@@ -1,0 +1,8 @@
+@import url(../reindeer/styles.css);
+
+.v-tagger {
+	outline: 1px solid #ddd;
+	border-top: 1px solid #fff;
+	padding: 20px;
+	background: #f0f0f0;
+}
