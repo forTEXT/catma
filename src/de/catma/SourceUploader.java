@@ -78,8 +78,38 @@ public class SourceUploader extends CustomComponent
         
 		try {
 			String text = IOUtils.toString(new FileInputStream(file), "UTF-8");
-			text = text.replaceAll("(\r\n)|\n", "<br>");
-	        tagger.setHTML("<div>"+text+"</div>");
+			String[] paragraphs = text.split("(\r\n)|\n");
+			StringBuilder builder = new StringBuilder();
+			
+			for ( int pCounter = 0; pCounter<paragraphs.length; pCounter++) {
+				int counter =0;
+				String paragraph = paragraphs[pCounter];
+				builder.append("<span>");
+				for (int i=0; i<paragraph.length(); i++) {
+					counter++;
+					if ((counter<40)&&(paragraph.charAt(i) == ' ')) {
+						builder.append("&nbsp;");
+					}
+					else {
+						
+						if (paragraph.charAt(i) == ' ' ) {
+							counter = 0;
+							builder.append("</span><br><span>");
+						}
+						else {
+							builder.append(paragraph.charAt(i));
+						}
+					}
+				}
+				builder.append("</span>");
+				builder.append("<br>");
+			}
+			
+			text = builder.toString();
+//			text = text.replaceAll("(\r\n)|\n", "</span><br><span>");
+//			text = text.replaceAll("\\p{Blank}", "&nbsp;");
+			
+	        tagger.setHTML("<div styple=\"text-align:justify;\">"+text+"</div>");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -31,6 +31,8 @@ public class Tagger extends AbstractComponent {
 	"</div>";
 	
 	private String html = INIT_HTML;
+	private String html_arg = INIT_HTML;
+	private String tag = "";
 	
 
 	@Override
@@ -39,9 +41,10 @@ public class Tagger extends AbstractComponent {
 
 		// Paint any component specific content by setting attributes
 		// These attributes can be read in updateFromUIDL in the widget.
-//		target.addAttribute(Attribute.TAGEVENT.name(), "empty event attr");
-		target.addAttribute(Attribute.HTML.name(), html);
-
+		target.addAttribute(Attribute.TAGEVENT.name(), tag);
+		target.addAttribute(Attribute.HTML.name(), html_arg);
+		tag = "";
+		html_arg = "";
 		// We could also set variables in which values can be returned
 		// but declaring variables here is not required
 	}
@@ -67,11 +70,13 @@ public class Tagger extends AbstractComponent {
 	
 	public void setHTML(String html) {
 		this.html = html;
+		this.html_arg = html;
 		requestRepaint();
 	}
 	
 	public void addTag(String tag) {
-		
+		this.tag = tag;
+		requestRepaint();				
 	}
 
 }

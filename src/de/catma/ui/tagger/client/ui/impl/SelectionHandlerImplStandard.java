@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Node;
+import com.vaadin.terminal.gwt.client.VConsole;
 
 
 public class SelectionHandlerImplStandard {
@@ -57,6 +58,7 @@ public class SelectionHandlerImplStandard {
 		int rangeCount = getRangeCount();
 		for (int i=0; i<rangeCount; i++) {
 			JavaScriptObject jsRange = getRangeAt(i);
+			VConsole.log("jsRange: " + jsRange.toString());
 			if (jsRange != null) { 
 				result.add(new Range(this,jsRange));
 			}

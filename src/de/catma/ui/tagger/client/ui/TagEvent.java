@@ -6,9 +6,14 @@ public class TagEvent extends DomEvent<TagEventHandler> {
 	private static final String NAME = "tagevent";
 	private static final Type<TagEventHandler> TYPE = new Type<TagEventHandler>(
 			NAME, new TagEvent());
+	private String tag;
 
 	protected TagEvent() {
 		//TODO: params
+	}
+	
+	TagEvent(String tag) {
+		this.tag = tag;
 	}
 	
 	@Override
@@ -30,7 +35,10 @@ public class TagEvent extends DomEvent<TagEventHandler> {
 	}
 	
 	public String toSerialization() {
-		return toString(); // TODO: proper serialization
+		return tag; // TODO: proper serialization
 	}
 
+	public String getTag() {
+		return tag;
+	}
 }

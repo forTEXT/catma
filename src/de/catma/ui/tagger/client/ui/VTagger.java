@@ -17,6 +17,7 @@ import com.google.gwt.user.client.ui.HTML;
 import com.vaadin.terminal.gwt.client.ApplicationConnection;
 import com.vaadin.terminal.gwt.client.Paintable;
 import com.vaadin.terminal.gwt.client.UIDL;
+import com.vaadin.terminal.gwt.client.VConsole;
 
 import de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplStandard;
 import de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplStandard.Range;
@@ -64,16 +65,19 @@ public class VTagger extends FocusWidget
 		setStyleName(CLASSNAME);
 		
 		// Tell GWT we are interested in receiving click events
-		sinkEvents(Event.MOUSEEVENTS);
-		sinkBitlessEvent(TagEvent.getName());
-		
-		// Add a handler for the click events (this is similar to FocusWidget.addClickHandler())
+		sinkEvents(Event.ONMOUSEUP);
+//		sinkBitlessEvent(TagEvent.getName());
+//		
+//		// Add a handler for the click events (this is similar to FocusWidget.addClickHandler())
 		addDomHandler(this, MouseUpEvent.getType());
-		addDomHandler(this, TagEvent.getType());
+//		addDomHandler(this, TagEvent.getType());
+//		addMouseUpHandler(this);
+//		addTagEventHandler(this);
 	}
 	
 	public void onMouseUp(MouseUpEvent event) {
 		lastRangeList = impl.getRangeList();
+		VConsole.log("Ranges: " + lastRangeList.size());
 	}
 	
 	public void onTagEvent(TagEvent event) {
@@ -103,12 +107,24 @@ public class VTagger extends FocusWidget
 		// Process attributes/variables from the server
 		// The attribute names are the same as we used in 
 		// paintContent on the server-side
+		
 		String html = uidl.getStringAttribute(Attribute.HTML.name());
-		setHTML(new HTML(html));
+		if (!html.isEmpty()) {
+			VConsole.log("setting html");
+			setHTML(new HTML(html));
+		}
+		String tag = uidl.getStringAttribute(Attribute.TAGEVENT.name());
+		VConsole.log("tag is:" + tag);
+		if (!tag.isEmpty()) {
+			VConsole.log("adding tag: " + tag);
+			addTag(tag);
+		}
 //		int clicks = uidl.getIntAttribute("clicks");
 //		String message = uidl.getStringAttribute("message");
 //		
 //		getElement().setInnerHTML("After <b>"+clicks+"</b> mouse clicks:\n" + message);
+		
+		
 //		
 	}
 
@@ -154,11 +170,11 @@ public class VTagger extends FocusWidget
 				}
 			}
 			else {
-				GWT.log("at least one node is out of the tagger's bounds");
+				VConsole.log("at least one node is out of the tagger's bounds");
 			}
 		}
 		else {
-			GWT.log("range is empty or out of the tagger's bounds");
+			VConsole.log("range is empty or out of the tagger's bounds");
 		}
 	}
 

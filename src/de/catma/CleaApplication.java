@@ -1,8 +1,10 @@
 package de.catma;
 
 import com.vaadin.Application;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Window;
 
@@ -30,12 +32,35 @@ public class CleaApplication extends Application {
 	@Override
 	public void init() {
 		Window mainWindow = new Window("Clea");
-		Panel p = new Panel("Tag Manager");
+		Panel tagManagerPanel = new Panel("Tag Manager");
 		
-		final Tagger t = new Tagger();
-		SourceUploader b = new SourceUploader(t);
-		mainWindow.addComponent(t);
-		mainWindow.addComponent(b);
+		Button tagGreen = new Button("green tag");
+		Button tagLight_green = new Button("light_green tag");
+		Button tagBlue = new Button("blue tag");
+		Button tagRed = new Button("red tag");
+		Panel editorPanel = new Panel("Tagger");
+		final Tagger tagger = new Tagger();
+		editorPanel.setWidth("450px");
+		editorPanel.addComponent(tagger);
+		tagGreen.addListener(new TagSelectionHandler("tag_green", tagger));
+		tagLight_green.addListener(new TagSelectionHandler("tag_lightgreen", tagger));
+		tagBlue.addListener(new TagSelectionHandler("tag_blue", tagger));
+		tagRed.addListener(new TagSelectionHandler("tag_red", tagger));
+		HorizontalLayout mainLayout = new HorizontalLayout();
+		SourceUploader sourceUploader = new SourceUploader(tagger);
+		tagManagerPanel.addComponent(sourceUploader);
+		tagManagerPanel.addComponent(tagGreen);
+		tagManagerPanel.addComponent(tagLight_green);
+		tagManagerPanel.addComponent(tagBlue);
+		tagManagerPanel.addComponent(tagRed);
+		
+		mainWindow.setContent(mainLayout);
+		
+		mainLayout.addComponent(editorPanel);
+		mainLayout.setExpandRatio(editorPanel, 2);
+		mainLayout.addComponent(tagManagerPanel);
+		mainLayout.setExpandRatio(tagManagerPanel, 1);
+		
 		setMainWindow(mainWindow);
 		setTheme("cleatheme");
 	}
