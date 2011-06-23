@@ -20,16 +20,17 @@ public class Tagger extends AbstractComponent {
 		TAGEVENT;
 	}
 	
-	public static final String INIT_HTML = "nase<div id=\"bla0\">bla0" +
-	"    <div id=\"bla1\">bla1 bla1 bla1</div>" +
-	"    <div id=\"bla2\">bla2 bla2 bla2" +
-	"        <div id=\"bla2.1\">bla2.1 bla2.1 bla2.1</div>" +
-	"        <div id=\"bla2.2\">bla2.2 bla2.2 bla2.2</div>" +
-	"        <div id=\"bla2.3\">bla2.3 bla2.3 bla2.3</div>" +
-	"    </div>" +
-	"    <div id=\"bla3\">bla3 bla3 bla3</div>" +
-	"</div>";
+//	public static final String INIT_HTML = "nase<div id=\"bla0\">bla0" +
+//	"    <div id=\"bla1\">bla1 bla1 bla1</div>" +
+//	"    <div id=\"bla2\">bla2 bla2 bla2" +
+//	"        <div id=\"bla2.1\">bla2.1 bla2.1 bla2.1</div>" +
+//	"        <div id=\"bla2.2\">bla2.2 bla2.2 bla2.2</div>" +
+//	"        <div id=\"bla2.3\">bla2.3 bla2.3 bla2.3</div>" +
+//	"    </div>" +
+//	"    <div id=\"bla3\">bla3 bla3 bla3</div>" +
+//	"</div>";
 	
+	public static final String INIT_HTML = "not loaded";
 	private String html = INIT_HTML;
 	private String html_arg = INIT_HTML;
 	private String tag = "";
@@ -60,9 +61,9 @@ public class Tagger extends AbstractComponent {
 
 		// Variables set by the widget are returned in the "variables" map.
 
-		if (variables.containsKey(TagEvent.getName())) {
+		if (variables.containsKey("TAGEVENT")) {
 
-			System.out.println(variables.get(TagEvent.getName()));
+			System.out.println(variables.get("TAGEVENT"));
 			
 //			requestRepaint();
 		}

@@ -23,4 +23,8 @@ public class TaggedSpanFactory {
 		return taggedSpan;
 	}
 	
+	public String getTag() {
+		return tag;
+	}
+	
 }

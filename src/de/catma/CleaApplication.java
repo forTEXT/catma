@@ -40,7 +40,7 @@ public class CleaApplication extends Application {
 		Button tagRed = new Button("red tag");
 		Panel editorPanel = new Panel("Tagger");
 		final Tagger tagger = new Tagger();
-		editorPanel.setWidth("450px");
+		editorPanel.setWidth("650px");
 		editorPanel.addComponent(tagger);
 		tagGreen.addListener(new TagSelectionHandler("tag_green", tagger));
 		tagLight_green.addListener(new TagSelectionHandler("tag_lightgreen", tagger));

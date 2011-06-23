@@ -87,7 +87,7 @@ public class SourceUploader extends CustomComponent
 				builder.append("<span>");
 				for (int i=0; i<paragraph.length(); i++) {
 					counter++;
-					if ((counter<40)&&(paragraph.charAt(i) == ' ')) {
+					if ((counter<90)&&(paragraph.charAt(i) == ' ')) {
 						builder.append("&nbsp;");
 					}
 					else {

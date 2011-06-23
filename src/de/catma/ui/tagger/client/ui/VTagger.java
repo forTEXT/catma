@@ -141,8 +141,10 @@ public class VTagger extends FocusWidget
 	public void addTag(String tag) {
 		
 		TaggedSpanFactory taggedSpanFactory = new TaggedSpanFactory(tag);
-		for (Range range : lastRangeList) {
+		for (Range range : lastRangeList) { //FIXME: wenn ranges im selben knoten sind, wir nur die erste markiert
+			VConsole.log("adding tag to range: " + range);
 			addTagToRange(taggedSpanFactory, range);
+			VConsole.log("added tag to range");
 		}
 	}
 	
@@ -209,7 +211,7 @@ public class VTagger extends FocusWidget
 			startNodeParent.insertBefore(t, startNode);
 		}
 		startNodeParent.removeChild(startNode);
-		fireEvent(new TagEvent()); //TODO: params
+		onTagEvent(new TagEvent(taggedSpanFactory.getTag())); //TODO: params
 	}
 
 	private void addTag(
@@ -283,7 +285,7 @@ public class VTagger extends FocusWidget
 		endNodeParent.replaceChild(
 				tw.isAfter() ? unmarkedEndSeq : taggedSpan, endNode);
 		
-		fireEvent(new TagEvent()); //TODO: params
+		onTagEvent(new TagEvent(taggedSpanFactory.getTag())); //TODO: params
 	}
 
 	private String ensureLeadingAndTrailingSpaces(String text) {
