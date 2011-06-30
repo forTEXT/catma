@@ -4,11 +4,12 @@ import java.util.List;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
+import com.vaadin.terminal.gwt.client.VConsole;
 
 public class DebugUtil {
 	
 	public static void printNodes(String listName, List<Node> nodeList) {
-		System.out.println(listName + ":");
+		println(listName + ":");
 		for (Node n : nodeList) {
 			printNode(n);
 		}
@@ -16,16 +17,21 @@ public class DebugUtil {
 	 
 	public static void printNode(Node node) {
 		if (node == null) {
-			System.out.println(node);
+			println("null");
 		}
 		if (Element.is(node)) {
 			Element e = Element.as(node);
-			System.out.println(
+			println(
 					node.getNodeName() + 
 					"#"+ e.getId());
 		}
 		else {
-			System.out.println(node.getNodeName() + "[" + node.getNodeValue() + "]");
+			println(node.getNodeName() + "[" + node.getNodeValue() + "]");
 		}
+	}
+	
+	private static void println(String s) {
+//		System.out.println(s);
+		VConsole.log(s);
 	}
 }

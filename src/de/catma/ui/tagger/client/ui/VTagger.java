@@ -59,7 +59,7 @@ public class VTagger extends FocusWidget
 	 */
 	public VTagger(Element element) {
 		super(element);
-		
+		getElement().setId("vtagger-element");
 		// This method call of the Paintable interface sets the component
 		// style name in DOM tree
 		setStyleName(CLASSNAME);
@@ -129,6 +129,8 @@ public class VTagger extends FocusWidget
 	}
 
  	public void setHTML(HTML html) {
+ 		html.getElement().setId("vtagger-html-div");
+ 		
 		if (getElement().hasChildNodes()) {
 			NodeList<Node> children = getElement().getChildNodes();
 			for (int i=0; i<children.getLength();i++) {
@@ -141,7 +143,9 @@ public class VTagger extends FocusWidget
 	public void addTag(String tag) {
 		
 		TaggedSpanFactory taggedSpanFactory = new TaggedSpanFactory(tag);
-		for (Range range : lastRangeList) { //FIXME: wenn ranges im selben knoten sind, wir nur die erste markiert
+		for (Range range : lastRangeList) { 
+			//FIXME: wenn ranges im selben knoten sind, wir nur die erste markiert, 
+			//weil nach Erstellen des ersten Tags, der Baum verändert wurde.
 			VConsole.log("adding tag to range: " + range);
 			addTagToRange(taggedSpanFactory, range);
 			VConsole.log("added tag to range");
@@ -151,21 +155,35 @@ public class VTagger extends FocusWidget
 	public void addTagToRange(TaggedSpanFactory taggedSpanFactory, Range range) {
 		
 		if ((range!= null) && (!range.isEmpty())) {
+			VConsole.log("pos -1");
 			Node startNode = range.getStartNode();
 			int startOffset = range.getStartOffset();
 			
 			Node endNode = range.getEndNode();
 			int endOffset = range.getEndOffset();
-
+			VConsole.log("pos -2");
 			if (getElement().isOrHasChild(endNode) 
 					&& getElement().isOrHasChild(startNode)) {
-
+				VConsole.log("pos -3");
 				if (startNode.equals(endNode)) {
+					VConsole.log("pos -4");
 					addTag(
 						taggedSpanFactory, 
 						startNode, startOffset, endOffset);
 				}
+				else if(startNode.isOrHasChild(endNode)) {
+					addTag(
+						taggedSpanFactory,
+						endNode, endOffset-endNode.getNodeValue().length(), endOffset);
+				}
+				else if(endNode.isOrHasChild(startNode)) {
+					addTag(
+						taggedSpanFactory,
+						startNode, startOffset, startOffset+startNode.getNodeValue().length());
+					
+				}
 				else {
+					VConsole.log("pos -5");
 					addTag(
 						taggedSpanFactory, 
 						startNode, startOffset, endNode, endOffset);
@@ -192,13 +210,13 @@ public class VTagger extends FocusWidget
 		int endOffset = Math.max(originalStartOffset, originalEndOffset);
 		String startNodeText = startNode.getNodeValue();
 		Node startNodeParent = startNode.getParentNode();
-		
+
 		if (startOffset != 0) {
 			Text t = Document.get().createTextNode(
 					startNodeText.substring(0, startOffset));
 			startNodeParent.insertBefore(t, startNode);
 		}
-		
+
 		Element taggedSpan = 
 			taggedSpanFactory.createTaggedSpan(
 					ensureLeadingAndTrailingSpaces(
@@ -210,6 +228,7 @@ public class VTagger extends FocusWidget
 					startNodeText.substring(endOffset, startNodeText.length()));
 			startNodeParent.insertBefore(t, startNode);
 		}
+
 		startNodeParent.removeChild(startNode);
 		onTagEvent(new TagEvent(taggedSpanFactory.getTag())); //TODO: params
 	}
@@ -218,12 +237,27 @@ public class VTagger extends FocusWidget
 			TaggedSpanFactory taggedSpanFactory, 
 			Node startNode, int startOffset, Node endNode, int endOffset) {
 
+		DebugUtil.printNode(startNode);
+		VConsole.log("startOffset: " + startOffset);
+		
+		DebugUtil.printNode(endNode);
+		VConsole.log("endOffset: " + endOffset);
+		
+		
+		VConsole.log("pos1");
+
 		TreeWalker tw = new TreeWalker(getElement(), startNode, endNode);
+
+		VConsole.log("pos2");
 		
 		String startNodeText = startNode.getNodeValue();
 		Node startNodeParent = startNode.getParentNode();
 		String endNodeText = endNode.getNodeValue();
 		Node endNodeParent = endNode.getParentNode();
+		
+		if (endNodeText == null) {
+			endNodeText = "";
+		}
 		
 		int unmarkedStartSeqBeginIdx = 0;
 		int unmarkedStartSeqEndIdx = startOffset;
@@ -236,6 +270,8 @@ public class VTagger extends FocusWidget
 		int markedEndSeqEndIdx = endOffset;
 		
 		if (!tw.isAfter()) {
+			VConsole.log("pos3");
+
 			unmarkedStartSeqBeginIdx = startOffset;
 			unmarkedStartSeqEndIdx = startNodeText.length();
 			markedStartSeqBeginIdx = 0;
@@ -246,12 +282,14 @@ public class VTagger extends FocusWidget
 			markedEndSeqBeginIdx = endOffset;
 			markedEndSeqEndIdx = endNodeText.length();
 		}
-		
+		VConsole.log("pos4");
+
 		Text unmarkedStartSeq = 
 			Document.get().createTextNode(
 				startNodeText.substring(
 						unmarkedStartSeqBeginIdx, unmarkedStartSeqEndIdx)); 
-		
+		VConsole.log("pos5");
+
 		Element taggedSpan = 
 			taggedSpanFactory.createTaggedSpan(ensureLeadingAndTrailingSpaces(
 				startNodeText.substring(
@@ -261,8 +299,12 @@ public class VTagger extends FocusWidget
 				tw.isAfter() ? unmarkedStartSeq : taggedSpan, startNode);
 		startNodeParent.replaceChild(
 				tw.isAfter() ? taggedSpan : unmarkedStartSeq, startNode);
-		
-		List<Node> affectedNodes = tw.getAffectedNodes(); 
+
+		VConsole.log("pos6");
+
+		List<Node> affectedNodes = tw.getAffectedNodes();
+		VConsole.log("pos7");
+
 		for (int i=1; i<affectedNodes.size()-1;i++) {
 			taggedSpan = 
 				taggedSpanFactory.createTaggedSpan(affectedNodes.get(i).getNodeValue());

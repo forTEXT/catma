@@ -84,37 +84,69 @@ public class SourceUploader extends CustomComponent
 			for ( int pCounter = 0; pCounter<paragraphs.length; pCounter++) {
 				int counter =0;
 				String paragraph = paragraphs[pCounter];
-				builder.append("<span>");
-				for (int i=0; i<paragraph.length(); i++) {
-					counter++;
-					if ((counter<90)&&(paragraph.charAt(i) == ' ')) {
-						builder.append("&nbsp;");
-					}
-					else {
-						
-						if (paragraph.charAt(i) == ' ' ) {
-							counter = 0;
-							builder.append("</span><br><span>");
-						}
-						else {
-							builder.append(paragraph.charAt(i));
-						}
+				builder.append("<p n=\"" +pCounter + "\">");
+//				for (int i=0; i<paragraph.length(); i++) {
+//					counter++;
+//					if ((counter<90)&&(paragraph.charAt(i) == ' ')) {
+//						builder.append("&nbsp;");
+//					}
+//					else {
+//						
+//						if (paragraph.charAt(i) == ' ' ) {
+//							counter = 0;
+//							builder.append("</span><br><span>");
+//						}
+//						else {
+//							builder.append(paragraph.charAt(i));
+//						}
+//					}
+//				}
+				String[] spans = paragraph.split("\\s+");
+				if (spans.length == 0) {
+					System.out.println( "span 0 in p: " + pCounter + " text:" + paragraph); 
+				}
+				else {
+					appendSpan(builder, pCounter, 0, spans[0]);
+
+					/*
+					 * hier gehts weiter
+					 * 
+					 * Problem so: es koennen keine Leerzeichen markiert werden 
+					 * und das Taggen klappt nicht immer.
+					 */
+					
+					for (int spanCounter=1; spanCounter<spans.length; spanCounter++) {
+//						builder.append("<span>&nbsp;</span>");
+						builder.append(" ");
+						appendSpan(builder, pCounter, spanCounter, spans[spanCounter]);
 					}
 				}
-				builder.append("</span>");
-				builder.append("<br>");
+				builder.append("</p>");
+				
+				//builder.append("<br>");
 			}
 			
 			text = builder.toString();
 //			text = text.replaceAll("(\r\n)|\n", "</span><br><span>");
 //			text = text.replaceAll("\\p{Blank}", "&nbsp;");
 			
-	        tagger.setHTML("<div styple=\"text-align:justify;\">"+text+"</div>");
+	        tagger.setHTML("<div id=\"raw-text\">"+text+"</div>");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
     }
-
+    
+    private void appendSpan(StringBuilder builder, int paragraphNo, int spanNo, String text) {
+		builder.append("<span p=\"");
+//		builder.append("<span style=\"padding-left:2px; padding-right:2px;\"p=\"");
+		builder.append(paragraphNo);
+		builder.append("\" n=\"");
+		builder.append(spanNo);
+		builder.append("\">");
+		builder.append(text);
+		builder.append("</span>");
+    }
+    
     // This is called if the upload fails.
     public void uploadFailed(Upload.FailedEvent event) {
         // Log the failure on screen.
