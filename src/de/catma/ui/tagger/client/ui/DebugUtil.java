@@ -21,12 +21,27 @@ public class DebugUtil {
 		}
 		if (Element.is(node)) {
 			Element e = Element.as(node);
-			println(
+			println( "Element " +
 					node.getNodeName() + 
 					"#"+ e.getId());
 		}
 		else {
 			println(node.getNodeName() + "[" + node.getNodeValue() + "]");
+		}
+	}
+
+	public static String getNodeInfo(Node node) {
+		if (node == null) {
+			return "null";
+		}
+		if (Element.is(node)) {
+			Element e = Element.as(node);
+			return "Element " +
+					node.getNodeName() + 
+					"#"+ e.getId();
+		}
+		else {
+			return node.getNodeName() + "[" + node.getNodeValue() + "]";
 		}
 	}
 	

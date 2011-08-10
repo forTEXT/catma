@@ -7,6 +7,8 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Node;
 import com.vaadin.terminal.gwt.client.VConsole;
 
+import de.catma.ui.tagger.client.ui.DebugUtil;
+
 
 public class SelectionHandlerImplStandard {
 	
@@ -39,11 +41,22 @@ public class SelectionHandlerImplStandard {
 		@Override
 		public String toString() {
 			if (javaScriptObject == null) {
-				return "";
+				return "N/A";
 			}
 			else {
 				return impl.toJSString(javaScriptObject);
 			}
+		}
+		
+		public String toDetailedString() {
+			if (javaScriptObject == null) {
+				return "N/A";
+			}
+			else {
+				return "StartNode["+getStartOffset()+"]"+DebugUtil.getNodeInfo(getStartNode()) + 
+						" EndNode["+getEndOffset()+"]" + DebugUtil.getNodeInfo(getEndNode());
+			}
+			
 		}
 		
 		public final boolean isEmpty() {
@@ -60,7 +73,9 @@ public class SelectionHandlerImplStandard {
 			JavaScriptObject jsRange = getRangeAt(i);
 			VConsole.log("jsRange: " + jsRange.toString());
 			if (jsRange != null) { 
-				result.add(new Range(this,jsRange));
+				Range range = new Range(this,jsRange);
+				VConsole.log(range.toDetailedString());
+				result.add(range);
 			}
 		}
 		return result;

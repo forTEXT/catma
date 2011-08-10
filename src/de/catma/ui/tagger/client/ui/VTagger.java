@@ -155,35 +155,45 @@ public class VTagger extends FocusWidget
 	public void addTagToRange(TaggedSpanFactory taggedSpanFactory, Range range) {
 		
 		if ((range!= null) && (!range.isEmpty())) {
-			VConsole.log("pos -1");
+			
 			Node startNode = range.getStartNode();
 			int startOffset = range.getStartOffset();
 			
 			Node endNode = range.getEndNode();
 			int endOffset = range.getEndOffset();
-			VConsole.log("pos -2");
+			
+			DebugUtil.printNode(startNode);
+			VConsole.log("startOffset: " + startOffset);
+			
+			DebugUtil.printNode(endNode);
+			VConsole.log("endOffset: " + endOffset);
+
+			
 			if (getElement().isOrHasChild(endNode) 
 					&& getElement().isOrHasChild(startNode)) {
-				VConsole.log("pos -3");
+				
 				if (startNode.equals(endNode)) {
-					VConsole.log("pos -4");
+					VConsole.log("startNode equals endNode");
 					addTag(
 						taggedSpanFactory, 
 						startNode, startOffset, endOffset);
 				}
 				else if(startNode.isOrHasChild(endNode)) {
+					VConsole.log("startNode isOrHasChild endNode");
 					addTag(
 						taggedSpanFactory,
 						endNode, endOffset-endNode.getNodeValue().length(), endOffset);
 				}
 				else if(endNode.isOrHasChild(startNode)) {
+					VConsole.log("endNode isOrHasChild startNode");
 					addTag(
 						taggedSpanFactory,
 						startNode, startOffset, startOffset+startNode.getNodeValue().length());
 					
 				}
 				else {
-					VConsole.log("pos -5");
+					VConsole.log("startNode and endNode are not on the same branch");
+					
 					addTag(
 						taggedSpanFactory, 
 						startNode, startOffset, endNode, endOffset);
@@ -204,32 +214,44 @@ public class VTagger extends FocusWidget
 	
 	private void addTag(
 			TaggedSpanFactory taggedSpanFactory, 
-			Node startNode, int originalStartOffset, int originalEndOffset) {
+			Node node, int originalStartOffset, int originalEndOffset) {
+		
+		// the whole text sequence is within one node
 		
 		int startOffset = Math.min(originalStartOffset, originalEndOffset);
 		int endOffset = Math.max(originalStartOffset, originalEndOffset);
-		String startNodeText = startNode.getNodeValue();
-		Node startNodeParent = startNode.getParentNode();
+		String nodeText = node.getNodeValue();
+		Node nodeParent = node.getParentNode();
 
-		if (startOffset != 0) {
+		if (startOffset != 0) { // does the tagged sequence start at the beginning?
+			// no, ok so we create a separate text node for the untagged part at the beginning
 			Text t = Document.get().createTextNode(
-					startNodeText.substring(0, startOffset));
-			startNodeParent.insertBefore(t, startNode);
+					nodeText.substring(0, startOffset));
+			nodeParent.insertBefore(t, node);
 		}
 
-		Element taggedSpan = 
-			taggedSpanFactory.createTaggedSpan(
-					ensureLeadingAndTrailingSpaces(
-							startNodeText.substring(startOffset, endOffset)));
-
-		startNodeParent.insertBefore(taggedSpan, startNode);
-		if (endOffset != startNodeText.length()) {
-			Text t = Document.get().createTextNode(
-					startNodeText.substring(endOffset, startNodeText.length()));
-			startNodeParent.insertBefore(t, startNode);
+		// get a list of tagged spans for every non-whitespace-containing-character-sequence 
+		// and text node for the separating whitespace-sequences
+		List<Node> taggedSpanSeq = 
+				taggedSpanFactory.createTaggedSpanSequence(
+						nodeText.substring(startOffset, endOffset));
+		
+		// insert tagged spans and whitespace text nodes before the old node
+		for( Node taggedSpan : taggedSpanSeq) {
+			nodeParent.insertBefore(taggedSpan, node);
 		}
 
-		startNodeParent.removeChild(startNode);
+		// does the tagged sequence stretch until the end of the whole sequence? 
+		if (endOffset != nodeText.length()) {
+			// no, so we create a separate text node for the untagged sequence at the end
+			Text t = Document.get().createTextNode(
+					nodeText.substring(endOffset, nodeText.length()));
+			nodeParent.insertBefore(t, node);
+		}
+		
+		// remove the old node which is no longer needed
+		nodeParent.removeChild(node);
+		
 		onTagEvent(new TagEvent(taggedSpanFactory.getTag())); //TODO: params
 	}
 
@@ -237,41 +259,38 @@ public class VTagger extends FocusWidget
 			TaggedSpanFactory taggedSpanFactory, 
 			Node startNode, int startOffset, Node endNode, int endOffset) {
 
-		DebugUtil.printNode(startNode);
-		VConsole.log("startOffset: " + startOffset);
-		
-		DebugUtil.printNode(endNode);
-		VConsole.log("endOffset: " + endOffset);
-		
-		
-		VConsole.log("pos1");
-
 		TreeWalker tw = new TreeWalker(getElement(), startNode, endNode);
-
-		VConsole.log("pos2");
 		
 		String startNodeText = startNode.getNodeValue();
 		Node startNodeParent = startNode.getParentNode();
 		String endNodeText = endNode.getNodeValue();
 		Node endNodeParent = endNode.getParentNode();
 		
-		if (endNodeText == null) {
+		if (endNodeText == null) { // node is a non text node like line breaks
+			VConsole.log("Found no text within the following node:");
+			DebugUtil.printNode(endNode);
 			endNodeText = "";
 		}
 		
+		// the range of unmarked text at the beginning of the start node's text range
 		int unmarkedStartSeqBeginIdx = 0;
 		int unmarkedStartSeqEndIdx = startOffset;
+		
+		// the marked text range of the start node
 		int markedStartSeqBeginIdx = startOffset;
 		int markedStartSeqEndIdx = startNodeText.length();
 		
+		// the range of umarked text at the end of the end node's text range
 		int unmarkedEndSeqBeginIdx = endOffset;
 		int unmarkedEndSeqEndIdx = endNodeText.length();
+		
+		// the marked text range of the end node
 		int markedEndSeqBeginIdx = 0;
 		int markedEndSeqEndIdx = endOffset;
 		
+		// if start node and end node are in reverse order within the tree 
+		// we switch start/end of sequences accordingly
 		if (!tw.isAfter()) {
-			VConsole.log("pos3");
-
 			unmarkedStartSeqBeginIdx = startOffset;
 			unmarkedStartSeqEndIdx = startNodeText.length();
 			markedStartSeqBeginIdx = 0;
@@ -282,33 +301,48 @@ public class VTagger extends FocusWidget
 			markedEndSeqBeginIdx = endOffset;
 			markedEndSeqEndIdx = endNodeText.length();
 		}
-		VConsole.log("pos4");
 
+		// a text node for the unmarked start
 		Text unmarkedStartSeq = 
 			Document.get().createTextNode(
 				startNodeText.substring(
 						unmarkedStartSeqBeginIdx, unmarkedStartSeqEndIdx)); 
-		VConsole.log("pos5");
 
-		Element taggedSpan = 
-			taggedSpanFactory.createTaggedSpan(ensureLeadingAndTrailingSpaces(
-				startNodeText.substring(
-						markedStartSeqBeginIdx, markedStartSeqEndIdx)));
-
-		startNodeParent.insertBefore(
-				tw.isAfter() ? unmarkedStartSeq : taggedSpan, startNode);
-		startNodeParent.replaceChild(
-				tw.isAfter() ? taggedSpan : unmarkedStartSeq, startNode);
-
-		VConsole.log("pos6");
+		// get a list of tagged spans for every non-whitespace-containing-character-sequence 
+		// and text node for the separating whitespace-sequences
+		List<Node> taggedSpanSeq = 
+				taggedSpanFactory.createTaggedSpanSequence(
+						startNodeText.substring(markedStartSeqBeginIdx, markedStartSeqEndIdx));
+		
+		if (tw.isAfter()) {
+			startNodeParent.insertBefore(
+					unmarkedStartSeq, startNode);
+			// insert tagged spans and whitespace text nodes before the old node
+			for( Node taggedSpan : taggedSpanSeq) {
+				startNodeParent.insertBefore(taggedSpan, startNode);
+			}
+			startNodeParent.removeChild(startNode);
+		}
+		else {
+			for( Node taggedSpan : taggedSpanSeq) {
+				startNodeParent.insertBefore(taggedSpan, startNode);
+			}
+			
+			startNodeParent.replaceChild(
+					unmarkedStartSeq, startNode);
+		}
 
 		List<Node> affectedNodes = tw.getAffectedNodes();
-		VConsole.log("pos7");
+		DebugUtil.printNodes("affectedNodes", affectedNodes);
 
 		for (int i=1; i<affectedNodes.size()-1;i++) {
-			taggedSpan = 
-				taggedSpanFactory.createTaggedSpan(affectedNodes.get(i).getNodeValue());
-			affectedNodes.get(i).getParentNode().replaceChild(taggedSpan, affectedNodes.get(i));
+			taggedSpanSeq = 
+				taggedSpanFactory.createTaggedSpanSequence(affectedNodes.get(i).getNodeValue());
+			for (Node taggedSpan : taggedSpanSeq) {
+				affectedNodes.get(i).getParentNode().insertBefore(taggedSpan, affectedNodes.get(i));
+			}
+			
+			affectedNodes.get(i).getParentNode().removeChild(affectedNodes.get(i));
 		}
 		
 		Text unmarkedEndSeq = 
@@ -316,31 +350,27 @@ public class VTagger extends FocusWidget
 					endNodeText.substring(
 							unmarkedEndSeqBeginIdx, unmarkedEndSeqEndIdx));
 		
-		taggedSpan = 
-			taggedSpanFactory.createTaggedSpan(
-				ensureLeadingAndTrailingSpaces(
+		taggedSpanSeq = 
+			taggedSpanFactory.createTaggedSpanSequence(
 						endNodeText.substring(
-								markedEndSeqBeginIdx, markedEndSeqEndIdx)));
+								markedEndSeqBeginIdx, markedEndSeqEndIdx));
 
-		endNodeParent.insertBefore(
-				tw.isAfter() ? taggedSpan : unmarkedEndSeq, endNode);
-		endNodeParent.replaceChild(
-				tw.isAfter() ? unmarkedEndSeq : taggedSpan, endNode);
+		if (tw.isAfter()) {
+			for (Node taggedSpan : taggedSpanSeq) {
+				endNodeParent.insertBefore(taggedSpan, endNode);
+			}
+			endNodeParent.replaceChild(unmarkedEndSeq, endNode);
+			
+		}
+		else {
+			endNodeParent.insertBefore(unmarkedEndSeq, endNode);
+			
+			for (Node taggedSpan : taggedSpanSeq) {
+				endNodeParent.insertBefore(taggedSpan, endNode);
+			}
+			endNodeParent.removeChild(endNode);
+		}
 		
 		onTagEvent(new TagEvent(taggedSpanFactory.getTag())); //TODO: params
 	}
-
-	private String ensureLeadingAndTrailingSpaces(String text) {
-		if (text.length() >= 1) {
-			if (text.substring(0, 1).equals(" ")) {
-				text = SOLIDSPACE+text.substring(1);
-			}
-			
-			if (text.substring(text.length()-1).equals(" ")) {
-				text = text.substring(0, text.length()-1)+SOLIDSPACE;
-			}
-		}
-		return text;
-	}
-
 }

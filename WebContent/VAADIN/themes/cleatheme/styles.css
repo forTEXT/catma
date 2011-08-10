@@ -7,9 +7,6 @@
 	background: #f0f0f0;
 }
 
-div.v-tagger span {
-	white-space:pre;
-}
 
 .tag_green {display:inline-block; border-bottom:5px; border-bottom-color:green;border-bottom-style:solid; }
 .tag_lightgreen {display:inline-block; border-bottom:5px; border-bottom-color:#00ff00;border-bottom-style:solid; }
