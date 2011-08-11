@@ -1,7 +1,7 @@
-#Wed Aug 10 17:26:40 CEST 2011
+#Thu Aug 11 18:15:42 CEST 2011
 com.vaadin.integration.eclipse.useLatestNightly=false
 com.vaadin.integration.eclipse.widgetsetBuildsSuspended=true
-com.vaadin.integration.eclipse.widgetsetCompilationEta=40467
-com.vaadin.integration.eclipse.widgetsetDirty=true
+com.vaadin.integration.eclipse.widgetsetCompilationEta=38439
+com.vaadin.integration.eclipse.widgetsetDirty=false
 com.vaadin.integration.eclipse.widgetsetStyle=DRAFT
 eclipse.preferences.version=1

@@ -12,3 +12,10 @@
 .tag_lightgreen {display:inline-block; border-bottom:5px; border-bottom-color:#00ff00;border-bottom-style:solid; }
 .tag_blue {display:inline-block; border-bottom:5px; border-bottom-color:blue;border-bottom-style:solid; }
 .tag_red {display:inline-block; border-bottom:5px; border-bottom-color:red;border-bottom-style:solid; }
+
+.ruler {
+	visibility:hidden;
+	white-space:nowrap;
+	font-family: Verdana;
+	font-size: 18px;
+}
