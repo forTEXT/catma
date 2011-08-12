@@ -42,21 +42,13 @@ public class CleaApplication extends Application {
 		final TextField inputPanel = new TextField("test");
 		Panel editorPanel = new Panel("Tagger");
 		final Tagger tagger = new Tagger();
-		tagger.setWidth("640px");
-		editorPanel.setWidth("650px");
+		tagger.setSizeFull();
+//		editorPanel.setSizeFull();
+		editorPanel.getContent().setSizeUndefined();
+//		tagger.setWidth("340px");
+		editorPanel.setWidth("340px");
 		editorPanel.addComponent(tagger);
-		Button computeWidth = new Button("computeWidth");
-		computeWidth.addListener(new ClickListener() {
-			
-			public void buttonClick(ClickEvent event) {
-				String innerHTML = inputPanel.getValue().toString();
-				
-				System.out.println(
-						"WIDTH of " + innerHTML + " is ");
-				tagger.computeWidth(innerHTML);
-				
-			}
-		});
+		editorPanel.setScrollable(true);
 		tagGreen.addListener(new TagSelectionHandler("tag_green", tagger));
 		tagLight_green.addListener(new TagSelectionHandler("tag_lightgreen", tagger));
 		tagBlue.addListener(new TagSelectionHandler("tag_blue", tagger));
@@ -69,7 +61,6 @@ public class CleaApplication extends Application {
 		tagManagerPanel.addComponent(tagBlue);
 		tagManagerPanel.addComponent(tagRed);
 		tagManagerPanel.addComponent(inputPanel);
-		tagManagerPanel.addComponent(computeWidth);
 		
 		mainWindow.setContent(mainLayout);
 		

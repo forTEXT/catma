@@ -24,6 +24,8 @@ public class SourceUploader extends CustomComponent
     private Panel root;         // Root element for contained components.
     private File  file;         // File to write to.
 	private Tagger tagger;
+	private static final String SOLIDSPACE = "&nbsp;";
+	
 
     public SourceUploader(Tagger tagger) {
     	this.tagger = tagger;
@@ -81,21 +83,45 @@ public class SourceUploader extends CustomComponent
         
 		try {
 			String text = IOUtils.toString(new FileInputStream(file), "UTF-8");
-//			Matcher matcher = Pattern.compile("(\\S+)(\\s+)").matcher(text);
-//			StringBuilder builder = new StringBuilder();
-//			while(matcher.find()) {
-//				builder.append("<span>");
-//				builder.append(matcher.group(1));
-//				builder.append("</span>");
-//				builder.append(matcher.group(2));
-//			}
-//			text = builder.toString();
+			Matcher matcher = Pattern.compile("(\\p{Blank}*)(\\S*)(\\p{Blank}*)((\r\n)|\n)?").matcher(text);
+			StringBuilder builder = new StringBuilder();
+			int lineLength = 0;
+			while(matcher.find()) {
+				if (lineLength + matcher.group().length()>160) {
+					builder.append("<br />");
+					lineLength = 0;
+				}
+				if (matcher.group(1) != null) {
+					builder.append(getSolidSpace(matcher.group(1).length()));
+				}
+				if (matcher.group(2) != null) {
+					builder.append(matcher.group(2));
+				}
+				if (matcher.group(3) != null) {
+					builder.append(getSolidSpace(matcher.group(3).length()));
+				}
+				if (matcher.group(4) != null) {
+					builder.append("<br />");
+					lineLength = 0;
+				}
+				else {
+					lineLength += matcher.group().length();
+				}
+			}
+			text = builder.toString();
 			text = text.replaceAll("(\r\n)|\n", "<br />");
-			
 	        tagger.setHTML("<div id=\"raw-text\">"+text+"</div>");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+    }
+    
+    private String getSolidSpace(int count) {
+    	StringBuilder builder = new StringBuilder();
+    	for (int i=0; i<count;i++) {
+    		builder.append(SOLIDSPACE);
+    	}
+    	return builder.toString();
     }
     
     // This is called if the upload fails.

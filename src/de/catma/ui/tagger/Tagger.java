@@ -6,7 +6,6 @@ import com.vaadin.terminal.PaintException;
 import com.vaadin.terminal.PaintTarget;
 import com.vaadin.ui.AbstractComponent;
 
-import de.catma.ui.tagger.client.ui.TagEvent;
 import de.catma.ui.tagger.client.ui.VTagger;
 
 /**
@@ -18,7 +17,7 @@ public class Tagger extends AbstractComponent {
 	public enum Attribute {
 		HTML,
 		TAGEVENT, 
-		SIZE;
+		;
 	}
 	
 //	public static final String INIT_HTML = "nase<div id=\"bla0\">bla0" +
@@ -35,7 +34,6 @@ public class Tagger extends AbstractComponent {
 	private String html = INIT_HTML;
 	private String html_arg = INIT_HTML;
 	private String tag = "";
-	private String sizeText = "";
 
 	@Override
 	public void paintContent(PaintTarget target) throws PaintException {
@@ -45,7 +43,6 @@ public class Tagger extends AbstractComponent {
 		// These attributes can be read in updateFromUIDL in the widget.
 		target.addAttribute(Attribute.TAGEVENT.name(), tag);
 		target.addAttribute(Attribute.HTML.name(), html_arg);
-		target.addAttribute(Attribute.SIZE.name(), sizeText);
 		tag = "";
 		html_arg = "";
 		// We could also set variables in which values can be returned
@@ -69,10 +66,6 @@ public class Tagger extends AbstractComponent {
 			
 //			requestRepaint();
 		}
-		if (variables.containsKey(Attribute.SIZE.name())) {
-			System.out.println(
-				Attribute.SIZE.name() + ": " + variables.get(Attribute.SIZE.name()));
-		}
 	}
 	
 	public void setHTML(String html) {
@@ -84,11 +77,6 @@ public class Tagger extends AbstractComponent {
 	public void addTag(String tag) {
 		this.tag = tag;
 		requestRepaint();				
-	}
-
-	public void computeWidth(String innerHTML) {
-		this.sizeText = innerHTML;
-		requestRepaint();
 	}
 
 }

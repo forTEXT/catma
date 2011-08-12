@@ -2,8 +2,6 @@ package de.catma.ui.tagger.client.ui;
 
 import java.util.List;
 
-import javax.swing.RootPaneContainer;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
@@ -13,11 +11,9 @@ import com.google.gwt.dom.client.Text;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.FocusWidget;
 import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.RootPanel;
 import com.vaadin.terminal.gwt.client.ApplicationConnection;
 import com.vaadin.terminal.gwt.client.Paintable;
 import com.vaadin.terminal.gwt.client.UIDL;
@@ -35,11 +31,10 @@ public class VTagger extends FocusWidget
 
 	public enum Attribute {
 		HTML,
-		TAGEVENT, SIZE;
+		TAGEVENT, 
+		;
 	}
 
-	private static final String SOLIDSPACE = "&nbsp;";
-	
 	private static SelectionHandlerImplStandard impl = 
 		 GWT.create(SelectionHandlerImplStandard.class);
 
@@ -77,12 +72,6 @@ public class VTagger extends FocusWidget
 //		addDomHandler(this, TagEvent.getType());
 //		addMouseUpHandler(this);
 //		addTagEventHandler(this);
-		
-		Element e = DOM.createSpan();
-		e.setId("ruler");
-		e.setClassName("ruler");
-		RootPanel.getBodyElement().appendChild(e);
-
 	}
 	
 	public void onMouseUp(MouseUpEvent event) {
@@ -131,15 +120,6 @@ public class VTagger extends FocusWidget
 			addTag(tag);
 		}
 		
-		String sizeText = uidl.getStringAttribute(Attribute.SIZE.name());
-		if (!sizeText.isEmpty()) {
-			Element e = DOM.getElementById("ruler");
-			e.setInnerHTML(sizeText);
-			int ow = e.getOffsetWidth();
-			client.updateVariable(
-					paintableId, Attribute.SIZE.name(), String.valueOf(ow), true);
-
-		}
 //		int clicks = uidl.getIntAttribute("clicks");
 //		String message = uidl.getStringAttribute("message");
 //		
