@@ -34,6 +34,10 @@ public class VTagger extends FocusWidget
 		TAGEVENT, 
 		;
 	}
+	private enum Direction {
+		RIGHT,
+		LEFT;
+	}
 
 	private static SelectionHandlerImplStandard impl = 
 		 GWT.create(SelectionHandlerImplStandard.class);
@@ -69,9 +73,10 @@ public class VTagger extends FocusWidget
 //		
 //		// Add a handler for the click events (this is similar to FocusWidget.addClickHandler())
 		addDomHandler(this, MouseUpEvent.getType());
+//		addHandler(this, TagEvent.getType())
 //		addDomHandler(this, TagEvent.getType());
 //		addMouseUpHandler(this);
-//		addTagEventHandler(this);
+		addTagEventHandler(this);
 	}
 	
 	public void onMouseUp(MouseUpEvent event) {
@@ -144,12 +149,17 @@ public class VTagger extends FocusWidget
 	public void addTag(String tag) {
 		
 		TaggedSpanFactory taggedSpanFactory = new TaggedSpanFactory(tag);
-		for (Range range : lastRangeList) { 
-			//FIXME: wenn ranges im selben knoten sind, wir nur die erste markiert, 
-			//weil nach Erstellen des ersten Tags, der Baum verändert wurde.
-			VConsole.log("adding tag to range: " + range);
-			addTagToRange(taggedSpanFactory, range);
-			VConsole.log("added tag to range");
+		if (lastRangeList != null) {
+			for (Range range : lastRangeList) { 
+				//FIXME: wenn ranges im selben knoten sind, wir nur die erste markiert, 
+				//weil nach Erstellen des ersten Tags, der Baum verändert wurde.
+				VConsole.log("adding tag to range: " + range);
+				addTagToRange(taggedSpanFactory, range);
+				VConsole.log("added tag to range");
+			}
+		}
+		else {
+			VConsole.log("no range to tag");
 		}
 	}
 	
@@ -172,25 +182,26 @@ public class VTagger extends FocusWidget
 			
 			if (getElement().isOrHasChild(endNode) 
 					&& getElement().isOrHasChild(startNode)) {
-				
+
+				if (Element.is(startNode)) {
+					startNode = findClosestTextNode(startNode.getChild(startOffset),Direction.RIGHT);
+					VConsole.log("Found closes text node for startNode: ");
+					DebugUtil.printNode(startNode);
+					startOffset = 0;
+				}
+	
+				if (Element.is(endNode)) {
+					endNode = findClosestTextNode(endNode.getChild(endOffset), Direction.LEFT);
+					VConsole.log("Found closes text node for endNode: ");
+					DebugUtil.printNode(endNode);
+					endOffset = endNode.getNodeValue().length();
+				}
+
 				if (startNode.equals(endNode)) {
 					VConsole.log("startNode equals endNode");
 					addTag(
 						taggedSpanFactory, 
 						startNode, startOffset, endOffset);
-				}
-				else if(startNode.isOrHasChild(endNode)) {
-					VConsole.log("startNode isOrHasChild endNode");
-					addTag(
-						taggedSpanFactory,
-						endNode, endOffset-endNode.getNodeValue().length(), endOffset);
-				}
-				else if(endNode.isOrHasChild(startNode)) {
-					VConsole.log("endNode isOrHasChild startNode");
-					addTag(
-						taggedSpanFactory,
-						startNode, startOffset, startOffset+startNode.getNodeValue().length());
-					
 				}
 				else {
 					VConsole.log("startNode and endNode are not on the same branch");
@@ -208,9 +219,21 @@ public class VTagger extends FocusWidget
 			VConsole.log("range is empty or out of the tagger's bounds");
 		}
 	}
-
+	
+	
+	private Node findClosestTextNode(Node node, Direction direction) {
+		if (direction == Direction.RIGHT) {
+			LeafFinder leftLeafWalker = new LeafFinder(node);
+			return leftLeafWalker.getNextRightTextLeaf();
+		}
+		else {
+			LeafFinder leftLeafWalker = new LeafFinder(node);
+			return leftLeafWalker.getNextLeftTextLeaf();
+		}
+	}
+	
 	public HandlerRegistration addTagEventHandler(TagEventHandler handler) {
-		return addDomHandler(handler, TagEvent.getType());
+		return addHandler(handler, TagEvent.getType());
 	}
 	
 	private void addTag(
@@ -252,15 +275,17 @@ public class VTagger extends FocusWidget
 		
 		// remove the old node which is no longer needed
 		nodeParent.removeChild(node);
-		
-		onTagEvent(new TagEvent(taggedSpanFactory.getTag())); //TODO: params
+
+		fireEvent(new TagEvent(taggedSpanFactory.getTag()));
+	
+//		onTagEvent(new TagEvent(taggedSpanFactory.getTag())); //TODO: params
 	}
 
 	private void addTag(
 			TaggedSpanFactory taggedSpanFactory, 
 			Node startNode, int startOffset, Node endNode, int endOffset) {
 
-		TreeWalker tw = new TreeWalker(getElement(), startNode, endNode);
+		AffectedNodesFinder tw = new AffectedNodesFinder(getElement(), startNode, endNode);
 		
 		String startNodeText = startNode.getNodeValue();
 		Node startNodeParent = startNode.getParentNode();
@@ -309,26 +334,29 @@ public class VTagger extends FocusWidget
 				startNodeText.substring(
 						unmarkedStartSeqBeginIdx, unmarkedStartSeqEndIdx)); 
 
-		// get a list of tagged spans for every non-whitespace-containing-character-sequence 
-		// and text node for the separating whitespace-sequences
+		// get a list of tagged spans for every individual token separated by whitespaces and
+		// for every whitespace-sequence
 		List<Node> taggedSpanSeq = 
 				taggedSpanFactory.createTaggedSpanSequence(
 						startNodeText.substring(markedStartSeqBeginIdx, markedStartSeqEndIdx));
 		
 		if (tw.isAfter()) {
+			// insert unmarked text seqence before the old node
 			startNodeParent.insertBefore(
 					unmarkedStartSeq, startNode);
-			// insert tagged spans and whitespace text nodes before the old node
+			// insert tagged spans before the old node
 			for( Node taggedSpan : taggedSpanSeq) {
 				startNodeParent.insertBefore(taggedSpan, startNode);
-			}
+			} 
+			// remove the old node
 			startNodeParent.removeChild(startNode);
 		}
 		else {
+			// insert tagged sequences before the old node
 			for( Node taggedSpan : taggedSpanSeq) {
 				startNodeParent.insertBefore(taggedSpan, startNode);
 			}
-			
+			// replace the old node with a new node for the unmarked sequence
 			startNodeParent.replaceChild(
 					unmarkedStartSeq, startNode);
 		}
@@ -336,42 +364,55 @@ public class VTagger extends FocusWidget
 		List<Node> affectedNodes = tw.getAffectedNodes();
 		DebugUtil.printNodes("affectedNodes", affectedNodes);
 
+		// create and insert tagged sequences for all the affected text nodes
 		for (int i=1; i<affectedNodes.size()-1;i++) {
+			// create the tagged spans ...
 			taggedSpanSeq = 
 				taggedSpanFactory.createTaggedSpanSequence(affectedNodes.get(i).getNodeValue());
+			// ... and insert them
 			for (Node taggedSpan : taggedSpanSeq) {
 				affectedNodes.get(i).getParentNode().insertBefore(taggedSpan, affectedNodes.get(i));
 			}
 			
+			// remove the old node
 			affectedNodes.get(i).getParentNode().removeChild(affectedNodes.get(i));
 		}
 		
+		// the unmarked text sequence of the last node
 		Text unmarkedEndSeq = 
 			Document.get().createTextNode(
 					endNodeText.substring(
 							unmarkedEndSeqBeginIdx, unmarkedEndSeqEndIdx));
 		
+		// the tagged parts of the last node
 		taggedSpanSeq = 
 			taggedSpanFactory.createTaggedSpanSequence(
 						endNodeText.substring(
 								markedEndSeqBeginIdx, markedEndSeqEndIdx));
 
 		if (tw.isAfter()) {
+			// insert tagged parts
 			for (Node taggedSpan : taggedSpanSeq) {
 				endNodeParent.insertBefore(taggedSpan, endNode);
 			}
+			
+			// replace old node with a text node for the unmarked part
 			endNodeParent.replaceChild(unmarkedEndSeq, endNode);
 			
 		}
 		else {
+			
+			// insert unmarked part
 			endNodeParent.insertBefore(unmarkedEndSeq, endNode);
 			
+			// insert tagged parts
 			for (Node taggedSpan : taggedSpanSeq) {
 				endNodeParent.insertBefore(taggedSpan, endNode);
 			}
+			// remove old node
 			endNodeParent.removeChild(endNode);
 		}
-		
-		onTagEvent(new TagEvent(taggedSpanFactory.getTag())); //TODO: params
+		fireEvent(new TagEvent(taggedSpanFactory.getTag()));
+		//onTagEvent(new TagEvent(taggedSpanFactory.getTag())); //TODO: params
 	}
 }

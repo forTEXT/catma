@@ -43,10 +43,8 @@ public class CleaApplication extends Application {
 		Panel editorPanel = new Panel("Tagger");
 		final Tagger tagger = new Tagger();
 		tagger.setSizeFull();
-//		editorPanel.setSizeFull();
 		editorPanel.getContent().setSizeUndefined();
-//		tagger.setWidth("340px");
-		editorPanel.setWidth("340px");
+		editorPanel.setWidth("640px");
 		editorPanel.addComponent(tagger);
 		editorPanel.setScrollable(true);
 		tagGreen.addListener(new TagSelectionHandler("tag_green", tagger));

@@ -9,7 +9,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
 import com.vaadin.terminal.gwt.client.VConsole;
 
-public class TreeWalker {
+public class AffectedNodesFinder {
 	
     private Node startNode;
     private Node outerLeftNode;
@@ -19,7 +19,7 @@ public class TreeWalker {
     private Stack<Node> affectedNodes;
     private boolean isAfter;
     
-	public TreeWalker(Element root, Node node1, Node node2) {
+	public AffectedNodesFinder(Element root, Node node1, Node node2) {
 		super();
 		affectedNodes = new Stack<Node>();
 		
@@ -49,7 +49,7 @@ public class TreeWalker {
 			DebugUtil.printNodes("node1Parents", node1Parents);
 			DebugUtil.printNodes("node2Parents", node2Parents);
 			
-			// find the closest comment parent node
+			// find the closest common parent node
 			for (; idx<maxParentIdx; idx++){
 				
 				VConsole.log("searching for the closest common parent, checking index: " + idx);
@@ -62,19 +62,9 @@ public class TreeWalker {
 			startNode = node1Parents.get(idx-1); // get the last common parent node, which is the closest
 
 			// is one of the node a parent of the other?
-			// (This should not happen because it gets filtered out before entering the TreeWalker)
 			if (idx == maxParentIdx) {
-				VConsole.log("idx==maxParentIdx");
-				isAfter = false;
-				
-				if (idx == node1Parents.size()) {
-					outerLeftNode = node2;
-					outerRightNode = node2;
-				}
-				else {
-					outerLeftNode = node1;
-					outerRightNode = node1;
-				}
+				// one of the nodes is node a text node since text nodes cannot have children
+				throw new IllegalStateException("idx==maxParentIdx, should not happen");
 			}
 			else {
 				// if the second node's index is larger then the index of the first node
@@ -144,7 +134,8 @@ public class TreeWalker {
 	/**
 	 * @param root the root node 
 	 * @param node the node to start from
-	 * @return a list of nodes starting with the parent closest to the root and ending with the given node
+	 * @return a list of nodes starting with the parent closest to the root
+	 * 			 and ending with the given node
 	 */
 	private List<Node> getParents(Element root, Node node) {
 		ArrayList<Node> result = new ArrayList<Node>();

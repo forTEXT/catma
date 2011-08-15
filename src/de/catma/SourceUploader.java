@@ -87,7 +87,7 @@ public class SourceUploader extends CustomComponent
 			StringBuilder builder = new StringBuilder();
 			int lineLength = 0;
 			while(matcher.find()) {
-				if (lineLength + matcher.group().length()>160) {
+				if (lineLength + matcher.group().length()>80) {
 					builder.append("<br />");
 					lineLength = 0;
 				}
