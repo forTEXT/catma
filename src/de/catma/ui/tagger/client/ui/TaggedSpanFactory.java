@@ -1,14 +1,8 @@
 package de.catma.ui.tagger.client.ui;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
-import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.Node;
-import com.google.gwt.regexp.shared.MatchResult;
-import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.user.client.DOM;
 
 public class TaggedSpanFactory {
@@ -21,7 +15,7 @@ public class TaggedSpanFactory {
 		instanceID = String.valueOf(new Date().getTime());
 	}
 	
-	private Element createTaggedSpan(String innerHtml) {
+	public Element createTaggedSpan(String innerHtml) {
 		Element taggedSpan = DOM.createSpan();
 		taggedSpan.addClassName(tag);
 		taggedSpan.setAttribute("instanceID", instanceID);
@@ -29,33 +23,6 @@ public class TaggedSpanFactory {
 		return taggedSpan;
 	}
 
-	public List<Node> createTaggedSpanSequence(String textOnly) {
-		List<Node> resultList = new ArrayList<Node>();
-		resultList.add(createTaggedSpan(textOnly));
-//		RegExp pattern = RegExp.compile("(\\s*)(\\S+)(\\s*)", "g");
-//		MatchResult matchResult = null;
-//		
-//		while((matchResult=pattern.exec(textOnly))!=null) {
-//			String result = matchResult.getGroup(1);
-//			if ((result != null) && (!result.isEmpty())) {
-//				//resultList.add(Document.get().createTextNode(result));
-//				resultList.add(createTaggedSpan(result));
-//			}
-//			
-//			result = matchResult.getGroup(2);
-//			if ((result != null) && (!result.isEmpty())) {
-//				resultList.add(createTaggedSpan(result));
-//			}			
-//			
-//			result = matchResult.getGroup(3);
-//			if ((result != null) && (!result.isEmpty())) {
-////				resultList.add(Document.get().createTextNode(result));
-//				resultList.add(createTaggedSpan(result));
-//			}
-//		}
-		
-		return resultList;
-	}
 	public String getTag() {
 		return tag;
 	}

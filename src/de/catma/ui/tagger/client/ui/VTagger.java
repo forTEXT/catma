@@ -21,6 +21,7 @@ import com.vaadin.terminal.gwt.client.VConsole;
 
 import de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplStandard;
 import de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplStandard.Range;
+import de.catma.ui.tagger.client.ui.shared.TaggerEventAttribute;
 
 /**
  * Client side widget which communicates with the server. Messages from the
@@ -29,23 +30,18 @@ import de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplStandard.Range;
 public class VTagger extends FocusWidget 
 	implements HasTagEventHandlers, Paintable, MouseUpHandler, TagEventHandler {
 
-	public enum Attribute {
-		HTML,
-		TAGEVENT, 
-		;
-	}
-	private enum Direction {
+	private static enum Direction {
 		RIGHT,
 		LEFT;
 	}
 
+	/** Set the CSS class name to allow styling. */
+	public static final String TAGGER_STYLE_CLASS = "v-tagger";
+
 	private static SelectionHandlerImplStandard impl = 
-		 GWT.create(SelectionHandlerImplStandard.class);
+			 GWT.create(SelectionHandlerImplStandard.class);
 
 	private List<Range> lastRangeList; 
-
-	/** Set the CSS class name to allow styling. */
-	public static final String CLASSNAME = "v-tagger";
 
 	/** The client side widget identifier */
 	protected String paintableId;
@@ -63,19 +59,13 @@ public class VTagger extends FocusWidget
 	public VTagger(Element element) {
 		super(element);
 		getElement().setId("vtagger-element");
-		// This method call of the Paintable interface sets the component
-		// style name in DOM tree
-		setStyleName(CLASSNAME);
+
+		setStyleName(TAGGER_STYLE_CLASS);
 		
-		// Tell GWT we are interested in receiving click events
+		// Tell GWT we are interested in consuming click events
 		sinkEvents(Event.ONMOUSEUP);
-//		sinkBitlessEvent(TagEvent.getName());
-//		
-//		// Add a handler for the click events (this is similar to FocusWidget.addClickHandler())
-		addDomHandler(this, MouseUpEvent.getType());
-//		addHandler(this, TagEvent.getType())
-//		addDomHandler(this, TagEvent.getType());
-//		addMouseUpHandler(this);
+
+		addMouseUpHandler(this);
 		addTagEventHandler(this);
 	}
 	
@@ -86,7 +76,7 @@ public class VTagger extends FocusWidget
 	
 	public void onTagEvent(TagEvent event) {
 		client.updateVariable(
-			paintableId, Attribute.TAGEVENT.name(), event.toSerialization(), true);
+			paintableId, TaggerEventAttribute.TAGEVENT.name(), event.toSerialization(), true);
 	}
 
     /**
@@ -106,32 +96,17 @@ public class VTagger extends FocusWidget
 		this.client = client;
 
 		// Save the client side identifier (paintable id) for the widget
-		paintableId = uidl.getId();
+		this.paintableId = uidl.getId();
 
-		// Process attributes/variables from the server
-		// The attribute names are the same as we used in 
-		// paintContent on the server-side
-		
-		String html = uidl.getStringAttribute(Attribute.HTML.name());
-		
-		if (!html.isEmpty()) {
+		if (uidl.hasAttribute(TaggerEventAttribute.HTML.name())) {
 			VConsole.log("setting html");
-			setHTML(new HTML(html));
+			setHTML(new HTML(uidl.getStringAttribute(TaggerEventAttribute.HTML.name())));
 		}
-		String tag = uidl.getStringAttribute(Attribute.TAGEVENT.name());
-		VConsole.log("tag is:" + tag);
-		if (!tag.isEmpty()) {
+		if (uidl.hasAttribute(TaggerEventAttribute.TAGEVENT.name())) {
+			String tag = uidl.getStringAttribute(TaggerEventAttribute.TAGEVENT.name());
 			VConsole.log("adding tag: " + tag);
 			addTag(tag);
 		}
-		
-//		int clicks = uidl.getIntAttribute("clicks");
-//		String message = uidl.getStringAttribute("message");
-//		
-//		getElement().setInnerHTML("After <b>"+clicks+"</b> mouse clicks:\n" + message);
-		
-		
-//		
 	}
 
  	public void setHTML(HTML html) {
@@ -256,14 +231,12 @@ public class VTagger extends FocusWidget
 
 		// get a list of tagged spans for every non-whitespace-containing-character-sequence 
 		// and text node for the separating whitespace-sequences
-		List<Node> taggedSpanSeq = 
-				taggedSpanFactory.createTaggedSpanSequence(
+		Element taggedSpan = 
+				taggedSpanFactory.createTaggedSpan(
 						nodeText.substring(startOffset, endOffset));
 		
 		// insert tagged spans and whitespace text nodes before the old node
-		for( Node taggedSpan : taggedSpanSeq) {
-			nodeParent.insertBefore(taggedSpan, node);
-		}
+		nodeParent.insertBefore(taggedSpan, node);
 
 		// does the tagged sequence stretch until the end of the whole sequence? 
 		if (endOffset != nodeText.length()) {
@@ -276,9 +249,7 @@ public class VTagger extends FocusWidget
 		// remove the old node which is no longer needed
 		nodeParent.removeChild(node);
 
-		fireEvent(new TagEvent(taggedSpanFactory.getTag()));
-	
-//		onTagEvent(new TagEvent(taggedSpanFactory.getTag())); //TODO: params
+		fireEvent(new TagEvent(taggedSpanFactory.getTag())); //TODO: params
 	}
 
 	private void addTag(
@@ -334,10 +305,9 @@ public class VTagger extends FocusWidget
 				startNodeText.substring(
 						unmarkedStartSeqBeginIdx, unmarkedStartSeqEndIdx)); 
 
-		// get a list of tagged spans for every individual token separated by whitespaces and
-		// for every whitespace-sequence
-		List<Node> taggedSpanSeq = 
-				taggedSpanFactory.createTaggedSpanSequence(
+		// get a tagged span for the tagged sequence of the starting node
+		Element taggedSpan = 
+				taggedSpanFactory.createTaggedSpan(
 						startNodeText.substring(markedStartSeqBeginIdx, markedStartSeqEndIdx));
 		
 		if (tw.isAfter()) {
@@ -345,17 +315,13 @@ public class VTagger extends FocusWidget
 			startNodeParent.insertBefore(
 					unmarkedStartSeq, startNode);
 			// insert tagged spans before the old node
-			for( Node taggedSpan : taggedSpanSeq) {
-				startNodeParent.insertBefore(taggedSpan, startNode);
-			} 
+			startNodeParent.insertBefore(taggedSpan, startNode);
 			// remove the old node
 			startNodeParent.removeChild(startNode);
 		}
 		else {
 			// insert tagged sequences before the old node
-			for( Node taggedSpan : taggedSpanSeq) {
-				startNodeParent.insertBefore(taggedSpan, startNode);
-			}
+			startNodeParent.insertBefore(taggedSpan, startNode);
 			// replace the old node with a new node for the unmarked sequence
 			startNodeParent.replaceChild(
 					unmarkedStartSeq, startNode);
@@ -366,13 +332,11 @@ public class VTagger extends FocusWidget
 
 		// create and insert tagged sequences for all the affected text nodes
 		for (int i=1; i<affectedNodes.size()-1;i++) {
-			// create the tagged spans ...
-			taggedSpanSeq = 
-				taggedSpanFactory.createTaggedSpanSequence(affectedNodes.get(i).getNodeValue());
-			// ... and insert them
-			for (Node taggedSpan : taggedSpanSeq) {
-				affectedNodes.get(i).getParentNode().insertBefore(taggedSpan, affectedNodes.get(i));
-			}
+			// create the tagged span ...
+			taggedSpan = 
+				taggedSpanFactory.createTaggedSpan(affectedNodes.get(i).getNodeValue());
+			// ... and insert it
+			affectedNodes.get(i).getParentNode().insertBefore(taggedSpan, affectedNodes.get(i));
 			
 			// remove the old node
 			affectedNodes.get(i).getParentNode().removeChild(affectedNodes.get(i));
@@ -384,17 +348,15 @@ public class VTagger extends FocusWidget
 					endNodeText.substring(
 							unmarkedEndSeqBeginIdx, unmarkedEndSeqEndIdx));
 		
-		// the tagged parts of the last node
-		taggedSpanSeq = 
-			taggedSpanFactory.createTaggedSpanSequence(
+		// the tagged part of the last node
+		taggedSpan = 
+			taggedSpanFactory.createTaggedSpan(
 						endNodeText.substring(
 								markedEndSeqBeginIdx, markedEndSeqEndIdx));
 
 		if (tw.isAfter()) {
-			// insert tagged parts
-			for (Node taggedSpan : taggedSpanSeq) {
-				endNodeParent.insertBefore(taggedSpan, endNode);
-			}
+			// insert tagged part
+			endNodeParent.insertBefore(taggedSpan, endNode);
 			
 			// replace old node with a text node for the unmarked part
 			endNodeParent.replaceChild(unmarkedEndSeq, endNode);
@@ -405,14 +367,12 @@ public class VTagger extends FocusWidget
 			// insert unmarked part
 			endNodeParent.insertBefore(unmarkedEndSeq, endNode);
 			
-			// insert tagged parts
-			for (Node taggedSpan : taggedSpanSeq) {
-				endNodeParent.insertBefore(taggedSpan, endNode);
-			}
+			// insert tagged part
+			endNodeParent.insertBefore(taggedSpan, endNode);
 			// remove old node
 			endNodeParent.removeChild(endNode);
 		}
-		fireEvent(new TagEvent(taggedSpanFactory.getTag()));
-		//onTagEvent(new TagEvent(taggedSpanFactory.getTag())); //TODO: params
+		
+		fireEvent(new TagEvent(taggedSpanFactory.getTag())); //TODO: params 
 	}
 }

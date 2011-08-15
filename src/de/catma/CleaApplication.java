@@ -6,7 +6,6 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.TextField;
 import com.vaadin.ui.Window;
 
 import de.catma.ui.tagger.Tagger;
@@ -39,7 +38,6 @@ public class CleaApplication extends Application {
 		Button tagLight_green = new Button("light_green tag");
 		Button tagBlue = new Button("blue tag");
 		Button tagRed = new Button("red tag");
-		final TextField inputPanel = new TextField("test");
 		Panel editorPanel = new Panel("Tagger");
 		final Tagger tagger = new Tagger();
 		tagger.setSizeFull();
@@ -58,7 +56,6 @@ public class CleaApplication extends Application {
 		tagManagerPanel.addComponent(tagLight_green);
 		tagManagerPanel.addComponent(tagBlue);
 		tagManagerPanel.addComponent(tagRed);
-		tagManagerPanel.addComponent(inputPanel);
 		
 		mainWindow.setContent(mainLayout);
 		
