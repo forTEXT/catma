@@ -17,7 +17,7 @@
     -->
     <set-property name="user.agent" value="gecko1_8,safari"/>
 <!-- 	<set-property name="user.agent" value="gecko1_8,safari,ie8"/>
-	<replace-with class="de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplIE6">
+	<replace-with class="de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplIE8">
 		<when-type-is class="de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplStandard"/>
 		<any>
 			<when-property-is name="user.agent" value="ie8"/>

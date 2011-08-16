@@ -4,7 +4,7 @@ import com.google.gwt.core.client.JavaScriptObject;
 
 
 
-public class SelectionHandlerImplIE6 extends SelectionHandlerImplStandard {
+public class SelectionHandlerImplIE8 extends SelectionHandlerImplStandard {
 
 	@Override
 	protected native JavaScriptObject getRangeAt(int idx) /*-{
