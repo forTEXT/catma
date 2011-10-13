@@ -1,5 +1,6 @@
 package de.catma.ui.tagger.client.ui;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gwt.core.client.GWT;
@@ -21,6 +22,7 @@ import com.vaadin.terminal.gwt.client.VConsole;
 
 import de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplStandard;
 import de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplStandard.Range;
+import de.catma.ui.tagger.client.ui.shared.TaggedNode;
 import de.catma.ui.tagger.client.ui.shared.TaggerEventAttribute;
 
 /**
@@ -76,7 +78,7 @@ public class VTagger extends FocusWidget
 	
 	public void onTagEvent(TagEvent event) {
 		client.updateVariable(
-			paintableId, TaggerEventAttribute.TAGEVENT.name(), event.toSerialization(), true);
+			paintableId, TaggerEventAttribute.TAGEVENT.name(), event.toString(), true);
 	}
 
     /**
@@ -249,7 +251,13 @@ public class VTagger extends FocusWidget
 		// remove the old node which is no longer needed
 		nodeParent.removeChild(node);
 
-		fireEvent(new TagEvent(taggedSpanFactory.getTag())); //TODO: params
+		TagEvent te = new TagEvent(
+					taggedSpanFactory.getTag(), 
+						new TaggedNode(
+								Element.as(nodeParent).getId(), 
+								startOffset, endOffset, taggedSpan.getId()));
+		VConsole.log("firing event " +  te.toString());
+		fireEvent(te); 
 	}
 
 	private void addTag(
@@ -257,6 +265,7 @@ public class VTagger extends FocusWidget
 			Node startNode, int startOffset, Node endNode, int endOffset) {
 
 		AffectedNodesFinder tw = new AffectedNodesFinder(getElement(), startNode, endNode);
+		List<TaggedNode> taggedNodes = new ArrayList<TaggedNode>();
 		
 		String startNodeText = startNode.getNodeValue();
 		Node startNodeParent = startNode.getParentNode();
@@ -298,43 +307,59 @@ public class VTagger extends FocusWidget
 			markedEndSeqBeginIdx = endOffset;
 			markedEndSeqEndIdx = endNodeText.length();
 		}
-
-		// a text node for the unmarked start
-		Text unmarkedStartSeq = 
-			Document.get().createTextNode(
-				startNodeText.substring(
-						unmarkedStartSeqBeginIdx, unmarkedStartSeqEndIdx)); 
-
-		// get a tagged span for the tagged sequence of the starting node
-		Element taggedSpan = 
-				taggedSpanFactory.createTaggedSpan(
-						startNodeText.substring(markedStartSeqBeginIdx, markedStartSeqEndIdx));
 		
-		if (tw.isAfter()) {
-			// insert unmarked text seqence before the old node
-			startNodeParent.insertBefore(
-					unmarkedStartSeq, startNode);
-			// insert tagged spans before the old node
-			startNodeParent.insertBefore(taggedSpan, startNode);
-			// remove the old node
-			startNodeParent.removeChild(startNode);
-		}
-		else {
-			// insert tagged sequences before the old node
-			startNodeParent.insertBefore(taggedSpan, startNode);
-			// replace the old node with a new node for the unmarked sequence
-			startNodeParent.replaceChild(
-					unmarkedStartSeq, startNode);
-		}
+		
 
+		if (!hasTag(startNode, taggedSpanFactory.getTag())) {
+			
+			// a text node for the unmarked start
+			Text unmarkedStartSeq = 
+				Document.get().createTextNode(
+					startNodeText.substring(
+							unmarkedStartSeqBeginIdx, unmarkedStartSeqEndIdx)); 
+	
+			// get a tagged span for the tagged sequence of the starting node
+			Element taggedSpan = 
+					taggedSpanFactory.createTaggedSpan(
+							startNodeText.substring(markedStartSeqBeginIdx, markedStartSeqEndIdx));
+			taggedNodes.add(
+					new TaggedNode(
+							startNode.getParentElement().getId(), 
+							markedStartSeqBeginIdx, markedStartSeqEndIdx,
+							taggedSpan.getId()));
+			
+			if (tw.isAfter()) {
+				// insert unmarked text seqence before the old node
+				startNodeParent.insertBefore(
+						unmarkedStartSeq, startNode);
+				// insert tagged spans before the old node
+				startNodeParent.insertBefore(taggedSpan, startNode);
+				// remove the old node
+				startNodeParent.removeChild(startNode);
+			}
+			else {
+				// insert tagged sequences before the old node
+				startNodeParent.insertBefore(taggedSpan, startNode);
+				// replace the old node with a new node for the unmarked sequence
+				startNodeParent.replaceChild(
+						unmarkedStartSeq, startNode);
+			}
+		}
 		List<Node> affectedNodes = tw.getAffectedNodes();
 		DebugUtil.printNodes("affectedNodes", affectedNodes);
 
 		// create and insert tagged sequences for all the affected text nodes
 		for (int i=1; i<affectedNodes.size()-1;i++) {
 			// create the tagged span ...
-			taggedSpan = 
+			Element taggedSpan = 
 				taggedSpanFactory.createTaggedSpan(affectedNodes.get(i).getNodeValue());
+			
+			taggedNodes.add(
+					new TaggedNode(
+							affectedNodes.get(i).getParentElement().getId(), 
+							affectedNodes.get(i).getNodeValue().length(),
+							taggedSpan.getId()));
+			
 			// ... and insert it
 			affectedNodes.get(i).getParentNode().insertBefore(taggedSpan, affectedNodes.get(i));
 			
@@ -349,10 +374,15 @@ public class VTagger extends FocusWidget
 							unmarkedEndSeqBeginIdx, unmarkedEndSeqEndIdx));
 		
 		// the tagged part of the last node
-		taggedSpan = 
+		Element taggedSpan = 
 			taggedSpanFactory.createTaggedSpan(
 						endNodeText.substring(
 								markedEndSeqBeginIdx, markedEndSeqEndIdx));
+		taggedNodes.add(
+				new TaggedNode(
+						endNode.getParentElement().getId(), 
+						markedEndSeqBeginIdx, markedEndSeqEndIdx,
+						taggedSpan.getId()));
 
 		if (tw.isAfter()) {
 			// insert tagged part
@@ -373,6 +403,24 @@ public class VTagger extends FocusWidget
 			endNodeParent.removeChild(endNode);
 		}
 		
-		fireEvent(new TagEvent(taggedSpanFactory.getTag())); //TODO: params 
+		
+		TagEvent te = new TagEvent(taggedSpanFactory.getTag(), taggedNodes);
+		VConsole.log("firing event " +  te.toDebugString());
+		fireEvent(te); 
+	}
+	
+	private boolean hasTag(Node node, String tag) {
+	// TODO: shall we allow multiple tagging with the same tag (maybe different non-contiguous tags or different properties!!!)
+		
+//		Element current = node.getParentElement();
+//		do {
+//			if (current.getClassName().equals(tag)) {
+//				return true;
+//			}
+//			current = current.getParentElement();
+//		}
+//		while(current != null);
+		
+		return false; 
 	}
 }

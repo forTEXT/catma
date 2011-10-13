@@ -41,7 +41,7 @@ public class AffectedNodesFinder {
 			int idx = 0;
 			
 			// the smaller size of the two lists of parents is the maximum parent index 
-			// we can check (after that there is no partner parent to check against)
+			// we can check (for greater index numbers there is no partner parent to check against)
 			int maxParentIdx = Math.min(node1Parents.size(), node2Parents.size());
 
 			VConsole.log("maxParentIdx: " + maxParentIdx);
@@ -63,13 +63,13 @@ public class AffectedNodesFinder {
 
 			// is one of the node a parent of the other?
 			if (idx == maxParentIdx) {
-				// one of the nodes is node a text node since text nodes cannot have children
+				// one of the nodes is not a text node since text nodes cannot have children
 				throw new IllegalStateException("idx==maxParentIdx, should not happen");
 			}
 			else {
-				// if the second node's index is larger then the index of the first node
-				// from their parents point of view the first node is on the outer left side of the subtree and
-				// the second node is on the outer right side of the subtree
+				// if the second node's index is larger than the index of the first node
+				// from their parents point of view, then the first node is on the outer left side of 
+				// the subtree and the second node is on the outer right side of the subtree;
 				// in the other case the positions are swapped 
 				isAfter = 
 					indexOf(startNode, node2Parents.get(idx)) 

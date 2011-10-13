@@ -1,6 +1,8 @@
 package de.catma.ui.tagger;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.vaadin.terminal.PaintException;
@@ -8,6 +10,7 @@ import com.vaadin.terminal.PaintTarget;
 import com.vaadin.ui.AbstractComponent;
 
 import de.catma.ui.tagger.client.ui.VTagger;
+import de.catma.ui.tagger.client.ui.shared.TaggedNode;
 import de.catma.ui.tagger.client.ui.shared.TaggerEventAttribute;
 
 /**
@@ -15,10 +18,6 @@ import de.catma.ui.tagger.client.ui.shared.TaggerEventAttribute;
  */
 @com.vaadin.ui.ClientWidget(VTagger.class)
 public class Tagger extends AbstractComponent {
-	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	private Map<String,String> attributes = new HashMap<String, String>();
@@ -51,12 +50,16 @@ public class Tagger extends AbstractComponent {
 		if (variables.containsKey(TaggerEventAttribute.TAGEVENT.name())) {
 
 			System.out.println(variables.get(TaggerEventAttribute.TAGEVENT.name()));
+			String event = (String)variables.get(TaggerEventAttribute.TAGEVENT.name());
+			String[] eventParts = event.split("\\^");
+			List<TaggedNode> taggedNodes = 
+					TaggedNode.createTaggedNodes(Arrays.copyOfRange(eventParts, 1, eventParts.length));
 			
-
+			System.out.println(eventParts[0]);
 		}
 	}
 	
-	public void setHTML(String html) {
+	private void setHTML(String html) {
 		attributes.put(TaggerEventAttribute.HTML.name(), html);
 		requestRepaint();
 	}
@@ -66,4 +69,9 @@ public class Tagger extends AbstractComponent {
 		requestRepaint();				
 	}
 
+	public void setText(String text) {
+		HTMLWrapper htmlWrapper = new HTMLWrapper(text);
+		System.out.println(htmlWrapper);
+		setHTML(htmlWrapper.toString());
+	}
 }
