@@ -18,5 +18,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/catma_backend"/>
+	<classpathentry kind="lib" path="/catma_backend/bin/org"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

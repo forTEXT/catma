@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.catma.document.Range;
+
 import com.vaadin.terminal.PaintException;
 import com.vaadin.terminal.PaintTarget;
 import com.vaadin.ui.AbstractComponent;
@@ -21,6 +23,8 @@ public class Tagger extends AbstractComponent {
 	private static final long serialVersionUID = 1L;
 
 	private Map<String,String> attributes = new HashMap<String, String>();
+
+	private HTMLWrapper htmlWrapper;
 
 	@Override
 	public void paintContent(PaintTarget target) throws PaintException {
@@ -55,7 +59,7 @@ public class Tagger extends AbstractComponent {
 			List<TaggedNode> taggedNodes = 
 					TaggedNode.createTaggedNodes(Arrays.copyOfRange(eventParts, 1, eventParts.length));
 			
-			System.out.println(eventParts[0]);
+			List<Range> ranges = htmlWrapper.addTag(eventParts[0], taggedNodes);
 		}
 	}
 	
@@ -70,7 +74,7 @@ public class Tagger extends AbstractComponent {
 	}
 
 	public void setText(String text) {
-		HTMLWrapper htmlWrapper = new HTMLWrapper(text);
+		this.htmlWrapper = new HTMLWrapper(text);
 		System.out.println(htmlWrapper);
 		setHTML(htmlWrapper.toString());
 	}
