@@ -1,5 +1,6 @@
 package de.catma.ui.tagger;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -9,6 +10,7 @@ import nu.xom.Attribute;
 import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Nodes;
+import nu.xom.Serializer;
 import nu.xom.Text;
 
 import org.catma.Pair;
@@ -32,10 +34,8 @@ public class HTMLWrapper {
 		}
 	}
 	
-    private static final String LINE_SEPARATOR_PATTERN = 
-            "(\r\n|[\n\r\u2028\u2029\u0085])";
-	private static final String WORD_PATTERN = 
-			"(\\S*)(\\p{Blank}*)" + LINE_SEPARATOR_PATTERN + "?";
+	private static final String LINE_CONTENT_PATTERN = 
+			"(\\S+)|(\\p{Blank}+)|(\r\n|[\n\r\u2028\u2029\u0085])"; //(WORDS)|(WHITESPACESEQUENCES)|(LINEBREAK)
 	
 	private int WORDCHARACTER_GROUP = 1;
 	private int WHITESPACE_GROUP = 2;
@@ -67,7 +67,7 @@ public class HTMLWrapper {
 	}
 
 	private void buildModel() {
-		Matcher matcher = Pattern.compile(WORD_PATTERN).matcher(text);
+		Matcher matcher = Pattern.compile(LINE_CONTENT_PATTERN).matcher(text);
 		Element rootDiv = new Element(HTMLElement.div.name());
 		rootDiv.addAttribute(new Attribute(HTMLAttribute.id.name(), "raw-text"));
 		htmlDocModel = new Document(rootDiv);
@@ -112,6 +112,13 @@ public class HTMLWrapper {
 				lineLength += matcher.group().length();
 				curDocLength += matcher.group().length();
 			}
+		}
+		if (lineLength != 0) {
+			Element lineSpan = new Element(HTMLElement.span.name());
+			lineSpan.addAttribute(new Attribute(HTMLAttribute.id.name(), "LINE"+lineId++));
+			lineSpan.appendChild(new TextRange(lineBuilder.toString(), new Range(prevDocLength,curDocLength)));
+			htmlDocModel.getRootElement().appendChild(lineSpan);
+			htmlDocModel.getRootElement().appendChild(new Element(HTMLElement.br.name()));
 		}
 	}
 
@@ -173,10 +180,10 @@ public class HTMLWrapper {
 				int insertionPos = 0;
 				
 				if (disjointRange.startsAfter(taggedRange.getStartPoint())) {
-					insertionPos = segment.indexOf(tr);
+					insertionPos = segment.indexOf(tr)+1;
 				}
 				else {
-					insertionPos = segment.indexOf(tr)+1;
+					insertionPos = segment.indexOf(tr);
 				}
 				
 				segment.insertChild(
@@ -213,7 +220,7 @@ public class HTMLWrapper {
 	}
 	
 	private String convertStandardToHTMLSolidWhitespace(String buf) {
-		Matcher matcher = Pattern.compile(WORD_PATTERN).matcher(buf);
+		Matcher matcher = Pattern.compile(LINE_CONTENT_PATTERN).matcher(buf);
 		StringBuilder result = new StringBuilder();
 		
 		while(matcher.find()) {
@@ -239,4 +246,14 @@ public class HTMLWrapper {
 		throw new IllegalStateException("unable to find segment with id " + id);
 	}
 
+	public void print() {
+		Serializer serializer;
+		try {
+			serializer = new Serializer( System.out, "UTF-8" );
+			serializer.setIndent( 4 );
+			serializer.write(htmlDocModel);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

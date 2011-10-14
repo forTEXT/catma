@@ -1,12 +1,9 @@
 package de.catma.ui.tagger;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import nu.xom.Serializer;
 
 import org.catma.document.Range;
 
@@ -63,14 +60,8 @@ public class Tagger extends AbstractComponent {
 					TaggedNode.createTaggedNodes(Arrays.copyOfRange(eventParts, 1, eventParts.length));
 			
 			List<Range> ranges = htmlWrapper.addTag(eventParts[0], taggedNodes);
+			htmlWrapper.print();
 			
-			Serializer serializer = new Serializer( System.out );
-			serializer.setIndent( 4 );
-			try {
-				serializer.write(htmlWrapper.getHtmlDocModel());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 	
@@ -86,7 +77,7 @@ public class Tagger extends AbstractComponent {
 
 	public void setText(String text) {
 		this.htmlWrapper = new HTMLWrapper(text);
-		System.out.println(htmlWrapper);
+		htmlWrapper.print();
 		setHTML(htmlWrapper.toString());
 	}
 }
