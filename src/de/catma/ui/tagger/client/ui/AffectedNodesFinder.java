@@ -154,7 +154,7 @@ public class AffectedNodesFinder {
 	 * @return the position of the child node within the array of children 
 	 * 			or -1 if there is no parent child relationship
 	 */
-	private int indexOf(Node parent, Node child) {
+	public static int indexOf(Node parent, Node child) {
 		for (int i=0; i<parent.getChildCount();i++) {
 			if (child.equals(parent.getChild(i))) {
 				return i;

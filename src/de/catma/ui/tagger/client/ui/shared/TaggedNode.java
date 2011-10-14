@@ -8,25 +8,27 @@ public class TaggedNode {
 	private int startOffset;
 	private int endOffset;
 	private String taggedSpanId;
+	private int nodeIndex;
 	
-	public TaggedNode(String id, int endOffset, String taggedSpanId){
-		this(id, 0, endOffset, taggedSpanId);
-	}
-
-	public TaggedNode(String id, int startOffset, int endOffset, String taggedSpanId) {
-		super();
-		this.id = id;
-		this.startOffset = startOffset;
-		this.endOffset = endOffset;
-		this.taggedSpanId = taggedSpanId;
+	public TaggedNode(String id, int nodeIndex, int endOffset, String taggedSpanId){
+		this(id, nodeIndex, 0, endOffset, taggedSpanId);
 	}
 
 	public TaggedNode(String[] taggedNodeString) {
 		this(
 			taggedNodeString[0],
-			Integer.valueOf(taggedNodeString[1]), 
-			Integer.valueOf(taggedNodeString[2]),
-			taggedNodeString[3]);
+			Integer.valueOf(taggedNodeString[1]),
+			Integer.valueOf(taggedNodeString[2]), 
+			Integer.valueOf(taggedNodeString[3]),
+			taggedNodeString[4]);
+	}
+
+	public TaggedNode(String id, int nodeIndex, int startOffset, int endOffset, String taggedSpanId) {
+		this.id = id;
+		this.nodeIndex = nodeIndex;
+		this.startOffset = startOffset;
+		this.endOffset = endOffset;
+		this.taggedSpanId = taggedSpanId;		
 	}
 
 	public String getId() {
@@ -41,9 +43,17 @@ public class TaggedNode {
 		return endOffset;
 	}
 	
+	public int getNodeIndex() {
+		return nodeIndex;
+	}
+	
+	public String getTaggedSpanId() {
+		return taggedSpanId;
+	}
+	
 	@Override
 	public String toString() {
-		return "^[" + id + "," +startOffset + "," + endOffset + "," + taggedSpanId + "]";
+		return "^[" + id + "," + nodeIndex + "," +startOffset + "," + endOffset + "," + taggedSpanId + "]";
 	}
 
 	public static List<TaggedNode> createTaggedNodes(String[] taggedNodesStringRepresentations) {

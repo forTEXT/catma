@@ -223,6 +223,7 @@ public class VTagger extends FocusWidget
 		int endOffset = Math.max(originalStartOffset, originalEndOffset);
 		String nodeText = node.getNodeValue();
 		Node nodeParent = node.getParentNode();
+		int nodeIndex = AffectedNodesFinder.indexOf(nodeParent, node);
 
 		if (startOffset != 0) { // does the tagged sequence start at the beginning?
 			// no, ok so we create a separate text node for the untagged part at the beginning
@@ -254,7 +255,7 @@ public class VTagger extends FocusWidget
 		TagEvent te = new TagEvent(
 					taggedSpanFactory.getTag(), 
 						new TaggedNode(
-								Element.as(nodeParent).getId(), 
+								Element.as(nodeParent).getId(), nodeIndex,
 								startOffset, endOffset, taggedSpan.getId()));
 		VConsole.log("firing event " +  te.toString());
 		fireEvent(te); 
@@ -268,8 +269,10 @@ public class VTagger extends FocusWidget
 		List<TaggedNode> taggedNodes = new ArrayList<TaggedNode>();
 		
 		String startNodeText = startNode.getNodeValue();
+		int startNodeIndex = AffectedNodesFinder.indexOf(startNode.getParentNode(), startNode);
 		Node startNodeParent = startNode.getParentNode();
 		String endNodeText = endNode.getNodeValue();
+		int endNodeIndex = AffectedNodesFinder.indexOf(endNode.getParentNode(), endNode);
 		Node endNodeParent = endNode.getParentNode();
 		
 		if (endNodeText == null) { // node is a non text node like line breaks
@@ -307,8 +310,7 @@ public class VTagger extends FocusWidget
 			markedEndSeqBeginIdx = endOffset;
 			markedEndSeqEndIdx = endNodeText.length();
 		}
-		
-		
+	
 
 		if (!hasTag(startNode, taggedSpanFactory.getTag())) {
 			
@@ -325,6 +327,7 @@ public class VTagger extends FocusWidget
 			taggedNodes.add(
 					new TaggedNode(
 							startNode.getParentElement().getId(), 
+							startNodeIndex,
 							markedStartSeqBeginIdx, markedStartSeqEndIdx,
 							taggedSpan.getId()));
 			
@@ -350,21 +353,23 @@ public class VTagger extends FocusWidget
 
 		// create and insert tagged sequences for all the affected text nodes
 		for (int i=1; i<affectedNodes.size()-1;i++) {
+			Node affectedNode = affectedNodes.get(i);
 			// create the tagged span ...
 			Element taggedSpan = 
-				taggedSpanFactory.createTaggedSpan(affectedNodes.get(i).getNodeValue());
+				taggedSpanFactory.createTaggedSpan(affectedNode.getNodeValue());
 			
 			taggedNodes.add(
 					new TaggedNode(
-							affectedNodes.get(i).getParentElement().getId(), 
-							affectedNodes.get(i).getNodeValue().length(),
+							affectedNode.getParentElement().getId(), 
+							AffectedNodesFinder.indexOf(affectedNode.getParentNode(), affectedNode),
+							affectedNode.getNodeValue().length(),
 							taggedSpan.getId()));
 			
 			// ... and insert it
-			affectedNodes.get(i).getParentNode().insertBefore(taggedSpan, affectedNodes.get(i));
+			affectedNode.getParentNode().insertBefore(taggedSpan, affectedNode);
 			
 			// remove the old node
-			affectedNodes.get(i).getParentNode().removeChild(affectedNodes.get(i));
+			affectedNode.getParentNode().removeChild(affectedNode);
 		}
 		
 		// the unmarked text sequence of the last node
@@ -381,6 +386,7 @@ public class VTagger extends FocusWidget
 		taggedNodes.add(
 				new TaggedNode(
 						endNode.getParentElement().getId(), 
+						endNodeIndex,
 						markedEndSeqBeginIdx, markedEndSeqEndIdx,
 						taggedSpan.getId()));
 
