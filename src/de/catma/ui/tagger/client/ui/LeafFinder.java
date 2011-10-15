@@ -1,5 +1,6 @@
 package de.catma.ui.tagger.client.ui;
 
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
 
@@ -7,10 +8,16 @@ public class LeafFinder {
 
 	private Node nextLeftLeaf;
 	private Node nextRightLeaf;
+	private Node upperBorderNode;
 
 	public LeafFinder(Node start) {
+		this(start, Document.get());
+	}
+	
+	public LeafFinder(Node start, Node upperBorderNode) {
 		this.nextLeftLeaf = start;
 		this.nextRightLeaf = start;
+		this.upperBorderNode = upperBorderNode;
 	}
 	
 	private void findNextRightLeaf() {
@@ -50,7 +57,7 @@ public class LeafFinder {
 	}
 
 	private Node ascentLeft(Node node) {
-		if (node != null) {
+		if ((node != null) && (!node.equals(upperBorderNode))){
 			Node sibling = node.getPreviousSibling();
 			if (sibling == null) {
 				return ascentLeft(node.getParentNode());
@@ -115,5 +122,25 @@ public class LeafFinder {
 		while ((this.nextRightLeaf != null) && (Element.is(this.nextRightLeaf)));
 
 		return this.nextRightLeaf;
+	}
+
+	public static Node getFirstTextLeaf(Node root) {
+		
+		if (root.hasChildNodes()) {
+			Node candidate = root.getFirstChild();
+			while(candidate.hasChildNodes()) {
+				candidate = candidate.getFirstChild();
+			}
+			
+			if (Element.is(candidate)) {
+				LeafFinder leafFinder = new LeafFinder(candidate);
+				return leafFinder.getNextRightTextLeaf();
+			}
+			else {
+				return candidate;
+			}
+		}
+		
+		return null;
 	}
 }

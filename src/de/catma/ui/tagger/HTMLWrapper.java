@@ -16,6 +16,7 @@ import nu.xom.Text;
 import org.catma.Pair;
 import org.catma.document.Range;
 
+import de.catma.ui.tagger.client.ui.shared.EditorElementID;
 import de.catma.ui.tagger.client.ui.shared.TaggedNode;
 
 public class HTMLWrapper {
@@ -69,7 +70,7 @@ public class HTMLWrapper {
 	private void buildModel() {
 		Matcher matcher = Pattern.compile(LINE_CONTENT_PATTERN).matcher(text);
 		Element rootDiv = new Element(HTMLElement.div.name());
-		rootDiv.addAttribute(new Attribute(HTMLAttribute.id.name(), "raw-text"));
+		rootDiv.addAttribute(new Attribute(HTMLAttribute.id.name(), EditorElementID.raw_text.name()));
 		htmlDocModel = new Document(rootDiv);
 		
 		StringBuilder lineBuilder = new StringBuilder();
@@ -129,7 +130,7 @@ public class HTMLWrapper {
     	}
     	return builder.toString();
     }
-	
+	//TODO: remove Tag (js+java) / load Markup (java)
 	public List<Range> addTag(String tag, List<TaggedNode> taggedNodes) {
 		ArrayList<Range> result = new ArrayList<Range>();
 		List<Pair<TaggedNode, TextRange>> taggedTextRanges = new ArrayList<Pair<TaggedNode,TextRange>>();

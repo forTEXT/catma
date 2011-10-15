@@ -32,11 +32,6 @@ import de.catma.ui.tagger.client.ui.shared.TaggerEventAttribute;
 public class VTagger extends FocusWidget 
 	implements HasTagEventHandlers, Paintable, MouseUpHandler, TagEventHandler {
 
-	private static enum Direction {
-		RIGHT,
-		LEFT;
-	}
-
 	/** Set the CSS class name to allow styling. */
 	public static final String TAGGER_STYLE_CLASS = "v-tagger";
 
@@ -126,88 +121,65 @@ public class VTagger extends FocusWidget
 	public void addTag(String tag) {
 		
 		TaggedSpanFactory taggedSpanFactory = new TaggedSpanFactory(tag);
-		if (lastRangeList != null) {
+		if ((lastRangeList != null) && (!lastRangeList.isEmpty())) {
+
+			//TODO: flatten ranges to prevent multiple tagging of the same range with the same instance!
+			
+			RangeConverter converter = new RangeConverter();
+			NodeRange firstRange = 
+					converter.convertToNodeRange(getElement(), lastRangeList.remove(0));
+
+			List<TextRange> remainingTextRanges = new ArrayList<TextRange>();
 			for (Range range : lastRangeList) { 
-				//FIXME: wenn ranges im selben knoten sind, wir nur die erste markiert, 
-				//weil nach Erstellen des ersten Tags, der Baum verändert wurde.
-				VConsole.log("adding tag to range: " + range);
-				addTagToRange(taggedSpanFactory, range);
+				remainingTextRanges.add(converter.convertToTextRange(range));
+			}
+			
+			VConsole.log("adding tag to range: " + firstRange);
+			addTagToRange(taggedSpanFactory, firstRange);
+			VConsole.log("added tag to range");
+			
+			for (TextRange textRange : remainingTextRanges) {
+				NodeRange nodeRange = converter.convertToNodeRange(textRange);
+				VConsole.log("adding tag to range: " + nodeRange);
+				addTagToRange(taggedSpanFactory, nodeRange);
 				VConsole.log("added tag to range");
 			}
+
 		}
 		else {
 			VConsole.log("no range to tag");
 		}
 	}
 	
-	public void addTagToRange(TaggedSpanFactory taggedSpanFactory, Range range) {
+	public void addTagToRange(TaggedSpanFactory taggedSpanFactory, NodeRange range) {
 		
-		if ((range!= null) && (!range.isEmpty())) {
-			
-			Node startNode = range.getStartNode();
-			int startOffset = range.getStartOffset();
-			
-			Node endNode = range.getEndNode();
-			int endOffset = range.getEndOffset();
-			
-			DebugUtil.printNode(startNode);
-			VConsole.log("startOffset: " + startOffset);
-			
-			DebugUtil.printNode(endNode);
-			VConsole.log("endOffset: " + endOffset);
+		Node startNode = range.getStartNode();
+		int startOffset = range.getStartOffset();
+		
+		Node endNode = range.getEndNode();
+		int endOffset = range.getEndOffset();
+		
+		DebugUtil.printNode(startNode);
+		VConsole.log("startOffset: " + startOffset);
+		
+		DebugUtil.printNode(endNode);
+		VConsole.log("endOffset: " + endOffset);
 
-			
-			if (getElement().isOrHasChild(endNode) 
-					&& getElement().isOrHasChild(startNode)) {
-
-				if (Element.is(startNode)) {
-					startNode = findClosestTextNode(startNode.getChild(startOffset),Direction.RIGHT);
-					VConsole.log("Found closes text node for startNode: ");
-					DebugUtil.printNode(startNode);
-					startOffset = 0;
-				}
-	
-				if (Element.is(endNode)) {
-					endNode = findClosestTextNode(endNode.getChild(endOffset), Direction.LEFT);
-					VConsole.log("Found closes text node for endNode: ");
-					DebugUtil.printNode(endNode);
-					endOffset = endNode.getNodeValue().length();
-				}
-
-				if (startNode.equals(endNode)) {
-					VConsole.log("startNode equals endNode");
-					addTag(
-						taggedSpanFactory, 
-						startNode, startOffset, endOffset);
-				}
-				else {
-					VConsole.log("startNode and endNode are not on the same branch");
-					
-					addTag(
-						taggedSpanFactory, 
-						startNode, startOffset, endNode, endOffset);
-				}
-			}
-			else {
-				VConsole.log("at least one node is out of the tagger's bounds");
-			}
+		if (startNode.equals(endNode)) {
+			VConsole.log("startNode equals endNode");
+			addTag(
+				taggedSpanFactory, 
+				startNode, startOffset, endOffset);
 		}
 		else {
-			VConsole.log("range is empty or out of the tagger's bounds");
+			VConsole.log("startNode and endNode are not on the same branch");
+			
+			addTag(
+				taggedSpanFactory, 
+				startNode, startOffset, endNode, endOffset);
 		}
 	}
 	
-	
-	private Node findClosestTextNode(Node node, Direction direction) {
-		if (direction == Direction.RIGHT) {
-			LeafFinder leftLeafWalker = new LeafFinder(node);
-			return leftLeafWalker.getNextRightTextLeaf();
-		}
-		else {
-			LeafFinder leftLeafWalker = new LeafFinder(node);
-			return leftLeafWalker.getNextLeftTextLeaf();
-		}
-	}
 	
 	public HandlerRegistration addTagEventHandler(TagEventHandler handler) {
 		return addHandler(handler, TagEvent.getType());
