@@ -1,0 +1,905 @@
+The Project Gutenberg EBook of Das Urteil, by Franz Kafka
+
+This eBook is for the use of anyone anywhere at no cost and with
+almost no restrictions whatsoever.  You may copy it, give it away or
+re-use it under the terms of the Project Gutenberg License included
+with this eBook or online at www.gutenberg.org
+
+
+Title: Das Urteil
+       Eine Geschichte
+
+Author: Franz Kafka
+
+Release Date: May 24, 2007 [EBook #21593]
+
+Language: German
+
+Character set encoding: UTF-8
+
+*** START OF THIS PROJECT GUTENBERG EBOOK DAS URTEIL ***
+
+
+
+
+Produced by Jana Srna, Alexander Bauer and the Online
+Distributed Proofreading Team at http://www.pgdp.net (This
+file was produced from images generously made available
+by Österreichische Nationalbibliothek - Austrian National
+Library)
+
+
+
+
+
+
+                              DAS URTEIL
+
+
+                            EINE GESCHICHTE
+                                  VON
+                              FRANZ KAFKA
+
+
+
+                                LEIPZIG
+                           KURT WOLFF VERLAG
+                                 1916
+
+
+Gedruckt bei E. Haberland in Leipzig-R. September 1916 als
+vierunddreißigster Band der Bücherei »Der jüngste Tag«
+
+Copyright 1916 by Kurt Wolff Verlag • Leipzig
+
+
+
+
+  FÜR F.
+
+
+
+Es war an einem Sonntagvormittag im schönsten Frühjahr. Georg Bendemann,
+ein junger Kaufmann, saß in seinem Privatzimmer im ersten Stock eines
+der niedrigen, leichtgebauten Häuser, die entlang des Flusses in einer
+langen Reihe, fast nur in der Höhe und Färbung unterschieden, sich
+hinzogen. Er hatte gerade einen Brief an einen sich im Ausland
+befindenden Jugendfreund beendet, verschloß ihn in spielerischer
+Langsamkeit und sah dann, den Ellbogen auf den Schreibtisch gestützt,
+aus dem Fenster auf den Fluß, die Brücke und die Anhöhen am anderen Ufer
+mit ihrem schwachen Grün.
+
+Er dachte darüber nach, wie dieser Freund, mit seinem Fortkommen zu
+Hause unzufrieden, vor Jahren schon nach Rußland sich förmlich
+geflüchtet hatte. Nun betrieb er ein Geschäft in Petersburg, das anfangs
+sich sehr gut angelassen hatte, seit langem aber schon zu stocken
+schien, wie der Freund bei seinen immer seltener werdenden Besuchen
+klagte. So arbeitete er sich in der Fremde nutzlos ab, der fremdartige
+Vollbart verdeckte nur schlecht das seit den Kinderjahren wohlbekannte
+Gesicht, dessen gelbe Hautfarbe auf eine sich entwickelnde Krankheit
+hinzudeuten schien. Wie er erzählte, hatte er keine rechte Verbindung
+mit der dortigen Kolonie seiner Landsleute, aber auch fast keinen
+gesellschaftlichen Verkehr mit einheimischen Familien und richtete sich
+so für ein endgültiges Junggesellentum ein.
+
+Was wollte man einem solchen Manne schreiben, der sich offenbar verrannt
+hatte, den man bedauern, dem man aber nicht helfen konnte. Sollte man
+ihm vielleicht raten, wieder nach Hause zu kommen, seine Existenz
+hierher zu verlegen, alle die alten freundschaftlichen Beziehungen
+wieder aufzunehmen – wofür ja kein Hindernis bestand – und im übrigen
+auf die Hilfe der Freunde zu vertrauen? Das bedeutete aber nichts
+anderes, als daß man ihm gleichzeitig, je schonender, desto kränkender,
+sagte, daß seine bisherigen Versuche mißlungen seien, daß er endlich
+von ihnen ablassen solle, daß er zurückkehren und sich als ein für immer
+Zurückgekehrter von allen mit großen Augen anstaunen lassen müsse, daß
+nur seine Freunde etwas verstünden und daß er ein altes Kind sei, das
+den erfolgreichen, zu Hause gebliebenen Freunden einfach zu folgen habe.
+Und war es dann noch sicher, daß alle die Plage, die man ihm antun
+müßte, einen Zweck hätte? Vielleicht gelang es nicht einmal, ihn
+überhaupt nach Hause zu bringen – er sagte ja selbst, daß er die
+Verhältnisse in der Heimat nicht mehr verstünde –, und so bliebe er
+dann trotz allem in seiner Fremde, verbittert durch die Ratschläge und
+den Freunden noch ein Stück mehr entfremdet. Folgte er aber wirklich dem
+Rat und würde hier – natürlich nicht mit Absicht, aber durch die
+Tatsachen – niedergedrückt, fände sich nicht in seinen Freunden und
+nicht ohne sie zurecht, litte an Beschämung, hätte jetzt wirklich keine
+Heimat und keine Freunde mehr, war es da nicht viel besser für ihn, er
+blieb in der Fremde, so wie er war? Konnte man denn bei solchen
+Umständen daran denken, daß er es hier tatsächlich vorwärts bringen
+würde?
+
+Aus diesen Gründen konnte man ihm, wenn man noch überhaupt die
+briefliche Verbindung aufrecht erhalten wollte, keine eigentlichen
+Mitteilungen machen, wie man sie ohne Scheu auch den entferntesten
+Bekannten machen würde. Der Freund war nun schon über drei Jahre nicht
+in der Heimat gewesen und erklärte dies sehr notdürftig mit der
+Unsicherheit der politischen Verhältnisse in Rußland, die demnach also
+auch die kürzeste Abwesenheit eines kleinen Geschäftsmannes nicht
+zuließen, während hunderttausende Russen ruhig in der Welt herumfuhren.
+Im Laufe dieser drei Jahre hatte sich aber gerade für Georg vieles
+verändert. Von dem Todesfall von Georgs Mutter, der vor etwa zwei Jahren
+erfolgt war und seit welchem Georg mit seinem alten Vater in gemeinsamer
+Wirtschaft lebte, hatte der Freund wohl noch erfahren und sein Beileid
+in einem Brief mit einer Trockenheit ausgedrückt, die ihren Grund nur
+darin haben konnte, daß die Trauer über ein solches Ereignis in der
+Fremde ganz unvorstellbar wird. Nun hatte aber Georg seit jener Zeit,
+so wie alles andere, auch sein Geschäft mit größerer Entschlossenheit
+angepackt. Vielleicht hatte ihn der Vater bei Lebzeiten der Mutter
+dadurch, daß er im Geschäft nur seine Ansicht gelten lassen wollte, an
+einer wirklichen eigenen Tätigkeit gehindert, vielleicht war der Vater
+seit dem Tode der Mutter, trotzdem er noch immer im Geschäft arbeitete,
+zurückhaltender geworden, vielleicht spielten – was sogar sehr
+wahrscheinlich war – glückliche Zufälle eine weit wichtigere Rolle,
+jedenfalls aber hatte sich das Geschäft in diesen zwei Jahren ganz
+unerwartet entwickelt, das Personal hatte man verdoppeln müssen, der
+Umsatz hatte sich verfünffacht, ein weiterer Fortschritt stand
+zweifellos bevor.
+
+Der Freund aber hatte keine Ahnung von dieser Veränderung. Früher, zum
+letztenmal vielleicht in jenem Beileidsbrief, hatte er Georg zur
+Auswanderung nach Rußland überreden wollen und sich über die Aussichten
+verbreitet, die gerade für Georgs Geschäftszweig in Petersburg
+bestanden. Die Ziffern waren verschwindend gegenüber dem Umfang, den
+Georgs Geschäft jetzt angenommen hatte. Georg aber hatte keine Lust
+gehabt, dem Freund von seinen geschäftlichen Erfolgen zu schreiben, und
+hätte er es jetzt nachträglich getan, es hätte wirklich einen
+merkwürdigen Anschein gehabt.
+
+So beschränkte sich Georg darauf, dem Freund immer nur über
+bedeutungslose Vorfälle zu schreiben, wie sie sich, wenn man an einem
+ruhigen Sonntag nachdenkt, in der Erinnerung ungeordnet aufhäufen. Er
+wollte nichts anderes, als die Vorstellung ungestört lassen, die sich
+der Freund von der Heimatstadt in der langen Zwischenzeit wohl gemacht
+und mit welcher er sich abgefunden hatte. So geschah es Georg, daß er
+dem Freund die Verlobung eines gleichgültigen Menschen mit einem ebenso
+gleichgültigen Mädchen dreimal in ziemlich weit auseinanderliegenden
+Briefen anzeigte, bis sich dann allerdings der Freund, ganz gegen Georgs
+Absicht, für diese Merkwürdigkeit zu interessieren begann.
+
+Georg schrieb ihm aber solche Dinge viel lieber, als daß er zugestanden
+hätte, daß er selbst vor einem Monat mit einem Fräulein Frieda
+Brandenfeld, einem Mädchen aus wohlhabender Familie, sich verlobt hatte.
+Oft sprach er mit seiner Braut über diesen Freund und das besondere
+Korrespondenzverhältnis, in welchem er zu ihm stand. »Er wird also gar
+nicht zu unserer Hochzeit kommen,« sagte sie, »und ich habe doch das
+Recht, alle deine Freunde kennen zu lernen.« »Ich will ihn nicht
+stören,« antwortete Georg, »verstehe mich recht, er würde wahrscheinlich
+kommen, wenigstens glaube ich es, aber er würde sich gezwungen und
+geschädigt fühlen, vielleicht mich beneiden und sicher unzufrieden und
+unfähig, diese Unzufriedenheit jemals zu beseitigen, allein wieder
+zurückfahren. Allein – weißt du, was das ist?« »Ja, kann er denn von
+unserer Heirat nicht auch auf andere Weise erfahren?« »Das kann ich
+allerdings nicht verhindern, aber es ist bei seiner Lebensweise
+unwahrscheinlich.« »Wenn du solche Freunde hast, Georg, hättest du dich
+überhaupt nicht verloben sollen.« »Ja, das ist unser beider Schuld; aber
+ich wollte es auch jetzt nicht anders haben.« Und wenn sie dann, rasch
+atmend unter seinen Küssen, noch vorbrachte: »Eigentlich kränkt es mich
+doch«, hielt er es wirklich für unverfänglich, dem Freund alles zu
+schreiben. »So bin ich und so hat er mich hinzunehmen«, sagte er sich,
+»ich kann nicht aus mir einen Menschen herausschneiden, der vielleicht
+für die Freundschaft mit ihm geeigneter wäre, als ich es bin.«
+
+Und tatsächlich berichtete er seinem Freunde in dem langen Brief, den er
+an diesem Sonntagvormittag schrieb, die erfolgte Verlobung mit folgenden
+Worten: »Die beste Neuigkeit habe ich mir bis zum Schluß aufgespart. Ich
+habe mich mit einem Fräulein Frieda Brandenfeld verlobt, einem Mädchen
+aus einer wohlhabenden Familie, die sich hier erst lange nach Deiner
+Abreise angesiedelt hat, die Du also kaum kennen dürftest. Es wird sich
+noch Gelegenheit finden, Dir Näheres über meine Braut mitzuteilen, heute
+genüge Dir, daß ich recht glücklich bin und daß sich in unserem
+gegenseitigen Verhältnis nur insofern etwas geändert hat, als Du jetzt
+in mir statt eines ganz gewöhnlichen Freundes einen glücklichen Freund
+haben wirst. Außerdem bekommst Du in meiner Braut, die Dich herzlich
+grüßen läßt, und die Dir nächstens selbst schreiben wird, eine
+aufrichtige Freundin, was für einen Junggesellen nicht ganz ohne
+Bedeutung ist. Ich weiß, es hält Dich vielerlei von einem Besuche bei
+uns zurück, wäre aber nicht gerade meine Hochzeit die richtige
+Gelegenheit, einmal alle Hindernisse über den Haufen zu werfen? Aber wie
+dies auch sein mag, handle ohne alle Rücksicht und nur nach Deiner
+Wohlmeinung.«
+
+Mit diesem Brief in der Hand war Georg lange, das Gesicht dem Fenster
+zugekehrt, an seinem Schreibtisch gesessen. Einem Bekannten, der ihn im
+Vorübergehen von der Gasse aus gegrüßt hatte, hatte er kaum mit einem
+abwesenden Lächeln geantwortet.
+
+Endlich steckte er den Brief in die Tasche und ging aus seinem Zimmer
+quer durch einen kleinen Gang in das Zimmer seines Vaters, in dem er
+schon seit Monaten nicht gewesen war. Es bestand auch sonst keine
+Nötigung dazu, denn er verkehrte mit seinem Vater ständig im Geschäft,
+das Mittagessen nahmen sie gleichzeitig in einem Speisehaus ein, abends
+versorgte sich zwar jeder nach Belieben, doch saßen sie dann meistens,
+wenn nicht Georg, wie es am häufigsten geschah, mit Freunden beisammen
+war oder jetzt seine Braut besuchte, noch ein Weilchen, jeder mit seiner
+Zeitung, im gemeinsamen Wohnzimmer.
+
+Georg staunte darüber, wie dunkel das Zimmer des Vaters selbst an diesem
+sonnigen Vormittag war. Einen solchen Schatten warf also die hohe Mauer,
+die sich jenseits des schmalen Hofes erhob. Der Vater saß beim Fenster
+in einer Ecke, die mit verschiedenen Andenken an die selige Mutter
+ausgeschmückt war, und las die Zeitung, die er seitlich vor die Augen
+hielt, wodurch er irgendeine Augenschwäche auszugleichen suchte. Auf dem
+Tisch standen die Reste des Frühstücks, von dem nicht viel verzehrt zu
+sein schien.
+
+»Ah, Georg!« sagte der Vater und ging ihm gleich entgegen. Sein schwerer
+Schlafrock öffnete sich im Gehen, die Enden umflatterten ihn – »mein
+Vater ist noch immer ein Riese«, sagte sich Georg.
+
+»Hier ist es ja unerträglich dunkel«, sagte er dann.
+
+»Ja, dunkel ist es schon«, antwortete der Vater.
+
+»Das Fenster hast du auch geschlossen?«
+
+»Ich habe es lieber so.«
+
+»Es ist ja ganz warm draußen«, sagte Georg, wie im Nachhang zu dem
+Früheren, und setzte sich.
+
+Der Vater räumte das Frühstücksgeschirr ab und stellte es auf einen
+Kasten.
+
+»Ich wollte dir eigentlich nur sagen,« fuhr Georg fort, der den
+Bewegungen des alten Mannes ganz verloren folgte, »daß ich nun doch nach
+Petersburg meine Verlobung angezeigt habe.« Er zog den Brief ein wenig
+aus der Tasche und ließ ihn wieder zurückfallen.
+
+»Nach Petersburg?« fragte der Vater.
+
+»Meinem Freunde doch«, sagte Georg und suchte des Vaters Augen. – »Im
+Geschäft ist er doch ganz anders,« dachte er, »wie er hier breit sitzt
+und die Arme über der Brust kreuzt.«
+
+»Ja. Deinem Freunde«, sagte der Vater mit Betonung.
+
+»Du weißt doch, Vater, daß ich ihm meine Verlobung zuerst verschweigen
+wollte. Aus Rücksichtnahme, aus keinem anderen Grunde sonst. Du weißt
+selbst, er ist ein schwieriger Mensch. Ich sagte mir, von anderer Seite
+kann er von meiner Verlobung wohl erfahren, wenn das auch bei seiner
+einsamen Lebensweise kaum wahrscheinlich ist – das kann ich nicht
+hindern –, aber von mir selbst soll er es nun einmal nicht erfahren.«
+
+»Und jetzt hast du es dir wieder anders überlegt?« fragte der Vater,
+legte die große Zeitung auf den Fensterbord und auf die Zeitung die
+Brille, die er mit der Hand bedeckte.
+
+»Ja, jetzt habe ich es mir wieder überlegt. Wenn er mein guter Freund
+ist, sagte ich mir, dann ist meine glückliche Verlobung auch für ihn ein
+Glück. Und deshalb habe ich nicht mehr gezögert, es ihm anzuzeigen. Ehe
+ich jedoch den Brief einwarf, wollte ich es dir sagen.«
+
+»Georg,« sagte der Vater und zog den zahnlosen Mund in die Breite, »hör’
+einmal! Du bist wegen dieser Sache zu mir gekommen, um dich mit mir zu
+beraten. Das ehrt dich ohne Zweifel. Aber es ist nichts, es ist ärger
+als nichts, wenn du mir jetzt nicht die volle Wahrheit sagst. Ich will
+nicht Dinge aufrühren, die nicht hierher gehören. Seit dem Tode unserer
+teueren Mutter sind gewisse unschöne Dinge vorgegangen. Vielleicht kommt
+auch für sie die Zeit und vielleicht kommt sie früher, als wir denken.
+Im Geschäft entgeht mir manches, es wird mir vielleicht nicht verborgen
+– ich will jetzt gar nicht die Annahme machen, daß es mir verborgen
+wird –, ich bin nicht mehr kräftig genug, mein Gedächtnis läßt nach,
+ich habe nicht mehr den Blick für alle die vielen Sachen. Das ist
+erstens der Ablauf der Natur, und zweitens hat mich der Tod unseres
+Mütterchens viel mehr niedergeschlagen als dich. – Aber weil wir gerade
+bei dieser Sache halten, bei diesem Brief, so bitte ich dich, Georg,
+täusche mich nicht. Es ist eine Kleinigkeit, es ist nicht des Atems
+wert, also täusche mich nicht. Hast du wirklich diesen Freund in
+Petersburg?«
+
+Georg stand verlegen auf. »Lassen wir meine Freunde sein. Tausend
+Freunde ersetzen mir nicht meinen Vater. Weißt du, was ich glaube? Du
+schonst dich nicht genug. Aber das Alter verlangt seine Rechte. Du bist
+mir im Geschäft unentbehrlich, das weißt du ja sehr genau, aber wenn das
+Geschäft deine Gesundheit bedrohen sollte, sperre ich es noch morgen für
+immer. Das geht nicht. Wir müssen da eine andere Lebensweise für dich
+einführen. Aber von Grund aus. Du sitzt hier im Dunkel, und im
+Wohnzimmer hättest du schönes Licht. Du nippst vom Frühstück, statt dich
+ordentlich zu stärken. Du sitzt bei geschlossenem Fenster, und die Luft
+würde dir so gut tun. Nein, mein Vater! Ich werde den Arzt holen und
+seinen Vorschriften werden wir folgen. Die Zimmer werden wir wechseln,
+du wirst ins Vorderzimmer ziehen, ich hierher. Es wird keine Veränderung
+für dich sein, alles wird mit übertragen werden. Aber das alles hat
+Zeit, jetzt lege dich noch ein wenig ins Bett, du brauchst unbedingt
+Ruhe. Komm, ich werde dir beim Ausziehn helfen, du wirst sehn, ich kann
+es. Oder willst du gleich ins Vorderzimmer gehn, dann legst du dich
+vorläufig in mein Bett. Das wäre übrigens sehr vernünftig.«
+
+Georg stand knapp neben seinem Vater, der den Kopf mit dem struppigen
+weißen Haar auf die Brust hatte sinken lassen.
+
+»Georg«, sagte der Vater leise, ohne Bewegung.
+
+Georg kniete sofort neben dem Vater nieder, er sah die Pupillen in dem
+müden Gesicht des Vaters übergroß in den Winkeln der Augen auf sich
+gerichtet.
+
+»Du hast keinen Freund in Petersburg. Du bist immer ein Spaßmacher
+gewesen und hast dich auch mir gegenüber nicht zurückgehalten. Wie
+solltest du denn gerade dort einen Freund haben! Das kann ich gar nicht
+glauben.«
+
+»Denk doch noch einmal nach, Vater,« sagte Georg, hob den Vater vom
+Sessel und zog ihm, wie er nun doch recht schwach dastand, den
+Schlafrock aus, »jetzt wird es bald drei Jahre her sein, da war ja mein
+Freund bei uns zu Besuch. Ich erinnere mich noch, daß du ihn nicht
+besonders gern hattest. Wenigstens zweimal habe ich ihn vor dir
+verleugnet, trotzdem er gerade bei mir im Zimmer saß. Ich konnte ja
+deine Abneigung gegen ihn ganz gut verstehn, mein Freund hat seine
+Eigentümlichkeiten. Aber dann hast du dich doch auch wieder ganz gut mit
+ihm unterhalten. Ich war damals noch so stolz darauf, daß du ihm
+zuhörtest, nicktest und fragtest. Wenn du nachdenkst, mußt du dich
+erinnern. Er erzählte damals unglaubliche Geschichten von der russischen
+Revolution. Wie er z. B. auf einer Geschäftsreise in Kiew bei einem
+Tumult einen Geistlichen auf einem Balkon gesehen hatte, der sich ein
+breites Blutkreuz in die flache Hand schnitt, diese Hand erhob und die
+Menge anrief. Du hast ja selbst diese Geschichte hie und da
+wiedererzählt.«
+
+Währenddessen war es Georg gelungen, den Vater wieder niederzusetzen und
+ihm die Trikothose, die er über den Leinenunterhosen trug, sowie die
+Socken vorsichtig auszuziehn. Beim Anblick der nicht besonders reinen
+Wäsche machte er sich Vorwürfe, den Vater vernachlässigt zu haben. Es
+wäre sicherlich auch seine Pflicht gewesen, über den Wäschewechsel
+seines Vaters zu wachen. Er hatte mit seiner Braut darüber, wie sie die
+Zukunft des Vaters einrichten wollten, noch nicht ausdrücklich
+gesprochen, denn sie hatten stillschweigend vorausgesetzt, daß der Vater
+allein in der alten Wohnung bleiben würde. Doch jetzt entschloß er sich
+kurz mit aller Bestimmtheit, den Vater in seinen künftigen Haushalt
+mitzunehmen. Es schien ja fast, wenn man genauer zusah, daß die Pflege,
+die dort dem Vater bereitet werden sollte, zu spät kommen könnte.
+
+Auf seinen Armen trug er den Vater ins Bett. Ein schreckliches Gefühl
+hatte er, als er während der paar Schritte zum Bett hin merkte, daß an
+seiner Brust der Vater mit seiner Uhrkette spiele. Er konnte ihn nicht
+gleich ins Bett legen, so fest hielt er sich an dieser Uhrkette.
+
+Kaum war er aber im Bett, schien alles gut. Er deckte sich selbst zu und
+zog dann die Bettdecke noch besonders weit über die Schulter. Er sah
+nicht unfreundlich zu Georg hinauf.
+
+»Nicht wahr, du erinnerst dich schon an ihn?« fragte Georg und nickte
+ihm aufmunternd zu.
+
+»Bin ich jetzt gut zugedeckt?« fragte der Vater, als könne er nicht
+nachschauen, ob die Füße genug bedeckt seien.
+
+»Es gefällt dir also schon im Bett«, sagte Georg und legte das Deckzeug
+besser um ihn.
+
+»Bin ich gut zugedeckt?« fragte der Vater noch einmal und schien auf die
+Antwort besonders aufzupassen.
+
+»Sei nur ruhig, du bist gut zugedeckt.«
+
+»Nein!« rief der Vater, daß die Antwort an die Frage stieß, warf die
+Decke zurück mit einer Kraft, daß sie einen Augenblick im Fluge sich
+ganz entfaltete, und stand aufrecht im Bett. Nur eine Hand hielt er
+leicht an den Plafond. »Du wolltest mich zudecken, das weiß ich, mein
+Früchtchen, aber zugedeckt bin ich noch nicht. Und ist es auch die
+letzte Kraft, genug für dich, zuviel für dich. Wohl kenne ich deinen
+Freund. Er wäre ein Sohn nach meinem Herzen. Darum hast du ihn auch
+betrogen die ganzen Jahre lang. Warum sonst? Glaubst du, ich habe nicht
+um ihn geweint? Darum doch sperrst du dich in dein Bureau, niemand soll
+stören, der Chef ist beschäftigt – nur damit du deine falschen
+Briefchen nach Rußland schreiben kannst. Aber den Vater muß
+glücklicherweise niemand lehren, den Sohn zu durchschauen. Wie du jetzt
+geglaubt hast, du hättest ihn untergekriegt, so untergekriegt, daß du
+dich mit deinem Hintern auf ihn setzen kannst und er rührt sich nicht,
+da hat sich mein Herr Sohn zum Heiraten entschlossen!«
+
+Georg sah zum Schreckbild seines Vaters auf. Der Petersburger Freund,
+den der Vater plötzlich so gut kannte, ergriff ihn, wie noch nie.
+Verloren im weiten Rußland sah er ihn. An der Türe des leeren,
+ausgeraubten Geschäftes sah er ihn. Zwischen den Trümmern der Regale,
+den zerfetzten Waren, den fallenden Gasarmen stand er gerade noch. Warum
+hatte er so weit wegfahren müssen!
+
+»Aber schau mich an!« rief der Vater, und Georg lief, fast zerstreut,
+zum Bett, um alles zu fassen, stockte aber in der Mitte des Weges.
+
+»Weil sie die Röcke gehoben hat,« fing der Vater zu flöten an, »weil sie
+die Röcke so gehoben hat, die widerliche Gans,« und er hob, um das
+darzustellen, sein Hemd so hoch, daß man auf seinem Oberschenkel die
+Narbe aus seinen Kriegsjahren sah, »weil sie die Röcke so und so und so
+gehoben hat, hast du dich an sie herangemacht, und damit du an ihr ohne
+Störung dich befriedigen kannst, hast du unserer Mutter Andenken
+geschändet, den Freund verraten und deinen Vater ins Bett gesteckt,
+damit er sich nicht rühren kann. Aber kann er sich rühren oder nicht?«
+
+Und er stand vollkommen frei und warf die Beine. Er strahlte vor
+Einsicht.
+
+Georg stand in einem Winkel, möglichst weit vom Vater. Vor einer langen
+Weile hatte er sich fest entschlossen, alles vollkommen genau zu
+beobachten, damit er nicht irgendwie auf Umwegen, von hinten her, von
+oben herab überrascht werden könne. Jetzt erinnerte er sich wieder an
+den längst vergessenen Entschluß und vergaß ihn, wie man einen kurzen
+Faden durch ein Nadelöhr zieht.
+
+»Aber der Freund ist nun doch nicht verraten!« rief der Vater, und sein
+hin- und herbewegter Zeigefinger bekräftigte es. »Ich war sein Vertreter
+hier am Ort.«
+
+»Komödiant!« konnte sich Georg zu rufen nicht enthalten, erkannte sofort
+den Schaden und biß, nur zu spät, – die Augen erstarrt – in seine
+Zunge, daß er vor Schmerz einknickte.
+
+»Ja, freilich habe ich Komödie gespielt! Komödie! Gutes Wort! Welcher
+andere Trost blieb dem alten verwitweten Vater? Sag – und für den
+Augenblick der Antwort sei du noch mein lebender Sohn –, was blieb mir
+übrig, in meinem Hinterzimmer, verfolgt vom ungetreuen Personal, alt bis
+in die Knochen? Und mein Sohn ging im Jubel durch die Welt, schloß
+Geschäfte ab, die ich vorbereitet hatte, überpurzelte sich vor Vergnügen
+und ging vor seinem Vater mit dem verschlossenen Gesicht eines
+Ehrenmannes davon! Glaubst du, ich hätte dich nicht geliebt, ich, von
+dem du ausgingst?«
+
+»Jetzt wird er sich vorbeugen,« dachte Georg, »wenn er fiele und
+zerschmetterte!« Dieses Wort durchzischte seinen Kopf.
+
+Der Vater beugte sich vor, fiel aber nicht. Da Georg sich nicht näherte,
+wie er erwartet hatte, erhob er sich wieder.
+
+»Bleib, wo du bist, ich brauche dich nicht! Du denkst, du hast noch die
+Kraft, hierher zu kommen und hältst dich bloß zurück, weil du so willst.
+Daß du dich nicht irrst! Ich bin noch immer der viel Stärkere. Allein
+hätte ich vielleicht zurückweichen müssen, aber so hat mir die Mutter
+ihre Kraft abgegeben, mit deinem Freund habe ich mich herrlich
+verbunden, deine Kundschaft habe ich hier in der Tasche!«
+
+»Sogar im Hemd hat er Taschen!« sagte sich Georg und glaubte, er könne
+ihn mit dieser Bemerkung in der ganzen Welt unmöglich machen. Nur einen
+Augenblick dachte er das, denn immerfort vergaß er alles.
+
+»Häng dich nur in deine Braut ein und komm mir entgegen! Ich fege sie
+dir von der Seite weg, du weißt nicht wie!«
+
+Georg machte Grimassen, als glaube er das nicht. Der Vater nickte bloß,
+die Wahrheit dessen, was er sagte, beteuernd, in Georgs Ecke hin.
+
+»Wie hast du mich doch heute unterhalten, als du kamst und fragtest, ob
+du deinem Freund von der Verlobung schreiben sollst. Er weiß doch
+alles, dummer Junge, er weiß doch alles! Ich schrieb ihm doch, weil du
+vergessen hast, mir das Schreibzeug wegzunehmen. Darum kommt er schon
+seit Jahren nicht, er weiß ja alles hundertmal besser als du selbst,
+deine Briefe zerknüllt er ungelesen in der linken Hand, während er in
+der Rechten meine Briefe zum Lesen sich vorhält!«
+
+Seinen Arm schwang er vor Begeisterung über dem Kopf. »Er weiß alles
+tausendmal besser!« rief er.
+
+»Zehntausendmal!« sagte Georg, um den Vater zu verlachen, aber noch in
+seinem Munde bekam das Wort einen toternsten Klang.
+
+»Seit Jahren passe ich schon auf, daß du mit dieser Frage kämest!
+Glaubst du, mich kümmert etwas anderes? Glaubst du, ich lese Zeitungen?
+Da!« und er warf Georg ein Zeitungsblatt, das irgendwie mit ins Bett
+getragen worden war, zu. Eine alte Zeitung, mit einem Georg schon ganz
+unbekannten Namen.
+
+»Wie lange hast du gezögert, ehe du reif geworden bist! Die Mutter mußte
+sterben, sie konnte den Freudentag nicht erleben, der Freund geht
+zugrunde in seinem Rußland, schon vor drei Jahren war er gelb zum
+Wegwerfen, und ich, du siehst ja, wie es mit mir steht. Dafür hast du
+doch Augen!«
+
+»Du hast mir also aufgelauert!« rief Georg.
+
+Mitleidig sagte der Vater nebenbei: »Das wolltest du wahrscheinlich
+früher sagen. Jetzt paßt es ja gar nicht mehr.«
+
+Und lauter: »Jetzt weißt du also, was es noch außer dir gab, bisher
+wußtest du nur von dir! Ein unschuldiges Kind warst du ja eigentlich,
+aber noch eigentlicher warst du ein teuflischer Mensch! – Und darum
+wisse: Ich verurteile dich jetzt zum Tode des Ertrinkens!«
+
+Georg fühlte sich aus dem Zimmer gejagt, den Schlag, mit dem der Vater
+hinter ihm aufs Bett stürzte, trug er noch in den Ohren davon. Auf der
+Treppe, über deren Stufen er wie über eine schiefe Fläche eilte,
+überrumpelte er seine Bedienerin, die im Begriffe war heraufzugehen, um
+die Wohnung nach der Nacht aufzuräumen. »Jesus!« rief sie und verdeckte
+mit der Schürze das Gesicht, aber er war schon davon. Aus dem Tor
+sprang er, über die Fahrbahn zum Wasser trieb es ihn. Schon hielt er das
+Geländer fest, wie ein Hungriger die Nahrung. Er schwang sich über, als
+der ausgezeichnete Turner, der er in seinen Jugendjahren zum Stolz
+seiner Eltern gewesen war. Noch hielt er sich mit schwächer werdenden
+Händen fest, erspähte zwischen den Geländerstangen einen Autoomnibus,
+der mit Leichtigkeit seinen Fall übertönen würde, rief leise: »Liebe
+Eltern, ich habe euch doch immer geliebt«, und ließ sich hinabfallen.
+
+In diesem Augenblick ging über die Brücke ein geradezu unendlicher
+Verkehr.
+
+
+
+
+Von demselben Verfasser erschien ferner:
+
+Betrachtungen. 2. Auflage
+
+      Geheftet M. 2.50, Pappband M. 3.50
+      Halblederband M. 4.50
+
+Der Heizer. Ein Fragment
+
+      Geheftet M. 0.80, Gebunden M. 1.50
+
+Die Verwandlung. Novelle
+
+      Geheftet M. 1.60, Gebunden M. 2.50
+
+
+KURT WOLFF VERLAG • LEIPZIG
+
+
+
+
+
+End of the Project Gutenberg EBook of Das Urteil, by Franz Kafka
+
+*** END OF THIS PROJECT GUTENBERG EBOOK DAS URTEIL ***
+
+***** This file should be named 21593-0.txt or 21593-0.zip *****
+This and all associated files of various formats will be found in:
+        http://www.gutenberg.org/2/1/5/9/21593/
+
+Produced by Jana Srna, Alexander Bauer and the Online
+Distributed Proofreading Team at http://www.pgdp.net (This
+file was produced from images generously made available
+by Österreichische Nationalbibliothek - Austrian National
+Library)
+
+
+Updated editions will replace the previous one--the old editions
+will be renamed.
+
+Creating the works from public domain print editions means that no
+one owns a United States copyright in these works, so the Foundation
+(and you!) can copy and distribute it in the United States without
+permission and without paying copyright royalties.  Special rules,
+set forth in the General Terms of Use part of this license, apply to
+copying and distributing Project Gutenberg-tm electronic works to
+protect the PROJECT GUTENBERG-tm concept and trademark.  Project
+Gutenberg is a registered trademark, and may not be used if you
+charge for the eBooks, unless you receive specific permission.  If you
+do not charge anything for copies of this eBook, complying with the
+rules is very easy.  You may use this eBook for nearly any purpose
+such as creation of derivative works, reports, performances and
+research.  They may be modified and printed and given away--you may do
+practically ANYTHING with public domain eBooks.  Redistribution is
+subject to the trademark license, especially commercial
+redistribution.
+
+
+
+*** START: FULL LICENSE ***
+
+THE FULL PROJECT GUTENBERG LICENSE
+PLEASE READ THIS BEFORE YOU DISTRIBUTE OR USE THIS WORK
+
+To protect the Project Gutenberg-tm mission of promoting the free
+distribution of electronic works, by using or distributing this work
+(or any other work associated in any way with the phrase "Project
+Gutenberg"), you agree to comply with all the terms of the Full Project
+Gutenberg-tm License (available with this file or online at
+http://gutenberg.org/license).
+
+
+Section 1.  General Terms of Use and Redistributing Project Gutenberg-tm
+electronic works
+
+1.A.  By reading or using any part of this Project Gutenberg-tm
+electronic work, you indicate that you have read, understand, agree to
+and accept all the terms of this license and intellectual property
+(trademark/copyright) agreement.  If you do not agree to abide by all
+the terms of this agreement, you must cease using and return or destroy
+all copies of Project Gutenberg-tm electronic works in your possession.
+If you paid a fee for obtaining a copy of or access to a Project
+Gutenberg-tm electronic work and you do not agree to be bound by the
+terms of this agreement, you may obtain a refund from the person or
+entity to whom you paid the fee as set forth in paragraph 1.E.8.
+
+1.B.  "Project Gutenberg" is a registered trademark.  It may only be
+used on or associated in any way with an electronic work by people who
+agree to be bound by the terms of this agreement.  There are a few
+things that you can do with most Project Gutenberg-tm electronic works
+even without complying with the full terms of this agreement.  See
+paragraph 1.C below.  There are a lot of things you can do with Project
+Gutenberg-tm electronic works if you follow the terms of this agreement
+and help preserve free future access to Project Gutenberg-tm electronic
+works.  See paragraph 1.E below.
+
+1.C.  The Project Gutenberg Literary Archive Foundation ("the Foundation"
+or PGLAF), owns a compilation copyright in the collection of Project
+Gutenberg-tm electronic works.  Nearly all the individual works in the
+collection are in the public domain in the United States.  If an
+individual work is in the public domain in the United States and you are
+located in the United States, we do not claim a right to prevent you from
+copying, distributing, performing, displaying or creating derivative
+works based on the work as long as all references to Project Gutenberg
+are removed.  Of course, we hope that you will support the Project
+Gutenberg-tm mission of promoting free access to electronic works by
+freely sharing Project Gutenberg-tm works in compliance with the terms of
+this agreement for keeping the Project Gutenberg-tm name associated with
+the work.  You can easily comply with the terms of this agreement by
+keeping this work in the same format with its attached full Project
+Gutenberg-tm License when you share it without charge with others.
+
+1.D.  The copyright laws of the place where you are located also govern
+what you can do with this work.  Copyright laws in most countries are in
+a constant state of change.  If you are outside the United States, check
+the laws of your country in addition to the terms of this agreement
+before downloading, copying, displaying, performing, distributing or
+creating derivative works based on this work or any other Project
+Gutenberg-tm work.  The Foundation makes no representations concerning
+the copyright status of any work in any country outside the United
+States.
+
+1.E.  Unless you have removed all references to Project Gutenberg:
+
+1.E.1.  The following sentence, with active links to, or other immediate
+access to, the full Project Gutenberg-tm License must appear prominently
+whenever any copy of a Project Gutenberg-tm work (any work on which the
+phrase "Project Gutenberg" appears, or with which the phrase "Project
+Gutenberg" is associated) is accessed, displayed, performed, viewed,
+copied or distributed:
+
+This eBook is for the use of anyone anywhere at no cost and with
+almost no restrictions whatsoever.  You may copy it, give it away or
+re-use it under the terms of the Project Gutenberg License included
+with this eBook or online at www.gutenberg.org
+
+1.E.2.  If an individual Project Gutenberg-tm electronic work is derived
+from the public domain (does not contain a notice indicating that it is
+posted with permission of the copyright holder), the work can be copied
+and distributed to anyone in the United States without paying any fees
+or charges.  If you are redistributing or providing access to a work
+with the phrase "Project Gutenberg" associated with or appearing on the
+work, you must comply either with the requirements of paragraphs 1.E.1
+through 1.E.7 or obtain permission for the use of the work and the
+Project Gutenberg-tm trademark as set forth in paragraphs 1.E.8 or
+1.E.9.
+
+1.E.3.  If an individual Project Gutenberg-tm electronic work is posted
+with the permission of the copyright holder, your use and distribution
+must comply with both paragraphs 1.E.1 through 1.E.7 and any additional
+terms imposed by the copyright holder.  Additional terms will be linked
+to the Project Gutenberg-tm License for all works posted with the
+permission of the copyright holder found at the beginning of this work.
+
+1.E.4.  Do not unlink or detach or remove the full Project Gutenberg-tm
+License terms from this work, or any files containing a part of this
+work or any other work associated with Project Gutenberg-tm.
+
+1.E.5.  Do not copy, display, perform, distribute or redistribute this
+electronic work, or any part of this electronic work, without
+prominently displaying the sentence set forth in paragraph 1.E.1 with
+active links or immediate access to the full terms of the Project
+Gutenberg-tm License.
+
+1.E.6.  You may convert to and distribute this work in any binary,
+compressed, marked up, nonproprietary or proprietary form, including any
+word processing or hypertext form.  However, if you provide access to or
+distribute copies of a Project Gutenberg-tm work in a format other than
+"Plain Vanilla ASCII" or other format used in the official version
+posted on the official Project Gutenberg-tm web site (www.gutenberg.org),
+you must, at no additional cost, fee or expense to the user, provide a
+copy, a means of exporting a copy, or a means of obtaining a copy upon
+request, of the work in its original "Plain Vanilla ASCII" or other
+form.  Any alternate format must include the full Project Gutenberg-tm
+License as specified in paragraph 1.E.1.
+
+1.E.7.  Do not charge a fee for access to, viewing, displaying,
+performing, copying or distributing any Project Gutenberg-tm works
+unless you comply with paragraph 1.E.8 or 1.E.9.
+
+1.E.8.  You may charge a reasonable fee for copies of or providing
+access to or distributing Project Gutenberg-tm electronic works provided
+that
+
+- You pay a royalty fee of 20% of the gross profits you derive from
+     the use of Project Gutenberg-tm works calculated using the method
+     you already use to calculate your applicable taxes.  The fee is
+     owed to the owner of the Project Gutenberg-tm trademark, but he
+     has agreed to donate royalties under this paragraph to the
+     Project Gutenberg Literary Archive Foundation.  Royalty payments
+     must be paid within 60 days following each date on which you
+     prepare (or are legally required to prepare) your periodic tax
+     returns.  Royalty payments should be clearly marked as such and
+     sent to the Project Gutenberg Literary Archive Foundation at the
+     address specified in Section 4, "Information about donations to
+     the Project Gutenberg Literary Archive Foundation."
+
+- You provide a full refund of any money paid by a user who notifies
+     you in writing (or by e-mail) within 30 days of receipt that s/he
+     does not agree to the terms of the full Project Gutenberg-tm
+     License.  You must require such a user to return or
+     destroy all copies of the works possessed in a physical medium
+     and discontinue all use of and all access to other copies of
+     Project Gutenberg-tm works.
+
+- You provide, in accordance with paragraph 1.F.3, a full refund of any
+     money paid for a work or a replacement copy, if a defect in the
+     electronic work is discovered and reported to you within 90 days
+     of receipt of the work.
+
+- You comply with all other terms of this agreement for free
+     distribution of Project Gutenberg-tm works.
+
+1.E.9.  If you wish to charge a fee or distribute a Project Gutenberg-tm
+electronic work or group of works on different terms than are set
+forth in this agreement, you must obtain permission in writing from
+both the Project Gutenberg Literary Archive Foundation and Michael
+Hart, the owner of the Project Gutenberg-tm trademark.  Contact the
+Foundation as set forth in Section 3 below.
+
+1.F.
+
+1.F.1.  Project Gutenberg volunteers and employees expend considerable
+effort to identify, do copyright research on, transcribe and proofread
+public domain works in creating the Project Gutenberg-tm
+collection.  Despite these efforts, Project Gutenberg-tm electronic
+works, and the medium on which they may be stored, may contain
+"Defects," such as, but not limited to, incomplete, inaccurate or
+corrupt data, transcription errors, a copyright or other intellectual
+property infringement, a defective or damaged disk or other medium, a
+computer virus, or computer codes that damage or cannot be read by
+your equipment.
+
+1.F.2.  LIMITED WARRANTY, DISCLAIMER OF DAMAGES - Except for the "Right
+of Replacement or Refund" described in paragraph 1.F.3, the Project
+Gutenberg Literary Archive Foundation, the owner of the Project
+Gutenberg-tm trademark, and any other party distributing a Project
+Gutenberg-tm electronic work under this agreement, disclaim all
+liability to you for damages, costs and expenses, including legal
+fees.  YOU AGREE THAT YOU HAVE NO REMEDIES FOR NEGLIGENCE, STRICT
+LIABILITY, BREACH OF WARRANTY OR BREACH OF CONTRACT EXCEPT THOSE
+PROVIDED IN PARAGRAPH F3.  YOU AGREE THAT THE FOUNDATION, THE
+TRADEMARK OWNER, AND ANY DISTRIBUTOR UNDER THIS AGREEMENT WILL NOT BE
+LIABLE TO YOU FOR ACTUAL, DIRECT, INDIRECT, CONSEQUENTIAL, PUNITIVE OR
+INCIDENTAL DAMAGES EVEN IF YOU GIVE NOTICE OF THE POSSIBILITY OF SUCH
+DAMAGE.
+
+1.F.3.  LIMITED RIGHT OF REPLACEMENT OR REFUND - If you discover a
+defect in this electronic work within 90 days of receiving it, you can
+receive a refund of the money (if any) you paid for it by sending a
+written explanation to the person you received the work from.  If you
+received the work on a physical medium, you must return the medium with
+your written explanation.  The person or entity that provided you with
+the defective work may elect to provide a replacement copy in lieu of a
+refund.  If you received the work electronically, the person or entity
+providing it to you may choose to give you a second opportunity to
+receive the work electronically in lieu of a refund.  If the second copy
+is also defective, you may demand a refund in writing without further
+opportunities to fix the problem.
+
+1.F.4.  Except for the limited right of replacement or refund set forth
+in paragraph 1.F.3, this work is provided to you 'AS-IS' WITH NO OTHER
+WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+WARRANTIES OF MERCHANTIBILITY OR FITNESS FOR ANY PURPOSE.
+
+1.F.5.  Some states do not allow disclaimers of certain implied
+warranties or the exclusion or limitation of certain types of damages.
+If any disclaimer or limitation set forth in this agreement violates the
+law of the state applicable to this agreement, the agreement shall be
+interpreted to make the maximum disclaimer or limitation permitted by
+the applicable state law.  The invalidity or unenforceability of any
+provision of this agreement shall not void the remaining provisions.
+
+1.F.6.  INDEMNITY - You agree to indemnify and hold the Foundation, the
+trademark owner, any agent or employee of the Foundation, anyone
+providing copies of Project Gutenberg-tm electronic works in accordance
+with this agreement, and any volunteers associated with the production,
+promotion and distribution of Project Gutenberg-tm electronic works,
+harmless from all liability, costs and expenses, including legal fees,
+that arise directly or indirectly from any of the following which you do
+or cause to occur: (a) distribution of this or any Project Gutenberg-tm
+work, (b) alteration, modification, or additions or deletions to any
+Project Gutenberg-tm work, and (c) any Defect you cause.
+
+
+Section  2.  Information about the Mission of Project Gutenberg-tm
+
+Project Gutenberg-tm is synonymous with the free distribution of
+electronic works in formats readable by the widest variety of computers
+including obsolete, old, middle-aged and new computers.  It exists
+because of the efforts of hundreds of volunteers and donations from
+people in all walks of life.
+
+Volunteers and financial support to provide volunteers with the
+assistance they need, is critical to reaching Project Gutenberg-tm's
+goals and ensuring that the Project Gutenberg-tm collection will
+remain freely available for generations to come.  In 2001, the Project
+Gutenberg Literary Archive Foundation was created to provide a secure
+and permanent future for Project Gutenberg-tm and future generations.
+To learn more about the Project Gutenberg Literary Archive Foundation
+and how your efforts and donations can help, see Sections 3 and 4
+and the Foundation web page at http://www.pglaf.org.
+
+
+Section 3.  Information about the Project Gutenberg Literary Archive
+Foundation
+
+The Project Gutenberg Literary Archive Foundation is a non profit
+501(c)(3) educational corporation organized under the laws of the
+state of Mississippi and granted tax exempt status by the Internal
+Revenue Service.  The Foundation's EIN or federal tax identification
+number is 64-6221541.  Its 501(c)(3) letter is posted at
+http://pglaf.org/fundraising.  Contributions to the Project Gutenberg
+Literary Archive Foundation are tax deductible to the full extent
+permitted by U.S. federal laws and your state's laws.
+
+The Foundation's principal office is located at 4557 Melan Dr. S.
+Fairbanks, AK, 99712., but its volunteers and employees are scattered
+throughout numerous locations.  Its business office is located at
+809 North 1500 West, Salt Lake City, UT 84116, (801) 596-1887, email
+business@pglaf.org.  Email contact links and up to date contact
+information can be found at the Foundation's web site and official
+page at http://pglaf.org
+
+For additional contact information:
+     Dr. Gregory B. Newby
+     Chief Executive and Director
+     gbnewby@pglaf.org
+
+
+Section 4.  Information about Donations to the Project Gutenberg
+Literary Archive Foundation
+
+Project Gutenberg-tm depends upon and cannot survive without wide
+spread public support and donations to carry out its mission of
+increasing the number of public domain and licensed works that can be
+freely distributed in machine readable form accessible by the widest
+array of equipment including outdated equipment.  Many small donations
+($1 to $5,000) are particularly important to maintaining tax exempt
+status with the IRS.
+
+The Foundation is committed to complying with the laws regulating
+charities and charitable donations in all 50 states of the United
+States.  Compliance requirements are not uniform and it takes a
+considerable effort, much paperwork and many fees to meet and keep up
+with these requirements.  We do not solicit donations in locations
+where we have not received written confirmation of compliance.  To
+SEND DONATIONS or determine the status of compliance for any
+particular state visit http://pglaf.org
+
+While we cannot and do not solicit contributions from states where we
+have not met the solicitation requirements, we know of no prohibition
+against accepting unsolicited donations from donors in such states who
+approach us with offers to donate.
+
+International donations are gratefully accepted, but we cannot make
+any statements concerning tax treatment of donations received from
+outside the United States.  U.S. laws alone swamp our small staff.
+
+Please check the Project Gutenberg Web pages for current donation
+methods and addresses.  Donations are accepted in a number of other
+ways including checks, online payments and credit card donations.
+To donate, please visit: http://pglaf.org/donate
+
+
+Section 5.  General Information About Project Gutenberg-tm electronic
+works.
+
+Professor Michael S. Hart is the originator of the Project Gutenberg-tm
+concept of a library of electronic works that could be freely shared
+with anyone.  For thirty years, he produced and distributed Project
+Gutenberg-tm eBooks with only a loose network of volunteer support.
+
+
+Project Gutenberg-tm eBooks are often created from several printed
+editions, all of which are confirmed as Public Domain in the U.S.
+unless a copyright notice is included.  Thus, we do not necessarily
+keep eBooks in compliance with any particular paper edition.
+
+
+Most people start at our Web site which has the main PG search facility:
+
+     http://www.gutenberg.org
+
+This Web site includes information about Project Gutenberg-tm,
+including how to make donations to the Project Gutenberg Literary
+Archive Foundation, how to help produce our new eBooks, and how to
+subscribe to our email newsletter to hear about new eBooks.
+
