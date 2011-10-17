@@ -6,7 +6,7 @@ import com.google.gwt.dom.client.Node;
 import com.vaadin.terminal.gwt.client.VConsole;
 
 import de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplStandard.Range;
-import de.catma.ui.tagger.client.ui.shared.EditorElementID;
+import de.catma.ui.tagger.client.ui.shared.ContentElementID;
 
 public class RangeConverter {
 	private static enum Direction {
@@ -16,7 +16,7 @@ public class RangeConverter {
 
 	
 	public TextRange convertToTextRange(Range range) {
-		Node root = Document.get().getElementById(EditorElementID.raw_text.name());
+		Node root = Document.get().getElementById(ContentElementID.CONTENT.name());
 		
 		int startPos = findPos(range.getStartNode(), root)+range.getStartOffset();
 		int endPos = findPos(range.getEndNode(), root)+range.getEndOffset();
@@ -27,7 +27,7 @@ public class RangeConverter {
 	}
 	
 	public NodeRange convertToNodeRange(TextRange textRange) {
-		Node root = Document.get().getElementById(EditorElementID.raw_text.name());
+		Node root = Document.get().getElementById(ContentElementID.CONTENT.name());
 		
 		Node textLeaf = LeafFinder.getFirstTextLeaf(root);
 		//TODO: should not return null, but better handle this case here and elsewhere in this class 

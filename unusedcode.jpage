@@ -1,0 +1,108 @@
+	//TODO: remove Tag (js+java) / load Markup (java)
+	public List<Range> addTag(String tag, List<TaggedNode> taggedNodes) {
+		ArrayList<Range> result = new ArrayList<Range>();
+		List<Pair<TaggedNode, TextRange>> taggedTextRanges = new ArrayList<Pair<TaggedNode,TextRange>>();
+		
+		for(TaggedNode tn : taggedNodes) {
+			Element segment = getSegmentByID(tn.getId());
+			TextRange tr = (TextRange)segment.getChild(tn.getNodeIndex());
+			taggedTextRanges.add(new Pair<TaggedNode, HTMLWrapper.TextRange>(tn,tr));
+		}		
+		
+		for(Pair<TaggedNode, TextRange> taggedTextRange : taggedTextRanges) {
+			TaggedNode tn = taggedTextRange.getFirst();
+			Element segment = getSegmentByID(tn.getId());
+			TextRange tr = taggedTextRange.getSecond();
+			
+			int referencePoint = (int)tr.getRange().getStartPoint();
+			
+			Range taggedRange = new Range(
+					referencePoint+tn.getStartOffset(),
+					referencePoint+tn.getEndOffset());
+			
+			result.add(taggedRange);
+			System.out.println( "added tagged range: " + taggedRange);
+			List<Range> disjointRanges = tr.getRange().getDisjointRanges(taggedRange);
+
+			if (disjointRanges.size() == 2) {
+				Range before = disjointRanges.get(0);
+				segment.insertChild(
+						new TextRange(
+								convertStandardToHTMLSolidWhitespace(text.substring(
+									(int)before.getStartPoint(),
+									(int)before.getEndPoint())),
+							before), 
+						segment.indexOf(tr));
+				Range after = disjointRanges.get(1);
+				segment.insertChild(
+						new TextRange(
+								convertStandardToHTMLSolidWhitespace(text.substring(
+										(int)after.getStartPoint(),
+										(int)after.getEndPoint())),
+								after), 
+							segment.indexOf(tr)+1);
+				
+			}
+			else if (disjointRanges.size() == 1) {
+				
+				Range disjointRange = disjointRanges.get(0);
+				int insertionPos = 0;
+				
+				if (disjointRange.startsAfter(taggedRange.getStartPoint())) {
+					insertionPos = segment.indexOf(tr)+1;
+				}
+				else {
+					insertionPos = segment.indexOf(tr);
+				}
+				
+				segment.insertChild(
+						new TextRange(
+							convertStandardToHTMLSolidWhitespace(text.substring(
+									(int)disjointRange.getStartPoint(),
+									(int)disjointRange.getEndPoint())),
+							disjointRange), 
+						insertionPos);
+			}
+			Element newSegment = new Element(HTMLElement.span.name());
+			newSegment.addAttribute(new Attribute(HTMLAttribute.id.name(), tn.getTaggedSpanId()));
+
+			newSegment.appendChild(
+					new TextRange(
+						convertStandardToHTMLSolidWhitespace(text.substring(
+								(int)taggedRange.getStartPoint(), 
+								(int)taggedRange.getEndPoint())),
+						taggedRange));
+			
+			segment.replaceChild(tr, newSegment);
+		}
+
+		return result;
+	}
+
+
+	private String convertStandardToHTMLSolidWhitespace(String buf) {
+		Matcher matcher = Pattern.compile(LINE_CONTENT_PATTERN).matcher(buf);
+		StringBuilder result = new StringBuilder();
+		
+		while(matcher.find()) {
+			if (matcher.group(WORDCHARACTER_GROUP) != null) {
+				result.append(matcher.group(WORDCHARACTER_GROUP));
+			}
+			if ((matcher.group(WHITESPACE_GROUP) != null) && (!matcher.group(WHITESPACE_GROUP).isEmpty())){
+				result.append(getSolidSpace(matcher.group(WHITESPACE_GROUP).length()));
+			}
+			if (matcher.group(LINE_SEPARATOR_GROUP) != null) {
+				result.append(getSolidSpace(matcher.group(LINE_SEPARATOR_GROUP).length()));
+			}
+		}
+		
+		return result.toString();
+	}
+	
+	private Element getSegmentByID(String id) {
+		Nodes nodes = htmlDocModel.query("//*[@"+HTMLAttribute.id.name()+"='"+id+"']");
+		if (nodes.size() > 0) {
+			return (Element)nodes.get(0);
+		}
+		throw new IllegalStateException("unable to find segment with id " + id);
+	}

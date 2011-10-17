@@ -1,7 +1,8 @@
 package de.catma.ui.tagger.client.ui.shared;
 
-public enum TaggerEventAttribute {
+public enum EventAttribute {
 	HTML,
 	TAGEVENT, 
+	LOGEVENT, 
 	;
 }

@@ -85,7 +85,7 @@ public class SourceUploader extends CustomComponent
         
 		try {
 			String text = streamToString(new FileInputStream(file), "UTF-8");
-			System.out.println(text);
+			//System.out.println(text);
 	        tagger.setText(text);
 		} catch (Exception e) {
 			e.printStackTrace();

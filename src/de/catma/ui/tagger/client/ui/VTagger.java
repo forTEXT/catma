@@ -2,6 +2,7 @@ package de.catma.ui.tagger.client.ui;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -11,7 +12,6 @@ import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
-import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.FocusWidget;
 import com.google.gwt.user.client.ui.HTML;
@@ -22,15 +22,16 @@ import com.vaadin.terminal.gwt.client.VConsole;
 
 import de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplStandard;
 import de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplStandard.Range;
-import de.catma.ui.tagger.client.ui.shared.TaggedNode;
-import de.catma.ui.tagger.client.ui.shared.TaggerEventAttribute;
+import de.catma.ui.tagger.client.ui.menu.TagMenu;
+import de.catma.ui.tagger.client.ui.menu.MenuItemListener;
+import de.catma.ui.tagger.client.ui.shared.EventAttribute;
+import de.catma.ui.tagger.client.ui.shared.TagEvent;
 
 /**
  * Client side widget which communicates with the server. Messages from the
  * server are shown as HTML and mouse clicks are sent to the server.
  */
-public class VTagger extends FocusWidget 
-	implements HasTagEventHandlers, Paintable, MouseUpHandler, TagEventHandler {
+public class VTagger extends FocusWidget implements Paintable, MouseUpHandler {
 
 	/** Set the CSS class name to allow styling. */
 	public static final String TAGGER_STYLE_CLASS = "v-tagger";
@@ -63,7 +64,13 @@ public class VTagger extends FocusWidget
 		sinkEvents(Event.ONMOUSEUP);
 
 		addMouseUpHandler(this);
-		addTagEventHandler(this);
+
+		addMouseMoveHandler(new TagMenu(new MenuItemListener() {
+			
+			public void menuItemSelected(String action) {
+				logToServer(action);
+			}
+		}));
 	}
 	
 	public void onMouseUp(MouseUpEvent event) {
@@ -71,11 +78,6 @@ public class VTagger extends FocusWidget
 		VConsole.log("Ranges: " + lastRangeList.size());
 	}
 	
-	public void onTagEvent(TagEvent event) {
-		client.updateVariable(
-			paintableId, TaggerEventAttribute.TAGEVENT.name(), event.toString(), true);
-	}
-
     /**
      * Called whenever an update is received from the server 
      */
@@ -95,12 +97,12 @@ public class VTagger extends FocusWidget
 		// Save the client side identifier (paintable id) for the widget
 		this.paintableId = uidl.getId();
 
-		if (uidl.hasAttribute(TaggerEventAttribute.HTML.name())) {
+		if (uidl.hasAttribute(EventAttribute.HTML.name())) {
 			VConsole.log("setting html");
-			setHTML(new HTML(uidl.getStringAttribute(TaggerEventAttribute.HTML.name())));
+			setHTML(new HTML(uidl.getStringAttribute(EventAttribute.HTML.name())));
 		}
-		if (uidl.hasAttribute(TaggerEventAttribute.TAGEVENT.name())) {
-			String tag = uidl.getStringAttribute(TaggerEventAttribute.TAGEVENT.name());
+		if (uidl.hasAttribute(EventAttribute.TAGEVENT.name())) {
+			String tag = uidl.getStringAttribute(EventAttribute.TAGEVENT.name());
 			VConsole.log("adding tag: " + tag);
 			addTag(tag);
 		}
@@ -126,30 +128,33 @@ public class VTagger extends FocusWidget
 			//TODO: flatten ranges to prevent multiple tagging of the same range with the same instance!
 			
 			RangeConverter converter = new RangeConverter();
-			NodeRange firstRange = 
-					converter.convertToNodeRange(getElement(), lastRangeList.remove(0));
 
-			List<TextRange> remainingTextRanges = new ArrayList<TextRange>();
+			List<TextRange> textRanges = new ArrayList<TextRange>();
 			for (Range range : lastRangeList) { 
-				remainingTextRanges.add(converter.convertToTextRange(range));
+				textRanges.add(converter.convertToTextRange(range));
 			}
 			
-			VConsole.log("adding tag to range: " + firstRange);
-			addTagToRange(taggedSpanFactory, firstRange);
-			VConsole.log("added tag to range");
-			
-			for (TextRange textRange : remainingTextRanges) {
+			for (TextRange textRange : textRanges) {
 				NodeRange nodeRange = converter.convertToNodeRange(textRange);
 				VConsole.log("adding tag to range: " + nodeRange);
 				addTagToRange(taggedSpanFactory, nodeRange);
 				VConsole.log("added tag to range");
 			}
 
+			TagEvent te = new TagEvent(tag, textRanges);
+			sendMessage(EventAttribute.LOGEVENT, "TAGEVENT.toString: " + te.toString());
+			sendMessage(EventAttribute.TAGEVENT, te.toMap());
 		}
 		else {
 			VConsole.log("no range to tag");
 		}
 	}
+
+	
+	public void logToServer(String logMsg) {
+		sendMessage(EventAttribute.LOGEVENT, logMsg);
+	}
+	
 	
 	public void addTagToRange(TaggedSpanFactory taggedSpanFactory, NodeRange range) {
 		
@@ -180,11 +185,6 @@ public class VTagger extends FocusWidget
 		}
 	}
 	
-	
-	public HandlerRegistration addTagEventHandler(TagEventHandler handler) {
-		return addHandler(handler, TagEvent.getType());
-	}
-	
 	private void addTag(
 			TaggedSpanFactory taggedSpanFactory, 
 			Node node, int originalStartOffset, int originalEndOffset) {
@@ -195,7 +195,6 @@ public class VTagger extends FocusWidget
 		int endOffset = Math.max(originalStartOffset, originalEndOffset);
 		String nodeText = node.getNodeValue();
 		Node nodeParent = node.getParentNode();
-		int nodeIndex = AffectedNodesFinder.indexOf(nodeParent, node);
 
 		if (startOffset != 0) { // does the tagged sequence start at the beginning?
 			// no, ok so we create a separate text node for the untagged part at the beginning
@@ -223,14 +222,6 @@ public class VTagger extends FocusWidget
 		
 		// remove the old node which is no longer needed
 		nodeParent.removeChild(node);
-
-		TagEvent te = new TagEvent(
-					taggedSpanFactory.getTag(), 
-						new TaggedNode(
-								Element.as(nodeParent).getId(), nodeIndex,
-								startOffset, endOffset, taggedSpan.getId()));
-		VConsole.log("firing event " +  te.toString());
-		fireEvent(te); 
 	}
 
 	private void addTag(
@@ -238,13 +229,10 @@ public class VTagger extends FocusWidget
 			Node startNode, int startOffset, Node endNode, int endOffset) {
 
 		AffectedNodesFinder tw = new AffectedNodesFinder(getElement(), startNode, endNode);
-		List<TaggedNode> taggedNodes = new ArrayList<TaggedNode>();
 		
 		String startNodeText = startNode.getNodeValue();
-		int startNodeIndex = AffectedNodesFinder.indexOf(startNode.getParentNode(), startNode);
 		Node startNodeParent = startNode.getParentNode();
 		String endNodeText = endNode.getNodeValue();
-		int endNodeIndex = AffectedNodesFinder.indexOf(endNode.getParentNode(), endNode);
 		Node endNodeParent = endNode.getParentNode();
 		
 		if (endNodeText == null) { // node is a non text node like line breaks
@@ -296,12 +284,6 @@ public class VTagger extends FocusWidget
 			Element taggedSpan = 
 					taggedSpanFactory.createTaggedSpan(
 							startNodeText.substring(markedStartSeqBeginIdx, markedStartSeqEndIdx));
-			taggedNodes.add(
-					new TaggedNode(
-							startNode.getParentElement().getId(), 
-							startNodeIndex,
-							markedStartSeqBeginIdx, markedStartSeqEndIdx,
-							taggedSpan.getId()));
 			
 			if (tw.isAfter()) {
 				// insert unmarked text seqence before the old node
@@ -330,13 +312,6 @@ public class VTagger extends FocusWidget
 			Element taggedSpan = 
 				taggedSpanFactory.createTaggedSpan(affectedNode.getNodeValue());
 			
-			taggedNodes.add(
-					new TaggedNode(
-							affectedNode.getParentElement().getId(), 
-							AffectedNodesFinder.indexOf(affectedNode.getParentNode(), affectedNode),
-							affectedNode.getNodeValue().length(),
-							taggedSpan.getId()));
-			
 			// ... and insert it
 			affectedNode.getParentNode().insertBefore(taggedSpan, affectedNode);
 			
@@ -355,13 +330,6 @@ public class VTagger extends FocusWidget
 			taggedSpanFactory.createTaggedSpan(
 						endNodeText.substring(
 								markedEndSeqBeginIdx, markedEndSeqEndIdx));
-		taggedNodes.add(
-				new TaggedNode(
-						endNode.getParentElement().getId(), 
-						endNodeIndex,
-						markedEndSeqBeginIdx, markedEndSeqEndIdx,
-						taggedSpan.getId()));
-
 		if (tw.isAfter()) {
 			// insert tagged part
 			endNodeParent.insertBefore(taggedSpan, endNode);
@@ -380,11 +348,6 @@ public class VTagger extends FocusWidget
 			// remove old node
 			endNodeParent.removeChild(endNode);
 		}
-		
-		
-		TagEvent te = new TagEvent(taggedSpanFactory.getTag(), taggedNodes);
-		VConsole.log("firing event " +  te.toDebugString());
-		fireEvent(te); 
 	}
 	
 	private boolean hasTag(Node node, String tag) {
@@ -400,5 +363,17 @@ public class VTagger extends FocusWidget
 //		while(current != null);
 		
 		return false; 
+	}
+
+
+	private void sendMessage(EventAttribute taggerEventAttribute, Map<String,Object> message) {
+		client.updateVariable(
+				paintableId, taggerEventAttribute.name(), message, true);
+	}
+	
+	private void sendMessage(EventAttribute taggerEventAttribute, String message) {
+		client.updateVariable(
+				paintableId, taggerEventAttribute.name(), message, true);
+		
 	}
 }

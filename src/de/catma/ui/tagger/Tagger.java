@@ -1,19 +1,15 @@
 package de.catma.ui.tagger;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import org.catma.document.Range;
 
 import com.vaadin.terminal.PaintException;
 import com.vaadin.terminal.PaintTarget;
 import com.vaadin.ui.AbstractComponent;
 
 import de.catma.ui.tagger.client.ui.VTagger;
-import de.catma.ui.tagger.client.ui.shared.TaggedNode;
-import de.catma.ui.tagger.client.ui.shared.TaggerEventAttribute;
+import de.catma.ui.tagger.client.ui.shared.EventAttribute;
+import de.catma.ui.tagger.client.ui.shared.TagEvent;
 
 /**
  * Server side component for the VMyComponent widget.
@@ -51,33 +47,34 @@ public class Tagger extends AbstractComponent {
 
 		// Variables set by the widget are returned in the "variables" map.
 
-		if (variables.containsKey(TaggerEventAttribute.TAGEVENT.name())) {
+		if (variables.containsKey(EventAttribute.TAGEVENT.name())) {
 
-			System.out.println(variables.get(TaggerEventAttribute.TAGEVENT.name()));
-			String event = (String)variables.get(TaggerEventAttribute.TAGEVENT.name());
-			String[] eventParts = event.split("\\^");
-			List<TaggedNode> taggedNodes = 
-					TaggedNode.createTaggedNodes(Arrays.copyOfRange(eventParts, 1, eventParts.length));
+			System.out.println(variables.get(EventAttribute.TAGEVENT.name()));
+			@SuppressWarnings("unchecked")
+			TagEvent event = new TagEvent((Map<String,Object>)variables.get(EventAttribute.TAGEVENT.name()));
 			
-			List<Range> ranges = htmlWrapper.addTag(eventParts[0], taggedNodes);
-			htmlWrapper.print();
+			System.out.println(event);
 			
+		}
+		
+		if (variables.containsKey(EventAttribute.LOGEVENT.name())) {
+			System.out.println(variables.get(EventAttribute.LOGEVENT.name()));
 		}
 	}
 	
 	private void setHTML(String html) {
-		attributes.put(TaggerEventAttribute.HTML.name(), html);
+		attributes.put(EventAttribute.HTML.name(), html);
 		requestRepaint();
 	}
 	
 	public void addTag(String tag) {
-		attributes.put(TaggerEventAttribute.TAGEVENT.name(), tag);
+		attributes.put(EventAttribute.TAGEVENT.name(), tag);
 		requestRepaint();				
 	}
 
 	public void setText(String text) {
 		this.htmlWrapper = new HTMLWrapper(text);
-		htmlWrapper.print();
+		//htmlWrapper.print();
 		setHTML(htmlWrapper.toString());
 	}
 }
