@@ -58,7 +58,8 @@ public class VTagger extends FocusWidget implements Paintable, MouseUpHandler {
 		super(element);
 		getElement().setId("vtagger-element");
 
-		setStyleName(TAGGER_STYLE_CLASS);
+		//setStyleName(TAGGER_STYLE_CLASS);
+		setStylePrimaryName(TAGGER_STYLE_CLASS);
 		
 		// Tell GWT we are interested in consuming click events
 		sinkEvents(Event.ONMOUSEUP);

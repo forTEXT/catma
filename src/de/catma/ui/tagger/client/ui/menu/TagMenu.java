@@ -7,11 +7,16 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.MouseMoveEvent;
 import com.google.gwt.event.dom.client.MouseMoveHandler;
+import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Hyperlink;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
+import com.google.gwt.user.client.ui.VerticalPanel;
 
 import de.catma.ui.tagger.client.ui.shared.ContentElementID;
 
@@ -22,30 +27,50 @@ public class TagMenu implements MouseMoveHandler {
 
 		@Override
 		public void run() {
-			loadMenu();
+			if ((lastPopup == null) 
+					|| !( (lastClientX >= lastPopup.getAbsoluteLeft()-2) 
+							&& (lastClientX <= lastPopup.getAbsoluteLeft()+lastPopup.getOffsetWidth())
+						&& (lastClientY >= lastPopup.getAbsoluteTop()-2) 
+							&& (lastClientY <= lastPopup.getAbsoluteTop()+lastPopup.getOffsetHeight()))) {
+				loadMenu();
+			}
 		}
 		
 		
 	}
 	
-	private final static class TagMenuPopup extends DialogBox {
+	private final static class TagMenuPopup extends PopupPanel {
 		
 		private TreeItem root;
 		
 		public TagMenuPopup() {
 			super(true);
-			root = new TreeItem("Tags");
+			root = new TreeItem("Tags") {
+				public void setSelected(boolean selected) {
+					super.setSelected(selected);
+				    setStyleName(DOM.getFirstChild(getElement()), "gwt-TreeItem-selected", false);
+				}
+			};
 			Tree tree = new Tree();
 			tree.addItem(root);
-			setGlassEnabled(true);
-			setAnimationEnabled(true);
-			setWidget(new Button("hello"));
-			setText("Test");
-			
+			root.setState(true);
+			root.setStyleName("tagger_menu_root");
+			VerticalPanel vPanel = new VerticalPanel();
+			vPanel.add(tree);
+			vPanel.setStylePrimaryName("tagger_menu");
+			setWidget(vPanel);
 		}
 		
 		public void addTag(String tag) {
-			root.addItem(tag);
+			HorizontalPanel hPanel = new HorizontalPanel();
+			hPanel.setSpacing(5);
+			Label l = new Label(tag);
+			l.setStyleName("menu_item_text");
+			hPanel.add(l);
+			Button tagRemoveButton = new Button("remove");
+			hPanel.add(tagRemoveButton);
+			root.addItem(hPanel);
+			root.setState(true);
 		}
 		
 		
@@ -56,6 +81,7 @@ public class TagMenu implements MouseMoveHandler {
 	private int lastClientY;
 	private MenuTimer curMenuTimer;
 	private MenuItemListener menuItemListener;
+	private TagMenuPopup lastPopup;
 	
 	public TagMenu(MenuItemListener menuItemListener) {
 		super();
@@ -69,22 +95,33 @@ public class TagMenu implements MouseMoveHandler {
 			
 			if (!taggedSpans.isEmpty()) {
 				
-				final TagMenuPopup tagMenuPopup = new TagMenuPopup();
-				tagMenuPopup.setPopupPosition(lastClientX, lastClientY);
+				hidePopup();
+				
+				lastPopup = new TagMenuPopup();
+				lastPopup.setPopupPosition(lastClientX, lastClientY+5);
 				
 				for (Element span : taggedSpans) {
-					tagMenuPopup.addTag(span.getAttribute("class"));
+					lastPopup.addTag(span.getAttribute("class"));
 				}
 				
-				
-				tagMenuPopup.show();
+				lastPopup.show();
 				
 				
 				//menuItemListener.menuItemSelected(builder.toString());
 			}
+			else {
+				hidePopup();
+			}
 		}
 	}
 
+	private void hidePopup() {
+		if ((lastPopup != null) && (lastPopup.isVisible())) {
+			lastPopup.hide();
+		}
+		
+	}
+	
 	private List<Element> findTargetSpan(Element line) {
 		ArrayList<Element> result = new ArrayList<Element>();
 		
@@ -135,6 +172,7 @@ public class TagMenu implements MouseMoveHandler {
 		if (curMenuTimer != null) {
 			curMenuTimer.cancel();
 		}
+		
 		curMenuTimer = new MenuTimer();
 		curMenuTimer.schedule(400);
 	}
