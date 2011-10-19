@@ -22,8 +22,8 @@ import com.vaadin.terminal.gwt.client.VConsole;
 
 import de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplStandard;
 import de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplStandard.Range;
+import de.catma.ui.tagger.client.ui.menu.TagActionListener;
 import de.catma.ui.tagger.client.ui.menu.TagMenu;
-import de.catma.ui.tagger.client.ui.menu.MenuItemListener;
 import de.catma.ui.tagger.client.ui.shared.EventAttribute;
 import de.catma.ui.tagger.client.ui.shared.TagEvent;
 
@@ -66,10 +66,10 @@ public class VTagger extends FocusWidget implements Paintable, MouseUpHandler {
 
 		addMouseUpHandler(this);
 
-		addMouseMoveHandler(new TagMenu(new MenuItemListener() {
+		addMouseMoveHandler(new TagMenu(new TagActionListener() {
 			
-			public void menuItemSelected(String action) {
-				logToServer(action);
+			public void tagRemove(String tag) {
+				
 			}
 		}));
 	}

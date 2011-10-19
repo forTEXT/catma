@@ -7,16 +7,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.MouseMoveEvent;
 import com.google.gwt.event.dom.client.MouseMoveHandler;
-import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.Hyperlink;
-import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.PopupPanel;
-import com.google.gwt.user.client.ui.Tree;
-import com.google.gwt.user.client.ui.TreeItem;
-import com.google.gwt.user.client.ui.VerticalPanel;
 
 import de.catma.ui.tagger.client.ui.shared.ContentElementID;
 
@@ -35,57 +26,17 @@ public class TagMenu implements MouseMoveHandler {
 				loadMenu();
 			}
 		}
-		
-		
-	}
-	
-	private final static class TagMenuPopup extends PopupPanel {
-		
-		private TreeItem root;
-		
-		public TagMenuPopup() {
-			super(true);
-			root = new TreeItem("Tags") {
-				public void setSelected(boolean selected) {
-					super.setSelected(selected);
-				    setStyleName(DOM.getFirstChild(getElement()), "gwt-TreeItem-selected", false);
-				}
-			};
-			Tree tree = new Tree();
-			tree.addItem(root);
-			root.setState(true);
-			root.setStyleName("tagger_menu_root");
-			VerticalPanel vPanel = new VerticalPanel();
-			vPanel.add(tree);
-			vPanel.setStylePrimaryName("tagger_menu");
-			setWidget(vPanel);
-		}
-		
-		public void addTag(String tag) {
-			HorizontalPanel hPanel = new HorizontalPanel();
-			hPanel.setSpacing(5);
-			Label l = new Label(tag);
-			l.setStyleName("menu_item_text");
-			hPanel.add(l);
-			Button tagRemoveButton = new Button("remove");
-			hPanel.add(tagRemoveButton);
-			root.addItem(hPanel);
-			root.setState(true);
-		}
-		
-		
-		
 	}
 	
 	private int lastClientX;
 	private int lastClientY;
 	private MenuTimer curMenuTimer;
-	private MenuItemListener menuItemListener;
+	private TagActionListener tagActionListener;
 	private TagMenuPopup lastPopup;
 	
-	public TagMenu(MenuItemListener menuItemListener) {
+	public TagMenu(TagActionListener tagActionListener) {
 		super();
-		this.menuItemListener = menuItemListener;
+		this.tagActionListener = tagActionListener;
 	}
 
 	public void loadMenu() {
@@ -97,7 +48,7 @@ public class TagMenu implements MouseMoveHandler {
 				
 				hidePopup();
 				
-				lastPopup = new TagMenuPopup();
+				lastPopup = new TagMenuPopup(tagActionListener);
 				lastPopup.setPopupPosition(lastClientX, lastClientY+5);
 				
 				for (Element span : taggedSpans) {
@@ -105,9 +56,6 @@ public class TagMenu implements MouseMoveHandler {
 				}
 				
 				lastPopup.show();
-				
-				
-				//menuItemListener.menuItemSelected(builder.toString());
 			}
 			else {
 				hidePopup();
