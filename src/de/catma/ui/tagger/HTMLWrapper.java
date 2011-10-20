@@ -9,9 +9,7 @@ import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Serializer;
 import nu.xom.Text;
-
-import org.catma.document.Range;
-
+import de.catma.core.document.Range;
 import de.catma.ui.tagger.client.ui.shared.ContentElementID;
 
 public class HTMLWrapper {
