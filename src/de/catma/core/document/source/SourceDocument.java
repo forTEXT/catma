@@ -55,15 +55,11 @@ public class SourceDocument {
 	 */
 	SourceDocument( 
 			SourceDocumentInfo sourceDocumentInfo,
-			SourceContentHandler handler,
-			URI uri,
-			ProgressListener progressListener ) throws IOException {
-		this.uri = uri;
+			SourceContentHandler handler, 
+			long checksum) throws IOException {
+		this.uri = sourceDocumentInfo.getURI();
 		this.handler = handler;
-		this.checksum =  
-			handler.load(
-					sourceDocumentInfo, uri,
-					progressListener );
+		this.checksum = checksum;
 	}
 	
 	/**

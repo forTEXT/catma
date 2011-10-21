@@ -46,7 +46,7 @@ public enum FileOSType {
 	 * type for system independent files (pdf,html...). 
 	 * (line separator is the systems line separator)
 	 */
-	INDEPENDENT(System.getenv( "line.separator" ));
+	INDEPENDENT(System.getProperty( "line.separator" ));
 	
 	private String lineSeparator;
 	

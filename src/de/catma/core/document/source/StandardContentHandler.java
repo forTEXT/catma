@@ -191,6 +191,7 @@ public class StandardContentHandler implements SourceContentHandler {
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private void showBytes( File file, int byteCount ) {
 		FileInputStream fis = null;
 		try {

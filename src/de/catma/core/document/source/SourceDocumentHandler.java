@@ -105,9 +105,10 @@ public enum SourceDocumentHandler {
 		SourceDocument document = 
 			new SourceDocument(
 					sourceDocumentInfo,
-					handler,
-					uri, 
-					progressListener );
+					handler, 
+					handler.load(
+							sourceDocumentInfo, uri,
+							progressListener) );
 		
 		return document;
 	}
@@ -160,6 +161,7 @@ public enum SourceDocumentHandler {
 			
 			if( standardContentHandler.hasUTF8BOM( file ) ) {
 				charset = Charset.forName( "UTF8" );
+				//TODO: handle non BOM UTF8
 			}
 			
 			String previewContent = 
