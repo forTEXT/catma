@@ -32,7 +32,6 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.zip.CRC32;
 
-import catma.document.FileManager;
 import de.catma.core.ExceptionHandler;
 
 /**
@@ -42,6 +41,14 @@ import de.catma.core.ExceptionHandler;
  *
  */
 public class StandardContentHandler implements SourceContentHandler {
+	
+	/**
+	 * UTF-8 <b>B</b>yte<b>O</b>rder<b>M</b>ark: 0xEF 0xBB 0xBF
+	 */
+	public static final byte[] UTF_8_BOM = 
+		new byte[] {(byte)0xEF, (byte)0xBB, (byte)0xBF};
+	
+	//TODO: BOM kram hier richtig?
 	
 	private Charset charset;
 	private String content;
@@ -227,9 +234,9 @@ public class StandardContentHandler implements SourceContentHandler {
 			byte b2 = (byte)fis.read();
 			byte b3 = (byte)fis.read();
 			
-			if( ( b1 != FileManager.UTF_8_BOM[0] ) || 
-				( b2 != FileManager.UTF_8_BOM[1]) ||
-				( b3 != FileManager.UTF_8_BOM[2]) ) {
+			if( ( b1 != UTF_8_BOM[0] ) || 
+				( b2 != UTF_8_BOM[1]) ||
+				( b3 != UTF_8_BOM[2]) ) {
 				return false;
 			}
 			

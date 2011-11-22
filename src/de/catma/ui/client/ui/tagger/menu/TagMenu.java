@@ -1,4 +1,4 @@
-package de.catma.ui.tagger.client.ui.menu;
+package de.catma.ui.client.ui.tagger.menu;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +9,7 @@ import com.google.gwt.event.dom.client.MouseMoveEvent;
 import com.google.gwt.event.dom.client.MouseMoveHandler;
 import com.google.gwt.user.client.Timer;
 
-import de.catma.ui.tagger.client.ui.shared.ContentElementID;
+import de.catma.ui.client.ui.tagger.shared.ContentElementID;
 
 
 public class TagMenu implements MouseMoveHandler {

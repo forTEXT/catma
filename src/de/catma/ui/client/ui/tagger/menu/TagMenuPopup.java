@@ -1,4 +1,4 @@
-package de.catma.ui.tagger.client.ui.menu;
+package de.catma.ui.client.ui.tagger.menu;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +14,7 @@ import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
-import de.catma.ui.common.client.ui.event.EventListenerSupport;
+import de.catma.ui.client.ui.common.event.EventListenerSupport;
 
 class TagMenuPopup extends PopupPanel {
 		

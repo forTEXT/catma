@@ -1,4 +1,4 @@
-package de.catma.ui.tagger.client.ui.shared;
+package de.catma.ui.client.ui.tagger.shared;
 
 public enum EventAttribute {
 	HTML,

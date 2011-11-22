@@ -1,4 +1,4 @@
-package de.catma.ui.common.client.ui.event;
+package de.catma.ui.client.ui.common.event;
 
 import java.util.ArrayList;
 import java.util.List;

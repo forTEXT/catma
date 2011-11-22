@@ -32,7 +32,7 @@ import javax.swing.text.rtf.RTFEditorKit;
 import org.apache.commons.io.FileUtils;
 
 /**
- * A content handler for RTF based {@link org.catma.document.source.SourceDocument}s.
+ * A content handler for RTF based {@link de.catma.document.source.SourceDocument}s.
  *
  * @author Marco Petris
  *

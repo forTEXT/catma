@@ -1,4 +1,4 @@
-package de.catma.ui.tagger.client.ui.impl;
+package de.catma.ui.client.ui.tagger.impl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +7,7 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Node;
 import com.vaadin.terminal.gwt.client.VConsole;
 
-import de.catma.ui.tagger.client.ui.DebugUtil;
+import de.catma.ui.client.ui.tagger.DebugUtil;
 
 
 public class SelectionHandlerImplStandard {

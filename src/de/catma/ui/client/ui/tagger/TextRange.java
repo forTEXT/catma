@@ -1,4 +1,4 @@
-package de.catma.ui.tagger.client.ui;
+package de.catma.ui.client.ui.tagger;
 
 public class TextRange {
 
@@ -17,6 +17,10 @@ public class TextRange {
 
 	public int getEndPos() {
 		return endPos;
+	}
+	
+	public boolean isPoint() {
+		return getStartPos()==getEndPos();
 	}
 	
 	@Override

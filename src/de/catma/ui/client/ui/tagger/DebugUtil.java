@@ -1,4 +1,4 @@
-package de.catma.ui.tagger.client.ui;
+package de.catma.ui.client.ui.tagger;
 
 import java.util.List;
 

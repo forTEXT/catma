@@ -1,4 +1,4 @@
-package de.catma.ui.tagger.client.ui.impl;
+package de.catma.ui.client.ui.tagger.impl;
 
 import com.google.gwt.core.client.JavaScriptObject;
 

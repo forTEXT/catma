@@ -17,6 +17,5 @@
 			<attribute name="owner.project.facets" value="java"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/catma_backend/bin/org"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

@@ -1,11 +1,11 @@
-package de.catma.ui.tagger.client.ui.shared;
+package de.catma.ui.client.ui.tagger.shared;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import de.catma.ui.tagger.client.ui.TextRange;
+import de.catma.ui.client.ui.tagger.TextRange;
 
 
 public class TagEvent {

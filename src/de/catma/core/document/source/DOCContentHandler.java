@@ -29,7 +29,7 @@ import java.util.zip.CRC32;
 import org.apache.poi.hwpf.extractor.WordExtractor;
 
 /**
- * A content handler for MS Word Doc based {@link org.catma.document.source.SourceDocument}s.
+ * A content handler for MS Word Doc based {@link de.catma.document.source.SourceDocument}s.
  *
  * @author Marco Petris
  *

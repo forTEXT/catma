@@ -1,4 +1,4 @@
-package de.catma.ui.tagger.client.ui;
+package de.catma.ui.client.ui.tagger;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;

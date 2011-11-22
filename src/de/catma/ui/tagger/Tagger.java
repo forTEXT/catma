@@ -7,9 +7,9 @@ import com.vaadin.terminal.PaintException;
 import com.vaadin.terminal.PaintTarget;
 import com.vaadin.ui.AbstractComponent;
 
-import de.catma.ui.tagger.client.ui.VTagger;
-import de.catma.ui.tagger.client.ui.shared.EventAttribute;
-import de.catma.ui.tagger.client.ui.shared.TagEvent;
+import de.catma.ui.client.ui.tagger.VTagger;
+import de.catma.ui.client.ui.tagger.shared.EventAttribute;
+import de.catma.ui.client.ui.tagger.shared.TagEvent;
 
 /**
  * Server side component for the VMyComponent widget.

@@ -34,7 +34,7 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
- * A content handler HTML based {@link org.catma.document.source.SourceDocument}s.
+ * A content handler HTML based {@link de.catma.document.source.SourceDocument}s.
  *
  * @author Marco Petris
  *

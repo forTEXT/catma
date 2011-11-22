@@ -1,4 +1,4 @@
-package de.catma.ui.tagger.client.ui;
+package de.catma.ui.client.ui.tagger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,12 +20,12 @@ import com.vaadin.terminal.gwt.client.Paintable;
 import com.vaadin.terminal.gwt.client.UIDL;
 import com.vaadin.terminal.gwt.client.VConsole;
 
-import de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplStandard;
-import de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplStandard.Range;
-import de.catma.ui.tagger.client.ui.menu.TagActionListener;
-import de.catma.ui.tagger.client.ui.menu.TagMenu;
-import de.catma.ui.tagger.client.ui.shared.EventAttribute;
-import de.catma.ui.tagger.client.ui.shared.TagEvent;
+import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard;
+import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard.Range;
+import de.catma.ui.client.ui.tagger.menu.TagActionListener;
+import de.catma.ui.client.ui.tagger.menu.TagMenu;
+import de.catma.ui.client.ui.tagger.shared.EventAttribute;
+import de.catma.ui.client.ui.tagger.shared.TagEvent;
 
 /**
  * Client side widget which communicates with the server. Messages from the
@@ -42,10 +42,10 @@ public class VTagger extends FocusWidget implements Paintable, MouseUpHandler {
 	private List<Range> lastRangeList; 
 
 	/** The client side widget identifier */
-	protected String paintableId;
+	private String clientID;
 
 	/** Reference to the server connection object. */
-	protected ApplicationConnection client;
+	private ApplicationConnection serverConnection;
 
 	public VTagger() {
 		this(Document.get().createDivElement());
@@ -93,10 +93,10 @@ public class VTagger extends FocusWidget implements Paintable, MouseUpHandler {
 
 		// Save reference to server connection object to be able to send
 		// user interaction later
-		this.client = client;
+		this.serverConnection = client;
 
 		// Save the client side identifier (paintable id) for the widget
-		this.paintableId = uidl.getId();
+		this.clientID = uidl.getId();
 
 		if (uidl.hasAttribute(EventAttribute.HTML.name())) {
 			VConsole.log("setting html");
@@ -132,7 +132,14 @@ public class VTagger extends FocusWidget implements Paintable, MouseUpHandler {
 
 			List<TextRange> textRanges = new ArrayList<TextRange>();
 			for (Range range : lastRangeList) { 
-				textRanges.add(converter.convertToTextRange(range));
+				TextRange textRange = converter.convertToTextRange(range);
+				if (!textRange.isPoint()) {
+					VConsole.log("converted and adding range " + textRange );
+					textRanges.add(textRange);
+				}
+				else {
+					VConsole.log("won't tag range " + textRange + " because it is a point");
+				}
 			}
 			
 			for (TextRange textRange : textRanges) {
@@ -142,9 +149,11 @@ public class VTagger extends FocusWidget implements Paintable, MouseUpHandler {
 				VConsole.log("added tag to range");
 			}
 
-			TagEvent te = new TagEvent(tag, textRanges);
-			sendMessage(EventAttribute.LOGEVENT, "TAGEVENT.toString: " + te.toString());
-			sendMessage(EventAttribute.TAGEVENT, te.toMap());
+			if (!textRanges.isEmpty()) {
+				TagEvent te = new TagEvent(tag, textRanges);
+				sendMessage(EventAttribute.LOGEVENT, "TAGEVENT.toString: " + te.toString());
+				sendMessage(EventAttribute.TAGEVENT, te.toMap());
+			}
 		}
 		else {
 			VConsole.log("no range to tag");
@@ -157,7 +166,7 @@ public class VTagger extends FocusWidget implements Paintable, MouseUpHandler {
 	}
 	
 	
-	public void addTagToRange(TaggedSpanFactory taggedSpanFactory, NodeRange range) {
+	private void addTagToRange(TaggedSpanFactory taggedSpanFactory, NodeRange range) {
 		
 		Node startNode = range.getStartNode();
 		int startOffset = range.getStartOffset();
@@ -368,13 +377,13 @@ public class VTagger extends FocusWidget implements Paintable, MouseUpHandler {
 
 
 	private void sendMessage(EventAttribute taggerEventAttribute, Map<String,Object> message) {
-		client.updateVariable(
-				paintableId, taggerEventAttribute.name(), message, true);
+		serverConnection.updateVariable(
+				clientID, taggerEventAttribute.name(), message, true);
 	}
 	
 	private void sendMessage(EventAttribute taggerEventAttribute, String message) {
-		client.updateVariable(
-				paintableId, taggerEventAttribute.name(), message, true);
+		serverConnection.updateVariable(
+				clientID, taggerEventAttribute.name(), message, true);
 		
 	}
 }

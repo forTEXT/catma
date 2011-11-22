@@ -20,7 +20,7 @@
 			<description>
 			Application widgetset</description>
 			<param-name>widgetset</param-name>
-			<param-value>de.catma.ui.tagger.CleaWidgetset</param-value>
+			<param-value>de.catma.ui.CleaWidgetset</param-value>
 		</init-param>
 	</servlet>
 	<servlet-mapping>

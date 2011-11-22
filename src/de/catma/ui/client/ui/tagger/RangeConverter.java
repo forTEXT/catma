@@ -1,12 +1,12 @@
-package de.catma.ui.tagger.client.ui;
+package de.catma.ui.client.ui.tagger;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
 import com.vaadin.terminal.gwt.client.VConsole;
 
-import de.catma.ui.tagger.client.ui.impl.SelectionHandlerImplStandard.Range;
-import de.catma.ui.tagger.client.ui.shared.ContentElementID;
+import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard.Range;
+import de.catma.ui.client.ui.tagger.shared.ContentElementID;
 
 public class RangeConverter {
 	private static enum Direction {
