@@ -27,6 +27,14 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import de.catma.core.document.source.contenthandler.DOCContentHandler;
+import de.catma.core.document.source.contenthandler.HTMLContentHandler;
+import de.catma.core.document.source.contenthandler.PDFContentHandler;
+import de.catma.core.document.source.contenthandler.ProgressListener;
+import de.catma.core.document.source.contenthandler.RTFContentHandler;
+import de.catma.core.document.source.contenthandler.SourceContentHandler;
+import de.catma.core.document.source.contenthandler.StandardContentHandler;
+
 /**
  * Handles the creation of {@link SourceDocument}s.<br>
  * 

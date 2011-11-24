@@ -17,7 +17,7 @@
  *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.catma.core.document.source;
+package de.catma.core.document.source.contenthandler;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -27,6 +27,8 @@ import java.net.URI;
 import java.util.zip.CRC32;
 
 import org.apache.poi.hwpf.extractor.WordExtractor;
+
+import de.catma.core.document.source.SourceDocumentInfo;
 
 /**
  * A content handler for MS Word Doc based {@link de.catma.document.source.SourceDocument}s.

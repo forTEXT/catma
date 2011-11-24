@@ -17,7 +17,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */ 
 
-package de.catma.core.document.source;
+package de.catma.core.document.source.contenthandler;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -33,6 +33,7 @@ import java.nio.charset.Charset;
 import java.util.zip.CRC32;
 
 import de.catma.core.ExceptionHandler;
+import de.catma.core.document.source.SourceDocumentInfo;
 
 /**
  * The standard content handler which handles text bases files.

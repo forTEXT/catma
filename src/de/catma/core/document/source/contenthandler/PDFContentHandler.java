@@ -17,29 +17,25 @@
  *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.catma.core.document.source;
+package de.catma.core.document.source.contenthandler;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
-import nu.xom.Builder;
-import nu.xom.Document;
-import nu.xom.Element;
-import nu.xom.Node;
-import nu.xom.Text;
-
 import org.apache.commons.io.FileUtils;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.util.PDFTextStripper;
+
+import de.catma.core.document.source.SourceDocumentInfo;
 
 /**
- * A content handler HTML based {@link de.catma.document.source.SourceDocument}s.
+ * A content handler for PDF based {@link de.catma.document.source.SourceDocument}s.
  *
  * @author Marco Petris
  *
  */
-public class HTMLContentHandler implements SourceContentHandler {
+public class PDFContentHandler implements SourceContentHandler {
 
     private String content;
 
@@ -48,7 +44,6 @@ public class HTMLContentHandler implements SourceContentHandler {
             URI uri, ProgressListener progressListener) throws IOException {
 
         File file = new File(uri);
-
         if( progressListener != null ) {
             progressListener.setIndeterminate(true,
                 "FileManager.loadingFile", file.getName() );
@@ -56,38 +51,25 @@ public class HTMLContentHandler implements SourceContentHandler {
 
         long checksum = FileUtils.checksumCRC32(file);
 
+        PDDocument document = null;
         try {
-            XMLReader reader =
-                XMLReaderFactory.createXMLReader("org.ccil.cowan.tagsoup.Parser");
-            Builder builder = new Builder(reader, false, new HTMLFilterFactory());
-            Document document = builder.build(file);
-            StringBuilder contentBuilder = new StringBuilder();
-            processTextNodes(contentBuilder, document.getRootElement());
-            content = contentBuilder.toString();
+            document = PDDocument.load(uri.toURL(), true);
+
+            if (document.isEncrypted()) {
+                throw new IOException("can not open pdf document because it is encrypted");
+            }
+            PDFTextStripper stripper = new PDFTextStripper();
+            stripper.setSortByPosition(true);
+            content = stripper.getText(document);
+
         }
-        catch (Exception e) {
-            throw new IOException(e);
+        finally {
+            if (document != null) {
+                document.close();
+            }
         }
 
         return checksum;
-    }
-
-    /**
-     * Appends text elements to the given builder otherwise descents deeper into the
-     * document tree.
-     * @param contentBuilder the builder is filled with text elements
-     * @param element the current element to process
-     */
-    private void processTextNodes(StringBuilder contentBuilder, Element element) {
-        for( int idx=0; idx<element.getChildCount(); idx++) {
-            Node curChild = element.getChild(idx);
-            if (curChild instanceof Text) {
-                contentBuilder.append(curChild.getValue());
-            }
-            else if (curChild instanceof Element) { //descent
-                processTextNodes(contentBuilder, (Element)curChild);
-            }
-        }
     }
 
     public String getContent(long startPoint, long endPoint) {

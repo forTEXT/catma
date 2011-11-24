@@ -4,7 +4,9 @@ import com.vaadin.Application;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.LoginForm.LoginEvent;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.LoginForm;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Window;
 
@@ -31,7 +33,11 @@ public class CleaApplication extends Application {
 
 	@Override
 	public void init() {
-		Window mainWindow = new Window("Clea");
+		final Window mainWindow = new Window("Clea");
+		
+		LoginForm lf = new LoginForm();
+		
+		
 		Panel tagManagerPanel = new Panel("Tag Manager");
 		
 		Button tagGreen = new Button("green tag");
@@ -49,7 +55,7 @@ public class CleaApplication extends Application {
 		tagLight_green.addListener(new TagSelectionHandler("tag_lightgreen", tagger));
 		tagBlue.addListener(new TagSelectionHandler("tag_blue", tagger));
 		tagRed.addListener(new TagSelectionHandler("tag_red", tagger));
-		HorizontalLayout mainLayout = new HorizontalLayout();
+		final HorizontalLayout mainLayout = new HorizontalLayout();
 		SourceUploader sourceUploader = new SourceUploader(tagger);
 		tagManagerPanel.addComponent(sourceUploader);
 		tagManagerPanel.addComponent(tagGreen);
@@ -57,7 +63,18 @@ public class CleaApplication extends Application {
 		tagManagerPanel.addComponent(tagBlue);
 		tagManagerPanel.addComponent(tagRed);
 		
-		mainWindow.setContent(mainLayout);
+		//mainWindow.setContent(mainLayout);
+		mainWindow.setContent(lf);
+		
+		lf.addListener(new LoginForm.LoginListener() {
+			
+			public void onLogin(LoginEvent event) {
+				mainWindow.setContent(mainLayout);
+				
+				CleaApplication.this.setUser(event.getLoginParameter("username"));
+				System.out.println(CleaApplication.this.getUser());
+			}
+		});
 		
 		mainLayout.addComponent(editorPanel);
 		mainLayout.setExpandRatio(editorPanel, 2);

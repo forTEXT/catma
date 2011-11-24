@@ -28,6 +28,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import de.catma.core.document.Range;
+import de.catma.core.document.source.contenthandler.SourceContentHandler;
+import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollection;
+import de.catma.core.document.standoffmarkup.user.UserMarkupCollection;
 
 /**
  * The representation of a Source Document.
@@ -38,10 +41,18 @@ import de.catma.core.document.Range;
 public class SourceDocument {
 	
 	private SourceContentHandler handler;
-	private long checksum;
-	private URI uri;
+	private ContentInfoSet contentInfoSet;
+	private IndexInfoSet indexInfoSet;
+	private TechInfoSet techInfoSet;
+	private List<StructureMarkupCollection> structureMarkupCollections;
+	private List<UserMarkupCollection> userMarkupCollections;
+	
+	
+	
+	
 	
 	/**
+	 * 
 	 * Constructor.
 	 * 
 	 * @param sourceDocumentInfo the corresponding Structure Markup Document
@@ -57,9 +68,9 @@ public class SourceDocument {
 			SourceDocumentInfo sourceDocumentInfo,
 			SourceContentHandler handler, 
 			long checksum) throws IOException {
-		this.uri = sourceDocumentInfo.getURI();
+
 		this.handler = handler;
-		this.checksum = checksum;
+
 	}
 	
 	/**
@@ -146,14 +157,4 @@ public class SourceDocument {
 		return result;
 	}
 
-	/**
-	 * @return the checksum of the Source Document
-	 */
-	public long getChecksum() {
-		return checksum;
-	}
-	
-	public URI getURI() {
-		return uri;
-	}
 }

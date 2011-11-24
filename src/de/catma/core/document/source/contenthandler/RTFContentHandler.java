@@ -17,7 +17,7 @@
  *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.catma.core.document.source;
+package de.catma.core.document.source.contenthandler;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -30,6 +30,8 @@ import javax.swing.text.Document;
 import javax.swing.text.rtf.RTFEditorKit;
 
 import org.apache.commons.io.FileUtils;
+
+import de.catma.core.document.source.SourceDocumentInfo;
 
 /**
  * A content handler for RTF based {@link de.catma.document.source.SourceDocument}s.

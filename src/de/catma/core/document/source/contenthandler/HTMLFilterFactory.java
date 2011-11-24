@@ -17,7 +17,7 @@
  *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.catma.core.document.source;
+package de.catma.core.document.source.contenthandler;
 
 import nu.xom.Element;
 import nu.xom.NodeFactory;

@@ -17,11 +17,14 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */ 
 
-package de.catma.core.document.source;
+package de.catma.core.document.source.contenthandler;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.zip.CRC32;
+
+import de.catma.core.document.source.FileType;
+import de.catma.core.document.source.SourceDocumentInfo;
 
 
 /**

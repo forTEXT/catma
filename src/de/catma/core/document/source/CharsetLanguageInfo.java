@@ -70,7 +70,7 @@ public enum CharsetLanguageInfo {
 		try {
 			is = 
 				Thread.currentThread().getContextClassLoader().getResourceAsStream(
-					"org/catma/document/source/resources/" +
+					"de/catma/document/source/resources/" +
 					"CharsetLanguageInfo.properties" );
 			try {
 				charsetLanguageInfoProperties.load( is );
