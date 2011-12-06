@@ -45,9 +45,6 @@ public class SourceDocumentInfo {
 	private URI uri;
 	private String title;
 	
-	
-	
-//	private SourceTextType sourceTextType; //FIXME: 
 	private Long checksum;
     private Locale locale;
     private List<String> unseparableCharacterSequences;
@@ -234,5 +231,9 @@ public class SourceDocumentInfo {
 
 	public URI getURI() {
 		return uri;
+	}
+	
+	public String getTitle() {
+		return title;
 	}
 }
