@@ -113,6 +113,17 @@ public class TeiElement extends Element implements Comparable<TeiElement> {
         return getAttributeValue(name.getLocalName(), "");
     }
     
+    public void setAttributeValue(Attribute name, String value) {
+    	nu.xom.Attribute attribute = getAttribute(name.getLocalName(), name.getNamespaceURI());
+    	if (attribute == null) {
+    		attribute = new nu.xom.Attribute(name.getLocalName(), name.getNamespaceURI(), value);
+    		addAttribute(attribute);
+    	}
+    	else {
+    		attribute.setValue(value);
+    	}
+    }
+    
     /**
      * @return the {@link TeiElement} which is the parent of this element or 
      * <code>null</code> if there is no parent TeiElement. 
@@ -258,6 +269,20 @@ public class TeiElement extends Element implements Comparable<TeiElement> {
 		return getAttributeValue( 
 				Attribute.xmlid.getLocalName(), 
 				Attribute.xmlid.getNamespaceURI() );
+	}
+	
+	void setID(String id) {
+    	nu.xom.Attribute attribute = 
+    			getAttribute(Attribute.xmlid.getLocalName(), Attribute.xmlid.getNamespaceURI());
+    	if (attribute == null) {
+    		attribute = new nu.xom.Attribute(
+    				Attribute.xmlid.getPrefixedName(), Attribute.xmlid.getNamespaceURI(), id);
+    		addAttribute(attribute);
+    	}
+    	else {
+    		attribute.setValue(id);
+    	}
+
 	}
     
 }

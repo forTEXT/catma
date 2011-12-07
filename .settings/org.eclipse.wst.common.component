@@ -3,6 +3,7 @@
     <wb-module deploy-name="clea">
         <wb-resource deploy-path="/" source-path="/WebContent"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/test"/>
         <property name="context-root" value="clea"/>
         <property name="java-output-path" value="/clea/build/classes"/>
     </wb-module>

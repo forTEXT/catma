@@ -34,5 +34,6 @@ public enum TeiElementName {
 	titleStmt, title, author, publisher, sourceDesc, f, fs, 
 	string, numeric, ptr, body, fvLib, seg, text, div,
 	encodingDesc, appInfo, application, label,
-    language, langUsage, profileDesc, vColl, timeline, when, u;
+    language, langUsage, profileDesc, vColl, timeline, when, u, 
+    fsdDecl, fsDecl, fsDescr, fDecl, vRange;
 }

@@ -33,6 +33,10 @@ public enum AttributeValue {
 	 */
 	type_catma( Attribute.type, "catma" ),
 	/**
+	 * 'catma_tag' value of {@link Attribute#type}.
+	 */
+	type_catma_tag( Attribute.type, "catma_tag" ),	
+	/**
 	 * 'scene' value of {@link Attribute#type}.
 	 */
 	type_scene( Attribute.type, "scene" ),

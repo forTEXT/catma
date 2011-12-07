@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<TEI xml:lang="en" xmlns="http://www.tei-c.org/ns/1.0">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title>A Rose for Emily</title>
+                <author>William Faulkner</author>
+            </titleStmt>
+            <publicationStmt>
+                <publisher>mp</publisher>
+            </publicationStmt>
+            <sourceDesc>
+                <p>Standoff Markup</p>
+                <ab>
+                    <fs xml:id="TARGET_INFO">
+                        <f name="version">
+                            <string>2</string>
+                        </f>
+                        <f name="filetype">
+                            <string>TEXT</string>
+                        </f>
+                        <f name="charset">
+                            <string>UTF-8</string>
+                        </f>
+                        <f name="fileOSType">
+                            <string>DOS</string>
+                        </f>
+                        <f name="sourceTextType">
+                            <string>PROSE</string>
+                        </f>
+                        <f name="checksum">
+                            <string>3968944867</string>
+                        </f>
+                    </fs>
+                </ab>
+            </sourceDesc>
+        </fileDesc>
+        <profileDesc>
+            <langUsage>
+                <language ident="en">English</language>
+            </langUsage>
+        </profileDesc>
+    </teiHeader>
+    <text>
+        <fs xml:id="CATMA_2fb2dca9-14e8-4127-8993-144f9dfc56fb" n="2_068768df-eb74-4aa6-97fa-9846b96d0747" type="catma_tag">
+            <f xml:id="CATMA_e7abba9c-018a-43e7-aefd-e3b31f9fda9b" name="catma_tagname">
+                <string>PTag in StdTS</string>
+            </f>
+            <f xml:id="CATMA_9aad952c-6738-4ac2-b7e7-049201f20201" name="catma_displaycolor">
+                <numeric value="-13369498"/>
+            </f>
+            <f xml:id="CATMA_fe3703a1-d07b-4a53-ad14-59779562545f" name="ChildTag_in_StdTS">
+                <fs xml:id="CATMA_ac559bf8-f7aa-4c8d-aee3-da8144d34f20" n="1_068768df-eb74-4aa6-97fa-9846b96d0747" type="catma_tag">
+                    <f xml:id="CATMA_8c6528d8-bca7-4dae-b303-39fa260b8ca8" name="catma_tagname">
+                        <string>ChildTag in StdTS</string>
+                    </f>
+                    <f xml:id="CATMA_10c1f757-e7ab-4fcc-a02c-aabc9b68d42f" name="catma_displaycolor">
+                        <numeric value="-16738048"/>
+                    </f>
+                </fs>
+            </f>
+        </fs>
+        <fvLib xml:id="CATMA_c5bd46a1-a884-4e86-985c-713baf0b9476" n="TestTagset 1_068768df-eb74-4aa6-97fa-9846b96d0747">
+            <fs xml:id="CATMA_9e7446f5-9ae1-4cef-90af-c444b0512c99" n="2_068768df-eb74-4aa6-97fa-9846b96d0747" type="catma_tag">
+                <f xml:id="CATMA_d2aae0ac-46ca-4289-9bb3-47e88854578f" name="catma_tagname">
+                    <string>PTag in TestTS</string>
+                </f>
+                <f xml:id="CATMA_176b8c3a-f1e8-4f5f-8ba4-3da96059824d" name="catma_displaycolor">
+                    <numeric value="-52225"/>
+                </f>
+                <f xml:id="CATMA_bc709556-481a-4870-8adc-c8ce3f72c595" name="Child_Tag_in_TestTS">
+                    <fs xml:id="CATMA_15ebb1b2-276a-48ad-a67b-4b120c1b79be" n="1_068768df-eb74-4aa6-97fa-9846b96d0747" type="catma_tag">
+                        <f xml:id="CATMA_6af73199-d408-4928-a26e-bf40b16e05cd" name="catma_tagname">
+                            <string>Child Tag in TestTS</string>
+                        </f>
+                        <f xml:id="CATMA_1197698d-b871-4398-90a0-e1ba79b14521" name="catma_displaycolor">
+                            <numeric value="-6750055"/>
+                        </f>
+                    </fs>
+                </f>
+            </fs>
+            <fs xml:id="CATMA_eaaf37b0-b622-420a-b740-5813c7638d7b" n="2_068768df-eb74-4aa6-97fa-9846b96d0747" type="catma_tag">
+                <f xml:id="CATMA_25efef40-fbc0-48d1-8e9f-853c4ff24531" name="catma_tagname">
+                    <string>Tag in TestTS</string>
+                </f>
+                <f xml:id="CATMA_0340e186-e798-49ec-82f0-4dd86fa0f32f" name="catma_displaycolor">
+                    <numeric value="-65536"/>
+                </f>
+                <f xml:id="CATMA_4c1d7194-d17f-4e2e-8bf2-91051b23262a" name="myProp2">
+                    <string>myPropVal2</string>
+                </f>
+            </fs>
+        </fvLib>
+        <fs xml:id="CATMA_629eb30d-f9d1-4b1a-b718-273c8d4abc8e" n="2_068768df-eb74-4aa6-97fa-9846b96d0747" type="catma_tag">
+            <f xml:id="CATMA_a9ddb840-d7ec-4274-b4c7-84b8b7adaee7" name="catma_tagname">
+                <string>Tag in StdTS</string>
+            </f>
+            <f xml:id="CATMA_67f32f81-01b9-4704-ab51-09c91e60b880" name="catma_displaycolor">
+                <numeric value="-6684673"/>
+            </f>
+            <f xml:id="CATMA_9af39fe4-ed0a-4e44-a6f8-d553cca7cc3b" name="myProp">
+                <string>myPropValue</string>
+            </f>
+        </fs>
+        <body>
+            <ab type="catma">
+                <ptr target="rose_for_emily.txt#range( /.0, /.36)" type="inclusion"/>
+                <seg ana="#CATMA_629eb30d-f9d1-4b1a-b718-273c8d4abc8e">
+                    <ptr target="rose_for_emily.txt#range( /.36, /.44)" type="inclusion"/>
+                </seg>
+                <ptr target="rose_for_emily.txt#range( /.44, /.61)" type="inclusion"/>
+                <seg ana="#CATMA_eaaf37b0-b622-420a-b740-5813c7638d7b">
+                    <ptr target="rose_for_emily.txt#range( /.61, /.65)" type="inclusion"/>
+                </seg>
+                <ptr target="rose_for_emily.txt#range( /.65, /.181)" type="inclusion"/>
+                <seg ana="#CATMA_ac559bf8-f7aa-4c8d-aee3-da8144d34f20">
+                    <ptr target="rose_for_emily.txt#range( /.181, /.190)" type="inclusion"/>
+                </seg>
+                <ptr target="rose_for_emily.txt#range( /.190, /.216)" type="inclusion"/>
+                <seg ana="#CATMA_15ebb1b2-276a-48ad-a67b-4b120c1b79be">
+                    <ptr target="rose_for_emily.txt#range( /.216, /.221)" type="inclusion"/>
+                </seg>
+                <ptr target="rose_for_emily.txt#range( /.221, /.20335)" type="inclusion"/>
+            </ab>
+        </body>
+    </text>
+</TEI>

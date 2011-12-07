@@ -44,6 +44,7 @@ public enum Attribute {
 	 * 'value'-attribute of &lt;numeric&gt;
 	 */
 	numeric_value( TeiElementName.numeric, "value" ),
+	numeric_max( TeiElementName.numeric, "max" ),
 	/**
 	 * 'target'-attribute of &lt;ptr&gt;
 	 */
@@ -89,6 +90,10 @@ public enum Attribute {
     u_start( TeiElementName.u, "start", new WhenRefHandler()),
     u_end( TeiElementName.u, "end", new WhenRefHandler()),
 
+    fDecl_name( TeiElementName.fDecl, "name"),
+    fDecl_optional( TeiElementName.fDecl, "optional"), 
+    fsDecl_baseTypes(TeiElementName.fsDecl, "baseTypes"),
+    
     ;
 	
 	private TeiElementName elementScope;

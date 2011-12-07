@@ -1,8 +1,11 @@
 package de.catma.serialization.tei;
 
+import java.io.IOException;
+
 import nu.xom.Document;
 import nu.xom.Node;
 import nu.xom.Nodes;
+import nu.xom.Serializer;
 import nu.xom.XPathContext;
 
 class TeiDocument {
@@ -177,5 +180,20 @@ class TeiDocument {
 	TeiHeader getTeiHeader() {
 		return teiHeader;
 	}
+	
+	/**
+	 * Prints the underlying document to {@link System#out}.
+	 */
+	public void printXmlDocument() {
+		Serializer serializer = new Serializer( System.out );
+		serializer.setIndent( 4 );
+
+		try {
+			serializer.write( document );
+		} catch( IOException e ) {
+			e.printStackTrace();
+		}
+	}
+
 
 }
