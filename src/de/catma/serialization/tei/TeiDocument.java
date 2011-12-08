@@ -177,6 +177,12 @@ class TeiDocument {
             getElementByID(TechnicalDescription.CATMA_TECH_DESC_XML_ID));
 	}	
 	
+	Nodes getTagLibraryElements() {
+		return getElements( 
+				"//" + TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.encodingDesc
+				+"/"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.fsdDecl );
+	}
+	
 	TeiHeader getTeiHeader() {
 		return teiHeader;
 	}

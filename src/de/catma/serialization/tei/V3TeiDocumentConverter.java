@@ -3,20 +3,31 @@ package de.catma.serialization.tei;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 
 import nu.xom.Elements;
 import nu.xom.Node;
 import nu.xom.Nodes;
+import de.catma.core.tag.TagIDGenerator;
 
 
 public class V3TeiDocumentConverter implements TeiDocumentConverter {
+	
+	private static final class TagDef {
+		private String color;
+		private HashMap<String, String> properties;
+		public TagDef(String color) {
+			this.properties = new HashMap<String, String>();
+			this.color = color;
+		}
+	}
 	
 	private SimpleDateFormat sdf = new SimpleDateFormat("yy-MM-dd'T'HH:mm:ssZ");
 	private TeiElement standardTagsetDefinition;
 	private HashMap<String,TeiElement> tagsetDefinitions = 
 			new HashMap<String, TeiElement>();
-	private HashMap<String,TeiElement> tagDefinitions = 
-			new HashMap<String,TeiElement>();
+	private HashMap<String,TagDef> tagDefinitions = 
+			new HashMap<String,TagDef>();
 	
 	public void convert(TeiDocument teiDocument) {
 		
@@ -53,31 +64,82 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 			}
 		}
 		
-		
+		TagIDGenerator tagIDGenerator = new TagIDGenerator();
 		Nodes segElements = teiDocument.getElements(TeiElementName.seg);
-		
+		TeiElement text = (TeiElement)teiDocument.getElements(TeiElementName.text).get(0);
 		for (int i=0; i<segElements.size(); i++) {
 			TeiElement segElement = (TeiElement)segElements.get(i);
 			if ((segElement.getAttributeValue(Attribute.ana) != null) 
 					&& !segElement.getAttributeValue(Attribute.ana).isEmpty()) {
-				addTagInstance(segElement);
+				addTagInstance(segElement, tagIDGenerator, text);
 			}
 		}
 		
-		
+		adjustPointers(teiDocument);
 		
 		teiDocument.getTeiHeader().getTechnicalDescription().setVersion(TeiDocumentVersion.V3);
 		
 		teiDocument.printXmlDocument();
 	}
 
-	private void addTagInstance(TeiElement segElement) {
-		String references = segElement.getAttributeValue(Attribute.ana);
-		String[] idValues = references.trim().split( "#" );
-		for( String id : idValues ) {
-			// HIER gehts weiter
+	private void adjustPointers(TeiDocument teiDocument) {
+		Nodes pointers = teiDocument.getElements(TeiElementName.ptr);
+		
+		for( int i=0; i<pointers.size(); i++) {
+			TeiElement pointer = (TeiElement)pointers.get(i);
+			String target = pointer.getAttributeValue(Attribute.ptr_target);
+			
+			String[] uri_points = target.split( "#" );
+			String uri = uri_points[0].trim();
+			String[] points = uri_points[1].split( "/." );
+			
+			String newTarget = 
+					"catma:///" + uri + "#char=" 
+							+ points[1].substring( 0, points[1].indexOf( ',' ) ).trim()
+							+ ","
+							+ points[2].substring( 0, points[2].indexOf( ')' ) ).trim();
+			pointer.setAttributeValue(Attribute.ptr_target, newTarget);
 		}
 		
+	}
+
+	private void addTagInstance(TeiElement segElement, TagIDGenerator tagIDGenerator, TeiElement text) {
+		String references = segElement.getAttributeValue(Attribute.ana);
+		String[] idValues = references.trim().split( "#" );
+		StringBuilder newReferencesBuilder = new StringBuilder();
+		
+		for( String id : idValues ) {
+			if (!id.trim().isEmpty()) {
+				String instanceID = tagIDGenerator.generate();
+				TagDef tagDefinition = tagDefinitions.get(id.trim());
+				newReferencesBuilder.append(" #");
+				newReferencesBuilder.append(instanceID);
+				
+				TeiElement fs = new TeiElement(TeiElementName.fs);
+				
+				fs.setID(instanceID);
+				fs.setAttributeValue(Attribute.fs_type, id);
+				
+				TeiElement fColor = new TeiElement(TeiElementName.f);
+				fColor.setAttributeValue(Attribute.f_name, "catma_displaycolor");
+				TeiElement numeric = new TeiElement(TeiElementName.numeric);
+				numeric.setAttributeValue(Attribute.numeric_value, tagDefinition.color);
+				fColor.appendChild(numeric);
+				fs.appendChild(fColor);
+				
+				for(Map.Entry<String, String> entry : tagDefinition.properties.entrySet()) {			
+					TeiElement f = new TeiElement(TeiElementName.f);
+					f.setAttributeValue(Attribute.f_name, entry.getKey());
+					TeiElement string = new TeiElement(TeiElementName.string);
+					string.appendChild(entry.getValue());
+					f.appendChild(string);
+					fs.appendChild(f);
+				}
+				
+				text.insertChild(fs,0);
+			}
+		}
+		segElement.setAttributeValue(Attribute.ana, newReferencesBuilder.toString().trim());
 	}
 
 	private void createTagDefinition(Node node) {
@@ -112,6 +174,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 				String curPropertyValue = curProperty.getChildElements().get(0).getValue();
 				
 				addUserDefinedProperty(tagDefinition, curPropertyName, curPropertyValue);
+				tagDefinitions.get(tagDefinition.getID()).properties.put(curPropertyName, curPropertyValue);
 			}
 		}
 
@@ -228,7 +291,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		fsDecl.appendChild(fsDescr);
 		fsDecl.appendChild(fDecl);
 		tagsetDefinition.appendChild(fsDecl);
-		tagDefinitions.put(id, fsDecl);
+		tagDefinitions.put(id, new TagDef(colorValue));
 		
 		return fsDecl;
 	}
