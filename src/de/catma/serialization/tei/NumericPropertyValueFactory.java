@@ -20,33 +20,26 @@
 package de.catma.serialization.tei;
 
 import nu.xom.Elements;
+import de.catma.core.tag.Property;
 
 /**
- * A factory sets and gets string Property values. TEI: &lt;string&gt;
+ * A factory sets and gets numeric {@link Property} values. TEI: &lt;numeric&gt;
  *
  * @author Marco Petris
  *
  */
-public class StringPropertyValueFactory extends BasicSingleValuePropertyValueFactory {
+public class NumericPropertyValueFactory extends BasicSingleValuePropertyValueFactory {
 
-	/* (non-Javadoc)
-	 * @see org.catma.tag.PropertyValueFactory#getValue(org.catma.tei.TeiElement)
-	 */
 	public String getValue( TeiElement teiElement ) {
 		Elements elements = teiElement.getChildElements();
-		
-		return elements.get( 0 ).getValue();
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.catma.tag.PropertyValueFactory#setValue(org.catma.tei.TeiElement, java.lang.Object)
-	 */
-	public void setValue( TeiElement teiElement, Object value ) {
-		Elements elements = teiElement.getChildElements();
-		TeiElement stringElement = (TeiElement)elements.get( 0 );
-		stringElement.removeChildren();
-		stringElement.appendChild( value.toString() );
+		return ((TeiElement)elements.get( 0 )).getAttributeValue( 
+					Attribute.numeric_value );
 	}
 	
 
+	public void setValue( TeiElement teiElement, Object value ) {
+		Elements elements = teiElement.getChildElements();
+		elements.get( 0 ).getAttribute( 
+			Attribute.numeric_value.getLocalName() ).setValue( value.toString() );
+	}
 }

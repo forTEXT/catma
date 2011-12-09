@@ -30,7 +30,7 @@ public class V2TeiDocumentConverter implements TeiDocumentConverter {
 
                     // make new name "property"
                     TeiElement fElement = new TeiElement( TeiElementName.f );
-                    fElement.addAttribute( TeiTagLibrarySerializer.getNewXmlIDAttribute() );
+                    fElement.addAttribute( TeiTagLibrarySerializationHandler.getNewXmlIDAttribute() );
 
                     nu.xom.Attribute nameAttr =
                         new nu.xom.Attribute(

@@ -11,10 +11,10 @@ import de.catma.core.tag.TagIDGenerator;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagsetDefinition;
 import de.catma.core.tag.Version;
-import de.catma.serialization.TagLibrarySerializer;
+import de.catma.serialization.TagLibrarySerializationHandler;
 
-public class TeiTagLibrarySerializer implements TagLibrarySerializer {
-
+public class TeiTagLibrarySerializationHandler implements TagLibrarySerializationHandler {
+	
 	public void serialize(TagLibrary tagLibrary) {
 		// TODO Auto-generated method stub
 
@@ -24,21 +24,7 @@ public class TeiTagLibrarySerializer implements TagLibrarySerializer {
 		try {
 			TeiDocument teiDocument = createDocumentFromStream(inputStream);
 			TeiDocumentVersion.convertToLatest(teiDocument);
-			
-			Nodes tagsetDefinitionElements = teiDocument.getTagLibraryElements();
-			
-			for (int i=0; i<tagsetDefinitionElements.size(); i++) {
-				TeiElement tagsetDefinition = (TeiElement)tagsetDefinitionElements.get(i);
-				String nValue = tagsetDefinition.getAttributeValue(Attribute.n);
-				int dividerPos = nValue.lastIndexOf(' ');
-				String tagsetName = nValue.substring(0, dividerPos);
-				String versionString = nValue.substring(dividerPos+1);
-				TagsetDefinition td = 
-						new TagsetDefinition(
-								tagsetDefinition.getID(),tagsetName, new Version(versionString));
-				
-				System.out.println(td);
-			}
+			TeiTagLibraryDeserializer deserializer = new TeiTagLibraryDeserializer(teiDocument);
 			
 			
 		} catch (Exception exc) {

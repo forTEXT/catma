@@ -88,7 +88,7 @@ public class AnaValueHandler implements AttributeValueHandler {
 						getTeiTagDatabase().getTag( 
 							id.trim() );
 				if( tag != null ) {
-					tags.add(tag);
+					tags.addSystemPropertyDefinition(tag);
 				}
 			}
 		}

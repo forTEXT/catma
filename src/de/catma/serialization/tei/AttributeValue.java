@@ -20,6 +20,7 @@
 package de.catma.serialization.tei;
 
 
+
 /**
  * An enumeration of attribute values used by CATMA.
  *
@@ -48,16 +49,20 @@ public enum AttributeValue {
 	 * 'inclusion' value of {@link Attribute#type}.
 	 */
 	type_inclusion( Attribute.type, "inclusion" ), 
-//	/**
-//	 * 'catma_displaycolor' value of {@link Attribute#f_name}.
-//	 */
-//	name_catma_displaycolor(
-//            Attribute.f_name, Property.CATMA_SYSTEM_PROPERTY_PREFIX + "displaycolor" ),
-//    /**
-//     * 'catma_tagname' value of {@link Attribute#f_name}.
-//     */
-//    name_catma_tagname(
-//        Attribute.f_name, Property.CATMA_SYSTEM_PROPERTY_PREFIX + "tagname" ),
+	/**
+	 * 'catma_displaycolor' value of {@link Attribute#f_name}.
+	 */
+	f_name_catma_displaycolor(
+            Attribute.f_name, PropertyValueFactory.CATMA_SYSTEM_PROPERTY_PREFIX + "displaycolor" ),
+            
+	f_Decl_name_catma_system_property(
+            Attribute.fDecl_name, PropertyValueFactory.CATMA_SYSTEM_PROPERTY_PREFIX ),
+            
+    /**
+     * 'catma_tagname' value of {@link Attribute#f_name}.
+     */
+    name_catma_tagname(
+        Attribute.f_name, PropertyValueFactory.CATMA_SYSTEM_PROPERTY_PREFIX + "tagname" ),
     /**
      * 'list' value of {@link Attribute#vColl_org}.
      */
@@ -72,7 +77,7 @@ public enum AttributeValue {
 	 * @param attribute the attribute 
 	 * @param valueName the value
 	 */
-	private AttributeValue( Attribute attribute, String valueName ) {
+	private AttributeValue( Attribute attribute, String valueName) {
 		this.attribute = attribute;
 		this.valueName = valueName;
 	}
@@ -94,5 +99,13 @@ public enum AttributeValue {
     @Override
     public String toString() {
         return attribute + "='" + valueName + "'";
+    }
+    
+    public String getStartsWith() {
+    	return "starts-with("+attribute+",'"+valueName+"')";
+    }
+    
+    public String getNotStartsWith() {
+    	return "not("+getStartsWith()+")";
     }
 }

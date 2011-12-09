@@ -16,7 +16,7 @@ public class TeiTagLibrarySerializerTest {
 	public void test() throws FileNotFoundException, IOException {
 		FilterInputStream is = new BOMFilterInputStream(
 				new FileInputStream("testdocs/rose_for_emily_user_simple.xml"), Charset.forName( "UTF-8" ));
-		new TeiTagLibrarySerializer().deserialize(is);
+		new TeiTagLibrarySerializationHandler().deserialize(is);
 	}
 
 }

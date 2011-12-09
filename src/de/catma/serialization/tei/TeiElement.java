@@ -25,7 +25,9 @@ import java.util.TreeSet;
 
 import nu.xom.Element;
 import nu.xom.Elements;
+import nu.xom.Nodes;
 import nu.xom.ParentNode;
+import nu.xom.XPathContext;
 
 /**
  * Represents a TEI xml-element.<br>
@@ -102,6 +104,28 @@ public class TeiElement extends Element implements Comparable<TeiElement> {
 	 */
 	public final Elements getChildElements(TeiElementName localName) {
 		return getChildElements(localName.name(), TEINAMESPACE);
+	}
+	
+	public final Nodes getChildNodes( TeiElementName teiElementName, String attributeFilter) {
+		String query = 
+				"//"+TeiElement.TEINAMESPACEPREFIX
+				+ ":*" //wildcard
+				+ "[@"+Attribute.xmlid.getPrefixedName()
+				+ "='"+getID()+"']" 
+				+"/"+TeiElement.TEINAMESPACEPREFIX+":"+teiElementName + "[" + attributeFilter + "]";
+		
+        return this.getDocument().query(query, 
+            new XPathContext( TeiElement.TEINAMESPACEPREFIX, TeiElement.TEINAMESPACE ));
+	}
+	
+	public TeiElement getFirstTeiChildElement(TeiElementName localName) {
+		Elements elements = getChildElements(localName);
+		if (elements.size() >0) {
+			return (TeiElement)elements.get(0);
+		}
+		else {
+			return null;
+		}
 	}
 	
     /**
@@ -222,23 +246,6 @@ public class TeiElement extends Element implements Comparable<TeiElement> {
 		this.active = active;
 	}
     
-    /**
-     * <b>This method is under construction</b>
-     */
-    public String getNumberedLabel() {
-    	// FIXME: provisorial hack
-    	if( getLocalName().equals( TeiElementName.p.name() ) ) {
-    		return "Paragraph " + getAttributeValue( Attribute.n ); 
-    	}
-    	else if( getLocalName().equals( TeiElementName.div.name() ) ) {
-    		return "Act " + getAttributeValue( Attribute.n );
-    	}
-    	return getLocalName()
-                + ( (getAttributeValue( Attribute.n ) == null)
-                ?  ""
-                : " " + getAttributeValue( Attribute.n ));
-    }
-    
     /* (non-Javadoc)
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
@@ -257,7 +264,7 @@ public class TeiElement extends Element implements Comparable<TeiElement> {
     					Integer.valueOf( oNValue ) );
     		}
     	}
-    	return this.getNumberedLabel().compareTo( o.getNumberedLabel() );
+    	return getLocalName().compareTo(o.getLocalName());
     }
     
 

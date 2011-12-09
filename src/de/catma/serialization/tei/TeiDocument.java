@@ -12,14 +12,12 @@ class TeiDocument {
 	
 	private Document document;
 	private XPathContext xpathcontext; 
-	private String nsPrefix;
 	private TeiHeader teiHeader;
 	
 	public TeiDocument(Document document) {
 		super();
 		this.document = document;
-		nsPrefix = TeiElement.TEINAMESPACEPREFIX;
-		xpathcontext = new XPathContext( nsPrefix, TeiElement.TEINAMESPACE );
+		xpathcontext = new XPathContext( TeiElement.TEINAMESPACEPREFIX, TeiElement.TEINAMESPACE );
 	}
 	
 	
@@ -82,7 +80,7 @@ class TeiDocument {
 	 * @param xpath the xpath expression that represents to the wanted elements
 	 * @return the list of matching nodes
 	 */
-	private Nodes getElements( String xpath ) {
+	Nodes getElements( String xpath ) {
 		return document.query( xpath, xpathcontext );
 	}
 	
@@ -111,7 +109,7 @@ class TeiDocument {
      */
     private TeiElement getLanguageElement() {
         Nodes resultList = document.query(
-                "//"+nsPrefix+":"+TeiElementName.language, xpathcontext );
+                "//"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.language, xpathcontext );
 
         TeiElement languageElement = null;
 
@@ -167,12 +165,12 @@ class TeiDocument {
 	void loadHeader() {
 		this.teiHeader =  new TeiHeader( 
 			getMandatoryElement( 
-				"/"+nsPrefix+":"+TeiElementName.TEI+
-				"/"+nsPrefix+":"+TeiElementName.teiHeader ),
-			getMandatoryElement( "//"+nsPrefix+":"+TeiElementName.title ), 
-			getMandatoryElement( "//"+nsPrefix+":"+TeiElementName.author ), 
-			getMandatoryElement( "//"+nsPrefix+":"+TeiElementName.publisher ), 
-			getMandatoryElement( "//"+nsPrefix+":"+TeiElementName.sourceDesc ),
+				"/"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.TEI+
+				"/"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.teiHeader ),
+			getMandatoryElement( "//"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.title ), 
+			getMandatoryElement( "//"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.author ), 
+			getMandatoryElement( "//"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.publisher ), 
+			getMandatoryElement( "//"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.sourceDesc ),
             getLanguageElement(),
             getElementByID(TechnicalDescription.CATMA_TECH_DESC_XML_ID));
 	}	
@@ -200,6 +198,4 @@ class TeiDocument {
 			e.printStackTrace();
 		}
 	}
-
-
 }

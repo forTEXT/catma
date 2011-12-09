@@ -118,7 +118,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 				TeiElement fs = new TeiElement(TeiElementName.fs);
 				
 				fs.setID(instanceID);
-				fs.setAttributeValue(Attribute.fs_type, id);
+				fs.setAttributeValue(Attribute.type, id);
 				
 				TeiElement fColor = new TeiElement(TeiElementName.f);
 				fColor.setAttributeValue(Attribute.f_name, "catma_displaycolor");

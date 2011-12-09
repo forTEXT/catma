@@ -19,6 +19,9 @@
 
 package de.catma.serialization.tei;
 
+import java.util.List;
+
+
 
 /**
  * A factory that sets and gets values for a {@link Property}.
@@ -27,13 +30,15 @@ package de.catma.serialization.tei;
  *
  */
 public interface PropertyValueFactory {
-
+    
+	public static final String CATMA_SYSTEM_PROPERTY_PREFIX = "catma_";
+    
 	/**
 	 * Getter.
 	 * @param teiElement the element that represents the {@link Property}
 	 * @return the value of the {@link Property} represented by the given element.
 	 */
-	public Object getValue( TeiElement teiElement );
+	public String getValue( TeiElement teiElement );
 
 	/**
 	 * Setter.
@@ -41,5 +46,9 @@ public interface PropertyValueFactory {
 	 * @param value the value of the {@link Property} represented by the given element
 	 */
 	public void setValue( TeiElement teiElement, Object value );
+	
+	public List<String> getValueAsList( TeiElement teiElement );
+	
+	public boolean isSingleSelectValue();
 	
 }

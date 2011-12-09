@@ -33,10 +33,6 @@ public enum Attribute {
 	 */
 	xmlid( null, "id", "xml", "http://www.w3.org/XML/1998/namespace", null ),
 	/**
-	 * 'type'-attribute of &lt;fs&gt;
-	 */
-	fs_type( TeiElementName.fs, "type" ),
-	/**
 	 * 'name'-attribute of &lt;f&gt;
 	 */
 	f_name( TeiElementName.f, "name" ),
@@ -50,15 +46,11 @@ public enum Attribute {
 	 */
 	ptr_target( TeiElementName.ptr, "target", new PtrValueHandler() ),
 	/**
-	 * 'type'-attribute of &lt;ptr&gt;
-	 */
-	ptr_type( TeiElementName.ptr, "type" ), 
-	/**
 	 * 'ana'-attribute (global)
 	 */
 	ana( null, "ana", new AnaValueHandler() ),
 	/**
-	 * 'type'-attribute (global)
+	 * 'type'-attribute (typed)
 	 */
 	type( null, "type" ), 
 	/**
@@ -92,7 +84,8 @@ public enum Attribute {
 
     fDecl_name( TeiElementName.fDecl, "name"),
     fDecl_optional( TeiElementName.fDecl, "optional"), 
-    fsDecl_baseTypes(TeiElementName.fsDecl, "baseTypes"),
+    fsDecl_baseTypes(TeiElementName.fsDecl, "baseTypes"), 
+    fsDecl_type(TeiElementName.fsDecl, "type" ),
     
     ;
 	

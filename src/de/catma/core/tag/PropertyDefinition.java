@@ -4,10 +4,23 @@ import java.util.List;
 
 public class PropertyDefinition {
 
-	private String ID;
 	private String name;
-	private List<PropertyValueHandler<?>> valueHandlers;
+	private PropertyPossibleValueList possibleValueList;
+	
+	public PropertyDefinition(String name,
+			PropertyPossibleValueList possibleValueList) {
+		super();
+		this.name = name;
+		this.possibleValueList = possibleValueList;
+	}
 	
 	
+	@Override
+	public String toString() {
+		return "PROP["+name+"="+possibleValueList+"]";
+	}
 	
+	//vAlt
+	//string
+	//vColl
 }
