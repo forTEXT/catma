@@ -2,6 +2,8 @@ package de.catma.serialization.tei;
 
 import java.io.IOException;
 
+import de.catma.core.tag.IDGenerator;
+
 import nu.xom.Document;
 import nu.xom.Node;
 import nu.xom.Nodes;
@@ -14,7 +16,7 @@ class TeiDocument {
 	private XPathContext xpathcontext; 
 	private TeiHeader teiHeader;
 	
-	public TeiDocument(Document document) {
+	TeiDocument(Document document) {
 		super();
 		this.document = document;
 		xpathcontext = new XPathContext( TeiElement.TEINAMESPACEPREFIX, TeiElement.TEINAMESPACE );
@@ -49,7 +51,7 @@ class TeiDocument {
 			xPathBuilder.append( teiElementName );
 		}
 		
-		return getElements( xPathBuilder.toString() );	
+		return getNodes( xPathBuilder.toString() );	
 	}
 	
 	/**
@@ -59,7 +61,7 @@ class TeiDocument {
 	 * @return  the list of matching nodes
 	 */
 	public Nodes getElements( TeiElementName teiElementName ) {
-		return getElements( 
+		return getNodes( 
 			"//"+TeiElement.TEINAMESPACEPREFIX+":"+teiElementName );
 	}
 
@@ -71,7 +73,7 @@ class TeiDocument {
      * @return  the list of matching nodes
      */
     public Nodes getElements( TeiElementName teiElementName, AttributeValue attributeValue) {
-        return getElements(
+        return getNodes(
             "//"+TeiElement.TEINAMESPACEPREFIX+":"+teiElementName + "[" + attributeValue + "]");
     }
 
@@ -80,8 +82,15 @@ class TeiDocument {
 	 * @param xpath the xpath expression that represents to the wanted elements
 	 * @return the list of matching nodes
 	 */
-	Nodes getElements( String xpath ) {
+	private Nodes getNodes( String xpath ) {
 		return document.query( xpath, xpathcontext );
+	}
+	
+	public Nodes getNodes( TeiElementName teiElementName, String attributeFilter) {
+		String query = 
+				"//"+TeiElement.TEINAMESPACEPREFIX+":"+teiElementName + "[" + attributeFilter + "]";
+		
+        return getNodes(query);
 	}
 	
 	/**
@@ -92,7 +101,7 @@ class TeiDocument {
 	 * if there is no such element
 	 */
 	public TeiElement getElementByID( String id ) {
-		Nodes result = getElements( 
+		Nodes result = getNodes( 
 			"//"+TeiElement.TEINAMESPACEPREFIX
 			+ ":*" //wildcard
 			+ "[@"+Attribute.xmlid.getPrefixedName()
@@ -175,8 +184,8 @@ class TeiDocument {
             getElementByID(TechnicalDescription.CATMA_TECH_DESC_XML_ID));
 	}	
 	
-	Nodes getTagLibraryElements() {
-		return getElements( 
+	Nodes getTagsetDefinitionElements() {
+		return getNodes( 
 				"//" + TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.encodingDesc
 				+"/"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.fsdDecl );
 	}
@@ -197,5 +206,23 @@ class TeiDocument {
 		} catch( IOException e ) {
 			e.printStackTrace();
 		}
+	}
+
+	public String getName() {
+		String title = getTeiHeader().getSimpleTitle();
+		String sourceDesc = getTeiHeader().getSimpleSourceDesc();
+		return title + " " + sourceDesc;
+	}
+
+
+
+	/**
+	 * @return a new {@link Attribute#xmlid}
+	 */
+	public static nu.xom.Attribute getNewXmlIDAttribute() {
+		return new nu.xom.Attribute( 
+				Attribute.xmlid.getPrefixedName(),
+				Attribute.xmlid.getNamespaceURI(),
+				new IDGenerator().generate() );
 	}
 }

@@ -30,15 +30,15 @@ import java.util.List;
  */
 public class Range implements Comparable<Range> {
 
-	private long startPoint;
-	private long endPoint;
+	private int startPoint;
+	private int endPoint;
 	private int hashCode;
 	
 	/**
 	 * @param startPoint the point before the first character.
 	 * @param endPoint the point after the last character.
 	 */
-	public Range( long startPoint, long endPoint ) {
+	public Range( int startPoint, int endPoint ) {
 		this.startPoint = startPoint;
 		this.endPoint = endPoint;
 		this.hashCode = 
@@ -50,14 +50,14 @@ public class Range implements Comparable<Range> {
 	/**
 	 * @return the start point
 	 */
-	public long getStartPoint() {
+	public int getStartPoint() {
 		return startPoint;
 	}
 
 	/**
 	 * @return the end point
 	 */
-	public long getEndPoint() {
+	public int getEndPoint() {
 		return endPoint;
 	}
 	

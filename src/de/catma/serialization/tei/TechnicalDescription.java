@@ -240,6 +240,7 @@ public class TechnicalDescription {
      * @return the corresponding element or <code>null</code> if there is no such feature
      */
     private TeiElement findFeature( Feature feature ) {
+    	//TODO: reimplement with getChildNodes...
         Elements features =
             technicalDescriptionElement.getChildElements( TeiElementName.f );
         for( int idx=0; idx<features.size(); idx++ ) {
@@ -260,8 +261,7 @@ public class TechnicalDescription {
 	 */
 	private String getFeatureValue( Feature feature ) {
 		TeiElement featureElement = getFeature( feature );
-		return (String)new StringPropertyValueFactory().getValue( 
-				featureElement ); 
+		return new StringPropertyValueFactory(featureElement).getValue(); 
 	}
 	
 	/**

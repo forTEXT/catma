@@ -19,6 +19,8 @@
 
 package de.catma.serialization.tei;
 
+import de.catma.core.tag.IDGenerator;
+
 
 
 /**
@@ -63,6 +65,10 @@ public enum AttributeValue {
      */
     name_catma_tagname(
         Attribute.f_name, PropertyValueFactory.CATMA_SYSTEM_PROPERTY_PREFIX + "tagname" ),
+        
+    seg_ana_catma_tag_ref(
+    	Attribute.ana, "#" + IDGenerator.ID_PREFIX ),
+    	
     /**
      * 'list' value of {@link Attribute#vColl_org}.
      */

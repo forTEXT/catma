@@ -28,12 +28,16 @@ import nu.xom.Elements;
  *
  */
 public class StringPropertyValueFactory extends BasicSingleValuePropertyValueFactory {
+	
+	public StringPropertyValueFactory(TeiElement teiElement) {
+		super(teiElement);
+	}
 
 	/* (non-Javadoc)
 	 * @see org.catma.tag.PropertyValueFactory#getValue(org.catma.tei.TeiElement)
 	 */
-	public String getValue( TeiElement teiElement ) {
-		Elements elements = teiElement.getChildElements();
+	public String getValue() {
+		Elements elements = getTeiElement().getChildElements();
 		
 		return elements.get( 0 ).getValue();
 	}
@@ -41,8 +45,8 @@ public class StringPropertyValueFactory extends BasicSingleValuePropertyValueFac
 	/* (non-Javadoc)
 	 * @see org.catma.tag.PropertyValueFactory#setValue(org.catma.tei.TeiElement, java.lang.Object)
 	 */
-	public void setValue( TeiElement teiElement, Object value ) {
-		Elements elements = teiElement.getChildElements();
+	public void setValue(Object value ) {
+		Elements elements = getTeiElement().getChildElements();
 		TeiElement stringElement = (TeiElement)elements.get( 0 );
 		stringElement.removeChildren();
 		stringElement.appendChild( value.toString() );

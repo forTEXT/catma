@@ -8,7 +8,7 @@ import java.util.Map;
 import nu.xom.Elements;
 import nu.xom.Node;
 import nu.xom.Nodes;
-import de.catma.core.tag.TagIDGenerator;
+import de.catma.core.tag.IDGenerator;
 
 
 public class V3TeiDocumentConverter implements TeiDocumentConverter {
@@ -64,14 +64,14 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 			}
 		}
 		
-		TagIDGenerator tagIDGenerator = new TagIDGenerator();
+		IDGenerator catmaIDGenerator = new IDGenerator();
 		Nodes segElements = teiDocument.getElements(TeiElementName.seg);
 		TeiElement text = (TeiElement)teiDocument.getElements(TeiElementName.text).get(0);
 		for (int i=0; i<segElements.size(); i++) {
 			TeiElement segElement = (TeiElement)segElements.get(i);
 			if ((segElement.getAttributeValue(Attribute.ana) != null) 
 					&& !segElement.getAttributeValue(Attribute.ana).isEmpty()) {
-				addTagInstance(segElement, tagIDGenerator, text);
+				addTagInstance(segElement, catmaIDGenerator, text);
 			}
 		}
 		
@@ -103,14 +103,14 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		
 	}
 
-	private void addTagInstance(TeiElement segElement, TagIDGenerator tagIDGenerator, TeiElement text) {
+	private void addTagInstance(TeiElement segElement, IDGenerator catmaIDGenerator, TeiElement text) {
 		String references = segElement.getAttributeValue(Attribute.ana);
 		String[] idValues = references.trim().split( "#" );
 		StringBuilder newReferencesBuilder = new StringBuilder();
 		
 		for( String id : idValues ) {
 			if (!id.trim().isEmpty()) {
-				String instanceID = tagIDGenerator.generate();
+				String instanceID = catmaIDGenerator.generate();
 				TagDef tagDefinition = tagDefinitions.get(id.trim());
 				newReferencesBuilder.append(" #");
 				newReferencesBuilder.append(instanceID);

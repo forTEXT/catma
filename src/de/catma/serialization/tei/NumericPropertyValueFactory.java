@@ -29,16 +29,21 @@ import de.catma.core.tag.Property;
  *
  */
 public class NumericPropertyValueFactory extends BasicSingleValuePropertyValueFactory {
+	
+	public NumericPropertyValueFactory(TeiElement teiElement) {
+		super(teiElement);
+	}
 
-	public String getValue( TeiElement teiElement ) {
-		Elements elements = teiElement.getChildElements();
+
+	public String getValue() {
+		Elements elements = getTeiElement().getChildElements();
 		return ((TeiElement)elements.get( 0 )).getAttributeValue( 
 					Attribute.numeric_value );
 	}
 	
 
-	public void setValue( TeiElement teiElement, Object value ) {
-		Elements elements = teiElement.getChildElements();
+	public void setValue(Object value ) {
+		Elements elements = getTeiElement().getChildElements();
 		elements.get( 0 ).getAttribute( 
 			Attribute.numeric_value.getLocalName() ).setValue( value.toString() );
 	}

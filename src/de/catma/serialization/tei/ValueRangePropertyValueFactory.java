@@ -1,6 +1,5 @@
 package de.catma.serialization.tei;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import nu.xom.Elements;
@@ -9,12 +8,47 @@ import de.catma.core.ExceptionHandler;
 public class ValueRangePropertyValueFactory implements PropertyValueFactory {
 	
 	private boolean singleSelectValue = true;
+	private TeiElement teiElement;
+	private List<String> value;
+	
+	public ValueRangePropertyValueFactory(TeiElement teiElement) {
+		super();
+		this.teiElement = teiElement;
+		extractValue();
+	}
 
-	public String getValue(TeiElement teiElement) {
+	private void extractValue() {
+		singleSelectValue = true;
+		
+		Elements elements = teiElement.getChildElements();
+		TeiElement vRange = (TeiElement)elements.get(0);
+		
+		Elements children = vRange.getChildElements();
+		for (int i=0; i<children.size(); i++) {
+			try {
+				TeiElement curChild = (TeiElement)children.get(i);
+				if (curChild.is(TeiElementName.numeric)) {
+					value.add(new NumericPropertyValueFactory(vRange).getValue());
+				}
+				else if (curChild.is(TeiElementName.string)) {
+					value.add(new StringPropertyValueFactory(vRange).getValue());
+				}
+				else {
+					throw new UnknownElementException(curChild.getLocalName() + " is not supported!");
+				}
+			} catch (UnknownElementException e) {
+				ExceptionHandler.log(e);
+			}
+		}
+		
+		singleSelectValue = value.size() > 1;
+	}
+
+	public String getValue() {
 	
 		StringBuilder builder = new StringBuilder();
 		
-		List<String> list = getValueAsList(teiElement);
+		List<String> list = getValueAsList();
 		for (int i=0; i<list.size(); i++) {
 			if (i>1) {
 				builder.append(",");
@@ -30,40 +64,13 @@ public class ValueRangePropertyValueFactory implements PropertyValueFactory {
 		}
 	}
 
-	public void setValue(TeiElement teiElement, Object value) {
-		singleSelectValue = true;
+	public void setValue(Object value) {
+
 		// TODO: implement
 	}
 
-	public List<String> getValueAsList(TeiElement teiElement) {
-		singleSelectValue = true;
-		
-		ArrayList<String> result = new ArrayList<String>();
-		
-		Elements elements = teiElement.getChildElements();
-		TeiElement vRange = (TeiElement)elements.get(0);
-		
-		Elements children = vRange.getChildElements();
-		for (int i=0; i<children.size(); i++) {
-			try {
-				TeiElement curChild = (TeiElement)children.get(i);
-				if (curChild.is(TeiElementName.numeric)) {
-					result.add(new NumericPropertyValueFactory().getValue(vRange));
-				}
-				else if (curChild.is(TeiElementName.string)) {
-					result.add(new StringPropertyValueFactory().getValue(vRange));
-				}
-				else {
-					throw new UnknownElementException(curChild.getLocalName() + " is not supported!");
-				}
-			} catch (UnknownElementException e) {
-				ExceptionHandler.log(e);
-			}
-		}
-		
-		singleSelectValue = result.size() > 1;
-		
-		return result;
+	public List<String> getValueAsList() {
+		return value;
 	}
 
 	public boolean isSingleSelectValue() {

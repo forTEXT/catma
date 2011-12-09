@@ -37,24 +37,24 @@ public class AnaValueHandler implements AttributeValueHandler {
 	 * @param tag the Tag we want to reference
 	 * @return the new value string
 	 */
-	public String makeValueFrom( String anaValue, Tag tag ) {
-		StringBuilder builder = new StringBuilder( anaValue );
-		if( !anaValue.equals( "" ) ) {
-			builder.append( " " );
-		}
-		builder.append( "#" );
-		builder.append( tag.getID() );
-		return builder.toString();
-	}
-	
+//	public String makeValueFrom( String anaValue, Tag tag ) {
+//		StringBuilder builder = new StringBuilder( anaValue );
+//		if( !anaValue.equals( "" ) ) {
+//			builder.append( " " );
+//		}
+//		builder.append( "#" );
+//		builder.append( tag.getID() );
+//		return builder.toString();
+//	}
+//	
 	/**
 	 * Creates a value string with references to the Tags in the given list.
 	 * @param tags the tags we want to reference
 	 * @return the new value string
 	 */
-	public String makeValueFrom( List<Tag> tags ) {
-		return makeValueFrom( tags.toArray( new Tag[]{} ) );
-	}
+//	public String makeValueFrom( List<Tag> tags ) {
+//		return makeValueFrom( tags.toArray( new Tag[]{} ) );
+//	}
 	
 	/**
 	 * Creates a value string with references to the Tags in the given list.
@@ -62,39 +62,39 @@ public class AnaValueHandler implements AttributeValueHandler {
 	 * @param tags the tags we want to reference (at least one!)
 	 * @return the new value string
 	 */
-	public String makeValueFrom( Tag... tags ) {
-		StringBuilder builder = new StringBuilder();
-		String conc = "";
-		for( Tag tag : tags ) {
-			builder.append( conc );
-			builder.append( "#" );
-			builder.append( tag.getID() );
-		}
-		return builder.toString();
-	}
+//	public String makeValueFrom( Tag... tags ) {
+//		StringBuilder builder = new StringBuilder();
+//		String conc = "";
+//		for( Tag tag : tags ) {
+//			builder.append( conc );
+//			builder.append( "#" );
+//			builder.append( tag.getID() );
+//		}
+//		return builder.toString();
+//	}
 
 	/**
 	 * Extracts the Tags that are referenced by the given value string.
 	 * @param anaValue the value string which contains the references
 	 * @return the list of referenced tags
 	 */
-	public List<Tag> makeTagListFrom( String anaValue ) {
-		List<Tag> tags = new ArrayList<Tag>();
-		if( anaValue != null ) {
-			String[] idValues = anaValue.trim().split( "#" );
-			for( String id : idValues ) {
-				Tag tag = 
-					TagManager.SINGLETON.getCurrentTagDatabaseDocument().
-						getTeiTagDatabase().getTag( 
-							id.trim() );
-				if( tag != null ) {
-					tags.addSystemPropertyDefinition(tag);
-				}
-			}
-		}
-		return tags;
-	}
-	
+//	public List<Tag> makeTagListFrom( String anaValue ) {
+//		List<Tag> tags = new ArrayList<Tag>();
+//		if( anaValue != null ) {
+//			String[] idValues = anaValue.trim().split( "#" );
+//			for( String id : idValues ) {
+//				Tag tag = 
+//					TagManager.SINGLETON.getCurrentTagDatabaseDocument().
+//						getTeiTagDatabase().getTag( 
+//							id.trim() );
+//				if( tag != null ) {
+//					tags.addSystemPropertyDefinition(tag);
+//				}
+//			}
+//		}
+//		return tags;
+//	}
+//	
 	
 	/**
 	 * Extracts the xml:ids of the Tags that are referenced by the given value 
@@ -102,7 +102,7 @@ public class AnaValueHandler implements AttributeValueHandler {
 	 * @param anaValue the value string which contains the references
 	 * @return the list of referenced tag-xml:ids
 	 */
-	public List<String> makeTagIDListFrom( String anaValue ) {
+	public List<String> makeTagInstanceIDListFrom( String anaValue ) {
 		List<String> tagIDs = new ArrayList<String>();
 		if( anaValue != null ) {
 			String[] idValues = anaValue.trim().split( "#" );
@@ -124,13 +124,13 @@ public class AnaValueHandler implements AttributeValueHandler {
 	 * @param tag the Tag for which we want to remove the reference
 	 * @return the new value string
 	 */
-	public String makeListWithoutTag( String anaValue, Tag tag ) {
-		int startIdx = anaValue.indexOf( tag.getID() )-1;
-		int endIdx = startIdx+tag.getID().length()+1;
-		if( endIdx != anaValue.length() ) {
-			endIdx++; // remove separating space, too
-		}
-		return anaValue.substring( 0, startIdx ) 
-			+ anaValue.substring( endIdx, anaValue.length() );
-	}
+//	public String makeListWithoutTag( String anaValue, Tag tag ) {
+//		int startIdx = anaValue.indexOf( tag.getID() )-1;
+//		int endIdx = startIdx+tag.getID().length()+1;
+//		if( endIdx != anaValue.length() ) {
+//			endIdx++; // remove separating space, too
+//		}
+//		return anaValue.substring( 0, startIdx ) 
+//			+ anaValue.substring( endIdx, anaValue.length() );
+//	}
 }

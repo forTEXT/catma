@@ -5,8 +5,19 @@ import java.util.List;
 
 public abstract class BasicSingleValuePropertyValueFactory implements PropertyValueFactory {
 
-	public List<String> getValueAsList(TeiElement teiElement) {
-		String value = getValue(teiElement);
+	private TeiElement teiElement;
+	
+	public BasicSingleValuePropertyValueFactory(TeiElement teiElement) {
+		super();
+		this.teiElement = teiElement;
+	}
+	
+	protected TeiElement getTeiElement() {
+		return teiElement;
+	}
+
+	public List<String> getValueAsList() {
+		String value = getValue();
 		ArrayList<String> list = new ArrayList<String>();
 		list.add(value);
 		return list;

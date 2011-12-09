@@ -6,37 +6,38 @@ import de.catma.core.ExceptionHandler;
 import de.catma.core.tag.PropertyDefinition;
 import de.catma.core.tag.PropertyPossibleValueList;
 import de.catma.core.tag.TagDefinition;
+import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagsetDefinition;
 import de.catma.core.tag.Version;
 
 public class TeiTagLibraryDeserializer {
 	
 	private TeiDocument teiDocument;
+	private TagLibrary tagLibrary;
 
 	public TeiTagLibraryDeserializer(TeiDocument teiDocument) {
 		super();
 		this.teiDocument = teiDocument;
+		this.tagLibrary = new TagLibrary(teiDocument.getName());
 		deserialize();
 	}
 
 	private void deserialize() {
-		Nodes tagsetDefinitionElements = teiDocument.getTagLibraryElements();
+		Nodes tagsetDefinitionElements = teiDocument.getTagsetDefinitionElements();
 		
 		for (int i=0; i<tagsetDefinitionElements.size(); i++) {
-			TeiElement tagsetDefinition = (TeiElement)tagsetDefinitionElements.get(i);
-			String nValue = tagsetDefinition.getAttributeValue(Attribute.n);
+			TeiElement tagsetDefinitionElement = (TeiElement)tagsetDefinitionElements.get(i);
+			String nValue = tagsetDefinitionElement.getAttributeValue(Attribute.n);
 			int dividerPos = nValue.lastIndexOf(' ');
 			String tagsetName = nValue.substring(0, dividerPos);
 			String versionString = nValue.substring(dividerPos+1);
-			TagsetDefinition td = 
+			TagsetDefinition tagsetDefinition = 
 					new TagsetDefinition(
-							tagsetDefinition.getID(),tagsetName, new Version(versionString));
+							tagsetDefinitionElement.getID(),tagsetName, new Version(versionString));
 			
-			System.out.println(td);
-			
-			addTagDefinitions(td, tagsetDefinition.getChildElements(TeiElementName.fsDecl));
+			addTagDefinitions(tagsetDefinition, tagsetDefinitionElement.getChildElements(TeiElementName.fsDecl));
 
-			
+			this.tagLibrary.add(tagsetDefinition);
 		}
 	}
 
@@ -63,8 +64,6 @@ public class TeiTagLibraryDeserializer {
 			
 			tagsetDefinition.add(tagDef);
 			
-			System.out.println(tagDef);
-
 			addProperties(tagDef, 
 					tagDefinitionElement.getChildNodes(
 							TeiElementName.fDecl, 
@@ -84,7 +83,6 @@ public class TeiTagLibraryDeserializer {
 			try {
 				TeiElement sysPropElement = (TeiElement)systemPropertyNodes.get(i);
 				PropertyDefinition pd = createPropertyDefinition(sysPropElement);
-				System.out.println(pd);
 				tagDef.addSystemPropertyDefinition(pd);
 			}
 			catch(UnknownElementException uee) {
@@ -97,7 +95,6 @@ public class TeiTagLibraryDeserializer {
 			try {
 				TeiElement sysPropElement = (TeiElement)userPropertyNodes.get(i);
 				PropertyDefinition pd = createPropertyDefinition(sysPropElement);
-				System.out.println(pd);
 				tagDef.addUserDefinedPropertyDefinition(pd);
 			}
 			catch(UnknownElementException uee) {
@@ -115,13 +112,13 @@ public class TeiTagLibraryDeserializer {
 		PropertyValueFactory pvf = null;
 		
 		if (valueElement.is(TeiElementName.numeric)) {
-			pvf = new NumericPropertyValueFactory();
+			pvf = new NumericPropertyValueFactory(sysPropElement);
 		}
 		else if (valueElement.is(TeiElementName.string)) {
-			pvf = new StringPropertyValueFactory();
+			pvf = new StringPropertyValueFactory(sysPropElement);
 		}
 		else if (valueElement.is(TeiElementName.vRange)) {
-			pvf = new ValueRangePropertyValueFactory();
+			pvf = new ValueRangePropertyValueFactory(sysPropElement);
 		}
 		else {
 			throw new UnknownElementException(valueElement.getLocalName() + " is not supported!");
@@ -129,9 +126,11 @@ public class TeiTagLibraryDeserializer {
 		
 		return new PropertyDefinition(
 						sysPropElement.getAttributeValue(Attribute.fDecl_name),
-						new PropertyPossibleValueList(pvf.getValueAsList(sysPropElement), 
+						new PropertyPossibleValueList(pvf.getValueAsList(), 
 								pvf.isSingleSelectValue()));
 	}
 
-	
+	public TagLibrary getTagLibrary() {
+		return tagLibrary;
+	}
 }

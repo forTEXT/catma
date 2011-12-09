@@ -4,7 +4,7 @@ import java.io.InputStream;
 
 import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollection;
 
-public interface StructureMarkupSerializer {
+public interface StructureMarkupSerializationHandler {
 	
 	public void serialize(StructureMarkupCollection structureMarkupCollection);
 	public StructureMarkupCollection deserialize(InputStream inputStream);

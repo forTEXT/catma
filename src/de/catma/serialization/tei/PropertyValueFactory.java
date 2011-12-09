@@ -38,16 +38,16 @@ public interface PropertyValueFactory {
 	 * @param teiElement the element that represents the {@link Property}
 	 * @return the value of the {@link Property} represented by the given element.
 	 */
-	public String getValue( TeiElement teiElement );
+	public String getValue();
 
 	/**
 	 * Setter.
 	 * @param teiElement the element that represents the {@link Property}
 	 * @param value the value of the {@link Property} represented by the given element
 	 */
-	public void setValue( TeiElement teiElement, Object value );
+	public void setValue(Object value );
 	
-	public List<String> getValueAsList( TeiElement teiElement );
+	public List<String> getValueAsList();
 	
 	public boolean isSingleSelectValue();
 	
