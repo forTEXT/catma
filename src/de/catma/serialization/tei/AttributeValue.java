@@ -57,6 +57,9 @@ public enum AttributeValue {
 	f_name_catma_displaycolor(
             Attribute.f_name, PropertyValueFactory.CATMA_SYSTEM_PROPERTY_PREFIX + "displaycolor" ),
             
+    f_name_catma_system_property(
+            Attribute.f_name, PropertyValueFactory.CATMA_SYSTEM_PROPERTY_PREFIX ),
+                    
 	f_Decl_name_catma_system_property(
             Attribute.fDecl_name, PropertyValueFactory.CATMA_SYSTEM_PROPERTY_PREFIX ),
             

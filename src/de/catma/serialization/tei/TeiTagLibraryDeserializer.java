@@ -62,7 +62,7 @@ public class TeiTagLibraryDeserializer {
 							new Version(tagDefinitionElement.getAttributeValue(Attribute.n)), 
 							tagDefinitionElement.getAttributeValue(Attribute.fsDecl_baseTypes));
 			
-			tagsetDefinition.add(tagDef);
+			tagsetDefinition.addTagDefinition(tagDef);
 			
 			addProperties(tagDef, 
 					tagDefinitionElement.getChildNodes(

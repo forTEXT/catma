@@ -1,5 +1,6 @@
 package de.catma.serialization.tei;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import nu.xom.Elements;
@@ -14,6 +15,7 @@ public class ValueRangePropertyValueFactory implements PropertyValueFactory {
 	public ValueRangePropertyValueFactory(TeiElement teiElement) {
 		super();
 		this.teiElement = teiElement;
+		this.value = new ArrayList<String>();
 		extractValue();
 	}
 

@@ -24,5 +24,12 @@ public class PropertyValueList {
 		
 		return sb.toString();
 	}
+
+	public String getFirstValue() {
+		if (values.size() > 0) {
+			return values.get(0);
+		}
+		return null;
+	}
 	
 }

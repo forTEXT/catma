@@ -10,18 +10,18 @@ package de.catma.serialization.tei;
  * To change this template use File | Settings | File Templates.
  */
 public enum TeiDocumentVersion {
-	V3(3, new V3TeiDocumentConverter()),
-    V2(2, V3, new V2TeiDocumentConverter()),
+	V3(3, V3TeiDocumentConverter.class),
+    V2(2, V3, V2TeiDocumentConverter.class),
     V1(1, V2),
     ;
 
 	private static final String TARGET_INFO_XML_ID = "TARGET_INFO"; //legacy
     private int version;
     private TeiDocumentVersion nextVersion;
-    private TeiDocumentConverter converter;
+    private Class<? extends TeiDocumentConverter> converterClazz;
 
-    private TeiDocumentVersion(int version, TeiDocumentConverter converter) {
-        this(version, null, converter);
+    private TeiDocumentVersion(int version, Class<? extends TeiDocumentConverter> converterClazz) {
+        this(version, null, converterClazz);
     }
 
     private TeiDocumentVersion(
@@ -32,16 +32,21 @@ public enum TeiDocumentVersion {
     private TeiDocumentVersion(
             int version,
             TeiDocumentVersion nextVersion,
-            TeiDocumentConverter converter) {
+            Class<? extends TeiDocumentConverter> converterClazz) {
         
         this.version = version;
         this.nextVersion = nextVersion;
-        this.converter = converter;
+        this.converterClazz = converterClazz;
     }
 
     private void convertToNextVersion(TeiDocument teiDocument) {
         if (nextVersion != null) {
-            nextVersion.converter.convert(teiDocument);
+			try {
+			 	TeiDocumentConverter converter = nextVersion.converterClazz.newInstance();
+	            converter.convert(teiDocument);
+			} catch (Exception e) {
+				throw new RuntimeException(e); // TODO: better use non generic exception
+			}
         }
     }
 

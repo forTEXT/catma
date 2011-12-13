@@ -30,8 +30,8 @@ import de.catma.core.tag.Property;
  */
 public class NumericPropertyValueFactory extends BasicSingleValuePropertyValueFactory {
 	
-	public NumericPropertyValueFactory(TeiElement teiElement) {
-		super(teiElement);
+	public NumericPropertyValueFactory(TeiElement propertyElement) {
+		super(propertyElement);
 	}
 
 

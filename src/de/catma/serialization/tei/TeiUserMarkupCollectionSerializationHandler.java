@@ -19,11 +19,13 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 		try {
 			TeiDocumentFactory factory = new TeiDocumentFactory();
 			TeiDocument teiDocument = factory.createDocumentFromStream(inputStream);
-			TagLibrary tagLibrary = new TeiTagLibrarySerializationHandler().deserialize(teiDocument);
-			TeiUserMarkupCollectionDeserializer deserializer = new TeiUserMarkupCollectionDeserializer(teiDocument);
+			TagLibrary tagLibrary = 
+					new TeiTagLibrarySerializationHandler().deserialize(teiDocument);
 			
+			TeiUserMarkupCollectionDeserializer deserializer = 
+					new TeiUserMarkupCollectionDeserializer(teiDocument, tagLibrary);
 			
-			return null;
+			return new UserMarkupCollection(tagLibrary, deserializer.getTagReferences());
 			
 		} catch (Exception exc) {
 			throw new IOException(exc);

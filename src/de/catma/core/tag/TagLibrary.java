@@ -1,19 +1,38 @@
 package de.catma.core.tag;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
-public class TagLibrary {
+public class TagLibrary implements Iterable<TagsetDefinition> {
 
 	private String name;
-	private List<TagsetDefinition> tagsetDefinitions;
+	private Map<String,TagsetDefinition> tagsetDefinitions;
 	
 	public TagLibrary(String name) {
 		super();
 		this.name = name;
+		tagsetDefinitions = new HashMap<String, TagsetDefinition>();
 	}
 
 	public void add(TagsetDefinition tagsetDefinition) {
-		tagsetDefinitions.add(tagsetDefinition);
+		tagsetDefinitions.put(tagsetDefinition.getID(),tagsetDefinition);
+	}
+
+	public TagDefinition getTagDefintion(String tagDefinitionID) {
+		for(TagsetDefinition tagsetDefiniton : tagsetDefinitions.values()) {
+			if (tagsetDefiniton.hasTagDefinition(tagDefinitionID)) {
+				return tagsetDefiniton.getTagDefinition(tagDefinitionID);
+			}
+		}
+		return null;
 	}
 	
+	public Iterator<TagsetDefinition> iterator() {
+		return tagsetDefinitions.values().iterator();
+	}
+
+	public TagsetDefinition getTagsetDefintion(String tagsetDefinitionID) {
+		return tagsetDefinitions.get(tagsetDefinitionID);
+	}
 }

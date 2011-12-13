@@ -18,6 +18,11 @@ public class PropertyPossibleValueList {
 	public String toString() {
 		return propertyValueList.toString();
 	}
+
+
+	public String getFirstValue() {
+		return propertyValueList.getFirstValue();
+	}
 	
 	
 	

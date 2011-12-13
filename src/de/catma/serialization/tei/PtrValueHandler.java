@@ -21,7 +21,11 @@ package de.catma.serialization.tei;
 
 import java.util.regex.Pattern;
 
+import org.antlr.runtime.RecognitionException;
+
 import de.catma.core.document.Range;
+import de.catma.serialization.tei.pointer.TextFragmentIdentifier;
+import de.catma.serialization.tei.pointer.TextFragmentIdentifierFactory;
 
 /**
  * A handler for values of attributes of {@link TeiElementName#ptr}, namely 
@@ -43,27 +47,17 @@ public class PtrValueHandler implements AttributeValueHandler {
 	 */
 	public static class TargetValues {
 		private String uri;
-		private long startPoint;
-		private long endPoint;
-		/**
-		 * @return the point after the last character of a range of text pointed
-		 * to by a {@link Attribute#ptr_target}.
-		 */
-		public long getEndPoint() {
-			return endPoint;
-		}
+		private Range range;
+
 		/**
 		 * @return the URI of the target 
 		 */
 		public String getURI() {
 			return uri;
 		}
-		/**
-		 * @return the point before the first character of a range of text pointed
-		 * to by a {@link Attribute#ptr_target}.
-		 */
-		public long getStartPoint() {
-			return startPoint;
+		
+		public Range getRange() {
+			return range;
 		}
 	}
 	
@@ -98,33 +92,30 @@ public class PtrValueHandler implements AttributeValueHandler {
 	 */
 	public TargetValues getTargetValuesFrom( String target ) {
 		
-		TargetValues result = new TargetValues();
-		
 		if( target == null ) {
 			throw new IllegalArgumentException( 
 					"The attribute target in <ptr> must not be null" );
 		}
-		else if( !Pattern.matches( TARGETPATTERN, target ) ) {
+		
+		TargetValues result = new TargetValues();
+		TextFragmentIdentifierFactory factory = new TextFragmentIdentifierFactory();
+		String[] uri_fragementIdent = target.split( "#" );
+		result.uri = uri_fragementIdent[0].trim();
+		String fragmentIdentifier = uri_fragementIdent[1].trim();
+		
+		try {
+			TextFragmentIdentifier textFragmentIdentifier = 
+					factory.createTextFragmentIdentifier(fragmentIdentifier);
+			
+			result.range = textFragmentIdentifier.getRange();
+			
+			return result;
+		} catch (RecognitionException e) {
+			
 			throw new IllegalArgumentException(
-					"The attribut target " + target 
-					+ " is malformed!\n It does not match regular expression "
-					+ TARGETPATTERN );
+					"The fragment identifier " + fragmentIdentifier 
+					+ " is malformed!\n It does not match RFC 5147", e );
 		}
-		
-		
-		String[] uri_points = target.split( "#" );
-		result.uri = uri_points[0].trim();
-		String[] points = uri_points[1].split( "/." );
-		
-		result.startPoint =
-			Long.valueOf( 
-				points[1].substring( 0, points[1].indexOf( ',' ) ).trim() );
-		
-		result.endPoint = 
-			Long.valueOf( 
-				points[2].substring( 0, points[2].indexOf( ')' ) ).trim() );
-
-		return result;
 	}
 	
 }

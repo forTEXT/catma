@@ -3,8 +3,16 @@ package de.catma.core.tag;
 
 public class Property {
 
-	private String ID;
 	private PropertyDefinition propertyDefinition;
 	private PropertyValueList propertyValueList;
 	
+	public Property(PropertyDefinition propertyDefinition,
+			PropertyValueList propertyValueList) {
+		this.propertyDefinition = propertyDefinition;
+		this.propertyValueList = propertyValueList;
+	}
+
+	public String getName() {
+		return propertyDefinition.getName();
+	}
 }

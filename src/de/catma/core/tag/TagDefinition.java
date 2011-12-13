@@ -1,7 +1,7 @@
 package de.catma.core.tag;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TagDefinition implements Versionable {
 	
@@ -10,8 +10,8 @@ public class TagDefinition implements Versionable {
 	private String id;
 	private String type;
 	private Version version;
-	private List<PropertyDefinition> systemPropertyDefinitions;
-	private List<PropertyDefinition> userDefinedPropertyDefinitions;
+	private Map<String,PropertyDefinition> systemPropertyDefinitions;
+	private Map<String,PropertyDefinition> userDefinedPropertyDefinitions;
 	private String baseID;
 
 
@@ -21,8 +21,8 @@ public class TagDefinition implements Versionable {
 		this.type = type;
 		this.version = version;
 		this.baseID = baseID;
-		systemPropertyDefinitions = new ArrayList<PropertyDefinition>();
-		userDefinedPropertyDefinitions = new ArrayList<PropertyDefinition>();
+		systemPropertyDefinitions = new HashMap<String, PropertyDefinition>();
+		userDefinedPropertyDefinitions = new HashMap<String, PropertyDefinition>();
 	}
 
 	public Version getVersion() {
@@ -36,11 +36,23 @@ public class TagDefinition implements Versionable {
 	}
 
 	public void addSystemPropertyDefinition(PropertyDefinition propertyDefinition) {
-		systemPropertyDefinitions.add(propertyDefinition);
+		systemPropertyDefinitions.put(propertyDefinition.getName(), propertyDefinition);
 	}
 	
 	public void addUserDefinedPropertyDefinition(PropertyDefinition propertyDefinition) {
-		userDefinedPropertyDefinitions.add(propertyDefinition);
+		userDefinedPropertyDefinitions.put(propertyDefinition.getName(), propertyDefinition);
 	}	
 	
+	public String getID() {
+		return id;
+	}
+
+	public PropertyDefinition getPropertyDefinition(String propertyName) {
+		if (systemPropertyDefinitions.containsKey(propertyName)) {
+			return systemPropertyDefinitions.get(propertyName);
+		}
+		else {
+			return userDefinedPropertyDefinitions.get(propertyName);
+		}
+	}
 }

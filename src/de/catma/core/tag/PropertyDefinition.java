@@ -19,8 +19,14 @@ public class PropertyDefinition {
 	public String toString() {
 		return "PROP["+name+"="+possibleValueList+"]";
 	}
+
+
+	public String getName() {
+		return name;
+	}
 	
-	//vAlt
-	//string
-	//vColl
+	public String getFirstValue() {
+		return possibleValueList.getFirstValue();
+	}
+
 }

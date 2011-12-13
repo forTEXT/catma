@@ -30,7 +30,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 			new HashMap<String,TagDef>();
 	
 	public void convert(TeiDocument teiDocument) {
-		
+	
 		TeiElement encodingDesc = new TeiElement(TeiElementName.encodingDesc);
 		((TeiElement)teiDocument.getElements(TeiElementName.teiHeader).get(0)).appendChild(encodingDesc);
 		standardTagsetDefinition = addStandardTagset(encodingDesc);
