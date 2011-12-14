@@ -20,7 +20,6 @@
 package de.catma.core.document.source;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.MatchResult;
@@ -29,8 +28,9 @@ import java.util.regex.Pattern;
 
 import de.catma.core.document.Range;
 import de.catma.core.document.source.contenthandler.SourceContentHandler;
-import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollection;
+import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollectionReference;
 import de.catma.core.document.standoffmarkup.user.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
 
 /**
  * The representation of a Source Document.
@@ -44,8 +44,8 @@ public class SourceDocument {
 	private ContentInfoSet contentInfoSet;
 	private IndexInfoSet indexInfoSet;
 	private TechInfoSet techInfoSet;
-	private List<StructureMarkupCollection> structureMarkupCollections;
-	private List<UserMarkupCollection> userMarkupCollections;
+	private List<StructureMarkupCollectionReference> structureMarkupCollectionRefs;
+	private List<UserMarkupCollectionReference> userMarkupCollectionRefs;
 	
 	
 	
