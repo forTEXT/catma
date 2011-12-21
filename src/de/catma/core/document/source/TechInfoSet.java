@@ -11,6 +11,17 @@ public class TechInfoSet {
 	private URI uri;
 	private Long checksum;
 	
+	private String xsltDocument; 
+	
+	public TechInfoSet(FileType fileType, Charset charset,
+			FileOSType fileOSType, URI uri, Long checksum) {
+		super();
+		this.fileType = fileType;
+		this.charset = charset;
+		this.fileOSType = fileOSType;
+		this.uri = uri;
+		this.checksum = checksum;
+	}
 	public FileType getFileType() {
 		return fileType;
 	}

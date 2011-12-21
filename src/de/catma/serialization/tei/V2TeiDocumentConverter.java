@@ -15,7 +15,7 @@ public class V2TeiDocumentConverter implements TeiDocumentConverter {
 
     public void convert(TeiDocument teiDocument) {
 
-        Nodes fsNodes = teiDocument.getElements(TeiElementName.fs);
+        Nodes fsNodes = teiDocument.getNodes(TeiElementName.fs);
 
         for( int i=0; i<fsNodes.size(); i++ ) {
             Node curNode = fsNodes.get(i);
@@ -48,7 +48,7 @@ public class V2TeiDocumentConverter implements TeiDocumentConverter {
         }
         
         Nodes fNodes =
-        		teiDocument.getElements(TeiElementName.f);
+        		teiDocument.getNodes(TeiElementName.f);
         
         for( int i=0; i<fNodes.size(); i++ ) {
             Node curNode = fNodes.get(i);

@@ -11,7 +11,16 @@ public class ContentInfoSet {
     private Locale locale;
     private String preview;
     
-    
+	public ContentInfoSet(String author, String description, String publisher,
+			String title, Locale locale) {
+		super();
+		this.author = author;
+		this.description = description;
+		this.publisher = publisher;
+		this.title = title;
+		this.locale = locale;
+	}
+
 	public String getAuthor() {
 		return author;
 	}

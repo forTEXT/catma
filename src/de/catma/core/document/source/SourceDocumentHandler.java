@@ -38,7 +38,7 @@ import de.catma.core.document.source.contenthandler.StandardContentHandler;
 /**
  * Handles the creation of {@link SourceDocument}s.<br>
  * 
- * This class is a Singletion.
+ * This class is a Singleton.
  *
  * @author Marco Petris
  *

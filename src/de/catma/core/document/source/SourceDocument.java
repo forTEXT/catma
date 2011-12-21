@@ -19,17 +19,11 @@
 
 package de.catma.core.document.source;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.MatchResult;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import de.catma.core.document.Range;
 import de.catma.core.document.source.contenthandler.SourceContentHandler;
 import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.user.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
 
 /**
@@ -47,32 +41,22 @@ public class SourceDocument {
 	private List<StructureMarkupCollectionReference> structureMarkupCollectionRefs;
 	private List<UserMarkupCollectionReference> userMarkupCollectionRefs;
 	
-	
-	
-	
-	
-	/**
-	 * 
-	 * Constructor.
-	 * 
-	 * @param sourceDocumentInfo the corresponding Structure Markup Document
-	 * @param handler the handler for the Source Document
-	 * @param name the name of the document
-	 * @param progressListener a listener which will be notified of the progress
-	 * of the computation of the checksum.
-	 * @throws IOException access failure
-	 * @see SourceContentHandler
-	 * @see MetaDataInfoSet
-	 */
-	SourceDocument( 
-			SourceDocumentInfo sourceDocumentInfo,
-			SourceContentHandler handler, 
-			long checksum) throws IOException {
-
+	public SourceDocument(
+			SourceContentHandler handler,
+			ContentInfoSet contentInfoSet,
+			IndexInfoSet indexInfoSet,
+			TechInfoSet techInfoSet,
+			List<StructureMarkupCollectionReference> structureMarkupCollectionRefs,
+			List<UserMarkupCollectionReference> userMarkupCollectionRefs) {
+		super();
 		this.handler = handler;
-
+		this.contentInfoSet = contentInfoSet;
+		this.indexInfoSet = indexInfoSet;
+		this.techInfoSet = techInfoSet;
+		this.structureMarkupCollectionRefs = structureMarkupCollectionRefs;
+		this.userMarkupCollectionRefs = userMarkupCollectionRefs;
 	}
-	
+
 	/**
 	 * Displays the content of the document as text.
 	 */
@@ -112,49 +96,4 @@ public class SourceDocument {
 	public long getSize() {
 		return handler.getContent( 0 ).length();
 	}
-	
-	/**
-	 * @param patternString the pattern to look for
-	 * @param isRegularExpression true->pattern is a regular 
-	 * expression-{@link Pattern}, false->simple match
-	 * @return a list of ranges where this document has content with 
-	 * the given pattern
-	 */
-	public List<Range> getRangesFor( 
-			String patternString, boolean isRegularExpression ) {
-		
-		ArrayList<Range> result = new ArrayList<Range>();
-		
-		String content = getContent(0);
-		
-		Pattern pattern = null; 
-			
-		if( !isRegularExpression ) {
-			pattern = Pattern.compile( 
-				Pattern.quote( patternString ),
-				Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
-		}
-		else {
-			pattern = Pattern.compile( patternString ); 
-		}
-
-		Matcher matcher = pattern.matcher( content );
-		
-		while( matcher.find() ) {
-			MatchResult mr = matcher.toMatchResult();
-			
-//			System.out.println( 
-//				"start: " + mr.start() 
-//				+ " end: " + mr.end() 
-//				+ " token: " + mr.group() ); 
-		
-			result.add( 
-					new Range(
-						mr.start(), 
-						mr.end() ) );
-		}
-		
-		return result;
-	}
-
 }

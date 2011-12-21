@@ -32,10 +32,10 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 	public void convert(TeiDocument teiDocument) {
 	
 		TeiElement encodingDesc = new TeiElement(TeiElementName.encodingDesc);
-		((TeiElement)teiDocument.getElements(TeiElementName.teiHeader).get(0)).appendChild(encodingDesc);
+		((TeiElement)teiDocument.getNodes(TeiElementName.teiHeader).get(0)).appendChild(encodingDesc);
 		standardTagsetDefinition = addStandardTagset(encodingDesc);
 		
-		Nodes tagsetElements = teiDocument.getElements(TeiElementName.fvLib);
+		Nodes tagsetElements = teiDocument.getNodes(TeiElementName.fvLib);
 		
 		for( int i=0; i<tagsetElements.size(); i++) {
 			TeiElement tagsetDef = createTagsetDefinition(tagsetElements.get(i), encodingDesc);
@@ -43,7 +43,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		}	
 		
 		Nodes tagElements = 
-				teiDocument.getElements(TeiElementName.fs, AttributeValue.type_catma_tag);
+				teiDocument.getNodes(TeiElementName.fs, AttributeValue.type_catma_tag);
 		
 		for( int i=0; i<tagElements.size(); i++) {
 			createTagDefinition(tagElements.get(i));
@@ -65,8 +65,8 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		}
 		
 		IDGenerator catmaIDGenerator = new IDGenerator();
-		Nodes segElements = teiDocument.getElements(TeiElementName.seg);
-		TeiElement text = (TeiElement)teiDocument.getElements(TeiElementName.text).get(0);
+		Nodes segElements = teiDocument.getNodes(TeiElementName.seg);
+		TeiElement text = (TeiElement)teiDocument.getNodes(TeiElementName.text).get(0);
 		for (int i=0; i<segElements.size(); i++) {
 			TeiElement segElement = (TeiElement)segElements.get(i);
 			if ((segElement.getAttributeValue(Attribute.ana) != null) 
@@ -83,7 +83,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 	}
 
 	private void adjustPointers(TeiDocument teiDocument) {
-		Nodes pointers = teiDocument.getElements(TeiElementName.ptr);
+		Nodes pointers = teiDocument.getNodes(TeiElementName.ptr);
 		
 		for( int i=0; i<pointers.size(); i++) {
 			TeiElement pointer = (TeiElement)pointers.get(i);

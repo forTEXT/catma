@@ -2,6 +2,8 @@ package de.catma.serialization.tei;
 
 import java.io.IOException;
 
+import de.catma.core.document.source.ContentInfoSet;
+import de.catma.core.document.source.TechInfoSet;
 import de.catma.core.tag.IDGenerator;
 
 import nu.xom.Document;
@@ -39,7 +41,7 @@ class TeiDocument {
 	 * @param xPathElements the elements for the xpath expression
 	 * @return the list of matching nodes
 	 */
-	public Nodes getElements( TeiElementName... xPathElements ) {
+	public Nodes getNodes( TeiElementName... xPathElements ) {
 		
 		StringBuilder xPathBuilder = new StringBuilder();
 		String conc = "//";
@@ -60,7 +62,7 @@ class TeiDocument {
 	 * @param teiElementName  the element for the xpath expression
 	 * @return  the list of matching nodes
 	 */
-	public Nodes getElements( TeiElementName teiElementName ) {
+	public Nodes getNodes( TeiElementName teiElementName ) {
 		return getNodes( 
 			"//"+TeiElement.TEINAMESPACEPREFIX+":"+teiElementName );
 	}
@@ -72,7 +74,7 @@ class TeiDocument {
      * @param attributeValue the attribute/value combination to filter on
      * @return  the list of matching nodes
      */
-    public Nodes getElements( TeiElementName teiElementName, AttributeValue attributeValue) {
+    public Nodes getNodes( TeiElementName teiElementName, AttributeValue attributeValue) {
         return getNodes(
             "//"+TeiElement.TEINAMESPACEPREFIX+":"+teiElementName + "[" + attributeValue + "]");
     }
@@ -172,16 +174,18 @@ class TeiDocument {
 	 * @return the new header representation
 	 */
 	void loadHeader() {
-		this.teiHeader =  new TeiHeader( 
-			getMandatoryElement( 
-				"/"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.TEI+
-				"/"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.teiHeader ),
-			getMandatoryElement( "//"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.title ), 
-			getMandatoryElement( "//"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.author ), 
-			getMandatoryElement( "//"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.publisher ), 
-			getMandatoryElement( "//"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.sourceDesc ),
-            getLanguageElement(),
-            getElementByID(TechnicalDescription.CATMA_TECH_DESC_XML_ID));
+		if (this.teiHeader == null) {
+			this.teiHeader =  new TeiHeader( 
+				getMandatoryElement( 
+					"/"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.TEI+
+					"/"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.teiHeader ),
+				getMandatoryElement( "//"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.title ), 
+				getMandatoryElement( "//"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.author ), 
+				getMandatoryElement( "//"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.publisher ), 
+				getMandatoryElement( "//"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.sourceDesc ),
+	            getLanguageElement(),
+	            getElementByID(TechnicalDescription.CATMA_TECH_DESC_XML_ID));
+		}
 	}	
 	
 	Nodes getTagsetDefinitionElements() {
@@ -224,5 +228,27 @@ class TeiDocument {
 				Attribute.xmlid.getPrefixedName(),
 				Attribute.xmlid.getNamespaceURI(),
 				new IDGenerator().generate() );
+	}
+
+
+
+	public ContentInfoSet getContentInfoSet() {
+		ContentInfoSet cis = 
+				new ContentInfoSet(
+						teiHeader.getSimpleAuthor(), teiHeader.getSimpleSourceDesc(),
+						teiHeader.getSimplePublisher(), teiHeader.getSimpleTitle(), 
+						teiHeader.getLanguage());
+		
+		return cis;
+	}
+
+
+
+	public TechInfoSet getTechInfoset() {
+		TechnicalDescription td = teiHeader.getTechnicalDescription();
+		TechInfoset tis = new TechInfoSet(
+				td.getFileType(), td.getCharset(), td.getFileOSType(), URI fehlt, td.getChecksum())
+// HIER GEHTS WEITER: URI aus FSSourceDocumentHandler fehlt hier
+		return null;
 	}
 }

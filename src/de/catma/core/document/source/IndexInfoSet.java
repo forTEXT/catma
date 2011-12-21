@@ -7,7 +7,6 @@ public class IndexInfoSet {
 
     private List<String> unseparableCharacterSequences;
     private List<Character> userDefinedSeparatingCharacters;
-    private List<IndexRegion> indexRegions;
     
     /**
      * @return a (possibly empty) list of unseparable character sequences,
