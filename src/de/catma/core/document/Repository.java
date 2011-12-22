@@ -1,5 +1,6 @@
 package de.catma.core.document;
 
+import java.util.Collection;
 import java.util.Set;
 
 import de.catma.core.document.source.SourceDocument;
@@ -10,8 +11,8 @@ import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
 
 public interface Repository {
 
-	public Set<SourceDocument> getSourceDocuments();
-	public Set<Collection> getCollections();
+	public Collection<SourceDocument> getSourceDocuments();
+	public Set<Corpus> getCorpora();
 	
 	public UserMarkupCollection getUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference);

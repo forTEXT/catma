@@ -1,12 +1,14 @@
 package de.catma;
 
+import java.io.File;
+
 import com.vaadin.Application;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.LoginForm.LoginEvent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.LoginForm;
+import com.vaadin.ui.LoginForm.LoginEvent;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Window;
 
@@ -83,6 +85,9 @@ public class CleaApplication extends Application {
 		
 		setMainWindow(mainWindow);
 		setTheme("cleatheme");
+		File f = new File("nase.txt");
+		System.out.println(f.getAbsolutePath());
+		System.out.println(this.getContext().getBaseDirectory());
 	}
 
 }

@@ -19,9 +19,8 @@
 
 package de.catma.core.document.source.contenthandler;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
+import java.io.InputStream;
 
 import nu.xom.Builder;
 import nu.xom.Document;
@@ -29,11 +28,8 @@ import nu.xom.Element;
 import nu.xom.Node;
 import nu.xom.Text;
 
-import org.apache.commons.io.FileUtils;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
-
-import de.catma.core.document.source.SourceDocumentInfo;
 
 /**
  * A content handler HTML based {@link de.catma.document.source.SourceDocument}s.
@@ -41,37 +37,32 @@ import de.catma.core.document.source.SourceDocumentInfo;
  * @author Marco Petris
  *
  */
-public class HTMLContentHandler implements SourceContentHandler {
+public class HTMLContentHandler extends AbstractSourceContentHandler {
 
     private String content;
-
-    public long load(
-    		SourceDocumentInfo sourceDocumentInfo,
-            URI uri, ProgressListener progressListener) throws IOException {
-
-        File file = new File(uri);
-
-        if( progressListener != null ) {
-            progressListener.setIndeterminate(true,
-                "FileManager.loadingFile", file.getName() );
-        }
-
-        long checksum = FileUtils.checksumCRC32(file);
-
+    
+    public void load() throws IOException {
+    	
         try {
-            XMLReader reader =
-                XMLReaderFactory.createXMLReader("org.ccil.cowan.tagsoup.Parser");
-            Builder builder = new Builder(reader, false, new HTMLFilterFactory());
-            Document document = builder.build(file);
-            StringBuilder contentBuilder = new StringBuilder();
-            processTextNodes(contentBuilder, document.getRootElement());
-            content = contentBuilder.toString();
+        	InputStream is = getSourceDocumentInfo().getURI().toURL().openStream();
+        	try {
+		        XMLReader reader =
+		            XMLReaderFactory.createXMLReader("org.ccil.cowan.tagsoup.Parser");
+		        Builder builder = new Builder(reader, false, new HTMLFilterFactory());
+		        Document document = builder.build(is);
+		        StringBuilder contentBuilder = new StringBuilder();
+		        processTextNodes(contentBuilder, document.getRootElement());
+		        content = contentBuilder.toString();
+        	}
+        	finally {
+        		is.close();
+        	}
         }
         catch (Exception e) {
-            throw new IOException(e);
+        	throw new IOException(e);
         }
+        
 
-        return checksum;
     }
 
     /**

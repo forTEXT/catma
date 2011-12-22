@@ -20,18 +20,12 @@
 package de.catma.core.document.source.contenthandler;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.net.URI;
+import java.io.InputStreamReader;
 
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.rtf.RTFEditorKit;
-
-import org.apache.commons.io.FileUtils;
-
-import de.catma.core.document.source.SourceDocumentInfo;
 
 /**
  * A content handler for RTF based {@link de.catma.document.source.SourceDocument}s.
@@ -39,29 +33,22 @@ import de.catma.core.document.source.SourceDocumentInfo;
  * @author Marco Petris
  *
  */
-public class RTFContentHandler implements SourceContentHandler {
+public class RTFContentHandler extends AbstractSourceContentHandler {
 
     private String content;
 
-    public long load(
-    		SourceDocumentInfo sourceDocumentInfo,
-            URI uri, ProgressListener progressListener) throws IOException {
-
+    public void load() throws IOException {
         RTFEditorKit rtf = new RTFEditorKit();
 
         Document doc = rtf.createDefaultDocument();
 
-        File file = new File(uri);
-
-        long checksum = FileUtils.checksumCRC32(file);
-
-        BufferedReader input = new BufferedReader(new FileReader(file));
+        
+        BufferedReader input = 
+        		new BufferedReader(
+        				new InputStreamReader(
+        						getSourceDocumentInfo().getURI().toURL().openStream()));
 
         try {
-            if( progressListener != null ) {
-                progressListener.setIndeterminate(true,
-                    "FileManager.loadingFile", file.getName() );
-            }
 
             rtf.read(input,doc,0);
             content = doc.getText(0,doc.getLength()).trim();
@@ -81,8 +68,6 @@ public class RTFContentHandler implements SourceContentHandler {
                 input.close();
             }
         }
-
-        return checksum;
     }
 
     public String getContent(long startPoint, long endPoint) {

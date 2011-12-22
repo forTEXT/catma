@@ -1,10 +1,14 @@
 package de.catma.core.document.source;
 
+import java.net.URI;
+
 public class SourceDocumentInfo {
 
 	private IndexInfoSet indexInfoSet;
 	private ContentInfoSet contentInfoSet;
 	private TechInfoSet techInfoSet;
+	private URI uri;
+	
 	public SourceDocumentInfo(IndexInfoSet indexInfoSet,
 			ContentInfoSet contentInfoSet, TechInfoSet techInfoSet) {
 		super();
@@ -20,6 +24,14 @@ public class SourceDocumentInfo {
 	}
 	public TechInfoSet getTechInfoSet() {
 		return techInfoSet;
+	}
+	
+	public void setURI(URI sourceURI) {
+		this.uri=sourceURI;
+	}
+	
+	public URI getURI() {
+		return uri;
 	}
 	
 	

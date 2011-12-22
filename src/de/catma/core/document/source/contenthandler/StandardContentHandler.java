@@ -30,10 +30,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.charset.Charset;
-import java.util.zip.CRC32;
 
 import de.catma.core.ExceptionHandler;
-import de.catma.core.document.source.SourceDocumentInfo;
 
 /**
  * The standard content handler which handles text bases files.
@@ -41,15 +39,13 @@ import de.catma.core.document.source.SourceDocumentInfo;
  * @author Marco Petris
  *
  */
-public class StandardContentHandler implements SourceContentHandler {
+public class StandardContentHandler extends AbstractSourceContentHandler {
 	
 	/**
 	 * UTF-8 <b>B</b>yte<b>O</b>rder<b>M</b>ark: 0xEF 0xBB 0xBF
 	 */
 	public static final byte[] UTF_8_BOM = 
 		new byte[] {(byte)0xEF, (byte)0xBB, (byte)0xBF};
-	
-	//TODO: BOM kram hier richtig?
 	
 	private Charset charset;
 	private String content;
@@ -76,34 +72,21 @@ public class StandardContentHandler implements SourceContentHandler {
 		return content.substring( (int)startPoint );
 	}
 
-	/* (non-Javadoc)
-	 * @see org.catma.document.source.SourceContentHandler#load(org.catma.document.standoffmarkup.StandoffMarkupDocument, java.lang.String, org.catma.backgroundservice.ProgressListener)
-	 */
-	public long load(
-			SourceDocumentInfo sourceDocumentInfo, URI uri, 
-			ProgressListener progressListener ) 
-		throws IOException {
-		
-		// read the content and compute the checksum
+	public void load() throws IOException {
+		// read the content 
 		
 		this.charset = 
-			sourceDocumentInfo.getCharset();
+			getSourceDocumentInfo().getTechInfoSet().getCharset();
 		
 //        Log.text( "charset " + charset );
 
 		StringBuilder contentBuffer = new StringBuilder(); 
 		
-		CRC32 checksum = new CRC32();
-		
 		BufferedInputStream bis = null;
+
 		try {
-			File file = new File( uri );
+			File file = new File(getSourceDocumentInfo().getURI());
 			size = file.length();
-            if( progressListener != null ) {
-                progressListener.start(
-                    (int)size,
-                    "FileManager.loadingFile", file.getName() );
-            }
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             bis = new BufferedInputStream(new FileInputStream(file));
@@ -111,17 +94,17 @@ public class StandardContentHandler implements SourceContentHandler {
             int bCount = -1;
             while ((bCount=bis.read(byteBuffer)) != -1) {
                 bos.write(byteBuffer, 0, bCount);
-                if( progressListener != null ) {
-                    progressListener.update( bos.toByteArray().length );
-                }
             }
-
-            checksum.update( bos.toByteArray() );
 
             ByteArrayInputStream toCharBis = new ByteArrayInputStream(bos.toByteArray());
 
-			InputStream fr =
-				new BOMFilterInputStream( toCharBis, charset );
+			InputStream fr = null;
+			if (hasUTF8BOM(file)) {
+				fr = new BOMFilterInputStream( toCharBis, charset );
+			}
+			else {
+				fr = toCharBis;
+			}
 
 			BufferedReader reader = new BufferedReader(
 					new InputStreamReader( fr, charset ) );
@@ -133,10 +116,6 @@ public class StandardContentHandler implements SourceContentHandler {
 	        }
 
 			content = contentBuffer.toString();
-
-//            Log.text("checksum for " + fullPath + " is " + checksum.getValue());
-
-            return checksum.getValue();
 		}
 		finally {
 			if( bis != null ) {
@@ -153,13 +132,11 @@ public class StandardContentHandler implements SourceContentHandler {
 	 * @param charset the characterset to use
 	 * @param startPoint the startpoint before the first character
 	 * @param endPoint the endpoint after the last character
-	 * @param progressListener a listener which will be notified about the load progress
 	 * @return the loaded content
 	 * @throws IOException Source Document access failure
 	 */
-	public String loadContent( URI uri, 
-			Charset charset, long startPoint, long endPoint, 
-			ProgressListener progressListener ) 
+	public String loadContent(URI uri, 
+			Charset charset, long startPoint, long endPoint) 
 		throws IOException {
 		
 		StringBuilder buffer = new StringBuilder();
@@ -167,13 +144,14 @@ public class StandardContentHandler implements SourceContentHandler {
 		BufferedReader reader = null;
 		try {
 			File file = new File( uri );
-			if( progressListener != null ) {
-				progressListener.start( 
-					(int)file.length(), 
-					"FileManager.loadingFile", file.getName() );
+			FileInputStream fr = null; 
+			
+			if (hasUTF8BOM(file)) {
+				fr = new BOMFilterFileInputStream( file, charset );
 			}
-			FileInputStream fr = 
-				new BOMFilterFileInputStream( file, charset );
+			else {
+				fr = new FileInputStream(file);
+			}
 
 			reader = new BufferedReader(
 					new InputStreamReader( fr, charset ) );
@@ -182,9 +160,6 @@ public class StandardContentHandler implements SourceContentHandler {
 			int cCount = -1;
 	        while((cCount=reader.read(buf)) != -1) {
 	        	buffer.append( buf, 0, cCount);
-				if( progressListener != null ) {
-					progressListener.update( buffer.length() );
-				}
 	        	if( ( endPoint > -1 ) && ( buffer.length() >= endPoint ) ) {
 	        		return buffer.toString();
 	        	}

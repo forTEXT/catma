@@ -19,9 +19,8 @@
 
 package de.catma.core.document.source.contenthandler;
 
+
 import java.io.IOException;
-import java.net.URI;
-import java.util.zip.CRC32;
 
 import de.catma.core.document.source.FileType;
 import de.catma.core.document.source.SourceDocumentInfo;
@@ -39,23 +38,12 @@ import de.catma.core.document.source.SourceDocumentInfo;
  */
 public interface SourceContentHandler {
 
-	/**
-     * Initializes the handler and computes a {@link CRC32} checksum for the file at the given path.
-	 * The progress of the computational process and the loading can be notified to the given
-	 * progressListener. The Structure Markup Document may provide information 
-	 * about the Source Document (the charset for example).
-	 * 
-	 * @param sourceDocumentInfo The Structure Markup Document which belongs
-	 * to the Source Document.
-	 * @param uri The URI of the Source Document
-	 * @param progressListener a listener which can be notified about the computation progress
-	 * @return the checksum
-	 * @throws IOException access failure to the Source Document
-	 */
-	public long load(
-			SourceDocumentInfo sourceDocumentInfo, URI uri, 
-			ProgressListener progressListener ) 
-		throws IOException;
+	public void setSourceDocumentInfo(
+			SourceDocumentInfo sourceDocumentInfo );
+	
+	public SourceDocumentInfo getSourceDocumentInfo();
+	
+	public void load() throws IOException;
 	
 	/**
 	 * Returns the content between the startPoint and the endPoint. A point is a mark
@@ -78,5 +66,4 @@ public interface SourceContentHandler {
 	 * @return the size of the content
 	 */
 	public long getSize();
-
 }

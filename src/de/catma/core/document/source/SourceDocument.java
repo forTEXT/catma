@@ -19,6 +19,7 @@
 
 package de.catma.core.document.source;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import de.catma.core.document.Range;
@@ -35,26 +36,14 @@ import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
 public class SourceDocument {
 	
 	private SourceContentHandler handler;
-	private ContentInfoSet contentInfoSet;
-	private IndexInfoSet indexInfoSet;
-	private TechInfoSet techInfoSet;
 	private List<StructureMarkupCollectionReference> structureMarkupCollectionRefs;
 	private List<UserMarkupCollectionReference> userMarkupCollectionRefs;
 	
-	public SourceDocument(
-			SourceContentHandler handler,
-			ContentInfoSet contentInfoSet,
-			IndexInfoSet indexInfoSet,
-			TechInfoSet techInfoSet,
-			List<StructureMarkupCollectionReference> structureMarkupCollectionRefs,
-			List<UserMarkupCollectionReference> userMarkupCollectionRefs) {
+	public SourceDocument(SourceContentHandler handler) {
 		super();
 		this.handler = handler;
-		this.contentInfoSet = contentInfoSet;
-		this.indexInfoSet = indexInfoSet;
-		this.techInfoSet = techInfoSet;
-		this.structureMarkupCollectionRefs = structureMarkupCollectionRefs;
-		this.userMarkupCollectionRefs = userMarkupCollectionRefs;
+		this.structureMarkupCollectionRefs = new ArrayList<StructureMarkupCollectionReference>();
+		this.userMarkupCollectionRefs = new ArrayList<UserMarkupCollectionReference>();
 	}
 
 	/**
@@ -95,5 +84,19 @@ public class SourceDocument {
 	 */
 	public long getSize() {
 		return handler.getContent( 0 ).length();
+	}
+
+	public void addStructureMarkupCollectionReference(
+			StructureMarkupCollectionReference structureMarkupCollRef) {
+		structureMarkupCollectionRefs.add(structureMarkupCollRef);
+	}
+
+	public void addUserMarkupCollectionReference(
+			UserMarkupCollectionReference userMarkupCollRef) {
+		userMarkupCollectionRefs.add(userMarkupCollRef);
+	}
+
+	public String getID() {
+		return handler.getSourceDocumentInfo().getURI().toString();
 	}
 }

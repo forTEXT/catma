@@ -2,15 +2,15 @@ package de.catma.serialization.tei;
 
 import java.io.IOException;
 
-import de.catma.core.document.source.ContentInfoSet;
-import de.catma.core.document.source.TechInfoSet;
-import de.catma.core.tag.IDGenerator;
-
 import nu.xom.Document;
 import nu.xom.Node;
 import nu.xom.Nodes;
 import nu.xom.Serializer;
 import nu.xom.XPathContext;
+import de.catma.core.document.source.ContentInfoSet;
+import de.catma.core.document.source.IndexInfoSet;
+import de.catma.core.document.source.TechInfoSet;
+import de.catma.core.tag.IDGenerator;
 
 class TeiDocument {
 	
@@ -246,9 +246,18 @@ class TeiDocument {
 
 	public TechInfoSet getTechInfoset() {
 		TechnicalDescription td = teiHeader.getTechnicalDescription();
-		TechInfoset tis = new TechInfoSet(
-				td.getFileType(), td.getCharset(), td.getFileOSType(), URI fehlt, td.getChecksum())
-// HIER GEHTS WEITER: URI aus FSSourceDocumentHandler fehlt hier
-		return null;
+		TechInfoSet tis = new TechInfoSet(
+				td.getFileType(), td.getCharset(), td.getFileOSType(), td.getChecksum());
+		
+		return tis;
+	}
+	
+	public IndexInfoSet getIndexInfoSet() {
+		TechnicalDescription td = teiHeader.getTechnicalDescription();
+		IndexInfoSet iis = 
+				new IndexInfoSet(
+						td.getUnseparableCharacterSequenceList(), 
+						td.getUserDefinedSeparatingCharacterList());
+		return iis;
 	}
 }

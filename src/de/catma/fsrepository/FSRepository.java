@@ -1,38 +1,75 @@
 package de.catma.fsrepository;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
-import de.catma.core.document.Collection;
+import de.catma.core.document.Corpus;
 import de.catma.core.document.Repository;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollection;
 import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollectionReference;
 import de.catma.core.document.standoffmarkup.user.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
+import de.catma.serialization.SerializationHandlerFactory;
 
-public class FSRepository implements Repository {
+class FSRepository implements Repository {
 	
 	private String repoFolderPath;
+	private SerializationHandlerFactory serializationHandlerFactory;
+	private Set<Corpus> corpora;
+	private FSCorpusHandler corpusHandler;
+	private FSSourceDocumentHandler sourceDocumentHandler;
+	private Map<String,SourceDocument> sourceDocumentsByID;
 	
-	public FSRepository(String repoFolderPath) {
+	public FSRepository(
+			String repoFolderPath, SerializationHandlerFactory serializationHandlerFactory) {
+		
 		super();
 		this.repoFolderPath = repoFolderPath;
-		loadCollections();
-	}
+		this.serializationHandlerFactory = serializationHandlerFactory;
+		this.corpusHandler = new FSCorpusHandler(repoFolderPath);
+		this.sourceDocumentHandler = 
+			new FSSourceDocumentHandler(
+				repoFolderPath, 
+				serializationHandlerFactory.getSourceDocumentInfoSerializationHandler());
 
-	private void loadCollections() {
-		// TODO Auto-generated method stub
+	}
+	
+	public void init() throws IOException {
 		
-	}
-
-	public Set<SourceDocument> getSourceDocuments() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Set<Collection> getCollections() {
+		File repoFolder = new File(repoFolderPath);
+		if(!repoFolder.exists() && !repoFolder.mkdirs()) {
+			throw new IOException("can not create repo folder " + repoFolderPath);
+		}
 		
-		return null;
+		File digitalObjectsFolder = new File(this.sourceDocumentHandler.getDigitalObjectsFolderPath());
+		if(!digitalObjectsFolder.exists() && !digitalObjectsFolder.mkdirs()) {
+			throw new IOException(
+				"can not create repo folder " + 
+				this.sourceDocumentHandler.getDigitalObjectsFolderPath());
+		}
+		
+		File corpusFolder = new File(this.corpusHandler.getCorpusFolderPath());
+		if(!corpusFolder.exists() && !corpusFolder.mkdirs()) {
+			throw new IOException(
+				"can not create repo folder " + 
+				this.corpusHandler.getCorpusFolderPath());
+		}
+		
+		this.sourceDocumentsByID = this.sourceDocumentHandler.loadSourceDocuments();
+		this.corpora = corpusHandler.loadCorpora(this);
+	}
+
+	public Collection<SourceDocument> getSourceDocuments() {
+		return Collections.unmodifiableCollection(this.sourceDocumentsByID.values());
+	}
+
+	public Set<Corpus> getCorpora() {
+		return this.corpora;
 	}
 
 	public UserMarkupCollection getUserMarkupCollection(
@@ -78,8 +115,7 @@ public class FSRepository implements Repository {
 	}
 
 	public void insert(SourceDocument sourceDocument) {
-		// TODO Auto-generated method stub
-		
+		sourceDocumentHandler.insert(sourceDocument);
 	}
 
 	public UserMarkupCollectionReference insert(
@@ -92,6 +128,10 @@ public class FSRepository implements Repository {
 			StructureMarkupCollection structureMarkupCollection) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public SourceDocument getSourceDocument(String id) {
+		return this.sourceDocumentsByID.get(id);
 	}
 
 	

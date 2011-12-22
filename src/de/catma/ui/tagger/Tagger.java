@@ -31,7 +31,7 @@ public class Tagger extends AbstractComponent {
 		}
 
 		attributes.clear();
-		
+		System.out.println("PAINTCONTENT: " + target);
 		// We could also set variables in which values can be returned
 		// but declaring variables here is not required
 	}
@@ -60,6 +60,8 @@ public class Tagger extends AbstractComponent {
 		if (variables.containsKey(EventAttribute.LOGEVENT.name())) {
 			System.out.println(variables.get(EventAttribute.LOGEVENT.name()));
 		}
+		
+		System.out.println("CHANGEVAR: " + source);
 	}
 	
 	private void setHTML(String html) {

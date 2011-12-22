@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import de.catma.core.document.source.ContentInfoSet;
+import de.catma.core.document.source.IndexInfoSet;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.source.SourceDocumentInfo;
 import de.catma.core.document.source.TechInfoSet;
@@ -27,8 +28,9 @@ public class TeiSourceDocumentInfoSerializationHandler implements
 	public SourceDocumentInfo deserialize(TeiDocument teiDocument) {
 		ContentInfoSet contentInfoSet = teiDocument.getContentInfoSet();	
 		TechInfoSet techInfoSet = teiDocument.getTechInfoset();
+		IndexInfoSet indexInfoSet = teiDocument.getIndexInfoSet();
 		
-		return null;
+		return new SourceDocumentInfo(indexInfoSet, contentInfoSet, techInfoSet);
 	}
 
 	public void serialize(SourceDocument sourceDocument) {

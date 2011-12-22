@@ -19,15 +19,10 @@
 
 package de.catma.core.document.source.contenthandler;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.util.PDFTextStripper;
-
-import de.catma.core.document.source.SourceDocumentInfo;
 
 /**
  * A content handler for PDF based {@link de.catma.document.source.SourceDocument}s.
@@ -35,25 +30,14 @@ import de.catma.core.document.source.SourceDocumentInfo;
  * @author Marco Petris
  *
  */
-public class PDFContentHandler implements SourceContentHandler {
+public class PDFContentHandler extends AbstractSourceContentHandler {
 
     private String content;
 
-    public long load(
-    		SourceDocumentInfo sourceDocumentInfo,
-            URI uri, ProgressListener progressListener) throws IOException {
-
-        File file = new File(uri);
-        if( progressListener != null ) {
-            progressListener.setIndeterminate(true,
-                "FileManager.loadingFile", file.getName() );
-        }
-
-        long checksum = FileUtils.checksumCRC32(file);
-
+    public void load() throws IOException {
         PDDocument document = null;
         try {
-            document = PDDocument.load(uri.toURL(), true);
+            document = PDDocument.load(getSourceDocumentInfo().getURI().toURL(), true);
 
             if (document.isEncrypted()) {
                 throw new IOException("can not open pdf document because it is encrypted");
@@ -61,15 +45,12 @@ public class PDFContentHandler implements SourceContentHandler {
             PDFTextStripper stripper = new PDFTextStripper();
             stripper.setSortByPosition(true);
             content = stripper.getText(document);
-
         }
         finally {
             if (document != null) {
-                document.close();
+				document.close();
             }
         }
-
-        return checksum;
     }
 
     public String getContent(long startPoint, long endPoint) {

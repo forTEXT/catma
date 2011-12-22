@@ -19,33 +19,25 @@
 
 package de.catma.core.document.source;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.nio.charset.Charset;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 import de.catma.core.document.source.contenthandler.DOCContentHandler;
 import de.catma.core.document.source.contenthandler.HTMLContentHandler;
 import de.catma.core.document.source.contenthandler.PDFContentHandler;
-import de.catma.core.document.source.contenthandler.ProgressListener;
 import de.catma.core.document.source.contenthandler.RTFContentHandler;
 import de.catma.core.document.source.contenthandler.SourceContentHandler;
 import de.catma.core.document.source.contenthandler.StandardContentHandler;
 
 /**
  * Handles the creation of {@link SourceDocument}s.<br>
- * 
- * This class is a Singleton.
+ *
  *
  * @author Marco Petris
  *
  */
-public enum SourceDocumentHandler {
-
-	SINGLETON;
+public class SourceDocumentHandler {
 	
 	// for creating document infos, we will load just a portion of the content
 	private static final int PREVIEW_CONTENT_SIZE = 2000;
@@ -56,7 +48,7 @@ public enum SourceDocumentHandler {
 	/**
 	 * Setup.
 	 */
-	private SourceDocumentHandler() {
+	public SourceDocumentHandler() {
 		typeHandlerMap = new HashMap<FileType, Class<? extends SourceContentHandler>>();
 		registerSourceContentHandler(
 				FileType.TEXT, StandardContentHandler.class );
@@ -95,12 +87,11 @@ public enum SourceDocumentHandler {
 	 * @throws IllegalAccessException {@link SourceContentHandler} instantiation failure
 	 */
 	public SourceDocument loadSourceDocument( 
-			SourceDocumentInfo sourceDocumentInfo, URI uri, 
-			ProgressListener progressListener )
+			SourceDocumentInfo sourceDocumentInfo)
 		throws IOException, InstantiationException, IllegalAccessException {
 		
 		FileType fileType = 
-				sourceDocumentInfo.getFileType();
+				sourceDocumentInfo.getTechInfoSet().getFileType();
 		
 		if( fileType == null ) {
 			throw new IllegalStateException( 
@@ -109,14 +100,9 @@ public enum SourceDocumentHandler {
 		
 		SourceContentHandler handler = 
 			typeHandlerMap.get( fileType ).newInstance();
+		handler.setSourceDocumentInfo(sourceDocumentInfo);
 		
-		SourceDocument document = 
-			new SourceDocument(
-					sourceDocumentInfo,
-					handler, 
-					handler.load(
-							sourceDocumentInfo, uri,
-							progressListener) );
+		SourceDocument document = new SourceDocument(handler);
 		
 		return document;
 	}
@@ -127,23 +113,24 @@ public enum SourceDocumentHandler {
 	 * @param sourceDocumentInfo the sourcedoc info to be updated
 	 * @throws IOException Source Document access failure
 	 */
-	public void updateSourceDocumentInfo( 
-			SourceDocumentInfo sourceDocumentInfo ) throws IOException {
-		Charset charset = sourceDocumentInfo.getCharset();
-
-		StandardContentHandler standardContentHandler = 
-			new StandardContentHandler();
-
-		String previewContent = 
-			standardContentHandler.loadContent( 
-					sourceDocumentInfo.getURI(), 
-					charset, 0, PREVIEW_CONTENT_SIZE, null );
-		
-		FileOSType fileOSType = FileOSType.getFileOSType( previewContent );
-		
-		sourceDocumentInfo.setPreviewContent( previewContent );
-		sourceDocumentInfo.setFileOSType( fileOSType );
-	}
+	//FIXME:
+//	public void updateSourceDocumentInfo( 
+//			SourceDocumentInfo sourceDocumentInfo ) throws IOException {
+//		Charset charset = sourceDocumentInfo.getCharset();
+//
+//		StandardContentHandler standardContentHandler = 
+//			new StandardContentHandler();
+//
+//		String previewContent = 
+//			standardContentHandler.loadContent( 
+//					sourceDocumentInfo.getURI(), 
+//					charset, 0, PREVIEW_CONTENT_SIZE, null );
+//		
+//		FileOSType fileOSType = FileOSType.getFileOSType( previewContent );
+//		
+//		sourceDocumentInfo.setPreviewContent( previewContent );
+//		sourceDocumentInfo.setFileOSType( fileOSType );
+//	}
 
 	
 	/**
@@ -152,38 +139,39 @@ public enum SourceDocumentHandler {
 	 * @return the SourceDocumentInfo instance
 	 * @throws IOException Source Document access failure
 	 */
-	public SourceDocumentInfo getSourceDocumentInfo( URI uri ) 
-		throws IOException {
-		
-		File file = new File( uri );
-		
-		FileType fileType = FileType.getFileType( file );
-		
-		if( !fileType.equals( FileType.TEXT ) ) {
-			return new SourceDocumentInfo( fileType, uri );
-		}
-		else {
-			Charset charset = Charset.defaultCharset();
-			StandardContentHandler standardContentHandler = 
-				new StandardContentHandler();
-			
-			if( standardContentHandler.hasUTF8BOM( file ) ) {
-				charset = Charset.forName( "UTF8" );
-				//TODO: handle non BOM UTF8
-			}
-			
-			String previewContent = 
-				standardContentHandler.loadContent( 
-					uri, charset, 0,  PREVIEW_CONTENT_SIZE, null );
-			
-			FileOSType fileOSType = FileOSType.getFileOSType( previewContent );
-
-            LanguageDetector ld = new LanguageDetector();
-            Locale locale = ld.getLocale(ld.detect(previewContent));
-
-			return new SourceDocumentInfo( 
-					fileType, fileOSType, charset, locale, previewContent, uri );
-		}
-	}
+	//FIXME:
+//	public SourceDocumentInfo getSourceDocumentInfo( URI uri ) 
+//		throws IOException {
+//		
+//		File file = new File( uri );
+//		
+//		FileType fileType = FileType.getFileType( file );
+//		
+//		if( !fileType.equals( FileType.TEXT ) ) {
+//			return new SourceDocumentInfo( fileType, uri );
+//		}
+//		else {
+//			Charset charset = Charset.defaultCharset();
+//			StandardContentHandler standardContentHandler = 
+//				new StandardContentHandler();
+//			
+//			if( standardContentHandler.hasUTF8BOM( file ) ) {
+//				charset = Charset.forName( "UTF8" );
+//				//TODO: handle non BOM UTF8
+//			}
+//			
+//			String previewContent = 
+//				standardContentHandler.loadContent( 
+//					uri, charset, 0,  PREVIEW_CONTENT_SIZE, null );
+//			
+//			FileOSType fileOSType = FileOSType.getFileOSType( previewContent );
+//
+//            LanguageDetector ld = new LanguageDetector();
+//            Locale locale = ld.getLocale(ld.detect(previewContent));
+//
+//			return new SourceDocumentInfo( 
+//					fileType, fileOSType, charset, locale, previewContent, uri );
+//		}
+//	}
 	
 }

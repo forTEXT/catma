@@ -8,7 +8,16 @@ public class IndexInfoSet {
     private List<String> unseparableCharacterSequences;
     private List<Character> userDefinedSeparatingCharacters;
     
-    /**
+    
+    
+    public IndexInfoSet(List<String> unseparableCharacterSequences,
+			List<Character> userDefinedSeparatingCharacters) {
+		super();
+		this.unseparableCharacterSequences = unseparableCharacterSequences;
+		this.userDefinedSeparatingCharacters = userDefinedSeparatingCharacters;
+	}
+
+	/**
      * @return a (possibly empty) list of unseparable character sequences,
      * does not return <oode>null</oode>
      */
