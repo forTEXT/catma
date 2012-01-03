@@ -25,7 +25,7 @@ import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard.Range;
 import de.catma.ui.client.ui.tagger.menu.TagActionListener;
 import de.catma.ui.client.ui.tagger.menu.TagMenu;
 import de.catma.ui.client.ui.tagger.shared.EventAttribute;
-import de.catma.ui.client.ui.tagger.shared.TagEvent;
+import de.catma.ui.client.ui.tagger.shared.TagInstance;
 
 /**
  * Client side widget which communicates with the server. Messages from the
@@ -46,10 +46,11 @@ public class VTagger extends FocusWidget implements Paintable, MouseUpHandler {
 
 	/** Reference to the server connection object. */
 	private ApplicationConnection serverConnection;
-
+	
 	public VTagger() {
 		this(Document.get().createDivElement());
 	}
+	
 	/**
 	 * The constructor should first call super() to initialize the component and
 	 * then handle any initialization relevant to Vaadin.
@@ -102,10 +103,23 @@ public class VTagger extends FocusWidget implements Paintable, MouseUpHandler {
 			VConsole.log("setting html");
 			setHTML(new HTML(uidl.getStringAttribute(EventAttribute.HTML.name())));
 		}
-		if (uidl.hasAttribute(EventAttribute.TAGEVENT.name())) {
-			String tag = uidl.getStringAttribute(EventAttribute.TAGEVENT.name());
+		if (uidl.hasAttribute(EventAttribute.TAGINSTANCE.name())) {
+			String tag = uidl.getStringAttribute(EventAttribute.TAGINSTANCE.name());
 			VConsole.log("adding tag: " + tag);
 			addTag(tag);
+		}
+		if (uidl.hasAttribute(EventAttribute.ALLTAGINSTANCES.name())) {
+			String[] tagInstances = uidl.getStringArrayAttribute(EventAttribute.ALLTAGINSTANCES.name());
+			RangeConverter rangeConverter = new RangeConverter();
+			for (String serializedInstance : tagInstances) {
+				TagInstance tagInstance = new TagInstance(serializedInstance);
+				TaggedSpanFactory taggedSpanFactory = 
+						new TaggedSpanFactory(tagInstance.getTag(), tagInstance.getInstanceID());
+				for (TextRange textRange : tagInstance.getRanges()) {
+					addTagToRange(taggedSpanFactory, rangeConverter.convertToNodeRange(textRange));
+				}
+			}
+			
 		}
 	}
 
@@ -150,9 +164,9 @@ public class VTagger extends FocusWidget implements Paintable, MouseUpHandler {
 			}
 
 			if (!textRanges.isEmpty()) {
-				TagEvent te = new TagEvent(tag, textRanges);
-				sendMessage(EventAttribute.LOGEVENT, "TAGEVENT.toString: " + te.toString());
-				sendMessage(EventAttribute.TAGEVENT, te.toMap());
+				TagInstance te = new TagInstance(tag, taggedSpanFactory.getInstanceID(), textRanges);
+				sendMessage(EventAttribute.LOGMESSAGE, "TAGEVENT.toString: " + te.toString());
+				sendMessage(EventAttribute.TAGINSTANCE, te.toMap());
 			}
 		}
 		else {
@@ -162,7 +176,7 @@ public class VTagger extends FocusWidget implements Paintable, MouseUpHandler {
 
 	
 	public void logToServer(String logMsg) {
-		sendMessage(EventAttribute.LOGEVENT, logMsg);
+		sendMessage(EventAttribute.LOGMESSAGE, logMsg);
 	}
 	
 	

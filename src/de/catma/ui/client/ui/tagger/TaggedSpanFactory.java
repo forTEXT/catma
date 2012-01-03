@@ -12,12 +12,15 @@ public class TaggedSpanFactory {
 	private int instanceReferenceCounter = 1;
 	
 	public TaggedSpanFactory(String tag) {
-		super();
-		this.tag = tag;
-		instanceID = String.valueOf(new Date().getTime());
-		
+		this(tag, String.valueOf(new Date().getTime()));
 	}
 	
+	public TaggedSpanFactory(String tag, String instanceID) {
+		super();
+		this.tag = tag;
+		this.instanceID = instanceID;
+	}
+
 	public Element createTaggedSpan(String innerHtml) {
 		Element taggedSpan = DOM.createSpan();
 		taggedSpan.addClassName(tag);
@@ -28,6 +31,10 @@ public class TaggedSpanFactory {
 
 	public String getTag() {
 		return tag;
+	}
+	
+	public String getInstanceID() {
+		return instanceID;
 	}
 	
 }
