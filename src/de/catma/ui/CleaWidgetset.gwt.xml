@@ -24,4 +24,6 @@
 		</any>
 	</replace-with>
  -->
+
+    <inherits name="org.vaadin.cssinject.Cssinject_addonWidgetset" />
 </module>

@@ -8,16 +8,19 @@ import java.util.Map;
 import java.util.Set;
 
 import de.catma.core.document.Corpus;
-import de.catma.core.document.Repository;
+import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollection;
 import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollectionReference;
 import de.catma.core.document.standoffmarkup.user.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
+import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.TagLibraryReference;
 import de.catma.serialization.SerializationHandlerFactory;
 
 class FSRepository implements Repository {
 	
+	private String name;
 	private String repoFolderPath;
 	private SerializationHandlerFactory serializationHandlerFactory;
 	private Set<Corpus> corpora;
@@ -26,9 +29,11 @@ class FSRepository implements Repository {
 	private Map<String,SourceDocument> sourceDocumentsByID;
 	
 	public FSRepository(
-			String repoFolderPath, SerializationHandlerFactory serializationHandlerFactory) {
-		
+			String name,
+			String repoFolderPath, 
+			SerializationHandlerFactory serializationHandlerFactory) {
 		super();
+		this.name = name;
 		this.repoFolderPath = repoFolderPath;
 		this.serializationHandlerFactory = serializationHandlerFactory;
 		this.corpusHandler = new FSCorpusHandler(repoFolderPath);
@@ -39,6 +44,13 @@ class FSRepository implements Repository {
 
 	}
 	
+	public String getName() {
+		return name;
+	}
+	public void open() throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
 	public void init() throws IOException {
 		
 		File repoFolder = new File(repoFolderPath);
@@ -70,6 +82,16 @@ class FSRepository implements Repository {
 
 	public Set<Corpus> getCorpora() {
 		return this.corpora;
+	}
+	
+	public Set<TagLibraryReference> getTagLibraryReferences() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	public UserMarkupCollection getUserMarkupCollection(

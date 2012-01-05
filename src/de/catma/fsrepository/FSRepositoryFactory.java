@@ -2,27 +2,27 @@ package de.catma.fsrepository;
 
 import java.util.Properties;
 
-import de.catma.core.document.Repository;
-import de.catma.core.document.RepositoryFactory;
+import de.catma.core.document.repository.Repository;
+import de.catma.core.document.repository.RepositoryFactory;
+import de.catma.core.document.repository.RepositoryPropertyKey;
 import de.catma.serialization.SerializationHandlerFactory;
 
 public class FSRepositoryFactory implements RepositoryFactory {
-	private enum Key {
-		SerializationHandlerFactory,
-		RepoFolderPath,
-		;
-	}
-
-	public Repository createRepository(Properties properties) throws Exception {
+	
+	public Repository createRepository(Properties properties, int index) throws Exception {
 		String serializationHandlerFactoryClazzName = 
-				properties.getProperty(Key.SerializationHandlerFactory.name());
-		String repoFolderPath = properties.getProperty(Key.RepoFolderPath.name());
+				RepositoryPropertyKey.SerializationHandlerFactory.getProperty(properties, index);
+		String repoFolderPath = RepositoryPropertyKey.RepositoryFolderPath.getProperty(properties, index);
 		
 		SerializationHandlerFactory serializationHandlerFactory = 
-				(SerializationHandlerFactory) Thread.currentThread().getContextClassLoader().loadClass(
-				serializationHandlerFactoryClazzName).newInstance();
+				(SerializationHandlerFactory) Class.forName(
+						serializationHandlerFactoryClazzName, true, 
+						Thread.currentThread().getContextClassLoader()).newInstance();
 		
-		return new FSRepository(repoFolderPath, serializationHandlerFactory);
+		return new FSRepository(
+				RepositoryPropertyKey.Repository.getProperty(properties, index),
+				repoFolderPath, 
+				serializationHandlerFactory);
 	}
 
 }
