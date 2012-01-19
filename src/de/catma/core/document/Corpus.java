@@ -1,6 +1,7 @@
 package de.catma.core.document;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import de.catma.core.document.source.SourceDocument;
@@ -35,5 +36,24 @@ public class Corpus {
 			UserMarkupCollectionReference userMarkupCollRef) {
 		userMarkupCollectionRefs.add(userMarkupCollRef);
 	}
+	
+	@Override
+	public String toString() {
+		return name;
+	}
+
+	public List<SourceDocument> getSourceDocuments() {
+		return Collections.unmodifiableList(sourceDocuments);
+	}
+
+	public List<StructureMarkupCollectionReference> getStructureMarkupCollectionRefs() {
+		return Collections.unmodifiableList(structureMarkupCollectionRefs);
+	}
+
+	public List<UserMarkupCollectionReference> getUserMarkupCollectionRefs() {
+		return Collections.unmodifiableList(userMarkupCollectionRefs);
+	}
+	
+	
 	
 }

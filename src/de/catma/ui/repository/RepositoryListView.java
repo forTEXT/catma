@@ -10,6 +10,7 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.CleaApplication;
+import de.catma.core.ExceptionHandler;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
 
@@ -32,8 +33,12 @@ public class RepositoryListView extends VerticalLayout {
 				RepositoryManagerView repositoryManagerView =
 						((CleaApplication)getApplication()).getRepositoryManagerView();
 				Repository repository = (Repository)repositoryTable.getValue();
-				
-				repositoryManagerView.openRepository(repository);
+				try {
+					repository.open();
+					repositoryManagerView.openRepository(repository);
+				} catch (Exception e) {
+					ExceptionHandler.log(e);
+				}
 			}
 		});
 		

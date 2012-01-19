@@ -48,12 +48,13 @@ class FSRepository implements Repository {
 		return name;
 	}
 	public void open() throws Exception {
-		// TODO Auto-generated method stub
-		
+		init();
 	}
+	
 	public void init() throws IOException {
 		
 		File repoFolder = new File(repoFolderPath);
+		System.out.println(repoFolder.getAbsolutePath());
 		if(!repoFolder.exists() && !repoFolder.mkdirs()) {
 			throw new IOException("can not create repo folder " + repoFolderPath);
 		}

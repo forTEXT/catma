@@ -102,7 +102,14 @@ public class SourceDocumentHandler {
 			typeHandlerMap.get( fileType ).newInstance();
 		handler.setSourceDocumentInfo(sourceDocumentInfo);
 		
-		SourceDocument document = new SourceDocument(handler);
+		String title = sourceDocumentInfo.getContentInfoSet().getTitle();
+		
+		if ((title == null) || (title.equals("empty"))) {
+			title = sourceDocumentInfo.getURI().getPath();
+		}
+		
+		SourceDocument document = 
+				new SourceDocument(title, handler);
 		
 		return document;
 	}

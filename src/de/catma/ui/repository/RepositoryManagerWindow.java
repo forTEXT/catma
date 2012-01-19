@@ -8,5 +8,8 @@ public class RepositoryManagerWindow extends Window {
 	public RepositoryManagerWindow(RepositoryManagerView view) {
 		super("Repository Manager");
 		this.setContent(view);
+		
+		setWidth("50%");
+		setHeight("50%");
 	}
 }

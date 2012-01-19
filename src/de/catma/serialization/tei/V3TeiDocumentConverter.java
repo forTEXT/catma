@@ -34,7 +34,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		TeiElement encodingDesc = new TeiElement(TeiElementName.encodingDesc);
 		((TeiElement)teiDocument.getNodes(TeiElementName.teiHeader).get(0)).appendChild(encodingDesc);
 		standardTagsetDefinition = addStandardTagset(encodingDesc);
-		
+		//TODO: remove empty and deleted tagsets/tags
 		Nodes tagsetElements = teiDocument.getNodes(TeiElementName.fvLib);
 		
 		for( int i=0; i<tagsetElements.size(); i++) {

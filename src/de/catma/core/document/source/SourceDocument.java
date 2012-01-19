@@ -35,23 +35,25 @@ import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
  */
 public class SourceDocument {
 	
+	private String title;
 	private SourceContentHandler handler;
 	private List<StructureMarkupCollectionReference> structureMarkupCollectionRefs;
 	private List<UserMarkupCollectionReference> userMarkupCollectionRefs;
 	
-	public SourceDocument(SourceContentHandler handler) {
+	public SourceDocument(String title, SourceContentHandler handler) {
 		super();
+		this.title = title;
 		this.handler = handler;
 		this.structureMarkupCollectionRefs = new ArrayList<StructureMarkupCollectionReference>();
 		this.userMarkupCollectionRefs = new ArrayList<UserMarkupCollectionReference>();
 	}
 
 	/**
-	 * Displays the content of the document as text.
+	 * Displays the title of the document.
 	 */
 	@Override
 	public String toString() {
-		return getContent( 0 ).toString();
+		return title;
 	}
 
 	/**
@@ -98,5 +100,13 @@ public class SourceDocument {
 
 	public String getID() {
 		return handler.getSourceDocumentInfo().getURI().toString();
+	}
+	
+	public List<StructureMarkupCollectionReference> getStructureMarkupCollectionRefs() {
+		return structureMarkupCollectionRefs;
+	}
+	
+	public List<UserMarkupCollectionReference> getUserMarkupCollectionRefs() {
+		return userMarkupCollectionRefs;
 	}
 }
