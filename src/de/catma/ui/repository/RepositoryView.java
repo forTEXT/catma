@@ -1,11 +1,7 @@
 package de.catma.ui.repository;
 
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 
-import com.vaadin.data.Container.Filter;
-import com.vaadin.data.Item;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItem;
@@ -25,45 +21,13 @@ import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
 import de.catma.ui.repository.entry.ContentInfo;
 import de.catma.ui.repository.entry.DocumentEntry;
 import de.catma.ui.repository.entry.MarkupCollectionEntry;
+import de.catma.ui.repository.entry.MarkupCollectionsEntry;
 import de.catma.ui.repository.entry.SourceDocumentEntry;
 import de.catma.ui.repository.entry.StandardContentInfo;
 
 
 public class RepositoryView extends VerticalLayout {
 	
-	private static class SourceDocumentFilter implements Filter {
-		
-		private Set<String> corpusContent;
-		
-		public SourceDocumentFilter(Corpus corpus) {
-			super();
-			corpusContent = new HashSet<String>();
-			for (SourceDocument sd : corpus.getSourceDocuments()) {
-				corpusContent.add(sd.toString());
-			}
-
-			for (UserMarkupCollectionReference ucr : corpus.getUserMarkupCollectionRefs()) {
-				corpusContent.add(ucr.toString());
-			}
-			
-			for (StructureMarkupCollectionReference scr : corpus.getStructureMarkupCollectionRefs()) {
-				corpusContent.add(scr.toString());
-			}
-		}
-
-		public boolean appliesToProperty(Object propertyId) {
-			return true;
-		}
-		
-		public boolean passesFilter(Object itemId, Item item)
-				throws UnsupportedOperationException {
-			
-			return corpusContent.contains(itemId.toString());
-		}
-		
-		
-	}
-
 	private Repository repository;
 	private Tree documentsTree;
 	private Tree corporaTree;
@@ -127,10 +91,13 @@ public class RepositoryView extends VerticalLayout {
 		
 		HorizontalLayout mainPanel = new HorizontalLayout();
 		mainPanel.setSpacing(true);
+		mainPanel.setSizeFull();
+		mainPanel.setMargin(false, false, true, false);
 		
 		Panel corporaPanel = new Panel();
+		corporaPanel.getContent().setSizeUndefined();
 		corporaPanel.setHeight("200px");
-
+		
 		corporaTree = new Tree();
 		corporaTree.setCaption("Corpora");
 		corporaTree.addItem(allDocuments);
@@ -144,9 +111,10 @@ public class RepositoryView extends VerticalLayout {
 		
 		corporaPanel.addComponent(corporaTree);
 		mainPanel.addComponent(corporaPanel);
-		mainPanel.setExpandRatio(corporaPanel, 1.0f);
+		mainPanel.setExpandRatio(corporaPanel, 1);
 		
 		Panel documentsPanel = new Panel();
+		
 		documentsContainer = new HierarchicalContainer();
 		documentsTree = new Tree();
 		documentsTree.setContainerDataSource(documentsContainer);
@@ -154,28 +122,43 @@ public class RepositoryView extends VerticalLayout {
 		documentsTree.setImmediate(true);
 		
 		documentsPanel.addComponent(documentsTree);
+		documentsPanel.getContent().setSizeUndefined();
 		documentsPanel.setHeight("200px");
 		
 		for (SourceDocument sd : repository.getSourceDocuments()) {
 			DocumentEntry sourceDocEntry = new SourceDocumentEntry(sd);
 			documentsTree.addItem(sourceDocEntry);
 			documentsTree.setChildrenAllowed(sourceDocEntry, true);
+			MarkupCollectionsEntry structureMarkupCollEntry = 
+					new MarkupCollectionsEntry( 
+							new MarkupCollectionsNode("Structure Markup Collections"));
+			
+			documentsTree.addItem(structureMarkupCollEntry);
+			documentsTree.setParent(structureMarkupCollEntry, sourceDocEntry);
 			
 			for (StructureMarkupCollectionReference smcr : sd.getStructureMarkupCollectionRefs()) {
 				DocumentEntry structureMarkupCollRefEntry = new MarkupCollectionEntry(smcr);
 				documentsTree.addItem(structureMarkupCollRefEntry);
-				documentsTree.setParent(structureMarkupCollRefEntry, sourceDocEntry);
+				documentsTree.setParent(structureMarkupCollRefEntry, structureMarkupCollEntry);
+				documentsTree.setChildrenAllowed(structureMarkupCollRefEntry, false);
 			}
 			
+			MarkupCollectionsEntry userMarkupCollEntry =
+					new MarkupCollectionsEntry(
+							new MarkupCollectionsNode("User Markup Collections"));
+			documentsTree.addItem(userMarkupCollEntry);
+			documentsTree.setParent(userMarkupCollEntry, sourceDocEntry);
+		
 			for (UserMarkupCollectionReference ucr : sd.getUserMarkupCollectionRefs()) {
 				DocumentEntry userMarkupCollRefEntry = new MarkupCollectionEntry(ucr);
 				documentsTree.addItem(userMarkupCollRefEntry);
-				documentsTree.setParent(userMarkupCollRefEntry, sourceDocEntry);
+				documentsTree.setParent(userMarkupCollRefEntry, userMarkupCollEntry);
+				documentsTree.setChildrenAllowed(userMarkupCollRefEntry, false);
+
 			}
 		}
 		mainPanel.addComponent(documentsPanel);
-		mainPanel.setExpandRatio(documentsPanel, 1.0f);
-		
+		mainPanel.setExpandRatio(documentsPanel, 2);
 
 		contentInfoForm = new Form();
 		contentInfoForm.setCaption("Information");
@@ -184,9 +167,9 @@ public class RepositoryView extends VerticalLayout {
 		contentInfoForm.setItemDataSource(contentInfoItem);
 		
 		mainPanel.addComponent(contentInfoForm);
+		mainPanel.setExpandRatio(contentInfoForm, 1);
 		
 		addComponent(mainPanel);
-		
 		corporaTree.setValue(allDocuments);
 	}
 
