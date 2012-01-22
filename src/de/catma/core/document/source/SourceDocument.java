@@ -36,14 +36,14 @@ import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
 public class SourceDocument {
 	
 	private String title;
-	private SourceContentHandler handler;
+	private SourceContentHandler sourceContentHandler;
 	private List<StructureMarkupCollectionReference> structureMarkupCollectionRefs;
 	private List<UserMarkupCollectionReference> userMarkupCollectionRefs;
 	
 	public SourceDocument(String title, SourceContentHandler handler) {
 		super();
 		this.title = title;
-		this.handler = handler;
+		this.sourceContentHandler = handler;
 		this.structureMarkupCollectionRefs = new ArrayList<StructureMarkupCollectionReference>();
 		this.userMarkupCollectionRefs = new ArrayList<UserMarkupCollectionReference>();
 	}
@@ -70,7 +70,7 @@ public class SourceDocument {
 	 * @return the content between the startpoint and the endpoint
 	 */
 	public String getContent( long startPoint, long endPoint ) {
-		return handler.getContent( startPoint, endPoint );
+		return sourceContentHandler.getContent( startPoint, endPoint );
 	}
 	
 	/**
@@ -78,14 +78,14 @@ public class SourceDocument {
 	 * @return the content after the startpoint
 	 */
 	public String getContent( long startPoint ) {
-		return handler.getContent( startPoint );
+		return sourceContentHandler.getContent( startPoint );
 	}
 	
 	/**
 	 * @return the size of the document
 	 */
 	public long getSize() {
-		return handler.getContent( 0 ).length();
+		return sourceContentHandler.getContent( 0 ).length();
 	}
 
 	public void addStructureMarkupCollectionReference(
@@ -99,7 +99,7 @@ public class SourceDocument {
 	}
 
 	public String getID() {
-		return handler.getSourceDocumentInfo().getURI().toString();
+		return sourceContentHandler.getSourceDocumentInfo().getURI().toString();
 	}
 	
 	public List<StructureMarkupCollectionReference> getStructureMarkupCollectionRefs() {
@@ -108,5 +108,9 @@ public class SourceDocument {
 	
 	public List<UserMarkupCollectionReference> getUserMarkupCollectionRefs() {
 		return userMarkupCollectionRefs;
+	}
+	
+	public SourceContentHandler getSourceContentHandler() {
+		return sourceContentHandler;
 	}
 }
