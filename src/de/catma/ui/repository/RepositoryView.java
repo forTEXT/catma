@@ -6,6 +6,7 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.Form;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -18,12 +19,14 @@ import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollectionReference;
 import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
+import de.catma.core.tag.TagLibraryReference;
 import de.catma.ui.repository.entry.ContentInfo;
-import de.catma.ui.repository.entry.DocumentEntry;
 import de.catma.ui.repository.entry.MarkupCollectionEntry;
 import de.catma.ui.repository.entry.MarkupCollectionsEntry;
 import de.catma.ui.repository.entry.SourceDocumentEntry;
 import de.catma.ui.repository.entry.StandardContentInfo;
+import de.catma.ui.repository.entry.TagLibraryEntry;
+import de.catma.ui.repository.entry.TreeEntry;
 
 
 public class RepositoryView extends VerticalLayout {
@@ -31,11 +34,14 @@ public class RepositoryView extends VerticalLayout {
 	private Repository repository;
 	private Tree documentsTree;
 	private Tree corporaTree;
+	private Tree tagLibrariesTree;
 	private Form contentInfoForm;
 	private String allDocuments = "All documents";
 	private HierarchicalContainer documentsContainer;
 	private HashMap<String, SourceDocumentFilter> filters = 
 			new HashMap<String, SourceDocumentFilter>();
+	
+	private Button btOpenTagLibrary;
 	
 	public RepositoryView(Repository repository) {
 		super();
@@ -75,24 +81,32 @@ public class RepositoryView extends VerticalLayout {
 			public void valueChange(ValueChangeEvent event) {
 				Object value = event.getProperty().getValue();
 				if (value != null) {
-					DocumentEntry entry = (DocumentEntry)value;
+					TreeEntry entry = (TreeEntry)value;
 					contentInfoForm.setItemDataSource(entry.getContentInfo());
 				}
 			}
 			
 		});
+		
+		tagLibrariesTree.addListener(new ValueChangeListener() {
+			
+			public void valueChange(ValueChangeEvent event) {
+				Object value = event.getProperty().getValue();
+				btOpenTagLibrary.setEnabled(value!=null);
+			}
+		});
 	}
 
 	private void initComponents() {
-		this.setMargin(true, false, false, true);
+		this.setMargin(true, true, true, true);
 		this.setSpacing(true);
 		Label documentsLabel = new Label("Document Manager");
 		addComponent(documentsLabel);
 		
-		HorizontalLayout mainPanel = new HorizontalLayout();
-		mainPanel.setSpacing(true);
-		mainPanel.setSizeFull();
-		mainPanel.setMargin(false, false, true, false);
+		HorizontalLayout documentsManagerPanel = new HorizontalLayout();
+		documentsManagerPanel.setSpacing(true);
+		documentsManagerPanel.setSizeFull();
+		documentsManagerPanel.setMargin(false, false, true, false);
 		
 		Panel corporaPanel = new Panel();
 		corporaPanel.getContent().setSizeUndefined();
@@ -110,8 +124,8 @@ public class RepositoryView extends VerticalLayout {
 		}
 		
 		corporaPanel.addComponent(corporaTree);
-		mainPanel.addComponent(corporaPanel);
-		mainPanel.setExpandRatio(corporaPanel, 1);
+		documentsManagerPanel.addComponent(corporaPanel);
+		documentsManagerPanel.setExpandRatio(corporaPanel, 1);
 		
 		Panel documentsPanel = new Panel();
 		
@@ -126,7 +140,7 @@ public class RepositoryView extends VerticalLayout {
 		documentsPanel.setHeight("200px");
 		
 		for (SourceDocument sd : repository.getSourceDocuments()) {
-			DocumentEntry sourceDocEntry = new SourceDocumentEntry(sd);
+			TreeEntry sourceDocEntry = new SourceDocumentEntry(sd);
 			documentsTree.addItem(sourceDocEntry);
 			documentsTree.setChildrenAllowed(sourceDocEntry, true);
 			MarkupCollectionsEntry structureMarkupCollEntry = 
@@ -137,7 +151,7 @@ public class RepositoryView extends VerticalLayout {
 			documentsTree.setParent(structureMarkupCollEntry, sourceDocEntry);
 			
 			for (StructureMarkupCollectionReference smcr : sd.getStructureMarkupCollectionRefs()) {
-				DocumentEntry structureMarkupCollRefEntry = new MarkupCollectionEntry(smcr);
+				TreeEntry structureMarkupCollRefEntry = new MarkupCollectionEntry(smcr);
 				documentsTree.addItem(structureMarkupCollRefEntry);
 				documentsTree.setParent(structureMarkupCollRefEntry, structureMarkupCollEntry);
 				documentsTree.setChildrenAllowed(structureMarkupCollRefEntry, false);
@@ -150,15 +164,15 @@ public class RepositoryView extends VerticalLayout {
 			documentsTree.setParent(userMarkupCollEntry, sourceDocEntry);
 		
 			for (UserMarkupCollectionReference ucr : sd.getUserMarkupCollectionRefs()) {
-				DocumentEntry userMarkupCollRefEntry = new MarkupCollectionEntry(ucr);
+				TreeEntry userMarkupCollRefEntry = new MarkupCollectionEntry(ucr);
 				documentsTree.addItem(userMarkupCollRefEntry);
 				documentsTree.setParent(userMarkupCollRefEntry, userMarkupCollEntry);
 				documentsTree.setChildrenAllowed(userMarkupCollRefEntry, false);
 
 			}
 		}
-		mainPanel.addComponent(documentsPanel);
-		mainPanel.setExpandRatio(documentsPanel, 2);
+		documentsManagerPanel.addComponent(documentsPanel);
+		documentsManagerPanel.setExpandRatio(documentsPanel, 2);
 
 		contentInfoForm = new Form();
 		contentInfoForm.setCaption("Information");
@@ -166,11 +180,40 @@ public class RepositoryView extends VerticalLayout {
 		BeanItem<ContentInfo> contentInfoItem = new BeanItem<ContentInfo>(new StandardContentInfo());
 		contentInfoForm.setItemDataSource(contentInfoItem);
 		
-		mainPanel.addComponent(contentInfoForm);
-		mainPanel.setExpandRatio(contentInfoForm, 1);
+		documentsManagerPanel.addComponent(contentInfoForm);
+		documentsManagerPanel.setExpandRatio(contentInfoForm, 1);
 		
-		addComponent(mainPanel);
+		addComponent(documentsManagerPanel);
 		corporaTree.setValue(allDocuments);
+		
+		//HorizontalLayout tagLibraryManaer = new HorizontalLayout();
+		VerticalLayout tagLibraryContainer = new VerticalLayout();
+		tagLibraryContainer.setSpacing(true);
+		
+		Panel tagLibraryPanel = new Panel();
+		
+		tagLibrariesTree = new Tree();
+		tagLibrariesTree.setCaption("Tag Libraries");
+		tagLibrariesTree.setImmediate(true);
+		
+		for (TagLibraryReference tlr : repository.getTagLibraryReferences()) {
+			TreeEntry entry = new TagLibraryEntry(tlr);
+			tagLibrariesTree.addItem(entry);
+			tagLibrariesTree.setChildrenAllowed(entry, false);
+		}
+		
+		tagLibraryPanel.addComponent(tagLibrariesTree);
+		
+		HorizontalLayout tagLibraryButtonPanel = new HorizontalLayout();
+		btOpenTagLibrary = new Button("Open Tag Library");
+		btOpenTagLibrary.setEnabled(false);
+		
+		tagLibraryButtonPanel.addComponent(btOpenTagLibrary);
+		
+		tagLibraryContainer.addComponent(tagLibraryPanel);
+		tagLibraryContainer.addComponent(tagLibraryButtonPanel);
+		
+		addComponent(tagLibraryContainer);
 	}
 
 	public Repository getRepository() {

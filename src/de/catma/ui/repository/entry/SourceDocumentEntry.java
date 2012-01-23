@@ -5,7 +5,7 @@ import com.vaadin.data.util.BeanItem;
 import de.catma.core.document.source.ContentInfoSet;
 import de.catma.core.document.source.SourceDocument;
 
-public class SourceDocumentEntry implements DocumentEntry {
+public class SourceDocumentEntry implements TreeEntry {
 	
 	private SourceDocument sourceDocument;
 	private BeanItem<ContentInfo> contentInfo;

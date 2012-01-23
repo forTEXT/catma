@@ -27,6 +27,8 @@ class FSRepository implements Repository {
 	private FSCorpusHandler corpusHandler;
 	private FSSourceDocumentHandler sourceDocumentHandler;
 	private Map<String,SourceDocument> sourceDocumentsByID;
+	private Set<TagLibraryReference> tagLibraryReferences;
+	private FSTagLibraryHandler tagLibraryHandler;
 	
 	public FSRepository(
 			String name,
@@ -41,6 +43,7 @@ class FSRepository implements Repository {
 			new FSSourceDocumentHandler(
 				repoFolderPath, 
 				serializationHandlerFactory.getSourceDocumentInfoSerializationHandler());
+		this.tagLibraryHandler = new FSTagLibraryHandler(repoFolderPath);
 
 	}
 	
@@ -75,6 +78,8 @@ class FSRepository implements Repository {
 		
 		this.sourceDocumentsByID = this.sourceDocumentHandler.loadSourceDocuments();
 		this.corpora = corpusHandler.loadCorpora(this);
+		
+		this.tagLibraryReferences = this.tagLibraryHandler.loadTagLibraryReferences();
 	}
 
 	public Collection<SourceDocument> getSourceDocuments() {
@@ -82,12 +87,11 @@ class FSRepository implements Repository {
 	}
 
 	public Set<Corpus> getCorpora() {
-		return this.corpora;
+		return Collections.unmodifiableSet(this.corpora);
 	}
 	
 	public Set<TagLibraryReference> getTagLibraryReferences() {
-		// TODO Auto-generated method stub
-		return null;
+		return Collections.unmodifiableSet(this.tagLibraryReferences);
 	}
 
 	public TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) {

@@ -4,7 +4,7 @@ import com.vaadin.data.util.BeanItem;
 
 import de.catma.ui.repository.MarkupCollectionsNode;
 
-public class MarkupCollectionsEntry implements DocumentEntry {
+public class MarkupCollectionsEntry implements TreeEntry {
 	
 	private BeanItem<ContentInfo> contentInfo =	
 			new BeanItem<ContentInfo>(new StandardContentInfo());
