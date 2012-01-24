@@ -2,7 +2,6 @@ package de.catma;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Properties;
 
 import com.vaadin.Application;
@@ -12,11 +11,16 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 import de.catma.core.ExceptionHandler;
+import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
+import de.catma.core.tag.TagLibrary;
+import de.catma.ui.menu.Menu;
 import de.catma.ui.menu.MenuFactory;
 import de.catma.ui.repository.RepositoryManagerView;
 import de.catma.ui.repository.RepositoryManagerWindow;
 import de.catma.ui.tagger.Tagger;
+import de.catma.ui.tagmanager.TagManagerView;
+import de.catma.ui.tagmanager.TagManagerWindow;
 
 public class CleaApplication extends Application {
 	
@@ -41,6 +45,8 @@ public class CleaApplication extends Application {
 	private static final String CATMA_PROPERTY_FILE = "catma.properties";
 	
 	private RepositoryManagerView repositoryManagerView;
+	private TagManagerView tagManagerView;
+	private Menu menu;
 
 	@Override
 	public void init() {
@@ -56,14 +62,23 @@ public class CleaApplication extends Application {
 		try {
 			repositoryManagerView = 
 					new RepositoryManagerView(new RepositoryManager(properties));
-			menuFactory.createMenu(
+		
+			tagManagerView = new TagManagerView();
+			
+			menu = menuFactory.createMenu(
 					mainLayout, 
-					new RepositoryManagerWindow(repositoryManagerView));
-							
+					new MenuFactory.MenuEntryDefinition( 
+							"Repository Manager",
+							new RepositoryManagerWindow(repositoryManagerView)),
+					new MenuFactory.MenuEntryDefinition(
+							"Tag Manager",
+							new TagManagerWindow(tagManagerView)));
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 		
 		
 //		LoginForm lf = new LoginForm();
@@ -134,8 +149,15 @@ public class CleaApplication extends Application {
 		}
 		return properties;
 	}
-
-	public RepositoryManagerView getRepositoryManagerView() {
-		return repositoryManagerView;
+	
+	public void openRepository(Repository repository) {
+		repositoryManagerView.openRepository(repository);
+	}
+	 
+	public void openTagLibrary(TagLibrary tagLibrary) {
+		if (tagManagerView.getApplication() == null) {
+			menu.executeEntry(tagManagerView);
+		}
+		tagManagerView.openTagLibrary(tagLibrary);
 	}
 }

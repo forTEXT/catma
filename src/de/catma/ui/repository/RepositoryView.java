@@ -7,6 +7,8 @@ import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Form;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -14,19 +16,21 @@ import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.CleaApplication;
 import de.catma.core.document.Corpus;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollectionReference;
 import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
+import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
-import de.catma.ui.repository.entry.ContentInfo;
-import de.catma.ui.repository.entry.MarkupCollectionEntry;
-import de.catma.ui.repository.entry.MarkupCollectionsEntry;
-import de.catma.ui.repository.entry.SourceDocumentEntry;
-import de.catma.ui.repository.entry.StandardContentInfo;
-import de.catma.ui.repository.entry.TagLibraryEntry;
-import de.catma.ui.repository.entry.TreeEntry;
+import de.catma.ui.repository.treeentry.ContentInfo;
+import de.catma.ui.repository.treeentry.MarkupCollectionEntry;
+import de.catma.ui.repository.treeentry.MarkupCollectionsEntry;
+import de.catma.ui.repository.treeentry.SourceDocumentEntry;
+import de.catma.ui.repository.treeentry.StandardContentInfo;
+import de.catma.ui.repository.treeentry.TagLibraryEntry;
+import de.catma.ui.repository.treeentry.TreeEntry;
 
 
 public class RepositoryView extends VerticalLayout {
@@ -91,8 +95,20 @@ public class RepositoryView extends VerticalLayout {
 		tagLibrariesTree.addListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
-				Object value = event.getProperty().getValue();
-				btOpenTagLibrary.setEnabled(value!=null);
+				btOpenTagLibrary.setEnabled(event.getProperty().getValue()!=null);
+			}
+		});
+		
+		btOpenTagLibrary.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				Object value = tagLibrariesTree.getValue();
+				if (value != null) {
+					TagLibraryReference tagLibraryReference = 
+							((TagLibraryEntry)value).getTagLibraryReference();
+					TagLibrary tagLibrary = repository.getTagLibrary(tagLibraryReference);
+					((CleaApplication)getApplication()).openTagLibrary(tagLibrary);
+				}				
 			}
 		});
 	}
@@ -186,7 +202,6 @@ public class RepositoryView extends VerticalLayout {
 		addComponent(documentsManagerPanel);
 		corporaTree.setValue(allDocuments);
 		
-		//HorizontalLayout tagLibraryManaer = new HorizontalLayout();
 		VerticalLayout tagLibraryContainer = new VerticalLayout();
 		tagLibraryContainer.setSpacing(true);
 		

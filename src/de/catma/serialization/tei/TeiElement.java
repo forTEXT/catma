@@ -232,7 +232,7 @@ public class TeiElement extends Element implements Comparable<TeiElement> {
     
     /**
      * @return true, if this element is active
-     * @see TagManager#setActive(org.catma.tag.Tag, boolean)
+     * @see TagManagerView#setActive(org.catma.tag.Tag, boolean)
      */
     public boolean isActive() {
 		return active;
@@ -240,7 +240,7 @@ public class TeiElement extends Element implements Comparable<TeiElement> {
     
     /**
      * @param active true->this element is marked as active, else false
-     * @see TagManager#setActive(org.catma.tag.Tag, boolean)
+     * @see TagManagerView#setActive(org.catma.tag.Tag, boolean)
      */
     public void setActive( boolean active ) {
 		this.active = active;

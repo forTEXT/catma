@@ -1,11 +1,17 @@
 package de.catma.core.tag;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public class TagDefinition implements Versionable {
 	
 	// TODO: hier besser interface einziehen um Links als tagdefs abzubilden.
+	
+	public final static TagDefinition CATMA_BASE_TAG = 
+			new TagDefinition(
+				"CATMA_BASE_TAG", "CATMA_BASE_TAG", new Version("1"), null);
 	
 	private String id;
 	private String type;
@@ -21,6 +27,9 @@ public class TagDefinition implements Versionable {
 		this.type = type;
 		this.version = version;
 		this.baseID = baseID;
+		if ((this.baseID != null) && this.baseID.isEmpty()) {
+			this.baseID = null;
+		}
 		systemPropertyDefinitions = new HashMap<String, PropertyDefinition>();
 		userDefinedPropertyDefinitions = new HashMap<String, PropertyDefinition>();
 	}
@@ -54,5 +63,17 @@ public class TagDefinition implements Versionable {
 		else {
 			return userDefinedPropertyDefinitions.get(propertyName);
 		}
+	}
+	
+	public Collection<PropertyDefinition> getUserDefinedPropertyDefinitions() {
+		return Collections.unmodifiableCollection(userDefinedPropertyDefinitions.values());
+	}
+	
+	public String getBaseID() {
+		return baseID;
+	}
+	
+	public String getType() {
+		return type;
 	}
 }

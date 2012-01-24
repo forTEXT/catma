@@ -30,12 +30,10 @@ public class RepositoryListView extends VerticalLayout {
 		openBt.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				RepositoryManagerView repositoryManagerView =
-						((CleaApplication)getApplication()).getRepositoryManagerView();
 				Repository repository = (Repository)repositoryTable.getValue();
 				try {
 					repository.open();
-					repositoryManagerView.openRepository(repository);
+					((CleaApplication)getApplication()).openRepository(repository);
 				} catch (Exception e) {
 					ExceptionHandler.log(e);
 				}

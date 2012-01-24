@@ -1,4 +1,4 @@
-package de.catma.ui.repository.entry;
+package de.catma.ui.repository.treeentry;
 
 import com.vaadin.data.util.BeanItem;
 
@@ -22,5 +22,9 @@ public class TagLibraryEntry implements TreeEntry {
 	@Override
 	public String toString() {
 		return tagLibraryReference.toString();
+	}
+	
+	public TagLibraryReference getTagLibraryReference() {
+		return tagLibraryReference;
 	}
 }

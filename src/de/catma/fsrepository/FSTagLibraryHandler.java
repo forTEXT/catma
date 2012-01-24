@@ -1,14 +1,20 @@
 package de.catma.fsrepository;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Set;
 
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Nodes;
+import de.catma.core.document.source.contenthandler.BOMFilterInputStream;
+import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
+import de.catma.serialization.TagLibrarySerializationHandler;
 
 class FSTagLibraryHandler {
 
@@ -26,11 +32,16 @@ class FSTagLibraryHandler {
 
 	private String repoFolderPath;
 	private String libFolderPath;
+	private TagLibrarySerializationHandler tagLibrarySerializationHandler;
 	
-	public FSTagLibraryHandler(String repoFolderPath) {
+	public FSTagLibraryHandler(
+			String repoFolderPath, 
+			TagLibrarySerializationHandler tagLibrarySerializationHandler) {
+		
 		super();
 		this.repoFolderPath = repoFolderPath;
 		this.libFolderPath = this.repoFolderPath + System.getProperty("file.separator") + TAGLIBRARY_FOLDER;
+		this.tagLibrarySerializationHandler = tagLibrarySerializationHandler;
 	}
 	
 	public Set<TagLibraryReference> loadTagLibraryReferences() throws IOException {
@@ -65,6 +76,10 @@ class FSTagLibraryHandler {
 		}
 	}
 	
-	
+	public TagLibrary loadTagLibrary(TagLibraryReference tagLibraryReference) throws IOException {
+		FilterInputStream is = new BOMFilterInputStream(
+				new FileInputStream(tagLibraryReference.getId()), Charset.forName( "UTF-8" ));
+		return tagLibrarySerializationHandler.deserialize(is); 
+	}
 	
 }

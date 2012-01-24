@@ -1,5 +1,6 @@
 package de.catma.core.tag;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -29,10 +30,14 @@ public class TagLibrary implements Iterable<TagsetDefinition> {
 	}
 	
 	public Iterator<TagsetDefinition> iterator() {
-		return tagsetDefinitions.values().iterator();
+		return Collections.unmodifiableCollection(tagsetDefinitions.values()).iterator();
 	}
 
 	public TagsetDefinition getTagsetDefintion(String tagsetDefinitionID) {
 		return tagsetDefinitions.get(tagsetDefinitionID);
+	}
+	
+	public String getName() {
+		return name;
 	}
 }

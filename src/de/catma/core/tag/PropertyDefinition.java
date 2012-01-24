@@ -1,6 +1,5 @@
 package de.catma.core.tag;
 
-import java.util.List;
 
 public class PropertyDefinition {
 

@@ -22,7 +22,6 @@ class FSRepository implements Repository {
 	
 	private String name;
 	private String repoFolderPath;
-	private SerializationHandlerFactory serializationHandlerFactory;
 	private Set<Corpus> corpora;
 	private FSCorpusHandler corpusHandler;
 	private FSSourceDocumentHandler sourceDocumentHandler;
@@ -37,13 +36,15 @@ class FSRepository implements Repository {
 		super();
 		this.name = name;
 		this.repoFolderPath = repoFolderPath;
-		this.serializationHandlerFactory = serializationHandlerFactory;
 		this.corpusHandler = new FSCorpusHandler(repoFolderPath);
 		this.sourceDocumentHandler = 
 			new FSSourceDocumentHandler(
 				repoFolderPath, 
 				serializationHandlerFactory.getSourceDocumentInfoSerializationHandler());
-		this.tagLibraryHandler = new FSTagLibraryHandler(repoFolderPath);
+		this.tagLibraryHandler = 
+				new FSTagLibraryHandler(
+						repoFolderPath, 
+						serializationHandlerFactory.getTagLibrarySerializationHandler());
 
 	}
 	
@@ -95,8 +96,12 @@ class FSRepository implements Repository {
 	}
 
 	public TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) {
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			return tagLibraryHandler.loadTagLibrary(tagLibraryReference);
+		}
+		catch(IOException ioe) {
+			throw new RuntimeException(ioe);
+		}
 	}
 
 	public UserMarkupCollection getUserMarkupCollection(

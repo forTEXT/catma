@@ -16,4 +16,7 @@ public class TagLibraryReference {
 		return name;
 	}
 	
+	public String getId() {
+		return id;
+	}
 }

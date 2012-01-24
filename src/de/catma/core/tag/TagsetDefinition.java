@@ -1,9 +1,11 @@
 package de.catma.core.tag;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
-public class TagsetDefinition implements Versionable {
+public class TagsetDefinition implements Versionable, Iterable<TagDefinition> {
 	
 	private String id;
 	private String name;
@@ -40,5 +42,13 @@ public class TagsetDefinition implements Versionable {
 	
 	public TagDefinition getTagDefinition(String tagDefinitionID) {
 		return tagDefinitions.get(tagDefinitionID);
+	}
+	
+	public Iterator<TagDefinition> iterator() {
+		return Collections.unmodifiableCollection(tagDefinitions.values()).iterator();
+	}
+	
+	public String getName() {
+		return name;
 	}
 }

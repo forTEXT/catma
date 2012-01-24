@@ -1,4 +1,4 @@
-package de.catma.ui.repository.entry;
+package de.catma.ui.repository.treeentry;
 
 public class StandardContentInfo implements ContentInfo {
 
