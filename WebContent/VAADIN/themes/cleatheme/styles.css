@@ -8,20 +8,10 @@
 	white-space:nowrap;
 }
 
-
-.tag_green {display:inline-block; border-bottom:5px; border-bottom-color:green;border-bottom-style:solid; }
-.tag_lightgreen {display:inline-block; border-bottom:5px; border-bottom-color:#00ff00;border-bottom-style:solid; }
-.tag_blue {display:inline-block; border-bottom:5px; border-bottom-color:blue;border-bottom-style:solid; }
-.tag_red {display:inline-block; border-bottom:5px; border-bottom-color:red;border-bottom-style:solid; }
-
-.tagger_menu {
-    background-color : #ffc;
-    border: 1px solid #000000;
-    color:  #222222;
-    font-family: Arial,Helvetica,Tahoma,Verdana,sans-serif;
-    font-size: 12px;
+.v-caption-repo-tree .v-captiontext {
+	font-weight:bold;
 }
 
-.tagger_menu_item td {
-	padding-right:10px;
+.repo-title-label {
+	font-weight:bold;
 }

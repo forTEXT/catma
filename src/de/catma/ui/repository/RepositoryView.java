@@ -117,6 +117,7 @@ public class RepositoryView extends VerticalLayout {
 		this.setMargin(true, true, true, true);
 		this.setSpacing(true);
 		Label documentsLabel = new Label("Document Manager");
+		documentsLabel.addStyleName("repo-title-label");
 		addComponent(documentsLabel);
 		
 		HorizontalLayout documentsManagerPanel = new HorizontalLayout();
@@ -129,6 +130,7 @@ public class RepositoryView extends VerticalLayout {
 		corporaPanel.setHeight("200px");
 		
 		corporaTree = new Tree();
+		corporaTree.addStyleName("repo-tree");
 		corporaTree.setCaption("Corpora");
 		corporaTree.addItem(allDocuments);
 		corporaTree.setChildrenAllowed(allDocuments, false);
@@ -149,6 +151,7 @@ public class RepositoryView extends VerticalLayout {
 		documentsTree = new Tree();
 		documentsTree.setContainerDataSource(documentsContainer);
 		documentsTree.setCaption("Documents");
+		documentsTree.addStyleName("repo-tree");
 		documentsTree.setImmediate(true);
 		
 		documentsPanel.addComponent(documentsTree);
@@ -197,7 +200,7 @@ public class RepositoryView extends VerticalLayout {
 		contentInfoForm.setItemDataSource(contentInfoItem);
 		
 		documentsManagerPanel.addComponent(contentInfoForm);
-		documentsManagerPanel.setExpandRatio(contentInfoForm, 1);
+		documentsManagerPanel.setExpandRatio(contentInfoForm, 1.5f);
 		
 		addComponent(documentsManagerPanel);
 		corporaTree.setValue(allDocuments);
@@ -209,6 +212,7 @@ public class RepositoryView extends VerticalLayout {
 		
 		tagLibrariesTree = new Tree();
 		tagLibrariesTree.setCaption("Tag Libraries");
+		tagLibrariesTree.addStyleName("repo-tree");
 		tagLibrariesTree.setImmediate(true);
 		
 		for (TagLibraryReference tlr : repository.getTagLibraryReferences()) {

@@ -10,6 +10,6 @@ public class RepositoryManagerWindow extends Window {
 		this.setContent(view);
 		
 		setWidth("50%");
-		setHeight("50%");
+		setHeight("90%");
 	}
 }

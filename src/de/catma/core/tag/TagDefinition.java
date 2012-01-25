@@ -9,6 +9,11 @@ public class TagDefinition implements Versionable {
 	
 	// TODO: hier besser interface einziehen um Links als tagdefs abzubilden.
 	
+	private static enum SystemPropertyName {
+		catma_displaycolor,
+		;
+	}
+	
 	public final static TagDefinition CATMA_BASE_TAG = 
 			new TagDefinition(
 				"CATMA_BASE_TAG", "CATMA_BASE_TAG", new Version("1"), null);
@@ -75,5 +80,9 @@ public class TagDefinition implements Versionable {
 	
 	public String getType() {
 		return type;
+	}
+	
+	public String getColor() {
+		return systemPropertyDefinitions.get(SystemPropertyName.catma_displaycolor.name()).getFirstValue();
 	}
 }
