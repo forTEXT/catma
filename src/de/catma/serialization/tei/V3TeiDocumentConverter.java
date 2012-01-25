@@ -34,12 +34,19 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		TeiElement encodingDesc = new TeiElement(TeiElementName.encodingDesc);
 		((TeiElement)teiDocument.getNodes(TeiElementName.teiHeader).get(0)).appendChild(encodingDesc);
 		standardTagsetDefinition = addStandardTagset(encodingDesc);
-		//TODO: remove empty and deleted tagsets/tags
+		
 		Nodes tagsetElements = teiDocument.getNodes(TeiElementName.fvLib);
 		
 		for( int i=0; i<tagsetElements.size(); i++) {
-			TeiElement tagsetDef = createTagsetDefinition(tagsetElements.get(i), encodingDesc);
-			tagsetDefinitions.put(tagsetDef.getID(), tagsetDef);
+			TeiElement tagsetElement = (TeiElement)tagsetElements.get(i);
+			String version = tagsetElement.getAttributeValue(Attribute.n);
+			version = version.substring(version.indexOf(' ')+1);
+			
+			// skip deleted or corrupted tablibs
+			if (!version.startsWith("-") && tagsetElement.hasChildElements()) { 
+				TeiElement tagsetDef = createTagsetDefinition(tagsetElement, encodingDesc);
+				tagsetDefinitions.put(tagsetDef.getID(), tagsetDef);
+			}
 		}	
 		
 		Nodes tagElements = 
@@ -144,21 +151,25 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 
 	private void createTagDefinition(Node node) {
 		TeiElement tagElement = (TeiElement)node;
-		if (!tagDefinitions.containsKey(tagElement.getID())) {
+		String version = tagElement.getAttributeValue(Attribute.n);
+		
+		if (!version.startsWith("-") && !tagDefinitions.containsKey(tagElement.getID())) {
 			Elements properties = tagElement.getChildElements(TeiElementName.f);
 			TeiElement tagsetDef = getTagsetDef(tagElement);
-			String baseTagID = getBaseTagID(tagElement);
-
-			TeiElement tagDefinition = addTagdefinition(
-					tagElement.getID(), 
-					getTimestamp(),
-					getTagName(properties),
-					getColorValue(properties),
-					baseTagID,
-					false,
-					tagsetDef);
-			
-			addUserDefinedProperties(tagDefinition, properties);
+			if (tagsetDef != null) { // check for deleted tagsets
+				String baseTagID = getBaseTagID(tagElement);
+	
+				TeiElement tagDefinition = addTagdefinition(
+						tagElement.getID(), 
+						getTimestamp(),
+						getTagName(properties),
+						getColorValue(properties),
+						baseTagID,
+						false,
+						tagsetDef);
+				
+				addUserDefinedProperties(tagDefinition, properties);
+			}
 		}
 		
 	}
@@ -166,6 +177,13 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 	private void addUserDefinedProperties(TeiElement tagDefinition, Elements properties) {
 		for(int i=0; i<properties.size();i++) {
 			TeiElement curProperty = (TeiElement)properties.get(i);
+			
+			if (!curProperty.hasChildElements()) { // hack to cover empty f-elements from corrupted TEI-docs
+				TeiElement string = new TeiElement(TeiElementName.string);
+				string.appendChild("property recovered recovered from corrupt TEI file");
+				curProperty.appendChild(string);
+			}
+			
 			String curPropertyName = curProperty.getAttributeValue(Attribute.f_name);
 			
 			if (!curPropertyName.equals("catma_displaycolor")

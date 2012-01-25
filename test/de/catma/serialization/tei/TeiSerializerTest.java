@@ -20,7 +20,29 @@ import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagsetDefinition;
 
 public class TeiSerializerTest {
+	
+	
 
+	@Test
+	public void testProblem2LibTagLibraryDeserializer() throws FileNotFoundException, IOException {
+		FilterInputStream is = new BOMFilterInputStream(
+				new FileInputStream("testdocs/Tagsets_user_problem.xml"), Charset.forName( "UTF-8" ));
+		TagLibrary tagLibrary = 
+				new TeiTagLibrarySerializationHandler().deserialize(is);
+		is.close();
+		
+	}
+
+	@Test
+	public void testProblem1LibTagLibraryDeserializer() throws FileNotFoundException, IOException {
+		FilterInputStream is = new BOMFilterInputStream(
+				new FileInputStream("testdocs/Wehmeier_problem_DefaultTagsetDB.xml"), Charset.forName( "UTF-8" ));
+		TagLibrary tagLibrary = 
+				new TeiTagLibrarySerializationHandler().deserialize(is);
+		is.close();
+		
+	}
+	
 	@Test
 	public void testTagLibraryDeserializer() throws FileNotFoundException, IOException {
 		FilterInputStream is = new BOMFilterInputStream(
