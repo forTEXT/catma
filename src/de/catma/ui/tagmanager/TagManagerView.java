@@ -18,6 +18,10 @@ public class TagManagerView extends VerticalLayout implements CloseHandler {
 	private Label noOpenTagLibraries;
 	
 	public TagManagerView() {
+		initComponents();
+	}
+	
+	private void initComponents() {
 		tabSheet = new TabSheet();
 		noOpenTagLibraries = 
 			new Label(
@@ -25,14 +29,14 @@ public class TagManagerView extends VerticalLayout implements CloseHandler {
 				"Please use the Repository Manager to open a Tag Libray.");
 		
 		tabSheet.setCloseHandler(this);
-		setEmptyLabel();
-	}
-	
-	private void setEmptyLabel() {
+		
 		noOpenTagLibraries.setSizeFull();
 		setMargin(true);
 		addComponent(noOpenTagLibraries);
 		setComponentAlignment(noOpenTagLibraries, Alignment.MIDDLE_CENTER);
+		
+		tabSheet.setVisible(false);
+		addComponent(tabSheet);
 	}
 
 	public void openTagLibrary(TagLibrary tagLibrary) {
@@ -47,10 +51,14 @@ public class TagManagerView extends VerticalLayout implements CloseHandler {
 			tabSheet.setSelectedTab(tab.getComponent());
 		}
 		
-		if (tabSheet.getParent() == null) {
-			removeComponent(noOpenTagLibraries);
-			addComponent(tabSheet);
+		if (!tabSheet.isVisible()) {
+			noOpenTagLibraries.setVisible(false);
 			setMargin(false);
+			tabSheet.setVisible(true);
+			tabSheet.setSizeFull();
+			
+			// workaround to force a repaint, that provokes to display the tabsheet in full size
+			getWindow().setWidth(getWindow().getWidth()+0.1f, getWidthUnits());
 		}
 	}
 	
@@ -72,13 +80,6 @@ public class TagManagerView extends VerticalLayout implements CloseHandler {
 	public void onTabClose(TabSheet tabsheet, Component tabContent) {
 		// workaround for http://dev.vaadin.com/ticket/7686
 		
-//		if (tabContent.equals(tabsheet.getSelectedTab())) {
-//			tabsheet.removeComponent(tabContent);
-//		}
-//		else {
-//			tabsheet.setSelectedTab(tabContent);
-//		}
-		
 		tabsheet.removeComponent(tabContent);
 		try {
 			Thread.sleep(5);
@@ -86,8 +87,9 @@ public class TagManagerView extends VerticalLayout implements CloseHandler {
 	            //do nothing 
 	    }
 		if (tabsheet.getComponentCount() == 0) {
-			removeComponent(tabsheet);
-			setEmptyLabel();
+			tabsheet.setVisible(false);
+			noOpenTagLibraries.setVisible(true);
+			setMargin(true);
 		}
 
 	}

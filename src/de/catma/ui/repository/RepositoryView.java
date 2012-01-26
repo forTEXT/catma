@@ -12,9 +12,13 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Form;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.MenuBar;
+import com.vaadin.ui.MenuBar.Command;
+import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.CleaApplication;
 import de.catma.core.document.Corpus;
@@ -46,6 +50,18 @@ public class RepositoryView extends VerticalLayout {
 			new HashMap<String, SourceDocumentFilter>();
 	
 	private Button btOpenTagLibrary;
+	private Button btAddDocument;
+	private Button btCreateUserMarkupCollection;
+	private MenuItem miMoreDocumentActions;
+	private Button btCreateCorpus;
+	private Button btRemoveCorpus;
+	private Button btCreateTagLibrary;
+	private Button btRemoveTagLibrary;
+	private Button btEditContentInfo;
+	private Button btSaveContentInfoChanges;
+	private Button btDiscardContentInfoChanges;
+	private Button btImportTagLibrary;
+	private Button btExportTagLibrary;
 	
 	public RepositoryView(Repository repository) {
 		super();
@@ -59,6 +75,7 @@ public class RepositoryView extends VerticalLayout {
 			
 			public void valueChange(ValueChangeEvent event) {
 				Object value = event.getProperty().getValue();
+				boolean corpusRemoveButtonEnabled = false;
 				if (value != null) {
 					documentsContainer.removeAllContainerFilters();
 					
@@ -74,9 +91,12 @@ public class RepositoryView extends VerticalLayout {
 						if(documentsContainer.size() > 0) {
 							documentsTree.setValue(documentsContainer.getIdByIndex(0));
 						}
+						corpusRemoveButtonEnabled = true;
 					}
 
 				}
+				
+				btRemoveCorpus.setEnabled(corpusRemoveButtonEnabled);
 			}
 		});
 		
@@ -87,6 +107,7 @@ public class RepositoryView extends VerticalLayout {
 				if (value != null) {
 					TreeEntry entry = (TreeEntry)value;
 					contentInfoForm.setItemDataSource(entry.getContentInfo());
+					contentInfoForm.setReadOnly(true);
 				}
 			}
 			
@@ -111,7 +132,112 @@ public class RepositoryView extends VerticalLayout {
 				}				
 			}
 		});
+		
+		miMoreDocumentActions.addItem("Remove Document", new Command() {
+			
+			public void menuSelected(MenuItem selectedItem) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		miMoreDocumentActions.addItem("Export Document", new Command() {
+			
+			public void menuSelected(MenuItem selectedItem) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		miMoreDocumentActions.addSeparator();
+		
+		miMoreDocumentActions.addItem("Import User Markup Collection", new Command() {
+			
+			public void menuSelected(MenuItem selectedItem) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		miMoreDocumentActions.addItem("Export User Markup Colletion", new Command() {
+			public void menuSelected(MenuItem selectedItem) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		miMoreDocumentActions.addItem("Remove User Markup Colletion", new Command() {
+			public void menuSelected(MenuItem selectedItem) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		miMoreDocumentActions.addSeparator();
+		
+		miMoreDocumentActions.addItem("Create Structure Markup Collection", new Command() {
+			
+			public void menuSelected(MenuItem selectedItem) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		miMoreDocumentActions.addItem("Import Structure Markup Colletion", new Command() {
+			public void menuSelected(MenuItem selectedItem) {
+				// TODO Auto-generated method stub
+				
+			}
+		});	
+		
+		miMoreDocumentActions.addItem("Export Structure Markup Colletion", new Command() {
+			public void menuSelected(MenuItem selectedItem) {
+				// TODO Auto-generated method stub
+				
+			}
+		});	
+		
+		
+		miMoreDocumentActions.addItem("Remove Structure Markup Colletion", new Command() {
+			public void menuSelected(MenuItem selectedItem) {
+				// TODO Auto-generated method stub
+				
+			}
+		});	
+		
+		btEditContentInfo.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				btEditContentInfo.setVisible(false);
+				btSaveContentInfoChanges.setVisible(true);
+				btDiscardContentInfoChanges.setVisible(true);
+				contentInfoForm.setReadOnly(false);
+			}
+		});
+		
+		btSaveContentInfoChanges.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				btEditContentInfo.setVisible(true);
+				btSaveContentInfoChanges.setVisible(false);
+				btDiscardContentInfoChanges.setVisible(false);
+				contentInfoForm.commit();
+				contentInfoForm.setReadOnly(true);				
+			}
+		});
+		
+		btDiscardContentInfoChanges.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				btEditContentInfo.setVisible(true);
+				btSaveContentInfoChanges.setVisible(false);
+				btDiscardContentInfoChanges.setVisible(false);
+				contentInfoForm.discard();
+				contentInfoForm.setReadOnly(true);				
+			}
+		});
 	}
+	
 
 	private void initComponents() {
 		this.setMargin(true, true, true, true);
@@ -124,6 +250,9 @@ public class RepositoryView extends VerticalLayout {
 		documentsManagerPanel.setSpacing(true);
 		documentsManagerPanel.setSizeFull();
 		documentsManagerPanel.setMargin(false, false, true, false);
+		
+		VerticalLayout outerCorporaPanel = new VerticalLayout();
+		outerCorporaPanel.setSpacing(true);
 		
 		Panel corporaPanel = new Panel();
 		corporaPanel.getContent().setSizeUndefined();
@@ -142,8 +271,26 @@ public class RepositoryView extends VerticalLayout {
 		}
 		
 		corporaPanel.addComponent(corporaTree);
-		documentsManagerPanel.addComponent(corporaPanel);
-		documentsManagerPanel.setExpandRatio(corporaPanel, 1);
+		outerCorporaPanel.addComponent(corporaPanel);
+		
+		Panel corporaButtonsPanel = new Panel(new HorizontalLayout());
+		corporaButtonsPanel.setStyleName(Reindeer.PANEL_LIGHT);
+		((HorizontalLayout)corporaButtonsPanel.getContent()).setSpacing(true);
+		
+		btCreateCorpus = new Button("Create Corpus");
+		btRemoveCorpus = new Button("Remove Corpus");
+		btRemoveCorpus.setEnabled(false);
+		
+		corporaButtonsPanel.addComponent(btCreateCorpus);
+		corporaButtonsPanel.addComponent(btRemoveCorpus);
+		
+		outerCorporaPanel.addComponent(corporaButtonsPanel);
+		
+		documentsManagerPanel.addComponent(outerCorporaPanel);
+		documentsManagerPanel.setExpandRatio(outerCorporaPanel, 1.3f);
+		
+		VerticalLayout outerDocumentsPanel = new VerticalLayout();
+		outerDocumentsPanel.setSpacing(true);
 		
 		Panel documentsPanel = new Panel();
 		
@@ -190,17 +337,59 @@ public class RepositoryView extends VerticalLayout {
 
 			}
 		}
-		documentsManagerPanel.addComponent(documentsPanel);
-		documentsManagerPanel.setExpandRatio(documentsPanel, 2);
+		outerDocumentsPanel.addComponent(documentsPanel);
+		
+		Panel documentButtonsPanel = new Panel(new HorizontalLayout());
+		documentButtonsPanel.setStyleName(Reindeer.PANEL_LIGHT);
 
+		((HorizontalLayout)documentButtonsPanel.getContent()).setSpacing(true);
+		
+		btAddDocument = new Button("Add Document");
+		documentButtonsPanel.addComponent(btAddDocument);
+		btCreateUserMarkupCollection = new Button("Create User Markup Collection");
+		documentButtonsPanel.addComponent(btCreateUserMarkupCollection);
+		MenuBar menuMoreDocumentActions = new MenuBar();
+		miMoreDocumentActions = menuMoreDocumentActions.addItem("More actions...", null);
+		documentButtonsPanel.addComponent(menuMoreDocumentActions);
+		
+		outerDocumentsPanel.addComponent(documentButtonsPanel);
+		
+		documentsManagerPanel.addComponent(outerDocumentsPanel);
+		documentsManagerPanel.setExpandRatio(outerDocumentsPanel, 2);
+		
+		VerticalLayout contentInfoPanel = new VerticalLayout();
+		contentInfoPanel.setSpacing(true);
+		
 		contentInfoForm = new Form();
 		contentInfoForm.setCaption("Information");
+		contentInfoForm.setWriteThrough(false);
 		
 		BeanItem<ContentInfo> contentInfoItem = new BeanItem<ContentInfo>(new StandardContentInfo());
 		contentInfoForm.setItemDataSource(contentInfoItem);
+		contentInfoForm.setVisibleItemProperties(new String[] {
+				"title", "author", "description", "publisher"
+		});
 		
-		documentsManagerPanel.addComponent(contentInfoForm);
-		documentsManagerPanel.setExpandRatio(contentInfoForm, 1.5f);
+		contentInfoForm.setReadOnly(true);
+		contentInfoPanel.addComponent(contentInfoForm);
+		
+		Panel contentInfoButtonsPanel = new Panel(new HorizontalLayout());
+		contentInfoButtonsPanel.setStyleName(Reindeer.PANEL_LIGHT);
+		((HorizontalLayout)contentInfoButtonsPanel.getContent()).setSpacing(true);
+		
+		btEditContentInfo = new Button("Edit");
+		contentInfoButtonsPanel.addComponent(btEditContentInfo);
+		btSaveContentInfoChanges = new Button("Save");
+		btSaveContentInfoChanges.setVisible(false);
+		contentInfoButtonsPanel.addComponent(btSaveContentInfoChanges);
+		btDiscardContentInfoChanges = new Button("Discard");
+		btDiscardContentInfoChanges.setVisible(false);
+		contentInfoButtonsPanel.addComponent(btDiscardContentInfoChanges);
+		
+		contentInfoPanel.addComponent(contentInfoButtonsPanel);
+		
+		documentsManagerPanel.addComponent(contentInfoPanel);
+		documentsManagerPanel.setExpandRatio(contentInfoPanel, 1);
 		
 		addComponent(documentsManagerPanel);
 		corporaTree.setValue(allDocuments);
@@ -224,10 +413,23 @@ public class RepositoryView extends VerticalLayout {
 		tagLibraryPanel.addComponent(tagLibrariesTree);
 		
 		HorizontalLayout tagLibraryButtonPanel = new HorizontalLayout();
+		tagLibraryButtonPanel.setSpacing(true);
+		
 		btOpenTagLibrary = new Button("Open Tag Library");
 		btOpenTagLibrary.setEnabled(false);
-		
 		tagLibraryButtonPanel.addComponent(btOpenTagLibrary);
+
+		btCreateTagLibrary = new Button("Create Tag Library");
+		tagLibraryButtonPanel.addComponent(btCreateTagLibrary);
+		
+		btImportTagLibrary = new Button("Import Tag Library");
+		tagLibraryButtonPanel.addComponent(btImportTagLibrary);
+		
+		btExportTagLibrary = new Button("Export Tag Library");
+		tagLibraryButtonPanel.addComponent(btExportTagLibrary);
+		
+		btRemoveTagLibrary = new Button("Remove Tag Library");
+		tagLibraryButtonPanel.addComponent(btRemoveTagLibrary);
 		
 		tagLibraryContainer.addComponent(tagLibraryPanel);
 		tagLibraryContainer.addComponent(tagLibraryButtonPanel);
