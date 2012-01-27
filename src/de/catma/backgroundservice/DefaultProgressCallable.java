@@ -1,7 +1,7 @@
 /*   
  *   CATMA Computer Aided Text Markup and Analysis
  *   
- *   Copyright (C) 2012  University Of Hamburg
+ *   Copyright (C) 2009  University Of Hamburg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,38 +16,33 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */   
-package de.catma.ui.client.ui.common.event;
 
-import java.util.ArrayList;
-import java.util.List;
+package de.catma.backgroundservice;
 
 /**
- * @author marco.petris@web.de
+ * Default implementation of a {@link ProgressCallable}. It adds a field 
+ * to maintain the instance of the {@link ProgressListener}.
  *
+ * @author Marco Petris
+ *
+ * @param <V>
  */
-public class EventListenerSupport {
-
-	private List<EventListener> eventListeners;
+public abstract class DefaultProgressCallable<V> 
+	implements ProgressCallable<V> {
+	private ProgressListener progressListener;
 	
-	public EventListenerSupport() {
-		eventListeners = new ArrayList<EventListener>();
+	/* (non-Javadoc)
+	 * @see org.catma.backgroundservice.ProgressCallable#setProgressListener(org.catma.backgroundservice.ProgressListener)
+	 */
+	public void setProgressListener( ProgressListener progressListener ) {
+		this.progressListener = progressListener;
 	}
 	
-	public void addEventListener(EventListener eventListener) {
-		eventListeners.add(eventListener);
+	/**
+	 * @return the progress listener
+	 */
+	public ProgressListener getProgressListener() {
+		return progressListener;
 	}
 	
-	public void removeEventListener(EventListener eventListener) {
-		eventListeners.remove(eventListener);
-	}
-	
-	public void fireEvent(Object event) {
-		for (EventListener listener : eventListeners) {
-			listener.eventFired(event);
-		}
-	}
-	
-	public void clear() {
-		eventListeners.clear();
-	}
 }

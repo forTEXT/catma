@@ -24,23 +24,23 @@ import de.catma.ui.tagmanager.TagManagerWindow;
 
 public class CleaApplication extends Application {
 	
-	private static class TagSelectionHandler implements ClickListener {
-		
-		private String tag;
-		private Tagger tagger;
-
-		public TagSelectionHandler(String tag, Tagger tagger) {
-			super();
-			this.tag = tag;
-			this.tagger = tagger;
-		}
-
-		public void buttonClick(ClickEvent event) {
-			tagger.addTag(tag);
-			
-		}
-	}
-	
+//	private static class TagSelectionHandler implements ClickListener {
+//		
+//		private String tag;
+//		private Tagger tagger;
+//
+//		public TagSelectionHandler(String tag, Tagger tagger) {
+//			super();
+//			this.tag = tag;
+//			this.tagger = tagger;
+//		}
+//
+//		public void buttonClick(ClickEvent event) {
+//			tagger.addTag(tag);
+//			
+//		}
+//	}
+//	
 	private static final String WEB_INF_DIR = "WEB-INF";
 	private static final String CATMA_PROPERTY_FILE = "catma.properties";
 	

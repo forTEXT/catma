@@ -1,3 +1,21 @@
+/*   
+ *   CATMA Computer Aided Text Markup and Analysis
+ *   
+ *   Copyright (C) 2012  University Of Hamburg
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */   
 package de.catma.ui.client.ui.tagger.menu;
 
 import java.util.ArrayList;
@@ -9,9 +27,14 @@ import com.google.gwt.event.dom.client.MouseMoveEvent;
 import com.google.gwt.event.dom.client.MouseMoveHandler;
 import com.google.gwt.user.client.Timer;
 
+import de.catma.ui.client.ui.tagger.VTagger;
 import de.catma.ui.client.ui.tagger.shared.ContentElementID;
 
 
+/**
+ * @author marco.petris@web.de
+ *
+ */
 public class TagMenu implements MouseMoveHandler {
 	
 	private final class MenuTimer extends Timer {
@@ -31,12 +54,12 @@ public class TagMenu implements MouseMoveHandler {
 	private int lastClientX;
 	private int lastClientY;
 	private MenuTimer curMenuTimer;
-	private TagActionListener tagActionListener;
 	private TagMenuPopup lastPopup;
+	private VTagger vTagger;
 	
-	public TagMenu(TagActionListener tagActionListener) {
+	public TagMenu(VTagger vTagger) {
 		super();
-		this.tagActionListener = tagActionListener;
+		this.vTagger = vTagger;
 	}
 
 	public void loadMenu() {
@@ -44,17 +67,18 @@ public class TagMenu implements MouseMoveHandler {
 		if (line != null) {
 			List<Element> taggedSpans = findTargetSpan(line);
 			
-			if (!taggedSpans.isEmpty()) {
-				
+			if (vTagger.hasSelection() || !taggedSpans.isEmpty()) {
 				hidePopup();
-				
-				lastPopup = new TagMenuPopup(tagActionListener);
+				String lastSelectedColor = null;
+				if (lastPopup != null) {
+					lastSelectedColor = lastPopup.getLastSelectedColor();
+				}
+				lastPopup = new TagMenuPopup(vTagger, lastSelectedColor);
 				lastPopup.setPopupPosition(lastClientX, lastClientY+5);
 				
 				for (Element span : taggedSpans) {
-					lastPopup.addTag(span.getAttribute("class"));
+					lastPopup.addTag(vTagger.getTagInstanceID(span.getAttribute("id")));
 				}
-				
 				lastPopup.show();
 			}
 			else {

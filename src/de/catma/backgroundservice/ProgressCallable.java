@@ -1,7 +1,7 @@
 /*   
  *   CATMA Computer Aided Text Markup and Analysis
  *   
- *   Copyright (C) 2012  University Of Hamburg
+ *   Copyright (C) 2009  University Of Hamburg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -15,14 +15,23 @@
  *
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */   
-package de.catma.ui.client.ui.tagger.shared;
+ */ 
+
+package de.catma.backgroundservice;
+
+import java.util.concurrent.Callable;
 
 /**
- * @author marco.petris@web.de
+ * A {@link Callable} which allows to set a listener for execution progress.
  *
+ * @author Marco Petris
+ *
+ * @param <V>
  */
-public enum ContentElementID {
-	CONTENT,
-	LINE;
+public interface ProgressCallable<V> extends Callable<V> {
+	/**
+	 * @param progressListener this listener can be notified by the implementer 
+	 * of the {@link ProgressCallable}.
+	 */
+	public void setProgressListener( ProgressListener progressListener );
 }

@@ -25,5 +25,5 @@
 	</replace-with>
  -->
 
-    <inherits name="org.vaadin.cssinject.Cssinject_addonWidgetset" />
+    <inherits name="net.auroris.ColorPicker.client" />
 </module>

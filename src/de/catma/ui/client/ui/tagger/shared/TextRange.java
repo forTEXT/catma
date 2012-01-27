@@ -16,38 +16,37 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */   
-package de.catma.ui.client.ui.common.event;
-
-import java.util.ArrayList;
-import java.util.List;
+package de.catma.ui.client.ui.tagger.shared;
 
 /**
  * @author marco.petris@web.de
  *
  */
-public class EventListenerSupport {
+public class TextRange {
 
-	private List<EventListener> eventListeners;
-	
-	public EventListenerSupport() {
-		eventListeners = new ArrayList<EventListener>();
+	private int startPos;
+	private int endPos;
+
+	public TextRange(int startPos, int endPos) {
+		super();
+		this.startPos = startPos;
+		this.endPos = endPos;
+	}
+
+	public int getStartPos() {
+		return startPos;
+	}
+
+	public int getEndPos() {
+		return endPos;
 	}
 	
-	public void addEventListener(EventListener eventListener) {
-		eventListeners.add(eventListener);
+	public boolean isPoint() {
+		return getStartPos()==getEndPos();
 	}
 	
-	public void removeEventListener(EventListener eventListener) {
-		eventListeners.remove(eventListener);
-	}
-	
-	public void fireEvent(Object event) {
-		for (EventListener listener : eventListeners) {
-			listener.eventFired(event);
-		}
-	}
-	
-	public void clear() {
-		eventListeners.clear();
+	@Override
+	public String toString() {
+		return "["+getStartPos()+","+getEndPos()+"]";
 	}
 }
