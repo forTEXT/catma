@@ -49,19 +49,21 @@ public class RepositoryView extends VerticalLayout {
 	private HashMap<String, SourceDocumentFilter> filters = 
 			new HashMap<String, SourceDocumentFilter>();
 	
-	private Button btOpenTagLibrary;
+	private Button btOpenDocument;
 	private Button btAddDocument;
-	private Button btCreateUserMarkupCollection;
 	private MenuItem miMoreDocumentActions;
+	
 	private Button btCreateCorpus;
-	private Button btRemoveCorpus;
+	private MenuItem miMoreCorpusActions;
+	private MenuItem miRemoveCorpus;
+	
+	private Button btOpenTagLibrary;
 	private Button btCreateTagLibrary;
-	private Button btRemoveTagLibrary;
+	private MenuItem miMoreTagLibraryActions;
+	
 	private Button btEditContentInfo;
 	private Button btSaveContentInfoChanges;
 	private Button btDiscardContentInfoChanges;
-	private Button btImportTagLibrary;
-	private Button btExportTagLibrary;
 	
 	public RepositoryView(Repository repository) {
 		super();
@@ -96,9 +98,27 @@ public class RepositoryView extends VerticalLayout {
 
 				}
 				
-				btRemoveCorpus.setEnabled(corpusRemoveButtonEnabled);
+				miRemoveCorpus.setEnabled(corpusRemoveButtonEnabled);
 			}
 		});
+		
+		miMoreCorpusActions.addItem("Analyze Corpus", new Command() {
+			
+			public void menuSelected(MenuItem selectedItem) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		miRemoveCorpus = miMoreCorpusActions.addItem("Remove Corpus", new Command() {
+			
+			public void menuSelected(MenuItem selectedItem) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		miRemoveCorpus.setEnabled(false);
 		
 		documentsTree.addListener(new ValueChangeListener() {
 			
@@ -151,6 +171,14 @@ public class RepositoryView extends VerticalLayout {
 		
 		miMoreDocumentActions.addSeparator();
 		
+		miMoreDocumentActions.addItem("Create User Markup Collection", new Command() {
+			
+			public void menuSelected(MenuItem selectedItem) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
 		miMoreDocumentActions.addItem("Import User Markup Collection", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
@@ -159,14 +187,14 @@ public class RepositoryView extends VerticalLayout {
 			}
 		});
 		
-		miMoreDocumentActions.addItem("Export User Markup Colletion", new Command() {
+		miMoreDocumentActions.addItem("Export User Markup Collection", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
 				// TODO Auto-generated method stub
 				
 			}
 		});
 		
-		miMoreDocumentActions.addItem("Remove User Markup Colletion", new Command() {
+		miMoreDocumentActions.addItem("Remove User Markup Collection", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
 				// TODO Auto-generated method stub
 				
@@ -183,14 +211,14 @@ public class RepositoryView extends VerticalLayout {
 			}
 		});
 		
-		miMoreDocumentActions.addItem("Import Structure Markup Colletion", new Command() {
+		miMoreDocumentActions.addItem("Import Structure Markup Collection", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
 				// TODO Auto-generated method stub
 				
 			}
 		});	
 		
-		miMoreDocumentActions.addItem("Export Structure Markup Colletion", new Command() {
+		miMoreDocumentActions.addItem("Export Structure Markup Collection", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
 				// TODO Auto-generated method stub
 				
@@ -198,7 +226,7 @@ public class RepositoryView extends VerticalLayout {
 		});	
 		
 		
-		miMoreDocumentActions.addItem("Remove Structure Markup Colletion", new Command() {
+		miMoreDocumentActions.addItem("Remove Structure Markup Collection", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
 				// TODO Auto-generated method stub
 				
@@ -234,6 +262,30 @@ public class RepositoryView extends VerticalLayout {
 				btDiscardContentInfoChanges.setVisible(false);
 				contentInfoForm.discard();
 				contentInfoForm.setReadOnly(true);				
+			}
+		});
+
+		miMoreTagLibraryActions.addItem("Import Tag Library", new Command() {
+			
+			public void menuSelected(MenuItem selectedItem) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		miMoreTagLibraryActions.addItem("Export Tag Library", new Command() {
+			
+			public void menuSelected(MenuItem selectedItem) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		miMoreTagLibraryActions.addItem("Remove Tag Library", new Command() {
+			
+			public void menuSelected(MenuItem selectedItem) {
+				// TODO Auto-generated method stub
+				
 			}
 		});
 	}
@@ -278,11 +330,11 @@ public class RepositoryView extends VerticalLayout {
 		((HorizontalLayout)corporaButtonsPanel.getContent()).setSpacing(true);
 		
 		btCreateCorpus = new Button("Create Corpus");
-		btRemoveCorpus = new Button("Remove Corpus");
-		btRemoveCorpus.setEnabled(false);
 		
 		corporaButtonsPanel.addComponent(btCreateCorpus);
-		corporaButtonsPanel.addComponent(btRemoveCorpus);
+		MenuBar menuMoreCorpusActions = new MenuBar();
+		miMoreCorpusActions = menuMoreCorpusActions.addItem("More actions...", null);
+		corporaButtonsPanel.addComponent(menuMoreCorpusActions);
 		
 		outerCorporaPanel.addComponent(corporaButtonsPanel);
 		
@@ -344,10 +396,11 @@ public class RepositoryView extends VerticalLayout {
 
 		((HorizontalLayout)documentButtonsPanel.getContent()).setSpacing(true);
 		
+		btOpenDocument = new Button("Open Document");
+		documentButtonsPanel.addComponent(btOpenDocument);
 		btAddDocument = new Button("Add Document");
 		documentButtonsPanel.addComponent(btAddDocument);
-		btCreateUserMarkupCollection = new Button("Create User Markup Collection");
-		documentButtonsPanel.addComponent(btCreateUserMarkupCollection);
+
 		MenuBar menuMoreDocumentActions = new MenuBar();
 		miMoreDocumentActions = menuMoreDocumentActions.addItem("More actions...", null);
 		documentButtonsPanel.addComponent(menuMoreDocumentActions);
@@ -422,14 +475,9 @@ public class RepositoryView extends VerticalLayout {
 		btCreateTagLibrary = new Button("Create Tag Library");
 		tagLibraryButtonPanel.addComponent(btCreateTagLibrary);
 		
-		btImportTagLibrary = new Button("Import Tag Library");
-		tagLibraryButtonPanel.addComponent(btImportTagLibrary);
-		
-		btExportTagLibrary = new Button("Export Tag Library");
-		tagLibraryButtonPanel.addComponent(btExportTagLibrary);
-		
-		btRemoveTagLibrary = new Button("Remove Tag Library");
-		tagLibraryButtonPanel.addComponent(btRemoveTagLibrary);
+		MenuBar menuMoreTagLibraryActions = new MenuBar();
+		miMoreTagLibraryActions = menuMoreTagLibraryActions.addItem("More actions...", null);
+		tagLibraryButtonPanel.addComponent(menuMoreTagLibraryActions);
 		
 		tagLibraryContainer.addComponent(tagLibraryPanel);
 		tagLibraryContainer.addComponent(tagLibraryButtonPanel);

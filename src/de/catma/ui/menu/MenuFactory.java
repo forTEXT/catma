@@ -6,13 +6,15 @@ import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Window;
 
+import de.catma.ui.CatmaWindow;
+
 public class MenuFactory {
 	
 	public static class MenuEntryDefinition {
 		private String caption;
-		private Window window;
+		private CatmaWindow window;
 		
-		public MenuEntryDefinition(String caption, Window window) {
+		public MenuEntryDefinition(String caption, CatmaWindow window) {
 			super();
 			this.caption = caption;
 			this.window = window;
@@ -22,7 +24,7 @@ public class MenuFactory {
 			return caption;
 		}
 		
-		public Window getWindow() {
+		public CatmaWindow getWindow() {
 			return window;
 		}
 	}
@@ -36,7 +38,7 @@ public class MenuFactory {
 		
 		Menu menu = new Menu();
 		
-		MenuBar menuBar = new MenuBar();
+		final MenuBar menuBar = new MenuBar();
 		
 		for (final MenuEntryDefinition menuEntryDefinition : menuEntryDefintions) {
 			Command command = new Command() {
@@ -47,7 +49,7 @@ public class MenuFactory {
 					}
 					else {
 						componentContainer.getWindow().addWindow(menuEntryDefinition.getWindow());
-						menuEntryDefinition.getWindow().center();
+						menuEntryDefinition.getWindow().setPosition();
 					}
 				}
 			};

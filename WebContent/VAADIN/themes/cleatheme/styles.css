@@ -15,3 +15,7 @@
 .repo-title-label {
 	font-weight:bold;
 }
+
+.v-gridlayout-taglibrary-action-grid .v-gridlayout-spacing-on {
+	padding-top:7px;	
+}
