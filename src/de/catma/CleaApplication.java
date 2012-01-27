@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.util.Properties;
 
 import com.vaadin.Application;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
@@ -18,7 +16,6 @@ import de.catma.ui.menu.Menu;
 import de.catma.ui.menu.MenuFactory;
 import de.catma.ui.repository.RepositoryManagerView;
 import de.catma.ui.repository.RepositoryManagerWindow;
-import de.catma.ui.tagger.Tagger;
 import de.catma.ui.tagmanager.TagManagerView;
 import de.catma.ui.tagmanager.TagManagerWindow;
 
@@ -54,7 +51,7 @@ public class CleaApplication extends Application {
 		Properties properties = loadProperties();
 		
 		
-		final Window mainWindow = new Window("Clea");
+		final Window mainWindow = new Window("CATMA 4 - CLÉA");
 		VerticalLayout mainLayout = new VerticalLayout();
 		mainLayout.setMargin(true);
 		mainWindow.setContent(mainLayout);
