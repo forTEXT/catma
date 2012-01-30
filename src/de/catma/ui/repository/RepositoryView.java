@@ -18,6 +18,7 @@ import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.CleaApplication;
@@ -35,6 +36,7 @@ import de.catma.ui.repository.treeentry.SourceDocumentEntry;
 import de.catma.ui.repository.treeentry.StandardContentInfo;
 import de.catma.ui.repository.treeentry.TagLibraryEntry;
 import de.catma.ui.repository.treeentry.TreeEntry;
+import de.catma.ui.repository.wizard.WizardFactory;
 
 
 public class RepositoryView extends VerticalLayout {
@@ -73,6 +75,16 @@ public class RepositoryView extends VerticalLayout {
 	}
 
 	private void initActions() {
+		btAddDocument.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				WizardFactory factory = new WizardFactory();
+				Window sourceDocCreationWizardWindow = factory.createWizardWindow();
+				getApplication().getMainWindow().addWindow(sourceDocCreationWizardWindow);
+				sourceDocCreationWizardWindow.center();
+			}
+		});
+		
 		corporaTree.addListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {

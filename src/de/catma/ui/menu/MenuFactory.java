@@ -4,7 +4,6 @@ import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
-import com.vaadin.ui.Window;
 
 import de.catma.ui.CatmaWindow;
 

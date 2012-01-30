@@ -1,5 +1,6 @@
 package de.catma;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
@@ -21,35 +22,19 @@ import de.catma.ui.tagmanager.TagManagerWindow;
 
 public class CleaApplication extends Application {
 	
-//	private static class TagSelectionHandler implements ClickListener {
-//		
-//		private String tag;
-//		private Tagger tagger;
-//
-//		public TagSelectionHandler(String tag, Tagger tagger) {
-//			super();
-//			this.tag = tag;
-//			this.tagger = tagger;
-//		}
-//
-//		public void buttonClick(ClickEvent event) {
-//			tagger.addTag(tag);
-//			
-//		}
-//	}
-//	
 	private static final String WEB_INF_DIR = "WEB-INF";
 	private static final String CATMA_PROPERTY_FILE = "catma.properties";
-	
+
+
 	private RepositoryManagerView repositoryManagerView;
 	private TagManagerView tagManagerView;
 	private Menu menu;
+	private String tempDirectory = null;
 
 	@Override
 	public void init() {
 		
 		Properties properties = loadProperties();
-		
 		
 		final Window mainWindow = new Window("CATMA 4 - CLÉA");
 		VerticalLayout mainLayout = new VerticalLayout();
@@ -57,6 +42,8 @@ public class CleaApplication extends Application {
 		mainWindow.setContent(mainLayout);
 		MenuFactory menuFactory = new MenuFactory();
 		try {
+			initTempDirectory(properties);
+			
 			repositoryManagerView = 
 					new RepositoryManagerView(new RepositoryManager(properties));
 		
@@ -79,54 +66,33 @@ public class CleaApplication extends Application {
 		
 		
 //		LoginForm lf = new LoginForm();
-//		
-//		
-//		Panel tagManagerPanel = new Panel("Tag Manager");
-//		
-//		Button tagGreen = new Button("green tag");
-//		Button tagLight_green = new Button("light_green tag");
-//		Button tagBlue = new Button("blue tag");
-//		Button tagRed = new Button("red tag");
-//		Panel editorPanel = new Panel("Tagger");
-//		final Tagger tagger = new Tagger();
-//		tagger.setSizeFull();
-//		editorPanel.getContent().setSizeUndefined();
-//		editorPanel.setWidth("640px");
-//		editorPanel.addComponent(tagger);
-//		editorPanel.setScrollable(true);
-//		tagGreen.addListener(new TagSelectionHandler("tag_green", tagger));
-//		tagLight_green.addListener(new TagSelectionHandler("tag_lightgreen", tagger));
-//		tagBlue.addListener(new TagSelectionHandler("tag_blue", tagger));
-//		tagRed.addListener(new TagSelectionHandler("tag_red", tagger));
-//		final HorizontalLayout mainLayout = new HorizontalLayout();
-//		SourceUploader sourceUploader = new SourceUploader(tagger);
-//		tagManagerPanel.addComponent(sourceUploader);
-//		tagManagerPanel.addComponent(tagGreen);
-//		tagManagerPanel.addComponent(tagLight_green);
-//		tagManagerPanel.addComponent(tagBlue);
-//		tagManagerPanel.addComponent(tagRed);
-//		
-//		//mainWindow.setContent(mainLayout);
-//		mainWindow.setContent(lf);
-//		
-//		lf.addListener(new LoginForm.LoginListener() {
-//			
-//			public void onLogin(LoginEvent event) {
-//				mainWindow.setContent(mainLayout);
-//				
-//				CleaApplication.this.setUser(event.getLoginParameter("username"));
-//				System.out.println(CleaApplication.this.getUser());
-//			}
-//		});
-//		
-//		mainLayout.addComponent(editorPanel);
-//		mainLayout.setExpandRatio(editorPanel, 2);
-//		mainLayout.addComponent(tagManagerPanel);
-//		mainLayout.setExpandRatio(tagManagerPanel, 1);
+
 		
 		setMainWindow(mainWindow);
 		setTheme("cleatheme");
 
+	}
+	
+	private void initTempDirectory(Properties properties) throws IOException {
+		String tempDirProp = properties.getProperty("TempDir");
+		File tempDir = new File(tempDirProp);
+
+		if (!tempDir.isAbsolute()) {
+			this.tempDirectory = 
+					this.getContext().getBaseDirectory() 
+					+ System.getProperty("file.separator") 
+					+ WEB_INF_DIR
+					+ System.getProperty("file.separator")
+					+ tempDirProp;
+		}
+		else {
+			this.tempDirectory = tempDirProp;
+		}
+		
+		tempDir = new File(this.tempDirectory);
+		if ((!tempDir.exists() && !tempDir.mkdirs())) {
+			throw new IOException("could not create temporary directory: " + this.tempDirectory);
+		}
 	}
 
 	private Properties loadProperties() {
@@ -146,7 +112,7 @@ public class CleaApplication extends Application {
 		}
 		return properties;
 	}
-	
+
 	public void openRepository(Repository repository) {
 		repositoryManagerView.openRepository(repository);
 	}
@@ -157,4 +123,9 @@ public class CleaApplication extends Application {
 		}
 		tagManagerView.openTagLibrary(tagLibrary);
 	}
+
+	public String getTempDirectory() {
+		return tempDirectory;
+	}
+	
 }

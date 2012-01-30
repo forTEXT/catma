@@ -26,4 +26,6 @@
  -->
 
     <inherits name="net.auroris.ColorPicker.client" />
+
+    <inherits name="org.vaadin.teemu.wizards.WizardsforvaadinWidgetset" />
 </module>

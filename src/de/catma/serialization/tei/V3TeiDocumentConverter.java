@@ -86,7 +86,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		
 		teiDocument.getTeiHeader().getTechnicalDescription().setVersion(TeiDocumentVersion.V3);
 		
-		teiDocument.printXmlDocument();
+//		teiDocument.printXmlDocument();
 	}
 
 	private void adjustPointers(TeiDocument teiDocument) {
