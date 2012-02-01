@@ -20,8 +20,11 @@
 package de.catma.core.document.source;
 
 import java.io.IOException;
+import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.mozilla.universalchardet.UniversalDetector;
 
 import de.catma.core.document.source.contenthandler.DOCContentHandler;
 import de.catma.core.document.source.contenthandler.HTMLContentHandler;
@@ -64,6 +67,54 @@ public class SourceDocumentHandler {
                 FileType.DOC, DOCContentHandler.class );
 	}
 	
+	public String getMimeType(String fileName, URLConnection urlConnection, String defaultMimeType) {
+		String contentType = urlConnection.getContentType();
+		String mimeType = null;
+		if (contentType != null) {
+			String[] contentTypeAttributes = contentType.split(";");
+			if (contentTypeAttributes.length > 0) {
+				mimeType  = contentTypeAttributes[0];
+			}
+		}
+		if (mimeType == null) {
+			mimeType = URLConnection.getFileNameMap().getContentTypeFor(fileName);
+			if (mimeType == null) {
+				mimeType = defaultMimeType;
+			}
+		}
+		return mimeType;
+	}
+	
+	public String getEncoding(URLConnection urlConnection, byte[] rawData, String defaultEncoding) {
+		String encoding = urlConnection.getContentEncoding();
+		if (encoding==null) {
+			String contentType = urlConnection.getContentType();
+			if (contentType.contains("charset")) {
+				String[] contentTypeAttributes = contentType.split(";");
+				String charsetAttribute = null;
+				for (String attribute : contentTypeAttributes) {
+					if (attribute.trim().startsWith("charset")) {
+						charsetAttribute = attribute;
+					}
+				}
+				if (charsetAttribute != null) {
+					encoding = charsetAttribute.trim().substring(
+							charsetAttribute.indexOf("=")).toUpperCase();
+				}
+			}
+			if (encoding == null) {
+				UniversalDetector detector = new UniversalDetector(null);
+				detector.handleData(rawData, 0, rawData.length);
+				encoding = detector.getDetectedCharset();
+				
+				if (encoding == null) {
+					encoding = defaultEncoding;
+				}
+			}
+		}
+		return encoding;
+	}
+
 	/**
 	 * Registers the {@link SourceContentHandler} with the givent {@link FileType}.
 	 * @param type the type we want to register a handler for

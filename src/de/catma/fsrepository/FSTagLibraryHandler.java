@@ -1,9 +1,10 @@
 package de.catma.fsrepository;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Set;
@@ -77,8 +78,10 @@ class FSTagLibraryHandler {
 	}
 	
 	public TagLibrary loadTagLibrary(TagLibraryReference tagLibraryReference) throws IOException {
+		URLConnection urlConnection = new URL(tagLibraryReference.getId()).openConnection();
+		
 		FilterInputStream is = new BOMFilterInputStream(
-				new FileInputStream(tagLibraryReference.getId()), Charset.forName( "UTF-8" ));
+				urlConnection.getInputStream(), Charset.forName( "UTF-8" ));
 		return tagLibrarySerializationHandler.deserialize(is); 
 	}
 	

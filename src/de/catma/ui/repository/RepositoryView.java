@@ -25,6 +25,7 @@ import de.catma.CleaApplication;
 import de.catma.core.document.Corpus;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.source.SourceDocumentInfo;
 import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollectionReference;
 import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
 import de.catma.core.tag.TagLibrary;
@@ -79,7 +80,8 @@ public class RepositoryView extends VerticalLayout {
 			
 			public void buttonClick(ClickEvent event) {
 				WizardFactory factory = new WizardFactory();
-				Window sourceDocCreationWizardWindow = factory.createWizardWindow();
+				SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo();
+				Window sourceDocCreationWizardWindow = factory.createWizardWindow(sourceDocumentInfo);
 				getApplication().getMainWindow().addWindow(sourceDocCreationWizardWindow);
 				sourceDocCreationWizardWindow.center();
 			}

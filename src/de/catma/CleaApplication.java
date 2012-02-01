@@ -9,10 +9,12 @@ import com.vaadin.Application;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
+import de.catma.backgroundservice.BackgroundService;
 import de.catma.core.ExceptionHandler;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
 import de.catma.core.tag.TagLibrary;
+import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.menu.Menu;
 import de.catma.ui.menu.MenuFactory;
 import de.catma.ui.repository.RepositoryManagerView;
@@ -30,11 +32,15 @@ public class CleaApplication extends Application {
 	private TagManagerView tagManagerView;
 	private Menu menu;
 	private String tempDirectory = null;
+	private BackgroundService backgroundService;
+	private DefaultProgressListener defaultProgressListener;
 
 	@Override
 	public void init() {
 		
 		Properties properties = loadProperties();
+		backgroundService = new BackgroundService(this);
+		
 		
 		final Window mainWindow = new Window("CATMA 4 - CLÉA");
 		VerticalLayout mainLayout = new VerticalLayout();
@@ -128,4 +134,7 @@ public class CleaApplication extends Application {
 		return tempDirectory;
 	}
 	
+	public BackgroundService getBackgroundService() {
+		return backgroundService;
+	}
 }

@@ -2,7 +2,10 @@ package de.catma.fsrepository;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +18,7 @@ import de.catma.core.ExceptionHandler;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.source.SourceDocumentHandler;
 import de.catma.core.document.source.SourceDocumentInfo;
-import de.catma.core.document.source.contenthandler.BOMFilterFileInputStream;
+import de.catma.core.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollectionReference;
 import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
 import de.catma.serialization.SourceDocumentInfoSerializationHandler;
@@ -70,14 +73,19 @@ class FSSourceDocumentHandler {
 	}
 
 	public SourceDocument loadSourceDocument(File digitalObjectFile) throws IOException {
+		InputStream infosetsInputStream  = null;
 		try {
 			Document xmlDoc = new Builder().build(digitalObjectFile);
 			
-			String infosetsDocumentURL = xmlDoc.query(Field.infosetsURI.toSimpleXQuery()).get(0).getValue();
+			String infosetsDocumentURLString = xmlDoc.query(Field.infosetsURI.toSimpleXQuery()).get(0).getValue();
+			URL infosetsURL = new URL(infosetsDocumentURLString);
+			
+			URLConnection infosetsURLConnection = infosetsURL.openConnection();
+			infosetsInputStream = infosetsURLConnection.getInputStream();
 			
 			SourceDocumentInfo sourceDocumentInfo = 
 					this.sourceDocumentInfoSerializationHandler.deserialize(
-							new BOMFilterFileInputStream(infosetsDocumentURL, Charset.forName("UTF-8")));
+							new BOMFilterInputStream(infosetsInputStream, Charset.forName("UTF-8")));
 			
 			String sourceURIVal = xmlDoc.query(Field.sourceURI.toSimpleXQuery()).get(0).getValue();
 			URI sourceURI = new URI(sourceURIVal);
@@ -106,10 +114,19 @@ class FSSourceDocumentHandler {
 				sourceDocument.addUserMarkupCollectionReference(userMarkupCollRef);
 			}
 			
+			infosetsInputStream.close();
+			
 			return sourceDocument;
 		} catch (Exception e) {
+			if (infosetsInputStream != null) {
+				try {
+					infosetsInputStream.close();
+				}
+				catch(Exception e2){}
+			}
 			throw new IOException(e);
 		}
+		
 	}
 	
 	public String getDigitalObjectsFolderPath() {

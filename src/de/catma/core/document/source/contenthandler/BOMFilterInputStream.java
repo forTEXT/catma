@@ -22,6 +22,10 @@ package de.catma.core.document.source.contenthandler;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.Charset;
 
 /**
@@ -32,13 +36,16 @@ import java.nio.charset.Charset;
  *
  */
 public class BOMFilterInputStream extends FilterInputStream {
+	
+	public static final byte[] UTF_8_BOM = 
+			new byte[] {(byte)0xEF, (byte)0xBB, (byte)0xBF};
 
     private final static Charset UTF8 = Charset.forName( "UTF-8" );
     private final static Charset UTF16 = Charset.forName( "UTF-16" );
     private final static Charset UTF16BE = Charset.forName( "UTF-16BE" );
     private final static Charset UTF16LE = Charset.forName( "UTF-16LE" );
     
-    public BOMFilterInputStream(InputStream in, Charset charset ) throws IOException {
+    public BOMFilterInputStream(InputStream in, Charset charset) throws IOException {
         super(in);
 		handleBOM( charset );
     }
@@ -50,7 +57,7 @@ public class BOMFilterInputStream extends FilterInputStream {
      */
     private void handleBOM( Charset charset ) throws IOException {
         if( charset.equals( UTF8 ) ) {
-            skip( 3 );
+    		skip(3);
         }
         else if(
             charset.equals( UTF16 )
@@ -60,4 +67,23 @@ public class BOMFilterInputStream extends FilterInputStream {
         }
     }
 
+    public static boolean hasBOM(URI uri) throws IOException {
+    	
+		URL url = uri.toURL();
+		URLConnection targetURLConnection = url.openConnection();
+		InputStream targetInputStream = targetURLConnection.getInputStream();
+		try {
+			byte[] buf = new byte[3];
+			int readCount = targetInputStream.read(buf, 0, 3);
+			if (readCount == 3) {
+				if ((buf[0]==UTF_8_BOM[0]) && (buf[1]==UTF_8_BOM[1]) && (buf[2]==UTF_8_BOM[2])) {
+					return true;
+				}
+			}
+		}
+		finally {
+			targetInputStream.close();
+		}
+		return false;
+    }
 }

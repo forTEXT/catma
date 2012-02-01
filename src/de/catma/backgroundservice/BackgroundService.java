@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 
 /**
  * Executes background tasks. An  {@link ExecutionListener} is notified when 
- * the task is done. The notification takes place in the GUI-Thread.<br>
+ * the task is done. The notification takes place in the initiating Thread.<br>
  * <br>
  *
  * @author Marco Petris
@@ -36,7 +36,6 @@ import java.util.logging.Logger;
 public class BackgroundService {
 	
 	private ExecutorService backgroundThread;
-	private ProgressListener progressListener;
 	private boolean background = true;
 	private Object lock;
 
@@ -50,15 +49,20 @@ public class BackgroundService {
 
 	/**
 	 * @param <T> the type of the {@link ExecutionListener} and 
-	 * the {@link ProgressCallable}.
+	 * 		the {@link ProgressCallable}.
 	 *  
 	 * @param callable the task which should be done in the background 
 	 * @param listener this one will be notified when the task is 
-	 * done (within the GUI-Thread)
+	 * 		done (within the initiating thread)
+	 * @param progressListener the listener for progress. The implementer 
+	 *		of the {@link ProgressCallable} which defines the task can
+	 *		call this listener to notify progress to the initiating thread.
 	 */
 	public <T> void submit( 
 			final ProgressCallable<T> callable, 
-			final ExecutionListener<T> listener ) {
+			final ExecutionListener<T> listener,
+			final ProgressListener progressListener) {
+		
         if (background) {
             backgroundThread.submit( new Runnable() {
                 public void run() {
@@ -71,10 +75,10 @@ public class BackgroundService {
                         }
                     } catch (Throwable t) {
                         try {
-                            progressListener.setIndeterminate(false, "");
+                            progressListener.setException(t);
                         }
                         catch(Throwable ignored) {}
-                        Logger.getLogger(getClass().getName()).log(Level.SEVERE, "error", t);
+                        Logger.getLogger(getClass().getName()).log(Level.SEVERE, "error", t); //TODO: handle properly
                     }
                 }
             } );
@@ -86,27 +90,10 @@ public class BackgroundService {
                 listener.done( result );
 
             } catch (Throwable t) {
-            	Logger.getLogger(getClass().getName()).log(Level.SEVERE, "error", t);
+            	Logger.getLogger(getClass().getName()).log(Level.SEVERE, "error", t);  //TODO: handle properly
             }
         }
 		
 	}
-	
-	/**
-	 * Sets the {@link ProgressListener} which will be notified during task execution.
-	 * This is done by the implementer of the {@link ProgressCallable} which defines the task.
-	 * @param progressListener the listener for progress
-	 */
-	public void setProgressListener( ProgressListener progressListener ) {
-		this.progressListener = progressListener;
-	}
-
-    /**
-     * Shutdown the background service. This method has been added for testing purposes!
-     */
-    public void shutdown()  {
-        backgroundThread.shutdown();
-        background = false;
-    }
 	
 }

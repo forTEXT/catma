@@ -98,12 +98,12 @@ public class StandardContentHandler extends AbstractSourceContentHandler {
 
             ByteArrayInputStream toCharBis = new ByteArrayInputStream(bos.toByteArray());
 
-			InputStream fr = null;
-			if (hasUTF8BOM(file)) {
+			InputStream fr = null; 
+			if (BOMFilterInputStream.hasBOM(file.toURI())) { //TODO: use byte array for bom check
 				fr = new BOMFilterInputStream( toCharBis, charset );
 			}
 			else {
-				fr = toCharBis;
+				fr = new FileInputStream(file);
 			}
 
 			BufferedReader reader = new BufferedReader(
@@ -144,10 +144,9 @@ public class StandardContentHandler extends AbstractSourceContentHandler {
 		BufferedReader reader = null;
 		try {
 			File file = new File( uri );
-			FileInputStream fr = null; 
-			
-			if (hasUTF8BOM(file)) {
-				fr = new BOMFilterFileInputStream( file, charset );
+			InputStream fr = null; 
+			if (BOMFilterInputStream.hasBOM(file.toURI())) {
+				fr = new BOMFilterInputStream( new FileInputStream(file), charset );
 			}
 			else {
 				fr = new FileInputStream(file);
@@ -194,42 +193,6 @@ public class StandardContentHandler extends AbstractSourceContentHandler {
 				} catch( IOException ignored) {}
 			}
 		}
-	}
-	
-	/**
-	 * Tests if the given file has a {@link FileManager#UTF_8_BOM UTF-8-BOM}.
-	 * 
-	 * @param file the file to test
-	 * @return true->file has UTF-8-BOM
-	 */
-	public boolean hasUTF8BOM( File file ) {
-		FileInputStream fis = null;
-		try {
-			fis = new FileInputStream( file );
-			byte b1 = (byte)fis.read();
-			byte b2 = (byte)fis.read();
-			byte b3 = (byte)fis.read();
-			
-			if( ( b1 != UTF_8_BOM[0] ) || 
-				( b2 != UTF_8_BOM[1]) ||
-				( b3 != UTF_8_BOM[2]) ) {
-				return false;
-			}
-			
-			return true;
-		}
-		catch( Exception exc ) {
-			ExceptionHandler.log( exc );
-		}
-		finally {
-			if( fis != null ) {
-				try {
-					fis.close();
-				} catch( IOException ignored) {}
-			}
-		}
-		
-		return false;
 	}
 
 	/* (non-Javadoc)

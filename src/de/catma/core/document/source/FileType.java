@@ -31,27 +31,37 @@ public enum FileType {
 	/**
 	 * MS-Word docs.
 	 */
-	DOC, 
+	DOC("application/msword"), 
 	/**
 	 * PDFs.
 	 */
-	PDF, 
+	PDF("application/pdf"), 
 	/**
 	 * HTML-pages.
 	 */
-	HTML,
+	HTML("text/html"),
     /**
      * HTM(L)-pages.
      */
-    HTM,
+    HTM("text/html"),
     /**
      * RTF-docs.
      */
-    RTF,
+    RTF("text/rtf"),
 	/**
 	 * everything which is not one of the other possibilities
 	 */
-	TEXT;
+	TEXT("text/plain");
+	
+	private String mimeType;
+
+	private FileType(String mimeType) {
+		this.mimeType = mimeType;
+	}
+	
+	public String getMimeType() {
+		return mimeType;
+	}
 	
 	/**
 	 * Tries to guess the file type by analyzing the file extension i. e. the 
@@ -71,6 +81,15 @@ public enum FileType {
                 }
             }
         }		
+		return TEXT;
+	}
+	
+	public static FileType getFileType(String mimeType) {
+		for (FileType type : values()) {
+			if (type.mimeType.equals(mimeType)) {
+				return type;
+			}
+		}
 		return TEXT;
 	}
 }
