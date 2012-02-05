@@ -38,11 +38,15 @@ public class WizardFactory {
 				new FileTypePanel(
 						new ToggleButtonStateListener(wizard), wizardResult));
 		
+		wizard.addStep(
+				new IndexerOptionsPanel(
+						new ToggleButtonStateListener(wizard), wizardResult));
+		
 		Window wizardWindow = new Window("Add new Source Document");
 		wizardWindow.setModal(true);
 		wizardWindow.setContent(wizard);
-		wizardWindow.setHeight("400px");
-		wizardWindow.setWidth("500px");
+		wizardWindow.setHeight("85%");
+		wizardWindow.setWidth("75%");
 		return wizardWindow;
 	}
 }

@@ -50,4 +50,8 @@ public class ContentInfoSet {
 	public String getPreview() {
 		return preview;
 	}
+
+	public void setLocale(Locale locale) {
+		this.locale = locale;
+	}
 }

@@ -73,6 +73,7 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	}
 	
 	public void stepActivated() {
+		onAdvance = false;
 		try {
 			final String mimeTypeFromUpload = 
 					sourceDocumentInfo.getTechInfoSet().getMimeType();
