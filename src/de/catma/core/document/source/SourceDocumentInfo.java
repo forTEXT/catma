@@ -7,8 +7,6 @@ public class SourceDocumentInfo {
 	private IndexInfoSet indexInfoSet;
 	private ContentInfoSet contentInfoSet;
 	private TechInfoSet techInfoSet;
-	private URI uri;
-	private String mimeType;
 	
 	public SourceDocumentInfo() {
 	}
@@ -30,20 +28,12 @@ public class SourceDocumentInfo {
 		return techInfoSet;
 	}
 	
-	public void setURI(URI sourceURI) {
-		this.uri=sourceURI;
+	public void setTechInfoSet(TechInfoSet techInfoSet) {
+		this.techInfoSet = techInfoSet;
 	}
 	
-	public URI getURI() {
-		return uri;
-	}
-	
-	public void setMimeType(String mimeType) {
-		this.mimeType = mimeType;
-	}
-	
-	public String getMimeType() {
-		return mimeType;
+	public void setContentInfoSet(ContentInfoSet contentInfoSet) {
+		this.contentInfoSet = contentInfoSet;
 	}
 	
 }

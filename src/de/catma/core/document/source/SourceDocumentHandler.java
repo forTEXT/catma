@@ -42,9 +42,6 @@ import de.catma.core.document.source.contenthandler.StandardContentHandler;
  */
 public class SourceDocumentHandler {
 	
-	// for creating document infos, we will load just a portion of the content
-	private static final int PREVIEW_CONTENT_SIZE = 2000;
-	
 	// mapping of file types -> source content handlers
 	private Map<FileType, Class<? extends SourceContentHandler>> typeHandlerMap;
 	
@@ -156,7 +153,7 @@ public class SourceDocumentHandler {
 		String title = sourceDocumentInfo.getContentInfoSet().getTitle();
 		
 		if ((title == null) || (title.equals("empty"))) {
-			title = sourceDocumentInfo.getURI().getPath();
+			title = sourceDocumentInfo.getTechInfoSet().getURI().getPath();
 		}
 		
 		SourceDocument document = 

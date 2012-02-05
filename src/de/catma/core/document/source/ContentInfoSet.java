@@ -21,6 +21,9 @@ public class ContentInfoSet {
 		this.locale = locale;
 	}
 
+	public ContentInfoSet() {
+	}
+
 	public String getAuthor() {
 		return author;
 	}

@@ -20,6 +20,7 @@
 package de.catma.core.document.source.contenthandler;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.util.PDFTextStripper;
@@ -32,36 +33,39 @@ import org.apache.pdfbox.util.PDFTextStripper;
  */
 public class PDFContentHandler extends AbstractSourceContentHandler {
 
-    private String content;
-
-    public void load() throws IOException {
+	public void load(InputStream is) throws IOException {
         PDDocument document = null;
         try {
-            document = PDDocument.load(getSourceDocumentInfo().getURI().toURL(), true);
+            document = PDDocument.load(is, true);
 
             if (document.isEncrypted()) {
                 throw new IOException("can not open pdf document because it is encrypted");
             }
             PDFTextStripper stripper = new PDFTextStripper();
             stripper.setSortByPosition(true);
-            content = stripper.getText(document);
+            setContent(stripper.getText(document));
         }
         finally {
             if (document != null) {
 				document.close();
             }
+        }		
+	}
+	
+    public void load() throws IOException {
+    	
+        try {
+        	InputStream is = getSourceDocumentInfo().getTechInfoSet().getURI().toURL().openStream();
+        	try {
+        		load(is);
+        	}
+        	finally {
+        		is.close();
+        	}
+        }
+        catch (Exception e) {
+        	throw new IOException(e);
         }
     }
 
-    public String getContent(long startPoint, long endPoint) {
-        return content.substring((int)startPoint, (int)endPoint);
-    }
-
-    public String getContent(long startPoint) {
-        return content.substring((int)startPoint);
-    }
-
-    public long getSize() {
-        return content.length();
-    }
 }

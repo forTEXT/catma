@@ -29,14 +29,14 @@ public class WizardFactory {
 				((DynamicWizardStep)event.getActivatedStep()).stepActivated();
 			}
 		});
-		
+		WizardResult wizardResult = new WizardResult(sourceDocumentInfo);
 		wizard.addStep(
 				new LocationPanel(
-						new ToggleButtonStateListener(wizard), sourceDocumentInfo));
+						new ToggleButtonStateListener(wizard), wizardResult));
 		
 		wizard.addStep(
 				new FileTypePanel(
-						new ToggleButtonStateListener(wizard), sourceDocumentInfo));
+						new ToggleButtonStateListener(wizard), wizardResult));
 		
 		Window wizardWindow = new Window("Add new Source Document");
 		wizardWindow.setModal(true);

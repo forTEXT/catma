@@ -1,17 +1,23 @@
 package de.catma.ui.repository.wizard;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.CRC32;
 
 import org.apache.commons.io.IOUtils;
 
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.GridLayout;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.Panel;
 import com.vaadin.ui.ProgressIndicator;
 import com.vaadin.ui.Tree;
 
@@ -19,8 +25,12 @@ import de.catma.CleaApplication;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
+import de.catma.core.document.Range;
 import de.catma.core.document.source.CharsetLanguageInfo;
+import de.catma.core.document.source.ContentInfoSet;
+import de.catma.core.document.source.FileOSType;
 import de.catma.core.document.source.FileType;
+import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.source.SourceDocumentHandler;
 import de.catma.core.document.source.SourceDocumentInfo;
 import de.catma.ui.DefaultProgressListener;
@@ -40,27 +50,42 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		
 	}
 
-	private ComboBox fileType;
-	private Tree fileEncoding;
+	private ComboBox cbFileType;
+	private Tree fileEncodingTree;
 	private boolean onAdvance = false;
 	private SourceDocumentInfo sourceDocumentInfo;
 	private ProgressIndicator progressIndicator;
-
-	public FileTypePanel(WizardStepListener listener, SourceDocumentInfo sourceDocumentInfo) {
-		super(2,2);
-		this.sourceDocumentInfo = sourceDocumentInfo;
-		
+	private byte[] currentByteContent;
+	private Label taPreview;
+	private UploadPanel uploadPanel;
+	private Label uploadLabel;
+	private Panel previewPanel;
+	private WizardStepListener wizardStepListener;
+	private WizardResult wizardResult;
+	
+	public FileTypePanel(WizardStepListener wizardStepListener, WizardResult wizardResult) {
+		super(2,4);
+		this.wizardResult = wizardResult;
+		this.sourceDocumentInfo = wizardResult.getSourceDocumentInfo();
+		this.wizardStepListener = wizardStepListener;
 		initComponents();
-
+		initActions();
 	}
 	
 	public void stepActivated() {
 		try {
-			final String mimeTypeFromUpload = sourceDocumentInfo.getMimeType();
-			final String sourceDocURL = sourceDocumentInfo.getURI().toURL().toString();
-			final String sourceURIPath = sourceDocumentInfo.getURI().getPath();
+			final String mimeTypeFromUpload = 
+					sourceDocumentInfo.getTechInfoSet().getMimeType();
+			final String sourceDocURL = 
+					sourceDocumentInfo.getTechInfoSet().getURI().toURL().toString();
+			final String sourceURIPath = 
+					sourceDocumentInfo.getTechInfoSet().getURI().getPath();
+			sourceDocumentInfo.setContentInfoSet(new ContentInfoSet());
+			setVisiblePreviewComponents(false);
+			setVisibleXSLTInputComponents(false);
 			
-			BackgroundService backgroundService = ((CleaApplication)getApplication()).getBackgroundService();
+			BackgroundService backgroundService = 
+					((CleaApplication)getApplication()).getBackgroundService();
 			progressIndicator.setEnabled(true);
 			progressIndicator.setCaption("Detecting file type");
 			backgroundService.submit(
@@ -73,7 +98,8 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 							if (mimeTypeFromUpload == null) {
 								resultMimeType = 
 										sourceDocumentHandler.getMimeType(
-												sourceURIPath, urlConnection, "text/plain");
+												sourceURIPath, urlConnection, 
+												FileType.TEXT.getMimeType());
 							}
 							InputStream is = urlConnection.getInputStream();
 							byte[] byteContent = IOUtils.toByteArray(is);
@@ -89,15 +115,53 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 												Charset.defaultCharset().name());	
 							}
 
-							return new BackgroundLoaderResult(byteContent, encoding, resultMimeType);
+							return new BackgroundLoaderResult(
+									byteContent, encoding, resultMimeType);
 						}
 					}, 
 					new ExecutionListener<BackgroundLoaderResult>() {
 						public void done(BackgroundLoaderResult result) {
-							sourceDocumentInfo.setMimeType(result.mimeType);
-							fileType.setValue(FileType.getFileType(result.mimeType));
-							System.out.println(result.encoding);
-							fileEncoding.select(Charset.forName(result.encoding));
+							currentByteContent = result.byteContent;
+
+							sourceDocumentInfo.getTechInfoSet().setMimeType(result.mimeType);
+							
+							FileType fileType = FileType.getFileType(result.mimeType);
+							
+							sourceDocumentInfo.getTechInfoSet().setFileType(fileType);
+							
+							
+							if (fileType.equals(FileType.TEXT)) {
+								System.out.println(result.encoding);
+								
+								Charset charset = Charset.forName(result.encoding);
+								fileEncodingTree.select(charset);
+								sourceDocumentInfo.getTechInfoSet().setCharset(charset);
+							}
+							else {
+								try {
+									sourceDocumentInfo.getTechInfoSet().setFileOSType(
+											FileOSType.INDEPENDENT);
+									SourceDocumentHandler sourceDocumentHandler = 
+											new SourceDocumentHandler();
+									SourceDocument sourceDocument =
+											sourceDocumentHandler.loadSourceDocument(sourceDocumentInfo);
+									
+									sourceDocument.getSourceContentHandler().load(
+											new ByteArrayInputStream(currentByteContent));
+									wizardResult.setSourceDocument(sourceDocument);
+								} catch (Exception e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+							}
+							if ((cbFileType.getValue() != null ) 
+									&& cbFileType.getValue().equals(fileType)) {
+								handleFileType();
+							}
+							else {
+								cbFileType.setValue(fileType);
+							}
+							
 							progressIndicator.setCaption("File type detection finished!");
 							progressIndicator.setEnabled(false);
 						}
@@ -108,35 +172,61 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		}
 	}
 
+	private void showPreview() {
+		SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
+		try {
+			SourceDocument sourceDocument =
+					sourceDocumentHandler.loadSourceDocument(sourceDocumentInfo);
+			
+			sourceDocument.getSourceContentHandler().load(
+					new ByteArrayInputStream(currentByteContent));
+			
+			FileOSType fileOSType = 
+					FileOSType.getFileOSType(sourceDocument.getContent());
+			
+			sourceDocumentInfo.getTechInfoSet().setFileOSType(fileOSType);
+			CRC32 checksum = new CRC32();
+			checksum.update(currentByteContent);
+			sourceDocumentInfo.getTechInfoSet().setChecksum(checksum.getValue());
+			taPreview.setValue(
+					"<pre>" + sourceDocument.getContent(new Range(0, 2000)) + "</pre>");
+			wizardResult.setSourceDocument(sourceDocument);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 	private void initComponents() {
-		setMargin(true);
+		setMargin(true, true, false, true);
 		setSpacing(true);
 		setWidth("100%");
 		
-		fileType = new ComboBox("File type");
+		cbFileType = new ComboBox("File type");
 		for (FileType ft : FileType.values()) {
-			fileType.addItem(ft);
+			cbFileType.addItem(ft);
 		}
-		fileType.setNullSelectionAllowed(false);
+		cbFileType.setNullSelectionAllowed(false);
+		cbFileType.setImmediate(true);
 		
-		addComponent(fileType, 0, 0);
+		addComponent(cbFileType, 0, 0);
 		
-		fileEncoding = new Tree("File encoding");
+		fileEncodingTree = new Tree("File encoding");
+		fileEncodingTree.setImmediate(true);
 		
 		Map<String, Map<String, List<Charset>>> regionLanguageCharsetMapping = 
 				CharsetLanguageInfo.SINGLETON.getRegionLanguageCharsetMapping();
 		
 		for (String region : regionLanguageCharsetMapping.keySet() ) {
-			fileEncoding.addItem(region);
+			fileEncodingTree.addItem(region);
 			Map<String, List<Charset>> languages = regionLanguageCharsetMapping.get(region);
 			for (String language : languages.keySet()) {
-				fileEncoding.addItem(language);
-				fileEncoding.setParent(language, region);
+				fileEncodingTree.addItem(language);
+				fileEncodingTree.setParent(language, region);
 				for (Charset charset : languages.get(language)) {
-					fileEncoding.addItem(charset);
-					fileEncoding.setParent(charset, language);
-					fileEncoding.setChildrenAllowed(charset, false);
+					fileEncodingTree.addItem(charset);
+					fileEncodingTree.setParent(charset, language);
+					fileEncodingTree.setChildrenAllowed(charset, false);
 				}
 			}
 		}
@@ -145,15 +235,30 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 				CharsetLanguageInfo.SINGLETON.getCategoryCharsetMapping();
 		
 		for (String category : categoryCharsetMapping.keySet()) {
-			fileEncoding.addItem(category);
+			fileEncodingTree.addItem(category);
 			for (Charset charset : categoryCharsetMapping.get(category)) {
-				fileEncoding.addItem(charset);
-				fileEncoding.setParent(charset, category);
-				fileEncoding.setChildrenAllowed(charset, false);
+				fileEncodingTree.addItem(charset);
+				fileEncodingTree.setParent(charset, category);
+				fileEncodingTree.setChildrenAllowed(charset, false);
 			}
 		}
 		
-		addComponent(fileEncoding, 0, 1);
+		previewPanel = new Panel("Preview");
+		previewPanel.getContent().setSizeUndefined();
+		previewPanel.setHeight("300px");
+		
+		
+		this.taPreview = new Label();
+		this.taPreview.setContentMode(Label.CONTENT_XHTML);
+		previewPanel.addComponent(taPreview);
+		
+		addComponent(fileEncodingTree, 0, 1);
+		addComponent(previewPanel, 1, 1);
+		
+		this.uploadLabel = new Label("Upload the corresponding XSLT file:");
+		this.uploadPanel = new UploadPanel();
+		addComponent(uploadLabel, 0, 2, 1, 2);
+		addComponent(uploadPanel, 0, 3, 1, 3);
 		
 		progressIndicator = new ProgressIndicator();
 		progressIndicator.setEnabled(false);
@@ -164,6 +269,67 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		addComponent(progressIndicator, 1, 0);
 		setColumnExpandRatio(1, 1);
 		
+	}
+	
+	private void initActions() {
+		cbFileType.addListener(new ValueChangeListener() {
+			
+			public void valueChange(ValueChangeEvent event) {
+				handleFileType();
+			}
+
+		});
+		
+		fileEncodingTree.addListener(new ValueChangeListener() {
+			
+			public void valueChange(ValueChangeEvent event) {
+				if (fileEncodingTree.getValue() instanceof Charset) {
+					sourceDocumentInfo.getTechInfoSet().setCharset(
+							(Charset)fileEncodingTree.getValue());
+					showPreview();
+				}
+			}
+		});
+		
+		// TODO add listeners to uploadpanel and handle xslt loading
+	}
+	
+	private void handleFileType() {
+		sourceDocumentInfo.getTechInfoSet().setFileType(
+				(FileType)cbFileType.getValue());
+		onAdvance = true;
+		switch(sourceDocumentInfo.getTechInfoSet().getFileType()) {
+			case TEXT : {
+				setVisibleXSLTInputComponents(false);
+				setVisiblePreviewComponents(true);
+				showPreview();
+				break;
+			}
+			case XML : {
+				setVisiblePreviewComponents(false);
+				setVisibleXSLTInputComponents(true);
+				onAdvance = false;
+				break;
+			}
+			default : {
+				setVisibleXSLTInputComponents(false);
+				setVisiblePreviewComponents(false);
+			}
+		}
+		wizardStepListener.stepChanged(FileTypePanel.this);
+	}
+	
+	private void setVisibleXSLTInputComponents(boolean visible) {
+		uploadLabel.setVisible(visible);
+		uploadPanel.setVisible(visible);
+	}
+	
+	private void setVisiblePreviewComponents(boolean visible) {
+		fileEncodingTree.setVisible(visible);
+		previewPanel.setVisible(visible);
+		if (visible) {
+			taPreview.setValue("");
+		}
 	}
 	
 	public Component getContent() {

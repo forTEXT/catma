@@ -22,7 +22,6 @@ package de.catma.core.document.source.contenthandler;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
@@ -76,14 +75,20 @@ public class BOMFilterInputStream extends FilterInputStream {
 			byte[] buf = new byte[3];
 			int readCount = targetInputStream.read(buf, 0, 3);
 			if (readCount == 3) {
-				if ((buf[0]==UTF_8_BOM[0]) && (buf[1]==UTF_8_BOM[1]) && (buf[2]==UTF_8_BOM[2])) {
-					return true;
-				}
+				return hasBOM(buf);
 			}
 		}
 		finally {
 			targetInputStream.close();
 		}
 		return false;
+    }
+    
+    public static boolean hasBOM(byte[] buf)  {
+    	if ((buf[0]==UTF_8_BOM[0]) && (buf[1]==UTF_8_BOM[1]) && (buf[2]==UTF_8_BOM[2])) {
+			return true;
+		}
+    	
+    	return false;
     }
 }

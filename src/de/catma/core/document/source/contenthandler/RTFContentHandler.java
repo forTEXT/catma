@@ -19,8 +19,10 @@
 
 package de.catma.core.document.source.contenthandler;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import javax.swing.text.BadLocationException;
@@ -35,23 +37,21 @@ import javax.swing.text.rtf.RTFEditorKit;
  */
 public class RTFContentHandler extends AbstractSourceContentHandler {
 
-    private String content;
 
-    public void load() throws IOException {
-        RTFEditorKit rtf = new RTFEditorKit();
+	public void load(InputStream is) throws IOException {
+	      RTFEditorKit rtf = new RTFEditorKit();
 
         Document doc = rtf.createDefaultDocument();
 
         
         BufferedReader input = 
         		new BufferedReader(
-        				new InputStreamReader(
-        						getSourceDocumentInfo().getURI().toURL().openStream()));
+        				new InputStreamReader(is));
 
         try {
 
             rtf.read(input,doc,0);
-            content = doc.getText(0,doc.getLength()).trim();
+            setContent(doc.getText(0,doc.getLength()).trim());
         }
         catch(BadLocationException ble) {
             try {
@@ -67,18 +67,23 @@ public class RTFContentHandler extends AbstractSourceContentHandler {
             if (input != null) {
                 input.close();
             }
+        }		
+	}
+	
+    public void load() throws IOException {
+        BufferedInputStream bis = null;
+        try {
+        	
+            bis = new BufferedInputStream(
+            		getSourceDocumentInfo().getTechInfoSet().getURI().toURL().openStream());
+
+            load(bis);
+        }
+        finally {
+            if (bis != null) {
+				bis.close();
+            }
         }
     }
 
-    public String getContent(long startPoint, long endPoint) {
-        return content.substring((int)startPoint, (int)endPoint);
-    }
-
-    public String getContent(long startPoint) {
-        return content.substring((int)startPoint);
-    }
-
-    public long getSize() {
-        return content.length();
-    }
 }

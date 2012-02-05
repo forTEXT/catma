@@ -61,31 +61,14 @@ public class SourceDocument {
 	 * @return the content between the startpoint and the endpoint of the range
 	 */
 	public String getContent( Range range ) {
-		return getContent( range.getStartPoint(), range.getEndPoint() );
+		int length = getContent().length();
+		return getContent().substring(
+				Math.min(range.getStartPoint(), length), 
+				Math.min(range.getEndPoint(), length));
 	}
 	
-	/**
-	 * @param startPoint startpoint of the content
-	 * @param endPoint endpoint of the content
-	 * @return the content between the startpoint and the endpoint
-	 */
-	public String getContent( long startPoint, long endPoint ) {
-		return sourceContentHandler.getContent( startPoint, endPoint );
-	}
-	
-	/**
-	 * @param startPoint startpoint of the content
-	 * @return the content after the startpoint
-	 */
-	public String getContent( long startPoint ) {
-		return sourceContentHandler.getContent( startPoint );
-	}
-	
-	/**
-	 * @return the size of the document
-	 */
-	public long getSize() {
-		return sourceContentHandler.getContent( 0 ).length();
+	public String getContent() {
+		return sourceContentHandler.getContent();
 	}
 
 	public void addStructureMarkupCollectionReference(
@@ -99,7 +82,7 @@ public class SourceDocument {
 	}
 
 	public String getID() {
-		return sourceContentHandler.getSourceDocumentInfo().getURI().toString();
+		return sourceContentHandler.getSourceDocumentInfo().getTechInfoSet().getURI().toString();
 	}
 	
 	public List<StructureMarkupCollectionReference> getStructureMarkupCollectionRefs() {

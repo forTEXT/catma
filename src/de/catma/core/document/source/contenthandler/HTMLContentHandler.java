@@ -39,20 +39,26 @@ import org.xml.sax.helpers.XMLReaderFactory;
  */
 public class HTMLContentHandler extends AbstractSourceContentHandler {
 
-    private String content;
+	public void load(InputStream is) throws IOException {
+        XMLReader reader;
+		try {
+			reader = XMLReaderFactory.createXMLReader("org.ccil.cowan.tagsoup.Parser");
+	        Builder builder = new Builder(reader, false, new HTMLFilterFactory());
+	        Document document = builder.build(is);
+	        StringBuilder contentBuilder = new StringBuilder();
+	        processTextNodes(contentBuilder, document.getRootElement());
+	        setContent(contentBuilder.toString());		
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
+	}
     
     public void load() throws IOException {
     	
         try {
-        	InputStream is = getSourceDocumentInfo().getURI().toURL().openStream();
+        	InputStream is = getSourceDocumentInfo().getTechInfoSet().getURI().toURL().openStream();
         	try {
-		        XMLReader reader =
-		            XMLReaderFactory.createXMLReader("org.ccil.cowan.tagsoup.Parser");
-		        Builder builder = new Builder(reader, false, new HTMLFilterFactory());
-		        Document document = builder.build(is);
-		        StringBuilder contentBuilder = new StringBuilder();
-		        processTextNodes(contentBuilder, document.getRootElement());
-		        content = contentBuilder.toString();
+        		load(is);
         	}
         	finally {
         		is.close();
@@ -81,17 +87,5 @@ public class HTMLContentHandler extends AbstractSourceContentHandler {
                 processTextNodes(contentBuilder, (Element)curChild);
             }
         }
-    }
-
-    public String getContent(long startPoint, long endPoint) {
-        return content.substring((int)startPoint, (int)endPoint);
-    }
-
-    public String getContent(long startPoint) {
-        return content.substring((int)startPoint);
-    }
-
-    public long getSize() {
-        return content.length();
     }
 }

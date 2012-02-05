@@ -51,7 +51,9 @@ public enum FileType {
 	/**
 	 * everything which is not one of the other possibilities
 	 */
-	TEXT("text/plain");
+	TEXT("text/plain"), 
+	XML("text/xml"),
+	;
 	
 	private String mimeType;
 

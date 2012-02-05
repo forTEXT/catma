@@ -89,7 +89,7 @@ class FSSourceDocumentHandler {
 			
 			String sourceURIVal = xmlDoc.query(Field.sourceURI.toSimpleXQuery()).get(0).getValue();
 			URI sourceURI = new URI(sourceURIVal);
-			sourceDocumentInfo.setURI(sourceURI);
+			sourceDocumentInfo.getTechInfoSet().setURI(sourceURI);
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
 			SourceDocument sourceDocument = 
 					sourceDocumentHandler.loadSourceDocument(sourceDocumentInfo);

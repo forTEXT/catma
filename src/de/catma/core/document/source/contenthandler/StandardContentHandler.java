@@ -28,10 +28,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URI;
 import java.nio.charset.Charset;
-
-import de.catma.core.ExceptionHandler;
 
 /**
  * The standard content handler which handles text bases files.
@@ -47,35 +44,9 @@ public class StandardContentHandler extends AbstractSourceContentHandler {
 	public static final byte[] UTF_8_BOM = 
 		new byte[] {(byte)0xEF, (byte)0xBB, (byte)0xBF};
 	
-	private Charset charset;
-	private String content;
-	private long size;
-	
-	
-	/* (non-Javadoc)
-	 * @see org.catma.document.source.SourceContentHandler#getContent(long, long)
-	 */
-	public String getContent( long startPoint,
-			long endPoint ) {
-		if( content.length() > endPoint ) {
-			return content.substring( (int)startPoint, (int)endPoint );
-		}
-		else {
-			return content.substring( (int)startPoint );
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.catma.document.source.SourceContentHandler#getContent(long)
-	 */
-	public String getContent( long startPoint ) {
-		return content.substring( (int)startPoint );
-	}
-
-	public void load() throws IOException {
-		// read the content 
+	public void load(InputStream is) throws IOException {
 		
-		this.charset = 
+		Charset charset = 
 			getSourceDocumentInfo().getTechInfoSet().getCharset();
 		
 //        Log.text( "charset " + charset );
@@ -85,94 +56,60 @@ public class StandardContentHandler extends AbstractSourceContentHandler {
 		BufferedInputStream bis = null;
 
 		try {
-			File file = new File(getSourceDocumentInfo().getURI());
-			size = file.length();
-
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            bis = new BufferedInputStream(new FileInputStream(file));
+            bis = new BufferedInputStream(is);
             byte[] byteBuffer = new byte[65536];
             int bCount = -1;
             while ((bCount=bis.read(byteBuffer)) != -1) {
                 bos.write(byteBuffer, 0, bCount);
             }
 
-            ByteArrayInputStream toCharBis = new ByteArrayInputStream(bos.toByteArray());
+            byte[] byteBuf = bos.toByteArray();
+            ByteArrayInputStream toCharBis = new ByteArrayInputStream(byteBuf);
 
 			InputStream fr = null; 
-			if (BOMFilterInputStream.hasBOM(file.toURI())) { //TODO: use byte array for bom check
+			if (BOMFilterInputStream.hasBOM(byteBuf)) {
 				fr = new BOMFilterInputStream( toCharBis, charset );
 			}
 			else {
-				fr = new FileInputStream(file);
+				fr = toCharBis;
 			}
 
 			BufferedReader reader = new BufferedReader(
 					new InputStreamReader( fr, charset ) );
 			
-			char[] buf = new char[65536];
+			char[] charBuf = new char[65536];
 			int cCount = -1;
-	        while((cCount=reader.read(buf)) != -1) {
-	        	contentBuffer.append( buf, 0, cCount);
+	        while((cCount=reader.read(charBuf)) != -1) {
+	        	contentBuffer.append( charBuf, 0, cCount);
 	        }
 
-			content = contentBuffer.toString();
+			setContent(contentBuffer.toString());
 		}
 		finally {
 			if( bis != null ) {
 				bis.close();
 			}
-		}
+		}	
+		
 	}
-	
-	/**
-	 * Loads the content between startpoint and endpont from the given file 
-	 * with the given charset.
-	 * 
-	 * @param uri the URI of the Source Document
-	 * @param charset the characterset to use
-	 * @param startPoint the startpoint before the first character
-	 * @param endPoint the endpoint after the last character
-	 * @return the loaded content
-	 * @throws IOException Source Document access failure
-	 */
-	public String loadContent(URI uri, 
-			Charset charset, long startPoint, long endPoint) 
-		throws IOException {
-		
-		StringBuilder buffer = new StringBuilder();
-		
-		BufferedReader reader = null;
-		try {
-			File file = new File( uri );
-			InputStream fr = null; 
-			if (BOMFilterInputStream.hasBOM(file.toURI())) {
-				fr = new BOMFilterInputStream( new FileInputStream(file), charset );
-			}
-			else {
-				fr = new FileInputStream(file);
-			}
 
-			reader = new BufferedReader(
-					new InputStreamReader( fr, charset ) );
-			
-			char[] buf = new char[65536];
-			int cCount = -1;
-	        while((cCount=reader.read(buf)) != -1) {
-	        	buffer.append( buf, 0, cCount);
-	        	if( ( endPoint > -1 ) && ( buffer.length() >= endPoint ) ) {
-	        		return buffer.toString();
-	        	}
-	        }
-			
-			return buffer.toString();
-		}
-		finally {
-			if( reader != null ) {
-				reader.close();
-			}
-		}
-	}
-	
+    public void load() throws IOException {
+        BufferedInputStream bis = null;
+        try {
+        	
+            bis = new BufferedInputStream(
+            		getSourceDocumentInfo().getTechInfoSet().getURI().toURL().openStream());
+
+            load(bis);
+        }
+        finally {
+            if (bis != null) {
+				bis.close();
+            }
+        }
+    }
+    
 	@SuppressWarnings("unused")
 	private void showBytes( File file, int byteCount ) {
 		FileInputStream fis = null;
@@ -193,12 +130,5 @@ public class StandardContentHandler extends AbstractSourceContentHandler {
 				} catch( IOException ignored) {}
 			}
 		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.catma.document.source.SourceContentHandler#getSize()
-	 */
-	public long getSize() {
-		return size;
 	}
 }

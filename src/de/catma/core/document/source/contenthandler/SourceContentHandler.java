@@ -21,6 +21,7 @@ package de.catma.core.document.source.contenthandler;
 
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import de.catma.core.document.source.FileType;
 import de.catma.core.document.source.SourceDocumentInfo;
@@ -43,27 +44,8 @@ public interface SourceContentHandler {
 	
 	public SourceDocumentInfo getSourceDocumentInfo();
 	
+	public void load(InputStream is) throws IOException;
 	public void load() throws IOException;
 	
-	/**
-	 * Returns the content between the startPoint and the endPoint. A point is a mark
-	 * between two characters. Counting starts with 0.
-	 * @param startPoint the point before the first character of the content
-	 * @param endPoint the point after the last character of the content
-	 * @return the content
-	 */
-	public String getContent( long startPoint, long endPoint );
-	
-	/**
-	 * Returns the content from the character after the startPoint. A point is a mark
-	 * between two characters. Counting starts with 0.
-	 * @param startPoint the point before teh first character of the content.
-	 * @return the content
-	 */
-	public String getContent( long startPoint );
-	
-	/**
-	 * @return the size of the content
-	 */
-	public long getSize();
+	public String getContent();
 }

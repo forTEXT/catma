@@ -21,6 +21,7 @@ package de.catma.core.document.source.contenthandler;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.poi.hwpf.extractor.WordExtractor;
 
@@ -32,17 +33,14 @@ import org.apache.poi.hwpf.extractor.WordExtractor;
  */
 public class DOCContentHandler extends AbstractSourceContentHandler {
 
-    private String content;
-
     public void load() throws IOException {
         BufferedInputStream bis = null;
         try {
         	
             bis = new BufferedInputStream(
-            		getSourceDocumentInfo().getURI().toURL().openStream());
+            		getSourceDocumentInfo().getTechInfoSet().getURI().toURL().openStream());
 
-            WordExtractor we = new WordExtractor(bis);
-            content = we.getText();
+            load(bis);
         }
         finally {
             if (bis != null) {
@@ -51,15 +49,8 @@ public class DOCContentHandler extends AbstractSourceContentHandler {
         }
     }
 
-    public String getContent(long startPoint, long endPoint) {
-        return content.substring((int)startPoint, (int)endPoint);
-    }
-
-    public String getContent(long startPoint) {
-        return content.substring((int)startPoint);
-    }
-
-    public long getSize() {
-        return content.length();
+    public void load(InputStream is) throws IOException {
+    	  WordExtractor we = new WordExtractor(is);
+          setContent(we.getText());
     }
 }
