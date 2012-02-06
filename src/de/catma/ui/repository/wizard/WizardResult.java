@@ -7,9 +7,9 @@ public class WizardResult {
 
 	private SourceDocumentInfo sourceDocumentInfo;
 	private SourceDocument sourceDocument;
-	public WizardResult(SourceDocumentInfo sourceDocumentInfo) {
+	public WizardResult() {
 		super();
-		this.sourceDocumentInfo = sourceDocumentInfo;
+		this.sourceDocumentInfo = new SourceDocumentInfo();
 	}
 	
 	public SourceDocumentInfo getSourceDocumentInfo() {

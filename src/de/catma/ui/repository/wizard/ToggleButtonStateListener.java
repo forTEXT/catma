@@ -12,9 +12,9 @@ public class ToggleButtonStateListener implements WizardStepListener {
 	}
 
 	public void stepChanged(WizardStep source) {
-		System.out.println(source + " a:"+source.onAdvance());
-		wizard.getNextButton().setEnabled(source.onAdvance());
+		wizard.getNextButton().setEnabled(!((DynamicWizardStep)source).onFinishOnly() && source.onAdvance());
 		wizard.getBackButton().setEnabled(source.onBack());
+		wizard.getFinishButton().setEnabled(((DynamicWizardStep)source).onFinish());
 	}
 
 }

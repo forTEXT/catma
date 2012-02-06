@@ -199,9 +199,10 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	}
 
 	private void initComponents() {
-		setMargin(true, true, false, true);
 		setSpacing(true);
-		setWidth("100%");
+		setSizeFull();
+		setMargin(true, false, false, false);
+
 		
 		cbFileType = new ComboBox("File type");
 		for (FileType ft : FileType.values()) {
@@ -349,4 +350,16 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	public String getCaption() {
 		return "Source Document file type";
 	}
+	
+	public boolean onFinish() {
+		return false;
+	}
+	
+	public boolean onFinishOnly() {
+		return false;
+	}
+	
+	public void stepDeactivated(){ /*not needed*/}
+
+
 }

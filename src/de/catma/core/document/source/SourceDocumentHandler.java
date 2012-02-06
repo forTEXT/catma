@@ -153,7 +153,7 @@ public class SourceDocumentHandler {
 		String title = sourceDocumentInfo.getContentInfoSet().getTitle();
 		
 		if ((title == null) || (title.equals("empty"))) {
-			title = sourceDocumentInfo.getTechInfoSet().getURI().getPath();
+			title = sourceDocumentInfo.getTechInfoSet().getURI().toString();
 		}
 		
 		SourceDocument document = 
@@ -161,72 +161,5 @@ public class SourceDocumentHandler {
 		
 		return document;
 	}
-
-	/**
-	 * The given SourceDocumentInfo will be provided with the  
-	 * {@link FileOSType} and the preview content.
-	 * @param sourceDocumentInfo the sourcedoc info to be updated
-	 * @throws IOException Source Document access failure
-	 */
-	//FIXME:
-//	public void updateSourceDocumentInfo( 
-//			SourceDocumentInfo sourceDocumentInfo ) throws IOException {
-//		Charset charset = sourceDocumentInfo.getCharset();
-//
-//		StandardContentHandler standardContentHandler = 
-//			new StandardContentHandler();
-//
-//		String previewContent = 
-//			standardContentHandler.loadContent( 
-//					sourceDocumentInfo.getURI(), 
-//					charset, 0, PREVIEW_CONTENT_SIZE, null );
-//		
-//		FileOSType fileOSType = FileOSType.getFileOSType( previewContent );
-//		
-//		sourceDocumentInfo.setPreviewContent( previewContent );
-//		sourceDocumentInfo.setFileOSType( fileOSType );
-//	}
-
-	
-	/**
-	 * Creates a SourceDocumentInfo for the Source Document at the given location.
-	 * @param fullPath the full path to the Source Document including the file name.
-	 * @return the SourceDocumentInfo instance
-	 * @throws IOException Source Document access failure
-	 */
-	//FIXME:
-//	public SourceDocumentInfo getSourceDocumentInfo( URI uri ) 
-//		throws IOException {
-//		
-//		File file = new File( uri );
-//		
-//		FileType fileType = FileType.getFileType( file );
-//		
-//		if( !fileType.equals( FileType.TEXT ) ) {
-//			return new SourceDocumentInfo( fileType, uri );
-//		}
-//		else {
-//			Charset charset = Charset.defaultCharset();
-//			StandardContentHandler standardContentHandler = 
-//				new StandardContentHandler();
-//			
-//			if( standardContentHandler.hasUTF8BOM( file ) ) {
-//				charset = Charset.forName( "UTF8" );
-//				//TODO: handle non BOM UTF8
-//			}
-//			
-//			String previewContent = 
-//				standardContentHandler.loadContent( 
-//					uri, charset, 0,  PREVIEW_CONTENT_SIZE, null );
-//			
-//			FileOSType fileOSType = FileOSType.getFileOSType( previewContent );
-//
-//            LanguageDetector ld = new LanguageDetector();
-//            Locale locale = ld.getLocale(ld.detect(previewContent));
-//
-//			return new SourceDocumentInfo( 
-//					fileType, fileOSType, charset, locale, previewContent, uri );
-//		}
-//	}
 	
 }

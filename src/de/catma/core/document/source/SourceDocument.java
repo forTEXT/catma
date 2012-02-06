@@ -96,4 +96,8 @@ public class SourceDocument {
 	public SourceContentHandler getSourceContentHandler() {
 		return sourceContentHandler;
 	}
+	
+	public void setTitle(String title) {
+		this.title = title;
+	}
 }

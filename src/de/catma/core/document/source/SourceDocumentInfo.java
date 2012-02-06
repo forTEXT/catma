@@ -1,6 +1,5 @@
 package de.catma.core.document.source;
 
-import java.net.URI;
 
 public class SourceDocumentInfo {
 
@@ -36,4 +35,7 @@ public class SourceDocumentInfo {
 		this.contentInfoSet = contentInfoSet;
 	}
 	
+	public void setIndexInfoSet(IndexInfoSet indexInfoSet) {
+		this.indexInfoSet = indexInfoSet;
+	}
 }

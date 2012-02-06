@@ -57,6 +57,7 @@ public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 						new File(((CleaApplication)getApplication()).getTempDirectory(), event.getFilename());
 				TechInfoSet ti = new TechInfoSet(event.getMIMEType(), uploadedFile.toURI());
 				wizardResult.getSourceDocumentInfo().setTechInfoSet(ti);
+				onAdvance = true;
 				wizardStepListener.stepChanged(LocationPanel.this);
 			}
 		});
@@ -64,9 +65,13 @@ public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		remoteURIInput.addListener(new TextChangeListener() {
 			
 			public void textChange(TextChangeEvent event) {
-				System.out.println("EVENT: " + event.getText());
+				
 				try {
-					URL url = new URL(event.getText());
+					String urlText = event.getText();
+					if (urlText.toLowerCase().startsWith("www")) {
+						urlText = "http://" + urlText;
+					}
+					URL url = new URL(urlText);
 					System.out.println(url);
 					TechInfoSet ti = new TechInfoSet(null, url.toURI());
 					wizardResult.getSourceDocumentInfo().setTechInfoSet(ti);
@@ -87,8 +92,10 @@ public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 	}
 
 	private void initComponents() {
-		setMargin(true);
 		setSpacing(true);
+		setMargin(true, false, false, false);
+		
+		setSizeFull();
 		
 		remoteURIInput = new TextField();
 		remoteURIInput.setCaption("Enter an URI that is accessible over the internet:");
@@ -123,4 +130,15 @@ public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 	public void stepActivated() {
 //		this.wizardResult.getSourceDocumentInfo().setTechInfoSet(null);
 	}
+	
+	public boolean onFinish() {
+		return false;
+	}
+	
+	public boolean onFinishOnly() {
+		return false;
+	}
+
+	public void stepDeactivated(){ /*not needed*/}
+
 }

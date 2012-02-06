@@ -9,7 +9,6 @@ public class ContentInfoSet {
 	private String publisher;
 	private String title;
     private Locale locale;
-    private String preview;
     
 	public ContentInfoSet(String author, String description, String publisher,
 			String title, Locale locale) {
@@ -22,6 +21,10 @@ public class ContentInfoSet {
 	}
 
 	public ContentInfoSet() {
+		this.author = "empty";
+		this.description = "empty";
+		this.title = "empty";
+		this.publisher = "empty";
 	}
 
 	public String getAuthor() {
@@ -47,11 +50,25 @@ public class ContentInfoSet {
         return (locale==null) ? Locale.getDefault() : locale;
     }
     
-	public String getPreview() {
-		return preview;
-	}
-
 	public void setLocale(Locale locale) {
 		this.locale = locale;
 	}
+
+	public void setAuthor(String author) {
+		this.author = author;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public void setPublisher(String publisher) {
+		this.publisher = publisher;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	
+	
 }

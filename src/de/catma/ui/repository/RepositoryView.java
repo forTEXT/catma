@@ -2,6 +2,12 @@ package de.catma.ui.repository;
 
 import java.util.HashMap;
 
+import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
+import org.vaadin.teemu.wizards.event.WizardCompletedEvent;
+import org.vaadin.teemu.wizards.event.WizardProgressListener;
+import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
+import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
+
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItem;
@@ -18,14 +24,12 @@ import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window;
 import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.CleaApplication;
 import de.catma.core.document.Corpus;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
-import de.catma.core.document.source.SourceDocumentInfo;
 import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollectionReference;
 import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
 import de.catma.core.tag.TagLibrary;
@@ -38,6 +42,8 @@ import de.catma.ui.repository.treeentry.StandardContentInfo;
 import de.catma.ui.repository.treeentry.TagLibraryEntry;
 import de.catma.ui.repository.treeentry.TreeEntry;
 import de.catma.ui.repository.wizard.WizardFactory;
+import de.catma.ui.repository.wizard.WizardResult;
+import de.catma.ui.repository.wizard.WizardWindow;
 
 
 public class RepositoryView extends VerticalLayout {
@@ -80,8 +86,24 @@ public class RepositoryView extends VerticalLayout {
 			
 			public void buttonClick(ClickEvent event) {
 				WizardFactory factory = new WizardFactory();
-				SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo();
-				Window sourceDocCreationWizardWindow = factory.createWizardWindow(sourceDocumentInfo);
+				final WizardResult wizardResult = new WizardResult();
+				WizardWindow sourceDocCreationWizardWindow = 
+						factory.createWizardWindow(new WizardProgressListener() {
+					
+					public void wizardCompleted(WizardCompletedEvent event) {
+						event.getWizard().removeListener(this);
+						repository.insert(wizardResult.getSourceDocument());
+					}
+					
+					public void wizardCancelled(WizardCancelledEvent event) {
+						event.getWizard().removeListener(this);
+					}
+					
+					public void stepSetChanged(WizardStepSetChangedEvent event) {/*not needed*/}
+					
+					public void activeStepChanged(WizardStepActivationEvent event) {/*not needed*/}
+				}, 
+				wizardResult);
 				getApplication().getMainWindow().addWindow(sourceDocCreationWizardWindow);
 				sourceDocCreationWizardWindow.center();
 			}
@@ -503,3 +525,5 @@ public class RepositoryView extends VerticalLayout {
 		return repository;
 	}
 }
+
+
