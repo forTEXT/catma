@@ -21,10 +21,10 @@ public class ContentInfoSet {
 	}
 
 	public ContentInfoSet() {
-		this.author = "empty";
-		this.description = "empty";
-		this.title = "empty";
-		this.publisher = "empty";
+		this.author = "";
+		this.description = "";
+		this.title = "";
+		this.publisher = "";
 	}
 
 	public String getAuthor() {

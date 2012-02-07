@@ -3,7 +3,7 @@ package de.catma.serialization;
 import java.io.IOException;
 import java.io.InputStream;
 
-import de.catma.core.document.standoffmarkup.user.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 
 public interface UserMarkupCollectionSerializationHandler {
 

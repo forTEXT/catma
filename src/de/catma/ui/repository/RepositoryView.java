@@ -1,5 +1,8 @@
 package de.catma.ui.repository;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.util.HashMap;
 
 import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
@@ -30,8 +33,8 @@ import de.catma.CleaApplication;
 import de.catma.core.document.Corpus;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
-import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
 import de.catma.ui.repository.treeentry.ContentInfo;
@@ -73,10 +76,26 @@ public class RepositoryView extends VerticalLayout {
 	private Button btEditContentInfo;
 	private Button btSaveContentInfoChanges;
 	private Button btDiscardContentInfoChanges;
+	private PropertyChangeListener repositoryListener;
 	
 	public RepositoryView(Repository repository) {
 		super();
 		this.repository = repository;
+		repositoryListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (evt.getPropertyName().equals(
+						Repository.PropertyChangeEvent.sourceDocumentAdded.name())) {
+					SourceDocument sd = RepositoryView.this.repository.getSourceDocument(
+							(String)evt.getNewValue());
+					addSourceDocumentToTree(sd);
+				}
+			}
+		};
+		this.repository.addPropertyChangeListener(
+				Repository.PropertyChangeEvent.sourceDocumentAdded,
+				repositoryListener);
+		
 		initComponents();
 		initActions();
 	}
@@ -92,7 +111,12 @@ public class RepositoryView extends VerticalLayout {
 					
 					public void wizardCompleted(WizardCompletedEvent event) {
 						event.getWizard().removeListener(this);
-						repository.insert(wizardResult.getSourceDocument());
+						try {
+							repository.insert(wizardResult.getSourceDocument());
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
 					
 					public void wizardCancelled(WizardCancelledEvent event) {
@@ -109,6 +133,17 @@ public class RepositoryView extends VerticalLayout {
 			}
 		});
 		
+		btOpenDocument.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				// TODO Auto-generated method stub
+				
+				/*
+				 * hier gehts weiter:
+				 * tagger einbauen + document laden
+				 */
+			}
+		});
 		corporaTree.addListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
@@ -211,7 +246,6 @@ public class RepositoryView extends VerticalLayout {
 			
 			public void menuSelected(MenuItem selectedItem) {
 				// TODO Auto-generated method stub
-				
 			}
 		});
 		
@@ -239,7 +273,7 @@ public class RepositoryView extends VerticalLayout {
 		
 		miMoreDocumentActions.addSeparator();
 		
-		miMoreDocumentActions.addItem("Create Structure Markup Collection", new Command() {
+		miMoreDocumentActions.addItem("Create Static Markup Collection", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
 				// TODO Auto-generated method stub
@@ -247,14 +281,14 @@ public class RepositoryView extends VerticalLayout {
 			}
 		});
 		
-		miMoreDocumentActions.addItem("Import Structure Markup Collection", new Command() {
+		miMoreDocumentActions.addItem("Import Static Markup Collection", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
 				// TODO Auto-generated method stub
 				
 			}
 		});	
 		
-		miMoreDocumentActions.addItem("Export Structure Markup Collection", new Command() {
+		miMoreDocumentActions.addItem("Export Static Markup Collection", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
 				// TODO Auto-generated method stub
 				
@@ -262,7 +296,7 @@ public class RepositoryView extends VerticalLayout {
 		});	
 		
 		
-		miMoreDocumentActions.addItem("Remove Structure Markup Collection", new Command() {
+		miMoreDocumentActions.addItem("Remove Static Markup Collection", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
 				// TODO Auto-generated method stub
 				
@@ -394,36 +428,7 @@ public class RepositoryView extends VerticalLayout {
 		documentsPanel.setHeight("200px");
 		
 		for (SourceDocument sd : repository.getSourceDocuments()) {
-			TreeEntry sourceDocEntry = new SourceDocumentEntry(sd);
-			documentsTree.addItem(sourceDocEntry);
-			documentsTree.setChildrenAllowed(sourceDocEntry, true);
-			MarkupCollectionsEntry structureMarkupCollEntry = 
-					new MarkupCollectionsEntry( 
-							new MarkupCollectionsNode("Structure Markup Collections"));
-			
-			documentsTree.addItem(structureMarkupCollEntry);
-			documentsTree.setParent(structureMarkupCollEntry, sourceDocEntry);
-			
-			for (StructureMarkupCollectionReference smcr : sd.getStructureMarkupCollectionRefs()) {
-				TreeEntry structureMarkupCollRefEntry = new MarkupCollectionEntry(smcr);
-				documentsTree.addItem(structureMarkupCollRefEntry);
-				documentsTree.setParent(structureMarkupCollRefEntry, structureMarkupCollEntry);
-				documentsTree.setChildrenAllowed(structureMarkupCollRefEntry, false);
-			}
-			
-			MarkupCollectionsEntry userMarkupCollEntry =
-					new MarkupCollectionsEntry(
-							new MarkupCollectionsNode("User Markup Collections"));
-			documentsTree.addItem(userMarkupCollEntry);
-			documentsTree.setParent(userMarkupCollEntry, sourceDocEntry);
-		
-			for (UserMarkupCollectionReference ucr : sd.getUserMarkupCollectionRefs()) {
-				TreeEntry userMarkupCollRefEntry = new MarkupCollectionEntry(ucr);
-				documentsTree.addItem(userMarkupCollRefEntry);
-				documentsTree.setParent(userMarkupCollRefEntry, userMarkupCollEntry);
-				documentsTree.setChildrenAllowed(userMarkupCollRefEntry, false);
-
-			}
+			addSourceDocumentToTree(sd);
 		}
 		outerDocumentsPanel.addComponent(documentsPanel);
 		
@@ -523,6 +528,47 @@ public class RepositoryView extends VerticalLayout {
 
 	public Repository getRepository() {
 		return repository;
+	}
+	
+	@Override
+	public void detach() {
+		this.repository.removePropertyChangeListener(
+				Repository.PropertyChangeEvent.sourceDocumentAdded,
+				repositoryListener);
+		super.detach();
+	}
+	
+	private void addSourceDocumentToTree(SourceDocument sd) {
+		TreeEntry sourceDocEntry = new SourceDocumentEntry(sd);
+		documentsTree.addItem(sourceDocEntry);
+		documentsTree.setChildrenAllowed(sourceDocEntry, true);
+		MarkupCollectionsEntry staticMarkupCollEntry = 
+				new MarkupCollectionsEntry( 
+						new MarkupCollectionsNode("Static Markup Collections"));
+		
+		documentsTree.addItem(staticMarkupCollEntry);
+		documentsTree.setParent(staticMarkupCollEntry, sourceDocEntry);
+		
+		for (StaticMarkupCollectionReference smcr : sd.getStaticMarkupCollectionRefs()) {
+			TreeEntry staticMarkupCollRefEntry = new MarkupCollectionEntry(smcr);
+			documentsTree.addItem(staticMarkupCollRefEntry);
+			documentsTree.setParent(staticMarkupCollRefEntry, staticMarkupCollEntry);
+			documentsTree.setChildrenAllowed(staticMarkupCollRefEntry, false);
+		}
+		
+		MarkupCollectionsEntry userMarkupCollEntry =
+				new MarkupCollectionsEntry(
+						new MarkupCollectionsNode("User Markup Collections"));
+		documentsTree.addItem(userMarkupCollEntry);
+		documentsTree.setParent(userMarkupCollEntry, sourceDocEntry);
+	
+		for (UserMarkupCollectionReference ucr : sd.getUserMarkupCollectionRefs()) {
+			TreeEntry userMarkupCollRefEntry = new MarkupCollectionEntry(ucr);
+			documentsTree.addItem(userMarkupCollRefEntry);
+			documentsTree.setParent(userMarkupCollRefEntry, userMarkupCollEntry);
+			documentsTree.setChildrenAllowed(userMarkupCollRefEntry, false);
+
+		}
 	}
 }
 

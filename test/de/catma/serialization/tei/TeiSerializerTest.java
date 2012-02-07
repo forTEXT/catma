@@ -12,8 +12,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import de.catma.core.document.source.contenthandler.BOMFilterInputStream;
-import de.catma.core.document.standoffmarkup.user.TagReference;
-import de.catma.core.document.standoffmarkup.user.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.PropertyDefinition;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagLibrary;

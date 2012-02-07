@@ -11,8 +11,8 @@ import nu.xom.Node;
 import nu.xom.Nodes;
 import de.catma.core.document.Corpus;
 import de.catma.core.document.source.SourceDocument;
-import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 
 class FSCorpusHandler {
 
@@ -21,8 +21,8 @@ class FSCorpusHandler {
 	private static enum Field {
 		name,
 		sourceURI,
-		userURI,
-		structureURI,
+		userMarkupURI,
+		staticMarkupURI,
 		;
 		private String toSimpleXQuery() {
 			return "//" + this.toString();
@@ -71,23 +71,23 @@ class FSCorpusHandler {
 				corpus.addSourceDocument(sourceDocument);
 			}
 			
-			Nodes structureURINodes = corpusDoc.query(Field.structureURI.toSimpleXQuery());
+			Nodes staticMarkupURINodes = corpusDoc.query(Field.staticMarkupURI.toSimpleXQuery());
 			
-			for (int i=0; i<structureURINodes.size(); i++) {
-				Node structureURINode = structureURINodes.get(i);
-				String structureURI = structureURINode.getValue();
-				StructureMarkupCollectionReference structureMarkupCollRef = 
-						new StructureMarkupCollectionReference(structureURI, structureURI);
-				corpus.addStructureMarkupCollectionReference(structureMarkupCollRef);
+			for (int i=0; i<staticMarkupURINodes.size(); i++) {
+				Node staticMarkupURINode = staticMarkupURINodes.get(i);
+				String staticMarkupURI = staticMarkupURINode.getValue();
+				StaticMarkupCollectionReference staticMarkupCollRef = 
+						new StaticMarkupCollectionReference(staticMarkupURI, staticMarkupURI);
+				corpus.addStaticMarkupCollectionReference(staticMarkupCollRef);
 			}
 			
-			Nodes userURINodes = corpusDoc.query(Field.userURI.toSimpleXQuery());
+			Nodes userMarkupURINodes = corpusDoc.query(Field.userMarkupURI.toSimpleXQuery());
 			
-			for (int i=0; i<userURINodes.size(); i++) {
-				Node userURINode = userURINodes.get(i);
-				String userURI = userURINode.getValue();
+			for (int i=0; i<userMarkupURINodes.size(); i++) {
+				Node userMarkupURINode = userMarkupURINodes.get(i);
+				String userMarkupURI = userMarkupURINode.getValue();
 				UserMarkupCollectionReference userMarkupCollRef = 
-						new UserMarkupCollectionReference(userURI, userURI);
+						new UserMarkupCollectionReference(userMarkupURI, userMarkupURI);
 				corpus.addUserMarkupCollectionReference(userMarkupCollRef);
 			}
 			

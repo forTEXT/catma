@@ -17,4 +17,12 @@ public class TeiDocumentFactory {
 		TeiDocumentVersion.convertToLatest(teiDocument);
 		return teiDocument;
 	}
+	
+	public TeiDocument createEmptyDocument() 
+			throws ValidityException, ParsingException, IOException {
+		return createDocumentFromStream(
+				Thread.currentThread().getContextClassLoader().getResourceAsStream(
+						"de/catma/serialization/tei/MinimalStandoffmarkup.xml"));
+		//TODO: set Version to 3 to prevent senseless version upgrade
+	}
 }

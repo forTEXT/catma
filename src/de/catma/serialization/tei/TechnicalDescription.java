@@ -89,7 +89,12 @@ public class TechnicalDescription {
         /**
          * A list of user defined additional separating characters.
          */
-        userDefinedSeparatingCharacters
+        userDefinedSeparatingCharacters,
+        /**
+         * A XSLT-Stylesheet for converting a custom xml source do to CATMA readable input.
+         */
+        xsltDocumentName,
+        ;
 	}
 	private TeiElement technicalDescriptionElement;
 
@@ -140,6 +145,14 @@ public class TechnicalDescription {
 		}
 		
 		return null;
+	}
+	
+	public String getXsltDocumentName() {
+		TeiElement featureElement = findFeature(Feature.xsltDocumentName);
+		if (featureElement != null) {
+			return  new StringPropertyValueFactory(featureElement).getValue();
+		}
+		return "";
 	}
 	
 	/**
@@ -334,10 +347,14 @@ public class TechnicalDescription {
 	 */
 	public void setValuesFrom( TechInfoSet techInfoSet, IndexInfoSet indexInfoSet ) {
 		
-		setValue( Feature.filetype, techInfoSet.getFileType().name() );
-		setValue( Feature.charset, techInfoSet.getCharset().name() );
-		setValue( Feature.fileOSType, techInfoSet.getFileOSType().name() );
-
+		setValue(Feature.filetype, techInfoSet.getFileType().name());
+		setValue(Feature.charset, techInfoSet.getCharset().name());
+		setValue(Feature.fileOSType, techInfoSet.getFileOSType().name());
+		
+		if (techInfoSet.getXsltDocumentName() != null) {
+			setValue(Feature.xsltDocumentName, techInfoSet.getXsltDocumentName());
+		}
+		
 		if( techInfoSet.getChecksum() != null ) {
 			setValue( 
 				Feature.checksum, techInfoSet.getChecksum().toString() );

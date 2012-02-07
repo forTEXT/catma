@@ -19,6 +19,9 @@ public class WizardFactory {
 		}
 
 		public void wizardCompleted(WizardCompletedEvent event) {
+			if (lastActiveStep != null) {
+				lastActiveStep.stepDeactivated();
+			}
 			wizardWindow.setVisible(false);
 			wizardWindow.getParent().removeWindow(wizardWindow);
 		}

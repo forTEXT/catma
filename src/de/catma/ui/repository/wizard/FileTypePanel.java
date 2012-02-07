@@ -103,21 +103,26 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 												FileType.TEXT.getMimeType());
 							}
 							InputStream is = urlConnection.getInputStream();
-							byte[] byteContent = IOUtils.toByteArray(is);
-							
-							String encoding = Charset.defaultCharset().name();
-							
-							if (resultMimeType.equals(FileType.TEXT.getMimeType())
-									||(resultMimeType.equals(FileType.HTML.getMimeType()))) {
-								encoding = 
-										sourceDocumentHandler.getEncoding(
-												urlConnection, 
-												byteContent, 
-												Charset.defaultCharset().name());	
+							try {
+								byte[] byteContent = IOUtils.toByteArray(is);
+								
+								String encoding = Charset.defaultCharset().name();
+								
+								if (resultMimeType.equals(FileType.TEXT.getMimeType())
+										||(resultMimeType.equals(FileType.HTML.getMimeType()))) {
+									encoding = 
+											sourceDocumentHandler.getEncoding(
+													urlConnection, 
+													byteContent, 
+													Charset.defaultCharset().name());	
+								}
+	
+								return new BackgroundLoaderResult(
+										byteContent, encoding, resultMimeType);
 							}
-
-							return new BackgroundLoaderResult(
-									byteContent, encoding, resultMimeType);
+							finally {
+								is.close();
+							}
 						}
 					}, 
 					new ExecutionListener<BackgroundLoaderResult>() {

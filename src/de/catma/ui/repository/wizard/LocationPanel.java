@@ -8,8 +8,12 @@ import java.net.URL;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Panel;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.Upload.FailedEvent;
 import com.vaadin.ui.Upload.FailedListener;
@@ -28,6 +32,8 @@ public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 	private UploadPanel uploadPanel;
 	private boolean onAdvance = false;
 	private WizardResult wizardResult;
+	private CheckBox cbUseExternalReference;
+	private Panel remoteURIInputPanel;
 
 	public LocationPanel(WizardStepListener listener, WizardResult wizardResult) {
 		this.wizardResult = wizardResult;
@@ -39,14 +45,14 @@ public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		
 		uploadPanel.addListener(new StartedListener() {
 			public void uploadStarted(StartedEvent event) {
-				remoteURIInput.setEnabled(false);
+				remoteURIInputPanel.setEnabled(false);
 			}
 		});
 		
 
 		uploadPanel.addListener(new FailedListener() {
 			public void uploadFailed(FailedEvent event) {
-				remoteURIInput.setEnabled(true);
+				remoteURIInputPanel.setEnabled(true);
 			}
 		});
 		
@@ -96,12 +102,27 @@ public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		setMargin(true, false, false, false);
 		
 		setSizeFull();
+		HorizontalLayout remoteLayout = new HorizontalLayout();
+		remoteLayout.setMargin(true);
+		remoteLayout.setSpacing(true);
+		remoteLayout.setSizeFull();
+		
+		remoteURIInputPanel = new Panel(remoteLayout);
 		
 		remoteURIInput = new TextField();
 		remoteURIInput.setCaption("Enter an URI that is accessible over the internet:");
 		remoteURIInput.setWidth("100%");
 		remoteURIInput.setTextChangeEventMode(TextChangeEventMode.EAGER);
-		addComponent(remoteURIInput);
+		remoteURIInputPanel.addComponent(remoteURIInput);
+		remoteLayout.setExpandRatio(remoteURIInput, 2);
+		
+		
+		cbUseExternalReference = new CheckBox(
+				"use reference to remote file instead of a local copy", true);
+		remoteURIInputPanel.addComponent(cbUseExternalReference);
+		remoteLayout.setComponentAlignment(cbUseExternalReference, Alignment.BOTTOM_LEFT);
+		
+		addComponent(remoteURIInputPanel);
 		
 		Label localFileLabel = new Label("or upload a local file from your computer:");
 		addComponent(localFileLabel);
@@ -127,9 +148,7 @@ public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		return false;
 	}
 	
-	public void stepActivated() {
-//		this.wizardResult.getSourceDocumentInfo().setTechInfoSet(null);
-	}
+	public void stepActivated(){ /*not needed*/}
 	
 	public boolean onFinish() {
 		return false;
@@ -139,6 +158,11 @@ public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		return false;
 	}
 
-	public void stepDeactivated(){ /*not needed*/}
+	public void stepDeactivated(){
+		if (cbUseExternalReference.isEnabled()) {
+			wizardResult.getSourceDocumentInfo().getTechInfoSet().setManagedResource(
+					!cbUseExternalReference.booleanValue());
+		}
+	}
 
 }

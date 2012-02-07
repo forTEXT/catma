@@ -11,6 +11,7 @@ import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.themes.Reindeer;
@@ -226,18 +227,23 @@ public class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep
         
         addComponent(unseparableCharacterSequencesListSelect, 1, 2, 1, 3);
         
-        Panel ucsAddRemovePanel = new Panel(new HorizontalLayout());
+        HorizontalLayout ucsAddRemoveLayout = new HorizontalLayout();
+        Panel ucsAddRemovePanel = new Panel(ucsAddRemoveLayout);
         ucsAddRemovePanel.setStyleName(Reindeer.PANEL_LIGHT);
-        ((HorizontalLayout)ucsAddRemovePanel.getContent()).setSpacing(true);
+        ucsAddRemoveLayout.setSpacing(true);
+        ucsAddRemoveLayout.setSizeFull();
         
         btAddUcs = new Button("Add entry");
         btAddUcs.setEnabled(false);
         ucsAddRemovePanel.addComponent(btAddUcs);
         tfUcs = new TextField();
-        tfUcs.setInputPrompt("Add sequences like e.g. or i. e. as you see fit.");
+        tfUcs.setInputPrompt("Add things like 'e.g.' as you see fit.");
         tfUcs.setImmediate(true);
+        tfUcs.setTextChangeEventMode(TextChangeEventMode.EAGER);
+        tfUcs.setWidth("100%");
         
         ucsAddRemovePanel.addComponent(tfUcs);
+        ucsAddRemoveLayout.setExpandRatio(tfUcs, 2);
         btRemvoeUcs = new Button("Remove entry");
         btRemvoeUcs.setEnabled(false);
         ucsAddRemovePanel.addComponent(btRemvoeUcs);

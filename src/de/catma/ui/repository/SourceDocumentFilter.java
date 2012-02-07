@@ -8,8 +8,8 @@ import com.vaadin.data.Container.Filter;
 
 import de.catma.core.document.Corpus;
 import de.catma.core.document.source.SourceDocument;
-import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 
 class SourceDocumentFilter implements Filter {
 	
@@ -26,7 +26,7 @@ class SourceDocumentFilter implements Filter {
 			corpusContent.add(ucr.toString());
 		}
 		
-		for (StructureMarkupCollectionReference scr : corpus.getStructureMarkupCollectionRefs()) {
+		for (StaticMarkupCollectionReference scr : corpus.getStaticMarkupCollectionRefs()) {
 			corpusContent.add(scr.toString());
 		}
 	}

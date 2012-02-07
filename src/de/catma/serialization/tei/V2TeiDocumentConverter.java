@@ -26,23 +26,25 @@ public class V2TeiDocumentConverter implements TeiDocumentConverter {
 
                     // extract name info
                     Attribute attributeType = curElement.getAttribute( "type" );
-                    String oldType = attributeType.getValue();
-
-                    // make new name "property"
-                    TeiElement fElement = new TeiElement( TeiElementName.f );
-                    fElement.addAttribute( TeiDocument.getNewXmlIDAttribute() );
-
-                    nu.xom.Attribute nameAttr =
-                        new nu.xom.Attribute(
-                        		de.catma.serialization.tei.Attribute.f_name.getLocalName(), "catma_tagname" );
-                    fElement.addAttribute( nameAttr );
-                    TeiElement stringElement = new TeiElement( TeiElementName.string );
-                    fElement.appendChild( stringElement );
-                    stringElement.appendChild( oldType );
-                    curElement.appendChild( fElement );
-
-                    // set type name
-                    attributeType.setValue("catma_tag");
+                    if (attributeType != null) {
+	                    String oldType = attributeType.getValue();
+	
+	                    // make new name "property"
+	                    TeiElement fElement = new TeiElement( TeiElementName.f );
+	                    fElement.addAttribute( TeiDocument.getNewXmlIDAttribute() );
+	
+	                    nu.xom.Attribute nameAttr =
+	                        new nu.xom.Attribute(
+	                        		de.catma.serialization.tei.Attribute.f_name.getLocalName(), "catma_tagname" );
+	                    fElement.addAttribute( nameAttr );
+	                    TeiElement stringElement = new TeiElement( TeiElementName.string );
+	                    fElement.appendChild( stringElement );
+	                    stringElement.appendChild( oldType );
+	                    curElement.appendChild( fElement );
+	
+	                    // set type name
+	                    attributeType.setValue("catma_tag");
+                    }
                 }
             }
         }

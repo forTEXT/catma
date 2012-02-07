@@ -7,7 +7,7 @@ import java.util.List;
 import nu.xom.Elements;
 import nu.xom.Nodes;
 import de.catma.core.ExceptionHandler;
-import de.catma.core.document.standoffmarkup.user.TagReference;
+import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.tag.Property;
 import de.catma.core.tag.PropertyDefinition;
 import de.catma.core.tag.PropertyValueList;

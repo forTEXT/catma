@@ -24,8 +24,8 @@ import java.util.List;
 
 import de.catma.core.document.Range;
 import de.catma.core.document.source.contenthandler.SourceContentHandler;
-import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 
 /**
  * The representation of a Source Document.
@@ -37,14 +37,14 @@ public class SourceDocument {
 	
 	private String title;
 	private SourceContentHandler sourceContentHandler;
-	private List<StructureMarkupCollectionReference> structureMarkupCollectionRefs;
+	private List<StaticMarkupCollectionReference> staticMarkupCollectionRefs;
 	private List<UserMarkupCollectionReference> userMarkupCollectionRefs;
 	
 	public SourceDocument(String title, SourceContentHandler handler) {
 		super();
 		this.title = title;
 		this.sourceContentHandler = handler;
-		this.structureMarkupCollectionRefs = new ArrayList<StructureMarkupCollectionReference>();
+		this.staticMarkupCollectionRefs = new ArrayList<StaticMarkupCollectionReference>();
 		this.userMarkupCollectionRefs = new ArrayList<UserMarkupCollectionReference>();
 	}
 
@@ -71,9 +71,9 @@ public class SourceDocument {
 		return sourceContentHandler.getContent();
 	}
 
-	public void addStructureMarkupCollectionReference(
-			StructureMarkupCollectionReference structureMarkupCollRef) {
-		structureMarkupCollectionRefs.add(structureMarkupCollRef);
+	public void addStaticMarkupCollectionReference(
+			StaticMarkupCollectionReference staticMarkupCollRef) {
+		staticMarkupCollectionRefs.add(staticMarkupCollRef);
 	}
 
 	public void addUserMarkupCollectionReference(
@@ -85,8 +85,8 @@ public class SourceDocument {
 		return sourceContentHandler.getSourceDocumentInfo().getTechInfoSet().getURI().toString();
 	}
 	
-	public List<StructureMarkupCollectionReference> getStructureMarkupCollectionRefs() {
-		return structureMarkupCollectionRefs;
+	public List<StaticMarkupCollectionReference> getStaticMarkupCollectionRefs() {
+		return staticMarkupCollectionRefs;
 	}
 	
 	public List<UserMarkupCollectionReference> getUserMarkupCollectionRefs() {

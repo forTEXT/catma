@@ -8,7 +8,7 @@ import java.util.Map;
 import nu.xom.Elements;
 import nu.xom.Node;
 import nu.xom.Nodes;
-import de.catma.core.tag.IDGenerator;
+import de.catma.core.util.IDGenerator;
 
 
 public class V3TeiDocumentConverter implements TeiDocumentConverter {

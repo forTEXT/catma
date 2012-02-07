@@ -5,21 +5,21 @@ import java.util.Collections;
 import java.util.List;
 
 import de.catma.core.document.source.SourceDocument;
-import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 
 public class Corpus {
 
 	private String name;
 
 	private List<SourceDocument> sourceDocuments;
-	private List<StructureMarkupCollectionReference> structureMarkupCollectionRefs;
+	private List<StaticMarkupCollectionReference> staticMarkupCollectionRefs;
 	private List<UserMarkupCollectionReference> userMarkupCollectionRefs;
 	
 	public Corpus(String corpusName) {
 		this.name = corpusName;
 		this.sourceDocuments = new ArrayList<SourceDocument>();
-		this.structureMarkupCollectionRefs = new ArrayList<StructureMarkupCollectionReference>();
+		this.staticMarkupCollectionRefs = new ArrayList<StaticMarkupCollectionReference>();
 		this.userMarkupCollectionRefs = new ArrayList<UserMarkupCollectionReference>();
 	}
 
@@ -27,9 +27,9 @@ public class Corpus {
 		sourceDocuments.add(sourceDocument);
 	}
 
-	public void addStructureMarkupCollectionReference(
-			StructureMarkupCollectionReference structureMarkupCollRef) {
-		structureMarkupCollectionRefs.add(structureMarkupCollRef);
+	public void addStaticMarkupCollectionReference(
+			StaticMarkupCollectionReference staticMarkupCollRef) {
+		staticMarkupCollectionRefs.add(staticMarkupCollRef);
 	}
 
 	public void addUserMarkupCollectionReference(
@@ -46,8 +46,8 @@ public class Corpus {
 		return Collections.unmodifiableList(sourceDocuments);
 	}
 
-	public List<StructureMarkupCollectionReference> getStructureMarkupCollectionRefs() {
-		return Collections.unmodifiableList(structureMarkupCollectionRefs);
+	public List<StaticMarkupCollectionReference> getStaticMarkupCollectionRefs() {
+		return Collections.unmodifiableList(staticMarkupCollectionRefs);
 	}
 
 	public List<UserMarkupCollectionReference> getUserMarkupCollectionRefs() {

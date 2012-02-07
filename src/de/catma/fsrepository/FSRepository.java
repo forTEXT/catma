@@ -1,5 +1,7 @@
 package de.catma.fsrepository;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -10,15 +12,17 @@ import java.util.Set;
 import de.catma.core.document.Corpus;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
-import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollection;
-import de.catma.core.document.standoffmarkup.structure.StructureMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.user.UserMarkupCollection;
-import de.catma.core.document.standoffmarkup.user.UserMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
+import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
 import de.catma.serialization.SerializationHandlerFactory;
 
 class FSRepository implements Repository {
+	
+	static final String CONTAINER_FOLDER = "container";
 	
 	private String name;
 	private String repoFolderPath;
@@ -28,12 +32,14 @@ class FSRepository implements Repository {
 	private Map<String,SourceDocument> sourceDocumentsByID;
 	private Set<TagLibraryReference> tagLibraryReferences;
 	private FSTagLibraryHandler tagLibraryHandler;
+	private PropertyChangeSupport propertyChangeSupport;
 	
 	public FSRepository(
 			String name,
 			String repoFolderPath, 
 			SerializationHandlerFactory serializationHandlerFactory) {
 		super();
+		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.name = name;
 		this.repoFolderPath = repoFolderPath;
 		this.corpusHandler = new FSCorpusHandler(repoFolderPath);
@@ -110,8 +116,8 @@ class FSRepository implements Repository {
 		return null;
 	}
 
-	public StructureMarkupCollection getStructureMarkupCollection(
-			StructureMarkupCollectionReference structureMarkupCollectionReference) {
+	public StaticMarkupCollection getStaticMarkupCollection(
+			StaticMarkupCollectionReference staticMarkupCollectionReference) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -126,7 +132,7 @@ class FSRepository implements Repository {
 		
 	}
 
-	public void delete(StructureMarkupCollection structureMarkupCollection) {
+	public void delete(StaticMarkupCollection staticMarkupCollection) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -141,13 +147,16 @@ class FSRepository implements Repository {
 		
 	}
 
-	public void update(StructureMarkupCollection structureMarkupCollection) {
+	public void update(StaticMarkupCollection staticMarkupCollection) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	public void insert(SourceDocument sourceDocument) {
+	public void insert(SourceDocument sourceDocument) throws IOException {
 		sourceDocumentHandler.insert(sourceDocument);
+		sourceDocumentsByID.put(sourceDocument.getID(), sourceDocument);
+		this.propertyChangeSupport.firePropertyChange(
+				PropertyChangeEvent.sourceDocumentAdded.name(), null, sourceDocument.getID());
 	}
 
 	public UserMarkupCollectionReference insert(
@@ -156,8 +165,8 @@ class FSRepository implements Repository {
 		return null;
 	}
 
-	public StructureMarkupCollectionReference insert(
-			StructureMarkupCollection structureMarkupCollection) {
+	public StaticMarkupCollectionReference insert(
+			StaticMarkupCollection staticMarkupCollection) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -166,6 +175,17 @@ class FSRepository implements Repository {
 		return this.sourceDocumentsByID.get(id);
 	}
 
+	public void addPropertyChangeListener(
+			PropertyChangeEvent propertyChangeEvent,
+			PropertyChangeListener propertyChangeListener) {
+		this.propertyChangeSupport.addPropertyChangeListener(
+				propertyChangeEvent.name(), propertyChangeListener);
+	}
 	
-
+	public void removePropertyChangeListener(
+			PropertyChangeEvent propertyChangeEvent,
+			PropertyChangeListener propertyChangeListener) {
+		this.propertyChangeSupport.removePropertyChangeListener(
+				propertyChangeEvent.name(), propertyChangeListener);
+	}
 }

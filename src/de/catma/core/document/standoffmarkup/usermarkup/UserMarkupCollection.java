@@ -1,4 +1,4 @@
-package de.catma.core.document.standoffmarkup.user;
+package de.catma.core.document.standoffmarkup.usermarkup;
 
 import java.util.Collections;
 import java.util.List;

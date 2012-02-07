@@ -2,7 +2,7 @@ package de.catma.serialization.tei;
 
 import de.catma.serialization.SerializationHandlerFactory;
 import de.catma.serialization.SourceDocumentInfoSerializationHandler;
-import de.catma.serialization.StructureMarkupCollectionSerializationHandler;
+import de.catma.serialization.StaticMarkupCollectionSerializationHandler;
 import de.catma.serialization.TagLibrarySerializationHandler;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 
@@ -13,8 +13,8 @@ public class TeiSerializationHandlerFactory implements
 		return new TeiSourceDocumentInfoSerializationHandler();
 	}
 
-	public StructureMarkupCollectionSerializationHandler getStructureMarkupCollectionSerializationHandler() {
-		return new TeiStructureMarkupCollectionSerializationHandler();
+	public StaticMarkupCollectionSerializationHandler getStaticMarkupCollectionSerializationHandler() {
+		return new TeiStaticMarkupCollectionSerializationHandler();
 	}
 
 	public TagLibrarySerializationHandler getTagLibrarySerializationHandler() {

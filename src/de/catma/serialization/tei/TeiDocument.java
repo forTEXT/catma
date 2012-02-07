@@ -10,7 +10,7 @@ import nu.xom.XPathContext;
 import de.catma.core.document.source.ContentInfoSet;
 import de.catma.core.document.source.IndexInfoSet;
 import de.catma.core.document.source.TechInfoSet;
-import de.catma.core.tag.IDGenerator;
+import de.catma.core.util.IDGenerator;
 
 class TeiDocument {
 	
@@ -247,7 +247,8 @@ class TeiDocument {
 	public TechInfoSet getTechInfoset() {
 		TechnicalDescription td = teiHeader.getTechnicalDescription();
 		TechInfoSet tis = new TechInfoSet(
-				td.getFileType(), td.getCharset(), td.getFileOSType(), td.getChecksum());
+				td.getFileType(), td.getCharset(), td.getFileOSType(),
+				td.getChecksum(), td.getXsltDocumentName());
 		
 		return tis;
 	}
@@ -259,5 +260,9 @@ class TeiDocument {
 						td.getUnseparableCharacterSequenceList(), 
 						td.getUserDefinedSeparatingCharacterList());
 		return iis;
+	}
+
+	Document getDocument() {
+		return document;
 	}
 }

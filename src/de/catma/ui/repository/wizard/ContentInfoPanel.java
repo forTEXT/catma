@@ -1,5 +1,8 @@
 package de.catma.ui.repository.wizard;
 
+import java.io.File;
+import java.net.URI;
+
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Form;
@@ -79,6 +82,14 @@ public class ContentInfoPanel extends HorizontalLayout implements
 		if (!incomingTitle.equals(wizardResult.getSourceDocumentInfo().getContentInfoSet().getTitle())) {
 			wizardResult.getSourceDocument().setTitle(
 					wizardResult.getSourceDocumentInfo().getContentInfoSet().getTitle());
+		}
+		if (wizardResult.getSourceDocument().toString().isEmpty()) {
+			URI uri = wizardResult.getSourceDocumentInfo().getTechInfoSet().getURI();
+			String title = uri.toString();
+			if (uri.getScheme().equals("file")) {
+				title = new File(uri).getName();
+			}
+			wizardResult.getSourceDocument().setTitle(title);
 		}
 	}
 }

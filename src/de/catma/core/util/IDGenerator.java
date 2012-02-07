@@ -1,4 +1,4 @@
-package de.catma.core.tag;
+package de.catma.core.util;
 
 import java.util.UUID;
 
