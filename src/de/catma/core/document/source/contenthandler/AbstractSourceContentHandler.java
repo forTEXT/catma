@@ -1,5 +1,7 @@
 package de.catma.core.document.source.contenthandler;
 
+import java.io.IOException;
+
 import de.catma.core.document.source.SourceDocumentInfo;
 
 public abstract class AbstractSourceContentHandler implements SourceContentHandler {
@@ -15,7 +17,10 @@ public abstract class AbstractSourceContentHandler implements SourceContentHandl
 		return sourceDocumentInfo;
 	}
 
-	public String getContent() {
+	public String getContent() throws IOException {
+		if (content == null) {
+			load();
+		}
 		return content;
 	}
 

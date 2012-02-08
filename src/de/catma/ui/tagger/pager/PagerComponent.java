@@ -20,7 +20,7 @@ package de.catma.ui.tagger.pager;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.terminal.ThemeResource;
+import com.vaadin.terminal.ClassResource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -65,11 +65,6 @@ public class PagerComponent extends HorizontalLayout {
 		}
 	}
 
-	private static final ThemeResource firstPageIcon = new ThemeResource("resources/page-first.gif");
-	private static final ThemeResource previousPageIcon = new ThemeResource("resources/page-prev.gif");
-	private static final ThemeResource nextPageIcon = new ThemeResource("resources/page-next.gif");
-	private static final ThemeResource lastPageIcon = new ThemeResource("resources/page-last.gif");
-	
 	private Button firstPageButton;
 	private Button previousPageButton;
 	private NumberField pageInput;
@@ -139,10 +134,8 @@ public class PagerComponent extends HorizontalLayout {
 	private void initComponents() {
 		setSpacing(true);
 		firstPageButton = new Button();
-		firstPageButton.setIcon(firstPageIcon);
 		addComponent(firstPageButton);
 		previousPageButton = new Button();
-		previousPageButton.setIcon(previousPageIcon);
 		addComponent(previousPageButton);
 		pageInput = new NumberField(1);
 		pageInput.setImmediate(true);
@@ -152,10 +145,32 @@ public class PagerComponent extends HorizontalLayout {
 		addComponent(lastPageNumberLabel);
 		this.setComponentAlignment(lastPageNumberLabel, Alignment.MIDDLE_LEFT);
 		nextPageButton = new Button();
-		nextPageButton.setIcon(nextPageIcon);
 		addComponent(nextPageButton);
 		lastPageButton = new Button();
-		lastPageButton.setIcon(lastPageIcon);
 		addComponent(lastPageButton);
+	}
+	
+	@Override
+	public void attach() {
+		super.attach();
+		ClassResource firstPageIcon = 
+				new ClassResource(
+						"ui/tagger/pager/resources/page-first.gif", 
+						getApplication());
+		firstPageButton.setIcon(firstPageIcon);
+		ClassResource previousPageIcon = 
+				new ClassResource(
+						"ui/tagger/pager/resources/page-prev.gif", 
+						getApplication());
+		previousPageButton.setIcon(previousPageIcon);
+		ClassResource nextPageIcon = 
+				new ClassResource(
+						"ui/tagger/pager/resources/page-next.gif", 
+						getApplication());
+		nextPageButton.setIcon(nextPageIcon);
+		ClassResource lastPageIcon = new ClassResource(
+				"ui/tagger/pager/resources/page-last.gif", 
+				getApplication());
+		lastPageButton.setIcon(lastPageIcon);
 	}
 }

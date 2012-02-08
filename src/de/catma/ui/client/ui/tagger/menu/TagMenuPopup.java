@@ -165,7 +165,7 @@ class TagMenuPopup extends DialogBox {
 	
 	@Override
 	public void show() {
-		Window.enableScrolling(true);
+//		Window.enableScrolling(true);
 		super.show();
 	}
 	

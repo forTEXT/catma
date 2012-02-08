@@ -19,3 +19,45 @@
 .v-gridlayout-taglibrary-action-grid .v-gridlayout-spacing-on {
 	padding-top:7px;	
 }
+
+.tagger_menu {
+ /*   background-color : #ffc; */
+ 	background-color: #FFFFFF;
+    border: 1px solid #000000;
+    color:  #222222;
+    font-family: Arial,Helvetica,Tahoma,Verdana,sans-serif;
+    font-size: 12px;
+}
+
+.tagger_menu_item td {
+	padding-right:10px;
+}
+
+
+.tagger-pushButton
+{
+    border                      :   1px solid #666;
+    margin                      :   3px 1px;
+    cursor                      :   hand;
+    cursor                      :   pointer;
+    background-color            :   #F5F5F5;
+    padding                     :   0 10px;
+}
+
+.tagger-pushButton-down-hovering
+{
+    background-color            :   #ccf;
+}
+
+.tagger-pushButton-up-hovering
+{
+    background-color            :   #F5F5F5;
+}
+
+.v-panel-caption-editor-panel {
+	text-align: center;
+}
+
+.pager-pageinput {
+	text-align: right;
+}
