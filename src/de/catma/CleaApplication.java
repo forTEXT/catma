@@ -47,6 +47,7 @@ public class CleaApplication extends Application {
 		
 		
 		final Window mainWindow = new Window("CATMA 4 - CLÉA");
+		
 		VerticalLayout mainLayout = new VerticalLayout();
 		mainLayout.setMargin(true);
 		mainWindow.setContent(mainLayout);
@@ -76,7 +77,6 @@ public class CleaApplication extends Application {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 		
 		
 //		LoginForm lf = new LoginForm();

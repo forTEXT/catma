@@ -56,9 +56,7 @@ public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 			setMargin(false);
 			tabSheet.setVisible(true);
 			tabSheet.setSizeFull();
-			
-			// workaround to force a repaint, that provokes to display the tabsheet in full size
-			getWindow().setWidth(getWindow().getWidth()+0.1f, getWidthUnits());
+
 		}
 	}
 	

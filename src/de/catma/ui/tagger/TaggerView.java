@@ -2,7 +2,8 @@ package de.catma.ui.tagger;
 
 import java.io.IOException;
 
-import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.terminal.gwt.server.WebApplicationContext;
+import com.vaadin.terminal.gwt.server.WebBrowser;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.document.source.SourceDocument;
@@ -16,20 +17,15 @@ public class TaggerView extends VerticalLayout {
 	
 	private SourceDocument sourceDocument;
 	private Tagger tagger;
+	private Pager pager;
 
 	public TaggerView(SourceDocument sourceDocument) {
 		this.sourceDocument = sourceDocument;
 		initComponents();
-		try {
-			tagger.setText(sourceDocument.getContent());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 	private void initComponents() {
-		Pager pager = new Pager(80, 30);
+		pager = new Pager(80, 30);
 		
 		tagger = new Tagger(pager, new TaggerListener() {
 			
@@ -51,5 +47,23 @@ public class TaggerView extends VerticalLayout {
 
 	public SourceDocument getSourceDocument() {
 		return sourceDocument;
+	}
+	
+	@Override
+	public void attach() {
+		super.attach();
+
+		WebApplicationContext context = ((WebApplicationContext) getApplication().getContext());
+		WebBrowser wb = context.getBrowser();
+
+		float lines = (wb.getScreenHeight()/3)/12;
+		pager.setMaxPageLengthInLines(Math.round(lines));
+		
+		try {
+			tagger.setText(sourceDocument.getContent());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
