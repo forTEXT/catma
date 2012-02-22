@@ -1,17 +1,18 @@
 package de.catma.query;
 
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Date;
 import java.util.Properties;
 
-import org.elasticsearch.ElasticSearchException;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,6 +21,7 @@ import de.catma.core.ExceptionHandler;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
 import de.catma.core.document.source.SourceDocument;
+
 
 public class PhraseQueryTest {
 
@@ -43,6 +45,19 @@ public class PhraseQueryTest {
 		}
 	}
 
+
+	@Test
+	public void testSearch(){
+		QueryBuilder qb1 = termQuery("content", "alice");
+		SearchResponse response = client.prepareSearch("test")
+        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+        .setQuery(qb1)
+        .execute()
+        .actionGet();
+		
+		System.out.print(response.toString());
+	}
+	
 	@After
 	public void teardown() {
 		client.close();
@@ -65,6 +80,8 @@ public class PhraseQueryTest {
 			                  )
 			        .execute()
 			        .actionGet();
+			
+			
 		} catch (Exception e) {
 			ExceptionHandler.log(e);
 		}
