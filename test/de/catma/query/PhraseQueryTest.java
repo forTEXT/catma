@@ -1,16 +1,21 @@
 package de.catma.query;
 
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+
 import java.io.IOException;
 import java.util.Date;
 
 import org.elasticsearch.ElasticSearchException;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import static org.elasticsearch.common.xcontent.XContentFactory.*;
 
 public class PhraseQueryTest {
 
@@ -23,6 +28,17 @@ public class PhraseQueryTest {
 						"clea.bsdsystems.de", 9300));
 	}
 
+	public void testSearch(){
+		QueryBuilder qb1 = termQuery("content", "alice");
+		SearchResponse response = client.prepareSearch("test")
+        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+        .setQuery(qb1)
+        .execute()
+        .actionGet();
+		
+		System.out.print(response.toString());
+	}
+	
 	@AfterClass
 	public void teardown() {
 		client.close();
