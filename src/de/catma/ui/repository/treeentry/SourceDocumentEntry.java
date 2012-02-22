@@ -29,5 +29,9 @@ public class SourceDocumentEntry implements TreeEntry {
 	public String toString() {
 		return sourceDocument.toString();
 	}
+	
+	public SourceDocument getSourceDocument() {
+		return sourceDocument;
+	}
 
 }

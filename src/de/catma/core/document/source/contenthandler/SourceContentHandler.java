@@ -47,5 +47,5 @@ public interface SourceContentHandler {
 	public void load(InputStream is) throws IOException;
 	public void load() throws IOException;
 	
-	public String getContent();
+	public String getContent() throws IOException;
 }

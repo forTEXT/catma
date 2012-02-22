@@ -56,6 +56,7 @@ class TagMenuPopup extends DialogBox {
 	
 	public TagMenuPopup(VTagger vTagger, String lastSelectedColor) {
 		super(true);
+		getElement().addClassName("tagmenu-popup");
 		this.setText("Annotations");
 		this.vTagger = vTagger;
 		this.lastSelectedColor = lastSelectedColor;
@@ -165,7 +166,7 @@ class TagMenuPopup extends DialogBox {
 	
 	@Override
 	public void show() {
-		Window.enableScrolling(true);
+//		Window.enableScrolling(true);
 		super.show();
 	}
 	

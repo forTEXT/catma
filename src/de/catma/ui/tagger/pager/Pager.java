@@ -174,4 +174,9 @@ public class Pager implements Iterable<Page> {
 	public Iterator<Page> iterator() {
 		return Collections.unmodifiableCollection(pages).iterator();
 	}
+	
+	public void setMaxPageLengthInLines(int maxPageLengthInLines) {
+		this.checksum = null; //recalculate pages
+		this.maxPageLengthInLines = maxPageLengthInLines;
+	}
 }

@@ -33,7 +33,14 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 	
 		TeiElement encodingDesc = new TeiElement(TeiElementName.encodingDesc);
 		((TeiElement)teiDocument.getNodes(TeiElementName.teiHeader).get(0)).appendChild(encodingDesc);
-		standardTagsetDefinition = addStandardTagset(encodingDesc);
+		
+
+		Nodes tagElements = 
+				teiDocument.getNodes(TeiElementName.fs, AttributeValue.type_catma_tag);
+		
+		if (tagElements.size() != 0) {
+			standardTagsetDefinition = addStandardTagset(encodingDesc);
+		}
 		
 		Nodes tagsetElements = teiDocument.getNodes(TeiElementName.fvLib);
 		
@@ -42,15 +49,13 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 			String version = tagsetElement.getAttributeValue(Attribute.n);
 			version = version.substring(version.indexOf(' ')+1);
 			
-			// skip deleted or corrupted tablibs
+			// skip deleted or corrupted taglibs
 			if (!version.startsWith("-") && tagsetElement.hasChildElements()) { 
 				TeiElement tagsetDef = createTagsetDefinition(tagsetElement, encodingDesc);
 				tagsetDefinitions.put(tagsetDef.getID(), tagsetDef);
 			}
 		}	
 		
-		Nodes tagElements = 
-				teiDocument.getNodes(TeiElementName.fs, AttributeValue.type_catma_tag);
 		
 		for( int i=0; i<tagElements.size(); i++) {
 			createTagDefinition(tagElements.get(i));

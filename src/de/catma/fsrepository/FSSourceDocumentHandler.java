@@ -1,5 +1,6 @@
 package de.catma.fsrepository;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -7,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
+import java.io.Writer;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
@@ -188,21 +190,16 @@ class FSSourceDocumentHandler {
 							+ System.getProperty("file.separator")
 							+ "Source_" + idGenerator.generate());
 			
-			StringReader sourceDocContentReader = new StringReader(sourceDocument.getContent());
+			Writer repoSourceFileWriter =  
+					new BufferedWriter(new OutputStreamWriter(
+							new FileOutputStream(repoSourceFile),
+							sourceDocumentInfo.getTechInfoSet().getCharset()));
 			try {
-				OutputStreamWriter repoSourceFileWriter =  
-						new OutputStreamWriter(
-								new FileOutputStream(repoSourceFile),
-								sourceDocumentInfo.getTechInfoSet().getCharset());
-				try {
-					IOUtils.copy(sourceDocContentReader, repoSourceFileWriter);
-				}
-				finally {
-					repoSourceFileWriter.close();
-				}
+				//TODO: keep BOM 
+				repoSourceFileWriter.append(sourceDocument.getContent());
 			}
 			finally {
-				sourceDocContentReader.close();
+				repoSourceFileWriter.close();
 			}
 			
 			if (sourceDocumentInfo.getTechInfoSet().isManagedResource()) {

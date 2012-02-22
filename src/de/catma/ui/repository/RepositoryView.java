@@ -142,6 +142,13 @@ public class RepositoryView extends VerticalLayout {
 				 * hier gehts weiter:
 				 * tagger einbauen + document laden
 				 */
+				Object value = documentsTree.getValue();
+				
+				if (value instanceof SourceDocumentEntry) {
+					((CleaApplication)getApplication()).openSourceDocument(
+							((SourceDocumentEntry)value).getSourceDocument());
+				}
+				
 			}
 		});
 		corporaTree.addListener(new ValueChangeListener() {

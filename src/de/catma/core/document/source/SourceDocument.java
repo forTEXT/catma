@@ -19,6 +19,7 @@
 
 package de.catma.core.document.source;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,14 +61,14 @@ public class SourceDocument {
 	 * @param range the range of the content
 	 * @return the content between the startpoint and the endpoint of the range
 	 */
-	public String getContent( Range range ) {
+	public String getContent( Range range ) throws IOException {
 		int length = getContent().length();
 		return getContent().substring(
 				Math.min(range.getStartPoint(), length), 
 				Math.min(range.getEndPoint(), length));
 	}
 	
-	public String getContent() {
+	public String getContent() throws IOException {
 		return sourceContentHandler.getContent();
 	}
 

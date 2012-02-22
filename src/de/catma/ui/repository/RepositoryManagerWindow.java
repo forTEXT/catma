@@ -14,6 +14,7 @@ public class RepositoryManagerWindow extends CatmaWindow {
 		setHeight("90%");
 		setPositionX(50);
 		setPositionY(50);
+		setEnableScrolling(true);
 	}
 	
 	@Override

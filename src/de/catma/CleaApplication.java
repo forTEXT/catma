@@ -13,12 +13,15 @@ import de.catma.backgroundservice.BackgroundService;
 import de.catma.core.ExceptionHandler;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
+import de.catma.core.document.source.SourceDocument;
 import de.catma.core.tag.TagLibrary;
 import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.menu.Menu;
 import de.catma.ui.menu.MenuFactory;
 import de.catma.ui.repository.RepositoryManagerView;
 import de.catma.ui.repository.RepositoryManagerWindow;
+import de.catma.ui.tagger.TaggerManagerView;
+import de.catma.ui.tagger.TaggerManagerWindow;
 import de.catma.ui.tagmanager.TagManagerView;
 import de.catma.ui.tagmanager.TagManagerWindow;
 
@@ -34,6 +37,7 @@ public class CleaApplication extends Application {
 	private String tempDirectory = null;
 	private BackgroundService backgroundService;
 	private DefaultProgressListener defaultProgressListener;
+	private TaggerManagerView taggerManagerView;
 
 	@Override
 	public void init() {
@@ -43,6 +47,7 @@ public class CleaApplication extends Application {
 		
 		
 		final Window mainWindow = new Window("CATMA 4 - CLÉA");
+		
 		VerticalLayout mainLayout = new VerticalLayout();
 		mainLayout.setMargin(true);
 		mainWindow.setContent(mainLayout);
@@ -55,6 +60,8 @@ public class CleaApplication extends Application {
 		
 			tagManagerView = new TagManagerView();
 			
+			taggerManagerView = new TaggerManagerView();
+			
 			menu = menuFactory.createMenu(
 					mainLayout, 
 					new MenuFactory.MenuEntryDefinition( 
@@ -62,13 +69,14 @@ public class CleaApplication extends Application {
 							new RepositoryManagerWindow(repositoryManagerView)),
 					new MenuFactory.MenuEntryDefinition(
 							"Tag Manager",
-							new TagManagerWindow(tagManagerView)));
+							new TagManagerWindow(tagManagerView)),
+					new MenuFactory.MenuEntryDefinition("Tagger",
+							new TaggerManagerWindow(taggerManagerView)));
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 		
 		
 //		LoginForm lf = new LoginForm();
@@ -130,6 +138,13 @@ public class CleaApplication extends Application {
 		tagManagerView.openTagLibrary(tagLibrary);
 	}
 
+	public void openSourceDocument(SourceDocument sourceDocument) {
+		if (taggerManagerView.getApplication() == null) {
+			menu.executeEntry(taggerManagerView);
+		}
+		taggerManagerView.openSourceDocument(sourceDocument);
+	}
+	
 	public String getTempDirectory() {
 		return tempDirectory;
 	}

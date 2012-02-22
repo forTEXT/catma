@@ -44,6 +44,15 @@ public class TeiSerializerTest {
 	}
 	
 	@Test
+	public void testStructureFileDeserializer() throws FileNotFoundException, IOException {
+		FilterInputStream is = new BOMFilterInputStream(
+				new FileInputStream("testdocs/rose_for_emily_structure.xml"), Charset.forName( "UTF-8" ));
+		TagLibrary tagLibrary = 
+				new TeiTagLibrarySerializationHandler().deserialize(is);
+		is.close();
+	}
+	
+	@Test
 	public void testTagLibraryDeserializer() throws FileNotFoundException, IOException {
 		FilterInputStream is = new BOMFilterInputStream(
 				new FileInputStream("testdocs/rose_for_emily_user_simple.xml"), Charset.forName( "UTF-8" ));
