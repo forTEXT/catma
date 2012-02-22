@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<digitalobject>
+	<name>The national corpus</name>
+	<staticMarkupURI>file:///c:/data/eclipse_workspace/clea/repo/container/rose_for_emily_structure.xml</staticMarkupURI>
+	<sourceURI>file:///c:/data/eclipse_workspace/clea/repo/container/rose_for_emily.txt</sourceURI>
+	<userMarkupURI>file:///c:/data/eclipse_workspace/clea/repo/container/rose_for_emily_user.xml</userMarkupURI>
+</digitalobject>

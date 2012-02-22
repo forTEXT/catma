@@ -7,8 +7,8 @@ public class TaggerManagerWindow extends CatmaWindow {
 	public TaggerManagerWindow(TaggerManagerView taggerManagerView) {
 		super("Tagger");
 		setContent(taggerManagerView);
-		setHeight("65%");
-		setWidth("40%");
+		setHeight("85%");
+		setWidth("50%");
 	}
 
 }

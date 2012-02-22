@@ -7,6 +7,8 @@ import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.Resource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -14,6 +16,7 @@ import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.Tree.ItemStyleGenerator;
 
+import de.catma.CleaApplication;
 import de.catma.core.tag.PropertyDefinition;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagLibrary;
@@ -46,8 +49,24 @@ public class TagLibraryView extends HorizontalLayout {
 		super();
 		this.tagLibrary = tagLibrary;
 		initComponents(application);
+		initActions();
 	}
 	
+	private void initActions() {
+		btInsertTagset.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				Object value = tagTree.getValue();
+				if (value instanceof TagsetDefinition) {
+					((CleaApplication)getApplication()).attachTagsetDefinition(
+							(TagsetDefinition)value);
+				}
+				
+			}
+		});
+		
+	}
+
 	private void initComponents(Application application) {
 		setWidth("100%");
 		Panel tagTreePanel = new Panel();

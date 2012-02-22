@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<TEI xml:lang="en" xmlns="http://www.tei-c.org/ns/1.0">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title>empty</title>
+                <author>empty</author>
+            </titleStmt>
+            <publicationStmt>
+                <publisher>mp</publisher>
+            </publicationStmt>
+            <sourceDesc>
+                <p>Standoff Markup</p>
+                <ab>
+                    <fs xml:id="TARGET_INFO">
+                        <f name="version">
+                            <string>2</string>
+                        </f>
+                        <f name="filetype">
+                            <string>TEXT</string>
+                        </f>
+                        <f name="charset">
+                            <string>UTF-8</string>
+                        </f>
+                        <f name="fileOSType">
+                            <string>DOS</string>
+                        </f>
+                        <f name="sourceTextType">
+                            <string>PROSE</string>
+                        </f>
+                        <f name="checksum">
+                            <string>3013559516</string>
+                        </f>
+                    </fs>
+                </ab>
+            </sourceDesc>
+        </fileDesc>
+        <profileDesc>
+            <langUsage>
+                <language ident="de">German</language>
+            </langUsage>
+        </profileDesc>
+    </teiHeader>
+    <text>
+        <fvLib xml:id="CATMA_c5bd46a1-a884-4e86-985c-713baf0b9476" n="TestTagset 1_068768df-eb74-4aa6-97fa-9846b96d0747">
+            <fs xml:id="CATMA_9e7446f5-9ae1-4cef-90af-c444b0512c99" n="2_068768df-eb74-4aa6-97fa-9846b96d0747" type="catma_tag">
+                <f xml:id="CATMA_d2aae0ac-46ca-4289-9bb3-47e88854578f" name="catma_tagname">
+                    <string>PTag in TestTS</string>
+                </f>
+                <f xml:id="CATMA_176b8c3a-f1e8-4f5f-8ba4-3da96059824d" name="catma_displaycolor">
+                    <numeric value="-52225"/>
+                </f>
+                <f xml:id="CATMA_bc709556-481a-4870-8adc-c8ce3f72c595" name="Child_Tag_in_TestTS">
+                    <fs xml:id="CATMA_15ebb1b2-276a-48ad-a67b-4b120c1b79be" n="1_068768df-eb74-4aa6-97fa-9846b96d0747" type="catma_tag">
+                        <f xml:id="CATMA_6af73199-d408-4928-a26e-bf40b16e05cd" name="catma_tagname">
+                            <string>Child Tag in TestTS</string>
+                        </f>
+                        <f xml:id="CATMA_1197698d-b871-4398-90a0-e1ba79b14521" name="catma_displaycolor">
+                            <numeric value="-6750055"/>
+                        </f>
+                    </fs>
+                </f>
+            </fs>
+        </fvLib>
+        <fvLib xml:id="CATMA_46d06c50-ea3e-44c8-b934-50b3cc698748" n="MoveTest 1_068768df-eb74-4aa6-97fa-9846b96d0747">
+            <fs xml:id="CATMA_873f1f5b-d1d6-4142-8808-207571d689ec" n="1_068768df-eb74-4aa6-97fa-9846b96d0747" type="catma_tag">
+                <f xml:id="CATMA_2dedc6fd-a215-499b-90f0-0a9d67d49fdb" name="catma_tagname">
+                    <string>MoveMe</string>
+                </f>
+                <f xml:id="CATMA_47072553-9e6e-4537-a4ed-d78b1fe2b7f7" name="catma_displaycolor">
+                    <numeric value="-16751002"/>
+                </f>
+            </fs>
+        </fvLib>
+        <fs xml:id="CATMA_31faf252-926d-4d2a-b612-f581dd8362dd" n="1_068768df-eb74-4aa6-97fa-9846b96d0747" type="catma_tag">
+            <f xml:id="CATMA_6873d6ea-a853-4b43-816a-bde82d51002f" name="catma_tagname">
+                <string>testit</string>
+            </f>
+            <f xml:id="CATMA_e6950166-ef0c-456a-8ed9-2abc3b82bbab" name="catma_displaycolor">
+                <numeric value="-16724737"/>
+            </f>
+        </fs>
+        <body>
+            <ab type="catma">
+                <ptr target="kafka_utf8.txt#range( /.0, /.97)" type="inclusion"/>
+                <seg ana="#CATMA_873f1f5b-d1d6-4142-8808-207571d689ec">
+                    <ptr target="kafka_utf8.txt#range( /.97, /.105)" type="inclusion"/>
+                </seg>
+                <ptr target="kafka_utf8.txt#range( /.105, /.1301)" type="inclusion"/>
+                <seg ana="#CATMA_31faf252-926d-4d2a-b612-f581dd8362dd">
+                    <ptr target="kafka_utf8.txt#range( /.1301, /.1959)" type="inclusion"/>
+                </seg>
+                <seg ana="#CATMA_31faf252-926d-4d2a-b612-f581dd8362dd #CATMA_873f1f5b-d1d6-4142-8808-207571d689ec">
+                    <ptr target="kafka_utf8.txt#range( /.1959, /.1964)" type="inclusion"/>
+                </seg>
+                <seg ana="#CATMA_31faf252-926d-4d2a-b612-f581dd8362dd">
+                    <ptr target="kafka_utf8.txt#range( /.1964, /.2884)" type="inclusion"/>
+                </seg>
+                <seg ana="#CATMA_31faf252-926d-4d2a-b612-f581dd8362dd #CATMA_873f1f5b-d1d6-4142-8808-207571d689ec">
+                    <ptr target="kafka_utf8.txt#range( /.2884, /.2889)" type="inclusion"/>
+                </seg>
+                <seg ana="#CATMA_31faf252-926d-4d2a-b612-f581dd8362dd">
+                    <ptr target="kafka_utf8.txt#range( /.2889, /.3100)" type="inclusion"/>
+                </seg>
+                <seg ana="#CATMA_31faf252-926d-4d2a-b612-f581dd8362dd #CATMA_15ebb1b2-276a-48ad-a67b-4b120c1b79be">
+                    <ptr target="kafka_utf8.txt#range( /.3100, /.3109)" type="inclusion"/>
+                </seg>
+                <seg ana="#CATMA_31faf252-926d-4d2a-b612-f581dd8362dd">
+                    <ptr target="kafka_utf8.txt#range( /.3109, /.3505)" type="inclusion"/>
+                </seg>
+                <seg ana="#CATMA_31faf252-926d-4d2a-b612-f581dd8362dd #CATMA_873f1f5b-d1d6-4142-8808-207571d689ec">
+                    <ptr target="kafka_utf8.txt#range( /.3505, /.3510)" type="inclusion"/>
+                </seg>
+                <seg ana="#CATMA_31faf252-926d-4d2a-b612-f581dd8362dd">
+                    <ptr target="kafka_utf8.txt#range( /.3510, /.3706)" type="inclusion"/>
+                </seg>
+                <seg ana="#CATMA_31faf252-926d-4d2a-b612-f581dd8362dd #CATMA_873f1f5b-d1d6-4142-8808-207571d689ec">
+                    <ptr target="kafka_utf8.txt#range( /.3706, /.3711)" type="inclusion"/>
+                </seg>
+                <seg ana="#CATMA_31faf252-926d-4d2a-b612-f581dd8362dd">
+                    <ptr target="kafka_utf8.txt#range( /.3711, /.26660)" type="inclusion"/>
+                </seg>
+                <ptr target="kafka_utf8.txt#range( /.26660, /.46334)" type="inclusion"/>
+            </ab>
+        </body>
+    </text>
+</TEI>
