@@ -3,3 +3,5 @@
 /.gwt
 /repo
 /.classpath
+/.settings
+/.project
