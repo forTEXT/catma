@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<TEI xml:lang="en" xmlns="http://www.tei-c.org/ns/1.0">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title>empty</title>
+                <author>Uwe Timm</author>
+            </titleStmt>
+            <publicationStmt>
+                <publisher>empty</publisher>
+            </publicationStmt>
+            <sourceDesc>
+                <p>empty</p>
+                <ab>
+                    <fs xml:id="CATMA_TECH_DESC">
+                        <f name="version">
+                            <string>3</string>
+                        </f>
+                        <f name="filetype">
+                            <string>TEXT</string>
+                        </f>
+                        <f name="charset">
+                            <string>UTF-8</string>
+                        </f>
+                        <f name="fileOSType">
+                            <string>DOS</string>
+                        </f>
+                        <f name="checksum">
+                            <string>582995730</string>
+                        </f>
+                    </fs>
+                </ab>
+            </sourceDesc>
+        </fileDesc>
+        <encodingDesc>
+            <fsdDecl xml:id="CATMA_STANDARD_TAGSET" n="Standard Tagset 1">
+                <fsDecl xml:id="CATMA_BASE_TAG" n="1" type="CATMA_BASE_TAG">
+                    <fsDescr>CATMA Base Tag</fsDescr>
+                    <fDecl name="catma_displaycolor" optional="false">
+                        <vRange>
+                            <numeric value="-16777216" max="-1"/>
+                        </vRange>
+                    </fDecl>
+                </fsDecl>
+            </fsdDecl>
+        </encodingDesc>
+        <profileDesc>
+            <langUsage>
+                <language ident="de">Deutsch</language>
+            </langUsage>
+        </profileDesc>
+    </teiHeader>
+    <text>
+        <body>
+            <ab type="catma"/>
+        </body>
+    </text>
+</TEI>

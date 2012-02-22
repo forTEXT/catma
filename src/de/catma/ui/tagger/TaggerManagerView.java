@@ -11,6 +11,7 @@ import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.document.source.SourceDocument;
+import de.catma.core.tag.TagsetDefinition;
 
 public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 	
@@ -90,6 +91,10 @@ public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 			setMargin(true);
 		}
 
+	}
+
+	public void attachTagsetDefinition(TagsetDefinition tagsetDefinition) {
+		((TaggerView)tabSheet.getSelectedTab()).attachTagsetDefinition(tagsetDefinition);
 	}
 
 }

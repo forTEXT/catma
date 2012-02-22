@@ -15,6 +15,7 @@ import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.TagsetDefinition;
 import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.menu.Menu;
 import de.catma.ui.menu.MenuFactory;
@@ -143,6 +144,13 @@ public class CleaApplication extends Application {
 			menu.executeEntry(taggerManagerView);
 		}
 		taggerManagerView.openSourceDocument(sourceDocument);
+	}
+	
+	public void attachTagsetDefinition(TagsetDefinition tagsetDefinition) {
+		if (taggerManagerView.getApplication() == null) {
+			menu.executeEntry(taggerManagerView);
+		}
+		taggerManagerView.attachTagsetDefinition(tagsetDefinition);
 	}
 	
 	public String getTempDirectory() {
