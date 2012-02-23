@@ -2,6 +2,8 @@ package de.catma.ui.tagger;
 
 import java.io.IOException;
 
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
 import com.vaadin.terminal.gwt.server.WebBrowser;
 import com.vaadin.ui.HorizontalLayout;
@@ -56,7 +58,13 @@ public class TaggerView extends HorizontalLayout {
 		addComponent(taggerPanel);
 		
 		tagsetsInUseTree = new Tree("Tagsets in use");
-		
+		tagsetsInUseTree.addListener(new ValueChangeListener() {
+			
+			public void valueChange(ValueChangeEvent event) {
+//				tagger.
+				
+			}
+		});
 		addComponent(tagsetsInUseTree);
 	}
 

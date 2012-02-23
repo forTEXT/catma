@@ -40,7 +40,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
-import de.catma.ui.client.ui.tagger.VTagger;
+import de.catma.ui.client.ui.tagger.editor.TaggerEditor;
 import de.catma.ui.client.ui.tagger.shared.TagInstance;
 
 /**
@@ -51,10 +51,10 @@ class TagMenuPopup extends DialogBox {
 		
 	private TreeItem root;
 	private List<HandlerRegistration> handlerRegistrations = new ArrayList<HandlerRegistration>();
-	private VTagger vTagger;
+	private TaggerEditor vTagger;
 	private String lastSelectedColor = null;
 	
-	public TagMenuPopup(VTagger vTagger, String lastSelectedColor) {
+	public TagMenuPopup(TaggerEditor vTagger, String lastSelectedColor) {
 		super(true);
 		getElement().addClassName("tagmenu-popup");
 		this.setText("Annotations");

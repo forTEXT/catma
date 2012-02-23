@@ -23,9 +23,9 @@ package de.catma.ui.client.ui.tagger.shared;
  *
  */
 public enum EventAttribute {
-	HTML,
+	PAGE_SET,
 	TAGINSTANCE_CLEAR,
-	TAGINSTANCE, 
+	TAGINSTANCE_ADD, 
 	LOGMESSAGE, 
 	TAGINSTANCE_REMOVE,
 	;

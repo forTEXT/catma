@@ -16,13 +16,14 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */   
-package de.catma.ui.client.ui.tagger;
+package de.catma.ui.client.ui.tagger.editor;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
 import com.vaadin.terminal.gwt.client.VConsole;
 
+import de.catma.ui.client.ui.tagger.DebugUtil;
 import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard.Range;
 import de.catma.ui.client.ui.tagger.shared.ContentElementID;
 import de.catma.ui.client.ui.tagger.shared.TextRange;

@@ -61,15 +61,15 @@ public class Tagger extends AbstractComponent {
 		super.paintContent(target);
 
 		if (target.isFullRepaint() && !pager.isEmpty()) {
-			attributes.put(EventAttribute.HTML.name(), pager.getCurrentPage().toHTML());
+			attributes.put(EventAttribute.PAGE_SET.name(), pager.getCurrentPage().toHTML());
 		}
 		
 		if (!pager.isEmpty() && 
-				(attributes.containsKey(EventAttribute.HTML.name())
+				(attributes.containsKey(EventAttribute.PAGE_SET.name())
 						|| attributes.containsKey(EventAttribute.TAGINSTANCE_CLEAR.name()))) {
 			int i = 0;
 			for (TagInstance t : pager.getCurrentPage().getTagInstances()) {
-				target.addAttribute(EventAttribute.TAGINSTANCE.name()+i, t.toMap());
+				target.addAttribute(EventAttribute.TAGINSTANCE_ADD.name()+i, t.toMap());
 				i++;
 			}
 		}
@@ -95,11 +95,11 @@ public class Tagger extends AbstractComponent {
 
 		// Variables set by the widget are returned in the "variables" map.
 
-		if (variables.containsKey(EventAttribute.TAGINSTANCE.name())) {
+		if (variables.containsKey(EventAttribute.TAGINSTANCE_ADD.name())) {
 			@SuppressWarnings("unchecked")
 			TagInstance tagInstance = 
 				new TagInstance(
-						(Map<String,Object>)variables.get(EventAttribute.TAGINSTANCE.name()));
+						(Map<String,Object>)variables.get(EventAttribute.TAGINSTANCE_ADD.name()));
 			pager.getCurrentPage().addTagInstance(tagInstance);
 			taggerListener.tagInstanceAdded(
 					pager.getCurrentPage().getAbsoluteTagInstance(tagInstance));
@@ -114,19 +114,19 @@ public class Tagger extends AbstractComponent {
 		}
 	}
 	
-	private void setHTML(String html) {
-		attributes.put(EventAttribute.HTML.name(), html);
+	private void setPage(String pageContent) {
+		attributes.put(EventAttribute.PAGE_SET.name(), pageContent);
 		requestRepaint();
 	}
 
 	public void setText(String text) {
 		pager.setText(text);
-		setHTML(pager.getCurrentPage().toHTML());
+		setPage(pager.getCurrentPage().toHTML());
 	}
 	
 	public void setPage(int pageNumber) {
 		Page page = pager.getPage(pageNumber);
-		setHTML(page.toHTML());
+		setPage(page.toHTML());
 	}
 
 	public void setTagInstances(List<TagInstance> availableAnnotations) {

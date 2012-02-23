@@ -27,7 +27,7 @@ import com.google.gwt.event.dom.client.MouseMoveEvent;
 import com.google.gwt.event.dom.client.MouseMoveHandler;
 import com.google.gwt.user.client.Timer;
 
-import de.catma.ui.client.ui.tagger.VTagger;
+import de.catma.ui.client.ui.tagger.editor.TaggerEditor;
 import de.catma.ui.client.ui.tagger.shared.ContentElementID;
 
 
@@ -55,9 +55,9 @@ public class TagMenu implements MouseMoveHandler {
 	private int lastClientY;
 	private MenuTimer curMenuTimer;
 	private TagMenuPopup lastPopup;
-	private VTagger vTagger;
+	private TaggerEditor vTagger;
 	
-	public TagMenu(VTagger vTagger) {
+	public TagMenu(TaggerEditor vTagger) {
 		super();
 		this.vTagger = vTagger;
 	}
