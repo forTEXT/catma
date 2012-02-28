@@ -1,11 +1,11 @@
-package de.catma.core.tag;
+package de.catma.ui.client.ui.tag;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TagDefinition implements Versionable {
+public class CTagDefinition implements CVersionable, DisplayableTagChild {
 	
 	// TODO: hier besser interface einziehen um Links als tagdefs abzubilden.
 	
@@ -14,19 +14,19 @@ public class TagDefinition implements Versionable {
 		;
 	}
 	
-	public final static TagDefinition CATMA_BASE_TAG = 
-			new TagDefinition(
-				"CATMA_BASE_TAG", "CATMA_BASE_TAG", new Version("1"), null);
+	public final static CTagDefinition CATMA_BASE_TAG = 
+			new CTagDefinition(
+				"CATMA_BASE_TAG", "CATMA_BASE_TAG", new CVersion("1"), null);
 	
 	private String id;
 	private String type;
-	private Version version;
-	private Map<String,PropertyDefinition> systemPropertyDefinitions;
-	private Map<String,PropertyDefinition> userDefinedPropertyDefinitions;
+	private CVersion version;
+	private Map<String,CPropertyDefinition> systemPropertyDefinitions;
+	private Map<String,CPropertyDefinition> userDefinedPropertyDefinitions;
 	private String baseID;
 
 
-	public TagDefinition(String id, String type, Version version, String baseID) {
+	public CTagDefinition(String id, String type, CVersion version, String baseID) {
 		super();
 		this.id = id;
 		this.type = type;
@@ -35,11 +35,11 @@ public class TagDefinition implements Versionable {
 		if ((this.baseID != null) && this.baseID.isEmpty()) {
 			this.baseID = null;
 		}
-		systemPropertyDefinitions = new HashMap<String, PropertyDefinition>();
-		userDefinedPropertyDefinitions = new HashMap<String, PropertyDefinition>();
+		systemPropertyDefinitions = new HashMap<String, CPropertyDefinition>();
+		userDefinedPropertyDefinitions = new HashMap<String, CPropertyDefinition>();
 	}
 
-	public Version getVersion() {
+	public CVersion getVersion() {
 		return version;
 	}
 	
@@ -52,11 +52,11 @@ public class TagDefinition implements Versionable {
 				+((baseID==null) ? "]" : (",#"+baseID+"]"));
 	}
 
-	public void addSystemPropertyDefinition(PropertyDefinition propertyDefinition) {
+	public void addSystemPropertyDefinition(CPropertyDefinition propertyDefinition) {
 		systemPropertyDefinitions.put(propertyDefinition.getName(), propertyDefinition);
 	}
 	
-	public void addUserDefinedPropertyDefinition(PropertyDefinition propertyDefinition) {
+	public void addUserDefinedPropertyDefinition(CPropertyDefinition propertyDefinition) {
 		userDefinedPropertyDefinitions.put(propertyDefinition.getName(), propertyDefinition);
 	}	
 	
@@ -64,7 +64,7 @@ public class TagDefinition implements Versionable {
 		return id;
 	}
 
-	public PropertyDefinition getPropertyDefinition(String propertyName) {
+	public CPropertyDefinition getPropertyDefinition(String propertyName) {
 		if (systemPropertyDefinitions.containsKey(propertyName)) {
 			return systemPropertyDefinitions.get(propertyName);
 		}
@@ -73,8 +73,9 @@ public class TagDefinition implements Versionable {
 		}
 	}
 	
-	public Collection<PropertyDefinition> getUserDefinedPropertyDefinitions() {
-		return Collections.unmodifiableCollection(userDefinedPropertyDefinitions.values());
+	public Collection<CPropertyDefinition> getUserDefinedPropertyDefinitions() {
+		return Collections.unmodifiableCollection(
+				userDefinedPropertyDefinitions.values());
 	}
 	
 	public String getBaseID() {
@@ -90,8 +91,12 @@ public class TagDefinition implements Versionable {
 				SystemPropertyName.catma_displaycolor.name()).getFirstValue();
 	}
 
-	public Collection<PropertyDefinition> getSystemPropertyDefinitions() {
+	public Collection<CPropertyDefinition> getSystemPropertyDefinitions() {
 		return Collections.unmodifiableCollection(
 				systemPropertyDefinitions.values());
+	}
+	
+	public String getDisplayString() {
+		return getType();
 	}
 }

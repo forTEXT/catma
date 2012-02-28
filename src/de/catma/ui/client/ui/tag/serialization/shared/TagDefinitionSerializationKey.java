@@ -1,4 +1,4 @@
-package de.catma.ui.client.ui.shared;
+package de.catma.ui.client.ui.tag.serialization.shared;
 
 public enum TagDefinitionSerializationKey {
 	id,

@@ -17,38 +17,51 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */ 
 
-package de.catma.serialization.tei;
-
-import java.util.List;
-
+package de.catma.ui.client.ui.tag;
 
 
 /**
- * A factory that sets and gets values for a {@link CProperty}.
+ *
+ * @see CVersionable
  *
  * @author Marco Petris
  *
  */
-public interface PropertyValueFactory {
-    
-	public static final String CATMA_SYSTEM_PROPERTY_PREFIX = "catma_";
-    
+public class CVersion {
+	
+	private String version;
+	
+	public CVersion( String version ) {
+		this.version = version;
+	}
+	
 	/**
-	 * Getter.
-	 * @param teiElement the element that represents the {@link CProperty}
-	 * @return the value of the {@link CProperty} represented by the given element.
+	 * Constructor.<br>
+	 * Version number is set to 1.
 	 */
-	public String getValue();
+	public CVersion() {
+		version = "1";
+	}
+	
+	public CVersion increment() {
+		return new CVersion(); //FIXME
+	}
+	
 
 	/**
-	 * Setter.
-	 * @param teiElement the element that represents the {@link CProperty}
-	 * @param value the value of the {@link CProperty} represented by the given element
+	 * @return the string representation of this {@link CVersion}
+	 * @see java.lang.Object#toString()
 	 */
-	public void setValue(Object value );
-	
-	public List<String> getValueAsList();
-	
-	public boolean isSingleSelectValue();
-	
+	@Override
+	public String toString() {
+		return version;
+	}
+
+    /**
+     * @param other the version to compare with
+     * @return true if the given version number is greater than the this version number
+     */
+    public boolean isNewer(CVersion other) {
+        return true; //FIXME
+    }
 }

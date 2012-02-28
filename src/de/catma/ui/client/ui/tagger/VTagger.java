@@ -22,18 +22,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.vaadin.terminal.gwt.client.ApplicationConnection;
 import com.vaadin.terminal.gwt.client.Paintable;
 import com.vaadin.terminal.gwt.client.UIDL;
 import com.vaadin.terminal.gwt.client.VConsole;
 import com.vaadin.terminal.gwt.client.ValueMap;
 
+import de.catma.ui.client.ui.tag.serialization.CTagsetDefinitionSerializationHandler;
 import de.catma.ui.client.ui.tagger.editor.TaggerEditor;
 import de.catma.ui.client.ui.tagger.editor.TaggerEditorListener;
 import de.catma.ui.client.ui.tagger.shared.EventAttribute;
 import de.catma.ui.client.ui.tagger.shared.TagInstance;
+import de.catma.ui.client.ui.tagger.tagmanager.TagManagerPanel;
 
 
 /**
@@ -50,6 +53,8 @@ public class VTagger extends Composite implements Paintable {
 	
 	private TaggerEditor taggerEditor;
 	
+	private TagManagerPanel tagManagerPanel;
+	
 	/**
 	 * The constructor should first call super() to initialize the component and
 	 * then handle any initialization relevant to Vaadin.
@@ -60,7 +65,7 @@ public class VTagger extends Composite implements Paintable {
 	}
 	
 	private void initComponents() {
-		FlowPanel mainLayout = new FlowPanel();
+		SplitLayoutPanel mainLayout = new SplitLayoutPanel();
 		taggerEditor = new TaggerEditor(new TaggerEditorListener() {
 			public void tagChanged(TaggerEditorEventType type, Object... args) {
 				switch(type) {
@@ -89,12 +94,12 @@ public class VTagger extends Composite implements Paintable {
 				
 			}
 		});
+		mainLayout.addWest(taggerEditor, 500);
 		
-		mainLayout.add(taggerEditor);
-		
-		
-		
-		
+		tagManagerPanel = new TagManagerPanel();
+		tagManagerPanel.setTitle("Tag Manager");
+		mainLayout.add(new ScrollPanel(tagManagerPanel));
+
 		initWidget(mainLayout);
 	}
 	
@@ -143,6 +148,14 @@ public class VTagger extends Composite implements Paintable {
 			taggerEditor.addTagInstance(tagInstance);
 			i++;
 		}
+		
+		if (uidl.hasAttribute(EventAttribute.TAGSETDEFINITION_ATTACH.name())) {
+			tagManagerPanel.attachTagsetDefinition(
+				new CTagsetDefinitionSerializationHandler(
+					uidl.getStringAttribute(
+						EventAttribute.TAGSETDEFINITION_ATTACH.name())).
+							toCTagsetDefinition());
+		}
 	}
 	
 	public void logToServer(String logMsg) {
@@ -150,7 +163,8 @@ public class VTagger extends Composite implements Paintable {
 	}
 	
 	
-	private void sendMessage(EventAttribute taggerEventAttribute, Map<String,Object> message) {
+	private void sendMessage(
+			EventAttribute taggerEventAttribute, Map<String,Object> message) {
 		serverConnection.updateVariable(
 				clientID, taggerEventAttribute.name(), message, true);
 	}

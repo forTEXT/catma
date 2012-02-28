@@ -5,13 +5,13 @@ import java.util.Map;
 
 public class TagInstance {
 
-	private String ID;
+	private String id;
 	private TagDefinition tagDefinition;
-	private Map<String,Property> systemProperties; // TODO: store user as system properties
+	private Map<String,Property> systemProperties;
 	private Map<String,Property> userDefinedProperties;
 	
-	public TagInstance(String ID, TagDefinition tagDefinition) {
-		this.ID = ID;
+	public TagInstance(String id, TagDefinition tagDefinition) {
+		this.id = id;
 		this.tagDefinition = tagDefinition;
 		systemProperties = new HashMap<String, Property>();
 		userDefinedProperties = new HashMap<String, Property>();
@@ -31,6 +31,6 @@ public class TagInstance {
 	
 	@Override
 	public String toString() {
-		return "TAGINSTANCE[#"+ID+","+tagDefinition+"]";
+		return "TAGINSTANCE[#"+id+","+tagDefinition+"]";
 	}
 }

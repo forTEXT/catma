@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.json.JSONException;
+
 import com.vaadin.Application;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -146,7 +148,8 @@ public class CleaApplication extends Application {
 		taggerManagerView.openSourceDocument(sourceDocument);
 	}
 	
-	public void attachTagsetDefinition(TagsetDefinition tagsetDefinition) {
+	public void attachTagsetDefinition(TagsetDefinition tagsetDefinition) 
+			throws JSONException {
 		if (taggerManagerView.getApplication() == null) {
 			menu.executeEntry(taggerManagerView);
 		}

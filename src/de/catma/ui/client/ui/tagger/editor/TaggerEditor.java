@@ -42,8 +42,6 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 		super(Document.get().createDivElement());
 		this.taggerEditorListener = taggerEditorListener;
 		
-//		getElement().setId("tagger-editor");
-
 		setStylePrimaryName(TAGGER_STYLE_CLASS);
 		
 		// Tell GWT we are interested in consuming click events

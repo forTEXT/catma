@@ -1,4 +1,4 @@
-package de.catma.core.util;
+package de.catma.ui.client.ui.tag;
 
 public class ColorConverter {
 	

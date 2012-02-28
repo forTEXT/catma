@@ -1,5 +1,7 @@
 package de.catma.ui.tagmanager;
 
+import org.json.JSONException;
+
 import com.vaadin.Application;
 import com.vaadin.data.Property;
 import com.vaadin.data.util.HierarchicalContainer;
@@ -21,7 +23,6 @@ import de.catma.core.tag.PropertyDefinition;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagsetDefinition;
-import de.catma.core.util.ColorConverter;
 
 public class TagLibraryView extends HorizontalLayout {
 	
@@ -58,8 +59,13 @@ public class TagLibraryView extends HorizontalLayout {
 			public void buttonClick(ClickEvent event) {
 				Object value = tagTree.getValue();
 				if (value instanceof TagsetDefinition) {
-					((CleaApplication)getApplication()).attachTagsetDefinition(
-							(TagsetDefinition)value);
+					try {
+						((CleaApplication)getApplication()).attachTagsetDefinition(
+								(TagsetDefinition)value);
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 				
 			}
@@ -142,12 +148,12 @@ public class TagLibraryView extends HorizontalLayout {
 					
 					if (colorProperty != null) {
 						Object colorValue = colorProperty.getValue();
-						if (colorValue != null) {
-							ColorConverter colorConverter =
-									new ColorConverter(Integer.valueOf(colorValue.toString()));
-							
-							return "catma-tag-color-" + colorConverter.toHex();
-						}
+//						if (colorValue != null) {
+//							ColorConverter colorConverter =
+//									new ColorConverter(Integer.valueOf(colorValue.toString()));
+//							
+//							return "catma-tag-color-" + colorConverter.toHex();
+//						}
 					}
 					return null;
 				}

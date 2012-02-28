@@ -6,7 +6,7 @@ import org.json.JSONObject;
 
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagsetDefinition;
-import de.catma.ui.client.ui.shared.TagsetDefinitionSerializationKey;
+import de.catma.ui.client.ui.tag.serialization.shared.TagsetDefinitionSerializationKey;
 
 public class TagsetDefinitionSerializationHandler {
 
@@ -21,6 +21,10 @@ public class TagsetDefinitionSerializationHandler {
 	public JSONObject toJSONObject() throws JSONException {
 		
 		JSONObject tagsetDefinitionJS = new JSONObject();
+		
+		tagsetDefinitionJS.put(
+				TagsetDefinitionSerializationKey.id.name(), 
+				tagsetDefinition.getID());
 		
 		tagsetDefinitionJS.put(
 			TagsetDefinitionSerializationKey.name.name(), 

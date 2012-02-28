@@ -1,13 +1,13 @@
-package de.catma.core.tag;
+package de.catma.ui.client.ui.tag;
 
 import java.util.Collections;
 import java.util.List;
 
-public class PropertyValueList {
+public class CPropertyValueList {
 
 	private List<String> values;
 
-	public PropertyValueList(List<String> values) {
+	public CPropertyValueList(List<String> values) {
 		super();
 		this.values = values;
 	}

@@ -1,0 +1,165 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<TEI xml:lang="en" xmlns="http://www.tei-c.org/ns/1.0">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title>A Rose for Emily</title>
+                <author>William Faulkner</author>
+            </titleStmt>
+            <publicationStmt>
+                <publisher>mp</publisher>
+            </publicationStmt>
+            <sourceDesc>
+                <p>Standoff Markup</p>
+                <ab>
+                    <fs xml:id="CATMA_TECH_DESC">
+                        <f name="version">
+                            <string>3</string>
+                        </f>
+                        <f name="filetype">
+                            <string>TEXT</string>
+                        </f>
+                        <f name="charset">
+                            <string>UTF-8</string>
+                        </f>
+                        <f name="fileOSType">
+                            <string>DOS</string>
+                        </f>
+                        <f name="sourceTextType">
+                            <string>PROSE</string>
+                        </f>
+                        <f name="checksum">
+                            <string>3968944867</string>
+                        </f>
+                    </fs>
+                </ab>
+            </sourceDesc>
+        </fileDesc>
+        <profileDesc>
+            <langUsage>
+                <language ident="en">English</language>
+            </langUsage>
+        </profileDesc>
+        <encodingDesc>
+            <fsdDecl xml:id="CATMA_STANDARD_TAGSET" n="Standard Tagset 1">
+                <fsDecl xml:id="CATMA_BASE_TAG" n="1" type="CATMA_BASE_TAG">
+                    <fsDescr>CATMA Base Tag</fsDescr>
+                    <fDecl name="catma_displaycolor" optional="false">
+                        <vRange>
+                            <numeric value="-16777216" max="-1"/>
+                        </vRange>
+                    </fDecl>
+                </fsDecl>
+                <fsDecl xml:id="CATMA_2fb2dca9-14e8-4127-8993-144f9dfc56fb" n="12-02-06T19:54:05+0100" type="CATMA_2fb2dca9-14e8-4127-8993-144f9dfc56fb" baseTypes="CATMA_BASE_TAG">
+                    <fsDescr>PTag in StdTS</fsDescr>
+                    <fDecl name="catma_displaycolor">
+                        <vRange>
+                            <numeric value="-13369498"/>
+                        </vRange>
+                    </fDecl>
+                </fsDecl>
+                <fsDecl xml:id="CATMA_ac559bf8-f7aa-4c8d-aee3-da8144d34f20" n="12-02-06T19:54:05+0100" type="CATMA_ac559bf8-f7aa-4c8d-aee3-da8144d34f20" baseTypes="CATMA_2fb2dca9-14e8-4127-8993-144f9dfc56fb">
+                    <fsDescr>ChildTag in StdTS</fsDescr>
+                    <fDecl name="catma_displaycolor">
+                        <vRange>
+                            <numeric value="-16738048"/>
+                        </vRange>
+                    </fDecl>
+                </fsDecl>
+                <fsDecl xml:id="CATMA_629eb30d-f9d1-4b1a-b718-273c8d4abc8e" n="12-02-06T19:54:05+0100" type="CATMA_629eb30d-f9d1-4b1a-b718-273c8d4abc8e" baseTypes="CATMA_BASE_TAG">
+                    <fsDescr>Tag in StdTS</fsDescr>
+                    <fDecl name="catma_displaycolor">
+                        <vRange>
+                            <numeric value="-6684673"/>
+                        </vRange>
+                    </fDecl>
+                    <fDecl name="myProp" optional="false">
+                        <vRange>
+                            <string>myPropValue</string>
+                        </vRange>
+                    </fDecl>
+                </fsDecl>
+            </fsdDecl>
+            <fsdDecl xml:id="CATMA_c5bd46a1-a884-4e86-985c-713baf0b9476" n="TestTagset 12-02-06T19:54:05+0100">
+                <fsDecl xml:id="CATMA_9e7446f5-9ae1-4cef-90af-c444b0512c99" n="12-02-06T19:54:05+0100" type="CATMA_9e7446f5-9ae1-4cef-90af-c444b0512c99" baseTypes="CATMA_BASE_TAG">
+                    <fsDescr>PTag in TestTS</fsDescr>
+                    <fDecl name="catma_displaycolor">
+                        <vRange>
+                            <numeric value="-52225"/>
+                        </vRange>
+                    </fDecl>
+                </fsDecl>
+                <fsDecl xml:id="CATMA_15ebb1b2-276a-48ad-a67b-4b120c1b79be" n="12-02-06T19:54:05+0100" type="CATMA_15ebb1b2-276a-48ad-a67b-4b120c1b79be" baseTypes="CATMA_9e7446f5-9ae1-4cef-90af-c444b0512c99">
+                    <fsDescr>Child Tag in TestTS</fsDescr>
+                    <fDecl name="catma_displaycolor">
+                        <vRange>
+                            <numeric value="-6750055"/>
+                        </vRange>
+                    </fDecl>
+                </fsDecl>
+                <fsDecl xml:id="CATMA_eaaf37b0-b622-420a-b740-5813c7638d7b" n="12-02-06T19:54:05+0100" type="CATMA_eaaf37b0-b622-420a-b740-5813c7638d7b" baseTypes="CATMA_BASE_TAG">
+                    <fsDescr>Tag in TestTS</fsDescr>
+                    <fDecl name="catma_displaycolor">
+                        <vRange>
+                            <numeric value="-65536"/>
+                        </vRange>
+                    </fDecl>
+                    <fDecl name="myProp2" optional="false">
+                        <vRange>
+                            <string>myPropVal2</string>
+                        </vRange>
+                    </fDecl>
+                </fsDecl>
+            </fsdDecl>
+        </encodingDesc>
+    </teiHeader>
+    <text>
+        <fs xml:id="CATMA_bb17f2af-c73b-4c69-befd-23b7070c0d2a" type="CATMA_15ebb1b2-276a-48ad-a67b-4b120c1b79be">
+            <f name="catma_displaycolor">
+                <numeric value="-6750055"/>
+            </f>
+        </fs>
+        <fs xml:id="CATMA_6aa2fd2b-503f-4dab-8117-009960aabeea" type="CATMA_ac559bf8-f7aa-4c8d-aee3-da8144d34f20">
+            <f name="catma_displaycolor">
+                <numeric value="-16738048"/>
+            </f>
+        </fs>
+        <fs xml:id="CATMA_f415f09a-f831-4c28-9b27-89fd25c702b1" type="CATMA_eaaf37b0-b622-420a-b740-5813c7638d7b">
+            <f name="catma_displaycolor">
+                <numeric value="-65536"/>
+            </f>
+            <f name="myProp2">
+                <string>myPropVal2</string>
+            </f>
+        </fs>
+        <fs xml:id="CATMA_9fa01c3d-3352-4957-a379-880c9522cffb" type="CATMA_629eb30d-f9d1-4b1a-b718-273c8d4abc8e">
+            <f name="catma_displaycolor">
+                <numeric value="-6684673"/>
+            </f>
+            <f name="myProp">
+                <string>myPropValue</string>
+            </f>
+        </fs> 
+        <body>
+            <ab type="catma">
+                <ptr target="catma:///rose_for_emily.txt#char=0,36" type="inclusion"/>
+                <seg ana="#CATMA_9fa01c3d-3352-4957-a379-880c9522cffb">
+                    <ptr target="catma:///rose_for_emily.txt#char=36,44" type="inclusion"/>
+                </seg>
+                <ptr target="catma:///rose_for_emily.txt#char=44,61" type="inclusion"/>
+                <seg ana="#CATMA_f415f09a-f831-4c28-9b27-89fd25c702b1">
+                    <ptr target="catma:///rose_for_emily.txt#char=61,65" type="inclusion"/>
+                </seg>
+                <ptr target="catma:///rose_for_emily.txt#char=65,181" type="inclusion"/>
+                <seg ana="#CATMA_6aa2fd2b-503f-4dab-8117-009960aabeea">
+                    <ptr target="catma:///rose_for_emily.txt#char=181,190" type="inclusion"/>
+                </seg>
+                <ptr target="catma:///rose_for_emily.txt#char=190,216" type="inclusion"/>
+                <seg ana="#CATMA_bb17f2af-c73b-4c69-befd-23b7070c0d2a">
+                    <ptr target="catma:///rose_for_emily.txt#char=216,221" type="inclusion"/>
+                </seg>
+                <ptr target="catma:///rose_for_emily.txt#char=221,20335" type="inclusion"/>
+            </ab>
+        </body>
+    </text>
+</TEI>

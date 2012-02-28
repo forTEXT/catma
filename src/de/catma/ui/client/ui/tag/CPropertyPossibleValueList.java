@@ -1,15 +1,15 @@
-package de.catma.core.tag;
+package de.catma.ui.client.ui.tag;
 
 import java.util.List;
 
-public class PropertyPossibleValueList {
+public class CPropertyPossibleValueList {
 
 	private boolean singleSelect;
-	private PropertyValueList propertyValueList;
+	private CPropertyValueList propertyValueList;
 	
-	public PropertyPossibleValueList(List<String> values, boolean singleSelect) {
+	public CPropertyPossibleValueList(List<String> values, boolean singleSelect) {
 		super();
-		this.propertyValueList = new PropertyValueList(values);
+		this.propertyValueList = new CPropertyValueList(values);
 		this.singleSelect = singleSelect;
 	}
 	
@@ -29,7 +29,7 @@ public class PropertyPossibleValueList {
 		return singleSelect;
 	}
 	
-	public PropertyValueList getPropertyValueList() {
+	public CPropertyValueList getPropertyValueList() {
 		return propertyValueList;
 	}
 	

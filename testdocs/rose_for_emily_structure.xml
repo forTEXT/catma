@@ -1,0 +1,307 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<TEI xml:lang="en" xmlns="http://www.tei-c.org/ns/1.0">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title>A Rose for Emily</title>
+                <author>William Faulkner</author>
+            </titleStmt>
+            <publicationStmt>
+                <publisher>empty</publisher>
+            </publicationStmt>
+            <sourceDesc>
+                <p>empty</p>
+                <ab>
+                    <fs xml:id="TARGET_INFO">
+                        <f name="version">
+                            <string>2</string>
+                        </f>
+                        <f name="filetype">
+                            <string>TEXT</string>
+                        </f>
+                        <f name="charset">
+                            <string>UTF-8</string>
+                        </f>
+                        <f name="fileOSType">
+                            <string>DOS</string>
+                        </f>
+                        <f name="sourceTextType">
+                            <string>PROSE</string>
+                        </f>
+                        <f name="checksum">
+                            <string>3968944867</string>
+                        </f>
+                    </fs>
+                </ab>
+            </sourceDesc>
+        </fileDesc>
+        <profileDesc>
+            <langUsage>
+                <language ident="en">English</language>
+            </langUsage>
+        </profileDesc>
+    </teiHeader>
+    <text>
+        <body>
+            <p n="1">
+                <ptr target="rose_for_emily.txt#range( /.0, /.16)" type="inclusion"/>
+            </p>
+            <p n="2">
+                <ptr target="rose_for_emily.txt#range( /.16, /.20)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.20, /.320)" type="inclusion"/>
+            </p>
+            <p n="3">
+                <ptr target="rose_for_emily.txt#range( /.320, /.324)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.324, /.1025)" type="inclusion"/>
+            </p>
+            <p n="4">
+                <ptr target="rose_for_emily.txt#range( /.1025, /.1029)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.1029, /.1736)" type="inclusion"/>
+            </p>
+            <p n="5">
+                <ptr target="rose_for_emily.txt#range( /.1736, /.1740)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.1740, /.2356)" type="inclusion"/>
+            </p>
+            <p n="6">
+                <ptr target="rose_for_emily.txt#range( /.2356, /.2360)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.2360, /.3132)" type="inclusion"/>
+            </p>
+            <p n="7">
+                <ptr target="rose_for_emily.txt#range( /.3132, /.3136)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.3136, /.3729)" type="inclusion"/>
+            </p>
+            <p n="8">
+                <ptr target="rose_for_emily.txt#range( /.3729, /.3733)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.3733, /.3934)" type="inclusion"/>
+            </p>
+            <p n="9">
+                <ptr target="rose_for_emily.txt#range( /.3934, /.3938)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.3938, /.4113)" type="inclusion"/>
+            </p>
+            <p n="10">
+                <ptr target="rose_for_emily.txt#range( /.4113, /.4117)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.4117, /.4229)" type="inclusion"/>
+            </p>
+            <p n="11">
+                <ptr target="rose_for_emily.txt#range( /.4229, /.4233)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.4233, /.4356)" type="inclusion"/>
+            </p>
+            <p n="12">
+                <ptr target="rose_for_emily.txt#range( /.4356, /.4360)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.4360, /.4437)" type="inclusion"/>
+            </p>
+            <p n="13">
+                <ptr target="rose_for_emily.txt#range( /.4437, /.4441)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.4441, /.4494)" type="inclusion"/>
+            </p>
+            <p n="14">
+                <ptr target="rose_for_emily.txt#range( /.4494, /.4498)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.4498, /.4516)" type="inclusion"/>
+            </p>
+            <p n="15">
+                <ptr target="rose_for_emily.txt#range( /.4516, /.4520)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.4520, /.4680)" type="inclusion"/>
+            </p>
+            <p n="16">
+                <ptr target="rose_for_emily.txt#range( /.4680, /.4689)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.4689, /.4691)" type="inclusion"/>
+            </p>
+            <p n="17">
+                <ptr target="rose_for_emily.txt#range( /.4691, /.4695)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.4695, /.5246)" type="inclusion"/>
+            </p>
+            <p n="18">
+                <ptr target="rose_for_emily.txt#range( /.5246, /.5250)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.5250, /.5465)" type="inclusion"/>
+            </p>
+            <p n="19">
+                <ptr target="rose_for_emily.txt#range( /.5465, /.5469)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.5469, /.5547)" type="inclusion"/>
+            </p>
+            <p n="20">
+                <ptr target="rose_for_emily.txt#range( /.5547, /.5551)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.5551, /.5607)" type="inclusion"/>
+            </p>
+            <p n="21">
+                <ptr target="rose_for_emily.txt#range( /.5607, /.5611)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.5611, /.5680)" type="inclusion"/>
+            </p>
+            <p n="22">
+                <ptr target="rose_for_emily.txt#range( /.5680, /.5684)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.5684, /.5845)" type="inclusion"/>
+            </p>
+            <p n="23">
+                <ptr target="rose_for_emily.txt#range( /.5845, /.5849)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.5849, /.6187)" type="inclusion"/>
+            </p>
+            <p n="24">
+                <ptr target="rose_for_emily.txt#range( /.6187, /.6191)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.6191, /.6327)" type="inclusion"/>
+            </p>
+            <p n="25">
+                <ptr target="rose_for_emily.txt#range( /.6327, /.6331)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.6331, /.6419)" type="inclusion"/>
+            </p>
+            <p n="26">
+                <ptr target="rose_for_emily.txt#range( /.6419, /.6423)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.6423, /.7096)" type="inclusion"/>
+            </p>
+            <p n="27">
+                <ptr target="rose_for_emily.txt#range( /.7096, /.7100)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.7100, /.7880)" type="inclusion"/>
+            </p>
+            <p n="28">
+                <ptr target="rose_for_emily.txt#range( /.7880, /.7884)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.7884, /.8172)" type="inclusion"/>
+            </p>
+            <p n="29">
+                <ptr target="rose_for_emily.txt#range( /.8172, /.8176)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.8176, /.8667)" type="inclusion"/>
+            </p>
+            <p n="30">
+                <ptr target="rose_for_emily.txt#range( /.8667, /.8671)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.8671, /.8903)" type="inclusion"/>
+            </p>
+            <p n="31">
+                <ptr target="rose_for_emily.txt#range( /.8903, /.8912)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.8912, /.8915)" type="inclusion"/>
+            </p>
+            <p n="32">
+                <ptr target="rose_for_emily.txt#range( /.8915, /.8919)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.8919, /.9118)" type="inclusion"/>
+            </p>
+            <p n="33">
+                <ptr target="rose_for_emily.txt#range( /.9118, /.9122)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.9122, /.9871)" type="inclusion"/>
+            </p>
+            <p n="34">
+                <ptr target="rose_for_emily.txt#range( /.9871, /.9875)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.9875, /.10506)" type="inclusion"/>
+            </p>
+            <p n="35">
+                <ptr target="rose_for_emily.txt#range( /.10506, /.10510)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.10510, /.10873)" type="inclusion"/>
+            </p>
+            <p n="36">
+                <ptr target="rose_for_emily.txt#range( /.10873, /.10877)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.10877, /.11288)" type="inclusion"/>
+            </p>
+            <p n="37">
+                <ptr target="rose_for_emily.txt#range( /.11288, /.11292)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.11292, /.11619)" type="inclusion"/>
+            </p>
+            <p n="38">
+                <ptr target="rose_for_emily.txt#range( /.11619, /.11623)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.11623, /.11682)" type="inclusion"/>
+            </p>
+            <p n="39">
+                <ptr target="rose_for_emily.txt#range( /.11682, /.11686)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.11686, /.11737)" type="inclusion"/>
+            </p>
+            <p n="40">
+                <ptr target="rose_for_emily.txt#range( /.11737, /.11741)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.11741, /.11833)" type="inclusion"/>
+            </p>
+            <p n="41">
+                <ptr target="rose_for_emily.txt#range( /.11833, /.11837)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.11837, /.11886)" type="inclusion"/>
+            </p>
+            <p n="42">
+                <ptr target="rose_for_emily.txt#range( /.11886, /.11890)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.11890, /.11940)" type="inclusion"/>
+            </p>
+            <p n="43">
+                <ptr target="rose_for_emily.txt#range( /.11940, /.11944)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.11944, /.11961)" type="inclusion"/>
+            </p>
+            <p n="44">
+                <ptr target="rose_for_emily.txt#range( /.11961, /.11965)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.11965, /.12190)" type="inclusion"/>
+            </p>
+            <p n="45">
+                <ptr target="rose_for_emily.txt#range( /.12190, /.12194)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.12194, /.12532)" type="inclusion"/>
+            </p>
+            <p n="46">
+                <ptr target="rose_for_emily.txt#range( /.12532, /.12541)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.12541, /.12543)" type="inclusion"/>
+            </p>
+            <p n="47">
+                <ptr target="rose_for_emily.txt#range( /.12543, /.12547)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.12547, /.13160)" type="inclusion"/>
+            </p>
+            <p n="48">
+                <ptr target="rose_for_emily.txt#range( /.13160, /.13164)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.13164, /.13644)" type="inclusion"/>
+            </p>
+            <p n="49">
+                <ptr target="rose_for_emily.txt#range( /.13644, /.13648)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.13648, /.14197)" type="inclusion"/>
+            </p>
+            <p n="50">
+                <ptr target="rose_for_emily.txt#range( /.14197, /.14201)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.14201, /.14803)" type="inclusion"/>
+            </p>
+            <p n="51">
+                <ptr target="rose_for_emily.txt#range( /.14803, /.14807)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.14807, /.15324)" type="inclusion"/>
+            </p>
+            <p n="52">
+                <ptr target="rose_for_emily.txt#range( /.15324, /.15328)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.15328, /.15647)" type="inclusion"/>
+            </p>
+            <p n="53">
+                <ptr target="rose_for_emily.txt#range( /.15647, /.15651)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.15651, /.16148)" type="inclusion"/>
+            </p>
+            <p n="54">
+                <ptr target="rose_for_emily.txt#range( /.16148, /.16152)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.16152, /.16639)" type="inclusion"/>
+            </p>
+            <p n="55">
+                <ptr target="rose_for_emily.txt#range( /.16639, /.16643)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.16643, /.17184)" type="inclusion"/>
+            </p>
+            <p n="56">
+                <ptr target="rose_for_emily.txt#range( /.17184, /.17188)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.17188, /.17519)" type="inclusion"/>
+            </p>
+            <p n="57">
+                <ptr target="rose_for_emily.txt#range( /.17519, /.17523)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.17523, /.17683)" type="inclusion"/>
+            </p>
+            <p n="58">
+                <ptr target="rose_for_emily.txt#range( /.17683, /.17692)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.17692, /.17693)" type="inclusion"/>
+            </p>
+            <p n="59">
+                <ptr target="rose_for_emily.txt#range( /.17693, /.17697)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.17697, /.17938)" type="inclusion"/>
+            </p>
+            <p n="60">
+                <ptr target="rose_for_emily.txt#range( /.17938, /.17942)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.17942, /.18684)" type="inclusion"/>
+            </p>
+            <p n="61">
+                <ptr target="rose_for_emily.txt#range( /.18684, /.18688)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.18688, /.18907)" type="inclusion"/>
+            </p>
+            <p n="62">
+                <ptr target="rose_for_emily.txt#range( /.18907, /.18911)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.18911, /.19587)" type="inclusion"/>
+            </p>
+            <p n="63">
+                <ptr target="rose_for_emily.txt#range( /.19587, /.19591)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.19591, /.19622)" type="inclusion"/>
+            </p>
+            <p n="64">
+                <ptr target="rose_for_emily.txt#range( /.19622, /.19626)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.19626, /.20101)" type="inclusion"/>
+            </p>
+            <p n="65">
+                <ptr target="rose_for_emily.txt#range( /.20101, /.20105)" type="inclusion"/>
+                <ptr target="rose_for_emily.txt#range( /.20105, /.20335)" type="inclusion"/>
+            </p>
+        </body>
+    </text>
+</TEI>

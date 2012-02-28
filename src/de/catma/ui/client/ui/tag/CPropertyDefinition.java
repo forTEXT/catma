@@ -1,13 +1,13 @@
-package de.catma.core.tag;
+package de.catma.ui.client.ui.tag;
 
 
-public class PropertyDefinition {
+public class CPropertyDefinition implements DisplayableTagChild {
 
 	private String name;
-	private PropertyPossibleValueList possibleValueList;
+	private CPropertyPossibleValueList possibleValueList;
 	
-	public PropertyDefinition(String name,
-			PropertyPossibleValueList possibleValueList) {
+	public CPropertyDefinition(String name,
+			CPropertyPossibleValueList possibleValueList) {
 		super();
 		this.name = name;
 		this.possibleValueList = possibleValueList;
@@ -28,8 +28,12 @@ public class PropertyDefinition {
 		return possibleValueList.getFirstValue();
 	}
 	
-	public PropertyPossibleValueList getPossibleValueList() {
+	public CPropertyPossibleValueList getPossibleValueList() {
 		return possibleValueList;
+	}
+	
+	public String getDisplayString() {
+		return getName();
 	}
 
 }

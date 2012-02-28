@@ -2,13 +2,12 @@ package de.catma.ui.tagger;
 
 import java.io.IOException;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
+import org.json.JSONException;
+
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
 import com.vaadin.terminal.gwt.server.WebBrowser;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
+import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.tag.TagDefinition;
@@ -19,12 +18,11 @@ import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
 import de.catma.ui.tagger.pager.PagerComponent.PageChangeListener;
 
-public class TaggerView extends HorizontalLayout {
+public class TaggerView extends VerticalLayout {
 	
 	private SourceDocument sourceDocument;
 	private Tagger tagger;
 	private Pager pager;
-	private Tree tagsetsInUseTree;
 
 	public TaggerView(SourceDocument sourceDocument) {
 		this.sourceDocument = sourceDocument;
@@ -33,8 +31,6 @@ public class TaggerView extends HorizontalLayout {
 
 	private void initComponents() {
 		setSpacing(true);
-		
-		Panel taggerPanel = new Panel();
 		
 		pager = new Pager(80, 30);
 		
@@ -45,7 +41,7 @@ public class TaggerView extends HorizontalLayout {
 		});
 		
 		tagger.setSizeFull();
-		taggerPanel.addComponent(tagger);
+		addComponent(tagger);
 
 		PagerComponent pagerComponent = new PagerComponent(pager, new PageChangeListener() {
 			public void pageChanged(int number) {
@@ -53,19 +49,8 @@ public class TaggerView extends HorizontalLayout {
 			}
 		});
 
-		taggerPanel.addComponent(pagerComponent);
+		addComponent(pagerComponent);
 		
-		addComponent(taggerPanel);
-		
-		tagsetsInUseTree = new Tree("Tagsets in use");
-		tagsetsInUseTree.addListener(new ValueChangeListener() {
-			
-			public void valueChange(ValueChangeEvent event) {
-//				tagger.
-				
-			}
-		});
-		addComponent(tagsetsInUseTree);
 	}
 
 	public SourceDocument getSourceDocument() {
@@ -90,26 +75,8 @@ public class TaggerView extends HorizontalLayout {
 	}
 	
 	
-	public void attachTagsetDefinition(TagsetDefinition tagsetDefinition) {
-		tagsetsInUseTree.addItem(tagsetDefinition.getName());
-		for (TagDefinition tagDefinition : tagsetDefinition) {
-			tagsetsInUseTree.addItem(tagDefinition.getType());
-		}
-		for (TagDefinition tagDefinition : tagsetDefinition) {
-			String baseID = tagDefinition.getBaseID();
-			TagDefinition parent = tagsetDefinition.getTagDefinition(baseID);
-			if ((parent==null)||(parent.getID().equals(TagDefinition.CATMA_BASE_TAG.getID()))) {
-				tagsetsInUseTree.setParent(tagDefinition, tagsetDefinition);
-			}
-			else {
-				tagsetsInUseTree.setParent(tagDefinition, parent);
-			}
-		}
-		
-		for (TagDefinition tagDefinition : tagsetDefinition) {
-			if (!tagsetsInUseTree.hasChildren(tagDefinition)) {
-				tagsetsInUseTree.setChildrenAllowed(tagDefinition, false);
-			}
-		}	
+	public void attachTagsetDefinition(TagsetDefinition tagsetDefinition) 
+			throws JSONException {
+		tagger.attachTagsetDefinition(tagsetDefinition);
 	}
 }

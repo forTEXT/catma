@@ -8,6 +8,10 @@
 	white-space:nowrap;
 }
 
+.tagger {
+	height: 400px;
+}
+
 .v-caption-repo-tree .v-captiontext {
 	font-weight:bold;
 }
@@ -20,8 +24,8 @@
 	padding-top:7px;	
 }
 
+/*
 .tagger_menu {
- /*   background-color : #ffc; */
  	background-color: #FFFFFF;
     border: 1px solid #000000;
     color:  #222222;
@@ -53,6 +57,8 @@
 {
     background-color            :   #F5F5F5;
 }
+
+*/
 
 .v-panel-caption-editor-panel {
 	text-align: center;

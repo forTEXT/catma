@@ -2,6 +2,8 @@ package de.catma.ui.tagger;
 
 import java.util.Iterator;
 
+import org.json.JSONException;
+
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
@@ -93,7 +95,8 @@ public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 
 	}
 
-	public void attachTagsetDefinition(TagsetDefinition tagsetDefinition) {
+	public void attachTagsetDefinition(TagsetDefinition tagsetDefinition) 
+			throws JSONException {
 		((TaggerView)tabSheet.getSelectedTab()).attachTagsetDefinition(tagsetDefinition);
 	}
 

@@ -17,38 +17,21 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */ 
 
-package de.catma.serialization.tei;
-
-import java.util.List;
-
-
+package de.catma.ui.client.ui.tag;
 
 /**
- * A factory that sets and gets values for a {@link CProperty}.
+ * A thing that has a {@link CVersion version}.
+ * <br>
+ * The {@link CVersion} can mark its Versionable as deleted!
+ *
+ * @see CVersion
  *
  * @author Marco Petris
- *
+ * 
  */
-public interface PropertyValueFactory {
-    
-	public static final String CATMA_SYSTEM_PROPERTY_PREFIX = "catma_";
-    
+public interface CVersionable {
 	/**
-	 * Getter.
-	 * @param teiElement the element that represents the {@link CProperty}
-	 * @return the value of the {@link CProperty} represented by the given element.
+	 * @return the version of the implementer
 	 */
-	public String getValue();
-
-	/**
-	 * Setter.
-	 * @param teiElement the element that represents the {@link CProperty}
-	 * @param value the value of the {@link CProperty} represented by the given element
-	 */
-	public void setValue(Object value );
-	
-	public List<String> getValueAsList();
-	
-	public boolean isSingleSelectValue();
-	
+	public CVersion getVersion();
 }
