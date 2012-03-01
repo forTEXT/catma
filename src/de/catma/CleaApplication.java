@@ -5,8 +5,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.json.JSONException;
-
 import com.vaadin.Application;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -17,7 +15,6 @@ import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.tag.TagLibrary;
-import de.catma.core.tag.TagsetDefinition;
 import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.menu.Menu;
 import de.catma.ui.menu.MenuFactory;
@@ -147,15 +144,7 @@ public class CleaApplication extends Application {
 		}
 		taggerManagerView.openSourceDocument(sourceDocument);
 	}
-	
-	public void attachTagsetDefinition(TagsetDefinition tagsetDefinition) 
-			throws JSONException {
-		if (taggerManagerView.getApplication() == null) {
-			menu.executeEntry(taggerManagerView);
-		}
-		taggerManagerView.attachTagsetDefinition(tagsetDefinition);
-	}
-	
+
 	public String getTempDirectory() {
 		return tempDirectory;
 	}

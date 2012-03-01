@@ -45,7 +45,7 @@ public class TagManagerView extends VerticalLayout implements CloseHandler {
 			tabSheet.setSelectedTab(tagLibraryView);
 		}
 		else {
-			tagLibraryView = new TagLibraryView(tagLibrary, getApplication());
+			tagLibraryView = new TagLibraryView(tagLibrary);
 			Tab tab = tabSheet.addTab(tagLibraryView, tagLibrary.getName());
 			tab.setClosable(true);
 			tabSheet.setSelectedTab(tab.getComponent());

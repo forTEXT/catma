@@ -22,17 +22,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.json.JSONException;
-
 import com.vaadin.terminal.PaintException;
 import com.vaadin.terminal.PaintTarget;
 import com.vaadin.ui.AbstractComponent;
 
-import de.catma.core.tag.TagsetDefinition;
 import de.catma.ui.client.ui.tagger.VTagger;
 import de.catma.ui.client.ui.tagger.shared.EventAttribute;
 import de.catma.ui.client.ui.tagger.shared.TagInstance;
-import de.catma.ui.serialization.TagsetDefinitionSerializationHandler;
 import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
 
@@ -149,18 +145,6 @@ public class Tagger extends AbstractComponent {
 				page.addAbsoluteTagInstance(ti);
 			}
 		}
-		requestRepaint();
-	}
-
-	public void attachTagsetDefinition(TagsetDefinition tagsetDefinition) 
-			throws JSONException {
-		String tagDefinitionJSString = 
-				new TagsetDefinitionSerializationHandler(
-						tagsetDefinition).toJSONObject().toString(4);
-		System.out.println(tagDefinitionJSString);
-		attributes.put(
-				EventAttribute.TAGSETDEFINITION_ATTACH.name(), 
-				tagDefinitionJSString);
 		requestRepaint();
 	}
 }

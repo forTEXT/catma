@@ -76,7 +76,7 @@ public class TeiUserMarkupCollectionDeserializer {
 		
 		TeiElement tagInstanceElement = teiDocument.getElementByID(tagInstanceID);
 		
-		TagDefinition tagDefinition = tagLibrary.getTagDefintion(
+		TagDefinition tagDefinition = tagLibrary.getTagDefinition(
 				tagInstanceElement.getAttributeValue(Attribute.type));
 		
 		final TagInstance tagInstance = new TagInstance(tagInstanceElement.getID(), tagDefinition);

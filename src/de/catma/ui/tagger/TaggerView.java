@@ -2,16 +2,12 @@ package de.catma.ui.tagger;
 
 import java.io.IOException;
 
-import org.json.JSONException;
-
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
 import com.vaadin.terminal.gwt.server.WebBrowser;
-import com.vaadin.ui.Tree;
+import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.document.source.SourceDocument;
-import de.catma.core.tag.TagDefinition;
-import de.catma.core.tag.TagsetDefinition;
 import de.catma.ui.client.ui.tagger.shared.TagInstance;
 import de.catma.ui.tagger.Tagger.TaggerListener;
 import de.catma.ui.tagger.pager.Pager;
@@ -23,14 +19,16 @@ public class TaggerView extends VerticalLayout {
 	private SourceDocument sourceDocument;
 	private Tagger tagger;
 	private Pager pager;
-
+	private MarkupPanel markupPanel;
+	
 	public TaggerView(SourceDocument sourceDocument) {
 		this.sourceDocument = sourceDocument;
 		initComponents();
 	}
 
 	private void initComponents() {
-		setSpacing(true);
+		VerticalLayout taggerPanel = new VerticalLayout();
+		taggerPanel.setSpacing(true);
 		
 		pager = new Pager(80, 30);
 		
@@ -41,16 +39,24 @@ public class TaggerView extends VerticalLayout {
 		});
 		
 		tagger.setSizeFull();
-		addComponent(tagger);
+		taggerPanel.addComponent(tagger);
 
-		PagerComponent pagerComponent = new PagerComponent(pager, new PageChangeListener() {
+		PagerComponent pagerComponent = new PagerComponent(
+				pager, new PageChangeListener() {
+					
 			public void pageChanged(int number) {
 				tagger.setPage(number);
 			}
 		});
 
-		addComponent(pagerComponent);
+		taggerPanel.addComponent(pagerComponent);
 		
+		markupPanel = new MarkupPanel();
+		
+		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
+		splitPanel.addComponent(taggerPanel);
+		splitPanel.addComponent(markupPanel);
+		addComponent(splitPanel);
 	}
 
 	public SourceDocument getSourceDocument() {
@@ -60,7 +66,8 @@ public class TaggerView extends VerticalLayout {
 	@Override
 	public void attach() {
 		super.attach();
-		WebApplicationContext context = ((WebApplicationContext) getApplication().getContext());
+		WebApplicationContext context = 
+				((WebApplicationContext) getApplication().getContext());
 		WebBrowser wb = context.getBrowser();
 
 		float lines = (wb.getScreenHeight()/3)/12;
@@ -73,10 +80,5 @@ public class TaggerView extends VerticalLayout {
 			e.printStackTrace();
 		}
 	}
-	
-	
-	public void attachTagsetDefinition(TagsetDefinition tagsetDefinition) 
-			throws JSONException {
-		tagger.attachTagsetDefinition(tagsetDefinition);
-	}
+
 }
