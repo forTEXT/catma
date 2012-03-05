@@ -136,6 +136,14 @@ public class VTagger extends Composite implements Paintable {
 			taggerEditor.addTagInstance(tagInstance);
 			i++;
 		}
+		
+		if (uidl.hasAttribute(EventAttribute.TAGDEFINITION_SELECTED.name())) {
+			String color = 
+				uidl.getStringAttribute(
+						EventAttribute.TAGDEFINITION_SELECTED.name());
+			taggerEditor.addTag(color);
+		}
+		
 	}
 	
 	public void logToServer(String logMsg) {

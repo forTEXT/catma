@@ -81,8 +81,6 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 	}
 
  	public void setHTML(HTML pageHtmlContent) {
-// 		pageHtmlContent.getElement().setId("vtagger-html-div");
- 		
 		if (getElement().hasChildNodes()) {
 			NodeList<Node> children = getElement().getChildNodes();
 			for (int i=0; i<children.getLength();i++) {
@@ -92,7 +90,7 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 		getElement().appendChild(pageHtmlContent.getElement());
 	}
 	 
-	public void addTag(String body, String color) {
+	public void addTag(String color) {
 		
 		TaggedSpanFactory taggedSpanFactory = new TaggedSpanFactory(color);
 		
@@ -126,7 +124,7 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 			if (!textRanges.isEmpty()) {
 				TagInstance te = 
 						new TagInstance(
-								body, taggedSpanFactory.getInstanceID(), 
+								taggedSpanFactory.getInstanceID(), 
 								taggedSpanFactory.getColor(), textRanges);
 				tagInstances.put(te.getInstanceID(), te);
 				taggerEditorListener.tagChanged(TaggerEditorEventType.ADD, te);

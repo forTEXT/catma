@@ -12,6 +12,10 @@ public class ColorConverter {
 		blue = (rgb >> 0) & 0xFF;
 	}
 	
+	public ColorConverter(String color) {
+		this(Integer.valueOf(color));
+	}
+
 	public String toHex() {
 		return fillUp(Integer.toHexString(red).toUpperCase()) 
 				+ fillUp(Integer.toHexString(green).toUpperCase()) 

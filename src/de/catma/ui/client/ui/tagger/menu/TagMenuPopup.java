@@ -123,7 +123,7 @@ class TagMenuPopup extends DialogBox {
 			HandlerRegistration saveButtonReg = saveButton.addClickHandler(new ClickHandler() {
 				
 				public void onClick(ClickEvent event) {
-					TagMenuPopup.this.vTagger.addTag(annotationBodyInput.getText(), colorPicker.getHexColor());
+					TagMenuPopup.this.vTagger.addTag(colorPicker.getHexColor());
 					TagMenuPopup.this.lastSelectedColor = colorPicker.getHexColor();
 					hide();
 				}
@@ -175,7 +175,7 @@ class TagMenuPopup extends DialogBox {
 		TagInstance tagInstance = vTagger.getTagInstance(tagInstanceID);
 
 		Grid grid = new Grid(1,3);
-		Label l = new HTML(tagInstance.getBody() + " #" + tagInstanceID);
+		Label l = new HTML("#" + tagInstanceID);
 		grid.setWidget(0, 0, l);
 		
 		PushButton tagRemoveButton = new PushButton("remove");

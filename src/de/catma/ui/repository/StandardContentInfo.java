@@ -1,4 +1,6 @@
-package de.catma.ui.repository.treeentry;
+package de.catma.ui.repository;
+
+import de.catma.core.document.source.SourceDocument;
 
 public class StandardContentInfo implements ContentInfo {
 
@@ -17,6 +19,14 @@ public class StandardContentInfo implements ContentInfo {
 		this.author = author;
 		this.description = description;
 		this.publisher = publisher;
+	}
+	
+	public StandardContentInfo(SourceDocument sd) {
+		this(
+			sd.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getTitle(),
+			sd.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getAuthor(),
+			sd.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getDescription(),
+			sd.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getPublisher());
 	}
 	
 	public String getTitle() {

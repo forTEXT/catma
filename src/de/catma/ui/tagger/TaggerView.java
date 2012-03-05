@@ -8,11 +8,13 @@ import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.document.source.SourceDocument;
+import de.catma.core.tag.TagDefinition;
 import de.catma.ui.client.ui.tagger.shared.TagInstance;
 import de.catma.ui.tagger.Tagger.TaggerListener;
 import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
 import de.catma.ui.tagger.pager.PagerComponent.PageChangeListener;
+import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 
 public class TaggerView extends VerticalLayout {
 	
@@ -51,7 +53,12 @@ public class TaggerView extends VerticalLayout {
 
 		taggerPanel.addComponent(pagerComponent);
 		
-		markupPanel = new MarkupPanel();
+		markupPanel = new MarkupPanel(new ColorButtonListener() {
+			
+			public void colorButtonClicked(TagDefinition tagDefinition) {
+				tagger.addTagInstanceWith(tagDefinition);
+			}
+		});
 		
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		splitPanel.addComponent(taggerPanel);

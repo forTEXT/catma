@@ -26,6 +26,8 @@ import com.vaadin.terminal.PaintException;
 import com.vaadin.terminal.PaintTarget;
 import com.vaadin.ui.AbstractComponent;
 
+import de.catma.core.tag.TagDefinition;
+import de.catma.core.util.ColorConverter;
 import de.catma.ui.client.ui.tagger.VTagger;
 import de.catma.ui.client.ui.tagger.shared.EventAttribute;
 import de.catma.ui.client.ui.tagger.shared.TagInstance;
@@ -48,7 +50,6 @@ public class Tagger extends AbstractComponent {
 
 	private Map<String,String> attributes = new HashMap<String, String>();
 	private Pager pager;
-
 	private TaggerListener taggerListener;
 	
 	public Tagger(Pager pager, TaggerListener taggerListener) {
@@ -74,10 +75,7 @@ public class Tagger extends AbstractComponent {
 				i++;
 			}
 		}
-		
-		
-		
-		
+
 		for (Map.Entry<String, String> entry : attributes.entrySet()) {
 			target.addAttribute(entry.getKey(), entry.getValue());
 		}
@@ -145,6 +143,13 @@ public class Tagger extends AbstractComponent {
 				page.addAbsoluteTagInstance(ti);
 			}
 		}
+		requestRepaint();
+	}
+
+	public void addTagInstanceWith(TagDefinition tagDefinition) {
+		attributes.put(
+			EventAttribute.TAGDEFINITION_SELECTED.name(), 
+			new ColorConverter(tagDefinition.getColor()).toHex());
 		requestRepaint();
 	}
 }

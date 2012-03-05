@@ -1,4 +1,4 @@
-package de.catma.ui.repository.treeentry;
+package de.catma.ui.repository;
 
 public interface ContentInfo {
 

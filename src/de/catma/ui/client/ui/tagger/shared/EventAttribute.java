@@ -24,6 +24,7 @@ package de.catma.ui.client.ui.tagger.shared;
  */
 public enum EventAttribute {
 	PAGE_SET,
+	TAGDEFINITION_SELECTED,
 	TAGINSTANCE_CLEAR,
 	TAGINSTANCE_ADD, 
 	LOGMESSAGE, 

@@ -37,19 +37,28 @@ import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollection
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
-import de.catma.ui.repository.treeentry.ContentInfo;
-import de.catma.ui.repository.treeentry.MarkupCollectionEntry;
-import de.catma.ui.repository.treeentry.MarkupCollectionsEntry;
-import de.catma.ui.repository.treeentry.SourceDocumentEntry;
-import de.catma.ui.repository.treeentry.StandardContentInfo;
-import de.catma.ui.repository.treeentry.TagLibraryEntry;
-import de.catma.ui.repository.treeentry.TreeEntry;
 import de.catma.ui.repository.wizard.WizardFactory;
 import de.catma.ui.repository.wizard.WizardResult;
 import de.catma.ui.repository.wizard.WizardWindow;
 
 
 public class RepositoryView extends VerticalLayout {
+	
+	private static final class MarkupItem {
+		private String displayString;
+
+		public MarkupItem(String displayString) {
+			this.displayString = displayString;
+		}
+		
+		@Override
+		public String toString() {
+			return displayString;
+		}
+	}
+	
+	private String userMarkupItemDisplayString = "User Markup Collections";
+	private String staticMarkupItemDisplayString = "Static Markup Collections";
 	
 	private Repository repository;
 	private Tree documentsTree;
@@ -136,17 +145,11 @@ public class RepositoryView extends VerticalLayout {
 		btOpenDocument.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				// TODO Auto-generated method stub
-				
-				/*
-				 * hier gehts weiter:
-				 * tagger einbauen + document laden
-				 */
 				Object value = documentsTree.getValue();
 				
-				if (value instanceof SourceDocumentEntry) {
+				if (value instanceof SourceDocument) {
 					((CleaApplication)getApplication()).openSourceDocument(
-							((SourceDocumentEntry)value).getSourceDocument());
+							(SourceDocument)value);
 				}
 				
 			}
@@ -203,9 +206,17 @@ public class RepositoryView extends VerticalLayout {
 			public void valueChange(ValueChangeEvent event) {
 				Object value = event.getProperty().getValue();
 				if (value != null) {
-					TreeEntry entry = (TreeEntry)value;
-					contentInfoForm.setItemDataSource(entry.getContentInfo());
-					contentInfoForm.setReadOnly(true);
+					if (value instanceof SourceDocument) {
+						contentInfoForm.setEnabled(true);
+						contentInfoForm.setItemDataSource(
+							new BeanItem<ContentInfo>(
+								new StandardContentInfo((SourceDocument)value)));
+						contentInfoForm.setReadOnly(true);
+					}
+					else {
+						contentInfoForm.setEnabled(false);
+					}
+				
 				}
 			}
 			
@@ -224,8 +235,9 @@ public class RepositoryView extends VerticalLayout {
 				Object value = tagLibrariesTree.getValue();
 				if (value != null) {
 					TagLibraryReference tagLibraryReference = 
-							((TagLibraryEntry)value).getTagLibraryReference();
-					TagLibrary tagLibrary = repository.getTagLibrary(tagLibraryReference);
+							(TagLibraryReference)value;
+					TagLibrary tagLibrary = 
+							repository.getTagLibrary(tagLibraryReference);
 					((CleaApplication)getApplication()).openTagLibrary(tagLibrary);
 				}				
 			}
@@ -429,10 +441,11 @@ public class RepositoryView extends VerticalLayout {
 		documentsTree.setCaption("Documents");
 		documentsTree.addStyleName("repo-tree");
 		documentsTree.setImmediate(true);
-		
+		documentsTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_ID);
+
 		documentsPanel.addComponent(documentsTree);
 		documentsPanel.getContent().setSizeUndefined();
-		documentsPanel.setHeight("200px");
+		documentsPanel.setHeight("200px"); //TODO: besser nicht fix
 		
 		for (SourceDocument sd : repository.getSourceDocuments()) {
 			addSourceDocumentToTree(sd);
@@ -465,7 +478,8 @@ public class RepositoryView extends VerticalLayout {
 		contentInfoForm.setCaption("Information");
 		contentInfoForm.setWriteThrough(false);
 		
-		BeanItem<ContentInfo> contentInfoItem = new BeanItem<ContentInfo>(new StandardContentInfo());
+		BeanItem<ContentInfo> contentInfoItem = 
+				new BeanItem<ContentInfo>(new StandardContentInfo());
 		contentInfoForm.setItemDataSource(contentInfoItem);
 		contentInfoForm.setVisibleItemProperties(new String[] {
 				"title", "author", "description", "publisher"
@@ -504,11 +518,11 @@ public class RepositoryView extends VerticalLayout {
 		tagLibrariesTree.setCaption("Tag Libraries");
 		tagLibrariesTree.addStyleName("repo-tree");
 		tagLibrariesTree.setImmediate(true);
+		tagLibrariesTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_ID);
 		
 		for (TagLibraryReference tlr : repository.getTagLibraryReferences()) {
-			TreeEntry entry = new TagLibraryEntry(tlr);
-			tagLibrariesTree.addItem(entry);
-			tagLibrariesTree.setChildrenAllowed(entry, false);
+			tagLibrariesTree.addItem(tlr);
+			tagLibrariesTree.setChildrenAllowed(tlr, false);
 		}
 		
 		tagLibraryPanel.addComponent(tagLibrariesTree);
@@ -546,35 +560,31 @@ public class RepositoryView extends VerticalLayout {
 	}
 	
 	private void addSourceDocumentToTree(SourceDocument sd) {
-		TreeEntry sourceDocEntry = new SourceDocumentEntry(sd);
-		documentsTree.addItem(sourceDocEntry);
-		documentsTree.setChildrenAllowed(sourceDocEntry, true);
-		MarkupCollectionsEntry staticMarkupCollEntry = 
-				new MarkupCollectionsEntry( 
-						new MarkupCollectionsNode("Static Markup Collections"));
+		documentsTree.addItem(sd);
+		documentsTree.getItem(sd);
+		documentsTree.setChildrenAllowed(sd, true);
 		
-		documentsTree.addItem(staticMarkupCollEntry);
-		documentsTree.setParent(staticMarkupCollEntry, sourceDocEntry);
+		MarkupItem staticMarkupItem = 
+				new MarkupItem(staticMarkupItemDisplayString);
+		documentsTree.addItem(staticMarkupItem);
+		documentsTree.setParent(staticMarkupItem, sd);
 		
 		for (StaticMarkupCollectionReference smcr : sd.getStaticMarkupCollectionRefs()) {
-			TreeEntry staticMarkupCollRefEntry = new MarkupCollectionEntry(smcr);
-			documentsTree.addItem(staticMarkupCollRefEntry);
-			documentsTree.setParent(staticMarkupCollRefEntry, staticMarkupCollEntry);
-			documentsTree.setChildrenAllowed(staticMarkupCollRefEntry, false);
+			documentsTree.addItem(smcr);
+			documentsTree.setParent(smcr, staticMarkupItem);
+			documentsTree.setChildrenAllowed(smcr, false);
 		}
 		
-		MarkupCollectionsEntry userMarkupCollEntry =
-				new MarkupCollectionsEntry(
-						new MarkupCollectionsNode("User Markup Collections"));
-		documentsTree.addItem(userMarkupCollEntry);
-		documentsTree.setParent(userMarkupCollEntry, sourceDocEntry);
+		MarkupItem userMarkupItem =
+				new MarkupItem(userMarkupItemDisplayString);
+
+		documentsTree.addItem(userMarkupItem);
+		documentsTree.setParent(userMarkupItem, sd);
 	
 		for (UserMarkupCollectionReference ucr : sd.getUserMarkupCollectionRefs()) {
-			TreeEntry userMarkupCollRefEntry = new MarkupCollectionEntry(ucr);
-			documentsTree.addItem(userMarkupCollRefEntry);
-			documentsTree.setParent(userMarkupCollRefEntry, userMarkupCollEntry);
-			documentsTree.setChildrenAllowed(userMarkupCollRefEntry, false);
-
+			documentsTree.addItem(ucr);
+			documentsTree.setParent(ucr, userMarkupItem);
+			documentsTree.setChildrenAllowed(ucr, false);
 		}
 	}
 }

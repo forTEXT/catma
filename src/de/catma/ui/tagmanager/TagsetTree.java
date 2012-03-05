@@ -1,32 +1,26 @@
 package de.catma.ui.tagmanager;
 
-import java.text.MessageFormat;
 import java.util.List;
 
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.Resource;
+import com.vaadin.terminal.gwt.server.WebApplicationContext;
+import com.vaadin.terminal.gwt.server.WebBrowser;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.Table.ColumnGenerator;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeTable;
 
 import de.catma.core.tag.PropertyDefinition;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagsetDefinition;
-import de.catma.core.util.ColorConverter;
+import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 
 public class TagsetTree extends HorizontalLayout {
-
-	private static final String COLORLABEL_HTML = 
-			"<span style=\"background-color:#{0};margin-left:3px;\">" +
-					"&nbsp;&nbsp;&nbsp;&nbsp;" +
-			"</span>";
 	
 	private static enum TagTreePropertyName {
 		caption,
@@ -61,13 +55,16 @@ public class TagsetTree extends HorizontalLayout {
 	private Button btRemoveProperty;
 	private Button btEditProperty;
 	private boolean withTagsetButtons;
+	private ColorButtonListener colorButtonListener;
 
 	public TagsetTree() {
-		this(true);
+		this(true, null);
 	}
 	
-	public TagsetTree(boolean withTagsetButtons) {
+	public TagsetTree(boolean withTagsetButtons, 
+			ColorButtonListener colorButtonListener) {
 		this.withTagsetButtons = withTagsetButtons;
+		this.colorButtonListener = colorButtonListener;
 	}
 	
 	@Override
@@ -78,8 +75,15 @@ public class TagsetTree extends HorizontalLayout {
 	
 	private void initComponents() {
 		setWidth("100%");
+	
+		WebApplicationContext context = 
+				((WebApplicationContext) getApplication().getContext());
+		WebBrowser wb = context.getBrowser();
+		
+		setHeight(wb.getScreenHeight()*60/100, UNITS_PIXELS);
 		
 		tagTree = new TreeTable();
+		tagTree.setImmediate(true);
 		tagTree.setSizeFull();
 		tagTree.setSelectable(true);
 		tagTree.setMultiSelect(false);
@@ -101,26 +105,16 @@ public class TagsetTree extends HorizontalLayout {
 				new Object[] {
 						TagTreePropertyName.caption});
 		
-		tagTree.addGeneratedColumn(
-				TagTreePropertyName.color, new ColumnGenerator() {
+		if (colorButtonListener != null) {
+			tagTree.addGeneratedColumn(
+				TagTreePropertyName.color,
+				new ColorButtonColumnGenerator(colorButtonListener));
 			
-			public Object generateCell(
-					Table source, Object itemId, Object columnId) {
-				if (itemId instanceof TagDefinition) {
-					TagDefinition td = (TagDefinition)itemId;
-					Label colorLabel = 
-						new Label(
-							MessageFormat.format(
-								COLORLABEL_HTML, 
-								new ColorConverter(
-									Integer.valueOf(td.getColor())).toHex()));
-					colorLabel.setContentMode(Label.CONTENT_XHTML);
-					return colorLabel;
-				}
-				
-				return new Label();
-			}
-		});
+		}
+		else {
+			tagTree.addGeneratedColumn(
+					TagTreePropertyName.color, new ColorLabelColumnGenerator());
+		}
 		
 		addComponent(tagTree);
 		setExpandRatio(tagTree, 2);
