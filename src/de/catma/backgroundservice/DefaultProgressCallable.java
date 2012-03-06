@@ -32,7 +32,7 @@ public abstract class DefaultProgressCallable<V>
 	private ProgressListener progressListener;
 	
 	/* (non-Javadoc)
-	 * @see org.catma.backgroundservice.ProgressCallable#setProgressListener(org.catma.backgroundservice.ProgressListener)
+	 * @see de.catma.backgroundservice.ProgressCallable#setProgressListener(de.catma.backgroundservice.ProgressListener)
 	 */
 	public void setProgressListener( ProgressListener progressListener ) {
 		this.progressListener = progressListener;
