@@ -1,8 +1,10 @@
 package de.catma.ui.tagger;
 
+import java.util.Collection;
 import java.util.List;
 
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
@@ -27,7 +29,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	} 
 	
 	private static enum MarkupCollectionTreeProperty {
-		caption("Markup Collections")
+		caption("Markup Collections"), 
+		visible("Visible"),
 		;
 		
 		private String displayString;
@@ -56,14 +59,22 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			final TagDefinitionSelectionListener tagDefinitionSelectionListener) {
 		
 		markupTable = new TreeTable();
+		markupTable.setSizeFull();
 		markupTable.setContainerDataSource(new HierarchicalContainer());
 		
 		markupTable.addContainerProperty(
 				MarkupCollectionTreeProperty.caption, 
 				String.class, null);
+		
+		//TODO: create non generated column with checkbox:
+		markupTable.addContainerProperty(
+				MarkupCollectionTreeProperty.visible, 
+				AbstractComponent.class, null);
+		
 		markupTable.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_PROPERTY);
 		markupTable.setItemCaptionPropertyId(
 				MarkupCollectionTreeProperty.caption);
+		
 		markupTable.setVisibleColumns(
 				new Object[] {MarkupCollectionTreeProperty.caption});
 		
@@ -79,12 +90,15 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				
 				if (itemId instanceof TagDefinition) {
 					CheckBox cbShowTagInstances = new CheckBox();
+					cbShowTagInstances.setImmediate(true);
 					cbShowTagInstances.addListener(new ClickListener() {
 						
 						public void buttonClick(ClickEvent event) {
 							boolean enabled = 
 									event.getButton().booleanValue();
 
+							Collection<?> children = 
+									markupTable.getChildren(itemId);
 							
 							UserMarkupCollection userMarkupCollection =
 									getUserMarkupCollection(itemId);
@@ -93,6 +107,15 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 									userMarkupCollection.getTagReferences(
 											(TagDefinition)itemId);
 							
+							if (children != null) {
+								for (Object childId : children) {
+									if (childId instanceof TagDefinition) {
+										tagReferences.addAll(
+											userMarkupCollection.getTagReferences(
+													(TagDefinition)childId));
+									}
+								}
+							}							
 							tagDefinitionSelectionListener.tagDefinitionSelectionChanged(
 									tagReferences, enabled);
 						}
