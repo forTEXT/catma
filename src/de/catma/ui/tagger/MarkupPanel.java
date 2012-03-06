@@ -9,7 +9,9 @@ import com.vaadin.ui.AbstractSelect.AcceptItem;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagsetDefinition;
+import de.catma.ui.tagger.MarkupCollectionsPanel.TagDefinitionSelectionListener;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 import de.catma.ui.tagmanager.TagsetTree;
 
@@ -17,18 +19,23 @@ public class MarkupPanel extends VerticalLayout {
 
 	private TagsetTree tagsetTree;
 	private TabSheet tabSheet;
+	private MarkupCollectionsPanel markupCollectionsPanel;
 	
-	public MarkupPanel(ColorButtonListener colorButtonListener) {
-		initComponents(colorButtonListener);
+	public MarkupPanel(
+			ColorButtonListener colorButtonListener, 
+			TagDefinitionSelectionListener tagDefinitionSelectionListener) {
+		initComponents(colorButtonListener, tagDefinitionSelectionListener);
 	}
 
-	private void initComponents(ColorButtonListener colorButtonListener) {
+	private void initComponents(
+			ColorButtonListener colorButtonListener, 
+			TagDefinitionSelectionListener tagDefinitionSelectionListener) {
 		tabSheet = new TabSheet();
 		tagsetTree = new TagsetTree(false, colorButtonListener);
 		tabSheet.addTab(tagsetTree, "Currently active Tagsets");
 		
-		MarkupCollectionsPanel markupCollectionsPanel = 
-				new MarkupCollectionsPanel();
+		markupCollectionsPanel = 
+				new MarkupCollectionsPanel(tagDefinitionSelectionListener);
 		
 		tabSheet.addTab(
 				markupCollectionsPanel, "Currently active Markup Collections");
@@ -64,5 +71,10 @@ public class MarkupPanel extends VerticalLayout {
                 }
 			}
 		});
+	}
+
+	public void openUserMarkupCollection(
+			UserMarkupCollection userMarkupCollection) {
+		markupCollectionsPanel.openUserMarkupCollection(userMarkupCollection);
 	}
 }

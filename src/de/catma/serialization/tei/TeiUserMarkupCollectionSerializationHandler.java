@@ -21,10 +21,8 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 			TeiDocument teiDocument = factory.createDocumentFromStream(inputStream);
 			TagLibrary tagLibrary = 
 					new TeiTagLibrarySerializationHandler().deserialize(teiDocument);
-			
 			TeiUserMarkupCollectionDeserializer deserializer = 
 					new TeiUserMarkupCollectionDeserializer(teiDocument, tagLibrary);
-			
 			return new UserMarkupCollection(tagLibrary, deserializer.getTagReferences());
 			
 		} catch (Exception exc) {

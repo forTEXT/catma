@@ -1,17 +1,31 @@
 package de.catma.ui.tagger;
 
-import com.vaadin.data.Container;
+import java.util.List;
+
 import com.vaadin.data.util.HierarchicalContainer;
-import com.vaadin.event.DataBoundTransferable;
-import com.vaadin.event.dd.DragAndDropEvent;
-import com.vaadin.event.dd.DropHandler;
-import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.CheckBox;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.Table;
+import com.vaadin.ui.Table.ColumnGenerator;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.AbstractSelect.AcceptItem;
+
+import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.tag.TagDefinition;
+import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.TagsetDefinition;
 
 public class MarkupCollectionsPanel extends VerticalLayout {
+	
+	public static interface TagDefinitionSelectionListener {
+		public void tagDefinitionSelectionChanged(
+				List<TagReference> tagReferences, boolean selected);
+	} 
+	
 	private static enum MarkupCollectionTreeProperty {
 		caption("Markup Collections")
 		;
@@ -33,40 +47,14 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private String userMarkupItem = "User Markup Collections";
 	private String staticMarkupItem = "Static Markup Collections";
 
-	public MarkupCollectionsPanel() {
-		initComponents();
-		initActions();
+	public MarkupCollectionsPanel(
+			TagDefinitionSelectionListener tagDefinitionSelectionListener) {
+		initComponents(tagDefinitionSelectionListener);
 	}
 
-	private void initActions() {
-		markupTable.setDropHandler(new DropHandler() {
-			
-			public AcceptCriterion getAcceptCriterion() {
-				//TODO: restrict somehow
-				return AcceptItem.ALL;
-			}
-			
-			public void drop(DragAndDropEvent event) {
-				DataBoundTransferable transferable = 
-						(DataBoundTransferable)event.getTransferable();
-				
-                if (!(transferable.getSourceContainer() 
-                		instanceof Container.Hierarchical)) {
-                    return;
-                }
-
-                Object sourceItemId = transferable.getItemId();
-                
-//                if (sourceItemId instanceof )
-                
-                // hier gehts weiter: markup collection mit repository oeffnen und einfuegen
-                // drag'n'drop oder doch besser per button?
-			}
-		});
+	private void initComponents(
+			final TagDefinitionSelectionListener tagDefinitionSelectionListener) {
 		
-	}
-
-	private void initComponents() {
 		markupTable = new TreeTable();
 		markupTable.setContainerDataSource(new HierarchicalContainer());
 		
@@ -84,7 +72,100 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		markupTable.addItem(staticMarkupItem).getItemProperty(
 				MarkupCollectionTreeProperty.caption).setValue(staticMarkupItem);
 		
+		markupTable.addGeneratedColumn("Show", new ColumnGenerator() {
+			
+			public Object generateCell(
+					final Table source, final Object itemId, Object columnId) {
+				
+				if (itemId instanceof TagDefinition) {
+					CheckBox cbShowTagInstances = new CheckBox();
+					cbShowTagInstances.addListener(new ClickListener() {
+						
+						public void buttonClick(ClickEvent event) {
+							boolean enabled = 
+									event.getButton().booleanValue();
+
+							
+							UserMarkupCollection userMarkupCollection =
+									getUserMarkupCollection(itemId);
+							 
+							List<TagReference> tagReferences =
+									userMarkupCollection.getTagReferences(
+											(TagDefinition)itemId);
+							
+							tagDefinitionSelectionListener.tagDefinitionSelectionChanged(
+									tagReferences, enabled);
+						}
+
+					});
+					return cbShowTagInstances;
+				}
+				
+				
+				return new Label();
+			}
+		});
+		
 		addComponent(markupTable);
+	}
+
+	private UserMarkupCollection getUserMarkupCollection(
+			Object itemId) {
+		
+		Object parent = markupTable.getParent(itemId);
+		while((parent!=null) 
+				&& !(parent instanceof UserMarkupCollection)) {
+			parent = markupTable.getParent(parent);
+		}
+		
+		return (UserMarkupCollection)parent;
+	}
+	
+	public void openUserMarkupCollection(
+			UserMarkupCollection userMarkupCollection) {
+
+		markupTable.addItem(userMarkupCollection).getItemProperty(
+				MarkupCollectionTreeProperty.caption).setValue(
+						userMarkupCollection.toString());
+		markupTable.setParent(userMarkupCollection, userMarkupItem);
+		
+		TagLibrary tagLibrary = userMarkupCollection.getTagLibrary();
+		for (TagsetDefinition tagsetDefinition : tagLibrary) {
+			markupTable.addItem(tagsetDefinition).getItemProperty(
+					MarkupCollectionTreeProperty.caption).setValue(
+							tagsetDefinition.getName());
+			markupTable.setParent(tagsetDefinition, userMarkupCollection);
+			addTagDefinitions(tagsetDefinition);
+		}
+	}
+
+	private void addTagDefinitions(TagsetDefinition tagsetDefinition) {
+		for (TagDefinition tagDefinition : tagsetDefinition) {
+			if (!tagDefinition.getID().equals
+					(TagDefinition.CATMA_BASE_TAG.getID())) {
+				markupTable.addItem(tagDefinition).getItemProperty(
+						MarkupCollectionTreeProperty.caption).setValue(
+								tagDefinition.getType());
+			}
+		}
+		for (TagDefinition tagDefinition : tagsetDefinition) {
+			String baseID = tagDefinition.getBaseID();
+			TagDefinition parent = tagsetDefinition.getTagDefinition(baseID);
+			if ((parent==null)
+					||(parent.getID().equals(
+							TagDefinition.CATMA_BASE_TAG.getID()))) {
+				markupTable.setParent(tagDefinition, tagsetDefinition);
+			}
+			else {
+				markupTable.setParent(tagDefinition, parent);
+			}
+		}
+		
+		for (TagDefinition tagDefinition : tagsetDefinition) {
+			if (!markupTable.hasChildren(tagDefinition)) {
+				markupTable.setChildrenAllowed(tagDefinition, false);
+			}
+		}
 	}
 	
 	

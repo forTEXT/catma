@@ -32,6 +32,8 @@ class FSRepository implements Repository {
 	private Map<String,SourceDocument> sourceDocumentsByID;
 	private Set<TagLibraryReference> tagLibraryReferences;
 	private FSTagLibraryHandler tagLibraryHandler;
+	private FSUserMarkupCollectionHandler userMarkupCollectionHandler;
+	
 	private PropertyChangeSupport propertyChangeSupport;
 	
 	public FSRepository(
@@ -51,6 +53,10 @@ class FSRepository implements Repository {
 				new FSTagLibraryHandler(
 						repoFolderPath, 
 						serializationHandlerFactory.getTagLibrarySerializationHandler());
+		
+		this.userMarkupCollectionHandler = 
+			new FSUserMarkupCollectionHandler(
+				serializationHandlerFactory.getUserMarkupCollectionSerializationHandler());
 
 	}
 	
@@ -112,8 +118,13 @@ class FSRepository implements Repository {
 
 	public UserMarkupCollection getUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference) {
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			return userMarkupCollectionHandler.loadUserMarkupCollection(
+					userMarkupCollectionReference);
+		}
+		catch(IOException ioe) {
+			throw new RuntimeException(ioe);
+		}
 	}
 
 	public StaticMarkupCollection getStaticMarkupCollection(

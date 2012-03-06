@@ -33,4 +33,12 @@ public class TagInstance {
 	public String toString() {
 		return "TAGINSTANCE[#"+id+","+tagDefinition+"]";
 	}
+	
+	public String getID() {
+		return id;
+	}
+	
+	public Property getSystemProperty(String name) {
+		return systemProperties.get(name);
+	}
 }

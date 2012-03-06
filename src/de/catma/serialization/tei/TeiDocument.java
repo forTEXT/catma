@@ -1,8 +1,11 @@
 package de.catma.serialization.tei;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import nu.xom.Document;
+import nu.xom.Elements;
 import nu.xom.Node;
 import nu.xom.Nodes;
 import nu.xom.Serializer;
@@ -17,10 +20,12 @@ class TeiDocument {
 	private Document document;
 	private XPathContext xpathcontext; 
 	private TeiHeader teiHeader;
+	private Map<String, TeiElement> idElementMapping;
 	
 	TeiDocument(Document document) {
 		super();
 		this.document = document;
+		this.idElementMapping = new HashMap<String, TeiElement>();
 		xpathcontext = new XPathContext( TeiElement.TEINAMESPACEPREFIX, TeiElement.TEINAMESPACE );
 	}
 	
@@ -103,16 +108,20 @@ class TeiDocument {
 	 * if there is no such element
 	 */
 	public TeiElement getElementByID( String id ) {
-		Nodes result = getNodes( 
-			"//"+TeiElement.TEINAMESPACEPREFIX
-			+ ":*" //wildcard
-			+ "[@"+Attribute.xmlid.getPrefixedName()
-			+ "='"+id+"']" );
-		
-		if( result.size() > 0 ) {
-			return (TeiElement)result.get( 0 );
-		}
-		return null;
+		TeiElement element = idElementMapping.get(id);
+		if (element == null) {
+			Nodes result = getNodes( 
+				"//"+TeiElement.TEINAMESPACEPREFIX
+				+ ":*" //wildcard
+				+ "[@"+Attribute.xmlid.getPrefixedName()
+				+ "='"+id+"']" );
+			
+			if( result.size() > 0 ) {
+				return (TeiElement)result.get( 0 );
+			}
+			return null;
+		}		
+		return element;
 	}
 	
     /**
@@ -264,5 +273,24 @@ class TeiDocument {
 
 	Document getDocument() {
 		return document;
+	}
+
+	void hashIDs() {
+		hashElementByID( (TeiElement)getDocument().getRootElement());
+	}
+
+	private void hashElementByID(TeiElement curRoot) {
+		String rootID = curRoot.getAttributeValue(
+				Attribute.xmlid.getLocalName(), Attribute.xmlid.getNamespaceURI());
+		if (rootID != null) {
+			this.idElementMapping.put(rootID, curRoot);
+		}
+		
+		Elements children = curRoot.getChildElements();
+		for (int i=0; i<children.size(); i++) {
+			TeiElement curElement = (TeiElement)children.get(i);
+	
+			hashElementByID(curElement);
+		}
 	}
 }

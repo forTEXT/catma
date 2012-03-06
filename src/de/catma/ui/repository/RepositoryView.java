@@ -15,6 +15,7 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -25,18 +26,25 @@ import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.ProgressIndicator;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.CleaApplication;
+import de.catma.backgroundservice.BackgroundService;
+import de.catma.backgroundservice.DefaultProgressCallable;
+import de.catma.backgroundservice.ExecutionListener;
 import de.catma.core.document.Corpus;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.standoffmarkup.MarkupCollectionReference;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
+import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.repository.wizard.WizardFactory;
 import de.catma.ui.repository.wizard.WizardResult;
 import de.catma.ui.repository.wizard.WizardWindow;
@@ -86,6 +94,7 @@ public class RepositoryView extends VerticalLayout {
 	private Button btSaveContentInfoChanges;
 	private Button btDiscardContentInfoChanges;
 	private PropertyChangeListener repositoryListener;
+	private ProgressIndicator progressIndicator;
 	
 	public RepositoryView(Repository repository) {
 		super();
@@ -145,15 +154,50 @@ public class RepositoryView extends VerticalLayout {
 		btOpenDocument.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				Object value = documentsTree.getValue();
+				final Object value = documentsTree.getValue();
 				
 				if (value instanceof SourceDocument) {
 					((CleaApplication)getApplication()).openSourceDocument(
 							(SourceDocument)value);
 				}
-				
+				else if (value instanceof StaticMarkupCollectionReference) {
+						
+					
+				}
+				else if (value instanceof UserMarkupCollectionReference) {
+					final SourceDocument sd = 
+							(SourceDocument)documentsTree.getParent(
+									documentsTree.getParent(value));
+			
+					BackgroundService backgroundService = 
+						((CleaApplication)getApplication()).getBackgroundService();
+					showProgressIndicator("Loading Markup Collection");
+					backgroundService.submit(
+							new DefaultProgressCallable<UserMarkupCollection>() {
+								public UserMarkupCollection call()
+										throws Exception {
+									UserMarkupCollectionReference 
+										userMarkupCollectionReference = 
+											(UserMarkupCollectionReference)value;
+									return repository.getUserMarkupCollection(
+											userMarkupCollectionReference);
+								}
+							},
+							new ExecutionListener<UserMarkupCollection>() {
+								public void done(UserMarkupCollection result) {
+									((CleaApplication)getApplication()).openUserMarkupCollection(sd, result);
+									
+									progressIndicator.setCaption("");
+									progressIndicator.setEnabled(false);
+									removeComponent(progressIndicator);
+								}
+							}, 
+							new DefaultProgressListener(
+									progressIndicator, getApplication()));
+				}
 			}
 		});
+		
 		corporaTree.addListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
@@ -167,7 +211,7 @@ public class RepositoryView extends VerticalLayout {
 						
 						if (!filters.containsKey(value)) {
 							filters.put(
-									corpus.toString(), new SourceDocumentFilter(corpus));
+								corpus.toString(), new SourceDocumentFilter(corpus));
 						}
 						SourceDocumentFilter sdf = filters.get(corpus.toString());
 						documentsContainer.addContainerFilter(sdf);
@@ -212,9 +256,18 @@ public class RepositoryView extends VerticalLayout {
 							new BeanItem<ContentInfo>(
 								new StandardContentInfo((SourceDocument)value)));
 						contentInfoForm.setReadOnly(true);
+						btOpenDocument.setCaption("Open Document");
+						btOpenDocument.setEnabled(true);
 					}
 					else {
 						contentInfoForm.setEnabled(false);
+						if (value instanceof MarkupCollectionReference) {
+							btOpenDocument.setCaption("Open Markup Collection");
+							btOpenDocument.setEnabled(true);
+						}
+						else {
+							btOpenDocument.setEnabled(false);
+						}
 					}
 				
 				}
@@ -381,8 +434,15 @@ public class RepositoryView extends VerticalLayout {
 	
 
 	private void initComponents() {
-		this.setMargin(true, true, true, true);
+		this.setMargin(false, true, true, true);
 		this.setSpacing(true);
+		progressIndicator = new ProgressIndicator();
+		progressIndicator.setEnabled(false);
+		progressIndicator.setIndeterminate(true);
+		progressIndicator.setPollingInterval(500);
+		
+		
+		
 		Label documentsLabel = new Label("Document Manager");
 		documentsLabel.addStyleName("repo-title-label");
 		addComponent(documentsLabel);
@@ -586,6 +646,14 @@ public class RepositoryView extends VerticalLayout {
 			documentsTree.setParent(ucr, userMarkupItem);
 			documentsTree.setChildrenAllowed(ucr, false);
 		}
+	}
+
+	
+	private void showProgressIndicator(String caption){
+		addComponent(progressIndicator,0);
+		setComponentAlignment(progressIndicator, Alignment.TOP_RIGHT);
+		progressIndicator.setCaption(caption);
+		progressIndicator.setEnabled(true);
 	}
 }
 

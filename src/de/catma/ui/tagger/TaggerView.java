@@ -1,6 +1,7 @@
 package de.catma.ui.tagger;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
 import com.vaadin.terminal.gwt.server.WebBrowser;
@@ -8,8 +9,11 @@ import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagDefinition;
 import de.catma.ui.client.ui.tagger.shared.TagInstance;
+import de.catma.ui.tagger.MarkupCollectionsPanel.TagDefinitionSelectionListener;
 import de.catma.ui.tagger.Tagger.TaggerListener;
 import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
@@ -53,12 +57,22 @@ public class TaggerView extends VerticalLayout {
 
 		taggerPanel.addComponent(pagerComponent);
 		
-		markupPanel = new MarkupPanel(new ColorButtonListener() {
+		markupPanel = new MarkupPanel(
+				new ColorButtonListener() {
 			
-			public void colorButtonClicked(TagDefinition tagDefinition) {
-				tagger.addTagInstanceWith(tagDefinition);
-			}
-		});
+					public void colorButtonClicked(TagDefinition tagDefinition) {
+						tagger.addTagInstanceWith(tagDefinition);
+					}
+				},
+				new TagDefinitionSelectionListener() {
+					
+					public void tagDefinitionSelectionChanged(
+							List<TagReference> tagReferences,
+							boolean selected) {
+						tagger.setVisible(tagReferences, selected);
+						
+					}
+				});
 		
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		splitPanel.addComponent(taggerPanel);
@@ -86,6 +100,11 @@ public class TaggerView extends VerticalLayout {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	public void openUserMarkupCollection(
+			UserMarkupCollection userMarkupCollection) {
+		markupPanel.openUserMarkupCollection(userMarkupCollection);
 	}
 
 }

@@ -114,6 +114,27 @@ public enum AttributeValue {
     	return "starts-with("+attribute+",'"+valueName+"')";
     }
     
+    public AttributeFilter getStartsWithFilter() {
+    	return new AttributeFilter() {
+    		public boolean matches(TeiElement teiElement) {
+    			String value = teiElement.getAttributeValue(attribute);
+    			if (value != null) {
+    				return value.startsWith(valueName);
+    			}
+    			
+    			return false;
+    		};
+    	};
+    }
+    
+    public AttributeFilter getNotStartsWithFilter() {
+    	return new AttributeFilter() {
+    		public boolean matches(TeiElement teiElement) {
+    			return !getStartsWithFilter().matches(teiElement);
+    		};
+    	};
+    }
+    
     public String getNotStartsWith() {
     	return "not("+getStartsWith()+")";
     }

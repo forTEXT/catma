@@ -1,6 +1,8 @@
 package de.catma.core.document.standoffmarkup.staticmarkup;
 
-public class StaticMarkupCollectionReference {
+import de.catma.core.document.standoffmarkup.MarkupCollectionReference;
+
+public class StaticMarkupCollectionReference implements MarkupCollectionReference {
 	
 	private String id;
 	private String name;

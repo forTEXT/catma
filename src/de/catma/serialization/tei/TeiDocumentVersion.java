@@ -75,7 +75,6 @@ public enum TeiDocumentVersion {
     				Attribute.xmlid.getLocalName(), 
     				Attribute.xmlid.getNamespaceURI() ).setValue(TechnicalDescription.CATMA_TECH_DESC_XML_ID);
     	}
-    	
     	teiDocument.loadHeader();
     	
         while(!teiDocument.getTeiHeader().getTechnicalDescription().getVersion().isCurrentVersion()) {

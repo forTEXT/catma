@@ -18,6 +18,7 @@
  */   
 package de.catma.ui.tagger;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,11 +27,13 @@ import com.vaadin.terminal.PaintException;
 import com.vaadin.terminal.PaintTarget;
 import com.vaadin.ui.AbstractComponent;
 
+import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.util.ColorConverter;
 import de.catma.ui.client.ui.tagger.VTagger;
 import de.catma.ui.client.ui.tagger.shared.EventAttribute;
 import de.catma.ui.client.ui.tagger.shared.TagInstance;
+import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
 
@@ -151,5 +154,25 @@ public class Tagger extends AbstractComponent {
 			EventAttribute.TAGDEFINITION_SELECTED.name(), 
 			new ColorConverter(tagDefinition.getColor()).toHex());
 		requestRepaint();
+	}
+
+	public void setVisible(List<TagReference> tagReferences, boolean visible) {
+		List<TagInstance> tagInstances = new ArrayList<TagInstance>();
+		
+		for (TagReference tagReference : tagReferences) {
+			List<TextRange> textRanges = new ArrayList<TextRange>();
+			textRanges.add(
+					new TextRange(
+							tagReference.getRange().getStartPoint(), 
+							tagReference.getRange().getEndPoint()));
+			
+			tagInstances.add(
+				new TagInstance(
+					tagReference.getTagInstanceID(), 
+					tagReference.getColor(), textRanges));
+		}
+		if (visible) {
+			setTagInstances(tagInstances);
+		}
 	}
 }

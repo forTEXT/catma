@@ -118,6 +118,20 @@ public class TeiElement extends Element implements Comparable<TeiElement> {
             new XPathContext( TeiElement.TEINAMESPACEPREFIX, TeiElement.TEINAMESPACE ));
 	}
 	
+	public final Nodes getChildNodes(
+			TeiElementName teiElementName, AttributeFilter attributeFilter) {
+		Elements childElements = getChildElements(teiElementName);
+		Nodes nodes = new Nodes();
+		for (int i=0; i<childElements.size();i++) {
+			TeiElement element = (TeiElement)childElements.get(i);
+			if (attributeFilter.matches(element)) {
+				nodes.append(element);
+			}
+		}
+
+		return nodes;
+	}
+	
 	public TeiElement getFirstTeiChildElement(TeiElementName localName) {
 		Elements elements = getChildElements(localName);
 		if (elements.size() >0) {
