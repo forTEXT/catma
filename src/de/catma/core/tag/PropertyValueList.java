@@ -1,5 +1,6 @@
 package de.catma.core.tag;
 
+import java.util.Collections;
 import java.util.List;
 
 public class PropertyValueList {
@@ -30,6 +31,10 @@ public class PropertyValueList {
 			return values.get(0);
 		}
 		return null;
+	}
+	
+	public List<String> getValues() {
+		return Collections.unmodifiableList(values);
 	}
 	
 }

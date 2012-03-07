@@ -11,7 +11,7 @@ import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.document.source.SourceDocument;
-import de.catma.core.tag.TagsetDefinition;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 
 public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 	
@@ -40,7 +40,7 @@ public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 		addComponent(tabSheet);
 	}
 
-	public void openSourceDocument(SourceDocument sourceDocument) {
+	public TaggerView openSourceDocument(SourceDocument sourceDocument) {
 		TaggerView taggerView = getTaggerView(sourceDocument);
 		if (taggerView != null) {
 			tabSheet.setSelectedTab(taggerView);
@@ -57,8 +57,9 @@ public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 			setMargin(false);
 			tabSheet.setVisible(true);
 			tabSheet.setSizeFull();
-
 		}
+		
+		return taggerView;
 	}
 	
 	
@@ -93,8 +94,12 @@ public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 
 	}
 
-	public void attachTagsetDefinition(TagsetDefinition tagsetDefinition) {
-		((TaggerView)tabSheet.getSelectedTab()).attachTagsetDefinition(tagsetDefinition);
+	public void openUserMarkupCollection(SourceDocument sourceDocument,
+			UserMarkupCollection userMarkupCollection) {
+	
+		TaggerView taggerView = openSourceDocument(sourceDocument);
+		taggerView.openUserMarkupCollection(userMarkupCollection);
+		
+		
 	}
-
 }

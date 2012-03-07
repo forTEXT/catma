@@ -46,7 +46,10 @@ public class TagDefinition implements Versionable {
 	
 	@Override
 	public String toString() {
-		return "TAG_DEF[" + type + ",#" + id +","+version+((baseID==null) ? "]" : (",#"+baseID+"]"));
+		return "TAG_DEF[" + type 
+				+ ",#" + id +","
+				+version
+				+((baseID==null) ? "]" : (",#"+baseID+"]"));
 	}
 
 	public void addSystemPropertyDefinition(PropertyDefinition propertyDefinition) {
@@ -83,6 +86,12 @@ public class TagDefinition implements Versionable {
 	}
 	
 	public String getColor() {
-		return systemPropertyDefinitions.get(SystemPropertyName.catma_displaycolor.name()).getFirstValue();
+		return systemPropertyDefinitions.get(
+				SystemPropertyName.catma_displaycolor.name()).getFirstValue();
+	}
+
+	public Collection<PropertyDefinition> getSystemPropertyDefinitions() {
+		return Collections.unmodifiableCollection(
+				systemPropertyDefinitions.values());
 	}
 }

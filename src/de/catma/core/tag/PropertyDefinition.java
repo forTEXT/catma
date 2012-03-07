@@ -2,6 +2,11 @@ package de.catma.core.tag;
 
 
 public class PropertyDefinition {
+	
+	public enum SystemPropertyName {
+		catma_displaycolor,
+		;
+	}
 
 	private String name;
 	private PropertyPossibleValueList possibleValueList;
@@ -26,6 +31,10 @@ public class PropertyDefinition {
 	
 	public String getFirstValue() {
 		return possibleValueList.getFirstValue();
+	}
+	
+	public PropertyPossibleValueList getPossibleValueList() {
+		return possibleValueList;
 	}
 
 }

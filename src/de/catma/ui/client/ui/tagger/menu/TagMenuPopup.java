@@ -40,7 +40,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
-import de.catma.ui.client.ui.tagger.VTagger;
+import de.catma.ui.client.ui.tagger.editor.TaggerEditor;
 import de.catma.ui.client.ui.tagger.shared.TagInstance;
 
 /**
@@ -51,10 +51,10 @@ class TagMenuPopup extends DialogBox {
 		
 	private TreeItem root;
 	private List<HandlerRegistration> handlerRegistrations = new ArrayList<HandlerRegistration>();
-	private VTagger vTagger;
+	private TaggerEditor vTagger;
 	private String lastSelectedColor = null;
 	
-	public TagMenuPopup(VTagger vTagger, String lastSelectedColor) {
+	public TagMenuPopup(TaggerEditor vTagger, String lastSelectedColor) {
 		super(true);
 		getElement().addClassName("tagmenu-popup");
 		this.setText("Annotations");
@@ -123,7 +123,7 @@ class TagMenuPopup extends DialogBox {
 			HandlerRegistration saveButtonReg = saveButton.addClickHandler(new ClickHandler() {
 				
 				public void onClick(ClickEvent event) {
-					TagMenuPopup.this.vTagger.addTag(annotationBodyInput.getText(), colorPicker.getHexColor());
+					TagMenuPopup.this.vTagger.addTag(colorPicker.getHexColor());
 					TagMenuPopup.this.lastSelectedColor = colorPicker.getHexColor();
 					hide();
 				}
@@ -175,7 +175,7 @@ class TagMenuPopup extends DialogBox {
 		TagInstance tagInstance = vTagger.getTagInstance(tagInstanceID);
 
 		Grid grid = new Grid(1,3);
-		Label l = new HTML(tagInstance.getBody() + " #" + tagInstanceID);
+		Label l = new HTML("#" + tagInstanceID);
 		grid.setWidget(0, 0, l);
 		
 		PushButton tagRemoveButton = new PushButton("remove");

@@ -24,7 +24,7 @@ import java.util.List;
 
 
 /**
- * A factory that sets and gets values for a {@link Property}.
+ * A factory that sets and gets values for a {@link CProperty}.
  *
  * @author Marco Petris
  *
@@ -35,15 +35,15 @@ public interface PropertyValueFactory {
     
 	/**
 	 * Getter.
-	 * @param teiElement the element that represents the {@link Property}
-	 * @return the value of the {@link Property} represented by the given element.
+	 * @param teiElement the element that represents the {@link CProperty}
+	 * @return the value of the {@link CProperty} represented by the given element.
 	 */
 	public String getValue();
 
 	/**
 	 * Setter.
-	 * @param teiElement the element that represents the {@link Property}
-	 * @param value the value of the {@link Property} represented by the given element
+	 * @param teiElement the element that represents the {@link CProperty}
+	 * @param value the value of the {@link CProperty} represented by the given element
 	 */
 	public void setValue(Object value );
 	

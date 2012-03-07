@@ -19,8 +19,12 @@
 
 package de.catma.serialization.tei;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import nu.xom.Element;
 import nu.xom.NodeFactory;
+import nu.xom.Nodes;
 
 /**
  * A {@link NodeFactory} that creates {@link TeiElement}s instead of 
@@ -33,6 +37,9 @@ import nu.xom.NodeFactory;
  */
 public class TeiNodeFactory extends NodeFactory {
 	
+	private HashMap<String, TeiElement> idElementMapping = 
+			new HashMap<String, TeiElement>();
+	
 	/**
 	 * @return a {@link TeiElement}.
 	 * @see nu.xom.NodeFactory#startMakingElement(java.lang.String, java.lang.String)
@@ -40,5 +47,24 @@ public class TeiNodeFactory extends NodeFactory {
 	@Override
 	public Element startMakingElement(String name, String namespace) {
 		return new TeiElement( name, namespace );
+	}
+	
+	@Override
+	public Nodes finishMakingElement(Element element) {
+		
+		TeiElement teiElement = (TeiElement)element;
+		String idValue = teiElement.getAttributeValue(
+				Attribute.xmlid.getLocalName(), 
+				Attribute.xmlid.getNamespaceURI());
+		if (idValue != null) {
+			idElementMapping.put(
+				idValue,
+				teiElement);
+		}
+		return super.finishMakingElement(element);
+	}
+	
+	public Map<String, TeiElement> getIdElementMapping() {
+		return idElementMapping;
 	}
 }

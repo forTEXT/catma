@@ -15,6 +15,8 @@ public class TeiDocumentFactory {
 		
 		TeiDocument teiDocument =  new TeiDocument(builder.build(inputStream));
 		TeiDocumentVersion.convertToLatest(teiDocument);
+		teiDocument.hashIDs();
+		
 		return teiDocument;
 	}
 	

@@ -15,4 +15,8 @@ public class Property {
 	public String getName() {
 		return propertyDefinition.getName();
 	}
+	
+	public PropertyValueList getPropertyValueList() {
+		return propertyValueList;
+	}
 }

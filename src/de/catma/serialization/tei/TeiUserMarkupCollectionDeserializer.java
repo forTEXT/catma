@@ -14,6 +14,7 @@ import de.catma.core.tag.PropertyValueList;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagInstance;
 import de.catma.core.tag.TagLibrary;
+import de.catma.core.util.StopWatch;
 import de.catma.serialization.tei.PtrValueHandler.TargetValues;
 
 public class TeiUserMarkupCollectionDeserializer {
@@ -34,7 +35,6 @@ public class TeiUserMarkupCollectionDeserializer {
 		Nodes segmentNodes = teiDocument.getNodes(
 				TeiElementName.seg, AttributeValue.seg_ana_catma_tag_ref.getStartsWith());
 		
-		
 		for (int i=0; i<segmentNodes.size(); i++) {
 			TeiElement curSegment = (TeiElement)segmentNodes.get(i);
 			AnaValueHandler anaValueHandler = new AnaValueHandler();
@@ -42,7 +42,6 @@ public class TeiUserMarkupCollectionDeserializer {
 					anaValueHandler.makeTagInstanceIDListFrom(
 							curSegment.getAttributeValue(Attribute.ana));
 			Elements pointerElements = curSegment.getChildElements(TeiElementName.ptr);
-			
 			for(String tagInstanceID : tagInstanceIDs) {
 				TagInstance tagInstance = createTagInstance(tagInstanceID);
 				
@@ -73,18 +72,14 @@ public class TeiUserMarkupCollectionDeserializer {
 	}
 
 	private TagInstance createTagInstance(String tagInstanceID) {
-		
 		TeiElement tagInstanceElement = teiDocument.getElementByID(tagInstanceID);
-		
-		TagDefinition tagDefinition = tagLibrary.getTagDefintion(
+		TagDefinition tagDefinition = tagLibrary.getTagDefinition(
 				tagInstanceElement.getAttributeValue(Attribute.type));
-		
 		final TagInstance tagInstance = new TagInstance(tagInstanceElement.getID(), tagDefinition);
 		
 		Nodes systemPropertyElements = tagInstanceElement.getChildNodes(
 				TeiElementName.f,
-				AttributeValue.f_name_catma_system_property.getStartsWith());
-		
+				AttributeValue.f_name_catma_system_property.getStartsWithFilter());
 		addProperties(
 				tagInstance.getTagDefinition(), 
 				new AddPropertyHandler() {
@@ -95,11 +90,9 @@ public class TeiUserMarkupCollectionDeserializer {
 					}
 				}, 
 				systemPropertyElements);
-		
 		Nodes userDefinedPropertyElements = tagInstanceElement.getChildNodes(
 				TeiElementName.f,
-				AttributeValue.f_name_catma_system_property.getNotStartsWith());
-		
+				AttributeValue.f_name_catma_system_property.getNotStartsWithFilter());
 		addProperties(
 				tagInstance.getTagDefinition(), 
 				new AddPropertyHandler() {
@@ -110,7 +103,6 @@ public class TeiUserMarkupCollectionDeserializer {
 					}
 				}, 
 				userDefinedPropertyElements);
-		
 		return tagInstance;
 	}
 

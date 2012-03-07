@@ -20,7 +20,7 @@ public class TagLibrary implements Iterable<TagsetDefinition> {
 		tagsetDefinitions.put(tagsetDefinition.getID(),tagsetDefinition);
 	}
 
-	public TagDefinition getTagDefintion(String tagDefinitionID) {
+	public TagDefinition getTagDefinition(String tagDefinitionID) {
 		for(TagsetDefinition tagsetDefiniton : tagsetDefinitions.values()) {
 			if (tagsetDefiniton.hasTagDefinition(tagDefinitionID)) {
 				return tagsetDefiniton.getTagDefinition(tagDefinitionID);

@@ -14,8 +14,8 @@ import de.catma.core.ExceptionHandler;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
 import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagLibrary;
-import de.catma.core.tag.TagsetDefinition;
 import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.menu.Menu;
 import de.catma.ui.menu.MenuFactory;
@@ -37,7 +37,6 @@ public class CleaApplication extends Application {
 	private Menu menu;
 	private String tempDirectory = null;
 	private BackgroundService backgroundService;
-	private DefaultProgressListener defaultProgressListener;
 	private TaggerManagerView taggerManagerView;
 
 	@Override
@@ -145,14 +144,7 @@ public class CleaApplication extends Application {
 		}
 		taggerManagerView.openSourceDocument(sourceDocument);
 	}
-	
-	public void attachTagsetDefinition(TagsetDefinition tagsetDefinition) {
-		if (taggerManagerView.getApplication() == null) {
-			menu.executeEntry(taggerManagerView);
-		}
-		taggerManagerView.attachTagsetDefinition(tagsetDefinition);
-	}
-	
+
 	public String getTempDirectory() {
 		return tempDirectory;
 	}
@@ -160,4 +152,13 @@ public class CleaApplication extends Application {
 	public BackgroundService getBackgroundService() {
 		return backgroundService;
 	}
+
+	public void openUserMarkupCollection(
+			SourceDocument sourceDocument, 
+			UserMarkupCollection userMarkupCollection) {
+		taggerManagerView.openUserMarkupCollection(
+				sourceDocument, userMarkupCollection);
+		
+	}
+	
 }

@@ -1,6 +1,8 @@
 package de.catma.core.document.standoffmarkup.usermarkup;
 
-public class UserMarkupCollectionReference {
+import de.catma.core.document.standoffmarkup.MarkupCollectionReference;
+
+public class UserMarkupCollectionReference implements MarkupCollectionReference {
 	
 	private String id;
 	private String name;
@@ -13,6 +15,14 @@ public class UserMarkupCollectionReference {
 	
 	@Override
 	public String toString() {
+		return name;
+	}
+	
+	public String getId() {
+		return id;
+	}
+	
+	public String getName() {
 		return name;
 	}
 }

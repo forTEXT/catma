@@ -25,6 +25,14 @@ public class PropertyPossibleValueList {
 	}
 	
 	
+	public boolean isSingleSelect() {
+		return singleSelect;
+	}
+	
+	public PropertyValueList getPropertyValueList() {
+		return propertyValueList;
+	}
+	
 	
 	
 	

@@ -18,6 +18,7 @@
  */   
 package de.catma.ui.tagger;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,9 +27,13 @@ import com.vaadin.terminal.PaintException;
 import com.vaadin.terminal.PaintTarget;
 import com.vaadin.ui.AbstractComponent;
 
+import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.core.tag.TagDefinition;
+import de.catma.core.util.ColorConverter;
 import de.catma.ui.client.ui.tagger.VTagger;
 import de.catma.ui.client.ui.tagger.shared.EventAttribute;
 import de.catma.ui.client.ui.tagger.shared.TagInstance;
+import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
 
@@ -48,12 +53,12 @@ public class Tagger extends AbstractComponent {
 
 	private Map<String,String> attributes = new HashMap<String, String>();
 	private Pager pager;
-
 	private TaggerListener taggerListener;
 	
 	public Tagger(Pager pager, TaggerListener taggerListener) {
+		addStyleName("tagger");
 		this.pager = pager;
-		this.taggerListener = taggerListener;
+		this.taggerListener = taggerListener;	
 	}
 
 	@Override
@@ -61,19 +66,19 @@ public class Tagger extends AbstractComponent {
 		super.paintContent(target);
 
 		if (target.isFullRepaint() && !pager.isEmpty()) {
-			attributes.put(EventAttribute.HTML.name(), pager.getCurrentPage().toHTML());
+			attributes.put(EventAttribute.PAGE_SET.name(), pager.getCurrentPage().toHTML());
 		}
 		
 		if (!pager.isEmpty() && 
-				(attributes.containsKey(EventAttribute.HTML.name())
+				(attributes.containsKey(EventAttribute.PAGE_SET.name())
 						|| attributes.containsKey(EventAttribute.TAGINSTANCE_CLEAR.name()))) {
 			int i = 0;
 			for (TagInstance t : pager.getCurrentPage().getTagInstances()) {
-				target.addAttribute(EventAttribute.TAGINSTANCE.name()+i, t.toMap());
+				target.addAttribute(EventAttribute.TAGINSTANCE_ADD.name()+i, t.toMap());
 				i++;
 			}
 		}
-		
+
 		for (Map.Entry<String, String> entry : attributes.entrySet()) {
 			target.addAttribute(entry.getKey(), entry.getValue());
 		}
@@ -95,11 +100,11 @@ public class Tagger extends AbstractComponent {
 
 		// Variables set by the widget are returned in the "variables" map.
 
-		if (variables.containsKey(EventAttribute.TAGINSTANCE.name())) {
+		if (variables.containsKey(EventAttribute.TAGINSTANCE_ADD.name())) {
 			@SuppressWarnings("unchecked")
 			TagInstance tagInstance = 
 				new TagInstance(
-						(Map<String,Object>)variables.get(EventAttribute.TAGINSTANCE.name()));
+						(Map<String,Object>)variables.get(EventAttribute.TAGINSTANCE_ADD.name()));
 			pager.getCurrentPage().addTagInstance(tagInstance);
 			taggerListener.tagInstanceAdded(
 					pager.getCurrentPage().getAbsoluteTagInstance(tagInstance));
@@ -114,19 +119,19 @@ public class Tagger extends AbstractComponent {
 		}
 	}
 	
-	private void setHTML(String html) {
-		attributes.put(EventAttribute.HTML.name(), html);
+	private void setPage(String pageContent) {
+		attributes.put(EventAttribute.PAGE_SET.name(), pageContent);
 		requestRepaint();
 	}
 
 	public void setText(String text) {
 		pager.setText(text);
-		setHTML(pager.getCurrentPage().toHTML());
+		setPage(pager.getCurrentPage().toHTML());
 	}
 	
 	public void setPage(int pageNumber) {
 		Page page = pager.getPage(pageNumber);
-		setHTML(page.toHTML());
+		setPage(page.toHTML());
 	}
 
 	public void setTagInstances(List<TagInstance> availableAnnotations) {
@@ -142,5 +147,32 @@ public class Tagger extends AbstractComponent {
 			}
 		}
 		requestRepaint();
+	}
+
+	public void addTagInstanceWith(TagDefinition tagDefinition) {
+		attributes.put(
+			EventAttribute.TAGDEFINITION_SELECTED.name(), 
+			new ColorConverter(tagDefinition.getColor()).toHex());
+		requestRepaint();
+	}
+
+	public void setVisible(List<TagReference> tagReferences, boolean visible) {
+		List<TagInstance> tagInstances = new ArrayList<TagInstance>();
+		
+		for (TagReference tagReference : tagReferences) {
+			List<TextRange> textRanges = new ArrayList<TextRange>();
+			textRanges.add(
+					new TextRange(
+							tagReference.getRange().getStartPoint(), 
+							tagReference.getRange().getEndPoint()));
+			
+			tagInstances.add(
+				new TagInstance(
+					tagReference.getTagInstanceID(), 
+					tagReference.getColor(), textRanges));
+		}
+		if (visible) {
+			setTagInstances(tagInstances);
+		}
 	}
 }
