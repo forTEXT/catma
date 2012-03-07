@@ -69,13 +69,15 @@ public class PhraseQueryTest {
 		SourceDocument sd = repository.getSourceDocument(
 				"http://www.gutenberg.org/cache/epub/13/pg13.txt");
 		try {
-			
 			IndexResponse response = client.prepareIndex("document", "book", "1")
 			        .setSource(XContentFactory.jsonBuilder()
 			                    .startObject()
 			                        .field("content", sd.getContent())
-			                        .field("title", 
-			                        		sd.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getTitle())
+			                        .field("title",
+			                        		sd.getSourceContentHandler().
+			                        		getSourceDocumentInfo().
+			                        		getContentInfoSet().
+			                        		getTitle())
 			                    .endObject()
 			                  )
 			        .execute()
