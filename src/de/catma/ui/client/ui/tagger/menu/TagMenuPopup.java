@@ -123,7 +123,7 @@ class TagMenuPopup extends DialogBox {
 			HandlerRegistration saveButtonReg = saveButton.addClickHandler(new ClickHandler() {
 				
 				public void onClick(ClickEvent event) {
-					TagMenuPopup.this.vTagger.addTag(colorPicker.getHexColor());
+					TagMenuPopup.this.vTagger.createAndAddTagIntance(colorPicker.getHexColor());
 					TagMenuPopup.this.lastSelectedColor = colorPicker.getHexColor();
 					hide();
 				}
@@ -184,7 +184,7 @@ class TagMenuPopup extends DialogBox {
 		HandlerRegistration tagRemoveBtReg = tagRemoveButton.addClickHandler(new ClickHandler() {
 			
 			public void onClick(ClickEvent event) {
-				vTagger.removeTag(tagInstanceID);
+				vTagger.removeTagInstance(tagInstanceID);
 				hide();
 			}
 		});

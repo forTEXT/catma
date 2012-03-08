@@ -19,6 +19,7 @@
 package de.catma.ui.client.ui.tagger.shared;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -38,9 +39,9 @@ public class TagInstance {
 		;
 	}
 	
-	private String color;
-	private String instanceID;
-	private List<TextRange> ranges;
+	final private String color;
+	final private String instanceID;
+	final private List<TextRange> ranges;
 
 	public TagInstance(String instanceID, String color, List<TextRange> ranges) {
 		super();
@@ -66,7 +67,7 @@ public class TagInstance {
 	}
 	
 	public List<TextRange> getRanges() {
-		return ranges;
+		return Collections.unmodifiableList(ranges);
 	}
 	
 	@Override
@@ -74,4 +75,33 @@ public class TagInstance {
 		return "#" + instanceID + " " 
 				+ ((getRanges().size()>0)? getRanges().get(0) :"");
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((instanceID == null) ? 0 : instanceID.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		TagInstance other = (TagInstance) obj;
+		if (instanceID == null) {
+			if (other.instanceID != null)
+				return false;
+		} else if (!instanceID.equals(other.instanceID))
+			return false;
+		return true;
+	}
+	
+
+	
 }

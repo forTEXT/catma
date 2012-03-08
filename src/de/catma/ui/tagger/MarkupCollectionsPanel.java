@@ -3,6 +3,7 @@ package de.catma.ui.tagger;
 import java.util.Collection;
 import java.util.List;
 
+import com.vaadin.data.Property;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.Resource;
@@ -29,7 +30,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				List<TagReference> tagReferences, boolean selected);
 	} 
 	
-	private static enum MarkupCollectionTreeProperty {
+	private static enum MarkupCollectionsTreeProperty {
 		caption("Markup Collections"), 
 		icon("icon"),
 		visible("Visible"),
@@ -38,7 +39,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		
 		private String displayString;
 
-		private MarkupCollectionTreeProperty(String displayString) {
+		private MarkupCollectionsTreeProperty(String displayString) {
 			this.displayString = displayString;
 		}
 		
@@ -49,7 +50,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		
 	}
 	
-	private TreeTable markupTable;
+	private TreeTable markupCollectionsTree;
 	private String userMarkupItem = "User Markup Collections";
 	private String staticMarkupItem = "Static Markup Collections";
 	private TagDefinitionSelectionListener tagDefinitionSelectionListener;
@@ -63,51 +64,51 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private void initComponents(
 			final TagDefinitionSelectionListener tagDefinitionSelectionListener) {
 		
-		markupTable = new TreeTable();
-		markupTable.setSizeFull();
-		markupTable.setContainerDataSource(new HierarchicalContainer());
+		markupCollectionsTree = new TreeTable();
+		markupCollectionsTree.setSizeFull();
+		markupCollectionsTree.setContainerDataSource(new HierarchicalContainer());
 		
-		markupTable.addContainerProperty(
-				MarkupCollectionTreeProperty.caption, 
+		markupCollectionsTree.addContainerProperty(
+				MarkupCollectionsTreeProperty.caption, 
 				String.class, null);
 		
-		markupTable.addContainerProperty(
-				MarkupCollectionTreeProperty.icon, Resource.class, null);
+		markupCollectionsTree.addContainerProperty(
+				MarkupCollectionsTreeProperty.icon, Resource.class, null);
 		
-		markupTable.addContainerProperty(
-				MarkupCollectionTreeProperty.visible, 
+		markupCollectionsTree.addContainerProperty(
+				MarkupCollectionsTreeProperty.visible, 
 				AbstractComponent.class, null);
 		
-		markupTable.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_PROPERTY);
-		markupTable.setItemCaptionPropertyId(
-				MarkupCollectionTreeProperty.caption);
-		markupTable.setItemIconPropertyId(MarkupCollectionTreeProperty.icon);
-		markupTable.addGeneratedColumn(
-				MarkupCollectionTreeProperty.color, new ColorLabelColumnGenerator());
+		markupCollectionsTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_PROPERTY);
+		markupCollectionsTree.setItemCaptionPropertyId(
+				MarkupCollectionsTreeProperty.caption);
+		markupCollectionsTree.setItemIconPropertyId(MarkupCollectionsTreeProperty.icon);
+		markupCollectionsTree.addGeneratedColumn(
+				MarkupCollectionsTreeProperty.color, new ColorLabelColumnGenerator());
 
-		markupTable.setVisibleColumns(
+		markupCollectionsTree.setVisibleColumns(
 				new Object[] {
-						MarkupCollectionTreeProperty.caption,
-						MarkupCollectionTreeProperty.color,
-						MarkupCollectionTreeProperty.visible});
+						MarkupCollectionsTreeProperty.caption,
+						MarkupCollectionsTreeProperty.color,
+						MarkupCollectionsTreeProperty.visible});
 		
-		markupTable.addItem(
+		markupCollectionsTree.addItem(
 			new Object[] {userMarkupItem, new Label()}, userMarkupItem);
 		
-		markupTable.addItem(
+		markupCollectionsTree.addItem(
 			new Object[] {staticMarkupItem, new Label()}, staticMarkupItem );
 		
 
-		addComponent(markupTable);
+		addComponent(markupCollectionsTree);
 	}
 
 	private UserMarkupCollection getUserMarkupCollection(
 			Object itemId) {
 		
-		Object parent = markupTable.getParent(itemId);
+		Object parent = markupCollectionsTree.getParent(itemId);
 		while((parent!=null) 
 				&& !(parent instanceof UserMarkupCollection)) {
-			parent = markupTable.getParent(parent);
+			parent = markupCollectionsTree.getParent(parent);
 		}
 		
 		return (UserMarkupCollection)parent;
@@ -116,10 +117,10 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	public void openUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
 
-		markupTable.addItem(
+		markupCollectionsTree.addItem(
 				new Object[] {userMarkupCollection, new Label()},
 				userMarkupCollection);
-		markupTable.setParent(userMarkupCollection, userMarkupItem);
+		markupCollectionsTree.setParent(userMarkupCollection, userMarkupItem);
 		
 		TagLibrary tagLibrary = userMarkupCollection.getTagLibrary();
 		for (TagsetDefinition tagsetDefinition : tagLibrary) {
@@ -127,13 +128,13 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 					new ClassResource(
 						"ui/tagmanager/resources/grndiamd.gif", getApplication());
 
-			markupTable.addItem(
+			markupCollectionsTree.addItem(
 					new Object[]{tagsetDefinition.getName(), 
 							new Label()}, tagsetDefinition);
-			markupTable.getContainerProperty(
-				tagsetDefinition, MarkupCollectionTreeProperty.icon).setValue(
+			markupCollectionsTree.getContainerProperty(
+				tagsetDefinition, MarkupCollectionsTreeProperty.icon).setValue(
 						tagsetIcon);
-			markupTable.setParent(tagsetDefinition, userMarkupCollection);
+			markupCollectionsTree.setParent(tagsetDefinition, userMarkupCollection);
 			addTagDefinitions(tagsetDefinition);
 		}
 	}
@@ -147,13 +148,13 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 							"ui/tagmanager/resources/reddiamd.gif", 
 						getApplication());
 				
-				markupTable.addItem(
+				markupCollectionsTree.addItem(
 						new Object[]{
 								tagDefinition.getType(), 
 								createCheckbox(tagDefinition)},
 						tagDefinition);
-				markupTable.getContainerProperty(
-						tagDefinition, MarkupCollectionTreeProperty.icon).setValue(
+				markupCollectionsTree.getContainerProperty(
+						tagDefinition, MarkupCollectionsTreeProperty.icon).setValue(
 								tagIcon);
 
 			}
@@ -164,16 +165,16 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			if ((parent==null)
 					||(parent.getID().equals(
 							TagDefinition.CATMA_BASE_TAG.getID()))) {
-				markupTable.setParent(tagDefinition, tagsetDefinition);
+				markupCollectionsTree.setParent(tagDefinition, tagsetDefinition);
 			}
 			else {
-				markupTable.setParent(tagDefinition, parent);
+				markupCollectionsTree.setParent(tagDefinition, parent);
 			}
 		}
 		
 		for (TagDefinition tagDefinition : tagsetDefinition) {
-			if (!markupTable.hasChildren(tagDefinition)) {
-				markupTable.setChildrenAllowed(tagDefinition, false);
+			if (!markupCollectionsTree.hasChildren(tagDefinition)) {
+				markupCollectionsTree.setChildrenAllowed(tagDefinition, false);
 			}
 		}
 	}
@@ -186,9 +187,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			public void buttonClick(ClickEvent event) {
 				boolean enabled = 
 						event.getButton().booleanValue();
-
+				System.out.println(tagDefinition + " enabled:" + enabled);
 				Collection<?> children = 
-						markupTable.getChildren(tagDefinition);
+						markupCollectionsTree.getChildren(tagDefinition);
 				
 				UserMarkupCollection userMarkupCollection =
 						getUserMarkupCollection(tagDefinition);
@@ -203,6 +204,16 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 							tagReferences.addAll(
 								userMarkupCollection.getTagReferences(
 										(TagDefinition)childId));
+						}
+						Object visiblePropertyValue = 
+							markupCollectionsTree.getItem(
+								childId).getItemProperty(
+									MarkupCollectionsTreeProperty.visible).getValue();
+						
+						if ((visiblePropertyValue != null) 
+								&& (visiblePropertyValue instanceof CheckBox)) {
+							CheckBox cbVisible = (CheckBox)visiblePropertyValue;
+							cbVisible.setValue(enabled);
 						}
 					}
 				}							

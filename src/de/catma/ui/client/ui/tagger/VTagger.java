@@ -29,7 +29,7 @@ import com.vaadin.terminal.gwt.client.VConsole;
 
 import de.catma.ui.client.ui.tagger.editor.TaggerEditor;
 import de.catma.ui.client.ui.tagger.editor.TaggerEditorListener;
-import de.catma.ui.client.ui.tagger.shared.EventAttribute;
+import de.catma.ui.client.ui.tagger.shared.TaggerMessageAttribute;
 import de.catma.ui.client.ui.tagger.shared.TagInstance;
 
 
@@ -67,19 +67,18 @@ public class VTagger extends Composite implements Paintable {
 					case ADD : {
 						TagInstance tagInstance = (TagInstance)args[0];
 						sendMessage(
-								EventAttribute.LOGMESSAGE, 
-								"TAGEVENT.toString: " + tagInstance.toString());
-						sendMessage(
-								EventAttribute.TAGINSTANCE_ADD, 
+								TaggerMessageAttribute.TAGINSTANCE_ADD, 
 								tagInstanceJSONSerializer.toJSONObject(tagInstance));
 						break;
 					}
 				
 					case REMOVE : {
-						boolean reportToServer = (Boolean)args[0];
-						String tagInstanceID  = (String)args[1];
+						String tagInstanceID  = (String)args[0];
+						boolean reportToServer = (Boolean)args[1];
 						if (reportToServer) {
-							sendMessage(EventAttribute.TAGINSTANCE_REMOVE, tagInstanceID);
+							sendMessage(
+								TaggerMessageAttribute.TAGINSTANCE_REMOVE, 
+								tagInstanceID);
 						}
 						break;
 					}
@@ -111,46 +110,60 @@ public class VTagger extends Composite implements Paintable {
 		// Save the client side identifier (paintable id) for the widget
 		this.clientID = uidl.getId();
 
-		if (uidl.hasAttribute(EventAttribute.PAGE_SET.name())) {
+		if (uidl.hasAttribute(TaggerMessageAttribute.PAGE_SET.name())) {
 			VConsole.log("setting page content");
 			taggerEditor.setHTML(
 				new HTML(
-					uidl.getStringAttribute(EventAttribute.PAGE_SET.name())));
+					uidl.getStringAttribute(TaggerMessageAttribute.PAGE_SET.name())));
 		}
 
 
-		if (uidl.hasAttribute(EventAttribute.TAGINSTANCE_CLEAR.name()) 
+		if (uidl.hasAttribute(TaggerMessageAttribute.TAGINSTANCE_CLEAR.name()) 
 				&& uidl.getBooleanAttribute(
-						EventAttribute.TAGINSTANCE_CLEAR.name())) {
-			
+						TaggerMessageAttribute.TAGINSTANCE_CLEAR.name())) {
+			//TODO: gets no longer sent by the server, might be obsolete
 			taggerEditor.clearTagInstances();
 		}
 		
-		if (uidl.hasAttribute(EventAttribute.TAGINSTANCES_ADD.name())) {
+		if (uidl.hasAttribute(TaggerMessageAttribute.TAGINSTANCES_ADD.name())) {
 			List<TagInstance> tagInstances = 
 					tagInstanceJSONSerializer.fromJSONArray(
 						uidl.getStringAttribute(
-							EventAttribute.TAGINSTANCES_ADD.name()));
+							TaggerMessageAttribute.TAGINSTANCES_ADD.name()));
 			for (TagInstance tagInstance : tagInstances) {
-				VConsole.log("got tag instance from server: " + tagInstance);
+				VConsole.log("got tag instance from server (show): " + tagInstance);
 				taggerEditor.addTagInstance(tagInstance);
 			}
 		}
 		
-		if (uidl.hasAttribute(EventAttribute.TAGDEFINITION_SELECTED.name())) {
+		if (uidl.hasAttribute(TaggerMessageAttribute.TAGINSTANCES_REMOVE.name())) {
+			List<TagInstance> tagInstances = 
+					tagInstanceJSONSerializer.fromJSONArray(
+						uidl.getStringAttribute(
+							TaggerMessageAttribute.TAGINSTANCES_REMOVE.name()));
+			
+			for (TagInstance tagInstance : tagInstances) {
+				VConsole.log("got TagInstance from server (hide): " + tagInstance);
+				taggerEditor.removeTagInstance(
+						tagInstance.getInstanceID(), 
+						false); //don't report to server
+			}
+		}
+		
+		if (uidl.hasAttribute(TaggerMessageAttribute.TAGDEFINITION_SELECTED.name())) {
 			String color = 
 				uidl.getStringAttribute(
-						EventAttribute.TAGDEFINITION_SELECTED.name());
-			taggerEditor.addTag(color);
+						TaggerMessageAttribute.TAGDEFINITION_SELECTED.name());
+			taggerEditor.createAndAddTagIntance(color);
 		}
 		
 	}
 	
 	public void logToServer(String logMsg) {
-		sendMessage(EventAttribute.LOGMESSAGE, logMsg);
+		sendMessage(TaggerMessageAttribute.LOGMESSAGE, logMsg);
 	}
 
-	private void sendMessage(EventAttribute taggerEventAttribute, String message) {
+	private void sendMessage(TaggerMessageAttribute taggerEventAttribute, String message) {
 		serverConnection.updateVariable(
 				clientID, taggerEventAttribute.name(), message, true);
 		

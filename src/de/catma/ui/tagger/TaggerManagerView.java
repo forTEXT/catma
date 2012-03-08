@@ -94,12 +94,8 @@ public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 
 	}
 
-	public void openUserMarkupCollection(SourceDocument sourceDocument,
+	public void openUserMarkupCollection(TaggerView taggerView,
 			UserMarkupCollection userMarkupCollection) {
-	
-		TaggerView taggerView = openSourceDocument(sourceDocument);
 		taggerView.openUserMarkupCollection(userMarkupCollection);
-		
-		
 	}
 }

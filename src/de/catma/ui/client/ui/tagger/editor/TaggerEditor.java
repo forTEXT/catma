@@ -51,11 +51,11 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 		addMouseMoveHandler(new TagMenu(this));
 	}
 	
-	public void removeTag(String tagInstanceID) {
-		removeTag(tagInstanceID, true);
+	public void removeTagInstance(String tagInstanceID) {
+		removeTagInstance(tagInstanceID, true);
 	}
 	
-	private void removeTag(String tagInstanceID, boolean reportToServer) {
+	public void removeTagInstance(String tagInstanceID, boolean reportToServer) {
 		int currentPartID = 1;
 		Element taggedSpan = Document.get().getElementById(tagInstanceID + "_" + currentPartID++);
 		while(taggedSpan != null) {
@@ -65,7 +65,6 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 			for (int i=0; i<children.getLength(); i++) {
 				Node child = children.getItem(i);
 				parent.insertBefore(child.cloneNode(true), taggedSpan);
-				
 			}
 			parent.removeChild(taggedSpan);
 			taggedSpan = Document.get().getElementById(tagInstanceID + "_" + currentPartID++);
@@ -88,9 +87,10 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 			}
 		}
 		getElement().appendChild(pageHtmlContent.getElement());
+		tagInstances.clear();
 	}
 	 
-	public void addTag(String color) {
+	public void createAndAddTagIntance(String color) {
 		
 		TaggedSpanFactory taggedSpanFactory = new TaggedSpanFactory(color);
 		
@@ -117,7 +117,7 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 			for (TextRange textRange : textRanges) {
 				NodeRange nodeRange = converter.convertToNodeRange(textRange);
 				VConsole.log("adding tag to range: " + nodeRange);
-				addTagToRange(taggedSpanFactory, nodeRange);
+				addTagInstanceForRange(taggedSpanFactory, nodeRange);
 				VConsole.log("added tag to range");
 			}
 
@@ -135,7 +135,8 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 		}
 	}
 	
-	private void addTagToRange(TaggedSpanFactory taggedSpanFactory, NodeRange range) {
+	private void addTagInstanceForRange(
+			TaggedSpanFactory taggedSpanFactory, NodeRange range) {
 		
 		Node startNode = range.getStartNode();
 		int startOffset = range.getStartOffset();
@@ -151,20 +152,20 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 
 		if (startNode.equals(endNode)) {
 			VConsole.log("startNode equals endNode");
-			addTag(
+			addTagInstance(
 				taggedSpanFactory, 
 				startNode, startOffset, endOffset);
 		}
 		else {
 			VConsole.log("startNode and endNode are not on the same branch");
 			
-			addTag(
+			addTagInstance(
 				taggedSpanFactory, 
 				startNode, startOffset, endNode, endOffset);
 		}
 	}
 	
-	private void addTag(
+	private void addTagInstance(
 			TaggedSpanFactory taggedSpanFactory, 
 			Node node, int originalStartOffset, int originalEndOffset) {
 		
@@ -203,7 +204,7 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 		nodeParent.removeChild(node);
 	}
 
-	private void addTag(
+	private void addTagInstance(
 			TaggedSpanFactory taggedSpanFactory, 
 			Node startNode, int startOffset, Node endNode, int endOffset) {
 
@@ -353,22 +354,24 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 		ArrayList<String> keyCopy = new ArrayList<String>();
 		keyCopy.addAll(tagInstances.keySet());
 		for (String tagInstanceID : keyCopy) {
-			removeTag(tagInstanceID, false);
+			removeTagInstance(tagInstanceID, false);
 		}		
 	}
 
 	public void addTagInstance(TagInstance tagInstance) {
-		tagInstances.put(tagInstance.getInstanceID(), tagInstance);
-
-		RangeConverter rangeConverter = new RangeConverter();
-
-		TaggedSpanFactory taggedSpanFactory = 
-				new TaggedSpanFactory(
-						tagInstance.getInstanceID(), tagInstance.getColor());
-		for (TextRange textRange : tagInstance.getRanges()) {
-			addTagToRange(
-				taggedSpanFactory, rangeConverter.convertToNodeRange(textRange));
-		}		
+		if (!tagInstances.containsKey(tagInstance.getInstanceID())) {
+			tagInstances.put(tagInstance.getInstanceID(), tagInstance);
+	
+			RangeConverter rangeConverter = new RangeConverter();
+	
+			TaggedSpanFactory taggedSpanFactory = 
+					new TaggedSpanFactory(
+							tagInstance.getInstanceID(), tagInstance.getColor());
+			for (TextRange textRange : tagInstance.getRanges()) {
+				addTagInstanceForRange(
+					taggedSpanFactory, rangeConverter.convertToNodeRange(textRange));
+			}
+		}
 	}
 }
 

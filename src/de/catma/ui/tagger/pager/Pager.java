@@ -163,10 +163,10 @@ public class Pager implements Iterable<Page> {
 		this.pagerListener = pagerListener;
 	}
 
-	public Page getPageFor(TagInstance ti) {
+	public Page getPageForAbsoluteTagInstance(TagInstance absoluteTagInstance) {
 		
 		for (Page p : pages) {
-			if (p.includes(ti)) {
+			if (p.includesAbsoluteTagInstance(absoluteTagInstance)) {
 				return p;
 			}
 		}

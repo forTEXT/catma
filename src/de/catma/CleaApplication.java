@@ -16,13 +16,13 @@ import de.catma.core.document.repository.RepositoryManager;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagLibrary;
-import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.menu.Menu;
 import de.catma.ui.menu.MenuFactory;
 import de.catma.ui.repository.RepositoryManagerView;
 import de.catma.ui.repository.RepositoryManagerWindow;
 import de.catma.ui.tagger.TaggerManagerView;
 import de.catma.ui.tagger.TaggerManagerWindow;
+import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagManagerView;
 import de.catma.ui.tagmanager.TagManagerWindow;
 
@@ -138,11 +138,11 @@ public class CleaApplication extends Application {
 		tagManagerView.openTagLibrary(tagLibrary);
 	}
 
-	public void openSourceDocument(SourceDocument sourceDocument) {
+	public TaggerView openSourceDocument(SourceDocument sourceDocument) {
 		if (taggerManagerView.getApplication() == null) {
 			menu.executeEntry(taggerManagerView);
 		}
-		taggerManagerView.openSourceDocument(sourceDocument);
+		return taggerManagerView.openSourceDocument(sourceDocument);
 	}
 
 	public String getTempDirectory() {
@@ -156,8 +156,9 @@ public class CleaApplication extends Application {
 	public void openUserMarkupCollection(
 			SourceDocument sourceDocument, 
 			UserMarkupCollection userMarkupCollection) {
+		TaggerView taggerView = openSourceDocument(sourceDocument);
 		taggerManagerView.openUserMarkupCollection(
-				sourceDocument, userMarkupCollection);
+				taggerView, userMarkupCollection);
 		
 	}
 	

@@ -45,7 +45,8 @@ public class Page {
 	
 	private static enum HTMLElement {
 		div,
-		span, br,
+		span, 
+		br,
 		;
 	}
 	
@@ -57,7 +58,8 @@ public class Page {
 	private int pageStart;
 	private int pageEnd;
 	private String text;
-	private Map<String, TagInstance> tagInstances = new HashMap<String,TagInstance>();
+	private Map<String, TagInstance> relativeTagInstances = 
+			new HashMap<String,TagInstance>();
 	
 	public Page(String text, int pageStart, int pageEnd) {
 		this.pageStart = pageStart;
@@ -152,16 +154,17 @@ public class Page {
 		}
 	}
 
-	public void addTagInstance(TagInstance tagInstance) {
-		this.tagInstances.put(tagInstance.getInstanceID(), tagInstance);
+	public void addRelativeTagInstance(TagInstance relativeTagInstance) {
+		this.relativeTagInstances.put(
+				relativeTagInstance.getInstanceID(), relativeTagInstance);
 	}
 	
-	public void removeTagInstance(String tagInstanceID) {
-		this.tagInstances.remove(tagInstanceID);
+	public void removeRelativeTagInstance(String tagInstanceID) {
+		this.relativeTagInstances.remove(tagInstanceID);
 	}
 	
-	public Collection<TagInstance> getTagInstances() {
-		return Collections.unmodifiableCollection(this.tagInstances.values());
+	public Collection<TagInstance> getRelativeTagInstances() {
+		return Collections.unmodifiableCollection(this.relativeTagInstances.values());
 	}
 
 	public TagInstance getAbsoluteTagInstance(TagInstance tagInstance) {
@@ -170,14 +173,13 @@ public class Page {
 
 	public void addAbsoluteTagInstance(TagInstance ti) {
 		TagInstance relativeInstance = new TagInstance(ti, pageStart*(-1));
-		System.out.println(relativeInstance);
-		addTagInstance(relativeInstance);
-		
+		addRelativeTagInstance(relativeInstance);
 	}
 
-	public boolean includes(TagInstance ti) {
-		if (ti.getRanges().size()>0) {
-			TextRange tr = ti.getRanges().get(0);
+	public boolean includesAbsoluteTagInstance(TagInstance absoluteTagInstance) {
+		if (absoluteTagInstance.getRanges().size()>0) {
+			//FIXME: what if a TagInstance stretches over two pages? Tagger doesn't support that for now but maybe in the future
+			TextRange tr = absoluteTagInstance.getRanges().get(0); 
 			if ((tr.getStartPos()>=this.pageStart) && (tr.getEndPos()<=this.pageEnd)) {
 				return true;
 			}
@@ -185,7 +187,11 @@ public class Page {
 		return false;
 	}
 
-	public void clearTagInstances() {
-		tagInstances.clear();
+	public void clearRelativeTagInstances() {
+		relativeTagInstances.clear();
+	}
+
+	public TagInstance getRelativeTagInstance(String instanceID) {
+		return relativeTagInstances.get(instanceID);
 	}
 }

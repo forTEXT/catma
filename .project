@@ -3,6 +3,7 @@
 	<name>clea</name>
 	<comment></comment>
 	<projects>
+		<project>catma-core</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

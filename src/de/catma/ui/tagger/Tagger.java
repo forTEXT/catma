@@ -32,8 +32,8 @@ import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.util.ColorConverter;
 import de.catma.ui.client.ui.tagger.VTagger;
-import de.catma.ui.client.ui.tagger.shared.EventAttribute;
 import de.catma.ui.client.ui.tagger.shared.TagInstance;
+import de.catma.ui.client.ui.tagger.shared.TaggerMessageAttribute;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.tagger.TagInstanceJSONSerializer.JSONSerializationException;
 import de.catma.ui.tagger.pager.Page;
@@ -69,21 +69,19 @@ public class Tagger extends AbstractComponent {
 	public void paintContent(PaintTarget target) throws PaintException {
 		super.paintContent(target);
 		
-		System.out.println(target + " fr:" + target.isFullRepaint());
-		
 		if (target.isFullRepaint() 
 				&& !pager.isEmpty() 
-				&& !attributes.containsKey(EventAttribute.PAGE_SET.name())) {
+				&& !attributes.containsKey(TaggerMessageAttribute.PAGE_SET.name())) {
 			
 			attributes.put(
-				EventAttribute.PAGE_SET.name(), 
+				TaggerMessageAttribute.PAGE_SET.name(), 
 				pager.getCurrentPage().toHTML());
 			
 			try {
 				attributes.put(
-						EventAttribute.TAGINSTANCES_ADD.name(),
+						TaggerMessageAttribute.TAGINSTANCES_ADD.name(),
 						tagInstanceJSONSerializer.toJSON(
-								pager.getCurrentPage().getTagInstances()));
+								pager.getCurrentPage().getRelativeTagInstances()));
 			}
 			catch(JSONSerializationException e) {
 				//TODO: handle
@@ -111,11 +109,12 @@ public class Tagger extends AbstractComponent {
 	public void changeVariables(Object source, Map<String, Object> variables) {
 		super.changeVariables(source, variables);
 
-		if (variables.containsKey(EventAttribute.TAGINSTANCE_ADD.name())) {
+		if (variables.containsKey(TaggerMessageAttribute.TAGINSTANCE_ADD.name())) {
 			try {
 				TagInstance tagInstance = tagInstanceJSONSerializer.fromJSON(
-						(String)variables.get(EventAttribute.TAGINSTANCE_ADD.name()));
-				pager.getCurrentPage().addTagInstance(tagInstance);
+						(String)variables.get(TaggerMessageAttribute.TAGINSTANCE_ADD.name()));
+				System.out.println("TagInstance added: " + tagInstance);
+				pager.getCurrentPage().addRelativeTagInstance(tagInstance);
 				taggerListener.tagInstanceAdded(
 						pager.getCurrentPage().getAbsoluteTagInstance(tagInstance));
 			} catch (JSONSerializationException e) {
@@ -124,23 +123,28 @@ public class Tagger extends AbstractComponent {
 			}
 		}
 		
-		if (variables.containsKey(EventAttribute.TAGINSTANCE_REMOVE.name())) {
-			pager.getCurrentPage().removeTagInstance(
-					(String)variables.get(EventAttribute.TAGINSTANCE_REMOVE.name()));
+		if (variables.containsKey(TaggerMessageAttribute.TAGINSTANCE_REMOVE.name())) {
+			String instanceID = 
+					(String)variables.get(
+							TaggerMessageAttribute.TAGINSTANCE_REMOVE.name());
+					System.out.println("TagInstance removed: " + instanceID);
+			pager.getCurrentPage().removeRelativeTagInstance(instanceID);
 		}
 		
-		if (variables.containsKey(EventAttribute.LOGMESSAGE.name())) {
-			System.out.println(variables.get(EventAttribute.LOGMESSAGE.name()));
+		if (variables.containsKey(TaggerMessageAttribute.LOGMESSAGE.name())) {
+			System.out.println(
+				"Got log message from client: "  
+					+ variables.get(TaggerMessageAttribute.LOGMESSAGE.name()));
 		}
 	}
 	
 	private void setPage(String pageContent) {
-		attributes.put(EventAttribute.PAGE_SET.name(), pageContent);
+		attributes.put(TaggerMessageAttribute.PAGE_SET.name(), pageContent);
 		try {
 			attributes.put(
-					EventAttribute.TAGINSTANCES_ADD.name(),
+					TaggerMessageAttribute.TAGINSTANCES_ADD.name(),
 					tagInstanceJSONSerializer.toJSON(
-							pager.getCurrentPage().getTagInstances()));
+							pager.getCurrentPage().getRelativeTagInstances()));
 		} catch (JSONSerializationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -158,28 +162,59 @@ public class Tagger extends AbstractComponent {
 		setPage(page.toHTML());
 	}
 
-	public void setTagInstances(List<TagInstance> tagInstances) {
+	private void setTagInstancesVisible(
+			List<TagInstance> tagInstances, boolean visible) {
+		
+		List<TagInstance> currentRelativePageTagInstancesCopy = 
+				new ArrayList<TagInstance>();
+		
+		currentRelativePageTagInstancesCopy.addAll(
+				pager.getCurrentPage().getRelativeTagInstances());
+		
+		for (TagInstance ti : tagInstances) {
+			Page page = pager.getPageForAbsoluteTagInstance(ti);
+			if (page != null) {
+				if (visible) {
+					page.addAbsoluteTagInstance(ti);
+				}
+				else {
+					page.removeRelativeTagInstance(ti.getInstanceID());
+				}
+			}	
+		}
+		
+		// we send only the TagInstances of the current page
+		if (visible) {
+			currentRelativePageTagInstancesCopy.clear();
+			currentRelativePageTagInstancesCopy.addAll(
+					pager.getCurrentPage().getRelativeTagInstances());
+		}
+		currentRelativePageTagInstancesCopy.retainAll(tagInstances);
+		
+		
+		String taggerMessageAttribute = 
+				TaggerMessageAttribute.TAGINSTANCES_ADD.name();
+		if (!visible) {
+			taggerMessageAttribute = 
+				TaggerMessageAttribute.TAGINSTANCES_REMOVE.name();
+		}
+		
 		try {
 			attributes.put(
-					EventAttribute.TAGINSTANCES_ADD.name(),
+					taggerMessageAttribute,
 					tagInstanceJSONSerializer.toJSON(
-							tagInstances));
+							currentRelativePageTagInstancesCopy));
 		} catch (JSONSerializationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		for (TagInstance ti : tagInstances) {
-			Page page = pager.getPageFor(ti);
-			if (page != null) {
-				page.addAbsoluteTagInstance(ti);
-			}
-		}
+		
 		requestRepaint();
 	}
 
 	public void addTagInstanceWith(TagDefinition tagDefinition) {
 		attributes.put(
-			EventAttribute.TAGDEFINITION_SELECTED.name(), 
+			TaggerMessageAttribute.TAGDEFINITION_SELECTED.name(), 
 			new ColorConverter(tagDefinition.getColor()).toHex());
 		requestRepaint();
 	}
@@ -188,6 +223,9 @@ public class Tagger extends AbstractComponent {
 		List<TagInstance> tagInstances = new ArrayList<TagInstance>();
 		
 		for (TagReference tagReference : tagReferences) {
+			System.out.println(
+					"Setting TagReference: " + tagReference 
+					+ " visible: " + visible);
 			List<TextRange> textRanges = new ArrayList<TextRange>();
 			textRanges.add(
 					new TextRange(
@@ -200,8 +238,6 @@ public class Tagger extends AbstractComponent {
 					new ColorConverter(tagReference.getColor()).toHex(), 
 					textRanges));
 		}
-		if (visible) {
-			setTagInstances(tagInstances);
-		}
+		setTagInstancesVisible(tagInstances, visible);
 	}
 }
