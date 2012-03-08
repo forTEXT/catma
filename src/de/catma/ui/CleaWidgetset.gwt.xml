@@ -28,4 +28,5 @@
     <inherits name="net.auroris.ColorPicker.client" />
 	<inherits name="com.google.gwt.json.JSON" />
     <inherits name="org.vaadin.teemu.wizards.WizardsforvaadinWidgetset" />
+    
 </module>

@@ -19,6 +19,13 @@
 
 package de.catma.indexer;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
+
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
@@ -28,13 +35,8 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
 
-
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.regex.Pattern;
+import de.catma.indexer.unseparablecharactersequence.CharTree;
+import de.catma.indexer.unseparablecharactersequence.CharTreeFactory;
 
 /**
  * This class handles the construction of the {@link org.catma.indexer.Index} of a
@@ -64,7 +66,8 @@ public enum Indexer {
      * @see org.catma.indexer.IndexBackroundLoader
      * @see org.catma.backgroundservice.BackgroundService
      */
-    public Index createIndex(
+    //TODO: elasticsearchteil implementieren
+    public boolean createIndex(
             String content,
             List<String> unseparableCharacterSequences,
             List<Character> userDefinedSeparatingCharacters,
@@ -99,7 +102,6 @@ public enum Indexer {
 
         // build the token list
 
-        ArrayList<TermInfo> tokenList = new ArrayList<TermInfo>();
 
         while(ts.incrementToken()) {
             TermAttribute termAttr =
@@ -107,31 +109,14 @@ public enum Indexer {
             OffsetAttribute offsetAttr =
                     (OffsetAttribute)ts.getAttribute(OffsetAttribute.class);
 
-            TermInfo ti =  new TermInfo(termAttr.term(),
-                offsetAttr.startOffset(), offsetAttr.endOffset());
-            tokenList.add(ti);
+
         }
 
         // store the list in the index
 
-        for( int idx=0; idx<tokenList.size(); idx++) {
-            TermInfo curTermInfo = tokenList.get(idx);
+       
             Document doc = new Document();
-
-            // index term
-            doc.add(new Field(Fieldname.term.name(),
-                    curTermInfo.getTerm(), Field.Store.YES,
-                    Field.Index.NOT_ANALYZED));
-
-            // store position
-            doc.add(new Field(Fieldname.startOffset.name(),
-                    String.valueOf(curTermInfo.getRange().getStartPoint()), Field.Store.YES,
-                    Field.Index.NO));
-
-            // store position
-            doc.add(new Field(Fieldname.endOffset.name(),
-                    String.valueOf(curTermInfo.getRange().getEndPoint()), Field.Store.YES,
-                    Field.Index.NO));
+           
 
 //            // index predecessors and successors
 //            for(
@@ -150,13 +135,13 @@ public enum Indexer {
 
             iwriter.addDocument(doc);
 
-        }
+        
 
         iwriter.optimize();
         iwriter.close();
         ts.close();
 
-        return new Index(directory, analyzer, tokenList.size());
+        return true;
     }
 
     /**

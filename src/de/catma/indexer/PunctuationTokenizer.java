@@ -19,18 +19,20 @@
 
 package de.catma.indexer;
 
-import org.apache.lucene.analysis.TokenFilter;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
-import org.apache.lucene.analysis.tokenattributes.TermAttribute;
-
-
 import java.io.IOException;
 import java.text.BreakIterator;
 import java.util.ArrayDeque;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.lucene.analysis.TokenFilter;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
+import org.apache.lucene.analysis.tokenattributes.TermAttribute;
+
+import de.catma.indexer.unseparablecharactersequence.CharTree;
+import de.catma.indexer.unseparablecharactersequence.UnseparableCharacterSequenceAttribute;
 
 /**
  * A punctuation aware tokenizer.

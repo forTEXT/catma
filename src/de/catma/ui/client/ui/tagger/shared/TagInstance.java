@@ -19,9 +19,7 @@
 package de.catma.ui.client.ui.tagger.shared;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 
@@ -31,9 +29,10 @@ import java.util.Map;
  */
 public class TagInstance {
 	
-	private static enum SerializationField {
+	public static enum SerializationField {
 		instanceID,
 		color,
+		ranges,
 		startPos,
 		endPos,
 		;
@@ -50,55 +49,12 @@ public class TagInstance {
 		this.ranges = ranges;
 	}
 	
-	public TagInstance(Map<String,Object> serializedEvent) {
-		this.instanceID = 
-				(String)serializedEvent.get(SerializationField.instanceID.name());
-		this.color = 
-				(String)serializedEvent.get(SerializationField.color.name());
-
-		ranges = new ArrayList<TextRange>();
-		int i=0;
-		while(serializedEvent.containsKey(SerializationField.startPos.name()+i)){
-			ranges.add(
-				new TextRange(
-					Integer.valueOf(
-						(String)serializedEvent.get(
-								SerializationField.startPos.name()+i)),
-					Integer.valueOf(
-						(String)serializedEvent.get(
-								SerializationField.endPos.name()+i))));
-			
-			i++;
-		}
-	}
-	
 	public TagInstance(TagInstance tagInstanceToCopy, int base) {
 		this(tagInstanceToCopy.instanceID, 
 				tagInstanceToCopy.color, new ArrayList<TextRange>());
 		for (TextRange tr : tagInstanceToCopy.getRanges()) {
 			ranges.add(new TextRange(tr.getStartPos()+base, tr.getEndPos()+base));
 		}
-	}
-
-	public Map<String,Object> toMap() {
-		Map<String, Object> result =
-				new HashMap<String, Object>();
-		
-		int i=0;
-		result.put(SerializationField.instanceID.name(), instanceID);
-		result.put(SerializationField.color.name(), color);
-
-		for (TextRange tr : ranges) {
-			result.put(
-				SerializationField.startPos.name()+i, 
-				String.valueOf(tr.getStartPos()));
-			result.put(
-				SerializationField.endPos.name()+i, 
-				String.valueOf(tr.getEndPos()));
-			i++;
-		}
-		
-		return result;
 	}
 
 	public String getInstanceID() {

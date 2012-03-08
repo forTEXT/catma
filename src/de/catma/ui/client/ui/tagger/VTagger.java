@@ -18,8 +18,7 @@
  */   
 package de.catma.ui.client.ui.tagger;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTML;
@@ -27,7 +26,6 @@ import com.vaadin.terminal.gwt.client.ApplicationConnection;
 import com.vaadin.terminal.gwt.client.Paintable;
 import com.vaadin.terminal.gwt.client.UIDL;
 import com.vaadin.terminal.gwt.client.VConsole;
-import com.vaadin.terminal.gwt.client.ValueMap;
 
 import de.catma.ui.client.ui.tagger.editor.TaggerEditor;
 import de.catma.ui.client.ui.tagger.editor.TaggerEditorListener;
@@ -48,6 +46,7 @@ public class VTagger extends Composite implements Paintable {
 	private ApplicationConnection serverConnection;
 	
 	private TaggerEditor taggerEditor;
+	private TagInstanceJSONSerializer tagInstanceJSONSerializer;
 	
 	/**
 	 * The constructor should first call super() to initialize the component and
@@ -55,6 +54,7 @@ public class VTagger extends Composite implements Paintable {
 	 */
 	public VTagger() {
 		super();
+		this.tagInstanceJSONSerializer = new TagInstanceJSONSerializer();
 		initComponents();
 		
 	}
@@ -71,7 +71,7 @@ public class VTagger extends Composite implements Paintable {
 								"TAGEVENT.toString: " + tagInstance.toString());
 						sendMessage(
 								EventAttribute.TAGINSTANCE_ADD, 
-								tagInstance.toMap());
+								tagInstanceJSONSerializer.toJSONObject(tagInstance));
 						break;
 					}
 				
@@ -126,15 +126,15 @@ public class VTagger extends Composite implements Paintable {
 			taggerEditor.clearTagInstances();
 		}
 		
-		int i=0;
-		while (uidl.hasAttribute(EventAttribute.TAGINSTANCE_ADD.name()+i)) {
-			ValueMap tagInstanceValueMap = 
-					uidl.getMapAttribute(EventAttribute.TAGINSTANCE_ADD.name()+i);
-			
-			TagInstance tagInstance = getTagInstance(tagInstanceValueMap);
-			VConsole.log("got tag instance from server: " + tagInstance);
-			taggerEditor.addTagInstance(tagInstance);
-			i++;
+		if (uidl.hasAttribute(EventAttribute.TAGINSTANCES_ADD.name())) {
+			List<TagInstance> tagInstances = 
+					tagInstanceJSONSerializer.fromJSONArray(
+						uidl.getStringAttribute(
+							EventAttribute.TAGINSTANCES_ADD.name()));
+			for (TagInstance tagInstance : tagInstances) {
+				VConsole.log("got tag instance from server: " + tagInstance);
+				taggerEditor.addTagInstance(tagInstance);
+			}
 		}
 		
 		if (uidl.hasAttribute(EventAttribute.TAGDEFINITION_SELECTED.name())) {
@@ -149,27 +149,11 @@ public class VTagger extends Composite implements Paintable {
 	public void logToServer(String logMsg) {
 		sendMessage(EventAttribute.LOGMESSAGE, logMsg);
 	}
-	
-	
-	private void sendMessage(
-			EventAttribute taggerEventAttribute, Map<String,Object> message) {
-		serverConnection.updateVariable(
-				clientID, taggerEventAttribute.name(), message, true);
-	}
-	
+
 	private void sendMessage(EventAttribute taggerEventAttribute, String message) {
 		serverConnection.updateVariable(
 				clientID, taggerEventAttribute.name(), message, true);
 		
 	}
-	
-	private TagInstance getTagInstance(ValueMap tagInstanceValueMap) {
-		Map<String,Object> valueMap = new HashMap<String, Object>();
-		for (String key : tagInstanceValueMap.getKeySet()) {
-			valueMap.put(key, tagInstanceValueMap.getString(key));
-		}
 
-		TagInstance tagInstance = new TagInstance(valueMap);
-		return tagInstance;
-	}
 }

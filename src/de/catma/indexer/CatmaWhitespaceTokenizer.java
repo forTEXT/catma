@@ -19,11 +19,12 @@
 
 package de.catma.indexer;
 
+import java.io.Reader;
+
 import org.apache.lucene.analysis.CharTokenizer;
+
 import de.catma.indexer.unseparablecharactersequence.CharTree;
 import de.catma.indexer.unseparablecharactersequence.UnseparableCharacterSequenceAttribute;
-
-import java.io.Reader;
 
 
 /**
