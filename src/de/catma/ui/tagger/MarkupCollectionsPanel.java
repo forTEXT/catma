@@ -4,13 +4,13 @@ import java.util.Collection;
 import java.util.List;
 
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.terminal.ClassResource;
+import com.vaadin.terminal.Resource;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.Table.ColumnGenerator;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
@@ -20,6 +20,7 @@ import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagsetDefinition;
+import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
 
 public class MarkupCollectionsPanel extends VerticalLayout {
 	
@@ -30,7 +31,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	
 	private static enum MarkupCollectionTreeProperty {
 		caption("Markup Collections"), 
+		icon("icon"),
 		visible("Visible"),
+		color("Tag Color"),
 		;
 		
 		private String displayString;
@@ -49,9 +52,11 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private TreeTable markupTable;
 	private String userMarkupItem = "User Markup Collections";
 	private String staticMarkupItem = "Static Markup Collections";
+	private TagDefinitionSelectionListener tagDefinitionSelectionListener;
 
 	public MarkupCollectionsPanel(
 			TagDefinitionSelectionListener tagDefinitionSelectionListener) {
+		this.tagDefinitionSelectionListener = tagDefinitionSelectionListener;
 		initComponents(tagDefinitionSelectionListener);
 	}
 
@@ -66,7 +71,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				MarkupCollectionTreeProperty.caption, 
 				String.class, null);
 		
-		//TODO: create non generated column with checkbox:
+		markupTable.addContainerProperty(
+				MarkupCollectionTreeProperty.icon, Resource.class, null);
+		
 		markupTable.addContainerProperty(
 				MarkupCollectionTreeProperty.visible, 
 				AbstractComponent.class, null);
@@ -74,61 +81,23 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		markupTable.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_PROPERTY);
 		markupTable.setItemCaptionPropertyId(
 				MarkupCollectionTreeProperty.caption);
-		
+		markupTable.setItemIconPropertyId(MarkupCollectionTreeProperty.icon);
+		markupTable.addGeneratedColumn(
+				MarkupCollectionTreeProperty.color, new ColorLabelColumnGenerator());
+
 		markupTable.setVisibleColumns(
-				new Object[] {MarkupCollectionTreeProperty.caption});
+				new Object[] {
+						MarkupCollectionTreeProperty.caption,
+						MarkupCollectionTreeProperty.color,
+						MarkupCollectionTreeProperty.visible});
 		
-		markupTable.addItem(userMarkupItem).getItemProperty(
-				MarkupCollectionTreeProperty.caption).setValue(userMarkupItem);
-		markupTable.addItem(staticMarkupItem).getItemProperty(
-				MarkupCollectionTreeProperty.caption).setValue(staticMarkupItem);
+		markupTable.addItem(
+			new Object[] {userMarkupItem, new Label()}, userMarkupItem);
 		
-		markupTable.addGeneratedColumn("Show", new ColumnGenerator() {
-			
-			public Object generateCell(
-					final Table source, final Object itemId, Object columnId) {
-				
-				if (itemId instanceof TagDefinition) {
-					CheckBox cbShowTagInstances = new CheckBox();
-					cbShowTagInstances.setImmediate(true);
-					cbShowTagInstances.addListener(new ClickListener() {
-						
-						public void buttonClick(ClickEvent event) {
-							boolean enabled = 
-									event.getButton().booleanValue();
+		markupTable.addItem(
+			new Object[] {staticMarkupItem, new Label()}, staticMarkupItem );
+		
 
-							Collection<?> children = 
-									markupTable.getChildren(itemId);
-							
-							UserMarkupCollection userMarkupCollection =
-									getUserMarkupCollection(itemId);
-							 
-							List<TagReference> tagReferences =
-									userMarkupCollection.getTagReferences(
-											(TagDefinition)itemId);
-							
-							if (children != null) {
-								for (Object childId : children) {
-									if (childId instanceof TagDefinition) {
-										tagReferences.addAll(
-											userMarkupCollection.getTagReferences(
-													(TagDefinition)childId));
-									}
-								}
-							}							
-							tagDefinitionSelectionListener.tagDefinitionSelectionChanged(
-									tagReferences, enabled);
-						}
-
-					});
-					return cbShowTagInstances;
-				}
-				
-				
-				return new Label();
-			}
-		});
-		
 		addComponent(markupTable);
 	}
 
@@ -143,32 +112,50 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		
 		return (UserMarkupCollection)parent;
 	}
-	
+
 	public void openUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
 
-		markupTable.addItem(userMarkupCollection).getItemProperty(
-				MarkupCollectionTreeProperty.caption).setValue(
-						userMarkupCollection.toString());
+		markupTable.addItem(
+				new Object[] {userMarkupCollection, new Label()},
+				userMarkupCollection);
 		markupTable.setParent(userMarkupCollection, userMarkupItem);
 		
 		TagLibrary tagLibrary = userMarkupCollection.getTagLibrary();
 		for (TagsetDefinition tagsetDefinition : tagLibrary) {
-			markupTable.addItem(tagsetDefinition).getItemProperty(
-					MarkupCollectionTreeProperty.caption).setValue(
-							tagsetDefinition.getName());
+			ClassResource tagsetIcon = 
+					new ClassResource(
+						"ui/tagmanager/resources/grndiamd.gif", getApplication());
+
+			markupTable.addItem(
+					new Object[]{tagsetDefinition.getName(), 
+							new Label()}, tagsetDefinition);
+			markupTable.getContainerProperty(
+				tagsetDefinition, MarkupCollectionTreeProperty.icon).setValue(
+						tagsetIcon);
 			markupTable.setParent(tagsetDefinition, userMarkupCollection);
 			addTagDefinitions(tagsetDefinition);
 		}
 	}
-
+	
 	private void addTagDefinitions(TagsetDefinition tagsetDefinition) {
 		for (TagDefinition tagDefinition : tagsetDefinition) {
 			if (!tagDefinition.getID().equals
 					(TagDefinition.CATMA_BASE_TAG.getID())) {
-				markupTable.addItem(tagDefinition).getItemProperty(
-						MarkupCollectionTreeProperty.caption).setValue(
-								tagDefinition.getType());
+				ClassResource tagIcon = 
+						new ClassResource(
+							"ui/tagmanager/resources/reddiamd.gif", 
+						getApplication());
+				
+				markupTable.addItem(
+						new Object[]{
+								tagDefinition.getType(), 
+								createCheckbox(tagDefinition)},
+						tagDefinition);
+				markupTable.getContainerProperty(
+						tagDefinition, MarkupCollectionTreeProperty.icon).setValue(
+								tagIcon);
+
 			}
 		}
 		for (TagDefinition tagDefinition : tagsetDefinition) {
@@ -191,5 +178,40 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		}
 	}
 	
-	
+	private CheckBox createCheckbox(final TagDefinition tagDefinition) {
+		CheckBox cbShowTagInstances = new CheckBox();
+		cbShowTagInstances.setImmediate(true);
+		cbShowTagInstances.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				boolean enabled = 
+						event.getButton().booleanValue();
+
+				Collection<?> children = 
+						markupTable.getChildren(tagDefinition);
+				
+				UserMarkupCollection userMarkupCollection =
+						getUserMarkupCollection(tagDefinition);
+				 
+				List<TagReference> tagReferences =
+						userMarkupCollection.getTagReferences(
+								(TagDefinition)tagDefinition);
+				
+				if (children != null) {
+					for (Object childId : children) {
+						if (childId instanceof TagDefinition) {
+							tagReferences.addAll(
+								userMarkupCollection.getTagReferences(
+										(TagDefinition)childId));
+						}
+					}
+				}							
+				tagDefinitionSelectionListener.tagDefinitionSelectionChanged(
+						tagReferences, enabled);
+			}
+
+		});
+		return cbShowTagInstances;
+	}
+
 }

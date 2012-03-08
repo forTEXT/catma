@@ -23,10 +23,16 @@ package de.catma.ui.client.ui.tagger.shared;
  *
  */
 public enum EventAttribute {
+	/**
+	 * Attribute signals a new page to the client side. This
+	 * event is usually accompanied by one or more numbered 
+	 * {@link EventAttribute#TAGINSTANCE_ADD} attributes.
+	 */
 	PAGE_SET,
 	TAGDEFINITION_SELECTED,
 	TAGINSTANCE_CLEAR,
-	TAGINSTANCE_ADD, 
+	TAGINSTANCE_ADD,
+	TAGINSTANCES_ADD,
 	LOGMESSAGE, 
 	TAGINSTANCE_REMOVE,
 	TAGSETDEFINITION_ATTACH,
