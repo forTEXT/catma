@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.ScrollPanel;
 import com.vaadin.terminal.gwt.client.ApplicationConnection;
 import com.vaadin.terminal.gwt.client.Paintable;
 import com.vaadin.terminal.gwt.client.UIDL;
@@ -60,6 +61,7 @@ public class VTagger extends Composite implements Paintable {
 	}
 	
 	private void initComponents() {
+		ScrollPanel taggerScrollPanel = new ScrollPanel();
 		taggerEditor = new TaggerEditor(new TaggerEditorListener() {
 			public void tagChanged(TaggerEditorEventType type, Object... args) {
 				switch(type) {
@@ -87,7 +89,8 @@ public class VTagger extends Composite implements Paintable {
 				
 			}
 		});
-		initWidget(taggerEditor);
+		taggerScrollPanel.add(taggerEditor);
+		initWidget(taggerScrollPanel);
 	}
 	
 

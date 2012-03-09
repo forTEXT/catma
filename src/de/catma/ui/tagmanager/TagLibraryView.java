@@ -1,5 +1,7 @@
 package de.catma.ui.tagmanager;
 
+import com.vaadin.terminal.gwt.server.WebApplicationContext;
+import com.vaadin.terminal.gwt.server.WebBrowser;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Table.TableDragMode;
 
@@ -48,6 +50,11 @@ public class TagLibraryView extends HorizontalLayout {
 	@Override
 	public void attach() {
 		super.attach();
+		
+		WebApplicationContext context = 
+				((WebApplicationContext) getApplication().getContext());
+		WebBrowser wb = context.getBrowser();
+		tagsetTree.setHeight(wb.getScreenHeight()*0.52f, UNITS_PIXELS);
 		
 		tagsetTree.getTagTree().setDragMode(TableDragMode.ROW);
 

@@ -1,9 +1,7 @@
 package de.catma.ui.tagger;
 
-import java.util.Collection;
 import java.util.List;
 
-import com.vaadin.data.Property;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.Resource;
@@ -188,16 +186,16 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				boolean enabled = 
 						event.getButton().booleanValue();
 				System.out.println(tagDefinition + " enabled:" + enabled);
-				Collection<?> children = 
-						markupCollectionsTree.getChildren(tagDefinition);
 				
 				UserMarkupCollection userMarkupCollection =
 						getUserMarkupCollection(tagDefinition);
-				 
+				
 				List<TagReference> tagReferences =
 						userMarkupCollection.getTagReferences(
-								(TagDefinition)tagDefinition);
+								tagDefinition, true);
 				
+				List<TagDefinition> children = 
+						userMarkupCollection.getChildren(tagDefinition);
 				if (children != null) {
 					for (Object childId : children) {
 						if (childId instanceof TagDefinition) {
@@ -224,5 +222,4 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		});
 		return cbShowTagInstances;
 	}
-
 }

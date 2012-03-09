@@ -106,5 +106,4 @@ public class TaggerView extends VerticalLayout {
 			UserMarkupCollection userMarkupCollection) {
 		markupPanel.openUserMarkupCollection(userMarkupCollection);
 	}
-
 }

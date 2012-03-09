@@ -10,7 +10,7 @@ public class TagManagerWindow extends CatmaWindow {
 		super("Tag Manager");
 		this.setContent(tagManagerView);
 		setWidth("35%");
-		setHeight("90%");
+		setHeight("85%");
 	}
 	
 	@Override

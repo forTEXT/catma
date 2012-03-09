@@ -21,6 +21,12 @@ public class MarkupPanel extends VerticalLayout {
 	private TabSheet tabSheet;
 	private MarkupCollectionsPanel markupCollectionsPanel;
 	
+	
+	// hier gehts weiter : 
+	// 1) TagManager for tagset and markupcollection manipulations
+	// 2) deserialize
+	
+	
 	public MarkupPanel(
 			ColorButtonListener colorButtonListener, 
 			TagDefinitionSelectionListener tagDefinitionSelectionListener) {

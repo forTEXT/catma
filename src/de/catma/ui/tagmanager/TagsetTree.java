@@ -80,7 +80,7 @@ public class TagsetTree extends HorizontalLayout {
 				((WebApplicationContext) getApplication().getContext());
 		WebBrowser wb = context.getBrowser();
 		
-		setHeight(wb.getScreenHeight()*60/100, UNITS_PIXELS);
+		setHeight(wb.getScreenHeight()*0.42f, UNITS_PIXELS);
 		
 		tagTree = new TreeTable();
 		tagTree.setImmediate(true);
