@@ -47,3 +47,7 @@
 .tagmenu-popup {
 	z-index: 11000;
 }
+
+.v-formlayout-contentcell .v-textfield {
+	width: 90%;
+}

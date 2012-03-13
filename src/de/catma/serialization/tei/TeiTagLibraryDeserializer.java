@@ -7,6 +7,7 @@ import de.catma.core.tag.PropertyDefinition;
 import de.catma.core.tag.PropertyPossibleValueList;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.TagManager;
 import de.catma.core.tag.TagsetDefinition;
 import de.catma.core.tag.Version;
 
@@ -14,11 +15,15 @@ public class TeiTagLibraryDeserializer {
 	
 	private TeiDocument teiDocument;
 	private TagLibrary tagLibrary;
+	private TagManager tagManager;
 
-	public TeiTagLibraryDeserializer(TeiDocument teiDocument) {
+	public TeiTagLibraryDeserializer(
+			TeiDocument teiDocument, TagManager tagManager) {
 		super();
 		this.teiDocument = teiDocument;
-		this.tagLibrary = new TagLibrary(teiDocument.getName());
+		this.tagManager = new TagManager();
+		this.tagLibrary = new TagLibrary(
+				teiDocument.getId(), teiDocument.getName());
 		deserialize();
 	}
 
@@ -37,7 +42,7 @@ public class TeiTagLibraryDeserializer {
 			
 			addTagDefinitions(tagsetDefinition, tagsetDefinitionElement.getChildElements(TeiElementName.fsDecl));
 
-			this.tagLibrary.add(tagsetDefinition);
+			tagManager.addTagsetDefinition(tagLibrary, tagsetDefinition);
 		}
 	}
 

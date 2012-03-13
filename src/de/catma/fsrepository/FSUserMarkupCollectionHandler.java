@@ -30,7 +30,8 @@ class FSUserMarkupCollectionHandler {
 		FilterInputStream is = new BOMFilterInputStream(
 				urlConnection.getInputStream(), Charset.forName( "UTF8" ));
 		UserMarkupCollection userMarkupCollection = 
-				userMarkupCollectionSerializationHandler.deserialize(is);
+				userMarkupCollectionSerializationHandler.deserialize(
+						userMarkupCollectionReference.getId(), is);
 		userMarkupCollection.setId(userMarkupCollectionReference.getId());
 		userMarkupCollection.setName(userMarkupCollectionReference.getName());
 		return userMarkupCollection;

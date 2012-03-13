@@ -14,10 +14,12 @@ public class TeiStaticMarkupCollectionSerializationHandler implements
 
 	}
 
-	public StaticMarkupCollection deserialize(InputStream inputStream) throws IOException {
+	public StaticMarkupCollection deserialize(
+			String id, InputStream inputStream) throws IOException {
 		try {
 			TeiDocumentFactory factory = new TeiDocumentFactory();
-			TeiDocument teiDocument = factory.createDocumentFromStream(inputStream);
+			TeiDocument teiDocument = 
+					factory.createDocumentFromStream(id, inputStream);
 			
 			return deserialize(teiDocument);
 			

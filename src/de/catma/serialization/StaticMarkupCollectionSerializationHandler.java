@@ -8,6 +8,7 @@ import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollection
 public interface StaticMarkupCollectionSerializationHandler {
 	
 	public void serialize(StaticMarkupCollection staticMarkupCollection);
-	public StaticMarkupCollection deserialize(InputStream inputStream) throws IOException;
+	public StaticMarkupCollection deserialize(
+			String id, InputStream inputStream) throws IOException;
 
 }

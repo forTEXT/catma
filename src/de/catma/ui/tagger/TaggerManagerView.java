@@ -12,6 +12,7 @@ import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.tag.TagManager;
 
 public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 	
@@ -40,13 +41,14 @@ public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 		addComponent(tabSheet);
 	}
 
-	public TaggerView openSourceDocument(SourceDocument sourceDocument) {
+	public TaggerView openSourceDocument(
+			TagManager tagManager, SourceDocument sourceDocument) {
 		TaggerView taggerView = getTaggerView(sourceDocument);
 		if (taggerView != null) {
 			tabSheet.setSelectedTab(taggerView);
 		}
 		else {
-			taggerView = new TaggerView(sourceDocument);
+			taggerView = new TaggerView(tagManager, sourceDocument);
 			Tab tab = tabSheet.addTab(taggerView, sourceDocument.toString());
 			tab.setClosable(true);
 			tabSheet.setSelectedTab(tab.getComponent());

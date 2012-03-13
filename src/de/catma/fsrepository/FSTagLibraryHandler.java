@@ -41,7 +41,10 @@ class FSTagLibraryHandler {
 		
 		super();
 		this.repoFolderPath = repoFolderPath;
-		this.libFolderPath = this.repoFolderPath + System.getProperty("file.separator") + TAGLIBRARY_FOLDER;
+		this.libFolderPath =
+				this.repoFolderPath + 
+				System.getProperty("file.separator") + 
+				TAGLIBRARY_FOLDER;
 		this.tagLibrarySerializationHandler = tagLibrarySerializationHandler;
 	}
 	
@@ -61,7 +64,9 @@ class FSTagLibraryHandler {
 		return result;
 	}
 
-	private TagLibraryReference loadTagLibraryReference(File tagLibFile) throws IOException {
+	private TagLibraryReference loadTagLibraryReference(File tagLibFile) 
+			throws IOException {
+		
 		try {
 			Document tagLibDoc = new Builder().build(tagLibFile);
 		
@@ -77,12 +82,16 @@ class FSTagLibraryHandler {
 		}
 	}
 	
-	public TagLibrary loadTagLibrary(TagLibraryReference tagLibraryReference) throws IOException {
-		URLConnection urlConnection = new URL(tagLibraryReference.getId()).openConnection();
+	public TagLibrary loadTagLibrary(TagLibraryReference tagLibraryReference) 
+			throws IOException {
+		
+		URLConnection urlConnection = 
+				new URL(tagLibraryReference.getId()).openConnection();
 		
 		FilterInputStream is = new BOMFilterInputStream(
 				urlConnection.getInputStream(), Charset.forName( "UTF-8" ));
-		return tagLibrarySerializationHandler.deserialize(is); 
+		return tagLibrarySerializationHandler.deserialize(
+				tagLibraryReference.getId(), is); 
 	}
 	
 }

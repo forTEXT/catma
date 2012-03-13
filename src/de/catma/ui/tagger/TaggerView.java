@@ -12,6 +12,7 @@ import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagDefinition;
+import de.catma.core.tag.TagManager;
 import de.catma.ui.client.ui.tagger.shared.TagInstance;
 import de.catma.ui.tagger.MarkupCollectionsPanel.TagDefinitionSelectionListener;
 import de.catma.ui.tagger.Tagger.TaggerListener;
@@ -27,12 +28,12 @@ public class TaggerView extends VerticalLayout {
 	private Pager pager;
 	private MarkupPanel markupPanel;
 	
-	public TaggerView(SourceDocument sourceDocument) {
+	public TaggerView(TagManager tagManager, SourceDocument sourceDocument) {
 		this.sourceDocument = sourceDocument;
-		initComponents();
+		initComponents(tagManager);
 	}
 
-	private void initComponents() {
+	private void initComponents(final TagManager tagManager) {
 		VerticalLayout taggerPanel = new VerticalLayout();
 		taggerPanel.setSpacing(true);
 		
@@ -58,6 +59,7 @@ public class TaggerView extends VerticalLayout {
 		taggerPanel.addComponent(pagerComponent);
 		
 		markupPanel = new MarkupPanel(
+				tagManager,
 				new ColorButtonListener() {
 			
 					public void colorButtonClicked(TagDefinition tagDefinition) {

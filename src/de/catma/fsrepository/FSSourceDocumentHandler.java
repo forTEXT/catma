@@ -7,7 +7,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
-import java.io.StringReader;
 import java.io.Writer;
 import java.net.URI;
 import java.net.URL;
@@ -93,19 +92,24 @@ class FSSourceDocumentHandler {
 			Document digitalObject = new Builder().build(digitalObjectFile);
 			
 			String infosetsDocumentURLString = 
-					digitalObject.query(Field.infosetsURI.toSimpleXQuery()).get(0).getValue();
+					digitalObject.query(
+						Field.infosetsURI.toSimpleXQuery()).get(0).getValue();
 			
 			URL infosetsURL = new URL(infosetsDocumentURLString);
 			
 			URLConnection infosetsURLConnection = infosetsURL.openConnection();
 			infosetsInputStream = infosetsURLConnection.getInputStream();
 			
-			SourceDocumentInfo sourceDocumentInfo = 
-					this.sourceDocumentInfoSerializationHandler.deserialize(
-							new BOMFilterInputStream(infosetsInputStream, Charset.forName("UTF-8")));
-			
 			String sourceURIVal = digitalObject.query(Field.sourceURI.toSimpleXQuery()).get(0).getValue();
 			URI sourceURI = new URI(sourceURIVal);
+
+			SourceDocumentInfo sourceDocumentInfo = 
+					this.sourceDocumentInfoSerializationHandler.deserialize(
+							sourceURIVal,
+							new BOMFilterInputStream(
+									infosetsInputStream, 
+									Charset.forName("UTF-8")));
+			
 			sourceDocumentInfo.getTechInfoSet().setURI(sourceURI);
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
 			SourceDocument sourceDocument = 

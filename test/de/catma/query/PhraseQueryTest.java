@@ -27,6 +27,7 @@ import de.catma.core.ExceptionHandler;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
 import de.catma.core.document.source.SourceDocument;
+import de.catma.core.tag.TagManager;
 
 
 public class PhraseQueryTest {
@@ -36,6 +37,8 @@ public class PhraseQueryTest {
 
 	@Before
 	public void setup() {
+		TagManager tagManager  = new TagManager();
+		
 		client = new TransportClient()
 				.addTransportAddress(new InetSocketTransportAddress(
 						"clea.bsdsystems.de", 9300));
@@ -44,7 +47,8 @@ public class PhraseQueryTest {
 		try {
 			properties.load(new FileInputStream("test/catma.properties"));
 			repository = 
-					new RepositoryManager(properties).getRepositories().get(0);
+					new RepositoryManager(
+							tagManager, properties).getRepositories().get(0);
 			repository.open();
 		}
 		catch( Exception e) {

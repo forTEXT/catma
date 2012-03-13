@@ -11,6 +11,7 @@ import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.TagManager;
 
 public class TagManagerView extends VerticalLayout implements CloseHandler {
 	
@@ -39,13 +40,13 @@ public class TagManagerView extends VerticalLayout implements CloseHandler {
 		addComponent(tabSheet);
 	}
 
-	public void openTagLibrary(TagLibrary tagLibrary) {
+	public void openTagLibrary(TagManager tagManager, TagLibrary tagLibrary) {
 		TagLibraryView tagLibraryView = getTagLibraryView(tagLibrary);
 		if (tagLibraryView != null) {
 			tabSheet.setSelectedTab(tagLibraryView);
 		}
 		else {
-			tagLibraryView = new TagLibraryView(tagLibrary);
+			tagLibraryView = new TagLibraryView(tagManager, tagLibrary);
 			Tab tab = tabSheet.addTab(tagLibraryView, tagLibrary.getName());
 			tab.setClosable(true);
 			tabSheet.setSelectedTab(tab.getComponent());
@@ -68,7 +69,7 @@ public class TagManagerView extends VerticalLayout implements CloseHandler {
 		while (iterator.hasNext()) {
 			Component c = iterator.next();
 			TagLibraryView tagLibraryView = (TagLibraryView)c;
-			if (tagLibraryView.getTagLibraryName().equals(tagLibrary.getName())) {
+			if (tagLibraryView.getTagLibrary().getId().equals(tagLibrary.getId())) {
 				return tagLibraryView;
 			}
 		}

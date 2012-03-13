@@ -15,10 +15,12 @@ import de.catma.serialization.SourceDocumentInfoSerializationHandler;
 public class TeiSourceDocumentInfoSerializationHandler implements
 		SourceDocumentInfoSerializationHandler {
 
-	public SourceDocumentInfo deserialize(InputStream inputStream) throws IOException {
+	public SourceDocumentInfo deserialize(
+			String id, InputStream inputStream) throws IOException {
 		try {
 			TeiDocumentFactory factory = new TeiDocumentFactory();
-			TeiDocument teiDocument = factory.createDocumentFromStream(inputStream);
+			TeiDocument teiDocument = 
+					factory.createDocumentFromStream(id, inputStream);
 			
 			return deserialize(teiDocument);
 			
@@ -35,11 +37,15 @@ public class TeiSourceDocumentInfoSerializationHandler implements
 		return new SourceDocumentInfo(indexInfoSet, contentInfoSet, techInfoSet);
 	}
 
-	public void serialize(SourceDocument sourceDocument, OutputStream outputStream) throws IOException {
+	public void serialize(
+			SourceDocument sourceDocument, 
+			OutputStream outputStream) throws IOException {
+		
 		try {
 			TeiDocumentFactory factory = new TeiDocumentFactory();
 			
-			TeiDocument teiDocument = factory.createEmptyDocument();
+			TeiDocument teiDocument = factory.createEmptyDocument(
+					sourceDocument.getID());
 			SourceDocumentInfo sourceDocumentInfo = 
 					sourceDocument.getSourceContentHandler().getSourceDocumentInfo();
 			

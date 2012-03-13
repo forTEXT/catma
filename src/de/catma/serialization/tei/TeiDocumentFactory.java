@@ -9,20 +9,22 @@ import nu.xom.ValidityException;
 
 public class TeiDocumentFactory {
 
-	public TeiDocument createDocumentFromStream(InputStream inputStream) 
+	public TeiDocument createDocumentFromStream(
+			String id, InputStream inputStream) 
 			throws ValidityException, ParsingException, IOException {
 		Builder builder = new Builder( new TeiNodeFactory() );
 		
-		TeiDocument teiDocument =  new TeiDocument(builder.build(inputStream));
+		TeiDocument teiDocument =  new TeiDocument(id, builder.build(inputStream));
 		TeiDocumentVersion.convertToLatest(teiDocument);
 		teiDocument.hashIDs();
 		
 		return teiDocument;
 	}
 	
-	public TeiDocument createEmptyDocument() 
+	public TeiDocument createEmptyDocument(String id) 
 			throws ValidityException, ParsingException, IOException {
 		return createDocumentFromStream(
+				id,
 				Thread.currentThread().getContextClassLoader().getResourceAsStream(
 						"de/catma/serialization/tei/MinimalStandoffmarkup.xml"));
 		//TODO: set Version to 3 to prevent senseless version upgrade

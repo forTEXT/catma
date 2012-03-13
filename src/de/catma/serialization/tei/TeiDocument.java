@@ -21,8 +21,9 @@ class TeiDocument {
 	private XPathContext xpathcontext; 
 	private TeiHeader teiHeader;
 	private Map<String, TeiElement> idElementMapping;
+	private String id;
 	
-	TeiDocument(Document document) {
+	TeiDocument(String id, Document document) {
 		super();
 		this.document = document;
 		this.idElementMapping = new HashMap<String, TeiElement>();
@@ -292,5 +293,9 @@ class TeiDocument {
 	
 			hashElementByID(curElement);
 		}
+	}
+	
+	public String getId() {
+		return id;
 	}
 }

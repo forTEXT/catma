@@ -16,6 +16,7 @@ import de.catma.core.document.repository.RepositoryManager;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.TagManager;
 import de.catma.ui.menu.Menu;
 import de.catma.ui.menu.MenuFactory;
 import de.catma.ui.repository.RepositoryManagerView;
@@ -38,6 +39,7 @@ public class CleaApplication extends Application {
 	private String tempDirectory = null;
 	private BackgroundService backgroundService;
 	private TaggerManagerView taggerManagerView;
+	private TagManager tagManager;
 
 	@Override
 	public void init() {
@@ -54,9 +56,11 @@ public class CleaApplication extends Application {
 		MenuFactory menuFactory = new MenuFactory();
 		try {
 			initTempDirectory(properties);
+			tagManager = new TagManager();
 			
 			repositoryManagerView = 
-					new RepositoryManagerView(new RepositoryManager(properties));
+				new RepositoryManagerView(
+					new RepositoryManager(tagManager, properties));
 		
 			tagManagerView = new TagManagerView();
 			
@@ -135,14 +139,14 @@ public class CleaApplication extends Application {
 		if (tagManagerView.getApplication() == null) {
 			menu.executeEntry(tagManagerView);
 		}
-		tagManagerView.openTagLibrary(tagLibrary);
+		tagManagerView.openTagLibrary(tagManager, tagLibrary);
 	}
 
 	public TaggerView openSourceDocument(SourceDocument sourceDocument) {
 		if (taggerManagerView.getApplication() == null) {
 			menu.executeEntry(taggerManagerView);
 		}
-		return taggerManagerView.openSourceDocument(sourceDocument);
+		return taggerManagerView.openSourceDocument(tagManager, sourceDocument);
 	}
 
 	public String getTempDirectory() {

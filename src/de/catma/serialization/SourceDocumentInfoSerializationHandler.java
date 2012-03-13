@@ -10,7 +10,10 @@ import de.catma.core.document.source.SourceDocumentInfo;
 
 public interface SourceDocumentInfoSerializationHandler {
 
-	public SourceDocumentInfo deserialize(InputStream inputStream) throws IOException;
-	public void serialize(SourceDocument sourceDocument, OutputStream outputStream) throws IOException;
+	public SourceDocumentInfo deserialize(
+			String id, InputStream inputStream) throws IOException;
+	public void serialize(
+			SourceDocument sourceDocument, 
+			OutputStream outputStream) throws IOException;
 	
 }

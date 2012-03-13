@@ -10,6 +10,7 @@ import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.tag.TagManager;
 import de.catma.core.tag.TagsetDefinition;
 import de.catma.ui.tagger.MarkupCollectionsPanel.TagDefinitionSelectionListener;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
@@ -28,16 +29,18 @@ public class MarkupPanel extends VerticalLayout {
 	
 	
 	public MarkupPanel(
+			TagManager tagManager,
 			ColorButtonListener colorButtonListener, 
 			TagDefinitionSelectionListener tagDefinitionSelectionListener) {
-		initComponents(colorButtonListener, tagDefinitionSelectionListener);
+		initComponents(
+			tagManager, colorButtonListener, tagDefinitionSelectionListener);
 	}
 
 	private void initComponents(
-			ColorButtonListener colorButtonListener, 
+			TagManager tagManager, ColorButtonListener colorButtonListener, 
 			TagDefinitionSelectionListener tagDefinitionSelectionListener) {
 		tabSheet = new TabSheet();
-		tagsetTree = new TagsetTree(false, colorButtonListener);
+		tagsetTree = new TagsetTree(tagManager, null, false, colorButtonListener);
 		tabSheet.addTab(tagsetTree, "Currently active Tagsets");
 		
 		markupCollectionsPanel = 
