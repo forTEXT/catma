@@ -25,7 +25,7 @@ public class ColorButtonColumnGenerator implements ColumnGenerator {
 			Table source, final Object itemId, Object columnId) {
 		if (itemId instanceof TagDefinition) {
 			ColorButton colorButton = new ColorButton(
-				new ColorConverter(((TagDefinition)itemId).getColor()).toHex(), 
+				ColorConverter.toHex(((TagDefinition)itemId).getColor()), 
 				new ClickListener() {
 				
 					public void buttonClick(ClickEvent event) {

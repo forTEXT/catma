@@ -217,7 +217,7 @@ public class Tagger extends AbstractComponent {
 	public void addTagInstanceWith(TagDefinition tagDefinition) {
 		attributes.put(
 			TaggerMessageAttribute.TAGDEFINITION_SELECTED.name(), 
-			new ColorConverter(tagDefinition.getColor()).toHex());
+			ColorConverter.toHex(tagDefinition.getColor()));
 		requestRepaint();
 	}
 
@@ -237,7 +237,7 @@ public class Tagger extends AbstractComponent {
 			tagInstances.add(
 				new TagInstance(
 					tagReference.getTagInstanceID(), 
-					new ColorConverter(tagReference.getColor()).toHex(), 
+					ColorConverter.toHex(tagReference.getColor()), 
 					textRanges));
 		}
 		setTagInstancesVisible(tagInstances, visible);

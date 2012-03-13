@@ -24,17 +24,20 @@ import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeTable;
 
 import de.catma.core.tag.PropertyDefinition;
+import de.catma.core.tag.PropertyPossibleValueList;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagManager;
 import de.catma.core.tag.TagManager.TagManagerEvent;
 import de.catma.core.tag.TagsetDefinition;
 import de.catma.core.tag.Version;
+import de.catma.core.util.ColorConverter;
 import de.catma.core.util.IDGenerator;
 import de.catma.core.util.Pair;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.PropertyCollection;
 import de.catma.ui.dialog.StringProperty;
+import de.catma.ui.dialog.TagDefinitionFieldFactory;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 
 public class TagsetTree extends HorizontalLayout {
@@ -78,6 +81,8 @@ public class TagsetTree extends HorizontalLayout {
 	private PropertyChangeListener tagsetDefAddedListener;
 	private PropertyChangeListener tagsetDefNameChangedListener;
 	private PropertyChangeListener tagsetDefRemovedListener;
+	private PropertyChangeListener tagDefAddedListener;
+	private PropertyChangeListener tagDefRemovedListener;
 
 	public TagsetTree(TagManager tagManager, TagLibrary tagLibrary) {
 		this(tagManager, tagLibrary, true, null);
@@ -150,17 +155,8 @@ public class TagsetTree extends HorizontalLayout {
 					if (tagLibrary.equals(removeOperationResult.getFirst())) {
 						TagsetDefinition tagsetDef = 
 								removeOperationResult.getSecond();
-						
 						for (TagDefinition td : tagsetDef) {
-							for (PropertyDefinition pd : 
-								td.getSystemPropertyDefinitions()) {
-								tagTree.removeItem(pd);
-							}
-							for (PropertyDefinition pd :
-								td.getUserDefinedPropertyDefinitions()) {
-								tagTree.removeItem(pd);
-							}
-							tagTree.removeItem(td);
+							removeTagDefinition(td);
 						}
 						tagTree.removeItem(tagsetDef);
 					}
@@ -173,111 +169,86 @@ public class TagsetTree extends HorizontalLayout {
 					tagsetDefRemovedListener);
 			
 			this.btInsertTagset.addListener(new ClickListener() {
-				
 				public void buttonClick(ClickEvent event) {
-					
-					final String tagsetdefinitionnameProperty = "name";
-					
-					PropertyCollection propertyCollection = 
-							new PropertyCollection(tagsetdefinitionnameProperty);
-	
-					FormDialog tagsetFormDialog =
-						new FormDialog(
-							"Create new Tagset",
-							propertyCollection,
-							new FormDialog.SaveCancelListener() {
-								public void cancelPressed() {}
-								public void savePressed(
-										PropertysetItem propertysetItem) {
-									Property property = 
-											propertysetItem.getItemProperty(
-													tagsetdefinitionnameProperty);
-									TagsetDefinition td = 
-											new TagsetDefinition(
-												new IDGenerator().generate(), 
-												(String)property.getValue(), 
-												new Version());
-									
-									tagManager.addTagsetDefinition(
-											tagLibrary, td);
-								}
-							});
-					configureTagsetFormDialog(
-							tagsetFormDialog, tagsetdefinitionnameProperty);
-					tagsetFormDialog.show(getApplication().getMainWindow());
+					handleInsertTagsetDefinition();
 				}
 			});
 			
 			this.btEditTagset.addListener(new ClickListener() {
-				
 				public void buttonClick(ClickEvent event) {
-					final String tagsetdefinitionnameProperty = "name";
-					
-					Object selValue = tagTree.getValue();
-					
-					if ((selValue != null)
-							&& (selValue instanceof TagsetDefinition)) {
-						
-						final TagsetDefinition curSelTagsetDefinition =
-								(TagsetDefinition)selValue;
-						
-						PropertyCollection propertyCollection = 
-								new PropertyCollection();
-						propertyCollection.addItemProperty(
-										tagsetdefinitionnameProperty,
-										new StringProperty(
-											curSelTagsetDefinition.getName()));
-						
-						FormDialog tagsetFormDialog =
-							new FormDialog(
-								"Edit Tagset",
-								propertyCollection,
-								new FormDialog.SaveCancelListener() {
-									public void cancelPressed() {}
-									public void savePressed(
-											PropertysetItem propertysetItem) {
-										Property property = 
-												propertysetItem.getItemProperty(
-													tagsetdefinitionnameProperty);
-										
-										tagManager.setTagsetDefinitionName(
-												curSelTagsetDefinition,
-												(String)property.getValue());
-									}
-								});
-						configureTagsetFormDialog(
-								tagsetFormDialog, tagsetdefinitionnameProperty);
+					handleEditTagsetDefinition();
+				}
+			});
 
-						tagsetFormDialog.show(getApplication().getMainWindow());
-					}
+			btRemoveTagset.addListener(new ClickListener() {
+				public void buttonClick(ClickEvent event) {
+					handleRemoveTagsetDefinition();
 				}
 			});
 		}
 		
-		btRemoveTagset.addListener(new ClickListener() {
+		tagDefAddedListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				@SuppressWarnings("unchecked")
+				Pair<TagsetDefinition, TagDefinition> addOperationResult =
+						(Pair<TagsetDefinition, TagDefinition>)evt.getNewValue();
+				TagsetDefinition tagsetDefinition = 
+						addOperationResult.getFirst();
+				TagDefinition tagDefinition = 
+						addOperationResult.getSecond();
+				if (tagTree.containsId(tagsetDefinition)) {
+					addTagDefinition(tagDefinition);
+					establishHierarchy(tagsetDefinition, tagDefinition);
+					configureChildren(tagDefinition);
+				}
+				
+			}
+		};
+		
+		this.tagManager.addPropertyChangeListener(
+				TagManagerEvent.tagDefinitionAdded,
+				tagDefAddedListener);
+		
+		tagDefRemovedListener = new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				@SuppressWarnings("unchecked")
+				Pair<TagsetDefinition, TagDefinition> removeOperationResult = 
+					(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
+				TagDefinition td = removeOperationResult.getSecond();
+				if (tagTree.containsId(td)) {
+					removeTagDefinition(td);
+				}
+			}
+		};
+		
+		this.tagManager.addPropertyChangeListener(
+				TagManagerEvent.tagDefinitionRemoved,
+				tagDefRemovedListener);
+		
+		btInsertTag.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				Object selValue = tagTree.getValue();
+				handleInsertTagDefinition();
+			}
+		});
+		
+		btRemoveTag.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				handleRemoveTagDefinition();
+			}
+
+		});
+		
+		// hier gehts weiter: 
+		// - implement editTag
+		// -propertyActions
+		// -deserialize
+		btEditTag.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
 				
-				if ((selValue != null)
-						&& (selValue instanceof TagsetDefinition)) {
-					final TagsetDefinition td = (TagsetDefinition)selValue;
-					
-					ConfirmDialog.show(
-						getApplication().getMainWindow(),
-						"Remove Tagset", 
-						"Do you really want to delete the Tagset " +
-						"with all its Tags?", "Yes", "No", 
-						new ConfirmDialog.Listener() {
-							
-							public void onClose(ConfirmDialog dialog) {
-								if (dialog.isConfirmed()) {
-									tagManager.removeTagsetDefinition(
-											tagLibrary, td);
-								}
-							}
-						});
-				}
 			}
 		});
 		
@@ -289,6 +260,226 @@ public class TagsetTree extends HorizontalLayout {
 						btInsertProperty, btRemoveProperty, btEditProperty));
 	}
 	
+	private void removeTagDefinition(TagDefinition td) {
+		for (PropertyDefinition pd : 
+			td.getSystemPropertyDefinitions()) {
+			tagTree.removeItem(pd);
+		}
+		for (PropertyDefinition pd :
+			td.getUserDefinedPropertyDefinitions()) {
+			tagTree.removeItem(pd);
+		}
+		tagTree.removeItem(td);
+	}
+
+	private void handleRemoveTagDefinition() {
+		Object selValue = tagTree.getValue();
+		
+		if ((selValue != null)
+				&& (selValue instanceof TagDefinition)) {
+			final TagDefinition td = (TagDefinition)selValue;
+			
+			ConfirmDialog.show(
+				getApplication().getMainWindow(),
+				"Remove Tag", 
+				"Do you really want to delete this Tag " +
+				"with all its properties?", "Yes", "No", 
+				new ConfirmDialog.Listener() {
+					
+					public void onClose(ConfirmDialog dialog) {
+						if (dialog.isConfirmed()) {
+							tagManager.removeTagDefinition(
+									getTagsetDefinition(td), td);
+						}
+					}
+				});
+		}
+	}
+	
+	private void handleInsertTagDefinition() {
+		final String tagDefNameProp = "name";
+		final String tagDefColorProp = "color";
+		
+		PropertyCollection propertyCollection = 
+				new PropertyCollection(tagDefNameProp, tagDefColorProp);
+		final Object selectedParent = 
+				tagTree.getValue();
+		
+		if (selectedParent == null) {
+			return;
+		}
+		
+		FormDialog tagFormDialog =
+			new FormDialog(
+				"Create new Tag",
+				propertyCollection,
+				new TagDefinitionFieldFactory(tagDefColorProp),
+				new FormDialog.SaveCancelListener() {
+					public void cancelPressed() {}
+					public void savePressed(
+							PropertysetItem propertysetItem) {
+						
+						Property nameProperty =
+							propertysetItem.getItemProperty(
+									tagDefNameProp);
+						
+						Property colorProperty =
+							propertysetItem.getItemProperty(
+									tagDefColorProp);
+						String baseID = null;
+						TagsetDefinition tagsetDefinition = null;
+
+						if (selectedParent instanceof TagsetDefinition) {
+							baseID = 
+								TagDefinition.CATMA_BASE_TAG.getID();
+							tagsetDefinition = 
+									(TagsetDefinition)selectedParent;
+						}
+						else if (selectedParent instanceof TagDefinition) {
+							baseID = 
+								((TagDefinition)selectedParent).getID();
+							tagsetDefinition = 
+									getTagsetDefinition(
+										(TagDefinition)selectedParent);
+						}
+						else {
+							throw new IllegalStateException(
+								"a parent of a TagDefinition has to be either a"
+								+ "TagDefinition or a TagsetDefinition and not a " 
+								+ selectedParent.getClass().getName());
+						}
+						
+						TagDefinition tagDefinition = 
+								new TagDefinition(
+									new IDGenerator().generate(),
+									(String)nameProperty.getValue(),
+									new Version(), 
+									baseID);
+						PropertyDefinition colorPropertyDef =
+								new PropertyDefinition(
+									PropertyDefinition.SystemPropertyName.
+										catma_displaycolor.name(),
+									new PropertyPossibleValueList(
+										ColorConverter.toRGBIntAsString(
+											(String)colorProperty.getValue())));
+						tagDefinition.addSystemPropertyDefinition(
+								colorPropertyDef);
+						tagManager.addTagDefintion(
+								tagsetDefinition, 
+								tagDefinition);
+					}
+				});
+		tagFormDialog.show(getApplication().getMainWindow(), "50%");
+	}
+
+	private TagsetDefinition getTagsetDefinition(TagDefinition tagDefinition) {
+		Object parent = tagTree.getParent(tagDefinition);
+		if (parent instanceof TagsetDefinition) {
+			return (TagsetDefinition)parent;
+		}
+		else {
+			return getTagsetDefinition((TagDefinition)parent);
+		}
+	}
+
+	private void handleRemoveTagsetDefinition() {
+		Object selValue = tagTree.getValue();
+		
+		if ((selValue != null)
+				&& (selValue instanceof TagsetDefinition)) {
+			final TagsetDefinition td = (TagsetDefinition)selValue;
+			
+			ConfirmDialog.show(
+				getApplication().getMainWindow(),
+				"Remove Tagset", 
+				"Do you really want to delete this Tagset " +
+				"with all its Tags?", "Yes", "No", 
+				new ConfirmDialog.Listener() {
+					
+					public void onClose(ConfirmDialog dialog) {
+						if (dialog.isConfirmed()) {
+							tagManager.removeTagsetDefinition(
+									tagLibrary, td);
+						}
+					}
+				});
+		}
+	}
+
+	private void handleInsertTagsetDefinition() {
+		final String tagsetdefinitionnameProperty = "name";
+		
+		PropertyCollection propertyCollection = 
+				new PropertyCollection(tagsetdefinitionnameProperty);
+
+		FormDialog tagsetFormDialog =
+			new FormDialog(
+				"Create new Tagset",
+				propertyCollection,
+				new FormDialog.SaveCancelListener() {
+					public void cancelPressed() {}
+					public void savePressed(
+							PropertysetItem propertysetItem) {
+						Property property = 
+								propertysetItem.getItemProperty(
+										tagsetdefinitionnameProperty);
+						TagsetDefinition td = 
+								new TagsetDefinition(
+									new IDGenerator().generate(), 
+									(String)property.getValue(), 
+									new Version());
+						
+						tagManager.addTagsetDefinition(
+								tagLibrary, td);
+					}
+				});
+		configureTagsetFormDialog(
+				tagsetFormDialog, tagsetdefinitionnameProperty);
+		tagsetFormDialog.show(getApplication().getMainWindow());
+	}
+	
+	private void handleEditTagsetDefinition() {
+		final String tagsetdefinitionnameProperty = "name";
+		
+		Object selValue = tagTree.getValue();
+		
+		if ((selValue != null)
+				&& (selValue instanceof TagsetDefinition)) {
+			
+			final TagsetDefinition curSelTagsetDefinition =
+					(TagsetDefinition)selValue;
+			
+			PropertyCollection propertyCollection = 
+					new PropertyCollection();
+			propertyCollection.addItemProperty(
+							tagsetdefinitionnameProperty,
+							new StringProperty(
+								curSelTagsetDefinition.getName()));
+			
+			FormDialog tagsetFormDialog =
+				new FormDialog(
+					"Edit Tagset",
+					propertyCollection,
+					new FormDialog.SaveCancelListener() {
+						public void cancelPressed() {}
+						public void savePressed(
+								PropertysetItem propertysetItem) {
+							Property property = 
+									propertysetItem.getItemProperty(
+										tagsetdefinitionnameProperty);
+							
+							tagManager.setTagsetDefinitionName(
+									curSelTagsetDefinition,
+									(String)property.getValue());
+						}
+					});
+			configureTagsetFormDialog(
+					tagsetFormDialog, tagsetdefinitionnameProperty);
+
+			tagsetFormDialog.show(getApplication().getMainWindow());
+		}
+	}
+
 	private void configureTagsetFormDialog(
 			FormDialog formDialog, String propertyId) {
 		formDialog.getField(
@@ -464,65 +655,80 @@ public class TagsetTree extends HorizontalLayout {
 				tagsetDefinition, TagTreePropertyName.icon).setValue(tagsetIcon);
 		
 		for (TagDefinition tagDefinition : tagsetDefinition) {
-			if (!tagDefinition.getID().equals
-					(TagDefinition.CATMA_BASE_TAG.getID())) {
-				
-				ClassResource tagIcon = 
-					new ClassResource(
-						"ui/tagmanager/resources/reddiamd.gif", getApplication());
-
-				tagTree.addItem(tagDefinition);
-				tagTree.getContainerProperty(
-						tagDefinition, 
-						TagTreePropertyName.caption).setValue(
-								tagDefinition.getType());
-				tagTree.getContainerProperty(
-						tagDefinition, 
-						TagTreePropertyName.icon).setValue(tagIcon);
-				
-				for (PropertyDefinition propertyDefinition : 
-						tagDefinition.getUserDefinedPropertyDefinitions()) {
-					
-					ClassResource propertyIcon = 
-							new ClassResource(
-								"ui/tagmanager/resources/ylwdiamd.gif", 
-								getApplication());
-					
-					tagTree.addItem(propertyDefinition);
-					tagTree.setParent(propertyDefinition, tagDefinition);
-					tagTree.getContainerProperty(
-							propertyDefinition, 
-							TagTreePropertyName.caption).setValue(
-									propertyDefinition.getName());
-					tagTree.getContainerProperty(
-							propertyDefinition, 
-							TagTreePropertyName.icon).setValue(
-									propertyIcon);
-					tagTree.setChildrenAllowed(propertyDefinition, false);
-				}
-			}
+			addTagDefinition(tagDefinition);
 		}
 		
 		for (TagDefinition tagDefinition : tagsetDefinition) {
-			String baseID = tagDefinition.getBaseID();
-			TagDefinition parent = tagsetDefinition.getTagDefinition(baseID);
-			if ((parent==null)
-					||(parent.getID().equals(
-							TagDefinition.CATMA_BASE_TAG.getID()))) {
-				tagTree.setParent(tagDefinition, tagsetDefinition);
-			}
-			else {
-				tagTree.setParent(tagDefinition, parent);
-			}
+			establishHierarchy(tagsetDefinition, tagDefinition);
 		}
 		
 		for (TagDefinition tagDefinition : tagsetDefinition) {
-			if (!tagTree.hasChildren(tagDefinition)) {
-				tagTree.setChildrenAllowed(tagDefinition, false);
-			}
+			configureChildren(tagDefinition);
 		}
 	}
 	
+
+	
+	private void configureChildren(TagDefinition tagDefinition) {
+		if (!tagTree.hasChildren(tagDefinition)) {
+			tagTree.setChildrenAllowed(tagDefinition, false);
+		}
+	}
+
+	private void establishHierarchy(
+			TagsetDefinition tagsetDefinition, TagDefinition tagDefinition) {
+		String baseID = tagDefinition.getBaseID();
+		TagDefinition parent = tagsetDefinition.getTagDefinition(baseID);
+		if ((parent==null)
+				||(parent.getID().equals(
+						TagDefinition.CATMA_BASE_TAG.getID()))) {
+			tagTree.setParent(tagDefinition, tagsetDefinition);
+		}
+		else {
+			tagTree.setParent(tagDefinition, parent);
+		}		
+	}
+
+	private void addTagDefinition(TagDefinition tagDefinition) {
+		if (!tagDefinition.getID().equals
+				(TagDefinition.CATMA_BASE_TAG.getID())) {
+			
+			ClassResource tagIcon = 
+				new ClassResource(
+					"ui/tagmanager/resources/reddiamd.gif", getApplication());
+
+			tagTree.addItem(tagDefinition);
+			tagTree.getContainerProperty(
+					tagDefinition, 
+					TagTreePropertyName.caption).setValue(
+							tagDefinition.getType());
+			tagTree.getContainerProperty(
+					tagDefinition, 
+					TagTreePropertyName.icon).setValue(tagIcon);
+			
+			for (PropertyDefinition propertyDefinition : 
+					tagDefinition.getUserDefinedPropertyDefinitions()) {
+				
+				ClassResource propertyIcon = 
+						new ClassResource(
+							"ui/tagmanager/resources/ylwdiamd.gif", 
+							getApplication());
+				
+				tagTree.addItem(propertyDefinition);
+				tagTree.setParent(propertyDefinition, tagDefinition);
+				tagTree.getContainerProperty(
+						propertyDefinition, 
+						TagTreePropertyName.caption).setValue(
+								propertyDefinition.getName());
+				tagTree.getContainerProperty(
+						propertyDefinition, 
+						TagTreePropertyName.icon).setValue(
+								propertyIcon);
+				tagTree.setChildrenAllowed(propertyDefinition, false);
+			}
+		}
+	}
+
 	public TreeTable getTagTree() {
 		return tagTree;
 	}
@@ -538,5 +744,8 @@ public class TagsetTree extends HorizontalLayout {
 				TagManagerEvent.tagsetDefinitionNameChanged,
 				tagsetDefNameChangedListener);
 		}
+		tagManager.removePropertyChangeListener(
+				TagManagerEvent.tagDefinitionAdded,
+				tagDefAddedListener);
 	}
 }

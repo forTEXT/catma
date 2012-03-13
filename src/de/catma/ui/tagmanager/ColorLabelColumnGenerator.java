@@ -24,8 +24,8 @@ public class ColorLabelColumnGenerator implements ColumnGenerator {
 				new Label(
 					MessageFormat.format(
 						COLORLABEL_HTML, 
-						new ColorConverter(
-							Integer.valueOf(td.getColor())).toHex()));
+						ColorConverter.toHex((
+							td.getColor()))));
 			colorLabel.setContentMode(Label.CONTENT_XHTML);
 			return colorLabel;
 		}

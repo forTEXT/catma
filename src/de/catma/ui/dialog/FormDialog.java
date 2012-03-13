@@ -9,6 +9,7 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Field;
 import com.vaadin.ui.Form;
+import com.vaadin.ui.FormFieldFactory;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -27,12 +28,21 @@ public class FormDialog extends VerticalLayout {
 			String caption,
 			PropertysetItem propertysetItem, 
 			SaveCancelListener saveCancelListener) {
-		initComponents(caption, propertysetItem, saveCancelListener);
+		this(caption, propertysetItem, null, saveCancelListener);
+	}
+	
+	public FormDialog(
+			String caption,
+			PropertysetItem propertysetItem, 
+			FormFieldFactory formFieldFactory,
+			SaveCancelListener saveCancelListener) {
+		initComponents(caption, propertysetItem, formFieldFactory, saveCancelListener);
 	}
 
 	private void initComponents(
 			String caption,
 			final PropertysetItem propertysetItem, 
+			FormFieldFactory formFieldFactory, 
 			final SaveCancelListener saveCancelListener) {
 		setSizeFull();
 		setSpacing(true);
@@ -41,6 +51,9 @@ public class FormDialog extends VerticalLayout {
 		dialogWindow.setModal(true);
 		
 		form = new Form();
+		if (formFieldFactory != null) {
+			form.setFormFieldFactory(formFieldFactory);
+		}
 		form.setSizeFull();
 		form.setWriteThrough(false);
 		form.setInvalidCommitted(false);
@@ -81,8 +94,6 @@ public class FormDialog extends VerticalLayout {
 		
 		dialogWindow.addComponent(this);
 		
-		dialogWindow.setWidth("25%");
-		
 		form.focus();
 	}
 	
@@ -92,7 +103,12 @@ public class FormDialog extends VerticalLayout {
 		return form.getField(propertyId);
 	}
 
-	public void show(Window parent) {
+	public void show(Window parent, String dialogWidth) {
+		dialogWindow.setWidth(dialogWidth);
 		parent.addWindow(dialogWindow);
+	}
+	
+	public void show(Window parent) {
+		show(parent, "25%");
 	}
 }
