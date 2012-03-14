@@ -3,6 +3,8 @@ package de.catma.elasticsearch;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.ning.http.client.AsyncHttpClient;
+
 public class ElasticsearchInstaller {
 
 	public String version = "1";
