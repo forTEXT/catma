@@ -1,7 +1,13 @@
 package de.catma.elasticsearch;
 
+import java.util.concurrent.Future;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.google.gwt.dev.util.Either;
+import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.Response;
 
 public class ElasticsearchInstaller {
 
@@ -10,7 +16,7 @@ public class ElasticsearchInstaller {
 	public String indexName;
 
 	public ElasticsearchInstaller() {
-		this.indexName = "catmaIndexCollection" + "-" + this.version;
+		this.indexName = "catma_index_collection";
 	}
 
 	/**
@@ -24,15 +30,15 @@ public class ElasticsearchInstaller {
 		String tagInstanceIndex = "{"
 				+ "\"TagInstanceIndex\" : {"
 				+ "   \"properties\" : {"
-				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\" }"
-				+ "       \"markupDocumentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"}"
-				+ "       \"tagId_l\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"yes\"}"
-				+ "       \"tagId_m\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"yes\"}"
-				+ "       \"tagInstanceId_l\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"yes\"}"
-				+ "       \"tagInstanceId_m\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"yes\"}"
-				+ "       \"properties\" : {\"type\" : \"string\", \"store\" : \"yes\"} , \"index\" : \"not_analyzed\""
-				+ "       \"characterStart\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"yes\"}"
-				+ "       \"characterEnd\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"yes\"}"
+				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\" },"
+				+ "       \"markupDocumentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"tagId_l\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"tagId_m\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"tagInstanceId_l\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"tagInstanceId_m\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"properties\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"characterStart\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"characterEnd\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"}"
 				+ "   }" + "}" + "}";
 		return new JSONObject(tagInstanceIndex).toString();
 	}
@@ -48,11 +54,11 @@ public class ElasticsearchInstaller {
 		String staticMarkupIndex = "{"
 				+ "\"StaticMarkupIndex\" : {"
 				+ "   \"properties\" : {"
-				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"}"
-				+ "       \"markupDocumentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"}"
-				+ "       \"properties\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"}"
-				+ "       \"characterStart\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"yes\"}"
-				+ "       \"characterEnd\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"yes\"}"
+				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"markupDocumentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"properties\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"characterStart\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"characterEnd\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
 				+ "   }" + "}" + "}";
 		return new JSONObject(staticMarkupIndex).toString();
 	}
@@ -68,12 +74,12 @@ public class ElasticsearchInstaller {
 		String staticMarkupIndex = "{"
 				+ "\"TermIndex\" : {"
 				+ "   \"properties\" : {"
-				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"}"
-				+ "       \"markupDocumentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"}"
-				+ "       \"termId_l\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"yes\"}"
-				+ "       \"termId_m\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"yes\"}"
-				+ "       \"frequency\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"yes\"}"
-				+ "       \"term\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"yes\"}"
+				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"markupDocumentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"termId_l\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"termId_m\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"frequency\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"term\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"}"
 				+ "   }" + "}" + "}";
 		return new JSONObject(staticMarkupIndex).toString();
 	}
@@ -89,13 +95,14 @@ public class ElasticsearchInstaller {
 		String positionIndex = "{"
 				+ "\"PositionIndex\" : {"
 				+ "   \"properties\" : {"
-				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"}"
-				+ "       \"termId_l\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"yes\"}"
-				+ "       \"termId_m\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"yes\"}"
-				+ "       \"characterStart\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"yes\"}"
-				+ "       \"characterEnd\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"yes\"}"
-				+ "       \"tokenoffset\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"yes\"}"
+				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\" },"
+				+ "       \"termId_l\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"termId_m\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"characterStart\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"characterEnd\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"tokenoffset\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"}"
 				+ "   }" + "}" + "}";
+		System.out.println(positionIndex);
 		return new JSONObject(positionIndex).toString();
 	}
 
@@ -110,24 +117,32 @@ public class ElasticsearchInstaller {
 		String wildcardIndex = "{"
 				+ "\"PositionIndex\" : {"
 				+ "   \"properties\" : {"
-				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"}"
-				+ "       \"termId_l\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"yes\"}"
-				+ "       \"termId_m\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"yes\"}"
-				+ "       \"nGram\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"yes\"}"
-				+ "       \"termIds\" : {\"type\" : \"binary\", \"store\" : \"yes\", \"index\" : \"yes\"}"
+				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"termId_l\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"termId_m\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"nGram\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"termIds\" : {\"type\" : \"binary\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"}"
 				+ "   }" + "}" + "}";
 		return new JSONObject(wildcardIndex).toString();
 	}
-
+	
 	public String getUrl() {
 		return this.url + "/" + this.indexName;
 	}
 
 	public static void main(String[] args) throws Exception {
-	    System.out.println("hans");
-	 //   AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
-	 //   Future<Response> f = asyncHttpClient.prepareGet("http://www.ning.com/ ").execute();
-	 //   Response r = f.get();
-	    System.out.println("wurst");
+		ElasticsearchInstaller ei = new ElasticsearchInstaller();
+	    AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
+	    Future<Response> f = asyncHttpClient.preparePut(ei.getUrl())
+	    		.execute();
+	    Response r = f.get();
+	    System.out.println(r.getResponseBody());
+
+	    f = asyncHttpClient.preparePut(ei.getUrl() + "/positionIndex/_mapping/")
+	    		.setBody(ei.genPositionIndex())
+	    		.execute();
+	    r = f.get();
+	    asyncHttpClient.close();
+	    System.out.println(r.getResponseBody());
 	}
 }
