@@ -1,9 +1,12 @@
 package de.catma.elasticsearch;
 
+import java.util.concurrent.Future;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.Response;
 
 public class ElasticsearchInstaller {
 
@@ -126,7 +129,14 @@ public class ElasticsearchInstaller {
 		return new JSONObject(wildcardIndex).toString();
 	}
 	
+	public String getUrl(){
+		return this.url + "/" + this.indexName;
+	}
+	
 	public static void main(String[] args) {
 		ElasticsearchInstaller ei = new ElasticsearchInstaller();
+		AsyncHttpClient a = new AsyncHttpClient();
+	  //  Future<Response> f = a.preparePost(ei.getUrl() + "/" + "TermIndex" + "/" );
+	  //  Response r = f.get();
 	}
 }
