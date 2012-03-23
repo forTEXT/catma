@@ -12,6 +12,11 @@ import org.slf4j.LoggerFactory;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 
+/**
+ * Installs the required catma indices on the elastic search server.
+ * @author db <db@bsdsystems.de>
+ *
+ */
 public class ESInstaller {
 
 	public String version = ESOptions.getString("ESInstaller.version");
@@ -19,7 +24,7 @@ public class ESInstaller {
 	public String indexName = ESOptions.getString("ESInstaller.name");
 	public AsyncHttpClient httpTransport;
 	private Logger logger = LoggerFactory.getLogger(ESInstaller.class);
-	
+
 	public ESInstaller() {
 		this.httpTransport = new AsyncHttpClient();
 	}
@@ -32,18 +37,8 @@ public class ESInstaller {
 			taskCreatePositionIndex();
 			taskCreateTermIndex();
 			taskCreateWildcardIndex();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
 		}
 	}
 
@@ -53,16 +48,17 @@ public class ESInstaller {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws ExecutionException
-	 * @throws JSONException
 	 */
 	private void taskCreateIndex() throws IOException, InterruptedException,
-			ExecutionException, JSONException {
+			ExecutionException {
 		Future<Response> f = this.httpTransport.preparePut(this.baseIndexUrl())
 				.execute();
 		Response r = f.get();
-		JSONObject result = new JSONObject(r.getResponseBody());
-		System.out.println(result);
-		// TODO: validate result and log with logger, throw exceptions!!
+		String result = r.getResponseBody();
+		if (!validateResponse(result)) {
+			throw new IOException("Couldn't create index error: " + result);
+		}
+		logger.info("Index successfully created");
 	}
 
 	/**
@@ -71,10 +67,9 @@ public class ESInstaller {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws ExecutionException
-	 * @throws JSONException
 	 */
 	private void taskCreateTaginstanceIndex() throws IOException,
-			InterruptedException, ExecutionException, JSONException {
+			InterruptedException, ExecutionException {
 		String tagInstanceIndex = "{"
 				+ "\"TagInstanceIndex\" : {"
 				+ "   \"properties\" : {"
@@ -96,21 +91,22 @@ public class ESInstaller {
 								+ "/_mapping/").setBody(tagInstanceIndex)
 				.execute();
 		Response r = f.get();
-		JSONObject result = new JSONObject(r.getResponseBody());
-		System.out.println(result);
-
-		// TODO: validate result and log with logger, throw exceptions!!
+		String result = r.getResponseBody();
+		if (!validateResponse(result)) {
+			throw new IOException("Couldn't create TagInstanceIndex: " + result);
+		}
+		logger.info("TagInstanceIndex successfully created");
 	}
 
 	/**
 	 * Creates the StaticMarkupIndex on elastic search server
+	 * 
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws ExecutionException
-	 * @throws JSONException
 	 */
 	private void taskCreateStaticMarkupIndex() throws IOException,
-			InterruptedException, ExecutionException, JSONException {
+			InterruptedException, ExecutionException {
 		String staticMarkupIndex = "{"
 				+ "\"StaticMarkupIndex\" : {"
 				+ "   \"properties\" : {"
@@ -128,21 +124,23 @@ public class ESInstaller {
 								+ "/_mapping/").setBody(staticMarkupIndex)
 				.execute();
 		Response r = f.get();
-		JSONObject result = new JSONObject(r.getResponseBody());
-		System.out.println(result);
-
-		// TODO: validate result and log with logger, throw exceptions!!
+		String result = r.getResponseBody();
+		if (!validateResponse(result)) {
+			throw new IOException("Couldn't create StaticMarkupIndex: "
+					+ result);
+		}
+		logger.info("StaticMarkupIndex successfully created");
 	}
 
 	/**
 	 * Creates the TermIndex on elastic search server
+	 * 
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws ExecutionException
-	 * @throws JSONException
 	 */
 	private void taskCreateTermIndex() throws IOException,
-			InterruptedException, ExecutionException, JSONException {
+			InterruptedException, ExecutionException {
 		String termindex = "{"
 				+ "\"TermIndex\" : {"
 				+ "   \"properties\" : {"
@@ -156,27 +154,25 @@ public class ESInstaller {
 		Future<Response> f = this.httpTransport
 				.preparePut(
 						baseIndexUrl()
-								+ ESOptions
-										.getString("ESInstaller.termindex")
-								+ "/_mapping/").setBody(termindex)
-				.execute();
+								+ ESOptions.getString("ESInstaller.termindex")
+								+ "/_mapping/").setBody(termindex).execute();
 		Response r = f.get();
-		JSONObject result = new JSONObject(r.getResponseBody());
-		System.out.println(result);
-
-		// TODO: validate result and log with logger, throw exceptions!!
+		String result = r.getResponseBody();
+		if (!validateResponse(result)) {
+			throw new IOException("Couldn't create TermIndex: " + result);
+		}
+		logger.info("TermIndex successfully created");
 	}
-
 
 	/**
 	 * Creates the PositionIndex on elastic search server
+	 * 
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws ExecutionException
-	 * @throws JSONException
 	 */
 	private void taskCreatePositionIndex() throws IOException,
-			InterruptedException, ExecutionException, JSONException {
+			InterruptedException, ExecutionException {
 		String positionindex = "{"
 				+ "\"PositionIndex\" : {"
 				+ "   \"properties\" : {"
@@ -195,23 +191,24 @@ public class ESInstaller {
 								+ "/_mapping/").setBody(positionindex)
 				.execute();
 		Response r = f.get();
-		JSONObject result = new JSONObject(r.getResponseBody());
-		System.out.println(result);
-
-		// TODO: validate result and log with logger, throw exceptions!!
+		String result = r.getResponseBody();
+		if (!validateResponse(result)) {
+			throw new IOException("Couldn't create PositionIndex: " + result);
+		}
+		logger.info("PositionIndex successfully created");
 	}
 
 	/**
 	 * Creates the WildcardIndex on elastic search server
+	 * 
 	 * @throws IOException
 	 * @throws InterruptedException
 	 * @throws ExecutionException
-	 * @throws JSONException
 	 */
 	private void taskCreateWildcardIndex() throws IOException,
-			InterruptedException, ExecutionException, JSONException {
+			InterruptedException, ExecutionException {
 		String wildcardindex = "{"
-				+ "\"PositionIndex\" : {"
+				+ "\"WildcardIndex\" : {"
 				+ "   \"properties\" : {"
 				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
 				+ "       \"termId_l\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
@@ -228,25 +225,64 @@ public class ESInstaller {
 								+ "/_mapping/").setBody(wildcardindex)
 				.execute();
 		Response r = f.get();
-		JSONObject result = new JSONObject(r.getResponseBody());
-		System.out.println(result);
+		String result = r.getResponseBody();
+		if (!validateResponse(result)) {
+			throw new IOException("Couldn't create WildcardIndex: " + result);
+		}
+		logger.info("WildcardIndex successfully created");
 
-		// TODO: validate result and log with logger, throw exceptions!!
 	}
-	
+
+	/**
+	 * Validates the elasticsearch response codes.
+	 * It is true if one of the following conditions is true:
+	 * <ul>
+	 * 	<li>response 200 and content ok : true 
+	 *  <li>response 200 and content acknowledged: true
+	 *  <li>response 400 and content error "IndexAlreadyExistsException"
+	 * </ul>
+	 * @param response the responsestring in JSONsyntax
+	 * @return boolean result
+	 */
+	private boolean validateResponse(String response) {
+		JSONObject result;
+		try {
+			result = new JSONObject(response);
+		} catch (JSONException e) {
+			return false;
+		}
+		try {
+			if (result.has("ok") && result.getBoolean("ok") == true) {
+				return true;
+			}
+			if (result.has("ok") && result.getBoolean("ok") == true) {
+				return true;
+			}
+			if (result.has("error")) {
+				String error = result.getString("error");
+				if (error.contains("IndexAlreadyExistsException")) {
+					return true;
+				}
+			}
+		} catch (JSONException e) {
+			return false;
+		}
+		return false;
 	}
+
 	/**
 	 * generates the full uri to the elastic search index
+	 * 
 	 * @return String the URI in form of http://<host>:<port>/indexname
 	 */
 	private String baseIndexUrl() {
 		return this.url + "/" + this.indexName;
 	}
-	
+
 	/**
 	 * Closes the async http transport client
 	 */
-	public void close(){
+	public void close() {
 		this.httpTransport.close();
 	}
 
@@ -257,7 +293,7 @@ public class ESInstaller {
 		close();
 		super.finalize();
 	}
-	
+
 	public static void main(String[] args) {
 		ESInstaller installer = new ESInstaller();
 		installer.setup();
