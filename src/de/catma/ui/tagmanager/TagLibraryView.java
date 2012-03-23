@@ -13,6 +13,7 @@ public class TagLibraryView extends HorizontalLayout {
 	
 	private TagLibrary tagLibrary;
 	private TagsetTree tagsetTree;
+	private boolean init = true;
 	
 	public TagLibraryView(TagManager tagManager, TagLibrary tagLibrary) {
 		super();
@@ -29,21 +30,27 @@ public class TagLibraryView extends HorizontalLayout {
 	@Override
 	public void attach() {
 		super.attach();
-		
-		WebApplicationContext context = 
-				((WebApplicationContext) getApplication().getContext());
-		WebBrowser wb = context.getBrowser();
-		tagsetTree.setHeight(wb.getScreenHeight()*0.52f, UNITS_PIXELS);
-		
-		tagsetTree.getTagTree().setDragMode(TableDragMode.ROW);
-
-		for (TagsetDefinition tagsetDefinition : tagLibrary) {
-			tagsetTree.addTagsetDefinition(tagsetDefinition);
+		if (init) {
+			WebApplicationContext context = 
+					((WebApplicationContext) getApplication().getContext());
+			WebBrowser wb = context.getBrowser();
+			tagsetTree.setHeight(wb.getScreenHeight()*0.52f, UNITS_PIXELS);
+			
+			tagsetTree.getTagTree().setDragMode(TableDragMode.ROW);
+	
+			for (TagsetDefinition tagsetDefinition : tagLibrary) {
+				tagsetTree.addTagsetDefinition(tagsetDefinition);
+			}
+			init = false;
 		}
 	}
 
 	TagLibrary getTagLibrary() {
 		return tagLibrary;
+	}
+
+	public void close() {
+		tagsetTree.close();
 	}
 	
 }

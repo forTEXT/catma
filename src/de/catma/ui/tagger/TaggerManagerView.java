@@ -83,6 +83,7 @@ public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 		// workaround for http://dev.vaadin.com/ticket/7686
 		
 		tabsheet.removeComponent(tabContent);
+		((TaggerView)tabContent).close();
 		try {
 			Thread.sleep(5);
 		} catch (InterruptedException ex) {

@@ -1,7 +1,10 @@
 package de.catma.ui.tagger;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 
+import com.vaadin.data.Property;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.Resource;
@@ -18,6 +21,8 @@ import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.TagManager;
+import de.catma.core.tag.TagManager.TagManagerEvent;
 import de.catma.core.tag.TagsetDefinition;
 import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
 
@@ -29,34 +34,51 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	} 
 	
 	private static enum MarkupCollectionsTreeProperty {
-		caption("Markup Collections"), 
-		icon("icon"),
-		visible("Visible"),
-		color("Tag Color"),
+		caption, 
+		icon,
+		visible,
+		color,
 		;
-		
-		private String displayString;
 
-		private MarkupCollectionsTreeProperty(String displayString) {
-			this.displayString = displayString;
-		}
-		
-		@Override
-		public String toString() {
-			return displayString;
-		}
-		
 	}
 	
 	private TreeTable markupCollectionsTree;
 	private String userMarkupItem = "User Markup Collections";
 	private String staticMarkupItem = "Static Markup Collections";
 	private TagDefinitionSelectionListener tagDefinitionSelectionListener;
+	private TagManager tagManager;
+	private PropertyChangeListener tagDefChangedListener;
 
 	public MarkupCollectionsPanel(
+			TagManager tagManager,
 			TagDefinitionSelectionListener tagDefinitionSelectionListener) {
+		this.tagManager = tagManager;
 		this.tagDefinitionSelectionListener = tagDefinitionSelectionListener;
 		initComponents(tagDefinitionSelectionListener);
+		initActions();
+	}
+
+	private void initActions() {
+		tagDefChangedListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				TagDefinition tagDefinition = 
+						(TagDefinition)evt.getNewValue();
+				Property captionProp = markupCollectionsTree.getContainerProperty(
+					tagDefinition, 
+					MarkupCollectionsTreeProperty.caption);
+				
+				if (captionProp != null) {
+					captionProp.setValue(tagDefinition.getType());
+				}				
+				
+			}
+		};
+		
+		tagManager.addPropertyChangeListener(
+				TagManagerEvent.tagDefinitionChanged,
+				tagDefChangedListener);
+		
 	}
 
 	private void initComponents(
@@ -64,11 +86,15 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		
 		markupCollectionsTree = new TreeTable();
 		markupCollectionsTree.setSizeFull();
+		markupCollectionsTree.setSelectable(true);
+		markupCollectionsTree.setMultiSelect(false);
 		markupCollectionsTree.setContainerDataSource(new HierarchicalContainer());
 		
 		markupCollectionsTree.addContainerProperty(
 				MarkupCollectionsTreeProperty.caption, 
 				String.class, null);
+		markupCollectionsTree.setColumnHeader(
+				MarkupCollectionsTreeProperty.caption, "Markup Collections");
 		
 		markupCollectionsTree.addContainerProperty(
 				MarkupCollectionsTreeProperty.icon, Resource.class, null);
@@ -76,6 +102,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		markupCollectionsTree.addContainerProperty(
 				MarkupCollectionsTreeProperty.visible, 
 				AbstractComponent.class, null);
+		markupCollectionsTree.setColumnHeader(
+				MarkupCollectionsTreeProperty.visible, "Visible");
 		
 		markupCollectionsTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_PROPERTY);
 		markupCollectionsTree.setItemCaptionPropertyId(
@@ -83,7 +111,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		markupCollectionsTree.setItemIconPropertyId(MarkupCollectionsTreeProperty.icon);
 		markupCollectionsTree.addGeneratedColumn(
 				MarkupCollectionsTreeProperty.color, new ColorLabelColumnGenerator());
-
+		markupCollectionsTree.setColumnHeader(
+				MarkupCollectionsTreeProperty.color, "Tag color");
+		
 		markupCollectionsTree.setVisibleColumns(
 				new Object[] {
 						MarkupCollectionsTreeProperty.caption,
@@ -185,8 +215,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			public void buttonClick(ClickEvent event) {
 				boolean enabled = 
 						event.getButton().booleanValue();
-				System.out.println(tagDefinition + " enabled:" + enabled);
-				
+
 				UserMarkupCollection userMarkupCollection =
 						getUserMarkupCollection(tagDefinition);
 				
@@ -221,5 +250,11 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 
 		});
 		return cbShowTagInstances;
+	}
+	
+	public void close() {
+		tagManager.removePropertyChangeListener(
+				TagManagerEvent.tagDefinitionChanged,
+				tagDefChangedListener);
 	}
 }

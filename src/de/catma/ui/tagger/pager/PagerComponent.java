@@ -74,6 +74,7 @@ public class PagerComponent extends HorizontalLayout {
 	private int currentPageNumber = 1;
 	private int lastPageNumber;
 	private Label lastPageNumberLabel;
+	private boolean init = true;
 	
 	public PagerComponent(final Pager pager, PageChangeListener pageChangeListener) {
 		this.pageChangeListener = pageChangeListener;
@@ -93,6 +94,7 @@ public class PagerComponent extends HorizontalLayout {
 	}
 
 	private void initActions() {
+		//TODO: prevent out of bounds pages, see AnnotationClient:Pager 
 		firstPageButton.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -153,24 +155,28 @@ public class PagerComponent extends HorizontalLayout {
 	@Override
 	public void attach() {
 		super.attach();
-		ClassResource firstPageIcon = 
-				new ClassResource(
-						"ui/tagger/pager/resources/page-first.gif", 
-						getApplication());
-		firstPageButton.setIcon(firstPageIcon);
-		ClassResource previousPageIcon = 
-				new ClassResource(
-						"ui/tagger/pager/resources/page-prev.gif", 
-						getApplication());
-		previousPageButton.setIcon(previousPageIcon);
-		ClassResource nextPageIcon = 
-				new ClassResource(
-						"ui/tagger/pager/resources/page-next.gif", 
-						getApplication());
-		nextPageButton.setIcon(nextPageIcon);
-		ClassResource lastPageIcon = new ClassResource(
-				"ui/tagger/pager/resources/page-last.gif", 
-				getApplication());
-		lastPageButton.setIcon(lastPageIcon);
+		
+		if (init) {
+			ClassResource firstPageIcon = 
+					new ClassResource(
+							"ui/tagger/pager/resources/page-first.gif", 
+							getApplication());
+			firstPageButton.setIcon(firstPageIcon);
+			ClassResource previousPageIcon = 
+					new ClassResource(
+							"ui/tagger/pager/resources/page-prev.gif", 
+							getApplication());
+			previousPageButton.setIcon(previousPageIcon);
+			ClassResource nextPageIcon = 
+					new ClassResource(
+							"ui/tagger/pager/resources/page-next.gif", 
+							getApplication());
+			nextPageButton.setIcon(nextPageIcon);
+			ClassResource lastPageIcon = new ClassResource(
+					"ui/tagger/pager/resources/page-last.gif", 
+					getApplication());
+			lastPageButton.setIcon(lastPageIcon);
+			init = false;
+		}
 	}
 }

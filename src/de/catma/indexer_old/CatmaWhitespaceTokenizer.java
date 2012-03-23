@@ -22,7 +22,6 @@ package de.catma.indexer;
 import java.io.Reader;
 
 import org.apache.lucene.analysis.CharTokenizer;
-import org.apache.lucene.util.Version;
 
 import de.catma.indexer.unseparablecharactersequence.CharTree;
 import de.catma.indexer.unseparablecharactersequence.UnseparableCharacterSequenceAttribute;
@@ -52,7 +51,7 @@ class CatmaWhitespaceTokenizer extends CharTokenizer {
      */
     CatmaWhitespaceTokenizer(
             Reader reader, CharTree unseparableCharacterSequences) {
-        super(Version.LUCENE_35, reader);
+        super(reader);
         ucAtt = (UnseparableCharacterSequenceAttribute)
                 addAttribute(UnseparableCharacterSequenceAttribute.class);
 

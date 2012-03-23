@@ -28,8 +28,8 @@ import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
+import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 
 import de.catma.indexer.unseparablecharactersequence.CharTree;
 import de.catma.indexer.unseparablecharactersequence.UnseparableCharacterSequenceAttribute;
@@ -41,7 +41,7 @@ import de.catma.indexer.unseparablecharactersequence.UnseparableCharacterSequenc
  */
 public class PunctuationTokenizer extends TokenFilter {
 
-    private CharTermAttribute termAtt;
+    private TermAttribute termAtt;
     private OffsetAttribute offsetAtt;
     private UnseparableCharacterSequenceAttribute ucAtt;
     private ArrayDeque<TermInfo> termInfoBuffer;
@@ -66,7 +66,7 @@ public class PunctuationTokenizer extends TokenFilter {
         super(input);
         termInfoBuffer = new ArrayDeque<TermInfo>();
         offsetAtt = (OffsetAttribute) input.getAttribute(OffsetAttribute.class);
-        termAtt = (CharTermAttribute) input.getAttribute(CharTermAttribute.class);
+        termAtt = (TermAttribute) input.getAttribute(TermAttribute.class);
         ucAtt = (UnseparableCharacterSequenceAttribute)
                         input.getAttribute(UnseparableCharacterSequenceAttribute.class);
 
@@ -91,7 +91,7 @@ public class PunctuationTokenizer extends TokenFilter {
                 return false; // no more tokens in the stream
             }
 
-            String origTerm = termAtt.toString();
+            String origTerm = termAtt.term();
             int origStartOffset = offsetAtt.startOffset();
             int origEndOffset = offsetAtt.endOffset();
 
@@ -116,8 +116,7 @@ public class PunctuationTokenizer extends TokenFilter {
         // ok, now we handle everything we left for later, while tokenizing
         if (termInfoBuffer.size() > 0) {
             TermInfo ti = termInfoBuffer.pop();
-            termAtt.setEmpty();
-            termAtt.append(ti.getTerm());
+            termAtt.setTermBuffer(ti.getTerm());
             offsetAtt.setOffset(
                     (int)ti.getRange().getStartPoint(),
                     (int)ti.getRange().getEndPoint());

@@ -25,6 +25,7 @@ class TeiDocument {
 	
 	TeiDocument(String id, Document document) {
 		super();
+		this.id = id;
 		this.document = document;
 		this.idElementMapping = new HashMap<String, TeiElement>();
 		xpathcontext = new XPathContext( TeiElement.TEINAMESPACEPREFIX, TeiElement.TEINAMESPACE );

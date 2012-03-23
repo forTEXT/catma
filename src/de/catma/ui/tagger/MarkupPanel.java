@@ -21,6 +21,7 @@ public class MarkupPanel extends VerticalLayout {
 	private TagsetTree tagsetTree;
 	private TabSheet tabSheet;
 	private MarkupCollectionsPanel markupCollectionsPanel;
+	private boolean init = true;
 	
 	public MarkupPanel(
 			TagManager tagManager,
@@ -38,7 +39,8 @@ public class MarkupPanel extends VerticalLayout {
 		tabSheet.addTab(tagsetTree, "Currently active Tagsets");
 		
 		markupCollectionsPanel = 
-				new MarkupCollectionsPanel(tagDefinitionSelectionListener);
+				new MarkupCollectionsPanel(
+						tagManager, tagDefinitionSelectionListener);
 		
 		tabSheet.addTab(
 				markupCollectionsPanel, "Currently active Markup Collections");
@@ -49,35 +51,42 @@ public class MarkupPanel extends VerticalLayout {
 	@Override
 	public void attach() {
 		super.attach();
-		//TODO: maybe accept drags only from the TaggerView table, drag only tagset defs
-		tagsetTree.getTagTree().setDropHandler(new DropHandler() {
-			
-			public AcceptCriterion getAcceptCriterion() {
+		if (init) {
+			//TODO: maybe accept drags only from the TaggerView table, drag only tagset defs
+			tagsetTree.getTagTree().setDropHandler(new DropHandler() {
 				
-				return AcceptItem.ALL;
-			}
-			
-			public void drop(DragAndDropEvent event) {
-				DataBoundTransferable transferable = 
-						(DataBoundTransferable)event.getTransferable();
+				public AcceptCriterion getAcceptCriterion() {
+					
+					return AcceptItem.ALL;
+				}
 				
-                if (!(transferable.getSourceContainer() 
-                		instanceof Container.Hierarchical)) {
-                    return;
-                }
-
-                Object sourceItemId = transferable.getItemId();
-                
-                if (sourceItemId instanceof TagsetDefinition) {
-                	tagsetTree.addTagsetDefinition(
-                			(TagsetDefinition)sourceItemId);
-                }
-			}
-		});
+				public void drop(DragAndDropEvent event) {
+					DataBoundTransferable transferable = 
+							(DataBoundTransferable)event.getTransferable();
+					
+	                if (!(transferable.getSourceContainer() 
+	                		instanceof Container.Hierarchical)) {
+	                    return;
+	                }
+	
+	                Object sourceItemId = transferable.getItemId();
+	                
+	                if (sourceItemId instanceof TagsetDefinition) {
+	                	tagsetTree.addTagsetDefinition(
+	                			(TagsetDefinition)sourceItemId);
+	                }
+				}
+			});
+			init = false;
+		}
 	}
 
 	public void openUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
 		markupCollectionsPanel.openUserMarkupCollection(userMarkupCollection);
+	}
+
+	public void close() {
+		tagsetTree.close();
 	}
 }

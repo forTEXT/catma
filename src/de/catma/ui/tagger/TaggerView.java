@@ -27,6 +27,7 @@ public class TaggerView extends VerticalLayout {
 	private Tagger tagger;
 	private Pager pager;
 	private MarkupPanel markupPanel;
+	private boolean init = true;
 	
 	public TaggerView(TagManager tagManager, SourceDocument sourceDocument) {
 		this.sourceDocument = sourceDocument;
@@ -89,23 +90,30 @@ public class TaggerView extends VerticalLayout {
 	@Override
 	public void attach() {
 		super.attach();
-		WebApplicationContext context = 
-				((WebApplicationContext) getApplication().getContext());
-		WebBrowser wb = context.getBrowser();
-
-		float lines = (wb.getScreenHeight()/3)/12;
-		pager.setMaxPageLengthInLines(Math.round(lines));
-		
-		try {
-			tagger.setText(sourceDocument.getContent());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if (init) {
+			WebApplicationContext context = 
+					((WebApplicationContext) getApplication().getContext());
+			WebBrowser wb = context.getBrowser();
+	
+			float lines = (wb.getScreenHeight()/3)/12;
+			pager.setMaxPageLengthInLines(Math.round(lines));
+			
+			try {
+				tagger.setText(sourceDocument.getContent());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			init = false;
 		}
 	}
 
 	public void openUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
 		markupPanel.openUserMarkupCollection(userMarkupCollection);
+	}
+
+	public void close() {
+		markupPanel.close();
 	}
 }

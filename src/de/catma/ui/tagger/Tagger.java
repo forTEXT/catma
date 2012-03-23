@@ -59,6 +59,7 @@ public class Tagger extends AbstractComponent {
 	private Pager pager;
 	private TaggerListener taggerListener;
 	private TagInstanceJSONSerializer tagInstanceJSONSerializer;
+	private boolean init = true;
 	
 	public Tagger(Pager pager, TaggerListener taggerListener) {
 		addStyleName("tagger");
@@ -246,10 +247,13 @@ public class Tagger extends AbstractComponent {
 	@Override
 	public void attach() {
 		super.attach();
-		WebApplicationContext context = 
-				((WebApplicationContext) getApplication().getContext());
-		WebBrowser wb = context.getBrowser();
-		
-		setHeight(wb.getScreenHeight()*0.47f, UNITS_PIXELS);
+		if (init) {
+			WebApplicationContext context = 
+					((WebApplicationContext) getApplication().getContext());
+			WebBrowser wb = context.getBrowser();
+			
+			setHeight(wb.getScreenHeight()*0.47f, UNITS_PIXELS);
+			init = false;
+		}
 	}
 }
