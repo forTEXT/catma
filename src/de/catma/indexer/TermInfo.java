@@ -6,10 +6,12 @@ public class TermInfo {
 
 	private String term;
 	private Range range;
-
-	public TermInfo(String term, int start, int end) {
+	private int tokenOffset;
+	
+	public TermInfo(String term, int start, int end, int tokenOffset) {
 		this.term = term;
 		this.range = new Range(start,end);
+		this.tokenOffset = tokenOffset;
 	}
 	
 	public Range getRange() {
@@ -18,6 +20,10 @@ public class TermInfo {
 	
 	public String getTerm() {
 		return term;
+	}
+
+	public int getTokenOffset() {
+		return tokenOffset;
 	}
 
 }

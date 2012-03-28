@@ -2,14 +2,17 @@ package de.catma.indexer.elasticsearch;
 
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 
+import de.catma.core.document.source.SourceDocument;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TermInfo;
 import de.catma.indexer.WhitespaceAndPunctuationAnalyzer;
@@ -18,11 +21,15 @@ import de.catma.indexer.unseparablecharactersequence.CharTreeFactory;
 
 public class ESIndexer implements Indexer {
 
-	public void index(String content,
+	private ESCommunication esComm; 
+	
+	public ESIndexer() {
+		esComm = new ESCommunication();
+	}
+	public void index(SourceDocument sourceDoc,
 			List<String> unseparableCharacterSequences,
 			List<Character> userDefinedSeparatingCharacters, Locale locale) 
 						throws Exception{
-
         // just in case something went wrong, better use the default than nothing 
         if (locale == null) {
             locale = Locale.getDefault();
@@ -41,10 +48,10 @@ public class ESIndexer implements Indexer {
         TokenStream ts =
                 analyzer.tokenStream(
                         null, // our analyzer does not use the fieldname 
-                        new StringReader(content));
+                        new StringReader(sourceDoc.getContent()));
 
-
-
+        Map<String,List<TermInfo>> terms = new HashMap<String,List<TermInfo>>();
+        
         int positionCounter = 0;
         while(ts.incrementToken()) {
             CharTermAttribute termAttr =
@@ -56,12 +63,15 @@ public class ESIndexer implements Indexer {
             
             
             TermInfo ti =  new TermInfo(termAttr.toString(),
-                offsetAttr.startOffset(), offsetAttr.endOffset());
+                offsetAttr.startOffset(), offsetAttr.endOffset(),positionCounter);
             
-            
-            
+            if(! terms.containsKey(ti.getTerm())){
+            	terms.put(ti.getTerm(), new ArrayList<TermInfo>());
+            }
+            terms.get(ti.getTerm()).add(ti);
             positionCounter++;
         }
+        esComm.addToIndex(sourceDoc.getID(),terms);
 	}
 	
     /**
