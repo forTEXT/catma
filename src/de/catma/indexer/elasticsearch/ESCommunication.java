@@ -29,8 +29,10 @@ public class ESCommunication {
 		AsyncHttpClientConfig config = 
 				new AsyncHttpClientConfig.Builder()
 				.setRequestTimeoutInMs(900000)
-				.setMaximumConnectionsPerHost(500)
-				.setMaximumConnectionsTotal(500).build();
+				.setMaximumConnectionsPerHost(-1)
+				.setConnectionTimeoutInMs(900000)
+				.setMaxRequestRetry(5)
+				.setMaximumConnectionsTotal(-1).build();
 		
 		this.httpTransport = new AsyncHttpClient(config);
 	}
