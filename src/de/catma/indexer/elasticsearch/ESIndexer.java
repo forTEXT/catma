@@ -70,6 +70,7 @@ public class ESIndexer implements Indexer {
             }
             terms.get(ti.getTerm()).add(ti);
             positionCounter++;
+            System.out.println(ti);
         }
         esComm.addToIndex(sourceDoc.getID(),terms);
 	}

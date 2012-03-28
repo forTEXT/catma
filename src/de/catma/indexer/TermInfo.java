@@ -8,6 +8,10 @@ public class TermInfo {
 	private Range range;
 	private int tokenOffset;
 	
+	public TermInfo(String term, int start, int end) {
+		this(term, start, end, 0);
+	}
+
 	public TermInfo(String term, int start, int end, int tokenOffset) {
 		this.term = term;
 		this.range = new Range(start,end);
@@ -26,4 +30,8 @@ public class TermInfo {
 		return tokenOffset;
 	}
 
+	@Override
+	public String toString() {
+		return term + range + " " + tokenOffset;
+	}
 }

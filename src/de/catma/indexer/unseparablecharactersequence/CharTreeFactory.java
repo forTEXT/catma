@@ -44,12 +44,10 @@ public class CharTreeFactory {
         for (String input : inputList ) {
             CharTree cur = head; // always restart from the head
 
-            char[] inputBuf = input.toCharArray();
-
             // loop over the characters of the curren USC
-            for (int i=0; i<inputBuf.length; i++) {
+            for (int i=0; i<input.length(); i++) {
 
-                Character c = inputBuf[i];
+                int c = input.codePointAt(i);
 
                 // whitespaces are handled in a peek mode and can be skipped here
                 if (!(Character.isWhitespace(c) && cur.isWhitespaceSequence())) {
@@ -60,11 +58,11 @@ public class CharTreeFactory {
                         // peek for the next character, as this has to be taken into account as well
 
                         // we are finished with this character, so current char points to the end entry
-                        if (i==inputBuf.length-1) {
+                        if (i==input.codePointAt(input.length()-1)) {
                             cur.put(c, CharTree.END_ENTRY);
                         }
                         // next character will be a whitespace, so current char points to a whitespace
-                        else if (Character.isWhitespace(inputBuf[i+1])) {
+                        else if (Character.isWhitespace(input.codePointAt(i+1))) {
                             cur.put(c, new WhitespaceSequenceEntry());
                         }
                         // just create a new entry

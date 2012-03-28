@@ -65,7 +65,7 @@ class CatmaWhitespaceTokenizer extends CharTokenizer {
     }
 
     @Override
-    protected boolean isTokenChar(char c) {
+    protected boolean isTokenChar(int c) {
 
         boolean isWS = Character.isWhitespace(c);
 

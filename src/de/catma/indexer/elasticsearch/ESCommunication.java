@@ -12,10 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.Response;
-import com.vaadin.ui.Upload.ProgressListener;
 
-import de.catma.core.document.source.SourceDocument;
 import de.catma.indexer.TermInfo;
 
 public class ESCommunication {
@@ -27,7 +26,13 @@ public class ESCommunication {
 	private Logger logger = LoggerFactory.getLogger(ESCommunication.class);
 
 	public ESCommunication() {
-		this.httpTransport = new AsyncHttpClient();
+		AsyncHttpClientConfig config = 
+				new AsyncHttpClientConfig.Builder()
+				.setRequestTimeoutInMs(900000)
+				.setMaximumConnectionsPerHost(500)
+				.setMaximumConnectionsTotal(500).build();
+		
+		this.httpTransport = new AsyncHttpClient(config);
 	}
 
 	public boolean addToIndex(String docId, Map<String, List<TermInfo>> terms)
@@ -36,7 +41,7 @@ public class ESCommunication {
 
 		for (Map.Entry<String, List<TermInfo>> entry : terms.entrySet()) {
 			ESTermIndexDocument termDoc = new ESTermIndexDocument(docId,entry.getKey(),entry.getValue().size());
-
+			logger.info("termdocTermId: " + termDoc.getTermId());
 			Future<Response> f = this.httpTransport
 					.preparePut(this.termIndexUrl()+"/"+termDoc.getTermId().toString()).setBody(termDoc.toJSON())
 					.execute();
@@ -49,14 +54,16 @@ public class ESCommunication {
 		for (Future<Response> response : httpRequests) {
 			try {
 				Response r = response.get();
+				logger.info(r.getResponseBody());
 				if (r.getStatusCode() != 200) {
-					return false;
+					logger.error("response was " + r.getStatusCode());
+//					return false;
 				}
 			} catch (InterruptedException e) {
-				logger.debug("http request got interrupted: "
+				logger.info("http request got interrupted: "
 						+ response.toString());
 			} catch (ExecutionException e) {
-				logger.debug("Couldn't execute http request: "
+				logger.info("Couldn't execute http request: "
 						+ response.toString());
 			}
 		}
@@ -73,6 +80,6 @@ public class ESCommunication {
 	}
 
 	private String termIndexUrl() {
-		return this.baseIndexUrl() + "/" + ESOptions.getString("termindex");
+		return this.baseIndexUrl() + "/" + ESOptions.getString("ESInstaller.termindex");
 	}
 }

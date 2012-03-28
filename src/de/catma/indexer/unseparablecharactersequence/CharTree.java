@@ -36,7 +36,7 @@ import java.util.HashMap;
  * @see org.catma.indexer.unseparablecharactersequence.CharTreeFactory
  *
  */
-public class CharTree extends HashMap<Character, CharTree> {
+public class CharTree extends HashMap<Integer, CharTree> {
 
     /**
      * The end of an unseparable character sequence within the tree structure.
@@ -88,7 +88,7 @@ public class CharTree extends HashMap<Character, CharTree> {
 
         for (int i=0; i<input.length(); i++) {
 
-            Character c = input.charAt(i);
+            int c = input.codePointAt(i);
 
             boolean isWS = Character.isWhitespace(c);
 

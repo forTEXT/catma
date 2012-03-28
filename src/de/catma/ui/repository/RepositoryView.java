@@ -179,6 +179,7 @@ public class RepositoryView extends VerticalLayout {
 									UserMarkupCollectionReference 
 										userMarkupCollectionReference = 
 											(UserMarkupCollectionReference)value;
+									
 									return repository.getUserMarkupCollection(
 											userMarkupCollectionReference);
 								}
