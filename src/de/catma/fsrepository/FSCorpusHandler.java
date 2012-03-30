@@ -67,7 +67,11 @@ class FSCorpusHandler {
 				Node sourceNode = sourceNodes.get(i);
 				
 				SourceDocument sourceDocument = 
-						fsRepository.getSourceDocument(sourceNode.getValue());
+						fsRepository.getSourceDocument(
+								"file:///"
+								+ repoFolderPath 
+								+ System.getProperty("file.separator")
+								+ sourceNode.getValue());
 				corpus.addSourceDocument(sourceDocument);
 			}
 			
@@ -75,7 +79,11 @@ class FSCorpusHandler {
 			
 			for (int i=0; i<staticMarkupURINodes.size(); i++) {
 				Node staticMarkupURINode = staticMarkupURINodes.get(i);
-				String staticMarkupURI = staticMarkupURINode.getValue();
+				String staticMarkupURI = 
+						"file:///"
+						+ repoFolderPath 
+						+ System.getProperty("file.separator") 
+						+ staticMarkupURINode.getValue();
 				StaticMarkupCollectionReference staticMarkupCollRef = 
 						new StaticMarkupCollectionReference(staticMarkupURI, staticMarkupURI);
 				corpus.addStaticMarkupCollectionReference(staticMarkupCollRef);
@@ -85,7 +93,11 @@ class FSCorpusHandler {
 			
 			for (int i=0; i<userMarkupURINodes.size(); i++) {
 				Node userMarkupURINode = userMarkupURINodes.get(i);
-				String userMarkupURI = userMarkupURINode.getValue();
+				String userMarkupURI = 
+						"file:///"
+						+ repoFolderPath 
+						+ System.getProperty("file.separator") 
+						+ userMarkupURINode.getValue();
 				UserMarkupCollectionReference userMarkupCollRef = 
 						new UserMarkupCollectionReference(userMarkupURI, userMarkupURI);
 				corpus.addUserMarkupCollectionReference(userMarkupCollRef);

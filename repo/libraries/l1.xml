@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <library>
 	<name>My Tag Library</name>
-	<fileURI>file:///c:/data/eclipse_workspace/clea/repo/container/DefaultTagsetDB.xml</fileURI>
+	<fileURI>container/DefaultTagsetDB.xml</fileURI>
 </library>
