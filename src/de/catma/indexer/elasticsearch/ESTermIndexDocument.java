@@ -15,8 +15,8 @@ public class ESTermIndexDocument implements ESDocument {
 	public ESTermIndexDocument(String documentId, String term, int frequency) {
 		this.documentId = documentId;
 		this.frequency = frequency;
-		this.termId = UUID.nameUUIDFromBytes((documentId + term).getBytes());
 		this.term = term;
+		this.termId = getIndexDocumentKey();
 	}
 
 	public String getDocumentId() {
@@ -41,5 +41,9 @@ public class ESTermIndexDocument implements ESDocument {
 		j_root.put("frequency", frequency);
 		j_root.put("term", term);
 		return j_root.toString();
+	}
+
+	public UUID getIndexDocumentKey() {
+		return UUID.nameUUIDFromBytes((documentId + term).getBytes());
 	}
 }

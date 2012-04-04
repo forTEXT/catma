@@ -27,15 +27,12 @@ public class ESCommunication {
 	private Logger logger = LoggerFactory.getLogger(ESCommunication.class);
 
 	public ESCommunication() {
-		AsyncHttpClientConfig config = 
-				new AsyncHttpClientConfig.Builder()
-				.setRequestTimeoutInMs(900000)
-				.setMaximumConnectionsPerHost(-1)
-				.setConnectionTimeoutInMs(900000)
-				.setMaxRequestRetry(5)
+		AsyncHttpClientConfig config = new AsyncHttpClientConfig.Builder()
+				.setRequestTimeoutInMs(900000).setMaximumConnectionsPerHost(-1)
+				.setConnectionTimeoutInMs(900000).setMaxRequestRetry(5)
 				.addRequestFilter(new ThrottleRequestFilter(100, 900000))
 				.setMaximumConnectionsTotal(-1).build();
-		
+
 		this.httpTransport = new AsyncHttpClient(config);
 	}
 
@@ -44,12 +41,26 @@ public class ESCommunication {
 		List<Future<Response>> httpRequests = new ArrayList<Future<Response>>();
 
 		for (Map.Entry<String, List<TermInfo>> entry : terms.entrySet()) {
-			ESTermIndexDocument termDoc = new ESTermIndexDocument(docId,entry.getKey(),entry.getValue().size());
+			ESTermIndexDocument termDoc = new ESTermIndexDocument(docId,
+					entry.getKey(), entry.getValue().size());
 			logger.info("termdocTermId: " + termDoc.getTermId());
 			Future<Response> f = this.httpTransport
-					.preparePut(this.termIndexUrl()+"/"+termDoc.getTermId().toString()).setBody(termDoc.toJSON())
-					.execute();
+					.preparePut(
+							this.termIndexUrl() + "/"
+									+ termDoc.getTermId().toString())
+					.setBody(termDoc.toJSON()).execute();
 			httpRequests.add(f);
+			for (TermInfo terminfo : entry.getValue()) {
+				ESPositionIndexDocument positionDoc = new ESPositionIndexDocument(
+						docId, termDoc.getTermId(), terminfo);
+				logger.info("termdocPositionId: " + positionDoc.getPositionId());
+				Future<Response> fp = this.httpTransport
+						.preparePut(
+								this.positionIndexUrl() + "/"
+										+ positionDoc.getPositionId().toString())
+						.setBody(positionDoc.toJSON()).execute();
+				httpRequests.add(fp);
+			}
 		}
 
 		/*
@@ -61,7 +72,7 @@ public class ESCommunication {
 				logger.info(r.getResponseBody());
 				if (r.getStatusCode() != 200) {
 					logger.error("response was " + r.getStatusCode());
-//					return false;
+					// return false;
 				}
 			} catch (InterruptedException e) {
 				logger.info("http request got interrupted: "
@@ -84,6 +95,11 @@ public class ESCommunication {
 	}
 
 	private String termIndexUrl() {
-		return this.baseIndexUrl() + "/" + ESOptions.getString("ESInstaller.termindex");
+		return this.baseIndexUrl() + "/"
+				+ ESOptions.getString("ESInstaller.termindex");
+	}
+	
+	private String positionIndexUrl() {
+		return this.baseIndexUrl() + "/" + ESOptions.getString("ESInstaller.positionindex");
 	}
 }

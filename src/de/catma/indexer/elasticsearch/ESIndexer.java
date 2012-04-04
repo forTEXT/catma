@@ -59,8 +59,6 @@ public class ESIndexer implements Indexer {
             
             OffsetAttribute offsetAttr =
                     (OffsetAttribute)ts.getAttribute(OffsetAttribute.class);
-
-            
             
             TermInfo ti =  new TermInfo(termAttr.toString(),
                 offsetAttr.startOffset(), offsetAttr.endOffset(),positionCounter);
