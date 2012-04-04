@@ -2,9 +2,10 @@ package de.catma.indexer;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
+import de.catma.core.document.Range;
 import de.catma.core.document.source.SourceDocument;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 
 public interface Indexer {
 	public void index(
@@ -13,4 +14,13 @@ public interface Indexer {
             List<Character> userDefinedSeparatingCharacters,
             Locale locale) throws Exception;
 	
+	
+	public Map<String,List<Range>> searchTerm(List<String> termList);
+	/**
+	 * @param documentIdList
+	 * @param termList
+	 * @return a list of mappings documentIds->list of matching ranges 
+	 */
+	public Map<String,List<Range>> searchTerm(
+			List<String> documentIdList, List<String> termList);
 }
