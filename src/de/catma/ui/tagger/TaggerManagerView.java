@@ -37,8 +37,9 @@ public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 		addComponent(noOpenTaggers);
 		setComponentAlignment(noOpenTaggers, Alignment.MIDDLE_CENTER);
 		
-		tabSheet.setVisible(false);
 		addComponent(tabSheet);
+		tabSheet.hideTabs(true);
+		tabSheet.setHeight("0px");
 	}
 
 	public TaggerView openSourceDocument(
@@ -54,10 +55,10 @@ public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 			tabSheet.setSelectedTab(tab.getComponent());
 		}
 		
-		if (!tabSheet.isVisible()) {
+		if (tabSheet.getComponentCount() != 0) {
 			noOpenTaggers.setVisible(false);
 			setMargin(false);
-			tabSheet.setVisible(true);
+			tabSheet.hideTabs(false);
 			tabSheet.setSizeFull();
 		}
 		
@@ -80,17 +81,22 @@ public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 	
 
 	public void onTabClose(TabSheet tabsheet, Component tabContent) {
-		// workaround for http://dev.vaadin.com/ticket/7686
 		
 		tabsheet.removeComponent(tabContent);
 		((TaggerView)tabContent).close();
+
+		// workaround for http://dev.vaadin.com/ticket/7686
 		try {
 			Thread.sleep(5);
 		} catch (InterruptedException ex) {
 	            //do nothing 
 	    }
+		
 		if (tabsheet.getComponentCount() == 0) {
-			tabsheet.setVisible(false);
+			 //setVisible(false) doesn't work here because of out of sync errors
+			tabSheet.hideTabs(true);
+			tabSheet.setHeight("0px");
+			
 			noOpenTaggers.setVisible(true);
 			setMargin(true);
 		}

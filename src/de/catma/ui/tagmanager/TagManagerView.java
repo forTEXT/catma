@@ -36,8 +36,9 @@ public class TagManagerView extends VerticalLayout implements CloseHandler {
 		addComponent(noOpenTagLibraries);
 		setComponentAlignment(noOpenTagLibraries, Alignment.MIDDLE_CENTER);
 		
-		tabSheet.setVisible(false);
 		addComponent(tabSheet);
+		tabSheet.hideTabs(true);
+		tabSheet.setHeight("0px");
 	}
 
 	public void openTagLibrary(TagManager tagManager, TagLibrary tagLibrary) {
@@ -52,14 +53,11 @@ public class TagManagerView extends VerticalLayout implements CloseHandler {
 			tabSheet.setSelectedTab(tab.getComponent());
 		}
 		
-		if (!tabSheet.isVisible()) {
+		if (tabSheet.getComponentCount() != 0) {
 			noOpenTagLibraries.setVisible(false);
 			setMargin(false);
-			tabSheet.setVisible(true);
+			tabSheet.hideTabs(false);
 			tabSheet.setSizeFull();
-			
-			// workaround to force a repaint, that provokes to display the tabsheet in full size
-			getWindow().setWidth(getWindow().getWidth()+0.1f, getWidthUnits());
 		}
 	}
 	
@@ -79,17 +77,21 @@ public class TagManagerView extends VerticalLayout implements CloseHandler {
 	
 
 	public void onTabClose(TabSheet tabsheet, Component tabContent) {
-		// workaround for http://dev.vaadin.com/ticket/7686
 		tabsheet.removeComponent(tabContent);
 		((TagLibraryView)tabContent).close();
 
+		// workaround for http://dev.vaadin.com/ticket/7686
 		try {
 			Thread.sleep(5);
 		} catch (InterruptedException ex) {
 	            //do nothing 
 	    }
+		
 		if (tabsheet.getComponentCount() == 0) {
-			tabsheet.setVisible(false);
+			 //setVisible(false) doesn't work here because of out of sync errors
+			tabSheet.hideTabs(true);
+			tabSheet.setHeight("0px");
+			
 			noOpenTagLibraries.setVisible(true);
 			setMargin(true);
 		}

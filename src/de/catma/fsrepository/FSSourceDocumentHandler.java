@@ -95,13 +95,21 @@ class FSSourceDocumentHandler {
 					digitalObject.query(
 						Field.infosetsURI.toSimpleXQuery()).get(0).getValue();
 			
-			URL infosetsURL = new URL(infosetsDocumentURLString);
+			URL infosetsURL = new URL(
+					"file:///" + repoFolderPath 
+					+ "/"
+					+ infosetsDocumentURLString);
 			
 			URLConnection infosetsURLConnection = infosetsURL.openConnection();
 			infosetsInputStream = infosetsURLConnection.getInputStream();
 			
-			String sourceURIVal = digitalObject.query(Field.sourceURI.toSimpleXQuery()).get(0).getValue();
-			URI sourceURI = new URI(sourceURIVal);
+			String sourceURIVal = 
+					digitalObject.query(Field.sourceURI.toSimpleXQuery()).get(0).getValue();
+			String prefix = "";
+			if (!sourceURIVal.contains("http")) {
+				prefix = "file:///" + repoFolderPath + "/";
+			}
+			URI sourceURI = new URI(prefix + sourceURIVal);
 
 			SourceDocumentInfo sourceDocumentInfo = 
 					this.sourceDocumentInfoSerializationHandler.deserialize(
@@ -119,7 +127,9 @@ class FSSourceDocumentHandler {
 			
 			for (int i=0; i<staticMarkupURINodes.size(); i++) {
 				Node staticMarkupURINode = staticMarkupURINodes.get(i);
-				String staticMarkupURI = staticMarkupURINode.getValue();
+				String staticMarkupURI = "file:///" + repoFolderPath 
+						+ "/"
+						+ staticMarkupURINode.getValue();
 				StaticMarkupCollectionReference staticMarkupCollRef = 
 						new StaticMarkupCollectionReference(staticMarkupURI, staticMarkupURI);
 				sourceDocument.addStaticMarkupCollectionReference(staticMarkupCollRef);
@@ -129,7 +139,9 @@ class FSSourceDocumentHandler {
 			
 			for (int i=0; i<userURINodes.size(); i++) {
 				Node userURINode = userURINodes.get(i);
-				String userURI = userURINode.getValue();
+				String userURI = "file:///" + repoFolderPath 
+						+ "/"
+						+ userURINode.getValue();
 				UserMarkupCollectionReference userMarkupCollRef = 
 						new UserMarkupCollectionReference(userURI, userURI);
 				sourceDocument.addUserMarkupCollectionReference(userMarkupCollRef);
@@ -164,6 +176,7 @@ class FSSourceDocumentHandler {
 				sourceDocument.getSourceContentHandler().getSourceDocumentInfo();
 		
 		URI sourceDocURI = sourceDocumentInfo.getTechInfoSet().getURI();
+		String sourceDocURIString = sourceDocURI.toString();
 		
 		if (sourceDocURI.getScheme().toLowerCase().equals("file")) {
 			File sourceTempFile = new File(sourceDocURI);
@@ -184,15 +197,17 @@ class FSSourceDocumentHandler {
 			
 			sourceTempFile.delete();
 			
-			sourceDocURI = repoSourceFile.toURI();
+			sourceDocURIString = 
+					DIGITALOBJECTS_FOLDER + "/"
+					+ sourceTempFile.getName();
 		}
 		else {
-
+			String localCopyFileName = "Source_" + idGenerator.generate();
 			File repoSourceFile = 
 					new File(
 							this.containerPath
 							+ System.getProperty("file.separator")
-							+ "Source_" + idGenerator.generate());
+							+ localCopyFileName);
 			
 			Writer repoSourceFileWriter =  
 					new BufferedWriter(new OutputStreamWriter(
@@ -207,29 +222,38 @@ class FSSourceDocumentHandler {
 			}
 			
 			if (sourceDocumentInfo.getTechInfoSet().isManagedResource()) {
-				sourceDocURI = repoSourceFile.toURI();
+				sourceDocURIString = 
+						DIGITALOBJECTS_FOLDER 
+						+ "/"
+						+ localCopyFileName;
 			}
 			else {
 				Element rawCopyUriElement = new Element(Field.rawcopyURI.name());
-				rawCopyUriElement.appendChild(repoSourceFile.toURI().toString());
+				rawCopyUriElement.appendChild(
+						DIGITALOBJECTS_FOLDER 
+						+ "/"
+						+ localCopyFileName);
 			}
 		}
 		
 		Element sourceUriElement = new Element(Field.sourceURI.name());
-		sourceUriElement.appendChild(sourceDocURI.toString());
+		sourceUriElement.appendChild(sourceDocURIString);
 		root.appendChild(sourceUriElement);
 		sourceDocumentInfo.getTechInfoSet().setURI(sourceDocURI);
 
+		String repoInfosetsFileName = 
+				"Infosets_" + idGenerator.generate() + ".xml";
 		File repoInfosetsFile = new File(
 				this.containerPath
 				+ System.getProperty("file.separator")
-				+ "Infosets_" + idGenerator.generate() + ".xml");
+				+ repoInfosetsFileName);
 		
 		sourceDocumentInfoSerializationHandler.serialize(
 				sourceDocument, new FileOutputStream(repoInfosetsFile));
 		
 		Element infoSetsUriElement = new Element(Field.infosetsURI.name());
-		infoSetsUriElement.appendChild(repoInfosetsFile.toURI().toString());
+		infoSetsUriElement.appendChild(
+				FSRepository.CONTAINER_FOLDER + "/" + repoInfosetsFileName);
 		root.appendChild(infoSetsUriElement);
 		
 		File repoDigitalObjectFile = new File(

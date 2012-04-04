@@ -119,7 +119,7 @@ public class CleaApplication extends Application {
 				+ System.getProperty("file.separator") 
 				+ WEB_INF_DIR
 				+ System.getProperty("file.separator") 
-				+ CATMA_PROPERTY_FILE;
+				+ CATMA_PROPERTY_FILE; //FIXME: properties im WebInf is bloed
 		
 		Properties properties = new Properties();
 		try {

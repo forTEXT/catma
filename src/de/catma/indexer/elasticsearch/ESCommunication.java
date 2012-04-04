@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.Response;
+import com.ning.http.client.extra.ThrottleRequestFilter;
 
 import de.catma.indexer.TermInfo;
 
@@ -30,9 +31,11 @@ public class ESCommunication {
 				new AsyncHttpClientConfig.Builder()
 				.setRequestTimeoutInMs(900000)
 				.setMaximumConnectionsPerHost(-1)
-				.setMaximumConnectionsTotal(-1)
 				.setConnectionTimeoutInMs(900000)
-				.build();
+				.setMaxRequestRetry(5)
+				.addRequestFilter(new ThrottleRequestFilter(100, 900000))
+				.setMaximumConnectionsTotal(-1).build();
+		
 		this.httpTransport = new AsyncHttpClient(config);
 	}
 
