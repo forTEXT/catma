@@ -24,7 +24,7 @@ public class ESCommunication {
 	public String url = ESOptions.getString("ESInstaller.uri");
 	public String indexName = ESOptions.getString("ESInstaller.name");
 	public AsyncHttpClient httpTransport;
-	private Logger logger = LoggerFactory.getLogger(ESCommunication.class);
+	private static Logger logger = LoggerFactory.getLogger(ESCommunication.class);
 
 	public ESCommunication() {
 		AsyncHttpClientConfig config = new AsyncHttpClientConfig.Builder()
@@ -56,8 +56,10 @@ public class ESCommunication {
 				logger.info("termdocPositionId: " + positionDoc.getPositionId());
 				Future<Response> fp = this.httpTransport
 						.preparePut(
-								this.positionIndexUrl() + "/"
-										+ positionDoc.getPositionId().toString())
+								this.positionIndexUrl()
+										+ "/"
+										+ positionDoc.getPositionId()
+												.toString())
 						.setBody(positionDoc.toJSON()).execute();
 				httpRequests.add(fp);
 			}
@@ -94,12 +96,35 @@ public class ESCommunication {
 		return this.url + "/" + this.indexName;
 	}
 
-	private String termIndexUrl() {
+	public String termIndexUrl() {
 		return this.baseIndexUrl() + "/"
 				+ ESOptions.getString("ESInstaller.termindex");
 	}
+
+	public String positionIndexUrl() {
+		return this.baseIndexUrl() + "/"
+				+ ESOptions.getString("ESInstaller.positionindex");
+	}
 	
-	private String positionIndexUrl() {
-		return this.baseIndexUrl() + "/" + ESOptions.getString("ESInstaller.positionindex");
+	public static boolean waitForRequests(List<Future<Response>> httpRequests){
+		/*
+		 * This is to join results
+		 */
+		for (Future<Response> response : httpRequests) {
+			try {
+				Response r = response.get();
+				if (r.getStatusCode() > 200 && r.getStatusCode() < 400) {
+					logger.error("response was " + r.getStatusCode());
+					return false;
+				}
+			} catch (InterruptedException e) {
+				logger.info("http request got interrupted: "
+						+ response.toString());
+			} catch (ExecutionException e) {
+				logger.info("Couldn't execute http request: "
+						+ response.toString());
+			}
+		}
+		return true;
 	}
 }

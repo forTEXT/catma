@@ -14,13 +14,11 @@ public interface Indexer {
             List<Character> userDefinedSeparatingCharacters,
             Locale locale) throws Exception;
 	
-	
-	public Map<String,List<Range>> searchTerm(List<String> termList);
 	/**
 	 * @param documentIdList
 	 * @param termList
 	 * @return a list of mappings documentIds->list of matching ranges 
 	 */
 	public Map<String,List<Range>> searchTerm(
-			List<String> documentIdList, List<String> termList);
+			List<String> documentIdList, List<String> termList) throws Exception;
 }
