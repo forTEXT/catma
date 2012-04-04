@@ -19,6 +19,7 @@ public class ESPositionIndexDocument implements ESDocument {
 	public ESPositionIndexDocument(String documentId, UUID termId,
 			TermInfo termInfo) {
 		this.documentId = documentId;
+		this.termId = termId;
 		this.range = termInfo.getRange();
 		this.tokenOffset = termInfo.getTokenOffset();
 		this.positionId = getIndexDocumentKey();
