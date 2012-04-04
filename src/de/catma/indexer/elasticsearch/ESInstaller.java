@@ -72,8 +72,8 @@ public class ESInstaller {
 			InterruptedException, ExecutionException {
 		String tagInstanceIndex = "{"
 				+ "\"TagInstanceIndex\" : {"
-				+ "   \"properties\" : {"
 				+ "       \"_id\" : {\"store\" : \"yes\", \"index\" : \"not_analyzed\"},"	
+				+ "   \"properties\" : {"
 				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\" },"
 				+ "       \"markupDocumentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
 				+ "       \"tagId_l\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
@@ -84,6 +84,7 @@ public class ESInstaller {
 				+ "       \"characterStart\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
 				+ "       \"characterEnd\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"}"
 				+ "   }" + "}" + "}";
+	
 		Future<Response> f = this.httpTransport
 				.preparePut(
 						baseIndexUrl()
@@ -110,8 +111,8 @@ public class ESInstaller {
 			InterruptedException, ExecutionException {
 		String staticMarkupIndex = "{"
 				+ "\"StaticMarkupIndex\" : {"
-				+ "   \"properties\" : {"
 				+ "       \"_id\" : {\"store\" : \"yes\", \"index\" : \"not_analyzed\"},"	
+				+ "   \"properties\" : {"
 				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
 				+ "       \"markupDocumentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
 				+ "       \"properties\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
@@ -145,13 +146,18 @@ public class ESInstaller {
 			InterruptedException, ExecutionException {
 		String termindex = "{"
 				+ "\"TermIndex\" : {"
-				+ "   \"properties\" : {"
 				+ "       \"_id\" : {\"store\" : \"yes\", \"index\" : \"not_analyzed\"},"	
+				+ "   \"properties\" : {"
 				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
 				+ "       \"frequency\" : {\"type\" : \"integer\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
 				+ "       \"term\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"}"
 				+ "   }" + "}" + "}";
 		Future<Response> f = this.httpTransport
+				.prepareDelete(
+						baseIndexUrl()
+								+ ESOptions.getString("ESInstaller.termindex")).execute();
+		f.get();
+		f = this.httpTransport
 				.preparePut(
 						baseIndexUrl()
 								+ ESOptions.getString("ESInstaller.termindex")
@@ -175,8 +181,8 @@ public class ESInstaller {
 			InterruptedException, ExecutionException {
 		String positionindex = "{"
 				+ "\"PositionIndex\" : {"
-				+ "   \"properties\" : {"
 				+ "       \"_id\" : {\"store\" : \"yes\", \"index\" : \"not_analyzed\"},"	
+				+ "   \"properties\" : {"
 				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\" },"
 				+ "       \"termId_l\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
 				+ "       \"termId_m\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
@@ -210,8 +216,8 @@ public class ESInstaller {
 			InterruptedException, ExecutionException {
 		String wildcardindex = "{"
 				+ "\"WildcardIndex\" : {"
-				+ "   \"properties\" : {"
 				+ "       \"_id\" : {\"store\" : \"yes\", \"index\" : \"not_analyzed\"},"	
+				+ "   \"properties\" : {"
 				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
 				+ "       \"termId_l\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
 				+ "       \"termId_m\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
