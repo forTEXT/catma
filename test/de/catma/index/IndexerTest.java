@@ -35,17 +35,40 @@ public class IndexerTest {
 	}
 	
 	@Test
-	public void testIndexSourceDoc() throws Exception {
+	public void testIndexSourceDoc() throws Throwable {
+		try {
+			SourceDocument sd = repository.getSourceDocument(
+					"http://www.gutenberg.org/cache/epub/13/pg13.txt");
+			
+			ESIndexer esIndexer = new ESIndexer();
+			esIndexer.index(
+					sd, 
+					Collections.<String>emptyList(), 
+					Collections.<Character>emptyList(), 
+					Locale.ENGLISH);
+		}
+		catch(Throwable t) {
+			t.printStackTrace();
+			throw t;
+		}
+	}
 
-		SourceDocument sd = repository.getSourceDocument(
-				"http://www.gutenberg.org/cache/epub/13/pg13.txt");
-		
-		ESIndexer esIndexer = new ESIndexer();
-		esIndexer.index(
-				sd, 
-				Collections.<String>emptyList(), 
-				Collections.<Character>emptyList(), 
-				Locale.ENGLISH);
-		
+	@Test
+	public void testIndexSourceDoc2() throws Throwable {
+		try {
+			SourceDocument sd = repository.getSourceDocument(
+					"http://www.gutenberg.org/cache/epub/11/pg11.txt");
+			
+			ESIndexer esIndexer = new ESIndexer();
+			esIndexer.index(
+					sd, 
+					Collections.<String>emptyList(), 
+					Collections.<Character>emptyList(), 
+					Locale.ENGLISH);
+		}
+		catch(Throwable t) {
+			t.printStackTrace();
+			throw t;
+		}
 	}
 }

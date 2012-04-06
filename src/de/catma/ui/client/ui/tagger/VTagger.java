@@ -128,6 +128,20 @@ public class VTagger extends Composite implements Paintable {
 			taggerEditor.clearTagInstances();
 		}
 		
+		if (uidl.hasAttribute(TaggerMessageAttribute.TAGINSTANCES_REMOVE.name())) {
+			List<TagInstance> tagInstances = 
+					tagInstanceJSONSerializer.fromJSONArray(
+							uidl.getStringAttribute(
+									TaggerMessageAttribute.TAGINSTANCES_REMOVE.name()));
+			
+			for (TagInstance tagInstance : tagInstances) {
+				VConsole.log("got TagInstance from server (hide): " + tagInstance);
+				taggerEditor.removeTagInstance(
+						tagInstance.getInstanceID(), 
+						false); //don't report to server
+			}
+		}
+		
 		if (uidl.hasAttribute(TaggerMessageAttribute.TAGINSTANCES_ADD.name())) {
 			List<TagInstance> tagInstances = 
 					tagInstanceJSONSerializer.fromJSONArray(
@@ -139,19 +153,6 @@ public class VTagger extends Composite implements Paintable {
 			}
 		}
 		
-		if (uidl.hasAttribute(TaggerMessageAttribute.TAGINSTANCES_REMOVE.name())) {
-			List<TagInstance> tagInstances = 
-					tagInstanceJSONSerializer.fromJSONArray(
-						uidl.getStringAttribute(
-							TaggerMessageAttribute.TAGINSTANCES_REMOVE.name()));
-			
-			for (TagInstance tagInstance : tagInstances) {
-				VConsole.log("got TagInstance from server (hide): " + tagInstance);
-				taggerEditor.removeTagInstance(
-						tagInstance.getInstanceID(), 
-						false); //don't report to server
-			}
-		}
 		
 		if (uidl.hasAttribute(TaggerMessageAttribute.TAGDEFINITION_SELECTED.name())) {
 			String color = 

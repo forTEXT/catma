@@ -67,8 +67,6 @@ public class TagsetTree extends HorizontalLayout {
 	private PropertyChangeListener tagsetDefAddedListener;
 	private PropertyChangeListener tagsetDefNameChangedListener;
 	private PropertyChangeListener tagsetDefRemovedListener;
-	private PropertyChangeListener tagDefAddedListener;
-	private PropertyChangeListener tagDefRemovedListener;
 	private PropertyChangeListener tagDefChangedListener;
 
 	public TagsetTree(TagManager tagManager, TagLibrary tagLibrary) {
@@ -81,6 +79,7 @@ public class TagsetTree extends HorizontalLayout {
 			ColorButtonListener colorButtonListener) {
 		this.tagManager = tagManager;
 		this.tagLibrary = tagLibrary;
+		tagManager.addTagLibrary(tagLibrary);
 		this.withTagsetButtons = withTagsetButtons;
 		this.colorButtonListener = colorButtonListener;
 	}
@@ -90,12 +89,12 @@ public class TagsetTree extends HorizontalLayout {
 		super.attach();
 		if (init){
 			initComponents();
-			initAction();
+			initActions();
 			init = false;
 		}
 	}
 	
-	private void initAction() {
+	private void initActions() {
 		if (withTagsetButtons) {
 			tagsetDefAddedListener = 
 					new PropertyChangeListener() {
@@ -177,53 +176,45 @@ public class TagsetTree extends HorizontalLayout {
 			});
 		}
 		
-		tagDefAddedListener = new PropertyChangeListener() {
-			
-			public void propertyChange(PropertyChangeEvent evt) {
-				@SuppressWarnings("unchecked")
-				Pair<TagsetDefinition, TagDefinition> addOperationResult =
-						(Pair<TagsetDefinition, TagDefinition>)evt.getNewValue();
-				TagsetDefinition tagsetDefinition = 
-						addOperationResult.getFirst();
-				TagDefinition tagDefinition = 
-						addOperationResult.getSecond();
-				if (tagTree.containsId(tagsetDefinition)) {
-					addTagDefinition(tagDefinition);
-					establishHierarchy(tagsetDefinition, tagDefinition);
-					configureChildren(tagDefinition);
-				}
-				
-			}
-		};
-		
-		this.tagManager.addPropertyChangeListener(
-				TagManagerEvent.tagDefinitionAdded,
-				tagDefAddedListener);
-		
-		tagDefRemovedListener = new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent evt) {
-				@SuppressWarnings("unchecked")
-				Pair<TagsetDefinition, TagDefinition> removeOperationResult = 
-					(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
-				TagDefinition td = removeOperationResult.getSecond();
-				if (tagTree.containsId(td)) {
-					removeTagDefinition(td);
-				}
-			}
-		};
-		
-		this.tagManager.addPropertyChangeListener(
-				TagManagerEvent.tagDefinitionRemoved,
-				tagDefRemovedListener);
-		
 		tagDefChangedListener = new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
-				TagDefinition tagDefinition = (TagDefinition)evt.getNewValue();
-				Property prop = tagTree.getContainerProperty(
-						tagDefinition, 
-						TagTreePropertyName.caption);
-				if (prop != null) {
-					prop.setValue(tagDefinition.getType());
+				Object oldValue = evt.getOldValue();
+				Object newValue = evt.getNewValue();
+				if ((oldValue == null) && (newValue == null)) {
+					return;
+				}
+				
+				if (oldValue == null) {
+					@SuppressWarnings("unchecked")
+					Pair<TagsetDefinition, TagDefinition> addOperationResult =
+							(Pair<TagsetDefinition, TagDefinition>)evt.getNewValue();
+					TagsetDefinition tagsetDefinition = 
+							addOperationResult.getFirst();
+					TagDefinition tagDefinition = 
+							addOperationResult.getSecond();
+					if (tagTree.containsId(tagsetDefinition)) {
+						addTagDefinition(tagDefinition);
+						establishHierarchy(tagsetDefinition, tagDefinition);
+						configureChildren(tagDefinition);
+					}
+				}
+				else if (newValue == null) {
+					@SuppressWarnings("unchecked")
+					Pair<TagsetDefinition, TagDefinition> removeOperationResult = 
+						(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
+					TagDefinition td = removeOperationResult.getSecond();
+					if (tagTree.containsId(td)) {
+						removeTagDefinition(td);
+					}
+				}
+				else {
+					TagDefinition tagDefinition = (TagDefinition)evt.getNewValue();
+					Property prop = tagTree.getContainerProperty(
+							tagDefinition, 
+							TagTreePropertyName.caption);
+					if (prop != null) {
+						prop.setValue(tagDefinition.getType());
+					}
 				}
 			}
 		};
@@ -276,7 +267,19 @@ public class TagsetTree extends HorizontalLayout {
 		 * um TagDefs in einer anderen Version. Hier lässt sich dann beim Laden auch
 		 * gleich entscheiden wie verfahren werden soll! Die unterschiedlichen Versionen sollen
 		 * später dann ja auch beim Taggen nicht gemischt werden!
-		 *  
+		 * 
+		 * 
+		 * 
+		 * So:
+		 * Ueberpruefung auf Aenderungen findet anhand der Toplevel-Version statt.
+		 * D. h. Aenderungen an PropDefs spiegeln sich auch in der Versionsnr der TagsetDefs wieder
+		 * Ueberprueft wird beim Hinzufuegen einer TagsetDef zu den "currently active Tagsets"
+		 * Problem: was passiert mit Properties deren PropDef sich geaendert hat?
+		 *  - ueberall alte Werte loeschen und neuen default-Wert setzen (zu grob)
+		 *  - jeweils alten Wert praesentieren und neuen Wert abfragen (aufwendig)
+		 * Problem: was passiert beim Verschieben von TagDefs ueber TagsetDef-Grenzen hinweg?
+		 *  - Bei der Ueberpruefung ist nur ein Tagset vorhanden, d. h. ein Verschieben sieht aus wie ein Loeschen
+		 * 
 		 */
 		// - implement editTag
 		// -propertyActions
@@ -289,7 +292,7 @@ public class TagsetTree extends HorizontalLayout {
 		});
 		
 		tagTree.addListener(
-				new ButtonStateMachine(
+				new ButtonStateManager(
 						withTagsetButtons,
 						btRemoveTagset, btEditTagset, 
 						btInsertTag, btRemoveTag, btEditTag, 
@@ -351,7 +354,11 @@ public class TagsetTree extends HorizontalLayout {
 			td.getUserDefinedPropertyDefinitions()) {
 			tagTree.removeItem(pd);
 		}
+		Object parentId = tagTree.getParent(td);
 		tagTree.removeItem(td);
+		if ((parentId != null) && (!tagTree.hasChildren(parentId))) {
+			tagTree.setChildrenAllowed(parentId, false);
+		}
 	}
 
 	private void handleRemoveTagDefinition() {
@@ -430,15 +437,16 @@ public class TagsetTree extends HorizontalLayout {
 								+ "TagDefinition or a TagsetDefinition and not a " 
 								+ selectedParent.getClass().getName());
 						}
-						
+						IDGenerator idGenerator = new IDGenerator();
 						TagDefinition tagDefinition = 
 								new TagDefinition(
-									new IDGenerator().generate(),
+									idGenerator.generate(),
 									(String)nameProperty.getValue(),
 									new Version(), 
 									baseID);
 						PropertyDefinition colorPropertyDef =
 								new PropertyDefinition(
+									idGenerator.generate(),
 									PropertyDefinition.SystemPropertyName.
 										catma_displaycolor.name(),
 									new PropertyPossibleValueList(
@@ -824,13 +832,12 @@ public class TagsetTree extends HorizontalLayout {
 					tagsetDefNameChangedListener);
 		}
 		tagManager.removePropertyChangeListener(
-				TagManagerEvent.tagDefinitionAdded,
-				tagDefAddedListener);
-		tagManager.removePropertyChangeListener(
-				TagManagerEvent.tagDefinitionRemoved,
-				tagDefRemovedListener);
-		tagManager.removePropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged,
 				tagDefChangedListener);
+		tagManager.removeTagLibrary(tagLibrary);
+	}
+	
+	public TagManager getTagManager() {
+		return tagManager;
 	}
 }

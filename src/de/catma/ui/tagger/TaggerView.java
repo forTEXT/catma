@@ -1,5 +1,7 @@
 package de.catma.ui.tagger;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.List;
 
@@ -13,6 +15,9 @@ import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagManager;
+import de.catma.core.tag.TagsetDefinition;
+import de.catma.core.tag.TagManager.TagManagerEvent;
+import de.catma.core.util.Pair;
 import de.catma.ui.client.ui.tagger.shared.TagInstance;
 import de.catma.ui.tagger.MarkupCollectionsPanel.TagDefinitionSelectionListener;
 import de.catma.ui.tagger.Tagger.TaggerListener;
@@ -28,13 +33,48 @@ public class TaggerView extends VerticalLayout {
 	private Pager pager;
 	private MarkupPanel markupPanel;
 	private boolean init = true;
+	private TagManager tagManager;
+	private PropertyChangeListener tagDefChangedListener;
 	
 	public TaggerView(TagManager tagManager, SourceDocument sourceDocument) {
+		this.tagManager = tagManager;
 		this.sourceDocument = sourceDocument;
-		initComponents(tagManager);
+		initComponents();
+		
+		tagDefChangedListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+			
+				Object oldValue = evt.getOldValue();
+				Object newValue = evt.getNewValue();
+				if ((oldValue == null) && (newValue == null)) {
+					return;
+				}
+				
+				if (newValue == null) { //tagDef removed
+					@SuppressWarnings("unchecked")
+					Pair<TagsetDefinition, TagDefinition> removeOperationResult = 
+							(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
+					TagDefinition td = removeOperationResult.getSecond();
+					
+				}
+				else if (oldValue != null) { // tagDef changed
+					TagDefinition tagDefinition = 
+							(TagDefinition)evt.getNewValue();
+					Pair<String, String> oldTypeOldRgb = 
+							(Pair<String, String>)evt.getOldValue();
+					
+					
+				}
+				
+			}
+		};
+		
+		tagManager.addPropertyChangeListener(
+				TagManagerEvent.tagDefinitionChanged, tagDefChangedListener);
 	}
 
-	private void initComponents(final TagManager tagManager) {
+	private void initComponents() {
 		VerticalLayout taggerPanel = new VerticalLayout();
 		taggerPanel.setSpacing(true);
 		

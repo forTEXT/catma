@@ -98,9 +98,6 @@ public class Tagger extends AbstractComponent {
 		}
 		
 		attributes.clear();
-		
-		// We could also set variables in which values can be returned
-		// but declaring variables here is not required
 	}
 
 	/**

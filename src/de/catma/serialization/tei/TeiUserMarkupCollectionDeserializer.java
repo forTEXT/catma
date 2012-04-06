@@ -114,7 +114,7 @@ public class TeiUserMarkupCollectionDeserializer {
 			try {
 				TeiElement curSystemPropertyElement = (TeiElement)propertyElements.get(i);
 				PropertyDefinition propertyDefinition =
-						tagDefinition.getPropertyDefinition(
+						tagDefinition.getPropertyDefinitionByName(
 								curSystemPropertyElement.getAttributeValue(Attribute.f_name));
 				TeiElement valueElement = 
 						(TeiElement)curSystemPropertyElement.getChildElements().get(0);

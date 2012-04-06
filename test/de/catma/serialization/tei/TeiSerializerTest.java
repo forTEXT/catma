@@ -83,7 +83,7 @@ public class TeiSerializerTest {
 		availableTagsetDefs.add("CATMA_STANDARD_TAGSET");
 		availableTagsetDefs.add("CATMA_c5bd46a1-a884-4e86-985c-713baf0b9476");
 		TagsetDefinition stdTagsetDefinition = 
-				tagLibrary.getTagsetDefintion("CATMA_STANDARD_TAGSET");
+				tagLibrary.getTagsetDefinition("CATMA_STANDARD_TAGSET");
 		Assert.assertNotNull(stdTagsetDefinition);
 		Assert.assertTrue(
 				stdTagsetDefinition.hasTagDefinition("CATMA_BASE_TAG"));
@@ -93,7 +93,7 @@ public class TeiSerializerTest {
 				stdTagsetDefinition.hasTagDefinition("CATMA_ac559bf8-f7aa-4c8d-aee3-da8144d34f20"));
 		
 		TagsetDefinition testTagsetDef = 
-				tagLibrary.getTagsetDefintion("CATMA_c5bd46a1-a884-4e86-985c-713baf0b9476");
+				tagLibrary.getTagsetDefinition("CATMA_c5bd46a1-a884-4e86-985c-713baf0b9476");
 		
 		Assert.assertNotNull(testTagsetDef);
 		
@@ -102,7 +102,7 @@ public class TeiSerializerTest {
 						"CATMA_9e7446f5-9ae1-4cef-90af-c444b0512c99");
 		Assert.assertNotNull(td);
 		
-		PropertyDefinition pd = td.getPropertyDefinition("catma_displaycolor");
+		PropertyDefinition pd = td.getPropertyDefinitionByName("catma_displaycolor");
 		Assert.assertNotNull(pd);
 		
 		String value = pd.getFirstValue();

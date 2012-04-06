@@ -21,7 +21,7 @@ public class TeiTagLibraryDeserializer {
 			TeiDocument teiDocument, TagManager tagManager) {
 		super();
 		this.teiDocument = teiDocument;
-		this.tagManager = new TagManager();
+		this.tagManager = tagManager;
 		this.tagLibrary = new TagLibrary(
 				teiDocument.getId(), teiDocument.getName());
 		deserialize();
@@ -98,8 +98,8 @@ public class TeiTagLibraryDeserializer {
 		
 		for (int i=0; i<userPropertyNodes.size(); i++) {
 			try {
-				TeiElement sysPropElement = (TeiElement)userPropertyNodes.get(i);
-				PropertyDefinition pd = createPropertyDefinition(sysPropElement);
+				TeiElement userPropElement = (TeiElement)userPropertyNodes.get(i);
+				PropertyDefinition pd = createPropertyDefinition(userPropElement);
 				tagDef.addUserDefinedPropertyDefinition(pd);
 			}
 			catch(UnknownElementException uee) {
@@ -110,27 +110,28 @@ public class TeiTagLibraryDeserializer {
 	}
 
 	private PropertyDefinition createPropertyDefinition(
-			TeiElement sysPropElement) throws UnknownElementException {
+			TeiElement propElement) throws UnknownElementException {
 		
-		TeiElement valueElement = (TeiElement)sysPropElement.getChildElements().get(0);
+		TeiElement valueElement = (TeiElement)propElement.getChildElements().get(0);
 		
 		PropertyValueFactory pvf = null;
 		
 		if (valueElement.is(TeiElementName.numeric)) {
-			pvf = new NumericPropertyValueFactory(sysPropElement);
+			pvf = new NumericPropertyValueFactory(propElement);
 		}
 		else if (valueElement.is(TeiElementName.string)) {
-			pvf = new StringPropertyValueFactory(sysPropElement);
+			pvf = new StringPropertyValueFactory(propElement);
 		}
 		else if (valueElement.is(TeiElementName.vRange)) {
-			pvf = new ValueRangePropertyValueFactory(sysPropElement);
+			pvf = new ValueRangePropertyValueFactory(propElement);
 		}
 		else {
 			throw new UnknownElementException(valueElement.getLocalName() + " is not supported!");
 		}
 		
 		return new PropertyDefinition(
-						sysPropElement.getAttributeValue(Attribute.fDecl_name),
+						propElement.getID(),
+						propElement.getAttributeValue(Attribute.fDecl_name),
 						new PropertyPossibleValueList(pvf.getValueAsList(), 
 								pvf.isSingleSelectValue()));
 	}

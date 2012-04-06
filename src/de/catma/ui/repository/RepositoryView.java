@@ -625,16 +625,6 @@ public class RepositoryView extends VerticalLayout {
 		documentsTree.getItem(sd);
 		documentsTree.setChildrenAllowed(sd, true);
 		
-		MarkupItem staticMarkupItem = 
-				new MarkupItem(staticMarkupItemDisplayString);
-		documentsTree.addItem(staticMarkupItem);
-		documentsTree.setParent(staticMarkupItem, sd);
-		
-		for (StaticMarkupCollectionReference smcr : sd.getStaticMarkupCollectionRefs()) {
-			documentsTree.addItem(smcr);
-			documentsTree.setParent(smcr, staticMarkupItem);
-			documentsTree.setChildrenAllowed(smcr, false);
-		}
 		
 		MarkupItem userMarkupItem =
 				new MarkupItem(userMarkupItemDisplayString);
@@ -646,6 +636,17 @@ public class RepositoryView extends VerticalLayout {
 			documentsTree.addItem(ucr);
 			documentsTree.setParent(ucr, userMarkupItem);
 			documentsTree.setChildrenAllowed(ucr, false);
+		}
+		
+		MarkupItem staticMarkupItem = 
+				new MarkupItem(staticMarkupItemDisplayString);
+		documentsTree.addItem(staticMarkupItem);
+		documentsTree.setParent(staticMarkupItem, sd);
+		
+		for (StaticMarkupCollectionReference smcr : sd.getStaticMarkupCollectionRefs()) {
+			documentsTree.addItem(smcr);
+			documentsTree.setParent(smcr, staticMarkupItem);
+			documentsTree.setChildrenAllowed(smcr, false);
 		}
 	}
 

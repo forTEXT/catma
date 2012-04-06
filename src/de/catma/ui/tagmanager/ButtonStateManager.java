@@ -9,7 +9,7 @@ import de.catma.core.tag.PropertyDefinition;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagsetDefinition;
 
-public class ButtonStateMachine implements ValueChangeListener {
+public class ButtonStateManager implements ValueChangeListener {
 	
 	private Button btRemoveTagset;
 	private Button btEditTagset;
@@ -21,7 +21,7 @@ public class ButtonStateMachine implements ValueChangeListener {
 	private Button btEditProperty;
 	private boolean withTagsetButtons;
 	
-	public ButtonStateMachine(boolean withTagsetButtons, 
+	public ButtonStateManager(boolean withTagsetButtons, 
 			Button btRemoveTagset, Button btEditTagset,
 			Button btInsertTag, Button btRemoveTag, Button btEditTag,
 			Button btInsertProperty, Button btRemoveProperty,

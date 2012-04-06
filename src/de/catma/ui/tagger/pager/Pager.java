@@ -84,7 +84,7 @@ public class Pager implements Iterable<Page> {
 
 	private void buildPages(String text) {
 		
-		//TODO: always break after blanks
+		//TODO: always break after blanks and directly before the next word
 		
 		Matcher matcher = Pattern.compile(LINE_CONTENT_PATTERN).matcher(text);
 

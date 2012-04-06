@@ -19,6 +19,8 @@
 
 package de.catma.queryengine;
 
+import java.util.List;
+
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
@@ -27,7 +29,7 @@ import org.antlr.runtime.tree.Tree;
 
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.core.ExceptionHandler;
-import de.catma.core.util.StopWatch;
+import de.catma.indexer.Indexer;
 import de.catma.queryengine.parser.CatmaQueryLexer;
 import de.catma.queryengine.parser.CatmaQueryParser;
 import de.catma.queryengine.parser.CatmaQueryWalker;
@@ -45,22 +47,22 @@ import de.catma.queryengine.result.ResultList;
  */
 public class QueryJob extends DefaultProgressCallable<QueryResult> {
     private String inputQuery;
-    private String jobName;
+	private Indexer indexer;
+	private List<String> documentIds;
 
     /**
      * Constructor.
      * @param inputQuery the query string
      * @param jobName the name of the job, that can be displayed to the user
      */
-    public QueryJob(String inputQuery, String jobName) {
+    public QueryJob(String inputQuery, Indexer indexer, List<String> documentIds) {
         this.inputQuery = inputQuery;
-        this.jobName = jobName;
+        this.indexer = indexer;
+        this.documentIds = documentIds;
     }
 
     public QueryResult call() throws Exception {
-        getProgressListener().setIndeterminate(true, jobName);
 
-        StopWatch watch = new StopWatch();
         try {
             // parse the query
             CatmaQueryLexer lex =
@@ -76,7 +78,9 @@ public class QueryJob extends DefaultProgressCallable<QueryResult> {
 
             CatmaQueryWalker walker = new CatmaQueryWalker(nodes);
             Query query = walker.start();
-
+            query.setIndexer(indexer);
+            query.setDocumentIds(documentIds);
+            
             // execute the query and retrieve the execution result
             ResultList resultList = query.getResult();
 
@@ -99,9 +103,6 @@ public class QueryJob extends DefaultProgressCallable<QueryResult> {
                 ExceptionHandler.log(t);
             }
             return null;
-        }
-        finally {
-            getProgressListener().setIndeterminate(false, jobName);
         }
     }
 

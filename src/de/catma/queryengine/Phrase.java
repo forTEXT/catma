@@ -19,14 +19,16 @@
 
 package de.catma.queryengine;
 
+import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
-import de.catma.core.document.source.SourceDocument;
-import de.catma.indexer.Index;
-import de.catma.indexer.TermInfo;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+
+import de.catma.core.document.Range;
+import de.catma.indexer.WhitespaceAndPunctuationAnalyzer;
 import de.catma.queryengine.result.ResultList;
 
 /**
@@ -54,50 +56,27 @@ public class Phrase extends Query {
 
     @Override
     protected ResultList execute() throws Exception {
+    	
+        WhitespaceAndPunctuationAnalyzer analyzer =
+                new WhitespaceAndPunctuationAnalyzer(
+                        this.getUnseparableCharacterSequences(),
+                        this.getUserDefinedSeparatingCharacters(),
+                        this.getLocale());
 
-        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
-
-        Index index = sourceDoc.getIndex();
-
-        // the phrase can contain more than one type
-        List<TermInfo> phraseTerms = index.extractTermInfoFrom(phrase,0);
-
-        if (phraseTerms.size() == 0) {
-            return new ResultList(Collections.<TermInfo>emptyList());
+        TokenStream ts =
+                analyzer.tokenStream(
+                        null, // our analyzer does not use the fieldname 
+                        new StringReader(phrase));
+        List<String> termList = new ArrayList<String>();
+        while(ts.incrementToken()) {
+            CharTermAttribute termAttr =
+                    (CharTermAttribute)ts.getAttribute(CharTermAttribute.class);
+            termList.add(termAttr.toString());
         }
-        // get the tokens for the first type of the phrase
-        List<TermInfo> searchResults = index.search(phraseTerms.get(0).getTerm());
-
-        if (phraseTerms.size() > 1) {
-            List<TermInfo> phraseResults = new ArrayList<TermInfo>();
-
-            // loop over the tokens and test the remaining tokens of the phrase
-            Iterator<TermInfo> iter = searchResults.iterator();
-            while(iter.hasNext()) {
-                TermInfo currentToken = iter.next();
-
-                // for the current token we retrieve the text fragment
-                // with the same length as the phrase we are looking for
-                String textFragmentToTest =
-                        sourceDoc.getContent(
-                            currentToken.getRange().getStartPoint(),
-                            currentToken.getRange().getStartPoint()+phrase.length());
-
-                // is the text fragment our phrase?
-                if (textFragmentToTest.equals(phrase)) {
-                    // yes, ok then this is a valid token for the query results
-                    phraseResults.add(
-                            new TermInfo(
-                                textFragmentToTest,
-                                (int)currentToken.getRange().getStartPoint(),
-                                (int)currentToken.getRange().getStartPoint()+phrase.length()));
-                }
-
-            }
-            return new ResultList(phraseResults);
-        }
-
-        return new ResultList(searchResults);
+        Map<String,List<Range>> result = 
+        		getIndexer().searchTerm(getDocumentIds(), termList);
+        
+        return new ResultList();
     }
 
     /**

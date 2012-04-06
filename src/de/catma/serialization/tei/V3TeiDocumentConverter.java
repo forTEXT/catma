@@ -1,7 +1,7 @@
 package de.catma.serialization.tei;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,12 +22,19 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		}
 	}
 	
-	private SimpleDateFormat sdf = new SimpleDateFormat("yy-MM-dd'T'HH:mm:ssZ");
+	private static final Calendar LEGACY_VERSION_BASE_DATE = Calendar.getInstance();
+	static {
+		LEGACY_VERSION_BASE_DATE.set(2008, 1, 1, 0, 0, 0);
+	}
+	
+	
+	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 	private TeiElement standardTagsetDefinition;
 	private HashMap<String,TeiElement> tagsetDefinitions = 
 			new HashMap<String, TeiElement>();
 	private HashMap<String,TagDef> tagDefinitions = 
 			new HashMap<String,TagDef>();
+	private IDGenerator catmaIDGenerator = new IDGenerator();
 	
 	public void convert(TeiDocument teiDocument) {
 	
@@ -76,14 +83,13 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 			}
 		}
 		
-		IDGenerator catmaIDGenerator = new IDGenerator();
 		Nodes segElements = teiDocument.getNodes(TeiElementName.seg);
 		TeiElement text = (TeiElement)teiDocument.getNodes(TeiElementName.text).get(0);
 		for (int i=0; i<segElements.size(); i++) {
 			TeiElement segElement = (TeiElement)segElements.get(i);
 			if ((segElement.getAttributeValue(Attribute.ana) != null) 
 					&& !segElement.getAttributeValue(Attribute.ana).isEmpty()) {
-				addTagInstance(segElement, catmaIDGenerator, text);
+				addTagInstance(segElement, text);
 			}
 		}
 		
@@ -91,7 +97,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		
 		teiDocument.getTeiHeader().getTechnicalDescription().setVersion(TeiDocumentVersion.V3);
 		
-//		teiDocument.printXmlDocument();
+		teiDocument.printXmlDocument();
 	}
 
 	private void adjustPointers(TeiDocument teiDocument) {
@@ -115,7 +121,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		
 	}
 
-	private void addTagInstance(TeiElement segElement, IDGenerator catmaIDGenerator, TeiElement text) {
+	private void addTagInstance(TeiElement segElement, TeiElement text) {
 		String references = segElement.getAttributeValue(Attribute.ana);
 		String[] idValues = references.trim().split( "#" );
 		StringBuilder newReferencesBuilder = new StringBuilder();
@@ -166,7 +172,9 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 	
 				TeiElement tagDefinition = addTagdefinition(
 						tagElement.getID(), 
-						getTimestamp(),
+						getTimestamp(
+							Integer.valueOf(
+								version.substring(0,version.indexOf('_')))),
 						getTagName(properties),
 						getColorValue(properties),
 						baseTagID,
@@ -205,6 +213,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 
 	private void addUserDefinedProperty(TeiElement tagDefinition, String propertyName, String propertyValue) {
 		TeiElement fDecl = new TeiElement(TeiElementName.fDecl);
+		fDecl.setID(catmaIDGenerator.generate(tagDefinition.getID()+propertyName));
 		fDecl.setAttributeValue(Attribute.fDecl_name, propertyName);
 		fDecl.setAttributeValue(Attribute.fDecl_optional, "false");
 		TeiElement vRange = new TeiElement(TeiElementName.vRange);
@@ -295,6 +304,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		fsDescr.appendChild(tagName);
 		
 		TeiElement fDecl = new TeiElement(TeiElementName.fDecl);
+		fDecl.setID(catmaIDGenerator.generate(id+"catma_displaycolor"));
 		fDecl.setAttributeValue(Attribute.fDecl_name, "catma_displaycolor");
 
 		if (forBase) {
@@ -323,8 +333,14 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		TeiElement tagsetElement = (TeiElement)node;
 		String tagsetID = tagsetElement.getID();
 		String nValue = tagsetElement.getAttributeValue(Attribute.n);
-		String tagsetName = nValue.substring(0, nValue.lastIndexOf(' ')); 
-		return addTagsetDefinition(tagsetID, tagsetName+" "+getTimestamp(), encodingDesc);
+		int splitPoint = nValue.lastIndexOf(' ');
+		String tagsetName = nValue.substring(0, splitPoint); 
+		String version =
+				nValue.substring(splitPoint+1).substring(
+						0, nValue.substring(splitPoint+1).indexOf('_'));
+		return addTagsetDefinition(
+			tagsetID, tagsetName+" "+getTimestamp(
+					Integer.valueOf(version)), encodingDesc);
 	}
 
 	private TeiElement addStandardTagset(TeiElement encodingDesc) {
@@ -360,9 +376,15 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		return fsdDecl;
 	}
 	
-	private String getTimestamp() {
-		Date date = new Date();
-		return sdf.format(date);
+	private String getTimestamp(int oldVersion) {
+		if (oldVersion > 1) {
+			Calendar tempCal = Calendar.getInstance();
+			tempCal.setTimeInMillis(LEGACY_VERSION_BASE_DATE.getTimeInMillis());
+			tempCal.add(Calendar.DAY_OF_YEAR, oldVersion);
+			return sdf.format(tempCal.getTime());
+		}
+		
+		return sdf.format(LEGACY_VERSION_BASE_DATE.getTime());
 	}
 
 }

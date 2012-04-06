@@ -52,6 +52,7 @@ public class MarkupPanel extends VerticalLayout {
 	public void attach() {
 		super.attach();
 		if (init) {
+			//TODO: handle TagLibrary close operations, i.e. remove corresponding TagsetDefs
 			//TODO: maybe accept drags only from the TaggerView table, drag only tagset defs
 			tagsetTree.getTagTree().setDropHandler(new DropHandler() {
 				
@@ -72,6 +73,12 @@ public class MarkupPanel extends VerticalLayout {
 	                Object sourceItemId = transferable.getItemId();
 	                
 	                if (sourceItemId instanceof TagsetDefinition) {
+	                	
+	                	TagsetDefinition incomingTagsetDef =
+	                			(TagsetDefinition)sourceItemId;
+	                	
+	                	markupCollectionsPanel.updateTagsetDefinition(
+	                			incomingTagsetDef);
 	                	tagsetTree.addTagsetDefinition(
 	                			(TagsetDefinition)sourceItemId);
 	                }

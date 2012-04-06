@@ -22,9 +22,11 @@ package de.catma.indexer;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import de.catma.indexer.unseparablecharactersequence.CharTree;
+import de.catma.indexer.unseparablecharactersequence.CharTreeFactory;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -56,6 +58,17 @@ public class WhitespaceAndPunctuationAnalyzer extends Analyzer {
         this.userDefSeparatingPunctuationPattern = userDefSeparatingPunctuationPattern;
         this.locale = locale;
     }
+    
+    public WhitespaceAndPunctuationAnalyzer(
+    		List<String> unseparableCharacterSequencesList,
+			List<Character> userDefinedSeparatingCharactersList, Locale locale) {
+        CharTreeFactory ctf = new CharTreeFactory();
+        this.unseparableCharacterSequences  =
+                ctf.createCharMap(unseparableCharacterSequencesList); 
+        this.userDefSeparatingPunctuationPattern = 
+        		buildPatternFrom(userDefinedSeparatingCharactersList);
+        this.locale = locale;
+    }
 
     public TokenStream tokenStream(String fieldName, Reader reader) {
         return new PunctuationTokenizer(
@@ -83,6 +96,30 @@ public class WhitespaceAndPunctuationAnalyzer extends Analyzer {
             tokenizer.reset();
         }
         return tokenizer;
+    }
+    
+    /**
+     * Creates an OR-ed regex pattern from the list of user defined separating characters.
+     * @param userDefinedSeparatingCharacters the list of user defined separating characters
+     * @return the pattern
+     */
+    private Pattern buildPatternFrom(
+    		List<Character> userDefinedSeparatingCharacters) {
+
+        if (userDefinedSeparatingCharacters.isEmpty()) {
+            return null;
+        }
+        
+        StringBuilder patternBuilder = new StringBuilder();
+        String conc = "";
+
+        for (Character c : userDefinedSeparatingCharacters) {
+            patternBuilder.append(conc);
+            patternBuilder.append(Pattern.quote(c.toString()));
+            conc = "|"; // OR
+        }
+
+        return Pattern.compile(patternBuilder.toString());
     }
 
 }

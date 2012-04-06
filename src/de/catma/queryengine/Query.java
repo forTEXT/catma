@@ -20,7 +20,10 @@
 package de.catma.queryengine;
 
 import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
 
+import de.catma.indexer.Indexer;
 import de.catma.indexer.TermInfo;
 import de.catma.queryengine.result.ResultList;
 
@@ -30,7 +33,13 @@ import de.catma.queryengine.result.ResultList;
  * @author Marco Petris <marco.petris@web.de>
  */
 public abstract class Query {
+	
     private Refinement refinement;
+    private Indexer indexer;
+	private List<String> unseparableCharacterSequences;
+	private List<Character> userDefinedSeparatingCharacters;
+	private Locale locale;
+	private List<String> documentIds;
 
     /**
      * Executes a query and returns a {@link org.catma.queryengine.result.ResultList} that has
@@ -80,5 +89,41 @@ public abstract class Query {
     public Comparator<TermInfo> getComparator() {
         return null;
     }
+    
+    public void setIndexOptions(List<String> unseparableCharacterSequences,
+            List<Character> userDefinedSeparatingCharacters,
+            Locale locale) {
+    	this.unseparableCharacterSequences = unseparableCharacterSequences;
+    	this.userDefinedSeparatingCharacters = userDefinedSeparatingCharacters;
+    	this.locale = locale;
+    }
+    
+    public void setIndexer(Indexer indexer) {
+		this.indexer = indexer;
+	}
+    
+    public Indexer getIndexer() {
+		return indexer;
+	}
+    
+    public List<String> getUnseparableCharacterSequences() {
+		return unseparableCharacterSequences;
+	}
+    
+    public List<Character> getUserDefinedSeparatingCharacters() {
+		return userDefinedSeparatingCharacters;
+	}
+    
+    public Locale getLocale() {
+		return locale;
+	}
+    
+    public void setDocumentIds(List<String> documentIds) {
+		this.documentIds = documentIds;
+	}
+    
+    public List<String> getDocumentIds() {
+		return documentIds;
+	}
     
 }
