@@ -2,6 +2,7 @@ package de.catma.indexer.elasticsearch;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -106,11 +107,11 @@ public class ESCommunication {
 				+ ESOptions.getString("ESInstaller.positionindex");
 	}
 	
-	public static boolean waitForRequests(List<Future<Response>> httpRequests){
+	public static boolean waitForRequests(Collection<Future<Response>> collection){
 		/*
 		 * This is to join results
 		 */
-		for (Future<Response> response : httpRequests) {
+		for (Future<Response> response : collection) {
 			try {
 				Response r = response.get();
 				if (r.getStatusCode() > 200 && r.getStatusCode() < 400) {

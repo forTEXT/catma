@@ -2,6 +2,7 @@ package de.catma.indexer.elasticsearch;
 
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -12,10 +13,10 @@ import java.util.regex.Pattern;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
-import org.eclipse.jetty.util.ajax.JSON;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ning.http.client.Response;
 
@@ -30,6 +31,7 @@ import de.catma.indexer.unseparablecharactersequence.CharTreeFactory;
 public class ESIndexer implements Indexer {
 
 	private ESCommunication esComm;
+	private Logger logger = LoggerFactory.getLogger(ESInstaller.class);
 
 	public ESIndexer() {
 		esComm = new ESCommunication();
@@ -110,14 +112,107 @@ public class ESIndexer implements Indexer {
 
 	public Map<String, List<Range>> searchTerm(List<String> documentIdList,
 			List<String> termList) throws Exception {
-
+		logger.info("searching...");
 		if (termList == null)
 			return null;
-		
+
+		List<ESTermIndexDocument> termids = getTermIds(documentIdList, termList);
+		HashMap<String, List<ESTermIndexDocument>> termIdsPerTerm = new HashMap<String, List<ESTermIndexDocument>>();
+		HashMap<String, List<Integer>> termOffsets = new HashMap<String, List<Integer>>();
+		HashMap<String, List<Range>> result = new HashMap<String, List<Range>>();
+
+		for (ESTermIndexDocument term : termids) {
+			termIdsPerTerm.containsKey(term.getTerm());
+			List<ESTermIndexDocument> tdocs = termIdsPerTerm
+					.get(term.getTerm());
+			if (tdocs == null) {
+				tdocs = new ArrayList<ESTermIndexDocument>();
+			}
+			tdocs.add(term);
+			termIdsPerTerm.put(term.getTerm(), tdocs);
+		}
+		String lastTerm = termList.get(0);
+		for (String currentTerm : termList) {
+			HashMap<ESTermIndexDocument, Future<Response>> httpRequests = new HashMap<ESTermIndexDocument, Future<Response>>();
+
+			for (ESTermIndexDocument term : termIdsPerTerm.get(currentTerm)) {
+
+				logger.info("fetching positions for term " + term.getTerm()
+						+ " from: " + term.getDocumentId());
+				JSONObject j_query = new JSONObject();
+				j_query.put("from",0);
+				j_query.put("size",1000);
+				JSONObject j_bool = new JSONObject();
+				j_query.put("query", j_bool);
+				JSONObject j_should = new JSONObject();
+				j_bool.put("bool",j_should );
+				JSONArray j_should_arr = new JSONArray();
+				j_should.put("should", j_should_arr);
+				
+				j_should_arr.put(new JSONObject().put("term",new JSONObject().put("termId_l",
+								term.getTermId().getLeastSignificantBits())));
+				j_should_arr.put(new JSONObject().put("term",new JSONObject().put("termId_m",
+						term.getTermId().getMostSignificantBits())));				
+				if (termOffsets.containsKey(lastTerm)) {
+					logger.info("ok filter added for: " + currentTerm);
+					logger.info("filter: " + Arrays.toString(termOffsets.get(lastTerm).toArray()));
+					j_should_arr.put(new JSONObject().put("terms",new JSONObject().put("tokenoffset", new JSONArray(
+									termOffsets.get(lastTerm)))));
+					j_should.put("minimum_number_should_match", 3); // number of items: termId_m, termId_l, tokenoffset
+				}else{
+					j_should.put("minimum_number_should_match", 2); // number of items: termId_m, termId_l
+				}
+				
+				logger.info("req: " + j_query.toString());
+				Future<Response> f = esComm.httpTransport
+						.preparePost(
+								esComm.positionIndexUrl() + "/" + "_search")
+						.setBody(j_query.toString()).execute();
+				httpRequests.put(term, f);
+			}
+			ESCommunication.waitForRequests(httpRequests.values());
+
+			for (Map.Entry<ESTermIndexDocument, Future<Response>> entry : httpRequests
+					.entrySet()) {
+				Response r = entry.getValue().get();
+				JSONObject hitdoc = new JSONObject(r.getResponseBody());
+				if (hitdoc.has("hits")) {
+					JSONObject hits0 = hitdoc.getJSONObject("hits");
+					JSONArray hits = hits0.getJSONArray("hits");
+					List<Integer> offsets = new ArrayList<Integer>();
+					for (int i = 0; i < hits.length(); i++) {
+						JSONObject j = hits.getJSONObject(i);
+						JSONObject source = j.getJSONObject("_source");
+						ESPositionIndexDocument position = ESPositionIndexDocument
+								.fromJSON(source);
+						logger.info("term[" + entry.getKey().getTerm() + "]@"
+								+ position.getTokenOffset());
+						offsets.add(position.getTokenOffset() + 1);
+					}
+					if(termOffsets.containsKey(entry.getKey().getTerm())){
+						offsets.addAll(termOffsets.get(entry.getKey().getTerm()));
+					}
+					termOffsets.put(entry.getKey().getTerm(), offsets);
+				}
+			}
+			lastTerm = currentTerm;
+		}
+
+		return null;
+	}
+
+	private List<ESTermIndexDocument> getTermIds(List<String> documentIdList,
+			List<String> termList) throws Exception {
+		logger.info("fetching termids from termindex");
+		if (termList == null)
+			return null;
+
 		List<Future<Response>> httpRequests = new ArrayList<Future<Response>>();
 
 		for (String term : termList) {
 			JSONObject searchobj = new JSONObject();
+			searchobj.put("from", 0);
+			searchobj.put("size",1000);
 			searchobj.put(
 					"query",
 					new JSONObject().put("term",
@@ -129,17 +224,27 @@ public class ESIndexer implements Indexer {
 			Future<Response> f = esComm.httpTransport
 					.preparePost(esComm.termIndexUrl() + "/" + "_search")
 					.setBody(searchobj.toString()).execute();
-			Response r =  f.get();
+			httpRequests.add(f);
+		}
+		ESCommunication.waitForRequests(httpRequests);
+
+		List<ESTermIndexDocument> termids = new ArrayList<ESTermIndexDocument>();
+
+		for (Future<Response> f : httpRequests) {
+			Response r = f.get();
 			JSONObject hitdoc = new JSONObject(r.getResponseBody());
 			JSONArray hits = hitdoc.getJSONObject("hits").getJSONArray("hits");
-			
-			for(int i=0;i< hits.length();i++){
+			for (int i = 0; i < hits.length(); i++) {
 				JSONObject j = hits.getJSONObject(i);
-				String termId = j.getString("_id");
-				List<ESPositionIndexDocument> positions = this.getPositions(termId);
+				ESTermIndexDocument termdoc = ESTermIndexDocument.fromJSON(j
+						.getJSONObject("_source"));
+				logger.info("term found: " + termdoc.getTerm() + "@"
+						+ termdoc.getTermId());
+				termids.add(termdoc);
 			}
 		}
-		return null;
+
+		return termids;
 	}
 
 	private List<ESPositionIndexDocument> getPositions(String termId) {

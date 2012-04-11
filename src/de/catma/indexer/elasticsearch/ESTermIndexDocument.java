@@ -46,4 +46,15 @@ public class ESTermIndexDocument implements ESDocument {
 	public UUID getIndexDocumentKey() {
 		return UUID.nameUUIDFromBytes((documentId + term).getBytes());
 	}
+
+	public static ESTermIndexDocument fromJSON(String jsonstring) throws JSONException {
+		return fromJSON(new JSONObject(jsonstring));
+	}
+
+	public static ESTermIndexDocument fromJSON(JSONObject jsonObject) throws JSONException {
+		String docid = jsonObject.getString("documentId");
+		String term = jsonObject.getString("term");
+		int freq = jsonObject.getInt("frequency");
+		return new ESTermIndexDocument(docid, term, freq);
+	}
 }

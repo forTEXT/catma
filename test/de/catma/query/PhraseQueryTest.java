@@ -3,19 +3,21 @@ package de.catma.query;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.highlight.HighlightField;
@@ -28,6 +30,7 @@ import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.tag.TagManager;
+import de.catma.indexer.elasticsearch.ESIndexer;
 
 
 public class PhraseQueryTest {
@@ -55,6 +58,25 @@ public class PhraseQueryTest {
 			ExceptionHandler.log(e);
 		}
 	}
+	
+	
+	@Test
+	public void testSearchTerm() throws Throwable {
+		try {
+			ESIndexer esIndexer = new ESIndexer();
+			List<String> term = new ArrayList<String>();
+			term.add("pig");
+			term.add("had");
+			term.add("been");
+			term.add("dead");
+			esIndexer.searchTerm(null, term);
+		}
+		catch(Throwable t) {
+			t.printStackTrace();
+			throw t;
+		}
+	}
+
 
 
 	@Test
