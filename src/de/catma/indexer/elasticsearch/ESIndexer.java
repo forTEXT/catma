@@ -118,7 +118,7 @@ public class ESIndexer implements Indexer {
 
 		List<ESTermIndexDocument> termids = getTermIds(documentIdList, termList);
 		HashMap<String, List<ESTermIndexDocument>> termIdsPerTerm = new HashMap<String, List<ESTermIndexDocument>>();
-		HashMap<String, List<Integer>> termOffsets = new HashMap<String, List<Integer>>();
+		HashMap<String, List<ESPositionIndexDocument>> termOffsets = new HashMap<String, List<ESPositionIndexDocument>>();
 		HashMap<String, List<Range>> result = new HashMap<String, List<Range>>();
 
 		for (ESTermIndexDocument term : termids) {
@@ -154,10 +154,16 @@ public class ESIndexer implements Indexer {
 				j_should_arr.put(new JSONObject().put("term",new JSONObject().put("termId_m",
 						term.getTermId().getMostSignificantBits())));				
 				if (termOffsets.containsKey(lastTerm)) {
+					List<Integer> relevantoffsets = new ArrayList<Integer>();
+					for(ESPositionIndexDocument pos : termOffsets.get(lastTerm)){
+						if(pos.getDocumentId().equals(term.getDocumentId())){
+							relevantoffsets.add(pos.getTokenOffset() + 1);
+						}
+					}
 					logger.info("ok filter added for: " + currentTerm);
-					logger.info("filter: " + Arrays.toString(termOffsets.get(lastTerm).toArray()));
+					logger.info("filter: " + Arrays.toString(relevantoffsets.toArray()));
 					j_should_arr.put(new JSONObject().put("terms",new JSONObject().put("tokenoffset", new JSONArray(
-									termOffsets.get(lastTerm)))));
+									relevantoffsets))));
 					j_should.put("minimum_number_should_match", 3); // number of items: termId_m, termId_l, tokenoffset
 				}else{
 					j_should.put("minimum_number_should_match", 2); // number of items: termId_m, termId_l
@@ -179,7 +185,7 @@ public class ESIndexer implements Indexer {
 				if (hitdoc.has("hits")) {
 					JSONObject hits0 = hitdoc.getJSONObject("hits");
 					JSONArray hits = hits0.getJSONArray("hits");
-					List<Integer> offsets = new ArrayList<Integer>();
+					List<ESPositionIndexDocument> offsets = new ArrayList<ESPositionIndexDocument>();
 					for (int i = 0; i < hits.length(); i++) {
 						JSONObject j = hits.getJSONObject(i);
 						JSONObject source = j.getJSONObject("_source");
@@ -187,7 +193,7 @@ public class ESIndexer implements Indexer {
 								.fromJSON(source);
 						logger.info("term[" + entry.getKey().getTerm() + "]@"
 								+ position.getTokenOffset());
-						offsets.add(position.getTokenOffset() + 1);
+						offsets.add(position);
 					}
 					if(termOffsets.containsKey(entry.getKey().getTerm())){
 						offsets.addAll(termOffsets.get(entry.getKey().getTerm()));
