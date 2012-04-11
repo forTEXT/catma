@@ -23,7 +23,6 @@ import java.util.List;
 
 import de.catma.core.document.source.SourceDocument;
 import de.catma.indexer.TermInfo;
-import de.catma.queryengine.result.ResultList;
 
 /**
  * A query that looks for all types that match a numeric frequency condition. 
@@ -75,13 +74,14 @@ public class FreqQuery extends Query {
     }
 
     @Override
-    protected ResultList execute() throws Exception {
-        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
-
-        List<TermInfo> searchResults =
-                sourceDoc.getIndex().searchTermsByFrequency(operator1, freq1, operator2, freq2);
-
-        return new ResultList(searchResults);
+    protected QueryResult execute() throws Exception {
+//        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
+//
+//        List<TermInfo> searchResults =
+//                sourceDoc.getIndex().searchTermsByFrequency(operator1, freq1, operator2, freq2);
+//
+//        return new ResultList(searchResults);
+    	return null;
     }
 
 }

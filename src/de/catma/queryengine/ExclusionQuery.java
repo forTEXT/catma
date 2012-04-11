@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import de.catma.indexer.TermInfo;
-import de.catma.queryengine.result.ResultList;
 
 /**
  * An exclusion query takes the results of the first query and substracts the results of the second
@@ -51,28 +50,29 @@ public class ExclusionQuery extends Query {
     }
 
     @Override
-    protected ResultList execute() throws Exception {
+    protected QueryResult execute() throws Exception {
 
-        List<TermInfo> results1 = query1.getResult().getTermInfoList();
-        List<TermInfo> results2 = query2.getResult().getTermInfoList();
-
-        Comparator<TermInfo> comparator1 = query1.getComparator();
-        Comparator<TermInfo> comparator2 = query2.getComparator();
-
-        if ( (comparator1 == null) && (comparator2 == null) ) {
-            results1.removeAll(results2);
-        }
-        else {
-            if (comparator1 != null) {
-                removeWithComparator(results1, results2, comparator1);
-            }
-
-            if ((comparator1 != comparator2) && (comparator2 != null)) {
-                removeWithComparator(results1, results2, comparator2);
-            }
-        }
-
-        return new ResultList(results1);
+//        List<TermInfo> results1 = query1.getResult().getTermInfoList();
+//        List<TermInfo> results2 = query2.getResult().getTermInfoList();
+//
+//        Comparator<TermInfo> comparator1 = query1.getComparator();
+//        Comparator<TermInfo> comparator2 = query2.getComparator();
+//
+//        if ( (comparator1 == null) && (comparator2 == null) ) {
+//            results1.removeAll(results2);
+//        }
+//        else {
+//            if (comparator1 != null) {
+//                removeWithComparator(results1, results2, comparator1);
+//            }
+//
+//            if ((comparator1 != comparator2) && (comparator2 != null)) {
+//                removeWithComparator(results1, results2, comparator2);
+//            }
+//        }
+//
+//        return new QueryResult(results1);
+    	return null;
     }
 
     /**

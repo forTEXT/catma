@@ -21,7 +21,6 @@ package de.catma.queryengine;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.ExecutionListener;
-import de.catma.queryengine.result.QueryResult;
 
 /**
  * Executes a {@link org.catma.queryengine.Query} via
@@ -39,11 +38,11 @@ public class QueryHandler {
      * @param jobName the name of the job, that can be displayed to the user
      * @see org.catma.queryengine.QueryJob
      */
-    public void executeQuery(
-            String inputQuery, ExecutionListener<QueryResult> execListener, String jobName) {
-        BackgroundService.SINGLETON.submit(
-                new QueryJob(inputQuery, jobName), execListener);
-    }
+//    public void executeQuery(
+//            String inputQuery, ExecutionListener<QueryResult> execListener, String jobName) {
+//        BackgroundService.SINGLETON.submit(
+//                new QueryJob(inputQuery, jobName), execListener);
+//    }
 
     /**
      * The not yet initialized query result gets initialized by a {@link org.catma.queryengine.WordlistQueryJob}.
@@ -52,10 +51,10 @@ public class QueryHandler {
      * @param jobName  the name of the job, that can be displayed to the user
      * @see org.catma.queryengine.WordlistQueryJob
      */
-    public void executeQuery(
-            QueryResult wordlistResult, ExecutionListener<QueryResult> execListener, String jobName) {
-        BackgroundService.SINGLETON.submit(
-                new WordlistQueryJob(wordlistResult, jobName), execListener);
-    }
+//    public void executeQuery(
+//            QueryResult wordlistResult, ExecutionListener<QueryResult> execListener, String jobName) {
+//        BackgroundService.SINGLETON.submit(
+//                new WordlistQueryJob(wordlistResult, jobName), execListener);
+//    }
 
 }

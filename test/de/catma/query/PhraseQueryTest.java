@@ -84,14 +84,14 @@ public class PhraseQueryTest {
 
 	@Test
 	public void testIndex() {
-		
-		SourceDocument sd = repository.getSourceDocument(
-				"http://www.gutenberg.org/cache/epub/13/pg13.txt");
-		try {
-
-			ActionFuture<DeleteIndexResponse> future = 
-					client.admin().indices().delete(new DeleteIndexRequest("document"));
-			future.actionGet();
+//		
+//		SourceDocument sd = repository.getSourceDocument(
+//				"http://www.gutenberg.org/cache/epub/13/pg13.txt");
+//		try {
+//
+//			ActionFuture<DeleteIndexResponse> future = 
+//					client.admin().indices().delete(new DeleteIndexRequest("document"));
+//			future.actionGet();
 			
 //			client.admin().indices().prepareCreate("document").addMapping(
 //					"book", XContentFactory.jsonBuilder().
@@ -114,8 +114,8 @@ public class PhraseQueryTest {
 //			        .execute()
 //			        .actionGet();
 			
-		} catch (Exception e) {
-			ExceptionHandler.log(e);
-		}
+//		} catch (Exception e) {
+//			ExceptionHandler.log(e);
+//		}
 	}
 }

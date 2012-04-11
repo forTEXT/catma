@@ -19,15 +19,9 @@
 
 package de.catma.queryengine;
 
-import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 
-import de.catma.core.document.source.SourceDocument;
-import de.catma.indexer.Index;
-import de.catma.indexer.SpanContext;
 import de.catma.indexer.TermInfo;
-import de.catma.queryengine.result.ResultList;
 
 /**
  * A collocation query looks for terms that form a collocation with other terms within a given
@@ -78,36 +72,37 @@ public class CollocQuery extends Query {
     }
 
     @Override
-    protected ResultList execute() throws Exception {
+    protected QueryResult execute() throws Exception {
 
-        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
-        Index index = sourceDoc.getIndex();
-
-        ResultList result1 = query1.execute();
-        List<TermInfo> termInfoList1 = result1.getTermInfoList();
-
-        ResultList result2 = query2.execute();
+//        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
+//        Index index = sourceDoc.getIndex();
+//
+//        ResultList result1 = query1.execute();
+//        List<TermInfo> termInfoList1 = result1.getTermInfoList();
+//
+//        ResultList result2 = query2.execute();
 
         // loop over the first resultset get the collocations and
         // check the collocation condition
-        Iterator<TermInfo> iter = termInfoList1.iterator();
-        while (iter.hasNext()) {
-            TermInfo curTermInfo = iter.next();
-
-            SpanContext spanContext = index.getSpanContextFor(
-                    sourceDoc.getContent(), curTermInfo.getRange(),
-                    spanContextSize, direction);
-
-            if ((!spanContextMeetsCollocCondition(
-                    spanContext.getForwardTokens(), result2, index))
-                   && ( ( !spanContext.hasBackwardSpan() )
-                        || ((!spanContextMeetsCollocCondition(
-                                spanContext.getBackwardTokens(), result2, index))))) {
-                iter.remove(); // this one does not meet the condition
-            }
-        }
-
-        return new ResultList(termInfoList1);
+//        Iterator<TermInfo> iter = termInfoList1.iterator();
+//        while (iter.hasNext()) {
+//            TermInfo curTermInfo = iter.next();
+//
+//            SpanContext spanContext = index.getSpanContextFor(
+//                    sourceDoc.getContent(), curTermInfo.getRange(),
+//                    spanContextSize, direction);
+//
+//            if ((!spanContextMeetsCollocCondition(
+//                    spanContext.getForwardTokens(), result2, index))
+//                   && ( ( !spanContext.hasBackwardSpan() )
+//                        || ((!spanContextMeetsCollocCondition(
+//                                spanContext.getBackwardTokens(), result2, index))))) {
+//                iter.remove(); // this one does not meet the condition
+//            }
+//        }
+//
+//        return new ResultList(termInfoList1);
+    	return null;
     }
 
     /**
@@ -119,19 +114,19 @@ public class CollocQuery extends Query {
      * @return true if the given span context meets the collocation condition
      * @throws IOException {@link org.catma.indexer.Index}-access problems, see instance for details 
      */
-    private boolean spanContextMeetsCollocCondition(
-            List<TermInfo> spanContext , ResultList collocConditionList, Index index) throws IOException {
-
-        for (TermInfo collocCondition : collocConditionList.getTermInfoList()) {
-            if(matches(spanContext, index.extractTermInfoFrom(
-                    collocCondition.getTerm(),
-                    (int)collocCondition.getRange().getStartPoint()))) {
-                return true;
-            }
-        }
-
-        return false;
-    }
+//    private boolean spanContextMeetsCollocCondition(
+//            List<TermInfo> spanContext , ResultList collocConditionList, Index index) throws IOException {
+//
+//        for (TermInfo collocCondition : collocConditionList.getTermInfoList()) {
+//            if(matches(spanContext, index.extractTermInfoFrom(
+//                    collocCondition.getTerm(),
+//                    (int)collocCondition.getRange().getStartPoint()))) {
+//                return true;
+//            }
+//        }
+//
+//        return false;
+//    }
 
     /**
      * @param spanContextTokens the tokens of the span context

@@ -21,7 +21,6 @@ package de.catma.queryengine;
 
 import java.util.Set;
 
-import de.catma.queryengine.result.ResultList;
 
 /**
  * This query looks for tokens that are tagged with a {@link Tag} that has the desired
@@ -52,44 +51,45 @@ public class PropertyQuery extends Query {
     }
 
     @Override
-    protected ResultList execute() throws Exception {
+    protected QueryResult execute() throws Exception {
 
-        Set<Tagset> tagsets = TagManager.SINGLETON.getTagsets();
-
-        Query curQuery = null;
-
-        // loop over the tagsets
-        for (Tagset tagset : tagsets) {
-            // loop over the tags
-            for (Tag tag : tagset) {
-                Property p = tag.getProperty(propertyName);
-
-                // does this property meet the query condition?
-                if ((p != null)
-                        && ((propertyValue == null) || p.getValue().equals(propertyValue))) {
-
-                    // is this the first Tag that matches?
-                    if (curQuery == null) {
-                        // yes, ok we create a tag query for this Tag
-                        curQuery = new TagQuery(new Phrase("\""+tag.getName()+"\""));
-                    }
-                    else {
-                        // no, so we create a tag query for this Tag and combine
-                        // it with the previous matches via a union query
-                        curQuery = new UnionQuery(
-                            curQuery,
-                            new TagQuery(new Phrase("\""+tag.getName()+"\"")));
-                    }
-                    
-                }
-            }
-        }
-
-        if (curQuery != null) {
-            return curQuery.execute();
-        }
-        else {
-            return new ResultList();
-        }
+//        Set<Tagset> tagsets = TagManager.SINGLETON.getTagsets();
+//
+//        Query curQuery = null;
+//
+//        // loop over the tagsets
+//        for (Tagset tagset : tagsets) {
+//            // loop over the tags
+//            for (Tag tag : tagset) {
+//                Property p = tag.getProperty(propertyName);
+//
+//                // does this property meet the query condition?
+//                if ((p != null)
+//                        && ((propertyValue == null) || p.getValue().equals(propertyValue))) {
+//
+//                    // is this the first Tag that matches?
+//                    if (curQuery == null) {
+//                        // yes, ok we create a tag query for this Tag
+//                        curQuery = new TagQuery(new Phrase("\""+tag.getName()+"\""));
+//                    }
+//                    else {
+//                        // no, so we create a tag query for this Tag and combine
+//                        // it with the previous matches via a union query
+//                        curQuery = new UnionQuery(
+//                            curQuery,
+//                            new TagQuery(new Phrase("\""+tag.getName()+"\"")));
+//                    }
+//                    
+//                }
+//            }
+//        }
+//
+//        if (curQuery != null) {
+//            return curQuery.execute();
+//        }
+//        else {
+//            return new ResultList();
+//        }
+    	return null;
     }
 }
