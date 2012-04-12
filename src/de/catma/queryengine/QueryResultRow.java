@@ -18,5 +18,12 @@ public class QueryResultRow {
 		this.range = range;
 		this.phrase = phrase;
 	}
-	
+
+	@Override
+	public String toString() {
+		return "SourceDoc[#"+sourceDocumentId + "]"+range + "Phrase[" + phrase + "]"
+				+ ((markupDocumentId == null)?"":("MarkupDoc[#"+markupDocumentId+"]"))
+				+ ((tagDefinitionId == null)?"":("TagDef[#"+tagDefinitionId+"]")) 
+				+ ((tagInstanceId == null)?"":("TagInstance[#"+tagInstanceId+"]")); 
+	}
 }
