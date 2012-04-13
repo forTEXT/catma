@@ -41,6 +41,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		icon,
 		visible,
 		color,
+		writable,
 		;
 
 	}
@@ -127,7 +128,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		markupCollectionsTree.setSelectable(true);
 		markupCollectionsTree.setMultiSelect(false);
 		markupCollectionsTree.setContainerDataSource(new HierarchicalContainer());
-		
+
 		markupCollectionsTree.addContainerProperty(
 				MarkupCollectionsTreeProperty.caption, 
 				String.class, null);
@@ -143,6 +144,12 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		markupCollectionsTree.setColumnHeader(
 				MarkupCollectionsTreeProperty.visible, "Visible");
 		
+		markupCollectionsTree.addContainerProperty(
+				MarkupCollectionsTreeProperty.writable, 
+				AbstractComponent.class, null);
+		markupCollectionsTree.setColumnHeader(
+				MarkupCollectionsTreeProperty.writable, "Writable");
+		
 		markupCollectionsTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_PROPERTY);
 		markupCollectionsTree.setItemCaptionPropertyId(
 				MarkupCollectionsTreeProperty.caption);
@@ -156,14 +163,16 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				new Object[] {
 						MarkupCollectionsTreeProperty.caption,
 						MarkupCollectionsTreeProperty.color,
-						MarkupCollectionsTreeProperty.visible});
+						MarkupCollectionsTreeProperty.visible,
+						MarkupCollectionsTreeProperty.writable});
 		
 		markupCollectionsTree.addItem(
-			new Object[] {userMarkupItem, new Label()}, userMarkupItem);
+			new Object[] {userMarkupItem, new Label(), new Label()}, 
+			userMarkupItem);
 		
 		markupCollectionsTree.addItem(
-			new Object[] {staticMarkupItem, new Label()}, staticMarkupItem );
-		
+			new Object[] {staticMarkupItem, new Label(), new Label()}, 
+			staticMarkupItem );
 
 		addComponent(markupCollectionsTree);
 	}
@@ -189,9 +198,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	
 	private void addUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
-		
+		// hier gehts weiter: new CheckBox() in richtige CheckBox mit Listener verwandeln
 		markupCollectionsTree.addItem(
-				new Object[] {userMarkupCollection, new Label()},
+				new Object[] {userMarkupCollection, new Label(), new CheckBox()},
 				userMarkupCollection);
 		markupCollectionsTree.setParent(userMarkupCollection, userMarkupItem);
 		
@@ -203,7 +212,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 
 			markupCollectionsTree.addItem(
 					new Object[]{tagsetDefinition.getName(), 
-							new Label()}, tagsetDefinition);
+							new Label(), new Label()}, tagsetDefinition);
 			markupCollectionsTree.getContainerProperty(
 				tagsetDefinition, MarkupCollectionsTreeProperty.icon).setValue(
 						tagsetIcon);
@@ -237,7 +246,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				markupCollectionsTree.addItem(
 						new Object[]{
 								tagDefinition.getType(), 
-								createCheckbox(tagDefinition)},
+								createCheckbox(tagDefinition),
+								new Label()},
 						tagDefinition);
 				markupCollectionsTree.getContainerProperty(
 						tagDefinition, MarkupCollectionsTreeProperty.icon).setValue(

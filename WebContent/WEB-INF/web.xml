@@ -22,11 +22,6 @@
 			<param-name>widgetset</param-name>
 			<param-value>de.catma.ui.CleaWidgetset</param-value>
 		</init-param>
-		<init-param>
-			<description>Repository No. 1 - Name -</description>
-			<param-name>Repository1</param-name>
-			<param-value>Local Repository</param-value>
-		</init-param>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>Clea</servlet-name>
