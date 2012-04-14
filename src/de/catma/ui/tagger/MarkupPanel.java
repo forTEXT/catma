@@ -1,5 +1,8 @@
 package de.catma.ui.tagger;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
 import com.vaadin.data.Container;
 import com.vaadin.event.DataBoundTransferable;
 import com.vaadin.event.dd.DragAndDropEvent;
@@ -12,7 +15,7 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagManager;
 import de.catma.core.tag.TagsetDefinition;
-import de.catma.ui.tagger.MarkupCollectionsPanel.TagDefinitionSelectionListener;
+import de.catma.ui.tagger.MarkupCollectionsPanel.MarkupCollectionPanelEvent;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 import de.catma.ui.tagmanager.TagsetTree;
 
@@ -26,21 +29,32 @@ public class MarkupPanel extends VerticalLayout {
 	public MarkupPanel(
 			TagManager tagManager,
 			ColorButtonListener colorButtonListener, 
-			TagDefinitionSelectionListener tagDefinitionSelectionListener) {
+			PropertyChangeListener tagDefinitionSelectionListener) {
 		initComponents(
 			tagManager, colorButtonListener, tagDefinitionSelectionListener);
 	}
 
 	private void initComponents(
 			TagManager tagManager, ColorButtonListener colorButtonListener, 
-			TagDefinitionSelectionListener tagDefinitionSelectionListener) {
+			PropertyChangeListener tagDefinitionSelectionListener) {
 		tabSheet = new TabSheet();
 		tagsetTree = new TagsetTree(tagManager, null, false, colorButtonListener);
 		tabSheet.addTab(tagsetTree, "Currently active Tagsets");
 		
 		markupCollectionsPanel = 
-				new MarkupCollectionsPanel(
-						tagManager, tagDefinitionSelectionListener);
+				new MarkupCollectionsPanel(tagManager);
+		markupCollectionsPanel.addPropertyChangeListener(
+				MarkupCollectionPanelEvent.tagDefinitionSelected, 
+				tagDefinitionSelectionListener);
+		markupCollectionsPanel.addPropertyChangeListener(
+				MarkupCollectionPanelEvent.userMarkupCollectionSelected, 
+				new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				//hier gehts weiter: MarkupCollectino merken und anzeigen
+				
+			}
+		});
 		
 		tabSheet.addTab(
 				markupCollectionsPanel, "Currently active Markup Collections");

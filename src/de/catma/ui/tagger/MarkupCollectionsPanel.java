@@ -2,6 +2,7 @@ package de.catma.ui.tagger;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.Collection;
 import java.util.List;
 
@@ -31,10 +32,11 @@ import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
 
 public class MarkupCollectionsPanel extends VerticalLayout {
 	
-	public static interface TagDefinitionSelectionListener {
-		public void tagDefinitionSelectionChanged(
-				List<TagReference> tagReferences, boolean selected);
-	} 
+	public static enum MarkupCollectionPanelEvent {
+		tagDefinitionSelected,
+		userMarkupCollectionSelected,
+		;
+	}
 	
 	private static enum MarkupCollectionsTreeProperty {
 		caption, 
@@ -49,20 +51,29 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private TreeTable markupCollectionsTree;
 	private String userMarkupItem = "User Markup Collections";
 	private String staticMarkupItem = "Static Markup Collections";
-	private TagDefinitionSelectionListener tagDefinitionSelectionListener;
 	private TagManager tagManager;
 	private PropertyChangeListener tagDefChangedListener;
 	private UserMarkupCollectionManager userMarkupCollectionManager;
+	private PropertyChangeSupport propertyChangeSupport;
 	
-	public MarkupCollectionsPanel(
-			TagManager tagManager,
-			TagDefinitionSelectionListener tagDefinitionSelectionListener) {
+	public MarkupCollectionsPanel(TagManager tagManager) {
+		propertyChangeSupport = new PropertyChangeSupport(this);
 		this.tagManager = tagManager;
-		this.tagDefinitionSelectionListener = tagDefinitionSelectionListener;
 		userMarkupCollectionManager =
 				new UserMarkupCollectionManager(tagManager);
-		initComponents(tagDefinitionSelectionListener);
+		initComponents();
 		initActions();
+	}
+
+	public void addPropertyChangeListener(MarkupCollectionPanelEvent propertyName,
+			PropertyChangeListener listener) {
+		propertyChangeSupport.addPropertyChangeListener(propertyName.name(), listener);
+	}
+
+	public void removePropertyChangeListener(MarkupCollectionPanelEvent propertyName,
+			PropertyChangeListener listener) {
+		propertyChangeSupport.removePropertyChangeListener(propertyName.name(),
+				listener);
 	}
 
 	private void initActions() {
@@ -120,8 +131,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		
 	}
 
-	private void initComponents(
-			final TagDefinitionSelectionListener tagDefinitionSelectionListener) {
+	private void initComponents() {
 		
 		markupCollectionsTree = new TreeTable();
 		markupCollectionsTree.setSizeFull();
@@ -198,9 +208,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	
 	private void addUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
-		// hier gehts weiter: new CheckBox() in richtige CheckBox mit Listener verwandeln
 		markupCollectionsTree.addItem(
-				new Object[] {userMarkupCollection, new Label(), new CheckBox()},
+				new Object[] {userMarkupCollection, new Label(), createCheckbox(userMarkupCollection)},
 				userMarkupCollection);
 		markupCollectionsTree.setParent(userMarkupCollection, userMarkupItem);
 		
@@ -292,7 +301,42 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		return cbShowTagInstances;
 	}
 	
-	private void fireTagDefinitionSelected(TagDefinition tagDefinition, boolean selected) {
+	private CheckBox createCheckbox(
+			final UserMarkupCollection userMarkupCollection) {
+		
+		CheckBox cbIsWritableUserMarkupColl = new CheckBox();
+		cbIsWritableUserMarkupColl.setImmediate(true);
+		cbIsWritableUserMarkupColl.addListener(new ClickListener() {
+
+			public void buttonClick(ClickEvent event) {
+				
+				boolean selected = 
+						event.getButton().booleanValue();
+				if (selected) {
+					for (UserMarkupCollection umc : userMarkupCollectionManager) {
+						if (!umc.equals(userMarkupCollection)) {
+							Object writeablePropertyValue = 
+								markupCollectionsTree.getItem(
+									umc).getItemProperty(
+										MarkupCollectionsTreeProperty.writable).getValue();
+							
+							if ((writeablePropertyValue != null) 
+									&& (writeablePropertyValue instanceof CheckBox)) {
+								CheckBox cbWritable = (CheckBox)writeablePropertyValue;
+								cbWritable.setValue(false);
+							}
+						}
+					}
+					fireUserMarkupCollectionWriteable(
+							userMarkupCollection);
+				}
+			}
+		});
+		return cbIsWritableUserMarkupColl;
+	}
+	
+	private void fireTagDefinitionSelected(
+			TagDefinition tagDefinition, boolean selected) {
 		UserMarkupCollection userMarkupCollection =
 				getUserMarkupCollection(tagDefinition);
 		
@@ -320,9 +364,18 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 					cbVisible.setValue(selected);
 				}
 			}
-		}							
-		tagDefinitionSelectionListener.tagDefinitionSelectionChanged(
-				tagReferences, selected);	
+		}		
+		
+		propertyChangeSupport.firePropertyChange(
+				MarkupCollectionPanelEvent.tagDefinitionSelected.name(), 
+				selected?null:tagReferences,
+				selected?tagReferences:null);
+	}
+	
+	private void fireUserMarkupCollectionWriteable(
+			UserMarkupCollection userMarkupCollection) {
+		
+		
 	}
 	
 	public void close() {

@@ -15,11 +15,7 @@ import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagManager;
-import de.catma.core.tag.TagsetDefinition;
-import de.catma.core.tag.TagManager.TagManagerEvent;
-import de.catma.core.util.Pair;
 import de.catma.ui.client.ui.tagger.shared.TagInstance;
-import de.catma.ui.tagger.MarkupCollectionsPanel.TagDefinitionSelectionListener;
 import de.catma.ui.tagger.Tagger.TaggerListener;
 import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
@@ -34,44 +30,11 @@ public class TaggerView extends VerticalLayout {
 	private MarkupPanel markupPanel;
 	private boolean init = true;
 	private TagManager tagManager;
-	private PropertyChangeListener tagDefChangedListener;
 	
 	public TaggerView(TagManager tagManager, SourceDocument sourceDocument) {
 		this.tagManager = tagManager;
 		this.sourceDocument = sourceDocument;
 		initComponents();
-		
-		tagDefChangedListener = new PropertyChangeListener() {
-			
-			public void propertyChange(PropertyChangeEvent evt) {
-			
-				Object oldValue = evt.getOldValue();
-				Object newValue = evt.getNewValue();
-				if ((oldValue == null) && (newValue == null)) {
-					return;
-				}
-				
-				if (newValue == null) { //tagDef removed
-					@SuppressWarnings("unchecked")
-					Pair<TagsetDefinition, TagDefinition> removeOperationResult = 
-							(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
-					TagDefinition td = removeOperationResult.getSecond();
-					
-				}
-				else if (oldValue != null) { // tagDef changed
-					TagDefinition tagDefinition = 
-							(TagDefinition)evt.getNewValue();
-					Pair<String, String> oldTypeOldRgb = 
-							(Pair<String, String>)evt.getOldValue();
-					
-					
-				}
-				
-			}
-		};
-		
-		tagManager.addPropertyChangeListener(
-				TagManagerEvent.tagDefinitionChanged, tagDefChangedListener);
 	}
 
 	private void initComponents() {
@@ -107,13 +70,16 @@ public class TaggerView extends VerticalLayout {
 						tagger.addTagInstanceWith(tagDefinition);
 					}
 				},
-				new TagDefinitionSelectionListener() {
+				new PropertyChangeListener() {
 					
-					public void tagDefinitionSelectionChanged(
-							List<TagReference> tagReferences,
-							boolean selected) {
-						tagger.setVisible(tagReferences, selected);
+					public void propertyChange(PropertyChangeEvent evt) {
+						boolean selected = evt.getNewValue() != null;
+						@SuppressWarnings("unchecked")
+						List<TagReference> tagReferences = 
+							(List<TagReference>)(
+									selected?evt.getNewValue():evt.getOldValue());
 						
+						tagger.setVisible(tagReferences, selected);
 					}
 				});
 		
