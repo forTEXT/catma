@@ -19,6 +19,7 @@ import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.core.document.repository.Repository;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
@@ -54,11 +55,14 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private TagManager tagManager;
 	private PropertyChangeListener tagDefChangedListener;
 	private UserMarkupCollectionManager userMarkupCollectionManager;
+	private UserMarkupCollection currentWritableUserMarkupColl;
 	private PropertyChangeSupport propertyChangeSupport;
+	private Repository repository;
 	
-	public MarkupCollectionsPanel(TagManager tagManager) {
+	public MarkupCollectionsPanel(TagManager tagManager, Repository repository) {
 		propertyChangeSupport = new PropertyChangeSupport(this);
 		this.tagManager = tagManager;
+		this.repository = repository;
 		userMarkupCollectionManager =
 				new UserMarkupCollectionManager(tagManager);
 		initComponents();
@@ -201,7 +205,6 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 
 	public void openUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
-		
 		userMarkupCollectionManager.add(userMarkupCollection);
 		addUserMarkupCollection(userMarkupCollection);
 	}
@@ -327,6 +330,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 							}
 						}
 					}
+					currentWritableUserMarkupColl = userMarkupCollection;
 					fireUserMarkupCollectionWriteable(
 							userMarkupCollection);
 				}
@@ -374,7 +378,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	
 	private void fireUserMarkupCollectionWriteable(
 			UserMarkupCollection userMarkupCollection) {
-		
+		propertyChangeSupport.firePropertyChange(
+			MarkupCollectionPanelEvent.userMarkupCollectionSelected.name(), 
+			null, userMarkupCollection);
 		
 	}
 	
@@ -392,5 +398,17 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			removeWithChildren(c);
 			addUserMarkupCollection(c);
 		}
+	}
+	
+	public void addTagReferences(List<TagReference> tagReferences) {
+		userMarkupCollectionManager.addTagReferences(
+				tagReferences, currentWritableUserMarkupColl);
+		// hier gehts weiter: 
+		// implement serialization
+		// implement usermarkupcoll creation
+	}
+	
+	public UserMarkupCollection getCurrentWritableUserMarkupCollection() {
+		return currentWritableUserMarkupColl;
 	}
 }

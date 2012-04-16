@@ -25,7 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 
-import de.catma.ui.client.ui.tagger.shared.TagInstance;
+import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 
 /**
  * @author marco.petris@web.de
@@ -163,7 +163,7 @@ public class Pager implements Iterable<Page> {
 		this.pagerListener = pagerListener;
 	}
 
-	public Page getPageForAbsoluteTagInstance(TagInstance absoluteTagInstance) {
+	public Page getPageForAbsoluteTagInstance(ClientTagInstance absoluteTagInstance) {
 		
 		for (Page p : pages) {
 			if (p.includesAbsoluteTagInstance(absoluteTagInstance)) {

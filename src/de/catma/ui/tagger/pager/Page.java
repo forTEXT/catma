@@ -32,7 +32,7 @@ import nu.xom.Element;
 import nu.xom.Serializer;
 import nu.xom.Text;
 import de.catma.ui.client.ui.tagger.shared.ContentElementID;
-import de.catma.ui.client.ui.tagger.shared.TagInstance;
+import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 /**
@@ -58,8 +58,8 @@ public class Page {
 	private int pageStart;
 	private int pageEnd;
 	private String text;
-	private Map<String, TagInstance> relativeTagInstances = 
-			new HashMap<String,TagInstance>();
+	private Map<String, ClientTagInstance> relativeTagInstances = 
+			new HashMap<String,ClientTagInstance>();
 	
 	public Page(String text, int pageStart, int pageEnd) {
 		this.pageStart = pageStart;
@@ -154,7 +154,7 @@ public class Page {
 		}
 	}
 
-	public void addRelativeTagInstance(TagInstance relativeTagInstance) {
+	public void addRelativeTagInstance(ClientTagInstance relativeTagInstance) {
 		this.relativeTagInstances.put(
 				relativeTagInstance.getInstanceID(), relativeTagInstance);
 	}
@@ -163,20 +163,20 @@ public class Page {
 		this.relativeTagInstances.remove(tagInstanceID);
 	}
 	
-	public Collection<TagInstance> getRelativeTagInstances() {
+	public Collection<ClientTagInstance> getRelativeTagInstances() {
 		return Collections.unmodifiableCollection(this.relativeTagInstances.values());
 	}
 
-	public TagInstance getAbsoluteTagInstance(TagInstance tagInstance) {
-		return new TagInstance(tagInstance, pageStart);
+	public ClientTagInstance getAbsoluteTagInstance(ClientTagInstance tagInstance) {
+		return new ClientTagInstance(tagInstance, pageStart);
 	}
 
-	public void addAbsoluteTagInstance(TagInstance ti) {
-		TagInstance relativeInstance = new TagInstance(ti, pageStart*(-1));
+	public void addAbsoluteTagInstance(ClientTagInstance ti) {
+		ClientTagInstance relativeInstance = new ClientTagInstance(ti, pageStart*(-1));
 		addRelativeTagInstance(relativeInstance);
 	}
 
-	public boolean includesAbsoluteTagInstance(TagInstance absoluteTagInstance) {
+	public boolean includesAbsoluteTagInstance(ClientTagInstance absoluteTagInstance) {
 		if (absoluteTagInstance.getRanges().size()>0) {
 			//FIXME: what if a TagInstance stretches over two pages? Tagger doesn't support that for now but maybe in the future
 			TextRange tr = absoluteTagInstance.getRanges().get(0); 
@@ -191,7 +191,7 @@ public class Page {
 		relativeTagInstances.clear();
 	}
 
-	public TagInstance getRelativeTagInstance(String instanceID) {
+	public ClientTagInstance getRelativeTagInstance(String instanceID) {
 		return relativeTagInstances.get(instanceID);
 	}
 }

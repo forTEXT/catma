@@ -416,7 +416,7 @@ public class TagsetTree extends HorizontalLayout {
 		tagFormDialog.show(getApplication().getMainWindow(), "50%");
 	}
 
-	private TagsetDefinition getTagsetDefinition(TagDefinition tagDefinition) {
+	public TagsetDefinition getTagsetDefinition(TagDefinition tagDefinition) {
 		Object parent = tagTree.getParent(tagDefinition);
 		if (parent instanceof TagsetDefinition) {
 			return (TagsetDefinition)parent;
@@ -793,5 +793,15 @@ public class TagsetTree extends HorizontalLayout {
 	
 	public TagManager getTagManager() {
 		return tagManager;
+	}
+	
+	public TagDefinition getTagDefinition(String tagDefinitionID) {
+		for (Object item : tagTree.getItemIds()) {
+			if ((item instanceof TagDefinition) 
+					&& ((TagDefinition)item).getID().equals(tagDefinitionID)) {
+				return (TagDefinition)item;
+			}
+		}
+		return null;
 	}
 }

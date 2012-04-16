@@ -158,7 +158,7 @@ public class RepositoryView extends VerticalLayout {
 				
 				if (value instanceof SourceDocument) {
 					((CleaApplication)getApplication()).openSourceDocument(
-							(SourceDocument)value);
+							(SourceDocument)value, repository);
 				}
 				else if (value instanceof StaticMarkupCollectionReference) {
 						
@@ -186,7 +186,8 @@ public class RepositoryView extends VerticalLayout {
 							},
 							new ExecutionListener<UserMarkupCollection>() {
 								public void done(UserMarkupCollection result) {
-									((CleaApplication)getApplication()).openUserMarkupCollection(sd, result);
+									((CleaApplication)getApplication()).openUserMarkupCollection(
+											sd, result, repository);
 									
 									progressIndicator.setCaption("");
 									progressIndicator.setEnabled(false);

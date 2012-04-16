@@ -8,24 +8,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import de.catma.ui.client.ui.tagger.shared.TagInstance;
-import de.catma.ui.client.ui.tagger.shared.TagInstance.SerializationField;
+import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
+import de.catma.ui.client.ui.tagger.shared.ClientTagInstance.SerializationField;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
-public class TagInstanceJSONSerializer {
+public class ClientTagInstanceJSONSerializer {
 	
-	// somehow the 
-	public static class JSONSerializationException extends Exception {
-
-		public JSONSerializationException(Throwable cause) {
-			super(cause);
-		}
-		
-	}
-
-	public TagInstance fromJSON(String json) throws JSONSerializationException {
+	public ClientTagInstance fromJSON(String json) throws JSONSerializationException {
 		try {
 			JSONObject tagInstanceJSON = new JSONObject(json);
+			String tagDefinitionID =
+					tagInstanceJSON.getString(SerializationField.tagDefinitionID.name());
 			String instanceID = 
 					tagInstanceJSON.getString(SerializationField.instanceID.name());
 			String color =
@@ -44,16 +37,19 @@ public class TagInstanceJSONSerializer {
 				ranges.add(tr);
 			}		
 			
-			return new TagInstance(instanceID, color, ranges);
+			return new ClientTagInstance(tagDefinitionID, instanceID, color, ranges);
 		}
 		catch(JSONException e) {
 			throw new JSONSerializationException(e);
 		}
 	}
 	
-	private JSONObject toJSONObject(TagInstance tagInstance) throws JSONSerializationException {
+	private JSONObject toJSONObject(ClientTagInstance tagInstance) throws JSONSerializationException {
 		try {
 			JSONObject tagInstanceJSON = new JSONObject();
+			tagInstanceJSON.put(
+				SerializationField.tagDefinitionID.name(),
+				tagInstance.getTagDefinitionID());
 			tagInstanceJSON.put(
 				SerializationField.instanceID.name(), 
 				tagInstance.getInstanceID());
@@ -82,14 +78,14 @@ public class TagInstanceJSONSerializer {
 		}
 	}
 	
-	public String toJSON(TagInstance tagInstance) throws JSONSerializationException {
+	public String toJSON(ClientTagInstance tagInstance) throws JSONSerializationException {
 		return toJSONObject(tagInstance).toString();
 	}
 	
-	public String toJSON(Collection<TagInstance> tagInstances) 
+	public String toJSON(Collection<ClientTagInstance> tagInstances) 
 			throws JSONSerializationException {
 		JSONArray tagInstancesJSON = new JSONArray();
-		for (TagInstance ti : tagInstances) {
+		for (ClientTagInstance ti : tagInstances) {
 			tagInstancesJSON.put(toJSONObject(ti));
 		}
 	

@@ -142,11 +142,13 @@ public class CleaApplication extends Application {
 		tagManagerView.openTagLibrary(tagManager, tagLibrary);
 	}
 
-	public TaggerView openSourceDocument(SourceDocument sourceDocument) {
+	public TaggerView openSourceDocument(
+			SourceDocument sourceDocument, Repository repository) {
 		if (taggerManagerView.getApplication() == null) {
 			menu.executeEntry(taggerManagerView);
 		}
-		return taggerManagerView.openSourceDocument(tagManager, sourceDocument);
+		return taggerManagerView.openSourceDocument(
+				tagManager, sourceDocument, repository);
 	}
 
 	public String getTempDirectory() {
@@ -159,8 +161,8 @@ public class CleaApplication extends Application {
 
 	public void openUserMarkupCollection(
 			SourceDocument sourceDocument, 
-			UserMarkupCollection userMarkupCollection) {
-		TaggerView taggerView = openSourceDocument(sourceDocument);
+			UserMarkupCollection userMarkupCollection, Repository repository) {
+		TaggerView taggerView = openSourceDocument(sourceDocument, repository);
 		taggerManagerView.openUserMarkupCollection(
 				taggerView, userMarkupCollection);
 		
