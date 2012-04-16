@@ -53,7 +53,9 @@ public class MarkupPanel extends VerticalLayout {
 		currentlyActiveMarkupPanel.addComponent(tagsetTree);
 
 		final Label currentlyWritableUserMarkupCollectionLabel = new Label(
-				"Currently writable Markup Collection: ");
+				"Currently writable Markup Collection:");
+		currentlyWritableUserMarkupCollectionLabel.setContentMode(
+				Label.CONTENT_XHTML);
 		currentlyActiveMarkupPanel.addComponent(
 				currentlyWritableUserMarkupCollectionLabel);
 		
@@ -68,7 +70,7 @@ public class MarkupPanel extends VerticalLayout {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
 				currentlyWritableUserMarkupCollectionLabel.setValue(
-						"Currently writable Markup Collection: " + evt.getNewValue());
+						"Currently writable Markup Collection:</ br>" + evt.getNewValue());
 			}
 		});
 		

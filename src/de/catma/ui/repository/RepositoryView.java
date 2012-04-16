@@ -15,10 +15,10 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.HierarchicalContainer;
-import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.Form;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -26,13 +26,11 @@ import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.ProgressIndicator;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.CleaApplication;
-import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.core.document.Corpus;
@@ -44,7 +42,6 @@ import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
-import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.repository.wizard.WizardFactory;
 import de.catma.ui.repository.wizard.WizardResult;
 import de.catma.ui.repository.wizard.WizardWindow;
@@ -94,7 +91,6 @@ public class RepositoryView extends VerticalLayout {
 	private Button btSaveContentInfoChanges;
 	private Button btDiscardContentInfoChanges;
 	private PropertyChangeListener repositoryListener;
-	private ProgressIndicator progressIndicator;
 	
 	public RepositoryView(Repository repository) {
 		super();
@@ -161,21 +157,20 @@ public class RepositoryView extends VerticalLayout {
 							(SourceDocument)value, repository);
 				}
 				else if (value instanceof StaticMarkupCollectionReference) {
-						
+						//TODO: implement
 					
 				}
 				else if (value instanceof UserMarkupCollectionReference) {
 					final SourceDocument sd = 
 							(SourceDocument)documentsTree.getParent(
 									documentsTree.getParent(value));
-			
-					BackgroundService backgroundService = 
-						((CleaApplication)getApplication()).getBackgroundService();
-					showProgressIndicator("Loading Markup Collection");
-					backgroundService.submit(
+					final CleaApplication application = 
+							(CleaApplication)getApplication();
+					application.submit(
 							new DefaultProgressCallable<UserMarkupCollection>() {
 								public UserMarkupCollection call()
 										throws Exception {
+									getProgressListener().setProgress("Loading Markup Collection");
 									UserMarkupCollectionReference 
 										userMarkupCollectionReference = 
 											(UserMarkupCollectionReference)value;
@@ -186,16 +181,11 @@ public class RepositoryView extends VerticalLayout {
 							},
 							new ExecutionListener<UserMarkupCollection>() {
 								public void done(UserMarkupCollection result) {
-									((CleaApplication)getApplication()).openUserMarkupCollection(
+									application.openUserMarkupCollection(
 											sd, result, repository);
-									
-									progressIndicator.setCaption("");
-									progressIndicator.setEnabled(false);
-									removeComponent(progressIndicator);
 								}
-							}, 
-							new DefaultProgressListener(
-									progressIndicator, getApplication()));
+							});
+
 				}
 			}
 		});
@@ -260,6 +250,7 @@ public class RepositoryView extends VerticalLayout {
 						contentInfoForm.setReadOnly(true);
 						btOpenDocument.setCaption("Open Document");
 						btOpenDocument.setEnabled(true);
+						
 					}
 					else {
 						contentInfoForm.setEnabled(false);
@@ -319,8 +310,9 @@ public class RepositoryView extends VerticalLayout {
 		miMoreDocumentActions.addItem("Create User Markup Collection", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
+				handleUserMarkupCreation();
 			}
+
 		});
 		
 		miMoreDocumentActions.addItem("Import User Markup Collection", new Command() {
@@ -436,158 +428,36 @@ public class RepositoryView extends VerticalLayout {
 	
 
 	private void initComponents() {
+		setSizeFull();
 		this.setMargin(false, true, true, true);
 		this.setSpacing(true);
-		progressIndicator = new ProgressIndicator();
-		progressIndicator.setEnabled(false);
-		progressIndicator.setIndeterminate(true);
-		progressIndicator.setPollingInterval(500);
-		
-		
-		
-		Label documentsLabel = new Label("Document Manager");
-		documentsLabel.addStyleName("repo-title-label");
+
+		Component documentsLabel = createDocumentsLabel();
 		addComponent(documentsLabel);
 		
-		HorizontalLayout documentsManagerPanel = new HorizontalLayout();
-		documentsManagerPanel.setSpacing(true);
-		documentsManagerPanel.setSizeFull();
-		documentsManagerPanel.setMargin(false, false, true, false);
-		
-		VerticalLayout outerCorporaPanel = new VerticalLayout();
-		outerCorporaPanel.setSpacing(true);
-		
-		Panel corporaPanel = new Panel();
-		corporaPanel.getContent().setSizeUndefined();
-		corporaPanel.setHeight("200px");
-		
-		corporaTree = new Tree();
-		corporaTree.addStyleName("repo-tree");
-		corporaTree.setCaption("Corpora");
-		corporaTree.addItem(allDocuments);
-		corporaTree.setChildrenAllowed(allDocuments, false);
-		corporaTree.setImmediate(true);
-		
-		for (Corpus c : repository.getCorpora()) {
-			corporaTree.addItem(c);
-			corporaTree.setChildrenAllowed(c, false);
-		}
-		
-		corporaPanel.addComponent(corporaTree);
-		outerCorporaPanel.addComponent(corporaPanel);
-		
-		Panel corporaButtonsPanel = new Panel(new HorizontalLayout());
-		corporaButtonsPanel.setStyleName(Reindeer.PANEL_LIGHT);
-		((HorizontalLayout)corporaButtonsPanel.getContent()).setSpacing(true);
-		
-		btCreateCorpus = new Button("Create Corpus");
-		
-		corporaButtonsPanel.addComponent(btCreateCorpus);
-		MenuBar menuMoreCorpusActions = new MenuBar();
-		miMoreCorpusActions = menuMoreCorpusActions.addItem("More actions...", null);
-		corporaButtonsPanel.addComponent(menuMoreCorpusActions);
-		
-		outerCorporaPanel.addComponent(corporaButtonsPanel);
-		
-		documentsManagerPanel.addComponent(outerCorporaPanel);
-		documentsManagerPanel.setExpandRatio(outerCorporaPanel, 1.3f);
-		
-		VerticalLayout outerDocumentsPanel = new VerticalLayout();
-		outerDocumentsPanel.setSpacing(true);
-		
-		Panel documentsPanel = new Panel();
-		
-		documentsContainer = new HierarchicalContainer();
-		documentsTree = new Tree();
-		documentsTree.setContainerDataSource(documentsContainer);
-		documentsTree.setCaption("Documents");
-		documentsTree.addStyleName("repo-tree");
-		documentsTree.setImmediate(true);
-		documentsTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_ID);
-
-		documentsPanel.addComponent(documentsTree);
-		documentsPanel.getContent().setSizeUndefined();
-		documentsPanel.setHeight("200px"); //TODO: besser nicht fix
-		
-		for (SourceDocument sd : repository.getSourceDocuments()) {
-			addSourceDocumentToTree(sd);
-		}
-		outerDocumentsPanel.addComponent(documentsPanel);
-		
-		Panel documentButtonsPanel = new Panel(new HorizontalLayout());
-		documentButtonsPanel.setStyleName(Reindeer.PANEL_LIGHT);
-
-		((HorizontalLayout)documentButtonsPanel.getContent()).setSpacing(true);
-		
-		btOpenDocument = new Button("Open Document");
-		documentButtonsPanel.addComponent(btOpenDocument);
-		btAddDocument = new Button("Add Document");
-		documentButtonsPanel.addComponent(btAddDocument);
-
-		MenuBar menuMoreDocumentActions = new MenuBar();
-		miMoreDocumentActions = menuMoreDocumentActions.addItem("More actions...", null);
-		documentButtonsPanel.addComponent(menuMoreDocumentActions);
-		
-		outerDocumentsPanel.addComponent(documentButtonsPanel);
-		
-		documentsManagerPanel.addComponent(outerDocumentsPanel);
-		documentsManagerPanel.setExpandRatio(outerDocumentsPanel, 2);
-		
-		VerticalLayout contentInfoPanel = new VerticalLayout();
-		contentInfoPanel.setSpacing(true);
-		
-		contentInfoForm = new Form();
-		contentInfoForm.setCaption("Information");
-		contentInfoForm.setWriteThrough(false);
-		
-		BeanItem<ContentInfo> contentInfoItem = 
-				new BeanItem<ContentInfo>(new StandardContentInfo());
-		contentInfoForm.setItemDataSource(contentInfoItem);
-		contentInfoForm.setVisibleItemProperties(new String[] {
-				"title", "author", "description", "publisher"
-		});
-		
-		contentInfoForm.setReadOnly(true);
-		contentInfoPanel.addComponent(contentInfoForm);
-		
-		Panel contentInfoButtonsPanel = new Panel(new HorizontalLayout());
-		contentInfoButtonsPanel.setStyleName(Reindeer.PANEL_LIGHT);
-		((HorizontalLayout)contentInfoButtonsPanel.getContent()).setSpacing(true);
-		
-		btEditContentInfo = new Button("Edit");
-		contentInfoButtonsPanel.addComponent(btEditContentInfo);
-		btSaveContentInfoChanges = new Button("Save");
-		btSaveContentInfoChanges.setVisible(false);
-		contentInfoButtonsPanel.addComponent(btSaveContentInfoChanges);
-		btDiscardContentInfoChanges = new Button("Discard");
-		btDiscardContentInfoChanges.setVisible(false);
-		contentInfoButtonsPanel.addComponent(btDiscardContentInfoChanges);
-		
-		contentInfoPanel.addComponent(contentInfoButtonsPanel);
-		
-		documentsManagerPanel.addComponent(contentInfoPanel);
-		documentsManagerPanel.setExpandRatio(contentInfoPanel, 1);
-		
+		Component documentsManagerPanel = createDocumentsManagerPanel();
 		addComponent(documentsManagerPanel);
-		corporaTree.setValue(allDocuments);
+		setExpandRatio(documentsManagerPanel, 0.6f);
+		
+		Component tagLibraryContainer = createTagLibraryContainer();
+		addComponent(tagLibraryContainer);
+		setExpandRatio(tagLibraryContainer, 0.4f);
+	}
+
+	private Component createTagLibraryContainer() {
 		
 		VerticalLayout tagLibraryContainer = new VerticalLayout();
 		tagLibraryContainer.setSpacing(true);
+		tagLibraryContainer.setSizeFull();
+		Component tagLibraryPanel = createTagLibraryPanel();
+		tagLibraryContainer.addComponent(tagLibraryPanel);
+		tagLibraryContainer.setExpandRatio(tagLibraryPanel, 1.0f);
+		tagLibraryContainer.addComponent(createTagLibraryButtonPanel());
 		
-		Panel tagLibraryPanel = new Panel();
-		
-		tagLibrariesTree = new Tree();
-		tagLibrariesTree.setCaption("Tag Libraries");
-		tagLibrariesTree.addStyleName("repo-tree");
-		tagLibrariesTree.setImmediate(true);
-		tagLibrariesTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_ID);
-		
-		for (TagLibraryReference tlr : repository.getTagLibraryReferences()) {
-			tagLibrariesTree.addItem(tlr);
-			tagLibrariesTree.setChildrenAllowed(tlr, false);
-		}
-		
-		tagLibraryPanel.addComponent(tagLibrariesTree);
+		return tagLibraryContainer;
+	}
+
+	private Component createTagLibraryButtonPanel() {
 		
 		HorizontalLayout tagLibraryButtonPanel = new HorizontalLayout();
 		tagLibraryButtonPanel.setSpacing(true);
@@ -603,10 +473,224 @@ public class RepositoryView extends VerticalLayout {
 		miMoreTagLibraryActions = menuMoreTagLibraryActions.addItem("More actions...", null);
 		tagLibraryButtonPanel.addComponent(menuMoreTagLibraryActions);
 		
-		tagLibraryContainer.addComponent(tagLibraryPanel);
-		tagLibraryContainer.addComponent(tagLibraryButtonPanel);
+		return tagLibraryButtonPanel;
 		
-		addComponent(tagLibraryContainer);
+	}
+
+	private Component createTagLibraryPanel() {
+
+		Panel tagLibraryPanel = new Panel();
+		tagLibraryPanel.getContent().setSizeUndefined();
+		tagLibraryPanel.setSizeFull();
+		
+		tagLibrariesTree = new Tree();
+		tagLibrariesTree.setCaption("Tag Libraries");
+		tagLibrariesTree.addStyleName("repo-tree");
+		tagLibrariesTree.setImmediate(true);
+		tagLibrariesTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_ID);
+		
+		for (TagLibraryReference tlr : repository.getTagLibraryReferences()) {
+			tagLibrariesTree.addItem(tlr);
+			tagLibrariesTree.setChildrenAllowed(tlr, false);
+		}
+		
+		tagLibraryPanel.addComponent(tagLibrariesTree);
+		
+		return tagLibraryPanel;
+	}
+
+	private Component createDocumentsManagerPanel() {
+		
+		HorizontalLayout documentsManagerPanel = new HorizontalLayout();
+		documentsManagerPanel.setSpacing(true);
+		documentsManagerPanel.setSizeFull();
+		documentsManagerPanel.setMargin(false, false, true, false);
+		
+		Component outerCorporaPanel = createOuterCorporaPanel();
+		documentsManagerPanel.addComponent(outerCorporaPanel);
+		documentsManagerPanel.setExpandRatio(outerCorporaPanel, 1.3f);
+		
+		Component outerDocumentsPanel = createOuterDocumentsPanel();
+		documentsManagerPanel.addComponent(outerDocumentsPanel);
+		documentsManagerPanel.setExpandRatio(outerDocumentsPanel, 2.0f);
+		
+		Component contentInfoPanel = createContentInfoPanel();
+		documentsManagerPanel.addComponent(contentInfoPanel);
+		documentsManagerPanel.setExpandRatio(contentInfoPanel, 1.0f);
+	
+		return documentsManagerPanel;
+	}
+
+	private Component createContentInfoPanel() {
+		VerticalLayout contentInfoPanel = new VerticalLayout();
+		contentInfoPanel.setSpacing(true);
+		contentInfoPanel.setSizeFull();
+		Component contentInfoForm = createContentInfoForm();
+		contentInfoPanel.addComponent(contentInfoForm);
+		contentInfoPanel.setExpandRatio(contentInfoForm, 1.0f);
+		
+		contentInfoPanel.addComponent(createContentInfoButtonsPanel());
+		
+		return contentInfoPanel;
+	}
+
+	private Component createContentInfoButtonsPanel() {
+		HorizontalLayout content = new HorizontalLayout();
+		content.setSpacing(true);
+		
+		Panel contentInfoButtonsPanel = new Panel(content);
+		
+		contentInfoButtonsPanel.setStyleName(Reindeer.PANEL_LIGHT);
+		
+		btEditContentInfo = new Button("Edit");
+		contentInfoButtonsPanel.addComponent(btEditContentInfo);
+		btSaveContentInfoChanges = new Button("Save");
+		btSaveContentInfoChanges.setVisible(false);
+		contentInfoButtonsPanel.addComponent(btSaveContentInfoChanges);
+		btDiscardContentInfoChanges = new Button("Discard");
+		btDiscardContentInfoChanges.setVisible(false);
+		contentInfoButtonsPanel.addComponent(btDiscardContentInfoChanges);
+		
+		return contentInfoButtonsPanel;
+	}
+
+	private Component createContentInfoForm() {
+		
+		Panel contentInfoPanel = new Panel();
+		contentInfoPanel.getContent().setSizeUndefined();
+		contentInfoPanel.getContent().setWidth("100%");
+		contentInfoPanel.setSizeFull();
+		
+		contentInfoForm = new Form();
+		contentInfoForm.setSizeFull();
+		contentInfoForm.setCaption("Information");
+		contentInfoForm.setWriteThrough(false);
+		
+		BeanItem<ContentInfo> contentInfoItem = 
+				new BeanItem<ContentInfo>(new StandardContentInfo());
+		contentInfoForm.setItemDataSource(contentInfoItem);
+		contentInfoForm.setVisibleItemProperties(new String[] {
+				"title", "author", "description", "publisher"
+		});
+		
+		contentInfoForm.setReadOnly(true);
+		contentInfoPanel.addComponent(contentInfoForm);
+		
+		return contentInfoPanel;
+	}
+
+	private Component createOuterDocumentsPanel() {
+		
+		VerticalLayout outerDocumentsPanel = new VerticalLayout();
+		outerDocumentsPanel.setSpacing(true);
+		outerDocumentsPanel.setSizeFull();
+		
+		Component documentsPanel = createDocumentsPanel();
+		outerDocumentsPanel.addComponent(documentsPanel);
+		outerDocumentsPanel.setExpandRatio(documentsPanel, 1.0f);
+		outerDocumentsPanel.addComponent(createDocumentButtonsPanel());
+		
+		return outerDocumentsPanel;
+	}
+
+	private Component createDocumentButtonsPanel() {
+		
+		Panel documentButtonsPanel = new Panel(new HorizontalLayout());
+		documentButtonsPanel.setStyleName(Reindeer.PANEL_LIGHT);
+
+		((HorizontalLayout)documentButtonsPanel.getContent()).setSpacing(true);
+		
+		btOpenDocument = new Button("Open Document");
+		documentButtonsPanel.addComponent(btOpenDocument);
+		btAddDocument = new Button("Add Document");
+		documentButtonsPanel.addComponent(btAddDocument);
+
+		MenuBar menuMoreDocumentActions = new MenuBar();
+		miMoreDocumentActions = menuMoreDocumentActions.addItem("More actions...", null);
+		documentButtonsPanel.addComponent(menuMoreDocumentActions);
+		
+		return documentButtonsPanel;
+	}
+
+	private Component createDocumentsPanel() {
+		
+		Panel documentsPanel = new Panel();
+		
+		documentsContainer = new HierarchicalContainer();
+		documentsTree = new Tree();
+		documentsTree.setContainerDataSource(documentsContainer);
+		documentsTree.setCaption("Documents");
+		documentsTree.addStyleName("repo-tree");
+		documentsTree.setImmediate(true);
+		documentsTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_ID);
+
+		documentsPanel.addComponent(documentsTree);
+		documentsPanel.getContent().setSizeUndefined();
+		documentsPanel.setSizeFull();
+		
+		for (SourceDocument sd : repository.getSourceDocuments()) {
+			addSourceDocumentToTree(sd);
+		}		
+		
+		return documentsPanel;
+	}
+
+	private Component createOuterCorporaPanel() {
+		
+		VerticalLayout outerCorporaPanel = new VerticalLayout();
+		outerCorporaPanel.setSpacing(true);
+		outerCorporaPanel.setSizeFull();
+		Component corporaPanel = createCorporaPanel();
+		outerCorporaPanel.addComponent(corporaPanel);
+		outerCorporaPanel.setExpandRatio(corporaPanel, 1.0f);
+		outerCorporaPanel.addComponent(createCorporaButtonPanel());
+		
+		return outerCorporaPanel;
+	}
+
+	private Component createCorporaButtonPanel() {
+		
+		Panel corporaButtonsPanel = new Panel(new HorizontalLayout());
+		corporaButtonsPanel.setStyleName(Reindeer.PANEL_LIGHT);
+		((HorizontalLayout)corporaButtonsPanel.getContent()).setSpacing(true);
+		
+		btCreateCorpus = new Button("Create Corpus");
+		
+		corporaButtonsPanel.addComponent(btCreateCorpus);
+		MenuBar menuMoreCorpusActions = new MenuBar();
+		miMoreCorpusActions = menuMoreCorpusActions.addItem("More actions...", null);
+		corporaButtonsPanel.addComponent(menuMoreCorpusActions);
+		
+		return corporaButtonsPanel;
+	}
+
+	private Component createCorporaPanel() {
+		Panel corporaPanel = new Panel();
+		corporaPanel.getContent().setSizeUndefined();
+		corporaPanel.setSizeFull();
+		
+		corporaTree = new Tree();
+		corporaTree.addStyleName("repo-tree");
+		corporaTree.setCaption("Corpora");
+		corporaTree.addItem(allDocuments);
+		corporaTree.setChildrenAllowed(allDocuments, false);
+		corporaTree.setImmediate(true);
+		
+		for (Corpus c : repository.getCorpora()) {
+			corporaTree.addItem(c);
+			corporaTree.setChildrenAllowed(c, false);
+		}
+		corporaTree.setValue(allDocuments);
+
+		corporaPanel.addComponent(corporaTree);
+		
+		return corporaPanel;
+	}
+
+	private Component createDocumentsLabel() {
+		Label documentsLabel = new Label("Document Manager");
+		documentsLabel.addStyleName("repo-title-label");
+		return documentsLabel;
 	}
 
 	public Repository getRepository() {
@@ -650,13 +734,20 @@ public class RepositoryView extends VerticalLayout {
 			documentsTree.setChildrenAllowed(smcr, false);
 		}
 	}
-
 	
-	private void showProgressIndicator(String caption){
-		addComponent(progressIndicator,0);
-		setComponentAlignment(progressIndicator, Alignment.TOP_RIGHT);
-		progressIndicator.setCaption(caption);
-		progressIndicator.setEnabled(true);
+	private void handleUserMarkupCreation() {
+		Object value = documentsTree.getValue();
+		if ((value == null) || !(value instanceof SourceDocument)) {
+			 getWindow().showNotification(
+                    "Information",
+                    "Please select a Source Document first");
+		}
+		else{
+			SourceDocument sd = (SourceDocument)value;
+			
+			// hier gehts weiter: erzeugen und speichern
+		}
+		
 	}
 }
 

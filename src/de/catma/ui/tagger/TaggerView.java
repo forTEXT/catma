@@ -104,7 +104,7 @@ public class TaggerView extends VerticalLayout implements TaggerListener {
 			WebApplicationContext context = 
 					((WebApplicationContext) getApplication().getContext());
 			WebBrowser wb = context.getBrowser();
-	
+			// TODO: should be changeable by the user:
 			float lines = (wb.getScreenHeight()/3)/12;
 			pager.setMaxPageLengthInLines(Math.round(lines));
 			
