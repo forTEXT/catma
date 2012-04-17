@@ -11,10 +11,12 @@ import org.vaadin.teemu.wizards.event.WizardProgressListener;
 import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
 import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
+import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -42,6 +44,8 @@ import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
+import de.catma.ui.dialog.FormDialog;
+import de.catma.ui.dialog.PropertyCollection;
 import de.catma.ui.repository.wizard.WizardFactory;
 import de.catma.ui.repository.wizard.WizardResult;
 import de.catma.ui.repository.wizard.WizardWindow;
@@ -743,11 +747,44 @@ public class RepositoryView extends VerticalLayout {
                     "Please select a Source Document first");
 		}
 		else{
-			SourceDocument sd = (SourceDocument)value;
-			
-			// hier gehts weiter: erzeugen und speichern
+			SourceDocument sourceDocument = (SourceDocument)value;
+
+			String name = getUserMarkupCollectionName();
+
+			repository.createUserMarkupCollection(name, sourceDocument);
 		}
 		
+	}
+
+	private String getUserMarkupCollectionName() {
+		final String userMarkupCollectionNameProperty = "name";
+		final StringBuilder result = new StringBuilder();
+		PropertyCollection propertyCollection = 
+				new PropertyCollection(userMarkupCollectionNameProperty);
+
+		FormDialog userMarkupCollFormDialog =
+			new FormDialog(
+				"Create new User Markup Collection",
+				propertyCollection,
+				new FormDialog.SaveCancelListener() {
+					public void cancelPressed() {}
+					public void savePressed(
+							PropertysetItem propertysetItem) {
+						Property property = 
+								propertysetItem.getItemProperty(
+										userMarkupCollectionNameProperty);
+						result.append((String)property.getValue());
+					}
+				});
+	
+		userMarkupCollFormDialog.getField(
+				userMarkupCollectionNameProperty).setRequired(true);
+		userMarkupCollFormDialog.getField(
+				userMarkupCollectionNameProperty).setRequiredError(
+						"You have to enter a name!");
+		userMarkupCollFormDialog.show(getApplication().getMainWindow());
+		
+		return result.toString();
 	}
 }
 

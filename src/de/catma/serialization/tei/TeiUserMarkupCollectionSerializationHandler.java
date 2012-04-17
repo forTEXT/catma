@@ -34,7 +34,7 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 							tagManager).deserialize(teiDocument);
 			TeiUserMarkupCollectionDeserializer deserializer = 
 					new TeiUserMarkupCollectionDeserializer(teiDocument, tagLibrary);
-			return new UserMarkupCollection(tagLibrary, deserializer.getTagReferences());
+			return new UserMarkupCollection(id, tagLibrary, deserializer.getTagReferences());
 			
 		} catch (Exception exc) {
 			throw new IOException(exc);

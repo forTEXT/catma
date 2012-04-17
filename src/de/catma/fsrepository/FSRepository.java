@@ -75,7 +75,9 @@ class FSRepository implements Repository {
 			throw new IOException("can not create repo folder " + repoFolderPath);
 		}
 		
-		File digitalObjectsFolder = new File(this.sourceDocumentHandler.getDigitalObjectsFolderPath());
+		File digitalObjectsFolder = 
+				new File(this.sourceDocumentHandler.getDigitalObjectsFolderPath());
+		
 		if(!digitalObjectsFolder.exists() && !digitalObjectsFolder.mkdirs()) {
 			throw new IOException(
 				"can not create repo folder " + 
@@ -167,13 +169,14 @@ class FSRepository implements Repository {
 		sourceDocumentHandler.insert(sourceDocument);
 		sourceDocumentsByID.put(sourceDocument.getID(), sourceDocument);
 		this.propertyChangeSupport.firePropertyChange(
-				PropertyChangeEvent.sourceDocumentAdded.name(), null, sourceDocument.getID());
+				PropertyChangeEvent.sourceDocumentAdded.name(),
+				null, sourceDocument.getID());
 	}
 
-	public UserMarkupCollectionReference insert(
-			UserMarkupCollection userMarkupCollection) {
+	public void createUserMarkupCollection(
+			String name, SourceDocument sourceDocument) {
 		// TODO Auto-generated method stub
-		return null;
+		// hier gehts weiter erzeugen, speichern und event
 	}
 
 	public StaticMarkupCollectionReference insert(
