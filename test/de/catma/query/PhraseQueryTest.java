@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 
 import org.elasticsearch.client.Client;
@@ -62,7 +63,6 @@ public class PhraseQueryTest {
 			term.add("been");
 			term.add("dead");
 			Map<String, List<Range>> result = esIndexer.searchTerm(null, term);
-			return;
 		}
 		catch(Throwable t) {
 			t.printStackTrace();
