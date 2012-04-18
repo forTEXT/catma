@@ -26,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import de.catma.core.ExceptionHandler;
+import de.catma.core.document.Range;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
 import de.catma.core.document.source.SourceDocument;
@@ -69,7 +70,8 @@ public class PhraseQueryTest {
 			term.add("had");
 			term.add("been");
 			term.add("dead");
-			esIndexer.searchTerm(null, term);
+			Map<String, List<Range>> result = esIndexer.searchTerm(null, term);
+			return;
 		}
 		catch(Throwable t) {
 			t.printStackTrace();
