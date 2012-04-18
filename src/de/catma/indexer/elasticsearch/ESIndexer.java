@@ -289,8 +289,10 @@ public class ESIndexer implements Indexer {
 	public void index(List<TagReference> tagReferences,
 			String sourceDocumentID, String userMarkupCollectionID,
 			TagLibrary tagLibrary) throws Exception {
-		
 		List<ESTagReferenceDocument> esTagReferences = new ArrayList<ESTagReferenceDocument>();
+		for(TagReference tagReference : tagReferences ){
+			esTagReferences.add(new ESTagReferenceDocument(sourceDocumentID, userMarkupCollectionID, tagReference, tagLibrary));			
+		}
 		esComm.indexTagReferences(esTagReferences);
 	}
 	

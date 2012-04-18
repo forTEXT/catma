@@ -25,7 +25,8 @@ public class ESCommunication {
 	public String url = ESOptions.getString("ESInstaller.uri");
 	public String indexName = ESOptions.getString("ESInstaller.name");
 	public AsyncHttpClient httpTransport;
-	private static Logger logger = LoggerFactory.getLogger(ESCommunication.class);
+	private static Logger logger = LoggerFactory
+			.getLogger(ESCommunication.class);
 
 	public ESCommunication() {
 		AsyncHttpClientConfig config = new AsyncHttpClientConfig.Builder()
@@ -106,12 +107,14 @@ public class ESCommunication {
 		return this.baseIndexUrl() + "/"
 				+ ESOptions.getString("ESInstaller.positionindex");
 	}
-	
+
 	public String tagReferenceIndexUrl() {
-		return this.baseIndexUrl() + "/" + ESOptions.getString("ESInstaller.tagreferenceindex");
+		return this.baseIndexUrl() + "/"
+				+ ESOptions.getString("ESInstaller.tagreferenceindex");
 	}
-	
-	public static boolean waitForRequests(Collection<Future<Response>> collection){
+
+	public static boolean waitForRequests(
+			Collection<Future<Response>> collection) {
 		/*
 		 * This is to join results
 		 */
@@ -133,8 +136,43 @@ public class ESCommunication {
 		return true;
 	}
 
-	public void indexTagReferences(List<ESTagReferenceDocument> esTagReferences) {
-		// TODO Auto-generated method stub
-		
+	public boolean indexTagReferences(
+			List<ESTagReferenceDocument> esTagReferences) throws IllegalArgumentException, IOException,
+			JSONException {
+		List<Future<Response>> httpRequests = new ArrayList<Future<Response>>();
+
+		for (ESTagReferenceDocument esTagReference : esTagReferences) {
+			logger.info("indexing tagReference: " + esTagReference);
+			Future<Response> f = this.httpTransport
+					.preparePut(
+							this.tagReferenceIndexUrl()
+									+ "/"
+									+ esTagReference.getTagReferenceId()
+											.toString())
+					.setBody(esTagReference.toJSON()).execute();
+			httpRequests.add(f);
+		}
+
+		/*
+		 * This is to join results
+		 */
+		for (Future<Response> response : httpRequests) {
+			try {
+				Response r = response.get();
+				logger.info(r.getResponseBody());
+				if (r.getStatusCode() != 200) {
+					logger.error("response was " + r.getStatusCode());
+					// return false;
+				}
+			} catch (InterruptedException e) {
+				logger.info("http request got interrupted: "
+						+ response.toString());
+			} catch (ExecutionException e) {
+				logger.info("Couldn't execute http request: "
+						+ response.toString());
+			}
+		}
+		return true;
+
 	}
 }
