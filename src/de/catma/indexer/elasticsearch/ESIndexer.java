@@ -283,10 +283,5 @@ public class ESIndexer implements Indexer {
 
 		return termids;
 	}
-
-	private List<ESPositionIndexDocument> getPositions(String termId) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+	
 }

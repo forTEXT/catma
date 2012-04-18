@@ -32,7 +32,7 @@ public class ESInstaller {
 	public void setup() {
 		try {
 			taskCreateIndex();
-			taskCreateTaginstanceIndex();
+			taskCreateTagRefernceIndex();
 			taskCreateStaticMarkupIndex();
 			taskCreatePositionIndex();
 			taskCreateTermIndex();
@@ -68,16 +68,17 @@ public class ESInstaller {
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
-	private void taskCreateTaginstanceIndex() throws IOException,
+	private void taskCreateTagRefernceIndex() throws IOException,
 			InterruptedException, ExecutionException {
-		String tagInstanceIndex = "{"
-				+ "\"TagInstanceIndex\" : {"
+		String tagReferenceIndex = "{"
+				+ "\"TagReferenceIndex\" : {"
 				+ "       \"_id\" : {\"store\" : \"yes\", \"index\" : \"not_analyzed\"},"	
 				+ "   \"properties\" : {"
 				+ "       \"documentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\" },"
-				+ "       \"markupDocumentId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"userMarkupCollectionId\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
 				+ "       \"tagId_l\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
 				+ "       \"tagId_m\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
+				+ "       \"tagPath\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
 				+ "       \"tagInstanceId_l\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
 				+ "       \"tagInstanceId_m\" : {\"type\" : \"long\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
 				+ "       \"properties\" : {\"type\" : \"string\", \"store\" : \"yes\", \"index\" : \"not_analyzed\"},"
@@ -89,15 +90,15 @@ public class ESInstaller {
 				.preparePut(
 						baseIndexUrl()
 								+ ESOptions
-										.getString("ESInstaller.taginstanceindex")
-								+ "/_mapping/").setBody(tagInstanceIndex)
+										.getString("ESInstaller.tagreferenceindex")
+								+ "/_mapping/").setBody(tagReferenceIndex)
 				.execute();
 		Response r = f.get();
 		String result = r.getResponseBody();
 		if (!validateResponse(result)) {
-			throw new IOException("Couldn't create TagInstanceIndex: " + result);
+			throw new IOException("Couldn't create TagReferenceIndex: " + result);
 		}
-		logger.info("TagInstanceIndex successfully created");
+		logger.info("TagReferenceIndex successfully created");
 	}
 
 	/**
