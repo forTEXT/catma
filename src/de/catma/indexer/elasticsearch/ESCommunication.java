@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.jboss.netty.channel.ChannelFuture;
 import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -169,7 +170,7 @@ public class ESCommunication {
 						+ response.toString());
 			} catch (ExecutionException e) {
 				logger.info("Couldn't execute http request: "
-						+ response.toString());
+						+ response.toString() + " CAUSE: " + ((ChannelFuture)response).getCause());
 			}
 		}
 		return true;
