@@ -20,12 +20,9 @@
 package de.catma.queryengine;
 
 import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
 
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TermInfo;
-import de.catma.queryengine.result.ResultList;
 
 /**
  * The base class for all queries.
@@ -36,13 +33,10 @@ public abstract class Query {
 	
     private Refinement refinement;
     private Indexer indexer;
-	private List<String> unseparableCharacterSequences;
-	private List<Character> userDefinedSeparatingCharacters;
-	private Locale locale;
-	private List<String> documentIds;
+    private QueryOptions queryOptions;
 
     /**
-     * Executes a query and returns a {@link org.catma.queryengine.result.ResultList} that has
+     * Executes a query and returns a {@link de.catma.queryengine.QueryResult.queryengine.result.ResultList} that has
      * not been refined yet by the {@link org.catma.queryengine.Refinement} of this query.
      * <br><br>
      * Normally this method does not need to be called directly. To execute a query
@@ -51,15 +45,15 @@ public abstract class Query {
      * @return the <b>unrefined</b> result, never <code>null</code>
      * @throws Exception see instance for details
      */
-    protected abstract ResultList execute() throws Exception;
+    protected abstract QueryResult execute() throws Exception;
 
     /**
      * @return the result of the execution, optionally refined by a {@link org.catma.queryengine.Refinement}.
      * @throws Exception see instance for details 
      */
-    public ResultList getResult() throws Exception {
+    public QueryResult getResult() throws Exception {
 
-        ResultList result = execute();
+        QueryResult result = execute();
         
         if(refinement != null) {
             return refinement.refine(result);
@@ -90,13 +84,9 @@ public abstract class Query {
         return null;
     }
     
-    public void setIndexOptions(List<String> unseparableCharacterSequences,
-            List<Character> userDefinedSeparatingCharacters,
-            Locale locale) {
-    	this.unseparableCharacterSequences = unseparableCharacterSequences;
-    	this.userDefinedSeparatingCharacters = userDefinedSeparatingCharacters;
-    	this.locale = locale;
-    }
+    public void setQueryOptions(QueryOptions queryOptions) {
+		this.queryOptions = queryOptions;
+	}
     
     public void setIndexer(Indexer indexer) {
 		this.indexer = indexer;
@@ -106,24 +96,7 @@ public abstract class Query {
 		return indexer;
 	}
     
-    public List<String> getUnseparableCharacterSequences() {
-		return unseparableCharacterSequences;
+    public QueryOptions getQueryOptions() {
+		return queryOptions;
 	}
-    
-    public List<Character> getUserDefinedSeparatingCharacters() {
-		return userDefinedSeparatingCharacters;
-	}
-    
-    public Locale getLocale() {
-		return locale;
-	}
-    
-    public void setDocumentIds(List<String> documentIds) {
-		this.documentIds = documentIds;
-	}
-    
-    public List<String> getDocumentIds() {
-		return documentIds;
-	}
-    
 }

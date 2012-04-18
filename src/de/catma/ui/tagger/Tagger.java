@@ -34,10 +34,10 @@ import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.util.ColorConverter;
 import de.catma.ui.client.ui.tagger.VTagger;
-import de.catma.ui.client.ui.tagger.shared.TagInstance;
+import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
+import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TaggerMessageAttribute;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
-import de.catma.ui.tagger.TagInstanceJSONSerializer.JSONSerializationException;
 import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
 
@@ -50,7 +50,7 @@ import de.catma.ui.tagger.pager.Pager;
 public class Tagger extends AbstractComponent {
 	
 	public static interface TaggerListener {
-		public void tagInstanceAdded(TagInstance tagInstance);
+		public void tagInstanceAdded(ClientTagInstance clientTagInstance);
 	}
 	
 	private static final long serialVersionUID = 1L;
@@ -58,14 +58,14 @@ public class Tagger extends AbstractComponent {
 	private Map<String,String> attributes = new HashMap<String, String>();
 	private Pager pager;
 	private TaggerListener taggerListener;
-	private TagInstanceJSONSerializer tagInstanceJSONSerializer;
+	private ClientTagInstanceJSONSerializer tagInstanceJSONSerializer;
 	private boolean init = true;
 	
 	public Tagger(Pager pager, TaggerListener taggerListener) {
 		addStyleName("tagger");
 		this.pager = pager;
-		this.taggerListener = taggerListener;	
-		this.tagInstanceJSONSerializer = new TagInstanceJSONSerializer();
+		this.taggerListener = taggerListener;
+		this.tagInstanceJSONSerializer = new ClientTagInstanceJSONSerializer();
 	}
 
 	@Override
@@ -111,7 +111,7 @@ public class Tagger extends AbstractComponent {
 
 		if (variables.containsKey(TaggerMessageAttribute.TAGINSTANCE_ADD.name())) {
 			try {
-				TagInstance tagInstance = tagInstanceJSONSerializer.fromJSON(
+				ClientTagInstance tagInstance = tagInstanceJSONSerializer.fromJSON(
 						(String)variables.get(TaggerMessageAttribute.TAGINSTANCE_ADD.name()));
 				System.out.println("TagInstance added: " + tagInstance);
 				pager.getCurrentPage().addRelativeTagInstance(tagInstance);
@@ -163,15 +163,15 @@ public class Tagger extends AbstractComponent {
 	}
 
 	private void setTagInstancesVisible(
-			List<TagInstance> tagInstances, boolean visible) {
+			List<ClientTagInstance> tagInstances, boolean visible) {
 		
-		List<TagInstance> currentRelativePageTagInstancesCopy = 
-				new ArrayList<TagInstance>();
+		List<ClientTagInstance> currentRelativePageTagInstancesCopy = 
+				new ArrayList<ClientTagInstance>();
 		
 		currentRelativePageTagInstancesCopy.addAll(
 				pager.getCurrentPage().getRelativeTagInstances());
 		
-		for (TagInstance ti : tagInstances) {
+		for (ClientTagInstance ti : tagInstances) {
 			Page page = pager.getPageForAbsoluteTagInstance(ti);
 			if (page != null) {
 				if (visible) {
@@ -213,14 +213,22 @@ public class Tagger extends AbstractComponent {
 	}
 
 	public void addTagInstanceWith(TagDefinition tagDefinition) {
-		attributes.put(
-			TaggerMessageAttribute.TAGDEFINITION_SELECTED.name(), 
-			ColorConverter.toHex(tagDefinition.getColor()));
+		try {
+			attributes.put(
+				TaggerMessageAttribute.TAGDEFINITION_SELECTED.name(), 
+				new ClientTagDefinitionJSONSerializer().toJSON(
+						new ClientTagDefinition(
+							tagDefinition.getID(),
+							ColorConverter.toHex(tagDefinition.getColor()))));
+		} catch (JSONSerializationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		requestRepaint();
 	}
 
 	public void setVisible(List<TagReference> tagReferences, boolean visible) {
-		List<TagInstance> tagInstances = new ArrayList<TagInstance>();
+		List<ClientTagInstance> tagInstances = new ArrayList<ClientTagInstance>();
 		
 		for (TagReference tagReference : tagReferences) {
 			System.out.println(
@@ -233,7 +241,8 @@ public class Tagger extends AbstractComponent {
 							tagReference.getRange().getEndPoint()));
 			
 			tagInstances.add(
-				new TagInstance(
+				new ClientTagInstance(
+					tagReference.getTagDefinition().getID(),
 					tagReference.getTagInstanceID(), 
 					ColorConverter.toHex(tagReference.getColor()), 
 					textRanges));

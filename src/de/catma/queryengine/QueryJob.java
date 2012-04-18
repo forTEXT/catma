@@ -19,8 +19,6 @@
 
 package de.catma.queryengine;
 
-import java.util.List;
-
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
@@ -33,9 +31,6 @@ import de.catma.indexer.Indexer;
 import de.catma.queryengine.parser.CatmaQueryLexer;
 import de.catma.queryengine.parser.CatmaQueryParser;
 import de.catma.queryengine.parser.CatmaQueryWalker;
-import de.catma.queryengine.result.CompleteQueryResult;
-import de.catma.queryengine.result.QueryResult;
-import de.catma.queryengine.result.ResultList;
 
 
 /**
@@ -48,17 +43,17 @@ import de.catma.queryengine.result.ResultList;
 public class QueryJob extends DefaultProgressCallable<QueryResult> {
     private String inputQuery;
 	private Indexer indexer;
-	private List<String> documentIds;
+	private QueryOptions queryOptions;
 
     /**
      * Constructor.
      * @param inputQuery the query string
      * @param jobName the name of the job, that can be displayed to the user
      */
-    public QueryJob(String inputQuery, Indexer indexer, List<String> documentIds) {
+    public QueryJob(String inputQuery, Indexer indexer, QueryOptions queryOptions ) {
         this.inputQuery = inputQuery;
         this.indexer = indexer;
-        this.documentIds = documentIds;
+        this.queryOptions = queryOptions;
     }
 
     public QueryResult call() throws Exception {
@@ -79,14 +74,10 @@ public class QueryJob extends DefaultProgressCallable<QueryResult> {
             CatmaQueryWalker walker = new CatmaQueryWalker(nodes);
             Query query = walker.start();
             query.setIndexer(indexer);
-            query.setDocumentIds(documentIds);
+            query.setQueryOptions(queryOptions);
             
             // execute the query and retrieve the execution result
-            ResultList resultList = query.getResult();
-
-            QueryResult queryResult = new CompleteQueryResult(resultList);
-
-            return queryResult;
+            return query.getResult();
         }
         catch (Throwable t) {
             if (t instanceof RecognitionException) {

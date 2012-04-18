@@ -19,7 +19,6 @@
 
 package de.catma.queryengine;
 
-import de.catma.queryengine.result.ResultList;
 
 /**
  * A refinment of the result of {@link org.catma.queryengine.Query}
@@ -33,5 +32,5 @@ public interface Refinement {
      * @return the refined result
      * @throws Exception see instance for details
      */
-    public ResultList refine(ResultList result) throws Exception;
+    public QueryResult refine(QueryResult result) throws Exception;
 }

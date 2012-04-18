@@ -22,7 +22,8 @@ import de.catma.ui.client.ui.tagger.editor.TaggerEditorListener.TaggerEditorEven
 import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard;
 import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard.Range;
 import de.catma.ui.client.ui.tagger.menu.TagMenu;
-import de.catma.ui.client.ui.tagger.shared.TagInstance;
+import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
+import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 public class TaggerEditor extends FocusWidget implements MouseUpHandler {
@@ -35,7 +36,7 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 
 	private List<Range> lastRangeList; 
 
-	private HashMap<String, TagInstance> tagInstances = new HashMap<String, TagInstance>();
+	private HashMap<String, ClientTagInstance> tagInstances = new HashMap<String, ClientTagInstance>();
 	private TaggerEditorListener taggerEditorListener;
 	
 	public TaggerEditor(TaggerEditorListener taggerEditorListener) {
@@ -90,9 +91,10 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 		tagInstances.clear();
 	}
 	 
-	public void createAndAddTagIntance(String color) {
+	public void createAndAddTagIntance(ClientTagDefinition tagDefinition) {
 		
-		TaggedSpanFactory taggedSpanFactory = new TaggedSpanFactory(color);
+		TaggedSpanFactory taggedSpanFactory = 
+				new TaggedSpanFactory(tagDefinition.getColor());
 		
 		if ((lastRangeList != null) && (!lastRangeList.isEmpty())) {
 
@@ -122,8 +124,9 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 			}
 
 			if (!textRanges.isEmpty()) {
-				TagInstance te = 
-						new TagInstance(
+				ClientTagInstance te = 
+						new ClientTagInstance(
+								tagDefinition.getId(),
 								taggedSpanFactory.getInstanceID(), 
 								taggedSpanFactory.getColor(), textRanges);
 				tagInstances.put(te.getInstanceID(), te);
@@ -342,7 +345,7 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 		return false;
 	}
 	
-	public TagInstance getTagInstance(String tagInstanceID) {
+	public ClientTagInstance getTagInstance(String tagInstanceID) {
 		return tagInstances.get(tagInstanceID);
 	}
 	
@@ -358,7 +361,7 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 		}		
 	}
 
-	public void addTagInstance(TagInstance tagInstance) {
+	public void addTagInstance(ClientTagInstance tagInstance) {
 		if (!tagInstances.containsKey(tagInstance.getInstanceID())) {
 			tagInstances.put(tagInstance.getInstanceID(), tagInstance);
 	

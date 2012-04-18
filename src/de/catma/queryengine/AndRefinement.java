@@ -19,7 +19,6 @@
 
 package de.catma.queryengine;
 
-import de.catma.queryengine.result.ResultList;
 
 /**
  * This refinement combines to refinement conditions by a logical AND.
@@ -41,7 +40,7 @@ public class AndRefinement implements Refinement {
         this.refinement2 = refinement2;
     }
 
-    public ResultList refine(ResultList result) throws Exception {
+    public QueryResult refine(QueryResult result) throws Exception {
         return refinement2.refine(refinement1.refine(result));
     }
 }

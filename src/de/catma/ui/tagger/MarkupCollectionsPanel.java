@@ -2,6 +2,7 @@ package de.catma.ui.tagger;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.Collection;
 import java.util.List;
 
@@ -18,6 +19,7 @@ import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.core.document.repository.Repository;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
@@ -31,16 +33,18 @@ import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
 
 public class MarkupCollectionsPanel extends VerticalLayout {
 	
-	public static interface TagDefinitionSelectionListener {
-		public void tagDefinitionSelectionChanged(
-				List<TagReference> tagReferences, boolean selected);
-	} 
+	public static enum MarkupCollectionPanelEvent {
+		tagDefinitionSelected,
+		userMarkupCollectionSelected,
+		;
+	}
 	
 	private static enum MarkupCollectionsTreeProperty {
 		caption, 
 		icon,
 		visible,
 		color,
+		writable,
 		;
 
 	}
@@ -48,20 +52,32 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private TreeTable markupCollectionsTree;
 	private String userMarkupItem = "User Markup Collections";
 	private String staticMarkupItem = "Static Markup Collections";
-	private TagDefinitionSelectionListener tagDefinitionSelectionListener;
 	private TagManager tagManager;
 	private PropertyChangeListener tagDefChangedListener;
 	private UserMarkupCollectionManager userMarkupCollectionManager;
+	private UserMarkupCollection currentWritableUserMarkupColl;
+	private PropertyChangeSupport propertyChangeSupport;
+	private Repository repository;
 	
-	public MarkupCollectionsPanel(
-			TagManager tagManager,
-			TagDefinitionSelectionListener tagDefinitionSelectionListener) {
+	public MarkupCollectionsPanel(TagManager tagManager, Repository repository) {
+		propertyChangeSupport = new PropertyChangeSupport(this);
 		this.tagManager = tagManager;
-		this.tagDefinitionSelectionListener = tagDefinitionSelectionListener;
+		this.repository = repository;
 		userMarkupCollectionManager =
 				new UserMarkupCollectionManager(tagManager);
-		initComponents(tagDefinitionSelectionListener);
+		initComponents();
 		initActions();
+	}
+
+	public void addPropertyChangeListener(MarkupCollectionPanelEvent propertyName,
+			PropertyChangeListener listener) {
+		propertyChangeSupport.addPropertyChangeListener(propertyName.name(), listener);
+	}
+
+	public void removePropertyChangeListener(MarkupCollectionPanelEvent propertyName,
+			PropertyChangeListener listener) {
+		propertyChangeSupport.removePropertyChangeListener(propertyName.name(),
+				listener);
 	}
 
 	private void initActions() {
@@ -119,15 +135,14 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		
 	}
 
-	private void initComponents(
-			final TagDefinitionSelectionListener tagDefinitionSelectionListener) {
+	private void initComponents() {
 		
 		markupCollectionsTree = new TreeTable();
 		markupCollectionsTree.setSizeFull();
 		markupCollectionsTree.setSelectable(true);
 		markupCollectionsTree.setMultiSelect(false);
 		markupCollectionsTree.setContainerDataSource(new HierarchicalContainer());
-		
+
 		markupCollectionsTree.addContainerProperty(
 				MarkupCollectionsTreeProperty.caption, 
 				String.class, null);
@@ -143,6 +158,12 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		markupCollectionsTree.setColumnHeader(
 				MarkupCollectionsTreeProperty.visible, "Visible");
 		
+		markupCollectionsTree.addContainerProperty(
+				MarkupCollectionsTreeProperty.writable, 
+				AbstractComponent.class, null);
+		markupCollectionsTree.setColumnHeader(
+				MarkupCollectionsTreeProperty.writable, "Writable");
+		
 		markupCollectionsTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_PROPERTY);
 		markupCollectionsTree.setItemCaptionPropertyId(
 				MarkupCollectionsTreeProperty.caption);
@@ -156,14 +177,16 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				new Object[] {
 						MarkupCollectionsTreeProperty.caption,
 						MarkupCollectionsTreeProperty.color,
-						MarkupCollectionsTreeProperty.visible});
+						MarkupCollectionsTreeProperty.visible,
+						MarkupCollectionsTreeProperty.writable});
 		
 		markupCollectionsTree.addItem(
-			new Object[] {userMarkupItem, new Label()}, userMarkupItem);
+			new Object[] {userMarkupItem, new Label(), new Label()}, 
+			userMarkupItem);
 		
 		markupCollectionsTree.addItem(
-			new Object[] {staticMarkupItem, new Label()}, staticMarkupItem );
-		
+			new Object[] {staticMarkupItem, new Label(), new Label()}, 
+			staticMarkupItem );
 
 		addComponent(markupCollectionsTree);
 	}
@@ -182,16 +205,14 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 
 	public void openUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
-		
 		userMarkupCollectionManager.add(userMarkupCollection);
 		addUserMarkupCollection(userMarkupCollection);
 	}
 	
 	private void addUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
-		
 		markupCollectionsTree.addItem(
-				new Object[] {userMarkupCollection, new Label()},
+				new Object[] {userMarkupCollection, new Label(), createCheckbox(userMarkupCollection)},
 				userMarkupCollection);
 		markupCollectionsTree.setParent(userMarkupCollection, userMarkupItem);
 		
@@ -203,7 +224,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 
 			markupCollectionsTree.addItem(
 					new Object[]{tagsetDefinition.getName(), 
-							new Label()}, tagsetDefinition);
+							new Label(), new Label()}, tagsetDefinition);
 			markupCollectionsTree.getContainerProperty(
 				tagsetDefinition, MarkupCollectionsTreeProperty.icon).setValue(
 						tagsetIcon);
@@ -237,7 +258,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				markupCollectionsTree.addItem(
 						new Object[]{
 								tagDefinition.getType(), 
-								createCheckbox(tagDefinition)},
+								createCheckbox(tagDefinition),
+								new Label()},
 						tagDefinition);
 				markupCollectionsTree.getContainerProperty(
 						tagDefinition, MarkupCollectionsTreeProperty.icon).setValue(
@@ -282,7 +304,43 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		return cbShowTagInstances;
 	}
 	
-	private void fireTagDefinitionSelected(TagDefinition tagDefinition, boolean selected) {
+	private CheckBox createCheckbox(
+			final UserMarkupCollection userMarkupCollection) {
+		
+		CheckBox cbIsWritableUserMarkupColl = new CheckBox();
+		cbIsWritableUserMarkupColl.setImmediate(true);
+		cbIsWritableUserMarkupColl.addListener(new ClickListener() {
+
+			public void buttonClick(ClickEvent event) {
+				
+				boolean selected = 
+						event.getButton().booleanValue();
+				if (selected) {
+					for (UserMarkupCollection umc : userMarkupCollectionManager) {
+						if (!umc.equals(userMarkupCollection)) {
+							Object writeablePropertyValue = 
+								markupCollectionsTree.getItem(
+									umc).getItemProperty(
+										MarkupCollectionsTreeProperty.writable).getValue();
+							
+							if ((writeablePropertyValue != null) 
+									&& (writeablePropertyValue instanceof CheckBox)) {
+								CheckBox cbWritable = (CheckBox)writeablePropertyValue;
+								cbWritable.setValue(false);
+							}
+						}
+					}
+					currentWritableUserMarkupColl = userMarkupCollection;
+					fireUserMarkupCollectionWriteable(
+							userMarkupCollection);
+				}
+			}
+		});
+		return cbIsWritableUserMarkupColl;
+	}
+	
+	private void fireTagDefinitionSelected(
+			TagDefinition tagDefinition, boolean selected) {
 		UserMarkupCollection userMarkupCollection =
 				getUserMarkupCollection(tagDefinition);
 		
@@ -310,9 +368,20 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 					cbVisible.setValue(selected);
 				}
 			}
-		}							
-		tagDefinitionSelectionListener.tagDefinitionSelectionChanged(
-				tagReferences, selected);	
+		}		
+		
+		propertyChangeSupport.firePropertyChange(
+				MarkupCollectionPanelEvent.tagDefinitionSelected.name(), 
+				selected?null:tagReferences,
+				selected?tagReferences:null);
+	}
+	
+	private void fireUserMarkupCollectionWriteable(
+			UserMarkupCollection userMarkupCollection) {
+		propertyChangeSupport.firePropertyChange(
+			MarkupCollectionPanelEvent.userMarkupCollectionSelected.name(), 
+			null, userMarkupCollection);
+		
 	}
 	
 	public void close() {
@@ -329,5 +398,17 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			removeWithChildren(c);
 			addUserMarkupCollection(c);
 		}
+	}
+	
+	public void addTagReferences(List<TagReference> tagReferences) {
+		userMarkupCollectionManager.addTagReferences(
+				tagReferences, currentWritableUserMarkupColl);
+		// hier gehts weiter: 
+		// implement serialization
+		// implement usermarkupcoll creation
+	}
+	
+	public UserMarkupCollection getCurrentWritableUserMarkupCollection() {
+		return currentWritableUserMarkupColl;
 	}
 }

@@ -1,37 +1,28 @@
 package de.catma.query;
 
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
-
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Properties;
 
-import org.elasticsearch.action.ActionFuture;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.highlight.HighlightField;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.catma.LogProgressListener;
 import de.catma.core.ExceptionHandler;
 import de.catma.core.document.Range;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
-import de.catma.core.document.source.SourceDocument;
 import de.catma.core.tag.TagManager;
 import de.catma.indexer.elasticsearch.ESIndexer;
+import de.catma.queryengine.QueryJob;
+import de.catma.queryengine.QueryOptions;
 
 
 public class PhraseQueryTest {
@@ -79,25 +70,24 @@ public class PhraseQueryTest {
 		}
 	}
 
-
-
 	@Test
-	public void testSearch(){
-		QueryBuilder qb1 = termQuery("content", "hunt");
-		SearchResponse response = client.prepareSearch("document")
-        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-        .setQuery(qb1)
-        .execute()
-        .actionGet();
+	public void testPhraseQuery(){
+		List<String> unseparableCharacterSequences = Collections.emptyList();
+		List<Character> userDefinedSeparatingCharacters = Collections.emptyList();
+		QueryOptions queryOptions = new QueryOptions(
+				(List<String>)null, 
+				unseparableCharacterSequences, 
+				userDefinedSeparatingCharacters,
+				Locale.ENGLISH);
 		
-		System.out.print(response.toString());
-		for (SearchHit sh : response.hits()) {
-			System.out.println(sh);
-			Map<String, HighlightField> hFields = sh.getHighlightFields();
-			for (Map.Entry<String, HighlightField> hField : hFields.entrySet()) {
-				System.out.println(hField.getKey());
-				System.out.println(hField.getValue().toString());
-			}
+		QueryJob job = new QueryJob(
+				"\"pig had been dead\"", new ESIndexer(), queryOptions);
+		job.setProgressListener(new LogProgressListener());
+		try {
+			System.out.println(job.call());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -108,14 +98,14 @@ public class PhraseQueryTest {
 
 	@Test
 	public void testIndex() {
-		
-		SourceDocument sd = repository.getSourceDocument(
-				"http://www.gutenberg.org/cache/epub/13/pg13.txt");
-		try {
-
-			ActionFuture<DeleteIndexResponse> future = 
-					client.admin().indices().delete(new DeleteIndexRequest("document"));
-			future.actionGet();
+//		
+//		SourceDocument sd = repository.getSourceDocument(
+//				"http://www.gutenberg.org/cache/epub/13/pg13.txt");
+//		try {
+//
+//			ActionFuture<DeleteIndexResponse> future = 
+//					client.admin().indices().delete(new DeleteIndexRequest("document"));
+//			future.actionGet();
 			
 //			client.admin().indices().prepareCreate("document").addMapping(
 //					"book", XContentFactory.jsonBuilder().
@@ -138,8 +128,8 @@ public class PhraseQueryTest {
 //			        .execute()
 //			        .actionGet();
 			
-		} catch (Exception e) {
-			ExceptionHandler.log(e);
-		}
+//		} catch (Exception e) {
+//			ExceptionHandler.log(e);
+//		}
 	}
 }

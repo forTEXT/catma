@@ -16,6 +16,7 @@ public class DefaultProgressListener implements ProgressListener {
 	
 	
 	public void setException(Throwable t) {
+		t.printStackTrace();
 		// TODO Auto-generated method stub
 		
 	}

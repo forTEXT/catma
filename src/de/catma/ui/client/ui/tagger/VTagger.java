@@ -30,8 +30,9 @@ import com.vaadin.terminal.gwt.client.VConsole;
 
 import de.catma.ui.client.ui.tagger.editor.TaggerEditor;
 import de.catma.ui.client.ui.tagger.editor.TaggerEditorListener;
+import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
+import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TaggerMessageAttribute;
-import de.catma.ui.client.ui.tagger.shared.TagInstance;
 
 
 /**
@@ -47,7 +48,8 @@ public class VTagger extends Composite implements Paintable {
 	private ApplicationConnection serverConnection;
 	
 	private TaggerEditor taggerEditor;
-	private TagInstanceJSONSerializer tagInstanceJSONSerializer;
+	private ClientTagInstanceJSONSerializer tagInstanceJSONSerializer;
+	private ClientTagDefinitionJSONSerializer tagDefinitionJSONSerializer;
 	
 	/**
 	 * The constructor should first call super() to initialize the component and
@@ -55,7 +57,8 @@ public class VTagger extends Composite implements Paintable {
 	 */
 	public VTagger() {
 		super();
-		this.tagInstanceJSONSerializer = new TagInstanceJSONSerializer();
+		this.tagInstanceJSONSerializer = new ClientTagInstanceJSONSerializer();
+		this.tagDefinitionJSONSerializer = new ClientTagDefinitionJSONSerializer();
 		initComponents();
 		
 	}
@@ -67,7 +70,7 @@ public class VTagger extends Composite implements Paintable {
 				switch(type) {
 				
 					case ADD : {
-						TagInstance tagInstance = (TagInstance)args[0];
+						ClientTagInstance tagInstance = (ClientTagInstance)args[0];
 						sendMessage(
 								TaggerMessageAttribute.TAGINSTANCE_ADD, 
 								tagInstanceJSONSerializer.toJSONObject(tagInstance));
@@ -129,12 +132,12 @@ public class VTagger extends Composite implements Paintable {
 		}
 		
 		if (uidl.hasAttribute(TaggerMessageAttribute.TAGINSTANCES_REMOVE.name())) {
-			List<TagInstance> tagInstances = 
+			List<ClientTagInstance> tagInstances = 
 					tagInstanceJSONSerializer.fromJSONArray(
 							uidl.getStringAttribute(
 									TaggerMessageAttribute.TAGINSTANCES_REMOVE.name()));
 			
-			for (TagInstance tagInstance : tagInstances) {
+			for (ClientTagInstance tagInstance : tagInstances) {
 				VConsole.log("got TagInstance from server (hide): " + tagInstance);
 				taggerEditor.removeTagInstance(
 						tagInstance.getInstanceID(), 
@@ -143,11 +146,11 @@ public class VTagger extends Composite implements Paintable {
 		}
 		
 		if (uidl.hasAttribute(TaggerMessageAttribute.TAGINSTANCES_ADD.name())) {
-			List<TagInstance> tagInstances = 
+			List<ClientTagInstance> tagInstances = 
 					tagInstanceJSONSerializer.fromJSONArray(
 						uidl.getStringAttribute(
 							TaggerMessageAttribute.TAGINSTANCES_ADD.name()));
-			for (TagInstance tagInstance : tagInstances) {
+			for (ClientTagInstance tagInstance : tagInstances) {
 				VConsole.log("got tag instance from server (show): " + tagInstance);
 				taggerEditor.addTagInstance(tagInstance);
 			}
@@ -155,10 +158,11 @@ public class VTagger extends Composite implements Paintable {
 		
 		
 		if (uidl.hasAttribute(TaggerMessageAttribute.TAGDEFINITION_SELECTED.name())) {
-			String color = 
-				uidl.getStringAttribute(
-						TaggerMessageAttribute.TAGDEFINITION_SELECTED.name());
-			taggerEditor.createAndAddTagIntance(color);
+			ClientTagDefinition tagDefinition = 
+				tagDefinitionJSONSerializer.fromJSON(
+					uidl.getStringAttribute(
+						TaggerMessageAttribute.TAGDEFINITION_SELECTED.name()));
+			taggerEditor.createAndAddTagIntance(tagDefinition);
 		}
 		
 	}

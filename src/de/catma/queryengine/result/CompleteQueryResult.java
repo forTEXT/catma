@@ -27,9 +27,10 @@ import java.util.List;
 import java.util.Map;
 
 import de.catma.indexer.TermInfo;
+import de.catma.queryengine.ResultList;
 
 /**
- * A query result based on a {@link org.catma.queryengine.result.ResultList}.
+ * A query result based on a {@link de.catma.queryengine.catma.queryengine.result.ResultList}.
  *
  * @author Marco Petris
  *

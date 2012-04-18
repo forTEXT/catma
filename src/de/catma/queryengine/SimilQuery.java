@@ -19,12 +19,6 @@
 
 package de.catma.queryengine;
 
-import java.util.List;
-
-import de.catma.core.document.source.SourceDocument;
-import de.catma.indexer.Index;
-import de.catma.indexer.TermInfo;
-import de.catma.queryengine.result.ResultList;
 
 /**
  * A query that looks for phrases that are {@link org.catma.queryengine.Simil similar} to the given
@@ -49,10 +43,10 @@ public class SimilQuery extends Query {
     }
 
     @Override
-    protected ResultList execute() throws Exception {
+    protected QueryResult execute() throws Exception {
 
-        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
-        Index index = sourceDoc.getIndex();
+//        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
+//        Index index = sourceDoc.getIndex();
 
 
         //TODO: enable phrases rather than words for simil
@@ -64,9 +58,10 @@ public class SimilQuery extends Query {
 //            (int)Math.round(
 //                (phrase.length()*(similPercent/100.0))/(2-(similPercent/100.0)));
 
-        List<TermInfo> termInfoList = index.searchTermsBySimilarity(phrase, similPercent);
-
-        return new ResultList(termInfoList);
+//        List<TermInfo> termInfoList = index.searchTermsBySimilarity(phrase, similPercent);
+//
+//        return new ResultList(termInfoList);
+    	return null;
     }
 
     

@@ -50,6 +50,7 @@ public class WhitespaceAndPunctuationAnalyzer extends Analyzer {
      * @param userDefSeparatingPunctuationPattern a pattern of OR-ed user defined
      *  separating punctuation characters
      * @param locale the locale of the main language of the content
+     * @deprecated use {@link #WhitespaceAndPunctuationAnalyzer(List, List, Locale)}
      */
     public WhitespaceAndPunctuationAnalyzer(
             CharTree unseparableCharacterSequences,

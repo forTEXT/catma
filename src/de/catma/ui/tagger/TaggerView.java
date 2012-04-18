@@ -3,6 +3,8 @@ package de.catma.ui.tagger;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
@@ -10,23 +12,24 @@ import com.vaadin.terminal.gwt.server.WebBrowser;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.core.document.Range;
+import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagDefinition;
+import de.catma.core.tag.TagInstance;
 import de.catma.core.tag.TagManager;
 import de.catma.core.tag.TagsetDefinition;
-import de.catma.core.tag.TagManager.TagManagerEvent;
-import de.catma.core.util.Pair;
-import de.catma.ui.client.ui.tagger.shared.TagInstance;
-import de.catma.ui.tagger.MarkupCollectionsPanel.TagDefinitionSelectionListener;
+import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
+import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.tagger.Tagger.TaggerListener;
 import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
 import de.catma.ui.tagger.pager.PagerComponent.PageChangeListener;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 
-public class TaggerView extends VerticalLayout {
+public class TaggerView extends VerticalLayout implements TaggerListener {
 	
 	private SourceDocument sourceDocument;
 	private Tagger tagger;
@@ -34,57 +37,20 @@ public class TaggerView extends VerticalLayout {
 	private MarkupPanel markupPanel;
 	private boolean init = true;
 	private TagManager tagManager;
-	private PropertyChangeListener tagDefChangedListener;
 	
-	public TaggerView(TagManager tagManager, SourceDocument sourceDocument) {
+	public TaggerView(TagManager tagManager, SourceDocument sourceDocument, Repository repository) {
 		this.tagManager = tagManager;
 		this.sourceDocument = sourceDocument;
-		initComponents();
-		
-		tagDefChangedListener = new PropertyChangeListener() {
-			
-			public void propertyChange(PropertyChangeEvent evt) {
-			
-				Object oldValue = evt.getOldValue();
-				Object newValue = evt.getNewValue();
-				if ((oldValue == null) && (newValue == null)) {
-					return;
-				}
-				
-				if (newValue == null) { //tagDef removed
-					@SuppressWarnings("unchecked")
-					Pair<TagsetDefinition, TagDefinition> removeOperationResult = 
-							(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
-					TagDefinition td = removeOperationResult.getSecond();
-					
-				}
-				else if (oldValue != null) { // tagDef changed
-					TagDefinition tagDefinition = 
-							(TagDefinition)evt.getNewValue();
-					Pair<String, String> oldTypeOldRgb = 
-							(Pair<String, String>)evt.getOldValue();
-					
-					
-				}
-				
-			}
-		};
-		
-		tagManager.addPropertyChangeListener(
-				TagManagerEvent.tagDefinitionChanged, tagDefChangedListener);
+		initComponents(repository);
 	}
 
-	private void initComponents() {
+	private void initComponents(Repository repository) {
 		VerticalLayout taggerPanel = new VerticalLayout();
 		taggerPanel.setSpacing(true);
 		
 		pager = new Pager(80, 30);
 		
-		tagger = new Tagger(pager, new TaggerListener() {
-			
-			public void tagInstanceAdded(TagInstance tagInstance) {
-			}
-		});
+		tagger = new Tagger(pager, this);
 		
 		tagger.setSizeFull();
 		taggerPanel.addComponent(tagger);
@@ -101,19 +67,23 @@ public class TaggerView extends VerticalLayout {
 		
 		markupPanel = new MarkupPanel(
 				tagManager,
+				repository,
 				new ColorButtonListener() {
 			
 					public void colorButtonClicked(TagDefinition tagDefinition) {
 						tagger.addTagInstanceWith(tagDefinition);
 					}
 				},
-				new TagDefinitionSelectionListener() {
+				new PropertyChangeListener() {
 					
-					public void tagDefinitionSelectionChanged(
-							List<TagReference> tagReferences,
-							boolean selected) {
-						tagger.setVisible(tagReferences, selected);
+					public void propertyChange(PropertyChangeEvent evt) {
+						boolean selected = evt.getNewValue() != null;
+						@SuppressWarnings("unchecked")
+						List<TagReference> tagReferences = 
+							(List<TagReference>)(
+									selected?evt.getNewValue():evt.getOldValue());
 						
+						tagger.setVisible(tagReferences, selected);
 					}
 				});
 		
@@ -134,7 +104,7 @@ public class TaggerView extends VerticalLayout {
 			WebApplicationContext context = 
 					((WebApplicationContext) getApplication().getContext());
 			WebBrowser wb = context.getBrowser();
-	
+			// TODO: should be changeable by the user:
 			float lines = (wb.getScreenHeight()/3)/12;
 			pager.setMaxPageLengthInLines(Math.round(lines));
 			
@@ -155,5 +125,43 @@ public class TaggerView extends VerticalLayout {
 
 	public void close() {
 		markupPanel.close();
+	}
+	
+	public void tagInstanceAdded(
+			ClientTagInstance clientTagInstance) {
+		
+		TagDefinition tagDef = 
+				markupPanel.getTagDefinition(
+						clientTagInstance.getTagDefinitionID());
+		TagsetDefinition tagsetDef = 
+				markupPanel.getTagsetDefinition(tagDef);
+		
+		if (!markupPanel.getCurrentWritableUserMarkupCollection()
+				.getTagLibrary().contains(tagsetDef)) {
+			tagManager.addTagsetDefinition(
+				markupPanel.getCurrentWritableUserMarkupCollection()
+					.getTagLibrary(), tagsetDef);
+		}
+		
+		TagInstance ti = 
+			new TagInstance(
+					clientTagInstance.getInstanceID(),
+					markupPanel.getTagDefinition(
+							clientTagInstance.getTagDefinitionID()));
+		
+		List<TagReference> tagReferences = new ArrayList<TagReference>();
+		
+		try {
+			for (TextRange tr : clientTagInstance.getRanges()) {
+				Range r = new Range(tr.getStartPos(), tr.getEndPos());
+				TagReference ref = 
+						new TagReference(ti, sourceDocument.getID() ,r);
+				tagReferences.add(ref);
+			}
+			markupPanel.addTagReferences(tagReferences);
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

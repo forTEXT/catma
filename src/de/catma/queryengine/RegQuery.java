@@ -26,7 +26,6 @@ import java.util.regex.Pattern;
 
 import de.catma.core.document.source.SourceDocument;
 import de.catma.indexer.TermInfo;
-import de.catma.queryengine.result.ResultList;
 
 /**
  * A regular expression query.
@@ -54,25 +53,26 @@ public class RegQuery extends Query {
     }
 
     @Override
-    protected ResultList execute() throws Exception {
-
-        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
-
-        int flags = Pattern.DOTALL;
-        if (caseInsensitive) {
-            flags |= Pattern.CASE_INSENSITIVE;
-        }
-        Pattern pattern = Pattern.compile(phrase.getPhrase(), flags);
-
-        Matcher matcher = pattern.matcher(sourceDoc.getContent());
-
-        List<TermInfo> searchResults = new ArrayList<TermInfo>();
-
-        while(matcher.find()) {
-            searchResults.add(
-                new TermInfo(matcher.group(), matcher.start(), matcher.end()));
-        }
-
-        return new ResultList(searchResults);
+    protected QueryResult execute() throws Exception {
+//
+//        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
+//
+//        int flags = Pattern.DOTALL;
+//        if (caseInsensitive) {
+//            flags |= Pattern.CASE_INSENSITIVE;
+//        }
+//        Pattern pattern = Pattern.compile(phrase.getPhrase(), flags);
+//
+//        Matcher matcher = pattern.matcher(sourceDoc.getContent());
+//
+//        List<TermInfo> searchResults = new ArrayList<TermInfo>();
+//
+//        while(matcher.find()) {
+//            searchResults.add(
+//                new TermInfo(matcher.group(), matcher.start(), matcher.end()));
+//        }
+//
+//        return new ResultList(searchResults);
+    	return null;
     }
 }

@@ -29,7 +29,6 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 import de.catma.core.document.Range;
 import de.catma.indexer.WhitespaceAndPunctuationAnalyzer;
-import de.catma.queryengine.result.ResultList;
 
 /**
  * A query for tokens that match an exact phrase or the phrase of a more advanced query like the
@@ -55,13 +54,13 @@ public class Phrase extends Query {
     }
 
     @Override
-    protected ResultList execute() throws Exception {
-    	
+    protected QueryResult execute() throws Exception {
+    	QueryOptions options = getQueryOptions();
         WhitespaceAndPunctuationAnalyzer analyzer =
                 new WhitespaceAndPunctuationAnalyzer(
-                        this.getUnseparableCharacterSequences(),
-                        this.getUserDefinedSeparatingCharacters(),
-                        this.getLocale());
+                        options.getUnseparableCharacterSequences(),
+                        options.getUserDefinedSeparatingCharacters(),
+                        options.getLocale());
 
         TokenStream ts =
                 analyzer.tokenStream(
@@ -73,10 +72,17 @@ public class Phrase extends Query {
                     (CharTermAttribute)ts.getAttribute(CharTermAttribute.class);
             termList.add(termAttr.toString());
         }
-        Map<String,List<Range>> result = 
-        		getIndexer().searchTerm(getDocumentIds(), termList);
+        Map<String,List<Range>> hits = 
+        		getIndexer().searchTerm(options.getDocumentIds(), termList);
+        QueryResultRowArray queryResult = new QueryResultRowArray();
         
-        return new ResultList();
+        for (Map.Entry<String,List<Range>> entry : hits.entrySet()) {
+        	String documentId = entry.getKey();
+        	for (Range r : entry.getValue()) {
+        		queryResult.add(new QueryResultRow(documentId,r, getPhrase()));
+        	}
+        }
+        return queryResult;
     }
 
     /**

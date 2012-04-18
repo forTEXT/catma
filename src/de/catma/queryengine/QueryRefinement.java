@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import de.catma.indexer.TermInfo;
-import de.catma.queryengine.result.ResultList;
 
 /**
  * A refinement that is specified via a {@link org.catma.queryengine.Query}.
@@ -44,27 +43,28 @@ public class QueryRefinement implements Refinement {
         this.query = query;
     }
 
-    public ResultList refine(ResultList result) throws Exception {
+    public QueryResult refine(QueryResult result) throws Exception {
 
-        List<TermInfo> termInfoList = query.getResult().getTermInfoList();
-
-        Comparator<TermInfo> comparator = query.getComparator();
-        
-        // do we have a special comparator or do we compare by equal?
-        if (comparator == null) {
-            result.getTermInfoList().retainAll(termInfoList);
-        }
-        else {
-            Iterator<TermInfo> baseResultIterator = result.getTermInfoList().iterator();
-            while (baseResultIterator.hasNext()) {
-                TermInfo curInfo = baseResultIterator.next();
-                if(!hasMatch(curInfo,termInfoList,comparator)) {
-                    baseResultIterator.remove();
-                }
-            }
-        }
-
-        return result;
+//        List<TermInfo> termInfoList = query.getResult().getTermInfoList();
+//
+//        Comparator<TermInfo> comparator = query.getComparator();
+//        
+//        // do we have a special comparator or do we compare by equal?
+//        if (comparator == null) {
+//            result.getTermInfoList().retainAll(termInfoList);
+//        }
+//        else {
+//            Iterator<TermInfo> baseResultIterator = result.getTermInfoList().iterator();
+//            while (baseResultIterator.hasNext()) {
+//                TermInfo curInfo = baseResultIterator.next();
+//                if(!hasMatch(curInfo,termInfoList,comparator)) {
+//                    baseResultIterator.remove();
+//                }
+//            }
+//        }
+//
+//        return result;
+    	return null;
     }
 
     /**

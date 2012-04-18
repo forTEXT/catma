@@ -19,41 +19,12 @@
 
 package de.catma.queryengine;
 
-import java.util.List;
-
-import de.catma.indexer.TermInfo;
 
 /**
- * An operator that combines the results of two queries.
+ * A list of tokens provided by a {@link org.catma.queryengine.Query}.
+ *
  *
  * @author Marco Petris <marco.petris@web.de>
  */
-public class UnionQuery extends Query {
-
-    private Query query1;
-    private Query query2;
-
-    /**
-     * Constructor.
-     * @param query1 the first query
-     * @param query2 the second query
-     */
-    public UnionQuery(Query query1, Query query2) {
-        this.query1 = query1;
-        this.query2 = query2;
-    }
-
-    @Override
-    protected QueryResult execute() throws Exception {
-
-//        List<TermInfo> termInfoList1 = query1.getResult().getTermInfoList();
-//        List<TermInfo> termInfoList2 = query2.getResult().getTermInfoList();
-//
-//        termInfoList2.removeAll(termInfoList1);
-//        termInfoList1.addAll(termInfoList2);
-//
-//        return new QueryResult(termInfoList1);
-    	return null;
-    }
-    
+public interface QueryResult {
 }

@@ -28,9 +28,10 @@ import java.util.List;
  * @author marco.petris@web.de
  *
  */
-public class TagInstance {
+public class ClientTagInstance {
 	
 	public static enum SerializationField {
+		tagDefinitionID,
 		instanceID,
 		color,
 		ranges,
@@ -39,25 +40,34 @@ public class TagInstance {
 		;
 	}
 	
+	final private String tagDefinitionID;
 	final private String color;
 	final private String instanceID;
 	final private List<TextRange> ranges;
 
-	public TagInstance(String instanceID, String color, List<TextRange> ranges) {
+	public ClientTagInstance(
+			String tagDefinitionID, String instanceID, 
+			String color, List<TextRange> ranges) {
 		super();
+		this.tagDefinitionID = tagDefinitionID;
 		this.instanceID = instanceID;
 		this.color = color;
 		this.ranges = ranges;
 	}
 	
-	public TagInstance(TagInstance tagInstanceToCopy, int base) {
-		this(tagInstanceToCopy.instanceID, 
+	public ClientTagInstance(ClientTagInstance tagInstanceToCopy, int base) {
+		this(tagInstanceToCopy.tagDefinitionID,
+				tagInstanceToCopy.instanceID, 
 				tagInstanceToCopy.color, new ArrayList<TextRange>());
 		for (TextRange tr : tagInstanceToCopy.getRanges()) {
 			ranges.add(new TextRange(tr.getStartPos()+base, tr.getEndPos()+base));
 		}
 	}
 
+	public String getTagDefinitionID() {
+		return tagDefinitionID;
+	}
+	
 	public String getInstanceID() {
 		return instanceID;
 	}
@@ -93,7 +103,7 @@ public class TagInstance {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		TagInstance other = (TagInstance) obj;
+		ClientTagInstance other = (ClientTagInstance) obj;
 		if (instanceID == null) {
 			if (other.instanceID != null)
 				return false;

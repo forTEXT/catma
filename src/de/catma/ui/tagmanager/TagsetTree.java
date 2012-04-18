@@ -237,53 +237,7 @@ public class TagsetTree extends HorizontalLayout {
 			}
 
 		});
-		
-		// hier gehts weiter: 
-		// Problem: 
-		/*
-		 * Es existieren verschiedene Instanzen der selben TagDefinition, z. B. 
-		 * einmal aus independent TagLib und einmal aus dem UserMarkupDoc
-		 * Bei Aenderungen sollten alle TagDefinition geaendert werden.
-		 * Der TagManager sollte irgendwie Buch über die verschiedenen Intanzen  
-		 * fuehren oder alles auf eine Instanz runterbrechen. 
-		 * Evtl. muss equals/hashcode ueberschrieben werden, aber mit Version, 
-		 * die dafuer immutable sein muss.
-		 * Schon beim Laden muessen Versionsunterschiede gemeldet werden, damit 
-		 * spaeter klar ist wie der TagManager damit umgehen soll. Entweder alte  
-		 * Versionen werden gleich hochgezogen oder sie werden spaeter bei  
-		 * Aenderungen an der neureren Version auch nicht angefasst!
-		 * 
-		 * Wie werden Versionen verglichen (date vs. int+uid)?
-		 * Wie wirkt sich Versionierung auf den Index aus?
-		 * Brauchen Propeties eine Version oder läuft das so wie bisher über die Tag Version?
-		 * Bei Tagsets ändert sich die Version nicht wenn die enthaltenden Tags 
-		 * sich ändern! Also inkonsistentes Verhalten.
-		 * Gut wäre wahrscheinlich wenn Versionsänderungen von PropertyVersionen
-		 * bis zur Tagset Version durchpropagiert werden.
-		 * 
-		 * Idee:
-		 * der TagManager wird beim Laden von TagLibs benutzt und er erzeugt nur
-		 * neue Instanzen wenn es sich um bisher unbekannte TagDefs handelt oder
-		 * um TagDefs in einer anderen Version. Hier lässt sich dann beim Laden auch
-		 * gleich entscheiden wie verfahren werden soll! Die unterschiedlichen Versionen sollen
-		 * später dann ja auch beim Taggen nicht gemischt werden!
-		 * 
-		 * 
-		 * 
-		 * So:
-		 * Ueberpruefung auf Aenderungen findet anhand der Toplevel-Version statt.
-		 * D. h. Aenderungen an PropDefs spiegeln sich auch in der Versionsnr der TagsetDefs wieder
-		 * Ueberprueft wird beim Hinzufuegen einer TagsetDef zu den "currently active Tagsets"
-		 * Problem: was passiert mit Properties deren PropDef sich geaendert hat?
-		 *  - ueberall alte Werte loeschen und neuen default-Wert setzen (zu grob)
-		 *  - jeweils alten Wert praesentieren und neuen Wert abfragen (aufwendig)
-		 * Problem: was passiert beim Verschieben von TagDefs ueber TagsetDef-Grenzen hinweg?
-		 *  - Bei der Ueberpruefung ist nur ein Tagset vorhanden, d. h. ein Verschieben sieht aus wie ein Loeschen
-		 * 
-		 */
-		// - implement editTag
-		// -propertyActions
-		// -deserialize
+
 		btEditTag.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -314,7 +268,7 @@ public class TagsetTree extends HorizontalLayout {
 			propertyCollection.getItemProperty(tagDefNameProp).setValue(
 					selTagDefinition.getType());
 			propertyCollection.getItemProperty(tagDefColorProp).setValue(
-					selTagDefinition.getColor());
+					ColorConverter.toHex(selTagDefinition.getColor()));
 			
 			FormDialog tagFormDialog = new FormDialog(
 				"Edit Tag",
@@ -462,7 +416,7 @@ public class TagsetTree extends HorizontalLayout {
 		tagFormDialog.show(getApplication().getMainWindow(), "50%");
 	}
 
-	private TagsetDefinition getTagsetDefinition(TagDefinition tagDefinition) {
+	public TagsetDefinition getTagsetDefinition(TagDefinition tagDefinition) {
 		Object parent = tagTree.getParent(tagDefinition);
 		if (parent instanceof TagsetDefinition) {
 			return (TagsetDefinition)parent;
@@ -839,5 +793,15 @@ public class TagsetTree extends HorizontalLayout {
 	
 	public TagManager getTagManager() {
 		return tagManager;
+	}
+	
+	public TagDefinition getTagDefinition(String tagDefinitionID) {
+		for (Object item : tagTree.getItemIds()) {
+			if ((item instanceof TagDefinition) 
+					&& ((TagDefinition)item).getID().equals(tagDefinitionID)) {
+				return (TagDefinition)item;
+			}
+		}
+		return null;
 	}
 }

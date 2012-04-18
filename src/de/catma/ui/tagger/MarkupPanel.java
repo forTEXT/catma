@@ -1,18 +1,26 @@
 package de.catma.ui.tagger;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.List;
+
 import com.vaadin.data.Container;
 import com.vaadin.event.DataBoundTransferable;
 import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.core.document.repository.Repository;
+import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagManager;
 import de.catma.core.tag.TagsetDefinition;
-import de.catma.ui.tagger.MarkupCollectionsPanel.TagDefinitionSelectionListener;
+import de.catma.ui.tagger.MarkupCollectionsPanel.MarkupCollectionPanelEvent;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 import de.catma.ui.tagmanager.TagsetTree;
 
@@ -25,22 +33,46 @@ public class MarkupPanel extends VerticalLayout {
 	
 	public MarkupPanel(
 			TagManager tagManager,
-			ColorButtonListener colorButtonListener, 
-			TagDefinitionSelectionListener tagDefinitionSelectionListener) {
+			Repository repository, ColorButtonListener colorButtonListener, 
+			PropertyChangeListener tagDefinitionSelectionListener) {
 		initComponents(
-			tagManager, colorButtonListener, tagDefinitionSelectionListener);
+				tagManager, repository, 
+				colorButtonListener, tagDefinitionSelectionListener);
 	}
 
 	private void initComponents(
-			TagManager tagManager, ColorButtonListener colorButtonListener, 
-			TagDefinitionSelectionListener tagDefinitionSelectionListener) {
+			final TagManager tagManager, Repository repository, 
+			ColorButtonListener colorButtonListener, 
+			PropertyChangeListener tagDefinitionSelectionListener) {
 		tabSheet = new TabSheet();
+		VerticalLayout currentlyActiveMarkupPanel = new VerticalLayout();
+		currentlyActiveMarkupPanel.setSpacing(true);
+		tabSheet.addTab(currentlyActiveMarkupPanel, "Currently active Tagsets");
+		
 		tagsetTree = new TagsetTree(tagManager, null, false, colorButtonListener);
-		tabSheet.addTab(tagsetTree, "Currently active Tagsets");
+		currentlyActiveMarkupPanel.addComponent(tagsetTree);
+
+		final Label currentlyWritableUserMarkupCollectionLabel = new Label(
+				"Currently writable Markup Collection:");
+		currentlyWritableUserMarkupCollectionLabel.setContentMode(
+				Label.CONTENT_XHTML);
+		currentlyActiveMarkupPanel.addComponent(
+				currentlyWritableUserMarkupCollectionLabel);
 		
 		markupCollectionsPanel = 
-				new MarkupCollectionsPanel(
-						tagManager, tagDefinitionSelectionListener);
+				new MarkupCollectionsPanel(tagManager, repository);
+		markupCollectionsPanel.addPropertyChangeListener(
+				MarkupCollectionPanelEvent.tagDefinitionSelected, 
+				tagDefinitionSelectionListener);
+		markupCollectionsPanel.addPropertyChangeListener(
+				MarkupCollectionPanelEvent.userMarkupCollectionSelected, 
+				new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				currentlyWritableUserMarkupCollectionLabel.setValue(
+						"Currently writable Markup Collection:</ br>" + evt.getNewValue());
+			}
+		});
 		
 		tabSheet.addTab(
 				markupCollectionsPanel, "Currently active Markup Collections");
@@ -90,10 +122,27 @@ public class MarkupPanel extends VerticalLayout {
 
 	public void openUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
-		markupCollectionsPanel.openUserMarkupCollection(userMarkupCollection);
+		markupCollectionsPanel.openUserMarkupCollection(
+				userMarkupCollection);
 	}
 
 	public void close() {
 		tagsetTree.close();
 	}
+	
+	public TagDefinition getTagDefinition(String tagDefinitionID) {
+		return tagsetTree.getTagDefinition(tagDefinitionID);
+	}
+
+	public void addTagReferences(List<TagReference> tagReferences) {
+		markupCollectionsPanel.addTagReferences(tagReferences);
+	}
+
+	public TagsetDefinition getTagsetDefinition(TagDefinition tagDefinition) {
+		return tagsetTree.getTagsetDefinition(tagDefinition);
+	}
+
+	public UserMarkupCollection getCurrentWritableUserMarkupCollection() {
+		return markupCollectionsPanel.getCurrentWritableUserMarkupCollection();
+	}	
 }

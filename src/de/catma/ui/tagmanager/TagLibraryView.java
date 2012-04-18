@@ -31,6 +31,7 @@ public class TagLibraryView extends HorizontalLayout {
 	public void attach() {
 		super.attach();
 		if (init) {
+			//FIXME: this is bullshit, see RepositoryView and clean this mess up
 			WebApplicationContext context = 
 					((WebApplicationContext) getApplication().getContext());
 			WebBrowser wb = context.getBrowser();

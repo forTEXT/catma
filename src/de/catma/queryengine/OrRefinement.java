@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Set;
 
 import de.catma.indexer.TermInfo;
-import de.catma.queryengine.result.ResultList;
 
 /**
  * This refinement combines to refinement conditions by a logical OR.
@@ -45,20 +44,21 @@ public class OrRefinement implements Refinement {
         this.refinement2 = refinement2;
     }
 
-    public ResultList refine(ResultList result) throws Exception {
-        List<TermInfo> refinedList1 =
-                refinement1.refine(new ResultList(result)).getTermInfoList();
-        List<TermInfo> refinedList2 =
-                refinement2.refine(result).getTermInfoList();
-        
-        Set<TermInfo> withoutDuplicates = new HashSet<TermInfo>();
-        withoutDuplicates.addAll(refinedList1);
-        withoutDuplicates.addAll(refinedList2);
-        
-        List<TermInfo> resultList = result.getTermInfoList();
-        resultList.clear();
-        resultList.addAll(withoutDuplicates);
-        return new ResultList(resultList);
+    public QueryResult refine(QueryResult result) throws Exception {
+//        List<TermInfo> refinedList1 =
+//                refinement1.refine(new QueryResult(result)).getTermInfoList();
+//        List<TermInfo> refinedList2 =
+//                refinement2.refine(result).getTermInfoList();
+//        
+//        Set<TermInfo> withoutDuplicates = new HashSet<TermInfo>();
+//        withoutDuplicates.addAll(refinedList1);
+//        withoutDuplicates.addAll(refinedList2);
+//        
+//        List<TermInfo> resultList = result.getTermInfoList();
+//        resultList.clear();
+//        resultList.addAll(withoutDuplicates);
+//        return new QueryResult(resultList);
+    	return null;
     }
 
 }

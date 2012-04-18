@@ -19,12 +19,14 @@ public class RepositoryManagerView extends VerticalLayout implements CloseHandle
 	
 	public RepositoryManagerView(RepositoryManager repositoryManager) {
 		tabSheet = new TabSheet();
+		tabSheet.setSizeFull();
 		repositoryListView = new RepositoryListView(repositoryManager);
 		Tab tab = tabSheet.addTab(repositoryListView, "Repositories Overview");
 		
 		tab.setEnabled(true);
 		addComponent(tabSheet);
 		tabSheet.setCloseHandler(this);
+		setSizeFull();
 	}
 
 

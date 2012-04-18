@@ -41,7 +41,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
 import de.catma.ui.client.ui.tagger.editor.TaggerEditor;
-import de.catma.ui.client.ui.tagger.shared.TagInstance;
+import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 
 /**
  * @author marco.petris@web.de
@@ -123,7 +123,8 @@ class TagMenuPopup extends DialogBox {
 			HandlerRegistration saveButtonReg = saveButton.addClickHandler(new ClickHandler() {
 				
 				public void onClick(ClickEvent event) {
-					TagMenuPopup.this.vTagger.createAndAddTagIntance(colorPicker.getHexColor());
+					//FIXME: redesign pop menu, taginstance deletion only
+				//	TagMenuPopup.this.vTagger.createAndAddTagIntance(colorPicker.getHexColor());
 					TagMenuPopup.this.lastSelectedColor = colorPicker.getHexColor();
 					hide();
 				}
@@ -172,7 +173,7 @@ class TagMenuPopup extends DialogBox {
 	
 	public void addTag(final String tagInstanceID) {
 		
-		TagInstance tagInstance = vTagger.getTagInstance(tagInstanceID);
+		ClientTagInstance tagInstance = vTagger.getTagInstance(tagInstanceID);
 
 		Grid grid = new Grid(1,3);
 		Label l = new HTML("#" + tagInstanceID);

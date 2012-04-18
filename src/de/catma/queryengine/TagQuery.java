@@ -29,7 +29,6 @@ import java.util.TreeSet;
 
 import de.catma.core.document.source.SourceDocument;
 import de.catma.indexer.TermInfo;
-import de.catma.queryengine.result.ResultList;
 import de.catma.core.document.Range;
 
 /**
@@ -91,41 +90,42 @@ public class TagQuery extends Query {
     }
 
     @Override
-    protected ResultList execute() throws Exception {
+    protected QueryResult execute() throws Exception {
 
         List<TermInfo> resultList = new ArrayList<TermInfo>();
 
-        if (tagID != null) {
-            getTermInfosForTag(TagManager.SINGLETON.getTag(tagID), resultList);
-        }
-        else {
-
-            Set<Tag> tags = TagManager.SINGLETON.getTagByName(tagPhrase);
-
-            // a Tag name does not have to be unique!
-            if (tags.size() == 1) {
-                getTermInfosForTag(tags.iterator().next(), resultList);
-            }
-            else {
-                Query curQuery = null;
-                for (Tag tag : tags) {
-                    if (curQuery == null) {
-                        curQuery = new TagQuery(tag.getID());
-                    }
-                    else {
-                        curQuery = new UnionQuery(
-                            curQuery,
-                            new TagQuery(tag.getID()));
-                    }
-                }
-
-                if (curQuery != null) {
-                    return curQuery.execute();
-                }
-            }
-        }
-
-        return new ResultList(resultList);
+//        if (tagID != null) {
+//            getTermInfosForTag(TagManager.SINGLETON.getTag(tagID), resultList);
+//        }
+//        else {
+//
+//            Set<Tag> tags = TagManager.SINGLETON.getTagByName(tagPhrase);
+//
+//            // a Tag name does not have to be unique!
+//            if (tags.size() == 1) {
+//                getTermInfosForTag(tags.iterator().next(), resultList);
+//            }
+//            else {
+//                Query curQuery = null;
+//                for (Tag tag : tags) {
+//                    if (curQuery == null) {
+//                        curQuery = new TagQuery(tag.getID());
+//                    }
+//                    else {
+//                        curQuery = new UnionQuery(
+//                            curQuery,
+//                            new TagQuery(tag.getID()));
+//                    }
+//                }
+//
+//                if (curQuery != null) {
+//                    return curQuery.execute();
+//                }
+//            }
+//        }
+//
+//        return new ResultList(resultList);
+        return null;
     }
 
     /**
@@ -133,44 +133,44 @@ public class TagQuery extends Query {
      * @param tag the Tag that has to be present
      * @param resultList the list of tokens tagged with the given Tag
      */
-    private void getTermInfosForTag(Tag tag, List<TermInfo> resultList) {
-
-        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
-
-        SortedSet<Range> sortedRanges = new TreeSet<Range>();
-
-        // get all ranges that are tagged with the given Tag
-        for (StandoffMarkupDocument userMarkupDoc :
-                FileManager.SINGLETON.getUserMarkupDocumentList()) {
-
-            List<TextrangePointer> textrangePointerList =
-                    userMarkupDoc.getTextRangePointerFor(tag);
-
-            for (TextrangePointer tp : textrangePointerList) {
-
-                sortedRanges.add(tp.getRange());
-            }
-        }
-
-        //  merge the contiguous ranges
-        List<Range> mergedRanges = mergeRanges(sortedRanges);
-
-        // get the tokens for the matching ranges
-        for (Range range : mergedRanges) {
-            resultList.add(
-                new TermInfo(
-                    sourceDoc.getContent(range), range, tag));
-        }
-
-        // look for tokens that are tagged with children of the given Tag 
-        if (tag.hasTagProperty()) {
-            for( Property prop : tag.getUserDefinedProperties()) {
-                if (prop.hasTagValue()) {
-                    getTermInfosForTag((Tag)prop.getValue(), resultList);
-                }
-            }
-        }
-    }
+//    private void getTermInfosForTag(Tag tag, List<TermInfo> resultList) {
+//
+//        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
+//
+//        SortedSet<Range> sortedRanges = new TreeSet<Range>();
+//
+//        // get all ranges that are tagged with the given Tag
+//        for (StandoffMarkupDocument userMarkupDoc :
+//                FileManager.SINGLETON.getUserMarkupDocumentList()) {
+//
+//            List<TextrangePointer> textrangePointerList =
+//                    userMarkupDoc.getTextRangePointerFor(tag);
+//
+//            for (TextrangePointer tp : textrangePointerList) {
+//
+//                sortedRanges.add(tp.getRange());
+//            }
+//        }
+//
+//        //  merge the contiguous ranges
+//        List<Range> mergedRanges = mergeRanges(sortedRanges);
+//
+//        // get the tokens for the matching ranges
+//        for (Range range : mergedRanges) {
+//            resultList.add(
+//                new TermInfo(
+//                    sourceDoc.getContent(range), range, tag));
+//        }
+//
+//        // look for tokens that are tagged with children of the given Tag 
+//        if (tag.hasTagProperty()) {
+//            for( Property prop : tag.getUserDefinedProperties()) {
+//                if (prop.hasTagValue()) {
+//                    getTermInfosForTag((Tag)prop.getValue(), resultList);
+//                }
+//            }
+//        }
+//    }
 
     /**
      * Merges the contiguous ranges of the given set.
