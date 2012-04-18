@@ -33,7 +33,7 @@ public class ESCommunication {
 		AsyncHttpClientConfig config = new AsyncHttpClientConfig.Builder()
 				.setRequestTimeoutInMs(900000).setMaximumConnectionsPerHost(-1)
 				.setConnectionTimeoutInMs(900000).setMaxRequestRetry(5)
-				.addRequestFilter(new ThrottleRequestFilter(100, 900000))
+				.addRequestFilter(new ThrottleRequestFilter(50, 900000))
 				.setMaximumConnectionsTotal(-1).build();
 
 		this.httpTransport = new AsyncHttpClient(config);
@@ -67,26 +67,9 @@ public class ESCommunication {
 				httpRequests.add(fp);
 			}
 		}
+		
+		waitForRequests(httpRequests);
 
-		/*
-		 * This is to join results
-		 */
-		for (Future<Response> response : httpRequests) {
-			try {
-				Response r = response.get();
-				logger.info(r.getResponseBody());
-				if (r.getStatusCode() != 200) {
-					logger.error("response was " + r.getStatusCode());
-					// return false;
-				}
-			} catch (InterruptedException e) {
-				logger.info("http request got interrupted: "
-						+ response.toString());
-			} catch (ExecutionException e) {
-				logger.info("Couldn't execute http request: "
-						+ response.toString());
-			}
-		}
 		return true;
 	}
 
@@ -119,12 +102,14 @@ public class ESCommunication {
 		/*
 		 * This is to join results
 		 */
+		boolean result = true;
+		
 		for (Future<Response> response : collection) {
 			try {
 				Response r = response.get();
-				if (r.getStatusCode() > 200 && r.getStatusCode() < 400) {
+				if (r.getStatusCode() >= 400) {
 					logger.error("response was " + r.getStatusCode());
-					return false;
+					result = false;
 				}
 			} catch (InterruptedException e) {
 				logger.info("http request got interrupted: "
@@ -134,7 +119,7 @@ public class ESCommunication {
 						+ response.toString());
 			}
 		}
-		return true;
+		return result;
 	}
 
 	public boolean indexTagReferences(
@@ -154,26 +139,16 @@ public class ESCommunication {
 			httpRequests.add(f);
 		}
 
-		/*
-		 * This is to join results
-		 */
-		for (Future<Response> response : httpRequests) {
-			try {
-				Response r = response.get();
-				logger.info(r.getResponseBody());
-				if (r.getStatusCode() != 200) {
-					logger.error("response was " + r.getStatusCode());
-					// return false;
-				}
-			} catch (InterruptedException e) {
-				logger.info("http request got interrupted: "
-						+ response.toString());
-			} catch (ExecutionException e) {
-				logger.info("Couldn't execute http request: "
-						+ response.toString() + " CAUSE: " + ((ChannelFuture)response).getCause());
-			}
-		}
+		waitForRequests(httpRequests);
+
 		return true;
 
+	}
+	
+	/**
+	 * Closes the async http transport client
+	 */
+	public void close() {
+		this.httpTransport.close();
 	}
 }

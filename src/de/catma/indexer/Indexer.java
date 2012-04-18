@@ -29,4 +29,6 @@ public interface Indexer {
 	 */
 	public Map<String,List<Range>> searchTerm(
 			List<String> documentIdList, List<String> termList) throws Exception;
+	
+	public void close();
 }

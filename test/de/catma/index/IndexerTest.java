@@ -12,6 +12,8 @@ import de.catma.core.ExceptionHandler;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
 import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagManager;
 import de.catma.indexer.elasticsearch.ESIndexer;
 
@@ -72,7 +74,24 @@ public class IndexerTest {
 		}
 	}
 	
-	public void testIndexUserMarkupColl1() throws Throwable {
-		
+	@Test
+	public void indexUserMarkupColl1() throws Throwable {
+		try {
+			SourceDocument sd = repository.getSourceDocument(
+					"file:///C:/data/eclipse_workspace/clea/repo/container/rose_for_emily.txt");
+			UserMarkupCollectionReference ref = 
+					sd.getUserMarkupCollectionRefs().get(0);
+			
+			UserMarkupCollection umc = 
+					repository.getUserMarkupCollection(ref);
+						
+			ESIndexer esIndexer = new ESIndexer();
+			esIndexer.index(umc.getTagReferences(), sd.getID(), umc.getId(), umc.getTagLibrary());
+			esIndexer.close();
+		}
+		catch(Throwable t) {
+			t.printStackTrace();
+			throw t;
+		}	
 	}
 }

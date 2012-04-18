@@ -296,4 +296,11 @@ public class ESIndexer implements Indexer {
 		esComm.indexTagReferences(esTagReferences);
 	}
 	
+	/**
+	 * Closes the async http transport client
+	 */
+	public void close() {
+		this.esComm.close();
+	}
+	
 }

@@ -51,7 +51,7 @@ public class ESTagReferenceDocument {
 	}
 
 	private UUID catmaIDToUUID(String catmastr) {
-		int index = catmastr.indexOf(IDGenerator.ID_PREFIX);
+		int index = catmastr.indexOf(IDGenerator.ID_PREFIX)+IDGenerator.ID_PREFIX.length();
 		return UUID.fromString(catmastr.substring(index));
 	}
 
