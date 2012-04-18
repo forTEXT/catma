@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 
 import org.elasticsearch.client.Client;
@@ -16,6 +17,7 @@ import org.junit.Test;
 
 import de.catma.LogProgressListener;
 import de.catma.core.ExceptionHandler;
+import de.catma.core.document.Range;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
 import de.catma.core.tag.TagManager;
@@ -60,7 +62,7 @@ public class PhraseQueryTest {
 			term.add("had");
 			term.add("been");
 			term.add("dead");
-			esIndexer.searchTerm(null, term);
+			Map<String, List<Range>> result = esIndexer.searchTerm(null, term);
 		}
 		catch(Throwable t) {
 			t.printStackTrace();
