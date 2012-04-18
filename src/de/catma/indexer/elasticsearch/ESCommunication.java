@@ -37,7 +37,7 @@ public class ESCommunication {
 		this.httpTransport = new AsyncHttpClient(config);
 	}
 
-	public boolean addToIndex(String docId, Map<String, List<TermInfo>> terms)
+	public boolean indexTerms(String docId, Map<String, List<TermInfo>> terms)
 			throws IllegalArgumentException, IOException, JSONException {
 		List<Future<Response>> httpRequests = new ArrayList<Future<Response>>();
 
@@ -107,6 +107,10 @@ public class ESCommunication {
 				+ ESOptions.getString("ESInstaller.positionindex");
 	}
 	
+	public String tagReferenceIndexUrl() {
+		return this.baseIndexUrl() + "/" + ESOptions.getString("ESInstaller.tagreferenceindex");
+	}
+	
 	public static boolean waitForRequests(Collection<Future<Response>> collection){
 		/*
 		 * This is to join results
@@ -127,5 +131,10 @@ public class ESCommunication {
 			}
 		}
 		return true;
+	}
+
+	public void indexTagReferences(List<ESTagReferenceDocument> esTagReferences) {
+		// TODO Auto-generated method stub
+		
 	}
 }

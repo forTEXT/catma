@@ -75,8 +75,8 @@ public class PhraseQueryTest {
 		List<String> unseparableCharacterSequences = Collections.emptyList();
 		List<Character> userDefinedSeparatingCharacters = Collections.emptyList();
 		QueryOptions queryOptions = new QueryOptions(
-				(List<String>)null, 
-				unseparableCharacterSequences, 
+				(List<String>)null,
+				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
 				Locale.ENGLISH);
 		
