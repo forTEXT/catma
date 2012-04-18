@@ -6,6 +6,8 @@ import java.util.Map;
 
 import de.catma.core.document.Range;
 import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.core.tag.TagLibrary;
 
 public interface Indexer {
 	public void index(
@@ -13,6 +15,12 @@ public interface Indexer {
 			List<String> unseparableCharacterSequences,
             List<Character> userDefinedSeparatingCharacters,
             Locale locale) throws Exception;
+	
+	public void index(
+			List<TagReference> tagReferences,
+			String sourceDocumentID,
+			String userMarkupCollectionID,
+			TagLibrary tagLibrary) throws Exception;
 	
 	/**
 	 * @param documentIdList
