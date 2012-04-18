@@ -22,6 +22,8 @@ import com.ning.http.client.Response;
 
 import de.catma.core.document.Range;
 import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.core.tag.TagLibrary;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TermInfo;
 import de.catma.indexer.WhitespaceAndPunctuationAnalyzer;
@@ -80,7 +82,7 @@ public class ESIndexer implements Indexer {
 			positionCounter++;
 			System.out.println(ti);
 		}
-		esComm.addToIndex(sourceDoc.getID(), terms);
+		esComm.indexTerms(sourceDoc.getID(), terms);
 	}
 
 	/**
@@ -282,6 +284,16 @@ public class ESIndexer implements Indexer {
 		}
 
 		return termids;
+	}
+
+	public void index(List<TagReference> tagReferences,
+			String sourceDocumentID, String userMarkupCollectionID,
+			TagLibrary tagLibrary) throws Exception {
+		List<ESTagReferenceDocument> esTagReferences = new ArrayList<ESTagReferenceDocument>();
+		for(TagReference tagReference : tagReferences ){
+			esTagReferences.add(new ESTagReferenceDocument(sourceDocumentID, userMarkupCollectionID, tagReference, tagLibrary));			
+		}
+		esComm.indexTagReferences(esTagReferences);
 	}
 	
 }
