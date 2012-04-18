@@ -28,11 +28,27 @@ class FSUserMarkupCollectionHandler {
 				new URL(userMarkupCollectionReference.getId()).openConnection();
 		
 		FilterInputStream is = new BOMFilterInputStream(
-				urlConnection.getInputStream(), Charset.forName( "UTF8" ));
+				urlConnection.getInputStream(), Charset.forName( "UTF-8" )); //TODO: BOM-detection?
 		UserMarkupCollection userMarkupCollection = 
 				userMarkupCollectionSerializationHandler.deserialize(
 						userMarkupCollectionReference.getId(), is);
 		userMarkupCollection.setName(userMarkupCollectionReference.getName());
 		return userMarkupCollection;
 	}	
+	
+	public UserMarkupCollectionReference saveUserMarkupCollection(
+			UserMarkupCollection userMarkupCollection) throws IOException {
+		UserMarkupCollectionReference reference = 
+				new UserMarkupCollectionReference(
+						userMarkupCollection.getId(), 
+						userMarkupCollection.getName());
+	
+		URLConnection urlConnection = 
+				new URL(userMarkupCollection.getId()).openConnection();
+		
+		userMarkupCollectionSerializationHandler.serialize(userMarkupCollection, urlConnection.getOutputStream());
+		
+		
+		return reference;
+	}
 }

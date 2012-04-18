@@ -49,7 +49,7 @@ public class RepositoryListView extends VerticalLayout {
 			
 			public void buttonClick(ClickEvent event) {
 				
-				login();
+//				login();
 				
 				Repository repository = (Repository)repositoryTable.getValue();
 				try {

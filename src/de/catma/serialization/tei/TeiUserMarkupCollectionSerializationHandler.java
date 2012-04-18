@@ -2,6 +2,7 @@ package de.catma.serialization.tei;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagLibrary;
@@ -18,8 +19,8 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 		this.tagManager = tagManager;
 	}
 
-	public void serialize(UserMarkupCollection userMarkupCollection) {
-		// TODO Auto-generated method stub
+	public void serialize(
+		UserMarkupCollection userMarkupCollection, OutputStream outputStream) throws IOException {
 
 	}
 

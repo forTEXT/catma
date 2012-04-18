@@ -71,4 +71,8 @@ public class IndexerTest {
 			throw t;
 		}
 	}
+	
+	public void testIndexUserMarkupColl1() throws Throwable {
+		
+	}
 }
