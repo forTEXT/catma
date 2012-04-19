@@ -311,7 +311,7 @@ public class ESIndexer implements Indexer {
 
 		JSONObject searchobj = new JSONObject();
 		searchobj.put("from", 0);
-		searchobj.put("size", 1000);
+		searchobj.put("size", 10000);
 		JSONObject queryobj = new JSONObject();
 		searchobj.put("query", queryobj);
 		if (isPrefixSearch == false) {
@@ -319,6 +319,7 @@ public class ESIndexer implements Indexer {
 		} else {
 			queryobj.put("prefix", new JSONObject().put("tagPath", tagPath));
 		}
+		logger.info(searchobj.toString());
 		Future<Response> f = esComm.httpTransport
 				.preparePost(esComm.tagReferenceIndexUrl() + "/" + "_search")
 				.setBody(searchobj.toString()).execute();
@@ -334,8 +335,9 @@ public class ESIndexer implements Indexer {
 			JSONArray hits = hitdoc.getJSONObject("hits").getJSONArray("hits");
 			for (int i = 0; i < hits.length(); i++) {
 				JSONObject j = hits.getJSONObject(i);
-				ESTagReferenceDocument tagdoc = ESTagReferenceDocument
-						.fromJSON(j.getJSONObject("_source"));
+				ESTagReferenceDocument tagdoc = null;
+				tagdoc = ESTagReferenceDocument.fromJSON(j
+						.getJSONObject("_source"));
 				logger.info("tag found: " + tagdoc);
 				results.add(new QueryResultRow(tagdoc.getDocumentId(), tagdoc
 						.getRange(), null, tagdoc.getUserMarkupCollectionId(),
