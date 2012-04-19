@@ -103,7 +103,7 @@ public class RepositoryListView extends VerticalLayout {
 			System.out.println("pos1");
 			final ConsumerManager consumerManager = new ConsumerManager();
 			System.out.println("pos2");
-			String returnURL = "http://87.106.12.254:8080/clea/" + new IDGenerator().generate();
+			final String returnURL = "http://87.106.12.254:8080/clea/" + new IDGenerator().generate();
 			System.out.println("pos3");
 		    // perform discovery on the user-supplied identifier
 		    List discoveries = consumerManager.discover("https://www.google.com/accounts/o8/id");
@@ -134,7 +134,7 @@ public class RepositoryListView extends VerticalLayout {
 								System.out.println("pos10");
 								// verify the response
 								VerificationResult verification = consumerManager.verify(
-										context.toString(), openidResp, discovered);
+										returnURL, openidResp, discovered);
 								System.out.println("pos11");
 								// examine the verification result and extract the verified identifier
 								Identifier verified = verification.getVerifiedId();

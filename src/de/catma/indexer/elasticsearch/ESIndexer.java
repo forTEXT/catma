@@ -29,6 +29,7 @@ import de.catma.indexer.TermInfo;
 import de.catma.indexer.WhitespaceAndPunctuationAnalyzer;
 import de.catma.indexer.unseparablecharactersequence.CharTree;
 import de.catma.indexer.unseparablecharactersequence.CharTreeFactory;
+import de.catma.queryengine.QueryResultRowArray;
 
 public class ESIndexer implements Indexer {
 
@@ -294,6 +295,13 @@ public class ESIndexer implements Indexer {
 			esTagReferences.add(new ESTagReferenceDocument(sourceDocumentID, userMarkupCollectionID, tagReference, tagLibrary));			
 		}
 		esComm.indexTagReferences(esTagReferences);
+	}
+
+	
+	public QueryResultRowArray searchTag(String tagPath, boolean isPrefixSearch)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	/**

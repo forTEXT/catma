@@ -10,6 +10,8 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.ProgressIndicator;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.Window.CloseEvent;
+import com.vaadin.ui.Window.CloseListener;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.ExecutionListener;
@@ -57,6 +59,12 @@ public class CleaApplication extends Application {
 		
 		final Window mainWindow = new Window("CATMA 4 - CLÉA");
 		
+		mainWindow.addListener(new CloseListener() {
+			
+			public void windowClose(CloseEvent e) {
+				//TODO: close comm to elastic search
+			}
+		});
 		VerticalLayout mainLayout = new VerticalLayout();
 		mainLayout.setSizeFull();
 		mainLayout.setMargin(true);
