@@ -24,6 +24,7 @@ import de.catma.core.tag.TagManager;
 import de.catma.indexer.elasticsearch.ESIndexer;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryOptions;
+import de.catma.queryengine.QueryResultRowArray;
 
 
 public class PhraseQueryTest {
@@ -90,6 +91,20 @@ public class PhraseQueryTest {
 			e.printStackTrace();
 		}
 	}
+
+	@Test
+	public void testSearchTag() throws Throwable {
+		try {
+			ESIndexer esIndexer = new ESIndexer();
+			 QueryResultRowArray result = esIndexer.searchTag("/Order/analepsis", true);
+		}
+		catch(Throwable t) {
+			t.printStackTrace();
+			throw t;
+		}
+	}
+
+
 	
 	@After
 	public void teardown() {

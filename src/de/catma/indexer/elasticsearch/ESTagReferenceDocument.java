@@ -27,9 +27,9 @@ public class ESTagReferenceDocument {
 		super();
 		this.documentId = sourceDocId;
 		this.userMarkupCollectionId = userMarkupCollectionId;
-		this.tagDefinitionId = catmaIDToUUID(tagReference.getTagDefinition()
+		this.tagDefinitionId = IDGenerator.catmaIDToUUID(tagReference.getTagDefinition()
 				.getID());
-		this.tagInstanceId = catmaIDToUUID(tagReference.getTagInstanceID());
+		this.tagInstanceId = IDGenerator.catmaIDToUUID(tagReference.getTagInstanceID());
 		this.tagPath = tagLibrary.getTagPath(tagReference.getTagDefinition());
 		this.range = tagReference.getRange();
 		this.version = tagReference.getTagDefinition().getVersion().toString();
@@ -49,12 +49,7 @@ public class ESTagReferenceDocument {
 		this.range = range;
 		this.tagReferenceId = this.getIndexDocumentKey();
 	}
-
-	private UUID catmaIDToUUID(String catmastr) {
-		int index = catmastr.indexOf(IDGenerator.ID_PREFIX)+IDGenerator.ID_PREFIX.length();
-		return UUID.fromString(catmastr.substring(index));
-	}
-
+	
 	public UUID getTagReferenceId() {
 		return tagReferenceId;
 	}
@@ -90,9 +85,12 @@ public class ESTagReferenceDocument {
 	public String toJSON() throws JSONException {
 		JSONObject j_root = new JSONObject();
 		j_root.put("documentId", documentId);
-		j_root.put("markupDocumentId", userMarkupCollectionId);
+		j_root.put("userMarkupCollectionId", userMarkupCollectionId);
 		j_root.put("tagInstanceId_l", tagInstanceId.getLeastSignificantBits());
 		j_root.put("tagInstanceId_m", tagInstanceId.getMostSignificantBits());
+		j_root.put("tagDefinitionId_l", tagDefinitionId.getLeastSignificantBits());
+		j_root.put("tagDefinitionId_m", tagDefinitionId.getMostSignificantBits());
+		j_root.put("version", version);
 		j_root.put("tagPath", tagPath);
 		j_root.put("characterStart", range.getStartPoint());
 		j_root.put("characterEnd", range.getEndPoint());

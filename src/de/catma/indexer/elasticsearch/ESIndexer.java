@@ -24,11 +24,13 @@ import de.catma.core.document.Range;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.tag.TagLibrary;
+import de.catma.core.util.IDGenerator;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TermInfo;
 import de.catma.indexer.WhitespaceAndPunctuationAnalyzer;
 import de.catma.indexer.unseparablecharactersequence.CharTree;
 import de.catma.indexer.unseparablecharactersequence.CharTreeFactory;
+import de.catma.queryengine.QueryResultRow;
 import de.catma.queryengine.QueryResultRowArray;
 
 public class ESIndexer implements Indexer {
@@ -291,24 +293,65 @@ public class ESIndexer implements Indexer {
 			String sourceDocumentID, String userMarkupCollectionID,
 			TagLibrary tagLibrary) throws Exception {
 		List<ESTagReferenceDocument> esTagReferences = new ArrayList<ESTagReferenceDocument>();
-		for(TagReference tagReference : tagReferences ){
-			esTagReferences.add(new ESTagReferenceDocument(sourceDocumentID, userMarkupCollectionID, tagReference, tagLibrary));			
+		for (TagReference tagReference : tagReferences) {
+			esTagReferences.add(new ESTagReferenceDocument(sourceDocumentID,
+					userMarkupCollectionID, tagReference, tagLibrary));
 		}
 		esComm.indexTagReferences(esTagReferences);
 	}
 
-	
 	public QueryResultRowArray searchTag(String tagPath, boolean isPrefixSearch)
 			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+
+		logger.info("fetching tags from tagreferenceindex");
+		if (tagPath == null || tagPath.isEmpty())
+			return null;
+
+		List<Future<Response>> httpRequests = new ArrayList<Future<Response>>();
+
+		JSONObject searchobj = new JSONObject();
+		searchobj.put("from", 0);
+		searchobj.put("size", 1000);
+		JSONObject queryobj = new JSONObject();
+		searchobj.put("query", queryobj);
+		if (isPrefixSearch == false) {
+			queryobj.put("term", new JSONObject().put("tagPath", tagPath));
+		} else {
+			queryobj.put("prefix", new JSONObject().put("tagPath", tagPath));
+		}
+		Future<Response> f = esComm.httpTransport
+				.preparePost(esComm.tagReferenceIndexUrl() + "/" + "_search")
+				.setBody(searchobj.toString()).execute();
+		httpRequests.add(f);
+
+		ESCommunication.waitForRequests(httpRequests);
+
+		QueryResultRowArray results = new QueryResultRowArray();
+
+		for (Future<Response> req : httpRequests) {
+			Response r = req.get();
+			JSONObject hitdoc = new JSONObject(r.getResponseBody());
+			JSONArray hits = hitdoc.getJSONObject("hits").getJSONArray("hits");
+			for (int i = 0; i < hits.length(); i++) {
+				JSONObject j = hits.getJSONObject(i);
+				ESTagReferenceDocument tagdoc = ESTagReferenceDocument
+						.fromJSON(j.getJSONObject("_source"));
+				logger.info("tag found: " + tagdoc);
+				results.add(new QueryResultRow(tagdoc.getDocumentId(), tagdoc
+						.getRange(), null, tagdoc.getUserMarkupCollectionId(),
+						IDGenerator.UUIDToCatmaID(tagdoc.getTagDefinitionId()),
+						IDGenerator.UUIDToCatmaID(tagdoc.getTagInstanceId())));
+			}
+		}
+
+		return results;
 	}
-	
+
 	/**
 	 * Closes the async http transport client
 	 */
 	public void close() {
 		this.esComm.close();
 	}
-	
+
 }
