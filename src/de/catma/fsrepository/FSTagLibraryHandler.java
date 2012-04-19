@@ -73,6 +73,7 @@ class FSTagLibraryHandler {
 			Nodes nameNode = tagLibDoc.query(Field.name.toSimpleXQuery());
 			String libName = nameNode.get(0).getValue();
 			Nodes fileURINode = tagLibDoc.query(Field.fileURI.toSimpleXQuery());
+			//FIXME: file url darf unter linux nur zwei slashes haben, also auf fuehrenden slash testen
 			String fileURI = 
 					"file:///" + repoFolderPath  
 					+ "/" 
