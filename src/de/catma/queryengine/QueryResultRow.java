@@ -18,6 +18,20 @@ public class QueryResultRow {
 		this.range = range;
 		this.phrase = phrase;
 	}
+	
+	
+	public QueryResultRow(String sourceDocumentId, Range range, String phrase,
+			String markupDocumentId, String tagDefinitionId,
+			String tagInstanceId) {
+		super();
+		this.sourceDocumentId = sourceDocumentId;
+		this.range = range;
+		this.phrase = phrase;
+		this.markupDocumentId = markupDocumentId;
+		this.tagDefinitionId = tagDefinitionId;
+		this.tagInstanceId = tagInstanceId;
+	}
+
 
 	@Override
 	public String toString() {
