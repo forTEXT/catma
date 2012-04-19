@@ -109,6 +109,7 @@ public class ESTagReferenceDocument {
 
 	public static ESTagReferenceDocument fromJSON(JSONObject jsonObject)
 			throws JSONException {
+	
 		String documentId = jsonObject.getString("documentId");
 		String userMarkupCollectionId = jsonObject
 				.getString("userMarkupCollectionId");
@@ -120,7 +121,7 @@ public class ESTagReferenceDocument {
 		String version = jsonObject.getString("version");
 		int c_start = jsonObject.getInt("characterStart");
 		int c_end = jsonObject.getInt("characterEnd");
-
+		
 		return new ESTagReferenceDocument(documentId, userMarkupCollectionId,
 				new UUID(tagDefinitionId_m, tagDefinitionId_l), new UUID(
 						tagInstanceId_m, tagInstanceId_l), tagPath, version,
