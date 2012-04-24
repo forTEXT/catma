@@ -215,7 +215,6 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		TeiElement fDecl = new TeiElement(TeiElementName.fDecl);
 		fDecl.setID(catmaIDGenerator.generate(tagDefinition.getID()+propertyName));
 		fDecl.setAttributeValue(Attribute.fDecl_name, propertyName);
-		fDecl.setAttributeValue(Attribute.fDecl_optional, "false");
 		TeiElement vRange = new TeiElement(TeiElementName.vRange);
 		TeiElement string = new TeiElement(TeiElementName.string);
 		string.appendChild(propertyValue);
@@ -306,11 +305,6 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		TeiElement fDecl = new TeiElement(TeiElementName.fDecl);
 		fDecl.setID(catmaIDGenerator.generate(id+"catma_displaycolor"));
 		fDecl.setAttributeValue(Attribute.fDecl_name, "catma_displaycolor");
-
-		if (forBase) {
-			fDecl.setAttributeValue(Attribute.fDecl_optional, "false");
-			
-		}
 		
 		TeiElement vRange = new TeiElement(TeiElementName.vRange);
 		

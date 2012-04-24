@@ -8,9 +8,15 @@ import nu.xom.ParsingException;
 import nu.xom.ValidityException;
 
 public class TeiDocumentFactory {
-
+	
 	public TeiDocument createDocumentFromStream(
 			String id, InputStream inputStream) 
+			throws ValidityException, ParsingException, IOException {
+		return createDocumentFromStream(id, inputStream, true);
+	}
+
+	private TeiDocument createDocumentFromStream(
+			String id, InputStream inputStream, boolean versionUpgrade) 
 			throws ValidityException, ParsingException, IOException {
 		Builder builder = new Builder( new TeiNodeFactory() );
 		
@@ -26,7 +32,7 @@ public class TeiDocumentFactory {
 		return createDocumentFromStream(
 				id,
 				Thread.currentThread().getContextClassLoader().getResourceAsStream(
-						"de/catma/serialization/tei/MinimalStandoffmarkup.xml"));
-		//TODO: set Version to 3 to prevent senseless version upgrade
+						"de/catma/serialization/tei/MinimalStandoffmarkup.xml"),
+				false);
 	}
 }

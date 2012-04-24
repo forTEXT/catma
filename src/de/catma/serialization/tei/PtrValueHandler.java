@@ -19,8 +19,6 @@
 
 package de.catma.serialization.tei;
 
-import java.util.regex.Pattern;
-
 import org.antlr.runtime.RecognitionException;
 
 import de.catma.core.document.Range;
@@ -35,12 +33,6 @@ import de.catma.serialization.tei.pointer.TextFragmentIdentifierFactory;
  *
  */
 public class PtrValueHandler implements AttributeValueHandler {
-	
-	/**
-	 * The {@link Pattern} that describes a {@link Attribute#ptr_target}.
-	 */
-	public static final String TARGETPATTERN = 
-		".+#range\\(\\s*/\\.\\d+\\s*,\\s*/\\.\\d+\\s*\\)\\s*";
 	
 	/**
 	 * A container for the values of {@link Attribute#ptr_target}. 
@@ -61,19 +53,13 @@ public class PtrValueHandler implements AttributeValueHandler {
 		}
 	}
 	
-	/**
-	 * Creates a target string with the given range and the given filename.
-	 * @param range the range of the text string 
-	 * @param fileName the filename <b>(deprecated!)</b>
-	 * @return the new target string
-	 */
-	public String makeTargetFrom( Range range, String fileName ) {
-		StringBuilder targetValue = new StringBuilder( fileName );
-		targetValue.append( "#range( /." );
+	
+	public String makeTargetFrom( Range range, String uri ) {
+		StringBuilder targetValue = new StringBuilder( uri );
+		targetValue.append( "#char=" );
 		targetValue.append( range.getStartPoint() );
-		targetValue.append( ", /." );
+		targetValue.append( "," );
 		targetValue.append( range.getEndPoint() );
-		targetValue.append( ")" );
 		
 		return targetValue.toString();
 	}

@@ -1,53 +1,98 @@
 package de.catma.fsrepository;
 
-import java.io.FilterInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 
+import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.core.util.CloseSafe;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 
 class FSUserMarkupCollectionHandler {
 
+	private String repoFolderPath;
 	private UserMarkupCollectionSerializationHandler userMarkupCollectionSerializationHandler;
 
 	public FSUserMarkupCollectionHandler(
+			String repoFolderPath,
 			UserMarkupCollectionSerializationHandler userMarkupCollectionSerializationHandler) {
-		super();
+		this.repoFolderPath = repoFolderPath;
 		this.userMarkupCollectionSerializationHandler = userMarkupCollectionSerializationHandler;
 	}
 	
 	
 	public UserMarkupCollection loadUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
-		URLConnection urlConnection = 
-				new URL(userMarkupCollectionReference.getId()).openConnection();
+		String userMarkupURI = 
+				FSRepository.getFileURL(
+					userMarkupCollectionReference.getId(), repoFolderPath);
 		
-		FilterInputStream is = new BOMFilterInputStream(
-				urlConnection.getInputStream(), Charset.forName( "UTF-8" )); //TODO: BOM-detection?
-		UserMarkupCollection userMarkupCollection = 
-				userMarkupCollectionSerializationHandler.deserialize(
-						userMarkupCollectionReference.getId(), is);
-		userMarkupCollection.setName(userMarkupCollectionReference.getName());
-		return userMarkupCollection;
+		URLConnection urlConnection = 
+				new URL(userMarkupURI).openConnection();
+		
+		InputStream is = null;
+		
+		try {
+			is = urlConnection.getInputStream();
+			try {
+				if (BOMFilterInputStream.hasBOM(
+						new URI(userMarkupURI))) {
+					is = new BOMFilterInputStream(
+							is, Charset.forName( "UTF-8" ));
+				}
+			}
+			catch (URISyntaxException se) {
+				throw new IOException(se);
+			}
+			
+			UserMarkupCollection userMarkupCollection = 
+					userMarkupCollectionSerializationHandler.deserialize(
+							userMarkupCollectionReference.getId(), is);
+			userMarkupCollection.setName(userMarkupCollectionReference.getName());
+			
+			is.close();
+			
+			return userMarkupCollection;
+		}
+		finally {
+			CloseSafe.close(is);
+		}
+		
 	}	
 	
 	public UserMarkupCollectionReference saveUserMarkupCollection(
-			UserMarkupCollection userMarkupCollection) throws IOException {
+			UserMarkupCollection userMarkupCollection, 
+			SourceDocument sourceDocument) throws IOException {
+		
 		UserMarkupCollectionReference reference = 
 				new UserMarkupCollectionReference(
 						userMarkupCollection.getId(), 
 						userMarkupCollection.getName());
 	
+		String url = FSRepository.getFileURL(
+				userMarkupCollection.getId(), repoFolderPath);
+		
 		URLConnection urlConnection = 
-				new URL(userMarkupCollection.getId()).openConnection();
+				new URL(url).openConnection();
 		
-		userMarkupCollectionSerializationHandler.serialize(userMarkupCollection, urlConnection.getOutputStream());
+		OutputStream os = null;
+		try {
+			os = urlConnection.getOutputStream();
 		
+			userMarkupCollectionSerializationHandler.serialize(
+					userMarkupCollection, sourceDocument, os);
+		}
+		finally {
+			CloseSafe.close(os);
+		}
 		
 		return reference;
 	}

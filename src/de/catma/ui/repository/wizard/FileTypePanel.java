@@ -25,9 +25,10 @@ import de.catma.CleaApplication;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
+import de.catma.core.document.ContentInfoSet;
 import de.catma.core.document.Range;
+import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.CharsetLanguageInfo;
-import de.catma.core.document.source.ContentInfoSet;
 import de.catma.core.document.source.FileOSType;
 import de.catma.core.document.source.FileType;
 import de.catma.core.document.source.SourceDocument;
@@ -62,8 +63,11 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	private Panel previewPanel;
 	private WizardStepListener wizardStepListener;
 	private WizardResult wizardResult;
+	private Repository repository;
 	
-	public FileTypePanel(WizardStepListener wizardStepListener, WizardResult wizardResult) {
+	public FileTypePanel(
+			WizardStepListener wizardStepListener, WizardResult wizardResult, 
+			Repository repository) {
 		super(2,4);
 		this.wizardResult = wizardResult;
 		this.sourceDocumentInfo = wizardResult.getSourceDocumentInfo();
@@ -135,7 +139,6 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 							
 							sourceDocumentInfo.getTechInfoSet().setFileType(fileType);
 							
-							
 							if (fileType.equals(FileType.TEXT)) {
 								System.out.println(result.encoding);
 								
@@ -150,7 +153,10 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 									SourceDocumentHandler sourceDocumentHandler = 
 											new SourceDocumentHandler();
 									SourceDocument sourceDocument =
-											sourceDocumentHandler.loadSourceDocument(sourceDocumentInfo);
+											sourceDocumentHandler.loadSourceDocument(
+											repository.createIdFromURI(
+												sourceDocumentInfo.getTechInfoSet().getURI()), 
+											sourceDocumentInfo);
 									
 									sourceDocument.getSourceContentHandler().load(
 											new ByteArrayInputStream(currentByteContent));
@@ -182,7 +188,9 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
 		try {
 			SourceDocument sourceDocument =
-					sourceDocumentHandler.loadSourceDocument(sourceDocumentInfo);
+					sourceDocumentHandler.loadSourceDocument(
+						repository.createIdFromURI(sourceDocumentInfo.getTechInfoSet().getURI()),
+						sourceDocumentInfo);
 			
 			sourceDocument.getSourceContentHandler().load(
 					new ByteArrayInputStream(currentByteContent));

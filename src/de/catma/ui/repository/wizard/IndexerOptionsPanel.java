@@ -121,7 +121,7 @@ public class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep
 				onAdvance = (languagesListSelect.getValue() != null);
 				if (languagesListSelect.getValue() != null) {
 					
-					sourceDocumentInfo.getContentInfoSet().setLocale(
+					sourceDocumentInfo.getIndexInfoSet().setLocale(
 							((LanguageItem)languagesListSelect.getValue()).getLocale());
 				}
 				wizardStepListener.stepChanged(IndexerOptionsPanel.this);
@@ -289,7 +289,7 @@ public class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep
 		try {
 			LanguageDetector ld = new LanguageDetector();
 			Locale locale = ld.getLocale(ld.detect(wizardResult.getSourceDocument().getContent()));
-			sourceDocumentInfo.getContentInfoSet().setLocale(locale);
+			sourceDocumentInfo.getIndexInfoSet().setLocale(locale);
 			
 			LanguageItem current = new LanguageItem(locale);
 			for (LanguageItem li : this.sortedLangs) {

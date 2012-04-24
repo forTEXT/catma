@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import de.catma.core.document.source.ContentInfoSet;
+import de.catma.core.document.ContentInfoSet;
 import de.catma.core.document.source.IndexInfoSet;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.source.SourceDocumentInfo;

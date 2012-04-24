@@ -145,7 +145,8 @@ public class RepositoryView extends VerticalLayout {
 					
 					public void activeStepChanged(WizardStepActivationEvent event) {/*not needed*/}
 				}, 
-				wizardResult);
+				wizardResult,
+				repository);
 				getApplication().getMainWindow().addWindow(sourceDocCreationWizardWindow);
 				sourceDocCreationWizardWindow.center();
 			}

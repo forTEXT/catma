@@ -7,6 +7,8 @@ import org.vaadin.teemu.wizards.event.WizardProgressListener;
 import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
 import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
+import de.catma.core.document.repository.Repository;
+
 public class WizardFactory {
 
 	private static class WizardManager implements
@@ -49,7 +51,8 @@ public class WizardFactory {
 	}
 
 	public WizardWindow createWizardWindow(
-			WizardProgressListener wizardProgressListener, WizardResult wizardResult) {
+			WizardProgressListener wizardProgressListener, 
+			WizardResult wizardResult, Repository repository) {
 		
 		Wizard wizard = new Wizard();
 		wizard.getFinishButton().setEnabled(false);
@@ -60,7 +63,7 @@ public class WizardFactory {
 		
 		wizard.addStep(
 				new FileTypePanel(
-						new ToggleButtonStateListener(wizard), wizardResult));
+						new ToggleButtonStateListener(wizard), wizardResult, repository));
 		
 		wizard.addStep(
 				new IndexerOptionsPanel(

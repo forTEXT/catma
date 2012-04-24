@@ -23,7 +23,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 import nu.xom.Elements;
-import de.catma.core.document.source.ContentInfoSet;
+import de.catma.core.document.ContentInfoSet;
 import de.catma.core.document.source.IndexInfoSet;
 import de.catma.core.document.source.TechInfoSet;
 
@@ -67,7 +67,8 @@ class TeiHeader {
 		this.publisher = publisher;
 		this.sourceDesc = sourceDesc;
         this.language = language;
-		this.technicalDescription = new TechnicalDescription( sourceDesc, technicalDescriptionElement );
+		this.technicalDescription = 
+				new TechnicalDescription( sourceDesc, technicalDescriptionElement );
 	}
 
 	/**
@@ -278,7 +279,7 @@ class TeiHeader {
 	 */
 	public void setValues( ContentInfoSet contentInfoSet, TechInfoSet techInfoSet, IndexInfoSet indexInfoSet ) {
 		setStandardFieldValues( contentInfoSet );
-        setLanguage(contentInfoSet.getLocale());
+        setLanguage(indexInfoSet.getLocale());
 		technicalDescription.setValuesFrom( techInfoSet, indexInfoSet );
 	}
 	
@@ -287,5 +288,19 @@ class TeiHeader {
 	 */
 	public TechnicalDescription getTechnicalDescription() {
 		return technicalDescription;
+	}
+
+	public void setValues(ContentInfoSet contentInfoSet) {
+		setStandardFieldValues(contentInfoSet);
+	}
+	
+	TeiElement getEncodingDescElement() {
+		TeiElement encodingDescElement = 
+			teiHeaderElement.getFirstTeiChildElement(TeiElementName.encodingDesc);
+		if (encodingDescElement == null) {
+			encodingDescElement = new TeiElement(TeiElementName.encodingDesc);
+			teiHeaderElement.appendChild(encodingDescElement);
+		}
+		return encodingDescElement;
 	}
 }

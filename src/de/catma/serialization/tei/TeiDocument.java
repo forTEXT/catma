@@ -10,7 +10,7 @@ import nu.xom.Node;
 import nu.xom.Nodes;
 import nu.xom.Serializer;
 import nu.xom.XPathContext;
-import de.catma.core.document.source.ContentInfoSet;
+import de.catma.core.document.ContentInfoSet;
 import de.catma.core.document.source.IndexInfoSet;
 import de.catma.core.document.source.TechInfoSet;
 import de.catma.core.util.IDGenerator;
@@ -230,30 +230,24 @@ class TeiDocument {
 	}
 
 
-
 	/**
 	 * @return a new {@link Attribute#xmlid}
 	 */
-	public static nu.xom.Attribute getNewXmlIDAttribute() {
+	static nu.xom.Attribute getNewXmlIDAttribute() {
 		return new nu.xom.Attribute( 
 				Attribute.xmlid.getPrefixedName(),
 				Attribute.xmlid.getNamespaceURI(),
 				new IDGenerator().generate() );
 	}
 
-
-
 	public ContentInfoSet getContentInfoSet() {
 		ContentInfoSet cis = 
 				new ContentInfoSet(
 						teiHeader.getSimpleAuthor(), teiHeader.getSimpleSourceDesc(),
-						teiHeader.getSimplePublisher(), teiHeader.getSimpleTitle(), 
-						teiHeader.getLanguage());
+						teiHeader.getSimplePublisher(), teiHeader.getSimpleTitle());
 		
 		return cis;
 	}
-
-
 
 	public TechInfoSet getTechInfoset() {
 		TechnicalDescription td = teiHeader.getTechnicalDescription();
@@ -269,7 +263,8 @@ class TeiDocument {
 		IndexInfoSet iis = 
 				new IndexInfoSet(
 						td.getUnseparableCharacterSequenceList(), 
-						td.getUserDefinedSeparatingCharacterList());
+						td.getUserDefinedSeparatingCharacterList(),
+						teiHeader.getLanguage());
 		return iis;
 	}
 

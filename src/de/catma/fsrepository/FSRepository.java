@@ -4,6 +4,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -23,6 +24,7 @@ import de.catma.serialization.SerializationHandlerFactory;
 class FSRepository implements Repository {
 	
 	static final String CONTAINER_FOLDER = "container";
+	private static final String REPO_URI_SCHEME = "catma://";
 	
 	private String name;
 	private String repoFolderPath;
@@ -56,6 +58,7 @@ class FSRepository implements Repository {
 		
 		this.userMarkupCollectionHandler = 
 			new FSUserMarkupCollectionHandler(
+				repoFolderPath,
 				serializationHandlerFactory.getUserMarkupCollectionSerializationHandler());
 
 	}
@@ -176,7 +179,7 @@ class FSRepository implements Repository {
 	public void createUserMarkupCollection(
 			String name, SourceDocument sourceDocument) {
 		
-		
+//		UserMarkupCollection umc = new UserMarkupCollection(id, contentInfoSet, tagLibrary, tagReferences):
 		
 		// TODO Auto-generated method stub
 		// hier gehts weiter erzeugen, speichern und event
@@ -205,5 +208,26 @@ class FSRepository implements Repository {
 			PropertyChangeListener propertyChangeListener) {
 		this.propertyChangeSupport.removePropertyChangeListener(
 				propertyChangeEvent.name(), propertyChangeListener);
+	}
+	
+	public static String getFileURL(String catmaUri, String... path) {
+		StringBuilder builder = new StringBuilder("file://");
+		for (String folder : path) {
+			builder.append(folder);
+		}
+		builder.append(catmaUri.substring((REPO_URI_SCHEME).length()));
+		return builder.toString();
+	}
+	
+	public static String createCatmaUri(String path) {
+		return REPO_URI_SCHEME + path;
+	}
+
+	public static boolean isCatmaUri(String uri) {
+		return uri.startsWith(REPO_URI_SCHEME);
+	}
+
+	public String createIdFromURI(URI uri) {
+		return sourceDocumentHandler.createIDFromURI(uri);
 	}
 }

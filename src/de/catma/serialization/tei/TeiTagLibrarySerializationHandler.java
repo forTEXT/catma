@@ -10,20 +10,28 @@ import de.catma.serialization.TagLibrarySerializationHandler;
 public class TeiTagLibrarySerializationHandler implements TagLibrarySerializationHandler {
 	
 	private TagManager tagManager;
+	private TeiDocument teiDocument;
 	
+	public TeiTagLibrarySerializationHandler(
+			TeiDocument teiDocument, TagManager tagManager) {
+		super();
+		this.tagManager = tagManager;
+		this.teiDocument = teiDocument;
+	}
+
 	public TeiTagLibrarySerializationHandler(TagManager tagManager) {
 		super();
 		this.tagManager = tagManager;
 	}
-
-
+	
 	public void serialize(TagLibrary tagLibrary) {
-		// TODO Auto-generated method stub
-
+		TeiTagLibrarySerializer serializer = 
+				new TeiTagLibrarySerializer(teiDocument);
+		serializer.serialize(tagLibrary);
 	}
 	
 	
-	public TagLibrary deserialize(TeiDocument teiDocument) {
+	public TagLibrary deserialize() {
 		TeiTagLibraryDeserializer deserializer = 
 				new TeiTagLibraryDeserializer(teiDocument, tagManager);
 		return deserializer.getTagLibrary();
@@ -33,10 +41,9 @@ public class TeiTagLibrarySerializationHandler implements TagLibrarySerializatio
 			String id, InputStream inputStream) throws IOException {
 		try {
 			TeiDocumentFactory factory = new TeiDocumentFactory();
-			TeiDocument teiDocument = 
+			teiDocument = 
 					factory.createDocumentFromStream(id, inputStream);
-			
-			return deserialize(teiDocument);
+			return deserialize();
 			
 		} catch (Exception exc) {
 			throw new IOException(exc);

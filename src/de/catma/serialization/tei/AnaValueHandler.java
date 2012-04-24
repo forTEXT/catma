@@ -22,6 +22,8 @@ package de.catma.serialization.tei;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.catma.core.tag.TagInstance;
+
 /**
  * A handler for values of {@link Attribute#ana}.
  *
@@ -56,22 +58,18 @@ public class AnaValueHandler implements AttributeValueHandler {
 //		return makeValueFrom( tags.toArray( new Tag[]{} ) );
 //	}
 	
-	/**
-	 * Creates a value string with references to the Tags in the given list.
-	 * 
-	 * @param tags the tags we want to reference (at least one!)
-	 * @return the new value string
-	 */
-//	public String makeValueFrom( Tag... tags ) {
-//		StringBuilder builder = new StringBuilder();
-//		String conc = "";
-//		for( Tag tag : tags ) {
-//			builder.append( conc );
-//			builder.append( "#" );
-//			builder.append( tag.getID() );
-//		}
-//		return builder.toString();
-//	}
+
+	public String makeValueFrom( List<TagInstance> tagInstances ) {
+		StringBuilder builder = new StringBuilder();
+		String conc = "";
+		for( TagInstance tagInstance : tagInstances ) {
+			builder.append( conc );
+			builder.append( "#" );
+			builder.append( tagInstance.getID() );
+			conc = " ";
+		}
+		return builder.toString();
+	}
 
 	/**
 	 * Extracts the Tags that are referenced by the given value string.

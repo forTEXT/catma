@@ -1,8 +1,10 @@
 package de.catma.fsrepository;
 
 import java.io.File;
-import java.io.FilterInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
@@ -15,6 +17,7 @@ import nu.xom.Nodes;
 import de.catma.core.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
+import de.catma.core.util.CloseSafe;
 import de.catma.serialization.TagLibrarySerializationHandler;
 
 class FSTagLibraryHandler {
@@ -43,7 +46,7 @@ class FSTagLibraryHandler {
 		this.repoFolderPath = repoFolderPath;
 		this.libFolderPath =
 				this.repoFolderPath + 
-				System.getProperty("file.separator") + 
+				"/" + 
 				TAGLIBRARY_FOLDER;
 		this.tagLibrarySerializationHandler = tagLibrarySerializationHandler;
 	}
@@ -73,13 +76,8 @@ class FSTagLibraryHandler {
 			Nodes nameNode = tagLibDoc.query(Field.name.toSimpleXQuery());
 			String libName = nameNode.get(0).getValue();
 			Nodes fileURINode = tagLibDoc.query(Field.fileURI.toSimpleXQuery());
-			//FIXME: file url darf unter linux nur zwei slashes haben, also auf fuehrenden slash testen
-			String fileURI = 
-					"file:///" + repoFolderPath  
-					+ "/" 
-					+ fileURINode.get(0).getValue();
-			
-			return new TagLibraryReference(libName, fileURI);
+
+			return new TagLibraryReference(libName, fileURINode.get(0).getValue());
 		}
 		catch(Exception e) {
 			throw new IOException(e);
@@ -90,12 +88,33 @@ class FSTagLibraryHandler {
 			throws IOException {
 		
 		URLConnection urlConnection = 
-				new URL(tagLibraryReference.getId()).openConnection();
+			new URL(FSRepository.getFileURL(
+				tagLibraryReference.getId(), repoFolderPath)).openConnection();
 		
-		FilterInputStream is = new BOMFilterInputStream(
-				urlConnection.getInputStream(), Charset.forName( "UTF-8" ));
-		return tagLibrarySerializationHandler.deserialize(
-				tagLibraryReference.getId(), is); 
+		InputStream is = null;
+		try {
+			try {
+				if (BOMFilterInputStream.hasBOM(
+					new URI(FSRepository.getFileURL(
+							tagLibraryReference.getId(), repoFolderPath)))) {
+					
+					is = new BOMFilterInputStream(
+							urlConnection.getInputStream(), 
+							Charset.forName( "UTF-8" ));
+				}
+				else {
+					is = urlConnection.getInputStream();
+				}
+			}
+			catch (URISyntaxException exc) {
+				throw new IOException(exc);
+			}
+			return tagLibrarySerializationHandler.deserialize(
+					tagLibraryReference.getId(), is);
+		}
+		finally {
+			CloseSafe.close(is);
+		}
 	}
 	
 }

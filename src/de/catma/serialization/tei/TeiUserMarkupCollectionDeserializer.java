@@ -14,7 +14,6 @@ import de.catma.core.tag.PropertyValueList;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagInstance;
 import de.catma.core.tag.TagLibrary;
-import de.catma.core.util.StopWatch;
 import de.catma.serialization.tei.PtrValueHandler.TargetValues;
 
 public class TeiUserMarkupCollectionDeserializer {
@@ -75,7 +74,8 @@ public class TeiUserMarkupCollectionDeserializer {
 		TeiElement tagInstanceElement = teiDocument.getElementByID(tagInstanceID);
 		TagDefinition tagDefinition = tagLibrary.getTagDefinition(
 				tagInstanceElement.getAttributeValue(Attribute.type));
-		final TagInstance tagInstance = new TagInstance(tagInstanceElement.getID(), tagDefinition);
+		final TagInstance tagInstance = 
+				new TagInstance(tagInstanceElement.getID(), tagDefinition);
 		
 		Nodes systemPropertyElements = tagInstanceElement.getChildNodes(
 				TeiElementName.f,
@@ -83,10 +83,8 @@ public class TeiUserMarkupCollectionDeserializer {
 		addProperties(
 				tagInstance.getTagDefinition(), 
 				new AddPropertyHandler() {
-			
 					public void addProperty(Property property) {
 						tagInstance.addSystemProperty(property);
-						
 					}
 				}, 
 				systemPropertyElements);

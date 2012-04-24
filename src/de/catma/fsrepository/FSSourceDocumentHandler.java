@@ -30,6 +30,7 @@ import de.catma.core.document.source.SourceDocumentInfo;
 import de.catma.core.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.core.util.CloseSafe;
 import de.catma.core.util.IDGenerator;
 import de.catma.serialization.DocumentSerializer;
 import de.catma.serialization.SourceDocumentInfoSerializationHandler;
@@ -49,7 +50,7 @@ class FSSourceDocumentHandler {
 		}
 	}
 
-	private static final String DIGITALOBJECTS_FOLDER = "digitalobjects";
+	static final String DIGITALOBJECTS_FOLDER = "digitalobjects";
 	
 	private String repoFolderPath;
 	private String digitalObjectsFolderPath;
@@ -95,21 +96,27 @@ class FSSourceDocumentHandler {
 					digitalObject.query(
 						Field.infosetsURI.toSimpleXQuery()).get(0).getValue();
 			
-			URL infosetsURL = new URL(
-					"file:///" + repoFolderPath 
-					+ "/"
-					+ infosetsDocumentURLString);
+			URL infosetsURL = 
+					new URL(FSRepository.getFileURL(
+							infosetsDocumentURLString, repoFolderPath));
+
 			
 			URLConnection infosetsURLConnection = infosetsURL.openConnection();
 			infosetsInputStream = infosetsURLConnection.getInputStream();
 			
 			String sourceURIVal = 
-					digitalObject.query(Field.sourceURI.toSimpleXQuery()).get(0).getValue();
-			String prefix = "";
-			if (!sourceURIVal.contains("http")) {
-				prefix = "file:///" + repoFolderPath + "/";
+					digitalObject.query(
+						Field.sourceURI.toSimpleXQuery()).get(0).getValue();
+							
+			URI sourceURI = null;
+			if (FSRepository.isCatmaUri(sourceURIVal)) {
+				sourceURI = 
+					new URI(
+						FSRepository.getFileURL(sourceURIVal, repoFolderPath));
 			}
-			URI sourceURI = new URI(prefix + sourceURIVal);
+			else {
+				sourceURI = new URI(sourceURIVal);
+			}
 
 			SourceDocumentInfo sourceDocumentInfo = 
 					this.sourceDocumentInfoSerializationHandler.deserialize(
@@ -119,19 +126,20 @@ class FSSourceDocumentHandler {
 									Charset.forName("UTF-8")));
 			
 			sourceDocumentInfo.getTechInfoSet().setURI(sourceURI);
+			
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
 			SourceDocument sourceDocument = 
-					sourceDocumentHandler.loadSourceDocument(sourceDocumentInfo);
+					sourceDocumentHandler.loadSourceDocument(
+							sourceURIVal, sourceDocumentInfo);
 			
 			Nodes staticMarkupURINodes = digitalObject.query(Field.staticMarkupURI.toSimpleXQuery());
 			
 			for (int i=0; i<staticMarkupURINodes.size(); i++) {
 				Node staticMarkupURINode = staticMarkupURINodes.get(i);
-				String staticMarkupURI = "file:///" + repoFolderPath 
-						+ "/"
-						+ staticMarkupURINode.getValue();
 				StaticMarkupCollectionReference staticMarkupCollRef = 
-						new StaticMarkupCollectionReference(staticMarkupURI, staticMarkupURI);
+						new StaticMarkupCollectionReference(
+								staticMarkupURINode.getValue(), 
+								staticMarkupURINode.getValue());
 				sourceDocument.addStaticMarkupCollectionReference(staticMarkupCollRef);
 			}
 			
@@ -139,33 +147,38 @@ class FSSourceDocumentHandler {
 			
 			for (int i=0; i<userURINodes.size(); i++) {
 				Node userURINode = userURINodes.get(i);
-				String userURI = "file:///" + repoFolderPath 
-						+ "/"
-						+ userURINode.getValue();
 				UserMarkupCollectionReference userMarkupCollRef = 
-						new UserMarkupCollectionReference(userURI, userURI);
+						new UserMarkupCollectionReference(
+								userURINode.getValue(), userURINode.getValue());
 				sourceDocument.addUserMarkupCollectionReference(userMarkupCollRef);
 			}
 			
-			infosetsInputStream.close();
-			
+			CloseSafe.close(infosetsInputStream);
 			return sourceDocument;
-		} catch (Exception e) {
-			if (infosetsInputStream != null) {
-				try {
-					infosetsInputStream.close();
-				}
-				catch(Exception e2){}
-			}
-			throw new IOException(e);
 		}
-		
+		catch (Exception exc) {
+			CloseSafe.close(infosetsInputStream);
+			throw new IOException(exc);
+		}
 	}
 	
 	public String getDigitalObjectsFolderPath() {
 		return digitalObjectsFolderPath;
 	}
 
+	
+	public String createIDFromURI(URI uri) {
+		if (uri.getScheme().equals("file")) {
+			File file = new File(uri);
+			return FSRepository.createCatmaUri(
+					DIGITALOBJECTS_FOLDER + "/"
+					+ file.getName());
+		}
+		else {
+			return uri.toString();
+		}
+	}
+	
 	public void insert(SourceDocument sourceDocument) throws IOException {
 
 		IDGenerator idGenerator = new IDGenerator();
@@ -191,15 +204,13 @@ class FSSourceDocumentHandler {
 				IOUtils.copy(sourceTempFileStream, repoSourceFileOutputStream);
 			}
 			finally {
-				sourceTempFileStream.close();
-				repoSourceFileOutputStream.close();
+				CloseSafe.close(sourceTempFileStream);
+				CloseSafe.close(repoSourceFileOutputStream);
 			}
 			
 			sourceTempFile.delete();
 			
-			sourceDocURIString = 
-					DIGITALOBJECTS_FOLDER + "/"
-					+ sourceTempFile.getName();
+			sourceDocURIString = createIDFromURI(sourceDocURI);
 		}
 		else {
 			String localCopyFileName = "Source_" + idGenerator.generate();
@@ -218,21 +229,23 @@ class FSSourceDocumentHandler {
 				repoSourceFileWriter.append(sourceDocument.getContent());
 			}
 			finally {
-				repoSourceFileWriter.close();
+				CloseSafe.close(repoSourceFileWriter);
 			}
 			
 			if (sourceDocumentInfo.getTechInfoSet().isManagedResource()) {
-				sourceDocURIString = 
+				sourceDocURIString =
+						FSRepository.createCatmaUri(
 						DIGITALOBJECTS_FOLDER 
 						+ "/"
-						+ localCopyFileName;
+						+ localCopyFileName);
 			}
 			else {
 				Element rawCopyUriElement = new Element(Field.rawcopyURI.name());
 				rawCopyUriElement.appendChild(
-						DIGITALOBJECTS_FOLDER 
-						+ "/"
-						+ localCopyFileName);
+						FSRepository.createCatmaUri(
+							DIGITALOBJECTS_FOLDER 
+							+ "/"
+							+ localCopyFileName));
 			}
 		}
 		
@@ -247,9 +260,14 @@ class FSSourceDocumentHandler {
 				this.containerPath
 				+ System.getProperty("file.separator")
 				+ repoInfosetsFileName);
-		
-		sourceDocumentInfoSerializationHandler.serialize(
-				sourceDocument, new FileOutputStream(repoInfosetsFile));
+		FileOutputStream infosetsFos = new FileOutputStream(repoInfosetsFile);
+		try {
+			sourceDocumentInfoSerializationHandler.serialize(
+					sourceDocument, infosetsFos);
+		}
+		finally {
+			CloseSafe.close(infosetsFos);
+		}
 		
 		Element infoSetsUriElement = new Element(Field.infosetsURI.name());
 		infoSetsUriElement.appendChild(
@@ -263,6 +281,12 @@ class FSSourceDocumentHandler {
 		
 		Document digitalObject = new Document(root);
 		DocumentSerializer serializer = new DocumentSerializer();
-		serializer.serialize(digitalObject, new FileOutputStream(repoDigitalObjectFile));
+		FileOutputStream fos = new FileOutputStream(repoDigitalObjectFile);
+		try {
+			serializer.serialize(digitalObject, fos);
+		}
+		finally {
+			CloseSafe.close(fos);
+		}
 	}
 }
