@@ -67,5 +67,9 @@ public enum TaggerMessageAttribute {
 	 * Log messages sent from the client to the server.
 	 */
 	LOGMESSAGE, 
+	/**
+	 * Attribute signals the tagger ID to the client.
+	 */
+	ID,
 	;
 }

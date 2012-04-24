@@ -38,9 +38,12 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 
 	private HashMap<String, ClientTagInstance> tagInstances = new HashMap<String, ClientTagInstance>();
 	private TaggerEditorListener taggerEditorListener;
+
+	private String taggerID;
 	
 	public TaggerEditor(TaggerEditorListener taggerEditorListener) {
 		super(Document.get().createDivElement());
+		
 		this.taggerEditorListener = taggerEditorListener;
 		
 		setStylePrimaryName(TAGGER_STYLE_CLASS);
@@ -100,7 +103,7 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 
 			//TODO: flatten ranges to prevent multiple tagging of the same range with the same instance!
 			
-			RangeConverter converter = new RangeConverter();
+			RangeConverter converter = new RangeConverter(taggerID);
 
 			List<TextRange> textRanges = new ArrayList<TextRange>();
 			for (Range range : lastRangeList) { 
@@ -363,9 +366,10 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 
 	public void addTagInstance(ClientTagInstance tagInstance) {
 		if (!tagInstances.containsKey(tagInstance.getInstanceID())) {
+			
 			tagInstances.put(tagInstance.getInstanceID(), tagInstance);
 	
-			RangeConverter rangeConverter = new RangeConverter();
+			RangeConverter rangeConverter = new RangeConverter(taggerID);
 	
 			TaggedSpanFactory taggedSpanFactory = 
 					new TaggedSpanFactory(
@@ -375,6 +379,15 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 					taggedSpanFactory, rangeConverter.convertToNodeRange(textRange));
 			}
 		}
+	}
+
+	public void setTaggerID(String taggerID) {
+		VConsole.log("Setting taggerID: " + taggerID);
+		this.taggerID = taggerID;
+	}
+	
+	public String getTaggerID() {
+		return taggerID;
 	}
 }
 

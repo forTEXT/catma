@@ -1,5 +1,6 @@
 package de.catma.serialization.tei;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,7 +29,7 @@ public class TeiUserMarkupCollectionSerializer {
 	
 	public void serialize(
 			UserMarkupCollection userMarkupCollection, 
-			SourceDocument sourceDocument) {
+			SourceDocument sourceDocument) throws IOException {
 		
 		String targetURI = makeTargetURI(sourceDocument);
 		
@@ -64,14 +65,33 @@ public class TeiUserMarkupCollectionSerializer {
 						targetURI,
 						new Range(0, range.getStartPoint()), abElement);
 			}
+			else if (lastRange.getEndPoint() != range.getStartPoint()) {
+				writePointer(
+						targetURI,
+						new Range(lastRange.getEndPoint(), range.getStartPoint()),
+						abElement);
+			}
 			List<TagReference> currentReferences = groupByRange.get(range);
-			writeSegment(
+			TeiElement seg = writeSegment(
 				currentReferences, abElement, 
 				textElement, addedTagInstances);
+			
+			writePointer(
+				targetURI, range, seg);
+			lastRange = range;
 		}
+		
+
+		if (lastRange.getEndPoint() != sourceDocument.getLength()) {
+			writePointer(
+				targetURI, 
+				new Range(lastRange.getEndPoint(), sourceDocument.getLength()), 
+				abElement);
+		}
+
 	}
 
-	private void writeSegment(
+	private TeiElement writeSegment(
 		List<TagReference> tagReferences, TeiElement abElement, 
 		TeiElement textElement, Set<String> addedTagInstances) {
 		
@@ -91,7 +111,7 @@ public class TeiUserMarkupCollectionSerializer {
 		seg.setAttributeValue(
 			Attribute.ana, anaValueHandler.makeValueFrom(tagInstances));
 		abElement.appendChild(seg);
-		
+		return seg;
 	}
 
 
@@ -106,12 +126,12 @@ public class TeiUserMarkupCollectionSerializer {
 			Attribute.type, tagInstance.getTagDefinition().getID());
 		for (PropertyDefinition pd : 
 			tagInstance.getTagDefinition().getSystemPropertyDefinitions()) {
-			writeProperty(tagInstance.getSystemProperty(pd.getName()), fs);
+			writeProperty(tagInstance.getSystemProperty(pd.getId()), fs);
 		}
 		
 		for (PropertyDefinition pd :
 			tagInstance.getTagDefinition().getUserDefinedPropertyDefinitions()) {
-			writeProperty(tagInstance.getUserDefinedProperty(pd.getName()),fs);
+			writeProperty(tagInstance.getUserDefinedProperty(pd.getId()),fs);
 		}
 		
 	}

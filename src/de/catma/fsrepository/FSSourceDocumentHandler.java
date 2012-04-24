@@ -56,6 +56,7 @@ class FSSourceDocumentHandler {
 	private String digitalObjectsFolderPath;
 	private String containerPath;
 	private SourceDocumentInfoSerializationHandler sourceDocumentInfoSerializationHandler;
+	private Map<String,String> sourceDoc2DigitalObject;
 
 	public FSSourceDocumentHandler(
 			String repoFolderPath, 
@@ -67,6 +68,7 @@ class FSSourceDocumentHandler {
 				this.repoFolderPath + System.getProperty("file.separator") + DIGITALOBJECTS_FOLDER;
 		this.containerPath = 
 				this.repoFolderPath + System.getProperty("file.separator") + FSRepository.CONTAINER_FOLDER;
+		this.sourceDoc2DigitalObject = new HashMap<String, String>();
 	}
 	
 	public Map<String,SourceDocument> loadSourceDocuments() {
@@ -78,6 +80,9 @@ class FSSourceDocumentHandler {
 			try {
 				SourceDocument current = loadSourceDocument(digitalObjectFile);
 				result.put(current.getID(), current);
+				sourceDoc2DigitalObject.put(
+					current.getID(),
+					digitalObjectFile.getAbsolutePath());
 			}
 			catch(IOException ioe) {
 				ExceptionHandler.log(ioe);
@@ -132,7 +137,8 @@ class FSSourceDocumentHandler {
 					sourceDocumentHandler.loadSourceDocument(
 							sourceURIVal, sourceDocumentInfo);
 			
-			Nodes staticMarkupURINodes = digitalObject.query(Field.staticMarkupURI.toSimpleXQuery());
+			Nodes staticMarkupURINodes = 
+					digitalObject.query(Field.staticMarkupURI.toSimpleXQuery());
 			
 			for (int i=0; i<staticMarkupURINodes.size(); i++) {
 				Node staticMarkupURINode = staticMarkupURINodes.get(i);
@@ -287,6 +293,31 @@ class FSSourceDocumentHandler {
 		}
 		finally {
 			CloseSafe.close(fos);
+		}
+	}
+
+	public void addUserMarkupCollectionReference(
+			UserMarkupCollectionReference ref, SourceDocument sourceDocument) throws IOException {
+		try {
+			String doPath = sourceDoc2DigitalObject.get(sourceDocument.getID());
+			File doFile = new File(doPath);
+			Document digitalObject = new Builder().build(new File(doPath));
+			
+			Element userMarkupURI = new Element(Field.userMarkupURI.name());
+			digitalObject.getRootElement().appendChild(userMarkupURI);
+			userMarkupURI.appendChild(ref.getId());
+			
+			DocumentSerializer serializer = new DocumentSerializer();
+			FileOutputStream fos = new FileOutputStream(doFile);
+			try {
+				serializer.serialize(digitalObject, fos);
+			}
+			finally {
+				CloseSafe.close(fos);
+			}
+		}
+		catch (Exception exc) {
+			throw new IOException(exc);
 		}
 	}
 }

@@ -55,13 +55,15 @@ public class Page {
 		;
 	}
 
+	private int taggerID;
 	private int pageStart;
 	private int pageEnd;
 	private String text;
 	private Map<String, ClientTagInstance> relativeTagInstances = 
 			new HashMap<String,ClientTagInstance>();
 	
-	public Page(String text, int pageStart, int pageEnd) {
+	public Page(int taggerID, String text, int pageStart, int pageEnd) {
+		this.taggerID = taggerID;
 		this.pageStart = pageStart;
 		this.pageEnd = pageEnd;
 		this.text = text;
@@ -78,7 +80,10 @@ public class Page {
 	private void buildModel() {
 		Matcher matcher = Pattern.compile(Pager.LINE_CONTENT_PATTERN).matcher(text);
 		Element rootDiv = new Element(HTMLElement.div.name());
-		rootDiv.addAttribute(new Attribute(HTMLAttribute.id.name(), ContentElementID.CONTENT.name()));
+		rootDiv.addAttribute(
+				new Attribute(
+					HTMLAttribute.id.name(), 
+					ContentElementID.CONTENT.name()+String.valueOf(taggerID)));
 		htmlDocModel = new Document(rootDiv);
 		
 		StringBuilder lineBuilder = new StringBuilder();
@@ -89,7 +94,9 @@ public class Page {
 			if (lineLength + matcher.group().length()>80) {
 				Element lineSpan = new Element(HTMLElement.span.name());
 				lineSpan.addAttribute(
-						new Attribute(HTMLAttribute.id.name(), ContentElementID.LINE.name()+lineId++));
+						new Attribute(
+								HTMLAttribute.id.name(), 
+								ContentElementID.LINE.name()+taggerID+lineId++));
 				lineSpan.appendChild(
 						new Text(lineBuilder.toString()));
 				htmlDocModel.getRootElement().appendChild(lineSpan);
@@ -107,7 +114,9 @@ public class Page {
 				lineBuilder.append(getSolidSpace(matcher.group(Pager.LINE_SEPARATOR_GROUP).length()));
 				Element lineSpan = new Element(HTMLElement.span.name());
 				lineSpan.addAttribute(
-						new Attribute(HTMLAttribute.id.name(), ContentElementID.LINE.name()+lineId++));
+						new Attribute(
+								HTMLAttribute.id.name(), 
+								ContentElementID.LINE.name()+taggerID+lineId++));
 				lineSpan.appendChild(new Text(lineBuilder.toString()));
 				htmlDocModel.getRootElement().appendChild(lineSpan);
 				htmlDocModel.getRootElement().appendChild(new Element(HTMLElement.br.name()));
@@ -121,7 +130,9 @@ public class Page {
 		if (lineLength != 0) {
 			Element lineSpan = new Element(HTMLElement.span.name());
 			lineSpan.addAttribute(
-					new Attribute(HTMLAttribute.id.name(), ContentElementID.LINE.name()+lineId++));
+					new Attribute(
+						HTMLAttribute.id.name(), 
+						ContentElementID.LINE.name()+taggerID+lineId++));
 			lineSpan.appendChild(new Text(lineBuilder.toString()));
 			htmlDocModel.getRootElement().appendChild(lineSpan);
 			htmlDocModel.getRootElement().appendChild(new Element(HTMLElement.br.name()));

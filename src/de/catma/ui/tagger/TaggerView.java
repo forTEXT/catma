@@ -37,8 +37,10 @@ public class TaggerView extends VerticalLayout implements TaggerListener {
 	private MarkupPanel markupPanel;
 	private boolean init = true;
 	private TagManager tagManager;
+	private int taggerID;
 	
-	public TaggerView(TagManager tagManager, SourceDocument sourceDocument, Repository repository) {
+	public TaggerView(int taggerID, TagManager tagManager, SourceDocument sourceDocument, Repository repository) {
+		this.taggerID = taggerID;
 		this.tagManager = tagManager;
 		this.sourceDocument = sourceDocument;
 		initComponents(repository);
@@ -48,9 +50,9 @@ public class TaggerView extends VerticalLayout implements TaggerListener {
 		VerticalLayout taggerPanel = new VerticalLayout();
 		taggerPanel.setSpacing(true);
 		
-		pager = new Pager(80, 30);
+		pager = new Pager(taggerID, 80, 30);
 		
-		tagger = new Tagger(pager, this);
+		tagger = new Tagger(taggerID, pager, this);
 		
 		tagger.setSizeFull();
 		taggerPanel.addComponent(tagger);
@@ -158,7 +160,7 @@ public class TaggerView extends VerticalLayout implements TaggerListener {
 						new TagReference(ti, sourceDocument.getID() ,r);
 				tagReferences.add(ref);
 			}
-			markupPanel.addTagReferences(tagReferences);
+			markupPanel.addTagReferences(tagReferences, sourceDocument);
 		} catch (URISyntaxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

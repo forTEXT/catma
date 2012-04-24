@@ -19,6 +19,7 @@ public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 	
 	private TabSheet tabSheet;
 	private Label noOpenTaggers;
+	private int nextTaggerID = 0;
 	
 	public TaggerManagerView() {
 		initComponents();
@@ -50,7 +51,8 @@ public class TaggerManagerView extends VerticalLayout implements CloseHandler {
 			tabSheet.setSelectedTab(taggerView);
 		}
 		else {
-			taggerView = new TaggerView(tagManager, sourceDocument, repository);
+			taggerView = new TaggerView(
+					nextTaggerID++, tagManager, sourceDocument, repository);
 			Tab tab = tabSheet.addTab(taggerView, sourceDocument.toString());
 			tab.setClosable(true);
 			tabSheet.setSelectedTab(tab.getComponent());

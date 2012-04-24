@@ -5,20 +5,24 @@ import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import de.catma.core.document.ContentInfoSet;
 import de.catma.core.document.Corpus;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
+import de.catma.core.util.Pair;
 import de.catma.serialization.SerializationHandlerFactory;
 
 class FSRepository implements Repository {
@@ -158,9 +162,11 @@ class FSRepository implements Repository {
 		
 	}
 
-	public void update(UserMarkupCollection userMarkupCollection) {
-		// TODO Auto-generated method stub
-		
+	public void update(
+			UserMarkupCollection userMarkupCollection, 
+			SourceDocument sourceDocument) throws IOException {
+		userMarkupCollectionHandler.saveUserMarkupCollection(
+				userMarkupCollection, sourceDocument);
 	}
 
 	public void update(StaticMarkupCollection staticMarkupCollection) {
@@ -177,13 +183,25 @@ class FSRepository implements Repository {
 	}
 
 	public void createUserMarkupCollection(
-			String name, SourceDocument sourceDocument) {
+			String name, SourceDocument sourceDocument) throws IOException {
+		String id = createCatmaUri(
+				"/" + CONTAINER_FOLDER + "/" + name + ".xml");
 		
-//		UserMarkupCollection umc = new UserMarkupCollection(id, contentInfoSet, tagLibrary, tagReferences):
+		UserMarkupCollection umc = 
+				new UserMarkupCollection(
+						id, name, new ContentInfoSet());
 		
-		// TODO Auto-generated method stub
-		// hier gehts weiter erzeugen, speichern und event
+		UserMarkupCollectionReference ref = 
+				userMarkupCollectionHandler.saveUserMarkupCollection(
+						umc, sourceDocument);
 		
+		sourceDocumentHandler.addUserMarkupCollectionReference(
+				ref, sourceDocument);
+		
+		this.propertyChangeSupport.firePropertyChange(
+				PropertyChangeEvent.userMarkupCollectionAdded.name(),
+				null, new Pair<UserMarkupCollectionReference, SourceDocument>(
+						ref,sourceDocument));
 	}
 
 	public StaticMarkupCollectionReference insert(

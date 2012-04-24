@@ -3,6 +3,7 @@ package de.catma.ui.tagger;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
@@ -20,6 +21,7 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.document.repository.Repository;
+import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
@@ -400,12 +402,19 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		}
 	}
 	
-	public void addTagReferences(List<TagReference> tagReferences) {
+	public void addTagReferences(
+			List<TagReference> tagReferences, SourceDocument sourceDocument) {
 		userMarkupCollectionManager.addTagReferences(
 				tagReferences, currentWritableUserMarkupColl);
-		// hier gehts weiter: 
-		// implement serialization
-		// implement usermarkupcoll creation
+		
+		try {
+			repository.update(currentWritableUserMarkupColl, sourceDocument);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		//FIXME: add TagsetDefs to tree!!!
 	}
 	
 	public UserMarkupCollection getCurrentWritableUserMarkupCollection() {

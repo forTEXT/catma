@@ -18,8 +18,6 @@
  */   
 package de.catma.ui.client.ui.tagger.editor;
 
-import java.util.Date;
-
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.DOM;
 
@@ -34,7 +32,7 @@ public class TaggedSpanFactory {
 	private String color;
 	
 	public TaggedSpanFactory(String color) {
-		this(String.valueOf(new Date().getTime()), color);
+		this(IDGenerator.generate(), color);
 	}
 	
 	public TaggedSpanFactory(String instanceID, String color) {

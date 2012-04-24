@@ -1,5 +1,6 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <digitalobject>
     <sourceURI>http://www.gutenberg.org/cache/epub/13/pg13.txt</sourceURI>
     <infosetsURI>catma:///container/Infosets_CATMA_fd615f4c-c6da-4140-b468-b5d6379ab3cd.xml</infosetsURI>
+    <userMarkupURI>catma:///container/HuntingMarkup.xml</userMarkupURI>
 </digitalobject>

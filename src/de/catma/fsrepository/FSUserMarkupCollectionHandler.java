@@ -1,5 +1,7 @@
 package de.catma.fsrepository;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -80,18 +82,17 @@ class FSUserMarkupCollectionHandler {
 		String url = FSRepository.getFileURL(
 				userMarkupCollection.getId(), repoFolderPath);
 		
-		URLConnection urlConnection = 
-				new URL(url).openConnection();
-		
 		OutputStream os = null;
 		try {
-			os = urlConnection.getOutputStream();
+			os = new FileOutputStream(new File(new URI(url)));
 		
 			userMarkupCollectionSerializationHandler.serialize(
 					userMarkupCollection, sourceDocument, os);
-		}
-		finally {
 			CloseSafe.close(os);
+		}
+		catch(Exception exc) {
+			CloseSafe.close(os);
+			throw new IOException(exc);
 		}
 		
 		return reference;

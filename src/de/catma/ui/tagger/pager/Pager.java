@@ -52,9 +52,11 @@ public class Pager implements Iterable<Page> {
 	private int maxPageLengthInLines;
 	private PagerListener pagerListener;
 	private Long checksum = null;
+	private int taggerID;
 	
-	public Pager(int approxMaxLineLength, int maxPageLengthInLines) {
+	public Pager(int taggerID, int approxMaxLineLength, int maxPageLengthInLines) {
 		pages = new ArrayList<Page>();
+		this.taggerID = taggerID;
 		this.approxMaxLineLength = approxMaxLineLength;
 		this.maxPageLengthInLines = maxPageLengthInLines;
 	}
@@ -102,7 +104,10 @@ public class Pager implements Iterable<Page> {
 			}			
 			
 			if (pageLines >= maxPageLengthInLines) {
-				pages.add(new Page(text.substring(pageStart, pageEnd), pageStart, pageEnd));
+				pages.add(new Page(
+						taggerID, 
+						text.substring(pageStart, pageEnd), 
+						pageStart, pageEnd));
 				pageLines = 0;
 				pageStart = pageEnd;
 			}
@@ -122,7 +127,10 @@ public class Pager implements Iterable<Page> {
 		}
 		
 		if (pageLines != 0) {
-			pages.add(new Page(text.substring(pageStart, pageEnd), pageStart, pageEnd));
+			pages.add(new Page(
+							taggerID, 
+							text.substring(pageStart, pageEnd), 
+							pageStart, pageEnd));
 		}
 	}
 	
