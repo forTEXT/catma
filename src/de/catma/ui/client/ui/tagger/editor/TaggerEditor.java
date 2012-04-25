@@ -24,6 +24,7 @@ import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard.Range;
 import de.catma.ui.client.ui.tagger.menu.TagMenu;
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
+import de.catma.ui.client.ui.tagger.shared.ContentElementID;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 public class TaggerEditor extends FocusWidget implements MouseUpHandler {
@@ -107,15 +108,23 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 
 			List<TextRange> textRanges = new ArrayList<TextRange>();
 			for (Range range : lastRangeList) { 
-				TextRange textRange = converter.convertToTextRange(range);
-				if (!textRange.isPoint()) {
-					VConsole.log("converted and adding range " + textRange );
-					textRanges.add(textRange);
+				if (!range.getStartNode().equals(getRootNode())
+							&& ! range.getEndNode().equals(getRootNode())) {
+					TextRange textRange = converter.convertToTextRange(range);
+					if (!textRange.isPoint()) {
+						VConsole.log("converted and adding range " + textRange );
+						textRanges.add(textRange);
+					}
+					else {
+						//TODO: consider tagging points (needs different visualization)
+						VConsole.log(
+							"won't tag range " + textRange + " because it is a point");
+					}
 				}
 				else {
-					//TODO: consider tagging points (needs different visualization)
 					VConsole.log(
-						"won't tag range " + textRange + " because it is a point");
+						"won'tag range " + range + 
+						" because it starts or ends with the content root");
 				}
 			}
 			
@@ -297,6 +306,10 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 			taggedSpan = 
 				taggedSpanFactory.createTaggedSpan(affectedNode.getNodeValue());
 			
+			VConsole.log("affected Node and its taggedSpan:");
+			DebugUtil.printNode(affectedNode);
+			DebugUtil.printNode(taggedSpan);
+			
 			// ... and insert it
 			affectedNode.getParentNode().insertBefore(taggedSpan, affectedNode);
 			
@@ -388,6 +401,11 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 	
 	public String getTaggerID() {
 		return taggerID;
+	}
+	
+	private Node getRootNode() {
+		return Document.get().getElementById(
+				ContentElementID.CONTENT.name() + taggerID);
 	}
 }
 

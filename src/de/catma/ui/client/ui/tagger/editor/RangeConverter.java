@@ -146,7 +146,7 @@ public class RangeConverter {
 		Node node = null;
 		
 		while((textLeaf != null) && (node == null)){
-			if ((curSize + textLeaf.getNodeValue().length()) > pos) {
+			if ((curSize + textLeaf.getNodeValue().length()) >= pos) {
 				node = textLeaf;
 			}
 			else {

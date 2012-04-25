@@ -31,8 +31,9 @@ import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Serializer;
 import nu.xom.Text;
-import de.catma.ui.client.ui.tagger.shared.ContentElementID;
+import de.catma.core.document.Range;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
+import de.catma.ui.client.ui.tagger.shared.ContentElementID;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 /**
@@ -183,16 +184,19 @@ public class Page {
 	}
 
 	public void addAbsoluteTagInstance(ClientTagInstance ti) {
-		ClientTagInstance relativeInstance = new ClientTagInstance(ti, pageStart*(-1));
+		ClientTagInstance relativeInstance = 
+				new ClientTagInstance(ti, pageStart*(-1), pageStart, pageEnd);
 		addRelativeTagInstance(relativeInstance);
 	}
 
-	public boolean includesAbsoluteTagInstance(ClientTagInstance absoluteTagInstance) {
-		if (absoluteTagInstance.getRanges().size()>0) {
-			//FIXME: what if a TagInstance stretches over two pages? Tagger doesn't support that for now but maybe in the future
-			TextRange tr = absoluteTagInstance.getRanges().get(0); 
-			if ((tr.getStartPos()>=this.pageStart) && (tr.getEndPos()<=this.pageEnd)) {
-				return true;
+	public boolean hasOverlappingRange(ClientTagInstance absoluteTagInstance) {
+		if (!absoluteTagInstance.getRanges().isEmpty()) {
+			for (TextRange tr : absoluteTagInstance.getRanges()) {
+				if (new Range(
+					this.pageStart, this.pageEnd).hasOverlappingRange(
+							new Range(tr.getStartPos(), tr.getEndPos()))) {
+					return true;
+				}
 			}
 		}
 		return false;

@@ -3,6 +3,7 @@ package de.catma.serialization.tei;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -149,7 +150,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		
 		teiDocument.getTeiHeader().getTechnicalDescription().setVersion(TeiDocumentVersion.V3);
 		
-//		teiDocument.printXmlDocument();
+		teiDocument.printXmlDocument();
 	}
 
 	private void adjustPointers(TeiDocument teiDocument) {
@@ -193,18 +194,19 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		
 		for( String id : idValues ) {
 			if (!id.trim().isEmpty()) {
+				id = id.trim();
 				Pair<String,Range> target = getTarget(
 						segElement.getFirstTeiChildElement(TeiElementName.ptr));
 				
 				String instanceID = getInstanceID(id, target.getSecond());
-				TagDef tagDefinition = tagDefinitions.get(id.trim());
+				TagDef tagDefinition = tagDefinitions.get(id);
 				newReferencesBuilder.append(" #");
 				newReferencesBuilder.append(instanceID);
 				
 				TeiElement fs = new TeiElement(TeiElementName.fs);
 				
 				fs.setID(instanceID);
-				fs.setAttributeValue(Attribute.type, id.trim());
+				fs.setAttributeValue(Attribute.type, id);
 				
 				TeiElement fColor = new TeiElement(TeiElementName.f);
 				fColor.setAttributeValue(Attribute.f_name, "catma_displaycolor");
@@ -234,15 +236,30 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 //		if (oldTagID2Ranges.containsKey(oldTagID)) {
 //			Set<Range> ranges = oldTagID2Ranges.get(oldTagID);
 //			for (Range r : ranges) {
-//				if (currentRange.)
+//				if (currentRange.isAdjacentTo(r)) {
+//					ranges.add(currentRange);
+//					String instanceID = 
+//							this.oldInstance2newInstanceID.get(
+//									new OldInstance(r, oldTagID));
+//					this.oldInstance2newInstanceID.put(
+//							new OldInstance(currentRange,oldTagID), 
+//							instanceID);
+//					return instanceID;
+//				}
 //			}
+//			ranges.add(currentRange);
+//		}
+//		else {
+//			HashSet<Range> ranges = new HashSet<Range>();
+//			ranges.add(currentRange);
+//			this.oldTagID2Ranges.put(oldTagID, ranges);
 //		}
 		
+		String newInstanceID = catmaIDGenerator.generate();
+		this.oldInstance2newInstanceID.put(
+				new OldInstance(currentRange, oldTagID), newInstanceID);
 		
-		
-		
-		
-		return catmaIDGenerator.generate();
+		return newInstanceID;
 	}
 
 	private void createTagDefinition(Node node) {
