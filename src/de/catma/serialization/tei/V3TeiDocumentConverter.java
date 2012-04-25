@@ -4,11 +4,14 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import nu.xom.Elements;
 import nu.xom.Node;
 import nu.xom.Nodes;
+import de.catma.core.document.Range;
 import de.catma.core.util.IDGenerator;
+import de.catma.core.util.Pair;
 
 
 public class V3TeiDocumentConverter implements TeiDocumentConverter {
@@ -27,6 +30,50 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		LEGACY_VERSION_BASE_DATE.set(2008, 1, 1, 0, 0, 0);
 	}
 	
+	private static class OldInstance {
+		private Range range;
+		private String oldTagID;
+		
+		public OldInstance(Range range, String oldTagID) {
+			this.range = range;
+			this.oldTagID = oldTagID;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((oldTagID == null) ? 0 : oldTagID.hashCode());
+			result = prime * result + ((range == null) ? 0 : range.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			OldInstance other = (OldInstance) obj;
+			if (oldTagID == null) {
+				if (other.oldTagID != null)
+					return false;
+			} else if (!oldTagID.equals(other.oldTagID))
+				return false;
+			if (range == null) {
+				if (other.range != null)
+					return false;
+			} else if (!range.equals(other.range))
+				return false;
+			return true;
+		}
+		
+		
+		
+	}
 	
 	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 	private TeiElement standardTagsetDefinition;
@@ -35,6 +82,11 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 	private HashMap<String,TagDef> tagDefinitions = 
 			new HashMap<String,TagDef>();
 	private IDGenerator catmaIDGenerator = new IDGenerator();
+	
+	private HashMap<String,Set<Range>> oldTagID2Ranges = 
+			new HashMap<String, Set<Range>>();
+	private HashMap<OldInstance,String> oldInstance2newInstanceID = 
+			new HashMap<V3TeiDocumentConverter.OldInstance, String>();
 	
 	public void convert(TeiDocument teiDocument) {
 	
@@ -105,20 +157,33 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		
 		for( int i=0; i<pointers.size(); i++) {
 			TeiElement pointer = (TeiElement)pointers.get(i);
-			String target = pointer.getAttributeValue(Attribute.ptr_target);
-			
-			String[] uri_points = target.split( "#" );
-			String uri = uri_points[0].trim();
-			String[] points = uri_points[1].split( "/." );
-			
+			Pair<String,Range> target = getTarget(pointer);
+
 			String newTarget = 
-					"catma:///" + uri + "#char=" 
-							+ points[1].substring( 0, points[1].indexOf( ',' ) ).trim()
+					"catma:///" + target.getFirst() + "#char=" 
+							+ target.getSecond().getStartPoint()
 							+ ","
-							+ points[2].substring( 0, points[2].indexOf( ')' ) ).trim();
+							+ target.getSecond().getEndPoint();
+			
 			pointer.setAttributeValue(Attribute.ptr_target, newTarget);
 		}
 		
+	}
+	
+	private Pair<String,Range> getTarget(TeiElement pointer) {
+		String target = pointer.getAttributeValue(Attribute.ptr_target);
+		
+		String[] uri_points = target.split( "#" );
+		String uri = uri_points[0].trim();
+		String[] points = uri_points[1].split( "/." );
+		// TODO: check, if we should better use the real uri from the repo
+		Range r = 
+				new Range(
+					Integer.valueOf(points[1].substring( 
+							0, points[1].indexOf( ',' ) ).trim()),
+					Integer.valueOf(points[2].substring( 
+							0, points[2].indexOf( ')' ) ).trim()));
+		return new Pair<String, Range>(uri, r);
 	}
 
 	private void addTagInstance(TeiElement segElement, TeiElement text) {
@@ -128,7 +193,10 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		
 		for( String id : idValues ) {
 			if (!id.trim().isEmpty()) {
-				String instanceID = catmaIDGenerator.generate();
+				Pair<String,Range> target = getTarget(
+						segElement.getFirstTeiChildElement(TeiElementName.ptr));
+				
+				String instanceID = getInstanceID(id, target.getSecond());
 				TagDef tagDefinition = tagDefinitions.get(id.trim());
 				newReferencesBuilder.append(" #");
 				newReferencesBuilder.append(instanceID);
@@ -157,7 +225,24 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 				text.insertChild(fs,0);
 			}
 		}
-		segElement.setAttributeValue(Attribute.ana, newReferencesBuilder.toString().trim());
+		segElement.setAttributeValue(
+				Attribute.ana, newReferencesBuilder.toString().trim());
+	}
+
+	private String getInstanceID(String oldTagID, Range currentRange) {
+		
+//		if (oldTagID2Ranges.containsKey(oldTagID)) {
+//			Set<Range> ranges = oldTagID2Ranges.get(oldTagID);
+//			for (Range r : ranges) {
+//				if (currentRange.)
+//			}
+//		}
+		
+		
+		
+		
+		
+		return catmaIDGenerator.generate();
 	}
 
 	private void createTagDefinition(Node node) {

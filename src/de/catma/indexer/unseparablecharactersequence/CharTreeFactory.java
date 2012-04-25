@@ -44,7 +44,7 @@ public class CharTreeFactory {
         for (String input : inputList ) {
             CharTree cur = head; // always restart from the head
 
-            // loop over the characters of the curren USC
+            // loop over the characters of the current USC
             for (int i=0; i<input.length(); i++) {
 
                 int c = input.codePointAt(i);
@@ -58,7 +58,7 @@ public class CharTreeFactory {
                         // peek for the next character, as this has to be taken into account as well
 
                         // we are finished with this character, so current char points to the end entry
-                        if (i==input.codePointAt(input.length()-1)) {
+                        if (i==input.length()-1) {
                             cur.put(c, CharTree.END_ENTRY);
                         }
                         // next character will be a whitespace, so current char points to a whitespace

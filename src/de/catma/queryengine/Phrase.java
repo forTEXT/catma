@@ -79,7 +79,7 @@ public class Phrase extends Query {
         for (Map.Entry<String,List<Range>> entry : hits.entrySet()) {
         	String documentId = entry.getKey();
         	for (Range r : entry.getValue()) {
-        		queryResult.add(new QueryResultRow(documentId,r, getPhrase()));
+        		queryResult.add(new QueryResultRow(documentId, r));
         	}
         }
         return queryResult;

@@ -3,6 +3,7 @@ package de.catma.query;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -20,10 +21,15 @@ import de.catma.core.ExceptionHandler;
 import de.catma.core.document.Range;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
+import de.catma.core.document.source.KeywordInContext;
+import de.catma.core.document.source.SourceDocument;
 import de.catma.core.tag.TagManager;
+import de.catma.indexer.KwicProvider;
 import de.catma.indexer.elasticsearch.ESIndexer;
+import de.catma.indexer.unseparablecharactersequence.CharTreeFactory;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryOptions;
+import de.catma.queryengine.QueryResultRow;
 import de.catma.queryengine.QueryResultRowArray;
 
 
@@ -71,6 +77,67 @@ public class PhraseQueryTest {
 		}
 	}
 
+	@Test
+	public void charTreeTest() {
+		String bla = "e. g.";
+		ArrayList<String> list = new ArrayList<String>();
+		list.add(bla);
+		CharTreeFactory f = new CharTreeFactory();
+		f.createCharMap(list);
+	}
+	
+	@Test
+	public void kwicPhraseQueryResult() {
+		List<String> unseparableCharacterSequences = Collections.emptyList();
+		List<Character> userDefinedSeparatingCharacters = Collections.emptyList();
+		QueryOptions queryOptions = new QueryOptions(
+				(List<String>)null,
+				unseparableCharacterSequences,
+				userDefinedSeparatingCharacters,
+				Locale.ENGLISH);
+		
+		QueryJob job = new QueryJob(
+				"\"pig\"", new ESIndexer(), queryOptions);
+		job.setProgressListener(new LogProgressListener());
+		try {
+			
+			QueryResultRowArray result = (QueryResultRowArray) job.call();
+			Map<String, List<Range>> rangesGroupedByDocumentId = 
+					new HashMap<String, List<Range>>();
+			
+			for (QueryResultRow row : result) {
+				
+				if (!rangesGroupedByDocumentId.containsKey(row.getSourceDocumentId())) {
+					rangesGroupedByDocumentId.put(
+							row.getSourceDocumentId(), new ArrayList<Range>());
+				}
+				
+				rangesGroupedByDocumentId.get(
+						row.getSourceDocumentId()).add(row.getRange());
+			}
+			for (Map.Entry<String, List<Range>> entry : 
+							rangesGroupedByDocumentId.entrySet()) {
+				System.out.println("documentId: " + entry.getKey());
+				SourceDocument sd = 
+						repository.getSourceDocument(entry.getKey());
+				KwicProvider kwicProvider = new KwicProvider(sd);
+				
+				List<KeywordInContext> kwics = 
+						kwicProvider.getKwic(entry.getValue(), 5);
+				
+				System.out.println("Results for " + sd);
+				for (KeywordInContext kwic : kwics) {
+					System.out.println(kwic);
+				}
+				
+				System.out.println("\n");
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	@Test
 	public void testPhraseQuery(){
 		List<String> unseparableCharacterSequences = Collections.emptyList();

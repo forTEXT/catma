@@ -409,6 +409,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		
 		try {
 			repository.update(currentWritableUserMarkupColl, sourceDocument);
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
