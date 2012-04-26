@@ -8,9 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +25,6 @@ public class ESCommunication {
 	public String url = ESOptions.getString("ESInstaller.uri");
 	public String indexName = ESOptions.getString("ESInstaller.name");
 	public AsyncHttpClient httpTransport;
-	private List<Future<Response>> httpRequests = new ArrayList<Future<Response>>();
 	
 	private static Logger logger = LoggerFactory
 			.getLogger(ESCommunication.class);
