@@ -167,8 +167,16 @@ public class Page {
 	}
 
 	public void addRelativeTagInstance(ClientTagInstance relativeTagInstance) {
-		this.relativeTagInstances.put(
-				relativeTagInstance.getInstanceID(), relativeTagInstance);
+		if (this.relativeTagInstances.containsKey(
+				relativeTagInstance.getInstanceID())) {
+			this.relativeTagInstances.get(
+					relativeTagInstance.getInstanceID()).addRanges(
+							relativeTagInstance.getRanges());
+		}
+		else {
+			this.relativeTagInstances.put(
+					relativeTagInstance.getInstanceID(),relativeTagInstance);
+		}
 	}
 	
 	public void removeRelativeTagInstance(String tagInstanceID) {

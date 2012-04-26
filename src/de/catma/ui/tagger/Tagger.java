@@ -60,13 +60,15 @@ public class Tagger extends AbstractComponent {
 	private TaggerListener taggerListener;
 	private ClientTagInstanceJSONSerializer tagInstanceJSONSerializer;
 	private boolean init = true;
+	private String taggerID;
 	
 	public Tagger(int taggerID, Pager pager, TaggerListener taggerListener) {
 		addStyleName("tagger");
 		this.pager = pager;
 		this.taggerListener = taggerListener;
 		this.tagInstanceJSONSerializer = new ClientTagInstanceJSONSerializer();
-		attributes.put(TaggerMessageAttribute.ID.name(), String.valueOf(taggerID));
+		this.taggerID = String.valueOf(taggerID);
+		attributes.put(TaggerMessageAttribute.ID.name(), this.taggerID);
 	}
 
 	@Override
@@ -76,7 +78,9 @@ public class Tagger extends AbstractComponent {
 		if (target.isFullRepaint() 
 				&& !pager.isEmpty() 
 				&& !attributes.containsKey(TaggerMessageAttribute.PAGE_SET.name())) {
-			
+
+			attributes.put(TaggerMessageAttribute.ID.name(), this.taggerID);
+
 			attributes.put(
 				TaggerMessageAttribute.PAGE_SET.name(), 
 				pager.getCurrentPage().toHTML());
@@ -205,6 +209,8 @@ public class Tagger extends AbstractComponent {
 		}
 		
 		try {
+			System.out.println(tagInstanceJSONSerializer.toJSON(
+					currentRelativePageTagInstancesCopy));
 			attributes.put(
 					taggerMessageAttribute,
 					tagInstanceJSONSerializer.toJSON(
