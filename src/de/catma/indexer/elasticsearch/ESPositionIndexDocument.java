@@ -1,12 +1,18 @@
 package de.catma.indexer.elasticsearch;
 
+import java.util.List;
 import java.util.UUID;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.ning.http.client.Response;
+
 import de.catma.core.document.Range;
+import de.catma.core.util.IDGenerator;
 import de.catma.indexer.TermInfo;
+import de.catma.queryengine.QueryResultRow;
 
 public class ESPositionIndexDocument implements ESDocument {
 
@@ -15,6 +21,45 @@ public class ESPositionIndexDocument implements ESDocument {
 	private UUID termId;
 	private Range range;
 	private int tokenOffset;
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((documentId == null) ? 0 : documentId.hashCode());
+		result = prime * result
+				+ ((positionId == null) ? 0 : positionId.hashCode());
+		result = prime * result + ((termId == null) ? 0 : termId.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ESPositionIndexDocument other = (ESPositionIndexDocument) obj;
+		if (documentId == null) {
+			if (other.documentId != null)
+				return false;
+		} else if (!documentId.equals(other.documentId))
+			return false;
+		if (positionId == null) {
+			if (other.positionId != null)
+				return false;
+		} else if (!positionId.equals(other.positionId))
+			return false;
+		if (termId == null) {
+			if (other.termId != null)
+				return false;
+		} else if (!termId.equals(other.termId))
+			return false;
+		return true;
+	}
 
 	public ESPositionIndexDocument(String documentId, UUID termId,
 			TermInfo termInfo) {
@@ -62,14 +107,5 @@ public class ESPositionIndexDocument implements ESDocument {
 		return tokenOffset;
 	}
 
-	public static ESPositionIndexDocument fromJSON(JSONObject jsonObject) throws JSONException {
-		String docid = jsonObject.getString("documentId");
-		int c_start = jsonObject.getInt("characterStart");
-		int c_end = jsonObject.getInt("characterEnd");
-		int offset = jsonObject.getInt("tokenoffset");
-		long termid_l = jsonObject.getLong("termId_l");
-		long termid_m = jsonObject.getLong("termId_m");
-		return new ESPositionIndexDocument(docid,new UUID(termid_m, termid_l),new TermInfo(null,c_start,c_end,offset));
-	}
 	
 }

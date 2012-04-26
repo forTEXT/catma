@@ -64,6 +64,8 @@ public class PhraseQueryTest {
 			term.add("been");
 			term.add("dead");
 			Map<String, List<Range>> result = esIndexer.searchTerm(null, term);
+			esIndexer.close();
+
 		}
 		catch(Throwable t) {
 			t.printStackTrace();
@@ -97,6 +99,8 @@ public class PhraseQueryTest {
 		try {
 			ESIndexer esIndexer = new ESIndexer();
 			 QueryResultRowArray result = esIndexer.searchTag("/Order/analepsis", true);
+				esIndexer.close();
+
 		}
 		catch(Throwable t) {
 			t.printStackTrace();
@@ -104,6 +108,18 @@ public class PhraseQueryTest {
 		}
 	}
 
+	@Test
+	public void testColocation() throws Throwable {
+		try {
+			ESIndexer esIndexer = new ESIndexer();
+			esIndexer.searchColocation(null, "you", "will", 10);
+			esIndexer.close();
+		}
+		catch(Throwable t) {
+			t.printStackTrace();
+			throw t;
+		}
+	}
 
 	
 	@After

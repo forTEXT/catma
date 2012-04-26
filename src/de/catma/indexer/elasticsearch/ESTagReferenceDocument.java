@@ -5,6 +5,8 @@ import java.util.UUID;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import sun.reflect.Reflection;
+
 import de.catma.core.document.Range;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.tag.TagLibrary;
@@ -20,10 +22,10 @@ public class ESTagReferenceDocument {
 	private String tagPath;
 	private String version;
 	private Range range;
-
+	
 	public ESTagReferenceDocument(String sourceDocId,
 			String userMarkupCollectionId, TagReference tagReference,
-			TagLibrary tagLibrary) {
+			TagLibrary tagLibrary) throws NoSuchFieldException {
 		super();
 		this.documentId = sourceDocId;
 		this.userMarkupCollectionId = userMarkupCollectionId;
@@ -100,32 +102,6 @@ public class ESTagReferenceDocument {
 	public UUID getIndexDocumentKey() {
 		return UUID.nameUUIDFromBytes((tagInstanceId.toString()
 				+ range.getStartPoint() + range.getEndPoint()).getBytes());
-	}
-
-	public static ESTagReferenceDocument fromJSON(String jsonstring)
-			throws JSONException {
-		return fromJSON(new JSONObject(jsonstring));
-	}
-
-	public static ESTagReferenceDocument fromJSON(JSONObject jsonObject)
-			throws JSONException {
-	
-		String documentId = jsonObject.getString("documentId");
-		String userMarkupCollectionId = jsonObject
-				.getString("userMarkupCollectionId");
-		long tagDefinitionId_l = jsonObject.getLong("tagDefinitionId_l");
-		long tagDefinitionId_m = jsonObject.getLong("tagDefinitionId_m");
-		long tagInstanceId_l = jsonObject.getLong("tagInstanceId_l");
-		long tagInstanceId_m = jsonObject.getLong("tagInstanceId_m");
-		String tagPath = jsonObject.getString("tagPath");
-		String version = jsonObject.getString("version");
-		int c_start = jsonObject.getInt("characterStart");
-		int c_end = jsonObject.getInt("characterEnd");
-		
-		return new ESTagReferenceDocument(documentId, userMarkupCollectionId,
-				new UUID(tagDefinitionId_m, tagDefinitionId_l), new UUID(
-						tagInstanceId_m, tagInstanceId_l), tagPath, version,
-				new Range(c_start, c_end));
 	}
 
 	public String toString() {
