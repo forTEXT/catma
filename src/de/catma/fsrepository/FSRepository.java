@@ -4,25 +4,31 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import de.catma.core.document.ContentInfoSet;
 import de.catma.core.document.Corpus;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
+import de.catma.core.util.Pair;
 import de.catma.serialization.SerializationHandlerFactory;
 
 class FSRepository implements Repository {
 	
 	static final String CONTAINER_FOLDER = "container";
+	private static final String REPO_URI_SCHEME = "catma://";
 	
 	private String name;
 	private String repoFolderPath;
@@ -56,6 +62,7 @@ class FSRepository implements Repository {
 		
 		this.userMarkupCollectionHandler = 
 			new FSUserMarkupCollectionHandler(
+				repoFolderPath,
 				serializationHandlerFactory.getUserMarkupCollectionSerializationHandler());
 
 	}
@@ -155,9 +162,11 @@ class FSRepository implements Repository {
 		
 	}
 
-	public void update(UserMarkupCollection userMarkupCollection) {
-		// TODO Auto-generated method stub
-		
+	public void update(
+			UserMarkupCollection userMarkupCollection, 
+			SourceDocument sourceDocument) throws IOException {
+		userMarkupCollectionHandler.saveUserMarkupCollection(
+				userMarkupCollection, sourceDocument);
 	}
 
 	public void update(StaticMarkupCollection staticMarkupCollection) {
@@ -174,13 +183,25 @@ class FSRepository implements Repository {
 	}
 
 	public void createUserMarkupCollection(
-			String name, SourceDocument sourceDocument) {
+			String name, SourceDocument sourceDocument) throws IOException {
+		String id = createCatmaUri(
+				"/" + CONTAINER_FOLDER + "/" + name + ".xml");
 		
+		UserMarkupCollection umc = 
+				new UserMarkupCollection(
+						id, name, new ContentInfoSet());
 		
+		UserMarkupCollectionReference ref = 
+				userMarkupCollectionHandler.saveUserMarkupCollection(
+						umc, sourceDocument);
 		
-		// TODO Auto-generated method stub
-		// hier gehts weiter erzeugen, speichern und event
+		sourceDocumentHandler.addUserMarkupCollectionReference(
+				ref, sourceDocument);
 		
+		this.propertyChangeSupport.firePropertyChange(
+				PropertyChangeEvent.userMarkupCollectionAdded.name(),
+				null, new Pair<UserMarkupCollectionReference, SourceDocument>(
+						ref,sourceDocument));
 	}
 
 	public StaticMarkupCollectionReference insert(
@@ -205,5 +226,26 @@ class FSRepository implements Repository {
 			PropertyChangeListener propertyChangeListener) {
 		this.propertyChangeSupport.removePropertyChangeListener(
 				propertyChangeEvent.name(), propertyChangeListener);
+	}
+	
+	public static String getFileURL(String catmaUri, String... path) {
+		StringBuilder builder = new StringBuilder("file://");
+		for (String folder : path) {
+			builder.append(folder);
+		}
+		builder.append(catmaUri.substring((REPO_URI_SCHEME).length()));
+		return builder.toString();
+	}
+	
+	public static String createCatmaUri(String path) {
+		return REPO_URI_SCHEME + path;
+	}
+
+	public static boolean isCatmaUri(String uri) {
+		return uri.startsWith(REPO_URI_SCHEME);
+	}
+
+	public String createIdFromURI(URI uri) {
+		return sourceDocumentHandler.createIDFromURI(uri);
 	}
 }

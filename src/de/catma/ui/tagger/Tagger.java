@@ -61,11 +61,12 @@ public class Tagger extends AbstractComponent {
 	private ClientTagInstanceJSONSerializer tagInstanceJSONSerializer;
 	private boolean init = true;
 	
-	public Tagger(Pager pager, TaggerListener taggerListener) {
+	public Tagger(int taggerID, Pager pager, TaggerListener taggerListener) {
 		addStyleName("tagger");
 		this.pager = pager;
 		this.taggerListener = taggerListener;
 		this.tagInstanceJSONSerializer = new ClientTagInstanceJSONSerializer();
+		attributes.put(TaggerMessageAttribute.ID.name(), String.valueOf(taggerID));
 	}
 
 	@Override
@@ -172,13 +173,17 @@ public class Tagger extends AbstractComponent {
 				pager.getCurrentPage().getRelativeTagInstances());
 		
 		for (ClientTagInstance ti : tagInstances) {
-			Page page = pager.getPageForAbsoluteTagInstance(ti);
-			if (page != null) {
+			List<Page> pages = pager.getPagesForAbsoluteTagInstance(ti);
+			if (!pages.isEmpty()) {
 				if (visible) {
-					page.addAbsoluteTagInstance(ti);
+					for (Page page : pages) {
+						page.addAbsoluteTagInstance(ti);
+					}
 				}
 				else {
-					page.removeRelativeTagInstance(ti.getInstanceID());
+					for (Page page : pages) {
+						page.removeRelativeTagInstance(ti.getInstanceID());
+					}
 				}
 			}	
 		}

@@ -15,6 +15,7 @@ import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.document.repository.Repository;
+import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagDefinition;
@@ -134,8 +135,8 @@ public class MarkupPanel extends VerticalLayout {
 		return tagsetTree.getTagDefinition(tagDefinitionID);
 	}
 
-	public void addTagReferences(List<TagReference> tagReferences) {
-		markupCollectionsPanel.addTagReferences(tagReferences);
+	public void addTagReferences(List<TagReference> tagReferences, SourceDocument sourceDocument) {
+		markupCollectionsPanel.addTagReferences(tagReferences, sourceDocument);
 	}
 
 	public TagsetDefinition getTagsetDefinition(TagDefinition tagDefinition) {

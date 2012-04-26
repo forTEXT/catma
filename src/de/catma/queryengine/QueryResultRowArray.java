@@ -2,9 +2,10 @@ package de.catma.queryengine;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
-public class QueryResultRowArray implements QueryResult {
+public class QueryResultRowArray implements QueryResult, Iterable<QueryResultRow> {
 	private List<QueryResultRow> rows;
 
 	public QueryResultRowArray() {
@@ -18,5 +19,9 @@ public class QueryResultRowArray implements QueryResult {
 	@Override
 	public String toString() {
 		return Arrays.toString(rows.toArray());
+	}
+	
+	public Iterator<QueryResultRow> iterator() {
+		return rows.iterator();
 	}
 }

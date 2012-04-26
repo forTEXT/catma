@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <digitalobject>
-	<infosetsURI>container/rose_for_emily_structure.xml</infosetsURI>
-	<staticMarkupURI>container/rose_for_emily_structure.xml</staticMarkupURI>
-	<sourceURI>container/rose_for_emily.txt</sourceURI>
-	<userMarkupURI>container/rose_for_emily_user.xml</userMarkupURI>
+	<infosetsURI>catma:///container/rose_for_emily_structure.xml</infosetsURI>
+	<staticMarkupURI>catma:///container/rose_for_emily_structure.xml</staticMarkupURI>
+	<sourceURI>catma:///container/rose_for_emily.txt</sourceURI>
+	<userMarkupURI>catma:///container/rose_for_emily_user.xml</userMarkupURI>
 </digitalobject>

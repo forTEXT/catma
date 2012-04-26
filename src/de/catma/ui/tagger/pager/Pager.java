@@ -21,6 +21,7 @@ package de.catma.ui.tagger.pager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.CRC32;
@@ -52,9 +53,11 @@ public class Pager implements Iterable<Page> {
 	private int maxPageLengthInLines;
 	private PagerListener pagerListener;
 	private Long checksum = null;
+	private int taggerID;
 	
-	public Pager(int approxMaxLineLength, int maxPageLengthInLines) {
+	public Pager(int taggerID, int approxMaxLineLength, int maxPageLengthInLines) {
 		pages = new ArrayList<Page>();
+		this.taggerID = taggerID;
 		this.approxMaxLineLength = approxMaxLineLength;
 		this.maxPageLengthInLines = maxPageLengthInLines;
 	}
@@ -102,7 +105,10 @@ public class Pager implements Iterable<Page> {
 			}			
 			
 			if (pageLines >= maxPageLengthInLines) {
-				pages.add(new Page(text.substring(pageStart, pageEnd), pageStart, pageEnd));
+				pages.add(new Page(
+						taggerID, 
+						text.substring(pageStart, pageEnd), 
+						pageStart, pageEnd));
 				pageLines = 0;
 				pageStart = pageEnd;
 			}
@@ -122,7 +128,10 @@ public class Pager implements Iterable<Page> {
 		}
 		
 		if (pageLines != 0) {
-			pages.add(new Page(text.substring(pageStart, pageEnd), pageStart, pageEnd));
+			pages.add(new Page(
+							taggerID, 
+							text.substring(pageStart, pageEnd), 
+							pageStart, pageEnd));
 		}
 	}
 	
@@ -163,15 +172,16 @@ public class Pager implements Iterable<Page> {
 		this.pagerListener = pagerListener;
 	}
 
-	public Page getPageForAbsoluteTagInstance(ClientTagInstance absoluteTagInstance) {
+	public List<Page> getPagesForAbsoluteTagInstance(ClientTagInstance absoluteTagInstance) {
+		List<Page> result = new ArrayList<Page>();
 		
 		for (Page p : pages) {
-			if (p.includesAbsoluteTagInstance(absoluteTagInstance)) {
-				return p;
+			if (p.hasOverlappingRange(absoluteTagInstance)) {
+				result.add(p);
 			}
 		}
 		
-		return null;
+		return result;
 	}
 	
 	public Iterator<Page> iterator() {

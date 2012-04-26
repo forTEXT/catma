@@ -20,7 +20,6 @@ public class ValueRangePropertyValueFactory implements PropertyValueFactory {
 	}
 
 	private void extractValue() {
-		singleSelectValue = true;
 		
 		Elements elements = teiElement.getChildElements();
 		TeiElement vRange = (TeiElement)elements.get(0);
@@ -43,7 +42,7 @@ public class ValueRangePropertyValueFactory implements PropertyValueFactory {
 			}
 		}
 		
-		singleSelectValue = value.size() > 1;
+		singleSelectValue = !(value.size() > 1);
 	}
 
 	public String getValue() {

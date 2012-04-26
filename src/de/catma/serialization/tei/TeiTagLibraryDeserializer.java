@@ -116,13 +116,7 @@ public class TeiTagLibraryDeserializer {
 		
 		PropertyValueFactory pvf = null;
 		
-		if (valueElement.is(TeiElementName.numeric)) {
-			pvf = new NumericPropertyValueFactory(propElement);
-		}
-		else if (valueElement.is(TeiElementName.string)) {
-			pvf = new StringPropertyValueFactory(propElement);
-		}
-		else if (valueElement.is(TeiElementName.vRange)) {
+		if (valueElement.is(TeiElementName.vRange)) {
 			pvf = new ValueRangePropertyValueFactory(propElement);
 		}
 		else {

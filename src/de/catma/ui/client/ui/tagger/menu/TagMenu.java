@@ -118,7 +118,8 @@ public class TagMenu implements MouseMoveHandler {
 
 	private Element findClosestLine() {
 		return findClosestSibling(
-				Document.get().getElementById(ContentElementID.LINE.name() + "0"));
+				Document.get().getElementById(
+					ContentElementID.LINE.name() + vTagger.getTaggerID() + "0"));
 	}
 	
 	private Element findClosestSibling(Element start) {

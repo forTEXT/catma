@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <library>
 	<name>My Tag Library</name>
-	<fileURI>container/DefaultTagsetDB.xml</fileURI>
+	<fileURI>catma:///container/DefaultTagsetDB.xml</fileURI>
 </library>

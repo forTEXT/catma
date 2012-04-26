@@ -115,7 +115,12 @@ public class VTagger extends Composite implements Paintable {
 
 		// Save the client side identifier (paintable id) for the widget
 		this.clientID = uidl.getId();
-
+		
+		if (uidl.hasAttribute(TaggerMessageAttribute.ID.name())) {
+			taggerEditor.setTaggerID(
+					uidl.getStringAttribute(TaggerMessageAttribute.ID.name()));
+		}
+		
 		if (uidl.hasAttribute(TaggerMessageAttribute.PAGE_SET.name())) {
 			VConsole.log("setting page content");
 			taggerEditor.setHTML(

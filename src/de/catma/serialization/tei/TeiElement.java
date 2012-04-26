@@ -98,7 +98,7 @@ public class TeiElement extends Element implements Comparable<TeiElement> {
 	
 	/**
 	 * Uses the {@link #TEINAMESPACE}.
-	 * @param localName the lcoal name of the child elements
+	 * @param localName the local name of the child elements
 	 * @return a list of child elements
 	 * @see Element#getChildElements(String, String)
 	 */
@@ -294,10 +294,13 @@ public class TeiElement extends Element implements Comparable<TeiElement> {
 	
 	void setID(String id) {
     	nu.xom.Attribute attribute = 
-    			getAttribute(Attribute.xmlid.getLocalName(), Attribute.xmlid.getNamespaceURI());
+    			getAttribute(
+    					Attribute.xmlid.getLocalName(), 
+    					Attribute.xmlid.getNamespaceURI());
     	if (attribute == null) {
     		attribute = new nu.xom.Attribute(
-    				Attribute.xmlid.getPrefixedName(), Attribute.xmlid.getNamespaceURI(), id);
+    				Attribute.xmlid.getPrefixedName(), 
+    				Attribute.xmlid.getNamespaceURI(), id);
     		addAttribute(attribute);
     	}
     	else {

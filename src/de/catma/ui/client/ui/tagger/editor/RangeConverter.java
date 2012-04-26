@@ -38,9 +38,16 @@ public class RangeConverter {
 		LEFT;
 	}
 
+	private String taggerID;
+
 	
+	public RangeConverter(String taggerID) {
+		this.taggerID = taggerID;
+	}
+
 	public TextRange convertToTextRange(Range range) {
-		Node root = Document.get().getElementById(ContentElementID.CONTENT.name());
+		Node root = Document.get().getElementById(
+				ContentElementID.CONTENT.name() + taggerID);
 		
 		int startPos = findPos(range.getStartNode(), root)+range.getStartOffset();
 		int endPos = findPos(range.getEndNode(), root)+range.getEndOffset();
@@ -51,7 +58,8 @@ public class RangeConverter {
 	}
 	
 	public NodeRange convertToNodeRange(TextRange textRange) {
-		Node root = Document.get().getElementById(ContentElementID.CONTENT.name());
+		Node root = Document.get().getElementById(
+				ContentElementID.CONTENT.name() + taggerID);
 		
 		Node textLeaf = LeafFinder.getFirstTextLeaf(root);
 		//TODO: should not return null, but better handle this case here and elsewhere in this class 
@@ -138,7 +146,7 @@ public class RangeConverter {
 		Node node = null;
 		
 		while((textLeaf != null) && (node == null)){
-			if ((curSize + textLeaf.getNodeValue().length()) > pos) {
+			if ((curSize + textLeaf.getNodeValue().length()) >= pos) {
 				node = textLeaf;
 			}
 			else {

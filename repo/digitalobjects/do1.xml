@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <digitalobject>
-	<infosetsURI>container/kafka_utf8_structure.xml</infosetsURI>
-	<staticMarkupURI>container/kafka_utf8_structure.xml</staticMarkupURI>
-	<sourceURI>container/kafka_utf8.txt</sourceURI>
-	<userMarkupURI>container/kafka_utf8_user.xml</userMarkupURI>
+	<infosetsURI>catma:///container/kafka_utf8_structure.xml</infosetsURI>
+	<staticMarkupURI>catma:///container/kafka_utf8_structure.xml</staticMarkupURI>
+	<sourceURI>catma:///container/kafka_utf8.txt</sourceURI>
+	<userMarkupURI>catma:///container/kafka_utf8_user.xml</userMarkupURI>
 </digitalobject>

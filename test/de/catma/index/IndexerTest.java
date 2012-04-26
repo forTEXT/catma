@@ -78,7 +78,7 @@ public class IndexerTest {
 	public void indexUserMarkupColl1() throws Throwable {
 		try {
 			SourceDocument sd = repository.getSourceDocument(
-					"file:///C:/data/eclipse_workspace/clea/repo/container/rose_for_emily.txt");
+					"catma:///container/rose_for_emily.txt");
 			UserMarkupCollectionReference ref = 
 					sd.getUserMarkupCollectionRefs().get(0);
 			

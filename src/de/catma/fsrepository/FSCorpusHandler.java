@@ -36,7 +36,7 @@ class FSCorpusHandler {
 		super();
 		this.repoFolderPath = repoFolderPath;
 		this.corpusFolderPath = 
-				this.repoFolderPath + System.getProperty("file.separator") + CORPUS_FOLDER;
+				this.repoFolderPath + "/" + CORPUS_FOLDER;
 	}
 	
 	public Set<Corpus> loadCorpora(FSRepository fsRepository) throws IOException {
@@ -68,10 +68,7 @@ class FSCorpusHandler {
 				
 				SourceDocument sourceDocument = 
 						fsRepository.getSourceDocument(
-								"file:///"
-								+ repoFolderPath 
-								+ System.getProperty("file.separator")
-								+ sourceNode.getValue());
+								FSRepository.getFileURL(sourceNode.getValue(), repoFolderPath));
 				corpus.addSourceDocument(sourceDocument);
 			}
 			
@@ -80,10 +77,8 @@ class FSCorpusHandler {
 			for (int i=0; i<staticMarkupURINodes.size(); i++) {
 				Node staticMarkupURINode = staticMarkupURINodes.get(i);
 				String staticMarkupURI = 
-						"file:///"
-						+ repoFolderPath 
-						+ System.getProperty("file.separator") 
-						+ staticMarkupURINode.getValue();
+						FSRepository.getFileURL(
+								staticMarkupURINode.getValue(), repoFolderPath);
 				StaticMarkupCollectionReference staticMarkupCollRef = 
 						new StaticMarkupCollectionReference(staticMarkupURI, staticMarkupURI);
 				corpus.addStaticMarkupCollectionReference(staticMarkupCollRef);
@@ -94,10 +89,8 @@ class FSCorpusHandler {
 			for (int i=0; i<userMarkupURINodes.size(); i++) {
 				Node userMarkupURINode = userMarkupURINodes.get(i);
 				String userMarkupURI = 
-						"file:///"
-						+ repoFolderPath 
-						+ System.getProperty("file.separator") 
-						+ userMarkupURINode.getValue();
+						FSRepository.getFileURL(
+								userMarkupURINode.getValue(), repoFolderPath);
 				UserMarkupCollectionReference userMarkupCollRef = 
 						new UserMarkupCollectionReference(userMarkupURI, userMarkupURI);
 				corpus.addUserMarkupCollectionReference(userMarkupCollRef);

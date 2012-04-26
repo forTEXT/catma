@@ -55,12 +55,27 @@ public class ClientTagInstance {
 		this.ranges = ranges;
 	}
 	
-	public ClientTagInstance(ClientTagInstance tagInstanceToCopy, int base) {
+	public ClientTagInstance(
+			ClientTagInstance tagInstanceToCopy, int base) {
 		this(tagInstanceToCopy.tagDefinitionID,
 				tagInstanceToCopy.instanceID, 
 				tagInstanceToCopy.color, new ArrayList<TextRange>());
 		for (TextRange tr : tagInstanceToCopy.getRanges()) {
 			ranges.add(new TextRange(tr.getStartPos()+base, tr.getEndPos()+base));
+		}
+	}
+	
+	public ClientTagInstance(
+			ClientTagInstance tagInstanceToCopy, int base, 
+			int pageStart, int pageEnd) {
+		this(tagInstanceToCopy.tagDefinitionID,
+				tagInstanceToCopy.instanceID, 
+				tagInstanceToCopy.color, new ArrayList<TextRange>());
+		for (TextRange tr : tagInstanceToCopy.getRanges()) {
+			ranges.add(
+				new TextRange(
+					Math.max(tr.getStartPos()+base, pageStart+base), 
+					Math.min(tr.getEndPos()+base, pageEnd+base)));
 		}
 	}
 

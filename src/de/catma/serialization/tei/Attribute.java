@@ -83,9 +83,7 @@ public enum Attribute {
     u_end( TeiElementName.u, "end", new WhenRefHandler()),
 
     fDecl_name( TeiElementName.fDecl, "name"),
-    fDecl_optional( TeiElementName.fDecl, "optional"), 
     fsDecl_baseTypes(TeiElementName.fsDecl, "baseTypes"), 
-    fsDecl_type(TeiElementName.fsDecl, "type" ),
     
     ;
 	

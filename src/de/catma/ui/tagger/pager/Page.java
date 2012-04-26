@@ -31,8 +31,9 @@ import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Serializer;
 import nu.xom.Text;
-import de.catma.ui.client.ui.tagger.shared.ContentElementID;
+import de.catma.core.document.Range;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
+import de.catma.ui.client.ui.tagger.shared.ContentElementID;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 /**
@@ -55,13 +56,15 @@ public class Page {
 		;
 	}
 
+	private int taggerID;
 	private int pageStart;
 	private int pageEnd;
 	private String text;
 	private Map<String, ClientTagInstance> relativeTagInstances = 
 			new HashMap<String,ClientTagInstance>();
 	
-	public Page(String text, int pageStart, int pageEnd) {
+	public Page(int taggerID, String text, int pageStart, int pageEnd) {
+		this.taggerID = taggerID;
 		this.pageStart = pageStart;
 		this.pageEnd = pageEnd;
 		this.text = text;
@@ -78,7 +81,10 @@ public class Page {
 	private void buildModel() {
 		Matcher matcher = Pattern.compile(Pager.LINE_CONTENT_PATTERN).matcher(text);
 		Element rootDiv = new Element(HTMLElement.div.name());
-		rootDiv.addAttribute(new Attribute(HTMLAttribute.id.name(), ContentElementID.CONTENT.name()));
+		rootDiv.addAttribute(
+				new Attribute(
+					HTMLAttribute.id.name(), 
+					ContentElementID.CONTENT.name()+String.valueOf(taggerID)));
 		htmlDocModel = new Document(rootDiv);
 		
 		StringBuilder lineBuilder = new StringBuilder();
@@ -89,7 +95,9 @@ public class Page {
 			if (lineLength + matcher.group().length()>80) {
 				Element lineSpan = new Element(HTMLElement.span.name());
 				lineSpan.addAttribute(
-						new Attribute(HTMLAttribute.id.name(), ContentElementID.LINE.name()+lineId++));
+						new Attribute(
+								HTMLAttribute.id.name(), 
+								ContentElementID.LINE.name()+taggerID+lineId++));
 				lineSpan.appendChild(
 						new Text(lineBuilder.toString()));
 				htmlDocModel.getRootElement().appendChild(lineSpan);
@@ -107,7 +115,9 @@ public class Page {
 				lineBuilder.append(getSolidSpace(matcher.group(Pager.LINE_SEPARATOR_GROUP).length()));
 				Element lineSpan = new Element(HTMLElement.span.name());
 				lineSpan.addAttribute(
-						new Attribute(HTMLAttribute.id.name(), ContentElementID.LINE.name()+lineId++));
+						new Attribute(
+								HTMLAttribute.id.name(), 
+								ContentElementID.LINE.name()+taggerID+lineId++));
 				lineSpan.appendChild(new Text(lineBuilder.toString()));
 				htmlDocModel.getRootElement().appendChild(lineSpan);
 				htmlDocModel.getRootElement().appendChild(new Element(HTMLElement.br.name()));
@@ -121,7 +131,9 @@ public class Page {
 		if (lineLength != 0) {
 			Element lineSpan = new Element(HTMLElement.span.name());
 			lineSpan.addAttribute(
-					new Attribute(HTMLAttribute.id.name(), ContentElementID.LINE.name()+lineId++));
+					new Attribute(
+						HTMLAttribute.id.name(), 
+						ContentElementID.LINE.name()+taggerID+lineId++));
 			lineSpan.appendChild(new Text(lineBuilder.toString()));
 			htmlDocModel.getRootElement().appendChild(lineSpan);
 			htmlDocModel.getRootElement().appendChild(new Element(HTMLElement.br.name()));
@@ -172,16 +184,19 @@ public class Page {
 	}
 
 	public void addAbsoluteTagInstance(ClientTagInstance ti) {
-		ClientTagInstance relativeInstance = new ClientTagInstance(ti, pageStart*(-1));
+		ClientTagInstance relativeInstance = 
+				new ClientTagInstance(ti, pageStart*(-1), pageStart, pageEnd);
 		addRelativeTagInstance(relativeInstance);
 	}
 
-	public boolean includesAbsoluteTagInstance(ClientTagInstance absoluteTagInstance) {
-		if (absoluteTagInstance.getRanges().size()>0) {
-			//FIXME: what if a TagInstance stretches over two pages? Tagger doesn't support that for now but maybe in the future
-			TextRange tr = absoluteTagInstance.getRanges().get(0); 
-			if ((tr.getStartPos()>=this.pageStart) && (tr.getEndPos()<=this.pageEnd)) {
-				return true;
+	public boolean hasOverlappingRange(ClientTagInstance absoluteTagInstance) {
+		if (!absoluteTagInstance.getRanges().isEmpty()) {
+			for (TextRange tr : absoluteTagInstance.getRanges()) {
+				if (new Range(
+					this.pageStart, this.pageEnd).hasOverlappingRange(
+							new Range(tr.getStartPos(), tr.getEndPos()))) {
+					return true;
+				}
 			}
 		}
 		return false;

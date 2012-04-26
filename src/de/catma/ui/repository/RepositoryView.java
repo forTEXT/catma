@@ -3,6 +3,7 @@ package de.catma.ui.repository;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 
 import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
@@ -44,6 +45,7 @@ import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
+import de.catma.core.util.Pair;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.PropertyCollection;
 import de.catma.ui.repository.wizard.WizardFactory;
@@ -55,14 +57,24 @@ public class RepositoryView extends VerticalLayout {
 	
 	private static final class MarkupItem {
 		private String displayString;
+		private boolean userMarkupCollectionItem = false;
 
 		public MarkupItem(String displayString) {
-			this.displayString = displayString;
+			this(displayString, false);
 		}
 		
+		public MarkupItem(String displayString, boolean userMarkupCollectionItem) {
+			this.displayString = displayString;
+			this.userMarkupCollectionItem = userMarkupCollectionItem;
+		}
+
 		@Override
 		public String toString() {
 			return displayString;
+		}
+		
+		public boolean isUserMarkupCollectionItem() {
+			return userMarkupCollectionItem;
 		}
 	}
 	
@@ -94,25 +106,38 @@ public class RepositoryView extends VerticalLayout {
 	private Button btEditContentInfo;
 	private Button btSaveContentInfoChanges;
 	private Button btDiscardContentInfoChanges;
-	private PropertyChangeListener repositoryListener;
+	private PropertyChangeListener sourceDocumentAddedListener;
+	private PropertyChangeListener userMarkupDocumentAddedListener;
 	
 	public RepositoryView(Repository repository) {
 		super();
 		this.repository = repository;
-		repositoryListener = new PropertyChangeListener() {
+		sourceDocumentAddedListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
-				if (evt.getPropertyName().equals(
-						Repository.PropertyChangeEvent.sourceDocumentAdded.name())) {
-					SourceDocument sd = RepositoryView.this.repository.getSourceDocument(
-							(String)evt.getNewValue());
-					addSourceDocumentToTree(sd);
-				}
+				SourceDocument sd = RepositoryView.this.repository.getSourceDocument(
+						(String)evt.getNewValue());
+				addSourceDocumentToTree(sd);
 			}
 		};
 		this.repository.addPropertyChangeListener(
 				Repository.PropertyChangeEvent.sourceDocumentAdded,
-				repositoryListener);
+				sourceDocumentAddedListener);
+		
+		userMarkupDocumentAddedListener = new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				@SuppressWarnings("unchecked")
+				Pair<UserMarkupCollectionReference, SourceDocument>
+					result = (Pair<UserMarkupCollectionReference, SourceDocument>)evt.getNewValue();
+				addUserMarkupCollectionReferenceToTree(
+						result.getFirst(), result.getSecond());
+				
+			}
+		};
+		this.repository.addPropertyChangeListener(
+				Repository.PropertyChangeEvent.userMarkupCollectionAdded,
+				userMarkupDocumentAddedListener);
+		
 		
 		initComponents();
 		initActions();
@@ -145,7 +170,8 @@ public class RepositoryView extends VerticalLayout {
 					
 					public void activeStepChanged(WizardStepActivationEvent event) {/*not needed*/}
 				}, 
-				wizardResult);
+				wizardResult,
+				repository);
 				getApplication().getMainWindow().addWindow(sourceDocCreationWizardWindow);
 				sourceDocCreationWizardWindow.center();
 			}
@@ -705,7 +731,10 @@ public class RepositoryView extends VerticalLayout {
 	public void detach() {
 		this.repository.removePropertyChangeListener(
 				Repository.PropertyChangeEvent.sourceDocumentAdded,
-				repositoryListener);
+				sourceDocumentAddedListener);
+		this.repository.removePropertyChangeListener(
+				Repository.PropertyChangeEvent.userMarkupCollectionAdded, 
+				userMarkupDocumentAddedListener);
 		super.detach();
 	}
 	
@@ -716,15 +745,13 @@ public class RepositoryView extends VerticalLayout {
 		
 		
 		MarkupItem userMarkupItem =
-				new MarkupItem(userMarkupItemDisplayString);
+				new MarkupItem(userMarkupItemDisplayString, true);
 
 		documentsTree.addItem(userMarkupItem);
 		documentsTree.setParent(userMarkupItem, sd);
 	
 		for (UserMarkupCollectionReference ucr : sd.getUserMarkupCollectionRefs()) {
-			documentsTree.addItem(ucr);
-			documentsTree.setParent(ucr, userMarkupItem);
-			documentsTree.setChildrenAllowed(ucr, false);
+			addUserMarkupCollectionReferenceToTree(ucr, userMarkupItem);
 		}
 		
 		MarkupItem staticMarkupItem = 
@@ -739,6 +766,31 @@ public class RepositoryView extends VerticalLayout {
 		}
 	}
 	
+	private void addUserMarkupCollectionReferenceToTree(
+			UserMarkupCollectionReference ucr, MarkupItem userMarkupItem) {
+		documentsTree.addItem(ucr);
+		documentsTree.setParent(ucr, userMarkupItem);
+		documentsTree.setChildrenAllowed(ucr, false);
+	}
+	
+	
+	private void addUserMarkupCollectionReferenceToTree(
+			UserMarkupCollectionReference userMarkupCollRef, 
+			SourceDocument sourceDocument) {
+		
+		@SuppressWarnings("unchecked")
+		Collection<MarkupItem> children = 
+				(Collection<MarkupItem>) documentsTree.getChildren(sourceDocument);
+		
+		for (MarkupItem mi : children) {
+			if (mi.isUserMarkupCollectionItem()) {
+				addUserMarkupCollectionReferenceToTree(userMarkupCollRef, mi);
+				break;
+			}
+		}
+		
+	}
+
 	private void handleUserMarkupCreation() {
 		Object value = documentsTree.getValue();
 		if ((value == null) || !(value instanceof SourceDocument)) {
@@ -747,18 +799,34 @@ public class RepositoryView extends VerticalLayout {
                     "Please select a Source Document first");
 		}
 		else{
-			SourceDocument sourceDocument = (SourceDocument)value;
+			final SourceDocument sourceDocument = (SourceDocument)value;
+			final String userMarkupCollectionNameProperty = "name";
+			getUserMarkupCollectionName(
+					new FormDialog.SaveCancelListener() {
+				public void cancelPressed() {}
+				public void savePressed(
+						PropertysetItem propertysetItem) {
+					Property property = 
+							propertysetItem.getItemProperty(
+									userMarkupCollectionNameProperty);
+					String name = (String)property.getValue();
+					try {
+						repository.createUserMarkupCollection(
+								name, sourceDocument);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}, userMarkupCollectionNameProperty);
 
-			String name = getUserMarkupCollectionName();
-
-			repository.createUserMarkupCollection(name, sourceDocument);
 		}
 		
 	}
 
-	private String getUserMarkupCollectionName() {
-		final String userMarkupCollectionNameProperty = "name";
-		final StringBuilder result = new StringBuilder();
+	private void getUserMarkupCollectionName(
+			FormDialog.SaveCancelListener listener, 
+			String userMarkupCollectionNameProperty) {
 		PropertyCollection propertyCollection = 
 				new PropertyCollection(userMarkupCollectionNameProperty);
 
@@ -766,16 +834,7 @@ public class RepositoryView extends VerticalLayout {
 			new FormDialog(
 				"Create new User Markup Collection",
 				propertyCollection,
-				new FormDialog.SaveCancelListener() {
-					public void cancelPressed() {}
-					public void savePressed(
-							PropertysetItem propertysetItem) {
-						Property property = 
-								propertysetItem.getItemProperty(
-										userMarkupCollectionNameProperty);
-						result.append((String)property.getValue());
-					}
-				});
+				listener);
 	
 		userMarkupCollFormDialog.getField(
 				userMarkupCollectionNameProperty).setRequired(true);
@@ -783,8 +842,6 @@ public class RepositoryView extends VerticalLayout {
 				userMarkupCollectionNameProperty).setRequiredError(
 						"You have to enter a name!");
 		userMarkupCollFormDialog.show(getApplication().getMainWindow());
-		
-		return result.toString();
 	}
 }
 
