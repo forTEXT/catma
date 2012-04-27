@@ -127,6 +127,9 @@ public class ClientTagInstance {
 		return true;
 	}
 	
+	public void addRanges(List<TextRange> moreRanges) {
+		this.ranges.addAll(moreRanges);
+	}
 
 	
 }

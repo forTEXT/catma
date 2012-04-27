@@ -199,32 +199,39 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 						segElement.getFirstTeiChildElement(TeiElementName.ptr));
 				
 				String instanceID = getInstanceID(id, target.getSecond());
-				TagDef tagDefinition = tagDefinitions.get(id);
 				newReferencesBuilder.append(" #");
 				newReferencesBuilder.append(instanceID);
-				
-				TeiElement fs = new TeiElement(TeiElementName.fs);
-				
-				fs.setID(instanceID);
-				fs.setAttributeValue(Attribute.type, id);
-				
-				TeiElement fColor = new TeiElement(TeiElementName.f);
-				fColor.setAttributeValue(Attribute.f_name, "catma_displaycolor");
-				TeiElement numeric = new TeiElement(TeiElementName.numeric);
-				numeric.setAttributeValue(Attribute.numeric_value, tagDefinition.color);
-				fColor.appendChild(numeric);
-				fs.appendChild(fColor);
-				
-				for(Map.Entry<String, String> entry : tagDefinition.properties.entrySet()) {			
-					TeiElement f = new TeiElement(TeiElementName.f);
-					f.setAttributeValue(Attribute.f_name, entry.getKey());
-					TeiElement string = new TeiElement(TeiElementName.string);
-					string.appendChild(entry.getValue());
-					f.appendChild(string);
-					fs.appendChild(f);
+
+				if (!oldInstance2newInstanceID.values().contains(instanceID)) {
+					
+					TagDef tagDefinition = tagDefinitions.get(id);
+					
+					TeiElement fs = new TeiElement(TeiElementName.fs);
+					
+					fs.setID(instanceID);
+					fs.setAttributeValue(Attribute.type, id);
+					
+					TeiElement fColor = new TeiElement(TeiElementName.f);
+					fColor.setAttributeValue(Attribute.f_name, "catma_displaycolor");
+					TeiElement numeric = new TeiElement(TeiElementName.numeric);
+					numeric.setAttributeValue(Attribute.numeric_value, tagDefinition.color);
+					fColor.appendChild(numeric);
+					fs.appendChild(fColor);
+					
+					for(Map.Entry<String, String> entry : tagDefinition.properties.entrySet()) {			
+						TeiElement f = new TeiElement(TeiElementName.f);
+						f.setAttributeValue(Attribute.f_name, entry.getKey());
+						TeiElement string = new TeiElement(TeiElementName.string);
+						string.appendChild(entry.getValue());
+						f.appendChild(string);
+						fs.appendChild(f);
+					}
+					
+					text.insertChild(fs,0);
 				}
-				
-				text.insertChild(fs,0);
+				this.oldInstance2newInstanceID.put(
+						new OldInstance(target.getSecond(),id), 
+						instanceID);
 			}
 		}
 		segElement.setAttributeValue(
@@ -233,31 +240,26 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 
 	private String getInstanceID(String oldTagID, Range currentRange) {
 		
-//		if (oldTagID2Ranges.containsKey(oldTagID)) {
-//			Set<Range> ranges = oldTagID2Ranges.get(oldTagID);
-//			for (Range r : ranges) {
-//				if (currentRange.isAdjacentTo(r)) {
-//					ranges.add(currentRange);
-//					String instanceID = 
-//							this.oldInstance2newInstanceID.get(
-//									new OldInstance(r, oldTagID));
-//					this.oldInstance2newInstanceID.put(
-//							new OldInstance(currentRange,oldTagID), 
-//							instanceID);
-//					return instanceID;
-//				}
-//			}
-//			ranges.add(currentRange);
-//		}
-//		else {
-//			HashSet<Range> ranges = new HashSet<Range>();
-//			ranges.add(currentRange);
-//			this.oldTagID2Ranges.put(oldTagID, ranges);
-//		}
+		if (oldTagID2Ranges.containsKey(oldTagID)) {
+			Set<Range> ranges = oldTagID2Ranges.get(oldTagID);
+			for (Range r : ranges) {
+				if (currentRange.isAdjacentTo(r)) {
+					ranges.add(currentRange);
+					String instanceID = 
+							this.oldInstance2newInstanceID.get(
+									new OldInstance(r, oldTagID));
+					return instanceID;
+				}
+			}
+			ranges.add(currentRange);
+		}
+		else {
+			HashSet<Range> ranges = new HashSet<Range>();
+			ranges.add(currentRange);
+			this.oldTagID2Ranges.put(oldTagID, ranges);
+		}
 		
 		String newInstanceID = catmaIDGenerator.generate();
-		this.oldInstance2newInstanceID.put(
-				new OldInstance(currentRange, oldTagID), newInstanceID);
 		
 		return newInstanceID;
 	}
