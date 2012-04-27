@@ -3,11 +3,10 @@ package de.catma.indexer.elasticsearch;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.logging.Logger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
@@ -23,7 +22,7 @@ public class ESInstaller {
 	public String url = ESOptions.getString("ESInstaller.uri");
 	public String indexName = ESOptions.getString("ESInstaller.name");
 	public AsyncHttpClient httpTransport;
-	private Logger logger = LoggerFactory.getLogger(ESInstaller.class);
+	private Logger logger = Logger.getLogger(ESInstaller.class.getName());
 
 	public ESInstaller() {
 		this.httpTransport = new AsyncHttpClient();
@@ -38,7 +37,7 @@ public class ESInstaller {
 			taskCreateTermIndex();
 			taskCreateWildcardIndex();
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.severe(e.getMessage());
 		}
 	}
 

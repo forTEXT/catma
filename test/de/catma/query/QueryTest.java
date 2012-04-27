@@ -9,10 +9,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
-import org.elasticsearch.client.Client;
-import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -26,25 +22,19 @@ import de.catma.core.document.source.SourceDocument;
 import de.catma.core.tag.TagManager;
 import de.catma.indexer.KwicProvider;
 import de.catma.indexer.elasticsearch.ESIndexer;
-import de.catma.indexer.unseparablecharactersequence.CharTreeFactory;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.QueryResultRow;
 import de.catma.queryengine.QueryResultRowArray;
 
 
-public class PhraseQueryTest {
+public class QueryTest {
 
-	private Client client;
 	private Repository repository;
 
 	@Before
 	public void setup() {
 		TagManager tagManager  = new TagManager();
-		
-		client = new TransportClient()
-				.addTransportAddress(new InetSocketTransportAddress(
-						"clea.bsdsystems.de", 9300));
 		
 		Properties properties = new Properties();
 		try {
@@ -77,15 +67,6 @@ public class PhraseQueryTest {
 			t.printStackTrace();
 			throw t;
 		}
-	}
-
-	@Test
-	public void charTreeTest() {
-		String bla = "e. g.";
-		ArrayList<String> list = new ArrayList<String>();
-		list.add(bla);
-		CharTreeFactory f = new CharTreeFactory();
-		f.createCharMap(list);
 	}
 	
 	@Test
@@ -186,12 +167,6 @@ public class PhraseQueryTest {
 			t.printStackTrace();
 			throw t;
 		}
-	}
-
-	
-	@After
-	public void teardown() {
-		client.close();
 	}
 
 	@Test

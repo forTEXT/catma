@@ -1,7 +1,6 @@
 package de.catma.indexer.elasticsearch;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -15,16 +14,11 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.regex.Pattern;
+import java.util.logging.Logger;
 
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ning.http.client.Response;
 
@@ -36,16 +30,13 @@ import de.catma.core.util.IDGenerator;
 import de.catma.core.util.Pair;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TermInfo;
-import de.catma.indexer.WhitespaceAndPunctuationAnalyzer;
-import de.catma.indexer.unseparablecharactersequence.CharTree;
-import de.catma.indexer.unseparablecharactersequence.CharTreeFactory;
 import de.catma.queryengine.QueryResultRow;
 import de.catma.queryengine.QueryResultRowArray;
 
 public class ESIndexer implements Indexer {
 
 	private ESCommunication esComm;
-	private Logger logger = LoggerFactory.getLogger(ESInstaller.class);
+	private Logger logger = Logger.getLogger(ESInstaller.class.getName());
 
 	public ESIndexer() {
 		esComm = new ESCommunication();
@@ -55,73 +46,17 @@ public class ESIndexer implements Indexer {
 			List<String> unseparableCharacterSequences,
 			List<Character> userDefinedSeparatingCharacters, Locale locale)
 			throws Exception {
-		// just in case something went wrong, better use the default than
-		// nothing
-		if (locale == null) {
-			locale = Locale.getDefault();
-		}
-
-		CharTreeFactory ctf = new CharTreeFactory();
-		CharTree unseparableCharSeqTree = ctf
-				.createCharMap(unseparableCharacterSequences);
-
-		WhitespaceAndPunctuationAnalyzer analyzer = new WhitespaceAndPunctuationAnalyzer(
-				unseparableCharSeqTree,
-				buildPatternFrom(userDefinedSeparatingCharacters), locale);
-
-		TokenStream ts = analyzer.tokenStream(null, // our analyzer does not use
-													// the fieldname
-				new StringReader(sourceDoc.getContent()));
-
-		Map<String, List<TermInfo>> terms = new HashMap<String, List<TermInfo>>();
-
-		int positionCounter = 0;
-		while (ts.incrementToken()) {
-			CharTermAttribute termAttr = (CharTermAttribute) ts
-					.getAttribute(CharTermAttribute.class);
-
-			OffsetAttribute offsetAttr = (OffsetAttribute) ts
-					.getAttribute(OffsetAttribute.class);
-
-			TermInfo ti = new TermInfo(termAttr.toString(),
-					offsetAttr.startOffset(), offsetAttr.endOffset(),
-					positionCounter);
-
-			if (!terms.containsKey(ti.getTerm())) {
-				terms.put(ti.getTerm(), new ArrayList<TermInfo>());
-			}
-			terms.get(ti.getTerm()).add(ti);
-			positionCounter++;
-			System.out.println(ti);
-		}
+		
+		TermExtractor termExtractor = 
+				new TermExtractor(
+					sourceDoc.getContent(), 
+					unseparableCharacterSequences, 
+					userDefinedSeparatingCharacters, 
+					locale);
+		
+		Map<String, List<TermInfo>> terms = termExtractor.getTerms();
+		
 		esComm.indexTerms(sourceDoc.getID(), terms);
-	}
-
-	/**
-	 * Creates an OR-ed regex pattern from the list of user defined separating
-	 * characters.
-	 * 
-	 * @param userDefinedSeparatingCharacters
-	 *            the list of user defined separating characters
-	 * @return the pattern
-	 */
-	private Pattern buildPatternFrom(
-			List<Character> userDefinedSeparatingCharacters) {
-
-		if (userDefinedSeparatingCharacters.isEmpty()) {
-			return null;
-		}
-
-		StringBuilder patternBuilder = new StringBuilder();
-		String conc = "";
-
-		for (Character c : userDefinedSeparatingCharacters) {
-			patternBuilder.append(conc);
-			patternBuilder.append(Pattern.quote(c.toString()));
-			conc = "|"; // OR
-		}
-
-		return Pattern.compile(patternBuilder.toString());
 	}
 
 	public Map<String, List<Range>> searchTerm(List<String> documentIdList,
@@ -204,7 +139,7 @@ public class ESIndexer implements Indexer {
 						.setBody(j_query.toString()).execute();
 				httpRequests.put(term, f);
 			}
-			ESCommunication.waitForRequests(httpRequests.values());
+			esComm.waitForRequests(httpRequests.values());
 
 			for (Map.Entry<ESTermIndexDocument, Future<Response>> entry : httpRequests
 					.entrySet()) {
@@ -256,7 +191,7 @@ public class ESIndexer implements Indexer {
 		for (String term : termList) {
 			searchTerm(documentIdList, term, httpRequests);
 		}
-		ESCommunication.waitForRequests(httpRequests);
+		esComm.waitForRequests(httpRequests);
 
 		List<ESTermIndexDocument> termids = new ArrayList<ESTermIndexDocument>();
 
@@ -308,7 +243,7 @@ public class ESIndexer implements Indexer {
 				.setBody(searchobj.toString()).execute();
 		httpRequests.add(f);
 
-		ESCommunication.waitForRequests(httpRequests);
+		esComm.waitForRequests(httpRequests);
 
 		QueryResultRowArray results = new QueryResultRowArray();
 
@@ -317,7 +252,7 @@ public class ESIndexer implements Indexer {
 					req, new ESTagReferenceDocumentFactory())) {
 				logger.info("tag found: " + tagdoc);
 				results.add(new QueryResultRow(tagdoc.getDocumentId(), tagdoc
-						.getRange(), null, tagdoc.getUserMarkupCollectionId(),
+						.getRange(), tagdoc.getUserMarkupCollectionId(),
 						IDGenerator.UUIDToCatmaID(tagdoc.getTagDefinitionId()),
 						IDGenerator.UUIDToCatmaID(tagdoc.getTagInstanceId())));
 			}
@@ -347,7 +282,7 @@ public class ESIndexer implements Indexer {
 		searchTerm(documentIds, term1, httpRequests);
 		searchTerm(documentIds, term2, httpRequests);
 
-		ESCommunication.waitForRequests(httpRequests);
+		esComm.waitForRequests(httpRequests);
 
 		TreeSet<ESTermIndexDocument> frequenciesOfTerms = new TreeSet<ESTermIndexDocument>(
 				new Comparator<ESTermIndexDocument>() {
@@ -402,7 +337,7 @@ public class ESIndexer implements Indexer {
 			httpRequests.add(searchPosition(term.getTermId()));
 		}
 
-		ESCommunication.waitForRequests(httpRequests);
+		esComm.waitForRequests(httpRequests);
 
 		for (Future<Response> req : httpRequests) {
 			ESPositionIndexDocumentFactory factory = new ESPositionIndexDocumentFactory();
@@ -427,7 +362,7 @@ public class ESIndexer implements Indexer {
 			}
 		}
 
-		ESCommunication.waitForRequests(positionPairs.values());
+		esComm.waitForRequests(positionPairs.values());
 
 		for (Map.Entry<ESPositionIndexDocument, Future<Response>> positionResponse : positionPairs
 				.entrySet()) {

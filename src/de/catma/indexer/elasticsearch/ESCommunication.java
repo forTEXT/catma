@@ -7,10 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.logging.Logger;
 
 import org.json.JSONException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
@@ -26,8 +25,8 @@ public class ESCommunication {
 	public String indexName = ESOptions.getString("ESInstaller.name");
 	public AsyncHttpClient httpTransport;
 	
-	private static Logger logger = LoggerFactory
-			.getLogger(ESCommunication.class);
+	private Logger logger = 
+			Logger.getLogger(ESCommunication.class.getName());
 
 	public ESCommunication() {
 		AsyncHttpClientConfig config = new AsyncHttpClientConfig.Builder()
@@ -97,7 +96,7 @@ public class ESCommunication {
 				+ ESOptions.getString("ESInstaller.tagreferenceindex");
 	}
 
-	public static boolean waitForRequests(
+	public boolean waitForRequests(
 			Collection<Future<Response>> collection) {
 		/*
 		 * This is to join results
@@ -108,7 +107,7 @@ public class ESCommunication {
 			try {
 				Response r = response.get();
 				if (r.getStatusCode() >= 400) {
-					logger.error("response was " + r.getStatusCode());
+					logger.severe("response was " + r.getStatusCode());
 					result = false;
 				}
 			} catch (InterruptedException e) {

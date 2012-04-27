@@ -19,16 +19,11 @@
 
 package de.catma.queryengine;
 
-import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-
 import de.catma.core.document.Range;
-import de.catma.indexer.WhitespaceAndPunctuationAnalyzer;
+import de.catma.indexer.elasticsearch.TermExtractor;
 
 /**
  * A query for tokens that match an exact phrase or the phrase of a more advanced query like the
@@ -56,22 +51,15 @@ public class Phrase extends Query {
     @Override
     protected QueryResult execute() throws Exception {
     	QueryOptions options = getQueryOptions();
-        WhitespaceAndPunctuationAnalyzer analyzer =
-                new WhitespaceAndPunctuationAnalyzer(
+        TermExtractor termExtractor =
+                new TermExtractor(
+                		phrase,
                         options.getUnseparableCharacterSequences(),
                         options.getUserDefinedSeparatingCharacters(),
                         options.getLocale());
 
-        TokenStream ts =
-                analyzer.tokenStream(
-                        null, // our analyzer does not use the fieldname 
-                        new StringReader(phrase));
-        List<String> termList = new ArrayList<String>();
-        while(ts.incrementToken()) {
-            CharTermAttribute termAttr =
-                    (CharTermAttribute)ts.getAttribute(CharTermAttribute.class);
-            termList.add(termAttr.toString());
-        }
+        List<String> termList = termExtractor.getTermsInOrder();
+        
         Map<String,List<Range>> hits = 
         		getIndexer().searchTerm(options.getDocumentIds(), termList);
         QueryResultRowArray queryResult = new QueryResultRowArray();

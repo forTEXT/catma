@@ -73,6 +73,7 @@ public class CollocQuery extends Query {
 
     @Override
     protected QueryResult execute() throws Exception {
+//    	QueryResult qr = 
 
 //        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
 //        Index index = sourceDoc.getIndex();
