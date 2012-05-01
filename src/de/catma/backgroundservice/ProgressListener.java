@@ -29,6 +29,4 @@ public interface ProgressListener {
 	
 	public void setProgress(String value, Object... args);
 
-	public void setException(Throwable t);
-
 }

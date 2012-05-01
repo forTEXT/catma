@@ -29,6 +29,7 @@ import java.util.TreeSet;
 
 import de.catma.core.document.source.SourceDocument;
 import de.catma.indexer.TermInfo;
+import de.catma.queryengine.result.QueryResult;
 import de.catma.core.document.Range;
 
 /**

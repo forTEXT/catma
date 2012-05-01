@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import de.catma.indexer.TermInfo;
+import de.catma.queryengine.result.QueryResult;
 
 /**
  * A refinement that is specified via a {@link org.catma.queryengine.Query}.

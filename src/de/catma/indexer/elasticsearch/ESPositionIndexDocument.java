@@ -12,7 +12,7 @@ import com.ning.http.client.Response;
 import de.catma.core.document.Range;
 import de.catma.core.util.IDGenerator;
 import de.catma.indexer.TermInfo;
-import de.catma.queryengine.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRow;
 
 public class ESPositionIndexDocument implements ESDocument {
 

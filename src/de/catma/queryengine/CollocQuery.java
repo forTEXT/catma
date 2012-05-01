@@ -22,6 +22,7 @@ package de.catma.queryengine;
 import java.util.List;
 
 import de.catma.indexer.TermInfo;
+import de.catma.queryengine.result.QueryResult;
 
 /**
  * A collocation query looks for terms that form a collocation with other terms within a given

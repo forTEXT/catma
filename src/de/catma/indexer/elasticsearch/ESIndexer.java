@@ -30,8 +30,8 @@ import de.catma.core.util.IDGenerator;
 import de.catma.core.util.Pair;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TermInfo;
-import de.catma.queryengine.QueryResultRow;
-import de.catma.queryengine.QueryResultRowArray;
+import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
 
 public class ESIndexer implements Indexer {
 

@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 
 import de.catma.core.document.source.SourceDocument;
 import de.catma.indexer.TermInfo;
+import de.catma.queryengine.result.QueryResult;
 
 /**
  * A regular expression query.

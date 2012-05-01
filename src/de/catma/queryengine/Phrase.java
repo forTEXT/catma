@@ -24,6 +24,9 @@ import java.util.Map;
 
 import de.catma.core.document.Range;
 import de.catma.indexer.elasticsearch.TermExtractor;
+import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
 
 /**
  * A query for tokens that match an exact phrase or the phrase of a more advanced query like the

@@ -23,6 +23,7 @@ import java.util.Comparator;
 
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TermInfo;
+import de.catma.queryengine.result.QueryResult;
 
 /**
  * The base class for all queries.

@@ -19,6 +19,8 @@
 
 package de.catma.queryengine;
 
+import de.catma.queryengine.result.QueryResult;
+
 
 /**
  * A query that looks for phrases that are {@link org.catma.queryengine.Simil similar} to the given

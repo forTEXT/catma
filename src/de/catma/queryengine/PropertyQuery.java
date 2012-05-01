@@ -21,6 +21,8 @@ package de.catma.queryengine;
 
 import java.util.Set;
 
+import de.catma.queryengine.result.QueryResult;
+
 
 /**
  * This query looks for tokens that are tagged with a {@link Tag} that has the desired

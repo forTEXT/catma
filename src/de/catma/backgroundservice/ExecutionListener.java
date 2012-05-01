@@ -33,4 +33,5 @@ public interface ExecutionListener<X> {
 	 * @param result may be null if there was no result.
 	 */
 	public void done( X result );
+	public void error(Throwable t);
 }

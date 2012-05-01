@@ -214,6 +214,11 @@ public class RepositoryView extends VerticalLayout {
 									application.openUserMarkupCollection(
 											sd, result, repository);
 								}
+								
+								public void error(Throwable t) {
+									// TODO Auto-generated method stub
+									
+								}
 							});
 
 				}
@@ -252,8 +257,7 @@ public class RepositoryView extends VerticalLayout {
 		miMoreCorpusActions.addItem("Analyze Corpus", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
+				((CleaApplication)getApplication()).analyzeDocuments();
 			}
 		});
 		

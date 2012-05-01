@@ -24,6 +24,8 @@ import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagManager;
 import de.catma.ui.DefaultProgressListener;
+import de.catma.ui.analyzer.AnalyzerManagerView;
+import de.catma.ui.analyzer.AnalyzerManagerWindow;
 import de.catma.ui.menu.Menu;
 import de.catma.ui.menu.MenuFactory;
 import de.catma.ui.repository.RepositoryManagerView;
@@ -46,6 +48,7 @@ public class CleaApplication extends Application {
 	private String tempDirectory = null;
 	private BackgroundService backgroundService;
 	private TaggerManagerView taggerManagerView;
+	private AnalyzerManagerView analyzerManagerView;
 	private TagManager tagManager;
 	private ProgressIndicator defaultProgressIndicator;
 	private int defaultPIbackgroundJobs = 0;
@@ -66,7 +69,7 @@ public class CleaApplication extends Application {
 			}
 		});
 		VerticalLayout mainLayout = new VerticalLayout();
-		mainLayout.setSizeFull();
+		mainLayout.setSizeUndefined();
 		mainLayout.setMargin(true);
 		mainWindow.setContent(mainLayout);
 		MenuFactory menuFactory = new MenuFactory();
@@ -82,6 +85,7 @@ public class CleaApplication extends Application {
 			
 			taggerManagerView = new TaggerManagerView();
 			
+			analyzerManagerView = new AnalyzerManagerView();
 			
 			menu = menuFactory.createMenu(
 					mainLayout, 
@@ -91,8 +95,13 @@ public class CleaApplication extends Application {
 					new MenuFactory.MenuEntryDefinition(
 							"Tag Manager",
 							new TagManagerWindow(tagManagerView)),
-					new MenuFactory.MenuEntryDefinition("Tagger",
-							new TaggerManagerWindow(taggerManagerView)));
+					new MenuFactory.MenuEntryDefinition(
+							"Tagger",
+							new TaggerManagerWindow(taggerManagerView)),
+					new MenuFactory.MenuEntryDefinition(
+							"Analyzer",
+							new AnalyzerManagerWindow(analyzerManagerView))
+					);
 			
 			defaultProgressIndicator = new ProgressIndicator();
 			defaultProgressIndicator.setIndeterminate(true);
@@ -114,8 +123,8 @@ public class CleaApplication extends Application {
 
 		
 		setMainWindow(mainWindow);
+		
 		setTheme("cleatheme");
-
 	}
 	
 	private void initTempDirectory(Properties properties) throws IOException {
@@ -204,6 +213,10 @@ public class CleaApplication extends Application {
 					}
 					
 				};
+				
+				public void error(Throwable t) {
+					listener.error(t);
+				}
 			}, 
 			new DefaultProgressListener(defaultProgressIndicator, this));
 	}
@@ -216,6 +229,14 @@ public class CleaApplication extends Application {
 		taggerManagerView.openUserMarkupCollection(
 				taggerView, userMarkupCollection);
 		
+	}
+	
+	public void analyzeDocuments() {
+		if (analyzerManagerView.getApplication() == null) {
+			menu.executeEntry(analyzerManagerView);
+		}
+		
+		analyzerManagerView.analyzeDocuments();
 	}
 	
 }

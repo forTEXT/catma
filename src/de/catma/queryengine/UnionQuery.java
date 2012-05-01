@@ -22,6 +22,7 @@ package de.catma.queryengine;
 import java.util.List;
 
 import de.catma.indexer.TermInfo;
+import de.catma.queryengine.result.QueryResult;
 
 /**
  * An operator that combines the results of two queries.

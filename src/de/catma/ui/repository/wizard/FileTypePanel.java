@@ -177,6 +177,12 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 							progressIndicator.setCaption("File type detection finished!");
 							progressIndicator.setEnabled(false);
 						}
+						
+						public void error(Throwable t) {
+							// TODO Auto-generated method stub
+							
+						}
+						
 					}, new DefaultProgressListener(progressIndicator, getApplication()));
 		}
 		catch (Exception exc) {

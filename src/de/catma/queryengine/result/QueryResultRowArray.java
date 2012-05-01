@@ -1,4 +1,4 @@
-package de.catma.queryengine;
+package de.catma.queryengine.result;
 
 import java.util.ArrayList;
 import java.util.Arrays;

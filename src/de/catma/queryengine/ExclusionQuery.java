@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import de.catma.indexer.TermInfo;
+import de.catma.queryengine.result.QueryResult;
 
 /**
  * An exclusion query takes the results of the first query and substracts the results of the second

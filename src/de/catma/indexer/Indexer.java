@@ -8,7 +8,7 @@ import de.catma.core.document.Range;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.tag.TagLibrary;
-import de.catma.queryengine.QueryResultRowArray;
+import de.catma.queryengine.result.QueryResultRowArray;
 
 public interface Indexer {
 	public void index(

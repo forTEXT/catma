@@ -31,6 +31,7 @@ import de.catma.indexer.Indexer;
 import de.catma.queryengine.parser.CatmaQueryLexer;
 import de.catma.queryengine.parser.CatmaQueryParser;
 import de.catma.queryengine.parser.CatmaQueryWalker;
+import de.catma.queryengine.result.QueryResult;
 
 
 /**

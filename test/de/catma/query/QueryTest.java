@@ -24,8 +24,8 @@ import de.catma.indexer.KwicProvider;
 import de.catma.indexer.elasticsearch.ESIndexer;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryOptions;
-import de.catma.queryengine.QueryResultRow;
-import de.catma.queryengine.QueryResultRowArray;
+import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
 
 
 public class QueryTest {

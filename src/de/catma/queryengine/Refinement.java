@@ -19,6 +19,8 @@
 
 package de.catma.queryengine;
 
+import de.catma.queryengine.result.QueryResult;
+
 
 /**
  * A refinment of the result of {@link org.catma.queryengine.Query}

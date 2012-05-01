@@ -23,6 +23,7 @@ import java.util.List;
 
 import de.catma.core.document.source.SourceDocument;
 import de.catma.indexer.TermInfo;
+import de.catma.queryengine.result.QueryResult;
 
 /**
  * A query that looks for all types that match a numeric frequency condition. 

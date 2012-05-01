@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import de.catma.indexer.TermInfo;
+import de.catma.queryengine.result.QueryResult;
 
 /**
  * This refinement combines to refinement conditions by a logical OR.

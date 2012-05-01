@@ -19,6 +19,8 @@
 
 package de.catma.queryengine;
 
+import de.catma.queryengine.result.QueryResult;
+
 
 /**
  * This refinement combines to refinement conditions by a logical AND.

@@ -14,13 +14,6 @@ public class DefaultProgressListener implements ProgressListener {
 		this.lock = lock;
 	}
 	
-	
-	public void setException(Throwable t) {
-		t.printStackTrace();
-		// TODO Auto-generated method stub
-		
-	}
-	
 	public void setProgress(String value, Object... args) {
 		synchronized (lock) {
 			pi.setCaption(value);

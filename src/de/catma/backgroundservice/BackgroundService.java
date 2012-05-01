@@ -75,10 +75,12 @@ public class BackgroundService {
                         }
                     } catch (Throwable t) {
                         try {
-                            progressListener.setException(t);
+                        	listener.error(t);
+                        	Logger.getLogger(
+                        		getClass().getName()).log(
+                        				Level.SEVERE, "error", t);
                         }
                         catch(Throwable ignored) {}
-                        Logger.getLogger(getClass().getName()).log(Level.SEVERE, "error", t); //TODO: handle properly
                     }
                 }
             } );
@@ -90,7 +92,9 @@ public class BackgroundService {
                 listener.done( result );
 
             } catch (Throwable t) {
-            	Logger.getLogger(getClass().getName()).log(Level.SEVERE, "error", t);  //TODO: handle properly
+            	listener.error(t);
+            	Logger.getLogger(getClass().getName()).log(
+            		Level.SEVERE, "error", t);  
             }
         }
 		
