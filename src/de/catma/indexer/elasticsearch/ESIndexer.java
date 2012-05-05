@@ -29,6 +29,7 @@ import de.catma.core.tag.TagLibrary;
 import de.catma.core.util.IDGenerator;
 import de.catma.core.util.Pair;
 import de.catma.indexer.Indexer;
+import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;

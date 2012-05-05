@@ -20,13 +20,9 @@
 package de.catma.queryengine;
 
 import java.util.List;
-import java.util.Map;
 
-import de.catma.core.document.Range;
-import de.catma.indexer.elasticsearch.TermExtractor;
+import de.catma.indexer.TermExtractor;
 import de.catma.queryengine.result.QueryResult;
-import de.catma.queryengine.result.QueryResultRow;
-import de.catma.queryengine.result.QueryResultRowArray;
 
 /**
  * A query for tokens that match an exact phrase or the phrase of a more advanced query like the
@@ -63,16 +59,10 @@ public class Phrase extends Query {
 
         List<String> termList = termExtractor.getTermsInOrder();
         
-        Map<String,List<Range>> hits = 
-        		getIndexer().searchTerm(options.getDocumentIds(), termList);
-        QueryResultRowArray queryResult = new QueryResultRowArray();
+        QueryResult queryResult = 
+        		getIndexer().searchPhrase(
+        				options.getDocumentIds(), phrase, termList);
         
-        for (Map.Entry<String,List<Range>> entry : hits.entrySet()) {
-        	String documentId = entry.getKey();
-        	for (Range r : entry.getValue()) {
-        		queryResult.add(new QueryResultRow(documentId, r));
-        	}
-        }
         return queryResult;
     }
 

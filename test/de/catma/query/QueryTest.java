@@ -20,10 +20,12 @@ import de.catma.core.document.repository.RepositoryManager;
 import de.catma.core.document.source.KeywordInContext;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.tag.TagManager;
+import de.catma.indexer.Indexer;
 import de.catma.indexer.KwicProvider;
-import de.catma.indexer.elasticsearch.ESIndexer;
+import de.catma.indexer.db.DBIndexer;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryOptions;
+import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 
@@ -51,16 +53,64 @@ public class QueryTest {
 	
 	
 	@Test
-	public void testSearchTerm() throws Throwable {
+	public void testSearchTerm1() throws Throwable {
 		try {
-			ESIndexer esIndexer = new ESIndexer();
+			Indexer indexer = new DBIndexer();
 			List<String> term = new ArrayList<String>();
 			term.add("pig");
 			term.add("had");
 			term.add("been");
 			term.add("dead");
-			Map<String, List<Range>> result = esIndexer.searchTerm(null, term);
-			esIndexer.close();
+			QueryResult result = 
+					indexer.searchPhrase(null, "pig had been dead", term);
+			indexer.close();
+			
+			for (QueryResultRow qrr : result) {
+				System.out.println(qrr);
+			}
+		}
+		catch(Throwable t) {
+			t.printStackTrace();
+			throw t;
+		}
+	}
+	
+	@Test
+	public void testSearchTerm2() throws Throwable {
+		try {
+			Indexer indexer = new DBIndexer();
+			List<String> termList = new ArrayList<String>();
+			termList.add("he");
+			termList.add("came");
+			List<String> documentIDs = new ArrayList<String>();
+//			documentIDs.add("catma:///container/pg13.txt");
+			QueryResult result = indexer.searchPhrase(documentIDs, "he came", termList);
+			indexer.close();
+			for (QueryResultRow qrr : result) {
+				System.out.println(qrr);
+			}
+
+		}
+		catch(Throwable t) {
+			t.printStackTrace();
+			throw t;
+		}
+	}
+	
+	@Test
+	public void testSearchTerm3() throws Throwable {
+		try {
+			Indexer indexer = new DBIndexer();
+			List<String> termList = new ArrayList<String>();
+			termList.add("he");
+			termList.add("came");
+			List<String> documentIDs = new ArrayList<String>();
+			documentIDs.add("catma:///container/pg13.txt");
+			QueryResult result = indexer.searchPhrase(documentIDs, "he came", termList);
+			indexer.close();
+			for (QueryResultRow qrr : result) {
+				System.out.println(qrr);
+			}
 
 		}
 		catch(Throwable t) {
@@ -73,14 +123,17 @@ public class QueryTest {
 	public void kwicPhraseQueryResult() {
 		List<String> unseparableCharacterSequences = Collections.emptyList();
 		List<Character> userDefinedSeparatingCharacters = Collections.emptyList();
+		List<String> documentIDs = new ArrayList<String>();
+		documentIDs.add("catma:///container/pg13.txt");
 		QueryOptions queryOptions = new QueryOptions(
-				(List<String>)null,
+//				(List<String>)null,
+				documentIDs,
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
 				Locale.ENGLISH);
 		
 		QueryJob job = new QueryJob(
-				"\"pig\"", new ESIndexer(), queryOptions);
+				"\"To the day when you took me aboard of your ship\"", new DBIndexer(), queryOptions);
 		job.setProgressListener(new LogProgressListener());
 		try {
 			
@@ -132,7 +185,7 @@ public class QueryTest {
 				Locale.ENGLISH);
 		
 		QueryJob job = new QueryJob(
-				"\"pig had been dead\"", new ESIndexer(), queryOptions);
+				"\"pig had been dead\"", new DBIndexer(), queryOptions);
 		job.setProgressListener(new LogProgressListener());
 		try {
 			System.out.println(job.call());
@@ -145,8 +198,8 @@ public class QueryTest {
 	@Test
 	public void testSearchTag() throws Throwable {
 		try {
-			ESIndexer esIndexer = new ESIndexer();
-			 QueryResultRowArray result = esIndexer.searchTag("/Order/analepsis", true);
+			Indexer esIndexer = new DBIndexer();
+			 QueryResult result = esIndexer.searchTag("/Order/analepsis", true);
 				esIndexer.close();
 
 		}
@@ -159,8 +212,8 @@ public class QueryTest {
 	@Test
 	public void testColocation() throws Throwable {
 		try {
-			ESIndexer esIndexer = new ESIndexer();
-			esIndexer.searchColocation(null, "you", "will", 10);
+			Indexer esIndexer = new DBIndexer();
+//			esIndexer.searchColocation(null, "you", "will", 10);
 			esIndexer.close();
 		}
 		catch(Throwable t) {

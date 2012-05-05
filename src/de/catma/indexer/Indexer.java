@@ -2,13 +2,11 @@ package de.catma.indexer;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
-import de.catma.core.document.Range;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.tag.TagLibrary;
-import de.catma.queryengine.result.QueryResultRowArray;
+import de.catma.queryengine.result.QueryResult;
 
 public interface Indexer {
 	public void index(
@@ -25,11 +23,12 @@ public interface Indexer {
 	
 	/**
 	 * @param documentIdList
+	 * @param phrase
 	 * @param termList
-	 * @return a list of mappings documentIds->list of matching ranges 
+	 * @return
 	 */
-	public Map<String,List<Range>> searchTerm(
-			List<String> documentIdList, List<String> termList) throws Exception;
+	public QueryResult searchPhrase(
+			List<String> documentIdList, String phrase, List<String> termList) throws Exception;
 	
 	
 	/**
@@ -38,7 +37,7 @@ public interface Indexer {
 	 * @return a list of mappings documentIds->Pair of matching ranges and phrases
 	 * @throws Exception
 	 */
-	public QueryResultRowArray searchTag(
+	public QueryResult searchTag(
 			String tagPath, boolean isPrefixSearch) throws Exception;
 	
 	public void close();

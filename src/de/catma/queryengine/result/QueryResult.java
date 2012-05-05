@@ -26,5 +26,6 @@ package de.catma.queryengine.result;
  *
  * @author Marco Petris <marco.petris@web.de>
  */
-public interface QueryResult {
+public interface QueryResult extends Iterable<QueryResultRow> {
+	
 }

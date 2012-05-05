@@ -15,7 +15,8 @@ import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagManager;
-import de.catma.indexer.elasticsearch.ESIndexer;
+import de.catma.indexer.Indexer;
+import de.catma.indexer.db.DBIndexer;
 
 public class IndexerTest {
 	private Repository repository;
@@ -40,10 +41,10 @@ public class IndexerTest {
 	public void testIndexSourceDoc() throws Throwable {
 		try {
 			SourceDocument sd = repository.getSourceDocument(
-					"http://www.gutenberg.org/cache/epub/13/pg13.txt");
+					"catma:///container/pg13.txt");
 			
-			ESIndexer esIndexer = new ESIndexer();
-			esIndexer.index(
+			Indexer indexer = new DBIndexer();
+			indexer.index(
 					sd, 
 					Collections.<String>emptyList(), 
 					Collections.<Character>emptyList(), 
@@ -59,10 +60,10 @@ public class IndexerTest {
 	public void testIndexSourceDoc2() throws Throwable {
 		try {
 			SourceDocument sd = repository.getSourceDocument(
-					"http://www.gutenberg.org/cache/epub/11/pg11.txt");
+					"catma:///container/pg11.txt");
 			
-			ESIndexer esIndexer = new ESIndexer();
-			esIndexer.index(
+			Indexer indexer = new DBIndexer();
+			indexer.index(
 					sd, 
 					Collections.<String>emptyList(), 
 					Collections.<Character>emptyList(), 
@@ -85,9 +86,9 @@ public class IndexerTest {
 			UserMarkupCollection umc = 
 					repository.getUserMarkupCollection(ref);
 						
-			ESIndexer esIndexer = new ESIndexer();
-			esIndexer.index(umc.getTagReferences(), sd.getID(), umc.getId(), umc.getTagLibrary());
-			esIndexer.close();
+//			ESIndexer esIndexer = new ESIndexer();
+//			esIndexer.index(umc.getTagReferences(), sd.getID(), umc.getId(), umc.getTagLibrary());
+//			esIndexer.close();
 		}
 		catch(Throwable t) {
 			t.printStackTrace();

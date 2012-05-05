@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-public class QueryResultRowArray implements QueryResult, Iterable<QueryResultRow> {
+public class QueryResultRowArray implements QueryResult {
 	private List<QueryResultRow> rows;
 
 	public QueryResultRowArray() {
