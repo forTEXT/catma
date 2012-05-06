@@ -24,4 +24,8 @@ public class QueryResultRowArray implements QueryResult {
 	public Iterator<QueryResultRow> iterator() {
 		return rows.iterator();
 	}
+
+	public void addAll(QueryResultRowArray queryResult) {
+		rows.addAll(queryResult.rows);
+	}
 }

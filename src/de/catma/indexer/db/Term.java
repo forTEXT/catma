@@ -37,7 +37,7 @@ public class Term implements java.io.Serializable {
 		return this.termId;
 	}
 
-	public void setTermId(Integer termId) {
+	void setTermId(Integer termId) {
 		this.termId = termId;
 	}
 
@@ -46,7 +46,7 @@ public class Term implements java.io.Serializable {
 		return this.documentId;
 	}
 
-	public void setDocumentId(String documentId) {
+	void setDocumentId(String documentId) {
 		this.documentId = documentId;
 	}
 
@@ -55,7 +55,7 @@ public class Term implements java.io.Serializable {
 		return this.frequency;
 	}
 
-	public void setFrequency(int frequency) {
+	void setFrequency(int frequency) {
 		this.frequency = frequency;
 	}
 
@@ -64,8 +64,45 @@ public class Term implements java.io.Serializable {
 		return this.term;
 	}
 
-	public void setTerm(String term) {
+	void setTerm(String term) {
 		this.term = term;
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((documentId == null) ? 0 : documentId.hashCode());
+		result = prime * result + frequency;
+		result = prime * result + ((term == null) ? 0 : term.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Term other = (Term) obj;
+		if (documentId == null) {
+			if (other.documentId != null)
+				return false;
+		} else if (!documentId.equals(other.documentId))
+			return false;
+		if (frequency != other.frequency)
+			return false;
+		if (term == null) {
+			if (other.term != null)
+				return false;
+		} else if (!term.equals(other.term))
+			return false;
+		return true;
+	}
+	
+	
 
 }

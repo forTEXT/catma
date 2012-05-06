@@ -83,7 +83,7 @@ public class QueryTest {
 			termList.add("he");
 			termList.add("came");
 			List<String> documentIDs = new ArrayList<String>();
-//			documentIDs.add("catma:///container/pg13.txt");
+			documentIDs.add("catma:///container/pg13.txt");
 			QueryResult result = indexer.searchPhrase(documentIDs, "he came", termList);
 			indexer.close();
 			for (QueryResultRow qrr : result) {
@@ -120,7 +120,29 @@ public class QueryTest {
 	}
 	
 	@Test
-	public void kwicPhraseQueryResult() {
+	public void testSearchTerm4() throws Throwable {
+		try {
+			Indexer indexer = new DBIndexer();
+			List<String> termList = new ArrayList<String>();
+			termList.add("and");
+//			termList.add("suddenly");
+			List<String> documentIDs = new ArrayList<String>();
+//			documentIDs.add("catma:///container/pg13.txt");
+			QueryResult result = indexer.searchPhrase(documentIDs, "and suddenly", termList);
+			indexer.close();
+			for (QueryResultRow qrr : result) {
+				System.out.println(qrr);
+			}
+
+		}
+		catch(Throwable t) {
+			t.printStackTrace();
+			throw t;
+		}
+	}
+
+	@Test
+	public void kwicPhraseQueryResult1() {
 		List<String> unseparableCharacterSequences = Collections.emptyList();
 		List<Character> userDefinedSeparatingCharacters = Collections.emptyList();
 		List<String> documentIDs = new ArrayList<String>();
@@ -175,6 +197,61 @@ public class QueryTest {
 	}
 	
 	@Test
+	public void kwicPhraseQueryResult2() {
+		List<String> unseparableCharacterSequences = Collections.emptyList();
+		List<Character> userDefinedSeparatingCharacters = Collections.emptyList();
+		List<String> documentIDs = new ArrayList<String>();
+//		documentIDs.add("catma:///container/pg13.txt");
+		QueryOptions queryOptions = new QueryOptions(
+//				(List<String>)null,
+				documentIDs,
+				unseparableCharacterSequences,
+				userDefinedSeparatingCharacters,
+				Locale.ENGLISH);
+		
+		QueryJob job = new QueryJob(
+				"\"and\"", new DBIndexer(), queryOptions);
+		job.setProgressListener(new LogProgressListener());
+		try {
+			
+			QueryResultRowArray result = (QueryResultRowArray) job.call();
+			Map<String, List<Range>> rangesGroupedByDocumentId = 
+					new HashMap<String, List<Range>>();
+			
+			for (QueryResultRow row : result) {
+				
+				if (!rangesGroupedByDocumentId.containsKey(row.getSourceDocumentId())) {
+					rangesGroupedByDocumentId.put(
+							row.getSourceDocumentId(), new ArrayList<Range>());
+				}
+				
+				rangesGroupedByDocumentId.get(
+						row.getSourceDocumentId()).add(row.getRange());
+			}
+			for (Map.Entry<String, List<Range>> entry : 
+							rangesGroupedByDocumentId.entrySet()) {
+				System.out.println("documentId: " + entry.getKey());
+				SourceDocument sd = 
+						repository.getSourceDocument(entry.getKey());
+				KwicProvider kwicProvider = new KwicProvider(sd);
+				
+				List<KeywordInContext> kwics = 
+						kwicProvider.getKwic(entry.getValue(), 5);
+				
+				System.out.println("Results for " + sd);
+				for (KeywordInContext kwic : kwics) {
+					System.out.println("\n" + kwic + "\n");
+				}
+				
+				System.out.println("\n");
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	@Test
 	public void testPhraseQuery(){
 		List<String> unseparableCharacterSequences = Collections.emptyList();
 		List<Character> userDefinedSeparatingCharacters = Collections.emptyList();
@@ -209,7 +286,7 @@ public class QueryTest {
 		}
 	}
 
-	@Test
+//	@Test
 	public void testColocation() throws Throwable {
 		try {
 			Indexer esIndexer = new DBIndexer();
@@ -222,7 +299,7 @@ public class QueryTest {
 		}
 	}
 
-	@Test
+//	@Test
 	public void testIndex() {
 //		
 //		SourceDocument sd = repository.getSourceDocument(
