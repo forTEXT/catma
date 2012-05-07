@@ -1,6 +1,7 @@
 package de.catma.indexer.db;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -8,15 +9,13 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-import com.google.gwt.dev.util.collect.HashMap;
-
 import de.catma.core.document.Range;
 import de.catma.core.util.Pair;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 
-public class PhraseSearcher {
+class PhraseSearcher {
 	
 	private SessionFactory sessionFactory;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -26,7 +25,7 @@ public class PhraseSearcher {
 		this.sessionFactory = sessionFactory;
 	}
 
-	public QueryResult searchPhrase(List<String> documentIdList,
+	public QueryResult search(List<String> documentIdList,
 			String phrase, List<String> termList) throws Exception {
 		
 		
@@ -137,7 +136,7 @@ public class PhraseSearcher {
 			Session session, String term, String documentId) {
 		
 		String query =
-				" from Position pos1 where pos1.term.term = '" 
+				" from Position pos1 where pos1.term.term = '" //TODO: lower() for case insens.
 				+ term
 				+ "'";
 		

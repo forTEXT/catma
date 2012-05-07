@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <digitalobject>
 	<name>My super special corpus</name>
-	<staticMarkupURI>catma:///container/kafka_utf8_structure.xml</staticMarkupURI>
-	<sourceURI>catma:///container/kafka_utf8.txt</sourceURI>
+	<sourceURI>catma:///container/pg11.txt</sourceURI>
+	<sourceURI>catma:///container/pg13.txt</sourceURI>
 </digitalobject>

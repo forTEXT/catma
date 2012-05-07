@@ -6,9 +6,12 @@ import com.vaadin.terminal.gwt.client.UIDL;
 import com.vaadin.terminal.gwt.client.ui.VWindow;
 
 public class VCatmaWindow extends VWindow {
+	
+	private boolean stayOnTop;
 
 	public static enum EventAttribute {
 		enableScrolling,
+		stayOnTop,
 		;
 	}
 	
@@ -25,6 +28,18 @@ public class VCatmaWindow extends VWindow {
 		if (uidl.hasAttribute(EventAttribute.enableScrolling.name())) {
 			Window.enableScrolling(
 					uidl.getBooleanAttribute(EventAttribute.enableScrolling.name()));
+		}
+		
+		if (uidl.hasAttribute(EventAttribute.stayOnTop.name())) {
+			stayOnTop = 
+					uidl.getBooleanAttribute(EventAttribute.stayOnTop.name());
+		}
+	}
+	
+	@Override
+	protected void setZIndex(int zIndex) {
+		if (!stayOnTop) {
+			super.setZIndex(zIndex);
 		}
 	}
 	

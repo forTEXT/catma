@@ -23,6 +23,7 @@ import de.catma.core.tag.TagManager;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.KwicProvider;
 import de.catma.indexer.db.DBIndexer;
+import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.result.QueryResult;
@@ -129,6 +130,31 @@ public class QueryTest {
 			List<String> documentIDs = new ArrayList<String>();
 //			documentIDs.add("catma:///container/pg13.txt");
 			QueryResult result = indexer.searchPhrase(documentIDs, "and suddenly", termList);
+			indexer.close();
+			for (QueryResultRow qrr : result) {
+				System.out.println(qrr);
+			}
+
+		}
+		catch(Throwable t) {
+			t.printStackTrace();
+			throw t;
+		}
+	}
+	
+	@Test
+	public void freqSearch1() throws Throwable {
+		try {
+			Indexer indexer = new DBIndexer();
+	
+			List<String> documentIDs = new ArrayList<String>();
+//			documentIDs.add("catma:///container/pg13.txt");
+			
+			QueryResult result =
+					indexer.searchFreqency(
+						documentIDs,
+						CompareOperator.GREATERTHAN, 850, 
+						null, 0);
 			indexer.close();
 			for (QueryResultRow qrr : result) {
 				System.out.println(qrr);

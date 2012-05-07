@@ -7,9 +7,12 @@ import com.vaadin.ui.MenuBar;
 
 public class Menu {
 
+	private MenuBar menuBar;
+	
 	private HashMap<ComponentContainer, MenuBar.Command> entries;
 	
-	public Menu() {
+	public Menu(MenuBar menuBar) {
+		this.menuBar = menuBar;
 		this.entries = new HashMap<ComponentContainer, MenuBar.Command>();
 	}
 	
@@ -19,6 +22,10 @@ public class Menu {
 	
 	public void executeEntry(ComponentContainer compContainer) {
 		this.entries.get(compContainer).menuSelected(null);
+	}
+	
+	public MenuBar getMenuBar() {
+		return menuBar;
 	}
 	
 }

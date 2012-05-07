@@ -8,6 +8,9 @@ import com.vaadin.ui.TabSheet.CloseHandler;
 import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.core.document.Corpus;
+import de.catma.core.document.repository.Repository;
+
 public class AnalyzerManagerView extends VerticalLayout implements CloseHandler {
 	
 	private TabSheet tabSheet;
@@ -16,7 +19,7 @@ public class AnalyzerManagerView extends VerticalLayout implements CloseHandler 
 	public AnalyzerManagerView() {
 		initComponents();
 	}
-
+	// TODO: factor out initComponents and onTabclose stuff
 	private void initComponents() {
 		tabSheet = new TabSheet();
 		noOpenAnalyzers = 
@@ -50,25 +53,22 @@ public class AnalyzerManagerView extends VerticalLayout implements CloseHandler 
 		if (tabsheet.getComponentCount() == 0) {
 			 //setVisible(false) doesn't work here because of out of sync errors
 			tabSheet.hideTabs(true);
-//			tabSheet.setHeight("0px");
+			tabSheet.setHeight("0px");
 			
 			noOpenAnalyzers.setVisible(true);
 			setMargin(true);
 		}
 	}
 
-	public void analyzeDocuments() {
-		AnalyzerView analyzerView = getAnalyzerView();
-		
-		if (analyzerView != null) {
-			tabSheet.setSelectedTab(analyzerView);
-		}
-		else {
-			analyzerView = new AnalyzerView();
-			Tab tab = tabSheet.addTab(analyzerView, "Various Docs...");
-			tab.setClosable(true);
-			tabSheet.setSelectedTab(tab.getComponent());
-		}
+	public void analyzeDocuments(Corpus corpus, Repository repository) {
+		//TODO: make equal titles distinguishable
+		AnalyzerView analyzerView = 
+				new AnalyzerView(corpus, repository);
+		Tab tab = tabSheet.addTab(
+				analyzerView, (corpus == null)? "All documents" : corpus.toString());
+		tab.setClosable(true);
+		tabSheet.setSelectedTab(tab.getComponent());
+
 		
 		if (tabSheet.getComponentCount() != 0) {
 			noOpenAnalyzers.setVisible(false);
@@ -77,10 +77,4 @@ public class AnalyzerManagerView extends VerticalLayout implements CloseHandler 
 			tabSheet.setSizeFull();
 		}
 	}
-
-	private AnalyzerView getAnalyzerView() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

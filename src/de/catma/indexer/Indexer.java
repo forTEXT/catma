@@ -6,6 +6,7 @@ import java.util.Locale;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.tag.TagLibrary;
+import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
 
 public interface Indexer {
@@ -39,6 +40,11 @@ public interface Indexer {
 	 */
 	public QueryResult searchTag(
 			String tagPath, boolean isPrefixSearch) throws Exception;
+	
+	public QueryResult searchFreqency(
+			List<String> documentIdList, 
+			CompareOperator comp1, int freq1, 
+			CompareOperator comp2, int freq2);
 	
 	public void close();
 }

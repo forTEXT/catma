@@ -14,7 +14,7 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "term", catalog = "CatmaIndex")
-public class Term implements java.io.Serializable {
+class Term implements java.io.Serializable {
 
 	private Integer termId;
 	private String documentId;
@@ -102,7 +102,10 @@ public class Term implements java.io.Serializable {
 			return false;
 		return true;
 	}
-	
-	
 
+	@Override
+	public String toString() {
+		return "Term [termId=" + termId + ", documentId=" + documentId
+				+ ", frequency=" + frequency + ", term=" + term + "]";
+	}
 }

@@ -35,9 +35,9 @@ public class MenuFactory {
 			final ComponentContainer componentContainer, 
 			final MenuEntryDefinition... menuEntryDefintions) {
 		
-		Menu menu = new Menu();
 		
 		final MenuBar menuBar = new MenuBar();
+		Menu menu = new Menu(menuBar);
 		
 		for (final MenuEntryDefinition menuEntryDefinition : menuEntryDefintions) {
 			Command command = new Command() {

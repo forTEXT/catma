@@ -46,6 +46,7 @@ import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionRefe
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
 import de.catma.core.util.Pair;
+import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.PropertyCollection;
 import de.catma.ui.repository.wizard.WizardFactory;
@@ -257,7 +258,15 @@ public class RepositoryView extends VerticalLayout {
 		miMoreCorpusActions.addItem("Analyze Corpus", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
-				((CleaApplication)getApplication()).analyzeDocuments();
+				Corpus selectedCorpus = null;
+				
+				
+				Object selectedValue = corporaTree.getValue();
+				if (!selectedValue.equals(allDocuments)) {
+					selectedCorpus = (Corpus)selectedValue;
+				}
+				((AnalyzerProvider)getApplication()).analyze(
+						selectedCorpus, repository);
 			}
 		});
 		

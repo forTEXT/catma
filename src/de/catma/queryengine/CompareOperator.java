@@ -119,5 +119,10 @@ public enum CompareOperator {
     public Condition getCondition() {
         return condition;
     }
+    
+    @Override
+    public String toString() {
+    	return value;
+    }
 
 }

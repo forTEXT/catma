@@ -17,8 +17,8 @@ import de.catma.core.tag.TagLibrary;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
+import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
-import de.catma.queryengine.result.QueryResultRowArray;
 
 public class DBIndexer implements Indexer {
 	
@@ -99,15 +99,24 @@ public class DBIndexer implements Indexer {
 			String phrase, List<String> termList) throws Exception {
 		PhraseSearcher phraseSearcher = new PhraseSearcher(sessionFactory);
 		
-		return phraseSearcher.searchPhrase(documentIdList, phrase, termList);
+		return phraseSearcher.search(documentIdList, phrase, termList);
 	}
 
-	public QueryResultRowArray searchTag(String tagPath, boolean isPrefixSearch)
+	public QueryResult searchTag(String tagPath, boolean isPrefixSearch)
 			throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	public QueryResult searchFreqency(
+			List<String> documentIdList, 
+			CompareOperator comp1, int freq1,
+			CompareOperator comp2, int freq2) {
+		FrequencySearcher freqSearcher = new FrequencySearcher(sessionFactory);
+		return freqSearcher.search(documentIdList, comp1, freq1, comp2, freq2);
+	}
+
+	
 	public void close() {
 		sessionFactory.close();
 	}

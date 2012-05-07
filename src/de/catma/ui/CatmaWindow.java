@@ -15,6 +15,7 @@ import de.catma.ui.client.ui.VCatmaWindow;
 public class CatmaWindow extends Window {
 	
 	private boolean enableScrolling = false;
+	private boolean stayOnTop = false;
 	
 	private Map<String,String> attributes = new HashMap<String, String>();
 	
@@ -55,6 +56,17 @@ public class CatmaWindow extends Window {
 	
 	public boolean isEnableScrolling() {
 		return enableScrolling;
+	}
+	
+	public void setStayOnTop(boolean stayOnTop) {
+		this.stayOnTop = stayOnTop;
+		attributes.put(
+				VCatmaWindow.EventAttribute.stayOnTop.name(), 
+				String.valueOf(stayOnTop));
+	}
+	
+	public boolean isStayOnTop() {
+		return stayOnTop;
 	}
 	
 }

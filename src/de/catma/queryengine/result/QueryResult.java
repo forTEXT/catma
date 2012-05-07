@@ -19,6 +19,8 @@
 
 package de.catma.queryengine.result;
 
+import java.util.Set;
+
 
 /**
  * A list of tokens provided by a {@link org.catma.queryengine.Query}.
@@ -27,5 +29,5 @@ package de.catma.queryengine.result;
  * @author Marco Petris <marco.petris@web.de>
  */
 public interface QueryResult extends Iterable<QueryResultRow> {
-	
+	public Set<GroupedQueryResult> asGroupedQueryResultSet();
 }

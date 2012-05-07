@@ -19,7 +19,7 @@ import de.catma.core.document.Range;
  */
 @Entity
 @Table(name = "position", catalog = "CatmaIndex")
-public class Position implements java.io.Serializable {
+class Position implements java.io.Serializable {
 
 	private Integer positionId;
 	private Term term;

@@ -55,6 +55,10 @@ public class QueryResultRow {
 		return range;
 	}	
 
+	public String getPhrase() {
+		return phrase;
+	}
+	
 	@Override
 	public String toString() {
 		return "SourceDoc[#"+sourceDocumentId + "]"+range

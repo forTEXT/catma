@@ -19,10 +19,6 @@
 
 package de.catma.queryengine;
 
-import java.util.List;
-
-import de.catma.core.document.source.SourceDocument;
-import de.catma.indexer.TermInfo;
 import de.catma.queryengine.result.QueryResult;
 
 /**
@@ -76,13 +72,10 @@ public class FreqQuery extends Query {
 
     @Override
     protected QueryResult execute() throws Exception {
-//        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
-//
-//        List<TermInfo> searchResults =
-//                sourceDoc.getIndex().searchTermsByFrequency(operator1, freq1, operator2, freq2);
-//
-//        return new ResultList(searchResults);
-    	return null;
+    	QueryOptions options = getQueryOptions();
+    	//TODO: freq refinement works different
+    	return getIndexer().searchFreqency(
+    			options.getDocumentIds(), operator1, freq1, operator2, freq2);
     }
 
 }

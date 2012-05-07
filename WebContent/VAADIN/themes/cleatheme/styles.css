@@ -51,3 +51,19 @@
 .v-formlayout-contentcell .v-textfield {
 	width: 90%;
 }
+
+.progress_window .v-window-outerheader {
+	visibility: hidden;
+	height: 0px;
+	padding: 0px;
+}
+
+.progress_window .v-window-footer {
+	visibility: hidden;
+	height: 0px;
+	padding: 0px;
+}
+.progress_window {
+	z-index: 20000;
+}
+}
