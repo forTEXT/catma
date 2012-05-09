@@ -67,10 +67,10 @@ class PhraseSearcher {
 		}
 		else if (termList.size() == 1) {
 			
-			List<Position> positions = 
+			List<DBPosition> positions = 
 					getPositionsForTerm(session, termList.get(0), documentId);
 			QueryResultRowArray result = new QueryResultRowArray();
-			for (Position p : positions) {
+			for (DBPosition p : positions) {
 				result.add(
 					new QueryResultRow(
 						p.getTerm().getDocumentId(), 
@@ -81,7 +81,7 @@ class PhraseSearcher {
 		}
 		else {
 			
-			List<Position> matchList =  
+			List<DBPosition> matchList =  
 					getPositionsForTerm(
 							session, 
 							termList.get(0), 
@@ -90,35 +90,35 @@ class PhraseSearcher {
 							true);
 			
 			for (int i=2; i<termList.size()-1; i++) {
-				List<Position> result = getPositionsForTerm(
+				List<DBPosition> result = getPositionsForTerm(
 						session, termList.get(0), 
 						termList.get(i+1), i+1, documentId, true);
 				matchList.retainAll(result);
 			}
 			
-			HashMap<Integer, Position> startPositions = 
-					new HashMap<Integer, Position>();
+			HashMap<Integer, DBPosition> startPositions = 
+					new HashMap<Integer, DBPosition>();
 			
-			for (Position p : matchList) {
+			for (DBPosition p : matchList) {
 				startPositions.put(p.getTokenOffset(), p);
 			}
 			
-			List<Position> endPositions = getPositionsForTerm(
+			List<DBPosition> endPositions = getPositionsForTerm(
 					session, 
 					termList.get(0), termList.get(termList.size()-1), 
 					termList.size()-1, 
 					documentId,
 					false);
 			
-			List<Pair<Position, Position>> result = 
-					new ArrayList<Pair<Position,Position>>();
+			List<Pair<DBPosition, DBPosition>> result = 
+					new ArrayList<Pair<DBPosition,DBPosition>>();
 			
-			for (Position p : endPositions) {
+			for (DBPosition p : endPositions) {
 				if (startPositions.containsKey(
 						p.getTokenOffset()-(termList.size()-1))) {
 					
 					result.add(
-						new Pair<Position,Position>(
+						new Pair<DBPosition,DBPosition>(
 							startPositions.get(
 									p.getTokenOffset()-(termList.size()-1)),
 							p));
@@ -126,7 +126,7 @@ class PhraseSearcher {
 			}
 			
 			QueryResultRowArray queryResult = new QueryResultRowArray();
-			for (Pair<Position,Position> match : result) {
+			for (Pair<DBPosition,DBPosition> match : result) {
 				System.out.println(match);
 				queryResult.add(
 					new QueryResultRow(
@@ -148,9 +148,9 @@ class PhraseSearcher {
 		
 		QueryResultRowArray result = new QueryResultRowArray();
 		try {
-			List<Position> positions = 
+			List<DBPosition> positions = 
 					getPositionsForTerm(session, term, documentId);
-			for (Position p : positions) {
+			for (DBPosition p : positions) {
 				result.add(
 					new QueryResultRow(
 						p.getTerm().getDocumentId(), 
@@ -171,11 +171,13 @@ class PhraseSearcher {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private List<Position> getPositionsForTerm(
+	private List<DBPosition> getPositionsForTerm(
 			Session session, String term, String documentId) {
 		
 		String query =
-				" from Position pos1 where pos1.term.term = '" //TODO: lower() for case insens.
+				" from "
+				+ DBEntityName.DBPosition 
+				+ " pos1 where pos1.term.term = '" //TODO: lower() for case insens.
 				+ term
 				+ "'";
 		
@@ -191,13 +193,17 @@ class PhraseSearcher {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private List<Position> getPositionsForTerm(
+	private List<DBPosition> getPositionsForTerm(
 			Session session, String term1, String term2, int tokenOffset, 
 			String documentId, boolean resultsForFirstTerm) {
 		
 		String query = "select "
 				+ (resultsForFirstTerm? " pos1 " : " pos2 ")
-				+ " from Position pos1, Position pos2 where pos1.term.term = '" 
+				+ " from "
+				+ DBEntityName.DBPosition 
+				+ " pos1, "
+				+ DBEntityName.DBPosition 
+				+ " pos2 where pos1.term.term = '" 
 				+ term1
 				+ "'"
 				+ " and pos2.term.term = '"

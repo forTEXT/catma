@@ -2,15 +2,19 @@ package de.catma.query;
 
 import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.gwt.dev.util.collect.HashSet;
 
 import de.catma.LogProgressListener;
 import de.catma.core.ExceptionHandler;
@@ -300,10 +304,26 @@ public class QueryTest {
 
 	@Test
 	public void testSearchTag() throws Throwable {
+		List<String> documentIDs = new ArrayList<String>();
+//		documentIDs.add("catma:///container/pg13.txt");
+
+		List<String> userMarkupCollIDs = new ArrayList<String>();
+		
 		try {
-			Indexer esIndexer = new DBIndexer();
-			 QueryResult result = esIndexer.searchTag("/Order/analepsis", true);
-				esIndexer.close();
+			Indexer indexer = new DBIndexer();
+			QueryResult result = 
+					indexer.searchTagDefinitionPath(
+						documentIDs, userMarkupCollIDs, "/Order/analepsis");
+			
+			indexer.close();
+			Set<String> tagInstances = new HashSet<String>();
+			for (QueryResultRow qrr : result) {
+				System.out.println(qrr);
+				tagInstances.add(qrr.getTagInstanceId());
+			}
+			
+			System.out.println("Instances found: " + tagInstances.size());
+			System.out.println(Arrays.toString(tagInstances.toArray()));
 
 		}
 		catch(Throwable t) {
@@ -323,42 +343,5 @@ public class QueryTest {
 			t.printStackTrace();
 			throw t;
 		}
-	}
-
-//	@Test
-	public void testIndex() {
-//		
-//		SourceDocument sd = repository.getSourceDocument(
-//				"http://www.gutenberg.org/cache/epub/13/pg13.txt");
-//		try {
-//
-//			ActionFuture<DeleteIndexResponse> future = 
-//					client.admin().indices().delete(new DeleteIndexRequest("document"));
-//			future.actionGet();
-			
-//			client.admin().indices().prepareCreate("document").addMapping(
-//					"book", XContentFactory.jsonBuilder().
-//						startObject().startObject("book").startObject("content").
-//							field("type", "string").
-//							field("term_vector", "with_positions_offset").
-//							field("store", "no").
-//						endObject().endObject().endObject());
-//						
-//			
-//			IndexResponse response = client.prepareIndex("document", "book", "1")
-//			        .setSource(XContentFactory.jsonBuilder()
-//			                    .startObject()
-//			                        .field("content", sd.getContent())
-//			                        .field("title", 
-//			                        		sd.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getTitle())
-//			                    .endObject()
-//			                  )
-//			        .setRefresh(true)
-//			        .execute()
-//			        .actionGet();
-			
-//		} catch (Exception e) {
-//			ExceptionHandler.log(e);
-//		}
 	}
 }

@@ -14,10 +14,12 @@ import de.catma.core.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRow;
+import de.catma.ui.data.util.PropertyToStringCIComparator;
+import de.catma.ui.data.util.PropertyDependentItemSorter;
 
 public class KwicPanel extends VerticalLayout {
 
-	public enum KwicPropertyName {
+	private enum KwicPropertyName {
 		caption,
 		origin,
 		leftContext,
@@ -37,7 +39,13 @@ public class KwicPanel extends VerticalLayout {
 	private void initComponents() {
 		kwicTable = new TreeTable();
 		kwicTable.setSelectable(true);
-		kwicTable.setContainerDataSource(new HierarchicalContainer());
+		HierarchicalContainer container = new HierarchicalContainer();
+		container.setItemSorter(
+				new PropertyDependentItemSorter(
+						KwicPropertyName.caption, 
+						new PropertyToStringCIComparator()));
+		
+		kwicTable.setContainerDataSource(container);
 		
 		kwicTable.addContainerProperty(
 				KwicPropertyName.caption, String.class, null);

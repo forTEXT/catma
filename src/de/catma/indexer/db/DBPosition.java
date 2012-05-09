@@ -19,18 +19,18 @@ import de.catma.core.document.Range;
  */
 @Entity
 @Table(name = "position", catalog = "CatmaIndex")
-class Position implements java.io.Serializable {
+class DBPosition implements java.io.Serializable {
 
 	private Integer positionId;
-	private Term term;
+	private DBTerm term;
 	private int characterStart;
 	private int characterEnd;
 	private int tokenOffset;
 
-	public Position() {
+	public DBPosition() {
 	}
 
-	public Position(Term term, int characterStart,
+	public DBPosition(DBTerm term, int characterStart,
 			int characterEnd, int tokenOffset) {
 		this.term = term;
 		this.characterStart = characterStart;
@@ -51,11 +51,11 @@ class Position implements java.io.Serializable {
 	
 	@ManyToOne
     @JoinColumn(name="termID")
-	public Term getTerm() {
+	public DBTerm getTerm() {
 		return term;
 	}
 
-	void setTerm(Term term) {
+	void setTerm(DBTerm term) {
 		this.term = term;
 	}
 
@@ -110,7 +110,7 @@ class Position implements java.io.Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Position other = (Position) obj;
+		DBPosition other = (DBPosition) obj;
 		if (characterEnd != other.characterEnd)
 			return false;
 		if (characterStart != other.characterStart)

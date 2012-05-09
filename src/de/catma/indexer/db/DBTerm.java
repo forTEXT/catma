@@ -14,17 +14,17 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "term", catalog = "CatmaIndex")
-class Term implements java.io.Serializable {
+class DBTerm implements java.io.Serializable {
 
 	private Integer termId;
 	private String documentId;
 	private int frequency;
 	private String term;
 
-	public Term() {
+	public DBTerm() {
 	}
 
-	public Term(String documentId, int frequency, String term) {
+	public DBTerm(String documentId, int frequency, String term) {
 		this.documentId = documentId;
 		this.frequency = frequency;
 		this.term = term;
@@ -87,7 +87,7 @@ class Term implements java.io.Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Term other = (Term) obj;
+		DBTerm other = (DBTerm) obj;
 		if (documentId == null) {
 			if (other.documentId != null)
 				return false;

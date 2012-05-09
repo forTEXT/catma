@@ -70,7 +70,10 @@ class FrequencySearcher {
 			CompareOperator comp2, int freq2) {
 		StringBuilder builder = new StringBuilder();
 		builder.append(
-				" select t, count(p) as freq from Term t, Position p " +
+				" select t, count(p) as freq from "
+				+ DBEntityName.DBTerm + " t, "
+				+ DBEntityName.DBPosition 
+				+ " p " +
 				" where t = p.term ");
 		if (documentId != null) {
 			builder.append(" and t.documentId = '");
@@ -80,7 +83,10 @@ class FrequencySearcher {
 		builder.append(
 				" and (" +
 					" select count(p2) " +
-					" from Position p2, Term t2 " +
+					" from "
+				+ DBEntityName.DBPosition 
+				+ " p2, "
+				+ DBEntityName.DBTerm + " t2 " +
 					" where p2.term = t2 and t2.term = t.term ");
 		
 		if (documentId != null) {
@@ -96,7 +102,10 @@ class FrequencySearcher {
 			builder.append(
 					" and (" +
 						" select count(p2) " +
-						" from Position p2, Term t2 " +
+						" from "
+				+ DBEntityName.DBPosition 
+				+ " p2, "
+				+ DBEntityName.DBTerm + " t2 " +
 						" where p2.term = t2 and t2.term = t.term ");
 			if (documentId != null) {
 				builder.append(" and t2.documentId in ");
@@ -121,7 +130,7 @@ class FrequencySearcher {
 			HashMap<String, LazyDBPhraseQueryResult> phraseResultMapping) {
 		
 		for (Object resultRow : list) {
-			Term t = (Term)((Object[])resultRow)[0];
+			DBTerm t = (DBTerm)((Object[])resultRow)[0];
 			Integer freq = Integer.valueOf(((Object[])resultRow)[1].toString());
 			
 			//TODO: remove freq column from table Term or are we running in performance problems then? 

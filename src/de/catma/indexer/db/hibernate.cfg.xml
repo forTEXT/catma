@@ -7,7 +7,8 @@
   <property name="hibernate.connection.url">jdbc:mysql://localhost/CatmaIndex</property>
   <property name="hibernate.connection.username">root</property>
   <property name="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
-  <mapping class="de.catma.indexer.db.Term"/>
-  <mapping class="de.catma.indexer.db.Position"/>
+  <mapping class="de.catma.indexer.db.DBTerm"/>
+  <mapping class="de.catma.indexer.db.DBPosition"/>
+  <mapping class="de.catma.indexer.db.DBTagReference"/>
  </session-factory>
 </hibernate-configuration>

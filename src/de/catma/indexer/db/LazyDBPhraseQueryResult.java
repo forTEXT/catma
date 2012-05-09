@@ -14,7 +14,7 @@ import de.catma.queryengine.result.QueryResultRowArray;
 public class LazyDBPhraseQueryResult implements GroupedQueryResult {
 	
 	private SessionFactory sessionFactory;
-	private Map<String, Term> termsByDocument;
+	private Map<String, DBTerm> termsByDocument;
 	private String term;
 	private QueryResultRowArray queryResultRowArray;
 
@@ -22,7 +22,7 @@ public class LazyDBPhraseQueryResult implements GroupedQueryResult {
 			SessionFactory sessionFactory, String term) {
 		this.sessionFactory = sessionFactory;
 		this.term = term;
-		termsByDocument = new HashMap<String, Term>();
+		termsByDocument = new HashMap<String, DBTerm>();
 	}
 
 	public Iterator<QueryResultRow> iterator() {
@@ -47,7 +47,7 @@ public class LazyDBPhraseQueryResult implements GroupedQueryResult {
 
 	public int getTotalFrequency() {
 		int sum = 0;
-		for (Term t : termsByDocument.values()) {
+		for (DBTerm t : termsByDocument.values()) {
 			sum += t.getFrequency();
 		}
 		return sum;
@@ -66,7 +66,7 @@ public class LazyDBPhraseQueryResult implements GroupedQueryResult {
 		return termsByDocument.keySet();
 	}
 
-	void addTerm(Term t) {
+	void addTerm(DBTerm t) {
 		termsByDocument.put(t.getDocumentId(), t);
 	}
 

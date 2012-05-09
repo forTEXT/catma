@@ -47,35 +47,13 @@ public class DBIndexer implements Indexer {
 			throws Exception {
 		Session session = sessionFactory.openSession();
 		try {
-			session.beginTransaction();
-			
-			
-			TermExtractor termExtractor = 
-					new TermExtractor(
-						sourceDocument.getContent(), 
-						unseparableCharacterSequences, 
-						userDefinedSeparatingCharacters, 
-						locale);
-			
-			Map<String, List<TermInfo>> terms = termExtractor.getTerms();
-			
-			for (Map.Entry<String, List<TermInfo>> entry : terms.entrySet()) {
-				Term term = new Term(
-						sourceDocument.getID(), 
-						entry.getValue().size(), entry.getKey());
-				session.save(term);
-				
-				for (TermInfo ti : entry.getValue()) {
-					Position p = new Position(
-						term,
-						ti.getRange().getStartPoint(),
-						ti.getRange().getEndPoint(),
-						ti.getTokenOffset());
-					session.save(p);
-				}
-			}
-			
-			session.getTransaction().commit();
+			SourceDocumentIndexer sourceDocumentIndexer = new SourceDocumentIndexer();
+			sourceDocumentIndexer.index(
+					session, 
+					sourceDocument, 
+					unseparableCharacterSequences, 
+					userDefinedSeparatingCharacters, 
+					locale);
 			session.close();
 		}
 		catch (Exception e) {
@@ -91,7 +69,27 @@ public class DBIndexer implements Indexer {
 	public void index(List<TagReference> tagReferences,
 			String sourceDocumentID, String userMarkupCollectionID,
 			TagLibrary tagLibrary) throws Exception {
-		// TODO Auto-generated method stub
+		
+		Session session = sessionFactory.openSession();
+		try {
+			TagReferenceIndexer tagReferenceIndexer = new TagReferenceIndexer();
+			
+			tagReferenceIndexer.index(
+					session, 
+					tagReferences, 
+					sourceDocumentID, 
+					userMarkupCollectionID, 
+					tagLibrary);
+			session.close();
+		}
+		catch (Exception e) {
+			try {
+				session.getTransaction().rollback();
+			}
+			catch (Throwable notOfInterest) {}
+			session.close();
+			throw e;
+		}
 
 	}
 	
@@ -102,10 +100,14 @@ public class DBIndexer implements Indexer {
 		return phraseSearcher.search(documentIdList, phrase, termList);
 	}
 
-	public QueryResult searchTag(String tagPath, boolean isPrefixSearch)
-			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+	public QueryResult searchTagDefinitionPath(
+			List<String> documentIdList, List<String> userMarkupCollectionIdList, 
+			String tagDefinitionPath) throws Exception {
+		
+		TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher(sessionFactory);
+		
+		return tagSearcher.search(
+				documentIdList, userMarkupCollectionIdList, tagDefinitionPath);
 	}
 
 	public QueryResult searchFreqency(

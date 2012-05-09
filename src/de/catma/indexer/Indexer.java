@@ -32,14 +32,9 @@ public interface Indexer {
 			List<String> documentIdList, String phrase, List<String> termList) throws Exception;
 	
 	
-	/**
-	 * @param tagPath
-	 * @param isPrefixSearch
-	 * @return a list of mappings documentIds->Pair of matching ranges and phrases
-	 * @throws Exception
-	 */
-	public QueryResult searchTag(
-			String tagPath, boolean isPrefixSearch) throws Exception;
+	public QueryResult searchTagDefinitionPath(
+			List<String> documentIdList, List<String> userMarkupCollectionIdList, 
+			String tagDefinitionPath) throws Exception;
 	
 	public QueryResult searchFreqency(
 			List<String> documentIdList, 

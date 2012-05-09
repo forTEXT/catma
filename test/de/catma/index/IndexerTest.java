@@ -76,6 +76,25 @@ public class IndexerTest {
 	}
 	
 	@Test
+	public void testIndexSourceDoc3() throws Throwable {
+		try {
+			SourceDocument sd = repository.getSourceDocument(
+					"catma:///container/rose_for_emily.txt");
+			
+			Indexer indexer = new DBIndexer();
+			indexer.index(
+					sd, 
+					Collections.<String>emptyList(), 
+					Collections.<Character>emptyList(), 
+					Locale.ENGLISH);
+		}
+		catch(Throwable t) {
+			t.printStackTrace();
+			throw t;
+		}
+	}
+	
+	@Test
 	public void indexUserMarkupColl1() throws Throwable {
 		try {
 			SourceDocument sd = repository.getSourceDocument(
@@ -86,9 +105,9 @@ public class IndexerTest {
 			UserMarkupCollection umc = 
 					repository.getUserMarkupCollection(ref);
 						
-//			ESIndexer esIndexer = new ESIndexer();
-//			esIndexer.index(umc.getTagReferences(), sd.getID(), umc.getId(), umc.getTagLibrary());
-//			esIndexer.close();
+			Indexer indexer = new DBIndexer();
+			indexer.index(umc.getTagReferences(), sd.getID(), umc.getId(), umc.getTagLibrary());
+			indexer.close();
 		}
 		catch(Throwable t) {
 			t.printStackTrace();

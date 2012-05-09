@@ -15,6 +15,8 @@ import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.ui.data.util.PropertyDependentItemSorter;
+import de.catma.ui.data.util.PropertyToStringCIComparator;
 
 public class PhraseResultPanel extends VerticalLayout {
 	
@@ -42,7 +44,14 @@ public class PhraseResultPanel extends VerticalLayout {
 		
 		resultTable = new TreeTable();
 		resultTable.setSelectable(true);
-		resultTable.setContainerDataSource(new HierarchicalContainer());
+		HierarchicalContainer container = new HierarchicalContainer();
+		container.setItemSorter(
+				new PropertyDependentItemSorter(
+						TreePropertyName.caption, 
+						new PropertyToStringCIComparator()));
+		
+		resultTable.setContainerDataSource(container);
+
 		resultTable.addContainerProperty(
 				TreePropertyName.caption, String.class, null);
 		resultTable.setColumnHeader(TreePropertyName.caption, "Phrase");

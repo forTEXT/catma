@@ -7,7 +7,7 @@ public class QueryResultRow {
 	private String sourceDocumentId;
 	private Range range;
 	private String phrase;
-	private String markupDocumentId;
+	private String markupCollectionId;
 	private String tagDefinitionId;
 	private String tagInstanceId;
 
@@ -25,12 +25,12 @@ public class QueryResultRow {
 	}
 	
 	public QueryResultRow(String sourceDocumentId, Range range,
-			String markupDocumentId, String tagDefinitionId,
+			String markupCollectionId, String tagDefinitionId,
 			String tagInstanceId) {
 		super();
 		this.sourceDocumentId = sourceDocumentId;
 		this.range = range;
-		this.markupDocumentId = markupDocumentId;
+		this.markupCollectionId = markupCollectionId;
 		this.tagDefinitionId = tagDefinitionId;
 		this.tagInstanceId = tagInstanceId;
 	}
@@ -42,7 +42,7 @@ public class QueryResultRow {
 		this.sourceDocumentId = sourceDocumentId;
 		this.range = range;
 		this.phrase = phrase;
-		this.markupDocumentId = markupDocumentId;
+		this.markupCollectionId = markupDocumentId;
 		this.tagDefinitionId = tagDefinitionId;
 		this.tagInstanceId = tagInstanceId;
 	}
@@ -59,11 +59,15 @@ public class QueryResultRow {
 		return phrase;
 	}
 	
+	public String getTagInstanceId() {
+		return tagInstanceId;
+	}
+	
 	@Override
 	public String toString() {
 		return "SourceDoc[#"+sourceDocumentId + "]"+range
 				+ ((phrase == null)?"":phrase)
-				+ ((markupDocumentId == null)?"":("MarkupDoc[#"+markupDocumentId+"]"))
+				+ ((markupCollectionId == null)?"":("MarkupColl[#"+markupCollectionId+"]"))
 				+ ((tagDefinitionId == null)?"":("TagDef[#"+tagDefinitionId+"]")) 
 				+ ((tagInstanceId == null)?"":("TagInstance[#"+tagInstanceId+"]")); 
 	}
