@@ -1,53 +1,40 @@
 package de.catma.ui.repository;
 
-import java.util.Iterator;
-
 import com.vaadin.ui.Component;
-import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.CloseHandler;
-import com.vaadin.ui.TabSheet.Tab;
-import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
+import de.catma.ui.tabbedview.TabbedView;
 
-public class RepositoryManagerView extends VerticalLayout implements CloseHandler {
+public class RepositoryManagerView extends TabbedView implements CloseHandler {
 
-	private TabSheet tabSheet;
 	private RepositoryListView repositoryListView;
 	
 	
 	public RepositoryManagerView(RepositoryManager repositoryManager) {
-		tabSheet = new TabSheet();
-		tabSheet.setSizeFull();
+		super("No repositories available.");
 		repositoryListView = new RepositoryListView(repositoryManager);
-		Tab tab = tabSheet.addTab(repositoryListView, "Repositories Overview");
-		
-		tab.setEnabled(true);
-		addComponent(tabSheet);
-		tabSheet.setCloseHandler(this);
-		setSizeFull();
+		addTab(repositoryListView, "Repositories Overview");
 	}
 
 
 	public void openRepository(Repository repository) {
 		RepositoryView repositoryView = getRepositoryView(repository);
 		if (repositoryView != null) {
-			tabSheet.setSelectedTab(repositoryView);
+			setSelectedTab(repositoryView);
 		}
 		else {
-			Tab tab = tabSheet.addTab(new RepositoryView(repository), repository.getName());
-			tab.setClosable(true);
-			tabSheet.setSelectedTab(tab.getComponent());
+			RepositoryView repoView = new RepositoryView(repository);
+			addClosableTab(repoView, repository.getName());
+			setSelectedTab(repoView);
 		}
 	}
 	
 	private RepositoryView getRepositoryView(Repository repository) {
-		Iterator<Component> iterator = tabSheet.getComponentIterator();
-		while (iterator.hasNext()) {
-			Component c = iterator.next();
-			if (c != repositoryListView) {
-				RepositoryView view = (RepositoryView)c;
+		for (Component tabContent : this) {
+			if (tabContent != repositoryListView) {
+				RepositoryView view = (RepositoryView)tabContent;
 				Repository curRepo = view.getRepository();
 				if ((curRepo !=null) && curRepo.equals(repository)) {
 					return view;
@@ -55,23 +42,5 @@ public class RepositoryManagerView extends VerticalLayout implements CloseHandle
 			}
 		}
 		return null;
-	}
-	
-	public void onTabClose(TabSheet tabsheet, Component tabContent) {
-		// workaround for http://dev.vaadin.com/ticket/7686
-		
-//		if (tabContent.equals(tabsheet.getSelectedTab())) {
-//			tabsheet.removeComponent(tabContent);
-//		}
-//		else {
-//			tabsheet.setSelectedTab(tabContent);
-//		}
-		
-		tabsheet.removeComponent(tabContent);
-		try {
-			Thread.sleep(5);
-		} catch (InterruptedException ex) {
-	            //do nothing 
-	    }
 	}
 }

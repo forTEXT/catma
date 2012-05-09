@@ -140,6 +140,7 @@ public class CleaApplication extends Application
 		setTheme("cleatheme");
 	}
 	
+	//TODO: indexer should be provided by the repository!?
 	private void createIndexer(Properties properties) 
 			throws InstantiationException, IllegalAccessException, 
 				ClassNotFoundException {
@@ -218,15 +219,22 @@ public class CleaApplication extends Application
 	}
 	
 	private void setDefaultProgressIndicatorEnabled(boolean enabled) {
-		if (enabled) {
-			getMainWindow().addWindow(progressWindow);
-		}
-		else {
-			getMainWindow().removeWindow(progressWindow);
-		}
-		defaultProgressIndicator.setEnabled(enabled);
+		
 		defaultProgressIndicator.setVisible(enabled);
 		defaultProgressIndicator.setCaption("");
+		
+		if (enabled) {
+			if (progressWindow.getParent() == null) {
+				getMainWindow().addWindow(progressWindow);
+			}
+		}
+		else {
+			if (progressWindow.getParent() != null) {
+				getMainWindow().removeWindow(progressWindow);
+			}
+		}
+		defaultProgressIndicator.setEnabled(enabled);
+		
 	}
 	public <T> void submit( 
 			final ProgressCallable<T> callable, 

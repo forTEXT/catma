@@ -1,6 +1,13 @@
 package de.catma.ui.analyzer;
 
+import java.io.IOException;
+
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.ui.AbstractComponent;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.CheckBox;
+import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
@@ -13,12 +20,14 @@ public class PhraseResultPanel extends VerticalLayout {
 	
 	private static enum TreePropertyName {
 		caption,
-		frequency,
+		frequency, 
+		visible,
 		;
 	}
 	
 	private TreeTable resultTable;
 	private Repository repository;
+	private KwicPanel kwicPanel;
 
 	public PhraseResultPanel(Repository repository) {
 		this.repository = repository;
@@ -26,6 +35,11 @@ public class PhraseResultPanel extends VerticalLayout {
 	}
 
 	private void initComponents() {
+		setSizeFull();
+		
+		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
+		splitPanel.setSizeFull();
+		
 		resultTable = new TreeTable();
 		resultTable.setSelectable(true);
 		resultTable.setContainerDataSource(new HierarchicalContainer());
@@ -35,14 +49,24 @@ public class PhraseResultPanel extends VerticalLayout {
 		resultTable.addContainerProperty(
 				TreePropertyName.frequency, Integer.class, null);
 		resultTable.setColumnHeader(TreePropertyName.frequency, "Frequency");
+		resultTable.addContainerProperty(
+				TreePropertyName.visible, AbstractComponent.class, null);
+		resultTable.setColumnHeader(TreePropertyName.visible, "Visible");
 		
 		resultTable.setItemCaptionPropertyId(TreePropertyName.caption);
 		resultTable.setPageLength(10); //TODO: config
 		resultTable.setSizeFull();
-		addComponent(resultTable);
+		splitPanel.addComponent(resultTable);
+		
+		
+		this.kwicPanel = new KwicPanel(repository);
+		splitPanel.addComponent(kwicPanel);
+		
+		addComponent(splitPanel);
 	}
 	
 	public void setQueryResult(QueryResult queryResult) {
+		kwicPanel.clear();
 		resultTable.removeAllItems();
 		int totalCount = 0;
 		int totalFreq = 0;
@@ -62,10 +86,11 @@ public class PhraseResultPanel extends VerticalLayout {
 	}
 
 	private void addPhraseResult(GroupedQueryResult phraseResult) {
-		resultTable.addItem(phraseResult.getGroup());
-		resultTable.getContainerProperty(
-			phraseResult.getGroup(), TreePropertyName.frequency).setValue(
-					phraseResult.getTotalFrequency());
+		resultTable.addItem(new Object[]{
+				phraseResult.getGroup(), 
+				phraseResult.getTotalFrequency(),
+				createCheckbox(phraseResult)},
+				phraseResult.getGroup());
 
 		resultTable.getContainerProperty(
 			phraseResult.getGroup(), TreePropertyName.caption).setValue(
@@ -74,7 +99,8 @@ public class PhraseResultPanel extends VerticalLayout {
 		for (String sourceDocumentID : phraseResult.getSourceDocumentIDs()) {
 			SourceDocument sourceDocument = 
 					repository.getSourceDocument(sourceDocumentID);
-			String sourceDocumentItemID = phraseResult.getGroup() + "@" + sourceDocument;
+			String sourceDocumentItemID = 
+					phraseResult.getGroup() + "@" + sourceDocument;
 			resultTable.addItem(sourceDocumentItemID);
 			resultTable.getContainerProperty(
 					sourceDocumentItemID, TreePropertyName.frequency).setValue(
@@ -85,6 +111,40 @@ public class PhraseResultPanel extends VerticalLayout {
 			resultTable.setParent(sourceDocumentItemID, phraseResult.getGroup());
 			
 			resultTable.setChildrenAllowed(sourceDocumentItemID, false);
+		}
+		
+	}
+
+	private CheckBox createCheckbox(final GroupedQueryResult phraseResult) {
+		CheckBox cbShowInKwicView = new CheckBox();
+		cbShowInKwicView.setImmediate(true);
+		cbShowInKwicView.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				boolean selected = 
+						event.getButton().booleanValue();
+
+				fireShowInKwicViewSelected(phraseResult, selected);
+			}
+
+
+		});
+		return cbShowInKwicView;
+	}
+
+	private void fireShowInKwicViewSelected(GroupedQueryResult phraseResult,
+			boolean selected) {
+
+		if (selected) {
+			try {
+				kwicPanel.addGroupedQueryResult(phraseResult);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		else {
+			kwicPanel.removeGroupedQueryResult(phraseResult);
 		}
 		
 	}

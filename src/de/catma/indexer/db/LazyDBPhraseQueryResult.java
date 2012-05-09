@@ -9,27 +9,40 @@ import org.hibernate.SessionFactory;
 
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
 
 public class LazyDBPhraseQueryResult implements GroupedQueryResult {
 	
 	private SessionFactory sessionFactory;
 	private Map<String, Term> termsByDocument;
-	private String phrase;
+	private String term;
+	private QueryResultRowArray queryResultRowArray;
 
 	public LazyDBPhraseQueryResult(
-			SessionFactory sessionFactory, String phrase) {
+			SessionFactory sessionFactory, String term) {
 		this.sessionFactory = sessionFactory;
-		this.phrase = phrase;
+		this.term = term;
 		termsByDocument = new HashMap<String, Term>();
 	}
 
 	public Iterator<QueryResultRow> iterator() {
-		// TODO Auto-generated method stub
-		return null;
+		if (queryResultRowArray == null) {
+			loadQueryResultRows();
+		}
+		return queryResultRowArray.iterator();
+	}
+
+	private void loadQueryResultRows() {
+		queryResultRowArray = new QueryResultRowArray();
+		PhraseSearcher phraseSearcher = new PhraseSearcher(sessionFactory);
+		for (String sourceDocumentID : getSourceDocumentIDs()) {
+			queryResultRowArray.addAll(
+				phraseSearcher.getPositionsForTerm(term, sourceDocumentID));
+		}
 	}
 
 	public Object getGroup() {
-		return phrase;
+		return term;
 	}
 
 	public int getTotalFrequency() {

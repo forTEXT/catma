@@ -52,9 +52,10 @@ import de.catma.ui.dialog.PropertyCollection;
 import de.catma.ui.repository.wizard.WizardFactory;
 import de.catma.ui.repository.wizard.WizardResult;
 import de.catma.ui.repository.wizard.WizardWindow;
+import de.catma.ui.tabbedview.ClosableTab;
 
 
-public class RepositoryView extends VerticalLayout {
+public class RepositoryView extends VerticalLayout implements ClosableTab {
 	
 	private static final class MarkupItem {
 		private String displayString;
@@ -329,6 +330,14 @@ public class RepositoryView extends VerticalLayout {
 							repository.getTagLibrary(tagLibraryReference);
 					((CleaApplication)getApplication()).openTagLibrary(tagLibrary);
 				}				
+			}
+		});
+
+		miMoreDocumentActions.addItem("Analyze Document", new Command() {
+			
+			public void menuSelected(MenuItem selectedItem) {
+				// TODO Auto-generated method stub
+				
 			}
 		});
 		
@@ -855,6 +864,11 @@ public class RepositoryView extends VerticalLayout {
 				userMarkupCollectionNameProperty).setRequiredError(
 						"You have to enter a name!");
 		userMarkupCollFormDialog.show(getApplication().getMainWindow());
+	}
+	
+	public void close() {
+		// TODO Auto-generated method stub
+		
 	}
 }
 

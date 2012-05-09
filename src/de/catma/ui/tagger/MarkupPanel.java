@@ -145,5 +145,13 @@ public class MarkupPanel extends VerticalLayout {
 
 	public UserMarkupCollection getCurrentWritableUserMarkupCollection() {
 		return markupCollectionsPanel.getCurrentWritableUserMarkupCollection();
+	}
+
+	public List<UserMarkupCollection> getUserMarkupCollections() {
+		return markupCollectionsPanel.getUserMarkupCollections();
+	}
+
+	public Repository getRepository() {
+		return markupCollectionsPanel.getRepository();
 	}	
 }

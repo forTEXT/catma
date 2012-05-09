@@ -7,6 +7,9 @@
 		<param-name>productionMode</param-name>
 		<param-value>false</param-value>
 	</context-param>
+	<session-config>
+    	<session-timeout>120</session-timeout>
+	</session-config>
 	<servlet>
 		<servlet-name>Clea</servlet-name>
 		<servlet-class>com.vaadin.terminal.gwt.server.ApplicationServlet</servlet-class>

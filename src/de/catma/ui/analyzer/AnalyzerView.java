@@ -29,8 +29,9 @@ import de.catma.indexer.IndexerProvider;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.ui.tabbedview.ClosableTab;
 
-public class AnalyzerView extends VerticalLayout {
+public class AnalyzerView extends VerticalLayout implements ClosableTab {
 	
 	private TextField searchInput;
 	private Button btExecSearch;
@@ -102,10 +103,12 @@ public class AnalyzerView extends VerticalLayout {
 	
 	private void initComponents(Corpus corpus) {
 		setSizeFull();
+		
 		Component searchPanel = createSearchPanel();
+		
 		Component convenienceButtonPanel = createConvenienceButtonPanel();
+		
 		VerticalLayout searchAndConveniencePanel = new VerticalLayout();
-		searchAndConveniencePanel.setSizeFull();
 		searchAndConveniencePanel.setSpacing(true);
 		searchAndConveniencePanel.setMargin(true);
 		searchAndConveniencePanel.addComponent(searchPanel);
@@ -117,15 +120,15 @@ public class AnalyzerView extends VerticalLayout {
 		topPanel.setSplitPosition(70);
 		topPanel.addComponent(searchAndConveniencePanel);
 		topPanel.addComponent(documentsPanel);
-
 		addComponent(topPanel);
-////		setExpandRatio(topPanel, 1.0f);
-//		
+		
+		setExpandRatio(topPanel, 0.25f);
+		
 		Component resultPanel = createResultPanel();
 		resultPanel.setSizeFull();
-//		
+		
 		addComponent(resultPanel);
-		setExpandRatio(resultPanel, 1.0f);
+		setExpandRatio(resultPanel, 0.75f);
 	}
 
 	private Component createResultPanel() {
@@ -139,16 +142,7 @@ public class AnalyzerView extends VerticalLayout {
 		Component resultByMarkupView = createResultByMarkupView();
 		resultTabSheet.addTab(resultByMarkupView, "Result by markup");
 		
-		Component kwicResultView = createKwicResultView();
-		resultTabSheet.addTab(kwicResultView, "KWIC result");
-		
 		return resultTabSheet;
-	}
-
-	private Component createKwicResultView() {
-		// TODO Auto-generated method stub
-		
-		return new HorizontalLayout();
 	}
 
 	private Component createResultByMarkupView() {
@@ -167,7 +161,8 @@ public class AnalyzerView extends VerticalLayout {
 		documentsContainer = new HierarchicalContainer();
 		documentsTree = new Tree();
 		documentsTree.setContainerDataSource(documentsContainer);
-		documentsTree.setCaption("Documents considered for this search");
+		documentsTree.setCaption(
+				"Documents and collections considered for this search");
 		
 		if (corpus != null) {
 			for (SourceDocument sd : corpus.getSourceDocuments()) {

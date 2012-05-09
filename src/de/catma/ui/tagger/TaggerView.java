@@ -9,27 +9,36 @@ import java.util.List;
 
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
 import com.vaadin.terminal.gwt.server.WebBrowser;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.core.document.Corpus;
 import de.catma.core.document.Range;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagInstance;
 import de.catma.core.tag.TagManager;
 import de.catma.core.tag.TagsetDefinition;
+import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
+import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tagger.Tagger.TaggerListener;
 import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
 import de.catma.ui.tagger.pager.PagerComponent.PageChangeListener;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 
-public class TaggerView extends VerticalLayout implements TaggerListener {
+public class TaggerView extends VerticalLayout 
+	implements TaggerListener, ClosableTab {
 	
 	private SourceDocument sourceDocument;
 	private Tagger tagger;
@@ -38,15 +47,46 @@ public class TaggerView extends VerticalLayout implements TaggerListener {
 	private boolean init = true;
 	private TagManager tagManager;
 	private int taggerID;
+	private Button btAnalyze;
 	
-	public TaggerView(int taggerID, TagManager tagManager, SourceDocument sourceDocument, Repository repository) {
+	public TaggerView(
+			int taggerID, TagManager tagManager, 
+			SourceDocument sourceDocument, Repository repository) {
 		this.taggerID = taggerID;
 		this.tagManager = tagManager;
 		this.sourceDocument = sourceDocument;
 		initComponents(repository);
+		initActions();
+	}
+
+	private void initActions() {
+		btAnalyze.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				Corpus corpus = new Corpus(sourceDocument.toString());
+				corpus.addSourceDocument(sourceDocument);
+				for (UserMarkupCollection umc : 
+					markupPanel.getUserMarkupCollections()) {
+					UserMarkupCollectionReference userMarkupCollRef =
+							sourceDocument.getUserMarkupCollectionReference(
+									umc.getId());
+					if (userMarkupCollRef != null) {
+						corpus.addUserMarkupCollectionReference(
+								userMarkupCollRef);
+					}
+				}
+				//TODO: add static markup colls
+				
+				((AnalyzerProvider)getApplication()).analyze(
+						corpus, markupPanel.getRepository());
+			}
+		});
+		
 	}
 
 	private void initComponents(Repository repository) {
+		setSizeFull();
+		
 		VerticalLayout taggerPanel = new VerticalLayout();
 		taggerPanel.setSpacing(true);
 		
@@ -57,6 +97,10 @@ public class TaggerView extends VerticalLayout implements TaggerListener {
 		tagger.setSizeFull();
 		taggerPanel.addComponent(tagger);
 
+		HorizontalLayout actionPanel = new HorizontalLayout();
+		actionPanel.setSpacing(true);
+		taggerPanel.addComponent(actionPanel);
+
 		PagerComponent pagerComponent = new PagerComponent(
 				pager, new PageChangeListener() {
 					
@@ -64,8 +108,11 @@ public class TaggerView extends VerticalLayout implements TaggerListener {
 				tagger.setPage(number);
 			}
 		});
-
-		taggerPanel.addComponent(pagerComponent);
+		
+		actionPanel.addComponent(pagerComponent);
+		
+		btAnalyze = new Button("Analyze Document");
+		actionPanel.addComponent(btAnalyze);
 		
 		markupPanel = new MarkupPanel(
 				tagManager,

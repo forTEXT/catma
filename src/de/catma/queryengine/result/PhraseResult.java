@@ -1,6 +1,7 @@
 package de.catma.queryengine.result;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -25,7 +26,8 @@ public class PhraseResult implements GroupedQueryResult {
 					|| (!this.currentResultRowIterator.hasNext())) {
 				
 				while (this.phraseResultListIterator.hasNext()
-						&& !currentResultRowIterator.hasNext()) {
+						&& ((this.currentResultRowIterator == null) 
+								|| !currentResultRowIterator.hasNext())) {
 					this.currentResultRowIterator = 
 							phraseResultListIterator.next().iterator();
 				}
@@ -100,4 +102,13 @@ public class PhraseResult implements GroupedQueryResult {
 	public Iterator<QueryResultRow> iterator() {
 		return new PhraseResultRowIterator(this);
 	}
+
+	@Override
+	public String toString() {
+		return "PhraseResult [phrase=" + phrase + ", sourceDocumentResults="
+				+ Arrays.toString(sourceDocumentResults.keySet().toArray()) + "]";
+	}
+	
+
+	
 }

@@ -1,5 +1,7 @@
 package de.catma.indexer.db;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +12,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
 import de.catma.core.document.Range;
+import de.catma.core.util.CloseSafe;
 import de.catma.core.util.Pair;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
@@ -29,23 +32,30 @@ class PhraseSearcher {
 			String phrase, List<String> termList) throws Exception {
 		
 		
-		Session session = sessionFactory.openSession();
-		
+		final Session session = sessionFactory.openSession();
 		QueryResultRowArray queryResult = null;
 		
-		if ((documentIdList==null) || documentIdList.isEmpty()) {
-			queryResult = searchPhrase(session, null, phrase, termList);
-		}
-		else {
-			queryResult = new QueryResultRowArray();
-
-			for (String documentId : documentIdList) {
-				queryResult.addAll(
-						searchPhrase(session, documentId, phrase, termList));
+		try {
+			
+			if ((documentIdList==null) || documentIdList.isEmpty()) {
+				queryResult = searchPhrase(session, null, phrase, termList);
+			}
+			else {
+				queryResult = new QueryResultRowArray();
+	
+				for (String documentId : documentIdList) {
+					queryResult.addAll(
+							searchPhrase(session, documentId, phrase, termList));
+				}
 			}
 		}
-		
-		session.close();
+		finally {
+			CloseSafe.close(new Closeable() {
+				public void close() throws IOException {
+					session.close();
+				}
+			});
+		}
 		
 		return queryResult;
 	}
@@ -129,6 +139,35 @@ class PhraseSearcher {
 			
 			return queryResult;
 		}		
+	}
+	
+	public QueryResultRowArray getPositionsForTerm(
+			String term, String documentId) {
+		
+		final Session session = sessionFactory.openSession();
+		
+		QueryResultRowArray result = new QueryResultRowArray();
+		try {
+			List<Position> positions = 
+					getPositionsForTerm(session, term, documentId);
+			for (Position p : positions) {
+				result.add(
+					new QueryResultRow(
+						p.getTerm().getDocumentId(), 
+						new Range(p.getCharacterStart(), p.getCharacterEnd()), 
+						term));
+			}
+
+		}
+		finally {
+			CloseSafe.close(new Closeable() {
+				public void close() throws IOException {
+					session.close();
+				}
+			});
+		}
+		
+		return result;
 	}
 	
 	@SuppressWarnings("unchecked")
