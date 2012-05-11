@@ -29,8 +29,8 @@ public interface Indexer {
 	 * @return
 	 */
 	public QueryResult searchPhrase(
-			List<String> documentIdList, String phrase, List<String> termList) throws Exception;
-	
+			List<String> documentIdList, 
+			String phrase, List<String> termList) throws Exception;
 	
 	public QueryResult searchTagDefinitionPath(
 			List<String> documentIdList, List<String> userMarkupCollectionIdList, 

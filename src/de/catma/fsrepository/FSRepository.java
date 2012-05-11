@@ -186,10 +186,10 @@ class FSRepository implements Repository {
 			String name, SourceDocument sourceDocument) throws IOException {
 		String id = createCatmaUri(
 				"/" + CONTAINER_FOLDER + "/" + name + ".xml");
-		
+		ContentInfoSet cis = new ContentInfoSet(name);
 		UserMarkupCollection umc = 
 				new UserMarkupCollection(
-						id, name, new ContentInfoSet());
+						id, cis);
 		
 		UserMarkupCollectionReference ref = 
 				userMarkupCollectionHandler.saveUserMarkupCollection(

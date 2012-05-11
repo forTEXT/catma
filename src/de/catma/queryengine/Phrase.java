@@ -61,7 +61,7 @@ public class Phrase extends Query {
         
         QueryResult queryResult = 
         		getIndexer().searchPhrase(
-        				options.getDocumentIds(), phrase, termList);
+        				options.getRelevantSourceDocumentIDs(), phrase, termList);
         
         return queryResult;
     }

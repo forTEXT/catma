@@ -150,7 +150,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		
 		teiDocument.getTeiHeader().getTechnicalDescription().setVersion(TeiDocumentVersion.V3);
 		
-//		teiDocument.printXmlDocument();
+		teiDocument.printXmlDocument();
 	}
 
 	private void adjustPointers(TeiDocument teiDocument) {
@@ -259,7 +259,9 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 			this.oldTagID2Ranges.put(oldTagID, ranges);
 		}
 		
-		String newInstanceID = catmaIDGenerator.generate();
+		String newInstanceID = 
+				catmaIDGenerator.generate(
+						currentRange.toString()+oldTagID);
 		
 		return newInstanceID;
 	}
@@ -394,7 +396,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 			String id, String nValue, String tagName, String colorValue, 
 			String baseTagID, boolean forBase,
 			TeiElement tagsetDefinition) {
-		
+		System.out.println("addTagDef: #" + id + " " + tagName);
 		TeiElement fsDecl = new TeiElement(TeiElementName.fsDecl);
 		fsDecl.setID(id);
 		fsDecl.setAttributeValue(Attribute.n, nValue);

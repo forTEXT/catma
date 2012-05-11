@@ -75,7 +75,7 @@ public class FreqQuery extends Query {
     	QueryOptions options = getQueryOptions();
     	//TODO: freq refinement works different
     	return getIndexer().searchFreqency(
-    			options.getDocumentIds(), operator1, freq1, operator2, freq2);
+    			options.getRelevantSourceDocumentIDs(), operator1, freq1, operator2, freq2);
     }
 
 }

@@ -16,7 +16,7 @@ import de.catma.core.document.source.SourceDocument;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
-import de.catma.ui.data.util.PropertyToStringCIComparator;
+import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 
 public class PhraseResultPanel extends VerticalLayout {
 	
@@ -48,7 +48,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		container.setItemSorter(
 				new PropertyDependentItemSorter(
 						TreePropertyName.caption, 
-						new PropertyToStringCIComparator()));
+						new PropertyToTrimmedStringCIComparator()));
 		
 		resultTable.setContainerDataSource(container);
 
@@ -60,7 +60,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		resultTable.setColumnHeader(TreePropertyName.frequency, "Frequency");
 		resultTable.addContainerProperty(
 				TreePropertyName.visible, AbstractComponent.class, null);
-		resultTable.setColumnHeader(TreePropertyName.visible, "Visible");
+		resultTable.setColumnHeader(TreePropertyName.visible, "Visible in Kwic");
 		
 		resultTable.setItemCaptionPropertyId(TreePropertyName.caption);
 		resultTable.setPageLength(10); //TODO: config
@@ -146,14 +146,14 @@ public class PhraseResultPanel extends VerticalLayout {
 
 		if (selected) {
 			try {
-				kwicPanel.addGroupedQueryResult(phraseResult);
+				kwicPanel.addQueryResultRows(phraseResult);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 		else {
-			kwicPanel.removeGroupedQueryResult(phraseResult);
+			kwicPanel.removeQueryResultRows(phraseResult);
 		}
 		
 	}

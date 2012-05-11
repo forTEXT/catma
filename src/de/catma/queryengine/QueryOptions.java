@@ -3,26 +3,37 @@ package de.catma.queryengine;
 import java.util.List;
 import java.util.Locale;
 
+import de.catma.core.document.repository.Repository;
+
 public class QueryOptions {
 	
-	private List<String> documentIds;
+	private List<String> relevantSourceDocumentIDs;
+	private List<String> relevantUserMarkupCollIDs;
+	private List<String> relevantStaticMarkupCollIDs;
 	private List<String> unseparableCharacterSequences;
 	private List<Character> userDefinedSeparatingCharacters;
 	private Locale locale;
-
-	public QueryOptions(List<String> documentIds,
+	private Repository repository;
+	
+	public QueryOptions(List<String> relevantSourceDocumentIDs,
+			List<String> relevantUserMarkupCollIDs,
+			List<String> relevantStaticMarkupCollIDs,
 			List<String> unseparableCharacterSequences,
-			List<Character> userDefinedSeparatingCharacters, Locale locale) {
-		this.documentIds = documentIds;
+			List<Character> userDefinedSeparatingCharacters, Locale locale,
+			Repository repository) {
+		this.relevantSourceDocumentIDs = relevantSourceDocumentIDs;
+		this.relevantUserMarkupCollIDs = relevantUserMarkupCollIDs;
+		this.relevantStaticMarkupCollIDs = relevantStaticMarkupCollIDs;
 		this.unseparableCharacterSequences = unseparableCharacterSequences;
 		this.userDefinedSeparatingCharacters = userDefinedSeparatingCharacters;
 		this.locale = locale;
-	}
-	
-	public List<String> getDocumentIds() {
-		return documentIds;
+		this.repository = repository;
 	}
 
+	public List<String> getRelevantSourceDocumentIDs() {
+		return relevantSourceDocumentIDs;
+	}
+	
 	public List<String> getUnseparableCharacterSequences() {
 		return unseparableCharacterSequences;
 	}
@@ -35,8 +46,15 @@ public class QueryOptions {
 		return locale;
 	}
 	
+	public List<String> getRelevantStaticMarkupCollIDs() {
+		return relevantStaticMarkupCollIDs;
+	}
 	
+	public List<String> getRelevantUserMarkupCollIDs() {
+		return relevantUserMarkupCollIDs;
+	}
 	
-	
-
+	public Repository getRepository() {
+		return repository;
+	}
 }

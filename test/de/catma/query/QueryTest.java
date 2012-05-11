@@ -33,6 +33,7 @@ import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
+import de.catma.queryengine.result.TagQueryResultRow;
 
 
 public class QueryTest {
@@ -178,11 +179,12 @@ public class QueryTest {
 		List<String> documentIDs = new ArrayList<String>();
 		documentIDs.add("catma:///container/pg13.txt");
 		QueryOptions queryOptions = new QueryOptions(
-//				(List<String>)null,
 				documentIDs,
+				Collections.<String>emptyList(),
+				Collections.<String>emptyList(),
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
-				Locale.ENGLISH);
+				Locale.ENGLISH, null);
 		
 		QueryJob job = new QueryJob(
 				"\"To the day when you took me aboard of your ship\"", new DBIndexer(), queryOptions);
@@ -233,11 +235,13 @@ public class QueryTest {
 		List<String> documentIDs = new ArrayList<String>();
 //		documentIDs.add("catma:///container/pg13.txt");
 		QueryOptions queryOptions = new QueryOptions(
-//				(List<String>)null,
 				documentIDs,
+				Collections.<String>emptyList(),
+				Collections.<String>emptyList(),
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
-				Locale.ENGLISH);
+				Locale.ENGLISH,
+				null);
 		
 		QueryJob job = new QueryJob(
 				"\"and\"", new DBIndexer(), queryOptions);
@@ -286,10 +290,12 @@ public class QueryTest {
 		List<String> unseparableCharacterSequences = Collections.emptyList();
 		List<Character> userDefinedSeparatingCharacters = Collections.emptyList();
 		QueryOptions queryOptions = new QueryOptions(
-				(List<String>)null,
+				Collections.<String>emptyList(),
+				Collections.<String>emptyList(),
+				Collections.<String>emptyList(),
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
-				Locale.ENGLISH);
+				Locale.ENGLISH, null);
 		
 		QueryJob job = new QueryJob(
 				"\"pig had been dead\"", new DBIndexer(), queryOptions);
@@ -319,7 +325,7 @@ public class QueryTest {
 			Set<String> tagInstances = new HashSet<String>();
 			for (QueryResultRow qrr : result) {
 				System.out.println(qrr);
-				tagInstances.add(qrr.getTagInstanceId());
+				tagInstances.add(((TagQueryResultRow)qrr).getTagInstanceId());
 			}
 			
 			System.out.println("Instances found: " + tagInstances.size());

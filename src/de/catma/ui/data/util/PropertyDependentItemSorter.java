@@ -16,6 +16,13 @@ public class PropertyDependentItemSorter extends DefaultItemSorter {
 	}
 
 	public PropertyDependentItemSorter(
+			Object[] propertyIds, Comparator<Object> comparator) {
+		for (Object propertyId : propertyIds) {
+			setPropertyComparator(propertyId, comparator);
+		}
+	}
+
+	public PropertyDependentItemSorter(
 			Object propertyId, Comparator<Object> comparator) {
 		setPropertyComparator(propertyId, comparator);
 	}
@@ -54,7 +61,6 @@ public class PropertyDependentItemSorter extends DefaultItemSorter {
 	        } else {
 	            r = comparator.compare(value2, value1);
 	        }
-
 	        return r;
     	}
     	else {

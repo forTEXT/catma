@@ -19,18 +19,16 @@
 
 package de.catma.queryengine;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
-import de.catma.core.document.source.SourceDocument;
-import de.catma.indexer.TermInfo;
-import de.catma.queryengine.result.QueryResult;
 import de.catma.core.document.Range;
+import de.catma.core.document.repository.Repository;
+import de.catma.core.document.source.SourceDocument;
+import de.catma.indexer.Indexer;
+import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.TagQueryResultRow;
 
 /**
  * A query for tagged tokens.
@@ -39,44 +37,7 @@ import de.catma.core.document.Range;
  */
 public class TagQuery extends Query {
 
-    /**
-     * A special comparator that has a partial equality definition that includes inclusion.
-     * See {@link #compare(org.catma.indexer.TermInfo, org.catma.indexer.TermInfo)}<br>
-     * <br>
-     * <b>Node:</b>: this comparator imposes orderings that are inconsistent with equals!!!
-     */
-    private static class TagTermComparator implements Comparator<TermInfo> {
-        /**
-         * Compares to entries by there ranges. Two ranges are equal if the range of
-         * argument o1 {@link Range#isInBetween(org.catma.document.Range) is in between} of the
-         * range of argument o2.
-         *
-         * <b>Node:</b>: this comparator imposes orderings that are inconsistent with equals!!!
-         *
-         * @param o1 the first token
-         * @param o2 the second token
-         * @return zero for equality in the above sense,
-         * the distance of the start points of the ranges else
-         */
-        public int compare(TermInfo o1, TermInfo o2) {
-
-//            if(o2.getRange().isInBetween(o1.getRange())
-//            		||(o1.getRange().isInBetween(o2.getRange()))) {
-//                return 0;
-//            }
-        	if(o1.getRange().isInBetween(o2.getRange())) {
-        		return 0;
-        	}
-            else {
-                return (int)(o1.getRange().getStartPoint()-o2.getRange().getStartPoint());
-            }
-        }
-    }
-
-
-    private final static TagTermComparator TAG_TERM_COMP = new TagTermComparator();
     private String tagPhrase;
-    private String tagID;
 
     /**
      * Constructor.
@@ -86,132 +47,51 @@ public class TagQuery extends Query {
         this.tagPhrase = query.getPhrase();
     }
 
-    public TagQuery(String tagID) {
-        this.tagID = tagID;
-    }
-
     @Override
     protected QueryResult execute() throws Exception {
-
-        List<TermInfo> resultList = new ArrayList<TermInfo>();
-
-//        if (tagID != null) {
-//            getTermInfosForTag(TagManager.SINGLETON.getTag(tagID), resultList);
-//        }
-//        else {
-//
-//            Set<Tag> tags = TagManager.SINGLETON.getTagByName(tagPhrase);
-//
-//            // a Tag name does not have to be unique!
-//            if (tags.size() == 1) {
-//                getTermInfosForTag(tags.iterator().next(), resultList);
-//            }
-//            else {
-//                Query curQuery = null;
-//                for (Tag tag : tags) {
-//                    if (curQuery == null) {
-//                        curQuery = new TagQuery(tag.getID());
-//                    }
-//                    else {
-//                        curQuery = new UnionQuery(
-//                            curQuery,
-//                            new TagQuery(tag.getID()));
-//                    }
-//                }
-//
-//                if (curQuery != null) {
-//                    return curQuery.execute();
-//                }
-//            }
-//        }
-//
-//        return new ResultList(resultList);
-        return null;
-    }
-
-    /**
-     * Fills the given list with the tokens that are tagged with the given Tag
-     * @param tag the Tag that has to be present
-     * @param resultList the list of tokens tagged with the given Tag
-     */
-//    private void getTermInfosForTag(Tag tag, List<TermInfo> resultList) {
-//
-//        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
-//
-//        SortedSet<Range> sortedRanges = new TreeSet<Range>();
-//
-//        // get all ranges that are tagged with the given Tag
-//        for (StandoffMarkupDocument userMarkupDoc :
-//                FileManager.SINGLETON.getUserMarkupDocumentList()) {
-//
-//            List<TextrangePointer> textrangePointerList =
-//                    userMarkupDoc.getTextRangePointerFor(tag);
-//
-//            for (TextrangePointer tp : textrangePointerList) {
-//
-//                sortedRanges.add(tp.getRange());
-//            }
-//        }
-//
-//        //  merge the contiguous ranges
-//        List<Range> mergedRanges = mergeRanges(sortedRanges);
-//
-//        // get the tokens for the matching ranges
-//        for (Range range : mergedRanges) {
-//            resultList.add(
-//                new TermInfo(
-//                    sourceDoc.getContent(range), range, tag));
-//        }
-//
-//        // look for tokens that are tagged with children of the given Tag 
-//        if (tag.hasTagProperty()) {
-//            for( Property prop : tag.getUserDefinedProperties()) {
-//                if (prop.hasTagValue()) {
-//                    getTermInfosForTag((Tag)prop.getValue(), resultList);
-//                }
-//            }
-//        }
-//    }
-
-    /**
-     * Merges the contiguous ranges of the given set.
-     * @param sortedRanges the ranges to merge
-     * @return the merged ranges.
-     */
-    private List<Range> mergeRanges(SortedSet<Range> sortedRanges) {
-        List<Range> result = new ArrayList<Range>();
-
-        Range curRange = null;
-
-        Iterator<Range> rangeIterator = sortedRanges.iterator();
-
-        if (rangeIterator.hasNext()) {
-            curRange = rangeIterator.next();
-
-            while (rangeIterator.hasNext()) {
-                Range range = rangeIterator.next();
-
-                if (curRange.getEndPoint() == range.getStartPoint()) { // merge
-                    curRange = new Range(curRange.getStartPoint(), range.getEndPoint());
-                }
-                else {
-                    result.add(curRange);
-                    curRange = range;
-                }
-            }
-            result.add(curRange);
+    	QueryOptions queryOptions = getQueryOptions();
+    	
+        Indexer indexer = getIndexer();
+        
+        QueryResult result = 
+				indexer.searchTagDefinitionPath(
+						queryOptions.getRelevantSourceDocumentIDs(),
+						queryOptions.getRelevantUserMarkupCollIDs(),
+						tagPhrase);
+        
+        Repository repository = queryOptions.getRepository();
+        Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
+        for (QueryResultRow row  : result) {
+        	SourceDocument sd = 
+        			repository.getSourceDocument(row.getSourceDocumentId());
+        	if (!sd.isLoaded()) {
+        		toBeUnloaded.add(sd);
+        	}
+        	TagQueryResultRow tRow = (TagQueryResultRow)row;
+        	
+        	if (tRow.getRanges().size() > 1) {
+	        	StringBuilder builder = new StringBuilder();
+	        	String conc = "";
+	        	for (Range range : tRow.getRanges()) {
+	        		builder.append(conc);
+	        		builder.append(sd.getContent(range));
+	        		conc = "[...]";
+	        	}
+	        	row.setPhrase(builder.toString());
+        	}
+        	else {
+        		row.setPhrase(sd.getContent(row.getRange()));
+        	}
+        	
+        	System.out.println(row);
         }
-
+        
+        for (SourceDocument sd : toBeUnloaded) {
+        	sd.unload();
+        }
+        
         return result;
     }
 
-    /**
-     * @return a special comparator that defines equality via {@link Range#isInBetween(org.catma.document.Range)}.
-     * @see org.catma.queryengine.TagQuery.TagTermComparator
-     */
-    @Override
-    public Comparator<TermInfo> getComparator() {
-        return TAG_TERM_COMP;
-    }
 }
 

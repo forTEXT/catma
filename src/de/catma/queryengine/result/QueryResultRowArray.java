@@ -2,6 +2,7 @@ package de.catma.queryengine.result;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -60,6 +61,11 @@ public class QueryResultRowArray implements QueryResult {
 				new HashMap<String, PhraseResult>();
 		
 		for (QueryResultRow row : rows) {
+			if (row.getPhrase() == null) {
+				throw new UnsupportedOperationException(
+					"The rows in this QueryResultRowArray are not phrase based, " +
+					"don't know how to group!");
+			}
 			if (!phraseResultMapping.containsKey(row.getPhrase())) {
 				phraseResultMapping.put(
 					row.getPhrase(), new PhraseResult(row.getPhrase()));
@@ -74,5 +80,9 @@ public class QueryResultRowArray implements QueryResult {
 		groupedQueryResults.addAll(phraseResultMapping.values());
 		
 		return groupedQueryResults;
+	}
+
+	public void addAll(Collection<QueryResultRow> rows) {
+		this.rows.addAll(rows);
 	}
 }

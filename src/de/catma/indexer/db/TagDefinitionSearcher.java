@@ -1,6 +1,12 @@
 package de.catma.indexer.db;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import org.hibernate.Query;
@@ -8,10 +14,9 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
 import de.catma.core.document.Range;
-import de.catma.core.util.IDGenerator;
 import de.catma.queryengine.result.QueryResult;
-import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
+import de.catma.queryengine.result.TagQueryResultRow;
 
 public class TagDefinitionSearcher {
 
@@ -29,18 +34,42 @@ public class TagDefinitionSearcher {
 		
 		List<DBTagReference> tagReferences  = 
 				searchInUserMarkupCollection(session, null, tagDefinitionPath);
-		
-		IDGenerator idGenerator = new IDGenerator();
+		logger.info(
+			"Query for " + tagDefinitionPath + " has " + 
+					tagReferences.size() + " results.");
 		
 		QueryResultRowArray result = new QueryResultRowArray();
+		HashMap<String, Set<DBTagReference>> groupByInstance = 
+				new HashMap<String, Set<DBTagReference>>();
 		for (DBTagReference tr : tagReferences) {
+			String tagInstanceId = 
+					tr.getCatmaTagInstanceId();
+			
+			if (!groupByInstance.containsKey(tagInstanceId)) {
+				groupByInstance.put(
+						tagInstanceId, new HashSet<DBTagReference>());
+			}
+			groupByInstance.get(tagInstanceId).add(tr);
+		}
+		
+		for (Map.Entry<String,Set<DBTagReference>> entry :
+			groupByInstance.entrySet()) {
+			
+			SortedSet<Range> ranges = new TreeSet<Range>();
+			for (DBTagReference tr : entry.getValue()) {
+				ranges.add(
+					new Range(tr.getCharacterStart(), tr.getCharacterEnd()));
+			}
+			DBTagReference firstDBTagRef = entry.getValue().iterator().next();
+			
+			List<Range> mergedRanges = Range.mergeRanges(ranges);
 			result.add(
-				new QueryResultRow(
-					tr.getDocumentId(),
-					new Range(tr.getCharacterStart(), tr.getCharacterEnd()), 
-					tr.getUserMarkupColletionId(),
-					idGenerator.uuidBytesToCatmaID(tr.getTagDefintionId()),
-					idGenerator.uuidBytesToCatmaID(tr.getTagInstanceId())));
+				new TagQueryResultRow(
+					firstDBTagRef.getDocumentId(),
+					mergedRanges, 
+					firstDBTagRef.getUserMarkupCollectionId(),
+					firstDBTagRef.getCatmaTagDefinitionId(),
+					entry.getKey()));
 		}
 		
 		return result;
@@ -50,7 +79,9 @@ public class TagDefinitionSearcher {
 	private List<DBTagReference> searchInUserMarkupCollection(
 			Session session, String userMarkupCollectionIdList, 
 			String tagDefinitionPath) {
-
+		if (!tagDefinitionPath.startsWith("/")) {
+			tagDefinitionPath = "%" + tagDefinitionPath;
+		}
 		String query =
 				" from " +
 				DBEntityName.DBTagReference +

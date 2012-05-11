@@ -12,16 +12,15 @@ import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.KeywordInContext;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
-import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRow;
-import de.catma.ui.data.util.PropertyToStringCIComparator;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
+import de.catma.ui.data.util.PropertyToReversedTrimmedStringCIComparator;
+import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 
 public class KwicPanel extends VerticalLayout {
 
 	private enum KwicPropertyName {
 		caption,
-		origin,
 		leftContext,
 		keyword,
 		rightContext,
@@ -39,21 +38,27 @@ public class KwicPanel extends VerticalLayout {
 	private void initComponents() {
 		kwicTable = new TreeTable();
 		kwicTable.setSelectable(true);
+		
 		HierarchicalContainer container = new HierarchicalContainer();
-		container.setItemSorter(
+		PropertyDependentItemSorter itemSorter = 
 				new PropertyDependentItemSorter(
-						KwicPropertyName.caption, 
-						new PropertyToStringCIComparator()));
+						new Object[] {
+								KwicPropertyName.rightContext,
+								KwicPropertyName.keyword
+						},
+						new PropertyToTrimmedStringCIComparator());
+		//TODO: nonsense:
+		itemSorter.setPropertyComparator(
+			KwicPropertyName.leftContext, 
+			new PropertyToReversedTrimmedStringCIComparator());
+		
+		container.setItemSorter(itemSorter);
 		
 		kwicTable.setContainerDataSource(container);
 		
 		kwicTable.addContainerProperty(
 				KwicPropertyName.caption, String.class, null);
-		kwicTable.setColumnHeader(KwicPropertyName.caption, "Phrase");
-		
-		kwicTable.addContainerProperty(
-				KwicPropertyName.origin, String.class, null);
-		kwicTable.setColumnHeader(KwicPropertyName.origin, "Document/Collection");
+		kwicTable.setColumnHeader(KwicPropertyName.caption, "Document/Collection");
 		
 		kwicTable.addContainerProperty(
 				KwicPropertyName.leftContext, String.class, null);
@@ -75,13 +80,13 @@ public class KwicPanel extends VerticalLayout {
 		addComponent(kwicTable);
 	}
 
-	public void addGroupedQueryResult(GroupedQueryResult groupedQueryResult) 
+	public void addQueryResultRows(Iterable<QueryResultRow> queryResult) 
 			throws IOException {
 		// TODO: should we put this in the  background thread?
 		HashMap<String, KwicProvider> kwicProviders =
 				new HashMap<String, KwicProvider>();
 		
-		for (QueryResultRow row : groupedQueryResult) {
+		for (QueryResultRow row : queryResult) {
 			SourceDocument sourceDocument = 
 					repository.getSourceDocument(row.getSourceDocumentId());
 			
@@ -92,22 +97,21 @@ public class KwicPanel extends VerticalLayout {
 			}
 			
 			KwicProvider kwicProvider = kwicProviders.get(sourceDocument.getID());
-			
 			KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), 5);
 			
 			kwicTable.addItem(
 				new Object[]{
-					row.getPhrase(), 
 					sourceDocument.toString(),
 					kwic.getLeftContext(),
 					kwic.getKeyword(),
 					kwic.getRightContext()},
-				row);
+					row);
+			kwicTable.setChildrenAllowed(row, false);
 		}
 	}
 	
-	public void removeGroupedQueryResult(GroupedQueryResult groupedQueryResult) {
-		for (QueryResultRow row : groupedQueryResult) {
+	public void removeQueryResultRows(Iterable<QueryResultRow> queryResult) {
+		for (QueryResultRow row : queryResult) {
 			kwicTable.removeItem(row);
 		}
 	}

@@ -1,5 +1,6 @@
 package de.catma.ui.analyzer;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +26,8 @@ import de.catma.backgroundservice.ExecutionListener;
 import de.catma.core.document.Corpus;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexerProvider;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryOptions;
@@ -42,20 +45,36 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 	private TabSheet resultTabSheet;
 	private PhraseResultPanel phraseResultPanel;
 	private Repository repository;
-	private List<String> selectedDocumentIDs;
+	private List<String> relevantSourceDocumentIDs;
+	private List<String> relevantUserMarkupCollIDs;
+	private List<String> relevantStaticMarkupCollIDs;
+	private MarkupResultPanel markupResultPanel;
 	
 	public AnalyzerView(
 			Corpus corpus, Repository repository) {
-		this.selectedDocumentIDs = new ArrayList<String>();
+		this.relevantSourceDocumentIDs = new ArrayList<String>();
+		this.relevantUserMarkupCollIDs = new ArrayList<String>();
+		this.relevantStaticMarkupCollIDs = new ArrayList<String>();
+		
 		if (corpus != null) {
 			for (SourceDocument sd : corpus.getSourceDocuments()) {
-				this.selectedDocumentIDs.add(sd.getID());
+				this.relevantSourceDocumentIDs.add(sd.getID());
+			}
+			for (UserMarkupCollectionReference ref : 
+				corpus.getUserMarkupCollectionRefs()) {
+				this.relevantUserMarkupCollIDs.add(ref.getId());
+			}
+			for (StaticMarkupCollectionReference ref : 
+				corpus.getStaticMarkupCollectionRefs()) {
+				this.relevantStaticMarkupCollIDs.add(ref.getId());
 			}
 		}
+		
 		this.repository = repository;
 		initComponents(corpus);
 		initActions();
 	}
+	
 
 	private void initActions() {
 		btExecSearch.addListener(new ClickListener() {
@@ -79,10 +98,13 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 		List<String> unseparableCharacterSequences = Collections.emptyList();
 		List<Character> userDefinedSeparatingCharacters = Collections.emptyList();
 		QueryOptions queryOptions = new QueryOptions(
-				selectedDocumentIDs,
+				relevantSourceDocumentIDs,
+				relevantUserMarkupCollIDs,
+				relevantStaticMarkupCollIDs,
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
-				Locale.ENGLISH);
+				Locale.ENGLISH,
+				repository);
 		
 		QueryJob job = new QueryJob(
 				searchInput.getValue().toString(),
@@ -93,6 +115,13 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 				new ExecutionListener<QueryResult>() {
 			public void done(QueryResult result) {
 				phraseResultPanel.setQueryResult(result);
+				//TODO: lazy?!
+				try {
+					markupResultPanel.setQueryResult(result);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} 
 			};
 			public void error(Throwable t) {
 						// TODO Auto-generated method stub
@@ -146,8 +175,8 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 	}
 
 	private Component createResultByMarkupView() {
-		// TODO Auto-generated method stub
-		return new HorizontalLayout();
+		markupResultPanel = new MarkupResultPanel(repository);
+		return markupResultPanel;
 	}
 
 	private Component createResultByPhraseView() {

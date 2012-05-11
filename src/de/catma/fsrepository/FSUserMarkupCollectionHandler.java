@@ -58,8 +58,6 @@ class FSUserMarkupCollectionHandler {
 			UserMarkupCollection userMarkupCollection = 
 					userMarkupCollectionSerializationHandler.deserialize(
 							userMarkupCollectionReference.getId(), is);
-			userMarkupCollection.setName(userMarkupCollectionReference.getName());
-			
 			is.close();
 			
 			return userMarkupCollection;
