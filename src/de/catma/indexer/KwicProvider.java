@@ -63,49 +63,66 @@ public class KwicProvider {
     public SpanContext getSpanContextFor(Range range,
             int spanContextSize, SpanDirection direction) throws IOException{
     	
-    	//TODO: look for correct token range
-    	
         //forward
         TokenStream forwardStream =
         	analyzer.tokenStream(
                 null,
                 new StringReader(
             		content.substring(
-            				range.getEndPoint())));
-
+            				range.getStartPoint()))); // we start with the token included which is underlying the incoming range
+        
         SpanContext spanContext = new SpanContext(sourceDocumentId);
-
-        int counter = 0;
-        int startOffset = range.getEndPoint();
-        int endOffset = range.getEndPoint();
-
-        // look for the given number of tokens in forward direction
-        while(forwardStream.incrementToken() && counter < spanContextSize) {
-            OffsetAttribute offsetAttr =
+        
+        if (forwardStream.incrementToken()) { //skip first token, this is just to...
+        	// ... retrieve the endoffset of the token, which might be different
+        	// from the incoming range endoffset and is necessary to compute 
+        	// the startOffset of the forward context
+        	
+        	OffsetAttribute offsetAttr =
                     (OffsetAttribute)forwardStream.getAttribute(OffsetAttribute.class);
-
-            CharTermAttribute termAttr = 
-            	(CharTermAttribute)forwardStream.getAttribute(CharTermAttribute.class);
-
-            endOffset = range.getEndPoint()+offsetAttr.endOffset();
-            TermInfo ti =  
-            		new TermInfo(
-            				termAttr.toString(),
-            				range.getEndPoint()+offsetAttr.startOffset(),
-            				range.getEndPoint()+offsetAttr.endOffset());
-            spanContext.addForwardToken(ti);
-            counter++;
+        	
+	
+	        int counter = 0;
+	        // the startOffset is relevant for the whole context range and content
+	        // but not for the single context tokens
+	        final int startOffset = Math.max(
+    				range.getEndPoint(), 
+    				range.getStartPoint()+offsetAttr.endOffset());
+	        
+	        // the endOffset gets moved forward as tokens are added to the context
+	        int endOffset = startOffset;
+	
+	        // look for the given number of tokens in forward direction
+	        while(forwardStream.incrementToken() && counter < spanContextSize) {
+	            offsetAttr =
+	                    (OffsetAttribute)forwardStream.getAttribute(OffsetAttribute.class);
+	
+	            CharTermAttribute termAttr = 
+	            	(CharTermAttribute)forwardStream.getAttribute(CharTermAttribute.class);
+	            // move the endOffset forward
+	            endOffset = range.getStartPoint()+offsetAttr.endOffset();
+	            
+	            TermInfo ti =  
+	            		new TermInfo(
+	            				termAttr.toString(),
+	            				// we compute offsets with the range's startpoint, 
+	            				// because that's where we started the tokenstream
+	            				range.getStartPoint()+offsetAttr.startOffset(),
+	            				range.getStartPoint()+offsetAttr.endOffset());
+	            spanContext.addForwardToken(ti);
+	            counter++;
+	        }
+	
+	        spanContext.setForward(content.substring(startOffset, endOffset));
+	        spanContext.setForwardRange(new Range(startOffset, endOffset));
         }
-
-        spanContext.setForward(content.substring(startOffset, endOffset));
-        spanContext.setForwardRange(new Range(startOffset, endOffset));
-
+        
         if(direction.equals(SpanDirection.Both)) { //backward
 
             // revert content for backward search
             StringBuffer backwardBuffer =
                     new StringBuffer(
-                    	content.substring(0, range.getStartPoint()));
+                    	content.substring(0, range.getEndPoint())); // backward stream starts at the range's end point
             
             backwardBuffer.reverse();
 
@@ -113,29 +130,41 @@ public class KwicProvider {
                     analyzer.tokenStream(null,
                             new StringReader(backwardBuffer.toString()));
             
-            counter = 0;
-            startOffset = range.getStartPoint();
-            endOffset = range.getStartPoint();
-            
-            // look for the given number of tokens in backward direction
-            while(backwardStream.incrementToken() && counter < spanContextSize) {
+            if (backwardStream.incrementToken()) { // we skip the first token, its just to compute the startOffset
                 OffsetAttribute offsetAttr =
                         (OffsetAttribute)backwardStream.getAttribute(OffsetAttribute.class);
-
-                CharTermAttribute termAttr =
-                        (CharTermAttribute)backwardStream.getAttribute(CharTermAttribute.class);
-
-                startOffset = range.getStartPoint()-offsetAttr.endOffset();
-                TermInfo ti =  new TermInfo( 
-                	new StringBuilder(termAttr.toString()).reverse().toString(),
-                    	startOffset, range.getStartPoint()-offsetAttr.startOffset());
-
-                spanContext.addBackwardToken(ti);
-                counter++;
+                
+	            int counter = 0;
+	            // the startOffset gets moved backward as we add tokens to the context
+	            int startOffset = 
+	            		Math.min(
+	            				range.getStartPoint(), 
+	            				range.getEndPoint()-offsetAttr.endOffset());
+	            
+	            final int endOffset = startOffset;
+	            
+	            // look for the given number of tokens in backward direction
+	            while(backwardStream.incrementToken() && counter < spanContextSize) {
+	                offsetAttr =
+	                        (OffsetAttribute)backwardStream.getAttribute(OffsetAttribute.class);
+	
+	                CharTermAttribute termAttr =
+	                        (CharTermAttribute)backwardStream.getAttribute(CharTermAttribute.class);
+	                // move startoffset backward
+	                startOffset = range.getEndPoint()-offsetAttr.endOffset();
+	                // start and endoffset are computed with the range's endpoint
+	                // because that's where we started the backward stream
+	                TermInfo ti =  new TermInfo( 
+	                	new StringBuilder(termAttr.toString()).reverse().toString(),
+	                    	startOffset, range.getEndPoint()-offsetAttr.startOffset());
+	
+	                spanContext.addBackwardToken(ti);
+	                counter++;
+	            }
+	            
+	            spanContext.setBackward(content.substring(startOffset, endOffset));
+	            spanContext.setBackwardRange(new Range(startOffset, endOffset));
             }
-            
-            spanContext.setBackward(content.substring(startOffset, endOffset));
-            spanContext.setBackwardRange(new Range(startOffset, endOffset));
         }
 
         return spanContext;

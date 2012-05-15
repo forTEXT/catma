@@ -205,8 +205,8 @@ public class MarkupResultPanel extends VerticalLayout {
 				TagQueryResultRow tRow = (TagQueryResultRow)row;
 				tagDefinitions.add(tRow.getTagDefinitionId());
 				addTagQueryResultRow(tRow, loadedUserMarkupCollections);
+				totalFreq++;
 			}
-			totalFreq++;
 		}
 		
 		resultTable.setFooterVisible(true);

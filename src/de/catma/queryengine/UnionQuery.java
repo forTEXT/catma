@@ -19,10 +19,8 @@
 
 package de.catma.queryengine;
 
-import java.util.List;
-
-import de.catma.indexer.TermInfo;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRowSet;
 
 /**
  * An operator that combines the results of two queries.
@@ -46,15 +44,18 @@ public class UnionQuery extends Query {
 
     @Override
     protected QueryResult execute() throws Exception {
+    	query1.setIndexer(getIndexer());
+    	query1.setQueryOptions(getQueryOptions());
+    	query2.setIndexer(getIndexer());
+    	query2.setQueryOptions(getQueryOptions());
 
-//        List<TermInfo> termInfoList1 = query1.getResult().getTermInfoList();
-//        List<TermInfo> termInfoList2 = query2.getResult().getTermInfoList();
-//
-//        termInfoList2.removeAll(termInfoList1);
-//        termInfoList1.addAll(termInfoList2);
-//
-//        return new QueryResult(termInfoList1);
-    	return null;
+    	QueryResultRowSet r1 = new QueryResultRowSet(query1.getResult());
+    	
+    	QueryResultRowSet r2 = new QueryResultRowSet(query2.getResult());
+    	r2.removeAll(r1);
+    	r1.addAll(r2);
+    	
+    	return r1;
     }
     
 }

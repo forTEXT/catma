@@ -26,7 +26,6 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
 import org.antlr.runtime.tree.Tree;
 
 import de.catma.backgroundservice.DefaultProgressCallable;
-import de.catma.core.ExceptionHandler;
 import de.catma.indexer.Indexer;
 import de.catma.queryengine.parser.CatmaQueryLexer;
 import de.catma.queryengine.parser.CatmaQueryParser;
@@ -84,22 +83,16 @@ public class QueryJob extends DefaultProgressCallable<QueryResult> {
             
             return queryResult;
         }
-        catch (Throwable t) {
-            if (t instanceof RecognitionException) {
-                //noinspection ThrowableInstanceNeverThrown
-                ExceptionHandler.log(
-                    new QueryException(inputQuery,(RecognitionException)t));
+        catch (Exception e) {
+            if (e instanceof RecognitionException) {
+                throw new QueryException(inputQuery,(RecognitionException)e);
             }
-            else if ((t.getCause() != null) && (t.getCause() instanceof RecognitionException)) {
-                //noinspection ThrowableInstanceNeverThrown
-                ExceptionHandler.log(
-                    new QueryException(inputQuery,(RecognitionException)t.getCause()));
+            else if ((e.getCause() != null) && (e.getCause() instanceof RecognitionException)) {
+                throw new QueryException(inputQuery,(RecognitionException)e.getCause());
             }
             else {
-                ExceptionHandler.log(t);
+               throw e;
             }
-            
-            return null;
         }
     }
 

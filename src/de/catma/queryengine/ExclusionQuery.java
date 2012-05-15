@@ -52,6 +52,7 @@ public class ExclusionQuery extends Query {
 
     @Override
     protected QueryResult execute() throws Exception {
+    	
 
 //        List<TermInfo> results1 = query1.getResult().getTermInfoList();
 //        List<TermInfo> results2 = query2.getResult().getTermInfoList();

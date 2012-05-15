@@ -65,6 +65,7 @@ public class TagQuery extends Query {
         	SourceDocument sd = 
         			repository.getSourceDocument(row.getSourceDocumentId());
         	if (!sd.isLoaded()) {
+    			//TODO: unload SourceDocuments to free space if tobeUnloaded.size() > 10
         		toBeUnloaded.add(sd);
         	}
         	TagQueryResultRow tRow = (TagQueryResultRow)row;

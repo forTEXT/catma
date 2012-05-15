@@ -19,14 +19,12 @@
 
 package de.catma.queryengine;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import de.catma.core.document.Range;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.indexer.Indexer;
@@ -105,6 +103,7 @@ public class CollocQuery extends Query {
     		SourceDocument sd = 
     				repository.getSourceDocument(row.getSourceDocumentId());
     		if (!sd.isLoaded()) {
+    			//TODO: unload SourceDocuments to free space if tobeUnloaded.size() > 10
     			toBeUnloaded.add(sd);
     		}
     		

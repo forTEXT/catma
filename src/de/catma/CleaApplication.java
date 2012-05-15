@@ -255,6 +255,10 @@ public class CleaApplication extends Application
 				
 				public void error(Throwable t) {
 					listener.error(t);
+					defaultPIbackgroundJobs--;
+					if (defaultPIbackgroundJobs == 0) {
+						setDefaultProgressIndicatorEnabled(false);
+					}
 				}
 			}, 
 			new DefaultProgressListener(defaultProgressIndicator, this));

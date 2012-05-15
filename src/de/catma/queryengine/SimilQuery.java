@@ -19,7 +19,12 @@
 
 package de.catma.queryengine;
 
+import java.util.Set;
+
+import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
 
 
 /**
@@ -46,11 +51,6 @@ public class SimilQuery extends Query {
 
     @Override
     protected QueryResult execute() throws Exception {
-
-//        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
-//        Index index = sourceDoc.getIndex();
-
-
         //TODO: enable phrases rather than words for simil
 //        int maxWindowSize =
 //            (int)Math.round((
@@ -60,12 +60,41 @@ public class SimilQuery extends Query {
 //            (int)Math.round(
 //                (phrase.length()*(similPercent/100.0))/(2-(similPercent/100.0)));
 
-//        List<TermInfo> termInfoList = index.searchTermsBySimilarity(phrase, similPercent);
-//
-//        return new ResultList(termInfoList);
-    	return null;
+    	return searchTermsBySimilarity();
     }
-
     
+    /**
+     * Searches a list of terms that a similar to the given phrase by a certain degree
+     *
+     * @param phrase the phrase to compare with
+     * @param similPercent the degree of similarity
+     * @return the list of similar terms
+     * @throws Exception 
+     * @see org.catma.queryengine.Simil
+     */
+    private QueryResult searchTermsBySimilarity() throws Exception {
+    	
+        QueryResultRowArray result = new QueryResultRowArray();
 
+        Simil simil = new Simil(phrase);
+
+        FreqQuery freqQuery = 
+        		new FreqQuery(CompareOperator.GREATERTHAN.toString(), "0");
+        
+        freqQuery.setQueryOptions(getQueryOptions());
+        freqQuery.setIndexer(getIndexer());
+        
+        QueryResult allTokens = freqQuery.getResult();
+        Set<GroupedQueryResult> allTypes = allTokens.asGroupedQueryResultSet();
+        
+        for (GroupedQueryResult groupedQueryResult : allTypes) {
+        	String type = groupedQueryResult.getGroup().toString();
+        	if(simil.getSimilarityInPercentFor(type) >= similPercent) {
+        		for (QueryResultRow row : groupedQueryResult) {
+        			result.add(row);
+        		}
+        	}
+        }
+        return result;
+    }
 }

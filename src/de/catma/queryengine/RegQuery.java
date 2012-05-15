@@ -20,13 +20,17 @@
 package de.catma.queryengine;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import de.catma.core.document.Range;
+import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
-import de.catma.indexer.TermInfo;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
 
 /**
  * A regular expression query.
@@ -50,30 +54,55 @@ public class RegQuery extends Query {
      */
     public RegQuery(Phrase phrase, String caseInsensitiveMarker) {
         this.phrase = phrase;
-        caseInsensitive = ((caseInsensitiveMarker!=null)&&(caseInsensitiveMarker.equals(CI)));
+        caseInsensitive = 
+        	((caseInsensitiveMarker!=null)&&(caseInsensitiveMarker.equals(CI)));
     }
 
     @Override
     protected QueryResult execute() throws Exception {
-//
-//        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
-//
-//        int flags = Pattern.DOTALL;
-//        if (caseInsensitive) {
-//            flags |= Pattern.CASE_INSENSITIVE;
-//        }
-//        Pattern pattern = Pattern.compile(phrase.getPhrase(), flags);
-//
-//        Matcher matcher = pattern.matcher(sourceDoc.getContent());
-//
-//        List<TermInfo> searchResults = new ArrayList<TermInfo>();
-//
-//        while(matcher.find()) {
-//            searchResults.add(
-//                new TermInfo(matcher.group(), matcher.start(), matcher.end()));
-//        }
-//
-//        return new ResultList(searchResults);
-    	return null;
+    	QueryResultRowArray result = new QueryResultRowArray();
+    	
+    	QueryOptions queryOptions = getQueryOptions();
+    	Repository repository = queryOptions.getRepository();
+    	
+    	List<String> relevantSourceDocIDs = 
+    			queryOptions.getRelevantSourceDocumentIDs();
+    	Collection<SourceDocument> relevantSourceDocuments = null;
+    	if ((relevantSourceDocIDs != null) && !relevantSourceDocIDs.isEmpty()) {
+    		relevantSourceDocuments = new ArrayList<SourceDocument>();
+    		for (String sourceDocumentID : relevantSourceDocIDs) {
+    			relevantSourceDocuments.add(
+    					repository.getSourceDocument(sourceDocumentID));
+    		}
+    	}
+    	else {
+    		relevantSourceDocuments = repository.getSourceDocuments();
+    	}
+    	
+    	for (SourceDocument sourceDoc : relevantSourceDocuments) {
+    		boolean sourceDocWasLoaded = sourceDoc.isLoaded();
+    		
+	        int flags = Pattern.DOTALL;
+	        if (caseInsensitive) {
+	            flags |= Pattern.CASE_INSENSITIVE;
+	        }
+	        Pattern pattern = Pattern.compile(phrase.getPhrase(), flags);
+	
+	        Matcher matcher = pattern.matcher(sourceDoc.getContent());
+	
+	        while(matcher.find()) {
+	            result.add(
+	            	new QueryResultRow(
+	            		sourceDoc.getID(), 
+	            		new Range(matcher.start(), matcher.end()), 
+	            		matcher.group()));
+	        }
+	        
+	        if (!sourceDocWasLoaded) {
+	        	sourceDoc.unload();
+	        }
+    	}	
+	    
+    	return result;
     }
 }

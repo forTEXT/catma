@@ -182,7 +182,9 @@ public class CollocationSearcher {
 		
 		return session.createQuery(query);
 	}
-	
+	//TODO: this is way too slow, huge union query solutions are a bit faster but 
+	// vulnerable if the size of the union query grows. 
+	// Maybe parallelization of the baserow-for-loop could help, needs more investigation
 	public QueryResult search(QueryResult baseResult,
 				QueryResult collocationConditionResult, int spanContextSize,
 				SpanDirection direction) throws IOException {
