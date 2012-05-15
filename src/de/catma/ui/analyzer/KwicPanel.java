@@ -13,6 +13,7 @@ import de.catma.core.document.source.KeywordInContext;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToReversedTrimmedStringCIComparator;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
@@ -29,9 +30,15 @@ public class KwicPanel extends VerticalLayout {
 
 	private Repository repository;
 	private TreeTable kwicTable;
+	private boolean markupBased;
 
 	public KwicPanel(Repository repository) {
+		this(repository, false);
+	}
+	
+	public KwicPanel(Repository repository, boolean markupBased) {
 		this.repository = repository;
+		this.markupBased = markupBased;
 		initComponents();
 	}
 
@@ -98,10 +105,18 @@ public class KwicPanel extends VerticalLayout {
 			
 			KwicProvider kwicProvider = kwicProviders.get(sourceDocument.getID());
 			KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), 5);
+			String sourceDocOrMarkupCollectionDisplay = 
+					sourceDocument.toString();
+			
+			if (markupBased && (row instanceof TagQueryResultRow)) {
+				sourceDocOrMarkupCollectionDisplay =
+					sourceDocument.getUserMarkupCollectionReference(
+						((TagQueryResultRow)row).getMarkupCollectionId()).getName();
+			}
 			
 			kwicTable.addItem(
 				new Object[]{
-					sourceDocument.toString(),
+					sourceDocOrMarkupCollectionDisplay,
 					kwic.getLeftContext(),
 					kwic.getKeyword(),
 					kwic.getRightContext()},

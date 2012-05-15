@@ -354,11 +354,6 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				userMarkupCollection.getChildren(tagDefinition);
 		if (children != null) {
 			for (Object childId : children) {
-				if (childId instanceof TagDefinition) {
-					tagReferences.addAll(
-						userMarkupCollection.getTagReferences(
-								(TagDefinition)childId));
-				}
 				Object visiblePropertyValue = 
 					markupCollectionsTree.getItem(
 						childId).getItemProperty(

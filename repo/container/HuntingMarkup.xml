@@ -3,7 +3,7 @@
     <teiHeader>
         <fileDesc>
             <titleStmt>
-                <title>empty</title>
+                <title>Hunting Markup</title>
                 <author>empty</author>
             </titleStmt>
             <publicationStmt>
@@ -73,36 +73,48 @@
     <text>
         <body>
             <ab type="catma">
-                <ptr target="http://www.gutenberg.org/cache/epub/13/pg13.txt#char=0,106" type="inclusion"/>
+                <ptr target="catma:///container/pg13.txt#char=0,106" type="inclusion"/>
                 <seg ana="#CATMA_22246CD6-3318-489D-9FBF-45534C401FEF">
-                    <ptr target="http://www.gutenberg.org/cache/epub/13/pg13.txt#char=106,112" type="inclusion"/>
+                    <ptr target="catma:///container/pg13.txt#char=106,112" type="inclusion"/>
                 </seg>
-                <ptr target="http://www.gutenberg.org/cache/epub/13/pg13.txt#char=112,345" type="inclusion"/>
+                <ptr target="catma:///container/pg13.txt#char=112,145" type="inclusion"/>
+                <seg ana="#CATMA_68D7CBF5-3638-4982-BCF6-6C2909EE86F3">
+                    <ptr target="catma:///container/pg13.txt#char=145,160" type="inclusion"/>
+                </seg>
+                <ptr target="catma:///container/pg13.txt#char=160,345" type="inclusion"/>
                 <seg ana="#CATMA_730A0ADD-6B9E-48C9-A3DC-2A08C21E666A">
-                    <ptr target="http://www.gutenberg.org/cache/epub/13/pg13.txt#char=345,352" type="inclusion"/>
+                    <ptr target="catma:///container/pg13.txt#char=345,352" type="inclusion"/>
                 </seg>
-                <ptr target="http://www.gutenberg.org/cache/epub/13/pg13.txt#char=352,2040" type="inclusion"/>
+                <ptr target="catma:///container/pg13.txt#char=352,2040" type="inclusion"/>
                 <seg ana="#CATMA_365AF2E6-1EA2-4E06-A30F-56FB936C2671">
-                    <ptr target="http://www.gutenberg.org/cache/epub/13/pg13.txt#char=2040,2044" type="inclusion"/>
+                    <ptr target="catma:///container/pg13.txt#char=2040,2044" type="inclusion"/>
                 </seg>
-                <ptr target="http://www.gutenberg.org/cache/epub/13/pg13.txt#char=2044,3251" type="inclusion"/>
+                <ptr target="catma:///container/pg13.txt#char=2044,3251" type="inclusion"/>
                 <seg ana="#CATMA_C737CE11-1625-491D-B7F5-8945D3E19A24">
-                    <ptr target="http://www.gutenberg.org/cache/epub/13/pg13.txt#char=3251,3337" type="inclusion"/>
+                    <ptr target="catma:///container/pg13.txt#char=3251,3337" type="inclusion"/>
                 </seg>
-                <ptr target="http://www.gutenberg.org/cache/epub/13/pg13.txt#char=3337,7481" type="inclusion"/>
+                <ptr target="catma:///container/pg13.txt#char=3337,7481" type="inclusion"/>
                 <seg ana="#CATMA_0B619F2E-B082-4E89-8E1F-1452A25BC335">
-                    <ptr target="http://www.gutenberg.org/cache/epub/13/pg13.txt#char=7481,7572" type="inclusion"/>
+                    <ptr target="catma:///container/pg13.txt#char=7481,7572" type="inclusion"/>
                 </seg>
-                <ptr target="http://www.gutenberg.org/cache/epub/13/pg13.txt#char=7572,10809" type="inclusion"/>
+                <ptr target="catma:///container/pg13.txt#char=7572,10809" type="inclusion"/>
                 <seg ana="#CATMA_707B868A-D3F6-470C-9AED-8F8C04A3E99E">
-                    <ptr target="http://www.gutenberg.org/cache/epub/13/pg13.txt#char=10809,10897" type="inclusion"/>
+                    <ptr target="catma:///container/pg13.txt#char=10809,10897" type="inclusion"/>
                 </seg>
-                <ptr target="http://www.gutenberg.org/cache/epub/13/pg13.txt#char=10897,53173" type="inclusion"/>
+                <ptr target="catma:///container/pg13.txt#char=10897,53173" type="inclusion"/>
             </ab>
         </body>
         <fs xml:id="CATMA_22246CD6-3318-489D-9FBF-45534C401FEF" type="CATMA_f03064f2-5430-4e0e-aaf0-115ec1b9d480">
             <f name="catma_displaycolor">
                 <string>-6749953</string>
+            </f>
+        </fs>
+        <fs xml:id="CATMA_68D7CBF5-3638-4982-BCF6-6C2909EE86F3" type="CATMA_31faf252-926d-4d2a-b612-f581dd8362dd">
+            <f name="catma_displaycolor">
+                <string>-16724737</string>
+            </f>
+            <f name="myProp">
+                <string>defValue</string>
             </f>
         </fs>
         <fs xml:id="CATMA_730A0ADD-6B9E-48C9-A3DC-2A08C21E666A" type="CATMA_31faf252-926d-4d2a-b612-f581dd8362dd">

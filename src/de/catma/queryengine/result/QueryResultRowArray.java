@@ -85,4 +85,8 @@ public class QueryResultRowArray implements QueryResult {
 	public void addAll(Collection<QueryResultRow> rows) {
 		this.rows.addAll(rows);
 	}
+
+	public int size() {
+		return rows.size();
+	}
 }

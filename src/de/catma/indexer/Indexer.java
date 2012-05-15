@@ -1,8 +1,10 @@
 package de.catma.indexer;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
+import de.catma.core.document.Range;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.tag.TagLibrary;
@@ -40,6 +42,15 @@ public interface Indexer {
 			List<String> documentIdList, 
 			CompareOperator comp1, int freq1, 
 			CompareOperator comp2, int freq2);
+	
+	public SpanContext getSpanContextFor(String sourceDocumentId, Range range,
+	            int spanContextSize, SpanDirection direction) throws IOException;
+	    	
+	public QueryResult searchCollocation(
+			QueryResult baseResult, QueryResult collocationConditionResult,
+			int spanContextSize, SpanDirection direction) throws IOException;
+	
+	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range);
 	
 	public void close();
 }

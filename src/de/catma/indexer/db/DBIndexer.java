@@ -1,28 +1,28 @@
 package de.catma.indexer.db;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
-import org.jboss.logging.Logger;
 
+import de.catma.core.document.Range;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.tag.TagLibrary;
 import de.catma.indexer.Indexer;
-import de.catma.indexer.TermExtractor;
+import de.catma.indexer.SpanContext;
+import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TermInfo;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
 
 public class DBIndexer implements Indexer {
 	
-	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private SessionFactory sessionFactory; 
 	private Configuration hibernateConfig;
 	
@@ -118,6 +118,30 @@ public class DBIndexer implements Indexer {
 		return freqSearcher.search(documentIdList, comp1, freq1, comp2, freq2);
 	}
 
+	public SpanContext getSpanContextFor(
+			String sourceDocumentId, Range range, int spanContextSize,
+			SpanDirection direction) throws IOException {
+		CollocationSearcher collocationSearcher = 
+				new CollocationSearcher(sessionFactory);
+		
+		return collocationSearcher.getSpanContextFor(
+				sourceDocumentId, range, spanContextSize, direction);
+	}
+	
+	public QueryResult searchCollocation(QueryResult baseResult,
+			QueryResult collocationConditionResult, int spanContextSize,
+			SpanDirection direction) throws IOException {
+		CollocationSearcher collocationSearcher = 
+				new CollocationSearcher(sessionFactory);
+		return collocationSearcher.search(
+			baseResult, collocationConditionResult, spanContextSize, direction);
+	}
+	
+	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range) {
+		CollocationSearcher collocationSearcher = 
+				new CollocationSearcher(sessionFactory);
+		return collocationSearcher.getTermInfosFor(sourceDocumentId, range);
+	}
 	
 	public void close() {
 		sessionFactory.close();

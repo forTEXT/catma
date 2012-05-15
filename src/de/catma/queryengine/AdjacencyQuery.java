@@ -19,6 +19,8 @@
 
 package de.catma.queryengine;
 
+import de.catma.indexer.SpanDirection;
+
 /**
  * An adjacency query is basically a {@link org.catma.queryengine.CollocQuery}
  * with span context size set to 1.

@@ -19,10 +19,24 @@
 
 package de.catma.queryengine;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import de.catma.core.document.Range;
+import de.catma.core.document.repository.Repository;
+import de.catma.core.document.source.SourceDocument;
+import de.catma.indexer.Indexer;
+import de.catma.indexer.KwicProvider;
+import de.catma.indexer.SpanContext;
+import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TermInfo;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
 
 /**
  * A collocation query looks for terms that form a collocation with other terms within a given
@@ -51,6 +65,7 @@ public class CollocQuery extends Query {
     public CollocQuery(Query query1, Query query2, String spanContext, SpanDirection direction) {
         this.query1 = query1;
         this.query2 = query2;
+        
         if (spanContext == null) {
             spanContextSize = DEFAULT_SPANCONTEXT_SIZE;
         }
@@ -61,7 +76,7 @@ public class CollocQuery extends Query {
     }
 
     /**
-     * Constructor. ({@link org.catma.queryengine.SpanDirection#Both both} directions are used as the span context)
+     * Constructor. ({@link de.catma.indexer.catma.queryengine.SpanDirection#Both both} directions are used as the span context)
      * @param query1 the definiton of the search term
      * @param query2 the defintion of the collocation term
      * @param spanContext the size of the context
@@ -74,136 +89,82 @@ public class CollocQuery extends Query {
 
     @Override
     protected QueryResult execute() throws Exception {
-//    	QueryResult qr = 
-
-//        SourceDocument sourceDoc = FileManager.SINGLETON.getCurrentSourceDocument();
-//        Index index = sourceDoc.getIndex();
-//
-//        ResultList result1 = query1.execute();
-//        List<TermInfo> termInfoList1 = result1.getTermInfoList();
-//
-//        ResultList result2 = query2.execute();
-
-        // loop over the first resultset get the collocations and
-        // check the collocation condition
-//        Iterator<TermInfo> iter = termInfoList1.iterator();
-//        while (iter.hasNext()) {
-//            TermInfo curTermInfo = iter.next();
-//
-//            SpanContext spanContext = index.getSpanContextFor(
-//                    sourceDoc.getContent(), curTermInfo.getRange(),
-//                    spanContextSize, direction);
-//
-//            if ((!spanContextMeetsCollocCondition(
-//                    spanContext.getForwardTokens(), result2, index))
-//                   && ( ( !spanContext.hasBackwardSpan() )
-//                        || ((!spanContextMeetsCollocCondition(
-//                                spanContext.getBackwardTokens(), result2, index))))) {
-//                iter.remove(); // this one does not meet the condition
-//            }
-//        }
-//
-//        return new ResultList(termInfoList1);
-    	return null;
+    	QueryResult baseResult = query1.execute();
+    	QueryResult collocCondition = query2.execute();
+    	
+    	Map<String,KwicProvider> kwicProviders = new HashMap<String, KwicProvider>(); 
+    	Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
+    	Repository repository = getQueryOptions().getRepository();
+    	
+    	Map<QueryResultRow, List<TermInfo>> termInfos = 
+    			new HashMap<QueryResultRow, List<TermInfo>>();
+    	
+    	QueryResultRowArray result = new QueryResultRowArray();
+    	
+    	for (QueryResultRow row : baseResult) {
+    		SourceDocument sd = 
+    				repository.getSourceDocument(row.getSourceDocumentId());
+    		if (!sd.isLoaded()) {
+    			toBeUnloaded.add(sd);
+    		}
+    		
+    		if (!kwicProviders.containsKey(sd.getID())) {
+    			kwicProviders.put(sd.getID(), new KwicProvider(sd));
+    		}
+    		KwicProvider kwicProvider = kwicProviders.get(sd.getID());
+    		SpanContext spanContext =
+				kwicProvider.getSpanContextFor(	
+					row.getRange(), 
+					spanContextSize, direction);
+    		
+    		if (spanContextMeetsCollocCondition
+    				(spanContext, collocCondition, termInfos)) {
+    			result.add(row);
+    		}
+    	}
+    	for (SourceDocument sd : toBeUnloaded) {
+    		sd.unload();
+    	}
+   
+    	return result;
     }
 
-    /**
-     * Checks if the given span context tokens meets the tokens of the given condition.
-     * 
-     * @param spanContext the tokens of the span context
-     * @param collocConditionList the list of conditions (tokens to be present in the span context)
-     * @param index the index of the {@link org.catma.document.source.SourceDocument}
-     * @return true if the given span context meets the collocation condition
-     * @throws IOException {@link org.catma.indexer.Index}-access problems, see instance for details 
-     */
-//    private boolean spanContextMeetsCollocCondition(
-//            List<TermInfo> spanContext , ResultList collocConditionList, Index index) throws IOException {
-//
-//        for (TermInfo collocCondition : collocConditionList.getTermInfoList()) {
-//            if(matches(spanContext, index.extractTermInfoFrom(
-//                    collocCondition.getTerm(),
-//                    (int)collocCondition.getRange().getStartPoint()))) {
-//                return true;
-//            }
-//        }
-//
-//        return false;
-//    }
-
-    /**
-     * @param spanContextTokens the tokens of the span context
-     * @param collocConditionTerms the tokens of the collocation condition
-     * @return true if all the tokens of the collocation condition can be found in that order in the
-     * list of the span context tokens
-     */
-    private boolean matches(List<TermInfo> spanContextTokens,
-                            List<TermInfo> collocConditionTerms) {
-
-        // span context should be large enough to hold the tokens of the condition
-        if (spanContextTokens.size() < collocConditionTerms.size()) {
-            // no need for detailed checking then
-            return false;
-        }
-
-        if (spanContextTokens.size() == 0) {
-            // at this point we realize that we have no tokens as a condition (see previous check)
-            // and no tokens in the context as well, that matches!
-            return true;
-        }
-
-        // we are trying to find the first token of the condition in the span context
-        int startIdx = getFirstMatchingIndex(spanContextTokens, collocConditionTerms.get(0));
-
-        if (startIdx==-1) { // not even the first token is present
-            return false;
-        }
-
-        // first token was present at this time
-
-        // are there more tokens with this condition?
-        if (collocConditionTerms.size() == 1) {
-            // no, ok we are done
-            return true;
-        }
-
-        // are there enough tokens in the span context to possibly meet the condition tokens?
-        if ((collocConditionTerms.size() + startIdx) > spanContextTokens.size()) {
-            // no need for detailed comparing then
-            return false;
-        }
-
-        // ok, we have found the first token and there are enough tokens in the span context
-        // after the one we found already, so lets try to check the rest of the tokens
-        // of the condition
-        for (int idx = 1; idx <collocConditionTerms.size(); idx++) {
-            if (!spanContextTokens.get(startIdx+idx).equals(collocConditionTerms.get(idx))) {
-                // the condition is not satisified with this one
-                return false;
-            }
-        }
-
-        // ok, found all tokens of the condition in the right order
-        return true;
+	private boolean spanContextMeetsCollocCondition(
+			SpanContext spanContext, QueryResult collocationConditionResult, 
+			Map<QueryResultRow, List<TermInfo>> rowToTermInfoListMapping) {
+		
+		
+		for (QueryResultRow collocConditionRow : collocationConditionResult) {
+			if (spanContext.getSourceDocumentId().equals(
+					collocConditionRow.getSourceDocumentId())) {
+				if (!rowToTermInfoListMapping.containsKey(collocConditionRow)) {
+					rowToTermInfoListMapping.put(
+							collocConditionRow, getIndexer().getTermInfosFor(
+									collocConditionRow.getSourceDocumentId(), 
+									collocConditionRow.getRange()));
+				}
+				
+				if (spanContext.contains(
+						rowToTermInfoListMapping.get(collocConditionRow))) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+    
+    @Override
+    public void setIndexer(Indexer indexer) {
+    	super.setIndexer(indexer);
+        this.query1.setIndexer(getIndexer());
+        this.query2.setIndexer(getIndexer());
     }
-
-    /**
-     * Retrieves the first matching index within the list of span context tokens.<br>
-     * <br>
-     * Note: not only the type of the token but also its range is checked for equality!
-     *
-     * @param spanContextTokens the tokens of the span context
-     * @param collocConditionTerm the current token of the collocation condition
-     * @return the first matching index within the list of span context tokens or -1 for no match
-     */
-    private int getFirstMatchingIndex(List<TermInfo> spanContextTokens, TermInfo collocConditionTerm) {
-
-        for( int idx = 0; idx < spanContextTokens.size(); idx++) {
-            if(spanContextTokens.get(idx).equals(collocConditionTerm)) {
-                return idx;
-            }
-        }
-
-        return -1;
+    
+    @Override
+    public void setQueryOptions(QueryOptions queryOptions) {
+    	super.setQueryOptions(queryOptions);
+        this.query1.setQueryOptions(getQueryOptions());
+        this.query2.setQueryOptions(getQueryOptions());
     }
 }
-

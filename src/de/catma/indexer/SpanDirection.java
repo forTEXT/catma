@@ -17,7 +17,7 @@
  *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.catma.queryengine;
+package de.catma.indexer;
 
 /**
  * The possible directions of a text span for a keyword.
@@ -26,6 +26,7 @@ package de.catma.queryengine;
  *
  */
 public enum SpanDirection {
+	Left,
     /**
      * Span at the right side of the keyword.
      */

@@ -26,6 +26,7 @@ import de.catma.core.document.source.SourceDocument;
 import de.catma.core.tag.TagManager;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.KwicProvider;
+import de.catma.indexer.TermInfo;
 import de.catma.indexer.db.DBIndexer;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.QueryJob;
@@ -148,28 +149,23 @@ public class QueryTest {
 	}
 	
 	@Test
-	public void freqSearch1() throws Throwable {
-		try {
-			Indexer indexer = new DBIndexer();
-	
-			List<String> documentIDs = new ArrayList<String>();
-//			documentIDs.add("catma:///container/pg13.txt");
-			
-			QueryResult result =
-					indexer.searchFreqency(
-						documentIDs,
-						CompareOperator.GREATERTHAN, 850, 
-						null, 0);
-			indexer.close();
-			for (QueryResultRow qrr : result) {
-				System.out.println(qrr);
-			}
+	public void freqSearch1() throws Exception {
 
+		Indexer indexer = new DBIndexer();
+
+		List<String> documentIDs = new ArrayList<String>();
+//			documentIDs.add("catma:///container/pg13.txt");
+		
+		QueryResult result =
+				indexer.searchFreqency(
+					documentIDs,
+					CompareOperator.GREATERTHAN, 850, 
+					null, 0);
+		indexer.close();
+		for (QueryResultRow qrr : result) {
+			System.out.println(qrr);
 		}
-		catch(Throwable t) {
-			t.printStackTrace();
-			throw t;
-		}
+
 	}
 
 	@Test
@@ -185,9 +181,9 @@ public class QueryTest {
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
 				Locale.ENGLISH, null);
-		
+		DBIndexer dbIndexer = new DBIndexer();
 		QueryJob job = new QueryJob(
-				"\"To the day when you took me aboard of your ship\"", new DBIndexer(), queryOptions);
+				"\"To the day when you took me aboard of your ship\"", dbIndexer, queryOptions);
 		job.setProgressListener(new LogProgressListener());
 		try {
 			
@@ -225,6 +221,9 @@ public class QueryTest {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+		finally {
+			dbIndexer.close();
 		}
 	}
 	
@@ -309,45 +308,77 @@ public class QueryTest {
 	}
 
 	@Test
-	public void testSearchTag() throws Throwable {
+	public void testSearchTag() throws Exception {
 		List<String> documentIDs = new ArrayList<String>();
 //		documentIDs.add("catma:///container/pg13.txt");
 
 		List<String> userMarkupCollIDs = new ArrayList<String>();
 		
-		try {
-			Indexer indexer = new DBIndexer();
-			QueryResult result = 
-					indexer.searchTagDefinitionPath(
-						documentIDs, userMarkupCollIDs, "/Order/analepsis");
-			
-			indexer.close();
-			Set<String> tagInstances = new HashSet<String>();
-			for (QueryResultRow qrr : result) {
-				System.out.println(qrr);
-				tagInstances.add(((TagQueryResultRow)qrr).getTagInstanceId());
-			}
-			
-			System.out.println("Instances found: " + tagInstances.size());
-			System.out.println(Arrays.toString(tagInstances.toArray()));
-
+		Indexer indexer = new DBIndexer();
+		QueryResult result = 
+				indexer.searchTagDefinitionPath(
+					documentIDs, userMarkupCollIDs, "/Order/analepsis");
+		
+		indexer.close();
+		Set<String> tagInstances = new HashSet<String>();
+		for (QueryResultRow qrr : result) {
+			System.out.println(qrr);
+			tagInstances.add(((TagQueryResultRow)qrr).getTagInstanceId());
 		}
-		catch(Throwable t) {
-			t.printStackTrace();
-			throw t;
+		
+		System.out.println("Instances found: " + tagInstances.size());
+		System.out.println(Arrays.toString(tagInstances.toArray()));
+	}
+	
+	@Test
+	public void testCollocationSearcher() throws Exception {
+		Indexer indexer = new DBIndexer();
+		List<TermInfo> termInfos = indexer.getTermInfosFor(
+			"catma:///container/pg13.txt", new Range(145,160));
+		for (TermInfo ti : termInfos) {
+			System.out.println(ti);
 		}
 	}
 
-//	@Test
-	public void testColocation() throws Throwable {
+	@Test
+	public void testCollocation() throws Exception {
+		List<String> unseparableCharacterSequences = Collections.emptyList();
+		List<Character> userDefinedSeparatingCharacters = Collections.emptyList();
+		List<String> documentIDs = new ArrayList<String>();
+		documentIDs.add("catma:///container/rose_for_emily.txt");
+		QueryOptions queryOptions = new QueryOptions(
+				documentIDs,
+				Collections.<String>emptyList(),
+				Collections.<String>emptyList(),
+				unseparableCharacterSequences,
+				userDefinedSeparatingCharacters,
+				Locale.ENGLISH,
+				repository);
+		DBIndexer dbIndexer = new DBIndexer();
+		QueryJob job = new QueryJob(
+//				"tag=\"Emily\" & freq > 230 2", dbIndexer, queryOptions);
+//				"freq < 230 & tag=\"Emily\" 2", dbIndexer, queryOptions);
+//				"\"\\\"\" & tag=\"/Emily\" 2", dbIndexer, queryOptions);
+				"tag=\"/Emily\" & \"house\" 2", dbIndexer, queryOptions);
+		
+		job.setProgressListener(new LogProgressListener());
 		try {
-			Indexer esIndexer = new DBIndexer();
-//			esIndexer.searchColocation(null, "you", "will", 10);
-			esIndexer.close();
+			
+			QueryResultRowArray result = (QueryResultRowArray) job.call();
+			
+			for (QueryResultRow row : result) {
+				System.out.println(row);
+			}
+			
+			System.out.println(result.size());
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		catch(Throwable t) {
-			t.printStackTrace();
-			throw t;
+		finally {
+			dbIndexer.close();
 		}
+
 	}
 }

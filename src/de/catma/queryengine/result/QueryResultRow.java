@@ -38,6 +38,6 @@ public class QueryResultRow {
 	@Override
 	public String toString() {
 		return "SourceDoc[#"+sourceDocumentId + "]"+range
-				+ ((phrase == null)?"":"->"+phrase+"<- "); 
+				+ ((phrase == null)?"phrase not set":"->"+phrase+"<- "); 
 	}
 }

@@ -98,6 +98,7 @@ public class QueryJob extends DefaultProgressCallable<QueryResult> {
             else {
                 ExceptionHandler.log(t);
             }
+            
             return null;
         }
     }

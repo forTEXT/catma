@@ -24,7 +24,7 @@ class DBTagReference implements java.io.Serializable {
 	private String documentId;
 	private String userMarkupCollectionId;
 	private String tagDefinitionPath;
-	private byte[] tagDefintionId;
+	private byte[] tagDefinitionId;
 	private String tagDefinitionVersion;
 	private byte[] tagInstanceId;
 	private int characterStart;
@@ -36,13 +36,13 @@ class DBTagReference implements java.io.Serializable {
 	}
 
 	public DBTagReference(String documentId, String userMarkupCollectionId,
-			String tagDefinitionPath, byte[] tagDefintionId, 
+			String tagDefinitionPath, byte[] tagDefinitionId, 
 			String tagDefinitionVersion,
 			byte[] tagInstanceId, int characterStart, int characterEnd) {
 		this.documentId = documentId;
 		this.userMarkupCollectionId = userMarkupCollectionId;
 		this.tagDefinitionPath = tagDefinitionPath;
-		setTagDefintionId(tagDefintionId);
+		setTagDefinitionId(tagDefinitionId);
 		this.tagDefinitionVersion = tagDefinitionVersion;
 		setTagInstanceId(tagInstanceId);
 		this.characterStart = characterStart;
@@ -96,13 +96,13 @@ class DBTagReference implements java.io.Serializable {
 		this.tagDefinitionPath = tagDefinitionPath;
 	}
 
-	@Column(name = "tagDefintionID", nullable = false)
-	public byte[] getTagDefintionId() {
-		return this.tagDefintionId;
+	@Column(name = "tagDefinitionID", nullable = false)
+	public byte[] getTagDefinitionId() {
+		return this.tagDefinitionId;
 	}
 
-	public void setTagDefintionId(byte[] tagDefintionId) {
-		this.tagDefintionId = tagDefintionId;
+	public void setTagDefinitionId(byte[] tagDefintionId) {
+		this.tagDefinitionId = tagDefintionId;
 		IDGenerator idGenerator = new IDGenerator();
 		setCatmaTagDefinitionId(idGenerator.uuidBytesToCatmaID(tagDefintionId));
 	}

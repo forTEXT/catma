@@ -14,14 +14,15 @@ import de.catma.core.document.Range;
 import de.catma.core.document.source.IndexInfoSet;
 import de.catma.core.document.source.KeywordInContext;
 import de.catma.core.document.source.SourceDocument;
-import de.catma.queryengine.SpanDirection;
 
 public class KwicProvider {
 	
 	private String content;
 	private Analyzer analyzer;
+	private String sourceDocumentId;
 	
 	public KwicProvider(SourceDocument sourceDocument) throws IOException {
+		this.sourceDocumentId = sourceDocument.getID();
 		this.content = sourceDocument.getContent();
 		IndexInfoSet indexInfoSet = 
 				sourceDocument.getSourceContentHandler()
@@ -62,6 +63,7 @@ public class KwicProvider {
     public SpanContext getSpanContextFor(Range range,
             int spanContextSize, SpanDirection direction) throws IOException{
     	
+    	//TODO: look for correct token range
     	
         //forward
         TokenStream forwardStream =
@@ -71,7 +73,7 @@ public class KwicProvider {
             		content.substring(
             				range.getEndPoint())));
 
-        SpanContext spanContext = new SpanContext();
+        SpanContext spanContext = new SpanContext(sourceDocumentId);
 
         int counter = 0;
         int startOffset = range.getEndPoint();

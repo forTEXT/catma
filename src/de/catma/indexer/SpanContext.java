@@ -21,7 +21,10 @@ package de.catma.indexer;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import de.catma.core.document.Range;
 
@@ -39,11 +42,13 @@ public class SpanContext {
     private String forward;
     private Range backwardRange;
     private Range forwardRange;
+    private String sourceDocumentId;
 
     /**
      * Contructor. Creates an empty span context.
      */
-    public SpanContext() {
+    public SpanContext(String sourceDocumentId) {
+    	this.sourceDocumentId = sourceDocumentId;
         backwardTokens = new ArrayList<TermInfo>();
         forwardTokens = new ArrayList<TermInfo>();
     }
@@ -146,4 +151,33 @@ public class SpanContext {
     public List<TermInfo> getForwardTokens() {
         return forwardTokens;
     }
+    
+    public String getSourceDocumentId() {
+		return sourceDocumentId;
+	}
+    
+    @Override
+    public String toString() {
+    	return "left["+Arrays.toString(backwardTokens.toArray())+
+    	"] right["+Arrays.toString(forwardTokens.toArray()) + 
+    	"]@" + sourceDocumentId;
+    }
+
+	public boolean contains(Collection<TermInfo> termInfos) {
+		return (forwardTokens.containsAll(termInfos) 
+				|| backwardTokens.containsAll(termInfos));
+	}
+
+	public void addForwardTokens(Set<TermInfo> termInfos) {
+		for (TermInfo ti : termInfos) {
+			addForwardToken(ti);
+		}
+	}
+	
+	public void addBackwardTokens(Set<TermInfo> termInfos) {
+		for (TermInfo ti : termInfos) {
+			addBackwardToken(ti);
+		}
+	}
+	
 }

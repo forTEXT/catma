@@ -88,7 +88,7 @@ class PhraseSearcher {
 							termList.get(1), 1,
 							documentId,
 							true);
-			
+			//TODO: use union and sqlquery instead
 			for (int i=2; i<termList.size()-1; i++) {
 				List<DBPosition> result = getPositionsForTerm(
 						session, termList.get(0), 
@@ -150,6 +150,7 @@ class PhraseSearcher {
 		try {
 			List<DBPosition> positions = 
 					getPositionsForTerm(session, term, documentId);
+			
 			for (DBPosition p : positions) {
 				result.add(
 					new QueryResultRow(
@@ -177,17 +178,18 @@ class PhraseSearcher {
 		String query =
 				" from "
 				+ DBEntityName.DBPosition 
-				+ " pos1 where pos1.term.term = '" //TODO: lower() for case insens.
-				+ term
-				+ "'";
+				+ " pos1 where pos1.term.term = :termArg"; //TODO: lower() for case insens.
 		
 		if (documentId != null) {
 			query += " and pos1.term.documentId = '" + documentId + "'";
 		}
 		
-		logger.info("query: " + query);
 		Query q = 
 				session.createQuery(query);
+		
+		q.setString("termArg", term);
+		
+//		logger.info("query: " + q.getQueryString());
 		
 		return q.list();
 	}
@@ -203,12 +205,9 @@ class PhraseSearcher {
 				+ DBEntityName.DBPosition 
 				+ " pos1, "
 				+ DBEntityName.DBPosition 
-				+ " pos2 where pos1.term.term = '" 
-				+ term1
-				+ "'"
-				+ " and pos2.term.term = '"
-				+ term2
-				+ "' and pos2.tokenOffset = pos1.tokenOffset + " + tokenOffset 
+				+ " pos2 where pos1.term.term = :curTerm1" 
+				+ " and pos2.term.term = :curTerm2"
+				+ " and pos2.tokenOffset = pos1.tokenOffset + " + tokenOffset 
 				+ " and pos1.term.documentId = pos2.term.documentId";
 		
 		if (documentId != null) {
@@ -218,6 +217,8 @@ class PhraseSearcher {
 		logger.info("query: " + query);
 		Query q = 
 				session.createQuery(query);
+		q.setString("curTerm1", term1);
+		q.setString("curTerm2", term2);
 		
 		return q.list();
 	}

@@ -3,7 +3,9 @@ package de.catma.ui.analyzer;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import com.vaadin.data.Property;
 import com.vaadin.data.util.HierarchicalContainer;
@@ -12,7 +14,6 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
@@ -29,6 +30,113 @@ import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 
 public class MarkupResultPanel extends VerticalLayout {
+	
+	private static interface TreeEntrySelectionHandler {
+		public QueryResultRowArray getResultRows(boolean selected);
+	}
+	
+	private static class UmcTreeEntrySelectionHandler implements TreeEntrySelectionHandler {
+		private TreeTable resultTable;
+		private String umcItemID;
+		
+		public UmcTreeEntrySelectionHandler(TreeTable resultTable,
+				String umcItemID) {
+			this.resultTable = resultTable;
+			this.umcItemID = umcItemID;
+		}
+
+		public QueryResultRowArray getResultRows(boolean selected) {
+			@SuppressWarnings("unchecked")
+			Collection<QueryResultRow> rows = 
+					(Collection<QueryResultRow>)resultTable.getChildren(
+							umcItemID);
+			for (QueryResultRow row : rows) {
+				((CheckBox)resultTable.getItem(row).getItemProperty(
+						TreePropertyName.visible).getValue()).setValue(selected);
+			}
+			QueryResultRowArray result = new QueryResultRowArray();
+			result.addAll(rows);
+			return result;
+		}
+	}
+	
+	private static class TagQueryResultRowTreeEntrySelectionHandler 
+		implements TreeEntrySelectionHandler {
+		
+		private QueryResultRow row;
+		
+		public TagQueryResultRowTreeEntrySelectionHandler(QueryResultRow row) {
+			this.row = row;
+		}
+
+		public QueryResultRowArray getResultRows(boolean selected) {
+			QueryResultRowArray result = new QueryResultRowArray();
+			result.add(row);
+			return result;
+		}
+		
+	}
+
+	private static class SourceDocumentTreeEntrySelectionHandler implements TreeEntrySelectionHandler {
+		
+		private TreeTable resultTable;
+		private String sourceDocumentItemID;
+
+		public SourceDocumentTreeEntrySelectionHandler(TreeTable resultTable,
+				String sourceDocumentItemID) {
+			this.resultTable = resultTable;
+			this.sourceDocumentItemID = sourceDocumentItemID;
+		}
+
+		public QueryResultRowArray getResultRows(boolean selected) {
+			@SuppressWarnings("unchecked")
+			Collection<String> umcItemIDs = 
+					(Collection<String>)resultTable.getChildren(
+							sourceDocumentItemID);
+			QueryResultRowArray result = new QueryResultRowArray();
+			
+			for (String umcItemID : umcItemIDs) {
+				((CheckBox)resultTable.getItem(umcItemID).getItemProperty(
+						TreePropertyName.visible).getValue()).setValue(selected);
+				result.addAll(
+					new UmcTreeEntrySelectionHandler(
+							resultTable, umcItemID).getResultRows(selected));
+			}
+			
+			return result;
+		}
+	}
+	
+	private static class TagDefinitionTreeEntrySelectionHandler implements TreeEntrySelectionHandler {
+		
+		private TreeTable resultTable;
+		private TagDefinition tagDefinition;
+		
+		public TagDefinitionTreeEntrySelectionHandler(TreeTable resultTable,
+				TagDefinition tagDefinition) {
+			this.resultTable = resultTable;
+			this.tagDefinition = tagDefinition;
+		}
+		
+		public QueryResultRowArray getResultRows(boolean selected) {
+			@SuppressWarnings("unchecked")
+			Collection<String> sourceDocItemIDs = 
+					(Collection<String>)resultTable.getChildren(
+							tagDefinition);
+			QueryResultRowArray result = new QueryResultRowArray();
+			
+			for (String sourceDocItemID : sourceDocItemIDs) {
+				((CheckBox)resultTable.getItem(sourceDocItemID).getItemProperty(
+						TreePropertyName.visible).getValue()).setValue(selected);
+				result.addAll(
+					new SourceDocumentTreeEntrySelectionHandler(
+							resultTable, sourceDocItemID).getResultRows(selected));
+			}
+			
+			return result;
+		}
+		
+	}
 	
 	private static enum TreePropertyName {
 		caption,
@@ -77,31 +185,41 @@ public class MarkupResultPanel extends VerticalLayout {
 		resultTable.setSizeFull();
 		splitPanel.addComponent(resultTable);
 		
-		this.kwicPanel = new KwicPanel(repository);
+		this.kwicPanel = new KwicPanel(repository, true);
 		splitPanel.addComponent(kwicPanel);
 		
 		addComponent(splitPanel);
 	}
 	
 	public void setQueryResult(QueryResult queryResult) throws IOException {
-//		kwicPanel.clear();
+		kwicPanel.clear();
 		resultTable.removeAllItems();
-		int totalCount = 0;
 		int totalFreq = 0;
 	
 		HashMap<String, UserMarkupCollection> loadedUserMarkupCollections =
 				new HashMap<String, UserMarkupCollection>();
+		Set<String> tagDefinitions = new HashSet<String>();
 		
 		for (QueryResultRow row : queryResult) {
 			if (row instanceof TagQueryResultRow) {
-				addTagQueryResultRow(
-					(TagQueryResultRow) row, loadedUserMarkupCollections);
+				TagQueryResultRow tRow = (TagQueryResultRow)row;
+				tagDefinitions.add(tRow.getTagDefinitionId());
+				addTagQueryResultRow(tRow, loadedUserMarkupCollections);
 			}
+			totalFreq++;
 		}
+		
+		resultTable.setFooterVisible(true);
+		resultTable.setColumnFooter(
+				TreePropertyName.caption, 
+				"Total count: " + tagDefinitions.size());
+		resultTable.setColumnFooter(
+				TreePropertyName.frequency, "Total frequency: " + totalFreq);
+		
 	}
 	
 	private void addTagQueryResultRow(
-		TagQueryResultRow row, 
+		final TagQueryResultRow row, 
 		Map<String,UserMarkupCollection> loadedUserMarkupCollections) 
 				throws IOException {
 		
@@ -131,7 +249,9 @@ public class MarkupResultPanel extends VerticalLayout {
 				new Object[]{
 						umc.getTagLibrary().getTagPath(tagDefinition),
 						0,
-						new CheckBox() //TODO: createCheckbox
+						createCheckbox(
+							new TagDefinitionTreeEntrySelectionHandler(
+								resultTable, tagDefinition))
 				},
 				tagDefinition);
 		}
@@ -140,14 +260,17 @@ public class MarkupResultPanel extends VerticalLayout {
 						TreePropertyName.frequency);
 		tagDefFreqProperty.setValue(((Integer)tagDefFreqProperty.getValue())+1);
 		
-		String sourceDocumentItemID = tagDefinitionId+ "@" + sourceDocument;
+		final String sourceDocumentItemID = tagDefinitionId+ "@" + sourceDocument;
 		
 		if (!resultTable.containsId(sourceDocumentItemID)) {
+		
 			resultTable.addItem(
 				new Object[] {
 						sourceDocument.toString(),
 						0,
-						new CheckBox() //TODO: createCheckbox
+						createCheckbox(
+							new SourceDocumentTreeEntrySelectionHandler(
+									resultTable, sourceDocumentItemID))
 				}, sourceDocumentItemID);
 			resultTable.setParent(sourceDocumentItemID, tagDefinition);
 		}
@@ -158,15 +281,16 @@ public class MarkupResultPanel extends VerticalLayout {
 		sourceDocFreqProperty.setValue(
 				((Integer)sourceDocFreqProperty.getValue())+1);
 		
-		String umcItemID = sourceDocumentItemID + "@" + umc.getId();
+		final String umcItemID = sourceDocumentItemID + "@" + umc.getId();
 		
 		if (!resultTable.containsId(umcItemID)) {
 			resultTable.addItem(
-					new Object[] {
-							umc.getName(),
-							0,
-							createCheckbox(umcItemID)
-					}, umcItemID);
+				new Object[] {
+					umc.getName(),
+					0,
+					createCheckbox(
+						new UmcTreeEntrySelectionHandler(resultTable, umcItemID))
+				}, umcItemID);
 			resultTable.setParent(umcItemID, sourceDocumentItemID);
 		}
 		
@@ -177,18 +301,20 @@ public class MarkupResultPanel extends VerticalLayout {
 				((Integer)userMarkupCollFreqProperty.getValue())+1);
 		
 		resultTable.addItem(
-				new Object[] {
-						row.getPhrase(),
-						1,
-						new CheckBox()
-				}, row);
+			new Object[] {
+				row.getPhrase(),
+				1,
+				createCheckbox(
+						new TagQueryResultRowTreeEntrySelectionHandler(row))
+			}, row);
 		
 		resultTable.setParent(row, umcItemID);
 		resultTable.setChildrenAllowed(row, false);
 		
 	}
 
-	private CheckBox createCheckbox(final String itemID) {
+	private CheckBox createCheckbox(
+			final TreeEntrySelectionHandler treeEntrySelectionHandler) {
 		CheckBox cbShowInKwicView = new CheckBox();
 		cbShowInKwicView.setImmediate(true);
 		cbShowInKwicView.addListener(new ClickListener() {
@@ -197,7 +323,8 @@ public class MarkupResultPanel extends VerticalLayout {
 				boolean selected = 
 						event.getButton().booleanValue();
 
-				fireShowInKwicViewSelected(itemID, selected);
+				fireShowInKwicViewSelected(
+					treeEntrySelectionHandler, selected);
 			}
 
 
@@ -205,26 +332,24 @@ public class MarkupResultPanel extends VerticalLayout {
 		return cbShowInKwicView;
 	}
 
-	private void fireShowInKwicViewSelected(String itemID,
+	private void fireShowInKwicViewSelected(
+			TreeEntrySelectionHandler treeEntrySelectionHandler,
 			boolean selected) {
 
 		QueryResultRowArray queryResult = new QueryResultRowArray();
-		@SuppressWarnings("unchecked")
-		Collection<QueryResultRow> rows = 
-				(Collection<QueryResultRow>)resultTable.getChildren(itemID);
-	
-		queryResult.addAll(rows);
+		
+		queryResult.addAll(treeEntrySelectionHandler.getResultRows(selected));
 		
 		if (selected) {
 			try {
-				kwicPanel.addQueryResultRows(rows);
+				kwicPanel.addQueryResultRows(queryResult);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 		else {
-			kwicPanel.removeQueryResultRows(rows);
+			kwicPanel.removeQueryResultRows(queryResult);
 		}
 		
 	}

@@ -106,3 +106,169 @@
 		}
 		throw new IllegalStateException("unable to find segment with id " + id);
 	}
+
+	
+	
+	
+	private Map<String, Map<String,SpanContext>> getSpanContextFor(
+			Session session, QueryResult queryResult, 
+			int spanContextSize, SpanDirection direction) throws IOException {
+		
+		Map<String, Map<String,SpanContext>> resultMap = 
+				new HashMap<String, Map<String,SpanContext>>();
+		
+		Map<String, Map<String,Set<TermInfo>>> tokensOfKeywordRanges = 
+				getTermInfosForRange(session, queryResult);
+		
+		Map<String, Map<String,Set<TermInfo>>> tokensForForwardContext = null;
+		if (direction.equals(SpanDirection.Both)
+				|| direction.equals(SpanDirection.Right)) {
+			tokensForForwardContext = 
+				getTokensForContext(
+						session, queryResult, true, 
+						tokensOfKeywordRanges, spanContextSize);
+		}
+		
+		Map<String, Map<String,Set<TermInfo>>> tokensForBackwardContxt = null;
+		
+		if (direction.equals(SpanDirection.Both)
+				|| direction.equals(SpanDirection.Left)) {
+			tokensForBackwardContxt = 
+					getTokensForContext(
+							session, queryResult, false, 
+							tokensOfKeywordRanges, spanContextSize);
+		}
+		for (QueryResultRow row : queryResult) {
+			SpanContext spanContext = new SpanContext(row.getSourceDocumentId());
+			
+			if (direction.equals(SpanDirection.Both)
+					|| direction.equals(SpanDirection.Right)) {
+				if (tokensForForwardContext.containsKey(row.getSourceDocumentId())) {
+					Map<String,Set<TermInfo>> rangeToTermInfoMapping = 
+							tokensForForwardContext.get(row.getSourceDocumentId());
+					if (rangeToTermInfoMapping.containsKey(row.getRange().toString())) {
+						spanContext.addForwardTokens(
+							rangeToTermInfoMapping.get(row.getRange().toString()));
+					}
+				}
+			}
+			
+			if (direction.equals(SpanDirection.Both)
+					|| direction.equals(SpanDirection.Left)) {
+				if (tokensForBackwardContxt.containsKey(row.getSourceDocumentId())) {
+					Map<String,Set<TermInfo>> rangeToTermInfoMapping = 
+							tokensForBackwardContxt.get(row.getSourceDocumentId());
+					if (rangeToTermInfoMapping.containsKey(row.getRange().toString())) {
+						spanContext.addBackwardTokens(
+							rangeToTermInfoMapping.get(row.getRange().toString()));
+					}
+				}
+			}
+			if (!spanContext.getForwardTokens().isEmpty() 
+					|| !spanContext.getBackwardTokens().isEmpty()) {
+				
+				if (!resultMap.containsKey(row.getSourceDocumentId())) {
+					resultMap.put(
+						row.getSourceDocumentId(), new HashMap<String, SpanContext>());
+				}
+				
+				Map<String, SpanContext> rangeToSpanContextMapping = 
+						resultMap.get(row.getSourceDocumentId());
+				
+				rangeToSpanContextMapping.put(row.getRange().toString(), spanContext);
+			}
+		}
+		
+		return resultMap;
+	}
+
+	private Map<String, Map<String, Set<TermInfo>>> getTokensForContext(
+			Session session, QueryResult queryResult, boolean forward,
+			Map<String, Map<String, Set<TermInfo>>> tokensOfKeywordRanges,
+			int spanContextSize) {
+
+		StringBuilder queryBuilder = new StringBuilder();
+		String concOuter = "";
+		for (QueryResultRow row : queryResult) {
+			List<TermInfo> orderedTermInfos = new ArrayList<TermInfo>();
+			Map<String,Set<TermInfo>> rangeToTermInfoMapping = 
+					tokensOfKeywordRanges.get(row.getSourceDocumentId());
+			if (rangeToTermInfoMapping != null) {
+				orderedTermInfos.addAll(
+					rangeToTermInfoMapping.get(row.getRange().toString()));
+				
+				if (!orderedTermInfos.isEmpty()) {	
+					queryBuilder.append(concOuter);
+
+					String conc = "";
+						
+					int tokenOffset = 
+							orderedTermInfos.get(orderedTermInfos.size()-1).getTokenOffset();
+					
+					if (!forward) {
+						tokenOffset = orderedTermInfos.get(0).getTokenOffset();
+					}
+					
+					for (int i=1; i<=spanContextSize; i++) {
+						
+						queryBuilder.append(conc);
+						queryBuilder.append("(SELECT t.documentId as documentId, '");
+						queryBuilder.append(row.getRange());
+						queryBuilder.append("' as origRange, t.term as term, ");
+						queryBuilder.append("p.characterStart as characterStart, ");
+						queryBuilder.append("p.characterEnd as characterEnd, ");
+						queryBuilder.append("p.tokenOffset as tokenOffset ");
+						queryBuilder.append(" FROM " ); 
+						queryBuilder.append(DBEntityName.DBPosition.getTableName());
+						queryBuilder.append(" p ");
+						queryBuilder.append(" JOIN ");
+						queryBuilder.append(DBEntityName.DBTerm.getTableName()); 
+						queryBuilder.append(" t ON t.termID = p.termID and t.documentID = '");
+						queryBuilder.append(row.getSourceDocumentId()); 
+						queryBuilder.append("' WHERE p.tokenOffset = ");
+						queryBuilder.append(forward?(tokenOffset+i):(tokenOffset-i));
+						queryBuilder.append(")");
+						conc = " UNION ";
+					}
+					concOuter = " UNION ";
+				}
+			}
+		}
+		
+		String query = queryBuilder.toString();
+		logger.info("Query: " + query);
+		
+		Map<String,Map<String,Set<TermInfo>>> resultMap = 
+				new HashMap<String, Map<String,Set<TermInfo>>>();
+		
+		if (!query.isEmpty()) {
+			SQLQuery sqlQuery = session.createSQLQuery(query);
+			@SuppressWarnings("unchecked")
+			List<Object[]> result = sqlQuery.list();
+			
+			for (Object[] resultRow : result) {
+				if (!resultMap.containsKey(resultRow[0])) {
+					resultMap.put(
+						resultRow[0].toString(),new HashMap<String,Set<TermInfo>>());
+				}
+				
+				Map<String,Set<TermInfo>> rangeMapping = 
+						resultMap.get(resultRow[0].toString());
+				
+				if (!rangeMapping.containsKey(resultRow[1].toString())) {
+					rangeMapping.put(
+						resultRow[1].toString(), new TreeSet<TermInfo>(TermInfo.TOKENOFFSETCOMPARATOR));
+				}
+				
+				Set<TermInfo> termInfos = rangeMapping.get(resultRow[1].toString());
+				
+				termInfos.add(
+					new TermInfo(
+						(String)resultRow[2],
+						(Integer)resultRow[3],
+						(Integer)resultRow[4],
+						(Integer)resultRow[5]));
+			}
+		}		
+		return resultMap;
+	}
