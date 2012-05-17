@@ -1,4 +1,4 @@
-// $ANTLR 3.4 C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g 2012-03-06 19:46:28
+// $ANTLR 3.4 C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g 2012-05-17 17:48:53
 
 package de.catma.queryengine.parser;
 
@@ -21,11 +21,10 @@ import java.util.ArrayList;
 @SuppressWarnings({"all", "warnings", "unchecked"})
 public class CatmaQueryWalker extends TreeParser {
     public static final String[] tokenNames = new String[] {
-        "<invalid>", "<EOR>", "<DOWN>", "<UP>", "EQUAL", "FREQ", "GROUPIDENT", "INT", "LETTER", "LETTEREXTENDED", "ND_ADJACENCY", "ND_ANDREFINE", "ND_COLLOC", "ND_EXCLUSION", "ND_FREQ", "ND_ORREFINE", "ND_PHRASE", "ND_PROPERTY", "ND_QUERY", "ND_REFINE", "ND_REG", "ND_SIMIL", "ND_TAG", "ND_UNION", "PROPERTY", "REG", "SIMIL", "TAG", "TXT", "UNEQUAL", "VALUE", "WHITESPACE", "'%'", "'&'", "'('", "')'", "','", "'-'", "';'", "'CI'", "'where'", "'|'"
+        "<invalid>", "<EOR>", "<DOWN>", "<UP>", "EQUAL", "FREQ", "GROUPIDENT", "INT", "LETTER", "LETTEREXTENDED", "ND_ADJACENCY", "ND_ANDREFINE", "ND_COLLOC", "ND_EXCLUSION", "ND_FREQ", "ND_ORREFINE", "ND_PHRASE", "ND_PROPERTY", "ND_QUERY", "ND_REFINE", "ND_REG", "ND_SIMIL", "ND_TAG", "ND_UNION", "PROPERTY", "REG", "SIMIL", "TAG", "TAG_MATCH_MODE", "TXT", "UNEQUAL", "VALUE", "WHITESPACE", "'%'", "'&'", "'('", "')'", "','", "'-'", "';'", "'CI'", "'where'", "'|'"
     };
 
     public static final int EOF=-1;
-    public static final int T__32=32;
     public static final int T__33=33;
     public static final int T__34=34;
     public static final int T__35=35;
@@ -35,6 +34,7 @@ public class CatmaQueryWalker extends TreeParser {
     public static final int T__39=39;
     public static final int T__40=40;
     public static final int T__41=41;
+    public static final int T__42=42;
     public static final int EQUAL=4;
     public static final int FREQ=5;
     public static final int GROUPIDENT=6;
@@ -59,10 +59,11 @@ public class CatmaQueryWalker extends TreeParser {
     public static final int REG=25;
     public static final int SIMIL=26;
     public static final int TAG=27;
-    public static final int TXT=28;
-    public static final int UNEQUAL=29;
-    public static final int VALUE=30;
-    public static final int WHITESPACE=31;
+    public static final int TAG_MATCH_MODE=28;
+    public static final int TXT=29;
+    public static final int UNEQUAL=30;
+    public static final int VALUE=31;
+    public static final int WHITESPACE=32;
 
     // delegates
     public TreeParser[] getDelegates() {
@@ -828,17 +829,18 @@ public class CatmaQueryWalker extends TreeParser {
 
 
     // $ANTLR start "tagQuery"
-    // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:108:1: tagQuery returns [Query query] : ^( ND_TAG phrase ) ;
+    // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:108:1: tagQuery returns [Query query] : ^( ND_TAG phrase (tagMatchMode= TAG_MATCH_MODE )? ) ;
     public final Query tagQuery() throws RecognitionException {
         Query query = null;
 
 
+        CommonTree tagMatchMode=null;
         Phrase phrase17 =null;
 
 
         try {
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:109:2: ( ^( ND_TAG phrase ) )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:109:4: ^( ND_TAG phrase )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:109:2: ( ^( ND_TAG phrase (tagMatchMode= TAG_MATCH_MODE )? ) )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:109:4: ^( ND_TAG phrase (tagMatchMode= TAG_MATCH_MODE )? )
             {
             match(input,ND_TAG,FOLLOW_ND_TAG_in_tagQuery447); 
 
@@ -849,10 +851,29 @@ public class CatmaQueryWalker extends TreeParser {
             state._fsp--;
 
 
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:109:32: (tagMatchMode= TAG_MATCH_MODE )?
+            int alt6=2;
+            int LA6_0 = input.LA(1);
+
+            if ( (LA6_0==TAG_MATCH_MODE) ) {
+                alt6=1;
+            }
+            switch (alt6) {
+                case 1 :
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:109:32: tagMatchMode= TAG_MATCH_MODE
+                    {
+                    tagMatchMode=(CommonTree)match(input,TAG_MATCH_MODE,FOLLOW_TAG_MATCH_MODE_in_tagQuery453); 
+
+                    }
+                    break;
+
+            }
+
+
             match(input, Token.UP, null); 
 
 
-             query = new TagQuery(phrase17); 
+             query = new TagQuery(phrase17, (tagMatchMode!=null?tagMatchMode.getText():null)); 
 
             }
 
@@ -885,27 +906,27 @@ public class CatmaQueryWalker extends TreeParser {
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:114:2: ( ^( ND_PROPERTY property= phrase (value= phrase )? ) )
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:114:4: ^( ND_PROPERTY property= phrase (value= phrase )? )
             {
-            match(input,ND_PROPERTY,FOLLOW_ND_PROPERTY_in_propertyQuery474); 
+            match(input,ND_PROPERTY,FOLLOW_ND_PROPERTY_in_propertyQuery479); 
 
             match(input, Token.DOWN, null); 
-            pushFollow(FOLLOW_phrase_in_propertyQuery478);
+            pushFollow(FOLLOW_phrase_in_propertyQuery483);
             property=phrase();
 
             state._fsp--;
 
 
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:114:34: (value= phrase )?
-            int alt6=2;
-            int LA6_0 = input.LA(1);
+            int alt7=2;
+            int LA7_0 = input.LA(1);
 
-            if ( (LA6_0==ND_PHRASE) ) {
-                alt6=1;
+            if ( (LA7_0==ND_PHRASE) ) {
+                alt7=1;
             }
-            switch (alt6) {
+            switch (alt7) {
                 case 1 :
                     // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:114:35: value= phrase
                     {
-                    pushFollow(FOLLOW_phrase_in_propertyQuery483);
+                    pushFollow(FOLLOW_phrase_in_propertyQuery488);
                     value=phrase();
 
                     state._fsp--;
@@ -952,27 +973,27 @@ public class CatmaQueryWalker extends TreeParser {
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:119:2: ( ^( ND_REG phrase (caseInsensitiveMarker= 'CI' )? ) )
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:119:4: ^( ND_REG phrase (caseInsensitiveMarker= 'CI' )? )
             {
-            match(input,ND_REG,FOLLOW_ND_REG_in_regQuery510); 
+            match(input,ND_REG,FOLLOW_ND_REG_in_regQuery515); 
 
             match(input, Token.DOWN, null); 
-            pushFollow(FOLLOW_phrase_in_regQuery512);
+            pushFollow(FOLLOW_phrase_in_regQuery517);
             phrase18=phrase();
 
             state._fsp--;
 
 
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:119:41: (caseInsensitiveMarker= 'CI' )?
-            int alt7=2;
-            int LA7_0 = input.LA(1);
+            int alt8=2;
+            int LA8_0 = input.LA(1);
 
-            if ( (LA7_0==39) ) {
-                alt7=1;
+            if ( (LA8_0==40) ) {
+                alt8=1;
             }
-            switch (alt7) {
+            switch (alt8) {
                 case 1 :
                     // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:119:41: caseInsensitiveMarker= 'CI'
                     {
-                    caseInsensitiveMarker=(CommonTree)match(input,39,FOLLOW_39_in_regQuery516); 
+                    caseInsensitiveMarker=(CommonTree)match(input,40,FOLLOW_40_in_regQuery521); 
 
                     }
                     break;
@@ -1015,24 +1036,24 @@ public class CatmaQueryWalker extends TreeParser {
 
         try {
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:124:2: ( ^( ND_FREQ EQUAL rInt1= INT (rInt2= INT )? ) | ^( ND_FREQ UNEQUAL INT ) )
-            int alt9=2;
-            int LA9_0 = input.LA(1);
+            int alt10=2;
+            int LA10_0 = input.LA(1);
 
-            if ( (LA9_0==ND_FREQ) ) {
-                int LA9_1 = input.LA(2);
+            if ( (LA10_0==ND_FREQ) ) {
+                int LA10_1 = input.LA(2);
 
-                if ( (LA9_1==DOWN) ) {
-                    int LA9_2 = input.LA(3);
+                if ( (LA10_1==DOWN) ) {
+                    int LA10_2 = input.LA(3);
 
-                    if ( (LA9_2==EQUAL) ) {
-                        alt9=1;
+                    if ( (LA10_2==EQUAL) ) {
+                        alt10=1;
                     }
-                    else if ( (LA9_2==UNEQUAL) ) {
-                        alt9=2;
+                    else if ( (LA10_2==UNEQUAL) ) {
+                        alt10=2;
                     }
                     else {
                         NoViableAltException nvae =
-                            new NoViableAltException("", 9, 2, input);
+                            new NoViableAltException("", 10, 2, input);
 
                         throw nvae;
 
@@ -1040,7 +1061,7 @@ public class CatmaQueryWalker extends TreeParser {
                 }
                 else {
                     NoViableAltException nvae =
-                        new NoViableAltException("", 9, 1, input);
+                        new NoViableAltException("", 10, 1, input);
 
                     throw nvae;
 
@@ -1048,34 +1069,34 @@ public class CatmaQueryWalker extends TreeParser {
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("", 9, 0, input);
+                    new NoViableAltException("", 10, 0, input);
 
                 throw nvae;
 
             }
-            switch (alt9) {
+            switch (alt10) {
                 case 1 :
                     // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:124:4: ^( ND_FREQ EQUAL rInt1= INT (rInt2= INT )? )
                     {
-                    match(input,ND_FREQ,FOLLOW_ND_FREQ_in_freqQuery544); 
+                    match(input,ND_FREQ,FOLLOW_ND_FREQ_in_freqQuery549); 
 
                     match(input, Token.DOWN, null); 
-                    EQUAL19=(CommonTree)match(input,EQUAL,FOLLOW_EQUAL_in_freqQuery546); 
+                    EQUAL19=(CommonTree)match(input,EQUAL,FOLLOW_EQUAL_in_freqQuery551); 
 
-                    rInt1=(CommonTree)match(input,INT,FOLLOW_INT_in_freqQuery550); 
+                    rInt1=(CommonTree)match(input,INT,FOLLOW_INT_in_freqQuery555); 
 
                     // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:124:35: (rInt2= INT )?
-                    int alt8=2;
-                    int LA8_0 = input.LA(1);
+                    int alt9=2;
+                    int LA9_0 = input.LA(1);
 
-                    if ( (LA8_0==INT) ) {
-                        alt8=1;
+                    if ( (LA9_0==INT) ) {
+                        alt9=1;
                     }
-                    switch (alt8) {
+                    switch (alt9) {
                         case 1 :
                             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:124:35: rInt2= INT
                             {
-                            rInt2=(CommonTree)match(input,INT,FOLLOW_INT_in_freqQuery554); 
+                            rInt2=(CommonTree)match(input,INT,FOLLOW_INT_in_freqQuery559); 
 
                             }
                             break;
@@ -1093,12 +1114,12 @@ public class CatmaQueryWalker extends TreeParser {
                 case 2 :
                     // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:125:5: ^( ND_FREQ UNEQUAL INT )
                     {
-                    match(input,ND_FREQ,FOLLOW_ND_FREQ_in_freqQuery565); 
+                    match(input,ND_FREQ,FOLLOW_ND_FREQ_in_freqQuery570); 
 
                     match(input, Token.DOWN, null); 
-                    UNEQUAL20=(CommonTree)match(input,UNEQUAL,FOLLOW_UNEQUAL_in_freqQuery567); 
+                    UNEQUAL20=(CommonTree)match(input,UNEQUAL,FOLLOW_UNEQUAL_in_freqQuery572); 
 
-                    INT21=(CommonTree)match(input,INT,FOLLOW_INT_in_freqQuery569); 
+                    INT21=(CommonTree)match(input,INT,FOLLOW_INT_in_freqQuery574); 
 
                     match(input, Token.UP, null); 
 
@@ -1137,16 +1158,16 @@ public class CatmaQueryWalker extends TreeParser {
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:130:2: ( ^( ND_SIMIL phrase INT ) )
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:130:4: ^( ND_SIMIL phrase INT )
             {
-            match(input,ND_SIMIL,FOLLOW_ND_SIMIL_in_similQuery597); 
+            match(input,ND_SIMIL,FOLLOW_ND_SIMIL_in_similQuery602); 
 
             match(input, Token.DOWN, null); 
-            pushFollow(FOLLOW_phrase_in_similQuery599);
+            pushFollow(FOLLOW_phrase_in_similQuery604);
             phrase22=phrase();
 
             state._fsp--;
 
 
-            INT23=(CommonTree)match(input,INT,FOLLOW_INT_in_similQuery601); 
+            INT23=(CommonTree)match(input,INT,FOLLOW_INT_in_similQuery606); 
 
             match(input, Token.UP, null); 
 
@@ -1179,7 +1200,7 @@ public class CatmaQueryWalker extends TreeParser {
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:140:2: ( refinementExpression )
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:140:4: refinementExpression
             {
-            pushFollow(FOLLOW_refinementExpression_in_refinement630);
+            pushFollow(FOLLOW_refinementExpression_in_refinement635);
             refinementExpression24=refinementExpression();
 
             state._fsp--;
@@ -1218,36 +1239,36 @@ public class CatmaQueryWalker extends TreeParser {
 
         try {
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:146:2: ( orRefinement | andRefinement | ^( ND_REFINE refinementTerm ) )
-            int alt10=3;
+            int alt11=3;
             switch ( input.LA(1) ) {
             case ND_ORREFINE:
                 {
-                alt10=1;
+                alt11=1;
                 }
                 break;
             case ND_ANDREFINE:
                 {
-                alt10=2;
+                alt11=2;
                 }
                 break;
             case ND_REFINE:
                 {
-                alt10=3;
+                alt11=3;
                 }
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("", 10, 0, input);
+                    new NoViableAltException("", 11, 0, input);
 
                 throw nvae;
 
             }
 
-            switch (alt10) {
+            switch (alt11) {
                 case 1 :
                     // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:146:4: orRefinement
                     {
-                    pushFollow(FOLLOW_orRefinement_in_refinementExpression656);
+                    pushFollow(FOLLOW_orRefinement_in_refinementExpression661);
                     orRefinement25=orRefinement();
 
                     state._fsp--;
@@ -1260,7 +1281,7 @@ public class CatmaQueryWalker extends TreeParser {
                 case 2 :
                     // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:147:5: andRefinement
                     {
-                    pushFollow(FOLLOW_andRefinement_in_refinementExpression664);
+                    pushFollow(FOLLOW_andRefinement_in_refinementExpression669);
                     andRefinement26=andRefinement();
 
                     state._fsp--;
@@ -1273,10 +1294,10 @@ public class CatmaQueryWalker extends TreeParser {
                 case 3 :
                     // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:148:5: ^( ND_REFINE refinementTerm )
                     {
-                    match(input,ND_REFINE,FOLLOW_ND_REFINE_in_refinementExpression673); 
+                    match(input,ND_REFINE,FOLLOW_ND_REFINE_in_refinementExpression678); 
 
                     match(input, Token.DOWN, null); 
-                    pushFollow(FOLLOW_refinementTerm_in_refinementExpression675);
+                    pushFollow(FOLLOW_refinementTerm_in_refinementExpression680);
                     refinementTerm27=refinementTerm();
 
                     state._fsp--;
@@ -1320,16 +1341,16 @@ public class CatmaQueryWalker extends TreeParser {
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:153:2: ( ^( ND_ORREFINE rTerm1= refinementTerm rTerm2= refinementTerm ) )
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:153:4: ^( ND_ORREFINE rTerm1= refinementTerm rTerm2= refinementTerm )
             {
-            match(input,ND_ORREFINE,FOLLOW_ND_ORREFINE_in_orRefinement700); 
+            match(input,ND_ORREFINE,FOLLOW_ND_ORREFINE_in_orRefinement705); 
 
             match(input, Token.DOWN, null); 
-            pushFollow(FOLLOW_refinementTerm_in_orRefinement704);
+            pushFollow(FOLLOW_refinementTerm_in_orRefinement709);
             rTerm1=refinementTerm();
 
             state._fsp--;
 
 
-            pushFollow(FOLLOW_refinementTerm_in_orRefinement708);
+            pushFollow(FOLLOW_refinementTerm_in_orRefinement713);
             rTerm2=refinementTerm();
 
             state._fsp--;
@@ -1371,16 +1392,16 @@ public class CatmaQueryWalker extends TreeParser {
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:159:2: ( ^( ND_ANDREFINE rTerm1= refinementTerm rTerm2= refinementTerm ) )
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:159:4: ^( ND_ANDREFINE rTerm1= refinementTerm rTerm2= refinementTerm )
             {
-            match(input,ND_ANDREFINE,FOLLOW_ND_ANDREFINE_in_andRefinement738); 
+            match(input,ND_ANDREFINE,FOLLOW_ND_ANDREFINE_in_andRefinement743); 
 
             match(input, Token.DOWN, null); 
-            pushFollow(FOLLOW_refinementTerm_in_andRefinement742);
+            pushFollow(FOLLOW_refinementTerm_in_andRefinement747);
             rTerm1=refinementTerm();
 
             state._fsp--;
 
 
-            pushFollow(FOLLOW_refinementTerm_in_andRefinement746);
+            pushFollow(FOLLOW_refinementTerm_in_andRefinement751);
             rTerm2=refinementTerm();
 
             state._fsp--;
@@ -1420,27 +1441,27 @@ public class CatmaQueryWalker extends TreeParser {
 
         try {
             // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:165:2: ( selector | refinementExpression )
-            int alt11=2;
-            int LA11_0 = input.LA(1);
+            int alt12=2;
+            int LA12_0 = input.LA(1);
 
-            if ( (LA11_0==ND_FREQ||LA11_0==ND_PROPERTY||(LA11_0 >= ND_REG && LA11_0 <= ND_TAG)) ) {
-                alt11=1;
+            if ( (LA12_0==ND_FREQ||LA12_0==ND_PROPERTY||(LA12_0 >= ND_REG && LA12_0 <= ND_TAG)) ) {
+                alt12=1;
             }
-            else if ( (LA11_0==ND_ANDREFINE||LA11_0==ND_ORREFINE||LA11_0==ND_REFINE) ) {
-                alt11=2;
+            else if ( (LA12_0==ND_ANDREFINE||LA12_0==ND_ORREFINE||LA12_0==ND_REFINE) ) {
+                alt12=2;
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("", 11, 0, input);
+                    new NoViableAltException("", 12, 0, input);
 
                 throw nvae;
 
             }
-            switch (alt11) {
+            switch (alt12) {
                 case 1 :
                     // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:165:5: selector
                     {
-                    pushFollow(FOLLOW_selector_in_refinementTerm776);
+                    pushFollow(FOLLOW_selector_in_refinementTerm781);
                     selector28=selector();
 
                     state._fsp--;
@@ -1453,7 +1474,7 @@ public class CatmaQueryWalker extends TreeParser {
                 case 2 :
                     // C:\\data\\eclipse_workspace\\clea\\grammars\\tree\\CatmaQueryWalker.g:166:5: refinementExpression
                     {
-                    pushFollow(FOLLOW_refinementExpression_in_refinementTerm784);
+                    pushFollow(FOLLOW_refinementExpression_in_refinementTerm789);
                     refinementExpression29=refinementExpression();
 
                     state._fsp--;
@@ -1515,35 +1536,36 @@ public class CatmaQueryWalker extends TreeParser {
     public static final BitSet FOLLOW_freqQuery_in_selector413 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_similQuery_in_selector420 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_ND_TAG_in_tagQuery447 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_phrase_in_tagQuery449 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_ND_PROPERTY_in_propertyQuery474 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_phrase_in_propertyQuery478 = new BitSet(new long[]{0x0000000000010008L});
-    public static final BitSet FOLLOW_phrase_in_propertyQuery483 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_ND_REG_in_regQuery510 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_phrase_in_regQuery512 = new BitSet(new long[]{0x0000008000000008L});
-    public static final BitSet FOLLOW_39_in_regQuery516 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_ND_FREQ_in_freqQuery544 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_EQUAL_in_freqQuery546 = new BitSet(new long[]{0x0000000000000080L});
-    public static final BitSet FOLLOW_INT_in_freqQuery550 = new BitSet(new long[]{0x0000000000000088L});
-    public static final BitSet FOLLOW_INT_in_freqQuery554 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_ND_FREQ_in_freqQuery565 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_UNEQUAL_in_freqQuery567 = new BitSet(new long[]{0x0000000000000080L});
-    public static final BitSet FOLLOW_INT_in_freqQuery569 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_ND_SIMIL_in_similQuery597 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_phrase_in_similQuery599 = new BitSet(new long[]{0x0000000000000080L});
-    public static final BitSet FOLLOW_INT_in_similQuery601 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_refinementExpression_in_refinement630 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_orRefinement_in_refinementExpression656 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_andRefinement_in_refinementExpression664 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_ND_REFINE_in_refinementExpression673 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_refinementTerm_in_refinementExpression675 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_ND_ORREFINE_in_orRefinement700 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_refinementTerm_in_orRefinement704 = new BitSet(new long[]{0x00000000007AC800L});
-    public static final BitSet FOLLOW_refinementTerm_in_orRefinement708 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_ND_ANDREFINE_in_andRefinement738 = new BitSet(new long[]{0x0000000000000004L});
-    public static final BitSet FOLLOW_refinementTerm_in_andRefinement742 = new BitSet(new long[]{0x00000000007AC800L});
-    public static final BitSet FOLLOW_refinementTerm_in_andRefinement746 = new BitSet(new long[]{0x0000000000000008L});
-    public static final BitSet FOLLOW_selector_in_refinementTerm776 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_refinementExpression_in_refinementTerm784 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_phrase_in_tagQuery449 = new BitSet(new long[]{0x0000000010000008L});
+    public static final BitSet FOLLOW_TAG_MATCH_MODE_in_tagQuery453 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_ND_PROPERTY_in_propertyQuery479 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_phrase_in_propertyQuery483 = new BitSet(new long[]{0x0000000000010008L});
+    public static final BitSet FOLLOW_phrase_in_propertyQuery488 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_ND_REG_in_regQuery515 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_phrase_in_regQuery517 = new BitSet(new long[]{0x0000010000000008L});
+    public static final BitSet FOLLOW_40_in_regQuery521 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_ND_FREQ_in_freqQuery549 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_EQUAL_in_freqQuery551 = new BitSet(new long[]{0x0000000000000080L});
+    public static final BitSet FOLLOW_INT_in_freqQuery555 = new BitSet(new long[]{0x0000000000000088L});
+    public static final BitSet FOLLOW_INT_in_freqQuery559 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_ND_FREQ_in_freqQuery570 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_UNEQUAL_in_freqQuery572 = new BitSet(new long[]{0x0000000000000080L});
+    public static final BitSet FOLLOW_INT_in_freqQuery574 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_ND_SIMIL_in_similQuery602 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_phrase_in_similQuery604 = new BitSet(new long[]{0x0000000000000080L});
+    public static final BitSet FOLLOW_INT_in_similQuery606 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_refinementExpression_in_refinement635 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_orRefinement_in_refinementExpression661 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_andRefinement_in_refinementExpression669 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_ND_REFINE_in_refinementExpression678 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_refinementTerm_in_refinementExpression680 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_ND_ORREFINE_in_orRefinement705 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_refinementTerm_in_orRefinement709 = new BitSet(new long[]{0x00000000007AC800L});
+    public static final BitSet FOLLOW_refinementTerm_in_orRefinement713 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_ND_ANDREFINE_in_andRefinement743 = new BitSet(new long[]{0x0000000000000004L});
+    public static final BitSet FOLLOW_refinementTerm_in_andRefinement747 = new BitSet(new long[]{0x00000000007AC800L});
+    public static final BitSet FOLLOW_refinementTerm_in_andRefinement751 = new BitSet(new long[]{0x0000000000000008L});
+    public static final BitSet FOLLOW_selector_in_refinementTerm781 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_refinementExpression_in_refinementTerm789 = new BitSet(new long[]{0x0000000000000002L});
 
 }

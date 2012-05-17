@@ -1,4 +1,4 @@
-// $ANTLR 3.4 C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g 2012-03-06 19:45:27
+// $ANTLR 3.4 C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g 2012-05-17 17:47:54
 
 package de.catma.queryengine.parser;
 
@@ -11,7 +11,6 @@ import java.util.ArrayList;
 @SuppressWarnings({"all", "warnings", "unchecked"})
 public class CatmaQueryLexer extends Lexer {
     public static final int EOF=-1;
-    public static final int T__32=32;
     public static final int T__33=33;
     public static final int T__34=34;
     public static final int T__35=35;
@@ -21,6 +20,7 @@ public class CatmaQueryLexer extends Lexer {
     public static final int T__39=39;
     public static final int T__40=40;
     public static final int T__41=41;
+    public static final int T__42=42;
     public static final int EQUAL=4;
     public static final int FREQ=5;
     public static final int GROUPIDENT=6;
@@ -45,10 +45,11 @@ public class CatmaQueryLexer extends Lexer {
     public static final int REG=25;
     public static final int SIMIL=26;
     public static final int TAG=27;
-    public static final int TXT=28;
-    public static final int UNEQUAL=29;
-    public static final int VALUE=30;
-    public static final int WHITESPACE=31;
+    public static final int TAG_MATCH_MODE=28;
+    public static final int TXT=29;
+    public static final int UNEQUAL=30;
+    public static final int VALUE=31;
+    public static final int WHITESPACE=32;
 
 
     /**
@@ -75,36 +76,15 @@ public class CatmaQueryLexer extends Lexer {
     }
     public String getGrammarFileName() { return "C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g"; }
 
-    // $ANTLR start "T__32"
-    public final void mT__32() throws RecognitionException {
-        try {
-            int _type = T__32;
-            int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:16:7: ( '%' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:16:9: '%'
-            {
-            match('%'); 
-
-            }
-
-            state.type = _type;
-            state.channel = _channel;
-        }
-        finally {
-        	// do for sure before leaving
-        }
-    }
-    // $ANTLR end "T__32"
-
     // $ANTLR start "T__33"
     public final void mT__33() throws RecognitionException {
         try {
             int _type = T__33;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:17:7: ( '&' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:17:9: '&'
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:16:7: ( '%' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:16:9: '%'
             {
-            match('&'); 
+            match('%'); 
 
             }
 
@@ -122,10 +102,10 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = T__34;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:18:7: ( '(' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:18:9: '('
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:17:7: ( '&' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:17:9: '&'
             {
-            match('('); 
+            match('&'); 
 
             }
 
@@ -143,10 +123,10 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = T__35;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:19:7: ( ')' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:19:9: ')'
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:18:7: ( '(' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:18:9: '('
             {
-            match(')'); 
+            match('('); 
 
             }
 
@@ -164,10 +144,10 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = T__36;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:20:7: ( ',' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:20:9: ','
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:19:7: ( ')' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:19:9: ')'
             {
-            match(','); 
+            match(')'); 
 
             }
 
@@ -185,10 +165,10 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = T__37;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:21:7: ( '-' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:21:9: '-'
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:20:7: ( ',' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:20:9: ','
             {
-            match('-'); 
+            match(','); 
 
             }
 
@@ -206,10 +186,10 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = T__38;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:22:7: ( ';' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:22:9: ';'
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:21:7: ( '-' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:21:9: '-'
             {
-            match(';'); 
+            match('-'); 
 
             }
 
@@ -227,12 +207,10 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = T__39;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:23:7: ( 'CI' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:23:9: 'CI'
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:22:7: ( ';' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:22:9: ';'
             {
-            match("CI"); 
-
-
+            match(';'); 
 
             }
 
@@ -250,10 +228,10 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = T__40;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:24:7: ( 'where' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:24:9: 'where'
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:23:7: ( 'CI' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:23:9: 'CI'
             {
-            match("where"); 
+            match("CI"); 
 
 
 
@@ -273,6 +251,29 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = T__41;
             int _channel = DEFAULT_TOKEN_CHANNEL;
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:24:7: ( 'where' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:24:9: 'where'
+            {
+            match("where"); 
+
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "T__41"
+
+    // $ANTLR start "T__42"
+    public final void mT__42() throws RecognitionException {
+        try {
+            int _type = T__42;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
             // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:25:7: ( '|' )
             // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:25:9: '|'
             {
@@ -287,15 +288,15 @@ public class CatmaQueryLexer extends Lexer {
         	// do for sure before leaving
         }
     }
-    // $ANTLR end "T__41"
+    // $ANTLR end "T__42"
 
     // $ANTLR start "TAG"
     public final void mTAG() throws RecognitionException {
         try {
             int _type = TAG;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:252:6: ( 'tag' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:252:8: 'tag'
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:253:6: ( 'tag' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:253:8: 'tag'
             {
             match("tag"); 
 
@@ -312,13 +313,83 @@ public class CatmaQueryLexer extends Lexer {
     }
     // $ANTLR end "TAG"
 
+    // $ANTLR start "TAG_MATCH_MODE"
+    public final void mTAG_MATCH_MODE() throws RecognitionException {
+        try {
+            int _type = TAG_MATCH_MODE;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:253:2: ( 'boundary' | 'overlap' | 'exact' )
+            int alt1=3;
+            switch ( input.LA(1) ) {
+            case 'b':
+                {
+                alt1=1;
+                }
+                break;
+            case 'o':
+                {
+                alt1=2;
+                }
+                break;
+            case 'e':
+                {
+                alt1=3;
+                }
+                break;
+            default:
+                NoViableAltException nvae =
+                    new NoViableAltException("", 1, 0, input);
+
+                throw nvae;
+
+            }
+
+            switch (alt1) {
+                case 1 :
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:253:4: 'boundary'
+                    {
+                    match("boundary"); 
+
+
+
+                    }
+                    break;
+                case 2 :
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:253:17: 'overlap'
+                    {
+                    match("overlap"); 
+
+
+
+                    }
+                    break;
+                case 3 :
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:253:29: 'exact'
+                    {
+                    match("exact"); 
+
+
+
+                    }
+                    break;
+
+            }
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
+    // $ANTLR end "TAG_MATCH_MODE"
+
     // $ANTLR start "PROPERTY"
     public final void mPROPERTY() throws RecognitionException {
         try {
             int _type = PROPERTY;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:252:2: ( 'property' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:252:4: 'property'
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:257:2: ( 'property' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:257:4: 'property'
             {
             match("property"); 
 
@@ -340,8 +411,8 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = VALUE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:255:7: ( 'value' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:255:9: 'value'
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:260:7: ( 'value' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:260:9: 'value'
             {
             match("value"); 
 
@@ -363,8 +434,8 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = REG;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:258:5: ( 'reg' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:258:7: 'reg'
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:263:5: ( 'reg' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:263:7: 'reg'
             {
             match("reg"); 
 
@@ -386,8 +457,8 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = FREQ;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:261:6: ( 'freq' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:261:8: 'freq'
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:266:6: ( 'freq' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:266:8: 'freq'
             {
             match("freq"); 
 
@@ -409,8 +480,8 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = SIMIL;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:264:7: ( 'simil' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:264:9: 'simil'
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:269:7: ( 'simil' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:269:9: 'simil'
             {
             match("simil"); 
 
@@ -432,8 +503,8 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = WHITESPACE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:268:2: ( ( ' ' | '\\t' | '\\r' | '\\n' | '\\u000C' ) )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:268:4: ( ' ' | '\\t' | '\\r' | '\\n' | '\\u000C' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:273:2: ( ( ' ' | '\\t' | '\\r' | '\\n' | '\\u000C' ) )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:273:4: ( ' ' | '\\t' | '\\r' | '\\n' | '\\u000C' )
             {
             if ( (input.LA(1) >= '\t' && input.LA(1) <= '\n')||(input.LA(1) >= '\f' && input.LA(1) <= '\r')||input.LA(1)==' ' ) {
                 input.consume();
@@ -463,8 +534,8 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = EQUAL;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:271:8: ( '=' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:271:10: '='
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:276:8: ( '=' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:276:10: '='
             {
             match('='); 
 
@@ -484,57 +555,57 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = UNEQUAL;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:274:9: ( ( '<' | '>' | '<=' | '>=' ) )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:274:11: ( '<' | '>' | '<=' | '>=' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:279:9: ( ( '<' | '>' | '<=' | '>=' ) )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:279:11: ( '<' | '>' | '<=' | '>=' )
             {
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:274:11: ( '<' | '>' | '<=' | '>=' )
-            int alt1=4;
-            int LA1_0 = input.LA(1);
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:279:11: ( '<' | '>' | '<=' | '>=' )
+            int alt2=4;
+            int LA2_0 = input.LA(1);
 
-            if ( (LA1_0=='<') ) {
-                int LA1_1 = input.LA(2);
+            if ( (LA2_0=='<') ) {
+                int LA2_1 = input.LA(2);
 
-                if ( (LA1_1=='=') ) {
-                    alt1=3;
+                if ( (LA2_1=='=') ) {
+                    alt2=3;
                 }
                 else {
-                    alt1=1;
+                    alt2=1;
                 }
             }
-            else if ( (LA1_0=='>') ) {
-                int LA1_2 = input.LA(2);
+            else if ( (LA2_0=='>') ) {
+                int LA2_2 = input.LA(2);
 
-                if ( (LA1_2=='=') ) {
-                    alt1=4;
+                if ( (LA2_2=='=') ) {
+                    alt2=4;
                 }
                 else {
-                    alt1=2;
+                    alt2=2;
                 }
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("", 1, 0, input);
+                    new NoViableAltException("", 2, 0, input);
 
                 throw nvae;
 
             }
-            switch (alt1) {
+            switch (alt2) {
                 case 1 :
-                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:274:13: '<'
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:279:13: '<'
                     {
                     match('<'); 
 
                     }
                     break;
                 case 2 :
-                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:274:19: '>'
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:279:19: '>'
                     {
                     match('>'); 
 
                     }
                     break;
                 case 3 :
-                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:274:25: '<='
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:279:25: '<='
                     {
                     match("<="); 
 
@@ -543,7 +614,7 @@ public class CatmaQueryLexer extends Lexer {
                     }
                     break;
                 case 4 :
-                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:274:32: '>='
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:279:32: '>='
                     {
                     match(">="); 
 
@@ -571,48 +642,48 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = TXT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:277:5: ( '\"' (~ ( '\"' ) | '\\\\\"' )+ '\"' )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:277:7: '\"' (~ ( '\"' ) | '\\\\\"' )+ '\"'
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:282:5: ( '\"' (~ ( '\"' ) | '\\\\\"' )+ '\"' )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:282:7: '\"' (~ ( '\"' ) | '\\\\\"' )+ '\"'
             {
             match('\"'); 
 
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:277:11: (~ ( '\"' ) | '\\\\\"' )+
-            int cnt2=0;
-            loop2:
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:282:11: (~ ( '\"' ) | '\\\\\"' )+
+            int cnt3=0;
+            loop3:
             do {
-                int alt2=3;
-                int LA2_0 = input.LA(1);
+                int alt3=3;
+                int LA3_0 = input.LA(1);
 
-                if ( (LA2_0=='\\') ) {
-                    int LA2_2 = input.LA(2);
+                if ( (LA3_0=='\\') ) {
+                    int LA3_2 = input.LA(2);
 
-                    if ( (LA2_2=='\"') ) {
-                        int LA2_4 = input.LA(3);
+                    if ( (LA3_2=='\"') ) {
+                        int LA3_4 = input.LA(3);
 
-                        if ( ((LA2_4 >= '\u0000' && LA2_4 <= '\uFFFF')) ) {
-                            alt2=2;
+                        if ( ((LA3_4 >= '\u0000' && LA3_4 <= '\uFFFF')) ) {
+                            alt3=2;
                         }
 
                         else {
-                            alt2=1;
+                            alt3=1;
                         }
 
 
                     }
-                    else if ( ((LA2_2 >= '\u0000' && LA2_2 <= '!')||(LA2_2 >= '#' && LA2_2 <= '\uFFFF')) ) {
-                        alt2=1;
+                    else if ( ((LA3_2 >= '\u0000' && LA3_2 <= '!')||(LA3_2 >= '#' && LA3_2 <= '\uFFFF')) ) {
+                        alt3=1;
                     }
 
 
                 }
-                else if ( ((LA2_0 >= '\u0000' && LA2_0 <= '!')||(LA2_0 >= '#' && LA2_0 <= '[')||(LA2_0 >= ']' && LA2_0 <= '\uFFFF')) ) {
-                    alt2=1;
+                else if ( ((LA3_0 >= '\u0000' && LA3_0 <= '!')||(LA3_0 >= '#' && LA3_0 <= '[')||(LA3_0 >= ']' && LA3_0 <= '\uFFFF')) ) {
+                    alt3=1;
                 }
 
 
-                switch (alt2) {
+                switch (alt3) {
             	case 1 :
-            	    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:277:12: ~ ( '\"' )
+            	    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:282:12: ~ ( '\"' )
             	    {
             	    if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '!')||(input.LA(1) >= '#' && input.LA(1) <= '\uFFFF') ) {
             	        input.consume();
@@ -627,7 +698,7 @@ public class CatmaQueryLexer extends Lexer {
             	    }
             	    break;
             	case 2 :
-            	    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:277:19: '\\\\\"'
+            	    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:282:19: '\\\\\"'
             	    {
             	    match("\\\""); 
 
@@ -637,12 +708,12 @@ public class CatmaQueryLexer extends Lexer {
             	    break;
 
             	default :
-            	    if ( cnt2 >= 1 ) break loop2;
+            	    if ( cnt3 >= 1 ) break loop3;
                         EarlyExitException eee =
-                            new EarlyExitException(2, input);
+                            new EarlyExitException(3, input);
                         throw eee;
                 }
-                cnt2++;
+                cnt3++;
             } while (true);
 
 
@@ -662,7 +733,7 @@ public class CatmaQueryLexer extends Lexer {
     // $ANTLR start "LETTER"
     public final void mLETTER() throws RecognitionException {
         try {
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:281:2: ( ( 'a' .. 'z' | 'A' .. 'Z' ) )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:286:2: ( ( 'a' .. 'z' | 'A' .. 'Z' ) )
             // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:
             {
             if ( (input.LA(1) >= 'A' && input.LA(1) <= 'Z')||(input.LA(1) >= 'a' && input.LA(1) <= 'z') ) {
@@ -688,7 +759,7 @@ public class CatmaQueryLexer extends Lexer {
     // $ANTLR start "LETTEREXTENDED"
     public final void mLETTEREXTENDED() throws RecognitionException {
         try {
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:285:2: ( ( '\\u00C0' .. '\\u00D6' | '\\u00D8' .. '\\u00F6' | '\\u00F8' .. '\\u00FF' ) )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:290:2: ( ( '\\u00C0' .. '\\u00D6' | '\\u00D8' .. '\\u00F6' | '\\u00F8' .. '\\u00FF' ) )
             // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:
             {
             if ( (input.LA(1) >= '\u00C0' && input.LA(1) <= '\u00D6')||(input.LA(1) >= '\u00D8' && input.LA(1) <= '\u00F6')||(input.LA(1) >= '\u00F8' && input.LA(1) <= '\u00FF') ) {
@@ -716,8 +787,8 @@ public class CatmaQueryLexer extends Lexer {
         try {
             int _type = GROUPIDENT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:289:2: ( '@' ( LETTER | '_' | LETTEREXTENDED ) ( LETTER | '_' | LETTEREXTENDED | INT )+ )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:289:4: '@' ( LETTER | '_' | LETTEREXTENDED ) ( LETTER | '_' | LETTEREXTENDED | INT )+
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:294:2: ( '@' ( LETTER | '_' | LETTEREXTENDED ) ( LETTER | '_' | LETTEREXTENDED | INT )+ )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:294:4: '@' ( LETTER | '_' | LETTEREXTENDED ) ( LETTER | '_' | LETTEREXTENDED | INT )+
             {
             match('@'); 
 
@@ -731,11 +802,11 @@ public class CatmaQueryLexer extends Lexer {
             }
 
 
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:289:36: ( LETTER | '_' | LETTEREXTENDED | INT )+
-            int cnt3=0;
-            loop3:
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:294:36: ( LETTER | '_' | LETTEREXTENDED | INT )+
+            int cnt4=0;
+            loop4:
             do {
-                int alt3=5;
+                int alt4=5;
                 switch ( input.LA(1) ) {
                 case 'A':
                 case 'B':
@@ -790,12 +861,12 @@ public class CatmaQueryLexer extends Lexer {
                 case 'y':
                 case 'z':
                     {
-                    alt3=1;
+                    alt4=1;
                     }
                     break;
                 case '_':
                     {
-                    alt3=2;
+                    alt4=2;
                     }
                     break;
                 case '\u00C0':
@@ -861,7 +932,7 @@ public class CatmaQueryLexer extends Lexer {
                 case '\u00FE':
                 case '\u00FF':
                     {
-                    alt3=3;
+                    alt4=3;
                     }
                     break;
                 case '0':
@@ -875,15 +946,15 @@ public class CatmaQueryLexer extends Lexer {
                 case '8':
                 case '9':
                     {
-                    alt3=4;
+                    alt4=4;
                     }
                     break;
 
                 }
 
-                switch (alt3) {
+                switch (alt4) {
             	case 1 :
-            	    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:289:37: LETTER
+            	    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:294:37: LETTER
             	    {
             	    mLETTER(); 
 
@@ -891,14 +962,14 @@ public class CatmaQueryLexer extends Lexer {
             	    }
             	    break;
             	case 2 :
-            	    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:289:44: '_'
+            	    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:294:44: '_'
             	    {
             	    match('_'); 
 
             	    }
             	    break;
             	case 3 :
-            	    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:289:48: LETTEREXTENDED
+            	    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:294:48: LETTEREXTENDED
             	    {
             	    mLETTEREXTENDED(); 
 
@@ -906,67 +977,9 @@ public class CatmaQueryLexer extends Lexer {
             	    }
             	    break;
             	case 4 :
-            	    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:289:63: INT
+            	    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:294:63: INT
             	    {
             	    mINT(); 
-
-
-            	    }
-            	    break;
-
-            	default :
-            	    if ( cnt3 >= 1 ) break loop3;
-                        EarlyExitException eee =
-                            new EarlyExitException(3, input);
-                        throw eee;
-                }
-                cnt3++;
-            } while (true);
-
-
-            }
-
-            state.type = _type;
-            state.channel = _channel;
-        }
-        finally {
-        	// do for sure before leaving
-        }
-    }
-    // $ANTLR end "GROUPIDENT"
-
-    // $ANTLR start "INT"
-    public final void mINT() throws RecognitionException {
-        try {
-            int _type = INT;
-            int _channel = DEFAULT_TOKEN_CHANNEL;
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:292:5: ( ( '0' .. '9' )+ )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:292:7: ( '0' .. '9' )+
-            {
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:292:7: ( '0' .. '9' )+
-            int cnt4=0;
-            loop4:
-            do {
-                int alt4=2;
-                int LA4_0 = input.LA(1);
-
-                if ( ((LA4_0 >= '0' && LA4_0 <= '9')) ) {
-                    alt4=1;
-                }
-
-
-                switch (alt4) {
-            	case 1 :
-            	    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:
-            	    {
-            	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
-            	        input.consume();
-            	    }
-            	    else {
-            	        MismatchedSetException mse = new MismatchedSetException(null,input);
-            	        recover(mse);
-            	        throw mse;
-            	    }
 
 
             	    }
@@ -991,90 +1004,155 @@ public class CatmaQueryLexer extends Lexer {
         	// do for sure before leaving
         }
     }
+    // $ANTLR end "GROUPIDENT"
+
+    // $ANTLR start "INT"
+    public final void mINT() throws RecognitionException {
+        try {
+            int _type = INT;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:297:5: ( ( '0' .. '9' )+ )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:297:7: ( '0' .. '9' )+
+            {
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:297:7: ( '0' .. '9' )+
+            int cnt5=0;
+            loop5:
+            do {
+                int alt5=2;
+                int LA5_0 = input.LA(1);
+
+                if ( ((LA5_0 >= '0' && LA5_0 <= '9')) ) {
+                    alt5=1;
+                }
+
+
+                switch (alt5) {
+            	case 1 :
+            	    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:
+            	    {
+            	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
+            	        input.consume();
+            	    }
+            	    else {
+            	        MismatchedSetException mse = new MismatchedSetException(null,input);
+            	        recover(mse);
+            	        throw mse;
+            	    }
+
+
+            	    }
+            	    break;
+
+            	default :
+            	    if ( cnt5 >= 1 ) break loop5;
+                        EarlyExitException eee =
+                            new EarlyExitException(5, input);
+                        throw eee;
+                }
+                cnt5++;
+            } while (true);
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        	// do for sure before leaving
+        }
+    }
     // $ANTLR end "INT"
 
     public void mTokens() throws RecognitionException {
-        // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:8: ( T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | T__38 | T__39 | T__40 | T__41 | TAG | PROPERTY | VALUE | REG | FREQ | SIMIL | WHITESPACE | EQUAL | UNEQUAL | TXT | GROUPIDENT | INT )
-        int alt5=22;
+        // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:8: ( T__33 | T__34 | T__35 | T__36 | T__37 | T__38 | T__39 | T__40 | T__41 | T__42 | TAG | TAG_MATCH_MODE | PROPERTY | VALUE | REG | FREQ | SIMIL | WHITESPACE | EQUAL | UNEQUAL | TXT | GROUPIDENT | INT )
+        int alt6=23;
         switch ( input.LA(1) ) {
         case '%':
             {
-            alt5=1;
+            alt6=1;
             }
             break;
         case '&':
             {
-            alt5=2;
+            alt6=2;
             }
             break;
         case '(':
             {
-            alt5=3;
+            alt6=3;
             }
             break;
         case ')':
             {
-            alt5=4;
+            alt6=4;
             }
             break;
         case ',':
             {
-            alt5=5;
+            alt6=5;
             }
             break;
         case '-':
             {
-            alt5=6;
+            alt6=6;
             }
             break;
         case ';':
             {
-            alt5=7;
+            alt6=7;
             }
             break;
         case 'C':
             {
-            alt5=8;
+            alt6=8;
             }
             break;
         case 'w':
             {
-            alt5=9;
+            alt6=9;
             }
             break;
         case '|':
             {
-            alt5=10;
+            alt6=10;
             }
             break;
         case 't':
             {
-            alt5=11;
+            alt6=11;
+            }
+            break;
+        case 'b':
+        case 'e':
+        case 'o':
+            {
+            alt6=12;
             }
             break;
         case 'p':
             {
-            alt5=12;
+            alt6=13;
             }
             break;
         case 'v':
             {
-            alt5=13;
+            alt6=14;
             }
             break;
         case 'r':
             {
-            alt5=14;
+            alt6=15;
             }
             break;
         case 'f':
             {
-            alt5=15;
+            alt6=16;
             }
             break;
         case 's':
             {
-            alt5=16;
+            alt6=17;
             }
             break;
         case '\t':
@@ -1083,28 +1161,28 @@ public class CatmaQueryLexer extends Lexer {
         case '\r':
         case ' ':
             {
-            alt5=17;
+            alt6=18;
             }
             break;
         case '=':
             {
-            alt5=18;
+            alt6=19;
             }
             break;
         case '<':
         case '>':
             {
-            alt5=19;
+            alt6=20;
             }
             break;
         case '\"':
             {
-            alt5=20;
+            alt6=21;
             }
             break;
         case '@':
             {
-            alt5=21;
+            alt6=22;
             }
             break;
         case '0':
@@ -1118,94 +1196,94 @@ public class CatmaQueryLexer extends Lexer {
         case '8':
         case '9':
             {
-            alt5=22;
+            alt6=23;
             }
             break;
         default:
             NoViableAltException nvae =
-                new NoViableAltException("", 5, 0, input);
+                new NoViableAltException("", 6, 0, input);
 
             throw nvae;
 
         }
 
-        switch (alt5) {
+        switch (alt6) {
             case 1 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:10: T__32
-                {
-                mT__32(); 
-
-
-                }
-                break;
-            case 2 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:16: T__33
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:10: T__33
                 {
                 mT__33(); 
 
 
                 }
                 break;
-            case 3 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:22: T__34
+            case 2 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:16: T__34
                 {
                 mT__34(); 
 
 
                 }
                 break;
-            case 4 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:28: T__35
+            case 3 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:22: T__35
                 {
                 mT__35(); 
 
 
                 }
                 break;
-            case 5 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:34: T__36
+            case 4 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:28: T__36
                 {
                 mT__36(); 
 
 
                 }
                 break;
-            case 6 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:40: T__37
+            case 5 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:34: T__37
                 {
                 mT__37(); 
 
 
                 }
                 break;
-            case 7 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:46: T__38
+            case 6 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:40: T__38
                 {
                 mT__38(); 
 
 
                 }
                 break;
-            case 8 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:52: T__39
+            case 7 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:46: T__39
                 {
                 mT__39(); 
 
 
                 }
                 break;
-            case 9 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:58: T__40
+            case 8 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:52: T__40
                 {
                 mT__40(); 
 
 
                 }
                 break;
-            case 10 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:64: T__41
+            case 9 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:58: T__41
                 {
                 mT__41(); 
+
+
+                }
+                break;
+            case 10 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:64: T__42
+                {
+                mT__42(); 
 
 
                 }
@@ -1219,87 +1297,95 @@ public class CatmaQueryLexer extends Lexer {
                 }
                 break;
             case 12 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:74: PROPERTY
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:74: TAG_MATCH_MODE
+                {
+                mTAG_MATCH_MODE(); 
+
+
+                }
+                break;
+            case 13 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:89: PROPERTY
                 {
                 mPROPERTY(); 
 
 
                 }
                 break;
-            case 13 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:83: VALUE
+            case 14 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:98: VALUE
                 {
                 mVALUE(); 
 
 
                 }
                 break;
-            case 14 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:89: REG
+            case 15 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:104: REG
                 {
                 mREG(); 
 
 
                 }
                 break;
-            case 15 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:93: FREQ
+            case 16 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:108: FREQ
                 {
                 mFREQ(); 
 
 
                 }
                 break;
-            case 16 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:98: SIMIL
+            case 17 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:113: SIMIL
                 {
                 mSIMIL(); 
 
 
                 }
                 break;
-            case 17 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:104: WHITESPACE
+            case 18 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:119: WHITESPACE
                 {
                 mWHITESPACE(); 
 
 
                 }
                 break;
-            case 18 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:115: EQUAL
+            case 19 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:130: EQUAL
                 {
                 mEQUAL(); 
 
 
                 }
                 break;
-            case 19 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:121: UNEQUAL
+            case 20 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:136: UNEQUAL
                 {
                 mUNEQUAL(); 
 
 
                 }
                 break;
-            case 20 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:129: TXT
+            case 21 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:144: TXT
                 {
                 mTXT(); 
 
 
                 }
                 break;
-            case 21 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:133: GROUPIDENT
+            case 22 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:148: GROUPIDENT
                 {
                 mGROUPIDENT(); 
 
 
                 }
                 break;
-            case 22 :
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:144: INT
+            case 23 :
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:1:159: INT
                 {
                 mINT(); 
 

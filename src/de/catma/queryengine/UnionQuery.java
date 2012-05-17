@@ -20,7 +20,7 @@
 package de.catma.queryengine;
 
 import de.catma.queryengine.result.QueryResult;
-import de.catma.queryengine.result.QueryResultRowSet;
+import de.catma.queryengine.result.QueryResultRowArray;
 
 /**
  * An operator that combines the results of two queries.
@@ -44,18 +44,17 @@ public class UnionQuery extends Query {
 
     @Override
     protected QueryResult execute() throws Exception {
-    	query1.setIndexer(getIndexer());
     	query1.setQueryOptions(getQueryOptions());
-    	query2.setIndexer(getIndexer());
     	query2.setQueryOptions(getQueryOptions());
 
-    	QueryResultRowSet r1 = new QueryResultRowSet(query1.getResult());
+    	QueryResultRowArray unifiedResult = 
+    			query1.getResult().asQueryResultRowArray();
+    	QueryResultRowArray r2 = query2.getResult().asQueryResultRowArray();
     	
-    	QueryResultRowSet r2 = new QueryResultRowSet(query2.getResult());
-    	r2.removeAll(r1);
-    	r1.addAll(r2);
+    	r2.removeAll(unifiedResult);
+    	unifiedResult.addAll(r2);
     	
-    	return r1;
+    	return unifiedResult;
     }
     
 }

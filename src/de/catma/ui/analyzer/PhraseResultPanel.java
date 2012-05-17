@@ -81,7 +81,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		int totalFreq = 0;
 		
 		for (GroupedQueryResult phraseResult : 
-				queryResult.asGroupedQueryResultSet()) {
+				queryResult.asGroupedSet()) {
 			addPhraseResult(phraseResult);
 			totalFreq+=phraseResult.getTotalFrequency();
 			totalCount++;

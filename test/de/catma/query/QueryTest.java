@@ -174,16 +174,16 @@ public class QueryTest {
 		List<Character> userDefinedSeparatingCharacters = Collections.emptyList();
 		List<String> documentIDs = new ArrayList<String>();
 		documentIDs.add("catma:///container/pg13.txt");
+		DBIndexer dbIndexer = new DBIndexer();
 		QueryOptions queryOptions = new QueryOptions(
 				documentIDs,
 				Collections.<String>emptyList(),
 				Collections.<String>emptyList(),
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
-				Locale.ENGLISH, null);
-		DBIndexer dbIndexer = new DBIndexer();
+				Locale.ENGLISH, null, dbIndexer);
 		QueryJob job = new QueryJob(
-				"\"To the day when you took me aboard of your ship\"", dbIndexer, queryOptions);
+				"\"To the day when you took me aboard of your ship\"", queryOptions);
 		job.setProgressListener(new LogProgressListener());
 		try {
 			
@@ -240,10 +240,10 @@ public class QueryTest {
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
 				Locale.ENGLISH,
-				null);
+				null, new DBIndexer());
 		
 		QueryJob job = new QueryJob(
-				"\"and\"", new DBIndexer(), queryOptions);
+				"\"and\"", queryOptions);
 		job.setProgressListener(new LogProgressListener());
 		try {
 			
@@ -294,10 +294,10 @@ public class QueryTest {
 				Collections.<String>emptyList(),
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
-				Locale.ENGLISH, null);
+				Locale.ENGLISH, null, new DBIndexer());
 		
 		QueryJob job = new QueryJob(
-				"\"pig had been dead\"", new DBIndexer(), queryOptions);
+				"\"pig had been dead\"", queryOptions);
 		job.setProgressListener(new LogProgressListener());
 		try {
 			System.out.println(job.call());
@@ -353,13 +353,13 @@ public class QueryTest {
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
 				Locale.ENGLISH,
-				repository);
-		DBIndexer dbIndexer = new DBIndexer();
+				repository, new DBIndexer());
+
 		QueryJob job = new QueryJob(
-//				"tag=\"Emily\" & freq > 230 2", dbIndexer, queryOptions);
-//				"freq < 230 & tag=\"Emily\" 2", dbIndexer, queryOptions);
-//				"\"\\\"\" & tag=\"/Emily\" 2", dbIndexer, queryOptions);
-				"tag=\"/Emily\" & \"house\" 2", dbIndexer, queryOptions);
+//				"tag=\"Emily\" & freq > 230 2", queryOptions);
+//				"freq < 230 & tag=\"Emily\" 2", queryOptions);
+//				"\"\\\"\" & tag=\"/Emily\" 2", queryOptions);
+				"tag=\"/Emily\" & \"house\" 2", queryOptions);
 		
 		job.setProgressListener(new LogProgressListener());
 		try {
@@ -377,7 +377,7 @@ public class QueryTest {
 			e.printStackTrace();
 		}
 		finally {
-			dbIndexer.close();
+			queryOptions.getIndexer().close();
 		}
 
 	}

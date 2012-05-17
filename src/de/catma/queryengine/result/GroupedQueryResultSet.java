@@ -1,7 +1,6 @@
 package de.catma.queryengine.result;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -12,6 +11,7 @@ public class GroupedQueryResultSet implements QueryResult {
 		
 		private Iterator<GroupedQueryResult> groupedQueryResultIterator;
 		private Iterator<QueryResultRow> currentResultRowIterator;
+		private int currentRows = 0;
 		
 		public GroupedQueryResultListIterator(
 				GroupedQueryResultSet groupedQueryResultSet) {
@@ -25,8 +25,15 @@ public class GroupedQueryResultSet implements QueryResult {
 				while (this.groupedQueryResultIterator.hasNext()
 						&& ((this.currentResultRowIterator == null) 
 								|| !currentResultRowIterator.hasNext())) {
+					GroupedQueryResult curGroupedQueryResult = 
+							groupedQueryResultIterator.next();
+					currentRows = curGroupedQueryResult.getTotalFrequency();
+					
 					this.currentResultRowIterator = 
-							groupedQueryResultIterator.next().iterator();
+							curGroupedQueryResult.iterator();
+					if (!currentResultRowIterator.hasNext()) {
+						groupedQueryResultIterator.remove();
+					}
 				}
 				
 				if (currentResultRowIterator != null) {
@@ -37,6 +44,7 @@ public class GroupedQueryResultSet implements QueryResult {
 			}
 			return true;
 		}
+
 		public QueryResultRow next() {
 			if (hasNext()) {
 				return currentResultRowIterator.next();
@@ -44,7 +52,13 @@ public class GroupedQueryResultSet implements QueryResult {
 			return null;
 		}
 		public void remove() {
-			throw new UnsupportedOperationException();
+			if (currentResultRowIterator != null) {
+				currentRows--;
+				currentResultRowIterator.remove();
+				if (currentRows == 0) {
+					groupedQueryResultIterator.remove();
+				}
+			}
 		}
 	}
 	
@@ -58,7 +72,7 @@ public class GroupedQueryResultSet implements QueryResult {
 		return new GroupedQueryResultListIterator(this);
 	}
 	
-	public Set<GroupedQueryResult> asGroupedQueryResultSet() {
+	public Set<GroupedQueryResult> asGroupedSet() {
 		return groupedQueryResults;
 	}
 	
@@ -70,29 +84,11 @@ public class GroupedQueryResultSet implements QueryResult {
 		return groupedQueryResults.addAll(c);
 	}
 
-	public static Set<GroupedQueryResult> asGroupedQueryResultSet(Iterable<QueryResultRow> source) {
-		HashMap<String, PhraseResult> phraseResultMapping = 
-				new HashMap<String, PhraseResult>();
-		
-		for (QueryResultRow row : source) {
-			if (row.getPhrase() == null) {
-				throw new UnsupportedOperationException(
-					"The rows in this QueryResultRowArray are not phrase based, " +
-					"don't know how to group!");
-			}
-			if (!phraseResultMapping.containsKey(row.getPhrase())) {
-				phraseResultMapping.put(
-					row.getPhrase(), new PhraseResult(row.getPhrase()));
-			}
-			
-			phraseResultMapping.get(row.getPhrase()).addQueryResultRow(row);
+	public QueryResultRowArray asQueryResultRowArray() {
+		QueryResultRowArray result = new QueryResultRowArray();
+		for (QueryResultRow row : this) {
+			result.add(row);
 		}
-		
-		Set<GroupedQueryResult> groupedQueryResults = 
-				new HashSet<GroupedQueryResult>();
-		
-		groupedQueryResults.addAll(phraseResultMapping.values());
-		
-		return groupedQueryResults;	
+		return result;
 	}
 }

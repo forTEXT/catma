@@ -106,7 +106,7 @@ selector returns [Query query]
 	
 	
 tagQuery returns [Query query]
-	:	^(ND_TAG phrase) { $query = new TagQuery($phrase.query); }
+	:	^(ND_TAG phrase tagMatchMode=TAG_MATCH_MODE?) { $query = new TagQuery($phrase.query, $tagMatchMode.text); }
 	;
 	catch[RecognitionException e] {throw e;}
 

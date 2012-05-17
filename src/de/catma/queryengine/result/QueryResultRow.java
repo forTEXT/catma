@@ -1,5 +1,7 @@
 package de.catma.queryengine.result;
 
+import java.util.Comparator;
+
 import de.catma.core.document.Range;
 
 public class QueryResultRow {
@@ -54,25 +56,44 @@ public class QueryResultRow {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (!(obj instanceof QueryResultRow)) {
 			return false;
+		}
 		QueryResultRow other = (QueryResultRow) obj;
 		if (range == null) {
-			if (other.range != null)
+			if (other.range != null) {
 				return false;
-		} else if (!range.equals(other.range))
+			}
+		} else if (!range.equals(other.range)) {
 			return false;
+		}
 		if (sourceDocumentId == null) {
-			if (other.sourceDocumentId != null)
+			if (other.sourceDocumentId != null) {
 				return false;
-		} else if (!sourceDocumentId.equals(other.sourceDocumentId))
+			}
+		} else if (!sourceDocumentId.equals(other.sourceDocumentId)) {
 			return false;
+		}
 		return true;
 	}
-	
+
+    public boolean existsIn(QueryResult queryResult, 
+            Comparator<QueryResultRow> comparator) {
+
+        for (QueryResultRow row : queryResult) {
+            if((comparator.compare(this,row)==0)
+            		||(comparator.compare(row,this)==0)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 	
 }

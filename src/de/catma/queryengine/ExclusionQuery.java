@@ -21,10 +21,10 @@ package de.catma.queryengine;
 
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 
-import de.catma.indexer.TermInfo;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
 
 /**
  * An exclusion query takes the results of the first query and substracts the results of the second
@@ -53,28 +53,27 @@ public class ExclusionQuery extends Query {
     @Override
     protected QueryResult execute() throws Exception {
     	
+    	query1.setQueryOptions(getQueryOptions());
+    	query2.setQueryOptions(getQueryOptions());
+    	
+    	QueryResultRowArray result1 = query1.getResult().asQueryResultRowArray();
+    	QueryResultRowArray result2 = query2.getResult().asQueryResultRowArray();
+    	
+    	Comparator<QueryResultRow> comparator1 = query1.getComparator();
+    	Comparator<QueryResultRow> comparator2 = query2.getComparator();
+    	if ( (comparator1 == null) && (comparator2 == null) ) {
+    		result1.removeAll(result2);
+    	}
+    	else {
+    		if (comparator1 != null) {
+                removeWithComparator(result1, result2, comparator1);
+            }
 
-//        List<TermInfo> results1 = query1.getResult().getTermInfoList();
-//        List<TermInfo> results2 = query2.getResult().getTermInfoList();
-//
-//        Comparator<TermInfo> comparator1 = query1.getComparator();
-//        Comparator<TermInfo> comparator2 = query2.getComparator();
-//
-//        if ( (comparator1 == null) && (comparator2 == null) ) {
-//            results1.removeAll(results2);
-//        }
-//        else {
-//            if (comparator1 != null) {
-//                removeWithComparator(results1, results2, comparator1);
-//            }
-//
-//            if ((comparator1 != comparator2) && (comparator2 != null)) {
-//                removeWithComparator(results1, results2, comparator2);
-//            }
-//        }
-//
-//        return new QueryResult(results1);
-    	return null;
+            if ((comparator1 != comparator2) && (comparator2 != null)) {
+                removeWithComparator(result1, result2, comparator2);
+            }
+        }
+    	return result1;
     }
 
     /**
@@ -85,33 +84,17 @@ public class ExclusionQuery extends Query {
      * @param comparator the comparator to use for the tests
      */
     private void removeWithComparator(
-            List<TermInfo> results1, List<TermInfo> results2, Comparator<TermInfo> comparator) {
-        Iterator<TermInfo> baseResultIterator = results1.iterator();
+            QueryResultRowArray result1, 
+            QueryResultRowArray results2, 
+            Comparator<QueryResultRow> comparator) {
+    	
+        Iterator<QueryResultRow> baseResultIterator = result1.iterator();
         while (baseResultIterator.hasNext()) {
-            TermInfo curInfo = baseResultIterator.next();
-            if(hasMatch(curInfo,results2,comparator)) {
+            QueryResultRow row  = baseResultIterator.next();
+            if(!row.existsIn(results2,comparator)) {
                 baseResultIterator.remove();
             }
         }
     }
 
-    /**
-     * Checks weather the given token equals to one token in the given list when testing with the given
-     * comparator.
-     * @param curInfo the token to test
-     * @param termInfoList the list to check against
-     * @param comparator the comparator to use for the tests
-     * @return <code>true</code> if the given token has an equal token in the list, else <code>false</code>
-     */
-    private boolean hasMatch(
-            TermInfo curInfo, List<TermInfo> termInfoList, Comparator<TermInfo> comparator) {
-
-        for (TermInfo comp : termInfoList) {
-            if(comparator.compare(curInfo,comp)==0) {
-                return true;
-            }
-        }
-
-        return false;
-    }
 }

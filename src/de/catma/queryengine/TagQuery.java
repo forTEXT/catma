@@ -19,6 +19,7 @@
 
 package de.catma.queryengine;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,20 +39,32 @@ import de.catma.queryengine.result.TagQueryResultRow;
 public class TagQuery extends Query {
 
     private String tagPhrase;
+    private TagMatchMode tagMatchMode;
 
     /**
      * Constructor.
      * @param query the name of the {@link org.catma.tag.Tag}
      */
-    public TagQuery(Phrase query) {
+    public TagQuery(Phrase query, String tagMatchMode) {
         this.tagPhrase = query.getPhrase();
+        if (tagMatchMode != null) {
+        	try {
+        		this.tagMatchMode = TagMatchMode.valueOf(tagMatchMode.toUpperCase());
+        	}
+        	catch (IllegalArgumentException iae) {
+        		this.tagMatchMode = TagMatchMode.EXACT;
+        	}
+        }
+        else {
+        	this.tagMatchMode = TagMatchMode.EXACT;
+        }
     }
 
     @Override
     protected QueryResult execute() throws Exception {
     	QueryOptions queryOptions = getQueryOptions();
     	
-        Indexer indexer = getIndexer();
+        Indexer indexer = queryOptions.getIndexer();
         
         QueryResult result = 
 				indexer.searchTagDefinitionPath(
@@ -83,8 +96,6 @@ public class TagQuery extends Query {
         	else {
         		row.setPhrase(sd.getContent(row.getRange()));
         	}
-        	
-        	System.out.println(row);
         }
         
         for (SourceDocument sd : toBeUnloaded) {
@@ -94,5 +105,9 @@ public class TagQuery extends Query {
         return result;
     }
 
+    @Override
+    public Comparator<QueryResultRow> getComparator() {
+    	return tagMatchMode.getComparator();
+    }
 }
 

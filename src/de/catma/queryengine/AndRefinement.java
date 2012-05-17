@@ -45,4 +45,9 @@ public class AndRefinement implements Refinement {
     public QueryResult refine(QueryResult result) throws Exception {
         return refinement2.refine(refinement1.refine(result));
     }
+    
+    public void setQueryOptions(QueryOptions queryOptions) {
+    	this.refinement1.setQueryOptions(queryOptions);
+    	this.refinement2.setQueryOptions(queryOptions);
+    }
 }

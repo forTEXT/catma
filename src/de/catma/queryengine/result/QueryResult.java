@@ -29,5 +29,6 @@ import java.util.Set;
  * @author Marco Petris <marco.petris@web.de>
  */
 public interface QueryResult extends Iterable<QueryResultRow> {
-	public Set<GroupedQueryResult> asGroupedQueryResultSet();
+	public QueryResultRowArray asQueryResultRowArray();
+	public Set<GroupedQueryResult> asGroupedSet();
 }

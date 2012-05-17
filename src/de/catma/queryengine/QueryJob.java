@@ -26,7 +26,6 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
 import org.antlr.runtime.tree.Tree;
 
 import de.catma.backgroundservice.DefaultProgressCallable;
-import de.catma.indexer.Indexer;
 import de.catma.queryengine.parser.CatmaQueryLexer;
 import de.catma.queryengine.parser.CatmaQueryParser;
 import de.catma.queryengine.parser.CatmaQueryWalker;
@@ -42,7 +41,6 @@ import de.catma.queryengine.result.QueryResult;
  */
 public class QueryJob extends DefaultProgressCallable<QueryResult> {
     private String inputQuery;
-	private Indexer indexer;
 	private QueryOptions queryOptions;
 
     /**
@@ -50,9 +48,8 @@ public class QueryJob extends DefaultProgressCallable<QueryResult> {
      * @param inputQuery the query string
      * @param jobName the name of the job, that can be displayed to the user
      */
-    public QueryJob(String inputQuery, Indexer indexer, QueryOptions queryOptions ) {
+    public QueryJob(String inputQuery, QueryOptions queryOptions ) {
         this.inputQuery = inputQuery;
-        this.indexer = indexer;
         this.queryOptions = queryOptions;
     }
 
@@ -73,7 +70,6 @@ public class QueryJob extends DefaultProgressCallable<QueryResult> {
 
             CatmaQueryWalker walker = new CatmaQueryWalker(nodes);
             Query query = walker.start();
-            query.setIndexer(indexer);
             query.setQueryOptions(queryOptions);
             
             // execute the query and retrieve the execution result

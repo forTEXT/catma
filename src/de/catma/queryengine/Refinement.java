@@ -35,4 +35,6 @@ public interface Refinement {
      * @throws Exception see instance for details
      */
     public QueryResult refine(QueryResult result) throws Exception;
+    
+    public void setQueryOptions(QueryOptions queryOptions);
 }

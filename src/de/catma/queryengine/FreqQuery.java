@@ -73,9 +73,13 @@ public class FreqQuery extends Query {
     @Override
     protected QueryResult execute() throws Exception {
     	QueryOptions options = getQueryOptions();
-    	//TODO: freq refinement works different
-    	return getIndexer().searchFreqency(
+    	return options.getIndexer().searchFreqency(
     			options.getRelevantSourceDocumentIDs(), operator1, freq1, operator2, freq2);
+    }
+    
+    public boolean matches(int freq) {
+    	return operator1.getCondition().isTrue(freq, freq1) 
+    			&& ((operator2 == null) ? true : operator2.getCondition().isTrue(freq, freq2));
     }
 
 }

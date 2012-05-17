@@ -82,10 +82,9 @@ public class SimilQuery extends Query {
         		new FreqQuery(CompareOperator.GREATERTHAN.toString(), "0");
         
         freqQuery.setQueryOptions(getQueryOptions());
-        freqQuery.setIndexer(getIndexer());
         
         QueryResult allTokens = freqQuery.getResult();
-        Set<GroupedQueryResult> allTypes = allTokens.asGroupedQueryResultSet();
+        Set<GroupedQueryResult> allTypes = allTokens.asGroupedSet();
         
         for (GroupedQueryResult groupedQueryResult : allTypes) {
         	String type = groupedQueryResult.getGroup().toString();

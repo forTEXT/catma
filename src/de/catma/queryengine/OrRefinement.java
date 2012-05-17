@@ -20,11 +20,11 @@
 package de.catma.queryengine;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import de.catma.indexer.TermInfo;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
 
 /**
  * This refinement combines to refinement conditions by a logical OR.
@@ -46,20 +46,22 @@ public class OrRefinement implements Refinement {
     }
 
     public QueryResult refine(QueryResult result) throws Exception {
-//        List<TermInfo> refinedList1 =
-//                refinement1.refine(new QueryResult(result)).getTermInfoList();
-//        List<TermInfo> refinedList2 =
-//                refinement2.refine(result).getTermInfoList();
-//        
-//        Set<TermInfo> withoutDuplicates = new HashSet<TermInfo>();
-//        withoutDuplicates.addAll(refinedList1);
-//        withoutDuplicates.addAll(refinedList2);
-//        
-//        List<TermInfo> resultList = result.getTermInfoList();
-//        resultList.clear();
-//        resultList.addAll(withoutDuplicates);
-//        return new QueryResult(resultList);
-    	return null;
+    	QueryResultRowArray refinedResult1 = 
+    			refinement1.refine(result).asQueryResultRowArray();
+    	QueryResultRowArray refinedResult2 = 
+    			refinement2.refine(result).asQueryResultRowArray();
+
+        Set<QueryResultRow> withoutDuplicates = new HashSet<QueryResultRow>();
+        withoutDuplicates.addAll(refinedResult1);
+        withoutDuplicates.addAll(refinedResult2);
+
+        QueryResultRowArray combinedResult = new QueryResultRowArray();
+        combinedResult.addAll(withoutDuplicates);
+    	return combinedResult;
     }
 
+    public void setQueryOptions(QueryOptions queryOptions) {
+    	this.refinement1.setQueryOptions(queryOptions);
+    	this.refinement2.setQueryOptions(queryOptions);
+    }
 }

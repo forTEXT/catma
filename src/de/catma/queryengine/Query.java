@@ -21,7 +21,6 @@ package de.catma.queryengine;
 
 import java.util.Comparator;
 
-import de.catma.indexer.Indexer;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 
@@ -33,7 +32,6 @@ import de.catma.queryengine.result.QueryResultRow;
 public abstract class Query {
 	
     private Refinement refinement;
-    private Indexer indexer;
     private QueryOptions queryOptions;
 
     /**
@@ -57,6 +55,7 @@ public abstract class Query {
         QueryResult result = execute();
         
         if(refinement != null) {
+        	refinement.setQueryOptions(queryOptions);
             return refinement.refine(result);
         }
 
@@ -87,14 +86,6 @@ public abstract class Query {
     
     public void setQueryOptions(QueryOptions queryOptions) {
 		this.queryOptions = queryOptions;
-	}
-    
-    public void setIndexer(Indexer indexer) {
-		this.indexer = indexer;
-	}
-    
-    public Indexer getIndexer() {
-		return indexer;
 	}
     
     public QueryOptions getQueryOptions() {

@@ -104,11 +104,11 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
 				Locale.ENGLISH,
-				repository);
+				repository,
+				((IndexerProvider)getApplication()).getIndexer());
 		
 		QueryJob job = new QueryJob(
 				searchInput.getValue().toString(),
-				((IndexerProvider)getApplication()).getIndexer(), 
 				queryOptions);
 		
 		((BackgroundServiceProvider)getApplication()).submit(job, 

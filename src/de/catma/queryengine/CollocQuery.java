@@ -27,7 +27,6 @@ import java.util.Set;
 
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
-import de.catma.indexer.Indexer;
 import de.catma.indexer.KwicProvider;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
@@ -138,7 +137,8 @@ public class CollocQuery extends Query {
 					collocConditionRow.getSourceDocumentId())) {
 				if (!rowToTermInfoListMapping.containsKey(collocConditionRow)) {
 					rowToTermInfoListMapping.put(
-							collocConditionRow, getIndexer().getTermInfosFor(
+							collocConditionRow, 
+							getQueryOptions().getIndexer().getTermInfosFor(
 									collocConditionRow.getSourceDocumentId(), 
 									collocConditionRow.getRange()));
 				}
@@ -152,14 +152,7 @@ public class CollocQuery extends Query {
 		
 		return false;
 	}
-    
-    @Override
-    public void setIndexer(Indexer indexer) {
-    	super.setIndexer(indexer);
-        this.query1.setIndexer(getIndexer());
-        this.query2.setIndexer(getIndexer());
-    }
-    
+
     @Override
     public void setQueryOptions(QueryOptions queryOptions) {
     	super.setQueryOptions(queryOptions);

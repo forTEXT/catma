@@ -60,7 +60,7 @@ public class Phrase extends Query {
         List<String> termList = termExtractor.getTermsInOrder();
         
         QueryResult queryResult = 
-        		getIndexer().searchPhrase(
+        		options.getIndexer().searchPhrase(
         				options.getRelevantSourceDocumentIDs(), phrase, termList);
         
         return queryResult;

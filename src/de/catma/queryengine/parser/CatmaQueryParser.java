@@ -1,4 +1,4 @@
-// $ANTLR 3.4 C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g 2012-03-06 19:45:26
+// $ANTLR 3.4 C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g 2012-05-17 17:47:53
 
 package de.catma.queryengine.parser;
 
@@ -21,11 +21,10 @@ import org.antlr.runtime.tree.*;
 @SuppressWarnings({"all", "warnings", "unchecked"})
 public class CatmaQueryParser extends Parser {
     public static final String[] tokenNames = new String[] {
-        "<invalid>", "<EOR>", "<DOWN>", "<UP>", "EQUAL", "FREQ", "GROUPIDENT", "INT", "LETTER", "LETTEREXTENDED", "ND_ADJACENCY", "ND_ANDREFINE", "ND_COLLOC", "ND_EXCLUSION", "ND_FREQ", "ND_ORREFINE", "ND_PHRASE", "ND_PROPERTY", "ND_QUERY", "ND_REFINE", "ND_REG", "ND_SIMIL", "ND_TAG", "ND_UNION", "PROPERTY", "REG", "SIMIL", "TAG", "TXT", "UNEQUAL", "VALUE", "WHITESPACE", "'%'", "'&'", "'('", "')'", "','", "'-'", "';'", "'CI'", "'where'", "'|'"
+        "<invalid>", "<EOR>", "<DOWN>", "<UP>", "EQUAL", "FREQ", "GROUPIDENT", "INT", "LETTER", "LETTEREXTENDED", "ND_ADJACENCY", "ND_ANDREFINE", "ND_COLLOC", "ND_EXCLUSION", "ND_FREQ", "ND_ORREFINE", "ND_PHRASE", "ND_PROPERTY", "ND_QUERY", "ND_REFINE", "ND_REG", "ND_SIMIL", "ND_TAG", "ND_UNION", "PROPERTY", "REG", "SIMIL", "TAG", "TAG_MATCH_MODE", "TXT", "UNEQUAL", "VALUE", "WHITESPACE", "'%'", "'&'", "'('", "')'", "','", "'-'", "';'", "'CI'", "'where'", "'|'"
     };
 
     public static final int EOF=-1;
-    public static final int T__32=32;
     public static final int T__33=33;
     public static final int T__34=34;
     public static final int T__35=35;
@@ -35,6 +34,7 @@ public class CatmaQueryParser extends Parser {
     public static final int T__39=39;
     public static final int T__40=40;
     public static final int T__41=41;
+    public static final int T__42=42;
     public static final int EQUAL=4;
     public static final int FREQ=5;
     public static final int GROUPIDENT=6;
@@ -59,10 +59,11 @@ public class CatmaQueryParser extends Parser {
     public static final int REG=25;
     public static final int SIMIL=26;
     public static final int TAG=27;
-    public static final int TXT=28;
-    public static final int UNEQUAL=29;
-    public static final int VALUE=30;
-    public static final int WHITESPACE=31;
+    public static final int TAG_MATCH_MODE=28;
+    public static final int TXT=29;
+    public static final int UNEQUAL=30;
+    public static final int VALUE=31;
+    public static final int WHITESPACE=32;
 
     // delegates
     public Parser[] getDelegates() {
@@ -218,7 +219,7 @@ public TreeAdaptor getTreeAdaptor() {
             int alt1=2;
             int LA1_0 = input.LA(1);
 
-            if ( (LA1_0==40) ) {
+            if ( (LA1_0==41) ) {
                 alt1=1;
             }
             switch (alt1) {
@@ -341,29 +342,29 @@ public TreeAdaptor getTreeAdaptor() {
             // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:117:19: ( unionQuery[(CommonTree)$startTerm.tree] -> unionQuery | collocQuery[(CommonTree)$startTerm.tree] -> collocQuery | exclusionQuery[(CommonTree)$startTerm.tree] -> exclusionQuery | adjacencyQuery[(CommonTree)$startTerm.tree] -> adjacencyQuery | -> term )
             int alt2=5;
             switch ( input.LA(1) ) {
-            case 36:
+            case 37:
                 {
                 alt2=1;
                 }
                 break;
-            case 33:
+            case 34:
                 {
                 alt2=2;
                 }
                 break;
-            case 37:
+            case 38:
                 {
                 alt2=3;
                 }
                 break;
-            case 38:
+            case 39:
                 {
                 alt2=4;
                 }
                 break;
             case EOF:
-            case 35:
-            case 40:
+            case 36:
+            case 41:
                 {
                 alt2=5;
                 }
@@ -575,14 +576,14 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         Object char_literal9_tree=null;
-        RewriteRuleTokenStream stream_36=new RewriteRuleTokenStream(adaptor,"token 36");
+        RewriteRuleTokenStream stream_37=new RewriteRuleTokenStream(adaptor,"token 37");
         RewriteRuleSubtreeStream stream_term=new RewriteRuleSubtreeStream(adaptor,"rule term");
         try {
             // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:133:2: ( ',' term -> ^( ND_UNION term ) )
             // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:133:4: ',' term
             {
-            char_literal9=(Token)match(input,36,FOLLOW_36_in_unionQuery288);  
-            stream_36.add(char_literal9);
+            char_literal9=(Token)match(input,37,FOLLOW_37_in_unionQuery288);  
+            stream_37.add(char_literal9);
 
 
             pushFollow(FOLLOW_term_in_unionQuery290);
@@ -668,14 +669,14 @@ public TreeAdaptor getTreeAdaptor() {
         Object char_literal11_tree=null;
         Object INT13_tree=null;
         RewriteRuleTokenStream stream_INT=new RewriteRuleTokenStream(adaptor,"token INT");
-        RewriteRuleTokenStream stream_33=new RewriteRuleTokenStream(adaptor,"token 33");
+        RewriteRuleTokenStream stream_34=new RewriteRuleTokenStream(adaptor,"token 34");
         RewriteRuleSubtreeStream stream_term=new RewriteRuleSubtreeStream(adaptor,"rule term");
         try {
             // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:138:2: ( '&' term ( INT )? -> ^( ND_COLLOC term ( INT )? ) )
             // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:138:4: '&' term ( INT )?
             {
-            char_literal11=(Token)match(input,33,FOLLOW_33_in_collocQuery321);  
-            stream_33.add(char_literal11);
+            char_literal11=(Token)match(input,34,FOLLOW_34_in_collocQuery321);  
+            stream_34.add(char_literal11);
 
 
             pushFollow(FOLLOW_term_in_collocQuery323);
@@ -788,14 +789,14 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         Object char_literal14_tree=null;
-        RewriteRuleTokenStream stream_37=new RewriteRuleTokenStream(adaptor,"token 37");
+        RewriteRuleTokenStream stream_38=new RewriteRuleTokenStream(adaptor,"token 38");
         RewriteRuleSubtreeStream stream_term=new RewriteRuleSubtreeStream(adaptor,"rule term");
         try {
             // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:143:2: ( '-' term -> ^( ND_EXCLUSION term ) )
             // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:143:4: '-' term
             {
-            char_literal14=(Token)match(input,37,FOLLOW_37_in_exclusionQuery359);  
-            stream_37.add(char_literal14);
+            char_literal14=(Token)match(input,38,FOLLOW_38_in_exclusionQuery359);  
+            stream_38.add(char_literal14);
 
 
             pushFollow(FOLLOW_term_in_exclusionQuery361);
@@ -878,14 +879,14 @@ public TreeAdaptor getTreeAdaptor() {
 
 
         Object char_literal16_tree=null;
-        RewriteRuleTokenStream stream_38=new RewriteRuleTokenStream(adaptor,"token 38");
+        RewriteRuleTokenStream stream_39=new RewriteRuleTokenStream(adaptor,"token 39");
         RewriteRuleSubtreeStream stream_term=new RewriteRuleSubtreeStream(adaptor,"rule term");
         try {
             // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:148:2: ( ';' term -> ^( ND_ADJACENCY term ) )
             // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:148:4: ';' term
             {
-            char_literal16=(Token)match(input,38,FOLLOW_38_in_adjacencyQuery392);  
-            stream_38.add(char_literal16);
+            char_literal16=(Token)match(input,39,FOLLOW_39_in_adjacencyQuery392);  
+            stream_39.add(char_literal16);
 
 
             pushFollow(FOLLOW_term_in_adjacencyQuery394);
@@ -975,7 +976,7 @@ public TreeAdaptor getTreeAdaptor() {
         Object char_literal20_tree=null;
         Object char_literal22_tree=null;
         RewriteRuleTokenStream stream_35=new RewriteRuleTokenStream(adaptor,"token 35");
-        RewriteRuleTokenStream stream_34=new RewriteRuleTokenStream(adaptor,"token 34");
+        RewriteRuleTokenStream stream_36=new RewriteRuleTokenStream(adaptor,"token 36");
         RewriteRuleSubtreeStream stream_selector=new RewriteRuleSubtreeStream(adaptor,"rule selector");
         RewriteRuleSubtreeStream stream_query=new RewriteRuleSubtreeStream(adaptor,"rule query");
         RewriteRuleSubtreeStream stream_phrase=new RewriteRuleSubtreeStream(adaptor,"rule phrase");
@@ -997,7 +998,7 @@ public TreeAdaptor getTreeAdaptor() {
                 alt4=2;
                 }
                 break;
-            case 34:
+            case 35:
                 {
                 alt4=3;
                 }
@@ -1078,8 +1079,8 @@ public TreeAdaptor getTreeAdaptor() {
                 case 3 :
                     // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:155:5: '(' query ')'
                     {
-                    char_literal20=(Token)match(input,34,FOLLOW_34_in_term445);  
-                    stream_34.add(char_literal20);
+                    char_literal20=(Token)match(input,35,FOLLOW_35_in_term445);  
+                    stream_35.add(char_literal20);
 
 
                     pushFollow(FOLLOW_query_in_term446);
@@ -1089,8 +1090,8 @@ public TreeAdaptor getTreeAdaptor() {
 
                     stream_query.add(query21.getTree());
 
-                    char_literal22=(Token)match(input,35,FOLLOW_35_in_term447);  
-                    stream_35.add(char_literal22);
+                    char_literal22=(Token)match(input,36,FOLLOW_36_in_term447);  
+                    stream_36.add(char_literal22);
 
 
                     // AST REWRITE
@@ -1385,7 +1386,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "tagQuery"
-    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:182:1: tagQuery : TAG EQUAL phrase -> ^( ND_TAG phrase ) ;
+    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:182:1: tagQuery : TAG EQUAL phrase ( TAG_MATCH_MODE )? -> ^( ND_TAG phrase ( TAG_MATCH_MODE )? ) ;
     public final CatmaQueryParser.tagQuery_return tagQuery() throws RecognitionException {
         CatmaQueryParser.tagQuery_return retval = new CatmaQueryParser.tagQuery_return();
         retval.start = input.LT(1);
@@ -1395,17 +1396,20 @@ public TreeAdaptor getTreeAdaptor() {
 
         Token TAG29=null;
         Token EQUAL30=null;
+        Token TAG_MATCH_MODE32=null;
         CatmaQueryParser.phrase_return phrase31 =null;
 
 
         Object TAG29_tree=null;
         Object EQUAL30_tree=null;
+        Object TAG_MATCH_MODE32_tree=null;
+        RewriteRuleTokenStream stream_TAG_MATCH_MODE=new RewriteRuleTokenStream(adaptor,"token TAG_MATCH_MODE");
         RewriteRuleTokenStream stream_EQUAL=new RewriteRuleTokenStream(adaptor,"token EQUAL");
         RewriteRuleTokenStream stream_TAG=new RewriteRuleTokenStream(adaptor,"token TAG");
         RewriteRuleSubtreeStream stream_phrase=new RewriteRuleSubtreeStream(adaptor,"rule phrase");
         try {
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:183:2: ( TAG EQUAL phrase -> ^( ND_TAG phrase ) )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:183:4: TAG EQUAL phrase
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:183:2: ( TAG EQUAL phrase ( TAG_MATCH_MODE )? -> ^( ND_TAG phrase ( TAG_MATCH_MODE )? ) )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:183:4: TAG EQUAL phrase ( TAG_MATCH_MODE )?
             {
             TAG29=(Token)match(input,TAG,FOLLOW_TAG_in_tagQuery544);  
             stream_TAG.add(TAG29);
@@ -1422,8 +1426,29 @@ public TreeAdaptor getTreeAdaptor() {
 
             stream_phrase.add(phrase31.getTree());
 
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:183:21: ( TAG_MATCH_MODE )?
+            int alt6=2;
+            int LA6_0 = input.LA(1);
+
+            if ( (LA6_0==TAG_MATCH_MODE) ) {
+                alt6=1;
+            }
+            switch (alt6) {
+                case 1 :
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:183:21: TAG_MATCH_MODE
+                    {
+                    TAG_MATCH_MODE32=(Token)match(input,TAG_MATCH_MODE,FOLLOW_TAG_MATCH_MODE_in_tagQuery550);  
+                    stream_TAG_MATCH_MODE.add(TAG_MATCH_MODE32);
+
+
+                    }
+                    break;
+
+            }
+
+
             // AST REWRITE
-            // elements: phrase
+            // elements: phrase, TAG_MATCH_MODE
             // token labels: 
             // rule labels: retval
             // token list labels: 
@@ -1433,9 +1458,9 @@ public TreeAdaptor getTreeAdaptor() {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
             root_0 = (Object)adaptor.nil();
-            // 183:21: -> ^( ND_TAG phrase )
+            // 183:37: -> ^( ND_TAG phrase ( TAG_MATCH_MODE )? )
             {
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:183:24: ^( ND_TAG phrase )
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:183:40: ^( ND_TAG phrase ( TAG_MATCH_MODE )? )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(
@@ -1443,6 +1468,15 @@ public TreeAdaptor getTreeAdaptor() {
                 , root_1);
 
                 adaptor.addChild(root_1, stream_phrase.nextTree());
+
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:183:56: ( TAG_MATCH_MODE )?
+                if ( stream_TAG_MATCH_MODE.hasNext() ) {
+                    adaptor.addChild(root_1, 
+                    stream_TAG_MATCH_MODE.nextNode()
+                    );
+
+                }
+                stream_TAG_MATCH_MODE.reset();
 
                 adaptor.addChild(root_0, root_1);
                 }
@@ -1480,7 +1514,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "propertyQuery"
-    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:187:1: propertyQuery : PROPERTY EQUAL phrase ( VALUE EQUAL phrase )? -> ^( ND_PROPERTY phrase ( phrase )? ) ;
+    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:188:1: propertyQuery : PROPERTY EQUAL phrase ( VALUE EQUAL phrase )? -> ^( ND_PROPERTY phrase ( phrase )? ) ;
     public final CatmaQueryParser.propertyQuery_return propertyQuery() throws RecognitionException {
         CatmaQueryParser.propertyQuery_return retval = new CatmaQueryParser.propertyQuery_return();
         retval.start = input.LT(1);
@@ -1488,67 +1522,67 @@ public TreeAdaptor getTreeAdaptor() {
 
         Object root_0 = null;
 
-        Token PROPERTY32=null;
-        Token EQUAL33=null;
-        Token VALUE35=null;
-        Token EQUAL36=null;
-        CatmaQueryParser.phrase_return phrase34 =null;
+        Token PROPERTY33=null;
+        Token EQUAL34=null;
+        Token VALUE36=null;
+        Token EQUAL37=null;
+        CatmaQueryParser.phrase_return phrase35 =null;
 
-        CatmaQueryParser.phrase_return phrase37 =null;
+        CatmaQueryParser.phrase_return phrase38 =null;
 
 
-        Object PROPERTY32_tree=null;
-        Object EQUAL33_tree=null;
-        Object VALUE35_tree=null;
-        Object EQUAL36_tree=null;
+        Object PROPERTY33_tree=null;
+        Object EQUAL34_tree=null;
+        Object VALUE36_tree=null;
+        Object EQUAL37_tree=null;
         RewriteRuleTokenStream stream_VALUE=new RewriteRuleTokenStream(adaptor,"token VALUE");
         RewriteRuleTokenStream stream_PROPERTY=new RewriteRuleTokenStream(adaptor,"token PROPERTY");
         RewriteRuleTokenStream stream_EQUAL=new RewriteRuleTokenStream(adaptor,"token EQUAL");
         RewriteRuleSubtreeStream stream_phrase=new RewriteRuleSubtreeStream(adaptor,"rule phrase");
         try {
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:188:2: ( PROPERTY EQUAL phrase ( VALUE EQUAL phrase )? -> ^( ND_PROPERTY phrase ( phrase )? ) )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:188:4: PROPERTY EQUAL phrase ( VALUE EQUAL phrase )?
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:189:2: ( PROPERTY EQUAL phrase ( VALUE EQUAL phrase )? -> ^( ND_PROPERTY phrase ( phrase )? ) )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:189:4: PROPERTY EQUAL phrase ( VALUE EQUAL phrase )?
             {
-            PROPERTY32=(Token)match(input,PROPERTY,FOLLOW_PROPERTY_in_propertyQuery575);  
-            stream_PROPERTY.add(PROPERTY32);
+            PROPERTY33=(Token)match(input,PROPERTY,FOLLOW_PROPERTY_in_propertyQuery583);  
+            stream_PROPERTY.add(PROPERTY33);
 
 
-            EQUAL33=(Token)match(input,EQUAL,FOLLOW_EQUAL_in_propertyQuery577);  
-            stream_EQUAL.add(EQUAL33);
+            EQUAL34=(Token)match(input,EQUAL,FOLLOW_EQUAL_in_propertyQuery585);  
+            stream_EQUAL.add(EQUAL34);
 
 
-            pushFollow(FOLLOW_phrase_in_propertyQuery579);
-            phrase34=phrase();
+            pushFollow(FOLLOW_phrase_in_propertyQuery587);
+            phrase35=phrase();
 
             state._fsp--;
 
-            stream_phrase.add(phrase34.getTree());
+            stream_phrase.add(phrase35.getTree());
 
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:188:26: ( VALUE EQUAL phrase )?
-            int alt6=2;
-            int LA6_0 = input.LA(1);
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:189:26: ( VALUE EQUAL phrase )?
+            int alt7=2;
+            int LA7_0 = input.LA(1);
 
-            if ( (LA6_0==VALUE) ) {
-                alt6=1;
+            if ( (LA7_0==VALUE) ) {
+                alt7=1;
             }
-            switch (alt6) {
+            switch (alt7) {
                 case 1 :
-                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:188:27: VALUE EQUAL phrase
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:189:27: VALUE EQUAL phrase
                     {
-                    VALUE35=(Token)match(input,VALUE,FOLLOW_VALUE_in_propertyQuery582);  
-                    stream_VALUE.add(VALUE35);
+                    VALUE36=(Token)match(input,VALUE,FOLLOW_VALUE_in_propertyQuery590);  
+                    stream_VALUE.add(VALUE36);
 
 
-                    EQUAL36=(Token)match(input,EQUAL,FOLLOW_EQUAL_in_propertyQuery584);  
-                    stream_EQUAL.add(EQUAL36);
+                    EQUAL37=(Token)match(input,EQUAL,FOLLOW_EQUAL_in_propertyQuery592);  
+                    stream_EQUAL.add(EQUAL37);
 
 
-                    pushFollow(FOLLOW_phrase_in_propertyQuery586);
-                    phrase37=phrase();
+                    pushFollow(FOLLOW_phrase_in_propertyQuery594);
+                    phrase38=phrase();
 
                     state._fsp--;
 
-                    stream_phrase.add(phrase37.getTree());
+                    stream_phrase.add(phrase38.getTree());
 
                     }
                     break;
@@ -1567,9 +1601,9 @@ public TreeAdaptor getTreeAdaptor() {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
             root_0 = (Object)adaptor.nil();
-            // 188:48: -> ^( ND_PROPERTY phrase ( phrase )? )
+            // 189:48: -> ^( ND_PROPERTY phrase ( phrase )? )
             {
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:188:51: ^( ND_PROPERTY phrase ( phrase )? )
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:189:51: ^( ND_PROPERTY phrase ( phrase )? )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(
@@ -1578,7 +1612,7 @@ public TreeAdaptor getTreeAdaptor() {
 
                 adaptor.addChild(root_1, stream_phrase.nextTree());
 
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:188:72: ( phrase )?
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:189:72: ( phrase )?
                 if ( stream_phrase.hasNext() ) {
                     adaptor.addChild(root_1, stream_phrase.nextTree());
 
@@ -1621,7 +1655,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "regQuery"
-    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:192:1: regQuery : REG EQUAL phrase ( 'CI' )? -> ^( ND_REG phrase ( 'CI' )? ) ;
+    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:193:1: regQuery : REG EQUAL phrase ( 'CI' )? -> ^( ND_REG phrase ( 'CI' )? ) ;
     public final CatmaQueryParser.regQuery_return regQuery() throws RecognitionException {
         CatmaQueryParser.regQuery_return retval = new CatmaQueryParser.regQuery_return();
         retval.start = input.LT(1);
@@ -1629,51 +1663,51 @@ public TreeAdaptor getTreeAdaptor() {
 
         Object root_0 = null;
 
-        Token REG38=null;
-        Token EQUAL39=null;
-        Token string_literal41=null;
-        CatmaQueryParser.phrase_return phrase40 =null;
+        Token REG39=null;
+        Token EQUAL40=null;
+        Token string_literal42=null;
+        CatmaQueryParser.phrase_return phrase41 =null;
 
 
-        Object REG38_tree=null;
-        Object EQUAL39_tree=null;
-        Object string_literal41_tree=null;
+        Object REG39_tree=null;
+        Object EQUAL40_tree=null;
+        Object string_literal42_tree=null;
+        RewriteRuleTokenStream stream_40=new RewriteRuleTokenStream(adaptor,"token 40");
         RewriteRuleTokenStream stream_REG=new RewriteRuleTokenStream(adaptor,"token REG");
-        RewriteRuleTokenStream stream_39=new RewriteRuleTokenStream(adaptor,"token 39");
         RewriteRuleTokenStream stream_EQUAL=new RewriteRuleTokenStream(adaptor,"token EQUAL");
         RewriteRuleSubtreeStream stream_phrase=new RewriteRuleSubtreeStream(adaptor,"rule phrase");
         try {
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:193:2: ( REG EQUAL phrase ( 'CI' )? -> ^( ND_REG phrase ( 'CI' )? ) )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:193:4: REG EQUAL phrase ( 'CI' )?
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:194:2: ( REG EQUAL phrase ( 'CI' )? -> ^( ND_REG phrase ( 'CI' )? ) )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:194:4: REG EQUAL phrase ( 'CI' )?
             {
-            REG38=(Token)match(input,REG,FOLLOW_REG_in_regQuery617);  
-            stream_REG.add(REG38);
+            REG39=(Token)match(input,REG,FOLLOW_REG_in_regQuery625);  
+            stream_REG.add(REG39);
 
 
-            EQUAL39=(Token)match(input,EQUAL,FOLLOW_EQUAL_in_regQuery619);  
-            stream_EQUAL.add(EQUAL39);
+            EQUAL40=(Token)match(input,EQUAL,FOLLOW_EQUAL_in_regQuery627);  
+            stream_EQUAL.add(EQUAL40);
 
 
-            pushFollow(FOLLOW_phrase_in_regQuery621);
-            phrase40=phrase();
+            pushFollow(FOLLOW_phrase_in_regQuery629);
+            phrase41=phrase();
 
             state._fsp--;
 
-            stream_phrase.add(phrase40.getTree());
+            stream_phrase.add(phrase41.getTree());
 
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:193:21: ( 'CI' )?
-            int alt7=2;
-            int LA7_0 = input.LA(1);
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:194:21: ( 'CI' )?
+            int alt8=2;
+            int LA8_0 = input.LA(1);
 
-            if ( (LA7_0==39) ) {
-                alt7=1;
+            if ( (LA8_0==40) ) {
+                alt8=1;
             }
-            switch (alt7) {
+            switch (alt8) {
                 case 1 :
-                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:193:21: 'CI'
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:194:21: 'CI'
                     {
-                    string_literal41=(Token)match(input,39,FOLLOW_39_in_regQuery623);  
-                    stream_39.add(string_literal41);
+                    string_literal42=(Token)match(input,40,FOLLOW_40_in_regQuery631);  
+                    stream_40.add(string_literal42);
 
 
                     }
@@ -1683,7 +1717,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
             // AST REWRITE
-            // elements: 39, phrase
+            // elements: 40, phrase
             // token labels: 
             // rule labels: retval
             // token list labels: 
@@ -1693,9 +1727,9 @@ public TreeAdaptor getTreeAdaptor() {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
             root_0 = (Object)adaptor.nil();
-            // 193:27: -> ^( ND_REG phrase ( 'CI' )? )
+            // 194:27: -> ^( ND_REG phrase ( 'CI' )? )
             {
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:193:30: ^( ND_REG phrase ( 'CI' )? )
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:194:30: ^( ND_REG phrase ( 'CI' )? )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(
@@ -1704,14 +1738,14 @@ public TreeAdaptor getTreeAdaptor() {
 
                 adaptor.addChild(root_1, stream_phrase.nextTree());
 
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:193:46: ( 'CI' )?
-                if ( stream_39.hasNext() ) {
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:194:46: ( 'CI' )?
+                if ( stream_40.hasNext() ) {
                     adaptor.addChild(root_1, 
-                    stream_39.nextNode()
+                    stream_40.nextNode()
                     );
 
                 }
-                stream_39.reset();
+                stream_40.reset();
 
                 adaptor.addChild(root_0, root_1);
                 }
@@ -1749,7 +1783,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "freqQuery"
-    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:197:1: freqQuery : FREQ ( EQUAL INT ( '-' INT )? -> ^( ND_FREQ EQUAL INT ( INT )? ) | UNEQUAL INT -> ^( ND_FREQ UNEQUAL INT ) ) ;
+    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:198:1: freqQuery : FREQ ( EQUAL INT ( '-' INT )? -> ^( ND_FREQ EQUAL INT ( INT )? ) | UNEQUAL INT -> ^( ND_FREQ UNEQUAL INT ) ) ;
     public final CatmaQueryParser.freqQuery_return freqQuery() throws RecognitionException {
         CatmaQueryParser.freqQuery_return retval = new CatmaQueryParser.freqQuery_return();
         retval.start = input.LT(1);
@@ -1757,85 +1791,85 @@ public TreeAdaptor getTreeAdaptor() {
 
         Object root_0 = null;
 
-        Token FREQ42=null;
-        Token EQUAL43=null;
-        Token INT44=null;
-        Token char_literal45=null;
-        Token INT46=null;
-        Token UNEQUAL47=null;
-        Token INT48=null;
+        Token FREQ43=null;
+        Token EQUAL44=null;
+        Token INT45=null;
+        Token char_literal46=null;
+        Token INT47=null;
+        Token UNEQUAL48=null;
+        Token INT49=null;
 
-        Object FREQ42_tree=null;
-        Object EQUAL43_tree=null;
-        Object INT44_tree=null;
-        Object char_literal45_tree=null;
-        Object INT46_tree=null;
-        Object UNEQUAL47_tree=null;
-        Object INT48_tree=null;
+        Object FREQ43_tree=null;
+        Object EQUAL44_tree=null;
+        Object INT45_tree=null;
+        Object char_literal46_tree=null;
+        Object INT47_tree=null;
+        Object UNEQUAL48_tree=null;
+        Object INT49_tree=null;
         RewriteRuleTokenStream stream_FREQ=new RewriteRuleTokenStream(adaptor,"token FREQ");
         RewriteRuleTokenStream stream_INT=new RewriteRuleTokenStream(adaptor,"token INT");
         RewriteRuleTokenStream stream_EQUAL=new RewriteRuleTokenStream(adaptor,"token EQUAL");
-        RewriteRuleTokenStream stream_37=new RewriteRuleTokenStream(adaptor,"token 37");
         RewriteRuleTokenStream stream_UNEQUAL=new RewriteRuleTokenStream(adaptor,"token UNEQUAL");
+        RewriteRuleTokenStream stream_38=new RewriteRuleTokenStream(adaptor,"token 38");
 
         try {
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:198:2: ( FREQ ( EQUAL INT ( '-' INT )? -> ^( ND_FREQ EQUAL INT ( INT )? ) | UNEQUAL INT -> ^( ND_FREQ UNEQUAL INT ) ) )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:198:4: FREQ ( EQUAL INT ( '-' INT )? -> ^( ND_FREQ EQUAL INT ( INT )? ) | UNEQUAL INT -> ^( ND_FREQ UNEQUAL INT ) )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:199:2: ( FREQ ( EQUAL INT ( '-' INT )? -> ^( ND_FREQ EQUAL INT ( INT )? ) | UNEQUAL INT -> ^( ND_FREQ UNEQUAL INT ) ) )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:199:4: FREQ ( EQUAL INT ( '-' INT )? -> ^( ND_FREQ EQUAL INT ( INT )? ) | UNEQUAL INT -> ^( ND_FREQ UNEQUAL INT ) )
             {
-            FREQ42=(Token)match(input,FREQ,FOLLOW_FREQ_in_freqQuery654);  
-            stream_FREQ.add(FREQ42);
+            FREQ43=(Token)match(input,FREQ,FOLLOW_FREQ_in_freqQuery662);  
+            stream_FREQ.add(FREQ43);
 
 
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:199:3: ( EQUAL INT ( '-' INT )? -> ^( ND_FREQ EQUAL INT ( INT )? ) | UNEQUAL INT -> ^( ND_FREQ UNEQUAL INT ) )
-            int alt9=2;
-            int LA9_0 = input.LA(1);
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:200:3: ( EQUAL INT ( '-' INT )? -> ^( ND_FREQ EQUAL INT ( INT )? ) | UNEQUAL INT -> ^( ND_FREQ UNEQUAL INT ) )
+            int alt10=2;
+            int LA10_0 = input.LA(1);
 
-            if ( (LA9_0==EQUAL) ) {
-                alt9=1;
+            if ( (LA10_0==EQUAL) ) {
+                alt10=1;
             }
-            else if ( (LA9_0==UNEQUAL) ) {
-                alt9=2;
+            else if ( (LA10_0==UNEQUAL) ) {
+                alt10=2;
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("", 9, 0, input);
+                    new NoViableAltException("", 10, 0, input);
 
                 throw nvae;
 
             }
-            switch (alt9) {
+            switch (alt10) {
                 case 1 :
-                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:199:5: EQUAL INT ( '-' INT )?
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:200:5: EQUAL INT ( '-' INT )?
                     {
-                    EQUAL43=(Token)match(input,EQUAL,FOLLOW_EQUAL_in_freqQuery661);  
-                    stream_EQUAL.add(EQUAL43);
+                    EQUAL44=(Token)match(input,EQUAL,FOLLOW_EQUAL_in_freqQuery669);  
+                    stream_EQUAL.add(EQUAL44);
 
 
-                    INT44=(Token)match(input,INT,FOLLOW_INT_in_freqQuery663);  
-                    stream_INT.add(INT44);
+                    INT45=(Token)match(input,INT,FOLLOW_INT_in_freqQuery671);  
+                    stream_INT.add(INT45);
 
 
-                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:199:15: ( '-' INT )?
-                    int alt8=2;
-                    int LA8_0 = input.LA(1);
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:200:15: ( '-' INT )?
+                    int alt9=2;
+                    int LA9_0 = input.LA(1);
 
-                    if ( (LA8_0==37) ) {
-                        int LA8_1 = input.LA(2);
+                    if ( (LA9_0==38) ) {
+                        int LA9_1 = input.LA(2);
 
-                        if ( (LA8_1==INT) ) {
-                            alt8=1;
+                        if ( (LA9_1==INT) ) {
+                            alt9=1;
                         }
                     }
-                    switch (alt8) {
+                    switch (alt9) {
                         case 1 :
-                            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:199:16: '-' INT
+                            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:200:16: '-' INT
                             {
-                            char_literal45=(Token)match(input,37,FOLLOW_37_in_freqQuery666);  
-                            stream_37.add(char_literal45);
+                            char_literal46=(Token)match(input,38,FOLLOW_38_in_freqQuery674);  
+                            stream_38.add(char_literal46);
 
 
-                            INT46=(Token)match(input,INT,FOLLOW_INT_in_freqQuery668);  
-                            stream_INT.add(INT46);
+                            INT47=(Token)match(input,INT,FOLLOW_INT_in_freqQuery676);  
+                            stream_INT.add(INT47);
 
 
                             }
@@ -1845,7 +1879,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                     // AST REWRITE
-                    // elements: INT, INT, EQUAL
+                    // elements: EQUAL, INT, INT
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -1855,9 +1889,9 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 199:26: -> ^( ND_FREQ EQUAL INT ( INT )? )
+                    // 200:26: -> ^( ND_FREQ EQUAL INT ( INT )? )
                     {
-                        // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:199:29: ^( ND_FREQ EQUAL INT ( INT )? )
+                        // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:200:29: ^( ND_FREQ EQUAL INT ( INT )? )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(
@@ -1872,7 +1906,7 @@ public TreeAdaptor getTreeAdaptor() {
                         stream_INT.nextNode()
                         );
 
-                        // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:199:49: ( INT )?
+                        // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:200:49: ( INT )?
                         if ( stream_INT.hasNext() ) {
                             adaptor.addChild(root_1, 
                             stream_INT.nextNode()
@@ -1892,18 +1926,18 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:200:5: UNEQUAL INT
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:201:5: UNEQUAL INT
                     {
-                    UNEQUAL47=(Token)match(input,UNEQUAL,FOLLOW_UNEQUAL_in_freqQuery690);  
-                    stream_UNEQUAL.add(UNEQUAL47);
+                    UNEQUAL48=(Token)match(input,UNEQUAL,FOLLOW_UNEQUAL_in_freqQuery698);  
+                    stream_UNEQUAL.add(UNEQUAL48);
 
 
-                    INT48=(Token)match(input,INT,FOLLOW_INT_in_freqQuery692);  
-                    stream_INT.add(INT48);
+                    INT49=(Token)match(input,INT,FOLLOW_INT_in_freqQuery700);  
+                    stream_INT.add(INT49);
 
 
                     // AST REWRITE
-                    // elements: INT, UNEQUAL
+                    // elements: UNEQUAL, INT
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -1913,9 +1947,9 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 200:17: -> ^( ND_FREQ UNEQUAL INT )
+                    // 201:17: -> ^( ND_FREQ UNEQUAL INT )
                     {
-                        // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:200:20: ^( ND_FREQ UNEQUAL INT )
+                        // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:201:20: ^( ND_FREQ UNEQUAL INT )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(
@@ -1972,7 +2006,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "similQuery"
-    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:204:1: similQuery : SIMIL EQUAL phrase INT ( '%' )? -> ^( ND_SIMIL phrase INT ) ;
+    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:205:1: similQuery : SIMIL EQUAL phrase INT ( '%' )? -> ^( ND_SIMIL phrase INT ) ;
     public final CatmaQueryParser.similQuery_return similQuery() throws RecognitionException {
         CatmaQueryParser.similQuery_return retval = new CatmaQueryParser.similQuery_return();
         retval.start = input.LT(1);
@@ -1980,58 +2014,58 @@ public TreeAdaptor getTreeAdaptor() {
 
         Object root_0 = null;
 
-        Token SIMIL49=null;
-        Token EQUAL50=null;
-        Token INT52=null;
-        Token char_literal53=null;
-        CatmaQueryParser.phrase_return phrase51 =null;
+        Token SIMIL50=null;
+        Token EQUAL51=null;
+        Token INT53=null;
+        Token char_literal54=null;
+        CatmaQueryParser.phrase_return phrase52 =null;
 
 
-        Object SIMIL49_tree=null;
-        Object EQUAL50_tree=null;
-        Object INT52_tree=null;
-        Object char_literal53_tree=null;
+        Object SIMIL50_tree=null;
+        Object EQUAL51_tree=null;
+        Object INT53_tree=null;
+        Object char_literal54_tree=null;
         RewriteRuleTokenStream stream_INT=new RewriteRuleTokenStream(adaptor,"token INT");
-        RewriteRuleTokenStream stream_32=new RewriteRuleTokenStream(adaptor,"token 32");
+        RewriteRuleTokenStream stream_33=new RewriteRuleTokenStream(adaptor,"token 33");
         RewriteRuleTokenStream stream_EQUAL=new RewriteRuleTokenStream(adaptor,"token EQUAL");
         RewriteRuleTokenStream stream_SIMIL=new RewriteRuleTokenStream(adaptor,"token SIMIL");
         RewriteRuleSubtreeStream stream_phrase=new RewriteRuleSubtreeStream(adaptor,"rule phrase");
         try {
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:205:2: ( SIMIL EQUAL phrase INT ( '%' )? -> ^( ND_SIMIL phrase INT ) )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:205:4: SIMIL EQUAL phrase INT ( '%' )?
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:206:2: ( SIMIL EQUAL phrase INT ( '%' )? -> ^( ND_SIMIL phrase INT ) )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:206:4: SIMIL EQUAL phrase INT ( '%' )?
             {
-            SIMIL49=(Token)match(input,SIMIL,FOLLOW_SIMIL_in_similQuery724);  
-            stream_SIMIL.add(SIMIL49);
+            SIMIL50=(Token)match(input,SIMIL,FOLLOW_SIMIL_in_similQuery732);  
+            stream_SIMIL.add(SIMIL50);
 
 
-            EQUAL50=(Token)match(input,EQUAL,FOLLOW_EQUAL_in_similQuery726);  
-            stream_EQUAL.add(EQUAL50);
+            EQUAL51=(Token)match(input,EQUAL,FOLLOW_EQUAL_in_similQuery734);  
+            stream_EQUAL.add(EQUAL51);
 
 
-            pushFollow(FOLLOW_phrase_in_similQuery728);
-            phrase51=phrase();
+            pushFollow(FOLLOW_phrase_in_similQuery736);
+            phrase52=phrase();
 
             state._fsp--;
 
-            stream_phrase.add(phrase51.getTree());
+            stream_phrase.add(phrase52.getTree());
 
-            INT52=(Token)match(input,INT,FOLLOW_INT_in_similQuery730);  
-            stream_INT.add(INT52);
+            INT53=(Token)match(input,INT,FOLLOW_INT_in_similQuery738);  
+            stream_INT.add(INT53);
 
 
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:205:27: ( '%' )?
-            int alt10=2;
-            int LA10_0 = input.LA(1);
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:206:27: ( '%' )?
+            int alt11=2;
+            int LA11_0 = input.LA(1);
 
-            if ( (LA10_0==32) ) {
-                alt10=1;
+            if ( (LA11_0==33) ) {
+                alt11=1;
             }
-            switch (alt10) {
+            switch (alt11) {
                 case 1 :
-                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:205:27: '%'
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:206:27: '%'
                     {
-                    char_literal53=(Token)match(input,32,FOLLOW_32_in_similQuery732);  
-                    stream_32.add(char_literal53);
+                    char_literal54=(Token)match(input,33,FOLLOW_33_in_similQuery740);  
+                    stream_33.add(char_literal54);
 
 
                     }
@@ -2041,7 +2075,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
             // AST REWRITE
-            // elements: phrase, INT
+            // elements: INT, phrase
             // token labels: 
             // rule labels: retval
             // token list labels: 
@@ -2051,9 +2085,9 @@ public TreeAdaptor getTreeAdaptor() {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
             root_0 = (Object)adaptor.nil();
-            // 205:32: -> ^( ND_SIMIL phrase INT )
+            // 206:32: -> ^( ND_SIMIL phrase INT )
             {
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:205:35: ^( ND_SIMIL phrase INT )
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:206:35: ^( ND_SIMIL phrase INT )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(
@@ -2102,7 +2136,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "refinement"
-    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:214:1: refinement : 'where' refinementExpression -> refinementExpression ;
+    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:215:1: refinement : 'where' refinementExpression -> refinementExpression ;
     public final CatmaQueryParser.refinement_return refinement() throws RecognitionException {
         CatmaQueryParser.refinement_return retval = new CatmaQueryParser.refinement_return();
         retval.start = input.LT(1);
@@ -2110,27 +2144,27 @@ public TreeAdaptor getTreeAdaptor() {
 
         Object root_0 = null;
 
-        Token string_literal54=null;
-        CatmaQueryParser.refinementExpression_return refinementExpression55 =null;
+        Token string_literal55=null;
+        CatmaQueryParser.refinementExpression_return refinementExpression56 =null;
 
 
-        Object string_literal54_tree=null;
-        RewriteRuleTokenStream stream_40=new RewriteRuleTokenStream(adaptor,"token 40");
+        Object string_literal55_tree=null;
+        RewriteRuleTokenStream stream_41=new RewriteRuleTokenStream(adaptor,"token 41");
         RewriteRuleSubtreeStream stream_refinementExpression=new RewriteRuleSubtreeStream(adaptor,"rule refinementExpression");
         try {
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:215:2: ( 'where' refinementExpression -> refinementExpression )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:215:4: 'where' refinementExpression
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:216:2: ( 'where' refinementExpression -> refinementExpression )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:216:4: 'where' refinementExpression
             {
-            string_literal54=(Token)match(input,40,FOLLOW_40_in_refinement768);  
-            stream_40.add(string_literal54);
+            string_literal55=(Token)match(input,41,FOLLOW_41_in_refinement776);  
+            stream_41.add(string_literal55);
 
 
-            pushFollow(FOLLOW_refinementExpression_in_refinement770);
-            refinementExpression55=refinementExpression();
+            pushFollow(FOLLOW_refinementExpression_in_refinement778);
+            refinementExpression56=refinementExpression();
 
             state._fsp--;
 
-            stream_refinementExpression.add(refinementExpression55.getTree());
+            stream_refinementExpression.add(refinementExpression56.getTree());
 
             // AST REWRITE
             // elements: refinementExpression
@@ -2143,7 +2177,7 @@ public TreeAdaptor getTreeAdaptor() {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
             root_0 = (Object)adaptor.nil();
-            // 215:33: -> refinementExpression
+            // 216:33: -> refinementExpression
             {
                 adaptor.addChild(root_0, stream_refinementExpression.nextTree());
 
@@ -2180,7 +2214,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "refinementExpression"
-    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:219:1: refinementExpression : startRefinement= refinementTerm ( orRefinement[(CommonTree)$startRefinement.tree] -> orRefinement | andRefinement[(CommonTree)$startRefinement.tree] -> andRefinement | -> ^( ND_REFINE refinementTerm ) ) ;
+    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:220:1: refinementExpression : startRefinement= refinementTerm ( orRefinement[(CommonTree)$startRefinement.tree] -> orRefinement | andRefinement[(CommonTree)$startRefinement.tree] -> andRefinement | -> ^( ND_REFINE refinementTerm ) ) ;
     public final CatmaQueryParser.refinementExpression_return refinementExpression() throws RecognitionException {
         CatmaQueryParser.refinementExpression_return retval = new CatmaQueryParser.refinementExpression_return();
         retval.start = input.LT(1);
@@ -2190,62 +2224,62 @@ public TreeAdaptor getTreeAdaptor() {
 
         CatmaQueryParser.refinementTerm_return startRefinement =null;
 
-        CatmaQueryParser.orRefinement_return orRefinement56 =null;
+        CatmaQueryParser.orRefinement_return orRefinement57 =null;
 
-        CatmaQueryParser.andRefinement_return andRefinement57 =null;
+        CatmaQueryParser.andRefinement_return andRefinement58 =null;
 
 
         RewriteRuleSubtreeStream stream_orRefinement=new RewriteRuleSubtreeStream(adaptor,"rule orRefinement");
         RewriteRuleSubtreeStream stream_andRefinement=new RewriteRuleSubtreeStream(adaptor,"rule andRefinement");
         RewriteRuleSubtreeStream stream_refinementTerm=new RewriteRuleSubtreeStream(adaptor,"rule refinementTerm");
         try {
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:220:2: (startRefinement= refinementTerm ( orRefinement[(CommonTree)$startRefinement.tree] -> orRefinement | andRefinement[(CommonTree)$startRefinement.tree] -> andRefinement | -> ^( ND_REFINE refinementTerm ) ) )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:220:4: startRefinement= refinementTerm ( orRefinement[(CommonTree)$startRefinement.tree] -> orRefinement | andRefinement[(CommonTree)$startRefinement.tree] -> andRefinement | -> ^( ND_REFINE refinementTerm ) )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:221:2: (startRefinement= refinementTerm ( orRefinement[(CommonTree)$startRefinement.tree] -> orRefinement | andRefinement[(CommonTree)$startRefinement.tree] -> andRefinement | -> ^( ND_REFINE refinementTerm ) ) )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:221:4: startRefinement= refinementTerm ( orRefinement[(CommonTree)$startRefinement.tree] -> orRefinement | andRefinement[(CommonTree)$startRefinement.tree] -> andRefinement | -> ^( ND_REFINE refinementTerm ) )
             {
-            pushFollow(FOLLOW_refinementTerm_in_refinementExpression794);
+            pushFollow(FOLLOW_refinementTerm_in_refinementExpression802);
             startRefinement=refinementTerm();
 
             state._fsp--;
 
             stream_refinementTerm.add(startRefinement.getTree());
 
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:220:35: ( orRefinement[(CommonTree)$startRefinement.tree] -> orRefinement | andRefinement[(CommonTree)$startRefinement.tree] -> andRefinement | -> ^( ND_REFINE refinementTerm ) )
-            int alt11=3;
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:221:35: ( orRefinement[(CommonTree)$startRefinement.tree] -> orRefinement | andRefinement[(CommonTree)$startRefinement.tree] -> andRefinement | -> ^( ND_REFINE refinementTerm ) )
+            int alt12=3;
             switch ( input.LA(1) ) {
-            case 41:
+            case 42:
                 {
-                alt11=1;
+                alt12=1;
                 }
                 break;
-            case 36:
+            case 37:
                 {
-                alt11=2;
+                alt12=2;
                 }
                 break;
             case EOF:
-            case 35:
+            case 36:
                 {
-                alt11=3;
+                alt12=3;
                 }
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("", 11, 0, input);
+                    new NoViableAltException("", 12, 0, input);
 
                 throw nvae;
 
             }
 
-            switch (alt11) {
+            switch (alt12) {
                 case 1 :
-                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:221:4: orRefinement[(CommonTree)$startRefinement.tree]
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:222:4: orRefinement[(CommonTree)$startRefinement.tree]
                     {
-                    pushFollow(FOLLOW_orRefinement_in_refinementExpression802);
-                    orRefinement56=orRefinement((CommonTree)(startRefinement!=null?((Object)startRefinement.tree):null));
+                    pushFollow(FOLLOW_orRefinement_in_refinementExpression810);
+                    orRefinement57=orRefinement((CommonTree)(startRefinement!=null?((Object)startRefinement.tree):null));
 
                     state._fsp--;
 
-                    stream_orRefinement.add(orRefinement56.getTree());
+                    stream_orRefinement.add(orRefinement57.getTree());
 
                     // AST REWRITE
                     // elements: orRefinement
@@ -2258,7 +2292,7 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 221:52: -> orRefinement
+                    // 222:52: -> orRefinement
                     {
                         adaptor.addChild(root_0, stream_orRefinement.nextTree());
 
@@ -2270,14 +2304,14 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:222:6: andRefinement[(CommonTree)$startRefinement.tree]
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:223:6: andRefinement[(CommonTree)$startRefinement.tree]
                     {
-                    pushFollow(FOLLOW_andRefinement_in_refinementExpression814);
-                    andRefinement57=andRefinement((CommonTree)(startRefinement!=null?((Object)startRefinement.tree):null));
+                    pushFollow(FOLLOW_andRefinement_in_refinementExpression822);
+                    andRefinement58=andRefinement((CommonTree)(startRefinement!=null?((Object)startRefinement.tree):null));
 
                     state._fsp--;
 
-                    stream_andRefinement.add(andRefinement57.getTree());
+                    stream_andRefinement.add(andRefinement58.getTree());
 
                     // AST REWRITE
                     // elements: andRefinement
@@ -2290,7 +2324,7 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 222:55: -> andRefinement
+                    // 223:55: -> andRefinement
                     {
                         adaptor.addChild(root_0, stream_andRefinement.nextTree());
 
@@ -2302,7 +2336,7 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:223:6: 
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:224:6: 
                     {
                     // AST REWRITE
                     // elements: refinementTerm
@@ -2315,9 +2349,9 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 223:6: -> ^( ND_REFINE refinementTerm )
+                    // 224:6: -> ^( ND_REFINE refinementTerm )
                     {
-                        // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:223:9: ^( ND_REFINE refinementTerm )
+                        // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:224:9: ^( ND_REFINE refinementTerm )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(
@@ -2368,7 +2402,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "orRefinement"
-    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:227:1: orRefinement[CommonTree startRefinement] : '|' refinementTerm -> ^( ND_ORREFINE refinementTerm ) ;
+    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:228:1: orRefinement[CommonTree startRefinement] : '|' refinementTerm -> ^( ND_ORREFINE refinementTerm ) ;
     public final CatmaQueryParser.orRefinement_return orRefinement(CommonTree startRefinement) throws RecognitionException {
         CatmaQueryParser.orRefinement_return retval = new CatmaQueryParser.orRefinement_return();
         retval.start = input.LT(1);
@@ -2376,27 +2410,27 @@ public TreeAdaptor getTreeAdaptor() {
 
         Object root_0 = null;
 
-        Token char_literal58=null;
-        CatmaQueryParser.refinementTerm_return refinementTerm59 =null;
+        Token char_literal59=null;
+        CatmaQueryParser.refinementTerm_return refinementTerm60 =null;
 
 
-        Object char_literal58_tree=null;
-        RewriteRuleTokenStream stream_41=new RewriteRuleTokenStream(adaptor,"token 41");
+        Object char_literal59_tree=null;
+        RewriteRuleTokenStream stream_42=new RewriteRuleTokenStream(adaptor,"token 42");
         RewriteRuleSubtreeStream stream_refinementTerm=new RewriteRuleSubtreeStream(adaptor,"rule refinementTerm");
         try {
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:228:2: ( '|' refinementTerm -> ^( ND_ORREFINE refinementTerm ) )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:228:4: '|' refinementTerm
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:229:2: ( '|' refinementTerm -> ^( ND_ORREFINE refinementTerm ) )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:229:4: '|' refinementTerm
             {
-            char_literal58=(Token)match(input,41,FOLLOW_41_in_orRefinement853);  
-            stream_41.add(char_literal58);
+            char_literal59=(Token)match(input,42,FOLLOW_42_in_orRefinement861);  
+            stream_42.add(char_literal59);
 
 
-            pushFollow(FOLLOW_refinementTerm_in_orRefinement855);
-            refinementTerm59=refinementTerm();
+            pushFollow(FOLLOW_refinementTerm_in_orRefinement863);
+            refinementTerm60=refinementTerm();
 
             state._fsp--;
 
-            stream_refinementTerm.add(refinementTerm59.getTree());
+            stream_refinementTerm.add(refinementTerm60.getTree());
 
             // AST REWRITE
             // elements: refinementTerm
@@ -2409,9 +2443,9 @@ public TreeAdaptor getTreeAdaptor() {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
             root_0 = (Object)adaptor.nil();
-            // 228:23: -> ^( ND_ORREFINE refinementTerm )
+            // 229:23: -> ^( ND_ORREFINE refinementTerm )
             {
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:228:26: ^( ND_ORREFINE refinementTerm )
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:229:26: ^( ND_ORREFINE refinementTerm )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(
@@ -2458,7 +2492,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "andRefinement"
-    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:232:1: andRefinement[CommonTree startRefinement] : ',' refinementTerm -> ^( ND_ANDREFINE refinementTerm ) ;
+    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:233:1: andRefinement[CommonTree startRefinement] : ',' refinementTerm -> ^( ND_ANDREFINE refinementTerm ) ;
     public final CatmaQueryParser.andRefinement_return andRefinement(CommonTree startRefinement) throws RecognitionException {
         CatmaQueryParser.andRefinement_return retval = new CatmaQueryParser.andRefinement_return();
         retval.start = input.LT(1);
@@ -2466,27 +2500,27 @@ public TreeAdaptor getTreeAdaptor() {
 
         Object root_0 = null;
 
-        Token char_literal60=null;
-        CatmaQueryParser.refinementTerm_return refinementTerm61 =null;
+        Token char_literal61=null;
+        CatmaQueryParser.refinementTerm_return refinementTerm62 =null;
 
 
-        Object char_literal60_tree=null;
-        RewriteRuleTokenStream stream_36=new RewriteRuleTokenStream(adaptor,"token 36");
+        Object char_literal61_tree=null;
+        RewriteRuleTokenStream stream_37=new RewriteRuleTokenStream(adaptor,"token 37");
         RewriteRuleSubtreeStream stream_refinementTerm=new RewriteRuleSubtreeStream(adaptor,"rule refinementTerm");
         try {
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:233:2: ( ',' refinementTerm -> ^( ND_ANDREFINE refinementTerm ) )
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:233:4: ',' refinementTerm
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:234:2: ( ',' refinementTerm -> ^( ND_ANDREFINE refinementTerm ) )
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:234:4: ',' refinementTerm
             {
-            char_literal60=(Token)match(input,36,FOLLOW_36_in_andRefinement885);  
-            stream_36.add(char_literal60);
+            char_literal61=(Token)match(input,37,FOLLOW_37_in_andRefinement893);  
+            stream_37.add(char_literal61);
 
 
-            pushFollow(FOLLOW_refinementTerm_in_andRefinement887);
-            refinementTerm61=refinementTerm();
+            pushFollow(FOLLOW_refinementTerm_in_andRefinement895);
+            refinementTerm62=refinementTerm();
 
             state._fsp--;
 
-            stream_refinementTerm.add(refinementTerm61.getTree());
+            stream_refinementTerm.add(refinementTerm62.getTree());
 
             // AST REWRITE
             // elements: refinementTerm
@@ -2499,9 +2533,9 @@ public TreeAdaptor getTreeAdaptor() {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
             root_0 = (Object)adaptor.nil();
-            // 233:23: -> ^( ND_ANDREFINE refinementTerm )
+            // 234:23: -> ^( ND_ANDREFINE refinementTerm )
             {
-                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:233:26: ^( ND_ANDREFINE refinementTerm )
+                // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:234:26: ^( ND_ANDREFINE refinementTerm )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(
@@ -2548,7 +2582,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "refinementTerm"
-    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:237:1: refinementTerm : ( selector -> selector | '(' refinementExpression ')' -> refinementExpression );
+    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:238:1: refinementTerm : ( selector -> selector | '(' refinementExpression ')' -> refinementExpression );
     public final CatmaQueryParser.refinementTerm_return refinementTerm() throws RecognitionException {
         CatmaQueryParser.refinementTerm_return retval = new CatmaQueryParser.refinementTerm_return();
         retval.start = input.LT(1);
@@ -2556,47 +2590,47 @@ public TreeAdaptor getTreeAdaptor() {
 
         Object root_0 = null;
 
-        Token char_literal63=null;
-        Token char_literal65=null;
-        CatmaQueryParser.selector_return selector62 =null;
+        Token char_literal64=null;
+        Token char_literal66=null;
+        CatmaQueryParser.selector_return selector63 =null;
 
-        CatmaQueryParser.refinementExpression_return refinementExpression64 =null;
+        CatmaQueryParser.refinementExpression_return refinementExpression65 =null;
 
 
-        Object char_literal63_tree=null;
-        Object char_literal65_tree=null;
+        Object char_literal64_tree=null;
+        Object char_literal66_tree=null;
         RewriteRuleTokenStream stream_35=new RewriteRuleTokenStream(adaptor,"token 35");
-        RewriteRuleTokenStream stream_34=new RewriteRuleTokenStream(adaptor,"token 34");
+        RewriteRuleTokenStream stream_36=new RewriteRuleTokenStream(adaptor,"token 36");
         RewriteRuleSubtreeStream stream_selector=new RewriteRuleSubtreeStream(adaptor,"rule selector");
         RewriteRuleSubtreeStream stream_refinementExpression=new RewriteRuleSubtreeStream(adaptor,"rule refinementExpression");
         try {
-            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:238:2: ( selector -> selector | '(' refinementExpression ')' -> refinementExpression )
-            int alt12=2;
-            int LA12_0 = input.LA(1);
+            // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:239:2: ( selector -> selector | '(' refinementExpression ')' -> refinementExpression )
+            int alt13=2;
+            int LA13_0 = input.LA(1);
 
-            if ( (LA12_0==FREQ||(LA12_0 >= PROPERTY && LA12_0 <= TAG)) ) {
-                alt12=1;
+            if ( (LA13_0==FREQ||(LA13_0 >= PROPERTY && LA13_0 <= TAG)) ) {
+                alt13=1;
             }
-            else if ( (LA12_0==34) ) {
-                alt12=2;
+            else if ( (LA13_0==35) ) {
+                alt13=2;
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("", 12, 0, input);
+                    new NoViableAltException("", 13, 0, input);
 
                 throw nvae;
 
             }
-            switch (alt12) {
+            switch (alt13) {
                 case 1 :
-                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:238:5: selector
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:239:5: selector
                     {
-                    pushFollow(FOLLOW_selector_in_refinementTerm917);
-                    selector62=selector();
+                    pushFollow(FOLLOW_selector_in_refinementTerm925);
+                    selector63=selector();
 
                     state._fsp--;
 
-                    stream_selector.add(selector62.getTree());
+                    stream_selector.add(selector63.getTree());
 
                     // AST REWRITE
                     // elements: selector
@@ -2609,7 +2643,7 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 238:14: -> selector
+                    // 239:14: -> selector
                     {
                         adaptor.addChild(root_0, stream_selector.nextTree());
 
@@ -2621,21 +2655,21 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:239:5: '(' refinementExpression ')'
+                    // C:\\data\\eclipse_workspace\\clea\\grammars\\ast\\CatmaQuery.g:240:5: '(' refinementExpression ')'
                     {
-                    char_literal63=(Token)match(input,34,FOLLOW_34_in_refinementTerm927);  
-                    stream_34.add(char_literal63);
+                    char_literal64=(Token)match(input,35,FOLLOW_35_in_refinementTerm935);  
+                    stream_35.add(char_literal64);
 
 
-                    pushFollow(FOLLOW_refinementExpression_in_refinementTerm928);
-                    refinementExpression64=refinementExpression();
+                    pushFollow(FOLLOW_refinementExpression_in_refinementTerm936);
+                    refinementExpression65=refinementExpression();
 
                     state._fsp--;
 
-                    stream_refinementExpression.add(refinementExpression64.getTree());
+                    stream_refinementExpression.add(refinementExpression65.getTree());
 
-                    char_literal65=(Token)match(input,35,FOLLOW_35_in_refinementTerm929);  
-                    stream_35.add(char_literal65);
+                    char_literal66=(Token)match(input,36,FOLLOW_36_in_refinementTerm937);  
+                    stream_36.add(char_literal66);
 
 
                     // AST REWRITE
@@ -2649,7 +2683,7 @@ public TreeAdaptor getTreeAdaptor() {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (Object)adaptor.nil();
-                    // 239:32: -> refinementExpression
+                    // 240:32: -> refinementExpression
                     {
                         adaptor.addChild(root_0, stream_refinementExpression.nextTree());
 
@@ -2687,27 +2721,27 @@ public TreeAdaptor getTreeAdaptor() {
 
     public static final BitSet FOLLOW_query_in_start143 = new BitSet(new long[]{0x0000000000000000L});
     public static final BitSet FOLLOW_EOF_in_start145 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_queryExpression_in_query161 = new BitSet(new long[]{0x0000010000000002L});
+    public static final BitSet FOLLOW_queryExpression_in_query161 = new BitSet(new long[]{0x0000020000000002L});
     public static final BitSet FOLLOW_refinement_in_query163 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_term_in_queryExpression200 = new BitSet(new long[]{0x0000007200000002L});
+    public static final BitSet FOLLOW_term_in_queryExpression200 = new BitSet(new long[]{0x000000E400000002L});
     public static final BitSet FOLLOW_unionQuery_in_queryExpression207 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_collocQuery_in_queryExpression219 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_exclusionQuery_in_queryExpression232 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_adjacencyQuery_in_queryExpression245 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_36_in_unionQuery288 = new BitSet(new long[]{0x000000041F000020L});
+    public static final BitSet FOLLOW_37_in_unionQuery288 = new BitSet(new long[]{0x000000082F000020L});
     public static final BitSet FOLLOW_term_in_unionQuery290 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_33_in_collocQuery321 = new BitSet(new long[]{0x000000041F000020L});
+    public static final BitSet FOLLOW_34_in_collocQuery321 = new BitSet(new long[]{0x000000082F000020L});
     public static final BitSet FOLLOW_term_in_collocQuery323 = new BitSet(new long[]{0x0000000000000082L});
     public static final BitSet FOLLOW_INT_in_collocQuery325 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_37_in_exclusionQuery359 = new BitSet(new long[]{0x000000041F000020L});
+    public static final BitSet FOLLOW_38_in_exclusionQuery359 = new BitSet(new long[]{0x000000082F000020L});
     public static final BitSet FOLLOW_term_in_exclusionQuery361 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_38_in_adjacencyQuery392 = new BitSet(new long[]{0x000000041F000020L});
+    public static final BitSet FOLLOW_39_in_adjacencyQuery392 = new BitSet(new long[]{0x000000082F000020L});
     public static final BitSet FOLLOW_term_in_adjacencyQuery394 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_phrase_in_term424 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_selector_in_term434 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_34_in_term445 = new BitSet(new long[]{0x000000041F000020L});
-    public static final BitSet FOLLOW_query_in_term446 = new BitSet(new long[]{0x0000000800000000L});
-    public static final BitSet FOLLOW_35_in_term447 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_35_in_term445 = new BitSet(new long[]{0x000000082F000020L});
+    public static final BitSet FOLLOW_query_in_term446 = new BitSet(new long[]{0x0000001000000000L});
+    public static final BitSet FOLLOW_36_in_term447 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_TXT_in_phrase471 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_tagQuery_in_selector504 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_propertyQuery_in_selector509 = new BitSet(new long[]{0x0000000000000002L});
@@ -2715,42 +2749,43 @@ public TreeAdaptor getTreeAdaptor() {
     public static final BitSet FOLLOW_freqQuery_in_selector519 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_similQuery_in_selector524 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_TAG_in_tagQuery544 = new BitSet(new long[]{0x0000000000000010L});
-    public static final BitSet FOLLOW_EQUAL_in_tagQuery546 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_phrase_in_tagQuery548 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_PROPERTY_in_propertyQuery575 = new BitSet(new long[]{0x0000000000000010L});
-    public static final BitSet FOLLOW_EQUAL_in_propertyQuery577 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_phrase_in_propertyQuery579 = new BitSet(new long[]{0x0000000040000002L});
-    public static final BitSet FOLLOW_VALUE_in_propertyQuery582 = new BitSet(new long[]{0x0000000000000010L});
-    public static final BitSet FOLLOW_EQUAL_in_propertyQuery584 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_phrase_in_propertyQuery586 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_REG_in_regQuery617 = new BitSet(new long[]{0x0000000000000010L});
-    public static final BitSet FOLLOW_EQUAL_in_regQuery619 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_phrase_in_regQuery621 = new BitSet(new long[]{0x0000008000000002L});
-    public static final BitSet FOLLOW_39_in_regQuery623 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_FREQ_in_freqQuery654 = new BitSet(new long[]{0x0000000020000010L});
-    public static final BitSet FOLLOW_EQUAL_in_freqQuery661 = new BitSet(new long[]{0x0000000000000080L});
-    public static final BitSet FOLLOW_INT_in_freqQuery663 = new BitSet(new long[]{0x0000002000000002L});
-    public static final BitSet FOLLOW_37_in_freqQuery666 = new BitSet(new long[]{0x0000000000000080L});
-    public static final BitSet FOLLOW_INT_in_freqQuery668 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_UNEQUAL_in_freqQuery690 = new BitSet(new long[]{0x0000000000000080L});
-    public static final BitSet FOLLOW_INT_in_freqQuery692 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_SIMIL_in_similQuery724 = new BitSet(new long[]{0x0000000000000010L});
-    public static final BitSet FOLLOW_EQUAL_in_similQuery726 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_phrase_in_similQuery728 = new BitSet(new long[]{0x0000000000000080L});
-    public static final BitSet FOLLOW_INT_in_similQuery730 = new BitSet(new long[]{0x0000000100000002L});
-    public static final BitSet FOLLOW_32_in_similQuery732 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_40_in_refinement768 = new BitSet(new long[]{0x000000040F000020L});
-    public static final BitSet FOLLOW_refinementExpression_in_refinement770 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_refinementTerm_in_refinementExpression794 = new BitSet(new long[]{0x0000021000000002L});
-    public static final BitSet FOLLOW_orRefinement_in_refinementExpression802 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_andRefinement_in_refinementExpression814 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_41_in_orRefinement853 = new BitSet(new long[]{0x000000040F000020L});
-    public static final BitSet FOLLOW_refinementTerm_in_orRefinement855 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_36_in_andRefinement885 = new BitSet(new long[]{0x000000040F000020L});
-    public static final BitSet FOLLOW_refinementTerm_in_andRefinement887 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_selector_in_refinementTerm917 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_34_in_refinementTerm927 = new BitSet(new long[]{0x000000040F000020L});
-    public static final BitSet FOLLOW_refinementExpression_in_refinementTerm928 = new BitSet(new long[]{0x0000000800000000L});
-    public static final BitSet FOLLOW_35_in_refinementTerm929 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_EQUAL_in_tagQuery546 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_phrase_in_tagQuery548 = new BitSet(new long[]{0x0000000010000002L});
+    public static final BitSet FOLLOW_TAG_MATCH_MODE_in_tagQuery550 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_PROPERTY_in_propertyQuery583 = new BitSet(new long[]{0x0000000000000010L});
+    public static final BitSet FOLLOW_EQUAL_in_propertyQuery585 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_phrase_in_propertyQuery587 = new BitSet(new long[]{0x0000000080000002L});
+    public static final BitSet FOLLOW_VALUE_in_propertyQuery590 = new BitSet(new long[]{0x0000000000000010L});
+    public static final BitSet FOLLOW_EQUAL_in_propertyQuery592 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_phrase_in_propertyQuery594 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_REG_in_regQuery625 = new BitSet(new long[]{0x0000000000000010L});
+    public static final BitSet FOLLOW_EQUAL_in_regQuery627 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_phrase_in_regQuery629 = new BitSet(new long[]{0x0000010000000002L});
+    public static final BitSet FOLLOW_40_in_regQuery631 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_FREQ_in_freqQuery662 = new BitSet(new long[]{0x0000000040000010L});
+    public static final BitSet FOLLOW_EQUAL_in_freqQuery669 = new BitSet(new long[]{0x0000000000000080L});
+    public static final BitSet FOLLOW_INT_in_freqQuery671 = new BitSet(new long[]{0x0000004000000002L});
+    public static final BitSet FOLLOW_38_in_freqQuery674 = new BitSet(new long[]{0x0000000000000080L});
+    public static final BitSet FOLLOW_INT_in_freqQuery676 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_UNEQUAL_in_freqQuery698 = new BitSet(new long[]{0x0000000000000080L});
+    public static final BitSet FOLLOW_INT_in_freqQuery700 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_SIMIL_in_similQuery732 = new BitSet(new long[]{0x0000000000000010L});
+    public static final BitSet FOLLOW_EQUAL_in_similQuery734 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_phrase_in_similQuery736 = new BitSet(new long[]{0x0000000000000080L});
+    public static final BitSet FOLLOW_INT_in_similQuery738 = new BitSet(new long[]{0x0000000200000002L});
+    public static final BitSet FOLLOW_33_in_similQuery740 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_41_in_refinement776 = new BitSet(new long[]{0x000000080F000020L});
+    public static final BitSet FOLLOW_refinementExpression_in_refinement778 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_refinementTerm_in_refinementExpression802 = new BitSet(new long[]{0x0000042000000002L});
+    public static final BitSet FOLLOW_orRefinement_in_refinementExpression810 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_andRefinement_in_refinementExpression822 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_42_in_orRefinement861 = new BitSet(new long[]{0x000000080F000020L});
+    public static final BitSet FOLLOW_refinementTerm_in_orRefinement863 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_37_in_andRefinement893 = new BitSet(new long[]{0x000000080F000020L});
+    public static final BitSet FOLLOW_refinementTerm_in_andRefinement895 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_selector_in_refinementTerm925 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_35_in_refinementTerm935 = new BitSet(new long[]{0x000000080F000020L});
+    public static final BitSet FOLLOW_refinementExpression_in_refinementTerm936 = new BitSet(new long[]{0x0000001000000000L});
+    public static final BitSet FOLLOW_36_in_refinementTerm937 = new BitSet(new long[]{0x0000000000000002L});
 
 }

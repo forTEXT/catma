@@ -21,10 +21,12 @@ package de.catma.queryengine;
 
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
-import de.catma.indexer.TermInfo;
+import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
 
 /**
  * A refinement that is specified via a {@link org.catma.queryengine.Query}.
@@ -43,47 +45,60 @@ public class QueryRefinement implements Refinement {
     public QueryRefinement(Query query) {
         this.query = query;
     }
+    
+    private QueryResult refineWithNonFreqQuery(QueryResult result) throws Exception {
 
-    public QueryResult refine(QueryResult result) throws Exception {
+    	QueryResult refinementResult = query.getResult();
+    	
+    	Comparator<QueryResultRow> comparator = query.getComparator();
+    	
+    	if (comparator == null) {
+    		QueryResultRowArray refinedResult = result.asQueryResultRowArray();
+    		refinedResult.retainAll(refinementResult.asQueryResultRowArray());
+    		
+    		return refinedResult;
+    	}
+    	else {
+    		Iterator<QueryResultRow> resultIterator = result.iterator();
+    		while (resultIterator.hasNext()) {
+    			QueryResultRow curRow = resultIterator.next();
+    			if (!curRow.existsIn(refinementResult, comparator)) {
+    				resultIterator.remove();
+    			}
+    		}
+    	}
 
-//        List<TermInfo> termInfoList = query.getResult().getTermInfoList();
-//
-//        Comparator<TermInfo> comparator = query.getComparator();
-//        
-//        // do we have a special comparator or do we compare by equal?
-//        if (comparator == null) {
-//            result.getTermInfoList().retainAll(termInfoList);
-//        }
-//        else {
-//            Iterator<TermInfo> baseResultIterator = result.getTermInfoList().iterator();
-//            while (baseResultIterator.hasNext()) {
-//                TermInfo curInfo = baseResultIterator.next();
-//                if(!hasMatch(curInfo,termInfoList,comparator)) {
-//                    baseResultIterator.remove();
-//                }
-//            }
-//        }
-//
-//        return result;
-    	return null;
+    	return result;
     }
-
-    /**
-     * Tests whether the given token has an equal token in the list.
-     * @param curInfo the token to test
-     * @param termInfoList the list to check against
-     * @param comparator the comparator to use for the test
-     * @return <code>true</code> if there is an equal token in the list 
-     */
-    private boolean hasMatch(
-            TermInfo curInfo, List<TermInfo> termInfoList, Comparator<TermInfo> comparator) {
-
-        for (TermInfo comp : termInfoList) {
-            if((comparator.compare(curInfo,comp)==0)||(comparator.compare(comp,curInfo)==0)) {
-                return true;
-            }
-        }
-
-        return false;
+    
+    private QueryResult refineWithFreqQuery(QueryResult result) throws Exception {
+    	FreqQuery freqQuery = (FreqQuery)query;
+    	Set<GroupedQueryResult> groupedSet = result.asGroupedSet();
+    	Iterator<GroupedQueryResult> resultIterator = groupedSet.iterator();
+		while (resultIterator.hasNext()) {
+			GroupedQueryResult curGroupedResult = resultIterator.next();
+			
+			if (!freqQuery.matches(curGroupedResult.getTotalFrequency())) {
+				resultIterator.remove();
+			}
+		}
+		QueryResultRowArray refinedResult = new QueryResultRowArray();
+		for (GroupedQueryResult groupedResult : groupedSet) {
+			for (QueryResultRow row : groupedResult) {
+				refinedResult.add(row);
+			}
+		}
+		return refinedResult;
+    }
+    
+    public QueryResult refine(QueryResult result) throws Exception {
+    	if (query instanceof FreqQuery) {
+    		return refineWithFreqQuery(result);
+    	}
+    	return refineWithNonFreqQuery(result);
+    }
+    
+    public void setQueryOptions(QueryOptions queryOptions) {
+    	query.setQueryOptions(queryOptions);
     }
 }

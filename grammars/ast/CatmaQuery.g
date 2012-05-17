@@ -180,9 +180,10 @@ selector
 	
 	
 tagQuery
-	:	TAG EQUAL phrase -> ^(ND_TAG phrase)
+	:	TAG EQUAL phrase TAG_MATCH_MODE? -> ^(ND_TAG phrase TAG_MATCH_MODE?)
 	;
 	catch[RecognitionException e] {throw e;}
+	
 	
 propertyQuery 
 	:	PROPERTY EQUAL phrase (VALUE EQUAL phrase)? -> ^(ND_PROPERTY phrase phrase?)	
@@ -246,6 +247,10 @@ refinementTerm
 *************************************************/
 
 TAG 	:	'tag'
+	;
+	
+TAG_MATCH_MODE 
+	:	'boundary' | 'overlap' | 'exact'
 	;
 	
 PROPERTY 

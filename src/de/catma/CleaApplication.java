@@ -3,9 +3,12 @@ package de.catma;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Properties;
 
 import com.vaadin.Application;
+import com.vaadin.service.ApplicationContext;
+import com.vaadin.service.ApplicationContext.TransactionListener;
 import com.vaadin.ui.ProgressIndicator;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -77,9 +80,14 @@ public class CleaApplication extends Application
 		mainWindow.addListener(new CloseListener() {
 			
 			public void windowClose(CloseEvent e) {
-				//TODO: close comm to elastic search
+				// TODO: what should we do when the user closes (or reloads) the browser window
+				// could be:
+				// close the application -> not so good on reloads
+				// leave it open -> then we need another way of closing the app (logout button?!)
 			}
+			
 		});
+		
 		VerticalLayout mainLayout = new VerticalLayout();
 		mainLayout.setSizeUndefined();
 		mainLayout.setMargin(true);
@@ -106,9 +114,6 @@ public class CleaApplication extends Application
 			defaultProgressIndicator.setEnabled(false);
 			defaultProgressIndicator.setPollingInterval(500);
 			progressWindow = new ProgressWindow(defaultProgressIndicator);
-//			mainLayout.addComponent(defaultProgressIndicator);
-//			mainLayout.setComponentAlignment(
-//					defaultProgressIndicator, Alignment.TOP_RIGHT);
 			
 			menu = menuFactory.createMenu(
 					mainLayout, 
@@ -138,6 +143,13 @@ public class CleaApplication extends Application
 		setMainWindow(mainWindow);
 		
 		setTheme("cleatheme");
+	}
+	
+	@Override
+	public void start(URL applicationUrl, Properties applicationProperties,
+			ApplicationContext context) {
+		System.out.println("Starting: " + applicationUrl );
+		super.start(applicationUrl, applicationProperties, context);
 	}
 	
 	//TODO: indexer should be provided by the repository!?
@@ -284,5 +296,11 @@ public class CleaApplication extends Application
 	
 	public Indexer getIndexer() {
 		return this.indexer;
+	}
+	
+	@Override
+	public void close() {
+		indexer.close();
+		super.close();
 	}
 }
