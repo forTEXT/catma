@@ -138,7 +138,7 @@ public class CollocQuery extends Query {
 				if (!rowToTermInfoListMapping.containsKey(collocConditionRow)) {
 					rowToTermInfoListMapping.put(
 							collocConditionRow, 
-							getQueryOptions().getIndexer().getTermInfosFor(
+							getQueryOptions().getIndexer().getTermInfosFor( //TODO: better use direct doc access via kwicprovider instead of DB
 									collocConditionRow.getSourceDocumentId(), 
 									collocConditionRow.getRange()));
 				}

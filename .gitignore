@@ -8,3 +8,4 @@ scratch.sql
 .project
 oldcode
 build
+db/*.bak
