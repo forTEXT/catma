@@ -115,7 +115,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 							MarkupCollectionsTreeProperty.caption);
 					
 					if (captionProp != null) {
-						captionProp.setValue(tagDefinition.getType());
+						captionProp.setValue(tagDefinition.getName());
 					}
 					
 					boolean selected = Boolean.valueOf(markupCollectionsTree.getItem(
@@ -259,7 +259,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				
 				markupCollectionsTree.addItem(
 						new Object[]{
-								tagDefinition.getType(), 
+								tagDefinition.getName(), 
 								createCheckbox(tagDefinition),
 								new Label()},
 						tagDefinition);
@@ -270,7 +270,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			}
 		}
 		for (TagDefinition tagDefinition : tagsetDefinition) {
-			String baseID = tagDefinition.getBaseID();
+			String baseID = tagDefinition.getParentID();
 			TagDefinition parent = tagsetDefinition.getTagDefinition(baseID);
 			if ((parent==null)
 					||(parent.getID().equals(

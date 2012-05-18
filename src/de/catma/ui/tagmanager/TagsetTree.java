@@ -213,7 +213,7 @@ public class TagsetTree extends HorizontalLayout {
 							tagDefinition, 
 							TagTreePropertyName.caption);
 					if (prop != null) {
-						prop.setValue(tagDefinition.getType());
+						prop.setValue(tagDefinition.getName());
 					}
 				}
 			}
@@ -266,7 +266,7 @@ public class TagsetTree extends HorizontalLayout {
 					new PropertyCollection(tagDefNameProp, tagDefColorProp);
 			
 			propertyCollection.getItemProperty(tagDefNameProp).setValue(
-					selTagDefinition.getType());
+					selTagDefinition.getName());
 			propertyCollection.getItemProperty(tagDefColorProp).setValue(
 					ColorConverter.toHex(selTagDefinition.getColor()));
 			
@@ -720,7 +720,7 @@ public class TagsetTree extends HorizontalLayout {
 
 	private void establishHierarchy(
 			TagsetDefinition tagsetDefinition, TagDefinition tagDefinition) {
-		String baseID = tagDefinition.getBaseID();
+		String baseID = tagDefinition.getParentID();
 		TagDefinition parent = tagsetDefinition.getTagDefinition(baseID);
 		if ((parent==null)
 				||(parent.getID().equals(
@@ -744,7 +744,7 @@ public class TagsetTree extends HorizontalLayout {
 			tagTree.getContainerProperty(
 					tagDefinition, 
 					TagTreePropertyName.caption).setValue(
-							tagDefinition.getType());
+							tagDefinition.getName());
 			tagTree.getContainerProperty(
 					tagDefinition, 
 					TagTreePropertyName.icon).setValue(tagIcon);

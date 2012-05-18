@@ -40,13 +40,13 @@ public class TeiTagLibrarySerializer {
 		fsDecl.setID(td.getID());
 		fsDecl.setAttributeValue(Attribute.n, td.getVersion().toString());
 		fsDecl.setAttributeValue(Attribute.type, td.getID());
-		if (!td.getBaseID().isEmpty()) {
-			fsDecl.setAttributeValue(Attribute.fsDecl_baseTypes, td.getBaseID());
+		if (!td.getParentID().isEmpty()) {
+			fsDecl.setAttributeValue(Attribute.fsDecl_baseTypes, td.getParentID());
 		}
 		fsdDecl.appendChild(fsDecl);
 		
 		TeiElement fsDescr = new TeiElement(TeiElementName.fsDescr);
-		fsDescr.appendChild(td.getType());
+		fsDescr.appendChild(td.getName());
 		fsDecl.appendChild(fsDescr);
 		
 		for (PropertyDefinition pd : td.getSystemPropertyDefinitions()) {
