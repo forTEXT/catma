@@ -1,4 +1,4 @@
-package de.catma.fsrepository;
+package de.catma.repository.fs;
 
 import java.util.Properties;
 

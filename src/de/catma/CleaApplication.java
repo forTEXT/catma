@@ -8,7 +8,6 @@ import java.util.Properties;
 
 import com.vaadin.Application;
 import com.vaadin.service.ApplicationContext;
-import com.vaadin.service.ApplicationContext.TransactionListener;
 import com.vaadin.ui.ProgressIndicator;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;

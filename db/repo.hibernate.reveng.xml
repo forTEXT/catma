@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-reverse-engineering PUBLIC "-//Hibernate/Hibernate Reverse Engineering DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-reverse-engineering-3.0.dtd" >
+
+<hibernate-reverse-engineering>
+  <table-filter match-catalog="CatmaRepository" match-name="property"/>
+  <table-filter match-catalog="CatmaRepository" match-name="propertydef_possiblevalue"/>
+  <table-filter match-catalog="CatmaRepository" match-name="propertydefinition"/>
+  <table-filter match-catalog="CatmaRepository" match-name="propertyvalue"/>
+  <table-filter match-catalog="CatmaRepository" match-name="sourcedocument"/>
+  <table-filter match-catalog="CatmaRepository" match-name="staticmarkupattribute"/>
+  <table-filter match-catalog="CatmaRepository" match-name="staticmarkupcollection"/>
+  <table-filter match-catalog="CatmaRepository" match-name="staticmarkupinstance"/>
+  <table-filter match-catalog="CatmaRepository" match-name="tagdefinition"/>
+  <table-filter match-catalog="CatmaRepository" match-name="taginstance"/>
+  <table-filter match-catalog="CatmaRepository" match-name="taglibrary"/>
+  <table-filter match-catalog="CatmaRepository" match-name="tagreference"/>
+  <table-filter match-catalog="CatmaRepository" match-name="tagsetdefinition"/>
+  <table-filter match-catalog="CatmaRepository" match-name="unseparable_charsequence"/>
+  <table-filter match-catalog="CatmaRepository" match-name="user"/>
+  <table-filter match-catalog="CatmaRepository" match-name="user_sourcedocument"/>
+  <table-filter match-catalog="CatmaRepository" match-name="user_staticmarkupcollection"/>
+  <table-filter match-catalog="CatmaRepository" match-name="user_taglibrary"/>
+  <table-filter match-catalog="CatmaRepository" match-name="user_usermarkupcollection"/>
+  <table-filter match-catalog="CatmaRepository" match-name="userdefined_separatingcharacter"/>
+  <table-filter match-catalog="CatmaRepository" match-name="usermarkupcollection"/>
+</hibernate-reverse-engineering>

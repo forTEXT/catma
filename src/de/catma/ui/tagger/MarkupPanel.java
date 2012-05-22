@@ -110,6 +110,10 @@ public class MarkupPanel extends VerticalLayout {
 	                	TagsetDefinition incomingTagsetDef =
 	                			(TagsetDefinition)sourceItemId;
 	                	
+	                	/**
+	                	 * TODO: hier muss statt der TagsetDef aus der independet lib
+	                	 * eher eine Kopie angelegt werden
+	                	 */
 	                	markupCollectionsPanel.updateTagsetDefinition(
 	                			incomingTagsetDef);
 	                	tagsetTree.addTagsetDefinition(
