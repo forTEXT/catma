@@ -25,7 +25,7 @@ import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.core.document.Corpus;
 import de.catma.core.document.repository.Repository;
-import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexerProvider;
@@ -57,7 +57,7 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 		this.relevantStaticMarkupCollIDs = new ArrayList<String>();
 		
 		if (corpus != null) {
-			for (SourceDocument sd : corpus.getSourceDocuments()) {
+			for (ISourceDocument sd : corpus.getSourceDocuments()) {
 				this.relevantSourceDocumentIDs.add(sd.getID());
 			}
 			for (UserMarkupCollectionReference ref : 
@@ -194,7 +194,7 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 				"Documents and collections considered for this search");
 		
 		if (corpus != null) {
-			for (SourceDocument sd : corpus.getSourceDocuments()) {
+			for (ISourceDocument sd : corpus.getSourceDocuments()) {
 				documentsTree.addItem(sd);
 			}
 		}

@@ -11,7 +11,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 
 import de.catma.core.document.Range;
-import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.tag.TagLibrary;
 import de.catma.indexer.Indexer;
@@ -41,7 +41,7 @@ public class DBIndexer implements Indexer {
 	}
 	
 
-	public void index(SourceDocument sourceDocument,
+	public void index(ISourceDocument sourceDocument,
 			List<String> unseparableCharacterSequences,
 			List<Character> userDefinedSeparatingCharacters, Locale locale)
 			throws Exception {

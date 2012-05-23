@@ -4,15 +4,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.net.URI;
 
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.ProgressIndicator;
 import com.vaadin.ui.Upload;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Upload.FailedEvent;
 import com.vaadin.ui.Upload.FailedListener;
 import com.vaadin.ui.Upload.ProgressListener;
@@ -23,7 +24,7 @@ import com.vaadin.ui.Upload.SucceededEvent;
 import com.vaadin.ui.Upload.SucceededListener;
 
 import de.catma.CleaApplication;
-import de.catma.core.document.source.TechInfoSet;
+import de.catma.core.util.IDGenerator;
 
 public class UploadPanel extends HorizontalLayout {
 
@@ -31,6 +32,7 @@ public class UploadPanel extends HorizontalLayout {
 	private ProgressIndicator pi;
 	private Button btCancelUpload;
 	private Label fileLabel;
+	private URI uploadedFileUri;
 
 	public UploadPanel() {
 		initComponents();
@@ -78,9 +80,15 @@ public class UploadPanel extends HorizontalLayout {
 		upload.setReceiver(new Receiver() {
 			
 			public OutputStream receiveUpload(String filename, String mimeType) {
+
 				try {
-					String tempDir = ((CleaApplication)getApplication()).getTempDirectory();
-					File uploadFile = new File(new File(tempDir), filename);
+					String tempDir = 
+							((CleaApplication)getApplication()).getTempDirectory();
+					IDGenerator idGenerator = new IDGenerator();
+					
+					File uploadFile = new File(new File(tempDir), idGenerator.generate());
+					uploadedFileUri = uploadFile.toURI();
+					
 					if (uploadFile.exists()) {
 						uploadFile.delete();
 					}
@@ -138,6 +146,9 @@ public class UploadPanel extends HorizontalLayout {
 		upload.addListener(listener);
 	}
 	
+	public URI getUploadedFileUri() {
+		return uploadedFileUri;
+	}
 	
 	
 }

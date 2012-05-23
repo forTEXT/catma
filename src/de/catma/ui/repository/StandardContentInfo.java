@@ -1,6 +1,6 @@
 package de.catma.ui.repository;
 
-import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.source.ISourceDocument;
 
 public class StandardContentInfo implements ContentInfo {
 
@@ -21,7 +21,7 @@ public class StandardContentInfo implements ContentInfo {
 		this.publisher = publisher;
 	}
 	
-	public StandardContentInfo(SourceDocument sd) {
+	public StandardContentInfo(ISourceDocument sd) {
 		this(
 			sd.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getTitle(),
 			sd.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getAuthor(),

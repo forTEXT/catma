@@ -12,14 +12,10 @@ public class DBRepositoryFactory implements RepositoryFactory {
 	public Repository createRepository(TagManager tagManager,
 			Properties properties, int index) throws Exception {
 
-		boolean isLocal = 
-				Boolean.valueOf(properties.getProperty(
-					RepositoryPropertyKey.isLocal.name(), 
-					Boolean.FALSE.toString()));
-		
 		return new DBRepository(
-			properties.getProperty(RepositoryPropertyKey.RepositoryName.name()),
-			isLocal);
+			RepositoryPropertyKey.Repository.getProperty(properties, index),
+			RepositoryPropertyKey.RepositoryFolderPath.getProperty(properties, index),
+			RepositoryPropertyKey.RepositoryAuthenticationRequired.isTrue(properties, index, false));
 	}
 
 }

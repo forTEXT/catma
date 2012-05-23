@@ -13,7 +13,7 @@ import java.util.Set;
 import de.catma.core.document.ContentInfoSet;
 import de.catma.core.document.Corpus;
 import de.catma.core.document.repository.Repository;
-import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
@@ -34,7 +34,7 @@ class FSRepository implements Repository {
 	private Set<Corpus> corpora;
 	private FSCorpusHandler corpusHandler;
 	private FSSourceDocumentHandler sourceDocumentHandler;
-	private Map<String,SourceDocument> sourceDocumentsByID;
+	private Map<String,ISourceDocument> sourceDocumentsByID;
 	private Set<TagLibraryReference> tagLibraryReferences;
 	private FSTagLibraryHandler tagLibraryHandler;
 	private FSUserMarkupCollectionHandler userMarkupCollectionHandler;
@@ -103,7 +103,7 @@ class FSRepository implements Repository {
 		this.tagLibraryReferences = this.tagLibraryHandler.loadTagLibraryReferences();
 	}
 
-	public Collection<SourceDocument> getSourceDocuments() {
+	public Collection<ISourceDocument> getSourceDocuments() {
 		return Collections.unmodifiableCollection(this.sourceDocumentsByID.values());
 	}
 
@@ -141,7 +141,7 @@ class FSRepository implements Repository {
 		return null;
 	}
 
-	public void delete(SourceDocument sourceDocument) {
+	public void delete(ISourceDocument sourceDocument) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -156,14 +156,14 @@ class FSRepository implements Repository {
 		
 	}
 
-	public void update(SourceDocument sourceDocument) {
+	public void update(ISourceDocument sourceDocument) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	public void update(
 			UserMarkupCollection userMarkupCollection, 
-			SourceDocument sourceDocument) throws IOException {
+			ISourceDocument sourceDocument) throws IOException {
 		userMarkupCollectionHandler.saveUserMarkupCollection(
 				userMarkupCollection, sourceDocument);
 	}
@@ -173,7 +173,7 @@ class FSRepository implements Repository {
 		
 	}
 
-	public void insert(SourceDocument sourceDocument) throws IOException {
+	public void insert(ISourceDocument sourceDocument) throws IOException {
 		sourceDocumentHandler.insert(sourceDocument);
 		sourceDocumentsByID.put(sourceDocument.getID(), sourceDocument);
 		this.propertyChangeSupport.firePropertyChange(
@@ -182,8 +182,8 @@ class FSRepository implements Repository {
 	}
 
 	public void createUserMarkupCollection(
-			String name, SourceDocument sourceDocument) throws IOException {
-		String id = createCatmaUri(
+			String name, ISourceDocument sourceDocument) throws IOException {
+		String id = buildCatmaUri(
 				"/" + CONTAINER_FOLDER + "/" + name + ".xml");
 		ContentInfoSet cis = new ContentInfoSet(name);
 		UserMarkupCollection umc = 
@@ -199,7 +199,7 @@ class FSRepository implements Repository {
 		
 		this.propertyChangeSupport.firePropertyChange(
 				PropertyChangeEvent.userMarkupCollectionAdded.name(),
-				null, new Pair<UserMarkupCollectionReference, SourceDocument>(
+				null, new Pair<UserMarkupCollectionReference, ISourceDocument>(
 						ref,sourceDocument));
 	}
 
@@ -209,7 +209,7 @@ class FSRepository implements Repository {
 		return null;
 	}
 
-	public SourceDocument getSourceDocument(String id) {
+	public ISourceDocument getSourceDocument(String id) {
 		return this.sourceDocumentsByID.get(id);
 	}
 
@@ -236,7 +236,7 @@ class FSRepository implements Repository {
 		return builder.toString();
 	}
 	
-	public static String createCatmaUri(String path) {
+	public static String buildCatmaUri(String path) {
 		return REPO_URI_SCHEME + path;
 	}
 
@@ -244,8 +244,8 @@ class FSRepository implements Repository {
 		return uri.startsWith(REPO_URI_SCHEME);
 	}
 
-	public String createIdFromURI(URI uri) {
-		return sourceDocumentHandler.createIDFromURI(uri);
+	public String getIdFromURI(URI uri) {
+		return sourceDocumentHandler.getIDFromURI(uri);
 	}
 	
 	public boolean isAuthenticationRequired() {
@@ -259,11 +259,7 @@ class FSRepository implements Repository {
 			public boolean isLocked() {
 				return false;
 			}
-			
-			public String getNickName() {
-				return System.getProperty("user.name");
-			}
-			
+
 			public String getIdentifier() {
 				return System.getProperty("user.name");
 			}

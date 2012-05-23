@@ -9,3 +9,4 @@ scratch.sql
 oldcode
 build
 db/*.bak
+repo/old

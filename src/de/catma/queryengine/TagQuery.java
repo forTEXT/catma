@@ -25,7 +25,7 @@ import java.util.Set;
 
 import de.catma.core.document.Range;
 import de.catma.core.document.repository.Repository;
-import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.indexer.Indexer;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
@@ -73,9 +73,9 @@ public class TagQuery extends Query {
 						tagPhrase);
         
         Repository repository = queryOptions.getRepository();
-        Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
+        Set<ISourceDocument> toBeUnloaded = new HashSet<ISourceDocument>();
         for (QueryResultRow row  : result) {
-        	SourceDocument sd = 
+        	ISourceDocument sd = 
         			repository.getSourceDocument(row.getSourceDocumentId());
         	if (!sd.isLoaded()) {
     			//TODO: unload SourceDocuments to free space if tobeUnloaded.size() > 10
@@ -98,7 +98,7 @@ public class TagQuery extends Query {
         	}
         }
         
-        for (SourceDocument sd : toBeUnloaded) {
+        for (ISourceDocument sd : toBeUnloaded) {
         	sd.unload();
         }
         

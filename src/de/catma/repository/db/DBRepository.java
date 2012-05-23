@@ -1,9 +1,11 @@
 package de.catma.repository.db;
 
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,6 +21,7 @@ import org.hibernate.service.ServiceRegistryBuilder;
 
 import de.catma.core.document.Corpus;
 import de.catma.core.document.repository.Repository;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
@@ -30,23 +33,32 @@ import de.catma.core.user.User;
 import de.catma.core.util.CloseSafe;
 import de.catma.repository.db.model.DBSourceDocument;
 import de.catma.repository.db.model.DBUser;
+import de.catma.repository.db.model.DBUserSourceDocument;
 
 public class DBRepository implements Repository {
 	
+	private String name;
+	private DBSourceDocumentHandler dbSourceDocumentHandler;
+	private boolean authenticationRequired;
+
 	private SessionFactory sessionFactory; 
 	private Configuration hibernateConfig;
-	private boolean isLocal;
-	private String name;
-	private DBUser currentUser;
 	
 	private Set<Corpus> corpora;
-	private Map<String,SourceDocument> sourceDocumentsByID;
+	private Map<String,ISourceDocument> sourceDocumentsByID;
 	private Set<TagLibraryReference> tagLibraryReferences;
 
+	private DBUser currentUser;
+	private PropertyChangeSupport propertyChangeSupport;
 
-	public DBRepository(String name, boolean isLocal) {
+	public DBRepository(
+			String name, String repoFolderPath, boolean authenticationRequired) {
+		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.name = name;
-		this.isLocal = isLocal;
+		this.dbSourceDocumentHandler = 
+				new DBSourceDocumentHandler(repoFolderPath);
+		this.authenticationRequired = authenticationRequired;
+		
 		hibernateConfig = new Configuration();
 		hibernateConfig.configure(
 				this.getClass().getPackage().getName().replace('.', '/') 
@@ -59,22 +71,22 @@ public class DBRepository implements Repository {
 		
 		sessionFactory = hibernateConfig.buildSessionFactory(serviceRegistry);
 		corpora = new HashSet<Corpus>();
-		sourceDocumentsByID = new HashMap<String, SourceDocument>();
+		sourceDocumentsByID = new HashMap<String, ISourceDocument>();
 		tagLibraryReferences = new HashSet<TagLibraryReference>();
 	}
 	
 	public void addPropertyChangeListener(
 			PropertyChangeEvent propertyChangeEvent,
 			PropertyChangeListener propertyChangeListener) {
-		// TODO Auto-generated method stub
-
+		this.propertyChangeSupport.addPropertyChangeListener(
+				propertyChangeEvent.name(), propertyChangeListener);
 	}
-
+	
 	public void removePropertyChangeListener(
 			PropertyChangeEvent propertyChangeEvent,
 			PropertyChangeListener propertyChangeListener) {
-		// TODO Auto-generated method stub
-
+		this.propertyChangeSupport.removePropertyChangeListener(
+				propertyChangeEvent.name(), propertyChangeListener);
 	}
 
 	public String getName() {
@@ -107,12 +119,21 @@ public class DBRepository implements Repository {
 		
 	}
 
+	@SuppressWarnings("unchecked")
 	private void loadSourceDocuments(Session session) {
-//		Query query = 
-//				session.createQuery(
-//						"from " + DBSourceDocument.class.getSimpleName() +
-//						" where  "
-		
+		if (!currentUser.isLocked()) {
+			Query query = 
+				session.createQuery(
+					"select sd from " 
+					+ DBSourceDocument.class.getSimpleName() + " as sd "
+					+ " inner join sd.dbUserSourceDocuments as usc "
+					+ " inner join usc.dbUser as user " 
+					+ " where user.userId = " + currentUser.getUserId() );
+			
+			for (DBSourceDocument sd : (List<DBSourceDocument>)query.list()) {
+				this.sourceDocumentsByID.put(sd.getID(), sd);
+			}
+		}		
 	}
 
 	private void loadCurrentUser(Session session,
@@ -149,24 +170,20 @@ public class DBRepository implements Repository {
 		return user;
 	}
 
-	public Collection<SourceDocument> getSourceDocuments() {
-		// TODO Auto-generated method stub
-		return null;
+	public Collection<ISourceDocument> getSourceDocuments() {
+		return  Collections.unmodifiableCollection(sourceDocumentsByID.values());
 	}
 
-	public SourceDocument getSourceDocument(String id) {
-		// TODO Auto-generated method stub
-		return null;
+	public ISourceDocument getSourceDocument(String id) {
+		return sourceDocumentsByID.get(id);
 	}
 
 	public Set<Corpus> getCorpora() {
-		// TODO Auto-generated method stub
-		return null;
+		return Collections.unmodifiableSet(corpora);
 	}
 
 	public Set<TagLibraryReference> getTagLibraryReferences() {
-		// TODO Auto-generated method stub
-		return null;
+		return Collections.unmodifiableSet(this.tagLibraryReferences);
 	}
 
 	public UserMarkupCollection getUserMarkupCollection(
@@ -186,7 +203,7 @@ public class DBRepository implements Repository {
 		return null;
 	}
 
-	public void delete(SourceDocument sourceDocument) {
+	public void delete(ISourceDocument sourceDocument) {
 		// TODO Auto-generated method stub
 
 	}
@@ -201,13 +218,13 @@ public class DBRepository implements Repository {
 
 	}
 
-	public void update(SourceDocument sourceDocument) {
+	public void update(ISourceDocument sourceDocument) {
 		// TODO Auto-generated method stub
 
 	}
 
 	public void update(UserMarkupCollection userMarkupCollection,
-			SourceDocument sourceDocument) throws IOException {
+			ISourceDocument sourceDocument) throws IOException {
 		// TODO Auto-generated method stub
 
 	}
@@ -217,14 +234,48 @@ public class DBRepository implements Repository {
 
 	}
 
-	public void insert(SourceDocument sourceDocument) throws IOException {
-		DBSourceDocument dbSourceDocument = 
-				new DBSourceDocument(sourceDocument);
-
+	public void insert(ISourceDocument sourceDocument) throws IOException {
+		if (sourceDocument instanceof SourceDocument) {
+			sourceDocument = 
+					new DBSourceDocument((SourceDocument)sourceDocument);
+		}
+		Session session = sessionFactory.openSession();
+		try {
+			session.beginTransaction();
+			session.save(sourceDocument);
+			
+			DBUserSourceDocument dbUserSourceDocument = 
+					new DBUserSourceDocument(
+							currentUser, (DBSourceDocument)sourceDocument);
+			
+			session.save(dbUserSourceDocument);
+			
+			dbSourceDocumentHandler.insert(sourceDocument);
+			
+			session.getTransaction().commit();
+			
+			this.sourceDocumentsByID.put(sourceDocument.getID(), sourceDocument);
+			
+			this.propertyChangeSupport.firePropertyChange(
+					PropertyChangeEvent.sourceDocumentAdded.name(),
+					null, sourceDocument.getID());
+		}
+		catch (Exception e) {
+			try {
+				if (session.getTransaction().isActive()) {
+					session.getTransaction().rollback();
+				}
+			}
+			catch(Exception notOfInterest){}
+			throw new IOException(e);
+		}
+		finally {
+			CloseSafe.close(new ClosableSession(session));
+		}
 	}
 
 	public void createUserMarkupCollection(String name,
-			SourceDocument sourceDocument) throws IOException {
+			ISourceDocument sourceDocument) throws IOException {
 		// TODO Auto-generated method stub
 
 	}
@@ -235,17 +286,15 @@ public class DBRepository implements Repository {
 		return null;
 	}
 
-	public String createIdFromURI(URI uri) {
-		// TODO Auto-generated method stub
-		return null;
+	public String getIdFromURI(URI uri) {
+		return dbSourceDocumentHandler.getIDFromURI(uri);
 	}
 	
 	public boolean isAuthenticationRequired() {
-		return !isLocal;
+		return authenticationRequired;
 	}
 	
 	public User getUser() {
 		return currentUser;
 	}
-
 }

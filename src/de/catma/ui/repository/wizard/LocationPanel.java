@@ -1,6 +1,5 @@
 package de.catma.ui.repository.wizard;
 
-import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -8,8 +7,6 @@ import java.net.URL;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
-import com.vaadin.ui.Alignment;
-import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -23,7 +20,6 @@ import com.vaadin.ui.Upload.SucceededEvent;
 import com.vaadin.ui.Upload.SucceededListener;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.CleaApplication;
 import de.catma.core.document.source.TechInfoSet;
 
 public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
@@ -32,7 +28,6 @@ public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 	private UploadPanel uploadPanel;
 	private boolean onAdvance = false;
 	private WizardResult wizardResult;
-	private CheckBox cbUseExternalReference;
 	private Panel remoteURIInputPanel;
 
 	public LocationPanel(WizardStepListener listener, WizardResult wizardResult) {
@@ -59,9 +54,12 @@ public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		uploadPanel.addListener(new SucceededListener() {
 			
 			public void uploadSucceeded(SucceededEvent event) {
-				File uploadedFile = 
-						new File(((CleaApplication)getApplication()).getTempDirectory(), event.getFilename());
-				TechInfoSet ti = new TechInfoSet(event.getMIMEType(), uploadedFile.toURI());
+
+				TechInfoSet ti = 
+						new TechInfoSet(
+								event.getMIMEType(), 
+								uploadPanel.getUploadedFileUri());
+				
 				wizardResult.getSourceDocumentInfo().setTechInfoSet(ti);
 				onAdvance = true;
 				wizardStepListener.stepChanged(LocationPanel.this);
@@ -74,12 +72,12 @@ public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 				
 				try {
 					String urlText = event.getText();
-					if (urlText.toLowerCase().startsWith("www")) {
+					if (urlText.toLowerCase().startsWith("www")) { //TODO: better scheme detection
 						urlText = "http://" + urlText;
 					}
 					URL url = new URL(urlText);
-					System.out.println(url);
-					TechInfoSet ti = new TechInfoSet(null, url.toURI());
+					
+					TechInfoSet ti = new TechInfoSet(null, url.toURI()); //TODO: mime type detection?
 					wizardResult.getSourceDocumentInfo().setTechInfoSet(ti);
 					onAdvance = true;
 				}
@@ -115,12 +113,6 @@ public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		remoteURIInput.setTextChangeEventMode(TextChangeEventMode.EAGER);
 		remoteURIInputPanel.addComponent(remoteURIInput);
 		remoteLayout.setExpandRatio(remoteURIInput, 2);
-		
-		
-		cbUseExternalReference = new CheckBox(
-				"use reference to remote file instead of a local copy", true);
-		remoteURIInputPanel.addComponent(cbUseExternalReference);
-		remoteLayout.setComponentAlignment(cbUseExternalReference, Alignment.BOTTOM_LEFT);
 		
 		addComponent(remoteURIInputPanel);
 		
@@ -158,11 +150,5 @@ public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		return false;
 	}
 
-	public void stepDeactivated(){
-		if (cbUseExternalReference.isEnabled()) {
-			wizardResult.getSourceDocumentInfo().getTechInfoSet().setManagedResource(
-					!cbUseExternalReference.booleanValue());
-		}
-	}
-
+	public void stepDeactivated() { /*not needed */}
 }

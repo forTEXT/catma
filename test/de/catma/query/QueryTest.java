@@ -21,8 +21,8 @@ import de.catma.core.ExceptionHandler;
 import de.catma.core.document.Range;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.source.KeywordInContext;
-import de.catma.core.document.source.SourceDocument;
 import de.catma.core.tag.TagManager;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.KwicProvider;
@@ -204,7 +204,7 @@ public class QueryTest {
 			for (Map.Entry<String, List<Range>> entry : 
 							rangesGroupedByDocumentId.entrySet()) {
 				System.out.println("documentId: " + entry.getKey());
-				SourceDocument sd = 
+				ISourceDocument sd = 
 						repository.getSourceDocument(entry.getKey());
 				KwicProvider kwicProvider = new KwicProvider(sd);
 				
@@ -264,7 +264,7 @@ public class QueryTest {
 			for (Map.Entry<String, List<Range>> entry : 
 							rangesGroupedByDocumentId.entrySet()) {
 				System.out.println("documentId: " + entry.getKey());
-				SourceDocument sd = 
+				ISourceDocument sd = 
 						repository.getSourceDocument(entry.getKey());
 				KwicProvider kwicProvider = new KwicProvider(sd);
 				

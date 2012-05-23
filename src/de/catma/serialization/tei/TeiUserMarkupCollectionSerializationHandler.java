@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagManager;
@@ -24,7 +24,7 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 
 	public void serialize(
 		UserMarkupCollection userMarkupCollection,
-		SourceDocument sourceDocument,
+		ISourceDocument sourceDocument,
 		OutputStream outputStream) throws IOException {
 		try {
 			TeiDocumentFactory factory = new TeiDocumentFactory();

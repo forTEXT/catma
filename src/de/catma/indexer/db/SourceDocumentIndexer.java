@@ -6,13 +6,13 @@ import java.util.Map;
 
 import org.hibernate.Session;
 
-import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
 
 class SourceDocumentIndexer {
 	
-	public void index(Session session, SourceDocument sourceDocument,
+	public void index(Session session, ISourceDocument sourceDocument,
 			List<String> unseparableCharacterSequences,
 			List<Character> userDefinedSeparatingCharacters, Locale locale)
 			throws Exception {

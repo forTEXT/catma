@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Locale;
 
 import de.catma.core.document.Range;
-import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.tag.TagLibrary;
 import de.catma.queryengine.CompareOperator;
@@ -13,7 +13,7 @@ import de.catma.queryengine.result.QueryResult;
 
 public interface Indexer {
 	public void index(
-			SourceDocument sourceDocument, 
+			ISourceDocument sourceDocument, 
 			List<String> unseparableCharacterSequences,
             List<Character> userDefinedSeparatingCharacters,
             Locale locale) throws Exception;

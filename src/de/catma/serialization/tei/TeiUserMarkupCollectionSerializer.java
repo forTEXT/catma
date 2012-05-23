@@ -10,7 +10,7 @@ import java.util.TreeSet;
 
 import de.catma.core.document.Range;
 import de.catma.core.document.source.FileType;
-import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.Property;
@@ -29,7 +29,7 @@ public class TeiUserMarkupCollectionSerializer {
 	
 	public void serialize(
 			UserMarkupCollection userMarkupCollection, 
-			SourceDocument sourceDocument) throws IOException {
+			ISourceDocument sourceDocument) throws IOException {
 		
 		String targetURI = makeTargetURI(sourceDocument);
 		
@@ -145,7 +145,7 @@ public class TeiUserMarkupCollectionSerializer {
 		f.appendChild(string);
 	}
 
-	private String makeTargetURI(SourceDocument sourceDocument) {
+	private String makeTargetURI(ISourceDocument sourceDocument) {
 		if ((!sourceDocument.getSourceContentHandler().getSourceDocumentInfo().
 				getTechInfoSet().getFileType().equals(FileType.TEXT)) 
 			&& (sourceDocument.getID().startsWith("http"))) {

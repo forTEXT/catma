@@ -24,7 +24,7 @@ import nu.xom.Nodes;
 import org.apache.commons.io.IOUtils;
 
 import de.catma.core.ExceptionHandler;
-import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.source.SourceDocumentHandler;
 import de.catma.core.document.source.SourceDocumentInfo;
 import de.catma.core.document.source.contenthandler.BOMFilterInputStream;
@@ -71,14 +71,14 @@ class FSSourceDocumentHandler {
 		this.sourceDoc2DigitalObject = new HashMap<String, String>();
 	}
 	
-	public Map<String,SourceDocument> loadSourceDocuments() {
-		HashMap<String,SourceDocument> result = new HashMap<String, SourceDocument>();
+	public Map<String,ISourceDocument> loadSourceDocuments() {
+		HashMap<String,ISourceDocument> result = new HashMap<String, ISourceDocument>();
 		
 		File digitalObjectsFolder = new File(this.digitalObjectsFolderPath);
 		File[] digitalObjectFiles = digitalObjectsFolder.listFiles();
 		for (File digitalObjectFile : digitalObjectFiles) {
 			try {
-				SourceDocument current = loadSourceDocument(digitalObjectFile);
+				ISourceDocument current = loadSourceDocument(digitalObjectFile);
 				result.put(current.getID(), current);
 				sourceDoc2DigitalObject.put(
 					current.getID(),
@@ -92,7 +92,7 @@ class FSSourceDocumentHandler {
 		return result;
 	}
 
-	public SourceDocument loadSourceDocument(File digitalObjectFile) throws IOException {
+	public ISourceDocument loadSourceDocument(File digitalObjectFile) throws IOException {
 		InputStream infosetsInputStream  = null;
 		try {
 			Document digitalObject = new Builder().build(digitalObjectFile);
@@ -133,7 +133,7 @@ class FSSourceDocumentHandler {
 			sourceDocumentInfo.getTechInfoSet().setURI(sourceURI);
 			
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
-			SourceDocument sourceDocument = 
+			ISourceDocument sourceDocument = 
 					sourceDocumentHandler.loadSourceDocument(
 							sourceURIVal, sourceDocumentInfo);
 			
@@ -173,10 +173,10 @@ class FSSourceDocumentHandler {
 	}
 
 	
-	public String createIDFromURI(URI uri) {
+	public String getIDFromURI(URI uri) {
 		if (uri.getScheme().equals("file")) {
 			File file = new File(uri);
-			return FSRepository.createCatmaUri(
+			return FSRepository.buildCatmaUri(
 					DIGITALOBJECTS_FOLDER + "/"
 					+ file.getName());
 		}
@@ -185,7 +185,7 @@ class FSSourceDocumentHandler {
 		}
 	}
 	
-	public void insert(SourceDocument sourceDocument) throws IOException {
+	public void insert(ISourceDocument sourceDocument) throws IOException {
 
 		IDGenerator idGenerator = new IDGenerator();
 
@@ -216,7 +216,7 @@ class FSSourceDocumentHandler {
 			
 			sourceTempFile.delete();
 			
-			sourceDocURIString = createIDFromURI(sourceDocURI);
+			sourceDocURIString = getIDFromURI(sourceDocURI);
 		}
 		else {
 			String localCopyFileName = "Source_" + idGenerator.generate();
@@ -238,21 +238,13 @@ class FSSourceDocumentHandler {
 				CloseSafe.close(repoSourceFileWriter);
 			}
 			
-			if (sourceDocumentInfo.getTechInfoSet().isManagedResource()) {
-				sourceDocURIString =
-						FSRepository.createCatmaUri(
+
+			Element rawCopyUriElement = new Element(Field.rawcopyURI.name());
+			rawCopyUriElement.appendChild(
+					FSRepository.buildCatmaUri(
 						DIGITALOBJECTS_FOLDER 
 						+ "/"
-						+ localCopyFileName);
-			}
-			else {
-				Element rawCopyUriElement = new Element(Field.rawcopyURI.name());
-				rawCopyUriElement.appendChild(
-						FSRepository.createCatmaUri(
-							DIGITALOBJECTS_FOLDER 
-							+ "/"
-							+ localCopyFileName));
-			}
+						+ localCopyFileName));
 		}
 		
 		Element sourceUriElement = new Element(Field.sourceURI.name());
@@ -297,7 +289,7 @@ class FSSourceDocumentHandler {
 	}
 
 	public void addUserMarkupCollectionReference(
-			UserMarkupCollectionReference ref, SourceDocument sourceDocument) throws IOException {
+			UserMarkupCollectionReference ref, ISourceDocument sourceDocument) throws IOException {
 		try {
 			String doPath = sourceDoc2DigitalObject.get(sourceDocument.getID());
 			File doFile = new File(doPath);

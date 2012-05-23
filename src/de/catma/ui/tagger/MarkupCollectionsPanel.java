@@ -21,7 +21,7 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.document.repository.Repository;
-import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
@@ -398,7 +398,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 	
 	public void addTagReferences(
-			List<TagReference> tagReferences, SourceDocument sourceDocument) {
+			List<TagReference> tagReferences, ISourceDocument sourceDocument) {
 		userMarkupCollectionManager.addTagReferences(
 				tagReferences, currentWritableUserMarkupColl);
 		

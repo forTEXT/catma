@@ -22,7 +22,7 @@ import de.catma.core.ExceptionHandler;
 import de.catma.core.document.Corpus;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
-import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagManager;
@@ -213,7 +213,7 @@ public class CleaApplication extends Application
 	}
 
 	public TaggerView openSourceDocument(
-			SourceDocument sourceDocument, Repository repository) {
+			ISourceDocument sourceDocument, Repository repository) {
 		if (taggerManagerView.getApplication() == null) {
 			menu.executeEntry(taggerManagerView);
 		}
@@ -277,7 +277,7 @@ public class CleaApplication extends Application
 	
 
 	public void openUserMarkupCollection(
-			SourceDocument sourceDocument, 
+			ISourceDocument sourceDocument, 
 			UserMarkupCollection userMarkupCollection, Repository repository) {
 		TaggerView taggerView = openSourceDocument(sourceDocument, repository);
 		taggerManagerView.openUserMarkupCollection(

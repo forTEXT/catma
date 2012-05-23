@@ -31,17 +31,17 @@ import nu.xom.Elements;
 import de.catma.core.ExceptionHandler;
 import de.catma.core.document.source.FileOSType;
 import de.catma.core.document.source.FileType;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.source.IndexInfoSet;
-import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.source.TechInfoSet;
 
 /**
  * Represents the technical description within a CATMA TEI document which holds
- * information about the TEI document and possibly about a corresponding {@link SourceDocument}.
+ * information about the TEI document and possibly about a corresponding {@link ISourceDocument}.
  *
  * @author Marco Petris
  * @see StandoffMarkupDocument
- * @see SourceDocument
+ * @see ISourceDocument
  */
 public class TechnicalDescription {
 
@@ -351,8 +351,8 @@ public class TechnicalDescription {
 		setValue(Feature.charset, techInfoSet.getCharset().name());
 		setValue(Feature.fileOSType, techInfoSet.getFileOSType().name());
 		
-		if (techInfoSet.getXsltDocumentName() != null) {
-			setValue(Feature.xsltDocumentName, techInfoSet.getXsltDocumentName());
+		if (techInfoSet.getXsltDocumentLocalUri() != null) {
+			setValue(Feature.xsltDocumentName, techInfoSet.getXsltDocumentLocalUri());
 		}
 		
 		if( techInfoSet.getChecksum() != null ) {

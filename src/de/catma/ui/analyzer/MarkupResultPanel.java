@@ -18,7 +18,7 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.document.repository.Repository;
-import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagDefinition;
@@ -225,7 +225,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 		String tagDefinitionId = row.getTagDefinitionId();
 		String markupCollectionsId = row.getMarkupCollectionId();
-		SourceDocument sourceDocument = 
+		ISourceDocument sourceDocument = 
 				repository.getSourceDocument(row.getSourceDocumentId());
 		
 		if (!loadedUserMarkupCollections.containsKey(markupCollectionsId)) {

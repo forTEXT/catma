@@ -19,7 +19,7 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.core.document.Corpus;
 import de.catma.core.document.Range;
 import de.catma.core.document.repository.Repository;
-import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
@@ -40,7 +40,7 @@ import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 public class TaggerView extends VerticalLayout 
 	implements TaggerListener, ClosableTab {
 	
-	private SourceDocument sourceDocument;
+	private ISourceDocument sourceDocument;
 	private Tagger tagger;
 	private Pager pager;
 	private MarkupPanel markupPanel;
@@ -51,7 +51,7 @@ public class TaggerView extends VerticalLayout
 	
 	public TaggerView(
 			int taggerID, TagManager tagManager, 
-			SourceDocument sourceDocument, Repository repository) {
+			ISourceDocument sourceDocument, Repository repository) {
 		this.taggerID = taggerID;
 		this.tagManager = tagManager;
 		this.sourceDocument = sourceDocument;
@@ -142,7 +142,7 @@ public class TaggerView extends VerticalLayout
 		addComponent(splitPanel);
 	}
 
-	public SourceDocument getSourceDocument() {
+	public ISourceDocument getSourceDocument() {
 		return sourceDocument;
 	}
 	

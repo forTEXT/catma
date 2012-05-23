@@ -287,6 +287,8 @@ public class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep
 
 	public void stepActivated() {
 		try {
+			sourceDocumentInfo.setIndexInfoSet(new IndexInfoSet());
+			
 			LanguageDetector ld = new LanguageDetector();
 			Locale locale = ld.getLocale(ld.detect(wizardResult.getSourceDocument().getContent()));
 			sourceDocumentInfo.getIndexInfoSet().setLocale(locale);
@@ -300,7 +302,6 @@ public class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep
 				}
 			}
 			
-			sourceDocumentInfo.setIndexInfoSet(new IndexInfoSet());
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

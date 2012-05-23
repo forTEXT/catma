@@ -9,8 +9,8 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.document.repository.Repository;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.source.KeywordInContext;
-import de.catma.core.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
@@ -94,7 +94,7 @@ public class KwicPanel extends VerticalLayout {
 				new HashMap<String, KwicProvider>();
 		
 		for (QueryResultRow row : queryResult) {
-			SourceDocument sourceDocument = 
+			ISourceDocument sourceDocument = 
 					repository.getSourceDocument(row.getSourceDocumentId());
 			
 			if (!kwicProviders.containsKey(sourceDocument.getID())) {

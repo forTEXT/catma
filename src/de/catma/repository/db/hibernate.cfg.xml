@@ -9,5 +9,6 @@
   <property name="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
   <mapping class="de.catma.repository.db.model.DBUser"/>
   <mapping class="de.catma.repository.db.model.DBSourceDocument"/>
+  <mapping class="de.catma.repository.db.model.DBUserSourceDocument"/>
  </session-factory>
 </hibernate-configuration>

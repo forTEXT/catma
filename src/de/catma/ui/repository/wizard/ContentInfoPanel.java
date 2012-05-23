@@ -17,7 +17,6 @@ public class ContentInfoPanel extends HorizontalLayout implements
 	private WizardResult wizardResult;
 	private WizardStepListener wizardStepListener;
 	private Form contentInfoForm;
-	private String incomingTitle;
 	
 	public ContentInfoPanel(WizardStepListener wizardStepListener,
 			WizardResult wizardResult) {
@@ -66,8 +65,6 @@ public class ContentInfoPanel extends HorizontalLayout implements
 		contentInfoForm.setVisibleItemProperties(new String[] {
 				"title", "author", "description", "publisher"
 		});
-		
-		incomingTitle = contentInfoSet.getTitle();
 	}
 
 	public boolean onFinish() {
@@ -79,17 +76,15 @@ public class ContentInfoPanel extends HorizontalLayout implements
 	}
 	
 	public void stepDeactivated() {
-		if (!incomingTitle.equals(wizardResult.getSourceDocumentInfo().getContentInfoSet().getTitle())) {
-			wizardResult.getSourceDocument().setTitle(
-					wizardResult.getSourceDocumentInfo().getContentInfoSet().getTitle());
-		}
 		if (wizardResult.getSourceDocument().toString().isEmpty()) {
 			URI uri = wizardResult.getSourceDocumentInfo().getTechInfoSet().getURI();
 			String title = uri.toString();
 			if (uri.getScheme().equals("file")) {
 				title = new File(uri).getName();
 			}
-			wizardResult.getSourceDocument().setTitle(title);
+			wizardResult.getSourceDocument()
+				.getSourceContentHandler().getSourceDocumentInfo()
+				.getContentInfoSet().setTitle(title);
 		}
 	}
 }

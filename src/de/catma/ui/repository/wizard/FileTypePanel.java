@@ -31,7 +31,7 @@ import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.CharsetLanguageInfo;
 import de.catma.core.document.source.FileOSType;
 import de.catma.core.document.source.FileType;
-import de.catma.core.document.source.SourceDocument;
+import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.source.SourceDocumentHandler;
 import de.catma.core.document.source.SourceDocumentInfo;
 import de.catma.ui.DefaultProgressListener;
@@ -72,6 +72,7 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		this.wizardResult = wizardResult;
 		this.sourceDocumentInfo = wizardResult.getSourceDocumentInfo();
 		this.wizardStepListener = wizardStepListener;
+		this.repository = repository;
 		initComponents();
 		initActions();
 	}
@@ -79,6 +80,11 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	public void stepActivated() {
 		onAdvance = false;
 		try {
+			if (wizardResult.getSourceDocumentID() == null) {
+				wizardResult.setSourceDocumentID(
+					repository.getIdFromURI(
+						sourceDocumentInfo.getTechInfoSet().getURI()));
+			}
 			final String mimeTypeFromUpload = 
 					sourceDocumentInfo.getTechInfoSet().getMimeType();
 			final String sourceDocURL = 
@@ -97,18 +103,22 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 					new DefaultProgressCallable<BackgroundLoaderResult>() {
 						public BackgroundLoaderResult call() throws Exception {
 							
-							SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
-							URLConnection urlConnection = new URL(sourceDocURL).openConnection();
+							SourceDocumentHandler sourceDocumentHandler = 
+									new SourceDocumentHandler();
+							
+							URLConnection urlConnection = 
+									new URL(sourceDocURL).openConnection();
+							
 							String resultMimeType = mimeTypeFromUpload;
-							if (mimeTypeFromUpload == null) {
-								resultMimeType = 
-										sourceDocumentHandler.getMimeType(
-												sourceURIPath, urlConnection, 
-												FileType.TEXT.getMimeType());
-							}
 							InputStream is = urlConnection.getInputStream();
 							try {
 								byte[] byteContent = IOUtils.toByteArray(is);
+								if (mimeTypeFromUpload == null) {
+									resultMimeType = 
+											sourceDocumentHandler.getMimeType(
+													sourceURIPath, urlConnection, 
+													FileType.TEXT.getMimeType());
+								}
 								
 								String encoding = Charset.defaultCharset().name();
 								
@@ -152,10 +162,9 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 											FileOSType.INDEPENDENT);
 									SourceDocumentHandler sourceDocumentHandler = 
 											new SourceDocumentHandler();
-									SourceDocument sourceDocument =
+									ISourceDocument sourceDocument =
 											sourceDocumentHandler.loadSourceDocument(
-											repository.createIdFromURI(
-												sourceDocumentInfo.getTechInfoSet().getURI()), 
+											wizardResult.getSourceDocumentID(), 
 											sourceDocumentInfo);
 									
 									sourceDocument.getSourceContentHandler().load(
@@ -193,9 +202,9 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	private void showPreview() {
 		SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
 		try {
-			SourceDocument sourceDocument =
+			ISourceDocument sourceDocument =
 					sourceDocumentHandler.loadSourceDocument(
-						repository.createIdFromURI(sourceDocumentInfo.getTechInfoSet().getURI()),
+						wizardResult.getSourceDocumentID(),
 						sourceDocumentInfo);
 			
 			sourceDocument.getSourceContentHandler().load(
