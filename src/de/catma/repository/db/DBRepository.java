@@ -1,10 +1,11 @@
 package de.catma.repository.db;
 
 import java.beans.PropertyChangeListener;
-import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,7 +28,7 @@ import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
 import de.catma.core.user.User;
 import de.catma.core.util.CloseSafe;
-import de.catma.repository.db.model.DBEntityName;
+import de.catma.repository.db.model.DBSourceDocument;
 import de.catma.repository.db.model.DBUser;
 
 public class DBRepository implements Repository {
@@ -57,6 +58,9 @@ public class DBRepository implements Repository {
 				serviceRegistryBuilder.buildServiceRegistry();
 		
 		sessionFactory = hibernateConfig.buildSessionFactory(serviceRegistry);
+		corpora = new HashSet<Corpus>();
+		sourceDocumentsByID = new HashMap<String, SourceDocument>();
+		tagLibraryReferences = new HashSet<TagLibraryReference>();
 	}
 	
 	public void addPropertyChangeListener(
@@ -104,9 +108,10 @@ public class DBRepository implements Repository {
 	}
 
 	private void loadSourceDocuments(Session session) {
-		Query query = 
-				session.createQuery(
-						"from " + 
+//		Query query = 
+//				session.createQuery(
+//						"from " + DBSourceDocument.class.getSimpleName() +
+//						" where  "
 		
 	}
 
@@ -114,8 +119,10 @@ public class DBRepository implements Repository {
 			Map<String, String> userIdentification) {
 		
 		Query query = session.createQuery(
-				"from " + DBUser.getEntityName();
-				" where identifier='" + userIdentification.get("user.ident") + "'" );
+				"from " + DBUser.class.getSimpleName() +
+				" where identifier=:curIdentifier");
+		query.setString(
+				"curIdentifier", userIdentification.get("user.ident"));
 		
 		@SuppressWarnings("unchecked")
 		List<DBUser> result = query.list();
@@ -211,7 +218,8 @@ public class DBRepository implements Repository {
 	}
 
 	public void insert(SourceDocument sourceDocument) throws IOException {
-		// TODO Auto-generated method stub
+		DBSourceDocument dbSourceDocument = 
+				new DBSourceDocument(sourceDocument);
 
 	}
 

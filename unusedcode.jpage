@@ -1,4 +1,52 @@
-	//TODO: remove Tag (js+java) / load Markup (java)
+    /**
+     * A special comparator that has a partial equality definition that includes inclusion.
+     * See {@link #compare(org.catma.indexer.TermInfo, org.catma.indexer.TermInfo)}<br>
+     * <br>
+     * <b>Node:</b>: this comparator imposes orderings that are inconsistent with equals!!!
+     */
+    private static class TagTermComparator implements Comparator<TermInfo> {
+        /**
+         * Compares to entries by there ranges. Two ranges are equal if the range of
+         * argument o1 {@link Range#isInBetween(org.catma.document.Range) is in between} of the
+         * range of argument o2.
+         *
+         * <b>Node:</b>: this comparator imposes orderings that are inconsistent with equals!!!
+         *
+         * @param o1 the first token
+         * @param o2 the second token
+         * @return zero for equality in the above sense,
+         * the distance of the start points of the ranges else
+         */
+        public int compare(TermInfo o1, TermInfo o2) {
+
+//            if(o2.getRange().isInBetween(o1.getRange())
+//            		||(o1.getRange().isInBetween(o2.getRange()))) {
+//                return 0;
+//            }
+        	if(o1.getRange().isInBetween(o2.getRange())) {
+        		return 0;
+        	}
+            else {
+                return (int)(o1.getRange().getStartPoint()-o2.getRange().getStartPoint());
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//TODO: remove Tag (js+java) / load Markup (java)
 	public List<Range> addTag(String tag, List<TaggedNode> taggedNodes) {
 		ArrayList<Range> result = new ArrayList<Range>();
 		List<Pair<TaggedNode, TextRange>> taggedTextRanges = new ArrayList<Pair<TaggedNode,TextRange>>();

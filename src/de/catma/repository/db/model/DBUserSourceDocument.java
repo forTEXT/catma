@@ -2,11 +2,14 @@ package de.catma.repository.db.model;
 
 // Generated 23.05.2012 12:54:30 by Hibernate Tools 3.4.0.CR1
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 /**
@@ -17,20 +20,12 @@ import javax.persistence.Table;
 public class DBUserSourceDocument implements java.io.Serializable {
 
 	private Integer userSourcedocumentId;
-	private int userId;
-	private int sourceDocumentId;
+	private DBUser dbUser;
+	private DBSourceDocument dbSourceDocument;
 	private int accessMode;
 	private boolean owner;
 
 	public DBUserSourceDocument() {
-	}
-
-	public DBUserSourceDocument(int userId, int sourceDocumentId, int accessMode,
-			boolean owner) {
-		this.userId = userId;
-		this.sourceDocumentId = sourceDocumentId;
-		this.accessMode = accessMode;
-		this.owner = owner;
 	}
 
 	@Id
@@ -44,24 +39,26 @@ public class DBUserSourceDocument implements java.io.Serializable {
 		this.userSourcedocumentId = userSourcedocumentId;
 	}
 
-	@Column(name = "userID", nullable = false)
-	public int getUserId() {
-		return this.userId;
+	@ManyToOne
+	@JoinColumn(name = "userID", nullable = false)
+	public DBUser getDbUser() {
+		return dbUser;
 	}
 
-	public void setUserId(int userId) {
-		this.userId = userId;
+	public void setDbUser(DBUser dbUser) {
+		this.dbUser = dbUser;
 	}
 
-	@Column(name = "sourceDocumentID", nullable = false)
-	public int getSourceDocumentId() {
-		return this.sourceDocumentId;
+	@ManyToOne
+	@JoinColumn(name = "sourceDocumentID", nullable = false)
+	public DBSourceDocument getDbSourceDocument() {
+		return dbSourceDocument;
 	}
-
-	public void setSourceDocumentId(int sourceDocumentId) {
-		this.sourceDocumentId = sourceDocumentId;
+	
+	public void setDbSourceDocument(DBSourceDocument dbSourceDocument) {
+		this.dbSourceDocument = dbSourceDocument;
 	}
-
+	
 	@Column(name = "accessMode", nullable = false)
 	public int getAccessMode() {
 		return this.accessMode;

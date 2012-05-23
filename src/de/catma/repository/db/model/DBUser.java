@@ -7,14 +7,11 @@ import static javax.persistence.GenerationType.IDENTITY;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -30,8 +27,10 @@ public class DBUser implements java.io.Serializable, User {
 	private Integer userId;
 	private String identifier;
 	private boolean locked;
-	private Set<DBSourceDocument> dbSourceDocuments = 
-			new HashSet<DBSourceDocument>(0);
+	
+	private Set<DBUserSourceDocument> dbUserSourceDocuments = 
+			new HashSet<DBUserSourceDocument>();
+	
 	private String name;
 
 	public DBUser() {
@@ -71,18 +70,16 @@ public class DBUser implements java.io.Serializable, User {
 		this.locked = locked;
 	}
 	
-	@ManyToMany(cascade = CascadeType.ALL)
-	@JoinTable(
-		name = "user_sourcedocument", 
-		joinColumns = { @JoinColumn(name = "userID") },
-		inverseJoinColumns = { @JoinColumn(name = "sourceDocumentID") })
-	public Set<DBSourceDocument> getDbSourceDocuments() {
-		return dbSourceDocuments;
+	@OneToMany(mappedBy = "dbUser")
+	public Set<DBUserSourceDocument> getDbUserSourceDocuments() {
+		return dbUserSourceDocuments;
+	}
+
+	public void setDbUserSourceDocuments(
+			Set<DBUserSourceDocument> dbUserSourceDocuments) {
+		this.dbUserSourceDocuments = dbUserSourceDocuments;
 	}
 	
-	public void setDbSourceDocuments(Set<DBSourceDocument> dbSourceDocuments) {
-		this.dbSourceDocuments = dbSourceDocuments;
-	}
 	
 	@Transient
 	public String getName() {
