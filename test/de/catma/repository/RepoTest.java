@@ -18,28 +18,28 @@ public class RepoTest {
 
 	private DBRepository repository;
 
-	@Before
-	public void setup() {
-		repository = new DBRepository();
-	}
-	
-	
-	@Test
-	public void addUser() throws Throwable {
-		DBUser user =new DBUser("mp", false);
-		repository.addUser(user);
-		
-		user = new DBUser("nase", false);
-		DBSourceDocument dbSDoc = 
-				new DBSourceDocument(
-					"testTitle", "testPublisher", 
-					"testAuthor", "testDescription", "testUri", 
-					FileType.TEXT.toString(),
-					Charset.forName("UTF-8").name(),
-					FileOSType.DOS.name(),
-					42,
-					null, null, false, Locale.ENGLISH.toString(),"localUri");
-		user.getDbSourceDocuments().add(dbSDoc);
-		repository.addUser(user);
-	}
+//	@Before
+//	public void setup() {
+//		repository = new DBRepository();
+//	}
+//	
+//	
+//	@Test
+//	public void addUser() throws Throwable {
+//		DBUser user = new DBUser("mp", false);
+//		repository.addUser(user);
+//		
+//		user = new DBUser("nase", false);
+//		DBSourceDocument dbSDoc = 
+//				new DBSourceDocument(
+//					"testTitle", "testPublisher", 
+//					"testAuthor", "testDescription", "testUri", 
+//					FileType.TEXT.toString(),
+//					Charset.forName("UTF-8").name(),
+//					FileOSType.DOS.name(),
+//					42,
+//					null, null, false, Locale.ENGLISH.toString(),"localUri");
+//		user.getDbSourceDocuments().add(dbSDoc);
+//		repository.addUser(user);
+//	}
 }

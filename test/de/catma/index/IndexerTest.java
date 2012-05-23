@@ -30,7 +30,7 @@ public class IndexerTest {
 			repository = 
 					new RepositoryManager(
 							tagManager, properties).getRepositories().get(0);
-			repository.open();
+			repository.open(null);
 		}
 		catch( Exception e) {
 			ExceptionHandler.log(e);

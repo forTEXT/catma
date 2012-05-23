@@ -5,8 +5,11 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -22,16 +25,27 @@ import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
+import de.catma.core.user.User;
 import de.catma.core.util.CloseSafe;
+import de.catma.repository.db.model.DBEntityName;
 import de.catma.repository.db.model.DBUser;
-import de.catma.ui.dialog.FormDialog.SaveCancelListener;
 
 public class DBRepository implements Repository {
 	
 	private SessionFactory sessionFactory; 
 	private Configuration hibernateConfig;
+	private boolean isLocal;
+	private String name;
+	private DBUser currentUser;
+	
+	private Set<Corpus> corpora;
+	private Map<String,SourceDocument> sourceDocumentsByID;
+	private Set<TagLibraryReference> tagLibraryReferences;
 
-	public DBRepository() {
+
+	public DBRepository(String name, boolean isLocal) {
+		this.name = name;
+		this.isLocal = isLocal;
 		hibernateConfig = new Configuration();
 		hibernateConfig.configure(
 				this.getClass().getPackage().getName().replace('.', '/') 
@@ -43,30 +57,6 @@ public class DBRepository implements Repository {
 				serviceRegistryBuilder.buildServiceRegistry();
 		
 		sessionFactory = hibernateConfig.buildSessionFactory(serviceRegistry);
-	}
-
-	public void addUser(DBUser user) {
-		final Session session = sessionFactory.openSession();
-		try {
-			session.beginTransaction();
-			session.save(user);
-			session.getTransaction().commit();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-			try {
-				if (session.getTransaction().isActive()) {
-					session.getTransaction().rollback();
-				}
-			}
-			catch (Exception notOfInterest) {}
-			
-			CloseSafe.close(new Closeable() {				
-				public void close() throws IOException {
-					session.close();
-				}
-			});
-		}
 	}
 	
 	public void addPropertyChangeListener(
@@ -84,13 +74,72 @@ public class DBRepository implements Repository {
 	}
 
 	public String getName() {
-		// TODO Auto-generated method stub
-		return null;
+		return name;
 	}
 
-	public void open() throws Exception {
-		// TODO Auto-generated method stub
+	public void open(Map<String, String> userIdentification) throws Exception {
+		Session session = sessionFactory.openSession();
+		
+		try {
+			loadCurrentUser(session, userIdentification);
+			loadContent(session); //TODO: consider lazy loading
+		}
+		catch (Exception e) {
+			try {
+				if (session.getTransaction().isActive()) {
+					session.getTransaction().rollback();
+				}
+			}
+			catch(Exception notOfInterest){}
+			throw new Exception(e);
+		}
+		finally {
+			CloseSafe.close(new ClosableSession(session));
+		}
+	}
 
+	private void loadContent(Session session) {
+		loadSourceDocuments(session);
+		
+	}
+
+	private void loadSourceDocuments(Session session) {
+		Query query = 
+				session.createQuery(
+						"from " + 
+		
+	}
+
+	private void loadCurrentUser(Session session,
+			Map<String, String> userIdentification) {
+		
+		Query query = session.createQuery(
+				"from " + DBUser.getEntityName();
+				" where identifier='" + userIdentification.get("user.ident") + "'" );
+		
+		@SuppressWarnings("unchecked")
+		List<DBUser> result = query.list();
+		
+		if (result.isEmpty()) {
+			currentUser = createUser(session, userIdentification);
+		}
+		else {
+			currentUser = result.get(0);
+			if (result.size() > 1) {
+				throw new IllegalStateException(
+						"the repository returned more than one user " +
+						"for the same identification");
+			}
+		}
+	}
+
+	private DBUser createUser(Session session,
+			Map<String, String> userIdentification) {
+		DBUser user = new DBUser(userIdentification.get("user.ident"));
+		session.beginTransaction();
+		session.save(user);
+		session.getTransaction().commit();
+		return user;
 	}
 
 	public Collection<SourceDocument> getSourceDocuments() {
@@ -181,6 +230,14 @@ public class DBRepository implements Repository {
 	public String createIdFromURI(URI uri) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	public boolean isAuthenticationRequired() {
+		return !isLocal;
+	}
+	
+	public User getUser() {
+		return currentUser;
 	}
 
 }

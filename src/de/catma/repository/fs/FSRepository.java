@@ -5,7 +5,6 @@ import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -17,11 +16,11 @@ import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
+import de.catma.core.user.User;
 import de.catma.core.util.Pair;
 import de.catma.serialization.SerializationHandlerFactory;
 
@@ -70,7 +69,7 @@ class FSRepository implements Repository {
 	public String getName() {
 		return name;
 	}
-	public void open() throws Exception {
+	public void open(Map<String,String> userIdentification) throws Exception {
 		init();
 	}
 	
@@ -247,5 +246,31 @@ class FSRepository implements Repository {
 
 	public String createIdFromURI(URI uri) {
 		return sourceDocumentHandler.createIDFromURI(uri);
+	}
+	
+	public boolean isAuthenticationRequired() {
+		return false;
+	}
+	
+	public User getUser() {
+		
+		return new User() {
+			
+			public boolean isLocked() {
+				return false;
+			}
+			
+			public String getNickName() {
+				return System.getProperty("user.name");
+			}
+			
+			public String getIdentifier() {
+				return System.getProperty("user.name");
+			}
+			
+			public String getName() {
+				return System.getProperty("user.name");
+			}
+		};
 	}
 }
