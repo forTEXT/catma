@@ -31,6 +31,12 @@ public class DBUser implements java.io.Serializable, User {
 	private Set<DBUserSourceDocument> dbUserSourceDocuments = 
 			new HashSet<DBUserSourceDocument>();
 	
+	private Set<DBUserUserMarkupCollection> dbUserUserMarkupCollections =
+			new HashSet<DBUserUserMarkupCollection>();
+	
+	private Set<DBUserTagLibrary> dbUserTagLibraries = 
+			new HashSet<DBUserTagLibrary>();
+	
 	private String name;
 
 	public DBUser() {
@@ -80,6 +86,25 @@ public class DBUser implements java.io.Serializable, User {
 		this.dbUserSourceDocuments = dbUserSourceDocuments;
 	}
 	
+
+	@OneToMany(mappedBy = "dbUser")
+	public Set<DBUserUserMarkupCollection> getDbUserUserMarkupCollections() {
+		return dbUserUserMarkupCollections;
+	}
+	
+	public void setDbUserUserMarkupCollections(
+			Set<DBUserUserMarkupCollection> dbUserUserMarkupCollections) {
+		this.dbUserUserMarkupCollections = dbUserUserMarkupCollections;
+	}
+	
+	@OneToMany(mappedBy = "dbUser")
+	public Set<DBUserTagLibrary> getDbUserTagLibraries() {
+		return dbUserTagLibraries;
+	}
+
+	public void setDbUserTagLibraries(Set<DBUserTagLibrary> dbUserTagLibraries) {
+		this.dbUserTagLibraries = dbUserTagLibraries;
+	}
 	
 	@Transient
 	public String getName() {

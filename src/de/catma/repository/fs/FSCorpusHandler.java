@@ -9,6 +9,7 @@ import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Node;
 import nu.xom.Nodes;
+import de.catma.core.document.ContentInfoSet;
 import de.catma.core.document.Corpus;
 import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
@@ -87,7 +88,8 @@ class FSCorpusHandler {
 				Node userMarkupURINode = userMarkupURINodes.get(i);
 				String userMarkupURI = userMarkupURINode.getValue();
 				UserMarkupCollectionReference userMarkupCollRef = 
-						new UserMarkupCollectionReference(userMarkupURI, userMarkupURI);
+						new UserMarkupCollectionReference(
+								userMarkupURI, new ContentInfoSet(userMarkupURI));
 				corpus.addUserMarkupCollectionReference(userMarkupCollRef);
 			}
 			

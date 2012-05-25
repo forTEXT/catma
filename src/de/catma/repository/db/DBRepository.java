@@ -20,25 +20,32 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 
 import de.catma.core.document.Corpus;
-import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.source.SourceDocument;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.ITagLibrary;
 import de.catma.core.tag.TagLibraryReference;
 import de.catma.core.user.User;
 import de.catma.core.util.CloseSafe;
+import de.catma.core.util.Pair;
+import de.catma.indexer.IndexedRepository;
+import de.catma.indexer.Indexer;
 import de.catma.repository.db.model.DBSourceDocument;
+import de.catma.repository.db.model.DBTagLibrary;
 import de.catma.repository.db.model.DBUser;
+import de.catma.repository.db.model.DBUserMarkupCollection;
 import de.catma.repository.db.model.DBUserSourceDocument;
+import de.catma.repository.db.model.DBUserTagLibrary;
+import de.catma.repository.db.model.DBUserUserMarkupCollection;
 
-public class DBRepository implements Repository {
+public class DBRepository implements IndexedRepository {
 	
 	private String name;
 	private DBSourceDocumentHandler dbSourceDocumentHandler;
+	private Indexer indexer;
 	private boolean authenticationRequired;
 
 	private SessionFactory sessionFactory; 
@@ -47,18 +54,21 @@ public class DBRepository implements Repository {
 	private Set<Corpus> corpora;
 	private Map<String,ISourceDocument> sourceDocumentsByID;
 	private Set<TagLibraryReference> tagLibraryReferences;
+	private Map<String,DBTagLibrary> tagLibrariesByID;
 
 	private DBUser currentUser;
 	private PropertyChangeSupport propertyChangeSupport;
+	private ServiceRegistry serviceRegistry;
 
 	public DBRepository(
-			String name, String repoFolderPath, boolean authenticationRequired) {
+			String name, String repoFolderPath, boolean authenticationRequired, 
+			Indexer indexer) {
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.name = name;
 		this.dbSourceDocumentHandler = 
 				new DBSourceDocumentHandler(repoFolderPath);
 		this.authenticationRequired = authenticationRequired;
-		
+		this.indexer = indexer;
 		hibernateConfig = new Configuration();
 		hibernateConfig.configure(
 				this.getClass().getPackage().getName().replace('.', '/') 
@@ -66,13 +76,13 @@ public class DBRepository implements Repository {
 		
 		ServiceRegistryBuilder serviceRegistryBuilder = new ServiceRegistryBuilder();
 		serviceRegistryBuilder.applySettings(hibernateConfig.getProperties());
-		ServiceRegistry serviceRegistry = 
+		serviceRegistry = 
 				serviceRegistryBuilder.buildServiceRegistry();
 		
-		sessionFactory = hibernateConfig.buildSessionFactory(serviceRegistry);
 		corpora = new HashSet<Corpus>();
 		sourceDocumentsByID = new HashMap<String, ISourceDocument>();
 		tagLibraryReferences = new HashSet<TagLibraryReference>();
+		tagLibrariesByID = new HashMap<String, DBTagLibrary>();
 	}
 	
 	public void addPropertyChangeListener(
@@ -94,6 +104,8 @@ public class DBRepository implements Repository {
 	}
 
 	public void open(Map<String, String> userIdentification) throws Exception {
+		sessionFactory = hibernateConfig.buildSessionFactory(serviceRegistry);
+		
 		Session session = sessionFactory.openSession();
 		
 		try {
@@ -116,6 +128,13 @@ public class DBRepository implements Repository {
 
 	private void loadContent(Session session) {
 		loadSourceDocuments(session);
+		loadTagLibraries(session);
+	}
+
+	private void loadTagLibraries(Session session) {
+		if (!currentUser.isLocked()) {
+//			Query query = 
+		}
 		
 	}
 
@@ -126,11 +145,20 @@ public class DBRepository implements Repository {
 				session.createQuery(
 					"select sd from " 
 					+ DBSourceDocument.class.getSimpleName() + " as sd "
-					+ " inner join sd.dbUserSourceDocuments as usc "
-					+ " inner join usc.dbUser as user " 
-					+ " where user.userId = " + currentUser.getUserId() );
+					+ " inner join sd.dbUserSourceDocuments as usd "
+					+ " inner join usd.dbUser as user " 
+					+ " left join fetch sd.dbUserMarkupCollections as usc "
+					+ " left join fetch usc.dbUserUserMarkupCollections uumc "
+					+ " where user.userId = " + currentUser.getUserId());
 			
 			for (DBSourceDocument sd : (List<DBSourceDocument>)query.list()) {
+				for (DBUserMarkupCollection dbUmc : sd.getDbUserMarkupCollections()) {
+					if (dbUmc.hasAccess(currentUser)) {
+						sd.addUserMarkupCollectionReference(
+							new UserMarkupCollectionReference(
+									dbUmc.getId(), dbUmc.getContentInfoSet()));
+					}
+				}
 				this.sourceDocumentsByID.put(sd.getID(), sd);
 			}
 		}		
@@ -186,7 +214,7 @@ public class DBRepository implements Repository {
 		return Collections.unmodifiableSet(this.tagLibraryReferences);
 	}
 
-	public UserMarkupCollection getUserMarkupCollection(
+	public IUserMarkupCollection getUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference) {
 		// TODO Auto-generated method stub
 		return null;
@@ -198,7 +226,7 @@ public class DBRepository implements Repository {
 		return null;
 	}
 
-	public TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) {
+	public ITagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -208,7 +236,7 @@ public class DBRepository implements Repository {
 
 	}
 
-	public void delete(UserMarkupCollection userMarkupCollection) {
+	public void delete(IUserMarkupCollection userMarkupCollection) {
 		// TODO Auto-generated method stub
 
 	}
@@ -223,7 +251,7 @@ public class DBRepository implements Repository {
 
 	}
 
-	public void update(UserMarkupCollection userMarkupCollection,
+	public void update(IUserMarkupCollection userMarkupCollection,
 			ISourceDocument sourceDocument) throws IOException {
 		// TODO Auto-generated method stub
 
@@ -252,6 +280,8 @@ public class DBRepository implements Repository {
 			
 			dbSourceDocumentHandler.insert(sourceDocument);
 			
+			indexer.index(sourceDocument);
+			
 			session.getTransaction().commit();
 			
 			this.sourceDocumentsByID.put(sourceDocument.getID(), sourceDocument);
@@ -273,17 +303,93 @@ public class DBRepository implements Repository {
 			CloseSafe.close(new ClosableSession(session));
 		}
 	}
-
-	public void createUserMarkupCollection(String name,
-			ISourceDocument sourceDocument) throws IOException {
-		// TODO Auto-generated method stub
-
-	}
-
+	
 	public StaticMarkupCollectionReference insert(
 			StaticMarkupCollection staticMarkupCollection) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public void createUserMarkupCollection(String name,
+			ISourceDocument sourceDocument) throws IOException {
+		
+		DBUserMarkupCollection dbUserMarkupCollection = 
+				new DBUserMarkupCollection(
+						((DBSourceDocument)sourceDocument).getSourceDocumentId(), 
+						name);
+		DBUserUserMarkupCollection dbUserUserMarkupCollection =
+				new DBUserUserMarkupCollection(
+						currentUser, dbUserMarkupCollection);
+		
+		Session session = sessionFactory.openSession();
+		try {
+			session.beginTransaction();
+			
+			session.save(dbUserMarkupCollection);
+			session.save(dbUserUserMarkupCollection);
+			
+			session.getTransaction().commit();
+			
+			UserMarkupCollectionReference reference = 
+					new UserMarkupCollectionReference(
+							dbUserMarkupCollection.getId(), 
+							dbUserMarkupCollection.getContentInfoSet());
+			
+			this.propertyChangeSupport.firePropertyChange(
+					PropertyChangeEvent.userMarkupCollectionAdded.name(),
+					null, new Pair<UserMarkupCollectionReference, ISourceDocument>(
+							reference,sourceDocument));
+
+		}
+		catch (Exception e) {
+			try {
+				if (session.getTransaction().isActive()) {
+					session.getTransaction().rollback();
+				}
+			}
+			catch(Exception notOfInterest){}
+			throw new IOException(e);
+		}
+		finally {
+			CloseSafe.close(new ClosableSession(session));
+		}
+	}
+	
+	public void createTagLibrary(String name) throws IOException {
+		
+		DBTagLibrary tagLibrary = new DBTagLibrary(name, true);
+		DBUserTagLibrary dbUserTagLibrary = 
+				new DBUserTagLibrary(currentUser, tagLibrary);
+				
+		Session session = sessionFactory.openSession();
+		try {
+			session.beginTransaction();
+			
+			session.save(tagLibrary);
+			session.save(dbUserTagLibrary);
+			
+			session.getTransaction().commit();
+			tagLibrariesByID.put(tagLibrary.getId(), tagLibrary);
+			
+			this.propertyChangeSupport.firePropertyChange(
+					PropertyChangeEvent.tagLibraryAdded.name(),
+					null, 
+					new TagLibraryReference(
+							tagLibrary.getId(), tagLibrary.getName()));
+
+		}
+		catch (Exception e) {
+			try {
+				if (session.getTransaction().isActive()) {
+					session.getTransaction().rollback();
+				}
+			}
+			catch(Exception notOfInterest){}
+			throw new IOException(e);
+		}
+		finally {
+			CloseSafe.close(new ClosableSession(session));
+		}
 	}
 
 	public String getIdFromURI(URI uri) {
@@ -296,5 +402,18 @@ public class DBRepository implements Repository {
 	
 	public User getUser() {
 		return currentUser;
+	}
+	
+	public Indexer getIndexer() {
+		return indexer;
+	}
+	
+	public void close() {
+		try {
+			indexer.close();
+		}
+		finally {
+			sessionFactory.close();
+		}
 	}
 }

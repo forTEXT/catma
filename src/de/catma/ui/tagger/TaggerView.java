@@ -21,12 +21,13 @@ import de.catma.core.document.Range;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagInstance;
 import de.catma.core.tag.TagManager;
 import de.catma.core.tag.TagsetDefinition;
+import de.catma.indexer.IndexedRepository;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
@@ -65,7 +66,7 @@ public class TaggerView extends VerticalLayout
 			public void buttonClick(ClickEvent event) {
 				Corpus corpus = new Corpus(sourceDocument.toString());
 				corpus.addSourceDocument(sourceDocument);
-				for (UserMarkupCollection umc : 
+				for (IUserMarkupCollection umc : 
 					markupPanel.getUserMarkupCollections()) {
 					UserMarkupCollectionReference userMarkupCollRef =
 							sourceDocument.getUserMarkupCollectionReference(
@@ -78,7 +79,7 @@ public class TaggerView extends VerticalLayout
 				//TODO: add static markup colls
 				
 				((AnalyzerProvider)getApplication()).analyze(
-						corpus, markupPanel.getRepository());
+						corpus, (IndexedRepository)markupPanel.getRepository());
 			}
 		});
 		
@@ -112,6 +113,7 @@ public class TaggerView extends VerticalLayout
 		actionPanel.addComponent(pagerComponent);
 		
 		btAnalyze = new Button("Analyze Document");
+		btAnalyze.setEnabled(repository instanceof IndexedRepository);
 		actionPanel.addComponent(btAnalyze);
 		
 		markupPanel = new MarkupPanel(
@@ -168,7 +170,7 @@ public class TaggerView extends VerticalLayout
 	}
 
 	public void openUserMarkupCollection(
-			UserMarkupCollection userMarkupCollection) {
+			IUserMarkupCollection userMarkupCollection) {
 		markupPanel.openUserMarkupCollection(userMarkupCollection);
 	}
 

@@ -41,11 +41,12 @@ import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.MarkupCollectionReference;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.ITagLibrary;
 import de.catma.core.tag.TagLibraryReference;
 import de.catma.core.util.Pair;
+import de.catma.indexer.IndexedRepository;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.PropertyCollection;
@@ -110,10 +111,13 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	private Button btDiscardContentInfoChanges;
 	private PropertyChangeListener sourceDocumentAddedListener;
 	private PropertyChangeListener userMarkupDocumentAddedListener;
+	private PropertyChangeListener tagLibraryAddedListener;
 	
 	public RepositoryView(Repository repository) {
-		super();
+
 		this.repository = repository;
+		initComponents();
+
 		sourceDocumentAddedListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
@@ -140,8 +144,18 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 				Repository.PropertyChangeEvent.userMarkupCollectionAdded,
 				userMarkupDocumentAddedListener);
 		
+		tagLibraryAddedListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				TagLibraryReference tagLibraryRef = 
+						(TagLibraryReference)evt.getNewValue();
+				addTagLibraryReferenceToTree(tagLibraryRef);
+			}
+		};
+		this.repository.addPropertyChangeListener(
+				Repository.PropertyChangeEvent.tagLibraryAdded, 
+				tagLibraryAddedListener);
 		
-		initComponents();
 		initActions();
 	}
 
@@ -199,8 +213,8 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 					final CleaApplication application = 
 							(CleaApplication)getApplication();
 					application.submit(
-							new DefaultProgressCallable<UserMarkupCollection>() {
-								public UserMarkupCollection call()
+							new DefaultProgressCallable<IUserMarkupCollection>() {
+								public IUserMarkupCollection call()
 										throws Exception {
 									getProgressListener().setProgress("Loading Markup Collection");
 									UserMarkupCollectionReference 
@@ -211,8 +225,8 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 											userMarkupCollectionReference);
 								}
 							},
-							new ExecutionListener<UserMarkupCollection>() {
-								public void done(UserMarkupCollection result) {
+							new ExecutionListener<IUserMarkupCollection>() {
+								public void done(IUserMarkupCollection result) {
 									application.openUserMarkupCollection(
 											sd, result, repository);
 								}
@@ -267,7 +281,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 					selectedCorpus = (Corpus)selectedValue;
 				}
 				((AnalyzerProvider)getApplication()).analyze(
-						selectedCorpus, repository);
+						selectedCorpus, (IndexedRepository)repository);
 			}
 		});
 		
@@ -282,7 +296,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		miRemoveCorpus.setEnabled(false);
 		
 		documentsTree.addListener(new ValueChangeListener() {
-			
+			//TODO: still messy:
 			public void valueChange(ValueChangeEvent event) {
 				Object value = event.getProperty().getValue();
 				if (value != null) {
@@ -297,12 +311,22 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 						
 					}
 					else {
-						contentInfoForm.setEnabled(false);
 						if (value instanceof MarkupCollectionReference) {
 							btOpenDocument.setCaption("Open Markup Collection");
 							btOpenDocument.setEnabled(true);
+							if (value instanceof UserMarkupCollectionReference) {
+								contentInfoForm.setEnabled(true);
+								contentInfoForm.setItemDataSource(
+									new BeanItem<ContentInfo>(
+										new StandardContentInfo((UserMarkupCollectionReference)value)));
+
+							}
+							else {
+								contentInfoForm.setEnabled(false);
+							}
 						}
 						else {
+							contentInfoForm.setEnabled(false);
 							btOpenDocument.setEnabled(false);
 						}
 					}
@@ -326,7 +350,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 				if (value != null) {
 					TagLibraryReference tagLibraryReference = 
 							(TagLibraryReference)value;
-					TagLibrary tagLibrary = 
+					ITagLibrary tagLibrary = 
 							repository.getTagLibrary(tagLibraryReference);
 					((CleaApplication)getApplication()).openTagLibrary(tagLibrary);
 				}				
@@ -542,13 +566,17 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		tagLibrariesTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_ID);
 		
 		for (TagLibraryReference tlr : repository.getTagLibraryReferences()) {
-			tagLibrariesTree.addItem(tlr);
-			tagLibrariesTree.setChildrenAllowed(tlr, false);
+			addTagLibraryReferenceToTree(tlr);
 		}
 		
 		tagLibraryPanel.addComponent(tagLibrariesTree);
 		
 		return tagLibraryPanel;
+	}
+	
+	private void addTagLibraryReferenceToTree(TagLibraryReference tlr) {
+		tagLibrariesTree.addItem(tlr);
+		tagLibrariesTree.setChildrenAllowed(tlr, false);
 	}
 
 	private Component createDocumentsManagerPanel() {
@@ -711,6 +739,8 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		corporaButtonsPanel.addComponent(btCreateCorpus);
 		MenuBar menuMoreCorpusActions = new MenuBar();
 		miMoreCorpusActions = menuMoreCorpusActions.addItem("More actions...", null);
+		miMoreCorpusActions.setEnabled(
+				repository instanceof IndexedRepository);
 		corporaButtonsPanel.addComponent(menuMoreCorpusActions);
 		
 		return corporaButtonsPanel;
@@ -867,8 +897,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	}
 	
 	public void close() {
-		// TODO Auto-generated method stub
-		
+		repository.close();
 	}
 }
 

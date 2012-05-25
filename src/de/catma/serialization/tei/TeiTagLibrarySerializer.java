@@ -2,7 +2,7 @@ package de.catma.serialization.tei;
 
 import de.catma.core.tag.PropertyDefinition;
 import de.catma.core.tag.TagDefinition;
-import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.ITagLibrary;
 import de.catma.core.tag.TagsetDefinition;
 
 public class TeiTagLibrarySerializer {
@@ -13,7 +13,7 @@ public class TeiTagLibrarySerializer {
 		this.teiDocument = teiDocument;
 	}
 
-	public void serialize(TagLibrary tagLibrary) {
+	public void serialize(ITagLibrary tagLibrary) {
 		TeiElement encodingDesc = 
 				teiDocument.getTeiHeader().getEncodingDescElement();
 		for (TagsetDefinition tagset : tagLibrary) {

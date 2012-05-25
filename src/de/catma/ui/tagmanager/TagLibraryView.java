@@ -5,23 +5,23 @@ import com.vaadin.terminal.gwt.server.WebBrowser;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Table.TableDragMode;
 
-import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.ITagLibrary;
 import de.catma.core.tag.TagManager;
 import de.catma.core.tag.TagsetDefinition;
 
 public class TagLibraryView extends HorizontalLayout {
 	
-	private TagLibrary tagLibrary;
+	private ITagLibrary tagLibrary;
 	private TagsetTree tagsetTree;
 	private boolean init = true;
 	
-	public TagLibraryView(TagManager tagManager, TagLibrary tagLibrary) {
+	public TagLibraryView(TagManager tagManager, ITagLibrary tagLibrary) {
 		super();
 		this.tagLibrary = tagLibrary;
 		initComponents(tagManager, tagLibrary);
 	}
 
-	private void initComponents(TagManager tagManager, TagLibrary tagLibrary) {
+	private void initComponents(TagManager tagManager, ITagLibrary tagLibrary) {
 		setWidth("100%");
 		tagsetTree = new TagsetTree(tagManager, tagLibrary);
 		addComponent(tagsetTree);
@@ -46,7 +46,7 @@ public class TagLibraryView extends HorizontalLayout {
 		}
 	}
 
-	TagLibrary getTagLibrary() {
+	ITagLibrary getTagLibrary() {
 		return tagLibrary;
 	}
 

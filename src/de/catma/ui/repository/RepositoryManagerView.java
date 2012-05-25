@@ -43,4 +43,11 @@ public class RepositoryManagerView extends TabbedView implements CloseHandler {
 		}
 		return null;
 	}
+
+
+	public RepositoryManager getRepositoryManager() {
+		return repositoryListView.getRepositoryManager();
+	}
+
+	
 }

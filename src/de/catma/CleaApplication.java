@@ -23,12 +23,10 @@ import de.catma.core.document.Corpus;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
 import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.core.tag.TagLibrary;
+import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.core.tag.ITagLibrary;
 import de.catma.core.tag.TagManager;
-import de.catma.indexer.Indexer;
-import de.catma.indexer.IndexerFactory;
-import de.catma.indexer.IndexerProvider;
+import de.catma.indexer.IndexedRepository;
 import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.ProgressWindow;
 import de.catma.ui.analyzer.AnalyzerManagerView;
@@ -45,14 +43,10 @@ import de.catma.ui.tagmanager.TagManagerView;
 import de.catma.ui.tagmanager.TagManagerWindow;
 
 public class CleaApplication extends Application
-	implements IndexerProvider, BackgroundServiceProvider, AnalyzerProvider {
+	implements BackgroundServiceProvider, AnalyzerProvider {
 	
 	private static final String WEB_INF_DIR = "WEB-INF";
 	private static final String CATMA_PROPERTY_FILE = "catma.properties";
-	private enum PropertyKey {
-		IndexerFactory,
-		;
-	}
 
 	private RepositoryManagerView repositoryManagerView;
 	private TagManagerView tagManagerView;
@@ -64,7 +58,6 @@ public class CleaApplication extends Application
 	private TagManager tagManager;
 	private ProgressIndicator defaultProgressIndicator;
 	private int defaultPIbackgroundJobs = 0;
-	private Indexer indexer;
 	private ProgressWindow progressWindow;
 
 	@Override
@@ -95,8 +88,6 @@ public class CleaApplication extends Application
 		try {
 			initTempDirectory(properties);
 			tagManager = new TagManager();
-			
-			createIndexer(properties);
 			
 			repositoryManagerView = 
 				new RepositoryManagerView(
@@ -151,17 +142,6 @@ public class CleaApplication extends Application
 		super.start(applicationUrl, applicationProperties, context);
 	}
 	
-	//TODO: indexer should be provided by the repository!?
-	private void createIndexer(Properties properties) 
-			throws InstantiationException, IllegalAccessException, 
-				ClassNotFoundException {
-		String indexerFactoryClassName = 
-				properties.getProperty(PropertyKey.IndexerFactory.name());
-		IndexerFactory indexerFactory = 
-				(IndexerFactory)Class.forName(indexerFactoryClassName).newInstance();
-		this.indexer = indexerFactory.createIndexer();
-	}
-	
 	//TODO: temp dir might be obsolete, better work with in-memory byte arrays
 	private void initTempDirectory(Properties properties) throws IOException {
 		String tempDirProp = properties.getProperty("TempDir");
@@ -205,7 +185,7 @@ public class CleaApplication extends Application
 		repositoryManagerView.openRepository(repository);
 	}
 	 
-	public void openTagLibrary(TagLibrary tagLibrary) {
+	public void openTagLibrary(ITagLibrary tagLibrary) {
 		if (tagManagerView.getApplication() == null) {
 			menu.executeEntry(tagManagerView);
 		}
@@ -278,14 +258,14 @@ public class CleaApplication extends Application
 
 	public void openUserMarkupCollection(
 			ISourceDocument sourceDocument, 
-			UserMarkupCollection userMarkupCollection, Repository repository) {
+			IUserMarkupCollection userMarkupCollection, Repository repository) {
 		TaggerView taggerView = openSourceDocument(sourceDocument, repository);
 		taggerManagerView.openUserMarkupCollection(
 				taggerView, userMarkupCollection);
 		
 	}
 	
-	public void analyze(Corpus corpus, Repository repository) {
+	public void analyze(Corpus corpus, IndexedRepository repository) {
 		if (analyzerManagerView.getApplication() == null) {
 			menu.executeEntry(analyzerManagerView);
 		}
@@ -293,13 +273,9 @@ public class CleaApplication extends Application
 		analyzerManagerView.analyzeDocuments(corpus, repository);
 	}
 	
-	public Indexer getIndexer() {
-		return this.indexer;
-	}
-	
 	@Override
 	public void close() {
-		indexer.close();
+		repositoryManagerView.getRepositoryManager().close();
 		super.close();
 	}
 }

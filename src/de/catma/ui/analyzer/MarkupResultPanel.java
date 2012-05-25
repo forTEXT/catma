@@ -19,7 +19,7 @@ import com.vaadin.ui.VerticalLayout;
 
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagDefinition;
 import de.catma.queryengine.result.QueryResult;
@@ -196,8 +196,8 @@ public class MarkupResultPanel extends VerticalLayout {
 		resultTable.removeAllItems();
 		int totalFreq = 0;
 	
-		HashMap<String, UserMarkupCollection> loadedUserMarkupCollections =
-				new HashMap<String, UserMarkupCollection>();
+		HashMap<String, IUserMarkupCollection> loadedUserMarkupCollections =
+				new HashMap<String, IUserMarkupCollection>();
 		Set<String> tagDefinitions = new HashSet<String>();
 		
 		for (QueryResultRow row : queryResult) {
@@ -220,7 +220,7 @@ public class MarkupResultPanel extends VerticalLayout {
 	
 	private void addTagQueryResultRow(
 		final TagQueryResultRow row, 
-		Map<String,UserMarkupCollection> loadedUserMarkupCollections) 
+		Map<String,IUserMarkupCollection> loadedUserMarkupCollections) 
 				throws IOException {
 		
 		String tagDefinitionId = row.getTagDefinitionId();
@@ -238,7 +238,7 @@ public class MarkupResultPanel extends VerticalLayout {
 					repository.getUserMarkupCollection(userMarkupCollRef));
 		}
 		
-		UserMarkupCollection umc = 
+		IUserMarkupCollection umc = 
 				loadedUserMarkupCollections.get(markupCollectionsId);
 		
 		TagDefinition tagDefinition = 

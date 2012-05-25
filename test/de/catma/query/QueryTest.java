@@ -19,11 +19,11 @@ import com.google.gwt.dev.util.collect.HashSet;
 import de.catma.LogProgressListener;
 import de.catma.core.ExceptionHandler;
 import de.catma.core.document.Range;
-import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
 import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.source.KeywordInContext;
 import de.catma.core.tag.TagManager;
+import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.KwicProvider;
 import de.catma.indexer.TermInfo;
@@ -39,7 +39,7 @@ import de.catma.queryengine.result.TagQueryResultRow;
 
 public class QueryTest {
 
-	private Repository repository;
+	private IndexedRepository repository;
 
 	@Before
 	public void setup() {
@@ -49,7 +49,7 @@ public class QueryTest {
 		try {
 			properties.load(new FileInputStream("test/catma.properties"));
 			repository = 
-					new RepositoryManager(
+					(IndexedRepository)new RepositoryManager(
 							tagManager, properties).getRepositories().get(0);
 			repository.open(null);
 		}
@@ -181,7 +181,7 @@ public class QueryTest {
 				Collections.<String>emptyList(),
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
-				Locale.ENGLISH, null, dbIndexer);
+				Locale.ENGLISH, new DummyRepository(dbIndexer));
 		QueryJob job = new QueryJob(
 				"\"To the day when you took me aboard of your ship\"", queryOptions);
 		job.setProgressListener(new LogProgressListener());
@@ -240,7 +240,7 @@ public class QueryTest {
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
 				Locale.ENGLISH,
-				null, new DBIndexer());
+				new DummyRepository(new DBIndexer()));
 		
 		QueryJob job = new QueryJob(
 				"\"and\"", queryOptions);
@@ -294,7 +294,7 @@ public class QueryTest {
 				Collections.<String>emptyList(),
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
-				Locale.ENGLISH, null, new DBIndexer());
+				Locale.ENGLISH, new DummyRepository(new DBIndexer()));
 		
 		QueryJob job = new QueryJob(
 				"\"pig had been dead\"", queryOptions);
@@ -353,7 +353,7 @@ public class QueryTest {
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
 				Locale.ENGLISH,
-				repository, new DBIndexer());
+				repository);
 
 		QueryJob job = new QueryJob(
 //				"tag=\"Emily\" & freq > 230 2", queryOptions);

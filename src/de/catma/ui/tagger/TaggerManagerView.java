@@ -5,7 +5,7 @@ import com.vaadin.ui.Component;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.source.SourceDocument;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.core.tag.TagManager;
 import de.catma.ui.tabbedview.TabbedView;
 
@@ -50,7 +50,7 @@ public class TaggerManagerView extends TabbedView {
 	}
 
 	public void openUserMarkupCollection(TaggerView taggerView,
-			UserMarkupCollection userMarkupCollection) {
+			IUserMarkupCollection userMarkupCollection) {
 		taggerView.openUserMarkupCollection(userMarkupCollection);
 	}
 }

@@ -5,14 +5,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 
 public interface UserMarkupCollectionSerializationHandler {
 
-	public void serialize(UserMarkupCollection userMarkupCollection, 
+	public void serialize(IUserMarkupCollection userMarkupCollection, 
 		ISourceDocument sourceDocument, OutputStream outputStream) throws IOException;
 	
-	public UserMarkupCollection deserialize(
+	public IUserMarkupCollection deserialize(
 			String id, InputStream inputStream) throws IOException;
 	
 }

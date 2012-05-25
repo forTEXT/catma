@@ -23,10 +23,10 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.core.tag.TagDefinition;
-import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.ITagLibrary;
 import de.catma.core.tag.TagManager;
 import de.catma.core.tag.TagManager.TagManagerEvent;
 import de.catma.core.tag.TagsetDefinition;
@@ -57,7 +57,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private TagManager tagManager;
 	private PropertyChangeListener tagDefChangedListener;
 	private UserMarkupCollectionManager userMarkupCollectionManager;
-	private UserMarkupCollection currentWritableUserMarkupColl;
+	private IUserMarkupCollection currentWritableUserMarkupColl;
 	private PropertyChangeSupport propertyChangeSupport;
 	private Repository repository;
 	
@@ -193,32 +193,32 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		addComponent(markupCollectionsTree);
 	}
 
-	private UserMarkupCollection getUserMarkupCollection(
+	private IUserMarkupCollection getUserMarkupCollection(
 			Object itemId) {
 		
 		Object parent = markupCollectionsTree.getParent(itemId);
 		while((parent!=null) 
-				&& !(parent instanceof UserMarkupCollection)) {
+				&& !(parent instanceof IUserMarkupCollection)) {
 			parent = markupCollectionsTree.getParent(parent);
 		}
 		
-		return (UserMarkupCollection)parent;
+		return (IUserMarkupCollection)parent;
 	}
 
 	public void openUserMarkupCollection(
-			UserMarkupCollection userMarkupCollection) {
+			IUserMarkupCollection userMarkupCollection) {
 		userMarkupCollectionManager.add(userMarkupCollection);
 		addUserMarkupCollection(userMarkupCollection);
 	}
 	
 	private void addUserMarkupCollection(
-			UserMarkupCollection userMarkupCollection) {
+			IUserMarkupCollection userMarkupCollection) {
 		markupCollectionsTree.addItem(
 				new Object[] {userMarkupCollection, new Label(), createCheckbox(userMarkupCollection)},
 				userMarkupCollection);
 		markupCollectionsTree.setParent(userMarkupCollection, userMarkupItem);
 		
-		TagLibrary tagLibrary = userMarkupCollection.getTagLibrary();
+		ITagLibrary tagLibrary = userMarkupCollection.getTagLibrary();
 		for (TagsetDefinition tagsetDefinition : tagLibrary) {
 			ClassResource tagsetIcon = 
 					new ClassResource(
@@ -307,7 +307,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 	
 	private CheckBox createCheckbox(
-			final UserMarkupCollection userMarkupCollection) {
+			final IUserMarkupCollection userMarkupCollection) {
 		
 		CheckBox cbIsWritableUserMarkupColl = new CheckBox();
 		cbIsWritableUserMarkupColl.setImmediate(true);
@@ -318,7 +318,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				boolean selected = 
 						event.getButton().booleanValue();
 				if (selected) {
-					for (UserMarkupCollection umc : userMarkupCollectionManager) {
+					for (IUserMarkupCollection umc : userMarkupCollectionManager) {
 						if (!umc.equals(userMarkupCollection)) {
 							Object writeablePropertyValue = 
 								markupCollectionsTree.getItem(
@@ -343,7 +343,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	
 	private void fireTagDefinitionSelected(
 			TagDefinition tagDefinition, boolean selected) {
-		UserMarkupCollection userMarkupCollection =
+		IUserMarkupCollection userMarkupCollection =
 				getUserMarkupCollection(tagDefinition);
 		
 		List<TagReference> tagReferences =
@@ -374,7 +374,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 	
 	private void fireUserMarkupCollectionWriteable(
-			UserMarkupCollection userMarkupCollection) {
+			IUserMarkupCollection userMarkupCollection) {
 		propertyChangeSupport.firePropertyChange(
 			MarkupCollectionPanelEvent.userMarkupCollectionSelected.name(), 
 			null, userMarkupCollection);
@@ -388,10 +388,10 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 	
 	public void updateTagsetDefinition(TagsetDefinition incomingTagsetDef) {
-		List<UserMarkupCollection> modified = 
+		List<IUserMarkupCollection> modified = 
 				userMarkupCollectionManager.updateUserMarkupCollections(
 			incomingTagsetDef);
-		for (UserMarkupCollection c : modified) {
+		for (IUserMarkupCollection c : modified) {
 			removeWithChildren(c);
 			addUserMarkupCollection(c);
 		}
@@ -413,11 +413,11 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		//FIXME: add TagsetDefs to tree!!!
 	}
 	
-	public UserMarkupCollection getCurrentWritableUserMarkupCollection() {
+	public IUserMarkupCollection getCurrentWritableUserMarkupCollection() {
 		return currentWritableUserMarkupColl;
 	}
 	
-	public List<UserMarkupCollection> getUserMarkupCollections() {
+	public List<IUserMarkupCollection> getUserMarkupCollections() {
 		return this.userMarkupCollectionManager.getUserMarkupCollections();
 	}
 

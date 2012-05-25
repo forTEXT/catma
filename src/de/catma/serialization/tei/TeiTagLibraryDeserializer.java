@@ -3,6 +3,7 @@ package de.catma.serialization.tei;
 import nu.xom.Elements;
 import nu.xom.Nodes;
 import de.catma.core.ExceptionHandler;
+import de.catma.core.tag.ITagLibrary;
 import de.catma.core.tag.PropertyDefinition;
 import de.catma.core.tag.PropertyPossibleValueList;
 import de.catma.core.tag.TagDefinition;
@@ -14,7 +15,7 @@ import de.catma.core.tag.Version;
 public class TeiTagLibraryDeserializer {
 	
 	private TeiDocument teiDocument;
-	private TagLibrary tagLibrary;
+	private ITagLibrary tagLibrary;
 	private TagManager tagManager;
 
 	public TeiTagLibraryDeserializer(
@@ -130,7 +131,7 @@ public class TeiTagLibraryDeserializer {
 								pvf.isSingleSelectValue()));
 	}
 
-	public TagLibrary getTagLibrary() {
+	public ITagLibrary getTagLibrary() {
 		return tagLibrary;
 	}
 }

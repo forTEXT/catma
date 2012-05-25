@@ -24,11 +24,10 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.core.document.Corpus;
-import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.indexer.IndexerProvider;
+import de.catma.indexer.IndexedRepository;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.result.QueryResult;
@@ -44,14 +43,14 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 	private Tree documentsTree;
 	private TabSheet resultTabSheet;
 	private PhraseResultPanel phraseResultPanel;
-	private Repository repository;
+	private IndexedRepository repository;
 	private List<String> relevantSourceDocumentIDs;
 	private List<String> relevantUserMarkupCollIDs;
 	private List<String> relevantStaticMarkupCollIDs;
 	private MarkupResultPanel markupResultPanel;
 	
 	public AnalyzerView(
-			Corpus corpus, Repository repository) {
+			Corpus corpus, IndexedRepository repository) {
 		this.relevantSourceDocumentIDs = new ArrayList<String>();
 		this.relevantUserMarkupCollIDs = new ArrayList<String>();
 		this.relevantStaticMarkupCollIDs = new ArrayList<String>();
@@ -104,8 +103,7 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
 				Locale.ENGLISH,
-				repository,
-				((IndexerProvider)getApplication()).getIndexer());
+				repository);
 		
 		QueryJob job = new QueryJob(
 				searchInput.getValue().toString(),

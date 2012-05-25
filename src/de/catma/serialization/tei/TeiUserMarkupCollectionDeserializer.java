@@ -13,17 +13,17 @@ import de.catma.core.tag.PropertyDefinition;
 import de.catma.core.tag.PropertyValueList;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagInstance;
-import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.ITagLibrary;
 import de.catma.serialization.tei.PtrValueHandler.TargetValues;
 
 public class TeiUserMarkupCollectionDeserializer {
 
 	private TeiDocument teiDocument;
 	private List<TagReference> tagReferences;
-	private TagLibrary tagLibrary;
+	private ITagLibrary tagLibrary;
 
 	public TeiUserMarkupCollectionDeserializer(
-			TeiDocument teiDocument, TagLibrary tagLibrary) {
+			TeiDocument teiDocument, ITagLibrary tagLibrary) {
 		this.teiDocument = teiDocument;
 		this.tagLibrary = tagLibrary;
 		this.tagReferences = new ArrayList<TagReference>();

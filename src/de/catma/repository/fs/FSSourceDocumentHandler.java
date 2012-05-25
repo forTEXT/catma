@@ -24,6 +24,7 @@ import nu.xom.Nodes;
 import org.apache.commons.io.IOUtils;
 
 import de.catma.core.ExceptionHandler;
+import de.catma.core.document.ContentInfoSet;
 import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.source.SourceDocumentHandler;
 import de.catma.core.document.source.SourceDocumentInfo;
@@ -155,7 +156,8 @@ class FSSourceDocumentHandler {
 				Node userURINode = userURINodes.get(i);
 				UserMarkupCollectionReference userMarkupCollRef = 
 						new UserMarkupCollectionReference(
-								userURINode.getValue(), userURINode.getValue());
+								userURINode.getValue(), 
+								new ContentInfoSet(userURINode.getValue()));
 				sourceDocument.addUserMarkupCollectionReference(userMarkupCollRef);
 			}
 			

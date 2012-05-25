@@ -12,7 +12,7 @@ import de.catma.core.document.Range;
 import de.catma.core.document.source.FileType;
 import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.core.tag.Property;
 import de.catma.core.tag.PropertyDefinition;
 import de.catma.core.tag.TagInstance;
@@ -28,7 +28,7 @@ public class TeiUserMarkupCollectionSerializer {
 	
 	
 	public void serialize(
-			UserMarkupCollection userMarkupCollection, 
+			IUserMarkupCollection userMarkupCollection, 
 			ISourceDocument sourceDocument) throws IOException {
 		
 		String targetURI = makeTargetURI(sourceDocument);

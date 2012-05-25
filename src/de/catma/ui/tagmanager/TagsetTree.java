@@ -26,7 +26,7 @@ import com.vaadin.ui.TreeTable;
 import de.catma.core.tag.PropertyDefinition;
 import de.catma.core.tag.PropertyPossibleValueList;
 import de.catma.core.tag.TagDefinition;
-import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.ITagLibrary;
 import de.catma.core.tag.TagManager;
 import de.catma.core.tag.TagManager.TagManagerEvent;
 import de.catma.core.tag.TagsetDefinition;
@@ -63,18 +63,18 @@ public class TagsetTree extends HorizontalLayout {
 	private boolean withTagsetButtons;
 	private ColorButtonListener colorButtonListener;
 	private TagManager tagManager;
-	private TagLibrary tagLibrary;
+	private ITagLibrary tagLibrary;
 	private PropertyChangeListener tagsetDefAddedListener;
 	private PropertyChangeListener tagsetDefNameChangedListener;
 	private PropertyChangeListener tagsetDefRemovedListener;
 	private PropertyChangeListener tagDefChangedListener;
 
-	public TagsetTree(TagManager tagManager, TagLibrary tagLibrary) {
+	public TagsetTree(TagManager tagManager, ITagLibrary tagLibrary) {
 		this(tagManager, tagLibrary, true, null);
 	}
 	
 	public TagsetTree(
-			TagManager tagManager, final TagLibrary tagLibrary, 
+			TagManager tagManager, final ITagLibrary tagLibrary, 
 			boolean withTagsetButtons, 
 			ColorButtonListener colorButtonListener) {
 		this.tagManager = tagManager;
@@ -102,8 +102,8 @@ public class TagsetTree extends HorizontalLayout {
 				public void propertyChange(PropertyChangeEvent evt) {
 					
 					@SuppressWarnings("unchecked")
-					Pair<TagLibrary, TagsetDefinition> addOperationResult = 
-						(Pair<TagLibrary,TagsetDefinition>)evt.getNewValue();
+					Pair<ITagLibrary, TagsetDefinition> addOperationResult = 
+						(Pair<ITagLibrary,TagsetDefinition>)evt.getNewValue();
 					
 					if (tagLibrary.equals(addOperationResult.getFirst())) {
 						addTagsetDefinition(addOperationResult.getSecond());
@@ -138,8 +138,8 @@ public class TagsetTree extends HorizontalLayout {
 						
 				public void propertyChange(PropertyChangeEvent evt) {
 					@SuppressWarnings("unchecked")
-					Pair<TagLibrary, TagsetDefinition> removeOperationResult = 
-						(Pair<TagLibrary,TagsetDefinition>)evt.getOldValue();
+					Pair<ITagLibrary, TagsetDefinition> removeOperationResult = 
+						(Pair<ITagLibrary,TagsetDefinition>)evt.getOldValue();
 					
 					if (tagLibrary.equals(removeOperationResult.getFirst())) {
 						TagsetDefinition tagsetDef = 

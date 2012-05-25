@@ -11,9 +11,10 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 
+import de.catma.core.document.ContentInfoSet;
 import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.source.contenthandler.BOMFilterInputStream;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.util.CloseSafe;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
@@ -31,7 +32,7 @@ class FSUserMarkupCollectionHandler {
 	}
 	
 	
-	public UserMarkupCollection loadUserMarkupCollection(
+	public IUserMarkupCollection loadUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
 		String userMarkupURI = 
 				FSRepository.getFileURL(
@@ -55,7 +56,7 @@ class FSUserMarkupCollectionHandler {
 				throw new IOException(se);
 			}
 			
-			UserMarkupCollection userMarkupCollection = 
+			IUserMarkupCollection userMarkupCollection = 
 					userMarkupCollectionSerializationHandler.deserialize(
 							userMarkupCollectionReference.getId(), is);
 			is.close();
@@ -69,13 +70,13 @@ class FSUserMarkupCollectionHandler {
 	}	
 	
 	public UserMarkupCollectionReference saveUserMarkupCollection(
-			UserMarkupCollection userMarkupCollection, 
+			IUserMarkupCollection userMarkupCollection, 
 			ISourceDocument sourceDocument) throws IOException {
 		
 		UserMarkupCollectionReference reference = 
 				new UserMarkupCollectionReference(
 						userMarkupCollection.getId(), 
-						userMarkupCollection.getName());
+						new ContentInfoSet(userMarkupCollection.getName()));
 	
 		String url = FSRepository.getFileURL(
 				userMarkupCollection.getId(), repoFolderPath);

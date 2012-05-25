@@ -17,7 +17,7 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagManager;
 import de.catma.core.tag.TagsetDefinition;
@@ -126,7 +126,7 @@ public class MarkupPanel extends VerticalLayout {
 	}
 
 	public void openUserMarkupCollection(
-			UserMarkupCollection userMarkupCollection) {
+			IUserMarkupCollection userMarkupCollection) {
 		markupCollectionsPanel.openUserMarkupCollection(
 				userMarkupCollection);
 	}
@@ -147,11 +147,11 @@ public class MarkupPanel extends VerticalLayout {
 		return tagsetTree.getTagsetDefinition(tagDefinition);
 	}
 
-	public UserMarkupCollection getCurrentWritableUserMarkupCollection() {
+	public IUserMarkupCollection getCurrentWritableUserMarkupCollection() {
 		return markupCollectionsPanel.getCurrentWritableUserMarkupCollection();
 	}
 
-	public List<UserMarkupCollection> getUserMarkupCollections() {
+	public List<IUserMarkupCollection> getUserMarkupCollections() {
 		return markupCollectionsPanel.getUserMarkupCollections();
 	}
 

@@ -1,8 +1,6 @@
 package de.catma.index;
 
 import java.io.FileInputStream;
-import java.util.Collections;
-import java.util.Locale;
 import java.util.Properties;
 
 import org.junit.Before;
@@ -12,7 +10,7 @@ import de.catma.core.ExceptionHandler;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
 import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.TagManager;
 import de.catma.indexer.Indexer;
@@ -44,11 +42,7 @@ public class IndexerTest {
 					"catma:///container/pg13.txt");
 			
 			Indexer indexer = new DBIndexer();
-			indexer.index(
-					sd, 
-					Collections.<String>emptyList(), 
-					Collections.<Character>emptyList(), 
-					Locale.ENGLISH);
+			indexer.index(sd);
 		}
 		catch(Throwable t) {
 			t.printStackTrace();
@@ -63,11 +57,7 @@ public class IndexerTest {
 					"catma:///container/pg11.txt");
 			
 			Indexer indexer = new DBIndexer();
-			indexer.index(
-					sd, 
-					Collections.<String>emptyList(), 
-					Collections.<Character>emptyList(), 
-					Locale.ENGLISH);
+			indexer.index(sd);
 		}
 		catch(Throwable t) {
 			t.printStackTrace();
@@ -82,11 +72,7 @@ public class IndexerTest {
 					"catma:///container/rose_for_emily.txt");
 			
 			Indexer indexer = new DBIndexer();
-			indexer.index(
-					sd, 
-					Collections.<String>emptyList(), 
-					Collections.<Character>emptyList(), 
-					Locale.ENGLISH);
+			indexer.index(sd);
 		}
 		catch(Throwable t) {
 			t.printStackTrace();
@@ -102,7 +88,7 @@ public class IndexerTest {
 			UserMarkupCollectionReference ref = 
 					sd.getUserMarkupCollectionRefs().get(0);
 			
-			UserMarkupCollection umc = 
+			IUserMarkupCollection umc = 
 					repository.getUserMarkupCollection(ref);
 						
 			Indexer indexer = new DBIndexer();

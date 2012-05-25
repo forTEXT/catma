@@ -1,12 +1,12 @@
 package de.catma.ui.analyzer;
 
 import de.catma.core.document.Corpus;
-import de.catma.core.document.repository.Repository;
+import de.catma.indexer.IndexedRepository;
 
 public interface AnalyzerProvider {
 
 	public void analyze(
 			Corpus corpus,
-			Repository repository);
+			IndexedRepository repository);
 
 }

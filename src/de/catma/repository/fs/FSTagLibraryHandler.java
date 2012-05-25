@@ -15,7 +15,7 @@ import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Nodes;
 import de.catma.core.document.source.contenthandler.BOMFilterInputStream;
-import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.ITagLibrary;
 import de.catma.core.tag.TagLibraryReference;
 import de.catma.core.util.CloseSafe;
 import de.catma.serialization.TagLibrarySerializationHandler;
@@ -84,7 +84,7 @@ class FSTagLibraryHandler {
 		}
 	}
 	
-	public TagLibrary loadTagLibrary(TagLibraryReference tagLibraryReference) 
+	public ITagLibrary loadTagLibrary(TagLibraryReference tagLibraryReference) 
 			throws IOException {
 		
 		URLConnection urlConnection = 

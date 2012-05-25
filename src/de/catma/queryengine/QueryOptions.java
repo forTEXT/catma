@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Locale;
 
 import de.catma.core.document.repository.Repository;
+import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 
 public class QueryOptions {
@@ -14,16 +15,14 @@ public class QueryOptions {
 	private List<String> unseparableCharacterSequences;
 	private List<Character> userDefinedSeparatingCharacters;
 	private Locale locale;
-	private Repository repository;
-	private Indexer indexer;
+	private IndexedRepository repository;
 	
 	public QueryOptions(List<String> relevantSourceDocumentIDs,
 			List<String> relevantUserMarkupCollIDs,
 			List<String> relevantStaticMarkupCollIDs,
 			List<String> unseparableCharacterSequences,
 			List<Character> userDefinedSeparatingCharacters, Locale locale,
-			Repository repository,
-			Indexer indexer) {
+			IndexedRepository repository) {
 		this.relevantSourceDocumentIDs = relevantSourceDocumentIDs;
 		this.relevantUserMarkupCollIDs = relevantUserMarkupCollIDs;
 		this.relevantStaticMarkupCollIDs = relevantStaticMarkupCollIDs;
@@ -31,7 +30,6 @@ public class QueryOptions {
 		this.userDefinedSeparatingCharacters = userDefinedSeparatingCharacters;
 		this.locale = locale;
 		this.repository = repository;
-		this.indexer = indexer;
 	}
 
 	public List<String> getRelevantSourceDocumentIDs() {
@@ -63,6 +61,6 @@ public class QueryOptions {
 	}
 	
 	public Indexer getIndexer() {
-		return indexer;
+		return repository.getIndexer();
 	}
 }

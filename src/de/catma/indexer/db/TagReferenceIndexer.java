@@ -5,14 +5,14 @@ import java.util.List;
 import org.hibernate.Session;
 
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.ITagLibrary;
 import de.catma.core.util.IDGenerator;
 
 public class TagReferenceIndexer {
 
 	public void index(Session session, List<TagReference> tagReferences,
 			String sourceDocumentID, String userMarkupCollectionID,
-			TagLibrary tagLibrary) {
+			ITagLibrary tagLibrary) {
 		
 		IDGenerator idGenerator = new IDGenerator();
 		

@@ -12,11 +12,17 @@ import de.catma.indexer.TermInfo;
 
 class SourceDocumentIndexer {
 	
-	public void index(Session session, ISourceDocument sourceDocument,
-			List<String> unseparableCharacterSequences,
-			List<Character> userDefinedSeparatingCharacters, Locale locale)
+	public void index(Session session, ISourceDocument sourceDocument)
 			throws Exception {
-		
+		List<String> unseparableCharacterSequences = 
+				sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+					.getIndexInfoSet().getUnseparableCharacterSequences();
+		List<Character> userDefinedSeparatingCharacters = 
+				sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+					.getIndexInfoSet().getUserDefinedSeparatingCharacters();
+		Locale locale = 
+				sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+				.getIndexInfoSet().getLocale();
 		
 		TermExtractor termExtractor = 
 				new TermExtractor(

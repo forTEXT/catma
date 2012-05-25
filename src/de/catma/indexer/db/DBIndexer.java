@@ -2,7 +2,6 @@ package de.catma.indexer.db;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -13,7 +12,7 @@ import org.hibernate.service.ServiceRegistryBuilder;
 import de.catma.core.document.Range;
 import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.core.tag.TagLibrary;
+import de.catma.core.tag.ITagLibrary;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
@@ -41,19 +40,14 @@ public class DBIndexer implements Indexer {
 	}
 	
 
-	public void index(ISourceDocument sourceDocument,
-			List<String> unseparableCharacterSequences,
-			List<Character> userDefinedSeparatingCharacters, Locale locale)
+	public void index(ISourceDocument sourceDocument)
 			throws Exception {
 		Session session = sessionFactory.openSession();
 		try {
 			SourceDocumentIndexer sourceDocumentIndexer = new SourceDocumentIndexer();
 			sourceDocumentIndexer.index(
 					session, 
-					sourceDocument, 
-					unseparableCharacterSequences, 
-					userDefinedSeparatingCharacters, 
-					locale);
+					sourceDocument);
 			session.close();
 		}
 		catch (Exception e) {
@@ -68,7 +62,7 @@ public class DBIndexer implements Indexer {
 
 	public void index(List<TagReference> tagReferences,
 			String sourceDocumentID, String userMarkupCollectionID,
-			TagLibrary tagLibrary) throws Exception {
+			ITagLibrary tagLibrary) throws Exception {
 		
 		Session session = sessionFactory.openSession();
 		try {

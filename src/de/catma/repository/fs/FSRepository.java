@@ -5,6 +5,7 @@ import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -16,8 +17,11 @@ import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.ISourceDocument;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.core.tag.ITagLibrary;
 import de.catma.core.tag.TagLibrary;
 import de.catma.core.tag.TagLibraryReference;
 import de.catma.core.user.User;
@@ -115,7 +119,7 @@ class FSRepository implements Repository {
 		return Collections.unmodifiableSet(this.tagLibraryReferences);
 	}
 
-	public TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) {
+	public ITagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) {
 		try {
 			return tagLibraryHandler.loadTagLibrary(tagLibraryReference);
 		}
@@ -124,7 +128,7 @@ class FSRepository implements Repository {
 		}
 	}
 
-	public UserMarkupCollection getUserMarkupCollection(
+	public IUserMarkupCollection getUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference) {
 		try {
 			return userMarkupCollectionHandler.loadUserMarkupCollection(
@@ -146,7 +150,7 @@ class FSRepository implements Repository {
 		
 	}
 
-	public void delete(UserMarkupCollection userMarkupCollection) {
+	public void delete(IUserMarkupCollection userMarkupCollection) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -162,7 +166,7 @@ class FSRepository implements Repository {
 	}
 
 	public void update(
-			UserMarkupCollection userMarkupCollection, 
+			IUserMarkupCollection userMarkupCollection, 
 			ISourceDocument sourceDocument) throws IOException {
 		userMarkupCollectionHandler.saveUserMarkupCollection(
 				userMarkupCollection, sourceDocument);
@@ -186,9 +190,12 @@ class FSRepository implements Repository {
 		String id = buildCatmaUri(
 				"/" + CONTAINER_FOLDER + "/" + name + ".xml");
 		ContentInfoSet cis = new ContentInfoSet(name);
-		UserMarkupCollection umc = 
+		IUserMarkupCollection umc = 
 				new UserMarkupCollection(
-						id, cis);
+						id, 
+						cis, 
+						new TagLibrary(id, cis.getTitle()),
+						new ArrayList<TagReference>());
 		
 		UserMarkupCollectionReference ref = 
 				userMarkupCollectionHandler.saveUserMarkupCollection(
@@ -268,5 +275,15 @@ class FSRepository implements Repository {
 				return System.getProperty("user.name");
 			}
 		};
+	}
+	
+	public void close() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void createTagLibrary(String name) throws IOException {
+		// TODO Auto-generated method stub
+		
 	}
 }

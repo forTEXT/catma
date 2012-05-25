@@ -7,8 +7,12 @@
   <property name="hibernate.connection.url">jdbc:mysql://localhost/CatmaRepository</property>
   <property name="hibernate.connection.username">root</property>
   <property name="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
+  <property name="hibernate.show_sql">true</property>
   <mapping class="de.catma.repository.db.model.DBUser"/>
   <mapping class="de.catma.repository.db.model.DBSourceDocument"/>
   <mapping class="de.catma.repository.db.model.DBUserSourceDocument"/>
+  <mapping class="de.catma.repository.db.model.DBUserMarkupCollection"/>
+  <mapping class="de.catma.repository.db.model.DBUserUserMarkupCollection"/>
+  <mapping class="de.catma.repository.db.model.DBTagLibrary"/>
  </session-factory>
 </hibernate-configuration>

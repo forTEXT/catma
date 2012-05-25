@@ -104,9 +104,9 @@ public class RepositoryListView extends VerticalLayout {
 		else {
 			openBt.setEnabled(false);
 		}
-		
-		
-
 	}
 	
+	public RepositoryManager getRepositoryManager() {
+		return repositoryManager;
+	}
 }

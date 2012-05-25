@@ -42,7 +42,10 @@ public class DBSourceDocument implements java.io.Serializable, ISourceDocument {
 	private Integer sourceDocumentId;
 	private SourceDocument sourceDocumentDelegate;
 	private SourceDocumentInfo sourceDocumentInfo;
-	private Set<DBUserSourceDocument> dbUserSourceDocuments = new HashSet<DBUserSourceDocument>();
+	private Set<DBUserSourceDocument> dbUserSourceDocuments = 
+			new HashSet<DBUserSourceDocument>();
+	private Set<DBUserMarkupCollection> dbUserMarkupCollections = 
+			new HashSet<DBUserMarkupCollection>();
 	
 	public DBSourceDocument(SourceDocument sourceDocument) {
 		sourceDocumentDelegate = sourceDocument;
@@ -211,6 +214,16 @@ public class DBSourceDocument implements java.io.Serializable, ISourceDocument {
 		this.dbUserSourceDocuments = dbUserSourceDocuments;
 	}
 
+	@OneToMany(mappedBy = "sourceDocumentId")
+	public Set<DBUserMarkupCollection> getDbUserMarkupCollections() {
+		return dbUserMarkupCollections;
+	}
+	
+	public void setDbUserMarkupCollections(
+			Set<DBUserMarkupCollection> dbUserMarkupCollections) {
+		this.dbUserMarkupCollections = dbUserMarkupCollections;
+	}
+	
 	@Transient
 	public String getContent(Range range) throws IOException {
 		return sourceDocumentDelegate.getContent(range);
