@@ -22,7 +22,7 @@ public class FormDialog extends VerticalLayout {
 	public FormDialog(
 			String caption,
 			PropertysetItem propertysetItem, 
-			SaveCancelListener saveCancelListener) {
+			SaveCancelListener<PropertysetItem> saveCancelListener) {
 		this(caption, propertysetItem, null, saveCancelListener);
 	}
 	
@@ -30,7 +30,7 @@ public class FormDialog extends VerticalLayout {
 			String caption,
 			PropertysetItem propertysetItem, 
 			FormFieldFactory formFieldFactory,
-			SaveCancelListener saveCancelListener) {
+			SaveCancelListener<PropertysetItem> saveCancelListener) {
 		initComponents(caption, propertysetItem, formFieldFactory, saveCancelListener);
 	}
 
@@ -38,7 +38,7 @@ public class FormDialog extends VerticalLayout {
 			String caption,
 			final PropertysetItem propertysetItem, 
 			FormFieldFactory formFieldFactory, 
-			final SaveCancelListener saveCancelListener) {
+			final SaveCancelListener<PropertysetItem> saveCancelListener) {
 		setSizeFull();
 		setSpacing(true);
 		

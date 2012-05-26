@@ -9,6 +9,7 @@ import de.catma.core.tag.TagManager;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.IndexerFactory;
 import de.catma.indexer.IndexerPropertyKey;
+import de.catma.serialization.SerializationHandlerFactory;
 
 public class DBRepositoryFactory implements RepositoryFactory {
 
@@ -20,12 +21,21 @@ public class DBRepositoryFactory implements RepositoryFactory {
 		IndexerFactory indexerFactory = 
 				(IndexerFactory)Class.forName(indexerFactoryClassName).newInstance();
 		Indexer indexer = indexerFactory.createIndexer();
-		
+
+		String serializationHandlerFactoryClazzName = 
+				RepositoryPropertyKey.SerializationHandlerFactory.getProperty(properties, index);
+		SerializationHandlerFactory serializationHandlerFactory = 
+				(SerializationHandlerFactory) Class.forName(
+						serializationHandlerFactoryClazzName, true, 
+						Thread.currentThread().getContextClassLoader()).newInstance();
+		serializationHandlerFactory.setTagManager(tagManager);
+
 		return new DBRepository(
 			RepositoryPropertyKey.Repository.getProperty(properties, index),
 			RepositoryPropertyKey.RepositoryFolderPath.getProperty(properties, index),
 			RepositoryPropertyKey.RepositoryAuthenticationRequired.isTrue(properties, index, false),
-			indexer);
+			indexer,
+			serializationHandlerFactory);
 	}
 
 }

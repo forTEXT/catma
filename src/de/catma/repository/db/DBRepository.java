@@ -51,12 +51,14 @@ import de.catma.repository.db.model.DBUserMarkupCollection;
 import de.catma.repository.db.model.DBUserSourceDocument;
 import de.catma.repository.db.model.DBUserTagLibrary;
 import de.catma.repository.db.model.DBUserUserMarkupCollection;
+import de.catma.serialization.SerializationHandlerFactory;
 
 public class DBRepository implements IndexedRepository {
 	
 	private String name;
 	private DBSourceDocumentHandler dbSourceDocumentHandler;
 	private Indexer indexer;
+	private SerializationHandlerFactory serializationHandlerFactory;
 	private boolean authenticationRequired;
 
 	private SessionFactory sessionFactory; 
@@ -73,13 +75,14 @@ public class DBRepository implements IndexedRepository {
 
 	public DBRepository(
 			String name, String repoFolderPath, boolean authenticationRequired, 
-			Indexer indexer) {
+			Indexer indexer, SerializationHandlerFactory serializationHandlerFactory) {
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.name = name;
 		this.dbSourceDocumentHandler = 
 				new DBSourceDocumentHandler(repoFolderPath);
 		this.authenticationRequired = authenticationRequired;
 		this.indexer = indexer;
+		this.serializationHandlerFactory = serializationHandlerFactory;
 		hibernateConfig = new Configuration();
 		hibernateConfig.configure(
 				this.getClass().getPackage().getName().replace('.', '/') 

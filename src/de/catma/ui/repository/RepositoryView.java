@@ -2,7 +2,10 @@ package de.catma.ui.repository;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashMap;
 
@@ -39,6 +42,7 @@ import de.catma.backgroundservice.ExecutionListener;
 import de.catma.core.document.Corpus;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.source.ISourceDocument;
+import de.catma.core.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.core.document.standoffmarkup.MarkupCollectionReference;
 import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
@@ -47,10 +51,12 @@ import de.catma.core.tag.ITagLibrary;
 import de.catma.core.tag.TagLibraryReference;
 import de.catma.core.util.Pair;
 import de.catma.indexer.IndexedRepository;
+import de.catma.serialization.TagLibrarySerializationHandler;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.PropertyCollection;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.dialog.UploadDialog;
 import de.catma.ui.repository.wizard.WizardFactory;
 import de.catma.ui.repository.wizard.WizardResult;
 import de.catma.ui.repository.wizard.WizardWindow;
@@ -509,7 +515,28 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	
 
 	private void handleTagLibraryImport() {
-		
+		UploadDialog uploadDialog = new UploadDialog("Upload Tag Library", new SaveCancelListener<byte[]>() {
+			
+			public void cancelPressed() {}
+			
+			public void savePressed(byte[] result) {
+				InputStream is = new ByteArrayInputStream(result);
+				if (BOMFilterInputStream.hasBOM(result)) {
+					try {
+						is = new BOMFilterInputStream(is, Charset.forName("UTF-8"));
+						
+						//TODO: repository.importTagLibrary(is);
+						
+						
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+			
+		});
+		uploadDialog.show(getApplication().getMainWindow());
 	}
 
 	private void initComponents() {
@@ -863,7 +890,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 			final ISourceDocument sourceDocument = (ISourceDocument)value;
 			final String userMarkupCollectionNameProperty = "name";
 			getUserMarkupCollectionName(
-					new SaveCancelListener() {
+					new SaveCancelListener<PropertysetItem>() {
 				public void cancelPressed() {}
 				public void savePressed(
 						PropertysetItem propertysetItem) {
@@ -886,7 +913,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	}
 
 	private void getUserMarkupCollectionName(
-			SaveCancelListener listener, 
+			SaveCancelListener<PropertysetItem> listener, 
 			String userMarkupCollectionNameProperty) {
 		PropertyCollection propertyCollection = 
 				new PropertyCollection(userMarkupCollectionNameProperty);
