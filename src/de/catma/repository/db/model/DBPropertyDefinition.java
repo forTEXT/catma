@@ -2,9 +2,14 @@ package de.catma.repository.db.model;
 
 // Generated 22.05.2012 21:58:37 by Hibernate Tools 3.4.0.CR1
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.OneToMany;
+
 import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -20,18 +25,12 @@ public class DBPropertyDefinition implements java.io.Serializable {
 	private Integer propertyDefinitionId;
 	private byte[] uuid;
 	private String name;
-	private int tagDefinitionId;
+	private DBTagDefinition dbTagDefinition;
 	private boolean systemproperty;
+	private Set<DBPropertyDefPossibleValue> dbPropertyDefPossibleValues = 
+			new HashSet<DBPropertyDefPossibleValue>();
 
 	public DBPropertyDefinition() {
-	}
-
-	public DBPropertyDefinition(byte[] uuid, String name, int tagDefinitionId,
-			boolean systemproperty) {
-		this.uuid = uuid;
-		this.name = name;
-		this.tagDefinitionId = tagDefinitionId;
-		this.systemproperty = systemproperty;
 	}
 
 	@Id
@@ -64,12 +63,12 @@ public class DBPropertyDefinition implements java.io.Serializable {
 	}
 
 	@Column(name = "tagDefinitionID", nullable = false)
-	public int getTagDefinitionId() {
-		return this.tagDefinitionId;
+	public DBTagDefinition getDbTagDefinition() {
+		return dbTagDefinition;
 	}
-
-	public void setTagDefinitionId(int tagDefinitionId) {
-		this.tagDefinitionId = tagDefinitionId;
+	
+	public void setDbTagDefinition(DBTagDefinition dbTagDefinition) {
+		this.dbTagDefinition = dbTagDefinition;
 	}
 
 	@Column(name = "systemproperty", nullable = false)
@@ -79,6 +78,16 @@ public class DBPropertyDefinition implements java.io.Serializable {
 
 	public void setSystemproperty(boolean systemproperty) {
 		this.systemproperty = systemproperty;
+	}
+	
+	@OneToMany(mappedBy = "dbPropertyDefinition")
+	public Set<DBPropertyDefPossibleValue> getDbPropertyDefPossibleValues() {
+		return dbPropertyDefPossibleValues;
+	}
+	
+	public void setDbPropertyDefPossibleValues(
+			Set<DBPropertyDefPossibleValue> dbPropertyDefPossibleValues) {
+		this.dbPropertyDefPossibleValues = dbPropertyDefPossibleValues;
 	}
 
 }

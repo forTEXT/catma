@@ -83,11 +83,6 @@ public class DBTagLibrary implements java.io.Serializable, ITagLibrary {
 		this.dbUserTagLibraries = dbUserTagLibraries;
 	}
 	
-
-	public TagLibrary getTagLibraryDelegate() {
-		return tagLibraryDelegate;
-	}
-	
 	public void add(TagsetDefinition tagsetDefinition) {
 		tagLibraryDelegate.add(tagsetDefinition);
 	}

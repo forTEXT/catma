@@ -2,12 +2,17 @@ package de.catma.repository.db.model;
 
 // Generated 22.05.2012 21:58:37 by Hibernate Tools 3.4.0.CR1
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -26,24 +31,14 @@ public class DBTagDefinition implements java.io.Serializable {
 	private Date version;
 	private byte[] uuid;
 	private String name;
-	private int tagsetDefinitionId;
+	private DBTagsetDefinition dbTagsetDefinition;
 	private Integer parentId;
-
+	private byte[] parentUuid;
+	
+	private Set<DBPropertyDefinition> dbPropertyDefinitions = 
+			new HashSet<DBPropertyDefinition>();
+	
 	public DBTagDefinition() {
-	}
-
-	public DBTagDefinition(byte[] uuid, String name, int tagsetDefinitionId) {
-		this.uuid = uuid;
-		this.name = name;
-		this.tagsetDefinitionId = tagsetDefinitionId;
-	}
-
-	public DBTagDefinition(byte[] uuid, String name, int tagsetDefinitionId,
-			Integer parentId) {
-		this.uuid = uuid;
-		this.name = name;
-		this.tagsetDefinitionId = tagsetDefinitionId;
-		this.parentId = parentId;
 	}
 
 	@Id
@@ -87,12 +82,12 @@ public class DBTagDefinition implements java.io.Serializable {
 	}
 
 	@Column(name = "tagsetDefinitionID", nullable = false)
-	public int getTagsetDefinitionId() {
-		return this.tagsetDefinitionId;
+	public DBTagsetDefinition getDbTagsetDefinition() {
+		return dbTagsetDefinition;
 	}
-
-	public void setTagsetDefinitionId(int tagsetDefinitionId) {
-		this.tagsetDefinitionId = tagsetDefinitionId;
+	
+	public void setDbTagsetDefinition(DBTagsetDefinition dbTagsetDefinition) {
+		this.dbTagsetDefinition = dbTagsetDefinition;
 	}
 
 	@Column(name = "parentID")
@@ -103,5 +98,23 @@ public class DBTagDefinition implements java.io.Serializable {
 	public void setParentId(Integer parentId) {
 		this.parentId = parentId;
 	}
+	
+	@Column(name = "parentUuid", nullable = false)
+	public byte[] getParentUuid() {
+		return this.parentUuid;
+	}
 
+	public void setParentUuid(byte[] parentUuid) {
+		this.parentUuid = parentUuid;
+	}
+
+	@OneToMany(mappedBy ="dbTagDefinition")
+	public Set<DBPropertyDefinition> getDbPropertyDefinitions() {
+		return dbPropertyDefinitions;
+	}
+	
+	public void setDbPropertyDefinitions(
+			Set<DBPropertyDefinition> dbPropertyDefinitions) {
+		this.dbPropertyDefinitions = dbPropertyDefinitions;
+	}
 }

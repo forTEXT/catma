@@ -1,5 +1,8 @@
 package de.catma.serialization.tei;
 
+import java.io.IOException;
+import java.text.ParseException;
+
 import nu.xom.Elements;
 import nu.xom.Nodes;
 import de.catma.core.ExceptionHandler;
@@ -19,16 +22,20 @@ public class TeiTagLibraryDeserializer {
 	private TagManager tagManager;
 
 	public TeiTagLibraryDeserializer(
-			TeiDocument teiDocument, TagManager tagManager) {
+			TeiDocument teiDocument, TagManager tagManager) throws IOException {
 		super();
 		this.teiDocument = teiDocument;
 		this.tagManager = tagManager;
 		this.tagLibrary = new TagLibrary(
 				teiDocument.getId(), teiDocument.getName());
-		deserialize();
+		try {
+			deserialize();
+		} catch (ParseException e) {
+			throw new IOException(e);
+		}
 	}
 
-	private void deserialize() {
+	private void deserialize() throws ParseException {
 		Nodes tagsetDefinitionElements = teiDocument.getTagsetDefinitionElements();
 		
 		for (int i=0; i<tagsetDefinitionElements.size(); i++) {
@@ -48,7 +55,7 @@ public class TeiTagLibraryDeserializer {
 	}
 
 	private void addTagDefinitions(
-			TagsetDefinition tagsetDefinition, Elements tagDefinitionElements) {
+			TagsetDefinition tagsetDefinition, Elements tagDefinitionElements) throws ParseException {
 		
 		for (int i=0; i<tagDefinitionElements.size(); i++) {
 			TeiElement tagDefinitionElement = (TeiElement)tagDefinitionElements.get(i);

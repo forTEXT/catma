@@ -2,12 +2,17 @@ package de.catma.repository.db.model;
 
 // Generated 22.05.2012 21:58:37 by Hibernate Tools 3.4.0.CR1
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -27,7 +32,8 @@ public class DBTagsetDefinition implements java.io.Serializable {
 	private byte[] uuid;
 	private String name;
 	private int tagLibraryId;
-
+	private Set<DBTagDefinition> dbTagDefinitions = new HashSet<DBTagDefinition>();
+	
 	public DBTagsetDefinition() {
 	}
 
@@ -85,5 +91,13 @@ public class DBTagsetDefinition implements java.io.Serializable {
 	public void setTagLibraryId(int tagLibraryId) {
 		this.tagLibraryId = tagLibraryId;
 	}
-
+	
+	@OneToMany(mappedBy = "dbTagsetDefinition")
+	public Set<DBTagDefinition> getDbTagDefinitions() {
+		return dbTagDefinitions;
+	}
+	
+	public void setDbTagDefinitions(Set<DBTagDefinition> dbTagDefinitions) {
+		this.dbTagDefinitions = dbTagDefinitions;
+	}
 }

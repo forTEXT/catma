@@ -50,6 +50,7 @@ import de.catma.indexer.IndexedRepository;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.PropertyCollection;
+import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.repository.wizard.WizardFactory;
 import de.catma.ui.repository.wizard.WizardResult;
 import de.catma.ui.repository.wizard.WizardWindow;
@@ -350,9 +351,14 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 				if (value != null) {
 					TagLibraryReference tagLibraryReference = 
 							(TagLibraryReference)value;
-					ITagLibrary tagLibrary = 
-							repository.getTagLibrary(tagLibraryReference);
-					((CleaApplication)getApplication()).openTagLibrary(tagLibrary);
+					ITagLibrary tagLibrary;
+					try {
+						tagLibrary = repository.getTagLibrary(tagLibraryReference);
+						((CleaApplication)getApplication()).openTagLibrary(tagLibrary);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}				
 			}
 		});
@@ -480,8 +486,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		miMoreTagLibraryActions.addItem("Import Tag Library", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
+				handleTagLibraryImport();
 			}
 		});
 		
@@ -502,6 +507,10 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		});
 	}
 	
+
+	private void handleTagLibraryImport() {
+		
+	}
 
 	private void initComponents() {
 		setSizeFull();
@@ -854,7 +863,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 			final ISourceDocument sourceDocument = (ISourceDocument)value;
 			final String userMarkupCollectionNameProperty = "name";
 			getUserMarkupCollectionName(
-					new FormDialog.SaveCancelListener() {
+					new SaveCancelListener() {
 				public void cancelPressed() {}
 				public void savePressed(
 						PropertysetItem propertysetItem) {
@@ -877,7 +886,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	}
 
 	private void getUserMarkupCollectionName(
-			FormDialog.SaveCancelListener listener, 
+			SaveCancelListener listener, 
 			String userMarkupCollectionNameProperty) {
 		PropertyCollection propertyCollection = 
 				new PropertyCollection(userMarkupCollectionNameProperty);

@@ -16,11 +16,6 @@ import com.vaadin.ui.Window;
 
 public class FormDialog extends VerticalLayout {
 	
-	public interface SaveCancelListener {
-		public void savePressed(PropertysetItem propertysetItem);
-		public void cancelPressed();
-	}
-	
 	private Window dialogWindow;
 	private Form form;
 	

@@ -4,6 +4,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,14 +28,24 @@ import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollection
 import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.ITagLibrary;
+import de.catma.core.tag.PropertyDefinition;
+import de.catma.core.tag.PropertyPossibleValueList;
+import de.catma.core.tag.TagDefinition;
 import de.catma.core.tag.TagLibraryReference;
+import de.catma.core.tag.TagsetDefinition;
+import de.catma.core.tag.Version;
 import de.catma.core.user.User;
 import de.catma.core.util.CloseSafe;
+import de.catma.core.util.IDGenerator;
 import de.catma.core.util.Pair;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
+import de.catma.repository.db.model.DBPropertyDefPossibleValue;
+import de.catma.repository.db.model.DBPropertyDefinition;
 import de.catma.repository.db.model.DBSourceDocument;
+import de.catma.repository.db.model.DBTagDefinition;
 import de.catma.repository.db.model.DBTagLibrary;
+import de.catma.repository.db.model.DBTagsetDefinition;
 import de.catma.repository.db.model.DBUser;
 import de.catma.repository.db.model.DBUserMarkupCollection;
 import de.catma.repository.db.model.DBUserSourceDocument;
@@ -128,12 +139,26 @@ public class DBRepository implements IndexedRepository {
 
 	private void loadContent(Session session) {
 		loadSourceDocuments(session);
-		loadTagLibraries(session);
+		loadTagLibraryReferences(session);
 	}
 
-	private void loadTagLibraries(Session session) {
+	@SuppressWarnings("unchecked")
+	private void loadTagLibraryReferences(Session session) {
 		if (!currentUser.isLocked()) {
-//			Query query = 
+			Query query = session.createQuery(
+					"select tl from "
+					+ DBTagLibrary.class.getSimpleName() + " as tl "
+					+ " inner join tl.dbUserTagLibraries as utl "
+					+ " inner join utl.dbUser as user "
+					+ " where tl.independent = true and user.userId = " 
+					+ currentUser.getUserId() );
+			
+			for (DBTagLibrary tagLibrary : (List<DBTagLibrary>)query.list()) {
+				this.tagLibrariesByID.put(tagLibrary.getId(), tagLibrary);
+				this.tagLibraryReferences.add(
+					new TagLibraryReference(
+						tagLibrary.getName(), tagLibrary.getId()));
+			}
 		}
 		
 	}
@@ -226,9 +251,84 @@ public class DBRepository implements IndexedRepository {
 		return null;
 	}
 
-	public ITagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) {
-		// TODO Auto-generated method stub
-		return null;
+	public ITagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) 
+			throws IOException{
+		
+		DBTagLibrary tagLibrary = 
+				this.tagLibrariesByID.get(tagLibraryReference.getId());
+		loadTagLibrayContent(tagLibrary);
+		
+		return tagLibrary;
+	}
+
+	@SuppressWarnings("unchecked")
+	private void loadTagLibrayContent(DBTagLibrary tagLibrary) throws IOException {
+
+		Session session = sessionFactory.openSession();
+		
+		try {
+			Query query = session.createQuery(
+					"select tsd from "
+					+ DBTagsetDefinition.class.getSimpleName() + " as tsd "
+					+ "inner join fetch tsd.dbTagDefinitions as td "
+					+ "inner join fetch ts.dbPropertyDefinitions as pd "
+					+ "inner join fetch pd.dbPropertyDefPossibleValues "
+					+ "where tsd.tagLibraryID = " + tagLibrary.getTagLibraryId());
+			IDGenerator idGenerator = new IDGenerator();
+			
+			for (DBTagsetDefinition dbTsDef : (List<DBTagsetDefinition>)query.list()) {
+				TagsetDefinition tsDef = 
+						new TagsetDefinition(
+							idGenerator.uuidBytesToCatmaID(dbTsDef.getUuid()),
+							dbTsDef.getName(),
+							new Version(dbTsDef.getVersion()));
+				for (DBTagDefinition dbTDef : dbTsDef.getDbTagDefinitions()) {
+					TagDefinition tDef = 
+						new TagDefinition(
+							idGenerator.uuidBytesToCatmaID(dbTDef.getUuid()),
+							dbTDef.getName(),
+							new Version(dbTDef.getVersion()),
+							idGenerator.uuidBytesToCatmaID(dbTDef.getParentUuid()));
+					tsDef.addTagDefinition(tDef);
+					
+					for (DBPropertyDefinition dbPDef : dbTDef.getDbPropertyDefinitions()) {
+						List<String> pValues = new ArrayList<String>();
+						for (DBPropertyDefPossibleValue dbPVal : dbPDef.getDbPropertyDefPossibleValues()) {
+							pValues.add(dbPVal.getValue());
+						}
+						PropertyPossibleValueList ppvList = 
+								new PropertyPossibleValueList(pValues, true);
+						PropertyDefinition pDef = 
+								new PropertyDefinition(
+									idGenerator.uuidBytesToCatmaID(dbPDef.getUuid()),
+									dbPDef.getName(),
+									ppvList);
+						if (dbPDef.isSystemproperty()) {
+							tDef.addSystemPropertyDefinition(pDef);
+						}
+						else {
+							tDef.addUserDefinedPropertyDefinition(pDef);
+						}
+					}
+				}
+				tagLibrary.add(tsDef);
+				
+				//TODO: store IDs
+			}
+		}
+		catch (Exception e) {
+			try {
+				if (session.getTransaction().isActive()) {
+					session.getTransaction().rollback();
+				}
+			}
+			catch(Exception notOfInterest){}
+			throw new IOException(e);
+		}
+		finally {
+			CloseSafe.close(new ClosableSession(session));
+		}
+		
 	}
 
 	public void delete(ISourceDocument sourceDocument) {

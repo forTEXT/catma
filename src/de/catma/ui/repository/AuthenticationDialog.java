@@ -121,10 +121,6 @@ public class AuthenticationDialog extends VerticalLayout {
 		}
 	}
 	
-	public interface CancelListener {
-		public void cancelPressed();
-	}
-	
 	private Window dialogWindow;
 	private String providerIdent;
 	private String caption;

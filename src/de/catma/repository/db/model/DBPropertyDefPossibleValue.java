@@ -18,18 +18,9 @@ public class DBPropertyDefPossibleValue implements java.io.Serializable {
 
 	private Integer propertydefPossibleValueId;
 	private String value;
-	private int propertyDefinitionId;
+	private DBPropertyDefinition dbPropertyDefinition;
 
 	public DBPropertyDefPossibleValue() {
-	}
-
-	public DBPropertyDefPossibleValue(int propertyDefinitionId) {
-		this.propertyDefinitionId = propertyDefinitionId;
-	}
-
-	public DBPropertyDefPossibleValue(String value, int propertyDefinitionId) {
-		this.value = value;
-		this.propertyDefinitionId = propertyDefinitionId;
 	}
 
 	@Id
@@ -51,14 +42,14 @@ public class DBPropertyDefPossibleValue implements java.io.Serializable {
 	public void setValue(String value) {
 		this.value = value;
 	}
-
+	
 	@Column(name = "propertyDefinitionID", nullable = false)
-	public int getPropertyDefinitionId() {
-		return this.propertyDefinitionId;
+	public DBPropertyDefinition getDbPropertyDefinition() {
+		return dbPropertyDefinition;
 	}
 
-	public void setPropertyDefinitionId(int propertyDefinitionId) {
-		this.propertyDefinitionId = propertyDefinitionId;
+	public void setDbPropertyDefinition(
+			DBPropertyDefinition dbPropertyDefinition) {
+		this.dbPropertyDefinition = dbPropertyDefinition;
 	}
-
 }

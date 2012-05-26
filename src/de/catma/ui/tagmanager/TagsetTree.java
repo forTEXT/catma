@@ -36,6 +36,7 @@ import de.catma.core.util.IDGenerator;
 import de.catma.core.util.Pair;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.PropertyCollection;
+import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.StringProperty;
 import de.catma.ui.dialog.TagDefinitionFieldFactory;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
@@ -274,7 +275,7 @@ public class TagsetTree extends HorizontalLayout {
 				"Edit Tag",
 				propertyCollection,
 				new TagDefinitionFieldFactory(tagDefColorProp),
-				new FormDialog.SaveCancelListener() {
+				new SaveCancelListener() {
 					public void cancelPressed() {}
 					public void savePressed(
 							PropertysetItem propertysetItem) {
@@ -357,7 +358,7 @@ public class TagsetTree extends HorizontalLayout {
 				"Create new Tag",
 				propertyCollection,
 				new TagDefinitionFieldFactory(tagDefColorProp),
-				new FormDialog.SaveCancelListener() {
+				new SaveCancelListener() {
 					public void cancelPressed() {}
 					public void savePressed(
 							PropertysetItem propertysetItem) {
@@ -460,7 +461,7 @@ public class TagsetTree extends HorizontalLayout {
 			new FormDialog(
 				"Create new Tagset",
 				propertyCollection,
-				new FormDialog.SaveCancelListener() {
+				new SaveCancelListener() {
 					public void cancelPressed() {}
 					public void savePressed(
 							PropertysetItem propertysetItem) {
@@ -504,7 +505,7 @@ public class TagsetTree extends HorizontalLayout {
 				new FormDialog(
 					"Edit Tagset",
 					propertyCollection,
-					new FormDialog.SaveCancelListener() {
+					new SaveCancelListener() {
 						public void cancelPressed() {}
 						public void savePressed(
 								PropertysetItem propertysetItem) {

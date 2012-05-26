@@ -14,5 +14,11 @@
   <mapping class="de.catma.repository.db.model.DBUserMarkupCollection"/>
   <mapping class="de.catma.repository.db.model.DBUserUserMarkupCollection"/>
   <mapping class="de.catma.repository.db.model.DBTagLibrary"/>
+  <mapping class="de.catma.repository.db.model.DBUserTagLibrary"/>
+  <mapping class="de.catma.repository.db.model.DBTagLibrary"/>
+  <mapping class="de.catma.repository.db.model.DBTagsetDefinition"/>
+  <mapping class="de.catma.repository.db.model.DBTagDefinition"/>
+  <mapping class="de.catma.repository.db.model.DBPropertyDefinition"/>
+  <mapping class="de.catma.repository.db.model.DBPropertyDefPossibleValue"/>
  </session-factory>
 </hibernate-configuration>

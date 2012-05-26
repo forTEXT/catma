@@ -11,6 +11,7 @@ import nu.xom.Elements;
 import nu.xom.Node;
 import nu.xom.Nodes;
 import de.catma.core.document.Range;
+import de.catma.core.tag.Version;
 import de.catma.core.util.IDGenerator;
 import de.catma.core.util.Pair;
 
@@ -458,12 +459,13 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 				</fsDecl>
 			</fsdDecl>
 		 */
+		Version baseVersion = new Version(LEGACY_VERSION_BASE_DATE.getTime());
 		
 		TeiElement fsdDecl = 
 				addTagsetDefinition(
-						"CATMA_STANDARD_TAGSET", "Standard Tagset 1", encodingDesc );
+						"CATMA_STANDARD_TAGSET", "Standard Tagset "+baseVersion, encodingDesc );
 		addTagdefinition(
-				"CATMA_BASE_TAG", "1", "CATMA Base Tag", "-16777216", null, true, fsdDecl );
+				"CATMA_BASE_TAG", baseVersion.toString(), "CATMA Base Tag", "-16777216", null, true, fsdDecl );
 		
 		return fsdDecl;
 	}
