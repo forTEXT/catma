@@ -77,7 +77,7 @@ class FSTagLibraryHandler {
 			String libName = nameNode.get(0).getValue();
 			Nodes fileURINode = tagLibDoc.query(Field.fileURI.toSimpleXQuery());
 
-			return new TagLibraryReference(libName, fileURINode.get(0).getValue());
+			return new TagLibraryReference(fileURINode.get(0).getValue(), libName);
 		}
 		catch(Exception e) {
 			throw new IOException(e);

@@ -49,9 +49,9 @@ import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.core.tag.ITagLibrary;
 import de.catma.core.tag.TagLibraryReference;
+import de.catma.core.util.CloseSafe;
 import de.catma.core.util.Pair;
 import de.catma.indexer.IndexedRepository;
-import de.catma.serialization.TagLibrarySerializationHandler;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.PropertyCollection;
@@ -134,7 +134,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 			}
 		};
 		this.repository.addPropertyChangeListener(
-				Repository.PropertyChangeEvent.sourceDocumentAdded,
+				Repository.RepositoryChangeEvent.sourceDocumentAdded,
 				sourceDocumentAddedListener);
 		
 		userMarkupDocumentAddedListener = new PropertyChangeListener() {
@@ -148,7 +148,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 			}
 		};
 		this.repository.addPropertyChangeListener(
-				Repository.PropertyChangeEvent.userMarkupCollectionAdded,
+				Repository.RepositoryChangeEvent.userMarkupCollectionAdded,
 				userMarkupDocumentAddedListener);
 		
 		tagLibraryAddedListener = new PropertyChangeListener() {
@@ -160,7 +160,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 			}
 		};
 		this.repository.addPropertyChangeListener(
-				Repository.PropertyChangeEvent.tagLibraryAdded, 
+				Repository.RepositoryChangeEvent.tagLibraryAdded, 
 				tagLibraryAddedListener);
 		
 		initActions();
@@ -515,23 +515,29 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	
 
 	private void handleTagLibraryImport() {
-		UploadDialog uploadDialog = new UploadDialog("Upload Tag Library", new SaveCancelListener<byte[]>() {
+		UploadDialog uploadDialog =
+				new UploadDialog("Upload Tag Library", 
+						new SaveCancelListener<byte[]>() {
 			
 			public void cancelPressed() {}
 			
 			public void savePressed(byte[] result) {
 				InputStream is = new ByteArrayInputStream(result);
-				if (BOMFilterInputStream.hasBOM(result)) {
-					try {
-						is = new BOMFilterInputStream(is, Charset.forName("UTF-8"));
-						
-						//TODO: repository.importTagLibrary(is);
-						
-						
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+				try {
+					if (BOMFilterInputStream.hasBOM(result)) {
+						is = new BOMFilterInputStream(
+								is, Charset.forName("UTF-8"));
 					}
+					
+					repository.importTagLibrary(is);
+					
+					
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				finally {
+					CloseSafe.close(is);
 				}
 			}
 			
@@ -818,10 +824,10 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	@Override
 	public void detach() {
 		this.repository.removePropertyChangeListener(
-				Repository.PropertyChangeEvent.sourceDocumentAdded,
+				Repository.RepositoryChangeEvent.sourceDocumentAdded,
 				sourceDocumentAddedListener);
 		this.repository.removePropertyChangeListener(
-				Repository.PropertyChangeEvent.userMarkupCollectionAdded, 
+				Repository.RepositoryChangeEvent.userMarkupCollectionAdded, 
 				userMarkupDocumentAddedListener);
 		super.detach();
 	}

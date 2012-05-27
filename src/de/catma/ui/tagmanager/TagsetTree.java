@@ -65,9 +65,7 @@ public class TagsetTree extends HorizontalLayout {
 	private ColorButtonListener colorButtonListener;
 	private TagManager tagManager;
 	private ITagLibrary tagLibrary;
-	private PropertyChangeListener tagsetDefAddedListener;
-	private PropertyChangeListener tagsetDefNameChangedListener;
-	private PropertyChangeListener tagsetDefRemovedListener;
+	private PropertyChangeListener tagsetDefinitionChangedListener;
 	private PropertyChangeListener tagDefChangedListener;
 
 	public TagsetTree(TagManager tagManager, ITagLibrary tagLibrary) {
@@ -97,66 +95,49 @@ public class TagsetTree extends HorizontalLayout {
 	
 	private void initActions() {
 		if (withTagsetButtons) {
-			tagsetDefAddedListener = 
+
+			tagsetDefinitionChangedListener = 
 					new PropertyChangeListener() {
 				
 				public void propertyChange(PropertyChangeEvent evt) {
-					
-					@SuppressWarnings("unchecked")
-					Pair<ITagLibrary, TagsetDefinition> addOperationResult = 
-						(Pair<ITagLibrary,TagsetDefinition>)evt.getNewValue();
-					
-					if (tagLibrary.equals(addOperationResult.getFirst())) {
-						addTagsetDefinition(addOperationResult.getSecond());
-					}
-				}
-			};
-					
-			this.tagManager.addPropertyChangeListener(
-					TagManagerEvent.tagsetDefinitionAdded, 
-					tagsetDefAddedListener);
-			
-			tagsetDefNameChangedListener = 
-					new PropertyChangeListener() {
-				
-				public void propertyChange(PropertyChangeEvent evt) {
-					TagsetDefinition tagsetDefinition = 
-							(TagsetDefinition)evt.getNewValue();
-					if (tagTree.containsId(tagsetDefinition)) {
-						tagTree.getContainerProperty(
-							tagsetDefinition, TagTreePropertyName.caption).setValue(
-									tagsetDefinition.getName());
-					}
-				}
-			};
-			
-			this.tagManager.addPropertyChangeListener(
-					TagManagerEvent.tagsetDefinitionNameChanged,
-					tagsetDefNameChangedListener);
-			
-			tagsetDefRemovedListener =
-					new PropertyChangeListener() {
+					if (evt.getOldValue()==null) {
+						@SuppressWarnings("unchecked")
+						Pair<ITagLibrary, TagsetDefinition> addOperationResult = 
+							(Pair<ITagLibrary,TagsetDefinition>)evt.getNewValue();
 						
-				public void propertyChange(PropertyChangeEvent evt) {
-					@SuppressWarnings("unchecked")
-					Pair<ITagLibrary, TagsetDefinition> removeOperationResult = 
-						(Pair<ITagLibrary,TagsetDefinition>)evt.getOldValue();
-					
-					if (tagLibrary.equals(removeOperationResult.getFirst())) {
-						TagsetDefinition tagsetDef = 
-								removeOperationResult.getSecond();
-						for (TagDefinition td : tagsetDef) {
-							removeTagDefinition(td);
+						if (tagLibrary.equals(addOperationResult.getFirst())) {
+							addTagsetDefinition(addOperationResult.getSecond());
 						}
-						tagTree.removeItem(tagsetDef);
 					}
-					
+					else if (evt.getNewValue() == null) {
+						@SuppressWarnings("unchecked")
+						Pair<ITagLibrary, TagsetDefinition> removeOperationResult = 
+							(Pair<ITagLibrary,TagsetDefinition>)evt.getOldValue();
+						
+						if (tagLibrary.equals(removeOperationResult.getFirst())) {
+							TagsetDefinition tagsetDef = 
+									removeOperationResult.getSecond();
+							for (TagDefinition td : tagsetDef) {
+								removeTagDefinition(td);
+							}
+							tagTree.removeItem(tagsetDef);
+						}
+					}
+					else {
+						TagsetDefinition tagsetDefinition = 
+								(TagsetDefinition)evt.getNewValue();
+						if (tagTree.containsId(tagsetDefinition)) {
+							tagTree.getContainerProperty(
+								tagsetDefinition, TagTreePropertyName.caption).setValue(
+										tagsetDefinition.getName());
+						}
+					}
 				}
 			};
 			
 			this.tagManager.addPropertyChangeListener(
-					TagManagerEvent.tagsetDefinitionRemoved,
-					tagsetDefRemovedListener);
+					TagManagerEvent.tagsetDefinitionChanged,
+					tagsetDefinitionChangedListener);
 			
 			this.btInsertTagset.addListener(new ClickListener() {
 				public void buttonClick(ClickEvent event) {
@@ -275,7 +256,7 @@ public class TagsetTree extends HorizontalLayout {
 				"Edit Tag",
 				propertyCollection,
 				new TagDefinitionFieldFactory(tagDefColorProp),
-				new SaveCancelListener() {
+				new SaveCancelListener<PropertysetItem>() {
 					public void cancelPressed() {}
 					public void savePressed(
 							PropertysetItem propertysetItem) {
@@ -358,7 +339,7 @@ public class TagsetTree extends HorizontalLayout {
 				"Create new Tag",
 				propertyCollection,
 				new TagDefinitionFieldFactory(tagDefColorProp),
-				new SaveCancelListener() {
+				new SaveCancelListener<PropertysetItem>() {
 					public void cancelPressed() {}
 					public void savePressed(
 							PropertysetItem propertysetItem) {
@@ -374,8 +355,7 @@ public class TagsetTree extends HorizontalLayout {
 						TagsetDefinition tagsetDefinition = null;
 
 						if (selectedParent instanceof TagsetDefinition) {
-							baseID = 
-								TagDefinition.CATMA_BASE_TAG.getID();
+							baseID = "";
 							tagsetDefinition = 
 									(TagsetDefinition)selectedParent;
 						}
@@ -461,7 +441,7 @@ public class TagsetTree extends HorizontalLayout {
 			new FormDialog(
 				"Create new Tagset",
 				propertyCollection,
-				new SaveCancelListener() {
+				new SaveCancelListener<PropertysetItem>() {
 					public void cancelPressed() {}
 					public void savePressed(
 							PropertysetItem propertysetItem) {
@@ -505,7 +485,7 @@ public class TagsetTree extends HorizontalLayout {
 				new FormDialog(
 					"Edit Tagset",
 					propertyCollection,
-					new SaveCancelListener() {
+					new SaveCancelListener<PropertysetItem>() {
 						public void cancelPressed() {}
 						public void savePressed(
 								PropertysetItem propertysetItem) {
@@ -722,54 +702,48 @@ public class TagsetTree extends HorizontalLayout {
 	private void establishHierarchy(
 			TagsetDefinition tagsetDefinition, TagDefinition tagDefinition) {
 		String baseID = tagDefinition.getParentID();
-		TagDefinition parent = tagsetDefinition.getTagDefinition(baseID);
-		if ((parent==null)
-				||(parent.getID().equals(
-						TagDefinition.CATMA_BASE_TAG.getID()))) {
+		if (baseID.isEmpty()) {
 			tagTree.setParent(tagDefinition, tagsetDefinition);
 		}
 		else {
+			TagDefinition parent = tagsetDefinition.getTagDefinition(baseID);
 			tagTree.setParent(tagDefinition, parent);
 		}		
 	}
 
 	private void addTagDefinition(TagDefinition tagDefinition) {
-		if (!tagDefinition.getID().equals
-				(TagDefinition.CATMA_BASE_TAG.getID())) {
-			
-			ClassResource tagIcon = 
-				new ClassResource(
-					"ui/tagmanager/resources/reddiamd.gif", getApplication());
+		ClassResource tagIcon = 
+			new ClassResource(
+				"ui/tagmanager/resources/reddiamd.gif", getApplication());
 
-			tagTree.addItem(tagDefinition);
-			tagTree.getContainerProperty(
-					tagDefinition, 
-					TagTreePropertyName.caption).setValue(
-							tagDefinition.getName());
-			tagTree.getContainerProperty(
-					tagDefinition, 
-					TagTreePropertyName.icon).setValue(tagIcon);
+		tagTree.addItem(tagDefinition);
+		tagTree.getContainerProperty(
+				tagDefinition, 
+				TagTreePropertyName.caption).setValue(
+						tagDefinition.getName());
+		tagTree.getContainerProperty(
+				tagDefinition, 
+				TagTreePropertyName.icon).setValue(tagIcon);
+		
+		for (PropertyDefinition propertyDefinition : 
+				tagDefinition.getUserDefinedPropertyDefinitions()) {
 			
-			for (PropertyDefinition propertyDefinition : 
-					tagDefinition.getUserDefinedPropertyDefinitions()) {
-				
-				ClassResource propertyIcon = 
-						new ClassResource(
-							"ui/tagmanager/resources/ylwdiamd.gif", 
-							getApplication());
-				
-				tagTree.addItem(propertyDefinition);
-				tagTree.setParent(propertyDefinition, tagDefinition);
-				tagTree.getContainerProperty(
-						propertyDefinition, 
-						TagTreePropertyName.caption).setValue(
-								propertyDefinition.getName());
-				tagTree.getContainerProperty(
-						propertyDefinition, 
-						TagTreePropertyName.icon).setValue(
-								propertyIcon);
-				tagTree.setChildrenAllowed(propertyDefinition, false);
-			}
+			ClassResource propertyIcon = 
+					new ClassResource(
+						"ui/tagmanager/resources/ylwdiamd.gif", 
+						getApplication());
+			
+			tagTree.addItem(propertyDefinition);
+			tagTree.setParent(propertyDefinition, tagDefinition);
+			tagTree.getContainerProperty(
+					propertyDefinition, 
+					TagTreePropertyName.caption).setValue(
+							propertyDefinition.getName());
+			tagTree.getContainerProperty(
+					propertyDefinition, 
+					TagTreePropertyName.icon).setValue(
+							propertyIcon);
+			tagTree.setChildrenAllowed(propertyDefinition, false);
 		}
 	}
 
@@ -780,11 +754,8 @@ public class TagsetTree extends HorizontalLayout {
 	public void close() {
 		if (withTagsetButtons) {
 			tagManager.removePropertyChangeListener(
-					TagManagerEvent.tagsetDefinitionAdded, 
-					tagsetDefAddedListener);
-			tagManager.removePropertyChangeListener(
-					TagManagerEvent.tagsetDefinitionNameChanged,
-					tagsetDefNameChangedListener);
+					TagManagerEvent.tagsetDefinitionChanged,
+					tagsetDefinitionChangedListener);
 		}
 		tagManager.removePropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged,

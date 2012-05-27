@@ -91,7 +91,8 @@ public class CleaApplication extends Application
 			
 			repositoryManagerView = 
 				new RepositoryManagerView(
-					new RepositoryManager(tagManager, properties));
+					new RepositoryManager(
+						this, tagManager, properties));
 		
 			tagManagerView = new TagManagerView();
 			
@@ -125,11 +126,7 @@ public class CleaApplication extends Application
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
-//		LoginForm lf = new LoginForm();
 
-		
 		setMainWindow(mainWindow);
 		
 		setTheme("cleatheme");

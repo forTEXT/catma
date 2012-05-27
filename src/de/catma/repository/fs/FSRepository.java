@@ -4,6 +4,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -181,7 +182,7 @@ class FSRepository implements Repository {
 		sourceDocumentHandler.insert(sourceDocument);
 		sourceDocumentsByID.put(sourceDocument.getID(), sourceDocument);
 		this.propertyChangeSupport.firePropertyChange(
-				PropertyChangeEvent.sourceDocumentAdded.name(),
+				RepositoryChangeEvent.sourceDocumentAdded.name(),
 				null, sourceDocument.getID());
 	}
 
@@ -205,7 +206,7 @@ class FSRepository implements Repository {
 				ref, sourceDocument);
 		
 		this.propertyChangeSupport.firePropertyChange(
-				PropertyChangeEvent.userMarkupCollectionAdded.name(),
+				RepositoryChangeEvent.userMarkupCollectionAdded.name(),
 				null, new Pair<UserMarkupCollectionReference, ISourceDocument>(
 						ref,sourceDocument));
 	}
@@ -221,14 +222,14 @@ class FSRepository implements Repository {
 	}
 
 	public void addPropertyChangeListener(
-			PropertyChangeEvent propertyChangeEvent,
+			RepositoryChangeEvent propertyChangeEvent,
 			PropertyChangeListener propertyChangeListener) {
 		this.propertyChangeSupport.addPropertyChangeListener(
 				propertyChangeEvent.name(), propertyChangeListener);
 	}
 	
 	public void removePropertyChangeListener(
-			PropertyChangeEvent propertyChangeEvent,
+			RepositoryChangeEvent propertyChangeEvent,
 			PropertyChangeListener propertyChangeListener) {
 		this.propertyChangeSupport.removePropertyChangeListener(
 				propertyChangeEvent.name(), propertyChangeListener);
@@ -283,6 +284,12 @@ class FSRepository implements Repository {
 	}
 
 	public void createTagLibrary(String name) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+	
+
+	public void importTagLibrary(InputStream inputStream) throws IOException {
 		// TODO Auto-generated method stub
 		
 	}

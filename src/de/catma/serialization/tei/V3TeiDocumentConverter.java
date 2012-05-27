@@ -285,7 +285,6 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 						getTagName(properties),
 						getColorValue(properties),
 						baseTagID,
-						false,
 						tagsetDef);
 				
 				addUserDefinedProperties(tagDefinition, properties);
@@ -339,7 +338,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		}	
 		
 		if (parent.is(TeiElementName.text)||parent.is(TeiElementName.fvLib)) {
-			return "CATMA_BASE_TAG";
+			return "";
 		}
 		else if ((parent.is(TeiElementName.f) 
 				&& parent.getTeiElementParent().is(TeiElementName.fs))) {
@@ -395,14 +394,14 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 
 	private TeiElement addTagdefinition(
 			String id, String nValue, String tagName, String colorValue, 
-			String baseTagID, boolean forBase,
+			String baseTagID,
 			TeiElement tagsetDefinition) {
 		System.out.println("addTagDef: #" + id + " " + tagName);
 		TeiElement fsDecl = new TeiElement(TeiElementName.fsDecl);
 		fsDecl.setID(id);
 		fsDecl.setAttributeValue(Attribute.n, nValue);
 		fsDecl.setAttributeValue(Attribute.type, id);
-		if (!forBase) {
+		if (!baseTagID.isEmpty()) {
 			fsDecl.setAttributeValue(Attribute.fsDecl_baseTypes, baseTagID);
 		}
 		
@@ -417,9 +416,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		
 		TeiElement numeric = new TeiElement(TeiElementName.numeric);
 		numeric.setAttributeValue(Attribute.numeric_value, colorValue);
-		if (forBase){
-			numeric.setAttributeValue(Attribute.numeric_max, "-1");
-		}
+
 		vRange.appendChild(numeric);
 		fDecl.appendChild(vRange);
 		fsDecl.appendChild(fsDescr);
@@ -463,10 +460,8 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		
 		TeiElement fsdDecl = 
 				addTagsetDefinition(
-						"CATMA_STANDARD_TAGSET", "Standard Tagset "+baseVersion, encodingDesc );
-		addTagdefinition(
-				"CATMA_BASE_TAG", baseVersion.toString(), "CATMA Base Tag", "-16777216", null, true, fsdDecl );
-		
+						new IDGenerator().generate(), // there is no standard tagset in V3, so we create new "standard tagsets" with identical names
+						"Standard Tagset "+baseVersion, encodingDesc );		
 		return fsdDecl;
 	}
 	

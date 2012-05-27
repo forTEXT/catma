@@ -7,5 +7,6 @@ import de.catma.core.tag.ITagLibrary;
 
 public interface TagLibrarySerializationHandler {
 	public void serialize(ITagLibrary tagLibrary) throws IOException;
-	public ITagLibrary deserialize(String id, InputStream inputStream) throws IOException;
+	public ITagLibrary deserialize(
+		String id, InputStream inputStream) throws IOException;
 }

@@ -2,6 +2,7 @@ package de.catma.query;
 
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
@@ -31,14 +32,14 @@ public class DummyRepository implements IndexedRepository {
 	}
 
 	public void addPropertyChangeListener(
-			PropertyChangeEvent propertyChangeEvent,
+			RepositoryChangeEvent propertyChangeEvent,
 			PropertyChangeListener propertyChangeListener) {
 		// TODO Auto-generated method stub
 
 	}
 
 	public void removePropertyChangeListener(
-			PropertyChangeEvent propertyChangeEvent,
+			RepositoryChangeEvent propertyChangeEvent,
 			PropertyChangeListener propertyChangeListener) {
 		// TODO Auto-generated method stub
 
@@ -165,6 +166,10 @@ public class DummyRepository implements IndexedRepository {
 	}
 
 	public void createTagLibrary(String name) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+	public void importTagLibrary(InputStream inputStream) throws IOException {
 		// TODO Auto-generated method stub
 		
 	}

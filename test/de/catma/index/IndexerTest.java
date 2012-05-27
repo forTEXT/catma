@@ -6,6 +6,7 @@ import java.util.Properties;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.catma.backgroundservice.DebugBackgroundServiceProvider;
 import de.catma.core.ExceptionHandler;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryManager;
@@ -27,6 +28,7 @@ public class IndexerTest {
 			properties.load(new FileInputStream("test/catma.properties"));
 			repository = 
 					new RepositoryManager(
+							new DebugBackgroundServiceProvider(), 
 							tagManager, properties).getRepositories().get(0);
 			repository.open(null);
 		}

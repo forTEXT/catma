@@ -2,6 +2,7 @@ package de.catma.repository.db;
 
 import java.util.Properties;
 
+import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryFactory;
 import de.catma.core.document.repository.RepositoryPropertyKey;
@@ -13,8 +14,9 @@ import de.catma.serialization.SerializationHandlerFactory;
 
 public class DBRepositoryFactory implements RepositoryFactory {
 
-	public Repository createRepository(TagManager tagManager,
-			Properties properties, int index) throws Exception {
+	public Repository createRepository(BackgroundServiceProvider backgroundServiceProvider,
+			TagManager tagManager, Properties properties, int index)
+			throws Exception {
 		
 		String indexerFactoryClassName = 
 				properties.getProperty(IndexerPropertyKey.IndexerFactory.name());
@@ -34,6 +36,8 @@ public class DBRepositoryFactory implements RepositoryFactory {
 			RepositoryPropertyKey.Repository.getProperty(properties, index),
 			RepositoryPropertyKey.RepositoryFolderPath.getProperty(properties, index),
 			RepositoryPropertyKey.RepositoryAuthenticationRequired.isTrue(properties, index, false),
+			tagManager,
+			backgroundServiceProvider,
 			indexer,
 			serializationHandlerFactory);
 	}

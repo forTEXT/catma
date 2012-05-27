@@ -61,7 +61,7 @@ public class TeiTagLibrarySerializer {
 	private void write(PropertyDefinition pd, TeiElement fsDecl) {
 		TeiElement fDecl = new TeiElement(TeiElementName.fDecl);
 		fsDecl.appendChild(fDecl);
-		fDecl.setID(pd.getId());
+		fDecl.setID(pd.getID());
 		fDecl.setAttributeValue(Attribute.fDecl_name, pd.getName());
 		TeiElement vRange = new TeiElement(TeiElementName.vRange);
 		fDecl.appendChild(vRange);

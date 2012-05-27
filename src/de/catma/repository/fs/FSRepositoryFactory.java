@@ -2,6 +2,7 @@ package de.catma.repository.fs;
 
 import java.util.Properties;
 
+import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.core.document.repository.Repository;
 import de.catma.core.document.repository.RepositoryFactory;
 import de.catma.core.document.repository.RepositoryPropertyKey;
@@ -10,9 +11,9 @@ import de.catma.serialization.SerializationHandlerFactory;
 
 public class FSRepositoryFactory implements RepositoryFactory {
 	
-	public Repository createRepository(
-			TagManager tagManager, Properties properties, int index) 
-					throws Exception {
+	public Repository createRepository(BackgroundServiceProvider backgroundServiceProvider,
+			TagManager tagManager, Properties properties, int index)
+			throws Exception {
 		
 		String serializationHandlerFactoryClazzName = 
 				RepositoryPropertyKey.SerializationHandlerFactory.getProperty(properties, index);

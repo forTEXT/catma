@@ -16,7 +16,8 @@ import org.junit.Test;
 
 import com.google.gwt.dev.util.collect.HashSet;
 
-import de.catma.LogProgressListener;
+import de.catma.backgroundservice.DebugBackgroundServiceProvider;
+import de.catma.backgroundservice.LogProgressListener;
 import de.catma.core.ExceptionHandler;
 import de.catma.core.document.Range;
 import de.catma.core.document.repository.RepositoryManager;
@@ -50,6 +51,7 @@ public class QueryTest {
 			properties.load(new FileInputStream("test/catma.properties"));
 			repository = 
 					(IndexedRepository)new RepositoryManager(
+							new DebugBackgroundServiceProvider(),
 							tagManager, properties).getRepositories().get(0);
 			repository.open(null);
 		}

@@ -250,34 +250,29 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 
 	private void addTagDefinitions(TagsetDefinition tagsetDefinition) {
 		for (TagDefinition tagDefinition : tagsetDefinition) {
-			if (!tagDefinition.getID().equals
-					(TagDefinition.CATMA_BASE_TAG.getID())) {
-				ClassResource tagIcon = 
-						new ClassResource(
-							"ui/tagmanager/resources/reddiamd.gif", 
-						getApplication());
-				
-				markupCollectionsTree.addItem(
-						new Object[]{
-								tagDefinition.getName(), 
-								createCheckbox(tagDefinition),
-								new Label()},
-						tagDefinition);
-				markupCollectionsTree.getContainerProperty(
-						tagDefinition, MarkupCollectionsTreeProperty.icon).setValue(
-								tagIcon);
-
-			}
+			ClassResource tagIcon = 
+					new ClassResource(
+						"ui/tagmanager/resources/reddiamd.gif", 
+					getApplication());
+			
+			markupCollectionsTree.addItem(
+					new Object[]{
+							tagDefinition.getName(), 
+							createCheckbox(tagDefinition),
+							new Label()},
+					tagDefinition);
+			markupCollectionsTree.getContainerProperty(
+					tagDefinition, MarkupCollectionsTreeProperty.icon).setValue(
+							tagIcon);
 		}
+		
 		for (TagDefinition tagDefinition : tagsetDefinition) {
 			String baseID = tagDefinition.getParentID();
-			TagDefinition parent = tagsetDefinition.getTagDefinition(baseID);
-			if ((parent==null)
-					||(parent.getID().equals(
-							TagDefinition.CATMA_BASE_TAG.getID()))) {
+			if (baseID.isEmpty()) {
 				markupCollectionsTree.setParent(tagDefinition, tagsetDefinition);
 			}
 			else {
+				TagDefinition parent = tagsetDefinition.getTagDefinition(baseID);
 				markupCollectionsTree.setParent(tagDefinition, parent);
 			}
 		}

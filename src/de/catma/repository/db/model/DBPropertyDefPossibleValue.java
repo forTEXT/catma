@@ -5,6 +5,9 @@ package de.catma.repository.db.model;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+
 import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -21,6 +24,12 @@ public class DBPropertyDefPossibleValue implements java.io.Serializable {
 	private DBPropertyDefinition dbPropertyDefinition;
 
 	public DBPropertyDefPossibleValue() {
+	}
+
+	public DBPropertyDefPossibleValue(String value,
+			DBPropertyDefinition dbPropertyDefinition) {
+		this.value = value;
+		this.dbPropertyDefinition = dbPropertyDefinition;
 	}
 
 	@Id
@@ -43,7 +52,8 @@ public class DBPropertyDefPossibleValue implements java.io.Serializable {
 		this.value = value;
 	}
 	
-	@Column(name = "propertyDefinitionID", nullable = false)
+	@ManyToOne
+	@JoinColumn(name = "propertyDefinitionID", nullable = false)
 	public DBPropertyDefinition getDbPropertyDefinition() {
 		return dbPropertyDefinition;
 	}

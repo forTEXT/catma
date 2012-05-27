@@ -31,7 +31,7 @@ public class DBTagLibrary implements java.io.Serializable, ITagLibrary {
 
 	private Integer tagLibraryId;
 	private boolean independent;
-	private TagLibrary tagLibraryDelegate;
+	private ITagLibrary tagLibraryDelegate;
 	private Set<DBUserTagLibrary> dbUserTagLibraries = 
 			new HashSet<DBUserTagLibrary>();
 	
@@ -41,6 +41,11 @@ public class DBTagLibrary implements java.io.Serializable, ITagLibrary {
 	
 	public DBTagLibrary(String name, boolean independent) {
 		this.tagLibraryDelegate = new TagLibrary(null, name);
+		this.independent = independent;
+	}
+
+	public DBTagLibrary(ITagLibrary tagLibrary, boolean independent) {
+		this.tagLibraryDelegate = tagLibrary;
 		this.independent = independent;
 	}
 
@@ -141,5 +146,9 @@ public class DBTagLibrary implements java.io.Serializable, ITagLibrary {
 	@Override
 	public String toString() {
 		return tagLibraryDelegate.toString();
+	}
+
+	public void setId(String id) {
+		tagLibraryDelegate.setId(id);
 	}
 }
