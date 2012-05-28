@@ -53,7 +53,7 @@ public class FormDialog extends VerticalLayout {
 		form.setWriteThrough(false);
 		form.setInvalidCommitted(false);
 		form.setItemDataSource(propertysetItem);
-
+		
 		addComponent(form);
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout();

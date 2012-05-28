@@ -6,10 +6,7 @@ import java.text.ParseException;
 import nu.xom.Elements;
 import nu.xom.Nodes;
 import de.catma.ExceptionHandler;
-import de.catma.tag.PropertyDefinition;
-import de.catma.tag.TagDefinition;
 import de.catma.tag.ITagLibrary;
-import de.catma.tag.TagsetDefinition;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
@@ -49,7 +46,9 @@ public class TeiTagLibraryDeserializer {
 			String versionString = nValue.substring(dividerPos+1);
 			TagsetDefinition tagsetDefinition = 
 					new TagsetDefinition(
-							tagsetDefinitionElement.getID(),tagsetName, new Version(versionString));
+							null,
+							tagsetDefinitionElement.getID(),tagsetName, 
+							new Version(versionString));
 			
 			addTagDefinitions(tagsetDefinition, tagsetDefinitionElement.getChildElements(TeiElementName.fsDecl));
 
@@ -73,9 +72,11 @@ public class TeiTagLibraryDeserializer {
 			
 			TagDefinition tagDef = 
 					new TagDefinition(
+							null,
 							tagDefinitionElement.getID(), 
 							description,
 							new Version(tagDefinitionElement.getAttributeValue(Attribute.n)), 
+							null,
 							tagDefinitionElement.getAttributeValue(Attribute.fsDecl_baseTypes));
 			
 			tagManager.addTagDefintion(tagsetDefinition, tagDef);
@@ -135,10 +136,11 @@ public class TeiTagLibraryDeserializer {
 		}
 		
 		return new PropertyDefinition(
-						propElement.getID(),
-						propElement.getAttributeValue(Attribute.fDecl_name),
-						new PropertyPossibleValueList(pvf.getValueAsList(), 
-								pvf.isSingleSelectValue()));
+					null,
+					propElement.getID(),
+					propElement.getAttributeValue(Attribute.fDecl_name),
+					new PropertyPossibleValueList(pvf.getValueAsList(), 
+							pvf.isSingleSelectValue()));
 	}
 
 	public ITagLibrary getTagLibrary() {

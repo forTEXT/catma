@@ -267,7 +267,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		}
 		
 		for (TagDefinition tagDefinition : tagsetDefinition) {
-			String baseID = tagDefinition.getParentID();
+			String baseID = tagDefinition.getParentUuid();
 			if (baseID.isEmpty()) {
 				markupCollectionsTree.setParent(tagDefinition, tagsetDefinition);
 			}

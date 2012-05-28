@@ -123,15 +123,15 @@ public class TeiUserMarkupCollectionSerializer {
 		
 		fs.setID(tagInstance.getID());
 		fs.setAttributeValue(
-			Attribute.type, tagInstance.getTagDefinition().getID());
+			Attribute.type, tagInstance.getTagDefinition().getUuid());
 		for (PropertyDefinition pd : 
 			tagInstance.getTagDefinition().getSystemPropertyDefinitions()) {
-			writeProperty(tagInstance.getSystemProperty(pd.getID()), fs);
+			writeProperty(tagInstance.getSystemProperty(pd.getUuid()), fs);
 		}
 		
 		for (PropertyDefinition pd :
 			tagInstance.getTagDefinition().getUserDefinedPropertyDefinitions()) {
-			writeProperty(tagInstance.getUserDefinedProperty(pd.getID()),fs);
+			writeProperty(tagInstance.getUserDefinedProperty(pd.getUuid()),fs);
 		}
 		
 	}

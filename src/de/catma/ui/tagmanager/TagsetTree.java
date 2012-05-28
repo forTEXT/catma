@@ -23,10 +23,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeTable;
 
-import de.catma.tag.PropertyDefinition;
-import de.catma.tag.TagDefinition;
 import de.catma.tag.ITagLibrary;
-import de.catma.tag.TagsetDefinition;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
@@ -121,7 +118,7 @@ public class TagsetTree extends HorizontalLayout {
 							TagsetDefinition tagsetDef = 
 									removeOperationResult.getSecond();
 							for (TagDefinition td : tagsetDef) {
-								removeTagDefinition(td);
+								removeTagDefinition(td, tagsetDef);
 							}
 							tagTree.removeItem(tagsetDef);
 						}
@@ -189,7 +186,7 @@ public class TagsetTree extends HorizontalLayout {
 						(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
 					TagDefinition td = removeOperationResult.getSecond();
 					if (tagTree.containsId(td)) {
-						removeTagDefinition(td);
+						removeTagDefinition(td, removeOperationResult.getFirst());
 					}
 				}
 				else {
@@ -284,7 +281,12 @@ public class TagsetTree extends HorizontalLayout {
 		
 	}
 
-	private void removeTagDefinition(TagDefinition td) {
+	private void removeTagDefinition(TagDefinition td, TagsetDefinition tagsetDefinition) {
+		
+		for (TagDefinition child : tagsetDefinition.getChildren(td)) {
+			removeTagDefinition(child, tagsetDefinition);
+		}
+		
 		for (PropertyDefinition pd : 
 			td.getSystemPropertyDefinitions()) {
 			tagTree.removeItem(pd);
@@ -330,6 +332,9 @@ public class TagsetTree extends HorizontalLayout {
 		
 		PropertyCollection propertyCollection = 
 				new PropertyCollection(tagDefNameProp, tagDefColorProp);
+		propertyCollection.getItemProperty(tagDefColorProp).setValue(
+				ColorConverter.randomHex());
+
 		final Object selectedParent = 
 				tagTree.getValue();
 		
@@ -341,7 +346,8 @@ public class TagsetTree extends HorizontalLayout {
 			new FormDialog(
 				"Create new Tag",
 				propertyCollection,
-				new TagDefinitionFieldFactory(tagDefColorProp),
+				new TagDefinitionFieldFactory(
+					tagDefColorProp),
 				new SaveCancelListener<PropertysetItem>() {
 					public void cancelPressed() {}
 					public void savePressed(
@@ -354,6 +360,7 @@ public class TagsetTree extends HorizontalLayout {
 						Property colorProperty =
 							propertysetItem.getItemProperty(
 									tagDefColorProp);
+						
 						String baseID = null;
 						TagsetDefinition tagsetDefinition = null;
 
@@ -364,7 +371,7 @@ public class TagsetTree extends HorizontalLayout {
 						}
 						else if (selectedParent instanceof TagDefinition) {
 							baseID = 
-								((TagDefinition)selectedParent).getID();
+								((TagDefinition)selectedParent).getUuid();
 							tagsetDefinition = 
 									getTagsetDefinition(
 										(TagDefinition)selectedParent);
@@ -378,12 +385,15 @@ public class TagsetTree extends HorizontalLayout {
 						IDGenerator idGenerator = new IDGenerator();
 						TagDefinition tagDefinition = 
 								new TagDefinition(
+									null,
 									idGenerator.generate(),
 									(String)nameProperty.getValue(),
 									new Version(), 
+									null,
 									baseID);
 						PropertyDefinition colorPropertyDef =
 								new PropertyDefinition(
+									null,
 									idGenerator.generate(),
 									PropertyDefinition.SystemPropertyName.
 										catma_displaycolor.name(),
@@ -453,6 +463,7 @@ public class TagsetTree extends HorizontalLayout {
 										tagsetdefinitionnameProperty);
 						TagsetDefinition td = 
 								new TagsetDefinition(
+									null,
 									new IDGenerator().generate(), 
 									(String)property.getValue(), 
 									new Version());
@@ -704,7 +715,7 @@ public class TagsetTree extends HorizontalLayout {
 
 	private void establishHierarchy(
 			TagsetDefinition tagsetDefinition, TagDefinition tagDefinition) {
-		String baseID = tagDefinition.getParentID();
+		String baseID = tagDefinition.getParentUuid();
 		if (baseID.isEmpty()) {
 			tagTree.setParent(tagDefinition, tagsetDefinition);
 		}
@@ -773,7 +784,7 @@ public class TagsetTree extends HorizontalLayout {
 	public TagDefinition getTagDefinition(String tagDefinitionID) {
 		for (Object item : tagTree.getItemIds()) {
 			if ((item instanceof TagDefinition) 
-					&& ((TagDefinition)item).getID().equals(tagDefinitionID)) {
+					&& ((TagDefinition)item).getUuid().equals(tagDefinitionID)) {
 				return (TagDefinition)item;
 			}
 		}

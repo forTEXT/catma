@@ -19,6 +19,7 @@ public class TagDefinitionFieldFactory implements FormFieldFactory {
 		if (propertyId.equals(colorPropertyId)) {
 			String colorValue = 
 					(String)item.getItemProperty(propertyId).getValue();
+
 			ColorField colorField = new ColorField(colorValue);
 			colorField.setCaption(
 				DefaultFieldFactory.createCaptionByPropertyId(colorPropertyId));
@@ -28,5 +29,4 @@ public class TagDefinitionFieldFactory implements FormFieldFactory {
 		
 		return DefaultFieldFactory.get().createField(item, propertyId, uiContext);
 	}
-
 }

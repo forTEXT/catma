@@ -229,7 +229,7 @@ public class Tagger extends AbstractComponent {
 				TaggerMessageAttribute.TAGDEFINITION_SELECTED.name(), 
 				new ClientTagDefinitionJSONSerializer().toJSON(
 						new ClientTagDefinition(
-							tagDefinition.getID(),
+							tagDefinition.getUuid(),
 							ColorConverter.toHex(tagDefinition.getColor()))));
 		} catch (JSONSerializationException e) {
 			// TODO Auto-generated catch block
@@ -253,7 +253,7 @@ public class Tagger extends AbstractComponent {
 			
 			tagInstances.add(
 				new ClientTagInstance(
-					tagReference.getTagDefinition().getID(),
+					tagReference.getTagDefinition().getUuid(),
 					tagReference.getTagInstanceID(), 
 					ColorConverter.toHex(tagReference.getColor()), 
 					textRanges));

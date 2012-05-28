@@ -25,7 +25,7 @@ public class TagReferenceIndexer {
 					userMarkupCollectionID, 
 					tagLibrary.getTagPath(tr.getTagDefinition()),
 					idGenerator.catmaIDToUUIDBytes(
-							tr.getTagDefinition().getID()),
+							tr.getTagDefinition().getUuid()),
 					tr.getTagDefinition().getVersion().toString(),
 					idGenerator.catmaIDToUUIDBytes(
 							tr.getTagInstanceID()),

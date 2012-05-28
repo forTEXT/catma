@@ -83,7 +83,7 @@ public class DBTagLibrary implements java.io.Serializable, ITagLibrary {
 	}
 
 	@OneToMany(mappedBy = "dbTagLibrary")
-	@Cascade({CascadeType.DELETE})
+	@Cascade({CascadeType.SAVE_UPDATE, CascadeType.DELETE})
 	public Set<DBUserTagLibrary> getDbUserTagLibraries() {
 		return dbUserTagLibraries;
 	}

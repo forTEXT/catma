@@ -84,7 +84,6 @@ public class DBRepository implements IndexedRepository {
 	private DBUser currentUser;
 	private PropertyChangeSupport propertyChangeSupport;
 	private ServiceRegistry serviceRegistry;
-	private Map<String,Integer> uuidToDBid;
 	private IDGenerator idGenerator;
 	
 	private boolean tagManagerListenersEnabled = true;
@@ -124,7 +123,6 @@ public class DBRepository implements IndexedRepository {
 		sourceDocumentsByID = new HashMap<String, ISourceDocument>();
 		tagLibraryReferences = new HashSet<TagLibraryReference>();
 		tagLibrariesByID = new HashMap<String, DBTagLibrary>();
-		uuidToDBid = new HashMap<String, Integer>();
 		
 		tagsetDefinitionChangedListener = new PropertyChangeListener() {
 			
@@ -200,7 +198,7 @@ public class DBRepository implements IndexedRepository {
 						DBTagDefinition dbTagDefinition = 
 							(DBTagDefinition)session.load(
 								DBTagDefinition.class, 
-								uuidToDBid.get(tagDefinition.getID()));
+								tagDefinition.getId());
 						dbTagDefinition.setName(
 								tagDefinition.getName());
 						PropertyDefinition colorDefinition = 
@@ -209,7 +207,7 @@ public class DBRepository implements IndexedRepository {
 						DBPropertyDefinition dbColorDefinition =
 								(DBPropertyDefinition)session.load(
 										DBPropertyDefinition.class,
-										uuidToDBid.get(colorDefinition.getID()));
+										colorDefinition.getId());
 						dbColorDefinition.setSingleValue(
 								tagDefinition.getColor());
 						dbTagDefinition.setVersion(
@@ -248,8 +246,8 @@ public class DBRepository implements IndexedRepository {
 
 	private void removeTagDefinition(final TagDefinition tagDefinition) {
 		backgroundServiceProvider.submit(
-			new DefaultProgressCallable<String>() {
-				public String call() throws Exception {
+			new DefaultProgressCallable<Void>() {
+				public Void call() throws Exception {
 					Session session = sessionFactory.openSession();
 					try {
 						session.beginTransaction();
@@ -258,12 +256,12 @@ public class DBRepository implements IndexedRepository {
 						DBTagDefinition dbTagDefinition = 
 							(DBTagDefinition)session.get(
 								DBTagDefinition.class, 
-								uuidToDBid.get(tagDefinition.getID()));
+								tagDefinition.getId());
 						
 						session.delete(dbTagDefinition);
 						session.getTransaction().commit();
 						
-						return tagDefinition.getID();
+						return null;
 					}
 					catch (Exception e) {
 						try {
@@ -279,10 +277,8 @@ public class DBRepository implements IndexedRepository {
 					}
 				}
 			}, 
-			new ExecutionListener<String>() {
-				public void done(String uuid) {
-					uuidToDBid.remove(uuid);
-				}
+			new ExecutionListener<Void>() {
+				public void done(Void nothing) {}
 				public void error(Throwable t) {
 					DBRepository.this.propertyChangeSupport.firePropertyChange(
 							RepositoryChangeEvent.exceptionOccurred.name(),
@@ -306,32 +302,36 @@ public class DBRepository implements IndexedRepository {
 						new DBTagDefinition(
 							tagDefinition.getVersion().getDate(),
 							idGenerator.catmaIDToUUIDBytes(
-									tagDefinition.getID()),
+									tagDefinition.getUuid()),
 							tagDefinition.getName(),
 							(DBTagsetDefinition)session.load(
 									DBTagsetDefinition.class, 
-									uuidToDBid.get(tagsetDefinition.getID())),
-							(tagDefinition.getParentID()==null)? null :
-								uuidToDBid.get(tagDefinition.getParentID()),
+									tagsetDefinition.getId()),
+							(tagDefinition.getParentUuid()==null)? null :
+								tagDefinition.getParentId(),
 							idGenerator.catmaIDToUUIDBytes(
-									tagDefinition.getParentID()));
-					PropertyDefinition colorDefinition = 
-						tagDefinition.getPropertyDefinitionByName(
-							PropertyDefinition.SystemPropertyName.catma_displaycolor.name());
-					DBPropertyDefinition dbColorDefinition = 
-						new DBPropertyDefinition(
-							idGenerator.catmaIDToUUIDBytes(
-								colorDefinition.getID()),
-							colorDefinition.getName(),
-							dbTagDefinition,
-							true);
-					dbColorDefinition.setSingleValue(colorDefinition.getFirstValue());
+									tagDefinition.getParentUuid()));
 					
-					dbTagDefinition.getDbPropertyDefinitions().add(dbColorDefinition);
+					for (PropertyDefinition systemPropDef : 
+						tagDefinition.getSystemPropertyDefinitions()) {
+						
+						DBPropertyDefinition dbColorDefinition = 
+								new DBPropertyDefinition(
+										idGenerator.catmaIDToUUIDBytes(
+												systemPropDef.getUuid()),
+												systemPropDef.getName(),
+												dbTagDefinition,
+												true);
+						dbColorDefinition.setSingleValue(
+								systemPropDef.getFirstValue());
+						
+						dbTagDefinition.getDbPropertyDefinitions().add(dbColorDefinition);
+					}
 					
 					session.beginTransaction();
 					session.save(dbTagDefinition);
 					session.getTransaction().commit();
+					
 					return dbTagDefinition;
 				}
 				catch (Exception e) {
@@ -350,8 +350,12 @@ public class DBRepository implements IndexedRepository {
 		}, 
 		new ExecutionListener<DBTagDefinition>() {
 			public void done(DBTagDefinition result) {
-				uuidToDBid.put(
-						tagDefinition.getID(), result.getTagDefinitionId());
+				tagDefinition.setId(result.getTagDefinitionId());
+				for (PropertyDefinition pd : tagDefinition.getSystemPropertyDefinitions()) {
+					DBPropertyDefinition dbPropertyDefinition = 
+							result.getDbPropertyDefinition(pd.getUuid());
+					pd.setId(dbPropertyDefinition.getPropertyDefinitionId());
+				}
 			}
 			public void error(Throwable t) {
 				DBRepository.this.propertyChangeSupport.firePropertyChange(
@@ -365,8 +369,8 @@ public class DBRepository implements IndexedRepository {
 
 	private void removeTagsetDefinition(final TagsetDefinition tagsetDefinition) {
 		backgroundServiceProvider.submit(
-			new DefaultProgressCallable<String>() {
-				public String call() throws Exception {
+			new DefaultProgressCallable<Void>() {
+				public Void call() throws Exception {
 					Session session = sessionFactory.openSession();
 					try {
 						session.beginTransaction();
@@ -374,12 +378,12 @@ public class DBRepository implements IndexedRepository {
 						DBTagsetDefinition dbTagsetDefinition = 
 							(DBTagsetDefinition)session.get(
 								DBTagsetDefinition.class, 
-								uuidToDBid.get(tagsetDefinition.getID()));
+								tagsetDefinition.getId());
 						
 						session.delete(dbTagsetDefinition);
 						session.getTransaction().commit();
 						
-						return tagsetDefinition.getID();
+						return null;
 					}
 					catch (Exception e) {
 						try {
@@ -395,10 +399,8 @@ public class DBRepository implements IndexedRepository {
 					}
 				}
 			}, 
-			new ExecutionListener<String>() {
-				public void done(String uuid) {
-					uuidToDBid.remove(uuid);
-				}
+			new ExecutionListener<Void>() {
+				public void done(Void nothing) {}
 				public void error(Throwable t) {
 					DBRepository.this.propertyChangeSupport.firePropertyChange(
 							RepositoryChangeEvent.exceptionOccurred.name(),
@@ -417,7 +419,7 @@ public class DBRepository implements IndexedRepository {
 			public DBTagsetDefinition call() throws Exception {
 				DBTagsetDefinition dbTagsetDefinition = 
 					new DBTagsetDefinition(
-						idGenerator.catmaIDToUUIDBytes(tagsetDefinition.getID()),
+						idGenerator.catmaIDToUUIDBytes(tagsetDefinition.getUuid()),
 						tagsetDefinition.getVersion().getDate(),
 						tagsetDefinition.getName(),
 						((DBTagLibrary)tagLibrary).getTagLibraryId());
@@ -446,8 +448,7 @@ public class DBRepository implements IndexedRepository {
 		}, 
 		new ExecutionListener<DBTagsetDefinition>() {
 			public void done(DBTagsetDefinition result) {
-				uuidToDBid.put(
-						tagsetDefinition.getID(), result.getTagsetDefinitionId());
+				tagsetDefinition.setId(result.getTagsetDefinitionId());
 			}
 			public void error(Throwable t) {
 				DBRepository.this.propertyChangeSupport.firePropertyChange(
@@ -469,7 +470,7 @@ public class DBRepository implements IndexedRepository {
 						DBTagsetDefinition dbTagsetDefinition = 
 							(DBTagsetDefinition)session.load(
 								DBTagsetDefinition.class, 
-								uuidToDBid.get(tagsetDefinition.getID()));
+								tagsetDefinition.getId());
 						dbTagsetDefinition.setName(
 								tagsetDefinition.getName());
 						dbTagsetDefinition.setVersion(
@@ -689,20 +690,21 @@ public class DBRepository implements IndexedRepository {
 				
 				TagsetDefinition tsDef = 
 						new TagsetDefinition(
+							dbTsDef.getTagsetDefinitionId(),
 							idGenerator.uuidBytesToCatmaID(dbTsDef.getUuid()),
 							dbTsDef.getName(),
 							new Version(dbTsDef.getVersion()));
-				uuidToDBid.put(tsDef.getID(), dbTsDef.getTagsetDefinitionId());
 				
 				for (DBTagDefinition dbTDef : dbTsDef.getDbTagDefinitions()) {
 					TagDefinition tDef = 
 						new TagDefinition(
+							dbTDef.getTagDefinitionId(),
 							idGenerator.uuidBytesToCatmaID(dbTDef.getUuid()),
 							dbTDef.getName(),
 							new Version(dbTDef.getVersion()),
+							dbTDef.getParentId(),
 							idGenerator.uuidBytesToCatmaID(dbTDef.getParentUuid()));
 					tsDef.addTagDefinition(tDef);
-					uuidToDBid.put(tDef.getID(), dbTDef.getTagDefinitionId());
 
 					for (DBPropertyDefinition dbPDef : 
 						dbTDef.getDbPropertyDefinitions()) {
@@ -717,10 +719,10 @@ public class DBRepository implements IndexedRepository {
 								new PropertyPossibleValueList(pValues, true);
 						PropertyDefinition pDef = 
 								new PropertyDefinition(
+									dbPDef.getPropertyDefinitionId(),
 									idGenerator.uuidBytesToCatmaID(dbPDef.getUuid()),
 									dbPDef.getName(),
 									ppvList);
-						uuidToDBid.put(pDef.getID(), dbPDef.getPropertyDefinitionId());
 
 						if (dbPDef.isSystemproperty()) {
 							tDef.addSystemPropertyDefinition(pDef);
@@ -925,20 +927,19 @@ public class DBRepository implements IndexedRepository {
 				DBTagLibrary dbTagLibrary = new DBTagLibrary(tagLibrary, true);
 				DBUserTagLibrary dbUserTagLibrary = 
 						new DBUserTagLibrary(currentUser, dbTagLibrary);
+				dbTagLibrary.getDbUserTagLibraries().add(dbUserTagLibrary);
 				
 				Session session = sessionFactory.openSession();
 				try {
 					session.beginTransaction();
 					
 					session.save(dbTagLibrary);
-					session.save(dbUserTagLibrary);
 
 					for (TagsetDefinition tsDef : dbTagLibrary) {
 						importTagsetDefinition(
 								session, dbTagLibrary.getTagLibraryId(), 
 								tsDef);
 					}
-					
 					SQLQuery maintainTagsetDefHierarchyQuery = session.createSQLQuery(
 						"UPDATE " + DBTagDefinition.TABLE + " td1, " + 
 						DBTagDefinition.TABLE + " td2, " +
@@ -998,7 +999,7 @@ public class DBRepository implements IndexedRepository {
 			Session session, Integer tagLibraryId, TagsetDefinition tsDef) {
 		DBTagsetDefinition dbTagsetDefinition = 
 				new DBTagsetDefinition(
-						idGenerator.catmaIDToUUIDBytes(tsDef.getID()),
+						idGenerator.catmaIDToUUIDBytes(tsDef.getUuid()),
 						tsDef.getVersion().getDate(),
 						tsDef.getName(), tagLibraryId);
 		for (TagDefinition tDef : tsDef) {
@@ -1008,13 +1009,13 @@ public class DBRepository implements IndexedRepository {
 		}
 		
 		session.save(dbTagsetDefinition);
-		
 	}
-	
+
 	private void addAuthorIfAbsent(TagDefinition tDef) {		
 		if (tDef.getAuthor() == null) {
 			PropertyDefinition pdAuthor = 
 					new PropertyDefinition(
+							null,
 							idGenerator.generate(), 
 							PropertyDefinition.SystemPropertyName.catma_markupauthor.name(), 
 							new PropertyPossibleValueList(currentUser.getIdentifier()));
@@ -1030,10 +1031,10 @@ public class DBRepository implements IndexedRepository {
 		DBTagDefinition dbTagDefinition = 
 				new DBTagDefinition(
 					tDef.getVersion().getDate(),
-					idGenerator.catmaIDToUUIDBytes(tDef.getID()),
+					idGenerator.catmaIDToUUIDBytes(tDef.getUuid()),
 					tDef.getName(),
 					dbTagsetDefinition,
-					idGenerator.catmaIDToUUIDBytes(tDef.getParentID()));
+					idGenerator.catmaIDToUUIDBytes(tDef.getParentUuid()));
 					
 		for (PropertyDefinition pDef : tDef.getSystemPropertyDefinitions()) {
 			DBPropertyDefinition dbPropertyDefinition = 
@@ -1057,7 +1058,7 @@ public class DBRepository implements IndexedRepository {
 
 		DBPropertyDefinition dbPropertyDefinition = 
 				new DBPropertyDefinition(
-					idGenerator.catmaIDToUUIDBytes(pDef.getID()),
+					idGenerator.catmaIDToUUIDBytes(pDef.getUuid()),
 					pDef.getName(),
 					dbTagDefinition, isSystemProperty);
 		
@@ -1084,7 +1085,7 @@ public class DBRepository implements IndexedRepository {
 				DBTagsetDefinition dbTagsetDefinition = 
 					(DBTagsetDefinition)session.get(
 						DBTagsetDefinition.class, 
-						uuidToDBid.get(tagsetDefinition.getID()));
+						tagsetDefinition.getId());
 				
 				session.delete(dbTagsetDefinition);
 			}
@@ -1093,20 +1094,6 @@ public class DBRepository implements IndexedRepository {
 			
 			session.getTransaction().commit();
 			
-			for (TagsetDefinition tagsetDefinition : tagLibrary) {
-				for (TagDefinition tagDefinition : tagsetDefinition) {
-					for (PropertyDefinition propertyDefinition : 
-						tagDefinition.getSystemPropertyDefinitions()) {
-						uuidToDBid.remove(propertyDefinition.getID());
-					}
-					for (PropertyDefinition propertyDefinition : 
-						tagDefinition.getUserDefinedPropertyDefinitions()) {
-						uuidToDBid.remove(propertyDefinition.getID());
-					}
-					uuidToDBid.remove(tagDefinition.getID());
-				}
-				uuidToDBid.remove(tagsetDefinition.getID());
-			}
 			tagLibrariesByID.remove(tagLibrary.getId());
 			tagLibraryReferences.remove(tagLibraryReference);
 			tagManager.removeTagLibrary(tagLibrary);

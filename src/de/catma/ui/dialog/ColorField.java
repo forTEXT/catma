@@ -19,7 +19,6 @@ public class ColorField extends AbstractField {
 	public ColorField(String hexColor) {
 		if ((hexColor != null) && (!hexColor.isEmpty())) {
 			setValue(hexColor);
-			dirty = true;
 		}
 	}
 	
