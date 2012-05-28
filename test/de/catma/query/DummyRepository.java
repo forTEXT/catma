@@ -179,4 +179,16 @@ public class DummyRepository implements IndexedRepository {
 		// TODO Auto-generated method stub
 		
 	}
+
+	public void importUserMarkupCollection(InputStream inputStream,
+			ISourceDocument sourceDocument) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public void delete(
+			UserMarkupCollectionReference userMarkupCollectionReference) {
+		// TODO Auto-generated method stub
+		
+	}
 }

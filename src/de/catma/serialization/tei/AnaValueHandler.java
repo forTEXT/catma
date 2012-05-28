@@ -65,7 +65,7 @@ public class AnaValueHandler implements AttributeValueHandler {
 		for( TagInstance tagInstance : tagInstances ) {
 			builder.append( conc );
 			builder.append( "#" );
-			builder.append( tagInstance.getID() );
+			builder.append( tagInstance.getUuid() );
 			conc = " ";
 		}
 		return builder.toString();

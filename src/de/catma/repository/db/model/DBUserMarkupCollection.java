@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -19,6 +18,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 
 import de.catma.document.ContentInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
@@ -37,10 +39,11 @@ public class DBUserMarkupCollection implements java.io.Serializable, IUserMarkup
 
 	private Integer usermarkupCollectionId;
 	private int sourceDocumentId;
-	private UserMarkupCollection delegateUserMarkupCollection;
+	private IUserMarkupCollection delegateUserMarkupCollection;
 	private Set<DBUserUserMarkupCollection> dbUserUserMarkupCollections = 
 			new HashSet<DBUserUserMarkupCollection>();
-
+	private Set<DBTagReference> dbTagReferences = new HashSet<DBTagReference>();
+	
 	public DBUserMarkupCollection() {
 		delegateUserMarkupCollection =
 				new UserMarkupCollection(
@@ -59,7 +62,13 @@ public class DBUserMarkupCollection implements java.io.Serializable, IUserMarkup
 						new DBTagLibrary(title, false),
 						new ArrayList<TagReference>());
 	}
-
+	
+	public DBUserMarkupCollection(
+			int sourceDocumentId,
+			IUserMarkupCollection delegateUserMarkupCollection) {
+		this.sourceDocumentId = sourceDocumentId;
+		this.delegateUserMarkupCollection = delegateUserMarkupCollection;
+	}
 
 	@Id
 	@GeneratedValue(strategy = IDENTITY)
@@ -118,7 +127,8 @@ public class DBUserMarkupCollection implements java.io.Serializable, IUserMarkup
 		this.sourceDocumentId = sourceDocumentId;
 	}
 
-	@OneToOne(cascade = CascadeType.ALL)
+	@OneToOne
+	@Cascade({CascadeType.DELETE, CascadeType.SAVE_UPDATE})
 	@JoinColumn(name = "tagLibraryID", nullable = false)
 	public DBTagLibrary getTagLibrary() {
 		return (DBTagLibrary)delegateUserMarkupCollection.getTagLibrary();
@@ -129,6 +139,7 @@ public class DBUserMarkupCollection implements java.io.Serializable, IUserMarkup
 	}
 	
 	@OneToMany(mappedBy = "dbUserMarkupCollection")
+	@Cascade({CascadeType.DELETE, CascadeType.SAVE_UPDATE})
 	public Set<DBUserUserMarkupCollection> getDbUserUserMarkupCollections() {
 		return dbUserUserMarkupCollections;
 	}
@@ -136,6 +147,16 @@ public class DBUserMarkupCollection implements java.io.Serializable, IUserMarkup
 	public void setDbUserUserMarkupCollections(
 			Set<DBUserUserMarkupCollection> dbUserUserMarkupCollections) {
 		this.dbUserUserMarkupCollections = dbUserUserMarkupCollections;
+	}
+	
+	@OneToMany(mappedBy = "dbUserMarkupCollection")
+	@Cascade({CascadeType.SAVE_UPDATE, CascadeType.DELETE})
+	public Set<DBTagReference> getDbTagReferences() {
+		return dbTagReferences;
+	}
+	
+	public void setDbTagReferences(Set<DBTagReference> dbTagReferences) {
+		this.dbTagReferences = dbTagReferences;
 	}
 	
 	@Transient
@@ -205,4 +226,10 @@ public class DBUserMarkupCollection implements java.io.Serializable, IUserMarkup
 		}
 		return false;
 	}
+
+	public void setId(String id) {
+		delegateUserMarkupCollection.setId(id);
+	}
+	
+	
 }

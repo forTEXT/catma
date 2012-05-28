@@ -151,11 +151,6 @@ class FSRepository implements Repository {
 		
 	}
 
-	public void delete(IUserMarkupCollection userMarkupCollection) {
-		// TODO Auto-generated method stub
-		
-	}
-
 	public void delete(StaticMarkupCollection staticMarkupCollection) {
 		// TODO Auto-generated method stub
 		
@@ -182,7 +177,7 @@ class FSRepository implements Repository {
 		sourceDocumentHandler.insert(sourceDocument);
 		sourceDocumentsByID.put(sourceDocument.getID(), sourceDocument);
 		this.propertyChangeSupport.firePropertyChange(
-				RepositoryChangeEvent.sourceDocumentAdded.name(),
+				RepositoryChangeEvent.sourceDocumentChanged.name(),
 				null, sourceDocument.getID());
 	}
 
@@ -206,7 +201,7 @@ class FSRepository implements Repository {
 				ref, sourceDocument);
 		
 		this.propertyChangeSupport.firePropertyChange(
-				RepositoryChangeEvent.userMarkupCollectionAdded.name(),
+				RepositoryChangeEvent.userMarkupCollectionChanged.name(),
 				null, new Pair<UserMarkupCollectionReference, ISourceDocument>(
 						ref,sourceDocument));
 	}
@@ -296,6 +291,18 @@ class FSRepository implements Repository {
 	
 	public void delete(TagLibraryReference tagLibraryReference)
 			throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public void importUserMarkupCollection(InputStream inputStream,
+			ISourceDocument sourceDocument) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public void delete(
+			UserMarkupCollectionReference userMarkupCollectionReference) {
 		// TODO Auto-generated method stub
 		
 	}

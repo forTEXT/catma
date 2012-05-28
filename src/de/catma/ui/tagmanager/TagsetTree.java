@@ -78,7 +78,9 @@ public class TagsetTree extends HorizontalLayout {
 			ColorButtonListener colorButtonListener) {
 		this.tagManager = tagManager;
 		this.tagLibrary = tagLibrary;
-		tagManager.addTagLibrary(tagLibrary);
+		if (tagLibrary != null) {
+			tagManager.addTagLibrary(tagLibrary);
+		}
 		this.withTagsetButtons = withTagsetButtons;
 		this.colorButtonListener = colorButtonListener;
 	}

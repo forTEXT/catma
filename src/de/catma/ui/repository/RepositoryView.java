@@ -118,7 +118,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	private Button btSaveContentInfoChanges;
 	private Button btDiscardContentInfoChanges;
 	private PropertyChangeListener sourceDocumentAddedListener;
-	private PropertyChangeListener userMarkupDocumentAddedListener;
+	private PropertyChangeListener userMarkupDocumentChangedListener;
 	private PropertyChangeListener tagLibraryChangedListener;
 	
 	public RepositoryView(Repository repository) {
@@ -135,22 +135,30 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 			}
 		};
 		this.repository.addPropertyChangeListener(
-				Repository.RepositoryChangeEvent.sourceDocumentAdded,
+				Repository.RepositoryChangeEvent.sourceDocumentChanged,
 				sourceDocumentAddedListener);
 		
-		userMarkupDocumentAddedListener = new PropertyChangeListener() {
+		userMarkupDocumentChangedListener = new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
-				@SuppressWarnings("unchecked")
-				Pair<UserMarkupCollectionReference, ISourceDocument>
-					result = (Pair<UserMarkupCollectionReference, ISourceDocument>)evt.getNewValue();
-				addUserMarkupCollectionReferenceToTree(
-						result.getFirst(), result.getSecond());
+				if (evt.getOldValue() == null) {
+					@SuppressWarnings("unchecked")
+					Pair<UserMarkupCollectionReference, ISourceDocument>
+						result = (Pair<UserMarkupCollectionReference, ISourceDocument>)evt.getNewValue();
+					addUserMarkupCollectionReferenceToTree(
+							result.getFirst(), result.getSecond());
+				}
+				else if (evt.getNewValue() == null) {
+					UserMarkupCollectionReference userMarkupCollectionReference =
+							(UserMarkupCollectionReference) evt.getOldValue();
+					removUserMarkupCollectionReferenceFromTree(
+							userMarkupCollectionReference);
+				}
 				
 			}
 		};
 		this.repository.addPropertyChangeListener(
-				Repository.RepositoryChangeEvent.userMarkupCollectionAdded,
-				userMarkupDocumentAddedListener);
+				Repository.RepositoryChangeEvent.userMarkupCollectionChanged,
+				userMarkupDocumentChangedListener);
 		
 		tagLibraryChangedListener = new PropertyChangeListener() {
 			
@@ -175,6 +183,32 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	}
 
 	private void initActions() {
+		
+		btCreateTagLibrary.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				final String nameProperty = "name";
+				getNameFromUser(
+						"Create a new Tag Library",
+						new SaveCancelListener<PropertysetItem>() {
+					public void cancelPressed() {}
+					public void savePressed(
+							PropertysetItem propertysetItem) {
+						Property property = 
+								propertysetItem.getItemProperty(
+										nameProperty);
+						String name = (String)property.getValue();
+						try {
+							repository.createTagLibrary(name);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}, nameProperty);
+			}
+		});
+		
 		btAddDocument.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -407,7 +441,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		miMoreDocumentActions.addItem("Create User Markup Collection", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
-				handleUserMarkupCreation();
+				handleUserMarkupCollectionCreation();
 			}
 
 		});
@@ -415,8 +449,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		miMoreDocumentActions.addItem("Import User Markup Collection", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
+				handleUserMarkupCollectionImport();
 			}
 		});
 		
@@ -429,9 +462,9 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		
 		miMoreDocumentActions.addItem("Remove User Markup Collection", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
+				handleUserMarkupRemoval();
 			}
+
 		});
 		
 		miMoreDocumentActions.addSeparator();
@@ -521,7 +554,80 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		});
 	}
 	
+	private void removUserMarkupCollectionReferenceFromTree(
+			UserMarkupCollectionReference userMarkupCollectionReference) {
+		documentsTree.removeItem(userMarkupCollectionReference);
+	}
 
+	private void handleUserMarkupCollectionImport() {
+		Object value = documentsTree.getValue();
+		if ((value == null) || !(value instanceof ISourceDocument)) {
+			 getWindow().showNotification(
+                    "Information",
+                    "Please select a Source Document first");
+		}
+		else{
+			final ISourceDocument sourceDocument = (ISourceDocument)value;
+
+			UploadDialog uploadDialog =
+					new UploadDialog("Upload User Markup Collection", 
+							new SaveCancelListener<byte[]>() {
+				
+				public void cancelPressed() {}
+				
+				public void savePressed(byte[] result) {
+					InputStream is = new ByteArrayInputStream(result);
+					try {
+						if (BOMFilterInputStream.hasBOM(result)) {
+							is = new BOMFilterInputStream(
+									is, Charset.forName("UTF-8"));
+						}
+						
+						repository.importUserMarkupCollection(
+								is, sourceDocument);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					finally {
+						CloseSafe.close(is);
+					}
+				}
+				
+			});
+			uploadDialog.show(getApplication().getMainWindow());		
+		}
+	}
+
+	private void handleUserMarkupRemoval() {
+		Object selValue = documentsTree.getValue();
+		if ((selValue != null) 
+				&& (selValue instanceof UserMarkupCollectionReference)) {
+			final UserMarkupCollectionReference userMarkupCollectionReference =
+					(UserMarkupCollectionReference) selValue;
+			
+			ConfirmDialog.show(
+				getApplication().getMainWindow(), 
+				"Do you really want to delete the User Markup Collection '"
+						+ userMarkupCollectionReference.toString() + "'?",
+						
+		        new ConfirmDialog.Listener() {
+
+		            public void onClose(ConfirmDialog dialog) {
+		                if (dialog.isConfirmed()) {
+		                	try {
+								repository.delete(userMarkupCollectionReference);
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+		                }
+		            }
+		        });
+		}
+		
+	}
+	
 	private void handleTagLibraryRemoval() {
 		final TagLibraryReference tagLibraryReference = 
 				(TagLibraryReference) tagLibrariesTree.getValue();
@@ -858,11 +964,11 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	@Override
 	public void detach() {
 		this.repository.removePropertyChangeListener(
-				Repository.RepositoryChangeEvent.sourceDocumentAdded,
+				Repository.RepositoryChangeEvent.sourceDocumentChanged,
 				sourceDocumentAddedListener);
 		this.repository.removePropertyChangeListener(
-				Repository.RepositoryChangeEvent.userMarkupCollectionAdded, 
-				userMarkupDocumentAddedListener);
+				Repository.RepositoryChangeEvent.userMarkupCollectionChanged, 
+				userMarkupDocumentChangedListener);
 		super.detach();
 	}
 	
@@ -919,7 +1025,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		
 	}
 
-	private void handleUserMarkupCreation() {
+	private void handleUserMarkupCollectionCreation() {
 		Object value = documentsTree.getValue();
 		if ((value == null) || !(value instanceof ISourceDocument)) {
 			 getWindow().showNotification(
@@ -929,7 +1035,8 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		else{
 			final ISourceDocument sourceDocument = (ISourceDocument)value;
 			final String userMarkupCollectionNameProperty = "name";
-			getUserMarkupCollectionName(
+			getNameFromUser(
+					"Create new User Markup Collection",
 					new SaveCancelListener<PropertysetItem>() {
 				public void cancelPressed() {}
 				public void savePressed(
@@ -952,22 +1059,23 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		
 	}
 
-	private void getUserMarkupCollectionName(
+	private void getNameFromUser(
+			String dialogCaption,
 			SaveCancelListener<PropertysetItem> listener, 
-			String userMarkupCollectionNameProperty) {
+			String nameProperty) {
 		PropertyCollection propertyCollection = 
-				new PropertyCollection(userMarkupCollectionNameProperty);
+				new PropertyCollection(nameProperty);
 
 		FormDialog userMarkupCollFormDialog =
 			new FormDialog(
-				"Create new User Markup Collection",
+				dialogCaption,
 				propertyCollection,
 				listener);
 	
 		userMarkupCollFormDialog.getField(
-				userMarkupCollectionNameProperty).setRequired(true);
+				nameProperty).setRequired(true);
 		userMarkupCollFormDialog.getField(
-				userMarkupCollectionNameProperty).setRequiredError(
+				nameProperty).setRequiredError(
 						"You have to enter a name!");
 		userMarkupCollFormDialog.show(getApplication().getMainWindow());
 	}

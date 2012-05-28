@@ -38,6 +38,8 @@ public class DBTagLibrary implements java.io.Serializable, ITagLibrary {
 	private Set<DBUserTagLibrary> dbUserTagLibraries = 
 			new HashSet<DBUserTagLibrary>();
 	
+	private Set<DBTagsetDefinition> dbTagsetDefinitions = new HashSet<DBTagsetDefinition>();
+	
 	public DBTagLibrary() {
 		this.tagLibraryDelegate = new TagLibrary(null, null);
 	}
@@ -90,6 +92,17 @@ public class DBTagLibrary implements java.io.Serializable, ITagLibrary {
 	
 	public void setDbUserTagLibraries(Set<DBUserTagLibrary> dbUserTagLibraries) {
 		this.dbUserTagLibraries = dbUserTagLibraries;
+	}
+	
+	@OneToMany(mappedBy = "tagLibraryId")
+	@Cascade({CascadeType.DELETE})
+	public Set<DBTagsetDefinition> getDbTagsetDefinitions() {
+		return dbTagsetDefinitions;
+	}
+
+	public void setDbTagsetDefinitions(
+			Set<DBTagsetDefinition> dbTagsetDefinitions) {
+		this.dbTagsetDefinitions = dbTagsetDefinitions;
 	}
 	
 	public void add(TagsetDefinition tagsetDefinition) {

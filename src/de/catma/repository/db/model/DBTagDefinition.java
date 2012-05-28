@@ -44,13 +44,18 @@ public class DBTagDefinition implements java.io.Serializable {
 	private Integer parentId;
 	private byte[] parentUuid;
 	private Set<DBTagDefinition> children;
+	private Set<DBTagInstance> dbTagInstances  = new HashSet<DBTagInstance>();
 	
 	private Set<DBPropertyDefinition> dbPropertyDefinitions = 
 			new HashSet<DBPropertyDefinition>();
 	
 	public DBTagDefinition() {
 	}
-	
+
+	public DBTagDefinition(Integer tagDefinitionId) {
+		this.tagDefinitionId = tagDefinitionId;
+	}
+
 	public DBTagDefinition(Date version, byte[] uuid,
 			String name, DBTagsetDefinition dbTagsetDefinition,
 			byte[] parentUuid) {
@@ -157,6 +162,16 @@ public class DBTagDefinition implements java.io.Serializable {
 	
 	public void setChildren(Set<DBTagDefinition> children) {
 		this.children = children;
+	}
+	
+	@OneToMany(mappedBy = "dbTagDefinition")
+	@Cascade({CascadeType.SAVE_UPDATE, CascadeType.DELETE})
+	public Set<DBTagInstance> getDbTagInstances() {
+		return dbTagInstances;
+	}
+	
+	public void setDbTagInstances(Set<DBTagInstance> dbTagInstances) {
+		this.dbTagInstances = dbTagInstances;
 	}
 
 	public DBPropertyDefinition getDbPropertyDefinition(String propertyDefUuid) {

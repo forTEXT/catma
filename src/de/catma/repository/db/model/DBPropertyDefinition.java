@@ -34,10 +34,15 @@ public class DBPropertyDefinition implements java.io.Serializable {
 	private boolean systemproperty;
 	private Set<DBPropertyDefPossibleValue> dbPropertyDefPossibleValues = 
 			new HashSet<DBPropertyDefPossibleValue>();
+	private Set<DBProperty> dbProperties = new HashSet<DBProperty>();
 
 	public DBPropertyDefinition() {
 	}
 	
+	public DBPropertyDefinition(Integer propertyDefinitionId) {
+		this.propertyDefinitionId = propertyDefinitionId;
+	}
+
 	public DBPropertyDefinition(byte[] uuid, String name,
 			DBTagDefinition dbTagDefinition, boolean systemproperty) {
 		this.uuid = uuid;
@@ -79,6 +84,7 @@ public class DBPropertyDefinition implements java.io.Serializable {
 
 	@ManyToOne
 	@JoinColumn(name = "tagDefinitionID", nullable = false)
+	@Cascade({CascadeType.SAVE_UPDATE})
 	public DBTagDefinition getDbTagDefinition() {
 		return dbTagDefinition;
 	}
@@ -105,6 +111,16 @@ public class DBPropertyDefinition implements java.io.Serializable {
 	public void setDbPropertyDefPossibleValues(
 			Set<DBPropertyDefPossibleValue> dbPropertyDefPossibleValues) {
 		this.dbPropertyDefPossibleValues = dbPropertyDefPossibleValues;
+	}
+	
+	@OneToMany(mappedBy = "dbPropertyDefinition")
+	@Cascade({CascadeType.SAVE_UPDATE, CascadeType.DELETE})
+	public Set<DBProperty> getDbProperties() {
+		return dbProperties;
+	}
+	
+	public void setDbProperties(Set<DBProperty> dbProperties) {
+		this.dbProperties = dbProperties;
 	}
 	
 	public void setSingleValue(String value) {

@@ -14,7 +14,6 @@ import de.catma.document.source.ISourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.tag.Property;
-import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagInstance;
 
 public class TeiUserMarkupCollectionSerializer {
@@ -121,17 +120,15 @@ public class TeiUserMarkupCollectionSerializer {
 		TeiElement fs = new TeiElement(TeiElementName.fs);
 		textElement.appendChild(fs);
 		
-		fs.setID(tagInstance.getID());
+		fs.setID(tagInstance.getUuid());
 		fs.setAttributeValue(
 			Attribute.type, tagInstance.getTagDefinition().getUuid());
-		for (PropertyDefinition pd : 
-			tagInstance.getTagDefinition().getSystemPropertyDefinitions()) {
-			writeProperty(tagInstance.getSystemProperty(pd.getUuid()), fs);
+		for (Property p : tagInstance.getSystemProperties()) {
+			writeProperty(p, fs);
 		}
 		
-		for (PropertyDefinition pd :
-			tagInstance.getTagDefinition().getUserDefinedPropertyDefinitions()) {
-			writeProperty(tagInstance.getUserDefinedProperty(pd.getUuid()),fs);
+		for (Property p : tagInstance.getUserDefinedProperties()) {
+			writeProperty(p,fs);
 		}
 		
 	}

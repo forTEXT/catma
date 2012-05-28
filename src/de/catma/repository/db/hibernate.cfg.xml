@@ -20,5 +20,9 @@
   <mapping class="de.catma.repository.db.model.DBTagDefinition"/>
   <mapping class="de.catma.repository.db.model.DBPropertyDefinition"/>
   <mapping class="de.catma.repository.db.model.DBPropertyDefPossibleValue"/>
+  <mapping class="de.catma.repository.db.model.DBTagReference"/>
+  <mapping class="de.catma.repository.db.model.DBTagInstance"/>
+  <mapping class="de.catma.repository.db.model.DBProperty"/>
+  <mapping class="de.catma.repository.db.model.DBPropertyValue"/>
  </session-factory>
 </hibernate-configuration>
