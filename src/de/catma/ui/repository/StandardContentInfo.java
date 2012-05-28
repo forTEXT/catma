@@ -1,7 +1,7 @@
 package de.catma.ui.repository;
 
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 
 public class StandardContentInfo implements ContentInfo {
 

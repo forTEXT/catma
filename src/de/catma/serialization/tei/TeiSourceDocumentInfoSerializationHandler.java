@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import de.catma.core.document.ContentInfoSet;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.source.IndexInfoSet;
-import de.catma.core.document.source.SourceDocumentInfo;
-import de.catma.core.document.source.TechInfoSet;
+import de.catma.document.ContentInfoSet;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.IndexInfoSet;
+import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.TechInfoSet;
 import de.catma.serialization.DocumentSerializer;
 import de.catma.serialization.SourceDocumentInfoSerializationHandler;
 

@@ -20,18 +20,18 @@ import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.core.document.repository.Repository;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
-import de.catma.core.tag.TagDefinition;
-import de.catma.core.tag.ITagLibrary;
-import de.catma.core.tag.TagManager;
-import de.catma.core.tag.TagManager.TagManagerEvent;
-import de.catma.core.tag.TagsetDefinition;
-import de.catma.core.util.Pair;
+import de.catma.document.repository.Repository;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
+import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagManager;
+import de.catma.tag.TagsetDefinition;
+import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
+import de.catma.util.Pair;
 
 public class MarkupCollectionsPanel extends VerticalLayout {
 	

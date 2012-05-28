@@ -21,7 +21,7 @@ package de.catma.serialization.tei;
 
 import org.antlr.runtime.RecognitionException;
 
-import de.catma.core.document.Range;
+import de.catma.document.Range;
 import de.catma.serialization.tei.pointer.TextFragmentIdentifier;
 import de.catma.serialization.tei.pointer.TextFragmentIdentifierFactory;
 

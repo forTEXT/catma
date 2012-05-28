@@ -13,8 +13,8 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.CleaApplication;
-import de.catma.core.document.repository.Repository;
-import de.catma.core.document.repository.RepositoryManager;
+import de.catma.document.repository.Repository;
+import de.catma.document.repository.RepositoryManager;
 
 public class RepositoryListView extends VerticalLayout {
 

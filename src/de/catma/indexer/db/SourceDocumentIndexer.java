@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.hibernate.Session;
 
-import de.catma.core.document.source.ISourceDocument;
+import de.catma.document.source.ISourceDocument;
 import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
 

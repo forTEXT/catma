@@ -10,10 +10,10 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 
-import de.catma.core.document.Range;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.source.IndexInfoSet;
-import de.catma.core.document.source.KeywordInContext;
+import de.catma.document.Range;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.IndexInfoSet;
+import de.catma.document.source.KeywordInContext;
 
 public class KwicProvider {
 	

@@ -27,9 +27,11 @@ import org.hibernate.annotations.CascadeType;
  */
 @Entity
 @Table(name = "tagsetdefinition", catalog = "CatmaRepository", uniqueConstraints = @UniqueConstraint(columnNames = {
-		"uuid", "version" }))
+		"uuid", "tagLibraryID" }))
 public class DBTagsetDefinition implements java.io.Serializable {
 
+	public static final String TABLE = "tagsetdefinition";
+	
 	private Integer tagsetDefinitionId;
 	private Date version;
 	private byte[] uuid;

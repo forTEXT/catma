@@ -30,9 +30,8 @@ import com.vaadin.terminal.gwt.server.WebBrowser;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.ClientWidget;
 
-import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.core.tag.TagDefinition;
-import de.catma.core.util.ColorConverter;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.tag.TagDefinition;
 import de.catma.ui.client.ui.tagger.VTagger;
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
@@ -40,6 +39,7 @@ import de.catma.ui.client.ui.tagger.shared.TaggerMessageAttribute;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
+import de.catma.util.ColorConverter;
 
 
 /**

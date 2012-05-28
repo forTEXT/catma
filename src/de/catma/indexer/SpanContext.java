@@ -26,7 +26,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import de.catma.core.document.Range;
+import de.catma.document.Range;
 
 /**
  * A span context.

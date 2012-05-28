@@ -6,16 +6,16 @@ import java.util.Properties;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.catma.ExceptionHandler;
 import de.catma.backgroundservice.DebugBackgroundServiceProvider;
-import de.catma.core.ExceptionHandler;
-import de.catma.core.document.repository.Repository;
-import de.catma.core.document.repository.RepositoryManager;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.core.tag.TagManager;
+import de.catma.document.repository.Repository;
+import de.catma.document.repository.RepositoryManager;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.db.DBIndexer;
+import de.catma.tag.TagManager;
 
 public class IndexerTest {
 	private Repository repository;

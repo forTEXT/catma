@@ -13,14 +13,14 @@ import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-import de.catma.core.document.Range;
-import de.catma.core.util.CloseSafe;
+import de.catma.document.Range;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TermInfo;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
+import de.catma.util.CloseSafe;
 
 public class CollocationSearcher {
 

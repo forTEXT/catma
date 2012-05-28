@@ -19,7 +19,7 @@
 
 package de.catma.serialization.tei;
 
-import de.catma.core.util.IDGenerator;
+import de.catma.util.IDGenerator;
 
 
 

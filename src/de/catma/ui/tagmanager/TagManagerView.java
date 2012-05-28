@@ -1,5 +1,7 @@
 package de.catma.ui.tagmanager;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Iterator;
 
 import com.vaadin.ui.Alignment;
@@ -10,16 +12,37 @@ import com.vaadin.ui.TabSheet.CloseHandler;
 import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.core.tag.ITagLibrary;
-import de.catma.core.tag.TagManager;
+import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibraryReference;
+import de.catma.tag.TagManager;
+import de.catma.tag.TagManager.TagManagerEvent;
 
 public class TagManagerView extends VerticalLayout implements CloseHandler {
 	
 	private TabSheet tabSheet;
 	private Label noOpenTagLibraries;
+	private PropertyChangeListener tagLibraryChangedListener;
+	private TagManager tagManager;
 	
-	public TagManagerView() {
+	public TagManagerView(TagManager tagManager) {
+		this.tagManager = tagManager;
+		tagLibraryChangedListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (evt.getNewValue() == null) {
+					TagLibraryReference tlr =
+							(TagLibraryReference)evt.getOldValue();
+					TagLibraryView tlv = getTagLibraryView(tlr.getId());
+					if (tlv != null) {
+						onTabClose(tabSheet, tlv);
+					}
+				}
+				
+			}
+		};
 		initComponents();
+		tagManager.addPropertyChangeListener(
+				TagManagerEvent.tagLibraryChanged, tagLibraryChangedListener);
 	}
 	
 	private void initComponents() {
@@ -41,8 +64,8 @@ public class TagManagerView extends VerticalLayout implements CloseHandler {
 		tabSheet.setHeight("0px");
 	}
 
-	public void openTagLibrary(TagManager tagManager, ITagLibrary tagLibrary) {
-		TagLibraryView tagLibraryView = getTagLibraryView(tagLibrary);
+	public void openTagLibrary(ITagLibrary tagLibrary) {
+		TagLibraryView tagLibraryView = getTagLibraryView(tagLibrary.getId());
 		if (tagLibraryView != null) {
 			tabSheet.setSelectedTab(tagLibraryView);
 		}
@@ -62,12 +85,12 @@ public class TagManagerView extends VerticalLayout implements CloseHandler {
 	}
 	
 	
-	private TagLibraryView getTagLibraryView(ITagLibrary tagLibrary) {
+	private TagLibraryView getTagLibraryView(String tagLibraryID) {
 		Iterator<Component> iterator = tabSheet.getComponentIterator();
 		while (iterator.hasNext()) {
 			Component c = iterator.next();
 			TagLibraryView tagLibraryView = (TagLibraryView)c;
-			if (tagLibraryView.getTagLibrary().getId().equals(tagLibrary.getId())) {
+			if (tagLibraryView.getTagLibrary().getId().equals(tagLibraryID)) {
 				return tagLibraryView;
 			}
 		}

@@ -16,14 +16,13 @@ import org.junit.Test;
 
 import com.google.gwt.dev.util.collect.HashSet;
 
+import de.catma.ExceptionHandler;
 import de.catma.backgroundservice.DebugBackgroundServiceProvider;
 import de.catma.backgroundservice.LogProgressListener;
-import de.catma.core.ExceptionHandler;
-import de.catma.core.document.Range;
-import de.catma.core.document.repository.RepositoryManager;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.source.KeywordInContext;
-import de.catma.core.tag.TagManager;
+import de.catma.document.Range;
+import de.catma.document.repository.RepositoryManager;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.KeywordInContext;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.KwicProvider;
@@ -36,6 +35,7 @@ import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.tag.TagManager;
 
 
 public class QueryTest {

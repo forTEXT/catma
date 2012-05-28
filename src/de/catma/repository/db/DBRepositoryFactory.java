@@ -3,14 +3,14 @@ package de.catma.repository.db;
 import java.util.Properties;
 
 import de.catma.backgroundservice.BackgroundServiceProvider;
-import de.catma.core.document.repository.Repository;
-import de.catma.core.document.repository.RepositoryFactory;
-import de.catma.core.document.repository.RepositoryPropertyKey;
-import de.catma.core.tag.TagManager;
+import de.catma.document.repository.Repository;
+import de.catma.document.repository.RepositoryFactory;
+import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.IndexerFactory;
 import de.catma.indexer.IndexerPropertyKey;
 import de.catma.serialization.SerializationHandlerFactory;
+import de.catma.tag.TagManager;
 
 public class DBRepositoryFactory implements RepositoryFactory {
 

@@ -6,15 +6,15 @@ import java.util.List;
 
 import nu.xom.Elements;
 import nu.xom.Nodes;
-import de.catma.core.ExceptionHandler;
-import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.core.tag.Property;
-import de.catma.core.tag.PropertyDefinition;
-import de.catma.core.tag.PropertyValueList;
-import de.catma.core.tag.TagDefinition;
-import de.catma.core.tag.TagInstance;
-import de.catma.core.tag.ITagLibrary;
+import de.catma.ExceptionHandler;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.serialization.tei.PtrValueHandler.TargetValues;
+import de.catma.tag.ITagLibrary;
+import de.catma.tag.Property;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.PropertyValueList;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
 
 public class TeiUserMarkupCollectionDeserializer {
 

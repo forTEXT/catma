@@ -6,8 +6,8 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.Table.ColumnGenerator;
 
-import de.catma.core.tag.TagDefinition;
-import de.catma.core.util.ColorConverter;
+import de.catma.tag.TagDefinition;
+import de.catma.util.ColorConverter;
 
 public class ColorButtonColumnGenerator implements ColumnGenerator {
 	

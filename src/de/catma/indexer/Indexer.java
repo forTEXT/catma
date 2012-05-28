@@ -3,12 +3,12 @@ package de.catma.indexer;
 import java.io.IOException;
 import java.util.List;
 
-import de.catma.core.document.Range;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.core.tag.ITagLibrary;
+import de.catma.document.Range;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.tag.ITagLibrary;
 
 public interface Indexer {
 	public void index(

@@ -1,6 +1,6 @@
 package de.catma.serialization;
 
-import de.catma.core.tag.TagManager;
+import de.catma.tag.TagManager;
 
 public interface SerializationHandlerFactory {
 

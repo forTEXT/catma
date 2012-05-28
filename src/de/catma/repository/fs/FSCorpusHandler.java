@@ -9,11 +9,11 @@ import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Node;
 import nu.xom.Nodes;
-import de.catma.core.document.ContentInfoSet;
-import de.catma.core.document.Corpus;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.document.ContentInfoSet;
+import de.catma.document.Corpus;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 
 class FSCorpusHandler {
 

@@ -18,15 +18,14 @@ import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.backgroundservice.ProgressCallable;
-import de.catma.core.ExceptionHandler;
-import de.catma.core.document.Corpus;
-import de.catma.core.document.repository.Repository;
-import de.catma.core.document.repository.RepositoryManager;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
-import de.catma.core.tag.ITagLibrary;
-import de.catma.core.tag.TagManager;
+import de.catma.document.Corpus;
+import de.catma.document.repository.Repository;
+import de.catma.document.repository.RepositoryManager;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.indexer.IndexedRepository;
+import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagManager;
 import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.ProgressWindow;
 import de.catma.ui.analyzer.AnalyzerManagerView;
@@ -94,7 +93,7 @@ public class CleaApplication extends Application
 					new RepositoryManager(
 						this, tagManager, properties));
 		
-			tagManagerView = new TagManagerView();
+			tagManagerView = new TagManagerView(tagManager);
 			
 			taggerManagerView = new TaggerManagerView();
 			
@@ -186,7 +185,7 @@ public class CleaApplication extends Application
 		if (tagManagerView.getApplication() == null) {
 			menu.executeEntry(tagManagerView);
 		}
-		tagManagerView.openTagLibrary(tagManager, tagLibrary);
+		tagManagerView.openTagLibrary(tagLibrary);
 	}
 
 	public TaggerView openSourceDocument(

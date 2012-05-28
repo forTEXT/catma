@@ -8,9 +8,9 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.core.document.repository.Repository;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.source.KeywordInContext;
+import de.catma.document.repository.Repository;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.KeywordInContext;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;

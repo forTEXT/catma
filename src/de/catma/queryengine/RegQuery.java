@@ -25,9 +25,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import de.catma.core.document.Range;
-import de.catma.core.document.repository.Repository;
-import de.catma.core.document.source.ISourceDocument;
+import de.catma.document.Range;
+import de.catma.document.repository.Repository;
+import de.catma.document.source.ISourceDocument;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;

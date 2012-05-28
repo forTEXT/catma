@@ -31,8 +31,8 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 import de.catma.CleaApplication;
-import de.catma.core.document.repository.Repository;
-import de.catma.core.util.IDGenerator;
+import de.catma.document.repository.Repository;
+import de.catma.util.IDGenerator;
 
 public class AuthenticationDialog extends VerticalLayout {
 	

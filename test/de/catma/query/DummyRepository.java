@@ -8,17 +8,17 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import de.catma.core.document.Corpus;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
-import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.core.tag.ITagLibrary;
-import de.catma.core.tag.TagLibraryReference;
-import de.catma.core.user.User;
+import de.catma.document.Corpus;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
+import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
+import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibraryReference;
+import de.catma.user.User;
 
 public class DummyRepository implements IndexedRepository {
 	
@@ -170,6 +170,12 @@ public class DummyRepository implements IndexedRepository {
 		
 	}
 	public void importTagLibrary(InputStream inputStream) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public void delete(TagLibraryReference tagLibraryReference)
+			throws IOException {
 		// TODO Auto-generated method stub
 		
 	}

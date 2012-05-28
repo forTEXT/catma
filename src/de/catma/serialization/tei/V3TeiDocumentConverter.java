@@ -10,10 +10,10 @@ import java.util.Set;
 import nu.xom.Elements;
 import nu.xom.Node;
 import nu.xom.Nodes;
-import de.catma.core.document.Range;
-import de.catma.core.tag.Version;
-import de.catma.core.util.IDGenerator;
-import de.catma.core.util.Pair;
+import de.catma.document.Range;
+import de.catma.tag.Version;
+import de.catma.util.IDGenerator;
+import de.catma.util.Pair;
 
 
 public class V3TeiDocumentConverter implements TeiDocumentConverter {

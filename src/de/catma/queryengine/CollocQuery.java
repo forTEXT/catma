@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import de.catma.core.document.repository.Repository;
-import de.catma.core.document.source.ISourceDocument;
+import de.catma.document.repository.Repository;
+import de.catma.document.source.ISourceDocument;
 import de.catma.indexer.KwicProvider;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;

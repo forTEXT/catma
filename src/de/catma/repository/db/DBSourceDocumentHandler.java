@@ -12,10 +12,10 @@ import java.net.URISyntaxException;
 
 import org.apache.commons.io.IOUtils;
 
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.source.SourceDocumentInfo;
-import de.catma.core.util.CloseSafe;
-import de.catma.core.util.IDGenerator;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocumentInfo;
+import de.catma.util.CloseSafe;
+import de.catma.util.IDGenerator;
 
 class DBSourceDocumentHandler {
 

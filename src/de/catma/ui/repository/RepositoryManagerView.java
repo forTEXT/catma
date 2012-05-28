@@ -3,8 +3,8 @@ package de.catma.ui.repository;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.TabSheet.CloseHandler;
 
-import de.catma.core.document.repository.Repository;
-import de.catma.core.document.repository.RepositoryManager;
+import de.catma.document.repository.Repository;
+import de.catma.document.repository.RepositoryManager;
 import de.catma.ui.tabbedview.TabbedView;
 
 public class RepositoryManagerView extends TabbedView implements CloseHandler {

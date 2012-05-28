@@ -1,6 +1,6 @@
 package de.catma.serialization.tei.pointer;
 
-import de.catma.core.document.Range;
+import de.catma.document.Range;
 
 
 public class CharFragmentIdentifier extends TextFragmentIdentifier {

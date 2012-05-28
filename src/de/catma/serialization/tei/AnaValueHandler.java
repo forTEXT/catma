@@ -22,7 +22,7 @@ package de.catma.serialization.tei;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.catma.core.tag.TagInstance;
+import de.catma.tag.TagInstance;
 
 /**
  * A handler for values of {@link Attribute#ana}.

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import nu.xom.Elements;
-import de.catma.core.ExceptionHandler;
+import de.catma.ExceptionHandler;
 
 public class ValueRangePropertyValueFactory implements PropertyValueFactory {
 	

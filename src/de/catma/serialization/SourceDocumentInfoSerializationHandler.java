@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.source.SourceDocumentInfo;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocumentInfo;
 
 
 public interface SourceDocumentInfoSerializationHandler {

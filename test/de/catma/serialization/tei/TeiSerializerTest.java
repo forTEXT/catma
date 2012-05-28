@@ -11,14 +11,14 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
-import de.catma.core.document.source.contenthandler.BOMFilterInputStream;
-import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
-import de.catma.core.tag.PropertyDefinition;
-import de.catma.core.tag.TagDefinition;
-import de.catma.core.tag.ITagLibrary;
-import de.catma.core.tag.TagManager;
-import de.catma.core.tag.TagsetDefinition;
+import de.catma.document.source.contenthandler.BOMFilterInputStream;
+import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.tag.ITagLibrary;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagManager;
+import de.catma.tag.TagsetDefinition;
 
 public class TeiSerializerTest {
 	

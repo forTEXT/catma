@@ -1,7 +1,7 @@
 package de.catma.ui.repository.wizard;
 
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.source.SourceDocumentInfo;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocumentInfo;
 
 public class WizardResult {
 

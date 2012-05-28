@@ -9,6 +9,7 @@ import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashMap;
 
+import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
 import org.vaadin.teemu.wizards.event.WizardCompletedEvent;
 import org.vaadin.teemu.wizards.event.WizardProgressListener;
@@ -39,19 +40,17 @@ import com.vaadin.ui.themes.Reindeer;
 import de.catma.CleaApplication;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
-import de.catma.core.document.Corpus;
-import de.catma.core.document.repository.Repository;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.source.contenthandler.BOMFilterInputStream;
-import de.catma.core.document.standoffmarkup.MarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.core.tag.ITagLibrary;
-import de.catma.core.tag.TagLibraryReference;
-import de.catma.core.util.CloseSafe;
-import de.catma.core.util.Pair;
+import de.catma.document.Corpus;
+import de.catma.document.repository.Repository;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.contenthandler.BOMFilterInputStream;
+import de.catma.document.standoffmarkup.MarkupCollectionReference;
+import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
+import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibraryReference;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.PropertyCollection;
@@ -61,6 +60,8 @@ import de.catma.ui.repository.wizard.WizardFactory;
 import de.catma.ui.repository.wizard.WizardResult;
 import de.catma.ui.repository.wizard.WizardWindow;
 import de.catma.ui.tabbedview.ClosableTab;
+import de.catma.util.CloseSafe;
+import de.catma.util.Pair;
 
 
 public class RepositoryView extends VerticalLayout implements ClosableTab {
@@ -118,7 +119,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	private Button btDiscardContentInfoChanges;
 	private PropertyChangeListener sourceDocumentAddedListener;
 	private PropertyChangeListener userMarkupDocumentAddedListener;
-	private PropertyChangeListener tagLibraryAddedListener;
+	private PropertyChangeListener tagLibraryChangedListener;
 	
 	public RepositoryView(Repository repository) {
 
@@ -151,17 +152,24 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 				Repository.RepositoryChangeEvent.userMarkupCollectionAdded,
 				userMarkupDocumentAddedListener);
 		
-		tagLibraryAddedListener = new PropertyChangeListener() {
+		tagLibraryChangedListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
-				TagLibraryReference tagLibraryRef = 
-						(TagLibraryReference)evt.getNewValue();
-				addTagLibraryReferenceToTree(tagLibraryRef);
+				if (evt.getOldValue() == null) {
+					TagLibraryReference tagLibraryRef = 
+							(TagLibraryReference)evt.getNewValue();
+					addTagLibraryReferenceToTree(tagLibraryRef);
+				}
+				else if (evt.getNewValue() == null) {
+					TagLibraryReference tagLibraryRef = 
+							(TagLibraryReference)evt.getOldValue();
+					tagLibrariesTree.removeItem(tagLibraryRef);
+				}
 			}
 		};
 		this.repository.addPropertyChangeListener(
-				Repository.RepositoryChangeEvent.tagLibraryAdded, 
-				tagLibraryAddedListener);
+				Repository.RepositoryChangeEvent.tagLibraryChanged, 
+				tagLibraryChangedListener);
 		
 		initActions();
 	}
@@ -239,6 +247,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 								}
 								
 								public void error(Throwable t) {
+									t.printStackTrace();
 									// TODO Auto-generated method stub
 									
 								}
@@ -507,12 +516,37 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		miMoreTagLibraryActions.addItem("Remove Tag Library", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
+				handleTagLibraryRemoval();
 			}
 		});
 	}
 	
+
+	private void handleTagLibraryRemoval() {
+		final TagLibraryReference tagLibraryReference = 
+				(TagLibraryReference) tagLibrariesTree.getValue();
+		
+		if (tagLibraryReference != null) {
+			ConfirmDialog.show(
+				getApplication().getMainWindow(), 
+				"Do you really want to delete Tag Library '"
+						+ tagLibraryReference.toString() + "'?",
+		        new ConfirmDialog.Listener() {
+
+		            public void onClose(ConfirmDialog dialog) {
+		                if (dialog.isConfirmed()) {
+		                	try {
+								repository.delete(tagLibraryReference);
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+		                }
+		            }
+		        });
+		}
+		
+	}
 
 	private void handleTagLibraryImport() {
 		UploadDialog uploadDialog =

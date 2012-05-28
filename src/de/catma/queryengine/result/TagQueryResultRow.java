@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import de.catma.core.document.Range;
+import de.catma.document.Range;
 
 public class TagQueryResultRow extends QueryResultRow {
 	

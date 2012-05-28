@@ -23,10 +23,10 @@ import com.vaadin.ui.VerticalLayout;
 
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
-import de.catma.core.document.Corpus;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.document.Corpus;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryOptions;

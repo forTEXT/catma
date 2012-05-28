@@ -20,7 +20,7 @@ import com.vaadin.ui.Upload.SucceededEvent;
 import com.vaadin.ui.Upload.SucceededListener;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.core.document.source.TechInfoSet;
+import de.catma.document.source.TechInfoSet;
 
 public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 	

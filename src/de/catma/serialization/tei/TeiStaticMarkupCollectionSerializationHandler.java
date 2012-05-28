@@ -3,7 +3,7 @@ package de.catma.serialization.tei;
 import java.io.IOException;
 import java.io.InputStream;
 
-import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
+import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.serialization.StaticMarkupCollectionSerializationHandler;
 
 public class TeiStaticMarkupCollectionSerializationHandler implements

@@ -28,12 +28,12 @@ import java.util.List;
 import java.util.zip.CRC32;
 
 import nu.xom.Elements;
-import de.catma.core.ExceptionHandler;
-import de.catma.core.document.source.FileOSType;
-import de.catma.core.document.source.FileType;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.source.IndexInfoSet;
-import de.catma.core.document.source.TechInfoSet;
+import de.catma.ExceptionHandler;
+import de.catma.document.source.FileOSType;
+import de.catma.document.source.FileType;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.IndexInfoSet;
+import de.catma.document.source.TechInfoSet;
 
 /**
  * Represents the technical description within a CATMA TEI document which holds

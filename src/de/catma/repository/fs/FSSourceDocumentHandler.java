@@ -23,18 +23,18 @@ import nu.xom.Nodes;
 
 import org.apache.commons.io.IOUtils;
 
-import de.catma.core.ExceptionHandler;
-import de.catma.core.document.ContentInfoSet;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.source.SourceDocumentHandler;
-import de.catma.core.document.source.SourceDocumentInfo;
-import de.catma.core.document.source.contenthandler.BOMFilterInputStream;
-import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.core.util.CloseSafe;
-import de.catma.core.util.IDGenerator;
+import de.catma.ExceptionHandler;
+import de.catma.document.ContentInfoSet;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocumentHandler;
+import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.contenthandler.BOMFilterInputStream;
+import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.serialization.DocumentSerializer;
 import de.catma.serialization.SourceDocumentInfoSerializationHandler;
+import de.catma.util.CloseSafe;
+import de.catma.util.IDGenerator;
 
 class FSSourceDocumentHandler {
 	

@@ -25,9 +25,9 @@ import com.vaadin.ui.Panel;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.core.document.source.IndexInfoSet;
-import de.catma.core.document.source.LanguageDetector;
-import de.catma.core.document.source.SourceDocumentInfo;
+import de.catma.document.source.IndexInfoSet;
+import de.catma.document.source.LanguageDetector;
+import de.catma.document.source.SourceDocumentInfo;
 
 public class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 	

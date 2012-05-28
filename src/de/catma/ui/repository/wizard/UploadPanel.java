@@ -24,7 +24,7 @@ import com.vaadin.ui.Upload.SucceededEvent;
 import com.vaadin.ui.Upload.SucceededListener;
 
 import de.catma.CleaApplication;
-import de.catma.core.util.IDGenerator;
+import de.catma.util.IDGenerator;
 
 public class UploadPanel extends HorizontalLayout {
 

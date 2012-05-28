@@ -7,8 +7,8 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.catma.core.document.source.FileOSType;
-import de.catma.core.document.source.FileType;
+import de.catma.document.source.FileOSType;
+import de.catma.document.source.FileType;
 import de.catma.repository.db.DBRepository;
 import de.catma.repository.db.model.DBSourceDocument;
 import de.catma.repository.db.model.DBUser;

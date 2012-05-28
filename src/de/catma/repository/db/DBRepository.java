@@ -26,26 +26,13 @@ import org.hibernate.service.ServiceRegistryBuilder;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
-import de.catma.core.document.Corpus;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.source.SourceDocument;
-import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
-import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.core.tag.ITagLibrary;
-import de.catma.core.tag.PropertyDefinition;
-import de.catma.core.tag.PropertyPossibleValueList;
-import de.catma.core.tag.TagDefinition;
-import de.catma.core.tag.TagLibraryReference;
-import de.catma.core.tag.TagManager;
-import de.catma.core.tag.TagManager.TagManagerEvent;
-import de.catma.core.tag.TagsetDefinition;
-import de.catma.core.tag.Version;
-import de.catma.core.user.User;
-import de.catma.core.util.CloseSafe;
-import de.catma.core.util.IDGenerator;
-import de.catma.core.util.Pair;
+import de.catma.document.Corpus;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
+import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.repository.db.model.DBPropertyDefPossibleValue;
@@ -61,6 +48,19 @@ import de.catma.repository.db.model.DBUserTagLibrary;
 import de.catma.repository.db.model.DBUserUserMarkupCollection;
 import de.catma.serialization.SerializationHandlerFactory;
 import de.catma.serialization.TagLibrarySerializationHandler;
+import de.catma.tag.ITagLibrary;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.PropertyPossibleValueList;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagLibraryReference;
+import de.catma.tag.TagManager;
+import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
+import de.catma.tag.TagManager.TagManagerEvent;
+import de.catma.user.User;
+import de.catma.util.CloseSafe;
+import de.catma.util.IDGenerator;
+import de.catma.util.Pair;
 
 public class DBRepository implements IndexedRepository {
 	//TODO: handle sqlstate 40001 deadlock
@@ -174,7 +174,6 @@ public class DBRepository implements IndexedRepository {
 					@SuppressWarnings("unchecked")
 					Pair<TagsetDefinition, TagDefinition> args = 
 							(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
-					saveTagDefinition(args.getFirst(), args.getSecond());
 					removeTagDefinition(args.getSecond());
 				}
 				else {
@@ -255,12 +254,13 @@ public class DBRepository implements IndexedRepository {
 					try {
 						session.beginTransaction();
 						
-						DBTagDefinition dbTagsetDefinition = 
+					
+						DBTagDefinition dbTagDefinition = 
 							(DBTagDefinition)session.get(
 								DBTagDefinition.class, 
 								uuidToDBid.get(tagDefinition.getID()));
 						
-						session.delete(dbTagsetDefinition);
+						session.delete(dbTagDefinition);
 						session.getTransaction().commit();
 						
 						return tagDefinition.getID();
@@ -889,7 +889,7 @@ public class DBRepository implements IndexedRepository {
 			tagLibrariesByID.put(tagLibrary.getId(), tagLibrary);
 			
 			this.propertyChangeSupport.firePropertyChange(
-					RepositoryChangeEvent.tagLibraryAdded.name(),
+					RepositoryChangeEvent.tagLibraryChanged.name(),
 					null, 
 					new TagLibraryReference(
 							tagLibrary.getId(), tagLibrary.getName()));
@@ -932,30 +932,26 @@ public class DBRepository implements IndexedRepository {
 					
 					session.save(dbTagLibrary);
 					session.save(dbUserTagLibrary);
-					
-					Query queryForExisingTagsetDef = session.createQuery(
-							"from " + DBTagsetDefinition.class.getSimpleName() +
-							" where uuid = :currentUuid");
+
 					for (TagsetDefinition tsDef : dbTagLibrary) {
-						queryForExisingTagsetDef.setBinary(
-								"currentUuid", 
-								idGenerator.catmaIDToUUIDBytes(tsDef.getID()));
-						if (!queryForExisingTagsetDef.list().isEmpty()) {
-							//FIXME: deep copy the tagsetdefinition with new IDs
-						}
 						importTagsetDefinition(
 								session, dbTagLibrary.getTagLibraryId(), 
 								tsDef);
 					}
 					
-					SQLQuery query = session.createSQLQuery(
-							"UPDATE tagdefinition td1, tagdefinition td2 " +
-							"SET td1.parentID = td2.tagDefinitionID " +
-							"WHERE td1.parentUuid = td2.uuid AND " +
-							"td1.parentID IS NULL AND " + 
-							"td1.parentUuid IS NOT NULL");
+					SQLQuery maintainTagsetDefHierarchyQuery = session.createSQLQuery(
+						"UPDATE " + DBTagDefinition.TABLE + " td1, " + 
+						DBTagDefinition.TABLE + " td2, " +
+						DBTagsetDefinition.TABLE + " tsd " +
+						"SET td1.parentID = td2.tagDefinitionID " +
+						"WHERE td1.parentUuid = td2.uuid AND " +
+						"td1.parentID IS NULL AND " + 
+						"td1.parentUuid IS NOT NULL " +
+						"AND td1.tagsetDefinitionID = tsd.tagsetDefinitionID " +
+						"AND td2.tagsetDefinitionID = tsd.tagsetDefinitionID " +
+						"AND tsd.tagLibraryID = " + dbTagLibrary.getTagLibraryId());
 					
-					query.executeUpdate();
+					maintainTagsetDefHierarchyQuery.executeUpdate();
 					
 					session.getTransaction().commit();
 					
@@ -982,7 +978,7 @@ public class DBRepository implements IndexedRepository {
 				tagManagerListenersEnabled = true;
 
 				DBRepository.this.propertyChangeSupport.firePropertyChange(
-						RepositoryChangeEvent.tagLibraryAdded.name(),
+						RepositoryChangeEvent.tagLibraryChanged.name(),
 						null, 
 						new TagLibraryReference(
 								result.getId(), result.getName()));
@@ -1076,6 +1072,62 @@ public class DBRepository implements IndexedRepository {
 		
 		
 		return dbPropertyDefinition;
+	}
+	
+	public void delete(TagLibraryReference tagLibraryReference) throws IOException {
+		ITagLibrary tagLibrary = getTagLibrary(tagLibraryReference);
+		Session session = sessionFactory.openSession();
+		try {
+			session.beginTransaction();
+			
+			for (TagsetDefinition tagsetDefinition : tagLibrary) {
+				DBTagsetDefinition dbTagsetDefinition = 
+					(DBTagsetDefinition)session.get(
+						DBTagsetDefinition.class, 
+						uuidToDBid.get(tagsetDefinition.getID()));
+				
+				session.delete(dbTagsetDefinition);
+			}
+			
+			session.delete(tagLibrary);
+			
+			session.getTransaction().commit();
+			
+			for (TagsetDefinition tagsetDefinition : tagLibrary) {
+				for (TagDefinition tagDefinition : tagsetDefinition) {
+					for (PropertyDefinition propertyDefinition : 
+						tagDefinition.getSystemPropertyDefinitions()) {
+						uuidToDBid.remove(propertyDefinition.getID());
+					}
+					for (PropertyDefinition propertyDefinition : 
+						tagDefinition.getUserDefinedPropertyDefinitions()) {
+						uuidToDBid.remove(propertyDefinition.getID());
+					}
+					uuidToDBid.remove(tagDefinition.getID());
+				}
+				uuidToDBid.remove(tagsetDefinition.getID());
+			}
+			tagLibrariesByID.remove(tagLibrary.getId());
+			tagLibraryReferences.remove(tagLibraryReference);
+			tagManager.removeTagLibrary(tagLibrary);
+			
+			DBRepository.this.propertyChangeSupport.firePropertyChange(
+					RepositoryChangeEvent.tagLibraryChanged.name(),
+					tagLibraryReference, null);	
+			
+		}
+		catch (Exception e) {
+			try {
+				if (session.getTransaction().isActive()) {
+					session.getTransaction().rollback();
+				}
+			}
+			catch(Exception notOfInterest){}
+			throw new IOException(e);
+		}
+		finally {
+			CloseSafe.close(new ClosableSession(session));
+		}
 	}
 
 	public String getIdFromURI(URI uri) {

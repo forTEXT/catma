@@ -4,9 +4,9 @@ import java.util.List;
 
 import org.hibernate.Session;
 
-import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.core.tag.ITagLibrary;
-import de.catma.core.util.IDGenerator;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.tag.ITagLibrary;
+import de.catma.util.IDGenerator;
 
 public class TagReferenceIndexer {
 

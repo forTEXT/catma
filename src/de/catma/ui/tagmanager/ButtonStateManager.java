@@ -5,9 +5,9 @@ import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.TreeTable;
 
-import de.catma.core.tag.PropertyDefinition;
-import de.catma.core.tag.TagDefinition;
-import de.catma.core.tag.TagsetDefinition;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagsetDefinition;
 
 public class ButtonStateManager implements ValueChangeListener {
 	

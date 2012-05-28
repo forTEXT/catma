@@ -23,9 +23,9 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
-import de.catma.core.document.Range;
-import de.catma.core.document.repository.Repository;
-import de.catma.core.document.source.ISourceDocument;
+import de.catma.document.Range;
+import de.catma.document.repository.Repository;
+import de.catma.document.source.ISourceDocument;
 import de.catma.indexer.Indexer;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;

@@ -1,9 +1,9 @@
 package de.catma.serialization.tei;
 
-import de.catma.core.tag.PropertyDefinition;
-import de.catma.core.tag.TagDefinition;
-import de.catma.core.tag.ITagLibrary;
-import de.catma.core.tag.TagsetDefinition;
+import de.catma.tag.ITagLibrary;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagsetDefinition;
 
 public class TeiTagLibrarySerializer {
 

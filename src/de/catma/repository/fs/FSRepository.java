@@ -12,22 +12,22 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import de.catma.core.document.ContentInfoSet;
-import de.catma.core.document.Corpus;
-import de.catma.core.document.repository.Repository;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
-import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
-import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.core.tag.ITagLibrary;
-import de.catma.core.tag.TagLibrary;
-import de.catma.core.tag.TagLibraryReference;
-import de.catma.core.user.User;
-import de.catma.core.util.Pair;
+import de.catma.document.ContentInfoSet;
+import de.catma.document.Corpus;
+import de.catma.document.repository.Repository;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
+import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.serialization.SerializationHandlerFactory;
+import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibrary;
+import de.catma.tag.TagLibraryReference;
+import de.catma.user.User;
+import de.catma.util.Pair;
 
 class FSRepository implements Repository {
 	
@@ -290,6 +290,12 @@ class FSRepository implements Repository {
 	
 
 	public void importTagLibrary(InputStream inputStream) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public void delete(TagLibraryReference tagLibraryReference)
+			throws IOException {
 		// TODO Auto-generated method stub
 		
 	}

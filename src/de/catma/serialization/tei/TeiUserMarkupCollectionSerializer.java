@@ -8,14 +8,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import de.catma.core.document.Range;
-import de.catma.core.document.source.FileType;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.core.document.standoffmarkup.usermarkup.IUserMarkupCollection;
-import de.catma.core.tag.Property;
-import de.catma.core.tag.PropertyDefinition;
-import de.catma.core.tag.TagInstance;
+import de.catma.document.Range;
+import de.catma.document.source.FileType;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.tag.Property;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagInstance;
 
 public class TeiUserMarkupCollectionSerializer {
 	

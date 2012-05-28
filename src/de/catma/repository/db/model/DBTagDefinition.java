@@ -10,6 +10,7 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -29,9 +30,10 @@ import org.hibernate.annotations.CascadeType;
  */
 @Entity
 @Table(name = "tagdefinition", catalog = "CatmaRepository", uniqueConstraints = @UniqueConstraint(columnNames = {
-		"uuid", "version" }))
+		"uuid", "tagsetDefinitionID" }))
 public class DBTagDefinition implements java.io.Serializable {
-
+	public static final String TABLE = "tagdefinition";
+	
 	private Integer tagDefinitionId;
 	private Date version;
 	private byte[] uuid;
@@ -39,6 +41,7 @@ public class DBTagDefinition implements java.io.Serializable {
 	private DBTagsetDefinition dbTagsetDefinition;
 	private Integer parentId;
 	private byte[] parentUuid;
+	private Set<DBTagDefinition> children;
 	
 	private Set<DBPropertyDefinition> dbPropertyDefinitions = 
 			new HashSet<DBPropertyDefinition>();
@@ -118,6 +121,8 @@ public class DBTagDefinition implements java.io.Serializable {
 		return this.parentId;
 	}
 
+	
+	
 	public void setParentId(Integer parentId) {
 		this.parentId = parentId;
 	}
@@ -140,5 +145,15 @@ public class DBTagDefinition implements java.io.Serializable {
 	public void setDbPropertyDefinitions(
 			Set<DBPropertyDefinition> dbPropertyDefinitions) {
 		this.dbPropertyDefinitions = dbPropertyDefinitions;
+	}
+	
+	@OneToMany(mappedBy = "parentId", fetch=FetchType.LAZY)
+	@Cascade({CascadeType.DELETE})
+	public Set<DBTagDefinition> getChildren() {
+		return children;
+	}
+	
+	public void setChildren(Set<DBTagDefinition> children) {
+		this.children = children;
 	}
 }

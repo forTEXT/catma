@@ -3,7 +3,7 @@ package de.catma.queryengine;
 import java.util.List;
 import java.util.Locale;
 
-import de.catma.core.document.repository.Repository;
+import de.catma.document.repository.Repository;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 

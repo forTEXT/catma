@@ -6,10 +6,10 @@ import java.util.Set;
 import com.vaadin.data.Item;
 import com.vaadin.data.Container.Filter;
 
-import de.catma.core.document.Corpus;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.core.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.document.Corpus;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 
 class SourceDocumentFilter implements Filter {
 	

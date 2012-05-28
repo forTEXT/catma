@@ -11,8 +11,8 @@ import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.core.document.repository.Repository;
-import de.catma.core.document.source.ISourceDocument;
+import de.catma.document.repository.Repository;
+import de.catma.document.source.ISourceDocument;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.ui.data.util.PropertyDependentItemSorter;

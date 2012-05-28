@@ -7,7 +7,7 @@ import org.vaadin.teemu.wizards.event.WizardProgressListener;
 import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
 import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
-import de.catma.core.document.repository.Repository;
+import de.catma.document.repository.Repository;
 
 public class WizardFactory {
 

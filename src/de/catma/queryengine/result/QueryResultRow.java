@@ -2,7 +2,7 @@ package de.catma.queryengine.result;
 
 import java.util.Comparator;
 
-import de.catma.core.document.Range;
+import de.catma.document.Range;
 
 public class QueryResultRow {
 

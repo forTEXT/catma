@@ -20,7 +20,7 @@
 package de.catma.serialization.tei;
 
 import nu.xom.Elements;
-import de.catma.core.tag.Property;
+import de.catma.tag.Property;
 
 /**
  * A factory sets and gets numeric {@link Property} values. TEI: &lt;numeric&gt;

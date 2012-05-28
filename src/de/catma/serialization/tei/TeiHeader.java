@@ -23,9 +23,9 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 import nu.xom.Elements;
-import de.catma.core.document.ContentInfoSet;
-import de.catma.core.document.source.IndexInfoSet;
-import de.catma.core.document.source.TechInfoSet;
+import de.catma.document.ContentInfoSet;
+import de.catma.document.source.IndexInfoSet;
+import de.catma.document.source.TechInfoSet;
 
 /**
  * The representation of a TEI header.<br><br>
@@ -241,7 +241,7 @@ class TeiHeader {
 
     /**
      * @param locale the predominant language of the
-     * targeted {@link de.catma.core.document.source.ISourceDocument}
+     * targeted {@link de.catma.document.source.ISourceDocument}
      */
     private void setLanguage( Locale locale ) {
         String identValue = locale.getLanguage();

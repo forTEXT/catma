@@ -1,6 +1,6 @@
 package de.catma.ui.analyzer;
 
-import de.catma.core.document.Corpus;
+import de.catma.document.Corpus;
 import de.catma.indexer.IndexedRepository;
 import de.catma.ui.tabbedview.TabbedView;
 

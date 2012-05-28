@@ -3,9 +3,9 @@ package de.catma.serialization.tei;
 import java.io.IOException;
 import java.io.InputStream;
 
-import de.catma.core.tag.ITagLibrary;
-import de.catma.core.tag.TagManager;
 import de.catma.serialization.TagLibrarySerializationHandler;
+import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagManager;
 
 public class TeiTagLibrarySerializationHandler implements TagLibrarySerializationHandler {
 	

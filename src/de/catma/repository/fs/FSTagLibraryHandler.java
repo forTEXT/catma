@@ -14,11 +14,11 @@ import java.util.Set;
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Nodes;
-import de.catma.core.document.source.contenthandler.BOMFilterInputStream;
-import de.catma.core.tag.ITagLibrary;
-import de.catma.core.tag.TagLibraryReference;
-import de.catma.core.util.CloseSafe;
+import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.serialization.TagLibrarySerializationHandler;
+import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibraryReference;
+import de.catma.util.CloseSafe;
 
 class FSTagLibraryHandler {
 

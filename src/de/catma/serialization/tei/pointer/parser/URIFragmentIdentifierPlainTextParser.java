@@ -2,7 +2,7 @@
 
 package de.catma.serialization.tei.pointer.parser;
 import de.catma.serialization.tei.pointer.*;
-import de.catma.core.document.Range;
+import de.catma.document.Range;
 
 
 import org.antlr.runtime.*;

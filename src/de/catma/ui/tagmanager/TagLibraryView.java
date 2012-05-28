@@ -5,9 +5,9 @@ import com.vaadin.terminal.gwt.server.WebBrowser;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Table.TableDragMode;
 
-import de.catma.core.tag.ITagLibrary;
-import de.catma.core.tag.TagManager;
-import de.catma.core.tag.TagsetDefinition;
+import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagManager;
+import de.catma.tag.TagsetDefinition;
 
 public class TagLibraryView extends HorizontalLayout {
 	

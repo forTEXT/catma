@@ -9,16 +9,16 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 
-import de.catma.core.document.Range;
-import de.catma.core.document.source.ISourceDocument;
-import de.catma.core.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.core.tag.ITagLibrary;
+import de.catma.document.Range;
+import de.catma.document.source.ISourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TermInfo;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.tag.ITagLibrary;
 
 public class DBIndexer implements Indexer {
 	

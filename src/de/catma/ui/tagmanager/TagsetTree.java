@@ -23,23 +23,26 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeTable;
 
-import de.catma.core.tag.PropertyDefinition;
-import de.catma.core.tag.PropertyPossibleValueList;
-import de.catma.core.tag.TagDefinition;
-import de.catma.core.tag.ITagLibrary;
-import de.catma.core.tag.TagManager;
-import de.catma.core.tag.TagManager.TagManagerEvent;
-import de.catma.core.tag.TagsetDefinition;
-import de.catma.core.tag.Version;
-import de.catma.core.util.ColorConverter;
-import de.catma.core.util.IDGenerator;
-import de.catma.core.util.Pair;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagsetDefinition;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.PropertyPossibleValueList;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagManager;
+import de.catma.tag.TagManager.TagManagerEvent;
+import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.PropertyCollection;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.StringProperty;
 import de.catma.ui.dialog.TagDefinitionFieldFactory;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
+import de.catma.util.ColorConverter;
+import de.catma.util.IDGenerator;
+import de.catma.util.Pair;
 
 public class TagsetTree extends HorizontalLayout {
 	
@@ -645,7 +648,7 @@ public class TagsetTree extends HorizontalLayout {
 		buttonGridRowCount++;
 		
 		btRemoveProperty = new Button("Remove Property");
-		// commented in on purpose: somehow this forces all the other buttons to 
+		// commented out on purpose: somehow this forces all the other buttons to 
 		// show up in natural size...
 //		btRemoveProperty.setWidth("100%");
 		buttonGrid.addComponent(btRemoveProperty);

@@ -3,7 +3,7 @@ package de.catma.serialization.tei.pointer;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
-import de.catma.core.document.Range;
+import de.catma.document.Range;
 
 
 public abstract class TextFragmentIdentifier {
