@@ -1081,6 +1081,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	}
 	
 	public void close() {
+		//TODO: fire event to notify analyzer and tagger components
 		repository.close();
 	}
 }

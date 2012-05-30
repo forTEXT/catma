@@ -78,7 +78,7 @@ public class TagsetTree extends HorizontalLayout {
 			ColorButtonListener colorButtonListener) {
 		this.tagManager = tagManager;
 		this.tagLibrary = tagLibrary;
-		if (tagLibrary != null) {
+		if (withTagsetButtons) {
 			tagManager.addTagLibrary(tagLibrary);
 		}
 		this.withTagsetButtons = withTagsetButtons;
@@ -772,11 +772,11 @@ public class TagsetTree extends HorizontalLayout {
 			tagManager.removePropertyChangeListener(
 					TagManagerEvent.tagsetDefinitionChanged,
 					tagsetDefinitionChangedListener);
+			tagManager.removeTagLibrary(tagLibrary);
 		}
 		tagManager.removePropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged,
 				tagDefChangedListener);
-		tagManager.removeTagLibrary(tagLibrary);
 	}
 	
 	public TagManager getTagManager() {

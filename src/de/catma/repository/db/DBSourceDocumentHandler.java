@@ -98,7 +98,6 @@ class DBSourceDocumentHandler {
 				throw new IOException(e);
 			}
 			
-			System.out.println(repoSourceFile.getAbsolutePath());
 			Writer repoSourceFileWriter =  
 					new BufferedWriter(new OutputStreamWriter(
 							new FileOutputStream(repoSourceFile),
@@ -139,6 +138,12 @@ class DBSourceDocumentHandler {
 							dbRepository.getCurrentUser(), 
 							(DBSourceDocument)sourceDocument);
 			
+			if (!sourceDocument.getSourceContentHandler().
+					getSourceDocumentInfo().getTechInfoSet().getURI().getScheme().equals("file")) {
+				((DBSourceDocument)sourceDocument).setSourceUri(
+					sourceDocument.getSourceContentHandler().
+						getSourceDocumentInfo().getTechInfoSet().getURI().toString());
+			}
 			session.save(dbUserSourceDocument);
 			
 			insertIntoFS(sourceDocument);
@@ -168,7 +173,7 @@ class DBSourceDocumentHandler {
 	}
 	
 	@SuppressWarnings("unchecked")
-	void loadSourceDocuments(Session session) {
+	void loadSourceDocuments(Session session) throws URISyntaxException {
 		if (!dbRepository.getCurrentUser().isLocked()) {
 			Query query = 
 				session.createQuery(
@@ -181,6 +186,10 @@ class DBSourceDocumentHandler {
 					+ " where user.userId = " + dbRepository.getCurrentUser().getUserId());
 			
 			for (DBSourceDocument sd : (List<DBSourceDocument>)query.list()) {
+				sd.getSourceContentHandler().getSourceDocumentInfo().
+					getTechInfoSet().setURI(
+							new URI(getFileURL(sd.getID(), sourceDocsPath)));
+				
 				for (DBUserMarkupCollection dbUmc : sd.getDbUserMarkupCollections()) {
 					if (dbUmc.hasAccess(dbRepository.getCurrentUser())) {
 						sd.addUserMarkupCollectionReference(
@@ -199,6 +208,16 @@ class DBSourceDocumentHandler {
 	
 	ISourceDocument getSourceDocument(String id) {
 		return sourceDocumentsByID.get(id);
+	}
+	
+	String getLocalUriFor(UserMarkupCollectionReference umcRef) {
+		for (ISourceDocument sd : getSourceDocuments()) {
+			if (sd.getUserMarkupCollectionRefs().contains(umcRef)) {
+				return ((DBSourceDocument)sd).getLocalUri();
+			}
+		}
+		
+		return null;
 	}
 
 }

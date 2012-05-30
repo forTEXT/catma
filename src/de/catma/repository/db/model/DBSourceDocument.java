@@ -5,7 +5,6 @@ package de.catma.repository.db.model;
 import static javax.persistence.GenerationType.IDENTITY;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.HashSet;
@@ -40,6 +39,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 public class DBSourceDocument implements java.io.Serializable, ISourceDocument {
 
 	private Integer sourceDocumentId;
+	private String sourceUri;
 	private SourceDocument sourceDocumentDelegate;
 	private SourceDocumentInfo sourceDocumentInfo;
 	private Set<DBUserSourceDocument> dbUserSourceDocuments = 
@@ -107,13 +107,13 @@ public class DBSourceDocument implements java.io.Serializable, ISourceDocument {
 		sourceDocumentInfo.getContentInfoSet().setDescription(description);
 	}
 
-	@Column(name = "uri", nullable = false, length = 300)
-	public String getUri() {
-		return sourceDocumentInfo.getTechInfoSet().getURI().toString();
+	@Column(name = "sourceUri", nullable = true, length = 300)
+	public String getSourceUri() {
+		return sourceUri;
 	}
 
-	public void setUri(String uri) throws URISyntaxException {
-		sourceDocumentInfo.getTechInfoSet().setURI(new URI(uri));
+	public void setSourceUri(String sourceUri) throws URISyntaxException {
+		this.sourceUri = sourceUri;
 	}
 
 	@Column(name = "fileType", nullable = false, length = 5)

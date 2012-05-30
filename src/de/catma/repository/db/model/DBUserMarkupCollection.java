@@ -194,6 +194,12 @@ public class DBUserMarkupCollection implements java.io.Serializable, IUserMarkup
 		delegateUserMarkupCollection.addTagReferences(tagReferences);
 	}
 
+	
+	
+	public void addTagReference(TagReference tagReference) {
+		delegateUserMarkupCollection.addTagReference(tagReference);
+	}
+
 	@Transient
 	public String getId() {
 		return delegateUserMarkupCollection.getId();

@@ -6,6 +6,7 @@ import java.beans.PropertyChangeSupport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -237,7 +238,7 @@ public class DBRepository implements IndexedRepository {
 	}
 
 
-	private void loadContent(Session session) {
+	private void loadContent(Session session) throws URISyntaxException {
 		dbSourceDocumentHandler.loadSourceDocuments(session);
 		dbTagLibraryHandler.loadTagLibraryReferences(session);
 	}
@@ -316,7 +317,6 @@ public class DBRepository implements IndexedRepository {
 			throws IOException {
 		dbUserMarkupCollectionHandler.importUserMarkupCollection(
 				inputStream, sourceDocument);
-		
 	}
 	
 	public IUserMarkupCollection getUserMarkupCollection(
@@ -421,5 +421,9 @@ public class DBRepository implements IndexedRepository {
 	
 	DBTagLibraryHandler getDbTagLibraryHandler() {
 		return dbTagLibraryHandler;
+	}
+	
+	DBSourceDocumentHandler getDbSourceDocumentHandler() {
+		return dbSourceDocumentHandler;
 	}
 }

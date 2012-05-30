@@ -2,6 +2,7 @@ package de.catma.repository.db;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import org.hibernate.Session;
 
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
+import de.catma.document.Range;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.ISourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
@@ -20,6 +22,7 @@ import de.catma.repository.db.model.DBPropertyDefinition;
 import de.catma.repository.db.model.DBSourceDocument;
 import de.catma.repository.db.model.DBTagDefinition;
 import de.catma.repository.db.model.DBTagInstance;
+import de.catma.repository.db.model.DBTagLibrary;
 import de.catma.repository.db.model.DBTagReference;
 import de.catma.repository.db.model.DBUserMarkupCollection;
 import de.catma.repository.db.model.DBUserUserMarkupCollection;
@@ -137,8 +140,14 @@ class DBUserMarkupCollectionHandler {
 				try {
 					session.save(dbUserMarkupCollection);
 
+					dbRepository.getIndexer().index(
+							dbUserMarkupCollection.getTagReferences(), 
+							sourceDocument.getID(),
+							dbUserMarkupCollection.getId(),
+							umc.getTagLibrary());
+
 					session.getTransaction().commit();
-					
+
 					return dbUserMarkupCollection;
 				}
 				catch (Exception e) {
@@ -252,7 +261,8 @@ class DBUserMarkupCollectionHandler {
 		}
 	}
 
-	private void addAuthorIfAbsent(DBPropertyDefinition authorPDef, DBTagInstance dbTagInstance) {
+	private void addAuthorIfAbsent(
+			DBPropertyDefinition authorPDef, DBTagInstance dbTagInstance) {
 		if (!dbTagInstance.hasProperty(authorPDef)) {
 			DBProperty dbProperty = 
 				new DBProperty(
@@ -263,7 +273,7 @@ class DBUserMarkupCollectionHandler {
 		}
 	}
 
-	public void delete(
+	void delete(
 			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
 		
 		Session session = dbRepository.getSessionFactory().openSession();
@@ -296,8 +306,12 @@ class DBUserMarkupCollectionHandler {
 		}
 	}
 
-	public IUserMarkupCollection getUserMarkupCollection(
+	IUserMarkupCollection getUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
+		String localSourceDocUri = 
+			dbRepository.getDbSourceDocumentHandler().getLocalUriFor(
+					userMarkupCollectionReference);
+		
 		Session session = dbRepository.getSessionFactory().openSession();
 		try {
 			Query query = session.createQuery(
@@ -317,12 +331,61 @@ class DBUserMarkupCollectionHandler {
 
 			dbRepository.getDbTagLibraryHandler().loadTagLibrayContent(
 					session, dbUserMarkupCollection.getTagLibrary());
-
-			return dbUserMarkupCollection;
+			
+			try {
+				
+				initUserMarkupCollection(
+						dbUserMarkupCollection, localSourceDocUri);
+				return dbUserMarkupCollection;
+				
+			} catch (URISyntaxException e) {
+				throw new IOException(e);
+			}
 		}
 		finally {
 			CloseSafe.close(new ClosableSession(session));
 		}
+	}
+
+	private void initUserMarkupCollection(
+			DBUserMarkupCollection dbUserMarkupCollection, String localSourceDocUri) throws URISyntaxException {
+		
+		IDGenerator idGenerator = new IDGenerator();
+		DBTagLibrary tagLibrary = dbUserMarkupCollection.getTagLibrary(); 
+		
+		HashMap<DBTagInstance, TagInstance> tagInstances = 
+				new HashMap<DBTagInstance, TagInstance>();
+		
+		for (DBTagReference dbTagReference : 
+			dbUserMarkupCollection.getDbTagReferences()) {
+			DBTagInstance dbTagInstance = dbTagReference.getDbTagInstance();
+			TagInstance tagInstance = 
+					tagInstances.get(dbTagInstance);
+			
+			if (tagInstance == null) {
+				tagInstance = 
+					new TagInstance(
+						idGenerator.uuidBytesToCatmaID(
+							dbTagInstance.getUuid()), 
+						tagLibrary.getTagDefinition(
+							idGenerator.uuidBytesToCatmaID(
+								dbTagInstance.getDbTagDefinition().getUuid())));
+				
+				tagInstances.put(dbTagInstance, tagInstance);
+			}
+			
+			
+			TagReference tr = 
+				new TagReference(
+						tagInstance, 
+						localSourceDocUri,
+						new Range(
+								dbTagReference.getCharacterStart(), 
+								dbTagReference.getCharacterEnd()));
+			
+			dbUserMarkupCollection.addTagReference(tr);
+		}
+		
 	}
 	
 }

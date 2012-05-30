@@ -60,7 +60,7 @@ class DBTagReference implements java.io.Serializable {
 		this.tagReferenceId = tagReferenceId;
 	}
 
-	@Column(name = "tagDefinitionVersion", nullable = false, length = 25)
+	@Column(name = "tagDefinitionVersion", nullable = false, length = 28)
 	public String getTagDefinitionVersion() {
 		return this.tagDefinitionVersion;
 	}
