@@ -109,10 +109,6 @@ public class DBTagLibrary implements java.io.Serializable, ITagLibrary {
 		tagLibraryDelegate.add(tagsetDefinition);
 	}
 
-	public void replace(TagsetDefinition tagsetDefinition) {
-		tagLibraryDelegate.replace(tagsetDefinition);
-	}
-
 	@Transient
 	public TagDefinition getTagDefinition(String tagDefinitionID) {
 		return tagLibraryDelegate.getTagDefinition(tagDefinitionID);

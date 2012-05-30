@@ -180,7 +180,24 @@ public class TaggerView extends VerticalLayout
 	
 	public void tagInstanceAdded(
 			ClientTagInstance clientTagInstance) {
-		
+		/**
+		 * FIXME:
+		 * 
+		 * markupPanel nur konsultieren, wenn tagsetdef noch nicht in der
+		 * betreffenden taglibrary von der usermarkupcoll
+		 * in dem fall reinkopieren
+		 * 
+		 * danach tagdef fuer taginstance aus der library der usermarkupcoll
+		 * holen!
+		 * 
+		 * repo-update ist in markupcolletionspanel.addTagReferences
+		 * 
+		 * synchronized-event im repo behandeln!!!
+		 * 
+		 * bei aenderungen von tagdefs und tagsetdefs muss im markupcollectionspanel
+		 * speziell gearbeitet werden, da dort die kopien angepasst werden muessen
+		 * 
+		 */
 		TagDefinition tagDef = 
 				markupPanel.getTagDefinition(
 						clientTagInstance.getTagDefinitionID());
