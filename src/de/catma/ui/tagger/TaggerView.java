@@ -24,6 +24,7 @@ import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
+import de.catma.tag.ITagLibrary;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagManager;
@@ -183,39 +184,34 @@ public class TaggerView extends VerticalLayout
 		/**
 		 * FIXME:
 		 * 
-		 * markupPanel nur konsultieren, wenn tagsetdef noch nicht in der
-		 * betreffenden taglibrary von der usermarkupcoll
-		 * in dem fall reinkopieren
-		 * 
-		 * danach tagdef fuer taginstance aus der library der usermarkupcoll
-		 * holen!
-		 * 
-		 * repo-update ist in markupcolletionspanel.addTagReferences
-		 * 
-		 * synchronized-event im repo behandeln!!!
-		 * 
+		 * tagDefChangedListener in MarkupCollectionsPanel korrigieren
+		 * tagsetDefChangedListner fehlt noch
 		 * bei aenderungen von tagdefs und tagsetdefs muss im markupcollectionspanel
 		 * speziell gearbeitet werden, da dort die kopien angepasst werden muessen
 		 * 
+		 * synchronized-event im repo behandeln!!!
+		 * 
+		 * 
 		 */
-		TagDefinition tagDef = 
-				markupPanel.getTagDefinition(
-						clientTagInstance.getTagDefinitionID());
-		TagsetDefinition tagsetDef = 
-				markupPanel.getTagsetDefinition(tagDef);
 		
-		if (!markupPanel.getCurrentWritableUserMarkupCollection()
-				.getTagLibrary().contains(tagsetDef)) {
+		ITagLibrary tagLibrary =
+				markupPanel.getCurrentWritableUserMarkupCollection().getTagLibrary();
+		
+		if (tagLibrary.getTagDefinition(clientTagInstance.getTagDefinitionID())
+				== null) {
+			TagsetDefinition tagsetDef =
+					markupPanel.getTagsetDefinition(
+							clientTagInstance.getTagDefinitionID());
 			tagManager.addTagsetDefinition(
-				markupPanel.getCurrentWritableUserMarkupCollection()
-					.getTagLibrary(), tagsetDef);
+					tagLibrary, new TagsetDefinition(tagsetDef));
 		}
 		
+		TagDefinition tagDef = 
+				tagLibrary.getTagDefinition(
+						clientTagInstance.getTagDefinitionID());
+		
 		TagInstance ti = 
-			new TagInstance(
-					clientTagInstance.getInstanceID(),
-					markupPanel.getTagDefinition(
-							clientTagInstance.getTagDefinitionID()));
+			new TagInstance(clientTagInstance.getInstanceID(), tagDef);
 		
 		List<TagReference> tagReferences = new ArrayList<TagReference>();
 		
@@ -223,7 +219,7 @@ public class TaggerView extends VerticalLayout
 			for (TextRange tr : clientTagInstance.getRanges()) {
 				Range r = new Range(tr.getStartPos(), tr.getEndPos());
 				TagReference ref = 
-						new TagReference(ti, sourceDocument.getID() ,r);
+						new TagReference(ti, sourceDocument.getID(), r);
 				tagReferences.add(ref);
 			}
 			markupPanel.addTagReferences(tagReferences, sourceDocument);

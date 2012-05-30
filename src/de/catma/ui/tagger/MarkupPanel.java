@@ -4,6 +4,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
+import org.vaadin.dialogs.ConfirmDialog;
+
 import com.vaadin.data.Container;
 import com.vaadin.event.DataBoundTransferable;
 import com.vaadin.event.dd.DragAndDropEvent;
@@ -103,7 +105,7 @@ public class MarkupPanel extends VerticalLayout {
 	                    return;
 	                }
 	
-	                Object sourceItemId = transferable.getItemId();
+	                final Object sourceItemId = transferable.getItemId();
 	                
 	                if (sourceItemId instanceof TagsetDefinition) {
 	                	
@@ -111,10 +113,15 @@ public class MarkupPanel extends VerticalLayout {
 	                			(TagsetDefinition)sourceItemId;
 	                	
 	                	markupCollectionsPanel.updateTagsetDefinition(
-	                			incomingTagsetDef);
+	                			incomingTagsetDef, 
+	                			new ConfirmDialog.Listener() {
+
+	        			            public void onClose(ConfirmDialog dialog) {
+	        			            	tagsetTree.addTagsetDefinition(
+	        			            			(TagsetDefinition)sourceItemId);
+	        			            }
+	                			});
 	                	
-	                	tagsetTree.addTagsetDefinition(
-	                			(TagsetDefinition)sourceItemId);
 	                }
 				}
 			});
@@ -142,6 +149,10 @@ public class MarkupPanel extends VerticalLayout {
 
 	public TagsetDefinition getTagsetDefinition(TagDefinition tagDefinition) {
 		return tagsetTree.getTagsetDefinition(tagDefinition);
+	}
+	
+	public TagsetDefinition getTagsetDefinition(String tagDefinitionID) {
+		return tagsetTree.getTagsetDefinition(tagDefinitionID);
 	}
 
 	public IUserMarkupCollection getCurrentWritableUserMarkupCollection() {

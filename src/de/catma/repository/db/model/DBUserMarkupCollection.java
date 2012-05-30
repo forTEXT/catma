@@ -236,6 +236,12 @@ public class DBUserMarkupCollection implements java.io.Serializable, IUserMarkup
 	public void setId(String id) {
 		delegateUserMarkupCollection.setId(id);
 	}
+
+	public void synchronizeTagInstances(boolean withUserDefinedPropertyValues) {
+		delegateUserMarkupCollection
+				.synchronizeTagInstances(withUserDefinedPropertyValues);
+	}
+	
 	
 	
 }

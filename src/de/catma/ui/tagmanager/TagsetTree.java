@@ -792,4 +792,8 @@ public class TagsetTree extends HorizontalLayout {
 		}
 		return null;
 	}
+	
+	public TagsetDefinition getTagsetDefinition(String tagDefinitionID) {
+		return getTagsetDefinition(getTagDefinition(tagDefinitionID));
+	}
 }

@@ -5,7 +5,11 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import org.vaadin.dialogs.ConfirmDialog;
 
 import com.vaadin.data.Property;
 import com.vaadin.data.util.HierarchicalContainer;
@@ -60,6 +64,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private IUserMarkupCollection currentWritableUserMarkupColl;
 	private PropertyChangeSupport propertyChangeSupport;
 	private Repository repository;
+	private Set<TagsetDefinition> updateableTagsetDefinitons;
 	
 	public MarkupCollectionsPanel(TagManager tagManager, Repository repository) {
 		propertyChangeSupport = new PropertyChangeSupport(this);
@@ -67,6 +72,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		this.repository = repository;
 		userMarkupCollectionManager =
 				new UserMarkupCollectionManager(tagManager);
+		updateableTagsetDefinitons = new HashSet<TagsetDefinition>();
 		initComponents();
 		initActions();
 	}
@@ -95,10 +101,11 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				if (oldValue == null) {
 					//TODO: add TagsetDef, is probably not of relevance since we only add TagDefs, when corresponding markup is added
 				}
-				else if (newValue == null) {
+				else if (newValue == null) { // removal
 					@SuppressWarnings("unchecked")
 					Pair<TagsetDefinition, TagDefinition> removeOperationResult = 
 							(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
+					
 					TagDefinition td = removeOperationResult.getSecond();
 					Object parentId = markupCollectionsTree.getParent(td);
 					removeWithChildren(td);
@@ -107,9 +114,11 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 						markupCollectionsTree.setChildrenAllowed(parentId, false);
 					}
 				}
-				else {
+				else { // update
 					TagDefinition tagDefinition = 
 							(TagDefinition)evt.getNewValue();
+					
+					
 					Property captionProp = markupCollectionsTree.getContainerProperty(
 							tagDefinition, 
 							MarkupCollectionsTreeProperty.caption);
@@ -382,18 +391,44 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				tagDefChangedListener);
 	}
 	
-	public void updateTagsetDefinition(TagsetDefinition incomingTagsetDef) {
-		List<IUserMarkupCollection> modified = 
-				userMarkupCollectionManager.updateUserMarkupCollections(
-			incomingTagsetDef);
-		for (IUserMarkupCollection c : modified) {
-			removeWithChildren(c);
-			addUserMarkupCollection(c);
+	public void updateTagsetDefinition(
+			final TagsetDefinition incomingTagsetDef,
+			final ConfirmDialog.Listener confirmListener) {
+		
+		final List<IUserMarkupCollection> toBeUpdated = 
+				userMarkupCollectionManager.getUserMarkupCollections(incomingTagsetDef);
+		
+		if (!toBeUpdated.isEmpty()) {
+			ConfirmDialog.show(
+				getApplication().getMainWindow(), 
+				"There are older versions of the Tagset '" +
+					incomingTagsetDef.getName() +
+					"' in the attached User Markup Collections! " +
+					"Do you really want to update the attached Markup Collections?",
+							
+			        new ConfirmDialog.Listener() {
+
+			            public void onClose(ConfirmDialog dialog) {
+			                if (dialog.isConfirmed()) {
+			                	updateableTagsetDefinitons.add(incomingTagsetDef);
+			                	userMarkupCollectionManager.updateUserMarkupCollections(
+			                			toBeUpdated, incomingTagsetDef);
+			                	
+			            		for (IUserMarkupCollection c : toBeUpdated) {
+			            			removeWithChildren(c);
+			            			addUserMarkupCollection(c);
+			            		}
+			            		
+			            		confirmListener.onClose(dialog);
+			                }
+			            }
+			        });
 		}
 	}
 	
 	public void addTagReferences(
 			List<TagReference> tagReferences, ISourceDocument sourceDocument) {
+		
 		userMarkupCollectionManager.addTagReferences(
 				tagReferences, currentWritableUserMarkupColl);
 		
@@ -404,8 +439,6 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		//FIXME: add TagsetDefs to tree!!!
 	}
 	
 	public IUserMarkupCollection getCurrentWritableUserMarkupCollection() {
