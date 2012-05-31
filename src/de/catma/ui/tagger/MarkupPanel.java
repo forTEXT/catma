@@ -4,8 +4,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
-import org.vaadin.dialogs.ConfirmDialog;
-
 import com.vaadin.data.Container;
 import com.vaadin.event.DataBoundTransferable;
 import com.vaadin.event.dd.DragAndDropEvent;
@@ -89,6 +87,8 @@ public class MarkupPanel extends VerticalLayout {
 		if (init) {
 			//TODO: handle TagLibrary close operations, i.e. remove corresponding TagsetDefs
 			//TODO: maybe accept drags only from the TaggerView table, drag only tagset defs
+			//TODO: allow removal, remove from writable markup coll as well
+			//TODO: react on writable markup coll changes, new TagsetDefs has to be added
 			tagsetTree.getTagTree().setDropHandler(new DropHandler() {
 				
 				public AcceptCriterion getAcceptCriterion() {
@@ -112,16 +112,14 @@ public class MarkupPanel extends VerticalLayout {
 	                	TagsetDefinition incomingTagsetDef =
 	                			(TagsetDefinition)sourceItemId;
 	                	
-	                	markupCollectionsPanel.updateTagsetDefinition(
+	                	markupCollectionsPanel.addOrUpdateTagsetDefinition(
 	                			incomingTagsetDef, 
-	                			new ConfirmDialog.Listener() {
-
-	        			            public void onClose(ConfirmDialog dialog) {
+	                			new ConfirmListener() {
+	        			            public void confirmed() {
 	        			            	tagsetTree.addTagsetDefinition(
 	        			            			(TagsetDefinition)sourceItemId);
 	        			            }
 	                			});
-	                	
 	                }
 				}
 			});

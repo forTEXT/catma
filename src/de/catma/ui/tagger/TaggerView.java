@@ -184,14 +184,9 @@ public class TaggerView extends VerticalLayout
 		/**
 		 * FIXME:
 		 * 
-		 * tagDefChangedListener in MarkupCollectionsPanel korrigieren
-		 * tagsetDefChangedListner fehlt noch
-		 * bei aenderungen von tagdefs und tagsetdefs muss im markupcollectionspanel
-		 * speziell gearbeitet werden, da dort die kopien angepasst werden muessen
-		 * 
 		 * synchronized-event im repo behandeln!!!
-		 * 
-		 * 
+		 * DbRepository.update(userMarkupColl) implementieren
+		 * siehe auch todos in MarkupPanel!
 		 */
 		
 		ITagLibrary tagLibrary =
