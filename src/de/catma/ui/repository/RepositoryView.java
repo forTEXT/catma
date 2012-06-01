@@ -120,6 +120,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	private PropertyChangeListener sourceDocumentAddedListener;
 	private PropertyChangeListener userMarkupDocumentChangedListener;
 	private PropertyChangeListener tagLibraryChangedListener;
+	private PropertyChangeListener exceptionOccurredListener;
 	
 	public RepositoryView(Repository repository) {
 
@@ -178,6 +179,18 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		this.repository.addPropertyChangeListener(
 				Repository.RepositoryChangeEvent.tagLibraryChanged, 
 				tagLibraryChangedListener);
+		
+		exceptionOccurredListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				//TODO: handle
+				((Throwable)evt.getNewValue()).printStackTrace();
+			}
+		};
+		
+		this.repository.addPropertyChangeListener(
+			Repository.RepositoryChangeEvent.exceptionOccurred, 
+			exceptionOccurredListener);
 		
 		initActions();
 	}
@@ -961,17 +974,6 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		return repository;
 	}
 	
-	@Override
-	public void detach() {
-		this.repository.removePropertyChangeListener(
-				Repository.RepositoryChangeEvent.sourceDocumentChanged,
-				sourceDocumentAddedListener);
-		this.repository.removePropertyChangeListener(
-				Repository.RepositoryChangeEvent.userMarkupCollectionChanged, 
-				userMarkupDocumentChangedListener);
-		super.detach();
-	}
-	
 	private void addSourceDocumentToTree(ISourceDocument sd) {
 		documentsTree.addItem(sd);
 		documentsTree.getItem(sd);
@@ -1081,6 +1083,19 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	}
 	
 	public void close() {
+		this.repository.removePropertyChangeListener(
+				Repository.RepositoryChangeEvent.sourceDocumentChanged,
+				sourceDocumentAddedListener);
+		this.repository.removePropertyChangeListener(
+				Repository.RepositoryChangeEvent.userMarkupCollectionChanged, 
+				userMarkupDocumentChangedListener);
+		this.repository.removePropertyChangeListener(
+				Repository.RepositoryChangeEvent.tagLibraryChanged, 
+				tagLibraryChangedListener);
+		this.repository.removePropertyChangeListener(
+				Repository.RepositoryChangeEvent.exceptionOccurred, 
+				exceptionOccurredListener);
+		
 		//TODO: fire event to notify analyzer and tagger components
 		repository.close();
 	}

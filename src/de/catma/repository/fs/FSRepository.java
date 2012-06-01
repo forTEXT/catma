@@ -9,6 +9,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,6 +27,7 @@ import de.catma.serialization.SerializationHandlerFactory;
 import de.catma.tag.ITagLibrary;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
+import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
 import de.catma.util.Pair;
 
@@ -160,12 +162,24 @@ class FSRepository implements Repository {
 		// TODO Auto-generated method stub
 		
 	}
-
+	
+	public void update(List<IUserMarkupCollection> userMarkupCollections,
+			TagsetDefinition tagsetDefinition) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 	public void update(
 			IUserMarkupCollection userMarkupCollection, 
-			ISourceDocument sourceDocument) throws IOException {
-		userMarkupCollectionHandler.saveUserMarkupCollection(
-				userMarkupCollection, sourceDocument);
+			List<TagReference> tagReferences) {
+		try {
+			userMarkupCollectionHandler.saveUserMarkupCollection(
+					userMarkupCollection, 
+					null); //FIXME: should not be null, determine correct sourcedoc from usermarkupcoll
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
 	}
 
 	public void update(StaticMarkupCollection staticMarkupCollection) {

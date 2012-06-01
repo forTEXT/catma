@@ -28,6 +28,7 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.ITagLibrary;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
 import de.catma.tag.TagsetDefinition;
 
 /**
@@ -241,7 +242,8 @@ public class DBUserMarkupCollection implements java.io.Serializable, IUserMarkup
 		delegateUserMarkupCollection
 				.synchronizeTagInstances(withUserDefinedPropertyValues);
 	}
-	
-	
-	
+
+	public Set<TagReference> getTagReferences(TagInstance ti) {
+		return delegateUserMarkupCollection.getTagReferences(ti);
+	}
 }

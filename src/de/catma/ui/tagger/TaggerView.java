@@ -181,14 +181,6 @@ public class TaggerView extends VerticalLayout
 	
 	public void tagInstanceAdded(
 			ClientTagInstance clientTagInstance) {
-		/**
-		 * FIXME:
-		 * 
-		 * synchronized-event im repo behandeln!!!
-		 * DbRepository.update(userMarkupColl) implementieren
-		 * siehe auch todos in MarkupPanel!
-		 */
-		
 		ITagLibrary tagLibrary =
 				markupPanel.getCurrentWritableUserMarkupCollection().getTagLibrary();
 		
@@ -217,7 +209,7 @@ public class TaggerView extends VerticalLayout
 						new TagReference(ti, sourceDocument.getID(), r);
 				tagReferences.add(ref);
 			}
-			markupPanel.addTagReferences(tagReferences, sourceDocument);
+			markupPanel.addTagReferences(tagReferences);
 		} catch (URISyntaxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

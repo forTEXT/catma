@@ -3,7 +3,6 @@ package de.catma.ui.tagger;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -25,15 +24,14 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.repository.Repository;
-import de.catma.document.source.ISourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.tag.ITagLibrary;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagManager;
-import de.catma.tag.TagsetDefinition;
 import de.catma.tag.TagManager.TagManagerEvent;
+import de.catma.tag.TagsetDefinition;
 import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
 import de.catma.util.Pair;
 
@@ -74,7 +72,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		this.tagManager = tagManager;
 		this.repository = repository;
 		userMarkupCollectionManager =
-				new UserMarkupCollectionManager(tagManager);
+				new UserMarkupCollectionManager(tagManager, repository);
 		updateableTagsetDefinitons = new HashSet<TagsetDefinition>();
 		initComponents();
 		initActions();
@@ -163,7 +161,6 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		tagManager.addPropertyChangeListener(
 				TagManagerEvent.tagsetDefinitionChanged,
 				tagsetDefChangedListener);
-		
 	}
 	
 	private void updateTagsetDefinition(TagsetDefinition foreignTagsetDefinition) {
@@ -649,19 +646,10 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		}
 	}
 	
-	public void addTagReferences(
-			List<TagReference> tagReferences, ISourceDocument sourceDocument) {
-		
+	public void addTagReferences(List<TagReference> tagReferences) {
 		userMarkupCollectionManager.addTagReferences(
 				tagReferences, currentWritableUserMarkupColl);
-		
-		try {
-			repository.update(currentWritableUserMarkupColl, sourceDocument);
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
 	}
 	
 	public IUserMarkupCollection getCurrentWritableUserMarkupCollection() {

@@ -27,6 +27,7 @@ import de.catma.document.source.ISourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
@@ -71,6 +72,7 @@ public class DBRepository implements IndexedRepository {
 	private boolean tagManagerListenersEnabled = true;
 	private PropertyChangeListener tagsetDefinitionChangedListener;
 	private PropertyChangeListener tagDefinitionChangedListener;
+
 
 	public DBRepository(
 			String name, 
@@ -324,10 +326,15 @@ public class DBRepository implements IndexedRepository {
 		return dbUserMarkupCollectionHandler.getUserMarkupCollection(userMarkupCollectionReference);
 	}
 
+
 	public void update(IUserMarkupCollection userMarkupCollection,
-			ISourceDocument sourceDocument) throws IOException {
-		// TODO Auto-generated method stub
-		
+			List<TagReference> tagReferences) {
+		dbUserMarkupCollectionHandler.update(userMarkupCollection, tagReferences);
+	}
+	
+	public void update(List<IUserMarkupCollection> userMarkupCollections,
+			TagsetDefinition tagsetDefinition) {
+		dbUserMarkupCollectionHandler.update(userMarkupCollections, tagsetDefinition);
 	}
 	
 

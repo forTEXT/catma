@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,11 +14,13 @@ import de.catma.document.source.ISourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.tag.ITagLibrary;
 import de.catma.tag.TagLibraryReference;
+import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
 
 public class DummyRepository implements IndexedRepository {
@@ -113,10 +116,17 @@ public class DummyRepository implements IndexedRepository {
 	}
 
 	public void update(IUserMarkupCollection userMarkupCollection,
-			ISourceDocument sourceDocument) throws IOException {
+			List<TagReference> tagReferences) {
 		// TODO Auto-generated method stub
-
+		
 	}
+	
+	public void update(List<IUserMarkupCollection> userMarkupCollections,
+			TagsetDefinition tagsetDefinition) {
+		// TODO Auto-generated method stub
+		
+	}
+
 
 	public void update(StaticMarkupCollection staticMarkupCollection) {
 		// TODO Auto-generated method stub

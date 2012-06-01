@@ -36,9 +36,14 @@ public class DBProperty implements java.io.Serializable {
 	
 	public DBProperty(DBPropertyDefinition dbPropertyDefinition,
 			DBTagInstance dbTagInstance, String value) {
+		this(dbPropertyDefinition, dbTagInstance);
+		dbPropertyValues.add(new DBPropertyValue(this, value));
+	}
+
+	public DBProperty(
+			DBPropertyDefinition dbPropertyDefinition, DBTagInstance dbTagInstance) {
 		this.dbPropertyDefinition = dbPropertyDefinition;
 		this.dbTagInstance = dbTagInstance;
-		dbPropertyValues.add(new DBPropertyValue(this, value));
 	}
 
 	@Id
@@ -83,5 +88,14 @@ public class DBProperty implements java.io.Serializable {
 	
 	public void setDbPropertyValues(Set<DBPropertyValue> dbPropertyValues) {
 		this.dbPropertyValues = dbPropertyValues;
+	}
+
+	public boolean hasPropertyValue(String value) {
+		for (DBPropertyValue dbPropValue : getDbPropertyValues()) {
+			if (dbPropValue.getValue().equals(value)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

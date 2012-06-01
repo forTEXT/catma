@@ -4,7 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -19,6 +23,7 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.repository.db.model.DBProperty;
 import de.catma.repository.db.model.DBPropertyDefinition;
+import de.catma.repository.db.model.DBPropertyValue;
 import de.catma.repository.db.model.DBSourceDocument;
 import de.catma.repository.db.model.DBTagDefinition;
 import de.catma.repository.db.model.DBTagInstance;
@@ -31,6 +36,7 @@ import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
+import de.catma.tag.TagsetDefinition;
 import de.catma.util.CloseSafe;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
@@ -348,7 +354,8 @@ class DBUserMarkupCollectionHandler {
 	}
 
 	private void initUserMarkupCollection(
-			DBUserMarkupCollection dbUserMarkupCollection, String localSourceDocUri) throws URISyntaxException {
+			DBUserMarkupCollection dbUserMarkupCollection, 
+			String localSourceDocUri) throws URISyntaxException {
 		
 		IDGenerator idGenerator = new IDGenerator();
 		DBTagLibrary tagLibrary = dbUserMarkupCollection.getTagLibrary(); 
@@ -385,6 +392,203 @@ class DBUserMarkupCollectionHandler {
 			
 			dbUserMarkupCollection.addTagReference(tr);
 		}
+		
+	}
+
+	void update(IUserMarkupCollection userMarkupCollection,
+			List<TagReference> tagReferences) {
+		IDGenerator idGenerator = new IDGenerator();
+		
+		DBUserMarkupCollection dbUserMarkupCollection =
+				(DBUserMarkupCollection) userMarkupCollection;
+		
+		Set<DBTagInstance> toBeDeleted = new HashSet<DBTagInstance>();
+		
+		Map<String, DBTagInstance> persistentTagInstances = 
+				new HashMap<String,DBTagInstance>();
+		
+		for (DBTagReference dbTr : dbUserMarkupCollection.getDbTagReferences()) {
+			persistentTagInstances.put(
+				idGenerator.uuidBytesToCatmaID(dbTr.getDbTagInstance().getUuid()),
+				dbTr.getDbTagInstance());
+		}
+		
+		Map<String, TagInstance> incomingTagInstances = 
+				new HashMap<String, TagInstance>();
+		
+		for (TagReference tr : tagReferences) {
+			incomingTagInstances.put(tr.getTagInstanceID(), tr.getTagInstance());
+		}
+		
+		for (DBTagInstance dbTagInstance : persistentTagInstances.values()) {
+			if (!incomingTagInstances.containsKey(
+				idGenerator.uuidBytesToCatmaID(dbTagInstance.getUuid()))) {
+				toBeDeleted.add(dbTagInstance);
+				dbUserMarkupCollection.getDbTagReferences().removeAll(
+						dbTagInstance.getDbTagReferences());
+			}
+		}
+		Session session = dbRepository.getSessionFactory().openSession();
+		try {
+			update(session, idGenerator, persistentTagInstances, 
+					dbUserMarkupCollection, incomingTagInstances);
+			
+			for (DBTagInstance dbTagInstance : toBeDeleted) {
+				session.delete(dbTagInstance);
+			}
+			
+			session.save(dbUserMarkupCollection);
+		}
+		finally {
+			CloseSafe.close(new ClosableSession(session));
+		}
+	}
+
+	private void update(
+			Session session, IDGenerator idGenerator, 
+			Map<String, DBTagInstance> persistentTagInstances,
+			DBUserMarkupCollection dbUserMarkupCollection, 
+			Map<String, TagInstance> incomingTagInstances) {
+		
+		for (TagInstance ti : incomingTagInstances.values()) {
+			
+			if (persistentTagInstances.containsKey(ti.getUuid())) {
+				update(idGenerator, persistentTagInstances.get(
+						ti.getUuid()), ti, dbUserMarkupCollection);
+			}
+			else {
+				
+				DBTagDefinition dbTagDefinition = 
+					(DBTagDefinition) session.load(
+							DBTagDefinition.class, 
+							ti.getTagDefinition().getId());
+				
+				DBTagInstance dbTagInstance = 
+					new DBTagInstance(
+						idGenerator.catmaIDToUUIDBytes(ti.getUuid()),
+						dbTagDefinition);
+				
+				for (Property prop : ti.getSystemProperties()) {
+					DBPropertyDefinition dbPropDef =
+							(DBPropertyDefinition) session.load(
+									DBPropertyDefinition.class,
+									prop.getPropertyDefinition().getId());
+								
+					DBProperty sysProp = 
+						new DBProperty(
+							dbPropDef, dbTagInstance,
+							prop.getPropertyValueList().getFirstValue());
+					dbTagInstance.getDbProperties().add(sysProp);
+				}
+				
+				for (Property prop : ti.getUserDefinedProperties()) {
+					DBPropertyDefinition dbPropDef =
+							(DBPropertyDefinition) session.load(
+									DBPropertyDefinition.class,
+									prop.getPropertyDefinition().getId());
+					DBProperty userProp = 
+							new DBProperty(
+									dbPropDef, dbTagInstance);
+					for (String value : prop.getPropertyValueList().getValues()) {
+						userProp.getDbPropertyValues().add(
+								new DBPropertyValue(userProp, value));
+					}
+					dbTagInstance.getDbProperties().add(userProp);
+				}
+				
+				for (TagReference tr : 
+					dbUserMarkupCollection.getTagReferences(ti)) {
+					
+					DBTagReference dbTagReference = 
+							new DBTagReference(
+									tr.getRange().getStartPoint(), 
+									tr.getRange().getEndPoint(), 
+									dbUserMarkupCollection, dbTagInstance);
+					
+					dbUserMarkupCollection.getDbTagReferences().add(dbTagReference);
+				}
+			}
+		}
+	}
+
+	private void update(
+			IDGenerator idGenerator, DBTagInstance dbTagInstance, TagInstance ti, 
+			DBUserMarkupCollection dbUserMarkupCollection) {
+		
+		Set<Range> incomingRanges = new HashSet<Range>();
+		Set<TagReference> incomingTagReferences = 
+				dbUserMarkupCollection.getTagReferences(ti);
+		
+		for (TagReference tr : incomingTagReferences) {
+			incomingRanges.add(tr.getRange());
+		}
+		
+		Map<Range, DBTagReference> dbTagRefsByRange = 
+				new HashMap<Range, DBTagReference>();
+		
+		Iterator<DBTagReference> iterator = 
+				dbTagInstance.getDbTagReferences().iterator();
+		while (iterator.hasNext()) {
+			DBTagReference curDbTagRef = iterator.next();
+			Range curRange = 
+					new Range(
+						curDbTagRef.getCharacterStart(), 
+						curDbTagRef.getCharacterEnd());
+			if (!incomingRanges.contains(curRange)) {
+				iterator.remove(); //TODO: check if this really works or if we have to delete them manually
+			}
+			else {
+				dbTagRefsByRange.put(curRange, curDbTagRef);
+			}
+		}
+		
+		for (TagReference tr : incomingTagReferences) {
+			if (!dbTagRefsByRange.containsKey(tr.getRange())) {
+				DBTagReference dbTagReference = 
+						new DBTagReference(
+							tr.getRange().getStartPoint(), 
+							tr.getRange().getEndPoint(), 
+							dbUserMarkupCollection, dbTagInstance);
+				dbUserMarkupCollection.getDbTagReferences().add(dbTagReference);
+			}
+		}
+		
+		for (DBProperty dbProperty : dbTagInstance.getDbProperties()) {
+			Property property = 
+				ti.getProperty(
+					idGenerator.uuidBytesToCatmaID(
+							dbProperty.getDbPropertyDefinition().getUuid()));
+			Iterator<DBPropertyValue> dbPropertyValIterator = 
+					dbProperty.getDbPropertyValues().iterator();
+			while (dbPropertyValIterator.hasNext()) {
+				DBPropertyValue curValue = dbPropertyValIterator.next();
+				if (!property.getPropertyValueList().getValues().contains(curValue.getValue())) {
+					dbPropertyValIterator.remove();
+				}
+			}
+			
+			for (String value : property.getPropertyValueList().getValues()) {
+				if (!dbProperty.hasPropertyValue(value)) {
+					dbProperty.getDbPropertyValues().add(
+							new DBPropertyValue(dbProperty, value));
+				}
+			}
+ 		}
+	}
+
+	public void update(List<IUserMarkupCollection> userMarkupCollections,
+			TagsetDefinition tagsetDefinition) {
+		// TODO Auto-generated method stub
+		
+		/**
+		 * save tagLibraries of the incoming collections
+		 * update id's of the new objects (reload possible?, definitely easier, maybe just reload the changed TagsetDefinition?)
+		 * then: update(userMarkupCollection, userMarkupCollection.getTagReferences) for each coll
+		 * 
+		 * background handling
+		 * 
+		 * siehe dann auch todos in MarkupPanel!
+		 */
 		
 	}
 	
