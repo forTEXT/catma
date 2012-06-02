@@ -242,7 +242,9 @@ public class DBRepository implements IndexedRepository {
 	}
 
 
-	private void loadContent(Session session) throws URISyntaxException {
+	private void loadContent(Session session) 
+			throws URISyntaxException, IOException, 
+			InstantiationException, IllegalAccessException {
 		dbSourceDocumentHandler.loadSourceDocuments(session);
 		dbTagLibraryHandler.loadTagLibraryReferences(session);
 	}

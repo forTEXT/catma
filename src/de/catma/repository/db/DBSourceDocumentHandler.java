@@ -9,20 +9,29 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.criterion.Restrictions;
 
+import de.catma.document.ContentInfoSet;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
+import de.catma.document.source.FileOSType;
+import de.catma.document.source.FileType;
 import de.catma.document.source.ISourceDocument;
-import de.catma.document.source.SourceDocument;
+import de.catma.document.source.IndexInfoSet;
+import de.catma.document.source.SourceDocumentHandler;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.TechInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.repository.db.model.DBSourceDocument;
 import de.catma.repository.db.model.DBUserMarkupCollection;
@@ -124,10 +133,10 @@ class DBSourceDocumentHandler {
 	}
 
 	void insert(ISourceDocument sourceDocument) throws IOException {
-		if (sourceDocument instanceof SourceDocument) {
-			sourceDocument = 
-					new DBSourceDocument((SourceDocument)sourceDocument);
-		}
+		DBSourceDocument dbSourceDocument = 
+					new DBSourceDocument(sourceDocument);
+		
+		
 		Session session = dbRepository.getSessionFactory().openSession();
 		try {
 			session.beginTransaction();
@@ -136,16 +145,10 @@ class DBSourceDocumentHandler {
 			DBUserSourceDocument dbUserSourceDocument = 
 					new DBUserSourceDocument(
 							dbRepository.getCurrentUser(), 
-							(DBSourceDocument)sourceDocument);
+							dbSourceDocument);
 			
-			if (!sourceDocument.getSourceContentHandler().
-					getSourceDocumentInfo().getTechInfoSet().getURI().getScheme().equals("file")) {
-				((DBSourceDocument)sourceDocument).setSourceUri(
-					sourceDocument.getSourceContentHandler().
-						getSourceDocumentInfo().getTechInfoSet().getURI().toString());
-			}
 			session.save(dbUserSourceDocument);
-			
+
 			insertIntoFS(sourceDocument);
 			
 			dbRepository.getIndexer().index(sourceDocument);
@@ -173,7 +176,8 @@ class DBSourceDocumentHandler {
 	}
 	
 	@SuppressWarnings("unchecked")
-	void loadSourceDocuments(Session session) throws URISyntaxException {
+	void loadSourceDocuments(Session session) 
+			throws URISyntaxException, IOException, InstantiationException, IllegalAccessException {
 		if (!dbRepository.getCurrentUser().isLocked()) {
 			Query query = 
 				session.createQuery(
@@ -186,18 +190,41 @@ class DBSourceDocumentHandler {
 					+ " where user.userId = " + dbRepository.getCurrentUser().getUserId());
 			
 			for (DBSourceDocument sd : (List<DBSourceDocument>)query.list()) {
-				sd.getSourceContentHandler().getSourceDocumentInfo().
-					getTechInfoSet().setURI(
-							new URI(getFileURL(sd.getID(), sourceDocsPath)));
+				IndexInfoSet indexInfoSet = 
+					new IndexInfoSet(
+						Collections.<String>emptyList(), //TODO: load list
+						Collections.<Character>emptyList(), //TODO: load list
+						new Locale(sd.getLocale()));
+				ContentInfoSet contentInfoSet = 
+						new ContentInfoSet(sd.getAuthor(), sd.getDescription(), 
+								sd.getPublisher(), sd.getTitle());
+				TechInfoSet techInfoSet = 
+						new TechInfoSet(
+							FileType.valueOf(sd.getFileType()),
+							Charset.forName(sd.getCharset()),
+							FileOSType.valueOf(sd.getFileOstype()),
+							sd.getChecksum(),
+							sd.getXsltDocumentLocalUri());
+				
+				SourceDocumentInfo sourceDocumentInfo = 
+						new SourceDocumentInfo(indexInfoSet, contentInfoSet, techInfoSet);
+				SourceDocumentHandler sdh = new SourceDocumentHandler();
+				ISourceDocument sourceDocument = 
+					sdh.loadSourceDocument(sd.getId(), sourceDocumentInfo);
 				
 				for (DBUserMarkupCollection dbUmc : sd.getDbUserMarkupCollections()) {
 					if (dbUmc.hasAccess(dbRepository.getCurrentUser())) {
-						sd.addUserMarkupCollectionReference(
+						sourceDocument.addUserMarkupCollectionReference(
 							new UserMarkupCollectionReference(
-									dbUmc.getId(), dbUmc.getContentInfoSet()));
+									dbUmc.getId(), 
+									new ContentInfoSet(
+										dbUmc.getAuthor(),
+										dbUmc.getDescription(),
+										dbUmc.getPublisher(),
+										dbUmc.getTitle())));
 					}
 				}
-				this.sourceDocumentsByID.put(sd.getID(), sd);
+				this.sourceDocumentsByID.put(sourceDocument.getID(), sourceDocument);
 			}
 		}		
 	}
@@ -213,11 +240,24 @@ class DBSourceDocumentHandler {
 	String getLocalUriFor(UserMarkupCollectionReference umcRef) {
 		for (ISourceDocument sd : getSourceDocuments()) {
 			if (sd.getUserMarkupCollectionRefs().contains(umcRef)) {
-				return ((DBSourceDocument)sd).getLocalUri();
+				return sd.getID();
 			}
 		}
 		
 		return null;
 	}
-
+	
+	DBSourceDocument getDbSourceDocument(Session session, String localUri) {
+		Criteria criteria = session.createCriteria(DBSourceDocument.class)
+			     .add(Restrictions.eq("localUri", localUri));
+		
+		@SuppressWarnings("unchecked")
+		List<DBSourceDocument> result = criteria.list();
+		if (result.size() != 1) {
+			throw new IllegalStateException(
+				"found more than one source document with localUri: " + 
+						localUri + " but there can only be one");
+		}
+		return result.get(0);
+	}
 }
