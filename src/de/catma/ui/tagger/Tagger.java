@@ -51,6 +51,7 @@ public class Tagger extends AbstractComponent {
 	
 	public static interface TaggerListener {
 		public void tagInstanceAdded(ClientTagInstance clientTagInstance);
+		public void tagInstanceRemoved(String instanceID);
 	}
 	
 	private static final long serialVersionUID = 1L;
@@ -134,6 +135,7 @@ public class Tagger extends AbstractComponent {
 							TaggerMessageAttribute.TAGINSTANCE_REMOVE.name());
 					System.out.println("TagInstance removed: " + instanceID);
 			pager.getCurrentPage().removeRelativeTagInstance(instanceID);
+			taggerListener.tagInstanceRemoved(instanceID);
 		}
 		
 		if (variables.containsKey(TaggerMessageAttribute.LOGMESSAGE.name())) {

@@ -215,4 +215,8 @@ public class TaggerView extends VerticalLayout
 			e.printStackTrace();
 		}
 	}
+	
+	public void tagInstanceRemoved(String instanceID) {
+		markupPanel.removeTagInstance(instanceID);
+	}
 }

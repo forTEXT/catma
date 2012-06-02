@@ -16,6 +16,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
@@ -60,8 +61,6 @@ public class DBTagsetDefinition implements java.io.Serializable {
 		this.tagsetDefinitionId = tagsetDefinitionId;
 	}
 
-	@Version
-	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "version", nullable = false, length = 19)
 	public Date getVersion() {
 		return this.version;
@@ -106,5 +105,22 @@ public class DBTagsetDefinition implements java.io.Serializable {
 	
 	public void setDbTagDefinitions(Set<DBTagDefinition> dbTagDefinitions) {
 		this.dbTagDefinitions = dbTagDefinitions;
+	}
+
+	@Transient
+	public DBTagDefinition getDbTagDefinition(Integer dbTagDefinitionId) {
+		for (DBTagDefinition dbTagDefinition : getDbTagDefinitions()) {
+			Integer id = dbTagDefinition.getTagDefinitionId();
+			if ((id != null) &&
+					(id.equals(dbTagDefinitionId))) {
+				return dbTagDefinition;
+			}
+		}
+		return null;
+	}
+	
+	@Override
+	public String toString() {
+		return super.toString() + " " + getName();
 	}
 }

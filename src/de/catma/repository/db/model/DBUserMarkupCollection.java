@@ -40,13 +40,13 @@ public class DBUserMarkupCollection implements java.io.Serializable, IUserMarkup
 
 	private Integer usermarkupCollectionId;
 	private int sourceDocumentId;
-	private IUserMarkupCollection delegateUserMarkupCollection;
+	private IUserMarkupCollection userMarkupCollectionDelegate;
 	private Set<DBUserUserMarkupCollection> dbUserUserMarkupCollections = 
 			new HashSet<DBUserUserMarkupCollection>();
 	private Set<DBTagReference> dbTagReferences = new HashSet<DBTagReference>();
 	
 	public DBUserMarkupCollection() {
-		delegateUserMarkupCollection =
+		userMarkupCollectionDelegate =
 				new UserMarkupCollection(
 						null, // gets filled out by setUsermarkupCollectionId
 						new ContentInfoSet(),
@@ -56,7 +56,7 @@ public class DBUserMarkupCollection implements java.io.Serializable, IUserMarkup
 	
 	public DBUserMarkupCollection(int sourceDocumentId, String title) {
 		this.sourceDocumentId = sourceDocumentId;
-		delegateUserMarkupCollection =
+		userMarkupCollectionDelegate =
 				new UserMarkupCollection(
 						null, // gets filled out by setUsermarkupCollectionId
 						new ContentInfoSet(title),
@@ -66,9 +66,9 @@ public class DBUserMarkupCollection implements java.io.Serializable, IUserMarkup
 	
 	public DBUserMarkupCollection(
 			int sourceDocumentId,
-			IUserMarkupCollection delegateUserMarkupCollection) {
+			IUserMarkupCollection userMarkupCollectionDelegate) {
 		this.sourceDocumentId = sourceDocumentId;
-		this.delegateUserMarkupCollection = delegateUserMarkupCollection;
+		this.userMarkupCollectionDelegate = userMarkupCollectionDelegate;
 	}
 
 	@Id
@@ -80,43 +80,43 @@ public class DBUserMarkupCollection implements java.io.Serializable, IUserMarkup
 
 	public void setUsermarkupCollectionId(Integer usermarkupCollectionId) {
 		this.usermarkupCollectionId = usermarkupCollectionId;
-		delegateUserMarkupCollection.setId(usermarkupCollectionId.toString());
+		userMarkupCollectionDelegate.setId(usermarkupCollectionId.toString());
 	}
 
 	@Column(name = "title", length = 300)
 	public String getTitle() {
-		return delegateUserMarkupCollection.getContentInfoSet().getTitle();
+		return userMarkupCollectionDelegate.getContentInfoSet().getTitle();
 	}
 
 	public void setTitle(String title) {
-		delegateUserMarkupCollection.getContentInfoSet().setTitle(title);
+		userMarkupCollectionDelegate.getContentInfoSet().setTitle(title);
 	}
 
 	@Column(name = "publisher", length = 300)
 	public String getPublisher() {
-		return delegateUserMarkupCollection.getContentInfoSet().getPublisher();
+		return userMarkupCollectionDelegate.getContentInfoSet().getPublisher();
 	}
 
 	public void setPublisher(String publisher) {
-		delegateUserMarkupCollection.getContentInfoSet().setPublisher(publisher);
+		userMarkupCollectionDelegate.getContentInfoSet().setPublisher(publisher);
 	}
 
 	@Column(name = "author", length = 300)
 	public String getAuthor() {
-		return delegateUserMarkupCollection.getContentInfoSet().getAuthor();
+		return userMarkupCollectionDelegate.getContentInfoSet().getAuthor();
 	}
 
 	public void setAuthor(String author) {
-		delegateUserMarkupCollection.getContentInfoSet().setAuthor(author);
+		userMarkupCollectionDelegate.getContentInfoSet().setAuthor(author);
 	}
 
 	@Column(name = "description", length = 300)
 	public String getDescription() {
-		return delegateUserMarkupCollection.getContentInfoSet().getDescription();
+		return userMarkupCollectionDelegate.getContentInfoSet().getDescription();
 	}
 
 	public void setDescription(String description) {
-		delegateUserMarkupCollection.getContentInfoSet().setDescription(description);
+		userMarkupCollectionDelegate.getContentInfoSet().setDescription(description);
 	}
 
 	@Column(name = "sourceDocumentID", nullable = false)
@@ -132,11 +132,11 @@ public class DBUserMarkupCollection implements java.io.Serializable, IUserMarkup
 	@Cascade({CascadeType.DELETE, CascadeType.SAVE_UPDATE})
 	@JoinColumn(name = "tagLibraryID", nullable = false)
 	public DBTagLibrary getTagLibrary() {
-		return (DBTagLibrary)delegateUserMarkupCollection.getTagLibrary();
+		return (DBTagLibrary)userMarkupCollectionDelegate.getTagLibrary();
 	}
 	
 	public void setTagLibrary(ITagLibrary tagLibrary) {
-		delegateUserMarkupCollection.setTagLibrary(tagLibrary);
+		userMarkupCollectionDelegate.setTagLibrary(tagLibrary);
 	}
 	
 	@OneToMany(mappedBy = "dbUserMarkupCollection")
@@ -162,67 +162,67 @@ public class DBUserMarkupCollection implements java.io.Serializable, IUserMarkup
 	
 	@Transient
 	public List<TagReference> getTagReferences() {
-		return delegateUserMarkupCollection.getTagReferences();
+		return userMarkupCollectionDelegate.getTagReferences();
 	}
 
 	@Transient
 	public List<TagReference> getTagReferences(TagDefinition tagDefinition) {
-		return delegateUserMarkupCollection.getTagReferences(tagDefinition);
+		return userMarkupCollectionDelegate.getTagReferences(tagDefinition);
 	}
 
 	@Transient
 	public List<TagReference> getTagReferences(TagDefinition tagDefinition,
 			boolean withChildReferences) {
-		return delegateUserMarkupCollection.getTagReferences(
+		return userMarkupCollectionDelegate.getTagReferences(
 				tagDefinition, withChildReferences);
 	}
 
 	@Transient
 	public Set<String> getChildIDs(TagDefinition tagDefinition) {
-		return delegateUserMarkupCollection.getChildIDs(tagDefinition);
+		return userMarkupCollectionDelegate.getChildIDs(tagDefinition);
 	}
 
 	@Transient
 	public List<TagDefinition> getChildren(TagDefinition tagDefinition) {
-		return delegateUserMarkupCollection.getChildren(tagDefinition);
+		return userMarkupCollectionDelegate.getChildren(tagDefinition);
 	}
 
 	public void update(TagsetDefinition tagsetDefinition) {
-		delegateUserMarkupCollection.update(tagsetDefinition);
+		userMarkupCollectionDelegate.update(tagsetDefinition);
 	}
 
 	public void addTagReferences(List<TagReference> tagReferences) {
-		delegateUserMarkupCollection.addTagReferences(tagReferences);
+		userMarkupCollectionDelegate.addTagReferences(tagReferences);
 	}
 
 	
 	
 	public void addTagReference(TagReference tagReference) {
-		delegateUserMarkupCollection.addTagReference(tagReference);
+		userMarkupCollectionDelegate.addTagReference(tagReference);
 	}
 
 	@Transient
 	public String getId() {
-		return delegateUserMarkupCollection.getId();
+		return userMarkupCollectionDelegate.getId();
 	}
 
 	@Transient
 	public String getName() {
-		return delegateUserMarkupCollection.getName();
+		return userMarkupCollectionDelegate.getName();
 	}
 
 	@Transient
 	public ContentInfoSet getContentInfoSet() {
-		return delegateUserMarkupCollection.getContentInfoSet();
+		return userMarkupCollectionDelegate.getContentInfoSet();
 	}
 	
 	@Transient
 	public boolean isEmpty() {
-		return delegateUserMarkupCollection.isEmpty();
+		return userMarkupCollectionDelegate.isEmpty();
 	}
 
 	public String toString() {
-		return delegateUserMarkupCollection.toString();
+		return userMarkupCollectionDelegate.toString();
 	}
 
 	public boolean hasAccess(DBUser dbUser) {
@@ -235,15 +235,41 @@ public class DBUserMarkupCollection implements java.io.Serializable, IUserMarkup
 	}
 
 	public void setId(String id) {
-		delegateUserMarkupCollection.setId(id);
+		userMarkupCollectionDelegate.setId(id);
 	}
 
 	public void synchronizeTagInstances(boolean withUserDefinedPropertyValues) {
-		delegateUserMarkupCollection
+		userMarkupCollectionDelegate
 				.synchronizeTagInstances(withUserDefinedPropertyValues);
 	}
-
+	
+	@Transient
 	public Set<TagReference> getTagReferences(TagInstance ti) {
-		return delegateUserMarkupCollection.getTagReferences(ti);
+		return userMarkupCollectionDelegate.getTagReferences(ti);
 	}
+	
+	@Transient
+	public IUserMarkupCollection getUserMarkupCollectionDelegate() {
+		return userMarkupCollectionDelegate;
+	}
+	
+	public void setUserMarkupCollectionDelegate(
+			IUserMarkupCollection userMarkupCollectionDelegate) {
+		this.userMarkupCollectionDelegate = userMarkupCollectionDelegate;
+	}
+
+	@Transient
+	public Set<TagReference> getTagReferences(String tagInstanceID) {
+		return userMarkupCollectionDelegate.getTagReferences(tagInstanceID);
+	}
+
+	public boolean hasTagInstance(String instanceID) {
+		return userMarkupCollectionDelegate.hasTagInstance(instanceID);
+	}
+
+	public void removeTagReferences(Set<TagReference> tagReferences) {
+		userMarkupCollectionDelegate.removeTagReferences(tagReferences);
+	}
+
+	
 }

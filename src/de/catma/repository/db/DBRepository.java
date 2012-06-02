@@ -22,6 +22,8 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 
 import de.catma.backgroundservice.BackgroundServiceProvider;
+import de.catma.backgroundservice.DefaultProgressCallable;
+import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
 import de.catma.document.source.ISourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
@@ -327,14 +329,58 @@ public class DBRepository implements IndexedRepository {
 	}
 
 
-	public void update(IUserMarkupCollection userMarkupCollection,
-			List<TagReference> tagReferences) {
-		dbUserMarkupCollectionHandler.update(userMarkupCollection, tagReferences);
+	public void update(final IUserMarkupCollection userMarkupCollection,
+			final Collection<TagReference> tagReferences) {
+		backgroundServiceProvider.submit(
+				new DefaultProgressCallable<Void>() {
+				public Void call() throws Exception {
+					getProgressListener().setProgress(
+						"Saving User Markup Collection " + 
+								userMarkupCollection.getName() + "... ");
+					if (userMarkupCollection.getTagReferences().containsAll(tagReferences)) {
+						dbUserMarkupCollectionHandler.addTagReferences(
+							userMarkupCollection, tagReferences);
+					}
+					else {
+						dbUserMarkupCollectionHandler.removeTagReferences(
+							userMarkupCollection, tagReferences);
+					}
+					return null;
+				}
+			}, 
+			new ExecutionListener<Void>() {
+				public void done(Void nothing) { /* noop */ }
+				public void error(Throwable t) {
+					propertyChangeSupport.firePropertyChange(
+							RepositoryChangeEvent.exceptionOccurred.name(),
+							null, 
+							t);				
+				}
+			});
 	}
 	
-	public void update(List<IUserMarkupCollection> userMarkupCollections,
-			TagsetDefinition tagsetDefinition) {
-		dbUserMarkupCollectionHandler.update(userMarkupCollections, tagsetDefinition);
+	public void update(final List<IUserMarkupCollection> userMarkupCollections,
+			final TagsetDefinition tagsetDefinition) {
+		backgroundServiceProvider.submit(
+				new DefaultProgressCallable<Void>() {
+				public Void call() throws Exception {
+					getProgressListener().setProgress(
+							"Updating Tagset " + tagsetDefinition.getName() + "... ");
+					
+					dbUserMarkupCollectionHandler.update(
+							userMarkupCollections, tagsetDefinition);
+					return null;
+				}
+			}, 
+			new ExecutionListener<Void>() {
+				public void done(Void nothing) { /* noop */ }
+				public void error(Throwable t) {
+					propertyChangeSupport.firePropertyChange(
+							RepositoryChangeEvent.exceptionOccurred.name(),
+							null, 
+							t);				
+				}
+			});
 	}
 	
 

@@ -171,7 +171,7 @@ class FSRepository implements Repository {
 	
 	public void update(
 			IUserMarkupCollection userMarkupCollection, 
-			List<TagReference> tagReferences) {
+			Collection<TagReference> tagReferences) {
 		try {
 			userMarkupCollectionHandler.saveUserMarkupCollection(
 					userMarkupCollection, 

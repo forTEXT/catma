@@ -133,4 +133,13 @@ public class DBPropertyDefinition implements java.io.Serializable {
 		}
 	}
 
+	public boolean hasValue(String value) {
+		for (DBPropertyDefPossibleValue dbValue : getDbPropertyDefPossibleValues()) {
+			if (dbValue.getValue().equals(value)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 }

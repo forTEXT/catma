@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
+import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.terminal.ClassResource;
@@ -670,14 +671,25 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		
 		for (TagsetDefinition tagsetDefinition : userMarkupCollection.getTagLibrary()) {
 			for (TagDefinition td : tagsetDefinition) {
-				boolean selected = Boolean.valueOf(markupCollectionsTree.getItem(
-						td).getItemProperty(
-								MarkupCollectionsTreeProperty.visible).toString());
-				if (selected) {
-					result.add(td);
+				Item item = markupCollectionsTree.getItem(td); 
+				if (item != null) {
+					Property property = 
+							(Property)item.getItemProperty(
+									MarkupCollectionsTreeProperty.visible);
+					CheckBox checkBox = (CheckBox) property.getValue();
+					
+					boolean selected = (Boolean) checkBox.getValue();
+					
+					if (selected) {
+						result.add(td);
+					}
 				}
 			}
 		}
 		return result;
+	}
+	
+	public void removeTagInstance(String instanceID) {
+		userMarkupCollectionManager.removeTagInstance(instanceID);
 	}
 }

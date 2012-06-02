@@ -8,6 +8,7 @@
   <property name="hibernate.connection.username">root</property>
   <property name="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
   <property name="hibernate.show_sql">true</property>
+  <!-- <property name="hibernate.current_session_context_class">managed</property> -->
   <mapping class="de.catma.repository.db.model.DBUser"/>
   <mapping class="de.catma.repository.db.model.DBSourceDocument"/>
   <mapping class="de.catma.repository.db.model.DBUserSourceDocument"/>

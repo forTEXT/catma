@@ -162,5 +162,9 @@ public class MarkupPanel extends VerticalLayout {
 
 	public Repository getRepository() {
 		return markupCollectionsPanel.getRepository();
+	}
+
+	public void removeTagInstance(String instanceID) {
+		markupCollectionsPanel.removeTagInstance(instanceID);
 	}	
 }

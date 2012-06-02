@@ -391,7 +391,8 @@ public class TagsetTree extends HorizontalLayout {
 									idGenerator.generate(),
 									(String)nameProperty.getValue(),
 									new Version(), 
-									null,
+									(baseID.isEmpty()? null : 
+										((TagDefinition)selectedParent).getId()),
 									baseID);
 						PropertyDefinition colorPropertyDef =
 								new PropertyDefinition(
@@ -723,6 +724,7 @@ public class TagsetTree extends HorizontalLayout {
 		}
 		else {
 			TagDefinition parent = tagsetDefinition.getTagDefinition(baseID);
+			tagTree.setChildrenAllowed(parent, true);
 			tagTree.setParent(tagDefinition, parent);
 		}		
 	}

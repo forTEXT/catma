@@ -84,8 +84,6 @@ public class DBTagDefinition implements java.io.Serializable {
 		this.tagDefinitionId = tagDefinitionId;
 	}
 
-	@Version
-	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "version", nullable = false, length = 19)
 	public Date getVersion() {
 		return this.version;

@@ -3,6 +3,7 @@ package de.catma.repository.db;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -32,6 +33,7 @@ import de.catma.repository.db.model.DBTagReference;
 import de.catma.repository.db.model.DBUserMarkupCollection;
 import de.catma.repository.db.model.DBUserUserMarkupCollection;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
+import de.catma.tag.ITagLibrary;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -42,11 +44,13 @@ import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
 class DBUserMarkupCollectionHandler {
-
+	
 	private DBRepository dbRepository;
-
+	private IDGenerator idGenerator;
+	
 	public DBUserMarkupCollectionHandler(DBRepository dbRepository) {
 		this.dbRepository = dbRepository;
+		this.idGenerator = new IDGenerator();
 	}
 
 	void createUserMarkupCollection(String name,
@@ -145,12 +149,12 @@ class DBUserMarkupCollectionHandler {
 				
 				try {
 					session.save(dbUserMarkupCollection);
-
-					dbRepository.getIndexer().index(
-							dbUserMarkupCollection.getTagReferences(), 
-							sourceDocument.getID(),
-							dbUserMarkupCollection.getId(),
-							umc.getTagLibrary());
+//TODO: indexing
+//					dbRepository.getIndexer().index(
+//							dbUserMarkupCollection.getTagReferences(), 
+//							sourceDocument.getID(),
+//							dbUserMarkupCollection.getId(),
+//							umc.getTagLibrary());
 
 					session.getTransaction().commit();
 
@@ -201,7 +205,6 @@ class DBUserMarkupCollectionHandler {
 			DBUserMarkupCollection dbUserMarkupCollection, 
 			Map<String, DBTagDefinition> dbTagDefs) {
 		
-		IDGenerator idGenerator = new IDGenerator();
 		HashMap<String, DBTagInstance> dbTagInstances = 
 				new HashMap<String, DBTagInstance>();
 		
@@ -357,7 +360,6 @@ class DBUserMarkupCollectionHandler {
 			DBUserMarkupCollection dbUserMarkupCollection, 
 			String localSourceDocUri) throws URISyntaxException {
 		
-		IDGenerator idGenerator = new IDGenerator();
 		DBTagLibrary tagLibrary = dbUserMarkupCollection.getTagLibrary(); 
 		
 		HashMap<DBTagInstance, TagInstance> tagInstances = 
@@ -395,14 +397,62 @@ class DBUserMarkupCollectionHandler {
 		
 	}
 
-	void update(IUserMarkupCollection userMarkupCollection,
+	void addTagReferences(IUserMarkupCollection userMarkupCollection,
+			Collection<TagReference> tagReferences) throws IOException {
+		Session session = dbRepository.getSessionFactory().openSession();
+		try {
+			Set<TagInstance> incomingTagInstances = 
+					new HashSet<TagInstance>();
+			
+			for (TagReference tr : tagReferences) {
+				incomingTagInstances.add(tr.getTagInstance());
+			}
+			IUserMarkupCollection userMarkupCollectionDelegate = 
+					((DBUserMarkupCollection)userMarkupCollection).getUserMarkupCollectionDelegate();
+			session.load(
+					userMarkupCollection, 
+					Integer.valueOf(userMarkupCollection.getId()));
+			((DBUserMarkupCollection)userMarkupCollection).setUserMarkupCollectionDelegate(
+					userMarkupCollectionDelegate);
+			
+			session.beginTransaction();
+			
+			session.saveOrUpdate(userMarkupCollection.getTagLibrary());
+			for (TagInstance ti : incomingTagInstances) {
+				addTagReferences(
+					session, ti, (DBUserMarkupCollection)userMarkupCollection);
+			}
+			
+			session.saveOrUpdate(userMarkupCollection);
+			session.getTransaction().commit();
+		}
+		catch (Exception e) {
+			try {
+				if (session.getTransaction().isActive()) {
+					session.getTransaction().rollback();
+				}
+			}
+			catch(Exception notOfInterest){}
+			throw new IOException(e);
+		}
+		finally {
+			CloseSafe.close(new ClosableSession(session));
+		}
+	}
+	
+	private void update(Session session, IUserMarkupCollection userMarkupCollection,
 			List<TagReference> tagReferences) {
-		IDGenerator idGenerator = new IDGenerator();
+		
+		IUserMarkupCollection userMarkupCollectionDelegate = 
+				((DBUserMarkupCollection)userMarkupCollection).getUserMarkupCollectionDelegate();
+		session.load(
+				userMarkupCollection, 
+				Integer.valueOf(userMarkupCollection.getId()));
+		((DBUserMarkupCollection)userMarkupCollection).setUserMarkupCollectionDelegate(
+				userMarkupCollectionDelegate);
 		
 		DBUserMarkupCollection dbUserMarkupCollection =
 				(DBUserMarkupCollection) userMarkupCollection;
-		
-		Set<DBTagInstance> toBeDeleted = new HashSet<DBTagInstance>();
 		
 		Map<String, DBTagInstance> persistentTagInstances = 
 				new HashMap<String,DBTagInstance>();
@@ -420,96 +470,109 @@ class DBUserMarkupCollectionHandler {
 			incomingTagInstances.put(tr.getTagInstanceID(), tr.getTagInstance());
 		}
 		
-		for (DBTagInstance dbTagInstance : persistentTagInstances.values()) {
+		removeTagReferences(
+			session, incomingTagInstances, 
+			persistentTagInstances, dbUserMarkupCollection);
+		
+		update(session, persistentTagInstances, 
+				dbUserMarkupCollection, incomingTagInstances);
+		
+		session.saveOrUpdate(dbUserMarkupCollection);
+	}
+
+	private void removeTagReferences(
+		Session session, Map<String, TagInstance> incomingTagInstances, 
+		Map<String, DBTagInstance> persistentTagInstances, 
+		DBUserMarkupCollection dbUserMarkupCollection) {
+		
+		Iterator<Map.Entry<String, DBTagInstance>> iterator = 
+				persistentTagInstances.entrySet().iterator();
+		
+		while(iterator.hasNext()) {
+			DBTagInstance dbTagInstance = iterator.next().getValue();
 			if (!incomingTagInstances.containsKey(
 				idGenerator.uuidBytesToCatmaID(dbTagInstance.getUuid()))) {
-				toBeDeleted.add(dbTagInstance);
 				dbUserMarkupCollection.getDbTagReferences().removeAll(
 						dbTagInstance.getDbTagReferences());
-			}
-		}
-		Session session = dbRepository.getSessionFactory().openSession();
-		try {
-			update(session, idGenerator, persistentTagInstances, 
-					dbUserMarkupCollection, incomingTagInstances);
-			
-			for (DBTagInstance dbTagInstance : toBeDeleted) {
 				session.delete(dbTagInstance);
+				iterator.remove();
 			}
-			
-			session.save(dbUserMarkupCollection);
-		}
-		finally {
-			CloseSafe.close(new ClosableSession(session));
 		}
 	}
 
 	private void update(
-			Session session, IDGenerator idGenerator, 
+			Session session,  
 			Map<String, DBTagInstance> persistentTagInstances,
 			DBUserMarkupCollection dbUserMarkupCollection, 
 			Map<String, TagInstance> incomingTagInstances) {
 		
 		for (TagInstance ti : incomingTagInstances.values()) {
-			
 			if (persistentTagInstances.containsKey(ti.getUuid())) {
-				update(idGenerator, persistentTagInstances.get(
-						ti.getUuid()), ti, dbUserMarkupCollection);
+				DBTagInstance dbTagInstance = 
+						persistentTagInstances.get(ti.getUuid());
+				update(idGenerator, dbTagInstance, ti, dbUserMarkupCollection);
 			}
 			else {
-				
-				DBTagDefinition dbTagDefinition = 
-					(DBTagDefinition) session.load(
-							DBTagDefinition.class, 
-							ti.getTagDefinition().getId());
-				
-				DBTagInstance dbTagInstance = 
-					new DBTagInstance(
-						idGenerator.catmaIDToUUIDBytes(ti.getUuid()),
-						dbTagDefinition);
-				
-				for (Property prop : ti.getSystemProperties()) {
-					DBPropertyDefinition dbPropDef =
-							(DBPropertyDefinition) session.load(
-									DBPropertyDefinition.class,
-									prop.getPropertyDefinition().getId());
-								
-					DBProperty sysProp = 
-						new DBProperty(
-							dbPropDef, dbTagInstance,
-							prop.getPropertyValueList().getFirstValue());
-					dbTagInstance.getDbProperties().add(sysProp);
-				}
-				
-				for (Property prop : ti.getUserDefinedProperties()) {
-					DBPropertyDefinition dbPropDef =
-							(DBPropertyDefinition) session.load(
-									DBPropertyDefinition.class,
-									prop.getPropertyDefinition().getId());
-					DBProperty userProp = 
-							new DBProperty(
-									dbPropDef, dbTagInstance);
-					for (String value : prop.getPropertyValueList().getValues()) {
-						userProp.getDbPropertyValues().add(
-								new DBPropertyValue(userProp, value));
-					}
-					dbTagInstance.getDbProperties().add(userProp);
-				}
-				
-				for (TagReference tr : 
-					dbUserMarkupCollection.getTagReferences(ti)) {
-					
-					DBTagReference dbTagReference = 
-							new DBTagReference(
-									tr.getRange().getStartPoint(), 
-									tr.getRange().getEndPoint(), 
-									dbUserMarkupCollection, dbTagInstance);
-					
-					dbUserMarkupCollection.getDbTagReferences().add(dbTagReference);
-				}
+				addTagReferences(session, ti, dbUserMarkupCollection);
 			}
 		}
 	}
+
+	private void addTagReferences(
+			Session session, TagInstance ti, 
+			DBUserMarkupCollection dbUserMarkupCollection) {
+		
+		DBTagDefinition dbTagDefinition = 
+			(DBTagDefinition) session.load(
+					DBTagDefinition.class, 
+					ti.getTagDefinition().getId());
+		
+		DBTagInstance dbTagInstance = 
+			new DBTagInstance(
+				idGenerator.catmaIDToUUIDBytes(ti.getUuid()),
+				dbTagDefinition);
+		
+		for (Property prop : ti.getSystemProperties()) {
+			DBPropertyDefinition dbPropDef =
+					(DBPropertyDefinition) session.load(
+							DBPropertyDefinition.class,
+							prop.getPropertyDefinition().getId());
+						
+			DBProperty sysProp = 
+				new DBProperty(
+					dbPropDef, dbTagInstance,
+					prop.getPropertyValueList().getFirstValue());
+			dbTagInstance.getDbProperties().add(sysProp);
+		}
+		
+		for (Property prop : ti.getUserDefinedProperties()) {
+			DBPropertyDefinition dbPropDef =
+					(DBPropertyDefinition) session.load(
+							DBPropertyDefinition.class,
+							prop.getPropertyDefinition().getId());
+			DBProperty userProp = 
+					new DBProperty(
+							dbPropDef, dbTagInstance);
+			for (String value : prop.getPropertyValueList().getValues()) {
+				userProp.getDbPropertyValues().add(
+						new DBPropertyValue(userProp, value));
+			}
+			dbTagInstance.getDbProperties().add(userProp);
+		}
+		
+		for (TagReference tr : 
+			dbUserMarkupCollection.getTagReferences(ti)) {
+			
+			DBTagReference dbTagReference = 
+					new DBTagReference(
+							tr.getRange().getStartPoint(), 
+							tr.getRange().getEndPoint(), 
+							dbUserMarkupCollection, dbTagInstance);
+			
+			dbUserMarkupCollection.getDbTagReferences().add(dbTagReference);
+		}
+	}
+
 
 	private void update(
 			IDGenerator idGenerator, DBTagInstance dbTagInstance, TagInstance ti, 
@@ -535,7 +598,7 @@ class DBUserMarkupCollectionHandler {
 						curDbTagRef.getCharacterStart(), 
 						curDbTagRef.getCharacterEnd());
 			if (!incomingRanges.contains(curRange)) {
-				iterator.remove(); //TODO: check if this really works or if we have to delete them manually
+				iterator.remove();
 			}
 			else {
 				dbTagRefsByRange.put(curRange, curDbTagRef);
@@ -576,20 +639,103 @@ class DBUserMarkupCollectionHandler {
  		}
 	}
 
-	public void update(List<IUserMarkupCollection> userMarkupCollections,
-			TagsetDefinition tagsetDefinition) {
-		// TODO Auto-generated method stub
-		
+	void update(List<IUserMarkupCollection> userMarkupCollections,
+			TagsetDefinition tagsetDefinition) throws IOException {
 		/**
-		 * save tagLibraries of the incoming collections
-		 * update id's of the new objects (reload possible?, definitely easier, maybe just reload the changed TagsetDefinition?)
-		 * then: update(userMarkupCollection, userMarkupCollection.getTagReferences) for each coll
-		 * 
-		 * background handling
-		 * 
 		 * siehe dann auch todos in MarkupPanel!
 		 */
 		
+		Session session = dbRepository.getSessionFactory().openSession();
+		try {
+			session.beginTransaction();
+			for (IUserMarkupCollection userMarkupCollection : 
+				userMarkupCollections) {
+				DBTagLibraryHandler dbTagLibraryHandler = 
+						dbRepository.getDbTagLibraryHandler();
+				DBTagLibrary dbTagLibrary = 
+						(DBTagLibrary)userMarkupCollection.getTagLibrary();
+				ITagLibrary tagLibraryDelegate = dbTagLibrary.getTagLibraryDelegate(); 
+
+				session.load(
+					dbTagLibrary, 
+					Integer.valueOf(dbTagLibrary.getId()));
+				dbTagLibrary.setTagLibraryDelegate(tagLibraryDelegate);
+				
+				dbTagLibraryHandler.updateTagsetDefinition(
+					session, dbTagLibrary,
+					dbTagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()));
+
+				update(session, userMarkupCollection, userMarkupCollection.getTagReferences());
+			}
+			session.getTransaction().commit();
+		}
+		catch (Exception e) {
+			try {
+				if (session.getTransaction().isActive()) {
+					session.getTransaction().rollback();
+				}
+			}
+			catch(Exception notOfInterest){}
+			throw new IOException(e);
+		}
+		finally {
+			CloseSafe.close(new ClosableSession(session));
+		}
 	}
-	
+
+	void removeTagReferences(IUserMarkupCollection userMarkupCollection,
+			Collection<TagReference> tagReferences) throws IOException {
+		DBUserMarkupCollection dbUserMarkupCollection = 
+				(DBUserMarkupCollection)userMarkupCollection;
+		
+		Session session = dbRepository.getSessionFactory().openSession();
+		try {
+			Map<String, DBTagInstance> persistentTagInstances = 
+					new HashMap<String,DBTagInstance>();
+			
+			for (DBTagReference dbTr : dbUserMarkupCollection.getDbTagReferences()) {
+				persistentTagInstances.put(
+					idGenerator.uuidBytesToCatmaID(dbTr.getDbTagInstance().getUuid()),
+					dbTr.getDbTagInstance());
+			}
+			
+			Map<String, TagInstance> incomingTagInstances = 
+					new HashMap<String, TagInstance>();
+			
+			for (TagReference tr : tagReferences) {
+				incomingTagInstances.put(
+						tr.getTagInstanceID(), tr.getTagInstance());
+			}
+			
+			IUserMarkupCollection userMarkupCollectionDelegate = 
+					((DBUserMarkupCollection)userMarkupCollection).getUserMarkupCollectionDelegate();
+			session.load(
+					userMarkupCollection, 
+					Integer.valueOf(userMarkupCollection.getId()));
+			((DBUserMarkupCollection)userMarkupCollection).setUserMarkupCollectionDelegate(
+					userMarkupCollectionDelegate);
+			
+			session.beginTransaction();
+			
+			removeTagReferences(
+				session, incomingTagInstances, 
+				persistentTagInstances, dbUserMarkupCollection);
+
+			session.saveOrUpdate(userMarkupCollection);
+			session.getTransaction().commit();
+		}
+		catch (Exception e) {
+			try {
+				if (session.getTransaction().isActive()) {
+					session.getTransaction().rollback();
+				}
+			}
+			catch(Exception notOfInterest){}
+			throw new IOException(e);
+		}
+		finally {
+			CloseSafe.close(new ClosableSession(session));
+		}
+	}
+
 }

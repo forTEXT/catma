@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,6 +37,18 @@ import de.catma.util.CloseSafe;
 import de.catma.util.IDGenerator;
 
 class DBTagLibraryHandler {
+	
+	private static String MAINTAIN_TAGDEFHIERARCHY = 
+			"UPDATE " + DBTagDefinition.TABLE + " td1, " + 
+			DBTagDefinition.TABLE + " td2, " +
+			DBTagsetDefinition.TABLE + " tsd " +
+			"SET td1.parentID = td2.tagDefinitionID " +
+			"WHERE td1.parentUuid = td2.uuid AND " +
+			"td1.parentID IS NULL AND " + 
+			"td1.parentUuid IS NOT NULL " +
+			"AND td1.tagsetDefinitionID = tsd.tagsetDefinitionID " +
+			"AND td2.tagsetDefinitionID = tsd.tagsetDefinitionID " +
+			"AND tsd.tagLibraryID = :curTagLibraryId";
 
 	private DBRepository dbRepository;
 	private Map<String,DBTagLibrary> tagLibrariesByID;
@@ -133,61 +146,65 @@ class DBTagLibraryHandler {
 	void loadTagLibrayContent(Session session, DBTagLibrary tagLibrary) throws IOException {
 
 		Query query = session.createQuery(
-				"select tsd from "
+				"select distinct tsd from "
 				+ DBTagsetDefinition.class.getSimpleName() + " as tsd "
 				+ "left join fetch tsd.dbTagDefinitions as td "
 				+ "left join fetch td.dbPropertyDefinitions as pd "
 				+ "left join fetch pd.dbPropertyDefPossibleValues "
 				+ "where tsd.tagLibraryId = " + tagLibrary.getTagLibraryId());
+		List<DBTagsetDefinition> dbTagsetDefinitions = (List<DBTagsetDefinition>)query.list();
 		
-		for (DBTagsetDefinition dbTsDef : (List<DBTagsetDefinition>)query.list()) {
-			
-			TagsetDefinition tsDef = 
-					new TagsetDefinition(
-						dbTsDef.getTagsetDefinitionId(),
-						idGenerator.uuidBytesToCatmaID(dbTsDef.getUuid()),
-						dbTsDef.getName(),
-						new Version(dbTsDef.getVersion()));
-			
-			for (DBTagDefinition dbTDef : dbTsDef.getDbTagDefinitions()) {
-				TagDefinition tDef = 
-					new TagDefinition(
-						dbTDef.getTagDefinitionId(),
-						idGenerator.uuidBytesToCatmaID(dbTDef.getUuid()),
-						dbTDef.getName(),
-						new Version(dbTDef.getVersion()),
-						dbTDef.getParentId(),
-						idGenerator.uuidBytesToCatmaID(dbTDef.getParentUuid()));
-				tsDef.addTagDefinition(tDef);
+		for (DBTagsetDefinition dbTsDef : dbTagsetDefinitions) {
+			tagLibrary.add(createTagsetDefinition(dbTsDef));
+		}
+	}
 
-				for (DBPropertyDefinition dbPDef : 
-					dbTDef.getDbPropertyDefinitions()) {
-					
-					List<String> pValues = new ArrayList<String>();
-					for (DBPropertyDefPossibleValue dbPVal : 
-						dbPDef.getDbPropertyDefPossibleValues()) {
-						pValues.add(dbPVal.getValue());
-					}
-					
-					PropertyPossibleValueList ppvList = 
-							new PropertyPossibleValueList(pValues, true);
-					PropertyDefinition pDef = 
-							new PropertyDefinition(
-								dbPDef.getPropertyDefinitionId(),
-								idGenerator.uuidBytesToCatmaID(dbPDef.getUuid()),
-								dbPDef.getName(),
-								ppvList);
+	private TagsetDefinition createTagsetDefinition(DBTagsetDefinition dbTsDef) {
+		TagsetDefinition tsDef = 
+			new TagsetDefinition(
+				dbTsDef.getTagsetDefinitionId(),
+				idGenerator.uuidBytesToCatmaID(dbTsDef.getUuid()),
+				dbTsDef.getName(),
+				new Version(dbTsDef.getVersion()));
 
-					if (dbPDef.isSystemproperty()) {
-						tDef.addSystemPropertyDefinition(pDef);
-					}
-					else {
-						tDef.addUserDefinedPropertyDefinition(pDef);
-					}
+		for (DBTagDefinition dbTDef : dbTsDef.getDbTagDefinitions()) {
+			TagDefinition tDef = 
+				new TagDefinition(
+					dbTDef.getTagDefinitionId(),
+					idGenerator.uuidBytesToCatmaID(dbTDef.getUuid()),
+					dbTDef.getName(),
+					new Version(dbTDef.getVersion()),
+					dbTDef.getParentId(),
+					idGenerator.uuidBytesToCatmaID(dbTDef.getParentUuid()));
+			tsDef.addTagDefinition(tDef);
+		
+			for (DBPropertyDefinition dbPDef : 
+				dbTDef.getDbPropertyDefinitions()) {
+				
+				List<String> pValues = new ArrayList<String>();
+				for (DBPropertyDefPossibleValue dbPVal : 
+					dbPDef.getDbPropertyDefPossibleValues()) {
+					pValues.add(dbPVal.getValue());
+				}
+				
+				PropertyPossibleValueList ppvList = 
+						new PropertyPossibleValueList(pValues, true);
+				PropertyDefinition pDef = 
+						new PropertyDefinition(
+							dbPDef.getPropertyDefinitionId(),
+							idGenerator.uuidBytesToCatmaID(dbPDef.getUuid()),
+							dbPDef.getName(),
+							ppvList);
+		
+				if (dbPDef.isSystemproperty()) {
+					tDef.addSystemPropertyDefinition(pDef);
+				}
+				else {
+					tDef.addUserDefinedPropertyDefinition(pDef);
 				}
 			}
-			tagLibrary.add(tsDef);
 		}
+		return tsDef;
 	}
 
 	public void importTagLibrary(InputStream inputStream) throws IOException {
@@ -196,7 +213,7 @@ class DBTagLibraryHandler {
 		TagLibrarySerializationHandler tagLibrarySerializationHandler = 
 				dbRepository.getSerializationHandlerFactory().getTagLibrarySerializationHandler();
 		
-		//emits eventa to the TagManager and is not suited for background loading
+		//emits events to the TagManager and is not suited for background loading
 		final ITagLibrary tagLibrary = 
 				tagLibrarySerializationHandler.deserialize(null, inputStream);
 		
@@ -231,19 +248,14 @@ class DBTagLibraryHandler {
 									session, dbTagLibrary.getTagLibraryId(), 
 									tsDef));
 					}
-					SQLQuery maintainTagsetDefHierarchyQuery = session.createSQLQuery(
-						"UPDATE " + DBTagDefinition.TABLE + " td1, " + 
-						DBTagDefinition.TABLE + " td2, " +
-						DBTagsetDefinition.TABLE + " tsd " +
-						"SET td1.parentID = td2.tagDefinitionID " +
-						"WHERE td1.parentUuid = td2.uuid AND " +
-						"td1.parentID IS NULL AND " + 
-						"td1.parentUuid IS NOT NULL " +
-						"AND td1.tagsetDefinitionID = tsd.tagsetDefinitionID " +
-						"AND td2.tagsetDefinitionID = tsd.tagsetDefinitionID " +
-						"AND tsd.tagLibraryID = " + dbTagLibrary.getTagLibraryId());
 					
-					maintainTagsetDefHierarchyQuery.executeUpdate();
+					SQLQuery maintainTagDefHierarchyQuery = session.createSQLQuery(
+							MAINTAIN_TAGDEFHIERARCHY);
+					
+					maintainTagDefHierarchyQuery.setInteger(
+							"curTagLibraryId", dbTagLibrary.getTagLibraryId());
+					
+					maintainTagDefHierarchyQuery.executeUpdate();
 					
 					if (independent) {
 						session.getTransaction().commit();
@@ -401,8 +413,8 @@ class DBTagLibraryHandler {
 							(DBTagsetDefinition)session.load(
 									DBTagsetDefinition.class, 
 									tagsetDefinition.getId()),
-							(tagDefinition.getParentUuid()==null)? null :
-								tagDefinition.getParentId(),
+							(tagDefinition.getParentUuid().isEmpty()? null :
+								tagDefinition.getParentId()),
 							idGenerator.catmaIDToUUIDBytes(
 									tagDefinition.getParentUuid()));
 					
@@ -563,11 +575,11 @@ class DBTagLibraryHandler {
 					Session session = dbRepository.getSessionFactory().openSession();
 					try {
 						session.beginTransaction();
-						
 						DBTagsetDefinition dbTagsetDefinition = 
 							(DBTagsetDefinition)session.load(
 								DBTagsetDefinition.class, 
 								tagsetDefinition.getId());
+
 						dbTagsetDefinition.setName(
 								tagsetDefinition.getName());
 						dbTagsetDefinition.setVersion(
@@ -662,8 +674,10 @@ class DBTagLibraryHandler {
 							(DBTagDefinition)session.load(
 								DBTagDefinition.class, 
 								tagDefinition.getId());
+						
 						dbTagDefinition.setName(
 								tagDefinition.getName());
+						
 						PropertyDefinition colorDefinition = 
 							tagDefinition.getPropertyDefinitionByName(
 								PropertyDefinition.SystemPropertyName.catma_displaycolor.name());
@@ -673,6 +687,7 @@ class DBTagLibraryHandler {
 										colorDefinition.getId());
 						dbColorDefinition.setSingleValue(
 								tagDefinition.getColor());
+						
 						dbTagDefinition.setVersion(
 							tagDefinition.getVersion().getDate());
 						
@@ -750,5 +765,186 @@ class DBTagLibraryHandler {
 				}
 			});
 	}
+
+	void updateTagsetDefinition(Session session, ITagLibrary tagLibrary,
+			TagsetDefinition tagsetDefinition) {
+
+		DBTagLibrary dbTagLibrary = (DBTagLibrary)tagLibrary;
+		DBTagsetDefinition dbTagsetDefinition = 
+				dbTagLibrary.getDbTagsetDefinition(tagsetDefinition.getUuid());
+		
+		if (dbTagsetDefinition != null) {
+			updateDbTagsetDefinition(dbTagsetDefinition, tagsetDefinition);
+			session.saveOrUpdate(dbTagsetDefinition);
+		}
+		else {
+			dbTagsetDefinition = 
+					createDbTagsetDefinition(tagsetDefinition, dbTagLibrary);
+			session.saveOrUpdate(dbTagsetDefinition);
+		}
+		
+		SQLQuery maintainTagDefHierarchyQuery = session.createSQLQuery(
+				MAINTAIN_TAGDEFHIERARCHY);
+		
+		maintainTagDefHierarchyQuery.setInteger(
+				"curTagLibraryId", dbTagLibrary.getTagLibraryId());
+		
+		maintainTagDefHierarchyQuery.executeUpdate();
+		tagLibrary.remove(tagsetDefinition);
+		
+		tagLibrary.add(createTagsetDefinition(dbTagsetDefinition));
+	}
+	
+
+	private void updateDbTagsetDefinition(
+			DBTagsetDefinition dbTagsetDefinition, TagsetDefinition tagsetDefinition) {
+		dbTagsetDefinition.setName(
+				tagsetDefinition.getName());
+		dbTagsetDefinition.setVersion(
+			tagsetDefinition.getVersion().getDate());
+		
+		for (TagDefinition tagDefinition : tagsetDefinition) {
+			Integer id = tagDefinition.getId();
+			if (id == null) {
+				//create
+				dbTagsetDefinition.getDbTagDefinitions().add(
+						createDbTagDefinition(tagDefinition, dbTagsetDefinition));
+			}
+			else if (tagsetDefinition.getDeletedTagDefinitions().contains(id)){
+				//delete
+				dbTagsetDefinition.getDbTagDefinitions().remove(
+					dbTagsetDefinition.getDbTagDefinition(id));
+			}
+			else {
+				//update
+				updateDbTagDefinition(
+					dbTagsetDefinition.getDbTagDefinition(id), tagDefinition);
+			}
+		}
+	}
+
+	private DBTagsetDefinition createDbTagsetDefinition(
+			TagsetDefinition tagsetDefinition, DBTagLibrary dbTagLibrary) {
+
+		DBTagsetDefinition dbTagsetDefinition = 
+			new DBTagsetDefinition(
+				idGenerator.catmaIDToUUIDBytes(tagsetDefinition.getUuid()), 
+				tagsetDefinition.getVersion().getDate(), 
+				tagsetDefinition.getName(),
+				dbTagLibrary.getTagLibraryId());
+		
+		for (TagDefinition td : tagsetDefinition) {
+			dbTagsetDefinition.getDbTagDefinitions().add(
+					createDbTagDefinition(td, dbTagsetDefinition));
+		}
+		return dbTagsetDefinition;
+	}
+
+	private void updateDbTagDefinition(DBTagDefinition dbTagDefinition,
+			TagDefinition tagDefinition) {
+		
+		dbTagDefinition.setName(
+				tagDefinition.getName());
+
+		dbTagDefinition.setVersion(
+				tagDefinition.getVersion().getDate());
+
+		dbTagDefinition.setParentUuid(
+				idGenerator.catmaIDToUUIDBytes(tagDefinition.getParentUuid()));
+
+		for (PropertyDefinition pd : tagDefinition.getSystemPropertyDefinitions()) {
+			updatePropertyDefinition(pd, true, dbTagDefinition, tagDefinition);
+		}
+		
+	}
+
+	private void updatePropertyDefinition(
+			PropertyDefinition pd, boolean isSystemPropertyDef,
+			DBTagDefinition dbTagDefinition, TagDefinition tagDefinition) {
+		
+		Integer id = pd.getId();
+		if (id == null) {
+			//create
+			dbTagDefinition.getDbPropertyDefinitions().add(
+					createDbPropertyDefinition(pd, dbTagDefinition, isSystemPropertyDef));
+		}
+		else if (tagDefinition.getDeletedPropertyDefinitions().contains(id)) {
+			//delete
+			dbTagDefinition.getDbPropertyDefinitions().remove(
+				dbTagDefinition.getDbPropertyDefinition(pd.getUuid()));
+		}
+		else {
+			// update
+			updateDbPropertyDefinition(
+				dbTagDefinition.getDbPropertyDefinition(pd.getUuid()), pd);
+		}
+	}
+
+	private DBTagDefinition createDbTagDefinition(TagDefinition tagDefinition,
+			DBTagsetDefinition dbTagsetDefinition) {
+
+		DBTagDefinition dbTagDefinition = 
+			new DBTagDefinition(
+				tagDefinition.getVersion().getDate(),
+				idGenerator.catmaIDToUUIDBytes(tagDefinition.getUuid()),
+				tagDefinition.getName(),
+				dbTagsetDefinition,
+				tagDefinition.getParentId(),
+				idGenerator.catmaIDToUUIDBytes(tagDefinition.getParentUuid()));
+		
+		for (PropertyDefinition pd  : tagDefinition.getSystemPropertyDefinitions()) {
+			dbTagDefinition.getDbPropertyDefinitions().add(
+					createDbPropertyDefinition(pd, dbTagDefinition, true));
+		}
+		
+		for (PropertyDefinition pd  : tagDefinition.getUserDefinedPropertyDefinitions()) {
+			dbTagDefinition.getDbPropertyDefinitions().add(
+					createDbPropertyDefinition(pd, dbTagDefinition, false));
+		}
+				
+		return dbTagDefinition;
+	}
+	
+	
+	private void updateDbPropertyDefinition(
+			DBPropertyDefinition dbPropertyDefinition, PropertyDefinition pd) {
+		dbPropertyDefinition.setName(pd.getName());
+		
+		Iterator<DBPropertyDefPossibleValue> iterator = 
+				dbPropertyDefinition.getDbPropertyDefPossibleValues().iterator();
+		
+		while (iterator.hasNext()) {
+			DBPropertyDefPossibleValue currentValue = iterator.next();
+			if (!pd.getPossibleValueList().getPropertyValueList().getValues().contains(
+					currentValue.getValue())){
+				iterator.remove();
+			}
+		}
+		
+		for (String value : pd.getPossibleValueList().getPropertyValueList().getValues()) {
+			if (!dbPropertyDefinition.hasValue(value)) {
+				dbPropertyDefinition.getDbPropertyDefPossibleValues().add(
+					new DBPropertyDefPossibleValue(value, dbPropertyDefinition));
+			}
+		}
+		
+	}
+
+	private DBPropertyDefinition createDbPropertyDefinition(
+			PropertyDefinition pd, DBTagDefinition dbTagDefinition, boolean isSystemPropertyDef) {
+		DBPropertyDefinition dbPropertyDefinition = 
+				new DBPropertyDefinition(
+						idGenerator.catmaIDToUUIDBytes(pd.getUuid()),
+						pd.getName(),
+						dbTagDefinition,
+						isSystemPropertyDef);
+		for (String value : pd.getPossibleValueList().getPropertyValueList().getValues()) {
+			dbPropertyDefinition.getDbPropertyDefPossibleValues().add(
+					new DBPropertyDefPossibleValue(value, dbPropertyDefinition));
+		}
+		
+		return dbPropertyDefinition;
+	}
+
 
 }
