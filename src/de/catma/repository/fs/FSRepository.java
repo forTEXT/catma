@@ -202,8 +202,7 @@ class FSRepository implements Repository {
 				new UserMarkupCollection(
 						id, 
 						cis, 
-						new TagLibrary(id, cis.getTitle()),
-						new ArrayList<TagReference>());
+						new TagLibrary(id, cis.getTitle()));
 		
 		UserMarkupCollectionReference ref = 
 				userMarkupCollectionHandler.saveUserMarkupCollection(

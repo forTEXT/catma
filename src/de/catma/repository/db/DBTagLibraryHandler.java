@@ -735,14 +735,15 @@ class DBTagLibraryHandler {
 				getDbTagsetDefinition(session, tagsetDefinition.getUuid(), tagLibrary.getId());
 		
 		if (dbTagsetDefinition != null) {
-			updateDbTagsetDefinition(dbTagsetDefinition, tagsetDefinition);
-			
+			//TODO: try to get along without getDeletedTagDefinitions()
 			for (Integer id : tagsetDefinition.getDeletedTagDefinitions()) {
 				DBTagDefinition dbTagDefinition = dbTagsetDefinition.getDbTagDefinition(id);
 				//delete
 				dbTagsetDefinition.getDbTagDefinitions().remove(dbTagDefinition);
+				session.delete(dbTagDefinition);
 			}
 
+			updateDbTagsetDefinition(session,dbTagsetDefinition, tagsetDefinition);
 		}
 		else {
 			dbTagsetDefinition = 
@@ -774,7 +775,7 @@ class DBTagLibraryHandler {
 	}
 
 	private void updateDbTagsetDefinition(
-			DBTagsetDefinition dbTagsetDefinition, TagsetDefinition tagsetDefinition) {
+			Session session, DBTagsetDefinition dbTagsetDefinition, TagsetDefinition tagsetDefinition) {
 		dbTagsetDefinition.setName(
 				tagsetDefinition.getName());
 		dbTagsetDefinition.setVersion(
@@ -789,7 +790,7 @@ class DBTagLibraryHandler {
 			}
 			else {
 				//update
-				updateDbTagDefinition(
+				updateDbTagDefinition(session,
 					dbTagsetDefinition.getDbTagDefinition(id), tagDefinition);
 			}
 		}
@@ -812,7 +813,7 @@ class DBTagLibraryHandler {
 		return dbTagsetDefinition;
 	}
 
-	private void updateDbTagDefinition(DBTagDefinition dbTagDefinition,
+	private void updateDbTagDefinition(Session session, DBTagDefinition dbTagDefinition,
 			TagDefinition tagDefinition) {
 		
 		dbTagDefinition.setName(
@@ -824,22 +825,21 @@ class DBTagLibraryHandler {
 		dbTagDefinition.setParentUuid(
 				idGenerator.catmaIDToUUIDBytes(tagDefinition.getParentUuid()));
 
-		for (PropertyDefinition pd : tagDefinition.getSystemPropertyDefinitions()) {
-			updatePropertyDefinition(pd, true, dbTagDefinition, tagDefinition);
-		}
-
 		for (Integer toBeDeletedId : tagDefinition.getDeletedPropertyDefinitions()) {
 			DBPropertyDefinition toBeDeleted = 
 					dbTagDefinition.getDbPropertyDefinition(toBeDeletedId);
 			
 			//delete
 			dbTagDefinition.getDbPropertyDefinitions().remove(toBeDeleted);
+			session.delete(toBeDeleted);
 		}
 
-		
+		for (PropertyDefinition pd : tagDefinition.getSystemPropertyDefinitions()) {
+			updatePropertyDefinition(session, pd, true, dbTagDefinition, tagDefinition);
+		}
 	}
 
-	private void updatePropertyDefinition(PropertyDefinition pd, boolean isSystemPropertyDef,
+	private void updatePropertyDefinition(Session session, PropertyDefinition pd, boolean isSystemPropertyDef,
 			DBTagDefinition dbTagDefinition, TagDefinition tagDefinition) {
 		
 		Integer id = pd.getId();
@@ -850,7 +850,7 @@ class DBTagLibraryHandler {
 		}
 		else {
 			// update
-			updateDbPropertyDefinition(
+			updateDbPropertyDefinition(session,
 				dbTagDefinition.getDbPropertyDefinition(pd.getUuid()), pd);
 		}
 	}
@@ -882,7 +882,7 @@ class DBTagLibraryHandler {
 	
 	
 	private void updateDbPropertyDefinition(
-			DBPropertyDefinition dbPropertyDefinition, PropertyDefinition pd) {
+			Session session, DBPropertyDefinition dbPropertyDefinition, PropertyDefinition pd) {
 		dbPropertyDefinition.setName(pd.getName());
 		
 		Iterator<DBPropertyDefPossibleValue> iterator = 
@@ -893,6 +893,7 @@ class DBTagLibraryHandler {
 			if (!pd.getPossibleValueList().getPropertyValueList().getValues().contains(
 					currentValue.getValue())){
 				iterator.remove();
+				session.delete(currentValue);
 			}
 		}
 		

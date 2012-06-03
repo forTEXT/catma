@@ -3,12 +3,9 @@ package de.catma.repository.db;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Criteria;
@@ -371,7 +368,7 @@ class DBUserMarkupCollectionHandler {
 								dbUserMarkupCollection.getDescription(), 
 								dbUserMarkupCollection.getPublisher(), 
 								dbUserMarkupCollection.getTitle()), 
-						tagLibrary, new ArrayList<TagReference>());
+						tagLibrary);
 		
 		HashMap<DBTagInstance, TagInstance> tagInstances = 
 				new HashMap<DBTagInstance, TagInstance>();
@@ -449,76 +446,6 @@ class DBUserMarkupCollectionHandler {
 		}
 	}
 	
-	private void updateUserMarkupCollection(
-			Session session, UserMarkupCollection userMarkupCollection) {
-
-		DBUserMarkupCollection dbUserMarkupCollection =
-				(DBUserMarkupCollection) session.load(
-						DBUserMarkupCollection.class, 
-						Integer.valueOf(userMarkupCollection.getId()));
-		
-		Map<String, DBTagInstance> persistentTagInstances = 
-				new HashMap<String,DBTagInstance>();
-		
-		for (DBTagReference dbTr : dbUserMarkupCollection.getDbTagReferences()) {
-			persistentTagInstances.put(
-				idGenerator.uuidBytesToCatmaID(dbTr.getDbTagInstance().getUuid()),
-				dbTr.getDbTagInstance());
-		}
-		
-		Map<String, TagInstance> incomingTagInstances = 
-				new HashMap<String, TagInstance>();
-		
-		for (TagReference tr : userMarkupCollection.getTagReferences()) {
-			incomingTagInstances.put(tr.getTagInstanceID(), tr.getTagInstance());
-		}
-		
-		removeTagInstances(session, persistentTagInstances, incomingTagInstances);
-		
-		updateTagInstances(session, persistentTagInstances, 
-				dbUserMarkupCollection, incomingTagInstances, 
-				userMarkupCollection);
-		
-		session.saveOrUpdate(dbUserMarkupCollection);
-	}
-
-	private void removeTagInstances(
-		Session session, Map<String, DBTagInstance> persistentTagInstances, 
-		Map<String, TagInstance> incomingTagInstances) {
-		
-		Iterator<Map.Entry<String, DBTagInstance>> iterator = 
-				persistentTagInstances.entrySet().iterator();
-		while (iterator.hasNext()) {
-			DBTagInstance dbTagInstance = iterator.next().getValue();
-			if (!incomingTagInstances.containsKey(
-				idGenerator.uuidBytesToCatmaID(dbTagInstance.getUuid()))) {
-				session.delete(dbTagInstance);
-				iterator.remove();
-			}
-		}
-	}
-
-	private void updateTagInstances(
-			Session session,  
-			Map<String, DBTagInstance> persistentTagInstances,
-			DBUserMarkupCollection dbUserMarkupCollection, 
-			Map<String, TagInstance> incomingTagInstances, 
-			UserMarkupCollection userMarkupCollection) {
-		
-		for (TagInstance ti : incomingTagInstances.values()) {
-			if (persistentTagInstances.containsKey(ti.getUuid())) {
-				DBTagInstance dbTagInstance = 
-						persistentTagInstances.get(ti.getUuid());
-				updateTagInstance(dbTagInstance,dbUserMarkupCollection, ti, 
-						userMarkupCollection.getTagReferences(ti.getUuid()));
-			}
-			else {
-				addTagInstance(
-					session, ti, userMarkupCollection, 
-					dbUserMarkupCollection);
-			}
-		}
-	}
 
 	private DBTagInstance addTagInstance(
 			Session session, TagInstance ti, 
@@ -577,69 +504,6 @@ class DBUserMarkupCollectionHandler {
 	}
 
 
-	private void updateTagInstance(DBTagInstance dbTagInstance, 
-			DBUserMarkupCollection dbUserMarkupCollection, 
-			TagInstance ti,
-			List<TagReference> incomingTagReferences) {
-		
-		Set<Range> incomingRanges = new HashSet<Range>();
-		
-		for (TagReference tr : incomingTagReferences) {
-			incomingRanges.add(tr.getRange());
-		}
-		
-		Map<Range, DBTagReference> dbTagRefsByRange = 
-				new HashMap<Range, DBTagReference>();
-		
-		Iterator<DBTagReference> iterator = 
-				dbTagInstance.getDbTagReferences().iterator();
-		while (iterator.hasNext()) {
-			DBTagReference curDbTagRef = iterator.next();
-			Range curRange = 
-					new Range(
-						curDbTagRef.getCharacterStart(), 
-						curDbTagRef.getCharacterEnd());
-			if (!incomingRanges.contains(curRange)) {
-				iterator.remove();
-			}
-			else {
-				dbTagRefsByRange.put(curRange, curDbTagRef);
-			}
-		}
-		
-		for (TagReference tr : incomingTagReferences) {
-			if (!dbTagRefsByRange.containsKey(tr.getRange())) {
-				DBTagReference dbTagReference = 
-						new DBTagReference(
-							tr.getRange().getStartPoint(), 
-							tr.getRange().getEndPoint(), 
-							dbUserMarkupCollection, dbTagInstance);
-				dbUserMarkupCollection.getDbTagReferences().add(dbTagReference);
-			}
-		}
-		
-		for (DBProperty dbProperty : dbTagInstance.getDbProperties()) {
-			Property property = 
-				ti.getProperty(
-					idGenerator.uuidBytesToCatmaID(
-							dbProperty.getDbPropertyDefinition().getUuid()));
-			Iterator<DBPropertyValue> dbPropertyValIterator = 
-					dbProperty.getDbPropertyValues().iterator();
-			while (dbPropertyValIterator.hasNext()) {
-				DBPropertyValue curValue = dbPropertyValIterator.next();
-				if (!property.getPropertyValueList().getValues().contains(curValue.getValue())) {
-					dbPropertyValIterator.remove();
-				}
-			}
-			
-			for (String value : property.getPropertyValueList().getValues()) {
-				if (!dbProperty.hasPropertyValue(value)) {
-					dbProperty.getDbPropertyValues().add(
-							new DBPropertyValue(dbProperty, value));
-				}
-			}
- 		}
-	}
 
 	void updateTagsetDefinitionInUserMarkupCollections(
 			List<UserMarkupCollection> userMarkupCollections,
@@ -661,8 +525,9 @@ class DBUserMarkupCollectionHandler {
 				dbTagLibraryHandler.updateTagsetDefinition(
 					session, tagLibrary,
 					tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()));
-
-				updateUserMarkupCollection(session, userMarkupCollection);
+				DBUserMarkupCollectionUpdater updater = 
+						new DBUserMarkupCollectionUpdater(dbRepository);
+				updater.updateUserMarkupCollection(session, userMarkupCollection);
 				dbRepository.getIndexer().reindex(
 					tagsetDefinition, 
 					userMarkupCollection, 
