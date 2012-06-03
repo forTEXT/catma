@@ -9,9 +9,11 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 
+import de.catma.db.CloseableSession;
 import de.catma.document.Range;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
@@ -19,12 +21,15 @@ import de.catma.indexer.TermInfo;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.tag.TagLibrary;
+import de.catma.tag.TagsetDefinition;
+import de.catma.util.CloseSafe;
 
 public class DBIndexer implements Indexer {
 	
 	private SessionFactory sessionFactory; 
 	private Configuration hibernateConfig;
-	
+	private TagReferenceIndexer tagReferenceIndexer;
+
 	public DBIndexer() {
 		hibernateConfig = new Configuration();
 		hibernateConfig.configure(
@@ -37,6 +42,7 @@ public class DBIndexer implements Indexer {
 				serviceRegistryBuilder.buildServiceRegistry();
 		
 		sessionFactory = hibernateConfig.buildSessionFactory(serviceRegistry);
+		tagReferenceIndexer = new TagReferenceIndexer();
 	}
 	
 
@@ -48,14 +54,10 @@ public class DBIndexer implements Indexer {
 			sourceDocumentIndexer.index(
 					session, 
 					sourceDocument);
-			session.close();
+			CloseSafe.close(new CloseableSession(session));
 		}
 		catch (Exception e) {
-			try {
-				session.getTransaction().rollback();
-			}
-			catch (Throwable notOfInterest) {}
-			session.close();
+			CloseSafe.close(new CloseableSession(session, true));
 			throw e;
 		}
 	}
@@ -66,25 +68,60 @@ public class DBIndexer implements Indexer {
 		
 		Session session = sessionFactory.openSession();
 		try {
-			TagReferenceIndexer tagReferenceIndexer = new TagReferenceIndexer();
-			
 			tagReferenceIndexer.index(
 					session, 
 					tagReferences, 
 					sourceDocumentID, 
 					userMarkupCollectionID, 
 					tagLibrary);
-			session.close();
+			CloseSafe.close(new CloseableSession(session));
 		}
 		catch (Exception e) {
-			try {
-				session.getTransaction().rollback();
-			}
-			catch (Throwable notOfInterest) {}
-			session.close();
+			CloseSafe.close(new CloseableSession(session, true));
 			throw e;
 		}
-
+	}
+	
+	public void removeUserMarkupCollection(String userMarkupCollectionID) throws Exception {
+		Session session = sessionFactory.openSession();
+		try {
+			tagReferenceIndexer.removeUserMarkupCollection(
+					session, userMarkupCollectionID);
+			CloseSafe.close(new CloseableSession(session));
+		}
+		catch (Exception e) {
+			CloseSafe.close(new CloseableSession(session, true));
+			throw e;
+		}
+	}
+	
+	public void removeTagReferences(
+			List<TagReference> tagReferences) throws Exception {
+		Session session = sessionFactory.openSession();
+		try {
+			tagReferenceIndexer.removeTagReferences(
+					session, tagReferences);
+			CloseSafe.close(new CloseableSession(session));
+		}
+		catch (Exception e) {
+			CloseSafe.close(new CloseableSession(session, true));
+			throw e;
+		}
+	}
+	
+	public void reindex(TagsetDefinition tagsetDefinition,
+			UserMarkupCollection userMarkupCollection, String sourceDocumentID)
+			throws Exception {
+		Session session = sessionFactory.openSession();
+		try {
+			tagReferenceIndexer.reindex(
+					session, tagsetDefinition, userMarkupCollection, sourceDocumentID);
+			CloseSafe.close(new CloseableSession(session));
+		}
+		catch (Exception e) {
+			CloseSafe.close(new CloseableSession(session, true));
+			throw e;
+		}
 	}
 	
 	public QueryResult searchPhrase(List<String> documentIdList,
@@ -94,14 +131,12 @@ public class DBIndexer implements Indexer {
 		return phraseSearcher.search(documentIdList, phrase, termList);
 	}
 
-	public QueryResult searchTagDefinitionPath(
-			List<String> documentIdList, List<String> userMarkupCollectionIdList, 
+	public QueryResult searchTagDefinitionPath(List<String> userMarkupCollectionIdList, 
 			String tagDefinitionPath) throws Exception {
 		
 		TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher(sessionFactory);
 		
-		return tagSearcher.search(
-				documentIdList, userMarkupCollectionIdList, tagDefinitionPath);
+		return tagSearcher.search(userMarkupCollectionIdList, tagDefinitionPath);
 	}
 
 	public QueryResult searchFreqency(

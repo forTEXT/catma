@@ -1,5 +1,6 @@
 package de.catma.indexer.db;
 
+//TODO: change to Entity.class.getSimpleName()
 public enum DBEntityName {
 	DBTerm("term"),
 	DBPosition("position"),

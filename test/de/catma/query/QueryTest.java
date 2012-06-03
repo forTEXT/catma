@@ -311,15 +311,13 @@ public class QueryTest {
 
 	@Test
 	public void testSearchTag() throws Exception {
-		List<String> documentIDs = new ArrayList<String>();
-//		documentIDs.add("catma:///container/pg13.txt");
 
 		List<String> userMarkupCollIDs = new ArrayList<String>();
 		
 		Indexer indexer = new DBIndexer();
 		QueryResult result = 
 				indexer.searchTagDefinitionPath(
-					documentIDs, userMarkupCollIDs, "/Order/analepsis");
+					userMarkupCollIDs, "/Order/analepsis");
 		
 		indexer.close();
 		Set<String> tagInstances = new HashSet<String>();

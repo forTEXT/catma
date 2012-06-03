@@ -116,7 +116,7 @@ public class DummyRepository implements IndexedRepository {
 	}
 
 	public void update(UserMarkupCollection userMarkupCollection,
-			Collection<TagReference> tagReferences) {
+			List<TagReference> tagReferences) {
 		// TODO Auto-generated method stub
 		
 	}

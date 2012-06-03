@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -19,12 +18,13 @@ import org.hibernate.criterion.Restrictions;
 
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
+import de.catma.db.CloseableSession;
 import de.catma.document.ContentInfoSet;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.repository.db.model.DBProperty;
 import de.catma.repository.db.model.DBPropertyDefinition;
@@ -37,11 +37,11 @@ import de.catma.repository.db.model.DBTagReference;
 import de.catma.repository.db.model.DBUserMarkupCollection;
 import de.catma.repository.db.model.DBUserUserMarkupCollection;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
-import de.catma.tag.TagLibrary;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagsetDefinition;
 import de.catma.util.CloseSafe;
@@ -93,20 +93,12 @@ class DBUserMarkupCollectionHandler {
 					null, new Pair<UserMarkupCollectionReference, SourceDocument>(
 							reference,sourceDocument));
 
+			CloseSafe.close(new CloseableSession(session));
 		}
 		catch (Exception e) {
-			try {
-				if (session.getTransaction().isActive()) {
-					session.getTransaction().rollback();
-				}
-			}
-			catch(Exception notOfInterest){}
+			CloseSafe.close(new CloseableSession(session,true));
 			throw new IOException(e);
 		}
-		finally {
-			CloseSafe.close(new ClosableSession(session));
-		}
-		
 	}
 
 	void importUserMarkupCollection(InputStream inputStream,
@@ -158,28 +150,21 @@ class DBUserMarkupCollectionHandler {
 				
 				try {
 					session.save(dbUserMarkupCollection);
-//TODO: indexing
-//					dbRepository.getIndexer().index(
-//							dbUserMarkupCollection.getTagReferences(), 
-//							sourceDocument.getID(),
-//							dbUserMarkupCollection.getId(),
-//							umc.getTagLibrary());
+
+					dbRepository.getIndexer().index(
+							umc.getTagReferences(), 
+							sourceDocument.getID(),
+							dbUserMarkupCollection.getId(),
+							umc.getTagLibrary());
 
 					session.getTransaction().commit();
 
+					CloseSafe.close(new CloseableSession(session));
 					return dbUserMarkupCollection;
 				}
 				catch (Exception e) {
-					try {
-						if (session.getTransaction().isActive()) {
-							session.getTransaction().rollback();
-						}
-					}
-					catch(Exception notOfInterest){}
+					CloseSafe.close(new CloseableSession(session,true));
 					throw new IOException(e);
-				}
-				finally {
-					CloseSafe.close(new ClosableSession(session));
 				}
 			};
 		}, 
@@ -305,31 +290,28 @@ class DBUserMarkupCollectionHandler {
 					DBUserMarkupCollection.class,
 					Integer.valueOf(userMarkupCollectionReference.getId()));
 			
-			Object dbTagLibrary = 
-				session.get(
-						DBTagLibrary.class,
-						dbUserMarkupCollection.getDbTagLibraryId());
+			DBTagLibrary dbTagLibrary = 
+				(DBTagLibrary) session.get(
+					DBTagLibrary.class,
+					dbUserMarkupCollection.getDbTagLibraryId());
 			
 			session.delete(dbUserMarkupCollection);
+			dbTagLibrary.getDbTagsetDefinitions();
 			session.delete(dbTagLibrary);
+			
+			dbRepository.getIndexer().removeUserMarkupCollection(
+					userMarkupCollectionReference.getId());
 			
 			session.getTransaction().commit();
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					RepositoryChangeEvent.userMarkupCollectionChanged.name(),
 					userMarkupCollectionReference, null);
+			CloseSafe.close(new CloseableSession(session));
 		}
 		catch (Exception e) {
-			try {
-				if (session.getTransaction().isActive()) {
-					session.getTransaction().rollback();
-				}
-			}
-			catch(Exception notOfInterest){}
+			CloseSafe.close(new CloseableSession(session,true));
 			throw new IOException(e);
-		}
-		finally {
-			CloseSafe.close(new ClosableSession(session));
 		}
 	}
 
@@ -374,7 +356,7 @@ class DBUserMarkupCollectionHandler {
 			}
 		}
 		finally {
-			CloseSafe.close(new ClosableSession(session));
+			CloseSafe.close(new CloseableSession(session));
 		}
 	}
 
@@ -428,7 +410,13 @@ class DBUserMarkupCollectionHandler {
 	}
 
 	void addTagReferences(UserMarkupCollection userMarkupCollection,
-			Collection<TagReference> tagReferences) throws IOException {
+			List<TagReference> tagReferences) throws IOException {
+		String sourceDocumentID = 
+				dbRepository.getDbSourceDocumentHandler().getLocalUriFor(
+						new UserMarkupCollectionReference(
+								userMarkupCollection.getId(), 
+								userMarkupCollection.getContentInfoSet()));
+		
 		Session session = dbRepository.getSessionFactory().openSession();
 		try {
 			Set<TagInstance> incomingTagInstances = 
@@ -447,20 +435,17 @@ class DBUserMarkupCollectionHandler {
 			for (TagInstance ti : incomingTagInstances) {
 				addTagInstance(session, ti, userMarkupCollection, dbUserMarkupCollection);
 			}
+			dbRepository.getIndexer().index(
+					tagReferences, sourceDocumentID, 
+					userMarkupCollection.getId(), 
+					userMarkupCollection.getTagLibrary());
 			
 			session.getTransaction().commit();
+			CloseSafe.close(new CloseableSession(session));
 		}
 		catch (Exception e) {
-			try {
-				if (session.getTransaction().isActive()) {
-					session.getTransaction().rollback();
-				}
-			}
-			catch(Exception notOfInterest){}
+			CloseSafe.close(new CloseableSession(session,true));
 			throw new IOException(e);
-		}
-		finally {
-			CloseSafe.close(new ClosableSession(session));
 		}
 	}
 	
@@ -595,7 +580,7 @@ class DBUserMarkupCollectionHandler {
 	private void updateTagInstance(DBTagInstance dbTagInstance, 
 			DBUserMarkupCollection dbUserMarkupCollection, 
 			TagInstance ti,
-			Set<TagReference> incomingTagReferences) {
+			List<TagReference> incomingTagReferences) {
 		
 		Set<Range> incomingRanges = new HashSet<Range>();
 		
@@ -678,25 +663,25 @@ class DBUserMarkupCollectionHandler {
 					tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()));
 
 				updateUserMarkupCollection(session, userMarkupCollection);
+				dbRepository.getIndexer().reindex(
+					tagsetDefinition, 
+					userMarkupCollection, 
+					dbRepository.getDbSourceDocumentHandler().getLocalUriFor(
+							new UserMarkupCollectionReference(
+									userMarkupCollection.getId(), 
+									userMarkupCollection.getContentInfoSet())));
 			}
 			session.getTransaction().commit();
+			CloseSafe.close(new CloseableSession(session));
 		}
 		catch (Exception e) {
-			try {
-				if (session.getTransaction().isActive()) {
-					session.getTransaction().rollback();
-				}
-			}
-			catch(Exception notOfInterest){}
+			CloseSafe.close(new CloseableSession(session,true));
 			throw new IOException(e);
-		}
-		finally {
-			CloseSafe.close(new ClosableSession(session));
 		}
 	}
 
 	void removeTagReferences(
-			Collection<TagReference> tagReferences) throws IOException {
+			List<TagReference> tagReferences) throws IOException {
 
 		Session session = dbRepository.getSessionFactory().openSession();
 		try {
@@ -713,24 +698,18 @@ class DBUserMarkupCollectionHandler {
 						DBTagInstance.class).add(
 							Restrictions.eq(
 								"uuid", idGenerator.catmaIDToUUIDBytes(ti.getUuid())));
-				@SuppressWarnings("unchecked")
-				List<DBTagInstance> dbTagInstances = criteria.list();
-				session.delete(dbTagInstances.get(0));
+				DBTagInstance dbTagInstance = (DBTagInstance) criteria.uniqueResult();
+				session.delete(dbTagInstance);
 			}
+			
+			dbRepository.getIndexer().removeTagReferences(tagReferences);
+			
 			session.getTransaction().commit();
+			CloseSafe.close(new CloseableSession(session));
 		}
 		catch (Exception e) {
-			try {
-				if (session.getTransaction().isActive()) {
-					session.getTransaction().rollback();
-				}
-			}
-			catch(Exception notOfInterest){}
+			CloseSafe.close(new CloseableSession(session,true));
 			throw new IOException(e);
 		}
-		finally {
-			CloseSafe.close(new ClosableSession(session));
-		}
 	}
-
 }

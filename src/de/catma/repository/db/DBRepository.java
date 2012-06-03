@@ -24,19 +24,20 @@ import org.hibernate.service.ServiceRegistryBuilder;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
+import de.catma.db.CloseableSession;
 import de.catma.document.Corpus;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.repository.db.model.DBUser;
 import de.catma.serialization.SerializationHandlerFactory;
-import de.catma.tag.TagLibrary;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
@@ -203,7 +204,7 @@ public class DBRepository implements IndexedRepository {
 			throw new Exception(e);
 		}
 		finally {
-			CloseSafe.close(new ClosableSession(session));
+			CloseSafe.close(new CloseableSession(session));
 		}
 	}
 	
@@ -332,7 +333,7 @@ public class DBRepository implements IndexedRepository {
 
 
 	public void update(final UserMarkupCollection userMarkupCollection,
-			final Collection<TagReference> tagReferences) {
+			final List<TagReference> tagReferences) {
 		backgroundServiceProvider.submit(
 				new DefaultProgressCallable<Void>() {
 				public Void call() throws Exception {

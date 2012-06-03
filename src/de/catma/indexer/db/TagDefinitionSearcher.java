@@ -9,9 +9,10 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
-import org.hibernate.Query;
+import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Restrictions;
 
 import de.catma.document.Range;
 import de.catma.queryengine.result.QueryResult;
@@ -27,13 +28,14 @@ public class TagDefinitionSearcher {
 		this.sessionFactory = sessionFactory;
 	}
 
-	public QueryResult search(List<String> documentIdList,
+	public QueryResult search(
 			List<String> userMarkupCollectionIdList, String tagDefinitionPath) {
 		
 		Session session = sessionFactory.openSession();
 		
 		List<DBTagReference> tagReferences  = 
-				searchInUserMarkupCollection(session, null, tagDefinitionPath);
+				searchInUserMarkupCollection(
+						session, userMarkupCollectionIdList, tagDefinitionPath);
 		logger.info(
 			"Query for " + tagDefinitionPath + " has " + 
 					tagReferences.size() + " results.");
@@ -77,21 +79,23 @@ public class TagDefinitionSearcher {
 	
 	@SuppressWarnings("unchecked")
 	private List<DBTagReference> searchInUserMarkupCollection(
-			Session session, String userMarkupCollectionIdList, 
+			Session session, List<String> userMarkupCollectionIdList, 
 			String tagDefinitionPath) {
+		
 		if (!tagDefinitionPath.startsWith("/")) {
 			tagDefinitionPath = "%" + tagDefinitionPath;
 		}
-		String query =
-				" from " +
-				DBEntityName.DBTagReference +
-				" where tagDefinitionPath like '" + tagDefinitionPath + "%'";
 		
-		logger.info("query: " + query);
-		Query q = 
-				session.createQuery(query);
+		Criteria criteria = session.createCriteria(DBTagReference.class).
+				add(Restrictions.ilike("tagDefinitionPath", tagDefinitionPath));
 		
-		return q.list();
+		if (!userMarkupCollectionIdList.isEmpty()) {
+			criteria.add(
+				Restrictions.in(
+					"userMarkupCollectionId", userMarkupCollectionIdList));
+		}
+		
+		return criteria.list();
 	}
 
 }

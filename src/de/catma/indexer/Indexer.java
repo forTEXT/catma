@@ -6,9 +6,11 @@ import java.util.List;
 import de.catma.document.Range;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.tag.TagLibrary;
+import de.catma.tag.TagsetDefinition;
 
 public interface Indexer {
 	public void index(
@@ -20,18 +22,20 @@ public interface Indexer {
 			String userMarkupCollectionID,
 			TagLibrary tagLibrary) throws Exception;
 	
-	/**
-	 * @param documentIdList
-	 * @param phrase
-	 * @param termList
-	 * @return
-	 */
+	public void removeUserMarkupCollection(String userMarkupCollectionID) throws Exception;
+	public void removeTagReferences(List<TagReference> tagReferences) throws Exception;
+	public void reindex(
+			TagsetDefinition tagsetDefinition, 
+			UserMarkupCollection userMarkupCollection,
+			String sourceDocumentID) throws Exception;
+
+	
 	public QueryResult searchPhrase(
 			List<String> documentIdList, 
 			String phrase, List<String> termList) throws Exception;
 	
 	public QueryResult searchTagDefinitionPath(
-			List<String> documentIdList, List<String> userMarkupCollectionIdList, 
+			List<String> userMarkupCollectionIdList, 
 			String tagDefinitionPath) throws Exception;
 	
 	public QueryResult searchFreqency(

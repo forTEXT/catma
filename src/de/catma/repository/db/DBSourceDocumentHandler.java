@@ -23,6 +23,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 
+import de.catma.db.CloseableSession;
 import de.catma.document.ContentInfoSet;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.FileOSType;
@@ -160,18 +161,11 @@ class DBSourceDocumentHandler {
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					RepositoryChangeEvent.sourceDocumentChanged.name(),
 					null, sourceDocument.getID());
+			CloseSafe.close(new CloseableSession(session));
 		}
 		catch (Exception e) {
-			try {
-				if (session.getTransaction().isActive()) {
-					session.getTransaction().rollback();
-				}
-			}
-			catch(Exception notOfInterest){}
+			CloseSafe.close(new CloseableSession(session,true));
 			throw new IOException(e);
-		}
-		finally {
-			CloseSafe.close(new ClosableSession(session));
 		}
 	}
 	
@@ -255,13 +249,8 @@ class DBSourceDocumentHandler {
 		Criteria criteria = session.createCriteria(DBSourceDocument.class)
 			     .add(Restrictions.eq("localUri", localUri));
 		
-		@SuppressWarnings("unchecked")
-		List<DBSourceDocument> result = criteria.list();
-		if (result.size() != 1) {
-			throw new IllegalStateException(
-				"found more than one source document with localUri: " + 
-						localUri + " but there can only be one");
-		}
-		return result.get(0);
+		DBSourceDocument result = (DBSourceDocument) criteria.uniqueResult();
+		
+		return result;
 	}
 }

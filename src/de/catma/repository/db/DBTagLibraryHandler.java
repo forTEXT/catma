@@ -18,6 +18,7 @@ import org.hibernate.criterion.Restrictions;
 
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
+import de.catma.db.CloseableSession;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.repository.db.model.DBPropertyDefPossibleValue;
 import de.catma.repository.db.model.DBPropertyDefinition;
@@ -83,20 +84,12 @@ class DBTagLibraryHandler {
 					new TagLibraryReference(
 							dbTagLibrary.getId(), name));
 
+			CloseSafe.close(new CloseableSession(session));
 		}
 		catch (Exception e) {
-			try {
-				if (session.getTransaction().isActive()) {
-					session.getTransaction().rollback();
-				}
-			}
-			catch(Exception notOfInterest){}
+			CloseSafe.close(new CloseableSession(session,true));
 			throw new IOException(e);
 		}
-		finally {
-			CloseSafe.close(new ClosableSession(session));
-		}
-		
 	}
 	
 	@SuppressWarnings("unchecked") 
@@ -133,7 +126,7 @@ class DBTagLibraryHandler {
 			return tagLibrary;
 		}
 		finally {
-			CloseSafe.close(new ClosableSession(session));
+			CloseSafe.close(new CloseableSession(session));
 		}
 	}
 	
@@ -256,7 +249,7 @@ class DBTagLibraryHandler {
 					
 					if (independent) {
 						session.getTransaction().commit();
-						CloseSafe.close(new ClosableSession(session));
+						CloseSafe.close(new CloseableSession(session));
 					}
 					
 					tagLibrary.setId(dbTagLibrary.getId());
@@ -265,13 +258,7 @@ class DBTagLibraryHandler {
 							session,dbTagLibrary.isIndependent());
 				}
 				catch (Exception e) {
-					try {
-						if (session.getTransaction().isActive()) {
-							session.getTransaction().rollback();
-						}
-					}
-					catch(Exception notOfInterest){}
-					CloseSafe.close(new ClosableSession(session));
+					CloseSafe.close(new CloseableSession(session,true));
 					throw new IOException(e);
 				}
 			};
@@ -322,7 +309,11 @@ class DBTagLibraryHandler {
 		}
 		
 		session.save(dbTagsetDefinition);
-		
+		updateTagsetDefinitionIDs(tsDef, dbTagsetDefinition);
+	}
+
+	private void updateTagsetDefinitionIDs(TagsetDefinition tsDef,
+			DBTagsetDefinition dbTagsetDefinition) {
 		tsDef.setId(dbTagsetDefinition.getTagsetDefinitionId());
 		
 		for (DBTagDefinition dbTagDefinition : dbTagsetDefinition.getDbTagDefinitions()) {
@@ -460,19 +451,12 @@ class DBTagLibraryHandler {
 					session.save(dbTagDefinition);
 					session.getTransaction().commit();
 					
+					CloseSafe.close(new CloseableSession(session));
 					return dbTagDefinition;
 				}
 				catch (Exception e) {
-					try {
-						if (session.getTransaction().isActive()) {
-							session.getTransaction().rollback();
-						}
-					}
-					catch(Exception notOfInterest){}
+					CloseSafe.close(new CloseableSession(session,true));
 					throw new Exception(e);
-				}
-				finally {
-					CloseSafe.close(new ClosableSession(session));
 				}
 			}
 		}, 
@@ -513,19 +497,12 @@ class DBTagLibraryHandler {
 						session.delete(dbTagsetDefinition);
 						session.getTransaction().commit();
 						
+						CloseSafe.close(new CloseableSession(session));
 						return null;
 					}
 					catch (Exception e) {
-						try {
-							if (session.getTransaction().isActive()) {
-								session.getTransaction().rollback();
-							}
-						}
-						catch(Exception notOfInterest){}
+						CloseSafe.close(new CloseableSession(session,true));
 						throw new Exception(e);
-					}
-					finally {
-						CloseSafe.close(new ClosableSession(session));
 					}
 				}
 			}, 
@@ -564,19 +541,12 @@ class DBTagLibraryHandler {
 					maintainTagDefHierarchyQuery.executeUpdate();
 				
 					session.getTransaction().commit();
+					CloseSafe.close(new CloseableSession(session));
 					return null;
 				}
 				catch (Exception e) {
-					try {
-						if (session.getTransaction().isActive()) {
-							session.getTransaction().rollback();
-						}
-					}
-					catch(Exception notOfInterest){}
+					CloseSafe.close(new CloseableSession(session,true));
 					throw new Exception(e);
-				}
-				finally {
-					CloseSafe.close(new ClosableSession(session));
 				}
 			}
 		}, 
@@ -612,19 +582,12 @@ class DBTagLibraryHandler {
 						
 						session.getTransaction().commit();
 						
+						CloseSafe.close(new CloseableSession(session));
 						return null;
 					}
 					catch (Exception e) {
-						try {
-							if (session.getTransaction().isActive()) {
-								session.getTransaction().rollback();
-							}
-						}
-						catch(Exception notOfInterest){}
+						CloseSafe.close(new CloseableSession(session,true));
 						throw new Exception(e);
-					}
-					finally {
-						CloseSafe.close(new ClosableSession(session));
 					}
 				}
 			}, 
@@ -666,22 +629,12 @@ class DBTagLibraryHandler {
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					RepositoryChangeEvent.tagLibraryChanged.name(),
 					tagLibraryReference, null);	
-			
+			CloseSafe.close(new CloseableSession(session));
 		}
 		catch (Exception e) {
-			try {
-				if (session.getTransaction().isActive()) {
-					session.getTransaction().rollback();
-				}
-			}
-			catch(Exception notOfInterest){}
+			CloseSafe.close(new CloseableSession(session,true));
 			throw new IOException(e);
 		}
-		finally {
-			CloseSafe.close(new ClosableSession(session));
-		}
-
-		
 	}
 
 	void updateTagDefinition(final TagDefinition tagDefinition) {
@@ -718,19 +671,12 @@ class DBTagLibraryHandler {
 						
 						session.getTransaction().commit();
 						
+						CloseSafe.close(new CloseableSession(session));
 						return null;
 					}
 					catch (Exception e) {
-						try {
-							if (session.getTransaction().isActive()) {
-								session.getTransaction().rollback();
-							}
-						}
-						catch(Exception notOfInterest){}
+						CloseSafe.close(new CloseableSession(session,true));
 						throw new Exception(e);
-					}
-					finally {
-						CloseSafe.close(new ClosableSession(session));
 					}
 				}
 			}, 
@@ -762,19 +708,12 @@ class DBTagLibraryHandler {
 						session.delete(dbTagDefinition);
 						session.getTransaction().commit();
 						
+						CloseSafe.close(new CloseableSession(session));
 						return null;
 					}
 					catch (Exception e) {
-						try {
-							if (session.getTransaction().isActive()) {
-								session.getTransaction().rollback();
-							}
-						}
-						catch(Exception notOfInterest){}
+						CloseSafe.close(new CloseableSession(session,true));
 						throw new Exception(e);
-					}
-					finally {
-						CloseSafe.close(new ClosableSession(session));
 					}
 				}
 			}, 
@@ -797,13 +736,19 @@ class DBTagLibraryHandler {
 		
 		if (dbTagsetDefinition != null) {
 			updateDbTagsetDefinition(dbTagsetDefinition, tagsetDefinition);
-			session.saveOrUpdate(dbTagsetDefinition);
+			
+			for (Integer id : tagsetDefinition.getDeletedTagDefinitions()) {
+				DBTagDefinition dbTagDefinition = dbTagsetDefinition.getDbTagDefinition(id);
+				//delete
+				dbTagsetDefinition.getDbTagDefinitions().remove(dbTagDefinition);
+			}
+
 		}
 		else {
 			dbTagsetDefinition = 
 					createDbTagsetDefinition(tagsetDefinition, tagLibrary.getId());
-			session.saveOrUpdate(dbTagsetDefinition);
 		}
+		session.saveOrUpdate(dbTagsetDefinition);
 		
 		SQLQuery maintainTagDefHierarchyQuery = session.createSQLQuery(
 				MAINTAIN_TAGDEFHIERARCHY);
@@ -812,9 +757,7 @@ class DBTagLibraryHandler {
 				"curTagLibraryId", Integer.valueOf(tagLibrary.getId()));
 		
 		maintainTagDefHierarchyQuery.executeUpdate();
-		tagLibrary.remove(tagsetDefinition);
-		
-		tagLibrary.add(createTagsetDefinition(dbTagsetDefinition));
+		updateTagsetDefinitionIDs(tagsetDefinition, dbTagsetDefinition);
 	}
 	
 
@@ -825,16 +768,9 @@ class DBTagLibraryHandler {
 					Restrictions.eq("uuid", idGenerator.catmaIDToUUIDBytes(uuid)),
 					Restrictions.eq("tagLibraryId", Integer.valueOf(tagLibraryId))));
 		
-		@SuppressWarnings("unchecked")
-		List<DBTagsetDefinition> result = criteria.list();
+		DBTagsetDefinition result = (DBTagsetDefinition) criteria.uniqueResult();
 		
-		if (result.size() != 1) {
-			throw new IllegalStateException(
-				"found more than one TagsetDefinition for uuid " + uuid 
-				+ " and taglibrary " + tagLibraryId +" but there can only be one");
-		}
-		
-		return result.get(0);
+		return result;
 	}
 
 	private void updateDbTagsetDefinition(
@@ -850,11 +786,6 @@ class DBTagLibraryHandler {
 				//create
 				dbTagsetDefinition.getDbTagDefinitions().add(
 						createDbTagDefinition(tagDefinition, dbTagsetDefinition));
-			}
-			else if (tagsetDefinition.getDeletedTagDefinitions().contains(id)){
-				//delete
-				dbTagsetDefinition.getDbTagDefinitions().remove(
-					dbTagsetDefinition.getDbTagDefinition(id));
 			}
 			else {
 				//update
@@ -896,11 +827,19 @@ class DBTagLibraryHandler {
 		for (PropertyDefinition pd : tagDefinition.getSystemPropertyDefinitions()) {
 			updatePropertyDefinition(pd, true, dbTagDefinition, tagDefinition);
 		}
+
+		for (Integer toBeDeletedId : tagDefinition.getDeletedPropertyDefinitions()) {
+			DBPropertyDefinition toBeDeleted = 
+					dbTagDefinition.getDbPropertyDefinition(toBeDeletedId);
+			
+			//delete
+			dbTagDefinition.getDbPropertyDefinitions().remove(toBeDeleted);
+		}
+
 		
 	}
 
-	private void updatePropertyDefinition(
-			PropertyDefinition pd, boolean isSystemPropertyDef,
+	private void updatePropertyDefinition(PropertyDefinition pd, boolean isSystemPropertyDef,
 			DBTagDefinition dbTagDefinition, TagDefinition tagDefinition) {
 		
 		Integer id = pd.getId();
@@ -908,11 +847,6 @@ class DBTagLibraryHandler {
 			//create
 			dbTagDefinition.getDbPropertyDefinitions().add(
 					createDbPropertyDefinition(pd, dbTagDefinition, isSystemPropertyDef));
-		}
-		else if (tagDefinition.getDeletedPropertyDefinitions().contains(id)) {
-			//delete
-			dbTagDefinition.getDbPropertyDefinitions().remove(
-				dbTagDefinition.getDbPropertyDefinition(pd.getUuid()));
 		}
 		else {
 			// update

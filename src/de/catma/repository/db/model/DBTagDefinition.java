@@ -17,10 +17,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
-import javax.persistence.Version;
 
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
@@ -172,6 +170,7 @@ public class DBTagDefinition implements java.io.Serializable {
 		this.dbTagInstances = dbTagInstances;
 	}
 
+	@Transient
 	public DBPropertyDefinition getDbPropertyDefinition(String propertyDefUuid) {
 		IDGenerator idGenerator = new IDGenerator();
 		for (DBPropertyDefinition pd : getDbPropertyDefinitions()) {
@@ -180,6 +179,16 @@ public class DBTagDefinition implements java.io.Serializable {
 				return pd;
 			}
 		}
+		return null;
+	}
+	@Transient
+	public DBPropertyDefinition getDbPropertyDefinition(Integer id) {
+		for (DBPropertyDefinition pd : getDbPropertyDefinitions()) {
+			if ((pd.getPropertyDefinitionId() != null) &&
+					pd.getPropertyDefinitionId().equals(id)) {
+				return pd;
+			}
+ 		}
 		return null;
 	}
 }
