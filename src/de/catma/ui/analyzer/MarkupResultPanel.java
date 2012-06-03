@@ -18,8 +18,8 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.repository.Repository;
-import de.catma.document.source.ISourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
@@ -196,8 +196,8 @@ public class MarkupResultPanel extends VerticalLayout {
 		resultTable.removeAllItems();
 		int totalFreq = 0;
 	
-		HashMap<String, IUserMarkupCollection> loadedUserMarkupCollections =
-				new HashMap<String, IUserMarkupCollection>();
+		HashMap<String, UserMarkupCollection> loadedUserMarkupCollections =
+				new HashMap<String, UserMarkupCollection>();
 		Set<String> tagDefinitions = new HashSet<String>();
 		
 		for (QueryResultRow row : queryResult) {
@@ -220,12 +220,12 @@ public class MarkupResultPanel extends VerticalLayout {
 	
 	private void addTagQueryResultRow(
 		final TagQueryResultRow row, 
-		Map<String,IUserMarkupCollection> loadedUserMarkupCollections) 
+		Map<String,UserMarkupCollection> loadedUserMarkupCollections) 
 				throws IOException {
 		
 		String tagDefinitionId = row.getTagDefinitionId();
 		String markupCollectionsId = row.getMarkupCollectionId();
-		ISourceDocument sourceDocument = 
+		SourceDocument sourceDocument = 
 				repository.getSourceDocument(row.getSourceDocumentId());
 		
 		if (!loadedUserMarkupCollections.containsKey(markupCollectionsId)) {
@@ -238,7 +238,7 @@ public class MarkupResultPanel extends VerticalLayout {
 					repository.getUserMarkupCollection(userMarkupCollRef));
 		}
 		
-		IUserMarkupCollection umc = 
+		UserMarkupCollection umc = 
 				loadedUserMarkupCollections.get(markupCollectionsId);
 		
 		TagDefinition tagDefinition = 

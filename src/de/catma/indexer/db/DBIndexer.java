@@ -10,7 +10,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 
 import de.catma.document.Range;
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.SpanContext;
@@ -18,7 +18,7 @@ import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TermInfo;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
-import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibrary;
 
 public class DBIndexer implements Indexer {
 	
@@ -40,7 +40,7 @@ public class DBIndexer implements Indexer {
 	}
 	
 
-	public void index(ISourceDocument sourceDocument)
+	public void index(SourceDocument sourceDocument)
 			throws Exception {
 		Session session = sessionFactory.openSession();
 		try {
@@ -62,7 +62,7 @@ public class DBIndexer implements Indexer {
 
 	public void index(List<TagReference> tagReferences,
 			String sourceDocumentID, String userMarkupCollectionID,
-			ITagLibrary tagLibrary) throws Exception {
+			TagLibrary tagLibrary) throws Exception {
 		
 		Session session = sessionFactory.openSession();
 		try {

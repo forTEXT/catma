@@ -4,12 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import de.catma.document.source.ISourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.serialization.DocumentSerializer;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
-import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 
 public class TeiUserMarkupCollectionSerializationHandler implements
@@ -24,8 +23,8 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 	}
 
 	public void serialize(
-		IUserMarkupCollection userMarkupCollection,
-		ISourceDocument sourceDocument,
+		UserMarkupCollection userMarkupCollection,
+		SourceDocument sourceDocument,
 		OutputStream outputStream) throws IOException {
 		try {
 			TeiDocumentFactory factory = new TeiDocumentFactory();
@@ -50,13 +49,13 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 		}
 	}
 
-	public IUserMarkupCollection deserialize(
+	public UserMarkupCollection deserialize(
 			String id, InputStream inputStream) throws IOException {
 		try {
 			TeiDocumentFactory factory = new TeiDocumentFactory();
 			TeiDocument teiDocument = 
 					factory.createDocumentFromStream(id, inputStream);
-			ITagLibrary tagLibrary = 
+			TagLibrary tagLibrary = 
 					new TeiTagLibrarySerializationHandler(
 							teiDocument, tagManager).deserialize();
 			

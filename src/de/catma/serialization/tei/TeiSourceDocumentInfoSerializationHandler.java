@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import de.catma.document.ContentInfoSet;
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
@@ -38,7 +38,7 @@ public class TeiSourceDocumentInfoSerializationHandler implements
 	}
 
 	public void serialize(
-			ISourceDocument sourceDocument, 
+			SourceDocument sourceDocument, 
 			OutputStream outputStream) throws IOException {
 		
 		try {

@@ -42,14 +42,14 @@ import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.standoffmarkup.MarkupCollectionReference;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
-import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.dialog.FormDialog;
@@ -130,7 +130,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		sourceDocumentAddedListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
-				ISourceDocument sd = RepositoryView.this.repository.getSourceDocument(
+				SourceDocument sd = RepositoryView.this.repository.getSourceDocument(
 						(String)evt.getNewValue());
 				addSourceDocumentToTree(sd);
 			}
@@ -143,8 +143,8 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getOldValue() == null) {
 					@SuppressWarnings("unchecked")
-					Pair<UserMarkupCollectionReference, ISourceDocument>
-						result = (Pair<UserMarkupCollectionReference, ISourceDocument>)evt.getNewValue();
+					Pair<UserMarkupCollectionReference, SourceDocument>
+						result = (Pair<UserMarkupCollectionReference, SourceDocument>)evt.getNewValue();
 					addUserMarkupCollectionReferenceToTree(
 							result.getFirst(), result.getSecond());
 				}
@@ -260,23 +260,23 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 			public void buttonClick(ClickEvent event) {
 				final Object value = documentsTree.getValue();
 				
-				if (value instanceof ISourceDocument) {
+				if (value instanceof SourceDocument) {
 					((CleaApplication)getApplication()).openSourceDocument(
-							(ISourceDocument)value, repository);
+							(SourceDocument)value, repository);
 				}
 				else if (value instanceof StaticMarkupCollectionReference) {
 						//TODO: implement
 					
 				}
 				else if (value instanceof UserMarkupCollectionReference) {
-					final ISourceDocument sd = 
-							(ISourceDocument)documentsTree.getParent(
+					final SourceDocument sd = 
+							(SourceDocument)documentsTree.getParent(
 									documentsTree.getParent(value));
 					final CleaApplication application = 
 							(CleaApplication)getApplication();
 					application.submit(
-							new DefaultProgressCallable<IUserMarkupCollection>() {
-								public IUserMarkupCollection call()
+							new DefaultProgressCallable<UserMarkupCollection>() {
+								public UserMarkupCollection call()
 										throws Exception {
 									getProgressListener().setProgress("Loading Markup Collection");
 									UserMarkupCollectionReference 
@@ -287,8 +287,8 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 											userMarkupCollectionReference);
 								}
 							},
-							new ExecutionListener<IUserMarkupCollection>() {
-								public void done(IUserMarkupCollection result) {
+							new ExecutionListener<UserMarkupCollection>() {
+								public void done(UserMarkupCollection result) {
 									application.openUserMarkupCollection(
 											sd, result, repository);
 								}
@@ -363,11 +363,11 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 			public void valueChange(ValueChangeEvent event) {
 				Object value = event.getProperty().getValue();
 				if (value != null) {
-					if (value instanceof ISourceDocument) {
+					if (value instanceof SourceDocument) {
 						contentInfoForm.setEnabled(true);
 						contentInfoForm.setItemDataSource(
 							new BeanItem<ContentInfo>(
-								new StandardContentInfo((ISourceDocument)value)));
+								new StandardContentInfo((SourceDocument)value)));
 						contentInfoForm.setReadOnly(true);
 						btOpenDocument.setCaption("Open Document");
 						btOpenDocument.setEnabled(true);
@@ -413,7 +413,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 				if (value != null) {
 					TagLibraryReference tagLibraryReference = 
 							(TagLibraryReference)value;
-					ITagLibrary tagLibrary;
+					TagLibrary tagLibrary;
 					try {
 						tagLibrary = repository.getTagLibrary(tagLibraryReference);
 						((CleaApplication)getApplication()).openTagLibrary(tagLibrary);
@@ -574,13 +574,13 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 
 	private void handleUserMarkupCollectionImport() {
 		Object value = documentsTree.getValue();
-		if ((value == null) || !(value instanceof ISourceDocument)) {
+		if ((value == null) || !(value instanceof SourceDocument)) {
 			 getWindow().showNotification(
                     "Information",
                     "Please select a Source Document first");
 		}
 		else{
-			final ISourceDocument sourceDocument = (ISourceDocument)value;
+			final SourceDocument sourceDocument = (SourceDocument)value;
 
 			UploadDialog uploadDialog =
 					new UploadDialog("Upload User Markup Collection", 
@@ -903,7 +903,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		documentsPanel.getContent().setSizeUndefined();
 		documentsPanel.setSizeFull();
 		
-		for (ISourceDocument sd : repository.getSourceDocuments()) {
+		for (SourceDocument sd : repository.getSourceDocuments()) {
 			addSourceDocumentToTree(sd);
 		}		
 		
@@ -974,7 +974,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		return repository;
 	}
 	
-	private void addSourceDocumentToTree(ISourceDocument sd) {
+	private void addSourceDocumentToTree(SourceDocument sd) {
 		documentsTree.addItem(sd);
 		documentsTree.getItem(sd);
 		documentsTree.setChildrenAllowed(sd, true);
@@ -1012,7 +1012,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	
 	private void addUserMarkupCollectionReferenceToTree(
 			UserMarkupCollectionReference userMarkupCollRef, 
-			ISourceDocument sourceDocument) {
+			SourceDocument sourceDocument) {
 		
 		@SuppressWarnings("unchecked")
 		Collection<MarkupItem> children = 
@@ -1029,13 +1029,13 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 
 	private void handleUserMarkupCollectionCreation() {
 		Object value = documentsTree.getValue();
-		if ((value == null) || !(value instanceof ISourceDocument)) {
+		if ((value == null) || !(value instanceof SourceDocument)) {
 			 getWindow().showNotification(
                     "Information",
                     "Please select a Source Document first");
 		}
 		else{
-			final ISourceDocument sourceDocument = (ISourceDocument)value;
+			final SourceDocument sourceDocument = (SourceDocument)value;
 			final String userMarkupCollectionNameProperty = "name";
 			getNameFromUser(
 					"Create new User Markup Collection",

@@ -26,11 +26,10 @@ import de.catma.repository.db.model.DBTagLibrary;
 import de.catma.repository.db.model.DBTagsetDefinition;
 import de.catma.repository.db.model.DBUserTagLibrary;
 import de.catma.serialization.TagLibrarySerializationHandler;
-import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
-import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
@@ -124,12 +123,12 @@ class DBTagLibraryHandler {
 		return Collections.unmodifiableSet(this.tagLibraryReferences);
 	}
 	
-	ITagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) 
+	TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) 
 			throws IOException{
 
 		Session session = dbRepository.getSessionFactory().openSession();
 		try {
-			ITagLibrary tagLibrary = 
+			TagLibrary tagLibrary = 
 					loadTagLibrayContent(session, tagLibraryReference);
 			return tagLibrary;
 		}
@@ -139,7 +138,7 @@ class DBTagLibraryHandler {
 	}
 	
 	@SuppressWarnings("unchecked")
-	ITagLibrary loadTagLibrayContent(Session session, TagLibraryReference reference) throws IOException {
+	TagLibrary loadTagLibrayContent(Session session, TagLibraryReference reference) throws IOException {
 
 		Query query = session.createQuery(
 				"select distinct tsd from "
@@ -214,14 +213,14 @@ class DBTagLibraryHandler {
 				dbRepository.getSerializationHandlerFactory().getTagLibrarySerializationHandler();
 		
 		//emits events to the TagManager and is not suited for background loading
-		final ITagLibrary tagLibrary = 
+		final TagLibrary tagLibrary = 
 				tagLibrarySerializationHandler.deserialize(null, inputStream);
 		
 		importTagLibrary(tagLibrary, null, true);
 	}
 		
 	public void importTagLibrary(
-			final ITagLibrary tagLibrary, 
+			final TagLibrary tagLibrary, 
 			final ExecutionListener<Session> executionListener, 
 			final boolean independent) {
 		
@@ -542,7 +541,7 @@ class DBTagLibraryHandler {
 
 	}
 
-	void saveTagsetDefinition(final ITagLibrary tagLibrary,
+	void saveTagsetDefinition(final TagLibrary tagLibrary,
 			final TagsetDefinition tagsetDefinition) {
 		
 		dbRepository.getBackgroundServiceProvider().submit(
@@ -641,7 +640,7 @@ class DBTagLibraryHandler {
 	}
 
 	void delete(TagManager tagManager, TagLibraryReference tagLibraryReference) throws IOException {
-		ITagLibrary tagLibrary = getTagLibrary(tagLibraryReference);
+		TagLibrary tagLibrary = getTagLibrary(tagLibraryReference);
 		
 		Session session = dbRepository.getSessionFactory().openSession();
 		try {
@@ -655,8 +654,9 @@ class DBTagLibraryHandler {
 				
 				session.delete(dbTagsetDefinition);
 			}
-			
-			session.delete(tagLibrary);
+			DBTagLibrary dbTagLibrary = (DBTagLibrary)session.get(
+					DBTagLibrary.class, Integer.valueOf(tagLibrary.getId()));
+			session.delete(dbTagLibrary);
 			
 			session.getTransaction().commit();
 			
@@ -789,7 +789,7 @@ class DBTagLibraryHandler {
 			});
 	}
 
-	void updateTagsetDefinition(Session session, ITagLibrary tagLibrary,
+	void updateTagsetDefinition(Session session, TagLibrary tagLibrary,
 			TagsetDefinition tagsetDefinition) {
 
 		DBTagsetDefinition dbTagsetDefinition = 
@@ -823,7 +823,7 @@ class DBTagLibraryHandler {
 		Criteria criteria = session.createCriteria(DBTagsetDefinition.class).add(
 				Restrictions.and(
 					Restrictions.eq("uuid", idGenerator.catmaIDToUUIDBytes(uuid)),
-					Restrictions.eq("tagLibraryId", tagLibraryId)));
+					Restrictions.eq("tagLibraryId", Integer.valueOf(tagLibraryId))));
 		
 		@SuppressWarnings("unchecked")
 		List<DBTagsetDefinition> result = criteria.list();

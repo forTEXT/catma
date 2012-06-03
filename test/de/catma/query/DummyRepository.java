@@ -10,15 +10,15 @@ import java.util.Map;
 import java.util.Set;
 
 import de.catma.document.Corpus;
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
-import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
@@ -58,12 +58,12 @@ public class DummyRepository implements IndexedRepository {
 
 	}
 
-	public Collection<ISourceDocument> getSourceDocuments() {
+	public Collection<SourceDocument> getSourceDocuments() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public ISourceDocument getSourceDocument(String id) {
+	public SourceDocument getSourceDocument(String id) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -78,7 +78,7 @@ public class DummyRepository implements IndexedRepository {
 		return null;
 	}
 
-	public IUserMarkupCollection getUserMarkupCollection(
+	public UserMarkupCollection getUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference) {
 		// TODO Auto-generated method stub
 		return null;
@@ -90,17 +90,17 @@ public class DummyRepository implements IndexedRepository {
 		return null;
 	}
 
-	public ITagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) {
+	public TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public void delete(ISourceDocument sourceDocument) {
+	public void delete(SourceDocument sourceDocument) {
 		// TODO Auto-generated method stub
 
 	}
 
-	public void delete(IUserMarkupCollection userMarkupCollection) {
+	public void delete(UserMarkupCollection userMarkupCollection) {
 		// TODO Auto-generated method stub
 
 	}
@@ -110,18 +110,18 @@ public class DummyRepository implements IndexedRepository {
 
 	}
 
-	public void update(ISourceDocument sourceDocument) {
+	public void update(SourceDocument sourceDocument) {
 		// TODO Auto-generated method stub
 
 	}
 
-	public void update(IUserMarkupCollection userMarkupCollection,
+	public void update(UserMarkupCollection userMarkupCollection,
 			Collection<TagReference> tagReferences) {
 		// TODO Auto-generated method stub
 		
 	}
 	
-	public void update(List<IUserMarkupCollection> userMarkupCollections,
+	public void update(List<UserMarkupCollection> userMarkupCollections,
 			TagsetDefinition tagsetDefinition) {
 		// TODO Auto-generated method stub
 		
@@ -133,13 +133,13 @@ public class DummyRepository implements IndexedRepository {
 
 	}
 
-	public void insert(ISourceDocument sourceDocument) throws IOException {
+	public void insert(SourceDocument sourceDocument) throws IOException {
 		// TODO Auto-generated method stub
 
 	}
 
 	public void createUserMarkupCollection(String name,
-			ISourceDocument sourceDocument) throws IOException {
+			SourceDocument sourceDocument) throws IOException {
 		// TODO Auto-generated method stub
 
 	}
@@ -191,7 +191,7 @@ public class DummyRepository implements IndexedRepository {
 	}
 
 	public void importUserMarkupCollection(InputStream inputStream,
-			ISourceDocument sourceDocument) throws IOException {
+			SourceDocument sourceDocument) throws IOException {
 		// TODO Auto-generated method stub
 		
 	}

@@ -24,7 +24,7 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
@@ -56,7 +56,7 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 		this.relevantStaticMarkupCollIDs = new ArrayList<String>();
 		
 		if (corpus != null) {
-			for (ISourceDocument sd : corpus.getSourceDocuments()) {
+			for (SourceDocument sd : corpus.getSourceDocuments()) {
 				this.relevantSourceDocumentIDs.add(sd.getID());
 			}
 			for (UserMarkupCollectionReference ref : 
@@ -192,7 +192,7 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 				"Documents and collections considered for this search");
 		
 		if (corpus != null) {
-			for (ISourceDocument sd : corpus.getSourceDocuments()) {
+			for (SourceDocument sd : corpus.getSourceDocuments()) {
 				documentsTree.addItem(sd);
 			}
 		}

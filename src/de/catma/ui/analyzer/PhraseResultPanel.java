@@ -12,7 +12,7 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.repository.Repository;
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
@@ -106,7 +106,7 @@ public class PhraseResultPanel extends VerticalLayout {
 					phraseResult.getGroup());
 		
 		for (String sourceDocumentID : phraseResult.getSourceDocumentIDs()) {
-			ISourceDocument sourceDocument = 
+			SourceDocument sourceDocument = 
 					repository.getSourceDocument(sourceDocumentID);
 			String sourceDocumentItemID = 
 					phraseResult.getGroup() + "@" + sourceDocument;

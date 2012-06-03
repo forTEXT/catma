@@ -23,7 +23,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeTable;
 
-import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
@@ -64,16 +64,16 @@ public class TagsetTree extends HorizontalLayout {
 	private boolean withTagsetButtons;
 	private ColorButtonListener colorButtonListener;
 	private TagManager tagManager;
-	private ITagLibrary tagLibrary;
+	private TagLibrary tagLibrary;
 	private PropertyChangeListener tagsetDefinitionChangedListener;
 	private PropertyChangeListener tagDefChangedListener;
 
-	public TagsetTree(TagManager tagManager, ITagLibrary tagLibrary) {
+	public TagsetTree(TagManager tagManager, TagLibrary tagLibrary) {
 		this(tagManager, tagLibrary, true, null);
 	}
 	
 	public TagsetTree(
-			TagManager tagManager, final ITagLibrary tagLibrary, 
+			TagManager tagManager, final TagLibrary tagLibrary, 
 			boolean withTagsetButtons, 
 			ColorButtonListener colorButtonListener) {
 		this.tagManager = tagManager;
@@ -104,8 +104,8 @@ public class TagsetTree extends HorizontalLayout {
 				public void propertyChange(PropertyChangeEvent evt) {
 					if (evt.getOldValue()==null) {
 						@SuppressWarnings("unchecked")
-						Pair<ITagLibrary, TagsetDefinition> addOperationResult = 
-							(Pair<ITagLibrary,TagsetDefinition>)evt.getNewValue();
+						Pair<TagLibrary, TagsetDefinition> addOperationResult = 
+							(Pair<TagLibrary,TagsetDefinition>)evt.getNewValue();
 						
 						if (tagLibrary.equals(addOperationResult.getFirst())) {
 							addTagsetDefinition(addOperationResult.getSecond());
@@ -113,8 +113,8 @@ public class TagsetTree extends HorizontalLayout {
 					}
 					else if (evt.getNewValue() == null) {
 						@SuppressWarnings("unchecked")
-						Pair<ITagLibrary, TagsetDefinition> removeOperationResult = 
-							(Pair<ITagLibrary,TagsetDefinition>)evt.getOldValue();
+						Pair<TagLibrary, TagsetDefinition> removeOperationResult = 
+							(Pair<TagLibrary,TagsetDefinition>)evt.getOldValue();
 						
 						if (tagLibrary.equals(removeOperationResult.getFirst())) {
 							TagsetDefinition tagsetDef = 

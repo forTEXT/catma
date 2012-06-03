@@ -1,6 +1,6 @@
 package de.catma.ui.repository;
 
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 
 public class StandardContentInfo implements ContentInfo {
@@ -22,7 +22,7 @@ public class StandardContentInfo implements ContentInfo {
 		this.publisher = publisher;
 	}
 	
-	public StandardContentInfo(ISourceDocument sd) {
+	public StandardContentInfo(SourceDocument sd) {
 		this(
 			sd.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getTitle(),
 			sd.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getAuthor(),

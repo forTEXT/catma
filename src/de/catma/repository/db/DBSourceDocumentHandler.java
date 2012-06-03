@@ -27,8 +27,8 @@ import de.catma.document.ContentInfoSet;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
-import de.catma.document.source.ISourceDocument;
 import de.catma.document.source.IndexInfoSet;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentHandler;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
@@ -46,7 +46,7 @@ class DBSourceDocumentHandler {
 	
 	private DBRepository dbRepository;
 	private String sourceDocsPath;
-	private Map<String,ISourceDocument> sourceDocumentsByID;
+	private Map<String,SourceDocument> sourceDocumentsByID;
 
 	public DBSourceDocumentHandler(
 			DBRepository dbRepository, String repoFolderPath) {
@@ -54,7 +54,7 @@ class DBSourceDocumentHandler {
 		this.sourceDocsPath = repoFolderPath + 
 			"/" + 
 			SOURCEDOCS_FOLDER + "/";
-		this.sourceDocumentsByID = new HashMap<String, ISourceDocument>();
+		this.sourceDocumentsByID = new HashMap<String, SourceDocument>();
 	}
 	
 	public String getIDFromURI(URI uri) {
@@ -68,7 +68,7 @@ class DBSourceDocumentHandler {
 		
 	}
 	
-	private void insertIntoFS(ISourceDocument sourceDocument) throws IOException {
+	private void insertIntoFS(SourceDocument sourceDocument) throws IOException {
 
 		SourceDocumentInfo sourceDocumentInfo = 
 				sourceDocument.getSourceContentHandler().getSourceDocumentInfo();
@@ -132,7 +132,7 @@ class DBSourceDocumentHandler {
 		return builder.toString();
 	}
 
-	void insert(ISourceDocument sourceDocument) throws IOException {
+	void insert(SourceDocument sourceDocument) throws IOException {
 		DBSourceDocument dbSourceDocument = 
 					new DBSourceDocument(sourceDocument);
 		
@@ -205,12 +205,14 @@ class DBSourceDocumentHandler {
 							FileOSType.valueOf(sd.getFileOstype()),
 							sd.getChecksum(),
 							sd.getXsltDocumentLocalUri());
+				techInfoSet.setURI(
+						new URI(getFileURL(sd.getLocalUri(), sourceDocsPath))); 
 				
 				SourceDocumentInfo sourceDocumentInfo = 
 						new SourceDocumentInfo(indexInfoSet, contentInfoSet, techInfoSet);
 				SourceDocumentHandler sdh = new SourceDocumentHandler();
-				ISourceDocument sourceDocument = 
-					sdh.loadSourceDocument(sd.getId(), sourceDocumentInfo);
+				SourceDocument sourceDocument = 
+					sdh.loadSourceDocument(sd.getLocalUri(), sourceDocumentInfo);
 				
 				for (DBUserMarkupCollection dbUmc : sd.getDbUserMarkupCollections()) {
 					if (dbUmc.hasAccess(dbRepository.getCurrentUser())) {
@@ -229,18 +231,20 @@ class DBSourceDocumentHandler {
 		}		
 	}
 	
-	Collection<ISourceDocument> getSourceDocuments() {
+	Collection<SourceDocument> getSourceDocuments() {
 		return  Collections.unmodifiableCollection(sourceDocumentsByID.values());
 	}
 	
-	ISourceDocument getSourceDocument(String id) {
+	SourceDocument getSourceDocument(String id) {
 		return sourceDocumentsByID.get(id);
 	}
 	
 	String getLocalUriFor(UserMarkupCollectionReference umcRef) {
-		for (ISourceDocument sd : getSourceDocuments()) {
-			if (sd.getUserMarkupCollectionRefs().contains(umcRef)) {
-				return sd.getID();
+		for (SourceDocument sd : getSourceDocuments()) {
+			for (UserMarkupCollectionReference ref : sd.getUserMarkupCollectionRefs()) {
+				if (ref.getId().equals(umcRef.getId())) {
+					return sd.getID();
+				}
 			}
 		}
 		

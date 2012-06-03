@@ -7,7 +7,7 @@ import com.vaadin.data.Item;
 import com.vaadin.data.Container.Filter;
 
 import de.catma.document.Corpus;
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 
@@ -18,7 +18,7 @@ class SourceDocumentFilter implements Filter {
 	public SourceDocumentFilter(Corpus corpus) {
 		super();
 		corpusContent = new HashSet<String>();
-		for (ISourceDocument sd : corpus.getSourceDocuments()) {
+		for (SourceDocument sd : corpus.getSourceDocuments()) {
 			corpusContent.add(sd.toString());
 		}
 

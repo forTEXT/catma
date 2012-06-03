@@ -3,10 +3,10 @@ package de.catma.serialization;
 import java.io.IOException;
 import java.io.InputStream;
 
-import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibrary;
 
 public interface TagLibrarySerializationHandler {
-	public void serialize(ITagLibrary tagLibrary) throws IOException;
-	public ITagLibrary deserialize(
+	public void serialize(TagLibrary tagLibrary) throws IOException;
+	public TagLibrary deserialize(
 		String id, InputStream inputStream) throws IOException;
 }

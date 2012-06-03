@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import de.catma.serialization.TagLibrarySerializationHandler;
-import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 
 public class TeiTagLibrarySerializationHandler implements TagLibrarySerializationHandler {
@@ -24,20 +24,20 @@ public class TeiTagLibrarySerializationHandler implements TagLibrarySerializatio
 		this.tagManager = tagManager;
 	}
 	
-	public void serialize(ITagLibrary tagLibrary) {
+	public void serialize(TagLibrary tagLibrary) {
 		TeiTagLibrarySerializer serializer = 
 				new TeiTagLibrarySerializer(teiDocument);
 		serializer.serialize(tagLibrary);
 	}
 	
 	
-	public ITagLibrary deserialize() throws IOException {
+	public TagLibrary deserialize() throws IOException {
 		TeiTagLibraryDeserializer deserializer = 
 				new TeiTagLibraryDeserializer(teiDocument, tagManager);
 		return deserializer.getTagLibrary();
 	}
 	
-	public ITagLibrary deserialize(
+	public TagLibrary deserialize(
 			String id, InputStream inputStream) throws IOException {
 		try {
 			TeiDocumentFactory factory = new TeiDocumentFactory();

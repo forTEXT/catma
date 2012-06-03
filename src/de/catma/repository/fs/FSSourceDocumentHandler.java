@@ -25,7 +25,7 @@ import org.apache.commons.io.IOUtils;
 
 import de.catma.ExceptionHandler;
 import de.catma.document.ContentInfoSet;
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentHandler;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
@@ -72,14 +72,14 @@ class FSSourceDocumentHandler {
 		this.sourceDoc2DigitalObject = new HashMap<String, String>();
 	}
 	
-	public Map<String,ISourceDocument> loadSourceDocuments() {
-		HashMap<String,ISourceDocument> result = new HashMap<String, ISourceDocument>();
+	public Map<String,SourceDocument> loadSourceDocuments() {
+		HashMap<String,SourceDocument> result = new HashMap<String, SourceDocument>();
 		
 		File digitalObjectsFolder = new File(this.digitalObjectsFolderPath);
 		File[] digitalObjectFiles = digitalObjectsFolder.listFiles();
 		for (File digitalObjectFile : digitalObjectFiles) {
 			try {
-				ISourceDocument current = loadSourceDocument(digitalObjectFile);
+				SourceDocument current = loadSourceDocument(digitalObjectFile);
 				result.put(current.getID(), current);
 				sourceDoc2DigitalObject.put(
 					current.getID(),
@@ -93,7 +93,7 @@ class FSSourceDocumentHandler {
 		return result;
 	}
 
-	public ISourceDocument loadSourceDocument(File digitalObjectFile) throws IOException {
+	public SourceDocument loadSourceDocument(File digitalObjectFile) throws IOException {
 		InputStream infosetsInputStream  = null;
 		try {
 			Document digitalObject = new Builder().build(digitalObjectFile);
@@ -134,7 +134,7 @@ class FSSourceDocumentHandler {
 			sourceDocumentInfo.getTechInfoSet().setURI(sourceURI);
 			
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
-			ISourceDocument sourceDocument = 
+			SourceDocument sourceDocument = 
 					sourceDocumentHandler.loadSourceDocument(
 							sourceURIVal, sourceDocumentInfo);
 			
@@ -187,7 +187,7 @@ class FSSourceDocumentHandler {
 		}
 	}
 	
-	public void insert(ISourceDocument sourceDocument) throws IOException {
+	public void insert(SourceDocument sourceDocument) throws IOException {
 
 		IDGenerator idGenerator = new IDGenerator();
 
@@ -291,7 +291,7 @@ class FSSourceDocumentHandler {
 	}
 
 	public void addUserMarkupCollectionReference(
-			UserMarkupCollectionReference ref, ISourceDocument sourceDocument) throws IOException {
+			UserMarkupCollectionReference ref, SourceDocument sourceDocument) throws IOException {
 		try {
 			String doPath = sourceDoc2DigitalObject.get(sourceDocument.getID());
 			File doFile = new File(doPath);

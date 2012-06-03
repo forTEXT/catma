@@ -19,12 +19,12 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.document.Corpus;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
-import de.catma.document.source.ISourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
-import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagManager;
@@ -42,7 +42,7 @@ import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 public class TaggerView extends VerticalLayout 
 	implements TaggerListener, ClosableTab {
 	
-	private ISourceDocument sourceDocument;
+	private SourceDocument sourceDocument;
 	private Tagger tagger;
 	private Pager pager;
 	private MarkupPanel markupPanel;
@@ -53,7 +53,7 @@ public class TaggerView extends VerticalLayout
 	
 	public TaggerView(
 			int taggerID, TagManager tagManager, 
-			ISourceDocument sourceDocument, Repository repository) {
+			SourceDocument sourceDocument, Repository repository) {
 		this.taggerID = taggerID;
 		this.tagManager = tagManager;
 		this.sourceDocument = sourceDocument;
@@ -67,7 +67,7 @@ public class TaggerView extends VerticalLayout
 			public void buttonClick(ClickEvent event) {
 				Corpus corpus = new Corpus(sourceDocument.toString());
 				corpus.addSourceDocument(sourceDocument);
-				for (IUserMarkupCollection umc : 
+				for (UserMarkupCollection umc : 
 					markupPanel.getUserMarkupCollections()) {
 					UserMarkupCollectionReference userMarkupCollRef =
 							sourceDocument.getUserMarkupCollectionReference(
@@ -145,7 +145,7 @@ public class TaggerView extends VerticalLayout
 		addComponent(splitPanel);
 	}
 
-	public ISourceDocument getSourceDocument() {
+	public SourceDocument getSourceDocument() {
 		return sourceDocument;
 	}
 	
@@ -171,7 +171,7 @@ public class TaggerView extends VerticalLayout
 	}
 
 	public void openUserMarkupCollection(
-			IUserMarkupCollection userMarkupCollection) {
+			UserMarkupCollection userMarkupCollection) {
 		markupPanel.openUserMarkupCollection(userMarkupCollection);
 	}
 
@@ -181,7 +181,7 @@ public class TaggerView extends VerticalLayout
 	
 	public void tagInstanceAdded(
 			ClientTagInstance clientTagInstance) {
-		ITagLibrary tagLibrary =
+		TagLibrary tagLibrary =
 				markupPanel.getCurrentWritableUserMarkupCollection().getTagLibrary();
 		
 		if (tagLibrary.getTagDefinition(clientTagInstance.getTagDefinitionID())

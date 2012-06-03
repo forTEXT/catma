@@ -3,9 +3,8 @@ package de.catma.ui.tagger;
 import com.vaadin.ui.Component;
 
 import de.catma.document.repository.Repository;
-import de.catma.document.source.ISourceDocument;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.TagManager;
 import de.catma.ui.tabbedview.TabbedView;
 
@@ -21,7 +20,7 @@ public class TaggerManagerView extends TabbedView {
 	}
 
 	public TaggerView openSourceDocument(
-			TagManager tagManager, ISourceDocument sourceDocument, Repository repository) {
+			TagManager tagManager, SourceDocument sourceDocument, Repository repository) {
 		TaggerView taggerView = getTaggerView(sourceDocument);
 		if (taggerView != null) {
 			setSelectedTab(taggerView);
@@ -37,7 +36,7 @@ public class TaggerManagerView extends TabbedView {
 	}
 	
 	
-	private TaggerView getTaggerView(ISourceDocument sourceDocument) {
+	private TaggerView getTaggerView(SourceDocument sourceDocument) {
 		for (Component tabContent : this) {
 			TaggerView taggerView = (TaggerView)tabContent;
 			if (taggerView.getSourceDocument().getID().equals(
@@ -50,7 +49,7 @@ public class TaggerManagerView extends TabbedView {
 	}
 
 	public void openUserMarkupCollection(TaggerView taggerView,
-			IUserMarkupCollection userMarkupCollection) {
+			UserMarkupCollection userMarkupCollection) {
 		taggerView.openUserMarkupCollection(userMarkupCollection);
 	}
 }

@@ -21,7 +21,7 @@ import de.catma.backgroundservice.DebugBackgroundServiceProvider;
 import de.catma.backgroundservice.LogProgressListener;
 import de.catma.document.Range;
 import de.catma.document.repository.RepositoryManager;
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.source.KeywordInContext;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
@@ -206,7 +206,7 @@ public class QueryTest {
 			for (Map.Entry<String, List<Range>> entry : 
 							rangesGroupedByDocumentId.entrySet()) {
 				System.out.println("documentId: " + entry.getKey());
-				ISourceDocument sd = 
+				SourceDocument sd = 
 						repository.getSourceDocument(entry.getKey());
 				KwicProvider kwicProvider = new KwicProvider(sd);
 				
@@ -266,7 +266,7 @@ public class QueryTest {
 			for (Map.Entry<String, List<Range>> entry : 
 							rangesGroupedByDocumentId.entrySet()) {
 				System.out.println("documentId: " + entry.getKey());
-				ISourceDocument sd = 
+				SourceDocument sd = 
 						repository.getSourceDocument(entry.getKey());
 				KwicProvider kwicProvider = new KwicProvider(sd);
 				

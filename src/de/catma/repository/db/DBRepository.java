@@ -25,17 +25,17 @@ import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.repository.db.model.DBUser;
 import de.catma.serialization.SerializationHandlerFactory;
-import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
@@ -128,15 +128,15 @@ public class DBRepository implements IndexedRepository {
 				
 				if (evt.getOldValue() == null) {
 					@SuppressWarnings("unchecked")
-					Pair<ITagLibrary, TagsetDefinition> args = 
-							(Pair<ITagLibrary, TagsetDefinition>)evt.getNewValue();
+					Pair<TagLibrary, TagsetDefinition> args = 
+							(Pair<TagLibrary, TagsetDefinition>)evt.getNewValue();
 					dbTagLibraryHandler.saveTagsetDefinition(
 							args.getFirst(), args.getSecond());
 				}
 				else if (evt.getNewValue() == null) {
 					@SuppressWarnings("unchecked")
-					Pair<ITagLibrary, TagsetDefinition> args = 
-							(Pair<ITagLibrary, TagsetDefinition>)evt.getOldValue();
+					Pair<TagLibrary, TagsetDefinition> args = 
+							(Pair<TagLibrary, TagsetDefinition>)evt.getOldValue();
 					dbTagLibraryHandler.removeTagsetDefinition(args.getSecond());
 				}
 				else {
@@ -289,19 +289,19 @@ public class DBRepository implements IndexedRepository {
 	}
 		
 	
-	public void insert(ISourceDocument sourceDocument) throws IOException {
+	public void insert(SourceDocument sourceDocument) throws IOException {
 		dbSourceDocumentHandler.insert(sourceDocument);
 	}
 	
-	public Collection<ISourceDocument> getSourceDocuments() {
+	public Collection<SourceDocument> getSourceDocuments() {
 		return dbSourceDocumentHandler.getSourceDocuments();
 	}
 	
-	public ISourceDocument getSourceDocument(String id) {
+	public SourceDocument getSourceDocument(String id) {
 		return dbSourceDocumentHandler.getSourceDocument(id);
 	}
 	
-	public void delete(ISourceDocument sourceDocument) {
+	public void delete(SourceDocument sourceDocument) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -313,25 +313,25 @@ public class DBRepository implements IndexedRepository {
 
 	
 	public void createUserMarkupCollection(String name,
-			ISourceDocument sourceDocument) throws IOException {
+			SourceDocument sourceDocument) throws IOException {
 		dbUserMarkupCollectionHandler.createUserMarkupCollection(
 				name, sourceDocument);
 	}
 	
 	public void importUserMarkupCollection(
-			InputStream inputStream, ISourceDocument sourceDocument)
+			InputStream inputStream, SourceDocument sourceDocument)
 			throws IOException {
 		dbUserMarkupCollectionHandler.importUserMarkupCollection(
 				inputStream, sourceDocument);
 	}
 	
-	public IUserMarkupCollection getUserMarkupCollection(
+	public UserMarkupCollection getUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
 		return dbUserMarkupCollectionHandler.getUserMarkupCollection(userMarkupCollectionReference);
 	}
 
 
-	public void update(final IUserMarkupCollection userMarkupCollection,
+	public void update(final UserMarkupCollection userMarkupCollection,
 			final Collection<TagReference> tagReferences) {
 		backgroundServiceProvider.submit(
 				new DefaultProgressCallable<Void>() {
@@ -345,7 +345,7 @@ public class DBRepository implements IndexedRepository {
 					}
 					else {
 						dbUserMarkupCollectionHandler.removeTagReferences(
-							userMarkupCollection, tagReferences);
+							tagReferences);
 					}
 					return null;
 				}
@@ -361,7 +361,7 @@ public class DBRepository implements IndexedRepository {
 			});
 	}
 	
-	public void update(final List<IUserMarkupCollection> userMarkupCollections,
+	public void update(final List<UserMarkupCollection> userMarkupCollections,
 			final TagsetDefinition tagsetDefinition) {
 		backgroundServiceProvider.submit(
 				new DefaultProgressCallable<Void>() {
@@ -369,7 +369,7 @@ public class DBRepository implements IndexedRepository {
 					getProgressListener().setProgress(
 							"Updating Tagset " + tagsetDefinition.getName() + "... ");
 					
-					dbUserMarkupCollectionHandler.update(
+					dbUserMarkupCollectionHandler.updateTagsetDefinitionInUserMarkupCollections(
 							userMarkupCollections, tagsetDefinition);
 					return null;
 				}
@@ -428,7 +428,7 @@ public class DBRepository implements IndexedRepository {
 		return dbTagLibraryHandler.getTagLibraryReferences();
 	}
 	
-	public ITagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) 
+	public TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) 
 			throws IOException{
 		return dbTagLibraryHandler.getTagLibrary(tagLibraryReference);
 	}

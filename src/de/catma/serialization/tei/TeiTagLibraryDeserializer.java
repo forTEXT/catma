@@ -6,11 +6,10 @@ import java.text.ParseException;
 import nu.xom.Elements;
 import nu.xom.Nodes;
 import de.catma.ExceptionHandler;
-import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
-import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
@@ -18,7 +17,7 @@ import de.catma.tag.Version;
 public class TeiTagLibraryDeserializer {
 	
 	private TeiDocument teiDocument;
-	private ITagLibrary tagLibrary;
+	private TagLibrary tagLibrary;
 	private TagManager tagManager;
 
 	public TeiTagLibraryDeserializer(
@@ -143,7 +142,7 @@ public class TeiTagLibraryDeserializer {
 							pvf.isSingleSelectValue()));
 	}
 
-	public ITagLibrary getTagLibrary() {
+	public TagLibrary getTagLibrary() {
 		return tagLibrary;
 	}
 }

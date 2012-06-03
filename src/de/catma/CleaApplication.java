@@ -21,10 +21,10 @@ import de.catma.backgroundservice.ProgressCallable;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
-import de.catma.document.source.ISourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.IndexedRepository;
-import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.ProgressWindow;
@@ -181,7 +181,7 @@ public class CleaApplication extends Application
 		repositoryManagerView.openRepository(repository);
 	}
 	 
-	public void openTagLibrary(ITagLibrary tagLibrary) {
+	public void openTagLibrary(TagLibrary tagLibrary) {
 		if (tagManagerView.getApplication() == null) {
 			menu.executeEntry(tagManagerView);
 		}
@@ -189,7 +189,7 @@ public class CleaApplication extends Application
 	}
 
 	public TaggerView openSourceDocument(
-			ISourceDocument sourceDocument, Repository repository) {
+			SourceDocument sourceDocument, Repository repository) {
 		if (taggerManagerView.getApplication() == null) {
 			menu.executeEntry(taggerManagerView);
 		}
@@ -253,8 +253,8 @@ public class CleaApplication extends Application
 	
 
 	public void openUserMarkupCollection(
-			ISourceDocument sourceDocument, 
-			IUserMarkupCollection userMarkupCollection, Repository repository) {
+			SourceDocument sourceDocument, 
+			UserMarkupCollection userMarkupCollection, Repository repository) {
 		TaggerView taggerView = openSourceDocument(sourceDocument, repository);
 		taggerManagerView.openUserMarkupCollection(
 				taggerView, userMarkupCollection);

@@ -32,7 +32,7 @@ public class DBTagLibrary implements java.io.Serializable {
 	private Set<DBUserTagLibrary> dbUserTagLibraries = 
 			new HashSet<DBUserTagLibrary>();
 	
-	private Set<DBTagsetDefinition> dbTagsetDefinitions = new HashSet<DBTagsetDefinition>();
+//	private Set<DBTagsetDefinition> dbTagsetDefinitions = new HashSet<DBTagsetDefinition>();
 	private String name;
 	
 	public DBTagLibrary() {
@@ -82,16 +82,16 @@ public class DBTagLibrary implements java.io.Serializable {
 		this.dbUserTagLibraries = dbUserTagLibraries;
 	}
 	
-	@OneToMany(mappedBy = "tagLibraryId")
-	@Cascade({CascadeType.DELETE})
-	public Set<DBTagsetDefinition> getDbTagsetDefinitions() {
-		return dbTagsetDefinitions;
-	}
-
-	public void setDbTagsetDefinitions(
-			Set<DBTagsetDefinition> dbTagsetDefinitions) {
-		this.dbTagsetDefinitions = dbTagsetDefinitions;
-	}
+//	@OneToMany(mappedBy = "tagLibraryId")
+//	@Cascade({CascadeType.DELETE})
+//	public Set<DBTagsetDefinition> getDbTagsetDefinitions() {
+//		return dbTagsetDefinitions;
+//	}
+//
+//	public void setDbTagsetDefinitions(
+//			Set<DBTagsetDefinition> dbTagsetDefinitions) {
+//		this.dbTagsetDefinitions = dbTagsetDefinitions;
+//	}
 	
 	@Override
 	public String toString() {
@@ -99,17 +99,6 @@ public class DBTagLibrary implements java.io.Serializable {
 	}
 
 	@Transient
-	public DBTagsetDefinition getDbTagsetDefinition(String uuid) {
-		IDGenerator idGenerator = new IDGenerator();
-		for (DBTagsetDefinition dbTagsetDefinition : getDbTagsetDefinitions()) {
-			if (uuid.equals(
-					idGenerator.uuidBytesToCatmaID(dbTagsetDefinition.getUuid()))) {
-				return dbTagsetDefinition;
-			}
-		}
-		return null;
-	}
-
 	public String getId() {
 		return (getTagLibraryId() == null) ? null : String.valueOf(getTagLibraryId());
 	}

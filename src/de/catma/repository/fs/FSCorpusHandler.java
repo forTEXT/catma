@@ -11,7 +11,7 @@ import nu.xom.Node;
 import nu.xom.Nodes;
 import de.catma.document.ContentInfoSet;
 import de.catma.document.Corpus;
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 
@@ -67,7 +67,7 @@ class FSCorpusHandler {
 			for (int i=0; i<sourceNodes.size(); i++) {
 				Node sourceNode = sourceNodes.get(i);
 				
-				ISourceDocument sourceDocument = 
+				SourceDocument sourceDocument = 
 						fsRepository.getSourceDocument(sourceNode.getValue());
 				corpus.addSourceDocument(sourceDocument);
 			}

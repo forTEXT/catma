@@ -16,15 +16,13 @@ import java.util.Set;
 import de.catma.document.ContentInfoSet;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.serialization.SerializationHandlerFactory;
-import de.catma.tag.ITagLibrary;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagsetDefinition;
@@ -41,7 +39,7 @@ class FSRepository implements Repository {
 	private Set<Corpus> corpora;
 	private FSCorpusHandler corpusHandler;
 	private FSSourceDocumentHandler sourceDocumentHandler;
-	private Map<String,ISourceDocument> sourceDocumentsByID;
+	private Map<String,SourceDocument> sourceDocumentsByID;
 	private Set<TagLibraryReference> tagLibraryReferences;
 	private FSTagLibraryHandler tagLibraryHandler;
 	private FSUserMarkupCollectionHandler userMarkupCollectionHandler;
@@ -110,7 +108,7 @@ class FSRepository implements Repository {
 		this.tagLibraryReferences = this.tagLibraryHandler.loadTagLibraryReferences();
 	}
 
-	public Collection<ISourceDocument> getSourceDocuments() {
+	public Collection<SourceDocument> getSourceDocuments() {
 		return Collections.unmodifiableCollection(this.sourceDocumentsByID.values());
 	}
 
@@ -122,7 +120,7 @@ class FSRepository implements Repository {
 		return Collections.unmodifiableSet(this.tagLibraryReferences);
 	}
 
-	public ITagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) {
+	public TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) {
 		try {
 			return tagLibraryHandler.loadTagLibrary(tagLibraryReference);
 		}
@@ -131,7 +129,7 @@ class FSRepository implements Repository {
 		}
 	}
 
-	public IUserMarkupCollection getUserMarkupCollection(
+	public UserMarkupCollection getUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference) {
 		try {
 			return userMarkupCollectionHandler.loadUserMarkupCollection(
@@ -148,7 +146,7 @@ class FSRepository implements Repository {
 		return null;
 	}
 
-	public void delete(ISourceDocument sourceDocument) {
+	public void delete(SourceDocument sourceDocument) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -158,19 +156,19 @@ class FSRepository implements Repository {
 		
 	}
 
-	public void update(ISourceDocument sourceDocument) {
+	public void update(SourceDocument sourceDocument) {
 		// TODO Auto-generated method stub
 		
 	}
 	
-	public void update(List<IUserMarkupCollection> userMarkupCollections,
+	public void update(List<UserMarkupCollection> userMarkupCollections,
 			TagsetDefinition tagsetDefinition) {
 		// TODO Auto-generated method stub
 		
 	}
 	
 	public void update(
-			IUserMarkupCollection userMarkupCollection, 
+			UserMarkupCollection userMarkupCollection, 
 			Collection<TagReference> tagReferences) {
 		try {
 			userMarkupCollectionHandler.saveUserMarkupCollection(
@@ -187,7 +185,7 @@ class FSRepository implements Repository {
 		
 	}
 
-	public void insert(ISourceDocument sourceDocument) throws IOException {
+	public void insert(SourceDocument sourceDocument) throws IOException {
 		sourceDocumentHandler.insert(sourceDocument);
 		sourceDocumentsByID.put(sourceDocument.getID(), sourceDocument);
 		this.propertyChangeSupport.firePropertyChange(
@@ -196,11 +194,11 @@ class FSRepository implements Repository {
 	}
 
 	public void createUserMarkupCollection(
-			String name, ISourceDocument sourceDocument) throws IOException {
+			String name, SourceDocument sourceDocument) throws IOException {
 		String id = buildCatmaUri(
 				"/" + CONTAINER_FOLDER + "/" + name + ".xml");
 		ContentInfoSet cis = new ContentInfoSet(name);
-		IUserMarkupCollection umc = 
+		UserMarkupCollection umc = 
 				new UserMarkupCollection(
 						id, 
 						cis, 
@@ -216,7 +214,7 @@ class FSRepository implements Repository {
 		
 		this.propertyChangeSupport.firePropertyChange(
 				RepositoryChangeEvent.userMarkupCollectionChanged.name(),
-				null, new Pair<UserMarkupCollectionReference, ISourceDocument>(
+				null, new Pair<UserMarkupCollectionReference, SourceDocument>(
 						ref,sourceDocument));
 	}
 
@@ -226,7 +224,7 @@ class FSRepository implements Repository {
 		return null;
 	}
 
-	public ISourceDocument getSourceDocument(String id) {
+	public SourceDocument getSourceDocument(String id) {
 		return this.sourceDocumentsByID.get(id);
 	}
 
@@ -310,7 +308,7 @@ class FSRepository implements Repository {
 	}
 	
 	public void importUserMarkupCollection(InputStream inputStream,
-			ISourceDocument sourceDocument) throws IOException {
+			SourceDocument sourceDocument) throws IOException {
 		// TODO Auto-generated method stub
 		
 	}

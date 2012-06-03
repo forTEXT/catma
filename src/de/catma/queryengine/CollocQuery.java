@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import de.catma.document.repository.Repository;
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
@@ -90,7 +90,7 @@ public class CollocQuery extends Query {
     	QueryResult collocCondition = query2.execute();
     	
     	Map<String,KwicProvider> kwicProviders = new HashMap<String, KwicProvider>(); 
-    	Set<ISourceDocument> toBeUnloaded = new HashSet<ISourceDocument>();
+    	Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
     	Repository repository = getQueryOptions().getRepository();
     	
     	Map<QueryResultRow, List<TermInfo>> termInfos = 
@@ -99,7 +99,7 @@ public class CollocQuery extends Query {
     	QueryResultRowArray result = new QueryResultRowArray();
     	
     	for (QueryResultRow row : baseResult) {
-    		ISourceDocument sd = 
+    		SourceDocument sd = 
     				repository.getSourceDocument(row.getSourceDocumentId());
     		if (!sd.isLoaded()) {
     			//TODO: unload SourceDocuments to free space if tobeUnloaded.size() > 10
@@ -120,7 +120,7 @@ public class CollocQuery extends Query {
     			result.add(row);
     		}
     	}
-    	for (ISourceDocument sd : toBeUnloaded) {
+    	for (SourceDocument sd : toBeUnloaded) {
     		sd.unload();
     	}
    

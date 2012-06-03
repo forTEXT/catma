@@ -4,15 +4,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import de.catma.document.source.ISourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 
 public interface UserMarkupCollectionSerializationHandler {
 
-	public void serialize(IUserMarkupCollection userMarkupCollection, 
-		ISourceDocument sourceDocument, OutputStream outputStream) throws IOException;
+	public void serialize(UserMarkupCollection userMarkupCollection, 
+		SourceDocument sourceDocument, OutputStream outputStream) throws IOException;
 	
-	public IUserMarkupCollection deserialize(
+	public UserMarkupCollection deserialize(
 			String id, InputStream inputStream) throws IOException;
 	
 }

@@ -12,9 +12,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
-import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagManager;
@@ -34,7 +34,7 @@ public class TeiSerializerTest {
 				new FileInputStream(
 						"testdocs/Tagsets_user_problem.xml"), 
 				Charset.forName( "UTF-8" ));
-		ITagLibrary tagLibrary = 
+		TagLibrary tagLibrary = 
 				new TeiTagLibrarySerializationHandler(tagManager).deserialize(
 						"testdocs/Tagsets_user_problem.xml", is);
 		is.close();
@@ -50,7 +50,7 @@ public class TeiSerializerTest {
 				new FileInputStream(
 						"testdocs/Wehmeier_problem_DefaultTagsetDB.xml"), 
 				Charset.forName( "UTF-8" ));
-		ITagLibrary tagLibrary = 
+		TagLibrary tagLibrary = 
 				new TeiTagLibrarySerializationHandler(tagManager).deserialize(
 						"testdocs/Wehmeier_problem_DefaultTagsetDB.xml",is);
 		is.close();
@@ -62,7 +62,7 @@ public class TeiSerializerTest {
 		TagManager tagManager = new TagManager();
 		FilterInputStream is = new BOMFilterInputStream(
 				new FileInputStream("testdocs/rose_for_emily_structure.xml"), Charset.forName( "UTF-8" ));
-		ITagLibrary tagLibrary = 
+		TagLibrary tagLibrary = 
 				new TeiTagLibrarySerializationHandler(tagManager).deserialize(
 						"testdocs/rose_for_emily_structure.xml", is);
 		is.close();
@@ -75,7 +75,7 @@ public class TeiSerializerTest {
 				new FileInputStream(
 						"testdocs/rose_for_emily_user_simple.xml"), 
 				Charset.forName( "UTF-8" ));
-		ITagLibrary tagLibrary = 
+		TagLibrary tagLibrary = 
 				new TeiTagLibrarySerializationHandler(tagManager).deserialize(
 						"testdocs/rose_for_emily_user_simple.xml", is);
 		is.close();
@@ -120,7 +120,7 @@ public class TeiSerializerTest {
 				new FileInputStream(
 						"testdocs/rose_for_emily_user_simple.xml"), 
 				Charset.forName( "UTF-8" ));
-		IUserMarkupCollection umc = 
+		UserMarkupCollection umc = 
 				new TeiUserMarkupCollectionSerializationHandler(
 						tagManager).deserialize(
 								"testdocs/rose_for_emily_user_simple.xml", is);

@@ -10,8 +10,8 @@ import de.catma.ExceptionHandler;
 import de.catma.backgroundservice.DebugBackgroundServiceProvider;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
-import de.catma.document.source.ISourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.IUserMarkupCollection;
+import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.db.DBIndexer;
@@ -40,7 +40,7 @@ public class IndexerTest {
 	@Test
 	public void testIndexSourceDoc() throws Throwable {
 		try {
-			ISourceDocument sd = repository.getSourceDocument(
+			SourceDocument sd = repository.getSourceDocument(
 					"catma:///container/pg13.txt");
 			
 			Indexer indexer = new DBIndexer();
@@ -55,7 +55,7 @@ public class IndexerTest {
 	@Test
 	public void testIndexSourceDoc2() throws Throwable {
 		try {
-			ISourceDocument sd = repository.getSourceDocument(
+			SourceDocument sd = repository.getSourceDocument(
 					"catma:///container/pg11.txt");
 			
 			Indexer indexer = new DBIndexer();
@@ -70,7 +70,7 @@ public class IndexerTest {
 	@Test
 	public void testIndexSourceDoc3() throws Throwable {
 		try {
-			ISourceDocument sd = repository.getSourceDocument(
+			SourceDocument sd = repository.getSourceDocument(
 					"catma:///container/rose_for_emily.txt");
 			
 			Indexer indexer = new DBIndexer();
@@ -85,12 +85,12 @@ public class IndexerTest {
 	@Test
 	public void indexUserMarkupColl1() throws Throwable {
 		try {
-			ISourceDocument sd = repository.getSourceDocument(
+			SourceDocument sd = repository.getSourceDocument(
 					"catma:///container/rose_for_emily.txt");
 			UserMarkupCollectionReference ref = 
 					sd.getUserMarkupCollectionRefs().get(0);
 			
-			IUserMarkupCollection umc = 
+			UserMarkupCollection umc = 
 					repository.getUserMarkupCollection(ref);
 						
 			Indexer indexer = new DBIndexer();

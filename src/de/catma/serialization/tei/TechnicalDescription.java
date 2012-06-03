@@ -31,17 +31,17 @@ import nu.xom.Elements;
 import de.catma.ExceptionHandler;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.TechInfoSet;
 
 /**
  * Represents the technical description within a CATMA TEI document which holds
- * information about the TEI document and possibly about a corresponding {@link ISourceDocument}.
+ * information about the TEI document and possibly about a corresponding {@link SourceDocument}.
  *
  * @author Marco Petris
  * @see StandoffMarkupDocument
- * @see ISourceDocument
+ * @see SourceDocument
  */
 public class TechnicalDescription {
 

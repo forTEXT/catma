@@ -11,7 +11,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 
 import de.catma.document.Range;
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.KeywordInContext;
 
@@ -21,7 +21,7 @@ public class KwicProvider {
 	private Analyzer analyzer;
 	private String sourceDocumentId;
 	
-	public KwicProvider(ISourceDocument sourceDocument) throws IOException {
+	public KwicProvider(SourceDocument sourceDocument) throws IOException {
 		this.sourceDocumentId = sourceDocument.getID();
 		this.content = sourceDocument.getContent();
 		IndexInfoSet indexInfoSet = 

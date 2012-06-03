@@ -17,7 +17,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.contenthandler.SourceContentHandler;
 
@@ -50,7 +50,7 @@ public class DBSourceDocument implements java.io.Serializable {
 	public DBSourceDocument() {
 	}
 
-	public DBSourceDocument(ISourceDocument sourceDocument) {
+	public DBSourceDocument(SourceDocument sourceDocument) {
 		SourceDocumentInfo sourceDocumentInfo  = 
 				sourceDocument.getSourceContentHandler().getSourceDocumentInfo();
 				

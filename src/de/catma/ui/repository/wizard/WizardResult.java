@@ -1,12 +1,12 @@
 package de.catma.ui.repository.wizard;
 
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 
 public class WizardResult {
 
 	private SourceDocumentInfo sourceDocumentInfo;
-	private ISourceDocument sourceDocument;
+	private SourceDocument sourceDocument;
 	private String sourceDocumentID = null;
 	
 	public WizardResult() {
@@ -18,11 +18,11 @@ public class WizardResult {
 		return sourceDocumentInfo;
 	}
 	
-	public ISourceDocument getSourceDocument() {
+	public SourceDocument getSourceDocument() {
 		return sourceDocument;
 	}
 	
-	public void setSourceDocument(ISourceDocument sourceDocument) {
+	public void setSourceDocument(SourceDocument sourceDocument) {
 		this.sourceDocument = sourceDocument;
 	}
 	

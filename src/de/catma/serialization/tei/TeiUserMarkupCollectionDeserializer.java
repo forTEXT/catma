@@ -9,7 +9,7 @@ import nu.xom.Nodes;
 import de.catma.ExceptionHandler;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.serialization.tei.PtrValueHandler.TargetValues;
-import de.catma.tag.ITagLibrary;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyValueList;
@@ -20,10 +20,10 @@ public class TeiUserMarkupCollectionDeserializer {
 
 	private TeiDocument teiDocument;
 	private List<TagReference> tagReferences;
-	private ITagLibrary tagLibrary;
+	private TagLibrary tagLibrary;
 
 	public TeiUserMarkupCollectionDeserializer(
-			TeiDocument teiDocument, ITagLibrary tagLibrary) {
+			TeiDocument teiDocument, TagLibrary tagLibrary) {
 		this.teiDocument = teiDocument;
 		this.tagLibrary = tagLibrary;
 		this.tagReferences = new ArrayList<TagReference>();

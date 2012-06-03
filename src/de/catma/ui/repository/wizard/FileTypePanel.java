@@ -31,7 +31,7 @@ import de.catma.document.repository.Repository;
 import de.catma.document.source.CharsetLanguageInfo;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
-import de.catma.document.source.ISourceDocument;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentHandler;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.ui.DefaultProgressListener;
@@ -162,7 +162,7 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 											FileOSType.INDEPENDENT);
 									SourceDocumentHandler sourceDocumentHandler = 
 											new SourceDocumentHandler();
-									ISourceDocument sourceDocument =
+									SourceDocument sourceDocument =
 											sourceDocumentHandler.loadSourceDocument(
 											wizardResult.getSourceDocumentID(), 
 											sourceDocumentInfo);
@@ -202,7 +202,7 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	private void showPreview() {
 		SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
 		try {
-			ISourceDocument sourceDocument =
+			SourceDocument sourceDocument =
 					sourceDocumentHandler.loadSourceDocument(
 						wizardResult.getSourceDocumentID(),
 						sourceDocumentInfo);

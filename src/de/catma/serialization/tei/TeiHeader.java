@@ -241,7 +241,7 @@ class TeiHeader {
 
     /**
      * @param locale the predominant language of the
-     * targeted {@link de.catma.document.source.ISourceDocument}
+     * targeted {@link de.catma.document.source.SourceDocument}
      */
     private void setLanguage( Locale locale ) {
         String identValue = locale.getLanguage();
