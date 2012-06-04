@@ -28,7 +28,7 @@ public class TagManagerView extends VerticalLayout implements CloseHandler {
 		tagLibraryChangedListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
-				if (evt.getNewValue() == null) {
+				if (evt.getNewValue() == null) { // removal
 					TagLibrary tagLibrary =
 							(TagLibrary)evt.getOldValue();
 					TagLibraryView tlv = getTagLibraryView(tagLibrary.getId());

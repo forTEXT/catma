@@ -70,10 +70,15 @@ class DBUserMarkupCollectionHandler {
 				new DBUserUserMarkupCollection(
 						dbRepository.getCurrentUser(), dbUserMarkupCollection);
 		
+		DBTagLibrary dbTagLibrary = new DBTagLibrary(name, false);
+		
 		dbUserMarkupCollection.getDbUserUserMarkupCollections().add(
 				dbUserUserMarkupCollection);
 		try {
 			session.beginTransaction();
+			
+			session.save(dbTagLibrary);
+			dbUserMarkupCollection.setDbTagLibraryId(dbTagLibrary.getTagLibraryId());
 			
 			session.save(dbUserMarkupCollection);
 			session.save(dbUserUserMarkupCollection);
@@ -84,6 +89,8 @@ class DBUserMarkupCollectionHandler {
 					new UserMarkupCollectionReference(
 							dbUserMarkupCollection.getId(), 
 							new ContentInfoSet(name));
+			
+			sourceDocument.addUserMarkupCollectionReference(reference);
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					RepositoryChangeEvent.userMarkupCollectionChanged.name(),
@@ -508,9 +515,6 @@ class DBUserMarkupCollectionHandler {
 	void updateTagsetDefinitionInUserMarkupCollections(
 			List<UserMarkupCollection> userMarkupCollections,
 			TagsetDefinition tagsetDefinition) throws IOException {
-		/**
-		 * siehe dann auch todos in MarkupPanel!
-		 */
 		
 		Session session = dbRepository.getSessionFactory().openSession();
 		try {

@@ -15,10 +15,12 @@ import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.repository.Repository;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
+import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.tagger.MarkupCollectionsPanel.MarkupCollectionPanelEvent;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
@@ -30,19 +32,39 @@ public class MarkupPanel extends VerticalLayout {
 	private TabSheet tabSheet;
 	private MarkupCollectionsPanel markupCollectionsPanel;
 	private boolean init = true;
+	private PropertyChangeListener tagLibraryChangedListener;
+	private ColorButtonListener colorButtonListener;
 	
 	public MarkupPanel(
 			TagManager tagManager,
 			Repository repository, ColorButtonListener colorButtonListener, 
 			PropertyChangeListener tagDefinitionSelectionListener) {
+		this.colorButtonListener = colorButtonListener;
 		initComponents(
-				tagManager, repository, 
-				colorButtonListener, tagDefinitionSelectionListener);
+				tagManager, repository, tagDefinitionSelectionListener);
+		initActions();
+	}
+
+	private void initActions() {
+		this.tagLibraryChangedListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (evt.getNewValue() == null) { // removal
+					TagLibrary tagLibrary = (TagLibrary) evt.getOldValue();
+					for (TagsetDefinition tagsetDefinition : tagLibrary) {
+						tagsetTree.removeTagsetDefinition(tagsetDefinition);
+						markupCollectionsPanel.removeUpdateableTagsetDefinition(
+								tagsetDefinition);
+					}
+				}
+			}
+		};
+		tagsetTree.getTagManager().addPropertyChangeListener(
+			TagManagerEvent.tagLibraryChanged, tagLibraryChangedListener);
 	}
 
 	private void initComponents(
 			final TagManager tagManager, Repository repository, 
-			ColorButtonListener colorButtonListener, 
 			PropertyChangeListener tagDefinitionSelectionListener) {
 		tabSheet = new TabSheet();
 		VerticalLayout currentlyActiveMarkupPanel = new VerticalLayout();
@@ -52,10 +74,9 @@ public class MarkupPanel extends VerticalLayout {
 		tagsetTree = new TagsetTree(tagManager, null, false, colorButtonListener);
 		currentlyActiveMarkupPanel.addComponent(tagsetTree);
 
-		final Label currentlyWritableUserMarkupCollectionLabel = new Label(
+		final Label currentlyWritableUserMarkupCollectionLabel = new Label();
+		currentlyWritableUserMarkupCollectionLabel.setCaption(
 				"Currently writable Markup Collection:");
-		currentlyWritableUserMarkupCollectionLabel.setContentMode(
-				Label.CONTENT_XHTML);
 		currentlyActiveMarkupPanel.addComponent(
 				currentlyWritableUserMarkupCollectionLabel);
 		
@@ -69,8 +90,14 @@ public class MarkupPanel extends VerticalLayout {
 				new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
-				currentlyWritableUserMarkupCollectionLabel.setValue(
-						"Currently writable Markup Collection:</ br>" + evt.getNewValue());
+				if (evt.getNewValue() != null) {
+					currentlyWritableUserMarkupCollectionLabel.setValue(
+							evt.getNewValue());
+				}
+				else {
+					currentlyWritableUserMarkupCollectionLabel.setValue("");
+				}
+				colorButtonListener.setEnabled(evt.getNewValue() != null);
 			}
 		});
 		
@@ -84,10 +111,10 @@ public class MarkupPanel extends VerticalLayout {
 	public void attach() {
 		super.attach();
 		if (init) {
-			//TODO: handle TagLibrary close operations, i.e. remove corresponding TagsetDefs
 			//TODO: maybe accept drags only from the TaggerView table, drag only tagset defs
 			//TODO: allow removal, remove from writable markup coll as well
 			//TODO: react on writable markup coll changes, new TagsetDefs has to be added
+			//TODO: react on umc deletions from repo
 			tagsetTree.getTagTree().setDropHandler(new DropHandler() {
 				
 				public AcceptCriterion getAcceptCriterion() {
@@ -133,6 +160,8 @@ public class MarkupPanel extends VerticalLayout {
 	}
 
 	public void close() {
+		tagsetTree.getTagManager().removePropertyChangeListener(
+				TagManagerEvent.tagLibraryChanged, tagLibraryChangedListener);
 		tagsetTree.close();
 	}
 	

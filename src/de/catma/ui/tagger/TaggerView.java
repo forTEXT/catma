@@ -121,9 +121,24 @@ public class TaggerView extends VerticalLayout
 				tagManager,
 				repository,
 				new ColorButtonListener() {
+					
+					private boolean enabled = false;
 			
 					public void colorButtonClicked(TagDefinition tagDefinition) {
-						tagger.addTagInstanceWith(tagDefinition);
+						if (enabled) {
+							tagger.addTagInstanceWith(tagDefinition);
+						}
+						else {
+							getWindow().showNotification(
+	                                "Information",
+	                                "Please select a User Markup Collection "
+	                                + " to store your markup first!<br>"
+	                                + "See 'Currently active Markup Colletions'.");
+						}
+					}
+					
+					public void setEnabled(boolean enabled) {
+						this.enabled = enabled;
 					}
 				},
 				new PropertyChangeListener() {

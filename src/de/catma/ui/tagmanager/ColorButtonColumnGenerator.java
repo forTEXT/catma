@@ -13,6 +13,7 @@ public class ColorButtonColumnGenerator implements ColumnGenerator {
 	
 	public static interface ColorButtonListener {
 		public void colorButtonClicked(TagDefinition tagDefinition);
+		public void setEnabled(boolean enabled);
 	}
 
 	private ColorButtonListener colorButtonListener;

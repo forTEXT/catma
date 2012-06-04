@@ -110,27 +110,29 @@ public class MarkupResultPanel extends VerticalLayout {
 	private static class TagDefinitionTreeEntrySelectionHandler implements TreeEntrySelectionHandler {
 		
 		private TreeTable resultTable;
-		private TagDefinition tagDefinition;
+		private String tagDefinitionItemID;
 		
 		public TagDefinitionTreeEntrySelectionHandler(TreeTable resultTable,
-				TagDefinition tagDefinition) {
+				String tagDefinitionItemID) {
 			this.resultTable = resultTable;
-			this.tagDefinition = tagDefinition;
+			this.tagDefinitionItemID = tagDefinitionItemID;
 		}
 		
 		public QueryResultRowArray getResultRows(boolean selected) {
 			@SuppressWarnings("unchecked")
 			Collection<String> sourceDocItemIDs = 
 					(Collection<String>)resultTable.getChildren(
-							tagDefinition);
+							tagDefinitionItemID);
 			QueryResultRowArray result = new QueryResultRowArray();
 			
-			for (String sourceDocItemID : sourceDocItemIDs) {
-				((CheckBox)resultTable.getItem(sourceDocItemID).getItemProperty(
-						TreePropertyName.visible).getValue()).setValue(selected);
-				result.addAll(
-					new SourceDocumentTreeEntrySelectionHandler(
-							resultTable, sourceDocItemID).getResultRows(selected));
+			if (sourceDocItemIDs != null) {
+				for (String sourceDocItemID : sourceDocItemIDs) {
+					((CheckBox)resultTable.getItem(sourceDocItemID).getItemProperty(
+							TreePropertyName.visible).getValue()).setValue(selected);
+					result.addAll(
+						new SourceDocumentTreeEntrySelectionHandler(
+								resultTable, sourceDocItemID).getResultRows(selected));
+				}
 			}
 			
 			return result;
@@ -183,6 +185,8 @@ public class MarkupResultPanel extends VerticalLayout {
 		resultTable.setItemCaptionPropertyId(TreePropertyName.caption);
 		resultTable.setPageLength(10); //TODO: config
 		resultTable.setSizeFull();
+		//TODO: a description generator that shows the version of a Tag
+//		resultTable.setItemDescriptionGenerator(generator);
 		splitPanel.addComponent(resultTable);
 		
 		this.kwicPanel = new KwicPanel(repository, true);
@@ -243,20 +247,22 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 		TagDefinition tagDefinition = 
 				umc.getTagLibrary().getTagDefinition(tagDefinitionId);
-		
-		if (!resultTable.containsId(tagDefinition)) {
+		String tagDefinitionItemID = 
+				tagDefinition.getUuid() + "#" + tagDefinition.getVersion();
+		if (!resultTable.containsId(tagDefinitionItemID)) {
 			resultTable.addItem(
 				new Object[]{
 						umc.getTagLibrary().getTagPath(tagDefinition),
 						0,
 						createCheckbox(
 							new TagDefinitionTreeEntrySelectionHandler(
-								resultTable, tagDefinition))
+								resultTable, tagDefinitionItemID))
 				},
-				tagDefinition);
+				tagDefinitionItemID);
 		}
+
 		Property tagDefFreqProperty = 
-				resultTable.getItem(tagDefinition).getItemProperty(
+				resultTable.getItem(tagDefinitionItemID).getItemProperty(
 						TreePropertyName.frequency);
 		tagDefFreqProperty.setValue(((Integer)tagDefFreqProperty.getValue())+1);
 		
@@ -272,7 +278,7 @@ public class MarkupResultPanel extends VerticalLayout {
 							new SourceDocumentTreeEntrySelectionHandler(
 									resultTable, sourceDocumentItemID))
 				}, sourceDocumentItemID);
-			resultTable.setParent(sourceDocumentItemID, tagDefinition);
+			resultTable.setParent(sourceDocumentItemID, tagDefinitionItemID);
 		}
 		
 		Property sourceDocFreqProperty = 

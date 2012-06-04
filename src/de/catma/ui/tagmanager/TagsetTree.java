@@ -66,7 +66,7 @@ public class TagsetTree extends HorizontalLayout {
 	private TagManager tagManager;
 	private TagLibrary tagLibrary;
 	private PropertyChangeListener tagsetDefinitionChangedListener;
-	private PropertyChangeListener tagDefChangedListener;
+	private PropertyChangeListener tagDefinitionChangedListener;
 
 	public TagsetTree(TagManager tagManager, TagLibrary tagLibrary) {
 		this(tagManager, tagLibrary, true, null);
@@ -119,10 +119,7 @@ public class TagsetTree extends HorizontalLayout {
 						if (tagLibrary.equals(removeOperationResult.getFirst())) {
 							TagsetDefinition tagsetDef = 
 									removeOperationResult.getSecond();
-							for (TagDefinition td : tagsetDef) {
-								removeTagDefinition(td, tagsetDef);
-							}
-							tagTree.removeItem(tagsetDef);
+							removeTagsetDefinitionFromTree(tagsetDef);
 						}
 					}
 					else {
@@ -143,24 +140,24 @@ public class TagsetTree extends HorizontalLayout {
 			
 			this.btInsertTagset.addListener(new ClickListener() {
 				public void buttonClick(ClickEvent event) {
-					handleInsertTagsetDefinition();
+					handleInsertTagsetDefinitionRequest();
 				}
 			});
 			
 			this.btEditTagset.addListener(new ClickListener() {
 				public void buttonClick(ClickEvent event) {
-					handleEditTagsetDefinition();
+					handleEditTagsetDefinitionRequest();
 				}
 			});
 
 			btRemoveTagset.addListener(new ClickListener() {
 				public void buttonClick(ClickEvent event) {
-					handleRemoveTagsetDefinition();
+					handleRemoveTagsetDefinitionRequest();
 				}
 			});
 		}
 		
-		tagDefChangedListener = new PropertyChangeListener() {
+		tagDefinitionChangedListener = new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				Object oldValue = evt.getOldValue();
 				Object newValue = evt.getNewValue();
@@ -188,7 +185,7 @@ public class TagsetTree extends HorizontalLayout {
 						(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
 					TagDefinition td = removeOperationResult.getSecond();
 					if (tagTree.containsId(td)) {
-						removeTagDefinition(td, removeOperationResult.getFirst());
+						removeTagDefinitionFromTree(td, removeOperationResult.getFirst());
 					}
 				}
 				else {
@@ -205,19 +202,19 @@ public class TagsetTree extends HorizontalLayout {
 		
 		this.tagManager.addPropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged,
-				tagDefChangedListener);
+				tagDefinitionChangedListener);
 		
 		btInsertTag.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				handleInsertTagDefinition();
+				handleInsertTagDefinitionRequest();
 			}
 		});
 		
 		btRemoveTag.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				handleRemoveTagDefinition();
+				handleRemoveTagDefinitionRequest();
 			}
 
 		});
@@ -225,7 +222,7 @@ public class TagsetTree extends HorizontalLayout {
 		btEditTag.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				handleEditTagDefinition();
+				handleEditTagDefinitionRequest();
 			}
 		});
 		
@@ -237,7 +234,7 @@ public class TagsetTree extends HorizontalLayout {
 						btInsertProperty, btRemoveProperty, btEditProperty));
 	}
 	
-	private void handleEditTagDefinition() {
+	private void handleEditTagDefinitionRequest() {
 		Object selValue = tagTree.getValue();
 		
 		if ((selValue != null) 
@@ -283,10 +280,11 @@ public class TagsetTree extends HorizontalLayout {
 		
 	}
 
-	private void removeTagDefinition(TagDefinition td, TagsetDefinition tagsetDefinition) {
+	private void removeTagDefinitionFromTree(
+			TagDefinition td, TagsetDefinition tagsetDefinition) {
 		
 		for (TagDefinition child : tagsetDefinition.getChildren(td)) {
-			removeTagDefinition(child, tagsetDefinition);
+			removeTagDefinitionFromTree(child, tagsetDefinition);
 		}
 		
 		for (PropertyDefinition pd : 
@@ -304,7 +302,7 @@ public class TagsetTree extends HorizontalLayout {
 		}
 	}
 
-	private void handleRemoveTagDefinition() {
+	private void handleRemoveTagDefinitionRequest() {
 		Object selValue = tagTree.getValue();
 		
 		if ((selValue != null)
@@ -328,7 +326,7 @@ public class TagsetTree extends HorizontalLayout {
 		}
 	}
 	
-	private void handleInsertTagDefinition() {
+	private void handleInsertTagDefinitionRequest() {
 		final String tagDefNameProp = "name";
 		final String tagDefColorProp = "color";
 		
@@ -423,7 +421,7 @@ public class TagsetTree extends HorizontalLayout {
 		}
 	}
 
-	private void handleRemoveTagsetDefinition() {
+	private void handleRemoveTagsetDefinitionRequest() {
 		Object selValue = tagTree.getValue();
 		
 		if ((selValue != null)
@@ -447,7 +445,7 @@ public class TagsetTree extends HorizontalLayout {
 		}
 	}
 
-	private void handleInsertTagsetDefinition() {
+	private void handleInsertTagsetDefinitionRequest() {
 		final String tagsetdefinitionnameProperty = "name";
 		
 		PropertyCollection propertyCollection = 
@@ -480,7 +478,7 @@ public class TagsetTree extends HorizontalLayout {
 		tagsetFormDialog.show(getApplication().getMainWindow());
 	}
 	
-	private void handleEditTagsetDefinition() {
+	private void handleEditTagsetDefinitionRequest() {
 		final String tagsetdefinitionnameProperty = "name";
 		
 		Object selValue = tagTree.getValue();
@@ -778,7 +776,7 @@ public class TagsetTree extends HorizontalLayout {
 		}
 		tagManager.removePropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged,
-				tagDefChangedListener);
+				tagDefinitionChangedListener);
 	}
 	
 	public TagManager getTagManager() {
@@ -797,5 +795,16 @@ public class TagsetTree extends HorizontalLayout {
 	
 	public TagsetDefinition getTagsetDefinition(String tagDefinitionID) {
 		return getTagsetDefinition(getTagDefinition(tagDefinitionID));
+	}
+
+	public void removeTagsetDefinition(TagsetDefinition tagsetDefinition) {
+		removeTagsetDefinitionFromTree(tagsetDefinition);
+	}
+
+	private void removeTagsetDefinitionFromTree(TagsetDefinition tagsetDef) {
+		for (TagDefinition td : tagsetDef) {
+			removeTagDefinitionFromTree(td, tagsetDef);
+		}
+		tagTree.removeItem(tagsetDef);
 	}
 }
