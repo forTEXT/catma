@@ -23,7 +23,7 @@ import com.vaadin.ui.Upload.StartedListener;
 import com.vaadin.ui.Upload.SucceededEvent;
 import com.vaadin.ui.Upload.SucceededListener;
 
-import de.catma.CleaApplication;
+import de.catma.CatmaApplication;
 import de.catma.util.IDGenerator;
 
 public class UploadPanel extends HorizontalLayout {
@@ -83,7 +83,7 @@ public class UploadPanel extends HorizontalLayout {
 
 				try {
 					String tempDir = 
-							((CleaApplication)getApplication()).getTempDirectory();
+							((CatmaApplication)getApplication()).getTempDirectory();
 					IDGenerator idGenerator = new IDGenerator();
 					
 					File uploadFile = new File(new File(tempDir), idGenerator.generate());

@@ -19,10 +19,21 @@ public class DBRepositoryFactory implements RepositoryFactory {
 			throws Exception {
 		
 		String indexerFactoryClassName = 
-				properties.getProperty(IndexerPropertyKey.IndexerFactory.name());
+				RepositoryPropertyKey.IndexerFactory.getProperty(properties, index);
 		IndexerFactory indexerFactory = 
 				(IndexerFactory)Class.forName(indexerFactoryClassName).newInstance();
-		Indexer indexer = indexerFactory.createIndexer();
+		Properties indexerProperties = new Properties();
+		indexerProperties.setProperty(
+			IndexerPropertyKey.IndexerUrl.name(),
+			RepositoryPropertyKey.IndexerUrl.getProperty(properties, index));
+		indexerProperties.setProperty(
+			IndexerPropertyKey.IndexerUser.name(),
+			RepositoryPropertyKey.RepositoryUser.getProperty(properties, index));
+		indexerProperties.setProperty(
+			IndexerPropertyKey.IndexerPass.name(),
+			RepositoryPropertyKey.RepositoryPass.getProperty(properties, index));
+
+		Indexer indexer = indexerFactory.createIndexer(indexerProperties);
 
 		String serializationHandlerFactoryClazzName = 
 				RepositoryPropertyKey.SerializationHandlerFactory.getProperty(properties, index);
@@ -39,7 +50,10 @@ public class DBRepositoryFactory implements RepositoryFactory {
 			tagManager,
 			backgroundServiceProvider,
 			indexer,
-			serializationHandlerFactory);
+			serializationHandlerFactory,
+			RepositoryPropertyKey.RepositoryUrl.getProperty(properties, index),
+			RepositoryPropertyKey.RepositoryUser.getProperty(properties, index),
+			RepositoryPropertyKey.RepositoryPass.getProperty(properties, index));
 	}
 
 }

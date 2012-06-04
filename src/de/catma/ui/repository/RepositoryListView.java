@@ -12,7 +12,7 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.CleaApplication;
+import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
 
@@ -37,8 +37,9 @@ public class RepositoryListView extends VerticalLayout {
 				if (repository.isAuthenticationRequired()) {
 					AuthenticationDialog authDialog = 
 							new AuthenticationDialog(
+									getApplication(),
 									"Please authenticate yourself", repository);
-					authDialog.show(getWindow());
+					authDialog.show(getApplication().getMainWindow());
 				}
 				else {
 					try {
@@ -50,7 +51,7 @@ public class RepositoryListView extends VerticalLayout {
 							"user.name", System.getProperty("user.name"));
 						repository.open(userIdentification);
 						
-						((CleaApplication)getApplication()).openRepository(
+						((CatmaApplication)getApplication()).openRepository(
 								repository);
 					} catch (Exception e) {
 						// TODO Auto-generated catch block

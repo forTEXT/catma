@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.openid4java.consumer.ConsumerManager;
 import org.openid4java.consumer.VerificationResult;
@@ -30,7 +31,7 @@ import com.vaadin.ui.Link;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
-import de.catma.CleaApplication;
+import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.util.IDGenerator;
 
@@ -38,6 +39,7 @@ public class AuthenticationDialog extends VerticalLayout {
 	
 	private static class AuthenticationParamHandler implements ParameterHandler {
 		
+		private Logger logger = Logger.getLogger(this.getClass().getName());
 		private Application application;
 		private String returnURL;
 		private ConsumerManager consumerManager;
@@ -78,6 +80,7 @@ public class AuthenticationDialog extends VerticalLayout {
 									new HashMap<String, String>();
 							userIdentification.put(
 									"user.ident", verified.getIdentifier());
+							logger.info("verified user " + verified.getIdentifier());
 							AuthSuccess authSuccess =
 			                        (AuthSuccess) verification.getAuthResponse();
 
@@ -90,6 +93,7 @@ public class AuthenticationDialog extends VerticalLayout {
 									fetchResp.getAttributeValues("email");
 			                    
 			                    String email = (String) emails.get(0);
+			                    logger.info("retrieved email: " + email);
 			                    userIdentification.put(
 			                    		"user.email", email);
 			                    userIdentification.put(
@@ -97,10 +101,10 @@ public class AuthenticationDialog extends VerticalLayout {
 			                }
 
 							repository.open(userIdentification);
-							((CleaApplication)application).openRepository(repository);
+							((CatmaApplication)application).openRepository(repository);
 						}
 						else {
-							System.out.println("no success");
+							logger.info("authentication failure");
 						}
 						
 						return new DownloadStream(
@@ -127,15 +131,16 @@ public class AuthenticationDialog extends VerticalLayout {
 	private Button btCancel;
 	private Repository repository;
 	
-	public AuthenticationDialog(
+	public AuthenticationDialog(Application application,
 			String caption, Repository repository) {
 		this.caption = caption;
 		this.repository = repository;
 		this.providerIdent = "https://www.google.com/accounts/o8/id";
+		initComponents(application);
 	}
 
 
-	private void initComponents() {
+	private void initComponents(Application application) {
 		setSizeFull();
 		setSpacing(true);
 		
@@ -148,7 +153,7 @@ public class AuthenticationDialog extends VerticalLayout {
 		btCancel = new Button("Cancel");
 		buttonPanel.addComponent(btCancel);
 
-		Link logInLink = createLogInLink();
+		Link logInLink = createLogInLink(application);
 		if (logInLink != null) {
 			addComponent(logInLink);
 		}
@@ -161,18 +166,12 @@ public class AuthenticationDialog extends VerticalLayout {
 		
 	}
 
-	@Override
-	public void attach() {
-		super.attach();
-		initComponents();
-	}
-
-	private Link createLogInLink() {
+	private Link createLogInLink(final Application application) {
 		try {
 			ConsumerManager consumerManager = new ConsumerManager();
 			
 			String returnURL = 
-				getApplication().getURL().toString() +
+				application.getURL().toString() +
 				new IDGenerator().generate();
 			
 			@SuppressWarnings("rawtypes")
@@ -198,15 +197,15 @@ public class AuthenticationDialog extends VerticalLayout {
 
 			final AuthenticationParamHandler authenticationParamHandler =
 					new AuthenticationParamHandler(
-							getApplication(), returnURL, 
+							application, returnURL, 
 							consumerManager, discovered, repository);
 					
-			getApplication().getMainWindow().addParameterHandler(
+			application.getMainWindow().addParameterHandler(
 					authenticationParamHandler);
 			btCancel.addListener(new ClickListener() {
 				
 				public void buttonClick(ClickEvent event) {
-					getApplication().getMainWindow().removeURIHandler(
+					application.getMainWindow().removeURIHandler(
 							authenticationParamHandler.getUriHandler());
 				}
 			});

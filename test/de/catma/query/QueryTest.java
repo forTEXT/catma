@@ -64,7 +64,7 @@ public class QueryTest {
 	@Test
 	public void testSearchTerm1() throws Throwable {
 		try {
-			Indexer indexer = new DBIndexer();
+			Indexer indexer = new DBIndexer("jdbc:mysql://localhost/CatmaIndex", "root", null);
 			List<String> term = new ArrayList<String>();
 			term.add("pig");
 			term.add("had");
@@ -87,7 +87,7 @@ public class QueryTest {
 	@Test
 	public void testSearchTerm2() throws Throwable {
 		try {
-			Indexer indexer = new DBIndexer();
+			Indexer indexer = new DBIndexer("jdbc:mysql://localhost/CatmaIndex", "root", null);
 			List<String> termList = new ArrayList<String>();
 			termList.add("he");
 			termList.add("came");
@@ -109,7 +109,7 @@ public class QueryTest {
 	@Test
 	public void testSearchTerm3() throws Throwable {
 		try {
-			Indexer indexer = new DBIndexer();
+			Indexer indexer = new DBIndexer("jdbc:mysql://localhost/CatmaIndex", "root", null);
 			List<String> termList = new ArrayList<String>();
 			termList.add("he");
 			termList.add("came");
@@ -131,7 +131,7 @@ public class QueryTest {
 	@Test
 	public void testSearchTerm4() throws Throwable {
 		try {
-			Indexer indexer = new DBIndexer();
+			Indexer indexer = new DBIndexer("jdbc:mysql://localhost/CatmaIndex", "root", null);
 			List<String> termList = new ArrayList<String>();
 			termList.add("and");
 //			termList.add("suddenly");
@@ -153,7 +153,7 @@ public class QueryTest {
 	@Test
 	public void freqSearch1() throws Exception {
 
-		Indexer indexer = new DBIndexer();
+		Indexer indexer = new DBIndexer("jdbc:mysql://localhost/CatmaIndex", "root", null);
 
 		List<String> documentIDs = new ArrayList<String>();
 //			documentIDs.add("catma:///container/pg13.txt");
@@ -176,7 +176,7 @@ public class QueryTest {
 		List<Character> userDefinedSeparatingCharacters = Collections.emptyList();
 		List<String> documentIDs = new ArrayList<String>();
 		documentIDs.add("catma:///container/pg13.txt");
-		DBIndexer dbIndexer = new DBIndexer();
+		DBIndexer dbIndexer = new DBIndexer("jdbc:mysql://localhost/CatmaIndex", "root", null);
 		QueryOptions queryOptions = new QueryOptions(
 				documentIDs,
 				Collections.<String>emptyList(),
@@ -242,7 +242,7 @@ public class QueryTest {
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
 				Locale.ENGLISH,
-				new DummyRepository(new DBIndexer()));
+				new DummyRepository(new DBIndexer("jdbc:mysql://localhost/CatmaIndex", "root", null)));
 		
 		QueryJob job = new QueryJob(
 				"\"and\"", queryOptions);
@@ -296,7 +296,7 @@ public class QueryTest {
 				Collections.<String>emptyList(),
 				unseparableCharacterSequences,
 				userDefinedSeparatingCharacters,
-				Locale.ENGLISH, new DummyRepository(new DBIndexer()));
+				Locale.ENGLISH, new DummyRepository(new DBIndexer("jdbc:mysql://localhost/CatmaIndex", "root", null)));
 		
 		QueryJob job = new QueryJob(
 				"\"pig had been dead\"", queryOptions);
@@ -314,7 +314,7 @@ public class QueryTest {
 
 		List<String> userMarkupCollIDs = new ArrayList<String>();
 		
-		Indexer indexer = new DBIndexer();
+		Indexer indexer = new DBIndexer("jdbc:mysql://localhost/CatmaIndex", "root", null);
 		QueryResult result = 
 				indexer.searchTagDefinitionPath(
 					userMarkupCollIDs, "/Order/analepsis");
@@ -332,7 +332,7 @@ public class QueryTest {
 	
 	@Test
 	public void testCollocationSearcher() throws Exception {
-		Indexer indexer = new DBIndexer();
+		Indexer indexer = new DBIndexer("jdbc:mysql://localhost/CatmaIndex", "root", null);
 		List<TermInfo> termInfos = indexer.getTermInfosFor(
 			"catma:///container/pg13.txt", new Range(145,160));
 		for (TermInfo ti : termInfos) {

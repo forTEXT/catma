@@ -30,12 +30,17 @@ public class DBIndexer implements Indexer {
 	private Configuration hibernateConfig;
 	private TagReferenceIndexer tagReferenceIndexer;
 
-	public DBIndexer() {
+	public DBIndexer(String url, String user, String pass) {
 		hibernateConfig = new Configuration();
 		hibernateConfig.configure(
 				this.getClass().getPackage().getName().replace('.', '/') 
 				+ "/hibernate.cfg.xml");
-		
+		hibernateConfig.setProperty("hibernate.connection.username", user);
+		hibernateConfig.setProperty("hibernate.connection.url",url);
+		if ((pass != null) && (!pass.isEmpty())) {
+			hibernateConfig.setProperty("hibernate.connection.password", pass);
+		}
+
 		ServiceRegistryBuilder serviceRegistryBuilder = new ServiceRegistryBuilder();
 		serviceRegistryBuilder.applySettings(hibernateConfig.getProperties());
 		ServiceRegistry serviceRegistry = 

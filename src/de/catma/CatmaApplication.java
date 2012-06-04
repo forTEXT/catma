@@ -41,7 +41,7 @@ import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagManagerView;
 import de.catma.ui.tagmanager.TagManagerWindow;
 
-public class CleaApplication extends Application
+public class CatmaApplication extends Application
 	implements BackgroundServiceProvider, AnalyzerProvider {
 	
 	private static final String WEB_INF_DIR = "WEB-INF";

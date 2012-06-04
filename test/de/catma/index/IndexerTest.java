@@ -43,7 +43,7 @@ public class IndexerTest {
 			SourceDocument sd = repository.getSourceDocument(
 					"catma:///container/pg13.txt");
 			
-			Indexer indexer = new DBIndexer();
+			Indexer indexer = new DBIndexer("jdbc:mysql://localhost/CatmaIndex", "root", null);
 			indexer.index(sd);
 		}
 		catch(Throwable t) {
@@ -58,7 +58,7 @@ public class IndexerTest {
 			SourceDocument sd = repository.getSourceDocument(
 					"catma:///container/pg11.txt");
 			
-			Indexer indexer = new DBIndexer();
+			Indexer indexer = new DBIndexer("jdbc:mysql://localhost/CatmaIndex", "root", null);
 			indexer.index(sd);
 		}
 		catch(Throwable t) {
@@ -73,7 +73,7 @@ public class IndexerTest {
 			SourceDocument sd = repository.getSourceDocument(
 					"catma:///container/rose_for_emily.txt");
 			
-			Indexer indexer = new DBIndexer();
+			Indexer indexer = new DBIndexer("jdbc:mysql://localhost/CatmaIndex", "root", null);
 			indexer.index(sd);
 		}
 		catch(Throwable t) {
@@ -93,7 +93,7 @@ public class IndexerTest {
 			UserMarkupCollection umc = 
 					repository.getUserMarkupCollection(ref);
 						
-			Indexer indexer = new DBIndexer();
+			Indexer indexer = new DBIndexer("jdbc:mysql://localhost/CatmaIndex", "root", null);
 			indexer.index(umc.getTagReferences(), sd.getID(), umc.getId(), umc.getTagLibrary());
 			indexer.close();
 		}

@@ -55,6 +55,13 @@ class DBSourceDocumentHandler {
 		this.sourceDocsPath = repoFolderPath + 
 			"/" + 
 			SOURCEDOCS_FOLDER + "/";
+		File file = new File(sourceDocsPath);
+		if (!file.exists()) {
+			if (!file.mkdirs()) {
+				throw new IllegalStateException(
+					"cannot access/create repository folder " +  sourceDocsPath);
+			}
+		}
 		this.sourceDocumentsByID = new HashMap<String, SourceDocument>();
 	}
 	

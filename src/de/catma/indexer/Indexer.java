@@ -13,6 +13,7 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 
 public interface Indexer {
+
 	public void index(
 			SourceDocument sourceDocument) throws Exception;
 	

@@ -84,7 +84,8 @@ public class DBRepository implements IndexedRepository {
 			TagManager tagManager, 
 			BackgroundServiceProvider backgroundServiceProvider,
 			Indexer indexer, 
-			SerializationHandlerFactory serializationHandlerFactory) {
+			SerializationHandlerFactory serializationHandlerFactory,
+			String url, String user, String pass) {
 		
 
 		this.name = name;
@@ -108,6 +109,12 @@ public class DBRepository implements IndexedRepository {
 				this.getClass().getPackage().getName().replace('.', '/') 
 				+ "/hibernate.cfg.xml");
 		
+		hibernateConfig.setProperty("hibernate.connection.username", user);
+		hibernateConfig.setProperty("hibernate.connection.url",url);
+		if ((pass != null) && (!pass.isEmpty())) {
+			hibernateConfig.setProperty("hibernate.connection.password", pass);
+		}
+
 		ServiceRegistryBuilder serviceRegistryBuilder = new ServiceRegistryBuilder();
 		serviceRegistryBuilder.applySettings(hibernateConfig.getProperties());
 		serviceRegistry = 

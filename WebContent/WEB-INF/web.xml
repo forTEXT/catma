@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app id="WebApp_ID" version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
-	<display-name>clea</display-name>
+	<display-name>catma</display-name>
 	<context-param>
 		<description>
 		Vaadin production mode</description>
@@ -17,7 +17,7 @@
 			<description>
 			Vaadin application class to start</description>
 			<param-name>application</param-name>
-			<param-value>de.catma.CleaApplication</param-value>
+			<param-value>de.catma.CatmaApplication</param-value>
 		</init-param>
 		<init-param>
 			<description>

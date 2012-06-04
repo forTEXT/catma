@@ -21,7 +21,7 @@ import com.vaadin.ui.Panel;
 import com.vaadin.ui.ProgressIndicator;
 import com.vaadin.ui.Tree;
 
-import de.catma.CleaApplication;
+import de.catma.CatmaApplication;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
@@ -96,7 +96,7 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			setVisibleXSLTInputComponents(false);
 			
 			BackgroundService backgroundService = 
-					((CleaApplication)getApplication()).getBackgroundService();
+					((CatmaApplication)getApplication()).getBackgroundService();
 			progressIndicator.setEnabled(true);
 			progressIndicator.setCaption("Detecting file type");
 			backgroundService.submit(

@@ -4,8 +4,6 @@
 <hibernate-configuration>
  <session-factory name="CatmaIndex">
   <property name="hibernate.connection.driver_class">org.gjt.mm.mysql.Driver</property>
-  <property name="hibernate.connection.url">jdbc:mysql://localhost/CatmaIndex</property>
-  <property name="hibernate.connection.username">root</property>
   <property name="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
   <property name="hibernate.show_sql">true</property>
   <mapping class="de.catma.indexer.db.DBTerm"/>

@@ -37,7 +37,7 @@ import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
 
-import de.catma.CleaApplication;
+import de.catma.CatmaApplication;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
@@ -261,7 +261,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 				final Object value = documentsTree.getValue();
 				
 				if (value instanceof SourceDocument) {
-					((CleaApplication)getApplication()).openSourceDocument(
+					((CatmaApplication)getApplication()).openSourceDocument(
 							(SourceDocument)value, repository);
 				}
 				else if (value instanceof StaticMarkupCollectionReference) {
@@ -272,8 +272,8 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 					final SourceDocument sd = 
 							(SourceDocument)documentsTree.getParent(
 									documentsTree.getParent(value));
-					final CleaApplication application = 
-							(CleaApplication)getApplication();
+					final CatmaApplication application = 
+							(CatmaApplication)getApplication();
 					application.submit(
 							new DefaultProgressCallable<UserMarkupCollection>() {
 								public UserMarkupCollection call()
@@ -416,7 +416,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 					TagLibrary tagLibrary;
 					try {
 						tagLibrary = repository.getTagLibrary(tagLibraryReference);
-						((CleaApplication)getApplication()).openTagLibrary(tagLibrary);
+						((CatmaApplication)getApplication()).openTagLibrary(tagLibrary);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();

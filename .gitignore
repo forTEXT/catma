@@ -1,3 +1,4 @@
+testdocs
 notepad_session.txt
 tmp
 scratch.jpage
@@ -9,4 +10,4 @@ scratch.sql
 oldcode
 build
 db/*.bak
-repo/old
+repo
