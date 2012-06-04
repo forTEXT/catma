@@ -92,4 +92,21 @@ public class ClientTagInstanceJSONSerializer {
 		return tagInstancesJSON.toString();
 	}
 
+	public String join(
+			String jsonArray, Collection<ClientTagInstance> tagInstances) 
+					throws JSONSerializationException {
+		try {
+			if (jsonArray == null) {
+				jsonArray = "[]";
+			}
+			JSONArray tagInstancesJSON = new JSONArray(jsonArray);
+			for (ClientTagInstance ti : tagInstances) {
+				tagInstancesJSON.put(toJSONObject(ti));
+			}
+			return tagInstancesJSON.toString();
+		}
+		catch (JSONException e) {
+			throw new JSONSerializationException(e);
+		}
+	}
 }

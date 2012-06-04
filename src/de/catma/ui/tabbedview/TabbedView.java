@@ -64,7 +64,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler, Iterable
 		
 		Tab tab = tabSheet.addTab(component, caption);
 		
-		tab.setClosable(true);
+		tab.setClosable(false);
 		tabSheet.setSelectedTab(tab.getComponent());
 		
 		if (tabSheet.getComponentCount() != 0) {

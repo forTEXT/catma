@@ -66,6 +66,14 @@ import de.catma.util.Pair;
 
 public class RepositoryView extends VerticalLayout implements ClosableTab {
 	
+	// TODO: hier gehts weiter
+	/**
+	 * Information form impl, needs to be avail for taglibs as well
+	 * Redesign of the repo view with split panels 
+	 * corpora actions
+	 *
+	 */
+	
 	private static final class MarkupItem {
 		private String displayString;
 		private boolean userMarkupCollectionItem = false;

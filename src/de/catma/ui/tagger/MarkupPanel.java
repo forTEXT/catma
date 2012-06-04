@@ -112,9 +112,8 @@ public class MarkupPanel extends VerticalLayout {
 		super.attach();
 		if (init) {
 			//TODO: maybe accept drags only from the TaggerView table, drag only tagset defs
-			//TODO: allow removal, remove from writable markup coll as well
-			//TODO: react on writable markup coll changes, new TagsetDefs has to be added
-			//TODO: react on umc deletions from repo
+			//TODO: allow tagsetdefs removal, remove from the editable set of the coll panel
+			
 			tagsetTree.getTagTree().setDropHandler(new DropHandler() {
 				
 				public AcceptCriterion getAcceptCriterion() {

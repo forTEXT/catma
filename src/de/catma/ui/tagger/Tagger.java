@@ -202,27 +202,29 @@ public class Tagger extends AbstractComponent {
 		}
 		currentRelativePageTagInstancesCopy.retainAll(tagInstances);
 		
-		
-		String taggerMessageAttribute = 
-				TaggerMessageAttribute.TAGINSTANCES_ADD.name();
-		if (!visible) {
-			taggerMessageAttribute = 
-				TaggerMessageAttribute.TAGINSTANCES_REMOVE.name();
+		if (!currentRelativePageTagInstancesCopy.isEmpty()) {
+			String taggerMessageAttribute = 
+					TaggerMessageAttribute.TAGINSTANCES_ADD.name();
+			if (!visible) {
+				taggerMessageAttribute = 
+					TaggerMessageAttribute.TAGINSTANCES_REMOVE.name();
+			}
+			
+			try {
+				System.out.println(tagInstanceJSONSerializer.toJSON(
+						currentRelativePageTagInstancesCopy));
+				attributes.put(
+						taggerMessageAttribute,
+						tagInstanceJSONSerializer.join( //TODO: check if other message attributes need a join as well
+								attributes.get(taggerMessageAttribute),
+								currentRelativePageTagInstancesCopy));
+			} catch (JSONSerializationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			requestRepaint();
 		}
-		
-		try {
-			System.out.println(tagInstanceJSONSerializer.toJSON(
-					currentRelativePageTagInstancesCopy));
-			attributes.put(
-					taggerMessageAttribute,
-					tagInstanceJSONSerializer.toJSON(
-							currentRelativePageTagInstancesCopy));
-		} catch (JSONSerializationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		requestRepaint();
 	}
 
 	public void addTagInstanceWith(TagDefinition tagDefinition) {
