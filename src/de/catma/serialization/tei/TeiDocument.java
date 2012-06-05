@@ -10,9 +10,9 @@ import nu.xom.Node;
 import nu.xom.Nodes;
 import nu.xom.Serializer;
 import nu.xom.XPathContext;
-import de.catma.document.ContentInfoSet;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.TechInfoSet;
+import de.catma.util.ContentInfoSet;
 import de.catma.util.IDGenerator;
 
 class TeiDocument {

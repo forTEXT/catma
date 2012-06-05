@@ -6,14 +6,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import de.catma.document.ContentInfoSet;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
@@ -27,6 +25,7 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
+import de.catma.util.ContentInfoSet;
 import de.catma.util.Pair;
 
 class FSRepository implements Repository {
@@ -314,6 +313,17 @@ class FSRepository implements Repository {
 	
 	public void delete(
 			UserMarkupCollectionReference userMarkupCollectionReference) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public void update(
+			UserMarkupCollectionReference userMarkupCollectionReference) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public void update(TagLibraryReference tagLibraryReference) {
 		// TODO Auto-generated method stub
 		
 	}

@@ -16,7 +16,6 @@ import org.hibernate.criterion.Restrictions;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.db.CloseableSession;
-import de.catma.document.ContentInfoSet;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
@@ -42,6 +41,7 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagsetDefinition;
 import de.catma.util.CloseSafe;
+import de.catma.util.ContentInfoSet;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
@@ -339,15 +339,18 @@ class DBUserMarkupCollectionHandler {
 					);
 			
 			DBUserMarkupCollection dbUserMarkupCollection = 
-					(DBUserMarkupCollection)query.list().get(0);
-
+					(DBUserMarkupCollection)query.uniqueResult();
 			
 			TagLibrary tagLibrary = 
 					dbRepository.getDbTagLibraryHandler().loadTagLibrayContent(
 						session, 
 						new TagLibraryReference(
 							String.valueOf(dbUserMarkupCollection.getDbTagLibraryId()), 
-							dbUserMarkupCollection.getTitle()));
+							new ContentInfoSet(
+									dbUserMarkupCollection.getAuthor(),
+									dbUserMarkupCollection.getDescription(),
+									dbUserMarkupCollection.getPublisher(),
+									dbUserMarkupCollection.getTitle())));
 			
 			try {
 				
@@ -580,5 +583,68 @@ class DBUserMarkupCollectionHandler {
 			CloseSafe.close(new CloseableSession(session,true));
 			throw new IOException(e);
 		}
+	}
+
+	public void update(
+			final UserMarkupCollectionReference userMarkupCollectionReference) {
+		final Integer userMarkupCollectionId = 
+			Integer.valueOf(userMarkupCollectionReference.getId());
+		ContentInfoSet contentInfoSet = 
+				userMarkupCollectionReference.getContentInfoSet();
+		final String author = contentInfoSet.getAuthor();
+		final String publisher = contentInfoSet.getPublisher();
+		final String title = contentInfoSet.getTitle();
+		final String description = contentInfoSet.getDescription();
+		
+		dbRepository.getBackgroundServiceProvider().submit(
+				new DefaultProgressCallable<ContentInfoSet>() {
+					public ContentInfoSet call() throws Exception {
+						
+						Session session = 
+								dbRepository.getSessionFactory().openSession();
+						try {
+							DBUserMarkupCollection dbUserMarkupCollection =
+									(DBUserMarkupCollection) session.load(
+									DBUserMarkupCollection.class, 
+									userMarkupCollectionId);
+							
+							ContentInfoSet oldContentInfoSet = 
+									new ContentInfoSet(
+										dbUserMarkupCollection.getAuthor(),
+										dbUserMarkupCollection.getDescription(),
+										dbUserMarkupCollection.getPublisher(),
+										dbUserMarkupCollection.getTitle());
+							
+							dbUserMarkupCollection.setAuthor(author);
+							dbUserMarkupCollection.setTitle(title);
+							dbUserMarkupCollection.setDescription(description);
+							dbUserMarkupCollection.setPublisher(publisher);
+							
+							session.beginTransaction();
+							session.save(dbUserMarkupCollection);
+							session.getTransaction().commit();
+							CloseSafe.close(new CloseableSession(session));
+							return oldContentInfoSet;
+						}
+						catch (Exception exc) {
+							CloseSafe.close(new CloseableSession(session,true));
+							throw new IOException(exc);
+						}
+					}
+				},
+				new ExecutionListener<ContentInfoSet>() {
+					public void done(ContentInfoSet oldContentInfoSet) {
+						
+						
+						
+						
+					}
+					public void error(Throwable t) {
+						t.printStackTrace();
+						// TODO Auto-generated method stub
+						
+					}
+				}
+			);;
 	}
 }

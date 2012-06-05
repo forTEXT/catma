@@ -27,15 +27,16 @@ import de.catma.repository.db.model.DBTagLibrary;
 import de.catma.repository.db.model.DBTagsetDefinition;
 import de.catma.repository.db.model.DBUserTagLibrary;
 import de.catma.serialization.TagLibrarySerializationHandler;
-import de.catma.tag.TagLibrary;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.util.CloseSafe;
+import de.catma.util.ContentInfoSet;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
@@ -82,7 +83,7 @@ class DBTagLibraryHandler {
 					RepositoryChangeEvent.tagLibraryChanged.name(),
 					null, 
 					new TagLibraryReference(
-							dbTagLibrary.getId(), name));
+							dbTagLibrary.getId(), new ContentInfoSet(name)));
 
 			CloseSafe.close(new CloseableSession(session));
 		}
@@ -106,7 +107,12 @@ class DBTagLibraryHandler {
 			for (DBTagLibrary dbTagLibrary : (List<DBTagLibrary>)query.list()) {
 				this.tagLibraryReferences.add(
 					new TagLibraryReference(
-							dbTagLibrary.getId(), dbTagLibrary.getName()));
+							dbTagLibrary.getId(), 
+							new ContentInfoSet(
+								dbTagLibrary.getAuthor(),
+								dbTagLibrary.getDescription(),
+								dbTagLibrary.getPublisher(),
+								dbTagLibrary.getTitle())));
 			}
 		}
 		
@@ -223,6 +229,13 @@ class DBTagLibraryHandler {
 				DBTagLibrary dbTagLibrary = 
 						new DBTagLibrary(tagLibrary.getName(), independent);
 				
+				dbTagLibrary.setAuthor(
+						tagLibrary.getContentInfoSet().getAuthor());
+				dbTagLibrary.setDescription(
+						tagLibrary.getContentInfoSet().getDescription());
+				dbTagLibrary.setPublisher(
+						tagLibrary.getContentInfoSet().getPublisher());
+				
 				DBUserTagLibrary dbUserTagLibrary = 
 						new DBUserTagLibrary(dbRepository.getCurrentUser(), dbTagLibrary);
 				dbTagLibrary.getDbUserTagLibraries().add(dbUserTagLibrary);
@@ -274,7 +287,11 @@ class DBTagLibraryHandler {
 							null, 
 							new TagLibraryReference(
 									tagLibrary.getId(), 
-									tagLibrary.getName()));
+									new ContentInfoSet(
+											tagLibrary.getContentInfoSet().getAuthor(),
+											tagLibrary.getContentInfoSet().getDescription(),
+											tagLibrary.getContentInfoSet().getPublisher(),
+											tagLibrary.getName())));
 				}
 				
 				if (executionListener != null) {
@@ -921,6 +938,67 @@ class DBTagLibraryHandler {
 		
 		return dbPropertyDefinition;
 	}
+
+	public void update(final TagLibraryReference tagLibraryReference) {
+		ContentInfoSet contentInfoSet = tagLibraryReference.getContentInfoSet();
+		final Integer tagLibraryId = 
+				Integer.valueOf(tagLibraryReference.getId());
+		final String author = contentInfoSet.getAuthor();
+		final String publisher = contentInfoSet.getPublisher();
+		final String title = contentInfoSet.getTitle();
+		final String description = contentInfoSet.getDescription();
+		
+		dbRepository.getBackgroundServiceProvider().submit(
+				new DefaultProgressCallable<ContentInfoSet>() {
+					public ContentInfoSet call() throws Exception {
+						
+						Session session = 
+								dbRepository.getSessionFactory().openSession();
+						try {
+							DBTagLibrary dbTagLibrary =
+									(DBTagLibrary) session.load(
+									DBTagLibrary.class, 
+									tagLibraryId);
+							
+							ContentInfoSet oldContentInfoSet =
+									new ContentInfoSet(
+											dbTagLibrary.getAuthor(), 
+											dbTagLibrary.getDescription(), 
+											dbTagLibrary.getPublisher(), 
+											dbTagLibrary.getTitle());
+							
+							dbTagLibrary.setAuthor(author);
+							dbTagLibrary.setTitle(title);
+							dbTagLibrary.setDescription(description);
+							dbTagLibrary.setPublisher(publisher);
+							
+							session.beginTransaction();
+							session.save(dbTagLibrary);
+							session.getTransaction().commit();
+							CloseSafe.close(new CloseableSession(session));
+							return oldContentInfoSet;
+						}
+						catch (Exception exc) {
+							CloseSafe.close(new CloseableSession(session,true));
+							throw new IOException(exc);
+						}
+							
+					}
+				},
+				new ExecutionListener<ContentInfoSet>() {
+					public void done(ContentInfoSet result) {
+						dbRepository.getPropertyChangeSupport().firePropertyChange(
+							RepositoryChangeEvent.tagLibraryReferenceChanged.name(),
+							result, tagLibraryReference);
+					}
+					public void error(Throwable t) {
+						t.printStackTrace();
+						// TODO Auto-generated method stub
+						
+					}
+				}
+			);;
+		}
 
 
 }

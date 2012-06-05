@@ -24,7 +24,6 @@ import nu.xom.Nodes;
 import org.apache.commons.io.IOUtils;
 
 import de.catma.ExceptionHandler;
-import de.catma.document.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentHandler;
 import de.catma.document.source.SourceDocumentInfo;
@@ -34,6 +33,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.serialization.DocumentSerializer;
 import de.catma.serialization.SourceDocumentInfoSerializationHandler;
 import de.catma.util.CloseSafe;
+import de.catma.util.ContentInfoSet;
 import de.catma.util.IDGenerator;
 
 class FSSourceDocumentHandler {

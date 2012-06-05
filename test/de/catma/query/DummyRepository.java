@@ -201,4 +201,16 @@ public class DummyRepository implements IndexedRepository {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	public void update(
+			UserMarkupCollectionReference userMarkupCollectionReference) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public void update(TagLibraryReference tagLibraryReference) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 }

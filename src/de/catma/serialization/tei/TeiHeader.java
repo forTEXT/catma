@@ -23,9 +23,9 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 import nu.xom.Elements;
-import de.catma.document.ContentInfoSet;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.TechInfoSet;
+import de.catma.util.ContentInfoSet;
 
 /**
  * The representation of a TEI header.<br><br>

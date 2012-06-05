@@ -8,12 +8,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.catma.document.ContentInfoSet;
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.query.DummyRepository;
+import de.catma.util.ContentInfoSet;
 
 public class SynchTest {
 

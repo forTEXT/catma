@@ -33,13 +33,16 @@ public class DBTagLibrary implements java.io.Serializable {
 			new HashSet<DBUserTagLibrary>();
 	
 	private Set<DBTagsetDefinition> dbTagsetDefinitions = new HashSet<DBTagsetDefinition>();
-	private String name;
+	private String title;
+	private String author;
+	private String description;
+	private String publisher;
 	
 	public DBTagLibrary() {
 	}
-	
-	public DBTagLibrary(String name, boolean independent) {
-		this.name = name;
+
+	public DBTagLibrary(String title, boolean independent) {
+		this.title = title;
 		this.independent = independent;
 	}
 
@@ -63,15 +66,42 @@ public class DBTagLibrary implements java.io.Serializable {
 		this.independent = independent;
 	}
 	
-	@Column(name = "name", nullable = false, length = 300)
-	public String getName() {
-		return name;
+	@Column(name = "title", nullable = false, length = 300)
+	public String getTitle() {
+		return title;
 	}
-
-	public void setName(String name) {
-		this.name = name;
+	
+	public void setTitle(String title) {
+		this.title = title;
 	}
-
+	
+	@Column(name = "author", nullable = false, length = 300)
+	public String getAuthor() {
+		return author;
+	}
+	
+	public void setAuthor(String author) {
+		this.author = author;
+	}
+	
+	@Column(name = "description", nullable = false, length = 300)
+	public String getDescription() {
+		return description;
+	}
+	
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	
+	@Column(name = "publisher", nullable = false, length = 300)
+	public String getPublisher() {
+		return publisher;
+	}
+	
+	public void setPublisher(String publisher) {
+		this.publisher = publisher;
+	}
+	
 	@OneToMany(mappedBy = "dbTagLibrary")
 	@Cascade({CascadeType.SAVE_UPDATE, CascadeType.DELETE})
 	public Set<DBUserTagLibrary> getDbUserTagLibraries() {
@@ -96,7 +126,7 @@ public class DBTagLibrary implements java.io.Serializable {
 	
 	@Override
 	public String toString() {
-		return getName();
+		return getTitle();
 	}
 
 	@Transient

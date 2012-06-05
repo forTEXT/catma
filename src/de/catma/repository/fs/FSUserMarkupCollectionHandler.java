@@ -11,13 +11,13 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 
-import de.catma.document.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.util.CloseSafe;
+import de.catma.util.ContentInfoSet;
 
 class FSUserMarkupCollectionHandler {
 

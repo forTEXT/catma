@@ -23,8 +23,9 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 
+import de.catma.backgroundservice.DefaultProgressCallable;
+import de.catma.backgroundservice.ExecutionListener;
 import de.catma.db.CloseableSession;
-import de.catma.document.ContentInfoSet;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
@@ -38,6 +39,7 @@ import de.catma.repository.db.model.DBSourceDocument;
 import de.catma.repository.db.model.DBUserMarkupCollection;
 import de.catma.repository.db.model.DBUserSourceDocument;
 import de.catma.util.CloseSafe;
+import de.catma.util.ContentInfoSet;
 import de.catma.util.IDGenerator;
 
 class DBSourceDocumentHandler {
@@ -148,7 +150,7 @@ class DBSourceDocumentHandler {
 		Session session = dbRepository.getSessionFactory().openSession();
 		try {
 			session.beginTransaction();
-			session.save(sourceDocument);
+			session.save(dbSourceDocument);
 			
 			DBUserSourceDocument dbUserSourceDocument = 
 					new DBUserSourceDocument(
@@ -259,5 +261,49 @@ class DBSourceDocumentHandler {
 		DBSourceDocument result = (DBSourceDocument) criteria.uniqueResult();
 		
 		return result;
+	}
+
+	public void update(final String localUri, ContentInfoSet contentInfoSet) {
+		final String author = contentInfoSet.getAuthor();
+		final String publisher = contentInfoSet.getPublisher();
+		final String title = contentInfoSet.getTitle();
+		final String description = contentInfoSet.getDescription();
+		
+		dbRepository.getBackgroundServiceProvider().submit(
+				new DefaultProgressCallable<Void>() {
+					public Void call() throws Exception {
+						
+						Session session = 
+								dbRepository.getSessionFactory().openSession();
+						try {
+							DBSourceDocument dbSourceDocument = 
+									getDbSourceDocument(session, localUri);
+							
+							dbSourceDocument.setAuthor(author);
+							dbSourceDocument.setTitle(title);
+							dbSourceDocument.setDescription(description);
+							dbSourceDocument.setPublisher(publisher);
+							
+							session.beginTransaction();
+							session.save(dbSourceDocument);
+							session.getTransaction().commit();
+							CloseSafe.close(new CloseableSession(session));
+						}
+						catch (Exception exc) {
+							CloseSafe.close(new CloseableSession(session,true));
+							throw new IOException(exc);
+						}
+						return null;
+					}
+				},
+				new ExecutionListener<Void>() {
+					public void done(Void notOfInterest) { /* noop */ }
+					public void error(Throwable t) {
+						t.printStackTrace();
+						// TODO Auto-generated method stub
+						
+					}
+				}
+			);;
 	}
 }

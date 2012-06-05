@@ -301,6 +301,13 @@ public class DBRepository implements IndexedRepository {
 		dbSourceDocumentHandler.insert(sourceDocument);
 	}
 	
+	public void update(SourceDocument sourceDocument) {
+		dbSourceDocumentHandler.update(
+			sourceDocument.getID(),
+			sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+				.getContentInfoSet());
+	}
+	
 	public Collection<SourceDocument> getSourceDocuments() {
 		return dbSourceDocumentHandler.getSourceDocuments();
 	}
@@ -393,6 +400,11 @@ public class DBRepository implements IndexedRepository {
 			});
 	}
 	
+	
+	public void update(
+			UserMarkupCollectionReference userMarkupCollectionReference) {
+		dbUserMarkupCollectionHandler.update(userMarkupCollectionReference);
+	}
 
 	public void delete(
 			UserMarkupCollectionReference userMarkupCollectionReference)
@@ -426,6 +438,10 @@ public class DBRepository implements IndexedRepository {
 	
 	public void createTagLibrary(String name) throws IOException {
 		dbTagLibraryHandler.createTagLibrary(name);
+	}
+	
+	public void update(TagLibraryReference tagLibraryReference) {
+		dbTagLibraryHandler.update(tagLibraryReference);
 	}
 
 	public void importTagLibrary(InputStream inputStream) throws IOException {

@@ -8,7 +8,7 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.Form;
 import com.vaadin.ui.HorizontalLayout;
 
-import de.catma.document.ContentInfoSet;
+import de.catma.util.ContentInfoSet;
 
 public class ContentInfoPanel extends HorizontalLayout implements
 		DynamicWizardStep {

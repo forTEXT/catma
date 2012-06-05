@@ -19,6 +19,7 @@ import de.catma.serialization.TagLibrarySerializationHandler;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.util.CloseSafe;
+import de.catma.util.ContentInfoSet;
 
 class FSTagLibraryHandler {
 
@@ -77,7 +78,8 @@ class FSTagLibraryHandler {
 			String libName = nameNode.get(0).getValue();
 			Nodes fileURINode = tagLibDoc.query(Field.fileURI.toSimpleXQuery());
 
-			return new TagLibraryReference(fileURINode.get(0).getValue(), libName);
+			return new TagLibraryReference(
+					fileURINode.get(0).getValue(), new ContentInfoSet(libName));
 		}
 		catch(Exception e) {
 			throw new IOException(e);

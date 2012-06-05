@@ -25,7 +25,6 @@ import de.catma.CatmaApplication;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
-import de.catma.document.ContentInfoSet;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.CharsetLanguageInfo;
@@ -35,6 +34,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentHandler;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.ui.DefaultProgressListener;
+import de.catma.util.ContentInfoSet;
 
 public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	
