@@ -8,8 +8,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,6 +51,7 @@ public class DBRepository implements IndexedRepository {
 	
 	private String name;
 	
+	private DBCorpusHandler dbCorpusHandler;
 	private DBSourceDocumentHandler dbSourceDocumentHandler;
 	private DBTagLibraryHandler dbTagLibraryHandler;
 	private DBUserMarkupCollectionHandler dbUserMarkupCollectionHandler;
@@ -66,8 +65,6 @@ public class DBRepository implements IndexedRepository {
 	private SessionFactory sessionFactory; 
 	private Configuration hibernateConfig;
 	
-	private Set<Corpus> corpora;
-
 	private DBUser currentUser;
 	private PropertyChangeSupport propertyChangeSupport;
 	private ServiceRegistry serviceRegistry;
@@ -106,6 +103,7 @@ public class DBRepository implements IndexedRepository {
 		this.dbTagLibraryHandler = new DBTagLibraryHandler(this, idGenerator);
 		this.dbUserMarkupCollectionHandler = 
 				new DBUserMarkupCollectionHandler(this);
+		this.dbCorpusHandler = new DBCorpusHandler(this);
 		
 		hibernateConfig = new Configuration();
 		hibernateConfig.configure(
@@ -122,8 +120,6 @@ public class DBRepository implements IndexedRepository {
 		serviceRegistryBuilder.applySettings(hibernateConfig.getProperties());
 		serviceRegistry = 
 				serviceRegistryBuilder.buildServiceRegistry();
-		
-		corpora = new HashSet<Corpus>();
 		
 		initTagManagerListeners();
 	}
@@ -202,7 +198,8 @@ public class DBRepository implements IndexedRepository {
 				}
 				
 				if ((evt.getNewValue() != null) && (evt.getOldValue() != null)) { //update
-					dbTagLibraryHandler.update((TagLibraryReference)evt.getNewValue());
+					dbTagLibraryHandler.update(
+							(TagLibraryReference)evt.getNewValue());
 				}
 			}
 		};
@@ -219,7 +216,7 @@ public class DBRepository implements IndexedRepository {
 		
 		try {
 			loadCurrentUser(session, userIdentification);
-			loadContent(session); //TODO: consider lazy loading
+			loadContent(session);
 		}
 		catch (Exception e) {
 			try {
@@ -275,6 +272,7 @@ public class DBRepository implements IndexedRepository {
 			InstantiationException, IllegalAccessException {
 		dbSourceDocumentHandler.loadSourceDocuments(session);
 		dbTagLibraryHandler.loadTagLibraryReferences(session);
+		dbCorpusHandler.loadCorpora(session);
 	}
 	
 	public void close() {
@@ -329,7 +327,8 @@ public class DBRepository implements IndexedRepository {
 		dbSourceDocumentHandler.insert(sourceDocument);
 	}
 	
-	public void update(SourceDocument sourceDocument, ContentInfoSet contentInfoSet) {
+	public void update(
+			SourceDocument sourceDocument, ContentInfoSet contentInfoSet) {
 		dbSourceDocumentHandler.update(sourceDocument, contentInfoSet);
 	}
 	
@@ -348,9 +347,33 @@ public class DBRepository implements IndexedRepository {
 
 	
 	public Set<Corpus> getCorpora() {
-		return Collections.unmodifiableSet(corpora);
+		return dbCorpusHandler.getCorpora();
 	}
 
+	public void createCorpus(String name) throws IOException {
+		dbCorpusHandler.createCorpus(name);
+	}
+	
+	public void update(Corpus corpus, SourceDocument sourceDocument) throws IOException {
+		dbCorpusHandler.addSourceDocument(corpus, sourceDocument);
+	}
+	
+	public void update(Corpus corpus,
+			StaticMarkupCollectionReference staticMarkupCollectionReference) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public void update(Corpus corpus,
+			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
+		dbCorpusHandler.addUserMarkupCollectionRef(
+				corpus, userMarkupCollectionReference);
+		
+	}
+	
+	public void delete(Corpus corpus) throws IOException {
+		dbCorpusHandler.delete(corpus);
+	}
 	
 	public void createUserMarkupCollection(String name,
 			SourceDocument sourceDocument) throws IOException {
@@ -462,7 +485,6 @@ public class DBRepository implements IndexedRepository {
 
 	}
 
-	
 	public void createTagLibrary(String name) throws IOException {
 		dbTagLibraryHandler.createTagLibrary(name);
 	}
@@ -483,7 +505,6 @@ public class DBRepository implements IndexedRepository {
 	public void delete(TagLibraryReference tagLibraryReference) throws IOException {
 		dbTagLibraryHandler.delete(tagManager, tagLibraryReference);
 	}
-
 
 	public boolean isAuthenticationRequired() {
 		return authenticationRequired;

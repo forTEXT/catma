@@ -17,7 +17,7 @@ public class CloseableSession implements Closeable {
 		this(session);
 		if (rollback) {
 			try {
-				if (session.getTransaction().isActive()) {
+				if ((session != null) && (session.getTransaction().isActive())) {
 					session.getTransaction().rollback();
 				}
 			}
@@ -26,7 +26,9 @@ public class CloseableSession implements Closeable {
 	}
 
 	public void close() throws IOException {
-		session.close();
+		if ((session != null) && (session.isOpen())) {
+			session.close();
+		}
 		session = null;
 	}
 

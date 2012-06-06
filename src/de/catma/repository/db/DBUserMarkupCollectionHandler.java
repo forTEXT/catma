@@ -59,22 +59,22 @@ class DBUserMarkupCollectionHandler {
 			SourceDocument sourceDocument) throws IOException {
 		
 		Session session = dbRepository.getSessionFactory().openSession();
-		DBSourceDocument dbSourceDocument = 
-				dbRepository.getDbSourceDocumentHandler().getDbSourceDocument(
-						session, sourceDocument.getID());
-		DBUserMarkupCollection dbUserMarkupCollection = 
-				new DBUserMarkupCollection(
-						dbSourceDocument.getSourceDocumentId(), 
-						name);
-		DBUserUserMarkupCollection dbUserUserMarkupCollection =
-				new DBUserUserMarkupCollection(
-						dbRepository.getCurrentUser(), dbUserMarkupCollection);
-		
-		DBTagLibrary dbTagLibrary = new DBTagLibrary(name, false);
-		
-		dbUserMarkupCollection.getDbUserUserMarkupCollections().add(
-				dbUserUserMarkupCollection);
 		try {
+			DBSourceDocument dbSourceDocument = 
+					dbRepository.getDbSourceDocumentHandler().getDbSourceDocument(
+							session, sourceDocument.getID());
+			DBUserMarkupCollection dbUserMarkupCollection = 
+					new DBUserMarkupCollection(
+							dbSourceDocument.getSourceDocumentId(), 
+							name);
+			DBUserUserMarkupCollection dbUserUserMarkupCollection =
+					new DBUserUserMarkupCollection(
+							dbRepository.getCurrentUser(), dbUserMarkupCollection);
+			
+			DBTagLibrary dbTagLibrary = new DBTagLibrary(name, false);
+		
+			dbUserMarkupCollection.getDbUserUserMarkupCollections().add(
+				dbUserUserMarkupCollection);
 			session.beginTransaction();
 			
 			session.save(dbTagLibrary);

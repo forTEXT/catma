@@ -23,5 +23,10 @@
   <mapping class="de.catma.repository.db.model.DBTagInstance"/>
   <mapping class="de.catma.repository.db.model.DBProperty"/>
   <mapping class="de.catma.repository.db.model.DBPropertyValue"/>
+  <mapping class="de.catma.repository.db.model.DBCorpus"/>
+  <mapping class="de.catma.repository.db.model.DBCorpusSourceDocument"/>
+  <mapping class="de.catma.repository.db.model.DBCorpusStaticMarkupCollection"/>
+  <mapping class="de.catma.repository.db.model.DBCorpusUserMarkupCollection"/>
+  <mapping class="de.catma.repository.db.model.DBUserCorpus"/>
  </session-factory>
 </hibernate-configuration>

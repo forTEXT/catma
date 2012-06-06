@@ -61,7 +61,7 @@ class FSCorpusHandler {
 			
 			Nodes nameNode = corpusDoc.query(Field.name.toSimpleXQuery());
 			String corpusName = nameNode.get(0).getValue();
-			Corpus corpus = new Corpus(corpusName);
+			Corpus corpus = new Corpus(corpusFile.getAbsolutePath(), corpusName);
 			
 			Nodes sourceNodes = corpusDoc.query(Field.sourceURI.toSimpleXQuery());
 			for (int i=0; i<sourceNodes.size(); i++) {

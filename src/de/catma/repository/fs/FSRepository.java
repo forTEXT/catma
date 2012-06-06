@@ -333,4 +333,29 @@ class FSRepository implements Repository {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	public void createCorpus(String name) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public void update(Corpus corpus, SourceDocument sourceDocument) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public void update(Corpus corpus,
+			StaticMarkupCollectionReference staticMarkupCollectionReference) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public void update(Corpus corpus,
+			UserMarkupCollectionReference userMarkupCollectionReference) {
+		// TODO Auto-generated method stub
+		
+	}
+	public void delete(Corpus corpus) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
 }

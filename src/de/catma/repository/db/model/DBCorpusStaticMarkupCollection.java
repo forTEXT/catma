@@ -14,16 +14,16 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "corpus_staticmarkupcollection", catalog = "CatmaRepository")
-public class CorpusStaticmarkupcollection implements java.io.Serializable {
+public class DBCorpusStaticMarkupCollection implements java.io.Serializable {
 
 	private Integer corpusStaticmarkupcollectionId;
 	private int corpusId;
 	private int staticMarkupCollectionId;
 
-	public CorpusStaticmarkupcollection() {
+	public DBCorpusStaticMarkupCollection() {
 	}
 
-	public CorpusStaticmarkupcollection(int corpusId,
+	public DBCorpusStaticMarkupCollection(int corpusId,
 			int staticMarkupCollectionId) {
 		this.corpusId = corpusId;
 		this.staticMarkupCollectionId = staticMarkupCollectionId;

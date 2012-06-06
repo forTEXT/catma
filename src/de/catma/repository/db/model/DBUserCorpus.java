@@ -5,6 +5,9 @@ package de.catma.repository.db.model;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+
 import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -17,19 +20,12 @@ import javax.persistence.Table;
 public class DBUserCorpus implements java.io.Serializable {
 
 	private Integer userCorpusId;
-	private int userId;
-	private int corpusId;
+	private DBUser dbUser;
+	private DBCorpus dbCorpus;
 	private int accessMode;
 	private boolean owner;
 
 	public DBUserCorpus() {
-	}
-
-	public DBUserCorpus(int userId, int corpusId, int accessMode, boolean owner) {
-		this.userId = userId;
-		this.corpusId = corpusId;
-		this.accessMode = accessMode;
-		this.owner = owner;
 	}
 
 	@Id
@@ -43,24 +39,26 @@ public class DBUserCorpus implements java.io.Serializable {
 		this.userCorpusId = userCorpusId;
 	}
 
-	@Column(name = "userID", nullable = false)
-	public int getUserId() {
-		return this.userId;
+	@ManyToOne
+	@JoinColumn(name = "userID", nullable = false)
+	public DBUser getDbUser() {
+		return dbUser;
 	}
 
-	public void setUserId(int userId) {
-		this.userId = userId;
+	public void setDbUser(DBUser dbUser) {
+		this.dbUser = dbUser;
 	}
 
-	@Column(name = "corpusID", nullable = false)
-	public int getCorpusId() {
-		return this.corpusId;
+	@ManyToOne
+	@JoinColumn(name = "corpusID", nullable = false)
+	public DBCorpus getDbCorpus() {
+		return dbCorpus;
 	}
 
-	public void setCorpusId(int corpusId) {
-		this.corpusId = corpusId;
+	public void setDbCorpus(DBCorpus dbCorpus) {
+		this.dbCorpus = dbCorpus;
 	}
-
+	
 	@Column(name = "accessMode", nullable = false)
 	public int getAccessMode() {
 		return this.accessMode;

@@ -4,7 +4,11 @@ package de.catma.repository.db.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+
 import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -14,19 +18,21 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "corpus_sourcedocument", catalog = "CatmaRepository")
-public class CorpusSourcedocument implements java.io.Serializable {
+public class DBCorpusSourceDocument implements java.io.Serializable {
 
 	private Integer corpusSourcedocumentId;
 	private int corpusId;
-	private int sourceDocumentId;
+	private DBSourceDocument dbSourceDocument;
 
-	public CorpusSourcedocument() {
+	public DBCorpusSourceDocument() {
 	}
-
-	public CorpusSourcedocument(int corpusId, int sourceDocumentId) {
+	
+	public DBCorpusSourceDocument(int corpusId,
+			DBSourceDocument dbSourceDocument) {
 		this.corpusId = corpusId;
-		this.sourceDocumentId = sourceDocumentId;
+		this.dbSourceDocument = dbSourceDocument;
 	}
+
 
 	@Id
 	@GeneratedValue(strategy = IDENTITY)
@@ -48,13 +54,14 @@ public class CorpusSourcedocument implements java.io.Serializable {
 		this.corpusId = corpusId;
 	}
 
-	@Column(name = "sourceDocumentID", nullable = false)
-	public int getSourceDocumentId() {
-		return this.sourceDocumentId;
+
+	@ManyToOne(fetch=FetchType.EAGER)
+	@JoinColumn(name = "sourceDocumentID", nullable = false)
+	public DBSourceDocument getDbSourceDocument() {
+		return dbSourceDocument;
 	}
 
-	public void setSourceDocumentId(int sourceDocumentId) {
-		this.sourceDocumentId = sourceDocumentId;
+	public void setDbSourceDocument(DBSourceDocument dbSourceDocument) {
+		this.dbSourceDocument = dbSourceDocument;
 	}
-
 }

@@ -34,6 +34,7 @@ import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
+import com.vaadin.ui.Tree.TreeDragMode;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
 
@@ -60,30 +61,6 @@ import de.catma.util.Pair;
 
 public class SourceDocumentPanel extends HorizontalSplitPanel
 	implements ValueChangeListener {
-	
-	private static final class MarkupCollectionItem {
-		private String displayString;
-		private boolean userMarkupCollectionItem = false;
-
-		public MarkupCollectionItem(String displayString) {
-			this(displayString, false);
-		}
-		
-		public MarkupCollectionItem(
-				String displayString, boolean userMarkupCollectionItem) {
-			this.displayString = displayString;
-			this.userMarkupCollectionItem = userMarkupCollectionItem;
-		}
-
-		@Override
-		public String toString() {
-			return displayString;
-		}
-		
-		public boolean isUserMarkupCollectionItem() {
-			return userMarkupCollectionItem;
-		}
-	}
 	
 	private final ContentInfoSet emptyContentInfoSet = new ContentInfoSet();
 	
@@ -435,7 +412,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		documentsTree.addStyleName("repo-tree");
 		documentsTree.setImmediate(true);
 		documentsTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_ID);
-
+		documentsTree.setDragMode(TreeDragMode.NODE);
+		
 		documentsPanel.addComponent(documentsTree);
 		documentsPanel.getContent().setSizeUndefined();
 		documentsPanel.setSizeFull();
@@ -634,7 +612,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			
 			singleValueDialog.getSingleValue(
 					getApplication().getMainWindow(),
-					"Create new User Markup Collection",
+					"Create a new User Markup Collection",
 					"You have to enter a name!",
 					new SaveCancelListener<PropertysetItem>() {
 				public void cancelPressed() {}
