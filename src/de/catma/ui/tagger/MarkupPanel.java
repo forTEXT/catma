@@ -159,6 +159,7 @@ public class MarkupPanel extends VerticalLayout {
 	}
 
 	public void close() {
+		markupCollectionsPanel.close();
 		tagsetTree.getTagManager().removePropertyChangeListener(
 				TagManagerEvent.tagLibraryChanged, tagLibraryChangedListener);
 		tagsetTree.close();

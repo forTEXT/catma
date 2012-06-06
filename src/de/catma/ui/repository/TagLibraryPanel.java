@@ -34,6 +34,7 @@ import de.catma.document.repository.Repository;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
+import de.catma.tag.TagManager;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.ui.dialog.UploadDialog;
@@ -57,10 +58,12 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 	private PropertyChangeListener tagLibraryChangedListener;
 
 	private Repository repository;
-	
-	public TagLibraryPanel(Repository repository) {
+
+	private TagManager tagManager;
+
+	public TagLibraryPanel(TagManager tagManager, Repository repository) {
 		this.repository = repository;
-		
+		this.tagManager = tagManager;
 		initComponents();
 		initActions();
 		initListeners();
@@ -79,6 +82,9 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 					TagLibraryReference tagLibraryRef = 
 							(TagLibraryReference)evt.getOldValue();
 					tagLibrariesTree.removeItem(tagLibraryRef);
+				}
+				else {
+					tagLibrariesTree.requestRepaint();
 				}
 			}
 		};
@@ -250,7 +256,8 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 					contentInfoForm.setEnabled(true);
 					contentInfoForm.setItemDataSource(
 						new BeanItem<ContentInfoSet>(
-							((TagLibraryReference)value).getContentInfoSet()));
+							new ContentInfoSet(
+								((TagLibraryReference)value).getContentInfoSet())));
 				}
 				else {
 					contentInfoForm.setEnabled(false);
@@ -321,8 +328,13 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 				contentInfoForm.commit();
 				contentInfoForm.setReadOnly(true);				
 				Object value = tagLibrariesTree.getValue();
-				repository.update((TagLibraryReference)value);
-				tagLibrariesTree.requestRepaint();
+				@SuppressWarnings("unchecked")
+				BeanItem<ContentInfoSet> item = 
+						(BeanItem<ContentInfoSet>)contentInfoForm.getItemDataSource();
+				ContentInfoSet contentInfoSet = item.getBean();
+
+				tagManager.updateTagLibrary(
+						(TagLibraryReference)value, contentInfoSet);
 			}
 		});
 		
@@ -405,11 +417,5 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		this.repository.removePropertyChangeListener(
 				Repository.RepositoryChangeEvent.tagLibraryChanged, 
 				tagLibraryChangedListener);
-	}
-	
-	@Override
-	protected void finalize() throws Throwable {
-		super.finalize();
-		System.out.println("finalize*********************");
 	}
 }

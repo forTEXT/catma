@@ -19,6 +19,7 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.document.Corpus;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
+import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
@@ -50,15 +51,27 @@ public class TaggerView extends VerticalLayout
 	private TagManager tagManager;
 	private int taggerID;
 	private Button btAnalyze;
+	private Repository repository;
+	private PropertyChangeListener sourceDocChangedListener;
 	
 	public TaggerView(
 			int taggerID, TagManager tagManager, 
-			SourceDocument sourceDocument, Repository repository) {
+			SourceDocument sourceDocument, Repository repository, 
+			PropertyChangeListener sourceDocChangedListener) {
 		this.taggerID = taggerID;
 		this.tagManager = tagManager;
+		this.repository = repository;
 		this.sourceDocument = sourceDocument;
-		initComponents(repository);
+		this.sourceDocChangedListener = sourceDocChangedListener;
+		initComponents();
 		initActions();
+		initListeners();
+	}
+
+	private void initListeners() {
+		repository.addPropertyChangeListener(
+			RepositoryChangeEvent.sourceDocumentChanged,
+			sourceDocChangedListener);
 	}
 
 	private void initActions() {
@@ -86,7 +99,7 @@ public class TaggerView extends VerticalLayout
 		
 	}
 
-	private void initComponents(Repository repository) {
+	private void initComponents() {
 		setSizeFull();
 		
 		VerticalLayout taggerPanel = new VerticalLayout();
@@ -192,6 +205,10 @@ public class TaggerView extends VerticalLayout
 
 	public void close() {
 		markupPanel.close();
+		repository.removePropertyChangeListener(
+				RepositoryChangeEvent.sourceDocumentChanged,
+				sourceDocChangedListener);
+		sourceDocChangedListener = null;
 	}
 	
 	public void tagInstanceAdded(

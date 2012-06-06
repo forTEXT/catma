@@ -20,8 +20,10 @@ import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
+import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
+import de.catma.util.ContentInfoSet;
 
 public class DummyRepository implements IndexedRepository {
 	
@@ -202,15 +204,21 @@ public class DummyRepository implements IndexedRepository {
 		
 	}
 	
+
+	public void update(SourceDocument sourceDocument,
+			ContentInfoSet contentInfoSet) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 	public void update(
-			UserMarkupCollectionReference userMarkupCollectionReference) {
+			UserMarkupCollectionReference userMarkupCollectionReference,
+			ContentInfoSet contentInfoSet) {
 		// TODO Auto-generated method stub
 		
 	}
-	
-	public void update(TagLibraryReference tagLibraryReference) {
+	public TagManager getTagManager() {
 		// TODO Auto-generated method stub
-		
+		return null;
 	}
-	
 }

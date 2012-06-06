@@ -174,6 +174,12 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 							(UserMarkupCollectionReference) evt.getOldValue();
 					removeUserMarkupCollection(userMarkupCollectionReference);
 				}
+				else if (evt.getOldValue() != null) { // update
+					UserMarkupCollection userMarkupCollection = 
+						userMarkupCollectionManager.updateUserMarkupCollection(
+							(UserMarkupCollectionReference)evt.getNewValue());
+					updateUserMarkupCollectionInTree(userMarkupCollection);
+				}
 			}
 		};
 		
@@ -182,6 +188,18 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				userMarkupCollectionChangedListener);
 	}
 	
+	private void updateUserMarkupCollectionInTree(
+			UserMarkupCollection userMarkupCollection) {
+		Property captionProp = markupCollectionsTree.getContainerProperty(
+				userMarkupCollection, MarkupCollectionsTreeProperty.caption);
+		captionProp.setValue(userMarkupCollection.toString());
+		Property writableProp = markupCollectionsTree.getContainerProperty(
+				userMarkupCollection, MarkupCollectionsTreeProperty.writable);
+		if (((CheckBox)writableProp.getValue()).booleanValue()) {
+			fireWritableUserMarkupCollectionSelected(userMarkupCollection,true);
+		}
+	}
+
 	private void removeUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference) {
 		UserMarkupCollection userMarkupCollection = 

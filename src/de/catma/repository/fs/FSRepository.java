@@ -23,6 +23,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.serialization.SerializationHandlerFactory;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
+import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
 import de.catma.util.ContentInfoSet;
@@ -155,7 +156,7 @@ class FSRepository implements Repository {
 		
 	}
 
-	public void update(SourceDocument sourceDocument) {
+	public void update(SourceDocument sourceDocument, ContentInfoSet contentInfoSet) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -318,7 +319,7 @@ class FSRepository implements Repository {
 	}
 	
 	public void update(
-			UserMarkupCollectionReference userMarkupCollectionReference) {
+			UserMarkupCollectionReference userMarkupCollectionReference, ContentInfoSet contentInfoSet) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -326,5 +327,10 @@ class FSRepository implements Repository {
 	public void update(TagLibraryReference tagLibraryReference) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public TagManager getTagManager() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

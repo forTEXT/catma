@@ -15,6 +15,7 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
+import de.catma.document.repository.RepositoryReference;
 
 public class RepositoryListView extends VerticalLayout {
 
@@ -32,13 +33,15 @@ public class RepositoryListView extends VerticalLayout {
 		openBt.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				Repository repository = (Repository)repositoryTable.getValue();
+				RepositoryReference repositoryReference = 
+						(RepositoryReference)repositoryTable.getValue();
 				
-				if (repository.isAuthenticationRequired()) {
+				if (repositoryReference.isAuthenticationRequired()) {
 					AuthenticationDialog authDialog = 
 							new AuthenticationDialog(
 									getApplication(),
-									"Please authenticate yourself", repository);
+									"Please authenticate yourself", 
+									repositoryReference, repositoryManager);
 					authDialog.show(getApplication().getMainWindow());
 				}
 				else {
@@ -49,10 +52,14 @@ public class RepositoryListView extends VerticalLayout {
 							"user.ident", System.getProperty("user.name"));
 						userIdentification.put(
 							"user.name", System.getProperty("user.name"));
-						repository.open(userIdentification);
+						
+						Repository repository = 
+								repositoryManager.openRepository(
+										repositoryReference, userIdentification);
 						
 						((CatmaApplication)getApplication()).openRepository(
 								repository);
+						
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -71,11 +78,11 @@ public class RepositoryListView extends VerticalLayout {
 
 	private void initComponents() {
 		repositoryTable = new Table("Available Repositories");
-		BeanItemContainer<Repository> container = 
-				new BeanItemContainer<Repository>(Repository.class);
+		BeanItemContainer<RepositoryReference> container = 
+				new BeanItemContainer<RepositoryReference>(RepositoryReference.class);
 		
-		for (Repository r : repositoryManager.getRepositories()) {
-			container.addBean(r);
+		for (RepositoryReference ref : repositoryManager.getRepositoryReferences()) {
+			container.addBean(ref);
 		}
 		
 		repositoryTable.setContainerDataSource(container);

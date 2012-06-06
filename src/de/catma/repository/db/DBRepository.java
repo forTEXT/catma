@@ -44,6 +44,7 @@ import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
 import de.catma.util.CloseSafe;
+import de.catma.util.ContentInfoSet;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
@@ -73,8 +74,10 @@ public class DBRepository implements IndexedRepository {
 	private IDGenerator idGenerator;
 	
 	private boolean tagManagerListenersEnabled = true;
+
 	private PropertyChangeListener tagsetDefinitionChangedListener;
 	private PropertyChangeListener tagDefinitionChangedListener;
+	private PropertyChangeListener tagLibraryChangedListener;
 
 
 	public DBRepository(
@@ -190,6 +193,23 @@ public class DBRepository implements IndexedRepository {
 		tagManager.addPropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged,
 				tagDefinitionChangedListener);	
+		
+		tagLibraryChangedListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (!tagManagerListenersEnabled) {
+					return;
+				}
+				
+				if ((evt.getNewValue() != null) && (evt.getOldValue() != null)) { //update
+					dbTagLibraryHandler.update((TagLibraryReference)evt.getNewValue());
+				}
+			}
+		};
+		
+		tagManager.addPropertyChangeListener(
+				TagManagerEvent.tagLibraryChanged,
+				tagLibraryChangedListener);
 	}
 
 	public void open(Map<String, String> userIdentification) throws Exception {
@@ -258,12 +278,20 @@ public class DBRepository implements IndexedRepository {
 	}
 	
 	public void close() {
+		
 		tagManager.removePropertyChangeListener(
 				TagManagerEvent.tagsetDefinitionChanged,
 				tagsetDefinitionChangedListener);
 		tagManager.removePropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged,
 				tagDefinitionChangedListener);	
+		tagManager.removePropertyChangeListener(
+				TagManagerEvent.tagLibraryChanged,
+				tagLibraryChangedListener);
+
+		dbTagLibraryHandler.close();
+		dbSourceDocumentHandler.close();
+		
 		try {
 			indexer.close();
 		}
@@ -301,11 +329,8 @@ public class DBRepository implements IndexedRepository {
 		dbSourceDocumentHandler.insert(sourceDocument);
 	}
 	
-	public void update(SourceDocument sourceDocument) {
-		dbSourceDocumentHandler.update(
-			sourceDocument.getID(),
-			sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
-				.getContentInfoSet());
+	public void update(SourceDocument sourceDocument, ContentInfoSet contentInfoSet) {
+		dbSourceDocumentHandler.update(sourceDocument, contentInfoSet);
 	}
 	
 	public Collection<SourceDocument> getSourceDocuments() {
@@ -402,8 +427,10 @@ public class DBRepository implements IndexedRepository {
 	
 	
 	public void update(
-			UserMarkupCollectionReference userMarkupCollectionReference) {
-		dbUserMarkupCollectionHandler.update(userMarkupCollectionReference);
+			UserMarkupCollectionReference userMarkupCollectionReference,
+			ContentInfoSet contentInfoSet) {
+		dbUserMarkupCollectionHandler.update(
+				userMarkupCollectionReference, contentInfoSet);
 	}
 
 	public void delete(
@@ -440,10 +467,6 @@ public class DBRepository implements IndexedRepository {
 		dbTagLibraryHandler.createTagLibrary(name);
 	}
 	
-	public void update(TagLibraryReference tagLibraryReference) {
-		dbTagLibraryHandler.update(tagLibraryReference);
-	}
-
 	public void importTagLibrary(InputStream inputStream) throws IOException {
 		dbTagLibraryHandler.importTagLibrary(inputStream);
 	}
@@ -504,5 +527,9 @@ public class DBRepository implements IndexedRepository {
 	
 	DBSourceDocumentHandler getDbSourceDocumentHandler() {
 		return dbSourceDocumentHandler;
+	}
+	
+	public TagManager getTagManager() {
+		return tagManager;
 	}
 }

@@ -49,11 +49,11 @@ public class QueryTest {
 		Properties properties = new Properties();
 		try {
 			properties.load(new FileInputStream("test/catma.properties"));
-			repository = 
-					(IndexedRepository)new RepositoryManager(
-							new DebugBackgroundServiceProvider(),
-							tagManager, properties).getRepositories().get(0);
-			repository.open(null);
+			RepositoryManager rm = new RepositoryManager(
+					new DebugBackgroundServiceProvider(), 
+					tagManager, properties);
+			repository = (IndexedRepository) rm.openRepository(
+					rm.getRepositoryReferences().iterator().next(), null);
 		}
 		catch( Exception e) {
 			ExceptionHandler.log(e);

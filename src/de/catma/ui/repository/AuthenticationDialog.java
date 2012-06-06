@@ -33,6 +33,8 @@ import com.vaadin.ui.Window;
 
 import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
+import de.catma.document.repository.RepositoryManager;
+import de.catma.document.repository.RepositoryReference;
 import de.catma.util.IDGenerator;
 
 public class AuthenticationDialog extends VerticalLayout {
@@ -45,17 +47,21 @@ public class AuthenticationDialog extends VerticalLayout {
 		private ConsumerManager consumerManager;
 		private DiscoveryInformation discovered;
 		private URIHandler uriHandler;
-		private Repository repository;
-		
+		private RepositoryReference repositoryReference;
+		private RepositoryManager repositoryManager;
+
 		public AuthenticationParamHandler(Application application,
 				String returnURL, ConsumerManager consumerManager,
-				DiscoveryInformation discovered, Repository repository) {
+				DiscoveryInformation discovered, 
+				RepositoryReference repositoryReference,
+				RepositoryManager repositoryManager) {
 			super();
 			this.application = application;
 			this.returnURL = returnURL;
 			this.consumerManager = consumerManager;
 			this.discovered = discovered;
-			this.repository = repository;
+			this.repositoryReference = repositoryReference;
+			this.repositoryManager = repositoryManager;
 		}
 
 		public void handleParameters(final Map<String, String[]> parameters) {
@@ -99,8 +105,10 @@ public class AuthenticationDialog extends VerticalLayout {
 			                    userIdentification.put(
 			                    		"user.name", email);
 			                }
-
-							repository.open(userIdentification);
+			                Repository repository = 
+			                		repositoryManager.openRepository(
+			                				repositoryReference, userIdentification );
+						
 							((CatmaApplication)application).openRepository(repository);
 						}
 						else {
@@ -129,12 +137,14 @@ public class AuthenticationDialog extends VerticalLayout {
 	private String providerIdent;
 	private String caption;
 	private Button btCancel;
-	private Repository repository;
+	private RepositoryReference repositoryReference;
+	private RepositoryManager repositoryManager;
 	
 	public AuthenticationDialog(Application application,
-			String caption, Repository repository) {
+			String caption, RepositoryReference repositoryReference, RepositoryManager repositoryManager) {
 		this.caption = caption;
-		this.repository = repository;
+		this.repositoryReference = repositoryReference;
+		this.repositoryManager = repositoryManager;
 		this.providerIdent = "https://www.google.com/accounts/o8/id";
 		initComponents(application);
 	}
@@ -198,7 +208,9 @@ public class AuthenticationDialog extends VerticalLayout {
 			final AuthenticationParamHandler authenticationParamHandler =
 					new AuthenticationParamHandler(
 							application, returnURL, 
-							consumerManager, discovered, repository);
+							consumerManager, discovered, 
+							repositoryReference,
+							repositoryManager);
 					
 			application.getMainWindow().addParameterHandler(
 					authenticationParamHandler);

@@ -116,9 +116,17 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		sourceDocumentAddedListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
-				SourceDocument sd = repository.getSourceDocument(
-						(String)evt.getNewValue());
-				addSourceDocumentToTree(sd);
+				if (evt.getOldValue() == null) { //insert
+					SourceDocument sd = repository.getSourceDocument(
+							(String)evt.getNewValue());
+					addSourceDocumentToTree(sd);
+				}
+				else if (evt.getNewValue() == null) { //remove
+					//TODO: removal
+				}
+				else { //update
+					documentsTree.requestRepaint();
+				}
 			}
 		};
 		this.repository.addPropertyChangeListener(
@@ -127,7 +135,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		
 		userMarkupDocumentChangedListener = new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
-				if (evt.getOldValue() == null) {
+				if (evt.getOldValue() == null) { // insert
 					@SuppressWarnings("unchecked")
 					Pair<UserMarkupCollectionReference, SourceDocument>
 						result = 
@@ -137,13 +145,15 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					addUserMarkupCollectionReferenceToTree(
 							result.getFirst(), result.getSecond());
 				}
-				else if (evt.getNewValue() == null) {
+				else if (evt.getNewValue() == null) { // remove
 					UserMarkupCollectionReference userMarkupCollectionReference =
 							(UserMarkupCollectionReference) evt.getOldValue();
 					removUserMarkupCollectionReferenceFromTree(
 							userMarkupCollectionReference);
 				}
-				
+				else { // update
+					documentsTree.requestRepaint();
+				}
 			}
 		};
 		this.repository.addPropertyChangeListener(
@@ -345,11 +355,16 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				contentInfoForm.commit();
 				contentInfoForm.setReadOnly(true);				
 				Object value = documentsTree.getValue();
+				@SuppressWarnings("unchecked")
+				BeanItem<ContentInfoSet> item = 
+						(BeanItem<ContentInfoSet>)contentInfoForm.getItemDataSource();
+				ContentInfoSet contentInfoSet = item.getBean();
+
 				if (value instanceof UserMarkupCollectionReference) {
-					repository.update((UserMarkupCollectionReference)value);
+					repository.update((UserMarkupCollectionReference)value, contentInfoSet);
 				}
 				else if (value instanceof SourceDocument) {
-					repository.update((SourceDocument)value);
+					repository.update((SourceDocument)value, contentInfoSet);
 				}
 			}
 		});
@@ -668,8 +683,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				contentInfoForm.setEnabled(true);
 				contentInfoForm.setItemDataSource(
 					new BeanItem<ContentInfoSet>(
-							((SourceDocument)value).getSourceContentHandler()
-								.getSourceDocumentInfo().getContentInfoSet()));
+						new ContentInfoSet(((SourceDocument)value).getSourceContentHandler()
+							.getSourceDocumentInfo().getContentInfoSet())));
 				
 				btOpenDocument.setCaption("Open Document");
 				btOpenDocument.setEnabled(true);
@@ -682,7 +697,9 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					contentInfoForm.setEnabled(true);
 					contentInfoForm.setItemDataSource(
 						new BeanItem<ContentInfoSet>(
-							((UserMarkupCollectionReference)value).getContentInfoSet()));
+							new ContentInfoSet(
+								((UserMarkupCollectionReference)value)
+									.getContentInfoSet())));
 
 				}
 				else {

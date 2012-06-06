@@ -20,7 +20,6 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	
 	// TODO: hier gehts weiter
 	/**
-	 * finish usercollref/tagref/sourcedoc changed events
 	 * handle open/close of repo correctly
 	 * corpora actions
 	 *
@@ -33,7 +32,6 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	private TagLibraryPanel tagLibraryPanel;
 	
 	public RepositoryView(Repository repository) {
-
 		this.repository = repository;
 		initComponents();
 
@@ -65,7 +63,8 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		Component documentsManagerPanel = createDocumentsManagerPanel();
 		splitPanel.addComponent(documentsManagerPanel);
 		
-		tagLibraryPanel = new TagLibraryPanel(repository);
+		tagLibraryPanel = new TagLibraryPanel(
+				repository.getTagManager(), repository);
 		splitPanel.addComponent(tagLibraryPanel);
 		
 		addComponent(splitPanel);
@@ -115,8 +114,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		this.sourceDocumentPanel.close();
 		this.tagLibraryPanel.close();
 		
-		//TODO: fire event to notify analyzer and tagger components
-		repository.close();
+		// repository is closed by the RepositoryManager from RepositoryManagerView
 	}
 }
 

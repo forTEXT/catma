@@ -986,10 +986,10 @@ class DBTagLibraryHandler {
 					}
 				},
 				new ExecutionListener<ContentInfoSet>() {
-					public void done(ContentInfoSet result) {
+					public void done(ContentInfoSet oldContentInfoSet) {
 						dbRepository.getPropertyChangeSupport().firePropertyChange(
-							RepositoryChangeEvent.tagLibraryReferenceChanged.name(),
-							result, tagLibraryReference);
+							RepositoryChangeEvent.tagLibraryChanged.name(),
+							oldContentInfoSet, tagLibraryReference);
 					}
 					public void error(Throwable t) {
 						t.printStackTrace();
@@ -1001,4 +1001,15 @@ class DBTagLibraryHandler {
 		}
 
 
+	void close() {
+		dbRepository.setTagManagerListenersEnabled(false);
+		
+		for (TagLibraryReference tagLibraryReference : tagLibraryReferences) {
+			dbRepository.getTagManager().removeTagLibrary(tagLibraryReference);
+			
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.tagLibraryChanged.name(),
+					tagLibraryReference, null);	
+		}
+	}
 }

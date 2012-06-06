@@ -586,11 +586,12 @@ class DBUserMarkupCollectionHandler {
 	}
 
 	public void update(
-			final UserMarkupCollectionReference userMarkupCollectionReference) {
+			final UserMarkupCollectionReference userMarkupCollectionReference, 
+			final ContentInfoSet contentInfoSet) {
+		
 		final Integer userMarkupCollectionId = 
 			Integer.valueOf(userMarkupCollectionReference.getId());
-		ContentInfoSet contentInfoSet = 
-				userMarkupCollectionReference.getContentInfoSet();
+
 		final String author = contentInfoSet.getAuthor();
 		final String publisher = contentInfoSet.getPublisher();
 		final String title = contentInfoSet.getTitle();
@@ -634,10 +635,11 @@ class DBUserMarkupCollectionHandler {
 				},
 				new ExecutionListener<ContentInfoSet>() {
 					public void done(ContentInfoSet oldContentInfoSet) {
+						userMarkupCollectionReference.setContentInfoSet(contentInfoSet);
 						
-						
-						
-						
+						dbRepository.getPropertyChangeSupport().firePropertyChange(
+								RepositoryChangeEvent.userMarkupCollectionChanged.name(),
+								oldContentInfoSet, userMarkupCollectionReference);
 					}
 					public void error(Throwable t) {
 						t.printStackTrace();

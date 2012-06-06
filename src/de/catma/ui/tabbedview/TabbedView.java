@@ -38,6 +38,10 @@ public class TabbedView extends VerticalLayout implements CloseHandler, Iterable
 		setSizeFull();
 	}
 	
+	protected void onTabClose(Component tabContent) {
+		onTabClose(tabSheet, tabContent);
+	}
+	
 	public void onTabClose(TabSheet tabsheet, Component tabContent) {
 		
 		tabsheet.removeComponent(tabContent);

@@ -263,21 +263,32 @@ class DBSourceDocumentHandler {
 		return result;
 	}
 
-	public void update(final String localUri, ContentInfoSet contentInfoSet) {
+	public void update(
+			final SourceDocument sourceDocument, 
+			final ContentInfoSet contentInfoSet) {
+		
+		final String localUri = sourceDocument.getID();
 		final String author = contentInfoSet.getAuthor();
 		final String publisher = contentInfoSet.getPublisher();
 		final String title = contentInfoSet.getTitle();
 		final String description = contentInfoSet.getDescription();
 		
 		dbRepository.getBackgroundServiceProvider().submit(
-				new DefaultProgressCallable<Void>() {
-					public Void call() throws Exception {
+				new DefaultProgressCallable<ContentInfoSet>() {
+					public ContentInfoSet call() throws Exception {
 						
 						Session session = 
 								dbRepository.getSessionFactory().openSession();
 						try {
 							DBSourceDocument dbSourceDocument = 
 									getDbSourceDocument(session, localUri);
+							
+							ContentInfoSet oldContentInfoSet = 
+									new ContentInfoSet(
+											dbSourceDocument.getAuthor(),
+											dbSourceDocument.getDescription(),
+											dbSourceDocument.getPublisher(),
+											dbSourceDocument.getTitle());
 							
 							dbSourceDocument.setAuthor(author);
 							dbSourceDocument.setTitle(title);
@@ -288,16 +299,23 @@ class DBSourceDocumentHandler {
 							session.save(dbSourceDocument);
 							session.getTransaction().commit();
 							CloseSafe.close(new CloseableSession(session));
+
+							return oldContentInfoSet;
 						}
 						catch (Exception exc) {
 							CloseSafe.close(new CloseableSession(session,true));
 							throw new IOException(exc);
 						}
-						return null;
 					}
 				},
-				new ExecutionListener<Void>() {
-					public void done(Void notOfInterest) { /* noop */ }
+				new ExecutionListener<ContentInfoSet>() {
+					public void done(ContentInfoSet oldContentInfoSet) {
+						sourceDocument.getSourceContentHandler().getSourceDocumentInfo().setContentInfoSet(
+								contentInfoSet);
+						dbRepository.getPropertyChangeSupport().firePropertyChange(
+								RepositoryChangeEvent.sourceDocumentChanged.name(),
+								oldContentInfoSet, contentInfoSet);						
+					}
 					public void error(Throwable t) {
 						t.printStackTrace();
 						// TODO Auto-generated method stub
@@ -305,5 +323,14 @@ class DBSourceDocumentHandler {
 					}
 				}
 			);;
+	}
+
+	void close() {
+		for (SourceDocument sourceDocument : sourceDocumentsByID.values()) {
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.sourceDocumentChanged.name(),
+					sourceDocument, null);
+		}
+		sourceDocumentsByID.clear();
 	}
 }

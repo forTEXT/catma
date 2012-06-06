@@ -1,6 +1,7 @@
 package de.catma.ui.repository;
 
 import com.vaadin.ui.Component;
+import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.CloseHandler;
 
 import de.catma.document.repository.Repository;
@@ -48,6 +49,11 @@ public class RepositoryManagerView extends TabbedView implements CloseHandler {
 	public RepositoryManager getRepositoryManager() {
 		return repositoryListView.getRepositoryManager();
 	}
-
 	
+	@Override
+	public void onTabClose(TabSheet tabsheet, Component tabContent) {
+		RepositoryView view = (RepositoryView)tabContent;
+		repositoryListView.getRepositoryManager().close(view.getRepository());
+		super.onTabClose(tabsheet, tabContent);
+	}
 }
