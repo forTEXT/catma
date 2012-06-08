@@ -12,7 +12,8 @@
 	</session-config>
 	<servlet>
 		<servlet-name>Clea</servlet-name>
-		<servlet-class>com.vaadin.terminal.gwt.server.ApplicationServlet</servlet-class>
+		<servlet-class>de.catma.CatmaApplicationServlet</servlet-class>
+		<!-- <servlet-class>com.vaadin.terminal.gwt.server.ApplicationServlet</servlet-class>  -->
 		<init-param>
 			<description>
 			Vaadin application class to start</description>

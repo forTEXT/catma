@@ -14,25 +14,36 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.queryengine.result.GroupedQueryResult;
+import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 
 public class PhraseResultPanel extends VerticalLayout {
 	
+	static interface VisualizeGroupedQueryResultSelectionListener {
+		public void setSelected(
+				GroupedQueryResultSet groupedQueryResultSet, boolean selected);
+	}
+	
 	private static enum TreePropertyName {
 		caption,
 		frequency, 
-		visible,
+		visibleInKwic,
+		visibleInVisualizations,
 		;
 	}
 	
 	private TreeTable resultTable;
 	private Repository repository;
 	private KwicPanel kwicPanel;
+	private VisualizeGroupedQueryResultSelectionListener resultSelectionListener;
 
-	public PhraseResultPanel(Repository repository) {
+	public PhraseResultPanel(
+			Repository repository, 
+			VisualizeGroupedQueryResultSelectionListener resultSelectionListener) {
 		this.repository = repository;
+		this.resultSelectionListener = resultSelectionListener;
 		initComponents();
 	}
 
@@ -59,8 +70,13 @@ public class PhraseResultPanel extends VerticalLayout {
 				TreePropertyName.frequency, Integer.class, null);
 		resultTable.setColumnHeader(TreePropertyName.frequency, "Frequency");
 		resultTable.addContainerProperty(
-				TreePropertyName.visible, AbstractComponent.class, null);
-		resultTable.setColumnHeader(TreePropertyName.visible, "Visible in Kwic");
+				TreePropertyName.visibleInKwic, AbstractComponent.class, null);
+		resultTable.setColumnHeader(TreePropertyName.visibleInKwic, "Visible in Kwic");
+		resultTable.addContainerProperty(
+				TreePropertyName.visibleInVisualizations, AbstractComponent.class,
+				null);
+		resultTable.setColumnHeader(
+				TreePropertyName.visibleInVisualizations, "Visualize");
 		
 		resultTable.setItemCaptionPropertyId(TreePropertyName.caption);
 		resultTable.setPageLength(10); //TODO: config
@@ -98,7 +114,8 @@ public class PhraseResultPanel extends VerticalLayout {
 		resultTable.addItem(new Object[]{
 				phraseResult.getGroup(), 
 				phraseResult.getTotalFrequency(),
-				createCheckbox(phraseResult)},
+				createKwicCheckbox(phraseResult),
+				createVisualizeCheckbox(phraseResult)},
 				phraseResult.getGroup());
 
 		resultTable.getContainerProperty(
@@ -124,7 +141,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		
 	}
 
-	private CheckBox createCheckbox(final GroupedQueryResult phraseResult) {
+	private CheckBox createKwicCheckbox(final GroupedQueryResult phraseResult) {
 		CheckBox cbShowInKwicView = new CheckBox();
 		cbShowInKwicView.setImmediate(true);
 		cbShowInKwicView.addListener(new ClickListener() {
@@ -141,6 +158,25 @@ public class PhraseResultPanel extends VerticalLayout {
 		return cbShowInKwicView;
 	}
 
+	private CheckBox createVisualizeCheckbox(final GroupedQueryResult phraseResult) {
+		CheckBox cbShowInKwicView = new CheckBox();
+		cbShowInKwicView.setImmediate(true);
+		cbShowInKwicView.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				boolean selected = 
+						event.getButton().booleanValue();
+
+				GroupedQueryResultSet set = new GroupedQueryResultSet();
+				set.add(phraseResult);
+				resultSelectionListener.setSelected(set, selected);
+			}
+
+
+		});
+		return cbShowInKwicView;
+	}
+	
 	private void fireShowInKwicViewSelected(GroupedQueryResult phraseResult,
 			boolean selected) {
 

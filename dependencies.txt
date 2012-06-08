@@ -17,12 +17,15 @@ hibernate-commons-annotations-4.0.1.Final.jar		hibernate-release-4.1.1.Final
 hibernate-core-4.1.1.Final.jar						hibernate-release-4.1.1.Final
 hibernate-jpa-2.0-api-1.0.1.Final.jar				hibernate-release-4.1.1.Final
 hibernate-validator-4.3.0.CR1.jar					hibernate-validator-4.3.0.CR1
+highcharts.js (2.2.5)								invientcharts-0.8.6.jar
 httpclient-4.0.jar									openid4java-0.9.6.662
 httpcore-4.0.1.jar									openid4java-0.9.6.662
+invientcharts-0.8.6.jar								UI (Analyzer Charts)
 javassist-3.15.0-GA.jar								hibernate-release-4.1.1.Final
 jboss-logging-3.1.0.GA.jar							hibernate-release-4.1.1.Final
 jboss-transaction-api_1.1_spec-1.0.0.Final.jar		hibernate-release-4.1.1.Final
 jjson.jar											UI
+jquery-1.7.2.min.js									highcharts 2.2.5
 lucene-core-3.5.0.jar								Indexer
 mysql-connector-java-5.1.18-bin.jar					DB-Indexer, DB-Repository
 nekohtml-1.9.14.jar									openid4java-0.9.6.662

@@ -20,6 +20,7 @@ import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
@@ -30,7 +31,9 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.IndexedRepository;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryOptions;
+import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.ui.analyzer.PhraseResultPanel.VisualizeGroupedQueryResultSelectionListener;
 import de.catma.ui.tabbedview.ClosableTab;
 
 public class AnalyzerView extends VerticalLayout implements ClosableTab {
@@ -91,7 +94,23 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 			}
 
 		});
+		btQueryBuilder.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				showQueryBuilder();
+			}
+		});
 	}
+
+	private void showQueryBuilder() {
+		//TODO: impl
+		Window window = new Window();
+		window.setHeight("400px");
+		window.setWidth("400px");
+		window.addComponent(new LineChartView("test"));
+		getApplication().getMainWindow().addWindow(window);
+	}
+
 
 	private void executeSearch() {
 		List<String> unseparableCharacterSequences = Collections.emptyList();
@@ -178,7 +197,15 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 	}
 
 	private Component createResultByPhraseView() {
-		phraseResultPanel = new PhraseResultPanel(repository);
+		phraseResultPanel = new PhraseResultPanel(repository,
+				new VisualizeGroupedQueryResultSelectionListener() {
+					
+					public void setSelected(GroupedQueryResultSet groupedQueryResultSet,
+							boolean selected) {
+						handleVisualizationSelectionRequest(
+								groupedQueryResultSet, selected);
+					}
+				});
 		return phraseResultPanel;
 	}
 
@@ -237,6 +264,12 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 		searchPanel.setComponentAlignment(btExecSearch, Alignment.BOTTOM_CENTER);
 		
 		return searchPanel;
+	}
+
+	private void handleVisualizationSelectionRequest(
+			GroupedQueryResultSet groupedQueryResultSet, boolean selected) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	public void close() {

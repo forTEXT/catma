@@ -29,4 +29,8 @@
 	<inherits name="com.google.gwt.json.JSON" />
     <inherits name="org.vaadin.teemu.wizards.WizardsforvaadinWidgetset" />
     
+
+    
+
+    <inherits name="com.invient.vaadin.charts.widgetset.InvientChartsWidgetset" />
 </module>

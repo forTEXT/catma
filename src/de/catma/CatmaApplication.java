@@ -274,4 +274,6 @@ public class CatmaApplication extends Application
 		repositoryManagerView.getRepositoryManager().close();
 		super.close();
 	}
+	
+	
 }
