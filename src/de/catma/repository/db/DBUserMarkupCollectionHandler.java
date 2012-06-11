@@ -133,6 +133,7 @@ class DBUserMarkupCollectionHandler {
 			final SourceDocument sourceDocument) {
 		
 		dbRepository.getBackgroundServiceProvider().submit(
+				"Importing User Markup collection...",
 				new DefaultProgressCallable<DBUserMarkupCollection>() {
 			public DBUserMarkupCollection call() throws Exception {
 				
@@ -598,6 +599,7 @@ class DBUserMarkupCollectionHandler {
 		final String description = contentInfoSet.getDescription();
 		
 		dbRepository.getBackgroundServiceProvider().submit(
+				"Updating User markup collection...",
 				new DefaultProgressCallable<ContentInfoSet>() {
 					public ContentInfoSet call() throws Exception {
 						

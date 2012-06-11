@@ -30,6 +30,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Link;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.Window.Notification;
 
 import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
@@ -49,12 +50,13 @@ public class AuthenticationDialog extends VerticalLayout {
 		private URIHandler uriHandler;
 		private RepositoryReference repositoryReference;
 		private RepositoryManager repositoryManager;
+		private Window dialogWindow;
 
 		public AuthenticationParamHandler(Application application,
 				String returnURL, ConsumerManager consumerManager,
 				DiscoveryInformation discovered, 
 				RepositoryReference repositoryReference,
-				RepositoryManager repositoryManager) {
+				RepositoryManager repositoryManager, Window dialogWindow) {
 			super();
 			this.application = application;
 			this.returnURL = returnURL;
@@ -62,6 +64,7 @@ public class AuthenticationDialog extends VerticalLayout {
 			this.discovered = discovered;
 			this.repositoryReference = repositoryReference;
 			this.repositoryManager = repositoryManager;
+			this.dialogWindow = dialogWindow;
 		}
 
 		public void handleParameters(final Map<String, String[]> parameters) {
@@ -69,6 +72,8 @@ public class AuthenticationDialog extends VerticalLayout {
 				public DownloadStream handleURI(URL context, String relativeUri) {
 					try {
 						application.getMainWindow().removeURIHandler(this);
+						application.getMainWindow().removeWindow(dialogWindow);
+						dialogWindow = null;
 						
 						// extract the parameters from the authentication response
 						// (which comes in as a HTTP request from the OpenID provider)
@@ -84,8 +89,6 @@ public class AuthenticationDialog extends VerticalLayout {
 						if (verified != null) {
 							Map<String, String> userIdentification = 
 									new HashMap<String, String>();
-							userIdentification.put(
-									"user.ident", verified.getIdentifier());
 							logger.info("verified user " + verified.getIdentifier());
 							AuthSuccess authSuccess =
 			                        (AuthSuccess) verification.getAuthResponse();
@@ -100,24 +103,35 @@ public class AuthenticationDialog extends VerticalLayout {
 			                    
 			                    String email = (String) emails.get(0);
 			                    logger.info("retrieved email: " + email);
+
+			                    userIdentification.put(
+										"user.ident", email);
 			                    userIdentification.put(
 			                    		"user.email", email);
 			                    userIdentification.put(
 			                    		"user.name", email);
+			                    
+			                    Repository repository = 
+		                    		repositoryManager.openRepository(
+	                    				repositoryReference, userIdentification );
+			                    
+			                    ((CatmaApplication)application).openRepository(repository);
+			                    
+			                    return new DownloadStream(
+			                    		application.getURL().openStream(), 
+			                    		"text/html", "CLEA logged in");
 			                }
-			                Repository repository = 
-			                		repositoryManager.openRepository(
-			                				repositoryReference, userIdentification );
-						
-							((CatmaApplication)application).openRepository(repository);
 						}
 						else {
 							logger.info("authentication failure");
+							application.getMainWindow().showNotification(
+	                                "Authentication failure",
+	                                "The authentication failed, you are not " +
+	                                "allowed to access this repository!",
+	                                Notification.TYPE_ERROR_MESSAGE);
+
 						}
 						
-						return new DownloadStream(
-							application.getURL().openStream(), 
-							"text/html", "CLEA logged in");
 					}
 					catch (Exception e) {
 						e.printStackTrace();
@@ -210,7 +224,8 @@ public class AuthenticationDialog extends VerticalLayout {
 							application, returnURL, 
 							consumerManager, discovered, 
 							repositoryReference,
-							repositoryManager);
+							repositoryManager, 
+							dialogWindow);
 					
 			application.getMainWindow().addParameterHandler(
 					authenticationParamHandler);

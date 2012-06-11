@@ -2,10 +2,14 @@ package de.catma.queryengine.result.computation;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.queryengine.result.GroupedQueryResult;
@@ -20,27 +24,46 @@ public class DistributionComputation {
 	private int segmentSizeInPercent = 10;
 	private double segmentSize;
 	private int numberOfSegments;
+	private List<XYValues<Integer, Integer>> xySeriesCollection;
+	private Set<PlotBand> plotBands;
+	private HashMap<String, Long> documentSegmentOffsets;
+	private long totalSize = 0;
 	
 	public DistributionComputation(GroupedQueryResultSet groupedQueryResultSet,
 			Repository repository, List<String> relevantSourceDocumentIDs) throws IOException {
 		this.groupedQueryResultSet = groupedQueryResultSet;
 		this.repository = repository;
 		this.relevantSourceDocumentIDs = relevantSourceDocumentIDs;
-		computeSegmentSize();
+		this.xySeriesCollection = new ArrayList<XYValues<Integer,Integer>>();
+		plotBands = new HashSet<PlotBand>();
+		documentSegmentOffsets = new HashMap<String, Long>();
+		
+		computeSegments();
+
 	}
-	
-	
-	private void computeSegmentSize() throws IOException {
+
+	private void computeSegments() throws IOException {
 		Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
-		long totalSize = 0;
 		for (String sourceDocId : relevantSourceDocumentIDs) {
 			SourceDocument sd = repository.getSourceDocument(sourceDocId);
 			if (!sd.isLoaded()) {
 				toBeUnloaded.add(sd);
 			}
+			documentSegmentOffsets.put(sourceDocId, totalSize);
+			
 			totalSize += sd.getLength();
 		}
 		
+		for (String sourceDocId : relevantSourceDocumentIDs) {
+			SourceDocument sd = repository.getSourceDocument(sourceDocId);		
+			plotBands.add(
+				new PlotBand(
+					sd.toString(),
+					100/totalSize*documentSegmentOffsets.get(sourceDocId),
+					100/totalSize*
+						(sd.getLength()+documentSegmentOffsets.get(sourceDocId))));
+		
+		}
 		for (SourceDocument sd : toBeUnloaded) {
 			sd.unload();
 		}
@@ -61,25 +84,43 @@ public class DistributionComputation {
 
 	private void compute(GroupedQueryResult groupedQueryResult) {
 		Object group = groupedQueryResult.getGroup();
-		XYSeries<Integer, Integer> xySeries = 
-				new XYSeries<Integer, Integer>(group);
+		XYValues<Integer, Integer> xySeries = 
+				new XYValues<Integer, Integer>(group);
 		
-		//hier gehts weiter: 
-		/*
-		 * count occurrences per segment by comparing ranges
-		 * add xy (curSegmentAofDocB, count)
-		 * make sure every segmentAofDocB has an entry (0 for no occurrences)
-		 * 
-		 * note: NOT every document has the same number of segments!!!
-		 */
-		
-		
-		for (QueryResultRow row : groupedQueryResult) {
-			for (int i=0; i<numberOfSegments; i++) {
-				
-			}
+		for (int i=1; i<=numberOfSegments; i++) {
+			xySeries.set(i*segmentSizeInPercent, 0);
 		}
+		for (QueryResultRow row : groupedQueryResult) {
+			int segmentNo =
+				getSegment(
+					row.getRange(), 
+					documentSegmentOffsets.get(row.getSourceDocumentId()));
+			xySeries.set(
+				segmentNo*segmentSizeInPercent, 
+				xySeries.get(segmentNo*segmentSizeInPercent)+1);
+		}
+		System.out.println(xySeries);
+		xySeriesCollection.add(xySeries);
 	}
-	
+
+	private int getSegment(Range range, Long offset) {
+		double curSize = segmentSize;
+		int curSegment = 1;
+		while (range.getStartPoint() > curSize) {
+			curSegment++;
+			curSize += segmentSize;
+		}
+		return curSegment;
+	}
+
+
+	public List<XYValues<Integer, Integer>> getXYSeriesCollection() {
+		return Collections.unmodifiableList(xySeriesCollection);
+	}
+
+	public int getPercentSegmentSize() {
+		return segmentSizeInPercent;
+	}
+
 
 }

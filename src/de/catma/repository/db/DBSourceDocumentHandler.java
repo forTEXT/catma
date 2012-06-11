@@ -142,41 +142,61 @@ class DBSourceDocumentHandler {
 		return builder.toString();
 	}
 
-	void insert(SourceDocument sourceDocument) throws IOException {
-		DBSourceDocument dbSourceDocument = 
-					new DBSourceDocument(sourceDocument);
+	void insert(final SourceDocument sourceDocument) throws IOException {
 		
-		
-		Session session = dbRepository.getSessionFactory().openSession();
-		try {
-			session.beginTransaction();
-			session.save(dbSourceDocument);
-			
-			DBUserSourceDocument dbUserSourceDocument = 
-					new DBUserSourceDocument(
-							dbRepository.getCurrentUser(), 
-							dbSourceDocument);
-			
-			session.save(dbUserSourceDocument);
+		dbRepository.getBackgroundServiceProvider().submit(
+			"Adding Source Document...",
+			new DefaultProgressCallable<String>() {
+				public String call() throws Exception {
+					
+					DBSourceDocument dbSourceDocument = 
+							new DBSourceDocument(sourceDocument);
+				
+				
+					Session session =
+							dbRepository.getSessionFactory().openSession();
+					try {
+						session.beginTransaction();
+						session.save(dbSourceDocument);
+						
+						DBUserSourceDocument dbUserSourceDocument = 
+								new DBUserSourceDocument(
+										dbRepository.getCurrentUser(), 
+										dbSourceDocument);
+						
+						session.save(dbUserSourceDocument);
 
-			insertIntoFS(sourceDocument);
+						insertIntoFS(sourceDocument);
+						getProgressListener().setProgress(
+								"Indexing Source Document");
+						dbRepository.getIndexer().index(sourceDocument);
+						
+						session.getTransaction().commit();
+						return sourceDocument.getID();
+					}
+					catch (Exception e) {
+						CloseSafe.close(new CloseableSession(session,true));
+						throw new IOException(e);
+					}
+				}
+			},
+			new ExecutionListener<String>() {
+				public void done(String documentID) {
+					sourceDocumentsByID.put(
+							documentID, sourceDocument);
 			
-			dbRepository.getIndexer().index(sourceDocument);
-			
-			session.getTransaction().commit();
-			
-			this.sourceDocumentsByID.put(sourceDocument.getID(), sourceDocument);
-			
-			dbRepository.getPropertyChangeSupport().firePropertyChange(
-					RepositoryChangeEvent.sourceDocumentChanged.name(),
-					null, sourceDocument.getID());
-			CloseSafe.close(new CloseableSession(session));
-		}
-		catch (Exception e) {
-			CloseSafe.close(new CloseableSession(session,true));
-			throw new IOException(e);
-		}
+					dbRepository.getPropertyChangeSupport().firePropertyChange(
+							RepositoryChangeEvent.sourceDocumentChanged.name(),
+							null, sourceDocument.getID());
+				}
+				public void error(Throwable t) {
+					t.printStackTrace();
+					// TODO Auto-generated method stub
+				}
+			}
+		);
 	}
+	
 	
 	@SuppressWarnings("unchecked")
 	void loadSourceDocuments(Session session) 
@@ -274,6 +294,7 @@ class DBSourceDocumentHandler {
 		final String description = contentInfoSet.getDescription();
 		
 		dbRepository.getBackgroundServiceProvider().submit(
+				"Update Source Document...",
 				new DefaultProgressCallable<ContentInfoSet>() {
 					public ContentInfoSet call() throws Exception {
 						

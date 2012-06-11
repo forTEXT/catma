@@ -3,7 +3,9 @@ package de.catma.ui.analyzer;
 import java.io.IOException;
 
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.terminal.ClassResource;
 import com.vaadin.ui.AbstractComponent;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
@@ -30,7 +32,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		caption,
 		frequency, 
 		visibleInKwic,
-		visibleInVisualizations,
+		showAsDistributionChart,
 		;
 	}
 	
@@ -73,10 +75,10 @@ public class PhraseResultPanel extends VerticalLayout {
 				TreePropertyName.visibleInKwic, AbstractComponent.class, null);
 		resultTable.setColumnHeader(TreePropertyName.visibleInKwic, "Visible in Kwic");
 		resultTable.addContainerProperty(
-				TreePropertyName.visibleInVisualizations, AbstractComponent.class,
+				TreePropertyName.showAsDistributionChart, AbstractComponent.class,
 				null);
 		resultTable.setColumnHeader(
-				TreePropertyName.visibleInVisualizations, "Visualize");
+				TreePropertyName.showAsDistributionChart, "Distribution");
 		
 		resultTable.setItemCaptionPropertyId(TreePropertyName.caption);
 		resultTable.setPageLength(10); //TODO: config
@@ -115,7 +117,7 @@ public class PhraseResultPanel extends VerticalLayout {
 				phraseResult.getGroup(), 
 				phraseResult.getTotalFrequency(),
 				createKwicCheckbox(phraseResult),
-				createVisualizeCheckbox(phraseResult)},
+				createDistChartButton(phraseResult)},
 				phraseResult.getGroup());
 
 		resultTable.getContainerProperty(
@@ -158,10 +160,13 @@ public class PhraseResultPanel extends VerticalLayout {
 		return cbShowInKwicView;
 	}
 
-	private CheckBox createVisualizeCheckbox(final GroupedQueryResult phraseResult) {
-		CheckBox cbShowInKwicView = new CheckBox();
-		cbShowInKwicView.setImmediate(true);
-		cbShowInKwicView.addListener(new ClickListener() {
+	private Button createDistChartButton(final GroupedQueryResult phraseResult) {
+		Button bDist = new Button();
+		bDist.setIcon(new ClassResource(
+				"ui/analyzer/resources/chart.gif", 
+				getApplication()));
+		
+		bDist.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				boolean selected = 
@@ -174,7 +179,7 @@ public class PhraseResultPanel extends VerticalLayout {
 
 
 		});
-		return cbShowInKwicView;
+		return bDist;
 	}
 	
 	private void fireShowInKwicViewSelected(GroupedQueryResult phraseResult,

@@ -24,6 +24,7 @@ import de.catma.document.repository.RepositoryManager;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.IndexedRepository;
+import de.catma.queryengine.result.computation.DistributionComputation;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.ui.DefaultProgressListener;
@@ -31,6 +32,8 @@ import de.catma.ui.ProgressWindow;
 import de.catma.ui.analyzer.AnalyzerManagerView;
 import de.catma.ui.analyzer.AnalyzerManagerWindow;
 import de.catma.ui.analyzer.AnalyzerProvider;
+import de.catma.ui.analyzer.VisualizationManagerView;
+import de.catma.ui.analyzer.VisualizationManagerWindow;
 import de.catma.ui.menu.Menu;
 import de.catma.ui.menu.MenuFactory;
 import de.catma.ui.repository.RepositoryManagerView;
@@ -58,6 +61,7 @@ public class CatmaApplication extends Application
 	private ProgressIndicator defaultProgressIndicator;
 	private int defaultPIbackgroundJobs = 0;
 	private ProgressWindow progressWindow;
+	private VisualizationManagerView visualizationManagerView;
 
 	@Override
 	public void init() {
@@ -99,6 +103,8 @@ public class CatmaApplication extends Application
 			
 			analyzerManagerView = new AnalyzerManagerView();
 			
+			visualizationManagerView = new VisualizationManagerView();
+			
 			defaultProgressIndicator = new ProgressIndicator();
 			defaultProgressIndicator.setIndeterminate(true);
 			defaultProgressIndicator.setEnabled(false);
@@ -118,7 +124,10 @@ public class CatmaApplication extends Application
 							new TaggerManagerWindow(taggerManagerView)),
 					new MenuFactory.MenuEntryDefinition(
 							"Analyzer",
-							new AnalyzerManagerWindow(analyzerManagerView))
+							new AnalyzerManagerWindow(analyzerManagerView)),
+					new MenuFactory.MenuEntryDefinition(
+							"Visualizer",
+							new VisualizationManagerWindow(visualizationManagerView))
 					);
 		
 		} catch (Exception e) {
@@ -193,6 +202,9 @@ public class CatmaApplication extends Application
 		if (taggerManagerView.getApplication() == null) {
 			menu.executeEntry(taggerManagerView);
 		}
+		else {
+			taggerManagerView.getWindow().bringToFront();
+		}
 		return taggerManagerView.openSourceDocument(
 				tagManager, sourceDocument, repository);
 	}
@@ -205,10 +217,11 @@ public class CatmaApplication extends Application
 		return backgroundService;
 	}
 	
-	private void setDefaultProgressIndicatorEnabled(boolean enabled) {
+	private void setDefaultProgressIndicatorEnabled(
+			String caption, boolean enabled) {
 		
 		defaultProgressIndicator.setVisible(enabled);
-		defaultProgressIndicator.setCaption("");
+		defaultProgressIndicator.setCaption(caption);
 		
 		if (enabled) {
 			if (progressWindow.getParent() == null) {
@@ -224,9 +237,10 @@ public class CatmaApplication extends Application
 		
 	}
 	public <T> void submit( 
+			String caption,
 			final ProgressCallable<T> callable, 
 			final ExecutionListener<T> listener) {
-		setDefaultProgressIndicatorEnabled(true);
+		setDefaultProgressIndicatorEnabled(caption, true);
 		
 		defaultPIbackgroundJobs++;
 		getBackgroundService().submit(
@@ -235,7 +249,7 @@ public class CatmaApplication extends Application
 					listener.done(result);
 					defaultPIbackgroundJobs--;
 					if (defaultPIbackgroundJobs == 0) {
-						setDefaultProgressIndicatorEnabled(false);
+						setDefaultProgressIndicatorEnabled("", false);
 					}
 					
 				};
@@ -244,7 +258,7 @@ public class CatmaApplication extends Application
 					listener.error(t);
 					defaultPIbackgroundJobs--;
 					if (defaultPIbackgroundJobs == 0) {
-						setDefaultProgressIndicatorEnabled(false);
+						setDefaultProgressIndicatorEnabled("", false);
 					}
 				}
 			}, 
@@ -269,6 +283,19 @@ public class CatmaApplication extends Application
 		analyzerManagerView.analyzeDocuments(corpus, repository);
 	}
 	
+	public int addVisulization(Integer visualizationId, String caption,
+			DistributionComputation distributionComputation) {
+		if (visualizationManagerView.getApplication() == null) {
+			menu.executeEntry(visualizationManagerView);
+		}
+		else {
+			visualizationManagerView.getWindow().bringToFront();
+		}
+		
+		return visualizationManagerView.addVisulization(visualizationId, caption,
+				distributionComputation);
+	}
+
 	@Override
 	public void close() {
 		repositoryManagerView.getRepositoryManager().close();

@@ -224,6 +224,7 @@ class DBTagLibraryHandler {
 			final boolean independent) {
 		
 		dbRepository.getBackgroundServiceProvider().submit(
+				"Importing Tag Library...",
 				new DefaultProgressCallable<Pair<Session,Boolean>>() {
 			public Pair<Session,Boolean> call() throws Exception {
 				DBTagLibrary dbTagLibrary = 
@@ -428,6 +429,7 @@ class DBTagLibraryHandler {
 		addAuthorIfAbsent(tagDefinition);
 		
 		dbRepository.getBackgroundServiceProvider().submit(
+				"Saving Tag definition...",
 		new DefaultProgressCallable<DBTagDefinition>() {
 			public DBTagDefinition call() throws Exception {
 				Session session = dbRepository.getSessionFactory().openSession();
@@ -500,6 +502,7 @@ class DBTagLibraryHandler {
 
 	void removeTagsetDefinition(final TagsetDefinition tagsetDefinition) {
 		dbRepository.getBackgroundServiceProvider().submit(
+				"Removing Tagset definition...",
 			new DefaultProgressCallable<Void>() {
 				public Void call() throws Exception {
 					Session session = dbRepository.getSessionFactory().openSession();
@@ -539,6 +542,7 @@ class DBTagLibraryHandler {
 			final TagsetDefinition tagsetDefinition) {
 		
 		dbRepository.getBackgroundServiceProvider().submit(
+				"Saving Tagset definition...",
 		new DefaultProgressCallable<Void>() {
 			public Void call() throws Exception {
 
@@ -580,6 +584,7 @@ class DBTagLibraryHandler {
 	
 	void updateTagsetDefinition(final TagsetDefinition tagsetDefinition) {
 		dbRepository.getBackgroundServiceProvider().submit(
+				"Updating Tagset definition",
 			new DefaultProgressCallable<Void>() {
 				public Void call() throws Exception {
 					Session session = dbRepository.getSessionFactory().openSession();
@@ -657,6 +662,7 @@ class DBTagLibraryHandler {
 	void updateTagDefinition(final TagDefinition tagDefinition) {
 		
 		dbRepository.getBackgroundServiceProvider().submit(
+				"Updating Tag definition...",
 			new DefaultProgressCallable<Void>() {
 				public Void call() throws Exception {
 					Session session = dbRepository.getSessionFactory().openSession();
@@ -710,6 +716,7 @@ class DBTagLibraryHandler {
 
 	void removeTagDefinition(final TagDefinition tagDefinition) {
 		dbRepository.getBackgroundServiceProvider().submit(
+				"Removing Tag definition",
 			new DefaultProgressCallable<Void>() {
 				public Void call() throws Exception {
 					Session session = dbRepository.getSessionFactory().openSession();
@@ -949,6 +956,7 @@ class DBTagLibraryHandler {
 		final String description = contentInfoSet.getDescription();
 		
 		dbRepository.getBackgroundServiceProvider().submit(
+				"Updating Tag Library...",
 				new DefaultProgressCallable<ContentInfoSet>() {
 					public ContentInfoSet call() throws Exception {
 						

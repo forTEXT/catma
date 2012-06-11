@@ -397,11 +397,10 @@ public class DBRepository implements IndexedRepository {
 	public void update(final UserMarkupCollection userMarkupCollection,
 			final List<TagReference> tagReferences) {
 		backgroundServiceProvider.submit(
+				"Saving User Markup Collection "
+						+ userMarkupCollection.getName() + "... ",
 				new DefaultProgressCallable<Void>() {
 				public Void call() throws Exception {
-					getProgressListener().setProgress(
-						"Saving User Markup Collection " + 
-								userMarkupCollection.getName() + "... ");
 					if (userMarkupCollection.getTagReferences().containsAll(tagReferences)) {
 						dbUserMarkupCollectionHandler.addTagReferences(
 							userMarkupCollection, tagReferences);
@@ -427,11 +426,9 @@ public class DBRepository implements IndexedRepository {
 	public void update(final List<UserMarkupCollection> userMarkupCollections,
 			final TagsetDefinition tagsetDefinition) {
 		backgroundServiceProvider.submit(
+				"Updating Tagset " + tagsetDefinition.getName() + "... ",
 				new DefaultProgressCallable<Void>() {
 				public Void call() throws Exception {
-					getProgressListener().setProgress(
-							"Updating Tagset " + tagsetDefinition.getName() + "... ");
-					
 					dbUserMarkupCollectionHandler.updateTagsetDefinitionInUserMarkupCollections(
 							userMarkupCollections, tagsetDefinition);
 					return null;

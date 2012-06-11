@@ -194,11 +194,10 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					final CatmaApplication application = 
 							(CatmaApplication)getApplication();
 					application.submit(
+							"Loading Markup collection...",
 							new DefaultProgressCallable<UserMarkupCollection>() {
 								public UserMarkupCollection call()
 										throws Exception {
-									getProgressListener().setProgress(
-											"Loading Markup Collection");
 									UserMarkupCollectionReference 
 										userMarkupCollectionReference = 
 											(UserMarkupCollectionReference)value;

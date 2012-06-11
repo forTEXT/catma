@@ -20,8 +20,8 @@ import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window;
 
+import de.catma.CatmaApplication;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
@@ -33,6 +33,7 @@ import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.computation.DistributionComputation;
 import de.catma.ui.analyzer.PhraseResultPanel.VisualizeGroupedQueryResultSelectionListener;
 import de.catma.ui.tabbedview.ClosableTab;
 
@@ -51,9 +52,13 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 	private List<String> relevantUserMarkupCollIDs;
 	private List<String> relevantStaticMarkupCollIDs;
 	private MarkupResultPanel markupResultPanel;
+	private String name;
+	private Integer visualizationId;
 	
 	public AnalyzerView(
 			Corpus corpus, IndexedRepository repository) {
+		this.name = corpus.toString();
+		
 		this.relevantSourceDocumentIDs = new ArrayList<String>();
 		this.relevantUserMarkupCollIDs = new ArrayList<String>();
 		this.relevantStaticMarkupCollIDs = new ArrayList<String>();
@@ -104,11 +109,6 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 
 	private void showQueryBuilder() {
 		//TODO: impl
-		Window window = new Window();
-		window.setHeight("400px");
-		window.setWidth("400px");
-		window.addComponent(new LineChartView("test"));
-		getApplication().getMainWindow().addWindow(window);
 	}
 
 
@@ -128,7 +128,9 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 				searchInput.getValue().toString(),
 				queryOptions);
 		
-		((BackgroundServiceProvider)getApplication()).submit(job, 
+		((BackgroundServiceProvider)getApplication()).submit(
+				"Searching...",
+				job, 
 				new ExecutionListener<QueryResult>() {
 			public void done(QueryResult result) {
 				phraseResultPanel.setQueryResult(result);
@@ -202,8 +204,13 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 					
 					public void setSelected(GroupedQueryResultSet groupedQueryResultSet,
 							boolean selected) {
-						handleVisualizationSelectionRequest(
-								groupedQueryResultSet, selected);
+						try {
+							handleDistributionChartRequest(
+									groupedQueryResultSet, selected);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
 				});
 		return phraseResultPanel;
@@ -266,10 +273,16 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 		return searchPanel;
 	}
 
-	private void handleVisualizationSelectionRequest(
-			GroupedQueryResultSet groupedQueryResultSet, boolean selected) {
-		// TODO Auto-generated method stub
+	private void handleDistributionChartRequest(
+			GroupedQueryResultSet groupedQueryResultSet, boolean selected) throws IOException {
+
+		DistributionComputation dc = new DistributionComputation(
+				groupedQueryResultSet, repository, relevantSourceDocumentIDs);
+		dc.compute();
 		
+		this.visualizationId = 
+			((CatmaApplication)getApplication()).addVisulization(
+				visualizationId, name, dc);
 	}
 
 	public void close() {

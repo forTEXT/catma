@@ -82,8 +82,10 @@ public class TabbedView extends VerticalLayout implements CloseHandler, Iterable
 		return tab;
 	}
 	
-	protected void addClosableTab(ClosableTab closableTab, String caption) {
-		addTab(closableTab, caption).setClosable(true);
+	protected Tab addClosableTab(ClosableTab closableTab, String caption) {
+		Tab tab = addTab(closableTab, caption);
+		tab.setClosable(true);
+		return tab;
 	}
 
 	public Iterator<Component> iterator() {
@@ -92,5 +94,18 @@ public class TabbedView extends VerticalLayout implements CloseHandler, Iterable
 	
 	protected void setSelectedTab(Component tabContent) {
 		tabSheet.setSelectedTab(tabContent);
+	}
+	
+	protected int getTabPosition(Tab tab) {
+		return tabSheet.getTabPosition(tab);
+	}
+
+	public Component getComponent(int position) {
+		if (tabSheet.getComponentCount() > position) {
+			return tabSheet.getTab(position).getComponent();
+		}
+		else {
+			return null;
+		}
 	}
 }

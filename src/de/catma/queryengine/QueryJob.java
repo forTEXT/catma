@@ -54,7 +54,6 @@ public class QueryJob extends DefaultProgressCallable<QueryResult> {
     }
 
     public QueryResult call() throws Exception {
-    	getProgressListener().setProgress("Executing Query...");
         try {
             // parse the query
             CatmaQueryLexer lex =

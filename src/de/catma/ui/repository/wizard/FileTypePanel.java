@@ -108,7 +108,7 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 							
 							URLConnection urlConnection = 
 									new URL(sourceDocURL).openConnection();
-							
+
 							String resultMimeType = mimeTypeFromUpload;
 							InputStream is = urlConnection.getInputStream();
 							try {
