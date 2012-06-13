@@ -39,7 +39,6 @@ public class RepositoryListView extends VerticalLayout {
 				if (repositoryReference.isAuthenticationRequired()) {
 					AuthenticationDialog authDialog = 
 							new AuthenticationDialog(
-									getApplication(),
 									"Please authenticate yourself", 
 									repositoryReference, repositoryManager);
 					authDialog.show(getApplication().getMainWindow());
@@ -61,8 +60,8 @@ public class RepositoryListView extends VerticalLayout {
 								repository);
 						
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						((CatmaApplication)getApplication()).showAndLogError(
+							"Error opening the repository!", e);
 					}
 				}
 			}

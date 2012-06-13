@@ -31,6 +31,7 @@ import com.vaadin.ui.Tree.TreeTargetDetails;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
 
+import de.catma.CatmaApplication;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
@@ -226,8 +227,8 @@ public class CorpusPanel extends VerticalLayout {
 		                	try {
 								repository.delete(corpus);
 							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
+								((CatmaApplication)getApplication()).showAndLogError(
+									"Error deleting corpus!", e);
 							}
 		                }
 		            }
@@ -339,8 +340,8 @@ public class CorpusPanel extends VerticalLayout {
 				try {
 					repository.createCorpus(name);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					((CatmaApplication)getApplication()).showAndLogError(
+						"Error creating corpus!", e);
 				}
 			}
 		}, corpusNameProperty);

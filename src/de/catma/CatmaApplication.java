@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.vaadin.Application;
 import com.vaadin.service.ApplicationContext;
@@ -13,6 +15,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.Window.CloseEvent;
 import com.vaadin.ui.Window.CloseListener;
+import com.vaadin.ui.Window.Notification;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.BackgroundServiceProvider;
@@ -62,6 +65,7 @@ public class CatmaApplication extends Application
 	private int defaultPIbackgroundJobs = 0;
 	private ProgressWindow progressWindow;
 	private VisualizationManagerView visualizationManagerView;
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 
 	@Override
 	public void init() {
@@ -131,8 +135,7 @@ public class CatmaApplication extends Application
 					);
 		
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			showAndLogError("The system could not be initialized!", e);
 		}
 
 		setMainWindow(mainWindow);
@@ -302,5 +305,20 @@ public class CatmaApplication extends Application
 		super.close();
 	}
 	
+	
+	public void showAndLogError(String message, Throwable e) {
+		logger.log(Level.SEVERE, message, e);
+		
+		if (message == null) {
+			message = "internal error"; 
+		}
+		
+		getMainWindow().showNotification(
+			"Error", 
+			"An error has occurred!<br />" +
+			"We've been notified about this error and it will be fixed soon.<br />" +
+			"The underlying error message is:<br />" + message, 
+			Notification.TYPE_ERROR_MESSAGE);
+	}
 	
 }

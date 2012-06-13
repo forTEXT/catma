@@ -718,6 +718,7 @@ public class TagsetTree extends HorizontalLayout {
 			TagsetDefinition tagsetDefinition, TagDefinition tagDefinition) {
 		String baseID = tagDefinition.getParentUuid();
 		if (baseID.isEmpty()) {
+			tagTree.setChildrenAllowed(tagsetDefinition, true);
 			tagTree.setParent(tagDefinition, tagsetDefinition);
 		}
 		else {

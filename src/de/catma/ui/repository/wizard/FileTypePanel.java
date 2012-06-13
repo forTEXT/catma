@@ -171,8 +171,8 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 											new ByteArrayInputStream(currentByteContent));
 									wizardResult.setSourceDocument(sourceDocument);
 								} catch (Exception e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
+									((CatmaApplication)getApplication()).showAndLogError(
+											"Error detecting the file type!", e);
 								}
 							}
 							if ((cbFileType.getValue() != null ) 
@@ -188,14 +188,15 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 						}
 						
 						public void error(Throwable t) {
-							// TODO Auto-generated method stub
-							
+							((CatmaApplication)getApplication()).showAndLogError(
+								"Error detecting file type", t);
 						}
 						
 					}, new DefaultProgressListener(progressIndicator, getApplication()));
 		}
 		catch (Exception exc) {
-			exc.printStackTrace(); //TODO handle
+			((CatmaApplication)getApplication()).showAndLogError(
+				"Error detecting file type", exc);
 		}
 	}
 
@@ -221,8 +222,8 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 					"<pre>" + sourceDocument.getContent(new Range(0, 2000)) + "</pre>");
 			wizardResult.setSourceDocument(sourceDocument);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			((CatmaApplication)getApplication()).showAndLogError(
+				"Error loading the preview for the document!", e);
 		}
 	}
 

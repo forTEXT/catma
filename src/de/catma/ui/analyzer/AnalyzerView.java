@@ -35,10 +35,13 @@ import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.computation.DistributionComputation;
 import de.catma.ui.analyzer.PhraseResultPanel.VisualizeGroupedQueryResultSelectionListener;
+import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 
 public class AnalyzerView extends VerticalLayout implements ClosableTab {
 	
+	private String userMarkupItemDisplayString = "User Markup Collections";
+	private String staticMarkupItemDisplayString = "Static Markup Collections";
 	private TextField searchInput;
 	private Button btExecSearch;
 	private Button btQueryBuilder;
@@ -138,13 +141,13 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 				try {
 					markupResultPanel.setQueryResult(result);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					((CatmaApplication)getApplication()).showAndLogError(
+						"Error accessing the repository!", e);
 				} 
 			};
 			public void error(Throwable t) {
-						// TODO Auto-generated method stub
-						
+				((CatmaApplication)getApplication()).showAndLogError(
+					"Error during search!", t);
 			}
 		});
 	}
@@ -208,8 +211,9 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 							handleDistributionChartRequest(
 									groupedQueryResultSet, selected);
 						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							((CatmaApplication)getApplication()).showAndLogError(
+								"Error showing the distribution chart",
+								e);
 						}
 					}
 				});
@@ -228,6 +232,19 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 		if (corpus != null) {
 			for (SourceDocument sd : corpus.getSourceDocuments()) {
 				documentsTree.addItem(sd);
+				MarkupCollectionItem umc = 
+					new MarkupCollectionItem(
+							userMarkupItemDisplayString, true);
+				documentsTree.addItem(umc);
+				documentsTree.setParent(umc, sd);
+				for (UserMarkupCollectionReference umcRef :
+					sd.getUserMarkupCollectionRefs()) {
+					if (corpus.getUserMarkupCollectionRefs().contains(umcRef)) {
+						documentsTree.addItem(umcRef);
+						documentsTree.setParent(umcRef, umc);
+						documentsTree.setChildrenAllowed(umcRef, false);
+					}
+				}
 			}
 		}
 		else {

@@ -18,6 +18,7 @@ import org.openid4java.message.ax.FetchRequest;
 import org.openid4java.message.ax.FetchResponse;
 
 import com.vaadin.Application;
+import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.DownloadStream;
 import com.vaadin.terminal.ExternalResource;
 import com.vaadin.terminal.ParameterHandler;
@@ -60,6 +61,7 @@ public class AuthenticationDialog extends VerticalLayout {
 			super();
 			this.application = application;
 			this.returnURL = returnURL;
+			logger.info("authentication dialog construction returnUrl: " + returnURL);
 			this.consumerManager = consumerManager;
 			this.discovered = discovered;
 			this.repositoryReference = repositoryReference;
@@ -68,9 +70,12 @@ public class AuthenticationDialog extends VerticalLayout {
 		}
 
 		public void handleParameters(final Map<String, String[]> parameters) {
+			logger.info("authentication dialog before uri handler creation: " + returnURL);
+
 			uriHandler = new URIHandler() {
 				public DownloadStream handleURI(URL context, String relativeUri) {
 					try {
+						logger.info("handling uri context: " + context + " relUri" + relativeUri);
 						application.getMainWindow().removeURIHandler(this);
 						application.getMainWindow().removeWindow(dialogWindow);
 						dialogWindow = null;
@@ -78,7 +83,7 @@ public class AuthenticationDialog extends VerticalLayout {
 						// extract the parameters from the authentication response
 						// (which comes in as a HTTP request from the OpenID provider)
 						ParameterList openidResp = new ParameterList(parameters);
-						
+						logger.info("verifying returnurl: " + returnURL);
 						// verify the response
 						VerificationResult verification = consumerManager.verify(
 								returnURL, openidResp, discovered);
@@ -110,7 +115,7 @@ public class AuthenticationDialog extends VerticalLayout {
 			                    		"user.email", email);
 			                    userIdentification.put(
 			                    		"user.name", email);
-			                    
+			                    logger.info("opening repository for user: " + email);
 			                    Repository repository = 
 		                    		repositoryManager.openRepository(
 	                    				repositoryReference, userIdentification );
@@ -134,12 +139,17 @@ public class AuthenticationDialog extends VerticalLayout {
 						
 					}
 					catch (Exception e) {
-						e.printStackTrace();
+						((CatmaApplication)application).showAndLogError(
+								"Error opening repository!", e);
 					}
-					return null;	
+					
+					application.close();
+					
+					return null;
 				}
 			};
 			application.getMainWindow().addURIHandler(uriHandler);
+			application.getMainWindow().removeParameterHandler(this);
 		}
 		
 		public URIHandler getUriHandler() {
@@ -153,18 +163,21 @@ public class AuthenticationDialog extends VerticalLayout {
 	private Button btCancel;
 	private RepositoryReference repositoryReference;
 	private RepositoryManager repositoryManager;
+	private Link logInLink;
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 	
-	public AuthenticationDialog(Application application,
-			String caption, RepositoryReference repositoryReference, RepositoryManager repositoryManager) {
+	public AuthenticationDialog(
+			String caption, RepositoryReference repositoryReference, 
+			RepositoryManager repositoryManager) {
 		this.caption = caption;
 		this.repositoryReference = repositoryReference;
 		this.repositoryManager = repositoryManager;
 		this.providerIdent = "https://www.google.com/accounts/o8/id";
-		initComponents(application);
+		initComponents();
 	}
 
 
-	private void initComponents(Application application) {
+	private void initComponents() {
 		setSizeFull();
 		setSpacing(true);
 		
@@ -176,18 +189,28 @@ public class AuthenticationDialog extends VerticalLayout {
 		
 		btCancel = new Button("Cancel");
 		buttonPanel.addComponent(btCancel);
-
-		Link logInLink = createLogInLink(application);
-		if (logInLink != null) {
-			addComponent(logInLink);
-		}
-		
 		
 		addComponent(buttonPanel);
 		this.setComponentAlignment(buttonPanel, Alignment.BOTTOM_RIGHT);
 		
 		dialogWindow.addComponent(this);
 		
+	}
+	
+	@Override
+	public void attach() {
+		super.attach();
+		if (logInLink == null) {
+			logger.info("creating first login link");
+			logInLink = createLogInLink(getApplication());
+			addComponent(logInLink, 0);
+		}
+		else {
+			logger.info("creating new login link");
+			Link newLogInlink = createLogInLink(getApplication()); 
+			replaceComponent(logInLink, newLogInlink);
+			logInLink = newLogInlink;
+		}
 	}
 
 	private Link createLogInLink(final Application application) {
@@ -197,6 +220,7 @@ public class AuthenticationDialog extends VerticalLayout {
 			String returnURL = 
 				application.getURL().toString() +
 				new IDGenerator().generate();
+			logger.info("return url in login link creation " + returnURL);
 			
 			@SuppressWarnings("rawtypes")
 			List discoveries = consumerManager.discover(this.providerIdent);
@@ -213,12 +237,15 @@ public class AuthenticationDialog extends VerticalLayout {
             // attach the extension to the authentication request
             authReq.addExtension(fetch);
 
-			
+			ClassResource icon =
+					new ClassResource(
+							"ui/repository/resources/google.png", application);
 			Link logInLink = 
 					new Link(
-						"Log in", 
+						"Log in via Google", 
 						new ExternalResource(authReq.getDestinationUrl(true)));
-
+			logInLink.setIcon(icon);
+			
 			final AuthenticationParamHandler authenticationParamHandler =
 					new AuthenticationParamHandler(
 							application, returnURL, 
@@ -232,8 +259,11 @@ public class AuthenticationDialog extends VerticalLayout {
 			btCancel.addListener(new ClickListener() {
 				
 				public void buttonClick(ClickEvent event) {
+					application.getMainWindow().removeParameterHandler(
+							authenticationParamHandler);
 					application.getMainWindow().removeURIHandler(
 							authenticationParamHandler.getUriHandler());
+					application.getMainWindow().removeWindow(dialogWindow);
 				}
 			});
 			

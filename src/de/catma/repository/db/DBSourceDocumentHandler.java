@@ -190,8 +190,9 @@ class DBSourceDocumentHandler {
 							null, sourceDocument.getID());
 				}
 				public void error(Throwable t) {
-					t.printStackTrace();
-					// TODO Auto-generated method stub
+					dbRepository.getPropertyChangeSupport().firePropertyChange(
+						RepositoryChangeEvent.exceptionOccurred.name(),
+						null, t);
 				}
 			}
 		);
@@ -338,9 +339,9 @@ class DBSourceDocumentHandler {
 								oldContentInfoSet, contentInfoSet);						
 					}
 					public void error(Throwable t) {
-						t.printStackTrace();
-						// TODO Auto-generated method stub
-						
+						dbRepository.getPropertyChangeSupport().firePropertyChange(
+								RepositoryChangeEvent.exceptionOccurred.name(),
+								null, t);
 					}
 				}
 			);;

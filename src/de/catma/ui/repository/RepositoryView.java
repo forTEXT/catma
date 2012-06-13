@@ -11,6 +11,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
+import de.catma.CatmaApplication;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.ui.tabbedview.ClosableTab;
@@ -21,7 +22,8 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	// TODO: hier gehts weiter
 	/**
 	 * handle open/close of repo correctly in AnalyzerView
-	 * error handling
+	 * analyze button 
+	 * documents tree in analyzer
 	 * c3po conn pool?
 	 */
 	
@@ -38,17 +40,21 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		exceptionOccurredListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
-				//TODO: handle
-				((Throwable)evt.getNewValue()).printStackTrace();
+				((CatmaApplication)getApplication()).showAndLogError(
+					"Repository Error!", (Throwable)evt.getNewValue());
 			}
 		};
 		
-		this.repository.addPropertyChangeListener(
-			Repository.RepositoryChangeEvent.exceptionOccurred, 
-			exceptionOccurredListener);
 		
 	}
 
+	@Override
+	public void attach() {
+		super.attach();
+		this.repository.addPropertyChangeListener(
+				Repository.RepositoryChangeEvent.exceptionOccurred, 
+				exceptionOccurredListener);
+	}
 
 	private void initComponents() {
 		setSizeFull();

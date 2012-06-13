@@ -16,6 +16,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.CatmaApplication;
 import de.catma.document.Corpus;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
@@ -191,8 +192,8 @@ public class TaggerView extends VerticalLayout
 			try {
 				tagger.setText(sourceDocument.getContent());
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				((CatmaApplication)getApplication()).showAndLogError(
+					"Error showing Source Document!", e);
 			}
 			init = false;
 		}
@@ -221,6 +222,7 @@ public class TaggerView extends VerticalLayout
 			TagsetDefinition tagsetDef =
 					markupPanel.getTagsetDefinition(
 							clientTagInstance.getTagDefinitionID());
+			//FIXME: somehow this does not show up in the MarkupCollectionsPannel
 			tagManager.addTagsetDefinition(
 					tagLibrary, new TagsetDefinition(tagsetDef));
 		}
@@ -243,8 +245,8 @@ public class TaggerView extends VerticalLayout
 			}
 			markupPanel.addTagReferences(tagReferences);
 		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			((CatmaApplication)getApplication()).showAndLogError(
+				"Error adding Tags!", e);
 		}
 	}
 	

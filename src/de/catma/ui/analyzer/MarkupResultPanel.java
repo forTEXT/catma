@@ -17,6 +17,7 @@ import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
@@ -350,8 +351,8 @@ public class MarkupResultPanel extends VerticalLayout {
 			try {
 				kwicPanel.addQueryResultRows(queryResult);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				((CatmaApplication)getApplication()).showAndLogError(
+					"Error showing KWIC results!", e);
 			}
 		}
 		else {

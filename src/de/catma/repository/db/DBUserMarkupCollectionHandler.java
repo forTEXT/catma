@@ -644,9 +644,9 @@ class DBUserMarkupCollectionHandler {
 								oldContentInfoSet, userMarkupCollectionReference);
 					}
 					public void error(Throwable t) {
-						t.printStackTrace();
-						// TODO Auto-generated method stub
-						
+						dbRepository.getPropertyChangeSupport().firePropertyChange(
+								RepositoryChangeEvent.exceptionOccurred.name(),
+								null, t);
 					}
 				}
 			);;

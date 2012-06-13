@@ -238,8 +238,8 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 						try {
 							repository.createTagLibrary(name);
 						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							((CatmaApplication)getApplication()).showAndLogError(
+								"Error creating the Tag Library!", e);
 						}
 					}
 				}, nameProperty);
@@ -280,8 +280,8 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 						tagLibrary = repository.getTagLibrary(tagLibraryReference);
 						((CatmaApplication)getApplication()).openTagLibrary(tagLibrary);
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						((CatmaApplication)getApplication()).showAndLogError(
+							"Error opening the Tag Library!", e);
 					}
 				}				
 			}
@@ -369,8 +369,8 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 					
 					
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					((CatmaApplication)getApplication()).showAndLogError(
+						"Error importing the Tag Library!", e);
 				}
 				finally {
 					CloseSafe.close(is);
@@ -403,8 +403,8 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		                	try {
 								repository.delete(tagLibraryReference);
 							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
+								((CatmaApplication)getApplication()).showAndLogError(
+									"Error deleting the Tag Library!", e);
 							}
 		                }
 		            }

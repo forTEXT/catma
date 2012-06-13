@@ -49,6 +49,8 @@ import de.catma.document.standoffmarkup.MarkupCollectionReference;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.indexer.IndexedRepository;
+import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.ui.dialog.UploadDialog;
@@ -151,8 +153,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						try {
 							repository.insert(wizardResult.getSourceDocument());
 						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							((CatmaApplication)getApplication()).showAndLogError(
+								"Error adding the Source Document!", e);
 						}
 					}
 					
@@ -213,9 +215,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 								}
 								
 								public void error(Throwable t) {
-									t.printStackTrace();
-									// TODO Auto-generated method stub
-									
+									((CatmaApplication)getApplication()).showAndLogError(
+											"Error loading markup collection!", t);
 								}
 							});
 
@@ -228,8 +229,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		miMoreDocumentActions.addItem("Analyze Document", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
+				handleAnalyzeDocumentRequest();
 			}
 		});
 		
@@ -357,6 +357,41 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		});
 
 
+	}
+
+	private void handleAnalyzeDocumentRequest() {
+		if (repository instanceof IndexedRepository) {
+			Object value = documentsTree.getValue();
+			if (value != null) {
+				if (value instanceof SourceDocument) {
+					SourceDocument sd = (SourceDocument)value;
+					CorpusContentSelectionDialog dialog =
+						new CorpusContentSelectionDialog(
+							sd,
+							new SaveCancelListener<Corpus>() {
+								public void cancelPressed() {/* noop */}
+								public void savePressed(Corpus result) {
+									
+									((AnalyzerProvider)getApplication()).analyze(
+											result,
+											(IndexedRepository)repository);
+									
+								}
+							});
+					dialog.show(getApplication().getMainWindow());
+				}
+				else {
+					getWindow().showNotification(
+						"Information", "Please select a Source Document first!");
+				}
+			}			
+		}
+		else {
+			getWindow().showNotification(
+				"Information", 
+				"This repository is not indexed, analysis is not supported!");
+		}
+		
 	}
 
 	private void initComponents() {
@@ -554,8 +589,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						repository.importUserMarkupCollection(
 								is, sourceDocument);
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						((CatmaApplication)getApplication()).showAndLogError(
+							"Error importing the User Markup Collection!", e);
 					}
 					finally {
 						CloseSafe.close(is);
@@ -586,8 +621,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		                	try {
 								repository.delete(userMarkupCollectionReference);
 							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
+								((CatmaApplication)getApplication()).showAndLogError(
+									"Error deleting the User Markup Collection!", e);
 							}
 		                }
 		            }
@@ -625,8 +660,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						repository.createUserMarkupCollection(
 								name, sourceDocument);
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						((CatmaApplication)getApplication()).showAndLogError(
+							"Error creating the User Markup Collection!", e);
 					}
 				}
 			}, userMarkupCollectionNameProperty);

@@ -30,6 +30,7 @@ import com.vaadin.terminal.gwt.server.WebBrowser;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.ClientWidget;
 
+import de.catma.CatmaApplication;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.client.ui.tagger.VTagger;
@@ -124,8 +125,8 @@ public class Tagger extends AbstractComponent {
 				taggerListener.tagInstanceAdded(
 						pager.getCurrentPage().getAbsoluteTagInstance(tagInstance));
 			} catch (JSONSerializationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				((CatmaApplication)getApplication()).showAndLogError(
+					"Error adding the Tag!", e);
 			}
 		}
 		
@@ -153,8 +154,8 @@ public class Tagger extends AbstractComponent {
 					tagInstanceJSONSerializer.toJSON(
 							pager.getCurrentPage().getRelativeTagInstances()));
 		} catch (JSONSerializationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			((CatmaApplication)getApplication()).showAndLogError(
+				"Error setting the page!", e);
 		}
 		requestRepaint();
 	}
@@ -219,8 +220,8 @@ public class Tagger extends AbstractComponent {
 								attributes.get(taggerMessageAttribute),
 								currentRelativePageTagInstancesCopy));
 			} catch (JSONSerializationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				((CatmaApplication)getApplication()).showAndLogError(
+					"Error showing Tags!", e);
 			}
 			
 			requestRepaint();
@@ -236,8 +237,8 @@ public class Tagger extends AbstractComponent {
 							tagDefinition.getUuid(),
 							ColorConverter.toHex(tagDefinition.getColor()))));
 		} catch (JSONSerializationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			((CatmaApplication)getApplication()).showAndLogError(
+					"Error adding Tag!", e);
 		}
 		requestRepaint();
 	}
