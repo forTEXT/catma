@@ -22,6 +22,7 @@ import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.backgroundservice.ProgressCallable;
 import de.catma.document.Corpus;
+import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
 import de.catma.document.source.SourceDocument;
@@ -204,6 +205,10 @@ public class CatmaApplication extends Application
 			SourceDocument sourceDocument, Repository repository) {
 		if (taggerManagerView.getApplication() == null) {
 			menu.executeEntry(taggerManagerView);
+			getMainWindow().showNotification(
+					"Information", 
+					"To markup your text please drag Tagsets from a Tag Library " +
+					"into the currently active Tagsets area!");
 		}
 		else {
 			taggerManagerView.getWindow().bringToFront();
@@ -319,6 +324,12 @@ public class CatmaApplication extends Application
 			"We've been notified about this error and it will be fixed soon.<br />" +
 			"The underlying error message is:<br />" + message, 
 			Notification.TYPE_ERROR_MESSAGE);
+	}
+
+	public void openSourceDocument(SourceDocument sd, Repository repository,
+			Range range) {
+		TaggerView tv = openSourceDocument(sd, repository);
+		tv.show(range);
 	}
 	
 }

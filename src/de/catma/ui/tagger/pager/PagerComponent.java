@@ -179,4 +179,9 @@ public class PagerComponent extends HorizontalLayout {
 			init = false;
 		}
 	}
+
+	public void setPage(int pageNumber) {
+		currentPageNumber = pageNumber;
+		pageInput.setNumber(currentPageNumber);
+	}
 }

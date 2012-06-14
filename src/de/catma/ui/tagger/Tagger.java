@@ -236,11 +236,11 @@ public class Tagger extends AbstractComponent {
 						new ClientTagDefinition(
 							tagDefinition.getUuid(),
 							ColorConverter.toHex(tagDefinition.getColor()))));
+			requestRepaint();
 		} catch (JSONSerializationException e) {
 			((CatmaApplication)getApplication()).showAndLogError(
 					"Error adding Tag!", e);
 		}
-		requestRepaint();
 	}
 
 	public void setVisible(List<TagReference> tagReferences, boolean visible) {
@@ -277,5 +277,16 @@ public class Tagger extends AbstractComponent {
 			setHeight(wb.getScreenHeight()*0.47f, UNITS_PIXELS);
 			init = false;
 		}
+	}
+
+	public void highlight(TextRange relativeTextRange) {
+		try {
+			attributes.put(TaggerMessageAttribute.HIGHLIGHT.name(),
+					new TextRangeJSONSerializer().toJSON(relativeTextRange));
+			requestRepaint();
+		} catch (JSONSerializationException e) {
+			((CatmaApplication)getApplication()).showAndLogError(
+					"Error showing KWIC in the Tagger!", e);
+		}		
 	}
 }

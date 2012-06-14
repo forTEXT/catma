@@ -217,4 +217,14 @@ public class Page {
 	public ClientTagInstance getRelativeTagInstance(String instanceID) {
 		return relativeTagInstances.get(instanceID);
 	}
+
+	public boolean hasPoint(int startPoint) {
+		return (this.pageStart <= startPoint) && (this.pageEnd >= startPoint);
+	}
+
+	public TextRange getRelativeRangeFor(Range absoluteTextRange) {
+		return new TextRange(
+				absoluteTextRange.getStartPoint()-pageStart, 
+				absoluteTextRange.getEndPoint()-pageStart);
+	}
 }

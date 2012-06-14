@@ -4,13 +4,17 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.event.ItemClickEvent;
+import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.CatmaApplication;
+import de.catma.document.Range;
 import de.catma.document.repository.Repository;
-import de.catma.document.source.SourceDocument;
 import de.catma.document.source.KeywordInContext;
+import de.catma.document.source.SourceDocument;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
@@ -40,6 +44,25 @@ public class KwicPanel extends VerticalLayout {
 		this.repository = repository;
 		this.markupBased = markupBased;
 		initComponents();
+		initActions();
+	}
+
+	private void initActions() {
+		kwicTable.addListener(new ItemClickListener() {
+			
+			public void itemClick(ItemClickEvent event) {
+				if (event.isDoubleClick()) {
+					QueryResultRow row = (QueryResultRow) event.getItemId();
+					SourceDocument sd = repository.getSourceDocument(
+							row.getSourceDocumentId());
+					Range range = row.getRange();
+					
+					((CatmaApplication)getApplication()).openSourceDocument(
+							sd, repository, range);
+				}
+				
+			}
+		});
 	}
 
 	private void initComponents() {

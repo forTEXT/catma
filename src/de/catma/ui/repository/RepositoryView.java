@@ -22,9 +22,8 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	// TODO: hier gehts weiter
 	/**
 	 * handle open/close of repo correctly in AnalyzerView
-	 * analyze button 
-	 * documents tree in analyzer
 	 * c3po conn pool?
+	 * todos!!!
 	 */
 	
 	private Repository repository;

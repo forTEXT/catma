@@ -365,20 +365,29 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			if (value != null) {
 				if (value instanceof SourceDocument) {
 					SourceDocument sd = (SourceDocument)value;
-					CorpusContentSelectionDialog dialog =
-						new CorpusContentSelectionDialog(
-							sd,
-							new SaveCancelListener<Corpus>() {
-								public void cancelPressed() {/* noop */}
-								public void savePressed(Corpus result) {
-									
-									((AnalyzerProvider)getApplication()).analyze(
-											result,
-											(IndexedRepository)repository);
-									
-								}
-							});
-					dialog.show(getApplication().getMainWindow());
+					if (sd.getUserMarkupCollectionRefs().isEmpty()) {
+						Corpus c = new Corpus(sd.toString());
+						c.addSourceDocument(sd);
+						((AnalyzerProvider)getApplication()).analyze(
+								c,
+								(IndexedRepository)repository);
+					}
+					else {
+						CorpusContentSelectionDialog dialog =
+							new CorpusContentSelectionDialog(
+								sd,
+								new SaveCancelListener<Corpus>() {
+									public void cancelPressed() {/* noop */}
+									public void savePressed(Corpus result) {
+										
+										((AnalyzerProvider)getApplication()).analyze(
+												result,
+												(IndexedRepository)repository);
+										
+									}
+								});
+						dialog.show(getApplication().getMainWindow());
+					}
 				}
 				else {
 					getWindow().showNotification(

@@ -22,13 +22,13 @@ import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
-import de.catma.tag.TagLibrary;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.analyzer.AnalyzerProvider;
@@ -54,6 +54,7 @@ public class TaggerView extends VerticalLayout
 	private Button btAnalyze;
 	private Repository repository;
 	private PropertyChangeListener sourceDocChangedListener;
+	private PagerComponent pagerComponent;
 	
 	public TaggerView(
 			int taggerID, TagManager tagManager, 
@@ -117,7 +118,7 @@ public class TaggerView extends VerticalLayout
 		actionPanel.setSpacing(true);
 		taggerPanel.addComponent(actionPanel);
 
-		PagerComponent pagerComponent = new PagerComponent(
+		pagerComponent = new PagerComponent(
 				pager, new PageChangeListener() {
 					
 			public void pageChanged(int number) {
@@ -252,5 +253,12 @@ public class TaggerView extends VerticalLayout
 	
 	public void tagInstanceRemoved(String instanceID) {
 		markupPanel.removeTagInstance(instanceID);
+	}
+
+	public void show(Range range) {
+		int pageNumber = pager.getStartPageNumberFor(range);
+		pagerComponent.setPage(pageNumber);
+		TextRange tr = pager.getCurrentPage().getRelativeRangeFor(range);
+		tagger.highlight(tr);
 	}
 }

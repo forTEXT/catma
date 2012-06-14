@@ -26,6 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 
+import de.catma.document.Range;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 
 /**
@@ -182,6 +183,16 @@ public class Pager implements Iterable<Page> {
 		}
 		
 		return result;
+	}
+	
+	public int getStartPageNumberFor(Range range) {
+		
+		for (Page p: pages) {
+			if (p.hasPoint(range.getStartPoint())) {
+				return pages.indexOf(p)+1;
+			}
+		}
+		return -1;
 	}
 	
 	public Iterator<Page> iterator() {
