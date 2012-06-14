@@ -25,19 +25,16 @@ import com.google.gwt.user.client.DOM;
  * @author marco.petris@web.de
  *
  */
-public class TaggedSpanFactory {
+public class TaggedSpanFactory extends SpanFactory {
 
-	private String instanceID;
-	private int instanceReferenceCounter = 1;
 	private String color;
 	
 	public TaggedSpanFactory(String color) {
-		this(IDGenerator.generate(), color);
+		this.color = color;
 	}
 	
 	public TaggedSpanFactory(String instanceID, String color) {
-		super();
-		this.instanceID = instanceID;
+		super(instanceID);
 		this.color = color;
 	}
 
@@ -49,13 +46,9 @@ public class TaggedSpanFactory {
 				+ ";border-bottom-style:solid;";
 		
 		taggedSpan.setAttribute("style", style);
-		taggedSpan.setId(instanceID + "_" + instanceReferenceCounter++);
+		taggedSpan.setId(getInstanceID() + "_" + instanceReferenceCounter++);
 		taggedSpan.setInnerHTML(innerHtml);
 		return taggedSpan;
-	}
-
-	public String getInstanceID() {
-		return instanceID;
 	}
 
 	public String getColor() {

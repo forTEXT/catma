@@ -33,6 +33,7 @@ import de.catma.ui.client.ui.tagger.editor.TaggerEditorListener;
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TaggerMessageAttribute;
+import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 
 /**
@@ -50,6 +51,7 @@ public class VTagger extends Composite implements Paintable {
 	private TaggerEditor taggerEditor;
 	private ClientTagInstanceJSONSerializer tagInstanceJSONSerializer;
 	private ClientTagDefinitionJSONSerializer tagDefinitionJSONSerializer;
+	private TextRangeJSONSerializer textRangeJSONSerializer;
 	
 	/**
 	 * The constructor should first call super() to initialize the component and
@@ -59,6 +61,7 @@ public class VTagger extends Composite implements Paintable {
 		super();
 		this.tagInstanceJSONSerializer = new ClientTagInstanceJSONSerializer();
 		this.tagDefinitionJSONSerializer = new ClientTagDefinitionJSONSerializer();
+		this.textRangeJSONSerializer = new TextRangeJSONSerializer();
 		initComponents();
 		
 	}
@@ -168,6 +171,13 @@ public class VTagger extends Composite implements Paintable {
 					uidl.getStringAttribute(
 						TaggerMessageAttribute.TAGDEFINITION_SELECTED.name()));
 			taggerEditor.createAndAddTagIntance(tagDefinition);
+		}
+		
+		if (uidl.hasAttribute(TaggerMessageAttribute.HIGHLIGHT.name())) {
+			TextRange textRange = 
+					textRangeJSONSerializer.fromJSON(uidl.getStringAttribute(
+							TaggerMessageAttribute.HIGHLIGHT.name()));
+			taggerEditor.highlight(textRange);
 		}
 		
 	}

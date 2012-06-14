@@ -41,6 +41,7 @@ public enum TaggerMessageAttribute {
 	TAGSETDEFINITION_ATTACH,
 	/**
 	 * TODO: still of any use?
+	 * @deprecated
 	 */
 	TAGINSTANCE_CLEAR,
 	/**
@@ -71,5 +72,9 @@ public enum TaggerMessageAttribute {
 	 * Attribute signals the tagger ID to the client.
 	 */
 	ID,
+	/**
+	 * Attribute signals to the client that a range should be highlighted.
+	 */
+	HIGHLIGHT
 	;
 }

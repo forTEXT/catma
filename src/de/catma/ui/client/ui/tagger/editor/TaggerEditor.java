@@ -10,6 +10,10 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Text;
+import com.google.gwt.event.dom.client.BlurEvent;
+import com.google.gwt.event.dom.client.BlurHandler;
+import com.google.gwt.event.dom.client.FocusEvent;
+import com.google.gwt.event.dom.client.FocusHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
 import com.google.gwt.user.client.Event;
@@ -27,7 +31,7 @@ import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.ContentElementID;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
-public class TaggerEditor extends FocusWidget implements MouseUpHandler {
+public class TaggerEditor extends FocusWidget implements MouseUpHandler, BlurHandler, FocusHandler {
 	
 	/** Set the CSS class name to allow styling. */
 	public static final String TAGGER_STYLE_CLASS = "tagger-editor";
@@ -36,11 +40,14 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 			 GWT.create(SelectionHandlerImplStandard.class);
 
 	private List<Range> lastRangeList; 
+	private List<TextRange> lastTextRanges;
 
 	private HashMap<String, ClientTagInstance> tagInstances = new HashMap<String, ClientTagInstance>();
 	private TaggerEditorListener taggerEditorListener;
 
 	private String taggerID;
+	
+	private String lastFocusID;
 	
 	public TaggerEditor(TaggerEditorListener taggerEditorListener) {
 		super(Document.get().createDivElement());
@@ -54,6 +61,8 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 
 		addMouseUpHandler(this);
 		addMouseMoveHandler(new TagMenu(this));
+		addBlurHandler(this);
+		addFocusHandler(this);
 	}
 	
 	public void removeTagInstance(String tagInstanceID) {
@@ -96,37 +105,18 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 	}
 	 
 	public void createAndAddTagIntance(ClientTagDefinition tagDefinition) {
+		onFocus(null);
 		
 		TaggedSpanFactory taggedSpanFactory = 
 				new TaggedSpanFactory(tagDefinition.getColor());
 		
-		if ((lastRangeList != null) && (!lastRangeList.isEmpty())) {
+		if (hasSelection()) {
 
 			//TODO: flatten ranges to prevent multiple tagging of the same range with the same instance!
 			
 			RangeConverter converter = new RangeConverter(taggerID);
 
-			List<TextRange> textRanges = new ArrayList<TextRange>();
-			for (Range range : lastRangeList) { 
-				if (!range.getStartNode().equals(getRootNode())
-							&& ! range.getEndNode().equals(getRootNode())) {
-					TextRange textRange = converter.convertToTextRange(range);
-					if (!textRange.isPoint()) {
-						VConsole.log("converted and adding range " + textRange );
-						textRanges.add(textRange);
-					}
-					else {
-						//TODO: consider tagging points (needs different visualization)
-						VConsole.log(
-							"won't tag range " + textRange + " because it is a point");
-					}
-				}
-				else {
-					VConsole.log(
-						"won'tag range " + range + 
-						" because it starts or ends with the content root");
-				}
-			}
+			List<TextRange> textRanges = getLastTextRanges(converter);
 			
 			for (TextRange textRange : textRanges) {
 				NodeRange nodeRange = converter.convertToNodeRange(textRange);
@@ -144,14 +134,46 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 				tagInstances.put(te.getInstanceID(), te);
 				taggerEditorListener.tagChanged(TaggerEditorEventType.ADD, te);
 			}
+			
+			lastTextRanges = null;
 		}
 		else {
 			VConsole.log("no range to tag");
 		}
 	}
 	
+	private List<TextRange> getLastTextRanges(RangeConverter converter) {
+		
+		if (lastTextRanges != null) {
+			return lastTextRanges;
+		}
+		
+		ArrayList<TextRange> textRanges = new ArrayList<TextRange>();
+		for (Range range : lastRangeList) { 
+			if (!range.getStartNode().equals(getRootNode())
+						&& ! range.getEndNode().equals(getRootNode())) {
+				TextRange textRange = converter.convertToTextRange(range);
+				if (!textRange.isPoint()) {
+					VConsole.log("converted and adding range " + textRange );
+					textRanges.add(textRange);
+				}
+				else {
+					//TODO: consider tagging points (needs different visualization)
+					VConsole.log(
+						"won't tag range " + textRange + " because it is a point");
+				}
+			}
+			else {
+				VConsole.log(
+					"won'tag range " + range + 
+					" because it starts or ends with the content root");
+			}
+		}
+		return textRanges;
+	}
+
 	private void addTagInstanceForRange(
-			TaggedSpanFactory taggedSpanFactory, NodeRange range) {
+			SpanFactory taggedSpanFactory, NodeRange range) {
 		
 		Node startNode = range.getStartNode();
 		int startOffset = range.getStartOffset();
@@ -181,7 +203,7 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 	}
 	
 	private void addTagInstance(
-			TaggedSpanFactory taggedSpanFactory, 
+			SpanFactory spanFactory, 
 			Node node, int originalStartOffset, int originalEndOffset) {
 		
 		// the whole text sequence is within one node
@@ -201,7 +223,7 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 		// get a list of tagged spans for every non-whitespace-containing-character-sequence 
 		// and text node for the separating whitespace-sequences
 		Element taggedSpan = 
-				taggedSpanFactory.createTaggedSpan(
+				spanFactory.createTaggedSpan(
 						nodeText.substring(startOffset, endOffset));
 		
 		// insert tagged spans and whitespace text nodes before the old node
@@ -220,7 +242,7 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 	}
 
 	private void addTagInstance(
-			TaggedSpanFactory taggedSpanFactory, 
+			SpanFactory spanFactory, 
 			Node startNode, int startOffset, Node endNode, int endOffset) {
 
 		AffectedNodesFinder tw = 
@@ -276,7 +298,7 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 
 		// get a tagged span for the tagged sequence of the starting node
 		Element taggedSpan = 
-			taggedSpanFactory.createTaggedSpan(
+			spanFactory.createTaggedSpan(
 					startNodeText.substring(markedStartSeqBeginIdx, markedStartSeqEndIdx));
 		
 		if (tw.isAfter()) {
@@ -304,7 +326,7 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 			Node affectedNode = affectedNodes.get(i);
 			// create the tagged span ...
 			taggedSpan = 
-				taggedSpanFactory.createTaggedSpan(affectedNode.getNodeValue());
+				spanFactory.createTaggedSpan(affectedNode.getNodeValue());
 			
 			VConsole.log("affected Node and its taggedSpan:");
 			DebugUtil.printNode(affectedNode);
@@ -325,7 +347,7 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 		
 		// the tagged part of the last node
 		taggedSpan = 
-			taggedSpanFactory.createTaggedSpan(
+			spanFactory.createTaggedSpan(
 						endNodeText.substring(
 								markedEndSeqBeginIdx, markedEndSeqEndIdx));
 		if (tw.isAfter()) {
@@ -349,6 +371,10 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 	}
 	
 	public boolean hasSelection() {
+		if ((lastTextRanges != null) && !lastTextRanges.isEmpty()) {
+			return true;
+		}
+		
 		if ((lastRangeList != null) && !lastRangeList.isEmpty()) {
 			for (Range r : lastRangeList) {
 				if ((r.getEndNode()!=r.getStartNode()) 
@@ -406,6 +432,44 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler {
 	private Node getRootNode() {
 		return Document.get().getElementById(
 				ContentElementID.CONTENT.name() + taggerID);
+	}
+
+	public void highlight(TextRange textRange) {
+		VConsole.log("Highlighting textrange: " + textRange);
+		RangeConverter rangeConverter = new RangeConverter(taggerID);
+		NodeRange nodeRange = rangeConverter.convertToNodeRange(textRange);
+
+		HighlightedSpanFactory highlightedSpanFactory = 
+				new HighlightedSpanFactory("#078E18");
+		addTagInstanceForRange(highlightedSpanFactory, nodeRange);
+	}
+	
+	
+	public void onBlur(BlurEvent event) {
+		VConsole.log(event.toDebugString());
+		if (hasSelection()) {
+			HighlightedSpanFactory highlightedSpanFactory = 
+					new HighlightedSpanFactory("#3399FF");
+			
+			RangeConverter converter = new RangeConverter(taggerID);
+
+			lastTextRanges = getLastTextRanges(converter);
+			
+			for (TextRange textRange : lastTextRanges) {
+				NodeRange nodeRange = converter.convertToNodeRange(textRange);
+				addTagInstanceForRange(highlightedSpanFactory, nodeRange);
+			}
+			
+			lastFocusID = highlightedSpanFactory.getInstanceID();
+		}
+	}
+	
+	public void onFocus(FocusEvent event) {
+		if (lastFocusID != null) {
+			removeTagInstance(lastFocusID, false);
+			lastFocusID = null;
+		}
+		lastTextRanges = null;
 	}
 }
 
