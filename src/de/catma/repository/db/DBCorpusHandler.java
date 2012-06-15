@@ -185,5 +185,27 @@ public class DBCorpusHandler {
 			throw new IOException(e);
 		}	
 	}
+
+	public void rename(Corpus corpus, String name) throws IOException {
+		Session session = dbRepository.getSessionFactory().openSession();
+		try  {
+			DBCorpus dbCorpus = 
+					(DBCorpus) session.load(
+							DBCorpus.class, Integer.valueOf(corpus.getId()));
+			session.beginTransaction();
+			dbCorpus.setName(name);
+			corpus.setName(name);
+			session.getTransaction().commit();
+			CloseSafe.close(new CloseableSession(session));
+		
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					Repository.RepositoryChangeEvent.corpusChanged.name(),
+					name, corpus);
+		}
+		catch (Exception e) {
+			CloseSafe.close(new CloseableSession(session,true));
+			throw new IOException(e);
+		}	
+	}
 	
 }

@@ -108,4 +108,14 @@ public class TabbedView extends VerticalLayout implements CloseHandler, Iterable
 			return null;
 		}
 	}
+	
+	public String getCaption(Component c) {
+		Tab t = tabSheet.getTab(c);
+		if (t != null) {
+			return t.getCaption();
+		}
+		else {
+			return "";
+		}
+	}
 }

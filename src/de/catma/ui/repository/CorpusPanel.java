@@ -84,6 +84,7 @@ public class CorpusPanel extends VerticalLayout {
 
 	private Repository repository;
 	private PropertyChangeListener corpusChangedListener;
+	private MenuItem miRenameCorpus;
 	
 	public CorpusPanel(
 			Repository repository, ValueChangeListener valueChangeListener) {
@@ -109,9 +110,11 @@ public class CorpusPanel extends VerticalLayout {
 							" and Markup Collections by dragging them " +
 							"from the Documents section on a Corpus.");
 				}
-				else { //update
-					// no need for special action so far
-				}
+				else { //update name
+					if (evt.getOldValue() instanceof String) {
+						corporaTree.requestRepaint();
+					}
+ 				}
 			}
 		};
 		
@@ -138,10 +141,10 @@ public class CorpusPanel extends VerticalLayout {
 			
 			public void valueChange(ValueChangeEvent event) {
 				Object value = event.getProperty().getValue();
-				boolean corpusRemoveButtonEnabled = false;
+				boolean corpusModificationButtonsEnabled = false;
 				if (value != null) {
 					if (!value.equals(allDocuments)) {
-						corpusRemoveButtonEnabled = true;
+						corpusModificationButtonsEnabled = true;
 						valueChangeListener.valueChange(
 								new CorpusValueChangeEvent((Corpus)value));
 					}
@@ -150,7 +153,8 @@ public class CorpusPanel extends VerticalLayout {
 								new CorpusValueChangeEvent(null));
 					}
 				}
-				miRemoveCorpus.setEnabled(corpusRemoveButtonEnabled);
+				miRemoveCorpus.setEnabled(corpusModificationButtonsEnabled);
+				miRenameCorpus.setEnabled(corpusModificationButtonsEnabled);
 			}
 		});
 		
@@ -212,6 +216,45 @@ public class CorpusPanel extends VerticalLayout {
 				handleCorpusCreationRequest();
 			}
 		});
+		
+		miRenameCorpus = miMoreCorpusActions.addItem("Rename Corpus", new Command() {
+			public void menuSelected(MenuItem selectedItem) {
+				Object selectedValue = corporaTree.getValue();
+				if ((selectedValue != null) 
+						&& !selectedValue.equals(allDocuments)) {
+					handleRenameCorpusRequest((Corpus)selectedValue);
+				}
+			}
+
+		});
+		miRemoveCorpus.setEnabled(false);
+	}
+	
+	private void handleRenameCorpusRequest(final Corpus corpus) {
+		final String corpusNameProperty = "name";
+		
+		SingleValueDialog singleValueDialog = new SingleValueDialog();
+		
+		singleValueDialog.getSingleValue(
+				getApplication().getMainWindow(),
+				"Rename Corpus",
+				"You have to enter a name!",
+				new SaveCancelListener<PropertysetItem>() {
+			public void cancelPressed() {}
+			public void savePressed(
+					PropertysetItem propertysetItem) {
+				Property property = 
+						propertysetItem.getItemProperty(
+								corpusNameProperty);
+				String name = (String)property.getValue();
+				try {
+					repository.update(corpus, name);
+				} catch (IOException e) {
+					((CatmaApplication)getApplication()).showAndLogError(
+						"Error renaming corpus!", e);
+				}
+			}
+		}, corpusNameProperty);
 	}
 
 	private void handleRemoveCorpusRequest(final Corpus corpus) {

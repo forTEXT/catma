@@ -358,4 +358,14 @@ class FSRepository implements Repository {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	public void update(Corpus corpus, String name) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public SourceDocument getSourceDocument(UserMarkupCollectionReference umcRef) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

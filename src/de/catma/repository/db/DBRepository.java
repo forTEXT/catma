@@ -345,6 +345,9 @@ public class DBRepository implements IndexedRepository {
 		
 	}
 
+	public SourceDocument getSourceDocument(UserMarkupCollectionReference umcRef) {
+		return dbSourceDocumentHandler.getSourceDocument(umcRef);
+	}
 	
 	public Set<Corpus> getCorpora() {
 		return dbCorpusHandler.getCorpora();
@@ -362,6 +365,10 @@ public class DBRepository implements IndexedRepository {
 			StaticMarkupCollectionReference staticMarkupCollectionReference) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public void update(Corpus corpus, String name) throws IOException {
+		dbCorpusHandler.rename(corpus, name);
 	}
 	
 	public void update(Corpus corpus,

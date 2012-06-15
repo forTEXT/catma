@@ -248,4 +248,12 @@ public class DummyRepository implements IndexedRepository {
 		// TODO Auto-generated method stub
 		
 	}
+	public SourceDocument getSourceDocument(UserMarkupCollectionReference umcRef) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	public void update(Corpus corpus, String name) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
 }

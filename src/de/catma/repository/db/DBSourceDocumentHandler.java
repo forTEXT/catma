@@ -355,4 +355,13 @@ class DBSourceDocumentHandler {
 		}
 		sourceDocumentsByID.clear();
 	}
+
+	public SourceDocument getSourceDocument(UserMarkupCollectionReference umcRef) {
+		for (SourceDocument sd : sourceDocumentsByID.values()) {
+			if (sd.getUserMarkupCollectionReference(umcRef.getId()) != null) {
+				return sd;
+			}
+		}
+		return null;
+	}
 }

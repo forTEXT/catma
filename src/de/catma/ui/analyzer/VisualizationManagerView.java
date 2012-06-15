@@ -8,7 +8,7 @@ import de.catma.ui.tabbedview.TabbedView;
 public class VisualizationManagerView extends TabbedView {
 	
 	public VisualizationManagerView() {
-		super("No visualizations available");
+		super("No visualizations available. To generate visualization use the Analyzer.");
 	}
 
 	private int addVisulization(

@@ -81,7 +81,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	private Button btSaveContentInfoChanges;
 	private Button btDiscardContentInfoChanges;
 	
-	private PropertyChangeListener sourceDocumentAddedListener;
+	private PropertyChangeListener sourceDocumentChangedListener;
 	private PropertyChangeListener userMarkupDocumentChangedListener;
 	
 	public SourceDocumentPanel(Repository repository) {
@@ -92,7 +92,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	}
 
 	private void initListeners() {
-		sourceDocumentAddedListener = new PropertyChangeListener() {
+		sourceDocumentChangedListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getOldValue() == null) { //insert
@@ -110,7 +110,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		};
 		this.repository.addPropertyChangeListener(
 				Repository.RepositoryChangeEvent.sourceDocumentChanged,
-				sourceDocumentAddedListener);
+				sourceDocumentChangedListener);
 		
 		userMarkupDocumentChangedListener = new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
@@ -137,7 +137,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		};
 		this.repository.addPropertyChangeListener(
 				Repository.RepositoryChangeEvent.userMarkupCollectionChanged,
-				userMarkupDocumentChangedListener);	}
+				userMarkupDocumentChangedListener);	
+	}
 
 	private void initActions() {
 		btAddDocument.addListener(new ClickListener() {
@@ -741,7 +742,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	public void close() {
 		this.repository.removePropertyChangeListener(
 				Repository.RepositoryChangeEvent.sourceDocumentChanged,
-				sourceDocumentAddedListener);
+				sourceDocumentChangedListener);
 		this.repository.removePropertyChangeListener(
 				Repository.RepositoryChangeEvent.userMarkupCollectionChanged, 
 				userMarkupDocumentChangedListener);

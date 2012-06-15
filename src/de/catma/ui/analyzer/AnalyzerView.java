@@ -1,7 +1,10 @@
 package de.catma.ui.analyzer;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -25,6 +28,7 @@ import de.catma.CatmaApplication;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
+import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
@@ -39,6 +43,9 @@ import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 
 public class AnalyzerView extends VerticalLayout implements ClosableTab {
+	static interface CloseListener {
+		public void closeRequest(AnalyzerView analyzerView);
+	}
 	
 	private String userMarkupItemDisplayString = "User Markup Collections";
 	private String staticMarkupItemDisplayString = "Static Markup Collections";
@@ -55,13 +62,19 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 	private List<String> relevantUserMarkupCollIDs;
 	private List<String> relevantStaticMarkupCollIDs;
 	private MarkupResultPanel markupResultPanel;
-	private String name;
+	private Corpus corpus;
 	private Integer visualizationId;
+	private PropertyChangeListener sourceDocumentChangedListener;
+	private PropertyChangeListener userMarkupDocumentChangedListener;
+	private CloseListener closeListener;
+	private PropertyChangeListener corpusChangedListener;
 	
 	public AnalyzerView(
-			Corpus corpus, IndexedRepository repository) {
-		this.name = corpus.toString();
+			Corpus corpus, IndexedRepository repository, 
+			CloseListener closeListener) {
 		
+		this.corpus = corpus;
+		this.closeListener = closeListener;
 		this.relevantSourceDocumentIDs = new ArrayList<String>();
 		this.relevantUserMarkupCollIDs = new ArrayList<String>();
 		this.relevantStaticMarkupCollIDs = new ArrayList<String>();
@@ -81,10 +94,131 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 		}
 		
 		this.repository = repository;
-		initComponents(corpus);
+		initComponents();
 		initActions();
+		initListeners();
 	}
 	
+
+	private void initListeners() {
+		sourceDocumentChangedListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (evt.getOldValue() == null) { //insert
+					// no action needed
+				}
+				else if (evt.getNewValue() == null) { //remove
+					if (!relevantSourceDocumentIDs.isEmpty()) {
+						removeSourceDocumentFromTree(
+								(SourceDocument)evt.getOldValue());
+						if (relevantSourceDocumentIDs.isEmpty()) {
+							closeListener.closeRequest(AnalyzerView.this);
+						}
+					}
+				}
+				else { //update
+					documentsTree.requestRepaint();
+				}
+			}
+		};
+		this.repository.addPropertyChangeListener(
+				Repository.RepositoryChangeEvent.sourceDocumentChanged,
+				sourceDocumentChangedListener);
+		
+		userMarkupDocumentChangedListener = new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (evt.getOldValue() == null) { // insert
+					// no action needed
+				}
+				else if (evt.getNewValue() == null) { // remove
+					UserMarkupCollectionReference userMarkupCollectionReference =
+							(UserMarkupCollectionReference) evt.getOldValue();
+					removeUserMarkupCollectionFromTree(userMarkupCollectionReference);
+				}
+				else { // update
+					documentsTree.requestRepaint();
+				}
+			}
+		};
+		this.repository.addPropertyChangeListener(
+				Repository.RepositoryChangeEvent.userMarkupCollectionChanged,
+				userMarkupDocumentChangedListener);	
+		
+		this.corpusChangedListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (evt.getNewValue() == null) { //remove
+					// no action needed
+				}
+				else if (evt.getOldValue() == null) { //add
+					// no action needed
+				}
+				else { 
+					//update sourcedoc added
+					if (evt.getOldValue() instanceof SourceDocument) {
+						addSourceDocument((SourceDocument)evt.getOldValue());
+					}
+					// update usermarkupcoll added
+					else if (evt.getOldValue() 
+							instanceof UserMarkupCollectionReference) {
+						addUserMarkupCollection(
+							(UserMarkupCollectionReference)evt.getOldValue());
+					}
+ 				}
+			}
+		};
+		
+		repository.addPropertyChangeListener(
+				Repository.RepositoryChangeEvent.corpusChanged,
+				corpusChangedListener);
+		
+	}
+
+	private void addUserMarkupCollection(
+			UserMarkupCollectionReference umcRef) {
+		SourceDocument sd = repository.getSourceDocument(umcRef);
+		
+		Collection<?> children = documentsTree.getChildren(sd);
+		MarkupCollectionItem umcItem = null;
+		if (children != null) {
+			for (Object child : children) {
+				if ((child instanceof MarkupCollectionItem) &&
+						((MarkupCollectionItem)child).isUserMarkupCollectionItem()) {
+					umcItem = (MarkupCollectionItem)child;
+				}
+			}
+		}
+		if (umcItem == null) {
+			umcItem = new MarkupCollectionItem(userMarkupItemDisplayString, true);
+			documentsTree.addItem(umcItem);
+			documentsTree.setParent(umcItem, sd);
+			addUserMarkupCollection(umcRef, umcItem);
+		}
+	}
+
+
+	private void removeUserMarkupCollectionFromTree(
+			UserMarkupCollectionReference userMarkupCollectionReference) {
+		relevantUserMarkupCollIDs.remove(
+				userMarkupCollectionReference.getId());
+		documentsTree.removeItem(userMarkupCollectionReference);
+	}
+
+
+	private void removeSourceDocumentFromTree(SourceDocument sourceDocument) {
+		relevantSourceDocumentIDs.remove(sourceDocument.getID());
+		
+		for (UserMarkupCollectionReference umcRef :
+			sourceDocument.getUserMarkupCollectionRefs()) {
+			documentsTree.removeItem(umcRef);
+			relevantUserMarkupCollIDs.remove(umcRef.getId());
+		}
+		
+		Collection<?> children = documentsTree.getChildren(sourceDocument);
+		if ((children != null) && (children.size() > 0)) {
+			documentsTree.removeItem(children.iterator().next());
+		}
+	}
 
 	private void initActions() {
 		btExecSearch.addListener(new ClickListener() {
@@ -152,7 +286,7 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 		});
 	}
 	
-	private void initComponents(Corpus corpus) {
+	private void initComponents() {
 		setSizeFull();
 		
 		Component searchPanel = createSearchPanel();
@@ -165,7 +299,7 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 		searchAndConveniencePanel.addComponent(searchPanel);
 		searchAndConveniencePanel.addComponent(convenienceButtonPanel);
 		
-		Component documentsPanel = createDocumentsPanel(corpus);
+		Component documentsPanel = createDocumentsPanel();
 
 		HorizontalSplitPanel topPanel = new HorizontalSplitPanel();
 		topPanel.setSplitPosition(70);
@@ -220,7 +354,7 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 		return phraseResultPanel;
 	}
 
-	private Component createDocumentsPanel(Corpus corpus) {
+	private Component createDocumentsPanel() {
 		Panel documentsPanel = new Panel();
 		
 		documentsContainer = new HierarchicalContainer();
@@ -231,20 +365,7 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 		
 		if (corpus != null) {
 			for (SourceDocument sd : corpus.getSourceDocuments()) {
-				documentsTree.addItem(sd);
-				MarkupCollectionItem umc = 
-					new MarkupCollectionItem(
-							userMarkupItemDisplayString, true);
-				documentsTree.addItem(umc);
-				documentsTree.setParent(umc, sd);
-				for (UserMarkupCollectionReference umcRef :
-					sd.getUserMarkupCollectionRefs()) {
-					if (corpus.getUserMarkupCollectionRefs().contains(umcRef)) {
-						documentsTree.addItem(umcRef);
-						documentsTree.setParent(umcRef, umc);
-						documentsTree.setChildrenAllowed(umcRef, false);
-					}
-				}
+				addSourceDocument(sd);
 			}
 		}
 		else {
@@ -254,6 +375,29 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 		documentsPanel.addComponent(documentsTree);
 		return documentsPanel;
 	}
+
+	private void addSourceDocument(SourceDocument sd) {
+		documentsTree.addItem(sd);
+		MarkupCollectionItem umc = 
+			new MarkupCollectionItem(
+					userMarkupItemDisplayString, true);
+		documentsTree.addItem(umc);
+		documentsTree.setParent(umc, sd);
+		for (UserMarkupCollectionReference umcRef :
+			sd.getUserMarkupCollectionRefs()) {
+			if (corpus.getUserMarkupCollectionRefs().contains(umcRef)) {
+				addUserMarkupCollection(umcRef, umc);
+			}
+		}
+	}
+	
+	private void addUserMarkupCollection(UserMarkupCollectionReference umcRef,
+			MarkupCollectionItem umc) {
+		documentsTree.addItem(umcRef);
+		documentsTree.setParent(umcRef, umc);
+		documentsTree.setChildrenAllowed(umcRef, false);
+	}
+
 
 	private Component createConvenienceButtonPanel() {
 		HorizontalLayout convenienceButtonPanel = new HorizontalLayout();
@@ -299,12 +443,22 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 		
 		this.visualizationId = 
 			((CatmaApplication)getApplication()).addVisulization(
-				visualizationId, name, dc);
+				visualizationId, (corpus==null)?"All documents":corpus.toString(), dc);
 	}
 
 	public void close() {
-		// TODO Auto-generated method stub
+		this.repository.removePropertyChangeListener(
+				Repository.RepositoryChangeEvent.sourceDocumentChanged,
+				sourceDocumentChangedListener);
 		
+		this.repository.removePropertyChangeListener(
+				Repository.RepositoryChangeEvent.userMarkupCollectionChanged,
+				userMarkupDocumentChangedListener);	
+		
+		closeListener = null;
 	}
 
+	public Corpus getCorpus() {
+		return corpus;
+	}
 }
