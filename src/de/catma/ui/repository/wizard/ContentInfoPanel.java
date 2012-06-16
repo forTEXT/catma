@@ -8,18 +8,21 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.Form;
 import com.vaadin.ui.HorizontalLayout;
 
+import de.catma.ui.dialog.wizard.DynamicWizardStep;
+import de.catma.ui.dialog.wizard.WizardStepListener;
 import de.catma.util.ContentInfoSet;
 
-public class ContentInfoPanel extends HorizontalLayout implements
+class ContentInfoPanel extends HorizontalLayout implements
 		DynamicWizardStep {
 	
 	
-	private WizardResult wizardResult;
-	private WizardStepListener wizardStepListener;
+	private AddSourceDocWizardResult wizardResult;
+	@SuppressWarnings("unused")
+	private WizardStepListener wizardStepListener; // not used
 	private Form contentInfoForm;
 	
 	public ContentInfoPanel(WizardStepListener wizardStepListener,
-			WizardResult wizardResult) {
+			AddSourceDocWizardResult wizardResult) {
 		super();
 		this.wizardStepListener = wizardStepListener;
 		this.wizardResult = wizardResult;

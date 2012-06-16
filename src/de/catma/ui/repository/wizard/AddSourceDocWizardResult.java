@@ -3,13 +3,13 @@ package de.catma.ui.repository.wizard;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 
-public class WizardResult {
+public class AddSourceDocWizardResult {
 
 	private SourceDocumentInfo sourceDocumentInfo;
 	private SourceDocument sourceDocument;
 	private String sourceDocumentID = null;
 	
-	public WizardResult() {
+	public AddSourceDocWizardResult() {
 		super();
 		this.sourceDocumentInfo = new SourceDocumentInfo();
 	}

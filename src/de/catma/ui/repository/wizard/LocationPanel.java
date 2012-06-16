@@ -21,16 +21,18 @@ import com.vaadin.ui.Upload.SucceededListener;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.source.TechInfoSet;
+import de.catma.ui.dialog.wizard.DynamicWizardStep;
+import de.catma.ui.dialog.wizard.WizardStepListener;
 
-public class LocationPanel extends VerticalLayout implements DynamicWizardStep {
+class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 	
 	private TextField remoteURIInput;
 	private UploadPanel uploadPanel;
 	private boolean onAdvance = false;
-	private WizardResult wizardResult;
+	private AddSourceDocWizardResult wizardResult;
 	private Panel remoteURIInputPanel;
 
-	public LocationPanel(WizardStepListener listener, WizardResult wizardResult) {
+	public LocationPanel(WizardStepListener listener, AddSourceDocWizardResult wizardResult) {
 		this.wizardResult = wizardResult;
 		initComponents();
 		initActions(listener);

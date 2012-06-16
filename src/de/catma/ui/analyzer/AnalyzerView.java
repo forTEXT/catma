@@ -9,6 +9,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
+import org.vaadin.teemu.wizards.event.WizardCompletedEvent;
+import org.vaadin.teemu.wizards.event.WizardProgressListener;
+import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
+import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
+
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.Alignment;
@@ -23,6 +29,7 @@ import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 
 import de.catma.CatmaApplication;
 import de.catma.backgroundservice.BackgroundServiceProvider;
@@ -35,10 +42,12 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.IndexedRepository;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryOptions;
+import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.computation.DistributionComputation;
 import de.catma.ui.analyzer.PhraseResultPanel.VisualizeGroupedQueryResultSelectionListener;
+import de.catma.ui.analyzer.querybuilder.QueryBuilderWizardFactory;
 import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 
@@ -245,7 +254,38 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 	}
 
 	private void showQueryBuilder() {
-		//TODO: impl
+		QueryTree queryTree = new QueryTree();
+		QueryBuilderWizardFactory factory =
+				new QueryBuilderWizardFactory(
+					new WizardProgressListener() {
+						
+						public void wizardCompleted(WizardCompletedEvent event) {
+							// TODO Auto-generated method stub
+							
+						}
+						
+						public void wizardCancelled(WizardCancelledEvent event) {
+							// TODO Auto-generated method stub
+							
+						}
+						
+						public void stepSetChanged(WizardStepSetChangedEvent event) {
+							// TODO Auto-generated method stub
+							
+						}
+						
+						public void activeStepChanged(WizardStepActivationEvent event) {
+							// TODO Auto-generated method stub
+							
+						}
+					},
+					queryTree);
+		
+		Window wizardWindow = 
+				factory.createWizardWindow("Query Builder", "60%", "60%");
+		
+		getApplication().getMainWindow().addWindow(wizardWindow);
+		wizardWindow.center();
 	}
 
 

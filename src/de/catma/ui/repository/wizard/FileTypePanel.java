@@ -34,9 +34,11 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentHandler;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.ui.DefaultProgressListener;
+import de.catma.ui.dialog.wizard.DynamicWizardStep;
+import de.catma.ui.dialog.wizard.WizardStepListener;
 import de.catma.util.ContentInfoSet;
 
-public class FileTypePanel extends GridLayout implements DynamicWizardStep {
+class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	
 	private static class BackgroundLoaderResult {
 		byte[] byteContent;
@@ -62,11 +64,11 @@ public class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	private Label uploadLabel;
 	private Panel previewPanel;
 	private WizardStepListener wizardStepListener;
-	private WizardResult wizardResult;
+	private AddSourceDocWizardResult wizardResult;
 	private Repository repository;
 	
 	public FileTypePanel(
-			WizardStepListener wizardStepListener, WizardResult wizardResult, 
+			WizardStepListener wizardStepListener, AddSourceDocWizardResult wizardResult, 
 			Repository repository) {
 		super(2,4);
 		this.wizardResult = wizardResult;

@@ -26,7 +26,7 @@ import com.vaadin.ui.Upload.SucceededListener;
 import de.catma.CatmaApplication;
 import de.catma.util.IDGenerator;
 
-public class UploadPanel extends HorizontalLayout {
+class UploadPanel extends HorizontalLayout {
 
 	private Upload upload;
 	private ProgressIndicator pi;

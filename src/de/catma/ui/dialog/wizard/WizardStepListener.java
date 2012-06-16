@@ -1,4 +1,4 @@
-package de.catma.ui.repository.wizard;
+package de.catma.ui.dialog.wizard;
 
 import org.vaadin.teemu.wizards.WizardStep;
 

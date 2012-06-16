@@ -122,5 +122,9 @@ public class DistributionComputation {
 		return segmentSizeInPercent;
 	}
 
+	
+	public Set<PlotBand> getPlotBands() {
+		return plotBands;
+	}
 
 }

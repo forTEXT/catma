@@ -1,7 +1,6 @@
 package de.catma.ui.repository;
 
 import com.vaadin.data.Property;
-import com.vaadin.data.Validator;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Alignment;

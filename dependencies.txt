@@ -6,11 +6,11 @@ Library												Cause
 
 antlr-3.4-complete.jar								queryengine, hibernate-release-4.1.1.Final(antlr-2.7.7.jar)
 ColorPicker-GWT-2.1.jar								UI
-commons-codec-1.3.jar								openid4java-0.9.6.662
-commons-logging-1.03.jar							openid4java-0.9.6.662, poi-3.8-20120326
+commons-codec-1.3.jar								openid4java-ro-svn-120615.jar
+commons-logging-1.03.jar							openid4java-ro-svn-120615.jar, poi-3.8-20120326
 confirmdialog-1.1.1.jar								UI
 dom4j-1.6.1.jar										hibernate-release-4.1.1.Final
-guice-2.0.jar										openid4java-0.9.6.662
+guice-2.0.jar										openid4java-ro-svn-120615.jar
 gwt-user.jar										GWT_2.4
 gwt-dev.jar											GWT_2.4
 hibernate-commons-annotations-4.0.1.Final.jar		hibernate-release-4.1.1.Final
@@ -18,8 +18,8 @@ hibernate-core-4.1.1.Final.jar						hibernate-release-4.1.1.Final
 hibernate-jpa-2.0-api-1.0.1.Final.jar				hibernate-release-4.1.1.Final
 hibernate-validator-4.3.0.CR1.jar					hibernate-validator-4.3.0.CR1
 highcharts.js (2.2.5)								invientcharts-0.8.6.jar
-httpclient-4.0.jar									openid4java-0.9.6.662
-httpcore-4.0.1.jar									openid4java-0.9.6.662
+httpclient-4.0.jar									openid4java-ro-svn-120615.jar
+httpcore-4.0.1.jar									openid4java-ro-svn-120615.jar
 invientcharts-0.8.6.jar								UI (Analyzer Charts)
 javassist-3.15.0-GA.jar								hibernate-release-4.1.1.Final
 jboss-logging-3.1.0.GA.jar							hibernate-release-4.1.1.Final
@@ -28,13 +28,13 @@ jjson.jar											UI
 jquery-1.7.2.min.js									highcharts 2.2.5
 lucene-core-3.5.0.jar								Indexer
 mysql-connector-java-5.1.18-bin.jar					DB-Indexer, DB-Repository
-nekohtml-1.9.14.jar									openid4java-0.9.6.662
-openid4java-0.9.6.jar								Repository
+nekohtml-1.9.14.jar									openid4java-ro-svn-120615.jar
+openid4java-ro-svn-120615.jar						Repository
 vaadin-6.7.3.jar									UI
 validation-api-1.0.0.GA-sources.jar					GWT_2.4
 validation-api-1.0.0.GA.jar							GWT_2.4
 wizards-for-vaadin-0.4.1.jar						UI
-xercesImpl-2.8.1.jar 								openid4java-0.9.6.662, XOM_1.2.7 (dtd-xercesImpl.jar 2.8.0?)
+xercesImpl-2.8.1.jar 								openid4java-ro-svn-120615.jar, XOM_1.2.7 (dtd-xercesImpl.jar 2.8.0?)
 
 
 CATMA 4 core depencencies								

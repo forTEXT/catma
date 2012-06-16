@@ -29,8 +29,10 @@ import de.catma.CatmaApplication;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.LanguageDetector;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.ui.dialog.wizard.DynamicWizardStep;
+import de.catma.ui.dialog.wizard.WizardStepListener;
 
-public class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
+class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 	
     /**
      * An item in the language list.
@@ -84,7 +86,7 @@ public class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep
 	
 	private boolean onAdvance;
 	private WizardStepListener wizardStepListener;
-	private WizardResult wizardResult;
+	private AddSourceDocWizardResult wizardResult;
 	private CheckBox cbUseApostrophe;
 	private SourceDocumentInfo sourceDocumentInfo;
 
@@ -105,7 +107,7 @@ public class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep
 	private Button btRemvoeUcs;
 
 	public IndexerOptionsPanel(WizardStepListener wizardStepListener,
-			WizardResult wizardResult) {
+			AddSourceDocWizardResult wizardResult) {
 		super(3,5);
 		this.onAdvance = true;
 		this.wizardStepListener = wizardStepListener;

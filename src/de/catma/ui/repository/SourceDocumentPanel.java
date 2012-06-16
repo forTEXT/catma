@@ -36,6 +36,7 @@ import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.Tree.TreeDragMode;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.CatmaApplication;
@@ -54,9 +55,8 @@ import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.ui.dialog.UploadDialog;
-import de.catma.ui.repository.wizard.WizardFactory;
-import de.catma.ui.repository.wizard.WizardResult;
-import de.catma.ui.repository.wizard.WizardWindow;
+import de.catma.ui.repository.wizard.AddSourceDocWizardFactory;
+import de.catma.ui.repository.wizard.AddSourceDocWizardResult;
 import de.catma.util.CloseSafe;
 import de.catma.util.ContentInfoSet;
 import de.catma.util.Pair;
@@ -144,31 +144,38 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		btAddDocument.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				WizardFactory factory = new WizardFactory();
-				final WizardResult wizardResult = new WizardResult();
-				WizardWindow sourceDocCreationWizardWindow = 
-						factory.createWizardWindow(new WizardProgressListener() {
-					
-					public void wizardCompleted(WizardCompletedEvent event) {
-						event.getWizard().removeListener(this);
-						try {
-							repository.insert(wizardResult.getSourceDocument());
-						} catch (IOException e) {
-							((CatmaApplication)getApplication()).showAndLogError(
-								"Error adding the Source Document!", e);
-						}
-					}
-					
-					public void wizardCancelled(WizardCancelledEvent event) {
-						event.getWizard().removeListener(this);
-					}
-					
-					public void stepSetChanged(WizardStepSetChangedEvent event) {/*not needed*/}
-					
-					public void activeStepChanged(WizardStepActivationEvent event) {/*not needed*/}
-				}, 
-				wizardResult,
-				repository);
+				
+				final AddSourceDocWizardResult wizardResult = 
+						new AddSourceDocWizardResult();
+				
+				AddSourceDocWizardFactory factory = 
+						new AddSourceDocWizardFactory(
+								new WizardProgressListener() {
+							
+							public void wizardCompleted(WizardCompletedEvent event) {
+								event.getWizard().removeListener(this);
+								try {
+									repository.insert(wizardResult.getSourceDocument());
+								} catch (IOException e) {
+									((CatmaApplication)getApplication()).showAndLogError(
+										"Error adding the Source Document!", e);
+								}
+							}
+							
+							public void wizardCancelled(WizardCancelledEvent event) {
+								event.getWizard().removeListener(this);
+							}
+							
+							public void stepSetChanged(WizardStepSetChangedEvent event) {/*not needed*/}
+							
+							public void activeStepChanged(WizardStepActivationEvent event) {/*not needed*/}
+						}, 
+						wizardResult,
+						repository);
+				
+				Window sourceDocCreationWizardWindow = 
+						factory.createWizardWindow(
+								"Add new Source Document", "85%",  "98%");
 				
 				getApplication().getMainWindow().addWindow(
 						sourceDocCreationWizardWindow);
