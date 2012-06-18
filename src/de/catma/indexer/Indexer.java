@@ -33,11 +33,15 @@ public interface Indexer {
 	
 	public QueryResult searchPhrase(
 			List<String> documentIdList, 
-			String phrase, List<String> termList) throws Exception;
+			String phrase, List<String> termList) throws IOException;
+	
+	public QueryResult searchWildcardPhrase(List<String> documentIdList,
+			List<String> termList) throws IOException;
 	
 	public QueryResult searchTagDefinitionPath(
 			List<String> userMarkupCollectionIdList, 
 			String tagDefinitionPath) throws Exception;
+	
 	
 	public QueryResult searchFreqency(
 			List<String> documentIdList, 
@@ -54,4 +58,5 @@ public interface Indexer {
 	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range);
 	
 	public void close();
+
 }

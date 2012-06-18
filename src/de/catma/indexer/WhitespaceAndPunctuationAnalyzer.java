@@ -19,16 +19,17 @@
 
 package de.catma.indexer;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import de.catma.indexer.unseparablecharactersequence.CharTree;
-import de.catma.indexer.unseparablecharactersequence.CharTreeFactory;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
+
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+
+import de.catma.indexer.unseparablecharactersequence.CharTree;
+import de.catma.indexer.unseparablecharactersequence.CharTreeFactory;
 
 /**
  * This anaylizer is like the classic {@link org.apache.lucene.analysis.WhitespaceAnalyzer}
@@ -42,24 +43,7 @@ public class WhitespaceAndPunctuationAnalyzer extends Analyzer {
     private CharTree unseparableCharacterSequences;
     private Pattern userDefSeparatingPunctuationPattern;
     private Locale locale;
-
-    /**
-     * Constructor.
-     *
-     * @param unseparableCharacterSequences the list of unseparable character sequences
-     * @param userDefSeparatingPunctuationPattern a pattern of OR-ed user defined
-     *  separating punctuation characters
-     * @param locale the locale of the main language of the content
-     * @deprecated use {@link #WhitespaceAndPunctuationAnalyzer(List, List, Locale)}
-     */
-    public WhitespaceAndPunctuationAnalyzer(
-            CharTree unseparableCharacterSequences,
-            Pattern userDefSeparatingPunctuationPattern, Locale locale) {
-        this.unseparableCharacterSequences = unseparableCharacterSequences;
-        this.userDefSeparatingPunctuationPattern = userDefSeparatingPunctuationPattern;
-        this.locale = locale;
-    }
-    
+  
     public WhitespaceAndPunctuationAnalyzer(
     		List<String> unseparableCharacterSequencesList,
 			List<Character> userDefinedSeparatingCharactersList, Locale locale) {

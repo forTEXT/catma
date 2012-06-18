@@ -1,8 +1,13 @@
 package de.catma.index;
 
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Locale;
 import java.util.Properties;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -14,13 +19,14 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.Indexer;
+import de.catma.indexer.WildcardTermExtractor;
 import de.catma.indexer.db.DBIndexer;
 import de.catma.tag.TagManager;
 
 public class IndexerTest {
 	private Repository repository;
 
-	@Before
+//	@Before
 	public void setup() {
 		TagManager tagManager  = new TagManager();
 		Properties properties = new Properties();
@@ -101,5 +107,68 @@ public class IndexerTest {
 			t.printStackTrace();
 			throw t;
 		}	
+	}
+	
+	@Test
+	public void testWildcardTermExtractor() throws IOException {
+		Assert.assertArrayEquals(
+			testWildcardTermExtracter("%lung"),
+			new Object[] {"%lung"});
+		
+		Assert.assertArrayEquals(
+				testWildcardTermExtracter("lung%"),
+				new Object[] {"lung%"});
+		
+		Assert.assertArrayEquals(
+				testWildcardTermExtracter("l%ung"),
+				new Object[] {"l%ung"});
+		
+		Assert.assertArrayEquals(
+				testWildcardTermExtracter("\\%lung"),
+				new Object[] {"\\%lung"});
+		
+		Assert.assertArrayEquals(
+				testWildcardTermExtracter("lung\\%"),
+				new Object[] {"lung\\%"});
+		
+		Assert.assertArrayEquals(
+				testWildcardTermExtracter("\\tlung"),
+				new Object[] {"\\","tlung"});
+		Assert.assertArrayEquals(
+				testWildcardTermExtracter("\\t lung"),
+				new Object[] {"\\","t", "lung"});
+				
+		Assert.assertArrayEquals(
+				testWildcardTermExtracter("__lung"),
+				new Object[] {"__lung"});
+		Assert.assertArrayEquals(
+				testWildcardTermExtracter("%_lung"),
+				new Object[] {"%_lung"});
+		Assert.assertArrayEquals(
+				testWildcardTermExtracter("_%lung"),
+				new Object[] {"_%lung"});
+		
+		Assert.assertArrayEquals(
+				testWildcardTermExtracter("Ha_e"),
+				new Object[] {"Ha_e"});
+		Assert.assertArrayEquals(
+				testWildcardTermExtracter("Ha__"),
+				new Object[] {"Ha__"});
+		Assert.assertArrayEquals(
+				testWildcardTermExtracter("Ha__n"),
+				new Object[] {"Ha__n"});
+	}
+	
+	private Object[] testWildcardTermExtracter(String content) throws IOException {
+		System.out.println("IN: " + content);
+		WildcardTermExtractor termExtractor = 
+				new WildcardTermExtractor(
+						content, 
+						Collections.<String>emptyList(), 
+						Collections.<Character>emptyList(), 
+						Locale.getDefault());
+		System.out.println(
+			"OUT: " + Arrays.toString(termExtractor.getOrderedTerms().toArray()));
+		return termExtractor.getOrderedTerms().toArray();
 	}
 }

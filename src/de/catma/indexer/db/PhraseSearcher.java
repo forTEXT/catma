@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -21,7 +20,7 @@ import de.catma.util.Pair;
 class PhraseSearcher {
 	
 	private SessionFactory sessionFactory;
-	private Logger logger = Logger.getLogger(this.getClass().getName());
+//	private Logger logger = Logger.getLogger(this.getClass().getName());
 	
 	public PhraseSearcher(SessionFactory sessionFactory) {
 		super();
@@ -29,7 +28,7 @@ class PhraseSearcher {
 	}
 
 	public QueryResult search(List<String> documentIdList,
-			String phrase, List<String> termList) throws Exception {
+			String phrase, List<String> termList) throws IOException {
 		
 		
 		final Session session = sessionFactory.openSession();
@@ -38,14 +37,15 @@ class PhraseSearcher {
 		try {
 			
 			if ((documentIdList==null) || documentIdList.isEmpty()) {
-				queryResult = searchPhrase(session, null, phrase, termList);
+				queryResult = searchPhrase(session, null, phrase, termList, false);
 			}
 			else {
 				queryResult = new QueryResultRowArray();
 	
 				for (String documentId : documentIdList) {
 					queryResult.addAll(
-							searchPhrase(session, documentId, phrase, termList));
+						searchPhrase(
+								session, documentId, phrase, termList, false));
 				}
 			}
 		}
@@ -61,14 +61,14 @@ class PhraseSearcher {
 	}
 	
 	private QueryResultRowArray searchPhrase(Session session, String documentId,
-			String phrase, List<String> termList) throws Exception {
+			String phrase, List<String> termList, boolean withWildcards) throws IOException {
 		if (termList.size() == 0) {
 			return new QueryResultRowArray();
 		}
 		else if (termList.size() == 1) {
 			
 			List<DBPosition> positions = 
-					getPositionsForTerm(session, termList.get(0), documentId);
+					getPositionsForTerm(session, termList.get(0), documentId, withWildcards);
 			QueryResultRowArray result = new QueryResultRowArray();
 			for (DBPosition p : positions) {
 				result.add(
@@ -80,22 +80,35 @@ class PhraseSearcher {
 			return result;
 		}
 		else {
-			
+			// get the matching positions for the first term that has the second
+			// term at the adjacent following position
 			List<DBPosition> matchList =  
 					getPositionsForTerm(
 							session, 
-							termList.get(0), 
-							termList.get(1), 1,
+							termList.get(0), // first term
+							termList.get(1), // second term
+							1, // adjacent following position 
 							documentId,
-							true);
-			//TODO: use union and sqlquery instead
-			for (int i=2; i<termList.size()-1; i++) {
+							true, // results for first term
+							withWildcards); 
+			
+			// get matching positions for the first term that has the i-th
+			// term at the i-th position ...
+			for (int i=2; i<termList.size()-2; i++) {
 				List<DBPosition> result = getPositionsForTerm(
-						session, termList.get(0), 
-						termList.get(i+1), i+1, documentId, true);
+						session, 
+						termList.get(0), // first term
+						termList.get(i), // i-th term (2..size-1)
+						i, //i-th position (2..size-1)
+						documentId,
+						true, // results for first term
+						withWildcards); 
+				// ... and keep just those matchList entries that match the
+				// current condition (i-th term at the i-th position)
 				matchList.retainAll(result);
 			}
 			
+			// mapping start position -> position object of the matching first term
 			HashMap<Integer, DBPosition> startPositions = 
 					new HashMap<Integer, DBPosition>();
 			
@@ -103,16 +116,21 @@ class PhraseSearcher {
 				startPositions.put(p.getTokenOffset(), p);
 			}
 			
+			// 
 			List<DBPosition> endPositions = getPositionsForTerm(
 					session, 
-					termList.get(0), termList.get(termList.size()-1), 
-					termList.size()-1, 
+					termList.get(0), // first term
+					termList.get(termList.size()-1), //last term
+					termList.size()-1, // last position
 					documentId,
-					false);
+					false,  // results for the last term
+					withWildcards);
 			
+			// list of matching phrases with their start and end terms as position objects
 			List<Pair<DBPosition, DBPosition>> result = 
 					new ArrayList<Pair<DBPosition,DBPosition>>();
 			
+			// fill the list by looping throught the end positions
 			for (DBPosition p : endPositions) {
 				if (startPositions.containsKey(
 						p.getTokenOffset()-(termList.size()-1))) {
@@ -125,9 +143,10 @@ class PhraseSearcher {
 				}
 			}
 			
+			// create a queryResult from machting phrases
 			QueryResultRowArray queryResult = new QueryResultRowArray();
 			for (Pair<DBPosition,DBPosition> match : result) {
-				System.out.println(match);
+				
 				queryResult.add(
 					new QueryResultRow(
 						match.getFirst().getTerm().getDocumentId(), 
@@ -149,7 +168,7 @@ class PhraseSearcher {
 		QueryResultRowArray result = new QueryResultRowArray();
 		try {
 			List<DBPosition> positions = 
-					getPositionsForTerm(session, term, documentId);
+					getPositionsForTerm(session, term, documentId, false);
 			
 			for (DBPosition p : positions) {
 				result.add(
@@ -173,12 +192,14 @@ class PhraseSearcher {
 	
 	@SuppressWarnings("unchecked")
 	private List<DBPosition> getPositionsForTerm(
-			Session session, String term, String documentId) {
+			Session session, String term, String documentId, boolean withWildcard) {
 		
 		String query =
 				" from "
 				+ DBEntityName.DBPosition 
-				+ " pos1 where pos1.term.term = :termArg"; //TODO: lower() for case insens.
+				+ " pos1 where pos1.term.term "
+				+ (withWildcard?" like ": "=") 
+				+ " :termArg"; //TODO: lower() for case insens.
 		
 		if (documentId != null) {
 			query += " and pos1.term.documentId = '" + documentId + "'";
@@ -189,15 +210,14 @@ class PhraseSearcher {
 		
 		q.setString("termArg", term);
 		
-//		logger.info("query: " + q.getQueryString());
-		
 		return q.list();
 	}
 	
 	@SuppressWarnings("unchecked")
 	private List<DBPosition> getPositionsForTerm(
 			Session session, String term1, String term2, int tokenOffset, 
-			String documentId, boolean resultsForFirstTerm) {
+			String documentId, boolean resultsForFirstTerm, 
+			boolean withWildcards) {
 		
 		String query = "select "
 				+ (resultsForFirstTerm? " pos1 " : " pos2 ")
@@ -205,8 +225,8 @@ class PhraseSearcher {
 				+ DBEntityName.DBPosition 
 				+ " pos1, "
 				+ DBEntityName.DBPosition 
-				+ " pos2 where pos1.term.term = :curTerm1" 
-				+ " and pos2.term.term = :curTerm2"
+				+ " pos2 where pos1.term.term " + (withWildcards?"like ": "= ") + ":curTerm1" 
+				+ " and pos2.term.term " + (withWildcards?"like ": "= ") + ":curTerm2"
 				+ " and pos2.tokenOffset = pos1.tokenOffset + " + tokenOffset 
 				+ " and pos1.term.documentId = pos2.term.documentId";
 		
@@ -214,13 +234,43 @@ class PhraseSearcher {
 			query += " and pos1.term.documentId = '" + documentId + "'";
 		}
 		
-		logger.info("query: " + query);
 		Query q = 
 				session.createQuery(query);
 		q.setString("curTerm1", term1);
 		q.setString("curTerm2", term2);
 		
 		return q.list();
+	}
+
+	public QueryResult searchWildcard(List<String> documentIdList,
+			List<String> termList) throws IOException {
+		
+		final Session session = sessionFactory.openSession();
+		QueryResultRowArray queryResult = null;
+		
+		try {
+			
+			if ((documentIdList==null) || documentIdList.isEmpty()) {
+				queryResult = searchPhrase(session, null, null, termList, true);
+			}
+			else {
+				queryResult = new QueryResultRowArray();
+	
+				for (String documentId : documentIdList) {
+					queryResult.addAll(
+						searchPhrase(session, documentId, null, termList, true));
+				}
+			}
+		}
+		finally {
+			CloseSafe.close(new Closeable() {
+				public void close() throws IOException {
+					session.close();
+				}
+			});
+		}
+		
+		return queryResult;
 	}
 
 }

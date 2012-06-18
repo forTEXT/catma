@@ -1,7 +1,9 @@
 package de.catma.ui.repository;
 
 import com.vaadin.data.Property;
+import com.vaadin.data.Validator;
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -10,6 +12,7 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -78,6 +81,9 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 
 	private void initComponents() {
 		setSizeFull();
+		Panel documentsPanel = new Panel();
+		documentsPanel.getContent().setSizeUndefined();
+		documentsPanel.setSizeFull();
 		
 		documentsContainer = new HierarchicalContainer();
 		documentsTree = new TreeTable(
@@ -97,10 +103,10 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 
 		MarkupCollectionItem userMarkupItem =
 				new MarkupCollectionItem(userMarkupItemDisplayString, true);
-		documentsTree.setParent(userMarkupItem, sourceDocument);
 		documentsTree.addItem(
 			new Object[] {userMarkupItemDisplayString, new Label()},
 			userMarkupItem);
+		documentsTree.setParent(userMarkupItem, sourceDocument);
 		
 		for (UserMarkupCollectionReference umcRef : 
 			sourceDocument.getUserMarkupCollectionRefs()) {
@@ -110,12 +116,26 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 			documentsTree.setChildrenAllowed(umcRef, false);
 		}
 		documentsTree.setCollapsed(userMarkupItem, false);
+		int pageLength = sourceDocument.getUserMarkupCollectionRefs().size() + 1;
+		if (pageLength < 5) {
+			pageLength = 5;
+		}
+		if (pageLength > 15) {
+			pageLength = 15;
+		}
+		documentsTree.setPageLength(pageLength);
+		documentsPanel.addComponent(documentsTree);
 		
-		addComponent(documentsTree);
+		addComponent(documentsPanel);
+		setExpandRatio(documentsPanel, 1.0f);
+		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setSpacing(true);
 		buttonPanel.setWidth("100%");
 		btOk = new Button("Ok");
+		btOk.setClickShortcut(KeyCode.ENTER);
+		btOk.focus();
+		
 		buttonPanel.addComponent(btOk);
 		buttonPanel.setComponentAlignment(btOk, Alignment.MIDDLE_RIGHT);
 		buttonPanel.setExpandRatio(btOk, 1.0f);
@@ -124,7 +144,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		buttonPanel.setComponentAlignment(btCancel, Alignment.MIDDLE_RIGHT);
 		addComponent(buttonPanel);
 		
-		dialogWindow = new Window();
+		dialogWindow = new Window("Selection of relevant documents");
 		dialogWindow.setContent(this);
 	}
 
@@ -132,27 +152,31 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		CheckBox cb = new CheckBox();
 		
 		cb.setValue(true);
-		cb.setEnabled(editable);
-		//TODO: try validation
-//		cb.addValidator(new Validator() {
-//
-//			public boolean isValid(Object value) {
-//				return editable || ((Boolean)value); 
-//			}
-//			
-//			public void validate(Object value) throws InvalidValueException {
-//				if (!editable && !(Boolean)value) {
-//					throw new InvalidValueException("Source Document must be selected!");
-//				}
-//			}
-//		});
-//		cb.setValidationVisible(true);
+		cb.setImmediate(true);
+
+		cb.addValidator(new Validator() {
+
+			public boolean isValid(Object value) {
+				return editable || ((Boolean)value); 
+			}
+			
+			public void validate(Object value) throws InvalidValueException {
+				if (!editable && !(Boolean)value) {
+					throw new InvalidValueException(
+							"Source Document has to be included!");
+				}
+			}
+		});
+
+		cb.setInvalidAllowed(false);
+		
 		return cb;
 	}
 	
 	public void show(Window parent, String dialogWidth) {
 		dialogWindow.setWidth(dialogWidth);
 		parent.addWindow(dialogWindow);
+		dialogWindow.center();
 	}
 	
 	public void show(Window parent) {

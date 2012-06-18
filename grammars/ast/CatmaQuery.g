@@ -23,6 +23,7 @@ tokens {
 	ND_REG;
 	ND_FREQ;
 	ND_SIMIL;
+	ND_WILD;
 	ND_REFINE;
 	ND_ORREFINE;
 	ND_ANDREFINE;
@@ -175,6 +176,7 @@ selector
 	|	regQuery
 	|	freqQuery
 	|	similQuery
+	|	wildQuery
 	;
 	catch[RecognitionException e] {throw e;}
 	
@@ -206,6 +208,12 @@ similQuery
 	:	SIMIL EQUAL phrase INT '%'? -> ^(ND_SIMIL phrase INT)
 	; 
 	catch[RecognitionException e] {throw e;}
+	
+wildQuery
+	:	WILD EQUAL phrase -> ^(ND_WILD phrase)
+	;
+	catch[RecognitionException e] {throw e;}
+
 	
 
 /************************************************
@@ -267,6 +275,9 @@ FREQ	:	'freq'
 	;
 	
 SIMIL	:	'simil'
+	;
+	
+WILD	:	'wild'
 	;
 	
 WHITESPACE 

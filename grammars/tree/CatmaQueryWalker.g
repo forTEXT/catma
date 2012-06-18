@@ -101,6 +101,7 @@ selector returns [Query query]
 	|	regQuery { $query = $regQuery.query; }
 	|	freqQuery { $query = $freqQuery.query; }
 	|	similQuery { $query = $similQuery.query; }
+	|	wildQuery { $query = $wildQuery.query; }
 	;
 	catch[RecognitionException e] {throw e;}
 	
@@ -131,6 +132,10 @@ similQuery returns [Query query]
 	; 
 	catch[RecognitionException e] {throw e;}
 	
+wildQuery returns [Query query]
+	:	^(ND_WILD phrase) { $query = new WildcardQuery($phrase.query); }
+	;
+	catch[RecognitionException e] {throw e;}
 
 /************************************************
 * refinement definition
