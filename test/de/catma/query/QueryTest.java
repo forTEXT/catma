@@ -71,7 +71,7 @@ public class QueryTest {
 			term.add("been");
 			term.add("dead");
 			QueryResult result = 
-					indexer.searchPhrase(null, "pig had been dead", term);
+					indexer.searchPhrase(null, "pig had been dead", term, 0);
 			indexer.close();
 			
 			for (QueryResultRow qrr : result) {
@@ -93,7 +93,7 @@ public class QueryTest {
 			termList.add("came");
 			List<String> documentIDs = new ArrayList<String>();
 			documentIDs.add("catma:///container/pg13.txt");
-			QueryResult result = indexer.searchPhrase(documentIDs, "he came", termList);
+			QueryResult result = indexer.searchPhrase(documentIDs, "he came", termList, 0);
 			indexer.close();
 			for (QueryResultRow qrr : result) {
 				System.out.println(qrr);
@@ -115,7 +115,7 @@ public class QueryTest {
 			termList.add("came");
 			List<String> documentIDs = new ArrayList<String>();
 			documentIDs.add("catma:///container/pg13.txt");
-			QueryResult result = indexer.searchPhrase(documentIDs, "he came", termList);
+			QueryResult result = indexer.searchPhrase(documentIDs, "he came", termList, 0);
 			indexer.close();
 			for (QueryResultRow qrr : result) {
 				System.out.println(qrr);
@@ -137,7 +137,7 @@ public class QueryTest {
 //			termList.add("suddenly");
 			List<String> documentIDs = new ArrayList<String>();
 //			documentIDs.add("catma:///container/pg13.txt");
-			QueryResult result = indexer.searchPhrase(documentIDs, "and suddenly", termList);
+			QueryResult result = indexer.searchPhrase(documentIDs, "and suddenly", termList, 0);
 			indexer.close();
 			for (QueryResultRow qrr : result) {
 				System.out.println(qrr);

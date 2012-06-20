@@ -254,18 +254,31 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 	}
 
 	private void showQueryBuilder() {
-		QueryTree queryTree = new QueryTree();
+		//TODO: handle query options
+		List<String> unseparableCharacterSequences = Collections.emptyList();
+		List<Character> userDefinedSeparatingCharacters = Collections.emptyList();
+		QueryOptions queryOptions = new QueryOptions(
+				relevantSourceDocumentIDs,
+				relevantUserMarkupCollIDs,
+				relevantStaticMarkupCollIDs,
+				unseparableCharacterSequences,
+				userDefinedSeparatingCharacters,
+				Locale.ENGLISH,
+				repository);
+
+		final QueryTree queryTree = new QueryTree();
 		QueryBuilderWizardFactory factory =
 				new QueryBuilderWizardFactory(
 					new WizardProgressListener() {
 						
 						public void wizardCompleted(WizardCompletedEvent event) {
-							// TODO Auto-generated method stub
-							
+							event.getWizard().removeListener(this);
+							searchInput.setValue(queryTree.toString());
+							executeSearch();
 						}
 						
 						public void wizardCancelled(WizardCancelledEvent event) {
-							// TODO Auto-generated method stub
+							event.getWizard().removeListener(this);
 							
 						}
 						
@@ -279,10 +292,11 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 							
 						}
 					},
-					queryTree);
+					queryTree,
+					queryOptions);
 		
 		Window wizardWindow = 
-				factory.createWizardWindow("Query Builder", "60%", "60%");
+				factory.createWizardWindow("Query Builder", "90%", "85%");
 		
 		getApplication().getMainWindow().addWindow(wizardWindow);
 		wizardWindow.center();
@@ -290,6 +304,7 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 
 
 	private void executeSearch() {
+		//TODO: handle query options
 		List<String> unseparableCharacterSequences = Collections.emptyList();
 		List<Character> userDefinedSeparatingCharacters = Collections.emptyList();
 		QueryOptions queryOptions = new QueryOptions(

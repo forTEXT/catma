@@ -33,10 +33,10 @@ public interface Indexer {
 	
 	public QueryResult searchPhrase(
 			List<String> documentIdList, 
-			String phrase, List<String> termList) throws IOException;
+			String phrase, List<String> termList, int limit) throws IOException;
 	
 	public QueryResult searchWildcardPhrase(List<String> documentIdList,
-			List<String> termList) throws IOException;
+			List<String> termList, int limit) throws IOException;
 	
 	public QueryResult searchTagDefinitionPath(
 			List<String> userMarkupCollectionIdList, 

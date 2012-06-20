@@ -16,6 +16,7 @@ public class QueryOptions {
 	private List<Character> userDefinedSeparatingCharacters;
 	private Locale locale;
 	private IndexedRepository repository;
+	private int limit = 0;
 	
 	public QueryOptions(List<String> relevantSourceDocumentIDs,
 			List<String> relevantUserMarkupCollIDs,
@@ -62,5 +63,13 @@ public class QueryOptions {
 	
 	public Indexer getIndexer() {
 		return repository.getIndexer();
+	}
+	
+	public int getLimit() {
+		return limit;
+	}
+	
+	public void setLimit(int limit) {
+		this.limit = limit;
 	}
 }

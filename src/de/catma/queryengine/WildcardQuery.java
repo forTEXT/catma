@@ -35,7 +35,8 @@ public class WildcardQuery extends Query {
         Indexer indexer = queryOptions.getIndexer();
         
         QueryResult result = indexer.searchWildcardPhrase(
-        	queryOptions.getRelevantSourceDocumentIDs(), termList);
+        	queryOptions.getRelevantSourceDocumentIDs(), termList,
+        	queryOptions.getLimit());
         
         Repository repository = queryOptions.getRepository();
         Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();

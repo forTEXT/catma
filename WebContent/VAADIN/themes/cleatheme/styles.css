@@ -40,7 +40,12 @@
 	text-align: center;
 }
 
-.pager-pageinput {
+.centered-bold-text {
+	text-align: center;
+		font-weight: bold;
+}
+
+.pager-pageinput {	
 	text-align: right;
 }
 

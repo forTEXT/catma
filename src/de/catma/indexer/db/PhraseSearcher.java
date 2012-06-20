@@ -28,7 +28,7 @@ class PhraseSearcher {
 	}
 
 	public QueryResult search(List<String> documentIdList,
-			String phrase, List<String> termList) throws IOException {
+			String phrase, List<String> termList, int limit) throws IOException {
 		
 		
 		final Session session = sessionFactory.openSession();
@@ -37,15 +37,18 @@ class PhraseSearcher {
 		try {
 			
 			if ((documentIdList==null) || documentIdList.isEmpty()) {
-				queryResult = searchPhrase(session, null, phrase, termList, false);
+				queryResult = searchPhrase(session, null, phrase, termList, false, limit);
 			}
 			else {
 				queryResult = new QueryResultRowArray();
 	
 				for (String documentId : documentIdList) {
-					queryResult.addAll(
-						searchPhrase(
-								session, documentId, phrase, termList, false));
+					limit -= ((QueryResultRowArray)queryResult).size();
+					if  (limit >= 0) {
+						queryResult.addAll(
+							searchPhrase(
+								session, documentId, phrase, termList, false, limit));
+					}
 				}
 			}
 		}
@@ -61,14 +64,15 @@ class PhraseSearcher {
 	}
 	
 	private QueryResultRowArray searchPhrase(Session session, String documentId,
-			String phrase, List<String> termList, boolean withWildcards) throws IOException {
+			String phrase, List<String> termList, boolean withWildcards, int limit) throws IOException {
 		if (termList.size() == 0) {
 			return new QueryResultRowArray();
 		}
 		else if (termList.size() == 1) {
 			
 			List<DBPosition> positions = 
-					getPositionsForTerm(session, termList.get(0), documentId, withWildcards);
+					getPositionsForTerm(
+						session, termList.get(0), documentId, withWildcards, limit);
 			QueryResultRowArray result = new QueryResultRowArray();
 			for (DBPosition p : positions) {
 				result.add(
@@ -80,32 +84,55 @@ class PhraseSearcher {
 			return result;
 		}
 		else {
+			
+			Pair<String, Integer> startTermWithPosition = 
+					new Pair<String, Integer>(termList.get(0),0);
+			
+			if (withWildcards) {
+				startTermWithPosition = getNextNonMatchAllTerm(0, termList);
+			}
+			
+			if (startTermWithPosition == null) {
+				//TODO: get all terms of the documents
+			}
+			
+			Pair<String, Integer> secondTermWithPosition = 
+					new Pair<String, Integer>(termList.get(1),1);
+			if (withWildcards) {
+					secondTermWithPosition = 
+						getNextNonMatchAllTerm(1, termList);
+			}
+			
 			// get the matching positions for the first term that has the second
 			// term at the adjacent following position
 			List<DBPosition> matchList =  
 					getPositionsForTerm(
 							session, 
-							termList.get(0), // first term
-							termList.get(1), // second term
-							1, // adjacent following position 
+							termList.get(0), // first term for start positions!
+							secondTermWithPosition.getFirst(), // second term
+							secondTermWithPosition.getSecond(), // adjacent position 
 							documentId,
 							true, // results for first term
-							withWildcards); 
+							withWildcards, 
+							limit); 
 			
 			// get matching positions for the first term that has the i-th
 			// term at the i-th position ...
-			for (int i=2; i<termList.size()-2; i++) {
-				List<DBPosition> result = getPositionsForTerm(
-						session, 
-						termList.get(0), // first term
-						termList.get(i), // i-th term (2..size-1)
-						i, //i-th position (2..size-1)
-						documentId,
-						true, // results for first term
-						withWildcards); 
-				// ... and keep just those matchList entries that match the
-				// current condition (i-th term at the i-th position)
-				matchList.retainAll(result);
+			for (int i=secondTermWithPosition.getSecond(); i<termList.size()-2; i++) {
+				if (!withWildcards || !termList.get(i).equals("%")) {
+					List<DBPosition> result = getPositionsForTerm(
+							session, 
+							startTermWithPosition.getFirst(), // first non wildcard term
+							termList.get(i), // i-th term (2..size-1)
+							i, //i-th position (2..size-1)
+							documentId,
+							true, // results for first term
+							withWildcards, 
+							limit); 
+					// ... and keep just those matchList entries that match the
+					// current condition (i-th term at the i-th position)
+					matchList.retainAll(result);
+				}
 			}
 			
 			// mapping start position -> position object of the matching first term
@@ -119,12 +146,13 @@ class PhraseSearcher {
 			// 
 			List<DBPosition> endPositions = getPositionsForTerm(
 					session, 
-					termList.get(0), // first term
+					startTermWithPosition.getFirst(), // first non wildcard term
 					termList.get(termList.size()-1), //last term
 					termList.size()-1, // last position
 					documentId,
 					false,  // results for the last term
-					withWildcards);
+					withWildcards,
+					limit);
 			
 			// list of matching phrases with their start and end terms as position objects
 			List<Pair<DBPosition, DBPosition>> result = 
@@ -160,15 +188,28 @@ class PhraseSearcher {
 		}		
 	}
 	
+	private Pair<String, Integer> getNextNonMatchAllTerm(int startIdx,
+			List<String> termList) {
+		
+		for (int i=startIdx; i<termList.size(); i++) {
+			String term = termList.get(i);
+			if (!term.equals("%")) {
+				return new Pair<String,Integer>(term,i);
+			}
+		}
+		
+		return null;
+	}
+
 	public QueryResultRowArray getPositionsForTerm(
-			String term, String documentId) {
+			String term, String documentId, int limit) {
 		
 		final Session session = sessionFactory.openSession();
 		
 		QueryResultRowArray result = new QueryResultRowArray();
 		try {
 			List<DBPosition> positions = 
-					getPositionsForTerm(session, term, documentId, false);
+					getPositionsForTerm(session, term, documentId, false, limit);
 			
 			for (DBPosition p : positions) {
 				result.add(
@@ -192,7 +233,7 @@ class PhraseSearcher {
 	
 	@SuppressWarnings("unchecked")
 	private List<DBPosition> getPositionsForTerm(
-			Session session, String term, String documentId, boolean withWildcard) {
+			Session session, String term, String documentId, boolean withWildcard, int limit) {
 		
 		String query =
 				" from "
@@ -208,6 +249,10 @@ class PhraseSearcher {
 		Query q = 
 				session.createQuery(query);
 		
+		if (limit > 0) {
+			q.setMaxResults(limit);
+		}
+		
 		q.setString("termArg", term);
 		
 		return q.list();
@@ -217,7 +262,7 @@ class PhraseSearcher {
 	private List<DBPosition> getPositionsForTerm(
 			Session session, String term1, String term2, int tokenOffset, 
 			String documentId, boolean resultsForFirstTerm, 
-			boolean withWildcards) {
+			boolean withWildcards, int limit) {
 		
 		String query = "select "
 				+ (resultsForFirstTerm? " pos1 " : " pos2 ")
@@ -243,7 +288,7 @@ class PhraseSearcher {
 	}
 
 	public QueryResult searchWildcard(List<String> documentIdList,
-			List<String> termList) throws IOException {
+			List<String> termList, int limit) throws IOException {
 		
 		final Session session = sessionFactory.openSession();
 		QueryResultRowArray queryResult = null;
@@ -251,14 +296,19 @@ class PhraseSearcher {
 		try {
 			
 			if ((documentIdList==null) || documentIdList.isEmpty()) {
-				queryResult = searchPhrase(session, null, null, termList, true);
+				queryResult = searchPhrase(session, null, null, termList, true, limit);
 			}
 			else {
 				queryResult = new QueryResultRowArray();
 	
 				for (String documentId : documentIdList) {
-					queryResult.addAll(
-						searchPhrase(session, documentId, null, termList, true));
+					limit -= ((QueryResultRowArray)queryResult).size();
+					if  (limit >= 0) {
+						queryResult.addAll(
+							searchPhrase(
+								session, documentId, null, 
+								termList, true, limit));
+					}
 				}
 			}
 		}

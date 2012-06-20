@@ -37,7 +37,10 @@ public class LazyDBPhraseQueryResult implements GroupedQueryResult {
 		PhraseSearcher phraseSearcher = new PhraseSearcher(sessionFactory);
 		for (String sourceDocumentID : getSourceDocumentIDs()) {
 			queryResultRowArray.addAll(
-				phraseSearcher.getPositionsForTerm(term, sourceDocumentID));
+				phraseSearcher.getPositionsForTerm(
+					term, 
+					sourceDocumentID, 
+					0)); // no limit
 		}
 	}
 

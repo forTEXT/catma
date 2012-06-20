@@ -130,18 +130,18 @@ public class DBIndexer implements Indexer {
 	}
 	
 	public QueryResult searchPhrase(List<String> documentIdList,
-			String phrase, List<String> termList) throws IOException {
+			String phrase, List<String> termList, int limit) throws IOException {
 		PhraseSearcher phraseSearcher = new PhraseSearcher(sessionFactory);
 		
-		return phraseSearcher.search(documentIdList, phrase, termList);
+		return phraseSearcher.search(documentIdList, phrase, termList, limit);
 	}
 	
 	public QueryResult searchWildcardPhrase(List<String> documentIdList,
-			List<String> termList) throws IOException {
+			List<String> termList, int limit) throws IOException {
 		PhraseSearcher phraseSearcher = new PhraseSearcher(sessionFactory);
 		
 		
-		return phraseSearcher.searchWildcard(documentIdList, termList);
+		return phraseSearcher.searchWildcard(documentIdList, termList, limit);
 	}
 
 	public QueryResult searchTagDefinitionPath(List<String> userMarkupCollectionIdList, 

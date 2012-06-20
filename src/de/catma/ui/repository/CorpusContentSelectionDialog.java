@@ -83,6 +83,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		setSizeFull();
 		Panel documentsPanel = new Panel();
 		documentsPanel.getContent().setSizeUndefined();
+		documentsPanel.getContent().setWidth("100%");
 		documentsPanel.setSizeFull();
 		
 		documentsContainer = new HierarchicalContainer();

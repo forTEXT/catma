@@ -38,5 +38,6 @@ public class AddSourceDocWizardFactory extends WizardFactory {
 		
 		wizard.addStep(
 				new ContentInfoPanel(
-						new ToggleButtonStateListener(wizard), wizardResult));	}
+						new ToggleButtonStateListener(wizard), wizardResult));	
+	}
 }

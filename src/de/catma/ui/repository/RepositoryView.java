@@ -21,10 +21,13 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	
 	// TODO: hier gehts weiter
 	/**
+	 * querybuilder
 	 * optimize tag deletion 
 	 * c3po conn pool?
 	 * todos!!!
 	 * plot bands in dist chart
+	 * setPage on Tagger when reattaching (bugfix)
+	 * add Tagset to tree of markup coll while tagging (bugfix)
 	 */
 	
 	private Repository repository;

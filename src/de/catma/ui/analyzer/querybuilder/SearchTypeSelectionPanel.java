@@ -1,51 +1,85 @@
 package de.catma.ui.analyzer.querybuilder;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.vaadin.teemu.wizards.Wizard;
+
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.queryengine.QueryOptions;
+import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
+import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
 
 public class SearchTypeSelectionPanel 
 	extends VerticalLayout implements DynamicWizardStep {
 	
-	public static enum SearchType {
-		PHRASE("by word or phrase"),
-		SIMIL("by grade of similarity"),
-		TAG("by Tag"),
-		COLLOC("by collocation"),
-		FREQ("by frequency"),
-		;
-		private String displayString;
+	private OptionGroup searchTypeSelect;
+	private DynamicWizardStep nextStep;
+	private PhrasePanel phrasePanel;
+	
+	public SearchTypeSelectionPanel(
+			ToggleButtonStateListener toggleButtonStateListener, 
+			QueryTree queryTree, Wizard wizard, 
+			QueryOptions queryOptions) {
+		initComponents(toggleButtonStateListener, queryTree, queryOptions);
+		initActions(wizard);
+	}
 
-		private SearchType(String displayString) {
-			this.displayString = displayString;
+	private void initActions(final Wizard wizard) {
+		
+		searchTypeSelect.addListener(new ValueChangeListener() {
+			
+			public void valueChange(ValueChangeEvent event) {
+				Object value = event.getProperty().getValue();
+				if (value != null) {
+					setNextStep((DynamicWizardStep)value, wizard);
+				}
+			}
+		});
+		
+	}
+
+	void setNextStep(DynamicWizardStep step, Wizard wizard) {
+		if (step == null) {
+			step = phrasePanel;
 		}
 		
-		@Override
-		public String toString() {
-			return displayString;
+		if (nextStep != null) {
+			wizard.removeStep(nextStep);
 		}
+		nextStep = step;
+		wizard.addStep(nextStep);
 	}
 
-	private OptionGroup searchTypeSelect;
-	
-	public SearchTypeSelectionPanel() {
-		initComponents();
-	}
-
-	private void initComponents() {
+	private void initComponents(
+			ToggleButtonStateListener toggleButtonStateListener, 
+			QueryTree queryTree, QueryOptions queryOptions) {
+		
 		setSpacing(true);
 		setWidth("100%");
+		List<Component> nextSteps = new ArrayList<Component>();
+		phrasePanel = 
+			new PhrasePanel(
+				toggleButtonStateListener,
+				queryTree, queryOptions);
+		nextSteps.add(phrasePanel);
+		nextSteps.add(new SimilPanel());
 		
-		searchTypeSelect = 
-			new OptionGroup(
-				"", 
-				Arrays.asList(SearchType.values()));
-		searchTypeSelect.setValue(SearchType.PHRASE);
+//		TAG("by Tag", null),
+//		COLLOC("by collocation", null),
+//		FREQ("by frequency", null),
+
+		searchTypeSelect = new OptionGroup("",nextSteps);
+		
+		searchTypeSelect.setImmediate(true);
+		searchTypeSelect.setValue(phrasePanel);
 		
 		addComponent(searchTypeSelect);
 		setComponentAlignment(searchTypeSelect, Alignment.MIDDLE_CENTER);
