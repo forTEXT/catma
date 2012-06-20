@@ -416,7 +416,7 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 		documentsTree = new Tree();
 		documentsTree.setContainerDataSource(documentsContainer);
 		documentsTree.setCaption(
-				"Documents and collections considered for this search");
+				"Documents and collections constraining this search");
 		
 		if (corpus != null) {
 			for (SourceDocument sd : corpus.getSourceDocuments()) {

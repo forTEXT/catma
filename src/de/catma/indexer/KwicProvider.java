@@ -73,6 +73,8 @@ public class KwicProvider {
         
         SpanContext spanContext = new SpanContext(sourceDocumentId);
         
+        
+        
         if (forwardStream.incrementToken()) { //skip first token, this is just to...
         	// ... retrieve the endoffset of the token, which might be different
         	// from the incoming range endoffset and is necessary to compute 
@@ -80,7 +82,9 @@ public class KwicProvider {
         	
         	OffsetAttribute offsetAttr =
                     (OffsetAttribute)forwardStream.getAttribute(OffsetAttribute.class);
-        	
+    
+        	//FIXME: bei Ranges mit mehreren Tokens wird das so nix, da obiges incrementToken immer nur einen weiterschaltet
+        	// und wir eigentlich wissen wollen wo das letzte Token aufhoert.
 	
 	        int counter = 0;
 	        // the startOffset is relevant for the whole context range and content

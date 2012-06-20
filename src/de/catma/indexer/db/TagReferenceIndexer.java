@@ -82,7 +82,7 @@ public class TagReferenceIndexer {
 			query.setInteger("curCharacterStart", tagReference.getRange().getStartPoint());
 			query.setInteger("curCharacterEnd", tagReference.getRange().getEndPoint());
 			int rowCount = query.executeUpdate();
-			if (rowCount != 1) {
+			if (rowCount > 1) {
 				throw new IllegalStateException(
 					"deleted more than one row at a time, expected exactly one row");
 			}
