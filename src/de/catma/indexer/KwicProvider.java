@@ -6,14 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 
 import de.catma.document.Range;
-import de.catma.document.source.SourceDocument;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.KeywordInContext;
+import de.catma.document.source.SourceDocument;
 
 public class KwicProvider {
 	
@@ -64,31 +63,37 @@ public class KwicProvider {
             int spanContextSize, SpanDirection direction) throws IOException{
     	
         //forward
-        TokenStream forwardStream =
-        	analyzer.tokenStream(
-                null,
-                new StringReader(
-            		content.substring(
-            				range.getStartPoint()))); // we start with the token included which is underlying the incoming range
+        PeekableTokenStream forwardStream =
+        	new PeekableTokenStream(
+	        	analyzer.tokenStream(
+	                null,
+	                new StringReader(
+	            		content.substring(
+	            				range.getStartPoint())))); // we start with all the ...
+        // ...tokens included which are underlying the incoming range
+        // that is because we have to examine the tokens at the edges of that range
+        // if there happens to be a partial token we do not want 
+        // to include the other part into the context because the SpanContext includedes 
+        // only full tokens
         
         SpanContext spanContext = new SpanContext(sourceDocumentId);
-        
-        
-        
-        if (forwardStream.incrementToken()) { //skip first token, this is just to...
-        	// ... retrieve the endoffset of the token, which might be different
-        	// from the incoming range endoffset and is necessary to compute 
-        	// the startOffset of the forward context
+    
+        if (moveForwardStreamToLastTokenOfRange(forwardStream, range)) { //move stream ...
+        	// ... to the token at the right edge of the range 
+        	// if it is a partial token we want to exclude the part outside 
+        	// of the range from the right side context by setting the
+        	// startOffset accordingly (see below)
         	
         	OffsetAttribute offsetAttr =
                     (OffsetAttribute)forwardStream.getAttribute(OffsetAttribute.class);
-    
-        	//FIXME: bei Ranges mit mehreren Tokens wird das so nix, da obiges incrementToken immer nur einen weiterschaltet
-        	// und wir eigentlich wissen wollen wo das letzte Token aufhoert.
-	
-	        int counter = 0;
-	        // the startOffset is relevant for the whole context range and content
-	        // but not for the single context tokens
+        	
+	        int contextTokenCounter = 0;
+	        
+	        // if the range is exactly at a token boundary 
+	        // the range.getEndPoint() equals range.getStartPoint()+offsetAttr.endOffset()
+	        // else range.getEndPoint() is greater than range.getStartPoint()+offsetAttr.endOffset()
+	        // because the first includes a parital token and the latter includes the full token
+	        // we set the startOffset to include only full tokens
 	        final int startOffset = Math.max(
     				range.getEndPoint(), 
     				range.getStartPoint()+offsetAttr.endOffset());
@@ -97,7 +102,7 @@ public class KwicProvider {
 	        int endOffset = startOffset;
 	
 	        // look for the given number of tokens in forward direction
-	        while(forwardStream.incrementToken() && counter < spanContextSize) {
+	        while(forwardStream.incrementToken() && contextTokenCounter < spanContextSize) {
 	            offsetAttr =
 	                    (OffsetAttribute)forwardStream.getAttribute(OffsetAttribute.class);
 	
@@ -114,11 +119,15 @@ public class KwicProvider {
 	            				range.getStartPoint()+offsetAttr.startOffset(),
 	            				range.getStartPoint()+offsetAttr.endOffset());
 	            spanContext.addForwardToken(ti);
-	            counter++;
+	            contextTokenCounter++;
 	        }
 	
 	        spanContext.setForward(content.substring(startOffset, endOffset));
 	        spanContext.setForwardRange(new Range(startOffset, endOffset));
+        }
+        else {
+        	spanContext.setForward("");
+ 	        spanContext.setForwardRange(new Range(content.length(), content.length()));
         }
         
         if(direction.equals(SpanDirection.Both)) { //backward
@@ -130,30 +139,47 @@ public class KwicProvider {
             
             backwardBuffer.reverse();
 
-            TokenStream backwardStream =
-                    analyzer.tokenStream(null,
-                            new StringReader(backwardBuffer.toString()));
+            PeekableTokenStream backwardStream =
+                    new PeekableTokenStream(
+                    	analyzer.tokenStream(null,
+                            new StringReader(backwardBuffer.toString())));
             
-            if (backwardStream.incrementToken()) { // we skip the first token, its just to compute the startOffset
+            if (moveBackwardStreamToFirstTokenOfRange(backwardStream, range)) {  //move stream ...
+            	// ... to the token at the left edge of the range 
+            	// if it is a partial token we want to exclude the part outside 
+            	// of the range from the left side context by setting the
+            	// endoffset accordingly (see below)
+            	
                 OffsetAttribute offsetAttr =
                         (OffsetAttribute)backwardStream.getAttribute(OffsetAttribute.class);
                 
-	            int counter = 0;
+	            int contextTokenCounter = 0;
+	            
+	            // if the range is exactly at a token boundary 
+		        // the range.getStartPoint() equals range.getEndPoint()-offsetAttr.endOffset()
+		        // else range.getEndPoint()-offsetAttr.endOffset() is smaller than
+	            // range.getStartPoint() because the first includes full tokens
+	            // and the latter includes a partial token
+		        // we set the startOffset and therefore endOffset to include full tokens only
+	            
 	            // the startOffset gets moved backward as we add tokens to the context
 	            int startOffset = 
 	            		Math.min(
 	            				range.getStartPoint(), 
 	            				range.getEndPoint()-offsetAttr.endOffset());
 	            
+	            // the endoffset stays fix 
 	            final int endOffset = startOffset;
 	            
 	            // look for the given number of tokens in backward direction
-	            while(backwardStream.incrementToken() && counter < spanContextSize) {
+	            while(backwardStream.incrementToken() && contextTokenCounter < spanContextSize) {
 	                offsetAttr =
-	                        (OffsetAttribute)backwardStream.getAttribute(OffsetAttribute.class);
+	                        (OffsetAttribute)backwardStream.getAttribute(
+	                        		OffsetAttribute.class);
 	
 	                CharTermAttribute termAttr =
-	                        (CharTermAttribute)backwardStream.getAttribute(CharTermAttribute.class);
+	                        (CharTermAttribute)backwardStream.getAttribute(
+	                        		CharTermAttribute.class);
 	                // move startoffset backward
 	                startOffset = range.getEndPoint()-offsetAttr.endOffset();
 	                // start and endoffset are computed with the range's endpoint
@@ -163,14 +189,56 @@ public class KwicProvider {
 	                    	startOffset, range.getEndPoint()-offsetAttr.startOffset());
 	
 	                spanContext.addBackwardToken(ti);
-	                counter++;
+	                contextTokenCounter++;
 	            }
 	            
 	            spanContext.setBackward(content.substring(startOffset, endOffset));
 	            spanContext.setBackwardRange(new Range(startOffset, endOffset));
             }
+            else {
+            	spanContext.setBackward("");
+            	spanContext.setBackwardRange(new Range(0,0));
+            }
         }
 
         return spanContext;
     }
+
+	private boolean moveForwardStreamToLastTokenOfRange(
+			PeekableTokenStream forwardStream,
+			Range range) throws IOException {
+		
+		while (forwardStream.incrementToken()) {
+			
+			if (forwardStream.canPeek()) {
+				OffsetAttribute offsetAttr = 
+						forwardStream.peekAttribute(OffsetAttribute.class);
+				if (range.getStartPoint()+offsetAttr.endOffset() > range.getEndPoint()) {
+					return true;
+				}
+			}
+			
+		}
+		
+		return false;
+	}
+	
+	private boolean moveBackwardStreamToFirstTokenOfRange(
+			PeekableTokenStream forwardStream,
+			Range range) throws IOException {
+		
+		while (forwardStream.incrementToken()) {
+			
+			if (forwardStream.canPeek()) {
+				OffsetAttribute offsetAttr = 
+						forwardStream.peekAttribute(OffsetAttribute.class);
+				if (range.getEndPoint()-offsetAttr.endOffset() < range.getStartPoint()) {
+					return true;
+				}
+			}
+			
+		}
+		
+		return false;
+	}
 }

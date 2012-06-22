@@ -2,9 +2,13 @@ package de.catma.index;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Assert;
@@ -13,20 +17,26 @@ import org.junit.Test;
 
 import de.catma.ExceptionHandler;
 import de.catma.backgroundservice.DebugBackgroundServiceProvider;
+import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
+import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
+import de.catma.indexer.KwicProvider;
 import de.catma.indexer.WildcardTermExtractor;
 import de.catma.indexer.db.DBIndexer;
+import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRow;
 import de.catma.tag.TagManager;
 
 public class IndexerTest {
 	private Repository repository;
 
-//	@Before
+	@Before
 	public void setup() {
 		TagManager tagManager  = new TagManager();
 		Properties properties = new Properties();
@@ -35,8 +45,10 @@ public class IndexerTest {
 			RepositoryManager rm = new RepositoryManager(
 							new DebugBackgroundServiceProvider(), 
 							tagManager, properties);
+			Map<String, String> userIdentification = new HashMap<String, String>();
+			userIdentification.put("user.ident", "mp");
 			repository = rm.openRepository(
-					rm.getRepositoryReferences().iterator().next(), null);
+					rm.getRepositoryReferences().iterator().next(), userIdentification);
 		}
 		catch( Exception e) {
 			ExceptionHandler.log(e);
@@ -171,4 +183,113 @@ public class IndexerTest {
 			"OUT: " + Arrays.toString(termExtractor.getOrderedTerms().toArray()));
 		return termExtractor.getOrderedTerms().toArray();
 	}
+	
+	@Test
+	public void testKwicProvider() {
+		
+		SourceDocument sd = repository.getSourceDocument(
+				"catma://CATMA_0dc558bf-1c2b-40d3-81bc-38f947414b73");
+		if (repository instanceof IndexedRepository) {
+			Indexer indexer = ((IndexedRepository)repository).getIndexer();
+			List<String> umcIdList = new ArrayList<String>();
+			umcIdList.add("35");
+			try {
+				QueryResult qr = indexer.searchTagDefinitionPath(umcIdList, "MoveMe2");
+				
+				KwicProvider kp = new KwicProvider(sd);
+				for (QueryResultRow row : qr) {
+					System.out.println(
+						"\n-->marked Text@"+row.getRange()+
+						"-->" + sd.getContent(row.getRange()));
+					KeywordInContext kwic = 
+							kp.getKwic(row.getRange(), 5);
+					
+					System.out.println("-->kwic-->"+kwic);
+				}
+				
+				
+				
+				
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+		}
+	}
+	
+	@Test
+	public void testKwicProvider2() throws Exception {
+		SourceDocument sd = repository.getSourceDocument(
+				"catma://CATMA_0dc558bf-1c2b-40d3-81bc-38f947414b73");
+		try {
+			KwicProvider kp = new KwicProvider(sd);
+			
+			Range range = new Range(1746,1831);
+			System.out.println(
+					"\n-->marked Text@"+range+
+					"-->" + sd.getContent(range));
+			KeywordInContext kwic = kp.getKwic(range, 5);
+			
+			System.out.println("-->kwic-->"+kwic);
+			Assert.assertTrue(kwic.getLeftContext().equals("und sah dann, den "));
+			Assert.assertTrue(kwic.getRightContext().equals(" die Anhöhen am anderen Ufer"));
+			
+			range = new Range(1749,1829);
+			System.out.println(
+					"\n-->marked Text@"+range+
+					"-->" + sd.getContent(range));
+			kwic = kp.getKwic(range, 5);
+			
+			System.out.println("-->kwic-->"+kwic);
+			Assert.assertTrue(kwic.getLeftContext().equals("sah dann, den Ell"));
+			Assert.assertTrue(kwic.getRightContext().equals("nd die Anhöhen am anderen"));
+			
+			range = new Range(0,21);
+			System.out.println(
+					"\n-->marked Text@"+range+
+					"-->" + sd.getContent(range));
+			kwic = kp.getKwic(range, 5);
+			
+			System.out.println("-->kwic-->"+kwic);
+			Assert.assertTrue(kwic.getLeftContext().equals(""));
+			Assert.assertTrue(kwic.getRightContext().equals(" EBook of Das Urteil,"));
+			
+			range = new Range(sd.getLength()-20,sd.getLength());
+			System.out.println(
+					"\n-->marked Text@"+range+
+					"-->" + sd.getContent(range));
+			kwic = kp.getKwic(range, 5);
+			
+			System.out.println("-->kwic-->"+kwic);
+			Assert.assertTrue(kwic.getLeftContext().equals("our email newsletter to hear "));
+			Assert.assertTrue(kwic.getRightContext().equals(""));
+			
+			range = new Range(4,21);
+			System.out.println(
+					"\n-->marked Text@"+range+
+					"-->" + sd.getContent(range));
+			kwic = kp.getKwic(range, 5);
+			
+			System.out.println("-->kwic-->"+kwic);
+			Assert.assertTrue(kwic.getLeftContext().equals("The "));
+			Assert.assertTrue(kwic.getRightContext().equals(" EBook of Das Urteil,"));
+			
+			range = new Range(sd.getLength()-20,sd.getLength()-1);
+			System.out.println(
+					"\n-->marked Text@"+range+
+					"-->" + sd.getContent(range));
+			kwic = kp.getKwic(range, 5);
+			
+			System.out.println("-->kwic-->"+kwic);
+			Assert.assertTrue(kwic.getLeftContext().equals("our email newsletter to hear "));
+			Assert.assertTrue(kwic.getRightContext().equals("\n"));
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
+	}
+	
 }
