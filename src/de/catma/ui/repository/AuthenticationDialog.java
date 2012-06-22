@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.logging.Logger;
 
 import org.openid4java.consumer.ConsumerManager;
@@ -12,6 +13,7 @@ import org.openid4java.discovery.DiscoveryInformation;
 import org.openid4java.discovery.Identifier;
 import org.openid4java.message.AuthRequest;
 import org.openid4java.message.AuthSuccess;
+import org.openid4java.message.MessageException;
 import org.openid4java.message.ParameterList;
 import org.openid4java.message.ax.AxMessage;
 import org.openid4java.message.ax.FetchRequest;
@@ -85,9 +87,24 @@ public class AuthenticationDialog extends VerticalLayout {
 						ParameterList openidResp = new ParameterList(parameters);
 						logger.info("verifying returnurl: " + returnURL);
 						// verify the response
-						VerificationResult verification = consumerManager.verify(
-								returnURL, openidResp, discovered);
-						
+						VerificationResult verification = null;
+						int tries = 3;
+						while (tries > 0) {
+							try {
+								verification = consumerManager.verify(
+										returnURL, openidResp, discovered);
+							}
+							catch (MessageException me) {
+								if (me.getErrorCode() != MessageException.MESSAGE_ERROR) {
+									throw new MessageException(me);
+								}
+								Thread.currentThread().wait(new Random().nextInt(2000));
+								tries--;
+							}
+						}
+						if (verification == null) {
+							throw new MessageException("could not verify returnurl: " + returnURL);
+						}
 						// examine the verification result and extract the verified identifier
 						Identifier verified = verification.getVerifiedId();
 						

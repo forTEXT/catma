@@ -2,11 +2,12 @@ package de.catma.ui.tagmanager;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.List;
+import java.util.Collection;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.vaadin.data.Property;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.terminal.ClassResource;
@@ -23,10 +24,10 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeTable;
 
-import de.catma.tag.TagLibrary;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
@@ -67,6 +68,7 @@ public class TagsetTree extends HorizontalLayout {
 	private TagLibrary tagLibrary;
 	private PropertyChangeListener tagsetDefinitionChangedListener;
 	private PropertyChangeListener tagDefinitionChangedListener;
+	private boolean withButtonPanel;
 
 	public TagsetTree(TagManager tagManager, TagLibrary tagLibrary) {
 		this(tagManager, tagLibrary, true, null);
@@ -76,12 +78,21 @@ public class TagsetTree extends HorizontalLayout {
 			TagManager tagManager, final TagLibrary tagLibrary, 
 			boolean withTagsetButtons, 
 			ColorButtonListener colorButtonListener) {
+		this(tagManager, tagLibrary, withTagsetButtons, true, colorButtonListener);
+	}
+	
+	public TagsetTree(
+			TagManager tagManager, final TagLibrary tagLibrary, 
+			boolean withTagsetButtons, 
+			boolean withButtonPanel,
+			ColorButtonListener colorButtonListener) {
 		this.tagManager = tagManager;
 		this.tagLibrary = tagLibrary;
 		if (withTagsetButtons) {
 			tagManager.addTagLibrary(tagLibrary);
 		}
 		this.withTagsetButtons = withTagsetButtons;
+		this.withButtonPanel = withButtonPanel;
 		this.colorButtonListener = colorButtonListener;
 	}
 	
@@ -673,9 +684,13 @@ public class TagsetTree extends HorizontalLayout {
 		
 		addComponent(buttonGrid);
 		setExpandRatio(buttonGrid, 0);
+		
+		if (!withButtonPanel) {
+			buttonGrid.setVisible(false);
+		}
 	}
 
-	public void addTagsetDefinition(List<TagsetDefinition> tagsetDefinitions) {
+	public void addTagsetDefinition(Collection<TagsetDefinition> tagsetDefinitions) {
 		for (TagsetDefinition tagsetDefinition : tagsetDefinitions) {
 			addTagsetDefinition(tagsetDefinition);
 		}
@@ -807,5 +822,13 @@ public class TagsetTree extends HorizontalLayout {
 			removeTagDefinitionFromTree(td, tagsetDef);
 		}
 		tagTree.removeItem(tagsetDef);
+	}
+	
+	public void addValueChangeListener(ValueChangeListener valueChangeListener) {
+		tagTree.addListener(valueChangeListener);
+	}
+	
+	public void removeValueChangeListener(ValueChangeListener valueChangeListener) {
+		tagTree.removeListener(valueChangeListener);
 	}
 }

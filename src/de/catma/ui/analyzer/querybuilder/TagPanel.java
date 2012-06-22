@@ -1,0 +1,289 @@
+package de.catma.ui.analyzer.querybuilder;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.Tree;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.VerticalSplitPanel;
+
+import de.catma.document.repository.Repository;
+import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.queryengine.QueryOptions;
+import de.catma.queryengine.querybuilder.QueryTree;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagLibrary;
+import de.catma.tag.TagLibraryReference;
+import de.catma.tag.TagsetDefinition;
+import de.catma.ui.dialog.wizard.DynamicWizardStep;
+import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
+import de.catma.ui.tagmanager.TagsetTree;
+import de.catma.util.ContentInfoSet;
+
+public class TagPanel extends VerticalLayout implements DynamicWizardStep {
+	
+	private ToggleButtonStateListener toggleButtonStateListener;
+	private QueryTree queryTree;
+	private QueryOptions queryOptions;
+	private Map<String, TagsetDefinition> tagsetDefinitionsByUuid;
+	private Component tagLibraryPanel;
+	private Tree tagLibrariesTree;
+	private Button btOpenTagLibrary;
+	private TagsetTree tagsetTree;
+	private boolean init = false;
+	private VerticalSplitPanel splitPanel;
+	private ResultPanel resultPanel;
+	private boolean onFinish = false;
+	protected String curQuery;
+
+	public TagPanel(
+			ToggleButtonStateListener toggleButtonStateListener, 
+			QueryTree queryTree, QueryOptions queryOptions) {
+		this.toggleButtonStateListener = toggleButtonStateListener;
+		this.queryTree = queryTree;
+		this.queryOptions = queryOptions;
+		this.tagsetDefinitionsByUuid = new HashMap<String, TagsetDefinition>();
+		try {
+			initTagsets();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void attach() {
+		super.attach();
+		if (!init) {
+			init = true;
+			initComponents();
+			initActions();
+		}
+		getParent().setHeight("100%");
+	}
+	
+	private void initActions() {
+		if (tagsetDefinitionsByUuid.isEmpty()) {
+			btOpenTagLibrary.addListener(new ClickListener() {
+				
+				public void buttonClick(ClickEvent event) {
+					Object value = tagLibrariesTree.getValue();
+					if (value != null) {
+						TagLibraryReference tlr = (TagLibraryReference)value;
+						try {
+							TagLibrary tl = 
+									queryOptions.getRepository().getTagLibrary(tlr);
+							addTagLibrary(tl);
+							for (TagsetDefinition t : tagsetDefinitionsByUuid.values()) {
+								System.out.println(t);
+							}
+							tagsetTree.addTagsetDefinition(tagsetDefinitionsByUuid.values());
+							splitPanel.setVisible(true);
+							tagLibraryPanel.setVisible(false);
+							removeComponent(tagLibraryPanel);
+							
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+					
+				}
+			});
+		}
+		tagsetTree.addValueChangeListener(new ValueChangeListener() {
+			
+			public void valueChange(ValueChangeEvent event) {
+				Object value = event.getProperty().getValue();
+				
+				if ((value != null) && (value instanceof TagDefinition)) {
+					TagDefinition td = (TagDefinition)value;
+					String path = tagsetTree.getTagsetDefinition(td).getTagPath(td);
+					curQuery = "tag=\""+path+"%\"";
+					resultPanel.setQuery(
+							curQuery, queryOptions.getLimit());
+					onFinish = true;
+				}
+				else {
+					onFinish = false;
+				}
+				toggleButtonStateListener.stepChanged(TagPanel.this);
+			}
+		});
+	}
+
+	private void initTagsets() throws IOException {
+		Repository repository = queryOptions.getRepository();
+		
+		if (!queryOptions.getRelevantUserMarkupCollIDs().isEmpty()) {
+			for (String userMarkupCollId : 
+				queryOptions.getRelevantUserMarkupCollIDs()) {
+				addUserMarkupCollection(
+					repository, 
+					new UserMarkupCollectionReference(
+							userMarkupCollId, new ContentInfoSet()));
+			}
+		}
+		else if (!queryOptions.getRelevantSourceDocumentIDs().isEmpty()) {
+			for (String sourceDocId : queryOptions.getRelevantSourceDocumentIDs()) {
+				SourceDocument sd = repository.getSourceDocument(sourceDocId);
+				for (UserMarkupCollectionReference umcRef : sd.getUserMarkupCollectionRefs()) {
+					addUserMarkupCollection(repository, umcRef);
+				}
+			}
+		}
+	}
+
+	private void addUserMarkupCollection(Repository repository,
+			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
+		
+		UserMarkupCollection umc =
+				repository.getUserMarkupCollection(userMarkupCollectionReference);
+		addTagLibrary(umc.getTagLibrary());
+		
+	}
+
+	private void addTagLibrary(TagLibrary tagLibrary) {
+		for (TagsetDefinition tagsetDefinition : tagLibrary) {
+			if (tagsetDefinitionsByUuid.containsKey(tagsetDefinition.getUuid())) {
+				TagsetDefinition existingTSDef = 
+						tagsetDefinitionsByUuid.get(tagsetDefinition.getUuid());
+				
+				if (tagsetDefinition.getVersion().isNewer(existingTSDef.getVersion())) {
+					tagsetDefinitionsByUuid.remove(existingTSDef.getUuid());
+					tagsetDefinitionsByUuid.put(
+							tagsetDefinition.getUuid(), tagsetDefinition);
+					System.out.println("readding " + tagsetDefinition);
+				}
+				
+			}
+			else {
+				tagsetDefinitionsByUuid.put(
+						tagsetDefinition.getUuid(), tagsetDefinition);
+				System.out.println("adding " + tagsetDefinition);
+			}
+		}
+		
+		
+	}
+
+	private void initComponents() {
+		setSizeFull();
+		if (tagsetDefinitionsByUuid.isEmpty()) {
+			tagLibraryPanel = createTagLibraryPanel();
+			addComponent(tagLibraryPanel);
+		}
+		
+		tagsetTree = new TagsetTree(
+			queryOptions.getRepository().getTagManager(), 
+			null, false, false, null);
+		
+		splitPanel = new VerticalSplitPanel();
+		addComponent(splitPanel);
+		
+		splitPanel.addComponent(tagsetTree);
+		if (tagsetDefinitionsByUuid.isEmpty()) {
+			splitPanel.setVisible(false);
+		}
+		else {
+			tagsetTree.addTagsetDefinition(tagsetDefinitionsByUuid.values());
+		}
+		
+		resultPanel = new ResultPanel(queryOptions);
+		splitPanel.addComponent(resultPanel);
+	}
+
+	private Component createTagLibraryPanel() {
+		VerticalLayout tagLibraryPanel = new VerticalLayout();
+		tagLibraryPanel.setMargin(true, false, false, false);
+		tagLibraryPanel.setSpacing(true);
+		Label infoLabel = 
+			new Label(
+				"Since you did not specify any Source Documents " +
+				"or User Markup Collections to constrain your search, " +
+				"CATMA has nowhere to look for Tags. So please open a Tag Library first: ");
+		tagLibraryPanel.addComponent(infoLabel);
+		Component tagLibraryTreePanel = createTagLibraryTreePanel();
+		tagLibraryPanel.addComponent(tagLibraryTreePanel);
+		btOpenTagLibrary = new Button("Open Tag Library");
+		tagLibraryPanel.addComponent(btOpenTagLibrary);
+		return tagLibraryPanel;
+	}
+
+	private Component createTagLibraryTreePanel() {
+
+		Panel tagLibraryPanel = new Panel();
+		tagLibraryPanel.getContent().setSizeUndefined();
+		tagLibraryPanel.setSizeFull();
+		
+		tagLibrariesTree = new Tree();
+		tagLibrariesTree.setCaption("Tag Libraries");
+		tagLibrariesTree.addStyleName("repo-tree");
+		tagLibrariesTree.setImmediate(true);
+		tagLibrariesTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_ID);
+		
+		for (TagLibraryReference tlr :
+				queryOptions.getRepository().getTagLibraryReferences()) {
+			addTagLibraryReferenceToTree(tlr);
+		}
+		
+		tagLibraryPanel.addComponent(tagLibrariesTree);
+		
+		return tagLibraryPanel;
+	}
+	
+	private void addTagLibraryReferenceToTree(TagLibraryReference tlr) {
+		tagLibrariesTree.addItem(tlr);
+		tagLibrariesTree.setChildrenAllowed(tlr, false);
+	}
+	
+	public Component getContent() {
+		return this;
+	}
+
+	public boolean onAdvance() {
+		return onFinish;
+	}
+
+	public boolean onBack() {
+		return true;
+	}
+
+	public void stepActivated() { /* noop */ }
+
+	public boolean onFinish() {
+		return onFinish;
+	}
+
+	public boolean onFinishOnly() {
+		// TODO Auto-generated method stub
+		return onFinish;
+	}
+
+	public void stepDeactivated() {
+		queryTree.add(curQuery);
+	}
+
+	@Override
+	public String getCaption() {
+		return "Please choose a TagDefinition";
+	}
+	
+	
+	@Override
+	public String toString() {
+		return "by Tag";
+	}
+	
+}

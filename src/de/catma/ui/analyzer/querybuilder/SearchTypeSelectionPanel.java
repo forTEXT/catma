@@ -70,9 +70,10 @@ public class SearchTypeSelectionPanel
 				toggleButtonStateListener,
 				queryTree, queryOptions);
 		nextSteps.add(phrasePanel);
-		nextSteps.add(new SimilPanel());
+		nextSteps.add(
+			new TagPanel(
+				toggleButtonStateListener, queryTree, queryOptions));
 		
-//		TAG("by Tag", null),
 //		COLLOC("by collocation", null),
 //		FREQ("by frequency", null),
 
