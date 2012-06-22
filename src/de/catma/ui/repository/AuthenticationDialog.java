@@ -91,8 +91,10 @@ public class AuthenticationDialog extends VerticalLayout {
 						int tries = 3;
 						while (tries > 0) {
 							try {
+								logger.info("verification tries left: " + tries);
 								verification = consumerManager.verify(
 										returnURL, openidResp, discovered);
+								break;
 							}
 							catch (MessageException me) {
 								if (me.getErrorCode() != MessageException.MESSAGE_ERROR) {
