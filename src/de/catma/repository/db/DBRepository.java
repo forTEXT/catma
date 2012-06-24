@@ -340,9 +340,8 @@ public class DBRepository implements IndexedRepository {
 		return dbSourceDocumentHandler.getSourceDocument(id);
 	}
 	
-	public void delete(SourceDocument sourceDocument) {
-		// TODO Auto-generated method stub
-		
+	public void delete(SourceDocument sourceDocument) throws IOException {
+		dbSourceDocumentHandler.remove(sourceDocument);
 	}
 
 	public SourceDocument getSourceDocument(UserMarkupCollectionReference umcRef) {
@@ -556,5 +555,9 @@ public class DBRepository implements IndexedRepository {
 	
 	public TagManager getTagManager() {
 		return tagManager;
+	}
+	
+	DBUserMarkupCollectionHandler getDbUserMarkupCollectionHandler() {
+		return dbUserMarkupCollectionHandler;
 	}
 }

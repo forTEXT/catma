@@ -28,5 +28,6 @@
   <mapping class="de.catma.repository.db.model.DBCorpusStaticMarkupCollection"/>
   <mapping class="de.catma.repository.db.model.DBCorpusUserMarkupCollection"/>
   <mapping class="de.catma.repository.db.model.DBUserCorpus"/>
+  <mapping class="de.catma.indexer.db.DBIndexTagReference"/>
  </session-factory>
 </hibernate-configuration>

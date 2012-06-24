@@ -55,4 +55,8 @@ public class TagLibraryView extends HorizontalLayout implements ClosableTab {
 		tagsetTree.close();
 	}
 	
+	public void addClickshortCuts() { /* noop*/	}
+	
+	public void removeClickshortCuts() { /* noop*/ }
+
 }

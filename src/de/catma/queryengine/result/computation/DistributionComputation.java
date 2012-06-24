@@ -58,9 +58,10 @@ public class DistributionComputation {
 			SourceDocument sd = repository.getSourceDocument(sourceDocId);		
 			plotBands.add(
 				new PlotBand(
+					sd.getID(),
 					sd.toString(),
-					100/totalSize*documentSegmentOffsets.get(sourceDocId),
-					100/totalSize*
+					100.0/totalSize*documentSegmentOffsets.get(sourceDocId),
+					100.0/totalSize*
 						(sd.getLength()+documentSegmentOffsets.get(sourceDocId))));
 		
 		}
@@ -88,7 +89,7 @@ public class DistributionComputation {
 				new XYValues<Integer, Integer>(group);
 		
 		for (int i=1; i<=numberOfSegments; i++) {
-			xySeries.set(i*segmentSizeInPercent, 0);
+			xySeries.set((i*segmentSizeInPercent)-(segmentSizeInPercent/2), 0);
 		}
 		for (QueryResultRow row : groupedQueryResult) {
 			int segmentNo =
@@ -96,8 +97,9 @@ public class DistributionComputation {
 					row.getRange(), 
 					documentSegmentOffsets.get(row.getSourceDocumentId()));
 			xySeries.set(
-				segmentNo*segmentSizeInPercent, 
-				xySeries.get(segmentNo*segmentSizeInPercent)+1);
+				(segmentNo*segmentSizeInPercent)-(segmentSizeInPercent/2), 
+				xySeries.get(
+					(segmentNo*segmentSizeInPercent)-(segmentSizeInPercent/2))+1);
 		}
 		System.out.println(xySeries);
 		xySeriesCollection.add(xySeries);
@@ -106,7 +108,7 @@ public class DistributionComputation {
 	private int getSegment(Range range, Long offset) {
 		double curSize = segmentSize;
 		int curSegment = 1;
-		while (range.getStartPoint() > curSize) {
+		while (offset+range.getStartPoint() > curSize) {
 			curSegment++;
 			curSize += segmentSize;
 		}

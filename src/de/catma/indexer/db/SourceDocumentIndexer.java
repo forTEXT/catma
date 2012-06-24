@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 
 import de.catma.document.source.SourceDocument;
@@ -12,7 +13,7 @@ import de.catma.indexer.TermInfo;
 
 class SourceDocumentIndexer {
 	
-	public void index(Session session, SourceDocument sourceDocument)
+	void index(Session session, SourceDocument sourceDocument)
 			throws Exception {
 		List<String> unseparableCharacterSequences = 
 				sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
@@ -52,6 +53,29 @@ class SourceDocumentIndexer {
 		}
 		
 		session.getTransaction().commit();
+	}
+
+	void removeSourceDocument(Session session, String sourceDocumentID) {
+		SQLQuery sqlQuery = session.createSQLQuery(
+				"delete p from catmaindex.position p join catmaindex.term t on p.termID = t.termID " 
+				+ " where t.documentID = '" + sourceDocumentID 
+				+ "'");
+		
+		boolean tranStartedLocally = false;
+		if (!session.getTransaction().isActive()) {
+			session.beginTransaction();
+			tranStartedLocally = true;
+		}
+		sqlQuery.executeUpdate();
+		sqlQuery = session.createSQLQuery(
+					"delete t from catmaindex.term t" 
+					+ " where t.documentID = '" + sourceDocumentID 
+					+ "'");
+		sqlQuery.executeUpdate();
+		
+		if (tranStartedLocally) {
+			session.getTransaction().commit();
+		}
 	}
 
 }

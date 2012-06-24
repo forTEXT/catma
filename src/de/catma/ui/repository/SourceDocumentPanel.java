@@ -101,7 +101,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					addSourceDocumentToTree(sd);
 				}
 				else if (evt.getNewValue() == null) { //remove
-					//TODO: removal
+					removeSourceDocumentFromTree(
+						(SourceDocument)evt.getOldValue());
 				}
 				else { //update
 					documentsTree.requestRepaint();
@@ -138,6 +139,25 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		this.repository.addPropertyChangeListener(
 				Repository.RepositoryChangeEvent.userMarkupCollectionChanged,
 				userMarkupDocumentChangedListener);	
+	}
+
+	private void removeSourceDocumentFromTree(SourceDocument sourceDocument) {
+		for (UserMarkupCollectionReference umcRef : 
+			sourceDocument.getUserMarkupCollectionRefs()) {
+			documentsTree.removeItem(umcRef);
+		}
+		
+		for (StaticMarkupCollectionReference smcRef : 
+			sourceDocument.getStaticMarkupCollectionRefs()) {
+			documentsTree.removeItem(smcRef);
+		}
+		
+		while ((documentsTree.getChildren(sourceDocument) != null)
+				&& !documentsTree.getChildren(sourceDocument).isEmpty()){
+			documentsTree.removeItem(
+					documentsTree.getChildren(sourceDocument).iterator().next());
+		}
+		documentsTree.removeItem(sourceDocument);
 	}
 
 	private void initActions() {
@@ -244,8 +264,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		miMoreDocumentActions.addItem("Remove Document", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
+				handleSourceDocumentRemovalRequest();
 			}
 		});
 		
@@ -367,6 +386,38 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 
 	}
 
+	private void handleSourceDocumentRemovalRequest() {
+		Object value = documentsTree.getValue();
+		
+		if (value instanceof SourceDocument) {
+			final SourceDocument sd = (SourceDocument)value;
+			ConfirmDialog.show(
+					getApplication().getMainWindow(), 
+					"Do you really want to delete the Source Document '"
+							+ sd.toString() + "' and all its markup collections?",
+							
+							new ConfirmDialog.Listener() {
+						
+						public void onClose(ConfirmDialog dialog) {
+							if (dialog.isConfirmed()) {
+								try {
+									repository.delete(sd);
+								} catch (IOException e) {
+									((CatmaApplication)getApplication()).showAndLogError(
+											"Error deleting the Source Document!", e);
+								}
+							}
+						}
+					});
+			
+		}
+		else {
+			getWindow().showNotification(
+					"Information", "Please select a Source Document!");
+		}
+		
+	}
+
 	private void handleAnalyzeDocumentRequest() {
 		if (repository instanceof IndexedRepository) {
 			Object value = documentsTree.getValue();
@@ -479,7 +530,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 
 	private void addSourceDocumentToTree(SourceDocument sd) {
 		documentsTree.addItem(sd);
-		documentsTree.getItem(sd);
+
 		documentsTree.setChildrenAllowed(sd, true);
 		
 		

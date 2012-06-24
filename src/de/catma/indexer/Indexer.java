@@ -23,6 +23,7 @@ public interface Indexer {
 			String userMarkupCollectionID,
 			TagLibrary tagLibrary) throws Exception;
 	
+	public void removeSourceDocument(String sourceDocumentID) throws Exception;
 	public void removeUserMarkupCollection(String userMarkupCollectionID) throws Exception;
 	public void removeTagReferences(List<TagReference> tagReferences) throws Exception;
 	public void reindex(

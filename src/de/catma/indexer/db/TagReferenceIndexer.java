@@ -33,8 +33,8 @@ public class TagReferenceIndexer {
 		}
 		
 		for (TagReference tr : tagReferences) {
-			DBTagReference dbTagReference = 
-				new DBTagReference(
+			DBIndexTagReference dbTagReference = 
+				new DBIndexTagReference(
 					sourceDocumentID, 
 					userMarkupCollectionID, 
 					tagLibrary.getTagPath(tr.getTagDefinition()),
@@ -57,19 +57,25 @@ public class TagReferenceIndexer {
 			Session session, String userMarkupCollectionID) {
 		
 		Query query = session.createQuery(
-				"delete from " + DBTagReference.class.getSimpleName() 
+				"delete from " + DBIndexTagReference.class.getSimpleName() 
 				+ " where userMarkupCollectionId = '" + userMarkupCollectionID 
 				+ "'");
-		session.beginTransaction();
+		boolean tranStartedLocally = false;
+		if (!session.getTransaction().isActive()) {
+			session.beginTransaction();
+			tranStartedLocally = true;
+		}
 		query.executeUpdate();
-		session.getTransaction().commit();
+		if (tranStartedLocally) {
+			session.getTransaction().commit();
+		}
 	}
 
 	public void removeTagReferences(Session session,
 			List<TagReference> tagReferences) {
 		
 		Query query = session.createQuery(
-				"delete from " + DBTagReference.class.getSimpleName() + 
+				"delete from " + DBIndexTagReference.class.getSimpleName() + 
 				" where tagInstanceId = :curTagInstanceId " +
 				" and characterStart = :curCharacterStart " +
 				" and characterEnd = :curCharacterEnd ");
@@ -94,7 +100,7 @@ public class TagReferenceIndexer {
 			UserMarkupCollection userMarkupCollection, String sourceDocumentID) {
 		
 		Query  query = session.createQuery(
-				"delete from " + DBTagReference.class.getSimpleName() +
+				"delete from " + DBIndexTagReference.class.getSimpleName() +
 				" where tagDefinitionId = :curTagDefinitionId");
 		
 		session.beginTransaction();		

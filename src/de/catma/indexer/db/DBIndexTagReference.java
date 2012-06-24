@@ -18,7 +18,7 @@ import de.catma.util.IDGenerator;
  */
 @Entity
 @Table(name = "tagreference", catalog = "CatmaIndex")
-class DBTagReference implements java.io.Serializable {
+class DBIndexTagReference implements java.io.Serializable {
 
 	private Integer tagReferenceId;
 	private String documentId;
@@ -32,10 +32,10 @@ class DBTagReference implements java.io.Serializable {
 	private String catmaTagDefinitionId;
 	private String catmaTagInstanceId;
 	
-	public DBTagReference() {
+	public DBIndexTagReference() {
 	}
 
-	public DBTagReference(String documentId, String userMarkupCollectionId,
+	public DBIndexTagReference(String documentId, String userMarkupCollectionId,
 			String tagDefinitionPath, byte[] tagDefinitionId, 
 			String tagDefinitionVersion,
 			byte[] tagInstanceId, int characterStart, int characterEnd) {

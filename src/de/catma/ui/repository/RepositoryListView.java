@@ -16,8 +16,9 @@ import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
 import de.catma.document.repository.RepositoryReference;
+import de.catma.ui.tabbedview.TabComponent;
 
-public class RepositoryListView extends VerticalLayout {
+public class RepositoryListView extends VerticalLayout implements TabComponent {
 
 	private RepositoryManager repositoryManager;
 	private Table repositoryTable;
@@ -116,4 +117,9 @@ public class RepositoryListView extends VerticalLayout {
 	public RepositoryManager getRepositoryManager() {
 		return repositoryManager;
 	}
+	
+	public void addClickshortCuts() { /* noop*/	}
+	
+	public void removeClickshortCuts() { /* noop*/ }
+
 }

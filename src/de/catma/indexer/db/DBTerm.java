@@ -2,10 +2,11 @@ package de.catma.indexer.db;
 
 // Generated 04.05.2012 21:11:20 by Hibernate Tools 3.4.0.CR1
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -20,7 +21,7 @@ class DBTerm implements java.io.Serializable {
 	private String documentId;
 	private int frequency;
 	private String term;
-
+	
 	public DBTerm() {
 	}
 

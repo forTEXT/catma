@@ -41,10 +41,18 @@ class PhraseSearcher {
 			}
 			else {
 				queryResult = new QueryResultRowArray();
-	
-				for (String documentId : documentIdList) {
-					limit -= ((QueryResultRowArray)queryResult).size();
-					if  (limit >= 0) {
+				if (limit != 0) {
+					for (String documentId : documentIdList) {
+						limit -= ((QueryResultRowArray)queryResult).size();
+						if  (limit >= 0) {
+							queryResult.addAll(
+								searchPhrase(
+									session, documentId, phrase, termList, false, limit));
+						}
+					}
+				}
+				else {
+					for (String documentId : documentIdList) {
 						queryResult.addAll(
 							searchPhrase(
 								session, documentId, phrase, termList, false, limit));
@@ -301,9 +309,19 @@ class PhraseSearcher {
 			else {
 				queryResult = new QueryResultRowArray();
 	
-				for (String documentId : documentIdList) {
-					limit -= ((QueryResultRowArray)queryResult).size();
-					if  (limit >= 0) {
+				if (limit != 0) {
+					for (String documentId : documentIdList) {
+						limit -= ((QueryResultRowArray)queryResult).size();
+						if  (limit >= 0) {
+							queryResult.addAll(
+								searchPhrase(
+									session, documentId, null, 
+									termList, true, limit));
+						}
+					}
+				}
+				else {
+					for (String documentId : documentIdList) {
 						queryResult.addAll(
 							searchPhrase(
 								session, documentId, null, 

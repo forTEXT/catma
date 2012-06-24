@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.hibernate.Criteria;
 import org.hibernate.Query;
@@ -22,6 +23,8 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.indexer.db.DBIndexer;
+import de.catma.repository.db.model.DBCorpusUserMarkupCollection;
 import de.catma.repository.db.model.DBProperty;
 import de.catma.repository.db.model.DBPropertyDefinition;
 import de.catma.repository.db.model.DBPropertyValue;
@@ -49,6 +52,7 @@ class DBUserMarkupCollectionHandler {
 	
 	private DBRepository dbRepository;
 	private IDGenerator idGenerator;
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 	
 	public DBUserMarkupCollectionHandler(DBRepository dbRepository) {
 		this.dbRepository = dbRepository;
@@ -284,28 +288,95 @@ class DBUserMarkupCollectionHandler {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	void delete(
+			Session session,
+			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
+		try {
+			DBUserMarkupCollection dbUserMarkupCollection = 
+				(DBUserMarkupCollection) session.get(
+					DBUserMarkupCollection.class,
+					Integer.valueOf(userMarkupCollectionReference.getId()));
+			Set<DBUserUserMarkupCollection> dbUserUserMarkupCollections =
+					dbUserMarkupCollection.getDbUserUserMarkupCollections();
+			DBUserUserMarkupCollection currentUserUserMarkupCollection = null;
+			for (DBUserUserMarkupCollection dbUserUserMarkupCollection :
+					dbUserUserMarkupCollections) {
+				if (dbUserUserMarkupCollection.getDbUser().getUserId().equals(
+						dbRepository.getCurrentUser().getUserId())) {
+					currentUserUserMarkupCollection = 
+							dbUserUserMarkupCollection;
+					break;
+				}
+			}
+			
+			if (currentUserUserMarkupCollection == null) {
+				throw new IllegalStateException(
+						"you seem to have no access rights for this collection!");
+			}
+			if (!currentUserUserMarkupCollection.isOwner()) {
+				dbUserMarkupCollection.getDbUserUserMarkupCollections().remove(
+						currentUserUserMarkupCollection);
+				session.delete(currentUserUserMarkupCollection);
+			}
+			else {
+				
+				if (dbUserUserMarkupCollections.size() > 1) {
+					throw new IOException(
+							"this collection is shared with others and cannot be " +
+							"deleted, please unshare this collection first!");
+				}
+				dbUserMarkupCollection.getDbUserUserMarkupCollections().remove(
+						currentUserUserMarkupCollection);
+
+				session.delete(currentUserUserMarkupCollection);
+			
+				Criteria criteria = 
+						session.createCriteria(DBCorpusUserMarkupCollection.class).add(
+								Restrictions.eq(
+									"userMarkupCollectionId",
+									dbUserMarkupCollection.getUsermarkupCollectionId()));
+				
+				if (!criteria.list().isEmpty()) {
+					for (DBCorpusUserMarkupCollection dbCorpusUserMarkupCollection 
+							: (List<DBCorpusUserMarkupCollection>)criteria.list()) {
+						session.delete(dbCorpusUserMarkupCollection);				
+					}
+				}
+				
+				DBTagLibrary dbTagLibrary = 
+					(DBTagLibrary) session.get(
+						DBTagLibrary.class,
+						dbUserMarkupCollection.getDbTagLibraryId());
+				
+				session.delete(dbUserMarkupCollection);
+				dbTagLibrary.getDbTagsetDefinitions();
+				session.delete(dbTagLibrary);
+				
+				if (dbRepository.getIndexer() instanceof DBIndexer) {
+					((DBIndexer)dbRepository.getIndexer()).removeUserMarkupCollection(
+							session,
+							userMarkupCollectionReference.getId());
+				}
+				else {
+					dbRepository.getIndexer().removeUserMarkupCollection(
+							userMarkupCollectionReference.getId());
+				}
+			}
+		}
+		catch (Exception e) {
+			throw new IOException(e);
+		}
+	}
 	void delete(
 			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
 		
 		Session session = dbRepository.getSessionFactory().openSession();
 		try {
+			
 			session.beginTransaction();
-			DBUserMarkupCollection dbUserMarkupCollection = 
-				(DBUserMarkupCollection) session.get(
-					DBUserMarkupCollection.class,
-					Integer.valueOf(userMarkupCollectionReference.getId()));
 			
-			DBTagLibrary dbTagLibrary = 
-				(DBTagLibrary) session.get(
-					DBTagLibrary.class,
-					dbUserMarkupCollection.getDbTagLibraryId());
-			
-			session.delete(dbUserMarkupCollection);
-			dbTagLibrary.getDbTagsetDefinitions();
-			session.delete(dbTagLibrary);
-			
-			dbRepository.getIndexer().removeUserMarkupCollection(
-					userMarkupCollectionReference.getId());
+			delete(session, userMarkupCollectionReference);
 			
 			session.getTransaction().commit();
 			
@@ -443,11 +514,19 @@ class DBUserMarkupCollectionHandler {
 			for (TagInstance ti : incomingTagInstances) {
 				addTagInstance(session, ti, userMarkupCollection, dbUserMarkupCollection);
 			}
-			dbRepository.getIndexer().index(
-					tagReferences, sourceDocumentID, 
-					userMarkupCollection.getId(), 
-					userMarkupCollection.getTagLibrary());
-			
+			if (dbRepository.getIndexer() instanceof DBIndexer) {
+				((DBIndexer)dbRepository.getIndexer()).index(
+						session,
+						tagReferences, sourceDocumentID, 
+						userMarkupCollection.getId(), 
+						userMarkupCollection.getTagLibrary());
+			}
+			else {
+				dbRepository.getIndexer().index(
+						tagReferences, sourceDocumentID, 
+						userMarkupCollection.getId(), 
+						userMarkupCollection.getTagLibrary());
+			}
 			session.getTransaction().commit();
 			CloseSafe.close(new CloseableSession(session));
 		}

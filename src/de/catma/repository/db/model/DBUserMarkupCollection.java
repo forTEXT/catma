@@ -122,7 +122,7 @@ public class DBUserMarkupCollection implements java.io.Serializable {
 	}
 	
 	@OneToMany(mappedBy = "dbUserMarkupCollection")
-	@Cascade({CascadeType.DELETE, CascadeType.SAVE_UPDATE})
+	@Cascade({CascadeType.SAVE_UPDATE})
 	public Set<DBUserUserMarkupCollection> getDbUserUserMarkupCollections() {
 		return dbUserUserMarkupCollections;
 	}

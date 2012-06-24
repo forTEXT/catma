@@ -277,6 +277,9 @@ public class Tagger extends AbstractComponent {
 			setHeight(wb.getScreenHeight()*0.47f, UNITS_PIXELS);
 			init = false;
 		}
+		else {
+			setPage(pager.getCurrentPage().toHTML());
+		}
 	}
 
 	public void highlight(TextRange relativeTextRange) {

@@ -7,6 +7,8 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.CloseHandler;
+import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
+import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.VerticalLayout;
 
@@ -14,9 +16,24 @@ public class TabbedView extends VerticalLayout implements CloseHandler, Iterable
 	
 	private TabSheet tabSheet;
 	private Label noOpenTabsLabel;
+	private TabComponent lastTab;
 	
 	public TabbedView(String noOpenTabsText) {
 		initComponents(noOpenTabsText);
+		initActions();
+	}
+
+	private void initActions() {
+		tabSheet.addListener(new SelectedTabChangeListener() {
+			
+			public void selectedTabChange(SelectedTabChangeEvent event) {
+				if (lastTab != null) {
+					lastTab.removeClickshortCuts();
+				}
+				lastTab = (TabComponent)tabSheet.getSelectedTab();
+				lastTab.addClickshortCuts();
+			}
+		});
 	}
 
 	private void initComponents(String noOpenTabsText) {
@@ -64,7 +81,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler, Iterable
 		}
 	}
 	
-	protected Tab addTab(Component component, String caption) {
+	protected Tab addTab(TabComponent component, String caption) {
 		
 		Tab tab = tabSheet.addTab(component, caption);
 		

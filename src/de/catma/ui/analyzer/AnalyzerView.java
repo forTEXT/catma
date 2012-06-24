@@ -50,8 +50,9 @@ import de.catma.ui.analyzer.PhraseResultPanel.VisualizeGroupedQueryResultSelecti
 import de.catma.ui.analyzer.querybuilder.QueryBuilderWizardFactory;
 import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
+import de.catma.ui.tabbedview.TabComponent;
 
-public class AnalyzerView extends VerticalLayout implements ClosableTab {
+public class AnalyzerView extends VerticalLayout implements ClosableTab, TabComponent {
 	static interface CloseListener {
 		public void closeRequest(AnalyzerView analyzerView);
 	}
@@ -107,7 +108,6 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 		initActions();
 		initListeners();
 	}
-	
 
 	private void initListeners() {
 		sourceDocumentChangedListener = new PropertyChangeListener() {
@@ -481,7 +481,6 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 		searchPanel.setExpandRatio(searchInput, 1.0f);
 		
 		btExecSearch = new Button("Execute Query");
-		btExecSearch.setClickShortcut(KeyCode.ENTER);
 		
 		searchPanel.addComponent(btExecSearch);
 		searchPanel.setComponentAlignment(btExecSearch, Alignment.BOTTOM_CENTER);
@@ -515,5 +514,13 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab {
 
 	public Corpus getCorpus() {
 		return corpus;
+	}
+	
+	public void addClickshortCuts() {
+		btExecSearch.setClickShortcut(KeyCode.ENTER);
+	}
+	
+	public void removeClickshortCuts() {
+		btExecSearch.removeClickShortcut();
 	}
 }

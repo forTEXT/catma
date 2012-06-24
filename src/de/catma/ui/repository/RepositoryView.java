@@ -25,8 +25,6 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	 * optimize tag deletion 
 	 * c3po conn pool?
 	 * todos!!!
-	 * plot bands in dist chart
-	 * setPage on Tagger when reattaching (bugfix)
 	 * add Tagset to tree of markup coll while tagging (bugfix)
 	 */
 	
@@ -125,6 +123,11 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		
 		// repository is closed by the RepositoryManager from RepositoryManagerView
 	}
+	
+	public void addClickshortCuts() { /* noop*/	}
+	
+	public void removeClickshortCuts() { /* noop*/ }
+
 }
 
 

@@ -88,7 +88,7 @@ public class AuthenticationDialog extends VerticalLayout {
 						logger.info("verifying returnurl: " + returnURL);
 						// verify the response
 						VerificationResult verification = null;
-						int tries = 3;
+						int tries = 10;
 						while (tries > 0) {
 							try {
 								logger.info("verification tries left: " + tries);

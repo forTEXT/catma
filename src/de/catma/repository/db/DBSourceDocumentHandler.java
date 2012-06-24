@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.hibernate.Criteria;
@@ -35,6 +36,8 @@ import de.catma.document.source.SourceDocumentHandler;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.indexer.db.DBIndexer;
+import de.catma.repository.db.model.DBCorpusSourceDocument;
 import de.catma.repository.db.model.DBSourceDocument;
 import de.catma.repository.db.model.DBUserMarkupCollection;
 import de.catma.repository.db.model.DBUserSourceDocument;
@@ -363,5 +366,79 @@ class DBSourceDocumentHandler {
 			}
 		}
 		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	public void remove(SourceDocument sourceDocument) throws IOException {
+		Session session = dbRepository.getSessionFactory().openSession();
+		try {
+			DBSourceDocument dbSourceDocument = 
+					getDbSourceDocument(session, sourceDocument.getID());
+			Set<DBUserSourceDocument> dbUserSourceDocuments = 
+					dbSourceDocument.getDbUserSourceDocuments();
+			
+			DBUserSourceDocument currentUserSourceDocument = null;
+			for (DBUserSourceDocument dbUserSourceDocument : dbUserSourceDocuments) {
+				if (dbUserSourceDocument.getDbUser().getUserId().equals(
+						dbRepository.getCurrentUser().getUserId())) {
+					currentUserSourceDocument = dbUserSourceDocument;
+					break;
+				}
+			}
+			if (currentUserSourceDocument == null) {
+				throw new IllegalStateException(
+						"you seem to have no access rights for this document!");
+			}
+			
+			session.beginTransaction();
+			if (!currentUserSourceDocument.isOwner()) {
+				session.delete(currentUserSourceDocument);
+			}
+			else {
+				
+				if (dbUserSourceDocuments.size() > 1) {
+					throw new IOException(
+						"this document is shared with others and cannot be " +
+						"deleted, please unshare this document first!");
+				}
+				session.delete(currentUserSourceDocument);
+				
+				Criteria criteria = 
+						session.createCriteria(DBCorpusSourceDocument.class).add(
+								Restrictions.eq("dbSourceDocument", dbSourceDocument));
+				
+				if (!criteria.list().isEmpty()) {
+					for (DBCorpusSourceDocument dbCorpusSourceDocument 
+							: (List<DBCorpusSourceDocument>)criteria.list()) {
+						session.delete(dbCorpusSourceDocument);				
+					}
+				}
+				for (UserMarkupCollectionReference umcRef : 
+					sourceDocument.getUserMarkupCollectionRefs()) {
+					dbRepository.getDbUserMarkupCollectionHandler().delete(session,umcRef);
+				}
+				
+				if (dbRepository.getIndexer() instanceof DBIndexer) {
+					((DBIndexer)dbRepository.getIndexer()).removeSourceDocument(
+							session, sourceDocument.getID());
+				}
+				else {
+					dbRepository.getIndexer().removeSourceDocument(
+							sourceDocument.getID());	
+				}
+				
+				session.delete(dbSourceDocument);
+			}				
+			session.getTransaction().commit();
+			
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.sourceDocumentChanged.name(),
+					sourceDocument, null);
+			CloseSafe.close(new CloseableSession(session));
+		}
+		catch (Exception e) {
+			CloseSafe.close(new CloseableSession(session,true));
+			throw new IOException(e);
+		}
 	}
 }

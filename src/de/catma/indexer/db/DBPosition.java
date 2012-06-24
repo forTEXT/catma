@@ -50,7 +50,7 @@ class DBPosition implements java.io.Serializable {
 	}
 	
 	@ManyToOne
-    @JoinColumn(name="termID")
+    @JoinColumn(name="termID", nullable = false)
 	public DBTerm getTerm() {
 		return term;
 	}

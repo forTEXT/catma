@@ -33,7 +33,7 @@ public class TagDefinitionSearcher {
 		
 		Session session = sessionFactory.openSession();
 		
-		List<DBTagReference> tagReferences  = 
+		List<DBIndexTagReference> tagReferences  = 
 				searchInUserMarkupCollection(
 						session, userMarkupCollectionIdList, tagDefinitionPath);
 		logger.info(
@@ -41,28 +41,28 @@ public class TagDefinitionSearcher {
 					tagReferences.size() + " results.");
 		
 		QueryResultRowArray result = new QueryResultRowArray();
-		HashMap<String, Set<DBTagReference>> groupByInstance = 
-				new HashMap<String, Set<DBTagReference>>();
-		for (DBTagReference tr : tagReferences) {
+		HashMap<String, Set<DBIndexTagReference>> groupByInstance = 
+				new HashMap<String, Set<DBIndexTagReference>>();
+		for (DBIndexTagReference tr : tagReferences) {
 			String tagInstanceId = 
 					tr.getCatmaTagInstanceId();
 			
 			if (!groupByInstance.containsKey(tagInstanceId)) {
 				groupByInstance.put(
-						tagInstanceId, new HashSet<DBTagReference>());
+						tagInstanceId, new HashSet<DBIndexTagReference>());
 			}
 			groupByInstance.get(tagInstanceId).add(tr);
 		}
 		
-		for (Map.Entry<String,Set<DBTagReference>> entry :
+		for (Map.Entry<String,Set<DBIndexTagReference>> entry :
 			groupByInstance.entrySet()) {
 			
 			SortedSet<Range> ranges = new TreeSet<Range>();
-			for (DBTagReference tr : entry.getValue()) {
+			for (DBIndexTagReference tr : entry.getValue()) {
 				ranges.add(
 					new Range(tr.getCharacterStart(), tr.getCharacterEnd()));
 			}
-			DBTagReference firstDBTagRef = entry.getValue().iterator().next();
+			DBIndexTagReference firstDBTagRef = entry.getValue().iterator().next();
 			
 			List<Range> mergedRanges = Range.mergeRanges(ranges);
 			result.add(
@@ -78,7 +78,7 @@ public class TagDefinitionSearcher {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private List<DBTagReference> searchInUserMarkupCollection(
+	private List<DBIndexTagReference> searchInUserMarkupCollection(
 			Session session, List<String> userMarkupCollectionIdList, 
 			String tagDefinitionPath) {
 		
@@ -86,7 +86,7 @@ public class TagDefinitionSearcher {
 			tagDefinitionPath = "%" + tagDefinitionPath;
 		}
 		
-		Criteria criteria = session.createCriteria(DBTagReference.class).
+		Criteria criteria = session.createCriteria(DBIndexTagReference.class).
 				add(Restrictions.ilike("tagDefinitionPath", tagDefinitionPath));
 		
 		if (!userMarkupCollectionIdList.isEmpty()) {

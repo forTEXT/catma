@@ -9,7 +9,9 @@ import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
@@ -21,6 +23,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.queryengine.QueryOptions;
+import de.catma.queryengine.TagMatchMode;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibrary;
@@ -32,6 +35,26 @@ import de.catma.ui.tagmanager.TagsetTree;
 import de.catma.util.ContentInfoSet;
 
 public class TagPanel extends VerticalLayout implements DynamicWizardStep {
+	
+	private static class TagMatchModeItem {
+		
+		private String displayText;
+		private TagMatchMode tagMatchMode;
+		
+		public TagMatchModeItem(String displayText, TagMatchMode tagMatchMode) {
+			this.displayText = displayText;
+			this.tagMatchMode = tagMatchMode;
+		}
+		
+		public TagMatchMode getTagMatchMode() {
+			return tagMatchMode;
+		}
+		
+		@Override
+		public String toString() {
+			return displayText;
+		}
+	}
 	
 	private ToggleButtonStateListener toggleButtonStateListener;
 	private QueryTree queryTree;
@@ -46,6 +69,7 @@ public class TagPanel extends VerticalLayout implements DynamicWizardStep {
 	private ResultPanel resultPanel;
 	private boolean onFinish = false;
 	protected String curQuery;
+	private ComboBox tagMatchModeCombo;
 
 	public TagPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
@@ -185,14 +209,51 @@ public class TagPanel extends VerticalLayout implements DynamicWizardStep {
 			addComponent(tagLibraryPanel);
 		}
 		
+		HorizontalLayout tagSearchPanel = new HorizontalLayout();
+		tagSearchPanel.setSizeFull();
+		tagSearchPanel.setSpacing(true);
+		
 		tagsetTree = new TagsetTree(
 			queryOptions.getRepository().getTagManager(), 
 			null, false, false, null);
+		tagSearchPanel.addComponent(tagsetTree);
+		tagSearchPanel.setExpandRatio(tagsetTree, 0.8f);
+		
+		
+		tagMatchModeCombo = new ComboBox("Please choose what you consider a match:");
+		tagMatchModeCombo.setVisible(false);
+		TagMatchModeItem exactMatchItem = 
+				new TagMatchModeItem("exact match", TagMatchMode.EXACT);
+		tagMatchModeCombo.addItem(exactMatchItem);
+		tagMatchModeCombo.addItem(
+				new TagMatchModeItem("boundary match", 
+						TagMatchMode.BOUNDARY));
+		tagMatchModeCombo.addItem(
+				new TagMatchModeItem("overlap match", 
+						TagMatchMode.OVERLAP));
+		tagMatchModeCombo.setNullSelectionAllowed(false);
+		tagMatchModeCombo.setNewItemsAllowed(false);
+		
+		tagMatchModeCombo.setDescription(
+			"The three different match modes influence the way tags refine" +
+			" your search results:" +
+			"<ul>"+
+			"<li>exact match - the tag boundaries have to match exactly to " +
+			"keep a result item in the result set</li>" +
+			"<li>boundary match - result items that should be kept in the " +
+			"result set must start and end within the boundaries of the tag</li>"+
+			"<li>overlap - the result items that should be kept in the result " +
+			"set must overlap with the range of the tag</li>" +
+			"</ul>");
+		tagMatchModeCombo.setValue(exactMatchItem);
+		
+		tagSearchPanel.addComponent(tagMatchModeCombo);
+		tagSearchPanel.setExpandRatio(tagMatchModeCombo, 0.2f);
 		
 		splitPanel = new VerticalSplitPanel();
 		addComponent(splitPanel);
 		
-		splitPanel.addComponent(tagsetTree);
+		splitPanel.addComponent(tagSearchPanel);
 		if (tagsetDefinitionsByUuid.isEmpty()) {
 			splitPanel.setVisible(false);
 		}

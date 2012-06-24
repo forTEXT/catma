@@ -261,4 +261,9 @@ public class TaggerView extends VerticalLayout
 		TextRange tr = pager.getCurrentPage().getRelativeRangeFor(range);
 		tagger.highlight(tr);
 	}
+	
+	public void addClickshortCuts() { /* noop*/	}
+	
+	public void removeClickshortCuts() { /* noop*/ }
+
 }

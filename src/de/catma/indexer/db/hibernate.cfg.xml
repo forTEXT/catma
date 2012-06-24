@@ -8,6 +8,6 @@
   <property name="hibernate.show_sql">true</property>
   <mapping class="de.catma.indexer.db.DBTerm"/>
   <mapping class="de.catma.indexer.db.DBPosition"/>
-  <mapping class="de.catma.indexer.db.DBTagReference"/>
+  <mapping class="de.catma.indexer.db.DBIndexTagReference"/>
  </session-factory>
 </hibernate-configuration>

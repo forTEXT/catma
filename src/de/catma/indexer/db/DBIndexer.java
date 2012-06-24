@@ -29,6 +29,7 @@ public class DBIndexer implements Indexer {
 	private SessionFactory sessionFactory; 
 	private Configuration hibernateConfig;
 	private TagReferenceIndexer tagReferenceIndexer;
+	private SourceDocumentIndexer sourceDocumentIndexer;
 
 	public DBIndexer(String url, String user, String pass) {
 		hibernateConfig = new Configuration();
@@ -48,6 +49,7 @@ public class DBIndexer implements Indexer {
 		
 		sessionFactory = hibernateConfig.buildSessionFactory(serviceRegistry);
 		tagReferenceIndexer = new TagReferenceIndexer();
+		sourceDocumentIndexer = new SourceDocumentIndexer();
 	}
 	
 
@@ -55,7 +57,6 @@ public class DBIndexer implements Indexer {
 			throws Exception {
 		Session session = sessionFactory.openSession();
 		try {
-			SourceDocumentIndexer sourceDocumentIndexer = new SourceDocumentIndexer();
 			sourceDocumentIndexer.index(
 					session, 
 					sourceDocument);
@@ -87,6 +88,36 @@ public class DBIndexer implements Indexer {
 		}
 	}
 	
+	public void index(Session session, List<TagReference> tagReferences,
+			String sourceDocumentID, String userMarkupCollectionID,
+			TagLibrary tagLibrary) throws Exception {
+		tagReferenceIndexer.index(
+				session, 
+				tagReferences, 
+				sourceDocumentID, 
+				userMarkupCollectionID, 
+				tagLibrary);
+	}
+	
+	public void removeSourceDocument(String sourceDocumentID) throws Exception {
+		Session session = sessionFactory.openSession();
+		try {
+			sourceDocumentIndexer.removeSourceDocument(
+					session, sourceDocumentID);
+			CloseSafe.close(new CloseableSession(session));
+		}
+		catch (Exception e) {
+			CloseSafe.close(new CloseableSession(session, true));
+			throw e;
+		}
+	}
+	
+	public void removeSourceDocument(Session session, String sourceDocumentID) throws Exception {
+		sourceDocumentIndexer.removeSourceDocument(
+				session, sourceDocumentID);
+	}
+	
+	
 	public void removeUserMarkupCollection(String userMarkupCollectionID) throws Exception {
 		Session session = sessionFactory.openSession();
 		try {
@@ -98,6 +129,12 @@ public class DBIndexer implements Indexer {
 			CloseSafe.close(new CloseableSession(session, true));
 			throw e;
 		}
+	}
+	
+	public void removeUserMarkupCollection(
+			Session session, String userMarkupCollectionID) throws Exception {
+		tagReferenceIndexer.removeUserMarkupCollection(
+				session, userMarkupCollectionID);
 	}
 	
 	public void removeTagReferences(
