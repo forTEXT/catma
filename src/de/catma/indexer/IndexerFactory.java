@@ -1,7 +1,7 @@
 package de.catma.indexer;
 
-import java.util.Properties;
+import java.util.Map;
 
 public interface IndexerFactory {
-	public Indexer createIndexer(Properties properties);
+	public Indexer createIndexer(Map<String,Object> properties);
 }

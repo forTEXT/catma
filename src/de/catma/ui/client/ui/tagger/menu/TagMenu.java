@@ -33,7 +33,7 @@ import de.catma.ui.client.ui.tagger.shared.ContentElementID;
 
 /**
  * @author marco.petris@web.de
- *
+ * @deprecated no longer used, replaced by clicks to select a list of taginstances and extra panels to initiate the removal, addition
  */
 public class TagMenu implements MouseMoveHandler {
 	

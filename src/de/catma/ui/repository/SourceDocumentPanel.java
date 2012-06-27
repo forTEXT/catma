@@ -511,7 +511,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		documentsTree = new Tree();
 		documentsTree.setContainerDataSource(documentsContainer);
 		documentsTree.setCaption("Documents");
-		documentsTree.addStyleName("repo-tree");
+		documentsTree.addStyleName("bold-label-caption");
 		documentsTree.setImmediate(true);
 		documentsTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_ID);
 		documentsTree.setDragMode(TreeDragMode.NODE);

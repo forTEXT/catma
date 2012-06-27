@@ -40,11 +40,6 @@ public enum TaggerMessageAttribute {
 	 */
 	TAGSETDEFINITION_ATTACH,
 	/**
-	 * TODO: still of any use?
-	 * @deprecated
-	 */
-	TAGINSTANCE_CLEAR,
-	/**
 	 * Attributes signals to the server that a TagInstance has been added
 	 * by a tagging action.
 	 */
@@ -57,8 +52,15 @@ public enum TaggerMessageAttribute {
 	/**
 	 * Attribute signals to the server that a TagInstance has been removed
 	 * by a tagging (remove-)action.
+	 * Not used by CATMA.
 	 */
 	TAGINSTANCE_REMOVE,
+	/**
+	 * Attribute signals to the server that a text point with one or more 
+	 * TagInstances had been selected or in case of an empty list  a text point 
+	 * with no TagInstances had been selected.
+	 */
+	TAGINSTANCES_SELECT,
 	/**
 	 * Attribute signals to the client that a set of TagInstances are selected
 	 * to NO LONGER show up in the editor.

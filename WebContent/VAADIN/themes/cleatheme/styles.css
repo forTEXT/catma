@@ -11,11 +11,11 @@
 .tagger {
 }
 
-.v-caption-repo-tree .v-captiontext {
+.bold-label {
 	font-weight:bold;
 }
 
-.repo-title-label {
+.v-caption-bold-label-caption .v-captiontext {
 	font-weight:bold;
 }
 
@@ -42,7 +42,7 @@
 
 .centered-bold-text {
 	text-align: center;
-		font-weight: bold;
+	font-weight: bold;
 }
 
 .pager-pageinput {	
@@ -68,7 +68,7 @@
 	height: 0px;
 	padding: 0px;
 }
+
 .progress_window {
 	z-index: 40000;
-}
 }

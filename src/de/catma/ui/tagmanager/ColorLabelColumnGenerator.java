@@ -7,6 +7,7 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.Table.ColumnGenerator;
 
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
 import de.catma.util.ColorConverter;
 
 public class ColorLabelColumnGenerator implements ColumnGenerator {
@@ -16,10 +17,42 @@ public class ColorLabelColumnGenerator implements ColumnGenerator {
 					"&nbsp;&nbsp;&nbsp;&nbsp;" +
 			"</span>";
 	
+	public static interface TagDefinitionProvider {
+		public TagDefinition getTagDefinition(Object itemId);
+	}
+	
+	public static class DefaultTagDefinitionProvider implements TagDefinitionProvider {
+		public TagDefinition getTagDefinition(Object itemId) {
+			if (itemId instanceof TagDefinition) {
+				return (TagDefinition)itemId;
+			}
+			return null;
+		}
+	}
+	
+	public static class TagInstanceTagDefinitionProvider implements TagDefinitionProvider {
+		public TagDefinition getTagDefinition(Object itemId) {
+			if (itemId instanceof TagInstance) {
+				return ((TagInstance)itemId).getTagDefinition();
+			}
+			return null;
+		}
+	}
+	
+	private TagDefinitionProvider tagDefinitionProvider;
+	
+	public ColorLabelColumnGenerator() {
+		this(new DefaultTagDefinitionProvider());
+	}
+
+	public ColorLabelColumnGenerator(TagDefinitionProvider tagDefinitionProvider) {
+		this.tagDefinitionProvider = tagDefinitionProvider;
+	}
 
 	public Object generateCell(Table source, Object itemId, Object columnId) {
-		if (itemId instanceof TagDefinition) {
-			TagDefinition td = (TagDefinition)itemId;
+		TagDefinition td = tagDefinitionProvider.getTagDefinition(itemId);
+		
+		if (td != null) {
 			Label colorLabel = 
 				new Label(
 					MessageFormat.format(

@@ -3,6 +3,7 @@ package de.catma.ui.tagger;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -31,6 +32,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
@@ -144,11 +146,15 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				if ((oldValue == null) && (newValue == null)) {
 					return;
 				}
-				
-				// we do not consider additions of TagsetDefinitions here
-				// those are handled on demand by TaggerView.tagInstanceAdded
-				
-				if (newValue == null) { //removal
+
+				if (oldValue == null) { //addition
+					@SuppressWarnings("unchecked")
+					Pair<TagLibrary, TagsetDefinition> addOpResult = 
+							 (Pair<TagLibrary, TagsetDefinition>) newValue;					
+					addTagsetDefinitionToTree(
+						addOpResult.getSecond(), currentWritableUserMarkupColl);
+				}
+				else if (newValue == null) { //removal
 					@SuppressWarnings("unchecked")
 					Pair<TagLibrary, TagsetDefinition> removeOpResult = 
 							 (Pair<TagLibrary, TagsetDefinition>) oldValue;
@@ -156,7 +162,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 					removeTagsetDefinition(removeOpResult.getSecond());
 					
 				}
-				else if (oldValue != null) { // update
+				else { // update
 					updateTagsetDefinition((TagsetDefinition)evt.getNewValue());
 				}
 			}
@@ -382,7 +388,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 
 	private void initComponents() {
-		
+		setSizeFull();
 		markupCollectionsTree = new TreeTable();
 		markupCollectionsTree.setSizeFull();
 		markupCollectionsTree.setSelectable(true);
@@ -800,12 +806,26 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		}
 		return result;
 	}
-	
-	public void removeTagInstance(String instanceID) {
-		userMarkupCollectionManager.removeTagInstance(instanceID);
-	}
 
 	public void removeUpdateableTagsetDefinition(TagsetDefinition tagsetDefinition) {
 		updateableTagsetDefinitons.remove(tagsetDefinition);
+	}
+
+	public List<Pair<String,TagInstance>> getTagInstances(List<String> instanceIDs) {
+		return userMarkupCollectionManager.getTagInstances(instanceIDs);
+	}
+
+	public void removeTagInstances(List<String> tagInstanceIDs) {
+		List<TagReference> tagReferences = new ArrayList<TagReference>();
+		for (String tagInstanceID : tagInstanceIDs) {
+			tagReferences.addAll(
+				userMarkupCollectionManager.getTagReferences(tagInstanceID));
+			userMarkupCollectionManager.removeTagInstance(tagInstanceID);
+		}
+		
+		propertyChangeSupport.firePropertyChange(
+				MarkupCollectionPanelEvent.tagDefinitionSelected.name(), 
+				tagReferences,
+				null);	
 	}
 }

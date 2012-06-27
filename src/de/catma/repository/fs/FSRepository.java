@@ -142,28 +142,28 @@ class FSRepository implements Repository {
 
 	public StaticMarkupCollection getStaticMarkupCollection(
 			StaticMarkupCollectionReference staticMarkupCollectionReference) {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 
 	public void delete(SourceDocument sourceDocument) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	public void delete(StaticMarkupCollection staticMarkupCollection) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	public void update(SourceDocument sourceDocument, ContentInfoSet contentInfoSet) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
 	public void update(List<UserMarkupCollection> userMarkupCollections,
 			TagsetDefinition tagsetDefinition) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
@@ -175,13 +175,12 @@ class FSRepository implements Repository {
 					userMarkupCollection, 
 					null); //FIXME: should not be null, determine correct sourcedoc from usermarkupcoll
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
 	}
 
 	public void update(StaticMarkupCollection staticMarkupCollection) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
@@ -219,7 +218,7 @@ class FSRepository implements Repository {
 
 	public StaticMarkupCollectionReference insert(
 			StaticMarkupCollection staticMarkupCollection) {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 
@@ -285,87 +284,87 @@ class FSRepository implements Repository {
 	}
 	
 	public void close() {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	public void createTagLibrary(String name) throws IOException {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
 
 	public void importTagLibrary(InputStream inputStream) throws IOException {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
 	public void delete(TagLibraryReference tagLibraryReference)
 			throws IOException {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
 	public void importUserMarkupCollection(InputStream inputStream,
 			SourceDocument sourceDocument) throws IOException {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
 	public void delete(
 			UserMarkupCollectionReference userMarkupCollectionReference) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
 	public void update(
 			UserMarkupCollectionReference userMarkupCollectionReference, ContentInfoSet contentInfoSet) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
 	public void update(TagLibraryReference tagLibraryReference) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
 	public TagManager getTagManager() {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 	public void createCorpus(String name) throws IOException {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
 	public void update(Corpus corpus, SourceDocument sourceDocument) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
 	public void update(Corpus corpus,
 			StaticMarkupCollectionReference staticMarkupCollectionReference) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
 	public void update(Corpus corpus,
 			UserMarkupCollectionReference userMarkupCollectionReference) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	public void delete(Corpus corpus) throws IOException {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
 	public void update(Corpus corpus, String name) throws IOException {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
 	public SourceDocument getSourceDocument(UserMarkupCollectionReference umcRef) {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 }

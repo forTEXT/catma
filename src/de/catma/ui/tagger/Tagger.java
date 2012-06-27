@@ -52,7 +52,7 @@ public class Tagger extends AbstractComponent {
 	
 	public static interface TaggerListener {
 		public void tagInstanceAdded(ClientTagInstance clientTagInstance);
-		public void tagInstanceRemoved(String instanceID);
+		public void tagInstancesSelected(List<String> instanceIDs);
 	}
 	
 	private static final long serialVersionUID = 1L;
@@ -130,19 +130,25 @@ public class Tagger extends AbstractComponent {
 			}
 		}
 		
-		if (variables.containsKey(TaggerMessageAttribute.TAGINSTANCE_REMOVE.name())) {
-			String instanceID = 
-					(String)variables.get(
-							TaggerMessageAttribute.TAGINSTANCE_REMOVE.name());
-					System.out.println("TagInstance removed: " + instanceID);
-			pager.getCurrentPage().removeRelativeTagInstance(instanceID);
-			taggerListener.tagInstanceRemoved(instanceID);
-		}
-		
 		if (variables.containsKey(TaggerMessageAttribute.LOGMESSAGE.name())) {
 			System.out.println(
 				"Got log message from client: "  
 					+ variables.get(TaggerMessageAttribute.LOGMESSAGE.name()));
+		}
+		
+		if (variables.containsKey(TaggerMessageAttribute.TAGINSTANCES_SELECT.name())) {
+			try {
+				List<String> instanceIDs =
+					tagInstanceJSONSerializer.fromInstanceIDJSONArray(
+						(String)variables.get(
+								TaggerMessageAttribute.TAGINSTANCES_SELECT.name()));
+				
+				taggerListener.tagInstancesSelected(instanceIDs);
+				
+			} catch (JSONSerializationException e) {
+				((CatmaApplication)getApplication()).showAndLogError(
+					"Error displaying Tag information!", e);
+			}
 		}
 	}
 	

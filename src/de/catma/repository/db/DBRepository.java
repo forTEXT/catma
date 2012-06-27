@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,6 +33,8 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
+import de.catma.indexer.IndexerFactory;
+import de.catma.indexer.IndexerPropertyKey;
 import de.catma.repository.db.model.DBUser;
 import de.catma.serialization.SerializationHandlerFactory;
 import de.catma.tag.TagDefinition;
@@ -56,6 +59,7 @@ public class DBRepository implements IndexedRepository {
 	private DBTagLibraryHandler dbTagLibraryHandler;
 	private DBUserMarkupCollectionHandler dbUserMarkupCollectionHandler;
 	
+	private IndexerFactory indexerFactory;
 	private Indexer indexer;
 	private SerializationHandlerFactory serializationHandlerFactory;
 	private boolean authenticationRequired;
@@ -83,7 +87,7 @@ public class DBRepository implements IndexedRepository {
 			boolean authenticationRequired, 
 			TagManager tagManager, 
 			BackgroundServiceProvider backgroundServiceProvider,
-			Indexer indexer, 
+			IndexerFactory indexerFactory, 
 			SerializationHandlerFactory serializationHandlerFactory,
 			String url, String user, String pass) {
 		
@@ -92,7 +96,7 @@ public class DBRepository implements IndexedRepository {
 		this.authenticationRequired = authenticationRequired;
 		this.tagManager = tagManager;
 		this.backgroundServiceProvider = backgroundServiceProvider;
-		this.indexer = indexer;
+		this.indexerFactory = indexerFactory;
 		this.serializationHandlerFactory = serializationHandlerFactory;
 		
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
@@ -120,8 +124,6 @@ public class DBRepository implements IndexedRepository {
 		serviceRegistryBuilder.applySettings(hibernateConfig.getProperties());
 		serviceRegistry = 
 				serviceRegistryBuilder.buildServiceRegistry();
-		
-		initTagManagerListeners();
 	}
 	
 	private void initTagManagerListeners() {
@@ -210,7 +212,15 @@ public class DBRepository implements IndexedRepository {
 	}
 
 	public void open(Map<String, String> userIdentification) throws Exception {
+		initTagManagerListeners();
+		
 		sessionFactory = hibernateConfig.buildSessionFactory(serviceRegistry);
+		
+		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put(IndexerPropertyKey.SessionFactory.name(), sessionFactory);
+		//TODO: fill up with all values from the properties file!
+		
+		indexer = indexerFactory.createIndexer(properties);
 		
 		Session session = sessionFactory.openSession();
 		

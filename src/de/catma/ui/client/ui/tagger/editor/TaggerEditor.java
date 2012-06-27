@@ -1,6 +1,7 @@
 package de.catma.ui.client.ui.tagger.editor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -14,6 +15,10 @@ import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.FocusEvent;
 import com.google.gwt.event.dom.client.FocusHandler;
+import com.google.gwt.event.dom.client.KeyUpEvent;
+import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.event.dom.client.MouseDownEvent;
+import com.google.gwt.event.dom.client.MouseDownHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
 import com.google.gwt.user.client.Event;
@@ -25,13 +30,14 @@ import de.catma.ui.client.ui.tagger.DebugUtil;
 import de.catma.ui.client.ui.tagger.editor.TaggerEditorListener.TaggerEditorEventType;
 import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard;
 import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard.Range;
-import de.catma.ui.client.ui.tagger.menu.TagMenu;
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.ContentElementID;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
-public class TaggerEditor extends FocusWidget implements MouseUpHandler, BlurHandler, FocusHandler {
+public class TaggerEditor extends FocusWidget 
+	implements MouseUpHandler, BlurHandler, FocusHandler, 
+		MouseDownHandler, KeyUpHandler {
 	
 	/** Set the CSS class name to allow styling. */
 	public static final String TAGGER_STYLE_CLASS = "tagger-editor";
@@ -49,22 +55,32 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler, BlurHan
 	
 	private String lastFocusID;
 	
+	private int lastClientX;
+	private int lastClientY;
+
+	private List<String> lastTagInstanceIDs;
+	
 	public TaggerEditor(TaggerEditorListener taggerEditorListener) {
 		super(Document.get().createDivElement());
-		
+		this.lastTagInstanceIDs = Collections.emptyList();
 		this.taggerEditorListener = taggerEditorListener;
 		
 		setStylePrimaryName(TAGGER_STYLE_CLASS);
 		
 		// Tell GWT we are interested in consuming click events
-		sinkEvents(Event.ONMOUSEUP);
+		sinkEvents(Event.ONMOUSEUP | Event.ONMOUSEDOWN | Event.ONKEYUP);
 
 		addMouseUpHandler(this);
-		addMouseMoveHandler(new TagMenu(this));
+		addMouseDownHandler(this);
+		addKeyUpHandler(this);
 		addBlurHandler(this);
 		addFocusHandler(this);
 	}
 	
+	/**
+	 * Can be called by external dialog and or panels to remove a tagInstance with a client side event.
+	 * @param tagInstanceID the tagInstance to remove
+	 */
 	public void removeTagInstance(String tagInstanceID) {
 		removeTagInstance(tagInstanceID, true);
 	}
@@ -105,7 +121,7 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler, BlurHan
 	}
 	 
 	public void createAndAddTagIntance(ClientTagDefinition tagDefinition) {
-		onFocus(null);
+		clearLastFocusID();
 		
 		TaggedSpanFactory taggedSpanFactory = 
 				new TaggedSpanFactory(tagDefinition.getColor());
@@ -135,11 +151,11 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler, BlurHan
 				taggerEditorListener.tagChanged(TaggerEditorEventType.ADD, te);
 			}
 			
-			lastTextRanges = null;
 		}
 		else {
 			VConsole.log("no range to tag");
 		}
+		lastTextRanges = null;
 	}
 	
 	private List<TextRange> getLastTextRanges(RangeConverter converter) {
@@ -371,17 +387,22 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler, BlurHan
 	}
 	
 	public boolean hasSelection() {
+		VConsole.log("checking for selection");
 		if ((lastTextRanges != null) && !lastTextRanges.isEmpty()) {
+			VConsole.log("found lastTextRanges: " + lastTextRanges.size());
 			return true;
 		}
 		
 		if ((lastRangeList != null) && !lastRangeList.isEmpty()) {
+			VConsole.log("found lastRangeList: " + lastRangeList.size());
 			for (Range r : lastRangeList) {
 				if ((r.getEndNode()!=r.getStartNode()) 
-						| (r.getEndOffset() != r.getStartOffset())) {
+						|| (r.getEndOffset() != r.getStartOffset())) {
+					VConsole.log("found at least on range: " + r);
 					return true;
 				}
 			}
+			VConsole.log("lastRangeList contains only a point");
 		}
 		
 		return false;
@@ -465,11 +486,86 @@ public class TaggerEditor extends FocusWidget implements MouseUpHandler, BlurHan
 	}
 	
 	public void onFocus(FocusEvent event) {
+		clearLastFocusID();
+		lastTextRanges = null;
+	}
+	
+	private void clearLastFocusID() {
 		if (lastFocusID != null) {
 			removeTagInstance(lastFocusID, false);
 			lastFocusID = null;
+		}	
+	}
+	
+	public void onKeyUp(KeyUpEvent event) {
+		lastRangeList = impl.getRangeList();
+		VConsole.log("Ranges: " + lastRangeList.size());
+	}
+
+	public void onMouseDown(MouseDownEvent event) {
+		lastClientX = event.getClientX();
+		lastClientY = event.getClientY();
+		fireTagsSelected();
+	}
+	
+	private void fireTagsSelected() {
+		Element line = findClosestLine();
+		if (line != null) {
+			List<Element> taggedSpans = findTargetSpan(line);
+			List<String> tagInstanceIDs = new ArrayList<String>(); 
+			
+			for (Element span : taggedSpans) {
+				tagInstanceIDs.add(0, getTagInstanceID(span.getAttribute("id")));
+			}
+			
+			if (!tagInstanceIDs.equals(lastTagInstanceIDs)) {
+				lastTagInstanceIDs = tagInstanceIDs;
+				taggerEditorListener.tagsSelected(tagInstanceIDs);
+			}
 		}
-		lastTextRanges = null;
+	}
+
+	private List<Element> findTargetSpan(Element line) {
+		ArrayList<Element> result = new ArrayList<Element>();
+		
+		
+		if (line.getFirstChildElement() != null) {
+
+			Element curSpan = findClosestSibling(line.getFirstChildElement());
+			if (curSpan != null) {
+				result.add(curSpan);
+			}
+			while (curSpan!= null && (curSpan.getFirstChildElement()!=null)) {
+				curSpan = findClosestSibling(curSpan.getFirstChildElement());
+				if (curSpan != null) {
+					result.add(curSpan);
+				}
+			}
+
+		}
+		
+		return result;
+	}
+
+	private Element findClosestLine() {
+		return findClosestSibling(
+				Document.get().getElementById(
+					ContentElementID.LINE.name() + taggerID + "0"));
+	}
+	
+	private Element findClosestSibling(Element start) {
+		Element curSibling = start;
+
+		while((curSibling != null) && 
+				!( (lastClientX > curSibling.getAbsoluteLeft()) 
+						&& (lastClientX < curSibling.getAbsoluteRight())
+					&& (lastClientY > curSibling.getAbsoluteTop()) 
+						&& (lastClientY < curSibling.getAbsoluteBottom()))) {
+			
+			curSibling = curSibling.getNextSiblingElement();
+		}
+		
+		return curSibling;
 	}
 }
 

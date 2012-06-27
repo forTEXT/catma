@@ -10,23 +10,28 @@ import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.VerticalSplitPanel;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.tagger.MarkupCollectionsPanel.MarkupCollectionPanelEvent;
+import de.catma.ui.tagger.TagInstanceTree.TagIntanceActionListener;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 import de.catma.ui.tagmanager.TagsetTree;
+import de.catma.util.Pair;
 
-public class MarkupPanel extends VerticalLayout {
+public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionListener {
 
 	private TagsetTree tagsetTree;
 	private TabSheet tabSheet;
@@ -34,6 +39,8 @@ public class MarkupPanel extends VerticalLayout {
 	private boolean init = true;
 	private PropertyChangeListener tagLibraryChangedListener;
 	private ColorButtonListener colorButtonListener;
+	private Label writableUserMarkupCollectionLabel;
+	private TagInstanceTree tagInstancesTree;
 	
 	public MarkupPanel(
 			TagManager tagManager,
@@ -66,19 +73,12 @@ public class MarkupPanel extends VerticalLayout {
 	private void initComponents(
 			final TagManager tagManager, Repository repository, 
 			PropertyChangeListener tagDefinitionSelectionListener) {
+		
 		tabSheet = new TabSheet();
-		VerticalLayout currentlyActiveMarkupPanel = new VerticalLayout();
-		currentlyActiveMarkupPanel.setSpacing(true);
-		tabSheet.addTab(currentlyActiveMarkupPanel, "Currently active Tagsets");
+		tabSheet.setSizeFull();
 		
 		tagsetTree = new TagsetTree(tagManager, null, false, colorButtonListener);
-		currentlyActiveMarkupPanel.addComponent(tagsetTree);
-
-		final Label currentlyWritableUserMarkupCollectionLabel = new Label();
-		currentlyWritableUserMarkupCollectionLabel.setCaption(
-				"Currently writable Markup Collection:");
-		currentlyActiveMarkupPanel.addComponent(
-				currentlyWritableUserMarkupCollectionLabel);
+		tabSheet.addTab(tagsetTree, "Active Tagsets");
 		
 		markupCollectionsPanel = 
 				new MarkupCollectionsPanel(tagManager, repository);
@@ -91,22 +91,43 @@ public class MarkupPanel extends VerticalLayout {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getNewValue() != null) {
-					currentlyWritableUserMarkupCollectionLabel.setValue(
+					writableUserMarkupCollectionLabel.setValue(
 							evt.getNewValue());
 				}
 				else {
-					currentlyWritableUserMarkupCollectionLabel.setValue("");
+					writableUserMarkupCollectionLabel.setValue("");
 				}
 				colorButtonListener.setEnabled(evt.getNewValue() != null);
 			}
 		});
 		
 		tabSheet.addTab(
-				markupCollectionsPanel, "Currently active Markup Collections");
+				markupCollectionsPanel, "Active Markup Collections");
 		
 		addComponent(tabSheet);
+		
+		Component markupInfoPanel = createInfoPanel();
+		addComponent(markupInfoPanel);
 	}
 	
+	private Component createInfoPanel() {
+		VerticalLayout markupInfoPanel = new VerticalLayout();
+		markupInfoPanel.setSpacing(true);
+		writableUserMarkupCollectionLabel = new Label();
+		writableUserMarkupCollectionLabel.addStyleName("bold-label-caption");
+		writableUserMarkupCollectionLabel.setCaption(
+				"Writable Markup Collection:");
+		markupInfoPanel.addComponent(
+				writableUserMarkupCollectionLabel);
+		
+		tagInstancesTree = new TagInstanceTree(this);
+		tagInstancesTree.setSizeFull();
+		markupInfoPanel.addComponent(tagInstancesTree);
+		
+		return markupInfoPanel;
+	}
+
+
 	@Override
 	public void attach() {
 		super.attach();
@@ -193,7 +214,14 @@ public class MarkupPanel extends VerticalLayout {
 		return markupCollectionsPanel.getRepository();
 	}
 
-	public void removeTagInstance(String instanceID) {
-		markupCollectionsPanel.removeTagInstance(instanceID);
+	public void showTagInstanceInfo(List<String> instanceIDs) {
+		List<Pair<String,TagInstance>> tagInstances = 
+				markupCollectionsPanel.getTagInstances(instanceIDs);
+		tagInstancesTree.setTagInstances(tagInstances);
 	}	
+	
+	public void removeTagInstances(List<String> tagInstanceIDs) {
+		markupCollectionsPanel.removeTagInstances(tagInstanceIDs);
+		
+	}
 }

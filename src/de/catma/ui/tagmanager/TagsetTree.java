@@ -12,8 +12,6 @@ import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.Resource;
-import com.vaadin.terminal.gwt.server.WebApplicationContext;
-import com.vaadin.terminal.gwt.server.WebBrowser;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -541,14 +539,15 @@ public class TagsetTree extends HorizontalLayout {
 	}
 
 	private void initComponents() {
-		setWidth("100%");
-	
-		WebApplicationContext context = 
-				((WebApplicationContext) getApplication().getContext());
-		WebBrowser wb = context.getBrowser();
-		
-		setHeight(wb.getScreenHeight()*0.42f, UNITS_PIXELS);
-		
+		setSizeFull();
+//		setWidth("100%");
+//	
+//		WebApplicationContext context = 
+//				((WebApplicationContext) getApplication().getContext());
+//		WebBrowser wb = context.getBrowser();
+//		
+//		setHeight(wb.getScreenHeight()*0.42f, UNITS_PIXELS);
+//		
 		tagTree = new TreeTable();
 		tagTree.setImmediate(true);
 		tagTree.setSizeFull();
@@ -556,6 +555,7 @@ public class TagsetTree extends HorizontalLayout {
 		tagTree.setMultiSelect(false);
 		
 		tagTree.setContainerDataSource(new HierarchicalContainer());
+		
 		tagTree.addContainerProperty(
 				TagTreePropertyName.caption, String.class, null);
 		tagTree.setColumnHeader(TagTreePropertyName.caption, "Tagsets");

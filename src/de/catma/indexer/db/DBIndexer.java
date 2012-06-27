@@ -2,12 +2,10 @@ package de.catma.indexer.db;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
 
 import de.catma.db.CloseableSession;
 import de.catma.document.Range;
@@ -15,6 +13,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.Indexer;
+import de.catma.indexer.IndexerPropertyKey;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TermInfo;
@@ -27,31 +26,20 @@ import de.catma.util.CloseSafe;
 public class DBIndexer implements Indexer {
 	
 	private SessionFactory sessionFactory; 
-	private Configuration hibernateConfig;
 	private TagReferenceIndexer tagReferenceIndexer;
 	private SourceDocumentIndexer sourceDocumentIndexer;
 
-	public DBIndexer(String url, String user, String pass) {
-		hibernateConfig = new Configuration();
-		hibernateConfig.configure(
-				this.getClass().getPackage().getName().replace('.', '/') 
-				+ "/hibernate.cfg.xml");
-		hibernateConfig.setProperty("hibernate.connection.username", user);
-		hibernateConfig.setProperty("hibernate.connection.url",url);
-		if ((pass != null) && (!pass.isEmpty())) {
-			hibernateConfig.setProperty("hibernate.connection.password", pass);
-		}
-
-		ServiceRegistryBuilder serviceRegistryBuilder = new ServiceRegistryBuilder();
-		serviceRegistryBuilder.applySettings(hibernateConfig.getProperties());
-		ServiceRegistry serviceRegistry = 
-				serviceRegistryBuilder.buildServiceRegistry();
-		
-		sessionFactory = hibernateConfig.buildSessionFactory(serviceRegistry);
+	public DBIndexer(Map<String, Object> properties) {
+		this.sessionFactory = 
+				(SessionFactory)properties.get(
+						IndexerPropertyKey.SessionFactory.name());
 		tagReferenceIndexer = new TagReferenceIndexer();
 		sourceDocumentIndexer = new SourceDocumentIndexer();
 	}
 	
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		this.sessionFactory = sessionFactory;
+	}
 
 	public void index(SourceDocument sourceDocument)
 			throws Exception {
@@ -222,8 +210,6 @@ public class DBIndexer implements Indexer {
 		return collocationSearcher.getTermInfosFor(sourceDocumentId, range);
 	}
 	
-	public void close() {
-		sessionFactory.close();
-	}
+	public void close() { /*noop sessionfactory is closed by repository*/ }
 
 }

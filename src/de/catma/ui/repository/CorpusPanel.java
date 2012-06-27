@@ -347,7 +347,7 @@ public class CorpusPanel extends VerticalLayout {
 		corporaPanel.setSizeFull();
 		
 		corporaTree = new Tree();
-		corporaTree.addStyleName("repo-tree");
+		corporaTree.addStyleName("bold-label-caption");
 		corporaTree.setCaption("Corpora");
 		corporaTree.addItem(allDocuments);
 		corporaTree.setChildrenAllowed(allDocuments, false);

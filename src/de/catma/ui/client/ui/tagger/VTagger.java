@@ -94,6 +94,12 @@ public class VTagger extends Composite implements Paintable {
 				}
 				
 			}
+			
+			public void tagsSelected(List<String> tagInstanceIDs) {
+				sendMessage(
+						TaggerMessageAttribute.TAGINSTANCES_SELECT, 
+						tagInstanceJSONSerializer.toJSONArray(tagInstanceIDs));
+			}
 		});
 		taggerScrollPanel.add(taggerEditor);
 		initWidget(taggerScrollPanel);
@@ -131,14 +137,6 @@ public class VTagger extends Composite implements Paintable {
 					uidl.getStringAttribute(TaggerMessageAttribute.PAGE_SET.name())));
 		}
 
-
-		if (uidl.hasAttribute(TaggerMessageAttribute.TAGINSTANCE_CLEAR.name()) 
-				&& uidl.getBooleanAttribute(
-						TaggerMessageAttribute.TAGINSTANCE_CLEAR.name())) {
-			//TODO: gets no longer sent by the server, might be obsolete
-			taggerEditor.clearTagInstances();
-		}
-		
 		if (uidl.hasAttribute(TaggerMessageAttribute.TAGINSTANCES_REMOVE.name())) {
 			List<ClientTagInstance> tagInstances = 
 					tagInstanceJSONSerializer.fromJSONArray(

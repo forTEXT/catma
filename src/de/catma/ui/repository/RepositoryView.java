@@ -22,10 +22,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	// TODO: hier gehts weiter
 	/**
 	 * querybuilder
-	 * optimize tag deletion 
-	 * c3po conn pool?
 	 * todos!!!
-	 * add Tagset to tree of markup coll while tagging (bugfix)
 	 */
 	
 	private Repository repository;
@@ -104,7 +101,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 
 	private Component createDocumentsLabel() {
 		Label documentsLabel = new Label("Document Manager");
-		documentsLabel.addStyleName("repo-title-label");
+		documentsLabel.addStyleName("bold-label");
 		return documentsLabel;
 	}
 

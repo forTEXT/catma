@@ -148,7 +148,7 @@ public class TaggerView extends VerticalLayout
 	                                "Information",
 	                                "Please select a User Markup Collection "
 	                                + " to store your markup first!<br>"
-	                                + "See 'Currently active Markup Colletions'.");
+	                                + "See 'Active Markup Colletions'.");
 						}
 					}
 					
@@ -223,7 +223,7 @@ public class TaggerView extends VerticalLayout
 			TagsetDefinition tagsetDef =
 					markupPanel.getTagsetDefinition(
 							clientTagInstance.getTagDefinitionID());
-			//FIXME: somehow this does not show up in the MarkupCollectionsPannel
+			
 			tagManager.addTagsetDefinition(
 					tagLibrary, new TagsetDefinition(tagsetDef));
 		}
@@ -250,16 +250,16 @@ public class TaggerView extends VerticalLayout
 				"Error adding Tags!", e);
 		}
 	}
-	
-	public void tagInstanceRemoved(String instanceID) {
-		markupPanel.removeTagInstance(instanceID);
-	}
 
 	public void show(Range range) {
 		int pageNumber = pager.getStartPageNumberFor(range);
 		pagerComponent.setPage(pageNumber);
 		TextRange tr = pager.getCurrentPage().getRelativeRangeFor(range);
 		tagger.highlight(tr);
+	}
+	
+	public void tagInstancesSelected(List<String> instanceIDs) {
+		markupPanel.showTagInstanceInfo(instanceIDs);
 	}
 	
 	public void addClickshortCuts() { /* noop*/	}

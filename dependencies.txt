@@ -5,6 +5,7 @@ jetty-distribution-7.4.5.v20110725
 Library												Cause
 
 antlr-3.4-complete.jar								queryengine, hibernate-release-4.1.1.Final(antlr-2.7.7.jar)
+c3p0-0.9.1.jar										connection pool (for hibernate-core-4.1.1.Final.jar)
 ColorPicker-GWT-2.1.jar								UI
 commons-codec-1.3.jar								openid4java-ro-svn-120615.jar
 commons-logging-1.03.jar							openid4java-ro-svn-120615.jar, poi-3.8-20120326
@@ -13,6 +14,7 @@ dom4j-1.6.1.jar										hibernate-release-4.1.1.Final
 guice-2.0.jar										openid4java-ro-svn-120615.jar
 gwt-user.jar										GWT_2.4
 gwt-dev.jar											GWT_2.4
+hibernate-c3p0-4.1.1.Final.jar						c3p0-0.9.1.jar (connection pool)
 hibernate-commons-annotations-4.0.1.Final.jar		hibernate-release-4.1.1.Final
 hibernate-core-4.1.1.Final.jar						hibernate-release-4.1.1.Final
 hibernate-jpa-2.0-api-1.0.1.Final.jar				hibernate-release-4.1.1.Final

@@ -14,6 +14,25 @@ import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 public class ClientTagInstanceJSONSerializer {
 	
+	public List<String> fromInstanceIDJSONArray(String jsonArray) throws JSONSerializationException {
+		try {
+			List<String> result = new ArrayList<String>();
+			JSONArray instanceIDArray = new JSONArray(jsonArray);
+			
+			for (int i=0; i<instanceIDArray.length(); i++) {
+				JSONObject instanceIDJSON = (JSONObject)instanceIDArray.get(i);
+				result.add(
+					instanceIDJSON.getString(
+							SerializationField.instanceID.name()));
+			}
+			
+			return result;
+		}
+		catch(JSONException e) {
+			throw new JSONSerializationException(e);
+		}
+	}
+	
 	public ClientTagInstance fromJSON(String json) throws JSONSerializationException {
 		try {
 			JSONObject tagInstanceJSON = new JSONObject(json);

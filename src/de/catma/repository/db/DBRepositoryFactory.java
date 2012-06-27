@@ -6,9 +6,7 @@ import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryFactory;
 import de.catma.document.repository.RepositoryPropertyKey;
-import de.catma.indexer.Indexer;
 import de.catma.indexer.IndexerFactory;
-import de.catma.indexer.IndexerPropertyKey;
 import de.catma.serialization.SerializationHandlerFactory;
 import de.catma.tag.TagManager;
 
@@ -22,18 +20,6 @@ public class DBRepositoryFactory implements RepositoryFactory {
 				RepositoryPropertyKey.IndexerFactory.getProperty(properties, index);
 		IndexerFactory indexerFactory = 
 				(IndexerFactory)Class.forName(indexerFactoryClassName).newInstance();
-		Properties indexerProperties = new Properties();
-		indexerProperties.setProperty(
-			IndexerPropertyKey.IndexerUrl.name(),
-			RepositoryPropertyKey.IndexerUrl.getProperty(properties, index));
-		indexerProperties.setProperty(
-			IndexerPropertyKey.IndexerUser.name(),
-			RepositoryPropertyKey.RepositoryUser.getProperty(properties, index));
-		indexerProperties.setProperty(
-			IndexerPropertyKey.IndexerPass.name(),
-			RepositoryPropertyKey.RepositoryPass.getProperty(properties, index));
-
-		Indexer indexer = indexerFactory.createIndexer(indexerProperties);
 
 		String serializationHandlerFactoryClazzName = 
 				RepositoryPropertyKey.SerializationHandlerFactory.getProperty(properties, index);
@@ -49,7 +35,7 @@ public class DBRepositoryFactory implements RepositoryFactory {
 			RepositoryPropertyKey.RepositoryAuthenticationRequired.isTrue(properties, index, false),
 			tagManager,
 			backgroundServiceProvider,
-			indexer,
+			indexerFactory,
 			serializationHandlerFactory,
 			RepositoryPropertyKey.RepositoryUrl.getProperty(properties, index),
 			RepositoryPropertyKey.RepositoryUser.getProperty(properties, index),

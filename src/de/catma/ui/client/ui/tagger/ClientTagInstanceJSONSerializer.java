@@ -90,4 +90,19 @@ public class ClientTagInstanceJSONSerializer extends JSONSerializer {
 		
 		return tagInstanceJSON.toString();
 	}
+	
+	public String toJSONArray(List<String> tagInstanceIDs) {
+		int i=0;
+		JSONArray result = new JSONArray();
+		for (String tagInstanceID : tagInstanceIDs) {
+			JSONObject instanceJSON = new JSONObject();
+			instanceJSON.put(
+				SerializationField.instanceID.name(), 
+				new JSONString(tagInstanceID));
+			result.set(i, instanceJSON);
+			i++;
+		}
+		
+		return result.toString();
+	}
 }

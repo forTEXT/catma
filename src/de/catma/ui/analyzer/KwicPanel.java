@@ -66,7 +66,11 @@ public class KwicPanel extends VerticalLayout {
 	}
 
 	private void initComponents() {
+		setSizeFull();
+		
 		kwicTable = new TreeTable();
+		kwicTable.setSizeFull();
+		
 		kwicTable.setSelectable(true);
 		
 		HierarchicalContainer container = new HierarchicalContainer();

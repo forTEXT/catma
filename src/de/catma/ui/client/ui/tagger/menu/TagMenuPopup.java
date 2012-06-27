@@ -45,7 +45,7 @@ import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 
 /**
  * @author marco.petris@web.de
- *
+ * @deprecated we handle add and remove requests via server side events not originated by this dialog
  */
 class TagMenuPopup extends DialogBox {
 		

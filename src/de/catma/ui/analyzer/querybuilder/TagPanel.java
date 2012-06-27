@@ -290,7 +290,7 @@ public class TagPanel extends VerticalLayout implements DynamicWizardStep {
 		
 		tagLibrariesTree = new Tree();
 		tagLibrariesTree.setCaption("Tag Libraries");
-		tagLibrariesTree.addStyleName("repo-tree");
+		tagLibrariesTree.addStyleName("bold-label-caption");
 		tagLibrariesTree.setImmediate(true);
 		tagLibrariesTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_ID);
 		
