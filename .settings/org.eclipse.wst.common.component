@@ -43,6 +43,12 @@
         <dependent-module archiveName="poi-scratchpad-3.6-20091214.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/poi-scratchpad-3.6-20091214.jar">
             <dependency-type>uses</dependency-type>
         </dependent-module>
+        <dependent-module archiveName="poi-3.8-20120326.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/poi-3.8-20120326.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="poi-scratchpad-3.8-20120326.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/poi-scratchpad-3.8-20120326.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
         <property name="java-output-path" value="/catma/build/classes"/>
         <property name="context-root" value="catma"/>
     </wb-module>

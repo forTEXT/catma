@@ -179,7 +179,10 @@ public class TaggerEditor extends FocusWidget
 						"won't tag range " + textRange + " because it is a point");
 				}
 			}
-			else {
+			else { // FIXME: in this case it seems that rootnode holds the index of
+				//the last fully selected child node we could set end node to child 
+				//node index with offset content lenght or something like this
+				// would it work with complex nodes?
 				VConsole.log(
 					"won'tag range " + range + 
 					" because it starts or ends with the content root");

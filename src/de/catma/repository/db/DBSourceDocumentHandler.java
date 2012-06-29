@@ -228,7 +228,7 @@ class DBSourceDocumentHandler {
 				TechInfoSet techInfoSet = 
 						new TechInfoSet(
 							FileType.valueOf(sd.getFileType()),
-							Charset.forName(sd.getCharset()),
+							(sd.getCharset()==null)?null:Charset.forName(sd.getCharset()),
 							FileOSType.valueOf(sd.getFileOstype()),
 							sd.getChecksum(),
 							sd.getXsltDocumentLocalUri());

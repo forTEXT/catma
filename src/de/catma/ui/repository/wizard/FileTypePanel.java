@@ -1,6 +1,7 @@
 package de.catma.ui.repository.wizard;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
@@ -10,6 +11,12 @@ import java.util.Map;
 import java.util.zip.CRC32;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.Header;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -107,38 +114,61 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 							
 							SourceDocumentHandler sourceDocumentHandler = 
 									new SourceDocumentHandler();
-							
-							URLConnection urlConnection = 
-									new URL(sourceDocURL).openConnection();
-
+							URL url = new URL(sourceDocURL);
+							InputStream is = null;
 							String resultMimeType = mimeTypeFromUpload;
-							InputStream is = urlConnection.getInputStream();
+							
+							if (url.getProtocol().equals("http")) {
+								  HttpClient httpclient = new DefaultHttpClient();
+								  HttpGet httpGet = new HttpGet(url.toURI());
+								  
+								  HttpResponseHandler responseHandler = new HttpResponseHandler();
+								  
+						          String responseBody = httpclient.execute(httpGet, responseHandler);
+//						          System.out.println(responseBody);
+						          is = new ByteArrayInputStream(responseBody.getBytes());
+						          System.out.println("ENC: " + 
+						        		  responseHandler.getEncoding());
+						          
+							}
+							else {
+								URLConnection urlConnection = 
+										url.openConnection();
+							
+								urlConnection.connect();
+					            String type = urlConnection.getContentType();
+				                System.out.println(type);
+								is = urlConnection.getInputStream();
+							}
 							try {
 								byte[] byteContent = IOUtils.toByteArray(is);
-								if (mimeTypeFromUpload == null) {
-									resultMimeType = 
-											sourceDocumentHandler.getMimeType(
-													sourceURIPath, urlConnection, 
-													FileType.TEXT.getMimeType());
-								}
-								
+			
+//								if (mimeTypeFromUpload == null) {
+//									resultMimeType = 
+//											sourceDocumentHandler.getMimeType(
+//													sourceURIPath, urlConnection, 
+//													FileType.TEXT.getMimeType());
+//								}
+//								
 								String encoding = Charset.defaultCharset().name();
 								
-								if (resultMimeType.equals(FileType.TEXT.getMimeType())
-										||(resultMimeType.equals(FileType.HTML.getMimeType()))) {
-									encoding = 
-											sourceDocumentHandler.getEncoding(
-													urlConnection, 
-													byteContent, 
-													Charset.defaultCharset().name());	
-								}
-	
+//								if (resultMimeType.equals(FileType.TEXT.getMimeType())
+//										||(resultMimeType.equals(FileType.HTML.getMimeType()))) {
+//									encoding = 
+//											sourceDocumentHandler.getEncoding(
+//													urlConnection, 
+//													byteContent, 
+//													Charset.defaultCharset().name());	
+//									System.out.println("ENCODING: " + encoding);
+//								}
+//	
 								return new BackgroundLoaderResult(
 										byteContent, encoding, resultMimeType);
 							}
 							finally {
 								is.close();
 							}
+						
 						}
 					}, 
 					new ExecutionListener<BackgroundLoaderResult>() {
@@ -209,17 +239,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 					sourceDocumentHandler.loadSourceDocument(
 						wizardResult.getSourceDocumentID(),
 						sourceDocumentInfo);
-			
-			sourceDocument.getSourceContentHandler().load(
-					new ByteArrayInputStream(currentByteContent));
-			
-			FileOSType fileOSType = 
-					FileOSType.getFileOSType(sourceDocument.getContent());
-			
-			sourceDocumentInfo.getTechInfoSet().setFileOSType(fileOSType);
-			CRC32 checksum = new CRC32();
-			checksum.update(currentByteContent);
-			sourceDocumentInfo.getTechInfoSet().setChecksum(checksum.getValue());
+			load(sourceDocument);
 			taPreview.setValue(
 					"<pre>" + sourceDocument.getContent(new Range(0, 2000)) + "</pre>");
 			wizardResult.setSourceDocument(sourceDocument);
@@ -227,6 +247,20 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			((CatmaApplication)getApplication()).showAndLogError(
 				"Error loading the preview for the document!", e);
 		}
+	}
+	
+	public void load(SourceDocument sourceDocument) throws IOException {
+
+		sourceDocument.getSourceContentHandler().load(
+				new ByteArrayInputStream(currentByteContent));
+		
+		FileOSType fileOSType = 
+				FileOSType.getFileOSType(sourceDocument.getContent());
+		
+		sourceDocumentInfo.getTechInfoSet().setFileOSType(fileOSType);
+		CRC32 checksum = new CRC32();
+		checksum.update(currentByteContent);
+		sourceDocumentInfo.getTechInfoSet().setChecksum(checksum.getValue());
 	}
 
 	private void initComponents() {
@@ -335,6 +369,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			case TEXT : {
 				setVisibleXSLTInputComponents(false);
 				setVisiblePreviewComponents(true);
+				fileEncodingTree.setVisible(true);
 				showPreview();
 				break;
 			}
@@ -346,7 +381,9 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			}
 			default : {
 				setVisibleXSLTInputComponents(false);
-				setVisiblePreviewComponents(false);
+				setVisiblePreviewComponents(true);
+				fileEncodingTree.setVisible(false);
+				showPreview();
 			}
 		}
 		wizardStepListener.stepChanged(FileTypePanel.this);
@@ -358,7 +395,6 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	}
 	
 	private void setVisiblePreviewComponents(boolean visible) {
-		fileEncodingTree.setVisible(visible);
 		previewPanel.setVisible(visible);
 		if (visible) {
 			taPreview.setValue("");

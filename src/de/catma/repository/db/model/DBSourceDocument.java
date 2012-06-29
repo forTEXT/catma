@@ -61,7 +61,7 @@ public class DBSourceDocument implements java.io.Serializable {
 		this.description = sourceDocumentInfo.getContentInfoSet().getDescription();
 		this.author = sourceDocumentInfo.getContentInfoSet().getAuthor();
 		this.fileType = sourceDocumentInfo.getTechInfoSet().getFileType().name();
-		this.charset = sourceDocumentInfo.getTechInfoSet().getCharset().toString();
+		this.charset = (sourceDocumentInfo.getTechInfoSet().getCharset()==null)?null:sourceDocumentInfo.getTechInfoSet().getCharset().toString();
 		this.fileOSType = sourceDocumentInfo.getTechInfoSet().getFileOSType().name();
 		this.checksum = sourceDocumentInfo.getTechInfoSet().getChecksum();
 		this.mimeType = sourceDocumentInfo.getTechInfoSet().getMimeType();
@@ -138,7 +138,7 @@ public class DBSourceDocument implements java.io.Serializable {
 		this.fileType = fileType;
 	}
 
-	@Column(name = "charset", nullable = false, length = 50)
+	@Column(name = "charset", nullable = true, length = 50)
 	public String getCharset() {
 		return this.charset;
 	}

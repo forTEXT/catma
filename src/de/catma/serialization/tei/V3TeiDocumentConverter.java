@@ -196,43 +196,46 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		for( String id : idValues ) {
 			if (!id.trim().isEmpty()) {
 				id = id.trim();
-				Pair<String,Range> target = getTarget(
-						segElement.getFirstTeiChildElement(TeiElementName.ptr));
-				
-				String instanceID = getInstanceID(id, target.getSecond());
-				newReferencesBuilder.append(" #");
-				newReferencesBuilder.append(instanceID);
-
-				if (!oldInstance2newInstanceID.values().contains(instanceID)) {
+				if (tagDefinitions.containsKey(id)) { // some broken files contain tagintances without a tagdef, we skip those
+					Pair<String,Range> target = getTarget(
+							segElement.getFirstTeiChildElement(TeiElementName.ptr));
+					System.out.println("adding TagInstances for target: " + target);
 					
-					TagDef tagDefinition = tagDefinitions.get(id);
-					
-					TeiElement fs = new TeiElement(TeiElementName.fs);
-					
-					fs.setID(instanceID);
-					fs.setAttributeValue(Attribute.type, id);
-					
-					TeiElement fColor = new TeiElement(TeiElementName.f);
-					fColor.setAttributeValue(Attribute.f_name, "catma_displaycolor");
-					TeiElement numeric = new TeiElement(TeiElementName.numeric);
-					numeric.setAttributeValue(Attribute.numeric_value, tagDefinition.color);
-					fColor.appendChild(numeric);
-					fs.appendChild(fColor);
-					
-					for(Map.Entry<String, String> entry : tagDefinition.properties.entrySet()) {			
-						TeiElement f = new TeiElement(TeiElementName.f);
-						f.setAttributeValue(Attribute.f_name, entry.getKey());
-						TeiElement string = new TeiElement(TeiElementName.string);
-						string.appendChild(entry.getValue());
-						f.appendChild(string);
-						fs.appendChild(f);
+					String instanceID = getInstanceID(id, target.getSecond());
+					newReferencesBuilder.append(" #");
+					newReferencesBuilder.append(instanceID);
+	
+					if (!oldInstance2newInstanceID.values().contains(instanceID)) {
+						
+						TagDef tagDefinition = tagDefinitions.get(id);
+						
+						TeiElement fs = new TeiElement(TeiElementName.fs);
+						
+						fs.setID(instanceID);
+						fs.setAttributeValue(Attribute.type, id);
+						
+						TeiElement fColor = new TeiElement(TeiElementName.f);
+						fColor.setAttributeValue(Attribute.f_name, "catma_displaycolor");
+						TeiElement numeric = new TeiElement(TeiElementName.numeric);
+						numeric.setAttributeValue(Attribute.numeric_value, tagDefinition.color);
+						fColor.appendChild(numeric);
+						fs.appendChild(fColor);
+						
+						for(Map.Entry<String, String> entry : tagDefinition.properties.entrySet()) {			
+							TeiElement f = new TeiElement(TeiElementName.f);
+							f.setAttributeValue(Attribute.f_name, entry.getKey());
+							TeiElement string = new TeiElement(TeiElementName.string);
+							string.appendChild(entry.getValue());
+							f.appendChild(string);
+							fs.appendChild(f);
+						}
+						
+						text.insertChild(fs,0);
 					}
-					
-					text.insertChild(fs,0);
+					this.oldInstance2newInstanceID.put(
+							new OldInstance(target.getSecond(),id), 
+							instanceID);
 				}
-				this.oldInstance2newInstanceID.put(
-						new OldInstance(target.getSecond(),id), 
-						instanceID);
 			}
 		}
 		segElement.setAttributeValue(

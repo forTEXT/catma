@@ -100,7 +100,7 @@ public class AuthenticationDialog extends VerticalLayout {
 								if (me.getErrorCode() != MessageException.MESSAGE_ERROR) {
 									throw new MessageException(me);
 								}
-								Thread.currentThread().wait(new Random().nextInt(2000));
+								Thread.sleep(new Random().nextInt(2000));
 								tries--;
 							}
 						}
