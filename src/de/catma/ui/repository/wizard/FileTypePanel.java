@@ -2,21 +2,11 @@ package de.catma.ui.repository.wizard;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.CRC32;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.http.Header;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.BasicResponseHandler;
-import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -40,6 +30,9 @@ import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentHandler;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.contenthandler.DefaultProtocolHandler;
+import de.catma.document.source.contenthandler.HttpProtocolHandler;
+import de.catma.document.source.contenthandler.ProtocolHandler;
 import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.WizardStepListener;
@@ -96,10 +89,8 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			}
 			final String mimeTypeFromUpload = 
 					sourceDocumentInfo.getTechInfoSet().getMimeType();
-			final String sourceDocURL = 
-					sourceDocumentInfo.getTechInfoSet().getURI().toURL().toString();
-			final String sourceURIPath = 
-					sourceDocumentInfo.getTechInfoSet().getURI().getPath();
+			final URI sourceDocURI = sourceDocumentInfo.getTechInfoSet().getURI();
+			
 			sourceDocumentInfo.setContentInfoSet(new ContentInfoSet());
 			setVisiblePreviewComponents(false);
 			setVisibleXSLTInputComponents(false);
@@ -110,65 +101,21 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			progressIndicator.setCaption("Detecting file type");
 			backgroundService.submit(
 					new DefaultProgressCallable<BackgroundLoaderResult>() {
-						public BackgroundLoaderResult call() throws Exception {
-							
-							SourceDocumentHandler sourceDocumentHandler = 
-									new SourceDocumentHandler();
-							URL url = new URL(sourceDocURL);
-							InputStream is = null;
-							String resultMimeType = mimeTypeFromUpload;
-							
-							if (url.getProtocol().equals("http")) {
-								  HttpClient httpclient = new DefaultHttpClient();
-								  HttpGet httpGet = new HttpGet(url.toURI());
-								  
-								  HttpResponseHandler responseHandler = new HttpResponseHandler();
-								  
-						          String responseBody = httpclient.execute(httpGet, responseHandler);
-//						          System.out.println(responseBody);
-						          is = new ByteArrayInputStream(responseBody.getBytes());
-						          System.out.println("ENC: " + 
-						        		  responseHandler.getEncoding());
-						          
+						public BackgroundLoaderResult call() throws Exception {	
+							ProtocolHandler protocolHandler = null;
+							if (sourceDocURI.toURL().getProtocol().toLowerCase().equals("http")) {
+								  protocolHandler = 
+										  new HttpProtocolHandler(sourceDocURI);
 							}
 							else {
-								URLConnection urlConnection = 
-										url.openConnection();
-							
-								urlConnection.connect();
-					            String type = urlConnection.getContentType();
-				                System.out.println(type);
-								is = urlConnection.getInputStream();
-							}
-							try {
-								byte[] byteContent = IOUtils.toByteArray(is);
-			
-//								if (mimeTypeFromUpload == null) {
-//									resultMimeType = 
-//											sourceDocumentHandler.getMimeType(
-//													sourceURIPath, urlConnection, 
-//													FileType.TEXT.getMimeType());
-//								}
-//								
-								String encoding = Charset.defaultCharset().name();
-								
-//								if (resultMimeType.equals(FileType.TEXT.getMimeType())
-//										||(resultMimeType.equals(FileType.HTML.getMimeType()))) {
-//									encoding = 
-//											sourceDocumentHandler.getEncoding(
-//													urlConnection, 
-//													byteContent, 
-//													Charset.defaultCharset().name());	
-//									System.out.println("ENCODING: " + encoding);
-//								}
-//	
-								return new BackgroundLoaderResult(
-										byteContent, encoding, resultMimeType);
-							}
-							finally {
-								is.close();
-							}
-						
+								protocolHandler = 
+										new DefaultProtocolHandler(
+												sourceDocURI, mimeTypeFromUpload);
+							}	
+							return new BackgroundLoaderResult(
+									protocolHandler.getByteContent(),
+									protocolHandler.getEncoding(),
+									protocolHandler.getMimeType());
 						}
 					}, 
 					new ExecutionListener<BackgroundLoaderResult>() {
@@ -181,8 +128,8 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 							
 							sourceDocumentInfo.getTechInfoSet().setFileType(fileType);
 							
-							if (fileType.equals(FileType.TEXT)) {
-								System.out.println(result.encoding);
+							if (fileType.equals(FileType.TEXT)
+									||fileType.equals(FileType.HTML)) {
 								
 								Charset charset = Charset.forName(result.encoding);
 								fileEncodingTree.select(charset);

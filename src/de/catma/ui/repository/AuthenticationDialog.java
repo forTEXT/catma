@@ -84,7 +84,12 @@ public class AuthenticationDialog extends VerticalLayout {
 						
 						// extract the parameters from the authentication response
 						// (which comes in as a HTTP request from the OpenID provider)
+						
+						//FIXME: consider adding openid.mode to the parameteris if missing as this seems to be the problem!!!
+						
 						ParameterList openidResp = new ParameterList(parameters);
+						
+						
 						logger.info("verifying returnurl: " + returnURL);
 						// verify the response
 						VerificationResult verification = null;

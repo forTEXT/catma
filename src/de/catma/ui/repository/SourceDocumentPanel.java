@@ -529,6 +529,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 
 
 	private void addSourceDocumentToTree(SourceDocument sd) {
+		
+		//FIXME: remove filters first, then add sd and children, restore filter and add sd to corpus of the filter, if existent
 		documentsTree.addItem(sd);
 
 		documentsTree.setChildrenAllowed(sd, true);
