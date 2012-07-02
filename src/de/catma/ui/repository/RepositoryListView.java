@@ -36,33 +36,38 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 			public void buttonClick(ClickEvent event) {
 				RepositoryReference repositoryReference = 
 						(RepositoryReference)repositoryTable.getValue();
-				
-				if (repositoryReference.isAuthenticationRequired()) {
-					AuthenticationDialog authDialog = 
-							new AuthenticationDialog(
-									"Please authenticate yourself", 
-									repositoryReference, repositoryManager);
-					authDialog.show(getApplication().getMainWindow());
+				if (repositoryManager.isOpen(repositoryReference)) {
+					getWindow().showNotification(
+							"Information", "Repository is already open.");
 				}
 				else {
-					try {
-						Map<String,String> userIdentification = 
-								new HashMap<String, String>(1);
-						userIdentification.put(
-							"user.ident", System.getProperty("user.name"));
-						userIdentification.put(
-							"user.name", System.getProperty("user.name"));
-						
-						Repository repository = 
-								repositoryManager.openRepository(
-										repositoryReference, userIdentification);
-						
-						((CatmaApplication)getApplication()).openRepository(
-								repository);
-						
-					} catch (Exception e) {
-						((CatmaApplication)getApplication()).showAndLogError(
-							"Error opening the repository!", e);
+					if (repositoryReference.isAuthenticationRequired()) {
+						AuthenticationDialog authDialog = 
+								new AuthenticationDialog(
+										"Please authenticate yourself", 
+										repositoryReference, repositoryManager);
+						authDialog.show(getApplication().getMainWindow());
+					}
+					else {
+						try {
+							Map<String,String> userIdentification = 
+									new HashMap<String, String>(1);
+							userIdentification.put(
+								"user.ident", System.getProperty("user.name"));
+							userIdentification.put(
+								"user.name", System.getProperty("user.name"));
+							
+							Repository repository = 
+									repositoryManager.openRepository(
+											repositoryReference, userIdentification);
+							
+							((CatmaApplication)getApplication()).openRepository(
+									repository);
+							
+						} catch (Exception e) {
+							((CatmaApplication)getApplication()).showAndLogError(
+								"Error opening the repository!", e);
+						}
 					}
 				}
 			}

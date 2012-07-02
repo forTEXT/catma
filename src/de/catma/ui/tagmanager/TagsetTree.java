@@ -603,7 +603,7 @@ public class TagsetTree extends HorizontalLayout {
 			buttonGrid.addComponent(tagsetLabel);
 			buttonGridRowCount++;
 			
-			btInsertTagset = new Button("Insert Tagset");
+			btInsertTagset = new Button("Create Tagset");
 			btInsertTagset.setEnabled(true);
 			btInsertTagset.setWidth("100%");
 			buttonGrid.addComponent(btInsertTagset);
@@ -633,7 +633,7 @@ public class TagsetTree extends HorizontalLayout {
 		
 		buttonGrid.setComponentAlignment(tagLabel, Alignment.BOTTOM_LEFT);
 		
-		btInsertTag = new Button("Insert Tag");
+		btInsertTag = new Button("Create Tag");
 		btInsertTag.setWidth("100%");
 		if (withTagsetButtons) {
 			btInsertTag.setEnabled(true);
@@ -665,7 +665,7 @@ public class TagsetTree extends HorizontalLayout {
 		
 		buttonGrid.setComponentAlignment(propertyLabel, Alignment.BOTTOM_LEFT);
 		
-		btInsertProperty = new Button("Insert Property");
+		btInsertProperty = new Button("Create Property");
 		btInsertProperty.setWidth("100%");
 		buttonGrid.addComponent(btInsertProperty);
 		buttonGridRowCount++;

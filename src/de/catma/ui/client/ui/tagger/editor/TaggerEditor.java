@@ -167,7 +167,7 @@ public class TaggerEditor extends FocusWidget
 		ArrayList<TextRange> textRanges = new ArrayList<TextRange>();
 		for (Range range : lastRangeList) { 
 			if (!range.getStartNode().equals(getRootNode())
-						&& ! range.getEndNode().equals(getRootNode())) {
+						&& !range.getEndNode().equals(getRootNode())) {
 				TextRange textRange = converter.convertToTextRange(range);
 				if (!textRange.isPoint()) {
 					VConsole.log("converted and adding range " + textRange );
@@ -179,15 +179,54 @@ public class TaggerEditor extends FocusWidget
 						"won't tag range " + textRange + " because it is a point");
 				}
 			}
-			else { // FIXME: in this case it seems that rootnode holds the index of
-				//the last fully selected child node we could set end node to child 
-				//node index with offset content lenght or something like this
-				// would it work with complex nodes?
-				VConsole.log(
-					"won'tag range " + range + 
-					" because it starts or ends with the content root");
+			else {
+				// one of the nodes is the root node, which is an out-of-bounds-selection
+				// but we try to recover from that by looking for the next adjacent
+				// text nodes
+				Node startNode = range.getStartNode();
+				int startOffset = range.getStartOffset();
+				Node endNode = range.getEndNode();
+				int endOffset = range.getEndOffset();
+
+				if (range.getStartNode().equals(getRootNode())) {
+					VConsole.log("startNode is root!");
+					LeafFinder leafFinder = 
+						new LeafFinder(
+								getRootNode().getChild(range.getStartOffset()),
+								getRootNode());
+					startNode = leafFinder.getNextRightLeaf();
+					startOffset = 0;
+					VConsole.log(
+						"Setting new startNode with Offset 0: " + startNode );
+				}
+				
+				if (range.getEndNode().equals(getRootNode())) {
+					VConsole.log("endNode is root!");
+					LeafFinder leafFinder = 
+						new LeafFinder(
+								getRootNode().getChild(range.getEndOffset()),
+								getRootNode());
+					endNode = leafFinder.getNextLeftTextLeaf();
+					endOffset = endNode.getNodeValue().length();
+					VConsole.log(
+						"Setting new endNode with Offset " 
+								+ endOffset + ": " + endNode );
+				}
+				
+				TextRange textRange = converter.convertToTextRange(
+						startNode, endNode, startOffset, endOffset);
+				
+				if (!textRange.isPoint()) {
+					VConsole.log("converted and adding range " + textRange );
+					textRanges.add(textRange);
+				}
+				else {
+					VConsole.log(
+						"won't tag range " + textRange + " because it is a point");
+				}
 			}
 		}
+
 		return textRanges;
 	}
 

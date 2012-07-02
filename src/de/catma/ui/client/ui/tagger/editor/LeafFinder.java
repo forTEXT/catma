@@ -123,7 +123,7 @@ public class LeafFinder {
 		return this.nextLeftLeaf;
 	}
 	
-	public Node getNextRigthLeaf() {
+	public Node getNextRightLeaf() {
 		findNextRightLeaf();
 		return this.nextRightLeaf;
 	}
@@ -139,7 +139,7 @@ public class LeafFinder {
 	
 	public Node getNextRightTextLeaf() {
 		do {
-			getNextRigthLeaf();
+			getNextRightLeaf();
 		}
 		while ((this.nextRightLeaf != null) && (Element.is(this.nextRightLeaf)));
 

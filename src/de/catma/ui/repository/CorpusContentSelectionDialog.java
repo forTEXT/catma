@@ -103,7 +103,8 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		documentsTree.setCollapsed(sourceDocument, false);
 
 		MarkupCollectionItem userMarkupItem =
-				new MarkupCollectionItem(userMarkupItemDisplayString, true);
+				new MarkupCollectionItem(
+						sourceDocument, userMarkupItemDisplayString, true);
 		documentsTree.addItem(
 			new Object[] {userMarkupItemDisplayString, new Label()},
 			userMarkupItem);

@@ -4,7 +4,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.logging.Logger;
 
 import org.openid4java.consumer.ConsumerManager;
@@ -14,6 +13,7 @@ import org.openid4java.discovery.Identifier;
 import org.openid4java.message.AuthRequest;
 import org.openid4java.message.AuthSuccess;
 import org.openid4java.message.MessageException;
+import org.openid4java.message.Parameter;
 import org.openid4java.message.ParameterList;
 import org.openid4java.message.ax.AxMessage;
 import org.openid4java.message.ax.FetchRequest;
@@ -85,32 +85,26 @@ public class AuthenticationDialog extends VerticalLayout {
 						// extract the parameters from the authentication response
 						// (which comes in as a HTTP request from the OpenID provider)
 						
-						//FIXME: consider adding openid.mode to the parameteris if missing as this seems to be the problem!!!
-						
 						ParameterList openidResp = new ParameterList(parameters);
-						
+						if (!openidResp.hasParameter("openid.mode")) {
+							openidResp.set(new Parameter("openid.mode", "id_res"));
+						}
+						else {
+							logger.info(
+								"openid.mode was: " + 
+								openidResp.getParameterValue("openid.mode"));
+						}
 						
 						logger.info("verifying returnurl: " + returnURL);
+						
 						// verify the response
-						VerificationResult verification = null;
-						int tries = 10;
-						while (tries > 0) {
-							try {
-								logger.info("verification tries left: " + tries);
-								verification = consumerManager.verify(
-										returnURL, openidResp, discovered);
-								break;
-							}
-							catch (MessageException me) {
-								if (me.getErrorCode() != MessageException.MESSAGE_ERROR) {
-									throw new MessageException(me);
-								}
-								Thread.sleep(new Random().nextInt(2000));
-								tries--;
-							}
-						}
+						VerificationResult verification = 
+							consumerManager.verify(
+								returnURL, openidResp, discovered);
+						
 						if (verification == null) {
-							throw new MessageException("could not verify returnurl: " + returnURL);
+							throw new MessageException(
+									"could not verify returnurl: " + returnURL);
 						}
 						// examine the verification result and extract the verified identifier
 						Identifier verified = verification.getVerifiedId();

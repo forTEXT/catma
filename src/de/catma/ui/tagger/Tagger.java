@@ -65,7 +65,6 @@ public class Tagger extends AbstractComponent {
 	private String taggerID;
 	
 	public Tagger(int taggerID, Pager pager, TaggerListener taggerListener) {
-		addStyleName("tagger");
 		this.pager = pager;
 		this.taggerListener = taggerListener;
 		this.tagInstanceJSONSerializer = new ClientTagInstanceJSONSerializer();

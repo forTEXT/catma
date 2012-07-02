@@ -46,11 +46,18 @@ public class RangeConverter {
 	}
 
 	public TextRange convertToTextRange(Range range) {
+		return convertToTextRange(
+			range.getStartNode(), range.getEndNode(), 
+			range.getStartOffset(), range.getEndOffset());
+	}
+	
+	public TextRange convertToTextRange(
+			Node startNode, Node endNode, int startOffset, int endOffset) {
 		Node root = Document.get().getElementById(
 				ContentElementID.CONTENT.name() + taggerID);
 		
-		int startPos = findPos(range.getStartNode(), root)+range.getStartOffset();
-		int endPos = findPos(range.getEndNode(), root)+range.getEndOffset();
+		int startPos = findPos(startNode, root)+startOffset;
+		int endPos = findPos(endNode, root)+endOffset;
 		TextRange tr = new TextRange(startPos, endPos);
 		VConsole.log("RANGE!: " + tr);
 		

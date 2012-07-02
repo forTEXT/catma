@@ -37,7 +37,6 @@ import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.queryengine.QueryJob;
@@ -88,20 +87,6 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab, TabComp
 		this.relevantSourceDocumentIDs = new ArrayList<String>();
 		this.relevantUserMarkupCollIDs = new ArrayList<String>();
 		this.relevantStaticMarkupCollIDs = new ArrayList<String>();
-		
-		if (corpus != null) {
-			for (SourceDocument sd : corpus.getSourceDocuments()) {
-				this.relevantSourceDocumentIDs.add(sd.getID());
-			}
-			for (UserMarkupCollectionReference ref : 
-				corpus.getUserMarkupCollectionRefs()) {
-				this.relevantUserMarkupCollIDs.add(ref.getId());
-			}
-			for (StaticMarkupCollectionReference ref : 
-				corpus.getStaticMarkupCollectionRefs()) {
-				this.relevantStaticMarkupCollIDs.add(ref.getId());
-			}
-		}
 		
 		this.repository = repository;
 		initComponents();
@@ -198,7 +183,8 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab, TabComp
 			}
 		}
 		if (umcItem == null) {
-			umcItem = new MarkupCollectionItem(userMarkupItemDisplayString, true);
+			umcItem = new MarkupCollectionItem(
+					sd, userMarkupItemDisplayString, true);
 			documentsTree.addItem(umcItem);
 			documentsTree.setParent(umcItem, sd);
 			addUserMarkupCollection(umcRef, umcItem);
@@ -432,9 +418,12 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab, TabComp
 	}
 
 	private void addSourceDocument(SourceDocument sd) {
+		relevantSourceDocumentIDs.add(sd.getID());
+		
 		documentsTree.addItem(sd);
 		MarkupCollectionItem umc = 
 			new MarkupCollectionItem(
+					sd, 
 					userMarkupItemDisplayString, true);
 		documentsTree.addItem(umc);
 		documentsTree.setParent(umc, sd);
@@ -448,6 +437,7 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab, TabComp
 	
 	private void addUserMarkupCollection(UserMarkupCollectionReference umcRef,
 			MarkupCollectionItem umc) {
+		this.relevantUserMarkupCollIDs.add(umcRef.getId());
 		documentsTree.addItem(umcRef);
 		documentsTree.setParent(umcRef, umc);
 		documentsTree.setChildrenAllowed(umcRef, false);

@@ -14,6 +14,8 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.PropertysetItem;
+import com.vaadin.event.ItemClickEvent;
+import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -250,6 +252,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		tagLibrariesTree.addListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
+				System.out.println(event);
 				Object value = event.getProperty().getValue();
 				btOpenTagLibrary.setEnabled(value!=null);
 				if (value != null) {
@@ -272,18 +275,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 			
 			public void buttonClick(ClickEvent event) {
 				Object value = tagLibrariesTree.getValue();
-				if (value != null) {
-					TagLibraryReference tagLibraryReference = 
-							(TagLibraryReference)value;
-					TagLibrary tagLibrary;
-					try {
-						tagLibrary = repository.getTagLibrary(tagLibraryReference);
-						((CatmaApplication)getApplication()).openTagLibrary(tagLibrary);
-					} catch (IOException e) {
-						((CatmaApplication)getApplication()).showAndLogError(
-							"Error opening the Tag Library!", e);
-					}
-				}				
+				handleOpenTagLibraryRequest(value);
 			}
 		});
 
@@ -348,6 +340,36 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 				contentInfoForm.setReadOnly(true);				
 			}
 		});
+		
+		this.tagLibrariesTree.addListener(new ItemClickListener() {
+			
+			public void itemClick(ItemClickEvent event) {
+				System.out.println(event);
+				if (event.isDoubleClick()) {
+					Object value = event.getItemId();
+					handleOpenTagLibraryRequest(value);
+				}
+			}
+		});
+	}
+
+	private void handleOpenTagLibraryRequest(Object value) {
+		if (value != null) {
+			TagLibraryReference tagLibraryReference = 
+					(TagLibraryReference)value;
+			TagLibrary tagLibrary;
+			try {
+				tagLibrary = repository.getTagLibrary(tagLibraryReference);
+				((CatmaApplication)getApplication()).openTagLibrary(tagLibrary);
+			} catch (IOException e) {
+				((CatmaApplication)getApplication()).showAndLogError(
+					"Error opening the Tag Library!", e);
+			}
+		}	
+		else {
+			getWindow().showNotification(
+					"Information", "Please select a Tag Library first!");
+		}
 	}
 
 	private void handleTagLibraryImport() {

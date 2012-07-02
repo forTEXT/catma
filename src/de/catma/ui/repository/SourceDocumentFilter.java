@@ -19,15 +19,15 @@ class SourceDocumentFilter implements Filter {
 		super();
 		corpusContent = new HashSet<String>();
 		for (SourceDocument sd : corpus.getSourceDocuments()) {
-			corpusContent.add(sd.toString());
+			corpusContent.add(sd.getID());
 		}
 
 		for (UserMarkupCollectionReference ucr : corpus.getUserMarkupCollectionRefs()) {
-			corpusContent.add(ucr.toString());
+			corpusContent.add(ucr.getId());
 		}
 		
 		for (StaticMarkupCollectionReference scr : corpus.getStaticMarkupCollectionRefs()) {
-			corpusContent.add(scr.toString());
+			corpusContent.add(scr.getId());
 		}
 	}
 
@@ -37,8 +37,24 @@ class SourceDocumentFilter implements Filter {
 	
 	public boolean passesFilter(Object itemId, Item item)
 			throws UnsupportedOperationException {
+		if (itemId instanceof MarkupCollectionItem) {
+			return corpusContent.contains(
+					((MarkupCollectionItem)itemId).getParentId());
+		}
+		else if (itemId instanceof SourceDocument){
+			return corpusContent.contains(
+					((SourceDocument)itemId).getID());
+		}
+		else if (itemId instanceof UserMarkupCollectionReference) {
+			return corpusContent.contains(
+					((UserMarkupCollectionReference)itemId).getId());
+		}
+		else if (itemId instanceof StaticMarkupCollectionReference) {
+			return corpusContent.contains(
+					((StaticMarkupCollectionReference)itemId).getId());
+		}
 		
-		return corpusContent.contains(itemId.toString());
+		return false;
 	}
 	
 	

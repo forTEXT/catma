@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Collection;
-import java.util.HashMap;
 
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
@@ -22,6 +21,8 @@ import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
+import com.vaadin.event.ItemClickEvent;
+import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -67,8 +68,6 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	private final ContentInfoSet emptyContentInfoSet = new ContentInfoSet();
 	
 	private HierarchicalContainer documentsContainer;
-	private HashMap<String, SourceDocumentFilter> filters = 
-			new HashMap<String, SourceDocumentFilter>();
 	private Tree documentsTree;
 	private Repository repository;
 	private String userMarkupItemDisplayString = "User Markup Collections";
@@ -83,7 +82,9 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	
 	private PropertyChangeListener sourceDocumentChangedListener;
 	private PropertyChangeListener userMarkupDocumentChangedListener;
-	
+
+	private Corpus currentCorpus;
+
 	public SourceDocumentPanel(Repository repository) {
 		this.repository = repository;
 		initComponents();
@@ -139,6 +140,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		this.repository.addPropertyChangeListener(
 				Repository.RepositoryChangeEvent.userMarkupCollectionChanged,
 				userMarkupDocumentChangedListener);	
+
 	}
 
 	private void removeSourceDocumentFromTree(SourceDocument sourceDocument) {
@@ -208,47 +210,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			
 			public void buttonClick(ClickEvent event) {
 				final Object value = documentsTree.getValue();
-				
-				if (value instanceof SourceDocument) {
-					((CatmaApplication)getApplication()).openSourceDocument(
-							(SourceDocument)value, repository);
-				}
-				else if (value instanceof StaticMarkupCollectionReference) {
-						//TODO: implement
-					
-				}
-				else if (value instanceof UserMarkupCollectionReference) {
-					final SourceDocument sd = 
-							(SourceDocument)documentsTree.getParent(
-									documentsTree.getParent(value));
-					final CatmaApplication application = 
-							(CatmaApplication)getApplication();
-					application.submit(
-							"Loading Markup collection...",
-							new DefaultProgressCallable<UserMarkupCollection>() {
-								public UserMarkupCollection call()
-										throws Exception {
-									UserMarkupCollectionReference 
-										userMarkupCollectionReference = 
-											(UserMarkupCollectionReference)value;
-									
-									return repository.getUserMarkupCollection(
-											userMarkupCollectionReference);
-								}
-							},
-							new ExecutionListener<UserMarkupCollection>() {
-								public void done(UserMarkupCollection result) {
-									application.openUserMarkupCollection(
-											sd, result, repository);
-								}
-								
-								public void error(Throwable t) {
-									((CatmaApplication)getApplication()).showAndLogError(
-											"Error loading markup collection!", t);
-								}
-							});
-
-				}
+				handleOpenDocumentRequest(value);
 			}
 		});
 		
@@ -383,7 +345,62 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 		});
 
+		documentsTree.addListener(new ItemClickListener() {
+			
+			public void itemClick(ItemClickEvent event) {
+				if (event.isDoubleClick()) {
+					Object item = event.getItemId();
+					handleOpenDocumentRequest(item);
+				}
+			}
+		});
+	}
 
+	private void handleOpenDocumentRequest(final Object value) {
+		if (value==null) {
+			getWindow().showNotification(
+					"Information", "Please select a document first!");
+		}
+		if (value instanceof SourceDocument) {
+			((CatmaApplication)getApplication()).openSourceDocument(
+					(SourceDocument)value, repository);
+		}
+		else if (value instanceof StaticMarkupCollectionReference) {
+				//TODO: implement
+			
+		}
+		else if (value instanceof UserMarkupCollectionReference) {
+			final SourceDocument sd = 
+					(SourceDocument)documentsTree.getParent(
+							documentsTree.getParent(value));
+			final CatmaApplication application = 
+					(CatmaApplication)getApplication();
+			application.submit(
+					"Loading Markup collection...",
+					new DefaultProgressCallable<UserMarkupCollection>() {
+						public UserMarkupCollection call()
+								throws Exception {
+							UserMarkupCollectionReference 
+								userMarkupCollectionReference = 
+									(UserMarkupCollectionReference)value;
+							
+							return repository.getUserMarkupCollection(
+									userMarkupCollectionReference);
+						}
+					},
+					new ExecutionListener<UserMarkupCollection>() {
+						public void done(UserMarkupCollection result) {
+							application.openUserMarkupCollection(
+									sd, result, repository);
+						}
+						
+						public void error(Throwable t) {
+							((CatmaApplication)getApplication()).showAndLogError(
+									"Error loading markup collection!", t);
+						}
+					});
+
+		}
 	}
 
 	private void handleSourceDocumentRemovalRequest() {
@@ -530,14 +547,15 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 
 	private void addSourceDocumentToTree(SourceDocument sd) {
 		
-		//FIXME: remove filters first, then add sd and children, restore filter and add sd to corpus of the filter, if existent
+		documentsContainer.removeAllContainerFilters();
+		
 		documentsTree.addItem(sd);
 
 		documentsTree.setChildrenAllowed(sd, true);
 		
 		
 		MarkupCollectionItem userMarkupItem =
-				new MarkupCollectionItem(userMarkupItemDisplayString, true);
+				new MarkupCollectionItem(sd, userMarkupItemDisplayString, true);
 
 		documentsTree.addItem(userMarkupItem);
 		documentsTree.setParent(userMarkupItem, sd);
@@ -547,7 +565,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		}
 		
 		MarkupCollectionItem staticMarkupItem = 
-				new MarkupCollectionItem(staticMarkupItemDisplayString);
+				new MarkupCollectionItem(sd, staticMarkupItemDisplayString);
 		documentsTree.addItem(staticMarkupItem);
 		documentsTree.setParent(staticMarkupItem, sd);
 		
@@ -556,6 +574,19 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			documentsTree.setParent(smcr, staticMarkupItem);
 			documentsTree.setChildrenAllowed(smcr, false);
 		}
+		
+		if (currentCorpus != null) {
+			try {
+				repository.update(currentCorpus, sd);
+				setSourceDocumentsFilter(currentCorpus);
+			} catch (IOException e) {
+				((CatmaApplication)getApplication()).showAndLogError(
+					"Error adding Source Document to Corpus! " +
+					"The Source Document has been added to 'All Documents's", e);
+			}
+			
+		}
+		
 	}
 	
 	private void addUserMarkupCollectionReferenceToTree(
@@ -743,6 +774,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	private void addUserMarkupCollectionReferenceToTree(
 			UserMarkupCollectionReference userMarkupCollRef, 
 			SourceDocument sourceDocument) {
+		documentsContainer.removeAllContainerFilters();
 		
 		@SuppressWarnings("unchecked")
 		Collection<MarkupCollectionItem> children = 
@@ -756,6 +788,19 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 		}
 		
+		
+		if (currentCorpus != null) {
+			try {
+				repository.update(currentCorpus, userMarkupCollRef);
+				setSourceDocumentsFilter(currentCorpus);
+			} catch (IOException e) {
+				((CatmaApplication)getApplication()).showAndLogError(
+						"Error adding User Markup Collection to Corpus! " +
+								"The User Markup Collection has been added to 'All Documents's", e);
+			}
+		}
+		documentsTree.setValue(userMarkupCollRef);
+		documentsTree.expandItemsRecursively(sourceDocument);
 	}
 	
 	public void valueChange(ValueChangeEvent event) {
@@ -809,14 +854,10 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	}
 
 	public void setSourceDocumentsFilter(Corpus corpus) {
+		this.currentCorpus = corpus;
 		documentsContainer.removeAllContainerFilters();
 		if (corpus != null) {
-		
-			if (!filters.containsKey(corpus)) {
-				filters.put(
-					corpus.toString(), new SourceDocumentFilter(corpus));
-			}
-			SourceDocumentFilter sdf = filters.get(corpus.toString());
+			SourceDocumentFilter sdf = new SourceDocumentFilter(corpus);
 			documentsContainer.addContainerFilter(sdf);
 			if(documentsContainer.size() > 0) {
 				documentsTree.setValue(documentsContainer.getIdByIndex(0));
