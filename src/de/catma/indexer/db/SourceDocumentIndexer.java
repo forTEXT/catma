@@ -57,7 +57,7 @@ class SourceDocumentIndexer {
 
 	void removeSourceDocument(Session session, String sourceDocumentID) {
 		SQLQuery sqlQuery = session.createSQLQuery(
-				"delete p from catmaindex.position p join catmaindex.term t on p.termID = t.termID " 
+				"delete p from CatmaIndex.position p join CatmaIndex.term t on p.termID = t.termID " 
 				+ " where t.documentID = '" + sourceDocumentID 
 				+ "'");
 		
@@ -68,7 +68,7 @@ class SourceDocumentIndexer {
 		}
 		sqlQuery.executeUpdate();
 		sqlQuery = session.createSQLQuery(
-					"delete t from catmaindex.term t" 
+					"delete t from CatmaIndex.term t" 
 					+ " where t.documentID = '" + sourceDocumentID 
 					+ "'");
 		sqlQuery.executeUpdate();

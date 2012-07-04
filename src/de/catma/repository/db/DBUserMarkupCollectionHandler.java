@@ -615,6 +615,8 @@ class DBUserMarkupCollectionHandler {
 				DBUserMarkupCollectionUpdater updater = 
 						new DBUserMarkupCollectionUpdater(dbRepository);
 				updater.updateUserMarkupCollection(session, userMarkupCollection);
+				//FIXME: reindexing should occurr only if something has changed, i. e. 
+				// not just additions to a tagset
 				dbRepository.getIndexer().reindex(
 					tagsetDefinition, 
 					userMarkupCollection, 

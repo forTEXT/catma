@@ -100,7 +100,8 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 				teiDocument.getNodes(TeiElementName.fs, AttributeValue.type_catma_tag);
 		
 		if (tagElements.size() != 0) {
-			standardTagsetDefinition = addStandardTagset(encodingDesc);
+			String standardTagsetID = createStandardTagsetID(tagElements);
+			standardTagsetDefinition = addStandardTagset(encodingDesc, standardTagsetID);
 		}
 		
 		Nodes tagsetElements = teiDocument.getNodes(TeiElementName.fvLib);
@@ -152,6 +153,17 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		teiDocument.getTeiHeader().getTechnicalDescription().setVersion(TeiDocumentVersion.V3);
 		
 		teiDocument.printXmlDocument();
+	}
+
+	private String createStandardTagsetID(Nodes tagElements) {
+		// we try to generate an id from with the contents of the tagElements as a base
+		// that should be pretty individual
+		StringBuilder builder = new StringBuilder();
+		for (int i=0; i<tagElements.size(); i++) {
+			builder.append(tagElements.get(i).getValue());
+		}
+		
+		return catmaIDGenerator.generate(builder.toString());
 	}
 
 	private void adjustPointers(TeiDocument teiDocument) {
@@ -264,8 +276,9 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		}
 		
 		String newInstanceID = 
-				catmaIDGenerator.generate(
-						currentRange.toString()+oldTagID);
+				catmaIDGenerator.generate(); 
+		//just for testing to keep the id stable but unique:
+//						currentRange.toString()+oldTagID);
 		
 		return newInstanceID;
 	}
@@ -444,7 +457,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 					Integer.valueOf(version)), encodingDesc);
 	}
 
-	private TeiElement addStandardTagset(TeiElement encodingDesc) {
+	private TeiElement addStandardTagset(TeiElement encodingDesc, String standardTagsetID) {
 		/* 
 		 	<fsdDecl xml:id="CATMA_STANDARD_TAGSET" n="Standard Tagset 1">
 				<!-- base tag -->
@@ -463,7 +476,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		
 		TeiElement fsdDecl = 
 				addTagsetDefinition(
-						new IDGenerator().generate(), // there is no standard tagset in V3, so we create new "standard tagsets" with identical names
+						standardTagsetID, // there is no standard tagset in V3, so we create new "standard tagsets" with identical names
 						"Standard Tagset "+baseVersion, encodingDesc );		
 		return fsdDecl;
 	}

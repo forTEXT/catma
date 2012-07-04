@@ -150,9 +150,12 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				if (oldValue == null) { //addition
 					@SuppressWarnings("unchecked")
 					Pair<TagLibrary, TagsetDefinition> addOpResult = 
-							 (Pair<TagLibrary, TagsetDefinition>) newValue;					
-					addTagsetDefinitionToTree(
-						addOpResult.getSecond(), currentWritableUserMarkupColl);
+							 (Pair<TagLibrary, TagsetDefinition>) newValue;	
+					if (currentWritableUserMarkupColl.getTagLibrary().equals(
+							addOpResult.getFirst())) {
+						addTagsetDefinitionToTree(
+							addOpResult.getSecond(), currentWritableUserMarkupColl);
+					}
 				}
 				else if (newValue == null) { //removal
 					@SuppressWarnings("unchecked")
@@ -178,13 +181,19 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				if (evt.getNewValue() == null) { // remove
 					UserMarkupCollectionReference userMarkupCollectionReference =
 							(UserMarkupCollectionReference) evt.getOldValue();
-					removeUserMarkupCollection(userMarkupCollectionReference);
+					if (userMarkupCollectionManager.contains(userMarkupCollectionReference)) {
+						removeUserMarkupCollection(userMarkupCollectionReference);
+					}
 				}
 				else if (evt.getOldValue() != null) { // update
-					UserMarkupCollection userMarkupCollection = 
-						userMarkupCollectionManager.updateUserMarkupCollection(
-							(UserMarkupCollectionReference)evt.getNewValue());
-					updateUserMarkupCollectionInTree(userMarkupCollection);
+					UserMarkupCollectionReference umcRef = 
+							(UserMarkupCollectionReference)evt.getNewValue();
+					if (userMarkupCollectionManager.contains(umcRef)) {
+						UserMarkupCollection userMarkupCollection = 
+							userMarkupCollectionManager.updateUserMarkupCollection(
+								umcRef);
+						updateUserMarkupCollectionInTree(userMarkupCollection);
+					}
 				}
 			}
 		};

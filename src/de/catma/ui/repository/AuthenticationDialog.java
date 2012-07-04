@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.openid4java.association.Association;
 import org.openid4java.consumer.ConsumerManager;
 import org.openid4java.consumer.VerificationResult;
 import org.openid4java.discovery.DiscoveryInformation;
@@ -13,6 +14,7 @@ import org.openid4java.discovery.Identifier;
 import org.openid4java.message.AuthRequest;
 import org.openid4java.message.AuthSuccess;
 import org.openid4java.message.MessageException;
+import org.openid4java.message.Parameter;
 import org.openid4java.message.ParameterList;
 import org.openid4java.message.ax.AxMessage;
 import org.openid4java.message.ax.FetchRequest;
@@ -53,12 +55,13 @@ public class AuthenticationDialog extends VerticalLayout {
 		private RepositoryReference repositoryReference;
 		private RepositoryManager repositoryManager;
 		private Window dialogWindow;
+		private String handle;
 
 		public AuthenticationParamHandler(Application application,
 				String returnURL, ConsumerManager consumerManager,
 				DiscoveryInformation discovered, 
 				RepositoryReference repositoryReference,
-				RepositoryManager repositoryManager, Window dialogWindow) {
+				RepositoryManager repositoryManager, Window dialogWindow, String handle) {
 			super();
 			this.application = application;
 			this.returnURL = returnURL;
@@ -68,6 +71,7 @@ public class AuthenticationDialog extends VerticalLayout {
 			this.repositoryReference = repositoryReference;
 			this.repositoryManager = repositoryManager;
 			this.dialogWindow = dialogWindow;
+			this.handle = handle;
 		}
 
 		public void handleParameters(final Map<String, String[]> parameters) {
@@ -84,10 +88,43 @@ public class AuthenticationDialog extends VerticalLayout {
 							ParameterList openidResp = new ParameterList(parameters);
 							
 							if (!openidResp.hasParameter("openid.mode")) {
-								logger.info("openid.mode is missing, waiting for teh correct message");
-								return null;
+								logger.info("openid.mode is missing, trying to set required param to 'id_res'" );
+								openidResp.set(new Parameter("openid.mode", "id_res"));
+							}
+							else {
+								logger.info("got openid.mode: " + openidResp.getParameterValue("openid.mode"));
 							}
 	
+							if (!openidResp.hasParameter("openid.return_to")) {
+								logger.info("openid.return_to is missing, trying to set required param to " + returnURL);
+								openidResp.set(new Parameter("openid.return_to", returnURL));
+							}
+							else {
+								logger.info("got openid.return_to: " + openidResp.getParameterValue("openid.return_to"));
+							}
+							
+							if (!openidResp.hasParameter("openid.assoc_handle")) {
+								logger.info("openid.assoc_handle is missing, trying to set required param to " + handle);
+								openidResp.set(new Parameter("openid.assoc_handle", handle));
+							}
+							else {
+								logger.info("got openid.assoc_handle: " + openidResp.getParameterValue("openid.assoc_handle"));
+							}
+							
+							if (!openidResp.hasParameter("openid.signed")) {
+								logger.info("openid.signed is missing");
+							}
+							else {
+								logger.info("got openid.signed: " + openidResp.getParameterValue("openid.signed"));
+							}
+							
+							if (!openidResp.hasParameter("openid.sig")) {
+								logger.info("openid.sig is missing");
+							}
+							else {
+								logger.info("got openid.sig: " + openidResp.getParameterValue("openid.sig"));
+							}
+							
 							application.getMainWindow().removeURIHandler(this);
 							
 							application.getMainWindow().removeParameterHandler(
@@ -238,7 +275,12 @@ public class AuthenticationDialog extends VerticalLayout {
 			List discoveries = consumerManager.discover(this.providerIdent);
 			final DiscoveryInformation discovered = 
 					consumerManager.associate(discoveries);
-			
+			logger.info("endpoint from consumer manager: " + discovered.getOPEndpoint().toString());
+			Association assoc = 
+					consumerManager.getAssociations().load(discovered.getOPEndpoint().toString());
+			final String handle = assoc.getHandle();
+			logger.info("handle from consumer manager: " + handle);
+
 			AuthRequest authReq = consumerManager.authenticate(discovered, returnURL);		
             FetchRequest fetch = FetchRequest.createFetchRequest();
             fetch.addAttribute("email",
@@ -264,7 +306,8 @@ public class AuthenticationDialog extends VerticalLayout {
 							consumerManager, discovered, 
 							repositoryReference,
 							repositoryManager, 
-							dialogWindow);
+							dialogWindow, 
+							handle);
 					
 			application.getMainWindow().addParameterHandler(
 					authenticationParamHandler);
