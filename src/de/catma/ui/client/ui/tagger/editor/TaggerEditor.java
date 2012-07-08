@@ -69,6 +69,7 @@ public class TaggerEditor extends FocusWidget
 		
 		// Tell GWT we are interested in consuming click events
 		sinkEvents(Event.ONMOUSEUP | Event.ONMOUSEDOWN | Event.ONKEYUP);
+		// FIXME: somehow discont tagging doesn't work anymore
 
 		addMouseUpHandler(this);
 		addMouseDownHandler(this);
@@ -555,7 +556,7 @@ public class TaggerEditor extends FocusWidget
 		if (line != null) {
 			List<Element> taggedSpans = findTargetSpan(line);
 			List<String> tagInstanceIDs = new ArrayList<String>(); 
-			
+			//FIXME: exclude highlighted spans and similar
 			for (Element span : taggedSpans) {
 				tagInstanceIDs.add(0, getTagInstanceID(span.getAttribute("id")));
 			}

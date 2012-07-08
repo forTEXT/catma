@@ -119,7 +119,8 @@ class DBSourceDocumentHandler {
 			} catch (URISyntaxException e) {
 				throw new IOException(e);
 			}
-			
+			//FIXME: for online resources as word docs this will fail, because there is no charset, better treat this in the
+			// same way as a file upload
 			Writer repoSourceFileWriter =  
 					new BufferedWriter(new OutputStreamWriter(
 							new FileOutputStream(repoSourceFile),

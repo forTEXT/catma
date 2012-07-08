@@ -3,12 +3,14 @@ package de.catma.ui.analyzer;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import org.antlr.runtime.RecognitionException;
 import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
 import org.vaadin.teemu.wizards.event.WizardCompletedEvent;
 import org.vaadin.teemu.wizards.event.WizardProgressListener;
@@ -40,6 +42,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.queryengine.QueryJob;
+import de.catma.queryengine.QueryJob.QueryException;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.queryengine.result.GroupedQueryResultSet;
@@ -321,8 +324,30 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab, TabComp
 				} 
 			};
 			public void error(Throwable t) {
-				((CatmaApplication)getApplication()).showAndLogError(
-					"Error during search!", t);
+				if (t instanceof QueryException) {
+					QueryJob.QueryException qe = (QueryJob.QueryException)t;
+		            String input = qe.getInput();
+		            int idx = ((RecognitionException)qe.getCause()).charPositionInLine;
+		            if ((idx >=0) && (input.length() > idx)) {
+		                char character = input.charAt(idx);
+		            	String message = MessageFormat.format(
+		            		"<html><p>There is something wrong with your query <b>{0}</b> approximately at positon {1} character <b>{2}</b>.</p> <p>If you are unsure about how to construct a query try the Query Builder!</p></html>",
+		            		input,
+	                        idx+1,
+	                        character);
+		            	getWindow().showNotification("Information", message);
+		            }
+		            else {
+		            	String message = MessageFormat.format(
+		            			"<html><p>There is something wrong with your query <b>{0}</b>.</p> <p>If you are unsure about how to construct a query try the Query Builder!</p></html>",
+			            		input);
+		            	getWindow().showNotification("Information", message);
+		            }
+				}
+				else {
+					((CatmaApplication)getApplication()).showAndLogError(
+						"Error during search!", t);
+				}
 			}
 		});
 	}

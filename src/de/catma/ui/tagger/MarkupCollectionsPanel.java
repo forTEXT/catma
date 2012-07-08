@@ -151,8 +151,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 					@SuppressWarnings("unchecked")
 					Pair<TagLibrary, TagsetDefinition> addOpResult = 
 							 (Pair<TagLibrary, TagsetDefinition>) newValue;	
-					if (currentWritableUserMarkupColl.getTagLibrary().equals(
-							addOpResult.getFirst())) {
+					if ((currentWritableUserMarkupColl != null) &&
+							currentWritableUserMarkupColl.getTagLibrary().equals(
+									addOpResult.getFirst())) {
 						addTagsetDefinitionToTree(
 							addOpResult.getSecond(), currentWritableUserMarkupColl);
 					}

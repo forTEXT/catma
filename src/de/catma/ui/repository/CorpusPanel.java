@@ -188,11 +188,16 @@ public class CorpusPanel extends VerticalLayout {
 				
 				
 				Object selectedValue = corporaTree.getValue();
-				if (!selectedValue.equals(allDocuments)) {
-					selectedCorpus = (Corpus)selectedValue;
+				if (selectedValue != null) {
+					if (!selectedValue.equals(allDocuments)) {
+						selectedCorpus = (Corpus)selectedValue;
+					}
+					((AnalyzerProvider)getApplication()).analyze(
+							selectedCorpus, (IndexedRepository)repository);
 				}
-				((AnalyzerProvider)getApplication()).analyze(
-						selectedCorpus, (IndexedRepository)repository);
+				else {
+					getWindow().showNotification("Information", "Please select a corpus first!");
+				}
 			}
 		});
 		
