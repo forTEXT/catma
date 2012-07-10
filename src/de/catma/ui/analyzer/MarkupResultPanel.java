@@ -9,7 +9,9 @@ import java.util.Set;
 
 import com.vaadin.data.Property;
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.terminal.ClassResource;
 import com.vaadin.ui.AbstractComponent;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
@@ -22,9 +24,13 @@ import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.queryengine.result.AccumulativeGroupedQueryResult;
+import de.catma.queryengine.result.GroupedQueryResult;
+import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
+import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
@@ -151,20 +157,134 @@ public class MarkupResultPanel extends VerticalLayout {
 	private TreeTable resultTable;
 	private Repository repository;
 	private KwicPanel kwicPanel;
+	private Button bDist;
+	private boolean init = false;
+	private GroupedQueryResultSelectionListener resultSelectionListener;
 
-	public MarkupResultPanel(Repository repository) {
+	public MarkupResultPanel(
+			Repository repository, 
+			GroupedQueryResultSelectionListener resultSelectionListener) {
 		this.repository = repository;
-		initComponents();
+		this.resultSelectionListener = resultSelectionListener;
 	}
 	
+	@Override
+	public void attach() {
+		super.attach();
+		if (!init) {
+			initComponents();
+			initActions();
+			init = true;
+		}
+	}
+	
+	private void initActions() {
+		bDist.addListener(new ClickListener() {
+			
+			@SuppressWarnings("unchecked")
+			public void buttonClick(ClickEvent event) {
+				GroupedQueryResultSet set = new GroupedQueryResultSet();
+				
+				Set<GroupedQueryResult> selection = new HashSet<GroupedQueryResult>();
+				
+				selection.addAll(
+						getSelectionAsGroupedQueryResults(
+								(Set<Object>)resultTable.getValue()));
+				
+				if (selection.size() > 1) {
+					AccumulativeGroupedQueryResult accResult =
+							new AccumulativeGroupedQueryResult(selection);
+					
+					set.add(accResult);
+				}
+				else if (selection.size() == 1) {
+					set.add(selection.iterator().next());
+				}
+				
+				if (selection.size() > 0) {
+					resultSelectionListener.resultsSelected(set);
+				}
+				else {
+					getWindow().showNotification(
+							"Information", "Please select one or more result rows!");
+				}
+			}
+
+
+		});
+	}
+	
+	private Collection<TagQueryResult> getSelectionAsGroupedQueryResults(
+			Set<Object> selection) {
+		
+		Set<TagQueryResultRow> rows = new HashSet<TagQueryResultRow>();
+		for (Object selValue : selection) {
+			rows.addAll(getTagQueryResultRows(selValue));
+		}
+		
+		Map<String, TagQueryResult> tagQueryResultsByTagDefPath = 
+				new HashMap<String, TagQueryResult>();
+		
+		HashMap<String, UserMarkupCollection> umcCache = new HashMap<String, UserMarkupCollection>();
+		
+		for(TagQueryResultRow row : rows) {
+			try {
+				if (!umcCache.containsKey(row.getMarkupCollectionId())) {
+					SourceDocument sd = repository.getSourceDocument(row.getSourceDocumentId());
+					UserMarkupCollectionReference umcRef = 
+							sd.getUserMarkupCollectionReference(row.getMarkupCollectionId());
+					UserMarkupCollection umc = repository.getUserMarkupCollection(umcRef);
+					umcCache.put(umc.getId(), umc);
+				}
+				UserMarkupCollection umc = umcCache.get(row.getMarkupCollectionId());
+				TagDefinition td = umc.getTagLibrary().getTagDefinition(row.getTagDefinitionId());
+				String tagPath = umc.getTagLibrary().getTagPath(td);
+	
+				if (!tagQueryResultsByTagDefPath.containsKey(tagPath)) {
+					tagQueryResultsByTagDefPath.put(tagPath, new TagQueryResult(tagPath));
+				}
+				
+				TagQueryResult tagQueryResult = tagQueryResultsByTagDefPath.get(tagPath);
+				tagQueryResult.addTagQueryResultRow(row);
+			}
+			catch (IOException ioe) {
+				((CatmaApplication)getApplication()).showAndLogError(
+						"Error preparing markup results!",
+						ioe);
+			}
+		}
+		
+		
+		return tagQueryResultsByTagDefPath.values();
+	}
+
+	private Collection<? extends TagQueryResultRow> getTagQueryResultRows(Object selValue) {
+		HashSet<TagQueryResultRow> result = new HashSet<TagQueryResultRow>();
+		if (resultTable.hasChildren(selValue)) {
+			for (Object child : resultTable.getChildren(selValue)) {
+				if (child instanceof TagQueryResultRow) {
+					result.add((TagQueryResultRow) child);
+				}
+				else {
+					result.addAll(getTagQueryResultRows(child));
+				}
+			}
+		}
+		return result;
+	}
+
 	private void initComponents() {
 		setSizeFull();
 		
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		splitPanel.setSizeFull();
+		VerticalLayout leftComponent = new VerticalLayout();
+		leftComponent.setSpacing(true);
+		leftComponent.setSizeFull();
 		
 		resultTable = new TreeTable();
 		resultTable.setSelectable(true);
+		resultTable.setMultiSelect(true);
 		HierarchicalContainer container = new HierarchicalContainer();
 		container.setItemSorter(
 				new PropertyDependentItemSorter(
@@ -188,7 +308,18 @@ public class MarkupResultPanel extends VerticalLayout {
 		resultTable.setSizeFull();
 		//TODO: a description generator that shows the version of a Tag
 //		resultTable.setItemDescriptionGenerator(generator);
-		splitPanel.addComponent(resultTable);
+		
+		leftComponent.addComponent(resultTable);
+		leftComponent.setExpandRatio(resultTable, 1.0f);
+		
+		
+		bDist = new Button();
+		bDist.setIcon(new ClassResource(
+				"ui/analyzer/resources/chart.gif", 
+				getApplication()));
+		leftComponent.addComponent(bDist);
+		
+		splitPanel.addComponent(leftComponent);
 		
 		this.kwicPanel = new KwicPanel(repository, true);
 		splitPanel.addComponent(kwicPanel);

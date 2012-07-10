@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
 import com.vaadin.terminal.gwt.server.WebBrowser;
@@ -45,6 +46,7 @@ import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 public class TaggerView extends VerticalLayout 
 	implements TaggerListener, ClosableTab {
 	
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private SourceDocument sourceDocument;
 	private Tagger tagger;
 	private Pager pager;
@@ -231,9 +233,25 @@ public class TaggerView extends VerticalLayout
 			TagsetDefinition tagsetDef =
 					markupPanel.getTagsetDefinition(
 							clientTagInstance.getTagDefinitionID());
-			
-			tagManager.addTagsetDefinition(
-					tagLibrary, new TagsetDefinition(tagsetDef));
+			if (tagLibrary.getTagsetDefinition(tagsetDef.getUuid()) == null) {
+				tagManager.addTagsetDefinition(
+						tagLibrary, new TagsetDefinition(tagsetDef));
+			}
+			else {
+				//this should not happen, because we update TagsetDefinitions immedately
+				logger.severe(
+					"TagDefinition not found, but TagsetDefinition is present, " +
+					"expected was either a complete TagsetDefiniton or no TagsetDefinition," +
+					"adding TagDefinition instead of TagsetDefinition now: orig TagsetDef: " + 
+					tagsetDef + " orig TagDef: " +tagsetDef.getTagDefinition(
+							clientTagInstance.getTagDefinitionID()));
+				
+				tagManager.addTagDefintion(
+					tagLibrary.getTagsetDefinition(tagsetDef.getUuid()),
+					new TagDefinition(
+						tagsetDef.getTagDefinition(
+							clientTagInstance.getTagDefinitionID())));
+			}
 		}
 		
 		TagDefinition tagDef = 

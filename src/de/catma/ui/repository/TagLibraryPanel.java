@@ -75,17 +75,17 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		tagLibraryChangedListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
-				if (evt.getOldValue() == null) {
+				if (evt.getOldValue() == null) { //insert
 					TagLibraryReference tagLibraryRef = 
 							(TagLibraryReference)evt.getNewValue();
 					addTagLibraryReferenceToTree(tagLibraryRef);
 				}
-				else if (evt.getNewValue() == null) {
+				else if (evt.getNewValue() == null) { //remove
 					TagLibraryReference tagLibraryRef = 
 							(TagLibraryReference)evt.getOldValue();
 					tagLibrariesTree.removeItem(tagLibraryRef);
 				}
-				else {
+				else { //update
 					tagLibrariesTree.requestRepaint();
 				}
 			}

@@ -1,6 +1,7 @@
 package de.catma.ui.analyzer;
 
 import java.io.IOException;
+import java.util.Set;
 
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.terminal.ClassResource;
@@ -16,6 +17,7 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
+import de.catma.queryengine.result.AccumulativeGroupedQueryResult;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
@@ -24,30 +26,67 @@ import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 
 public class PhraseResultPanel extends VerticalLayout {
 	
-	static interface VisualizeGroupedQueryResultSelectionListener {
-		public void setSelected(
-				GroupedQueryResultSet groupedQueryResultSet, boolean selected);
-	}
-	
 	private static enum TreePropertyName {
 		caption,
 		frequency, 
 		visibleInKwic,
-		showAsDistributionChart,
 		;
 	}
 	
 	private TreeTable resultTable;
 	private Repository repository;
 	private KwicPanel kwicPanel;
-	private VisualizeGroupedQueryResultSelectionListener resultSelectionListener;
+	private GroupedQueryResultSelectionListener resultSelectionListener;
+	private Button bDist;
+	private boolean init = false;
 
 	public PhraseResultPanel(
 			Repository repository, 
-			VisualizeGroupedQueryResultSelectionListener resultSelectionListener) {
+			GroupedQueryResultSelectionListener resultSelectionListener) {
 		this.repository = repository;
 		this.resultSelectionListener = resultSelectionListener;
-		initComponents();
+	}
+	
+	@Override
+	public void attach() {
+		super.attach();
+		if (!init) {
+			initComponents();
+			initActions();
+			init = true;
+		}
+	}
+
+	private void initActions() {
+		bDist.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				GroupedQueryResultSet set = new GroupedQueryResultSet();
+				
+				@SuppressWarnings("unchecked")
+				Set<GroupedQueryResult> selection = 
+						(Set<GroupedQueryResult>) resultTable.getValue();
+				if (selection.size() > 1) {
+					AccumulativeGroupedQueryResult accResult =
+							new AccumulativeGroupedQueryResult(selection);
+					
+					set.add(accResult);
+				}
+				else if (selection.size() == 1) {
+					set.add(selection.iterator().next());
+				}
+				
+				if (selection.size() > 0) {
+					resultSelectionListener.resultsSelected(set);
+				}
+				else {
+					getWindow().showNotification(
+							"Information", "Please select one or more result rows!");
+				}
+			}
+
+
+		});
 	}
 
 	private void initComponents() {
@@ -55,9 +94,13 @@ public class PhraseResultPanel extends VerticalLayout {
 		
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		splitPanel.setSizeFull();
+		VerticalLayout leftComponent = new VerticalLayout();
+		leftComponent.setSpacing(true);
+		leftComponent.setSizeFull();
 		
 		resultTable = new TreeTable();
 		resultTable.setSelectable(true);
+		resultTable.setMultiSelect(true);
 		HierarchicalContainer container = new HierarchicalContainer();
 		container.setItemSorter(
 				new PropertyDependentItemSorter(
@@ -75,17 +118,21 @@ public class PhraseResultPanel extends VerticalLayout {
 		resultTable.addContainerProperty(
 				TreePropertyName.visibleInKwic, AbstractComponent.class, null);
 		resultTable.setColumnHeader(TreePropertyName.visibleInKwic, "Visible in Kwic");
-		resultTable.addContainerProperty(
-				TreePropertyName.showAsDistributionChart, AbstractComponent.class,
-				null);
-		resultTable.setColumnHeader(
-				TreePropertyName.showAsDistributionChart, "Distribution");
 		
 		resultTable.setItemCaptionPropertyId(TreePropertyName.caption);
 		resultTable.setPageLength(10); //TODO: config
 		resultTable.setSizeFull();
-		splitPanel.addComponent(resultTable);
 		
+		leftComponent.addComponent(resultTable);
+		leftComponent.setExpandRatio(resultTable, 1.0f);
+		
+		bDist = new Button();
+		bDist.setIcon(new ClassResource(
+				"ui/analyzer/resources/chart.gif", 
+				getApplication()));
+		leftComponent.addComponent(bDist);
+		
+		splitPanel.addComponent(leftComponent);
 		
 		this.kwicPanel = new KwicPanel(repository);
 		splitPanel.addComponent(kwicPanel);
@@ -117,12 +164,11 @@ public class PhraseResultPanel extends VerticalLayout {
 		resultTable.addItem(new Object[]{
 				phraseResult.getGroup(), 
 				phraseResult.getTotalFrequency(),
-				createKwicCheckbox(phraseResult),
-				createDistChartButton(phraseResult)},
-				phraseResult.getGroup());
+				createKwicCheckbox(phraseResult)},
+				phraseResult);
 
 		resultTable.getContainerProperty(
-			phraseResult.getGroup(), TreePropertyName.caption).setValue(
+			phraseResult, TreePropertyName.caption).setValue(
 					phraseResult.getGroup());
 		
 		for (String sourceDocumentID : phraseResult.getSourceDocumentIDs()) {
@@ -137,7 +183,7 @@ public class PhraseResultPanel extends VerticalLayout {
 			resultTable.getContainerProperty(
 					sourceDocumentItemID, TreePropertyName.caption).setValue(
 							sourceDocument.toString());
-			resultTable.setParent(sourceDocumentItemID, phraseResult.getGroup());
+			resultTable.setParent(sourceDocumentItemID, phraseResult);
 			
 			resultTable.setChildrenAllowed(sourceDocumentItemID, false);
 		}
@@ -159,28 +205,6 @@ public class PhraseResultPanel extends VerticalLayout {
 
 		});
 		return cbShowInKwicView;
-	}
-
-	private Button createDistChartButton(final GroupedQueryResult phraseResult) {
-		Button bDist = new Button();
-		bDist.setIcon(new ClassResource(
-				"ui/analyzer/resources/chart.gif", 
-				getApplication()));
-		
-		bDist.addListener(new ClickListener() {
-			
-			public void buttonClick(ClickEvent event) {
-				boolean selected = 
-						event.getButton().booleanValue();
-
-				GroupedQueryResultSet set = new GroupedQueryResultSet();
-				set.add(phraseResult);
-				resultSelectionListener.setSelected(set, selected);
-			}
-
-
-		});
-		return bDist;
 	}
 	
 	private void fireShowInKwicViewSelected(GroupedQueryResult phraseResult,

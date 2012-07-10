@@ -432,6 +432,8 @@ class DBSourceDocumentHandler {
 			}				
 			session.getTransaction().commit();
 			
+			sourceDocumentsByID.remove(sourceDocument.getID());
+			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					RepositoryChangeEvent.sourceDocumentChanged.name(),
 					sourceDocument, null);

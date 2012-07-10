@@ -63,7 +63,7 @@ public class DebugUtil {
 					"#"+ e.getId();
 		}
 		else {
-			return node.getNodeName() + "[" + node.getNodeValue() + "]";
+			return node.getNodeName() + "[" + node.getNodeValue() + "]T"+node.getNodeType();
 		}
 	}
 	

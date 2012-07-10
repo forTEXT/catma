@@ -30,6 +30,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	private SourceDocumentPanel sourceDocumentPanel;
 	private CorpusPanel corpusPanel;
 	private TagLibraryPanel tagLibraryPanel;
+	private boolean init = false;
 	
 	public RepositoryView(Repository repository) {
 		this.repository = repository;
@@ -49,9 +50,13 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	@Override
 	public void attach() {
 		super.attach();
-		this.repository.addPropertyChangeListener(
-				Repository.RepositoryChangeEvent.exceptionOccurred, 
-				exceptionOccurredListener);
+		if (!init) {
+			this.repository.addPropertyChangeListener(
+					Repository.RepositoryChangeEvent.exceptionOccurred, 
+					exceptionOccurredListener);
+			init = true;
+		}
+		
 	}
 
 	private void initComponents() {

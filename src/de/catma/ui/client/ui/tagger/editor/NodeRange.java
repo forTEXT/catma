@@ -94,6 +94,7 @@ public class NodeRange {
 			if(endNode.getNodeValue().length() > 10) {
 				builder.append("...");
 			}
+			builder.append("|");
 			builder.append(endOffset);
 			builder.append("]");
 		}

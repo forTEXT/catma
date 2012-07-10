@@ -441,7 +441,7 @@ public class TaggerEditor extends FocusWidget
 			for (Range r : lastRangeList) {
 				if ((r.getEndNode()!=r.getStartNode()) 
 						|| (r.getEndOffset() != r.getStartOffset())) {
-					VConsole.log("found at least on range: " + r);
+					VConsole.log("found at least one range: " + r);
 					return true;
 				}
 			}

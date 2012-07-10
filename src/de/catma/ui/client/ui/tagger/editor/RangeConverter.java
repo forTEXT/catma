@@ -70,10 +70,12 @@ public class RangeConverter {
 		
 		Node textLeaf = LeafFinder.getFirstTextLeaf(root);
 		//TODO: should not return null, but better handle this case here and elsewhere in this class 
+		VConsole.log("converting Text- to NodeRange starting at first text leaf: " + DebugUtil.getNodeInfo(textLeaf));
 		
 		LeafFinder leafFinder = new LeafFinder(textLeaf,root);
 		NodeRange nodeRange = new NodeRange();
 		int lastSize = findAndAddNode(0, leafFinder, textLeaf, textRange.getStartPos(), nodeRange);
+		
 		findAndAddNode(lastSize, leafFinder, nodeRange.getStartNode(), textRange.getEndPos(), nodeRange);
 		
 		VConsole.log("STARTNODE!: " + nodeRange.getStartNode().getNodeValue());
@@ -145,11 +147,25 @@ public class RangeConverter {
 		return pos;
 	}
 	
+	/**
+	 * Hopping forward (to the right) through the text leaves until the text leaf
+	 * with the position pos has been found. Startposition is startPos and 
+	 * startNode is textLeaf
+	 * @param startPos start position
+	 * @param leafFinder the finder for text leaves
+	 * @param textLeaf start node
+	 * @param pos the position we are looking for
+	 * @param nodeRange the node container for the result
+	 * @return the endposition, where the search stopped
+	 */
 	private int findAndAddNode(
-			int startSize, LeafFinder leafFinder, Node textLeaf, 
+			int startPos, LeafFinder leafFinder, Node textLeaf, 
 			int pos, NodeRange nodeRange) {
+		VConsole.log(
+			"looking for position " + pos 
+			+ " from startpos " + pos + "@" + DebugUtil.getNodeInfo(textLeaf));
 		
-		int curSize = startSize;
+		int curSize = startPos;
 		Node node = null;
 		
 		while((textLeaf != null) && (node == null)){

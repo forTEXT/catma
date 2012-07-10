@@ -19,13 +19,16 @@
 
 package de.catma.queryengine;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.Indexer;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
@@ -62,17 +65,34 @@ public class TagQuery extends Query {
 
     @Override
     protected QueryResult execute() throws Exception {
+
     	QueryOptions queryOptions = getQueryOptions();
+    	Repository repository = queryOptions.getRepository();
     	
         Indexer indexer = queryOptions.getIndexer();
+        List<String> relevantUserMarkupCollIDs = 
+        		queryOptions.getRelevantUserMarkupCollIDs();
+        
+        if (relevantUserMarkupCollIDs.isEmpty() 
+        		&& !queryOptions.getRelevantSourceDocumentIDs().isEmpty()) {
+        	relevantUserMarkupCollIDs = new ArrayList<String>();
+        	for (String sourceDocumentId 
+        			: queryOptions.getRelevantSourceDocumentIDs()) {
+        		for (UserMarkupCollectionReference umcRef : 
+        			repository.getSourceDocument(sourceDocumentId).getUserMarkupCollectionRefs()) {
+        			relevantUserMarkupCollIDs.add(umcRef.getId());
+        		}
+        	}
+        }
         
         QueryResult result = 
 				indexer.searchTagDefinitionPath(
-						queryOptions.getRelevantUserMarkupCollIDs(),
+						relevantUserMarkupCollIDs,
 						tagPhrase);
         
-        Repository repository = queryOptions.getRepository();
+        
         Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
+
         for (QueryResultRow row  : result) {
         	SourceDocument sd = 
         			repository.getSourceDocument(row.getSourceDocumentId());

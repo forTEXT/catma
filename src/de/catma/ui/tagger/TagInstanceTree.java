@@ -58,6 +58,7 @@ public class TagInstanceTree extends HorizontalLayout {
 					List<String> tagInstanceIDs = new ArrayList<String>();
 					tagInstanceIDs.add(selectedItem.getUuid());
 					tagInstanceActionListener.removeTagInstances(tagInstanceIDs);
+					tagInstanceTree.removeItem(selectedItem);
 				}
 			}
 		});

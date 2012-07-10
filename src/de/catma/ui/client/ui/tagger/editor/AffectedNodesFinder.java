@@ -48,10 +48,12 @@ public class AffectedNodesFinder {
 		affectedNodes = new Stack<Node>();
 		
 		setStartNodeAndOuterLimits(root, node1, node2);
-		
+		VConsole.log("AffectedNodesFinder startNode: " + DebugUtil.getNodeInfo(startNode));
+		VConsole.log("AffectedNodesFinder outerLeftNode: " + DebugUtil.getNodeInfo(outerLeftNode));
+		VConsole.log("AffectedNodesFinder outerRightNode: " + DebugUtil.getNodeInfo(outerRightNode));
 		walk(startNode);
-//		DebugUtil.printNode(startNode);
-//		DebugUtil.printNodes("affectedNodes", affectedNodes);
+
+		DebugUtil.printNodes("AffectedNodesFinder affectedNodes", affectedNodes);
 	}
 
 	private void setStartNodeAndOuterLimits(Element root, Node node1, Node node2) {
@@ -116,6 +118,7 @@ public class AffectedNodesFinder {
 	 * @param curNode the (relative) root node to start with 
 	 */
 	private void walk(Node curNode) {
+		VConsole.log("AffectedNodesFinder walking node: " + DebugUtil.getNodeInfo(curNode));
 		
 		// check if we're still within the affected subtree 
 		// and the current node has any taggable content
@@ -126,11 +129,16 @@ public class AffectedNodesFinder {
 			// all text nodes gets added, in case we get into the affected subtree with this 
 			// node or one of its children 
 			if (curNode.getNodeType() == Node.TEXT_NODE) {
+				VConsole.log("AffectedNodesFinder pushing text node: " + DebugUtil.getNodeInfo(curNode));
 				affectedNodes.push(curNode);
+			}
+			else {
+				VConsole.log("no text node " + DebugUtil.getNodeInfo(curNode));
 			}
 			
 			// we check for children and go down the subtrees
 			if (curNode.hasChildNodes()) {
+				VConsole.log("AffectedNodesFinder walking down: " + DebugUtil.getNodeInfo(curNode));
 				for (int i=0; i<curNode.getChildCount(); i++) {
 					walk(curNode.getChild(i));
 				}
@@ -138,11 +146,14 @@ public class AffectedNodesFinder {
 			// if we reach the outer left node
 			// we're in the affacted subtree -> all parent nodes can stay on the stack
 			else if(curNode.equals(outerLeftNode)) {
+				VConsole.log("AffectedNodesFinder outer left node reached: " + DebugUtil.getNodeInfo(curNode));
+
 				this.inAffectedSubtree = true;
 			}
 			// if we reach the outer right node
 			// we reject all the rest of the upcoming nodes
 			else if(curNode.equals(outerRightNode)) {
+				VConsole.log("AffectedNodesFinder outer right node reached: " + DebugUtil.getNodeInfo(curNode));
 				this.outOfAffectedSubtree = true;
 			}
 			// if the current node is a text node it has already been pushed onto the stack
@@ -150,7 +161,8 @@ public class AffectedNodesFinder {
 			// (not being in the affected subtree means neither the current node nor one of its 
 			//  children is the outer left node)
 			if (!inAffectedSubtree && (curNode.getNodeType() == Node.TEXT_NODE)) {
-				affectedNodes.pop();
+				Node poppedNode = affectedNodes.pop();
+				VConsole.log("not in affected subtree, popped node " +  DebugUtil.getNodeInfo(poppedNode));
 			}
 		}
 	}

@@ -48,13 +48,14 @@ import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.computation.DistributionComputation;
-import de.catma.ui.analyzer.PhraseResultPanel.VisualizeGroupedQueryResultSelectionListener;
 import de.catma.ui.analyzer.querybuilder.QueryBuilderWizardFactory;
 import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabComponent;
 
-public class AnalyzerView extends VerticalLayout implements ClosableTab, TabComponent {
+public class AnalyzerView extends VerticalLayout 
+implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener {
+	
 	static interface CloseListener {
 		public void closeRequest(AnalyzerView analyzerView);
 	}
@@ -98,6 +99,7 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab, TabComp
 	}
 
 	private void initListeners() {
+		//FIXME: update result panels to prevent stale results
 		sourceDocumentChangedListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
@@ -128,9 +130,14 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab, TabComp
 					// no action needed
 				}
 				else if (evt.getNewValue() == null) { // remove
+					
 					UserMarkupCollectionReference userMarkupCollectionReference =
 							(UserMarkupCollectionReference) evt.getOldValue();
-					removeUserMarkupCollectionFromTree(userMarkupCollectionReference);
+					if (relevantUserMarkupCollIDs.contains(
+							userMarkupCollectionReference)) {
+						removeUserMarkupCollectionFromTree(
+								userMarkupCollectionReference);
+					}
 				}
 				else { // update
 					documentsTree.requestRepaint();
@@ -145,21 +152,32 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab, TabComp
 			
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getNewValue() == null) { //remove
-					// no action needed
+					Corpus corpus = (Corpus) evt.getNewValue();
+					if ((AnalyzerView.this.corpus != null) 
+							&& corpus.getId().equals(AnalyzerView.this.corpus.getId())) {
+						
+						//detaching relevant documents from corpus
+						//the documents itself are not removed
+						AnalyzerView.this.corpus = null; 
+					}
 				}
 				else if (evt.getOldValue() == null) { //add
 					// no action needed
 				}
 				else { 
-					//update sourcedoc added
-					if (evt.getOldValue() instanceof SourceDocument) {
-						addSourceDocument((SourceDocument)evt.getOldValue());
-					}
-					// update usermarkupcoll added
-					else if (evt.getOldValue() 
-							instanceof UserMarkupCollectionReference) {
-						addUserMarkupCollection(
-							(UserMarkupCollectionReference)evt.getOldValue());
+					Corpus corpus = (Corpus)evt.getNewValue();
+					if ((AnalyzerView.this.corpus != null) 
+							&& AnalyzerView.this.corpus.getId().equals(corpus.getId())) {
+						//update sourcedoc added
+						if (evt.getOldValue() instanceof SourceDocument) {
+							addSourceDocument((SourceDocument)evt.getOldValue());
+						}
+						// update usermarkupcoll added
+						else if (evt.getOldValue() 
+								instanceof UserMarkupCollectionReference) {
+							addUserMarkupCollection(
+								(UserMarkupCollectionReference)evt.getOldValue());
+						}
 					}
  				}
 			}
@@ -216,6 +234,7 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab, TabComp
 		if ((children != null) && (children.size() > 0)) {
 			documentsTree.removeItem(children.iterator().next());
 		}
+		documentsTree.removeItem(sourceDocument);
 	}
 
 	private void initActions() {
@@ -352,6 +371,16 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab, TabComp
 		});
 	}
 	
+	public void resultsSelected(GroupedQueryResultSet groupedQueryResultSet) {
+		try {
+			handleDistributionChartRequest(groupedQueryResultSet);
+		} catch (IOException e) {
+			((CatmaApplication)getApplication()).showAndLogError(
+				"Error showing the distribution chart",
+				e);
+		}
+	}
+	
 	private void initComponents() {
 		setSizeFull();
 		
@@ -397,26 +426,12 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab, TabComp
 	}
 
 	private Component createResultByMarkupView() {
-		markupResultPanel = new MarkupResultPanel(repository);
+		markupResultPanel = new MarkupResultPanel(repository, this);
 		return markupResultPanel;
 	}
 
 	private Component createResultByPhraseView() {
-		phraseResultPanel = new PhraseResultPanel(repository,
-				new VisualizeGroupedQueryResultSelectionListener() {
-					
-					public void setSelected(GroupedQueryResultSet groupedQueryResultSet,
-							boolean selected) {
-						try {
-							handleDistributionChartRequest(
-									groupedQueryResultSet, selected);
-						} catch (IOException e) {
-							((CatmaApplication)getApplication()).showAndLogError(
-								"Error showing the distribution chart",
-								e);
-						}
-					}
-				});
+		phraseResultPanel = new PhraseResultPanel(repository, this);
 		return phraseResultPanel;
 	}
 
@@ -504,7 +519,7 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab, TabComp
 	}
 
 	private void handleDistributionChartRequest(
-			GroupedQueryResultSet groupedQueryResultSet, boolean selected) throws IOException {
+			GroupedQueryResultSet groupedQueryResultSet) throws IOException {
 
 		DistributionComputation dc = new DistributionComputation(
 				groupedQueryResultSet, repository, relevantSourceDocumentIDs);
@@ -525,10 +540,6 @@ public class AnalyzerView extends VerticalLayout implements ClosableTab, TabComp
 				userMarkupDocumentChangedListener);	
 		
 		closeListener = null;
-	}
-
-	public Corpus getCorpus() {
-		return corpus;
 	}
 	
 	public void addClickshortCuts() {

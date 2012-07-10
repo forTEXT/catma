@@ -14,15 +14,9 @@ import com.invient.vaadin.charts.InvientChartsConfig.AxisBase.AxisTitle;
 import com.invient.vaadin.charts.InvientChartsConfig.AxisBase.NumberPlotBand;
 import com.invient.vaadin.charts.InvientChartsConfig.AxisBase.NumberPlotBand.NumberRange;
 import com.invient.vaadin.charts.InvientChartsConfig.AxisBase.PlotLabel;
-import com.invient.vaadin.charts.InvientChartsConfig.GeneralChartConfig.Margin;
-import com.invient.vaadin.charts.InvientChartsConfig.HorzAlign;
-import com.invient.vaadin.charts.InvientChartsConfig.Legend;
-import com.invient.vaadin.charts.InvientChartsConfig.Legend.Layout;
 import com.invient.vaadin.charts.InvientChartsConfig.LineConfig;
 import com.invient.vaadin.charts.InvientChartsConfig.NumberXAxis;
 import com.invient.vaadin.charts.InvientChartsConfig.NumberYAxis;
-import com.invient.vaadin.charts.InvientChartsConfig.Position;
-import com.invient.vaadin.charts.InvientChartsConfig.VertAlign;
 import com.invient.vaadin.charts.InvientChartsConfig.XAxis;
 import com.invient.vaadin.charts.InvientChartsConfig.YAxis;
 import com.vaadin.ui.HorizontalLayout;
@@ -47,9 +41,9 @@ public class DistributionChartView extends HorizontalLayout implements ClosableT
 		
         chartConfig.getGeneralChartConfig().setType(SeriesType.LINE);
         
-        chartConfig.getGeneralChartConfig().setMargin(new Margin());
-        chartConfig.getGeneralChartConfig().getMargin().setRight(130);
-        chartConfig.getGeneralChartConfig().getMargin().setBottom(25);
+//        chartConfig.getGeneralChartConfig().setMargin(new Margin());
+//        chartConfig.getGeneralChartConfig().getMargin().setRight(130);
+//        chartConfig.getGeneralChartConfig().getMargin().setBottom(150);
 
         chartConfig.getTitle().setX(-20);
         chartConfig.getTitle().setText("Distribution chart");
@@ -70,16 +64,18 @@ public class DistributionChartView extends HorizontalLayout implements ClosableT
         yAxesSet.add(numberYAxis);
         chartConfig.setYAxes(yAxesSet);
 
-        Legend legend = new Legend();
-        legend.setLayout(Layout.VERTICAL);
-        Position legendPos = new Position();
-        legendPos.setAlign(HorzAlign.RIGHT);
-        legendPos.setVertAlign(VertAlign.TOP);
-        legendPos.setX(-10);
-        legendPos.setY(100);
-        legend.setPosition(legendPos);
-        legend.setBorderWidth(0);
-        chartConfig.setLegend(legend);
+//        Legend legend = new Legend();
+//        legend.setLayout(Layout.VERTICAL);
+//        legend.setWidth(380);
+//        Position legendPos = new Position();
+//        legendPos.setAlign(HorzAlign.RIGHT);
+//        legendPos.setVertAlign(VertAlign.TOP);
+//        legendPos.setX(255);
+//        legendPos.setY(100);
+//        
+//        legend.setPosition(legendPos);
+//        legend.setBorderWidth(0);
+//        chartConfig.setLegend(legend);
 
 //         Series data label formatter
         LineConfig lineCfg = new LineConfig();
@@ -96,9 +92,11 @@ public class DistributionChartView extends HorizontalLayout implements ClosableT
 	                        + "}");
         chart = new InvientCharts(chartConfig);
         chart.setSizeFull();
-        chart.setStyleName("v-chart-min-width");
+//        chart.setHeight("400px");
+//        chart.setWidth("600px");
 
         addComponent(chart);
+        setSizeFull();
 	}
 	
 	public void addDistributionComputation(
@@ -129,7 +127,13 @@ public class DistributionChartView extends HorizontalLayout implements ClosableT
 	    NumberPlotBand numberPlotBand = new NumberPlotBand(plotBand.getId());
 		if (!xAxis.getPlotBands().contains(numberPlotBand)) {
 		    numberPlotBand.setRange(new NumberRange(plotBand.getStart(), plotBand.getEnd()));
-		    numberPlotBand.setLabel(new PlotLabel(plotBand.getLabel()));
+		    String label = plotBand.getLabel().substring(0,Math.min(plotBand.getLabel().length(), 10));
+		    if (label.length() < plotBand.getLabel().length()) {
+		    	label += "...";
+		    }
+		    PlotLabel plotLabel = new PlotLabel(label);
+		    plotLabel.setRotation(-90);
+		    numberPlotBand.setLabel(plotLabel);
 		    int[] color = ColorConverter.getRandomNonDarkColor();
 		    while (colorExists(color)) {
 		    	color = ColorConverter.getRandomNonDarkColor();

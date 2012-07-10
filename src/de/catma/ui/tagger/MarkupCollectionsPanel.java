@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
+import com.vaadin.Application;
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.util.HierarchicalContainer;
@@ -72,6 +73,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private Repository repository;
 	private Set<TagsetDefinition> updateableTagsetDefinitons;
 	private PropertyChangeListener userMarkupCollectionChangedListener;
+	private Application application;
 	
 	public MarkupCollectionsPanel(TagManager tagManager, Repository repository) {
 		propertyChangeSupport = new PropertyChangeSupport(this);
@@ -82,6 +84,12 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		updateableTagsetDefinitons = new HashSet<TagsetDefinition>();
 		initComponents();
 		initActions();
+	}
+	
+	@Override
+	public void attach() {
+		super.attach();
+		this.application = getApplication();
 	}
 
 	public void addPropertyChangeListener(MarkupCollectionPanelEvent propertyName,
@@ -512,7 +520,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		
 		ClassResource tagsetIcon = 
 				new ClassResource(
-					"ui/tagmanager/resources/grndiamd.gif", getApplication());
+					"ui/tagmanager/resources/grndiamd.gif", application);
 
 		markupCollectionsTree.addItem(
 				new Object[]{tagsetDefinition.getName(), 
@@ -553,7 +561,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		ClassResource tagIcon = 
 				new ClassResource(
 					"ui/tagmanager/resources/reddiamd.gif", 
-				getApplication());
+				application);
 		
 		markupCollectionsTree.addItem(
 				new Object[]{
@@ -729,7 +737,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		
 		if (!toBeUpdated.isEmpty()) {
 			ConfirmDialog.show(
-				getApplication().getMainWindow(), 
+				application.getMainWindow(), 
 				"There are older versions of the Tagset '" +
 					incomingTagsetDef.getName() +
 					"' in the attached User Markup Collections! " +
@@ -749,6 +757,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			        });
 		}
 		else {
+			updateableTagsetDefinitons.add(incomingTagsetDef);
 			confirmListener.confirmed();
 		}
 	}
