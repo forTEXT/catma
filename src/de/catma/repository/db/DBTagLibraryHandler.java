@@ -766,7 +766,8 @@ class DBTagLibraryHandler {
 				dbTagsetDefinition.getDbTagDefinitions().remove(dbTagDefinition);
 				session.delete(dbTagDefinition);
 			}
-
+			tagsetDefinition.getDeletedTagDefinitions().clear();
+			
 			updateDbTagsetDefinition(session,dbTagsetDefinition, tagsetDefinition);
 		}
 		else {
@@ -857,7 +858,8 @@ class DBTagLibraryHandler {
 			dbTagDefinition.getDbPropertyDefinitions().remove(toBeDeleted);
 			session.delete(toBeDeleted);
 		}
-
+		dbTagDefinition.getDbPropertyDefinitions().clear();
+		
 		for (PropertyDefinition pd : tagDefinition.getSystemPropertyDefinitions()) {
 			updatePropertyDefinition(session, pd, true, dbTagDefinition, tagDefinition);
 		}

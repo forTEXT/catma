@@ -45,7 +45,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	
 	public static enum MarkupCollectionPanelEvent {
 		tagDefinitionSelected,
-		userMarkupCollectionSelected,
+		userMarkupCollectionSelected, 
+		tagDefinitionsRemoved,
 		;
 	}
 	
@@ -338,13 +339,16 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 					userMarkupCollectionManager.getUserMarkupCollections(
 						foreignTagsetDefinition, false);
 
-			userMarkupCollectionManager.updateUserMarkupCollections(
-					outOfSynchCollections, foreignTagsetDefinition);
-			
-			
 			for (UserMarkupCollection umc : outOfSynchCollections) {
 				TagDefinition tagDefinition = umc.getTagLibrary().getTagDefinition(
 						foreignTagDefinition.getUuid());
+				
+				boolean selected = Boolean.valueOf(markupCollectionsTree.getItem(
+						tagDefinition).getItemProperty(
+								MarkupCollectionsTreeProperty.visible).toString());
+				if (selected) {
+					fireTagDefinitionSelected(tagDefinition, false);
+				}
 				
 				Object parentId = markupCollectionsTree.getParent(tagDefinition);
 				removeWithChildrenFromTree(tagDefinition);
@@ -354,6 +358,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				}
 			}
 
+			userMarkupCollectionManager.updateUserMarkupCollections(
+					outOfSynchCollections, foreignTagsetDefinition);
 		}
 
 	}
@@ -765,20 +771,32 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private void updateUserMarkupCollectionsInTree(
 			List<UserMarkupCollection> toBeUpdated) {
 		for (UserMarkupCollection c : toBeUpdated) {
-			Set<TagDefinition> currentlySelected = 
-					getCurrentlySelectedTagDefinitions(c);
-
+			Set<TagDefinition> currentlySelectedValid = 
+					getCurrentlySelectedValidTagDefinitions(c);
+			
+			Collection<?> children = 
+					markupCollectionsTree.getChildren(c);
+			
+			Set<TagDefinition> allSelected = new HashSet<TagDefinition>();
+			collectItemsOfType(TagDefinition.class, children, allSelected);
+			
+			allSelected.removeAll(currentlySelectedValid);
+			
+			propertyChangeSupport.firePropertyChange(
+					MarkupCollectionPanelEvent.tagDefinitionsRemoved.name(), 
+					allSelected, null);
+			
 			removeWithChildrenFromTree(c);
 			addUserMarkupCollectionToTree(c);
 			
-			
-			for (TagDefinition td : currentlySelected) {
-				
+			for (TagDefinition td : currentlySelectedValid) {
 				fireTagDefinitionSelected(td, false);
-				((CheckBox)markupCollectionsTree.getItem(
-					td).getItemProperty(	
-						MarkupCollectionsTreeProperty.visible).getValue()).setValue(true);
-				fireTagDefinitionSelected(td, true);
+				Item item = markupCollectionsTree.getItem(td);
+				if (item != null) {
+					((CheckBox)item.getItemProperty(	
+							MarkupCollectionsTreeProperty.visible).getValue()).setValue(true);
+					fireTagDefinitionSelected(td, true);
+				}
 			}
 			
 		}
@@ -802,9 +820,10 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		return repository;
 	}
 	
-	private Set<TagDefinition> getCurrentlySelectedTagDefinitions(
+	private Set<TagDefinition> getCurrentlySelectedValidTagDefinitions(
 			UserMarkupCollection userMarkupCollection) {
 		HashSet<TagDefinition> result = new HashSet<TagDefinition>();
+
 		
 		for (TagsetDefinition tagsetDefinition : userMarkupCollection.getTagLibrary()) {
 			for (TagDefinition td : tagsetDefinition) {
@@ -824,6 +843,23 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			}
 		}
 		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> void collectItemsOfType(Class<T> clazz, Collection<?> items,
+			Set<T> result) {
+		
+		for (Object o : items) {
+			if (o.getClass().equals(clazz)) {
+				result.add((T)o);
+			}
+			
+			Collection<?> children = markupCollectionsTree.getChildren(o);
+			if ((children != null) && !children.isEmpty()) {
+				collectItemsOfType(clazz, children, result);
+			}
+		}
+		
 	}
 
 	public void removeUpdateableTagsetDefinition(TagsetDefinition tagsetDefinition) {

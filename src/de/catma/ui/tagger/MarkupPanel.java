@@ -45,10 +45,13 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	public MarkupPanel(
 			TagManager tagManager,
 			Repository repository, ColorButtonListener colorButtonListener, 
-			PropertyChangeListener tagDefinitionSelectionListener) {
+			PropertyChangeListener tagDefinitionSelectionListener,
+			PropertyChangeListener tagDefinitionsRemovedListener) {
 		this.colorButtonListener = colorButtonListener;
 		initComponents(
-				tagManager, repository, tagDefinitionSelectionListener);
+				tagManager, repository, 
+				tagDefinitionSelectionListener,
+				tagDefinitionsRemovedListener);
 		initActions();
 	}
 
@@ -72,7 +75,8 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 
 	private void initComponents(
 			final TagManager tagManager, Repository repository, 
-			PropertyChangeListener tagDefinitionSelectionListener) {
+			PropertyChangeListener tagDefinitionSelectionListener, 
+			PropertyChangeListener tagDefinitionsRemovedListener) {
 		
 		tabSheet = new TabSheet();
 		tabSheet.setSizeFull();
@@ -85,6 +89,10 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		markupCollectionsPanel.addPropertyChangeListener(
 				MarkupCollectionPanelEvent.tagDefinitionSelected, 
 				tagDefinitionSelectionListener);
+		markupCollectionsPanel.addPropertyChangeListener(
+				MarkupCollectionPanelEvent.tagDefinitionsRemoved,
+				tagDefinitionsRemovedListener);
+		
 		markupCollectionsPanel.addPropertyChangeListener(
 				MarkupCollectionPanelEvent.userMarkupCollectionSelected, 
 				new PropertyChangeListener() {

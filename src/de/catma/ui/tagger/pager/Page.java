@@ -22,7 +22,10 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,6 +35,7 @@ import nu.xom.Element;
 import nu.xom.Serializer;
 import nu.xom.Text;
 import de.catma.document.Range;
+import de.catma.tag.TagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.ContentElementID;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
@@ -226,5 +230,21 @@ public class Page {
 		return new TextRange(
 				absoluteTextRange.getStartPoint()-pageStart, 
 				absoluteTextRange.getEndPoint()-pageStart);
+	}
+
+	public void removeTagInstances(Set<TagDefinition> tagDefinitions) {
+		Set<String> tagDefUUIds = new HashSet<String>();
+		for (TagDefinition td : tagDefinitions) {
+			tagDefUUIds.add(td.getUuid());
+		}
+		Iterator<Map.Entry<String, ClientTagInstance>> iterator = 
+				relativeTagInstances.entrySet().iterator();
+		while (iterator.hasNext()) {
+			Map.Entry<String, ClientTagInstance> entry = 
+					iterator.next();
+			if (tagDefUUIds.contains(entry.getValue().getTagDefinitionID())) {
+				iterator.remove();
+			}
+		}
 	}
 }

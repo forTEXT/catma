@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import com.vaadin.terminal.gwt.server.WebApplicationContext;
@@ -176,6 +177,16 @@ public class TaggerView extends VerticalLayout
 									selected?evt.getNewValue():evt.getOldValue());
 						
 						tagger.setVisible(tagReferences, selected);
+					}
+				},
+				new PropertyChangeListener() {
+					
+					public void propertyChange(PropertyChangeEvent evt) {
+						@SuppressWarnings("unchecked")
+						Set<TagDefinition> removedTagDefinitions = 
+								(Set<TagDefinition>) evt.getOldValue();
+						pager.removeTagInstances(removedTagDefinitions);
+						tagger.setPage(pager.getCurrentPageNumber());
 					}
 				});
 		

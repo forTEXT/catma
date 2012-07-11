@@ -57,6 +57,8 @@ public class DBUserMarkupCollectionUpdater {
 			DBTagInstance dbTagInstance = iterator.next().getValue();
 			if (!incomingTagInstances.containsKey(
 				idGenerator.uuidBytesToCatmaID(dbTagInstance.getUuid()))) {
+				dbUserMarkupCollection.getDbTagReferences().removeAll(
+						dbTagInstance.getDbTagReferences());
 				session.delete(dbTagInstance);
 				iterator.remove();
 			}

@@ -22,11 +22,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 
 import de.catma.document.Range;
+import de.catma.tag.TagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 
 /**
@@ -149,6 +151,10 @@ public class Pager implements Iterable<Page> {
 		return pages.get(currentPageIndex);
 	}
 	
+	public int getCurrentPageNumber() {
+		return currentPageIndex+1;
+	}
+	
 	public Page getPage(int pageNumber) {
 		int index = pageNumber-1;
 		if (index < 0) {
@@ -202,5 +208,12 @@ public class Pager implements Iterable<Page> {
 	public void setMaxPageLengthInLines(int maxPageLengthInLines) {
 		this.checksum = null; //recalculate pages
 		this.maxPageLengthInLines = maxPageLengthInLines;
+	}
+
+	public void removeTagInstances(Set<TagDefinition> tagDefinitions) {
+		for (Page p : pages) {
+			p.removeTagInstances(tagDefinitions);
+		}
+		
 	}
 }
