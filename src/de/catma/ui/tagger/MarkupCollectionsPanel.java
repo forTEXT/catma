@@ -75,7 +75,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private Set<TagsetDefinition> updateableTagsetDefinitons;
 	private PropertyChangeListener userMarkupCollectionChangedListener;
 	private Application application;
+	private PropertyChangeListener userMarkupCollectionTagLibraryChangedListener;
 	
+	//TODO: arg TagManager is redundant here, we could ask the repo
 	public MarkupCollectionsPanel(TagManager tagManager, Repository repository) {
 		propertyChangeSupport = new PropertyChangeSupport(this);
 		this.tagManager = tagManager;
@@ -211,8 +213,49 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		repository.addPropertyChangeListener(
 				RepositoryChangeEvent.userMarkupCollectionChanged, 
 				userMarkupCollectionChangedListener);
+		
+		userMarkupCollectionTagLibraryChangedListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				if ((evt.getNewValue() != null) && (evt.getOldValue() != null)) {
+					
+					TagsetDefinition tagsetDefinition = 
+							(TagsetDefinition) evt.getOldValue();
+					
+					@SuppressWarnings("unchecked")
+					List<UserMarkupCollection> userMarkupCollcCollections =
+							(List<UserMarkupCollection>) evt.getNewValue();
+					
+					for (UserMarkupCollection umc : userMarkupCollcCollections) {
+						reloadTagsetDefinition(tagsetDefinition, umc);
+					}
+					
+				}
+				
+			}
+		};
+		
+		repository.addPropertyChangeListener(
+				RepositoryChangeEvent.userMarkupCollectionTagLibraryChanged, 
+				userMarkupCollectionTagLibraryChangedListener);
 	}
 	
+	private void reloadTagsetDefinition(TagsetDefinition foreignTagsetDefinition,
+			UserMarkupCollection umc) {
+
+		removeWithChildrenFromTree(
+			umc.getTagLibrary().getTagsetDefinition(foreignTagsetDefinition.getUuid()));
+		
+		addTagsetDefinitionToTree(
+			umc.getTagLibrary().getTagsetDefinition(foreignTagsetDefinition.getUuid()), 
+			umc);
+		
+		for (TagDefinition td : umc.getTagLibrary().getTagsetDefinition(foreignTagsetDefinition.getUuid())) {
+			fireTagDefinitionSelected(td, false);
+			fireTagDefinitionSelected(td, true);
+		}
+	}
+
 	private void updateUserMarkupCollectionInTree(
 			UserMarkupCollection userMarkupCollection) {
 		Property captionProp = markupCollectionsTree.getContainerProperty(
@@ -285,6 +328,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 					userMarkupCollectionManager.getUserMarkupCollections(
 						foreignTagsetDefinition, false);
 
+			//FIXME: update does not remove Tagsets just Tags, removal should probably occur by a button of this panel only!
 			userMarkupCollectionManager.updateUserMarkupCollections(
 					outOfSynchCollections, foreignTagsetDefinition);
 			
@@ -343,12 +387,16 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				TagDefinition tagDefinition = umc.getTagLibrary().getTagDefinition(
 						foreignTagDefinition.getUuid());
 				
-				boolean selected = Boolean.valueOf(markupCollectionsTree.getItem(
-						tagDefinition).getItemProperty(
-								MarkupCollectionsTreeProperty.visible).toString());
-				if (selected) {
-					fireTagDefinitionSelected(tagDefinition, false);
-				}
+				Set<TagDefinition> allDeleted = new HashSet<TagDefinition>();
+				allDeleted.add(tagDefinition);
+				
+				collectItemsOfType(
+					TagDefinition.class, 
+					markupCollectionsTree.getChildren(tagDefinition), allDeleted);
+				
+				propertyChangeSupport.firePropertyChange(
+						MarkupCollectionPanelEvent.tagDefinitionsRemoved.name(), 
+						allDeleted, null);
 				
 				Object parentId = markupCollectionsTree.getParent(tagDefinition);
 				removeWithChildrenFromTree(tagDefinition);
@@ -731,6 +779,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		repository.removePropertyChangeListener(
 				RepositoryChangeEvent.userMarkupCollectionChanged, 
 				userMarkupCollectionChangedListener);
+		repository.removePropertyChangeListener(
+				RepositoryChangeEvent.userMarkupCollectionTagLibraryChanged, 
+				userMarkupCollectionTagLibraryChangedListener);
 	}
 	
 	public void addOrUpdateTagsetDefinition(
@@ -848,18 +899,18 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	@SuppressWarnings("unchecked")
 	private <T> void collectItemsOfType(Class<T> clazz, Collection<?> items,
 			Set<T> result) {
-		
-		for (Object o : items) {
-			if (o.getClass().equals(clazz)) {
-				result.add((T)o);
+		if (items != null) {
+			for (Object o : items) {
+				if (o.getClass().equals(clazz)) {
+					result.add((T)o);
+				}
+				
+				Collection<?> children = markupCollectionsTree.getChildren(o);
+				if ((children != null) && !children.isEmpty()) {
+					collectItemsOfType(clazz, children, result);
+				}
 			}
-			
-			Collection<?> children = markupCollectionsTree.getChildren(o);
-			if ((children != null) && !children.isEmpty()) {
-				collectItemsOfType(clazz, children, result);
-			}
-		}
-		
+		}		
 	}
 
 	public void removeUpdateableTagsetDefinition(TagsetDefinition tagsetDefinition) {

@@ -1,6 +1,8 @@
 package de.catma.indexer.db;
 
 import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -13,6 +15,8 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.util.IDGenerator;
 
 public class TagReferenceIndexer {
+	
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 	
 	private IDGenerator idGenerator;
 
@@ -33,6 +37,7 @@ public class TagReferenceIndexer {
 		}
 		
 		for (TagReference tr : tagReferences) {
+			logger.info("indexing " + tr);
 			DBIndexTagReference dbTagReference = 
 				new DBIndexTagReference(
 					sourceDocumentID, 
@@ -97,7 +102,7 @@ public class TagReferenceIndexer {
 	}
 
 	public void reindex(Session session, TagsetDefinition tagsetDefinition,
-			UserMarkupCollection userMarkupCollection, String sourceDocumentID) {
+			Set<byte[]> deletedTagsetDefinitionUuids, UserMarkupCollection userMarkupCollection, String sourceDocumentID) {
 		
 		Query  query = session.createQuery(
 				"delete from " + DBIndexTagReference.class.getSimpleName() +
@@ -106,8 +111,17 @@ public class TagReferenceIndexer {
 		session.beginTransaction();		
 		
 		for (TagDefinition td : tagsetDefinition) {
+			logger.info("reindexing deleting refs for " + td);
 			query.setBinary("curTagDefinitionId",
 					idGenerator.catmaIDToUUIDBytes(td.getUuid()));
+			query.executeUpdate();
+		}
+
+		for (byte[] uuid : deletedTagsetDefinitionUuids) {
+			logger.info(
+				"reindexing deleting refs for deleted TagDef " 
+						+ idGenerator.uuidBytesToCatmaID(uuid));
+			query.setBinary("curTagDefinitionId", uuid);
 			query.executeUpdate();
 		}
 		

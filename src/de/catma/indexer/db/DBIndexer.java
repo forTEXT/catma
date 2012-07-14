@@ -3,6 +3,7 @@ package de.catma.indexer.db;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -140,12 +141,14 @@ public class DBIndexer implements Indexer {
 	}
 	
 	public void reindex(TagsetDefinition tagsetDefinition,
+			Set<byte[]> deletedTagsetDefinitionUuids,
 			UserMarkupCollection userMarkupCollection, String sourceDocumentID)
 			throws Exception {
 		Session session = sessionFactory.openSession();
 		try {
 			tagReferenceIndexer.reindex(
-					session, tagsetDefinition, userMarkupCollection, sourceDocumentID);
+					session, tagsetDefinition, deletedTagsetDefinitionUuids, 
+					userMarkupCollection, sourceDocumentID);
 			CloseSafe.close(new CloseableSession(session));
 		}
 		catch (Exception e) {

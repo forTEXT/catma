@@ -556,9 +556,12 @@ public class TaggerEditor extends FocusWidget
 		if (line != null) {
 			List<Element> taggedSpans = findTargetSpan(line);
 			List<String> tagInstanceIDs = new ArrayList<String>(); 
-			//FIXME: exclude highlighted spans and similar
+			
 			for (Element span : taggedSpans) {
-				tagInstanceIDs.add(0, getTagInstanceID(span.getAttribute("id")));
+				String tagInstanceID = getTagInstanceID(span.getAttribute("id"));
+				if (tagInstances.containsKey(tagInstanceID)) {
+					tagInstanceIDs.add(0, tagInstanceID);
+				}
 			}
 			
 			if (!tagInstanceIDs.equals(lastTagInstanceIDs)) {

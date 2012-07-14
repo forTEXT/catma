@@ -38,6 +38,15 @@ import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 
 public class MarkupResultPanel extends VerticalLayout {
 	
+	private static class RowWrapper {
+		TagQueryResultRow row;
+
+		public RowWrapper(TagQueryResultRow row) {
+			this.row = row;
+		}
+		
+	}
+	
 	private static interface TreeEntrySelectionHandler {
 		public QueryResultRowArray getResultRows(boolean selected);
 	}
@@ -53,16 +62,18 @@ public class MarkupResultPanel extends VerticalLayout {
 		}
 
 		public QueryResultRowArray getResultRows(boolean selected) {
-			@SuppressWarnings("unchecked")
-			Collection<QueryResultRow> rows = 
-					(Collection<QueryResultRow>)resultTable.getChildren(
-							umcItemID);
-			for (QueryResultRow row : rows) {
-				((CheckBox)resultTable.getItem(row).getItemProperty(
-						TreePropertyName.visible).getValue()).setValue(selected);
-			}
 			QueryResultRowArray result = new QueryResultRowArray();
-			result.addAll(rows);
+			@SuppressWarnings("unchecked")
+			Collection<RowWrapper> rows = 
+					(Collection<RowWrapper>)resultTable.getChildren(
+							umcItemID);
+			if (rows != null) {
+				for (RowWrapper wrapper : rows) {
+					((CheckBox)resultTable.getItem(wrapper).getItemProperty(
+							TreePropertyName.visible).getValue()).setValue(selected);
+					result.add(wrapper.row);
+				}
+			}
 			return result;
 		}
 	}
@@ -160,12 +171,15 @@ public class MarkupResultPanel extends VerticalLayout {
 	private Button bDist;
 	private boolean init = false;
 	private GroupedQueryResultSelectionListener resultSelectionListener;
+	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
 
 	public MarkupResultPanel(
 			Repository repository, 
-			GroupedQueryResultSelectionListener resultSelectionListener) {
+			GroupedQueryResultSelectionListener resultSelectionListener, 
+			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider) {
 		this.repository = repository;
 		this.resultSelectionListener = resultSelectionListener;
+		this.relevantUserMarkupCollectionProvider = relevantUserMarkupCollectionProvider;
 	}
 	
 	@Override
@@ -262,8 +276,8 @@ public class MarkupResultPanel extends VerticalLayout {
 		HashSet<TagQueryResultRow> result = new HashSet<TagQueryResultRow>();
 		if (resultTable.hasChildren(selValue)) {
 			for (Object child : resultTable.getChildren(selValue)) {
-				if (child instanceof TagQueryResultRow) {
-					result.add((TagQueryResultRow) child);
+				if (child instanceof RowWrapper) {
+					result.add(((RowWrapper)child).row);
 				}
 				else {
 					result.addAll(getTagQueryResultRows(child));
@@ -321,7 +335,9 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 		splitPanel.addComponent(leftComponent);
 		
-		this.kwicPanel = new KwicPanel(repository, true);
+		this.kwicPanel = 
+				new KwicPanel(
+					repository, relevantUserMarkupCollectionProvider,  true);
 		splitPanel.addComponent(kwicPanel);
 		
 		addComponent(splitPanel);
@@ -437,17 +453,17 @@ public class MarkupResultPanel extends VerticalLayout {
 						TreePropertyName.frequency);
 		userMarkupCollFreqProperty.setValue(
 				((Integer)userMarkupCollFreqProperty.getValue())+1);
-		
+		RowWrapper wrapper = new RowWrapper(row);
 		resultTable.addItem(
 			new Object[] {
 				row.getPhrase(),
 				1,
 				createCheckbox(
 						new TagQueryResultRowTreeEntrySelectionHandler(row))
-			}, row);
+			}, wrapper);
 		
-		resultTable.setParent(row, umcItemID);
-		resultTable.setChildrenAllowed(row, false);
+		resultTable.setParent(wrapper, umcItemID);
+		resultTable.setChildrenAllowed(wrapper, false);
 		
 	}
 

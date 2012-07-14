@@ -52,7 +52,7 @@ public class TagInstanceTree extends HorizontalLayout {
 				if (selectedItem == null) {
 					getWindow().showNotification(
 						"Information", 
-						"Please select on or more Tag Instances in the list first!");
+						"Please select one or more Tag Instances in the list first!");
 				}
 				else {
 					List<String> tagInstanceIDs = new ArrayList<String>();

@@ -11,7 +11,7 @@ public class VisualizationManagerView extends TabbedView {
 		super("No visualizations available. To generate visualization use the Analyzer.");
 	}
 
-	private int addVisulization(
+	private int addVisualization(
 		String caption, DistributionComputation distributionComputation) {
 		DistributionChartView lineChartView =
 				new DistributionChartView(
@@ -24,11 +24,11 @@ public class VisualizationManagerView extends TabbedView {
 		return id;
 	}
 
-	public int addVisulization(
+	public int addVisualization(
 			Integer visualizationId, String caption, 
 			DistributionComputation distributionComputation) {
 		if (visualizationId == null) {
-			return addVisulization(caption, distributionComputation);
+			return addVisualization(caption, distributionComputation);
 		}
 		else {
 			Component comp = getComponent(visualizationId);
@@ -38,7 +38,7 @@ public class VisualizationManagerView extends TabbedView {
 				return visualizationId;
 			}
 			else {
-				return addVisulization(caption, distributionComputation);
+				return addVisualization(caption, distributionComputation);
 			}
 		}
 	}

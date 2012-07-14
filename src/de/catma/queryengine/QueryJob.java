@@ -86,7 +86,7 @@ public class QueryJob extends DefaultProgressCallable<QueryResult> {
                 throw new QueryException(inputQuery,(RecognitionException)e.getCause());
             }
             else {
-               throw e;
+               throw new Exception(e);
             }
         }
     }

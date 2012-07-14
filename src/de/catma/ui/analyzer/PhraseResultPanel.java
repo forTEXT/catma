@@ -39,12 +39,15 @@ public class PhraseResultPanel extends VerticalLayout {
 	private GroupedQueryResultSelectionListener resultSelectionListener;
 	private Button bDist;
 	private boolean init = false;
+	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
 
 	public PhraseResultPanel(
 			Repository repository, 
-			GroupedQueryResultSelectionListener resultSelectionListener) {
+			GroupedQueryResultSelectionListener resultSelectionListener, 
+			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider) {
 		this.repository = repository;
 		this.resultSelectionListener = resultSelectionListener;
+		this.relevantUserMarkupCollectionProvider = relevantUserMarkupCollectionProvider;
 	}
 	
 	@Override
@@ -108,7 +111,7 @@ public class PhraseResultPanel extends VerticalLayout {
 						new PropertyToTrimmedStringCIComparator()));
 		
 		resultTable.setContainerDataSource(container);
-
+		
 		resultTable.addContainerProperty(
 				TreePropertyName.caption, String.class, null);
 		resultTable.setColumnHeader(TreePropertyName.caption, "Phrase");
@@ -134,7 +137,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		
 		splitPanel.addComponent(leftComponent);
 		
-		this.kwicPanel = new KwicPanel(repository);
+		this.kwicPanel = new KwicPanel(repository, relevantUserMarkupCollectionProvider);
 		splitPanel.addComponent(kwicPanel);
 		
 		addComponent(splitPanel);

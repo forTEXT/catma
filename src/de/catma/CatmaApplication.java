@@ -198,6 +198,9 @@ public class CatmaApplication extends Application
 		if (tagManagerView.getApplication() == null) {
 			menu.executeEntry(tagManagerView);
 		}
+		else {
+			tagManagerView.getWindow().bringToFront();
+		}
 		tagManagerView.openTagLibrary(tagLibrary);
 	}
 
@@ -249,7 +252,7 @@ public class CatmaApplication extends Application
 			final ProgressCallable<T> callable, 
 			final ExecutionListener<T> listener) {
 		setDefaultProgressIndicatorEnabled(caption, true);
-		
+		logger.info("submitting job '" + caption +  "' " + callable);
 		defaultPIbackgroundJobs++;
 		getBackgroundService().submit(
 			callable, new ExecutionListener<T>() {
@@ -287,11 +290,13 @@ public class CatmaApplication extends Application
 		if (analyzerManagerView.getApplication() == null) {
 			menu.executeEntry(analyzerManagerView);
 		}
-		
+		else {
+			analyzerManagerView.getWindow().bringToFront();
+		}
 		analyzerManagerView.analyzeDocuments(corpus, repository);
 	}
 	
-	public int addVisulization(Integer visualizationId, String caption,
+	public int addVisualization(Integer visualizationId, String caption,
 			DistributionComputation distributionComputation) {
 		if (visualizationManagerView.getApplication() == null) {
 			menu.executeEntry(visualizationManagerView);
@@ -300,7 +305,7 @@ public class CatmaApplication extends Application
 			visualizationManagerView.getWindow().bringToFront();
 		}
 		
-		return visualizationManagerView.addVisulization(visualizationId, caption,
+		return visualizationManagerView.addVisualization(visualizationId, caption,
 				distributionComputation);
 	}
 

@@ -192,6 +192,15 @@ public class CorpusPanel extends VerticalLayout {
 					if (!selectedValue.equals(allDocuments)) {
 						selectedCorpus = (Corpus)selectedValue;
 					}
+					else {
+						selectedCorpus = new Corpus(allDocuments);
+						for (SourceDocument sd : repository.getSourceDocuments()) {
+							selectedCorpus.addSourceDocument(sd);
+							for (UserMarkupCollectionReference umcRef : sd.getUserMarkupCollectionRefs()) {
+								selectedCorpus.addUserMarkupCollectionReference(umcRef);
+							}
+						}
+					}
 					((AnalyzerProvider)getApplication()).analyze(
 							selectedCorpus, (IndexedRepository)repository);
 				}

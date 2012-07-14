@@ -287,9 +287,16 @@ public class TeiElement extends Element implements Comparable<TeiElement> {
 	 * element does not have an id.
 	 */
 	public String getID() {
-		return getAttributeValue( 
+		String id =  getAttributeValue( 
 				Attribute.xmlid.getLocalName(), 
-				Attribute.xmlid.getNamespaceURI() );
+				Attribute.xmlid.getNamespaceURI());
+		if (id != null) {
+			return id.toUpperCase();
+		}
+		else {
+			return null;
+			
+		}
 	}
 	
 	void setID(String id) {

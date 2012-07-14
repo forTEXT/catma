@@ -451,7 +451,11 @@ public class DBRepository implements IndexedRepository {
 				}
 			}, 
 			new ExecutionListener<Void>() {
-				public void done(Void nothing) { /* noop */ }
+				public void done(Void nothing) {
+					propertyChangeSupport.firePropertyChange(
+						RepositoryChangeEvent.userMarkupCollectionTagLibraryChanged.name(),
+						tagsetDefinition, userMarkupCollections);
+				}
 				public void error(Throwable t) {
 					propertyChangeSupport.firePropertyChange(
 							RepositoryChangeEvent.exceptionOccurred.name(),

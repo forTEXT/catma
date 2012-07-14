@@ -2,7 +2,10 @@ package de.catma.ui.repository;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.vaadin.Application;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Component;
@@ -24,13 +27,14 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	 * querybuilder
 	 * todos!!!
 	 */
-	
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private Repository repository;
 	private PropertyChangeListener exceptionOccurredListener;
 	private SourceDocumentPanel sourceDocumentPanel;
 	private CorpusPanel corpusPanel;
 	private TagLibraryPanel tagLibraryPanel;
 	private boolean init = false;
+	private Application application;
 	
 	public RepositoryView(Repository repository) {
 		this.repository = repository;
@@ -39,8 +43,15 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		exceptionOccurredListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
-				((CatmaApplication)getApplication()).showAndLogError(
-					"Repository Error!", (Throwable)evt.getNewValue());
+				if (application !=null) {
+					((CatmaApplication)application).showAndLogError(
+						"Repository Error!", (Throwable)evt.getNewValue());
+				}
+				else {
+					logger.log(
+						Level.SEVERE, "repository error", 
+						(Throwable)evt.getNewValue());
+				}
 			}
 		};
 		
@@ -51,6 +62,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	public void attach() {
 		super.attach();
 		if (!init) {
+			this.application = getApplication();
 			this.repository.addPropertyChangeListener(
 					Repository.RepositoryChangeEvent.exceptionOccurred, 
 					exceptionOccurredListener);

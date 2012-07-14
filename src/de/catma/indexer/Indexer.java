@@ -2,6 +2,7 @@ package de.catma.indexer;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import de.catma.document.Range;
 import de.catma.document.source.SourceDocument;
@@ -28,6 +29,7 @@ public interface Indexer {
 	public void removeTagReferences(List<TagReference> tagReferences) throws Exception;
 	public void reindex(
 			TagsetDefinition tagsetDefinition, 
+			Set<byte[]> deletedTagsetDefinitionUuids,
 			UserMarkupCollection userMarkupCollection,
 			String sourceDocumentID) throws Exception;
 

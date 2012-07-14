@@ -13,7 +13,7 @@ public class AnalyzerManagerView extends TabbedView {
 	
 	public AnalyzerManagerView() {
 		super("To analyze documents and collections please do the following: " +
-				"Open a Repository with the Repository Manager and use the" +
+				"Open a Repository with the Repository Manager and use the " +
 				"analyze menu items in the corpora or source documents " +
 				"sections or the analyze button of the Tagger.");
 	}

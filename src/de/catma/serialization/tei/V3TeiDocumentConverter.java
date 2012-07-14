@@ -207,7 +207,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		
 		for( String id : idValues ) {
 			if (!id.trim().isEmpty()) {
-				id = id.trim();
+				id = id.trim().toUpperCase();
 				if (tagDefinitions.containsKey(id)) { // some broken files contain tagintances without a tagdef, we skip those
 					Pair<String,Range> target = getTarget(
 							segElement.getFirstTeiChildElement(TeiElementName.ptr));

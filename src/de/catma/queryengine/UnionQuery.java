@@ -51,7 +51,8 @@ public class UnionQuery extends Query {
     			query1.getResult().asQueryResultRowArray();
     	QueryResultRowArray r2 = query2.getResult().asQueryResultRowArray();
     	
-    	r2.removeAll(unifiedResult);
+    	//FIXME: UNION ALL is better for TagQueries, UNION makes more sense for phrase queries 
+//    	r2.removeAll(unifiedResult); 
     	unifiedResult.addAll(r2);
     	
     	return unifiedResult;

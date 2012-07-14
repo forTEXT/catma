@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.hibernate.Criteria;
 import org.hibernate.Query;
@@ -57,6 +58,7 @@ class DBTagLibraryHandler {
 	private DBRepository dbRepository;
 	private Set<TagLibraryReference> tagLibraryReferences;
 	private IDGenerator idGenerator;
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 
 	public DBTagLibraryHandler(DBRepository dbRepository, IDGenerator idGenerator) {
 		this.dbRepository = dbRepository;
@@ -248,6 +250,7 @@ class DBTagLibraryHandler {
 					session.save(dbTagLibrary);
 					
 					for (TagsetDefinition tsDef : tagLibrary) {
+						logger.info("importing TagsetDefinition:" + tsDef);
 						importTagsetDefinition(
 								session, dbTagLibrary.getTagLibraryId(), 
 								tsDef);
@@ -335,6 +338,7 @@ class DBTagLibraryHandler {
 		tsDef.setId(dbTagsetDefinition.getTagsetDefinitionId());
 		
 		for (DBTagDefinition dbTagDefinition : dbTagsetDefinition.getDbTagDefinitions()) {
+			System.out.println(idGenerator.uuidBytesToCatmaID(dbTagDefinition.getUuid()));
 			TagDefinition tDef = 
 					tsDef.getTagDefinition(
 							idGenerator.uuidBytesToCatmaID(dbTagDefinition.getUuid()));
@@ -752,9 +756,10 @@ class DBTagLibraryHandler {
 			});
 	}
 
-	void updateTagsetDefinition(Session session, TagLibrary tagLibrary,
+	Set<byte[]> updateTagsetDefinition(Session session, TagLibrary tagLibrary,
 			TagsetDefinition tagsetDefinition) {
-
+		Set<byte[]> deletedUuids = new HashSet<byte[]>();
+		
 		DBTagsetDefinition dbTagsetDefinition = 
 				getDbTagsetDefinition(session, tagsetDefinition.getUuid(), tagLibrary.getId());
 		
@@ -762,12 +767,13 @@ class DBTagLibraryHandler {
 			//TODO: try to get along without getDeletedTagDefinitions()
 			for (Integer id : tagsetDefinition.getDeletedTagDefinitions()) {
 				DBTagDefinition dbTagDefinition = dbTagsetDefinition.getDbTagDefinition(id);
+				deletedUuids.add(dbTagDefinition.getUuid());
 				//delete
 				dbTagsetDefinition.getDbTagDefinitions().remove(dbTagDefinition);
 				session.delete(dbTagDefinition);
 			}
 			tagsetDefinition.getDeletedTagDefinitions().clear();
-			
+
 			updateDbTagsetDefinition(session,dbTagsetDefinition, tagsetDefinition);
 		}
 		else {
@@ -784,6 +790,8 @@ class DBTagLibraryHandler {
 		
 		maintainTagDefHierarchyQuery.executeUpdate();
 		updateTagsetDefinitionIDs(tagsetDefinition, dbTagsetDefinition);
+		
+		return deletedUuids;
 	}
 	
 
@@ -875,6 +883,7 @@ class DBTagLibraryHandler {
 					createDbPropertyDefinition(pd, dbTagDefinition, isSystemPropertyDef));
 		}
 		else {
+			logger.info("updating " + pd + " in " + tagDefinition);
 			// update
 			updateDbPropertyDefinition(session,
 				dbTagDefinition.getDbPropertyDefinition(pd.getUuid()), pd);

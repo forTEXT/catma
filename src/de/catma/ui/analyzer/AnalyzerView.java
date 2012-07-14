@@ -54,7 +54,7 @@ import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabComponent;
 
 public class AnalyzerView extends VerticalLayout 
-implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener {
+implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, RelevantUserMarkupCollectionProvider {
 	
 	static interface CloseListener {
 		public void closeRequest(AnalyzerView analyzerView);
@@ -99,6 +99,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener {
 	}
 
 	private void initListeners() {
+		//FIXME: the view doesn't get closed when "All documents" is analyzed and the repo gets closed
 		//FIXME: update result panels to prevent stale results
 		sourceDocumentChangedListener = new PropertyChangeListener() {
 			
@@ -426,12 +427,12 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener {
 	}
 
 	private Component createResultByMarkupView() {
-		markupResultPanel = new MarkupResultPanel(repository, this);
+		markupResultPanel = new MarkupResultPanel(repository, this, this);
 		return markupResultPanel;
 	}
 
 	private Component createResultByPhraseView() {
-		phraseResultPanel = new PhraseResultPanel(repository, this);
+		phraseResultPanel = new PhraseResultPanel(repository, this, this);
 		return phraseResultPanel;
 	}
 
@@ -526,7 +527,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener {
 		dc.compute();
 		
 		this.visualizationId = 
-			((CatmaApplication)getApplication()).addVisulization(
+			((CatmaApplication)getApplication()).addVisualization(
 				visualizationId, (corpus==null)?"All documents":corpus.toString(), dc);
 	}
 
@@ -548,5 +549,9 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener {
 	
 	public void removeClickshortCuts() {
 		btExecSearch.removeClickShortcut();
+	}
+	
+	public List<String> getRelevantUserMarkupCollectionIDs() {
+		return Collections.unmodifiableList(relevantUserMarkupCollIDs);
 	}
 }

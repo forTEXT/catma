@@ -2,10 +2,12 @@ package de.catma.repository.db;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -53,10 +55,12 @@ class DBUserMarkupCollectionHandler {
 	private DBRepository dbRepository;
 	private IDGenerator idGenerator;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private Map<String,WeakReference<UserMarkupCollection>> umcCache;
 	
 	public DBUserMarkupCollectionHandler(DBRepository dbRepository) {
 		this.dbRepository = dbRepository;
 		this.idGenerator = new IDGenerator();
+		this.umcCache = new HashMap<String, WeakReference<UserMarkupCollection>>();
 	}
 
 	void createUserMarkupCollection(String name,
@@ -393,6 +397,13 @@ class DBUserMarkupCollectionHandler {
 
 	UserMarkupCollection getUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
+		WeakReference<UserMarkupCollection> weakUmc = umcCache.get(userMarkupCollectionReference.getId());
+		if (weakUmc != null) {
+			UserMarkupCollection umc = weakUmc.get();
+			if (umc != null) {
+				return umc;
+			}
+		}
 		String localSourceDocUri = 
 			dbRepository.getDbSourceDocumentHandler().getLocalUriFor(
 					userMarkupCollectionReference);
@@ -428,6 +439,9 @@ class DBUserMarkupCollectionHandler {
 				
 				UserMarkupCollection userMarkupCollection = createUserMarkupCollection(
 						dbUserMarkupCollection, localSourceDocUri, tagLibrary);
+				umcCache.put(
+					userMarkupCollection.getId(),
+					new WeakReference<UserMarkupCollection>(userMarkupCollection));
 				return userMarkupCollection;
 				
 			} catch (URISyntaxException e) {
@@ -579,8 +593,8 @@ class DBUserMarkupCollectionHandler {
 			}
 			dbTagInstance.getDbProperties().add(userProp);
 		}
-		
-		session.save(dbTagInstance);
+		logger.info("saving TagInstance: " + ti);
+		session.saveOrUpdate(dbTagInstance);
 		
 		for (TagReference tr : userMarkupCollection.getTagReferences(ti.getUuid())) {
 			DBTagReference dbTagReference = 
@@ -588,7 +602,7 @@ class DBUserMarkupCollectionHandler {
 						tr.getRange().getStartPoint(), 
 						tr.getRange().getEndPoint(), 
 						dbUserMarkupCollection, dbTagInstance);
-			session.save(dbTagReference);
+			session.saveOrUpdate(dbTagReference);
 		}
 		return dbTagInstance;
 	}
@@ -609,9 +623,10 @@ class DBUserMarkupCollectionHandler {
 				TagLibrary tagLibrary = 
 						userMarkupCollection.getTagLibrary();
 				
-				dbTagLibraryHandler.updateTagsetDefinition(
-					session, tagLibrary,
-					tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()));
+				Set<byte[]> deletedTagDefUuids = 
+					dbTagLibraryHandler.updateTagsetDefinition(
+							session, tagLibrary,
+							tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()));
 				DBUserMarkupCollectionUpdater updater = 
 						new DBUserMarkupCollectionUpdater(dbRepository);
 				updater.updateUserMarkupCollection(session, userMarkupCollection);
@@ -619,12 +634,14 @@ class DBUserMarkupCollectionHandler {
 				// not just additions to a tagset
 				dbRepository.getIndexer().reindex(
 					tagsetDefinition, 
+					deletedTagDefUuids,
 					userMarkupCollection, 
 					dbRepository.getDbSourceDocumentHandler().getLocalUriFor(
 							new UserMarkupCollectionReference(
 									userMarkupCollection.getId(), 
 									userMarkupCollection.getContentInfoSet())));
 			}
+
 			session.getTransaction().commit();
 			CloseSafe.close(new CloseableSession(session));
 		}
