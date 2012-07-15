@@ -1,6 +1,7 @@
 package de.catma.ui.repository;
 
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,18 +45,20 @@ import de.catma.util.IDGenerator;
 
 public class AuthenticationDialog extends VerticalLayout {
 	
-	private static class AuthenticationParamHandler implements ParameterHandler {
+	private static class AuthenticationParamHandler implements ParameterHandler, URIHandler {
 		
 		private Logger logger = Logger.getLogger(this.getClass().getName());
 		private Application application;
 		private String returnURL;
 		private ConsumerManager consumerManager;
 		private DiscoveryInformation discovered;
-		private URIHandler uriHandler;
 		private RepositoryReference repositoryReference;
 		private RepositoryManager repositoryManager;
 		private Window dialogWindow;
 		private String handle;
+		private ParameterList openidResp;
+		private String signed;
+		private String sig;
 
 		public AuthenticationParamHandler(Application application,
 				String returnURL, ConsumerManager consumerManager,
@@ -74,142 +77,144 @@ public class AuthenticationDialog extends VerticalLayout {
 			this.handle = handle;
 		}
 
-		public void handleParameters(final Map<String, String[]> parameters) {
-			logger.info("authentication dialog before uri handler creation: " + returnURL);
-			if (uriHandler == null) {
-				uriHandler = new URIHandler() {
-					public DownloadStream handleURI(URL context, String relativeUri) {
-						try {
-							logger.info("handling uri context: " + context + " relUri " + relativeUri);
-							
-							// extract the parameters from the authentication response
-							// (which comes in as a HTTP request from the OpenID provider)
-							
-							ParameterList openidResp = new ParameterList(parameters);
-							
-							if (!openidResp.hasParameter("openid.mode")) {
-								logger.info("openid.mode is missing, trying to set required param to 'id_res'" );
-								openidResp.set(new Parameter("openid.mode", "id_res"));
-							}
-							else {
-								logger.info("got openid.mode: " + openidResp.getParameterValue("openid.mode"));
-							}
-	
-							if (!openidResp.hasParameter("openid.return_to")) {
-								logger.info("openid.return_to is missing, trying to set required param to " + returnURL);
-								openidResp.set(new Parameter("openid.return_to", returnURL));
-							}
-							else {
-								logger.info("got openid.return_to: " + openidResp.getParameterValue("openid.return_to"));
-							}
-							
-							if (!openidResp.hasParameter("openid.assoc_handle")) {
-								logger.info("openid.assoc_handle is missing, trying to set required param to " + handle);
-								openidResp.set(new Parameter("openid.assoc_handle", handle));
-							}
-							else {
-								logger.info("got openid.assoc_handle: " + openidResp.getParameterValue("openid.assoc_handle"));
-							}
-							
-							if (!openidResp.hasParameter("openid.signed")) {
-								logger.info("openid.signed is missing");
-							}
-							else {
-								logger.info("got openid.signed: " + openidResp.getParameterValue("openid.signed"));
-							}
-							
-							if (!openidResp.hasParameter("openid.sig")) {
-								logger.info("openid.sig is missing");
-							}
-							else {
-								logger.info("got openid.sig: " + openidResp.getParameterValue("openid.sig"));
-							}
-							
-							application.getMainWindow().removeURIHandler(this);
-							
-							application.getMainWindow().removeParameterHandler(
-									AuthenticationParamHandler.this);
-							
-							application.getMainWindow().removeWindow(dialogWindow);
-							
-							dialogWindow = null;
-							logger.info("verifying returnurl: " + returnURL);
-							
-							// verify the response
-							VerificationResult verification = 
-								consumerManager.verify(
-									returnURL, openidResp, discovered);
-							
-							if (verification == null) {
-								throw new MessageException(
-										"could not verify returnurl: " + returnURL);
-							}
-							// examine the verification result and extract the verified identifier
-							Identifier verified = verification.getVerifiedId();
-							
-							if (verified != null) {
-								Map<String, String> userIdentification = 
-										new HashMap<String, String>();
-								logger.info("verified user " + verified.getIdentifier());
-								AuthSuccess authSuccess =
-				                        (AuthSuccess) verification.getAuthResponse();
-	
-				                if (authSuccess.hasExtension(AxMessage.OPENID_NS_AX)) {
-				                    FetchResponse fetchResp = (FetchResponse) authSuccess
-				                            .getExtension(AxMessage.OPENID_NS_AX);
-	
-				                    @SuppressWarnings("rawtypes")
-									List emails = 
-										fetchResp.getAttributeValues("email");
-				                    
-				                    String email = (String) emails.get(0);
-				                    logger.info("retrieved email: " + email);
-	
-				                    userIdentification.put(
-											"user.ident", email);
-				                    userIdentification.put(
-				                    		"user.email", email);
-				                    userIdentification.put(
-				                    		"user.name", email);
-				                    logger.info("opening repository for user: " + email);
-				                    Repository repository = 
-			                    		repositoryManager.openRepository(
-		                    				repositoryReference, userIdentification );
-				                    
-				                    ((CatmaApplication)application).openRepository(repository);
-				                    
-				                    return new DownloadStream(
-				                    		application.getURL().openStream(), 
-				                    		"text/html", "CATMA 4");
-				                }
-							}
-							else {
-								logger.info("authentication failure");
-								application.getMainWindow().showNotification(
-		                                "Authentication failure",
-		                                "The authentication failed, you are not " +
-		                                "allowed to access this repository!",
-		                                Notification.TYPE_ERROR_MESSAGE);
-	
-							}
-							
-						}
-						catch (Exception e) {
-							((CatmaApplication)application).showAndLogError(
-									"Error opening repository!", e);
-						}
-						
-						application.close();
-						
-						return null;
-					}
-				};
-				application.getMainWindow().addURIHandler(uriHandler);
+		public void handleParameters(Map<String, String[]> parameters) {
+			if (parameters != null) {
+				for (Map.Entry<String,String[]> entry : parameters.entrySet()) {
+					System.out.println("entry in handelParams: " + entry.getKey() + " : " + Arrays.toString(entry.getValue()));
+				}
 			}
+			logger.info("authentication dialog before uri handler creation: " + returnURL);
+			
+			openidResp = new ParameterList(parameters);
+			
+			signed = openidResp.getParameterValue("openid.signed");
+			sig = openidResp.getParameterValue("openid.sig");
+			
 		}
-		
-		public URIHandler getUriHandler() {
-			return uriHandler;
+					
+		public DownloadStream handleURI(URL context, String relativeUri) {
+			try {
+				logger.info("handling uri context: " + context + " relUri " + relativeUri);
+				
+				// extract the parameters from the authentication response
+				// (which comes in as a HTTP request from the OpenID provider)
+				if (!openidResp.hasParameter("openid.mode")) {
+					logger.info("openid.mode is missing, trying to set required param to 'id_res'" );
+					openidResp.set(new Parameter("openid.mode", "id_res"));
+				}
+				else {
+					logger.info("got openid.mode: " + openidResp.getParameterValue("openid.mode"));
+				}
+
+				if (!openidResp.hasParameter("openid.return_to")) {
+					logger.info("openid.return_to is missing, trying to set required param to " + returnURL);
+					openidResp.set(new Parameter("openid.return_to", returnURL));
+				}
+				else {
+					logger.info("got openid.return_to: " + openidResp.getParameterValue("openid.return_to"));
+				}
+				
+				if (!openidResp.hasParameter("openid.assoc_handle")) {
+					logger.info("openid.assoc_handle is missing, trying to set required param to " + handle);
+					openidResp.set(new Parameter("openid.assoc_handle", handle));
+				}
+				else {
+					logger.info("got openid.assoc_handle: " + openidResp.getParameterValue("openid.assoc_handle"));
+				}
+				
+				if (!openidResp.hasParameter("openid.signed")) {
+					logger.info("openid.signed is missing, setting to " + signed);
+					openidResp.set(new Parameter("openid.signed", signed));
+				}
+				else {
+					logger.info("got openid.signed: " + openidResp.getParameterValue("openid.signed"));
+				}
+				
+				if (!openidResp.hasParameter("openid.sig")) {
+					logger.info("openid.sig is missing, setting to " + sig);
+					openidResp.set(new Parameter("openid.sig", sig));
+
+				}
+				else {
+					logger.info("got openid.sig: " + openidResp.getParameterValue("openid.sig"));
+				}
+				
+				application.getMainWindow().removeURIHandler(this);
+				
+				application.getMainWindow().removeParameterHandler(this);
+				
+				application.getMainWindow().removeWindow(dialogWindow);
+				
+				dialogWindow = null;
+				logger.info("verifying returnurl: " + returnURL);
+				
+				// verify the response
+				VerificationResult verification = 
+					consumerManager.verify(
+						returnURL, openidResp, discovered);
+				
+				if (verification == null) {
+					throw new MessageException(
+							"could not verify returnurl: " + returnURL);
+				}
+				// examine the verification result and extract the verified identifier
+				Identifier verified = verification.getVerifiedId();
+				
+				if (verified != null) {
+					Map<String, String> userIdentification = 
+							new HashMap<String, String>();
+					logger.info("verified user " + verified.getIdentifier());
+					AuthSuccess authSuccess =
+	                        (AuthSuccess) verification.getAuthResponse();
+
+	                if (authSuccess.hasExtension(AxMessage.OPENID_NS_AX)) {
+	                    FetchResponse fetchResp = (FetchResponse) authSuccess
+	                            .getExtension(AxMessage.OPENID_NS_AX);
+
+	                    @SuppressWarnings("rawtypes")
+						List emails = 
+							fetchResp.getAttributeValues("email");
+	                    
+	                    String email = (String) emails.get(0);
+	                    logger.info("retrieved email: " + email);
+
+	                    userIdentification.put(
+								"user.ident", email);
+	                    userIdentification.put(
+	                    		"user.email", email);
+	                    userIdentification.put(
+	                    		"user.name", email);
+	                    logger.info("opening repository for user: " + email);
+	                    Repository repository = 
+                    		repositoryManager.openRepository(
+                				repositoryReference, userIdentification );
+	                    
+	                    ((CatmaApplication)application).openRepository(repository);
+	                    
+	                    return new DownloadStream(
+	                    		application.getURL().openStream(), 
+	                    		"text/html", "CATMA 4");
+	                }
+				}
+				else {
+					logger.info("authentication failure");
+					application.getMainWindow().showNotification(
+                            "Authentication failure",
+                            "The authentication failed, you are not " +
+                            "allowed to access this repository!",
+                            Notification.TYPE_ERROR_MESSAGE);
+
+				}
+				
+			}
+			catch (Exception e) {
+				((CatmaApplication)application).showAndLogError(
+						"Error opening repository!", e);
+			}
+			
+			application.close();
+			
+			return null;
 		}
 	}
 	
@@ -311,13 +316,16 @@ public class AuthenticationDialog extends VerticalLayout {
 					
 			application.getMainWindow().addParameterHandler(
 					authenticationParamHandler);
+			application.getMainWindow().addURIHandler(
+					authenticationParamHandler);
+			
 			btCancel.addListener(new ClickListener() {
 				
 				public void buttonClick(ClickEvent event) {
 					application.getMainWindow().removeParameterHandler(
 							authenticationParamHandler);
 					application.getMainWindow().removeURIHandler(
-							authenticationParamHandler.getUriHandler());
+							authenticationParamHandler);
 					application.getMainWindow().removeWindow(dialogWindow);
 				}
 			});
