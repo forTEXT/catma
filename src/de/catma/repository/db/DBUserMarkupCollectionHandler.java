@@ -382,6 +382,10 @@ class DBUserMarkupCollectionHandler {
 			
 			delete(session, userMarkupCollectionReference);
 			
+			SourceDocument sd = dbRepository.getSourceDocument(userMarkupCollectionReference);
+			sd.removeUserMarkupCollectionReference(userMarkupCollectionReference);
+			
+			
 			session.getTransaction().commit();
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(

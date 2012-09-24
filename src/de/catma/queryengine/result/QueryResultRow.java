@@ -87,8 +87,9 @@ public class QueryResultRow {
             Comparator<QueryResultRow> comparator) {
 
         for (QueryResultRow row : queryResult) {
-            if((comparator.compare(this,row)==0)
-            		||(comparator.compare(row,this)==0)) {
+            if(comparator.compare(this,row)==0) {
+//            if((comparator.compare(this,row)==0)
+            		//||(comparator.compare(row,this)==0)) {
                 return true;
             }
         }

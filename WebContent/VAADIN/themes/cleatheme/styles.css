@@ -69,3 +69,8 @@
 .progress_window {
 	z-index: 40000;
 }
+
+.v-treetable-treespacer {
+	position: static;
+}
+}

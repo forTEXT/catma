@@ -11,7 +11,8 @@ public enum TagMatchMode {
         		return 0;
         	}
             else {
-                return (int)(o1.getRange().getStartPoint()-o2.getRange().getStartPoint());
+                return (int)(o1.getRange().getStartPoint()-o2.getRange().getStartPoint())+
+                		(o1.getRange().getEndPoint()-o2.getRange().getEndPoint());
             }
 		}
 	}),

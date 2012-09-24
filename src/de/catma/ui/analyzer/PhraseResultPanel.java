@@ -66,6 +66,7 @@ public class PhraseResultPanel extends VerticalLayout {
 			public void buttonClick(ClickEvent event) {
 				GroupedQueryResultSet set = new GroupedQueryResultSet();
 				
+				//TODO: handle children of GroupedQeuryResult
 				@SuppressWarnings("unchecked")
 				Set<GroupedQueryResult> selection = 
 						(Set<GroupedQueryResult>) resultTable.getValue();

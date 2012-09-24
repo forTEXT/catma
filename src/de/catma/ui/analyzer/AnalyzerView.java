@@ -167,6 +167,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				}
 				else { 
 					Corpus corpus = (Corpus)evt.getNewValue();
+					//FIXME: this.corpus id can be null even if corpus is not null
 					if ((AnalyzerView.this.corpus != null) 
 							&& AnalyzerView.this.corpus.getId().equals(corpus.getId())) {
 						//update sourcedoc added

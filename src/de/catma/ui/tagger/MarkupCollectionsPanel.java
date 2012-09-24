@@ -732,32 +732,34 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			TagDefinition tagDefinition, boolean selected) {
 		UserMarkupCollection userMarkupCollection =
 				getUserMarkupCollection(tagDefinition);
-		
-		List<TagReference> tagReferences =
-				userMarkupCollection.getTagReferences(
-						tagDefinition, true);
-		
-		List<TagDefinition> children = 
-				userMarkupCollection.getChildren(tagDefinition);
-		if (children != null) {
-			for (Object childId : children) {
-				Object visiblePropertyValue = 
-					markupCollectionsTree.getItem(
-						childId).getItemProperty(
-							MarkupCollectionsTreeProperty.visible).getValue();
-				
-				if ((visiblePropertyValue != null) 
-						&& (visiblePropertyValue instanceof CheckBox)) {
-					CheckBox cbVisible = (CheckBox)visiblePropertyValue;
-					cbVisible.setValue(selected);
+		//TODO: why can this be null?
+		if (userMarkupCollection != null) {
+			List<TagReference> tagReferences =
+					userMarkupCollection.getTagReferences(
+							tagDefinition, true);
+			
+			List<TagDefinition> children = 
+					userMarkupCollection.getChildren(tagDefinition);
+			if (children != null) {
+				for (Object childId : children) {
+					Object visiblePropertyValue = 
+						markupCollectionsTree.getItem(
+							childId).getItemProperty(
+								MarkupCollectionsTreeProperty.visible).getValue();
+					
+					if ((visiblePropertyValue != null) 
+							&& (visiblePropertyValue instanceof CheckBox)) {
+						CheckBox cbVisible = (CheckBox)visiblePropertyValue;
+						cbVisible.setValue(selected);
+					}
 				}
-			}
-		}		
-		
-		propertyChangeSupport.firePropertyChange(
-				MarkupCollectionPanelEvent.tagDefinitionSelected.name(), 
-				selected?null:tagReferences,
-				selected?tagReferences:null);
+			}		
+			
+			propertyChangeSupport.firePropertyChange(
+					MarkupCollectionPanelEvent.tagDefinitionSelected.name(), 
+					selected?null:tagReferences,
+					selected?tagReferences:null);
+		}
 	}
 	
 	private void fireWritableUserMarkupCollectionSelected(

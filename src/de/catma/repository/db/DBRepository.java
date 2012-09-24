@@ -12,6 +12,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -52,6 +56,8 @@ import de.catma.util.Pair;
 public class DBRepository implements IndexedRepository {
 	//TODO: handle sqlstate 40001 deadlock
 	
+	private static AtomicBoolean init = new AtomicBoolean(false);
+	
 	private String name;
 	
 	private DBCorpusHandler dbCorpusHandler;
@@ -66,12 +72,10 @@ public class DBRepository implements IndexedRepository {
 	private BackgroundServiceProvider backgroundServiceProvider;
 	private TagManager tagManager;
 
-	private SessionFactory sessionFactory; 
-	private Configuration hibernateConfig;
+	private SessionFactory sessionFactory;
 	
 	private DBUser currentUser;
 	private PropertyChangeSupport propertyChangeSupport;
-	private ServiceRegistry serviceRegistry;
 	private IDGenerator idGenerator;
 	
 	private boolean tagManagerListenersEnabled = true;
@@ -80,6 +84,9 @@ public class DBRepository implements IndexedRepository {
 	private PropertyChangeListener tagDefinitionChangedListener;
 	private PropertyChangeListener tagLibraryChangedListener;
 
+	private String user;
+	private String pass;
+	private String url;
 
 	public DBRepository(
 			String name, 
@@ -98,6 +105,9 @@ public class DBRepository implements IndexedRepository {
 		this.backgroundServiceProvider = backgroundServiceProvider;
 		this.indexerFactory = indexerFactory;
 		this.serializationHandlerFactory = serializationHandlerFactory;
+		this.user = user;
+		this.pass = pass;
+		this.url = url;
 		
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.idGenerator = new IDGenerator();
@@ -108,22 +118,7 @@ public class DBRepository implements IndexedRepository {
 		this.dbUserMarkupCollectionHandler = 
 				new DBUserMarkupCollectionHandler(this);
 		this.dbCorpusHandler = new DBCorpusHandler(this);
-		
-		hibernateConfig = new Configuration();
-		hibernateConfig.configure(
-				this.getClass().getPackage().getName().replace('.', '/') 
-				+ "/hibernate.cfg.xml");
-		
-		hibernateConfig.setProperty("hibernate.connection.username", user);
-		hibernateConfig.setProperty("hibernate.connection.url",url);
-		if ((pass != null) && (!pass.isEmpty())) {
-			hibernateConfig.setProperty("hibernate.connection.password", pass);
-		}
 
-		ServiceRegistryBuilder serviceRegistryBuilder = new ServiceRegistryBuilder();
-		serviceRegistryBuilder.applySettings(hibernateConfig.getProperties());
-		serviceRegistry = 
-				serviceRegistryBuilder.buildServiceRegistry();
 	}
 	
 	private void initTagManagerListeners() {
@@ -213,8 +208,32 @@ public class DBRepository implements IndexedRepository {
 
 	public void open(Map<String, String> userIdentification) throws Exception {
 		initTagManagerListeners();
-		
-		sessionFactory = hibernateConfig.buildSessionFactory(serviceRegistry);
+		if (init.compareAndSet(false, true)) {
+			
+			Configuration hibernateConfig = new Configuration();
+			hibernateConfig.configure(
+					this.getClass().getPackage().getName().replace('.', '/') 
+					+ "/hibernate.cfg.xml");
+			
+			hibernateConfig.setProperty("hibernate.connection.username", user);
+			hibernateConfig.setProperty("hibernate.connection.url",url);
+			if ((pass != null) && (!pass.isEmpty())) {
+				hibernateConfig.setProperty("hibernate.connection.password", pass);
+			}
+
+			ServiceRegistryBuilder serviceRegistryBuilder = new ServiceRegistryBuilder();
+			serviceRegistryBuilder.applySettings(hibernateConfig.getProperties());
+			ServiceRegistry serviceRegistry = 
+					serviceRegistryBuilder.buildServiceRegistry();
+			hibernateConfig.buildSessionFactory(serviceRegistry);
+			
+			Context context = new InitialContext();
+			this.sessionFactory = (SessionFactory) context.lookup("catma");
+		}
+		else {
+			Context context = new InitialContext();
+			this.sessionFactory = (SessionFactory) context.lookup("catma");
+		}
 		
 		Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put(IndexerPropertyKey.SessionFactory.name(), sessionFactory);
@@ -300,12 +319,8 @@ public class DBRepository implements IndexedRepository {
 		dbTagLibraryHandler.close();
 		dbSourceDocumentHandler.close();
 		
-		try {
-			indexer.close();
-		}
-		finally {
-			sessionFactory.close();
-		}
+		indexer.close();
+
 	}
 	
 	
