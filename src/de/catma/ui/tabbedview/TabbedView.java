@@ -60,17 +60,9 @@ public class TabbedView extends VerticalLayout implements CloseHandler, Iterable
 	}
 	
 	public void onTabClose(TabSheet tabsheet, Component tabContent) {
-		
 		tabsheet.removeComponent(tabContent);
 		((ClosableTab)tabContent).close();
-		
-		// workaround for http://dev.vaadin.com/ticket/7686
-		try {
-			Thread.sleep(5);
-		} catch (InterruptedException ex) {
-	            //do nothing 
-	    }
-		
+
 		if (tabsheet.getComponentCount() == 0) {
 			 //setVisible(false) doesn't work here because of out of sync errors
 			tabSheet.hideTabs(true);
@@ -79,6 +71,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler, Iterable
 			noOpenTabsLabel.setVisible(true);
 			setMargin(true);
 		}
+		
 	}
 	
 	protected Tab addTab(TabComponent component, String caption) {

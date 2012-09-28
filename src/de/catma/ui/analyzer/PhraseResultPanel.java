@@ -175,6 +175,15 @@ public class PhraseResultPanel extends VerticalLayout {
 			phraseResult, TreePropertyName.caption).setValue(
 					phraseResult.getGroup());
 		
+		//hier gehts weiter: 
+		/*
+		 * sourcedocumentItemID muss so gestaltet sein, dass die sourceDocumentID
+		 * extrahierbar ist und diese dann beim uebergeordneten groupedqueryresult 
+		 * als Filter dienen kann um eine GroupedQueryResult zu bauen, dass nur 
+		 * das oder die selektierte(n) Dokument(e) enthält. Siehe auch Zeile 80ff
+		 */
+		
+		
 		for (String sourceDocumentID : phraseResult.getSourceDocumentIDs()) {
 			SourceDocument sourceDocument = 
 					repository.getSourceDocument(sourceDocumentID);

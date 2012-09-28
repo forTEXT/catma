@@ -22,11 +22,6 @@ import de.catma.ui.tabbedview.ClosableTab;
 
 public class RepositoryView extends VerticalLayout implements ClosableTab {
 	
-	// TODO: hier gehts weiter
-	/**
-	 * querybuilder
-	 * todos!!!
-	 */
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private Repository repository;
 	private PropertyChangeListener exceptionOccurredListener;

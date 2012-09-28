@@ -31,8 +31,10 @@ public class DistributionChartView extends HorizontalLayout implements ClosableT
 	
 	private InvientCharts chart;
 	private NumberXAxis xAxis;
+	private String label;
 
-	public DistributionChartView(int xAxisSegmentSize) {
+	public DistributionChartView(int xAxisSegmentSize, String label) {
+		this.label = label;
 		initComponents(xAxisSegmentSize);
 	}
 
@@ -156,13 +158,14 @@ public class DistributionChartView extends HorizontalLayout implements ClosableT
 		}
 		return false;
 	}
-
-	public void close() {
-		// TODO Auto-generated method stub
-		
+	
+	public String getLabel() {
+		return label;
 	}
 
-	public void addClickshortCuts() { /* noop*/	}
+	public void close() { /* noop */ }
+
+	public void addClickshortCuts() { /* noop */ }
 	
-	public void removeClickshortCuts() { /* noop*/ }
+	public void removeClickshortCuts() { /* noop */ }
 }
