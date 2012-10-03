@@ -17,9 +17,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
-
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 
@@ -165,7 +162,7 @@ public class DBSourceDocument implements java.io.Serializable {
 		this.checksum = checksum;
 	}
 
-	@Column(name = "mimeType", length = 45)
+	@Column(name = "mimeType", length = 255)
 	public String getMimeType() {
 		return this.mimeType;
 	}

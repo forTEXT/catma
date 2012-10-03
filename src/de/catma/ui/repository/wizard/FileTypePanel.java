@@ -82,11 +82,10 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	public void stepActivated() {
 		onAdvance = false;
 		try {
-			if (wizardResult.getSourceDocumentID() == null) {
-				wizardResult.setSourceDocumentID(
-					repository.getIdFromURI(
-						sourceDocumentInfo.getTechInfoSet().getURI()));
-			}
+			wizardResult.setSourceDocumentID(
+				repository.getIdFromURI(
+					sourceDocumentInfo.getTechInfoSet().getURI()));
+			
 			final String mimeTypeFromUpload = 
 					sourceDocumentInfo.getTechInfoSet().getMimeType();
 			final URI sourceDocURI = sourceDocumentInfo.getTechInfoSet().getURI();
@@ -196,7 +195,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		}
 	}
 	
-	public void load(SourceDocument sourceDocument) throws IOException {
+	private void load(SourceDocument sourceDocument) throws IOException {
 
 		sourceDocument.getSourceContentHandler().load(
 				new ByteArrayInputStream(currentByteContent));

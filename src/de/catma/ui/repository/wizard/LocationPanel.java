@@ -20,6 +20,7 @@ import com.vaadin.ui.Upload.SucceededEvent;
 import com.vaadin.ui.Upload.SucceededListener;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.document.source.SourceDocumentHandler;
 import de.catma.document.source.TechInfoSet;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.WizardStepListener;
@@ -59,7 +60,8 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 
 				TechInfoSet ti = 
 						new TechInfoSet(
-								event.getMIMEType(), 
+								new SourceDocumentHandler().getMimeType(
+									event.getFilename(), event.getMIMEType()), // the event's mimetype can be wrong (eg. RTF) 
 								uploadPanel.getUploadedFileUri());
 				
 				wizardResult.getSourceDocumentInfo().setTechInfoSet(ti);
