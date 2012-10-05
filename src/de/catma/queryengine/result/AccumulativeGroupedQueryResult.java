@@ -1,5 +1,6 @@
 package de.catma.queryengine.result;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,32 +15,39 @@ public class AccumulativeGroupedQueryResult implements GroupedQueryResult {
 	private int totalFrequency;
 	private String group;
 	
-	public AccumulativeGroupedQueryResult(Set<GroupedQueryResult> results) {
-		String conc = "";
-		StringBuilder groupBuilder = new StringBuilder();
-		
+	public AccumulativeGroupedQueryResult() {
 		rows = new HashSet<QueryResultRow>();
 		frequencyBySourceDocument = new HashMap<String, Integer>();
+	}
+
+	public AccumulativeGroupedQueryResult(Set<GroupedQueryResult> results) {
+		this();
 		
 		for (GroupedQueryResult result : results) {
-			totalFrequency += result.getTotalFrequency();
-			for (String sourceDocumentID : result.getSourceDocumentIDs()) {
-				if (!frequencyBySourceDocument.containsKey(sourceDocumentID)) {
-					frequencyBySourceDocument.put(sourceDocumentID, 0);
-				}
-				frequencyBySourceDocument.put(
-					sourceDocumentID, 
-					frequencyBySourceDocument.get(sourceDocumentID)
-						+result.getFrequency(sourceDocumentID));
-			}
-			for (QueryResultRow row : result) {
-				rows.add(row);
-			}
-			groupBuilder.append(conc);
-			groupBuilder.append(result.getGroup().toString());
-			conc = ",";
+			addGroupedQueryResult(result);
 		}
 		
+	}
+
+	public void addGroupedQueryResult(GroupedQueryResult result) {
+		String conc = (group == null) ? "" : ",";
+		StringBuilder groupBuilder = new StringBuilder((group==null) ? "" : group);
+		
+		totalFrequency += result.getTotalFrequency();
+		for (String sourceDocumentID : result.getSourceDocumentIDs()) {
+			if (!frequencyBySourceDocument.containsKey(sourceDocumentID)) {
+				frequencyBySourceDocument.put(sourceDocumentID, 0);
+			}
+			frequencyBySourceDocument.put(
+				sourceDocumentID, 
+				frequencyBySourceDocument.get(sourceDocumentID)
+					+result.getFrequency(sourceDocumentID));
+		}
+		for (QueryResultRow row : result) {
+			rows.add(row);
+		}
+		groupBuilder.append(conc);
+		groupBuilder.append(result.getGroup().toString());
 		group = groupBuilder.toString();
 	}
 
@@ -64,6 +72,19 @@ public class AccumulativeGroupedQueryResult implements GroupedQueryResult {
 
 	public Set<String> getSourceDocumentIDs() {
 		return Collections.unmodifiableSet(frequencyBySourceDocument.keySet());
+	}
+
+	public GroupedQueryResult getSubResult(String... sourceDocumentID) {
+		Set<String> filterSourceDocumentIds = new HashSet<String>(); 
+		filterSourceDocumentIds.addAll(Arrays.asList(sourceDocumentID));
+		
+		PhraseResult subResult = new PhraseResult(group);
+		for (QueryResultRow row : this) {
+			if (filterSourceDocumentIds.contains(row.getSourceDocumentId())) {
+				subResult.addQueryResultRow(row);
+			}
+		}
+		return subResult;
 	}
 
 }

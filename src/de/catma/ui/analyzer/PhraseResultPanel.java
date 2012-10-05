@@ -13,6 +13,7 @@ import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window.Notification;
 
 import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
@@ -65,19 +66,22 @@ public class PhraseResultPanel extends VerticalLayout {
 			
 			public void buttonClick(ClickEvent event) {
 				GroupedQueryResultSet set = new GroupedQueryResultSet();
+
+				Set<?> selection = (Set<?>) resultTable.getValue();
 				
-				//TODO: handle children of GroupedQeuryResult
-				@SuppressWarnings("unchecked")
-				Set<GroupedQueryResult> selection = 
-						(Set<GroupedQueryResult>) resultTable.getValue();
 				if (selection.size() > 1) {
 					AccumulativeGroupedQueryResult accResult =
-							new AccumulativeGroupedQueryResult(selection);
+							new AccumulativeGroupedQueryResult();
+					
+					for (Object value : selection) {
+						accResult.addGroupedQueryResult(extractGroupedQueryResult(value));
+					}
 					
 					set.add(accResult);
 				}
 				else if (selection.size() == 1) {
-					set.add(selection.iterator().next());
+					Object value = selection.iterator().next();
+					set.add(extractGroupedQueryResult(value));
 				}
 				
 				if (selection.size() > 0) {
@@ -85,12 +89,24 @@ public class PhraseResultPanel extends VerticalLayout {
 				}
 				else {
 					getWindow().showNotification(
-							"Information", "Please select one or more result rows!");
+							"Information", "Please select one or more result rows!",
+							Notification.TYPE_TRAY_NOTIFICATION);
 				}
 			}
 
 
 		});
+	}
+
+	private GroupedQueryResult extractGroupedQueryResult(Object value) {
+		if (value instanceof SourceDocumentItemID) {
+			GroupedQueryResult parentResult = (GroupedQueryResult)resultTable.getParent(value);
+			return parentResult.getSubResult(
+					((SourceDocumentItemID)value).getSourceDocumentID());
+		}
+		else {
+			return (GroupedQueryResult)value;
+		}
 	}
 
 	private void initComponents() {
@@ -187,8 +203,12 @@ public class PhraseResultPanel extends VerticalLayout {
 		for (String sourceDocumentID : phraseResult.getSourceDocumentIDs()) {
 			SourceDocument sourceDocument = 
 					repository.getSourceDocument(sourceDocumentID);
-			String sourceDocumentItemID = 
-					phraseResult.getGroup() + "@" + sourceDocument;
+			SourceDocumentItemID sourceDocumentItemID = 
+					new SourceDocumentItemID(
+							phraseResult.getGroup() 
+								+ "@" + sourceDocument, 
+							sourceDocumentID);
+			
 			resultTable.addItem(sourceDocumentItemID);
 			resultTable.getContainerProperty(
 					sourceDocumentItemID, TreePropertyName.frequency).setValue(

@@ -1,6 +1,8 @@
 package de.catma.indexer.db;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -8,6 +10,7 @@ import java.util.Set;
 import org.hibernate.SessionFactory;
 
 import de.catma.queryengine.result.GroupedQueryResult;
+import de.catma.queryengine.result.PhraseResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 
@@ -73,4 +76,16 @@ public class LazyDBPhraseQueryResult implements GroupedQueryResult {
 		termsByDocument.put(t.getDocumentId(), t);
 	}
 
+	public GroupedQueryResult getSubResult(String... sourceDocumentID) {
+		Set<String> filterSourceDocumentIds = new HashSet<String>(); 
+		filterSourceDocumentIds.addAll(Arrays.asList(sourceDocumentID));
+		
+		PhraseResult subResult = new PhraseResult(term);
+		for (QueryResultRow row : this) {
+			if (filterSourceDocumentIds.contains(row.getSourceDocumentId())) {
+				subResult.addQueryResultRow(row);
+			}
+		}
+		return subResult;
+	}
 }

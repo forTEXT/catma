@@ -3,6 +3,7 @@ package de.catma.queryengine.result;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -110,5 +111,17 @@ public class PhraseResult implements GroupedQueryResult {
 	}
 	
 
+	public GroupedQueryResult getSubResult(String... sourceDocumentID) {
+		Set<String> filterSourceDocumentIds = new HashSet<String>(); 
+		filterSourceDocumentIds.addAll(Arrays.asList(sourceDocumentID));
+		
+		PhraseResult subResult = new PhraseResult(phrase);
+		for (QueryResultRow row : this) {
+			if (filterSourceDocumentIds.contains(row.getSourceDocumentId())) {
+				subResult.addQueryResultRow(row);
+			}
+		}
+		return subResult;
+	}
 	
 }

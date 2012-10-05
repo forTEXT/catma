@@ -14,6 +14,7 @@ import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.TreeTable;
@@ -220,7 +221,8 @@ public class MarkupResultPanel extends VerticalLayout {
 				}
 				else {
 					getWindow().showNotification(
-							"Information", "Please select one or more result rows!");
+							"Information", "Please select one or more result rows!", 
+							Notification.TYPE_TRAY_NOTIFICATION);
 				}
 			}
 

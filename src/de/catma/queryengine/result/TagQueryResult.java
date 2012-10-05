@@ -1,5 +1,6 @@
 package de.catma.queryengine.result;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,6 +53,19 @@ public class TagQueryResult implements GroupedQueryResult {
 
 	public Set<String> getSourceDocumentIDs() {
 		return Collections.unmodifiableSet(frequencyBySourceDocument.keySet());
+	}
+	
+	public GroupedQueryResult getSubResult(String... sourceDocumentID) {
+		Set<String> filterSourceDocumentIds = new HashSet<String>(); 
+		filterSourceDocumentIds.addAll(Arrays.asList(sourceDocumentID));
+		
+		PhraseResult subResult = new PhraseResult(group);
+		for (QueryResultRow row : this) {
+			if (filterSourceDocumentIds.contains(row.getSourceDocumentId())) {
+				subResult.addQueryResultRow(row);
+			}
+		}
+		return subResult;
 	}
 
 }

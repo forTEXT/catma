@@ -17,6 +17,8 @@ import org.vaadin.teemu.wizards.event.WizardProgressListener;
 import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
 import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.Alignment;
@@ -52,6 +54,7 @@ import de.catma.ui.analyzer.querybuilder.QueryBuilderWizardFactory;
 import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabComponent;
+import de.catma.util.Equal;
 
 public class AnalyzerView extends VerticalLayout 
 implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, RelevantUserMarkupCollectionProvider {
@@ -155,7 +158,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				if (evt.getNewValue() == null) { //remove
 					Corpus corpus = (Corpus) evt.getNewValue();
 					if ((AnalyzerView.this.corpus != null) 
-							&& corpus.getId().equals(AnalyzerView.this.corpus.getId())) {
+							&& Equal.nonNull(AnalyzerView.this.corpus.getId(), corpus.getId())) {
 						
 						//detaching relevant documents from corpus
 						//the documents itself are not removed
@@ -167,9 +170,9 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				}
 				else { 
 					Corpus corpus = (Corpus)evt.getNewValue();
-					//FIXME: this.corpus id can be null even if corpus is not null
+					
 					if ((AnalyzerView.this.corpus != null) 
-							&& AnalyzerView.this.corpus.getId().equals(corpus.getId())) {
+							&& Equal.nonNull(AnalyzerView.this.corpus.getId(), corpus.getId())) {
 						//update sourcedoc added
 						if (evt.getOldValue() instanceof SourceDocument) {
 							addSourceDocument((SourceDocument)evt.getOldValue());
@@ -251,7 +254,6 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			
 			public void buttonClick(ClickEvent event) {
 				searchInput.setValue("freq>0");
-				executeSearch();
 			}
 
 		});
@@ -259,6 +261,12 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			
 			public void buttonClick(ClickEvent event) {
 				showQueryBuilder();
+			}
+		});
+		this.searchInput.addListener(new ValueChangeListener() {
+			
+			public void valueChange(ValueChangeEvent event) {
+				executeSearch();
 			}
 		});
 	}
@@ -507,7 +515,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		searchInput = new TextField();
 		searchInput.setCaption("Query");
 		searchInput.setWidth("100%");
-
+		searchInput.setImmediate(true);
 		
 		searchPanel.addComponent(searchInput);
 		searchPanel.setExpandRatio(searchInput, 1.0f);
