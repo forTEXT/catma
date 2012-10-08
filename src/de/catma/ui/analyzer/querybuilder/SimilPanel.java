@@ -27,11 +27,15 @@ public class SimilPanel extends VerticalLayout implements DynamicWizardStep {
 		return false;
 	}
 
-	public void stepDeactivated() {
+	public void stepDeactivated(boolean forward) {
 		// TODO Auto-generated method stub
 
 	}
 
+	public void stepAdded() {
+		// TODO Auto-generated method stub
+		
+	}
 	public Component getContent() {
 		return this;
 	}

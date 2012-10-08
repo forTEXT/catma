@@ -3,8 +3,6 @@ package de.catma.ui.analyzer.querybuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.vaadin.teemu.wizards.Wizard;
-
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Alignment;
@@ -20,46 +18,54 @@ import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
 public class SearchTypeSelectionPanel 
 	extends VerticalLayout implements DynamicWizardStep {
 	
+	private ToggleButtonStateListener toggleButtonStateListener;
 	private OptionGroup searchTypeSelect;
 	private DynamicWizardStep nextStep;
 	private PhrasePanel phrasePanel;
-	
+	private boolean onBack;
+
 	public SearchTypeSelectionPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
-			QueryTree queryTree, Wizard wizard, 
+			QueryTree queryTree,
 			QueryOptions queryOptions) {
-		initComponents(toggleButtonStateListener, queryTree, queryOptions);
-		initActions(wizard);
+		this(toggleButtonStateListener, queryTree, queryOptions, false);
+	}
+	public SearchTypeSelectionPanel(
+			ToggleButtonStateListener toggleButtonStateListener, 
+			QueryTree queryTree,
+			QueryOptions queryOptions,
+			boolean onBack) {
+		this.toggleButtonStateListener = toggleButtonStateListener;
+		this.onBack = onBack;
+		initComponents(queryTree, queryOptions);
+		initActions();
 	}
 
-	private void initActions(final Wizard wizard) {
+	private void initActions() {
 		
 		searchTypeSelect.addListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				Object value = event.getProperty().getValue();
 				if (value != null) {
-					setNextStep((DynamicWizardStep)value, wizard);
+					setNextStep(
+						(DynamicWizardStep)value);
 				}
 			}
 		});
 		
 	}
 
-	void setNextStep(DynamicWizardStep step, Wizard wizard) {
-		if (step == null) {
-			step = phrasePanel;
-		}
-		
+	private void setNextStep(DynamicWizardStep step) {
 		if (nextStep != null) {
-			wizard.removeStep(nextStep);
+			toggleButtonStateListener.getWizard().removeStep(nextStep);
 		}
 		nextStep = step;
-		wizard.addStep(nextStep);
+		
+		toggleButtonStateListener.getWizard().addStep(nextStep);
 	}
 
 	private void initComponents(
-			ToggleButtonStateListener toggleButtonStateListener, 
 			QueryTree queryTree, QueryOptions queryOptions) {
 		
 		setSpacing(true);
@@ -101,7 +107,7 @@ public class SearchTypeSelectionPanel
 	}
 	
 	public boolean onBack() {
-		return false;
+		return onBack;
 	}
 	
 	public boolean onFinish() {
@@ -112,7 +118,17 @@ public class SearchTypeSelectionPanel
 		return false;
 	}
 	
-	public void stepActivated() { /* not used */ }
+	public void stepAdded() {
+	}
 	
-	public void stepDeactivated() { /* not used */ }
+	public void stepActivated() {
+		setNextStep(phrasePanel);
+	}
+	
+	public void stepDeactivated(boolean forward) {
+		if (!forward) {
+			toggleButtonStateListener.getWizard().removeStep(nextStep);
+			nextStep = null;
+		}
+	}
 }

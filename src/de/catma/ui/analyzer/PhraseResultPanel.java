@@ -181,25 +181,18 @@ public class PhraseResultPanel extends VerticalLayout {
 	}
 
 	private void addPhraseResult(GroupedQueryResult phraseResult) {
-		resultTable.addItem(new Object[]{
-				phraseResult.getGroup(), 
-				phraseResult.getTotalFrequency(),
-				createKwicCheckbox(phraseResult)},
+		resultTable.addItem( 
+				new Object[] {
+					phraseResult.getGroup(), 
+					phraseResult.getTotalFrequency(),
+					createKwicCheckbox(phraseResult) 
+				},
 				phraseResult);
 
 		resultTable.getContainerProperty(
 			phraseResult, TreePropertyName.caption).setValue(
 					phraseResult.getGroup());
-		
-		//hier gehts weiter: 
-		/*
-		 * sourcedocumentItemID muss so gestaltet sein, dass die sourceDocumentID
-		 * extrahierbar ist und diese dann beim uebergeordneten groupedqueryresult 
-		 * als Filter dienen kann um eine GroupedQueryResult zu bauen, dass nur 
-		 * das oder die selektierte(n) Dokument(e) enthält. Siehe auch Zeile 80ff
-		 */
-		
-		
+
 		for (String sourceDocumentID : phraseResult.getSourceDocumentIDs()) {
 			SourceDocument sourceDocument = 
 					repository.getSourceDocument(sourceDocumentID);

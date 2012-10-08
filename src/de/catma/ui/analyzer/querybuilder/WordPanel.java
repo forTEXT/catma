@@ -49,21 +49,22 @@ public class WordPanel extends GridLayout{
 	private WildcardBuilder wildcardBuilder;
 	private boolean withPositionBox;
 
-	public WordPanel() {
-		this(false, null);
+	public WordPanel(ValueChangeListener valueChangeListener) {
+		this(false, null, valueChangeListener);
 	}
 	
 	public WordPanel(
-			boolean withPositionBox, List<WordPanel> wordPanelList) {
+			boolean withPositionBox, List<WordPanel> wordPanelList, 
+			ValueChangeListener valueChangeListener) {
 		super(2,withPositionBox?6:4);
 		this.wildcardBuilder = new WildcardBuilder();
 		this.withPositionBox = withPositionBox;
 		initComponents();
-		initActions(wordPanelList);
+		initActions(wordPanelList, valueChangeListener);
 	}
 
 	private void initActions(
-			final List<WordPanel> wordPanelList) {
+			final List<WordPanel> wordPanelList, ValueChangeListener valueChangeListener) {
 		if (withPositionBox) {
 			btRemove.addListener(new ClickListener() {
 				
@@ -86,6 +87,10 @@ public class WordPanel extends GridLayout{
 				}
 			}
 		});
+		startsWithField.addListener(valueChangeListener);
+		containsField.addListener(valueChangeListener);
+		endsWithField.addListener(valueChangeListener);
+		exactField.addListener(valueChangeListener);
 	}
 
 	private void setWildcardInputFieldsEnabled(boolean enabled) {

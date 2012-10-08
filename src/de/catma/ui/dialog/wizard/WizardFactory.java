@@ -18,7 +18,6 @@ public abstract class WizardFactory {
 		
 		Wizard wizard = new Wizard();
 		wizard.getFinishButton().setEnabled(false);
-		addSteps(wizard);
 		Window wizardWindow = new Window(caption);
 		wizardWindow.setModal(true);
 		wizardWindow.setContent(wizard);
@@ -26,9 +25,10 @@ public abstract class WizardFactory {
 		wizardWindow.setHeight(height);
 		
 		wizard.addListener(new WizardManager(wizardWindow));
-		
 		wizard.addListener(wizardProgressListener);
 
+		addSteps(wizard);
+		
 		return wizardWindow;
 	}
 

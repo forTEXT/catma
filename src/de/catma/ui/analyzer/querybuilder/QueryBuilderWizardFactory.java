@@ -26,10 +26,9 @@ public class QueryBuilderWizardFactory extends WizardFactory {
 		SearchTypeSelectionPanel searchTypeSelectionPanel = 
 				new SearchTypeSelectionPanel(
 					new ToggleButtonStateListener(wizard), 
-					queryTree, wizard, queryOptions);
+					queryTree, queryOptions);
 		
 		wizard.addStep(searchTypeSelectionPanel);
-		searchTypeSelectionPanel.setNextStep(null, wizard);
 	}
 	
 	

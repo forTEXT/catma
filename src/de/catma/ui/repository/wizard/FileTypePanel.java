@@ -372,7 +372,8 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		return false;
 	}
 	
-	public void stepDeactivated(){ /*not needed*/}
+	public void stepDeactivated(boolean forward){ /* noop */}
 
+	public void stepAdded() {/* noop */}
 
 }

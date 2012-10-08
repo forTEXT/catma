@@ -78,7 +78,7 @@ class ContentInfoPanel extends HorizontalLayout implements
 		return true;
 	}
 	
-	public void stepDeactivated() {
+	public void stepDeactivated(boolean forward) {
 		if (wizardResult.getSourceDocument().toString().isEmpty()) {
 			URI uri = wizardResult.getSourceDocumentInfo().getTechInfoSet().getURI();
 			String title = uri.toString();
@@ -90,4 +90,6 @@ class ContentInfoPanel extends HorizontalLayout implements
 				.getContentInfoSet().setTitle(title);
 		}
 	}
+	
+	public void stepAdded() {/* noop */}
 }

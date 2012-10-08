@@ -13,6 +13,7 @@ public class WizardManager implements
 		WizardProgressListener {
 	private final Window wizardWindow;
 	private DynamicWizardStep lastActiveStep;
+	private int lastStepCount = 0;
 	
 	public WizardManager(Window wizardWindow) {
 		this.wizardWindow = wizardWindow;
@@ -20,7 +21,7 @@ public class WizardManager implements
 
 	public void wizardCompleted(WizardCompletedEvent event) {
 		if (lastActiveStep != null) {
-			lastActiveStep.stepDeactivated();
+			lastActiveStep.stepDeactivated(true);
 		}
 		wizardWindow.setVisible(false);
 		wizardWindow.getParent().removeWindow(wizardWindow);
@@ -31,11 +32,21 @@ public class WizardManager implements
 		wizardWindow.getParent().removeWindow(wizardWindow);
 	}
 
-	public void stepSetChanged(WizardStepSetChangedEvent event) {/*not needed*/}
+	public void stepSetChanged(WizardStepSetChangedEvent event) {
+		if (lastStepCount < event.getWizard().getSteps().size()) {
+			DynamicWizardStep lastStep = 
+				(DynamicWizardStep)event.getWizard().getSteps().get(
+						event.getWizard().getSteps().size()-1);
+			lastStep.stepAdded();
+		}
+		lastStepCount = event.getWizard().getSteps().size();
+	}
 
 	public void activeStepChanged(WizardStepActivationEvent event) {
 		if (lastActiveStep != null) {
-			lastActiveStep.stepDeactivated();
+			lastActiveStep.stepDeactivated(
+				event.getWizard().getSteps().indexOf(lastActiveStep)
+					< event.getWizard().getSteps().indexOf(event.getActivatedStep()));
 		}
 		lastActiveStep = (DynamicWizardStep)event.getActivatedStep();
 		event.getWizard().getNextButton().setEnabled(

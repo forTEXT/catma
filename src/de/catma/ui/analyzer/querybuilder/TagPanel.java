@@ -29,12 +29,11 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagsetDefinition;
-import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
 import de.catma.ui.tagmanager.TagsetTree;
 import de.catma.util.ContentInfoSet;
 
-public class TagPanel extends VerticalLayout implements DynamicWizardStep {
+public class TagPanel extends AbstractSearchPanel {
 	
 	private static class TagMatchModeItem {
 		
@@ -56,9 +55,6 @@ public class TagPanel extends VerticalLayout implements DynamicWizardStep {
 		}
 	}
 	
-	private ToggleButtonStateListener toggleButtonStateListener;
-	private QueryTree queryTree;
-	private QueryOptions queryOptions;
 	private Map<String, TagsetDefinition> tagsetDefinitionsByUuid;
 	private Component tagLibraryPanel;
 	private Tree tagLibrariesTree;
@@ -67,16 +63,13 @@ public class TagPanel extends VerticalLayout implements DynamicWizardStep {
 	private boolean init = false;
 	private VerticalSplitPanel splitPanel;
 	private ResultPanel resultPanel;
-	private boolean onFinish = false;
-	protected String curQuery;
 	private ComboBox tagMatchModeCombo;
+	private VerticalLayout contentPanel;
 
 	public TagPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
 			QueryTree queryTree, QueryOptions queryOptions) {
-		this.toggleButtonStateListener = toggleButtonStateListener;
-		this.queryTree = queryTree;
-		this.queryOptions = queryOptions;
+		super(toggleButtonStateListener, queryTree, queryOptions);
 		this.tagsetDefinitionsByUuid = new HashMap<String, TagsetDefinition>();
 		try {
 			initTagsets();
@@ -115,7 +108,7 @@ public class TagPanel extends VerticalLayout implements DynamicWizardStep {
 							tagsetTree.addTagsetDefinition(tagsetDefinitionsByUuid.values());
 							splitPanel.setVisible(true);
 							tagLibraryPanel.setVisible(false);
-							removeComponent(tagLibraryPanel);
+							contentPanel.removeComponent(tagLibraryPanel);
 							
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -134,13 +127,19 @@ public class TagPanel extends VerticalLayout implements DynamicWizardStep {
 				if ((value != null) && (value instanceof TagDefinition)) {
 					TagDefinition td = (TagDefinition)value;
 					String path = tagsetTree.getTagsetDefinition(td).getTagPath(td);
+					if (curQuery != null) {
+						queryTree.removeLast();
+					}
 					curQuery = "tag=\""+path+"%\"";
 					resultPanel.setQuery(
 							curQuery, queryOptions.getLimit());
-					onFinish = true;
+					queryTree.add(curQuery);
+					onFinish = !isComplexQuery();
+					onAdvance = true;
 				}
 				else {
 					onFinish = false;
+					onAdvance = false;
 				}
 				toggleButtonStateListener.stepChanged(TagPanel.this);
 			}
@@ -188,25 +187,26 @@ public class TagPanel extends VerticalLayout implements DynamicWizardStep {
 					tagsetDefinitionsByUuid.remove(existingTSDef.getUuid());
 					tagsetDefinitionsByUuid.put(
 							tagsetDefinition.getUuid(), tagsetDefinition);
-					System.out.println("readding " + tagsetDefinition);
 				}
 				
 			}
 			else {
 				tagsetDefinitionsByUuid.put(
 						tagsetDefinition.getUuid(), tagsetDefinition);
-				System.out.println("adding " + tagsetDefinition);
 			}
 		}
 		
 		
 	}
 
-	private void initComponents() {
-		setSizeFull();
+	protected void initComponents() {
+		contentPanel = new VerticalLayout();
+		contentPanel.setSizeFull();
+		addComponent(contentPanel);
+		
 		if (tagsetDefinitionsByUuid.isEmpty()) {
 			tagLibraryPanel = createTagLibraryPanel();
-			addComponent(tagLibraryPanel);
+			contentPanel.addComponent(tagLibraryPanel);
 		}
 		
 		HorizontalLayout tagSearchPanel = new HorizontalLayout();
@@ -251,7 +251,7 @@ public class TagPanel extends VerticalLayout implements DynamicWizardStep {
 		tagSearchPanel.setExpandRatio(tagMatchModeCombo, 0.2f);
 		
 		splitPanel = new VerticalSplitPanel();
-		addComponent(splitPanel);
+		contentPanel.addComponent(splitPanel);
 		
 		splitPanel.addComponent(tagSearchPanel);
 		if (tagsetDefinitionsByUuid.isEmpty()) {
@@ -263,6 +263,9 @@ public class TagPanel extends VerticalLayout implements DynamicWizardStep {
 		
 		resultPanel = new ResultPanel(queryOptions);
 		splitPanel.addComponent(resultPanel);
+		
+		initComponents(contentPanel);
+		
 	}
 
 	private Component createTagLibraryPanel() {
@@ -311,29 +314,6 @@ public class TagPanel extends VerticalLayout implements DynamicWizardStep {
 	
 	public Component getContent() {
 		return this;
-	}
-
-	public boolean onAdvance() {
-		return onFinish;
-	}
-
-	public boolean onBack() {
-		return true;
-	}
-
-	public void stepActivated() { /* noop */ }
-
-	public boolean onFinish() {
-		return onFinish;
-	}
-
-	public boolean onFinishOnly() {
-		// TODO Auto-generated method stub
-		return onFinish;
-	}
-
-	public void stepDeactivated() {
-		queryTree.add(curQuery);
 	}
 
 	@Override

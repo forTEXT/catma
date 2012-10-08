@@ -9,5 +9,7 @@ public interface DynamicWizardStep extends WizardStep {
 	
 	public boolean onFinishOnly();
 
-	public void stepDeactivated();
+	public void stepDeactivated(boolean forward);
+	
+	public void stepAdded();
 }

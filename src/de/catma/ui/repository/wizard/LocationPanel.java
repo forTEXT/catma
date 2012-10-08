@@ -144,7 +144,6 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		return false;
 	}
 	
-	public void stepActivated(){ /*not needed*/}
 	
 	public boolean onFinish() {
 		return false;
@@ -154,5 +153,8 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		return false;
 	}
 
-	public void stepDeactivated() { /*not needed */}
+	public void stepActivated(){ /* noop */}
+	public void stepDeactivated(boolean forward) { /* noop */}
+	public void stepAdded() {/* noop */}
 }
+

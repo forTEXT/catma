@@ -3,6 +3,8 @@ package de.catma.ui.analyzer.querybuilder;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.Validator;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -18,31 +20,24 @@ import com.vaadin.ui.VerticalSplitPanel;
 
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
-import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
 
-public class PhrasePanel extends VerticalSplitPanel implements DynamicWizardStep {
+public class PhrasePanel extends AbstractSearchPanel {
 	
 	private Panel wordSequencePanel;
 	private List<WordPanel> wordPanels;
 	private Button btAddWordPanel;
-	private QueryTree queryTree;
 	private ResultPanel resultPanel;
 	private Button btShowInPreview;
 	private TextField maxTotalFrequencyField;
-	private boolean onFinish;
-	private String curQuery;
-	private ToggleButtonStateListener toggleButtonStateListener;
 
 	public PhrasePanel(
 			ToggleButtonStateListener toggleButtonStateListener,
 			QueryTree queryTree,
 			QueryOptions queryOptions) {
-		this.toggleButtonStateListener = toggleButtonStateListener;
-		this.queryTree = queryTree;
+		super(toggleButtonStateListener, queryTree, queryOptions);
 		wordPanels = new ArrayList<WordPanel>();
-		onFinish = false;
-		initComponents(queryOptions);
+		initComponents();
 		initActions();
 	}
 
@@ -51,7 +46,12 @@ public class PhrasePanel extends VerticalSplitPanel implements DynamicWizardStep
 			
 			public void buttonClick(ClickEvent event) {
 				WordPanel wordPanel = 
-						new WordPanel(true, wordPanels);
+						new WordPanel(true, wordPanels, new ValueChangeListener() {
+							
+							public void valueChange(ValueChangeEvent event) {
+								showInPreviw();
+							}
+						});
 				addWordPanel(wordPanel);
 			}
 		});
@@ -59,33 +59,48 @@ public class PhrasePanel extends VerticalSplitPanel implements DynamicWizardStep
 			
 
 			public void buttonClick(ClickEvent event) {
-				
-				StringBuilder builder = new StringBuilder();
-				String conc="";
-				for (WordPanel panel : wordPanels) {
-					builder.append(conc);
-					builder.append(panel.getWildcardWord());
-					conc = " ";
-				}
-				
-				if (!builder.toString().trim().isEmpty()) {
-					curQuery = "wild=\"" + builder.toString() + "\"";
-					resultPanel.setQuery(
-						curQuery, Integer.valueOf(
-							(String)maxTotalFrequencyField.getValue()));
-					onFinish = true;
-					toggleButtonStateListener.stepChanged(PhrasePanel.this);
-				}
-				
+				showInPreviw();
 			}
 		});
 	}
 
-	private void initComponents(QueryOptions queryOptions) {
+	private void showInPreviw() {
+		StringBuilder builder = new StringBuilder();
+		String conc="";
+		for (WordPanel panel : wordPanels) {
+			builder.append(conc);
+			builder.append(panel.getWildcardWord());
+			conc = " ";
+		}
+		
+		if (!builder.toString().trim().isEmpty()) {
+			if (curQuery != null) {
+				queryTree.removeLast();
+			}
+			curQuery = "wild=\"" + builder.toString() + "\"";
+			resultPanel.setQuery(
+				curQuery, Integer.valueOf(
+					(String)maxTotalFrequencyField.getValue()));
+			queryTree.add(curQuery);
+			onFinish = !isComplexQuery();
+			onAdvance = true;
+			toggleButtonStateListener.stepChanged(PhrasePanel.this);
+		}
+		else {
+			onFinish = false;
+			onAdvance = false;
+		}
+		
+	}
+
+	private void initComponents() {
+		VerticalSplitPanel splitPanel = new VerticalSplitPanel();
 		Component searchPanel = createSearchPanel();
-		this.addComponent(searchPanel);
+		splitPanel.addComponent(searchPanel);
 		resultPanel = new ResultPanel(queryOptions);
-		this.addComponent(resultPanel);
+		splitPanel.addComponent(resultPanel);
+		addComponent(splitPanel);
+		super.initComponents(splitPanel);
 	}
 
 	private Component createSearchPanel() {
@@ -95,7 +110,12 @@ public class PhrasePanel extends VerticalSplitPanel implements DynamicWizardStep
 		wordSequencePanel = new Panel(new HorizontalLayout());
 		searchPanel.addComponent(wordSequencePanel);
 		
-		WordPanel firstWordPanel = new WordPanel();
+		WordPanel firstWordPanel = new WordPanel(new ValueChangeListener() {
+			
+			public void valueChange(ValueChangeEvent event) {
+				showInPreviw();
+			}
+		});
 		addWordPanel(firstWordPanel);
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout(); 
@@ -162,28 +182,6 @@ public class PhrasePanel extends VerticalSplitPanel implements DynamicWizardStep
 		return this;
 	}
 
-	public boolean onAdvance() {
-		return onFinish;
-	}
-
-	public boolean onBack() {
-		return true;
-	}
-
-	public void stepActivated() { /*noop*/ }
-
-	public boolean onFinish() {
-		return onFinish;
-	}
-
-	public boolean onFinishOnly() {
-		return onFinish;
-	}
-
-	public void stepDeactivated() {
-		queryTree.add(curQuery);
-	}
-	
 	@Override
 	public void attach() {
 		super.attach();
