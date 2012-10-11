@@ -153,7 +153,7 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		return false;
 	}
 
-	public void stepActivated(){ /* noop */}
+	public void stepActivated(boolean forward){ /* noop */}
 	public void stepDeactivated(boolean forward) { /* noop */}
 	public void stepAdded() {/* noop */}
 }

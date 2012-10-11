@@ -58,7 +58,7 @@ class ContentInfoPanel extends HorizontalLayout implements
 		return true;
 	}
 
-	public void stepActivated() {
+	public void stepActivated(boolean forward) {
 	
 		ContentInfoSet contentInfoSet = wizardResult.getSourceDocumentInfo().getContentInfoSet();
 		

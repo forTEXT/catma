@@ -43,10 +43,12 @@ public class WizardManager implements
 	}
 
 	public void activeStepChanged(WizardStepActivationEvent event) {
+		boolean forward = true;
 		if (lastActiveStep != null) {
-			lastActiveStep.stepDeactivated(
-				event.getWizard().getSteps().indexOf(lastActiveStep)
-					< event.getWizard().getSteps().indexOf(event.getActivatedStep()));
+			forward = 
+				(event.getWizard().getSteps().indexOf(lastActiveStep)
+					< event.getWizard().getSteps().indexOf(event.getActivatedStep())); 
+			lastActiveStep.stepDeactivated(forward);
 		}
 		lastActiveStep = (DynamicWizardStep)event.getActivatedStep();
 		event.getWizard().getNextButton().setEnabled(
@@ -55,6 +57,6 @@ public class WizardManager implements
 		event.getWizard().getBackButton().setEnabled(event.getActivatedStep().onBack());
 		event.getWizard().getFinishButton().setEnabled(
 				((DynamicWizardStep)event.getActivatedStep()).onFinish());
-		((DynamicWizardStep)event.getActivatedStep()).stepActivated();
+		((DynamicWizardStep)event.getActivatedStep()).stepActivated(forward);
 	}
 }

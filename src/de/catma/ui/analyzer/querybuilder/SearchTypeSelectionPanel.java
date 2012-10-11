@@ -30,6 +30,7 @@ public class SearchTypeSelectionPanel
 			QueryOptions queryOptions) {
 		this(toggleButtonStateListener, queryTree, queryOptions, false);
 	}
+	
 	public SearchTypeSelectionPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
 			QueryTree queryTree,
@@ -76,13 +77,15 @@ public class SearchTypeSelectionPanel
 				toggleButtonStateListener,
 				queryTree, queryOptions);
 		nextSteps.add(phrasePanel);
+		
+		nextSteps.add(
+			new SimilPanel(
+				toggleButtonStateListener, queryTree, queryOptions));
+		
 		nextSteps.add(
 			new TagPanel(
 				toggleButtonStateListener, queryTree, queryOptions));
 		
-//		COLLOC("by collocation", null),
-//		FREQ("by frequency", null),
-
 		searchTypeSelect = new OptionGroup("",nextSteps);
 		
 		searchTypeSelect.setImmediate(true);
@@ -121,8 +124,10 @@ public class SearchTypeSelectionPanel
 	public void stepAdded() {
 	}
 	
-	public void stepActivated() {
-		setNextStep(phrasePanel);
+	public void stepActivated(boolean forward) {
+		if(forward) {
+			setNextStep(phrasePanel);
+		}
 	}
 	
 	public void stepDeactivated(boolean forward) {

@@ -49,7 +49,6 @@ public class ComplexTypeSelectionPanel extends VerticalLayout implements
 		this.queryTree = queryTree;
 		initComponents();
 		initActions();
-		complexTypeSelect.setValue(ComplexTypeOption.UNION);
 	}
 
 	private void initActions() {
@@ -106,7 +105,11 @@ public class ComplexTypeSelectionPanel extends VerticalLayout implements
 		return true;
 	}
 
-	public void stepActivated() {/* noop */}
+	public void stepActivated(boolean forward) {
+		if (forward) {
+			complexTypeSelect.setValue(ComplexTypeOption.UNION);
+		}
+	}
 
 	public boolean onFinish() {
 		return false;
@@ -121,7 +124,7 @@ public class ComplexTypeSelectionPanel extends VerticalLayout implements
 	public void stepDeactivated(boolean forward) {
 		if (!forward && typeAdded) {
 			queryTree.removeLast();
+			typeAdded = false;
 		}
 	}
-
 }

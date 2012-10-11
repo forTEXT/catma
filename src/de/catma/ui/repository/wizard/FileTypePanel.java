@@ -79,7 +79,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		initActions();
 	}
 	
-	public void stepActivated() {
+	public void stepActivated(boolean forward) {
 		onAdvance = false;
 		try {
 			wizardResult.setSourceDocumentID(

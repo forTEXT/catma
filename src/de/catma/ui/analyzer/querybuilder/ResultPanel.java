@@ -1,10 +1,14 @@
 package de.catma.ui.analyzer.querybuilder;
 
+import com.vaadin.data.Validator;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.ProgressIndicator;
+import com.vaadin.ui.TextField;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
@@ -31,6 +35,8 @@ public class ResultPanel extends VerticalLayout {
 	private QueryOptions queryOptions;
 	private Label queryLabel;
 	private ProgressIndicator pi;
+	private TextField maxTotalFrequencyField;
+	private Button btShowInPreview;
 
 	public ResultPanel(QueryOptions queryOptions) {
 		this.queryOptions = queryOptions;
@@ -39,6 +45,45 @@ public class ResultPanel extends VerticalLayout {
 	}
 
 	private void initComponents() {
+		setSpacing(true);
+		setMargin(true, false, false, false);
+		HorizontalLayout buttonPanel = new HorizontalLayout(); 
+		buttonPanel.setSpacing(true);
+		
+		btShowInPreview = new Button("Show in preview");
+		buttonPanel.addComponent(btShowInPreview);
+		Label maxTotalFrequencyLabel = new Label("with a maximum total frequency of");
+		buttonPanel.addComponent(maxTotalFrequencyLabel);
+		buttonPanel.setComponentAlignment(
+				maxTotalFrequencyLabel, Alignment.MIDDLE_CENTER);
+		
+		maxTotalFrequencyField = new TextField();
+		maxTotalFrequencyField.setValue("50");
+		maxTotalFrequencyField.addValidator(new Validator() {
+			public boolean isValid(Object value) {
+				try {
+					Integer.valueOf((String)value);
+					return true;
+				}
+				catch (NumberFormatException nfe) {
+					return false;
+				}
+			}
+			
+			public void validate(Object value) throws InvalidValueException {
+				try {
+					Integer.valueOf((String)value);
+				}
+				catch (NumberFormatException nfe) {
+					throw new InvalidValueException("Value must be an integer number!");
+				}
+				
+			}
+		});
+		maxTotalFrequencyField.setInvalidAllowed(false);
+		buttonPanel.addComponent(maxTotalFrequencyField);
+		addComponent(buttonPanel);
+		
 		HorizontalLayout headerPanel = new HorizontalLayout();
 		headerPanel.setSpacing(true);
 		headerPanel.setWidth("100%");
@@ -85,7 +130,10 @@ public class ResultPanel extends VerticalLayout {
 		addComponent(resultTable);
 	}
 
-	public void setQuery(String query, Integer limit) {
+	public void setQuery(String query) {
+		int limit = Integer.valueOf(
+				(String)maxTotalFrequencyField.getValue());
+		
 		queryOptions.setLimit(limit);
 		
 		queryLabel.setValue(query);
@@ -161,4 +209,9 @@ public class ResultPanel extends VerticalLayout {
 		
 	}
 
+	public void addBtShowInPreviewListener(ClickListener clickListener) {
+		btShowInPreview.addListener(clickListener);
+	}
+
+	
 }

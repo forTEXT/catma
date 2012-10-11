@@ -32,6 +32,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.Indexer;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 
 /**
@@ -82,6 +83,10 @@ public class TagQuery extends Query {
         			repository.getSourceDocument(sourceDocumentId).getUserMarkupCollectionRefs()) {
         			relevantUserMarkupCollIDs.add(umcRef.getId());
         		}
+        	}
+        	
+        	if (relevantUserMarkupCollIDs.isEmpty()) {
+        		return new QueryResultRowArray();
         	}
         }
         

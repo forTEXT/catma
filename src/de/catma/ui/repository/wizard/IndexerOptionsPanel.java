@@ -104,7 +104,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 
 	private TextField tfUcs;
 
-	private Button btRemvoeUcs;
+	private Button btRemoveUcs;
 
 	public IndexerOptionsPanel(WizardStepListener wizardStepListener,
 			AddSourceDocWizardResult wizardResult) {
@@ -148,7 +148,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		
 		this.unseparableCharacterSequencesListSelect.addListener(new ItemSetChangeListener() {
 			public void containerItemSetChange(ItemSetChangeEvent event) {
-				btRemvoeUcs.setEnabled(
+				btRemoveUcs.setEnabled(
 					unseparableCharacterSequencesListSelect.getContainerDataSource().size() > 0);
 			}
 		});
@@ -159,7 +159,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 			}
 		});
 		
-		btRemvoeUcs.addListener(new ClickListener() {
+		btRemoveUcs.addListener(new ClickListener() {
 			public void buttonClick(ClickEvent event) {
 				unseparableCharacterSequencesListSelect.removeItem(
 						unseparableCharacterSequencesListSelect.getValue());
@@ -247,9 +247,9 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
         
         ucsAddRemovePanel.addComponent(tfUcs);
         ucsAddRemoveLayout.setExpandRatio(tfUcs, 2);
-        btRemvoeUcs = new Button("Remove entry");
-        btRemvoeUcs.setEnabled(false);
-        ucsAddRemovePanel.addComponent(btRemvoeUcs);
+        btRemoveUcs = new Button("Remove entry");
+        btRemoveUcs.setEnabled(false);
+        ucsAddRemovePanel.addComponent(btRemoveUcs);
         
         addComponent(ucsAddRemovePanel, 1, 4);
 
@@ -288,7 +288,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		return "Wordlist options";
 	}
 
-	public void stepActivated() {
+	public void stepActivated(boolean forward) {
 		try {
 			sourceDocumentInfo.setIndexInfoSet(new IndexInfoSet());
 			

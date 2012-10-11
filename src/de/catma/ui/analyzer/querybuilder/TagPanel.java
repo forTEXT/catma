@@ -87,7 +87,7 @@ public class TagPanel extends AbstractSearchPanel {
 			initComponents();
 			initActions();
 		}
-		getParent().setHeight("100%");
+//		getParent().setHeight("100%");
 	}
 	
 	private void initActions() {
@@ -122,28 +122,39 @@ public class TagPanel extends AbstractSearchPanel {
 		tagsetTree.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
-				Object value = event.getProperty().getValue();
-				
-				if ((value != null) && (value instanceof TagDefinition)) {
-					TagDefinition td = (TagDefinition)value;
-					String path = tagsetTree.getTagsetDefinition(td).getTagPath(td);
-					if (curQuery != null) {
-						queryTree.removeLast();
-					}
-					curQuery = "tag=\""+path+"%\"";
-					resultPanel.setQuery(
-							curQuery, queryOptions.getLimit());
-					queryTree.add(curQuery);
-					onFinish = !isComplexQuery();
-					onAdvance = true;
-				}
-				else {
-					onFinish = false;
-					onAdvance = false;
-				}
-				toggleButtonStateListener.stepChanged(TagPanel.this);
+				showInPreview();
 			}
 		});
+		
+		resultPanel.addBtShowInPreviewListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				showInPreview();
+			}
+		});
+	}
+
+	private void showInPreview() {
+		Object value = tagsetTree.getTagTree().getValue();
+		
+		if ((value != null) && (value instanceof TagDefinition)) {
+			TagDefinition td = (TagDefinition)value;
+			String path = tagsetTree.getTagsetDefinition(td).getTagPath(td);
+			if (curQuery != null) {
+				queryTree.removeLast();
+			}
+			curQuery = "tag=\""+path+"%\"";
+			resultPanel.setQuery(curQuery);
+			
+			queryTree.add(curQuery);
+			onFinish = !isComplexQuery();
+			onAdvance = true;
+		}
+		else {
+			onFinish = false;
+			onAdvance = false;
+		}
+		toggleButtonStateListener.stepChanged(TagPanel.this);
 	}
 
 	private void initTagsets() throws IOException {

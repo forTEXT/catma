@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.data.Validator;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -14,7 +13,6 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
@@ -28,8 +26,6 @@ public class PhrasePanel extends AbstractSearchPanel {
 	private List<WordPanel> wordPanels;
 	private Button btAddWordPanel;
 	private ResultPanel resultPanel;
-	private Button btShowInPreview;
-	private TextField maxTotalFrequencyField;
 
 	public PhrasePanel(
 			ToggleButtonStateListener toggleButtonStateListener,
@@ -55,9 +51,7 @@ public class PhrasePanel extends AbstractSearchPanel {
 				addWordPanel(wordPanel);
 			}
 		});
-		btShowInPreview.addListener(new ClickListener() {
-			
-
+		resultPanel.addBtShowInPreviewListener(new ClickListener() {
 			public void buttonClick(ClickEvent event) {
 				showInPreviw();
 			}
@@ -78,13 +72,11 @@ public class PhrasePanel extends AbstractSearchPanel {
 				queryTree.removeLast();
 			}
 			curQuery = "wild=\"" + builder.toString() + "\"";
-			resultPanel.setQuery(
-				curQuery, Integer.valueOf(
-					(String)maxTotalFrequencyField.getValue()));
+			resultPanel.setQuery(curQuery);
 			queryTree.add(curQuery);
 			onFinish = !isComplexQuery();
 			onAdvance = true;
-			toggleButtonStateListener.stepChanged(PhrasePanel.this);
+			toggleButtonStateListener.stepChanged(this);
 		}
 		else {
 			onFinish = false;
@@ -118,41 +110,7 @@ public class PhrasePanel extends AbstractSearchPanel {
 		});
 		addWordPanel(firstWordPanel);
 		
-		HorizontalLayout buttonPanel = new HorizontalLayout(); 
-		buttonPanel.setSpacing(true);
-		
-		btShowInPreview = new Button("Show in preview");
-		buttonPanel.addComponent(btShowInPreview);
-		Label maxTotalFrequencyLabel = new Label("with a maximum total frequency of");
-		buttonPanel.addComponent(maxTotalFrequencyLabel);
-		buttonPanel.setComponentAlignment(
-				maxTotalFrequencyLabel, Alignment.MIDDLE_CENTER);
-		
-		maxTotalFrequencyField = new TextField();
-		maxTotalFrequencyField.setValue("50");
-		maxTotalFrequencyField.addValidator(new Validator() {
-			public boolean isValid(Object value) {
-				try {
-					Integer.valueOf((String)value);
-					return true;
-				}
-				catch (NumberFormatException nfe) {
-					return false;
-				}
-			}
-			
-			public void validate(Object value) throws InvalidValueException {
-				try {
-					Integer.valueOf((String)value);
-				}
-				catch (NumberFormatException nfe) {
-					throw new InvalidValueException("Value must be an integer number!");
-				}
-				
-			}
-		});
-		maxTotalFrequencyField.setInvalidAllowed(false);
-		buttonPanel.addComponent(maxTotalFrequencyField);
+		HorizontalLayout buttonPanel = new HorizontalLayout();
 		
 		Label addWordPanelLabel = 
 				new Label("If your phrase contains more words you can");
@@ -193,4 +151,5 @@ public class PhrasePanel extends AbstractSearchPanel {
 	public String toString() {
 		return "by word or phrase";
 	}
+
 }
