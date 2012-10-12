@@ -9,14 +9,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import com.vaadin.terminal.gwt.server.WebApplicationContext;
-import com.vaadin.terminal.gwt.server.WebBrowser;
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.Slider.ValueOutOfBoundsException;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.CatmaApplication;
@@ -34,6 +35,7 @@ import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
+import de.catma.ui.Slider;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
@@ -52,13 +54,14 @@ public class TaggerView extends VerticalLayout
 	private Tagger tagger;
 	private Pager pager;
 	private MarkupPanel markupPanel;
-	private boolean init = true;
 	private TagManager tagManager;
 	private int taggerID;
 	private Button btAnalyze;
 	private Repository repository;
 	private PropertyChangeListener sourceDocChangedListener;
 	private PagerComponent pagerComponent;
+	private Slider linesPerPageSlider;
+	private double totalLineCount;
 	
 	public TaggerView(
 			int taggerID, TagManager tagManager, 
@@ -69,9 +72,21 @@ public class TaggerView extends VerticalLayout
 		this.repository = repository;
 		this.sourceDocument = sourceDocument;
 		this.sourceDocChangedListener = sourceDocChangedListener;
+
 		initComponents();
 		initActions();
 		initListeners();
+		pager.setMaxPageLengthInLines(30);
+		try {
+			tagger.setText(sourceDocument.getContent());
+			totalLineCount = pager.getTotalLineCount();
+			try {
+				linesPerPageSlider.setValue((100/totalLineCount)*30);
+			} catch (ValueOutOfBoundsException toBeIgnored) {}
+		} catch (IOException e) {
+			((CatmaApplication)getApplication()).showAndLogError(
+				"Error showing Source Document!", e);
+		}
 	}
 
 	private void initListeners() {
@@ -103,6 +118,23 @@ public class TaggerView extends VerticalLayout
 			}
 		});
 		
+		linesPerPageSlider.addListener(new ValueChangeListener() {
+			
+			public void valueChange(ValueChangeEvent event) {
+				Double perCentValue = (Double)linesPerPageSlider.getValue();
+				int lines = (int)((totalLineCount/100.0)*perCentValue);
+				
+				pager.setMaxPageLengthInLines(lines);
+				//recalculate pages
+				try {
+					tagger.setText(sourceDocument.getContent());
+				} catch (IOException e) {
+					((CatmaApplication)getApplication()).showAndLogError(
+						"Error showing Source Document!", e);
+				}
+				pagerComponent.setPage(1);
+			}
+		});
 	}
 
 	private void initComponents() {
@@ -123,12 +155,15 @@ public class TaggerView extends VerticalLayout
 		
 		scrollPanel.addComponent(tagger);
 		taggerPanel.addComponent(scrollPanel);
-		taggerPanel.setExpandRatio(scrollPanel, 1.0f);
+		taggerPanel.setExpandRatio(scrollPanel, 0.8f);
 		
 		HorizontalLayout actionPanel = new HorizontalLayout();
 		actionPanel.setSpacing(true);
-		taggerPanel.addComponent(actionPanel);
+		actionPanel.setSizeFull();
 
+		taggerPanel.addComponent(actionPanel);
+		taggerPanel.setExpandRatio(actionPanel, 0.2f);
+		
 		pagerComponent = new PagerComponent(
 				pager, new PageChangeListener() {
 					
@@ -138,10 +173,19 @@ public class TaggerView extends VerticalLayout
 		});
 		
 		actionPanel.addComponent(pagerComponent);
+		actionPanel.setExpandRatio(pagerComponent, 0.1f);
 		
 		btAnalyze = new Button("Analyze Document");
 		btAnalyze.setEnabled(repository instanceof IndexedRepository);
 		actionPanel.addComponent(btAnalyze);
+		actionPanel.setExpandRatio(btAnalyze, 0.1f);
+		
+		linesPerPageSlider =  new Slider("zoom page size", 1, 100);
+		linesPerPageSlider.setImmediate(true);
+		linesPerPageSlider.setWidth("150px");
+		
+		actionPanel.addComponent(linesPerPageSlider);
+		actionPanel.setExpandRatio(linesPerPageSlider, 0.8f);
 		
 		markupPanel = new MarkupPanel(
 				tagManager,
@@ -200,27 +244,6 @@ public class TaggerView extends VerticalLayout
 		return sourceDocument;
 	}
 	
-	@Override
-	public void attach() {
-		super.attach();
-		if (init) {
-			WebApplicationContext context = 
-					((WebApplicationContext) getApplication().getContext());
-			WebBrowser wb = context.getBrowser();
-			// TODO: should be changeable by the user:
-			float lines = (wb.getScreenHeight()/3)/12;
-			pager.setMaxPageLengthInLines(Math.round(lines));
-			
-			try {
-				tagger.setText(sourceDocument.getContent());
-			} catch (IOException e) {
-				((CatmaApplication)getApplication()).showAndLogError(
-					"Error showing Source Document!", e);
-			}
-			init = false;
-		}
-	}
-
 	public void openUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
 		markupPanel.openUserMarkupCollection(userMarkupCollection);

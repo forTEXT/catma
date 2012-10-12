@@ -86,6 +86,12 @@ public class SearchTypeSelectionPanel
 			new TagPanel(
 				toggleButtonStateListener, queryTree, queryOptions));
 		
+		nextSteps.add(
+			new CollocPanel(toggleButtonStateListener, queryTree, queryOptions));
+		
+		nextSteps.add(
+				new FreqPanel(toggleButtonStateListener, queryTree, queryOptions));
+
 		searchTypeSelect = new OptionGroup("",nextSteps);
 		
 		searchTypeSelect.setImmediate(true);

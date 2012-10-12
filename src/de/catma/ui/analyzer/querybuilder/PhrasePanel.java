@@ -92,7 +92,7 @@ public class PhrasePanel extends AbstractSearchPanel {
 		resultPanel = new ResultPanel(queryOptions);
 		splitPanel.addComponent(resultPanel);
 		addComponent(splitPanel);
-		super.initComponents(splitPanel);
+		super.initSearchPanelComponents(splitPanel);
 	}
 
 	private Component createSearchPanel() {
@@ -134,10 +134,6 @@ public class PhrasePanel extends AbstractSearchPanel {
 	@Override
 	public String getCaption() {
 		return "How does your phrase look like?";
-	}
-
-	public Component getContent() {
-		return this;
 	}
 
 	@Override

@@ -65,7 +65,8 @@ public class TagPanel extends AbstractSearchPanel {
 	private ResultPanel resultPanel;
 	private ComboBox tagMatchModeCombo;
 	private VerticalLayout contentPanel;
-
+	private boolean inRefinement;
+	
 	public TagPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
 			QueryTree queryTree, QueryOptions queryOptions) {
@@ -87,7 +88,6 @@ public class TagPanel extends AbstractSearchPanel {
 			initComponents();
 			initActions();
 		}
-//		getParent().setHeight("100%");
 	}
 	
 	private void initActions() {
@@ -144,6 +144,11 @@ public class TagPanel extends AbstractSearchPanel {
 				queryTree.removeLast();
 			}
 			curQuery = "tag=\""+path+"%\"";
+			
+			if (inRefinement) {
+				curQuery += 
+					" " + ((TagMatchModeItem)tagMatchModeCombo.getValue()).getTagMatchMode().name().toLowerCase();
+			}
 			resultPanel.setQuery(curQuery);
 			
 			queryTree.add(curQuery);
@@ -210,7 +215,7 @@ public class TagPanel extends AbstractSearchPanel {
 		
 	}
 
-	protected void initComponents() {
+	private void initComponents() {
 		contentPanel = new VerticalLayout();
 		contentPanel.setSizeFull();
 		addComponent(contentPanel);
@@ -232,7 +237,6 @@ public class TagPanel extends AbstractSearchPanel {
 		
 		
 		tagMatchModeCombo = new ComboBox("Please choose what you consider a match:");
-		tagMatchModeCombo.setVisible(false);
 		TagMatchModeItem exactMatchItem = 
 				new TagMatchModeItem("exact match", TagMatchMode.EXACT);
 		tagMatchModeCombo.addItem(exactMatchItem);
@@ -275,7 +279,7 @@ public class TagPanel extends AbstractSearchPanel {
 		resultPanel = new ResultPanel(queryOptions);
 		splitPanel.addComponent(resultPanel);
 		
-		initComponents(contentPanel);
+		initSearchPanelComponents(contentPanel);
 		
 	}
 
@@ -323,10 +327,6 @@ public class TagPanel extends AbstractSearchPanel {
 		tagLibrariesTree.setChildrenAllowed(tlr, false);
 	}
 	
-	public Component getContent() {
-		return this;
-	}
-
 	@Override
 	public String getCaption() {
 		return "Please choose a TagDefinition";
@@ -337,5 +337,19 @@ public class TagPanel extends AbstractSearchPanel {
 	public String toString() {
 		return "by Tag";
 	}
-	
+
+	@Override
+	public void stepActivated(boolean forward) {
+		super.stepActivated(forward);
+		
+		if (forward) {
+			String last = queryTree.getLast();
+			inRefinement =
+				(last != null) 
+					&& (last.trim().equals(
+						ComplexTypeSelectionPanel.ComplexTypeOption.REFINMENT.getQueryElement())); 
+			this.tagMatchModeCombo.setEnabled(inRefinement);
+				
+		}
+	}
 }

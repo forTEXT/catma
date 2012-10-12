@@ -42,6 +42,10 @@
 	font-weight: bold;
 }
 
+.centered-text {
+	text-align: center;
+}
+
 .pager-pageinput {	
 	text-align: right;
 }

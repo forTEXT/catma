@@ -130,6 +130,11 @@ public class QueryTree {
         }
     }
 
+    
+    public String getLast() {
+        return curNode.value;
+    }
+    
     @Override
     public String toString() {
         return curNode.toString();

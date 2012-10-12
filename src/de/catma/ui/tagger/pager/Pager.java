@@ -57,6 +57,7 @@ public class Pager implements Iterable<Page> {
 	private PagerListener pagerListener;
 	private Long checksum = null;
 	private int taggerID;
+	private int totalLineCount = 0;
 	
 	public Pager(int taggerID, int approxMaxLineLength, int maxPageLengthInLines) {
 		pages = new ArrayList<Page>();
@@ -136,6 +137,11 @@ public class Pager implements Iterable<Page> {
 							text.substring(pageStart, pageEnd), 
 							pageStart, pageEnd));
 		}
+		
+		totalLineCount = 0;
+		for (Page p : pages) {
+			totalLineCount += p.getLineCount();
+		}
 	}
 	
 	@Override
@@ -208,6 +214,7 @@ public class Pager implements Iterable<Page> {
 	public void setMaxPageLengthInLines(int maxPageLengthInLines) {
 		this.checksum = null; //recalculate pages
 		this.maxPageLengthInLines = maxPageLengthInLines;
+		this.currentPageIndex = 0;
 	}
 
 	public void removeTagInstances(Set<TagDefinition> tagDefinitions) {
@@ -215,5 +222,9 @@ public class Pager implements Iterable<Page> {
 			p.removeTagInstances(tagDefinitions);
 		}
 		
+	}
+	
+	public int getTotalLineCount() {
+		return totalLineCount;
 	}
 }

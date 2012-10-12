@@ -13,6 +13,7 @@ import com.vaadin.ui.VerticalSplitPanel;
 
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
+import de.catma.ui.data.util.NonEmptySequenceValidator;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
 
@@ -32,14 +33,7 @@ public class SimilPanel extends AbstractSearchPanel implements DynamicWizardStep
 		initActions();
 	}
 	
-	private void initActions() {
-		inputField.addListener(new ValueChangeListener() {
-			
-			public void valueChange(ValueChangeEvent event) {
-				showInPreview();
-			}
-		});
-		
+	private void initActions() {		
 		resultPanel.addBtShowInPreviewListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -49,7 +43,7 @@ public class SimilPanel extends AbstractSearchPanel implements DynamicWizardStep
 	}
 
 	private void showInPreview() {
-		if ((inputField.getValue() != null) && !inputField.getValue().toString().isEmpty()){
+		if (inputField.isValid()){
 			StringBuilder builder = new StringBuilder("simil=\"");
 			builder.append(inputField.getValue());
 			builder.append("\" ");
@@ -81,7 +75,7 @@ public class SimilPanel extends AbstractSearchPanel implements DynamicWizardStep
 		splitPanel.addComponent(resultPanel);
 		addComponent(splitPanel);
 		
-		super.initComponents(splitPanel);
+		super.initSearchPanelComponents(splitPanel);
 	}
 
 	private Component createSearchPanel() {
@@ -94,6 +88,9 @@ public class SimilPanel extends AbstractSearchPanel implements DynamicWizardStep
 		searchPanel.addComponent(inputField);
 		searchPanel.setExpandRatio(inputField, 0.7f);
 		inputField.setImmediate(true);
+		inputField.setRequired(true);
+		inputField.setInvalidAllowed(false);
+		inputField.addValidator(new NonEmptySequenceValidator("This value may not be empty!"));
 		
 		gradeSlider = new Slider("Grade of similarity", 0, 100);
 		gradeSlider.setResolution(0);
@@ -114,10 +111,6 @@ public class SimilPanel extends AbstractSearchPanel implements DynamicWizardStep
 		return "The word is similar to";
 	}
 	
-	public Component getContent() {
-		return this;
-	}
-
 	@Override
 	public String toString() {
 		return "by grade of similarity";

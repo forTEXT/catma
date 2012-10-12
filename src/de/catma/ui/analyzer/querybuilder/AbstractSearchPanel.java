@@ -40,7 +40,7 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 		onAdvance = false;
 	}
 
-	protected void initComponents(Component content) {
+	protected void initSearchPanelComponents(Component content) {
 		setSizeFull();
 		setSpacing(true);
 		cbComplexQuery = new CheckBox("continue to build a complex query");
@@ -51,10 +51,10 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 		setExpandRatio(cbComplexQuery, 0.01f);
 		setComponentAlignment(cbComplexQuery, Alignment.BOTTOM_RIGHT);
 		
-		initAbstractActions();
+		initSearchPanelActions();
 	}
 
-	private void initAbstractActions() {
+	private void initSearchPanelActions() {
 		cbComplexQuery.addListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
@@ -138,4 +138,10 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 		super.attach();
 		getParent().setHeight("100%");
 	}
+	
+	public Component getContent() {
+		return this;
+	}
+
+
 }

@@ -66,6 +66,7 @@ public class Page {
 	private String text;
 	private Map<String, ClientTagInstance> relativeTagInstances = 
 			new HashMap<String,ClientTagInstance>();
+	private int lineCount;
 	
 	public Page(int taggerID, String text, int pageStart, int pageEnd) {
 		this.taggerID = taggerID;
@@ -142,6 +143,8 @@ public class Page {
 			htmlDocModel.getRootElement().appendChild(lineSpan);
 			htmlDocModel.getRootElement().appendChild(new Element(HTMLElement.br.name()));
 		}
+		
+		lineCount = lineId;
 	}
 
 	private String getSolidSpace(int count) {
@@ -246,5 +249,12 @@ public class Page {
 				iterator.remove();
 			}
 		}
+	}
+	
+	public int getLineCount() {
+		if (htmlDocModel == null) {
+			buildModel();
+		}
+		return lineCount;
 	}
 }

@@ -15,7 +15,7 @@ import de.catma.ui.dialog.wizard.DynamicWizardStep;
 public class ComplexTypeSelectionPanel extends VerticalLayout implements
 		DynamicWizardStep {
 	
-	private static enum ComplexTypeOption {
+	static enum ComplexTypeOption {
 		UNION(","),
 		EXCLUSION("-"),
 		REFINMENT("where"),
