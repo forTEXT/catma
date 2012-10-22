@@ -211,7 +211,8 @@ public class CatmaApplication extends Application
 			getMainWindow().showNotification(
 					"Information", 
 					"To markup your text please drag Tagsets from a Tag Library " +
-					"into the currently active Tagsets area!");
+					"into the currently active Tagsets area!",
+					Notification.TYPE_TRAY_NOTIFICATION);
 		}
 		else {
 			taggerManagerView.getWindow().bringToFront();

@@ -635,18 +635,39 @@ class DBTagLibraryHandler {
 		try {
 			session.beginTransaction();
 			
-			for (TagsetDefinition tagsetDefinition : tagLibrary) {
-				DBTagsetDefinition dbTagsetDefinition = 
-					(DBTagsetDefinition)session.get(
-						DBTagsetDefinition.class, 
-						tagsetDefinition.getId());
-				
-				session.delete(dbTagsetDefinition);
-			}
 			DBTagLibrary dbTagLibrary = (DBTagLibrary)session.get(
 					DBTagLibrary.class, Integer.valueOf(tagLibrary.getId()));
-			session.delete(dbTagLibrary);
 			
+			Set<DBUserTagLibrary> dbUserTagLibraries = 
+					dbTagLibrary.getDbUserTagLibraries();
+			
+			DBUserTagLibrary currentUserTagLibrary = null;
+			for (DBUserTagLibrary dbUserTagLibrary : dbUserTagLibraries) {
+				if (dbUserTagLibrary.getDbUser().getUserId().equals(
+						dbRepository.getCurrentUser().getUserId())) {
+					currentUserTagLibrary = dbUserTagLibrary;
+					break;
+				}
+			}
+			if (currentUserTagLibrary == null) {
+				throw new IllegalStateException(
+						"you seem to have no access rights for this library!");
+			}
+			
+			if (currentUserTagLibrary.isOwner() || (dbUserTagLibraries.size() > 1)) {
+				session.delete(currentUserTagLibrary);
+			}
+			else {
+				for (TagsetDefinition tagsetDefinition : tagLibrary) {
+					DBTagsetDefinition dbTagsetDefinition = 
+						(DBTagsetDefinition)session.get(
+							DBTagsetDefinition.class, 
+							tagsetDefinition.getId());
+					
+					session.delete(dbTagsetDefinition);
+				}
+				session.delete(dbTagLibrary);
+			}			
 			session.getTransaction().commit();
 			
 			tagLibraryReferences.remove(tagLibraryReference);

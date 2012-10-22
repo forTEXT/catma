@@ -29,6 +29,7 @@ import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.Tree.TreeTargetDetails;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.CatmaApplication;
@@ -108,7 +109,8 @@ public class CorpusPanel extends VerticalLayout {
 					getWindow().showNotification("Information",
 							"Start adding Source Documents" +
 							" and Markup Collections by dragging them " +
-							"from the Documents section on a Corpus.");
+							"from the Documents section on a Corpus.",
+							Notification.TYPE_TRAY_NOTIFICATION);
 				}
 				else { //update name
 					if (evt.getOldValue() instanceof String) {
@@ -205,7 +207,8 @@ public class CorpusPanel extends VerticalLayout {
 							selectedCorpus, (IndexedRepository)repository);
 				}
 				else {
-					getWindow().showNotification("Information", "Please select a corpus first!");
+					getWindow().showNotification("Information", "Please select a corpus first!",
+							Notification.TYPE_TRAY_NOTIFICATION);
 				}
 			}
 		});
@@ -317,7 +320,8 @@ public class CorpusPanel extends VerticalLayout {
 			else {
 				getWindow().showNotification(
 					"Information", "You can only add " +
-							"Source Documents and Markup Collections to a Corpus!");
+							"Source Documents and Markup Collections to a Corpus!",
+							Notification.TYPE_TRAY_NOTIFICATION);
 			}
 		}
 		catch (IOException e) {

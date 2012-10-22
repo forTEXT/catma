@@ -21,6 +21,7 @@ import com.vaadin.ui.AbstractSelect.AcceptItem;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window.Notification;
 
 import de.catma.CatmaApplication;
 import de.catma.document.Range;
@@ -40,8 +41,8 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToReversedTrimmedStringCIComparator;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
+import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.util.IDGenerator;
-import de.catma.util.Pair;
 
 public class KwicPanel extends VerticalLayout {
 
@@ -120,8 +121,8 @@ public class KwicPanel extends VerticalLayout {
 							applyTagOperationToAllSelectedResults(
 									incomingTagsetDef, incomingTagDef, true);
 						} catch (Exception e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							((CatmaApplication)getApplication()).showAndLogError(
+									"Error tagging search results!", e);
 						}
                 	}
                 }
@@ -145,78 +146,89 @@ public class KwicPanel extends VerticalLayout {
 
 	private void applyTagOperationToAllSelectedResults(
 			TagsetDefinition incomingTagsetDef, TagDefinition incomingTagDef,
-			boolean applyTag) throws IOException, URISyntaxException {
-    	IDGenerator idGenerator = new IDGenerator();
-    	
+			boolean applyTag) throws IOException, URISyntaxException {    	
 		@SuppressWarnings("unchecked")
 		Set<QueryResultRow> selectedRows = 
 				(Set<QueryResultRow>)kwicTable.getValue();
 		
 		if (selectedRows != null) {
-			Pair<UserMarkupCollectionManager,Map<String,UserMarkupCollection>> result =
-					updateAllMarkupCollections(selectedRows, incomingTagsetDef);
-			
-			UserMarkupCollectionManager userMarkupCollectionManager = result.getFirst();
-			Map<String,UserMarkupCollection> userMarkupCollectionsBySourceDoc = 
-					result.getSecond();
-			Map<UserMarkupCollection, List<TagReference>> tagReferences =
-					new HashMap<UserMarkupCollection, List<TagReference>>();
-			
-			for (QueryResultRow row : selectedRows) {
-				UserMarkupCollection umc = 
-						userMarkupCollectionsBySourceDoc.get(row.getSourceDocumentId());
-				
-				TagInstance ti = 
-						new TagInstance(
-							idGenerator.generate(), 
-							umc.getTagLibrary().getTagDefinition(
-									incomingTagDef.getUuid()));
-				
-				TagReference tr = new TagReference(
-					ti, repository.getSourceDocument(
-							row.getSourceDocumentId()).getID(), row.getRange());
-				
-				if (!tagReferences.containsKey(umc)) {
-					tagReferences.put(umc, new ArrayList<TagReference>());
-				}
-				tagReferences.get(umc).add(tr);
-			}
-			
-			
-			for (Map.Entry<UserMarkupCollection, List<TagReference>> entry : tagReferences.entrySet()) {
-				userMarkupCollectionManager.addTagReferences(entry.getValue(), entry.getKey());
-			}
+			updateAllMarkupCollections(
+				selectedRows, incomingTagsetDef, incomingTagDef);
 		}
-		
-		
 	}
 
-	private Pair<UserMarkupCollectionManager, Map<String,UserMarkupCollection>> 
-		updateAllMarkupCollections(
-			Set<QueryResultRow> selectedRows, TagsetDefinition incomingTagsetDef) throws IOException {
+	private void updateAllMarkupCollections(
+			final Set<QueryResultRow> selectedRows, 
+			final TagsetDefinition incomingTagsetDef, 
+			final TagDefinition incomingTagDef) throws IOException {
 		
 		Set<SourceDocument> affectedDocuments = new HashSet<SourceDocument>();
 		for (QueryResultRow row : selectedRows) {
 			affectedDocuments.add(repository.getSourceDocument(row.getSourceDocumentId()));
 		}
 		
-		UserMarkupCollectionManager userMarkupCollectionManager =
-				new UserMarkupCollectionManager(repository.getTagManager(), repository);
-		Map<String,UserMarkupCollection> userMarkupCollectionsBySourceDoc = 
-				new HashMap<String, UserMarkupCollection>();
+		TagKwicDialog tagKwicDialog = new TagKwicDialog(
+				new SaveCancelListener<Map<String,UserMarkupCollection>>() {
+			
+			public void savePressed(Map<String, UserMarkupCollection> result) {
+				try {
+					tagKwic(result, selectedRows, incomingTagsetDef, incomingTagDef);
+					KwicPanel.this.getWindow().showNotification(
+							"Info", "The search results have been tagged!", 
+							Notification.TYPE_TRAY_NOTIFICATION);
+
+				} catch (URISyntaxException e) {
+					((CatmaApplication)getApplication()).showAndLogError(
+							"error creating tag reference", e);
+				}
+			}
+			
+			public void cancelPressed() { /* noop */}
+		}, repository);
 		
 		for (SourceDocument sd : affectedDocuments) {
-			UserMarkupCollection umc = getUserMarkupCollection(sd);
-			if (umc != null) {
-				if (!umc.getTagLibrary().contains(incomingTagsetDef)) {
-					repository.getTagManager().addTagsetDefinition(
-						umc.getTagLibrary(), new TagsetDefinition(incomingTagsetDef));
+			List<UserMarkupCollectionReference> writableUmcRefs = 
+					repository.getWritableUserMarkupCollectionRefs(sd);
+			
+			UserMarkupCollectionReference initialTarget = null;
+			
+			for (UserMarkupCollectionReference umcRef : writableUmcRefs) {
+				if (initialTarget == null) {
+					initialTarget = umcRef;
 				}
-				userMarkupCollectionManager.add(umc);
-				userMarkupCollectionsBySourceDoc.put(sd.getID(), umc);
+				else if (relevantUserMarkupCollectionProvider.getCorpus().getUserMarkupCollectionRefs().contains(umcRef)) {
+					initialTarget = umcRef;
+					break;
+				}
 			}
+			
+			tagKwicDialog.addUserMarkCollections(
+					sd, writableUmcRefs, initialTarget);
+			
 		}
 		
+		tagKwicDialog.show(getApplication().getMainWindow());
+	}
+
+	private void tagKwic(
+			Map<String, UserMarkupCollection> result, 
+			Set<QueryResultRow> selectedRows, 
+			TagsetDefinition incomingTagsetDef, TagDefinition incomingTagDef) throws URISyntaxException {
+		
+		UserMarkupCollectionManager userMarkupCollectionManager =
+				new UserMarkupCollectionManager(repository.getTagManager(), repository);
+
+		for (Map.Entry<String,UserMarkupCollection> entry : result.entrySet()) {
+			
+			UserMarkupCollection umc = entry.getValue();
+			
+			if (!umc.getTagLibrary().contains(incomingTagsetDef)) {
+				repository.getTagManager().addTagsetDefinition(
+					umc.getTagLibrary(), new TagsetDefinition(incomingTagsetDef));
+			}
+			userMarkupCollectionManager.add(umc);
+		}
+
 		final List<UserMarkupCollection> toBeUpdated = 
 				userMarkupCollectionManager.getUserMarkupCollections(
 						incomingTagsetDef, false);
@@ -224,19 +236,37 @@ public class KwicPanel extends VerticalLayout {
 		userMarkupCollectionManager.updateUserMarkupCollections(
     			toBeUpdated, incomingTagsetDef);
 		
-		return new Pair<UserMarkupCollectionManager,Map<String,UserMarkupCollection>>(
-				userMarkupCollectionManager,userMarkupCollectionsBySourceDoc);
-	}
+		Map<UserMarkupCollection, List<TagReference>> tagReferences =
+				new HashMap<UserMarkupCollection, List<TagReference>>();
 
-	private UserMarkupCollection getUserMarkupCollection(SourceDocument sd) throws IOException {
-		List<String> relevantUserMarkupCollIDs =
-				this.relevantUserMarkupCollectionProvider.getRelevantUserMarkupCollectionIDs();
-		for (UserMarkupCollectionReference ref : sd.getUserMarkupCollectionRefs()) {
-			if (relevantUserMarkupCollIDs.contains(ref.getId())) {
-				return repository.getUserMarkupCollection(ref);
+		IDGenerator idGenerator = new IDGenerator();
+	
+		for (QueryResultRow row : selectedRows) {
+			UserMarkupCollection umc = 
+					result.get(row.getSourceDocumentId());
+			
+			TagInstance ti = 
+					new TagInstance(
+						idGenerator.generate(), 
+						umc.getTagLibrary().getTagDefinition(
+								incomingTagDef.getUuid()));
+			
+			TagReference tr = new TagReference(
+				ti, repository.getSourceDocument(
+						row.getSourceDocumentId()).getID(), row.getRange());
+			
+			if (!tagReferences.containsKey(umc)) {
+				tagReferences.put(umc, new ArrayList<TagReference>());
 			}
+			tagReferences.get(umc).add(tr);
 		}
-		return null;
+		
+		
+		for (Map.Entry<UserMarkupCollection, List<TagReference>> entry : tagReferences.entrySet()) {
+			userMarkupCollectionManager.addTagReferences(entry.getValue(), entry.getKey());
+		}
+
+		
 	}
 
 	private void initComponents() {

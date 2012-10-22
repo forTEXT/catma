@@ -34,6 +34,7 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.Window.Notification;
 
 import de.catma.CatmaApplication;
 import de.catma.backgroundservice.BackgroundServiceProvider;
@@ -364,13 +365,13 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		            		input,
 	                        idx+1,
 	                        character);
-		            	getWindow().showNotification("Information", message);
+		            	getWindow().showNotification("Information", message, Notification.TYPE_TRAY_NOTIFICATION);
 		            }
 		            else {
 		            	String message = MessageFormat.format(
 		            			"<html><p>There is something wrong with your query <b>{0}</b>.</p> <p>If you are unsure about how to construct a query try the Query Builder!</p></html>",
 			            		input);
-		            	getWindow().showNotification("Information", message);
+		            	getWindow().showNotification("Information", message, Notification.TYPE_TRAY_NOTIFICATION);
 		            }
 				}
 				else {
@@ -562,5 +563,9 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	
 	public List<String> getRelevantUserMarkupCollectionIDs() {
 		return Collections.unmodifiableList(relevantUserMarkupCollIDs);
+	}
+	
+	public Corpus getCorpus() {
+		return corpus;
 	}
 }

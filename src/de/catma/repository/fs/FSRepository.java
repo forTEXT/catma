@@ -367,4 +367,11 @@ class FSRepository implements Repository {
 		
 		return null;
 	}
+	
+	
+	public List<UserMarkupCollectionReference> getWritableUserMarkupCollectionRefs(
+			SourceDocument sd) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

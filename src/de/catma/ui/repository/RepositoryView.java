@@ -30,7 +30,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	private TagLibraryPanel tagLibraryPanel;
 	private boolean init = false;
 	private Application application;
-	
+	//TODO: add logout button
 	public RepositoryView(Repository repository) {
 		this.repository = repository;
 		initComponents();

@@ -36,6 +36,7 @@ import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.Tree.TreeDragMode;
+import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.themes.Reindeer;
@@ -359,7 +360,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	private void handleOpenDocumentRequest(final Object value) {
 		if (value==null) {
 			getWindow().showNotification(
-					"Information", "Please select a document first!");
+					"Information", "Please select a document first!",
+					Notification.TYPE_TRAY_NOTIFICATION);
 		}
 		if (value instanceof SourceDocument) {
 			((CatmaApplication)getApplication()).openSourceDocument(
@@ -430,7 +432,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		}
 		else {
 			getWindow().showNotification(
-					"Information", "Please select a Source Document!");
+					"Information", "Please select a Source Document!",
+					Notification.TYPE_TRAY_NOTIFICATION);
 		}
 		
 	}
@@ -467,14 +470,16 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				}
 				else {
 					getWindow().showNotification(
-						"Information", "Please select a Source Document first!");
+						"Information", "Please select a Source Document first!",
+						Notification.TYPE_TRAY_NOTIFICATION);
 				}
 			}			
 		}
 		else {
 			getWindow().showNotification(
 				"Information", 
-				"This repository is not indexed, analysis is not supported!");
+				"This repository is not indexed, analysis is not supported!",
+				Notification.TYPE_TRAY_NOTIFICATION);
 		}
 		
 	}
@@ -668,7 +673,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		if ((value == null) || !(value instanceof SourceDocument)) {
 			 getWindow().showNotification(
                     "Information",
-                    "Please select a Source Document first");
+                    "Please select a Source Document first",
+                    Notification.TYPE_TRAY_NOTIFICATION);
 		}
 		else{
 			final SourceDocument sourceDocument = (SourceDocument)value;
@@ -737,7 +743,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		if ((value == null) || !(value instanceof SourceDocument)) {
 			 getWindow().showNotification(
                     "Information",
-                    "Please select a Source Document first");
+                    "Please select a Source Document first",
+                    Notification.TYPE_TRAY_NOTIFICATION);
 		}
 		else{
 			final SourceDocument sourceDocument = (SourceDocument)value;

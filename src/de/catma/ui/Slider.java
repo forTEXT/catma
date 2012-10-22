@@ -17,12 +17,13 @@ public class Slider extends VerticalLayout {
 	private Label minLabel;
 	private Label maxLabel;
 	
-	public Slider(String caption, int min, int max) {
+	public Slider(String caption, int min, int max, final String unit) {
 		this.setCaption(caption);
 		
 		HorizontalLayout sliderLayout = new HorizontalLayout();
 		sliderLayout.setSpacing(true);
-		this.sliderComp = new com.vaadin.ui.Slider(min, max);
+//		this.sliderComp = new com.vaadin.ui.Slider(min, max);
+		this.sliderComp = new SliderComp(min, max);
 		minLabel = new Label(String.valueOf(min));
 		maxLabel = new Label(String.valueOf(max));
 		
@@ -43,7 +44,7 @@ public class Slider extends VerticalLayout {
 		sliderComp.addListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
-				current.setValue(event.getProperty().getValue());
+				current.setValue(event.getProperty().getValue() + unit);
 			}
 		});
 		

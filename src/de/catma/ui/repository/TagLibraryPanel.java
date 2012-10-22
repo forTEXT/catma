@@ -26,6 +26,7 @@ import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
+import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
@@ -368,7 +369,8 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		}	
 		else {
 			getWindow().showNotification(
-					"Information", "Please select a Tag Library first!");
+					"Information", "Please select a Tag Library first!",
+					Notification.TYPE_TRAY_NOTIFICATION);
 		}
 	}
 

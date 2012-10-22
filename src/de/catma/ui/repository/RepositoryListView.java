@@ -9,6 +9,7 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 
@@ -38,7 +39,8 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 						(RepositoryReference)repositoryTable.getValue();
 				if (repositoryManager.isOpen(repositoryReference)) {
 					getWindow().showNotification(
-							"Information", "Repository is already open.");
+							"Information", "Repository is already open.",
+							Notification.TYPE_TRAY_NOTIFICATION);
 				}
 				else {
 					if (repositoryReference.isAuthenticationRequired()) {

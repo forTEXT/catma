@@ -9,6 +9,7 @@ import com.vaadin.terminal.Resource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Tree;
@@ -52,7 +53,8 @@ public class TagInstanceTree extends HorizontalLayout {
 				if (selectedItem == null) {
 					getWindow().showNotification(
 						"Information", 
-						"Please select one or more Tag Instances in the list first!");
+						"Please select one or more Tag Instances in the list first!",
+						Notification.TYPE_TRAY_NOTIFICATION);
 				}
 				else {
 					List<String> tagInstanceIDs = new ArrayList<String>();

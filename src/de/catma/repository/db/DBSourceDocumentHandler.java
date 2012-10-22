@@ -392,16 +392,11 @@ class DBSourceDocumentHandler {
 			}
 			
 			session.beginTransaction();
-			if (!currentUserSourceDocument.isOwner()) {
+			if (!currentUserSourceDocument.isOwner() 
+					|| (dbUserSourceDocuments.size() > 1)) {
 				session.delete(currentUserSourceDocument);
 			}
 			else {
-				
-				if (dbUserSourceDocuments.size() > 1) {
-					throw new IOException(
-						"this document is shared with others and cannot be " +
-						"deleted, please unshare this document first!");
-				}
 				session.delete(currentUserSourceDocument);
 				
 				Criteria criteria = 

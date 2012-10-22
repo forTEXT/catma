@@ -18,6 +18,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
+import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.CatmaApplication;
@@ -180,7 +181,7 @@ public class TaggerView extends VerticalLayout
 		actionPanel.addComponent(btAnalyze);
 		actionPanel.setExpandRatio(btAnalyze, 0.1f);
 		
-		linesPerPageSlider =  new Slider("zoom page size", 1, 100);
+		linesPerPageSlider =  new Slider("page size zoom", 1, 100, "%");
 		linesPerPageSlider.setImmediate(true);
 		linesPerPageSlider.setWidth("150px");
 		
@@ -203,7 +204,8 @@ public class TaggerView extends VerticalLayout
 	                                "Information",
 	                                "Please select a User Markup Collection "
 	                                + " to store your markup first!<br>"
-	                                + "See 'Active Markup Colletions'.");
+	                                + "See 'Active Markup Colletions'.",
+	                                Notification.TYPE_TRAY_NOTIFICATION);
 						}
 					}
 					

@@ -256,4 +256,10 @@ public class DummyRepository implements IndexedRepository {
 		
 		
 	}
+	
+	public List<UserMarkupCollectionReference> getWritableUserMarkupCollectionRefs(
+			SourceDocument sd) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

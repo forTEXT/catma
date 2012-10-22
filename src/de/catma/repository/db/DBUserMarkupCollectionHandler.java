@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +21,7 @@ import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.db.CloseableSession;
 import de.catma.document.Range;
+import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
@@ -318,18 +320,13 @@ class DBUserMarkupCollectionHandler {
 				throw new IllegalStateException(
 						"you seem to have no access rights for this collection!");
 			}
-			if (!currentUserUserMarkupCollection.isOwner()) {
+			if (!currentUserUserMarkupCollection.isOwner() 
+					|| (dbUserUserMarkupCollections.size() > 1)) {
 				dbUserMarkupCollection.getDbUserUserMarkupCollections().remove(
 						currentUserUserMarkupCollection);
 				session.delete(currentUserUserMarkupCollection);
 			}
 			else {
-				
-				if (dbUserUserMarkupCollections.size() > 1) {
-					throw new IOException(
-							"this collection is shared with others and cannot be " +
-							"deleted, please unshare this collection first!");
-				}
 				dbUserMarkupCollection.getDbUserUserMarkupCollections().remove(
 						currentUserUserMarkupCollection);
 
@@ -752,5 +749,37 @@ class DBUserMarkupCollectionHandler {
 					}
 				}
 			);;
+	}
+
+	List<UserMarkupCollectionReference> getWritableUserMarkupCollectionRefs(
+			SourceDocument sd) {
+	
+		List<UserMarkupCollectionReference> result = 
+				new ArrayList<UserMarkupCollectionReference>();
+		
+		List<UserMarkupCollectionReference> allUmcRefs = 
+				sd.getUserMarkupCollectionRefs();
+		
+		Session session = dbRepository.getSessionFactory().openSession();
+		try {
+			for (UserMarkupCollectionReference umcRef : allUmcRefs) {
+				DBUserMarkupCollection dbUmc = 
+					(DBUserMarkupCollection) session.load(
+							DBUserMarkupCollection.class, Integer.valueOf(umcRef.getId()));
+				for (DBUserUserMarkupCollection userInfo : dbUmc.getDbUserUserMarkupCollections()) {
+					if ((userInfo.isOwner()) 
+						|| (userInfo.getAccessMode() == AccessMode.WRITE.getNumericRepresentation())) {
+						result.add(umcRef);
+						break;
+					}
+				}
+			}
+		}
+		finally {
+			CloseSafe.close(new CloseableSession(session));
+		}
+		
+		
+		return result;
 	}
 }

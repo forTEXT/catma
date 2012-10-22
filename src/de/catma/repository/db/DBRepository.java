@@ -424,6 +424,10 @@ public class DBRepository implements IndexedRepository {
 		return dbUserMarkupCollectionHandler.getUserMarkupCollection(userMarkupCollectionReference);
 	}
 
+	public List<UserMarkupCollectionReference> getWritableUserMarkupCollectionRefs(
+			SourceDocument sd) throws IOException {
+		return dbUserMarkupCollectionHandler.getWritableUserMarkupCollectionRefs(sd);
+	}
 
 	public void update(final UserMarkupCollection userMarkupCollection,
 			final List<TagReference> tagReferences) {

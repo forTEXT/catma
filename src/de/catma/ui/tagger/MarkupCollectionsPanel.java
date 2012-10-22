@@ -228,7 +228,10 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 					
 					for (UserMarkupCollection umc : userMarkupCollcCollections) {
 						if (userMarkupCollectionManager.contains(umc.getId())) {
-							reloadTagsetDefinition(tagsetDefinition, userMarkupCollectionManager.getUserMarkupCollection(umc.getId()));
+							reloadTagsetDefinition(
+								tagsetDefinition, 
+								userMarkupCollectionManager.getUserMarkupCollection(
+										umc.getId()));
 						}
 					}
 					
