@@ -14,11 +14,11 @@ import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window.Notification;
 
 import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
@@ -261,7 +261,7 @@ public class MarkupResultPanel extends VerticalLayout {
 				}
 				
 				TagQueryResult tagQueryResult = tagQueryResultsByTagDefPath.get(tagPath);
-				tagQueryResult.addTagQueryResultRow(row);
+				tagQueryResult.add(row);
 			}
 			catch (IOException ioe) {
 				((CatmaApplication)getApplication()).showAndLogError(
@@ -353,16 +353,18 @@ public class MarkupResultPanel extends VerticalLayout {
 		HashMap<String, UserMarkupCollection> loadedUserMarkupCollections =
 				new HashMap<String, UserMarkupCollection>();
 		Set<String> tagDefinitions = new HashSet<String>();
-		
-		for (QueryResultRow row : queryResult) {
-			if (row instanceof TagQueryResultRow) {
-				TagQueryResultRow tRow = (TagQueryResultRow)row;
-				tagDefinitions.add(tRow.getTagDefinitionId());
-				addTagQueryResultRow(tRow, loadedUserMarkupCollections);
-				totalFreq++;
+
+		if (queryResult instanceof TagQueryResult) {
+			for (QueryResultRow row : queryResult) {
+				if (row instanceof TagQueryResultRow) {
+					TagQueryResultRow tRow = (TagQueryResultRow)row;
+					tagDefinitions.add(tRow.getTagDefinitionId());
+					addTagQueryResultRow(tRow, loadedUserMarkupCollections);
+					totalFreq++;
+				}
 			}
 		}
-		
+
 		resultTable.setFooterVisible(true);
 		resultTable.setColumnFooter(
 				TreePropertyName.caption, 

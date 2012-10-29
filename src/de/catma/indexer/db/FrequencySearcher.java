@@ -80,24 +80,26 @@ class FrequencySearcher {
 			builder.append(documentId);
 			builder.append("'");
 		}
-		builder.append(
-				" and (" +
-					" select count(p2) " +
-					" from "
-				+ DBEntityName.DBPosition 
-				+ " p2, "
-				+ DBEntityName.DBTerm + " t2 " +
-					" where p2.term = t2 and t2.term = t.term ");
+		if ((freq1 > 0) || (!comp1.equals(CompareOperator.GREATERTHAN))) {
+			builder.append(
+					" and (" +
+						" select count(p2) " +
+						" from "
+					+ DBEntityName.DBPosition 
+					+ " p2, "
+					+ DBEntityName.DBTerm + " t2 " +
+						" where p2.term = t2 and t2.term = t.term ");
+			
+			if (documentId != null) {
+				builder.append(" and t2.documentId in ");
+				builder.append(documentIdList);
+			}		
+			builder.append(") ");
+			builder.append(comp1);
+			builder.append(" ");
+			builder.append(freq1);
+		}
 		
-		if (documentId != null) {
-			builder.append(" and t2.documentId in ");
-			builder.append(documentIdList);
-		}		
-		builder.append(") ");
-		builder.append(comp1);
-		builder.append(" ");
-		builder.append(freq1);
-				
 		if (comp2 != null) {
 			builder.append(
 					" and (" +

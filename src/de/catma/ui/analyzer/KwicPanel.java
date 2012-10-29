@@ -87,6 +87,20 @@ public class KwicPanel extends VerticalLayout {
 					
 					((CatmaApplication)getApplication()).openSourceDocument(
 							sd, repository, range);
+					
+					List<UserMarkupCollectionReference> relatedUmcRefs = 
+							relevantUserMarkupCollectionProvider.getCorpus().
+								getUserMarkupCollectionRefs(sd);
+					try {
+						for (UserMarkupCollectionReference ref : relatedUmcRefs) {
+							((CatmaApplication)getApplication()).openUserMarkupCollection(
+								sd, repository.getUserMarkupCollection(ref), repository);
+						}
+					}
+					catch (IOException e) {
+						((CatmaApplication)getApplication()).showAndLogError(
+							"Error opening related User Markup Collection!", e);
+					}
 				}
 				
 			}

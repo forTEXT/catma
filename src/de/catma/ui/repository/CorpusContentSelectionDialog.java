@@ -95,6 +95,8 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 			DocumentTreeProperty.caption, String.class, null);
 		documentsTree.addContainerProperty(
 				DocumentTreeProperty.include, AbstractComponent.class, null);
+		documentsTree.setColumnHeader(DocumentTreeProperty.caption, "document/collection");
+		documentsTree.setColumnHeader(DocumentTreeProperty.include, "include");
 		
 		documentsTree.addItem(
 			new Object[] {sourceDocument.toString(), createCheckBox(false)},

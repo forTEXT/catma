@@ -16,7 +16,7 @@ import org.hibernate.criterion.Restrictions;
 
 import de.catma.document.Range;
 import de.catma.queryengine.result.QueryResult;
-import de.catma.queryengine.result.QueryResultRowArray;
+import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
 
 public class TagDefinitionSearcher {
@@ -40,7 +40,8 @@ public class TagDefinitionSearcher {
 			"Query for " + tagDefinitionPath + " has " + 
 					tagReferences.size() + " results.");
 		
-		QueryResultRowArray result = new QueryResultRowArray();
+		TagQueryResult result = new TagQueryResult(tagDefinitionPath);
+		
 		HashMap<String, Set<DBIndexTagReference>> groupByInstance = 
 				new HashMap<String, Set<DBIndexTagReference>>();
 		for (DBIndexTagReference tr : tagReferences) {

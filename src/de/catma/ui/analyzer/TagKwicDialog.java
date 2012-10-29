@@ -121,7 +121,7 @@ public class TagKwicDialog extends VerticalLayout {
 		umcTable.addContainerProperty(UmcTableProperty.CAPTION, String.class, null);
 		umcTable.setColumnHeader(UmcTableProperty.CAPTION, "Document/Collection");
 		umcTable.addContainerProperty(UmcTableProperty.TARGET, Component.class, null);
-		umcTable.setColumnHeader(UmcTableProperty.TARGET, "Markup goes here");
+		umcTable.setColumnHeader(UmcTableProperty.TARGET, "targeted User Markup Collection");
 		umcTable.setSizeFull();
 		
 		addComponent(umcTable);
