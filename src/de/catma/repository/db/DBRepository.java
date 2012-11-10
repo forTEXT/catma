@@ -41,6 +41,7 @@ import de.catma.indexer.IndexerFactory;
 import de.catma.indexer.IndexerPropertyKey;
 import de.catma.repository.db.model.DBUser;
 import de.catma.serialization.SerializationHandlerFactory;
+import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
@@ -83,10 +84,12 @@ public class DBRepository implements IndexedRepository {
 	private PropertyChangeListener tagsetDefinitionChangedListener;
 	private PropertyChangeListener tagDefinitionChangedListener;
 	private PropertyChangeListener tagLibraryChangedListener;
+	private PropertyChangeListener userDefinedPropertyChangedListener;
 
 	private String user;
 	private String pass;
 	private String url;
+
 
 	public DBRepository(
 			String name, 
@@ -186,6 +189,37 @@ public class DBRepository implements IndexedRepository {
 		tagManager.addPropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged,
 				tagDefinitionChangedListener);	
+		
+		
+		userDefinedPropertyChangedListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				Object oldValue = evt.getOldValue();
+				Object newValue = evt.getNewValue();
+
+				if (oldValue == null) { // insert
+					
+					@SuppressWarnings("unchecked")
+					Pair<PropertyDefinition, TagDefinition> newPair = 
+							(Pair<PropertyDefinition, TagDefinition>)newValue;
+					
+					dbTagLibraryHandler.savePropertyDefinition(
+							newPair.getFirst(), newPair.getSecond());
+				}
+				else if (newValue == null) { // delete
+					
+				}
+				else { // update
+					PropertyDefinition pd = (PropertyDefinition)evt.getNewValue();
+					dbTagLibraryHandler.updatePropertyDefinition(pd);
+				}
+				
+			}
+		};
+		
+		tagManager.addPropertyChangeListener(
+				TagManagerEvent.userPropertyDefinitionChanged,
+				userDefinedPropertyChangedListener);
 		
 		tagLibraryChangedListener = new PropertyChangeListener() {
 			
@@ -315,7 +349,10 @@ public class DBRepository implements IndexedRepository {
 		tagManager.removePropertyChangeListener(
 				TagManagerEvent.tagLibraryChanged,
 				tagLibraryChangedListener);
-
+		tagManager.removePropertyChangeListener(
+				TagManagerEvent.userPropertyDefinitionChanged,
+				userDefinedPropertyChangedListener);
+		
 		dbTagLibraryHandler.close();
 		dbSourceDocumentHandler.close();
 		

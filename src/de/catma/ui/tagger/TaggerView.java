@@ -282,7 +282,7 @@ public class TaggerView extends VerticalLayout
 					tagsetDef + " orig TagDef: " +tagsetDef.getTagDefinition(
 							clientTagInstance.getTagDefinitionID()));
 				
-				tagManager.addTagDefintion(
+				tagManager.addTagDefinition(
 					tagLibrary.getTagsetDefinition(tagsetDef.getUuid()),
 					new TagDefinition(
 						tagsetDef.getTagDefinition(

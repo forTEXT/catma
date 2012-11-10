@@ -67,6 +67,7 @@ public class TagsetTree extends HorizontalLayout {
 	private TagLibrary tagLibrary;
 	private PropertyChangeListener tagsetDefinitionChangedListener;
 	private PropertyChangeListener tagDefinitionChangedListener;
+	private PropertyChangeListener userPropertyDefinitionChangedListener;
 	private boolean withButtonPanel;
 	private Application application;
 
@@ -202,6 +203,7 @@ public class TagsetTree extends HorizontalLayout {
 				}
 				else {
 					TagDefinition tagDefinition = (TagDefinition)evt.getNewValue();
+
 					Property prop = tagTree.getContainerProperty(
 							tagDefinition, 
 							TagTreePropertyName.caption);
@@ -215,6 +217,34 @@ public class TagsetTree extends HorizontalLayout {
 		this.tagManager.addPropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged,
 				tagDefinitionChangedListener);
+		
+		userPropertyDefinitionChangedListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				Object oldValue = evt.getOldValue();
+				Object newValue = evt.getNewValue();
+
+				if (oldValue == null) { // insert
+					
+					@SuppressWarnings("unchecked")
+					Pair<PropertyDefinition, TagDefinition> newPair = 
+							(Pair<PropertyDefinition, TagDefinition>)newValue;
+					
+					addUserDefinedPropertyDefinition(
+							newPair.getFirst(), newPair.getSecond());
+				}
+				else if (newValue == null) { // delete
+					
+				}
+				else { // update
+					
+				}
+			}
+		};
+		
+		this.tagManager.addPropertyChangeListener(
+				TagManagerEvent.userPropertyDefinitionChanged,
+				userPropertyDefinitionChangedListener);
 		
 		btInsertTag.addListener(new ClickListener() {
 			
@@ -238,6 +268,20 @@ public class TagsetTree extends HorizontalLayout {
 			}
 		});
 		
+		btInsertProperty.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				handleInsertPropertyDefinitionRequest();
+			}
+		});
+		
+		btEditProperty.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				handleEditPropertyDefinitionRequest();
+			}
+		});
+		
 		tagTree.addListener(
 				new ButtonStateManager(
 						withTagsetButtons,
@@ -246,6 +290,53 @@ public class TagsetTree extends HorizontalLayout {
 						btInsertProperty, btRemoveProperty, btEditProperty));
 	}
 	
+	private void handleEditPropertyDefinitionRequest() {
+		final Object selectedValue = tagTree.getValue();
+		if (!(selectedValue instanceof PropertyDefinition)) {
+			return;
+		}
+		final PropertyDefinition pd = (PropertyDefinition)selectedValue;
+		final TagDefinition parent = (TagDefinition)tagTree.getParent(pd);
+		
+		PropertyDefinitionDialog propertyDefinitionDialog = 
+				new PropertyDefinitionDialog(
+					"Edit Property", pd, 
+					new SaveCancelListener<PropertyDefinition>() {
+						
+						public void cancelPressed() {}
+						public void savePressed(PropertyDefinition result) {
+							tagManager.updateUserDefinedPropertyDefinition(
+									parent, result);
+						}
+					});
+			propertyDefinitionDialog.show(getApplication().getMainWindow());
+		
+		
+	}
+
+	private void handleInsertPropertyDefinitionRequest() {
+		
+		final Object selectedParent = 
+				tagTree.getValue();
+		
+		if (selectedParent == null) {
+			return;
+		}
+		
+		PropertyDefinitionDialog propertyDefinitionDialog = 
+			new PropertyDefinitionDialog(
+				"Create Property", 
+				new SaveCancelListener<PropertyDefinition>() {
+					
+					public void cancelPressed() {}
+					public void savePressed(PropertyDefinition result) {
+						TagDefinition td = (TagDefinition)selectedParent;
+						tagManager.addUserDefinedPropertyDefinition(td, result);
+					}
+				});
+		propertyDefinitionDialog.show(getApplication().getMainWindow());
+	}
+
 	private void handleEditTagDefinitionRequest() {
 		Object selValue = tagTree.getValue();
 		
@@ -415,7 +506,7 @@ public class TagsetTree extends HorizontalLayout {
 											(String)colorProperty.getValue())));
 						tagDefinition.addSystemPropertyDefinition(
 								colorPropertyDef);
-						tagManager.addTagDefintion(
+						tagManager.addTagDefinition(
 								tagsetDefinition, 
 								tagDefinition);
 					}
@@ -755,24 +846,30 @@ public class TagsetTree extends HorizontalLayout {
 		
 		for (PropertyDefinition propertyDefinition : 
 				tagDefinition.getUserDefinedPropertyDefinitions()) {
-			
-			ClassResource propertyIcon = 
-					new ClassResource(
-						"ui/tagmanager/resources/ylwdiamd.gif", 
-						application);
-			
-			tagTree.addItem(propertyDefinition);
-			tagTree.setParent(propertyDefinition, tagDefinition);
-			tagTree.getContainerProperty(
-					propertyDefinition, 
-					TagTreePropertyName.caption).setValue(
-							propertyDefinition.getName());
-			tagTree.getContainerProperty(
-					propertyDefinition, 
-					TagTreePropertyName.icon).setValue(
-							propertyIcon);
-			tagTree.setChildrenAllowed(propertyDefinition, false);
+			addUserDefinedPropertyDefinition(propertyDefinition, tagDefinition);
 		}
+	}
+
+	private void addUserDefinedPropertyDefinition(
+			PropertyDefinition propertyDefinition, TagDefinition tagDefinition) {
+		ClassResource propertyIcon = 
+				new ClassResource(
+					"ui/tagmanager/resources/ylwdiamd.gif", 
+					application);
+		
+		tagTree.addItem(propertyDefinition);
+		tagTree.setChildrenAllowed(tagDefinition, true);
+		tagTree.setParent(propertyDefinition, tagDefinition);
+		tagTree.getContainerProperty(
+				propertyDefinition, 
+				TagTreePropertyName.caption).setValue(
+						propertyDefinition.getName());
+		tagTree.getContainerProperty(
+				propertyDefinition, 
+				TagTreePropertyName.icon).setValue(
+						propertyIcon);
+		tagTree.setChildrenAllowed(propertyDefinition, false);
+	
 	}
 
 	public TreeTable getTagTree() {
@@ -789,6 +886,9 @@ public class TagsetTree extends HorizontalLayout {
 		tagManager.removePropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged,
 				tagDefinitionChangedListener);
+		tagManager.removePropertyChangeListener(
+				TagManagerEvent.userPropertyDefinitionChanged,
+				userPropertyDefinitionChangedListener);
 	}
 	
 	public TagManager getTagManager() {
