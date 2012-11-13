@@ -14,6 +14,7 @@ import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Panel;
@@ -142,19 +143,26 @@ public class TaggerView extends VerticalLayout
 		setSizeFull();
 		
 		VerticalLayout taggerPanel = new VerticalLayout();
+		
 		taggerPanel.setSpacing(true);
 		taggerPanel.setSizeFull();
 		
 		pager = new Pager(taggerID, 80, 30);
 		
-		Panel scrollPanel = new Panel();
-		scrollPanel.getContent().setSizeUndefined();
-		scrollPanel.setSizeFull();
-
 		tagger = new Tagger(taggerID, pager, this);
 		tagger.setSizeFull();
 		
-		scrollPanel.addComponent(tagger);
+		CustomComponent cc = new CustomComponent(tagger);
+		cc.setWidth("400px");
+		cc.addStyleName("tagger");
+		
+		Panel scrollPanel = new Panel(cc);
+		scrollPanel.setSizeFull();
+		
+		scrollPanel.getContent().setSizeUndefined();
+		
+		addComponent(scrollPanel);
+		
 		taggerPanel.addComponent(scrollPanel);
 		taggerPanel.setExpandRatio(scrollPanel, 0.8f);
 		

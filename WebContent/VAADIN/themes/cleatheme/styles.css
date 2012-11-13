@@ -1,10 +1,9 @@
 @import url(../reindeer/styles.css);
 
-.tagger-editor {
+.tagger {
 	outline: 1px solid #ddd;
-	border-top: 1px solid #fff;
-	padding: 20px;
-	background: #f0f0f0;
+	margin: 20px;
+	padding: 5px;
 	white-space:nowrap;
 }
 

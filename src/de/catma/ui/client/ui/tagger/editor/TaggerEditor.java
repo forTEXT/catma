@@ -39,9 +39,6 @@ public class TaggerEditor extends FocusWidget
 	implements MouseUpHandler, BlurHandler, FocusHandler, 
 		MouseDownHandler, KeyUpHandler {
 	
-	/** Set the CSS class name to allow styling. */
-	public static final String TAGGER_STYLE_CLASS = "tagger-editor";
-
 	private static SelectionHandlerImplStandard impl = 
 			 GWT.create(SelectionHandlerImplStandard.class);
 
@@ -62,14 +59,12 @@ public class TaggerEditor extends FocusWidget
 	
 	public TaggerEditor(TaggerEditorListener taggerEditorListener) {
 		super(Document.get().createDivElement());
+		
 		this.lastTagInstanceIDs = Collections.emptyList();
 		this.taggerEditorListener = taggerEditorListener;
 		
-		setStylePrimaryName(TAGGER_STYLE_CLASS);
-		
 		// Tell GWT we are interested in consuming click events
 		sinkEvents(Event.ONMOUSEUP | Event.ONMOUSEDOWN | Event.ONKEYUP);
-		// FIXME: somehow discont tagging doesn't work anymore
 
 		addMouseUpHandler(this);
 		addMouseDownHandler(this);
@@ -119,6 +114,10 @@ public class TaggerEditor extends FocusWidget
 		}
 		getElement().appendChild(pageHtmlContent.getElement());
 		tagInstances.clear();
+		
+		getElement().setAttribute("style", "");
+		getElement().getParentElement().setAttribute(
+				"style", "width:120%;min-width:80%;");
 	}
 	 
 	public void createAndAddTagIntance(ClientTagDefinition tagDefinition) {

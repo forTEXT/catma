@@ -22,7 +22,6 @@ import java.util.List;
 
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.VerticalPanel;
 import com.vaadin.terminal.gwt.client.ApplicationConnection;
 import com.vaadin.terminal.gwt.client.Paintable;
 import com.vaadin.terminal.gwt.client.UIDL;
@@ -58,7 +57,6 @@ public class VTagger extends Composite implements Paintable {
 	 * then handle any initialization relevant to Vaadin.
 	 */
 	public VTagger() {
-		super();
 		this.tagInstanceJSONSerializer = new ClientTagInstanceJSONSerializer();
 		this.tagDefinitionJSONSerializer = new ClientTagDefinitionJSONSerializer();
 		this.textRangeJSONSerializer = new TextRangeJSONSerializer();
@@ -67,8 +65,7 @@ public class VTagger extends Composite implements Paintable {
 	}
 	
 	private void initComponents() {
-		VerticalPanel taggerPanel = new VerticalPanel();
-		
+
 		taggerEditor = new TaggerEditor(new TaggerEditorListener() {
 			public void tagChanged(TaggerEditorEventType type, Object... args) {
 				switch(type) {
@@ -102,9 +99,8 @@ public class VTagger extends Composite implements Paintable {
 						tagInstanceJSONSerializer.toJSONArray(tagInstanceIDs));
 			}
 		});
-		taggerPanel.add(taggerEditor);
 		
-		initWidget(taggerPanel);
+		initWidget(taggerEditor);
 	}
 	
 
