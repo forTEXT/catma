@@ -114,10 +114,6 @@ public class TaggerEditor extends FocusWidget
 		}
 		getElement().appendChild(pageHtmlContent.getElement());
 		tagInstances.clear();
-		
-		getElement().setAttribute("style", "");
-		getElement().getParentElement().setAttribute(
-				"style", "width:120%;min-width:80%;");
 	}
 	 
 	public void createAndAddTagIntance(ClientTagDefinition tagDefinition) {
@@ -467,6 +463,7 @@ public class TaggerEditor extends FocusWidget
 	}
 
 	public void addTagInstance(ClientTagInstance tagInstance) {
+		
 		if (!tagInstances.containsKey(tagInstance.getInstanceID())) {
 			
 			tagInstances.put(tagInstance.getInstanceID(), tagInstance);
@@ -480,6 +477,7 @@ public class TaggerEditor extends FocusWidget
 				addTagInstanceForRange(
 					taggedSpanFactory, rangeConverter.convertToNodeRange(textRange));
 			}
+			
 		}
 	}
 

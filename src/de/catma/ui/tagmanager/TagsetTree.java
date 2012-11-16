@@ -282,6 +282,13 @@ public class TagsetTree extends HorizontalLayout {
 			}
 		});
 		
+		btRemoveProperty.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				handleDeletePropertyDefinitionRequest();
+			}
+		});
+		
 		tagTree.addListener(
 				new ButtonStateManager(
 						withTagsetButtons,
@@ -290,6 +297,29 @@ public class TagsetTree extends HorizontalLayout {
 						btInsertProperty, btRemoveProperty, btEditProperty));
 	}
 	
+	private void handleDeletePropertyDefinitionRequest() {
+		final Object selectedValue = tagTree.getValue();
+		if (!(selectedValue instanceof PropertyDefinition)) {
+			return;
+		}
+		
+		final PropertyDefinition pd = (PropertyDefinition)selectedValue;
+		final TagDefinition parent = (TagDefinition)tagTree.getParent(pd);
+
+		ConfirmDialog.show(
+				getApplication().getMainWindow(), 
+				"Delete User Defined Property",
+				"Are you sure you want to delete this Property?", "Yes", "No",
+				new ConfirmDialog.Listener() {
+					
+					public void onClose(ConfirmDialog dialog) {
+						if (dialog.isConfirmed()) {
+							tagManager.removeUserDefinedPropertyDefinition(pd, parent);
+						}
+					}
+				});
+	}
+
 	private void handleEditPropertyDefinitionRequest() {
 		final Object selectedValue = tagTree.getValue();
 		if (!(selectedValue instanceof PropertyDefinition)) {

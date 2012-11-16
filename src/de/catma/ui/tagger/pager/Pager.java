@@ -19,6 +19,7 @@
 package de.catma.ui.tagger.pager;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -195,6 +196,17 @@ public class Pager implements Iterable<Page> {
 		}
 		
 		return result;
+	}
+	
+	public List<ClientTagInstance> getAbsoluteTagInstances() {
+		List<ClientTagInstance> absoluteTagInstances = 
+				new ArrayList<ClientTagInstance>();
+		
+		for (Page p : pages) {
+			absoluteTagInstances.addAll(p.getAbsoluteTagInstances());
+		}
+		
+		return absoluteTagInstances;
 	}
 	
 	public int getStartPageNumberFor(Range range) {

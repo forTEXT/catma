@@ -175,7 +175,7 @@ public class Tagger extends AbstractComponent {
 		setPage(page.toHTML());
 	}
 
-	private void setTagInstancesVisible(
+	void setTagInstancesVisible(
 			List<ClientTagInstance> tagInstances, boolean visible) {
 		
 		List<ClientTagInstance> currentRelativePageTagInstancesCopy = 

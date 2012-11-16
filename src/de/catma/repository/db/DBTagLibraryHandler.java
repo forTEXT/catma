@@ -654,10 +654,10 @@ class DBTagLibraryHandler {
 						"you seem to have no access rights for this library!");
 			}
 			
-			if (currentUserTagLibrary.isOwner() || (dbUserTagLibraries.size() > 1)) {
+			session.delete(currentUserTagLibrary);
+
+			if (currentUserTagLibrary.isOwner() && (dbUserTagLibraries.size() == 1)) {
 				session.delete(currentUserTagLibrary);
-			}
-			else {
 				for (TagsetDefinition tagsetDefinition : tagLibrary) {
 					DBTagsetDefinition dbTagsetDefinition = 
 						(DBTagsetDefinition)session.get(
@@ -667,7 +667,8 @@ class DBTagLibraryHandler {
 					session.delete(dbTagsetDefinition);
 				}
 				session.delete(dbTagLibrary);
-			}			
+			}
+			
 			session.getTransaction().commit();
 			
 			tagLibraryReferences.remove(tagLibraryReference);

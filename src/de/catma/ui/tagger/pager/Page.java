@@ -19,6 +19,7 @@
 package de.catma.ui.tagger.pager;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -194,6 +195,14 @@ public class Page {
 		return Collections.unmodifiableCollection(this.relativeTagInstances.values());
 	}
 
+	public Collection<ClientTagInstance> getAbsoluteTagInstances() {
+		Collection<ClientTagInstance> absoluteTagInstances = new ArrayList<ClientTagInstance>();
+		for (ClientTagInstance cti : getRelativeTagInstances()) {
+			absoluteTagInstances.add(getAbsoluteTagInstance(cti));
+		}
+		return absoluteTagInstances;
+	}
+	
 	public ClientTagInstance getAbsoluteTagInstance(ClientTagInstance tagInstance) {
 		return new ClientTagInstance(tagInstance, pageStart);
 	}

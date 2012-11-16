@@ -19,8 +19,8 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
-import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window.Notification;
 
 import de.catma.CatmaApplication;
 import de.catma.document.Corpus;
@@ -126,6 +126,9 @@ public class TaggerView extends VerticalLayout
 				Double perCentValue = (Double)linesPerPageSlider.getValue();
 				int lines = (int)((totalLineCount/100.0)*perCentValue);
 				
+				List<ClientTagInstance> absoluteTagInstances = 
+						pager.getAbsoluteTagInstances();
+				
 				pager.setMaxPageLengthInLines(lines);
 				//recalculate pages
 				try {
@@ -134,6 +137,8 @@ public class TaggerView extends VerticalLayout
 					((CatmaApplication)getApplication()).showAndLogError(
 						"Error showing Source Document!", e);
 				}
+				tagger.setTagInstancesVisible(absoluteTagInstances, true);
+
 				pagerComponent.setPage(1);
 			}
 		});
