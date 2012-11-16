@@ -207,6 +207,8 @@ public class DBRepository implements IndexedRepository {
 							newPair.getFirst(), newPair.getSecond());
 				}
 				else if (newValue == null) { // delete
+					dbTagLibraryHandler.removePropertyDefinition(
+							(PropertyDefinition) evt.getOldValue());
 					
 				}
 				else { // update

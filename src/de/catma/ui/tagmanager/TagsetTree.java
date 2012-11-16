@@ -234,7 +234,8 @@ public class TagsetTree extends HorizontalLayout {
 							newPair.getFirst(), newPair.getSecond());
 				}
 				else if (newValue == null) { // delete
-					
+					removeUserDefinedPropertyDefinitionFromTree(
+							(PropertyDefinition)oldValue);
 				}
 				else { // update
 					
@@ -297,6 +298,16 @@ public class TagsetTree extends HorizontalLayout {
 						btInsertProperty, btRemoveProperty, btEditProperty));
 	}
 	
+	private void removeUserDefinedPropertyDefinitionFromTree(
+			PropertyDefinition propertyDefinition) {
+		Object parent = tagTree.getParent(propertyDefinition);
+		this.tagTree.removeItem(propertyDefinition);
+		if (!tagTree.hasChildren(parent)) {
+			tagTree.setChildrenAllowed(parent, false);
+		}
+		
+	}
+
 	private void handleDeletePropertyDefinitionRequest() {
 		final Object selectedValue = tagTree.getValue();
 		if (!(selectedValue instanceof PropertyDefinition)) {

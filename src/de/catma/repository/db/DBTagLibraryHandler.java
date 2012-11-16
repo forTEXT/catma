@@ -1112,4 +1112,42 @@ class DBTagLibraryHandler {
 			}
 		});
 	}
+
+	public void removePropertyDefinition(final PropertyDefinition propertyDefinition) {
+		dbRepository.getBackgroundServiceProvider().submit(
+				"Removing Property definition",
+			new DefaultProgressCallable<Void>() {
+				public Void call() throws Exception {
+					Session session = dbRepository.getSessionFactory().openSession();
+					try {
+						session.beginTransaction();
+						
+					
+						DBPropertyDefinition dbPropertyDefinition = 
+							(DBPropertyDefinition)session.get(
+								DBPropertyDefinition.class, 
+								propertyDefinition.getId());
+						
+						session.delete(dbPropertyDefinition);
+						session.getTransaction().commit();
+						
+						CloseSafe.close(new CloseableSession(session));
+						return null;
+					}
+					catch (Exception e) {
+						CloseSafe.close(new CloseableSession(session,true));
+						throw new Exception(e);
+					}
+				}
+			}, 
+			new ExecutionListener<Void>() {
+				public void done(Void nothing) {}
+				public void error(Throwable t) {
+					dbRepository.getPropertyChangeSupport().firePropertyChange(
+							RepositoryChangeEvent.exceptionOccurred.name(),
+							null, 
+							t);	
+				}
+			});
+	}
 }
