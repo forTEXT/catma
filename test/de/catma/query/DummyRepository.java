@@ -18,6 +18,8 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
+import de.catma.tag.Property;
+import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
@@ -261,5 +263,10 @@ public class DummyRepository implements IndexedRepository {
 			SourceDocument sd) throws IOException {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	public void update(TagInstance tagInstance, Property property)
+			throws IOException {
+		// TODO Auto-generated method stub
+		
 	}
 }

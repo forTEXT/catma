@@ -10,6 +10,8 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.tag.Property;
+import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 
@@ -61,5 +63,7 @@ public interface Indexer {
 	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range);
 	
 	public void close();
+
+	public void updateIndex(TagInstance tagInstance, Property property);
 
 }

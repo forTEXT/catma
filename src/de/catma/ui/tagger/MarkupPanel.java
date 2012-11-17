@@ -19,6 +19,7 @@ import com.vaadin.ui.VerticalSplitPanel;
 import de.catma.document.repository.Repository;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
@@ -230,6 +231,11 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	
 	public void removeTagInstances(List<String> tagInstanceIDs) {
 		markupCollectionsPanel.removeTagInstances(tagInstanceIDs);
+		
+	}
+	
+	public void updateProperty(TagInstance tagInstance, Property property) {
+		markupCollectionsPanel.updateProperty(tagInstance, property);
 		
 	}
 }

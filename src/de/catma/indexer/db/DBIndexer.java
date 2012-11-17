@@ -20,6 +20,8 @@ import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TermInfo;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.tag.Property;
+import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 import de.catma.util.CloseSafe;
@@ -212,6 +214,13 @@ public class DBIndexer implements Indexer {
 				new CollocationSearcher(sessionFactory);
 		return collocationSearcher.getTermInfosFor(sourceDocumentId, range);
 	}
+
+	
+	public void updateIndex(TagInstance tagInstance, Property property) {
+		// do indexing
+		
+	}
+	
 	
 	public void close() { /*noop sessionfactory is closed by repository*/ }
 

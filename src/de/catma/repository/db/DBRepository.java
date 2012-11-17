@@ -41,8 +41,10 @@ import de.catma.indexer.IndexerFactory;
 import de.catma.indexer.IndexerPropertyKey;
 import de.catma.repository.db.model.DBUser;
 import de.catma.serialization.SerializationHandlerFactory;
+import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
@@ -531,6 +533,11 @@ public class DBRepository implements IndexedRepository {
 				userMarkupCollectionReference, contentInfoSet);
 	}
 
+	public void update(TagInstance tagInstance, Property property)
+			throws IOException {
+		dbUserMarkupCollectionHandler.updateProperty(tagInstance, property);
+	}
+
 	public void delete(
 			UserMarkupCollectionReference userMarkupCollectionReference)
 			throws IOException {
@@ -632,4 +639,5 @@ public class DBRepository implements IndexedRepository {
 	DBUserMarkupCollectionHandler getDbUserMarkupCollectionHandler() {
 		return dbUserMarkupCollectionHandler;
 	}
+	
 }

@@ -133,7 +133,7 @@ public class DBUserMarkupCollectionUpdater {
 		}
 	}
 
-	private void updateDbProperty(Session session, DBProperty dbProperty, Property property) {
+	void updateDbProperty(Session session, DBProperty dbProperty, Property property) {
 		Iterator<DBPropertyValue> dbPropertyValueIterator = 
 				dbProperty.getDbPropertyValues().iterator();
 		while (dbPropertyValueIterator.hasNext()) {
@@ -150,6 +150,5 @@ public class DBUserMarkupCollectionUpdater {
 				dbProperty.getDbPropertyValues().add(newValue);
 			}
 		}
-		
 	}
 }

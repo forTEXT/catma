@@ -782,4 +782,38 @@ class DBUserMarkupCollectionHandler {
 		
 		return result;
 	}
+	
+	void updateProperty(TagInstance tagInstance, Property property) throws IOException {
+		Session session = dbRepository.getSessionFactory().openSession();
+		try {
+			Query query = session.createQuery(
+				"from " + DBProperty.class.getSimpleName()
+				+ " where dbTagInstance.uuid = :tagInstanceID "
+				+ " dbPropertyDefinition.uuid = :propertyDefID");
+			query.setBinary(
+				"tagInstanceID", 
+				idGenerator.catmaIDToUUIDBytes(tagInstance.getUuid()));
+			query.setBinary(
+				"propertyDefID", 
+				idGenerator.catmaIDToUUIDBytes(
+						property.getPropertyDefinition().getUuid()));
+			
+			DBProperty dbProperty = (DBProperty) query.uniqueResult();
+			
+			DBUserMarkupCollectionUpdater updater = 
+					new DBUserMarkupCollectionUpdater(dbRepository);
+			
+			session.beginTransaction();
+			updater.updateDbProperty(session, dbProperty, property);
+			session.getTransaction().commit();
+			
+			dbRepository.getIndexer().updateIndex(tagInstance, property);
+
+			CloseSafe.close(new CloseableSession(session));
+		}
+		catch (Exception e) {
+			CloseSafe.close(new CloseableSession(session,true));
+			throw new IOException(e);
+		}
+	}
 }

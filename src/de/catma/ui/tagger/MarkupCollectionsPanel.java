@@ -3,6 +3,7 @@ package de.catma.ui.tagger;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -26,6 +27,7 @@ import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
@@ -932,10 +934,19 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				userMarkupCollectionManager.getTagReferences(tagInstanceID));
 			userMarkupCollectionManager.removeTagInstance(tagInstanceID);
 		}
-		
+		// deselect tag references
 		propertyChangeSupport.firePropertyChange(
 				MarkupCollectionPanelEvent.tagDefinitionSelected.name(), 
 				tagReferences,
 				null);	
+	}
+
+	public void updateProperty(TagInstance tagInstance, de.catma.tag.Property property) {
+		try {
+			userMarkupCollectionManager.updateProperty(tagInstance, property);
+		} catch (IOException e) {
+			((CatmaApplication)getApplication()).showAndLogError("Error updating the Property", e);
+		}
+		
 	}
 }

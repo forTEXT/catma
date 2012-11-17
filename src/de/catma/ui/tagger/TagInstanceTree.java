@@ -32,6 +32,7 @@ public class TagInstanceTree extends HorizontalLayout {
 	
 	static interface TagIntanceActionListener {
 		public void removeTagInstances(List<String> tagInstanceIDs);
+		public void updateProperty(TagInstance tagInstance, Property property);
 	}
 	
 	private static enum TagInstanceTreePropertyName {
