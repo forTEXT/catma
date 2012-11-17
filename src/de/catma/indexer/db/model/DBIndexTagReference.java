@@ -1,4 +1,4 @@
-package de.catma.indexer.db;
+package de.catma.indexer.db.model;
 
 // Generated 09.05.2012 15:49:49 by Hibernate Tools 3.4.0.CR1
 
@@ -18,8 +18,9 @@ import de.catma.util.IDGenerator;
  */
 @Entity
 @Table(name = "tagreference", catalog = "CatmaIndex")
-class DBIndexTagReference implements java.io.Serializable {
+public class DBIndexTagReference implements java.io.Serializable {
 
+	public static final String TABLENAME = "tagreference";
 	private Integer tagReferenceId;
 	private String documentId;
 	private String userMarkupCollectionId;
@@ -135,7 +136,7 @@ class DBIndexTagReference implements java.io.Serializable {
 	public void setCharacterEnd(int characterEnd) {
 		this.characterEnd = characterEnd;
 	}
-	
+
 	@Transient
 	public String getCatmaTagDefinitionId() {
 		return catmaTagDefinitionId;

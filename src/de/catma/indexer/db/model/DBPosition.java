@@ -1,4 +1,4 @@
-package de.catma.indexer.db;
+package de.catma.indexer.db.model;
 
 // Generated 04.05.2012 21:11:20 by Hibernate Tools 3.4.0.CR1
 
@@ -19,8 +19,9 @@ import de.catma.document.Range;
  */
 @Entity
 @Table(name = "position", catalog = "CatmaIndex")
-class DBPosition implements java.io.Serializable {
+public class DBPosition implements java.io.Serializable {
 
+	public static final String TABLENAME = "position";
 	private Integer positionId;
 	private DBTerm term;
 	private int characterStart;

@@ -10,6 +10,8 @@ import org.hibernate.Session;
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
+import de.catma.indexer.db.model.DBPosition;
+import de.catma.indexer.db.model.DBTerm;
 
 class SourceDocumentIndexer {
 	

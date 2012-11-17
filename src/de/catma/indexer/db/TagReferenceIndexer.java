@@ -5,10 +5,14 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.indexer.db.model.DBIndexProperty;
+import de.catma.indexer.db.model.DBIndexTagReference;
+import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
@@ -51,25 +55,52 @@ public class TagReferenceIndexer {
 					tr.getRange().getStartPoint(),
 					tr.getRange().getEndPoint());
 			session.save(dbTagReference);
+			for (Property property : tr.getTagInstance().getSystemProperties()) {
+				indexProperty(
+					session, property, 
+					idGenerator.catmaIDToUUIDBytes(tr.getTagInstanceID()));
+			}
+			
+			//user defined properties get indexed individually!
 		}
 		
 		if (transactionStartedLocally) {
 			session.getTransaction().commit();
 		}
 	}
+	
+	private void indexProperty(Session session, Property property, byte[] tagInstanceUuid) {
+		for (String value : property.getPropertyValueList().getValues()) {
+			DBIndexProperty dbIndexProperty = 
+					new DBIndexProperty(
+							tagInstanceUuid,
+							idGenerator.catmaIDToUUIDBytes(
+									property.getPropertyDefinition().getUuid()),
+							value);
+			session.save(dbIndexProperty);
+		}
+	}
 
 	public void removeUserMarkupCollection(
 			Session session, String userMarkupCollectionID) {
 		
-		Query query = session.createQuery(
-				"delete from " + DBIndexTagReference.class.getSimpleName() 
-				+ " where userMarkupCollectionId = '" + userMarkupCollectionID 
-				+ "'");
 		boolean tranStartedLocally = false;
 		if (!session.getTransaction().isActive()) {
 			session.beginTransaction();
 			tranStartedLocally = true;
 		}
+		SQLQuery sqlQuery = session.createSQLQuery(
+				"DELETE FROM " + DBIndexProperty.TABLENAME 
+				+ " WHERE tagInstanceID in ( SELECT r.tagInstanceID from "
+				+ DBIndexTagReference.TABLENAME
+				+ " WHERE r.userMarkupCollectionID = '" + userMarkupCollectionID + "')" 
+				);
+		sqlQuery.executeUpdate();
+		
+		Query query = session.createQuery(
+				"delete from " + DBIndexTagReference.class.getSimpleName() 
+				+ " where userMarkupCollectionId = '" + userMarkupCollectionID 
+				+ "'");
 		query.executeUpdate();
 		if (tranStartedLocally) {
 			session.getTransaction().commit();
@@ -79,50 +110,67 @@ public class TagReferenceIndexer {
 	public void removeTagReferences(Session session,
 			List<TagReference> tagReferences) {
 		
-		Query query = session.createQuery(
+		Query trDelQuery = session.createQuery(
 				"delete from " + DBIndexTagReference.class.getSimpleName() + 
 				" where tagInstanceId = :curTagInstanceId " +
 				" and characterStart = :curCharacterStart " +
 				" and characterEnd = :curCharacterEnd ");
+		
+		Query propDelQuery = session.createQuery(
+				"delete from " + DBIndexProperty.class.getSimpleName() +
+				" where tagInstanceId = :curTagInstanceId ");
 
 		session.beginTransaction();
 		for (TagReference tagReference : tagReferences) {
-			query.setBinary(
-				"curTagInstanceId", 
-				idGenerator.catmaIDToUUIDBytes(tagReference.getTagInstanceID()));
-			query.setInteger("curCharacterStart", tagReference.getRange().getStartPoint());
-			query.setInteger("curCharacterEnd", tagReference.getRange().getEndPoint());
-			int rowCount = query.executeUpdate();
+			byte[] tagInstanceID = 
+					idGenerator.catmaIDToUUIDBytes(tagReference.getTagInstanceID());
+			trDelQuery.setBinary("curTagInstanceId", tagInstanceID);
+			trDelQuery.setInteger("curCharacterStart", tagReference.getRange().getStartPoint());
+			trDelQuery.setInteger("curCharacterEnd", tagReference.getRange().getEndPoint());
+			int rowCount = trDelQuery.executeUpdate();
 			if (rowCount > 1) {
 				throw new IllegalStateException(
 					"deleted more than one row at a time, expected exactly one row");
 			}
+			//TODO: this works if all refs of an instance get deleted at once (which is the case right now) 
+			propDelQuery.setBinary("curTagInstanceId", tagInstanceID);
+			propDelQuery.executeUpdate();
 		}
 		session.getTransaction().commit();
 	}
 
 	public void reindex(Session session, TagsetDefinition tagsetDefinition,
-			Set<byte[]> deletedTagsetDefinitionUuids, UserMarkupCollection userMarkupCollection, String sourceDocumentID) {
+			Set<byte[]> deletedTagDefinitionUuids, 
+			UserMarkupCollection userMarkupCollection, String sourceDocumentID) {
 		
-		Query  query = session.createQuery(
+		SQLQuery delPropQuery = session.createSQLQuery("" +
+				"DELETE FROM " + DBIndexProperty.TABLENAME 
+				+ " WHERE tagInstanceID IN (SELECT r.tagInstanceID FROM "
+				+ DBIndexTagReference.TABLENAME 
+				+ " r WHERE r.tagDefinitionId = :curTagDefinitionId)");
+		
+		Query  delTrQuery = session.createQuery(
 				"delete from " + DBIndexTagReference.class.getSimpleName() +
 				" where tagDefinitionId = :curTagDefinitionId");
 		
 		session.beginTransaction();		
 		
 		for (TagDefinition td : tagsetDefinition) {
-			logger.info("reindexing deleting refs for " + td);
-			query.setBinary("curTagDefinitionId",
-					idGenerator.catmaIDToUUIDBytes(td.getUuid()));
-			query.executeUpdate();
+			logger.info("reindexing: deleting refs for " + td);
+			byte[] tagDefUuid = idGenerator.catmaIDToUUIDBytes(td.getUuid());
+			delTrQuery.setBinary("curTagDefinitionId", tagDefUuid);
+			delTrQuery.executeUpdate();
+			//TODO: handle deleted properties
 		}
 
-		for (byte[] uuid : deletedTagsetDefinitionUuids) {
+		for (byte[] uuid : deletedTagDefinitionUuids) {
 			logger.info(
-				"reindexing deleting refs for deleted TagDef " 
+				"reindexing: deleting refs for deleted TagDef " 
 						+ idGenerator.uuidBytesToCatmaID(uuid));
-			query.setBinary("curTagDefinitionId", uuid);
-			query.executeUpdate();
+			delTrQuery.setBinary("curTagDefinitionId", uuid);
+			delTrQuery.executeUpdate();
+			delPropQuery.setBinary("curTagDefinitionId", uuid);
+			delPropQuery.executeUpdate();
 		}
 		
 		this.index(

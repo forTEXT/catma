@@ -15,6 +15,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 
 import de.catma.document.Range;
+import de.catma.indexer.db.model.DBIndexTagReference;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;

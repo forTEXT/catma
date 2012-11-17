@@ -8,6 +8,8 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
+import de.catma.indexer.db.model.DBPosition;
+import de.catma.indexer.db.model.DBTerm;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
@@ -71,8 +73,8 @@ class FrequencySearcher {
 		StringBuilder builder = new StringBuilder();
 		builder.append(
 				" select t, count(p) as freq from "
-				+ DBEntityName.DBTerm + " t, "
-				+ DBEntityName.DBPosition 
+				+ DBTerm.class.getSimpleName() + " t, "
+				+ DBPosition.class.getSimpleName() 
 				+ " p " +
 				" where t = p.term ");
 		if (documentId != null) {
@@ -85,9 +87,9 @@ class FrequencySearcher {
 					" and (" +
 						" select count(p2) " +
 						" from "
-					+ DBEntityName.DBPosition 
+					+ DBPosition.class.getSimpleName() 
 					+ " p2, "
-					+ DBEntityName.DBTerm + " t2 " +
+					+ DBTerm.class.getSimpleName() + " t2 " +
 						" where p2.term = t2 and t2.term = t.term ");
 			
 			if (documentId != null) {
@@ -105,9 +107,9 @@ class FrequencySearcher {
 					" and (" +
 						" select count(p2) " +
 						" from "
-				+ DBEntityName.DBPosition 
+				+ DBPosition.class.getSimpleName() 
 				+ " p2, "
-				+ DBEntityName.DBTerm + " t2 " +
+				+ DBTerm.class.getSimpleName() + " t2 " +
 						" where p2.term = t2 and t2.term = t.term ");
 			if (documentId != null) {
 				builder.append(" and t2.documentId in ");

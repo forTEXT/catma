@@ -17,6 +17,8 @@ import de.catma.document.Range;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TermInfo;
+import de.catma.indexer.db.model.DBPosition;
+import de.catma.indexer.db.model.DBTerm;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
@@ -121,10 +123,10 @@ public class CollocationSearcher {
 			
 			queryBuilder.append(conc);
 			queryBuilder.append(" SELECT * FROM " ); 
-			queryBuilder.append(DBEntityName.DBPosition.getTableName());
+			queryBuilder.append(DBPosition.TABLENAME);
 			queryBuilder.append(" p ");
 			queryBuilder.append(" JOIN ");
-			queryBuilder.append(DBEntityName.DBTerm.getTableName()); 
+			queryBuilder.append(DBTerm.TABLENAME); 
 			queryBuilder.append(" t ON t.termID = p.termID and t.documentID = '");
 			queryBuilder.append(sourceDocumentId); 
 			queryBuilder.append("' WHERE p.tokenOffset = ");
@@ -144,7 +146,7 @@ public class CollocationSearcher {
 	private List<DBPosition> getTokensForRange(
 			Session session, String sourceDocumentId, Range range) {
 		String query = 
-				" from " + DBEntityName.DBPosition + " as pos " +
+				" from " + DBPosition.class.getSimpleName() + " as pos " +
 				" where pos.term.documentId = '" + sourceDocumentId + "'" +
 				" and pos.characterStart < " + range.getEndPoint() + 
 				" and pos.characterEnd > " + range.getStartPoint() +
@@ -173,7 +175,7 @@ public class CollocationSearcher {
 	
 	private Query createTokensForRangeQuery(Session session) {
 		String query = 
-		" from " + DBEntityName.DBPosition + " as pos " +
+		" from " + DBPosition.class.getSimpleName() + " as pos " +
 		" where pos.term.documentId = :curDocumentId" +
 		" and pos.characterStart < :curCharStart" +
 		" and pos.characterEnd > :curCharEnd" +

@@ -184,6 +184,7 @@ public class VTagger extends Composite implements Paintable {
 	}
 
 	private void sendMessage(TaggerMessageAttribute taggerEventAttribute, String message) {
+		VConsole.log("sending message " + taggerEventAttribute + "["+message+"] to the server");
 		serverConnection.updateVariable(
 				clientID, taggerEventAttribute.name(), message, true);
 		

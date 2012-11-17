@@ -11,6 +11,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
 import de.catma.document.Range;
+import de.catma.indexer.db.model.DBPosition;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
@@ -245,7 +246,7 @@ class PhraseSearcher {
 		
 		String query =
 				" from "
-				+ DBEntityName.DBPosition 
+				+ DBPosition.class.getSimpleName() 
 				+ " pos1 where pos1.term.term "
 				+ (withWildcard?" like ": "=") 
 				+ " :termArg"; //TODO: lower() for case insens.
@@ -275,9 +276,9 @@ class PhraseSearcher {
 		String query = "select "
 				+ (resultsForFirstTerm? " pos1 " : " pos2 ")
 				+ " from "
-				+ DBEntityName.DBPosition 
+				+ DBPosition.class.getSimpleName() 
 				+ " pos1, "
-				+ DBEntityName.DBPosition 
+				+ DBPosition.class.getSimpleName() 
 				+ " pos2 where pos1.term.term " + (withWildcards?"like ": "= ") + ":curTerm1" 
 				+ " and pos2.term.term " + (withWildcards?"like ": "= ") + ":curTerm2"
 				+ " and pos2.tokenOffset = pos1.tokenOffset + " + tokenOffset 

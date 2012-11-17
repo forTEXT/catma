@@ -1,4 +1,4 @@
-package de.catma.indexer.db;
+package de.catma.indexer.db.model;
 
 // Generated 04.05.2012 21:11:20 by Hibernate Tools 3.4.0.CR1
 
@@ -15,8 +15,10 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "term", catalog = "CatmaIndex")
-class DBTerm implements java.io.Serializable {
+public class DBTerm implements java.io.Serializable {
 
+	public static String TABLENAME = "term";
+	
 	private Integer termId;
 	private String documentId;
 	private int frequency;
@@ -56,7 +58,7 @@ class DBTerm implements java.io.Serializable {
 		return this.frequency;
 	}
 
-	void setFrequency(int frequency) {
+	public void setFrequency(int frequency) {
 		this.frequency = frequency;
 	}
 

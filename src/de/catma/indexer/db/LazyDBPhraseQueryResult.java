@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.hibernate.SessionFactory;
 
+import de.catma.indexer.db.model.DBTerm;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.PhraseResult;
 import de.catma.queryengine.result.QueryResultRow;

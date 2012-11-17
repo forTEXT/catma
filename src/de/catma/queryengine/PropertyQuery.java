@@ -26,7 +26,7 @@ import de.catma.queryengine.result.QueryResult;
 
 /**
  * This query looks for tokens that are tagged with a {@link Tag} that has the desired
- * {@link org.DBProperty.tag.Property}.
+ * {@link org.DBIndexProperty.tag.Property}.
  *
  * @author Marco Petris
  *
@@ -38,8 +38,8 @@ public class PropertyQuery extends Query {
 
     /**
      * Constructor
-     * @param property the name of the {@link org.DBProperty.tag.Property}
-     * @param value the value of the {@link org.DBProperty.tag.Property} this is optional and can be
+     * @param property the name of the {@link org.DBIndexProperty.tag.Property}
+     * @param value the value of the {@link org.DBIndexProperty.tag.Property} this is optional and can be
      * <code>null</code>
      */
     public PropertyQuery(Phrase property, Phrase value) {

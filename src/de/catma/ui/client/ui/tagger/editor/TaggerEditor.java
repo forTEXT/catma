@@ -545,24 +545,30 @@ public class TaggerEditor extends FocusWidget
 	public void onMouseDown(MouseDownEvent event) {
 		lastClientX = event.getClientX();
 		lastClientY = event.getClientY();
+		VConsole.log("mouse down at: " + lastClientX + "," + lastClientY);
 		fireTagsSelected();
 	}
 	
 	private void fireTagsSelected() {
 		Element line = findClosestLine();
 		if (line != null) {
+			VConsole.log("fireTagsSelected: line found: " + line);
+			
 			List<Element> taggedSpans = findTargetSpan(line);
 			List<String> tagInstanceIDs = new ArrayList<String>(); 
 			
 			for (Element span : taggedSpans) {
 				String tagInstanceID = getTagInstanceID(span.getAttribute("id"));
+				VConsole.log("fireTagsSelected: testing tagInstanceID " + tagInstanceID);
 				if (tagInstances.containsKey(tagInstanceID)) {
+					VConsole.log("fireTagsSelected: valid tagInstanceID found " + tagInstanceID);
 					tagInstanceIDs.add(0, tagInstanceID);
 				}
 			}
 			
 			if (!tagInstanceIDs.equals(lastTagInstanceIDs)) {
 				lastTagInstanceIDs = tagInstanceIDs;
+				VConsole.log("fireTagsSelected: notifying listeners");
 				taggerEditorListener.tagsSelected(tagInstanceIDs);
 			}
 		}

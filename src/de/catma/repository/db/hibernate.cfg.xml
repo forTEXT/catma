@@ -32,8 +32,10 @@
   <mapping class="de.catma.repository.db.model.DBCorpusStaticMarkupCollection"/>
   <mapping class="de.catma.repository.db.model.DBCorpusUserMarkupCollection"/>
   <mapping class="de.catma.repository.db.model.DBUserCorpus"/>
-  <mapping class="de.catma.indexer.db.DBTerm"/>
-  <mapping class="de.catma.indexer.db.DBPosition"/>
-  <mapping class="de.catma.indexer.db.DBIndexTagReference"/>
+  
+  <mapping class="de.catma.indexer.db.model.DBTerm"/>
+  <mapping class="de.catma.indexer.db.model.DBPosition"/>
+  <mapping class="de.catma.indexer.db.model.DBIndexTagReference"/>
+  <mapping class="de.catma.indexer.db.model.DBIndexProperty"/>
  </session-factory>
 </hibernate-configuration>
