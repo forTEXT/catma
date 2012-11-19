@@ -66,11 +66,11 @@ public class TaggerView extends VerticalLayout
 	private double totalLineCount;
 	
 	public TaggerView(
-			int taggerID, TagManager tagManager, 
+			int taggerID, 
 			SourceDocument sourceDocument, Repository repository, 
 			PropertyChangeListener sourceDocChangedListener) {
 		this.taggerID = taggerID;
-		this.tagManager = tagManager;
+		this.tagManager = repository.getTagManager();
 		this.repository = repository;
 		this.sourceDocument = sourceDocument;
 		this.sourceDocChangedListener = sourceDocChangedListener;
@@ -202,7 +202,6 @@ public class TaggerView extends VerticalLayout
 		actionPanel.setExpandRatio(linesPerPageSlider, 0.8f);
 		
 		markupPanel = new MarkupPanel(
-				tagManager,
 				repository,
 				new ColorButtonListener() {
 					

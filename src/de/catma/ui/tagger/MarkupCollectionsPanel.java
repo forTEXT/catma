@@ -34,6 +34,7 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
@@ -74,19 +75,19 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private UserMarkupCollection currentWritableUserMarkupColl;
 	private PropertyChangeSupport propertyChangeSupport;
 	private Repository repository;
-	private Set<TagsetDefinition> updateableTagsetDefinitons;
+	private Set<TagsetDefinition> updateableTagsetDefinitions;
 	private PropertyChangeListener userMarkupCollectionChangedListener;
 	private Application application;
 	private PropertyChangeListener userMarkupCollectionTagLibraryChangedListener;
+	private PropertyChangeListener userPropertyDefinitionChangedListener;
 	
-	//TODO: arg TagManager is redundant here, we could ask the repo
-	public MarkupCollectionsPanel(TagManager tagManager, Repository repository) {
+	public MarkupCollectionsPanel(Repository repository) {
 		propertyChangeSupport = new PropertyChangeSupport(this);
-		this.tagManager = tagManager;
+		this.tagManager = repository.getTagManager();
 		this.repository = repository;
 		userMarkupCollectionManager =
-				new UserMarkupCollectionManager(tagManager, repository);
-		updateableTagsetDefinitons = new HashSet<TagsetDefinition>();
+				new UserMarkupCollectionManager(repository);
+		updateableTagsetDefinitions = new HashSet<TagsetDefinition>();
 		initComponents();
 		initActions();
 	}
@@ -150,6 +151,33 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		tagManager.addPropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged,
 				tagDefChangedListener);
+		
+		
+		userPropertyDefinitionChangedListener = 
+				new PropertyChangeListener() {
+					
+					public void propertyChange(PropertyChangeEvent evt) {
+						if (evt.getOldValue() == null) { //insert
+							@SuppressWarnings("unchecked")
+							Pair<PropertyDefinition, TagDefinition> pair = 
+								(Pair<PropertyDefinition, TagDefinition>) evt.getNewValue();
+							updateTagDefinition(pair.getSecond());
+						}
+						else if (evt.getNewValue() == null) {//delete
+							@SuppressWarnings("unchecked")
+							Pair<PropertyDefinition, TagDefinition> pair = 
+									(Pair<PropertyDefinition, TagDefinition>) evt.getOldValue();
+								updateTagDefinition(pair.getSecond());
+						}
+						else { //update
+							updateTagDefinition((TagDefinition) evt.getOldValue());
+						}
+					}
+				};
+		
+		this.tagManager.addPropertyChangeListener(
+				TagManagerEvent.userPropertyDefinitionChanged,
+				userPropertyDefinitionChangedListener);
 		
 		tagsetDefChangedListener = new PropertyChangeListener() {
 			
@@ -302,7 +330,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 
 	private void updateTagsetDefinition(TagsetDefinition foreignTagsetDefinition) {
-		if (updateableTagsetDefinitons.contains(foreignTagsetDefinition)) {
+		if (updateableTagsetDefinitions.contains(foreignTagsetDefinition)) {
 			List<UserMarkupCollection> outOfSynchCollections = 
 					userMarkupCollectionManager.getUserMarkupCollections(
 						foreignTagsetDefinition, false);
@@ -330,7 +358,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 
 	private void removeTagsetDefinition(TagsetDefinition foreignTagsetDefinition) {
 		
-		if (updateableTagsetDefinitons.contains(foreignTagsetDefinition)) {
+		if (updateableTagsetDefinitions.contains(foreignTagsetDefinition)) {
 			List<UserMarkupCollection> outOfSynchCollections = 
 					userMarkupCollectionManager.getUserMarkupCollections(
 						foreignTagsetDefinition, false);
@@ -361,7 +389,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			TagsetDefinition foreignTagsetDefinition) {
 		
 
-		if (updateableTagsetDefinitons.contains(foreignTagsetDefinition)) {
+		if (updateableTagsetDefinitions.contains(foreignTagsetDefinition)) {
 			List<UserMarkupCollection> outOfSynchCollections = 
 					userMarkupCollectionManager.getUserMarkupCollections(
 						foreignTagsetDefinition, false);
@@ -384,7 +412,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			TagDefinition foreignTagDefinition, 
 			TagsetDefinition foreignTagsetDefinition) {
 		
-		if (updateableTagsetDefinitons.contains(foreignTagsetDefinition)) {
+		if (updateableTagsetDefinitions.contains(foreignTagsetDefinition)) {
 			
 			List<UserMarkupCollection> outOfSynchCollections = 
 					userMarkupCollectionManager.getUserMarkupCollections(
@@ -458,14 +486,14 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 
 	private TagsetDefinition getUpdateableTagsetDefinition(String tagDefUuid) {
-		for (TagsetDefinition tagsetDef : updateableTagsetDefinitons) {
+		for (TagsetDefinition tagsetDef : updateableTagsetDefinitions) {
 			if (tagsetDef.hasTagDefinition(tagDefUuid)) {
 				return tagsetDef;
 			}
 		}
 		return null;
 	}
-
+	
 	private void initComponents() {
 		setSizeFull();
 		markupCollectionsTree = new TreeTable();
@@ -782,6 +810,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		tagManager.removePropertyChangeListener(
 				TagManagerEvent.tagsetDefinitionChanged,
 				tagsetDefChangedListener);
+		tagManager.removePropertyChangeListener(
+				TagManagerEvent.userPropertyDefinitionChanged,
+				userPropertyDefinitionChangedListener);
 		repository.removePropertyChangeListener(
 				RepositoryChangeEvent.userMarkupCollectionChanged, 
 				userMarkupCollectionChangedListener);
@@ -810,7 +841,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 
 			            public void onClose(ConfirmDialog dialog) {
 			                if (dialog.isConfirmed()) {
-			                	updateableTagsetDefinitons.add(incomingTagsetDef);
+			                	updateableTagsetDefinitions.add(incomingTagsetDef);
 			                	userMarkupCollectionManager.updateUserMarkupCollections(
 			                			toBeUpdated, incomingTagsetDef);
 			                	updateUserMarkupCollectionsInTree(toBeUpdated);
@@ -820,7 +851,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			        });
 		}
 		else {
-			updateableTagsetDefinitons.add(incomingTagsetDef);
+			updateableTagsetDefinitions.add(incomingTagsetDef);
 			confirmListener.confirmed();
 		}
 	}
@@ -920,7 +951,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 
 	public void removeUpdateableTagsetDefinition(TagsetDefinition tagsetDefinition) {
-		updateableTagsetDefinitons.remove(tagsetDefinition);
+		updateableTagsetDefinitions.remove(tagsetDefinition);
 	}
 
 	public List<Pair<String,TagInstance>> getTagInstances(List<String> instanceIDs) {

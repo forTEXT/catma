@@ -42,6 +42,7 @@ import de.catma.repository.db.model.DBUserUserMarkupCollection;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
+import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
@@ -484,7 +485,7 @@ class DBUserMarkupCollectionHandler {
 						tagLibrary.getTagDefinition(
 							idGenerator.uuidBytesToCatmaID(
 								dbTagInstance.getDbTagDefinition().getUuid())));
-				
+				addProperties(tagInstance, dbTagInstance);
 				tagInstances.put(dbTagInstance, tagInstance);
 			}
 			
@@ -501,6 +502,30 @@ class DBUserMarkupCollectionHandler {
 		}
 		
 		return userMarkupCollection;
+	}
+
+	private void addProperties(TagInstance tagInstance,
+			DBTagInstance dbTagInstance) {
+
+		for (DBProperty dbProperty : dbTagInstance.getDbProperties()) {
+			if (dbProperty.getDbPropertyDefinition().isSystemproperty()) {
+				tagInstance.addSystemProperty(
+					new Property(
+						tagInstance.getTagDefinition().getPropertyDefinition(
+							idGenerator.uuidBytesToCatmaID(
+								dbProperty.getDbPropertyDefinition().getUuid())),
+						new PropertyValueList(dbProperty.getPropertyValues())));
+			}
+			else {
+				tagInstance.addUserDefinedProperty(
+					new Property(
+						tagInstance.getTagDefinition().getPropertyDefinition(
+							idGenerator.uuidBytesToCatmaID(
+								dbProperty.getDbPropertyDefinition().getUuid())),
+						new PropertyValueList(dbProperty.getPropertyValues())));
+				
+			}
+		}
 	}
 
 	void addTagReferences(UserMarkupCollection userMarkupCollection,
@@ -789,7 +814,7 @@ class DBUserMarkupCollectionHandler {
 			Query query = session.createQuery(
 				"from " + DBProperty.class.getSimpleName()
 				+ " where dbTagInstance.uuid = :tagInstanceID "
-				+ " dbPropertyDefinition.uuid = :propertyDefID");
+				+ " and dbPropertyDefinition.uuid = :propertyDefID");
 			query.setBinary(
 				"tagInstanceID", 
 				idGenerator.catmaIDToUUIDBytes(tagInstance.getUuid()));
@@ -799,12 +824,26 @@ class DBUserMarkupCollectionHandler {
 						property.getPropertyDefinition().getUuid()));
 			
 			DBProperty dbProperty = (DBProperty) query.uniqueResult();
-			
+			if (dbProperty == null) {
+				Criteria criteria = session.createCriteria(
+					DBTagInstance.class).add(
+						Restrictions.eq(
+							"uuid", 
+							idGenerator.catmaIDToUUIDBytes(tagInstance.getUuid())));
+				DBTagInstance dbTagInstance = (DBTagInstance) criteria.uniqueResult();
+				
+				dbProperty = new DBProperty(
+					(DBPropertyDefinition) session.get(
+						DBPropertyDefinition.class, 
+						property.getPropertyDefinition().getId()),
+					dbTagInstance);
+			}
 			DBUserMarkupCollectionUpdater updater = 
 					new DBUserMarkupCollectionUpdater(dbRepository);
 			
 			session.beginTransaction();
 			updater.updateDbProperty(session, dbProperty, property);
+			session.saveOrUpdate(dbProperty);
 			session.getTransaction().commit();
 			
 			dbRepository.getIndexer().updateIndex(tagInstance, property);

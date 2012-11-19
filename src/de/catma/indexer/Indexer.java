@@ -47,6 +47,8 @@ public interface Indexer {
 			List<String> userMarkupCollectionIdList, 
 			String tagDefinitionPath) throws Exception;
 	
+	public QueryResult searchProperty(Set<String> propertyDefinitionIDs,
+			String propertyName, String propertyValue);
 	
 	public QueryResult searchFreqency(
 			List<String> documentIdList, 
@@ -64,6 +66,7 @@ public interface Indexer {
 	
 	public void close();
 
-	public void updateIndex(TagInstance tagInstance, Property property);
+	public void updateIndex(TagInstance tagInstance, Property property) throws IOException;
+
 
 }

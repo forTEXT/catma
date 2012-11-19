@@ -536,6 +536,9 @@ public class DBRepository implements IndexedRepository {
 	public void update(TagInstance tagInstance, Property property)
 			throws IOException {
 		dbUserMarkupCollectionHandler.updateProperty(tagInstance, property);
+		propertyChangeSupport.firePropertyChange(
+				RepositoryChangeEvent.propertyValueChanged.name(),
+				tagInstance, property);
 	}
 
 	public void delete(

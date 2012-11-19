@@ -21,10 +21,12 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.Window.Notification;
 
 import de.catma.tag.Property;
+import de.catma.tag.PropertyValueList;
+import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.ui.dialog.FormDialog;
-import de.catma.ui.dialog.PropertyCollection;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.dialog.StringListProperty;
 import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
 import de.catma.util.Pair;
 
@@ -95,7 +97,8 @@ public class TagInstanceTree extends HorizontalLayout {
 			
 			public void buttonClick(ClickEvent event) {
 				Object selection = tagInstanceTree.getValue();
-				Property property = getProperty((Set<?>)selection);
+				final Property property = getProperty((Set<?>)selection);
+				final TagInstance tagInstance = (TagInstance) tagInstanceTree.getParent(property);
 				
 				if ((((Set<?>)selection).size()>1) || (property == null)) {
 					getWindow().showNotification(
@@ -105,9 +108,8 @@ public class TagInstanceTree extends HorizontalLayout {
 				}
 				else {
 					final String valuesProp = "values";
-					
-					PropertyCollection propertyCollection = 
-							new PropertyCollection(valuesProp);
+					PropertysetItem propertyCollection = new PropertysetItem();
+					propertyCollection.addItemProperty(valuesProp, new StringListProperty());
 					Set<String> initialValues = new HashSet<String>();
 					initialValues.addAll(
 						property.getPropertyDefinition().getPossibleValueList().getPropertyValueList().getValues());
@@ -123,11 +125,17 @@ public class TagInstanceTree extends HorizontalLayout {
 								public void cancelPressed() {}
 								public void savePressed(PropertysetItem result) {
 									
+									StringListProperty stringList =
+											(StringListProperty) result.getItemProperty(valuesProp);
+									
+									property.setPropertyValueList(
+										new PropertyValueList(stringList.getList()));
 									// update prop values
 									// update prop value index
 									// (handle deletion of prop defs, update should be fine, needs testing) 
 									
-									System.out.println(result);
+									System.out.println(stringList.getList().toString());
+									tagInstanceActionListener.updateProperty(tagInstance, property);
 								}
 							});
 					editValueDlg.show(getApplication().getMainWindow());
@@ -256,7 +264,7 @@ public class TagInstanceTree extends HorizontalLayout {
 				
 				for (String value : values) {
 					String itemId = String.valueOf(property.hashCode()) + value; 
-					tagInstanceTree.addItem(new Object[] {value, null}, 
+					tagInstanceTree.addItem(new Object[] {value}, 
 							itemId);
 					tagInstanceTree.setParent(itemId, property);
 					tagInstanceTree.setChildrenAllowed(itemId, false);
@@ -264,5 +272,17 @@ public class TagInstanceTree extends HorizontalLayout {
 			}
 		}
 	}
-	
+
+	public List<String> getTagInstanceIDs(Set<TagDefinition> excludeFilter) {
+		ArrayList<String> idList = new ArrayList<String>();
+		for (Object itemId : tagInstanceTree.getItemIds()) {
+			if (tagInstanceTree.getParent(itemId)==null) {
+				TagInstance ti = (TagInstance)itemId;
+				if (!excludeFilter.contains(ti.getTagDefinition())) {
+					idList.add(ti.getUuid());
+				}
+			}
+		}
+		return idList;
+	}
 }

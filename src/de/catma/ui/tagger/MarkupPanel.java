@@ -2,7 +2,10 @@ package de.catma.ui.tagger;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.vaadin.data.Container;
 import com.vaadin.event.DataBoundTransferable;
@@ -17,13 +20,13 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
 import de.catma.document.repository.Repository;
+import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
-import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.tagger.MarkupCollectionsPanel.MarkupCollectionPanelEvent;
@@ -42,15 +45,16 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	private ColorButtonListener colorButtonListener;
 	private Label writableUserMarkupCollectionLabel;
 	private TagInstanceTree tagInstancesTree;
+	private Repository repository;
+	private PropertyChangeListener propertyValueChangeListener;
 	
 	public MarkupPanel(
-			TagManager tagManager,
 			Repository repository, ColorButtonListener colorButtonListener, 
 			PropertyChangeListener tagDefinitionSelectionListener,
 			PropertyChangeListener tagDefinitionsRemovedListener) {
 		this.colorButtonListener = colorButtonListener;
-		initComponents(
-				tagManager, repository, 
+		this.repository = repository;
+		initComponents( 
 				tagDefinitionSelectionListener,
 				tagDefinitionsRemovedListener);
 		initActions();
@@ -72,21 +76,68 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		};
 		tagsetTree.getTagManager().addPropertyChangeListener(
 			TagManagerEvent.tagLibraryChanged, tagLibraryChangedListener);
+		
+		markupCollectionsPanel.addPropertyChangeListener(
+				MarkupCollectionPanelEvent.tagDefinitionSelected, 
+				new PropertyChangeListener() {
+					
+					public void propertyChange(PropertyChangeEvent evt) {
+						if (evt.getNewValue() == null) {
+							@SuppressWarnings("unchecked")
+							List<TagReference> deselectedTagRefs = 
+									(List<TagReference>) evt.getOldValue();
+							Set<TagDefinition> exclusionFilter = new HashSet<TagDefinition>();
+							for (TagReference tr : deselectedTagRefs) {
+								exclusionFilter.add(tr.getTagDefinition());
+							}
+							showTagInstanceInfo(
+								tagInstancesTree.getTagInstanceIDs(exclusionFilter));
+						}
+					}
+				});
+		markupCollectionsPanel.addPropertyChangeListener(
+				MarkupCollectionPanelEvent.tagDefinitionsRemoved,
+				new PropertyChangeListener() {
+					
+					@SuppressWarnings("unchecked")
+					public void propertyChange(PropertyChangeEvent evt) {
+						showTagInstanceInfo(
+							tagInstancesTree.getTagInstanceIDs(
+								(Set<TagDefinition>)evt.getOldValue()));
+					}
+				});
+		
+		propertyValueChangeListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				if ((evt.getNewValue() != null) && (evt.getOldValue() != null)) {
+					showTagInstanceInfo(
+						tagInstancesTree.getTagInstanceIDs(
+								Collections.<TagDefinition>emptySet()));
+				}
+				
+			}
+		};
+		
+		repository.addPropertyChangeListener(
+			RepositoryChangeEvent.propertyValueChanged, 
+			propertyValueChangeListener);
 	}
 
 	private void initComponents(
-			final TagManager tagManager, Repository repository, 
 			PropertyChangeListener tagDefinitionSelectionListener, 
 			PropertyChangeListener tagDefinitionsRemovedListener) {
 		
 		tabSheet = new TabSheet();
 		tabSheet.setSizeFull();
 		
-		tagsetTree = new TagsetTree(tagManager, null, false, colorButtonListener);
+		tagsetTree = 
+			new TagsetTree(
+				repository.getTagManager(), null, false, colorButtonListener);
 		tabSheet.addTab(tagsetTree, "Active Tagsets");
 		
 		markupCollectionsPanel = 
-				new MarkupCollectionsPanel(tagManager, repository);
+				new MarkupCollectionsPanel(repository);
 		markupCollectionsPanel.addPropertyChangeListener(
 				MarkupCollectionPanelEvent.tagDefinitionSelected, 
 				tagDefinitionSelectionListener);
@@ -190,8 +241,13 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 
 	public void close() {
 		markupCollectionsPanel.close();
+		
 		tagsetTree.getTagManager().removePropertyChangeListener(
 				TagManagerEvent.tagLibraryChanged, tagLibraryChangedListener);
+		repository.removePropertyChangeListener(
+			RepositoryChangeEvent.propertyValueChanged, 
+			propertyValueChangeListener);
+		
 		tagsetTree.close();
 	}
 	

@@ -145,7 +145,7 @@ public class DBIndexer implements Indexer {
 	public void reindex(TagsetDefinition tagsetDefinition,
 			Set<byte[]> deletedTagsetDefinitionUuids,
 			UserMarkupCollection userMarkupCollection, String sourceDocumentID)
-			throws Exception {
+			throws IOException {
 		Session session = sessionFactory.openSession();
 		try {
 			tagReferenceIndexer.reindex(
@@ -155,7 +155,7 @@ public class DBIndexer implements Indexer {
 		}
 		catch (Exception e) {
 			CloseSafe.close(new CloseableSession(session, true));
-			throw e;
+			throw new IOException(e);
 		}
 	}
 	
@@ -180,6 +180,14 @@ public class DBIndexer implements Indexer {
 		TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher(sessionFactory);
 		
 		return tagSearcher.search(userMarkupCollectionIdList, tagDefinitionPath);
+	}
+	
+	public QueryResult searchProperty(Set<String> propertyDefinitionIDs,
+			String propertyName, String propertyValue) {
+
+		TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher(sessionFactory);
+		
+		return tagSearcher.searchProperties(propertyDefinitionIDs, propertyName, propertyValue);
 	}
 
 	public QueryResult searchFreqency(
@@ -216,8 +224,19 @@ public class DBIndexer implements Indexer {
 	}
 
 	
-	public void updateIndex(TagInstance tagInstance, Property property) {
-		// do indexing
+	public void updateIndex(TagInstance tagInstance, Property property) 
+			throws IOException {
+		Session session = sessionFactory.openSession();
+		try {
+			session.beginTransaction();
+			tagReferenceIndexer.reIndexProperty(session, tagInstance, property);
+			session.getTransaction().commit();
+			CloseSafe.close(new CloseableSession(session));
+		}
+		catch (Exception e) {
+			CloseSafe.close(new CloseableSession(session, true));
+			throw new IOException(e);
+		}
 		
 	}
 	

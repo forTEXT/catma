@@ -4,7 +4,9 @@ package de.catma.repository.db.model;
 
 import static javax.persistence.GenerationType.IDENTITY;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -15,6 +17,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
@@ -97,5 +100,14 @@ public class DBProperty implements java.io.Serializable {
 			}
 		}
 		return false;
+	}
+	
+	@Transient
+	public List<String> getPropertyValues() {
+		ArrayList<String> values = new ArrayList<String>();
+		for (DBPropertyValue val : getDbPropertyValues()) {
+			values.add(val.getValue());
+		}
+		return values;
 	}
 }

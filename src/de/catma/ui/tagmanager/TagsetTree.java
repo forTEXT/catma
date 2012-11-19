@@ -234,11 +234,22 @@ public class TagsetTree extends HorizontalLayout {
 							newPair.getFirst(), newPair.getSecond());
 				}
 				else if (newValue == null) { // delete
+					@SuppressWarnings("unchecked")
+					Pair<PropertyDefinition, TagDefinition> oldPair = 
+							(Pair<PropertyDefinition, TagDefinition>)oldValue;
+
 					removeUserDefinedPropertyDefinitionFromTree(
-							(PropertyDefinition)oldValue);
+							oldPair.getFirst());
 				}
 				else { // update
+					PropertyDefinition pd = (PropertyDefinition)evt.getNewValue(); 
+					Property contProp = tagTree.getContainerProperty(
+						pd, 
+						TagTreePropertyName.caption);
 					
+					if (contProp != null) {
+						contProp.setValue(pd.getName());
+					}
 				}
 			}
 		};

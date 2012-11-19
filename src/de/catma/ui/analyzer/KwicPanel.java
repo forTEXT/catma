@@ -230,7 +230,7 @@ public class KwicPanel extends VerticalLayout {
 			TagsetDefinition incomingTagsetDef, TagDefinition incomingTagDef) throws URISyntaxException {
 		
 		UserMarkupCollectionManager userMarkupCollectionManager =
-				new UserMarkupCollectionManager(repository.getTagManager(), repository);
+				new UserMarkupCollectionManager(repository);
 
 		for (Map.Entry<String,UserMarkupCollection> entry : result.entrySet()) {
 			

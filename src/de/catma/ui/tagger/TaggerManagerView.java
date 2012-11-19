@@ -8,7 +8,6 @@ import com.vaadin.ui.Component;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.tag.TagManager;
 import de.catma.ui.tabbedview.TabbedView;
 
 public class TaggerManagerView extends TabbedView {
@@ -23,14 +22,14 @@ public class TaggerManagerView extends TabbedView {
 	}
 
 	public TaggerView openSourceDocument(
-			TagManager tagManager, final SourceDocument sourceDocument, Repository repository) {
+			final SourceDocument sourceDocument, Repository repository) {
 		TaggerView taggerView = getTaggerView(sourceDocument);
 		if (taggerView != null) {
 			setSelectedTab(taggerView);
 		}
 		else {
 			taggerView = new TaggerView(
-					nextTaggerID++, tagManager, sourceDocument, repository,
+					nextTaggerID++, sourceDocument, repository,
 					new PropertyChangeListener() {
 						
 						public void propertyChange(PropertyChangeEvent evt) {

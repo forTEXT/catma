@@ -19,6 +19,7 @@ public class PropertyValueEditorFormFieldFactory implements FormFieldFactory {
 				initialValues);
 		valueBox.setNewItemsAllowed(true);
 		valueBox.setMultiSelect(true);
+		valueBox.setSizeFull();
 	}
 
 	public Field createField(Item item, Object propertyId, Component uiContext) {

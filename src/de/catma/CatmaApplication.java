@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,7 +52,8 @@ import de.catma.ui.tagmanager.TagManagerWindow;
 
 public class CatmaApplication extends Application
 	implements BackgroundServiceProvider, AnalyzerProvider {
-	
+	private static final String VERSION = 
+			"(v"+new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date())+")";
 	private static final String WEB_INF_DIR = "WEB-INF";
 	private static final String CATMA_PROPERTY_FILE = "catma.properties";
 
@@ -75,7 +78,7 @@ public class CatmaApplication extends Application
 		backgroundService = new BackgroundService(this);
 		
 		
-		final Window mainWindow = new Window("CATMA 4 - CLÉA");
+		final Window mainWindow = new Window("CATMA 4 - CLÉA " + VERSION);
 		
 		mainWindow.addListener(new CloseListener() {
 			
@@ -218,7 +221,7 @@ public class CatmaApplication extends Application
 			taggerManagerView.getWindow().bringToFront();
 		}
 		return taggerManagerView.openSourceDocument(
-				tagManager, sourceDocument, repository);
+				sourceDocument, repository);
 	}
 
 	public String getTempDirectory() {

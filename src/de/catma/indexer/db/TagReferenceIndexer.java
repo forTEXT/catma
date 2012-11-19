@@ -14,6 +14,7 @@ import de.catma.indexer.db.model.DBIndexProperty;
 import de.catma.indexer.db.model.DBIndexTagReference;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 import de.catma.util.IDGenerator;
@@ -137,6 +138,17 @@ public class TagReferenceIndexer {
 			propDelQuery.executeUpdate();
 		}
 		session.getTransaction().commit();
+	}
+	
+	void reIndexProperty(Session session, TagInstance tagInstance, Property property) {
+		Query propDelQuery = session.createQuery(
+				"delete from " + DBIndexProperty.class.getSimpleName() +
+				" where tagInstanceId = :curTagInstanceId ");
+		byte[] tagInstanceUuid = idGenerator.catmaIDToUUIDBytes(tagInstance.getUuid()); 
+		propDelQuery.setBinary("curTagInstanceId", tagInstanceUuid);
+		propDelQuery.executeUpdate();
+		
+		indexProperty(session, property, tagInstanceUuid);
 	}
 
 	public void reindex(Session session, TagsetDefinition tagsetDefinition,

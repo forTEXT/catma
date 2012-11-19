@@ -19,9 +19,25 @@
 
 package de.catma.queryengine;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import de.catma.document.Range;
+import de.catma.document.repository.Repository;
+import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.indexer.Indexer;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
+import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagsetDefinition;
+import de.catma.util.ContentInfoSet;
 
 
 /**
@@ -54,44 +70,82 @@ public class PropertyQuery extends Query {
 
     @Override
     protected QueryResult execute() throws Exception {
+    	
+    	QueryOptions queryOptions = getQueryOptions();
+    	Repository repository = queryOptions.getRepository();
+    	
+        Indexer indexer = queryOptions.getIndexer();
+        List<String> relevantUserMarkupCollIDs = 
+        		queryOptions.getRelevantUserMarkupCollIDs();
+        
+        if (relevantUserMarkupCollIDs.isEmpty() 
+        		&& !queryOptions.getRelevantSourceDocumentIDs().isEmpty()) {
+        	relevantUserMarkupCollIDs = new ArrayList<String>();
+        	for (String sourceDocumentId 
+        			: queryOptions.getRelevantSourceDocumentIDs()) {
+        		for (UserMarkupCollectionReference umcRef : 
+        			repository.getSourceDocument(sourceDocumentId).getUserMarkupCollectionRefs()) {
+        			relevantUserMarkupCollIDs.add(umcRef.getId());
+        		}
+        	}
+        	
+        	if (relevantUserMarkupCollIDs.isEmpty()) {
+        		return new QueryResultRowArray();
+        	}
+        }
+        Set<String> propertyDefinitionIDs = new HashSet<String>();
+        for (String userMarkupCollID : relevantUserMarkupCollIDs) {
+        	UserMarkupCollection umc = 
+        			repository.getUserMarkupCollection(
+        				new UserMarkupCollectionReference(
+        						userMarkupCollID, new ContentInfoSet()));
+        	for (TagsetDefinition tagsetDefinition : umc.getTagLibrary()) {
+        		for (TagDefinition tagDef : tagsetDefinition) {
+        			PropertyDefinition pd = 
+        					tagDef.getPropertyDefinitionByName(propertyName); 
+        			if (pd != null) {
+        				propertyDefinitionIDs.add(pd.getUuid());
+        			}
+        		}
+        	}
+        }
+        
+        
+        QueryResult result = 
+				indexer.searchProperty(
+						propertyDefinitionIDs,
+						propertyName, propertyValue);
 
-//        Set<Tagset> tagsets = TagManager.SINGLETON.getTagsets();
-//
-//        Query curQuery = null;
-//
-//        // loop over the tagsets
-//        for (Tagset tagset : tagsets) {
-//            // loop over the tags
-//            for (Tag tag : tagset) {
-//                Property p = tag.getProperty(propertyName);
-//
-//                // does this property meet the query condition?
-//                if ((p != null)
-//                        && ((propertyValue == null) || p.getValue().equals(propertyValue))) {
-//
-//                    // is this the first Tag that matches?
-//                    if (curQuery == null) {
-//                        // yes, ok we create a tag query for this Tag
-//                        curQuery = new TagQuery(new Phrase("\""+tag.getName()+"\""));
-//                    }
-//                    else {
-//                        // no, so we create a tag query for this Tag and combine
-//                        // it with the previous matches via a union query
-//                        curQuery = new UnionQuery(
-//                            curQuery,
-//                            new TagQuery(new Phrase("\""+tag.getName()+"\"")));
-//                    }
-//                    
-//                }
-//            }
-//        }
-//
-//        if (curQuery != null) {
-//            return curQuery.execute();
-//        }
-//        else {
-//            return new ResultList();
-//        }
-    	return null;
+        Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
+
+        for (QueryResultRow row  : result) {
+        	SourceDocument sd = 
+        			repository.getSourceDocument(row.getSourceDocumentId());
+        	if (!sd.isLoaded()) {
+    			//TODO: unload SourceDocuments to free space if tobeUnloaded.size() > 10
+        		toBeUnloaded.add(sd);
+        	}
+        	TagQueryResultRow tRow = (TagQueryResultRow)row;
+        	
+        	if (tRow.getRanges().size() > 1) {
+	        	StringBuilder builder = new StringBuilder();
+	        	String conc = "";
+	        	for (Range range : tRow.getRanges()) {
+	        		builder.append(conc);
+	        		builder.append(sd.getContent(range));
+	        		conc = "[...]";
+	        	}
+	        	row.setPhrase(builder.toString());
+        	}
+        	else {
+        		row.setPhrase(sd.getContent(row.getRange()));
+        	}
+        }
+        
+        for (SourceDocument sd : toBeUnloaded) {
+        	sd.unload();
+        }
+        
+        return result;
     }
 }

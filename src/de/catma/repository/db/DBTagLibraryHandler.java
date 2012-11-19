@@ -1073,7 +1073,9 @@ class DBTagLibraryHandler {
 							(DBPropertyDefinition)session.get(DBPropertyDefinition.class, pd.getId());
 					Iterator<DBPropertyDefPossibleValue> iterator =
 							dbPropertyDefinition.getDbPropertyDefPossibleValues().iterator();
+					dbPropertyDefinition.setName(pd.getName());
 					session.beginTransaction();
+					
 					while (iterator.hasNext()) {
 						DBPropertyDefPossibleValue val = iterator.next();
 						if (!pd.getPossibleValueList().getPropertyValueList().getValues().contains(val.getValue())) {

@@ -13,8 +13,8 @@ import de.catma.document.Corpus;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
@@ -30,12 +30,16 @@ import de.catma.util.ContentInfoSet;
 public class DummyRepository implements IndexedRepository {
 	
 	private Indexer indexer;
-	
+	private TagManager tagManager;
 	
 
 	public DummyRepository(Indexer indexer) {
 		super();
 		this.indexer = indexer;
+	}
+
+	public DummyRepository(TagManager tagManager) {
+		this.tagManager = tagManager;
 	}
 
 	public void addPropertyChangeListener(
@@ -221,7 +225,7 @@ public class DummyRepository implements IndexedRepository {
 	}
 	public TagManager getTagManager() {
 		
-		return null;
+		return tagManager;
 	}
 	
 	public void createCorpus(String name) throws IOException {

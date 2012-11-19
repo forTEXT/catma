@@ -1,5 +1,6 @@
 package de.catma.indexer.db;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -10,15 +11,20 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 
+import de.catma.db.CloseableSession;
 import de.catma.document.Range;
+import de.catma.indexer.db.model.DBIndexProperty;
 import de.catma.indexer.db.model.DBIndexTagReference;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.util.CloseSafe;
+import de.catma.util.IDGenerator;
 
 public class TagDefinitionSearcher {
 
@@ -33,15 +39,23 @@ public class TagDefinitionSearcher {
 			List<String> userMarkupCollectionIdList, String tagDefinitionPath) {
 		
 		Session session = sessionFactory.openSession();
-		
-		List<DBIndexTagReference> tagReferences  = 
-				searchInUserMarkupCollection(
-						session, userMarkupCollectionIdList, tagDefinitionPath);
-		logger.info(
-			"Query for " + tagDefinitionPath + " has " + 
-					tagReferences.size() + " results.");
-		
-		TagQueryResult result = new TagQueryResult(tagDefinitionPath);
+		try {
+			List<DBIndexTagReference> tagReferences  = 
+					searchInUserMarkupCollection(
+							session, userMarkupCollectionIdList, tagDefinitionPath);
+			logger.info(
+				"Query for " + tagDefinitionPath + " has " + 
+						tagReferences.size() + " results.");
+			return createTagQueryResult(tagReferences, tagDefinitionPath);
+		}
+		finally {
+			CloseSafe.close(new CloseableSession(session));
+		}
+	}
+	
+	private QueryResult createTagQueryResult(
+			List<DBIndexTagReference> tagReferences, String group) {
+		TagQueryResult result = new TagQueryResult(group);
 		
 		HashMap<String, Set<DBIndexTagReference>> groupByInstance = 
 				new HashMap<String, Set<DBIndexTagReference>>();
@@ -78,7 +92,7 @@ public class TagDefinitionSearcher {
 		
 		return result;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	private List<DBIndexTagReference> searchInUserMarkupCollection(
 			Session session, List<String> userMarkupCollectionIdList, 
@@ -98,6 +112,52 @@ public class TagDefinitionSearcher {
 		}
 		
 		return criteria.list();
+	}
+
+
+	public QueryResult searchProperties(Set<String> propertyDefinitionIDs,
+			String propertyName,
+			String propertyValue) {
+		IDGenerator idGenerator = new IDGenerator();
+		List<byte[]> byteUuidSet = new ArrayList<byte[]>();
+		
+		for (String propertyDefinitionID : propertyDefinitionIDs) {
+			byteUuidSet.add(idGenerator.catmaIDToUUIDBytes(propertyDefinitionID));
+		}
+		
+		
+		String hql = " select tr from " + 
+				DBIndexTagReference.class.getSimpleName() + " tr, " +
+				DBIndexProperty.class.getSimpleName() + " p " +
+				" where tr.tagInstanceId = p.tagInstanceId and " +
+				" p.propertyDefinitionId in :byteUuidSet ";
+		
+		if ((propertyValue != null) && (!propertyValue.isEmpty())) {
+			hql += " and p.value = :propertyValue";
+		}
+		
+		Session session = sessionFactory.openSession();
+		try {
+			Query query = session.createQuery(hql);
+			
+			query.setParameterList("byteUuidSet", byteUuidSet);
+			
+			if ((propertyValue != null) && (!propertyValue.isEmpty())) {
+				query.setParameter("propertyValue", propertyValue);
+			}
+
+			@SuppressWarnings("unchecked")
+			List<DBIndexTagReference> dbTagReferences = query.list();
+		
+			return createTagQueryResult(
+				dbTagReferences, 
+				propertyName + 
+					(((propertyValue==null)||propertyValue.isEmpty())?"":
+						(":"+propertyValue)));
+		}
+		finally {
+			CloseSafe.close(new CloseableSession(session));
+		}
 	}
 
 }

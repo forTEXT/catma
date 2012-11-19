@@ -181,8 +181,7 @@ public class SynchTest {
 		
 		TagManager tagManager = new TagManager();
 		UserMarkupCollectionManager manager = 
-				new UserMarkupCollectionManager(
-						tagManager, new DummyRepository(null));
+				new UserMarkupCollectionManager(new DummyRepository(tagManager));
 		manager.add(userMarkupCollection);
 		
 		tagManager.removeUserDefinedPropertyDefinition(u4, td2);
