@@ -58,8 +58,8 @@ public class RepositoryManagerView extends TabbedView implements CloseHandler {
 	}
 
 
-	public boolean openFirstRepository() {
-		return repositoryListView.openFirstRepository();
+	public void openFirstRepository() {
+		repositoryListView.openFirstRepository();
 	}
 
 

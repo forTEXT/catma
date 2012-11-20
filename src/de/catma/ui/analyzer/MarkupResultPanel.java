@@ -7,14 +7,18 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.vaadin.dialogs.ConfirmDialog;
+
 import com.vaadin.data.Property;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.ui.AbstractComponent;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
@@ -24,6 +28,7 @@ import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.queryengine.result.AccumulativeGroupedQueryResult;
 import de.catma.queryengine.result.GroupedQueryResult;
@@ -36,6 +41,7 @@ import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
+import de.catma.util.ContentInfoSet;
 
 public class MarkupResultPanel extends VerticalLayout {
 	
@@ -169,11 +175,14 @@ public class MarkupResultPanel extends VerticalLayout {
 	private TreeTable resultTable;
 	private Repository repository;
 	private KwicPanel kwicPanel;
-	private Button bDist;
+	private Button btDist;
 	private boolean init = false;
 	private GroupedQueryResultSelectionListener resultSelectionListener;
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
-
+	private Button btSelectAll;
+	private Button btDeselectAll;
+	private Button btUntagResults;
+	
 	public MarkupResultPanel(
 			Repository repository, 
 			GroupedQueryResultSelectionListener resultSelectionListener, 
@@ -194,7 +203,7 @@ public class MarkupResultPanel extends VerticalLayout {
 	}
 	
 	private void initActions() {
-		bDist.addListener(new ClickListener() {
+		btDist.addListener(new ClickListener() {
 			
 			@SuppressWarnings("unchecked")
 			public void buttonClick(ClickEvent event) {
@@ -228,7 +237,79 @@ public class MarkupResultPanel extends VerticalLayout {
 
 
 		});
+		btSelectAll.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				selectAllForKwic(true);
+			}
+		});
+		btDeselectAll.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				selectAllForKwic(false);
+			}
+		});
+		
+		btUntagResults.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				untagResults();
+			}
+		});
 	}
+	
+	private void untagResults() {
+		final Set<QueryResultRow> selection = kwicPanel.getSelection();
+		if ((selection != null) && !selection.isEmpty()) {
+			ConfirmDialog.show(getApplication().getMainWindow(), 
+					"Remove Tag Instances", 
+					"Do you want to remove the selected Tag Instances?", 
+					"Yes", "No", new ConfirmDialog.Listener() {
+				public void onClose(ConfirmDialog dialog) {
+					if (dialog.isConfirmed()) {
+						try {
+							UserMarkupCollectionManager umcManager = 
+									new UserMarkupCollectionManager(repository);
+							for (QueryResultRow row : selection) {
+								TagQueryResultRow tagRow = (TagQueryResultRow)row;
+								if (!umcManager.contains(tagRow.getMarkupCollectionId())) {
+									umcManager.add(
+										repository.getUserMarkupCollection(
+											new UserMarkupCollectionReference(
+													tagRow.getMarkupCollectionId(), 
+													new ContentInfoSet())));
+								}
+								umcManager.removeTagInstance(tagRow.getTagInstanceId());
+							}
+						} catch (IOException e) {
+							((CatmaApplication)getApplication()).showAndLogError(
+									"Error untagging search results!", e);
+						}
+					}
+				}
+
+			});
+
+		}
+		else {
+			getWindow().showNotification(
+					"Information", 
+					"Please select one or more rows in the Kwic view first!",
+					Notification.TYPE_TRAY_NOTIFICATION);
+		}
+	}
+
+	private void selectAllForKwic(boolean selected) {
+		for (Object o : resultTable.getItemIds()) {
+			if (resultTable.getParent(o) == null) {
+				CheckBox cbVisibleInKwic = 
+					(CheckBox) resultTable.getItem(o).getItemProperty(
+						TreePropertyName.visible).getValue();
+				cbVisibleInKwic.setValue(selected);
+			}
+		}
+	}
+
 	
 	private Collection<TagQueryResult> getSelectionAsGroupedQueryResults(
 			Set<Object> selection) {
@@ -328,19 +409,44 @@ public class MarkupResultPanel extends VerticalLayout {
 		leftComponent.addComponent(resultTable);
 		leftComponent.setExpandRatio(resultTable, 1.0f);
 		
+		HorizontalLayout buttonPanel = new HorizontalLayout();
+		buttonPanel.setSpacing(true);
+		buttonPanel.setWidth("100%");
 		
-		bDist = new Button();
-		bDist.setIcon(new ClassResource(
+		btDist = new Button();
+		btDist.setIcon(new ClassResource(
 				"ui/analyzer/resources/chart.gif", 
 				getApplication()));
-		leftComponent.addComponent(bDist);
+		buttonPanel.addComponent(btDist);
 		
+		btSelectAll = new Button("Select all for Kwic");
+		
+		buttonPanel.addComponent(btSelectAll);
+		buttonPanel.setComponentAlignment(btSelectAll, Alignment.MIDDLE_RIGHT);
+		buttonPanel.setExpandRatio(btSelectAll, 1f);
+		btDeselectAll = new Button("Deselect all for Kwic");
+		buttonPanel.addComponent(btDeselectAll);
+		buttonPanel.setComponentAlignment(btDeselectAll, Alignment.MIDDLE_RIGHT);
+		
+		leftComponent.addComponent(buttonPanel);
+
 		splitPanel.addComponent(leftComponent);
+		
+		VerticalLayout rightComponent = new VerticalLayout();
+		rightComponent.setSpacing(true);
+		rightComponent.setSizeFull();
 		
 		this.kwicPanel = 
 				new KwicPanel(
 					repository, relevantUserMarkupCollectionProvider,  true);
-		splitPanel.addComponent(kwicPanel);
+		rightComponent.addComponent(kwicPanel);
+		rightComponent.setExpandRatio(kwicPanel, 1f);
+		
+		btUntagResults = new Button("Untag selected Kwics");
+		rightComponent.addComponent(btUntagResults);
+		rightComponent.setComponentAlignment(btUntagResults, Alignment.MIDDLE_RIGHT);
+		
+		splitPanel.addComponent(rightComponent);
 		
 		addComponent(splitPanel);
 	}

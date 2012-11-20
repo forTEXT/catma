@@ -10,7 +10,6 @@ import de.catma.document.repository.RepositoryManager;
 import de.catma.ui.repository.RepositoryManagerView;
 
 public class LoginLogoutCommand implements Command {
-	private boolean isLoggedIn = false;
 	private MenuItem loginLogoutItem;
 	private RepositoryManagerView repositoryManagerView;
 	private Menu menu;
@@ -19,8 +18,7 @@ public class LoginLogoutCommand implements Command {
 			new PropertyChangeListener() {
 		
 		public void propertyChange(PropertyChangeEvent evt) {
-			isLoggedIn = repositoryManagerView.getRepositoryManager().hasOpenRepository();
-			if (isLoggedIn) {
+			if (repositoryManagerView.getRepositoryManager().hasOpenRepository()) {
 				loginLogoutItem.setText("Logout");
 			}
 			else {
@@ -40,19 +38,12 @@ public class LoginLogoutCommand implements Command {
 
 
 	public void menuSelected(MenuItem selectedItem) {
-		if (isLoggedIn) {
+		if (repositoryManagerView.getRepositoryManager().hasOpenRepository()) {
 			repositoryManagerView.closeCurrentRepository();
-			if (!repositoryManagerView.getRepositoryManager().hasOpenRepository()) {
-				isLoggedIn = false;
-				selectedItem.setText("Login");
-			}
 		}
 		else {
 			menu.executeEntry(repositoryManagerView);
-			if (repositoryManagerView.openFirstRepository()) {
-				isLoggedIn = true;
-				selectedItem.setText("Logout");
-			}
+			repositoryManagerView.openFirstRepository();
 		}
 	}
 

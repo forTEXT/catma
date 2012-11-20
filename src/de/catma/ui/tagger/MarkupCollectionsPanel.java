@@ -965,11 +965,6 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				userMarkupCollectionManager.getTagReferences(tagInstanceID));
 			userMarkupCollectionManager.removeTagInstance(tagInstanceID);
 		}
-		// deselect tag references
-		propertyChangeSupport.firePropertyChange(
-				MarkupCollectionPanelEvent.tagDefinitionSelected.name(), 
-				tagReferences,
-				null);	
 	}
 
 	public void updateProperty(TagInstance tagInstance, de.catma.tag.Property property) {

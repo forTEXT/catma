@@ -86,12 +86,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 							@SuppressWarnings("unchecked")
 							List<TagReference> deselectedTagRefs = 
 									(List<TagReference>) evt.getOldValue();
-							Set<TagDefinition> exclusionFilter = new HashSet<TagDefinition>();
-							for (TagReference tr : deselectedTagRefs) {
-								exclusionFilter.add(tr.getTagDefinition());
-							}
-							showTagInstanceInfo(
-								tagInstancesTree.getTagInstanceIDs(exclusionFilter));
+							showTagInstanceInfo(deselectedTagRefs.toArray(new TagReference[]{}));
 						}
 					}
 				});
@@ -123,6 +118,8 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			RepositoryChangeEvent.propertyValueChanged, 
 			propertyValueChangeListener);
 	}
+	
+	
 
 	private void initComponents(
 			PropertyChangeListener tagDefinitionSelectionListener, 
@@ -284,6 +281,15 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 				markupCollectionsPanel.getTagInstances(instanceIDs);
 		tagInstancesTree.setTagInstances(tagInstances);
 	}	
+	
+	public void showTagInstanceInfo(TagReference[] deselectedTagRefs) {
+		Set<TagDefinition> exclusionFilter = new HashSet<TagDefinition>();
+		for (TagReference tr : deselectedTagRefs) {
+			exclusionFilter.add(tr.getTagDefinition());
+		}
+		showTagInstanceInfo(
+			tagInstancesTree.getTagInstanceIDs(exclusionFilter));
+	}
 	
 	public void removeTagInstances(List<String> tagInstanceIDs) {
 		markupCollectionsPanel.removeTagInstances(tagInstanceIDs);

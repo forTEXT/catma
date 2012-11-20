@@ -121,7 +121,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		}
 	}
 	
-	public boolean openFirstRepository() {
+	public void openFirstRepository() {
 		if ((repositoryTable.getValue() == null) 
 				&& !repositoryTable.getItemIds().isEmpty()) {
 			repositoryTable.setValue(repositoryTable.getItemIds().iterator().next());
@@ -129,14 +129,12 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		
 		if (repositoryTable.getValue() != null) {
 			openBt.click();
-			return true;
 		}
 		else {
 			getApplication().getMainWindow().showNotification(
 					"Information", 
 					"There are no available repositories to login!",
 					Notification.TYPE_TRAY_NOTIFICATION);
-			return false;
 		}
 	}
 	

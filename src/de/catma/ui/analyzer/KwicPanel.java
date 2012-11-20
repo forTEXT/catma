@@ -379,4 +379,9 @@ public class KwicPanel extends VerticalLayout {
 	public void clear() {
 		kwicTable.removeAllItems();
 	}
+	
+	@SuppressWarnings("unchecked")
+	public Set<QueryResultRow> getSelection() {
+		return (Set<QueryResultRow>) kwicTable.getValue();
+	}
 }

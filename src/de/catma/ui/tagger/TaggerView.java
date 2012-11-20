@@ -64,6 +64,7 @@ public class TaggerView extends VerticalLayout
 	private PagerComponent pagerComponent;
 	private Slider linesPerPageSlider;
 	private double totalLineCount;
+	private PropertyChangeListener tagReferencesChangedListener;
 	
 	public TaggerView(
 			int taggerID, 
@@ -95,6 +96,50 @@ public class TaggerView extends VerticalLayout
 		repository.addPropertyChangeListener(
 			RepositoryChangeEvent.sourceDocumentChanged,
 			sourceDocChangedListener);
+		
+		this.tagReferencesChangedListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (evt.getNewValue() != null) {
+
+					@SuppressWarnings("unchecked")
+					List<TagReference> tagReferences = (List<TagReference>)evt.getNewValue(); 
+					
+					List<TagReference> relevantTagReferences = new ArrayList<TagReference>();
+
+					for (TagReference tr : tagReferences) {
+						if (isRelevantTagReference(tr, markupPanel.getUserMarkupCollections())) {
+							relevantTagReferences.add(tr);
+						}
+					}
+					tagger.setVisible(relevantTagReferences, true);
+					
+				}
+				else if (evt.getOldValue() != null) {
+					@SuppressWarnings("unchecked")
+					List<TagReference> tagReferences = (List<TagReference>)evt.getOldValue(); 
+					tagger.setVisible(tagReferences, false);
+					markupPanel.showTagInstanceInfo(
+							tagReferences.toArray(new TagReference[]{}));
+				}
+			}
+		};
+		
+		repository.addPropertyChangeListener(
+			RepositoryChangeEvent.tagReferencesChanged, 
+			tagReferencesChangedListener);
+	}
+
+	private boolean isRelevantTagReference(TagReference tr,
+			List<UserMarkupCollection> userMarkupCollections) {
+		
+		for (UserMarkupCollection umc : userMarkupCollections) {
+			if (umc.hasTagInstance(tr.getTagInstanceID())) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 
 	private void initActions() {
@@ -268,6 +313,10 @@ public class TaggerView extends VerticalLayout
 		repository.removePropertyChangeListener(
 				RepositoryChangeEvent.sourceDocumentChanged,
 				sourceDocChangedListener);
+		repository.removePropertyChangeListener(
+				RepositoryChangeEvent.tagReferencesChanged, 
+				tagReferencesChangedListener);
+
 		sourceDocChangedListener = null;
 	}
 	

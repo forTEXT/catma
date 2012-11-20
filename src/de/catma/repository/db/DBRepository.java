@@ -475,21 +475,35 @@ public class DBRepository implements IndexedRepository {
 		backgroundServiceProvider.submit(
 				"Saving User Markup Collection "
 						+ userMarkupCollection.getName() + "... ",
-				new DefaultProgressCallable<Void>() {
-				public Void call() throws Exception {
-					if (userMarkupCollection.getTagReferences().containsAll(tagReferences)) {
+				new DefaultProgressCallable<Boolean>() {
+				public Boolean call() throws Exception {
+					if (userMarkupCollection.getTagReferences().containsAll(
+							tagReferences)) {
 						dbUserMarkupCollectionHandler.addTagReferences(
 							userMarkupCollection, tagReferences);
+						return true;
 					}
 					else {
 						dbUserMarkupCollectionHandler.removeTagReferences(
 							tagReferences);
+						return false;
 					}
-					return null;
 				}
 			}, 
-			new ExecutionListener<Void>() {
-				public void done(Void nothing) { /* noop */ }
+			new ExecutionListener<Boolean>() {
+				public void done(Boolean added) { 
+					if (added) {
+						propertyChangeSupport.firePropertyChange(
+							RepositoryChangeEvent.tagReferencesChanged.name(), 
+							null, tagReferences);
+					}
+					else {
+						propertyChangeSupport.firePropertyChange(
+							RepositoryChangeEvent.tagReferencesChanged.name(), 
+							tagReferences, null);
+					}
+					
+				}
 				public void error(Throwable t) {
 					propertyChangeSupport.firePropertyChange(
 							RepositoryChangeEvent.exceptionOccurred.name(),
