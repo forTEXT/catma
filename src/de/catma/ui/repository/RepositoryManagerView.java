@@ -56,4 +56,14 @@ public class RepositoryManagerView extends TabbedView implements CloseHandler {
 		repositoryListView.getRepositoryManager().close(view.getRepository());
 		super.onTabClose(tabsheet, tabContent);
 	}
+
+
+	public boolean openFirstRepository() {
+		return repositoryListView.openFirstRepository();
+	}
+
+
+	public void closeCurrentRepository() {
+		closeClosables();
+	}
 }

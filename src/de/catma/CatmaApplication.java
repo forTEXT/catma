@@ -3,7 +3,6 @@ package de.catma;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
@@ -11,12 +10,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.vaadin.Application;
-import com.vaadin.service.ApplicationContext;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.MenuBar;
+import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.ProgressIndicator;
-import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.ui.Window.CloseEvent;
-import com.vaadin.ui.Window.CloseListener;
 import com.vaadin.ui.Window.Notification;
 
 import de.catma.backgroundservice.BackgroundService;
@@ -40,6 +39,7 @@ import de.catma.ui.analyzer.AnalyzerManagerWindow;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.analyzer.VisualizationManagerView;
 import de.catma.ui.analyzer.VisualizationManagerWindow;
+import de.catma.ui.menu.LoginLogoutCommand;
 import de.catma.ui.menu.Menu;
 import de.catma.ui.menu.MenuFactory;
 import de.catma.ui.repository.RepositoryManagerView;
@@ -52,6 +52,7 @@ import de.catma.ui.tagmanager.TagManagerWindow;
 
 public class CatmaApplication extends Application
 	implements BackgroundServiceProvider, AnalyzerProvider {
+	
 	private static final String VERSION = 
 			"(v"+new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date())+")";
 	private static final String WEB_INF_DIR = "WEB-INF";
@@ -80,18 +81,7 @@ public class CatmaApplication extends Application
 		
 		final Window mainWindow = new Window("CATMA 4 - CLÉA " + VERSION);
 		
-		mainWindow.addListener(new CloseListener() {
-			
-			public void windowClose(CloseEvent e) {
-				// TODO: what should we do when the user closes (or reloads) the browser window
-				// could be:
-				// close the application -> not so good on reloads
-				// leave it open -> then we need another way of closing the app (logout button?!)
-			}
-			
-		});
-		
-		VerticalLayout mainLayout = new VerticalLayout();
+		HorizontalLayout mainLayout = new HorizontalLayout();
 		mainLayout.setSizeUndefined();
 		mainLayout.setMargin(true);
 		mainWindow.setContent(mainLayout);
@@ -138,6 +128,14 @@ public class CatmaApplication extends Application
 							new VisualizationManagerWindow(visualizationManagerView))
 					);
 		
+			MenuBar loginLogoutMenu = new MenuBar();
+			LoginLogoutCommand loginLogoutCommand = new LoginLogoutCommand(menu, repositoryManagerView);
+			MenuItem loginLogoutitem = loginLogoutMenu.addItem("Login", loginLogoutCommand);
+			loginLogoutCommand.setLoginLogoutItem(loginLogoutitem);
+			
+			mainLayout.addComponent(loginLogoutMenu);
+			mainLayout.setComponentAlignment(loginLogoutMenu, Alignment.TOP_RIGHT);
+			mainLayout.setWidth("100%");
 		} catch (Exception e) {
 			showAndLogError("The system could not be initialized!", e);
 		}
@@ -147,14 +145,6 @@ public class CatmaApplication extends Application
 		setTheme("cleatheme");
 	}
 	
-	@Override
-	public void start(URL applicationUrl, Properties applicationProperties,
-			ApplicationContext context) {
-		System.out.println("Starting: " + applicationUrl );
-		super.start(applicationUrl, applicationProperties, context);
-	}
-	
-	//TODO: temp dir might be obsolete, better work with in-memory byte arrays
 	private void initTempDirectory(Properties properties) throws IOException {
 		String tempDirProp = properties.getProperty("TempDir");
 		File tempDir = new File(tempDirProp);
@@ -173,7 +163,8 @@ public class CatmaApplication extends Application
 		
 		tempDir = new File(this.tempDirectory);
 		if ((!tempDir.exists() && !tempDir.mkdirs())) {
-			throw new IOException("could not create temporary directory: " + this.tempDirectory);
+			throw new IOException(
+				"could not create temporary directory: " + this.tempDirectory);
 		}
 	}
 

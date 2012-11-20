@@ -1,6 +1,8 @@
 package de.catma.ui.tabbedview;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
@@ -126,6 +128,18 @@ public class TabbedView extends VerticalLayout implements CloseHandler, Iterable
 		}
 		else {
 			return "";
+		}
+	}
+	
+	public void closeClosables() {
+		Set<Component> componentBuffer = new HashSet<Component>();
+		for (Component comp : this) {
+			componentBuffer.add(comp);
+		}
+		for (Component comp : componentBuffer) {
+			if (comp instanceof ClosableTab) {
+				onTabClose(tabSheet, comp);
+			}
 		}
 	}
 }
