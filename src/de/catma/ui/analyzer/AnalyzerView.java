@@ -301,15 +301,9 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 							
 						}
 						
-						public void stepSetChanged(WizardStepSetChangedEvent event) {
-							// TODO Auto-generated method stub
-							
-						}
+						public void stepSetChanged(WizardStepSetChangedEvent event) {/*noop*/}
 						
-						public void activeStepChanged(WizardStepActivationEvent event) {
-							// TODO Auto-generated method stub
-							
-						}
+						public void activeStepChanged(WizardStepActivationEvent event) {/*noop*/}
 					},
 					queryTree,
 					queryOptions);

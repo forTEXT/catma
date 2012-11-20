@@ -3,13 +3,17 @@ package de.catma.ui.analyzer;
 import java.io.IOException;
 import java.util.Set;
 
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.ui.AbstractComponent;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
@@ -38,9 +42,11 @@ public class PhraseResultPanel extends VerticalLayout {
 	private Repository repository;
 	private KwicPanel kwicPanel;
 	private GroupedQueryResultSelectionListener resultSelectionListener;
-	private Button bDist;
+	private Button btDist;
 	private boolean init = false;
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
+	private Button btSelectAll;
+	private Button btDeselectAll;
 
 	public PhraseResultPanel(
 			Repository repository, 
@@ -62,7 +68,7 @@ public class PhraseResultPanel extends VerticalLayout {
 	}
 
 	private void initActions() {
-		bDist.addListener(new ClickListener() {
+		btDist.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				GroupedQueryResultSet set = new GroupedQueryResultSet();
@@ -96,6 +102,29 @@ public class PhraseResultPanel extends VerticalLayout {
 
 
 		});
+		btSelectAll.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				selectAllForKwic(true);
+			}
+		});
+		btDeselectAll.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				selectAllForKwic(false);
+			}
+		});
+	}
+	
+	private void selectAllForKwic(boolean selected) {
+		for (Object o : resultTable.getItemIds()) {
+			if (resultTable.getParent(o) == null) {
+				CheckBox cbVisibleInKwic = 
+					(CheckBox) resultTable.getItem(o).getItemProperty(
+						TreePropertyName.visibleInKwic).getValue();
+				cbVisibleInKwic.setValue(selected);
+			}
+		}
 	}
 
 	private GroupedQueryResult extractGroupedQueryResult(Object value) {
@@ -146,12 +175,26 @@ public class PhraseResultPanel extends VerticalLayout {
 		leftComponent.addComponent(resultTable);
 		leftComponent.setExpandRatio(resultTable, 1.0f);
 		
-		bDist = new Button();
-		bDist.setIcon(new ClassResource(
+		HorizontalLayout buttonPanel = new HorizontalLayout();
+		buttonPanel.setSpacing(true);
+		buttonPanel.setWidth("100%");
+		
+		btDist = new Button();
+		btDist.setIcon(new ClassResource(
 				"ui/analyzer/resources/chart.gif", 
 				getApplication()));
-		leftComponent.addComponent(bDist);
+		buttonPanel.addComponent(btDist);
 		
+		btSelectAll = new Button("Select all for Kwic");
+		
+		buttonPanel.addComponent(btSelectAll);
+		buttonPanel.setComponentAlignment(btSelectAll, Alignment.MIDDLE_RIGHT);
+		buttonPanel.setExpandRatio(btSelectAll, 1f);
+		btDeselectAll = new Button("Deselect all for Kwic");
+		buttonPanel.addComponent(btDeselectAll);
+		buttonPanel.setComponentAlignment(btDeselectAll, Alignment.MIDDLE_RIGHT);
+		
+		leftComponent.addComponent(buttonPanel);
 		splitPanel.addComponent(leftComponent);
 		
 		this.kwicPanel = new KwicPanel(repository, relevantUserMarkupCollectionProvider);
@@ -217,13 +260,13 @@ public class PhraseResultPanel extends VerticalLayout {
 	}
 
 	private CheckBox createKwicCheckbox(final GroupedQueryResult phraseResult) {
-		CheckBox cbShowInKwicView = new CheckBox();
+		final CheckBox cbShowInKwicView = new CheckBox();
 		cbShowInKwicView.setImmediate(true);
-		cbShowInKwicView.addListener(new ClickListener() {
+		cbShowInKwicView.addListener(new ValueChangeListener() {
 			
-			public void buttonClick(ClickEvent event) {
+			public void valueChange(ValueChangeEvent event) {
 				boolean selected = 
-						event.getButton().booleanValue();
+						(Boolean)event.getProperty().getValue();
 
 				fireShowInKwicViewSelected(phraseResult, selected);
 			}

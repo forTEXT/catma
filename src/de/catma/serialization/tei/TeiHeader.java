@@ -36,7 +36,7 @@ import de.catma.util.ContentInfoSet;
  * @author Marco Petris
  *
  */
-class TeiHeader {
+public class TeiHeader {
 		
 	private TeiElement teiHeaderElement;
 	private TeiElement title;

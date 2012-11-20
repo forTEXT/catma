@@ -1,6 +1,7 @@
 package de.catma.serialization.tei;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,7 +16,7 @@ import de.catma.document.source.TechInfoSet;
 import de.catma.util.ContentInfoSet;
 import de.catma.util.IDGenerator;
 
-class TeiDocument {
+public class TeiDocument {
 	
 	private Document document;
 	private XPathContext xpathcontext; 
@@ -205,7 +206,7 @@ class TeiDocument {
 				+"/"+TeiElement.TEINAMESPACEPREFIX+":"+TeiElementName.fsdDecl );
 	}
 	
-	TeiHeader getTeiHeader() {
+	public TeiHeader getTeiHeader() {
 		return teiHeader;
 	}
 	
@@ -213,14 +214,18 @@ class TeiDocument {
 	 * Prints the underlying document to {@link System#out}.
 	 */
 	public void printXmlDocument() {
-		Serializer serializer = new Serializer( System.out );
-		serializer.setIndent( 4 );
-
 		try {
-			serializer.write( document );
+			printXmlDocument(System.out);
 		} catch( IOException e ) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void printXmlDocument(OutputStream os) throws IOException {
+		Serializer serializer = new Serializer( os );
+		serializer.setIndent( 4 );
+
+		serializer.write( document );
 	}
 
 	public String getName() {

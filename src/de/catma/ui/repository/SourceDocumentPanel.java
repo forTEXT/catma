@@ -3,6 +3,7 @@ package de.catma.ui.repository;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -23,6 +24,8 @@ import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
+import com.vaadin.terminal.DownloadStream;
+import com.vaadin.terminal.FileResource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -53,6 +56,7 @@ import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionRefer
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
+import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
@@ -252,14 +256,15 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		miMoreDocumentActions.addItem("Import User Markup Collection", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
-				handleUserMarkupCollectionImport();
+				handleUserMarkupCollectionImportRequest();
 			}
 		});
 		
 		miMoreDocumentActions.addItem("Export User Markup Collection", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
 				
+				Object value = documentsTree.getValue();
+				handleUserMarkupCollectionExportRequest(value);
 			}
 		});
 		
@@ -355,6 +360,61 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				}
 			}
 		});
+	}
+
+	private void handleUserMarkupCollectionExportRequest(Object value) {
+		if ((value != null) && (value instanceof UserMarkupCollectionReference)) {
+			final UserMarkupCollectionReference umcRef = 
+					(UserMarkupCollectionReference)value;
+			final SourceDocument sd = 
+					(SourceDocument)documentsTree.getParent(
+							documentsTree.getParent(value));
+			
+			TeiUserMarkupCollectionSerializationHandler handler =
+					new TeiUserMarkupCollectionSerializationHandler(
+							repository.getTagManager());
+			ByteArrayOutputStream teiDocOut = new ByteArrayOutputStream();
+			try {
+				handler.serialize(
+					repository.getUserMarkupCollection(umcRef), sd, teiDocOut);
+				
+				final ByteArrayInputStream teiDownloadStream = 
+						new ByteArrayInputStream(teiDocOut.toByteArray());
+
+				getWindow().open(new FileResource(null, getApplication()) {
+					public com.vaadin.terminal.DownloadStream getStream() {
+						DownloadStream ds = 
+							new DownloadStream(
+								teiDownloadStream, 
+								getMIMEType(), getFilename());
+						ds.setParameter(
+							"Content-Disposition", 
+							"attachment; filename="
+			                    + getFilename());
+			            ds.setCacheTime(0);
+			            return ds;
+					};
+					public String getMIMEType() {
+						return "application/xml";
+					};
+					
+					public String getFilename() {
+						return umcRef.toString() + ".xml";
+					};
+				},
+				"_blank");
+			} catch (IOException e) {
+				((CatmaApplication)getApplication()).showAndLogError(
+					"Error exporting User Markup Collection!", e);
+			}
+			
+		}
+		else {
+			getWindow().showNotification(
+					"Information", "Please select a User Markup Collection first!",
+					Notification.TYPE_TRAY_NOTIFICATION);
+		}
+		
 	}
 
 	private void handleOpenDocumentRequest(final Object value) {
@@ -668,7 +728,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		documentsTree.removeItem(userMarkupCollectionReference);
 	}
 
-	private void handleUserMarkupCollectionImport() {
+	private void handleUserMarkupCollectionImportRequest() {
 		Object value = documentsTree.getValue();
 		if ((value == null) || !(value instanceof SourceDocument)) {
 			 getWindow().showNotification(

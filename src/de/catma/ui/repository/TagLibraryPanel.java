@@ -3,9 +3,12 @@ package de.catma.ui.repository;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+
+import nu.xom.ParsingException;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
@@ -16,6 +19,8 @@ import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
+import com.vaadin.terminal.DownloadStream;
+import com.vaadin.terminal.FileResource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -26,15 +31,18 @@ import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
-import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
+import de.catma.serialization.tei.TeiDocument;
+import de.catma.serialization.tei.TeiDocumentFactory;
+import de.catma.serialization.tei.TeiTagLibrarySerializationHandler;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
@@ -290,8 +298,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		miMoreTagLibraryActions.addItem("Export Tag Library", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
+				handleTagLibraryExportRequest(tagLibrariesTree.getValue());
 			}
 		});
 		
@@ -352,6 +359,71 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 				}
 			}
 		});
+	}
+	
+	private void handleTagLibraryExportRequest(Object value) {
+		if (value != null) {
+			TagLibraryReference tagLibraryReference = 
+					(TagLibraryReference)value;
+			try {
+				final TagLibrary tagLibrary = 
+						repository.getTagLibrary(tagLibraryReference);
+				
+				TeiDocumentFactory factory = new TeiDocumentFactory();
+				TeiDocument teiDocument = 
+						factory.createEmptyDocument(tagLibrary.getId());
+				
+				teiDocument.getTeiHeader().setValues(
+					tagLibrary.getContentInfoSet());
+				
+				new TeiTagLibrarySerializationHandler(
+						teiDocument, tagManager).serialize(tagLibrary);
+				
+				ByteArrayOutputStream teiDocOut = new ByteArrayOutputStream();
+				teiDocument.printXmlDocument(teiDocOut);
+				
+				final ByteArrayInputStream teiDownloadStream = 
+						new ByteArrayInputStream(teiDocOut.toByteArray());
+
+				getWindow().open(new FileResource(null, getApplication()) {
+					public com.vaadin.terminal.DownloadStream getStream() {
+						DownloadStream ds = 
+							new DownloadStream(
+								teiDownloadStream, 
+								getMIMEType(), getFilename());
+						ds.setParameter(
+							"Content-Disposition", 
+							"attachment; filename="
+			                    + getFilename());
+			            ds.setCacheTime(0);
+			            return ds;
+					};
+					public String getMIMEType() {
+						return "application/xml";
+					};
+					
+					public String getFilename() {
+						return tagLibrary.toString() + ".xml";
+					};
+				},
+				"_blank");
+
+				
+				
+			} catch (IOException e) {
+				((CatmaApplication)getApplication()).showAndLogError(
+					"Error opening the Tag Library!", e);
+			} catch (ParsingException parsingException) {
+				((CatmaApplication)getApplication()).showAndLogError(
+						"Error exporting the Tag Library!", parsingException);
+			}
+		}	
+		else {
+			getWindow().showNotification(
+					"Information", "Please select a Tag Library first!",
+					Notification.TYPE_TRAY_NOTIFICATION);
+		}
+
 	}
 
 	private void handleOpenTagLibraryRequest(Object value) {
