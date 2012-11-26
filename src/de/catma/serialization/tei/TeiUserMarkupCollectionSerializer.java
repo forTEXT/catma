@@ -64,7 +64,7 @@ public class TeiUserMarkupCollectionSerializer {
 						targetURI,
 						new Range(0, range.getStartPoint()), abElement);
 			}
-			else if (lastRange.getEndPoint() != range.getStartPoint()) {
+			else if ((lastRange != null) && (lastRange.getEndPoint() != range.getStartPoint())) {
 				writePointer(
 						targetURI,
 						new Range(lastRange.getEndPoint(), range.getStartPoint()),

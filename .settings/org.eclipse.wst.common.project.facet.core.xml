@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <faceted-project>
-  <runtime name="Jetty v7.4"/>
+  <runtime name="Jetty v7.4.5"/>
   <fixed facet="wst.jsdt.web"/>
   <installed facet="java" version="1.5"/>
   <installed facet="jst.web" version="2.4"/>

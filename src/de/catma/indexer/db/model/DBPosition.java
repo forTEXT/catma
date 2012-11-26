@@ -21,7 +21,7 @@ import de.catma.document.Range;
 @Table(name = "position", catalog = "CatmaIndex")
 public class DBPosition implements java.io.Serializable {
 
-	public static final String TABLENAME = "position";
+	public static final String TABLENAME = "CatmaIndex.position";
 	private Integer positionId;
 	private DBTerm term;
 	private int characterStart;

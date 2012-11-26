@@ -17,7 +17,7 @@ import javax.persistence.Table;
 @Table(name = "property", catalog = "CatmaIndex")
 public class DBIndexProperty implements java.io.Serializable {
 
-	public static final String TABLENAME = "property";
+	public static final String TABLENAME = "CatmaIndex.property";
 	private Integer propertyId;
 	private byte[] tagInstanceId;
 	private byte[] propertyDefinitionId;

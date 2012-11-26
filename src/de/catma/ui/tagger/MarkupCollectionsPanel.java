@@ -6,6 +6,7 @@ import java.beans.PropertyChangeSupport;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -16,6 +17,7 @@ import com.vaadin.Application;
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.event.Action;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.Resource;
 import com.vaadin.ui.AbstractComponent;
@@ -26,6 +28,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window.Notification;
 
 import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
@@ -34,6 +37,8 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.indexer.IndexedRepository;
+import de.catma.indexer.Indexer;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -273,8 +278,81 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		repository.addPropertyChangeListener(
 				RepositoryChangeEvent.userMarkupCollectionTagLibraryChanged, 
 				userMarkupCollectionTagLibraryChangedListener);
+		
+		this.markupCollectionsTree.addActionHandler(new Action.Handler() {
+			private Action reindex = new Action("Reindex");
+			
+			public void handleAction(Action action, Object sender, Object target) {
+				
+				if (target instanceof UserMarkupCollection) {
+					reindex((UserMarkupCollection)target);
+				}
+				else if (target instanceof TagsetDefinition) {
+					reindex((TagsetDefinition)target);
+				}
+			}
+			
+			public Action[] getActions(Object target, Object sender) {
+				if ((target != null) 
+						&& ((target instanceof UserMarkupCollection)
+								|| target instanceof TagsetDefinition)) { 
+					return new Action[] {reindex};
+				}
+				else {
+					return new Action[] {};
+				}
+			}
+		});
 	}
 	
+	private void reindex(TagsetDefinition tagsetDef) {
+		try {
+			UserMarkupCollection umc = 
+					(UserMarkupCollection) this.markupCollectionsTree.getParent(
+							tagsetDef);
+			Indexer indexer = ((IndexedRepository)repository).getIndexer();
+			indexer.reindex(
+					tagsetDef, 
+					Collections.<byte[]>emptySet(), 
+					umc, 
+					repository.getSourceDocument(
+						new UserMarkupCollectionReference(
+							umc.getId(), umc.getContentInfoSet())).getID());
+			getWindow().showNotification(
+				"Information", "Reindexing finished!", 
+				Notification.TYPE_TRAY_NOTIFICATION);
+
+		}
+		catch (IOException ioe) {
+			((CatmaApplication)getApplication()).showAndLogError(
+					"error reindexing User Markup Collection!", ioe);
+		}
+		
+	}
+
+	private void reindex(UserMarkupCollection umc) {
+		try {
+			Indexer indexer = ((IndexedRepository)repository).getIndexer();
+			
+			for (TagsetDefinition tagsetDef : umc.getTagLibrary()) {
+				indexer.reindex(
+					tagsetDef, 
+					Collections.<byte[]>emptySet(), 
+					umc, 
+					repository.getSourceDocument(
+						new UserMarkupCollectionReference(
+							umc.getId(), umc.getContentInfoSet())).getID());
+			}
+			getWindow().showNotification(
+					"Information", "Reindexing finished!", 
+					Notification.TYPE_TRAY_NOTIFICATION);
+		}
+		catch (IOException ioe) {
+			((CatmaApplication)getApplication()).showAndLogError(
+					"error reindexing User Markup Collection!", ioe);
+		}
+	}
+
 	private void reloadTagsetDefinition(TagsetDefinition foreignTagsetDefinition,
 			UserMarkupCollection umc) {
 

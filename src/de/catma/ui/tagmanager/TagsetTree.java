@@ -17,6 +17,7 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -494,6 +495,9 @@ public class TagsetTree extends HorizontalLayout {
 				tagTree.getValue();
 		
 		if (selectedParent == null) {
+			getWindow().showNotification(
+				"Info", "Please select a Tagset or parent Tag first!", 
+				Notification.TYPE_TRAY_NOTIFICATION);
 			return;
 		}
 		

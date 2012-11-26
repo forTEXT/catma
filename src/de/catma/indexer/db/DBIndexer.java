@@ -143,13 +143,13 @@ public class DBIndexer implements Indexer {
 	}
 	
 	public void reindex(TagsetDefinition tagsetDefinition,
-			Set<byte[]> deletedTagsetDefinitionUuids,
+			Set<byte[]> deletedTagDefinitionUuids,
 			UserMarkupCollection userMarkupCollection, String sourceDocumentID)
 			throws IOException {
 		Session session = sessionFactory.openSession();
 		try {
 			tagReferenceIndexer.reindex(
-					session, tagsetDefinition, deletedTagsetDefinitionUuids, 
+					session, tagsetDefinition, deletedTagDefinitionUuids, 
 					userMarkupCollection, sourceDocumentID);
 			CloseSafe.close(new CloseableSession(session));
 		}

@@ -17,7 +17,7 @@ import javax.persistence.Table;
 @Table(name = "term", catalog = "CatmaIndex")
 public class DBTerm implements java.io.Serializable {
 
-	public static String TABLENAME = "term";
+	public static String TABLENAME = "CatmaIndex.term";
 	
 	private Integer termId;
 	private String documentId;

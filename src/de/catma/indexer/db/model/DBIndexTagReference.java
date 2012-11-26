@@ -20,7 +20,7 @@ import de.catma.util.IDGenerator;
 @Table(name = "tagreference", catalog = "CatmaIndex")
 public class DBIndexTagReference implements java.io.Serializable {
 
-	public static final String TABLENAME = "tagreference";
+	public static final String TABLENAME = "CatmaIndex.tagreference";
 	private Integer tagReferenceId;
 	private String documentId;
 	private String userMarkupCollectionId;

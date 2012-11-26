@@ -145,11 +145,14 @@ public class TagInstanceTree extends HorizontalLayout {
 	}
 
 	private Property getProperty(Set<?> selection) {
-		Object selVal = selection.iterator().next();
-		while ((selVal != null) && !(selVal instanceof Property)) {
-			selVal = tagInstanceTree.getParent(selVal);
+		if (selection.iterator().hasNext()) {
+			Object selVal = selection.iterator().next();
+			while ((selVal != null) && !(selVal instanceof Property)) {
+				selVal = tagInstanceTree.getParent(selVal);
+			}
+			return (Property)selVal;
 		}
-		return (Property)selVal;
+		return null;
 	}
 
 	private void removeTagInstanceFromTree(TagInstance ti) {

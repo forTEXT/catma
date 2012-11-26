@@ -31,9 +31,9 @@ public interface Indexer {
 	public void removeTagReferences(List<TagReference> tagReferences) throws Exception;
 	public void reindex(
 			TagsetDefinition tagsetDefinition, 
-			Set<byte[]> deletedTagsetDefinitionUuids,
+			Set<byte[]> deletedTagDefinitionUuids,
 			UserMarkupCollection userMarkupCollection,
-			String sourceDocumentID) throws Exception;
+			String sourceDocumentID) throws IOException;
 
 	
 	public QueryResult searchPhrase(

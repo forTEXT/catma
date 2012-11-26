@@ -31,8 +31,8 @@ public class TeiDocumentFactory {
 			throws ValidityException, ParsingException, IOException {
 		return createDocumentFromStream(
 				id,
-				Thread.currentThread().getContextClassLoader().getResourceAsStream(
-						"de/catma/serialization/tei/MinimalStandoffmarkup.xml"),
+				this.getClass().getResourceAsStream(
+						"/de/catma/serialization/tei/MinimalStandoffMarkup.xml"),
 				false);
 	}
 }
