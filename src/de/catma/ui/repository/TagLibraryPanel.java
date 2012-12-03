@@ -16,6 +16,7 @@ import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItem;
+import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
@@ -54,6 +55,8 @@ import de.catma.util.ContentInfoSet;
 
 public class TagLibraryPanel extends HorizontalSplitPanel {
 
+	private final static String SORTCAP_PROP = "SORTCAP";
+
 	private final ContentInfoSet emptyContentInfoSet = new ContentInfoSet();
 	
 	private Tree tagLibrariesTree;
@@ -72,6 +75,8 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 
 	private TagManager tagManager;
 
+	private HierarchicalContainer tagLibraryContainer;
+
 	public TagLibraryPanel(TagManager tagManager, Repository repository) {
 		this.repository = repository;
 		this.tagManager = tagManager;
@@ -88,6 +93,9 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 					TagLibraryReference tagLibraryRef = 
 							(TagLibraryReference)evt.getNewValue();
 					addTagLibraryReferenceToTree(tagLibraryRef);
+					tagLibraryContainer.sort(
+						new Object[] {SORTCAP_PROP}, new boolean[] { true });
+
 				}
 				else if (evt.getNewValue() == null) { //remove
 					TagLibraryReference tagLibraryRef = 
@@ -148,17 +156,24 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		Panel tagLibraryPanel = new Panel();
 		tagLibraryPanel.getContent().setSizeUndefined();
 		tagLibraryPanel.setSizeFull();
-		
+
+		tagLibraryContainer = new HierarchicalContainer();
+
 		tagLibrariesTree = new Tree();
+		tagLibrariesTree.setContainerDataSource(tagLibraryContainer);
+		
 		tagLibrariesTree.setCaption("Tag Libraries");
 		tagLibrariesTree.addStyleName("bold-label-caption");
 		tagLibrariesTree.setImmediate(true);
 		tagLibrariesTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_ID);
 		
+		tagLibraryContainer.addContainerProperty(SORTCAP_PROP, String.class, null);
+		
 		for (TagLibraryReference tlr : repository.getTagLibraryReferences()) {
 			addTagLibraryReferenceToTree(tlr);
 		}
-		
+		tagLibraryContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
+
 		tagLibraryPanel.addComponent(tagLibrariesTree);
 		
 		return tagLibraryPanel;
@@ -270,11 +285,19 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 						new BeanItem<ContentInfoSet>(
 							new ContentInfoSet(
 								((TagLibraryReference)value).getContentInfoSet())));
+					contentInfoForm.setVisibleItemProperties(new String[] {
+							"title", "author", "description", "publisher"
+					});
+
 				}
 				else {
 					contentInfoForm.setEnabled(false);
 					contentInfoForm.setItemDataSource(
 							new BeanItem<ContentInfoSet>(emptyContentInfoSet));
+					contentInfoForm.setVisibleItemProperties(new String[] {
+							"title", "author", "description", "publisher"
+					});
+
 				}
 				contentInfoForm.setReadOnly(true);
 			}
@@ -479,6 +502,8 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 
 	private void addTagLibraryReferenceToTree(TagLibraryReference tlr) {
 		tagLibrariesTree.addItem(tlr);
+		tagLibrariesTree.getItem(tlr).getItemProperty(SORTCAP_PROP).setValue(
+				(tlr.toString()==null)?"":tlr.toString());
 		tagLibrariesTree.setChildrenAllowed(tlr, false);
 	}
 	

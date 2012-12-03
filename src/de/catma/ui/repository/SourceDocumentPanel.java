@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
@@ -39,9 +40,9 @@ import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.Tree.TreeDragMode;
-import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.CatmaApplication;
@@ -56,7 +57,9 @@ import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionRefer
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
+import de.catma.indexer.Indexer;
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
+import de.catma.tag.TagsetDefinition;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
@@ -70,8 +73,8 @@ import de.catma.util.Pair;
 public class SourceDocumentPanel extends HorizontalSplitPanel
 	implements ValueChangeListener {
 	
+	private final static String SORTCAP_PROP = "SORTCAP";
 	private final ContentInfoSet emptyContentInfoSet = new ContentInfoSet();
-	
 	private HierarchicalContainer documentsContainer;
 	private Tree documentsTree;
 	private Repository repository;
@@ -105,6 +108,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					SourceDocument sd = repository.getSourceDocument(
 							(String)evt.getNewValue());
 					addSourceDocumentToTree(sd);
+					documentsContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
 				}
 				else if (evt.getNewValue() == null) { //remove
 					removeSourceDocumentFromTree(
@@ -253,6 +257,15 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 
 		});
 		
+		miMoreDocumentActions.addItem("Reindex User Markup Collection", new Command() {
+			
+			public void menuSelected(MenuItem selectedItem) {
+				Object value = documentsTree.getValue();
+
+				handleUserMarkupCollectionReindexRequest(value);
+			}
+		});
+		
 		miMoreDocumentActions.addItem("Import User Markup Collection", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
@@ -360,6 +373,34 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				}
 			}
 		});
+	}
+
+	private void handleUserMarkupCollectionReindexRequest(Object value) {
+		if ((value != null) && (value instanceof UserMarkupCollectionReference)) {
+			final UserMarkupCollectionReference umcRef = 
+					(UserMarkupCollectionReference)value;
+			try {
+				UserMarkupCollection umc = repository.getUserMarkupCollection(umcRef);
+				Indexer indexer = ((IndexedRepository)repository).getIndexer();
+				
+				for (TagsetDefinition tagsetDef : umc.getTagLibrary()) {
+					indexer.reindex(
+						tagsetDef, 
+						Collections.<byte[]>emptySet(), 
+						umc, 
+						repository.getSourceDocument(
+							new UserMarkupCollectionReference(
+								umc.getId(), umc.getContentInfoSet())).getID());
+				}
+				getWindow().showNotification(
+						"Information", "Reindexing finished!", 
+						Notification.TYPE_TRAY_NOTIFICATION);
+			}
+			catch (IOException ioe) {
+				((CatmaApplication)getApplication()).showAndLogError(
+						"error reindexing User Markup Collection!", ioe);
+			}
+		}
 	}
 
 	private void handleUserMarkupCollectionExportRequest(Object value) {
@@ -602,9 +643,13 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		documentsPanel.getContent().setSizeUndefined();
 		documentsPanel.setSizeFull();
 		
+		documentsContainer.addContainerProperty(SORTCAP_PROP, String.class, null);
+		
 		for (SourceDocument sd : repository.getSourceDocuments()) {
 			addSourceDocumentToTree(sd);
 		}		
+
+		documentsContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
 		
 		return documentsPanel;
 	}
@@ -615,6 +660,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		documentsContainer.removeAllContainerFilters();
 		
 		documentsTree.addItem(sd);
+		documentsTree.getItem(sd).getItemProperty(SORTCAP_PROP).setValue(sd.toString().toLowerCase());
 
 		documentsTree.setChildrenAllowed(sd, true);
 		
@@ -879,7 +925,10 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					new BeanItem<ContentInfoSet>(
 						new ContentInfoSet(((SourceDocument)value).getSourceContentHandler()
 							.getSourceDocumentInfo().getContentInfoSet())));
-				
+				contentInfoForm.setVisibleItemProperties(new String[] {
+						"title", "author", "description", "publisher"
+				});
+
 				btOpenDocument.setCaption("Open Document");
 				btOpenDocument.setEnabled(true);
 			}
@@ -894,6 +943,9 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 							new ContentInfoSet(
 								((UserMarkupCollectionReference)value)
 									.getContentInfoSet())));
+					contentInfoForm.setVisibleItemProperties(new String[] {
+							"title", "author", "description", "publisher"
+					});
 
 				}
 				else {
@@ -904,6 +956,10 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				contentInfoForm.setEnabled(false);
 				contentInfoForm.setItemDataSource(
 						new BeanItem<ContentInfoSet>(emptyContentInfoSet));
+				contentInfoForm.setVisibleItemProperties(new String[] {
+						"title", "author", "description", "publisher"
+				});
+
 				btOpenDocument.setEnabled(false);
 			}
 		}

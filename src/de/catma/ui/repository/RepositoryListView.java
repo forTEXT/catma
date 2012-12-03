@@ -54,10 +54,14 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 						try {
 							Map<String,String> userIdentification = 
 									new HashMap<String, String>(1);
+//							userIdentification.put(
+//								"user.ident", System.getProperty("user.name"));
+//							userIdentification.put(
+//								"user.name", System.getProperty("user.name"));
 							userIdentification.put(
-								"user.ident", System.getProperty("user.name"));
-							userIdentification.put(
-								"user.name", System.getProperty("user.name"));
+									"user.ident", "evelyn.gius@googlemail.com");
+								userIdentification.put(
+									"user.name", System.getProperty("user.name"));
 							
 							Repository repository = 
 									repositoryManager.openRepository(

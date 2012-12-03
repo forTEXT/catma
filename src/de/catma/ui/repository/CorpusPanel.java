@@ -10,6 +10,7 @@ import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.AbstractProperty;
+import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.DataBoundTransferable;
 import com.vaadin.event.Transferable;
@@ -76,6 +77,8 @@ public class CorpusPanel extends VerticalLayout {
 			return corpusProperty;
 		}
 	}
+
+	private final static String SORTCAP_PROP = "SORTCAP";
 	
 	private String allDocuments = "All documents";
 	private Button btCreateCorpus;
@@ -86,6 +89,8 @@ public class CorpusPanel extends VerticalLayout {
 	private Repository repository;
 	private PropertyChangeListener corpusChangedListener;
 	private MenuItem miRenameCorpus;
+
+	private HierarchicalContainer corporaContainer;
 	
 	public CorpusPanel(
 			Repository repository, ValueChangeListener valueChangeListener) {
@@ -105,7 +110,8 @@ public class CorpusPanel extends VerticalLayout {
 				}
 				else if (evt.getOldValue() == null) { //add
 					addCorpusToTree((Corpus)evt.getNewValue());
-					
+					corporaContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
+
 					getWindow().showNotification("Information",
 							"Start adding Source Documents" +
 							" and Markup Collections by dragging them " +
@@ -135,6 +141,9 @@ public class CorpusPanel extends VerticalLayout {
 
 	private void addCorpusToTree(Corpus corpus) {
 		corporaTree.addItem(corpus);
+		corporaTree.getItem(corpus).getItemProperty(SORTCAP_PROP).setValue(
+				(corpus.toString()==null)?"":corpus.toString().toLowerCase());
+
 		corporaTree.setChildrenAllowed(corpus, false);
 	}
 
@@ -364,16 +373,23 @@ public class CorpusPanel extends VerticalLayout {
 		corporaPanel.getContent().setSizeUndefined();
 		corporaPanel.setSizeFull();
 		
+		corporaContainer = new HierarchicalContainer();
 		corporaTree = new Tree();
+		corporaTree.setContainerDataSource(corporaContainer);
+
 		corporaTree.addStyleName("bold-label-caption");
 		corporaTree.setCaption("Corpora");
 		corporaTree.addItem(allDocuments);
 		corporaTree.setChildrenAllowed(allDocuments, false);
 		corporaTree.setImmediate(true);
+
+		corporaContainer.addContainerProperty(SORTCAP_PROP, String.class, null);
 		
 		for (Corpus c : repository.getCorpora()) {
 			addCorpusToTree(c);
 		}
+		corporaContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
+
 		corporaTree.setValue(allDocuments);
 
 		corporaPanel.addComponent(corporaTree);

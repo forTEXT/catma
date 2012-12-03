@@ -91,10 +91,11 @@ public class TagReferenceIndexer {
 			tranStartedLocally = true;
 		}
 		SQLQuery sqlQuery = session.createSQLQuery(
-				"DELETE FROM " + DBIndexProperty.TABLENAME 
-				+ " WHERE tagInstanceID in ( SELECT r.tagInstanceID from "
-				+ DBIndexTagReference.TABLENAME
-				+ " WHERE r.userMarkupCollectionID = '" + userMarkupCollectionID + "')" 
+				"DELETE p FROM " + DBIndexProperty.TABLENAME + " p "
+				+ " JOIN "
+				+ DBIndexTagReference.TABLENAME + " r "
+				+ " ON p.tagInstanceID = r.tagInstanceID and " 
+				+ " r.userMarkupCollectionID =  '" + userMarkupCollectionID + "'" 
 				);
 		sqlQuery.executeUpdate();
 		
@@ -157,9 +158,9 @@ public class TagReferenceIndexer {
 		
 		SQLQuery delPropQuery = session.createSQLQuery("" +
 				"DELETE p FROM " + DBIndexProperty.TABLENAME + " p " 
-				+ " join "
+				+ " JOIN "
 				+ DBIndexTagReference.TABLENAME + " r "
-				+ " on p.tagInstanceID = r.tagInstanceID and " 
+				+ " ON p.tagInstanceID = r.tagInstanceID and " 
 				+ " r.tagDefinitionID = :curTagDefinitionId ");
 		
 		Query  delTrQuery = session.createQuery(
@@ -170,7 +171,7 @@ public class TagReferenceIndexer {
 		
 		for (TagDefinition td : tagsetDefinition) {
 			logger.info("reindexing: deleting refs for " + td);
-			delTrQuery.setString("curTagDefinitionId", td.getUuid());
+			delTrQuery.setBinary("curTagDefinitionId", idGenerator.catmaIDToUUIDBytes(td.getUuid()));
 			delTrQuery.executeUpdate();
 			//TODO: handle deleted properties
 		}
@@ -179,9 +180,9 @@ public class TagReferenceIndexer {
 			logger.info(
 				"reindexing: deleting refs for deleted TagDef " 
 						+ idGenerator.uuidBytesToCatmaID(uuid));
-			delTrQuery.setString("curTagDefinitionId", idGenerator.uuidBytesToCatmaID(uuid));
+			delTrQuery.setBinary("curTagDefinitionId", uuid);
 			delTrQuery.executeUpdate();
-			delPropQuery.setString("curTagDefinitionId", idGenerator.uuidBytesToCatmaID(uuid));
+			delPropQuery.setBinary("curTagDefinitionId", uuid);
 			delPropQuery.executeUpdate();
 		}
 		
