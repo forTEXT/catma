@@ -10,6 +10,8 @@ import java.util.Set;
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.vaadin.data.Property;
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.ui.AbstractComponent;
@@ -579,19 +581,17 @@ public class MarkupResultPanel extends VerticalLayout {
 
 	private CheckBox createCheckbox(
 			final TreeEntrySelectionHandler treeEntrySelectionHandler) {
-		CheckBox cbShowInKwicView = new CheckBox();
+		final CheckBox cbShowInKwicView = new CheckBox();
 		cbShowInKwicView.setImmediate(true);
-		cbShowInKwicView.addListener(new ClickListener() {
+		cbShowInKwicView.addListener(new ValueChangeListener() {
 			
-			public void buttonClick(ClickEvent event) {
+			public void valueChange(ValueChangeEvent event) {
 				boolean selected = 
-						event.getButton().booleanValue();
+						cbShowInKwicView.booleanValue();
 
 				fireShowInKwicViewSelected(
 					treeEntrySelectionHandler, selected);
 			}
-
-
 		});
 		return cbShowInKwicView;
 	}

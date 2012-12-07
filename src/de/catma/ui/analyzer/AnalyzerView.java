@@ -139,7 +139,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 					UserMarkupCollectionReference userMarkupCollectionReference =
 							(UserMarkupCollectionReference) evt.getOldValue();
 					if (relevantUserMarkupCollIDs.contains(
-							userMarkupCollectionReference)) {
+							userMarkupCollectionReference.getId())) {
 						removeUserMarkupCollectionFromTree(
 								userMarkupCollectionReference);
 					}

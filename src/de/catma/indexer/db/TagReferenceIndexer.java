@@ -161,11 +161,13 @@ public class TagReferenceIndexer {
 				+ " JOIN "
 				+ DBIndexTagReference.TABLENAME + " r "
 				+ " ON p.tagInstanceID = r.tagInstanceID and " 
-				+ " r.tagDefinitionID = :curTagDefinitionId ");
+				+ " r.tagDefinitionID = :curTagDefinitionId and "
+				+ " r.userMarkupCollectionID = '" + userMarkupCollection.getId() + "'");
 		
 		Query  delTrQuery = session.createQuery(
 				"delete from " + DBIndexTagReference.class.getSimpleName() +
-				" where tagDefinitionId = :curTagDefinitionId");
+				" where tagDefinitionId = :curTagDefinitionId and "
+				+ " userMarkupCollectionId = '" + userMarkupCollection.getId() + "'");
 		
 		session.beginTransaction();		
 		

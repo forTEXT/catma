@@ -276,7 +276,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		tagLibrariesTree.addListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
-				System.out.println(event);
+				
 				Object value = event.getProperty().getValue();
 				btOpenTagLibrary.setEnabled(value!=null);
 				if (value != null) {

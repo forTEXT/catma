@@ -888,7 +888,6 @@ class DBTagLibraryHandler {
 			dbTagDefinition.getDbPropertyDefinitions().remove(toBeDeleted);
 			session.delete(toBeDeleted);
 		}
-		dbTagDefinition.getDbPropertyDefinitions().clear();
 		
 		for (PropertyDefinition pd : tagDefinition.getSystemPropertyDefinitions()) {
 			updatePropertyDefinition(session, pd, true, dbTagDefinition, tagDefinition);
@@ -1034,6 +1033,7 @@ class DBTagLibraryHandler {
 						dbPropertyDefinition.getDbPropertyDefPossibleValues().add(
 								new DBPropertyDefPossibleValue(value, dbPropertyDefinition));
 					}
+					dbPropertyDefinition.getDbTagDefinition().setVersion(td.getVersion().getDate());
 					session.beginTransaction();
 					session.save(dbPropertyDefinition);
 					session.getTransaction().commit();
@@ -1060,7 +1060,8 @@ class DBTagLibraryHandler {
 		});
 	}
 
-	void updatePropertyDefinition(final PropertyDefinition pd) {
+	void updatePropertyDefinition(
+			final PropertyDefinition pd, final TagDefinition td) {
 		dbRepository.getBackgroundServiceProvider().submit(
 				"Saving Property definition...",
 		new DefaultProgressCallable<DBPropertyDefinition>() {
@@ -1074,11 +1075,14 @@ class DBTagLibraryHandler {
 					Iterator<DBPropertyDefPossibleValue> iterator =
 							dbPropertyDefinition.getDbPropertyDefPossibleValues().iterator();
 					dbPropertyDefinition.setName(pd.getName());
+					dbPropertyDefinition.getDbTagDefinition().setVersion(
+							td.getVersion().getDate());
 					session.beginTransaction();
 					
 					while (iterator.hasNext()) {
 						DBPropertyDefPossibleValue val = iterator.next();
-						if (!pd.getPossibleValueList().getPropertyValueList().getValues().contains(val.getValue())) {
+						if (!pd.getPossibleValueList().getPropertyValueList().getValues().contains(
+								val.getValue())) {
 							iterator.remove();
 							session.delete(val);
 						}
@@ -1115,21 +1119,22 @@ class DBTagLibraryHandler {
 		});
 	}
 
-	public void removePropertyDefinition(final PropertyDefinition propertyDefinition) {
+	public void removePropertyDefinition(
+			final PropertyDefinition propertyDefinition, final TagDefinition tagDefinition) {
 		dbRepository.getBackgroundServiceProvider().submit(
 				"Removing Property definition",
 			new DefaultProgressCallable<Void>() {
 				public Void call() throws Exception {
 					Session session = dbRepository.getSessionFactory().openSession();
 					try {
-						session.beginTransaction();
-						
-					
 						DBPropertyDefinition dbPropertyDefinition = 
 							(DBPropertyDefinition)session.get(
 								DBPropertyDefinition.class, 
 								propertyDefinition.getId());
-						
+						dbPropertyDefinition.getDbTagDefinition().setVersion(
+								tagDefinition.getVersion().getDate());
+						session.beginTransaction();
+						session.update(dbPropertyDefinition.getDbTagDefinition());
 						session.delete(dbPropertyDefinition);
 						session.getTransaction().commit();
 						

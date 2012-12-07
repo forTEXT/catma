@@ -209,13 +209,17 @@ public class DBRepository implements IndexedRepository {
 							newPair.getFirst(), newPair.getSecond());
 				}
 				else if (newValue == null) { // delete
+					@SuppressWarnings("unchecked")
+					Pair<PropertyDefinition, TagDefinition> oldPair = 
+							(Pair<PropertyDefinition, TagDefinition>)oldValue;
 					dbTagLibraryHandler.removePropertyDefinition(
-							(PropertyDefinition) evt.getOldValue());
+							oldPair.getFirst(), oldPair.getSecond());
 					
 				}
 				else { // update
 					PropertyDefinition pd = (PropertyDefinition)evt.getNewValue();
-					dbTagLibraryHandler.updatePropertyDefinition(pd);
+					TagDefinition td = (TagDefinition)evt.getOldValue();
+					dbTagLibraryHandler.updatePropertyDefinition(pd, td);
 				}
 				
 			}
