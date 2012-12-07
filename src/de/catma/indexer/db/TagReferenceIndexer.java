@@ -182,10 +182,10 @@ public class TagReferenceIndexer {
 			logger.info(
 				"reindexing: deleting refs for deleted TagDef " 
 						+ idGenerator.uuidBytesToCatmaID(uuid));
-			delTrQuery.setBinary("curTagDefinitionId", uuid);
-			delTrQuery.executeUpdate();
 			delPropQuery.setBinary("curTagDefinitionId", uuid);
 			delPropQuery.executeUpdate();
+			delTrQuery.setBinary("curTagDefinitionId", uuid);
+			delTrQuery.executeUpdate();
 		}
 		
 		this.index(

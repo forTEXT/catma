@@ -7,13 +7,13 @@ BEGIN
   
   SELECT parentID, name 
   INTO currentParent, currentPath
-  FROM catmarepository.tagdefinition 
+  FROM CatmaRepository.tagdefinition 
   WHERE tagDefinitionID = curTagDefinitionID;
   
   WHILE currentParent is not null DO
     SELECT parentId, concat(name, '/', currentPath) 
     INTO currentParent, currentPath
-    FROM catmarepository.tagdefinition 
+    FROM CatmaRepository.tagdefinition 
     where tagDefinitionID = currentParent;
     
   END WHILE;
