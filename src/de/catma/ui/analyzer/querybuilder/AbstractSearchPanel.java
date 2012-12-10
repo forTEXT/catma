@@ -63,7 +63,8 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 						complexTypeSelectionPanel = 
 								new ComplexTypeSelectionPanel(queryTree);
 						searchTypeSelectionPanel = new SearchTypeSelectionPanel(
-								toggleButtonStateListener, queryTree, queryOptions, true);
+								toggleButtonStateListener, queryTree, queryOptions, 
+								true, null, null);
 					}
 					toggleButtonStateListener.getWizard().addStep(
 							complexTypeSelectionPanel);

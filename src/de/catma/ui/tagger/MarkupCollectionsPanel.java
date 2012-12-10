@@ -660,12 +660,19 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				new Object[] {userMarkupCollection, new Label(), createCheckbox(userMarkupCollection)},
 				userMarkupCollection);
 		markupCollectionsTree.setParent(userMarkupCollection, userMarkupItem);
+		markupCollectionsTree.setCollapsed(userMarkupItem, false);
+		markupCollectionsTree.setCollapsed(userMarkupCollection, false);
 		
 		TagLibrary tagLibrary = userMarkupCollection.getTagLibrary();
 		for (TagsetDefinition tagsetDefinition : tagLibrary) {
 			addTagsetDefinitionToTree(tagsetDefinition, userMarkupCollection);
 		}
 		
+		if (markupCollectionsTree.getChildren(userMarkupCollection).size() == 1) {
+			markupCollectionsTree.setCollapsed(
+				markupCollectionsTree.getChildren(
+						userMarkupCollection).iterator().next(), false);
+		}
 	}
 	
 	private void removeWithChildrenFromTree(Object itemId) {

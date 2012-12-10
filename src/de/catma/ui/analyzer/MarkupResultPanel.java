@@ -462,7 +462,7 @@ public class MarkupResultPanel extends VerticalLayout {
 				new HashMap<String, UserMarkupCollection>();
 		Set<String> tagDefinitions = new HashSet<String>();
 
-		if (queryResult instanceof TagQueryResult) {
+		if (!(queryResult instanceof GroupedQueryResultSet)) { // performace opt for Wordlists which are freqency based GroupedQueryResultSets 
 			for (QueryResultRow row : queryResult) {
 				if (row instanceof TagQueryResultRow) {
 					TagQueryResultRow tRow = (TagQueryResultRow)row;

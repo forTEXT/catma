@@ -20,4 +20,8 @@ public abstract class SpanFactory {
 	}
 	
 	public abstract Element createTaggedSpan(String innerHtml);
+	
+	public String getLastSpanID() {
+		return getInstanceID() + "_" + (instanceReferenceCounter-1);
+	}
 }

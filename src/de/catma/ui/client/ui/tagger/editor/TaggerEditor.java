@@ -477,8 +477,9 @@ public class TaggerEditor extends FocusWidget
 				addTagInstanceForRange(
 					taggedSpanFactory, rangeConverter.convertToNodeRange(textRange));
 			}
-			
+			VConsole.log("TAGINSTANCES size: " + tagInstances.size());
 		}
+		
 	}
 
 	public void setTaggerID(String taggerID) {
@@ -503,6 +504,8 @@ public class TaggerEditor extends FocusWidget
 		HighlightedSpanFactory highlightedSpanFactory = 
 				new HighlightedSpanFactory("#078E18");
 		addTagInstanceForRange(highlightedSpanFactory, nodeRange);
+		Document.get().getElementById(
+				highlightedSpanFactory.getLastSpanID()).scrollIntoView();
 	}
 	
 	

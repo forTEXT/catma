@@ -234,6 +234,9 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			UserMarkupCollection userMarkupCollection) {
 		markupCollectionsPanel.openUserMarkupCollection(
 				userMarkupCollection);
+		if (!userMarkupCollection.isEmpty()) {
+			tabSheet.setSelectedTab(markupCollectionsPanel);
+		}
 	}
 
 	public void close() {

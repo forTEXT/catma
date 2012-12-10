@@ -66,17 +66,18 @@ public class TagPanel extends AbstractSearchPanel {
 	private ComboBox tagMatchModeCombo;
 	private VerticalLayout contentPanel;
 	private boolean inRefinement;
+	private TagsetDefinitionDictionaryListener tagsetDefinitionDictionaryListener;
 	
 	public TagPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
-			QueryTree queryTree, QueryOptions queryOptions) {
+			QueryTree queryTree, QueryOptions queryOptions, 
+			TagsetDefinitionDictionaryListener tagsetDefinitionDictionaryListener, 
+			Map<String, TagsetDefinition> tagsetDefinitionsByUuid) {
 		super(toggleButtonStateListener, queryTree, queryOptions);
-		this.tagsetDefinitionsByUuid = new HashMap<String, TagsetDefinition>();
-		try {
-			initTagsets();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		this.tagsetDefinitionDictionaryListener = tagsetDefinitionDictionaryListener;
+		this.tagsetDefinitionsByUuid = tagsetDefinitionsByUuid;
+		if (this.tagsetDefinitionsByUuid == null) {
+			this.tagsetDefinitionsByUuid = new HashMap<String, TagsetDefinition>();
 		}
 	}
 
@@ -85,6 +86,14 @@ public class TagPanel extends AbstractSearchPanel {
 		super.attach();
 		if (!init) {
 			init = true;
+			if (this.tagsetDefinitionsByUuid.isEmpty()) {
+				try {
+					initTagsets();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 			initComponents();
 			initActions();
 		}
@@ -102,13 +111,15 @@ public class TagPanel extends AbstractSearchPanel {
 							TagLibrary tl = 
 									queryOptions.getRepository().getTagLibrary(tlr);
 							addTagLibrary(tl);
-							for (TagsetDefinition t : tagsetDefinitionsByUuid.values()) {
-								System.out.println(t);
-							}
-							tagsetTree.addTagsetDefinition(tagsetDefinitionsByUuid.values());
+							tagsetTree.addTagsetDefinition(
+									tagsetDefinitionsByUuid.values());
 							splitPanel.setVisible(true);
 							tagLibraryPanel.setVisible(false);
 							contentPanel.removeComponent(tagLibraryPanel);
+							if (tagsetDefinitionDictionaryListener != null) {
+								tagsetDefinitionDictionaryListener.tagsetDefinitionDictionarySelected(
+										tagsetDefinitionsByUuid);
+							}
 							
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -164,7 +175,7 @@ public class TagPanel extends AbstractSearchPanel {
 
 	private void initTagsets() throws IOException {
 		Repository repository = queryOptions.getRepository();
-		
+		//FIXME: load TagsetDefinitions directly by relevantUserMarkupCollIDs to avoid loading of UMCs
 		if (!queryOptions.getRelevantUserMarkupCollIDs().isEmpty()) {
 			for (String userMarkupCollId : 
 				queryOptions.getRelevantUserMarkupCollIDs()) {
@@ -182,6 +193,10 @@ public class TagPanel extends AbstractSearchPanel {
 				}
 			}
 		}
+		if (tagsetDefinitionDictionaryListener != null) {
+			tagsetDefinitionDictionaryListener.tagsetDefinitionDictionarySelected(
+					tagsetDefinitionsByUuid);
+		}
 	}
 
 	private void addUserMarkupCollection(Repository repository,
@@ -195,24 +210,26 @@ public class TagPanel extends AbstractSearchPanel {
 
 	private void addTagLibrary(TagLibrary tagLibrary) {
 		for (TagsetDefinition tagsetDefinition : tagLibrary) {
-			if (tagsetDefinitionsByUuid.containsKey(tagsetDefinition.getUuid())) {
-				TagsetDefinition existingTSDef = 
-						tagsetDefinitionsByUuid.get(tagsetDefinition.getUuid());
-				
-				if (tagsetDefinition.getVersion().isNewer(existingTSDef.getVersion())) {
-					tagsetDefinitionsByUuid.remove(existingTSDef.getUuid());
-					tagsetDefinitionsByUuid.put(
-							tagsetDefinition.getUuid(), tagsetDefinition);
-				}
-				
-			}
-			else {
+			addTagsetDefinition(tagsetDefinition);
+		}
+	}
+
+	private void addTagsetDefinition(TagsetDefinition tagsetDefinition) {
+		if (tagsetDefinitionsByUuid.containsKey(tagsetDefinition.getUuid())) {
+			TagsetDefinition existingTSDef = 
+					tagsetDefinitionsByUuid.get(tagsetDefinition.getUuid());
+			
+			if (tagsetDefinition.getVersion().isNewer(existingTSDef.getVersion())) {
+				tagsetDefinitionsByUuid.remove(existingTSDef.getUuid());
 				tagsetDefinitionsByUuid.put(
 						tagsetDefinition.getUuid(), tagsetDefinition);
 			}
+			
 		}
-		
-		
+		else {
+			tagsetDefinitionsByUuid.put(
+					tagsetDefinition.getUuid(), tagsetDefinition);
+		}
 	}
 
 	private void initComponents() {

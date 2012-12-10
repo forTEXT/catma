@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.antlr.runtime.RecognitionException;
 import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
@@ -51,7 +52,9 @@ import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.computation.DistributionComputation;
+import de.catma.tag.TagsetDefinition;
 import de.catma.ui.analyzer.querybuilder.QueryBuilderWizardFactory;
+import de.catma.ui.analyzer.querybuilder.TagsetDefinitionDictionaryListener;
 import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabComponent;
@@ -85,7 +88,8 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private PropertyChangeListener userMarkupDocumentChangedListener;
 	private CloseListener closeListener;
 	private PropertyChangeListener corpusChangedListener;
-	
+	private Map<String, TagsetDefinition> tagsetDefinitionsByUuid;
+	//FIXME: reset tagsetDefinitionsByUuid on document changes
 	public AnalyzerView(
 			Corpus corpus, IndexedRepository repository, 
 			CloseListener closeListener) {
@@ -157,7 +161,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getNewValue() == null) { //remove
-					Corpus corpus = (Corpus) evt.getNewValue();
+					Corpus corpus = (Corpus) evt.getOldValue();
 					if ((AnalyzerView.this.corpus != null) 
 							&& Equal.nonNull(AnalyzerView.this.corpus.getId(), corpus.getId())) {
 						
@@ -306,7 +310,16 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 						public void activeStepChanged(WizardStepActivationEvent event) {/*noop*/}
 					},
 					queryTree,
-					queryOptions);
+					queryOptions,
+					new TagsetDefinitionDictionaryListener() {
+						
+						public void tagsetDefinitionDictionarySelected(
+								Map<String, TagsetDefinition> tagsetDefinitionsByUuid) {
+							AnalyzerView.this.tagsetDefinitionsByUuid = 
+									tagsetDefinitionsByUuid;
+						}
+					},
+					tagsetDefinitionsByUuid);
 		
 		Window wizardWindow = 
 				factory.createWizardWindow("Query Builder", "90%", "85%");

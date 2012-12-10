@@ -2,6 +2,7 @@ package de.catma.ui.analyzer.querybuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -12,6 +13,7 @@ import com.vaadin.ui.VerticalLayout;
 
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
+import de.catma.tag.TagsetDefinition;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
 
@@ -27,18 +29,22 @@ public class SearchTypeSelectionPanel
 	public SearchTypeSelectionPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
 			QueryTree queryTree,
-			QueryOptions queryOptions) {
-		this(toggleButtonStateListener, queryTree, queryOptions, false);
+			QueryOptions queryOptions, 
+			TagsetDefinitionDictionaryListener tagsetDefinitionDictionaryListener, 
+			Map<String, TagsetDefinition> tagsetDefinitionsByUuid) {
+		this(toggleButtonStateListener, queryTree, queryOptions, false, 
+				tagsetDefinitionDictionaryListener, tagsetDefinitionsByUuid);
 	}
 	
 	public SearchTypeSelectionPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
 			QueryTree queryTree,
 			QueryOptions queryOptions,
-			boolean onBack) {
+			boolean onBack, TagsetDefinitionDictionaryListener tagsetDefinitionDictionaryListener, 
+			Map<String, TagsetDefinition> tagsetDefinitionsByUuid) {
 		this.toggleButtonStateListener = toggleButtonStateListener;
 		this.onBack = onBack;
-		initComponents(queryTree, queryOptions);
+		initComponents(queryTree, queryOptions, tagsetDefinitionDictionaryListener, tagsetDefinitionsByUuid);
 		initActions();
 	}
 
@@ -67,7 +73,8 @@ public class SearchTypeSelectionPanel
 	}
 
 	private void initComponents(
-			QueryTree queryTree, QueryOptions queryOptions) {
+			QueryTree queryTree, QueryOptions queryOptions, 
+			TagsetDefinitionDictionaryListener tagsetDefinitionDictionaryListener, Map<String, TagsetDefinition> tagsetDefinitionsByUuid) {
 		
 		setSpacing(true);
 		setWidth("100%");
@@ -84,7 +91,8 @@ public class SearchTypeSelectionPanel
 		
 		nextSteps.add(
 			new TagPanel(
-				toggleButtonStateListener, queryTree, queryOptions));
+				toggleButtonStateListener, queryTree, queryOptions, tagsetDefinitionDictionaryListener,
+				tagsetDefinitionsByUuid));
 		
 		nextSteps.add(
 			new CollocPanel(toggleButtonStateListener, queryTree, queryOptions));

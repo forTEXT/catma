@@ -375,10 +375,16 @@ public class TaggerView extends VerticalLayout
 	}
 
 	public void show(Range range) {
-		int pageNumber = pager.getStartPageNumberFor(range);
-		pagerComponent.setPage(pageNumber);
-		TextRange tr = pager.getCurrentPage().getRelativeRangeFor(range);
-		tagger.highlight(tr);
+		try {
+			linesPerPageSlider.setValue(100.0);
+			int pageNumber = pager.getStartPageNumberFor(range);
+			pagerComponent.setPage(pageNumber);
+			TextRange tr = pager.getCurrentPage().getRelativeRangeFor(range);
+			tagger.highlight(tr);
+		} catch (ValueOutOfBoundsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public void tagInstancesSelected(List<String> instanceIDs) {

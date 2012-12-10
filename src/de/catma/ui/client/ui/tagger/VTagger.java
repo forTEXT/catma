@@ -169,14 +169,16 @@ public class VTagger extends Composite implements Paintable {
 			taggerEditor.createAndAddTagIntance(tagDefinition);
 		}
 		
+		adjustTaggerEditorSizeAttribute();
+
 		if (uidl.hasAttribute(TaggerMessageAttribute.HIGHLIGHT.name())) {
 			TextRange textRange = 
 					textRangeJSONSerializer.fromJSON(uidl.getStringAttribute(
 							TaggerMessageAttribute.HIGHLIGHT.name()));
 			taggerEditor.highlight(textRange);
+			adjustTaggerEditorSizeAttribute();
 		}
 		
-		adjustTaggerEditorSizeAttribute();
 	}
 	
 	public void logToServer(String logMsg) {

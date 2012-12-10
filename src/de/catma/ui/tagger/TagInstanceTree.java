@@ -41,6 +41,7 @@ public class TagInstanceTree extends HorizontalLayout {
 		caption,
 		icon,
 		color,
+		path,
 		;
 	}
 	
@@ -196,21 +197,26 @@ public class TagInstanceTree extends HorizontalLayout {
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.icon, Resource.class, null);
 
+		tagInstanceTree.addContainerProperty(
+				TagInstanceTreePropertyName.path, String.class, null);
+
 		tagInstanceTree.setItemCaptionPropertyId(TagInstanceTreePropertyName.caption);
 		tagInstanceTree.setItemIconPropertyId(TagInstanceTreePropertyName.icon);
-		tagInstanceTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_PROPERTY);
-	
-		tagInstanceTree.setVisibleColumns(
-				new Object[] {
-						TagInstanceTreePropertyName.caption});
 
 		tagInstanceTree.addGeneratedColumn(
 			TagInstanceTreePropertyName.color,
 			new ColorLabelColumnGenerator(
 				new ColorLabelColumnGenerator.TagInstanceTagDefinitionProvider()));
 		
+		tagInstanceTree.setVisibleColumns(
+				new Object[] {
+						TagInstanceTreePropertyName.caption, 
+						TagInstanceTreePropertyName.color,
+						TagInstanceTreePropertyName.path});
 		tagInstanceTree.setColumnHeader(
 				TagInstanceTreePropertyName.color, "Tag Color");
+		tagInstanceTree.setColumnHeader(
+				TagInstanceTreePropertyName.path, "Tag Path");
 		
 		addComponent(tagInstanceTree);
 		setExpandRatio(tagInstanceTree, 1.0f);
@@ -236,6 +242,7 @@ public class TagInstanceTree extends HorizontalLayout {
 						"ui/tagmanager/resources/reddiamd.gif", getApplication());
 			tagInstanceTree.addItem(
 					new Object[] {
+						ti.getSecond().getTagDefinition().getName(),
 						ti.getFirst()
 					},
 					ti.getSecond());
@@ -257,7 +264,8 @@ public class TagInstanceTree extends HorizontalLayout {
 				}
 				tagInstanceTree.addItem(
 						new Object[] {
-								caption
+								caption,
+								""
 						},
 						property);
 				tagInstanceTree.getItem(property).getItemProperty(
@@ -267,7 +275,7 @@ public class TagInstanceTree extends HorizontalLayout {
 				
 				for (String value : values) {
 					String itemId = String.valueOf(property.hashCode()) + value; 
-					tagInstanceTree.addItem(new Object[] {value}, 
+					tagInstanceTree.addItem(new Object[] {value, ""}, 
 							itemId);
 					tagInstanceTree.setParent(itemId, property);
 					tagInstanceTree.setChildrenAllowed(itemId, false);
