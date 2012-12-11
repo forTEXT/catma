@@ -210,9 +210,13 @@ public class Pager implements Iterable<Page> {
 	}
 	
 	public int getStartPageNumberFor(Range range) {
+		return getPageNumberFor(range.getStartPoint());
+	}
+
+	public int getPageNumberFor(int point) {
 		
 		for (Page p: pages) {
-			if (p.hasPoint(range.getStartPoint())) {
+			if (p.hasPoint(point)) {
 				return pages.indexOf(p)+1;
 			}
 		}
@@ -238,5 +242,13 @@ public class Pager implements Iterable<Page> {
 	
 	public int getTotalLineCount() {
 		return totalLineCount;
+	}
+	
+	public int getApproxMaxLineLength() {
+		return approxMaxLineLength;
+	}
+	
+	public int getMaxPageLengthInLines() {
+		return maxPageLengthInLines;
 	}
 }

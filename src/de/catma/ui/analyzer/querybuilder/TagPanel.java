@@ -170,7 +170,7 @@ public class TagPanel extends AbstractSearchPanel {
 
 	private void initTagsets() throws IOException {
 		Repository repository = queryOptions.getRepository();
-		//FIXME: load TagsetDefinitions directly by relevantUserMarkupCollIDs to avoid loading of UMCs
+
 		if (!queryOptions.getRelevantUserMarkupCollIDs().isEmpty()) {
 			for (String userMarkupCollId : 
 				queryOptions.getRelevantUserMarkupCollIDs()) {

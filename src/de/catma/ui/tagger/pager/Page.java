@@ -266,4 +266,12 @@ public class Page {
 		}
 		return lineCount;
 	}
+	
+	public int getPageEnd() {
+		return pageEnd;
+	}
+	
+	public int getPageStart() {
+		return pageStart;
+	}
 }

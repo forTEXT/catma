@@ -376,7 +376,30 @@ public class TaggerView extends VerticalLayout
 
 	public void show(Range range) {
 		try {
-			linesPerPageSlider.setValue(100.0);
+			int startPage = pager.getPageNumberFor(range.getStartPoint());
+			int endPage = pager.getPageNumberFor(range.getEndPoint());
+			
+			if (startPage != endPage) {
+				Double perCentValue = 100.0;
+
+				while(startPage != endPage) {
+					pager.setMaxPageLengthInLines(pager.getMaxPageLengthInLines()+5);
+					try {
+						pager.setText(sourceDocument.getContent());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+	
+					startPage = pager.getPageNumberFor(range.getStartPoint());
+					endPage = pager.getPageNumberFor(range.getEndPoint());
+					
+					perCentValue = ((double)pager.getApproxMaxLineLength())/(((double)totalLineCount)/100.0);
+				}
+				
+				linesPerPageSlider.setValue(perCentValue);
+			}
+			
 			int pageNumber = pager.getStartPageNumberFor(range);
 			pagerComponent.setPage(pageNumber);
 			TextRange tr = pager.getCurrentPage().getRelativeRangeFor(range);

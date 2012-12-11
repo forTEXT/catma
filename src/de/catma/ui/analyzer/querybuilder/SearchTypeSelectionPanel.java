@@ -2,7 +2,6 @@ package de.catma.ui.analyzer.querybuilder;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -13,7 +12,6 @@ import com.vaadin.ui.VerticalLayout;
 
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
-import de.catma.tag.TagsetDefinition;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
 
