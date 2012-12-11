@@ -1,7 +1,5 @@
 package de.catma.ui.analyzer.querybuilder;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
@@ -27,8 +25,10 @@ public class SimilPanel extends AbstractSearchPanel implements DynamicWizardStep
 	public SimilPanel(
 			ToggleButtonStateListener toggleButtonStateListener,
 			QueryTree queryTree,
-			QueryOptions queryOptions) {
-		super(toggleButtonStateListener, queryTree, queryOptions);
+			QueryOptions queryOptions,
+			TagsetDefinitionDictionary tagsetDefinitionDictionary) {
+		super(toggleButtonStateListener, 
+				queryTree, queryOptions, tagsetDefinitionDictionary);
 		initComponents();
 		initActions();
 	}

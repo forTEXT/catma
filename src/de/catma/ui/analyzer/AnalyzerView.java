@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import org.antlr.runtime.RecognitionException;
 import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
@@ -52,9 +51,8 @@ import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.computation.DistributionComputation;
-import de.catma.tag.TagsetDefinition;
 import de.catma.ui.analyzer.querybuilder.QueryBuilderWizardFactory;
-import de.catma.ui.analyzer.querybuilder.TagsetDefinitionDictionaryListener;
+import de.catma.ui.analyzer.querybuilder.TagsetDefinitionDictionary;
 import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabComponent;
@@ -88,8 +86,8 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private PropertyChangeListener userMarkupDocumentChangedListener;
 	private CloseListener closeListener;
 	private PropertyChangeListener corpusChangedListener;
-	private Map<String, TagsetDefinition> tagsetDefinitionsByUuid;
-	//FIXME: reset tagsetDefinitionsByUuid on document changes
+	private TagsetDefinitionDictionary tagsetDefinitionDictionary;
+	
 	public AnalyzerView(
 			Corpus corpus, IndexedRepository repository, 
 			CloseListener closeListener) {
@@ -99,7 +97,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		this.relevantSourceDocumentIDs = new ArrayList<String>();
 		this.relevantUserMarkupCollIDs = new ArrayList<String>();
 		this.relevantStaticMarkupCollIDs = new ArrayList<String>();
-		
+		tagsetDefinitionDictionary = new TagsetDefinitionDictionary();
 		this.repository = repository;
 		initComponents();
 		initActions();
@@ -117,14 +115,19 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				}
 				else if (evt.getNewValue() == null) { //remove
 					if (!relevantSourceDocumentIDs.isEmpty()) {
-						removeSourceDocumentFromTree(
-								(SourceDocument)evt.getOldValue());
-						if (relevantSourceDocumentIDs.isEmpty()) {
-							closeListener.closeRequest(AnalyzerView.this);
+						SourceDocument sourceDocument = 
+								(SourceDocument)evt.getOldValue();
+						if (relevantSourceDocumentIDs.contains(sourceDocument.getID())) {
+							tagsetDefinitionDictionary.clear();
+							removeSourceDocumentFromTree(sourceDocument);
+							if (relevantSourceDocumentIDs.isEmpty()) {
+								closeListener.closeRequest(AnalyzerView.this);
+							}
 						}
 					}
 				}
 				else { //update
+					tagsetDefinitionDictionary.clear();
 					documentsTree.requestRepaint();
 				}
 			}
@@ -144,11 +147,14 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 							(UserMarkupCollectionReference) evt.getOldValue();
 					if (relevantUserMarkupCollIDs.contains(
 							userMarkupCollectionReference.getId())) {
+						tagsetDefinitionDictionary.clear();
+
 						removeUserMarkupCollectionFromTree(
 								userMarkupCollectionReference);
 					}
 				}
 				else { // update
+					tagsetDefinitionDictionary.clear();
 					documentsTree.requestRepaint();
 				}
 			}
@@ -180,11 +186,13 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 							&& Equal.nonNull(AnalyzerView.this.corpus.getId(), corpus.getId())) {
 						//update sourcedoc added
 						if (evt.getOldValue() instanceof SourceDocument) {
+							tagsetDefinitionDictionary.clear();
 							addSourceDocument((SourceDocument)evt.getOldValue());
 						}
 						// update usermarkupcoll added
 						else if (evt.getOldValue() 
 								instanceof UserMarkupCollectionReference) {
+							tagsetDefinitionDictionary.clear();
 							addUserMarkupCollection(
 								(UserMarkupCollectionReference)evt.getOldValue());
 						}
@@ -311,15 +319,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 					},
 					queryTree,
 					queryOptions,
-					new TagsetDefinitionDictionaryListener() {
-						
-						public void tagsetDefinitionDictionarySelected(
-								Map<String, TagsetDefinition> tagsetDefinitionsByUuid) {
-							AnalyzerView.this.tagsetDefinitionsByUuid = 
-									tagsetDefinitionsByUuid;
-						}
-					},
-					tagsetDefinitionsByUuid);
+					tagsetDefinitionDictionary);
 		
 		Window wizardWindow = 
 				factory.createWizardWindow("Query Builder", "90%", "85%");

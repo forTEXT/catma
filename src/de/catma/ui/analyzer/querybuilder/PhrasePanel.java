@@ -30,8 +30,10 @@ public class PhrasePanel extends AbstractSearchPanel {
 	public PhrasePanel(
 			ToggleButtonStateListener toggleButtonStateListener,
 			QueryTree queryTree,
-			QueryOptions queryOptions) {
-		super(toggleButtonStateListener, queryTree, queryOptions);
+			QueryOptions queryOptions,
+			TagsetDefinitionDictionary tagsetDefinitionDictionary) {
+		super(toggleButtonStateListener, queryTree, queryOptions, 
+				tagsetDefinitionDictionary);
 		wordPanels = new ArrayList<WordPanel>();
 		initComponents();
 		initActions();

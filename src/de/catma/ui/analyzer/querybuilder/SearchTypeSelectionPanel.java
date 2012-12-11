@@ -30,21 +30,19 @@ public class SearchTypeSelectionPanel
 			ToggleButtonStateListener toggleButtonStateListener, 
 			QueryTree queryTree,
 			QueryOptions queryOptions, 
-			TagsetDefinitionDictionaryListener tagsetDefinitionDictionaryListener, 
-			Map<String, TagsetDefinition> tagsetDefinitionsByUuid) {
+			TagsetDefinitionDictionary tagsetDefinitionDictionary) {
 		this(toggleButtonStateListener, queryTree, queryOptions, false, 
-				tagsetDefinitionDictionaryListener, tagsetDefinitionsByUuid);
+				tagsetDefinitionDictionary);
 	}
 	
 	public SearchTypeSelectionPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
 			QueryTree queryTree,
 			QueryOptions queryOptions,
-			boolean onBack, TagsetDefinitionDictionaryListener tagsetDefinitionDictionaryListener, 
-			Map<String, TagsetDefinition> tagsetDefinitionsByUuid) {
+			boolean onBack, TagsetDefinitionDictionary tagsetDefinitionDictionary) {
 		this.toggleButtonStateListener = toggleButtonStateListener;
 		this.onBack = onBack;
-		initComponents(queryTree, queryOptions, tagsetDefinitionDictionaryListener, tagsetDefinitionsByUuid);
+		initComponents(queryTree, queryOptions, tagsetDefinitionDictionary);
 		initActions();
 	}
 
@@ -74,7 +72,7 @@ public class SearchTypeSelectionPanel
 
 	private void initComponents(
 			QueryTree queryTree, QueryOptions queryOptions, 
-			TagsetDefinitionDictionaryListener tagsetDefinitionDictionaryListener, Map<String, TagsetDefinition> tagsetDefinitionsByUuid) {
+			TagsetDefinitionDictionary tagsetDefinitionDictionary) {
 		
 		setSpacing(true);
 		setWidth("100%");
@@ -82,23 +80,32 @@ public class SearchTypeSelectionPanel
 		phrasePanel = 
 			new PhrasePanel(
 				toggleButtonStateListener,
-				queryTree, queryOptions);
+				queryTree, queryOptions,
+				tagsetDefinitionDictionary);
 		nextSteps.add(phrasePanel);
 		
 		nextSteps.add(
 			new SimilPanel(
-				toggleButtonStateListener, queryTree, queryOptions));
+				toggleButtonStateListener, 
+				queryTree, queryOptions,
+				tagsetDefinitionDictionary));
 		
 		nextSteps.add(
 			new TagPanel(
-				toggleButtonStateListener, queryTree, queryOptions, tagsetDefinitionDictionaryListener,
-				tagsetDefinitionsByUuid));
+				toggleButtonStateListener, queryTree, queryOptions, 
+				tagsetDefinitionDictionary));
 		
 		nextSteps.add(
-			new CollocPanel(toggleButtonStateListener, queryTree, queryOptions));
+			new CollocPanel(
+				toggleButtonStateListener, 
+				queryTree, queryOptions,
+				tagsetDefinitionDictionary));
 		
 		nextSteps.add(
-				new FreqPanel(toggleButtonStateListener, queryTree, queryOptions));
+				new FreqPanel(
+					toggleButtonStateListener, 
+					queryTree, queryOptions,
+					tagsetDefinitionDictionary));
 
 		searchTypeSelect = new OptionGroup("",nextSteps);
 		

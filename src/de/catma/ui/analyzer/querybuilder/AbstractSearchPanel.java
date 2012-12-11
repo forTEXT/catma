@@ -19,6 +19,7 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 	protected ToggleButtonStateListener toggleButtonStateListener;
 	protected QueryTree queryTree;
 	protected QueryOptions queryOptions;
+	protected TagsetDefinitionDictionary tagsetDefinitionDictionary;
 	
 	private ComplexTypeSelectionPanel complexTypeSelectionPanel;
 	private SearchTypeSelectionPanel searchTypeSelectionPanel;
@@ -31,10 +32,12 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 
 	public AbstractSearchPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
-			QueryTree queryTree, QueryOptions queryOptions) {
+			QueryTree queryTree, QueryOptions queryOptions,
+			TagsetDefinitionDictionary tagsetDefinitionDictionary) {
 		this.toggleButtonStateListener = toggleButtonStateListener;
 		this.queryTree = queryTree;
 		this.queryOptions = queryOptions;
+		this.tagsetDefinitionDictionary = tagsetDefinitionDictionary;
 		onFinish = false;
 		onFinishOnly = true;
 		onAdvance = false;
@@ -64,7 +67,7 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 								new ComplexTypeSelectionPanel(queryTree);
 						searchTypeSelectionPanel = new SearchTypeSelectionPanel(
 								toggleButtonStateListener, queryTree, queryOptions, 
-								true, null, null);
+								true, tagsetDefinitionDictionary);
 					}
 					toggleButtonStateListener.getWizard().addStep(
 							complexTypeSelectionPanel);

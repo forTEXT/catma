@@ -1,8 +1,6 @@
 package de.catma.ui.analyzer.querybuilder;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -55,7 +53,6 @@ public class TagPanel extends AbstractSearchPanel {
 		}
 	}
 	
-	private Map<String, TagsetDefinition> tagsetDefinitionsByUuid;
 	private Component tagLibraryPanel;
 	private Tree tagLibrariesTree;
 	private Button btOpenTagLibrary;
@@ -66,19 +63,13 @@ public class TagPanel extends AbstractSearchPanel {
 	private ComboBox tagMatchModeCombo;
 	private VerticalLayout contentPanel;
 	private boolean inRefinement;
-	private TagsetDefinitionDictionaryListener tagsetDefinitionDictionaryListener;
 	
 	public TagPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
 			QueryTree queryTree, QueryOptions queryOptions, 
-			TagsetDefinitionDictionaryListener tagsetDefinitionDictionaryListener, 
-			Map<String, TagsetDefinition> tagsetDefinitionsByUuid) {
-		super(toggleButtonStateListener, queryTree, queryOptions);
-		this.tagsetDefinitionDictionaryListener = tagsetDefinitionDictionaryListener;
-		this.tagsetDefinitionsByUuid = tagsetDefinitionsByUuid;
-		if (this.tagsetDefinitionsByUuid == null) {
-			this.tagsetDefinitionsByUuid = new HashMap<String, TagsetDefinition>();
-		}
+			TagsetDefinitionDictionary tagsetDefinitionDictionary) {
+		super(toggleButtonStateListener, queryTree, queryOptions, 
+				tagsetDefinitionDictionary);
 	}
 
 	@Override
@@ -86,7 +77,7 @@ public class TagPanel extends AbstractSearchPanel {
 		super.attach();
 		if (!init) {
 			init = true;
-			if (this.tagsetDefinitionsByUuid.isEmpty()) {
+			if (this.tagsetDefinitionDictionary.isEmpty()) {
 				try {
 					initTagsets();
 				} catch (IOException e) {
@@ -100,27 +91,24 @@ public class TagPanel extends AbstractSearchPanel {
 	}
 	
 	private void initActions() {
-		if (tagsetDefinitionsByUuid.isEmpty()) {
+		if (tagsetDefinitionDictionary.isEmpty()) {
 			btOpenTagLibrary.addListener(new ClickListener() {
 				
 				public void buttonClick(ClickEvent event) {
 					Object value = tagLibrariesTree.getValue();
 					if (value != null) {
+						tagsetDefinitionDictionary.clear();
+						
 						TagLibraryReference tlr = (TagLibraryReference)value;
 						try {
 							TagLibrary tl = 
 									queryOptions.getRepository().getTagLibrary(tlr);
 							addTagLibrary(tl);
 							tagsetTree.addTagsetDefinition(
-									tagsetDefinitionsByUuid.values());
+									tagsetDefinitionDictionary.values());
 							splitPanel.setVisible(true);
 							tagLibraryPanel.setVisible(false);
 							contentPanel.removeComponent(tagLibraryPanel);
-							if (tagsetDefinitionDictionaryListener != null) {
-								tagsetDefinitionDictionaryListener.tagsetDefinitionDictionarySelected(
-										tagsetDefinitionsByUuid);
-							}
-							
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -140,6 +128,13 @@ public class TagPanel extends AbstractSearchPanel {
 		resultPanel.addBtShowInPreviewListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
+				showInPreview();
+			}
+		});
+		
+		tagMatchModeCombo.addListener(new ValueChangeListener() {
+			
+			public void valueChange(ValueChangeEvent event) {
 				showInPreview();
 			}
 		});
@@ -193,10 +188,6 @@ public class TagPanel extends AbstractSearchPanel {
 				}
 			}
 		}
-		if (tagsetDefinitionDictionaryListener != null) {
-			tagsetDefinitionDictionaryListener.tagsetDefinitionDictionarySelected(
-					tagsetDefinitionsByUuid);
-		}
 	}
 
 	private void addUserMarkupCollection(Repository repository,
@@ -215,19 +206,19 @@ public class TagPanel extends AbstractSearchPanel {
 	}
 
 	private void addTagsetDefinition(TagsetDefinition tagsetDefinition) {
-		if (tagsetDefinitionsByUuid.containsKey(tagsetDefinition.getUuid())) {
+		if (tagsetDefinitionDictionary.containsKey(tagsetDefinition.getUuid())) {
 			TagsetDefinition existingTSDef = 
-					tagsetDefinitionsByUuid.get(tagsetDefinition.getUuid());
+					tagsetDefinitionDictionary.get(tagsetDefinition.getUuid());
 			
 			if (tagsetDefinition.getVersion().isNewer(existingTSDef.getVersion())) {
-				tagsetDefinitionsByUuid.remove(existingTSDef.getUuid());
-				tagsetDefinitionsByUuid.put(
+				tagsetDefinitionDictionary.remove(existingTSDef.getUuid());
+				tagsetDefinitionDictionary.put(
 						tagsetDefinition.getUuid(), tagsetDefinition);
 			}
 			
 		}
 		else {
-			tagsetDefinitionsByUuid.put(
+			tagsetDefinitionDictionary.put(
 					tagsetDefinition.getUuid(), tagsetDefinition);
 		}
 	}
@@ -237,7 +228,7 @@ public class TagPanel extends AbstractSearchPanel {
 		contentPanel.setSizeFull();
 		addComponent(contentPanel);
 		
-		if (tagsetDefinitionsByUuid.isEmpty()) {
+		if (tagsetDefinitionDictionary.isEmpty()) {
 			tagLibraryPanel = createTagLibraryPanel();
 			contentPanel.addComponent(tagLibraryPanel);
 		}
@@ -254,6 +245,7 @@ public class TagPanel extends AbstractSearchPanel {
 		
 		
 		tagMatchModeCombo = new ComboBox("Please choose what you consider a match:");
+		tagMatchModeCombo.setImmediate(true);
 		TagMatchModeItem exactMatchItem = 
 				new TagMatchModeItem("exact match", TagMatchMode.EXACT);
 		tagMatchModeCombo.addItem(exactMatchItem);
@@ -286,11 +278,11 @@ public class TagPanel extends AbstractSearchPanel {
 		contentPanel.addComponent(splitPanel);
 		
 		splitPanel.addComponent(tagSearchPanel);
-		if (tagsetDefinitionsByUuid.isEmpty()) {
+		if (tagsetDefinitionDictionary.isEmpty()) {
 			splitPanel.setVisible(false);
 		}
 		else {
-			tagsetTree.addTagsetDefinition(tagsetDefinitionsByUuid.values());
+			tagsetTree.addTagsetDefinition(tagsetDefinitionDictionary.values());
 		}
 		
 		resultPanel = new ResultPanel(queryOptions);
