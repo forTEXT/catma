@@ -13,6 +13,8 @@
   <!-- <property name="hibernate.current_session_context_class">managed</property> -->
   <mapping class="de.catma.repository.db.model.DBUser"/>
   <mapping class="de.catma.repository.db.model.DBSourceDocument"/>
+  <mapping class="de.catma.repository.db.model.DBUnseparableCharsequence"/>
+  <mapping class="de.catma.repository.db.model.DBUserDefinedSeparatingCharacter"/>
   <mapping class="de.catma.repository.db.model.DBUserSourceDocument"/>
   <mapping class="de.catma.repository.db.model.DBUserMarkupCollection"/>
   <mapping class="de.catma.repository.db.model.DBUserUserMarkupCollection"/>

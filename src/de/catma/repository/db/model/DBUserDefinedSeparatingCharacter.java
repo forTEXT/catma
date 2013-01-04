@@ -2,10 +2,11 @@ package de.catma.repository.db.model;
 
 // Generated 22.05.2012 21:58:37 by Hibernate Tools 3.4.0.CR1
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -18,14 +19,12 @@ public class DBUserDefinedSeparatingCharacter implements java.io.Serializable {
 
 	private Integer udscId;
 	private String character;
-	private int sourceDocumentId;
 
 	public DBUserDefinedSeparatingCharacter() {
 	}
 
-	public DBUserDefinedSeparatingCharacter(String character, int sourceDocumentId) {
+	public DBUserDefinedSeparatingCharacter(String character) {
 		this.character = character;
-		this.sourceDocumentId = sourceDocumentId;
 	}
 
 	@Id
@@ -39,22 +38,13 @@ public class DBUserDefinedSeparatingCharacter implements java.io.Serializable {
 		this.udscId = udscId;
 	}
 
-	@Column(name = "character", nullable = false, length = 5)
+	@Column(name = "chr", nullable = false, length = 5)
 	public String getCharacter() {
 		return this.character;
 	}
 
 	public void setCharacter(String character) {
 		this.character = character;
-	}
-
-	@Column(name = "sourceDocumentID", nullable = false)
-	public int getSourceDocumentId() {
-		return this.sourceDocumentId;
-	}
-
-	public void setSourceDocumentId(int sourceDocumentId) {
-		this.sourceDocumentId = sourceDocumentId;
 	}
 
 }

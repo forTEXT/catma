@@ -13,9 +13,13 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
@@ -46,6 +50,11 @@ public class DBSourceDocument implements java.io.Serializable {
 	private String localUri;
 	private String author;
 	
+	private Set<DBUnseparableCharsequence> dbUnseparableCharsequences =
+			new HashSet<DBUnseparableCharsequence>();
+	private Set<DBUserDefinedSeparatingCharacter> dbUserDefinedSeparatingCharacters = 
+			new HashSet<DBUserDefinedSeparatingCharacter>();
+	
 	public DBSourceDocument() {
 	}
 
@@ -63,9 +72,22 @@ public class DBSourceDocument implements java.io.Serializable {
 		this.checksum = sourceDocumentInfo.getTechInfoSet().getChecksum();
 		this.mimeType = sourceDocumentInfo.getTechInfoSet().getMimeType();
 		this.localUri = sourceDocument.getID();
+		
 		this.locale = sourceDocumentInfo.getIndexInfoSet().getLocale().toString();
 		if (!sourceDocumentInfo.getTechInfoSet().getURI().getScheme().equals("file")) {
 			this.sourceUri = sourceDocumentInfo.getTechInfoSet().getURI().toString();
+		}
+		
+		for (Character udsc : 
+			sourceDocumentInfo.getIndexInfoSet().getUserDefinedSeparatingCharacters()) {
+			getDbUserDefinedSeparatingCharacters().add(
+				new DBUserDefinedSeparatingCharacter(udsc.toString()));
+		}
+		
+		for (String ucs : 
+			sourceDocumentInfo.getIndexInfoSet().getUnseparableCharacterSequences()) {
+			getDbUnseparableCharsequences().add(
+				new DBUnseparableCharsequence(ucs));
 		}
 	}
 
@@ -217,6 +239,31 @@ public class DBSourceDocument implements java.io.Serializable {
 			Set<DBUserMarkupCollection> dbUserMarkupCollections) {
 		this.dbUserMarkupCollections = dbUserMarkupCollections;
 	}
+	
+	@OneToMany
+	@JoinColumn(name = "sourceDocumentID", nullable=false)
+	@Cascade({CascadeType.DELETE, CascadeType.SAVE_UPDATE})
+	public Set<DBUnseparableCharsequence> getDbUnseparableCharsequences() {
+		return dbUnseparableCharsequences;
+	}
+	
+	public void setDbUnseparableCharsequences(
+			Set<DBUnseparableCharsequence> dbUnseparableCharsequences) {
+		this.dbUnseparableCharsequences = dbUnseparableCharsequences;
+	}
+	
+	@OneToMany
+	@JoinColumn(name = "sourceDocumentID", nullable=false)
+	@Cascade({CascadeType.DELETE, CascadeType.SAVE_UPDATE})
+	public Set<DBUserDefinedSeparatingCharacter> getDbUserDefinedSeparatingCharacters() {
+		return dbUserDefinedSeparatingCharacters;
+	}
+	
+	public void setDbUserDefinedSeparatingCharacters(
+			Set<DBUserDefinedSeparatingCharacter> dbUserDefinedSeparatingCharacters) {
+		this.dbUserDefinedSeparatingCharacters = dbUserDefinedSeparatingCharacters;
+	}
+	
 	@Override
 	public String toString() {
 		return getLocalUri() + " " + getTitle();

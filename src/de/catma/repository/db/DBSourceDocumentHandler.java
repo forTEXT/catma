@@ -10,6 +10,7 @@ import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,6 +40,8 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.db.DBIndexer;
 import de.catma.repository.db.model.DBCorpusSourceDocument;
 import de.catma.repository.db.model.DBSourceDocument;
+import de.catma.repository.db.model.DBUnseparableCharsequence;
+import de.catma.repository.db.model.DBUserDefinedSeparatingCharacter;
 import de.catma.repository.db.model.DBUserMarkupCollection;
 import de.catma.repository.db.model.DBUserSourceDocument;
 import de.catma.util.CloseSafe;
@@ -220,8 +223,8 @@ class DBSourceDocumentHandler {
 			for (DBSourceDocument sd : (List<DBSourceDocument>)query.list()) {
 				IndexInfoSet indexInfoSet = 
 					new IndexInfoSet(
-						Collections.<String>emptyList(), //TODO: load list
-						Collections.<Character>emptyList(), //TODO: load list
+						getUnseparableCharacterSequences(sd.getDbUnseparableCharsequences()),
+						getUserDefinedSeparatingCharacters(sd.getDbUserDefinedSeparatingCharacters()),
 						new Locale(sd.getLocale()));
 				ContentInfoSet contentInfoSet = 
 						new ContentInfoSet(sd.getAuthor(), sd.getDescription(), 
@@ -259,6 +262,37 @@ class DBSourceDocumentHandler {
 		}		
 	}
 	
+	private List<Character> getUserDefinedSeparatingCharacters(
+			Set<DBUserDefinedSeparatingCharacter> dbUserDefinedSeparatingCharacters) {
+		if (dbUserDefinedSeparatingCharacters.isEmpty()) {
+			return Collections.<Character>emptyList();
+		}
+		else {
+			ArrayList<Character> uscList = new ArrayList<Character>();
+			for (DBUserDefinedSeparatingCharacter dbUsc : dbUserDefinedSeparatingCharacters) {
+				if (dbUsc.getCharacter().length() == 1) {
+					uscList.add(dbUsc.getCharacter().toCharArray()[0]);
+				}
+			}
+			return uscList;
+		}
+	}
+
+	private List<String> getUnseparableCharacterSequences(
+			Set<DBUnseparableCharsequence> dbUnseparableCharsequences) {
+
+		if (dbUnseparableCharsequences.isEmpty()) {
+			return Collections.emptyList();
+		}
+		else {
+			ArrayList<String> ucsList = new ArrayList<String>();
+			for (DBUnseparableCharsequence dbUcs : dbUnseparableCharsequences) {
+				ucsList.add(dbUcs.getCharsequence());
+			}
+			return ucsList;
+		}
+	}
+
 	Collection<SourceDocument> getSourceDocuments() {
 		return  Collections.unmodifiableCollection(sourceDocumentsByID.values());
 	}

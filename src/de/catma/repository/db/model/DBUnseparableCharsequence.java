@@ -2,10 +2,11 @@ package de.catma.repository.db.model;
 
 // Generated 22.05.2012 21:58:37 by Hibernate Tools 3.4.0.CR1
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -18,14 +19,12 @@ public class DBUnseparableCharsequence implements java.io.Serializable {
 
 	private Integer uscId;
 	private String charsequence;
-	private int sourceDocumentId;
 
 	public DBUnseparableCharsequence() {
 	}
 
-	public DBUnseparableCharsequence(String charsequence, int sourceDocumentId) {
+	public DBUnseparableCharsequence(String charsequence) {
 		this.charsequence = charsequence;
-		this.sourceDocumentId = sourceDocumentId;
 	}
 
 	@Id
@@ -47,14 +46,4 @@ public class DBUnseparableCharsequence implements java.io.Serializable {
 	public void setCharsequence(String charsequence) {
 		this.charsequence = charsequence;
 	}
-
-	@Column(name = "sourceDocumentID", nullable = false)
-	public int getSourceDocumentId() {
-		return this.sourceDocumentId;
-	}
-
-	public void setSourceDocumentId(int sourceDocumentId) {
-		this.sourceDocumentId = sourceDocumentId;
-	}
-
 }

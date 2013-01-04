@@ -41,6 +41,7 @@ import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
+import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
@@ -87,6 +88,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private CloseListener closeListener;
 	private PropertyChangeListener corpusChangedListener;
 	private TagsetDefinitionDictionary tagsetDefinitionDictionary;
+	private IndexInfoSet indexInfoSet;
 	
 	public AnalyzerView(
 			Corpus corpus, IndexedRepository repository, 
@@ -99,6 +101,11 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		this.relevantStaticMarkupCollIDs = new ArrayList<String>();
 		tagsetDefinitionDictionary = new TagsetDefinitionDictionary();
 		this.repository = repository;
+		this.indexInfoSet = 
+				new IndexInfoSet(
+					Collections.<String>emptyList(), 
+					Collections.<Character>emptyList(), 
+					Locale.ENGLISH);
 		initComponents();
 		initActions();
 		initListeners();
@@ -285,16 +292,13 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	}
 
 	private void showQueryBuilder() {
-		//TODO: handle query options
-		List<String> unseparableCharacterSequences = Collections.emptyList();
-		List<Character> userDefinedSeparatingCharacters = Collections.emptyList();
 		QueryOptions queryOptions = new QueryOptions(
 				relevantSourceDocumentIDs,
 				relevantUserMarkupCollIDs,
 				relevantStaticMarkupCollIDs,
-				unseparableCharacterSequences,
-				userDefinedSeparatingCharacters,
-				Locale.ENGLISH,
+				indexInfoSet.getUnseparableCharacterSequences(),
+				indexInfoSet.getUserDefinedSeparatingCharacters(),
+				indexInfoSet.getLocale(),
 				repository);
 
 		final QueryTree queryTree = new QueryTree();
@@ -330,16 +334,14 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 
 
 	private void executeSearch() {
-		//TODO: handle query options
-		List<String> unseparableCharacterSequences = Collections.emptyList();
-		List<Character> userDefinedSeparatingCharacters = Collections.emptyList();
+
 		QueryOptions queryOptions = new QueryOptions(
 				relevantSourceDocumentIDs,
 				relevantUserMarkupCollIDs,
 				relevantStaticMarkupCollIDs,
-				unseparableCharacterSequences,
-				userDefinedSeparatingCharacters,
-				Locale.ENGLISH,
+				indexInfoSet.getUnseparableCharacterSequences(),
+				indexInfoSet.getUserDefinedSeparatingCharacters(),
+				indexInfoSet.getLocale(),
 				repository);
 		
 		QueryJob job = new QueryJob(
@@ -477,6 +479,9 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 
 	private void addSourceDocument(SourceDocument sd) {
 		relevantSourceDocumentIDs.add(sd.getID());
+		//TODO: provide a facility where the user can select between different IndexInfoSets
+		indexInfoSet = 
+				sd.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
 		
 		documentsTree.addItem(sd);
 		MarkupCollectionItem umc = 

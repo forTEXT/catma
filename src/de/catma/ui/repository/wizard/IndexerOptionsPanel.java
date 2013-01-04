@@ -165,7 +165,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 						unseparableCharacterSequencesListSelect.getValue());
 				sourceDocumentInfo.getIndexInfoSet().removeUnseparableCharacterSequence(
 						tfUcs.getValue().toString());
-				if (sourceDocumentInfo.getIndexInfoSet().getUnseparableCharacterSequences().size() > 0) {
+				if (!sourceDocumentInfo.getIndexInfoSet().getUnseparableCharacterSequences().isEmpty()) {
 					unseparableCharacterSequencesListSelect.setValue(
 						sourceDocumentInfo.getIndexInfoSet().getUnseparableCharacterSequences().get(0));
 				}
