@@ -10,7 +10,7 @@ public class PropertyToReversedTrimmedStringCIComparator implements Comparator<O
         int r = 0;
         // Normal non-null comparison
         if (o1 != null && o2 != null) {
-        	// TODO: use local from search options, same for non reversed version
+        	// TODO: use locale from search options, same for non reversed version
         	StringBuilder b1 = 
         			new StringBuilder(o1.toString().trim().toLowerCase());
         	StringBuilder b2 = 

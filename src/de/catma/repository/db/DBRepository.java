@@ -92,6 +92,8 @@ public class DBRepository implements IndexedRepository {
 	private String pass;
 	private String url;
 
+	private String tempDir;
+
 
 	public DBRepository(
 			String name, 
@@ -101,7 +103,7 @@ public class DBRepository implements IndexedRepository {
 			BackgroundServiceProvider backgroundServiceProvider,
 			IndexerFactory indexerFactory, 
 			SerializationHandlerFactory serializationHandlerFactory,
-			String url, String user, String pass) {
+			String url, String user, String pass, String tempDir) {
 		
 
 		this.name = name;
@@ -113,6 +115,7 @@ public class DBRepository implements IndexedRepository {
 		this.user = user;
 		this.pass = pass;
 		this.url = url;
+		this.tempDir = tempDir;
 		
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.idGenerator = new IDGenerator();
@@ -392,6 +395,9 @@ public class DBRepository implements IndexedRepository {
 		return dbSourceDocumentHandler.getIDFromURI(uri);
 	}
 		
+	public String getFileURL(String sourceDocumentID, String... path) {
+		return dbSourceDocumentHandler.getFileURL(sourceDocumentID, path);
+	}
 	
 	public void insert(SourceDocument sourceDocument) throws IOException {
 		dbSourceDocumentHandler.insert(sourceDocument);
@@ -661,4 +667,7 @@ public class DBRepository implements IndexedRepository {
 		return dbUserMarkupCollectionHandler;
 	}
 	
+	String getTempDir() {
+		return tempDir;
+	}
 }

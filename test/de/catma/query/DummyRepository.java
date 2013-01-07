@@ -273,4 +273,9 @@ public class DummyRepository implements IndexedRepository {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	public String getFileURL(String sourceDocumentID, String... path) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

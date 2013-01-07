@@ -58,6 +58,21 @@
         <dependent-module archiveName="jempbox-1.7.0.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/jempbox-1.7.0.jar">
             <dependency-type>uses</dependency-type>
         </dependent-module>
+        <dependent-module archiveName="poi-ooxml-schemas-3.8-20120326.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/poi-ooxml-schemas-3.8-20120326.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="poi-ooxml-3.8-20120326.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/poi-ooxml-3.8-20120326.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="xmlbeans-2.3.0.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/xmlbeans-2.3.0.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="stax-api-1.0.1.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/stax-api-1.0.1.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="dom4j-1.6.1.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/dom4j-1.6.1.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
         <property name="java-output-path" value="/catma/build/classes"/>
         <property name="context-root" value="catma"/>
     </wb-module>

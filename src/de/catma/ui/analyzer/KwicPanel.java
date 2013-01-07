@@ -334,7 +334,7 @@ public class KwicPanel extends VerticalLayout {
 
 	public void addQueryResultRows(Iterable<QueryResultRow> queryResult) 
 			throws IOException {
-		// TODO: should we put this in the  background thread?
+
 		HashMap<String, KwicProvider> kwicProviders =
 				new HashMap<String, KwicProvider>();
 		

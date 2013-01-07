@@ -26,6 +26,7 @@ import de.catma.document.Corpus;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
+import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.IndexedRepository;
@@ -146,7 +147,7 @@ public class CatmaApplication extends Application
 	}
 	
 	private void initTempDirectory(Properties properties) throws IOException {
-		String tempDirProp = properties.getProperty("TempDir");
+		String tempDirProp = properties.getProperty(RepositoryPropertyKey.TempDir.name());
 		File tempDir = new File(tempDirProp);
 
 		if (!tempDir.isAbsolute()) {

@@ -1,12 +1,9 @@
 package de.catma.repository.db;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -86,13 +83,15 @@ class DBSourceDocumentHandler {
 	
 	private void insertIntoFS(SourceDocument sourceDocument) throws IOException {
 
-		SourceDocumentInfo sourceDocumentInfo = 
-				sourceDocument.getSourceContentHandler().getSourceDocumentInfo();
-		
-		URI sourceDocURI = sourceDocumentInfo.getTechInfoSet().getURI();
-		
-		if (sourceDocURI.getScheme().toLowerCase().equals("file")) {
-			File sourceTempFile = new File(sourceDocURI);
+//		SourceDocumentInfo sourceDocumentInfo = 
+//				sourceDocument.getSourceContentHandler().getSourceDocumentInfo();
+		try {
+			File sourceTempFile = 
+					new File(new URI(
+						getFileURL(
+								sourceDocument.getID(), 
+								dbRepository.getTempDir() + "/" )));
+					
 			File repoSourceFile = 
 					new File(
 							this.sourceDocsPath
@@ -112,40 +111,18 @@ class DBSourceDocumentHandler {
 			
 			sourceTempFile.delete();
 		}
-		else {
-			File repoSourceFile = null;
-			
-			try {
-				repoSourceFile = 
-					new File(
-						new URI(getFileURL(sourceDocument.getID(), sourceDocsPath)));
-			} catch (URISyntaxException e) {
-				throw new IOException(e);
-			}
-			//FIXME: for online resources as word docs this will fail, because there is no charset, better treat this in the
-			// same way as a file upload
-			Writer repoSourceFileWriter =  
-					new BufferedWriter(new OutputStreamWriter(
-							new FileOutputStream(repoSourceFile),
-							sourceDocumentInfo.getTechInfoSet().getCharset()));
-			try {
-				//TODO: keep BOM ... or don't keep it...?!
-				repoSourceFileWriter.append(sourceDocument.getContent());
-			}
-			finally {
-				CloseSafe.close(repoSourceFileWriter);
-			}
-
+		catch (URISyntaxException se) {
+			throw new IOException(se);
 		}
 	}
 	
 	
-	String getFileURL(String catmaUri, String... path) {
+	String getFileURL(String catmaID, String... path) {
 		StringBuilder builder = new StringBuilder("file://");
 		for (String folder : path) {
 			builder.append(folder);
 		}
-		builder.append(catmaUri.substring((REPO_URI_SCHEME).length()));
+		builder.append(catmaID.substring((REPO_URI_SCHEME).length()));
 		return builder.toString();
 	}
 

@@ -82,10 +82,14 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	public void stepActivated(boolean forward) {
 		onAdvance = false;
 		try {
+			
 			wizardResult.setSourceDocumentID(
 				repository.getIdFromURI(
 					sourceDocumentInfo.getTechInfoSet().getURI()));
 			
+			final String sourceDocumentFileUri = 
+					repository.getFileURL(wizardResult.getSourceDocumentID(), 
+							((CatmaApplication)getApplication()).getTempDirectory() + "/");
 			final String mimeTypeFromUpload = 
 					sourceDocumentInfo.getTechInfoSet().getMimeType();
 			final URI sourceDocURI = sourceDocumentInfo.getTechInfoSet().getURI();
@@ -104,7 +108,9 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 							ProtocolHandler protocolHandler = null;
 							if (sourceDocURI.toURL().getProtocol().toLowerCase().equals("http")) {
 								  protocolHandler = 
-										  new HttpProtocolHandler(sourceDocURI);
+										  new HttpProtocolHandler(
+												 sourceDocURI, 
+												 sourceDocumentFileUri);
 							}
 							else {
 								protocolHandler = 

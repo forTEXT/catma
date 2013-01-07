@@ -39,7 +39,8 @@ public class DBRepositoryFactory implements RepositoryFactory {
 			serializationHandlerFactory,
 			RepositoryPropertyKey.RepositoryUrl.getProperty(properties, index),
 			RepositoryPropertyKey.RepositoryUser.getProperty(properties, index),
-			RepositoryPropertyKey.RepositoryPass.getProperty(properties, index));
+			RepositoryPropertyKey.RepositoryPass.getProperty(properties, index),
+			properties.getProperty(RepositoryPropertyKey.TempDir.name()));
 	}
 
 }

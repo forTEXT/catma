@@ -123,7 +123,6 @@ class TagMenuPopup extends DialogBox {
 			HandlerRegistration saveButtonReg = saveButton.addClickHandler(new ClickHandler() {
 				
 				public void onClick(ClickEvent event) {
-					//FIXME: redesign pop menu, taginstance deletion only
 				//	TagMenuPopup.this.vTagger.createAndAddTagIntance(colorPicker.getHexColor());
 					TagMenuPopup.this.lastSelectedColor = colorPicker.getHexColor();
 					hide();

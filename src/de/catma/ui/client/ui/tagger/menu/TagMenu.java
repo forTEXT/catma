@@ -140,7 +140,7 @@ public class TagMenu implements MouseMoveHandler {
 
 
 	public void onMouseMove(MouseMoveEvent event) {
-		if (event.isShiftKeyDown() ) { //TODO: check mac compat, control key is blocked for multiple range taggin
+		if (event.isShiftKeyDown() ) { 
 			lastClientX = event.getClientX();
 			lastClientY = event.getClientY();
 			if (curMenuTimer != null) {
