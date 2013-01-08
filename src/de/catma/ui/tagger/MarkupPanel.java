@@ -2,11 +2,15 @@ package de.catma.ui.tagger;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.vaadin.dialogs.ConfirmDialog;
+
+import com.vaadin.Application;
 import com.vaadin.data.Container;
 import com.vaadin.event.DataBoundTransferable;
 import com.vaadin.event.dd.DragAndDropEvent;
@@ -48,6 +52,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	private TagInstanceTree tagInstancesTree;
 	private Repository repository;
 	private PropertyChangeListener propertyValueChangeListener;
+	private Application application;
 	
 	public MarkupPanel(
 			Repository repository, ColorButtonListener colorButtonListener, 
@@ -190,6 +195,8 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	public void attach() {
 		super.attach();
 		if (init) {
+			
+			application = getApplication();
 			//TODO: maybe accept drags only from the TaggerView table, drag only tagset defs
 			//TODO: allow tagsetdefs removal, remove from the editable set of the coll panel
 			
@@ -232,43 +239,62 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	}
 
 	public void openUserMarkupCollection(
-			UserMarkupCollection userMarkupCollection) {
-//		
-//		final UserMarkupCollectionManager umcManager = 
-//				new UserMarkupCollectionManager(repository);
-//		umcManager.add(userMarkupCollection);
-//		
-//		umcManager.getUserMarkupCollections(tagsetDefinition, inSynch)
-//		List<TagsetDefinition> activeTagsetDefs = tagsetTree.getTagsetDefinitions();
-//		for (TagsetDef)
-//		
-//		
-//		if (!isInSyncWithActiveTagsetDefs(userMarkupCollection, activeTagsetDefs)) {
-//			
-//		}
+			final UserMarkupCollection userMarkupCollection) {
 		
-		markupCollectionsPanel.openUserMarkupCollection(
-				userMarkupCollection);
-		if (!userMarkupCollection.isEmpty()) {
-			tabSheet.setSelectedTab(markupCollectionsPanel);
-		}
-	}
-
-
-	private boolean isInSyncWithActiveTagsetDefs(
-			UserMarkupCollection userMarkupCollection,
-			List<TagsetDefinition> activeTagsetDefs) {
+		final UserMarkupCollectionManager umcManager = 
+				new UserMarkupCollectionManager(repository);
+		umcManager.add(userMarkupCollection);
 		
-		for (TagsetDefinition activeTsDef : activeTagsetDefs) {
-			if (userMarkupCollection.getTagLibrary().contains(activeTsDef)) {
-				TagsetDefinition incomingTsDef = 
-						userMarkupCollection.getTagLibrary().getTagsetDefinition(activeTsDef.getUuid());
-				if (!incomingTsDef.isSynchronized(activeTsDef)) {
-					return false;
-				}
+		List<TagsetDefinition> activeTagsetDefs = tagsetTree.getTagsetDefinitions();
+		final List<TagsetDefinition> outOfSyncTagsetDefs = new ArrayList<TagsetDefinition>();
+
+		for (TagsetDefinition activeTagsetDef : activeTagsetDefs) {
+			List<UserMarkupCollection> toBeUpdated = 
+					umcManager.getUserMarkupCollections(activeTagsetDef, false);
+			
+			if (!toBeUpdated.isEmpty()) { // the list will be empty or contain exactly one element
+				outOfSyncTagsetDefs.add(activeTagsetDef);
 			}
 		}
-		return true;
+		
+		if (outOfSyncTagsetDefs.isEmpty()) {
+			markupCollectionsPanel.openUserMarkupCollection(
+					userMarkupCollection);
+			if (!userMarkupCollection.isEmpty()) {
+				tabSheet.setSelectedTab(markupCollectionsPanel);
+			}
+		}
+		else {
+			ConfirmDialog.show(
+					application.getMainWindow(), 
+					"One or more of the active Tagsets are newer than their "
+					+ " correpsonding Tagsets in the User Markup Collection you want to open!"
+					+ " The Collection will be updated with the versions of the active Tagsets! " 
+					+ " Do you really want to update the attached Markup Collections?",
+								
+				        new ConfirmDialog.Listener() {
+
+				            public void onClose(ConfirmDialog dialog) {
+				            	List<UserMarkupCollection> oneElementCollection =
+				            			new ArrayList<UserMarkupCollection>();
+				            	oneElementCollection.add(userMarkupCollection);
+				            	
+				            	for (TagsetDefinition outOfSyncTagsetDef : outOfSyncTagsetDefs) {
+				            		umcManager.updateUserMarkupCollections(
+				            			oneElementCollection,
+				            			outOfSyncTagsetDef);
+				            	}
+				            	
+				    			markupCollectionsPanel.openUserMarkupCollection(
+				    					userMarkupCollection);
+				    			if (!userMarkupCollection.isEmpty()) {
+				    				tabSheet.setSelectedTab(markupCollectionsPanel);
+				    			}
+				    		}
+					});
+
+		}
+		
 	}
 
 	public void close() {

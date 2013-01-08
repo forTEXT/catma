@@ -15,6 +15,7 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window.Notification;
@@ -197,9 +198,33 @@ public class PhraseResultPanel extends VerticalLayout {
 		leftComponent.addComponent(buttonPanel);
 		splitPanel.addComponent(leftComponent);
 		
-		this.kwicPanel = new KwicPanel(repository, relevantUserMarkupCollectionProvider);
-		splitPanel.addComponent(kwicPanel);
+		VerticalLayout rightComponent = new VerticalLayout();
+		rightComponent.setSpacing(true);
+		rightComponent.setSizeFull();
 		
+		this.kwicPanel = new KwicPanel(repository, relevantUserMarkupCollectionProvider);
+		rightComponent.addComponent(kwicPanel);
+		rightComponent.setExpandRatio(kwicPanel, 1f);
+
+		Label helpLabel = new Label();
+		helpLabel.setIcon(new ClassResource(
+				"ui/resources/icon-help.gif", 
+				getApplication()));
+		
+		helpLabel.setDescription(
+				"<h3>Hints</h3>" +
+				"<h4>Tagging search results</h4>" +
+				"You can tag the search results in the Kwic-view: " +
+				"<p>First select one ore more rows and then drag the desired " +
+				"Tag from the Tag Manager over the Kwic-results.</p>" +
+				"<h4>Take a closer look</h4>" +
+				"You can jump to the location in the full text by double " +
+				"clicking on a row in the Kwic-view.");
+		
+		rightComponent.addComponent(helpLabel);
+		rightComponent.setComponentAlignment(helpLabel, Alignment.TOP_RIGHT);
+		
+		splitPanel.addComponent(rightComponent);
 		addComponent(splitPanel);
 	}
 	

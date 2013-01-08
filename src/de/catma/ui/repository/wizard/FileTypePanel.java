@@ -138,6 +138,11 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 								
 								Charset charset = Charset.forName(result.encoding);
 								fileEncodingTree.select(charset);
+								Object parent = fileEncodingTree.getParent(charset);
+								while (parent != null) {
+									fileEncodingTree.expandItem(parent);
+									parent = fileEncodingTree.getParent(parent);
+								}
 								sourceDocumentInfo.getTechInfoSet().setCharset(charset);
 							}
 							else {

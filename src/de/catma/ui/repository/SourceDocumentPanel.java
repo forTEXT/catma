@@ -185,8 +185,13 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 							
 							public void wizardCompleted(WizardCompletedEvent event) {
 								event.getWizard().removeListener(this);
+								boolean generateStarterKit = 
+										repository.getSourceDocuments().isEmpty();
 								try {
 									repository.insert(wizardResult.getSourceDocument());
+									if (generateStarterKit) {
+										//TODO: generate starter kit
+									}
 								} catch (IOException e) {
 									((CatmaApplication)getApplication()).showAndLogError(
 										"Error adding the Source Document!", e);
@@ -287,7 +292,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 
 		});
-		
+		/*
 		miMoreDocumentActions.addSeparator();
 		
 		miMoreDocumentActions.addItem("Create Static Markup Collection", new Command() {
@@ -319,7 +324,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				
 			}
 		});	
-		
+		*/
 		btEditContentInfo.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {

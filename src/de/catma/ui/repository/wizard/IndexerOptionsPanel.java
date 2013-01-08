@@ -324,7 +324,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 	}
 
 	public boolean onFinish() {
-		return true;
+		return false;
 	}
 	
 	public boolean onFinishOnly() {
