@@ -23,6 +23,7 @@ import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -232,11 +233,42 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 
 	public void openUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
+//		
+//		final UserMarkupCollectionManager umcManager = 
+//				new UserMarkupCollectionManager(repository);
+//		umcManager.add(userMarkupCollection);
+//		
+//		umcManager.getUserMarkupCollections(tagsetDefinition, inSynch)
+//		List<TagsetDefinition> activeTagsetDefs = tagsetTree.getTagsetDefinitions();
+//		for (TagsetDef)
+//		
+//		
+//		if (!isInSyncWithActiveTagsetDefs(userMarkupCollection, activeTagsetDefs)) {
+//			
+//		}
+		
 		markupCollectionsPanel.openUserMarkupCollection(
 				userMarkupCollection);
 		if (!userMarkupCollection.isEmpty()) {
 			tabSheet.setSelectedTab(markupCollectionsPanel);
 		}
+	}
+
+
+	private boolean isInSyncWithActiveTagsetDefs(
+			UserMarkupCollection userMarkupCollection,
+			List<TagsetDefinition> activeTagsetDefs) {
+		
+		for (TagsetDefinition activeTsDef : activeTagsetDefs) {
+			if (userMarkupCollection.getTagLibrary().contains(activeTsDef)) {
+				TagsetDefinition incomingTsDef = 
+						userMarkupCollection.getTagLibrary().getTagsetDefinition(activeTsDef.getUuid());
+				if (!incomingTsDef.isSynchronized(activeTsDef)) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	public void close() {

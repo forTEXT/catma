@@ -668,7 +668,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			addTagsetDefinitionToTree(tagsetDefinition, userMarkupCollection);
 		}
 		
-		if (markupCollectionsTree.getChildren(userMarkupCollection).size() == 1) {
+		if (markupCollectionsTree.hasChildren(userMarkupCollection) && 
+				markupCollectionsTree.getChildren(userMarkupCollection).size() == 1) {
 			markupCollectionsTree.setCollapsed(
 				markupCollectionsTree.getChildren(
 						userMarkupCollection).iterator().next(), false);

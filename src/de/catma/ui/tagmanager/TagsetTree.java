@@ -2,7 +2,9 @@ package de.catma.ui.tagmanager;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
@@ -230,26 +232,31 @@ public class TagsetTree extends HorizontalLayout {
 					@SuppressWarnings("unchecked")
 					Pair<PropertyDefinition, TagDefinition> newPair = 
 							(Pair<PropertyDefinition, TagDefinition>)newValue;
-					
-					addUserDefinedPropertyDefinition(
-							newPair.getFirst(), newPair.getSecond());
+					if (tagTree.containsId(newPair.getSecond())) {
+						addUserDefinedPropertyDefinition(
+								newPair.getFirst(), newPair.getSecond());
+					}
 				}
 				else if (newValue == null) { // delete
 					@SuppressWarnings("unchecked")
 					Pair<PropertyDefinition, TagDefinition> oldPair = 
 							(Pair<PropertyDefinition, TagDefinition>)oldValue;
-
-					removeUserDefinedPropertyDefinitionFromTree(
-							oldPair.getFirst());
+					if (tagTree.containsId(oldPair.getFirst())) {
+						removeUserDefinedPropertyDefinitionFromTree(
+								oldPair.getFirst());
+					}
 				}
 				else { // update
-					PropertyDefinition pd = (PropertyDefinition)evt.getNewValue(); 
-					Property contProp = tagTree.getContainerProperty(
-						pd, 
-						TagTreePropertyName.caption);
 					
-					if (contProp != null) {
-						contProp.setValue(pd.getName());
+					PropertyDefinition pd = (PropertyDefinition)evt.getNewValue();
+					if (tagTree.containsId(pd)) {
+						Property contProp = tagTree.getContainerProperty(
+							pd, 
+							TagTreePropertyName.caption);
+						
+						if (contProp != null) {
+							contProp.setValue(pd.getName());
+						}
 					}
 				}
 			}
@@ -982,5 +989,18 @@ public class TagsetTree extends HorizontalLayout {
 	
 	public void removeValueChangeListener(ValueChangeListener valueChangeListener) {
 		tagTree.removeListener(valueChangeListener);
+	}
+	
+	public List<TagsetDefinition> getTagsetDefinitions() {
+		ArrayList<TagsetDefinition> result = new ArrayList<TagsetDefinition>();
+		
+		for (Object itemId : tagTree.getItemIds()) {
+			if (itemId instanceof TagsetDefinition) {
+				result.add((TagsetDefinition)itemId);
+			}
+			
+		}
+		
+		return result;
 	}
 }

@@ -80,12 +80,14 @@ class DBTagLibraryHandler {
 			session.save(dbTagLibrary);
 			
 			session.getTransaction().commit();
+			TagLibraryReference ref = new TagLibraryReference(
+					dbTagLibrary.getId(), new ContentInfoSet(name));
+			tagLibraryReferences.add(ref);
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					RepositoryChangeEvent.tagLibraryChanged.name(),
 					null, 
-					new TagLibraryReference(
-							dbTagLibrary.getId(), new ContentInfoSet(name)));
+					ref);
 
 			CloseSafe.close(new CloseableSession(session));
 		}

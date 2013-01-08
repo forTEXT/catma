@@ -200,6 +200,7 @@ public class KwicPanel extends VerticalLayout {
 			public void cancelPressed() { /* noop */}
 		}, repository);
 		
+		boolean umcFound = false;
 		for (SourceDocument sd : affectedDocuments) {
 			List<UserMarkupCollectionReference> writableUmcRefs = 
 					repository.getWritableUserMarkupCollectionRefs(sd);
@@ -215,13 +216,20 @@ public class KwicPanel extends VerticalLayout {
 					break;
 				}
 			}
-			
-			tagKwicDialog.addUserMarkCollections(
-					sd, writableUmcRefs, initialTarget);
-			
+			if (!writableUmcRefs.isEmpty()) {
+				tagKwicDialog.addUserMarkCollections(
+						sd, writableUmcRefs, initialTarget);
+				umcFound = true;
+			}
 		}
-		
-		tagKwicDialog.show(getApplication().getMainWindow());
+		if (umcFound) {
+			tagKwicDialog.show(getApplication().getMainWindow());
+		}
+		else {
+			getWindow().showNotification(
+				"Information", "Please create a User Markup Collection first!",
+				Notification.TYPE_TRAY_NOTIFICATION);
+		}
 	}
 
 	private void tagKwic(

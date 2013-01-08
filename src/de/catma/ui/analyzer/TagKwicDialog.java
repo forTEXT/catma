@@ -88,16 +88,19 @@ public class TagKwicDialog extends VerticalLayout {
 				@SuppressWarnings("unchecked")
 				Collection<UserMarkupCollectionReference> children = 
 						(Collection<UserMarkupCollectionReference>) umcTable.getChildren(itemId);
-				for (UserMarkupCollectionReference curChild : children) {
-					boolean isTarget = ((CheckBox)(umcTable.getItem(
-							curChild).getItemProperty(
-								UmcTableProperty.TARGET)).getValue()).booleanValue();
-					if (isTarget) {
-						UserMarkupCollection umc = 
-								repository.getUserMarkupCollection(curChild);
-						result.put(((SourceDocument)itemId).getID(), umc);
+				if ((children != null) && (!children.isEmpty())) { 
+					for (UserMarkupCollectionReference curChild : children) {
+						boolean isTarget = ((CheckBox)(umcTable.getItem(
+								curChild).getItemProperty(
+									UmcTableProperty.TARGET)).getValue()).booleanValue();
+						if (isTarget) {
+							UserMarkupCollection umc = 
+									repository.getUserMarkupCollection(curChild);
+							result.put(((SourceDocument)itemId).getID(), umc);
+						}
 					}
 				}
+				
 			}
 		}
 		
@@ -129,11 +132,12 @@ public class TagKwicDialog extends VerticalLayout {
 		setExpandRatio(umcTable, 1.0f);
 		
 		btOk = new Button("Ok");
+		btOk.setEnabled(false);
+		
 		btCancel = new Button("Cancel");
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setSpacing(true);
-		buttonPanel.setWidth("100%");
 		
 		buttonPanel.addComponent(btOk);
 		buttonPanel.addComponent(btCancel);
@@ -142,6 +146,7 @@ public class TagKwicDialog extends VerticalLayout {
 		buttonPanel.setComponentAlignment(btCancel, Alignment.MIDDLE_RIGHT);
 		
 		addComponent(buttonPanel);
+		setComponentAlignment(buttonPanel, Alignment.BOTTOM_RIGHT);
 		
 		window.setContent(this);
 		window.setWidth("50%");
@@ -169,11 +174,13 @@ public class TagKwicDialog extends VerticalLayout {
 		}
 		
 		umcTable.setCollapsed(sd, false);
-		
 	}
 
 	private CheckBox createUmcRefCheckBox(final UserMarkupCollectionReference umcRef,
 			final SourceDocument sd, boolean isTarget) {
+		if (isTarget) {
+			btOk.setEnabled(true);
+		}
 		CheckBox cb = new CheckBox(null, isTarget);
 		cb.setImmediate(true);
 		cb.addListener(new ValueChangeListener() {
@@ -181,6 +188,7 @@ public class TagKwicDialog extends VerticalLayout {
 			public void valueChange(ValueChangeEvent event) {
 				if (!valueChangeEventActive) {
 					valueChangeEventActive = true;
+					btOk.setEnabled(true);
 					@SuppressWarnings("unchecked")
 					Collection<UserMarkupCollectionReference> children = 
 							(Collection<UserMarkupCollectionReference>) umcTable.getChildren(sd);
