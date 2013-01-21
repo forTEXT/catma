@@ -9,14 +9,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import com.vaadin.Application;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.terminal.ClassResource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
 import com.vaadin.ui.VerticalLayout;
@@ -69,14 +72,15 @@ public class TaggerView extends VerticalLayout
 	public TaggerView(
 			int taggerID, 
 			SourceDocument sourceDocument, Repository repository, 
-			PropertyChangeListener sourceDocChangedListener) {
+			PropertyChangeListener sourceDocChangedListener,
+			Application application) {
 		this.taggerID = taggerID;
 		this.tagManager = repository.getTagManager();
 		this.repository = repository;
 		this.sourceDocument = sourceDocument;
 		this.sourceDocChangedListener = sourceDocChangedListener;
 
-		initComponents();
+		initComponents(application);
 		initActions();
 		initListeners();
 		pager.setMaxPageLengthInLines(30);
@@ -189,14 +193,28 @@ public class TaggerView extends VerticalLayout
 		});
 	}
 
-	private void initComponents() {
+	private void initComponents(Application application) {
 		setSizeFull();
 		
 		VerticalLayout taggerPanel = new VerticalLayout();
 		
 		taggerPanel.setSpacing(true);
 		taggerPanel.setSizeFull();
+
+		Label helpLabel = new Label();
 		
+		helpLabel.setIcon(new ClassResource(
+				"ui/resources/icon-help.gif", 
+				application));
+		helpLabel.setWidth("20px");
+		helpLabel.setDescription(
+				"<h3>Hints</h3>" +
+				"<h4>Tag this Source Document</h4>" +
+				"<ol><li>First you have to tell CATMA which Tagset you want to use. " +
+				"Open a Tag Library from the Repository Manager and drag a Tagset to the \"Active Tagsets\" section.</li>" +
+				"<li>Now you can mark the text sequence you want to tag.</li><li>Click the colored button of the desired Tag to apply it to the marked sequence.</li></ol> " +
+				"When you click on a tagged text, i. e. a text that is underlined with colored bars you should see " +
+				"the available Tag Instances in the section on the lower right of this view.");		
 		pager = new Pager(taggerID, 80, 30);
 		
 		tagger = new Tagger(taggerID, pager, this);
@@ -216,8 +234,9 @@ public class TaggerView extends VerticalLayout
 		taggerPanel.addComponent(scrollPanel);
 		taggerPanel.setExpandRatio(scrollPanel, 0.8f);
 		
-		HorizontalLayout actionPanel = new HorizontalLayout();
-		actionPanel.setSpacing(true);
+		Panel actionPanel = new Panel(new HorizontalLayout());
+		
+		((HorizontalLayout)actionPanel.getContent()).setSpacing(true);
 		actionPanel.setSizeFull();
 
 		taggerPanel.addComponent(actionPanel);
@@ -231,20 +250,22 @@ public class TaggerView extends VerticalLayout
 			}
 		});
 		
+		actionPanel.addComponent(helpLabel);
+		
 		actionPanel.addComponent(pagerComponent);
-		actionPanel.setExpandRatio(pagerComponent, 0.1f);
+		((HorizontalLayout)actionPanel.getContent()).setExpandRatio(pagerComponent, 0.1f);
 		
 		btAnalyze = new Button("Analyze Document");
 		btAnalyze.setEnabled(repository instanceof IndexedRepository);
 		actionPanel.addComponent(btAnalyze);
-		actionPanel.setExpandRatio(btAnalyze, 0.1f);
+		((HorizontalLayout)actionPanel.getContent()).setExpandRatio(btAnalyze, 0.1f);
 		
 		linesPerPageSlider =  new Slider("page size zoom", 1, 100, "%");
 		linesPerPageSlider.setImmediate(true);
 		linesPerPageSlider.setWidth("150px");
 		
 		actionPanel.addComponent(linesPerPageSlider);
-		actionPanel.setExpandRatio(linesPerPageSlider, 0.8f);
+		((HorizontalLayout)actionPanel.getContent()).setExpandRatio(linesPerPageSlider, 0.8f);
 		
 		markupPanel = new MarkupPanel(
 				repository,

@@ -33,7 +33,6 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	
 	public RepositoryView(Repository repository) {
 		this.repository = repository;
-		initComponents();
 
 		exceptionOccurredListener = new PropertyChangeListener() {
 			
@@ -57,6 +56,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	public void attach() {
 		super.attach();
 		if (!init) {
+			initComponents();
 			this.application = getApplication();
 			this.repository.addPropertyChangeListener(
 					Repository.RepositoryChangeEvent.exceptionOccurred, 

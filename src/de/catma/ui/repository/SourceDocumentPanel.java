@@ -25,6 +25,7 @@ import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
+import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.DownloadStream;
 import com.vaadin.terminal.FileResource;
 import com.vaadin.ui.Button;
@@ -34,6 +35,7 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.Form;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
@@ -50,6 +52,7 @@ import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
+import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.standoffmarkup.MarkupCollectionReference;
@@ -59,7 +62,13 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.PropertyPossibleValueList;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagLibrary;
+import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
@@ -67,7 +76,9 @@ import de.catma.ui.dialog.UploadDialog;
 import de.catma.ui.repository.wizard.AddSourceDocWizardFactory;
 import de.catma.ui.repository.wizard.AddSourceDocWizardResult;
 import de.catma.util.CloseSafe;
+import de.catma.util.ColorConverter;
 import de.catma.util.ContentInfoSet;
+import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
 public class SourceDocumentPanel extends HorizontalSplitPanel
@@ -92,12 +103,21 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	private PropertyChangeListener userMarkupDocumentChangedListener;
 
 	private Corpus currentCorpus;
+	private boolean init = false;
 
 	public SourceDocumentPanel(Repository repository) {
 		this.repository = repository;
-		initComponents();
-		initActions();
-		initListeners();
+	}
+	
+	@Override
+	public void attach() {
+		super.attach();
+		if (!init) {
+			initComponents();
+			initActions();
+			initListeners();
+			init = true;
+		}
 	}
 
 	private void initListeners() {
@@ -190,14 +210,14 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 								try {
 									repository.insert(wizardResult.getSourceDocument());
 									if (generateStarterKit) {
-										//TODO: generate starter kit
+										generateStarterKit(wizardResult.getSourceDocument());
 									}
 								} catch (IOException e) {
 									((CatmaApplication)getApplication()).showAndLogError(
 										"Error adding the Source Document!", e);
 								}
 							}
-							
+
 							public void wizardCancelled(WizardCancelledEvent event) {
 								event.getWizard().removeListener(this);
 							}
@@ -378,6 +398,100 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				}
 			}
 		});
+	}
+	
+	private void generateStarterKit(
+			final SourceDocument sourceDocument) {
+		String name = "Example User Markup Collection";
+		try {
+			repository.addPropertyChangeListener(
+					RepositoryChangeEvent.userMarkupCollectionChanged, 
+				new PropertyChangeListener() {
+				
+				public void propertyChange(PropertyChangeEvent evt) {
+					@SuppressWarnings("unchecked")
+					Pair<UserMarkupCollectionReference, SourceDocument> umcResultPair = 
+							(Pair<UserMarkupCollectionReference, SourceDocument>) evt.getNewValue();
+					
+					if ((umcResultPair != null) && (evt.getOldValue() == null)) {
+						if (sourceDocument.equals(umcResultPair.getSecond())) {
+							
+							try {
+								repository.addPropertyChangeListener(
+										RepositoryChangeEvent.tagLibraryChanged, 
+										new PropertyChangeListener() {
+									
+									public void propertyChange(PropertyChangeEvent evt) {
+										TagLibraryReference tagLibRef = 
+												(TagLibraryReference)evt.getNewValue();
+										if ((tagLibRef != null)
+												&& (evt.getOldValue() == null)) {
+											IDGenerator idGenerator = new IDGenerator();
+											try {
+												TagLibrary tagLibrary = 
+														repository.getTagLibrary(tagLibRef);
+												
+												TagsetDefinition tsd = 
+														new TagsetDefinition(
+															null,
+															idGenerator.generate(), 
+															"Example Tagset", 
+															new Version());
+												
+												repository.getTagManager().addTagsetDefinition(
+														tagLibrary, tsd);
+
+												TagDefinition td = 
+														new TagDefinition(
+																null,
+																idGenerator.generate(),
+																"Example Tag",
+																new Version(), 
+																null, "");
+												PropertyDefinition colorPropertyDef =
+														new PropertyDefinition(
+															null,
+															idGenerator.generate(),
+															PropertyDefinition.SystemPropertyName.
+																catma_displaycolor.name(),
+															new PropertyPossibleValueList(
+																ColorConverter.toRGBIntAsString(
+																	ColorConverter.randomHex())));
+												td.addSystemPropertyDefinition(
+														colorPropertyDef);
+												repository.getTagManager().addTagDefinition(
+													tsd, td);
+												
+											} catch (IOException e) {
+												((CatmaApplication)getApplication()).showAndLogError(
+													"Error creating the Example Tagset and Tag Definitions!", e);
+											}
+											
+											repository.removePropertyChangeListener(
+													RepositoryChangeEvent.tagLibraryChanged, 
+													this);
+										}
+									}
+								});
+								repository.createTagLibrary("Example Tag Library");
+								repository.removePropertyChangeListener(
+									RepositoryChangeEvent.userMarkupCollectionChanged, this);
+							} catch (IOException e) {
+								((CatmaApplication)getApplication()).showAndLogError(
+										"Error creating Example Tag Library!", e);
+							}
+						}
+					}
+				}
+			});
+			repository.createUserMarkupCollection(
+					name, sourceDocument);
+		} catch (IOException e) {
+			((CatmaApplication)getApplication()).showAndLogError(
+				"Error creating Example User Markup Collection!", e);
+		}
+		
+		
 	}
 
 	private void handleUserMarkupCollectionReindexRequest(Object value) {
@@ -628,6 +742,26 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				menuMoreDocumentActions.addItem("More actions...", null);
 		documentButtonsPanel.addComponent(menuMoreDocumentActions);
 		
+		Label helpLabel = new Label();
+		helpLabel.setIcon(new ClassResource(
+				"ui/resources/icon-help.gif", 
+				getApplication()));
+		helpLabel.setWidth("20px");
+		helpLabel.setDescription(
+				"<h3>Hints</h3>" +
+				"<h4>First steps</h4>" +
+				"<h5>Adding a Source Document</h5>" +
+				"You can add a Source Document by clicking the \"Add Source Document\"-Button. " +
+				"A Source Document can be a web resource pointed to by the URL or you can upload a document from your computer. " +
+				"<h5>Tagging a Source Document</h5>" +
+				"When you add your first Source Document CATMA generates a set of example items to get you going: " +
+				"<ul><li>A User Markup Collection to hold your markup.</li><li>A Tag Library with an example Tagset that contains an example Tag</li></ul> "+
+				"To start tagging a Source Document just select the example User Markup Collection from the tree and click the \"Open User Markup Collection\"-button. " +
+				"Then follow the instructions given to you be the Tagger component." +
+				"<h5>Analyze a Source Document</h5>" +
+				"To analyze a Source Document just select that document from the tree and click \"Analyze Source Document\" in the \"More Actions\"-Menu." +
+				"Then follow the instructions of the Analyzer component.");
+		documentButtonsPanel.addComponent(helpLabel);
 		return documentButtonsPanel;
 	}
 	

@@ -49,7 +49,8 @@ public class TaggerManagerView extends TabbedView {
 							}
 							
 						}
-					});
+					},
+					getApplication());
 			addClosableTab(taggerView, sourceDocument.toString());
 			setSelectedTab(taggerView);
 		}

@@ -10,8 +10,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.vaadin.Application;
+import com.vaadin.terminal.ClassResource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.ProgressIndicator;
@@ -128,7 +130,23 @@ public class CatmaApplication extends Application
 							"Visualizer",
 							new VisualizationManagerWindow(visualizationManagerView))
 					);
-		
+			
+			Label helpLabel = new Label();
+			
+			helpLabel.setIcon(new ClassResource(
+					"ui/resources/icon-help.gif", 
+					this));
+
+			helpLabel.setDescription(
+					"<h3>Hints</h3>" +
+					"Watch out for little question mark icons that guide you " +
+					"through CATMA." +
+					"Once you're logged in, you will see the Repository Manager " +
+					"which will explain the first steps to you via the question " +
+					"mark icons. Just hover over them with the mouse.");
+
+			mainLayout.addComponent(helpLabel);
+			mainLayout.setComponentAlignment(helpLabel, Alignment.TOP_RIGHT);
 			MenuBar loginLogoutMenu = new MenuBar();
 			LoginLogoutCommand loginLogoutCommand = new LoginLogoutCommand(menu, repositoryManagerView);
 			MenuItem loginLogoutitem = loginLogoutMenu.addItem("Login", loginLogoutCommand);

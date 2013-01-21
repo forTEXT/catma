@@ -16,7 +16,9 @@ import com.vaadin.event.DataBoundTransferable;
 import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
+import com.vaadin.terminal.ClassResource;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
@@ -53,6 +55,8 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	private Repository repository;
 	private PropertyChangeListener propertyValueChangeListener;
 	private Application application;
+	private PropertyChangeListener tagDefinitionSelectionListener;
+	private PropertyChangeListener tagDefinitionsRemovedListener;
 	
 	public MarkupPanel(
 			Repository repository, ColorButtonListener colorButtonListener, 
@@ -60,10 +64,9 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			PropertyChangeListener tagDefinitionsRemovedListener) {
 		this.colorButtonListener = colorButtonListener;
 		this.repository = repository;
-		initComponents( 
-				tagDefinitionSelectionListener,
-				tagDefinitionsRemovedListener);
-		initActions();
+		this.tagDefinitionSelectionListener = tagDefinitionSelectionListener;
+		this.tagDefinitionsRemovedListener = tagDefinitionsRemovedListener;
+		
 	}
 
 	private void initActions() {
@@ -133,11 +136,38 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		
 		tabSheet = new TabSheet();
 		tabSheet.setSizeFull();
+		VerticalLayout tabContent = new VerticalLayout();
+		tabContent.setSpacing(true);
+		
+		Label helpLabel = new Label();
+		
+		helpLabel.setIcon(new ClassResource(
+				"ui/resources/icon-help.gif", 
+				application));
+		helpLabel.setWidth("20px");
+		helpLabel.setDescription(
+				"<h3>Hints</h3>" +
+			    "<h4>Creating Tags</h4>" +
+				"<ol><li>First you have to tell CATMA which Tagset you want to use. " +
+				"Open a Tag Library from the Repository Manager and drag a Tagset to the \"Active Tagsets\" section." +
+				" If you already have an active Tagset you want to use, you can skip this step.</li>" +
+				"<li>Now you can select the Tagset and click the \"Create Tag\"-Button.</li></ol>"+
+				"<h4>Tag this Source Document</h4>" +
+				"<ol><li>First you have to tell CATMA which Tagset you want to use. " +
+				"Open a Tag Library from the Repository Manager and drag a Tagset to the \"Active Tagsets\" section." +
+				" If you already have an active Tagset you want to use, you can skip this step.</li>" +
+				"<li>Now you can mark the text sequence you want to tag.</li><li>Click the colored button of the desired Tag to apply it to the marked sequence.</li></ol> " +
+				"When you click on a tagged text, i. e. a text that is underlined with colored bars you should see " +
+				"the available Tag Instances in the section on the lower right of this view.");
+		tabContent.addComponent(helpLabel);
+		tabContent.setComponentAlignment(helpLabel, Alignment.MIDDLE_RIGHT);
 		
 		tagsetTree = 
 			new TagsetTree(
 				repository.getTagManager(), null, false, colorButtonListener);
-		tabSheet.addTab(tagsetTree, "Active Tagsets");
+		tabContent.addComponent(tagsetTree);
+		
+		tabSheet.addTab(tabContent, "Active Tagsets");
 		
 		markupCollectionsPanel = 
 				new MarkupCollectionsPanel(repository);
@@ -199,7 +229,11 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			application = getApplication();
 			//TODO: maybe accept drags only from the TaggerView table, drag only tagset defs
 			//TODO: allow tagsetdefs removal, remove from the editable set of the coll panel
-			
+			initComponents( 
+					tagDefinitionSelectionListener,
+					tagDefinitionsRemovedListener);
+			initActions();
+
 			tagsetTree.getTagTree().setDropHandler(new DropHandler() {
 				
 				public AcceptCriterion getAcceptCriterion() {
