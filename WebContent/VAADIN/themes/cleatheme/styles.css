@@ -1,5 +1,11 @@
 @import url(../reindeer/styles.css);
 
+.catma-mainwindow {
+	background-image: url(logo.gif);
+	background-repeat:no-repeat;
+	background-position:center;
+}
+
 .tagger {
 	outline: 1px solid #ddd;
 	margin: 20px;

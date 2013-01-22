@@ -13,9 +13,11 @@ import org.vaadin.jouni.animator.Animator;
 
 import com.vaadin.Application;
 import com.vaadin.terminal.ClassResource;
+import com.vaadin.terminal.ExternalResource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Link;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.ProgressIndicator;
@@ -90,6 +92,9 @@ public class CatmaApplication extends Application
 		HorizontalLayout mainLayout = new HorizontalLayout();
 		mainLayout.setSizeUndefined();
 		mainLayout.setMargin(true);
+		mainLayout.setSpacing(true);
+		mainWindow.addStyleName("catma-mainwindow");
+		
 		mainWindow.setContent(mainLayout);
 		MenuFactory menuFactory = new MenuFactory();
 		try {
@@ -133,6 +138,13 @@ public class CatmaApplication extends Application
 							"Visualizer",
 							new VisualizationManagerWindow(visualizationManagerView))
 					);
+			Link aboutLink = new Link(
+					"About", new ExternalResource("http://www.catma.de"));
+			aboutLink.setTargetName("_blank");
+			mainLayout.addComponent(aboutLink);
+			mainLayout.setComponentAlignment(aboutLink, Alignment.TOP_RIGHT);
+			mainLayout.setExpandRatio(aboutLink, 1.0f);
+			
 			
 			Label helpLabel = new Label();
 			helpLabel.setIcon(new ClassResource(
@@ -158,11 +170,11 @@ public class CatmaApplication extends Application
 			
 			mainLayout.addComponent(helpAnimator);
 			mainLayout.setComponentAlignment(helpAnimator, Alignment.TOP_RIGHT);
-			mainLayout.setExpandRatio(helpAnimator, 1.0f);
 			helpAnimator.fadeIn(2000, 300);
 			
 			MenuBar loginLogoutMenu = new MenuBar();
-			LoginLogoutCommand loginLogoutCommand = new LoginLogoutCommand(menu, repositoryManagerView);
+			LoginLogoutCommand loginLogoutCommand = 
+					new LoginLogoutCommand(menu, repositoryManagerView, this);
 			MenuItem loginLogoutitem = loginLogoutMenu.addItem("Login", loginLogoutCommand);
 			loginLogoutCommand.setLoginLogoutItem(loginLogoutitem);
 			

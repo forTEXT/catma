@@ -3,6 +3,7 @@ package de.catma.ui.menu;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import com.vaadin.Application;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
 
@@ -13,6 +14,7 @@ public class LoginLogoutCommand implements Command {
 	private MenuItem loginLogoutItem;
 	private RepositoryManagerView repositoryManagerView;
 	private Menu menu;
+	final private Application application;
 	
 	private PropertyChangeListener repositoryManagerListener = 
 			new PropertyChangeListener() {
@@ -23,13 +25,17 @@ public class LoginLogoutCommand implements Command {
 			}
 			else {
 				loginLogoutItem.setText("Login");
+				application.close();
 			}
 		}
 	};
 	
-	public LoginLogoutCommand(Menu menu, RepositoryManagerView repositoryManagerView) {
+	public LoginLogoutCommand(
+			Menu menu, RepositoryManagerView repositoryManagerView, 
+			Application application) {
 		this.menu = menu;
 		this.repositoryManagerView = repositoryManagerView;
+		this.application = application;
 		repositoryManagerView.getRepositoryManager().
 			addPropertyChangeListener(
 				RepositoryManager.RepositoryManagerEvent.repositoryStateChange, 
@@ -40,6 +46,7 @@ public class LoginLogoutCommand implements Command {
 	public void menuSelected(MenuItem selectedItem) {
 		if (repositoryManagerView.getRepositoryManager().hasOpenRepository()) {
 			repositoryManagerView.closeCurrentRepository();
+			application.close();
 		}
 		else {
 			menu.executeEntry(repositoryManagerView);

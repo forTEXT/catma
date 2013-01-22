@@ -19,6 +19,8 @@
 
 package de.catma.queryengine;
 
+import java.util.logging.Logger;
+
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
@@ -40,6 +42,7 @@ import de.catma.queryengine.result.QueryResult;
  *
  */
 public class QueryJob extends DefaultProgressCallable<QueryResult> {
+	private Logger logger = Logger.getLogger(getClass().getName());
     private String inputQuery;
 	private QueryOptions queryOptions;
 
@@ -75,7 +78,7 @@ public class QueryJob extends DefaultProgressCallable<QueryResult> {
             QueryResult queryResult = query.getResult();
             
             getProgressListener().setProgress("Query finished!");
-            
+            logger.info("query finished " + inputQuery);
             return queryResult;
         }
         catch (Exception e) {
@@ -115,5 +118,10 @@ public class QueryJob extends DefaultProgressCallable<QueryResult> {
         public String getInput() {
             return input;
         }
+    }
+    
+    @Override
+    public String toString() {
+    	return super.toString() +  " " + inputQuery;
     }
 }

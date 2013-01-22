@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
@@ -55,7 +56,7 @@ class PhraseSearcher {
 				else {
 					for (String documentId : documentIdList) {
 						queryResult.addAll(
-							searchPhrase(
+							searchPhrase2(
 								session, documentId, phrase, termList, false, limit));
 					}
 				}
@@ -72,6 +73,64 @@ class PhraseSearcher {
 		return queryResult;
 	}
 	
+	private QueryResultRowArray searchPhrase2(Session session, String documentId,
+			String phrase, List<String> termList, boolean withWildcards, int limit) throws IOException {
+		
+		if (termList.size() == 0) {
+			return new QueryResultRowArray();
+		}
+		else if (termList.size() == 1) {
+			
+			List<DBPosition> positions = 
+					getPositionsForTerm(
+						session, termList.get(0), documentId, withWildcards, limit);
+			QueryResultRowArray result = new QueryResultRowArray();
+			for (DBPosition p : positions) {
+				result.add(
+					new QueryResultRow(
+						p.getTerm().getDocumentId(), 
+						new Range(p.getCharacterStart(), p.getCharacterEnd()), 
+						phrase));
+			}
+			return result;
+		}
+		else {
+			
+			//NEXT: wildcards, limit, termsize>5
+
+			SQLQuery spSearchPhrase = session.createSQLQuery(
+						"call CatmaIndex.searchPhrase(" +
+						":term1, :term2, :term3, :term4, :term5, :docID)");
+		
+			int termCount=0;
+			for (termCount=0; termCount<Math.min(5, termList.size()); termCount++) {
+				spSearchPhrase.setParameter("term"+(termCount+1), termList.get(termCount));
+			}
+			
+			for (int pIdx=termCount; pIdx<5; pIdx++) {
+				spSearchPhrase.setParameter("term"+(pIdx+1), null);
+			}
+			
+			spSearchPhrase.setParameter("docID", documentId);
+			
+			@SuppressWarnings("unchecked")
+			List<Object[]> result = spSearchPhrase.list();
+			
+			QueryResultRowArray queryResult = new QueryResultRowArray();
+			for (Object[] row : result) {
+				queryResult.add(
+					new QueryResultRow(
+						documentId, 
+						new Range(
+							(Integer)row[1],
+							(Integer)row[2]),
+						phrase));
+			}
+			
+			return queryResult;
+		
+		}		
+	}
 	private QueryResultRowArray searchPhrase(Session session, String documentId,
 			String phrase, List<String> termList, boolean withWildcards, int limit) throws IOException {
 		if (termList.size() == 0) {
@@ -180,7 +239,7 @@ class PhraseSearcher {
 				}
 			}
 			
-			// create a queryResult from machting phrases
+			// create a queryResult from matching phrases
 			QueryResultRowArray queryResult = new QueryResultRowArray();
 			for (Pair<DBPosition,DBPosition> match : result) {
 				

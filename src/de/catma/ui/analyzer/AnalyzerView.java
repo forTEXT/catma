@@ -17,8 +17,6 @@ import org.vaadin.teemu.wizards.event.WizardProgressListener;
 import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
 import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.terminal.ClassResource;
@@ -289,6 +287,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			
 			public void buttonClick(ClickEvent event) {
 				searchInput.setValue("freq>0");
+				executeSearch();
 			}
 
 		});
@@ -296,12 +295,6 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			
 			public void buttonClick(ClickEvent event) {
 				showQueryBuilder();
-			}
-		});
-		this.searchInput.addListener(new ValueChangeListener() {
-			
-			public void valueChange(ValueChangeEvent event) {
-				executeSearch();
 			}
 		});
 	}
