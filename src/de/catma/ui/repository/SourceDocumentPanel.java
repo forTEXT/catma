@@ -25,7 +25,6 @@ import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
-import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.DownloadStream;
 import com.vaadin.terminal.FileResource;
 import com.vaadin.ui.Button;
@@ -35,7 +34,6 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.Form;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
@@ -414,7 +412,11 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 							(Pair<UserMarkupCollectionReference, SourceDocument>) evt.getNewValue();
 					
 					if ((umcResultPair != null) && (evt.getOldValue() == null)) {
+						
 						if (sourceDocument.equals(umcResultPair.getSecond())) {
+							
+							documentsTree.expandItemsRecursively(umcResultPair.getSecond());
+							documentsTree.setValue(umcResultPair.getFirst());
 							
 							try {
 								repository.addPropertyChangeListener(
@@ -742,26 +744,6 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				menuMoreDocumentActions.addItem("More actions...", null);
 		documentButtonsPanel.addComponent(menuMoreDocumentActions);
 		
-		Label helpLabel = new Label();
-		helpLabel.setIcon(new ClassResource(
-				"ui/resources/icon-help.gif", 
-				getApplication()));
-		helpLabel.setWidth("20px");
-		helpLabel.setDescription(
-				"<h3>Hints</h3>" +
-				"<h4>First steps</h4>" +
-				"<h5>Adding a Source Document</h5>" +
-				"You can add a Source Document by clicking the \"Add Source Document\"-Button. " +
-				"A Source Document can be a web resource pointed to by the URL or you can upload a document from your computer. " +
-				"<h5>Tagging a Source Document</h5>" +
-				"When you add your first Source Document CATMA generates a set of example items to get you going: " +
-				"<ul><li>A User Markup Collection to hold your markup.</li><li>A Tag Library with an example Tagset that contains an example Tag</li></ul> "+
-				"To start tagging a Source Document just select the example User Markup Collection from the tree and click the \"Open User Markup Collection\"-button. " +
-				"Then follow the instructions given to you be the Tagger component." +
-				"<h5>Analyze a Source Document</h5>" +
-				"To analyze a Source Document just select that document from the tree and click \"Analyze Source Document\" in the \"More Actions\"-Menu." +
-				"Then follow the instructions of the Analyzer component.");
-		documentButtonsPanel.addComponent(helpLabel);
 		return documentButtonsPanel;
 	}
 	

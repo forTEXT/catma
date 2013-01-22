@@ -36,4 +36,6 @@
     <inherits name="com.invient.vaadin.charts.widgetset.InvientChartsWidgetset" />
 
     
+
+    <inherits name="org.vaadin.jouni.animator.AnimatorWidgetset" />
 </module>

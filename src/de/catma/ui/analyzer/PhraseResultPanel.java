@@ -219,7 +219,10 @@ public class PhraseResultPanel extends VerticalLayout {
 				"Tag from the Tag Manager over the Kwic-results.</p>" +
 				"<h4>Take a closer look</h4>" +
 				"You can jump to the location in the full text by double " +
-				"clicking on a row in the Kwic-view.");
+				"clicking on a row in the Kwic-view." +
+				"<h4>Untag search results</h4>" +
+				"The \"Results by markup\" tab gives you the opportunity " +
+				"to untag markup for selected search results in the Kwic-view.");
 		
 		rightComponent.addComponent(helpLabel);
 		rightComponent.setComponentAlignment(helpLabel, Alignment.TOP_RIGHT);

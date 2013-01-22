@@ -9,6 +9,8 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.vaadin.jouni.animator.Animator;
+
 import com.vaadin.Application;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.ui.Alignment;
@@ -17,6 +19,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.ProgressIndicator;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.Window.Notification;
 
@@ -132,21 +135,32 @@ public class CatmaApplication extends Application
 					);
 			
 			Label helpLabel = new Label();
-			
 			helpLabel.setIcon(new ClassResource(
 					"ui/resources/icon-help.gif", 
 					this));
-
+			helpLabel.setWidth("20px");
 			helpLabel.setDescription(
 					"<h3>Hints</h3>" +
-					"Watch out for little question mark icons that guide you " +
-					"through CATMA." +
+					"<p>Watch out for these little question mark icons while navigating " +
+					"through CATMA. They provide useful hints for managing the first " +
+					"steps within a CATMA component.</p>" +
+					"<h4>Login</h4>" +
 					"Once you're logged in, you will see the Repository Manager " +
-					"which will explain the first steps to you via the question " +
-					"mark icons. Just hover over them with the mouse.");
-
-			mainLayout.addComponent(helpLabel);
-			mainLayout.setComponentAlignment(helpLabel, Alignment.TOP_RIGHT);
+					"which will explain the first steps to you. " +
+					"Just hover your mouse over the question mark icons!");
+			VerticalLayout helpWrapper = new VerticalLayout();
+			helpWrapper.addComponent(helpLabel);
+			helpWrapper.setComponentAlignment(helpLabel, Alignment.TOP_RIGHT);
+			
+			Animator helpAnimator = new Animator(helpWrapper);
+			
+			helpAnimator.setFadedOut(true);
+			
+			mainLayout.addComponent(helpAnimator);
+			mainLayout.setComponentAlignment(helpAnimator, Alignment.TOP_RIGHT);
+			mainLayout.setExpandRatio(helpAnimator, 1.0f);
+			helpAnimator.fadeIn(2000, 300);
+			
 			MenuBar loginLogoutMenu = new MenuBar();
 			LoginLogoutCommand loginLogoutCommand = new LoginLogoutCommand(menu, repositoryManagerView);
 			MenuItem loginLogoutitem = loginLogoutMenu.addItem("Login", loginLogoutCommand);
@@ -163,6 +177,7 @@ public class CatmaApplication extends Application
 		
 		setTheme("cleatheme");
 	}
+	
 	
 	private void initTempDirectory(Properties properties) throws IOException {
 		String tempDirProp = properties.getProperty(RepositoryPropertyKey.TempDir.name());

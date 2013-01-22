@@ -8,7 +8,10 @@ import java.util.logging.Logger;
 import com.vaadin.Application;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.terminal.ClassResource;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
@@ -70,7 +73,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		setSizeFull();
 		this.setMargin(false, true, true, true);
 		this.setSpacing(true);
-
+		
 		Component documentsLabel = createDocumentsLabel();
 		addComponent(documentsLabel);
 		VerticalSplitPanel splitPanel = new VerticalSplitPanel();
@@ -112,9 +115,38 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	}
 
 	private Component createDocumentsLabel() {
+		HorizontalLayout labelLayout = new HorizontalLayout();
+		labelLayout.setWidth("100%");
+		
 		Label documentsLabel = new Label("Document Manager");
 		documentsLabel.addStyleName("bold-label");
-		return documentsLabel;
+		
+		labelLayout.addComponent(documentsLabel);
+		
+		Label helpLabel = new Label();
+		helpLabel.setIcon(new ClassResource(
+				"ui/resources/icon-help.gif", 
+				getApplication()));
+		helpLabel.setWidth("20px");
+		helpLabel.setDescription(
+				"<h3>Hints</h3>" +
+				"<h4>First steps</h4>" +
+				"<h5>Adding a Source Document</h5>" +
+				"You can add a Source Document by clicking the \"Add Source Document\"-Button. " +
+				"A Source Document can be a web resource pointed to by the URL or you can upload a document from your computer. " +
+				"<h5>Tagging a Source Document</h5>" +
+				"When you add your first Source Document CATMA generates a set of example items to get you going: " +
+				"<ul><li>A User Markup Collection to hold your markup.</li><li>A Tag Library with an example Tagset that contains an example Tag</li></ul> "+
+				"To start tagging a Source Document just select the example User Markup Collection from the tree and click the \"Open User Markup Collection\"-button. " +
+				"Then follow the instructions given to you by the Tagger component." +
+				"<h5>Analyze a Source Document</h5>" +
+				"To analyze a Source Document just select that document from the tree and click \"Analyze Source Document\" in the \"More Actions\"-Menu." +
+				"Then follow the instructions given to you by the Analyzer component.");
+
+		labelLayout.addComponent(helpLabel);
+		labelLayout.setComponentAlignment(helpLabel, Alignment.MIDDLE_RIGHT);
+		
+		return labelLayout;
 	}
 
 	public Repository getRepository() {
