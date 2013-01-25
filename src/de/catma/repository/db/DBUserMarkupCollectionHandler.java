@@ -481,10 +481,15 @@ class DBUserMarkupCollectionHandler {
 				tagInstance = 
 					new TagInstance(
 						idGenerator.uuidBytesToCatmaID(
-							dbTagInstance.getUuid()), 
-						tagLibrary.getTagDefinition(
-							idGenerator.uuidBytesToCatmaID(
+							dbTagInstance.getUuid()),
+						tagLibrary.getTagsetDefinition(
+								idGenerator.uuidBytesToCatmaID(
+									dbTagInstance.getDbTagDefinition()
+										.getDbTagsetDefinition().getUuid())).getTagDefinition(idGenerator.uuidBytesToCatmaID(
 								dbTagInstance.getDbTagDefinition().getUuid())));
+//						tagLibrary.getTagDefinition(
+//							idGenerator.uuidBytesToCatmaID(
+//								dbTagInstance.getDbTagDefinition().getUuid())));
 				addProperties(tagInstance, dbTagInstance);
 				tagInstances.put(dbTagInstance, tagInstance);
 			}

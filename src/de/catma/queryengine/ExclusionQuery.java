@@ -91,7 +91,7 @@ public class ExclusionQuery extends Query {
         Iterator<QueryResultRow> baseResultIterator = result1.iterator();
         while (baseResultIterator.hasNext()) {
             QueryResultRow row  = baseResultIterator.next();
-            if(!row.existsIn(results2,comparator)) {
+            if(row.existsIn(results2,comparator)) {
                 baseResultIterator.remove();
             }
         }

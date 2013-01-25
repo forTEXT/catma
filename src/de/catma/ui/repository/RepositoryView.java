@@ -132,15 +132,15 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 				"<h3>Hints</h3>" +
 				"<h4>First steps</h4>" +
 				"<h5>Adding a Source Document</h5>" +
-				"You can add a Source Document by clicking the \"Add Source Document\"-Button. " +
+				"You can add a Source Document by clicking the \"Add Source Document\"-button. " +
 				"A Source Document can be a web resource pointed to by the URL or you can upload a document from your computer. " +
 				"<h5>Tagging a Source Document</h5>" +
-				"When you add your first Source Document CATMA generates a set of example items to get you going: " +
-				"<ul><li>A User Markup Collection to hold your markup.</li><li>A Tag Library with an example Tagset that contains an example Tag</li></ul> "+
-				"To start tagging a Source Document just select the example User Markup Collection from the tree and click the \"Open User Markup Collection\"-button. " +
+				"When you add your first Source Document, CATMA generates a set of example items to get you going: " +
+				"<ul><li>A User Markup Collection to hold your markup</li><li>A Tag Library with an example Tagset that contains an example Tag</li></ul> "+
+				"To start tagging a Source Document, just select the example User Markup Collection from the tree and click the \"Open User Markup Collection\"-button. " +
 				"Then follow the instructions given to you by the Tagger component." +
 				"<h5>Analyze a Source Document</h5>" +
-				"To analyze a Source Document just select that document from the tree and click \"Analyze Source Document\" in the \"More Actions\"-Menu." +
+				"To analyze a Source Document, just select that document from the tree and click \"Analyze Source Document\" in the \"More Actions\"-menu." +
 				"Then follow the instructions given to you by the Analyzer component.");
 
 		labelLayout.addComponent(helpLabel);

@@ -157,7 +157,7 @@ public class CatmaApplication extends Application
 					"through CATMA. They provide useful hints for managing the first " +
 					"steps within a CATMA component.</p>" +
 					"<h4>Login</h4>" +
-					"Once you're logged in, you will see the Repository Manager " +
+					"Once you're logged in, you will see the Repository Manager, " +
 					"which will explain the first steps to you. " +
 					"Just hover your mouse over the question mark icons!");
 			VerticalLayout helpWrapper = new VerticalLayout();

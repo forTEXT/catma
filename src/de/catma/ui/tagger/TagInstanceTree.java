@@ -16,7 +16,6 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.Window.Notification;
 
@@ -42,6 +41,7 @@ public class TagInstanceTree extends HorizontalLayout {
 		icon,
 		color,
 		path,
+		instanceId,
 		;
 	}
 	
@@ -200,6 +200,9 @@ public class TagInstanceTree extends HorizontalLayout {
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.path, String.class, null);
 
+		tagInstanceTree.addContainerProperty(
+				TagInstanceTreePropertyName.instanceId, String.class, null);
+
 		tagInstanceTree.setItemCaptionPropertyId(TagInstanceTreePropertyName.caption);
 		tagInstanceTree.setItemIconPropertyId(TagInstanceTreePropertyName.icon);
 
@@ -212,12 +215,14 @@ public class TagInstanceTree extends HorizontalLayout {
 				new Object[] {
 						TagInstanceTreePropertyName.caption, 
 						TagInstanceTreePropertyName.color,
-						TagInstanceTreePropertyName.path});
+						TagInstanceTreePropertyName.path,
+						TagInstanceTreePropertyName.instanceId});
 		tagInstanceTree.setColumnHeader(
 				TagInstanceTreePropertyName.color, "Tag Color");
 		tagInstanceTree.setColumnHeader(
 				TagInstanceTreePropertyName.path, "Tag Path");
-		
+		tagInstanceTree.setColumnHeader(
+				TagInstanceTreePropertyName.instanceId, "Tag Instance ID");
 		addComponent(tagInstanceTree);
 		setExpandRatio(tagInstanceTree, 1.0f);
 		
@@ -243,7 +248,8 @@ public class TagInstanceTree extends HorizontalLayout {
 			tagInstanceTree.addItem(
 					new Object[] {
 						ti.getSecond().getTagDefinition().getName(),
-						ti.getFirst()
+						ti.getFirst(),
+						ti.getSecond().getUuid()
 					},
 					ti.getSecond());
 			tagInstanceTree.getItem(
@@ -265,6 +271,7 @@ public class TagInstanceTree extends HorizontalLayout {
 				tagInstanceTree.addItem(
 						new Object[] {
 								caption,
+								"",
 								""
 						},
 						property);
@@ -275,7 +282,7 @@ public class TagInstanceTree extends HorizontalLayout {
 				
 				for (String value : values) {
 					String itemId = String.valueOf(property.hashCode()) + value; 
-					tagInstanceTree.addItem(new Object[] {value, ""}, 
+					tagInstanceTree.addItem(new Object[] {value, "", ""}, 
 							itemId);
 					tagInstanceTree.setParent(itemId, property);
 					tagInstanceTree.setChildrenAllowed(itemId, false);

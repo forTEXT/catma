@@ -533,14 +533,14 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				"Click on the  \"Wordlist\"-Button to get a list of all words of your document together with their frequencies." +
 				" You can now sort the list by phrase, i. e. the word, or by frequency." +
 				"<h4>Building queries</h4>" +
-				"You are free to hack your query directly into the Query box but a large part of all possible queries can be generated with the Query Builder more conveniently." +
+				"You are free to hack your query directly into the Query box, but a large part of all possible queries can be generated with the Query Builder more conveniently." +
 				"<h4>Keywords in Context (KWIC)</h4>" +
-				"To see your search results in the context of its surrounding text tick the \"Visible in Kwic\"-check box " +
+				"To see your search results in the context of its surrounding text, tick the \"Visible in Kwic\"-check box " +
 				"of the desired results." +
 				"<h4>Results by Markup</h4>" +
-				"When building tag queries where you look for occurrences of certain tags sometimes you " +
-				"want the results grouped by tags (especially subtags) and sometimes you want the results " +
-				"grouped by the tagged phrase. The \"Results by markup\" and \"Results by phrase\" tabs give you this choice for tag queries.");
+				"When building Tag Queries where you look for occurrences of certain Tags, sometimes you " +
+				"want the results grouped by Tags (especially Subtags) and sometimes you want the results " +
+				"grouped by the tagged phrase. The \"Results by markup\" and \"Results by phrase\" tabs give you this choice for Tag Queries.");
 
 		convenienceButtonPanel.addComponent(helpLabel);
 	

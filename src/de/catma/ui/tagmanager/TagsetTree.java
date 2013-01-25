@@ -725,7 +725,7 @@ public class TagsetTree extends HorizontalLayout {
 			tagTree.addGeneratedColumn(
 				TagTreePropertyName.color,
 				new ColorButtonColumnGenerator(colorButtonListener));
-			
+			tagTree.setColumnReorderingAllowed(true);
 		}
 		else {
 			tagTree.addGeneratedColumn(

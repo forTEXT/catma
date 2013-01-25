@@ -182,13 +182,14 @@ public class TaggerView extends VerticalLayout
 				//recalculate pages
 				try {
 					tagger.setText(sourceDocument.getContent());
+					tagger.setTagInstancesVisible(absoluteTagInstances, true);
+
+					pagerComponent.setPage(1);
 				} catch (IOException e) {
 					((CatmaApplication)getApplication()).showAndLogError(
 						"Error showing Source Document!", e);
 				}
-				tagger.setTagInstancesVisible(absoluteTagInstances, true);
 
-				pagerComponent.setPage(1);
 			}
 		});
 	}
@@ -213,7 +214,7 @@ public class TaggerView extends VerticalLayout
 				"<ol><li>First you have to tell CATMA which Tagset you want to use. " +
 				"Open a Tag Library from the Repository Manager and drag a Tagset to the \"Active Tagsets\" section.</li>" +
 				"<li>Now you can mark the text sequence you want to tag.</li><li>Click the colored button of the desired Tag to apply it to the marked sequence.</li></ol> " +
-				"When you click on a tagged text, i. e. a text that is underlined with colored bars you should see " +
+				"When you click on a tagged text, i. e. a text that is underlined with colored bars, you should see " +
 				"the available Tag Instances in the section on the lower right of this view.");		
 		pager = new Pager(taggerID, 80, 30);
 		

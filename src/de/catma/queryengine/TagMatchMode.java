@@ -18,6 +18,10 @@ public enum TagMatchMode {
                 		(o1.getRange().getEndPoint()-o2.getRange().getEndPoint());
             }
 		}
+		
+		public String toString() {
+			return TagMatchMode.BOUNDARY.name() + super.toString();
+		};
 	}),
 	OVERLAP(new Comparator<QueryResultRow>() {
 		public int compare(QueryResultRow o1, QueryResultRow o2) {
@@ -31,6 +35,10 @@ public enum TagMatchMode {
 				return (int)(o1.getRange().getStartPoint()-o2.getRange().getStartPoint());
 			}
 		}
+		public String toString() {
+			return TagMatchMode.OVERLAP.name() + super.toString();
+		};
+
 	}),
 	EXACT(new Comparator<QueryResultRow>() {
 		public int compare(QueryResultRow o1, QueryResultRow o2) {
@@ -39,6 +47,11 @@ public enum TagMatchMode {
 			}
 			return o1.getRange().compareTo(o2.getRange());
 		}
+		
+		public String toString() {
+			return TagMatchMode.EXACT.name() + super.toString();
+		};
+
 	}),
 	;
 	

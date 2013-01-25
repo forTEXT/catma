@@ -138,6 +138,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		tabSheet.setSizeFull();
 		VerticalLayout tabContent = new VerticalLayout();
 		tabContent.setSpacing(true);
+		tabContent.setSizeFull();
 		
 		Label helpLabel = new Label();
 		
@@ -166,6 +167,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			new TagsetTree(
 				repository.getTagManager(), null, false, colorButtonListener);
 		tabContent.addComponent(tagsetTree);
+		tabContent.setExpandRatio(tagsetTree, 1.0f);
 		
 		tabSheet.addTab(tabContent, "Active Tagsets");
 		

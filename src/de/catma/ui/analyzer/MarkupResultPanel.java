@@ -462,7 +462,7 @@ public class MarkupResultPanel extends VerticalLayout {
 				"<h3>Hints</h3>" +
 				"<h4>Tagging search results</h4>" +
 				"You can tag the search results in the Kwic-view: " +
-				"<p>First select one ore more rows and then drag the desired " +
+				"<p>First select one or more rows and then drag the desired " +
 				"Tag from the Tag Manager over the Kwic-results.</p>" +
 				"<h4>Take a closer look</h4>" +
 				"You can jump to the location in the full text by double " +

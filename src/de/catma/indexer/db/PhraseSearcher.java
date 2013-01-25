@@ -56,7 +56,7 @@ class PhraseSearcher {
 				else {
 					for (String documentId : documentIdList) {
 						queryResult.addAll(
-							searchPhrase2(
+							searchPhrase(
 								session, documentId, phrase, termList, false, limit));
 					}
 				}
