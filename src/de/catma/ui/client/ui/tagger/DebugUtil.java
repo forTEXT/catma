@@ -41,14 +41,16 @@ public class DebugUtil {
 		if (node == null) {
 			println("null");
 		}
-		if (Element.is(node)) {
-			Element e = Element.as(node);
-			println( "Element " +
-					node.getNodeName() + 
-					"#"+ e.getId());
-		}
 		else {
-			println(node.getNodeName() + "[" + node.getNodeValue() + "]");
+			if (Element.is(node)) {
+				Element e = Element.as(node);
+				println( "Element " +
+						node.getNodeName() + 
+						"#"+ e.getId());
+			}
+			else {
+				println(node.getNodeName() + "[" + node.getNodeValue() + "]");
+			}
 		}
 	}
 
