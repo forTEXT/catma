@@ -446,8 +446,14 @@ public class TagsetTree extends HorizontalLayout {
 	private void removeTagDefinitionFromTree(
 			TagDefinition td, TagsetDefinition tagsetDefinition) {
 		
-		for (TagDefinition child : tagsetDefinition.getChildren(td)) {
-			removeTagDefinitionFromTree(child, tagsetDefinition);
+		Collection<Object> children = new ArrayList<Object>();
+		if (tagTree.hasChildren(td)) {
+			children.addAll(tagTree.getChildren(td));
+		}
+		for (Object child : children) {
+			if (child instanceof TagDefinition) {
+				removeTagDefinitionFromTree((TagDefinition)child, tagsetDefinition);
+			}
 		}
 		
 		for (PropertyDefinition pd : 
