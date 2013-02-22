@@ -11,6 +11,7 @@
 	margin: 20px;
 	padding: 5px;
 	white-space:nowrap;
+	overflow: auto ! important;
 }
 
 .bold-label {

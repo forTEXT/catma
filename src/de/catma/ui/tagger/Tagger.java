@@ -178,6 +178,7 @@ public class Tagger extends AbstractComponent {
 	void setTagInstancesVisible(
 			List<ClientTagInstance> tagInstances, boolean visible) {
 		
+		
 		List<ClientTagInstance> currentRelativePageTagInstancesCopy = 
 				new ArrayList<ClientTagInstance>();
 		

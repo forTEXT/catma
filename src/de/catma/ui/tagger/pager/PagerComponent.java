@@ -20,6 +20,7 @@ package de.catma.ui.tagger.pager;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.data.Validator;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -86,20 +87,24 @@ public class PagerComponent extends HorizontalLayout {
 				setLastPageNumber(pager.getLastPageNumber());
 			}
 		});
+		previousPageButton.setEnabled(false);
 	}
 	
 	public void setLastPageNumber(int lastPageNumber) {
 		this.lastPageNumber = lastPageNumber;
 		this.lastPageNumberLabel.setValue("/"+lastPageNumber);
+		nextPageButton.setEnabled((currentPageNumber < lastPageNumber));
+		previousPageButton.setEnabled(currentPageNumber != 1);
 	}
 
 	private void initActions() {
-		//TODO: prevent out of bounds pages, see AnnotationClient:Pager 
 		firstPageButton.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				currentPageNumber = 1;
 				pageInput.setValue("1");
+				previousPageButton.setEnabled(false);
+				nextPageButton.setEnabled(true);
 			}
 		});
 		previousPageButton.addListener(new ClickListener() {
@@ -107,6 +112,10 @@ public class PagerComponent extends HorizontalLayout {
 			public void buttonClick(ClickEvent event) {
 				currentPageNumber--;
 				pageInput.setNumber(currentPageNumber);
+				if (currentPageNumber == 1) {
+					previousPageButton.setEnabled(false);
+				}
+				nextPageButton.setEnabled(true);
 			}
 		});
 		nextPageButton.addListener(new ClickListener() {
@@ -114,6 +123,11 @@ public class PagerComponent extends HorizontalLayout {
 			public void buttonClick(ClickEvent event) {
 				currentPageNumber++;
 				pageInput.setNumber(currentPageNumber);
+				if (currentPageNumber == lastPageNumber) {
+					nextPageButton.setEnabled(false);
+				}
+				
+				previousPageButton.setEnabled(true);
 			}
 		});
 		lastPageButton.addListener(new ClickListener() {
@@ -121,6 +135,8 @@ public class PagerComponent extends HorizontalLayout {
 			public void buttonClick(ClickEvent event) {
 				currentPageNumber = lastPageNumber;
 				pageInput.setNumber(currentPageNumber);
+				previousPageButton.setEnabled(true);
+				nextPageButton.setEnabled(false);
 			}
 		});
 		pageInput.addListener(new ValueChangeListener() {
@@ -128,9 +144,46 @@ public class PagerComponent extends HorizontalLayout {
 			public void valueChange(ValueChangeEvent event) {
 				currentPageNumber = pageInput.getNumber();
 				pageChangeListener.pageChanged(currentPageNumber);
+				if (currentPageNumber == 1) {
+					previousPageButton.setEnabled(false);
+					nextPageButton.setEnabled(true);
+				}
+				else if (currentPageNumber == lastPageNumber) {
+					nextPageButton.setEnabled(false);
+					previousPageButton.setEnabled(true);
+				}
+				else {
+					previousPageButton.setEnabled(true);
+					nextPageButton.setEnabled(true);
+				}
+				pageInput.setComponentError(null);
 			}
 		});
 		
+		pageInput.addValidator(new Validator() {
+			public boolean isValid(Object value) {
+				if (value != null) {
+					try {
+						int i = Integer.valueOf(value.toString());
+						if (i>=1 && i<=lastPageNumber) {
+							return true;
+						}
+					}
+					catch (NumberFormatException nfe) {
+						return false;
+					}
+				}
+				return false;
+			}
+			
+			public void validate(Object value) throws InvalidValueException {
+				if (!isValid(value)) {
+					throw new InvalidValueException("The number should be between 1 and " + lastPageNumber ); 
+				}
+			}
+		});
+		pageInput.setInvalidAllowed(false);
+		pageInput.setInvalidCommitted(false);
 	}
 
 	private void initComponents() {
@@ -142,6 +195,7 @@ public class PagerComponent extends HorizontalLayout {
 		pageInput = new NumberField(1);
 		pageInput.setImmediate(true);
 		pageInput.setStyleName("pager-pageinput");
+		pageInput.setWidth("30px");
 		addComponent(pageInput);
 		lastPageNumberLabel = new Label("/NA");
 		addComponent(lastPageNumberLabel);

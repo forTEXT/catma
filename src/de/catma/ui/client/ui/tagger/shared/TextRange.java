@@ -18,6 +18,7 @@
  */   
 package de.catma.ui.client.ui.tagger.shared;
 
+
 /**
  * @author marco.petris@web.de
  *
@@ -49,4 +50,91 @@ public class TextRange {
 	public String toString() {
 		return "["+getStartPos()+","+getEndPos()+"]";
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + endPos;
+		result = prime * result + startPos;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		TextRange other = (TextRange) obj;
+		if (endPos != other.endPos) {
+			return false;
+		}
+		if (startPos != other.startPos) {
+			return false;
+		}
+		return true;
+	}
+	
+	
+    /**
+     * @param range the range to test
+     * @return true if the given range and this range overlap in any point
+     */
+    public boolean hasOverlappingRange(TextRange range) {
+        return (getOverlappingRange(range) != null);
+    }
+
+    
+    public TextRange getOverlappingRange(
+            TextRange rangeToTest ) {
+
+        if( ( rangeToTest.getStartPos() == getEndPos() )
+                || ( getStartPos() == rangeToTest.getEndPos() ) ) {
+            return null;
+        }
+
+        if( isInBetweenInclusiveEdge( rangeToTest.getStartPos()) ) {
+            if( isInBetweenInclusiveEdge( rangeToTest.getEndPos() ) ) {
+                return new TextRange(
+                        rangeToTest.getStartPos(),
+                        rangeToTest.getEndPos() );
+            }
+            else if( isAfter( rangeToTest.getEndPos() ) ) {
+                return new TextRange(
+                    rangeToTest.getStartPos(),
+                    this.getEndPos() );
+            }
+        }
+        else if( !isAfter( rangeToTest.getStartPos() ) ) {
+            if( isInBetweenInclusiveEdge( rangeToTest.getEndPos() ) ) {
+                return new TextRange(
+                    this.getStartPos(),
+                    rangeToTest.getEndPos() );
+
+            }
+            else if( isAfter( rangeToTest.getEndPos() ) ) {
+                return new TextRange(
+                    this.getStartPos(),
+                    this.getEndPos() );
+            }
+        }
+
+        // no overlap
+        return null;
+    }
+    
+    private boolean isAfter( long point ) {
+        return (this.getEndPos() < point);
+    }
+
+    private boolean isInBetweenInclusiveEdge( long point ) {
+        return ( (point >= this.getStartPos())
+                    && (point <= this.getEndPos()) );
+    }
 }

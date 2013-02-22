@@ -175,6 +175,9 @@ public class Page {
 	}
 
 	public void addRelativeTagInstance(ClientTagInstance relativeTagInstance) {
+		// for relative TagInstances the amount of text ranges varies depending 
+		// on the current page and the current page size
+		// so we need to append those that are not present
 		if (this.relativeTagInstances.containsKey(
 				relativeTagInstance.getInstanceID())) {
 			this.relativeTagInstances.get(

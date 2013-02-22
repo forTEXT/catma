@@ -16,11 +16,9 @@ import com.vaadin.terminal.ClassResource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window.Notification;
@@ -200,7 +198,6 @@ public class TaggerView extends VerticalLayout
 		VerticalLayout taggerPanel = new VerticalLayout();
 		
 		taggerPanel.setSpacing(true);
-		taggerPanel.setSizeFull();
 
 		Label helpLabel = new Label();
 		
@@ -219,29 +216,18 @@ public class TaggerView extends VerticalLayout
 		pager = new Pager(taggerID, 80, 30);
 		
 		tagger = new Tagger(taggerID, pager, this);
-		tagger.setSizeFull();
+		tagger.addStyleName("tagger");
+		tagger.setWidth("550px");
 		
-		CustomComponent cc = new CustomComponent(tagger);
-		cc.setWidth("400px");
-		cc.addStyleName("tagger");
+		taggerPanel.addComponent(tagger);
 		
-		Panel scrollPanel = new Panel(cc);
-		scrollPanel.setSizeFull();
+//		Panel actionPanel = new Panel(new HorizontalLayout());
+//		((HorizontalLayout)actionPanel.getContent()).setSpacing(true);
+	
+		HorizontalLayout actionPanel = new HorizontalLayout();
+		actionPanel.setSpacing(true);
 		
-		scrollPanel.getContent().setSizeUndefined();
-		
-		addComponent(scrollPanel);
-		
-		taggerPanel.addComponent(scrollPanel);
-		taggerPanel.setExpandRatio(scrollPanel, 0.8f);
-		
-		Panel actionPanel = new Panel(new HorizontalLayout());
-		
-		((HorizontalLayout)actionPanel.getContent()).setSpacing(true);
-		actionPanel.setSizeFull();
-
 		taggerPanel.addComponent(actionPanel);
-		taggerPanel.setExpandRatio(actionPanel, 0.2f);
 		
 		pagerComponent = new PagerComponent(
 				pager, new PageChangeListener() {
@@ -254,19 +240,16 @@ public class TaggerView extends VerticalLayout
 		actionPanel.addComponent(helpLabel);
 		
 		actionPanel.addComponent(pagerComponent);
-		((HorizontalLayout)actionPanel.getContent()).setExpandRatio(pagerComponent, 0.1f);
 		
 		btAnalyze = new Button("Analyze Document");
 		btAnalyze.setEnabled(repository instanceof IndexedRepository);
 		actionPanel.addComponent(btAnalyze);
-		((HorizontalLayout)actionPanel.getContent()).setExpandRatio(btAnalyze, 0.1f);
 		
 		linesPerPageSlider =  new Slider("page size zoom", 1, 100, "%");
 		linesPerPageSlider.setImmediate(true);
 		linesPerPageSlider.setWidth("150px");
 		
 		actionPanel.addComponent(linesPerPageSlider);
-		((HorizontalLayout)actionPanel.getContent()).setExpandRatio(linesPerPageSlider, 0.8f);
 		
 		markupPanel = new MarkupPanel(
 				repository,

@@ -71,11 +71,18 @@ public class ClientTagInstance {
 		this(tagInstanceToCopy.tagDefinitionID,
 				tagInstanceToCopy.instanceID, 
 				tagInstanceToCopy.color, new ArrayList<TextRange>());
+		
+		TextRange pageRange = new TextRange(pageStart, pageEnd);
+		
 		for (TextRange tr : tagInstanceToCopy.getRanges()) {
-			ranges.add(
-				new TextRange(
-					Math.max(tr.getStartPos()+base, pageStart+base), 
-					Math.min(tr.getEndPos()+base, pageEnd+base)));
+			
+			TextRange overlappingRange = pageRange.getOverlappingRange(tr);
+		
+			if (overlappingRange != null) {
+				ranges.add(
+					new TextRange(overlappingRange.getStartPos()+base,
+							overlappingRange.getEndPos()+base));
+			}
 		}
 	}
 
@@ -128,7 +135,11 @@ public class ClientTagInstance {
 	}
 	
 	public void addRanges(List<TextRange> moreRanges) {
-		this.ranges.addAll(moreRanges);
+		for (TextRange tr : moreRanges) {
+			if (!ranges.contains(tr)) {
+				this.ranges.add(tr);
+			}
+		}
 	}
 
 	

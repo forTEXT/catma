@@ -196,8 +196,8 @@ public class VTagger extends Composite implements Paintable {
 	 * sort of a hack to ensure proper scrollability of the TaggerEditor
 	 */
 	private void adjustTaggerEditorSizeAttribute() {
-		taggerEditor.getElement().setAttribute("style", "");
-		taggerEditor.getElement().getParentElement().setAttribute(
-				"style", "width:120%;min-width:80%;");
+//		taggerEditor.getElement().setAttribute("style", "");
+//		taggerEditor.getElement().getParentElement().setAttribute(
+//				"style", "width:120%;min-width:80%;");
 	}
 }
