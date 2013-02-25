@@ -6,6 +6,9 @@
   <property name="hibernate.connection.driver_class">org.gjt.mm.mysql.Driver</property>
   <property name="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
   <property name="hibernate.show_sql">true</property>
+  <property name="hibernate.connection.characterEncoding">UTF-8</property>
+  <property name="hibernate.connection.useUnicode">true</property>
+  
   <property name="hibernate.c3p0.min_size">15</property>
   <property name="hibernate.c3p0.max_size">500</property>
   <property name="hibernate.c3p0.timeout">1800</property>
