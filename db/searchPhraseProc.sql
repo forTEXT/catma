@@ -6,7 +6,8 @@ DROP PROCEDURE IF EXISTS searchPhrase$$
 CREATE PROCEDURE searchPhrase (
     term1 VARCHAR(300), term2 VARCHAR(300), 
     term3 VARCHAR(300), term4 VARCHAR(300), term5 VARCHAR(300), 
-    docID VARCHAR(300))
+    docID VARCHAR(300),
+    wild BOOLEAN)
 BEGIN
 
     CREATE temporary TABLE result (
@@ -20,13 +21,18 @@ BEGIN
         characterEnd INT
     ); 
     
-    INSERT INTO termbuf1(tokenOffset, characterEnd) 
-    SELECT p.tokenOffset, p.characterEnd
-    FROM CatmaIndex.term t
-    JOIN CatmaIndex.position p ON p.termID = t.termID
-    WHERE t.documentID=docID
-    and t.term = term2;
-
+    IF (term2 IS NOT NULL)
+    THEN
+        INSERT INTO termbuf1(tokenOffset, characterEnd) 
+        SELECT p.tokenOffset, p.characterEnd
+        FROM CatmaIndex.term t
+        JOIN CatmaIndex.position p ON p.termID = t.termID
+        WHERE t.documentID=docID
+        AND CASE WHEN wild = 0 THEN
+            t.term = term2
+        ELSE t.term like term2 END;
+    END IF;
+    
     CREATE temporary TABLE termbuf2 (
         tokenOffset INT,
         characterEnd INT
@@ -39,7 +45,9 @@ BEGIN
         FROM CatmaIndex.term t
         JOIN CatmaIndex.position p ON p.termID = t.termID
         WHERE t.documentID=docID
-        and t.term = term3;
+        AND CASE WHEN wild = 0 THEN
+            t.term = term3
+        ELSE t.term like term3 END;
     END IF;
    
 
@@ -55,7 +63,9 @@ BEGIN
         FROM CatmaIndex.term t
         JOIN CatmaIndex.position p ON p.termID = t.termID
         WHERE t.documentID=docID
-        and t.term = term4;
+        AND CASE WHEN wild = 0 THEN
+            t.term = term4
+        ELSE t.term like term4 END;
     END IF;
 
     CREATE temporary TABLE termbuf4 (
@@ -70,20 +80,28 @@ BEGIN
         FROM CatmaIndex.term t
         JOIN CatmaIndex.position p ON p.termID = t.termID
         WHERE t.documentID=docID
-        and t.term = term5;
+        AND CASE WHEN wild = 0 THEN
+            t.term = term5
+        ELSE t.term like term5 END;
     END IF;
     
-    INSERT INTO result(tokenOffset, characterStart)
+    INSERT INTO result(tokenOffset, characterStart, characterEnd)
     SELECT
     pos.tokenOffset as tokenOffset,
-    pos.characterStart as characterStart
+    pos.characterStart as characterStart,
+    pos.characterEnd as characterEnd
     FROM CatmaIndex.term t 
     JOIN CatmaIndex.position pos on pos.termID=t.termID
     WHERE t.documentID=docID
-    AND t.term = term1 
-    AND pos.tokenOffset+1 IN (
+    AND CASE WHEN wild = 0 THEN
+        t.term = term1
+    ELSE 
+        CASE WHEN term1 IS NOT NULL THEN t.term like term1 
+        ELSE 1=1 END
+    END
+    AND CASE WHEN term2 IS NOT NULL THEN pos.tokenOffset+1 IN (
         SELECT tm1.tokenOffset FROM termbuf1 tm1
-    )
+    ) ELSE 1=1 END
     AND CASE WHEN term3 IS NOT NULl THEN pos.tokenOffset+2 IN (
         SELECT tm2.tokenOffset FROM termbuf2 tm2
     ) ELSE 1=1 END
@@ -100,7 +118,7 @@ BEGIN
         UPDATE result r, termbuf3 t SET r.characterEnd = t.characterEnd WHERE r.tokenOffset+3=t.tokenOffset;
     ELSEIF (term3 IS NOT NULL) THEN
         UPDATE result r, termbuf2 t SET r.characterEnd = t.characterEnd WHERE r.tokenOffset+2=t.tokenOffset;
-    ELSE 
+    ELSEIF (term2 IS NOT NULL) THEN
         UPDATE result r, termbuf1 t SET r.characterEnd = t.characterEnd WHERE r.tokenOffset+1=t.tokenOffset;
     END IF;
 

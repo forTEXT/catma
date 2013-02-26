@@ -20,7 +20,7 @@ import de.catma.util.CloseSafe;
 import de.catma.util.Pair;
 
 class PhraseSearcher {
-	
+	private static final int MAX_DIRECT_SEARCH_TERMS = 5;
 	private SessionFactory sessionFactory;
 //	private Logger logger = Logger.getLogger(this.getClass().getName());
 	
@@ -39,7 +39,7 @@ class PhraseSearcher {
 		try {
 			
 			if ((documentIdList==null) || documentIdList.isEmpty()) {
-				queryResult = searchPhrase(session, null, phrase, termList, false, limit);
+				queryResult = searchPhrase2(session, null, phrase, termList, false, limit);
 			}
 			else {
 				queryResult = new QueryResultRowArray();
@@ -48,7 +48,7 @@ class PhraseSearcher {
 						limit -= ((QueryResultRowArray)queryResult).size();
 						if  (limit >= 0) {
 							queryResult.addAll(
-								searchPhrase(
+								searchPhrase2(
 									session, documentId, phrase, termList, false, limit));
 						}
 					}
@@ -56,7 +56,7 @@ class PhraseSearcher {
 				else {
 					for (String documentId : documentIdList) {
 						queryResult.addAll(
-							searchPhrase(
+							searchPhrase2(
 								session, documentId, phrase, termList, false, limit));
 					}
 				}
@@ -79,58 +79,89 @@ class PhraseSearcher {
 		if (termList.size() == 0) {
 			return new QueryResultRowArray();
 		}
-		else if (termList.size() == 1) {
-			
-			List<DBPosition> positions = 
-					getPositionsForTerm(
-						session, termList.get(0), documentId, withWildcards, limit);
-			QueryResultRowArray result = new QueryResultRowArray();
-			for (DBPosition p : positions) {
-				result.add(
-					new QueryResultRow(
-						p.getTerm().getDocumentId(), 
-						new Range(p.getCharacterStart(), p.getCharacterEnd()), 
-						phrase));
-			}
-			return result;
-		}
 		else {
 			
-			//NEXT: wildcards, limit, termsize>5
+			//NEXT: limit, match improve
 
 			SQLQuery spSearchPhrase = session.createSQLQuery(
 						"call CatmaIndex.searchPhrase(" +
-						":term1, :term2, :term3, :term4, :term5, :docID)");
+						":term1, :term2, :term3, :term4, :term5, :docID, :wild)");
 		
-			int termCount=0;
-			for (termCount=0; termCount<Math.min(5, termList.size()); termCount++) {
-				spSearchPhrase.setParameter("term"+(termCount+1), termList.get(termCount));
+			SQLQuery spGetTerms = null;
+			
+			if (termList.size() > MAX_DIRECT_SEARCH_TERMS) {
+				spGetTerms = session.createSQLQuery("call CatmaIndex.getTerms(" +
+						":docID, :basePos, :termCount)");
+				spGetTerms.setParameter("docID", documentId);
 			}
 			
-			for (int pIdx=termCount; pIdx<5; pIdx++) {
+			int termCount=0;
+			for (termCount=0; 
+				termCount<Math.min(MAX_DIRECT_SEARCH_TERMS, 
+				termList.size()); termCount++) {
+				
+				String term = termList.get(termCount);
+				if (term.equals("%")) {
+					spSearchPhrase.setParameter("term"+(termCount+1), null);
+				}
+				else {
+					spSearchPhrase.setParameter("term"+(termCount+1), termList.get(termCount));
+				}
+			}
+			
+			for (int pIdx=termCount; pIdx<MAX_DIRECT_SEARCH_TERMS; pIdx++) {
 				spSearchPhrase.setParameter("term"+(pIdx+1), null);
 			}
 			
 			spSearchPhrase.setParameter("docID", documentId);
+			spSearchPhrase.setParameter("wild", withWildcards);
 			
 			@SuppressWarnings("unchecked")
 			List<Object[]> result = spSearchPhrase.list();
 			
 			QueryResultRowArray queryResult = new QueryResultRowArray();
 			for (Object[] row : result) {
-				queryResult.add(
-					new QueryResultRow(
-						documentId, 
-						new Range(
-							(Integer)row[1],
-							(Integer)row[2]),
-						phrase));
+				if (termList.size() > MAX_DIRECT_SEARCH_TERMS) {
+					spGetTerms.setParameter("basePos", (Integer)row[0]+MAX_DIRECT_SEARCH_TERMS-1);
+					spGetTerms.setParameter("termCount", termList.size()-MAX_DIRECT_SEARCH_TERMS);
+					@SuppressWarnings("unchecked")
+					List<Object[]> termResult = spGetTerms.list();
+					if (match(termResult, termList)) {
+						queryResult.add(
+								new QueryResultRow(
+									documentId,
+									new Range(
+										(Integer)row[1],
+										(Integer)termResult.get(termResult.size()-1)[2]),
+									phrase));
+					}
+				}
+				else {
+					queryResult.add(
+							new QueryResultRow(
+									documentId, 
+									new Range(
+											(Integer)row[1],
+											(Integer)row[2]),
+											phrase));
+				}
 			}
 			
 			return queryResult;
 		
 		}		
 	}
+	private boolean match(List<Object[]> termResult, List<String> termList) {
+		for (int i=0; i<termResult.size(); i++) {
+			String curTermResult = (String)termResult.get(i)[0];
+			String curTerm = termList.get(MAX_DIRECT_SEARCH_TERMS+i);
+			if (!curTermResult.matches(curTerm.replaceAll("%", ".*?"))) { //TODO: naive implementation!
+				return false; 
+			}
+		}
+		return true;
+	}
+
 	private QueryResultRowArray searchPhrase(Session session, String documentId,
 			String phrase, List<String> termList, boolean withWildcards, int limit) throws IOException {
 		if (termList.size() == 0) {
@@ -364,7 +395,7 @@ class PhraseSearcher {
 		try {
 			
 			if ((documentIdList==null) || documentIdList.isEmpty()) {
-				queryResult = searchPhrase(session, null, null, termList, true, limit);
+				queryResult = searchPhrase2(session, null, null, termList, true, limit);
 			}
 			else {
 				queryResult = new QueryResultRowArray();
@@ -374,7 +405,7 @@ class PhraseSearcher {
 						limit -= ((QueryResultRowArray)queryResult).size();
 						if  (limit >= 0) {
 							queryResult.addAll(
-								searchPhrase(
+								searchPhrase2(
 									session, documentId, null, 
 									termList, true, limit));
 						}
@@ -383,7 +414,7 @@ class PhraseSearcher {
 				else {
 					for (String documentId : documentIdList) {
 						queryResult.addAll(
-							searchPhrase(
+							searchPhrase2(
 								session, documentId, null, 
 								termList, true, limit));
 					}
