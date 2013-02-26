@@ -561,7 +561,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					};
 					
 					public String getFilename() {
-						return umcRef.toString() + ".xml";
+						return umcRef.toString().replaceAll("\\s", "_") + ".xml";
 					};
 				},
 				"_blank");

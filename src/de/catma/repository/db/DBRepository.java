@@ -448,6 +448,10 @@ public class DBRepository implements IndexedRepository {
 	
 	public void update(Corpus corpus,
 			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
+		SourceDocument sd = getSourceDocument(userMarkupCollectionReference);
+		if (!corpus.getSourceDocuments().contains(sd)) {
+			update(corpus, sd);
+		}
 		dbCorpusHandler.addUserMarkupCollectionRef(
 				corpus, userMarkupCollectionReference);
 		
