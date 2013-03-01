@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
@@ -81,7 +82,7 @@ class PhraseSearcher {
 		}
 		else {
 			
-			//NEXT: limit, match improve
+			//NEXT: limit
 
 			SQLQuery spSearchPhrase = session.createSQLQuery(
 						"call CatmaIndex.searchPhrase(" +
@@ -126,7 +127,7 @@ class PhraseSearcher {
 					spGetTerms.setParameter("termCount", termList.size()-MAX_DIRECT_SEARCH_TERMS);
 					@SuppressWarnings("unchecked")
 					List<Object[]> termResult = spGetTerms.list();
-					if (match(termResult, termList)) {
+					if (match(termResult, termList, withWildcards)) {
 						queryResult.add(
 								new QueryResultRow(
 									documentId,
@@ -151,12 +152,50 @@ class PhraseSearcher {
 		
 		}		
 	}
-	private boolean match(List<Object[]> termResult, List<String> termList) {
+	
+	private boolean match(
+			List<Object[]> termResult, List<String> termList, boolean withWildcards) {
 		for (int i=0; i<termResult.size(); i++) {
 			String curTermResult = (String)termResult.get(i)[0];
 			String curTerm = termList.get(MAX_DIRECT_SEARCH_TERMS+i);
-			if (!curTermResult.matches(curTerm.replaceAll("%", ".*?"))) { //TODO: naive implementation!
-				return false; 
+			if (!withWildcards) {
+				if (!curTermResult.equals(curTerm)) {
+					return false;
+				}
+			}
+			else {
+				
+				String[] percentParts = curTerm.split("((?<=[^\\\\])%)|(^%)");
+				StringBuilder pattern = new StringBuilder();
+				String percentConc = "";
+				
+				for (String percentPart : percentParts) {
+					pattern.append(percentConc);
+	
+					String[] underscoreParts = percentPart.split("((?<=[^\\\\])_)|(^_)");
+					String underScoreConc = "";
+					for (String underScorePart : underscoreParts) {
+						pattern.append(underScoreConc);
+						if (!underScorePart.isEmpty()) {
+							pattern.append(Pattern.quote(underScorePart));
+						}
+						underScoreConc = ".{1}?";
+					}
+					
+					if ((percentPart.length()>1) && (percentPart.endsWith("_"))) {
+						pattern.append(underScoreConc);
+					}
+					
+					percentConc = ".*?";
+				}
+				
+				if ((curTerm.length()>1) && (curTerm.endsWith("%"))) {
+					pattern.append(percentConc);
+				}
+				
+				if (!curTermResult.matches(pattern.toString())) {
+					return false; 
+				}
 			}
 		}
 		return true;
