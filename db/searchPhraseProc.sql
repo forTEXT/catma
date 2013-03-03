@@ -7,9 +7,10 @@ CREATE PROCEDURE searchPhrase (
     term1 VARCHAR(300), term2 VARCHAR(300), 
     term3 VARCHAR(300), term4 VARCHAR(300), term5 VARCHAR(300), 
     docID VARCHAR(300),
-    wild BOOLEAN)
+    wild BOOLEAN, limitresult INT)
 BEGIN
-
+    DECLARE dynSQL VARCHAR(200);
+    
     CREATE temporary TABLE result (
         tokenOffset INT,
         characterStart INT,
@@ -122,7 +123,13 @@ BEGIN
         UPDATE result r, termbuf1 t SET r.characterEnd = t.characterEnd WHERE r.tokenOffset+1=t.tokenOffset;
     END IF;
 
-    SELECT tokenOffset, characterStart, characterEnd FROM result;
+    IF (limitresult > 0) THEN
+        SET @dynSQL = CONCAT('SELECT tokenOffset, characterStart, characterEnd FROM result LIMIT 0,', limitresult);
+        PREPARE stmt FROM @dynSQL;
+        EXECUTE stmt;
+    ELSE
+        SELECT tokenOffset, characterStart, characterEnd FROM result;
+    END IF;
 
     DROP TABLE termbuf1;
     DROP TABLE termbuf2;
