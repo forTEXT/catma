@@ -54,7 +54,8 @@ public class TeiUserMarkupCollectionDeserializer {
 					try {
 						TagReference tagReference = 
 							new TagReference(
-									tagInstance, targetValues.getURI(), targetValues.getRange());
+									tagInstance, targetValues.getURI(), 
+									targetValues.getRange());
 						tagReferences.add(tagReference);
 					}
 					catch(URISyntaxException ue) {

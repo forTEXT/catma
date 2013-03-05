@@ -1,5 +1,7 @@
 package de.catma.serialization.tei;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -190,14 +192,19 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 		String[] uri_points = target.split( "#" );
 		String uri = uri_points[0].trim();
 		String[] points = uri_points[1].split( "/." );
-		// TODO: check, if we should better use the real uri from the repo
-		Range r = 
-				new Range(
-					Integer.valueOf(points[1].substring( 
-							0, points[1].indexOf( ',' ) ).trim()),
-					Integer.valueOf(points[2].substring( 
-							0, points[2].indexOf( ')' ) ).trim()));
-		return new Pair<String, Range>(uri, r);
+		try {
+			uri = URLEncoder.encode(uri, "UTF8");
+			Range r = 
+					new Range(
+						Integer.valueOf(points[1].substring( 
+								0, points[1].indexOf( ',' ) ).trim()),
+						Integer.valueOf(points[2].substring( 
+								0, points[2].indexOf( ')' ) ).trim()));
+			return new Pair<String, Range>(uri, r);
+		}
+		catch (UnsupportedEncodingException uee) {
+			throw new IllegalStateException("UTF8 characterset not supported!");
+		}
 	}
 
 	private void addTagInstance(TeiElement segElement, TeiElement text) {
@@ -211,8 +218,7 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 				if (tagDefinitions.containsKey(id)) { // some broken files contain tagintances without a tagdef, we skip those
 					Pair<String,Range> target = getTarget(
 							segElement.getFirstTeiChildElement(TeiElementName.ptr));
-					System.out.println("adding TagInstances for target: " + target);
-					
+				
 					String instanceID = getInstanceID(id, target.getSecond());
 					newReferencesBuilder.append(" #");
 					newReferencesBuilder.append(instanceID);
