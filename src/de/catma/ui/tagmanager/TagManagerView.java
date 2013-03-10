@@ -20,10 +20,16 @@ package de.catma.ui.tagmanager;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
 
+import de.catma.CatmaApplication;
+import de.catma.document.repository.Repository;
 import de.catma.tag.TagLibrary;
+import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.ui.tabbedview.TabbedView;
@@ -31,13 +37,11 @@ import de.catma.ui.tabbedview.TabbedView;
 public class TagManagerView extends TabbedView {
 	
 	private PropertyChangeListener tagLibraryChangedListener;
-	private TagManager tagManager;
 	
 	public TagManagerView(TagManager tagManager) {
 		super ("There are no open Tag Libraries. " +
 				"Please use the Repository Manager to open a Tag Libray.");
 		
-		this.tagManager = tagManager;
 		tagLibraryChangedListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
@@ -59,14 +63,32 @@ public class TagManagerView extends TabbedView {
 				TagManagerEvent.tagLibraryChanged, tagLibraryChangedListener);
 	}
 
-	public void openTagLibrary(TagLibrary tagLibrary) {
-		TagLibraryView tagLibraryView = getTagLibraryView(tagLibrary.getId());
+	public void openTagLibrary(final Repository repository, final TagLibrary tagLibrary) {
+		TagLibraryView existingTagLibraryView = getTagLibraryView(tagLibrary.getId());
 		
-		if (tagLibraryView != null) {
-			setSelectedTab(tagLibraryView);
+		if (existingTagLibraryView != null) {
+			setSelectedTab(existingTagLibraryView);
 		}
 		else {
-			tagLibraryView = new TagLibraryView(tagManager, tagLibrary);
+			final TagLibraryView tagLibraryView = new TagLibraryView(
+					repository.getTagManager(), tagLibrary);
+			tagLibraryView.setReloadListener(new ClickListener() {
+				
+				public void buttonClick(ClickEvent event) {
+					tagLibraryView.close();
+					
+					try {
+						TagLibrary reloadedTagLibrary = repository.getTagLibrary(
+							new TagLibraryReference(tagLibrary.getId(), 
+									tagLibrary.getContentInfoSet()));
+						openTagLibrary(repository, reloadedTagLibrary);
+						
+					} catch (IOException e) {
+						((CatmaApplication)getApplication()).showAndLogError(
+								"error refreshing Tag Library", e);
+					}
+				}
+			});
 			addClosableTab(tagLibraryView, tagLibrary.getName());
 			setSelectedTab(tagLibraryView);
 		}

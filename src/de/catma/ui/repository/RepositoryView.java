@@ -20,6 +20,7 @@ package de.catma.ui.repository;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,6 +29,9 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
@@ -51,6 +55,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	private TagLibraryPanel tagLibraryPanel;
 	private boolean init = false;
 	private Application application;
+	private Button btReload;
 	
 	public RepositoryView(Repository repository) {
 		this.repository = repository;
@@ -78,12 +83,28 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		super.attach();
 		if (!init) {
 			initComponents();
+			initActions();
 			this.application = getApplication();
 			this.repository.addPropertyChangeListener(
 					Repository.RepositoryChangeEvent.exceptionOccurred, 
 					exceptionOccurredListener);
 			init = true;
 		}
+		
+	}
+
+	private void initActions() {
+		btReload.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				try {
+					repository.reload();
+				} catch (IOException e) {
+					((CatmaApplication)getApplication()).showAndLogError(
+							"Error reloading repository!", e);
+				}
+			}
+		});
 		
 	}
 
@@ -140,6 +161,14 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		documentsLabel.addStyleName("bold-label");
 		
 		labelLayout.addComponent(documentsLabel);
+		labelLayout.setExpandRatio(documentsLabel, 1.0f);
+		btReload = new Button(""); 
+		btReload.setIcon(new ClassResource(
+				"ui/resources/icon-reload.gif",
+				getApplication()));
+		btReload.addStyleName("icon-button");
+		labelLayout.addComponent(btReload);
+		labelLayout.setComponentAlignment(btReload, Alignment.MIDDLE_RIGHT);
 		
 		Label helpLabel = new Label();
 		helpLabel.setIcon(new ClassResource(

@@ -64,6 +64,7 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
+import de.catma.ui.menu.CMenuAction;
 import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
 import de.catma.util.Pair;
 
@@ -98,7 +99,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private UserMarkupCollection currentWritableUserMarkupColl;
 	private PropertyChangeSupport propertyChangeSupport;
 	private Repository repository;
-	private Set<TagsetDefinition> updateableTagsetDefinitions;
+	private Set<TagsetDefinition> updateableforeignTagsetDefinitions;
 	private PropertyChangeListener userMarkupCollectionChangedListener;
 	private Application application;
 	private PropertyChangeListener userMarkupCollectionTagLibraryChangedListener;
@@ -110,7 +111,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		this.repository = repository;
 		userMarkupCollectionManager =
 				new UserMarkupCollectionManager(repository);
-		updateableTagsetDefinitions = new HashSet<TagsetDefinition>();
+		updateableforeignTagsetDefinitions = new HashSet<TagsetDefinition>();
 		initComponents();
 		initActions();
 	}
@@ -298,23 +299,48 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				userMarkupCollectionTagLibraryChangedListener);
 		
 		this.markupCollectionsTree.addActionHandler(new Action.Handler() {
-			private Action reindex = new Action("Reindex");
+			private CMenuAction<UserMarkupCollection> close = 
+					new CMenuAction<UserMarkupCollection>("Close") {
+				@Override
+				public void handle(UserMarkupCollection umc) {
+					removeUserMarkupCollection(
+						new UserMarkupCollectionReference(umc.getId(), umc.getContentInfoSet()));
+				}
+			};
+			private CMenuAction<UserMarkupCollection> refresh = 
+					new CMenuAction<UserMarkupCollection>("Refresh") {
+				@Override
+				public void handle(UserMarkupCollection umc) {
+					UserMarkupCollectionReference umcRef =
+							new UserMarkupCollectionReference(umc.getId(), umc.getContentInfoSet());
+					removeUserMarkupCollection(umcRef);
+					UserMarkupCollection refreshedUmc;
+					try {
+						refreshedUmc = repository.getUserMarkupCollection(umcRef, true);
+						openUserMarkupCollection(refreshedUmc);
+					} catch (IOException e) {
+						((CatmaApplication)getApplication()).showAndLogError(
+								"error refreshing User Markup Collection!", e);
+					}
+				}
+			};
+				
 			
+			@SuppressWarnings("unchecked")
 			public void handleAction(Action action, Object sender, Object target) {
 				
 				if (target instanceof UserMarkupCollection) {
-					reindex((UserMarkupCollection)target);
+					UserMarkupCollection umc =
+							(UserMarkupCollection)target;
+						((CMenuAction<UserMarkupCollection>)action).handle(umc);
 				}
-				else if (target instanceof TagsetDefinition) {
-					reindex((TagsetDefinition)target);
-				}
+				
 			}
 			
 			public Action[] getActions(Object target, Object sender) {
 				if ((target != null) 
-						&& ((target instanceof UserMarkupCollection)
-								|| target instanceof TagsetDefinition)) { 
-					return new Action[] {reindex};
+						&& (target instanceof UserMarkupCollection)) { 
+					return new Action[] {refresh,close};
 				}
 				else {
 					return new Action[] {};
@@ -426,7 +452,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 
 	private void updateTagsetDefinition(TagsetDefinition foreignTagsetDefinition) {
-		if (updateableTagsetDefinitions.contains(foreignTagsetDefinition)) {
+		if (updateableforeignTagsetDefinitions.contains(foreignTagsetDefinition)) {
 			List<UserMarkupCollection> outOfSynchCollections = 
 					userMarkupCollectionManager.getUserMarkupCollections(
 						foreignTagsetDefinition, false);
@@ -454,7 +480,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 
 	private void removeTagsetDefinition(TagsetDefinition foreignTagsetDefinition) {
 		
-		if (updateableTagsetDefinitions.contains(foreignTagsetDefinition)) {
+		if (updateableforeignTagsetDefinitions.contains(foreignTagsetDefinition)) {
 			List<UserMarkupCollection> outOfSynchCollections = 
 					userMarkupCollectionManager.getUserMarkupCollections(
 						foreignTagsetDefinition, false);
@@ -485,7 +511,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			TagsetDefinition foreignTagsetDefinition) {
 		
 
-		if (updateableTagsetDefinitions.contains(foreignTagsetDefinition)) {
+		if (updateableforeignTagsetDefinitions.contains(foreignTagsetDefinition)) {
 			List<UserMarkupCollection> outOfSynchCollections = 
 					userMarkupCollectionManager.getUserMarkupCollections(
 						foreignTagsetDefinition, false);
@@ -508,7 +534,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			TagDefinition foreignTagDefinition, 
 			TagsetDefinition foreignTagsetDefinition) {
 		
-		if (updateableTagsetDefinitions.contains(foreignTagsetDefinition)) {
+		if (updateableforeignTagsetDefinitions.contains(foreignTagsetDefinition)) {
 			
 			List<UserMarkupCollection> outOfSynchCollections = 
 					userMarkupCollectionManager.getUserMarkupCollections(
@@ -582,7 +608,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 
 	private TagsetDefinition getUpdateableTagsetDefinition(String tagDefUuid) {
-		for (TagsetDefinition tagsetDef : updateableTagsetDefinitions) {
+		for (TagsetDefinition tagsetDef : updateableforeignTagsetDefinitions) {
 			if (tagsetDef.hasTagDefinition(tagDefUuid)) {
 				return tagsetDef;
 			}
@@ -945,7 +971,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 
 			            public void onClose(ConfirmDialog dialog) {
 			                if (dialog.isConfirmed()) {
-			                	updateableTagsetDefinitions.add(incomingTagsetDef);
+			                	updateableforeignTagsetDefinitions.add(incomingTagsetDef);
 			                	userMarkupCollectionManager.updateUserMarkupCollections(
 			                			toBeUpdated, incomingTagsetDef);
 			                	updateUserMarkupCollectionsInTree(toBeUpdated);
@@ -955,7 +981,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			        });
 		}
 		else {
-			updateableTagsetDefinitions.add(incomingTagsetDef);
+			updateableforeignTagsetDefinitions.add(incomingTagsetDef);
 			confirmListener.confirmed();
 		}
 	}
@@ -1055,7 +1081,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 
 	public void removeUpdateableTagsetDefinition(TagsetDefinition tagsetDefinition) {
-		updateableTagsetDefinitions.remove(tagsetDefinition);
+		updateableforeignTagsetDefinitions.remove(tagsetDefinition);
 	}
 
 	public List<Pair<String,TagInstance>> getTagInstances(List<String> instanceIDs) {

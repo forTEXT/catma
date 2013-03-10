@@ -252,14 +252,14 @@ public class CatmaApplication extends Application
 		repositoryManagerView.openRepository(repository);
 	}
 	 
-	public void openTagLibrary(TagLibrary tagLibrary) {
+	public void openTagLibrary(Repository repository, TagLibrary tagLibrary) {
 		if (tagManagerView.getApplication() == null) {
 			menu.executeEntry(tagManagerView);
 		}
 		else {
 			tagManagerView.getWindow().bringToFront();
 		}
-		tagManagerView.openTagLibrary(tagLibrary);
+		tagManagerView.openTagLibrary(repository, tagLibrary);
 	}
 
 	public TaggerView openSourceDocument(

@@ -18,6 +18,7 @@
  */
 package de.catma.ui.tagmanager;
 
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Table.TableDragMode;
 
@@ -31,11 +32,20 @@ public class TagLibraryView extends HorizontalLayout implements ClosableTab {
 	private TagLibrary tagLibrary;
 	private TagsetTree tagsetTree;
 	private boolean init = true;
+	private ClickListener reloadListener;
 	
 	public TagLibraryView(TagManager tagManager, TagLibrary tagLibrary) {
 		super();
 		this.tagLibrary = tagLibrary;
 		initComponents(tagManager, tagLibrary);
+	}
+	
+	public void setReloadListener(ClickListener reloadListener) {
+		this.reloadListener = reloadListener;
+	}
+
+	private void initActions() {
+		tagsetTree.addBtReloadListener(reloadListener);
 	}
 
 	private void initComponents(TagManager tagManager, TagLibrary tagLibrary) {
@@ -53,6 +63,7 @@ public class TagLibraryView extends HorizontalLayout implements ClosableTab {
 			for (TagsetDefinition tagsetDefinition : tagLibrary) {
 				tagsetTree.addTagsetDefinition(tagsetDefinition);
 			}
+			initActions();
 			init = false;
 		}
 	}

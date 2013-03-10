@@ -54,6 +54,14 @@ public class DBUserTagLibrary implements java.io.Serializable {
 		this.accessMode = AccessMode.WRITE.getNumericRepresentation();
 		this.owner = true;
 	}
+	
+	public DBUserTagLibrary(DBUser dbUser, DBTagLibrary dbTagLibrary,
+			AccessMode accessMode) {
+		this.dbUser = dbUser;
+		this.dbTagLibrary = dbTagLibrary;
+		this.accessMode = accessMode.getNumericRepresentation();
+		this.owner = false;
+	}
 
 	@Id
 	@GeneratedValue(strategy = IDENTITY)

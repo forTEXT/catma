@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import de.catma.document.Corpus;
+import de.catma.document.repository.AccessMode;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
@@ -81,7 +82,7 @@ public class DummyRepository implements IndexedRepository {
 		return null;
 	}
 
-	public Set<TagLibraryReference> getTagLibraryReferences() {
+	public List<TagLibraryReference> getTagLibraryReferences() {
 		
 		return null;
 	}
@@ -277,5 +278,43 @@ public class DummyRepository implements IndexedRepository {
 	public String getFileURL(String sourceDocumentID, String... path) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	public void reload() throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public UserMarkupCollection getUserMarkupCollection(
+			UserMarkupCollectionReference userMarkupCollectionReference,
+			boolean refresh) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	public void share(Corpus corpus, String userIdentification,
+			AccessMode accessMode) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public void share(SourceDocument sourceDocument, String userIdentification,
+			AccessMode accessMode) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+	
+
+	public void share(TagLibraryReference tagLibraryReference,
+			String userIdentification, AccessMode accessMode)
+			throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+	public void share(UserMarkupCollectionReference userMarkupCollectionRef,
+			String userIdentification, AccessMode accessMode)
+			throws IOException {
+		// TODO Auto-generated method stub
+		
 	}
 }

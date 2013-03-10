@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -62,6 +63,7 @@ import de.catma.repository.db.model.DBUserSourceDocument;
 import de.catma.util.CloseSafe;
 import de.catma.util.ContentInfoSet;
 import de.catma.util.IDGenerator;
+import de.catma.util.Pair;
 
 class DBSourceDocumentHandler {
 
@@ -201,9 +203,16 @@ class DBSourceDocumentHandler {
 	}
 	
 	
-	@SuppressWarnings("unchecked")
 	void loadSourceDocuments(Session session) 
 			throws URISyntaxException, IOException, InstantiationException, IllegalAccessException {
+		this.sourceDocumentsByID = getSourceDocumentList(session);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private Map<String,SourceDocument> getSourceDocumentList(Session session) 
+			throws URISyntaxException, IOException, InstantiationException, IllegalAccessException {
+		Map<String,SourceDocument> result = new HashMap<String, SourceDocument>();
+		
 		if (!dbRepository.getCurrentUser().isLocked()) {
 			Query query = 
 				session.createQuery(
@@ -252,11 +261,12 @@ class DBSourceDocumentHandler {
 										dbUmc.getTitle())));
 					}
 				}
-				this.sourceDocumentsByID.put(sourceDocument.getID(), sourceDocument);
+				result.put(sourceDocument.getID(), sourceDocument);
 			}
 		}		
+		return result;
 	}
-	
+
 	private List<Character> getUserDefinedSeparatingCharacters(
 			Set<DBUserDefinedSeparatingCharacter> dbUserDefinedSeparatingCharacters) {
 		if (dbUserDefinedSeparatingCharacters.isEmpty()) {
@@ -467,5 +477,74 @@ class DBSourceDocumentHandler {
 			CloseSafe.close(new CloseableSession(session,true));
 			throw new IOException(e);
 		}
+	}
+
+	void reloadSourceDocuments(Session session) 
+			throws URISyntaxException, IOException, 
+			InstantiationException, IllegalAccessException {
+		
+		Map<String,SourceDocument> result = getSourceDocumentList(session);
+		
+		for (Map.Entry<String, SourceDocument> entry : result.entrySet()) {
+			// new document?
+			SourceDocument oldDoc = sourceDocumentsByID.get(entry.getKey());
+			sourceDocumentsByID.put(
+					entry.getKey(), entry.getValue());
+			if (oldDoc == null) {
+				dbRepository.getPropertyChangeSupport().firePropertyChange(
+						RepositoryChangeEvent.sourceDocumentChanged.name(),
+						null, entry.getKey());
+			}
+			else {
+				ContentInfoSet oldContentInfoSet = 
+					oldDoc.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet(); 
+				dbRepository.getPropertyChangeSupport().firePropertyChange(
+						RepositoryChangeEvent.sourceDocumentChanged.name(),
+						oldContentInfoSet,
+						entry.getValue().getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet());						
+			}
+			reloadUserMarkupCollections(oldDoc, entry.getValue());
+			
+		}
+		
+		Iterator<Map.Entry<String,SourceDocument>> iter = sourceDocumentsByID.entrySet().iterator();
+		while (iter.hasNext()) {
+			Map.Entry<String, SourceDocument> entry = iter.next();
+			SourceDocument sd = entry.getValue();
+			if (!result.containsKey(sd.getID())) {
+				iter.remove();
+				dbRepository.getPropertyChangeSupport().firePropertyChange(
+						RepositoryChangeEvent.sourceDocumentChanged.name(),
+						sd, null);
+				
+			}
+		}
+	}
+
+	private void reloadUserMarkupCollections(SourceDocument oldDoc, SourceDocument sd) {
+		for (UserMarkupCollectionReference umcRef : sd.getUserMarkupCollectionRefs()) {
+			UserMarkupCollectionReference oldUmcRef = 
+					oldDoc.getUserMarkupCollectionReference(umcRef.getId());
+			if (oldUmcRef == null) {
+				dbRepository.getPropertyChangeSupport().firePropertyChange(
+						RepositoryChangeEvent.userMarkupCollectionChanged.name(),
+						null, new Pair<UserMarkupCollectionReference, SourceDocument>(
+								umcRef, sd));
+			}
+			else {
+				dbRepository.getPropertyChangeSupport().firePropertyChange(
+						RepositoryChangeEvent.userMarkupCollectionChanged.name(),
+						oldUmcRef.getContentInfoSet(), umcRef);
+			}
+		}
+		
+		for (UserMarkupCollectionReference umcRef : oldDoc.getUserMarkupCollectionRefs()) {
+			if (sd.getUserMarkupCollectionReference(umcRef.getId()) == null) {
+				dbRepository.getPropertyChangeSupport().firePropertyChange(
+						RepositoryChangeEvent.userMarkupCollectionChanged.name(),
+						umcRef, null);
+			}
+		}
+		
 	}
 }

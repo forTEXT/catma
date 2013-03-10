@@ -31,6 +31,7 @@ import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
+import com.vaadin.event.Action;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.Resource;
 import com.vaadin.ui.Alignment;
@@ -91,6 +92,7 @@ public class TagsetTree extends HorizontalLayout {
 	private PropertyChangeListener userPropertyDefinitionChangedListener;
 	private boolean withButtonPanel;
 	private Application application;
+	private Button btReload;
 
 	public TagsetTree(TagManager tagManager, TagLibrary tagLibrary) {
 		this(tagManager, tagLibrary, true, null);
@@ -767,6 +769,15 @@ public class TagsetTree extends HorizontalLayout {
 		int buttonGridRowCount = 0;
 		
 		if (withTagsetButtons) {
+			btReload = new Button(""); 
+			btReload.setIcon(new ClassResource(
+					"ui/resources/icon-reload.gif",
+					getApplication()));
+			btReload.addStyleName("icon-button");
+			buttonGrid.addComponent(btReload);
+			buttonGrid.setComponentAlignment(btReload, Alignment.MIDDLE_RIGHT);
+			buttonGridRowCount++;
+
 			Label tagsetLabel = new Label();
 			tagsetLabel.setIcon(
 					new ClassResource(
@@ -862,6 +873,7 @@ public class TagsetTree extends HorizontalLayout {
 		if (!withButtonPanel) {
 			buttonGrid.setVisible(false);
 		}
+
 	}
 
 	public void addTagsetDefinition(Collection<TagsetDefinition> tagsetDefinitions) {
@@ -1026,5 +1038,13 @@ public class TagsetTree extends HorizontalLayout {
 		}
 		
 		return result;
+	}
+	
+	public void addActionHandler(Action.Handler actionHandler) {
+		tagTree.addActionHandler(actionHandler);
+	}
+	
+	public void addBtReloadListener(ClickListener listener) {
+		btReload.addListener(listener);
 	}
 }

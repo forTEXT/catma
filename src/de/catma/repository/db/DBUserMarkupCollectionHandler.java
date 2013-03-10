@@ -416,12 +416,14 @@ class DBUserMarkupCollectionHandler {
 	}
 
 	UserMarkupCollection getUserMarkupCollection(
-			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
-		WeakReference<UserMarkupCollection> weakUmc = umcCache.get(userMarkupCollectionReference.getId());
-		if (weakUmc != null) {
-			UserMarkupCollection umc = weakUmc.get();
-			if (umc != null) {
-				return umc;
+			UserMarkupCollectionReference userMarkupCollectionReference, boolean refresh) throws IOException {
+		if (!refresh) {
+			WeakReference<UserMarkupCollection> weakUmc = umcCache.get(userMarkupCollectionReference.getId());
+			if (weakUmc != null) {
+				UserMarkupCollection umc = weakUmc.get();
+				if (umc != null) {
+					return umc;
+				}
 			}
 		}
 		String localSourceDocUri = 

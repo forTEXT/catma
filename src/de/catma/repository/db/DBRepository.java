@@ -29,7 +29,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.naming.Context;
@@ -47,6 +46,7 @@ import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.db.CloseableSession;
 import de.catma.document.Corpus;
+import de.catma.document.repository.AccessMode;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
@@ -57,7 +57,15 @@ import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.IndexerFactory;
 import de.catma.indexer.IndexerPropertyKey;
+import de.catma.repository.db.model.DBCorpus;
+import de.catma.repository.db.model.DBSourceDocument;
+import de.catma.repository.db.model.DBTagLibrary;
 import de.catma.repository.db.model.DBUser;
+import de.catma.repository.db.model.DBUserCorpus;
+import de.catma.repository.db.model.DBUserMarkupCollection;
+import de.catma.repository.db.model.DBUserSourceDocument;
+import de.catma.repository.db.model.DBUserTagLibrary;
+import de.catma.repository.db.model.DBUserUserMarkupCollection;
 import de.catma.serialization.SerializationHandlerFactory;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
@@ -310,15 +318,6 @@ public class DBRepository implements IndexedRepository {
 			loadCurrentUser(session, userIdentification);
 			loadContent(session);
 		}
-		catch (Exception e) {
-			try {
-				if (session.getTransaction().isActive()) {
-					session.getTransaction().rollback();
-				}
-			}
-			catch(Exception notOfInterest){}
-			throw new Exception(e);
-		}
 		finally {
 			CloseSafe.close(new CloseableSession(session));
 		}
@@ -365,6 +364,25 @@ public class DBRepository implements IndexedRepository {
 		dbSourceDocumentHandler.loadSourceDocuments(session);
 		dbTagLibraryHandler.loadTagLibraryReferences(session);
 		dbCorpusHandler.loadCorpora(session);
+	}
+	
+	public void reload() throws IOException {
+		Session session = sessionFactory.openSession();
+		
+		try {
+			try {
+				dbSourceDocumentHandler.reloadSourceDocuments(session);
+				dbTagLibraryHandler.reloadTagLibraryReferences(session);
+				dbCorpusHandler.reloadCorpora(session);
+			}
+			catch (Exception e) {
+				throw new IOException(e);
+			}
+		}
+		finally {
+			CloseSafe.close(new CloseableSession(session));
+		}
+
 	}
 	
 	public void close() {
@@ -442,7 +460,7 @@ public class DBRepository implements IndexedRepository {
 		return dbSourceDocumentHandler.getSourceDocument(umcRef);
 	}
 	
-	public Set<Corpus> getCorpora() {
+	public Collection<Corpus> getCorpora() {
 		return dbCorpusHandler.getCorpora();
 	}
 
@@ -494,7 +512,11 @@ public class DBRepository implements IndexedRepository {
 	
 	public UserMarkupCollection getUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
-		return dbUserMarkupCollectionHandler.getUserMarkupCollection(userMarkupCollectionReference);
+		return getUserMarkupCollection(userMarkupCollectionReference, false);
+	}
+	public UserMarkupCollection getUserMarkupCollection(
+			UserMarkupCollectionReference userMarkupCollectionReference, boolean refresh) throws IOException {
+		return dbUserMarkupCollectionHandler.getUserMarkupCollection(userMarkupCollectionReference, refresh);
 	}
 
 	public List<UserMarkupCollectionReference> getWritableUserMarkupCollectionRefs(
@@ -624,7 +646,7 @@ public class DBRepository implements IndexedRepository {
 		dbTagLibraryHandler.importTagLibrary(inputStream);
 	}
 	
-	public Set<TagLibraryReference> getTagLibraryReferences() {
+	public List<TagLibraryReference> getTagLibraryReferences() {
 		return dbTagLibraryHandler.getTagLibraryReferences();
 	}
 	
@@ -691,5 +713,200 @@ public class DBRepository implements IndexedRepository {
 	
 	String getTempDir() {
 		return tempDir;
+	}
+	
+	//TODO: what happens if the corpus changes after sharing, do we share corpus changes?
+	//TODO: cache user object
+	public void share(Corpus corpus, String userIdentification, AccessMode accessMode) throws IOException {
+		
+		Session session = sessionFactory.openSession();
+		try {
+			DBUser dbUser = getUser(session, userIdentification); 
+			if (dbUser != null) {
+				DBCorpus dbCorpus = 
+					(DBCorpus) session.get(DBCorpus.class, Integer.valueOf(corpus.getId()));
+				
+				Query existQuery = session.createQuery(
+						"from " + DBUserCorpus.class.getSimpleName() + " where "
+						+ " dbUser = :user and dbCorpus = :corpus");
+				existQuery.setParameter("user", dbUser);
+				existQuery.setParameter("corpus", dbCorpus);
+				
+				DBUserCorpus dbUserCorpus = (DBUserCorpus) existQuery.uniqueResult();
+				
+				if (dbUserCorpus == null) {
+					dbUserCorpus = new DBUserCorpus(dbUser, dbCorpus, accessMode);
+					session.beginTransaction();
+					session.saveOrUpdate(dbUserCorpus);
+				}
+
+				for (UserMarkupCollectionReference umcRef : 
+					corpus.getUserMarkupCollectionRefs()) {
+					share(session, umcRef, userIdentification, accessMode);
+				}
+				
+				if (session.getTransaction().isActive()) {
+					session.getTransaction().commit();
+				}
+			}
+			else {
+				throw new IllegalArgumentException("User identification unknown!");
+			}
+
+		}
+		catch (Exception e) {
+			CloseSafe.close(new CloseableSession(session,true));
+			throw new IOException(e);
+		}
+	}
+	
+	private void share(
+		Session session, SourceDocument sourceDocument, 
+		String userIdentification, AccessMode accessMode) throws IOException {
+		
+		DBUser dbUser = getUser(session, userIdentification); 
+		if (dbUser != null) {
+			DBSourceDocument dbSourceDocument = 
+					dbSourceDocumentHandler.getDbSourceDocument(
+							session, sourceDocument.getID());
+			
+			Query existQuery = session.createQuery(
+					"from " + DBUserSourceDocument.class.getSimpleName() + " where "
+					+ " dbUser = :user and dbSourceDocument = :doc");
+			existQuery.setParameter("user", dbUser);
+			existQuery.setParameter("doc", dbSourceDocument);
+				
+			DBUserSourceDocument dbUserSourceDocument =
+					(DBUserSourceDocument) existQuery.uniqueResult(); 
+						
+			if (dbUserSourceDocument == null) {
+				dbUserSourceDocument = 
+					new DBUserSourceDocument(dbUser, dbSourceDocument, accessMode);
+				if (!session.getTransaction().isActive()) {
+					session.beginTransaction();
+				}
+				session.saveOrUpdate(dbUserSourceDocument);
+			}
+		}
+		else {
+			throw new IllegalArgumentException("User identification unknown!");
+		}
+	}
+	
+	public void share(
+			SourceDocument sourceDocument, 
+			String userIdentification,
+			AccessMode accessMode) throws IOException {
+		Session session = sessionFactory.openSession();
+		try {
+			share(session, sourceDocument, userIdentification, accessMode);
+			session.getTransaction().commit();
+			CloseSafe.close(new CloseableSession(session));
+		}
+		catch (Exception e) {
+			CloseSafe.close(new CloseableSession(session,true));
+			throw new IOException(e);
+		}
+	}
+	
+	public void share(UserMarkupCollectionReference userMarkupCollectionRef, 
+			String userIdentification, AccessMode accessMode) throws IOException {
+		Session session = sessionFactory.openSession();
+		try {
+			share(session, userMarkupCollectionRef, userIdentification, accessMode);
+			CloseSafe.close(new CloseableSession(session));
+		}
+		catch (Exception e) {
+			CloseSafe.close(new CloseableSession(session,true));
+			throw new IOException(e);
+		}
+	}
+	
+	private void share(
+			Session session, 
+			UserMarkupCollectionReference userMarkupCollectionRef, 
+			String userIdentification, AccessMode accessMode) throws IOException {
+		
+		SourceDocument sourceDocument = 
+				getSourceDocument(new UserMarkupCollectionReference(
+						userMarkupCollectionRef.getId(), 
+						userMarkupCollectionRef.getContentInfoSet()));
+		share(session, sourceDocument, userIdentification, accessMode);
+		DBUser dbUser = getUser(session, userIdentification); 
+		if (dbUser != null) {
+			DBUserMarkupCollection dbUserMarkupCollection =
+					(DBUserMarkupCollection) session.get(
+							DBUserMarkupCollection.class,
+							Integer.valueOf(userMarkupCollectionRef.getId()));
+			Query existQuery = session.createQuery(
+				"from " + DBUserUserMarkupCollection.class.getSimpleName() + " where "
+				+ " dbUser = :user and dbUserMarkupCollection = :umc");
+			existQuery.setParameter("user", dbUser);
+			existQuery.setParameter("umc", dbUserMarkupCollection);
+			
+			DBUserUserMarkupCollection dbUserUserMarkupCollection = 
+					(DBUserUserMarkupCollection) existQuery.uniqueResult();
+			if (dbUserUserMarkupCollection == null) {
+				dbUserUserMarkupCollection = 
+						new DBUserUserMarkupCollection(
+								dbUser, dbUserMarkupCollection, accessMode);
+				if (!session.getTransaction().isActive()) {
+					session.beginTransaction();
+				}
+				session.saveOrUpdate(dbUserUserMarkupCollection);
+				session.getTransaction().commit();
+				
+			}
+		}
+	}
+
+	public void share(
+			TagLibraryReference tagLibrary, 
+			String userIdentification, AccessMode accessMode) throws IOException {
+		
+		Session session = sessionFactory.openSession();
+		try {
+			
+			DBUser dbUser = getUser(session, userIdentification); 
+			if (dbUser != null) {
+				DBTagLibrary dbTagLibrary =
+						(DBTagLibrary) session.get(
+								DBTagLibrary.class,
+								Integer.valueOf(tagLibrary.getId()));
+				
+				Query existQuery = session.createQuery(
+						"from " + DBUserTagLibrary.class.getSimpleName() + " where "
+						+ " dbUser = :user and dbTagLibrary = :lib");
+				existQuery.setParameter("user", dbUser);
+				existQuery.setParameter("lib", dbTagLibrary);
+					
+				DBUserTagLibrary dbUserTagLibrary =
+						(DBUserTagLibrary) existQuery.uniqueResult(); 
+							
+				if (dbUserTagLibrary == null) {
+					dbUserTagLibrary = 
+						new DBUserTagLibrary(dbUser, dbTagLibrary, accessMode);
+					session.beginTransaction();
+					session.saveOrUpdate(dbUserTagLibrary);
+					session.getTransaction().commit();
+				}
+			}
+			else {
+				throw new IllegalArgumentException("User identification unknown!");
+			}
+			CloseSafe.close(new CloseableSession(session));
+		}
+		catch (Exception e) {
+			CloseSafe.close(new CloseableSession(session,true));
+			throw new IOException(e);
+		}
+	}
+
+	private DBUser getUser(Session session, String userIdentification) {
+		Query query = session.createQuery(
+			"from " + DBUser.class.getSimpleName() + " where identifier = :userIdent");
+		query.setParameter("userIdent", userIdentification);
+		
+		return (DBUser) query.uniqueResult();
 	}
 }

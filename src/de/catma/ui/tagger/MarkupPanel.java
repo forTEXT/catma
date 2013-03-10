@@ -30,6 +30,7 @@ import org.vaadin.dialogs.ConfirmDialog;
 
 import com.vaadin.Application;
 import com.vaadin.data.Container;
+import com.vaadin.event.Action;
 import com.vaadin.event.DataBoundTransferable;
 import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
@@ -54,6 +55,7 @@ import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
+import de.catma.ui.menu.CMenuAction;
 import de.catma.ui.tagger.MarkupCollectionsPanel.MarkupCollectionPanelEvent;
 import de.catma.ui.tagger.TagInstanceTree.TagIntanceActionListener;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
@@ -94,9 +96,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 				if (evt.getNewValue() == null) { // removal
 					TagLibrary tagLibrary = (TagLibrary) evt.getOldValue();
 					for (TagsetDefinition tagsetDefinition : tagLibrary) {
-						tagsetTree.removeTagsetDefinition(tagsetDefinition);
-						markupCollectionsPanel.removeUpdateableTagsetDefinition(
-								tagsetDefinition);
+						closeTagsetDefinition(tagsetDefinition);
 					}
 				}
 			}
@@ -144,9 +144,44 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		repository.addPropertyChangeListener(
 			RepositoryChangeEvent.propertyValueChanged, 
 			propertyValueChangeListener);
+		
+		tagsetTree.addActionHandler(new Action.Handler() {
+			private CMenuAction<TagsetDefinition> close = 
+					new CMenuAction<TagsetDefinition>("Close") {
+				@Override
+				public void handle(TagsetDefinition tagsetDefinition) {
+					closeTagsetDefinition(tagsetDefinition);
+				}
+			};
+			
+			@SuppressWarnings("unchecked")
+			public void handleAction(Action action, Object sender, Object target) {
+				
+				if (target instanceof TagsetDefinition) {
+					TagsetDefinition umc =
+							(TagsetDefinition)target;
+						((CMenuAction<TagsetDefinition>)action).handle(umc);
+				}
+				
+			}
+			
+			public Action[] getActions(Object target, Object sender) {
+				if ((target != null) 
+						&& (target instanceof TagsetDefinition)) { 
+					return new Action[] {close};
+				}
+				else {
+					return new Action[] {};
+				}
+			}
+		});
 	}
 	
-	
+	private void closeTagsetDefinition(TagsetDefinition tagsetDefinition) {
+		tagsetTree.removeTagsetDefinition(tagsetDefinition);
+		markupCollectionsPanel.removeUpdateableTagsetDefinition(
+				tagsetDefinition);
+	}
 
 	private void initComponents(
 			PropertyChangeListener tagDefinitionSelectionListener, 

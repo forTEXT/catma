@@ -57,6 +57,7 @@ import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.CatmaApplication;
+import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.serialization.tei.TeiDocument;
@@ -349,7 +350,14 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 				handleTagLibraryRemoval();
 			}
 		});
-		
+
+		miMoreTagLibraryActions.addItem("Share Tag Library", new Command() {
+			
+			public void menuSelected(MenuItem selectedItem) {
+				handleShareTagLibraryRequest(tagLibrariesTree.getValue());
+			}
+		});
+
 		btEditContentInfo.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -392,8 +400,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		
 		this.tagLibrariesTree.addListener(new ItemClickListener() {
 			
-			public void itemClick(ItemClickEvent event) {
-				System.out.println(event);
+			public void itemClick(ItemClickEvent event) {			
 				if (event.isDoubleClick()) {
 					Object value = event.getItemId();
 					handleOpenTagLibraryRequest(value);
@@ -402,6 +409,46 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		});
 	}
 	
+	private void handleShareTagLibraryRequest(Object value) {
+		if (value != null) {
+			final TagLibraryReference tagLibraryReference = 
+					(TagLibraryReference)value;
+			
+			final String userIdentificationPropertyName = "Share with (email)";
+			
+			SingleValueDialog singleValueDialog = new SingleValueDialog();
+			
+			singleValueDialog.getSingleValue(
+					getApplication().getMainWindow(),
+					"Please enter the user name of the person you want to share with",
+					"You have to enter a name!",
+					new SaveCancelListener<PropertysetItem>() {
+				public void cancelPressed() {}
+				public void savePressed(
+						PropertysetItem propertysetItem) {
+					Property property = 
+							propertysetItem.getItemProperty(
+									userIdentificationPropertyName);
+					String userIdent = (String)property.getValue();
+					try {
+						repository.share(
+								tagLibraryReference, 
+								userIdent, AccessMode.READ);
+					} catch (IOException e) {
+						((CatmaApplication)getApplication()).showAndLogError(
+							"Error sharing this corpus!", e);
+					}
+				}
+			}, userIdentificationPropertyName);
+		}
+		else {
+			getWindow().showNotification(
+					"Information", "Please select a Tag Library first!",
+					Notification.TYPE_TRAY_NOTIFICATION);
+		}
+
+	}
+
 	private void handleTagLibraryExportRequest(Object value) {
 		if (value != null) {
 			TagLibraryReference tagLibraryReference = 
@@ -474,7 +521,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 			TagLibrary tagLibrary;
 			try {
 				tagLibrary = repository.getTagLibrary(tagLibraryReference);
-				((CatmaApplication)getApplication()).openTagLibrary(tagLibrary);
+				((CatmaApplication)getApplication()).openTagLibrary(repository, tagLibrary);
 			} catch (IOException e) {
 				((CatmaApplication)getApplication()).showAndLogError(
 					"Error opening the Tag Library!", e);

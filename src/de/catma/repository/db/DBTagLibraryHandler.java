@@ -22,10 +22,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -61,6 +63,12 @@ import de.catma.util.Pair;
 
 class DBTagLibraryHandler {
 	
+	private static class TagLibRefNameComparator implements Comparator<TagLibraryReference> {
+		public int compare(TagLibraryReference o1, TagLibraryReference o2) {
+			return o1.toString().compareToIgnoreCase(o2.toString());
+		}
+	}
+	
 	private static String MAINTAIN_TAGDEFHIERARCHY = 
 			"UPDATE " + DBTagDefinition.TABLE + " td1, " + 
 			DBTagDefinition.TABLE + " td2, " +
@@ -74,14 +82,14 @@ class DBTagLibraryHandler {
 			"AND tsd.tagLibraryID = :curTagLibraryId";
 
 	private DBRepository dbRepository;
-	private Set<TagLibraryReference> tagLibraryReferences;
+	private HashMap<String, TagLibraryReference> tagLibraryReferencesById;
 	private IDGenerator idGenerator;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 
 	public DBTagLibraryHandler(DBRepository dbRepository, IDGenerator idGenerator) {
 		this.dbRepository = dbRepository;
 		this.idGenerator = idGenerator;
-		tagLibraryReferences = new HashSet<TagLibraryReference>();
+		tagLibraryReferencesById = new HashMap<String, TagLibraryReference>();
 	}
 
 	public void createTagLibrary(String name) throws IOException {
@@ -100,7 +108,7 @@ class DBTagLibraryHandler {
 			session.getTransaction().commit();
 			TagLibraryReference ref = new TagLibraryReference(
 					dbTagLibrary.getId(), new ContentInfoSet(name));
-			tagLibraryReferences.add(ref);
+			tagLibraryReferencesById.put(ref.getId(), ref);
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					RepositoryChangeEvent.tagLibraryChanged.name(),
@@ -115,8 +123,14 @@ class DBTagLibraryHandler {
 		}
 	}
 	
-	@SuppressWarnings("unchecked") 
 	void loadTagLibraryReferences(Session session) {
+		this.tagLibraryReferencesById = getTagLibraryReferences(session);
+	}
+	
+	@SuppressWarnings("unchecked") 
+	private HashMap<String, TagLibraryReference> getTagLibraryReferences(
+			Session session) {
+		HashMap<String, TagLibraryReference> result = new HashMap<String, TagLibraryReference>();
 		if (!dbRepository.getCurrentUser().isLocked()) {
 			Query query = session.createQuery(
 					"select tl from "
@@ -127,7 +141,8 @@ class DBTagLibraryHandler {
 					+ dbRepository.getCurrentUser().getUserId() );
 			
 			for (DBTagLibrary dbTagLibrary : (List<DBTagLibrary>)query.list()) {
-				this.tagLibraryReferences.add(
+				result.put(
+					dbTagLibrary.getId(),
 					new TagLibraryReference(
 							dbTagLibrary.getId(), 
 							new ContentInfoSet(
@@ -137,11 +152,14 @@ class DBTagLibraryHandler {
 								dbTagLibrary.getTitle())));
 			}
 		}
-		
+		return result;
 	}
-	
-	Set<TagLibraryReference> getTagLibraryReferences() {
-		return Collections.unmodifiableSet(this.tagLibraryReferences);
+
+	List<TagLibraryReference> getTagLibraryReferences() {
+		List<TagLibraryReference> orderedList = new ArrayList<TagLibraryReference>();
+		orderedList.addAll(this.tagLibraryReferencesById.values());
+		Collections.sort(orderedList, new TagLibRefNameComparator());
+		return Collections.unmodifiableList(orderedList);
 	}
 	
 	TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) 
@@ -691,7 +709,7 @@ class DBTagLibraryHandler {
 			
 			session.getTransaction().commit();
 			
-			tagLibraryReferences.remove(tagLibraryReference);
+			tagLibraryReferencesById.remove(tagLibraryReference);
 			tagManager.removeTagLibrary(tagLibrary);
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
@@ -1026,7 +1044,9 @@ class DBTagLibraryHandler {
 	void close() {
 		dbRepository.setTagManagerListenersEnabled(false);
 		
-		for (TagLibraryReference tagLibraryReference : tagLibraryReferences) {
+		for (Map.Entry<String,TagLibraryReference> entry : tagLibraryReferencesById.entrySet()) {
+			TagLibraryReference  tagLibraryReference = entry.getValue();
+			
 			dbRepository.getTagManager().removeTagLibrary(tagLibraryReference);
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
@@ -1176,5 +1196,45 @@ class DBTagLibraryHandler {
 							t);	
 				}
 			});
+	}
+
+	public void reloadTagLibraryReferences(Session session) {
+		HashMap<String, TagLibraryReference> result = 
+				getTagLibraryReferences(session);
+		
+		for (Map.Entry<String, TagLibraryReference> entry : result.entrySet()) {
+			
+			if (!tagLibraryReferencesById.containsKey(entry.getKey())) {
+				tagLibraryReferencesById.put(
+						entry.getKey(), entry.getValue());
+				dbRepository.getPropertyChangeSupport().firePropertyChange(
+						RepositoryChangeEvent.tagLibraryChanged.name(),
+						null, 
+						entry.getValue());
+			}
+			else {
+				ContentInfoSet oldContentInfoSet = 
+						tagLibraryReferencesById.get(entry.getKey()).getContentInfoSet();
+				tagLibraryReferencesById.put(
+						entry.getKey(), entry.getValue());
+				dbRepository.getPropertyChangeSupport().firePropertyChange(
+						RepositoryChangeEvent.tagLibraryChanged.name(),
+						oldContentInfoSet, entry.getValue());
+			}
+		}
+		
+		Iterator<Map.Entry<String,TagLibraryReference>> iter = 
+				tagLibraryReferencesById.entrySet().iterator();
+		while (iter.hasNext()) {
+			Map.Entry<String, TagLibraryReference> entry = iter.next();
+			TagLibraryReference ref = entry.getValue();
+			if (!result.containsKey(ref.getId())) {
+				iter.remove();
+				dbRepository.getPropertyChangeSupport().firePropertyChange(
+						RepositoryChangeEvent.tagLibraryChanged.name(),
+						ref, null);	
+			}
+		}
+
 	}
 }

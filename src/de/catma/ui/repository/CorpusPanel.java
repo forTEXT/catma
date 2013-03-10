@@ -53,6 +53,7 @@ import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.CatmaApplication;
 import de.catma.document.Corpus;
+import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
@@ -109,6 +110,8 @@ public class CorpusPanel extends VerticalLayout {
 	private MenuItem miRenameCorpus;
 
 	private HierarchicalContainer corporaContainer;
+
+	private MenuItem miShareCorpus;
 	
 	public CorpusPanel(
 			Repository repository, ValueChangeListener valueChangeListener) {
@@ -184,6 +187,7 @@ public class CorpusPanel extends VerticalLayout {
 				}
 				miRemoveCorpus.setEnabled(corpusModificationButtonsEnabled);
 				miRenameCorpus.setEnabled(corpusModificationButtonsEnabled);
+				miShareCorpus.setEnabled(corpusModificationButtonsEnabled);
 			}
 		});
 		
@@ -271,9 +275,52 @@ public class CorpusPanel extends VerticalLayout {
 			}
 
 		});
-		miRemoveCorpus.setEnabled(false);
+		
+		miRenameCorpus.setEnabled(false);
+		
+		miShareCorpus = miMoreCorpusActions.addItem("Share Corpus", new Command() {
+			public void menuSelected(MenuItem selectedItem) {
+				Object selectedValue = corporaTree.getValue();
+				if ((selectedValue != null) 
+						&& !selectedValue.equals(allDocuments)) {
+					handleShareCorpusRequest((Corpus)selectedValue);
+				}
+			}
+
+		});
+		miShareCorpus.setEnabled(false);
 	}
 	
+	protected void handleShareCorpusRequest(final Corpus corpus) {
+		final String userIdentificationPropertyName = "Share with (email)";
+		
+		SingleValueDialog singleValueDialog = new SingleValueDialog();
+		
+		singleValueDialog.getSingleValue(
+				getApplication().getMainWindow(),
+				"Please enter the user name of the person you want to share with",
+				"You have to enter a name!",
+				new SaveCancelListener<PropertysetItem>() {
+			public void cancelPressed() {}
+			public void savePressed(
+					PropertysetItem propertysetItem) {
+				Property property = 
+						propertysetItem.getItemProperty(
+								userIdentificationPropertyName);
+				String userIdent = (String)property.getValue();
+				try {
+					repository.share(
+							corpus, 
+							userIdent, AccessMode.READ);
+				} catch (IOException e) {
+					((CatmaApplication)getApplication()).showAndLogError(
+						"Error sharing this corpus!", e);
+				}
+			}
+		}, userIdentificationPropertyName);
+
+	}
+
 	private void handleRenameCorpusRequest(final Corpus corpus) {
 		final String corpusNameProperty = "name";
 		

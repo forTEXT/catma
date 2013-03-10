@@ -83,4 +83,26 @@
 .v-treetable-treespacer {
 	position: static;
 }
+
+.v-button-icon-button {
+	margin-top:5px;
+	margin-right:5px;
+}
+/*
+.v-button-icon-button:focus {
+	background-image: none;	
+}
+
+.v-button-icon-button:focus .v-button-wrap {
+	background-image: none;	
+}
+
+.v-button-icon-button .v-button-wrap {
+	background-image: none;	
+}
+
+.v-button-icon-button {
+	background-image: none;	
+}
+*/
 }

@@ -67,6 +67,7 @@ import de.catma.CatmaApplication;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
+import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
@@ -283,8 +284,16 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		miMoreDocumentActions.addItem("Export Document", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
+				getWindow().showNotification(
+					"Information", "Not implemented yet!", 
+					Notification.TYPE_TRAY_NOTIFICATION);
+				//TODO: implement
+			}
+		});
+		
+		miMoreDocumentActions.addItem("Share Document", new Command() {
+			public void menuSelected(MenuItem selectedItem) {
+				handleShareSourceDocumentRequest();
 			}
 		});
 		
@@ -325,6 +334,12 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		miMoreDocumentActions.addItem("Remove User Markup Collection", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
 				handleUserMarkupRemoval();
+			}
+
+		});
+		miMoreDocumentActions.addItem("Share User Markup Collection", new Command() {
+			public void menuSelected(MenuItem selectedItem) {
+				handleShareUmcRequest();
 			}
 
 		});
@@ -416,6 +431,87 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		});
 	}
 	
+	private void handleShareUmcRequest() {
+		Object selValue = documentsTree.getValue();
+		if ((selValue != null) 
+				&& (selValue instanceof UserMarkupCollectionReference)) {
+			final UserMarkupCollectionReference userMarkupCollectionReference =
+					(UserMarkupCollectionReference) selValue;
+			final String userIdentificationPropertyName = "Share with (email)";
+			
+			SingleValueDialog singleValueDialog = new SingleValueDialog();
+			
+			singleValueDialog.getSingleValue(
+					getApplication().getMainWindow(),
+					"Please enter the user name of the person you want to share with",
+					"You have to enter a name!",
+					new SaveCancelListener<PropertysetItem>() {
+				public void cancelPressed() {}
+				public void savePressed(
+						PropertysetItem propertysetItem) {
+					Property property = 
+							propertysetItem.getItemProperty(
+									userIdentificationPropertyName);
+					String userIdent = (String)property.getValue();
+					try {
+						repository.share(
+								userMarkupCollectionReference, 
+								userIdent, AccessMode.READ);
+					} catch (IOException e) {
+						((CatmaApplication)getApplication()).showAndLogError(
+							"Error sharing this document!", e);
+					}
+				}
+			}, userIdentificationPropertyName);
+
+		}
+		else {
+			getWindow().showNotification(
+					"Information", "Please select a User Markup Collection first!",
+					Notification.TYPE_TRAY_NOTIFICATION);
+		}
+	}
+
+	private void handleShareSourceDocumentRequest() {
+		Object value = documentsTree.getValue();
+		if ((value == null) || !(value instanceof SourceDocument)) {
+			 getWindow().showNotification(
+                    "Information",
+                    "Please select a Source Document first",
+                    Notification.TYPE_TRAY_NOTIFICATION);
+		}
+		else{
+			final SourceDocument sourceDocument = (SourceDocument)value;
+			final String userIdentificationPropertyName = "Share with (email)";
+			
+			SingleValueDialog singleValueDialog = new SingleValueDialog();
+			
+			singleValueDialog.getSingleValue(
+					getApplication().getMainWindow(),
+					"Please enter the user name of the person you want to share with",
+					"You have to enter a name!",
+					new SaveCancelListener<PropertysetItem>() {
+				public void cancelPressed() {}
+				public void savePressed(
+						PropertysetItem propertysetItem) {
+					Property property = 
+							propertysetItem.getItemProperty(
+									userIdentificationPropertyName);
+					String userIdent = (String)property.getValue();
+					try {
+						repository.share(
+								sourceDocument, userIdent, AccessMode.READ);
+					} catch (IOException e) {
+						((CatmaApplication)getApplication()).showAndLogError(
+							"Error sharing this document!", e);
+					}
+				}
+			}, userIdentificationPropertyName);
+
+		}
+		
+	}
+
 	private void generateStarterKit(
 			final SourceDocument sourceDocument) {
 		String name = "Example User Markup Collection";

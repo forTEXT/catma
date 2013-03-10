@@ -55,6 +55,14 @@ public class DBUserSourceDocument implements java.io.Serializable {
 		this.accessMode = AccessMode.WRITE.getNumericRepresentation();
 		this.owner = true;
 	}
+	
+	public DBUserSourceDocument(DBUser dbUser,
+			DBSourceDocument dbSourceDocument, AccessMode accessMode) {
+		this.dbUser = dbUser;
+		this.dbSourceDocument = dbSourceDocument;
+		this.accessMode = accessMode.getNumericRepresentation();
+		this.owner = false;
+	}
 
 	@Id
 	@GeneratedValue(strategy = IDENTITY)

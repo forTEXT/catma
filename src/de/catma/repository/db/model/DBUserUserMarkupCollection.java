@@ -56,6 +56,15 @@ public class DBUserUserMarkupCollection implements java.io.Serializable {
 		this.owner = true;
 	}
 
+	
+	public DBUserUserMarkupCollection(DBUser dbUser,
+			DBUserMarkupCollection dbUserMarkupCollection, AccessMode accessMode) {
+		this.dbUser = dbUser;
+		this.dbUserMarkupCollection = dbUserMarkupCollection;
+		this.accessMode = accessMode.getNumericRepresentation();
+		this.owner = false;
+	}
+
 	@Id
 	@GeneratedValue(strategy = IDENTITY)
 	@Column(name = "user_usermarkupcollectioID", unique = true, nullable = false)

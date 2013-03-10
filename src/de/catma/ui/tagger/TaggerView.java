@@ -284,7 +284,7 @@ public class TaggerView extends VerticalLayout
 	                                "Information",
 	                                "Please select a User Markup Collection "
 	                                + " to store your markup first!<br>"
-	                                + "See 'Active Markup Colletions'.",
+	                                + "See 'Active Markup Collections'.",
 	                                Notification.TYPE_TRAY_NOTIFICATION);
 						}
 					}

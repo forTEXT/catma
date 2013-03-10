@@ -19,10 +19,12 @@
 package de.catma.repository.db;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -43,19 +45,25 @@ import de.catma.util.CloseSafe;
 public class DBCorpusHandler {
 	
 	private DBRepository dbRepository;
-	private Set<Corpus> corpora;
+	private Map<String, Corpus> corpora;
 
 	public DBCorpusHandler(DBRepository dbRepository) {
 		this.dbRepository = dbRepository;
-		corpora = new HashSet<Corpus>();
+		corpora = new HashMap<String, Corpus>();
 	}
 
-	public Set<Corpus> getCorpora() {
-		return Collections.unmodifiableSet(corpora);
+	public Collection<Corpus> getCorpora() {
+		return Collections.unmodifiableCollection(corpora.values());
+	}
+
+	public void loadCorpora(Session session) {
+		corpora = getCorpusList(session);
 	}
 
 	@SuppressWarnings("unchecked")
-	public void loadCorpora(Session session) {
+	private Map<String, Corpus> getCorpusList(Session session) {
+		Map<String,Corpus> result = new HashMap<String, Corpus>();
+		
 		if (!dbRepository.getCurrentUser().isLocked()) {
 			Query query = 
 				session.createQuery(
@@ -93,18 +101,17 @@ public class DBCorpusHandler {
 						}
 					}
 				}
-				corpora.add(corpus);
+				result.put(corpus.getId(), corpus);
 			}
 		}
+		return result;
 	}
 
 	public void createCorpus(String name) throws IOException {
 		Session session = dbRepository.getSessionFactory().openSession();
 		try  {
 			DBCorpus dbCorpus = new DBCorpus(name);
-			DBUserCorpus dbUserCorpus = new DBUserCorpus();
-			dbUserCorpus.setDbCorpus(dbCorpus);
-			dbUserCorpus.setDbUser(dbRepository.getCurrentUser());
+			DBUserCorpus dbUserCorpus = new DBUserCorpus(dbRepository.getCurrentUser(), dbCorpus);
 			dbCorpus.getDbUserCorpus().add(dbUserCorpus);
 			
 			session.beginTransaction();
@@ -116,7 +123,7 @@ public class DBCorpusHandler {
 
 			Corpus corpus = 
 					new Corpus(String.valueOf(dbCorpus.getCorpusId()), name);
-			corpora.add(corpus);
+			corpora.put(corpus.getId(), corpus);
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 				Repository.RepositoryChangeEvent.corpusChanged.name(),
@@ -224,6 +231,42 @@ public class DBCorpusHandler {
 			CloseSafe.close(new CloseableSession(session,true));
 			throw new IOException(e);
 		}	
+	}
+
+	public void reloadCorpora(Session session) {
+		Map<String, Corpus> result = getCorpusList(session);
+		for (Map.Entry<String, Corpus> entry : result.entrySet()) {
+
+			if (!corpora.containsKey(entry.getKey())) {
+				corpora.put(
+						entry.getKey(), entry.getValue());
+				dbRepository.getPropertyChangeSupport().firePropertyChange(
+						Repository.RepositoryChangeEvent.corpusChanged.name(),
+						null, entry.getValue());
+			}
+			else {
+				String oldName = corpora.get(entry.getKey()).toString();
+				corpora.put(
+						entry.getKey(), entry.getValue());
+				dbRepository.getPropertyChangeSupport().firePropertyChange(
+						Repository.RepositoryChangeEvent.corpusChanged.name(),
+						oldName, entry.getValue());
+			}
+		}
+		
+		Iterator<Map.Entry<String,Corpus>> iter = 
+				corpora.entrySet().iterator();
+		while (iter.hasNext()) {
+			Map.Entry<String, Corpus> entry = iter.next();
+			Corpus corpus = entry.getValue();
+			if (!result.containsKey(corpus.getId())) {
+				iter.remove();
+				dbRepository.getPropertyChangeSupport().firePropertyChange(
+						Repository.RepositoryChangeEvent.corpusChanged.name(),
+						corpus, null);
+			}
+		}
+
 	}
 	
 }
