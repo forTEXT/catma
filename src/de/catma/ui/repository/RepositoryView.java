@@ -98,7 +98,11 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 			
 			public void buttonClick(ClickEvent event) {
 				try {
+					Corpus corpus = corpusPanel.getSelectedCorpus();
+					corpusPanel.setSelectedCorpus(null);
 					repository.reload();
+					corpusPanel.setSelectedCorpus(corpus);
+					
 				} catch (IOException e) {
 					((CatmaApplication)getApplication()).showAndLogError(
 							"Error reloading repository!", e);

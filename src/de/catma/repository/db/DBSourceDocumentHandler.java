@@ -523,8 +523,12 @@ class DBSourceDocumentHandler {
 
 	private void reloadUserMarkupCollections(SourceDocument oldDoc, SourceDocument sd) {
 		for (UserMarkupCollectionReference umcRef : sd.getUserMarkupCollectionRefs()) {
-			UserMarkupCollectionReference oldUmcRef = 
-					oldDoc.getUserMarkupCollectionReference(umcRef.getId());
+			UserMarkupCollectionReference oldUmcRef = null;
+			
+			if (oldDoc != null) { 
+				oldUmcRef = oldDoc.getUserMarkupCollectionReference(umcRef.getId());
+			}
+			
 			if (oldUmcRef == null) {
 				dbRepository.getPropertyChangeSupport().firePropertyChange(
 						RepositoryChangeEvent.userMarkupCollectionChanged.name(),
@@ -537,14 +541,14 @@ class DBSourceDocumentHandler {
 						oldUmcRef.getContentInfoSet(), umcRef);
 			}
 		}
-		
-		for (UserMarkupCollectionReference umcRef : oldDoc.getUserMarkupCollectionRefs()) {
-			if (sd.getUserMarkupCollectionReference(umcRef.getId()) == null) {
-				dbRepository.getPropertyChangeSupport().firePropertyChange(
-						RepositoryChangeEvent.userMarkupCollectionChanged.name(),
-						umcRef, null);
+		if (oldDoc != null) {
+			for (UserMarkupCollectionReference umcRef : oldDoc.getUserMarkupCollectionRefs()) {
+				if (sd.getUserMarkupCollectionReference(umcRef.getId()) == null) {
+					dbRepository.getPropertyChangeSupport().firePropertyChange(
+							RepositoryChangeEvent.userMarkupCollectionChanged.name(),
+							umcRef, null);
+				}
 			}
-		}
-		
+		}		
 	}
 }

@@ -393,9 +393,10 @@ public class CorpusPanel extends VerticalLayout {
 			}
 			else {
 				getWindow().showNotification(
-					"Information", "You can only add " +
-							"Source Documents and Markup Collections to a Corpus!",
-							Notification.TYPE_TRAY_NOTIFICATION);
+					"Information", 
+					"You can only add " +
+						"Source Documents and Markup Collections to a Corpus!",
+						Notification.TYPE_TRAY_NOTIFICATION);
 			}
 		}
 		catch (IOException e) {
@@ -496,6 +497,21 @@ public class CorpusPanel extends VerticalLayout {
 				corpusChangedListener);
 	}
 
+	public Corpus getSelectedCorpus() {
+		Object itemId = corporaTree.getValue();
+		if (itemId instanceof Corpus) {
+			return (Corpus)itemId;
+		}
+		return null;
+	}
 
+	public void setSelectedCorpus(Corpus corpus) {
+		if (corpus == null) {
+			corporaTree.setValue(allDocuments);
+		}
+		else {
+			corporaTree.setValue(corpus);
+		}
+	}
 }
 

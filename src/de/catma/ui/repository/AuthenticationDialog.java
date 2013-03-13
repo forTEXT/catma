@@ -203,11 +203,15 @@ public class AuthenticationDialog extends VerticalLayout {
 	                    userIdentification.put(
 	                    		"user.name", email);
 	                    logger.info("opening repository for user: " + email);
+	                    
+	                    application.setUser(userIdentification);
+
 	                    Repository repository = 
                     		repositoryManager.openRepository(
                 				repositoryReference, userIdentification );
 	                    
 	                    ((CatmaApplication)application).openRepository(repository);
+	                    
 	                    
 	                    return new DownloadStream(
 	                    		application.getURL().openStream(), 

@@ -1198,6 +1198,15 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				btOpenDocument.setEnabled(false);
 			}
 		}
+		else {
+			contentInfoForm.setEnabled(false);
+			contentInfoForm.setItemDataSource(
+					new BeanItem<ContentInfoSet>(emptyContentInfoSet));
+			contentInfoForm.setVisibleItemProperties(new String[] {
+					"title", "author", "description", "publisher"
+			});
+			btOpenDocument.setEnabled(false);
+		}
 		contentInfoForm.setReadOnly(true);
 	}
 
@@ -1219,6 +1228,9 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			documentsContainer.addContainerFilter(sdf);
 			if(documentsContainer.size() > 0) {
 				documentsTree.setValue(documentsContainer.getIdByIndex(0));
+			}
+			else {
+				documentsTree.setValue(null);
 			}
 		}
 	}

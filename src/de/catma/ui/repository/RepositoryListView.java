@@ -21,6 +21,7 @@ package de.catma.ui.repository;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.vaadin.Application;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.Alignment;
@@ -70,10 +71,18 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 					}
 					else {
 						try {
+							String user = 
+								((CatmaApplication)getApplication()).getParameter(
+										"user.name");
+							if (user == null) {
+								user = System.getProperty("user.name");
+							}
 							Map<String,String> userIdentification = 
 									new HashMap<String, String>(1);
 							userIdentification.put(
-								"user.ident", System.getProperty("user.name"));
+								"user.ident", user);
+							
+							getApplication().setUser(user);
 							
 							Repository repository = 
 									repositoryManager.openRepository(

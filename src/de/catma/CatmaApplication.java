@@ -22,7 +22,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,6 +35,7 @@ import org.vaadin.jouni.animator.Animator;
 import com.vaadin.Application;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.ExternalResource;
+import com.vaadin.terminal.ParameterHandler;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -77,7 +81,7 @@ import de.catma.ui.tagmanager.TagManagerView;
 import de.catma.ui.tagmanager.TagManagerWindow;
 
 public class CatmaApplication extends Application
-	implements BackgroundServiceProvider, AnalyzerProvider {
+	implements BackgroundServiceProvider, AnalyzerProvider, ParameterHandler {
 	
 	private static final String VERSION = 
 			"(v"+new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date())+")";
@@ -97,6 +101,7 @@ public class CatmaApplication extends Application
 	private ProgressWindow progressWindow;
 	private VisualizationManagerView visualizationManagerView;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private Map<String,String[]> parameters = new HashMap<String, String[]>();
 
 	@Override
 	public void init() {
@@ -106,7 +111,7 @@ public class CatmaApplication extends Application
 		
 		
 		final Window mainWindow = new Window("CATMA 4 - CLÉA " + VERSION);
-		
+		mainWindow.addParameterHandler(this);
 		HorizontalLayout mainLayout = new HorizontalLayout();
 		mainLayout.setSizeUndefined();
 		mainLayout.setMargin(true);
@@ -208,7 +213,22 @@ public class CatmaApplication extends Application
 		setTheme("cleatheme");
 	}
 	
+	public void handleParameters(Map<String, String[]> parameters) {
+		this.parameters.putAll(parameters);
+	}
 	
+	public Map<String, String[]> getParameters() {
+		return Collections.unmodifiableMap(parameters);
+	}
+	
+	public String getParameter(String key) {
+		String[] values = parameters.get(key);
+		if ((values != null) && (values.length > 0)) {
+			return values[0];
+		}
+		
+		return null;
+	}
 	private void initTempDirectory(Properties properties) throws IOException {
 		String tempDirProp = properties.getProperty(RepositoryPropertyKey.TempDir.name());
 		File tempDir = new File(tempDirProp);
@@ -376,7 +396,7 @@ public class CatmaApplication extends Application
 	
 	
 	public void showAndLogError(String message, Throwable e) {
-		logger.log(Level.SEVERE, message, e);
+		logger.log(Level.SEVERE, "["+getUser()+"]" + message, e);
 		
 		if (message == null) {
 			message = "internal error"; 
