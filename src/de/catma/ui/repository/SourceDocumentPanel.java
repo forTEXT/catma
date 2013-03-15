@@ -69,6 +69,7 @@ import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
 import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.Repository;
+import de.catma.document.repository.UnknownUserException;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
@@ -87,9 +88,12 @@ import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.ui.analyzer.AnalyzerProvider;
+import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.ui.dialog.UploadDialog;
+import de.catma.ui.repository.sharing.SharingOptions;
+import de.catma.ui.repository.sharing.SharingOptionsFieldFactory;
 import de.catma.ui.repository.wizard.AddSourceDocWizardFactory;
 import de.catma.ui.repository.wizard.AddSourceDocWizardResult;
 import de.catma.util.CloseSafe;
@@ -437,33 +441,37 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				&& (selValue instanceof UserMarkupCollectionReference)) {
 			final UserMarkupCollectionReference userMarkupCollectionReference =
 					(UserMarkupCollectionReference) selValue;
-			final String userIdentificationPropertyName = "Share with (email)";
-			
-			SingleValueDialog singleValueDialog = new SingleValueDialog();
-			
-			singleValueDialog.getSingleValue(
-					getApplication().getMainWindow(),
-					"Please enter the user name of the person you want to share with",
-					"You have to enter a name!",
-					new SaveCancelListener<PropertysetItem>() {
-				public void cancelPressed() {}
-				public void savePressed(
-						PropertysetItem propertysetItem) {
-					Property property = 
-							propertysetItem.getItemProperty(
-									userIdentificationPropertyName);
-					String userIdent = (String)property.getValue();
-					try {
-						repository.share(
-								userMarkupCollectionReference, 
-								userIdent, AccessMode.READ);
-					} catch (IOException e) {
-						((CatmaApplication)getApplication()).showAndLogError(
-							"Error sharing this document!", e);
-					}
-				}
-			}, userIdentificationPropertyName);
 
+			SharingOptions sharingOptions = new SharingOptions();
+			
+			FormDialog<SharingOptions> sharingOptionsDlg = new FormDialog<SharingOptions>(
+				"Please enter the person you want to share with", 
+				new BeanItem<SharingOptions>(sharingOptions),
+				new SharingOptionsFieldFactory(), 
+				new SaveCancelListener<SharingOptions>() {
+					public void cancelPressed() {}
+					public void savePressed(SharingOptions result) {
+						try {
+							repository.share(
+									userMarkupCollectionReference, 
+									result.getUserIdentification(), 
+									result.getAccessMode());
+						} catch (IOException e) {
+							if (e.getCause() instanceof UnknownUserException) {
+								getWindow().showNotification(
+										"Sharing failed!", e.getCause().getMessage(), 
+										Notification.TYPE_WARNING_MESSAGE);
+							}
+							else {
+								((CatmaApplication)getApplication()).showAndLogError(
+									"Error sharing this corpus!", e);
+							}
+						}
+					}
+				});
+			sharingOptionsDlg.setVisibleItemProperties(
+					new Object[] {"userIdentification", "accessMode"});
+			sharingOptionsDlg.show(getApplication().getMainWindow());
 		}
 		else {
 			getWindow().showNotification(
@@ -482,32 +490,36 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		}
 		else{
 			final SourceDocument sourceDocument = (SourceDocument)value;
-			final String userIdentificationPropertyName = "Share with (email)";
+			SharingOptions sharingOptions = new SharingOptions();
 			
-			SingleValueDialog singleValueDialog = new SingleValueDialog();
-			
-			singleValueDialog.getSingleValue(
-					getApplication().getMainWindow(),
-					"Please enter the user name of the person you want to share with",
-					"You have to enter a name!",
-					new SaveCancelListener<PropertysetItem>() {
-				public void cancelPressed() {}
-				public void savePressed(
-						PropertysetItem propertysetItem) {
-					Property property = 
-							propertysetItem.getItemProperty(
-									userIdentificationPropertyName);
-					String userIdent = (String)property.getValue();
-					try {
-						repository.share(
-								sourceDocument, userIdent, AccessMode.READ);
-					} catch (IOException e) {
-						((CatmaApplication)getApplication()).showAndLogError(
-							"Error sharing this document!", e);
+			FormDialog<SharingOptions> sharingOptionsDlg = new FormDialog<SharingOptions>(
+				"Please enter the person you want to share with", 
+				new BeanItem<SharingOptions>(sharingOptions),
+				new SharingOptionsFieldFactory(), 
+				new SaveCancelListener<SharingOptions>() {
+					public void cancelPressed() {}
+					public void savePressed(SharingOptions result) {
+						try {
+							repository.share(
+									sourceDocument, 
+									result.getUserIdentification(), 
+									result.getAccessMode());
+						} catch (IOException e) {
+							if (e.getCause() instanceof UnknownUserException) {
+								getWindow().showNotification(
+										"Sharing failed!", e.getCause().getMessage(), 
+										Notification.TYPE_WARNING_MESSAGE);
+							}
+							else {
+								((CatmaApplication)getApplication()).showAndLogError(
+									"Error sharing this corpus!", e);
+							}
+						}
 					}
-				}
-			}, userIdentificationPropertyName);
-
+				});
+			sharingOptionsDlg.setVisibleItemProperties(
+					new Object[] {"userIdentification", "accessMode"});
+			sharingOptionsDlg.show(getApplication().getMainWindow());
 		}
 		
 	}

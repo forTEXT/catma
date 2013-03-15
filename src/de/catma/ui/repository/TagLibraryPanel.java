@@ -59,6 +59,7 @@ import com.vaadin.ui.themes.Reindeer;
 import de.catma.CatmaApplication;
 import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.Repository;
+import de.catma.document.repository.UnknownUserException;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.serialization.tei.TeiDocument;
 import de.catma.serialization.tei.TeiDocumentFactory;
@@ -435,8 +436,15 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 								tagLibraryReference, 
 								userIdent, AccessMode.READ);
 					} catch (IOException e) {
-						((CatmaApplication)getApplication()).showAndLogError(
-							"Error sharing this corpus!", e);
+						if (e.getCause() instanceof UnknownUserException) {
+							getWindow().showNotification(
+									"Sharing failed!", e.getCause().getMessage(), 
+									Notification.TYPE_WARNING_MESSAGE);
+						}
+						else {
+							((CatmaApplication)getApplication()).showAndLogError(
+								"Error sharing this corpus!", e);
+						}
 					}
 				}
 			}, userIdentificationPropertyName);

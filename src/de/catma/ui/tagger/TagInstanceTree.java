@@ -136,7 +136,7 @@ public class TagInstanceTree extends HorizontalLayout {
 						property.getPropertyValueList().getValues());
 					propertyCollection.getItemProperty(valuesProp).setValue(
 							property.getPropertyValueList().getValues());
-					FormDialog editValueDlg = new FormDialog(
+					FormDialog<PropertysetItem> editValueDlg = new FormDialog<PropertysetItem>(
 							"Edit Property values", propertyCollection, 
 							new PropertyValueEditorFormFieldFactory(
 								initialValues),

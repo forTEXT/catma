@@ -33,8 +33,8 @@ public class SingleValueDialog {
 		PropertyCollection propertyCollection = 
 				new PropertyCollection(valueProperty);
 
-		FormDialog formDialog =
-			new FormDialog(
+		FormDialog<PropertysetItem> formDialog =
+			new FormDialog<PropertysetItem>(
 				dialogCaption,
 				propertyCollection,
 				listener);

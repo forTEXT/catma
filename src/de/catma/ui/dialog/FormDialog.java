@@ -19,6 +19,7 @@
 package de.catma.ui.dialog;
 
 import com.vaadin.data.Validator.InvalidValueException;
+import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.Alignment;
@@ -32,10 +33,12 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
-public class FormDialog extends VerticalLayout {
+public class FormDialog<T> extends VerticalLayout {
 	
 	private Window dialogWindow;
 	private Form form;
+	private Button btSave;
+	private Button btCancel;
 	
 	public FormDialog(
 			String caption,
@@ -49,14 +52,74 @@ public class FormDialog extends VerticalLayout {
 			PropertysetItem propertysetItem, 
 			FormFieldFactory formFieldFactory,
 			SaveCancelListener<PropertysetItem> saveCancelListener) {
-		initComponents(caption, propertysetItem, formFieldFactory, saveCancelListener);
+		initComponents(caption, propertysetItem, formFieldFactory);
+		initAction(saveCancelListener, propertysetItem);
+	}
+	
+	public FormDialog(
+			String caption,
+			BeanItem<T> beanItem, 
+			FormFieldFactory formFieldFactory,
+			SaveCancelListener<T> saveCancelListener) {
+		initComponents(caption, beanItem, formFieldFactory);
+		initAction(saveCancelListener, beanItem);
+	}
+	
+
+	private void initAction(
+			final SaveCancelListener<T> saveCancelListener, 
+			final BeanItem<T> beanItem) {
+		btCancel.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				dialogWindow.getParent().removeWindow(dialogWindow);
+				saveCancelListener.cancelPressed();
+			}
+		});
+
+		btSave.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				try {
+					form.commit();
+					dialogWindow.getParent().removeWindow(dialogWindow);
+					saveCancelListener.savePressed(beanItem.getBean());
+				}
+				catch(InvalidValueException ignore) {}
+			}
+		});	
+
+	}
+	
+	private void initAction(
+		final SaveCancelListener<PropertysetItem> saveCancelListener, 
+		final PropertysetItem propertysetItem) {
+		btCancel.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				dialogWindow.getParent().removeWindow(dialogWindow);
+				saveCancelListener.cancelPressed();
+			}
+		});
+
+		btSave.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				try {
+					form.commit();
+					dialogWindow.getParent().removeWindow(dialogWindow);
+					saveCancelListener.savePressed(propertysetItem);
+				}
+				catch(InvalidValueException ignore) {}
+			}
+		});	
 	}
 
 	private void initComponents(
 			String caption,
 			final PropertysetItem propertysetItem, 
-			FormFieldFactory formFieldFactory, 
-			final SaveCancelListener<PropertysetItem> saveCancelListener) {
+			FormFieldFactory formFieldFactory) {
+		
 		setSizeFull();
 		setSpacing(true);
 		
@@ -77,28 +140,11 @@ public class FormDialog extends VerticalLayout {
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setSpacing(true);
 		
-		Button btSave = new Button("Save");
-		btSave.addListener(new ClickListener() {
-			
-			public void buttonClick(ClickEvent event) {
-				try {
-					form.commit();
-					dialogWindow.getParent().removeWindow(dialogWindow);
-					saveCancelListener.savePressed(propertysetItem);
-				}
-				catch(InvalidValueException ignore) {}
-			}
-		});
+		btSave = new Button("Save");
+
 		btSave.setClickShortcut(KeyCode.ENTER);
 
-		Button btCancel = new Button("Cancel");
-		btCancel.addListener(new ClickListener() {
-			
-			public void buttonClick(ClickEvent event) {
-				dialogWindow.getParent().removeWindow(dialogWindow);
-				saveCancelListener.cancelPressed();
-			}
-		});
+		btCancel = new Button("Cancel");
 		buttonPanel.addComponent(btSave);
 		buttonPanel.addComponent(btCancel);
 		
@@ -124,4 +170,11 @@ public class FormDialog extends VerticalLayout {
 	public void show(Window parent) {
 		show(parent, "25%");
 	}
+
+	public void setVisibleItemProperties(Object[] visibleProperties) {
+		form.setVisibleItemProperties(visibleProperties);
+	}
+	
+
+	
 }

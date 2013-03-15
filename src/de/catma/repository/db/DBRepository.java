@@ -47,6 +47,7 @@ import de.catma.backgroundservice.ExecutionListener;
 import de.catma.db.CloseableSession;
 import de.catma.document.Corpus;
 import de.catma.document.repository.AccessMode;
+import de.catma.document.repository.UnknownUserException;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
@@ -716,7 +717,6 @@ public class DBRepository implements IndexedRepository {
 	}
 	
 	//TODO: what happens if the corpus changes after sharing, do we share corpus changes?
-	//TODO: cache user object
 	public void share(Corpus corpus, String userIdentification, AccessMode accessMode) throws IOException {
 		
 		Session session = sessionFactory.openSession();
@@ -740,9 +740,13 @@ public class DBRepository implements IndexedRepository {
 					session.saveOrUpdate(dbUserCorpus);
 				}
 
+				for (SourceDocument sd : corpus.getSourceDocuments()) {
+					share(session, dbUser, sd, userIdentification, accessMode);
+				}
+				
 				for (UserMarkupCollectionReference umcRef : 
 					corpus.getUserMarkupCollectionRefs()) {
-					share(session, umcRef, userIdentification, accessMode);
+					share(session, dbUser, umcRef, userIdentification, accessMode);
 				}
 				
 				if (session.getTransaction().isActive()) {
@@ -750,7 +754,7 @@ public class DBRepository implements IndexedRepository {
 				}
 			}
 			else {
-				throw new IllegalArgumentException("User identification unknown!");
+				throw new UnknownUserException(userIdentification);
 			}
 
 		}
@@ -761,35 +765,29 @@ public class DBRepository implements IndexedRepository {
 	}
 	
 	private void share(
-		Session session, SourceDocument sourceDocument, 
+		Session session, DBUser dbUser, SourceDocument sourceDocument, 
 		String userIdentification, AccessMode accessMode) throws IOException {
 		
-		DBUser dbUser = getUser(session, userIdentification); 
-		if (dbUser != null) {
-			DBSourceDocument dbSourceDocument = 
-					dbSourceDocumentHandler.getDbSourceDocument(
-							session, sourceDocument.getID());
+		DBSourceDocument dbSourceDocument = 
+				dbSourceDocumentHandler.getDbSourceDocument(
+						session, sourceDocument.getID());
+		
+		Query existQuery = session.createQuery(
+				"from " + DBUserSourceDocument.class.getSimpleName() + " where "
+				+ " dbUser = :user and dbSourceDocument = :doc");
+		existQuery.setParameter("user", dbUser);
+		existQuery.setParameter("doc", dbSourceDocument);
 			
-			Query existQuery = session.createQuery(
-					"from " + DBUserSourceDocument.class.getSimpleName() + " where "
-					+ " dbUser = :user and dbSourceDocument = :doc");
-			existQuery.setParameter("user", dbUser);
-			existQuery.setParameter("doc", dbSourceDocument);
-				
-			DBUserSourceDocument dbUserSourceDocument =
-					(DBUserSourceDocument) existQuery.uniqueResult(); 
-						
-			if (dbUserSourceDocument == null) {
-				dbUserSourceDocument = 
-					new DBUserSourceDocument(dbUser, dbSourceDocument, accessMode);
-				if (!session.getTransaction().isActive()) {
-					session.beginTransaction();
-				}
-				session.saveOrUpdate(dbUserSourceDocument);
+		DBUserSourceDocument dbUserSourceDocument =
+				(DBUserSourceDocument) existQuery.uniqueResult(); 
+					
+		if (dbUserSourceDocument == null) {
+			dbUserSourceDocument = 
+				new DBUserSourceDocument(dbUser, dbSourceDocument, accessMode);
+			if (!session.getTransaction().isActive()) {
+				session.beginTransaction();
 			}
-		}
-		else {
-			throw new IllegalArgumentException("User identification unknown!");
+			session.saveOrUpdate(dbUserSourceDocument);
 		}
 	}
 	
@@ -799,8 +797,14 @@ public class DBRepository implements IndexedRepository {
 			AccessMode accessMode) throws IOException {
 		Session session = sessionFactory.openSession();
 		try {
-			share(session, sourceDocument, userIdentification, accessMode);
-			session.getTransaction().commit();
+			DBUser dbUser = getUser(session, userIdentification); 
+			if (dbUser != null) {
+				share(session, dbUser, sourceDocument, userIdentification, accessMode);
+				session.getTransaction().commit();
+			}
+			else {
+				throw new UnknownUserException(userIdentification);
+			}
 			CloseSafe.close(new CloseableSession(session));
 		}
 		catch (Exception e) {
@@ -813,7 +817,15 @@ public class DBRepository implements IndexedRepository {
 			String userIdentification, AccessMode accessMode) throws IOException {
 		Session session = sessionFactory.openSession();
 		try {
-			share(session, userMarkupCollectionRef, userIdentification, accessMode);
+			DBUser dbUser = getUser(session, userIdentification); 
+			if (dbUser != null) {
+				share(
+					session, dbUser, 
+					userMarkupCollectionRef, userIdentification, accessMode);
+			}
+			else {
+				throw new UnknownUserException(userIdentification);
+			}
 			CloseSafe.close(new CloseableSession(session));
 		}
 		catch (Exception e) {
@@ -824,6 +836,7 @@ public class DBRepository implements IndexedRepository {
 	
 	private void share(
 			Session session, 
+			DBUser dbUser,
 			UserMarkupCollectionReference userMarkupCollectionRef, 
 			String userIdentification, AccessMode accessMode) throws IOException {
 		
@@ -831,32 +844,29 @@ public class DBRepository implements IndexedRepository {
 				getSourceDocument(new UserMarkupCollectionReference(
 						userMarkupCollectionRef.getId(), 
 						userMarkupCollectionRef.getContentInfoSet()));
-		share(session, sourceDocument, userIdentification, accessMode);
-		DBUser dbUser = getUser(session, userIdentification); 
-		if (dbUser != null) {
-			DBUserMarkupCollection dbUserMarkupCollection =
-					(DBUserMarkupCollection) session.get(
-							DBUserMarkupCollection.class,
-							Integer.valueOf(userMarkupCollectionRef.getId()));
-			Query existQuery = session.createQuery(
-				"from " + DBUserUserMarkupCollection.class.getSimpleName() + " where "
-				+ " dbUser = :user and dbUserMarkupCollection = :umc");
-			existQuery.setParameter("user", dbUser);
-			existQuery.setParameter("umc", dbUserMarkupCollection);
-			
-			DBUserUserMarkupCollection dbUserUserMarkupCollection = 
-					(DBUserUserMarkupCollection) existQuery.uniqueResult();
-			if (dbUserUserMarkupCollection == null) {
-				dbUserUserMarkupCollection = 
-						new DBUserUserMarkupCollection(
-								dbUser, dbUserMarkupCollection, accessMode);
-				if (!session.getTransaction().isActive()) {
-					session.beginTransaction();
-				}
-				session.saveOrUpdate(dbUserUserMarkupCollection);
-				session.getTransaction().commit();
-				
+		share(session, dbUser, sourceDocument, userIdentification, accessMode);
+		DBUserMarkupCollection dbUserMarkupCollection =
+				(DBUserMarkupCollection) session.get(
+						DBUserMarkupCollection.class,
+						Integer.valueOf(userMarkupCollectionRef.getId()));
+		Query existQuery = session.createQuery(
+			"from " + DBUserUserMarkupCollection.class.getSimpleName() + " where "
+			+ " dbUser = :user and dbUserMarkupCollection = :umc");
+		existQuery.setParameter("user", dbUser);
+		existQuery.setParameter("umc", dbUserMarkupCollection);
+		
+		DBUserUserMarkupCollection dbUserUserMarkupCollection = 
+				(DBUserUserMarkupCollection) existQuery.uniqueResult();
+		if (dbUserUserMarkupCollection == null) {
+			dbUserUserMarkupCollection = 
+					new DBUserUserMarkupCollection(
+							dbUser, dbUserMarkupCollection, accessMode);
+			if (!session.getTransaction().isActive()) {
+				session.beginTransaction();
 			}
+			session.saveOrUpdate(dbUserUserMarkupCollection);
+			session.getTransaction().commit();
+			
 		}
 	}
 
@@ -892,7 +902,7 @@ public class DBRepository implements IndexedRepository {
 				}
 			}
 			else {
-				throw new IllegalArgumentException("User identification unknown!");
+				throw new UnknownUserException(userIdentification);
 			}
 			CloseSafe.close(new CloseableSession(session));
 		}
@@ -904,8 +914,8 @@ public class DBRepository implements IndexedRepository {
 
 	private DBUser getUser(Session session, String userIdentification) {
 		Query query = session.createQuery(
-			"from " + DBUser.class.getSimpleName() + " where identifier = :userIdent");
-		query.setParameter("userIdent", userIdentification);
+			"from " + DBUser.class.getSimpleName() + " where lower(identifier) = :userIdent");
+		query.setParameter("userIdent", userIdentification.toLowerCase());
 		
 		return (DBUser) query.uniqueResult();
 	}

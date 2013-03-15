@@ -434,7 +434,7 @@ public class TagsetTree extends HorizontalLayout {
 			propertyCollection.getItemProperty(tagDefColorProp).setValue(
 					ColorConverter.toHex(selTagDefinition.getColor()));
 			
-			FormDialog tagFormDialog = new FormDialog(
+			FormDialog<PropertysetItem> tagFormDialog = new FormDialog<PropertysetItem>(
 				"Edit Tag",
 				propertyCollection,
 				new TagDefinitionFieldFactory(tagDefColorProp),
@@ -534,8 +534,8 @@ public class TagsetTree extends HorizontalLayout {
 			return;
 		}
 		
-		FormDialog tagFormDialog =
-			new FormDialog(
+		FormDialog<PropertysetItem> tagFormDialog =
+			new FormDialog<PropertysetItem>(
 				"Create new Tag",
 				propertyCollection,
 				new TagDefinitionFieldFactory(
@@ -643,8 +643,8 @@ public class TagsetTree extends HorizontalLayout {
 		PropertyCollection propertyCollection = 
 				new PropertyCollection(tagsetdefinitionnameProperty);
 
-		FormDialog tagsetFormDialog =
-			new FormDialog(
+		FormDialog<PropertysetItem> tagsetFormDialog =
+			new FormDialog<PropertysetItem>(
 				"Create new Tagset",
 				propertyCollection,
 				new SaveCancelListener<PropertysetItem>() {
@@ -688,8 +688,8 @@ public class TagsetTree extends HorizontalLayout {
 							new StringProperty(
 								curSelTagsetDefinition.getName()));
 			
-			FormDialog tagsetFormDialog =
-				new FormDialog(
+			FormDialog<PropertysetItem> tagsetFormDialog =
+				new FormDialog<PropertysetItem>(
 					"Edit Tagset",
 					propertyCollection,
 					new SaveCancelListener<PropertysetItem>() {
@@ -713,7 +713,7 @@ public class TagsetTree extends HorizontalLayout {
 	}
 
 	private void configureTagsetFormDialog(
-			FormDialog formDialog, String propertyId) {
+			FormDialog<PropertysetItem> formDialog, String propertyId) {
 		formDialog.getField(
 				propertyId).setRequired(true);
 		formDialog.getField(

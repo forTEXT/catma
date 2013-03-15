@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 
 import de.catma.db.CloseableSession;
@@ -37,8 +38,6 @@ import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionRefer
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.repository.db.model.DBCorpus;
 import de.catma.repository.db.model.DBCorpusSourceDocument;
-import de.catma.repository.db.model.DBCorpusUserMarkupCollection;
-import de.catma.repository.db.model.DBSourceDocument;
 import de.catma.repository.db.model.DBUserCorpus;
 import de.catma.util.CloseSafe;
 
@@ -138,15 +137,15 @@ public class DBCorpusHandler {
 	public void addSourceDocument(Corpus corpus, SourceDocument sourceDocument) throws IOException {
 		Session session = dbRepository.getSessionFactory().openSession();
 		try  {
-			DBSourceDocument dbSourceDocument = 
-					dbRepository.getDbSourceDocumentHandler().getDbSourceDocument(
-							session, sourceDocument.getID());
-			DBCorpusSourceDocument dbCorpusSourceDocument = 
-					new DBCorpusSourceDocument(
-						Integer.valueOf(corpus.getId()), 
-						dbSourceDocument);
+			SQLQuery query = session.createSQLQuery(
+				"call CatmaRepository.addItemToCorpus(" +
+					":umcID, :sourceDocumentLocalUri, :corpusID)");
+			query.setParameter("umcID", null);
+			query.setParameter("sourceDocumentLocalUri", sourceDocument.getID());
+			query.setParameter("corpusID", Integer.valueOf(corpus.getId()));
+
 			session.beginTransaction();
-			session.save(dbCorpusSourceDocument);
+			query.executeUpdate();
 			session.getTransaction().commit();
 			CloseSafe.close(new CloseableSession(session));
 			
@@ -165,13 +164,17 @@ public class DBCorpusHandler {
 			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
 		Session session = dbRepository.getSessionFactory().openSession();
 		try  {
-			DBCorpusUserMarkupCollection dbCorpusUserMarkupCollection = 
-					new DBCorpusUserMarkupCollection(
-						Integer.valueOf(corpus.getId()),
-						Integer.valueOf(userMarkupCollectionReference.getId()));
+			SQLQuery query = session.createSQLQuery(
+				"call CatmaRepository.addItemToCorpus(" +
+					":umcID, :sourceDocumentLocalUri, :corpusID)");
+			query.setParameter("umcID", Integer.valueOf(userMarkupCollectionReference.getId()));
+			query.setParameter("sourceDocumentLocalUri", null);
+			query.setParameter("corpusID", Integer.valueOf(corpus.getId()));
+			
 			session.beginTransaction();
-			session.save(dbCorpusUserMarkupCollection);
+			query.executeUpdate();
 			session.getTransaction().commit();
+
 			CloseSafe.close(new CloseableSession(session));
 			
 			corpus.addUserMarkupCollectionReference(
@@ -245,12 +248,14 @@ public class DBCorpusHandler {
 						null, entry.getValue());
 			}
 			else {
-				String oldName = corpora.get(entry.getKey()).toString();
+				Corpus oldCorpus = corpora.get(entry.getKey());
+				
 				corpora.put(
 						entry.getKey(), entry.getValue());
+				
 				dbRepository.getPropertyChangeSupport().firePropertyChange(
 						Repository.RepositoryChangeEvent.corpusChanged.name(),
-						oldName, entry.getValue());
+						oldCorpus, entry.getValue());
 			}
 		}
 		
