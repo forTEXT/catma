@@ -57,7 +57,6 @@ import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.CatmaApplication;
-import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.UnknownUserException;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
@@ -67,9 +66,12 @@ import de.catma.serialization.tei.TeiTagLibrarySerializationHandler;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
+import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.ui.dialog.UploadDialog;
+import de.catma.ui.repository.sharing.SharingOptions;
+import de.catma.ui.repository.sharing.SharingOptionsFieldFactory;
 import de.catma.util.CloseSafe;
 import de.catma.util.ContentInfoSet;
 
@@ -415,39 +417,36 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 			final TagLibraryReference tagLibraryReference = 
 					(TagLibraryReference)value;
 			
-			final String userIdentificationPropertyName = "Share with (email)";
+			SharingOptions sharingOptions = new SharingOptions();
 			
-			SingleValueDialog singleValueDialog = new SingleValueDialog();
-			
-			singleValueDialog.getSingleValue(
-					getApplication().getMainWindow(),
-					"Please enter the user name of the person you want to share with",
-					"You have to enter a name!",
-					new SaveCancelListener<PropertysetItem>() {
-				public void cancelPressed() {}
-				public void savePressed(
-						PropertysetItem propertysetItem) {
-					Property property = 
-							propertysetItem.getItemProperty(
-									userIdentificationPropertyName);
-					String userIdent = (String)property.getValue();
-					try {
-						repository.share(
-								tagLibraryReference, 
-								userIdent, AccessMode.READ);
-					} catch (IOException e) {
-						if (e.getCause() instanceof UnknownUserException) {
-							getWindow().showNotification(
-									"Sharing failed!", e.getCause().getMessage(), 
-									Notification.TYPE_WARNING_MESSAGE);
-						}
-						else {
-							((CatmaApplication)getApplication()).showAndLogError(
-								"Error sharing this corpus!", e);
+			FormDialog<SharingOptions> sharingOptionsDlg = new FormDialog<SharingOptions>(
+				"Please enter the person you want to share with", 
+				new BeanItem<SharingOptions>(sharingOptions),
+				new SharingOptionsFieldFactory(), 
+				new SaveCancelListener<SharingOptions>() {
+					public void cancelPressed() {}
+					public void savePressed(SharingOptions result) {
+						try {
+							repository.share(
+									tagLibraryReference, 
+									result.getUserIdentification(), 
+									result.getAccessMode());
+						} catch (IOException e) {
+							if (e.getCause() instanceof UnknownUserException) {
+								getWindow().showNotification(
+										"Sharing failed!", e.getCause().getMessage(), 
+										Notification.TYPE_WARNING_MESSAGE);
+							}
+							else {
+								((CatmaApplication)getApplication()).showAndLogError(
+									"Error sharing this corpus!", e);
+							}
 						}
 					}
-				}
-			}, userIdentificationPropertyName);
+				});
+			sharingOptionsDlg.setVisibleItemProperties(
+					new Object[] {"userIdentification", "accessMode"});
+			sharingOptionsDlg.show(getApplication().getMainWindow());
 		}
 		else {
 			getWindow().showNotification(
