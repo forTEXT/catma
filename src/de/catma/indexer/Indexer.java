@@ -65,7 +65,8 @@ public interface Indexer {
 			List<String> userMarkupCollectionIdList, 
 			String tagDefinitionPath) throws Exception;
 	
-	public QueryResult searchProperty(Set<String> propertyDefinitionIDs,
+	public QueryResult searchProperty(
+			List<String> userMarkupCollectionIdList, Set<String> propertyDefinitionIDs,
 			String propertyName, String propertyValue);
 	
 	public QueryResult searchFreqency(

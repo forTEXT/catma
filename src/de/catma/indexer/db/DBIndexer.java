@@ -200,12 +200,14 @@ public class DBIndexer implements Indexer {
 		return tagSearcher.search(userMarkupCollectionIdList, tagDefinitionPath);
 	}
 	
-	public QueryResult searchProperty(Set<String> propertyDefinitionIDs,
+	public QueryResult searchProperty(
+			List<String> userMarkupCollectionIdList, Set<String> propertyDefinitionIDs,
 			String propertyName, String propertyValue) {
 
 		TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher(sessionFactory);
 		
-		return tagSearcher.searchProperties(propertyDefinitionIDs, propertyName, propertyValue);
+		return tagSearcher.searchProperties(
+				userMarkupCollectionIdList, propertyDefinitionIDs, propertyName, propertyValue);
 	}
 
 	public QueryResult searchFreqency(

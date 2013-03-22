@@ -133,9 +133,12 @@ public class TagDefinitionSearcher {
 	}
 
 
-	public QueryResult searchProperties(Set<String> propertyDefinitionIDs,
+	public QueryResult searchProperties(
+			List<String> userMarkupCollectionIdList, 
+			Set<String> propertyDefinitionIDs,
 			String propertyName,
 			String propertyValue) {
+		
 		IDGenerator idGenerator = new IDGenerator();
 		List<byte[]> byteUuidSet = new ArrayList<byte[]>();
 		
@@ -143,12 +146,12 @@ public class TagDefinitionSearcher {
 			byteUuidSet.add(idGenerator.catmaIDToUUIDBytes(propertyDefinitionID));
 		}
 		
-		
 		String hql = " select tr from " + 
 				DBIndexTagReference.class.getSimpleName() + " tr, " +
 				DBIndexProperty.class.getSimpleName() + " p " +
 				" where tr.tagInstanceId = p.tagInstanceId and " +
-				" p.propertyDefinitionId in :byteUuidSet ";
+				" p.propertyDefinitionId in :byteUuidSet " +
+				" and tr.userMarkupCollectionId in :umcList ";
 		
 		if ((propertyValue != null) && (!propertyValue.isEmpty())) {
 			hql += " and p.value = :propertyValue";
@@ -159,6 +162,7 @@ public class TagDefinitionSearcher {
 			Query query = session.createQuery(hql);
 			
 			query.setParameterList("byteUuidSet", byteUuidSet);
+			query.setParameterList("umcList", userMarkupCollectionIdList);
 			
 			if ((propertyValue != null) && (!propertyValue.isEmpty())) {
 				query.setParameter("propertyValue", propertyValue);

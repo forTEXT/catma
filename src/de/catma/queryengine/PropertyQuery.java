@@ -113,6 +113,7 @@ public class PropertyQuery extends Query {
         
         QueryResult result = 
 				indexer.searchProperty(
+						relevantUserMarkupCollIDs,
 						propertyDefinitionIDs,
 						propertyName, propertyValue);
 
