@@ -110,7 +110,7 @@ public class CatmaApplication extends Application
 		backgroundService = new BackgroundService(this);
 		
 		
-		final Window mainWindow = new Window("CATMA 4 - CLÉA " + VERSION);
+		final Window mainWindow = new Window("CATMA 4 - CLÃ‰A " + VERSION);
 		mainWindow.addParameterHandler(this);
 		HorizontalLayout mainLayout = new HorizontalLayout();
 		mainLayout.setSizeUndefined();
@@ -168,6 +168,11 @@ public class CatmaApplication extends Application
 			mainLayout.setComponentAlignment(aboutLink, Alignment.TOP_RIGHT);
 			mainLayout.setExpandRatio(aboutLink, 1.0f);
 			
+			Link helpLink = new Link(
+					"Help", new ExternalResource(getURL()+"manual/"));
+			helpLink.setTargetName("_blank");
+			mainLayout.addComponent(helpLink);
+			mainLayout.setComponentAlignment(helpLink, Alignment.TOP_RIGHT);
 			
 			Label helpLabel = new Label();
 			helpLabel.setIcon(new ClassResource(

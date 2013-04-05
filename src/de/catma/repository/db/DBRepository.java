@@ -511,6 +511,9 @@ public class DBRepository implements IndexedRepository {
 				inputStream, sourceDocument);
 	}
 	
+	/* (non-Javadoc)
+	 * @see de.catma.document.repository.Repository#getUserMarkupCollection(de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference)
+	 */
 	public UserMarkupCollection getUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
 		return getUserMarkupCollection(userMarkupCollectionReference, false);

@@ -215,6 +215,7 @@ public class DBCorpusHandler {
 	}
 
 	public void rename(Corpus corpus, String name) throws IOException {
+		String oldName = corpus.toString();
 		Session session = dbRepository.getSessionFactory().openSession();
 		try  {
 			DBCorpus dbCorpus = 
@@ -228,7 +229,7 @@ public class DBCorpusHandler {
 		
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					Repository.RepositoryChangeEvent.corpusChanged.name(),
-					name, corpus);
+					oldName, corpus);
 		}
 		catch (Exception e) {
 			CloseSafe.close(new CloseableSession(session,true));
