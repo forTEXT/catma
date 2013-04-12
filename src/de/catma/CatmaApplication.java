@@ -25,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -56,6 +57,7 @@ import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
 import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.IndexedRepository;
@@ -67,8 +69,6 @@ import de.catma.ui.ProgressWindow;
 import de.catma.ui.analyzer.AnalyzerManagerView;
 import de.catma.ui.analyzer.AnalyzerManagerWindow;
 import de.catma.ui.analyzer.AnalyzerProvider;
-import de.catma.ui.analyzer.VisualizationManagerView;
-import de.catma.ui.analyzer.VisualizationManagerWindow;
 import de.catma.ui.menu.LoginLogoutCommand;
 import de.catma.ui.menu.Menu;
 import de.catma.ui.menu.MenuFactory;
@@ -79,6 +79,8 @@ import de.catma.ui.tagger.TaggerManagerWindow;
 import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagManagerView;
 import de.catma.ui.tagmanager.TagManagerWindow;
+import de.catma.ui.visualizer.VisualizationManagerView;
+import de.catma.ui.visualizer.VisualizationManagerWindow;
 
 public class CatmaApplication extends Application
 	implements BackgroundServiceProvider, AnalyzerProvider, ParameterHandler {
@@ -419,6 +421,17 @@ public class CatmaApplication extends Application
 			Range range) {
 		TaggerView tv = openSourceDocument(sd, repository);
 		tv.show(range);
+	}
+
+	public void addDoubleTree(List<KeywordInContext> kwics) {
+		if (visualizationManagerView.getApplication() == null) {
+			menu.executeEntry(visualizationManagerView);
+		}
+		else {
+			visualizationManagerView.getWindow().bringToFront();
+		}
+
+		visualizationManagerView.addDoubleTree(kwics);
 	}
 	
 }

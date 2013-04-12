@@ -34,10 +34,33 @@ public class CatmaApplicationServlet extends ApplicationServlet {
 		JQUERY("jquery/jquery-1.7.2.min.js"),
 		HIGHCHARTS("highcharts/highcharts.js"),
 //		EXPORTING("highcharts/exporting.js"),
+		D3("doubletreejs/d3.v3.js"),
+		CLASSLISTSUBSTITUTE("doubletreejs/classListSubstitute.js"),
+		DOUBLETREE("doubletreejs/DoubleTree.js"),
+		DT_TRIE("doubletreejs/Trie.js"),
+//		D3("doubletreejs/d3.min.js"),
+//		CLASSLISTSUBSTITUTE("doubletreejs/classListSubstitute.min.js"),
+//		DOUBLETREE("doubletreejs/DoubleTree.min.js"),
+//		DT_TRIE("doubletreejs/Trie.min.js"),
 		;
 		String relFilePath;
 
 		private JsLib(String relFilePath) {
+			this.relFilePath = relFilePath;
+		}
+		
+		@Override
+		public String toString() {
+			return relFilePath;
+		}
+	}
+	
+	private enum CssLib {
+		DOUBLETREE("doubletreejs/doubletree.css"),
+		;
+		String relFilePath;
+
+		private CssLib(String relFilePath) {
 			this.relFilePath = relFilePath;
 		}
 		
@@ -65,6 +88,20 @@ public class CatmaApplicationServlet extends ApplicationServlet {
 	      
 		super.writeAjaxPageHtmlVaadinScripts(window, themeName, application, page,
 				appUrl, themeUri, appId, request);
+	}
+	
+
+	@Override
+	protected void writeAjaxPageHtmlHeader(BufferedWriter page, String title,
+			String themeUri, HttpServletRequest request) throws IOException {
+		
+		for (CssLib lib : CssLib.values()) {
+			page.write(
+				"<link rel=\"stylesheet\" href=\"" 
+				+ request.getContextPath() +"/VAADIN/" + lib + "\" />");
+		}
+		
+		super.writeAjaxPageHtmlHeader(page, title, themeUri, request);
 	}
 	
 //	@Override

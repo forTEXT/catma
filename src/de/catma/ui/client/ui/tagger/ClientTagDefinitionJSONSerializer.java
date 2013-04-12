@@ -22,6 +22,7 @@ import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
+import de.catma.ui.client.ui.util.JSONSerializer;
 
 public class ClientTagDefinitionJSONSerializer extends JSONSerializer {
 

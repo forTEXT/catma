@@ -16,7 +16,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.catma.ui.analyzer;
+package de.catma.ui.visualizer;
 
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -186,4 +186,9 @@ public class DistributionChartView extends HorizontalLayout implements ClosableT
 	public void addClickshortCuts() { /* noop */ }
 	
 	public void removeClickshortCuts() { /* noop */ }
+	
+	@Override
+	public String toString() {
+		return "Distribution analysis for " + label;
+	}
 }

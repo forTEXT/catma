@@ -19,6 +19,8 @@
 package de.catma.ui.analyzer;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -40,11 +42,14 @@ import com.vaadin.ui.Window.Notification;
 
 import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
+import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
+import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.AccumulativeGroupedQueryResult;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRow;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 
@@ -66,6 +71,7 @@ public class PhraseResultPanel extends VerticalLayout {
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
 	private Button btSelectAll;
 	private Button btDeselectAll;
+	private Button btDoubleTree;
 
 	public PhraseResultPanel(
 			Repository repository, 
@@ -87,6 +93,34 @@ public class PhraseResultPanel extends VerticalLayout {
 	}
 
 	private void initActions() {
+		btDoubleTree.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				Set<?> selection = (Set<?>) resultTable.getValue();
+				
+				try {
+					if (selection.size() == 1) {
+						GroupedQueryResult result = extractGroupedQueryResult(selection.iterator().next());
+						List<KeywordInContext> kwics = new ArrayList<KeywordInContext>();
+						for (QueryResultRow row : result) {
+						
+							SourceDocument sourceDocument = 
+									repository.getSourceDocument(row.getSourceDocumentId());
+								
+							KwicProvider kwicProvider = new KwicProvider(sourceDocument);
+							KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), 5);
+							kwics.add(kwic);
+						}	
+						((CatmaApplication)getApplication()).addDoubleTree(kwics);
+					}					
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+		});
+		
 		btDist.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -203,6 +237,9 @@ public class PhraseResultPanel extends VerticalLayout {
 				"ui/analyzer/resources/chart.gif", 
 				getApplication()));
 		buttonPanel.addComponent(btDist);
+		
+		btDoubleTree = new Button("DT");
+		buttonPanel.addComponent(btDoubleTree);
 		
 		btSelectAll = new Button("Select all for Kwic");
 		

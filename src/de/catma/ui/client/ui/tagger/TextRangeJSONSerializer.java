@@ -23,6 +23,7 @@ import com.google.gwt.json.client.JSONParser;
 
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance.SerializationField;
+import de.catma.ui.client.ui.util.JSONSerializer;
 
 public class TextRangeJSONSerializer extends JSONSerializer {
 

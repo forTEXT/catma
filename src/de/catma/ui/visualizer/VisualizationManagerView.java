@@ -16,14 +16,16 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.catma.ui.analyzer;
+package de.catma.ui.visualizer;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import com.vaadin.ui.Component;
 import com.vaadin.ui.TabSheet;
 
+import de.catma.document.source.KeywordInContext;
 import de.catma.queryengine.result.computation.DistributionComputation;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabbedView;
@@ -41,7 +43,7 @@ public class VisualizationManagerView extends TabbedView {
 						distributionComputation.getPercentSegmentSize(), caption);
 		int id = getTabPosition(
 				addClosableTab(
-						distChartView, "Distribution analysis for " + caption));
+						distChartView, distChartView.toString()));
 		
 		distChartView.addDistributionComputation(distributionComputation);
 		return id;
@@ -91,9 +93,16 @@ public class VisualizationManagerView extends TabbedView {
 			for (Component c : contents) {
 				addClosableTab(
 					(ClosableTab)c, 
-					"Distribution analysis for " + ((DistributionChartView)c).getLabel());
+					c.toString());
 			}
 
 		}
+	}
+
+	public void addDoubleTree(List<KeywordInContext> kwics) {
+		DoubleTreeView dtView = new DoubleTreeView(kwics);
+		
+		addClosableTab(dtView, dtView.toString());
+		
 	}
 }
