@@ -57,17 +57,22 @@ public class VDoubleTree extends Composite implements Paintable {
 //			{"rechts", "vom", "Supermarkt"}, 
 //			{"links", "hinterm", "Baum"}};
 //	String[] tokens = {"Haus", "Haus", "Haus"};
-
-			doubleTreeWidget.setupFromArrays(); 
+			KwicList kwicList = 
+				KwicList.fromJSON(
+					uidl.getStringAttribute(DoubleTreeMessageAttribute.SET.name()));
+			
+			VConsole.log(kwicList.getTokens().toString());
+			doubleTreeWidget.setupFromArrays(
+				kwicList.getPrefixes(), kwicList.getTokens(), kwicList.getPostfixes()); 
 		}
 	}
 	
-	private void sendMessage(DoubleTreeMessageAttribute dtEventAttribute, String message) {
-		VConsole.log("sending message " + dtEventAttribute + "["+message+"] to the server");
-		serverConnection.updateVariable(
-				clientID, dtEventAttribute.name(), message, true);
-		
-	}
+//	private void sendMessage(DoubleTreeMessageAttribute dtEventAttribute, String message) {
+//		VConsole.log("sending message " + dtEventAttribute + "["+message+"] to the server");
+//		serverConnection.updateVariable(
+//				clientID, dtEventAttribute.name(), message, true);
+//		
+//	}
 
 
 

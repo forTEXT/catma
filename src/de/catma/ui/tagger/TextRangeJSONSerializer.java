@@ -23,6 +23,7 @@ import org.json.JSONObject;
 
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance.SerializationField;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
+import de.catma.ui.data.util.JSONSerializationException;
 
 public class TextRangeJSONSerializer {
 	

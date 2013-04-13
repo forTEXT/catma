@@ -38,6 +38,7 @@ import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TaggerMessageAttribute;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
+import de.catma.ui.data.util.JSONSerializationException;
 import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
 import de.catma.util.ColorConverter;

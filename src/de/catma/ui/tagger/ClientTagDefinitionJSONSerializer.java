@@ -22,6 +22,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
+import de.catma.ui.data.util.JSONSerializationException;
 
 public class ClientTagDefinitionJSONSerializer {
 

@@ -66,7 +66,7 @@ public class KwicProvider {
         SpanContext spanContext =
                 getSpanContextFor(range, span, SpanDirection.Both);
 
-        return new KeywordInContext(
+        return new KeywordInSpanContext(
             content.substring(range.getStartPoint(), range.getEndPoint()),
             content.substring(
             			spanContext.getBackwardRange().getStartPoint(),
@@ -74,7 +74,8 @@ public class KwicProvider {
             new Range(
             		spanContext.getBackwardRange().getStartPoint(),
                     spanContext.getForwardRange().getEndPoint()),
-            range.getStartPoint()-spanContext.getBackwardRange().getStartPoint());
+            range.getStartPoint()-spanContext.getBackwardRange().getStartPoint(),
+            spanContext);
     }	
 	
     public SpanContext getSpanContextFor(Range range,
@@ -91,7 +92,7 @@ public class KwicProvider {
         // ...tokens included which are underlying the incoming range
         // that is because we have to examine the tokens at the edges of that range
         // if there happens to be a partial token we do not want 
-        // to include the other part into the context because the SpanContext includedes 
+        // to include the other part into the context because the SpanContext includes 
         // only full tokens
         
         SpanContext spanContext = new SpanContext(sourceDocumentId);

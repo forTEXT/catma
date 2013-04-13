@@ -16,7 +16,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.catma.ui.tagger;
+package de.catma.ui.data.util;
 
 // somehow the JSONExceptions doesn't work
 public class JSONSerializationException extends Exception {

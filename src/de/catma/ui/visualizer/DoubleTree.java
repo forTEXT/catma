@@ -9,9 +9,11 @@ import com.vaadin.terminal.PaintTarget;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.ClientWidget;
 
+import de.catma.CatmaApplication;
 import de.catma.document.source.KeywordInContext;
 import de.catma.ui.client.ui.visualizer.VDoubleTree;
 import de.catma.ui.client.ui.visualizer.shared.DoubleTreeMessageAttribute;
+import de.catma.ui.data.util.JSONSerializationException;
 
 @ClientWidget(VDoubleTree.class)
 public class DoubleTree extends AbstractComponent {
@@ -39,11 +41,16 @@ public class DoubleTree extends AbstractComponent {
 	}
 	
 	public void setupFromArrays(List<KeywordInContext> kwics) {
-		
-		
-		attributes.put(
-				DoubleTreeMessageAttribute.SET.name(), 
-				DoubleTreeMessageAttribute.SET.name());
-		requestRepaint();
+		try {
+			String kwicsJson = new KwicListJSONSerializer().toJSON(kwics);
+			System.out.println(kwicsJson);
+			attributes.put(
+					DoubleTreeMessageAttribute.SET.name(), 
+					kwicsJson);
+			requestRepaint();
+		} catch (JSONSerializationException e) {
+			((CatmaApplication)getApplication()).showAndLogError(
+					"Error showing DoubleTree in the Visualizer!", e);
+		}	
 	}
 }
