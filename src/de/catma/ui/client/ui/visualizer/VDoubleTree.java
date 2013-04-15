@@ -1,5 +1,7 @@
 package de.catma.ui.client.ui.visualizer;
 
+import java.util.Date;
+
 import com.google.gwt.user.client.ui.Composite;
 import com.vaadin.terminal.gwt.client.ApplicationConnection;
 import com.vaadin.terminal.gwt.client.Paintable;
@@ -23,7 +25,7 @@ public class VDoubleTree extends Composite implements Paintable {
 	}
 	
     private void initComponents() {
-    	doubleTreeWidget = new DoubleTreeWidget(1); 
+    	doubleTreeWidget = new DoubleTreeWidget(new Date().getTime());
 		initWidget(doubleTreeWidget);
 	}
 
@@ -47,23 +49,21 @@ public class VDoubleTree extends Composite implements Paintable {
 		this.clientID = uidl.getId();
 		
 		
-		if (uidl.hasAttribute(DoubleTreeMessageAttribute.SET.name())) {
-//			String[][] prefix = new String[][] {
-//			{"das", "kleine", "rote"}, 
-//			{"ein", "kleines", "graues"}, 
-//			{"ihm", "sein", "rotes"}};
-//	String[][] postfix = new String[][] {
-//			{"gehört", "Dieter", "Dietersen"}, 
-//			{"rechts", "vom", "Supermarkt"}, 
-//			{"links", "hinterm", "Baum"}};
-//	String[] tokens = {"Haus", "Haus", "Haus"};
+		if (uidl.hasAttribute(DoubleTreeMessageAttribute.TREEDATA.name())) {
 			KwicList kwicList = 
 				KwicList.fromJSON(
-					uidl.getStringAttribute(DoubleTreeMessageAttribute.SET.name()));
+					uidl.getStringAttribute(DoubleTreeMessageAttribute.TREEDATA.name()));
 			
-			VConsole.log(kwicList.getTokens().toString());
 			doubleTreeWidget.setupFromArrays(
-				kwicList.getPrefixes(), kwicList.getTokens(), kwicList.getPostfixes()); 
+				kwicList.getPrefixes(), kwicList.getTokens(), kwicList.getPostfixes(),
+				kwicList.isCaseSensitive()); 
+		}
+		
+		if (uidl.hasAttribute(DoubleTreeMessageAttribute.WIDTH.name())) {
+			doubleTreeWidget.setVisWidth(
+				Integer.valueOf(
+					uidl.getStringAttribute(
+							DoubleTreeMessageAttribute.WIDTH.name())));
 		}
 	}
 	

@@ -14,7 +14,8 @@ import de.catma.ui.data.util.JSONSerializationException;
 
 public class KwicListJSONSerializer {
 	
-	public String toJSON(List<KeywordInContext> kwicList) throws JSONSerializationException {
+	public String toJSON(List<KeywordInContext> kwicList, boolean caseSensitive) 
+				throws JSONSerializationException {
 		
 		JSONObject kwicListJson = new JSONObject();
 		JSONArray prefixArraysJson = new JSONArray();
@@ -24,7 +25,9 @@ public class KwicListJSONSerializer {
 			kwicListJson.put(KwicSerializationField.prefixArrays.name(), prefixArraysJson);
 			kwicListJson.put(KwicSerializationField.tokenArray.name(), tokenArray);
 			kwicListJson.put(KwicSerializationField.postfixArrays.name(), postfixArraysJson);
-			
+			kwicListJson.put(
+					KwicSerializationField.caseSensitive.name(), 
+					Boolean.toString(caseSensitive));
 			for (KeywordInContext kwic : kwicList) {
 				if (kwic instanceof KeywordInSpanContext) {
 					KeywordInSpanContext spanKwic = (KeywordInSpanContext)kwic;

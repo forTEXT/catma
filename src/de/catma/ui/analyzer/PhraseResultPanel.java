@@ -100,7 +100,8 @@ public class PhraseResultPanel extends VerticalLayout {
 				
 				try {
 					if (selection.size() == 1) {
-						GroupedQueryResult result = extractGroupedQueryResult(selection.iterator().next());
+						GroupedQueryResult result = 
+								extractGroupedQueryResult(selection.iterator().next());
 						List<KeywordInContext> kwics = new ArrayList<KeywordInContext>();
 						for (QueryResultRow row : result) {
 						
@@ -112,10 +113,16 @@ public class PhraseResultPanel extends VerticalLayout {
 							kwics.add(kwic);
 						}	
 						((CatmaApplication)getApplication()).addDoubleTree(kwics);
-					}					
+					}		
+					else {
+						getWindow().showNotification(
+							"Information", 
+							"Please select exactly one phrase!", 
+							Notification.TYPE_TRAY_NOTIFICATION);
+					}
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					((CatmaApplication)getApplication()).showAndLogError(
+							"error while preparing kwic in doubletree visualization", e);
 				}
 				
 			}
@@ -238,7 +245,13 @@ public class PhraseResultPanel extends VerticalLayout {
 				getApplication()));
 		buttonPanel.addComponent(btDist);
 		
-		btDoubleTree = new Button("DT");
+		btDoubleTree = new Button();
+		btDoubleTree.setIcon(new ClassResource(
+				"ui/analyzer/resources/doubletree.gif", 
+				getApplication()));
+		btDoubleTree.setDescription(
+			"Show selected phrase with a doubletree kwic visualization.");
+		
 		buttonPanel.addComponent(btDoubleTree);
 		
 		btSelectAll = new Button("Select all for Kwic");

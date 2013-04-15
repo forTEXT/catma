@@ -37,10 +37,9 @@ public class Slider extends VerticalLayout {
 	
 	public Slider(String caption, int min, int max, final String unit) {
 		this.setCaption(caption);
-		
+		setSizeUndefined();
 		HorizontalLayout sliderLayout = new HorizontalLayout();
 		sliderLayout.setSpacing(true);
-//		this.sliderComp = new com.vaadin.ui.Slider(min, max);
 		this.sliderComp = new SliderComp(min, max);
 		minLabel = new Label(String.valueOf(min));
 		maxLabel = new Label(String.valueOf(max));
@@ -54,7 +53,8 @@ public class Slider extends VerticalLayout {
 		
 		final Label current = new Label(sliderComp.getValue().toString());
 		current.setWidth("100%");
-		current.addStyleName("centered-text");
+		
+		current.addStyleName("slider-centered-text");
 		
 		addComponent(current);
 		setComponentAlignment(current, Alignment.MIDDLE_CENTER);
@@ -62,7 +62,8 @@ public class Slider extends VerticalLayout {
 		sliderComp.addListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
-				current.setValue(event.getProperty().getValue() + unit);
+				current.setValue(
+					event.getProperty().getValue() + (unit.isEmpty()?"":" ") + unit);
 			}
 		});
 		

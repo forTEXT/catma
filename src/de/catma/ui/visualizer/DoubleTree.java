@@ -19,13 +19,22 @@ import de.catma.ui.data.util.JSONSerializationException;
 public class DoubleTree extends AbstractComponent {
 
 	private Map<String,String> attributes = new HashMap<String, String>();
-
+	private String kwicsJson;
+	
 	public DoubleTree() {
 	}
 	
 	@Override
 	public void paintContent(PaintTarget target) throws PaintException {
 		super.paintContent(target);
+		
+		if (target.isFullRepaint() 
+				&& (kwicsJson != null) 
+				&& !attributes.containsKey(DoubleTreeMessageAttribute.TREEDATA.name())) {
+			attributes.put(
+					DoubleTreeMessageAttribute.TREEDATA.name(), 
+					kwicsJson);
+		}
 		
 		for (Map.Entry<String, String> entry : attributes.entrySet()) {
 			target.addAttribute(entry.getKey(), entry.getValue());
@@ -40,17 +49,23 @@ public class DoubleTree extends AbstractComponent {
 		super.changeVariables(source, variables);
 	}
 	
-	public void setupFromArrays(List<KeywordInContext> kwics) {
+	public void setupFromArrays(List<KeywordInContext> kwics, boolean caseSensitive) {
 		try {
-			String kwicsJson = new KwicListJSONSerializer().toJSON(kwics);
-			System.out.println(kwicsJson);
+			kwicsJson = new KwicListJSONSerializer().toJSON(kwics, caseSensitive);
 			attributes.put(
-					DoubleTreeMessageAttribute.SET.name(), 
+					DoubleTreeMessageAttribute.TREEDATA.name(), 
 					kwicsJson);
 			requestRepaint();
 		} catch (JSONSerializationException e) {
 			((CatmaApplication)getApplication()).showAndLogError(
 					"Error showing DoubleTree in the Visualizer!", e);
 		}	
+	}
+	
+	public void setVisWidth(int width) {
+		attributes.put(
+				DoubleTreeMessageAttribute.WIDTH.name(),
+				String.valueOf(width));
+		requestRepaint();
 	}
 }

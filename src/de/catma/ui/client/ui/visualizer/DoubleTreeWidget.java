@@ -7,7 +7,7 @@ public class DoubleTreeWidget extends FocusWidget {
 	
 	private DoubleTreeJs doubleTree;
 
-	public DoubleTreeWidget(int treeId) {
+	public DoubleTreeWidget(long treeId) {
 		super(Document.get().createDivElement());
 
 		getElement().setId("DoubleTreeWidget"+treeId);
@@ -15,8 +15,14 @@ public class DoubleTreeWidget extends FocusWidget {
 		doubleTree = DoubleTreeJs.create();
 	}
 	
-	public void setupFromArrays(String[][] prefix, String[] tokens, String[][] postfix) {
+	public void setupFromArrays(String[][] prefix, String[] tokens, String[][] postfix, 
+			boolean caseSensitive) {
 		doubleTree.init(getElement().getId());
-		doubleTree.setupFromArrays(prefix, tokens, postfix);
+		getElement().getParentElement().getParentElement().addClassName("doubletree-container");
+		doubleTree.setupFromArrays(prefix, tokens, postfix, caseSensitive);
+	}
+	
+	public void setVisWidth(int width) {
+		doubleTree.visWidth(width);
 	}
 }

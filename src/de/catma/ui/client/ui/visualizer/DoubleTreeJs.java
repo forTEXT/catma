@@ -18,7 +18,10 @@ public final class DoubleTreeJs extends JavaScriptObject {
 	public void init(String targetSelector) {
 		impl.init(this, targetSelector);
 	}
-	public void setupFromArrays(String[][] prefix, String[] tokens, String[][] postfix) {
-		impl.setupFromArrays(this, prefix, tokens, postfix);
+	public void setupFromArrays(String[][] prefix, String[] tokens, String[][] postfix, boolean caseSensitive) {
+		impl.setupFromArrays(this, prefix, tokens, postfix, caseSensitive);
+	}
+	public void visWidth(int width) {
+		impl.visWidth(this, width);
 	}
 }

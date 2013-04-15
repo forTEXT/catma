@@ -34,14 +34,14 @@ public class CatmaApplicationServlet extends ApplicationServlet {
 		JQUERY("jquery/jquery-1.7.2.min.js"),
 		HIGHCHARTS("highcharts/highcharts.js"),
 //		EXPORTING("highcharts/exporting.js"),
-		D3("doubletreejs/d3.v3.js"),
-		CLASSLISTSUBSTITUTE("doubletreejs/classListSubstitute.js"),
-		DOUBLETREE("doubletreejs/DoubleTree.js"),
-		DT_TRIE("doubletreejs/Trie.js"),
-//		D3("doubletreejs/d3.min.js"),
-//		CLASSLISTSUBSTITUTE("doubletreejs/classListSubstitute.min.js"),
-//		DOUBLETREE("doubletreejs/DoubleTree.min.js"),
-//		DT_TRIE("doubletreejs/Trie.min.js"),
+//		D3("doubletreejs/d3.v3.js"),
+//		CLASSLISTSUBSTITUTE("doubletreejs/classListSubstitute.js"),
+//		DOUBLETREE("doubletreejs/DoubleTree.js"),
+//		DT_TRIE("doubletreejs/Trie.js"),
+		D3("doubletreejs/d3.min.js"),
+		CLASSLISTSUBSTITUTE("doubletreejs/classListSubstitute.min.js"),
+		DOUBLETREE("doubletreejs/DoubleTree.min.js"),
+		DT_TRIE("doubletreejs/Trie.min.js"),
 		;
 		String relFilePath;
 

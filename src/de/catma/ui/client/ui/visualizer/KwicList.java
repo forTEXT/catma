@@ -11,6 +11,7 @@ import de.catma.ui.client.ui.visualizer.shared.KwicSerializationField;
 
 public class KwicList {
 	
+	private boolean caseSensitive;
 	private ArrayList<ArrayList<String>> prefixArrays;
 	private ArrayList<ArrayList<String>> postfixArrays;
 	private ArrayList<String> tokenArray;
@@ -58,6 +59,14 @@ public class KwicList {
 	public void addPostfix(ArrayList<String> postfix) {
 		postfixArrays.add(postfix);
 	}
+	
+	public void setCaseSensitive(boolean caseSensitive) {
+		this.caseSensitive = caseSensitive;
+	}
+	
+	public boolean isCaseSensitive() {
+		return caseSensitive;
+	}
 
 	
 	public static KwicList fromJSON(String jsonString){
@@ -74,6 +83,11 @@ public class KwicList {
 		
 		JSONArray postfixes = 
 			(JSONArray)kwicListJson.get(KwicSerializationField.postfixArrays.name());	
+		
+		kwicList.setCaseSensitive(
+			Boolean.parseBoolean(
+				serializer.getStringValueFromStringObject(
+					kwicListJson.get(KwicSerializationField.caseSensitive.name()))));
 		
 		for (int i=0; i<tokens.size(); i++) {
 			

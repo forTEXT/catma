@@ -48,7 +48,7 @@
 	font-weight: bold;
 }
 
-.centered-text {
+.slider-centered-text {
 	text-align: center;
 }
 
@@ -88,6 +88,11 @@
 	margin-top:5px;
 	margin-right:5px;
 }
+
+.doubletree-container {
+	overflow:auto !important;
+}
+
 /*
 .v-button-icon-button:focus {
 	background-image: none;	

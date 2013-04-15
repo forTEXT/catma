@@ -9,16 +9,23 @@ public class DoubleTreeJsImplStandard {
 	}-*/;
 
 	public native void init(DoubleTreeJs dt, String targetSelector) /*-{
-		dt.init("div#"+targetSelector);
+		dt.init("div#"+targetSelector).visWidth(800);
+	}-*/;
+	
+	
+	public native void visWidth(DoubleTreeJs dt, int width) /*-{
+		dt.visWidth(width);
+		dt.redraw();
 	}-*/;
 	
 	public native void setupFromArrays(
-			DoubleTreeJs dt, String[][] prefixArr, String[] tokenArr, String[][] postfixArr) /*-{
-		var caseSensitive = false;
+			DoubleTreeJs dt, String[][] prefixArr, String[] tokenArr, String[][] postfixArr, boolean caseSensitive) /*-{
 		var fieldNames = ["token"];
 		var fieldDelim = "/";
 		var distinguishingFieldsArray = ["token"];
-		dt.setupFromArrays(prefixArr, tokenArr, postfixArr, true, fieldNames, fieldDelim, distinguishingFieldsArray);	  
+		dt.setupFromArrays(
+			prefixArr, tokenArr, postfixArr, caseSensitive, 
+			fieldNames, fieldDelim, distinguishingFieldsArray);	  
 	}-*/;
 	
 }
