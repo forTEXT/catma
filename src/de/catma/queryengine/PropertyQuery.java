@@ -26,6 +26,7 @@ import java.util.Set;
 
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
+import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
@@ -37,7 +38,6 @@ import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
-import de.catma.util.ContentInfoSet;
 
 
 /**

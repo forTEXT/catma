@@ -9,7 +9,7 @@ public class DoubleTreeJsImplStandard {
 	}-*/;
 
 	public native void init(DoubleTreeJs dt, String targetSelector) /*-{
-		dt.init("div#"+targetSelector).visWidth(800);
+		dt.init("div#"+targetSelector).visWidth(1600);
 	}-*/;
 	
 	

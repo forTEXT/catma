@@ -1,4 +1,4 @@
-package de.catma.ui.visualizer;
+package de.catma.ui.visualizer.doubletree;
 
 import java.util.HashMap;
 import java.util.List;

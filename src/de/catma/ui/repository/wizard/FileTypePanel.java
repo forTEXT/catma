@@ -43,6 +43,7 @@ import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.CharsetLanguageInfo;
+import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
@@ -54,7 +55,6 @@ import de.catma.document.source.contenthandler.ProtocolHandler;
 import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.WizardStepListener;
-import de.catma.util.ContentInfoSet;
 
 class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	

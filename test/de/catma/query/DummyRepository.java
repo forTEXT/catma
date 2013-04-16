@@ -11,6 +11,7 @@ import java.util.Set;
 
 import de.catma.document.Corpus;
 import de.catma.document.repository.AccessMode;
+import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
@@ -26,7 +27,6 @@ import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
-import de.catma.util.ContentInfoSet;
 
 public class DummyRepository implements IndexedRepository {
 	

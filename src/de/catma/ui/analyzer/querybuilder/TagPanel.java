@@ -35,6 +35,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
 import de.catma.document.repository.Repository;
+import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
@@ -47,7 +48,6 @@ import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
 import de.catma.ui.tagmanager.TagsetTree;
-import de.catma.util.ContentInfoSet;
 
 public class TagPanel extends AbstractSearchPanel {
 	

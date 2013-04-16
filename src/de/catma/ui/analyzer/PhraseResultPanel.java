@@ -243,6 +243,10 @@ public class PhraseResultPanel extends VerticalLayout {
 		btDist.setIcon(new ClassResource(
 				"ui/analyzer/resources/chart.gif", 
 				getApplication()));
+		btDist.setDescription(
+			"Show selected phrases as a distribution trend in a " +
+			"chart like visualization.");
+		
 		buttonPanel.addComponent(btDist);
 		
 		btDoubleTree = new Button();
@@ -250,7 +254,7 @@ public class PhraseResultPanel extends VerticalLayout {
 				"ui/analyzer/resources/doubletree.gif", 
 				getApplication()));
 		btDoubleTree.setDescription(
-			"Show selected phrase with a doubletree kwic visualization.");
+			"Show a selected phrase with a doubletree kwic visualization.");
 		
 		buttonPanel.addComponent(btDoubleTree);
 		

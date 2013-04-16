@@ -41,6 +41,7 @@ import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.db.CloseableSession;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
+import de.catma.document.source.ContentInfoSet;
 import de.catma.repository.db.model.DBPropertyDefPossibleValue;
 import de.catma.repository.db.model.DBPropertyDefinition;
 import de.catma.repository.db.model.DBTagDefinition;
@@ -57,7 +58,6 @@ import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.util.CloseSafe;
-import de.catma.util.ContentInfoSet;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 

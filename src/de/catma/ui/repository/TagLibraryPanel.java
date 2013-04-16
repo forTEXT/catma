@@ -59,6 +59,7 @@ import com.vaadin.ui.themes.Reindeer;
 import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.UnknownUserException;
+import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.serialization.tei.TeiDocument;
 import de.catma.serialization.tei.TeiDocumentFactory;
@@ -73,7 +74,6 @@ import de.catma.ui.dialog.UploadDialog;
 import de.catma.ui.repository.sharing.SharingOptions;
 import de.catma.ui.repository.sharing.SharingOptionsFieldFactory;
 import de.catma.util.CloseSafe;
-import de.catma.util.ContentInfoSet;
 
 public class TagLibraryPanel extends HorizontalSplitPanel {
 

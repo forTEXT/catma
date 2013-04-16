@@ -18,7 +18,6 @@ public class DoubleTreeWidget extends FocusWidget {
 	public void setupFromArrays(String[][] prefix, String[] tokens, String[][] postfix, 
 			boolean caseSensitive) {
 		doubleTree.init(getElement().getId());
-		getElement().getParentElement().getParentElement().addClassName("doubletree-container");
 		doubleTree.setupFromArrays(prefix, tokens, postfix, caseSensitive);
 	}
 	

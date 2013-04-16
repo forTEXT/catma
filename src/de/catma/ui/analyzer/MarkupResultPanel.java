@@ -47,6 +47,7 @@ import com.vaadin.ui.Window.Notification;
 
 import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
+import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
@@ -62,7 +63,6 @@ import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
-import de.catma.util.ContentInfoSet;
 
 public class MarkupResultPanel extends VerticalLayout {
 	

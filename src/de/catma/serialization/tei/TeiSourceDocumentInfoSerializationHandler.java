@@ -22,13 +22,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
 import de.catma.serialization.DocumentSerializer;
 import de.catma.serialization.SourceDocumentInfoSerializationHandler;
-import de.catma.util.ContentInfoSet;
 
 public class TeiSourceDocumentInfoSerializationHandler implements
 		SourceDocumentInfoSerializationHandler {

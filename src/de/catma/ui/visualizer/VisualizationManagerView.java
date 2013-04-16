@@ -29,6 +29,7 @@ import de.catma.document.source.KeywordInContext;
 import de.catma.queryengine.result.computation.DistributionComputation;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabbedView;
+import de.catma.ui.visualizer.doubletree.DoubleTreeView;
 
 public class VisualizationManagerView extends TabbedView {
 	

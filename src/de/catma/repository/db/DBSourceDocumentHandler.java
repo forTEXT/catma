@@ -45,6 +45,7 @@ import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.db.CloseableSession;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
+import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
 import de.catma.document.source.IndexInfoSet;
@@ -61,7 +62,6 @@ import de.catma.repository.db.model.DBUserDefinedSeparatingCharacter;
 import de.catma.repository.db.model.DBUserMarkupCollection;
 import de.catma.repository.db.model.DBUserSourceDocument;
 import de.catma.util.CloseSafe;
-import de.catma.util.ContentInfoSet;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 

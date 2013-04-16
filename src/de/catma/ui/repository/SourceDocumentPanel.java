@@ -71,6 +71,7 @@ import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.UnknownUserException;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
+import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.standoffmarkup.MarkupCollectionReference;
@@ -98,7 +99,6 @@ import de.catma.ui.repository.wizard.AddSourceDocWizardFactory;
 import de.catma.ui.repository.wizard.AddSourceDocWizardResult;
 import de.catma.util.CloseSafe;
 import de.catma.util.ColorConverter;
-import de.catma.util.ContentInfoSet;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 

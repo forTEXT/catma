@@ -41,6 +41,7 @@ import de.catma.db.CloseableSession;
 import de.catma.document.Range;
 import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
+import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
@@ -67,7 +68,6 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagsetDefinition;
 import de.catma.util.CloseSafe;
-import de.catma.util.ContentInfoSet;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
