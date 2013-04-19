@@ -379,7 +379,7 @@ class DBSourceDocumentHandler {
 								contentInfoSet);
 						dbRepository.getPropertyChangeSupport().firePropertyChange(
 								RepositoryChangeEvent.sourceDocumentChanged.name(),
-								oldContentInfoSet, contentInfoSet);						
+								sourceDocument.getID(), sourceDocument);						
 					}
 					public void error(Throwable t) {
 						dbRepository.getPropertyChangeSupport().firePropertyChange(
@@ -496,12 +496,10 @@ class DBSourceDocumentHandler {
 						null, entry.getKey());
 			}
 			else {
-				ContentInfoSet oldContentInfoSet = 
-					oldDoc.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet(); 
 				dbRepository.getPropertyChangeSupport().firePropertyChange(
 						RepositoryChangeEvent.sourceDocumentChanged.name(),
-						oldContentInfoSet,
-						entry.getValue().getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet());						
+						oldDoc.getID(),
+						entry.getValue());						
 			}
 			reloadUserMarkupCollections(oldDoc, entry.getValue());
 			

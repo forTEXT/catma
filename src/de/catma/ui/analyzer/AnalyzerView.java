@@ -165,8 +165,12 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 					}
 				}
 				else { //update
+					String oldId = (String) evt.getOldValue();
+					if (relevantSourceDocumentIDs.contains(oldId)) {
+						removeSourceDocumentFromTree((SourceDocument) evt.getNewValue());
+						addSourceDocument((SourceDocument) evt.getNewValue());
+					}
 					tagsetDefinitionDictionary.clear();
-					documentsTree.requestRepaint();
 				}
 			}
 		};

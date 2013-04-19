@@ -320,16 +320,17 @@ public class CatmaApplication extends Application
 		defaultProgressIndicator.setVisible(enabled);
 		defaultProgressIndicator.setCaption(caption);
 		
-		if (enabled) {
-			if (progressWindow.getParent() == null) {
-				getMainWindow().addWindow(progressWindow);
-			}
-		}
-		else {
-			if (progressWindow.getParent() != null) {
-				getMainWindow().removeWindow(progressWindow);
-			}
-		}
+		//TODO: enable progress window together with background loading
+//		if (enabled) {
+//			if (progressWindow.getParent() == null) {
+//				getMainWindow().addWindow(progressWindow);
+//			}
+//		}
+//		else {
+//			if (progressWindow.getParent() != null) {
+//				getMainWindow().removeWindow(progressWindow);
+//			}
+//		}
 		defaultProgressIndicator.setEnabled(enabled);
 		
 	}
@@ -413,7 +414,8 @@ public class CatmaApplication extends Application
 			"Error", 
 			"An error has occurred!<br />" +
 			"We've been notified about this error and it will be fixed soon.<br />" +
-			"The underlying error message is:<br />" + message, 
+			"The underlying error message is:<br />" + message +
+			"<br />" + e.getMessage(), 
 			Notification.TYPE_ERROR_MESSAGE);
 	}
 

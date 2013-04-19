@@ -251,7 +251,7 @@ class DBUserMarkupCollectionHandler {
 						tr.getTagInstance().getTagDefinition().getUuid());
 
 				DBTagDefinition dbTagDefinition  = 
-						(DBTagDefinition) session.load(
+						(DBTagDefinition) session.get(
 								DBTagDefinition.class, tDef.getId());
 				
 				dbTagInstance = new DBTagInstance(
@@ -572,7 +572,7 @@ class DBUserMarkupCollectionHandler {
 
 			session.beginTransaction();
 			DBUserMarkupCollection dbUserMarkupCollection = 
-					(DBUserMarkupCollection) session.load(
+					(DBUserMarkupCollection) session.get(
 							DBUserMarkupCollection.class, 
 							Integer.valueOf(userMarkupCollection.getId()));
 			
@@ -608,7 +608,7 @@ class DBUserMarkupCollectionHandler {
 			DBUserMarkupCollection dbUserMarkupCollection) {
 		
 		DBTagDefinition dbTagDefinition = 
-			(DBTagDefinition) session.load(
+			(DBTagDefinition) session.get(
 					DBTagDefinition.class, 
 					ti.getTagDefinition().getId());
 		
@@ -619,7 +619,7 @@ class DBUserMarkupCollectionHandler {
 		
 		for (Property prop : ti.getSystemProperties()) {
 			DBPropertyDefinition dbPropDef =
-					(DBPropertyDefinition) session.load(
+					(DBPropertyDefinition) session.get(
 							DBPropertyDefinition.class,
 							prop.getPropertyDefinition().getId());
 						
@@ -632,7 +632,7 @@ class DBUserMarkupCollectionHandler {
 		
 		for (Property prop : ti.getUserDefinedProperties()) {
 			DBPropertyDefinition dbPropDef =
-					(DBPropertyDefinition) session.load(
+					(DBPropertyDefinition) session.get(
 							DBPropertyDefinition.class,
 							prop.getPropertyDefinition().getId());
 			DBProperty userProp = 
@@ -756,7 +756,7 @@ class DBUserMarkupCollectionHandler {
 								dbRepository.getSessionFactory().openSession();
 						try {
 							DBUserMarkupCollection dbUserMarkupCollection =
-									(DBUserMarkupCollection) session.load(
+									(DBUserMarkupCollection) session.get(
 									DBUserMarkupCollection.class, 
 									userMarkupCollectionId);
 							
@@ -814,7 +814,7 @@ class DBUserMarkupCollectionHandler {
 		try {
 			for (UserMarkupCollectionReference umcRef : allUmcRefs) {
 				DBUserMarkupCollection dbUmc = 
-					(DBUserMarkupCollection) session.load(
+					(DBUserMarkupCollection) session.get(
 							DBUserMarkupCollection.class, Integer.valueOf(umcRef.getId()));
 				for (DBUserUserMarkupCollection userInfo : dbUmc.getDbUserUserMarkupCollections()) {
 					if ((userInfo.isOwner()) 

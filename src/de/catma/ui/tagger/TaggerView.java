@@ -441,4 +441,8 @@ public class TaggerView extends VerticalLayout
 	
 	public void removeClickshortCuts() { /* noop*/ }
 
+	void setSourceDocument(SourceDocument sd) {
+		this.sourceDocument = sd;
+	}
+
 }

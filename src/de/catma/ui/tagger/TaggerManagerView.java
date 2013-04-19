@@ -63,7 +63,15 @@ public class TaggerManagerView extends TabbedView {
 								}
 							}
 							else if (evt.getOldValue() != null) { //update
-								//TODO: update Tab Title
+								String sdID = (String) evt.getOldValue();
+								if (sdID.equals(sourceDocument.getID())) {
+									TaggerView taggerView = 
+											getTaggerView(sourceDocument);
+									if (taggerView != null) {
+										taggerView.setSourceDocument(
+												(SourceDocument) evt.getNewValue());
+									}
+								}								
 							}
 							
 						}

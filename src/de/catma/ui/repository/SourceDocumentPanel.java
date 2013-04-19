@@ -156,7 +156,9 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						(SourceDocument)evt.getOldValue());
 				}
 				else { //update
-					documentsTree.requestRepaint();
+					removeSourceDocumentFromTree((SourceDocument) evt.getNewValue()); //newValue intended
+					addSourceDocumentToTree((SourceDocument) evt.getNewValue());
+					documentsContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
 				}
 			}
 		};
