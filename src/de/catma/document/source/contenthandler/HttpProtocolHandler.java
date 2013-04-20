@@ -51,7 +51,7 @@ public class HttpProtocolHandler implements ProtocolHandler {
 		HttpClient httpclient = new DefaultHttpClient();
 		try {
 			HttpGet httpGet = new HttpGet(sourceDocURI);
-			
+			httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0");
 			HttpResponseHandler responseHandler = new HttpResponseHandler();
 			
 			this.byteContent = httpclient.execute(httpGet, responseHandler);

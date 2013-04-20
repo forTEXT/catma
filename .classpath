@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry excluding="de/catma/queryengine/computation_old/**|de/catma/queryengine/result_old/**" kind="src" path="src"/>
-	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="lib" path="C:/Users/mp/.eclipse/org.eclipse.platform_3.7.0_248562372/plugins/com.google.gwt.eclipse.sdkbundle_2.4.0.v201112160242-rel-r37/gwt-2.4.0/gwt-user.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="file:/C:/Users/mp/.eclipse/org.eclipse.platform_3.7.0_248562372/plugins/com.google.gwt.eclipse.sdkbundle_2.4.0.v201112160242-rel-r37/gwt-2.4.0/doc/javadoc/"/>

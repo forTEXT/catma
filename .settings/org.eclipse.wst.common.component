@@ -3,7 +3,6 @@
     <wb-module deploy-name="catma">
         <wb-resource deploy-path="/" source-path="/WebContent"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
-        <wb-resource deploy-path="/WEB-INF/classes" source-path="/test"/>
         <dependent-module archiveName="catma-core.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/catma-core/catma-core">
             <dependency-type>uses</dependency-type>
         </dependent-module>
