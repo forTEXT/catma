@@ -29,4 +29,5 @@ public interface TaggerEditorListener {
 	
 	public void tagChanged(TaggerEditorEventType type, Object... args);
 	public void tagsSelected(List<String> tagInstanceIDs);
+	public void logEvent(String event);
 }

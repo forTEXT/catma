@@ -98,6 +98,10 @@ public class VTagger extends Composite implements Paintable {
 						TaggerMessageAttribute.TAGINSTANCES_SELECT, 
 						tagInstanceJSONSerializer.toJSONArray(tagInstanceIDs));
 			}
+			
+			public void logEvent(String event) {
+				logToServer(event);
+			}
 		});
 		
 		initWidget(taggerEditor);
@@ -169,14 +173,12 @@ public class VTagger extends Composite implements Paintable {
 			taggerEditor.createAndAddTagIntance(tagDefinition);
 		}
 		
-		adjustTaggerEditorSizeAttribute();
 
 		if (uidl.hasAttribute(TaggerMessageAttribute.HIGHLIGHT.name())) {
 			TextRange textRange = 
 					textRangeJSONSerializer.fromJSON(uidl.getStringAttribute(
 							TaggerMessageAttribute.HIGHLIGHT.name()));
 			taggerEditor.highlight(textRange);
-			adjustTaggerEditorSizeAttribute();
 		}
 		
 	}
@@ -192,12 +194,4 @@ public class VTagger extends Composite implements Paintable {
 		
 	}
 
-	/**
-	 * sort of a hack to ensure proper scrollability of the TaggerEditor
-	 */
-	private void adjustTaggerEditorSizeAttribute() {
-//		taggerEditor.getElement().setAttribute("style", "");
-//		taggerEditor.getElement().getParentElement().setAttribute(
-//				"style", "width:120%;min-width:80%;");
-	}
 }

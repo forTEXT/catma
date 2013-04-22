@@ -182,7 +182,8 @@ public class TaggerEditor extends FocusWidget
 		for (Range range : lastRangeList) { 
 			if (!range.getStartNode().equals(getRootNode())
 						&& !range.getEndNode().equals(getRootNode())) {
-				TextRange textRange = converter.convertToTextRange(range);
+				TextRange textRange = validateTextRange(converter.convertToTextRange(range));
+
 				if (!textRange.isPoint()) {
 					VConsole.log("converted and adding range " + textRange );
 					textRanges.add(textRange);
@@ -227,8 +228,8 @@ public class TaggerEditor extends FocusWidget
 								+ endOffset + ": " + endNode );
 				}
 				
-				TextRange textRange = converter.convertToTextRange(
-						startNode, endNode, startOffset, endOffset);
+				TextRange textRange = validateTextRange(converter.convertToTextRange(
+						startNode, endNode, startOffset, endOffset));
 				
 				if (!textRange.isPoint()) {
 					VConsole.log("converted and adding range " + textRange );
@@ -242,6 +243,16 @@ public class TaggerEditor extends FocusWidget
 		}
 
 		return textRanges;
+	}
+
+	private TextRange validateTextRange(TextRange textRange) {
+		if (textRange.getStartPos() > textRange.getEndPos()) {
+			taggerEditorListener.logEvent(
+				"got twisted range: " + textRange 
+				+ " recovering by exchanging positions!");
+			return new TextRange(textRange.getEndPos(), textRange.getStartPos());
+		}
+		return textRange;
 	}
 
 	private void addTagInstanceForRange(
