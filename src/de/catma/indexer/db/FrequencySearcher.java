@@ -50,10 +50,8 @@ class FrequencySearcher {
 				new HashMap<String, LazyDBPhraseQueryResult>();
 		Session session = sessionFactory.openSession();
 		
-		if ((documentIdList == null) || documentIdList.isEmpty()) {
-			addResultToMapping(
-				getResultsFor(null, null, session, comp1, freq1, comp2, freq2), 
-				phraseResultMapping);
+		if (documentIdList.isEmpty()) {
+			throw new IllegalArgumentException("documentIdList cannot be empty");
 		}
 		else {
 			StringBuilder documentIdListAsString = new StringBuilder(" (");
@@ -95,11 +93,11 @@ class FrequencySearcher {
 				+ DBPosition.class.getSimpleName() 
 				+ " p " +
 				" where t = p.term ");
-		if (documentId != null) {
-			builder.append(" and t.documentId = '");
-			builder.append(documentId);
-			builder.append("'");
-		}
+		
+		builder.append(" and t.documentId = '");
+		builder.append(documentId);
+		builder.append("'");
+
 		if ((freq1 > 0) || (!comp1.equals(CompareOperator.GREATERTHAN))) {
 			builder.append(
 					" and (" +

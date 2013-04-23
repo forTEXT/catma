@@ -48,35 +48,31 @@ class PhraseSearcher {
 	public QueryResult search(List<String> documentIdList,
 			String phrase, List<String> termList, int limit) throws IOException {
 		
+		if (documentIdList.isEmpty()) {
+			throw new IllegalArgumentException("documentIdList cannot be empty");
+		}
 		
 		final Session session = sessionFactory.openSession();
-		QueryResultRowArray queryResult = null;
-		
 		try {
-			
-			if ((documentIdList==null) || documentIdList.isEmpty()) {
-				queryResult = searchPhrase(session, null, phrase, termList, false, limit);
-			}
-			else {
-				queryResult = new QueryResultRowArray();
-				if (limit != 0) {
-					for (String documentId : documentIdList) {
-						limit -= ((QueryResultRowArray)queryResult).size();
-						if  (limit >= 0) {
-							queryResult.addAll(
-								searchPhrase(
-									session, documentId, phrase, termList, false, limit));
-						}
-					}
-				}
-				else {
-					for (String documentId : documentIdList) {
+			QueryResultRowArray queryResult = new QueryResultRowArray();
+			if (limit != 0) {
+				for (String documentId : documentIdList) {
+					limit -= ((QueryResultRowArray)queryResult).size();
+					if  (limit >= 0) {
 						queryResult.addAll(
 							searchPhrase(
 								session, documentId, phrase, termList, false, limit));
 					}
 				}
 			}
+			else {
+				for (String documentId : documentIdList) {
+					queryResult.addAll(
+						searchPhrase(
+							session, documentId, phrase, termList, false, limit));
+				}
+			}
+			return queryResult;
 		}
 		finally {
 			CloseSafe.close(new Closeable() {
@@ -86,7 +82,6 @@ class PhraseSearcher {
 			});
 		}
 		
-		return queryResult;
 	}
 	
 	private QueryResultRowArray searchPhrase(Session session, String documentId,

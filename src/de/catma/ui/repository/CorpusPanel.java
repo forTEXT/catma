@@ -245,8 +245,17 @@ public class CorpusPanel extends VerticalLayout {
 							}
 						}
 					}
-					((AnalyzerProvider)getApplication()).analyze(
-							selectedCorpus, (IndexedRepository)repository);
+					
+					if (selectedCorpus.getSourceDocuments().isEmpty()) {
+						getWindow().showNotification(
+							"Information", "The corpus is empty! " +
+									"Please add some documents first!",
+								Notification.TYPE_TRAY_NOTIFICATION);
+					}
+					else {
+						((AnalyzerProvider)getApplication()).analyze(
+								selectedCorpus, (IndexedRepository)repository);
+					}
 				}
 				else {
 					getWindow().showNotification("Information", "Please select a corpus first!",
