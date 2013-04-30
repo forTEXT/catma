@@ -47,7 +47,7 @@ public class TeiSerializationHandlerFactory implements
 	}
 
 	public UserMarkupCollectionSerializationHandler getUserMarkupCollectionSerializationHandler() {
-		return new TeiUserMarkupCollectionSerializationHandler(tagManager);
+		return new TeiUserMarkupCollectionSerializationHandler(tagManager, false);
 	}
 
 }

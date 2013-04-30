@@ -114,6 +114,8 @@ public class TaggerEditor extends FocusWidget
 			taggedSpan = Document.get().getElementById(tagInstanceID + "_" + currentPartID++);
 		}
 		tagInstances.remove(tagInstanceID);
+		lastTagInstanceIDs.remove(tagInstanceID);
+		
 		taggerEditorListener.tagChanged(
 				TaggerEditorEventType.REMOVE, tagInstanceID, reportToServer);
 	}

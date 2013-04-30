@@ -33,11 +33,13 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 		UserMarkupCollectionSerializationHandler {
 
 	private TagManager tagManager;
+	private boolean withText;
 	
 	public TeiUserMarkupCollectionSerializationHandler(
-			TagManager tagManager) {
+			TagManager tagManager, boolean withText) {
 		super();
 		this.tagManager = tagManager;
+		this.withText = withText;
 	}
 
 	public void serialize(
@@ -56,7 +58,7 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 					teiDocument, tagManager).serialize(
 							userMarkupCollection.getTagLibrary());
     		
-			new TeiUserMarkupCollectionSerializer(teiDocument).serialize(
+			new TeiUserMarkupCollectionSerializer(teiDocument, withText).serialize(
     				userMarkupCollection, sourceDocument);
 			
 			new DocumentSerializer().serialize(

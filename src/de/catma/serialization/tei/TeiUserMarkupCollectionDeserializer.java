@@ -20,6 +20,7 @@ package de.catma.serialization.tei;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import nu.xom.Elements;
@@ -33,12 +34,14 @@ import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
+import de.catma.util.IDGenerator;
 
 public class TeiUserMarkupCollectionDeserializer {
 
 	private TeiDocument teiDocument;
 	private List<TagReference> tagReferences;
 	private TagLibrary tagLibrary;
+	private HashMap<String,String> old2newTagInstanceIDs = new HashMap<String, String>();
 
 	public TeiUserMarkupCollectionDeserializer(
 			TeiDocument teiDocument, TagLibrary tagLibrary) {
@@ -93,8 +96,11 @@ public class TeiUserMarkupCollectionDeserializer {
 		TeiElement tagInstanceElement = teiDocument.getElementByID(tagInstanceID);
 		TagDefinition tagDefinition = tagLibrary.getTagDefinition(
 				tagInstanceElement.getAttributeValue(Attribute.type));
+		if (!old2newTagInstanceIDs.containsKey(tagInstanceElement.getID())) {
+			old2newTagInstanceIDs.put(tagInstanceElement.getID(), new IDGenerator().generate());
+		}
 		final TagInstance tagInstance = 
-				new TagInstance(tagInstanceElement.getID(), tagDefinition);
+				new TagInstance(old2newTagInstanceIDs.get(tagInstanceElement.getID()), tagDefinition);
 		
 		Nodes systemPropertyElements = tagInstanceElement.getChildNodes(
 				TeiElementName.f,

@@ -42,15 +42,17 @@ public class ValueRangePropertyValueFactory implements PropertyValueFactory {
 		Elements elements = teiElement.getChildElements();
 		TeiElement vRange = (TeiElement)elements.get(0);
 		
-		Elements children = vRange.getChildElements();
+		TeiElement vColl = (TeiElement)vRange.getChildElements().get(0);
+		
+		Elements children = vColl.getChildElements();
 		for (int i=0; i<children.size(); i++) {
 			try {
 				TeiElement curChild = (TeiElement)children.get(i);
 				if (curChild.is(TeiElementName.numeric)) {
-					value.add(new NumericPropertyValueFactory(vRange).getValue());
+					value.add(new NumericPropertyValueFactory(vColl).getValue());
 				}
 				else if (curChild.is(TeiElementName.string)) {
-					value.add(new StringPropertyValueFactory(vRange).getValue());
+					value.add(new StringPropertyValueFactory(vColl).getValue());
 				}
 				else {
 					throw new UnknownElementException(curChild.getLocalName() + " is not supported!");

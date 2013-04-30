@@ -80,15 +80,20 @@ public class TeiTagLibrarySerializer {
 		TeiElement fDecl = new TeiElement(TeiElementName.fDecl);
 		fsDecl.appendChild(fDecl);
 		fDecl.setID(pd.getUuid());
-		fDecl.setAttributeValue(Attribute.fDecl_name, pd.getName());
+		fDecl.setAttributeValue(Attribute.fDecl_name, Validator.SINGLETON.convertToXMLName(pd.getName()));
+//		fDecl.setAttributeValue(Attribute.fDecl_name, pd.getName());
 		TeiElement vRange = new TeiElement(TeiElementName.vRange);
 		fDecl.appendChild(vRange);
+
+		TeiElement vColl = new TeiElement(TeiElementName.vColl);
+		vRange.appendChild(vColl);
+		
 		for (String value :
 			pd.getPossibleValueList().getPropertyValueList().getValues()) {
 
 			TeiElement string = new TeiElement(TeiElementName.string);
 			string.appendChild(value);
-			vRange.appendChild(string);
+			vColl.appendChild(string);
 		}
 	}
 

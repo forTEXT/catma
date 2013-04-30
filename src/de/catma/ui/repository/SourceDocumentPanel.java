@@ -67,10 +67,9 @@ import de.catma.CatmaApplication;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
-import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.Repository;
-import de.catma.document.repository.UnknownUserException;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
+import de.catma.document.repository.UnknownUserException;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
@@ -333,7 +332,15 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			public void menuSelected(MenuItem selectedItem) {
 				
 				Object value = documentsTree.getValue();
-				handleUserMarkupCollectionExportRequest(value);
+				handleUserMarkupCollectionExportRequest(value, false);
+			}
+		});
+
+		miMoreDocumentActions.addItem("Export User Markup Collection with text", new Command() {
+			public void menuSelected(MenuItem selectedItem) {
+				
+				Object value = documentsTree.getValue();
+				handleUserMarkupCollectionExportRequest(value, true);
 			}
 		});
 		
@@ -652,17 +659,17 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		}
 	}
 
-	private void handleUserMarkupCollectionExportRequest(Object value) {
+	private void handleUserMarkupCollectionExportRequest(Object value, boolean withText) {
 		if ((value != null) && (value instanceof UserMarkupCollectionReference)) {
 			final UserMarkupCollectionReference umcRef = 
 					(UserMarkupCollectionReference)value;
 			final SourceDocument sd = 
 					(SourceDocument)documentsTree.getParent(
 							documentsTree.getParent(value));
-			
+
 			TeiUserMarkupCollectionSerializationHandler handler =
 					new TeiUserMarkupCollectionSerializationHandler(
-							repository.getTagManager());
+							repository.getTagManager(), withText);
 			ByteArrayOutputStream teiDocOut = new ByteArrayOutputStream();
 			try {
 				handler.serialize(

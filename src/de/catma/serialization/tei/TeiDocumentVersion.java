@@ -28,7 +28,8 @@ package de.catma.serialization.tei;
  * To change this template use File | Settings | File Templates.
  */
 public enum TeiDocumentVersion {
-	V3(3, V3TeiDocumentConverter.class),
+	V4(4, V4TeiDocumentConverter.class),
+	V3(3, V4, V3TeiDocumentConverter.class),
     V2(2, V3, V2TeiDocumentConverter.class),
     V1(1, V2),
     ;
@@ -103,7 +104,7 @@ public enum TeiDocumentVersion {
 
 
     public static TeiDocumentVersion getCurrentVersion() {
-        return V3;
+        return V4;
     }
 
     @Override

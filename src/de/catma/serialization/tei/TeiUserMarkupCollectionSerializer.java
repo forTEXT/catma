@@ -29,18 +29,20 @@ import java.util.TreeSet;
 import de.catma.document.Range;
 import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.Property;
 import de.catma.tag.TagInstance;
 
 public class TeiUserMarkupCollectionSerializer {
 	
 	private TeiDocument teiDocument;
+	private boolean withText;
 	
-	public TeiUserMarkupCollectionSerializer(TeiDocument teiDocument) {
+	public TeiUserMarkupCollectionSerializer(TeiDocument teiDocument, boolean withText) {
 		super();
 		this.teiDocument = teiDocument;
+		this.withText = withText;
 	}
 	
 	
@@ -56,57 +58,119 @@ public class TeiUserMarkupCollectionSerializer {
 		
 		TeiElement textElement = 
 				(TeiElement)teiDocument.getNodes(TeiElementName.text).get(0);
-		TeiElement abElement =
+		
+		TeiElement ptrParentElement =
 				(TeiElement)teiDocument.getNodes(
 						TeiElementName.ab, AttributeValue.type_catma).get(0);
-		
+
+		if (withText) {
+			ptrParentElement.getParent().removeChild(ptrParentElement);
+			ptrParentElement = 
+					(TeiElement)teiDocument.getNodes(TeiElementName.body).get(0);
+
+		}
+
 		Set<String> addedTagInstances = new HashSet<String>();
 		
-		HashMap<Range, List<TagReference>> groupByRange = 
-				new HashMap<Range, List<TagReference>>();
-		
-		for (TagReference tr : userMarkupCollection.getTagReferences()) {
-			if (!groupByRange.containsKey(tr.getRange())) {
-				groupByRange.put(tr.getRange(), new ArrayList<TagReference>());
-			}
-			groupByRange.get(tr.getRange()).add(tr);
-		}
+		HashMap<Range, List<TagReference>> mergedTagReferences = 
+			mergeTagReferences(
+				userMarkupCollection.getTagReferences(), 
+				new Range(0, sourceDocument.getLength()));
 		
 		TreeSet<Range> sortedRanges = new TreeSet<Range>();
-		sortedRanges.addAll(groupByRange.keySet());
+		sortedRanges.addAll(mergedTagReferences.keySet());
 		
-		Range lastRange = null;
+		
 		for (Range range : sortedRanges) {
-			if ((lastRange == null) && (range.getStartPoint() != 0)) {
-				writePointer(
-						targetURI,
-						new Range(0, range.getStartPoint()), abElement);
-			}
-			else if ((lastRange != null) && (lastRange.getEndPoint() != range.getStartPoint())) {
-				writePointer(
-						targetURI,
-						new Range(lastRange.getEndPoint(), range.getStartPoint()),
-						abElement);
-			}
-			List<TagReference> currentReferences = groupByRange.get(range);
-			TeiElement seg = writeSegment(
-				currentReferences, abElement, 
-				textElement, addedTagInstances);
+			List<TagReference> currentReferences = mergedTagReferences.get(range);
 			
-			writePointer(
-				targetURI, range, seg);
-			lastRange = range;
+			TeiElement parent = ptrParentElement; 
+			if (!currentReferences.isEmpty()) {
+				parent = writeSegment(
+						currentReferences, ptrParentElement, 
+						textElement, addedTagInstances);
+			}
+			writeText(
+				targetURI, range, parent, sourceDocument);
+		}
+	}
+
+	private HashMap<Range, List<TagReference>> mergeTagReferences(
+			List<TagReference> tagReferences, Range initialRange) {
+		
+		HashMap<Range, List<TagReference>> mergedTagReferences = 
+				new HashMap<Range, List<TagReference>>();
+		
+		mergedTagReferences.put(initialRange, new ArrayList<TagReference>());
+		
+		for (TagReference tagReference : tagReferences) {
+			Range targetRange = tagReference.getRange();
+			List<Range> affectedRanges = 
+					getAffectedRanges(mergedTagReferences.keySet(), targetRange);
+			
+			for (Range affectedRange : affectedRanges) {
+				
+				if (affectedRange.isInBetween(targetRange)) {
+					mergedTagReferences.get(affectedRange).add(tagReference);
+				}
+				else {
+					List<TagReference> existingReferences = 
+							mergedTagReferences.get(affectedRange);
+
+					Range overlappingRange = affectedRange.getOverlappingRange(targetRange);
+					
+					List<Range> disjointRanges = affectedRange.getDisjointRanges(targetRange);
+
+					// range outside of the overlapping range
+					// left or right depending on the position of the overlapping range
+					Range firstDisjointRange = disjointRanges.get( 0 );
+					List<TagReference> firstCopy = new ArrayList<TagReference>();
+					firstCopy.addAll(existingReferences);
+					mergedTagReferences.put(
+							firstDisjointRange, firstCopy);
+					
+					// the overlapping range sits in the middle
+					if( disjointRanges.size() == 2 ) {
+						// range right of the overlappting range
+						Range secondDisjointRange = disjointRanges.get( 1 );
+
+						List<TagReference> secondCopy = new ArrayList<TagReference>();
+						secondCopy.addAll(existingReferences);
+						
+						mergedTagReferences.put(
+								secondDisjointRange, secondCopy);
+					}
+					
+					existingReferences.add(tagReference);
+					mergedTagReferences.put(overlappingRange, existingReferences);
+					
+					mergedTagReferences.remove(affectedRange);
+					
+				}
+			}
+		}			
+		
+		return mergedTagReferences;
+	}
+
+
+	private List<Range> getAffectedRanges(
+			Set<Range> documentRanges,
+			Range targetRange) {
+		Set<Range> sortedDocumentRanges = new TreeSet<Range>();
+		sortedDocumentRanges.addAll(documentRanges);
+		
+		List<Range> affectedRanges = new ArrayList<Range>();
+		
+		for (Range docRange : sortedDocumentRanges) {
+			if (docRange.hasOverlappingRange(targetRange)) {
+				affectedRanges.add(docRange);
+			}
 		}
 		
-
-		if (lastRange.getEndPoint() != sourceDocument.getLength()) {
-			writePointer(
-				targetURI, 
-				new Range(lastRange.getEndPoint(), sourceDocument.getLength()), 
-				abElement);
-		}
-
+		return affectedRanges;
 	}
+
 
 	private TeiElement writeSegment(
 		List<TagReference> tagReferences, TeiElement abElement, 
@@ -149,6 +213,16 @@ public class TeiUserMarkupCollectionSerializer {
 			writeProperty(p,fs);
 		}
 		
+	}
+	
+	private void writeText(String uri, Range range, 
+			TeiElement parentElement, SourceDocument sourceDocument) throws IOException {
+		if (withText) {
+			parentElement.appendChild(sourceDocument.getContent(range));
+		}
+		else {
+			writePointer(uri, range, parentElement);
+		}
 	}
 
 	private void writeProperty(Property property, TeiElement fs) {
