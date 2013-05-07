@@ -43,7 +43,9 @@ public class LoginLogoutCommand implements Command {
 			}
 			else {
 				loginLogoutItem.setText("Login");
-				application.close();
+				if (application.isRunning()) {
+					application.close();
+				}
 			}
 		}
 	};
@@ -64,7 +66,9 @@ public class LoginLogoutCommand implements Command {
 	public void menuSelected(MenuItem selectedItem) {
 		if (repositoryManagerView.getRepositoryManager().hasOpenRepository()) {
 			repositoryManagerView.closeCurrentRepository();
-			application.close();
+			if (application.isRunning()) {
+				application.close();
+			}
 		}
 		else {
 			menu.executeEntry(repositoryManagerView);

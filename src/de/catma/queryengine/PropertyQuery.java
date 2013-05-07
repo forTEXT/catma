@@ -110,6 +110,9 @@ public class PropertyQuery extends Query {
         	}
         }
         
+        if (propertyDefinitionIDs.isEmpty()) {
+        	return new QueryResultRowArray();
+        }
         
         QueryResult result = 
 				indexer.searchProperty(

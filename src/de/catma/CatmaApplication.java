@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -84,6 +85,8 @@ import de.catma.ui.visualizer.VisualizationManagerWindow;
 
 public class CatmaApplication extends Application
 	implements BackgroundServiceProvider, AnalyzerProvider, ParameterHandler {
+	
+	private static AtomicInteger userCount = new AtomicInteger(0);
 	
 	private static final String VERSION = 
 			"(v"+new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date())+")";
@@ -276,6 +279,7 @@ public class CatmaApplication extends Application
 	}
 
 	public void openRepository(Repository repository) {
+		userCount.incrementAndGet();
 		repositoryManagerView.openRepository(repository);
 	}
 	 
@@ -399,6 +403,7 @@ public class CatmaApplication extends Application
 	@Override
 	public void close() {
 		repositoryManagerView.getRepositoryManager().close();
+		userCount.decrementAndGet();
 		super.close();
 	}
 	
@@ -435,5 +440,8 @@ public class CatmaApplication extends Application
 
 		visualizationManagerView.addDoubleTree(kwics);
 	}
-	
+
+	public static int getUserCount() {
+		return userCount.get();
+	}
 }

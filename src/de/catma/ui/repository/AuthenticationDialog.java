@@ -202,6 +202,9 @@ public class AuthenticationDialog extends VerticalLayout {
 	                    		"user.email", email);
 	                    userIdentification.put(
 	                    		"user.name", email);
+	                    userIdentification.put(
+	                    		"user.role", "0");
+	                    
 	                    logger.info("opening repository for user: " + email);
 	                    
 	                    application.setUser(userIdentification);

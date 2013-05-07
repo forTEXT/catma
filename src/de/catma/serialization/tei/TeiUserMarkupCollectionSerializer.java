@@ -63,13 +63,6 @@ public class TeiUserMarkupCollectionSerializer {
 				(TeiElement)teiDocument.getNodes(
 						TeiElementName.ab, AttributeValue.type_catma).get(0);
 
-		if (withText) {
-			ptrParentElement.getParent().removeChild(ptrParentElement);
-			ptrParentElement = 
-					(TeiElement)teiDocument.getNodes(TeiElementName.body).get(0);
-
-		}
-
 		Set<String> addedTagInstances = new HashSet<String>();
 		
 		HashMap<Range, List<TagReference>> mergedTagReferences = 
@@ -228,10 +221,27 @@ public class TeiUserMarkupCollectionSerializer {
 	private void writeProperty(Property property, TeiElement fs) {
 		TeiElement f = new TeiElement(TeiElementName.f);
 		fs.appendChild(f);
-		f.setAttributeValue(Attribute.f_name, property.getName());
-		TeiElement string = new TeiElement(TeiElementName.string);
-		string.appendChild(property.getPropertyValueList().getFirstValue()); //TODO: support list of values
-		f.appendChild(string);
+		
+		 //TODO: check if this is a good idea
+		f.setAttributeValue(Attribute.f_name, Validator.SINGLETON.convertToXMLName(property.getName()));
+//		f.setAttributeValue(Attribute.f_name, property.getName());
+		if (property.getPropertyValueList().getValues().size() > 1) {
+			TeiElement vRange = new TeiElement(TeiElementName.vRange);
+			f.appendChild(vRange);
+			TeiElement vColl = new TeiElement(TeiElementName.vColl);
+			vRange.appendChild(vColl);
+			for (String val : property.getPropertyValueList().getValues()) {
+				TeiElement string = new TeiElement(TeiElementName.string);
+				vRange.appendChild(string);
+				string.appendChild(val);
+			}
+			
+		}
+		else if (property.getPropertyValueList().getValues().size() == 1) {
+			TeiElement string = new TeiElement(TeiElementName.string);
+			string.appendChild(property.getPropertyValueList().getFirstValue());
+			f.appendChild(string);
+		}
 	}
 
 	private String makeTargetURI(SourceDocument sourceDocument) {

@@ -135,12 +135,14 @@ public class TeiUserMarkupCollectionDeserializer {
 		
 		for (int i=0; i<propertyElements.size(); i++) {
 			try {
-				TeiElement curSystemPropertyElement = (TeiElement)propertyElements.get(i);
+				TeiElement curPropertyElement = (TeiElement)propertyElements.get(i);
 				PropertyDefinition propertyDefinition =
 						tagDefinition.getPropertyDefinitionByName(
-								curSystemPropertyElement.getAttributeValue(Attribute.f_name));
+								curPropertyElement.getAttributeValue(Attribute.f_name));
+				
+				
 				TeiElement valueElement = 
-						(TeiElement)curSystemPropertyElement.getChildElements().get(0);
+						(TeiElement)curPropertyElement.getChildElements().get(0);
 				
 				if (valueElement.is(TeiElementName.numeric)) {
 					addPropertyHandler.addProperty(
@@ -148,15 +150,35 @@ public class TeiUserMarkupCollectionDeserializer {
 							propertyDefinition,
 							new PropertyValueList(
 									new NumericPropertyValueFactory(
-											curSystemPropertyElement).getValueAsList())));
+											curPropertyElement).getValueAsList())));
 				}
 				else if (valueElement.is(TeiElementName.string)) {
-					addPropertyHandler.addProperty(
+					StringPropertyValueFactory stringPropFact = 
+							new StringPropertyValueFactory(
+									curPropertyElement);
+					if (!stringPropFact.getValue().trim().isEmpty()) {
+						addPropertyHandler.addProperty(
 							new Property(
 								propertyDefinition,
 								new PropertyValueList(
-										new StringPropertyValueFactory(
-												curSystemPropertyElement).getValueAsList())));				
+										stringPropFact.getValueAsList())));
+					}
+				}
+				else if (valueElement.is(TeiElementName.vRange)) {
+					TeiElement vColl = (TeiElement)valueElement.getChildElements().get(0);
+					if (vColl.hasChildElements()) {
+						List<String> valueList = new ArrayList<String>();
+						
+						for (int j=0; j<vColl.getChildElements().size(); j++) {
+							TeiElement collValElement = (TeiElement) vColl.getChildElements().get(j);
+							valueList.add(new StringPropertyValueFactory(
+												collValElement).getValue());
+						}
+						
+						addPropertyHandler.addProperty(new Property(
+								propertyDefinition, 
+								new PropertyValueList(valueList)));
+					}
 				}
 				else {
 					throw new UnknownElementException(

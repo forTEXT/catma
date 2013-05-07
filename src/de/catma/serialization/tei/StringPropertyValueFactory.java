@@ -53,4 +53,8 @@ public class StringPropertyValueFactory extends BasicSingleValuePropertyValueFac
 	}
 	
 
+	@Override
+	public String toString() {
+		return super.toString() + " Value: " + getValue();
+	}
 }

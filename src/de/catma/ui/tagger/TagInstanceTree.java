@@ -305,8 +305,13 @@ public class TagInstanceTree extends HorizontalLayout {
 					tagInstanceTree.setParent(itemId, property);
 					tagInstanceTree.setChildrenAllowed(itemId, false);
 				}
+				tagInstanceTree.setCollapsed(property, false);
+			}
+			if (tagInstanceTree.hasChildren(ti.getSecond())) {
+				tagInstanceTree.setCollapsed(ti.getSecond(), false);
 			}
 		}
+		
 	}
 
 	public List<String> getTagInstanceIDs(Set<TagDefinition> excludeFilter) {

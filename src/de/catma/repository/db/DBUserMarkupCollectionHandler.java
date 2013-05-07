@@ -277,14 +277,16 @@ class DBUserMarkupCollectionHandler {
 						dbTagInstance);
 				
 				for (Property p : ti.getUserDefinedProperties()) {
-					DBProperty dbProperty = 
-						new DBProperty(
-							dbTagDefinition.getDbPropertyDefinition(
-									p.getPropertyDefinition().getUuid()),
-							dbTagInstance, 
-							p.getPropertyValueList().getFirstValue());
-
-					dbTagInstance.getDbProperties().add(dbProperty);
+					if (!p.getPropertyValueList().getValues().isEmpty()) {
+						DBProperty dbProperty = 
+							new DBProperty(
+								dbTagDefinition.getDbPropertyDefinition(
+										p.getPropertyDefinition().getUuid()),
+								dbTagInstance, 
+								p.getPropertyValueList().getFirstValue());
+	
+						dbTagInstance.getDbProperties().add(dbProperty);
+					}
 				}
 				
 			}

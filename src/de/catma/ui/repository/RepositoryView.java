@@ -42,7 +42,9 @@ import com.vaadin.ui.VerticalSplitPanel;
 import de.catma.CatmaApplication;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
+import de.catma.ui.admin.AdminWindow;
 import de.catma.ui.tabbedview.ClosableTab;
+import de.catma.user.Role;
 
 
 public class RepositoryView extends VerticalLayout implements ClosableTab {
@@ -56,6 +58,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	private boolean init = false;
 	private Application application;
 	private Button btReload;
+	private Button btAdmin;
 	
 	public RepositoryView(Repository repository) {
 		this.repository = repository;
@@ -110,6 +113,15 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 			}
 		});
 		
+		btAdmin.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				AdminWindow adminWindow = new AdminWindow();
+				
+				getApplication().getMainWindow().addWindow(adminWindow);
+			}
+		});
+		
 	}
 
 	private void initComponents() {
@@ -160,12 +172,19 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	private Component createDocumentsLabel() {
 		HorizontalLayout labelLayout = new HorizontalLayout();
 		labelLayout.setWidth("100%");
+		labelLayout.setSpacing(true);
 		
 		Label documentsLabel = new Label("Document Manager");
 		documentsLabel.addStyleName("bold-label");
 		
 		labelLayout.addComponent(documentsLabel);
 		labelLayout.setExpandRatio(documentsLabel, 1.0f);
+		btAdmin = new Button("Admin");
+		btAdmin.setVisible(repository.getUser().getRole().equals(Role.ADMIN));
+		
+		labelLayout.addComponent(btAdmin);
+		labelLayout.setComponentAlignment(btAdmin, Alignment.MIDDLE_RIGHT);
+		
 		btReload = new Button(""); 
 		btReload.setIcon(new ClassResource(
 				"ui/resources/icon-reload.gif",

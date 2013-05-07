@@ -33,6 +33,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import de.catma.user.Role;
 import de.catma.user.User;
 
 /**
@@ -45,6 +46,7 @@ public class DBUser implements java.io.Serializable, User {
 	private Integer userId;
 	private String identifier;
 	private boolean locked;
+	private Integer dbRole;
 	
 	private Set<DBUserSourceDocument> dbUserSourceDocuments = 
 			new HashSet<DBUserSourceDocument>();
@@ -132,5 +134,24 @@ public class DBUser implements java.io.Serializable, User {
 	public void setName(String name) {
 		this.name = name;
 	}
-
+	
+	
+	@Column(name = "role", nullable = true)
+	public Integer getDbRole() {
+		return dbRole;
+	}
+	
+	public void setDbRole(int dbRole) {
+		this.dbRole = dbRole;
+	}
+	
+	@Transient
+	public Role getRole() {
+		if (dbRole != null) {
+			return Role.getRole(dbRole);
+		}
+		else {
+			return Role.STANDARD;
+		}
+	}
 }

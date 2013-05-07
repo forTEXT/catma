@@ -80,6 +80,7 @@ public class TeiTagLibrarySerializer {
 		TeiElement fDecl = new TeiElement(TeiElementName.fDecl);
 		fsDecl.appendChild(fDecl);
 		fDecl.setID(pd.getUuid());
+		 //TODO: check if this is a good idea
 		fDecl.setAttributeValue(Attribute.fDecl_name, Validator.SINGLETON.convertToXMLName(pd.getName()));
 //		fDecl.setAttributeValue(Attribute.fDecl_name, pd.getName());
 		TeiElement vRange = new TeiElement(TeiElementName.vRange);

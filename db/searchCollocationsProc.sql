@@ -12,6 +12,8 @@ BEGIN
 	DECLARE characterEnd INT;
 	DECLARE tokenMinOffset INT;
 	DECLARE tokenMaxOffset INT;
+	DECLARE tokenOffset INT;
+	DECLARE baseRowID INT;
 
 	CREATE TEMPORARY TABLE log (
 		msg VARCHAR(200),
@@ -32,8 +34,7 @@ BEGIN
 
 	CREATE TEMPORARY TABLE basecontext (
 		baseID INT,
-		tokenOffset INT,
-		term VARCHAR(300)
+		tokenOffset INT
 	);
 
     CREATE TEMPORARY TABLE condrows (
@@ -48,8 +49,7 @@ BEGIN
 
 	CREATE TEMPORARY TABLE condtoken (
 		condID INT,
-		tokenOffset INT,
-		term VARCHAR(300)
+		tokenOffset INT
 	);
 
     SET arrayElementIndex = 1;
@@ -61,16 +61,27 @@ BEGIN
 			SET sourceDocumentID = getArrayElement(arrayElement, ',', 1);
 			SET characterStart = getArrayElement(arrayElement, ',', 2);
 			SET characterEnd = getArrayElement(arrayElement, ',', 3);
-			
-			SELECT min(p.tokenOffset), max(p.tokenOffset)
-			FROM CatmaIndex.position p 
-			JOIN CatmaIndex.term t ON t.termID = p.termID 
-			WHERE t.documentID = sourceDocumentID
-			AND characterStart <= p.characterStart AND p.characterEnd <= characterEnd
-			INTO tokenMinOffset, tokenMaxOffset;
 
 			INSERT INTO baserows(sourceDocumentID, characterStart, characterEnd, tokenMinOffset, tokenMaxOffset)
-			VALUES(sourceDocumentID, characterStart, characterEnd, tokenMinOffset, tokenMaxOffset);
+			SELECT sourceDocumentID, characterStart, characterEnd, 
+				min(p.tokenOffset)-contextSize, max(p.tokenOffset)+contextSize
+			FROM CatmaIndex.docposition p
+			WHERE p.documentID = sourceDocumentID
+			AND p.characterStart < characterEnd AND p.characterEnd > characterStart;
+
+			SET baseRowID = LAST_INSERT_ID();
+
+			SELECT b.tokenMinOffset, b.tokenMaxOffset 
+			FROM baserows b
+			WHERE b.baseID = baseRowID
+			INTO tokenMinOffset, tokenMaxOffset;
+
+			SET tokenOffset = tokenMinOffset;
+			WHILE tokenOffset <= tokenMaxOffset DO
+				INSERT INTO basecontext(baseID, tokenOffset) 
+				VALUES (baseRowID, tokenOffset);
+				SET tokenOffset = tokenOffset+1;
+			END WHILE;
 
 		END IF;
 		SET arrayElementIndex = arrayElementIndex+1;
@@ -78,7 +89,7 @@ BEGIN
 	END REPEAT;
 
 	INSERT INTO log(msg, zeit)
-	SELECT 'nach baserows fuellen', now();
+	SELECT 'nach baserows und basecontext fuellen', now();
 
     SET arrayElementIndex = 1;
 	REPEAT 
@@ -99,22 +110,12 @@ BEGIN
 	INSERT INTO log(msg, zeit)
 	SELECT 'nach condrows fuellen', now();
 
-	INSERT INTO basecontext(baseID, tokenOffset, term) 
-	SELECT b.baseID, p.tokenOffset, t.term 
-	FROM baserows b
-	JOIN CatmaIndex.term t ON t.documentID = b.sourceDocumentID
-	JOIN CatmaIndex.position p ON t.termID = p.termID 
-	WHERE p.tokenOffset <= b.tokenMaxOffset+contextSize AND p.tokenOffset >= b.tokenMinOffset-contextSize;
-
-	INSERT INTO log(msg, zeit)
-	SELECT 'nach basecontext fuellen', now();
-
-	INSERT INTO condtoken(condID, tokenOffset, term)
-	SELECT c.condID, p.tokenOffset, t.term
+	INSERT INTO condtoken(condID, tokenOffset)
+	SELECT c.condID, p.tokenOffset
 	FROM condrows c
-	JOIN CatmaIndex.term t ON t.documentID = c.sourceDocumentID
-	JOIN CatmaIndex.position p ON t.termID = p.termID 
-	WHERE c.characterStart <= p.characterStart AND p.characterEnd <= c.characterEnd;
+	JOIN CatmaIndex.docposition p ON p.documentID = c.sourceDocumentID
+	WHERE p.characterStart < c.characterEnd AND p.characterEnd > c.characterStart;
+
 
 	INSERT INTO log(msg, zeit)
 	SELECT 'nach condtoken fuellen', now();
@@ -134,6 +135,6 @@ BEGIN
 	DROP TABLE basecontext;
     DROP TABLE baserows;
     DROP TABLE condrows;
-	DROP TABLE log;
+	DROP TABLE log; 
 END$$
 
