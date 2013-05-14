@@ -180,6 +180,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		labelLayout.addComponent(documentsLabel);
 		labelLayout.setExpandRatio(documentsLabel, 1.0f);
 		btAdmin = new Button("Admin");
+		btAdmin.addStyleName("icon-button"); // for top-margin
 		btAdmin.setVisible(repository.getUser().getRole().equals(Role.ADMIN));
 		
 		labelLayout.addComponent(btAdmin);

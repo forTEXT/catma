@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
@@ -32,6 +33,7 @@ import org.hibernate.Session;
 
 import de.catma.db.CloseableSession;
 import de.catma.document.Corpus;
+import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
@@ -40,6 +42,7 @@ import de.catma.repository.db.model.DBCorpus;
 import de.catma.repository.db.model.DBCorpusSourceDocument;
 import de.catma.repository.db.model.DBUserCorpus;
 import de.catma.util.CloseSafe;
+import de.catma.util.Pair;
 
 public class DBCorpusHandler {
 	
@@ -137,6 +140,7 @@ public class DBCorpusHandler {
 	public void addSourceDocument(Corpus corpus, SourceDocument sourceDocument) throws IOException {
 		Session session = dbRepository.getSessionFactory().openSession();
 		try  {
+			getCorpusAccess(session, Integer.valueOf(corpus.getId()), true);
 			SQLQuery query = session.createSQLQuery(
 				"call CatmaRepository.addItemToCorpus(" +
 					":umcID, :sourceDocumentLocalUri, :corpusID)");
@@ -164,6 +168,8 @@ public class DBCorpusHandler {
 			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
 		Session session = dbRepository.getSessionFactory().openSession();
 		try  {
+			getCorpusAccess(session, Integer.valueOf(corpus.getId()), true);
+			
 			SQLQuery query = session.createSQLQuery(
 				"call CatmaRepository.addItemToCorpus(" +
 					":umcID, :sourceDocumentLocalUri, :corpusID)");
@@ -191,14 +197,57 @@ public class DBCorpusHandler {
 		
 	}
 
+	Pair<DBCorpus, DBUserCorpus> getCorpusAccess(
+			Session session, int corpusId, boolean checkWriteAccess) throws IOException {
+	
+		DBCorpus dbCorpus = (DBCorpus)session.get(
+				DBCorpus.class, corpusId);
+		
+		Set<DBUserCorpus> dbUserCorpusSet = 
+				dbCorpus.getDbUserCorpus();
+		
+		DBUserCorpus currentUserCorpus = null;
+		for (DBUserCorpus dbUserCorpus : dbUserCorpusSet) {
+			if (dbUserCorpus.getDbUser().getUserId().equals(
+					dbRepository.getCurrentUser().getUserId())) {
+				currentUserCorpus = dbUserCorpus;
+				break;
+			}
+		}
+
+		if (currentUserCorpus == null) {
+			throw new IOException(
+					"You seem to have no access to this corpus! " +
+					"Please reload the repository!");
+		}
+		else if (checkWriteAccess && currentUserCorpus.getAccessMode() 
+							!= AccessMode.WRITE.getNumericRepresentation()) {
+			throw new IOException(
+					"You seem to have no write access to this corpus! " +
+					"Please reload this corpus!");
+		}
+		else {
+			return new Pair<DBCorpus, DBUserCorpus>(
+					dbCorpus, currentUserCorpus);
+		}
+	}
+
+	
 	public void delete(Corpus corpus) throws IOException {
 		Session session = dbRepository.getSessionFactory().openSession();
 		try  {
-			DBCorpus dbCorpus = 
-					(DBCorpus) session.load(
-							DBCorpus.class, Integer.valueOf(corpus.getId()));
+			Pair<DBCorpus, DBUserCorpus> corpusAccess = getCorpusAccess(
+					session, Integer.valueOf(corpus.getId()), true);
+			DBCorpus dbCorpus = corpusAccess.getFirst(); 
+			DBUserCorpus currentUserCorpus = corpusAccess.getSecond();
+
 			session.beginTransaction();
-			session.delete(dbCorpus);
+			session.delete(currentUserCorpus);
+
+			if (dbCorpus.getDbUserCorpus().size() == 1) {
+				session.delete(dbCorpus);
+			}
+			
 			session.getTransaction().commit();
 			CloseSafe.close(new CloseableSession(session));
 		
@@ -218,9 +267,10 @@ public class DBCorpusHandler {
 		String oldName = corpus.toString();
 		Session session = dbRepository.getSessionFactory().openSession();
 		try  {
-			DBCorpus dbCorpus = 
-					(DBCorpus) session.load(
-							DBCorpus.class, Integer.valueOf(corpus.getId()));
+			Pair<DBCorpus, DBUserCorpus> corpusAccess = 
+					getCorpusAccess(session, Integer.valueOf(corpus.getId()), true);
+			DBCorpus dbCorpus = corpusAccess.getFirst(); 
+
 			session.beginTransaction();
 			dbCorpus.setName(name);
 			corpus.setName(name);

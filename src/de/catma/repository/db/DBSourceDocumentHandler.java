@@ -44,6 +44,7 @@ import org.hibernate.criterion.Restrictions;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.db.CloseableSession;
+import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.FileOSType;
@@ -345,8 +346,9 @@ class DBSourceDocumentHandler {
 						Session session = 
 								dbRepository.getSessionFactory().openSession();
 						try {
-							DBSourceDocument dbSourceDocument = 
-									getDbSourceDocument(session, localUri);
+							Pair<DBSourceDocument, DBUserSourceDocument> docAccess = 
+									getSourceDocumentAccess(session, localUri, true);
+							DBSourceDocument dbSourceDocument = docAccess.getFirst();
 							
 							ContentInfoSet oldContentInfoSet = 
 									new ContentInfoSet(
@@ -549,4 +551,39 @@ class DBSourceDocumentHandler {
 			}
 		}		
 	}
+	
+	Pair<DBSourceDocument, DBUserSourceDocument> getSourceDocumentAccess(
+			Session session, String localUri, boolean checkWriteAccess) throws IOException {
+	
+		DBSourceDocument dbSourceDocument = getDbSourceDocument(session, localUri);
+		
+		Set<DBUserSourceDocument> dbUserSourceDocuments = 
+				dbSourceDocument.getDbUserSourceDocuments();
+		
+		DBUserSourceDocument currentUserSourceDocument = null;
+		for (DBUserSourceDocument dbUserSourceDocument : dbUserSourceDocuments) {
+			if (dbUserSourceDocument.getDbUser().getUserId().equals(
+					dbRepository.getCurrentUser().getUserId())) {
+				currentUserSourceDocument = dbUserSourceDocument;
+				break;
+			}
+		}
+
+		if (currentUserSourceDocument == null) {
+			throw new IOException(
+					"You seem to have no access to this Document! " +
+					"Please reload the repository!");
+		}
+		else if (checkWriteAccess && currentUserSourceDocument.getAccessMode() 
+							!= AccessMode.WRITE.getNumericRepresentation()) {
+			throw new IOException(
+					"You seem to have no write access to this document! " +
+					"Please reload this document!");
+		}
+		else {
+			return new Pair<DBSourceDocument, DBUserSourceDocument>(
+					dbSourceDocument, currentUserSourceDocument);
+		}
+	}
+
 }

@@ -410,4 +410,8 @@ public class KwicPanel extends VerticalLayout {
 	public Set<QueryResultRow> getSelection() {
 		return (Set<QueryResultRow>) kwicTable.getValue();
 	}
+	
+	TreeTable getKwicTable() {
+		return kwicTable;
+	}
 }

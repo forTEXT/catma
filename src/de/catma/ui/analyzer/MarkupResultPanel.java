@@ -27,11 +27,13 @@ import java.util.Set;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
+import com.vaadin.addon.tableexport.ExcelExport;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.terminal.ClassResource;
+import com.vaadin.terminal.ThemeResource;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -203,6 +205,8 @@ public class MarkupResultPanel extends VerticalLayout {
 	private Button btSelectAll;
 	private Button btDeselectAll;
 	private Button btUntagResults;
+	private Button btResultExcelExport;
+	private Button btKwicExcelExport;
 	
 	public MarkupResultPanel(
 			Repository repository, 
@@ -275,6 +279,29 @@ public class MarkupResultPanel extends VerticalLayout {
 			
 			public void buttonClick(ClickEvent event) {
 				untagResults();
+			}
+		});
+		
+		btKwicExcelExport.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+            	ExcelExport excelExport = 
+            			new ExcelExport(kwicPanel.getKwicTable(), 
+            					"CATMA Query Result Kwic");
+                excelExport.excludeCollapsedColumns();
+                excelExport.setReportTitle("CATMA Query Result Kwic");
+                excelExport.export();
+			}
+		});
+
+		btResultExcelExport.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+            	ExcelExport excelExport = 
+            			new ExcelExport(resultTable, "CATMA Query Result");
+                excelExport.excludeCollapsedColumns();
+                excelExport.setReportTitle("CATMA Query Result");
+                excelExport.export();
 			}
 		});
 	}
@@ -440,6 +467,13 @@ public class MarkupResultPanel extends VerticalLayout {
 				getApplication()));
 		buttonPanel.addComponent(btDist);
 		
+		btResultExcelExport = new Button();
+		btResultExcelExport.setIcon(new ThemeResource("../images/table-excel.png"));
+		btResultExcelExport.setDescription(
+				"Export all Query result data as an Excel spreadsheet.");
+		buttonPanel.addComponent(btResultExcelExport);
+		
+		
 		btSelectAll = new Button("Select all for Kwic");
 		
 		buttonPanel.addComponent(btSelectAll);
@@ -465,10 +499,20 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 		HorizontalLayout kwicButtonPanel = new HorizontalLayout();
 		kwicButtonPanel.setSpacing(true);
+		kwicButtonPanel.setWidth("100%");
+		
+		btKwicExcelExport = new Button();
+		btKwicExcelExport.setIcon(new ThemeResource("../images/table-excel.png"));
+		btKwicExcelExport.setDescription(
+				"Export all Query result data as an Excel spreadsheet.");
+		kwicButtonPanel.addComponent(btKwicExcelExport);
+		kwicButtonPanel.setComponentAlignment(
+				btKwicExcelExport, Alignment.MIDDLE_LEFT);
 		
 		btUntagResults = new Button("Untag selected Kwics");
 		kwicButtonPanel.addComponent(btUntagResults);
 		kwicButtonPanel.setComponentAlignment(btUntagResults, Alignment.MIDDLE_RIGHT);
+		kwicButtonPanel.setExpandRatio(btUntagResults, 1f);
 		
 		Label helpLabel = new Label();
 		helpLabel.setIcon(new ClassResource(

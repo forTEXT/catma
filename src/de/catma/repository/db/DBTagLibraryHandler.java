@@ -482,7 +482,8 @@ class DBTagLibraryHandler {
 							(DBTagsetDefinition)session.load(
 									DBTagsetDefinition.class, 
 									tagsetDefinition.getId());
-					getLibraryAccess(session, dbTagsetDefinition.getTagLibraryId());
+					getLibraryAccess(
+						session, dbTagsetDefinition.getTagLibraryId(), true);
 					
 					DBTagDefinition dbTagDefinition = 
 						new DBTagDefinition(
@@ -560,7 +561,8 @@ class DBTagLibraryHandler {
 							(DBTagsetDefinition)session.get(
 								DBTagsetDefinition.class, 
 								tagsetDefinition.getId());
-						getLibraryAccess(session, dbTagsetDefinition.getTagLibraryId());
+						getLibraryAccess(
+							session, dbTagsetDefinition.getTagLibraryId(), true);
 							
 						session.delete(dbTagsetDefinition);
 						session.getTransaction().commit();
@@ -597,7 +599,7 @@ class DBTagLibraryHandler {
 				Session session = dbRepository.getSessionFactory().openSession();
 				try {
 					
-					getLibraryAccess(session, tagLibrary.getId());
+					getLibraryAccess(session, tagLibrary.getId(), true);
 					
 					session.beginTransaction();
 					importTagsetDefinition(
@@ -634,12 +636,12 @@ class DBTagLibraryHandler {
 	}
 	
 	private Pair<DBTagLibrary, DBUserTagLibrary> getLibraryAccess(
-			Session session, String tagLibraryId) throws IOException {
-		return getLibraryAccess(session, Integer.valueOf(tagLibraryId));
+			Session session, String tagLibraryId, boolean checkWriteAccess) throws IOException {
+		return getLibraryAccess(session, Integer.valueOf(tagLibraryId), checkWriteAccess);
 	}
 	
-	private Pair<DBTagLibrary, DBUserTagLibrary> getLibraryAccess(
-			Session session, int tagLibraryId) throws IOException {
+	Pair<DBTagLibrary, DBUserTagLibrary> getLibraryAccess(
+			Session session, int tagLibraryId, boolean checkWriteAccess) throws IOException {
 	
 		DBTagLibrary dbTagLibrary = (DBTagLibrary)session.get(
 				DBTagLibrary.class, tagLibraryId);
@@ -655,9 +657,14 @@ class DBTagLibraryHandler {
 				break;
 			}
 		}
-		if (dbTagLibrary.isIndependent() && ((currentUserTagLibrary == null) 
-				|| (currentUserTagLibrary.getAccessMode() 
-							!= AccessMode.WRITE.getNumericRepresentation()))) {
+		if (dbTagLibrary.isIndependent() && (currentUserTagLibrary == null)) {
+			throw new IOException(
+					"You seem to have no access to this library! " +
+					"Please reload the repository!");
+		}
+		else if (checkWriteAccess && dbTagLibrary.isIndependent() && 
+					(currentUserTagLibrary.getAccessMode() 
+							!= AccessMode.WRITE.getNumericRepresentation())) {
 			throw new IOException(
 					"You seem to have no write access to this library! " +
 					"Please reload your Tag Library using the Tag Manager!");
@@ -682,7 +689,8 @@ class DBTagLibraryHandler {
 								tagsetDefinition.getId());
 
 						getLibraryAccess(session,
-								dbTagsetDefinition.getTagLibraryId());
+								dbTagsetDefinition.getTagLibraryId(),
+								true);
 						
 						dbTagsetDefinition.setName(
 								tagsetDefinition.getName());
@@ -721,7 +729,7 @@ class DBTagLibraryHandler {
 			session.beginTransaction();
 			
 			Pair<DBTagLibrary, DBUserTagLibrary> libraryAccess =   
-					getLibraryAccess(session, tagLibrary.getId());
+					getLibraryAccess(session, tagLibrary.getId(), true);
 
 			Set<DBUserTagLibrary> dbUserTagLibraries = 
 					libraryAccess.getFirst().getDbUserTagLibraries();
@@ -779,8 +787,10 @@ class DBTagLibraryHandler {
 								DBTagDefinition.class, 
 								tagDefinition.getId());
 
-						getLibraryAccess(session,
-								dbTagDefinition.getDbTagsetDefinition().getTagLibraryId());
+						getLibraryAccess(
+							session,
+							dbTagDefinition.getDbTagsetDefinition().getTagLibraryId(),
+							true);
 
 						dbTagDefinition.setName(
 								tagDefinition.getName());
@@ -839,7 +849,8 @@ class DBTagLibraryHandler {
 						
 						getLibraryAccess(
 							session, 
-							dbTagDefinition.getDbTagsetDefinition().getTagLibraryId());
+							dbTagDefinition.getDbTagsetDefinition().getTagLibraryId(),
+							true);
 						
 						session.delete(dbTagDefinition);
 						session.getTransaction().commit();
@@ -1044,7 +1055,8 @@ class DBTagLibraryHandler {
 								dbRepository.getSessionFactory().openSession();
 						try {
 							Pair<DBTagLibrary, DBUserTagLibrary> libraryAccess = 
-									getLibraryAccess(session, tagLibraryId);
+									getLibraryAccess(
+										session, tagLibraryId, true);
 							DBTagLibrary dbTagLibrary = libraryAccess.getFirst();
 							
 							ContentInfoSet oldContentInfoSet =
@@ -1115,7 +1127,8 @@ class DBTagLibraryHandler {
 					DBTagsetDefinition dbTagsetDefinition = 
 							dbTagDefinition.getDbTagsetDefinition();
 					
-					getLibraryAccess(session, dbTagsetDefinition.getTagLibraryId());
+					getLibraryAccess(
+						session, dbTagsetDefinition.getTagLibraryId(), true);
 					
 					DBPropertyDefinition dbPropertyDefinition = new
 						DBPropertyDefinition(
@@ -1167,8 +1180,10 @@ class DBTagLibraryHandler {
 					DBPropertyDefinition dbPropertyDefinition = 
 							(DBPropertyDefinition)session.get(DBPropertyDefinition.class, pd.getId());
 					
-					getLibraryAccess(session,
-						dbPropertyDefinition.getDbTagDefinition().getDbTagsetDefinition().getTagLibraryId());
+					getLibraryAccess(
+						session,
+						dbPropertyDefinition.getDbTagDefinition().getDbTagsetDefinition().getTagLibraryId(),
+						true);
 					
 					Iterator<DBPropertyDefPossibleValue> iterator =
 							dbPropertyDefinition.getDbPropertyDefPossibleValues().iterator();
@@ -1232,7 +1247,8 @@ class DBTagLibraryHandler {
 						
 						getLibraryAccess(
 							session, 
-							dbPropertyDefinition.getDbTagDefinition().getDbTagsetDefinition().getTagLibraryId());
+							dbPropertyDefinition.getDbTagDefinition().getDbTagsetDefinition().getTagLibraryId(),
+							true);
 						
 						dbPropertyDefinition.getDbTagDefinition().setVersion(
 								tagDefinition.getVersion().getDate());

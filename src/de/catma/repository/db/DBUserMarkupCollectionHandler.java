@@ -314,6 +314,21 @@ class DBUserMarkupCollectionHandler {
 			dbTagInstance.getDbProperties().add(dbProperty);
 		}
 	}
+	
+	private DBUserUserMarkupCollection getCurrentDBUserUserMarkupCollection(
+			DBUserMarkupCollection dbUserMarkupCollection) {
+
+		for (DBUserUserMarkupCollection dbUserUserMarkupCollection :
+			dbUserMarkupCollection.getDbUserUserMarkupCollections()) {
+			if (dbUserUserMarkupCollection.getDbUser().getUserId().equals(
+					dbRepository.getCurrentUser().getUserId())) {
+				return dbUserUserMarkupCollection;
+			}
+		}
+
+		
+		return null;
+	}
 
 	@SuppressWarnings("unchecked")
 	void delete(
@@ -324,23 +339,17 @@ class DBUserMarkupCollectionHandler {
 				(DBUserMarkupCollection) session.get(
 					DBUserMarkupCollection.class,
 					Integer.valueOf(userMarkupCollectionReference.getId()));
-			Set<DBUserUserMarkupCollection> dbUserUserMarkupCollections =
-					dbUserMarkupCollection.getDbUserUserMarkupCollections();
-			DBUserUserMarkupCollection currentUserUserMarkupCollection = null;
-			for (DBUserUserMarkupCollection dbUserUserMarkupCollection :
-					dbUserUserMarkupCollections) {
-				if (dbUserUserMarkupCollection.getDbUser().getUserId().equals(
-						dbRepository.getCurrentUser().getUserId())) {
-					currentUserUserMarkupCollection = 
-							dbUserUserMarkupCollection;
-					break;
-				}
-			}
+			
+			DBUserUserMarkupCollection currentUserUserMarkupCollection = 
+					getCurrentDBUserUserMarkupCollection(dbUserMarkupCollection);
 			
 			if (currentUserUserMarkupCollection == null) {
 				throw new IllegalStateException(
 						"you seem to have no access rights for this collection!");
 			}
+			Set<DBUserUserMarkupCollection> dbUserUserMarkupCollections =
+					dbUserMarkupCollection.getDbUserUserMarkupCollections();
+			
 			if (!currentUserUserMarkupCollection.isOwner() 
 					|| (dbUserUserMarkupCollections.size() > 1)) {
 				dbUserMarkupCollection.getDbUserUserMarkupCollections().remove(
@@ -509,9 +518,6 @@ class DBUserMarkupCollectionHandler {
 									dbTagInstance.getDbTagDefinition()
 										.getDbTagsetDefinition().getUuid())).getTagDefinition(idGenerator.uuidBytesToCatmaID(
 								dbTagInstance.getDbTagDefinition().getUuid())));
-//						tagLibrary.getTagDefinition(
-//							idGenerator.uuidBytesToCatmaID(
-//								dbTagInstance.getDbTagDefinition().getUuid())));
 				addProperties(tagInstance, dbTagInstance);
 				tagInstances.put(dbTagInstance, tagInstance);
 			}
@@ -565,6 +571,8 @@ class DBUserMarkupCollectionHandler {
 		
 		Session session = dbRepository.getSessionFactory().openSession();
 		try {
+			checkWriteAccess(session, Integer.valueOf(userMarkupCollection.getId()));
+
 			Set<TagInstance> incomingTagInstances = 
 					new HashSet<TagInstance>();
 			
@@ -660,7 +668,26 @@ class DBUserMarkupCollectionHandler {
 		return dbTagInstance;
 	}
 
-
+	boolean hasWriteAccess(Session session, Integer userMarkupCollectionId) throws IOException {
+		DBUserMarkupCollection dbUserMarkupCollection = 
+				(DBUserMarkupCollection) session.get(
+				DBUserMarkupCollection.class, 
+				userMarkupCollectionId);
+		
+		DBUserUserMarkupCollection currentDBUserUmc = 
+				getCurrentDBUserUserMarkupCollection(dbUserMarkupCollection);
+		
+		return (currentDBUserUmc.getAccessMode() 
+				!= AccessMode.WRITE.getNumericRepresentation());
+	}
+	
+	void checkWriteAccess(Session session, Integer userMarkupCollectionId) throws IOException {
+		if (!hasWriteAccess(session, userMarkupCollectionId)) {
+			throw new IOException(
+					"You seem to have no write access to this collection! " +
+					"Please reload this Collection!");
+		}
+	}	
 
 	void updateTagsetDefinitionInUserMarkupCollections(
 			List<UserMarkupCollection> userMarkupCollections,
@@ -671,28 +698,32 @@ class DBUserMarkupCollectionHandler {
 			session.beginTransaction();
 			for (UserMarkupCollection userMarkupCollection : 
 				userMarkupCollections) {
-				DBTagLibraryHandler dbTagLibraryHandler = 
-						dbRepository.getDbTagLibraryHandler();
-				TagLibrary tagLibrary = 
-						userMarkupCollection.getTagLibrary();
-				
-				Set<byte[]> deletedTagDefUuids = 
-					dbTagLibraryHandler.updateTagsetDefinition(
-							session, tagLibrary,
-							tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()));
-				DBUserMarkupCollectionUpdater updater = 
-						new DBUserMarkupCollectionUpdater(dbRepository);
-				updater.updateUserMarkupCollection(session, userMarkupCollection);
-				//FIXME: reindexing should occurr only if something has changed, i. e. 
-				// not just additions to a tagset
-				dbRepository.getIndexer().reindex(
-					tagsetDefinition, 
-					deletedTagDefUuids,
-					userMarkupCollection, 
-					dbRepository.getDbSourceDocumentHandler().getLocalUriFor(
-							new UserMarkupCollectionReference(
-									userMarkupCollection.getId(), 
-									userMarkupCollection.getContentInfoSet())));
+
+				if (hasWriteAccess(session, Integer.valueOf(userMarkupCollection.getId()))) {
+					
+					DBTagLibraryHandler dbTagLibraryHandler = 
+							dbRepository.getDbTagLibraryHandler();
+					TagLibrary tagLibrary = 
+							userMarkupCollection.getTagLibrary();
+					
+					Set<byte[]> deletedTagDefUuids = 
+						dbTagLibraryHandler.updateTagsetDefinition(
+								session, tagLibrary,
+								tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()));
+					DBUserMarkupCollectionUpdater updater = 
+							new DBUserMarkupCollectionUpdater(dbRepository);
+					updater.updateUserMarkupCollection(session, userMarkupCollection);
+					//FIXME: reindexing should occurr only if something has changed, i. e. 
+					// not just additions to a tagset
+					dbRepository.getIndexer().reindex(
+						tagsetDefinition, 
+						deletedTagDefUuids,
+						userMarkupCollection, 
+						dbRepository.getDbSourceDocumentHandler().getLocalUriFor(
+								new UserMarkupCollectionReference(
+										userMarkupCollection.getId(), 
+										userMarkupCollection.getContentInfoSet())));
+				}
 			}
 
 			session.getTransaction().commit();
@@ -723,6 +754,10 @@ class DBUserMarkupCollectionHandler {
 							Restrictions.eq(
 								"uuid", idGenerator.catmaIDToUUIDBytes(ti.getUuid())));
 				DBTagInstance dbTagInstance = (DBTagInstance) criteria.uniqueResult();
+				checkWriteAccess(
+					session,
+					dbTagInstance.getDbTagReferences().iterator().next().getDbUserMarkupCollection().getUsermarkupCollectionId());
+				
 				session.delete(dbTagInstance);
 			}
 			
@@ -756,7 +791,11 @@ class DBUserMarkupCollectionHandler {
 						
 						Session session = 
 								dbRepository.getSessionFactory().openSession();
+
 						try {
+							checkWriteAccess(
+									session, userMarkupCollectionId);
+							
 							DBUserMarkupCollection dbUserMarkupCollection =
 									(DBUserMarkupCollection) session.get(
 									DBUserMarkupCollection.class, 
@@ -836,6 +875,7 @@ class DBUserMarkupCollectionHandler {
 	}
 	
 	void updateProperty(TagInstance tagInstance, Property property) throws IOException {
+		
 		Session session = dbRepository.getSessionFactory().openSession();
 		try {
 			Query query = session.createQuery(
@@ -867,13 +907,15 @@ class DBUserMarkupCollectionHandler {
 			}
 			DBUserMarkupCollectionUpdater updater = 
 					new DBUserMarkupCollectionUpdater(dbRepository);
-			
+			checkWriteAccess(
+				session,
+				dbProperty.getDbTagInstance().getDbTagReferences().iterator().next().getDbUserMarkupCollection().getUsermarkupCollectionId());
+
 			session.beginTransaction();
 			updater.updateDbProperty(session, dbProperty, property);
 			session.saveOrUpdate(dbProperty);
-			session.getTransaction().commit();
-			
 			dbRepository.getIndexer().updateIndex(tagInstance, property);
+			session.getTransaction().commit();
 
 			CloseSafe.close(new CloseableSession(session));
 		}

@@ -719,16 +719,27 @@ public class DBRepository implements IndexedRepository {
 		return tempDir;
 	}
 	
-	//TODO: what happens if the corpus changes after sharing, do we share corpus changes?
-	public void share(Corpus corpus, String userIdentification, AccessMode accessMode) throws IOException {
+	public void share(
+			Corpus corpus, String userIdentification, AccessMode accessMode) 
+					throws IOException {
 		
 		Session session = sessionFactory.openSession();
 		try {
+			
 			DBUser dbUser = getUser(session, userIdentification); 
 			if (dbUser != null) {
-				DBCorpus dbCorpus = 
-					(DBCorpus) session.get(DBCorpus.class, Integer.valueOf(corpus.getId()));
+				Pair<DBCorpus, DBUserCorpus> corpusAccess = 
+						dbCorpusHandler.getCorpusAccess(
+							session, Integer.valueOf(corpus.getId()),
+							false);
 				
+				DBCorpus dbCorpus = corpusAccess.getFirst();
+				if (accessMode.equals(AccessMode.WRITE)
+						&& (corpusAccess.getSecond().getAccessMode() 
+							!= AccessMode.WRITE.getNumericRepresentation())) {
+					accessMode = AccessMode.getAccessMode(
+							corpusAccess.getSecond().getAccessMode());
+				}
 				Query existQuery = session.createQuery(
 						"from " + DBUserCorpus.class.getSimpleName() + " where "
 						+ " dbUser = :user and dbCorpus = :corpus");
@@ -771,9 +782,17 @@ public class DBRepository implements IndexedRepository {
 		Session session, DBUser dbUser, SourceDocument sourceDocument, 
 		String userIdentification, AccessMode accessMode) throws IOException {
 		
-		DBSourceDocument dbSourceDocument = 
-				dbSourceDocumentHandler.getDbSourceDocument(
-						session, sourceDocument.getID());
+		Pair<DBSourceDocument, DBUserSourceDocument> docAccess = 
+				dbSourceDocumentHandler.getSourceDocumentAccess(
+						session, sourceDocument.getID(), false);
+		
+		DBSourceDocument dbSourceDocument = docAccess.getFirst();
+
+		if (accessMode.equals(AccessMode.WRITE) && 
+				(docAccess.getSecond().getAccessMode() 
+						!= AccessMode.WRITE.getNumericRepresentation())) {
+			accessMode = AccessMode.getAccessMode(docAccess.getSecond().getAccessMode());
+		}
 		
 		Query existQuery = session.createQuery(
 				"from " + DBUserSourceDocument.class.getSimpleName() + " where "
@@ -843,6 +862,12 @@ public class DBRepository implements IndexedRepository {
 			UserMarkupCollectionReference userMarkupCollectionRef, 
 			String userIdentification, AccessMode accessMode) throws IOException {
 		
+		if (accessMode.equals(AccessMode.WRITE)  
+			&& !dbUserMarkupCollectionHandler.hasWriteAccess(
+					session, Integer.valueOf(userMarkupCollectionRef.getId()))) {
+			accessMode = AccessMode.READ;
+		}
+		
 		SourceDocument sourceDocument = 
 				getSourceDocument(new UserMarkupCollectionReference(
 						userMarkupCollectionRef.getId(), 
@@ -879,6 +904,16 @@ public class DBRepository implements IndexedRepository {
 		
 		Session session = sessionFactory.openSession();
 		try {
+			if (accessMode.equals(AccessMode.WRITE)) {
+				Pair<DBTagLibrary, DBUserTagLibrary> libAccess = 
+						dbTagLibraryHandler.getLibraryAccess(
+								session, 
+								Integer.valueOf(tagLibrary.getId()), false);
+				if (libAccess.getSecond().getAccessMode() 
+						!= AccessMode.WRITE.getNumericRepresentation()) {
+					accessMode = AccessMode.getAccessMode(libAccess.getSecond().getAccessMode());
+				}
+			}			
 			
 			DBUser dbUser = getUser(session, userIdentification); 
 			if (dbUser != null) {
