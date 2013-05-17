@@ -678,7 +678,7 @@ class DBUserMarkupCollectionHandler {
 				getCurrentDBUserUserMarkupCollection(dbUserMarkupCollection);
 		
 		return (currentDBUserUmc.getAccessMode() 
-				!= AccessMode.WRITE.getNumericRepresentation());
+				== AccessMode.WRITE.getNumericRepresentation());
 	}
 	
 	void checkWriteAccess(Session session, Integer userMarkupCollectionId) throws IOException {
