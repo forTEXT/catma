@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
@@ -87,6 +88,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 
 	}
 	
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private TreeTable markupCollectionsTree;
 	private String userMarkupItem = "User Markup Collections";
 	private String staticMarkupItem = "Static Markup Collections";
@@ -431,6 +433,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				userMarkupCollectionManager.getUserMarkupCollection(
 						userMarkupCollectionReference);
 		if (userMarkupCollection != null) {
+			
 			for (TagsetDefinition tagsetDefinition : 
 				userMarkupCollection.getTagLibrary()) {
 				
@@ -445,6 +448,11 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				}
 			}
 			
+			logger.info(
+					"removing UserMarkupCollection " 
+							+ userMarkupCollection + "#" 
+							+ userMarkupCollection.getId()
+							+ " from MarkupCollectionsPanel.Tree");
 			removeWithChildrenFromTree(userMarkupCollection);
 			fireWritableUserMarkupCollectionSelected(userMarkupCollection, false);
 			userMarkupCollectionManager.remove(userMarkupCollection);
@@ -871,15 +879,26 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		if (selected) {
 			for (UserMarkupCollection umc : userMarkupCollectionManager) {
 				if (!umc.equals(userMarkupCollection)) {
-					Object writeablePropertyValue = 
+					Item umcItem = 
 						markupCollectionsTree.getItem(
-							umc).getItemProperty(
+							umc);
+					if (umcItem != null) {
+						Object writeablePropertyValue = 
+							umcItem.getItemProperty(
 								MarkupCollectionsTreeProperty.writable).getValue();
-					
-					if ((writeablePropertyValue != null) 
-							&& (writeablePropertyValue instanceof CheckBox)) {
-						CheckBox cbWritable = (CheckBox)writeablePropertyValue;
-						cbWritable.setValue(false);
+						
+						if ((writeablePropertyValue != null) 
+								&& (writeablePropertyValue instanceof CheckBox)) {
+							CheckBox cbWritable = (CheckBox)writeablePropertyValue;
+							cbWritable.setValue(false);
+						}
+					}
+					else {
+						logger.warning(
+							"[" + getApplication().getUser() 
+							+ "] could not find UserMarkupCollection " 
+							+ umc + "#" + umc.getId() 
+							+ " in the MarkupCollectionsPanel.Tree!");
 					}
 				}
 			}
