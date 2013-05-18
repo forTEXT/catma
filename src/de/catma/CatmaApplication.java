@@ -107,6 +107,7 @@ public class CatmaApplication extends Application
 	private VisualizationManagerView visualizationManagerView;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private Map<String,String[]> parameters = new HashMap<String, String[]>();
+	private boolean repositoryOpened = false;
 
 	@Override
 	public void init() {
@@ -279,6 +280,7 @@ public class CatmaApplication extends Application
 	}
 
 	public void openRepository(Repository repository) {
+		repositoryOpened = true;
 		userCount.incrementAndGet();
 		repositoryManagerView.openRepository(repository);
 	}
@@ -403,7 +405,10 @@ public class CatmaApplication extends Application
 	@Override
 	public void close() {
 		repositoryManagerView.getRepositoryManager().close();
-		userCount.decrementAndGet();
+		if (repositoryOpened) {
+			repositoryOpened = false;
+			userCount.decrementAndGet();
+		}
 		super.close();
 	}
 	
