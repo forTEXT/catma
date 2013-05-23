@@ -52,6 +52,7 @@ import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
+import de.catma.ui.HierarchicalExcelExport;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 
@@ -183,7 +184,7 @@ public class PhraseResultPanel extends VerticalLayout {
 			
 			public void buttonClick(ClickEvent event) {
             	ExcelExport excelExport = 
-            			new ExcelExport(kwicPanel.getKwicTable(), 
+            			new HierarchicalExcelExport(kwicPanel.getKwicTable(), 
             					"CATMA Query Result Kwic");
                 excelExport.excludeCollapsedColumns();
                 excelExport.setReportTitle("CATMA Query Result Kwic");
@@ -194,7 +195,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		btExcelExport.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-            	ExcelExport excelExport = new ExcelExport(resultTable, "CATMA Query Result");
+            	ExcelExport excelExport = new HierarchicalExcelExport(resultTable, "CATMA Query Result");
                 excelExport.excludeCollapsedColumns();
                 excelExport.setReportTitle("CATMA Query Result");
                 excelExport.export();
