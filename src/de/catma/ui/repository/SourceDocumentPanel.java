@@ -22,6 +22,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -73,6 +76,7 @@ import de.catma.document.repository.UnknownUserException;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
+import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.standoffmarkup.MarkupCollectionReference;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
@@ -289,10 +293,13 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		miMoreDocumentActions.addItem("Export Document", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
-				getWindow().showNotification(
-					"Information", "Not implemented yet!", 
-					Notification.TYPE_TRAY_NOTIFICATION);
-				//TODO: implement
+				handleSourceDocumentExportRequest();
+			}
+		});
+		miMoreDocumentActions.addItem("Export Document as UTF-8 plain text", new Command() {
+			
+			public void menuSelected(MenuItem selectedItem) {
+				handleSourceDocumentExportUTF8Request();
 			}
 		});
 		
@@ -444,6 +451,117 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		});
 	}
 	
+	private void handleSourceDocumentExportUTF8Request() {
+		Object value = documentsTree.getValue();
+		if ((value == null) || !(value instanceof SourceDocument)) {
+			 getWindow().showNotification(
+                    "Information",
+                    "Please select a Source Document first",
+                    Notification.TYPE_TRAY_NOTIFICATION);
+		}
+		else{
+			final SourceDocument sourceDocument = (SourceDocument)value;
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//			OutputStreamWriter writer = new OutputStreamWriter(bos, "UTF-8");
+			
+			try {
+				bos.write(sourceDocument.getContent().getBytes(Charset.forName("UTF8")));
+			
+				final ByteArrayInputStream bis = 
+						new ByteArrayInputStream(bos.toByteArray());
+				
+				getWindow().open(new FileResource(null, getApplication()) {
+					public com.vaadin.terminal.DownloadStream getStream() {
+						DownloadStream ds = new DownloadStream(bis, 
+								getMIMEType(), getFilename());
+						ds.setParameter(
+								"Content-Disposition", 
+								"attachment; filename="
+										+ getFilename());
+						ds.setCacheTime(0);
+						return ds;
+					};
+					public String getMIMEType() {
+						return "text/plain;charset=utf-8";
+					};
+					
+					public String getFilename() {
+						SourceContentHandler sourceContentHandler = 
+								sourceDocument.getSourceContentHandler();
+						String title = 
+								sourceContentHandler.getSourceDocumentInfo()
+									.getContentInfoSet().getTitle();
+						if (title!=null) {
+							title = title.replaceAll("\\s", "_");
+						}
+						return sourceDocument.getID() 
+							+ (((title==null)||title.isEmpty())?"":("_"+title)) +
+							".txt";
+					};
+				},
+				"_blank");
+				
+			} catch (IOException e) {
+				((CatmaApplication)getApplication()).showAndLogError("error exporting source document as plain text", e);
+			}
+			
+		}		
+	}
+
+	
+	private void handleSourceDocumentExportRequest() {
+		Object value = documentsTree.getValue();
+		if ((value == null) || !(value instanceof SourceDocument)) {
+			 getWindow().showNotification(
+                    "Information",
+                    "Please select a Source Document first",
+                    Notification.TYPE_TRAY_NOTIFICATION);
+		}
+		else{
+			final SourceDocument sourceDocument = (SourceDocument)value;
+			
+			final File file = repository.getFile(sourceDocument);
+			
+			getWindow().open(new FileResource(null, getApplication()) {
+				public com.vaadin.terminal.DownloadStream getStream() {
+					
+					try {
+						DownloadStream  ds = new DownloadStream(
+							new FileInputStream(file), 
+							getMIMEType(), getFilename());
+						ds.setParameter(
+								"Content-Disposition", 
+								"attachment; filename="
+										+ getFilename());
+						ds.setCacheTime(0);
+						return ds;
+					} catch (FileNotFoundException e) {
+						throw new RuntimeException(e);
+					}
+				};
+				public String getMIMEType() {
+					return sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getMimeType();
+				};
+				
+				public String getFilename() {
+					SourceContentHandler sourceContentHandler = 
+							sourceDocument.getSourceContentHandler();
+					String title = 
+							sourceContentHandler.getSourceDocumentInfo()
+								.getContentInfoSet().getTitle();
+					if (title!=null) {
+						title = title.replaceAll("\\s", "_");
+					}
+					return sourceDocument.getID() 
+						+ (((title==null)||title.isEmpty())?"":("_"+title)) +
+						"." + sourceContentHandler.getSourceDocumentInfo().getTechInfoSet().getFileType().name().toLowerCase();
+				};
+			},
+			"_blank");
+			
+		}
+	}
+
 	private void handleShareUmcRequest() {
 		Object selValue = documentsTree.getValue();
 		if ((selValue != null) 

@@ -137,7 +137,7 @@ public class TagDefinitionSearcher {
 			List<String> userMarkupCollectionIdList, 
 			Set<String> propertyDefinitionIDs,
 			String propertyName,
-			String propertyValue) {
+			String propertyValue, String tagValue) {
 		
 		IDGenerator idGenerator = new IDGenerator();
 		List<byte[]> byteUuidSet = new ArrayList<byte[]>();
@@ -154,9 +154,15 @@ public class TagDefinitionSearcher {
 				" and tr.userMarkupCollectionId in :umcList ";
 		
 		if ((propertyValue != null) && (!propertyValue.isEmpty())) {
-			hql += " and p.value = :propertyValue";
+			hql += " and p.value = :propertyValue ";
 		}
 		
+		if ((tagValue != null) && (!tagValue.isEmpty())) {
+			if (!tagValue.startsWith("/")) {
+				tagValue = "%" + tagValue;
+			}
+			hql += " and lower(tr.tagDefinitionPath) like :tagValue "; 
+		}
 		Session session = sessionFactory.openSession();
 		try {
 			Query query = session.createQuery(hql);
@@ -167,7 +173,10 @@ public class TagDefinitionSearcher {
 			if ((propertyValue != null) && (!propertyValue.isEmpty())) {
 				query.setParameter("propertyValue", propertyValue);
 			}
-
+			if ((tagValue != null) && (!tagValue.isEmpty())) {
+				query.setParameter("tagValue", tagValue.toLowerCase());
+			}
+			
 			@SuppressWarnings("unchecked")
 			List<DBIndexTagReference> dbTagReferences = query.list();
 		

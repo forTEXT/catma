@@ -39,6 +39,7 @@ public class LazyDBPhraseQueryResult implements GroupedQueryResult {
 	private Map<String, DBTerm> termsByDocument;
 	private String term;
 	private QueryResultRowArray queryResultRowArray;
+	private Map<String,Integer> freqByDocument;
 
 	public LazyDBPhraseQueryResult(
 			SessionFactory sessionFactory, String term) {
@@ -56,13 +57,15 @@ public class LazyDBPhraseQueryResult implements GroupedQueryResult {
 
 	private void loadQueryResultRows() {
 		queryResultRowArray = new QueryResultRowArray();
+		freqByDocument = new HashMap<String, Integer>();
 		PhraseSearcher phraseSearcher = new PhraseSearcher(sessionFactory);
 		for (String sourceDocumentID : getSourceDocumentIDs()) {
-			queryResultRowArray.addAll(
-				phraseSearcher.getPositionsForTerm(
-					term, 
-					sourceDocumentID, 
-					0)); // no limit
+			QueryResultRowArray positions =
+					phraseSearcher.getPositionsForTerm(
+							term, 
+							sourceDocumentID, 
+							0); // no limit
+			queryResultRowArray.addAll(positions);
 		}
 	}
 
@@ -71,6 +74,11 @@ public class LazyDBPhraseQueryResult implements GroupedQueryResult {
 	}
 
 	public int getTotalFrequency() {
+		
+		if (queryResultRowArray != null) {
+			return queryResultRowArray.size();
+		}
+		
 		int sum = 0;
 		for (DBTerm t : termsByDocument.values()) {
 			sum += t.getFrequency();
@@ -80,11 +88,27 @@ public class LazyDBPhraseQueryResult implements GroupedQueryResult {
 
 	public int getFrequency(String sourceDocumentID) {
 		if (termsByDocument.containsKey(sourceDocumentID)) {
+			if (queryResultRowArray != null) {
+				if (!freqByDocument.containsKey(sourceDocumentID)) {
+					freqByDocument.put(sourceDocumentID, computeFrequency(sourceDocumentID));
+				}
+				return freqByDocument.get(sourceDocumentID);
+			}
 			return termsByDocument.get(sourceDocumentID).getFrequency();
 		}
 		else {
 			return 0;
 		}
+	}
+
+	private int computeFrequency(String sourceDocumentID) {
+		int freq = 0;
+		for (QueryResultRow row : queryResultRowArray) {
+			if (row.getSourceDocumentId().equals(sourceDocumentID)) {
+				freq++;
+			}
+		}
+		return freq;
 	}
 
 	public Set<String> getSourceDocumentIDs() {

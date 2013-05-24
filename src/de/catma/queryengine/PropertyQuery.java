@@ -20,6 +20,7 @@
 package de.catma.queryengine;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -51,14 +52,16 @@ public class PropertyQuery extends Query {
 
     private String propertyName;
     private String propertyValue;
-
+    private String tagPhrase;
+    private TagMatchMode tagMatchMode;
+    
     /**
      * Constructor
      * @param property the name of the {@link org.DBIndexProperty.tag.Property}
      * @param value the value of the {@link org.DBIndexProperty.tag.Property} this is optional and can be
      * <code>null</code>
      */
-    public PropertyQuery(Phrase property, Phrase value) {
+    public PropertyQuery(Phrase tag, Phrase property, Phrase value, String tagMatchMode) {
         propertyName = property.getPhrase();
         if (value != null) {
             propertyValue = value.getPhrase();
@@ -66,6 +69,25 @@ public class PropertyQuery extends Query {
         else {
             propertyValue = null;
         }
+        if (tag != null){
+        	this.tagPhrase = tag.getPhrase();
+        }
+        else {
+        	this.tagPhrase = null;
+        }
+        
+        if (tagMatchMode != null) {
+        	try {
+        		this.tagMatchMode = TagMatchMode.valueOf(tagMatchMode.toUpperCase());
+        	}
+        	catch (IllegalArgumentException iae) {
+        		this.tagMatchMode = TagMatchMode.EXACT;
+        	}
+        }
+        else {
+        	this.tagMatchMode = TagMatchMode.EXACT;
+        }
+
     }
 
     @Override
@@ -93,6 +115,7 @@ public class PropertyQuery extends Query {
         		return new QueryResultRowArray();
         	}
         }
+        
         Set<String> propertyDefinitionIDs = new HashSet<String>();
         for (String userMarkupCollID : relevantUserMarkupCollIDs) {
         	UserMarkupCollection umc = 
@@ -100,7 +123,9 @@ public class PropertyQuery extends Query {
         				new UserMarkupCollectionReference(
         						userMarkupCollID, new ContentInfoSet()));
         	for (TagsetDefinition tagsetDefinition : umc.getTagLibrary()) {
+        		
         		for (TagDefinition tagDef : tagsetDefinition) {
+        			
         			PropertyDefinition pd = 
         					tagDef.getPropertyDefinitionByName(propertyName); 
         			if (pd != null) {
@@ -118,7 +143,7 @@ public class PropertyQuery extends Query {
 				indexer.searchProperty(
 						relevantUserMarkupCollIDs,
 						propertyDefinitionIDs,
-						propertyName, propertyValue);
+						propertyName, propertyValue, tagPhrase);
 
         Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
 
@@ -151,5 +176,10 @@ public class PropertyQuery extends Query {
         }
         
         return result;
+    }
+    
+    @Override
+    public Comparator<QueryResultRow> getComparator() {
+    	return tagMatchMode.getComparator();
     }
 }

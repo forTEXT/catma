@@ -21,6 +21,7 @@ package de.catma.repository.db;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -957,4 +958,10 @@ public class DBRepository implements IndexedRepository {
 		
 		return (DBUser) query.uniqueResult();
 	}
+	
+	public File getFile(SourceDocument sourceDocument) {
+		return new File(
+			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getURI());
+	}
+	
 }

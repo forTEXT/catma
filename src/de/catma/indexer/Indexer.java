@@ -67,7 +67,7 @@ public interface Indexer {
 	
 	public QueryResult searchProperty(
 			List<String> userMarkupCollectionIdList, Set<String> propertyDefinitionIDs,
-			String propertyName, String propertyValue);
+			String propertyName, String propertyValue, String tagValue);
 	
 	public QueryResult searchFreqency(
 			List<String> documentIdList, 

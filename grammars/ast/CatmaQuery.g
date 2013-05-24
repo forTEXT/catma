@@ -20,6 +20,7 @@ tokens {
 	ND_ADJACENCY;
 	ND_TAG;
 	ND_PROPERTY;
+	ND_TAGPROPERTY;
 	ND_REG;
 	ND_FREQ;
 	ND_SIMIL;
@@ -188,10 +189,11 @@ tagQuery
 	
 	
 propertyQuery 
-	:	PROPERTY EQUAL phrase (VALUE EQUAL phrase)? -> ^(ND_PROPERTY phrase phrase?)	
+	:	PROPERTY EQUAL phrase (VALUE EQUAL phrase)? TAG_MATCH_MODE? -> ^(ND_PROPERTY phrase phrase? TAG_MATCH_MODE?)	
+	|	TAG EQUAL phrase PROPERTY EQUAL phrase (VALUE EQUAL phrase)? TAG_MATCH_MODE? -> ^(ND_TAGPROPERTY phrase phrase phrase? TAG_MATCH_MODE?)
 	;
 	catch[RecognitionException e] {throw e;}
-
+	
 regQuery
 	:	REG EQUAL phrase 'CI'? -> ^(ND_REG phrase 'CI'?)
 	;
