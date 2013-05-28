@@ -1,4 +1,4 @@
-// $ANTLR 3.4 C:\\data\\eclipse_workspace\\catma\\grammars\\ast\\CatmaQuery.g 2013-05-24 16:17:33
+// $ANTLR 3.4 C:\\data\\eclipse_workspace\\catma\\grammars\\ast\\CatmaQuery.g 2013-05-28 22:40:01
 
 package de.catma.queryengine.parser;
 
@@ -711,7 +711,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
             // AST REWRITE
-            // elements: term, INT
+            // elements: INT, term
             // token labels: 
             // rule labels: retval
             // token list labels: 
@@ -1850,7 +1850,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                     // AST REWRITE
-                    // elements: TAG_MATCH_MODE, phrase, phrase, phrase
+                    // elements: phrase, phrase, phrase, TAG_MATCH_MODE
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -1989,7 +1989,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
             // AST REWRITE
-            // elements: 43, phrase
+            // elements: phrase, 43
             // token labels: 
             // rule labels: retval
             // token list labels: 
@@ -2151,7 +2151,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
                     // AST REWRITE
-                    // elements: EQUAL, INT, INT
+                    // elements: INT, INT, EQUAL
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -2347,7 +2347,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
             // AST REWRITE
-            // elements: phrase, INT
+            // elements: INT, phrase
             // token labels: 
             // rule labels: retval
             // token list labels: 

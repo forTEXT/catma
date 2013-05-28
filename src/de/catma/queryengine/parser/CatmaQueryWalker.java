@@ -1,4 +1,4 @@
-// $ANTLR 3.4 C:\\data\\eclipse_workspace\\catma\\grammars\\tree\\CatmaQueryWalker.g 2013-05-24 16:17:39
+// $ANTLR 3.4 C:\\data\\eclipse_workspace\\catma\\grammars\\tree\\CatmaQueryWalker.g 2013-05-28 22:40:07
 
 package de.catma.queryengine.parser;
 
@@ -641,7 +641,7 @@ public class CatmaQueryWalker extends TreeParser {
                     state._fsp--;
 
 
-                     query = subQuery; 
+                     query = new SubQuery(subQuery); 
 
                     }
                     break;

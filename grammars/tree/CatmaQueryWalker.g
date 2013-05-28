@@ -77,7 +77,7 @@ adjacencyQuery returns [Query query]
 term returns [Query query]
 	:	phrase { $query = $phrase.query; }
 		| selector { $query = $selector.query; }
-		| subQuery=query { $query = $subQuery.query; }
+		| subQuery=query { $query = new SubQuery($subQuery.query); }
 	;
 	catch[RecognitionException e] {throw e;}
 	
