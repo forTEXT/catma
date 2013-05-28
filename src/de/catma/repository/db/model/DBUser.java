@@ -65,6 +65,7 @@ public class DBUser implements java.io.Serializable, User {
 	public DBUser(String identifier) {
 		this.identifier = identifier;
 		this.locked = false;
+		this.dbRole = Role.STANDARD.getVal();
 	}
 
 	@Id
@@ -141,7 +142,7 @@ public class DBUser implements java.io.Serializable, User {
 		return dbRole;
 	}
 	
-	public void setDbRole(int dbRole) {
+	public void setDbRole(Integer dbRole) {
 		this.dbRole = dbRole;
 	}
 	
