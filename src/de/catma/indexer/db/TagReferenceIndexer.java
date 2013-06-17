@@ -162,9 +162,13 @@ public class TagReferenceIndexer {
 	void reIndexProperty(Session session, TagInstance tagInstance, Property property) {
 		Query propDelQuery = session.createQuery(
 				"delete from " + DBIndexProperty.class.getSimpleName() +
-				" where tagInstanceId = :curTagInstanceId ");
+				" where tagInstanceId = :curTagInstanceId " +
+				" and propertyDefinitionId = :curPropDefId ");
 		byte[] tagInstanceUuid = idGenerator.catmaIDToUUIDBytes(tagInstance.getUuid()); 
 		propDelQuery.setBinary("curTagInstanceId", tagInstanceUuid);
+		byte[] propDefUuid = idGenerator.catmaIDToUUIDBytes(property.getPropertyDefinition().getUuid());
+		propDelQuery.setBinary("curPropDefId", propDefUuid);
+		
 		propDelQuery.executeUpdate();
 		
 		indexProperty(session, property, tagInstanceUuid);
