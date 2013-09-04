@@ -38,4 +38,6 @@
     
 
     <inherits name="org.vaadin.jouni.animator.AnimatorWidgetset" />
+
+    <inherits name="com.vaadin.addon.tableexport.widgetset.Tableexport_for_vaadinWidgetset" />
 </module>

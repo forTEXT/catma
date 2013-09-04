@@ -1,3 +1,4 @@
+db/local/*
 testlib
 testdocs
 notepad_session.txt
