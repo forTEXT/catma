@@ -34,6 +34,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -41,6 +43,11 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
+import org.jooq.DSLContext;
+import org.jooq.SQLDialect;
+import org.jooq.impl.DSL;
+
+import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.DefaultProgressCallable;
@@ -121,6 +128,7 @@ public class DBRepository implements IndexedRepository {
 	private String url;
 
 	private String tempDir;
+	private String repoFolderPath;
 
 
 	public DBRepository(
@@ -131,10 +139,11 @@ public class DBRepository implements IndexedRepository {
 			BackgroundServiceProvider backgroundServiceProvider,
 			IndexerFactory indexerFactory, 
 			SerializationHandlerFactory serializationHandlerFactory,
-			String url, String user, String pass, String tempDir) {
+			String url, String user, String pass, String tempDir) throws NamingException {
 		
 
 		this.name = name;
+		this.repoFolderPath = repoFolderPath;
 		this.authenticationRequired = authenticationRequired;
 		this.tagManager = tagManager;
 		this.backgroundServiceProvider = backgroundServiceProvider;
@@ -147,14 +156,6 @@ public class DBRepository implements IndexedRepository {
 		
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.idGenerator = new IDGenerator();
-		
-		this.dbSourceDocumentHandler = 
-				new DBSourceDocumentHandler(this, repoFolderPath);
-		this.dbTagLibraryHandler = new DBTagLibraryHandler(this, idGenerator);
-		this.dbUserMarkupCollectionHandler = 
-				new DBUserMarkupCollectionHandler(this);
-		this.dbCorpusHandler = new DBCorpusHandler(this);
-
 	}
 	
 	private void initTagManagerListeners() {
@@ -282,7 +283,16 @@ public class DBRepository implements IndexedRepository {
 	public void open(Map<String, String> userIdentification) throws Exception {
 		initTagManagerListeners();
 		if (init.compareAndSet(false, true)) {
+			ComboPooledDataSource cpds = new ComboPooledDataSource();
 			
+			cpds.setDriverClass( "org.gjt.mm.mysql.Driver" ); //loads the jdbc driver 
+			cpds.setJdbcUrl(url); 
+			cpds.setUser(user);
+			cpds.setPassword(pass); 
+			cpds.setIdleConnectionTestPeriod(10);
+			
+			new InitialContext().bind("catmads", cpds);
+
 			Configuration hibernateConfig = new Configuration();
 			hibernateConfig.configure(
 					this.getClass().getPackage().getName().replace('.', '/') 
@@ -308,6 +318,15 @@ public class DBRepository implements IndexedRepository {
 			this.sessionFactory = (SessionFactory) context.lookup("catma");
 		}
 		
+		this.dbSourceDocumentHandler = 
+				new DBSourceDocumentHandler(this, repoFolderPath);
+		this.dbTagLibraryHandler = new DBTagLibraryHandler(this, idGenerator);
+		this.dbUserMarkupCollectionHandler = 
+				new DBUserMarkupCollectionHandler(this);
+		this.dbCorpusHandler = new DBCorpusHandler(this);
+
+
+		
 		Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put(IndexerPropertyKey.SessionFactory.name(), sessionFactory);
 		//TODO: fill up with all values from the properties file!
@@ -315,10 +334,13 @@ public class DBRepository implements IndexedRepository {
 		indexer = indexerFactory.createIndexer(properties);
 		
 		Session session = sessionFactory.openSession();
+		DSLContext db = DSL.using(
+			(DataSource) new InitialContext().lookup("catmads"), 
+			SQLDialect.MYSQL);
 		
 		try {
 			loadCurrentUser(session, userIdentification);
-			loadContent(session);
+			loadContent(session, db);
 		}
 		finally {
 			CloseSafe.close(new CloseableSession(session));
@@ -360,20 +382,23 @@ public class DBRepository implements IndexedRepository {
 	}
 
 
-	private void loadContent(Session session) 
+	private void loadContent(Session session, DSLContext db) 
 			throws URISyntaxException, IOException, 
 			InstantiationException, IllegalAccessException {
-		dbSourceDocumentHandler.loadSourceDocuments(session);
+		dbSourceDocumentHandler.loadSourceDocuments(db);
 		dbTagLibraryHandler.loadTagLibraryReferences(session);
 		dbCorpusHandler.loadCorpora(session);
 	}
 	
 	public void reload() throws IOException {
 		Session session = sessionFactory.openSession();
-		
+
 		try {
 			try {
-				dbSourceDocumentHandler.reloadSourceDocuments(session);
+				DSLContext db = DSL.using(
+						(DataSource) new InitialContext().lookup("catmads"), 
+						SQLDialect.MYSQL);
+				dbSourceDocumentHandler.reloadSourceDocuments(db);
 				dbTagLibraryHandler.reloadTagLibraryReferences(session);
 				dbCorpusHandler.reloadCorpora(session);
 			}

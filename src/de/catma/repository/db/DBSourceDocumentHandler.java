@@ -18,28 +18,44 @@
  */
 package de.catma.repository.db;
 
+import static de.catma.repository.db.jooq.catmarepository.Tables.SOURCEDOCUMENT;
+import static de.catma.repository.db.jooq.catmarepository.Tables.UNSEPARABLE_CHARSEQUENCE;
+import static de.catma.repository.db.jooq.catmarepository.Tables.USERDEFINED_SEPARATINGCHARACTER;
+import static de.catma.repository.db.jooq.catmarepository.Tables.USERMARKUPCOLLECTION;
+import static de.catma.repository.db.jooq.catmarepository.Tables.USER_SOURCEDOCUMENT;
+import static de.catma.repository.db.jooq.catmarepository.Tables.USER_USERMARKUPCOLLECTION;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
+
 import org.apache.commons.io.IOUtils;
 import org.hibernate.Criteria;
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.Record;
+import org.jooq.Record2;
+import org.jooq.Result;
+import org.jooq.SQLDialect;
+import org.jooq.exception.DataAccessException;
+import org.jooq.impl.DSL;
 
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
@@ -47,20 +63,13 @@ import de.catma.db.CloseableSession;
 import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.ContentInfoSet;
-import de.catma.document.source.FileOSType;
-import de.catma.document.source.FileType;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.source.SourceDocumentHandler;
-import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.db.DBIndexer;
 import de.catma.repository.db.model.DBCorpusSourceDocument;
 import de.catma.repository.db.model.DBSourceDocument;
-import de.catma.repository.db.model.DBUnseparableCharsequence;
-import de.catma.repository.db.model.DBUserDefinedSeparatingCharacter;
-import de.catma.repository.db.model.DBUserMarkupCollection;
 import de.catma.repository.db.model.DBUserSourceDocument;
 import de.catma.util.CloseSafe;
 import de.catma.util.IDGenerator;
@@ -69,14 +78,15 @@ import de.catma.util.Pair;
 class DBSourceDocumentHandler {
 
 	private static final String SOURCEDOCS_FOLDER = "sourcedocuments";
-	private static final String REPO_URI_SCHEME = "catma://";
+	static final String REPO_URI_SCHEME = "catma://";
 	
 	private DBRepository dbRepository;
 	private String sourceDocsPath;
 	private Map<String,SourceDocument> sourceDocumentsByID;
+	private DataSource dataSource;
 
 	public DBSourceDocumentHandler(
-			DBRepository dbRepository, String repoFolderPath) {
+			DBRepository dbRepository, String repoFolderPath) throws NamingException {
 		this.dbRepository = dbRepository;
 		this.sourceDocsPath = repoFolderPath + 
 			"/" + 
@@ -89,6 +99,8 @@ class DBSourceDocumentHandler {
 			}
 		}
 		this.sourceDocumentsByID = new HashMap<String, SourceDocument>();
+		Context  context = new InitialContext();
+		this.dataSource = (DataSource) context.lookup("catmads");
 	}
 	
 	public String getIDFromURI(URI uri) {
@@ -104,8 +116,6 @@ class DBSourceDocumentHandler {
 	
 	private void insertIntoFS(SourceDocument sourceDocument) throws IOException {
 
-//		SourceDocumentInfo sourceDocumentInfo = 
-//				sourceDocument.getSourceContentHandler().getSourceDocumentInfo();
 		try {
 			File sourceTempFile = 
 					new File(new URI(
@@ -154,34 +164,114 @@ class DBSourceDocumentHandler {
 			new DefaultProgressCallable<String>() {
 				public String call() throws Exception {
 					
-					DBSourceDocument dbSourceDocument = 
-							new DBSourceDocument(sourceDocument);
-				
-				
-					Session session =
-							dbRepository.getSessionFactory().openSession();
+					TransactionalDSLContext db = new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 					try {
-						session.beginTransaction();
-						session.save(dbSourceDocument);
+						ContentInfoSet contentInfoSet = 
+								sourceDocument.getSourceContentHandler()
+									.getSourceDocumentInfo().getContentInfoSet();
+						TechInfoSet techInfoSet = 
+								sourceDocument.getSourceContentHandler()
+									.getSourceDocumentInfo().getTechInfoSet();
+						IndexInfoSet indexInfoSet = 
+								sourceDocument.getSourceContentHandler()
+									.getSourceDocumentInfo().getIndexInfoSet();
 						
-						DBUserSourceDocument dbUserSourceDocument = 
-								new DBUserSourceDocument(
-										dbRepository.getCurrentUser(), 
-										dbSourceDocument);
-						
-						session.save(dbUserSourceDocument);
+						db.beginTransaction();
+						Record idRecord = db
+						.insertInto(
+							SOURCEDOCUMENT,
+								SOURCEDOCUMENT.TITLE,
+								SOURCEDOCUMENT.PUBLISHER,
+								SOURCEDOCUMENT.AUTHOR,
+								SOURCEDOCUMENT.DESCRIPTION,
+								SOURCEDOCUMENT.SOURCEURI,
+								SOURCEDOCUMENT.FILETYPE,
+								SOURCEDOCUMENT.CHARSET,
+								SOURCEDOCUMENT.FILEOSTYPE,
+								SOURCEDOCUMENT.CHECKSUM,
+								SOURCEDOCUMENT.MIMETYPE,
+								SOURCEDOCUMENT.XSLTDOCUMENTLOCALURI,
+								SOURCEDOCUMENT.LOCALE,
+								SOURCEDOCUMENT.LOCALURI)
+						.values(
+							contentInfoSet.getTitle(),
+							contentInfoSet.getPublisher(),
+							contentInfoSet.getAuthor(),
+							contentInfoSet.getDescription(),
+							(techInfoSet.getURI().getScheme().equals("file")?null:
+								techInfoSet.getURI().toString()),
+							techInfoSet.getFileType().name(),
+							(techInfoSet.getCharset()==null)?null:techInfoSet.getCharset().toString(),
+							techInfoSet.getFileOSType().name(),
+							techInfoSet.getChecksum(),
+							techInfoSet.getMimeType(),
+							techInfoSet.getXsltDocumentLocalUri(),
+							indexInfoSet.getLocale().toString(),
+							sourceDocument.getID())
+						.returning(SOURCEDOCUMENT.SOURCEDOCUMENTID)
+						.fetchOne();
 
+						Integer sourceDocumentId = 
+								idRecord.getValue(SOURCEDOCUMENT.SOURCEDOCUMENTID);
+						db
+						.insertInto(
+							USER_SOURCEDOCUMENT,
+								USER_SOURCEDOCUMENT.USERID,
+								USER_SOURCEDOCUMENT.SOURCEDOCUMENTID,
+								USER_SOURCEDOCUMENT.ACCESSMODE,
+								USER_SOURCEDOCUMENT.OWNER)
+						.values(
+							dbRepository.getCurrentUser().getUserId(),
+							sourceDocumentId,
+							AccessMode.WRITE.getNumericRepresentation(),
+							(byte)1)
+						.execute();
+						
+						for (Character udsc : 
+							indexInfoSet.getUserDefinedSeparatingCharacters()) {
+							db
+							.insertInto(
+								USERDEFINED_SEPARATINGCHARACTER,
+									USERDEFINED_SEPARATINGCHARACTER.CHR,
+									USERDEFINED_SEPARATINGCHARACTER.SOURCEDOCUMENTID)
+							.values(
+								String.valueOf(udsc),
+								sourceDocumentId)
+							.execute();
+						}
+						
+						for (String ucs : 
+							indexInfoSet.getUnseparableCharacterSequences()) {
+							db
+							.insertInto(
+								UNSEPARABLE_CHARSEQUENCE,
+									UNSEPARABLE_CHARSEQUENCE.CHARSEQUENCE,
+									UNSEPARABLE_CHARSEQUENCE.SOURCEDOCUMENTID)
+							.values(
+								ucs,
+								sourceDocumentId)
+							.execute();
+						}
+						
 						insertIntoFS(sourceDocument);
 						getProgressListener().setProgress(
 								"Indexing Source Document");
-						dbRepository.getIndexer().index(sourceDocument);
 						
-						session.getTransaction().commit();
+						dbRepository.getIndexer().index(sourceDocument);
+
+						db.commitTransaction();
 						return sourceDocument.getID();
+								
 					}
-					catch (Exception e) {
-						CloseSafe.close(new CloseableSession(session,true));
-						throw new IOException(e);
+					catch (DataAccessException dae) {
+						db.rollbackTransaction();
+						db.close();
+						throw new IOException(dae);
+					}
+					finally {
+						if (db!=null) {
+							db.close();
+						}
 					}
 				}
 			},
@@ -204,100 +294,61 @@ class DBSourceDocumentHandler {
 	}
 	
 	
-	void loadSourceDocuments(Session session) 
+	void loadSourceDocuments(DSLContext db) 
 			throws URISyntaxException, IOException, InstantiationException, IllegalAccessException {
-		this.sourceDocumentsByID = getSourceDocumentList(session);
+		this.sourceDocumentsByID = getSourceDocumentList(db);
 	}
-	
-	@SuppressWarnings("unchecked")
-	private Map<String,SourceDocument> getSourceDocumentList(Session session) 
-			throws URISyntaxException, IOException, InstantiationException, IllegalAccessException {
+
+	private Map<String,SourceDocument> getSourceDocumentList(DSLContext db) {
 		Map<String,SourceDocument> result = new HashMap<String, SourceDocument>();
-		
+
 		if (!dbRepository.getCurrentUser().isLocked()) {
-			Query query = 
-				session.createQuery(
-					"select sd from " 
-					+ DBSourceDocument.class.getSimpleName() + " as sd "
-					+ " inner join sd.dbUserSourceDocuments as usd "
-					+ " inner join usd.dbUser as user " 
-					+ " left join fetch sd.dbUserMarkupCollections as usc "
-					+ " left join fetch usc.dbUserUserMarkupCollections uumc "
-					+ " where user.userId = " + dbRepository.getCurrentUser().getUserId());
 			
-			for (DBSourceDocument sd : (List<DBSourceDocument>)query.list()) {
-				IndexInfoSet indexInfoSet = 
-					new IndexInfoSet(
-						getUnseparableCharacterSequences(sd.getDbUnseparableCharsequences()),
-						getUserDefinedSeparatingCharacters(sd.getDbUserDefinedSeparatingCharacters()),
-						new Locale(sd.getLocale()));
-				ContentInfoSet contentInfoSet = 
-						new ContentInfoSet(sd.getAuthor(), sd.getDescription(), 
-								sd.getPublisher(), sd.getTitle());
-				TechInfoSet techInfoSet = 
-						new TechInfoSet(
-							FileType.valueOf(sd.getFileType()),
-							(sd.getCharset()==null)?null:Charset.forName(sd.getCharset()),
-							FileOSType.valueOf(sd.getFileOstype()),
-							sd.getChecksum(),
-							sd.getXsltDocumentLocalUri());
-				techInfoSet.setURI(
-						new URI(getFileURL(sd.getLocalUri(), sourceDocsPath))); 
-				
-				SourceDocumentInfo sourceDocumentInfo = 
-						new SourceDocumentInfo(indexInfoSet, contentInfoSet, techInfoSet);
-				SourceDocumentHandler sdh = new SourceDocumentHandler();
-				SourceDocument sourceDocument = 
-					sdh.loadSourceDocument(sd.getLocalUri(), sourceDocumentInfo);
-				
-				for (DBUserMarkupCollection dbUmc : sd.getDbUserMarkupCollections()) {
-					if (dbUmc.hasAccess(dbRepository.getCurrentUser())) {
-						sourceDocument.addUserMarkupCollectionReference(
-							new UserMarkupCollectionReference(
-									dbUmc.getId(), 
-									new ContentInfoSet(
-										dbUmc.getAuthor(),
-										dbUmc.getDescription(),
-										dbUmc.getPublisher(),
-										dbUmc.getTitle())));
-					}
-				}
-				result.put(sourceDocument.getID(), sourceDocument);
+			Map<Integer, Result<Record>> userDefSepCharsRecords = db
+			.select()
+			.from(USERDEFINED_SEPARATINGCHARACTER)
+			.join(USER_SOURCEDOCUMENT)
+				.on(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(USERDEFINED_SEPARATINGCHARACTER.SOURCEDOCUMENTID))
+				.and(USER_SOURCEDOCUMENT.USERID.eq(dbRepository.getCurrentUser().getUserId()))
+			.fetchGroups(USERDEFINED_SEPARATINGCHARACTER.SOURCEDOCUMENTID);
+			
+			Map<Integer, Result<Record>> unseparableCharSeqRecords = db 
+			.select()
+			.from(UNSEPARABLE_CHARSEQUENCE)
+			.join(USER_SOURCEDOCUMENT)
+				.on(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(UNSEPARABLE_CHARSEQUENCE.SOURCEDOCUMENTID))
+				.and(USER_SOURCEDOCUMENT.USERID.eq(dbRepository.getCurrentUser().getUserId()))
+			.fetchGroups(UNSEPARABLE_CHARSEQUENCE.SOURCEDOCUMENTID);
+			
+			Map<Integer, Result<Record>> userMarkupCollectionRecords = db
+			.select()
+			.from(USERMARKUPCOLLECTION)
+			.join(USER_USERMARKUPCOLLECTION)
+				.on(USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+						.eq(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID))
+				.and(USER_USERMARKUPCOLLECTION.USERID.eq(dbRepository.getCurrentUser().getUserId()))
+			.fetchGroups(USERMARKUPCOLLECTION.SOURCEDOCUMENTID);
+			
+			List<SourceDocument> resultlist = db
+			.select()
+			.from(SOURCEDOCUMENT)
+			.join(USER_SOURCEDOCUMENT)
+				.on(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(SOURCEDOCUMENT.SOURCEDOCUMENTID))
+				.and(USER_SOURCEDOCUMENT.USERID.eq(dbRepository.getCurrentUser().getUserId()))
+			.fetch()
+			.map(new SourceDocumentMapper(
+					sourceDocsPath, 
+					userDefSepCharsRecords, unseparableCharSeqRecords,
+					userMarkupCollectionRecords));
+		
+			for (SourceDocument sd : resultlist) {
+				result.put(sd.getID(), sd);
 			}
-		}		
+		}
+		
 		return result;
 	}
 
-	private List<Character> getUserDefinedSeparatingCharacters(
-			Set<DBUserDefinedSeparatingCharacter> dbUserDefinedSeparatingCharacters) {
-		if (dbUserDefinedSeparatingCharacters.isEmpty()) {
-			return Collections.<Character>emptyList();
-		}
-		else {
-			ArrayList<Character> uscList = new ArrayList<Character>();
-			for (DBUserDefinedSeparatingCharacter dbUsc : dbUserDefinedSeparatingCharacters) {
-				if (dbUsc.getCharacter().length() == 1) {
-					uscList.add(dbUsc.getCharacter().toCharArray()[0]);
-				}
-			}
-			return uscList;
-		}
-	}
-
-	private List<String> getUnseparableCharacterSequences(
-			Set<DBUnseparableCharsequence> dbUnseparableCharsequences) {
-
-		if (dbUnseparableCharsequences.isEmpty()) {
-			return Collections.emptyList();
-		}
-		else {
-			ArrayList<String> ucsList = new ArrayList<String>();
-			for (DBUnseparableCharsequence dbUcs : dbUnseparableCharsequences) {
-				ucsList.add(dbUcs.getCharsequence());
-			}
-			return ucsList;
-		}
-	}
 
 	Collection<SourceDocument> getSourceDocuments() {
 		return  Collections.unmodifiableCollection(sourceDocumentsByID.values());
@@ -340,43 +391,25 @@ class DBSourceDocumentHandler {
 		
 		dbRepository.getBackgroundServiceProvider().submit(
 				"Update Source Document...",
-				new DefaultProgressCallable<ContentInfoSet>() {
-					public ContentInfoSet call() throws Exception {
-						
-						Session session = 
-								dbRepository.getSessionFactory().openSession();
-						try {
-							Pair<DBSourceDocument, DBUserSourceDocument> docAccess = 
-									getSourceDocumentAccess(session, localUri, true);
-							DBSourceDocument dbSourceDocument = docAccess.getFirst();
-							
-							ContentInfoSet oldContentInfoSet = 
-									new ContentInfoSet(
-											dbSourceDocument.getAuthor(),
-											dbSourceDocument.getDescription(),
-											dbSourceDocument.getPublisher(),
-											dbSourceDocument.getTitle());
-							
-							dbSourceDocument.setAuthor(author);
-							dbSourceDocument.setTitle(title);
-							dbSourceDocument.setDescription(description);
-							dbSourceDocument.setPublisher(publisher);
-							
-							session.beginTransaction();
-							session.save(dbSourceDocument);
-							session.getTransaction().commit();
-							CloseSafe.close(new CloseableSession(session));
+				new DefaultProgressCallable<Void>() {
+					public Void call() throws Exception {
+						DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+						checkSourceDocumentAccess(db, localUri, true);
 
-							return oldContentInfoSet;
-						}
-						catch (Exception exc) {
-							CloseSafe.close(new CloseableSession(session,true));
-							throw new IOException(exc);
-						}
+						db
+						.update(SOURCEDOCUMENT)
+						.set(SOURCEDOCUMENT.AUTHOR, author)
+						.set(SOURCEDOCUMENT.TITLE, title)
+						.set(SOURCEDOCUMENT.DESCRIPTION, description)
+						.set(SOURCEDOCUMENT.PUBLISHER, publisher)
+						.where(SOURCEDOCUMENT.LOCALURI.eq(localUri))
+						.execute();
+						
+						return null;
 					}
 				},
-				new ExecutionListener<ContentInfoSet>() {
-					public void done(ContentInfoSet oldContentInfoSet) {
+				new ExecutionListener<Void>() {
+					public void done(Void nothing) {
 						sourceDocument.getSourceContentHandler().getSourceDocumentInfo().setContentInfoSet(
 								contentInfoSet);
 						dbRepository.getPropertyChangeSupport().firePropertyChange(
@@ -389,7 +422,8 @@ class DBSourceDocumentHandler {
 								null, t);
 					}
 				}
-			);;
+			);
+						
 	}
 
 	void close() {
@@ -410,8 +444,74 @@ class DBSourceDocumentHandler {
 		return null;
 	}
 
+	public void remove2(SourceDocument sourceDocument) throws IOException {
+		
+		TransactionalDSLContext db = 
+				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
+		try {
+			Field<Integer> totalParticipantsField = db
+			.select(DSL.count(USER_SOURCEDOCUMENT.USERID))
+			.from(USER_SOURCEDOCUMENT)
+			.join(SOURCEDOCUMENT)
+				.on(SOURCEDOCUMENT.SOURCEDOCUMENTID
+						.eq(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID))
+			.asField("totalParticipants");
+			
+			
+			Record currentUserSourceDocRecord = db
+			.select(
+				USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID, 
+				USER_SOURCEDOCUMENT.ACCESSMODE, 
+				USER_SOURCEDOCUMENT.OWNER, 
+				totalParticipantsField)
+			.from(USER_SOURCEDOCUMENT)
+			.join(SOURCEDOCUMENT)
+				.on(SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID))
+			.where(USER_SOURCEDOCUMENT.USERID.eq(dbRepository.getCurrentUser().getUserId()))
+			.fetchOne();
+			
+			
+			if ((currentUserSourceDocRecord == null) 
+					|| (currentUserSourceDocRecord.getValue(USER_SOURCEDOCUMENT.ACCESSMODE) == null)) {
+				throw new IllegalStateException(
+						"you seem to have no access rights for this document!");
+			}
+			
+			boolean isOwner = 
+				(currentUserSourceDocRecord.getValue(USER_SOURCEDOCUMENT.OWNER).intValue()==0)?false:true;
+			
+			int totalParticipants = 
+					(Integer)currentUserSourceDocRecord.getValue("totalParticipants");
+			
+			db.beginTransaction();
+			if (!isOwner 
+					|| (totalParticipants > 1)) {
+				db
+				.delete(USER_SOURCEDOCUMENT)
+				.where(USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID
+					.eq(currentUserSourceDocRecord.getValue(USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID)));
+			}
+			else {
+				
+			}
+			
+			
+			db.commitTransaction();
+		}
+		catch (DataAccessException dae) {
+			db.rollbackTransaction();
+			db.close();
+			throw new IOException(dae);
+		}
+		finally {
+			if (db!=null) {
+				db.close();
+			}
+		}
+	}
 	@SuppressWarnings("unchecked")
 	public void remove(SourceDocument sourceDocument) throws IOException {
+
 		Session session = dbRepository.getSessionFactory().openSession();
 		try {
 			DBSourceDocument dbSourceDocument = 
@@ -481,11 +581,11 @@ class DBSourceDocumentHandler {
 		}
 	}
 
-	void reloadSourceDocuments(Session session) 
+	void reloadSourceDocuments(DSLContext db) 
 			throws URISyntaxException, IOException, 
 			InstantiationException, IllegalAccessException {
 		
-		Map<String,SourceDocument> result = getSourceDocumentList(session);
+		Map<String,SourceDocument> result = getSourceDocumentList(db);
 		
 		for (Map.Entry<String, SourceDocument> entry : result.entrySet()) {
 			// new document?
@@ -550,6 +650,31 @@ class DBSourceDocumentHandler {
 				}
 			}
 		}		
+	}
+
+	void checkSourceDocumentAccess(
+			DSLContext db, String localUri, boolean checkWriteAccess) throws IOException {
+		Record accessModeRecord =
+		db
+		.select(USER_SOURCEDOCUMENT.ACCESSMODE)
+		.from(USER_SOURCEDOCUMENT)
+		.join(SOURCEDOCUMENT)
+			.on(SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID))
+			.and(SOURCEDOCUMENT.LOCALURI.eq(localUri))
+		.where(USER_SOURCEDOCUMENT.USERID.eq(dbRepository.getCurrentUser().getUserId()))
+		.fetchOne();
+		
+		if (accessModeRecord == null) {
+			throw new IOException(
+					"You seem to have no access to this Document! " +
+					"Please reload the repository!");
+		}
+		else if (checkWriteAccess && accessModeRecord.getValue(USER_SOURCEDOCUMENT.ACCESSMODE) 
+							!= AccessMode.WRITE.getNumericRepresentation()) {
+			throw new IOException(
+					"You seem to have no write access to this document! " +
+					"Please reload this document!");
+		}
 	}
 	
 	Pair<DBSourceDocument, DBUserSourceDocument> getSourceDocumentAccess(
