@@ -386,13 +386,15 @@ public class DBCorpusHandler {
 				.execute();
 				
 			}
+			
 			corpora.remove(corpus);
+
+			db.commitTransaction();
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					Repository.RepositoryChangeEvent.corpusChanged.name(),
 					corpus, null);
 
-			db.commitTransaction();
 		}
 		catch (DataAccessException dae) {
 			db.rollbackTransaction();
