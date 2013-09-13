@@ -385,7 +385,7 @@ public class DBRepository implements IndexedRepository {
 			InstantiationException, IllegalAccessException {
 		dbSourceDocumentHandler.loadSourceDocuments(db);
 		dbTagLibraryHandler.loadTagLibraryReferences(session);
-		dbCorpusHandler.loadCorpora(session);
+		dbCorpusHandler.loadCorpora(db);
 	}
 	
 	public void reload() throws IOException {

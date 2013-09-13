@@ -488,7 +488,7 @@ class DBSourceDocumentHandler {
 			Integer sourceDocId = 
 				currentUserSourceDocRecord.getValue(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID);
 			boolean isOwner = 
-				(currentUserSourceDocRecord.getValue(USER_SOURCEDOCUMENT.OWNER).intValue()==0)?false:true;
+				currentUserSourceDocRecord.getValue(USER_SOURCEDOCUMENT.OWNER, Boolean.class);
 			
 			int totalParticipants = 
 					(Integer)currentUserSourceDocRecord.getValue("totalParticipants");
@@ -497,7 +497,8 @@ class DBSourceDocumentHandler {
 			
 			db
 			.delete(USER_SOURCEDOCUMENT)
-			.where(USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID.eq(sourceDocId))
+			.where(USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID
+					.eq(currentUserSourceDocRecord.getValue(USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID)))
 			.execute();
 
 			if (isOwner 
