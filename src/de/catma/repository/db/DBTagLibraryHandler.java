@@ -18,6 +18,9 @@
  */
 package de.catma.repository.db;
 
+import static de.catma.repository.db.jooq.catmarepository.Tables.TAGLIBRARY;
+import static de.catma.repository.db.jooq.catmarepository.Tables.USER_TAGLIBRARY;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -36,6 +39,8 @@ import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.jooq.DSLContext;
+import org.jooq.Record;
 
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
@@ -635,43 +640,42 @@ class DBTagLibraryHandler {
 		});
 	}
 	
-	private Pair<DBTagLibrary, DBUserTagLibrary> getLibraryAccess(
-			Session session, String tagLibraryId, boolean checkWriteAccess) throws IOException {
-		return getLibraryAccess(session, Integer.valueOf(tagLibraryId), checkWriteAccess);
+	private AccessMode getLibraryAccess(
+			DSLContext db, String tagLibraryId, boolean checkWriteAccess) throws IOException {
+		return getLibraryAccess(db, Integer.valueOf(tagLibraryId), checkWriteAccess);
 	}
 	
-	Pair<DBTagLibrary, DBUserTagLibrary> getLibraryAccess(
-			Session session, int tagLibraryId, boolean checkWriteAccess) throws IOException {
+	AccessMode getLibraryAccess(
+			DSLContext db, int tagLibraryId, boolean checkWriteAccess) throws IOException {
 	
-		DBTagLibrary dbTagLibrary = (DBTagLibrary)session.get(
-				DBTagLibrary.class, tagLibraryId);
+		Record accessModeRecord = db
+			.select(TAGLIBRARY.INDEPENDENT, USER_TAGLIBRARY.ACCESSMODE)
+			.from(TAGLIBRARY)
+			.leftOuterJoin(USER_TAGLIBRARY)
+				.on(USER_TAGLIBRARY.TAGLIBRARYID.eq(tagLibraryId))
+				.and(USER_TAGLIBRARY.USERID.eq(dbRepository.getCurrentUser().getUserId()))
+			.where(TAGLIBRARY.TAGLIBRARYID.eq(tagLibraryId))
+			.fetchOne();
 		
-		Set<DBUserTagLibrary> dbUserTagLibraries = 
-				dbTagLibrary.getDbUserTagLibraries();
+		Integer existingAccessModeValue = 
+				accessModeRecord.getValue(USER_TAGLIBRARY.ACCESSMODE);
+		Boolean independent = 
+				accessModeRecord.getValue(TAGLIBRARY.INDEPENDENT, Boolean.class);
 		
-		DBUserTagLibrary currentUserTagLibrary = null;
-		for (DBUserTagLibrary dbUserTagLibrary : dbUserTagLibraries) {
-			if (dbUserTagLibrary.getDbUser().getUserId().equals(
-					dbRepository.getCurrentUser().getUserId())) {
-				currentUserTagLibrary = dbUserTagLibrary;
-				break;
-			}
-		}
-		if (dbTagLibrary.isIndependent() && (currentUserTagLibrary == null)) {
+		if (independent && (existingAccessModeValue == null)) {
 			throw new IOException(
 					"You seem to have no access to this library! " +
 					"Please reload the repository!");
 		}
-		else if (checkWriteAccess && dbTagLibrary.isIndependent() && 
-					(currentUserTagLibrary.getAccessMode() 
+		else if (checkWriteAccess && independent && 
+					(existingAccessModeValue 
 							!= AccessMode.WRITE.getNumericRepresentation())) {
 			throw new IOException(
 					"You seem to have no write access to this library! " +
 					"Please reload your Tag Library using the Tag Manager!");
 		}
 		else {
-			return new Pair<DBTagLibrary, DBUserTagLibrary>(
-					dbTagLibrary, currentUserTagLibrary);
+			return AccessMode.getAccessMode(existingAccessModeValue);
 		}
 	}
 

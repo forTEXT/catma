@@ -61,6 +61,17 @@ public class DBUser implements java.io.Serializable, User {
 
 	public DBUser() {
 	}
+	
+	
+
+	public DBUser(Integer userId, String identifier, boolean locked, Role role) {
+		this.userId = userId;
+		this.identifier = identifier;
+		this.locked = locked;
+		this.dbRole = role.getVal();
+	}
+
+
 
 	public DBUser(String identifier) {
 		this.identifier = identifier;

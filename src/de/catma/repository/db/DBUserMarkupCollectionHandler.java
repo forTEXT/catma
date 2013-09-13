@@ -34,6 +34,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.jooq.DSLContext;
 
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
@@ -668,7 +669,7 @@ class DBUserMarkupCollectionHandler {
 		return dbTagInstance;
 	}
 
-	boolean hasWriteAccess(Session session, Integer userMarkupCollectionId) throws IOException {
+	boolean hasWriteAccess(DSLContext db, Integer userMarkupCollectionId) throws IOException {
 		DBUserMarkupCollection dbUserMarkupCollection = 
 				(DBUserMarkupCollection) session.get(
 				DBUserMarkupCollection.class, 

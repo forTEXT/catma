@@ -18,6 +18,7 @@
  */
 package de.catma.repository.db;
 
+import static de.catma.repository.db.jooq.catmarepository.Tables.CORPUS_SOURCEDOCUMENT;
 import static de.catma.repository.db.jooq.catmarepository.Tables.PROPERTY;
 import static de.catma.repository.db.jooq.catmarepository.Tables.PROPERTYDEFINITION;
 import static de.catma.repository.db.jooq.catmarepository.Tables.PROPERTYDEF_POSSIBLEVALUE;
@@ -46,7 +47,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -60,7 +60,6 @@ import org.hibernate.criterion.Restrictions;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
-import org.jooq.Record1;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.exception.DataAccessException;
@@ -71,7 +70,6 @@ import com.google.common.collect.Collections2;
 
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
-import de.catma.db.CloseableSession;
 import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.ContentInfoSet;
@@ -79,10 +77,7 @@ import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.TechInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.indexer.db.DBIndexer;
-import de.catma.repository.db.model.DBCorpusSourceDocument;
 import de.catma.repository.db.model.DBSourceDocument;
-import de.catma.repository.db.model.DBUserSourceDocument;
 import de.catma.util.CloseSafe;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
@@ -406,7 +401,7 @@ class DBSourceDocumentHandler {
 				new DefaultProgressCallable<Void>() {
 					public Void call() throws Exception {
 						DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
-						checkSourceDocumentAccess(db, localUri, true);
+						getSourceDocumentAccess(db, localUri, true);
 
 						db
 						.update(SOURCEDOCUMENT)
@@ -456,7 +451,7 @@ class DBSourceDocumentHandler {
 		return null;
 	}
 
-	public void remove2(SourceDocument sourceDocument) throws IOException {
+	public void remove(SourceDocument sourceDocument) throws IOException {
 		
 		TransactionalDSLContext db = 
 				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
@@ -490,6 +485,8 @@ class DBSourceDocumentHandler {
 						"you seem to have no access rights for this document!");
 			}
 			
+			Integer sourceDocId = 
+				currentUserSourceDocRecord.getValue(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID);
 			boolean isOwner = 
 				(currentUserSourceDocRecord.getValue(USER_SOURCEDOCUMENT.OWNER).intValue()==0)?false:true;
 			
@@ -497,19 +494,46 @@ class DBSourceDocumentHandler {
 					(Integer)currentUserSourceDocRecord.getValue("totalParticipants");
 			
 			db.beginTransaction();
+			
 			db
 			.delete(USER_SOURCEDOCUMENT)
-			.where(USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID
-					.eq(currentUserSourceDocRecord.getValue(USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID)));
+			.where(USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID.eq(sourceDocId))
+			.execute();
 
 			if (isOwner 
 					&& (totalParticipants == 1)) {
-				deleteUserMarkupCollections(
-					db,
-					currentUserSourceDocRecord.getValue(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID), false);
+				db.batch(
+					db
+					.delete(CORPUS_SOURCEDOCUMENT)
+					.where(CORPUS_SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(sourceDocId)),
+					db
+					.delete(UNSEPARABLE_CHARSEQUENCE)
+					.where(UNSEPARABLE_CHARSEQUENCE.SOURCEDOCUMENTID.eq(sourceDocId)),
+					db
+					.delete(USERDEFINED_SEPARATINGCHARACTER)
+					.where(USERDEFINED_SEPARATINGCHARACTER.SOURCEDOCUMENTID.eq(sourceDocId)))
+				.execute();
+				
+				deleteUserMarkupCollections(db, sourceDocId, false);
+
+				db
+				.delete(SOURCEDOCUMENT)
+				.where(SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(sourceDocId))
+				.execute();
+				
+				dbRepository.getIndexer().removeSourceDocument(
+						sourceDocument.getID());
+			}
+			else {
+				deleteUserMarkupCollections(db, sourceDocId, true);
 			}
 			
+			sourceDocumentsByID.remove(sourceDocument.getID());
 			
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.sourceDocumentChanged.name(),
+					sourceDocument, null);
+
 			db.commitTransaction();
 		}
 		catch (DataAccessException dae) {
@@ -523,214 +547,310 @@ class DBSourceDocumentHandler {
 			}
 		}
 	}
-	private void deleteUserMarkupCollections(DSLContext db, Integer sourceDocumentId, boolean check) {
+	private void deleteUserMarkupCollections(
+			DSLContext db, Integer sourceDocumentId, boolean check) throws IOException {
 	
 		if (!check) {
-			db
-			.delete(PROPERTYVALUE)
-			.where(PROPERTYVALUE.PROPERTYID.in(
+			// assume that the user has full control over all UMCs of the givenn sourcedoc
+			db.batch(
 				db
-				.select(PROPERTY.PROPERTYID)
-				.from(PROPERTY)
-				.join(TAGINSTANCE)
-					.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
-				.join(TAGREFERENCE)
-					.on(TAGREFERENCE.TAGINSTANCEID.eq(TAGINSTANCE.TAGINSTANCEID))
-				.join(USERMARKUPCOLLECTION)
-					.on(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-							.eq(TAGREFERENCE.USERMARKUPCOLLECTIONID))
-					.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))))
+				.delete(PROPERTYVALUE)
+				.where(PROPERTYVALUE.PROPERTYID.in(
+					db
+					.select(PROPERTY.PROPERTYID)
+					.from(PROPERTY)
+					.join(TAGINSTANCE)
+						.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
+					.join(TAGREFERENCE)
+						.on(TAGREFERENCE.TAGINSTANCEID.eq(TAGINSTANCE.TAGINSTANCEID))
+					.join(USERMARKUPCOLLECTION)
+						.on(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+								.eq(TAGREFERENCE.USERMARKUPCOLLECTIONID))
+						.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId)))),
+				db
+				.delete(PROPERTY)
+				.where(PROPERTY.TAGINSTANCEID.in(
+					db
+					.select(TAGINSTANCE.TAGINSTANCEID)
+					.from(TAGINSTANCE)
+					.join(TAGREFERENCE)
+						.on(TAGREFERENCE.TAGINSTANCEID.eq(TAGINSTANCE.TAGINSTANCEID))
+					.join(USERMARKUPCOLLECTION)
+						.on(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+								.eq(TAGREFERENCE.USERMARKUPCOLLECTIONID))
+						.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId)))),
+				db
+				.delete(TAGINSTANCE)
+				.where(TAGINSTANCE.TAGINSTANCEID.in(
+					db
+					.select(TAGREFERENCE.TAGINSTANCEID)
+					.from(TAGREFERENCE)
+					.join(USERMARKUPCOLLECTION)
+						.on(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+								.eq(TAGREFERENCE.USERMARKUPCOLLECTIONID))
+						.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId)))),
+				db
+				.delete(TAGREFERENCE)
+				.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.in(
+					db
+					.select(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)
+					.from(USERMARKUPCOLLECTION)
+					.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId)))),
+				db
+				.delete(PROPERTYDEF_POSSIBLEVALUE)
+				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
+					db
+					.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+					.from(PROPERTYDEFINITION)
+					.join(TAGDEFINITION)
+						.on(TAGDEFINITION.TAGDEFINITIONID.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
+					.join(TAGSETDEFINITION)
+						.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
+					.join(TAGLIBRARY)
+						.on(TAGLIBRARY.TAGLIBRARYID.eq(TAGSETDEFINITION.TAGLIBRARYID))
+					.join(USERMARKUPCOLLECTION)
+						.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+						.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId)))),
+				db
+				.delete(PROPERTYDEFINITION)
+				.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(
+					db
+					.select(TAGDEFINITION.TAGDEFINITIONID)
+					.from(TAGDEFINITION)
+					.join(TAGSETDEFINITION)
+						.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
+					.join(TAGLIBRARY)
+						.on(TAGLIBRARY.TAGLIBRARYID.eq(TAGSETDEFINITION.TAGLIBRARYID))
+					.join(USERMARKUPCOLLECTION)
+						.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+						.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId)))),
+				db
+				.delete(TAGDEFINITION)
+				.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
+					db
+					.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
+					.from(TAGSETDEFINITION)
+					.join(TAGLIBRARY)
+						.on(TAGLIBRARY.TAGLIBRARYID.eq(TAGSETDEFINITION.TAGLIBRARYID))
+					.join(USERMARKUPCOLLECTION)
+						.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+						.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId)))),
+				db
+				.delete(TAGSETDEFINITION)
+				.where(TAGSETDEFINITION.TAGLIBRARYID.in(
+					db
+					.select(TAGLIBRARY.TAGLIBRARYID)
+					.from(TAGLIBRARY)
+					.join(USERMARKUPCOLLECTION)
+						.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+						.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId)))),
+				db
+				.delete(USER_USERMARKUPCOLLECTION)
+				.where(USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.in(db
+					.select(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)
+					.from(USERMARKUPCOLLECTION)
+					.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId)))))
 			.execute();
 			
-			db
-			.delete(PROPERTY)
-			.where(PROPERTY.TAGINSTANCEID.in(
-				db
-				.select(TAGINSTANCE.TAGINSTANCEID)
-				.from(TAGINSTANCE)
-				.join(TAGREFERENCE)
-					.on(TAGREFERENCE.TAGINSTANCEID.eq(TAGINSTANCE.TAGINSTANCEID))
-				.join(USERMARKUPCOLLECTION)
-					.on(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-							.eq(TAGREFERENCE.USERMARKUPCOLLECTIONID))
-					.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))))
-			.execute();
-			
-			db
-			.delete(TAGINSTANCE)
-			.where(TAGINSTANCE.TAGINSTANCEID.in(
-				db
-				.select(TAGREFERENCE.TAGINSTANCEID)
-				.from(TAGREFERENCE)
-				.join(USERMARKUPCOLLECTION)
-					.on(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-							.eq(TAGREFERENCE.USERMARKUPCOLLECTIONID))
-					.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))))
-			.execute();
-			
-			db
-			.delete(TAGREFERENCE)
-			.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.in(
-				db
-				.select(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)
-				.from(USERMARKUPCOLLECTION)
-				.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))))
-			.execute();
-			
-			
-			db
-			.delete(PROPERTYDEF_POSSIBLEVALUE)
-			.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
-				db
-				.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
-				.from(PROPERTYDEFINITION)
-				.join(TAGDEFINITION)
-					.on(TAGDEFINITION.TAGDEFINITIONID.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
-				.join(TAGSETDEFINITION)
-					.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
-				.join(TAGLIBRARY)
-					.on(TAGLIBRARY.TAGLIBRARYID.eq(TAGSETDEFINITION.TAGLIBRARYID))
-				.join(USERMARKUPCOLLECTION)
-					.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
-					.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))))
-			.execute();
-
-			db
-			.delete(PROPERTYDEFINITION)
-			.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(
-				db
-				.select(TAGDEFINITION.TAGDEFINITIONID)
-				.from(TAGDEFINITION)
-				.join(TAGSETDEFINITION)
-					.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
-				.join(TAGLIBRARY)
-					.on(TAGLIBRARY.TAGLIBRARYID.eq(TAGSETDEFINITION.TAGLIBRARYID))
-				.join(USERMARKUPCOLLECTION)
-					.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
-					.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))))
-			.execute();
-			
-			db
-			.delete(TAGDEFINITION)
-			.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
-				db
-				.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
-				.from(TAGSETDEFINITION)
-				.join(TAGLIBRARY)
-					.on(TAGLIBRARY.TAGLIBRARYID.eq(TAGSETDEFINITION.TAGLIBRARYID))
-				.join(USERMARKUPCOLLECTION)
-					.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
-					.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))))
-			.execute();
-
-			db
-			.delete(TAGSETDEFINITION)
-			.where(TAGSETDEFINITION.TAGLIBRARYID.in(
-				db
-				.select(TAGLIBRARY.TAGLIBRARYID)
-				.from(TAGLIBRARY)
-				.join(USERMARKUPCOLLECTION)
-					.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
-					.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))))
-			.execute();
-
-			db
-			.delete(USERMARKUPCOLLECTION)
-			.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))
-			.execute();
-			
-			Result<Record1<Integer>> tagLibraryIDs = db
-			.select(USERMARKUPCOLLECTION.TAGLIBRARYID)
+			// relevant umcIDs for index removal 
+			// and relevant tagLibIDs for repo removal
+			List<Pair<Integer,Integer>> umcAndTagLibIDs = db
+			.select(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID, USERMARKUPCOLLECTION.TAGLIBRARYID)
 			.from(USERMARKUPCOLLECTION)
 			.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))
-			.fetch();
-			
-			db
-			.delete(TAGLIBRARY)
-			.where(TAGLIBRARY.TAGLIBRARYID
-				.in(Collections2.transform(
-					tagLibraryIDs,
-					new Function<Record1<Integer>, Integer>() {
-						public Integer apply(Record1<Integer> r) {
-							return r.value1();
-						}
-					})))
+			.fetch()
+			.map(new IDFieldsToIntegerPairMapper(
+				USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID, USERMARKUPCOLLECTION.TAGLIBRARYID));
+
+			db.batch(
+				db
+				.delete(USERMARKUPCOLLECTION)
+				.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId)),
+				db
+				.delete(TAGLIBRARY)
+				.where(TAGLIBRARY.TAGLIBRARYID
+					.in(Collections2.transform(
+						umcAndTagLibIDs,
+						new Function<Pair<Integer,Integer>, Integer>() {
+							public Integer apply(Pair<Integer,Integer> pair) {
+								return pair.getSecond();
+							}
+						}))))
 			.execute();
+			
+			dbRepository.getIndexer().removeUserMarkupCollections(
+					Collections2.transform(
+							umcAndTagLibIDs,
+							new Function<Pair<Integer,Integer>, String>() {
+								public String apply(Pair<Integer,Integer> pair) {
+									return String.valueOf(pair.getFirst());
+								}
+							}));
 		}
-		
-		//HIER GEHTS WEITER
-		
-	}
+		else { // other users have access to the source doc, so 
+			// we check which collections belong to the current user
+			// exclusively
+			
+			// full control collections
+			List<Integer> fullControlUmcCollIds = db
+			.select(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)
+			.from(USERMARKUPCOLLECTION)
+			.join(USER_USERMARKUPCOLLECTION)
+				.on(USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+					.eq(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID))
+				.and(USER_USERMARKUPCOLLECTION.OWNER.eq((byte)1))
+			.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))
+			.andNotExists(db
+				.selectOne()
+				.from(USER_USERMARKUPCOLLECTION)
+				.where(USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+					.eq(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID))
+				.and(USER_USERMARKUPCOLLECTION.USERID.ne(dbRepository.getCurrentUser().getUserId())))
+			.fetch()
+			.map(new IDFieldToIntegerMapper(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID));
+				
+			db.batch(
+				// delete refs to current user for all other umcs that are not 
+				// under full control
+				db
+				.delete(USER_USERMARKUPCOLLECTION)
+				.where(USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.in(db
+					.select(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)
+					.from(USERMARKUPCOLLECTION)
+					.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))
+					.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.notIn(fullControlUmcCollIds))))
+				.and(USER_USERMARKUPCOLLECTION.USERID.eq(dbRepository.getCurrentUser().getUserId())),
+				// delete UMC's contents for everything which is under full control
+				db
+				.delete(PROPERTYVALUE)
+				.where(PROPERTYVALUE.PROPERTYID.in(
+					db
+					.select(PROPERTY.PROPERTYID)
+					.from(PROPERTY)
+					.join(TAGINSTANCE)
+						.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
+					.join(TAGREFERENCE)
+						.on(TAGREFERENCE.TAGINSTANCEID.eq(TAGINSTANCE.TAGINSTANCEID))
+						.and(TAGREFERENCE.USERMARKUPCOLLECTIONID.in(fullControlUmcCollIds)))),
+				db
+				.delete(PROPERTY)
+				.where(PROPERTY.TAGINSTANCEID.in(
+					db
+					.select(TAGINSTANCE.TAGINSTANCEID)
+					.from(TAGINSTANCE)
+					.join(TAGREFERENCE)
+						.on(TAGREFERENCE.TAGINSTANCEID.eq(TAGINSTANCE.TAGINSTANCEID))
+						.and(TAGREFERENCE.USERMARKUPCOLLECTIONID.in(fullControlUmcCollIds)))),
+				db
+				.delete(TAGINSTANCE)
+				.where(TAGINSTANCE.TAGINSTANCEID.in(
+					db
+					.select(TAGREFERENCE.TAGINSTANCEID)
+					.from(TAGREFERENCE)
+					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.in(fullControlUmcCollIds)))),
+				db
+				.delete(TAGREFERENCE)
+				.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.in(fullControlUmcCollIds)),
+				db
+				.delete(PROPERTYDEF_POSSIBLEVALUE)
+				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
+					db
+					.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+					.from(PROPERTYDEFINITION)
+					.join(TAGDEFINITION)
+						.on(TAGDEFINITION.TAGDEFINITIONID.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
+					.join(TAGSETDEFINITION)
+						.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
+					.join(TAGLIBRARY)
+						.on(TAGLIBRARY.TAGLIBRARYID.eq(TAGSETDEFINITION.TAGLIBRARYID))
+					.join(USERMARKUPCOLLECTION)
+						.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+						.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))
+						.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.in(fullControlUmcCollIds)))),
+				db
+				.delete(PROPERTYDEFINITION)
+				.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(
+					db
+					.select(TAGDEFINITION.TAGDEFINITIONID)
+					.from(TAGDEFINITION)
+					.join(TAGSETDEFINITION)
+						.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
+					.join(TAGLIBRARY)
+						.on(TAGLIBRARY.TAGLIBRARYID.eq(TAGSETDEFINITION.TAGLIBRARYID))
+					.join(USERMARKUPCOLLECTION)
+						.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+						.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))
+						.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.in(fullControlUmcCollIds)))),
+				db
+				.delete(TAGDEFINITION)
+				.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
+					db
+					.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
+					.from(TAGSETDEFINITION)
+					.join(TAGLIBRARY)
+						.on(TAGLIBRARY.TAGLIBRARYID.eq(TAGSETDEFINITION.TAGLIBRARYID))
+					.join(USERMARKUPCOLLECTION)
+						.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+						.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))
+						.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.in(fullControlUmcCollIds)))),
+				db
+				.delete(TAGSETDEFINITION)
+				.where(TAGSETDEFINITION.TAGLIBRARYID.in(
+					db
+					.select(TAGLIBRARY.TAGLIBRARYID)
+					.from(TAGLIBRARY)
+					.join(USERMARKUPCOLLECTION)
+						.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+						.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))
+						.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.in(fullControlUmcCollIds)))),
+				db
+				.delete(USER_USERMARKUPCOLLECTION)
+				.where(USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.in(db
+					.select(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)
+					.from(USERMARKUPCOLLECTION)
+					.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))
+					.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.in(fullControlUmcCollIds)))))
+			.execute();
+			
+			
+			// relevant umcIDs for index removal 
+			// and relevant tagLibIDs for repo removal
+			List<Pair<Integer,Integer>> umcAndTagLibIDs = db
+			.select(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID, USERMARKUPCOLLECTION.TAGLIBRARYID)
+			.from(USERMARKUPCOLLECTION)
+			.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))
+			.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.in(fullControlUmcCollIds))
+			.fetch()
+			.map(new IDFieldsToIntegerPairMapper(
+				USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID, USERMARKUPCOLLECTION.TAGLIBRARYID));
 
-	@SuppressWarnings("unchecked")
-	public void remove(SourceDocument sourceDocument) throws IOException {
-
-		Session session = dbRepository.getSessionFactory().openSession();
-		try {
-			DBSourceDocument dbSourceDocument = 
-					getDbSourceDocument(session, sourceDocument.getID());
-			Set<DBUserSourceDocument> dbUserSourceDocuments = 
-					dbSourceDocument.getDbUserSourceDocuments();
-			
-			DBUserSourceDocument currentUserSourceDocument = null;
-			for (DBUserSourceDocument dbUserSourceDocument : dbUserSourceDocuments) {
-				if (dbUserSourceDocument.getDbUser().getUserId().equals(
-						dbRepository.getCurrentUser().getUserId())) {
-					currentUserSourceDocument = dbUserSourceDocument;
-					break;
-				}
-			}
-			if (currentUserSourceDocument == null) {
-				throw new IllegalStateException(
-						"you seem to have no access rights for this document!");
-			}
-			
-			session.beginTransaction();
-			if (!currentUserSourceDocument.isOwner() 
-					|| (dbUserSourceDocuments.size() > 1)) {
-				session.delete(currentUserSourceDocument);
-			}
-			else {
-				session.delete(currentUserSourceDocument);
+			db.batch(
+				// delete UMCs under full control
+				db
+				.delete(USERMARKUPCOLLECTION)
+				.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))
+				.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.in(fullControlUmcCollIds)),
+				// delete the corresponding TagLibraries
+				db
+				.delete(TAGLIBRARY)
+				.where(TAGLIBRARY.TAGLIBRARYID
+					.in(Collections2.transform(
+							umcAndTagLibIDs,
+							new Function<Pair<Integer,Integer>, Integer>() {
+								public Integer apply(Pair<Integer,Integer> pair) {
+									return pair.getSecond();
+								}
+							}))))
+				.execute();
 				
-				Criteria criteria = 
-						session.createCriteria(DBCorpusSourceDocument.class).add(
-								Restrictions.eq("dbSourceDocument", dbSourceDocument));
-				
-				if (!criteria.list().isEmpty()) {
-					for (DBCorpusSourceDocument dbCorpusSourceDocument 
-							: (List<DBCorpusSourceDocument>)criteria.list()) {
-						session.delete(dbCorpusSourceDocument);				
-					}
-				}
-				for (UserMarkupCollectionReference umcRef : 
-					sourceDocument.getUserMarkupCollectionRefs()) {
-					dbRepository.getDbUserMarkupCollectionHandler().delete(session,umcRef);
-				}
-				
-				if (dbRepository.getIndexer() instanceof DBIndexer) {
-					((DBIndexer)dbRepository.getIndexer()).removeSourceDocument(
-							session, sourceDocument.getID());
-				}
-				else {
-					dbRepository.getIndexer().removeSourceDocument(
-							sourceDocument.getID());	
-				}
-				
-				session.delete(dbSourceDocument);
-			}				
-			session.getTransaction().commit();
-			
-			sourceDocumentsByID.remove(sourceDocument.getID());
-			
-			dbRepository.getPropertyChangeSupport().firePropertyChange(
-					RepositoryChangeEvent.sourceDocumentChanged.name(),
-					sourceDocument, null);
-			CloseSafe.close(new CloseableSession(session));
-		}
-		catch (Exception e) {
-			CloseSafe.close(new CloseableSession(session,true));
-			throw new IOException(e);
+				dbRepository.getIndexer().removeUserMarkupCollections(
+					Collections2.transform(
+							umcAndTagLibIDs,
+							new Function<Pair<Integer,Integer>, String>() {
+								public String apply(Pair<Integer,Integer> pair) {
+									return String.valueOf(pair.getFirst());
+								}
+							}));
 		}
 	}
 
@@ -805,11 +925,11 @@ class DBSourceDocumentHandler {
 		}		
 	}
 
-	void checkSourceDocumentAccess(
+	Pair<Integer,AccessMode> getSourceDocumentAccess(
 			DSLContext db, String localUri, boolean checkWriteAccess) throws IOException {
 		Record accessModeRecord =
 		db
-		.select(USER_SOURCEDOCUMENT.ACCESSMODE)
+		.select(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID, USER_SOURCEDOCUMENT.ACCESSMODE)
 		.from(USER_SOURCEDOCUMENT)
 		.join(SOURCEDOCUMENT)
 			.on(SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID))
@@ -828,40 +948,10 @@ class DBSourceDocumentHandler {
 					"You seem to have no write access to this document! " +
 					"Please reload this document!");
 		}
-	}
-	
-	Pair<DBSourceDocument, DBUserSourceDocument> getSourceDocumentAccess(
-			Session session, String localUri, boolean checkWriteAccess) throws IOException {
-	
-		DBSourceDocument dbSourceDocument = getDbSourceDocument(session, localUri);
-		
-		Set<DBUserSourceDocument> dbUserSourceDocuments = 
-				dbSourceDocument.getDbUserSourceDocuments();
-		
-		DBUserSourceDocument currentUserSourceDocument = null;
-		for (DBUserSourceDocument dbUserSourceDocument : dbUserSourceDocuments) {
-			if (dbUserSourceDocument.getDbUser().getUserId().equals(
-					dbRepository.getCurrentUser().getUserId())) {
-				currentUserSourceDocument = dbUserSourceDocument;
-				break;
-			}
-		}
-
-		if (currentUserSourceDocument == null) {
-			throw new IOException(
-					"You seem to have no access to this Document! " +
-					"Please reload the repository!");
-		}
-		else if (checkWriteAccess && currentUserSourceDocument.getAccessMode() 
-							!= AccessMode.WRITE.getNumericRepresentation()) {
-			throw new IOException(
-					"You seem to have no write access to this document! " +
-					"Please reload this document!");
-		}
 		else {
-			return new Pair<DBSourceDocument, DBUserSourceDocument>(
-					dbSourceDocument, currentUserSourceDocument);
+			return new Pair<Integer, AccessMode>(
+				accessModeRecord.getValue(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID),
+				AccessMode.getAccessMode(accessModeRecord.getValue(USER_SOURCEDOCUMENT.ACCESSMODE)));
 		}
 	}
-
 }

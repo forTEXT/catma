@@ -19,6 +19,7 @@
 package de.catma.indexer.db;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -108,7 +109,7 @@ public class DBIndexer implements Indexer {
 				tagLibrary);
 	}
 	
-	public void removeSourceDocument(String sourceDocumentID) throws Exception {
+	public void removeSourceDocument(String sourceDocumentID) throws IOException {
 		Session session = sessionFactory.openSession();
 		try {
 			sourceDocumentIndexer.removeSourceDocument(
@@ -117,7 +118,7 @@ public class DBIndexer implements Indexer {
 		}
 		catch (Exception e) {
 			CloseSafe.close(new CloseableSession(session, true));
-			throw e;
+			throw new IOException(e);
 		}
 	}
 	
@@ -127,7 +128,7 @@ public class DBIndexer implements Indexer {
 	}
 	
 	
-	public void removeUserMarkupCollection(String userMarkupCollectionID) throws Exception {
+	public void removeUserMarkupCollection(String userMarkupCollectionID) throws IOException {
 		Session session = sessionFactory.openSession();
 		try {
 			tagReferenceIndexer.removeUserMarkupCollection(
@@ -136,7 +137,7 @@ public class DBIndexer implements Indexer {
 		}
 		catch (Exception e) {
 			CloseSafe.close(new CloseableSession(session, true));
-			throw e;
+			throw new IOException(e);
 		}
 	}
 	
@@ -260,6 +261,15 @@ public class DBIndexer implements Indexer {
 		
 	}
 	
+
+	public void removeUserMarkupCollections(
+			Collection<String> usermarkupCollectionIDs) throws IOException {
+		//TODO: optimize with jooq
+		for (String userMarkupColl : usermarkupCollectionIDs) {
+			removeUserMarkupCollection(userMarkupColl);
+		}
+		
+	}
 	
 	public void close() { /*noop sessionfactory is closed by repository*/ }
 

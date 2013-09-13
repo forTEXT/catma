@@ -19,6 +19,7 @@
 package de.catma.indexer;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -44,8 +45,8 @@ public interface Indexer {
 			String userMarkupCollectionID,
 			TagLibrary tagLibrary) throws Exception;
 	
-	public void removeSourceDocument(String sourceDocumentID) throws Exception;
-	public void removeUserMarkupCollection(String userMarkupCollectionID) throws Exception;
+	public void removeSourceDocument(String sourceDocumentID) throws IOException;
+	public void removeUserMarkupCollection(String userMarkupCollectionID) throws IOException;
 	public void removeTagReferences(List<TagReference> tagReferences) throws Exception;
 	public void reindex(
 			TagsetDefinition tagsetDefinition, 
@@ -86,6 +87,8 @@ public interface Indexer {
 	public void close();
 
 	public void updateIndex(TagInstance tagInstance, Property property) throws IOException;
+
+	public void removeUserMarkupCollections(Collection<String> usermarkupCollectionIDs) throws IOException;
 
 
 }

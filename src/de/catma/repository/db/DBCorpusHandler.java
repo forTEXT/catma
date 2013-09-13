@@ -30,6 +30,7 @@ import java.util.Set;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
+import org.jooq.DSLContext;
 
 import de.catma.db.CloseableSession;
 import de.catma.document.Corpus;
@@ -197,8 +198,8 @@ public class DBCorpusHandler {
 		
 	}
 
-	Pair<DBCorpus, DBUserCorpus> getCorpusAccess(
-			Session session, int corpusId, boolean checkWriteAccess) throws IOException {
+	AccessMode getCorpusAccess(
+			DSLContext db, int corpusId, boolean checkWriteAccess) throws IOException {
 	
 		DBCorpus dbCorpus = (DBCorpus)session.get(
 				DBCorpus.class, corpusId);
