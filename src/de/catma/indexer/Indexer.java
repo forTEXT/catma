@@ -43,7 +43,7 @@ public interface Indexer {
 			List<TagReference> tagReferences,
 			String sourceDocumentID,
 			String userMarkupCollectionID,
-			TagLibrary tagLibrary) throws Exception;
+			TagLibrary tagLibrary) throws IOException;
 	
 	public void removeSourceDocument(String sourceDocumentID) throws IOException;
 	public void removeUserMarkupCollection(String userMarkupCollectionID) throws IOException;

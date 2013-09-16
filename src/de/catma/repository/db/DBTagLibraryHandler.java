@@ -183,7 +183,7 @@ class DBTagLibraryHandler {
 	}
 	
 	@SuppressWarnings("unchecked")
-	TagLibrary loadTagLibrayContent(Session session, TagLibraryReference reference) throws IOException {
+	TagLibrary loadTagLibrayContent(DSLContext db, TagLibraryReference reference) throws IOException {
 
 		Query query = session.createQuery(
 				"select distinct tsd from "

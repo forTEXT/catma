@@ -18,10 +18,16 @@
  */
 package de.catma.repository.db;
 
+import static de.catma.repository.db.jooq.catmarepository.Tables.PROPERTY;
+import static de.catma.repository.db.jooq.catmarepository.Tables.PROPERTYDEFINITION;
+import static de.catma.repository.db.jooq.catmarepository.Tables.PROPERTYDEF_POSSIBLEVALUE;
+import static de.catma.repository.db.jooq.catmarepository.Tables.PROPERTYVALUE;
 import static de.catma.repository.db.jooq.catmarepository.Tables.SOURCEDOCUMENT;
+import static de.catma.repository.db.jooq.catmarepository.Tables.TAGDEFINITION;
 import static de.catma.repository.db.jooq.catmarepository.Tables.TAGINSTANCE;
 import static de.catma.repository.db.jooq.catmarepository.Tables.TAGLIBRARY;
-import static de.catma.repository.db.jooq.catmarepository.Tables.USER;
+import static de.catma.repository.db.jooq.catmarepository.Tables.TAGREFERENCE;
+import static de.catma.repository.db.jooq.catmarepository.Tables.TAGSETDEFINITION;
 import static de.catma.repository.db.jooq.catmarepository.Tables.USERMARKUPCOLLECTION;
 import static de.catma.repository.db.jooq.catmarepository.Tables.USER_USERMARKUPCOLLECTION;
 
@@ -46,10 +52,14 @@ import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.jooq.BatchBindStep;
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.jooq.Record;
+import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.exception.DataAccessException;
+import org.jooq.impl.DSL;
 
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
@@ -67,7 +77,6 @@ import de.catma.repository.db.model.DBCorpusUserMarkupCollection;
 import de.catma.repository.db.model.DBProperty;
 import de.catma.repository.db.model.DBPropertyDefinition;
 import de.catma.repository.db.model.DBPropertyValue;
-import de.catma.repository.db.model.DBSourceDocument;
 import de.catma.repository.db.model.DBTagDefinition;
 import de.catma.repository.db.model.DBTagInstance;
 import de.catma.repository.db.model.DBTagLibrary;
@@ -107,8 +116,6 @@ class DBUserMarkupCollectionHandler {
 			SourceDocument sourceDocument) throws IOException {
 		TransactionalDSLContext db = 
 				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
-		
-		// HIER GEHTS WEITER
 		
 		Integer sourceDocumentId = db
 		.select(SOURCEDOCUMENT.SOURCEDOCUMENTID)
@@ -198,190 +205,96 @@ class DBUserMarkupCollectionHandler {
 		final UserMarkupCollection umc =
 				userMarkupCollectionSerializationHandler.deserialize(null, inputStream);
 
-		dbRepository.getDbTagLibraryHandler().importTagLibrary(
-				umc.getTagLibrary(), new ExecutionListener<Session>() {
-					
-					public void error(Throwable t) {}
-					
-					public void done(Session result) {
-						importUserMarkupCollection(
-								result, umc, sourceDocument);
-					}
-				}, 
-				false);
+		TransactionalDSLContext db = 
+				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
+
+		try {
+			db.beginTransaction();
+			
+			dbRepository.getDbTagLibraryHandler().importTagLibrary(
+				db, umc.getTagLibrary());
+			
+			importUserMarkupCollection(
+					db, umc, sourceDocument);
+
+			db.commitTransaction();
+		}
+		catch (DataAccessException dae) {
+			db.rollbackTransaction();
+			db.close();
+			throw new IOException(dae);
+		}
+		finally {
+			if (db!=null) {
+				db.close();
+			}
+		}
 	}
 	
 	
 	private void importUserMarkupCollection(
 			final DSLContext db, final UserMarkupCollection umc,
-			final SourceDocument sourceDocument) {
+			final SourceDocument sourceDocument) throws Exception {
 		
-		dbRepository.getBackgroundServiceProvider().submit(
-				"Importing User Markup collection...",
-				new DefaultProgressCallable<DBUserMarkupCollection>() {
-			public DBUserMarkupCollection call() throws Exception {
+			Integer sourceDocumentId = db
+			.select(SOURCEDOCUMENT.SOURCEDOCUMENTID)
+			.from(SOURCEDOCUMENT)
+			.where(SOURCEDOCUMENT.LOCALURI.eq(sourceDocument.getID()))
+			.fetchOne()
+			.map(new IDFieldToIntegerMapper(SOURCEDOCUMENT.SOURCEDOCUMENTID));
+
+			Integer userMarkupCollectionId = db
+			.insertInto(
+				USERMARKUPCOLLECTION,
+					USERMARKUPCOLLECTION.TITLE,
+					USERMARKUPCOLLECTION.SOURCEDOCUMENTID,
+					USERMARKUPCOLLECTION.TAGLIBRARYID)
+			.values(
+				umc.getName(),
+				sourceDocumentId,
+				Integer.valueOf(umc.getTagLibrary().getId()))
+			.returning(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)
+			.fetchOne()
+			.map(new IDFieldToIntegerMapper(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID));
+			
+			db
+			.insertInto(
+				USER_USERMARKUPCOLLECTION,
+					USER_USERMARKUPCOLLECTION.USERID,
+					USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID,
+					USER_USERMARKUPCOLLECTION.ACCESSMODE,
+					USER_USERMARKUPCOLLECTION.OWNER)
+			.values(
+				dbRepository.getCurrentUser().getUserId(),
+				userMarkupCollectionId,
+				AccessMode.WRITE.getNumericRepresentation(),
+				(byte)1)
+			.execute();
+
+			umc.setId(String.valueOf(userMarkupCollectionId));
+			
+			addDbTagReferences(db, umc);
+
+			dbRepository.getIndexer().index(
+					umc.getTagReferences(), 
+					sourceDocument.getID(),
+					umc.getId(),
+					umc.getTagLibrary());
+			
+			UserMarkupCollectionReference umcRef = 
+					new UserMarkupCollectionReference(
+							String.valueOf(userMarkupCollectionId), 
+							umc.getContentInfoSet());
+			sourceDocument.addUserMarkupCollectionReference(umcRef);
 				
-				Integer sourceDocumentId = db
-				.select(SOURCEDOCUMENT.SOURCEDOCUMENTID)
-				.from(SOURCEDOCUMENT)
-				.where(SOURCEDOCUMENT.LOCALURI.eq(sourceDocument.getID()))
-				.fetchOne()
-				.map(new IDFieldToIntegerMapper(SOURCEDOCUMENT.SOURCEDOCUMENTID));
+			dbRepository.setTagManagerListenersEnabled(true);
 
-				Integer userMarkupCollectionId = db
-				.insertInto(
-					USERMARKUPCOLLECTION,
-						USERMARKUPCOLLECTION.TITLE,
-						USERMARKUPCOLLECTION.SOURCEDOCUMENTID,
-						USERMARKUPCOLLECTION.TAGLIBRARYID)
-				.values(
-					umc.getName(),
-					sourceDocumentId,
-					Integer.valueOf(umc.getTagLibrary().getId()))
-				.returning(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)
-				.fetchOne()
-				.map(new IDFieldToIntegerMapper(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID));
-				
-				db
-				.insertInto(
-					USER_USERMARKUPCOLLECTION,
-						USER_USERMARKUPCOLLECTION.USERID,
-						USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID,
-						USER_USERMARKUPCOLLECTION.ACCESSMODE,
-						USER_USERMARKUPCOLLECTION.OWNER)
-				.values(
-					dbRepository.getCurrentUser().getUserId(),
-					userMarkupCollectionId,
-					AccessMode.WRITE.getNumericRepresentation(),
-					(byte)1)
-				.execute();
-
-				addDbTagReferences(db, umc);
-
-				dbUserMarkupCollection.getDbUserUserMarkupCollections().add(
-					new DBUserUserMarkupCollection(
-						dbRepository.getCurrentUser(), dbUserMarkupCollection));
-				
-				try {
-					session.save(dbUserMarkupCollection);
-
-					dbRepository.getIndexer().index(
-							umc.getTagReferences(), 
-							sourceDocument.getID(),
-							dbUserMarkupCollection.getId(),
-							umc.getTagLibrary());
-
-					session.getTransaction().commit();
-
-					CloseSafe.close(new CloseableSession(session));
-					return dbUserMarkupCollection;
-				}
-				catch (Exception e) {
-					CloseSafe.close(new CloseableSession(session,true));
-					throw new IOException(e);
-				}
-			};
-		}, 
-		new ExecutionListener<DBUserMarkupCollection>() {
-			public void done(DBUserMarkupCollection result) {
-				umc.setId(result.getId());
-				UserMarkupCollectionReference umcRef = 
-						new UserMarkupCollectionReference(
-								result.getId(), umc.getContentInfoSet());
-				sourceDocument.addUserMarkupCollectionReference(umcRef);
-				
-				dbRepository.setTagManagerListenersEnabled(true);
-
-				dbRepository.getPropertyChangeSupport().firePropertyChange(
-					RepositoryChangeEvent.userMarkupCollectionChanged.name(),
-					null, new Pair<UserMarkupCollectionReference, SourceDocument>(
-							umcRef, sourceDocument));
-			}
-			public void error(Throwable t) {
-				dbRepository.setTagManagerListenersEnabled(true);
-
-				dbRepository.getPropertyChangeSupport().firePropertyChange(
-						RepositoryChangeEvent.exceptionOccurred.name(),
-						null, 
-						t);				
-			}
-		});
-		
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+				RepositoryChangeEvent.userMarkupCollectionChanged.name(),
+				null, new Pair<UserMarkupCollectionReference, SourceDocument>(
+						umcRef, sourceDocument));
 	}
 
-
-	private void importUserMarkupCollectio2n(
-			final Session session, final UserMarkupCollection umc,
-			final SourceDocument sourceDocument) {
-		
-		dbRepository.getBackgroundServiceProvider().submit(
-				"Importing User Markup collection...",
-				new DefaultProgressCallable<DBUserMarkupCollection>() {
-			public DBUserMarkupCollection call() throws Exception {
-				
-				DBSourceDocument dbSourceDocument = 
-						dbRepository.getDbSourceDocumentHandler().getDbSourceDocument(
-								session, sourceDocument.getID());
-				
-				DBUserMarkupCollection dbUserMarkupCollection =
-					new DBUserMarkupCollection(
-						dbSourceDocument.getSourceDocumentId(), 
-						umc,
-						Integer.valueOf(umc.getTagLibrary().getId()));
-				
-				addDbTagReferences(session, dbUserMarkupCollection, umc);
-
-				dbUserMarkupCollection.getDbUserUserMarkupCollections().add(
-					new DBUserUserMarkupCollection(
-						dbRepository.getCurrentUser(), dbUserMarkupCollection));
-				
-				try {
-					session.save(dbUserMarkupCollection);
-
-					dbRepository.getIndexer().index(
-							umc.getTagReferences(), 
-							sourceDocument.getID(),
-							dbUserMarkupCollection.getId(),
-							umc.getTagLibrary());
-
-					session.getTransaction().commit();
-
-					CloseSafe.close(new CloseableSession(session));
-					return dbUserMarkupCollection;
-				}
-				catch (Exception e) {
-					CloseSafe.close(new CloseableSession(session,true));
-					throw new IOException(e);
-				}
-			};
-		}, 
-		new ExecutionListener<DBUserMarkupCollection>() {
-			public void done(DBUserMarkupCollection result) {
-				umc.setId(result.getId());
-				UserMarkupCollectionReference umcRef = 
-						new UserMarkupCollectionReference(
-								result.getId(), umc.getContentInfoSet());
-				sourceDocument.addUserMarkupCollectionReference(umcRef);
-				
-				dbRepository.setTagManagerListenersEnabled(true);
-
-				dbRepository.getPropertyChangeSupport().firePropertyChange(
-					RepositoryChangeEvent.userMarkupCollectionChanged.name(),
-					null, new Pair<UserMarkupCollectionReference, SourceDocument>(
-							umcRef, sourceDocument));
-			}
-			public void error(Throwable t) {
-				dbRepository.setTagManagerListenersEnabled(true);
-
-				dbRepository.getPropertyChangeSupport().firePropertyChange(
-						RepositoryChangeEvent.exceptionOccurred.name(),
-						null, 
-						t);				
-			}
-		});
-		
-	}
-	
 	private void addDbTagReferences(
 			DSLContext db,
 			UserMarkupCollection umc) {
@@ -400,7 +313,7 @@ class DBUserMarkupCollectionHandler {
 					umc.getTagLibrary().getTagDefinition(
 						tr.getTagInstance().getTagDefinition().getUuid());
 				
-				Integer tagInstanceId = 
+				curTagInstanceId = 
 				db.insertInto(
 					TAGINSTANCE,
 						TAGINSTANCE.UUID,
@@ -412,63 +325,67 @@ class DBUserMarkupCollectionHandler {
 				.fetchOne()
 				.map(new IDFieldToIntegerMapper(TAGINSTANCE.TAGDEFINITIONID));
 				
-				tagInstances.put(tr.getTagInstanceID(), tagInstanceId);
+				tagInstances.put(tr.getTagInstanceID(), curTagInstanceId);
 				
+				BatchBindStep insertBatch = db.batch(db
+				.insertInto(
+					PROPERTY,
+						PROPERTY.PROPERTYDEFINITIONID,
+						PROPERTY.TAGINSTANCEID)
+				.values(
+					(Integer)null,
+					(Integer)null));
+				
+				boolean authorPresent = false;
 				for (Property p : ti.getSystemProperties()) {
-					DBProperty dbProperty = 
-						new DBProperty(
-							dbTagDefinition.getDbPropertyDefinition(
-									p.getPropertyDefinition().getUuid()),
-							dbTagInstance, 
-							p.getPropertyValueList().getFirstValue());
-
-					dbTagInstance.getDbProperties().add(dbProperty);
+					insertBatch.bind(
+						p.getPropertyDefinition().getId(), 
+						curTagInstanceId);
+					authorPresent =
+						p.getPropertyDefinition().getName().equals(
+							PropertyDefinition.SystemPropertyName.catma_markupauthor.name());
 				}
-				addAuthorIfAbsent(
-					dbTagDefinition.getDbPropertyDefinition(
-						tDef.getPropertyDefinitionByName(
-							PropertyDefinition.SystemPropertyName.catma_markupauthor.name()).getUuid()), 
-						dbTagInstance);
 				
+				if (!authorPresent) {
+					Property authorNameProp = 
+						new Property(
+							tDef.getPropertyDefinitionByName(
+								PropertyDefinition.SystemPropertyName.catma_markupauthor.name()),
+							new PropertyValueList(
+								dbRepository.getCurrentUser().getIdentifier()));
+					ti.addSystemProperty(authorNameProp);
+					insertBatch.bind(
+						authorNameProp.getPropertyDefinition().getId(), 
+						curTagInstanceId);
+				}
+					 
 				for (Property p : ti.getUserDefinedProperties()) {
 					if (!p.getPropertyValueList().getValues().isEmpty()) {
-						DBProperty dbProperty = 
-							new DBProperty(
-								dbTagDefinition.getDbPropertyDefinition(
-										p.getPropertyDefinition().getUuid()),
-								dbTagInstance, 
-								p.getPropertyValueList().getFirstValue());
-	
-						dbTagInstance.getDbProperties().add(dbProperty);
+						insertBatch.bind(
+								p.getPropertyDefinition().getId(), 
+								curTagInstanceId);
 					}
 				}
-				
+
+				insertBatch.execute();
 			}
 			
-			DBTagReference dbTagReference = 
-				new DBTagReference(
-					tr.getRange().getStartPoint(), 
-					tr.getRange().getEndPoint(),
-					dbUserMarkupCollection, 
-					dbTagInstance);
-			
-
-			dbUserMarkupCollection.getDbTagReferences().add(dbTagReference);
+			db
+			.insertInto(
+				TAGREFERENCE,
+					TAGREFERENCE.CHARACTERSTART,
+					TAGREFERENCE.CHARACTEREND,
+					TAGREFERENCE.USERMARKUPCOLLECTIONID,
+					TAGREFERENCE.TAGINSTANCEID)
+			.values(
+				tr.getRange().getStartPoint(),
+				tr.getRange().getEndPoint(),
+				Integer.valueOf(umc.getId()),
+				curTagInstanceId)
+			.execute();
 		}
 	}
 
-	private void addAuthorIfAbsent(
-			DBPropertyDefinition authorPDef, DBTagInstance dbTagInstance) {
-		if (!dbTagInstance.hasProperty(authorPDef)) {
-			DBProperty dbProperty = 
-				new DBProperty(
-						authorPDef, 
-						dbTagInstance, 
-						dbRepository.getCurrentUser().getIdentifier());
-			dbTagInstance.getDbProperties().add(dbProperty);
-		}
-	}
-	
 	private DBUserUserMarkupCollection getCurrentDBUserUserMarkupCollection(
 			DBUserMarkupCollection dbUserMarkupCollection) {
 
@@ -555,31 +472,176 @@ class DBUserMarkupCollectionHandler {
 	}
 	void delete(
 			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
-		
-		Session session = dbRepository.getSessionFactory().openSession();
+
+		TransactionalDSLContext db = 
+				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
+
 		try {
+			Integer userMarkupCollectionId = Integer.valueOf(userMarkupCollectionReference.getId());
 			
-			session.beginTransaction();
+			Field<Integer> totalParticipantsField = db
+			.select(DSL.count(USER_USERMARKUPCOLLECTION.USERID))
+			.from(USER_USERMARKUPCOLLECTION)
+			.where(USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
+			.asField("totalParticipants");
 			
-			delete(session, userMarkupCollectionReference);
+			
+			Record currentUserUmcRecord = db
+			.select(
+				USER_USERMARKUPCOLLECTION.USER_USERMARKUPCOLLECTIOID, 
+				USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID, 
+				USER_USERMARKUPCOLLECTION.ACCESSMODE, 
+				USER_USERMARKUPCOLLECTION.OWNER,
+				totalParticipantsField)
+			.from(USER_USERMARKUPCOLLECTION)
+			.where(USER_USERMARKUPCOLLECTION.USERID.eq(dbRepository.getCurrentUser().getUserId()))
+			.and(USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
+			.fetchOne();
+		
+			db.beginTransaction();
+			
+			if ((currentUserUmcRecord == null) 
+					|| (currentUserUmcRecord.getValue(USER_USERMARKUPCOLLECTION.ACCESSMODE) == null)) {
+				throw new IllegalStateException(
+						"you seem to have no access rights for this collection!");
+			}
+
+			Integer userUmcId =
+					currentUserUmcRecord.getValue(USER_USERMARKUPCOLLECTION.USER_USERMARKUPCOLLECTIOID);
+			boolean isOwner = 
+					currentUserUmcRecord.getValue(USER_USERMARKUPCOLLECTION.OWNER, Boolean.class);
+			
+			int totalParticipants = 
+					(Integer)currentUserUmcRecord.getValue("totalParticipants");
+			
+			db
+			.delete(USER_USERMARKUPCOLLECTION)
+			.where(USER_USERMARKUPCOLLECTION.USER_USERMARKUPCOLLECTIOID.eq(userUmcId))
+			.execute();
+			
+			if (isOwner && (totalParticipants == 1)) {
+				
+				db.batch(
+				db
+				.delete(PROPERTYVALUE)
+				.where(PROPERTYVALUE.PROPERTYID.in(
+					db
+					.select(PROPERTY.PROPERTYID)
+					.from(PROPERTY)
+					.join(TAGINSTANCE)
+						.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
+					.join(TAGREFERENCE)
+						.on(TAGREFERENCE.TAGINSTANCEID.eq(TAGINSTANCE.TAGINSTANCEID))
+						.and(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId)))),
+				db
+				.delete(PROPERTY)
+				.where(PROPERTY.TAGINSTANCEID.in(
+					db
+					.select(TAGINSTANCE.TAGINSTANCEID)
+					.from(TAGINSTANCE)
+					.join(TAGREFERENCE)
+						.on(TAGREFERENCE.TAGINSTANCEID.eq(TAGINSTANCE.TAGINSTANCEID))
+						.and(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId)))),
+				db
+				.delete(TAGINSTANCE)
+				.where(TAGINSTANCE.TAGINSTANCEID.in(
+					db
+					.select(TAGREFERENCE.TAGINSTANCEID)
+					.from(TAGREFERENCE)
+					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId)))),
+				db
+				.delete(TAGREFERENCE)
+				.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId)),
+				db
+				.delete(PROPERTYDEF_POSSIBLEVALUE)
+				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
+					db
+					.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+					.from(PROPERTYDEFINITION)
+					.join(TAGDEFINITION)
+						.on(TAGDEFINITION.TAGDEFINITIONID.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
+					.join(TAGSETDEFINITION)
+						.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
+					.join(TAGLIBRARY)
+						.on(TAGLIBRARY.TAGLIBRARYID.eq(TAGSETDEFINITION.TAGLIBRARYID))
+					.join(USERMARKUPCOLLECTION)
+						.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+						.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId)))),
+				db
+				.delete(PROPERTYDEFINITION)
+				.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(
+					db
+					.select(TAGDEFINITION.TAGDEFINITIONID)
+					.from(TAGDEFINITION)
+					.join(TAGSETDEFINITION)
+						.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
+					.join(TAGLIBRARY)
+						.on(TAGLIBRARY.TAGLIBRARYID.eq(TAGSETDEFINITION.TAGLIBRARYID))
+					.join(USERMARKUPCOLLECTION)
+						.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+						.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId)))),
+				db
+				.delete(TAGDEFINITION)
+				.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
+					db
+					.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
+					.from(TAGSETDEFINITION)
+					.join(TAGLIBRARY)
+						.on(TAGLIBRARY.TAGLIBRARYID.eq(TAGSETDEFINITION.TAGLIBRARYID))
+					.join(USERMARKUPCOLLECTION)
+						.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+						.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId)))),
+				db
+				.delete(TAGSETDEFINITION)
+				.where(TAGSETDEFINITION.TAGLIBRARYID.in(
+					db
+					.select(TAGLIBRARY.TAGLIBRARYID)
+					.from(TAGLIBRARY)
+					.join(USERMARKUPCOLLECTION)
+						.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+						.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId)))))
+				.execute();
+
+				Integer tagLibraryId = db
+				.select(USERMARKUPCOLLECTION.TAGLIBRARYID)
+				.from(USERMARKUPCOLLECTION)
+				.where(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
+				.fetchOne()
+				.map(new IDFieldToIntegerMapper(USERMARKUPCOLLECTION.TAGLIBRARYID));
+				
+				db.batch(
+				db
+				.delete(USERMARKUPCOLLECTION)
+				.where(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId)),
+				db
+				.delete(TAGLIBRARY)
+				.where(TAGLIBRARY.TAGLIBRARYID.eq(tagLibraryId)))
+				.execute();
+				
+			}
+			
+			dbRepository.getIndexer().removeUserMarkupCollection(
+					userMarkupCollectionReference.getId());
 			
 			SourceDocument sd = dbRepository.getSourceDocument(userMarkupCollectionReference);
 			sd.removeUserMarkupCollectionReference(userMarkupCollectionReference);
 			
-			
-			session.getTransaction().commit();
-			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					RepositoryChangeEvent.userMarkupCollectionChanged.name(),
 					userMarkupCollectionReference, null);
-			CloseSafe.close(new CloseableSession(session));
+			db.commitTransaction();
 		}
-		catch (Exception e) {
-			CloseSafe.close(new CloseableSession(session,true));
-			throw new IOException(e);
+		catch (DataAccessException dae) {
+			db.rollbackTransaction();
+			db.close();
+			throw new IOException(dae);
+		}
+		finally {
+			if (db!=null) {
+				db.close();
+			}
 		}
 	}
-
 	UserMarkupCollection getUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference, boolean refresh) throws IOException {
 		if (!refresh) {
@@ -591,129 +653,101 @@ class DBUserMarkupCollectionHandler {
 				}
 			}
 		}
-		String localSourceDocUri = 
-			dbRepository.getDbSourceDocumentHandler().getLocalUriFor(
-					userMarkupCollectionReference);
+		Integer userMarkupCollectionId = 
+				Integer.valueOf(userMarkupCollectionReference.getId());
 		
-		Session session = dbRepository.getSessionFactory().openSession();
-		try {
-			Query query = session.createQuery(
-					"select umc from " + 
-					DBUserMarkupCollection.class.getSimpleName() + " as umc " +
-					" left join umc.dbTagReferences as tr " +
-					" left join tr.dbTagInstance ti " +
-					" left join ti.dbProperties p " +
-					" left join p.dbPropertyValues " +
-					" where umc.usermarkupCollectionId = " + 
-					userMarkupCollectionReference.getId()
-					);
-			
-			DBUserMarkupCollection dbUserMarkupCollection = 
-					(DBUserMarkupCollection)query.uniqueResult();
-			
-			TagLibrary tagLibrary = 
-					dbRepository.getDbTagLibraryHandler().loadTagLibrayContent(
-						session, 
-						new TagLibraryReference(
-							String.valueOf(dbUserMarkupCollection.getDbTagLibraryId()), 
-							new ContentInfoSet(
-									dbUserMarkupCollection.getAuthor(),
-									dbUserMarkupCollection.getDescription(),
-									dbUserMarkupCollection.getPublisher(),
-									dbUserMarkupCollection.getTitle())));
-			
-			try {
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+		
+		Record umcRecord = db
+		.select()
+		.from(USERMARKUPCOLLECTION)
+		.join(SOURCEDOCUMENT)
+			.on(SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(USERMARKUPCOLLECTION.SOURCEDOCUMENTID))
+		.where(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+				.eq(userMarkupCollectionId))
+		.fetchOne();
 				
-				UserMarkupCollection userMarkupCollection = createUserMarkupCollection(
-						dbUserMarkupCollection, localSourceDocUri, tagLibrary);
-				umcCache.put(
-					userMarkupCollection.getId(),
-					new WeakReference<UserMarkupCollection>(userMarkupCollection));
-				return userMarkupCollection;
-				
-			} catch (URISyntaxException e) {
-				throw new IOException(e);
-			}
-		}
-		finally {
-			CloseSafe.close(new CloseableSession(session));
-		}
-	}
+		Integer tagLibraryId = umcRecord.getValue(USERMARKUPCOLLECTION.TAGLIBRARYID);
+		String localSourceDocURI = umcRecord.getValue(SOURCEDOCUMENT.LOCALURI);
+		
+		TagLibrary tagLibrary = 
+			dbRepository.getDbTagLibraryHandler().loadTagLibrayContent(
+				db, 
+				new TagLibraryReference(
+					String.valueOf(tagLibraryId), 
+					new ContentInfoSet(
+							umcRecord.getValue(USERMARKUPCOLLECTION.AUTHOR),
+							umcRecord.getValue(USERMARKUPCOLLECTION.DESCRIPTION),
+							umcRecord.getValue(USERMARKUPCOLLECTION.PUBLISHER),
+							umcRecord.getValue(USERMARKUPCOLLECTION.TITLE))));
 
-	private UserMarkupCollection createUserMarkupCollection(
-			DBUserMarkupCollection dbUserMarkupCollection, 
-			String localSourceDocUri, TagLibrary tagLibrary) throws URISyntaxException {
+		Map<Integer, Result<Record>> propertyValueRecordsByPropertyId = db
+		.select(PROPERTYVALUE.fields())
+		.from(PROPERTYVALUE)
+		.join(PROPERTY)
+			.on(PROPERTY.PROPERTYID.eq(PROPERTYVALUE.PROPERTYID))
+		.join(TAGINSTANCE)
+			.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
+			.and(TAGINSTANCE.TAGINSTANCEID
+				.in(db
+					.select(TAGREFERENCE.TAGINSTANCEID)
+					.from(TAGREFERENCE)
+					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))))
+		.fetchGroups(PROPERTYVALUE.PROPERTYID);
+		
+				
+		
+		Map<Integer, Result<Record>> propertyRecordsByTagInstanceId = db
+		.select()
+		.from(PROPERTY)
+		.join(PROPERTYDEFINITION)
+			.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID.eq(PROPERTY.PROPERTYDEFINITIONID))
+		.join(TAGINSTANCE)
+			.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
+			.and(TAGINSTANCE.TAGINSTANCEID
+				.in(db
+					.select(TAGREFERENCE.TAGINSTANCEID)
+					.from(TAGREFERENCE)
+					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))))
+		.fetchGroups(TAGINSTANCE.TAGINSTANCEID);
+		
+		List<TagInstance> tagInstances = db
+		.select()
+		.from(TAGINSTANCE)
+		.join(TAGDEFINITION)
+			.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
+		.where(TAGINSTANCE.TAGINSTANCEID
+			.in(db
+				.select(TAGREFERENCE.TAGINSTANCEID)
+				.from(TAGREFERENCE)
+				.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))))
+		.fetch()
+		.map(
+			new TagInstanceMapper(
+				tagLibrary, 
+				propertyRecordsByTagInstanceId, 
+				propertyValueRecordsByPropertyId));
+				
+		List<TagReference> tagReferences = db
+		.select()
+		.from(TAGREFERENCE)
+		.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
+		.fetch()
+		.map(new TagReferenceMapper(localSourceDocURI, tagInstances));
+		
 		UserMarkupCollection userMarkupCollection = 
-				new UserMarkupCollection(
-						dbUserMarkupCollection.getId(),
-						new ContentInfoSet(
-								dbUserMarkupCollection.getAuthor(), 
-								dbUserMarkupCollection.getDescription(), 
-								dbUserMarkupCollection.getPublisher(), 
-								dbUserMarkupCollection.getTitle()), 
-						tagLibrary);
+			new UserMarkupCollectionMapper(tagLibrary, tagReferences).map(umcRecord);
 		
-		HashMap<DBTagInstance, TagInstance> tagInstances = 
-				new HashMap<DBTagInstance, TagInstance>();
-		
-		for (DBTagReference dbTagReference : 
-			dbUserMarkupCollection.getDbTagReferences()) {
-			DBTagInstance dbTagInstance = dbTagReference.getDbTagInstance();
-			TagInstance tagInstance = 
-					tagInstances.get(dbTagInstance);
-			
-			if (tagInstance == null) {
-				tagInstance = 
-					new TagInstance(
-						idGenerator.uuidBytesToCatmaID(
-							dbTagInstance.getUuid()),
-						tagLibrary.getTagsetDefinition(
-								idGenerator.uuidBytesToCatmaID(
-									dbTagInstance.getDbTagDefinition()
-										.getDbTagsetDefinition().getUuid())).getTagDefinition(idGenerator.uuidBytesToCatmaID(
-								dbTagInstance.getDbTagDefinition().getUuid())));
-				addProperties(tagInstance, dbTagInstance);
-				tagInstances.put(dbTagInstance, tagInstance);
-			}
-			
-			
-			TagReference tr = 
-				new TagReference(
-						tagInstance, 
-						localSourceDocUri,
-						new Range(
-								dbTagReference.getCharacterStart(), 
-								dbTagReference.getCharacterEnd()));
-			
-			userMarkupCollection.addTagReference(tr);
-		}
+		umcCache.put(
+				userMarkupCollection.getId(),
+				new WeakReference<UserMarkupCollection>(userMarkupCollection));
 		
 		return userMarkupCollection;
 	}
+	
+	
+	// HIER GEHTS WEITER
 
-	private void addProperties(TagInstance tagInstance,
-			DBTagInstance dbTagInstance) {
-
-		for (DBProperty dbProperty : dbTagInstance.getDbProperties()) {
-			if (dbProperty.getDbPropertyDefinition().isSystemproperty()) {
-				tagInstance.addSystemProperty(
-					new Property(
-						tagInstance.getTagDefinition().getPropertyDefinition(
-							idGenerator.uuidBytesToCatmaID(
-								dbProperty.getDbPropertyDefinition().getUuid())),
-						new PropertyValueList(dbProperty.getPropertyValues())));
-			}
-			else {
-				tagInstance.addUserDefinedProperty(
-					new Property(
-						tagInstance.getTagDefinition().getPropertyDefinition(
-							idGenerator.uuidBytesToCatmaID(
-								dbProperty.getDbPropertyDefinition().getUuid())),
-						new PropertyValueList(dbProperty.getPropertyValues())));
-				
-			}
-		}
-	}
 
 	void addTagReferences(UserMarkupCollection userMarkupCollection,
 			List<TagReference> tagReferences) throws IOException {
@@ -821,6 +855,39 @@ class DBUserMarkupCollectionHandler {
 		}
 		return dbTagInstance;
 	}
+	
+	
+	AccessMode getUserMarkupCollectionAccessMode(
+			DSLContext db, Integer userMarkupCollectionId, boolean checkWriteAccess) 
+					throws IOException {
+		Record accessModeRecord = db
+				.select(USER_USERMARKUPCOLLECTION.ACCESSMODE)
+				.from(USER_USERMARKUPCOLLECTION)
+				.where(USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+						.eq(userMarkupCollectionId))
+				.and(USER_USERMARKUPCOLLECTION.USERID
+						.eq(dbRepository.getCurrentUser().getUserId()))
+				.fetchOne();
+			
+		Integer existingAccessModeValue = 
+				accessModeRecord.getValue(USER_USERMARKUPCOLLECTION.ACCESSMODE);
+
+		if (existingAccessModeValue == null) {
+			throw new IOException(
+					"You seem to have no access to this collection! " +
+					"Please reload the repository!");
+		}
+		else if (checkWriteAccess && accessModeRecord.getValue(USER_USERMARKUPCOLLECTION.ACCESSMODE) 
+							!= AccessMode.WRITE.getNumericRepresentation()) {
+			throw new IOException(
+					"You seem to have no write access to this collection! " +
+					"Please reload this collection!");
+		}
+		else {
+			return AccessMode.getAccessMode(existingAccessModeValue);
+		}
+	}
+	
 
 	boolean hasWriteAccess(DSLContext db, Integer userMarkupCollectionId) throws IOException {
 		DBUserMarkupCollection dbUserMarkupCollection = 
