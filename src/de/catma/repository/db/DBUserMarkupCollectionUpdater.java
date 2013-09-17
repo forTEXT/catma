@@ -151,9 +151,10 @@ public class DBUserMarkupCollectionUpdater {
 		}
 	}
 
-	void updateDbProperty(Session session, DBProperty dbProperty, Property property) {
+	private void updateDbProperty(Session session, DBProperty dbProperty, Property property) {
 		Iterator<DBPropertyValue> dbPropertyValueIterator = 
 				dbProperty.getDbPropertyValues().iterator();
+		
 		while (dbPropertyValueIterator.hasNext()) {
 			DBPropertyValue dbPropertyValue = dbPropertyValueIterator.next();
 			if (!property.getPropertyValueList().getValues().contains(dbPropertyValue.getValue())) {
