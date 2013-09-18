@@ -38,16 +38,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.SQLDialect;
@@ -59,7 +53,6 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
-import de.catma.db.CloseableSession;
 import de.catma.document.Corpus;
 import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.UnknownUserException;
@@ -73,7 +66,6 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.IndexerFactory;
-import de.catma.indexer.IndexerPropertyKey;
 import de.catma.repository.db.model.DBUser;
 import de.catma.serialization.SerializationHandlerFactory;
 import de.catma.tag.Property;
@@ -87,7 +79,6 @@ import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.Role;
 import de.catma.user.User;
-import de.catma.util.CloseSafe;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
@@ -110,8 +101,6 @@ public class DBRepository implements IndexedRepository {
 	private BackgroundServiceProvider backgroundServiceProvider;
 	private TagManager tagManager;
 
-	private SessionFactory sessionFactory;
-	
 	private DBUser currentUser;
 	private PropertyChangeSupport propertyChangeSupport;
 	private IDGenerator idGenerator;
@@ -294,31 +283,10 @@ public class DBRepository implements IndexedRepository {
 			cpds.setIdleConnectionTestPeriod(10);
 			
 			new InitialContext().bind("catmads", cpds);
-
-			Configuration hibernateConfig = new Configuration();
-			hibernateConfig.configure(
-					this.getClass().getPackage().getName().replace('.', '/') 
-					+ "/hibernate.cfg.xml");
-			
-			hibernateConfig.setProperty("hibernate.connection.username", user);
-			hibernateConfig.setProperty("hibernate.connection.url",url);
-			if ((pass != null) && (!pass.isEmpty())) {
-				hibernateConfig.setProperty("hibernate.connection.password", pass);
-			}
-
-			ServiceRegistryBuilder serviceRegistryBuilder = new ServiceRegistryBuilder();
-			serviceRegistryBuilder.applySettings(hibernateConfig.getProperties());
-			ServiceRegistry serviceRegistry = 
-					serviceRegistryBuilder.buildServiceRegistry();
-			hibernateConfig.buildSessionFactory(serviceRegistry);
-			
-			Context context = new InitialContext();
-			this.sessionFactory = (SessionFactory) context.lookup("catma");
 		}
 		else {
-			Context context = new InitialContext();
+			// FIXME: is this really necessary?
 			this.dataSource = (DataSource) new InitialContext().lookup("catmads");
-			this.sessionFactory = (SessionFactory) context.lookup("catma");
 		}
 		
 		this.dbSourceDocumentHandler = 
@@ -331,21 +299,14 @@ public class DBRepository implements IndexedRepository {
 
 		
 		Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put(IndexerPropertyKey.SessionFactory.name(), sessionFactory);
-		//TODO: fill up with all values from the properties file!
+		//TODO: properties obsolete? maybe ds name for lookup
 		
 		indexer = indexerFactory.createIndexer(properties);
 		
-		Session session = sessionFactory.openSession();
 		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
 		
-		try {
-			loadCurrentUser(db, userIdentification);
-			loadContent(session, db);
-		}
-		finally {
-			CloseSafe.close(new CloseableSession(session));
-		}
+		loadCurrentUser(db, userIdentification);
+		loadContent(db);
 	}
 	
 	private void loadCurrentUser(DSLContext db,
@@ -380,32 +341,24 @@ public class DBRepository implements IndexedRepository {
 		}
 	}
 
-	private void loadContent(Session session, DSLContext db) 
+	private void loadContent(DSLContext db) 
 			throws URISyntaxException, IOException, 
 			InstantiationException, IllegalAccessException {
 		dbSourceDocumentHandler.loadSourceDocuments(db);
-		dbTagLibraryHandler.loadTagLibraryReferences(session);
+		dbTagLibraryHandler.loadTagLibraryReferences(db);
 		dbCorpusHandler.loadCorpora(db);
 	}
 	
 	public void reload() throws IOException {
-		Session session = sessionFactory.openSession();
-
 		try {
-			try {
-				DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
-				dbSourceDocumentHandler.reloadSourceDocuments(db);
-				dbTagLibraryHandler.reloadTagLibraryReferences(session);
-				dbCorpusHandler.reloadCorpora(session);
-			}
-			catch (Exception e) {
-				throw new IOException(e);
-			}
+			DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+			dbSourceDocumentHandler.reloadSourceDocuments(db);
+			dbTagLibraryHandler.reloadTagLibraryReferences(db);
+			dbCorpusHandler.reloadCorpora(db);
 		}
-		finally {
-			CloseSafe.close(new CloseableSession(session));
+		catch (Exception e) {
+			throw new IOException(e);
 		}
-
 	}
 	
 	public void close() {
@@ -698,10 +651,6 @@ public class DBRepository implements IndexedRepository {
 		return indexer;
 	}
 	
-	SessionFactory getSessionFactory() {
-		return sessionFactory;
-	}
-	
 	DBUser getCurrentUser() {
 		return currentUser;
 	}
@@ -926,9 +875,12 @@ public class DBRepository implements IndexedRepository {
 			UserMarkupCollectionReference userMarkupCollectionRef, 
 			String userIdentification, AccessMode accessMode) throws IOException {
 		
+		AccessMode currentAccessMode = 
+			dbUserMarkupCollectionHandler.getUserMarkupCollectionAccessMode(
+				db, Integer.valueOf(userMarkupCollectionRef.getId()), false);
+				
 		if (accessMode.equals(AccessMode.WRITE)  
-			&& !dbUserMarkupCollectionHandler.hasWriteAccess(
-					db, Integer.valueOf(userMarkupCollectionRef.getId()))) {
+			&& !currentAccessMode.equals(AccessMode.WRITE)) {
 			accessMode = AccessMode.READ;
 		}
 		

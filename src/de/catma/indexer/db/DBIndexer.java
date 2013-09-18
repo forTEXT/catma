@@ -64,7 +64,7 @@ public class DBIndexer implements Indexer {
 	}
 
 	public void index(SourceDocument sourceDocument)
-			throws Exception {
+			throws IOException {
 		Session session = sessionFactory.openSession();
 		try {
 			sourceDocumentIndexer.index(
@@ -74,13 +74,13 @@ public class DBIndexer implements Indexer {
 		}
 		catch (Exception e) {
 			CloseSafe.close(new CloseableSession(session, true));
-			throw e;
+			throw new IOException(e);
 		}
 	}
 
 	public void index(List<TagReference> tagReferences,
 			String sourceDocumentID, String userMarkupCollectionID,
-			TagLibrary tagLibrary) throws Exception {
+			TagLibrary tagLibrary) throws IOException {
 		
 		Session session = sessionFactory.openSession();
 		try {
@@ -94,7 +94,7 @@ public class DBIndexer implements Indexer {
 		}
 		catch (Exception e) {
 			CloseSafe.close(new CloseableSession(session, true));
-			throw e;
+			throw new IOException(e);
 		}
 	}
 	
@@ -148,7 +148,7 @@ public class DBIndexer implements Indexer {
 	}
 	
 	public void removeTagReferences(
-			List<TagReference> tagReferences) throws Exception {
+			List<TagReference> tagReferences) throws IOException {
 		Session session = sessionFactory.openSession();
 		try {
 			tagReferenceIndexer.removeTagReferences(
@@ -157,7 +157,7 @@ public class DBIndexer implements Indexer {
 		}
 		catch (Exception e) {
 			CloseSafe.close(new CloseableSession(session, true));
-			throw e;
+			throw new IOException(e);
 		}
 	}
 	

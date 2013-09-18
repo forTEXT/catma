@@ -34,6 +34,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
+
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
@@ -41,6 +46,9 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.jooq.DSLContext;
 import org.jooq.Record;
+import org.jooq.SQLDialect;
+import org.jooq.exception.DataAccessException;
+import org.jooq.impl.DSL;
 
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
@@ -91,29 +99,52 @@ class DBTagLibraryHandler {
 	private HashMap<String, TagLibraryReference> tagLibraryReferencesById;
 	private IDGenerator idGenerator;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private DataSource dataSource;
 
-	public DBTagLibraryHandler(DBRepository dbRepository, IDGenerator idGenerator) {
+	public DBTagLibraryHandler(
+		DBRepository dbRepository, IDGenerator idGenerator) throws NamingException {
 		this.dbRepository = dbRepository;
 		this.idGenerator = idGenerator;
 		tagLibraryReferencesById = new HashMap<String, TagLibraryReference>();
+		Context  context = new InitialContext();
+		this.dataSource = (DataSource) context.lookup("catmads");
 	}
 
 	public void createTagLibrary(String name) throws IOException {
-
-		DBTagLibrary dbTagLibrary = new DBTagLibrary(name, true);
-		DBUserTagLibrary dbUserTagLibrary = 
-				new DBUserTagLibrary(dbRepository.getCurrentUser(), dbTagLibrary);
-		dbTagLibrary.getDbUserTagLibraries().add(dbUserTagLibrary);
 		
-		Session session = dbRepository.getSessionFactory().openSession();
+		TransactionalDSLContext db = 
+				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
+
 		try {
-			session.beginTransaction();
+			db.beginTransaction();
 			
-			session.save(dbTagLibrary);
+			Integer tagLibraryId = db
+			.insertInto(
+				TAGLIBRARY,
+					TAGLIBRARY.TITLE)
+			.values(name)
+			.returning(TAGLIBRARY.TAGLIBRARYID)
+			.fetchOne()
+			.map(new IDFieldToIntegerMapper(TAGLIBRARY.TAGLIBRARYID));
+					
+			db
+			.insertInto(
+				USER_TAGLIBRARY,
+					USER_TAGLIBRARY.USERID,
+					USER_TAGLIBRARY.TAGLIBRARYID,
+					USER_TAGLIBRARY.ACCESSMODE,
+					USER_TAGLIBRARY.OWNER)
+			.values(
+				dbRepository.getCurrentUser().getUserId(),
+				tagLibraryId,
+				AccessMode.WRITE.getNumericRepresentation(),
+				(byte)1)
+			.execute();
+
+			db.commitTransaction();
 			
-			session.getTransaction().commit();
 			TagLibraryReference ref = new TagLibraryReference(
-					dbTagLibrary.getId(), new ContentInfoSet(name));
+					String.valueOf(tagLibraryId), new ContentInfoSet(name));
 			tagLibraryReferencesById.put(ref.getId(), ref);
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
@@ -121,43 +152,43 @@ class DBTagLibraryHandler {
 					null, 
 					ref);
 
-			CloseSafe.close(new CloseableSession(session));
 		}
-		catch (Exception e) {
-			CloseSafe.close(new CloseableSession(session,true));
-			throw new IOException(e);
+		catch (DataAccessException dae) {
+			db.rollbackTransaction();
+			db.close();
+			throw new IOException(dae);
 		}
-	}
-	
-	void loadTagLibraryReferences(Session session) {
-		this.tagLibraryReferencesById = getTagLibraryReferences(session);
-	}
-	
-	@SuppressWarnings("unchecked") 
-	private HashMap<String, TagLibraryReference> getTagLibraryReferences(
-			Session session) {
-		HashMap<String, TagLibraryReference> result = new HashMap<String, TagLibraryReference>();
-		if (!dbRepository.getCurrentUser().isLocked()) {
-			Query query = session.createQuery(
-					"select tl from "
-					+ DBTagLibrary.class.getSimpleName() + " as tl "
-					+ " inner join tl.dbUserTagLibraries as utl "
-					+ " inner join utl.dbUser as user "
-					+ " where tl.independent = true and user.userId = " 
-					+ dbRepository.getCurrentUser().getUserId() );
-			
-			for (DBTagLibrary dbTagLibrary : (List<DBTagLibrary>)query.list()) {
-				result.put(
-					dbTagLibrary.getId(),
-					new TagLibraryReference(
-							dbTagLibrary.getId(), 
-							new ContentInfoSet(
-								dbTagLibrary.getAuthor(),
-								dbTagLibrary.getDescription(),
-								dbTagLibrary.getPublisher(),
-								dbTagLibrary.getTitle())));
+		finally {
+			if (db!=null) {
+				db.close();
 			}
 		}
+	}
+	
+	void loadTagLibraryReferences(DSLContext db) {
+		this.tagLibraryReferencesById = getTagLibraryReferences(db);
+	}
+
+	private HashMap<String, TagLibraryReference> getTagLibraryReferences(
+			DSLContext db) {
+		
+		List<TagLibraryReference> tagLibReferences = db
+		.select()
+		.from(TAGLIBRARY)
+		.join(USER_TAGLIBRARY)
+			.on(USER_TAGLIBRARY.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID)
+			.and(USER_TAGLIBRARY.USERID.eq(dbRepository.getCurrentUser().getUserId())))
+		.where(TAGLIBRARY.INDEPENDENT.eq((byte)1))
+		.fetch()
+		.map(new TagLibraryReferenceMapper());
+		
+		HashMap<String, TagLibraryReference> result = 
+				new HashMap<String, TagLibraryReference>();
+		
+		for (TagLibraryReference ref : tagLibReferences) {
+			result.put(ref.getId(), ref);
+		}
+		
 		return result;
 	}
 
@@ -170,16 +201,22 @@ class DBTagLibraryHandler {
 	
 	TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) 
 			throws IOException{
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+		
+		TagLibrary tagLibrary = 
+				loadTagLibrayContent(db, tagLibraryReference);
+		return tagLibrary;
+	}
 
-		Session session = dbRepository.getSessionFactory().openSession();
-		try {
-			TagLibrary tagLibrary = 
-					loadTagLibrayContent(session, tagLibraryReference);
-			return tagLibrary;
-		}
-		finally {
-			CloseSafe.close(new CloseableSession(session));
-		}
+	TagLibrary loadTagLibrayContent(DSLContext db, TagLibraryReference reference) throws IOException {
+		
+		TagLibrary tagLibrary = new TagLibrary(reference.getId(), reference.toString());
+		
+		
+		
+		
+		
+		return tagLibrary;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -879,7 +916,7 @@ class DBTagLibraryHandler {
 			});
 	}
 
-	Set<byte[]> updateTagsetDefinition(Session session, TagLibrary tagLibrary,
+	Set<byte[]> updateTagsetDefinition(DSLContext db, TagLibrary tagLibrary,
 			TagsetDefinition tagsetDefinition) {
 		Set<byte[]> deletedUuids = new HashSet<byte[]>();
 		

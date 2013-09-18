@@ -46,7 +46,6 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-import org.hibernate.Session;
 import org.jooq.BatchBindStep;
 import org.jooq.DSLContext;
 import org.jooq.Field;
@@ -56,7 +55,9 @@ import org.jooq.SQLDialect;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 
-import de.catma.db.CloseableSession;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+
 import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.ContentInfoSet;
@@ -73,7 +74,6 @@ import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagsetDefinition;
-import de.catma.util.CloseSafe;
 import de.catma.util.Collections3;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
@@ -779,8 +779,8 @@ class DBUserMarkupCollectionHandler {
 						userMarkupCollection.getTagLibrary();
 				
 				Set<byte[]> deletedTagDefUuids = 
-					dbTagLibraryHandler.updateTagsetDefinition(
-							session, tagLibrary,
+					dbRepository.getDbTagLibraryHandler().updateTagsetDefinition(
+							db, tagLibrary,
 							tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()));
 				
 				Set<byte[]> relevantTagInstanceUUIDs = 
@@ -795,6 +795,7 @@ class DBUserMarkupCollectionHandler {
 					relevantTagInstances.add(tr.getTagInstance());
 				}
  
+				// get list of TagInstances which are no longer present in the umc
 				List<Integer> obsoleteTagInstanceIds = db
 				.select(TAGINSTANCE.TAGINSTANCEID)
 				.from(TAGINSTANCE)
@@ -808,14 +809,12 @@ class DBUserMarkupCollectionHandler {
 				.map(new IDFieldToIntegerMapper(TAGINSTANCE.TAGINSTANCEID));
 
 				db.batch(
+					// delete obsolete tag references
 					db
 					.delete(TAGREFERENCE)
 					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
-					.and(TAGREFERENCE.TAGINSTANCEID
-						.notIn(db
-							.select(TAGINSTANCE.TAGINSTANCEID)
-							.from(TAGINSTANCE)
-							.where(TAGINSTANCE.UUID.in(relevantTagInstanceUUIDs)))),
+					.and(TAGREFERENCE.TAGINSTANCEID.in(obsoleteTagInstanceIds)),
+					// delete the prop values of obsolete tag instances
 					db
 					.delete(PROPERTYVALUE)
 					.where(PROPERTYVALUE.PROPERTYID
@@ -823,57 +822,82 @@ class DBUserMarkupCollectionHandler {
 							.select(PROPERTY.PROPERTYID)
 							.from(PROPERTY)
 							.where(PROPERTY.TAGINSTANCEID.in(obsoleteTagInstanceIds)))),
+					// delete the properties of obsolete tag instances
 					db
 					.delete(PROPERTY)
 					.where(PROPERTY.TAGINSTANCEID.in(obsoleteTagInstanceIds)),
+					// delete obsolete taginstances
 					db
 					.delete(TAGINSTANCE)
 					.where(TAGINSTANCE.TAGINSTANCEID.in(obsoleteTagInstanceIds)))
 				.execute();
 				
-				
-				List<byte[]> existingTagInstanceUUIDs = db
-				.select(TAGINSTANCE.UUID)
-				.from(TAGINSTANCE)
-				.where(TAGINSTANCE.TAGINSTANCEID.in(
-					db
-					.select(TAGREFERENCE.TAGINSTANCEID)
-					.from(TAGREFERENCE)
-					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))))
-				.fetch()
-				.map(new FieldToValueMapper<byte[]>(TAGINSTANCE.UUID));			
-				
-				
-				//Properties fallen weg
-				//neue Properties hinzu
 				for (TagInstance ti : relevantTagInstances) {
-					if (existingTagInstanceUUIDs.contains(
-							idGenerator.catmaIDToUUIDBytes(ti.getUuid()))) {
-						Collection<Property> userDefProperties = 
-								ti.getUserDefinedProperties();
+					// get all propertyDef IDs
+					Collection<Integer> relevantUserDefPropertyDefIds = 
+							Collections2.transform(ti.getUserDefinedProperties(),
+									new Function<Property, Integer>() {
+								public Integer apply(
+										Property property) {
+									return property.getPropertyDefinition().getId();
+								}});
+					
+					byte[] tagIntanceUUIDbin = 
+							idGenerator.catmaIDToUUIDBytes(ti.getUuid()); 
+					
+					db.batch(
+						// delete property values of properties which are no longer present
 						db
 						.delete(PROPERTYVALUE)
-						
-						
-					}
+						.where(PROPERTYVALUE.PROPERTYID
+							.in(db
+								.select(PROPERTY.PROPERTYID)
+								.from(PROPERTY)
+								.join(TAGINSTANCE)
+									.on(TAGINSTANCE.TAGINSTANCEID
+											.eq(PROPERTY.TAGINSTANCEID))
+									.and(TAGINSTANCE.UUID.eq(tagIntanceUUIDbin))
+								.join(PROPERTYDEFINITION)
+									.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID
+											.eq(PROPERTY.PROPERTYDEFINITIONID))
+									.and(PROPERTYDEFINITION.PROPERTYDEFINITIONID
+										.notIn(relevantUserDefPropertyDefIds)))),
+						// delete properties which are no longer present
+						db
+						.delete(PROPERTY)
+						.where(PROPERTY.PROPERTYID
+							.in(db
+								.select(PROPERTY.PROPERTYID)
+								.from(PROPERTY)
+								.join(TAGINSTANCE)
+									.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
+									.and(TAGINSTANCE.UUID.eq(tagIntanceUUIDbin))
+								.join(PROPERTYDEFINITION)
+									.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID
+											.eq(PROPERTY.PROPERTYDEFINITIONID))
+									.and(PROPERTYDEFINITION.PROPERTYDEFINITIONID
+										.notIn(relevantUserDefPropertyDefIds)))))
+					.execute();
+					
+					// addition of new properties with default values is not 
+					// represented on the database side
+					
 				}
 				
-				
-				
-				
-				
-				Collection<byte[]> newTagInstanceUUIDs = 
-					Collections3.getSetDifference(
-							relevantTagInstanceUUIDs, existingTagInstanceUUIDs);
-				
-				
-				
-				
-				//HIER GEHTS WEITER
-				
-			
+				//FIXME: reindexing should occurr only if something has changed, i. e. 
+				// not just additions to a tagset
+				dbRepository.getIndexer().reindex(
+						tagsetDefinition, 
+						deletedTagDefUuids,
+						userMarkupCollection, 
+						dbRepository.getDbSourceDocumentHandler().getLocalUriFor(
+								new UserMarkupCollectionReference(
+										userMarkupCollection.getId(), 
+										userMarkupCollection.getContentInfoSet())));
 			}
 			
+			
+
 			db.commitTransaction();
 		}
 		catch (DataAccessException dae) {
@@ -888,56 +912,6 @@ class DBUserMarkupCollectionHandler {
 		}
 	}
 	
-	
-	private void updateTagsetDefinitionInUserMarkupCollections2(
-			List<UserMarkupCollection> userMarkupCollections,
-			TagsetDefinition tagsetDefinition) throws IOException {
-		
-		Session session = dbRepository.getSessionFactory().openSession();
-		try {
-			session.beginTransaction();
-			for (UserMarkupCollection userMarkupCollection : 
-				userMarkupCollections) {
-
-				if (hasWriteAccess(session, Integer.valueOf(userMarkupCollection.getId()))) {
-					
-					DBTagLibraryHandler dbTagLibraryHandler = 
-							dbRepository.getDbTagLibraryHandler();
-					TagLibrary tagLibrary = 
-							userMarkupCollection.getTagLibrary();
-					
-					Set<byte[]> deletedTagDefUuids = 
-						dbTagLibraryHandler.updateTagsetDefinition(
-								session, tagLibrary,
-								tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()));
-					
-					DBUserMarkupCollectionUpdater updater = 
-							new DBUserMarkupCollectionUpdater(dbRepository);
-					
-					updater.updateUserMarkupCollection(session, userMarkupCollection);
-					
-					//FIXME: reindexing should occurr only if something has changed, i. e. 
-					// not just additions to a tagset
-					dbRepository.getIndexer().reindex(
-						tagsetDefinition, 
-						deletedTagDefUuids,
-						userMarkupCollection, 
-						dbRepository.getDbSourceDocumentHandler().getLocalUriFor(
-								new UserMarkupCollectionReference(
-										userMarkupCollection.getId(), 
-										userMarkupCollection.getContentInfoSet())));
-				}
-			}
-
-			session.getTransaction().commit();
-			CloseSafe.close(new CloseableSession(session));
-		}
-		catch (Exception e) {
-			CloseSafe.close(new CloseableSession(session,true));
-			throw new IOException(e);
-		}
-	}
-
 	void removeTagReferences(
 			List<TagReference> tagReferences) throws IOException {
 
