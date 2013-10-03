@@ -18,12 +18,17 @@
  */
 package de.catma.repository.db;
 
+import static de.catma.repository.db.jooq.catmarepository.Tables.PROPERTYDEFINITION;
+import static de.catma.repository.db.jooq.catmarepository.Tables.PROPERTYDEF_POSSIBLEVALUE;
+import static de.catma.repository.db.jooq.catmarepository.Tables.TAGDEFINITION;
 import static de.catma.repository.db.jooq.catmarepository.Tables.TAGLIBRARY;
+import static de.catma.repository.db.jooq.catmarepository.Tables.TAGSETDEFINITION;
 import static de.catma.repository.db.jooq.catmarepository.Tables.USER_TAGLIBRARY;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -46,6 +51,7 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.jooq.DSLContext;
 import org.jooq.Record;
+import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
@@ -72,6 +78,7 @@ import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.util.CloseSafe;
+import de.catma.util.Collections3;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
@@ -212,81 +219,59 @@ class DBTagLibraryHandler {
 		
 		TagLibrary tagLibrary = new TagLibrary(reference.getId(), reference.toString());
 		
+		int tagLibraryId = Integer.valueOf(reference.getId());
+		//HIER GEHTS WEITER
 		
+		Map<byte[], Result<Record>> possValuesByDefUuid = db
+		.select(Collections3.getUnion(
+				PROPERTYDEF_POSSIBLEVALUE.fields(), 
+				PROPERTYDEFINITION.fields()))
+		.from(PROPERTYDEF_POSSIBLEVALUE)
+		.join(PROPERTYDEFINITION)
+			.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID.eq(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID))
+		.join(TAGDEFINITION)
+			.on(TAGDEFINITION.TAGDEFINITIONID.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
+		.join(TAGSETDEFINITION)
+			.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
+			.and(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId))
+		.fetchGroups(PROPERTYDEFINITION.UUID);
 		
+		Map<byte[], Result<Record>> propertyDefByTagDefUuid = db
+		.select(Collections3.getUnion(PROPERTYDEFINITION.fields(), TAGDEFINITION.fields()))
+		.from(PROPERTYDEFINITION)
+		.join(TAGDEFINITION)
+			.on(TAGDEFINITION.TAGDEFINITIONID.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
+		.join(TAGSETDEFINITION)
+			.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
+			.and(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId))
+		.fetchGroups(TAGDEFINITION.UUID);
+	
+		Map<byte[], Result<Record>> tagDefByTagsetDefUuid = db
+		.select()
+		.from(TAGDEFINITION)
+		.join(TAGSETDEFINITION)
+			.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
+			.and(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId))
+		.fetchGroups(TAGSETDEFINITION.UUID);
 		
+		List<TagsetDefinition> tagsetDefinitions = db
+		.select(TAGSETDEFINITION.fields())
+		.from(TAGSETDEFINITION)
+		.where(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId))
+		.fetch()
+		.map(new TagsetDefinitionMapper(
+			tagDefByTagsetDefUuid, 
+			propertyDefByTagDefUuid, 
+			possValuesByDefUuid));
+		
+		for (TagsetDefinition tagsetDef : tagsetDefinitions) {
+			tagLibrary.add(tagsetDef);
+		}
 		
 		return tagLibrary;
 	}
 	
-	@SuppressWarnings("unchecked")
-	TagLibrary loadTagLibrayContent(DSLContext db, TagLibraryReference reference) throws IOException {
 
-		Query query = session.createQuery(
-				"select distinct tsd from "
-				+ DBTagsetDefinition.class.getSimpleName() + " as tsd "
-				+ "left join fetch tsd.dbTagDefinitions as td "
-				+ "left join fetch td.dbPropertyDefinitions as pd "
-				+ "left join fetch pd.dbPropertyDefPossibleValues "
-				+ "where tsd.tagLibraryId = " + reference.getId());
-		
-		List<DBTagsetDefinition> dbTagsetDefinitions = (List<DBTagsetDefinition>)query.list();
-		TagLibrary tagLibrary = new TagLibrary(reference.getId(), reference.toString());
-		
-		for (DBTagsetDefinition dbTsDef : dbTagsetDefinitions) {
-			tagLibrary.add(createTagsetDefinition(dbTsDef));
-		}
-		
-		return tagLibrary;
-	}
-
-	private TagsetDefinition createTagsetDefinition(DBTagsetDefinition dbTsDef) {
-		TagsetDefinition tsDef = 
-			new TagsetDefinition(
-				dbTsDef.getTagsetDefinitionId(),
-				idGenerator.uuidBytesToCatmaID(dbTsDef.getUuid()),
-				dbTsDef.getName(),
-				new Version(dbTsDef.getVersion()));
-
-		for (DBTagDefinition dbTDef : dbTsDef.getDbTagDefinitions()) {
-			TagDefinition tDef = 
-				new TagDefinition(
-					dbTDef.getTagDefinitionId(),
-					idGenerator.uuidBytesToCatmaID(dbTDef.getUuid()),
-					dbTDef.getName(),
-					new Version(dbTDef.getVersion()),
-					dbTDef.getParentId(),
-					idGenerator.uuidBytesToCatmaID(dbTDef.getParentUuid()));
-			tsDef.addTagDefinition(tDef);
-		
-			for (DBPropertyDefinition dbPDef : 
-				dbTDef.getDbPropertyDefinitions()) {
-				
-				List<String> pValues = new ArrayList<String>();
-				for (DBPropertyDefPossibleValue dbPVal : 
-					dbPDef.getDbPropertyDefPossibleValues()) {
-					pValues.add(dbPVal.getValue());
-				}
-				
-				PropertyPossibleValueList ppvList = 
-						new PropertyPossibleValueList(pValues, true);
-				PropertyDefinition pDef = 
-						new PropertyDefinition(
-							dbPDef.getPropertyDefinitionId(),
-							idGenerator.uuidBytesToCatmaID(dbPDef.getUuid()),
-							dbPDef.getName(),
-							ppvList);
-		
-				if (dbPDef.isSystemproperty()) {
-					tDef.addSystemPropertyDefinition(pDef);
-				}
-				else {
-					tDef.addUserDefinedPropertyDefinition(pDef);
-				}
-			}
-		}
-		return tsDef;
-	}
 
 	public void importTagLibrary(InputStream inputStream) throws IOException {
 		dbRepository.setTagManagerListenersEnabled(false);
@@ -301,7 +286,10 @@ class DBTagLibraryHandler {
 		importTagLibrary(tagLibrary, null, true);
 	}
 		
-	public void importTagLibrary(
+	
+	// HIER GEHTS WEITER
+	
+	private void importTagLibrary(
 			final TagLibrary tagLibrary, 
 			final ExecutionListener<Session> executionListener, 
 			final boolean independent) {
