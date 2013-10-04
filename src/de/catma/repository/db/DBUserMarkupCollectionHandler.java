@@ -194,17 +194,29 @@ class DBUserMarkupCollectionHandler {
 			db.beginTransaction();
 			
 			dbRepository.getDbTagLibraryHandler().importTagLibrary(
-				db, umc.getTagLibrary());
+				db, umc.getTagLibrary(), false);
 			
-			importUserMarkupCollection(
+			UserMarkupCollectionReference umcRef = importUserMarkupCollection(
 					db, umc, sourceDocument);
+
+			dbRepository.setTagManagerListenersEnabled(true);
+
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+				RepositoryChangeEvent.userMarkupCollectionChanged.name(),
+				null, new Pair<UserMarkupCollectionReference, SourceDocument>(
+						umcRef, sourceDocument));
 
 			db.commitTransaction();
 		}
 		catch (DataAccessException dae) {
 			db.rollbackTransaction();
 			db.close();
-			throw new IOException(dae);
+			dbRepository.setTagManagerListenersEnabled(true);
+
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, 
+					new IOException(dae));				
 		}
 		finally {
 			if (db!=null) {
@@ -214,9 +226,9 @@ class DBUserMarkupCollectionHandler {
 	}
 	
 	
-	private void importUserMarkupCollection(
+	private UserMarkupCollectionReference importUserMarkupCollection(
 			final DSLContext db, final UserMarkupCollection umc,
-			final SourceDocument sourceDocument) throws Exception {
+			final SourceDocument sourceDocument) throws IOException {
 		
 		Integer sourceDocumentId = db
 		.select(SOURCEDOCUMENT.SOURCEDOCUMENTID)
@@ -257,6 +269,8 @@ class DBUserMarkupCollectionHandler {
 		
 		addTagReferences(db, umc);
 
+		
+		// index the imported collection
 		dbRepository.getIndexer().index(
 				umc.getTagReferences(), 
 				sourceDocument.getID(),
@@ -268,13 +282,8 @@ class DBUserMarkupCollectionHandler {
 						String.valueOf(userMarkupCollectionId), 
 						umc.getContentInfoSet());
 		sourceDocument.addUserMarkupCollectionReference(umcRef);
-			
-		dbRepository.setTagManagerListenersEnabled(true);
-
-		dbRepository.getPropertyChangeSupport().firePropertyChange(
-			RepositoryChangeEvent.userMarkupCollectionChanged.name(),
-			null, new Pair<UserMarkupCollectionReference, SourceDocument>(
-					umcRef, sourceDocument));
+		
+		return umcRef;
 	}
 
 	private void addTagReferences(
@@ -778,11 +787,6 @@ class DBUserMarkupCollectionHandler {
 				TagLibrary tagLibrary = 
 						userMarkupCollection.getTagLibrary();
 				
-				Set<byte[]> deletedTagDefUuids = 
-					dbRepository.getDbTagLibraryHandler().updateTagsetDefinition(
-							db, tagLibrary,
-							tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()));
-				
 				Set<byte[]> relevantTagInstanceUUIDs = 
 						new HashSet<byte[]>();
 				
@@ -884,6 +888,11 @@ class DBUserMarkupCollectionHandler {
 					
 				}
 				
+				Set<byte[]> deletedTagDefUuids = 
+						dbRepository.getDbTagLibraryHandler().updateTagsetDefinition(
+								db, tagLibrary,
+								tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()));
+				
 				//FIXME: reindexing should occurr only if something has changed, i. e. 
 				// not just additions to a tagset
 				dbRepository.getIndexer().reindex(
@@ -896,6 +905,8 @@ class DBUserMarkupCollectionHandler {
 										userMarkupCollection.getContentInfoSet())));
 			}
 			
+				
+
 			
 
 			db.commitTransaction();

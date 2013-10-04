@@ -158,20 +158,20 @@ public class DBRepository implements IndexedRepository {
 					return;
 				}
 				
-				if (evt.getOldValue() == null) {
+				if (evt.getOldValue() == null) { //insert
 					@SuppressWarnings("unchecked")
 					Pair<TagLibrary, TagsetDefinition> args = 
 							(Pair<TagLibrary, TagsetDefinition>)evt.getNewValue();
-					dbTagLibraryHandler.saveTagsetDefinition(
+					dbTagLibraryHandler.createTagsetDefinition(
 							args.getFirst(), args.getSecond());
 				}
-				else if (evt.getNewValue() == null) {
+				else if (evt.getNewValue() == null) { //delete
 					@SuppressWarnings("unchecked")
 					Pair<TagLibrary, TagsetDefinition> args = 
 							(Pair<TagLibrary, TagsetDefinition>)evt.getOldValue();
 					dbTagLibraryHandler.removeTagsetDefinition(args.getSecond());
 				}
-				else {
+				else { //update
 					dbTagLibraryHandler.updateTagsetDefinition(
 							(TagsetDefinition)evt.getNewValue());
 				}
@@ -194,7 +194,7 @@ public class DBRepository implements IndexedRepository {
 					@SuppressWarnings("unchecked")
 					Pair<TagsetDefinition, TagDefinition> args = 
 							(Pair<TagsetDefinition, TagDefinition>)evt.getNewValue();
-					dbTagLibraryHandler.saveTagDefinition(
+					dbTagLibraryHandler.createTagDefinition(
 							args.getFirst(), args.getSecond());
 				}
 				else if (evt.getNewValue() == null) {

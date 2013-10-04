@@ -18,17 +18,22 @@
  */
 package de.catma.repository.db;
 
+import static de.catma.repository.db.jooq.catmarepository.Tables.PROPERTY;
 import static de.catma.repository.db.jooq.catmarepository.Tables.PROPERTYDEFINITION;
 import static de.catma.repository.db.jooq.catmarepository.Tables.PROPERTYDEF_POSSIBLEVALUE;
+import static de.catma.repository.db.jooq.catmarepository.Tables.PROPERTYVALUE;
 import static de.catma.repository.db.jooq.catmarepository.Tables.TAGDEFINITION;
+import static de.catma.repository.db.jooq.catmarepository.Tables.TAGINSTANCE;
 import static de.catma.repository.db.jooq.catmarepository.Tables.TAGLIBRARY;
+import static de.catma.repository.db.jooq.catmarepository.Tables.TAGREFERENCE;
 import static de.catma.repository.db.jooq.catmarepository.Tables.TAGSETDEFINITION;
 import static de.catma.repository.db.jooq.catmarepository.Tables.USER_TAGLIBRARY;
+import static de.catma.repository.db.jooq.catmarepository.Tables.USER_USERMARKUPCOLLECTION;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -45,16 +50,20 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.hibernate.Criteria;
-import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.jooq.BatchBindStep;
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
@@ -84,24 +93,19 @@ import de.catma.util.Pair;
 
 class DBTagLibraryHandler {
 	
+	private static class PropertyDefinitionToByteUUID implements Function<PropertyDefinition, byte[]> {
+		private IDGenerator idGenerator;
+		public byte[] apply(PropertyDefinition pd) {
+			return idGenerator.catmaIDToUUIDBytes(pd.getUuid());
+		}
+	}
+	
 	private static class TagLibRefNameComparator implements Comparator<TagLibraryReference> {
 		public int compare(TagLibraryReference o1, TagLibraryReference o2) {
 			return o1.toString().compareToIgnoreCase(o2.toString());
 		}
 	}
 	
-	private static String MAINTAIN_TAGDEFHIERARCHY = 
-			"UPDATE " + DBTagDefinition.TABLE + " td1, " + 
-			DBTagDefinition.TABLE + " td2, " +
-			DBTagsetDefinition.TABLE + " tsd " +
-			"SET td1.parentID = td2.tagDefinitionID " +
-			"WHERE td1.parentUuid = td2.uuid AND " +
-			"td1.parentID IS NULL AND " + 
-			"td1.parentUuid IS NOT NULL " +
-			"AND td1.tagsetDefinitionID = tsd.tagsetDefinitionID " +
-			"AND td2.tagsetDefinitionID = tsd.tagsetDefinitionID " +
-			"AND tsd.tagLibraryID = :curTagLibraryId";
-
 	private DBRepository dbRepository;
 	private HashMap<String, TagLibraryReference> tagLibraryReferencesById;
 	private IDGenerator idGenerator;
@@ -125,29 +129,9 @@ class DBTagLibraryHandler {
 		try {
 			db.beginTransaction();
 			
-			Integer tagLibraryId = db
-			.insertInto(
-				TAGLIBRARY,
-					TAGLIBRARY.TITLE)
-			.values(name)
-			.returning(TAGLIBRARY.TAGLIBRARYID)
-			.fetchOne()
-			.map(new IDFieldToIntegerMapper(TAGLIBRARY.TAGLIBRARYID));
-					
-			db
-			.insertInto(
-				USER_TAGLIBRARY,
-					USER_TAGLIBRARY.USERID,
-					USER_TAGLIBRARY.TAGLIBRARYID,
-					USER_TAGLIBRARY.ACCESSMODE,
-					USER_TAGLIBRARY.OWNER)
-			.values(
-				dbRepository.getCurrentUser().getUserId(),
-				tagLibraryId,
-				AccessMode.WRITE.getNumericRepresentation(),
-				(byte)1)
-			.execute();
-
+			Integer tagLibraryId = 
+					createTagLibrary(db, name, null, null, null, true);
+			
 			db.commitTransaction();
 			
 			TagLibraryReference ref = new TagLibraryReference(
@@ -172,6 +156,45 @@ class DBTagLibraryHandler {
 		}
 	}
 	
+	private Integer createTagLibrary(DSLContext db, String title,
+			String author, String description, String publisher, boolean independent) {
+		Integer tagLibraryId = db
+		.insertInto(
+			TAGLIBRARY,
+				TAGLIBRARY.TITLE,
+				TAGLIBRARY.AUTHOR,
+				TAGLIBRARY.DESCRIPTION,
+				TAGLIBRARY.PUBLISHER, 
+				TAGLIBRARY.INDEPENDENT)
+		.values(
+			title, 
+			author, 
+			description, 
+			publisher,
+			(byte)(independent?1:0))
+		.returning(TAGLIBRARY.TAGLIBRARYID)
+		.fetchOne()
+		.map(new IDFieldToIntegerMapper(TAGLIBRARY.TAGLIBRARYID));
+			
+		if (independent) {
+			db
+			.insertInto(
+				USER_TAGLIBRARY,
+					USER_TAGLIBRARY.USERID,
+					USER_TAGLIBRARY.TAGLIBRARYID,
+					USER_TAGLIBRARY.ACCESSMODE,
+					USER_TAGLIBRARY.OWNER)
+			.values(
+				dbRepository.getCurrentUser().getUserId(),
+				tagLibraryId,
+				AccessMode.WRITE.getNumericRepresentation(),
+				(byte)1)
+			.execute();
+		}
+		
+		return tagLibraryId;
+	}
+
 	void loadTagLibraryReferences(DSLContext db) {
 		this.tagLibraryReferencesById = getTagLibraryReferences(db);
 	}
@@ -283,152 +306,226 @@ class DBTagLibraryHandler {
 		final TagLibrary tagLibrary = 
 				tagLibrarySerializationHandler.deserialize(null, inputStream);
 		
-		importTagLibrary(tagLibrary, null, true);
+		TransactionalDSLContext db = 
+				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
+
+		try {
+			db.beginTransaction();
+			importTagLibrary(db, tagLibrary, true);
+			db.commitTransaction();
+			
+			dbRepository.setTagManagerListenersEnabled(true);
+			
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.tagLibraryChanged.name(),
+					null, 
+					new TagLibraryReference(
+							tagLibrary.getId(), 
+							new ContentInfoSet(
+									tagLibrary.getContentInfoSet().getAuthor(),
+									tagLibrary.getContentInfoSet().getDescription(),
+									tagLibrary.getContentInfoSet().getPublisher(),
+									tagLibrary.getName())));
+
+		}
+		catch (Exception dae) {
+			db.rollbackTransaction();
+			db.close();
+			
+			dbRepository.setTagManagerListenersEnabled(true);
+
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, 
+					dae);				
+		}
+		finally {
+			if (db!=null) {
+				db.close();
+			}
+		}
+
 	}
 		
-	
-	// HIER GEHTS WEITER
-	
-	private void importTagLibrary(
+
+	void importTagLibrary(
+			DSLContext db,
 			final TagLibrary tagLibrary, 
-			final ExecutionListener<Session> executionListener, 
 			final boolean independent) {
 		
-		dbRepository.getBackgroundServiceProvider().submit(
-				"Importing Tag Library...",
-				new DefaultProgressCallable<Pair<Session,Boolean>>() {
-			public Pair<Session,Boolean> call() throws Exception {
-				DBTagLibrary dbTagLibrary = 
-						new DBTagLibrary(tagLibrary.getName(), independent);
-				
-				dbTagLibrary.setAuthor(
-						tagLibrary.getContentInfoSet().getAuthor());
-				dbTagLibrary.setDescription(
-						tagLibrary.getContentInfoSet().getDescription());
-				dbTagLibrary.setPublisher(
-						tagLibrary.getContentInfoSet().getPublisher());
-				
-				DBUserTagLibrary dbUserTagLibrary = 
-						new DBUserTagLibrary(dbRepository.getCurrentUser(), dbTagLibrary);
-				dbTagLibrary.getDbUserTagLibraries().add(dbUserTagLibrary);
-				
-				Session session = dbRepository.getSessionFactory().openSession();
-				try {
-					session.beginTransaction();
-					
-					session.save(dbTagLibrary);
-					
-					for (TagsetDefinition tsDef : tagLibrary) {
-						logger.info("importing TagsetDefinition:" + tsDef);
-						importTagsetDefinition(
-								session, dbTagLibrary.getTagLibraryId(), 
-								tsDef);
-					}
-					
-					SQLQuery maintainTagDefHierarchyQuery = session.createSQLQuery(
-							MAINTAIN_TAGDEFHIERARCHY);
-					
-					maintainTagDefHierarchyQuery.setInteger(
-							"curTagLibraryId", dbTagLibrary.getTagLibraryId());
-					
-					maintainTagDefHierarchyQuery.executeUpdate();
-					
-					if (independent) {
-						session.getTransaction().commit();
-						CloseSafe.close(new CloseableSession(session));
-					}
-					
-					tagLibrary.setId(dbTagLibrary.getId());
-					
-					return new Pair<Session,Boolean>(
-							session,dbTagLibrary.isIndependent());
-				}
-				catch (Exception e) {
-					CloseSafe.close(new CloseableSession(session,true));
-					throw new IOException(e);
-				}
-			};
-		}, 
-		new ExecutionListener<Pair<Session, Boolean>>() {
-			public void done(Pair<Session, Boolean> result) {
-				
-				dbRepository.setTagManagerListenersEnabled(true);
-				
-				if (result.getSecond()) {
-					dbRepository.getPropertyChangeSupport().firePropertyChange(
-							RepositoryChangeEvent.tagLibraryChanged.name(),
-							null, 
-							new TagLibraryReference(
-									tagLibrary.getId(), 
-									new ContentInfoSet(
-											tagLibrary.getContentInfoSet().getAuthor(),
-											tagLibrary.getContentInfoSet().getDescription(),
-											tagLibrary.getContentInfoSet().getPublisher(),
-											tagLibrary.getName())));
-				}
-				
-				if (executionListener != null) {
-					executionListener.done(result.getFirst());
-				}
-			}
-			public void error(Throwable t) {
-				dbRepository.setTagManagerListenersEnabled(true);
-
-				dbRepository.getPropertyChangeSupport().firePropertyChange(
-						RepositoryChangeEvent.exceptionOccurred.name(),
-						null, 
-						t);				
-			}
-		});
-	}
-
-	private void importTagsetDefinition(
-			Session session, Integer tagLibraryId, TagsetDefinition tsDef) {
-		HashMap<String, DBTagDefinition> result = new HashMap<String, DBTagDefinition>();
+		Integer tagLibraryId = 
+			createTagLibrary(
+				db, 
+				tagLibrary.getName(), 
+				tagLibrary.getContentInfoSet().getAuthor(), 
+				tagLibrary.getContentInfoSet().getDescription(), 
+				tagLibrary.getContentInfoSet().getPublisher(),
+				independent);
+		tagLibrary.setId(String.valueOf(tagLibraryId));
 		
-		DBTagsetDefinition dbTagsetDefinition = 
-				new DBTagsetDefinition(
-						idGenerator.catmaIDToUUIDBytes(tsDef.getUuid()),
-						tsDef.getVersion().getDate(),
-						tsDef.getName(), tagLibraryId);
-		for (TagDefinition tDef : tsDef) {
-			DBTagDefinition dbTagDefinition = 
-					createDBTagDefinition(tDef, dbTagsetDefinition);
-			dbTagsetDefinition.getDbTagDefinitions().add(dbTagDefinition);
-			result.put(tDef.getUuid(), dbTagDefinition);
+		for (TagsetDefinition tagsetDefinition : tagLibrary) {
+			createDeepTagsetDefinition(db, tagsetDefinition, tagLibraryId);
+		}
+	}
+	
+	private void createDeepTagsetDefinition(
+			DSLContext db, TagsetDefinition tagsetDefinition, Integer tagLibraryId) {
+		
+		Integer tagsetDefinitionId = createTagsetDefinition(
+				db,
+				tagsetDefinition.getUuid(),
+				tagsetDefinition.getName(),
+				tagsetDefinition.getVersion(),
+				tagLibraryId);
+		
+		for (TagDefinition tagDefinition : tagsetDefinition) {
+			createDeepTagDefinition(
+				db,
+				tagDefinition,
+				tagsetDefinitionId);
 		}
 		
-		session.save(dbTagsetDefinition);
-		updateTagsetDefinitionIDs(tsDef, dbTagsetDefinition);
-	}
-
-	private void updateTagsetDefinitionIDs(TagsetDefinition tsDef,
-			DBTagsetDefinition dbTagsetDefinition) {
-		tsDef.setId(dbTagsetDefinition.getTagsetDefinitionId());
+		de.catma.repository.db.jooq.catmarepository.tables.Tagdefinition td1 = 
+				TAGDEFINITION.as("td1"); 
+		de.catma.repository.db.jooq.catmarepository.tables.Tagdefinition td2 = 
+				TAGDEFINITION.as("td2");
 		
-		for (DBTagDefinition dbTagDefinition : dbTagsetDefinition.getDbTagDefinitions()) {
-			TagDefinition tDef = 
-					tsDef.getTagDefinition(
-							idGenerator.uuidBytesToCatmaID(dbTagDefinition.getUuid()));
-			tDef.setId(dbTagDefinition.getTagDefinitionId());
-			for (DBPropertyDefinition dbPropertyDefinition : dbTagDefinition.getDbPropertyDefinitions()) {
-				PropertyDefinition pd = tDef.getPropertyDefinition(
-						idGenerator.uuidBytesToCatmaID(dbPropertyDefinition.getUuid()));
-				pd.setId(dbPropertyDefinition.getPropertyDefinitionId());
-			}
-			
-		}
-		for (DBTagDefinition dbTagDefinition : dbTagsetDefinition.getDbTagDefinitions()) {
-			if (dbTagDefinition.getParentUuid() != null) {
-				TagDefinition tDef = 
-						tsDef.getTagDefinition(
-								idGenerator.uuidBytesToCatmaID(dbTagDefinition.getUuid()));
+		// maintain tagdef hierarchy
+		db
+		.update(td1)
+		.set(
+			td1.PARENTID, db.
+				select(td2.TAGDEFINITIONID)
+				.from(td2)
+				.where(td2.UUID.eq(td1.PARENTUUID))
+				.and(td2.TAGSETDEFINITIONID.eq(tagsetDefinitionId)))
+		.where(td1.PARENTID.isNull())
+		.and(td1.PARENTUUID.isNotNull())
+		.and(td1.TAGSETDEFINITIONID.eq(tagsetDefinitionId));
+
+		for (TagDefinition tagDefinition : tagsetDefinition) {
+			if (tagDefinition.getParentUuid() != null) {
 				TagDefinition parentTagDef = 
-						tsDef.getTagDefinition(
-								idGenerator.uuidBytesToCatmaID(dbTagDefinition.getParentUuid()));
-				tDef.setParentId(parentTagDef.getId());
+					tagsetDefinition.getTagDefinition(
+							tagDefinition.getParentUuid());
+				tagDefinition.setParentId(parentTagDef.getId());
 			}
 		}
+	}
+
+	private void createPossibleValue(DSLContext db, String value,
+			Integer propertyDefinitionId) {
+		db
+		.insertInto(
+			PROPERTYDEF_POSSIBLEVALUE,
+				PROPERTYDEF_POSSIBLEVALUE.VALUE,
+				PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID)
+		.values(
+			value,
+			propertyDefinitionId)
+		.execute();
+		
+	}
+
+	private void createDeepPropertyDefinition(
+		DSLContext db, 
+		PropertyDefinition propDef, Integer tagDefinitionId, 
+		boolean isSystemProperty) {
+
+		Integer propertyDefId = db
+		.insertInto(
+			PROPERTYDEFINITION,
+				PROPERTYDEFINITION.UUID,
+				PROPERTYDEFINITION.NAME,
+				PROPERTYDEFINITION.TAGDEFINITIONID,
+				PROPERTYDEFINITION.SYSTEMPROPERTY)
+		.values(
+			idGenerator.catmaIDToUUIDBytes(propDef.getUuid()),
+			propDef.getName(),
+			tagDefinitionId,
+			(byte)(isSystemProperty?1:0))
+		.returning(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+		.fetchOne()
+		.map(new IDFieldToIntegerMapper(PROPERTYDEFINITION.PROPERTYDEFINITIONID));
+				
+		propDef.setId(propertyDefId);
+		
+		for (String value : propDef.getPossibleValueList()
+				.getPropertyValueList().getValues()) {
+			
+			createPossibleValue(db, value, propertyDefId);
+		}
+	}
+
+	private void createDeepTagDefinition(
+		DSLContext db, TagDefinition tagDefinition, Integer tagsetDefinitionId) {
+
+		Integer tagDefinitionId = db
+		.insertInto(
+			TAGDEFINITION,
+				TAGDEFINITION.UUID,
+				TAGDEFINITION.VERSION,
+				TAGDEFINITION.NAME,
+				TAGDEFINITION.TAGSETDEFINITIONID,
+				TAGDEFINITION.PARENTID,
+				TAGDEFINITION.PARENTUUID)
+		.values(
+			idGenerator.catmaIDToUUIDBytes(tagDefinition.getUuid()),
+			SqlTimestamp.from(tagDefinition.getVersion().getDate()),
+			tagDefinition.getName(),
+			tagsetDefinitionId,
+			tagDefinition.getParentId(),
+			idGenerator.catmaIDToUUIDBytes(tagDefinition.getParentUuid()))
+		.returning(TAGDEFINITION.TAGDEFINITIONID)
+		.fetchOne()
+		.map(new IDFieldToIntegerMapper(TAGDEFINITION.TAGDEFINITIONID));
+				
+		
+		tagDefinition.setId(tagDefinitionId);
+
+		
+		for (PropertyDefinition propDef : 
+			tagDefinition.getSystemPropertyDefinitions()) {
+		
+			createDeepPropertyDefinition(
+					db,
+					propDef,
+					tagDefinitionId,
+					true);
+		}
+		
+		for (PropertyDefinition propDef : 
+				tagDefinition.getUserDefinedPropertyDefinitions()) {
+			
+			createDeepPropertyDefinition(
+					db,
+					propDef,
+					tagDefinitionId,
+					false);
+		}
+	}
+
+	private Integer createTagsetDefinition(DSLContext db, String uuid,
+			String name, Version version, Integer tagLibraryId) {
+		
+		Integer tagsetDefinitionId = db
+		.insertInto(
+			TAGSETDEFINITION,
+				TAGSETDEFINITION.UUID,
+				TAGSETDEFINITION.VERSION,
+				TAGSETDEFINITION.NAME,
+				TAGSETDEFINITION.TAGLIBRARYID)
+		.values(
+			idGenerator.catmaIDToUUIDBytes(uuid),
+			SqlTimestamp.from(version.getDate()),
+			name, 
+			tagLibraryId)
+		.returning(TAGSETDEFINITION.TAGSETDEFINITIONID)
+		.fetchOne()
+		.map(new IDFieldToIntegerMapper(TAGSETDEFINITION.TAGSETDEFINITIONID));
+			
+				
+		return tagsetDefinitionId;
 	}
 
 	private void addAuthorIfAbsent(TagDefinition tDef) {		
@@ -444,227 +541,178 @@ class DBTagLibraryHandler {
 		}
 	}
 
-	private DBTagDefinition createDBTagDefinition(
-			TagDefinition tDef, 
-			DBTagsetDefinition dbTagsetDefinition) {
-		addAuthorIfAbsent(tDef);
 
-		DBTagDefinition dbTagDefinition = 
-				new DBTagDefinition(
-					tDef.getVersion().getDate(),
-					idGenerator.catmaIDToUUIDBytes(tDef.getUuid()),
-					tDef.getName(),
-					dbTagsetDefinition,
-					tDef.getParentId(),
-					idGenerator.catmaIDToUUIDBytes(tDef.getParentUuid()));
-					
-		for (PropertyDefinition pDef : tDef.getSystemPropertyDefinitions()) {
-			DBPropertyDefinition dbPropertyDefinition = 
-					createDBPropertyDefinition(
-							pDef, dbTagDefinition, true);
-			dbTagDefinition.getDbPropertyDefinitions().add(dbPropertyDefinition);
-		}
-		
-		for (PropertyDefinition pDef : tDef.getUserDefinedPropertyDefinitions()) {
-			DBPropertyDefinition dbPropertyDefinition = 
-					createDBPropertyDefinition(
-							pDef, dbTagDefinition, false);
-			dbTagDefinition.getDbPropertyDefinitions().add(dbPropertyDefinition);
-		}		
-		return dbTagDefinition;
-	}
 
-	private DBPropertyDefinition createDBPropertyDefinition(
-			PropertyDefinition pDef,
-			DBTagDefinition dbTagDefinition, boolean isSystemProperty) {
-
-		DBPropertyDefinition dbPropertyDefinition = 
-				new DBPropertyDefinition(
-					idGenerator.catmaIDToUUIDBytes(pDef.getUuid()),
-					pDef.getName(),
-					dbTagDefinition, isSystemProperty);
-		
-		for (String value : 
-			pDef.getPossibleValueList().getPropertyValueList().getValues()) {
-			
-			DBPropertyDefPossibleValue dbPropertyDefPossibleValue =
-					new DBPropertyDefPossibleValue(value, dbPropertyDefinition);
-			dbPropertyDefinition.getDbPropertyDefPossibleValues().add(
-					dbPropertyDefPossibleValue);
-		}
-		
-		
-		return dbPropertyDefinition;
-	}
-
-	void saveTagDefinition(final TagsetDefinition tagsetDefinition,
+	void createTagDefinition(final TagsetDefinition tagsetDefinition,
 			final TagDefinition tagDefinition) {
 		addAuthorIfAbsent(tagDefinition);
-		
-		dbRepository.getBackgroundServiceProvider().submit(
-				"Saving Tag definition...",
-		new DefaultProgressCallable<DBTagDefinition>() {
-			public DBTagDefinition call() throws Exception {
-				Session session = dbRepository.getSessionFactory().openSession();
+
+		TransactionalDSLContext db = 
+				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 				
-				try {
-					DBTagsetDefinition dbTagsetDefinition = 
-							(DBTagsetDefinition)session.load(
-									DBTagsetDefinition.class, 
-									tagsetDefinition.getId());
-					getLibraryAccess(
-						session, dbTagsetDefinition.getTagLibraryId(), true);
-					
-					DBTagDefinition dbTagDefinition = 
-						new DBTagDefinition(
-							tagDefinition.getVersion().getDate(),
-							idGenerator.catmaIDToUUIDBytes(
-									tagDefinition.getUuid()),
-							tagDefinition.getName(),
-							dbTagsetDefinition,
-							(tagDefinition.getParentUuid().isEmpty()? null :
-								tagDefinition.getParentId()),
-							idGenerator.catmaIDToUUIDBytes(
-									tagDefinition.getParentUuid()));
-					
-					for (PropertyDefinition systemPropDef : 
-						tagDefinition.getSystemPropertyDefinitions()) {
+		try {
+			Integer tagLibraryId = db
+					.select(TAGSETDEFINITION.TAGLIBRARYID)
+					.from(TAGSETDEFINITION)
+					.where(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId()))
+					.fetchOne()
+					.map(new IDFieldToIntegerMapper(TAGSETDEFINITION.TAGLIBRARYID));
+
+			getLibraryAccess(db, tagLibraryId, true);
+
+			db.beginTransaction();
+
+			createDeepTagDefinition(
+				db, 
+				tagDefinition, 
+				tagsetDefinition.getId());
 						
-						DBPropertyDefinition dbColorDefinition = 
-								new DBPropertyDefinition(
-										idGenerator.catmaIDToUUIDBytes(
-												systemPropDef.getUuid()),
-												systemPropDef.getName(),
-												dbTagDefinition,
-												true);
-						dbColorDefinition.setSingleValue(
-								systemPropDef.getFirstValue());
-						
-						dbTagDefinition.getDbPropertyDefinitions().add(
-								dbColorDefinition);
-					}
-					
-					session.beginTransaction();
-					session.save(dbTagDefinition);
-					session.getTransaction().commit();
-					
-					CloseSafe.close(new CloseableSession(session));
-					return dbTagDefinition;
-				}
-				catch (Exception e) {
-					CloseSafe.close(new CloseableSession(session,true));
-					throw new Exception(e);
-				}
+			db.commitTransaction();
+		}
+		catch (Exception e) {
+			db.rollbackTransaction();
+			db.close();
+			
+			dbRepository.setTagManagerListenersEnabled(true);
+
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, 
+					e);				
+		}
+		finally {
+			if (db!=null) {
+				db.close();
 			}
-		}, 
-		new ExecutionListener<DBTagDefinition>() {
-			public void done(DBTagDefinition result) {
-				tagDefinition.setId(result.getTagDefinitionId());
-				for (PropertyDefinition pd : 
-					tagDefinition.getSystemPropertyDefinitions()) {
-					
-					DBPropertyDefinition dbPropertyDefinition = 
-							result.getDbPropertyDefinition(pd.getUuid());
-					pd.setId(dbPropertyDefinition.getPropertyDefinitionId());
-				}
-			}
-			public void error(Throwable t) {
-				dbRepository.getPropertyChangeSupport().firePropertyChange(
-						RepositoryChangeEvent.exceptionOccurred.name(),
-						null, 
-						t);	
-			}
-		});
+		}
 
-	}
-
-	void removeTagsetDefinition(final TagsetDefinition tagsetDefinition) {
-		dbRepository.getBackgroundServiceProvider().submit(
-				"Removing Tagset definition...",
-			new DefaultProgressCallable<Void>() {
-				public Void call() throws Exception {
-					Session session = dbRepository.getSessionFactory().openSession();
-					try {
-						session.beginTransaction();
-						
-						DBTagsetDefinition dbTagsetDefinition = 
-							(DBTagsetDefinition)session.get(
-								DBTagsetDefinition.class, 
-								tagsetDefinition.getId());
-						getLibraryAccess(
-							session, dbTagsetDefinition.getTagLibraryId(), true);
-							
-						session.delete(dbTagsetDefinition);
-						session.getTransaction().commit();
-						
-						CloseSafe.close(new CloseableSession(session));
-						return null;
-					}
-					catch (Exception e) {
-						CloseSafe.close(new CloseableSession(session,true));
-						throw new Exception(e);
-					}
-				}
-			}, 
-			new ExecutionListener<Void>() {
-				public void done(Void nothing) {}
-				public void error(Throwable t) {
-					dbRepository.getPropertyChangeSupport().firePropertyChange(
-							RepositoryChangeEvent.exceptionOccurred.name(),
-							null, 
-							t);	
-				}
-			});
-
-	}
-
-	void saveTagsetDefinition(final TagLibrary tagLibrary,
-			final TagsetDefinition tagsetDefinition) {
 		
-		dbRepository.getBackgroundServiceProvider().submit(
-				"Saving Tagset definition...",
-		new DefaultProgressCallable<Void>() {
-			public Void call() throws Exception {
-
-				Session session = dbRepository.getSessionFactory().openSession();
-				try {
-					
-					getLibraryAccess(session, tagLibrary.getId(), true);
-					
-					session.beginTransaction();
-					importTagsetDefinition(
-							session, Integer.valueOf(tagLibrary.getId()), 
-							tagsetDefinition);
-					
-					SQLQuery maintainTagDefHierarchyQuery = session.createSQLQuery(
-							MAINTAIN_TAGDEFHIERARCHY);
-					
-					maintainTagDefHierarchyQuery.setInteger(
-							"curTagLibraryId", Integer.valueOf(tagLibrary.getId()));
-					
-					maintainTagDefHierarchyQuery.executeUpdate();
-				
-					session.getTransaction().commit();
-					CloseSafe.close(new CloseableSession(session));
-					return null;
-				}
-				catch (Exception e) {
-					CloseSafe.close(new CloseableSession(session,true));
-					throw new Exception(e);
-				}
-			}
-		}, 
-		new ExecutionListener<Void>() {
-			public void done(Void nothing) { /* noop */ }
-			public void error(Throwable t) {
-				dbRepository.getPropertyChangeSupport().firePropertyChange(
-						RepositoryChangeEvent.exceptionOccurred.name(),
-						null, 
-						t);	
-			}
-		});
 	}
 	
+
+	void removeTagsetDefinition(final TagsetDefinition tagsetDefinition) {
+		TransactionalDSLContext db = 
+				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
+				
+		try {
+			Integer tagLibraryId = db
+					.select(TAGSETDEFINITION.TAGLIBRARYID)
+					.from(TAGSETDEFINITION)
+					.where(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId()))
+					.fetchOne()
+					.map(new IDFieldToIntegerMapper(TAGSETDEFINITION.TAGLIBRARYID));
+
+			getLibraryAccess(db, tagLibraryId, true);
+
+			db.beginTransaction();
+			
+			db.batch(
+				db
+				.delete(PROPERTYVALUE)
+				.where(PROPERTYVALUE.PROPERTYID.in(
+					db
+					.select(PROPERTY.PROPERTYID)
+					.from(PROPERTY)
+					.join(TAGINSTANCE)
+						.on(TAGINSTANCE.TAGINSTANCEID
+								.eq(PROPERTY.TAGINSTANCEID))
+					.join(TAGDEFINITION)
+						.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
+						.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
+				db
+				.delete(PROPERTY)
+				.where(PROPERTY.TAGINSTANCEID.in(
+					db
+					.select(TAGINSTANCE.TAGINSTANCEID)
+					.from(TAGINSTANCE)
+					.join(TAGDEFINITION)
+						.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
+						.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
+				db
+				.delete(TAGREFERENCE)
+				.where(TAGREFERENCE.TAGINSTANCEID.in(
+					db
+					.select(TAGINSTANCE.TAGINSTANCEID)
+					.from(TAGINSTANCE)
+					.join(TAGDEFINITION)
+						.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
+						.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
+				db
+				.delete(TAGINSTANCE)
+				.where(TAGINSTANCE.TAGDEFINITIONID.in(
+					db
+					.select(TAGDEFINITION.TAGDEFINITIONID)
+					.from(TAGDEFINITION)
+					.where(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
+				db
+				.delete(PROPERTYDEF_POSSIBLEVALUE)
+				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
+					db
+					.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+					.from(PROPERTYDEFINITION)
+					.join(TAGDEFINITION)
+						.on(TAGDEFINITION.TAGDEFINITIONID
+								.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
+						.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
+				db
+				.delete(PROPERTYDEFINITION)
+				.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(
+					db
+					.select(TAGDEFINITION.TAGDEFINITIONID)
+					.from(TAGDEFINITION)
+					.where(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
+				db
+				.delete(TAGDEFINITION)
+				.where(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())),
+				db
+				.delete(TAGSETDEFINITION)
+				.where(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))
+			.execute();
+			
+			db.commitTransaction();
+		}
+		catch (Exception e) {
+			db.rollbackTransaction();
+			db.close();
+			
+			dbRepository.setTagManagerListenersEnabled(true);
+
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, 
+					e);				
+		}
+		finally {
+			if (db!=null) {
+				db.close();
+			}
+		}
+	}
+
+	void createTagsetDefinition(final TagLibrary tagLibrary,
+			final TagsetDefinition tagsetDefinition) {
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+		try {
+			getLibraryAccess(db, tagLibrary.getId(), true);
+
+			Integer tagsetDefinitionId = createTagsetDefinition(
+				db,
+				tagsetDefinition.getUuid(), 
+				tagsetDefinition.getName(),
+				tagsetDefinition.getVersion(),
+				Integer.valueOf(tagLibrary.getId()));
+			
+			tagsetDefinition.setId(tagsetDefinitionId);
+		}
+		catch (Exception e) {
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, 
+					e);	
+		}
+		
+	}
+		
 	private AccessMode getLibraryAccess(
 			DSLContext db, String tagLibraryId, boolean checkWriteAccess) throws IOException {
 		return getLibraryAccess(db, Integer.valueOf(tagLibraryId), checkWriteAccess);
@@ -703,370 +751,497 @@ class DBTagLibraryHandler {
 			return AccessMode.getAccessMode(existingAccessModeValue);
 		}
 	}
-
+	
 	void updateTagsetDefinition(final TagsetDefinition tagsetDefinition) {
-		dbRepository.getBackgroundServiceProvider().submit(
-				"Updating Tagset definition",
-			new DefaultProgressCallable<Void>() {
-				public Void call() throws Exception {
-					Session session = dbRepository.getSessionFactory().openSession();
-					try {
-						session.beginTransaction();
-						DBTagsetDefinition dbTagsetDefinition = 
-							(DBTagsetDefinition)session.load(
-								DBTagsetDefinition.class, 
-								tagsetDefinition.getId());
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+		try {
+			Integer tagLibraryId = db
+					.select(TAGSETDEFINITION.TAGLIBRARYID)
+					.from(TAGSETDEFINITION)
+					.where(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId()))
+					.fetchOne()
+					.map(new IDFieldToIntegerMapper(TAGSETDEFINITION.TAGLIBRARYID));
 
-						getLibraryAccess(session,
-								dbTagsetDefinition.getTagLibraryId(),
-								true);
-						
-						dbTagsetDefinition.setName(
-								tagsetDefinition.getName());
-						dbTagsetDefinition.setVersion(
-							tagsetDefinition.getVersion().getDate());
-						
-						session.update(dbTagsetDefinition);
-						
-						session.getTransaction().commit();
-						
-						CloseSafe.close(new CloseableSession(session));
-						return null;
-					}
-					catch (Exception e) {
-						CloseSafe.close(new CloseableSession(session,true));
-						throw new Exception(e);
-					}
-				}
-			}, 
-			new ExecutionListener<Void>() {
-				public void done(Void nothing) {}
-				public void error(Throwable t) {
-					dbRepository.getPropertyChangeSupport().firePropertyChange(
-							RepositoryChangeEvent.exceptionOccurred.name(),
-							null, 
-							t);	
-				}
-			});
+			getLibraryAccess(db, tagLibraryId, true);
+			
+			db
+			.update(TAGSETDEFINITION)
+			.set(TAGSETDEFINITION.NAME, tagsetDefinition.getName())
+			.set(TAGSETDEFINITION.VERSION, 
+					SqlTimestamp.from(tagsetDefinition.getVersion().getDate()))
+			.where(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId()))
+			.execute();
+			
+		}
+		catch (Exception e) {
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, 
+					e);	
+		}
+
 	}
 
-	void delete(TagManager tagManager, TagLibraryReference tagLibraryReference) throws IOException {
-		TagLibrary tagLibrary = getTagLibrary(tagLibraryReference);
-		
-		Session session = dbRepository.getSessionFactory().openSession();
-		try {
-			session.beginTransaction();
-			
-			Pair<DBTagLibrary, DBUserTagLibrary> libraryAccess =   
-					getLibraryAccess(session, tagLibrary.getId(), true);
 
-			Set<DBUserTagLibrary> dbUserTagLibraries = 
-					libraryAccess.getFirst().getDbUserTagLibraries();
-			
-			DBUserTagLibrary currentUserTagLibrary = libraryAccess.getSecond();
-			
-			if (currentUserTagLibrary.isOwner() 
-					&& (dbUserTagLibraries.size() == 1)) {
+	void delete(TagManager tagManager, TagLibraryReference tagLibraryReference)
+			throws IOException {
+	
+		TransactionalDSLContext db = 
+				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 				
-				session.delete(currentUserTagLibrary);
-				
-				for (TagsetDefinition tagsetDefinition : tagLibrary) {
-					DBTagsetDefinition dbTagsetDefinition = 
-						(DBTagsetDefinition)session.get(
-							DBTagsetDefinition.class, 
-							tagsetDefinition.getId());
-					
-					session.delete(dbTagsetDefinition);
-				}
-				session.delete(libraryAccess.getFirst());
+		try {
+			Integer tagLibraryId = Integer.valueOf(tagLibraryReference.getId());
+			
+			Field<Integer> totalParticipantsField = db
+			.select(DSL.count(USER_TAGLIBRARY.USERID))
+			.from(USER_TAGLIBRARY)
+			.where(USER_TAGLIBRARY.TAGLIBRARYID
+					.eq(tagLibraryId))
+			.asField("totalParticipants");
+			
+			Record currentUserTagLibRecord = db
+			.select(
+				USER_TAGLIBRARY.USER_TAGLIBRARYID, 
+				USER_TAGLIBRARY.TAGLIBRARYID, 
+				USER_TAGLIBRARY.ACCESSMODE, 
+				USER_TAGLIBRARY.OWNER,
+				totalParticipantsField)
+			.from(USER_TAGLIBRARY)
+			.where(USER_TAGLIBRARY.USERID
+					.eq(dbRepository.getCurrentUser().getUserId()))
+			.and(USER_TAGLIBRARY.TAGLIBRARYID.eq(tagLibraryId))
+			.fetchOne();
+
+			if ((currentUserTagLibRecord == null) 
+					|| (currentUserTagLibRecord.getValue(
+							USER_USERMARKUPCOLLECTION.ACCESSMODE) == null)) {
+				throw new IllegalStateException(
+						"you seem to have no access rights for this collection!");
 			}
-			else {
-				session.delete(currentUserTagLibrary);
+
+			Integer userTagLibId =
+					currentUserTagLibRecord.getValue(
+							USER_TAGLIBRARY.USER_TAGLIBRARYID);
+			boolean isOwner = 
+					currentUserTagLibRecord.getValue(
+							USER_TAGLIBRARY.OWNER, Boolean.class);
+			
+			int totalParticipants = 
+					(Integer)currentUserTagLibRecord.getValue("totalParticipants");
+
+			
+			db.beginTransaction();
+			
+			db
+			.delete(USER_TAGLIBRARY)
+			.where(USER_TAGLIBRARY.USER_TAGLIBRARYID.eq(userTagLibId))
+			.execute();
+			
+			if (isOwner && (totalParticipants == 1)) {
+				db.batch(
+					db
+					.delete(PROPERTYDEF_POSSIBLEVALUE)
+					.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
+						db
+						.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+						.from(PROPERTYDEFINITION)
+						.join(TAGDEFINITION)
+							.on(TAGDEFINITION.TAGDEFINITIONID
+									.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
+						.join(TAGSETDEFINITION)
+							.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
+							.and(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)))),
+					db
+					.delete(PROPERTYDEFINITION)
+					.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(
+						db
+						.select(TAGDEFINITION.TAGDEFINITIONID)
+						.from(TAGDEFINITION)
+						.join(TAGSETDEFINITION)
+							.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
+							.and(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)))),
+					db
+					.delete(TAGDEFINITION)
+					.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
+						db
+						.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
+						.from(TAGSETDEFINITION)
+						.where(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)))),
+					db
+					.delete(TAGSETDEFINITION)
+					.where(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)),
+					db
+					.delete(TAGLIBRARY)
+					.where(TAGLIBRARY.TAGLIBRARYID.eq(tagLibraryId)))
+				.execute();
+
 			}
 			
-			session.getTransaction().commit();
-			
+			db.commitTransaction();
+
 			tagLibraryReferencesById.remove(tagLibraryReference);
-			tagManager.removeTagLibrary(tagLibrary);
+			tagManager.removeTagLibrary(tagLibraryReference);
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					RepositoryChangeEvent.tagLibraryChanged.name(),
 					tagLibraryReference, null);	
-			CloseSafe.close(new CloseableSession(session));
+
 		}
 		catch (Exception e) {
-			CloseSafe.close(new CloseableSession(session,true));
+			db.rollbackTransaction();
+			db.close();
 			throw new IOException(e);
 		}
+		finally {
+			if (db!=null) {
+				db.close();
+			}
+		}
+
+	
 	}
 
 	void updateTagDefinition(final TagDefinition tagDefinition) {
-		
-		dbRepository.getBackgroundServiceProvider().submit(
-				"Updating Tag definition...",
-			new DefaultProgressCallable<Void>() {
-				public Void call() throws Exception {
-					Session session = dbRepository.getSessionFactory().openSession();
-					try {
-						
-						session.beginTransaction();
-						
-						DBTagDefinition dbTagDefinition = 
-							(DBTagDefinition)session.load(
-								DBTagDefinition.class, 
-								tagDefinition.getId());
+		TransactionalDSLContext db = 
+				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
+				
+		try {
+			Integer tagLibraryId = db
+					.select(TAGSETDEFINITION.TAGLIBRARYID)
+					.from(TAGSETDEFINITION)
+					.join(TAGDEFINITION)
+						.on(TAGDEFINITION.TAGSETDEFINITIONID.eq(TAGSETDEFINITION.TAGSETDEFINITIONID))
+						.and(TAGDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId()))
+					.fetchOne()
+					.map(new IDFieldToIntegerMapper(TAGSETDEFINITION.TAGLIBRARYID));
 
-						getLibraryAccess(
-							session,
-							dbTagDefinition.getDbTagsetDefinition().getTagLibraryId(),
-							true);
+			getLibraryAccess(db, tagLibraryId, true);
 
-						dbTagDefinition.setName(
-								tagDefinition.getName());
-						
-						PropertyDefinition colorDefinition = 
-							tagDefinition.getPropertyDefinitionByName(
-								PropertyDefinition.SystemPropertyName.catma_displaycolor.name());
-						DBPropertyDefinition dbColorDefinition =
-								(DBPropertyDefinition)session.load(
-										DBPropertyDefinition.class,
-										colorDefinition.getId());
-						dbColorDefinition.setSingleValue(
-								tagDefinition.getColor());
-						
-						dbTagDefinition.setVersion(
-							tagDefinition.getVersion().getDate());
-						
-						session.update(dbTagDefinition);
-						
-						session.getTransaction().commit();
-						
-						CloseSafe.close(new CloseableSession(session));
-						return null;
-					}
-					catch (Exception e) {
-						CloseSafe.close(new CloseableSession(session,true));
-						throw new Exception(e);
-					}
-				}
-			}, 
-			new ExecutionListener<Void>() {
-				public void done(Void nothing) {}
-				public void error(Throwable t) {
-					dbRepository.getPropertyChangeSupport().firePropertyChange(
-							RepositoryChangeEvent.exceptionOccurred.name(),
-							null, 
-							t);	
-				}
-			});
+			db.beginTransaction();
+			
+			PropertyDefinition colorPropertyDef = 
+				tagDefinition.getPropertyDefinitionByName(
+					PropertyDefinition.SystemPropertyName.catma_displaycolor.name());
+			
+			db.batch(
+				db
+				.update(PROPERTYDEF_POSSIBLEVALUE)
+				.set(PROPERTYDEF_POSSIBLEVALUE.VALUE, colorPropertyDef.getFirstValue())
+				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.eq(colorPropertyDef.getId())),
+				db
+				.update(TAGDEFINITION)
+				.set(TAGDEFINITION.NAME, tagDefinition.getName())
+				.set(TAGDEFINITION.VERSION, SqlTimestamp.from(tagDefinition.getVersion().getDate()))
+				.where(TAGDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId())))
+			.execute();
+
+			db.commitTransaction();
+		}
+		catch (Exception e) {
+			db.rollbackTransaction();
+			db.close();
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, 
+					e);	
+		}
+		finally {
+			if (db!=null) {
+				db.close();
+			}
+		}
 	}
-
+	
 	void removeTagDefinition(final TagDefinition tagDefinition) {
-		dbRepository.getBackgroundServiceProvider().submit(
-				"Removing Tag definition",
-			new DefaultProgressCallable<Void>() {
-				public Void call() throws Exception {
-					Session session = dbRepository.getSessionFactory().openSession();
-					try {
-						session.beginTransaction();
-						
-					
-						DBTagDefinition dbTagDefinition = 
-							(DBTagDefinition)session.get(
-								DBTagDefinition.class, 
-								tagDefinition.getId());
-						
-						getLibraryAccess(
-							session, 
-							dbTagDefinition.getDbTagsetDefinition().getTagLibraryId(),
-							true);
-						
-						session.delete(dbTagDefinition);
-						session.getTransaction().commit();
-						
-						CloseSafe.close(new CloseableSession(session));
-						return null;
-					}
-					catch (Exception e) {
-						CloseSafe.close(new CloseableSession(session,true));
-						throw new Exception(e);
-					}
-				}
-			}, 
-			new ExecutionListener<Void>() {
-				public void done(Void nothing) {}
-				public void error(Throwable t) {
-					dbRepository.getPropertyChangeSupport().firePropertyChange(
-							RepositoryChangeEvent.exceptionOccurred.name(),
-							null, 
-							t);	
-				}
-			});
+		TransactionalDSLContext db = 
+				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
+				
+		try {
+			Integer tagLibraryId = db
+				.select(TAGSETDEFINITION.TAGLIBRARYID)
+				.from(TAGSETDEFINITION)
+				.join(TAGDEFINITION)
+					.on(TAGDEFINITION.TAGSETDEFINITIONID.eq(TAGSETDEFINITION.TAGSETDEFINITIONID))
+					.and(TAGDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId()))
+				.fetchOne()
+				.map(new IDFieldToIntegerMapper(TAGSETDEFINITION.TAGLIBRARYID));
+
+			getLibraryAccess(db, tagLibraryId, true);
+
+			db.beginTransaction();
+			
+			db.batch(
+				db
+				.delete(PROPERTYVALUE)
+				.where(PROPERTYVALUE.PROPERTYID.in(
+					db
+					.select(PROPERTY.PROPERTYID)
+					.from(PROPERTY)
+					.join(TAGINSTANCE)
+						.on(TAGINSTANCE.TAGINSTANCEID
+								.eq(PROPERTY.TAGINSTANCEID)
+						.and(TAGINSTANCE.TAGDEFINITIONID.eq(tagDefinition.getId()))))),
+				db
+				.delete(PROPERTY)
+				.where(PROPERTY.TAGINSTANCEID.in(
+					db
+					.select(TAGINSTANCE.TAGINSTANCEID)
+					.from(TAGINSTANCE)
+					.where(TAGINSTANCE.TAGDEFINITIONID.eq(tagDefinition.getId())))),
+				db
+				.delete(TAGREFERENCE)
+				.where(TAGREFERENCE.TAGINSTANCEID.in(
+					db
+					.select(TAGINSTANCE.TAGINSTANCEID)
+					.from(TAGINSTANCE)
+					.where(TAGINSTANCE.TAGDEFINITIONID.eq(tagDefinition.getId())))),
+				db
+				.delete(TAGINSTANCE)
+				.where(TAGINSTANCE.TAGDEFINITIONID.eq(tagDefinition.getId())),
+				db
+				.delete(PROPERTYDEF_POSSIBLEVALUE)
+				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
+					db
+					.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+					.from(PROPERTYDEFINITION)
+					.join(TAGDEFINITION)
+						.on(TAGDEFINITION.TAGDEFINITIONID
+								.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
+						.and(TAGDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId())))),
+				db
+				.delete(PROPERTYDEFINITION)
+				.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(
+					db
+					.select(TAGDEFINITION.TAGDEFINITIONID)
+					.from(TAGDEFINITION)
+					.where(TAGDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId())))),
+				db
+				.delete(TAGDEFINITION)
+				.where(TAGDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId())))
+			.execute();
+			
+			db.commitTransaction();
+		}
+		catch (Exception e) {
+			db.rollbackTransaction();
+			db.close();
+			
+			dbRepository.setTagManagerListenersEnabled(true);
+
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, 
+					e);				
+		}
+		finally {
+			if (db!=null) {
+				db.close();
+			}
+		}
+
 	}
 
 	Set<byte[]> updateTagsetDefinition(DSLContext db, TagLibrary tagLibrary,
-			TagsetDefinition tagsetDefinition) {
+			TagsetDefinition tagsetDefinition) throws IOException {
 		Set<byte[]> deletedUuids = new HashSet<byte[]>();
 		
-		DBTagsetDefinition dbTagsetDefinition = 
-				getDBTagsetDefinition(session, tagsetDefinition.getUuid(), tagLibrary.getId());
-		
-		if (dbTagsetDefinition != null) {
-			//TODO: try to get along without getDeletedTagDefinitions()
-			for (Integer id : tagsetDefinition.getDeletedTagDefinitions()) {
-				DBTagDefinition dbTagDefinition = dbTagsetDefinition.getDbTagDefinition(id);
-				deletedUuids.add(dbTagDefinition.getUuid());
-				//delete
-				dbTagsetDefinition.getDbTagDefinitions().remove(dbTagDefinition);
-				session.delete(dbTagDefinition);
-			}
-			tagsetDefinition.getDeletedTagDefinitions().clear();
+		Integer tagLibraryId = db
+				.select(TAGSETDEFINITION.TAGLIBRARYID)
+				.from(TAGSETDEFINITION)
+				.where(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId()))
+				.fetchOne()
+				.map(new IDFieldToIntegerMapper(TAGSETDEFINITION.TAGLIBRARYID));
 
-			updateDBTagsetDefinition(session,dbTagsetDefinition, tagsetDefinition);
+		getLibraryAccess(db, tagLibraryId, true);
+		
+		if (tagsetDefinition.getId() == null) {
+			createDeepTagsetDefinition(
+				db,
+				tagsetDefinition,
+				tagLibraryId);
 		}
 		else {
-			dbTagsetDefinition = 
-					createDBTagsetDefinition(tagsetDefinition, tagLibrary.getId());
+			updateDeepTagsetDefinition(db, tagsetDefinition);
 		}
-		session.saveOrUpdate(dbTagsetDefinition);
-		
-		SQLQuery maintainTagDefHierarchyQuery = session.createSQLQuery(
-				MAINTAIN_TAGDEFHIERARCHY);
-		
-		maintainTagDefHierarchyQuery.setInteger(
-				"curTagLibraryId", Integer.valueOf(tagLibrary.getId()));
-		
-		maintainTagDefHierarchyQuery.executeUpdate();
-		updateTagsetDefinitionIDs(tagsetDefinition, dbTagsetDefinition);
-		
-		return deletedUuids;
-	}
-	
-
-	DBTagsetDefinition getDBTagsetDefinition(Session session,
-			String uuid, String tagLibraryId) {
-		Criteria criteria = session.createCriteria(DBTagsetDefinition.class).add(
-				Restrictions.and(
-					Restrictions.eq("uuid", idGenerator.catmaIDToUUIDBytes(uuid)),
-					Restrictions.eq("tagLibraryId", Integer.valueOf(tagLibraryId))));
-		
-		DBTagsetDefinition result = (DBTagsetDefinition) criteria.uniqueResult();
-		
-		return result;
+		return null;
 	}
 
-	private void updateDBTagsetDefinition(
-			Session session, DBTagsetDefinition dbTagsetDefinition, TagsetDefinition tagsetDefinition) {
-		dbTagsetDefinition.setName(
-				tagsetDefinition.getName());
-		dbTagsetDefinition.setVersion(
-			tagsetDefinition.getVersion().getDate());
-		
+	private void updateDeepTagsetDefinition(DSLContext db,
+			TagsetDefinition tagsetDefinition) {
+		db
+		.update(TAGSETDEFINITION)
+		.set(TAGSETDEFINITION.NAME, tagsetDefinition.getName())
+		.set(TAGSETDEFINITION.VERSION, 
+				SqlTimestamp.from(tagsetDefinition.getVersion().getDate()))
+		.where(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId()))
+		.execute();
+
 		for (TagDefinition tagDefinition : tagsetDefinition) {
-			Integer id = tagDefinition.getId();
-			if (id == null) {
-				//create
-				dbTagsetDefinition.getDbTagDefinitions().add(
-						createDBTagDefinition(tagDefinition, dbTagsetDefinition));
+			if (tagDefinition.getId() == null) {
+				createDeepTagDefinition(db, tagDefinition, tagsetDefinition.getId());
 			}
 			else {
-				//update
-				updateDBTagDefinition(session,
-					dbTagsetDefinition.getDbTagDefinition(id), tagDefinition);
+				updateDeepTagDefinition(db, tagDefinition);
 			}
 		}
-	}
-
-	private DBTagsetDefinition createDBTagsetDefinition(
-			TagsetDefinition tagsetDefinition, String dbTagLibraryId) {
-
-		DBTagsetDefinition dbTagsetDefinition = 
-			new DBTagsetDefinition(
-				idGenerator.catmaIDToUUIDBytes(tagsetDefinition.getUuid()), 
-				tagsetDefinition.getVersion().getDate(), 
-				tagsetDefinition.getName(),
-				Integer.valueOf(dbTagLibraryId));
 		
-		for (TagDefinition td : tagsetDefinition) {
-			dbTagsetDefinition.getDbTagDefinitions().add(
-					createDBTagDefinition(td, dbTagsetDefinition));
-		}
-		return dbTagsetDefinition;
-	}
-
-	private void updateDBTagDefinition(Session session, DBTagDefinition dbTagDefinition,
-			TagDefinition tagDefinition) {
+		List<String> oldTagDefUUIDs = db
+		.select(TAGDEFINITION.UUID)
+		.from(TAGDEFINITION)
+		.where(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId()))
+		.fetch()
+		.map(new UUIDByteToStringFieldMapper());
 		
-		dbTagDefinition.setName(
-				tagDefinition.getName());
-
-		dbTagDefinition.setVersion(
-				tagDefinition.getVersion().getDate());
-
-		dbTagDefinition.setParentUuid(
-				idGenerator.catmaIDToUUIDBytes(tagDefinition.getParentUuid()));
-
-		for (Integer toBeDeletedId : tagDefinition.getDeletedPropertyDefinitions()) {
-			DBPropertyDefinition toBeDeleted = 
-					dbTagDefinition.getDbPropertyDefinition(toBeDeletedId);
+		
+		HashSet<byte[]> toBeDeleted = new HashSet<byte[]>();
+		for (String uuid : oldTagDefUUIDs) {
+			if (!tagsetDefinition.hasTagDefinition(uuid)) {
+				toBeDeleted.add(idGenerator.catmaIDToUUIDBytes(uuid));
+			}
 			
-			//delete
-			dbTagDefinition.getDbPropertyDefinitions().remove(toBeDeleted);
-			session.delete(toBeDeleted);
 		}
+		
+		db.batch(
+			db
+			.delete(PROPERTYDEF_POSSIBLEVALUE)
+			.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(db
+				.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+				.from(PROPERTYDEFINITION)
+				.join(TAGDEFINITION)
+					.on(TAGDEFINITION.TAGDEFINITIONID.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
+					.and(TAGDEFINITION.UUID.in(toBeDeleted)))),
+			db
+			.delete(PROPERTYDEFINITION)
+			.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(db
+				.select(TAGDEFINITION.TAGDEFINITIONID)
+				.from(TAGDEFINITION)
+				.where(TAGDEFINITION.UUID.in(toBeDeleted)))),
+			db
+			.delete(TAGDEFINITION)
+			.where(TAGDEFINITION.UUID.in(toBeDeleted)))
+		.execute();
+	}
+
+	private void updateDeepTagDefinition(
+			DSLContext db, TagDefinition tagDefinition) {
+		
+		db
+		.update(TAGDEFINITION)
+		.set(TAGDEFINITION.NAME, tagDefinition.getName())
+		.set(TAGDEFINITION.VERSION, SqlTimestamp.from(tagDefinition.getVersion().getDate()))
+		.where(TAGDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId()))
+		.execute();
 		
 		for (PropertyDefinition pd : tagDefinition.getSystemPropertyDefinitions()) {
-			updatePropertyDefinition(session, pd, true, dbTagDefinition, tagDefinition);
+			if (pd.getId() == null) {
+				createDeepPropertyDefinition(db, pd, tagDefinition.getId(), true);
+			}
+			else {
+				updateDeepPropertyDefinition(db, pd, true);
+			}
 		}
 		
 		for (PropertyDefinition pd : tagDefinition.getUserDefinedPropertyDefinitions()) {
-			updatePropertyDefinition(session, pd, false, dbTagDefinition, tagDefinition);
-		}
-	}
-
-	private void updatePropertyDefinition(Session session, PropertyDefinition pd, boolean isSystemPropertyDef,
-			DBTagDefinition dbTagDefinition, TagDefinition tagDefinition) {
-		
-		Integer id = pd.getId();
-		if (id == null) {
-			//create
-			dbTagDefinition.getDbPropertyDefinitions().add(
-					createDBPropertyDefinition(pd, dbTagDefinition, isSystemPropertyDef));
-		}
-		else {
-			logger.info("updating " + pd + " in " + tagDefinition);
-			// update
-			updateDBPropertyDefinition(session,
-				dbTagDefinition.getDbPropertyDefinition(pd.getUuid()), pd);
-		}
-	}
-
-	private void updateDBPropertyDefinition(
-			Session session, DBPropertyDefinition dbPropertyDefinition, PropertyDefinition pd) {
-		dbPropertyDefinition.setName(pd.getName());
-		
-		Iterator<DBPropertyDefPossibleValue> iterator = 
-				dbPropertyDefinition.getDbPropertyDefPossibleValues().iterator();
-		
-		while (iterator.hasNext()) {
-			DBPropertyDefPossibleValue currentValue = iterator.next();
-			if (!pd.getPossibleValueList().getPropertyValueList().getValues().contains(
-					currentValue.getValue())){
-				iterator.remove();
-				session.delete(currentValue);
+			if (pd.getId() == null) {
+				createDeepPropertyDefinition(db, pd, tagDefinition.getId(), false);
+			}
+			else {
+				updateDeepPropertyDefinition(db, pd, false);
 			}
 		}
 		
-		for (String value : pd.getPossibleValueList().getPropertyValueList().getValues()) {
-			if (!dbPropertyDefinition.hasValue(value)) {
-				dbPropertyDefinition.getDbPropertyDefPossibleValues().add(
-					new DBPropertyDefPossibleValue(value, dbPropertyDefinition));
-			}
-		}
+		HashSet<byte[]> existingPropertyDefinitionUUIDs = 
+				new HashSet<byte[]>();
+				
+		PropertyDefinitionToByteUUID pd2ByteUUID = new PropertyDefinitionToByteUUID();
 		
+		existingPropertyDefinitionUUIDs.addAll(
+			Collections2.transform(
+				tagDefinition.getSystemPropertyDefinitions(),
+				pd2ByteUUID));
+		existingPropertyDefinitionUUIDs.addAll(
+			Collections2.transform(
+				tagDefinition.getUserDefinedPropertyDefinitions(),
+				pd2ByteUUID));
+		
+		List<byte[]> oldPropertyDefinitionUUIDs = 
+		db
+		.select(PROPERTYDEFINITION.UUID)
+		.from(PROPERTYDEFINITION)
+		.where(PROPERTYDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId()))
+		.fetch()
+		.map(new FieldToValueMapper<byte[]>(PROPERTYDEFINITION.UUID));
+		
+		Collection<byte[]> toBeDeleted = 
+			Collections3.getSetDifference(
+				oldPropertyDefinitionUUIDs, existingPropertyDefinitionUUIDs);
+		db.batch(
+			db
+			.delete(PROPERTYDEF_POSSIBLEVALUE)
+			.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(db
+				.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+				.from(PROPERTYDEFINITION)
+				.where(PROPERTYDEFINITION.UUID.in(toBeDeleted)))),
+			db
+			.delete(PROPERTYDEFINITION)
+			.where(PROPERTYDEFINITION.UUID.in(toBeDeleted)))
+		.execute();
+
 	}
 
+	private void updateDeepPropertyDefinition(DSLContext db,
+			PropertyDefinition pd, boolean isSystemProperty) {
+
+		if (!isSystemProperty) {
+			db
+			.update(PROPERTYDEFINITION)
+			.set(PROPERTYDEFINITION.NAME, pd.getName())
+			.where(PROPERTYDEFINITION.PROPERTYDEFINITIONID.eq(pd.getId()))
+			.execute();
+		}
+
+		List<String> oldValues = db
+		.select(PROPERTYDEF_POSSIBLEVALUE.VALUE)
+		.from(PROPERTYDEF_POSSIBLEVALUE)
+		.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.eq(pd.getId()))
+		.fetch()
+		.map(new FieldToValueMapper<String>(PROPERTYDEF_POSSIBLEVALUE.VALUE));
+		
+		List<String> newValues = pd.getPossibleValueList().getPropertyValueList().getValues();
+		
+		Collection<String> toBeDeleted = Collections3.getSetDifference(oldValues, newValues);
+		Collection<String> toBeInserted = Collections3.getSetDifference(newValues, oldValues);
+		
+		db
+		.delete(PROPERTYDEF_POSSIBLEVALUE)
+		.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.eq(pd.getId()))
+		.and(PROPERTYDEF_POSSIBLEVALUE.VALUE.in(toBeDeleted))
+		.execute();
+		
+		BatchBindStep insertBatch = db.batch(db
+		.insertInto(
+			PROPERTYDEF_POSSIBLEVALUE,
+				PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID,
+				PROPERTYDEF_POSSIBLEVALUE.VALUE)
+		.values(
+			(Integer)null, 
+			null));
+		
+		for (String value : toBeInserted) {
+			insertBatch.bind(pd.getId(), value);
+		}
+		
+		insertBatch.execute();
+	}
+	
+	
 	public void update(final TagLibraryReference tagLibraryReference) {
+		//HIER GEHTS WEITER
+	}
+
+	
+	
+	public void update2(final TagLibraryReference tagLibraryReference) {
 		ContentInfoSet contentInfoSet = tagLibraryReference.getContentInfoSet();
 		final Integer tagLibraryId = 
 				Integer.valueOf(tagLibraryReference.getId());
