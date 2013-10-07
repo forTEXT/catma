@@ -38,10 +38,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.ServiceRegistryBuilder;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.SQLDialect;
@@ -66,6 +71,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.IndexerFactory;
+import de.catma.indexer.IndexerPropertyKey;
 import de.catma.repository.db.model.DBUser;
 import de.catma.serialization.SerializationHandlerFactory;
 import de.catma.tag.Property;
@@ -273,7 +279,33 @@ public class DBRepository implements IndexedRepository {
 
 	public void open(Map<String, String> userIdentification) throws Exception {
 		initTagManagerListeners();
+		
+		
+		Map<String, Object> properties = new HashMap<String, Object>();
+		
 		if (init.compareAndSet(false, true)) {
+
+			Configuration hibernateConfig = new Configuration();
+			hibernateConfig.configure(
+			this.getClass().getPackage().getName().replace('.', '/')
+			+ "/hibernate.cfg.xml");
+
+			hibernateConfig.setProperty("hibernate.connection.username", user);
+			hibernateConfig.setProperty("hibernate.connection.url",url);
+			if ((pass != null) && (!pass.isEmpty())) {
+			hibernateConfig.setProperty("hibernate.connection.password", pass);
+			}
+
+			ServiceRegistryBuilder serviceRegistryBuilder = new ServiceRegistryBuilder();
+			serviceRegistryBuilder.applySettings(hibernateConfig.getProperties());
+			ServiceRegistry serviceRegistry =
+			serviceRegistryBuilder.buildServiceRegistry();
+			hibernateConfig.buildSessionFactory(serviceRegistry);
+
+			Context context = new InitialContext();
+			
+			properties.put(IndexerPropertyKey.SessionFactory.name(), (SessionFactory) context.lookup("catma"));
+
 			ComboPooledDataSource cpds = new ComboPooledDataSource();
 			
 			cpds.setDriverClass( "org.gjt.mm.mysql.Driver" ); //loads the jdbc driver 
@@ -281,6 +313,7 @@ public class DBRepository implements IndexedRepository {
 			cpds.setUser(user);
 			cpds.setPassword(pass); 
 			cpds.setIdleConnectionTestPeriod(10);
+			this.dataSource = cpds;
 			
 			new InitialContext().bind("catmads", cpds);
 		}
@@ -296,11 +329,6 @@ public class DBRepository implements IndexedRepository {
 				new DBUserMarkupCollectionHandler(this);
 		this.dbCorpusHandler = new DBCorpusHandler(this);
 
-
-		
-		Map<String, Object> properties = new HashMap<String, Object>();
-		//TODO: properties obsolete? maybe ds name for lookup
-		
 		indexer = indexerFactory.createIndexer(properties);
 		
 		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
@@ -339,6 +367,8 @@ public class DBRepository implements IndexedRepository {
 				false,
 				Role.STANDARD);
 		}
+		
+		currentUser = user;
 	}
 
 	private void loadContent(DSLContext db) 

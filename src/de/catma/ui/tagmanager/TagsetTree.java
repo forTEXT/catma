@@ -53,6 +53,7 @@ import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
+import de.catma.ui.EndorsedTreeTable;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.PropertyCollection;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -724,7 +725,7 @@ public class TagsetTree extends HorizontalLayout {
 	private void initComponents() {
 		setSizeFull();
 
-		tagTree = new TreeTable();
+		tagTree = new EndorsedTreeTable();
 		tagTree.setImmediate(true);
 		tagTree.setSizeFull();
 		tagTree.setSelectable(true);

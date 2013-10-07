@@ -36,6 +36,7 @@ import de.catma.indexer.Indexer;
 import de.catma.indexer.IndexerPropertyKey;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
+import de.catma.indexer.TagsetDefinitionUpdateLog;
 import de.catma.indexer.TermInfo;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
@@ -162,13 +163,13 @@ public class DBIndexer implements Indexer {
 	}
 	
 	public void reindex(TagsetDefinition tagsetDefinition,
-			Set<byte[]> deletedTagDefinitionUuids,
+			TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog,
 			UserMarkupCollection userMarkupCollection, String sourceDocumentID)
 			throws IOException {
 		Session session = sessionFactory.openSession();
 		try {
 			tagReferenceIndexer.reindex(
-					session, tagsetDefinition, deletedTagDefinitionUuids, 
+					session, tagsetDefinition, tagsetDefinitionUpdateLog, 
 					userMarkupCollection, sourceDocumentID);
 			CloseSafe.close(new CloseableSession(session));
 		}

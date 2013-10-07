@@ -68,19 +68,24 @@ public class ColorLabelColumnGenerator implements ColumnGenerator {
 	}
 
 	public Object generateCell(Table source, Object itemId, Object columnId) {
-		TagDefinition td = tagDefinitionProvider.getTagDefinition(itemId);
-		
-		if (td != null) {
-			Label colorLabel = 
-				new Label(
-					MessageFormat.format(
-						COLORLABEL_HTML, 
-						ColorConverter.toHex((
-							td.getColor()))));
-			colorLabel.setContentMode(Label.CONTENT_XHTML);
-			return colorLabel;
+		try {
+			TagDefinition td = tagDefinitionProvider.getTagDefinition(itemId);
+			
+			if (td != null) {
+				Label colorLabel = 
+					new Label(
+						MessageFormat.format(
+							COLORLABEL_HTML, 
+							ColorConverter.toHex((
+								td.getColor()))));
+				colorLabel.setContentMode(Label.CONTENT_XHTML);
+				return colorLabel;
+			}
 		}
-		
+		catch (RuntimeException e) {
+			e.printStackTrace();//TODO: log
+			throw e;
+		}
 		return new Label();
 	}
 

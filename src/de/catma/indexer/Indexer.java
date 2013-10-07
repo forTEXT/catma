@@ -50,7 +50,7 @@ public interface Indexer {
 	public void removeTagReferences(List<TagReference> tagReferences) throws IOException;
 	public void reindex(
 			TagsetDefinition tagsetDefinition, 
-			Set<byte[]> deletedTagDefinitionUuids,
+			TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog,
 			UserMarkupCollection userMarkupCollection,
 			String sourceDocumentID) throws IOException;
 

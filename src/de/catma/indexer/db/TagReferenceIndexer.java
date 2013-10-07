@@ -28,6 +28,7 @@ import org.hibernate.Session;
 
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.indexer.TagsetDefinitionUpdateLog;
 import de.catma.indexer.db.model.DBIndexProperty;
 import de.catma.indexer.db.model.DBIndexTagReference;
 import de.catma.tag.Property;
@@ -175,7 +176,7 @@ public class TagReferenceIndexer {
 	}
 
 	public void reindex(Session session, TagsetDefinition tagsetDefinition,
-			Set<byte[]> deletedTagDefinitionUuids, 
+			TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog, 
 			UserMarkupCollection userMarkupCollection, String sourceDocumentID) {
 		
 		SQLQuery delPropQuery = session.createSQLQuery("" +
@@ -200,15 +201,16 @@ public class TagReferenceIndexer {
 			//TODO: handle deleted properties
 		}
 
-		for (byte[] uuid : deletedTagDefinitionUuids) {
-			logger.info(
-				"reindexing: deleting refs for deleted TagDef " 
-						+ idGenerator.uuidBytesToCatmaID(uuid));
-			delPropQuery.setBinary("curTagDefinitionId", uuid);
-			delPropQuery.executeUpdate();
-			delTrQuery.setBinary("curTagDefinitionId", uuid);
-			delTrQuery.executeUpdate();
-		}
+		//FIXME: 
+//		for (byte[] uuid : tagsetDefinitionUpdateLog) {
+//			logger.info(
+//				"reindexing: deleting refs for deleted TagDef " 
+//						+ idGenerator.uuidBytesToCatmaID(uuid));
+//			delPropQuery.setBinary("curTagDefinitionId", uuid);
+//			delPropQuery.executeUpdate();
+//			delTrQuery.setBinary("curTagDefinitionId", uuid);
+//			delTrQuery.executeUpdate();
+//		}
 		
 		this.index(
 				session, 

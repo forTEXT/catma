@@ -24,7 +24,6 @@ import java.beans.PropertyChangeSupport;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -58,6 +57,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
+import de.catma.indexer.TagsetDefinitionUpdateLog;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -359,7 +359,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			Indexer indexer = ((IndexedRepository)repository).getIndexer();
 			indexer.reindex(
 					tagsetDef, 
-					Collections.<byte[]>emptySet(), 
+					new TagsetDefinitionUpdateLog(), 
 					umc, 
 					repository.getSourceDocument(
 						new UserMarkupCollectionReference(
@@ -383,7 +383,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			for (TagsetDefinition tagsetDef : umc.getTagLibrary()) {
 				indexer.reindex(
 					tagsetDef, 
-					Collections.<byte[]>emptySet(), 
+					new TagsetDefinitionUpdateLog(), 
 					umc, 
 					repository.getSourceDocument(
 						new UserMarkupCollectionReference(

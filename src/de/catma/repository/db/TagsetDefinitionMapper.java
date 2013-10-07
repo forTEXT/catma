@@ -2,11 +2,11 @@ package de.catma.repository.db;
 
 import static de.catma.repository.db.jooq.catmarepository.Tables.TAGSETDEFINITION;
 
+import java.util.List;
 import java.util.Map;
 
 import org.jooq.Record;
 import org.jooq.RecordMapper;
-import org.jooq.Result;
 
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
@@ -15,15 +15,15 @@ import de.catma.util.IDGenerator;
 public class TagsetDefinitionMapper implements
 		RecordMapper<Record, TagsetDefinition> {
 	
-	private Map<byte[], Result<Record>> tagDefByTagsetDefUuid;
+	private Map<String, List<Record>> tagDefByTagsetDefUuid;
 	private IDGenerator idGenerator;
 	private TagDefinitionMapper tagDefinitionMapper;
 	
 	public TagsetDefinitionMapper(
-			Map<byte[], Result<Record>> tagDefByTagsetDefUuid,
-			Map<byte[], Result<Record>> propertyDefByTagDefUuid,
-			Map<byte[], Result<Record>> possValuesByDefUuid) {
-		this.tagDefByTagsetDefUuid = tagDefByTagsetDefUuid;
+			Map<String, List<Record>> tagDefByTagsetDefUuid2,
+			Map<String, List<Record>> propertyDefByTagDefUuid,
+			Map<String, List<Record>> possValuesByDefUuid) {
+		this.tagDefByTagsetDefUuid = tagDefByTagsetDefUuid2;
 		this.idGenerator = new IDGenerator();
 		this.tagDefinitionMapper = 
 			new TagDefinitionMapper(propertyDefByTagDefUuid, possValuesByDefUuid);
@@ -38,7 +38,7 @@ public class TagsetDefinitionMapper implements
 					record.getValue(TAGSETDEFINITION.NAME),
 					new Version(record.getValue(TAGSETDEFINITION.VERSION)));
 		
-		addTagDefinitions(tagsetDefinition, record.getValue(TAGSETDEFINITION.UUID));
+		addTagDefinitions(tagsetDefinition);
 		
 		return tagsetDefinition;
 	}
@@ -46,10 +46,10 @@ public class TagsetDefinitionMapper implements
 
 
 
-	private void addTagDefinitions(TagsetDefinition tagsetDefinition, byte[] uuid) {
-		if (tagDefByTagsetDefUuid.containsKey(uuid)) {
+	private void addTagDefinitions(TagsetDefinition tagsetDefinition) {
+		if (tagDefByTagsetDefUuid.containsKey(tagsetDefinition.getUuid())) {
 			
-			for (Record r : tagDefByTagsetDefUuid.get(uuid)) {
+			for (Record r : tagDefByTagsetDefUuid.get(tagsetDefinition.getUuid())) {
 				tagsetDefinition.addTagDefinition(tagDefinitionMapper.map(r));
 			}
 		}

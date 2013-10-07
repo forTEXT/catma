@@ -65,6 +65,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.indexer.TagsetDefinitionUpdateLog;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
@@ -888,7 +889,7 @@ class DBUserMarkupCollectionHandler {
 					
 				}
 				
-				Set<byte[]> deletedTagDefUuids = 
+				TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog = 
 						dbRepository.getDbTagLibraryHandler().updateTagsetDefinition(
 								db, tagLibrary,
 								tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()));
@@ -897,7 +898,7 @@ class DBUserMarkupCollectionHandler {
 				// not just additions to a tagset
 				dbRepository.getIndexer().reindex(
 						tagsetDefinition, 
-						deletedTagDefUuids,
+						tagsetDefinitionUpdateLog,
 						userMarkupCollection, 
 						dbRepository.getDbSourceDocumentHandler().getLocalUriFor(
 								new UserMarkupCollectionReference(

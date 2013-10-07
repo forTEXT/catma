@@ -54,9 +54,6 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.apache.commons.io.IOUtils;
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -77,7 +74,6 @@ import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.TechInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.repository.db.model.DBSourceDocument;
 import de.catma.util.CloseSafe;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
@@ -377,15 +373,6 @@ class DBSourceDocumentHandler {
 		return null;
 	}
 	
-	DBSourceDocument getDbSourceDocument(Session session, String localUri) {
-		Criteria criteria = session.createCriteria(DBSourceDocument.class)
-			     .add(Restrictions.eq("localUri", localUri));
-		
-		DBSourceDocument result = (DBSourceDocument) criteria.uniqueResult();
-		
-		return result;
-	}
-
 	public void update(
 			final SourceDocument sourceDocument, 
 			final ContentInfoSet contentInfoSet) {

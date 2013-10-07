@@ -2,11 +2,11 @@ package de.catma.repository.db;
 
 import static de.catma.repository.db.jooq.catmarepository.Tables.TAGDEFINITION;
 
+import java.util.List;
 import java.util.Map;
 
 import org.jooq.Record;
 import org.jooq.RecordMapper;
-import org.jooq.Result;
 
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -15,16 +15,16 @@ import de.catma.util.IDGenerator;
 
 public class TagDefinitionMapper implements RecordMapper<Record, TagDefinition> {
 
-	private Map<byte[], Result<Record>> propertyDefByTagDefUuid;
+	private Map<String, List<Record>> propertyDefByTagDefUuid;
 	private IDGenerator idGenerator;
 	private PropertyDefinitionMapper propertyDefinitionMapper;
 		
 	public TagDefinitionMapper(
-			Map<byte[], Result<Record>> propertyDefByTagDefUuid,
-			Map<byte[], Result<Record>> possValuesByDefUuid) {
+			Map<String, List<Record>> propertyDefByTagDefUuid,
+			Map<String, List<Record>> possValuesByPropDefUuid) {
 		this.propertyDefByTagDefUuid = propertyDefByTagDefUuid;
 		this.idGenerator = new IDGenerator();
-		this.propertyDefinitionMapper = new PropertyDefinitionMapper(possValuesByDefUuid);
+		this.propertyDefinitionMapper = new PropertyDefinitionMapper(possValuesByPropDefUuid);
 	}
 
 	public TagDefinition map(Record record) {
@@ -37,15 +37,15 @@ public class TagDefinitionMapper implements RecordMapper<Record, TagDefinition> 
 					record.getValue(TAGDEFINITION.PARENTID),
 					idGenerator.uuidBytesToCatmaID(record.getValue(TAGDEFINITION.PARENTUUID)));
 					
-		addPropertyDefinitions(tagDefinition, record.getValue(TAGDEFINITION.UUID));				
+		addPropertyDefinitions(tagDefinition);				
 			
 		return tagDefinition;
 	}
 
-	private void addPropertyDefinitions(TagDefinition tagDefinition,
-			byte[] uuid) {
-		if (propertyDefByTagDefUuid.containsKey(uuid)) {
-			for (Record r : propertyDefByTagDefUuid.get(uuid)) {
+	private void addPropertyDefinitions(TagDefinition tagDefinition) {
+		
+		if (propertyDefByTagDefUuid.containsKey(tagDefinition.getUuid())) {
+			for (Record r : propertyDefByTagDefUuid.get(tagDefinition.getUuid())) {
 				PropertyDefinition pd = propertyDefinitionMapper.map(r);
 				if (PropertyDefinition.SystemPropertyName.hasPropertyName(pd.getName())) {
 					tagDefinition.addSystemPropertyDefinition(pd);

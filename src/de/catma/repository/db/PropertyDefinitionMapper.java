@@ -4,11 +4,11 @@ import static de.catma.repository.db.jooq.catmarepository.Tables.PROPERTYDEFINIT
 import static de.catma.repository.db.jooq.catmarepository.Tables.PROPERTYDEF_POSSIBLEVALUE;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.jooq.Record;
 import org.jooq.RecordMapper;
-import org.jooq.Result;
 
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
@@ -17,26 +17,27 @@ import de.catma.util.IDGenerator;
 public class PropertyDefinitionMapper implements
 		RecordMapper<Record, PropertyDefinition> {
 
-	private Map<byte[], Result<Record>> possValuesByDefUuid;
+	private Map<String, List<Record>> possValuesByPropDefUuid;
 	private IDGenerator idGenerator;
 
 	public PropertyDefinitionMapper(
-			Map<byte[], Result<Record>> possValuesByDefUuid) {
-		this.possValuesByDefUuid = possValuesByDefUuid;
+			Map<String, List<Record>> possValuesByPropDefUuid) {
+		this.possValuesByPropDefUuid = possValuesByPropDefUuid;
 		this.idGenerator = new IDGenerator();
 	}
 
 	public PropertyDefinition map(Record record) {
-
+		String propDefUuid = 
+			idGenerator.uuidBytesToCatmaID(record.getValue(PROPERTYDEFINITION.UUID));
 		return new PropertyDefinition(
 			record.getValue(PROPERTYDEFINITION.PROPERTYDEFINITIONID),
-			idGenerator.uuidBytesToCatmaID(record.getValue(PROPERTYDEFINITION.UUID)),
+			propDefUuid,
 			record.getValue(PROPERTYDEFINITION.NAME),
-			getPossibleValuesList(possValuesByDefUuid.get(record.getValue(PROPERTYDEFINITION.UUID))));
+			getPossibleValuesList(possValuesByPropDefUuid.get(propDefUuid)));
 	}
 
 	private PropertyPossibleValueList getPossibleValuesList(
-			Result<Record> possValuesRecords) {
+			List<Record> possValuesRecords) {
 		ArrayList<String> values = new ArrayList<String>();
 		
 		if (possValuesRecords != null) {
@@ -45,6 +46,6 @@ public class PropertyDefinitionMapper implements
 			}
 		}
 		
-		return new PropertyPossibleValueList(new ArrayList<String>(), true);
+		return new PropertyPossibleValueList(values, true);
 	}
 }

@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Collection;
-import java.util.Collections;
 
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
@@ -83,6 +82,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
+import de.catma.indexer.TagsetDefinitionUpdateLog;
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
@@ -760,7 +760,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				for (TagsetDefinition tagsetDef : umc.getTagLibrary()) {
 					indexer.reindex(
 						tagsetDef, 
-						Collections.<byte[]>emptySet(), 
+						new TagsetDefinitionUpdateLog(), 
 						umc, 
 						repository.getSourceDocument(
 							new UserMarkupCollectionReference(
