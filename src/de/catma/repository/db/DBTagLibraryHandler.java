@@ -74,7 +74,6 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.util.Collections3;
 import de.catma.util.IDGenerator;
-import de.catma.util.Pair;
 
 class DBTagLibraryHandler {
 	
@@ -1305,19 +1304,16 @@ class DBTagLibraryHandler {
 				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 				
 		try {
-			Pair<Integer, Integer> idPair = db
-					.select(TAGSETDEFINITION.TAGLIBRARYID, TAGDEFINITION.TAGDEFINITIONID)
+			Integer tagLibraryId = db
+					.select(TAGSETDEFINITION.TAGLIBRARYID)
 					.from(TAGSETDEFINITION)
 					.join(TAGDEFINITION)
 						.on(TAGDEFINITION.TAGSETDEFINITIONID.eq(TAGSETDEFINITION.TAGSETDEFINITIONID))
-						.and(TAGDEFINITION.UUID.eq(idGenerator.catmaIDToUUIDBytes(td.getUuid())))
+						.and(TAGDEFINITION.TAGDEFINITIONID.eq(td.getId()))
 					.fetchOne()
-					.map(new IDFieldsToIntegerPairMapper(
-							TAGSETDEFINITION.TAGLIBRARYID, TAGDEFINITION.TAGDEFINITIONID));
+					.map(new IDFieldToIntegerMapper(
+							TAGSETDEFINITION.TAGLIBRARYID));
 
-			Integer tagLibraryId = idPair.getFirst();
-			Integer tagDefinitionId = idPair.getSecond();
-			
 			getLibraryAccess(db, tagLibraryId, true);
 			
 			db.beginTransaction();
@@ -1325,10 +1321,10 @@ class DBTagLibraryHandler {
 			db
 			.update(TAGDEFINITION)
 			.set(TAGDEFINITION.VERSION, SqlTimestamp.from(td.getVersion().getDate()))
-			.where(TAGDEFINITION.TAGDEFINITIONID.eq(tagDefinitionId))
+			.where(TAGDEFINITION.TAGDEFINITIONID.eq(td.getId()))
 			.execute();
 			
-			createDeepPropertyDefinition(db, pd, tagDefinitionId, false);
+			createDeepPropertyDefinition(db, pd, td.getId(), false);
 			
 			db.commitTransaction();
 		}
@@ -1356,19 +1352,17 @@ class DBTagLibraryHandler {
 				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 				
 		try {
-			Pair<Integer, Integer> idPair = db
-					.select(TAGSETDEFINITION.TAGLIBRARYID, TAGDEFINITION.TAGDEFINITIONID)
-					.from(TAGSETDEFINITION)
-					.join(TAGDEFINITION)
-						.on(TAGDEFINITION.TAGSETDEFINITIONID.eq(TAGSETDEFINITION.TAGSETDEFINITIONID))
-						.and(TAGDEFINITION.UUID.eq(idGenerator.catmaIDToUUIDBytes(td.getUuid())))
-					.fetchOne()
-					.map(new IDFieldsToIntegerPairMapper(
-							TAGSETDEFINITION.TAGLIBRARYID, TAGDEFINITION.TAGDEFINITIONID));
+			Integer tagLibraryId = db
+				.select(TAGSETDEFINITION.TAGLIBRARYID)
+				.from(TAGSETDEFINITION)
+				.join(TAGDEFINITION)
+					.on(TAGDEFINITION.TAGSETDEFINITIONID
+							.eq(TAGSETDEFINITION.TAGSETDEFINITIONID))
+					.and(TAGDEFINITION.TAGDEFINITIONID.eq(td.getId()))
+				.fetchOne()
+				.map(new IDFieldToIntegerMapper(
+						TAGSETDEFINITION.TAGLIBRARYID));
 
-			Integer tagLibraryId = idPair.getFirst();
-			Integer tagDefinitionId = idPair.getSecond();
-			
 			getLibraryAccess(db, tagLibraryId, true);
 			
 			db.beginTransaction();
@@ -1376,7 +1370,7 @@ class DBTagLibraryHandler {
 			db
 			.update(TAGDEFINITION)
 			.set(TAGDEFINITION.VERSION, SqlTimestamp.from(td.getVersion().getDate()))
-			.where(TAGDEFINITION.TAGDEFINITIONID.eq(tagDefinitionId))
+			.where(TAGDEFINITION.TAGDEFINITIONID.eq(td.getId()))
 			.execute();
 			
 			updateDeepPropertyDefinition(db, pd, false, new TagsetDefinitionUpdateLog());
@@ -1407,19 +1401,16 @@ class DBTagLibraryHandler {
 				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 				
 		try {
-			Pair<Integer, Integer> idPair = db
-					.select(TAGSETDEFINITION.TAGLIBRARYID, TAGDEFINITION.TAGDEFINITIONID)
+			Integer tagLibraryId = db
+					.select(TAGSETDEFINITION.TAGLIBRARYID)
 					.from(TAGSETDEFINITION)
 					.join(TAGDEFINITION)
 						.on(TAGDEFINITION.TAGSETDEFINITIONID.eq(TAGSETDEFINITION.TAGSETDEFINITIONID))
-						.and(TAGDEFINITION.UUID.eq(idGenerator.catmaIDToUUIDBytes(tagDefinition.getUuid())))
+						.and(TAGDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId()))
 					.fetchOne()
-					.map(new IDFieldsToIntegerPairMapper(
-							TAGSETDEFINITION.TAGLIBRARYID, TAGDEFINITION.TAGDEFINITIONID));
+					.map(new IDFieldToIntegerMapper(
+							TAGSETDEFINITION.TAGLIBRARYID));
 
-			Integer tagLibraryId = idPair.getFirst();
-			Integer tagDefinitionId = idPair.getSecond();
-			
 			getLibraryAccess(db, tagLibraryId, true);
 			
 			db.beginTransaction();
@@ -1428,7 +1419,7 @@ class DBTagLibraryHandler {
 				db
 				.update(TAGDEFINITION)
 				.set(TAGDEFINITION.VERSION, SqlTimestamp.from(tagDefinition.getVersion().getDate()))
-				.where(TAGDEFINITION.TAGDEFINITIONID.eq(tagDefinitionId)),
+				.where(TAGDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId())),
 				db
 				.delete(PROPERTYVALUE)
 				.where(PROPERTYVALUE.PROPERTYID.in(

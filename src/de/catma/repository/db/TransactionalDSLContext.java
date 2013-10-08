@@ -88,7 +88,7 @@ public class TransactionalDSLContext implements DSLContext {
 		try {
 			Connection con = configuration().connectionProvider().acquire();
 			
-			if ((con != null) && (!con.isClosed())) {
+			if ((con != null) && !con.isClosed() && !con.getAutoCommit()) {
 				con.rollback();
 			}
 		}

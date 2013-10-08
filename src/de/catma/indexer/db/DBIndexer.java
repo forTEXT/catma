@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -48,6 +49,7 @@ import de.catma.util.CloseSafe;
 
 public class DBIndexer implements Indexer {
 	
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private SessionFactory sessionFactory; 
 	private TagReferenceIndexer tagReferenceIndexer;
 	private SourceDocumentIndexer sourceDocumentIndexer;
@@ -168,6 +170,10 @@ public class DBIndexer implements Indexer {
 			throws IOException {
 		Session session = sessionFactory.openSession();
 		try {
+			logger.info(
+				"reindexing tagsetdefinition " + tagsetDefinition 
+				+ " in umc " + userMarkupCollection);
+			
 			tagReferenceIndexer.reindex(
 					session, tagsetDefinition, tagsetDefinitionUpdateLog, 
 					userMarkupCollection, sourceDocumentID);
