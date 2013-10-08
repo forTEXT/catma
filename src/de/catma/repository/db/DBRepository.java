@@ -18,11 +18,11 @@
  */
 package de.catma.repository.db;
 
-import static de.catma.repository.db.jooq.catmarepository.Tables.USER;
-import static de.catma.repository.db.jooq.catmarepository.Tables.USER_CORPUS;
-import static de.catma.repository.db.jooq.catmarepository.Tables.USER_SOURCEDOCUMENT;
-import static de.catma.repository.db.jooq.catmarepository.Tables.USER_TAGLIBRARY;
-import static de.catma.repository.db.jooq.catmarepository.Tables.USER_USERMARKUPCOLLECTION;
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.USER;
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.USER_CORPUS;
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.USER_SOURCEDOCUMENT;
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.USER_TAGLIBRARY;
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.USER_USERMARKUPCOLLECTION;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -72,7 +72,9 @@ import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.IndexerFactory;
 import de.catma.indexer.IndexerPropertyKey;
-import de.catma.repository.db.model.DBUser;
+import de.catma.repository.db.jooq.TransactionalDSLContext;
+import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
+import de.catma.repository.db.mapper.UserMapper;
 import de.catma.serialization.SerializationHandlerFactory;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
@@ -95,10 +97,10 @@ public class DBRepository implements IndexedRepository {
 	
 	private String name;
 	
-	private DBCorpusHandler dbCorpusHandler;
-	private DBSourceDocumentHandler dbSourceDocumentHandler;
-	private DBTagLibraryHandler dbTagLibraryHandler;
-	private DBUserMarkupCollectionHandler dbUserMarkupCollectionHandler;
+	private CorpusHandler dbCorpusHandler;
+	private SourceDocumentHandler dbSourceDocumentHandler;
+	private TagLibraryHandler dbTagLibraryHandler;
+	private UserMarkupCollectionHandler dbUserMarkupCollectionHandler;
 	
 	private IndexerFactory indexerFactory;
 	private Indexer indexer;
@@ -323,11 +325,11 @@ public class DBRepository implements IndexedRepository {
 		}
 		
 		this.dbSourceDocumentHandler = 
-				new DBSourceDocumentHandler(this, repoFolderPath);
-		this.dbTagLibraryHandler = new DBTagLibraryHandler(this, idGenerator);
+				new SourceDocumentHandler(this, repoFolderPath);
+		this.dbTagLibraryHandler = new TagLibraryHandler(this, idGenerator);
 		this.dbUserMarkupCollectionHandler = 
-				new DBUserMarkupCollectionHandler(this);
-		this.dbCorpusHandler = new DBCorpusHandler(this);
+				new UserMarkupCollectionHandler(this);
+		this.dbCorpusHandler = new CorpusHandler(this);
 
 		indexer = indexerFactory.createIndexer(properties);
 		
@@ -701,11 +703,11 @@ public class DBRepository implements IndexedRepository {
 		return backgroundServiceProvider;
 	}
 	
-	DBTagLibraryHandler getDbTagLibraryHandler() {
+	TagLibraryHandler getDbTagLibraryHandler() {
 		return dbTagLibraryHandler;
 	}
 	
-	DBSourceDocumentHandler getDbSourceDocumentHandler() {
+	SourceDocumentHandler getDbSourceDocumentHandler() {
 		return dbSourceDocumentHandler;
 	}
 	
@@ -713,7 +715,7 @@ public class DBRepository implements IndexedRepository {
 		return tagManager;
 	}
 	
-	DBUserMarkupCollectionHandler getDbUserMarkupCollectionHandler() {
+	UserMarkupCollectionHandler getDbUserMarkupCollectionHandler() {
 		return dbUserMarkupCollectionHandler;
 	}
 	

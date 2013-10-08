@@ -1,9 +1,9 @@
 package de.catma.repository.db;
 
-import static de.catma.repository.db.DBSourceDocumentHandler.REPO_URI_SCHEME;
+import static de.catma.repository.db.SourceDocumentHandler.REPO_URI_SCHEME;
 
 public class FileURLFactory {
-	String getFileURL(String catmaID, String... path) {
+	public String getFileURL(String catmaID, String... path) {
 		StringBuilder builder = new StringBuilder("file://");
 		for (String folder : path) {
 			builder.append(folder);

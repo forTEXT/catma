@@ -73,7 +73,7 @@
     <target>
       <!-- The destination package of your generated classes (within the
            destination directory) -->
-      <packageName>de.catma.repository.db.jooq</packageName>
+      <packageName>de.catma.repository.db.jooqgen</packageName>
 
       <!-- The destination directory of your generated classes -->
       <directory>src/</directory>
