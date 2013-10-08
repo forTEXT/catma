@@ -78,10 +78,10 @@ import de.catma.util.Pair;
 
 class DBTagLibraryHandler {
 	
-	private static class PropertyDefinitionToByteUUID implements Function<PropertyDefinition, byte[]> {
-		private IDGenerator idGenerator;
-		public byte[] apply(PropertyDefinition pd) {
-			return idGenerator.catmaIDToUUIDBytes(pd.getUuid());
+	private static class PropertyDefinitionToByteUUID implements Function<PropertyDefinition, String> {
+		
+		public String apply(PropertyDefinition pd) {
+			return pd.getUuid();
 		}
 	}
 	
@@ -393,7 +393,7 @@ class DBTagLibraryHandler {
 		.and(td1.TAGSETDEFINITIONID.eq(tagsetDefinitionId));
 
 		for (TagDefinition tagDefinition : tagsetDefinition) {
-			if (tagDefinition.getParentUuid() != null) {
+			if (!tagDefinition.getParentUuid().isEmpty()) {
 				TagDefinition parentTagDef = 
 					tagsetDefinition.getTagDefinition(
 							tagDefinition.getParentUuid());
@@ -680,14 +680,10 @@ class DBTagLibraryHandler {
 		try {
 			getLibraryAccess(db, tagLibrary.getId(), true);
 
-			Integer tagsetDefinitionId = createTagsetDefinition(
+			createDeepTagsetDefinition(
 				db,
-				tagsetDefinition.getUuid(), 
-				tagsetDefinition.getName(),
-				tagsetDefinition.getVersion(),
+				tagsetDefinition,
 				Integer.valueOf(tagLibrary.getId()));
-			
-			tagsetDefinition.setId(tagsetDefinitionId);
 		}
 		catch (Exception e) {
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
@@ -731,6 +727,9 @@ class DBTagLibraryHandler {
 			throw new IOException(
 					"You seem to have no write access to this library! " +
 					"Please reload your Tag Library using the Tag Manager!");
+		}
+		else if (!independent) {
+			return AccessMode.WRITE;
 		}
 		else {
 			return AccessMode.getAccessMode(existingAccessModeValue);
@@ -1158,9 +1157,9 @@ class DBTagLibraryHandler {
 			tagsetDefinitionUpdateLog.addUpdatedTagDefinition(
 					idGenerator.catmaIDToUUIDBytes(tagDefinition.getUuid()));
 		}
-		//HIER GEHTS WEITER: byte[] does not support equals as expected
-		HashSet<byte[]> existingPropertyDefinitionUUIDs = 
-				new HashSet<byte[]>();
+
+		HashSet<String> existingPropertyDefinitionUUIDs = 
+				new HashSet<String>();
 				
 		PropertyDefinitionToByteUUID pd2ByteUUID = new PropertyDefinitionToByteUUID();
 		
@@ -1173,30 +1172,34 @@ class DBTagLibraryHandler {
 				tagDefinition.getUserDefinedPropertyDefinitions(),
 				pd2ByteUUID));
 		
-		List<byte[]> oldPropertyDefinitionUUIDs = 
+		List<String> oldPropertyDefinitionUUIDs = 
 		db
 		.select(PROPERTYDEFINITION.UUID)
 		.from(PROPERTYDEFINITION)
 		.where(PROPERTYDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId()))
 		.fetch()
-		.map(new FieldToValueMapper<byte[]>(PROPERTYDEFINITION.UUID));
+		.map(new UUIDByteToStringFieldMapper());
 		
-		Collection<byte[]> toBeDeleted = 
+		Collection<String> toBeDeleted = 
 			Collections3.getSetDifference(
 				oldPropertyDefinitionUUIDs, existingPropertyDefinitionUUIDs);
+		
+		Collection<byte[]> toBeDeletedByteUUIDs = 
+				Collections2.transform(toBeDeleted, new UUIDtoByteMapper());
+		
 		db.batch(
 			db
 			.delete(PROPERTYDEF_POSSIBLEVALUE)
 			.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(db
 				.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
 				.from(PROPERTYDEFINITION)
-				.where(PROPERTYDEFINITION.UUID.in(toBeDeleted)))),
+				.where(PROPERTYDEFINITION.UUID.in(toBeDeletedByteUUIDs)))),
 			db
 			.delete(PROPERTYDEFINITION)
-			.where(PROPERTYDEFINITION.UUID.in(toBeDeleted)))
+			.where(PROPERTYDEFINITION.UUID.in(toBeDeletedByteUUIDs)))
 		.execute();
 		
-		tagsetDefinitionUpdateLog.addDeletedPropertyDefinitions(toBeDeleted);
+		tagsetDefinitionUpdateLog.addDeletedPropertyDefinitions(toBeDeletedByteUUIDs);
 	}
 
 	private boolean updateDeepPropertyDefinition(DSLContext db,

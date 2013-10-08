@@ -4,6 +4,7 @@ import static de.catma.repository.db.jooq.catmarepository.Tables.TAGINSTANCE;
 import static de.catma.repository.db.jooq.catmarepository.Tables.TAGREFERENCE;
 
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +20,7 @@ import de.catma.util.IDGenerator;
 public class TagReferenceMapper implements
 		RecordMapper<Record, TagReference> {
 
-	private Map<String, TagInstance> tagInstancesByUUID;
+	private Map<String, TagInstance> tagInstancesByUUID = new HashMap<String, TagInstance>();
 	private IDGenerator idGenerator;
 	private String localSourceDocURI;
 	

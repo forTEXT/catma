@@ -323,21 +323,37 @@ class DBUserMarkupCollectionHandler {
 				.map(new IDFieldToIntegerMapper(TAGINSTANCE.TAGDEFINITIONID));
 				
 				tagInstances.put(tr.getTagInstanceID(), curTagInstanceId);
-				
-				BatchBindStep insertBatch = db.batch(db
-				.insertInto(
-					PROPERTY,
-						PROPERTY.PROPERTYDEFINITIONID,
-						PROPERTY.TAGINSTANCEID)
-				.values(
-					(Integer)null,
-					(Integer)null));
-				
+
+				BatchBindStep pValueInsertBatch = db.batch(db
+						.insertInto(
+							PROPERTYVALUE,
+								PROPERTYVALUE.PROPERTYID,
+								PROPERTYVALUE.VALUE)
+						.values(
+							(Integer)null,
+							(String)null));
+
 				boolean authorPresent = false;
 				for (Property p : ti.getSystemProperties()) {
-					insertBatch.bind(
-						p.getPropertyDefinition().getId(), 
-						curTagInstanceId);
+					Integer propertyId = db
+						.insertInto(
+							PROPERTY,
+								PROPERTY.PROPERTYDEFINITIONID,
+								PROPERTY.TAGINSTANCEID)
+						.values(
+							p.getPropertyDefinition().getId(),
+							curTagInstanceId)
+						.returning(PROPERTY.PROPERTYID)
+						.fetchOne()
+						.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
+				
+					
+					for (String value : p.getPropertyValueList().getValues()) {
+						pValueInsertBatch.bind(propertyId, value);
+					}
+					
+					pValueInsertBatch.execute();
+					
 					authorPresent =
 						p.getPropertyDefinition().getName().equals(
 							PropertyDefinition.SystemPropertyName.catma_markupauthor.name());
@@ -351,20 +367,48 @@ class DBUserMarkupCollectionHandler {
 							new PropertyValueList(
 								dbRepository.getCurrentUser().getIdentifier()));
 					ti.addSystemProperty(authorNameProp);
-					insertBatch.bind(
-						authorNameProp.getPropertyDefinition().getId(), 
-						curTagInstanceId);
+					
+					Integer propertyId = db
+						.insertInto(
+							PROPERTY,
+								PROPERTY.PROPERTYDEFINITIONID,
+								PROPERTY.TAGINSTANCEID)
+						.values(
+							authorNameProp.getPropertyDefinition().getId(),
+							curTagInstanceId)
+						.returning(PROPERTY.PROPERTYID)
+						.fetchOne()
+						.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
+
+					pValueInsertBatch.bind(
+						propertyId, 
+						authorNameProp.getPropertyValueList().getFirstValue());
 				}
 					 
 				for (Property p : ti.getUserDefinedProperties()) {
 					if (!p.getPropertyValueList().getValues().isEmpty()) {
-						insertBatch.bind(
-								p.getPropertyDefinition().getId(), 
-								curTagInstanceId);
+						Integer propertyId = db
+							.insertInto(
+								PROPERTY,
+									PROPERTY.PROPERTYDEFINITIONID,
+									PROPERTY.TAGINSTANCEID)
+							.values(
+								p.getPropertyDefinition().getId(),
+								curTagInstanceId)
+							.returning(PROPERTY.PROPERTYID)
+							.fetchOne()
+							.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
+					
+						
+						for (String value : p.getPropertyValueList().getValues()) {
+							pValueInsertBatch.bind(propertyId, value);
+						}
+						
+						pValueInsertBatch.execute();
 					}
 				}
 
-				insertBatch.execute();
+				pValueInsertBatch.execute();
 			}
 			
 			db
@@ -686,9 +730,12 @@ class DBUserMarkupCollectionHandler {
 				propertyRecordsByTagInstanceId, 
 				propertyValueRecordsByPropertyId));
 				
+		@SuppressWarnings("unchecked")
 		List<TagReference> tagReferences = db
-		.select()
+		.select(Collections3.getUnion(TAGREFERENCE.fields(), TAGINSTANCE.UUID))
 		.from(TAGREFERENCE)
+		.join(TAGINSTANCE)
+			.on(TAGINSTANCE.TAGINSTANCEID.eq(TAGREFERENCE.TAGINSTANCEID))
 		.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
 		.fetch()
 		.map(new TagReferenceMapper(localSourceDocURI, tagInstances));

@@ -282,7 +282,8 @@ public class DBRepository implements IndexedRepository {
 		
 		
 		Map<String, Object> properties = new HashMap<String, Object>();
-		
+		Context context = new InitialContext();
+
 		if (init.compareAndSet(false, true)) {
 
 			Configuration hibernateConfig = new Configuration();
@@ -302,7 +303,6 @@ public class DBRepository implements IndexedRepository {
 			serviceRegistryBuilder.buildServiceRegistry();
 			hibernateConfig.buildSessionFactory(serviceRegistry);
 
-			Context context = new InitialContext();
 			
 			properties.put(IndexerPropertyKey.SessionFactory.name(), (SessionFactory) context.lookup("catma"));
 
@@ -315,11 +315,11 @@ public class DBRepository implements IndexedRepository {
 			cpds.setIdleConnectionTestPeriod(10);
 			this.dataSource = cpds;
 			
-			new InitialContext().bind("catmads", cpds);
+			context.bind("catmads", cpds);
 		}
 		else {
-			// FIXME: is this really necessary?
-			this.dataSource = (DataSource) new InitialContext().lookup("catmads");
+			this.dataSource = (DataSource) context.lookup("catmads");
+			properties.put(IndexerPropertyKey.SessionFactory.name(), (SessionFactory) context.lookup("catma"));
 		}
 		
 		this.dbSourceDocumentHandler = 
