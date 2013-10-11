@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.naming.NamingException;
+
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
@@ -54,7 +56,7 @@ public class DBIndexer implements Indexer {
 	private TagReferenceIndexer tagReferenceIndexer;
 	private SourceDocumentIndexer sourceDocumentIndexer;
 
-	public DBIndexer(Map<String, Object> properties) {
+	public DBIndexer(Map<String, Object> properties) throws NamingException {
 		this.sessionFactory = 
 				(SessionFactory)properties.get(
 						IndexerPropertyKey.SessionFactory.name());
@@ -68,17 +70,8 @@ public class DBIndexer implements Indexer {
 
 	public void index(SourceDocument sourceDocument)
 			throws IOException {
-		Session session = sessionFactory.openSession();
-		try {
-			sourceDocumentIndexer.index(
-					session, 
-					sourceDocument);
-			CloseSafe.close(new CloseableSession(session));
-		}
-		catch (Exception e) {
-			CloseSafe.close(new CloseableSession(session, true));
-			throw new IOException(e);
-		}
+		
+		sourceDocumentIndexer.index(sourceDocument);
 	}
 
 	public void index(List<TagReference> tagReferences,
@@ -113,23 +106,8 @@ public class DBIndexer implements Indexer {
 	}
 	
 	public void removeSourceDocument(String sourceDocumentID) throws IOException {
-		Session session = sessionFactory.openSession();
-		try {
-			sourceDocumentIndexer.removeSourceDocument(
-					session, sourceDocumentID);
-			CloseSafe.close(new CloseableSession(session));
-		}
-		catch (Exception e) {
-			CloseSafe.close(new CloseableSession(session, true));
-			throw new IOException(e);
-		}
+		sourceDocumentIndexer.removeSourceDocument(sourceDocumentID);
 	}
-	
-	public void removeSourceDocument(Session session, String sourceDocumentID) throws Exception {
-		sourceDocumentIndexer.removeSourceDocument(
-				session, sourceDocumentID);
-	}
-	
 	
 	public void removeUserMarkupCollection(String userMarkupCollectionID) throws IOException {
 		Session session = sessionFactory.openSession();
@@ -142,12 +120,6 @@ public class DBIndexer implements Indexer {
 			CloseSafe.close(new CloseableSession(session, true));
 			throw new IOException(e);
 		}
-	}
-	
-	public void removeUserMarkupCollection(
-			Session session, String userMarkupCollectionID) throws Exception {
-		tagReferenceIndexer.removeUserMarkupCollection(
-				session, userMarkupCollectionID);
 	}
 	
 	public void removeTagReferences(

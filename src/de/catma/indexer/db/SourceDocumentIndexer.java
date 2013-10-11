@@ -18,84 +18,162 @@
  */
 package de.catma.indexer.db;
 
+import static de.catma.repository.db.jooqgen.catmaindex.Tables.POSITION;
+import static de.catma.repository.db.jooqgen.catmaindex.Tables.TERM;
+
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.SQLQuery;
-import org.hibernate.Session;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
+
+import org.jooq.BatchBindStep;
+import org.jooq.Record;
+import org.jooq.SQLDialect;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
-import de.catma.indexer.db.model.DBPosition;
-import de.catma.indexer.db.model.DBTerm;
+import de.catma.repository.db.jooq.TransactionalDSLContext;
 
 class SourceDocumentIndexer {
-	
-	void index(Session session, SourceDocument sourceDocument)
-			throws Exception {
-		List<String> unseparableCharacterSequences = 
-				sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
-					.getIndexInfoSet().getUnseparableCharacterSequences();
-		List<Character> userDefinedSeparatingCharacters = 
-				sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
-					.getIndexInfoSet().getUserDefinedSeparatingCharacters();
-		Locale locale = 
-				sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
-				.getIndexInfoSet().getLocale();
-		
-		TermExtractor termExtractor = 
-				new TermExtractor(
-					sourceDocument.getContent(), 
-					unseparableCharacterSequences, 
-					userDefinedSeparatingCharacters, 
-					locale);
-		
-		Map<String, List<TermInfo>> terms = termExtractor.getTerms();
-		
-		session.beginTransaction();
-		
-		for (Map.Entry<String, List<TermInfo>> entry : terms.entrySet()) {
-			DBTerm term = new DBTerm(
-					sourceDocument.getID(), 
-					entry.getValue().size(), entry.getKey());
-			session.save(term);
+	private DataSource dataSource;
+
+	public SourceDocumentIndexer() throws NamingException {
+		Context  context = new InitialContext();
+		this.dataSource = (DataSource) context.lookup("catmads");
+	}
+
+	void index(SourceDocument sourceDocument) throws IOException {
+		TransactionalDSLContext db = 
+				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
+				
+		try {
+			List<String> unseparableCharacterSequences = 
+					sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+						.getIndexInfoSet().getUnseparableCharacterSequences();
+			List<Character> userDefinedSeparatingCharacters = 
+					sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+						.getIndexInfoSet().getUserDefinedSeparatingCharacters();
+			Locale locale = 
+					sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+					.getIndexInfoSet().getLocale();
 			
-			for (TermInfo ti : entry.getValue()) {
-				DBPosition p = new DBPosition(
-					term,
-					ti.getRange().getStartPoint(),
-					ti.getRange().getEndPoint(),
-					ti.getTokenOffset());
-				session.save(p);
+			TermExtractor termExtractor = 
+					new TermExtractor(
+						sourceDocument.getContent(), 
+						unseparableCharacterSequences, 
+						userDefinedSeparatingCharacters, 
+						locale);
+			
+			Map<String, List<TermInfo>> terms = termExtractor.getTerms();
+			
+			db.beginTransaction();
+			
+			BatchBindStep termInsertBatch = db.batch(db
+				.insertInto(
+						TERM,
+							TERM.DOCUMENTID,
+							TERM.FREQUENCY,
+							TERM.TERM_)
+					.values(
+						(String)null,
+						null,
+						null));
+							
+			for (Map.Entry<String, List<TermInfo>> entry : terms.entrySet()) {
+				termInsertBatch.bind(
+					sourceDocument.getID(),
+					entry.getValue().size(),
+					entry.getKey());
+			}
+			
+			termInsertBatch.execute();
+
+			Map<String, Record> termRecordsByTerm = db
+			.select()
+			.from(TERM)
+			.where(TERM.DOCUMENTID.eq(sourceDocument.getID()))
+			.fetchMap(TERM.TERM_);
+			
+			BatchBindStep posInsertBatch = db.batch(db
+				.insertInto(
+					POSITION,
+						POSITION.TERMID,
+						POSITION.CHARACTERSTART,
+						POSITION.CHARACTEREND,
+						POSITION.TOKENOFFSET)
+				.values(
+					(Integer)null,
+					(Integer)null,
+					(Integer)null,
+					(Integer)null));
+			
+			for (Map.Entry<String, List<TermInfo>> entry : terms.entrySet()) {
+				Record termRecord = termRecordsByTerm.get(entry.getKey());
+				if (termRecord == null) {
+					throw new IllegalStateException("no record for term " + entry.getKey());
+				}
+				Integer termId = termRecord.getValue(TERM.TERMID);
+				
+				for (TermInfo ti : entry.getValue()) {
+					posInsertBatch.bind(
+						termId, 
+						ti.getRange().getStartPoint(), ti.getRange().getEndPoint(), 
+						ti.getTokenOffset());
+				}
+			}
+			
+			posInsertBatch.execute();
+			db.commitTransaction();
+		}
+		catch (Exception e) {
+			db.rollbackTransaction();
+			db.close();
+			throw new IOException(e);
+		}
+		finally {
+			if (db!=null) {
+				db.close();
 			}
 		}
-		
-		session.getTransaction().commit();
 	}
 
-	void removeSourceDocument(Session session, String sourceDocumentID) {
-		SQLQuery sqlQuery = session.createSQLQuery(
-				"delete p from CatmaIndex.position p join CatmaIndex.term t on p.termID = t.termID " 
-				+ " where t.documentID = '" + sourceDocumentID 
-				+ "'");
+	void removeSourceDocument(String sourceDocumentID) throws IOException {
 		
-		boolean tranStartedLocally = false;
-		if (!session.getTransaction().isActive()) {
-			session.beginTransaction();
-			tranStartedLocally = true;
+		TransactionalDSLContext db = 
+				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
+				
+
+		try {
+			
+			db.batch(
+				db
+				.delete(POSITION)
+				.where(POSITION.TERMID.in(db
+						.select(TERM.TERMID)
+						.from(TERM)
+						.where(TERM.DOCUMENTID.eq(sourceDocumentID)))),
+				db
+				.delete(TERM)
+				.where(TERM.DOCUMENTID.eq(sourceDocumentID)))
+			.execute();
+			
+			db.commitTransaction();
 		}
-		sqlQuery.executeUpdate();
-		sqlQuery = session.createSQLQuery(
-					"delete t from CatmaIndex.term t" 
-					+ " where t.documentID = '" + sourceDocumentID 
-					+ "'");
-		sqlQuery.executeUpdate();
-		
-		if (tranStartedLocally) {
-			session.getTransaction().commit();
+		catch (Exception e) {
+			db.rollbackTransaction();
+			db.close();
+			throw new IOException(e);
+		}
+		finally {
+			if (db!=null) {
+				db.close();
+			}
 		}
 	}
-
 }

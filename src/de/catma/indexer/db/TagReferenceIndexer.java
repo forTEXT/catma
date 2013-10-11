@@ -48,6 +48,8 @@ public class TagReferenceIndexer {
 		this.idGenerator = new IDGenerator();
 	}
 
+	//HIER GEHTS WEITER
+	
 	public void index(Session session, List<TagReference> tagReferences,
 			String sourceDocumentID, String userMarkupCollectionID,
 			TagLibrary tagLibrary) {

@@ -284,6 +284,9 @@ public class DBRepository implements IndexedRepository {
 		
 		
 		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put(IndexerPropertyKey.IndexerUser.name(), user);
+		properties.put(IndexerPropertyKey.IndexerPass.name(), pass);
+		
 		Context context = new InitialContext();
 
 		if (init.compareAndSet(false, true)) {
@@ -728,11 +731,11 @@ public class DBRepository implements IndexedRepository {
 					throws IOException {
 		TransactionalDSLContext db = new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 		
-		Integer targetUserId = getUserId(db, userIdentification);
-		Integer corpusId = Integer.valueOf(corpus.getId());
-		
-		if (targetUserId != null) {
-			try {
+		try {
+			Integer targetUserId = getUserId(db, userIdentification);
+			Integer corpusId = Integer.valueOf(corpus.getId());
+			
+			if (targetUserId != null) {
 				AccessMode corpusAccess = 
 						dbCorpusHandler.getCorpusAccess(
 							db, Integer.valueOf(corpus.getId()),
@@ -785,19 +788,19 @@ public class DBRepository implements IndexedRepository {
 
 				db.commitTransaction();
 			}
-			catch (DataAccessException dae) {
-				db.rollbackTransaction();
-				db.close();
-				throw new IOException(dae);
-			}
-			finally {
-				if (db!=null) {
-					db.close();
-				}
+			else {
+				throw new UnknownUserException(userIdentification);
 			}
 		}
-		else {
-			throw new UnknownUserException(userIdentification);
+		catch (DataAccessException dae) {
+			db.rollbackTransaction();
+			db.close();
+			throw new IOException(dae);
+		}
+		finally {
+			if (db!=null) {
+				db.close();
+			}
 		}
 	}
 	
@@ -1016,5 +1019,4 @@ public class DBRepository implements IndexedRepository {
 		return new File(
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getURI());
 	}
-	
 }

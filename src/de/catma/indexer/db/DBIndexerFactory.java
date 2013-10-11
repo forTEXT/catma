@@ -25,7 +25,7 @@ import de.catma.indexer.IndexerFactory;
 
 public class DBIndexerFactory implements IndexerFactory {
 
-	public Indexer createIndexer(Map<String,Object> properties) {
+	public Indexer createIndexer(Map<String,Object> properties) throws Exception {
 		return new DBIndexer(properties);
 	}
 
