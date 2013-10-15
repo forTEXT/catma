@@ -1,48 +1,59 @@
 package de.catma.indexer;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class TagsetDefinitionUpdateLog {
 	
-	private Set<byte[]> updatedTagDefinitionUuids = new HashSet<byte[]>();
-	private Set<byte[]> deletedTagDefinitionUuids = new HashSet<byte[]>();
-	private Set<byte[]> updatedPropertyDefinitionUuids = new HashSet<byte[]>();
-	private Set<byte[]> deletedPropertyDefinitionUuids = new HashSet<byte[]>();
+	private Set<String> updatedTagDefinitionUuids = new HashSet<String>();
+	private Set<String> deletedTagDefinitionUuids = new HashSet<String>();
+	private Map<String, Set<String>> updatedPropertyDefinitionUuids = new HashMap<String, Set<String>>();
+	private Set<String> deletedPropertyDefinitionUuids = new HashSet<String>();
 	
 	
-	public Set<byte[]> getUpdatedTagDefinitionUuids() {
+	public Set<String> getUpdatedTagDefinitionUuids() {
 		return updatedTagDefinitionUuids;
 	}
 	
-	public Set<byte[]> getDeletedTagDefinitionUuids() {
+	public Set<String> getDeletedTagDefinitionUuids() {
 		return deletedTagDefinitionUuids;
 	}
 	
-	public Set<byte[]> getUpdatedPropertyDefinitionUuids() {
+	public Map<String, Set<String>> getUpdatedPropertyDefinitionUuids() {
 		return updatedPropertyDefinitionUuids;
 	}
 	
-	public Set<byte[]> getDeletedPropertyDefinitionUuids() {
+	public Set<String> getDeletedPropertyDefinitionUuids() {
 		return deletedPropertyDefinitionUuids;
 	}
 	
 	
 	
-	public void setDeletedTagDefinitionUuids(Set<byte[]> deletedTagDefinitionUuids) {
+	public void setDeletedTagDefinitionUuids(Set<String> deletedTagDefinitionUuids) {
 		this.deletedTagDefinitionUuids = deletedTagDefinitionUuids;
 	}
 	
-	public void addUpdatedTagDefinition(byte[] tagDefUuid) {
+	public void addUpdatedTagDefinition(String tagDefUuid) {
 		updatedTagDefinitionUuids.add(tagDefUuid);
 	}
 	
-	public void addUpdatedPropertyDefinition(byte[] propDefUuid) {
-		updatedPropertyDefinitionUuids.add(propDefUuid);
+	public void addUpdatedPropertyDefinition(String propDefUuid, String tagDefUuid) {
+		Set<String> updatedPropDefSet = null;
+		if (!updatedPropertyDefinitionUuids.containsKey(tagDefUuid)) {
+			updatedPropDefSet = new HashSet<String>();
+			updatedPropertyDefinitionUuids.put(tagDefUuid, updatedPropDefSet);
+		}
+		else {
+			updatedPropDefSet = updatedPropertyDefinitionUuids.get(tagDefUuid);
+		}
+		
+		updatedPropDefSet.add(propDefUuid);
 	}
 	
-	public void addDeletedPropertyDefinitions(Collection<byte[]> propDefUuids) {
+	public void addDeletedPropertyDefinitions(Collection<String> propDefUuids) {
 		deletedPropertyDefinitionUuids.addAll(propDefUuids);
 	}
 	

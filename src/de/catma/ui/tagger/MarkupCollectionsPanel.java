@@ -360,10 +360,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			indexer.reindex(
 					tagsetDef, 
 					new TagsetDefinitionUpdateLog(), 
-					umc, 
-					repository.getSourceDocument(
-						new UserMarkupCollectionReference(
-							umc.getId(), umc.getContentInfoSet())).getID());
+					umc);
 			getWindow().showNotification(
 				"Information", "Reindexing finished!", 
 				Notification.TYPE_TRAY_NOTIFICATION);
@@ -384,10 +381,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				indexer.reindex(
 					tagsetDef, 
 					new TagsetDefinitionUpdateLog(), 
-					umc, 
-					repository.getSourceDocument(
-						new UserMarkupCollectionReference(
-							umc.getId(), umc.getContentInfoSet())).getID());
+					umc);
 			}
 			getWindow().showNotification(
 					"Information", "Reindexing finished!", 

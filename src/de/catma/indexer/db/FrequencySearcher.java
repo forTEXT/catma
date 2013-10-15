@@ -18,13 +18,26 @@
  */
 package de.catma.indexer.db;
 
+import static de.catma.repository.db.jooqgen.catmaindex.Tables.TERM;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
+
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.jooq.DSLContext;
+import org.jooq.Record;
+import org.jooq.Result;
+import org.jooq.SQLDialect;
+import org.jooq.SelectConditionStep;
+import org.jooq.impl.DSL;
 
 import de.catma.indexer.db.model.DBPosition;
 import de.catma.indexer.db.model.DBTerm;
@@ -36,12 +49,77 @@ class FrequencySearcher {
 	
 	private SessionFactory sessionFactory;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private DataSource dataSource;
 	
-	public FrequencySearcher(SessionFactory sessionFactory) {
+	public FrequencySearcher(SessionFactory sessionFactory) throws NamingException {
 		super();
 		this.sessionFactory = sessionFactory;
+		Context  context = new InitialContext();
+		this.dataSource = (DataSource) context.lookup("catmads");
 	}
 
+	
+	public QueryResult search2(
+			List<String> documentIdList, CompareOperator comp1, int freq1,
+			CompareOperator comp2, int freq2) {
+		
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+		
+		SelectConditionStep<Record> query = db
+		.select()
+		.from(TERM)
+		.where(TERM.DOCUMENTID.in(documentIdList));
+		
+		if ((freq1 > 0) || (!comp1.equals(CompareOperator.GREATERTHAN))) {
+			
+			switch(comp1) {
+			case EQUAL:
+				query = query.and(TERM.FREQUENCY.eq(freq1));
+				break;
+			case GREATERTHAN:
+				query = query.and(TERM.FREQUENCY.greaterThan(freq1));
+				break;
+			case LESSTHAN:
+				query = query.and(TERM.FREQUENCY.lessThan(freq1));
+				break;
+			case GREATEROREQUALTHAN:
+				query = query.and(TERM.FREQUENCY.greaterOrEqual(freq1));
+				break;
+			case LESSOREQUALTHAN:
+				query = query.and(TERM.FREQUENCY.lessOrEqual(freq1));
+				break;
+			}
+		}
+		
+		if (comp2 != null) {
+			switch(comp2) {
+			case EQUAL:
+				query = query.and(TERM.FREQUENCY.eq(freq2));
+				break;
+			case GREATERTHAN:
+				query = query.and(TERM.FREQUENCY.greaterThan(freq2));
+				break;
+			case LESSTHAN:
+				query = query.and(TERM.FREQUENCY.lessThan(freq2));
+				break;
+			case GREATEROREQUALTHAN:
+				query = query.and(TERM.FREQUENCY.greaterOrEqual(freq2));
+				break;
+			case LESSOREQUALTHAN:
+				query = query.and(TERM.FREQUENCY.lessOrEqual(freq2));
+				break;
+			}
+		}
+		
+		
+		Result<Record> record = query.fetch();
+		
+		
+		
+		return null;
+	}
+	
+	
 	public QueryResult search(
 			List<String> documentIdList, CompareOperator comp1, int freq1,
 			CompareOperator comp2, int freq2) {
@@ -79,6 +157,7 @@ class FrequencySearcher {
 		
 		return groupedQueryResultSet;
 	}
+
 	
 	@SuppressWarnings("rawtypes")
 	private List getResultsFor(
@@ -164,7 +243,7 @@ class FrequencySearcher {
 			if (!phraseResultMapping.containsKey(t.getTerm())) {
 				phraseResultMapping.put(
 					t.getTerm(), 
-					new LazyDBPhraseQueryResult(sessionFactory, t.getTerm()));
+					new LazyDBPhraseQueryResult(t.getTerm()));
 			}
 			
 			phraseResultMapping.get(t.getTerm()).addTerm(t);

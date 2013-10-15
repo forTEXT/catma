@@ -761,10 +761,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					indexer.reindex(
 						tagsetDef, 
 						new TagsetDefinitionUpdateLog(), 
-						umc, 
-						repository.getSourceDocument(
-							new UserMarkupCollectionReference(
-								umc.getId(), umc.getContentInfoSet())).getID());
+						umc);
 				}
 				getWindow().showNotification(
 						"Information", "Reindexing finished!", 

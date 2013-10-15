@@ -27,10 +27,8 @@ import java.util.logging.Logger;
 
 import javax.naming.NamingException;
 
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-import de.catma.db.CloseableSession;
 import de.catma.document.Range;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
@@ -47,7 +45,6 @@ import de.catma.tag.Property;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
-import de.catma.util.CloseSafe;
 
 public class DBIndexer implements Indexer {
 	
@@ -77,28 +74,7 @@ public class DBIndexer implements Indexer {
 	public void index(List<TagReference> tagReferences,
 			String sourceDocumentID, String userMarkupCollectionID,
 			TagLibrary tagLibrary) throws IOException {
-		
-		Session session = sessionFactory.openSession();
-		try {
-			tagReferenceIndexer.index(
-					session, 
-					tagReferences, 
-					sourceDocumentID, 
-					userMarkupCollectionID, 
-					tagLibrary);
-			CloseSafe.close(new CloseableSession(session));
-		}
-		catch (Exception e) {
-			CloseSafe.close(new CloseableSession(session, true));
-			throw new IOException(e);
-		}
-	}
-	
-	public void index(Session session, List<TagReference> tagReferences,
-			String sourceDocumentID, String userMarkupCollectionID,
-			TagLibrary tagLibrary) throws Exception {
 		tagReferenceIndexer.index(
-				session, 
 				tagReferences, 
 				sourceDocumentID, 
 				userMarkupCollectionID, 
@@ -110,84 +86,77 @@ public class DBIndexer implements Indexer {
 	}
 	
 	public void removeUserMarkupCollection(String userMarkupCollectionID) throws IOException {
-		Session session = sessionFactory.openSession();
-		try {
-			tagReferenceIndexer.removeUserMarkupCollection(
-					session, userMarkupCollectionID);
-			CloseSafe.close(new CloseableSession(session));
-		}
-		catch (Exception e) {
-			CloseSafe.close(new CloseableSession(session, true));
-			throw new IOException(e);
-		}
+		tagReferenceIndexer.removeUserMarkupCollection(userMarkupCollectionID);
 	}
 	
 	public void removeTagReferences(
 			List<TagReference> tagReferences) throws IOException {
-		Session session = sessionFactory.openSession();
-		try {
-			tagReferenceIndexer.removeTagReferences(
-					session, tagReferences);
-			CloseSafe.close(new CloseableSession(session));
-		}
-		catch (Exception e) {
-			CloseSafe.close(new CloseableSession(session, true));
-			throw new IOException(e);
-		}
+		tagReferenceIndexer.removeTagReferences(tagReferences);
 	}
 	
 	public void reindex(TagsetDefinition tagsetDefinition,
 			TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog,
-			UserMarkupCollection userMarkupCollection, String sourceDocumentID)
+			UserMarkupCollection userMarkupCollection)
 			throws IOException {
-		Session session = sessionFactory.openSession();
-		try {
-			logger.info(
-				"reindexing tagsetdefinition " + tagsetDefinition 
-				+ " in umc " + userMarkupCollection);
-			
-			tagReferenceIndexer.reindex(
-					session, tagsetDefinition, tagsetDefinitionUpdateLog, 
-					userMarkupCollection, sourceDocumentID);
-			CloseSafe.close(new CloseableSession(session));
-		}
-		catch (Exception e) {
-			CloseSafe.close(new CloseableSession(session, true));
-			throw new IOException(e);
-		}
+		logger.info(
+			"reindexing tagsetdefinition " + tagsetDefinition 
+			+ " in umc " + userMarkupCollection);
+		
+		tagReferenceIndexer.reindex(
+				tagsetDefinition, tagsetDefinitionUpdateLog, 
+				userMarkupCollection);
 	}
 	
 	public QueryResult searchPhrase(List<String> documentIdList,
 			String phrase, List<String> termList, int limit) throws IOException {
-		PhraseSearcher phraseSearcher = new PhraseSearcher(sessionFactory);
-		
-		return phraseSearcher.search(documentIdList, phrase, termList, limit);
+		try {
+			PhraseSearcher phraseSearcher = new PhraseSearcher();
+			
+			return phraseSearcher.search(documentIdList, phrase, termList, limit);
+		}
+		catch(Exception e) {
+			throw new IOException(e);
+		}
 	}
 	
 	public QueryResult searchWildcardPhrase(List<String> documentIdList,
 			List<String> termList, int limit) throws IOException {
-		PhraseSearcher phraseSearcher = new PhraseSearcher(sessionFactory);
-		
-		
-		return phraseSearcher.searchWildcard(documentIdList, termList, limit);
+		try {
+			PhraseSearcher phraseSearcher = new PhraseSearcher();
+			
+			return phraseSearcher.searchWildcard(documentIdList, termList, limit);
+		}
+		catch(Exception e) {
+			throw new IOException(e);
+		}
 	}
 
 	public QueryResult searchTagDefinitionPath(List<String> userMarkupCollectionIdList, 
-			String tagDefinitionPath) throws Exception {
+			String tagDefinitionPath) throws IOException {
 		
-		TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher(sessionFactory);
+		try {
+			TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
 		
-		return tagSearcher.search(userMarkupCollectionIdList, tagDefinitionPath);
+			return tagSearcher.search(userMarkupCollectionIdList, tagDefinitionPath);
+		} catch (NamingException e) {
+			throw new IOException(e);
+		}
+
 	}
 	
 	public QueryResult searchProperty(
 			List<String> userMarkupCollectionIdList, Set<String> propertyDefinitionIDs,
-			String propertyName, String propertyValue, String tagValue) {
+			String propertyName, String propertyValue, String tagValue) throws IOException {
 
-		TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher(sessionFactory);
+		try {
+			TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
+			return tagSearcher.searchProperties(
+					userMarkupCollectionIdList, propertyDefinitionIDs, 
+					propertyName, propertyValue, tagValue);
+		} catch (NamingException e) {
+			throw new IOException(e);
+		}
 		
-		return tagSearcher.searchProperties(
-				userMarkupCollectionIdList, propertyDefinitionIDs, propertyName, propertyValue, tagValue);
 	}
 
 	public QueryResult searchFreqency(
@@ -226,18 +195,7 @@ public class DBIndexer implements Indexer {
 	
 	public void updateIndex(TagInstance tagInstance, Property property) 
 			throws IOException {
-		Session session = sessionFactory.openSession();
-		try {
-			session.beginTransaction();
-			tagReferenceIndexer.reIndexProperty(session, tagInstance, property);
-			session.getTransaction().commit();
-			CloseSafe.close(new CloseableSession(session));
-		}
-		catch (Exception e) {
-			CloseSafe.close(new CloseableSession(session, true));
-			throw new IOException(e);
-		}
-		
+		tagReferenceIndexer.reIndexProperty(tagInstance, property);
 	}
 	
 

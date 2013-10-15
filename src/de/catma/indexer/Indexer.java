@@ -51,8 +51,7 @@ public interface Indexer {
 	public void reindex(
 			TagsetDefinition tagsetDefinition, 
 			TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog,
-			UserMarkupCollection userMarkupCollection,
-			String sourceDocumentID) throws IOException;
+			UserMarkupCollection userMarkupCollection) throws IOException;
 
 	
 	public QueryResult searchPhrase(
@@ -64,11 +63,11 @@ public interface Indexer {
 	
 	public QueryResult searchTagDefinitionPath(
 			List<String> userMarkupCollectionIdList, 
-			String tagDefinitionPath) throws Exception;
+			String tagDefinitionPath) throws IOException;
 	
 	public QueryResult searchProperty(
 			List<String> userMarkupCollectionIdList, Set<String> propertyDefinitionIDs,
-			String propertyName, String propertyValue, String tagValue);
+			String propertyName, String propertyValue, String tagValue) throws IOException;
 	
 	public QueryResult searchFreqency(
 			List<String> documentIdList, 

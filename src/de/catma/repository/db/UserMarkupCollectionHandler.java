@@ -998,22 +998,10 @@ class UserMarkupCollectionHandler {
 				
 
 				if (!tagsetDefinitionUpdateLog.isEmpty()) {
-					String sourceDocumentID = db
-						.select(SOURCEDOCUMENT.LOCALURI)
-						.from(SOURCEDOCUMENT)
-						.join(USERMARKUPCOLLECTION)
-							.on(USERMARKUPCOLLECTION.SOURCEDOCUMENTID
-									.eq(SOURCEDOCUMENT.SOURCEDOCUMENTID))
-							.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-									.eq(userMarkupCollectionId))
-						.fetchOne()
-						.map(new FieldToValueMapper<String>(SOURCEDOCUMENT.LOCALURI));
-					
 					dbRepository.getIndexer().reindex(
 							tagsetDefinition, 
 							tagsetDefinitionUpdateLog,
-							userMarkupCollection, 
-							sourceDocumentID);
+							userMarkupCollection);
 				}
 			}
 			

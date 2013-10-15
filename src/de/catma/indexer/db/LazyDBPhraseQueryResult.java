@@ -25,9 +25,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.SessionFactory;
+import javax.naming.NamingException;
 
-import de.catma.indexer.db.model.DBTerm;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.PhraseResult;
 import de.catma.queryengine.result.QueryResultRow;
@@ -35,36 +34,37 @@ import de.catma.queryengine.result.QueryResultRowArray;
 
 public class LazyDBPhraseQueryResult implements GroupedQueryResult {
 	
-	private SessionFactory sessionFactory;
-	private Map<String, DBTerm> termsByDocument;
+	private Map<String, Term> termsByDocument;
 	private String term;
 	private QueryResultRowArray queryResultRowArray;
 	private Map<String,Integer> freqByDocument;
 
-	public LazyDBPhraseQueryResult(
-			SessionFactory sessionFactory, String term) {
-		this.sessionFactory = sessionFactory;
+	public LazyDBPhraseQueryResult(String term) {
 		this.term = term;
-		termsByDocument = new HashMap<String, DBTerm>();
+		termsByDocument = new HashMap<String, Term>();
 	}
 
 	public Iterator<QueryResultRow> iterator() {
 		if (queryResultRowArray == null) {
-			loadQueryResultRows();
+			try {
+				loadQueryResultRows();
+			}
+			catch (NamingException ne) {
+				throw new RuntimeException(ne);
+			}
 		}
 		return queryResultRowArray.iterator();
 	}
 
-	private void loadQueryResultRows() {
+	private void loadQueryResultRows() throws NamingException {
 		queryResultRowArray = new QueryResultRowArray();
 		freqByDocument = new HashMap<String, Integer>();
-		PhraseSearcher phraseSearcher = new PhraseSearcher(sessionFactory);
+		PhraseSearcher phraseSearcher = new PhraseSearcher();
 		for (String sourceDocumentID : getSourceDocumentIDs()) {
 			QueryResultRowArray positions =
 					phraseSearcher.getPositionsForTerm(
 							term, 
-							sourceDocumentID, 
-							0); // no limit
+							sourceDocumentID);
 			queryResultRowArray.addAll(positions);
 		}
 	}
@@ -80,7 +80,7 @@ public class LazyDBPhraseQueryResult implements GroupedQueryResult {
 		}
 		
 		int sum = 0;
-		for (DBTerm t : termsByDocument.values()) {
+		for (Term t : termsByDocument.values()) {
 			sum += t.getFrequency();
 		}
 		return sum;
@@ -115,7 +115,7 @@ public class LazyDBPhraseQueryResult implements GroupedQueryResult {
 		return termsByDocument.keySet();
 	}
 
-	void addTerm(DBTerm t) {
+	void addTerm(Term t) {
 		termsByDocument.put(t.getDocumentId(), t);
 	}
 

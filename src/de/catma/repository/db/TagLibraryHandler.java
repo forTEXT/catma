@@ -1109,11 +1109,12 @@ class TagLibraryHandler {
 		.fetch()
 		.map(new UUIDByteToStringFieldMapper());
 		
-		
-		HashSet<byte[]> toBeDeleted = new HashSet<byte[]>();
+		HashSet<String> toBeDeleted = new HashSet<String>();
+		HashSet<byte[]> toBeDeletedByte = new HashSet<byte[]>();
 		for (String uuid : oldTagDefUUIDs) {
 			if (!tagsetDefinition.hasTagDefinition(uuid)) {
-				toBeDeleted.add(idGenerator.catmaIDToUUIDBytes(uuid));
+				toBeDeleted.add(uuid);
+				toBeDeletedByte.add(idGenerator.catmaIDToUUIDBytes(uuid));
 			}
 			
 		}
@@ -1126,20 +1127,20 @@ class TagLibraryHandler {
 				.from(PROPERTYDEFINITION)
 				.join(TAGDEFINITION)
 					.on(TAGDEFINITION.TAGDEFINITIONID.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
-					.and(TAGDEFINITION.UUID.in(toBeDeleted)))),
+					.and(TAGDEFINITION.UUID.in(toBeDeletedByte)))),
 			db
 			.delete(PROPERTYDEFINITION)
 			.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(db
 				.select(TAGDEFINITION.TAGDEFINITIONID)
 				.from(TAGDEFINITION)
-				.where(TAGDEFINITION.UUID.in(toBeDeleted)))),
+				.where(TAGDEFINITION.UUID.in(toBeDeletedByte)))),
 			db
 			.update(TAGDEFINITION)
 			.set(TAGDEFINITION.PARENTID, (Integer)null)
-			.where(TAGDEFINITION.UUID.in(toBeDeleted)),
+			.where(TAGDEFINITION.UUID.in(toBeDeletedByte)),
 			db
 			.delete(TAGDEFINITION)
-			.where(TAGDEFINITION.UUID.in(toBeDeleted)))
+			.where(TAGDEFINITION.UUID.in(toBeDeletedByte)))
 		.execute();
 		
 		tagsetDefinitionUpdateLog.setDeletedTagDefinitionUuids(toBeDeleted);
@@ -1159,7 +1160,7 @@ class TagLibraryHandler {
 			else {
 				if (updateDeepPropertyDefinition(db, pd, true, tagsetDefinitionUpdateLog)) {
 					tagsetDefinitionUpdateLog.addUpdatedPropertyDefinition(
-							idGenerator.catmaIDToUUIDBytes(pd.getUuid()));
+							pd.getUuid(), tagDefinition.getUuid());
 					propDefChanged = true;
 				}
 			}
@@ -1172,8 +1173,10 @@ class TagLibraryHandler {
 			}
 			else {
 				if (updateDeepPropertyDefinition(db, pd, false, tagsetDefinitionUpdateLog)) {
-					tagsetDefinitionUpdateLog.addUpdatedPropertyDefinition(
-							idGenerator.catmaIDToUUIDBytes(pd.getUuid()));
+					//a change of a user defined property definition does not
+					//result in a change of a property value
+					// so there is no need for reindexing (see updates of system property defs above)
+
 					propDefChanged = true;
 				}
 			}
@@ -1189,7 +1192,7 @@ class TagLibraryHandler {
 		
 		if (tagDefUpdated>0) {
 			tagsetDefinitionUpdateLog.addUpdatedTagDefinition(
-					idGenerator.catmaIDToUUIDBytes(tagDefinition.getUuid()));
+					tagDefinition.getUuid());
 		}
 
 		HashSet<String> existingPropertyDefinitionUUIDs = 
@@ -1233,7 +1236,7 @@ class TagLibraryHandler {
 			.where(PROPERTYDEFINITION.UUID.in(toBeDeletedByteUUIDs)))
 		.execute();
 		
-		tagsetDefinitionUpdateLog.addDeletedPropertyDefinitions(toBeDeletedByteUUIDs);
+		tagsetDefinitionUpdateLog.addDeletedPropertyDefinitions(toBeDeleted);
 	}
 
 	private boolean updateDeepPropertyDefinition(DSLContext db,
