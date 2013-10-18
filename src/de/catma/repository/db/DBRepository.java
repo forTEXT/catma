@@ -43,10 +43,6 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.SQLDialect;
@@ -290,27 +286,6 @@ public class DBRepository implements IndexedRepository {
 		Context context = new InitialContext();
 
 		if (init.compareAndSet(false, true)) {
-
-			Configuration hibernateConfig = new Configuration();
-			hibernateConfig.configure(
-			this.getClass().getPackage().getName().replace('.', '/')
-			+ "/hibernate.cfg.xml");
-
-			hibernateConfig.setProperty("hibernate.connection.username", user);
-			hibernateConfig.setProperty("hibernate.connection.url",url);
-			if ((pass != null) && (!pass.isEmpty())) {
-			hibernateConfig.setProperty("hibernate.connection.password", pass);
-			}
-
-			ServiceRegistryBuilder serviceRegistryBuilder = new ServiceRegistryBuilder();
-			serviceRegistryBuilder.applySettings(hibernateConfig.getProperties());
-			ServiceRegistry serviceRegistry =
-			serviceRegistryBuilder.buildServiceRegistry();
-			hibernateConfig.buildSessionFactory(serviceRegistry);
-
-			
-			properties.put(IndexerPropertyKey.SessionFactory.name(), (SessionFactory) context.lookup("catma"));
-
 			ComboPooledDataSource cpds = new ComboPooledDataSource();
 			
 			cpds.setDriverClass( "org.gjt.mm.mysql.Driver" ); //loads the jdbc driver 
@@ -324,7 +299,6 @@ public class DBRepository implements IndexedRepository {
 		}
 		else {
 			this.dataSource = (DataSource) context.lookup("catmads");
-			properties.put(IndexerPropertyKey.SessionFactory.name(), (SessionFactory) context.lookup("catma"));
 		}
 		
 		this.dbSourceDocumentHandler = 

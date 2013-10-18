@@ -19,6 +19,7 @@
 
 package de.catma.queryengine;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -129,7 +130,7 @@ public class CollocQuery extends Query {
 
 	private boolean spanContextMeetsCollocCondition(
 			SpanContext spanContext, QueryResult collocationConditionResult, 
-			Map<QueryResultRow, List<TermInfo>> rowToTermInfoListMapping) {
+			Map<QueryResultRow, List<TermInfo>> rowToTermInfoListMapping) throws IOException {
 		
 		
 		for (QueryResultRow collocConditionRow : collocationConditionResult) {

@@ -72,7 +72,7 @@ public interface Indexer {
 	public QueryResult searchFreqency(
 			List<String> documentIdList, 
 			CompareOperator comp1, int freq1, 
-			CompareOperator comp2, int freq2);
+			CompareOperator comp2, int freq2) throws IOException;
 	
 	public SpanContext getSpanContextFor(String sourceDocumentId, Range range,
 	            int spanContextSize, SpanDirection direction) throws IOException;
@@ -81,7 +81,7 @@ public interface Indexer {
 			QueryResult baseResult, QueryResult collocationConditionResult,
 			int spanContextSize, SpanDirection direction) throws IOException;
 	
-	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range);
+	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range) throws IOException;
 	
 	public void close();
 

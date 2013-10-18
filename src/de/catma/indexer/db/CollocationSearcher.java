@@ -18,7 +18,9 @@
  */
 package de.catma.indexer.db;
 
-import java.io.Closeable;
+import static de.catma.repository.db.jooqgen.catmaindex.Tables.POSITION;
+import static de.catma.repository.db.jooqgen.catmaindex.Tables.TERM;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,62 +28,56 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.hibernate.Query;
-import org.hibernate.SQLQuery;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
+
+import org.jooq.DSLContext;
+import org.jooq.Record;
+import org.jooq.SQLDialect;
+import org.jooq.Select;
+import org.jooq.impl.DSL;
 
 import de.catma.document.Range;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TermInfo;
-import de.catma.indexer.db.model.DBPosition;
-import de.catma.indexer.db.model.DBTerm;
+import de.catma.indexer.db.model.Position;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
-import de.catma.util.CloseSafe;
 
 public class CollocationSearcher {
 
-	private SessionFactory sessionFactory;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
-	
-	public CollocationSearcher(SessionFactory sessionFactory) {
-		this.sessionFactory = sessionFactory;
+	private DataSource dataSource;
+
+	public CollocationSearcher() throws NamingException {
+		Context  context = new InitialContext();
+		this.dataSource = (DataSource) context.lookup("catmads");
 	}
 	
 	public SpanContext getSpanContextFor(
 			String sourceDocumentId, Range range, int spanContextSize,
 			SpanDirection direction) throws IOException {
 		
-		final Session session = sessionFactory.openSession();
-		try {
-			SpanContext spanContext = getSpanContextFor(
-				session, sourceDocumentId, range, spanContextSize, direction);
-			return spanContext;
-		}
-		finally {
-			CloseSafe.close(new Closeable() {
-				public void close() throws IOException {
-					session.close();
-				}
-			});
-		}
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+		
+		SpanContext spanContext = getSpanContextFor(
+			db, sourceDocumentId, range, spanContextSize, direction);
+		return spanContext;
 	}
-	
+
 	private SpanContext getSpanContextFor(
-			Session session, String sourceDocumentId, Range keywordRange, 
+			DSLContext db, String sourceDocumentId, Range keywordRange, 
 			int spanContextSize, SpanDirection direction) throws IOException {
-		
+	
 		SpanContext spanContext = new SpanContext(sourceDocumentId);
+
 		
-		List<DBPosition> tokensOfKeywordRange = 
-			getTokensForRange(session, sourceDocumentId, keywordRange);
-		
-		for (DBPosition pos : tokensOfKeywordRange) {
-			logger.info("Found token: " + pos);
-		}
+		List<Position> tokensOfKeywordRange = 
+				getTokensForRange(db, sourceDocumentId, keywordRange);
 		
 		if (tokensOfKeywordRange.size() > 0) {
 			if (direction.equals(SpanDirection.Both)
@@ -92,28 +88,29 @@ public class CollocationSearcher {
 						tokensOfKeywordRange.get(
 								tokensOfKeywordRange.size()-1).getTokenOffset();
 				
-				List<DBPosition> forwardContextTokens = 
+				List<Position> forwardContextTokens = 
 					getTokensForContext(
-						session, true, sourceDocumentId, 
+						db, true, sourceDocumentId, 
 						lastTokenOffset, spanContextSize);
-				for (DBPosition pos : forwardContextTokens) {
+				for (Position pos : forwardContextTokens) {
 					spanContext.addForwardToken(
 						new TermInfo(pos.getTerm().getTerm(), 
 								pos.getCharacterStart(), pos.getCharacterEnd(),
 								pos.getTokenOffset()));
 				}
 			}
+			
 			if (direction.equals(SpanDirection.Both)
 					|| direction.equals(SpanDirection.Left)) {
 				int firstTokenOffset = 
 						tokensOfKeywordRange.get(0).getTokenOffset();
 
-				List<DBPosition> backwardContextTokens = 
+				List<Position> backwardContextTokens = 
 					getTokensForContext(
-						session, false, sourceDocumentId, 
+						db, false, sourceDocumentId, 
 						firstTokenOffset, spanContextSize);
 				
-				for (DBPosition pos : backwardContextTokens) {
+				for (Position pos : backwardContextTokens) {
 					spanContext.addBackwardToken(
 						new TermInfo(pos.getTerm().getTerm(), 
 								pos.getCharacterStart(), pos.getCharacterEnd(), 
@@ -122,86 +119,53 @@ public class CollocationSearcher {
 				
 			}
 		}
-		else {
-			logger.info("no tokens at " + keywordRange + "@" +sourceDocumentId);
-		}
-		
 		return spanContext;
 	}
 	
-	@SuppressWarnings("unchecked")
-	private List<DBPosition> getTokensForContext(
-		Session session, boolean forward, String sourceDocumentId, 
-		int tokenOffset, int tokenCount) {
+	
+	private List<Position> getTokensForRange(
+			DSLContext db, String sourceDocumentId, Range keywordRange) {
 		
-		StringBuilder queryBuilder = new StringBuilder();
-		String conc = "";
-		for (
-				int i=1; i<=tokenCount; i++) {
-			
-			queryBuilder.append(conc);
-			queryBuilder.append(" SELECT * FROM " ); 
-			queryBuilder.append(DBPosition.TABLENAME);
-			queryBuilder.append(" p ");
-			queryBuilder.append(" JOIN ");
-			queryBuilder.append(DBTerm.TABLENAME); 
-			queryBuilder.append(" t ON t.termID = p.termID and t.documentID = '");
-			queryBuilder.append(sourceDocumentId); 
-			queryBuilder.append("' WHERE p.tokenOffset = ");
-			queryBuilder.append(forward?(tokenOffset+i):(tokenOffset-i));
-			conc = " UNION ";
+		return db
+		.select()
+		.from(POSITION)
+		.join(TERM)
+			.on(TERM.TERMID.eq(POSITION.TERMID))
+			.and(TERM.DOCUMENTID.eq(sourceDocumentId))
+		.where(POSITION.CHARACTERSTART.lessThan(keywordRange.getEndPoint()))
+		.and(POSITION.CHARACTEREND.greaterThan(keywordRange.getStartPoint()))
+		.orderBy(POSITION.TOKENOFFSET.asc())
+		.fetch()
+		.map(new PositionMapper());
+	}
+
+	private List<Position> getTokensForContext(
+			DSLContext db, boolean forward, String sourceDocumentId, 
+			int tokenOffset, int tokenCount) {
+
+		Select<Record> query = db
+		.select()
+		.from(POSITION)
+		.join(TERM)
+			.on(TERM.TERMID.eq(POSITION.TERMID))
+			.and(TERM.DOCUMENTID.eq(sourceDocumentId))
+		.where(POSITION.TOKENOFFSET.eq(forward?(tokenOffset+1):(tokenOffset-1)));
+		
+		for (int i=2; i<=tokenCount; i++) {
+			query = query.union(
+				db
+				.select()
+				.from(POSITION)
+				.join(TERM)
+					.on(TERM.TERMID.eq(POSITION.TERMID))
+					.and(TERM.DOCUMENTID.eq(sourceDocumentId))
+				.where(POSITION.TOKENOFFSET
+						.eq(forward?(tokenOffset+i):(tokenOffset-i))));
 		}
-		String query = queryBuilder.toString();
-		logger.info("Query: " + query);
 		
-		SQLQuery sqlQuery = session.createSQLQuery(query);
-		sqlQuery.addEntity("position", DBPosition.class);
-		
-		return sqlQuery.list();
-	}
-	
-	@SuppressWarnings("unchecked")
-	private List<DBPosition> getTokensForRange(
-			Session session, String sourceDocumentId, Range range) {
-		String query = 
-				" from " + DBPosition.class.getSimpleName() + " as pos " +
-				" where pos.term.documentId = '" + sourceDocumentId + "'" +
-				" and pos.characterStart < " + range.getEndPoint() + 
-				" and pos.characterEnd > " + range.getStartPoint() +
-				" order by pos.tokenOffset asc";
-
-		logger.info("Query: " + query);
-		Query hqlQuery = 
-				session.createQuery(query);
-		
-		return hqlQuery.list();
+		return query.fetch().map(new PositionMapper());
 	}
 
-	@SuppressWarnings("unchecked")
-	private List<DBPosition> getTokensForRange(
-			Query query, String sourceDocumentId, Range range) {
-
-		query.setString("curDocumentId", sourceDocumentId);
-		query.setInteger("curCharStart", range.getEndPoint());
-		query.setInteger("curCharEnd", range.getStartPoint());
-
-		logger.info("Query: " + query.getQueryString());
-		
-		return query.list();
-	}
-	
-	
-	private Query createTokensForRangeQuery(Session session) {
-		String query = 
-		" from " + DBPosition.class.getSimpleName() + " as pos " +
-		" where pos.term.documentId = :curDocumentId" +
-		" and pos.characterStart < :curCharStart" +
-		" and pos.characterEnd > :curCharEnd" +
-		" order by pos.tokenOffset asc";
-
-		
-		return session.createQuery(query);
-	}
 	//TODO: this is way too slow, huge union query solutions are a bit faster but 
 	// vulnerable if the size of the union query grows. 
 	// Maybe parallelization of the baserow-for-loop could help, needs more investigation
@@ -209,36 +173,29 @@ public class CollocationSearcher {
 				QueryResult collocationConditionResult, int spanContextSize,
 				SpanDirection direction) throws IOException {
 		
-		QueryResultRowArray result = new QueryResultRowArray();
-		final Session session = sessionFactory.openSession();
-		try {
-			Map<QueryResultRow, List<TermInfo>> rowToTermInfoListMapping = 
-					new HashMap<QueryResultRow, List<TermInfo>>();
-			Query getTokensQuery = createTokensForRangeQuery(session);
-			for (QueryResultRow baseRow : baseResult) {
-				SpanContext spanContext = getSpanContextFor(
-						session, baseRow.getSourceDocumentId(), 
-						baseRow.getRange(), spanContextSize, direction);
-				if (spanContextMeetsCollocCondition(
-						getTokensQuery, spanContext, 
-						collocationConditionResult, rowToTermInfoListMapping)) {
-					result.add(baseRow);
-				}
-			}
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
 
-			return result;
+		QueryResultRowArray result = new QueryResultRowArray();
+		
+		Map<QueryResultRow, List<TermInfo>> rowToTermInfoListMapping = 
+				new HashMap<QueryResultRow, List<TermInfo>>();
+		
+		for (QueryResultRow baseRow : baseResult) {
+			SpanContext spanContext = getSpanContextFor(
+					db, baseRow.getSourceDocumentId(), 
+					baseRow.getRange(), spanContextSize, direction);
+			if (spanContextMeetsCollocCondition(
+					db, spanContext, 
+					collocationConditionResult, rowToTermInfoListMapping)) {
+				result.add(baseRow);
+			}
 		}
-		finally {
-			CloseSafe.close(new Closeable() {
-				public void close() throws IOException {
-					session.close();
-				}
-			});
-		}
+
+		return result;
 	}
 	
 	private boolean spanContextMeetsCollocCondition(
-			Query getTokensQuery, SpanContext spanContext, 
+			DSLContext db, SpanContext spanContext, 
 			QueryResult collocationConditionResult, 
 			Map<QueryResultRow, List<TermInfo>> rowToTermInfoListMapping) {
 		
@@ -246,15 +203,15 @@ public class CollocationSearcher {
 		for (QueryResultRow row : collocationConditionResult) {
 			if (spanContext.getSourceDocumentId().equals(row.getSourceDocumentId())) {
 				if (!rowToTermInfoListMapping.containsKey(row)) {
-					List<DBPosition> collocationConditionTokens = 
+					List<Position> collocationConditionTokens = 
 							getTokensForRange(
-								getTokensQuery, row.getSourceDocumentId(), 
+								db, row.getSourceDocumentId(), 
 								row.getRange());
 					
 					List<TermInfo> collocCondOrderedTermInfos = 
 							new ArrayList<TermInfo>();
 					
-					for (DBPosition pos : collocationConditionTokens) {
+					for (Position pos : collocationConditionTokens) {
 						collocCondOrderedTermInfos.add(
 							new TermInfo(
 								pos.getTerm().getTerm(), 
@@ -275,31 +232,22 @@ public class CollocationSearcher {
 	}
 	
 	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range) {
-		final Session session = sessionFactory.openSession();
-		try {
-			List<DBPosition> tokens = 
-					getTokensForRange(
-						session, sourceDocumentId, 
-						range);
-			
-			List<TermInfo> termInfos = 
-					new ArrayList<TermInfo>();
-			
-			for (DBPosition pos : tokens) {
-				termInfos.add(
-					new TermInfo(
-						pos.getTerm().getTerm(), 
-						pos.getCharacterStart(), pos.getCharacterEnd(),
-						pos.getTokenOffset()));
-			}
-			return termInfos;
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+		List<Position> tokens = 
+				getTokensForRange(
+					db, sourceDocumentId, 
+					range);
+		
+		List<TermInfo> termInfos = 
+				new ArrayList<TermInfo>();
+		
+		for (Position pos : tokens) {
+			termInfos.add(
+				new TermInfo(
+					pos.getTerm().getTerm(), 
+					pos.getCharacterStart(), pos.getCharacterEnd(),
+					pos.getTokenOffset()));
 		}
-		finally {
-			CloseSafe.close(new Closeable() {
-				public void close() throws IOException {
-					session.close();
-				}
-			});
-		}
+		return termInfos;
 	}
 }

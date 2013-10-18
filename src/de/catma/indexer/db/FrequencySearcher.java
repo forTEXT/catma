@@ -29,37 +29,30 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.SelectConditionStep;
+import org.jooq.conf.ParamType;
 import org.jooq.impl.DSL;
 
-import de.catma.indexer.db.model.DBPosition;
-import de.catma.indexer.db.model.DBTerm;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 
 class FrequencySearcher {
 	
-	private SessionFactory sessionFactory;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private DataSource dataSource;
 	
-	public FrequencySearcher(SessionFactory sessionFactory) throws NamingException {
+	public FrequencySearcher() throws NamingException {
 		super();
-		this.sessionFactory = sessionFactory;
 		Context  context = new InitialContext();
 		this.dataSource = (DataSource) context.lookup("catmads");
 	}
 
-	
-	public QueryResult search2(
+	public QueryResult search(
 			List<String> documentIdList, CompareOperator comp1, int freq1,
 			CompareOperator comp2, int freq2) {
 		
@@ -112,44 +105,24 @@ class FrequencySearcher {
 		}
 		
 		
-		Result<Record> record = query.fetch();
+		Result<Record> records = query.fetch();
 		
-		
-		
-		return null;
-	}
-	
-	
-	public QueryResult search(
-			List<String> documentIdList, CompareOperator comp1, int freq1,
-			CompareOperator comp2, int freq2) {
-
 		HashMap<String, LazyDBPhraseQueryResult> phraseResultMapping = 
 				new HashMap<String, LazyDBPhraseQueryResult>();
-		Session session = sessionFactory.openSession();
+		TermMapper termMapper = new TermMapper();
 		
-		if (documentIdList.isEmpty()) {
-			throw new IllegalArgumentException("documentIdList cannot be empty");
-		}
-		else {
-			StringBuilder documentIdListAsString = new StringBuilder(" (");
-			String conc = "";
-			for (String documentId : documentIdList) {
-				documentIdListAsString.append(conc);
-				documentIdListAsString.append("'");
-				documentIdListAsString.append(documentId);
-				documentIdListAsString.append("'");
-				conc = ",";
+		for (Record r : records) {
+			LazyDBPhraseQueryResult qr = null;
+			String term = r.getValue(TERM.TERM_);
+			if (!phraseResultMapping.containsKey(term)) {
+				qr = new LazyDBPhraseQueryResult(term);
+				phraseResultMapping.put(term, qr);
 			}
-			documentIdListAsString.append( ") ");
+			else {
+				qr = phraseResultMapping.get(term);
+			}
 			
-			for (String documentId : documentIdList) {
-				addResultToMapping(
-					getResultsFor(
-							documentIdListAsString.toString(),
-							documentId, session, comp1, freq1, comp2, freq2), 
-					phraseResultMapping);
-			}
+			qr.addTerm(termMapper.map(r));
 		}
 		
 		GroupedQueryResultSet groupedQueryResultSet = new GroupedQueryResultSet();
@@ -157,100 +130,4 @@ class FrequencySearcher {
 		
 		return groupedQueryResultSet;
 	}
-
-	
-	@SuppressWarnings("rawtypes")
-	private List getResultsFor(
-			String documentIdList,
-			String documentId,
-			Session session, CompareOperator comp1, int freq1,
-			CompareOperator comp2, int freq2) {
-		StringBuilder builder = new StringBuilder();
-		builder.append(
-				" select t, count(p) as freq from "
-				+ DBTerm.class.getSimpleName() + " t, "
-				+ DBPosition.class.getSimpleName() 
-				+ " p " +
-				" where t = p.term ");
-		
-		builder.append(" and t.documentId = '");
-		builder.append(documentId);
-		builder.append("'");
-
-		if ((freq1 > 0) || (!comp1.equals(CompareOperator.GREATERTHAN))) {
-			builder.append(
-					" and (" +
-						" select count(p2) " +
-						" from "
-					+ DBPosition.class.getSimpleName() 
-					+ " p2, "
-					+ DBTerm.class.getSimpleName() + " t2 " +
-						" where p2.term = t2 and t2.term = t.term ");
-			
-			if (documentId != null) {
-				builder.append(" and t2.documentId in ");
-				builder.append(documentIdList);
-			}		
-			builder.append(") ");
-			builder.append(comp1);
-			builder.append(" ");
-			builder.append(freq1);
-		}
-		
-		if (comp2 != null) {
-			builder.append(
-					" and (" +
-						" select count(p2) " +
-						" from "
-				+ DBPosition.class.getSimpleName() 
-				+ " p2, "
-				+ DBTerm.class.getSimpleName() + " t2 " +
-						" where p2.term = t2 and t2.term = t.term ");
-			if (documentId != null) {
-				builder.append(" and t2.documentId in ");
-				builder.append(documentIdList);
-			}		
-			builder.append(") ");
-			builder.append(comp2);
-			builder.append(" ");
-			builder.append(freq2);
-		}
-		builder.append(" group by t");
-		String query = builder.toString();
-		logger.info("query: " + query);
-		
-		Query q = 
-				session.createQuery(query);
-		
-		return q.list();
-	}
-
-	private void addResultToMapping(@SuppressWarnings("rawtypes") List list,
-			HashMap<String, LazyDBPhraseQueryResult> phraseResultMapping) {
-		
-		for (Object resultRow : list) {
-			DBTerm t = (DBTerm)((Object[])resultRow)[0];
-			Integer freq = Integer.valueOf(((Object[])resultRow)[1].toString());
-			
-			//TODO: remove freq column from table Term or are we running in performance problems then? 
-			if (t.getFrequency() != freq) {
-				throw new IllegalStateException(
-					"t.getFrequency() != freq : " + t.getFrequency() + " != " + freq );
-			}
-			
-			t.setFrequency(freq);
-			
-			if (!phraseResultMapping.containsKey(t.getTerm())) {
-				phraseResultMapping.put(
-					t.getTerm(), 
-					new LazyDBPhraseQueryResult(t.getTerm()));
-			}
-			
-			phraseResultMapping.get(t.getTerm()).addTerm(t);
-		}
-		
-	}
-	
-	
-
 }

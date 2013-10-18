@@ -27,14 +27,11 @@ import java.util.logging.Logger;
 
 import javax.naming.NamingException;
 
-import org.hibernate.SessionFactory;
-
 import de.catma.document.Range;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.Indexer;
-import de.catma.indexer.IndexerPropertyKey;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
@@ -49,22 +46,14 @@ import de.catma.tag.TagsetDefinition;
 public class DBIndexer implements Indexer {
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
-	private SessionFactory sessionFactory; 
 	private TagReferenceIndexer tagReferenceIndexer;
 	private SourceDocumentIndexer sourceDocumentIndexer;
 
 	public DBIndexer(Map<String, Object> properties) throws NamingException {
-		this.sessionFactory = 
-				(SessionFactory)properties.get(
-						IndexerPropertyKey.SessionFactory.name());
 		tagReferenceIndexer = new TagReferenceIndexer();
 		sourceDocumentIndexer = new SourceDocumentIndexer();
 	}
 	
-	public void setSessionFactory(SessionFactory sessionFactory) {
-		this.sessionFactory = sessionFactory;
-	}
-
 	public void index(SourceDocument sourceDocument)
 			throws IOException {
 		
@@ -162,34 +151,53 @@ public class DBIndexer implements Indexer {
 	public QueryResult searchFreqency(
 			List<String> documentIdList, 
 			CompareOperator comp1, int freq1,
-			CompareOperator comp2, int freq2) {
-		FrequencySearcher freqSearcher = new FrequencySearcher(sessionFactory);
-		return freqSearcher.search(documentIdList, comp1, freq1, comp2, freq2);
+			CompareOperator comp2, int freq2) throws IOException {
+		try {
+			FrequencySearcher freqSearcher = new FrequencySearcher();
+			return freqSearcher.search(documentIdList, comp1, freq1, comp2, freq2);
+		} catch (NamingException e) {
+			throw new IOException(e);
+		}
 	}
 
 	public SpanContext getSpanContextFor(
 			String sourceDocumentId, Range range, int spanContextSize,
 			SpanDirection direction) throws IOException {
-		CollocationSearcher collocationSearcher = 
-				new CollocationSearcher(sessionFactory);
-		
-		return collocationSearcher.getSpanContextFor(
-				sourceDocumentId, range, spanContextSize, direction);
+		try {
+			CollocationSearcher collocationSearcher = 
+					new CollocationSearcher();
+			
+			return collocationSearcher.getSpanContextFor(
+					sourceDocumentId, range, spanContextSize, direction);
+		}
+		catch (NamingException ne) {
+			throw new IOException(ne);
+		}
 	}
 	
 	public QueryResult searchCollocation(QueryResult baseResult,
 			QueryResult collocationConditionResult, int spanContextSize,
 			SpanDirection direction) throws IOException {
-		CollocationSearcher collocationSearcher = 
-				new CollocationSearcher(sessionFactory);
-		return collocationSearcher.search(
-			baseResult, collocationConditionResult, spanContextSize, direction);
+		try {
+			CollocationSearcher collocationSearcher = 
+					new CollocationSearcher();
+			return collocationSearcher.search(
+				baseResult, collocationConditionResult, spanContextSize, direction);
+		}
+		catch (NamingException ne) {
+			throw new IOException(ne);
+		}
 	}
 	
-	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range) {
-		CollocationSearcher collocationSearcher = 
-				new CollocationSearcher(sessionFactory);
-		return collocationSearcher.getTermInfosFor(sourceDocumentId, range);
+	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range) throws IOException {
+		try {
+			CollocationSearcher collocationSearcher = 
+					new CollocationSearcher();
+			return collocationSearcher.getTermInfosFor(sourceDocumentId, range);
+		}
+		catch (NamingException ne) {
+			throw new IOException(ne);
+		}
 	}
 
 	

@@ -27,6 +27,7 @@ import java.util.Set;
 
 import javax.naming.NamingException;
 
+import de.catma.indexer.db.model.Term;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.PhraseResult;
 import de.catma.queryengine.result.QueryResultRow;
