@@ -361,9 +361,7 @@ class UserMarkupCollectionHandler {
 						pValueInsertBatch.bind(propertyId, value);
 					}
 					
-					pValueInsertBatch.execute();
-					
-					authorPresent =
+					authorPresent = authorPresent ||
 						p.getPropertyDefinition().getName().equals(
 							PropertyDefinition.SystemPropertyName.catma_markupauthor.name());
 				}
@@ -412,8 +410,6 @@ class UserMarkupCollectionHandler {
 						for (String value : p.getPropertyValueList().getValues()) {
 							pValueInsertBatch.bind(propertyId, value);
 						}
-						
-						pValueInsertBatch.execute();
 					}
 				}
 

@@ -392,7 +392,7 @@ public class TagReferenceIndexer {
 				.execute();
 			}
 			
-			// remove delted Tag Defs and their Properties
+			// remove deleted Tag Defs and their Properties
 			
 			Set<String> deletedTagDefinitionUUIDs = 
 					tagsetDefinitionUpdateLog.getDeletedTagDefinitionUuids();
