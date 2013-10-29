@@ -313,6 +313,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 					new CMenuAction<UserMarkupCollection>("Refresh") {
 				@Override
 				public void handle(UserMarkupCollection umc) {
+					//TODO: close all active tagsets
 					UserMarkupCollectionReference umcRef =
 							new UserMarkupCollectionReference(umc.getId(), umc.getContentInfoSet());
 					removeUserMarkupCollection(umcRef);

@@ -11,6 +11,9 @@ import de.catma.user.Role;
 public class UserMapper implements RecordMapper<Record, DBUser> {
 
 	public DBUser map(Record record) {
+		if (record == null) {
+			return null;
+		}
 		return new DBUser(
 			record.getValue(USER.USERID),
 			record.getValue(USER.IDENTIFIER),

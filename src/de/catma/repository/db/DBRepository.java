@@ -33,7 +33,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -67,7 +67,6 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.IndexerFactory;
-import de.catma.indexer.IndexerPropertyKey;
 import de.catma.repository.db.jooq.TransactionalDSLContext;
 import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
 import de.catma.repository.db.mapper.UserMapper;
@@ -278,11 +277,6 @@ public class DBRepository implements IndexedRepository {
 	public void open(Map<String, String> userIdentification) throws Exception {
 		initTagManagerListeners();
 		
-		
-		Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put(IndexerPropertyKey.IndexerUser.name(), user);
-		properties.put(IndexerPropertyKey.IndexerPass.name(), pass);
-		
 		Context context = new InitialContext();
 
 		if (init.compareAndSet(false, true)) {
@@ -306,9 +300,10 @@ public class DBRepository implements IndexedRepository {
 		this.dbTagLibraryHandler = new TagLibraryHandler(this, idGenerator);
 		this.dbUserMarkupCollectionHandler = 
 				new UserMarkupCollectionHandler(this);
+		
 		this.dbCorpusHandler = new CorpusHandler(this);
 
-		indexer = indexerFactory.createIndexer(properties);
+		indexer = indexerFactory.createIndexer(Collections.<String, Object>emptyMap());
 		
 		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
 		
@@ -319,14 +314,13 @@ public class DBRepository implements IndexedRepository {
 	private void loadCurrentUser(DSLContext db,
 			Map<String, String> userIdentification) {
 
-		DBUser user = db
+		Record record = db
 		.select()
 		.from(USER)
 		.where(USER.IDENTIFIER.eq(userIdentification.get("user.ident")))
-		.fetchOne()
-		.map(new UserMapper());
+		.fetchOne();
 		
-		if (user == null) {
+		if (record == null) {
 			Record idRecord = db
 			.insertInto(
 				USER,
@@ -340,14 +334,15 @@ public class DBRepository implements IndexedRepository {
 			.returning(USER.USERID)
 			.fetchOne();
 			
-			user = new DBUser(
+			currentUser = new DBUser(
 				idRecord.getValue(USER.USERID), 
 				userIdentification.get("user.ident"),
 				false,
 				Role.STANDARD);
 		}
-		
-		currentUser = user;
+		else {
+			currentUser = record.map(new UserMapper());
+		}
 	}
 
 	private void loadContent(DSLContext db) 
@@ -720,12 +715,18 @@ public class DBRepository implements IndexedRepository {
 					accessMode = corpusAccess;
 				}
 
-				Integer userCorpusId = db
+				Record record = db
 				.select(USER_CORPUS.USER_CORPUSID)
 				.from(USER_CORPUS)
 				.where(USER_CORPUS.USERID.eq(targetUserId))
-				.fetchOne()
-				.map(new IDFieldToIntegerMapper(USER_CORPUS.USER_CORPUSID));
+				.fetchOne();
+				
+				Integer userCorpusId = null;
+				
+				if (record != null) {
+					userCorpusId = record.map(
+						new IDFieldToIntegerMapper(USER_CORPUS.USER_CORPUSID));
+				}
 				
 				db.beginTransaction();
 				
@@ -794,13 +795,21 @@ public class DBRepository implements IndexedRepository {
 			accessMode = sourceDocAccessMode;
 		}
 		
-		Integer userSourceDocId = db
+		 Record record = db
 		.select(USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID)
 		.from(USER_SOURCEDOCUMENT)
 		.where(USER_SOURCEDOCUMENT.USERID.eq(targetUserId))
 		.and(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(sourceDocumentId))
-		.fetchOne()
-		.map(new IDFieldToIntegerMapper(USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID));
+		.fetchOne();
+		
+		
+		Integer userSourceDocId = null;
+		
+		if (record != null) {
+			userSourceDocId = 
+				record.map(new IDFieldToIntegerMapper(
+						USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID));
+		}
 		
 		if (userSourceDocId == null) {
 			db
@@ -903,13 +912,20 @@ public class DBRepository implements IndexedRepository {
 		Integer userMarkupCollectionId = 
 				Integer.valueOf(userMarkupCollectionRef.getId());
 		
-		Integer userUmcId = db
+		Record record = db
 		.select(USER_USERMARKUPCOLLECTION.USER_USERMARKUPCOLLECTIOID)
 		.from(USER_USERMARKUPCOLLECTION)
 		.where(USER_USERMARKUPCOLLECTION.USERID.eq(targetUserId))
 		.and(USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
-		.fetchOne()
-		.map(new IDFieldToIntegerMapper(USER_USERMARKUPCOLLECTION.USER_USERMARKUPCOLLECTIOID));
+		.fetchOne();
+		
+		Integer userUmcId = null;
+		
+		if (record != null) {
+			userUmcId = record.map(
+				new IDFieldToIntegerMapper(
+						USER_USERMARKUPCOLLECTION.USER_USERMARKUPCOLLECTIOID));
+		}
 		
 		if (userUmcId == null) {
 			db
@@ -953,13 +969,18 @@ public class DBRepository implements IndexedRepository {
 				accessMode = libAccess;
 			}
 			
-			Integer userTagLibId = db
+			Record record = db
 			.select(USER_TAGLIBRARY.USER_TAGLIBRARYID)
 			.from(USER_TAGLIBRARY)
 			.where(USER_TAGLIBRARY.USERID.eq(targetUserId))
 			.and(USER_TAGLIBRARY.TAGLIBRARYID.eq(tagLibraryId))
-			.fetchOne()
-			.map(new IDFieldToIntegerMapper(USER_TAGLIBRARY.USER_TAGLIBRARYID));
+			.fetchOne();
+			
+			Integer userTagLibId = null;
+			if (record != null) {
+				userTagLibId = record.map(
+					new IDFieldToIntegerMapper(USER_TAGLIBRARY.USER_TAGLIBRARYID));
+			}
 			
 			if (userTagLibId == null) {
 				db

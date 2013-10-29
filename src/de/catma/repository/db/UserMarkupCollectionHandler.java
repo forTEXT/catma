@@ -48,6 +48,7 @@ import javax.sql.DataSource;
 
 import org.jooq.BatchBindStep;
 import org.jooq.DSLContext;
+import org.jooq.DeleteConditionStep;
 import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -1190,7 +1191,7 @@ class UserMarkupCollectionHandler {
 			getUserMarkupCollectionAccessMode(db, userMarkupCollectionId, true);
 			
 			db.beginTransaction();
-			
+			DeleteConditionStep<Record> deleteQuery = 
 			db
 			.delete(PROPERTYVALUE)
 			.where(PROPERTYVALUE.PROPERTYID
@@ -1201,9 +1202,12 @@ class UserMarkupCollectionHandler {
 						.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
 						.and(TAGINSTANCE.UUID.eq(tagInstanceIDbin))
 					.where(PROPERTY.PROPERTYDEFINITIONID
-							.eq(property.getPropertyDefinition().getId()))))
-			.and(PROPERTYVALUE.VALUE.notIn(property.getPropertyValueList().getValues()))
-			.execute();
+							.eq(property.getPropertyDefinition().getId()))));
+			if (!property.getPropertyValueList().getValues().isEmpty()) {
+				deleteQuery = deleteQuery.and(PROPERTYVALUE.VALUE.notIn(property.getPropertyValueList().getValues()));
+			}
+			
+			deleteQuery.execute();
 					
 			List<String> existingValues = db
 			.select(PROPERTYVALUE.VALUE)
