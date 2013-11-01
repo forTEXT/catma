@@ -46,6 +46,7 @@ import com.vaadin.ui.VerticalSplitPanel;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
+import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
@@ -60,7 +61,6 @@ import de.catma.ui.tagger.MarkupCollectionsPanel.MarkupCollectionPanelEvent;
 import de.catma.ui.tagger.TagInstanceTree.TagIntanceActionListener;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 import de.catma.ui.tagmanager.TagsetTree;
-import de.catma.util.Pair;
 
 public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionListener {
 
@@ -427,7 +427,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	}
 
 	public void showTagInstanceInfo(List<String> instanceIDs) {
-		List<Pair<String,TagInstance>> tagInstances = 
+		List<TagInstanceInfo> tagInstances = 
 				markupCollectionsPanel.getTagInstances(instanceIDs);
 		tagInstancesTree.setTagInstances(tagInstances);
 	}	

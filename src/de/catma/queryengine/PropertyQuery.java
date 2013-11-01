@@ -117,27 +117,27 @@ public class PropertyQuery extends Query {
         }
         
         Set<String> propertyDefinitionIDs = new HashSet<String>();
-        for (String userMarkupCollID : relevantUserMarkupCollIDs) {
-        	UserMarkupCollection umc = 
-        			repository.getUserMarkupCollection(
-        				new UserMarkupCollectionReference(
-        						userMarkupCollID, new ContentInfoSet()));
-        	for (TagsetDefinition tagsetDefinition : umc.getTagLibrary()) {
-        		
-        		for (TagDefinition tagDef : tagsetDefinition) {
-        			
-        			PropertyDefinition pd = 
-        					tagDef.getPropertyDefinitionByName(propertyName); 
-        			if (pd != null) {
-        				propertyDefinitionIDs.add(pd.getUuid());
-        			}
-        		}
-        	}
-        }
-        
-        if (propertyDefinitionIDs.isEmpty()) {
-        	return new QueryResultRowArray();
-        }
+//        for (String userMarkupCollID : relevantUserMarkupCollIDs) {
+//        	UserMarkupCollection umc = 
+//        			repository.getUserMarkupCollection(
+//        				new UserMarkupCollectionReference(
+//        						userMarkupCollID, new ContentInfoSet()));
+//        	for (TagsetDefinition tagsetDefinition : umc.getTagLibrary()) {
+//        		
+//        		for (TagDefinition tagDef : tagsetDefinition) {
+//        			
+//        			PropertyDefinition pd = 
+//        					tagDef.getPropertyDefinitionByName(propertyName); 
+//        			if (pd != null) {
+//        				propertyDefinitionIDs.add(pd.getUuid());
+//        			}
+//        		}
+//        	}
+//        }
+//        
+//        if (propertyDefinitionIDs.isEmpty()) {
+//        	return new QueryResultRowArray();
+//        }
         
         QueryResult result = 
 				indexer.searchProperty(

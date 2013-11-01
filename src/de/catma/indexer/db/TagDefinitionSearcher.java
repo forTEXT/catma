@@ -120,7 +120,8 @@ public class TagDefinitionSearcher {
 								masterRecord.getValue(TAGREFERENCE.TAGDEFINITIONID)),
 						idGenerator.uuidBytesToCatmaID(
 								masterRecord.getValue(TAGREFERENCE.TAGINSTANCEID)),
-						masterRecord.getValue(PROPERTY.NAME),
+						idGenerator.uuidBytesToCatmaID(
+								masterRecord.getValue(PROPERTY.PROPERTYDEFINITIONID)),
 						masterRecord.getValue(PROPERTY.VALUE)
 					));
 			}

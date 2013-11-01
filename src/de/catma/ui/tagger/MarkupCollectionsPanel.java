@@ -51,6 +51,7 @@ import com.vaadin.ui.Window.Notification;
 import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
+import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
@@ -1098,7 +1099,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		updateableforeignTagsetDefinitions.remove(tagsetDefinition);
 	}
 
-	public List<Pair<String,TagInstance>> getTagInstances(List<String> instanceIDs) {
+	public List<TagInstanceInfo> getTagInstances(List<String> instanceIDs) {
 		return userMarkupCollectionManager.getTagInstances(instanceIDs);
 	}
 

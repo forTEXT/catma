@@ -344,6 +344,14 @@ class UserMarkupCollectionHandler {
 
 				boolean authorPresent = false;
 				for (Property p : ti.getSystemProperties()) {
+					
+					if (p.getPropertyDefinition().getName().equals(
+							PropertyDefinition.SystemPropertyName.catma_markupauthor.name())) {
+						p.setPropertyValueList(new PropertyValueList(
+								dbRepository.getCurrentUser().getIdentifier()));
+						authorPresent = true;
+					}
+					
 					Integer propertyId = db
 						.insertInto(
 							PROPERTY,
@@ -361,9 +369,6 @@ class UserMarkupCollectionHandler {
 						pValueInsertBatch.bind(propertyId, value);
 					}
 					
-					authorPresent = authorPresent ||
-						p.getPropertyDefinition().getName().equals(
-							PropertyDefinition.SystemPropertyName.catma_markupauthor.name());
 				}
 				
 				if (!authorPresent) {

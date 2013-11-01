@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
+import com.vaadin.data.Item;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.terminal.ClassResource;
@@ -37,6 +38,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.Window.Notification;
 
+import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
@@ -45,7 +47,6 @@ import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.StringListProperty;
 import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
-import de.catma.util.Pair;
 
 public class TagInstanceTree extends HorizontalLayout {
 	
@@ -59,7 +60,8 @@ public class TagInstanceTree extends HorizontalLayout {
 		icon,
 		color,
 		path,
-		instanceId,
+		instanceId, 
+		umc,
 		;
 	}
 	
@@ -206,6 +208,8 @@ public class TagInstanceTree extends HorizontalLayout {
 		tagInstanceTree.setSizeFull();
 		tagInstanceTree.setSelectable(true);
 		tagInstanceTree.setMultiSelect(true);
+		tagInstanceTree.setColumnReorderingAllowed(true);
+		tagInstanceTree.setColumnCollapsingAllowed(true);
 		
 		tagInstanceTree.setContainerDataSource(new HierarchicalContainer());
 		tagInstanceTree.addContainerProperty(
@@ -220,6 +224,9 @@ public class TagInstanceTree extends HorizontalLayout {
 
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.instanceId, String.class, null);
+		
+		tagInstanceTree.addContainerProperty(
+				TagInstanceTreePropertyName.umc, String.class, null);
 
 		tagInstanceTree.setItemCaptionPropertyId(TagInstanceTreePropertyName.caption);
 		tagInstanceTree.setItemIconPropertyId(TagInstanceTreePropertyName.icon);
@@ -234,13 +241,16 @@ public class TagInstanceTree extends HorizontalLayout {
 						TagInstanceTreePropertyName.caption, 
 						TagInstanceTreePropertyName.color,
 						TagInstanceTreePropertyName.path,
-						TagInstanceTreePropertyName.instanceId});
+						TagInstanceTreePropertyName.instanceId,
+						TagInstanceTreePropertyName.umc});
 		tagInstanceTree.setColumnHeader(
 				TagInstanceTreePropertyName.color, "Tag Color");
 		tagInstanceTree.setColumnHeader(
 				TagInstanceTreePropertyName.path, "Tag Path");
 		tagInstanceTree.setColumnHeader(
 				TagInstanceTreePropertyName.instanceId, "Tag Instance ID");
+		tagInstanceTree.setColumnHeader(
+				TagInstanceTreePropertyName.umc, "User Markup Collection");
 		addComponent(tagInstanceTree);
 		setExpandRatio(tagInstanceTree, 1.0f);
 		
@@ -257,27 +267,36 @@ public class TagInstanceTree extends HorizontalLayout {
 		addComponent(buttonGrid);
 	}
 	
-	public void setTagInstances(List<Pair<String,TagInstance>> tagInstances) {
+	public void setTagInstances(List<TagInstanceInfo> tagInstances) {
 		tagInstanceTree.removeAllItems();
-		for (Pair<String,TagInstance> ti : tagInstances) {
+		for (TagInstanceInfo ti : tagInstances) {
 			ClassResource tagIcon = 
 					new ClassResource(
 						"ui/tagmanager/resources/reddiamd.gif", getApplication());
-			tagInstanceTree.addItem(
-					new Object[] {
-						ti.getSecond().getTagDefinition().getName(),
-						ti.getFirst(),
-						ti.getSecond().getUuid()
-					},
-					ti.getSecond());
-			tagInstanceTree.getItem(
-					ti.getSecond()).getItemProperty(
-							TagInstanceTreePropertyName.icon).setValue(tagIcon);
+			
+			tagInstanceTree.addItem(ti.getTagInstance());
+			Item item = tagInstanceTree.getItem(ti.getTagInstance());
+			
+			item.getItemProperty(
+					TagInstanceTreePropertyName.caption).setValue(
+							ti.getTagInstance().getTagDefinition().getName());
+			item.getItemProperty(
+					TagInstanceTreePropertyName.path).setValue(
+							ti.getTagPath());
+			item.getItemProperty(
+					TagInstanceTreePropertyName.instanceId).setValue(
+							ti.getTagInstance().getUuid());
+			item.getItemProperty(
+					TagInstanceTreePropertyName.umc).setValue(
+							ti.getUserMarkupCollection().getName());
+			item.getItemProperty(
+					TagInstanceTreePropertyName.icon).setValue(tagIcon);
 			
 			tagInstanceTree.setChildrenAllowed(
-					ti.getSecond(), !ti.getSecond().getUserDefinedProperties().isEmpty());
+					ti.getTagInstance(), 
+					!ti.getTagInstance().getUserDefinedProperties().isEmpty());
 			
-			for (Property property : ti.getSecond().getUserDefinedProperties()) {
+			for (Property property : ti.getTagInstance().getUserDefinedProperties()) {
 				ClassResource propIcon = 
 						new ClassResource(
 							"ui/tagmanager/resources/ylwdiamd.gif", getApplication());
@@ -286,29 +305,33 @@ public class TagInstanceTree extends HorizontalLayout {
 				if (values.isEmpty()) {
 					caption += " (not set)";
 				}
-				tagInstanceTree.addItem(
-						new Object[] {
-								caption,
-								"",
-								""
-						},
-						property);
-				tagInstanceTree.getItem(property).getItemProperty(
+				tagInstanceTree.addItem(property);
+				item = tagInstanceTree.getItem(property);
+				
+				item.getItemProperty(
+						TagInstanceTreePropertyName.caption).setValue(
+								caption);
+				item.getItemProperty(
 							TagInstanceTreePropertyName.icon).setValue(propIcon);
-				tagInstanceTree.setParent(property, ti.getSecond());
+				tagInstanceTree.setParent(property, ti.getTagInstance());
 				tagInstanceTree.setChildrenAllowed(property, !values.isEmpty());
 				
 				for (String value : values) {
 					String itemId = String.valueOf(property.hashCode()) + value; 
-					tagInstanceTree.addItem(new Object[] {value, "", ""}, 
-							itemId);
+					tagInstanceTree.addItem(itemId);
+					item = tagInstanceTree.getItem(itemId);
+					
+					item.getItemProperty(
+							TagInstanceTreePropertyName.caption).setValue(
+									value);
+
 					tagInstanceTree.setParent(itemId, property);
 					tagInstanceTree.setChildrenAllowed(itemId, false);
 				}
 				tagInstanceTree.setCollapsed(property, false);
 			}
-			if (tagInstanceTree.hasChildren(ti.getSecond())) {
-				tagInstanceTree.setCollapsed(ti.getSecond(), false);
+			if (tagInstanceTree.hasChildren(ti.getTagInstance())) {
+				tagInstanceTree.setCollapsed(ti.getTagInstance(), false);
 			}
 		}
 		
