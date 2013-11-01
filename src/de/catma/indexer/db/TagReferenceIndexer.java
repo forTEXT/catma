@@ -35,6 +35,8 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.jooq.BatchBindStep;
+import org.jooq.DeleteConditionStep;
+import org.jooq.Record;
 import org.jooq.SQLDialect;
 
 import com.google.common.collect.Collections2;
@@ -265,12 +267,20 @@ public class TagReferenceIndexer {
 			
 			db.beginTransaction();
 
-			db
+			
+			DeleteConditionStep<Record> deleteQuery = db
 			.delete(PROPERTY)
 			.where(PROPERTY.TAGINSTANCEID.eq(tagInstanceUUIDBytes))
-			.and(PROPERTY.PROPERTYDEFINITIONID.eq(propDefUUIDBytes))
-			.and(PROPERTY.VALUE.notIn(property.getPropertyValueList().getValues()))
-			.execute();
+			.and(PROPERTY.PROPERTYDEFINITIONID.eq(propDefUUIDBytes));
+			
+			if (!property.getPropertyValueList().getValues().isEmpty()) {
+				deleteQuery = 
+					deleteQuery
+					.and(PROPERTY.VALUE
+						.notIn(property.getPropertyValueList().getValues()));
+			}
+			
+			deleteQuery.execute();
 			
 			BatchBindStep insertPropertyBatch = db.batch(db
 			.insertInto(
