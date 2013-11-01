@@ -31,6 +31,17 @@ public class TagQueryResultRow extends QueryResultRow {
 	private String tagDefinitionId;
 	private String tagInstanceId;
 	private SortedSet<Range> ranges;
+	private String propertyDefinitionId;
+	private String propertyValue;
+
+	public TagQueryResultRow(String sourceDocumentId, List<Range> ranges,
+			String markupCollectionId, String tagDefinitionId,
+			String tagInstanceId, String propertyDefinitionId, String propertyValue) {
+		this(sourceDocumentId, ranges, markupCollectionId, tagDefinitionId, tagInstanceId);
+		
+		this.propertyDefinitionId = propertyDefinitionId;
+		this.propertyValue = propertyValue;
+	}
 	
 	public TagQueryResultRow(String sourceDocumentId, List<Range> ranges,
 			String markupCollectionId, String tagDefinitionId,
@@ -52,7 +63,9 @@ public class TagQueryResultRow extends QueryResultRow {
 		return super.toString()
 				+ ((markupCollectionId == null)?"":("MarkupColl[#"+markupCollectionId+"]"))
 				+ ((tagDefinitionId == null)?"":("TagDef[#"+tagDefinitionId+"]")) 
-				+ ((tagInstanceId == null)?"":("TagInstance[#"+tagInstanceId+"]"));
+				+ ((tagInstanceId == null)?"":("TagInstance[#"+tagInstanceId+"]"))
+				+ ((propertyDefinitionId == null)?"":("PropDef[#"+propertyDefinitionId+"]"))
+				+ ((propertyValue == null)?"":("PropValue["+propertyValue+"]"));
 	}
 
 	public Set<Range> getRanges() {
@@ -65,5 +78,13 @@ public class TagQueryResultRow extends QueryResultRow {
 	
 	public String getTagDefinitionId() {
 		return tagDefinitionId;
+	}
+	
+	public String getPropertyDefinitionId() {
+		return propertyDefinitionId;
+	}
+	
+	public String getPropertyValue() {
+		return propertyValue;
 	}
 }

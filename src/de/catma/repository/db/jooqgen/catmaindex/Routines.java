@@ -45,10 +45,39 @@ public class Routines {
 	}
 
 	/**
+	 * Call <code>CatmaIndex.getTerms</code>
+	 */
+	public static void getterms(org.jooq.Configuration configuration, java.lang.String docid, java.lang.Integer basepos, java.lang.Integer termcount) {
+		de.catma.repository.db.jooqgen.catmaindex.routines.Getterms p = new de.catma.repository.db.jooqgen.catmaindex.routines.Getterms();
+		p.setDocid(docid);
+		p.setBasepos(basepos);
+		p.setTermcount(termcount);
+
+		p.execute(configuration);
+	}
+
+	/**
 	 * Call <code>CatmaIndex.reindex</code>
 	 */
 	public static void reindex(org.jooq.Configuration configuration) {
 		de.catma.repository.db.jooqgen.catmaindex.routines.Reindex p = new de.catma.repository.db.jooqgen.catmaindex.routines.Reindex();
+
+		p.execute(configuration);
+	}
+
+	/**
+	 * Call <code>CatmaIndex.searchPhrase</code>
+	 */
+	public static void searchphrase(org.jooq.Configuration configuration, java.lang.String term1, java.lang.String term2, java.lang.String term3, java.lang.String term4, java.lang.String term5, java.lang.String docid, java.lang.Byte wild, java.lang.Integer limitresult) {
+		de.catma.repository.db.jooqgen.catmaindex.routines.Searchphrase p = new de.catma.repository.db.jooqgen.catmaindex.routines.Searchphrase();
+		p.setTerm1(term1);
+		p.setTerm2(term2);
+		p.setTerm3(term3);
+		p.setTerm4(term4);
+		p.setTerm5(term5);
+		p.setDocid(docid);
+		p.setWild(wild);
+		p.setLimitresult(limitresult);
 
 		p.execute(configuration);
 	}

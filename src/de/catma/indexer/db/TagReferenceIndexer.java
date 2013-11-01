@@ -35,6 +35,9 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.jooq.BatchBindStep;
+import org.jooq.Record;
+import org.jooq.Record2;
+import org.jooq.Result;
 import org.jooq.SQLDialect;
 
 import com.google.common.collect.Collections2;
@@ -103,10 +106,12 @@ public class TagReferenceIndexer {
 				PROPERTY,
 					PROPERTY.TAGINSTANCEID,
 					PROPERTY.PROPERTYDEFINITIONID,
+					PROPERTY.NAME,
 					PROPERTY.VALUE)
 			.values(
 				(byte[])null,
 				(byte[])null,
+				(String)null,
 				(String)null));
 					
 			
@@ -131,6 +136,7 @@ public class TagReferenceIndexer {
 						insertPropertyBatch.bind(
 							tagInstanceUUIDBytes,
 							propertyDefUUIDBytes,
+							property.getName(),
 							value);
 					}
 				}
@@ -251,14 +257,17 @@ public class TagReferenceIndexer {
 				idGenerator.catmaIDToUUIDBytes(
 						property.getPropertyDefinition().getUuid());
 			
-			List<String> existingValues = db
-					.select(PROPERTY.VALUE)
+			Result<Record2<Integer, String>> existingRecords = db
+					.select(PROPERTY.PROPERTYID, PROPERTY.VALUE)
 					.from(PROPERTY)
 					.where(PROPERTY.TAGINSTANCEID.eq(tagInstanceUUIDBytes))
 					.and(PROPERTY.PROPERTYDEFINITIONID.eq(propDefUUIDBytes))
-					.fetch()
-					.map(new FieldToValueMapper<String>(PROPERTY.VALUE));
+					.fetch();
 			
+			List<String> existingValues = 
+					existingRecords.map(new FieldToValueMapper<String>(PROPERTY.VALUE));
+			List<Integer> existingIDs = 
+					existingRecords.map(new FieldToValueMapper<Integer>(PROPERTY.PROPERTYID));
 			Collection<String> toBeIndexed = 
 					Collections3.getSetDifference(
 						property.getPropertyValueList().getValues(), existingValues);
@@ -271,22 +280,34 @@ public class TagReferenceIndexer {
 			.and(PROPERTY.PROPERTYDEFINITIONID.eq(propDefUUIDBytes))
 			.and(PROPERTY.VALUE.notIn(property.getPropertyValueList().getValues()))
 			.execute();
+
+			if (!existingIDs.isEmpty()) {
+				db
+				.update(PROPERTY)
+				.set(PROPERTY.NAME, property.getName())
+				.where(PROPERTY.PROPERTYID.in(existingIDs))
+				.and(PROPERTY.NAME.ne(property.getName()))
+				.execute();
+			}
 			
 			BatchBindStep insertPropertyBatch = db.batch(db
 			.insertInto(
 				PROPERTY,
 					PROPERTY.TAGINSTANCEID,
 					PROPERTY.PROPERTYDEFINITIONID,
+					PROPERTY.NAME,
 					PROPERTY.VALUE)
 			.values(
 				(byte[])null,
 				(byte[])null,
+				(String)null,
 				(String)null));
 					
 			for (String value : toBeIndexed) {
 				insertPropertyBatch.bind(
 					tagInstanceUUIDBytes,
 					propDefUUIDBytes,
+					property.getName(),
 					value);
 			}
 			

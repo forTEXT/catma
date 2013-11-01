@@ -11,7 +11,7 @@ package de.catma.repository.db.jooqgen.catmaindex.tables;
 @java.lang.SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Property extends org.jooq.impl.TableImpl<org.jooq.Record> {
 
-	private static final long serialVersionUID = -994600354;
+	private static final long serialVersionUID = 344739128;
 
 	/**
 	 * The singleton instance of <code>CatmaIndex.property</code>
@@ -45,6 +45,11 @@ public class Property extends org.jooq.impl.TableImpl<org.jooq.Record> {
 	 * The column <code>CatmaIndex.property.value</code>. 
 	 */
 	public final org.jooq.TableField<org.jooq.Record, java.lang.String> VALUE = createField("value", org.jooq.impl.SQLDataType.VARCHAR.length(300), this);
+
+	/**
+	 * The column <code>CatmaIndex.property.name</code>. 
+	 */
+	public final org.jooq.TableField<org.jooq.Record, java.lang.String> NAME = createField("name", org.jooq.impl.SQLDataType.VARCHAR.length(45), this);
 
 	/**
 	 * Create a <code>CatmaIndex.property</code> table reference

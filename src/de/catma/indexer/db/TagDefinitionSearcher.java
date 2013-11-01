@@ -42,13 +42,10 @@ import org.jooq.SelectConditionStep;
 import org.jooq.SelectOnConditionStep;
 import org.jooq.impl.DSL;
 
-import com.google.common.collect.Collections2;
-
 import de.catma.document.Range;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.repository.db.jooq.UUIDtoByteMapper;
 import de.catma.util.IDGenerator;
 
 public class TagDefinitionSearcher {
@@ -87,13 +84,13 @@ public class TagDefinitionSearcher {
 		.and(TAGREFERENCE.USERMARKUPCOLLECTIONID.in(userMarkupCollectionIdList))
 		.fetchGroups(TAGREFERENCE.TAGINSTANCEID);
 		
-		return createTagQueryResult(recordsGroupedByInstanceUUID, tagDefinitionPath);
+		return createTagQueryResult(recordsGroupedByInstanceUUID, tagDefinitionPath, false);
 		
 	}
 
 	private QueryResult createTagQueryResult(
 			Map<byte[], Result<Record>> recordsGroupedByInstanceUUID, 
-			String resultGroupKey) {
+			String resultGroupKey, boolean keepProperties) {
 		TagQueryResult result = new TagQueryResult(resultGroupKey);
 		
 		for (Map.Entry<byte[], Result<Record>> entry : 
@@ -113,15 +110,32 @@ public class TagDefinitionSearcher {
 			}
 			List<Range> mergedRanges = Range.mergeRanges(ranges);
 
-			result.add(
-				new TagQueryResultRow(
-					masterRecord.getValue(TAGREFERENCE.DOCUMENTID),
-					mergedRanges, 
-					masterRecord.getValue(TAGREFERENCE.USERMARKUPCOLLECTIONID),
-					idGenerator.uuidBytesToCatmaID(
-							masterRecord.getValue(TAGREFERENCE.TAGDEFINITIONID)),
-					idGenerator.uuidBytesToCatmaID(
-							masterRecord.getValue(TAGREFERENCE.TAGINSTANCEID))));
+			if (keepProperties) {
+				result.add(
+					new TagQueryResultRow(
+						masterRecord.getValue(TAGREFERENCE.DOCUMENTID),
+						mergedRanges, 
+						masterRecord.getValue(TAGREFERENCE.USERMARKUPCOLLECTIONID),
+						idGenerator.uuidBytesToCatmaID(
+								masterRecord.getValue(TAGREFERENCE.TAGDEFINITIONID)),
+						idGenerator.uuidBytesToCatmaID(
+								masterRecord.getValue(TAGREFERENCE.TAGINSTANCEID)),
+						masterRecord.getValue(PROPERTY.NAME),
+						masterRecord.getValue(PROPERTY.VALUE)
+					));
+			}
+			else {
+				result.add(
+					new TagQueryResultRow(
+						masterRecord.getValue(TAGREFERENCE.DOCUMENTID),
+						mergedRanges, 
+						masterRecord.getValue(TAGREFERENCE.USERMARKUPCOLLECTIONID),
+						idGenerator.uuidBytesToCatmaID(
+								masterRecord.getValue(TAGREFERENCE.TAGDEFINITIONID)),
+						idGenerator.uuidBytesToCatmaID(
+								masterRecord.getValue(TAGREFERENCE.TAGINSTANCEID))
+					));
+			}
 		}
 		return result;
 	}
@@ -140,12 +154,14 @@ public class TagDefinitionSearcher {
 		.from(TAGREFERENCE)
 		.join(PROPERTY)
 			.on(PROPERTY.TAGINSTANCEID.eq(TAGREFERENCE.TAGINSTANCEID))
-			.and(PROPERTY.PROPERTYDEFINITIONID.in(
-				Collections2.transform(
-						propertyDefinitionIDs, 
-						new UUIDtoByteMapper())));
+			.and(PROPERTY.NAME.likeIgnoreCase(propertyName));
+//			.and(PROPERTY.PROPERTYDEFINITIONID.in(
+//				Collections2.transform(
+//						propertyDefinitionIDs, 
+//						new UUIDtoByteMapper())));
 		
 		if ((propertyValue != null) && (!propertyValue.isEmpty())) {
+			
 			selectQuery = ((SelectOnConditionStep<Record>)selectQuery).and(PROPERTY.VALUE.eq(propertyValue));
 		}		
 		
@@ -168,6 +184,6 @@ public class TagDefinitionSearcher {
 			recordsGroupedByInstanceUUID, 
 			propertyName + 
 					(((propertyValue==null)||propertyValue.isEmpty())?"":
-						(":"+propertyValue)));
+						(":"+propertyValue)), true);
 	}
 }
