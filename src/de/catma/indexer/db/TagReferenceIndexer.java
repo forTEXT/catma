@@ -375,7 +375,7 @@ public class TagReferenceIndexer {
 			
 			// reindex updated TagDef System Property values (mainly color)
 			
-			//tagDefUuid->Set<SystemPropertyDefUuid>
+			//tagDefUuid->Set<PropertyDefUuid>
 			Map<String, Set<String>> updatedPropertyDefinitionUUIDs = 
 					tagsetDefinitionUpdateLog.getUpdatedPropertyDefinitionUuids();
 			if (!updatedPropertyDefinitionUUIDs.isEmpty()) {
@@ -383,6 +383,7 @@ public class TagReferenceIndexer {
 				BatchBindStep updatePropertyBatch = db.batch(db
 				.update(PROPERTY)
 				.set(PROPERTY.VALUE, (String)null)
+				.set(PROPERTY.NAME, (String)null)
 				.where(PROPERTY.PROPERTYDEFINITIONID.eq((byte[])null))
 				.and(PROPERTY.TAGINSTANCEID.in(db
 					.select(TAGREFERENCE.TAGINSTANCEID)
@@ -396,7 +397,8 @@ public class TagReferenceIndexer {
 						PropertyDefinition propDef = tagDef.getPropertyDefinition(propDefUuid);
 						updatePropertyBatch.bind(
 							propDef.getFirstValue(),
-							idGenerator.catmaIDToUUID(propDefUuid),
+							propDef.getName(),
+							idGenerator.catmaIDToUUIDBytes(propDefUuid),
 							userMarkupCollection.getId());
 					}
 				}

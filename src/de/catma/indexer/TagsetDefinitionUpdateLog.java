@@ -60,8 +60,7 @@ public class TagsetDefinitionUpdateLog {
 	
 	public boolean isEmpty() {
 		return deletedTagDefinitionUuids.isEmpty() && updatedTagDefinitionUuids.isEmpty()
-				&& deletedPropertyDefinitionUuids.isEmpty();
-		//&& updatedPropertyDefinitionUuids.isEmpty(); 
-		//updated PropertyDefinitions are not a reason for reindexing (yet?) 
+				&& deletedPropertyDefinitionUuids.isEmpty()
+				&& updatedPropertyDefinitionUuids.isEmpty(); 
 	}
 }

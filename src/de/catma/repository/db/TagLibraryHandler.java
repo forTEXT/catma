@@ -1173,10 +1173,8 @@ class TagLibraryHandler {
 			}
 			else {
 				if (updateDeepPropertyDefinition(db, pd, false, tagsetDefinitionUpdateLog)) {
-					//a change of a user defined property definition does not
-					//result in a change of a property value
-					// so there is no need for reindexing (see updates of system property defs above)
-
+					tagsetDefinitionUpdateLog.addUpdatedPropertyDefinition(
+							pd.getUuid(), tagDefinition.getUuid());
 					propDefChanged = true;
 				}
 			}
