@@ -19,7 +19,6 @@
 package de.catma.ui.repository;
 
 import java.net.URL;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,13 +95,6 @@ public class AuthenticationDialog extends VerticalLayout {
 		}
 
 		public void handleParameters(Map<String, String[]> parameters) {
-			if (parameters != null) {
-				for (Map.Entry<String,String[]> entry : parameters.entrySet()) {
-					System.out.println("entry in handelParams: " + entry.getKey() + " : " + Arrays.toString(entry.getValue()));
-				}
-			}
-			logger.info("authentication dialog before uri handler creation: " + returnURL);
-			
 			openidResp = new ParameterList(parameters);
 			
 			signed = openidResp.getParameterValue("openid.signed");
@@ -112,8 +104,6 @@ public class AuthenticationDialog extends VerticalLayout {
 					
 		public DownloadStream handleURI(URL context, String relativeUri) {
 			try {
-				logger.info("handling uri context: " + context + " relUri " + relativeUri);
-				
 				// extract the parameters from the authentication response
 				// (which comes in as a HTTP request from the OpenID provider)
 				if (!openidResp.hasParameter("openid.mode")) {

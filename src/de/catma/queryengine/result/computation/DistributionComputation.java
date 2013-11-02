@@ -119,7 +119,6 @@ public class DistributionComputation {
 				xySeries.get(
 					(segmentNo*segmentSizeInPercent)-(segmentSizeInPercent/2))+1);
 		}
-		System.out.println(xySeries);
 		xySeriesCollection.add(xySeries);
 	}
 

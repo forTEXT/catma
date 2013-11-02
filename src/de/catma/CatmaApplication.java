@@ -116,7 +116,7 @@ public class CatmaApplication extends Application
 		backgroundService = new BackgroundService(this);
 		
 		
-		final Window mainWindow = new Window("CATMA 4 - CLÉA " + VERSION);
+		final Window mainWindow = new Window("CATMA 4.1 - CLÉA " + VERSION);
 		mainWindow.addParameterHandler(this);
 		HorizontalLayout mainLayout = new HorizontalLayout();
 		mainLayout.setSizeUndefined();
@@ -282,7 +282,9 @@ public class CatmaApplication extends Application
 	public void openRepository(Repository repository) {
 		repositoryOpened = true;
 		userCount.incrementAndGet();
+		logger.info("user" + getUser() + " has been added to user count (" + getUserCount() + ")" );
 		repositoryManagerView.openRepository(repository);
+		logger.info("repository has been opened for user" + getUser());
 	}
 	 
 	public void openTagLibrary(Repository repository, TagLibrary tagLibrary) {
@@ -405,9 +407,11 @@ public class CatmaApplication extends Application
 	@Override
 	public void close() {
 		repositoryManagerView.getRepositoryManager().close();
+		logger.info("application for user" + getUser() + " has been closed");
 		if (repositoryOpened) {
 			repositoryOpened = false;
 			userCount.decrementAndGet();
+			logger.info("user" + getUser() + " has been substracted from user count (" + getUserCount() + ")" );
 		}
 		super.close();
 	}

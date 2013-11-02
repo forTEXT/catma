@@ -107,32 +107,12 @@ public class CatmaApplicationServlet extends ApplicationServlet {
 //	@Override
 //	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 //			throws ServletException, IOException {
-//		Map<?,?> requestParams = req.getParameterMap();
-//		System.out.println("got doGET:");
-//		if (requestParams != null) {
-//			for (Map.Entry<?,?> entry : requestParams.entrySet()) {
-//				System.out.println("entry: " + entry.getKey() + " : " + entry.getValue());
-//			}
-//		}
-//		else {
-//			System.out.println("requestParams was null");
-//		}
 //		super.doGet(req, resp);
 //	}
 //	
 //	@Override
 //	protected void service(HttpServletRequest request,
 //			HttpServletResponse response) throws ServletException, IOException {
-//		Map<?,?> requestParams = request.getParameterMap();
-//		System.out.println("got doGET:");
-//		if (requestParams != null) {
-//			for (Map.Entry<?,?> entry : requestParams.entrySet()) {
-//				System.out.println("entry: " + entry.getKey() + " : " + entry.getValue());
-//			}
-//		}
-//		else {
-//			System.out.println("requestParams was null");
-//		}
 //		super.service(request, response);
 //	}
 }

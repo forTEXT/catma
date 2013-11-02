@@ -155,7 +155,6 @@ public class TagInstanceTree extends HorizontalLayout {
 									// update prop value index
 									// (handle deletion of prop defs, update should be fine, needs testing) 
 									
-									System.out.println(stringList.getList().toString());
 									tagInstanceActionListener.updateProperty(tagInstance, property);
 								}
 							});

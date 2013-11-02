@@ -120,7 +120,7 @@ public class Tagger extends AbstractComponent {
 			try {
 				ClientTagInstance tagInstance = tagInstanceJSONSerializer.fromJSON(
 						(String)variables.get(TaggerMessageAttribute.TAGINSTANCE_ADD.name()));
-				System.out.println("TagInstance added: " + tagInstance);
+				
 				pager.getCurrentPage().addRelativeTagInstance(tagInstance);
 				taggerListener.tagInstanceAdded(
 						pager.getCurrentPage().getAbsoluteTagInstance(tagInstance));
@@ -219,8 +219,6 @@ public class Tagger extends AbstractComponent {
 			}
 			
 			try {
-				System.out.println(tagInstanceJSONSerializer.toJSON(
-						currentRelativePageTagInstancesCopy));
 				attributes.put(
 						taggerMessageAttribute,
 						tagInstanceJSONSerializer.join( //TODO: check if other message attributes need a join as well
@@ -254,9 +252,6 @@ public class Tagger extends AbstractComponent {
 		List<ClientTagInstance> tagInstances = new ArrayList<ClientTagInstance>();
 		
 		for (TagReference tagReference : tagReferences) {
-			System.out.println(
-					"Setting TagReference: " + tagReference 
-					+ " visible: " + visible);
 			List<TextRange> textRanges = new ArrayList<TextRange>();
 			textRanges.add(
 					new TextRange(

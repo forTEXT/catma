@@ -436,7 +436,6 @@ public class V3TeiDocumentConverter implements TeiDocumentConverter {
 			String id, String nValue, String tagName, String colorValue, 
 			String baseTagID,
 			TeiElement tagsetDefinition) {
-		System.out.println("addTagDef: #" + id + " " + tagName);
 		TeiElement fsDecl = new TeiElement(TeiElementName.fsDecl);
 		fsDecl.setID(id);
 		fsDecl.setAttributeValue(Attribute.n, nValue);
