@@ -373,16 +373,30 @@ public class TagReferenceIndexer {
 				updateTagDefBatch.execute();
 			}
 			
-			// reindex updated TagDef System Property values (mainly color)
+			// reindex updated TagDef Property names and values (the latter only for system props!)
 			
 			//tagDefUuid->Set<PropertyDefUuid>
 			Map<String, Set<String>> updatedPropertyDefinitionUUIDs = 
 					tagsetDefinitionUpdateLog.getUpdatedPropertyDefinitionUuids();
 			if (!updatedPropertyDefinitionUUIDs.isEmpty()) {
 
-				BatchBindStep updatePropertyBatch = db.batch(db
+				// reindexing of system properties includes only values because
+				// the user cannot change names of system properties
+				BatchBindStep updateSystemPropertyBatch = db.batch(db
 				.update(PROPERTY)
 				.set(PROPERTY.VALUE, (String)null)
+				.where(PROPERTY.PROPERTYDEFINITIONID.eq((byte[])null))
+				.and(PROPERTY.TAGINSTANCEID.in(db
+					.select(TAGREFERENCE.TAGINSTANCEID)
+					.from(TAGREFERENCE)
+					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq((String)null)))));
+				
+				// reindexing of user properties includes only names because
+				// values get (re-)indexed indiviually upon the taginstance 
+				// and are not changed by systematic changes of the possible values list
+				// of a property definition
+				BatchBindStep updateUserPropertyBatch = db.batch(db
+				.update(PROPERTY)
 				.set(PROPERTY.NAME, (String)null)
 				.where(PROPERTY.PROPERTYDEFINITIONID.eq((byte[])null))
 				.and(PROPERTY.TAGINSTANCEID.in(db
@@ -395,15 +409,23 @@ public class TagReferenceIndexer {
 					TagDefinition tagDef = tagsetDefinition.getTagDefinition(tagDefUuid);
 					for (String propDefUuid : entry.getValue()) {
 						PropertyDefinition propDef = tagDef.getPropertyDefinition(propDefUuid);
-						updatePropertyBatch.bind(
-							propDef.getFirstValue(),
-							propDef.getName(),
-							idGenerator.catmaIDToUUIDBytes(propDefUuid),
-							userMarkupCollection.getId());
+						if (propDef.isSystemProperty()) {
+							updateSystemPropertyBatch.bind(
+								propDef.getFirstValue(),
+								idGenerator.catmaIDToUUIDBytes(propDefUuid),
+								userMarkupCollection.getId());
+						}
+						else {
+							updateUserPropertyBatch.bind(
+									propDef.getName(),
+									idGenerator.catmaIDToUUIDBytes(propDefUuid),
+									userMarkupCollection.getId());
+						}
 					}
 				}
 				
-				updatePropertyBatch.execute();
+				updateSystemPropertyBatch.execute();
+				updateUserPropertyBatch.execute();
 			}
 					
 			
