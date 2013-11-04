@@ -438,5 +438,8 @@ public class PhraseResultPanel extends VerticalLayout {
 		}
 		
 	}
-	
+
+	public boolean isEmpty() {
+		return resultTable.getItemIds().isEmpty();
+	}
 }

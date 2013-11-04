@@ -393,6 +393,18 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 					((CatmaApplication)getApplication()).showAndLogError(
 						"Error accessing the repository!", e);
 				} 
+				
+				if (resultTabSheet.getSelectedTab().equals(markupResultPanel)) {
+					if (markupResultPanel.isEmpty() && 
+							!phraseResultPanel.isEmpty()) {
+						getWindow().showNotification(
+							"Info", 
+							"Your search returned phrase results " +
+								"only but you selected \"Results by markup\"!" +
+								"<br> Please consider switching to \"Results by phrase\".",
+							Notification.TYPE_TRAY_NOTIFICATION, true);
+					}
+				}
 			};
 			public void error(Throwable t) {
 				if (t instanceof QueryException) {

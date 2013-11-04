@@ -19,11 +19,13 @@
 package de.catma.ui.analyzer;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
@@ -62,6 +64,7 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.HierarchicalExcelExport;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
@@ -69,6 +72,14 @@ import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 
 public class MarkupResultPanel extends VerticalLayout {
 	
+	/**
+	 * A TagQueryResultRow can appear more than once (if tagged with different
+	 * tags for example). As the base class of TagQueryResultRow {@link QueryResultRow}
+	 * has its own idea of equality and the vaadin table is a set without duplicates and 
+	 * identity is computed by itemId object identity we need this wrapper to provide 
+	 * that object identity. 
+	 * 
+	 */
 	private static class RowWrapper {
 		TagQueryResultRow row;
 
@@ -214,11 +225,15 @@ public class MarkupResultPanel extends VerticalLayout {
 	private Button btResultExcelExport;
 	private Button btKwicExcelExport;
 	private CheckBox cbFlatTable;
+	private CheckBox cbPropAsColumns;
+	private boolean resetColumns = false;
+	private QueryResult curQueryResult;
 	
 	public MarkupResultPanel(
 			Repository repository, 
 			GroupedQueryResultSelectionListener resultSelectionListener, 
 			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider) {
+		this.curQueryResult = new QueryResultRowArray();
 		this.repository = repository;
 		this.resultSelectionListener = resultSelectionListener;
 		this.relevantUserMarkupCollectionProvider = relevantUserMarkupCollectionProvider;
@@ -235,20 +250,25 @@ public class MarkupResultPanel extends VerticalLayout {
 	}
 	
 	private void initActions() {
+		cbPropAsColumns.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				QueryResult queryResult = getQueryResult();
+				
+				try {
+					setQueryResult(queryResult);
+				} catch (IOException e) {
+					((CatmaApplication)getApplication()).showAndLogError(
+							"error converting Query Result!", e);
+				}
+			}
+		});
 		cbFlatTable.addListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
-				QueryResultRowArray queryResult = new QueryResultRowArray();
-
-				for (Object itemId : resultTable.getItemIds()) {
-					if (itemId instanceof RowWrapper) {
-						queryResult.add(((RowWrapper)itemId).row);
-					}
-					else {
-						collectQueryResultRows(queryResult, itemId);
-					}
-				}		
-
+				cbPropAsColumns.setVisible(cbFlatTable.booleanValue());
+				QueryResult queryResult = getQueryResult();
+				
 				try {
 					setQueryResult(queryResult);
 				} catch (IOException e) {
@@ -335,16 +355,8 @@ public class MarkupResultPanel extends VerticalLayout {
 		});
 	}
 	
-	private void collectQueryResultRows(QueryResultRowArray queryResult, Object startItemId) {
-		Collection<?> children = resultTable.getChildren(startItemId);
-		for (Object itemId : children) {
-			if (itemId instanceof RowWrapper) {
-				queryResult.add(((RowWrapper)itemId).row);
-			}
-			else {
-				collectQueryResultRows(queryResult, itemId);
-			}
-		}
+	private QueryResult getQueryResult() {
+		return curQueryResult;
 	}
 
 	private void untagResults() {
@@ -478,50 +490,9 @@ public class MarkupResultPanel extends VerticalLayout {
 						new PropertyToTrimmedStringCIComparator()));
 		
 		resultTable.setContainerDataSource(container);
-
-		resultTable.addContainerProperty(
-				TreePropertyName.caption, String.class, null);
-		resultTable.setColumnHeader(TreePropertyName.caption, "Tag Definition");
-		
-		resultTable.addContainerProperty(
-				TreePropertyName.sourcedocument, String.class, null);
-		resultTable.setColumnHeader(TreePropertyName.sourcedocument, "Source Document");
-		
-		resultTable.addContainerProperty(
-				TreePropertyName.markupcollection, String.class, null);
-		resultTable.setColumnHeader(TreePropertyName.markupcollection, "Markup Collection");
-
-		resultTable.addContainerProperty(
-				TreePropertyName.phrase, String.class, null);
-		resultTable.setColumnHeader(TreePropertyName.phrase, "Phrase");
-
-		resultTable.addContainerProperty(
-				TreePropertyName.propertyname, String.class, null);
-		resultTable.setColumnHeader(TreePropertyName.propertyname, "Property");
-
-		resultTable.addContainerProperty(
-				TreePropertyName.propertyvalue, String.class, null);
-		resultTable.setColumnHeader(TreePropertyName.propertyvalue, "Property value");
-		
-		resultTable.addContainerProperty(
-				TreePropertyName.frequency, Integer.class, null);
-		resultTable.setColumnHeader(TreePropertyName.frequency, "Frequency");
-		resultTable.addContainerProperty(
-				TreePropertyName.visible, AbstractComponent.class, null);
-		resultTable.setColumnHeader(TreePropertyName.visible, "Visible in Kwic");
-		
-		resultTable.setItemCaptionPropertyId(TreePropertyName.caption);
+		setupContainerProperties();
 		resultTable.setPageLength(10); //TODO: config
 		resultTable.setSizeFull();
-		resultTable.setColumnCollapsingAllowed(true);
-		resultTable.setColumnCollapsible(TreePropertyName.caption, false);
-		resultTable.setColumnCollapsible(TreePropertyName.sourcedocument, true);
-		resultTable.setColumnCollapsible(TreePropertyName.markupcollection, true);
-		resultTable.setColumnCollapsible(TreePropertyName.phrase, true);
-		resultTable.setColumnCollapsible(TreePropertyName.propertyname, true);
-		resultTable.setColumnCollapsible(TreePropertyName.propertyvalue, true);
-		resultTable.setColumnCollapsible(TreePropertyName.frequency, false);
-		resultTable.setColumnCollapsible(TreePropertyName.visible, false);
 		
 		//TODO: a description generator that shows the version of a Tag
 //		resultTable.setItemDescriptionGenerator(generator);
@@ -546,17 +517,32 @@ public class MarkupResultPanel extends VerticalLayout {
 		buttonPanel.addComponent(btResultExcelExport);
 		
 		cbFlatTable = new CheckBox("flat table", false);
+		cbFlatTable.setDescription(
+			"<p>Display query results as a flat table for sortability by Source " +
+			"Document, Markup Collection and phrase.</p>" +
+			"<p>If the query is a <i>property</i> query this ensures sortability " +
+			"of properties as well.</p>");
 		cbFlatTable.setImmediate(true);
 		
 		buttonPanel.addComponent(cbFlatTable);
 		buttonPanel.setComponentAlignment(cbFlatTable, Alignment.MIDDLE_RIGHT);
 		buttonPanel.setExpandRatio(cbFlatTable, 1f);
 		
+		cbPropAsColumns = new CheckBox("properties as columns", false);
+		cbPropAsColumns.setDescription(
+			"Create a column for each property in the QueryResult selected " +
+			"by a <i>property</i> query.");
+		
+		cbPropAsColumns.setImmediate(true);
+		buttonPanel.addComponent(cbPropAsColumns);
+		buttonPanel.setComponentAlignment(cbPropAsColumns, Alignment.MIDDLE_RIGHT);
+		cbPropAsColumns.setVisible(false);
+		
 		btSelectAll = new Button("Select all for Kwic");
 		
 		buttonPanel.addComponent(btSelectAll);
 		buttonPanel.setComponentAlignment(btSelectAll, Alignment.MIDDLE_RIGHT);
-//		buttonPanel.setExpandRatio(btSelectAll, 1f);
+
 		btDeselectAll = new Button("Deselect all for Kwic");
 		buttonPanel.addComponent(btDeselectAll);
 		buttonPanel.setComponentAlignment(btDeselectAll, Alignment.MIDDLE_RIGHT);
@@ -619,42 +605,82 @@ public class MarkupResultPanel extends VerticalLayout {
 		addComponent(splitPanel);
 	}
 	
+	private void setupContainerProperties() {
+		resultTable.addContainerProperty(
+				TreePropertyName.caption, String.class, null);
+		resultTable.setColumnHeader(TreePropertyName.caption, "Tag Definition");
+		
+		resultTable.addContainerProperty(
+				TreePropertyName.sourcedocument, String.class, null);
+		resultTable.setColumnHeader(TreePropertyName.sourcedocument, "Source Document");
+		
+		resultTable.addContainerProperty(
+				TreePropertyName.markupcollection, String.class, null);
+		resultTable.setColumnHeader(TreePropertyName.markupcollection, "Markup Collection");
+
+		resultTable.addContainerProperty(
+				TreePropertyName.phrase, String.class, null);
+		resultTable.setColumnHeader(TreePropertyName.phrase, "Phrase");
+
+		resultTable.addContainerProperty(
+				TreePropertyName.propertyname, String.class, null);
+		resultTable.setColumnHeader(TreePropertyName.propertyname, "Property");
+
+		resultTable.addContainerProperty(
+				TreePropertyName.propertyvalue, String.class, null);
+		resultTable.setColumnHeader(TreePropertyName.propertyvalue, "Property value");
+		
+		resultTable.addContainerProperty(
+				TreePropertyName.frequency, Integer.class, null);
+		resultTable.setColumnHeader(TreePropertyName.frequency, "Frequency");
+		resultTable.addContainerProperty(
+				TreePropertyName.visible, AbstractComponent.class, null);
+		resultTable.setColumnHeader(TreePropertyName.visible, "Visible in Kwic");
+		
+		resultTable.setItemCaptionPropertyId(TreePropertyName.caption);
+		
+		resultTable.setVisibleColumns(new Object[] {
+				TreePropertyName.caption,
+				TreePropertyName.sourcedocument,
+				TreePropertyName.markupcollection,
+				TreePropertyName.phrase,
+				TreePropertyName.frequency,
+				TreePropertyName.visible,
+		});
+	}
+
 	public void setQueryResult(QueryResult queryResult) throws IOException {
+		curQueryResult = queryResult;
+		
 		kwicPanel.clear();
 		resultTable.removeAllItems();
+		
+		if (resetColumns) {
+			for (Object propId : resultTable.getContainerPropertyIds().toArray()) {
+				resultTable.removeContainerProperty(propId);
+			}
+			setupContainerProperties();
+			resetColumns = false;
+		}
 
 		int totalFreq = 0;
 	
 		HashMap<String, UserMarkupCollection> loadedUserMarkupCollections =
 				new HashMap<String, UserMarkupCollection>();
 		Set<String> tagDefinitions = new HashSet<String>();
-		boolean displayProperties = false;
 		
 		if (!(queryResult instanceof GroupedQueryResultSet)) { // performance opt for Wordlists which are freqency based GroupedQueryResultSets
 																// and we want to avoid expensive iteration
-			for (QueryResultRow row : queryResult) {
-				if (row instanceof TagQueryResultRow) {
-					TagQueryResultRow tRow = (TagQueryResultRow)row;
-					tagDefinitions.add(tRow.getTagDefinitionId());
-					if (cbFlatTable.booleanValue()) {
-						addFlatTagQueryResultRow(tRow, loadedUserMarkupCollections);
-					}
-					else {
-						addTagQueryResultRow(tRow, loadedUserMarkupCollections);
-					}
-					if (!displayProperties && (tRow.getPropertyDefinitionId() != null)) {
-						displayProperties = true;
-					}
-					totalFreq++;
-				}
+			if (cbFlatTable.booleanValue() && cbPropAsColumns.booleanValue()) {
+				resetColumns = true;
+				totalFreq = setQueryResultGroupedByTagInstance(
+						queryResult, loadedUserMarkupCollections, tagDefinitions);
+			}
+			else {
+				totalFreq = setQueryResultByRow(
+						queryResult, loadedUserMarkupCollections, tagDefinitions);
 			}
 		}
-		resultTable.setColumnCollapsed(TreePropertyName.sourcedocument, !cbFlatTable.booleanValue());
-		resultTable.setColumnCollapsed(TreePropertyName.markupcollection, !cbFlatTable.booleanValue());
-		resultTable.setColumnCollapsed(TreePropertyName.phrase, !cbFlatTable.booleanValue());
-		
-		resultTable.setColumnCollapsed(TreePropertyName.propertyname, !displayProperties);
-		resultTable.setColumnCollapsed(TreePropertyName.propertyvalue, !displayProperties);
 		
 		resultTable.setFooterVisible(true);
 		resultTable.setColumnFooter(
@@ -665,6 +691,173 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 	}
 	
+	private int setQueryResultGroupedByTagInstance(
+			QueryResult queryResult,HashMap<String,
+			UserMarkupCollection> loadedUserMarkupCollections, 
+			Set<String> tagDefinitions) throws IOException {
+		
+		int totalFreq = 0;
+		
+		HashMap<String, QueryResultRowArray> rowsGroupedByTagInstance = 
+				new HashMap<String, QueryResultRowArray>();
+		
+		for (QueryResultRow row : queryResult) {
+			
+			if (row instanceof TagQueryResultRow) {
+				TagQueryResultRow tRow = (TagQueryResultRow) row;
+				QueryResultRowArray rows = 
+						rowsGroupedByTagInstance.get(tRow.getTagInstanceId());
+				
+				if (rows == null) {
+					rows = new QueryResultRowArray();
+					rowsGroupedByTagInstance.put(tRow.getTagInstanceId(), rows);
+				}
+				rows.add(tRow);
+			}
+		}
+
+		Set<String> propNames = new TreeSet<String>();
+		
+		for (Map.Entry<String, QueryResultRowArray> entry : rowsGroupedByTagInstance.entrySet()) {
+			
+			QueryResultRowArray rows = entry.getValue();
+			
+			TagQueryResultRow masterRow = (TagQueryResultRow) rows.get(0); 
+			totalFreq++;
+			
+			tagDefinitions.add(masterRow.getTagDefinitionId());
+			String tagDefinitionId = masterRow.getTagDefinitionId();
+			String markupCollectionsId = masterRow.getMarkupCollectionId();
+			SourceDocument sourceDocument = 
+					repository.getSourceDocument(masterRow.getSourceDocumentId());
+			
+			if (!loadedUserMarkupCollections.containsKey(markupCollectionsId)) {
+				UserMarkupCollectionReference userMarkupCollRef = 
+					sourceDocument.getUserMarkupCollectionReference(
+							markupCollectionsId);
+			
+				loadedUserMarkupCollections.put(
+						markupCollectionsId,
+						repository.getUserMarkupCollection(userMarkupCollRef));
+			}
+			
+			UserMarkupCollection umc = 
+					loadedUserMarkupCollections.get(markupCollectionsId);
+			
+			TagDefinition tagDefinition = 
+					umc.getTagLibrary().getTagDefinition(tagDefinitionId);
+
+			RowWrapper itemId = new RowWrapper(masterRow);
+			resultTable.addItem(itemId);
+			resultTable.setChildrenAllowed(itemId, false);
+			
+			resultTable.getContainerProperty(
+				itemId, TreePropertyName.caption).setValue(
+					umc.getTagLibrary().getTagPath(tagDefinition));
+			resultTable.getContainerProperty(
+					itemId, TreePropertyName.sourcedocument).setValue(
+					sourceDocument.toString());
+			resultTable.getContainerProperty(
+					itemId, TreePropertyName.markupcollection).setValue(
+					umc.getName());
+			resultTable.getContainerProperty(
+					itemId, TreePropertyName.phrase).setValue(
+					masterRow.getPhrase());
+
+			resultTable.getContainerProperty(itemId, TreePropertyName.frequency).setValue(
+					1);
+			resultTable.getContainerProperty(itemId, TreePropertyName.visible).setValue(
+					createCheckbox(
+							new TagQueryResultRowTreeEntrySelectionHandler(masterRow)));
+			
+			for (QueryResultRow row : rows) {
+				
+				TagQueryResultRow tRow = (TagQueryResultRow)row;
+				
+				String propDefId = tRow.getPropertyDefinitionId();
+				if (propDefId != null) {
+					PropertyDefinition propDef = tagDefinition.getPropertyDefinition(propDefId);
+					
+					if (!resultTable.getContainerPropertyIds().contains(propDef.getName())) {
+						resultTable.addContainerProperty(propDef.getName(), String.class, null);
+						propNames.add(propDef.getName());
+					}
+					resultTable.getContainerProperty(
+							itemId, propDef.getName()).setValue(tRow.getPropertyValue());
+				}				
+			}
+		}
+		
+		ArrayList<Object> visibleColumns = new ArrayList<Object>();
+		visibleColumns.add(TreePropertyName.caption);
+		visibleColumns.add(TreePropertyName.sourcedocument);
+		visibleColumns.add(TreePropertyName.markupcollection);
+		visibleColumns.add(TreePropertyName.phrase);
+
+		for (String propDefName : propNames) {
+			visibleColumns.add(propDefName);
+		}
+		
+		visibleColumns.add(TreePropertyName.frequency);
+		visibleColumns.add(TreePropertyName.visible);
+		
+		resultTable.setVisibleColumns(visibleColumns.toArray());
+
+		
+		return totalFreq;
+	}
+
+	private int setQueryResultByRow(
+			QueryResult queryResult, 
+			HashMap<String,UserMarkupCollection> loadedUserMarkupCollections, 
+			Set<String> tagDefinitions) throws IOException {
+		
+		int totalFreq = 0;
+		boolean displayProperties = false;
+
+		for (QueryResultRow row : queryResult) {
+			if (row instanceof TagQueryResultRow) {
+				TagQueryResultRow tRow = (TagQueryResultRow)row;
+				tagDefinitions.add(tRow.getTagDefinitionId());
+				if (cbFlatTable.booleanValue()) {
+					addFlatTagQueryResultRow(tRow, loadedUserMarkupCollections);
+				}
+				else {
+					addTagQueryResultRow(tRow, loadedUserMarkupCollections);
+				}
+				if (!displayProperties && (tRow.getPropertyDefinitionId() != null)) {
+					displayProperties = true;
+				}
+				totalFreq++;
+			}
+		}
+		
+		ArrayList<Object> visibleColumns = new ArrayList<Object>();
+		visibleColumns.add(TreePropertyName.caption);
+		
+		if (cbFlatTable.booleanValue()) {
+			visibleColumns.add(TreePropertyName.sourcedocument);
+			visibleColumns.add(TreePropertyName.markupcollection);
+			visibleColumns.add(TreePropertyName.phrase);
+			if (displayProperties) {
+				visibleColumns.add(TreePropertyName.propertyname);
+				visibleColumns.add(TreePropertyName.propertyvalue);
+			}
+		}
+		else if (displayProperties) {
+			visibleColumns.add(TreePropertyName.propertyname);
+			visibleColumns.add(TreePropertyName.propertyvalue);
+		}
+		
+		visibleColumns.add(TreePropertyName.frequency);
+		visibleColumns.add(TreePropertyName.visible);
+		
+		resultTable.setVisibleColumns(visibleColumns.toArray());
+
+		
+		return totalFreq;
+	}
+
 	private void addFlatTagQueryResultRow(TagQueryResultRow row,
 			HashMap<String, UserMarkupCollection> loadedUserMarkupCollections) throws IOException {
 		String tagDefinitionId = row.getTagDefinitionId();
@@ -689,20 +882,29 @@ public class MarkupResultPanel extends VerticalLayout {
 				umc.getTagLibrary().getTagDefinition(tagDefinitionId);
 		
 		RowWrapper wrapper = new RowWrapper(row);
-		resultTable.addItem(
-			new Object[] {
-				umc.getTagLibrary().getTagPath(tagDefinition),
-				sourceDocument.toString(),
-				umc.getName(),
-				row.getPhrase(),
-				row.getPropertyDefinitionId()==null?"":
-					tagDefinition.getPropertyDefinition(
-							row.getPropertyDefinitionId()).getName(),
-				row.getPropertyDefinitionId()==null?"":row.getPropertyValue(),
-				1,
+		
+		resultTable.addItem(wrapper);
+		
+		resultTable.getContainerProperty(wrapper, TreePropertyName.caption).setValue(
+				umc.getTagLibrary().getTagPath(tagDefinition));
+		resultTable.getContainerProperty(wrapper, TreePropertyName.sourcedocument).setValue(
+				sourceDocument.toString());
+		resultTable.getContainerProperty(wrapper, TreePropertyName.markupcollection).setValue(
+				umc.getName());
+		resultTable.getContainerProperty(wrapper, TreePropertyName.phrase).setValue(
+				row.getPhrase());
+		if (row.getPropertyDefinitionId()!=null) {
+			resultTable.getContainerProperty(wrapper, TreePropertyName.propertyname).setValue(
+				tagDefinition.getPropertyDefinition(
+								row.getPropertyDefinitionId()).getName());
+			resultTable.getContainerProperty(wrapper, TreePropertyName.propertyvalue).setValue(
+				row.getPropertyValue());
+		}
+		resultTable.getContainerProperty(wrapper, TreePropertyName.frequency).setValue(
+				1);
+		resultTable.getContainerProperty(wrapper, TreePropertyName.visible).setValue(
 				createCheckbox(
-						new TagQueryResultRowTreeEntrySelectionHandler(row))
-			}, wrapper);
+						new TagQueryResultRowTreeEntrySelectionHandler(row)));
 		
 		resultTable.setChildrenAllowed(wrapper, false);
 	}
@@ -735,20 +937,15 @@ public class MarkupResultPanel extends VerticalLayout {
 		String tagDefinitionItemID = 
 				tagDefinition.getUuid() + "#" + tagDefinition.getVersion();
 		if (!resultTable.containsId(tagDefinitionItemID)) {
-			resultTable.addItem(
-				new Object[]{
-						umc.getTagLibrary().getTagPath(tagDefinition),
-						"",
-						"",
-						"",
-						"",
-						"",
-						0,
+			resultTable.addItem(tagDefinitionItemID);
+			resultTable.getContainerProperty(tagDefinitionItemID, TreePropertyName.caption).setValue(
+						umc.getTagLibrary().getTagPath(tagDefinition));
+			resultTable.getContainerProperty(tagDefinitionItemID, TreePropertyName.frequency).setValue(
+						0);
+			resultTable.getContainerProperty(tagDefinitionItemID, TreePropertyName.visible).setValue(
 						createCheckbox(
 							new TagDefinitionTreeEntrySelectionHandler(
-								resultTable, tagDefinitionItemID))
-				},
-				tagDefinitionItemID);
+								resultTable, tagDefinitionItemID)));
 		}
 
 		Property tagDefFreqProperty = 
@@ -760,19 +957,15 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 		if (!resultTable.containsId(sourceDocumentItemID)) {
 		
-			resultTable.addItem(
-				new Object[] {
-						sourceDocument.toString(),
-						"",
-						"",
-						"",
-						"",
-						"",
-						0,
+			resultTable.addItem(sourceDocumentItemID);
+			resultTable.getContainerProperty(sourceDocumentItemID, TreePropertyName.caption).setValue(
+						sourceDocument.toString());
+			resultTable.getContainerProperty(sourceDocumentItemID, TreePropertyName.frequency).setValue(
+						0);
+			resultTable.getContainerProperty(sourceDocumentItemID, TreePropertyName.visible).setValue(
 						createCheckbox(
 							new SourceDocumentTreeEntrySelectionHandler(
-									resultTable, sourceDocumentItemID))
-				}, sourceDocumentItemID);
+									resultTable, sourceDocumentItemID)));
 			resultTable.setParent(sourceDocumentItemID, tagDefinitionItemID);
 		}
 		
@@ -785,18 +978,14 @@ public class MarkupResultPanel extends VerticalLayout {
 		final String umcItemID = sourceDocumentItemID + "@" + umc.getId();
 		
 		if (!resultTable.containsId(umcItemID)) {
-			resultTable.addItem(
-				new Object[] {
-					umc.getName(),
-					"",
-					"",
-					"",
-					"",
-					"",
-					0,
+			resultTable.addItem(umcItemID);
+			resultTable.getContainerProperty(umcItemID, TreePropertyName.caption).setValue(
+					umc.getName());
+			resultTable.getContainerProperty(umcItemID, TreePropertyName.frequency).setValue(
+					0);
+			resultTable.getContainerProperty(umcItemID, TreePropertyName.visible).setValue(
 					createCheckbox(
-						new UmcTreeEntrySelectionHandler(resultTable, umcItemID))
-				}, umcItemID);
+						new UmcTreeEntrySelectionHandler(resultTable, umcItemID)));
 			resultTable.setParent(umcItemID, sourceDocumentItemID);
 		}
 		
@@ -806,20 +995,28 @@ public class MarkupResultPanel extends VerticalLayout {
 		userMarkupCollFreqProperty.setValue(
 				((Integer)userMarkupCollFreqProperty.getValue())+1);
 		RowWrapper wrapper = new RowWrapper(row);
-		resultTable.addItem(
-			new Object[] {
-				row.getPhrase(),
-				sourceDocument.toString(),
-				umc.getName(),
-				row.getPhrase(),
-				row.getPropertyDefinitionId()==null?"":
-					tagDefinition.getPropertyDefinition(
-							row.getPropertyDefinitionId()).getName(),
-				row.getPropertyDefinitionId()==null?"":row.getPropertyValue(),
-				1,
+		resultTable.addItem(wrapper);
+		
+		resultTable.getContainerProperty(wrapper, TreePropertyName.caption).setValue(
+				umc.getTagLibrary().getTagPath(tagDefinition));
+		resultTable.getContainerProperty(wrapper, TreePropertyName.sourcedocument).setValue(
+				sourceDocument.toString());
+		resultTable.getContainerProperty(wrapper, TreePropertyName.markupcollection).setValue(
+				umc.getName());
+		resultTable.getContainerProperty(wrapper, TreePropertyName.phrase).setValue(
+				row.getPhrase());
+		if (row.getPropertyDefinitionId()!=null) {
+			resultTable.getContainerProperty(wrapper, TreePropertyName.propertyname).setValue(
+				tagDefinition.getPropertyDefinition(
+								row.getPropertyDefinitionId()).getName());
+			resultTable.getContainerProperty(wrapper, TreePropertyName.propertyvalue).setValue(
+				row.getPropertyValue());
+		}
+		resultTable.getContainerProperty(wrapper, TreePropertyName.frequency).setValue(
+				1);
+		resultTable.getContainerProperty(wrapper, TreePropertyName.visible).setValue(
 				createCheckbox(
-						new TagQueryResultRowTreeEntrySelectionHandler(row))
-			}, wrapper);
+						new TagQueryResultRowTreeEntrySelectionHandler(row)));
 		
 		resultTable.setParent(wrapper, umcItemID);
 		resultTable.setChildrenAllowed(wrapper, false);
@@ -862,5 +1059,9 @@ public class MarkupResultPanel extends VerticalLayout {
 			kwicPanel.removeQueryResultRows(queryResult);
 		}
 		
+	}
+	
+	public boolean isEmpty() {
+		return resultTable.getItemIds().isEmpty();
 	}
 }
