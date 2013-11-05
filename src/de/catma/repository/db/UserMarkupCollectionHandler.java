@@ -53,7 +53,6 @@ import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
-import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 
 import com.google.common.base.Function;
@@ -173,7 +172,7 @@ class UserMarkupCollectionHandler {
 							reference,sourceDocument));
 
 		}
-		catch (DataAccessException dae) {
+		catch (Exception dae) {
 			db.rollbackTransaction();
 			db.close();
 			throw new IOException(dae);
@@ -218,7 +217,7 @@ class UserMarkupCollectionHandler {
 
 			db.commitTransaction();
 		}
-		catch (DataAccessException dae) {
+		catch (Exception dae) {
 			db.rollbackTransaction();
 			db.close();
 			dbRepository.setTagManagerListenersEnabled(true);
@@ -805,7 +804,7 @@ class UserMarkupCollectionHandler {
 
 			db.commitTransaction();
 		}
-		catch (DataAccessException dae) {
+		catch (Exception dae) {
 			db.rollbackTransaction();
 			db.close();
 			throw new IOException(dae);
@@ -1013,7 +1012,7 @@ class UserMarkupCollectionHandler {
 
 			db.commitTransaction();
 		}
-		catch (DataAccessException dae) {
+		catch (Exception dae) {
 			db.rollbackTransaction();
 			db.close();
 			throw new IOException(dae);

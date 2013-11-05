@@ -46,7 +46,6 @@ import org.jooq.Record;
 import org.jooq.Record2;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
-import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 
 import de.catma.document.Corpus;
@@ -157,7 +156,7 @@ class CorpusHandler {
 				null, corpus);
 
 		}
-		catch (DataAccessException dae) {
+		catch (Exception dae) {
 			db.rollbackTransaction();
 			db.close();
 			throw new IOException(dae);
@@ -223,7 +222,7 @@ class CorpusHandler {
 				Repository.RepositoryChangeEvent.corpusChanged.name(),
 				sourceDocument, corpus);
 		}
-		catch (DataAccessException dae) {
+		catch (Exception dae) {
 			db.rollbackTransaction();
 			db.close();
 			throw new IOException(dae);
@@ -287,7 +286,7 @@ class CorpusHandler {
 				Repository.RepositoryChangeEvent.corpusChanged.name(),
 				userMarkupCollectionReference, corpus);
 		}
-		catch (DataAccessException dae) {
+		catch (Exception dae) {
 			db.rollbackTransaction();
 			db.close();
 			throw new IOException(dae);
@@ -398,7 +397,7 @@ class CorpusHandler {
 					corpus, null);
 
 		}
-		catch (DataAccessException dae) {
+		catch (Exception dae) {
 			db.rollbackTransaction();
 			db.close();
 			throw new IOException(dae);
