@@ -35,28 +35,45 @@ import javax.sql.DataSource;
 
 import org.jooq.DSLContext;
 import org.jooq.Record;
-import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.Select;
 import org.jooq.SelectConditionStep;
 import org.jooq.SelectOnConditionStep;
 import org.jooq.impl.DSL;
 
+import com.google.common.base.Function;
+
 import de.catma.document.Range;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.repository.db.jooq.ResultUtil;
 import de.catma.util.IDGenerator;
 
 public class TagDefinitionSearcher {
 
+	private static class GroupByTagInstanceIdFunction implements
+			Function<Record, String> {
+		private IDGenerator idGenerator;
+		
+		public GroupByTagInstanceIdFunction(IDGenerator idGenerator) {
+			this.idGenerator = idGenerator;
+		}
+
+		public String apply(Record r) {
+			return idGenerator.uuidBytesToCatmaID(r.getValue(TAGREFERENCE.TAGINSTANCEID));
+		}
+	}
+
 	private IDGenerator idGenerator;
+	private GroupByTagInstanceIdFunction groupByTagInstanceIdFunction;
 
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private DataSource dataSource;
 
 	public TagDefinitionSearcher() throws NamingException {
 		this.idGenerator = new IDGenerator();
+		this.groupByTagInstanceIdFunction = new GroupByTagInstanceIdFunction(idGenerator);
 		Context  context = new InitialContext();
 		this.dataSource = (DataSource) context.lookup("catmads");
 	}
@@ -77,23 +94,27 @@ public class TagDefinitionSearcher {
 		
 		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
 		
-		Map<byte[], Result<Record>> recordsGroupedByInstanceUUID = db
-		.select()
-		.from(TAGREFERENCE)
-		.where(TAGREFERENCE.TAGDEFINITIONPATH.likeIgnoreCase(tagDefinitionPath))
-		.and(TAGREFERENCE.USERMARKUPCOLLECTIONID.in(userMarkupCollectionIdList))
-		.fetchGroups(TAGREFERENCE.TAGINSTANCEID);
+		Map<String, List<Record>> recordsGroupedByInstanceUUID = ResultUtil.asGroups(
+				groupByTagInstanceIdFunction, 
+				db
+				.select()
+				.from(TAGREFERENCE)
+				.where(TAGREFERENCE.TAGDEFINITIONPATH
+						.likeIgnoreCase(tagDefinitionPath))
+				.and(TAGREFERENCE.USERMARKUPCOLLECTIONID
+						.in(userMarkupCollectionIdList))
+				.fetch());
 		
 		return createTagQueryResult(recordsGroupedByInstanceUUID, tagDefinitionPath, false);
 		
 	}
 
 	private QueryResult createTagQueryResult(
-			Map<byte[], Result<Record>> recordsGroupedByInstanceUUID, 
+			Map<String, List<Record>> recordsGroupedByInstanceUUID, 
 			String resultGroupKey, boolean keepProperties) {
 		TagQueryResult result = new TagQueryResult(resultGroupKey);
 		
-		for (Map.Entry<byte[], Result<Record>> entry : 
+		for (Map.Entry<String, List<Record>> entry : 
 				recordsGroupedByInstanceUUID.entrySet()) {
 			
 			Record masterRecord = null;
@@ -178,8 +199,10 @@ public class TagDefinitionSearcher {
 					TAGREFERENCE.TAGDEFINITIONPATH.likeIgnoreCase(tagDefinitionPath));
 		}
 		
-		Map<byte[], Result<Record>> recordsGroupedByInstanceUUID = 
-				selectQuery.fetchGroups(TAGREFERENCE.TAGINSTANCEID);
+		Map<String, List<Record>> recordsGroupedByInstanceUUID =
+				ResultUtil.asGroups(
+					groupByTagInstanceIdFunction,
+					selectQuery.fetch());
 		
 		return createTagQueryResult(
 			recordsGroupedByInstanceUUID, 
