@@ -59,7 +59,6 @@ import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
-import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 
 import com.google.common.base.Function;
@@ -269,7 +268,7 @@ class SourceDocumentHandler {
 						return sourceDocument.getID();
 								
 					}
-					catch (DataAccessException dae) {
+					catch (Exception dae) {
 						db.rollbackTransaction();
 						db.close();
 						throw new IOException(dae);
@@ -521,7 +520,7 @@ class SourceDocumentHandler {
 
 			db.commitTransaction();
 		}
-		catch (DataAccessException dae) {
+		catch (Exception dae) {
 			db.rollbackTransaction();
 			db.close();
 			throw new IOException(dae);

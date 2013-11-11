@@ -55,7 +55,6 @@ import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
-import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 
 import com.google.common.base.Function;
@@ -139,7 +138,7 @@ class TagLibraryHandler {
 					ref);
 
 		}
-		catch (DataAccessException dae) {
+		catch (Exception dae) {
 			db.rollbackTransaction();
 			db.close();
 			throw new IOException(dae);
@@ -1127,20 +1126,24 @@ class TagLibraryHandler {
 				.from(PROPERTYDEFINITION)
 				.join(TAGDEFINITION)
 					.on(TAGDEFINITION.TAGDEFINITIONID.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
-					.and(TAGDEFINITION.UUID.in(toBeDeletedByte)))),
+					.and(TAGDEFINITION.UUID.in(toBeDeletedByte))
+					.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
 			db
 			.delete(PROPERTYDEFINITION)
 			.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(db
 				.select(TAGDEFINITION.TAGDEFINITIONID)
 				.from(TAGDEFINITION)
-				.where(TAGDEFINITION.UUID.in(toBeDeletedByte)))),
+				.where(TAGDEFINITION.UUID.in(toBeDeletedByte))
+				.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
 			db
 			.update(TAGDEFINITION)
 			.set(TAGDEFINITION.PARENTID, (Integer)null)
-			.where(TAGDEFINITION.UUID.in(toBeDeletedByte)),
+			.where(TAGDEFINITION.UUID.in(toBeDeletedByte)
+			.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId()))),
 			db
 			.delete(TAGDEFINITION)
-			.where(TAGDEFINITION.UUID.in(toBeDeletedByte)))
+			.where(TAGDEFINITION.UUID.in(toBeDeletedByte))
+			.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))
 		.execute();
 		
 		tagsetDefinitionUpdateLog.setDeletedTagDefinitionUuids(toBeDeleted);
@@ -1228,10 +1231,12 @@ class TagLibraryHandler {
 			.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(db
 				.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
 				.from(PROPERTYDEFINITION)
-				.where(PROPERTYDEFINITION.UUID.in(toBeDeletedByteUUIDs)))),
+				.where(PROPERTYDEFINITION.UUID.in(toBeDeletedByteUUIDs))
+				.and(PROPERTYDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId())))),
 			db
 			.delete(PROPERTYDEFINITION)
-			.where(PROPERTYDEFINITION.UUID.in(toBeDeletedByteUUIDs)))
+			.where(PROPERTYDEFINITION.UUID.in(toBeDeletedByteUUIDs))
+			.and(PROPERTYDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId())))
 		.execute();
 		
 		tagsetDefinitionUpdateLog.addDeletedPropertyDefinitions(toBeDeleted);

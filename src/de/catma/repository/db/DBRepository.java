@@ -46,7 +46,6 @@ import javax.sql.DataSource;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.SQLDialect;
-import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
@@ -767,7 +766,7 @@ public class DBRepository implements IndexedRepository {
 				throw new UnknownUserException(userIdentification);
 			}
 		}
-		catch (DataAccessException dae) {
+		catch (Exception dae) {
 			db.rollbackTransaction();
 			db.close();
 			throw new IOException(dae);
@@ -872,7 +871,7 @@ public class DBRepository implements IndexedRepository {
 					userMarkupCollectionRef, userIdentification, accessMode);
 				db.commitTransaction();
 			}
-			catch (DataAccessException dae) {
+			catch (Exception dae) {
 				db.rollbackTransaction();
 				db.close();
 				throw new IOException(dae);

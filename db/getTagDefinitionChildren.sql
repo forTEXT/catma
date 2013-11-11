@@ -1,7 +1,7 @@
 delimiter $$
-DROP PROCEDURE `getTagDefinitionChildren`$$
+DROP PROCEDURE IF EXISTS `getTagDefinitionChildren`$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getTagDefinitionChildren`(startTagDefinitionID INT)
+CREATE PROCEDURE `getTagDefinitionChildren`(startTagDefinitionID INT)
 BEGIN
 
 	DECLARE currentParentID INT;
