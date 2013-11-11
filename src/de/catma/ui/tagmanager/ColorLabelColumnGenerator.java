@@ -39,6 +39,10 @@ public class ColorLabelColumnGenerator implements ColumnGenerator {
 		public TagDefinition getTagDefinition(Object itemId);
 	}
 	
+	public static interface ColorProvider {
+		public String getColor(Object itemId);		
+	}
+	
 	public static class DefaultTagDefinitionProvider implements TagDefinitionProvider {
 		public TagDefinition getTagDefinition(Object itemId) {
 			if (itemId instanceof TagDefinition) {
@@ -57,27 +61,49 @@ public class ColorLabelColumnGenerator implements ColumnGenerator {
 		}
 	}
 	
-	private TagDefinitionProvider tagDefinitionProvider;
+	public static class TagDefinitionColorProvider implements ColorProvider {
+		private TagDefinitionProvider tagDefinitionProvider;
+
+		public TagDefinitionColorProvider(
+				TagDefinitionProvider tagDefinitionProvider) {
+			this.tagDefinitionProvider = tagDefinitionProvider;
+		}
+		
+		public String getColor(Object itemId) {
+			TagDefinition td = tagDefinitionProvider.getTagDefinition(itemId);
+			if (td != null) {
+				return td.getColor();
+			}
+			
+			return null;
+		}
+	}
+	
+	private ColorProvider colorProvider;
 	
 	public ColorLabelColumnGenerator() {
 		this(new DefaultTagDefinitionProvider());
 	}
 
 	public ColorLabelColumnGenerator(TagDefinitionProvider tagDefinitionProvider) {
-		this.tagDefinitionProvider = tagDefinitionProvider;
+		this(new TagDefinitionColorProvider(tagDefinitionProvider));
+	}
+	
+	public ColorLabelColumnGenerator(ColorProvider colorProvider) {
+		this.colorProvider = colorProvider;
 	}
 
 	public Object generateCell(Table source, Object itemId, Object columnId) {
 		try {
-			TagDefinition td = tagDefinitionProvider.getTagDefinition(itemId);
+			String color = colorProvider.getColor(itemId);
 			
-			if (td != null) {
+			if (color != null) {
 				Label colorLabel = 
 					new Label(
 						MessageFormat.format(
 							COLORLABEL_HTML, 
 							ColorConverter.toHex((
-								td.getColor()))));
+								color))));
 				colorLabel.setContentMode(Label.CONTENT_XHTML);
 				return colorLabel;
 			}

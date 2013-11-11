@@ -20,6 +20,11 @@ package de.catma.indexer.db;
 
 import static de.catma.repository.db.jooqgen.catmaindex.Tables.PROPERTY;
 import static de.catma.repository.db.jooqgen.catmaindex.Tables.TAGREFERENCE;
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTYDEFINITION;
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTYDEF_POSSIBLEVALUE;
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGDEFINITION;
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGSETDEFINITION;
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.USERMARKUPCOLLECTION;
 
 import java.util.List;
 import java.util.Map;
@@ -46,6 +51,8 @@ import de.catma.document.Range;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinitionPathInfo;
 import de.catma.util.IDGenerator;
 
 public class TagDefinitionSearcher {
@@ -118,10 +125,13 @@ public class TagDefinitionSearcher {
 						masterRecord.getValue(TAGREFERENCE.USERMARKUPCOLLECTIONID),
 						idGenerator.uuidBytesToCatmaID(
 								masterRecord.getValue(TAGREFERENCE.TAGDEFINITIONID)),
+						masterRecord.getValue(TAGREFERENCE.TAGDEFINITIONPATH),
+						masterRecord.getValue(TAGREFERENCE.TAGDEFINITIONVERSION),
 						idGenerator.uuidBytesToCatmaID(
 								masterRecord.getValue(TAGREFERENCE.TAGINSTANCEID)),
 						idGenerator.uuidBytesToCatmaID(
 								masterRecord.getValue(PROPERTY.PROPERTYDEFINITIONID)),
+						masterRecord.getValue(PROPERTY.NAME),
 						masterRecord.getValue(PROPERTY.VALUE)
 					));
 			}
@@ -133,6 +143,8 @@ public class TagDefinitionSearcher {
 						masterRecord.getValue(TAGREFERENCE.USERMARKUPCOLLECTIONID),
 						idGenerator.uuidBytesToCatmaID(
 								masterRecord.getValue(TAGREFERENCE.TAGDEFINITIONID)),
+						masterRecord.getValue(TAGREFERENCE.TAGDEFINITIONPATH),
+						masterRecord.getValue(TAGREFERENCE.TAGDEFINITIONVERSION),
 						idGenerator.uuidBytesToCatmaID(
 								masterRecord.getValue(TAGREFERENCE.TAGINSTANCEID))
 					));
@@ -156,10 +168,6 @@ public class TagDefinitionSearcher {
 		.join(PROPERTY)
 			.on(PROPERTY.TAGINSTANCEID.eq(TAGREFERENCE.TAGINSTANCEID))
 			.and(PROPERTY.NAME.likeIgnoreCase(propertyName));
-//			.and(PROPERTY.PROPERTYDEFINITIONID.in(
-//				Collections2.transform(
-//						propertyDefinitionIDs, 
-//						new UUIDtoByteMapper())));
 		
 		if ((propertyValue != null) && (!propertyValue.isEmpty())) {
 			
@@ -186,5 +194,38 @@ public class TagDefinitionSearcher {
 			propertyName + 
 					(((propertyValue==null)||propertyValue.isEmpty())?"":
 						(":"+propertyValue)), true);
+	}
+	
+	public List<TagDefinitionPathInfo> getTagDefinitionPathInfos(List<String> userMarkupCollectionIDs) {
+		
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+		
+		
+		return db
+		.selectDistinct(
+				DSL.field("ciTagRef.tagDefintionPath"), 
+				TAGSETDEFINITION.NAME, 
+				PROPERTYDEF_POSSIBLEVALUE.VALUE)
+		.from(TAGDEFINITION)
+		.join(TAGSETDEFINITION)
+			.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
+		.join(USERMARKUPCOLLECTION)
+			.on(USERMARKUPCOLLECTION.TAGLIBRARYID.eq(TAGSETDEFINITION.TAGLIBRARYID))
+		.join(PROPERTYDEFINITION)
+			.on(PROPERTYDEFINITION.TAGDEFINITIONID.eq(TAGDEFINITION.TAGDEFINITIONID))
+			.and(PROPERTYDEFINITION.NAME.eq(PropertyDefinition.SystemPropertyName.catma_displaycolor.name()))
+		.join(PROPERTYDEF_POSSIBLEVALUE)
+			.on(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.eq(PROPERTYDEFINITION.PROPERTYDEFINITIONID))
+		.join(db
+				.selectDistinct(
+					TAGREFERENCE.USERMARKUPCOLLECTIONID.as("userMarkupCollectionID"), 
+					TAGREFERENCE.TAGDEFINITIONID.as("tagDefinitionID"),
+					TAGREFERENCE.TAGDEFINITIONPATH.as("tagDefintionPath"))
+				.from(TAGREFERENCE)
+				.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.in(userMarkupCollectionIDs)).asTable("ciTagRef"))
+			.on(DSL.field("ciTagRef.userMarkupCollectionID").eq(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID))
+			.and(DSL.field("ciTagRef.tagDefinitionID").eq(TAGDEFINITION.UUID))
+		.fetch()
+		.map(new TagDefinitionPathInfoMapper());
 	}
 }

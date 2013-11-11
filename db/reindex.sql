@@ -1,8 +1,7 @@
 delimiter $$
-
 DROP PROCEDURE IF EXISTS reindex$$
 
-CREATE PROCEDURE reindex()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `reindex`()
 BEGIN
 
 	DELETE FROM tagreference;
@@ -17,8 +16,8 @@ BEGIN
 	
 	DELETE FROM property;
 	
-	INSERT INTO property(tagInstanceID, propertyDefinitionID, value)
-	SELECT ti.uuid, pd.uuid, v.value
+	INSERT INTO property(tagInstanceID, propertyDefinitionID, value, name)
+	SELECT ti.uuid, pd.uuid, v.value, pd.name
 	FROM CatmaRepository.propertyvalue v
 	JOIN CatmaRepository.property p ON v.propertyID = p.propertyId
 	JOIN CatmaRepository.propertydefinition pd ON p.propertyDefinitionID = pd.propertyDefinitionID
@@ -26,4 +25,3 @@ BEGIN
 
 END$$
 
-delimiter ;

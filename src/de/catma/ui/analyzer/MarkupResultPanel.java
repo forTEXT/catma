@@ -64,7 +64,6 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.HierarchicalExcelExport;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
@@ -665,8 +664,6 @@ public class MarkupResultPanel extends VerticalLayout {
 
 		int totalFreq = 0;
 	
-		HashMap<String, UserMarkupCollection> loadedUserMarkupCollections =
-				new HashMap<String, UserMarkupCollection>();
 		Set<String> tagDefinitions = new HashSet<String>();
 		
 		if (!(queryResult instanceof GroupedQueryResultSet)) { // performance opt for Wordlists which are freqency based GroupedQueryResultSets
@@ -674,11 +671,11 @@ public class MarkupResultPanel extends VerticalLayout {
 			if (cbFlatTable.booleanValue() && cbPropAsColumns.booleanValue()) {
 				resetColumns = true;
 				totalFreq = setQueryResultGroupedByTagInstance(
-						queryResult, loadedUserMarkupCollections, tagDefinitions);
+						queryResult, tagDefinitions);
 			}
 			else {
 				totalFreq = setQueryResultByRow(
-						queryResult, loadedUserMarkupCollections, tagDefinitions);
+						queryResult, tagDefinitions);
 			}
 		}
 		
@@ -692,8 +689,7 @@ public class MarkupResultPanel extends VerticalLayout {
 	}
 	
 	private int setQueryResultGroupedByTagInstance(
-			QueryResult queryResult,HashMap<String,
-			UserMarkupCollection> loadedUserMarkupCollections, 
+			QueryResult queryResult,
 			Set<String> tagDefinitions) throws IOException {
 		
 		int totalFreq = 0;
@@ -726,26 +722,9 @@ public class MarkupResultPanel extends VerticalLayout {
 			totalFreq++;
 			
 			tagDefinitions.add(masterRow.getTagDefinitionId());
-			String tagDefinitionId = masterRow.getTagDefinitionId();
 			String markupCollectionsId = masterRow.getMarkupCollectionId();
 			SourceDocument sourceDocument = 
 					repository.getSourceDocument(masterRow.getSourceDocumentId());
-			
-			if (!loadedUserMarkupCollections.containsKey(markupCollectionsId)) {
-				UserMarkupCollectionReference userMarkupCollRef = 
-					sourceDocument.getUserMarkupCollectionReference(
-							markupCollectionsId);
-			
-				loadedUserMarkupCollections.put(
-						markupCollectionsId,
-						repository.getUserMarkupCollection(userMarkupCollRef));
-			}
-			
-			UserMarkupCollection umc = 
-					loadedUserMarkupCollections.get(markupCollectionsId);
-			
-			TagDefinition tagDefinition = 
-					umc.getTagLibrary().getTagDefinition(tagDefinitionId);
 
 			RowWrapper itemId = new RowWrapper(masterRow);
 			resultTable.addItem(itemId);
@@ -753,13 +732,13 @@ public class MarkupResultPanel extends VerticalLayout {
 			
 			resultTable.getContainerProperty(
 				itemId, TreePropertyName.caption).setValue(
-					umc.getTagLibrary().getTagPath(tagDefinition));
+					masterRow.getTagDefinitionPath());
 			resultTable.getContainerProperty(
 					itemId, TreePropertyName.sourcedocument).setValue(
 					sourceDocument.toString());
 			resultTable.getContainerProperty(
 					itemId, TreePropertyName.markupcollection).setValue(
-					umc.getName());
+					sourceDocument.getUserMarkupCollectionReference(markupCollectionsId).getName());
 			resultTable.getContainerProperty(
 					itemId, TreePropertyName.phrase).setValue(
 					masterRow.getPhrase());
@@ -776,14 +755,13 @@ public class MarkupResultPanel extends VerticalLayout {
 				
 				String propDefId = tRow.getPropertyDefinitionId();
 				if (propDefId != null) {
-					PropertyDefinition propDef = tagDefinition.getPropertyDefinition(propDefId);
-					
-					if (!resultTable.getContainerPropertyIds().contains(propDef.getName())) {
-						resultTable.addContainerProperty(propDef.getName(), String.class, null);
-						propNames.add(propDef.getName());
+					String propertyName = tRow.getPropertyName();
+					if (!resultTable.getContainerPropertyIds().contains(propertyName)) {
+						resultTable.addContainerProperty(propertyName, String.class, null);
+						propNames.add(propertyName);
 					}
 					resultTable.getContainerProperty(
-							itemId, propDef.getName()).setValue(tRow.getPropertyValue());
+							itemId, propertyName).setValue(tRow.getPropertyValue());
 				}				
 			}
 		}
@@ -809,7 +787,6 @@ public class MarkupResultPanel extends VerticalLayout {
 
 	private int setQueryResultByRow(
 			QueryResult queryResult, 
-			HashMap<String,UserMarkupCollection> loadedUserMarkupCollections, 
 			Set<String> tagDefinitions) throws IOException {
 		
 		int totalFreq = 0;
@@ -820,10 +797,10 @@ public class MarkupResultPanel extends VerticalLayout {
 				TagQueryResultRow tRow = (TagQueryResultRow)row;
 				tagDefinitions.add(tRow.getTagDefinitionId());
 				if (cbFlatTable.booleanValue()) {
-					addFlatTagQueryResultRow(tRow, loadedUserMarkupCollections);
+					addFlatTagQueryResultRow(tRow);
 				}
 				else {
-					addTagQueryResultRow(tRow, loadedUserMarkupCollections);
+					addTagQueryResultRow(tRow);
 				}
 				if (!displayProperties && (tRow.getPropertyDefinitionId() != null)) {
 					displayProperties = true;
@@ -858,45 +835,26 @@ public class MarkupResultPanel extends VerticalLayout {
 		return totalFreq;
 	}
 
-	private void addFlatTagQueryResultRow(TagQueryResultRow row,
-			HashMap<String, UserMarkupCollection> loadedUserMarkupCollections) throws IOException {
-		String tagDefinitionId = row.getTagDefinitionId();
+	private void addFlatTagQueryResultRow(TagQueryResultRow row) throws IOException {
 		String markupCollectionsId = row.getMarkupCollectionId();
 		SourceDocument sourceDocument = 
 				repository.getSourceDocument(row.getSourceDocumentId());
-		
-		if (!loadedUserMarkupCollections.containsKey(markupCollectionsId)) {
-			UserMarkupCollectionReference userMarkupCollRef = 
-				sourceDocument.getUserMarkupCollectionReference(
-						markupCollectionsId);
-		
-			loadedUserMarkupCollections.put(
-					markupCollectionsId,
-					repository.getUserMarkupCollection(userMarkupCollRef));
-		}
-		
-		UserMarkupCollection umc = 
-				loadedUserMarkupCollections.get(markupCollectionsId);
-		
-		TagDefinition tagDefinition = 
-				umc.getTagLibrary().getTagDefinition(tagDefinitionId);
 		
 		RowWrapper wrapper = new RowWrapper(row);
 		
 		resultTable.addItem(wrapper);
 		
 		resultTable.getContainerProperty(wrapper, TreePropertyName.caption).setValue(
-				umc.getTagLibrary().getTagPath(tagDefinition));
+				row.getTagDefinitionPath());
 		resultTable.getContainerProperty(wrapper, TreePropertyName.sourcedocument).setValue(
 				sourceDocument.toString());
 		resultTable.getContainerProperty(wrapper, TreePropertyName.markupcollection).setValue(
-				umc.getName());
+				sourceDocument.getUserMarkupCollectionReference(markupCollectionsId).getName());
 		resultTable.getContainerProperty(wrapper, TreePropertyName.phrase).setValue(
 				row.getPhrase());
 		if (row.getPropertyDefinitionId()!=null) {
 			resultTable.getContainerProperty(wrapper, TreePropertyName.propertyname).setValue(
-				tagDefinition.getPropertyDefinition(
-								row.getPropertyDefinitionId()).getName());
+				row.getPropertyName());
 			resultTable.getContainerProperty(wrapper, TreePropertyName.propertyvalue).setValue(
 				row.getPropertyValue());
 		}
@@ -909,9 +867,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		resultTable.setChildrenAllowed(wrapper, false);
 	}
 
-	private void addTagQueryResultRow(
-		final TagQueryResultRow row, 
-		Map<String,UserMarkupCollection> loadedUserMarkupCollections) 
+	private void addTagQueryResultRow(final TagQueryResultRow row) 
 				throws IOException {
 		
 		String tagDefinitionId = row.getTagDefinitionId();
@@ -919,27 +875,13 @@ public class MarkupResultPanel extends VerticalLayout {
 		SourceDocument sourceDocument = 
 				repository.getSourceDocument(row.getSourceDocumentId());
 		
-		if (!loadedUserMarkupCollections.containsKey(markupCollectionsId)) {
-			UserMarkupCollectionReference userMarkupCollRef = 
-				sourceDocument.getUserMarkupCollectionReference(
-						markupCollectionsId);
-		
-			loadedUserMarkupCollections.put(
-					markupCollectionsId,
-					repository.getUserMarkupCollection(userMarkupCollRef));
-		}
-		
-		UserMarkupCollection umc = 
-				loadedUserMarkupCollections.get(markupCollectionsId);
-		
-		TagDefinition tagDefinition = 
-				umc.getTagLibrary().getTagDefinition(tagDefinitionId);
 		String tagDefinitionItemID = 
-				tagDefinition.getUuid() + "#" + tagDefinition.getVersion();
+				row.getTagDefinitionId() + "#" + row.getTagDefinitionVersion();
+
 		if (!resultTable.containsId(tagDefinitionItemID)) {
 			resultTable.addItem(tagDefinitionItemID);
 			resultTable.getContainerProperty(tagDefinitionItemID, TreePropertyName.caption).setValue(
-						umc.getTagLibrary().getTagPath(tagDefinition));
+						row.getTagDefinitionPath());
 			resultTable.getContainerProperty(tagDefinitionItemID, TreePropertyName.frequency).setValue(
 						0);
 			resultTable.getContainerProperty(tagDefinitionItemID, TreePropertyName.visible).setValue(
@@ -975,12 +917,12 @@ public class MarkupResultPanel extends VerticalLayout {
 		sourceDocFreqProperty.setValue(
 				((Integer)sourceDocFreqProperty.getValue())+1);
 		
-		final String umcItemID = sourceDocumentItemID + "@" + umc.getId();
+		final String umcItemID = sourceDocumentItemID + "@" + markupCollectionsId;
 		
 		if (!resultTable.containsId(umcItemID)) {
 			resultTable.addItem(umcItemID);
 			resultTable.getContainerProperty(umcItemID, TreePropertyName.caption).setValue(
-					umc.getName());
+					sourceDocument.getUserMarkupCollectionReference(markupCollectionsId).getName());
 			resultTable.getContainerProperty(umcItemID, TreePropertyName.frequency).setValue(
 					0);
 			resultTable.getContainerProperty(umcItemID, TreePropertyName.visible).setValue(
@@ -998,17 +940,16 @@ public class MarkupResultPanel extends VerticalLayout {
 		resultTable.addItem(wrapper);
 		
 		resultTable.getContainerProperty(wrapper, TreePropertyName.caption).setValue(
-				umc.getTagLibrary().getTagPath(tagDefinition));
+				row.getTagDefinitionPath());
 		resultTable.getContainerProperty(wrapper, TreePropertyName.sourcedocument).setValue(
 				sourceDocument.toString());
 		resultTable.getContainerProperty(wrapper, TreePropertyName.markupcollection).setValue(
-				umc.getName());
+				sourceDocument.getUserMarkupCollectionReference(row.getMarkupCollectionId()).getName());
 		resultTable.getContainerProperty(wrapper, TreePropertyName.phrase).setValue(
 				row.getPhrase());
 		if (row.getPropertyDefinitionId()!=null) {
 			resultTable.getContainerProperty(wrapper, TreePropertyName.propertyname).setValue(
-				tagDefinition.getPropertyDefinition(
-								row.getPropertyDefinitionId()).getName());
+				row.getPropertyName());
 			resultTable.getContainerProperty(wrapper, TreePropertyName.propertyvalue).setValue(
 				row.getPropertyValue());
 		}

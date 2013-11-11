@@ -29,26 +29,32 @@ public class TagQueryResultRow extends QueryResultRow {
 	
 	private String markupCollectionId;
 	private String tagDefinitionId;
+	private String tagDefinitionPath;
+	private String tagDefinitionVersion;
 	private String tagInstanceId;
 	private SortedSet<Range> ranges;
 	private String propertyDefinitionId;
+	private String propertyName;
 	private String propertyValue;
 
 	public TagQueryResultRow(String sourceDocumentId, List<Range> ranges,
-			String markupCollectionId, String tagDefinitionId,
-			String tagInstanceId, String propertyDefinitionId, String propertyValue) {
-		this(sourceDocumentId, ranges, markupCollectionId, tagDefinitionId, tagInstanceId);
+			String markupCollectionId, String tagDefinitionId, String tagDefinitionPath, String tagDefinitionVersion,
+			String tagInstanceId, String propertyDefinitionId, String propertyName, String propertyValue) {
+		this(sourceDocumentId, ranges, markupCollectionId, tagDefinitionId, tagDefinitionPath, tagDefinitionVersion, tagInstanceId);
 		
 		this.propertyDefinitionId = propertyDefinitionId;
+		this.propertyName = propertyName;
 		this.propertyValue = propertyValue;
 	}
 	
 	public TagQueryResultRow(String sourceDocumentId, List<Range> ranges,
-			String markupCollectionId, String tagDefinitionId,
-			String tagInstanceId) {
+			String markupCollectionId, String tagDefinitionId, String tagDefinitionPath, 
+			String tagDefinitionVersion, String tagInstanceId) {
 		super(sourceDocumentId, Range.getEnclosingRange(ranges));
 		this.markupCollectionId = markupCollectionId;
 		this.tagDefinitionId = tagDefinitionId;
+		this.tagDefinitionPath = tagDefinitionPath;
+		this.tagDefinitionVersion = tagDefinitionVersion;
 		this.tagInstanceId = tagInstanceId;
 		this.ranges = new TreeSet<Range>();
 		this.ranges.addAll(ranges);
@@ -80,11 +86,23 @@ public class TagQueryResultRow extends QueryResultRow {
 		return tagDefinitionId;
 	}
 	
+	public String getTagDefinitionPath() {
+		return tagDefinitionPath;
+	}
+	
+	public String getTagDefinitionVersion() {
+		return tagDefinitionVersion;
+	}
+	
 	public String getPropertyDefinitionId() {
 		return propertyDefinitionId;
 	}
 	
 	public String getPropertyValue() {
 		return propertyValue;
+	}
+	
+	public String getPropertyName() {
+		return propertyName;
 	}
 }

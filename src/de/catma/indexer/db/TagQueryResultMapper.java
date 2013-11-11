@@ -27,6 +27,8 @@ public class TagQueryResultMapper implements RecordMapper<Record, TagQueryResult
 				ranges, 
 				record.getValue(TAGREFERENCE.USERMARKUPCOLLECTIONID),
 				idGenerator.uuidBytesToCatmaID(record.getValue(TAGREFERENCE.TAGDEFINITIONID)),
+				record.getValue(TAGREFERENCE.TAGDEFINITIONPATH),
+				record.getValue(TAGREFERENCE.TAGDEFINITIONVERSION),
 				idGenerator.uuidBytesToCatmaID(record.getValue(TAGREFERENCE.TAGINSTANCEID)));
 	}
 }

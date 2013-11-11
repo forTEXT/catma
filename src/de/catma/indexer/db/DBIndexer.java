@@ -39,6 +39,7 @@ import de.catma.indexer.TermInfo;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.tag.Property;
+import de.catma.tag.TagDefinitionPathInfo;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
@@ -208,12 +209,24 @@ public class DBIndexer implements Indexer {
 	
 
 	public void removeUserMarkupCollections(
-			Collection<String> usermarkupCollectionIDs) throws IOException {
+			Collection<String> userMarkupCollectionIDs) throws IOException {
 		//TODO: optimize with jooq
-		for (String userMarkupColl : usermarkupCollectionIDs) {
+		for (String userMarkupColl : userMarkupCollectionIDs) {
 			removeUserMarkupCollection(userMarkupColl);
 		}
 		
+	}
+	
+	public List<TagDefinitionPathInfo> getTagDefinitionPathInfos(List<String> userMarkupCollectionIDs) 
+			throws IOException {
+		try {
+			TagDefinitionSearcher tagDefinitionSearcher = 
+					new TagDefinitionSearcher();
+			return tagDefinitionSearcher.getTagDefinitionPathInfos(userMarkupCollectionIDs);
+		}
+		catch (Exception e) {
+			throw new IOException(e);
+		}
 	}
 	
 	public void close() { /*noop sessionfactory is closed by repository*/ }

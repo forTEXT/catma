@@ -30,6 +30,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.tag.Property;
+import de.catma.tag.TagDefinitionPathInfo;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
@@ -88,6 +89,9 @@ public interface Indexer {
 	public void updateIndex(TagInstance tagInstance, Property property) throws IOException;
 
 	public void removeUserMarkupCollections(Collection<String> usermarkupCollectionIDs) throws IOException;
+
+	public List<TagDefinitionPathInfo> getTagDefinitionPathInfos(
+			List<String> userMarkupCollectionIDs) throws IOException;
 
 
 }

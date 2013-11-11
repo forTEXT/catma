@@ -19,37 +19,53 @@
 package de.catma.ui.analyzer.querybuilder;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.ui.Button;
+import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.terminal.ClassResource;
+import com.vaadin.terminal.Resource;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
+import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
-import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.TagMatchMode;
 import de.catma.queryengine.querybuilder.QueryTree;
-import de.catma.tag.TagDefinition;
-import de.catma.tag.TagLibrary;
-import de.catma.tag.TagLibraryReference;
-import de.catma.tag.TagsetDefinition;
+import de.catma.tag.TagDefinitionPathInfo;
+import de.catma.ui.EndorsedTreeTable;
 import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
-import de.catma.ui.tagmanager.TagsetTree;
+import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
+import de.catma.ui.tagmanager.ColorLabelColumnGenerator.ColorProvider;
 
 public class TagPanel extends AbstractSearchPanel {
+	
+	private static class TagDefinitionPathInfoColorProvider implements ColorProvider {
+		public String getColor(Object itemId) {
+			if (itemId instanceof TagDefinitionPathInfo) {
+				return ((TagDefinitionPathInfo)itemId).getColor();
+			}
+			return null;
+		}
+	}
+	
+
+	private static enum TagTreePropertyName {
+		caption,
+		icon,
+		color,
+		;
+	}
 	
 	private static class TagMatchModeItem {
 		
@@ -71,10 +87,7 @@ public class TagPanel extends AbstractSearchPanel {
 		}
 	}
 	
-	private Component tagLibraryPanel;
-	private Tree tagLibrariesTree;
-	private Button btOpenTagLibrary;
-	private TagsetTree tagsetTree;
+	private EndorsedTreeTable tagsetTree;
 	private boolean init = false;
 	private VerticalSplitPanel splitPanel;
 	private ResultPanel resultPanel;
@@ -95,54 +108,43 @@ public class TagPanel extends AbstractSearchPanel {
 		super.attach();
 		if (!init) {
 			init = true;
-			if (this.tagsetDefinitionDictionary.isEmpty()) {
-				try {
-					initTagsets();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+			try {
+				initComponents();
+				initActions();
+				initData();
+			} catch (IOException e) {
+				((CatmaApplication)getApplication()).showAndLogError("DB error", e);
 			}
-			initComponents();
-			initActions();
 		}
 	}
 	
-	private void initActions() {
-		if (tagsetDefinitionDictionary.isEmpty()) {
-			btOpenTagLibrary.addListener(new ClickListener() {
-				
-				public void buttonClick(ClickEvent event) {
-					Object value = tagLibrariesTree.getValue();
-					if (value != null) {
-						tagsetDefinitionDictionary.clear();
-						
-						TagLibraryReference tlr = (TagLibraryReference)value;
-						try {
-							TagLibrary tl = 
-									queryOptions.getRepository().getTagLibrary(tlr);
-							addTagLibrary(tl);
-							tagsetTree.addTagsetDefinition(
-									tagsetDefinitionDictionary.values());
-							splitPanel.setVisible(true);
-							tagLibraryPanel.setVisible(false);
-							contentPanel.removeComponent(tagLibraryPanel);
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-					
-				}
-			});
-		}
-		tagsetTree.addValueChangeListener(new ValueChangeListener() {
-			
-			public void valueChange(ValueChangeEvent event) {
-				showInPreview();
-			}
-		});
+	private void initData() throws IOException {
+		List<String> userMarkupCollectionIDs = null;
 		
+		Repository repository = queryOptions.getRepository();
+
+		if (!queryOptions.getRelevantUserMarkupCollIDs().isEmpty()) {
+			userMarkupCollectionIDs = queryOptions.getRelevantUserMarkupCollIDs();
+		}
+		else if (!queryOptions.getRelevantSourceDocumentIDs().isEmpty()) {
+			userMarkupCollectionIDs = new ArrayList<String>();
+			for (String sourceDocId : queryOptions.getRelevantSourceDocumentIDs()) {
+				SourceDocument sd = repository.getSourceDocument(sourceDocId);
+				for (UserMarkupCollectionReference umcRef : sd.getUserMarkupCollectionRefs()) {
+					userMarkupCollectionIDs.add(umcRef.getId());
+				}
+			}
+		}
+		
+		List<TagDefinitionPathInfo> tagDefinitionPathInfos = 
+				queryOptions.getIndexer().getTagDefinitionPathInfos(userMarkupCollectionIDs);
+		
+		for (TagDefinitionPathInfo tagDefinitionPathInfo : tagDefinitionPathInfos) {
+			addTagDefinitionPathInfo(tagDefinitionPathInfo);
+		}
+	}
+
+	private void initActions() {
 		resultPanel.addBtShowInPreviewListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -159,11 +161,18 @@ public class TagPanel extends AbstractSearchPanel {
 	}
 
 	private void showInPreview() {
-		Object value = tagsetTree.getTagTree().getValue();
+		Object value = tagsetTree.getValue();
 		
-		if ((value != null) && (value instanceof TagDefinition)) {
-			TagDefinition td = (TagDefinition)value;
-			String path = tagsetTree.getTagsetDefinition(td).getTagPath(td);
+		if ((value != null) && (tagsetTree.getParent(value) != null)) {
+			String path = null;
+			if (value instanceof TagDefinitionPathInfo) {
+				TagDefinitionPathInfo td = (TagDefinitionPathInfo)value;
+				path = td.getTagDefinitionPath();
+			}
+			else {
+				path = ((String)value).substring(((String)value).indexOf('/')+1);
+			}
+			
 			if (curQuery != null) {
 				queryTree.removeLast();
 			}
@@ -186,58 +195,67 @@ public class TagPanel extends AbstractSearchPanel {
 		toggleButtonStateListener.stepChanged(TagPanel.this);
 	}
 
-	private void initTagsets() throws IOException {
-		Repository repository = queryOptions.getRepository();
-
-		if (!queryOptions.getRelevantUserMarkupCollIDs().isEmpty()) {
-			for (String userMarkupCollId : 
-				queryOptions.getRelevantUserMarkupCollIDs()) {
-				addUserMarkupCollection(
-					repository, 
-					new UserMarkupCollectionReference(
-							userMarkupCollId, new ContentInfoSet()));
-			}
+	private void addTagDefinitionPathInfo(
+			TagDefinitionPathInfo tagDefinitionPathInfo) {
+		String tagsetDefinitionName = tagDefinitionPathInfo.getTagsetDefinitionName();
+		
+		if (!(tagsetTree).containsId(tagsetDefinitionName)) {
+			ClassResource tagsetIcon = 
+					new ClassResource(
+						"ui/tagmanager/resources/grndiamd.gif", getApplication());
+			tagsetTree.addItem(tagsetDefinitionName);
+			tagsetTree.getContainerProperty(
+				tagsetDefinitionName, TagTreePropertyName.caption).setValue(
+						tagsetDefinitionName);
+			tagsetTree.getContainerProperty(
+					tagsetDefinitionName, TagTreePropertyName.icon).setValue(
+							tagsetIcon);
+			tagsetTree.setChildrenAllowed(tagsetDefinitionName, true);
 		}
-		else if (!queryOptions.getRelevantSourceDocumentIDs().isEmpty()) {
-			for (String sourceDocId : queryOptions.getRelevantSourceDocumentIDs()) {
-				SourceDocument sd = repository.getSourceDocument(sourceDocId);
-				for (UserMarkupCollectionReference umcRef : sd.getUserMarkupCollectionRefs()) {
-					addUserMarkupCollection(repository, umcRef);
+		
+		Object parent = tagsetDefinitionName;
+		
+		String[] tagDefinitions = 
+				tagDefinitionPathInfo.getTagDefinitionPath().substring(1).split("/"); //TODO: handle escapes
+		StringBuilder pathBuilder = new StringBuilder();
+		for (String tagDefinitionName : tagDefinitions) {
+			pathBuilder.append("/");
+			pathBuilder.append(tagDefinitionName);
+			String curPath = pathBuilder.toString();
+			
+			if (curPath.equals(tagDefinitionPathInfo.getTagDefinitionPath())) {
+				ClassResource tagIcon = new ClassResource(
+						"ui/tagmanager/resources/reddiamd.gif", 
+						getApplication());
+				tagsetTree.addItem(tagDefinitionPathInfo);
+				tagsetTree.getContainerProperty(
+					tagDefinitionPathInfo, TagTreePropertyName.caption).setValue(
+							tagDefinitionName);
+				tagsetTree.getContainerProperty(
+						tagDefinitionPathInfo, TagTreePropertyName.icon).setValue(
+							tagIcon);
+				
+				tagsetTree.setParent(tagDefinitionPathInfo, parent);
+				tagsetTree.setChildrenAllowed(tagDefinitionPathInfo, false);
+			}
+			else {
+				curPath = tagsetDefinitionName + curPath;
+				if (!tagsetTree.containsId(curPath)) {
+					ClassResource tagIcon = new ClassResource(
+							"ui/tagmanager/resources/reddiamd.gif", 
+							getApplication());
+					tagsetTree.addItem(curPath);
+					tagsetTree.getContainerProperty(
+							curPath, TagTreePropertyName.caption).setValue(
+								tagDefinitionName);
+					tagsetTree.getContainerProperty(
+							curPath, TagTreePropertyName.icon).setValue(
+								tagIcon);
+					tagsetTree.setParent(curPath, parent);
+					tagsetTree.setChildrenAllowed(curPath, true);
 				}
+				parent = curPath;
 			}
-		}
-	}
-
-	private void addUserMarkupCollection(Repository repository,
-			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
-		
-		UserMarkupCollection umc =
-				repository.getUserMarkupCollection(userMarkupCollectionReference);
-		addTagLibrary(umc.getTagLibrary());
-		
-	}
-
-	private void addTagLibrary(TagLibrary tagLibrary) {
-		for (TagsetDefinition tagsetDefinition : tagLibrary) {
-			addTagsetDefinition(tagsetDefinition);
-		}
-	}
-
-	private void addTagsetDefinition(TagsetDefinition tagsetDefinition) {
-		if (tagsetDefinitionDictionary.containsKey(tagsetDefinition.getUuid())) {
-			TagsetDefinition existingTSDef = 
-					tagsetDefinitionDictionary.get(tagsetDefinition.getUuid());
-			
-			if (tagsetDefinition.getVersion().isNewer(existingTSDef.getVersion())) {
-				tagsetDefinitionDictionary.remove(existingTSDef.getUuid());
-				tagsetDefinitionDictionary.put(
-						tagsetDefinition.getUuid(), tagsetDefinition);
-			}
-			
-		}
-		else {
-			tagsetDefinitionDictionary.put(
-					tagsetDefinition.getUuid(), tagsetDefinition);
 		}
 	}
 
@@ -246,18 +264,39 @@ public class TagPanel extends AbstractSearchPanel {
 		contentPanel.setSizeFull();
 		addComponent(contentPanel);
 		
-		if (tagsetDefinitionDictionary.isEmpty()) {
-			tagLibraryPanel = createTagLibraryPanel();
-			contentPanel.addComponent(tagLibraryPanel);
-		}
-		
 		HorizontalLayout tagSearchPanel = new HorizontalLayout();
 		tagSearchPanel.setSizeFull();
 		tagSearchPanel.setSpacing(true);
 		
-		tagsetTree = new TagsetTree(
-			queryOptions.getRepository().getTagManager(), 
-			null, false, false, null);
+		tagsetTree = new EndorsedTreeTable();
+		tagsetTree.setSizeFull();
+		tagsetTree.setSelectable(true);
+		tagsetTree.setMultiSelect(false);
+		
+		tagsetTree.setContainerDataSource(new HierarchicalContainer());
+		
+		tagsetTree.addContainerProperty(
+				TagTreePropertyName.caption, String.class, null);
+		tagsetTree.setColumnHeader(TagTreePropertyName.caption, "Tagsets");
+		
+		tagsetTree.addContainerProperty(
+				TagTreePropertyName.icon, Resource.class, null);
+
+		tagsetTree.setItemCaptionPropertyId(TagTreePropertyName.caption);
+		tagsetTree.setItemIconPropertyId(TagTreePropertyName.icon);
+		tagsetTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_PROPERTY);
+	
+		tagsetTree.setVisibleColumns(
+				new Object[] {
+						TagTreePropertyName.caption});
+		
+		tagsetTree.addGeneratedColumn(
+				TagTreePropertyName.color, 
+				new ColorLabelColumnGenerator(
+						new TagDefinitionPathInfoColorProvider()));
+
+		tagsetTree.setColumnHeader(TagTreePropertyName.color, "Tag Color");
+		
 		tagSearchPanel.addComponent(tagsetTree);
 		tagSearchPanel.setExpandRatio(tagsetTree, 0.8f);
 		
@@ -296,12 +335,6 @@ public class TagPanel extends AbstractSearchPanel {
 		contentPanel.addComponent(splitPanel);
 		
 		splitPanel.addComponent(tagSearchPanel);
-		if (tagsetDefinitionDictionary.isEmpty()) {
-			splitPanel.setVisible(false);
-		}
-		else {
-			tagsetTree.addTagsetDefinition(tagsetDefinitionDictionary.values());
-		}
 		
 		resultPanel = new ResultPanel(queryOptions);
 		splitPanel.addComponent(resultPanel);
@@ -310,55 +343,11 @@ public class TagPanel extends AbstractSearchPanel {
 		
 	}
 
-	private Component createTagLibraryPanel() {
-		VerticalLayout tagLibraryPanel = new VerticalLayout();
-		tagLibraryPanel.setMargin(true, false, false, false);
-		tagLibraryPanel.setSpacing(true);
-		Label infoLabel = 
-			new Label(
-				"Since you did not specify any Source Documents " +
-				"or User Markup Collections to constrain your search, " +
-				"CATMA has nowhere to look for Tags. So please open a Tag Library first: ");
-		tagLibraryPanel.addComponent(infoLabel);
-		Component tagLibraryTreePanel = createTagLibraryTreePanel();
-		tagLibraryPanel.addComponent(tagLibraryTreePanel);
-		btOpenTagLibrary = new Button("Open Tag Library");
-		tagLibraryPanel.addComponent(btOpenTagLibrary);
-		return tagLibraryPanel;
-	}
-
-	private Component createTagLibraryTreePanel() {
-
-		Panel tagLibraryPanel = new Panel();
-		tagLibraryPanel.getContent().setSizeUndefined();
-		tagLibraryPanel.setSizeFull();
-		
-		tagLibrariesTree = new Tree();
-		tagLibrariesTree.setCaption("Tag Libraries");
-		tagLibrariesTree.addStyleName("bold-label-caption");
-		tagLibrariesTree.setImmediate(true);
-		tagLibrariesTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_ID);
-		
-		for (TagLibraryReference tlr :
-				queryOptions.getRepository().getTagLibraryReferences()) {
-			addTagLibraryReferenceToTree(tlr);
-		}
-		
-		tagLibraryPanel.addComponent(tagLibrariesTree);
-		
-		return tagLibraryPanel;
-	}
-	
-	private void addTagLibraryReferenceToTree(TagLibraryReference tlr) {
-		tagLibrariesTree.addItem(tlr);
-		tagLibrariesTree.setChildrenAllowed(tlr, false);
-	}
-	
 	@Override
 	public String getCaption() {
-		return "Please choose a TagDefinition";
+		return "Please choose a TagDefinition " +
+				"(only TagDefinitions that will provide results are listed)";
 	}
-	
 	
 	@Override
 	public String toString() {
