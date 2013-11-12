@@ -71,7 +71,6 @@ import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.computation.DistributionComputation;
 import de.catma.ui.analyzer.querybuilder.QueryBuilderWizardFactory;
-import de.catma.ui.analyzer.querybuilder.TagsetDefinitionDictionary;
 import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabComponent;
@@ -105,7 +104,6 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private PropertyChangeListener userMarkupDocumentChangedListener;
 	private CloseListener closeListener;
 	private PropertyChangeListener corpusChangedListener;
-	private TagsetDefinitionDictionary tagsetDefinitionDictionary;
 	private IndexInfoSet indexInfoSet;
 	private boolean init = false;
 	private Label helpLabel;
@@ -119,7 +117,6 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		this.relevantSourceDocumentIDs = new ArrayList<String>();
 		this.relevantUserMarkupCollIDs = new ArrayList<String>();
 		this.relevantStaticMarkupCollIDs = new ArrayList<String>();
-		tagsetDefinitionDictionary = new TagsetDefinitionDictionary();
 		this.repository = repository;
 		this.indexInfoSet = 
 				new IndexInfoSet(
@@ -156,7 +153,6 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 						SourceDocument sourceDocument = 
 								(SourceDocument)evt.getOldValue();
 						if (relevantSourceDocumentIDs.contains(sourceDocument.getID())) {
-							tagsetDefinitionDictionary.clear();
 							removeSourceDocumentFromTree(sourceDocument);
 							if (relevantSourceDocumentIDs.isEmpty()) {
 								closeListener.closeRequest(AnalyzerView.this);
@@ -170,7 +166,6 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 						removeSourceDocumentFromTree((SourceDocument) evt.getNewValue());
 						addSourceDocument((SourceDocument) evt.getNewValue());
 					}
-					tagsetDefinitionDictionary.clear();
 				}
 			}
 		};
@@ -189,14 +184,12 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 							(UserMarkupCollectionReference) evt.getOldValue();
 					if (relevantUserMarkupCollIDs.contains(
 							userMarkupCollectionReference.getId())) {
-						tagsetDefinitionDictionary.clear();
 
 						removeUserMarkupCollectionFromTree(
 								userMarkupCollectionReference);
 					}
 				}
 				else { // update
-					tagsetDefinitionDictionary.clear();
 					documentsTree.requestRepaint();
 				}
 			}
@@ -228,13 +221,11 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 							&& Equal.nonNull(AnalyzerView.this.corpus.getId(), corpus.getId())) {
 						//update sourcedoc added
 						if (evt.getOldValue() instanceof SourceDocument) {
-							tagsetDefinitionDictionary.clear();
 							addSourceDocument((SourceDocument)evt.getOldValue());
 						}
 						// update usermarkupcoll added
 						else if (evt.getOldValue() 
 								instanceof UserMarkupCollectionReference) {
-							tagsetDefinitionDictionary.clear();
 							addUserMarkupCollection(
 								(UserMarkupCollectionReference)evt.getOldValue());
 						}
@@ -352,8 +343,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 						public void activeStepChanged(WizardStepActivationEvent event) {/*noop*/}
 					},
 					queryTree,
-					queryOptions,
-					tagsetDefinitionDictionary);
+					queryOptions);
 		
 		Window wizardWindow = 
 				factory.createWizardWindow("Query Builder", "90%", "85%");

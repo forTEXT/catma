@@ -231,5 +231,9 @@ public class ResultPanel extends VerticalLayout {
 		btShowInPreview.addListener(clickListener);
 	}
 
+	public void clear() {
+		resultTable.removeAllItems();
+	}
+
 	
 }

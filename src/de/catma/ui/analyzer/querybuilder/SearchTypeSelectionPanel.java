@@ -45,20 +45,18 @@ public class SearchTypeSelectionPanel
 	public SearchTypeSelectionPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
 			QueryTree queryTree,
-			QueryOptions queryOptions, 
-			TagsetDefinitionDictionary tagsetDefinitionDictionary) {
-		this(toggleButtonStateListener, queryTree, queryOptions, false, 
-				tagsetDefinitionDictionary);
+			QueryOptions queryOptions) {
+		this(toggleButtonStateListener, queryTree, queryOptions, false);
 	}
 	
 	public SearchTypeSelectionPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
 			QueryTree queryTree,
 			QueryOptions queryOptions,
-			boolean onBack, TagsetDefinitionDictionary tagsetDefinitionDictionary) {
+			boolean onBack) {
 		this.toggleButtonStateListener = toggleButtonStateListener;
 		this.onBack = onBack;
-		initComponents(queryTree, queryOptions, tagsetDefinitionDictionary);
+		initComponents(queryTree, queryOptions);
 		initActions();
 	}
 
@@ -87,8 +85,7 @@ public class SearchTypeSelectionPanel
 	}
 
 	private void initComponents(
-			QueryTree queryTree, QueryOptions queryOptions, 
-			TagsetDefinitionDictionary tagsetDefinitionDictionary) {
+			QueryTree queryTree, QueryOptions queryOptions) {
 		
 		setSpacing(true);
 		setWidth("100%");
@@ -96,32 +93,27 @@ public class SearchTypeSelectionPanel
 		phrasePanel = 
 			new PhrasePanel(
 				toggleButtonStateListener,
-				queryTree, queryOptions,
-				tagsetDefinitionDictionary);
+				queryTree, queryOptions);
 		nextSteps.add(phrasePanel);
 		
 		nextSteps.add(
 			new SimilPanel(
 				toggleButtonStateListener, 
-				queryTree, queryOptions,
-				tagsetDefinitionDictionary));
+				queryTree, queryOptions));
 		
 		nextSteps.add(
 			new TagPanel(
-				toggleButtonStateListener, queryTree, queryOptions, 
-				tagsetDefinitionDictionary));
+				toggleButtonStateListener, queryTree, queryOptions));
 		
 		nextSteps.add(
 			new CollocPanel(
 				toggleButtonStateListener, 
-				queryTree, queryOptions,
-				tagsetDefinitionDictionary));
+				queryTree, queryOptions));
 		
 		nextSteps.add(
 				new FreqPanel(
 					toggleButtonStateListener, 
-					queryTree, queryOptions,
-					tagsetDefinitionDictionary));
+					queryTree, queryOptions));
 
 		searchTypeSelect = new OptionGroup("",nextSteps);
 		

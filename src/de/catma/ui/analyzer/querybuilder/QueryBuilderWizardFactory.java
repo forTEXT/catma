@@ -30,16 +30,13 @@ public class QueryBuilderWizardFactory extends WizardFactory {
 	
 	private QueryTree queryTree;
 	private QueryOptions queryOptions;
-	private TagsetDefinitionDictionary tagsetDefinitionDictionary;
 
 	public QueryBuilderWizardFactory(
 			WizardProgressListener wizardProgressListener, QueryTree queryTree, 
-			QueryOptions queryOptions,
-			TagsetDefinitionDictionary tagsetDefinitionDictionary) {
+			QueryOptions queryOptions) {
 		super(wizardProgressListener);
 		this.queryTree = queryTree;
 		this.queryOptions = queryOptions;
-		this.tagsetDefinitionDictionary = tagsetDefinitionDictionary;
 	}
 
 	@Override
@@ -47,8 +44,7 @@ public class QueryBuilderWizardFactory extends WizardFactory {
 		SearchTypeSelectionPanel searchTypeSelectionPanel = 
 				new SearchTypeSelectionPanel(
 					new ToggleButtonStateListener(wizard), 
-					queryTree, queryOptions,
-					tagsetDefinitionDictionary);
+					queryTree, queryOptions);
 		
 		wizard.addStep(searchTypeSelectionPanel);
 	}

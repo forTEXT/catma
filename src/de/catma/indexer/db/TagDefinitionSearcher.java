@@ -71,9 +71,24 @@ public class TagDefinitionSearcher {
 			return idGenerator.uuidBytesToCatmaID(r.getValue(TAGREFERENCE.TAGINSTANCEID));
 		}
 	}
+	
+	private static class GroupByTagInstanceIdPropertyDefIdFunction implements
+		Function<Record, String> {
+		private IDGenerator idGenerator;
+		
+		public GroupByTagInstanceIdPropertyDefIdFunction(IDGenerator idGenerator) {
+			this.idGenerator = idGenerator;
+		}
+		public String apply(Record r) {
+			return idGenerator.uuidBytesToCatmaID(r.getValue(TAGREFERENCE.TAGINSTANCEID))
+					+ "_"
+					+idGenerator.uuidBytesToCatmaID(r.getValue(PROPERTY.PROPERTYDEFINITIONID));
+		}
+	}
 
 	private IDGenerator idGenerator;
 	private GroupByTagInstanceIdFunction groupByTagInstanceIdFunction;
+	private GroupByTagInstanceIdPropertyDefIdFunction groupByTagInstanceIdPropertyDefIdFunction;
 
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private DataSource dataSource;
@@ -81,6 +96,7 @@ public class TagDefinitionSearcher {
 	public TagDefinitionSearcher() throws NamingException {
 		this.idGenerator = new IDGenerator();
 		this.groupByTagInstanceIdFunction = new GroupByTagInstanceIdFunction(idGenerator);
+		this.groupByTagInstanceIdPropertyDefIdFunction = new GroupByTagInstanceIdPropertyDefIdFunction(idGenerator);
 		Context  context = new InitialContext();
 		this.dataSource = (DataSource) context.lookup("catmads");
 	}
@@ -209,7 +225,7 @@ public class TagDefinitionSearcher {
 		
 		Map<String, List<Record>> recordsGroupedByInstanceUUID =
 				ResultUtil.asGroups(
-					groupByTagInstanceIdFunction,
+					groupByTagInstanceIdPropertyDefIdFunction,
 					selectQuery.fetch());
 		
 		return createTagQueryResult(

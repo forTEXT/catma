@@ -39,9 +39,8 @@ public class CollocPanel extends AbstractSearchPanel {
 	private ResultPanel resultPanel;
 
 	public CollocPanel(ToggleButtonStateListener toggleButtonStateListener,
-			QueryTree queryTree, QueryOptions queryOptions, 
-			TagsetDefinitionDictionary tagsetDefinitionDictionary) {
-		super(toggleButtonStateListener, queryTree, queryOptions, tagsetDefinitionDictionary);
+			QueryTree queryTree, QueryOptions queryOptions) {
+		super(toggleButtonStateListener, queryTree, queryOptions);
 		initComponents();
 		initActions();
 	}

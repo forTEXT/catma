@@ -43,10 +43,8 @@ public class SimilPanel extends AbstractSearchPanel implements DynamicWizardStep
 	public SimilPanel(
 			ToggleButtonStateListener toggleButtonStateListener,
 			QueryTree queryTree,
-			QueryOptions queryOptions,
-			TagsetDefinitionDictionary tagsetDefinitionDictionary) {
-		super(toggleButtonStateListener, 
-				queryTree, queryOptions, tagsetDefinitionDictionary);
+			QueryOptions queryOptions) {
+		super(toggleButtonStateListener, queryTree, queryOptions);
 		initComponents();
 		initActions();
 	}
