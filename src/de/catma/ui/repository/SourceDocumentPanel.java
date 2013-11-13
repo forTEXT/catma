@@ -660,11 +660,16 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				new PropertyChangeListener() {
 				
 				public void propertyChange(PropertyChangeEvent evt) {
+					
+					if (evt.getOldValue() != null) {
+						return;
+					}
+					
 					@SuppressWarnings("unchecked")
 					Pair<UserMarkupCollectionReference, SourceDocument> umcResultPair = 
 							(Pair<UserMarkupCollectionReference, SourceDocument>) evt.getNewValue();
 					
-					if ((umcResultPair != null) && (evt.getOldValue() == null)) {
+					if (umcResultPair != null) {
 						
 						if (sourceDocument.equals(umcResultPair.getSecond())) {
 							

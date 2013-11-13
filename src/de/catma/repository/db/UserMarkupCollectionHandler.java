@@ -53,6 +53,7 @@ import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
+import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 
 import com.google.common.base.Function;
@@ -885,19 +886,28 @@ class UserMarkupCollectionHandler {
 					relevantTagInstances.add(tr.getTagInstance());
 				}
  
-				// get list of TagInstances which are no longer present in the umc
-				List<Integer> obsoleteTagInstanceIds = db
+				SelectConditionStep<?> selectObsoleteTagInstanceIdsQuery = db
 				.select(TAGINSTANCE.TAGINSTANCEID)
 				.from(TAGINSTANCE)
 				.where(TAGINSTANCE.TAGINSTANCEID.in(
 					db
 					.select(TAGREFERENCE.TAGINSTANCEID)
 					.from(TAGREFERENCE)
-					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))))
-				.and(TAGINSTANCE.UUID.notIn(relevantTagInstanceUUIDs))
-				.fetch()
-				.map(new IDFieldToIntegerMapper(TAGINSTANCE.TAGINSTANCEID));
-
+					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))));
+					
+				// get list of TagInstances which are no longer present in the umc
+				
+				if (!relevantTagInstances.isEmpty()) {
+					selectObsoleteTagInstanceIdsQuery = 
+						selectObsoleteTagInstanceIdsQuery
+							.and(TAGINSTANCE.UUID.notIn(relevantTagInstanceUUIDs));
+				}
+				
+				List<Integer> obsoleteTagInstanceIds = 
+					selectObsoleteTagInstanceIdsQuery
+					.fetch()
+					.map(new IDFieldToIntegerMapper(TAGINSTANCE.TAGINSTANCEID));
+				
 				if (!obsoleteTagInstanceIds.isEmpty()) {
 					// handle deleted TagInstances/TagReferences and their content
 					db.batch(
