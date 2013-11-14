@@ -68,7 +68,9 @@ public class KwicPanel extends VerticalLayout {
 		caption,
 		leftContext,
 		keyword,
-		rightContext,
+		rightContext, 
+		startPoint,
+		endPoint,
 		;
 	}
 
@@ -353,6 +355,14 @@ public class KwicPanel extends VerticalLayout {
 		kwicTable.setColumnHeader(KwicPropertyName.rightContext, "Right Context");	
 		kwicTable.setColumnAlignment(KwicPropertyName.rightContext, Table.ALIGN_LEFT);
 		
+		kwicTable.addContainerProperty(
+				KwicPropertyName.startPoint, String.class, null);
+		kwicTable.setColumnHeader(KwicPropertyName.startPoint, "Start Point");
+		
+		kwicTable.addContainerProperty(
+				KwicPropertyName.endPoint, String.class, null);
+		kwicTable.setColumnHeader(KwicPropertyName.endPoint, "End Point");
+		
 		kwicTable.setPageLength(12); //TODO: config
 		kwicTable.setSizeFull();
 		addComponent(kwicTable);
@@ -390,7 +400,9 @@ public class KwicPanel extends VerticalLayout {
 					sourceDocOrMarkupCollectionDisplay,
 					kwic.getLeftContext(),
 					kwic.getKeyword(),
-					kwic.getRightContext()},
+					kwic.getRightContext(),
+					row.getRange().getStartPoint(),
+					row.getRange().getEndPoint()},
 					row);
 			kwicTable.setChildrenAllowed(row, false);
 		}

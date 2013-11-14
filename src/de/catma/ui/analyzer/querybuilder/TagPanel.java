@@ -18,7 +18,10 @@
  */
 package de.catma.ui.analyzer.querybuilder;
 
+import static de.catma.ui.tagmanager.ColorLabelColumnGenerator.COLORLABEL_HTML;
+
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +33,9 @@ import com.vaadin.terminal.Resource;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
@@ -45,25 +50,15 @@ import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.tag.TagDefinitionPathInfo;
 import de.catma.ui.EndorsedTreeTable;
 import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
-import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
-import de.catma.ui.tagmanager.ColorLabelColumnGenerator.ColorProvider;
+import de.catma.util.ColorConverter;
 
 public class TagPanel extends AbstractSearchPanel {
 	
-	private static class TagDefinitionPathInfoColorProvider implements ColorProvider {
-		public String getColor(Object itemId) {
-			if (itemId instanceof TagDefinitionPathInfo) {
-				return ((TagDefinitionPathInfo)itemId).getColor();
-			}
-			return null;
-		}
-	}
-	
-
 	private static enum TagTreePropertyName {
 		caption,
 		icon,
 		color,
+		colorValue
 		;
 	}
 	
@@ -162,14 +157,7 @@ public class TagPanel extends AbstractSearchPanel {
 		Object value = tagsetTree.getValue();
 		
 		if ((value != null) && (tagsetTree.getParent(value) != null)) {
-			String path = null;
-			if (value instanceof TagDefinitionPathInfo) {
-				TagDefinitionPathInfo td = (TagDefinitionPathInfo)value;
-				path = td.getTagDefinitionPath();
-			}
-			else {
-				path = ((String)value).substring(((String)value).indexOf('/')+1);
-			}
+			String path = ((String)value).substring(((String)value).indexOf('/')+1);
 			
 			if (curQuery != null) {
 				queryTree.removeLast();
@@ -220,40 +208,37 @@ public class TagPanel extends AbstractSearchPanel {
 			pathBuilder.append("/");
 			pathBuilder.append(tagDefinitionName);
 			String curPath = pathBuilder.toString();
-			
-			if (curPath.equals(tagDefinitionPathInfo.getTagDefinitionPath())) {
+				
+			String curId = tagsetDefinitionName + curPath; 
+			if (!tagsetTree.containsId(curId)) {
 				ClassResource tagIcon = new ClassResource(
 						"ui/tagmanager/resources/reddiamd.gif", 
 						getApplication());
-				tagsetTree.addItem(tagDefinitionPathInfo);
+				tagsetTree.addItem(curId);
 				tagsetTree.getContainerProperty(
-					tagDefinitionPathInfo, TagTreePropertyName.caption).setValue(
+						curId, TagTreePropertyName.caption).setValue(
 							tagDefinitionName);
 				tagsetTree.getContainerProperty(
-						tagDefinitionPathInfo, TagTreePropertyName.icon).setValue(
+						curId, TagTreePropertyName.icon).setValue(
 							tagIcon);
-				
-				tagsetTree.setParent(tagDefinitionPathInfo, parent);
-				tagsetTree.setChildrenAllowed(tagDefinitionPathInfo, false);
+				tagsetTree.setChildrenAllowed(parent, true);
+				tagsetTree.setParent(curId, parent);
+				tagsetTree.setChildrenAllowed(curId, false);
 			}
-			else {
-				curPath = tagsetDefinitionName + curPath;
-				if (!tagsetTree.containsId(curPath)) {
-					ClassResource tagIcon = new ClassResource(
-							"ui/tagmanager/resources/reddiamd.gif", 
-							getApplication());
-					tagsetTree.addItem(curPath);
-					tagsetTree.getContainerProperty(
-							curPath, TagTreePropertyName.caption).setValue(
-								tagDefinitionName);
-					tagsetTree.getContainerProperty(
-							curPath, TagTreePropertyName.icon).setValue(
-								tagIcon);
-					tagsetTree.setParent(curPath, parent);
-					tagsetTree.setChildrenAllowed(curPath, true);
-				}
-				parent = curPath;
+			
+			if (curPath.equals(tagDefinitionPathInfo.getTagDefinitionPath())) {
+				Label colorLabel = 
+						new Label(
+							MessageFormat.format(
+								COLORLABEL_HTML, 
+								ColorConverter.toHex((
+										tagDefinitionPathInfo.getColor()))));
+				colorLabel.setContentMode(Label.CONTENT_XHTML);
+				tagsetTree.getContainerProperty(
+						curId, TagTreePropertyName.color).setValue(
+							colorLabel);
 			}
+			parent = curId;
 		}
 	}
 
@@ -280,18 +265,19 @@ public class TagPanel extends AbstractSearchPanel {
 		tagsetTree.addContainerProperty(
 				TagTreePropertyName.icon, Resource.class, null);
 
+		tagsetTree.addContainerProperty(
+				TagTreePropertyName.color,
+				Component.class, null);
+		
 		tagsetTree.setItemCaptionPropertyId(TagTreePropertyName.caption);
 		tagsetTree.setItemIconPropertyId(TagTreePropertyName.icon);
 		tagsetTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_PROPERTY);
 	
 		tagsetTree.setVisibleColumns(
 				new Object[] {
-						TagTreePropertyName.caption});
+						TagTreePropertyName.caption,
+						TagTreePropertyName.color});
 		
-		tagsetTree.addGeneratedColumn(
-				TagTreePropertyName.color, 
-				new ColorLabelColumnGenerator(
-						new TagDefinitionPathInfoColorProvider()));
 
 		tagsetTree.setColumnHeader(TagTreePropertyName.color, "Tag Color");
 		

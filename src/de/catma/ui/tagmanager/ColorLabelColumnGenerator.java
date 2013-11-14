@@ -30,7 +30,7 @@ import de.catma.util.ColorConverter;
 
 public class ColorLabelColumnGenerator implements ColumnGenerator {
 	
-	private static final String COLORLABEL_HTML = 
+	public static final String COLORLABEL_HTML = 
 			"<span style=\"background-color:#{0};margin-left:3px;\">" +
 					"&nbsp;&nbsp;&nbsp;&nbsp;" +
 			"</span>";
