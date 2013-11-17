@@ -141,48 +141,56 @@ public class TeiUserMarkupCollectionDeserializer {
 								curPropertyElement.getAttributeValue(Attribute.f_name));
 				
 				
-				TeiElement valueElement = 
-						(TeiElement)curPropertyElement.getChildElements().get(0);
-				
-				if (valueElement.is(TeiElementName.numeric)) {
+				if (curPropertyElement.getChildElements().size() == 0) {
 					addPropertyHandler.addProperty(
-						new Property(
-							propertyDefinition,
-							new PropertyValueList(
-									new NumericPropertyValueFactory(
-											curPropertyElement).getValueAsList())));
+							new Property(
+								propertyDefinition,
+								new PropertyValueList()));
 				}
-				else if (valueElement.is(TeiElementName.string)) {
-					StringPropertyValueFactory stringPropFact = 
-							new StringPropertyValueFactory(
-									curPropertyElement);
-					if (!stringPropFact.getValue().trim().isEmpty()) {
+				else {
+					TeiElement valueElement = 
+							(TeiElement)curPropertyElement.getChildElements().get(0);
+					
+					if (valueElement.is(TeiElementName.numeric)) {
 						addPropertyHandler.addProperty(
 							new Property(
 								propertyDefinition,
 								new PropertyValueList(
-										stringPropFact.getValueAsList())));
+										new NumericPropertyValueFactory(
+												curPropertyElement).getValueAsList())));
 					}
-				}
-				else if (valueElement.is(TeiElementName.vRange)) {
-					TeiElement vColl = (TeiElement)valueElement.getChildElements().get(0);
-					if (vColl.hasChildElements()) {
-						List<String> valueList = new ArrayList<String>();
-						
-						for (int j=0; j<vColl.getChildElements().size(); j++) {
-							TeiElement collValElement = (TeiElement) vColl.getChildElements().get(j);
-							valueList.add(new StringPropertyValueFactory(
-												collValElement).getValue());
+					else if (valueElement.is(TeiElementName.string)) {
+						StringPropertyValueFactory stringPropFact = 
+								new StringPropertyValueFactory(
+										curPropertyElement);
+						if (!stringPropFact.getValue().trim().isEmpty()) {
+							addPropertyHandler.addProperty(
+								new Property(
+									propertyDefinition,
+									new PropertyValueList(
+											stringPropFact.getValueAsList())));
 						}
-						
-						addPropertyHandler.addProperty(new Property(
-								propertyDefinition, 
-								new PropertyValueList(valueList)));
 					}
-				}
-				else {
-					throw new UnknownElementException(
-							valueElement.getLocalName() + " is not supported!");
+					else if (valueElement.is(TeiElementName.vRange)) {
+						TeiElement vColl = (TeiElement)valueElement.getChildElements().get(0);
+						if (vColl.hasChildElements()) {
+							List<String> valueList = new ArrayList<String>();
+							
+							for (int j=0; j<vColl.getChildElements().size(); j++) {
+								TeiElement collValElement = (TeiElement) vColl.getChildElements().get(j);
+								valueList.add(new StringPropertyValueFactory(
+													collValElement).getValue());
+							}
+							
+							addPropertyHandler.addProperty(new Property(
+									propertyDefinition, 
+									new PropertyValueList(valueList)));
+						}
+					}
+					else {
+						throw new UnknownElementException(
+								valueElement.getLocalName() + " is not supported!");
+					}
 				}
 			}
 			catch(UnknownElementException ue) {

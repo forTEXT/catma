@@ -659,20 +659,21 @@ class SourceDocumentHandler {
 				USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID, USERMARKUPCOLLECTION.TAGLIBRARYID));
 			
 			if (!umcAndTagLibIDs.isEmpty()) {
-				db.batch(
-					db
-					.delete(USERMARKUPCOLLECTION)
-					.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId)),
-					db
-					.delete(TAGLIBRARY)
-					.where(TAGLIBRARY.TAGLIBRARYID
-						.in(Collections2.transform(
-							umcAndTagLibIDs,
-							new Function<Pair<Integer,Integer>, Integer>() {
-								public Integer apply(Pair<Integer,Integer> pair) {
-									return pair.getSecond();
-								}
-							}))))
+				db
+				.delete(USERMARKUPCOLLECTION)
+				.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))
+				.execute();
+				
+				db
+				.delete(TAGLIBRARY)
+				.where(TAGLIBRARY.TAGLIBRARYID
+					.in(Collections2.transform(
+						umcAndTagLibIDs,
+						new Function<Pair<Integer,Integer>, Integer>() {
+							public Integer apply(Pair<Integer,Integer> pair) {
+								return pair.getSecond();
+							}
+						})))
 				.execute();
 			}			
 			dbRepository.getIndexer().removeUserMarkupCollections(

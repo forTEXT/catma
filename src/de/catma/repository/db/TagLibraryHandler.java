@@ -493,10 +493,11 @@ class TagLibraryHandler {
 		
 		tagDefinition.setId(tagDefinitionId);
 
+		addAuthorIfAbsent(tagDefinition);
 		
 		for (PropertyDefinition propDef : 
 			tagDefinition.getSystemPropertyDefinitions()) {
-		
+			
 			createDeepPropertyDefinition(
 					db,
 					propDef,
