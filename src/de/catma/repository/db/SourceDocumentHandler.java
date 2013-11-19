@@ -19,6 +19,7 @@
 package de.catma.repository.db;
 
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.CORPUS_SOURCEDOCUMENT;
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.CORPUS_USERMARKUPCOLLECTION;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTY;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTYDEFINITION;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTYDEF_POSSIBLEVALUE;
@@ -74,6 +75,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.source.TechInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.repository.db.jooq.TransactionalDSLContext;
+import de.catma.repository.db.jooqgen.catmarepository.Tables;
 import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
 import de.catma.repository.db.mapper.IDFieldsToIntegerPairMapper;
 import de.catma.repository.db.mapper.SourceDocumentMapper;
@@ -536,6 +538,21 @@ class SourceDocumentHandler {
 	
 		if (!check) {
 			// assume that the user has full control over all UMCs of the givenn sourcedoc
+			
+			List<Integer> tagInstanceIds = db
+			.selectDistinct(TAGREFERENCE.TAGINSTANCEID)
+			.from(TAGREFERENCE)
+			.join(USERMARKUPCOLLECTION)
+				.on(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+						.eq(TAGREFERENCE.USERMARKUPCOLLECTIONID))
+				.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))
+			.fetch()
+			.map(new IDFieldToIntegerMapper(TAGREFERENCE.TAGINSTANCEID));
+
+			if (tagInstanceIds.isEmpty()) {
+				tagInstanceIds = Collections.singletonList(-1);
+			}
+
 			db.batch(
 				db
 				.delete(PROPERTYVALUE)
@@ -564,22 +581,15 @@ class SourceDocumentHandler {
 								.eq(TAGREFERENCE.USERMARKUPCOLLECTIONID))
 						.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId)))),
 				db
-				.delete(TAGINSTANCE)
-				.where(TAGINSTANCE.TAGINSTANCEID.in(
-					db
-					.select(TAGREFERENCE.TAGINSTANCEID)
-					.from(TAGREFERENCE)
-					.join(USERMARKUPCOLLECTION)
-						.on(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-								.eq(TAGREFERENCE.USERMARKUPCOLLECTIONID))
-						.and(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId)))),
-				db
 				.delete(TAGREFERENCE)
 				.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.in(
 					db
 					.select(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)
 					.from(USERMARKUPCOLLECTION)
 					.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId)))),
+				db
+				.delete(TAGINSTANCE)
+				.where(TAGINSTANCE.TAGINSTANCEID.in(tagInstanceIds)),
 				db
 				.delete(PROPERTYDEF_POSSIBLEVALUE)
 				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
@@ -659,21 +669,26 @@ class SourceDocumentHandler {
 				USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID, USERMARKUPCOLLECTION.TAGLIBRARYID));
 			
 			if (!umcAndTagLibIDs.isEmpty()) {
-				db
-				.delete(USERMARKUPCOLLECTION)
-				.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId))
-				.execute();
-				
-				db
-				.delete(TAGLIBRARY)
-				.where(TAGLIBRARY.TAGLIBRARYID
-					.in(Collections2.transform(
-						umcAndTagLibIDs,
-						new Function<Pair<Integer,Integer>, Integer>() {
-							public Integer apply(Pair<Integer,Integer> pair) {
-								return pair.getSecond();
-							}
-						})))
+				db.batch(
+					db
+					.delete(CORPUS_USERMARKUPCOLLECTION)
+					.where(CORPUS_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.in(db
+						.select(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)
+						.from(USERMARKUPCOLLECTION)
+						.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId)))),
+					db
+					.delete(USERMARKUPCOLLECTION)
+					.where(USERMARKUPCOLLECTION.SOURCEDOCUMENTID.eq(sourceDocumentId)),
+					db
+					.delete(TAGLIBRARY)
+					.where(TAGLIBRARY.TAGLIBRARYID
+						.in(Collections2.transform(
+							umcAndTagLibIDs,
+							new Function<Pair<Integer,Integer>, Integer>() {
+								public Integer apply(Pair<Integer,Integer> pair) {
+									return pair.getSecond();
+								}
+							}))))
 				.execute();
 			}			
 			dbRepository.getIndexer().removeUserMarkupCollections(

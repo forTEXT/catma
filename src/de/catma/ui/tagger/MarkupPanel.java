@@ -356,7 +356,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		else {
 			ConfirmDialog.show(
 					application.getMainWindow(), 
-					"One or more of the active Tagsets are newer than their "
+					"One or more of the active Tagsets are different from their "
 					+ " correpsonding Tagsets in the User Markup Collection you want to open!"
 					+ " The Collection will be updated with the versions of the active Tagsets! " 
 					+ " Do you really want to update the attached Markup Collections?",

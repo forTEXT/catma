@@ -583,7 +583,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			List<UserMarkupCollection> outOfSynchCollections = 
 				userMarkupCollectionManager.getUserMarkupCollections(
 					foreignTagsetDefinition, false);
-
+			
 			userMarkupCollectionManager.updateUserMarkupCollections(
 					outOfSynchCollections, foreignTagsetDefinition);
 			
@@ -986,7 +986,19 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 
 			            public void onClose(ConfirmDialog dialog) {
 			                if (dialog.isConfirmed()) {
+
+			                	// clear all TagInstance displaying because
+			                	// the instances might get deleted during TagsetDefintion update
+			                	for (UserMarkupCollection umc : toBeUpdated) {
+			                		for (TagsetDefinition tagsetDefinition : umc.getTagLibrary()) {
+			                			for (TagDefinition td : tagsetDefinition) {
+			                				fireTagDefinitionSelected(td, false);
+			                			}
+			                		}
+			                	}
+			                	
 			                	updateableforeignTagsetDefinitions.add(incomingTagsetDef);
+			                	
 			                	userMarkupCollectionManager.updateUserMarkupCollections(
 			                			toBeUpdated, incomingTagsetDef);
 			                	updateUserMarkupCollectionsInTree(toBeUpdated);

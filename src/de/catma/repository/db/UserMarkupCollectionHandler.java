@@ -18,6 +18,7 @@
  */
 package de.catma.repository.db;
 
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.CORPUS_USERMARKUPCOLLECTION;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTY;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTYDEFINITION;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTYDEF_POSSIBLEVALUE;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -505,6 +507,9 @@ class UserMarkupCollectionHandler {
 				.fetch()
 				.map(new IDFieldToIntegerMapper(TAGINSTANCE.TAGINSTANCEID));
 
+				if (tagInstanceIds.isEmpty()) {
+					tagInstanceIds = Collections.singletonList(-1);
+				}
 						
 				db.batch(
 					db
@@ -627,6 +632,10 @@ class UserMarkupCollectionHandler {
 				.map(new IDFieldToIntegerMapper(USERMARKUPCOLLECTION.TAGLIBRARYID));
 				
 				db.batch(
+					db
+					.delete(CORPUS_USERMARKUPCOLLECTION)
+					.where(CORPUS_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+							.eq(userMarkupCollectionId)),
 					db
 					.delete(USERMARKUPCOLLECTION)
 					.where(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID

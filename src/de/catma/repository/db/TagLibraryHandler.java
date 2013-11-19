@@ -86,8 +86,8 @@ import de.catma.util.Collections3;
 import de.catma.util.IDGenerator;
 
 class TagLibraryHandler {
-	
-	private static class PropertyDefinitionToByteUUID implements Function<PropertyDefinition, String> {
+
+	private static class PropertyDefinitionToUUID implements Function<PropertyDefinition, String> {
 		
 		public String apply(PropertyDefinition pd) {
 			return pd.getUuid();
@@ -1200,7 +1200,7 @@ class TagLibraryHandler {
 		HashSet<String> existingPropertyDefinitionUUIDs = 
 				new HashSet<String>();
 				
-		PropertyDefinitionToByteUUID pd2ByteUUID = new PropertyDefinitionToByteUUID();
+		PropertyDefinitionToUUID pd2ByteUUID = new PropertyDefinitionToUUID();
 		
 		existingPropertyDefinitionUUIDs.addAll(
 			Collections2.transform(
@@ -1225,21 +1225,22 @@ class TagLibraryHandler {
 		
 		Collection<byte[]> toBeDeletedByteUUIDs = 
 				Collections2.transform(toBeDeleted, new UUIDtoByteMapper());
-		
-		db.batch(
-			db
-			.delete(PROPERTYDEF_POSSIBLEVALUE)
-			.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(db
-				.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
-				.from(PROPERTYDEFINITION)
+
+		if (!toBeDeletedByteUUIDs.isEmpty()) {
+			db.batch(
+				db
+				.delete(PROPERTYDEF_POSSIBLEVALUE)
+				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(db
+					.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+					.from(PROPERTYDEFINITION)
+					.where(PROPERTYDEFINITION.UUID.in(toBeDeletedByteUUIDs))
+					.and(PROPERTYDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId())))),
+				db
+				.delete(PROPERTYDEFINITION)
 				.where(PROPERTYDEFINITION.UUID.in(toBeDeletedByteUUIDs))
-				.and(PROPERTYDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId())))),
-			db
-			.delete(PROPERTYDEFINITION)
-			.where(PROPERTYDEFINITION.UUID.in(toBeDeletedByteUUIDs))
-			.and(PROPERTYDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId())))
-		.execute();
-		
+				.and(PROPERTYDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId())))
+			.execute();
+		}		
 		tagsetDefinitionUpdateLog.addDeletedPropertyDefinitions(toBeDeleted);
 	}
 
