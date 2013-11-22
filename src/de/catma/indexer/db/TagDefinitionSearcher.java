@@ -152,6 +152,7 @@ public class TagDefinitionSearcher {
 					masterRecord = r;
 				}
 			}
+			// the merge is relevant for refinement matching (see TagMatchMode)
 			List<Range> mergedRanges = Range.mergeRanges(ranges);
 
 			if (keepProperties) {

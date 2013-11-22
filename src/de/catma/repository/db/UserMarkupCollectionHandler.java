@@ -72,6 +72,7 @@ import de.catma.indexer.TagsetDefinitionUpdateLog;
 import de.catma.repository.db.jooq.TransactionalDSLContext;
 import de.catma.repository.db.mapper.FieldToValueMapper;
 import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
+import de.catma.repository.db.mapper.IDFieldsToIntegerPairMapper;
 import de.catma.repository.db.mapper.PropertyValueMapper;
 import de.catma.repository.db.mapper.TagInstanceMapper;
 import de.catma.repository.db.mapper.TagReferenceMapper;
@@ -1209,39 +1210,56 @@ class UserMarkupCollectionHandler {
 
 			getUserMarkupCollectionAccessMode(db, userMarkupCollectionId, true);
 			
+			Pair<Integer,Integer> tagInstanceIdpropertyId = db
+				.select(TAGINSTANCE.TAGINSTANCEID, PROPERTY.PROPERTYID)
+				.from(TAGINSTANCE)
+				.leftOuterJoin(PROPERTY)
+					.on(PROPERTY.TAGINSTANCEID.eq(TAGINSTANCE.TAGINSTANCEID))
+					.and(PROPERTY.PROPERTYDEFINITIONID
+							.eq(property.getPropertyDefinition().getId()))
+				.where(TAGINSTANCE.UUID.eq(tagInstanceIDbin))
+				.fetchOne()
+				.map(new IDFieldsToIntegerPairMapper(
+						TAGINSTANCE.TAGINSTANCEID, PROPERTY.PROPERTYID));
+			Integer propertyId = tagInstanceIdpropertyId.getSecond();
+			
 			db.beginTransaction();
-			DeleteConditionStep<Record> deleteQuery = 
-			db
-			.delete(PROPERTYVALUE)
-			.where(PROPERTYVALUE.PROPERTYID
-				.in(db
-					.select(PROPERTY.PROPERTYID)
-					.from(PROPERTY)
-					.join(TAGINSTANCE)
-						.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
-						.and(TAGINSTANCE.UUID.eq(tagInstanceIDbin))
-					.where(PROPERTY.PROPERTYDEFINITIONID
-							.eq(property.getPropertyDefinition().getId()))));
-			if (!property.getPropertyValueList().getValues().isEmpty()) {
-				deleteQuery = deleteQuery.and(PROPERTYVALUE.VALUE.notIn(property.getPropertyValueList().getValues()));
+			if (propertyId != null) {
+				DeleteConditionStep<Record> deleteQuery = 
+				db
+				.delete(PROPERTYVALUE)
+				.where(PROPERTYVALUE.PROPERTYID.eq(propertyId));
+					
+				if (!property.getPropertyValueList().getValues().isEmpty()) {
+					deleteQuery = deleteQuery.and(PROPERTYVALUE.VALUE.notIn(property.getPropertyValueList().getValues()));
+				}
+				
+				deleteQuery.execute();
 			}
 			
-			deleteQuery.execute();
-					
-			List<String> existingValues = db
-			.select(PROPERTYVALUE.VALUE)
-			.from(PROPERTYVALUE)
-			.where(PROPERTYVALUE.PROPERTYID
-				.in(db
-					.select(PROPERTY.PROPERTYID)
-					.from(PROPERTY)
-					.join(TAGINSTANCE)
-						.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
-						.and(TAGINSTANCE.UUID.eq(tagInstanceIDbin))
-					.where(PROPERTY.PROPERTYDEFINITIONID
-							.eq(property.getPropertyDefinition().getId()))))
-			.fetch()
-			.map(new PropertyValueMapper());
+			List<String> existingValues = Collections.emptyList();
+			if (propertyId != null) {
+				existingValues = 
+					db
+					.select(PROPERTYVALUE.VALUE)
+					.from(PROPERTYVALUE)
+					.where(PROPERTYVALUE.PROPERTYID.eq(propertyId))
+					.fetch()
+					.map(new PropertyValueMapper());
+			}
+			else {
+				propertyId = db
+					.insertInto(
+						PROPERTY,
+							PROPERTY.PROPERTYDEFINITIONID,
+							PROPERTY.TAGINSTANCEID)
+					.values(
+						property.getPropertyDefinition().getId(),
+						tagInstanceIdpropertyId.getFirst())
+					.returning(PROPERTY.PROPERTYID)
+					.fetchOne()
+					.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
+			}
 			
 			for(String value : 
 				Collections3.getSetDifference(
@@ -1251,14 +1269,9 @@ class UserMarkupCollectionHandler {
 					PROPERTYVALUE,
 						PROPERTYVALUE.PROPERTYID,
 						PROPERTYVALUE.VALUE)
-				.select(db
-					.select(PROPERTY.PROPERTYID, DSL.value(value))
-					.from(PROPERTY)
-					.join(TAGINSTANCE)
-					.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
-					.and(TAGINSTANCE.UUID.eq(tagInstanceIDbin))
-					.where(PROPERTY.PROPERTYDEFINITIONID
-							.eq(property.getPropertyDefinition().getId())))
+				.values(
+					propertyId,
+					value)
 				.execute();
 			}
 			

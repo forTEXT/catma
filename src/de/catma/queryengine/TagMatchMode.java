@@ -32,7 +32,6 @@ public enum TagMatchMode {
 			if (!o1.getSourceDocumentId().equals(o2.getSourceDocumentId())) {
 				return -1;
 			}
-//        	if(o1.getRange().isInBetween(o2.getRange())) {
 			if (isInBetween(o1, o2)) {
         		return 0;
         	}
@@ -43,21 +42,10 @@ public enum TagMatchMode {
 		}
 		
 		private boolean isInBetween(QueryResultRow o1, QueryResultRow o2) {
-			Collection<Range> ranges1 = null;
-			if (o1 instanceof TagQueryResultRow) {
-				ranges1 = ((TagQueryResultRow)o1).getRanges();
-			}
-			else {
-				ranges1 = Collections.singletonList(o1.getRange());
-			}
-			Collection<Range> ranges2 = null;
-			if (o2 instanceof TagQueryResultRow) {
-				ranges2 = ((TagQueryResultRow)o2).getRanges();
-			}
-			else {
-				ranges2 = Collections.singletonList(o2.getRange());
-			}
+			Collection<Range> ranges1 = TagMatchMode.collectRanges(o1);
+			Collection<Range> ranges2 = TagMatchMode.collectRanges(o2);
 			
+			// this works because ranges are merged (see TagDefinitionSearcher)
 			for (Range r1 : ranges1) {
 				boolean found = false;
 				for (Range r2 : ranges2) {
@@ -96,20 +84,8 @@ public enum TagMatchMode {
 		};
 		
 		private boolean hasOverlappingRange(QueryResultRow o1, QueryResultRow o2) {
-			Collection<Range> ranges1 = null;
-			if (o1 instanceof TagQueryResultRow) {
-				ranges1 = ((TagQueryResultRow)o1).getRanges();
-			}
-			else {
-				ranges1 = Collections.singletonList(o1.getRange());
-			}
-			Collection<Range> ranges2 = null;
-			if (o2 instanceof TagQueryResultRow) {
-				ranges2 = ((TagQueryResultRow)o2).getRanges();
-			}
-			else {
-				ranges2 = Collections.singletonList(o2.getRange());
-			}
+			Collection<Range> ranges1 = TagMatchMode.collectRanges(o1);
+			Collection<Range> ranges2 = TagMatchMode.collectRanges(o2);
 			
 			for (Range r1 : ranges1) {
 				boolean found = false;
@@ -148,20 +124,8 @@ public enum TagMatchMode {
 		};
 		
 		private boolean isExactMatch(QueryResultRow o1, QueryResultRow o2) {
-			Collection<Range> ranges1 = null;
-			if (o1 instanceof TagQueryResultRow) {
-				ranges1 = ((TagQueryResultRow)o1).getRanges();
-			}
-			else {
-				ranges1 = Collections.singletonList(o1.getRange());
-			}
-			Collection<Range> ranges2 = null;
-			if (o2 instanceof TagQueryResultRow) {
-				ranges2 = ((TagQueryResultRow)o2).getRanges();
-			}
-			else {
-				ranges2 = Collections.singletonList(o2.getRange());
-			}
+			Collection<Range> ranges1 = TagMatchMode.collectRanges(o1);
+			Collection<Range> ranges2 = TagMatchMode.collectRanges(o2);
 			
 			for (Range r1 : ranges1) {
 				boolean found = false;
@@ -192,5 +156,14 @@ public enum TagMatchMode {
 	
 	public Comparator<QueryResultRow> getComparator() {
 		return comparator;
+	}
+	
+	private static Collection<Range> collectRanges(QueryResultRow row) {
+		if (row instanceof TagQueryResultRow) {
+			return ((TagQueryResultRow)row).getRanges();
+		}
+		else {
+			return Collections.singletonList(row.getRange());
+		}	
 	}
 }
