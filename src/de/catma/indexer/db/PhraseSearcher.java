@@ -40,6 +40,7 @@ import de.catma.document.Range;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
+import de.catma.repository.db.CatmaDataSourceName;
 
 class PhraseSearcher {
 	private static final int MAX_DIRECT_SEARCH_TERMS = 5;
@@ -49,7 +50,7 @@ class PhraseSearcher {
 	public PhraseSearcher() throws NamingException {
 		super();
 		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup("catmads");
+		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
 	}
 
 	public QueryResult search(List<String> documentIdList,

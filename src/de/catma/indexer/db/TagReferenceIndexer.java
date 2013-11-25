@@ -46,6 +46,7 @@ import com.google.common.collect.Collections2;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
+import de.catma.repository.db.CatmaDataSourceName;
 import de.catma.repository.db.jooq.TransactionalDSLContext;
 import de.catma.repository.db.jooq.UUIDtoByteMapper;
 import de.catma.repository.db.mapper.FieldToValueMapper;
@@ -69,7 +70,7 @@ public class TagReferenceIndexer {
 	public TagReferenceIndexer() throws NamingException {
 		this.idGenerator = new IDGenerator();
 		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup("catmads");
+		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
 	}
 
 

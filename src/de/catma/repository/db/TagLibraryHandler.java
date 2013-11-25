@@ -112,7 +112,7 @@ class TagLibraryHandler {
 		this.idGenerator = idGenerator;
 		tagLibraryReferencesById = new HashMap<String, TagLibraryReference>();
 		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup("catmads");
+		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
 	}
 
 	public void createTagLibrary(String name) throws IOException {

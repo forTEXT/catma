@@ -104,7 +104,7 @@ class UserMarkupCollectionHandler {
 		this.idGenerator = new IDGenerator();
 		this.umcCache = new HashMap<String, WeakReference<UserMarkupCollection>>();
 		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup("catmads");
+		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
 	}
 
 	void createUserMarkupCollection(String name,

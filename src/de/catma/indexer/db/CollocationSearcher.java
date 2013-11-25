@@ -47,6 +47,7 @@ import de.catma.indexer.db.model.Position;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
+import de.catma.repository.db.CatmaDataSourceName;
 
 public class CollocationSearcher {
 
@@ -55,7 +56,7 @@ public class CollocationSearcher {
 
 	public CollocationSearcher() throws NamingException {
 		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup("catmads");
+		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
 	}
 	
 	public SpanContext getSpanContextFor(

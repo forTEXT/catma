@@ -108,7 +108,7 @@ class SourceDocumentHandler {
 		}
 		this.sourceDocumentsByID = new HashMap<String, SourceDocument>();
 		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup("catmads");
+		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
 	}
 	
 	public String getIDFromURI(URI uri) {

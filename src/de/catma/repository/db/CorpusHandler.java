@@ -66,7 +66,7 @@ class CorpusHandler {
 		this.dbRepository = dbRepository;
 		corpora = new HashMap<String, Corpus>();
 		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup("catmads");
+		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
 	}
 
 	public Collection<Corpus> getCorpora() {
