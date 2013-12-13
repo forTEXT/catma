@@ -5,9 +5,9 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
+import org.quartz.CronScheduleBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.SchedulerException;
-import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 
@@ -34,9 +34,9 @@ public class HeurecleaPeriodicExportInitializerServlet extends HttpServlet {
 						HeurecleaExporterJob.class.getName()+"_Trigger",
 		    			TriggerGroup.DEFAULT.name()))
 				.startNow()
-				.withSchedule(SimpleScheduleBuilder.repeatHourlyForTotalCount(1))
-//				.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(0, 30))
-	//			.withSchedule(CalendarIntervalScheduleBuilder.calendarIntervalSchedule().withIntervalInSeconds(60))
+//				.withSchedule(SimpleScheduleBuilder.repeatHourlyForTotalCount(1))
+				.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(0, 30))
+//				.withSchedule(CalendarIntervalScheduleBuilder.calendarIntervalSchedule().withIntervalInSeconds(60))
 			    .build(),
 				jobDataMap);
 		}
