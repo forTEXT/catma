@@ -912,11 +912,11 @@ class TagLibraryHandler {
 
 			getLibraryAccess(db, tagLibraryId, true);
 
-			db.beginTransaction();
-			
 			PropertyDefinition colorPropertyDef = 
 				tagDefinition.getPropertyDefinitionByName(
 					PropertyDefinition.SystemPropertyName.catma_displaycolor.name());
+
+			db.beginTransaction();
 			
 			db.batch(
 				db
