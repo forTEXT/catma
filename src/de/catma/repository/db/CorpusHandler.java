@@ -366,7 +366,8 @@ class CorpusHandler {
 			db
 			.delete(USER_CORPUS)
 			.where(USER_CORPUS.USER_CORPUSID
-				.eq(currentUserCorpusRecord.getValue(USER_CORPUS.USER_CORPUSID)));
+				.eq(currentUserCorpusRecord.getValue(USER_CORPUS.USER_CORPUSID)))
+			.execute();
 			
 			if (isOwner 
 					&& (totalParticipants == 1)) {
@@ -420,6 +421,8 @@ class CorpusHandler {
 		.set(CORPUS.NAME, name)
 		.where(CORPUS.CORPUSID.eq(corpusId))
 		.execute();
+		
+		corpus.setName(name);
 		
 		dbRepository.getPropertyChangeSupport().firePropertyChange(
 				Repository.RepositoryChangeEvent.corpusChanged.name(),

@@ -35,6 +35,7 @@ import static de.catma.repository.db.jooqgen.catmarepository.Tables.USER_USERMAR
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,6 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -120,7 +122,8 @@ class UserMarkupCollectionHandler {
 		.map(new IDFieldToIntegerMapper(SOURCEDOCUMENT.SOURCEDOCUMENTID));
 		
 		try {
-
+			db.beginTransaction();
+			
 			Integer tagLibraryId = db
 			.insertInto(
 				TAGLIBRARY,
@@ -646,12 +649,15 @@ class UserMarkupCollectionHandler {
 					.where(TAGLIBRARY.TAGLIBRARYID.eq(tagLibraryId)))
 				.execute();
 				
-				dbRepository.getIndexer().removeUserMarkupCollection(
-						userMarkupCollectionReference.getId());
 			}
 			
-			
 			db.commitTransaction();
+
+			if (isOwner && (totalParticipants == 1)) {
+				dbRepository.getIndexer().removeUserMarkupCollection(
+						userMarkupCollectionReference.getId());
+			}			
+			
 
 			SourceDocument sd = 
 					dbRepository.getSourceDocument(userMarkupCollectionReference);
@@ -808,12 +814,13 @@ class UserMarkupCollectionHandler {
 			
 			db.beginTransaction();
 			addTagReferences(db, userMarkupCollection, tagReferences);
+			db.commitTransaction();
+
 			dbRepository.getIndexer().index(
 					tagReferences, sourceDocumentID, 
 					userMarkupCollection.getId(), 
 					userMarkupCollection.getTagLibrary());
 
-			db.commitTransaction();
 		}
 		catch (Exception dae) {
 			db.rollbackTransaction();
@@ -865,7 +872,8 @@ class UserMarkupCollectionHandler {
 
 	void updateTagsetDefinitionInUserMarkupCollections(
 			List<UserMarkupCollection> userMarkupCollections,
-			TagsetDefinition tagsetDefinition) throws IOException {
+			final TagsetDefinition tagsetDefinition) throws IOException {
+		List<Callable<Void>> reindexJobs = new ArrayList<Callable<Void>>();
 		
 		TransactionalDSLContext db = 
 				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
@@ -873,7 +881,7 @@ class UserMarkupCollectionHandler {
 		try {
 			
 			db.beginTransaction();
-			for (UserMarkupCollection userMarkupCollection : 
+			for (final UserMarkupCollection userMarkupCollection : 
 				userMarkupCollections) {
 				
 				Integer userMarkupCollectionId = 
@@ -1012,25 +1020,32 @@ class UserMarkupCollectionHandler {
 					}
 				}
 				
-				TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog = 
+				final TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog = 
 						dbRepository.getDbTagLibraryHandler().updateTagsetDefinition(
 								db, tagLibrary,
 								tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()));
 				
 
 				if (!tagsetDefinitionUpdateLog.isEmpty()) {
-					dbRepository.getIndexer().reindex(
-							tagsetDefinition, 
-							tagsetDefinitionUpdateLog,
-							userMarkupCollection);
+					reindexJobs.add(
+							new Callable<Void>() {
+								public Void call() throws Exception {
+									dbRepository.getIndexer().reindex(
+											tagsetDefinition, 
+											tagsetDefinitionUpdateLog,
+											userMarkupCollection);
+									return null;
+								}
+							});
 				}
 			}
 			
-				
-
-			
-
 			db.commitTransaction();
+			db.close();
+			
+			for (Callable<Void> reindexJob : reindexJobs) {
+				reindexJob.call();
+			}
 		}
 		catch (Exception dae) {
 			db.rollbackTransaction();
@@ -1081,32 +1096,32 @@ class UserMarkupCollectionHandler {
 			db.beginTransaction();
 
 			db.batch(
-			db
-			.delete(PROPERTYVALUE)
-			.where(PROPERTYVALUE.PROPERTYID.in(
 				db
-				.select(PROPERTY.PROPERTYID)
-				.from(PROPERTY)
-				.join(TAGINSTANCE)
-					.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
-					.and(TAGINSTANCE.UUID.in(relevantTagInstanceUUIDs)))),
-			db
-			.delete(PROPERTY)
-			.where(PROPERTY.TAGINSTANCEID.in(
+				.delete(PROPERTYVALUE)
+				.where(PROPERTYVALUE.PROPERTYID.in(
+					db
+					.select(PROPERTY.PROPERTYID)
+					.from(PROPERTY)
+					.join(TAGINSTANCE)
+						.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
+						.and(TAGINSTANCE.UUID.in(relevantTagInstanceUUIDs)))),
 				db
-				.select(TAGINSTANCE.TAGINSTANCEID)
-				.from(TAGINSTANCE)
-				.where(TAGINSTANCE.UUID.in(relevantTagInstanceUUIDs)))),
-			db
-			.delete(TAGREFERENCE)
-			.where(TAGREFERENCE.TAGINSTANCEID.in(
+				.delete(PROPERTY)
+				.where(PROPERTY.TAGINSTANCEID.in(
+					db
+					.select(TAGINSTANCE.TAGINSTANCEID)
+					.from(TAGINSTANCE)
+					.where(TAGINSTANCE.UUID.in(relevantTagInstanceUUIDs)))),
 				db
-				.select(TAGINSTANCE.TAGINSTANCEID)
-				.from(TAGINSTANCE)
-				.where(TAGINSTANCE.UUID.in(relevantTagInstanceUUIDs)))),
-			db
-			.delete(TAGINSTANCE)
-			.where(TAGINSTANCE.UUID.in(relevantTagInstanceUUIDs)))
+				.delete(TAGREFERENCE)
+				.where(TAGREFERENCE.TAGINSTANCEID.in(
+					db
+					.select(TAGINSTANCE.TAGINSTANCEID)
+					.from(TAGINSTANCE)
+					.where(TAGINSTANCE.UUID.in(relevantTagInstanceUUIDs)))),
+				db
+				.delete(TAGINSTANCE)
+				.where(TAGINSTANCE.UUID.in(relevantTagInstanceUUIDs)))
 			.execute();
 			
 			dbRepository.getIndexer().removeTagReferences(tagReferences);
@@ -1275,9 +1290,9 @@ class UserMarkupCollectionHandler {
 				.execute();
 			}
 			
-			dbRepository.getIndexer().updateIndex(tagInstance, property);
-
 			db.commitTransaction();
+
+			dbRepository.getIndexer().updateIndex(tagInstance, property);
 		}
 		catch (Exception e) {
 			db.rollbackTransaction();
