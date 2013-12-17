@@ -215,6 +215,15 @@ class UserMarkupCollectionHandler {
 			UserMarkupCollectionReference umcRef = importUserMarkupCollection(
 					db, umc, sourceDocument);
 
+			db.commitTransaction();
+			
+			// index the imported collection
+			dbRepository.getIndexer().index(
+					umc.getTagReferences(), 
+					sourceDocument.getID(),
+					umc.getId(),
+					umc.getTagLibrary());
+			
 			dbRepository.setTagManagerListenersEnabled(true);
 
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
@@ -222,7 +231,6 @@ class UserMarkupCollectionHandler {
 				null, new Pair<UserMarkupCollectionReference, SourceDocument>(
 						umcRef, sourceDocument));
 
-			db.commitTransaction();
 		}
 		catch (Exception dae) {
 			db.rollbackTransaction();
@@ -285,14 +293,6 @@ class UserMarkupCollectionHandler {
 		
 		addTagReferences(db, umc);
 
-		
-		// index the imported collection
-		dbRepository.getIndexer().index(
-				umc.getTagReferences(), 
-				sourceDocument.getID(),
-				umc.getId(),
-				umc.getTagLibrary());
-		
 		UserMarkupCollectionReference umcRef = 
 				new UserMarkupCollectionReference(
 						String.valueOf(userMarkupCollectionId), 

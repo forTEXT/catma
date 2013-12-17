@@ -389,9 +389,9 @@ class CorpusHandler {
 				
 			}
 			
-			corpora.remove(corpus);
-
 			db.commitTransaction();
+
+			corpora.remove(corpus);
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					Repository.RepositoryChangeEvent.corpusChanged.name(),
