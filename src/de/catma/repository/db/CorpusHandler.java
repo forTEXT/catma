@@ -66,7 +66,7 @@ class CorpusHandler {
 		this.dbRepository = dbRepository;
 		corpora = new HashMap<String, Corpus>();
 		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup("catmads");
+		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
 	}
 
 	public Collection<Corpus> getCorpora() {
@@ -366,7 +366,8 @@ class CorpusHandler {
 			db
 			.delete(USER_CORPUS)
 			.where(USER_CORPUS.USER_CORPUSID
-				.eq(currentUserCorpusRecord.getValue(USER_CORPUS.USER_CORPUSID)));
+				.eq(currentUserCorpusRecord.getValue(USER_CORPUS.USER_CORPUSID)))
+			.execute();
 			
 			if (isOwner 
 					&& (totalParticipants == 1)) {
@@ -388,9 +389,9 @@ class CorpusHandler {
 				
 			}
 			
-			corpora.remove(corpus);
-
 			db.commitTransaction();
+
+			corpora.remove(corpus);
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					Repository.RepositoryChangeEvent.corpusChanged.name(),
@@ -420,6 +421,8 @@ class CorpusHandler {
 		.set(CORPUS.NAME, name)
 		.where(CORPUS.CORPUSID.eq(corpusId))
 		.execute();
+		
+		corpus.setName(name);
 		
 		dbRepository.getPropertyChangeSupport().firePropertyChange(
 				Repository.RepositoryChangeEvent.corpusChanged.name(),

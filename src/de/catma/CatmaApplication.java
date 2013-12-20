@@ -88,7 +88,7 @@ public class CatmaApplication extends Application
 	
 	private static AtomicInteger userCount = new AtomicInteger(0);
 	
-	private static final String VERSION = 
+	private static final String MINORVERSION = 
 			"(v"+new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date())+")";
 	private static final String WEB_INF_DIR = "WEB-INF";
 	private static final String CATMA_PROPERTY_FILE = "catma.properties";
@@ -116,7 +116,7 @@ public class CatmaApplication extends Application
 		backgroundService = new BackgroundService(this);
 		
 		
-		final Window mainWindow = new Window("CATMA 4.1 - CLÉA " + VERSION);
+		final Window mainWindow = new Window("CATMA 4.1 - CLÉA " + MINORVERSION);
 		mainWindow.addParameterHandler(this);
 		HorizontalLayout mainLayout = new HorizontalLayout();
 		mainLayout.setSizeUndefined();

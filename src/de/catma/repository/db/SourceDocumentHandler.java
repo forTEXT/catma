@@ -108,7 +108,7 @@ class SourceDocumentHandler {
 		}
 		this.sourceDocumentsByID = new HashMap<String, SourceDocument>();
 		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup("catmads");
+		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
 	}
 	
 	public String getIDFromURI(URI uri) {
@@ -264,9 +264,9 @@ class SourceDocumentHandler {
 						getProgressListener().setProgress(
 								"Indexing Source Document");
 						
+						db.commitTransaction();
 						dbRepository.getIndexer().index(sourceDocument);
 
-						db.commitTransaction();
 						return sourceDocument.getID();
 								
 					}
@@ -481,7 +481,10 @@ class SourceDocumentHandler {
 			.where(USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID
 					.eq(currentUserSourceDocRecord.getValue(USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID)))
 			.execute();
-
+			
+			Collection<String> removedUserMarkupCollectionIDs = 
+					Collections.emptyList();
+			
 			if (isOwner 
 					&& (totalParticipants == 1)) {
 				db.batch(
@@ -497,7 +500,8 @@ class SourceDocumentHandler {
 				.execute();
 				
 				if (!sourceDocument.getUserMarkupCollectionRefs().isEmpty()) {
-					deleteUserMarkupCollections(db, sourceDocId, false);
+					removedUserMarkupCollectionIDs = 
+							deleteUserMarkupCollections(db, sourceDocId, false);
 				}
 
 				db
@@ -505,13 +509,26 @@ class SourceDocumentHandler {
 				.where(SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(sourceDocId))
 				.execute();
 				
-				dbRepository.getIndexer().removeSourceDocument(
-						sourceDocument.getID());
 			}
 			else {
 				if (!sourceDocument.getUserMarkupCollectionRefs().isEmpty()) {
-					deleteUserMarkupCollections(db, sourceDocId, true);
+					removedUserMarkupCollectionIDs = 
+							deleteUserMarkupCollections(db, sourceDocId, true);
 				}
+			}
+			
+			db.commitTransaction();
+
+			if (isOwner 
+					&& (totalParticipants == 1)) {
+				
+				if (!removedUserMarkupCollectionIDs.isEmpty()) {
+					dbRepository.getIndexer().removeUserMarkupCollections(
+							removedUserMarkupCollectionIDs);
+				}
+				
+				dbRepository.getIndexer().removeSourceDocument(
+						sourceDocument.getID());
 			}
 			
 			sourceDocumentsByID.remove(sourceDocument.getID());
@@ -520,7 +537,6 @@ class SourceDocumentHandler {
 					RepositoryChangeEvent.sourceDocumentChanged.name(),
 					sourceDocument, null);
 
-			db.commitTransaction();
 		}
 		catch (Exception dae) {
 			db.rollbackTransaction();
@@ -533,8 +549,11 @@ class SourceDocumentHandler {
 			}
 		}
 	}
-	private void deleteUserMarkupCollections(
+	private Collection<String> deleteUserMarkupCollections(
 			DSLContext db, Integer sourceDocumentId, boolean check) throws IOException {
+		
+		Collection<String> removedUserMarkupCollectionIDs = 
+				Collections.emptyList();
 	
 		if (!check) {
 			// assume that the user has full control over all UMCs of the givenn sourcedoc
@@ -690,15 +709,16 @@ class SourceDocumentHandler {
 								}
 							}))))
 				.execute();
-			}			
-			dbRepository.getIndexer().removeUserMarkupCollections(
+				
+				removedUserMarkupCollectionIDs = 
 					Collections2.transform(
 							umcAndTagLibIDs,
 							new Function<Pair<Integer,Integer>, String>() {
 								public String apply(Pair<Integer,Integer> pair) {
 									return String.valueOf(pair.getFirst());
 								}
-							}));
+							});
+			}			
 		}
 		else { // other users have access to the source doc, so 
 			// we check which collections belong to the current user
@@ -868,15 +888,15 @@ class SourceDocumentHandler {
 									}
 								}))))
 					.execute();
-					
-					dbRepository.getIndexer().removeUserMarkupCollections(
+				
+					removedUserMarkupCollectionIDs = 
 						Collections2.transform(
 								umcAndTagLibIDs,
 								new Function<Pair<Integer,Integer>, String>() {
 									public String apply(Pair<Integer,Integer> pair) {
 										return String.valueOf(pair.getFirst());
 									}
-								}));
+								});
 
 			}
 			else {// no full control collections, just remove the refs to the shared collections
@@ -890,6 +910,8 @@ class SourceDocumentHandler {
 				.execute();
 			}
 		}
+		
+		return removedUserMarkupCollectionIDs;
 	}
 
 	void reloadSourceDocuments(DSLContext db) 

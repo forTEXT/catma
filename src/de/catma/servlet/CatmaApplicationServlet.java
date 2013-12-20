@@ -16,7 +16,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.catma;
+package de.catma.servlet;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

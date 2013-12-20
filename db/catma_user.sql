@@ -4,3 +4,5 @@ GRANT USAGE ON * . * TO 'catma'@'localhost' IDENTIFIED BY 'roaring_like_thunder'
 
 GRANT SELECT , INSERT , UPDATE , DELETE, EXECUTE ON `CatmaIndex` . * TO 'catma'@'localhost';
 GRANT SELECT , INSERT , UPDATE , DELETE, EXECUTE ON `CatmaRepository` . * TO 'catma'@'localhost';
+
+-- GRANT SELECT , INSERT , UPDATE , DELETE, EXECUTE ON `quartz` . * TO 'catma'@'localhost';

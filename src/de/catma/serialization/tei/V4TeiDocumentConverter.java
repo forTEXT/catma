@@ -32,6 +32,6 @@ public class V4TeiDocumentConverter implements TeiDocumentConverter {
 		}
 		
 		teiDocument.getTeiHeader().getTechnicalDescription().setVersion(TeiDocumentVersion.V4);
-		teiDocument.printXmlDocument();
+//		teiDocument.printXmlDocument();
 	}
 }
