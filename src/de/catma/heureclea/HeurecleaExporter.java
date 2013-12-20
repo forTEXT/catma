@@ -80,8 +80,11 @@ public class HeurecleaExporter {
 					
 					for (Corpus corpus : corpora) {
 						String corpusName = cleanupName(corpus.toString());
+						logger.info("exporting corpus " +  corpus);
 						
 						for (SourceDocument sd : corpus.getSourceDocuments()) {
+							logger.info("exporting Source Document " + sd);
+							
 							TarArchiveEntry sdEntry = 
 								new TarArchiveEntry(
 									"heureclea_" 
@@ -106,7 +109,8 @@ public class HeurecleaExporter {
 							
 							for (UserMarkupCollectionReference umcRef 
 									: sd.getUserMarkupCollectionRefs()) {
-
+								logger.info("exporting User Markup Collection " +  umcRef);
+								
 								UserMarkupCollection umc = 
 										repo.getUserMarkupCollection(umcRef);
 
