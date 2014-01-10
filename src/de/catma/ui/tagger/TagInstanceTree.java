@@ -139,7 +139,10 @@ public class TagInstanceTree extends HorizontalLayout {
 					propertyCollection.getItemProperty(valuesProp).setValue(
 							property.getPropertyValueList().getValues());
 					FormDialog<PropertysetItem> editValueDlg = new FormDialog<PropertysetItem>(
-							"Edit Property values", propertyCollection, 
+							"Edit Property values", 
+							"New property values created here exist only for this tag instance! " +
+							"For the creation of new systematic values use the Tag Manager.",
+							propertyCollection, 
 							new PropertyValueEditorFormFieldFactory(
 								initialValues),
 							new SaveCancelListener<PropertysetItem>() {
