@@ -75,7 +75,6 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.source.TechInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.repository.db.jooq.TransactionalDSLContext;
-import de.catma.repository.db.jooqgen.catmarepository.Tables;
 import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
 import de.catma.repository.db.mapper.IDFieldsToIntegerPairMapper;
 import de.catma.repository.db.mapper.SourceDocumentMapper;
@@ -743,6 +742,19 @@ class SourceDocumentHandler {
 			.map(new IDFieldToIntegerMapper(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID));
 				
 			if (!fullControlUmcCollIds.isEmpty()) {
+				
+				List<Integer> tagInstanceIds = db
+				.selectDistinct(TAGREFERENCE.TAGINSTANCEID)
+				.from(TAGREFERENCE)
+				.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.in(fullControlUmcCollIds))
+				.fetch()
+				.map(new IDFieldToIntegerMapper(TAGREFERENCE.TAGINSTANCEID));
+
+				if (tagInstanceIds.isEmpty()) {
+					tagInstanceIds = Collections.singletonList(-1);
+				}
+				
+				
 				db.batch(
 					// delete refs to current user for all other umcs that are not 
 					// under full control
@@ -776,15 +788,11 @@ class SourceDocumentHandler {
 							.on(TAGREFERENCE.TAGINSTANCEID.eq(TAGINSTANCE.TAGINSTANCEID))
 							.and(TAGREFERENCE.USERMARKUPCOLLECTIONID.in(fullControlUmcCollIds)))),
 					db
-					.delete(TAGINSTANCE)
-					.where(TAGINSTANCE.TAGINSTANCEID.in(
-						db
-						.select(TAGREFERENCE.TAGINSTANCEID)
-						.from(TAGREFERENCE)
-						.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.in(fullControlUmcCollIds)))),
-					db
 					.delete(TAGREFERENCE)
 					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.in(fullControlUmcCollIds)),
+					db
+					.delete(TAGINSTANCE)
+					.where(TAGINSTANCE.TAGINSTANCEID.in(tagInstanceIds)),
 					db
 					.delete(PROPERTYDEF_POSSIBLEVALUE)
 					.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
