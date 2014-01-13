@@ -333,7 +333,8 @@ public class TagInstanceTree extends HorizontalLayout {
 				tagInstanceTree.setCollapsed(ti.getTagInstance(), false);
 			}
 		}
-		
+		tagInstanceTree.sort(
+			new Object[] {TagInstanceTreePropertyName.caption}, new boolean[] {true});
 	}
 
 	public List<String> getTagInstanceIDs(Set<TagDefinition> excludeFilter) {
