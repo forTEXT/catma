@@ -56,6 +56,7 @@ import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagsetDefinition;
+import de.catma.ui.MultiSelectTreeTable;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToReversedTrimmedStringCIComparator;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
@@ -63,7 +64,6 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.util.IDGenerator;
 
 public class KwicPanel extends VerticalLayout {
-
 	private enum KwicPropertyName {
 		caption,
 		leftContext,
@@ -314,7 +314,8 @@ public class KwicPanel extends VerticalLayout {
 	private void initComponents() {
 		setSizeFull();
 		
-		kwicTable = new TreeTable();
+		kwicTable = new MultiSelectTreeTable();
+		
 		kwicTable.setSizeFull();
 		kwicTable.setSelectable(true);
 		kwicTable.setMultiSelect(true);

@@ -153,6 +153,7 @@ public class Tagger extends AbstractComponent {
 	}
 	
 	private void setPage(String pageContent) {
+		attributes.put(TaggerMessageAttribute.ID.name(), this.taggerID);
 		attributes.put(TaggerMessageAttribute.PAGE_SET.name(), pageContent);
 		try {
 			attributes.put(
