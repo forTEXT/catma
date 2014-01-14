@@ -31,15 +31,17 @@ public class UnionQuery extends Query {
 
     private Query query1;
     private Query query2;
+    private boolean exclusive;
 
     /**
      * Constructor.
      * @param query1 the first query
      * @param query2 the second query
      */
-    public UnionQuery(Query query1, Query query2) {
+    public UnionQuery(Query query1, Query query2, String exclusiveMarker) {
         this.query1 = query1;
         this.query2 = query2;
+        exclusive = ((exclusiveMarker!=null)&&(exclusiveMarker.equals("EXCL")));
     }
 
     @Override
@@ -51,8 +53,9 @@ public class UnionQuery extends Query {
     			query1.getResult().asQueryResultRowArray();
     	QueryResultRowArray r2 = query2.getResult().asQueryResultRowArray();
     	
-    	//FIXME: UNION ALL is better for TagQueries, UNION makes more sense for phrase queries 
-//    	r2.removeAll(unifiedResult); 
+    	if (exclusive) {
+    		r2.removeAll(unifiedResult); 
+    	}
     	unifiedResult.addAll(r2);
     	
     	return unifiedResult;
