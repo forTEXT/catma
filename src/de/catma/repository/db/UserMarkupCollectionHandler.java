@@ -498,165 +498,165 @@ class UserMarkupCollectionHandler {
 			.where(USER_USERMARKUPCOLLECTION.USER_USERMARKUPCOLLECTIOID.eq(userUmcId))
 			.execute();
 			
-			if (isOwner && (totalParticipants == 1)) {
-				
-				List<Integer> tagInstanceIds = db
-				.select(TAGINSTANCE.TAGINSTANCEID)
-				.from(TAGINSTANCE)
-				.where(TAGINSTANCE.TAGINSTANCEID.in(
-					db
-					.select(TAGREFERENCE.TAGINSTANCEID)
-					.from(TAGREFERENCE)
-					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))))
-				.fetch()
-				.map(new IDFieldToIntegerMapper(TAGINSTANCE.TAGINSTANCEID));
-
-				if (tagInstanceIds.isEmpty()) {
-					tagInstanceIds = Collections.singletonList(-1);
-				}
-						
-				db.batch(
-					db
-					.delete(PROPERTYVALUE)
-					.where(PROPERTYVALUE.PROPERTYID.in(
-						db
-						.select(PROPERTY.PROPERTYID)
-						.from(PROPERTY)
-						.join(TAGINSTANCE)
-							.on(TAGINSTANCE.TAGINSTANCEID
-									.eq(PROPERTY.TAGINSTANCEID))
-						.join(TAGREFERENCE)
-							.on(TAGREFERENCE.TAGINSTANCEID
-									.eq(TAGINSTANCE.TAGINSTANCEID))
-							.and(TAGREFERENCE.USERMARKUPCOLLECTIONID
-									.eq(userMarkupCollectionId)))),
-					db
-					.delete(PROPERTY)
-					.where(PROPERTY.TAGINSTANCEID.in(
-						db
-						.select(TAGINSTANCE.TAGINSTANCEID)
-						.from(TAGINSTANCE)
-						.join(TAGREFERENCE)
-							.on(TAGREFERENCE.TAGINSTANCEID
-									.eq(TAGINSTANCE.TAGINSTANCEID))
-							.and(TAGREFERENCE.USERMARKUPCOLLECTIONID
-									.eq(userMarkupCollectionId)))),
-					db
-					.delete(TAGREFERENCE)
-					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID
-							.eq(userMarkupCollectionId)),
-					db
-					.delete(TAGINSTANCE)
-					.where(TAGINSTANCE.TAGINSTANCEID.in(tagInstanceIds)),
-					db
-					.delete(PROPERTYDEF_POSSIBLEVALUE)
-					.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
-						db
-						.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
-						.from(PROPERTYDEFINITION)
-						.join(TAGDEFINITION)
-							.on(TAGDEFINITION.TAGDEFINITIONID
-									.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
-						.join(TAGSETDEFINITION)
-							.on(TAGSETDEFINITION.TAGSETDEFINITIONID
-									.eq(TAGDEFINITION.TAGSETDEFINITIONID))
-						.join(TAGLIBRARY)
-							.on(TAGLIBRARY.TAGLIBRARYID
-									.eq(TAGSETDEFINITION.TAGLIBRARYID))
-						.join(USERMARKUPCOLLECTION)
-							.on(USERMARKUPCOLLECTION.TAGLIBRARYID
-									.eq(TAGLIBRARY.TAGLIBRARYID))
-							.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-									.eq(userMarkupCollectionId)))),
-					db
-					.delete(PROPERTYDEFINITION)
-					.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(
-						db
-						.select(TAGDEFINITION.TAGDEFINITIONID)
-						.from(TAGDEFINITION)
-						.join(TAGSETDEFINITION)
-							.on(TAGSETDEFINITION.TAGSETDEFINITIONID
-									.eq(TAGDEFINITION.TAGSETDEFINITIONID))
-						.join(TAGLIBRARY)
-							.on(TAGLIBRARY.TAGLIBRARYID
-									.eq(TAGSETDEFINITION.TAGLIBRARYID))
-						.join(USERMARKUPCOLLECTION)
-							.on(USERMARKUPCOLLECTION.TAGLIBRARYID
-									.eq(TAGLIBRARY.TAGLIBRARYID))
-							.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-									.eq(userMarkupCollectionId)))),
-					db
-					.update(TAGDEFINITION)
-					.set(TAGDEFINITION.PARENTID, (Integer)null)
-					.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
-							db
-							.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
-							.from(TAGSETDEFINITION)
-							.join(TAGLIBRARY)
-								.on(TAGLIBRARY.TAGLIBRARYID
-										.eq(TAGSETDEFINITION.TAGLIBRARYID))
-							.join(USERMARKUPCOLLECTION)
-								.on(USERMARKUPCOLLECTION.TAGLIBRARYID
-										.eq(TAGLIBRARY.TAGLIBRARYID))
-								.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-										.eq(userMarkupCollectionId)))),
-					db
-					.delete(TAGDEFINITION)
-					.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
-						db
-						.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
-						.from(TAGSETDEFINITION)
-						.join(TAGLIBRARY)
-							.on(TAGLIBRARY.TAGLIBRARYID
-									.eq(TAGSETDEFINITION.TAGLIBRARYID))
-						.join(USERMARKUPCOLLECTION)
-							.on(USERMARKUPCOLLECTION.TAGLIBRARYID
-									.eq(TAGLIBRARY.TAGLIBRARYID))
-							.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-									.eq(userMarkupCollectionId)))),
-					db
-					.delete(TAGSETDEFINITION)
-					.where(TAGSETDEFINITION.TAGLIBRARYID.in(
-						db
-						.select(TAGLIBRARY.TAGLIBRARYID)
-						.from(TAGLIBRARY)
-						.join(USERMARKUPCOLLECTION)
-							.on(USERMARKUPCOLLECTION.TAGLIBRARYID
-									.eq(TAGLIBRARY.TAGLIBRARYID))
-							.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-									.eq(userMarkupCollectionId)))))
-				.execute();
-
-				Integer tagLibraryId = db
-				.select(USERMARKUPCOLLECTION.TAGLIBRARYID)
-				.from(USERMARKUPCOLLECTION)
-				.where(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-						.eq(userMarkupCollectionId))
-				.fetchOne()
-				.map(new IDFieldToIntegerMapper(USERMARKUPCOLLECTION.TAGLIBRARYID));
-				
-				db.batch(
-					db
-					.delete(CORPUS_USERMARKUPCOLLECTION)
-					.where(CORPUS_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-							.eq(userMarkupCollectionId)),
-					db
-					.delete(USERMARKUPCOLLECTION)
-					.where(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-							.eq(userMarkupCollectionId)),
-					db
-					.delete(TAGLIBRARY)
-					.where(TAGLIBRARY.TAGLIBRARYID.eq(tagLibraryId)))
-				.execute();
-				
-			}
+//			if (isOwner && (totalParticipants == 1)) {
+//				
+//				List<Integer> tagInstanceIds = db
+//				.select(TAGINSTANCE.TAGINSTANCEID)
+//				.from(TAGINSTANCE)
+//				.where(TAGINSTANCE.TAGINSTANCEID.in(
+//					db
+//					.select(TAGREFERENCE.TAGINSTANCEID)
+//					.from(TAGREFERENCE)
+//					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))))
+//				.fetch()
+//				.map(new IDFieldToIntegerMapper(TAGINSTANCE.TAGINSTANCEID));
+//
+//				if (tagInstanceIds.isEmpty()) {
+//					tagInstanceIds = Collections.singletonList(-1);
+//				}
+//						
+//				db.batch(
+//					db
+//					.delete(PROPERTYVALUE)
+//					.where(PROPERTYVALUE.PROPERTYID.in(
+//						db
+//						.select(PROPERTY.PROPERTYID)
+//						.from(PROPERTY)
+//						.join(TAGINSTANCE)
+//							.on(TAGINSTANCE.TAGINSTANCEID
+//									.eq(PROPERTY.TAGINSTANCEID))
+//						.join(TAGREFERENCE)
+//							.on(TAGREFERENCE.TAGINSTANCEID
+//									.eq(TAGINSTANCE.TAGINSTANCEID))
+//							.and(TAGREFERENCE.USERMARKUPCOLLECTIONID
+//									.eq(userMarkupCollectionId)))),
+//					db
+//					.delete(PROPERTY)
+//					.where(PROPERTY.TAGINSTANCEID.in(
+//						db
+//						.select(TAGINSTANCE.TAGINSTANCEID)
+//						.from(TAGINSTANCE)
+//						.join(TAGREFERENCE)
+//							.on(TAGREFERENCE.TAGINSTANCEID
+//									.eq(TAGINSTANCE.TAGINSTANCEID))
+//							.and(TAGREFERENCE.USERMARKUPCOLLECTIONID
+//									.eq(userMarkupCollectionId)))),
+//					db
+//					.delete(TAGREFERENCE)
+//					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID
+//							.eq(userMarkupCollectionId)),
+//					db
+//					.delete(TAGINSTANCE)
+//					.where(TAGINSTANCE.TAGINSTANCEID.in(tagInstanceIds)),
+//					db
+//					.delete(PROPERTYDEF_POSSIBLEVALUE)
+//					.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
+//						db
+//						.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+//						.from(PROPERTYDEFINITION)
+//						.join(TAGDEFINITION)
+//							.on(TAGDEFINITION.TAGDEFINITIONID
+//									.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
+//						.join(TAGSETDEFINITION)
+//							.on(TAGSETDEFINITION.TAGSETDEFINITIONID
+//									.eq(TAGDEFINITION.TAGSETDEFINITIONID))
+//						.join(TAGLIBRARY)
+//							.on(TAGLIBRARY.TAGLIBRARYID
+//									.eq(TAGSETDEFINITION.TAGLIBRARYID))
+//						.join(USERMARKUPCOLLECTION)
+//							.on(USERMARKUPCOLLECTION.TAGLIBRARYID
+//									.eq(TAGLIBRARY.TAGLIBRARYID))
+//							.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+//									.eq(userMarkupCollectionId)))),
+//					db
+//					.delete(PROPERTYDEFINITION)
+//					.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(
+//						db
+//						.select(TAGDEFINITION.TAGDEFINITIONID)
+//						.from(TAGDEFINITION)
+//						.join(TAGSETDEFINITION)
+//							.on(TAGSETDEFINITION.TAGSETDEFINITIONID
+//									.eq(TAGDEFINITION.TAGSETDEFINITIONID))
+//						.join(TAGLIBRARY)
+//							.on(TAGLIBRARY.TAGLIBRARYID
+//									.eq(TAGSETDEFINITION.TAGLIBRARYID))
+//						.join(USERMARKUPCOLLECTION)
+//							.on(USERMARKUPCOLLECTION.TAGLIBRARYID
+//									.eq(TAGLIBRARY.TAGLIBRARYID))
+//							.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+//									.eq(userMarkupCollectionId)))),
+//					db
+//					.update(TAGDEFINITION)
+//					.set(TAGDEFINITION.PARENTID, (Integer)null)
+//					.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
+//							db
+//							.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
+//							.from(TAGSETDEFINITION)
+//							.join(TAGLIBRARY)
+//								.on(TAGLIBRARY.TAGLIBRARYID
+//										.eq(TAGSETDEFINITION.TAGLIBRARYID))
+//							.join(USERMARKUPCOLLECTION)
+//								.on(USERMARKUPCOLLECTION.TAGLIBRARYID
+//										.eq(TAGLIBRARY.TAGLIBRARYID))
+//								.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+//										.eq(userMarkupCollectionId)))),
+//					db
+//					.delete(TAGDEFINITION)
+//					.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
+//						db
+//						.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
+//						.from(TAGSETDEFINITION)
+//						.join(TAGLIBRARY)
+//							.on(TAGLIBRARY.TAGLIBRARYID
+//									.eq(TAGSETDEFINITION.TAGLIBRARYID))
+//						.join(USERMARKUPCOLLECTION)
+//							.on(USERMARKUPCOLLECTION.TAGLIBRARYID
+//									.eq(TAGLIBRARY.TAGLIBRARYID))
+//							.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+//									.eq(userMarkupCollectionId)))),
+//					db
+//					.delete(TAGSETDEFINITION)
+//					.where(TAGSETDEFINITION.TAGLIBRARYID.in(
+//						db
+//						.select(TAGLIBRARY.TAGLIBRARYID)
+//						.from(TAGLIBRARY)
+//						.join(USERMARKUPCOLLECTION)
+//							.on(USERMARKUPCOLLECTION.TAGLIBRARYID
+//									.eq(TAGLIBRARY.TAGLIBRARYID))
+//							.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+//									.eq(userMarkupCollectionId)))))
+//				.execute();
+//
+//				Integer tagLibraryId = db
+//				.select(USERMARKUPCOLLECTION.TAGLIBRARYID)
+//				.from(USERMARKUPCOLLECTION)
+//				.where(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+//						.eq(userMarkupCollectionId))
+//				.fetchOne()
+//				.map(new IDFieldToIntegerMapper(USERMARKUPCOLLECTION.TAGLIBRARYID));
+//				
+//				db.batch(
+//					db
+//					.delete(CORPUS_USERMARKUPCOLLECTION)
+//					.where(CORPUS_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+//							.eq(userMarkupCollectionId)),
+//					db
+//					.delete(USERMARKUPCOLLECTION)
+//					.where(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+//							.eq(userMarkupCollectionId)),
+//					db
+//					.delete(TAGLIBRARY)
+//					.where(TAGLIBRARY.TAGLIBRARYID.eq(tagLibraryId)))
+//				.execute();
+//				
+//			}
 			
 			db.commitTransaction();
 
-			if (isOwner && (totalParticipants == 1)) {
-				dbRepository.getIndexer().removeUserMarkupCollection(
-						userMarkupCollectionReference.getId());
-			}			
+//			if (isOwner && (totalParticipants == 1)) {
+//				dbRepository.getIndexer().removeUserMarkupCollection(
+//						userMarkupCollectionReference.getId());
+//			}			
 			
 
 			SourceDocument sd = 

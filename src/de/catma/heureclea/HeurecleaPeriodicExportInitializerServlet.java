@@ -35,7 +35,7 @@ public class HeurecleaPeriodicExportInitializerServlet extends HttpServlet {
 		    			TriggerGroup.DEFAULT.name()))
 				.startNow()
 //				.withSchedule(SimpleScheduleBuilder.repeatHourlyForTotalCount(1))
-				.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(0, 30))
+				.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(0, 30).withMisfireHandlingInstructionDoNothing())
 //				.withSchedule(CalendarIntervalScheduleBuilder.calendarIntervalSchedule().withIntervalInSeconds(60))
 			    .build(),
 				jobDataMap);
