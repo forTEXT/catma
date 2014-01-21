@@ -55,7 +55,7 @@ public class FormDialog<T> extends VerticalLayout {
 			PropertysetItem propertysetItem, 
 			FormFieldFactory formFieldFactory,
 			SaveCancelListener<PropertysetItem> saveCancelListener) {
-		this(caption, null, propertysetItem, null, saveCancelListener);
+		this(caption, null, propertysetItem, formFieldFactory, saveCancelListener);
 	}
 	public FormDialog(
 			String caption,

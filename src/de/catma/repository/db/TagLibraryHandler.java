@@ -593,43 +593,43 @@ class TagLibraryHandler {
 			db.beginTransaction();
 			
 			db.batch(
-				db
-				.delete(PROPERTYVALUE)
-				.where(PROPERTYVALUE.PROPERTYID.in(
-					db
-					.select(PROPERTY.PROPERTYID)
-					.from(PROPERTY)
-					.join(TAGINSTANCE)
-						.on(TAGINSTANCE.TAGINSTANCEID
-								.eq(PROPERTY.TAGINSTANCEID))
-					.join(TAGDEFINITION)
-						.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
-						.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
-				db
-				.delete(PROPERTY)
-				.where(PROPERTY.TAGINSTANCEID.in(
-					db
-					.select(TAGINSTANCE.TAGINSTANCEID)
-					.from(TAGINSTANCE)
-					.join(TAGDEFINITION)
-						.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
-						.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
-				db
-				.delete(TAGREFERENCE)
-				.where(TAGREFERENCE.TAGINSTANCEID.in(
-					db
-					.select(TAGINSTANCE.TAGINSTANCEID)
-					.from(TAGINSTANCE)
-					.join(TAGDEFINITION)
-						.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
-						.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
-				db
-				.delete(TAGINSTANCE)
-				.where(TAGINSTANCE.TAGDEFINITIONID.in(
-					db
-					.select(TAGDEFINITION.TAGDEFINITIONID)
-					.from(TAGDEFINITION)
-					.where(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
+//				db
+//				.delete(PROPERTYVALUE)
+//				.where(PROPERTYVALUE.PROPERTYID.in(
+//					db
+//					.select(PROPERTY.PROPERTYID)
+//					.from(PROPERTY)
+//					.join(TAGINSTANCE)
+//						.on(TAGINSTANCE.TAGINSTANCEID
+//								.eq(PROPERTY.TAGINSTANCEID))
+//					.join(TAGDEFINITION)
+//						.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
+//						.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
+//				db
+//				.delete(PROPERTY)
+//				.where(PROPERTY.TAGINSTANCEID.in(
+//					db
+//					.select(TAGINSTANCE.TAGINSTANCEID)
+//					.from(TAGINSTANCE)
+//					.join(TAGDEFINITION)
+//						.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
+//						.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
+//				db
+//				.delete(TAGREFERENCE)
+//				.where(TAGREFERENCE.TAGINSTANCEID.in(
+//					db
+//					.select(TAGINSTANCE.TAGINSTANCEID)
+//					.from(TAGINSTANCE)
+//					.join(TAGDEFINITION)
+//						.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
+//						.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
+//				db
+//				.delete(TAGINSTANCE)
+//				.where(TAGINSTANCE.TAGDEFINITIONID.in(
+//					db
+//					.select(TAGDEFINITION.TAGDEFINITIONID)
+//					.from(TAGDEFINITION)
+//					.where(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
 				db
 				.delete(PROPERTYDEF_POSSIBLEVALUE)
 				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
@@ -824,53 +824,53 @@ class TagLibraryHandler {
 			.where(USER_TAGLIBRARY.USER_TAGLIBRARYID.eq(userTagLibId))
 			.execute();
 			
-			if (isOwner && (totalParticipants == 1)) {
-				db.batch(
-					db
-					.delete(PROPERTYDEF_POSSIBLEVALUE)
-					.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
-						db
-						.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
-						.from(PROPERTYDEFINITION)
-						.join(TAGDEFINITION)
-							.on(TAGDEFINITION.TAGDEFINITIONID
-									.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
-						.join(TAGSETDEFINITION)
-							.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
-							.and(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)))),
-					db
-					.delete(PROPERTYDEFINITION)
-					.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(
-						db
-						.select(TAGDEFINITION.TAGDEFINITIONID)
-						.from(TAGDEFINITION)
-						.join(TAGSETDEFINITION)
-							.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
-							.and(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)))),
-					db
-					.update(TAGDEFINITION)
-					.set(TAGDEFINITION.PARENTID, (Integer)null)
-					.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
-						db
-						.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
-						.from(TAGSETDEFINITION)
-						.where(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)))),
-					db
-					.delete(TAGDEFINITION)
-					.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
-						db
-						.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
-						.from(TAGSETDEFINITION)
-						.where(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)))),
-					db
-					.delete(TAGSETDEFINITION)
-					.where(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)),
-					db
-					.delete(TAGLIBRARY)
-					.where(TAGLIBRARY.TAGLIBRARYID.eq(tagLibraryId)))
-				.execute();
-
-			}
+//			if (isOwner && (totalParticipants == 1)) {
+//				db.batch(
+//					db
+//					.delete(PROPERTYDEF_POSSIBLEVALUE)
+//					.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
+//						db
+//						.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+//						.from(PROPERTYDEFINITION)
+//						.join(TAGDEFINITION)
+//							.on(TAGDEFINITION.TAGDEFINITIONID
+//									.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
+//						.join(TAGSETDEFINITION)
+//							.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
+//							.and(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)))),
+//					db
+//					.delete(PROPERTYDEFINITION)
+//					.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(
+//						db
+//						.select(TAGDEFINITION.TAGDEFINITIONID)
+//						.from(TAGDEFINITION)
+//						.join(TAGSETDEFINITION)
+//							.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
+//							.and(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)))),
+//					db
+//					.update(TAGDEFINITION)
+//					.set(TAGDEFINITION.PARENTID, (Integer)null)
+//					.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
+//						db
+//						.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
+//						.from(TAGSETDEFINITION)
+//						.where(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)))),
+//					db
+//					.delete(TAGDEFINITION)
+//					.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
+//						db
+//						.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
+//						.from(TAGSETDEFINITION)
+//						.where(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)))),
+//					db
+//					.delete(TAGSETDEFINITION)
+//					.where(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)),
+//					db
+//					.delete(TAGLIBRARY)
+//					.where(TAGLIBRARY.TAGLIBRARYID.eq(tagLibraryId)))
+//				.execute();
+//
+//			}
 			
 			db.commitTransaction();
 
