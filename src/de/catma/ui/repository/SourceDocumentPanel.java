@@ -932,6 +932,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						CorpusContentSelectionDialog dialog =
 							new CorpusContentSelectionDialog(
 								sd,
+								currentCorpus,
 								new SaveCancelListener<Corpus>() {
 									public void cancelPressed() {/* noop */}
 									public void savePressed(Corpus result) {
@@ -959,6 +960,20 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				Notification.TYPE_TRAY_NOTIFICATION);
 		}
 		
+	}
+	
+	private MarkupCollectionItem getUserMarkupCollectionItemId(SourceDocument sd) {
+		Collection<?> children = documentsTree.getChildren(sd);
+
+		if (children != null) {
+			for (Object child : children) {
+				if ((child instanceof MarkupCollectionItem) &&
+						((MarkupCollectionItem)child).isUserMarkupCollectionItem()) {
+					return (MarkupCollectionItem)child;
+				}
+			}
+		}
+		return null;
 	}
 
 	private void initComponents() {
@@ -1265,16 +1280,10 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			SourceDocument sourceDocument) {
 		documentsContainer.removeAllContainerFilters();
 		
-		@SuppressWarnings("unchecked")
-		Collection<MarkupCollectionItem> children = 
-				(Collection<MarkupCollectionItem>) documentsTree.getChildren(
-						sourceDocument);
 		
-		for (MarkupCollectionItem mi : children) {
-			if (mi.isUserMarkupCollectionItem()) {
-				addUserMarkupCollectionReferenceToTree(userMarkupCollRef, mi);
-				break;
-			}
+		MarkupCollectionItem mi = getUserMarkupCollectionItemId(sourceDocument);
+		if (mi != null) {
+			addUserMarkupCollectionReferenceToTree(userMarkupCollRef, mi);
 		}
 		
 		

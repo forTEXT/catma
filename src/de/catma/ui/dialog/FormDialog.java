@@ -32,11 +32,14 @@ import com.vaadin.ui.FormFieldFactory;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.Label;
+
 
 public class FormDialog<T> extends VerticalLayout {
 	
 	private Window dialogWindow;
 	private Form form;
+	private Label hint;
 	private Button btSave;
 	private Button btCancel;
 	
@@ -52,7 +55,15 @@ public class FormDialog<T> extends VerticalLayout {
 			PropertysetItem propertysetItem, 
 			FormFieldFactory formFieldFactory,
 			SaveCancelListener<PropertysetItem> saveCancelListener) {
-		initComponents(caption, propertysetItem, formFieldFactory);
+		this(caption, null, propertysetItem, formFieldFactory, saveCancelListener);
+	}
+	public FormDialog(
+			String caption,
+			String hintText,
+			PropertysetItem propertysetItem, 
+			FormFieldFactory formFieldFactory,
+			SaveCancelListener<PropertysetItem> saveCancelListener) {
+		initComponents(caption, hintText, propertysetItem, formFieldFactory);
 		initAction(saveCancelListener, propertysetItem);
 	}
 	
@@ -61,7 +72,7 @@ public class FormDialog<T> extends VerticalLayout {
 			BeanItem<T> beanItem, 
 			FormFieldFactory formFieldFactory,
 			SaveCancelListener<T> saveCancelListener) {
-		initComponents(caption, beanItem, formFieldFactory);
+		initComponents(caption, null, beanItem, formFieldFactory);
 		initAction(saveCancelListener, beanItem);
 	}
 	
@@ -117,7 +128,7 @@ public class FormDialog<T> extends VerticalLayout {
 
 	private void initComponents(
 			String caption,
-			final PropertysetItem propertysetItem, 
+			String hintText, final PropertysetItem propertysetItem, 
 			FormFieldFactory formFieldFactory) {
 		
 		setSizeFull();
@@ -139,6 +150,11 @@ public class FormDialog<T> extends VerticalLayout {
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setSpacing(true);
+		
+		hint = new Label(hintText);
+		hint.setContentMode(Label.CONTENT_TEXT);
+		
+		addComponent(hint);
 		
 		btSave = new Button("Save");
 

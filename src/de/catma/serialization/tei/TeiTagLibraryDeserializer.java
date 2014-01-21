@@ -24,10 +24,10 @@ import java.text.ParseException;
 import nu.xom.Elements;
 import nu.xom.Nodes;
 import de.catma.ExceptionHandler;
-import de.catma.tag.TagLibrary;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
@@ -61,6 +61,7 @@ public class TeiTagLibraryDeserializer {
 			int dividerPos = nValue.lastIndexOf(' ');
 			String tagsetName = nValue.substring(0, dividerPos);
 			String versionString = nValue.substring(dividerPos+1);
+
 			TagsetDefinition tagsetDefinition = 
 					new TagsetDefinition(
 							null,
@@ -101,10 +102,10 @@ public class TeiTagLibraryDeserializer {
 			addProperties(tagDef, 
 					tagDefinitionElement.getChildNodes(
 							TeiElementName.fDecl, 
-							AttributeValue.f_Decl_name_catma_system_property.getStartsWith()),
+							AttributeValue.f_Decl_name_catma_system_property.getStartsWithFilter()),
 					tagDefinitionElement.getChildNodes(
 							TeiElementName.fDecl, 
-							AttributeValue.f_Decl_name_catma_system_property.getNotStartsWith()));
+							AttributeValue.f_Decl_name_catma_system_property.getNotStartsWithFilter()));
 		}
 		
 	}

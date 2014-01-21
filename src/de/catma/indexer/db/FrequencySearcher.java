@@ -40,6 +40,7 @@ import org.jooq.impl.DSL;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.repository.db.CatmaDataSourceName;
 
 class FrequencySearcher {
 	
@@ -49,7 +50,7 @@ class FrequencySearcher {
 	public FrequencySearcher() throws NamingException {
 		super();
 		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup("catmads");
+		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
 	}
 
 	public QueryResult search(

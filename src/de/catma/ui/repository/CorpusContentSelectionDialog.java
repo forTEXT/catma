@@ -18,6 +18,8 @@
  */
 package de.catma.ui.repository;
 
+import java.util.List;
+
 import com.vaadin.data.Property;
 import com.vaadin.data.Validator;
 import com.vaadin.data.util.HierarchicalContainer;
@@ -57,11 +59,13 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 	private Button btOk;
 	private Button btCancel;
 	private Window dialogWindow;
+	private Corpus constrainingCorpus;
 
 	public CorpusContentSelectionDialog(
-			SourceDocument sd, SaveCancelListener<Corpus> listener) {
+			SourceDocument sd, Corpus corpus, SaveCancelListener<Corpus> listener) {
 		this.sourceDocument = sd;
 		this.listener = listener;
+		this.constrainingCorpus = corpus;
 		
 		initComponents();
 		initActions();
@@ -82,8 +86,15 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 			public void buttonClick(ClickEvent event) {
 				Corpus corpus = new Corpus(sourceDocument.toString());
 				corpus.addSourceDocument(sourceDocument);
-				for (UserMarkupCollectionReference umcRef : 
-					sourceDocument.getUserMarkupCollectionRefs()) {
+				
+				List<UserMarkupCollectionReference> umcRefList = sourceDocument.getUserMarkupCollectionRefs();
+				
+				if (constrainingCorpus != null) {
+					umcRefList = constrainingCorpus.getUserMarkupCollectionRefs(sourceDocument);
+				}
+				
+				for (UserMarkupCollectionReference umcRef : umcRefList) {
+					
 					Property prop = documentsTree.getItem(umcRef).getItemProperty(
 							DocumentTreeProperty.include);
 					CheckBox cb = (CheckBox) prop.getValue();
@@ -130,8 +141,13 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 			userMarkupItem);
 		documentsTree.setParent(userMarkupItem, sourceDocument);
 		
-		for (UserMarkupCollectionReference umcRef : 
-			sourceDocument.getUserMarkupCollectionRefs()) {
+		List<UserMarkupCollectionReference> umcRefList = sourceDocument.getUserMarkupCollectionRefs();
+		
+		if (constrainingCorpus != null) {
+			umcRefList = constrainingCorpus.getUserMarkupCollectionRefs(sourceDocument);
+		}
+
+		for (UserMarkupCollectionReference umcRef : umcRefList) {
 			documentsTree.addItem(
 				new Object[] {umcRef.getName(), createCheckBox(true)}, umcRef);
 			documentsTree.setParent(umcRef, userMarkupItem);

@@ -36,7 +36,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -47,8 +46,6 @@ import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
-
-import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.DefaultProgressCallable;
@@ -86,8 +83,6 @@ import de.catma.util.Pair;
 
 public class DBRepository implements IndexedRepository {
 	//TODO: handle sqlstate 40001 deadlock
-	
-	private static AtomicBoolean init = new AtomicBoolean(false);
 	
 	private String name;
 	
@@ -278,21 +273,7 @@ public class DBRepository implements IndexedRepository {
 		
 		Context context = new InitialContext();
 
-		if (init.compareAndSet(false, true)) {
-			ComboPooledDataSource cpds = new ComboPooledDataSource();
-			
-			cpds.setDriverClass( "org.gjt.mm.mysql.Driver" ); //loads the jdbc driver 
-			cpds.setJdbcUrl(url); 
-			cpds.setUser(user);
-			cpds.setPassword(pass); 
-			cpds.setIdleConnectionTestPeriod(10);
-			this.dataSource = cpds;
-			
-			context.bind("catmads", cpds);
-		}
-		else {
-			this.dataSource = (DataSource) context.lookup("catmads");
-		}
+		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
 		
 		this.dbSourceDocumentHandler = 
 				new SourceDocumentHandler(this, repoFolderPath);

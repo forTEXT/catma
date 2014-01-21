@@ -52,6 +52,7 @@ import de.catma.document.Range;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.repository.db.CatmaDataSourceName;
 import de.catma.repository.db.jooq.ResultUtil;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinitionPathInfo;
@@ -98,7 +99,7 @@ public class TagDefinitionSearcher {
 		this.groupByTagInstanceIdFunction = new GroupByTagInstanceIdFunction(idGenerator);
 		this.groupByTagInstanceIdPropertyDefIdFunction = new GroupByTagInstanceIdPropertyDefIdFunction(idGenerator);
 		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup("catmads");
+		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
 	}
 
 	public QueryResult search(

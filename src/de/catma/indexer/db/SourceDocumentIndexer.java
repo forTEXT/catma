@@ -38,6 +38,7 @@ import org.jooq.SQLDialect;
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
+import de.catma.repository.db.CatmaDataSourceName;
 import de.catma.repository.db.jooq.TransactionalDSLContext;
 
 class SourceDocumentIndexer {
@@ -45,7 +46,7 @@ class SourceDocumentIndexer {
 
 	public SourceDocumentIndexer() throws NamingException {
 		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup("catmads");
+		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
 	}
 
 	void index(SourceDocument sourceDocument) throws IOException {
