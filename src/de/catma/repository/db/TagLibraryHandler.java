@@ -532,7 +532,7 @@ class TagLibraryHandler {
 
 
 	void createTagDefinition(final TagsetDefinition tagsetDefinition,
-			final TagDefinition tagDefinition) {
+			final TagDefinition tagDefinition) throws IOException {
 		addAuthorIfAbsent(tagDefinition);
 
 		TransactionalDSLContext db = 
@@ -560,11 +560,7 @@ class TagLibraryHandler {
 		catch (Exception e) {
 			db.rollbackTransaction();
 			db.close();
-			
-			dbRepository.getPropertyChangeSupport().firePropertyChange(
-					RepositoryChangeEvent.exceptionOccurred.name(),
-					null, 
-					e);				
+			throw new IOException(e);
 		}
 		finally {
 			if (db!=null) {
@@ -576,7 +572,7 @@ class TagLibraryHandler {
 	}
 	
 
-	void removeTagsetDefinition(final TagsetDefinition tagsetDefinition) {
+	void removeTagsetDefinition(final TagsetDefinition tagsetDefinition) throws IOException {
 		TransactionalDSLContext db = 
 				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 				
@@ -664,11 +660,7 @@ class TagLibraryHandler {
 		catch (Exception e) {
 			db.rollbackTransaction();
 			db.close();
-			
-			dbRepository.getPropertyChangeSupport().firePropertyChange(
-					RepositoryChangeEvent.exceptionOccurred.name(),
-					null, 
-					e);				
+			throw new IOException(e);
 		}
 		finally {
 			if (db!=null) {
@@ -678,22 +670,14 @@ class TagLibraryHandler {
 	}
 
 	void createTagsetDefinition(final TagLibrary tagLibrary,
-			final TagsetDefinition tagsetDefinition) {
+			final TagsetDefinition tagsetDefinition) throws IOException {
 		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
-		try {
-			getLibraryAccess(db, tagLibrary.getId(), true);
+		getLibraryAccess(db, tagLibrary.getId(), true);
 
-			createDeepTagsetDefinition(
-				db,
-				tagsetDefinition,
-				Integer.valueOf(tagLibrary.getId()));
-		}
-		catch (Exception e) {
-			dbRepository.getPropertyChangeSupport().firePropertyChange(
-					RepositoryChangeEvent.exceptionOccurred.name(),
-					null, 
-					e);	
-		}
+		createDeepTagsetDefinition(
+			db,
+			tagsetDefinition,
+			Integer.valueOf(tagLibrary.getId()));
 		
 	}
 		
@@ -739,34 +723,24 @@ class TagLibraryHandler {
 		}
 	}
 	
-	void updateTagsetDefinition(final TagsetDefinition tagsetDefinition) {
+	void updateTagsetDefinition(final TagsetDefinition tagsetDefinition) throws IOException {
 		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
-		try {
-			Integer tagLibraryId = db
-					.select(TAGSETDEFINITION.TAGLIBRARYID)
-					.from(TAGSETDEFINITION)
-					.where(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId()))
-					.fetchOne()
-					.map(new IDFieldToIntegerMapper(TAGSETDEFINITION.TAGLIBRARYID));
+		Integer tagLibraryId = db
+				.select(TAGSETDEFINITION.TAGLIBRARYID)
+				.from(TAGSETDEFINITION)
+				.where(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId()))
+				.fetchOne()
+				.map(new IDFieldToIntegerMapper(TAGSETDEFINITION.TAGLIBRARYID));
 
-			getLibraryAccess(db, tagLibraryId, true);
-			
-			db
-			.update(TAGSETDEFINITION)
-			.set(TAGSETDEFINITION.NAME, tagsetDefinition.getName())
-			.set(TAGSETDEFINITION.VERSION, 
-					SqlTimestamp.from(tagsetDefinition.getVersion().getDate()))
-			.where(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId()))
-			.execute();
-			
-		}
-		catch (Exception e) {
-			dbRepository.getPropertyChangeSupport().firePropertyChange(
-					RepositoryChangeEvent.exceptionOccurred.name(),
-					null, 
-					e);	
-		}
-
+		getLibraryAccess(db, tagLibraryId, true);
+		
+		db
+		.update(TAGSETDEFINITION)
+		.set(TAGSETDEFINITION.NAME, tagsetDefinition.getName())
+		.set(TAGSETDEFINITION.VERSION, 
+				SqlTimestamp.from(tagsetDefinition.getVersion().getDate()))
+		.where(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId()))
+		.execute();
 	}
 
 
@@ -947,7 +921,7 @@ class TagLibraryHandler {
 		}
 	}
 	
-	void removeTagDefinition(final TagDefinition tagDefinition) {
+	void removeTagDefinition(final TagDefinition tagDefinition) throws IOException {
 		
 		
 		TransactionalDSLContext db = 
@@ -1039,11 +1013,7 @@ class TagLibraryHandler {
 		catch (Exception e) {
 			db.rollbackTransaction();
 			db.close();
-			
-			dbRepository.getPropertyChangeSupport().firePropertyChange(
-					RepositoryChangeEvent.exceptionOccurred.name(),
-					null, 
-					e);				
+			throw new IOException(e);
 		}
 		finally {
 			if (db!=null) {

@@ -63,6 +63,8 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.IndexerFactory;
+import de.catma.repository.db.executionshield.DBOperation;
+import de.catma.repository.db.executionshield.ExecutionShield;
 import de.catma.repository.db.jooq.TransactionalDSLContext;
 import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
 import de.catma.repository.db.mapper.UserMapper;
@@ -117,7 +119,7 @@ public class DBRepository implements IndexedRepository {
 	private String repoFolderPath;
 
 	private DataSource dataSource;
-
+	private ExecutionShield execShield;
 
 	public DBRepository(
 			String name, 
@@ -144,33 +146,56 @@ public class DBRepository implements IndexedRepository {
 		
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.idGenerator = new IDGenerator();
+		this.execShield = new ExecutionShield();
 	}
 	
 	private void initTagManagerListeners() {
 		tagsetDefinitionChangedListener = new PropertyChangeListener() {
 			
-			public void propertyChange(PropertyChangeEvent evt) {
+			public void propertyChange(final PropertyChangeEvent evt) {
 				
 				if (!tagManagerListenersEnabled) {
 					return;
 				}
-				
-				if (evt.getOldValue() == null) { //insert
-					@SuppressWarnings("unchecked")
-					Pair<TagLibrary, TagsetDefinition> args = 
-							(Pair<TagLibrary, TagsetDefinition>)evt.getNewValue();
-					dbTagLibraryHandler.createTagsetDefinition(
-							args.getFirst(), args.getSecond());
+				try {
+					if (evt.getOldValue() == null) { //insert
+						@SuppressWarnings("unchecked")
+						final Pair<TagLibrary, TagsetDefinition> args = 
+								(Pair<TagLibrary, TagsetDefinition>)evt.getNewValue();
+						execShield.execute(new DBOperation<Void>() {
+							public Void execute() throws Exception {
+								dbTagLibraryHandler.createTagsetDefinition(
+										args.getFirst(), args.getSecond());
+								return null;
+							}
+						});
+					}
+					else if (evt.getNewValue() == null) { //delete
+						@SuppressWarnings("unchecked")
+						final Pair<TagLibrary, TagsetDefinition> args = 
+								(Pair<TagLibrary, TagsetDefinition>)evt.getOldValue();
+						execShield.execute(new DBOperation<Void>() {
+							public Void execute() throws Exception {
+								dbTagLibraryHandler.removeTagsetDefinition(args.getSecond());
+								return null;
+							}
+						});
+					}
+					else { //update
+						execShield.execute(new DBOperation<Void>() {
+							public Void execute() throws Exception {
+								dbTagLibraryHandler.updateTagsetDefinition(
+										(TagsetDefinition)evt.getNewValue());
+								return null;
+							}
+						});
+					}
 				}
-				else if (evt.getNewValue() == null) { //delete
-					@SuppressWarnings("unchecked")
-					Pair<TagLibrary, TagsetDefinition> args = 
-							(Pair<TagLibrary, TagsetDefinition>)evt.getOldValue();
-					dbTagLibraryHandler.removeTagsetDefinition(args.getSecond());
-				}
-				else { //update
-					dbTagLibraryHandler.updateTagsetDefinition(
-							(TagsetDefinition)evt.getNewValue());
+				catch (IOException e) {
+					propertyChangeSupport.firePropertyChange(
+							RepositoryChangeEvent.exceptionOccurred.name(),
+							null, 
+							e);	
 				}
 			}
 		};
@@ -181,28 +206,50 @@ public class DBRepository implements IndexedRepository {
 		
 		tagDefinitionChangedListener = new PropertyChangeListener() {
 			
-			public void propertyChange(PropertyChangeEvent evt) {
+			public void propertyChange(final PropertyChangeEvent evt) {
 				
 				if (!tagManagerListenersEnabled) {
 					return;
 				}
-
-				if (evt.getOldValue() == null) {
-					@SuppressWarnings("unchecked")
-					Pair<TagsetDefinition, TagDefinition> args = 
-							(Pair<TagsetDefinition, TagDefinition>)evt.getNewValue();
-					dbTagLibraryHandler.createTagDefinition(
-							args.getFirst(), args.getSecond());
+				try {
+					if (evt.getOldValue() == null) {
+						@SuppressWarnings("unchecked")
+						final Pair<TagsetDefinition, TagDefinition> args = 
+								(Pair<TagsetDefinition, TagDefinition>)evt.getNewValue();
+						execShield.execute(new DBOperation<Void>() {
+							public Void execute() throws Exception {
+								dbTagLibraryHandler.createTagDefinition(
+										args.getFirst(), args.getSecond());
+								return null;
+							}
+						});
+					}
+					else if (evt.getNewValue() == null) {
+						@SuppressWarnings("unchecked")
+						final Pair<TagsetDefinition, TagDefinition> args = 
+								(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
+						execShield.execute(new DBOperation<Void>() {
+							public Void execute() throws Exception {
+								dbTagLibraryHandler.removeTagDefinition(args.getSecond());
+								return null;
+							}
+						});							
+					}
+					else {
+						execShield.execute(new DBOperation<Void>() {
+							public Void execute() throws Exception {
+								dbTagLibraryHandler.updateTagDefinition(
+										(TagDefinition)evt.getNewValue());
+								return null;
+							}
+						});
+					}
 				}
-				else if (evt.getNewValue() == null) {
-					@SuppressWarnings("unchecked")
-					Pair<TagsetDefinition, TagDefinition> args = 
-							(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
-					dbTagLibraryHandler.removeTagDefinition(args.getSecond());
-				}
-				else {
-					dbTagLibraryHandler.updateTagDefinition(
-							(TagDefinition)evt.getNewValue());
+				catch (Exception e) {
+					propertyChangeSupport.firePropertyChange(
+							RepositoryChangeEvent.exceptionOccurred.name(),
+							null, 
+							e);				
 				}
 			}
 
@@ -495,17 +542,21 @@ public class DBRepository implements IndexedRepository {
 						+ userMarkupCollection.getName() + "... ",
 				new DefaultProgressCallable<Boolean>() {
 				public Boolean call() throws Exception {
-					if (userMarkupCollection.getTagReferences().containsAll(
-							tagReferences)) {
-						dbUserMarkupCollectionHandler.addTagReferences(
-							userMarkupCollection, tagReferences);
-						return true;
-					}
-					else {
-						dbUserMarkupCollectionHandler.removeTagReferences(
-							tagReferences);
-						return false;
-					}
+					return execShield.execute(new DBOperation<Boolean>() {
+						public Boolean execute() throws Exception {
+							if (userMarkupCollection.getTagReferences().containsAll(
+									tagReferences)) {
+								dbUserMarkupCollectionHandler.addTagReferences(
+									userMarkupCollection, tagReferences);
+								return true;
+							}
+							else {
+								dbUserMarkupCollectionHandler.removeTagReferences(
+									tagReferences);
+								return false;
+							}
+						}
+					});
 				}
 			}, 
 			new ExecutionListener<Boolean>() {
@@ -537,9 +588,13 @@ public class DBRepository implements IndexedRepository {
 				"Updating Tagset " + tagsetDefinition.getName() + "... ",
 				new DefaultProgressCallable<Void>() {
 				public Void call() throws Exception {
-					dbUserMarkupCollectionHandler.updateTagsetDefinitionInUserMarkupCollections(
-							userMarkupCollections, tagsetDefinition);
-					return null;
+					return execShield.execute( new DBOperation<Void>() {
+						public Void execute() throws Exception {
+							dbUserMarkupCollectionHandler.updateTagsetDefinitionInUserMarkupCollections(
+									userMarkupCollections, tagsetDefinition);
+							return null;
+						}
+					});
 				}
 			}, 
 			new ExecutionListener<Void>() {
@@ -565,12 +620,18 @@ public class DBRepository implements IndexedRepository {
 				userMarkupCollectionReference, contentInfoSet);
 	}
 
-	public void update(TagInstance tagInstance, Property property)
+	public void update(final TagInstance tagInstance, final Property property)
 			throws IOException {
-		dbUserMarkupCollectionHandler.updateProperty(tagInstance, property);
-		propertyChangeSupport.firePropertyChange(
-				RepositoryChangeEvent.propertyValueChanged.name(),
-				tagInstance, property);
+		execShield.execute( new DBOperation<Void>() {
+			public Void execute() throws Exception {
+				dbUserMarkupCollectionHandler.updateProperty(tagInstance, property);
+				propertyChangeSupport.firePropertyChange(
+						RepositoryChangeEvent.propertyValueChanged.name(),
+						tagInstance, property);
+				return null;
+			}
+		});
+			
 	}
 
 	public void delete(

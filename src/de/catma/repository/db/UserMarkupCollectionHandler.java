@@ -101,7 +101,7 @@ class UserMarkupCollectionHandler {
 	private Map<String,WeakReference<UserMarkupCollection>> umcCache;
 	private DataSource dataSource;
 	
-	public UserMarkupCollectionHandler(DBRepository dbRepository) throws NamingException {
+	UserMarkupCollectionHandler(DBRepository dbRepository) throws NamingException {
 		this.dbRepository = dbRepository;
 		this.idGenerator = new IDGenerator();
 		this.umcCache = new HashMap<String, WeakReference<UserMarkupCollection>>();
@@ -951,73 +951,72 @@ class UserMarkupCollectionHandler {
 						.delete(TAGINSTANCE)
 						.where(TAGINSTANCE.TAGINSTANCEID.in(obsoleteTagInstanceIds)))
 					.execute();
+				}
+				// handle deleted Properties
+				for (TagInstance ti : relevantTagInstances) {
+					// get all propertyDef IDs
+					Collection<Integer> relevantUserDefPropertyDefIds = 
+							Collections2.transform(ti.getUserDefinedProperties(),
+									new Function<Property, Integer>() {
+								public Integer apply(
+										Property property) {
+									return property.getPropertyDefinition().getId();
+								}});
 					
-					// handle deleted Properties
-					for (TagInstance ti : relevantTagInstances) {
-						// get all propertyDef IDs
-						Collection<Integer> relevantUserDefPropertyDefIds = 
-								Collections2.transform(ti.getUserDefinedProperties(),
-										new Function<Property, Integer>() {
-									public Integer apply(
-											Property property) {
-										return property.getPropertyDefinition().getId();
-									}});
-						
-						byte[] tagIntanceUUIDbin = 
-								idGenerator.catmaIDToUUIDBytes(ti.getUuid()); 
-						
-						if (relevantUserDefPropertyDefIds.isEmpty()) { // no restriction
-							db.batch(
-								// delete property values of properties
-								db
-								.delete(PROPERTYVALUE)
-								.where(PROPERTYVALUE.PROPERTYID
-									.in(db
-										.select(PROPERTY.PROPERTYID)
-										.from(PROPERTY)
-										.join(TAGINSTANCE)
-											.on(TAGINSTANCE.TAGINSTANCEID
-													.eq(PROPERTY.TAGINSTANCEID))
-											.and(TAGINSTANCE.UUID.eq(tagIntanceUUIDbin)))),
-								// delete properties 
-								db
-								.delete(PROPERTY)
-								.where(PROPERTY.TAGINSTANCEID.eq(db
-										.select(TAGINSTANCE.TAGINSTANCEID)
-										.from(TAGINSTANCE)
-										.where(TAGINSTANCE.UUID.eq(tagIntanceUUIDbin)))))
-							.execute();
-						}
-						else {
-							db.batch(
-								// delete property values of properties which are no longer present
-								db
-								.delete(PROPERTYVALUE)
-								.where(PROPERTYVALUE.PROPERTYID
-									.in(db
-										.select(PROPERTY.PROPERTYID)
-										.from(PROPERTY)
-										.join(TAGINSTANCE)
-											.on(TAGINSTANCE.TAGINSTANCEID
-													.eq(PROPERTY.TAGINSTANCEID))
-											.and(TAGINSTANCE.UUID.eq(tagIntanceUUIDbin))
-										.where(PROPERTY.PROPERTYDEFINITIONID
-												.notIn(relevantUserDefPropertyDefIds)))),
-								// delete properties which are no longer present
-								db
-								.delete(PROPERTY)
-								.where(PROPERTY.TAGINSTANCEID.eq(db
-										.select(TAGINSTANCE.TAGINSTANCEID)
-										.from(TAGINSTANCE)
-										.where(TAGINSTANCE.UUID.eq(tagIntanceUUIDbin))))
-								.and(PROPERTY.PROPERTYDEFINITIONID.notIn(relevantUserDefPropertyDefIds)))
-							.execute();
-
-						}
-						// addition of new properties with default values is not 
-						// represented on the database side
-						
+					byte[] tagIntanceUUIDbin = 
+							idGenerator.catmaIDToUUIDBytes(ti.getUuid()); 
+					
+					if (relevantUserDefPropertyDefIds.isEmpty()) { // no restriction
+						db.batch(
+							// delete property values of properties
+							db
+							.delete(PROPERTYVALUE)
+							.where(PROPERTYVALUE.PROPERTYID
+								.in(db
+									.select(PROPERTY.PROPERTYID)
+									.from(PROPERTY)
+									.join(TAGINSTANCE)
+										.on(TAGINSTANCE.TAGINSTANCEID
+												.eq(PROPERTY.TAGINSTANCEID))
+										.and(TAGINSTANCE.UUID.eq(tagIntanceUUIDbin)))),
+							// delete properties 
+							db
+							.delete(PROPERTY)
+							.where(PROPERTY.TAGINSTANCEID.eq(db
+									.select(TAGINSTANCE.TAGINSTANCEID)
+									.from(TAGINSTANCE)
+									.where(TAGINSTANCE.UUID.eq(tagIntanceUUIDbin)))))
+						.execute();
 					}
+					else {
+						db.batch(
+							// delete property values of properties which are no longer present
+							db
+							.delete(PROPERTYVALUE)
+							.where(PROPERTYVALUE.PROPERTYID
+								.in(db
+									.select(PROPERTY.PROPERTYID)
+									.from(PROPERTY)
+									.join(TAGINSTANCE)
+										.on(TAGINSTANCE.TAGINSTANCEID
+												.eq(PROPERTY.TAGINSTANCEID))
+										.and(TAGINSTANCE.UUID.eq(tagIntanceUUIDbin))
+									.where(PROPERTY.PROPERTYDEFINITIONID
+											.notIn(relevantUserDefPropertyDefIds)))),
+							// delete properties which are no longer present
+							db
+							.delete(PROPERTY)
+							.where(PROPERTY.TAGINSTANCEID.eq(db
+									.select(TAGINSTANCE.TAGINSTANCEID)
+									.from(TAGINSTANCE)
+									.where(TAGINSTANCE.UUID.eq(tagIntanceUUIDbin))))
+							.and(PROPERTY.PROPERTYDEFINITIONID.notIn(relevantUserDefPropertyDefIds)))
+						.execute();
+
+					}
+					// addition of new properties with default values is not 
+					// represented on the database side
+					
 				}
 				
 				final TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog = 
@@ -1092,7 +1091,14 @@ class UserMarkupCollectionHandler {
 			for (Integer userMarkupCollectionId : relevantUserMarkupCollectionIds) {
 				getUserMarkupCollectionAccessMode(db, userMarkupCollectionId, true);
 			}
-				
+			
+			List<Integer> relevantTagInstanceIDs = db
+			.select(TAGINSTANCE.TAGINSTANCEID)
+			.from(TAGINSTANCE)
+			.where(TAGINSTANCE.UUID.in(relevantTagInstanceUUIDs))
+			.fetch()
+			.map(new IDFieldToIntegerMapper(TAGINSTANCE.TAGINSTANCEID));
+			
 			db.beginTransaction();
 
 			db.batch(
@@ -1102,26 +1108,16 @@ class UserMarkupCollectionHandler {
 					db
 					.select(PROPERTY.PROPERTYID)
 					.from(PROPERTY)
-					.join(TAGINSTANCE)
-						.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
-						.and(TAGINSTANCE.UUID.in(relevantTagInstanceUUIDs)))),
+					.where(PROPERTY.TAGINSTANCEID.in(relevantTagInstanceIDs)))),
 				db
 				.delete(PROPERTY)
-				.where(PROPERTY.TAGINSTANCEID.in(
-					db
-					.select(TAGINSTANCE.TAGINSTANCEID)
-					.from(TAGINSTANCE)
-					.where(TAGINSTANCE.UUID.in(relevantTagInstanceUUIDs)))),
+				.where(PROPERTY.TAGINSTANCEID.in(relevantTagInstanceIDs)),
 				db
 				.delete(TAGREFERENCE)
-				.where(TAGREFERENCE.TAGINSTANCEID.in(
-					db
-					.select(TAGINSTANCE.TAGINSTANCEID)
-					.from(TAGINSTANCE)
-					.where(TAGINSTANCE.UUID.in(relevantTagInstanceUUIDs)))),
+				.where(TAGREFERENCE.TAGINSTANCEID.in(relevantTagInstanceIDs)),
 				db
 				.delete(TAGINSTANCE)
-				.where(TAGINSTANCE.UUID.in(relevantTagInstanceUUIDs)))
+				.where(TAGINSTANCE.TAGINSTANCEID.in(relevantTagInstanceIDs)))
 			.execute();
 			
 			dbRepository.getIndexer().removeTagReferences(tagReferences);
@@ -1140,7 +1136,7 @@ class UserMarkupCollectionHandler {
 		}
 	}
 
-	public void update(
+	void update(
 			final UserMarkupCollectionReference userMarkupCollectionReference, 
 			final ContentInfoSet contentInfoSet) {
 		
