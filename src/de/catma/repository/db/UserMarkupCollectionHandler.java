@@ -880,7 +880,7 @@ class UserMarkupCollectionHandler {
 
 		try {
 			
-			db.beginTransaction();
+//			db.beginTransaction();
 			for (final UserMarkupCollection userMarkupCollection : 
 				userMarkupCollections) {
 				
@@ -1018,7 +1018,7 @@ class UserMarkupCollectionHandler {
 					// represented on the database side
 					
 				}
-				
+
 				final TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog = 
 						dbRepository.getDbTagLibraryHandler().updateTagsetDefinition(
 								db, tagLibrary,
@@ -1039,7 +1039,7 @@ class UserMarkupCollectionHandler {
 				}
 			}
 			
-			db.commitTransaction();
+//			db.commitTransaction();
 			db.close();
 			
 			for (Callable<Void> reindexJob : reindexJobs) {
