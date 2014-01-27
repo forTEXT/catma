@@ -759,7 +759,8 @@ public class DBRepository implements IndexedRepository {
 				Record record = db
 				.select(USER_CORPUS.USER_CORPUSID)
 				.from(USER_CORPUS)
-				.where(USER_CORPUS.USERID.eq(targetUserId))
+				.where(USER_CORPUS.USERID.eq(targetUserId)
+					.and(USER_CORPUS.CORPUSID.eq(corpusId)))
 				.fetchOne();
 				
 				Integer userCorpusId = null;
