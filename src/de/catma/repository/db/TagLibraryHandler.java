@@ -395,34 +395,39 @@ class TagLibraryHandler {
 						tagsetDefinitionId);
 			}
 			
-			// maintain tagdef hierarchy
-
-			de.catma.repository.db.jooqgen.catmarepository.tables.Tagdefinition td1 = 
-					TAGDEFINITION.as("td1"); 
-			de.catma.repository.db.jooqgen.catmarepository.tables.Tagdefinition td2 = 
-					TAGDEFINITION.as("td2");
-			db
-			.update(td1
-			.join(td2)
-				.on(td2.UUID.eq(td1.PARENTUUID))
-				.and(td2.TAGSETDEFINITIONID.eq(tagsetDefinitionId)))
-			.set(td1.PARENTID, td2.TAGDEFINITIONID)
-			.where(td1.PARENTID.isNull())
-			.and(td1.PARENTUUID.isNotNull())
-			.and(td1.TAGSETDEFINITIONID.eq(tagsetDefinitionId))
-			.execute();
-	
-			for (TagDefinition tagDefinition : tagsetDefinition) {
-				if (!tagDefinition.getParentUuid().isEmpty()) {
-					TagDefinition parentTagDef = 
-						tagsetDefinition.getTagDefinition(
-								tagDefinition.getParentUuid());
-					tagDefinition.setParentId(parentTagDef.getId());
-				}
-			}
+			maintainTagDefinitionHierarchy(db, tagsetDefinition);
 		}
 	}
 
+	private void maintainTagDefinitionHierarchy(DSLContext db, TagsetDefinition tagsetDefinition) {
+		// maintain tagdef hierarchy
+
+		int tagsetDefinitionId = tagsetDefinition.getId();
+		
+		de.catma.repository.db.jooqgen.catmarepository.tables.Tagdefinition td1 = 
+				TAGDEFINITION.as("td1"); 
+		de.catma.repository.db.jooqgen.catmarepository.tables.Tagdefinition td2 = 
+				TAGDEFINITION.as("td2");
+		db
+		.update(td1
+		.join(td2)
+			.on(td2.UUID.eq(td1.PARENTUUID))
+			.and(td2.TAGSETDEFINITIONID.eq(tagsetDefinitionId)))
+		.set(td1.PARENTID, td2.TAGDEFINITIONID)
+		.where(td1.PARENTID.isNull())
+		.and(td1.PARENTUUID.isNotNull())
+		.and(td1.TAGSETDEFINITIONID.eq(tagsetDefinitionId))
+		.execute();
+
+		for (TagDefinition tagDefinition : tagsetDefinition) {
+			if (!tagDefinition.getParentUuid().isEmpty()) {
+				TagDefinition parentTagDef = 
+					tagsetDefinition.getTagDefinition(
+							tagDefinition.getParentUuid());
+				tagDefinition.setParentId(parentTagDef.getId());
+			}
+		}
+	}
 	private void createPossibleValue(DSLContext db, String value,
 			Integer propertyDefinitionId) {
 		db
@@ -1071,6 +1076,8 @@ class TagLibraryHandler {
 				updateDeepTagDefinition(db, tagDefinition, tagsetDefinitionUpdateLog);
 			}
 		}
+		
+		maintainTagDefinitionHierarchy(db, tagsetDefinition);
 		
 		List<String> oldTagDefUUIDs = db
 		.select(TAGDEFINITION.UUID)
