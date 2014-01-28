@@ -28,6 +28,7 @@ import org.vaadin.dialogs.ConfirmDialog;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
+import com.vaadin.event.ItemClickEvent;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.Resource;
 import com.vaadin.ui.Button;
@@ -52,7 +53,7 @@ public class TagInstanceTree extends HorizontalLayout {
 	
 	static interface TagIntanceActionListener {
 		public void removeTagInstances(List<String> tagInstanceIDs);
-		public void updateProperty(TagInstance tagInstance, Property property);
+		public void updateProperty(TagInstance tagInstance, Property property);		
 	}
 	
 	private static enum TagInstanceTreePropertyName {
@@ -77,7 +78,7 @@ public class TagInstanceTree extends HorizontalLayout {
 	}
 
 	private void initActions() {
-
+		
 		btRemoveTagInstance.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -165,7 +166,18 @@ public class TagInstanceTree extends HorizontalLayout {
 				}	
 			}
 		});
-	}
+		
+		tagInstanceTree.addListener(new ItemClickEvent.ItemClickListener() {
+			
+			public void itemClick(ItemClickEvent event) {
+				
+				if (event.isDoubleClick()){
+					btEditPropertyValues.click();
+				}				
+			}
+		});
+
+	}	
 
 	private Property getProperty(Set<?> selection) {
 		if (selection.iterator().hasNext()) {
@@ -339,6 +351,8 @@ public class TagInstanceTree extends HorizontalLayout {
 		tagInstanceTree.sort(
 			new Object[] {TagInstanceTreePropertyName.caption}, new boolean[] {true});
 	}
+	
+	
 
 	public List<String> getTagInstanceIDs(Set<TagDefinition> excludeFilter) {
 		ArrayList<String> idList = new ArrayList<String>();
