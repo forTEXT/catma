@@ -20,8 +20,8 @@ package de.catma.ui.repository;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collections;
 
@@ -39,8 +39,6 @@ import com.vaadin.event.Transferable;
 import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
-import com.vaadin.terminal.DownloadStream;
-import com.vaadin.terminal.FileResource;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -336,40 +334,17 @@ public class CorpusPanel extends VerticalLayout {
 	
 	private void handleExportCorpusRequest(Corpus selectedValue) {
 		final CorpusExporter corpusExporter = new CorpusExporter(repository);
-		ByteArrayOutputStream corpusOut = new ByteArrayOutputStream();
+		final String name = corpusExporter.cleanupName(selectedValue.toString());
+		final String fileName = name + corpusExporter.getDate() + ".tar.gz";
 		try {
-			final String name = corpusExporter.cleanupName(selectedValue.toString());
+			FileOutputStream corpusOut = new FileOutputStream(
+				new File(((CatmaApplication)getApplication()).getTempDirectory() 
+						+ "/" +fileName));
 			
 			corpusExporter.export(
 				name,
 				Collections.singletonList(selectedValue), corpusOut);
 			
-			final ByteArrayInputStream corpusDownloadStream = 
-					new ByteArrayInputStream(corpusOut.toByteArray());
-
-			getWindow().open(new FileResource(null, getApplication()) {
-				public com.vaadin.terminal.DownloadStream getStream() {
-					DownloadStream ds = 
-						new DownloadStream(
-							corpusDownloadStream, 
-							getMIMEType(), getFilename());
-					ds.setParameter(
-						"Content-Disposition", 
-						"attachment; filename="
-		                    + getFilename());
-		            ds.setCacheTime(0);
-		            return ds;
-				};
-				public String getMIMEType() {
-					return "application/xml";
-				};
-				
-				public String getFilename() {
-					return name + corpusExporter.getDate() + ".tar.gz";
-				};
-			},
-			"_blank");
-
 		}
 		catch (IOException e) {
 			((CatmaApplication)getApplication()).showAndLogError(
