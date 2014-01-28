@@ -20,7 +20,10 @@ package de.catma.ui.repository;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Collections;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
@@ -36,6 +39,8 @@ import com.vaadin.event.Transferable;
 import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
+import com.vaadin.terminal.DownloadStream;
+import com.vaadin.terminal.FileResource;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -54,6 +59,7 @@ import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.CatmaApplication;
 import de.catma.document.Corpus;
+import de.catma.document.corpus.CorpusExporter;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.UnknownUserException;
 import de.catma.document.source.SourceDocument;
@@ -66,6 +72,7 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.ui.repository.sharing.SharingOptions;
 import de.catma.ui.repository.sharing.SharingOptionsFieldFactory;
+import de.catma.user.Role;
 
 public class CorpusPanel extends VerticalLayout {
 	private static class CorpusProperty extends AbstractProperty {
@@ -116,6 +123,8 @@ public class CorpusPanel extends VerticalLayout {
 	private HierarchicalContainer corporaContainer;
 
 	private MenuItem miShareCorpus;
+
+	private MenuItem miExportCorpus;
 	
 	public CorpusPanel(
 			Repository repository, ValueChangeListener valueChangeListener) {
@@ -199,6 +208,7 @@ public class CorpusPanel extends VerticalLayout {
 				miRemoveCorpus.setEnabled(corpusModificationButtonsEnabled);
 				miRenameCorpus.setEnabled(corpusModificationButtonsEnabled);
 				miShareCorpus.setEnabled(corpusModificationButtonsEnabled);
+				miExportCorpus.setEnabled(corpusModificationButtonsEnabled);
 			}
 		});
 		
@@ -309,8 +319,64 @@ public class CorpusPanel extends VerticalLayout {
 
 		});
 		miShareCorpus.setEnabled(false);
+		
+		miExportCorpus = miMoreCorpusActions.addItem("Export Corpus", new Command() {
+			public void menuSelected(MenuItem selectedItem) {
+				Object selectedValue = corporaTree.getValue();
+				if ((selectedValue != null) 
+						&& !selectedValue.equals(allDocuments)) {
+					handleExportCorpusRequest((Corpus)selectedValue);
+				}
+			}
+		});
+		
+		miExportCorpus.setVisible(repository.getUser().getRole().equals(Role.ADMIN));
+		miExportCorpus.setEnabled(false);
 	}
 	
+	private void handleExportCorpusRequest(Corpus selectedValue) {
+		final CorpusExporter corpusExporter = new CorpusExporter(repository);
+		ByteArrayOutputStream corpusOut = new ByteArrayOutputStream();
+		try {
+			final String name = corpusExporter.cleanupName(selectedValue.toString());
+			
+			corpusExporter.export(
+				name,
+				Collections.singletonList(selectedValue), corpusOut);
+			
+			final ByteArrayInputStream corpusDownloadStream = 
+					new ByteArrayInputStream(corpusOut.toByteArray());
+
+			getWindow().open(new FileResource(null, getApplication()) {
+				public com.vaadin.terminal.DownloadStream getStream() {
+					DownloadStream ds = 
+						new DownloadStream(
+							corpusDownloadStream, 
+							getMIMEType(), getFilename());
+					ds.setParameter(
+						"Content-Disposition", 
+						"attachment; filename="
+		                    + getFilename());
+		            ds.setCacheTime(0);
+		            return ds;
+				};
+				public String getMIMEType() {
+					return "application/xml";
+				};
+				
+				public String getFilename() {
+					return name + corpusExporter.getDate() + ".tar.gz";
+				};
+			},
+			"_blank");
+
+		}
+		catch (IOException e) {
+			((CatmaApplication)getApplication()).showAndLogError(
+					"Error exporting Corpus!", e);
+		}
+	}
+
 	protected void handleShareCorpusRequest(final Corpus corpus) {
 		SharingOptions sharingOptions = new SharingOptions();
 		
