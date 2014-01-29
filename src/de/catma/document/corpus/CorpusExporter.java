@@ -72,7 +72,7 @@ public class CorpusExporter {
 					taOut.closeArchiveEntry();
 					
 					for (UserMarkupCollectionReference umcRef 
-							: sd.getUserMarkupCollectionRefs()) {
+							: corpus.getUserMarkupCollectionRefs(sd)) {
 						
 						UserMarkupCollection umc = 
 								repo.getUserMarkupCollection(umcRef);
