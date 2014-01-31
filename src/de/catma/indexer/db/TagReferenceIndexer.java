@@ -456,23 +456,44 @@ public class TagReferenceIndexer {
 				Collection<byte[]> deletedTagDefinitionUUIDBytes = 
 					Collections2.transform(
 							deletedTagDefinitionUUIDs, new UUIDtoByteMapper());
+				
+				Collection<byte[]> relevantTagInstanceIDs = 
+				db
+				.select(TAGREFERENCE.TAGINSTANCEID)
+				.from(TAGREFERENCE)
+				.where(TAGREFERENCE.TAGDEFINITIONID
+						.in(deletedTagDefinitionUUIDBytes))
+				.and(TAGREFERENCE.USERMARKUPCOLLECTIONID
+						.eq(userMarkupCollection.getId()))
+				.fetch()
+				.map(new FieldToValueMapper<byte[]>(TAGREFERENCE.TAGINSTANCEID));
+				
 				db.batch(
 					db
 					.delete(PROPERTY)
-					.where(PROPERTY.TAGINSTANCEID.in(db
-						.select(TAGREFERENCE.TAGINSTANCEID)
-						.from(TAGREFERENCE)
-						.where(TAGREFERENCE.TAGDEFINITIONID
-								.in(deletedTagDefinitionUUIDBytes))
-						.and(TAGREFERENCE.USERMARKUPCOLLECTIONID
-								.eq(userMarkupCollection.getId())))),
+					.where(PROPERTY.TAGINSTANCEID.in(relevantTagInstanceIDs)),
 					db
 					.delete(TAGREFERENCE)
-					.where(TAGREFERENCE.TAGDEFINITIONID
-							.in(deletedTagDefinitionUUIDBytes))
-					.and(TAGREFERENCE.USERMARKUPCOLLECTIONID
-							.eq(userMarkupCollection.getId())))
+					.where(TAGREFERENCE.TAGINSTANCEID.in(relevantTagInstanceIDs)))
 				.execute();
+//				
+//				db.batch(
+//					db
+//					.delete(PROPERTY)
+//					.where(PROPERTY.TAGINSTANCEID.in(db
+//						.select(TAGREFERENCE.TAGINSTANCEID)
+//						.from(TAGREFERENCE)
+//						.where(TAGREFERENCE.TAGDEFINITIONID
+//								.in(deletedTagDefinitionUUIDBytes))
+//						.and(TAGREFERENCE.USERMARKUPCOLLECTIONID
+//								.eq(userMarkupCollection.getId())))),
+//					db
+//					.delete(TAGREFERENCE)
+//					.where(TAGREFERENCE.TAGDEFINITIONID
+//							.in(deletedTagDefinitionUUIDBytes))
+//					.and(TAGREFERENCE.USERMARKUPCOLLECTIONID
+//							.eq(userMarkupCollection.getId())))
+//				.execute();
 			}
 			
 			db.commitTransaction();
