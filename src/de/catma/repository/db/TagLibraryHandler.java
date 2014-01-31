@@ -560,6 +560,14 @@ class TagLibraryHandler {
 				tagDefinition, 
 				tagsetDefinition.getId());
 						
+			db
+			.update(TAGSETDEFINITION)
+			.set(TAGSETDEFINITION.VERSION, 
+				SqlTimestamp.from(tagsetDefinition.getVersion().getDate()))
+			.where(TAGSETDEFINITION.TAGSETDEFINITIONID
+					.eq(tagsetDefinition.getId()))
+			.execute();
+
 			db.commitTransaction();
 		}
 		catch (Exception e) {
@@ -926,7 +934,9 @@ class TagLibraryHandler {
 		}
 	}
 	
-	void removeTagDefinition(final TagDefinition tagDefinition) throws IOException {
+	void removeTagDefinition(
+		final TagsetDefinition tagsetDefinition, 
+		final TagDefinition tagDefinition) throws IOException {
 		
 		
 		TransactionalDSLContext db = 
@@ -1010,7 +1020,13 @@ class TagLibraryHandler {
 				.where(TAGDEFINITION.TAGDEFINITIONID.in(toBeDeletedIds)),
 				db
 				.delete(TAGDEFINITION)
-				.where(TAGDEFINITION.TAGDEFINITIONID.in(toBeDeletedIds)))
+				.where(TAGDEFINITION.TAGDEFINITIONID.in(toBeDeletedIds)),
+				db
+				.update(TAGSETDEFINITION)
+				.set(TAGSETDEFINITION.VERSION, 
+					SqlTimestamp.from(tagsetDefinition.getVersion().getDate()))
+				.where(TAGSETDEFINITION.TAGSETDEFINITIONID
+						.eq(tagsetDefinition.getId())))
 			.execute();
 			
 			db.commitTransaction();

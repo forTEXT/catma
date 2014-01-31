@@ -230,7 +230,8 @@ public class DBRepository implements IndexedRepository {
 								(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
 						execShield.execute(new DBOperation<Void>() {
 							public Void execute() throws Exception {
-								dbTagLibraryHandler.removeTagDefinition(args.getSecond());
+								dbTagLibraryHandler.removeTagDefinition(
+										args.getFirst(), args.getSecond());
 								return null;
 							}
 						});							
