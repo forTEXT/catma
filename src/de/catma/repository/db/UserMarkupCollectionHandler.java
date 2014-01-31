@@ -18,17 +18,14 @@
  */
 package de.catma.repository.db;
 
-import static de.catma.repository.db.jooqgen.catmarepository.Tables.CORPUS_USERMARKUPCOLLECTION;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTY;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTYDEFINITION;
-import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTYDEF_POSSIBLEVALUE;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTYVALUE;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.SOURCEDOCUMENT;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGDEFINITION;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGINSTANCE;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGLIBRARY;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGREFERENCE;
-import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGSETDEFINITION;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.USERMARKUPCOLLECTION;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.USER_USERMARKUPCOLLECTION;
 
@@ -43,7 +40,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -873,7 +869,6 @@ class UserMarkupCollectionHandler {
 	void updateTagsetDefinitionInUserMarkupCollections(
 			List<UserMarkupCollection> userMarkupCollections,
 			final TagsetDefinition tagsetDefinition) throws IOException {
-		List<Callable<Void>> reindexJobs = new ArrayList<Callable<Void>>();
 		
 		TransactionalDSLContext db = 
 				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
@@ -940,10 +935,10 @@ class UserMarkupCollectionHandler {
 								}});
 					relevantUserDefPropertyIdList.addAll(relevantUserDefPropertyDefIds);
 					
-					byte[] tagIntanceUUIDbin = 
+					byte[] tagInstanceUUIDbin = 
 							idGenerator.catmaIDToUUIDBytes(ti.getUuid()); 
 					
-					tagInstanceUUIDbinList.add(tagIntanceUUIDbin);
+					tagInstanceUUIDbinList.add(tagInstanceUUIDbin);
 				}
 					
 				db.beginTransaction();
