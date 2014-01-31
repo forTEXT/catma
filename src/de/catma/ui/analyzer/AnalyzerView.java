@@ -89,6 +89,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private Button btExecSearch;
 	private Button btQueryBuilder;
 	private Button btWordList;
+	private Button btNewTab;
 	private HierarchicalContainer documentsContainer;
 	private Tree documentsTree;
 	private TabSheet resultTabSheet;
@@ -107,6 +108,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private IndexInfoSet indexInfoSet;
 	private boolean init = false;
 	private Label helpLabel;
+	private Label helpLabel2;
 	
 	public AnalyzerView(
 			Corpus corpus, IndexedRepository repository, 
@@ -137,8 +139,10 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 					"ui/resources/icon-help.gif", 
 					getApplication()));
 		}
+		
 	}
-
+	
+	
 	private void initListeners() {
 		//FIXME: the view doesn't get closed when "All documents" is analyzed and the repo gets closed
 		//FIXME: update result panels to prevent stale results
@@ -310,6 +314,17 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				showQueryBuilder();
 			}
 		});
+		btNewTab.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				openNewTab();
+			}
+		});
+		
+	}
+	//opens new analyzer tab with same constraints
+	private void openNewTab(){
+		((AnalyzerProvider)getApplication()).analyze(corpus, repository);
 	}
 
 	private void showQueryBuilder() {
@@ -423,6 +438,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				}
 			}
 		});
+		
 	}
 	
 	private List<String> getSourceDocumentIDs(
@@ -460,7 +476,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		Component documentsPanel = createDocumentsPanel();
 
 		HorizontalSplitPanel topPanel = new HorizontalSplitPanel();
-		topPanel.setSplitPosition(70);
+		topPanel.setSplitPosition(60);
 		topPanel.addComponent(searchAndConveniencePanel);
 		topPanel.addComponent(documentsPanel);
 		addComponent(topPanel);
@@ -499,7 +515,11 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	}
 
 	private Component createDocumentsPanel() {
-		Panel documentsPanel = new Panel();
+
+        HorizontalLayout documentsPanel = new HorizontalLayout();
+        documentsPanel.setSpacing(true);
+        documentsPanel.setMargin(true, true, false, true);
+        documentsPanel.setWidth("100%");
 		
 		documentsContainer = new HierarchicalContainer();
 		documentsTree = new Tree();
@@ -517,6 +537,11 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		}
 		
 		documentsPanel.addComponent(documentsTree);
+		documentsPanel.setExpandRatio(documentsTree, 1.0f);
+		btNewTab = new Button("+");
+		btNewTab.setDescription("opens a new tab with same constraints.");
+		documentsPanel.addComponent(btNewTab);
+		documentsPanel.setComponentAlignment(btNewTab, Alignment.TOP_RIGHT);
 		return documentsPanel;
 	}
 
