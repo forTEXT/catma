@@ -1130,7 +1130,7 @@ class TagLibraryHandler {
 	private void updateDeepTagDefinition(
 			DSLContext db, TagDefinition tagDefinition, 
 			TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog) {
-
+		
 		boolean propDefChanged = false;
 		
 		for (PropertyDefinition pd : tagDefinition.getSystemPropertyDefinitions()) {
@@ -1166,7 +1166,9 @@ class TagLibraryHandler {
 		.set(TAGDEFINITION.NAME, tagDefinition.getName())
 		.set(TAGDEFINITION.VERSION, SqlTimestamp.from(tagDefinition.getVersion().getDate()))
 		.where(TAGDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId()))
-		.and(TAGDEFINITION.NAME.ne(tagDefinition.getName()).or(DSL.val(propDefChanged).eq(true)))
+		.and(TAGDEFINITION.NAME.ne(tagDefinition.getName())
+				.or(DSL.val(propDefChanged).eq(true))
+				.or(TAGDEFINITION.VERSION.ne(SqlTimestamp.from(tagDefinition.getVersion().getDate()))))
 		.execute();
 		
 		if (tagDefUpdated>0) {
