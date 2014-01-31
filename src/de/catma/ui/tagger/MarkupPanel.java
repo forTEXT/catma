@@ -282,8 +282,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		if (init) {
 			
 			application = getApplication();
-			//TODO: maybe accept drags only from the TaggerView table, drag only tagset defs
-			//TODO: allow tagsetdefs removal, remove from the editable set of the coll panel
+
 			initComponents( 
 					tagDefinitionSelectionListener,
 					tagDefinitionsRemovedListener);

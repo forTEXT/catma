@@ -455,7 +455,7 @@ public class TagReferenceIndexer {
 			if (!deletedTagDefinitionUUIDs.isEmpty()) {
 				Collection<byte[]> deletedTagDefinitionUUIDBytes = 
 					Collections2.transform(
-							deletedPropertyDefinitionUUIDs, new UUIDtoByteMapper());
+							deletedTagDefinitionUUIDs, new UUIDtoByteMapper());
 				db.batch(
 					db
 					.delete(PROPERTY)
