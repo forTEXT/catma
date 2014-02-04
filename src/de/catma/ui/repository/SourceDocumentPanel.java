@@ -1237,13 +1237,18 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	
 	private void handleUserMarkupCollectionCreation() {
 		Object value = documentsTree.getValue();
-		if ((value == null) || !(value instanceof SourceDocument)) {
+		if (value == null) {
 			 getWindow().showNotification(
                     "Information",
                     "Please select a Source Document first",
                     Notification.TYPE_TRAY_NOTIFICATION);
 		}
-		else{
+		else {
+			 while (!(value instanceof SourceDocument)){
+				 value = documentsTree.getParent(value);
+			 }
+			
+			
 			final SourceDocument sourceDocument = (SourceDocument)value;
 			final String userMarkupCollectionNameProperty = "name";
 			
