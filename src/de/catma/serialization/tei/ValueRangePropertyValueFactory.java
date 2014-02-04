@@ -52,7 +52,7 @@ public class ValueRangePropertyValueFactory implements PropertyValueFactory {
 					value.add(new NumericPropertyValueFactory(vColl).getValue());
 				}
 				else if (curChild.is(TeiElementName.string)) {
-					value.add(new StringPropertyValueFactory(vColl).getValue());
+					value.add(new StringPropertyValueFactory(vColl, i).getValue());
 				}
 				else {
 					throw new UnknownElementException(curChild.getLocalName() + " is not supported!");

@@ -23,6 +23,7 @@ import static de.catma.repository.db.jooqgen.catmaindex.Tables.TAGREFERENCE;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -374,11 +375,31 @@ public class TagReferenceIndexer {
 				updateTagDefBatch.execute();
 			}
 			
-			// reindex updated TagDef Property names and values (the latter only for system props!)
 			
 			//tagDefUuid->Set<PropertyDefUuid>
 			Map<String, Set<String>> updatedPropertyDefinitionUUIDs = 
 					tagsetDefinitionUpdateLog.getUpdatedPropertyDefinitionUuids();
+
+			Set<String> deletedPropertyDefinitionUUIDs =
+					tagsetDefinitionUpdateLog.getDeletedPropertyDefinitionUuids();
+			
+			Collection<byte[]> allTagInstanceIDs = Collections.emptyList();
+			
+			// preselect all relevant TagInstances
+			if (!updatedPropertyDefinitionUUIDs.isEmpty() || 
+					!deletedPropertyDefinitionUUIDs.isEmpty()) {
+			
+				allTagInstanceIDs = db
+					.select(TAGREFERENCE.TAGINSTANCEID)
+					.from(TAGREFERENCE)
+					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID
+						.eq(userMarkupCollection.getId()))
+					.fetch()
+					.map(new FieldToValueMapper<byte[]>(TAGREFERENCE.TAGINSTANCEID));
+			}
+			
+			// reindex updated TagDef Property names and values (the latter only for system props!)
+			
 			if (!updatedPropertyDefinitionUUIDs.isEmpty()) {
 
 				// reindexing of system properties includes only values because
@@ -387,10 +408,7 @@ public class TagReferenceIndexer {
 				.update(PROPERTY)
 				.set(PROPERTY.VALUE, (String)null)
 				.where(PROPERTY.PROPERTYDEFINITIONID.eq((byte[])null))
-				.and(PROPERTY.TAGINSTANCEID.in(db
-					.select(TAGREFERENCE.TAGINSTANCEID)
-					.from(TAGREFERENCE)
-					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq((String)null)))));
+				.and(PROPERTY.TAGINSTANCEID.in(allTagInstanceIDs)));
 				
 				// reindexing of user properties includes only names because
 				// values get (re-)indexed indiviually upon the taginstance 
@@ -400,10 +418,7 @@ public class TagReferenceIndexer {
 				.update(PROPERTY)
 				.set(PROPERTY.NAME, (String)null)
 				.where(PROPERTY.PROPERTYDEFINITIONID.eq((byte[])null))
-				.and(PROPERTY.TAGINSTANCEID.in(db
-					.select(TAGREFERENCE.TAGINSTANCEID)
-					.from(TAGREFERENCE)
-					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq((String)null)))));
+				.and(PROPERTY.TAGINSTANCEID.in(allTagInstanceIDs)));
 			
 				for (Map.Entry<String, Set<String>> entry : updatedPropertyDefinitionUUIDs.entrySet()) {
 					String tagDefUuid = entry.getKey();
@@ -413,14 +428,12 @@ public class TagReferenceIndexer {
 						if (propDef.isSystemProperty()) {
 							updateSystemPropertyBatch.bind(
 								propDef.getFirstValue(),
-								idGenerator.catmaIDToUUIDBytes(propDefUuid),
-								userMarkupCollection.getId());
+								idGenerator.catmaIDToUUIDBytes(propDefUuid));
 						}
 						else {
 							updateUserPropertyBatch.bind(
 									propDef.getName(),
-									idGenerator.catmaIDToUUIDBytes(propDefUuid),
-									userMarkupCollection.getId());
+									idGenerator.catmaIDToUUIDBytes(propDefUuid));
 						}
 					}
 				}
@@ -431,19 +444,12 @@ public class TagReferenceIndexer {
 					
 			
 			// remove deleted Property Defs 
-			Set<String> deletedPropertyDefinitionUUIDs =
-					tagsetDefinitionUpdateLog.getDeletedPropertyDefinitionUuids();
-			
 			if (!deletedPropertyDefinitionUUIDs.isEmpty()) {
 				db
 				.delete(PROPERTY)
 				.where(PROPERTY.PROPERTYDEFINITIONID.in(
 					Collections2.transform(deletedPropertyDefinitionUUIDs, new UUIDtoByteMapper())))
-				.and(PROPERTY.TAGINSTANCEID.in(db
-					.select(TAGREFERENCE.TAGINSTANCEID)
-					.from(TAGREFERENCE)
-					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID
-							.eq(userMarkupCollection.getId()))))
+				.and(PROPERTY.TAGINSTANCEID.in(allTagInstanceIDs))
 				.execute();
 			}
 			
@@ -476,24 +482,7 @@ public class TagReferenceIndexer {
 					.delete(TAGREFERENCE)
 					.where(TAGREFERENCE.TAGINSTANCEID.in(relevantTagInstanceIDs)))
 				.execute();
-//				
-//				db.batch(
-//					db
-//					.delete(PROPERTY)
-//					.where(PROPERTY.TAGINSTANCEID.in(db
-//						.select(TAGREFERENCE.TAGINSTANCEID)
-//						.from(TAGREFERENCE)
-//						.where(TAGREFERENCE.TAGDEFINITIONID
-//								.in(deletedTagDefinitionUUIDBytes))
-//						.and(TAGREFERENCE.USERMARKUPCOLLECTIONID
-//								.eq(userMarkupCollection.getId())))),
-//					db
-//					.delete(TAGREFERENCE)
-//					.where(TAGREFERENCE.TAGDEFINITIONID
-//							.in(deletedTagDefinitionUUIDBytes))
-//					.and(TAGREFERENCE.USERMARKUPCOLLECTIONID
-//							.eq(userMarkupCollection.getId())))
-//				.execute();
+
 			}
 			
 			db.commitTransaction();
