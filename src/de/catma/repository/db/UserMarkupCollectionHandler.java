@@ -908,7 +908,7 @@ class UserMarkupCollectionHandler {
 					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))));
 					
 				// get list of TagInstances which are no longer present in the umc
-				
+				// to handle deleted TagInstances (see further below)
 				if (!relevantTagInstances.isEmpty()) {
 					selectObsoleteTagInstanceIdsQuery = 
 						selectObsoleteTagInstanceIdsQuery
@@ -920,12 +920,13 @@ class UserMarkupCollectionHandler {
 					.fetch()
 					.map(new IDFieldToIntegerMapper(TAGINSTANCE.TAGINSTANCEID));
 				
+				// collect tagInstanceUUIDs and valid user def prop IDs 
+				// to handle deleted properties (see further below)
 				List<byte[]> tagInstanceUUIDbinList = new ArrayList<byte[]>();
 				Set<Integer> relevantUserDefPropertyIdList = new HashSet<Integer>();
 				
-				// handle deleted Properties
 				for (TagInstance ti : relevantTagInstances) {
-					// get all propertyDef IDs
+					// get all valid propertyDef IDs
 					Collection<Integer> relevantUserDefPropertyDefIds = 
 							Collections2.transform(ti.getUserDefinedProperties(),
 									new Function<Property, Integer>() {
@@ -937,14 +938,14 @@ class UserMarkupCollectionHandler {
 					
 					byte[] tagInstanceUUIDbin = 
 							idGenerator.catmaIDToUUIDBytes(ti.getUuid()); 
-					
+					// remember TagInstance UUID
 					tagInstanceUUIDbinList.add(tagInstanceUUIDbin);
 				}
 					
 				db.beginTransaction();
 
+				// handle deleted TagInstances/TagReferences and their content
 				if (!obsoleteTagInstanceIds.isEmpty()) {
-					// handle deleted TagInstances/TagReferences and their content
 					db.batch(
 						// delete obsolete tag references
 						db
@@ -970,78 +971,79 @@ class UserMarkupCollectionHandler {
 					.execute();
 				}
 
+				// handle deleted properties
 				if (relevantUserDefPropertyIdList.isEmpty()) { // no restriction->delete all user def properties+values
-					db.batch(
-						// delete property values of properties
-						db
-						.delete(PROPERTYVALUE)
-						.where(PROPERTYVALUE.PROPERTYID
-							.in(db
-								.select(PROPERTY.PROPERTYID)
-								.from(PROPERTY)
-								.join(PROPERTYDEFINITION)
-									.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID
-											.eq(PROPERTY.PROPERTYDEFINITIONID))
-									.and(PROPERTYDEFINITION.SYSTEMPROPERTY.eq((byte)0))
-								.join(TAGINSTANCE)
-									.on(TAGINSTANCE.TAGINSTANCEID
-											.eq(PROPERTY.TAGINSTANCEID))
-									.and(TAGINSTANCE.UUID.in(tagInstanceUUIDbinList)))),
-						// delete properties 
-						db
-						.delete(PROPERTY)
-						.where(PROPERTY.TAGINSTANCEID.in(db
-								.select(TAGINSTANCE.TAGINSTANCEID)
-								.from(TAGINSTANCE)
-								.where(TAGINSTANCE.UUID.in(tagInstanceUUIDbinList))))
-						.and(DSL.val((byte)0).eq(db
-								.select(PROPERTYDEFINITION.SYSTEMPROPERTY)
-								.from(PROPERTYDEFINITION)
-								.where(PROPERTYDEFINITION.PROPERTYDEFINITIONID
-										.eq(PROPERTY.PROPERTYDEFINITIONID))))
-					)
-					.execute();
+					//collect propertyIDs
+					List<Integer> toBeDeletedPropertyIDs = db
+						.select(PROPERTY.PROPERTYID)
+						.from(PROPERTY)
+						.join(PROPERTYDEFINITION)
+							.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID
+									.eq(PROPERTY.PROPERTYDEFINITIONID))
+							.and(PROPERTYDEFINITION.SYSTEMPROPERTY.eq((byte)0))
+						.join(TAGINSTANCE)
+							.on(TAGINSTANCE.TAGINSTANCEID
+									.eq(PROPERTY.TAGINSTANCEID))
+							.and(TAGINSTANCE.UUID.in(tagInstanceUUIDbinList))
+						.fetch()
+						.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
+					
+					if (!toBeDeletedPropertyIDs.isEmpty()) {
+						db.batch(
+							// delete property values of properties
+							db
+							.delete(PROPERTYVALUE)
+							.where(PROPERTYVALUE.PROPERTYID
+								.in(toBeDeletedPropertyIDs)),
+							// delete properties 
+							db
+							.delete(PROPERTY)
+							.where(PROPERTY.PROPERTYID
+								.in(toBeDeletedPropertyIDs))
+						)
+						.execute();
+					}
 				}
-				else {
-					db.batch(
-						// delete property values of properties which are no longer present
-						db
-						.delete(PROPERTYVALUE)
-						.where(PROPERTYVALUE.PROPERTYID
-							.in(db
-								.select(PROPERTY.PROPERTYID)
-								.from(PROPERTY)
-								.join(PROPERTYDEFINITION)
-									.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID
-											.eq(PROPERTY.PROPERTYDEFINITIONID))
-									.and(PROPERTYDEFINITION.SYSTEMPROPERTY.eq((byte)0))
-									.and(PROPERTYDEFINITION.PROPERTYDEFINITIONID
-											.notIn(relevantUserDefPropertyIdList))
-								.join(TAGINSTANCE)
-									.on(TAGINSTANCE.TAGINSTANCEID
-											.eq(PROPERTY.TAGINSTANCEID))
-									.and(TAGINSTANCE.UUID.in(tagInstanceUUIDbinList)))),
-						// delete properties which are no longer present
-						db
-						.delete(PROPERTY)
-						.where(PROPERTY.TAGINSTANCEID.in(db
-								.select(TAGINSTANCE.TAGINSTANCEID)
-								.from(TAGINSTANCE)
-								.where(TAGINSTANCE.UUID.in(tagInstanceUUIDbinList))))
-						.and(PROPERTY.PROPERTYDEFINITIONID.in(db
-								.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
-								.from(PROPERTYDEFINITION)
-								.where(PROPERTYDEFINITION.PROPERTYDEFINITIONID
-										.eq(PROPERTY.PROPERTYDEFINITIONID))
-								.and(PROPERTYDEFINITION.SYSTEMPROPERTY.eq((byte)0))
-								.and(PROPERTYDEFINITION.PROPERTYDEFINITIONID
-										.notIn(relevantUserDefPropertyIdList)))))
-					.execute();
+				else { // delete all properties+values which are no longer relevant
+					//collect propertyIDs
+					List<Integer> toBeDeletedPropertyIDs = db
+						.select(PROPERTY.PROPERTYID)
+						.from(PROPERTY)
+						.join(PROPERTYDEFINITION)
+							.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID
+									.eq(PROPERTY.PROPERTYDEFINITIONID))
+							.and(PROPERTYDEFINITION.SYSTEMPROPERTY.eq((byte)0))
+							.and(PROPERTYDEFINITION.PROPERTYDEFINITIONID
+									.notIn(relevantUserDefPropertyIdList))
+						.join(TAGINSTANCE)
+							.on(TAGINSTANCE.TAGINSTANCEID
+									.eq(PROPERTY.TAGINSTANCEID))
+							.and(TAGINSTANCE.UUID.in(tagInstanceUUIDbinList))
+						.fetch()
+						.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
+	
+					if (!toBeDeletedPropertyIDs.isEmpty()) {
+						db.batch(
+							// delete property values of properties which are no longer present
+							db
+							.delete(PROPERTYVALUE)
+							.where(PROPERTYVALUE.PROPERTYID
+								.in(toBeDeletedPropertyIDs)),
+							// delete properties which are no longer present
+							db
+							.delete(PROPERTY)
+							.where(PROPERTY.PROPERTYID.in(
+									toBeDeletedPropertyIDs))
+						)
+						.execute();
+					}
 
 				}
 				// addition of new properties with default values is not 
-				// represented on the database side
+				// represented within the umc on the database side
+				// only the tag library will be affected (see below)
 					
+				// handle changes in the tag library
 				final TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog = 
 						dbRepository.getDbTagLibraryHandler().updateTagsetDefinition(
 								db, tagLibrary,

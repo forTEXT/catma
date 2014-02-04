@@ -22,6 +22,7 @@ import static de.catma.repository.db.jooqgen.catmaindex.Tables.PROPERTY;
 import static de.catma.repository.db.jooqgen.catmaindex.Tables.TAGREFERENCE;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -48,6 +49,7 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
 import de.catma.repository.db.CatmaDataSourceName;
+import de.catma.repository.db.jooq.BindFactory;
 import de.catma.repository.db.jooq.TransactionalDSLContext;
 import de.catma.repository.db.jooq.UUIDtoByteMapper;
 import de.catma.repository.db.mapper.FieldToValueMapper;
@@ -383,7 +385,7 @@ public class TagReferenceIndexer {
 			Set<String> deletedPropertyDefinitionUUIDs =
 					tagsetDefinitionUpdateLog.getDeletedPropertyDefinitionUuids();
 			
-			Collection<byte[]> allTagInstanceIDs = Collections.emptyList();
+			List<byte[]> allTagInstanceIDs = Collections.emptyList();
 			
 			// preselect all relevant TagInstances
 			if (!updatedPropertyDefinitionUUIDs.isEmpty() || 
@@ -401,7 +403,6 @@ public class TagReferenceIndexer {
 			// reindex updated TagDef Property names and values (the latter only for system props!)
 			
 			if (!updatedPropertyDefinitionUUIDs.isEmpty()) {
-
 				// reindexing of system properties includes only values because
 				// the user cannot change names of system properties
 				BatchBindStep updateSystemPropertyBatch = db.batch(db
@@ -424,16 +425,21 @@ public class TagReferenceIndexer {
 					String tagDefUuid = entry.getKey();
 					TagDefinition tagDef = tagsetDefinition.getTagDefinition(tagDefUuid);
 					for (String propDefUuid : entry.getValue()) {
+						BindFactory bindFactory = new BindFactory(allTagInstanceIDs.size()+2);
 						PropertyDefinition propDef = tagDef.getPropertyDefinition(propDefUuid);
 						if (propDef.isSystemProperty()) {
-							updateSystemPropertyBatch.bind(
-								propDef.getFirstValue(),
-								idGenerator.catmaIDToUUIDBytes(propDefUuid));
+							bindFactory.add(
+									propDef.getFirstValue(),
+									idGenerator.catmaIDToUUIDBytes(propDefUuid));
+							bindFactory.addAll(allTagInstanceIDs);
+							updateSystemPropertyBatch.bind(bindFactory.toArray());
 						}
 						else {
-							updateUserPropertyBatch.bind(
+							bindFactory.add(
 									propDef.getName(),
 									idGenerator.catmaIDToUUIDBytes(propDefUuid));
+							bindFactory.addAll(allTagInstanceIDs);
+							updateUserPropertyBatch.bind(bindFactory.toArray());
 						}
 					}
 				}
