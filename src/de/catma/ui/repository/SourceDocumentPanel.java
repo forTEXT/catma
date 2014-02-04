@@ -443,6 +443,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		documentsTree.addListener(new ItemClickListener() {
 			
 			public void itemClick(ItemClickEvent event) {
+				//FIXME: documentsTree needs to be converted to TreeTable because Tree is buggy with double clicks
 				if (event.isDoubleClick()) {
 					Object item = event.getItemId();
 					handleOpenDocumentRequest(item);
