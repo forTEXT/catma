@@ -602,43 +602,6 @@ class TagLibraryHandler {
 			db.beginTransaction();
 			
 			db.batch(
-//				db
-//				.delete(PROPERTYVALUE)
-//				.where(PROPERTYVALUE.PROPERTYID.in(
-//					db
-//					.select(PROPERTY.PROPERTYID)
-//					.from(PROPERTY)
-//					.join(TAGINSTANCE)
-//						.on(TAGINSTANCE.TAGINSTANCEID
-//								.eq(PROPERTY.TAGINSTANCEID))
-//					.join(TAGDEFINITION)
-//						.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
-//						.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
-//				db
-//				.delete(PROPERTY)
-//				.where(PROPERTY.TAGINSTANCEID.in(
-//					db
-//					.select(TAGINSTANCE.TAGINSTANCEID)
-//					.from(TAGINSTANCE)
-//					.join(TAGDEFINITION)
-//						.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
-//						.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
-//				db
-//				.delete(TAGREFERENCE)
-//				.where(TAGREFERENCE.TAGINSTANCEID.in(
-//					db
-//					.select(TAGINSTANCE.TAGINSTANCEID)
-//					.from(TAGINSTANCE)
-//					.join(TAGDEFINITION)
-//						.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
-//						.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
-//				db
-//				.delete(TAGINSTANCE)
-//				.where(TAGINSTANCE.TAGDEFINITIONID.in(
-//					db
-//					.select(TAGDEFINITION.TAGDEFINITIONID)
-//					.from(TAGDEFINITION)
-//					.where(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
 				db
 				.delete(PROPERTYDEF_POSSIBLEVALUE)
 				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
@@ -970,33 +933,33 @@ class TagLibraryHandler {
 			db.beginTransaction();
 			
 			db.batch(
-				db
-				.delete(PROPERTYVALUE)
-				.where(PROPERTYVALUE.PROPERTYID.in(
-					db
-					.select(PROPERTY.PROPERTYID)
-					.from(PROPERTY)
-					.join(TAGINSTANCE)
-						.on(TAGINSTANCE.TAGINSTANCEID
-								.eq(PROPERTY.TAGINSTANCEID)
-						.and(TAGINSTANCE.TAGDEFINITIONID.in(toBeDeletedIds))))),
-				db
-				.delete(PROPERTY)
-				.where(PROPERTY.TAGINSTANCEID.in(
-					db
-					.select(TAGINSTANCE.TAGINSTANCEID)
-					.from(TAGINSTANCE)
-					.where(TAGINSTANCE.TAGDEFINITIONID.in(toBeDeletedIds)))),
-				db
-				.delete(TAGREFERENCE)
-				.where(TAGREFERENCE.TAGINSTANCEID.in(
-					db
-					.select(TAGINSTANCE.TAGINSTANCEID)
-					.from(TAGINSTANCE)
-					.where(TAGINSTANCE.TAGDEFINITIONID.in(toBeDeletedIds)))),
-				db
-				.delete(TAGINSTANCE)
-				.where(TAGINSTANCE.TAGDEFINITIONID.eq(tagDefinition.getId())),
+//				db
+//				.delete(PROPERTYVALUE)
+//				.where(PROPERTYVALUE.PROPERTYID.in(
+//					db
+//					.select(PROPERTY.PROPERTYID)
+//					.from(PROPERTY)
+//					.join(TAGINSTANCE)
+//						.on(TAGINSTANCE.TAGINSTANCEID
+//								.eq(PROPERTY.TAGINSTANCEID)
+//						.and(TAGINSTANCE.TAGDEFINITIONID.in(toBeDeletedIds))))),
+//				db
+//				.delete(PROPERTY)
+//				.where(PROPERTY.TAGINSTANCEID.in(
+//					db
+//					.select(TAGINSTANCE.TAGINSTANCEID)
+//					.from(TAGINSTANCE)
+//					.where(TAGINSTANCE.TAGDEFINITIONID.in(toBeDeletedIds)))),
+//				db
+//				.delete(TAGREFERENCE)
+//				.where(TAGREFERENCE.TAGINSTANCEID.in(
+//					db
+//					.select(TAGINSTANCE.TAGINSTANCEID)
+//					.from(TAGINSTANCE)
+//					.where(TAGINSTANCE.TAGDEFINITIONID.in(toBeDeletedIds)))),
+//				db
+//				.delete(TAGINSTANCE)
+//				.where(TAGINSTANCE.TAGDEFINITIONID.eq(tagDefinition.getId())),
 				db
 				.delete(PROPERTYDEF_POSSIBLEVALUE)
 				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
@@ -1458,16 +1421,16 @@ class TagLibraryHandler {
 				.update(TAGDEFINITION)
 				.set(TAGDEFINITION.VERSION, SqlTimestamp.from(tagDefinition.getVersion().getDate()))
 				.where(TAGDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId())),
-				db
-				.delete(PROPERTYVALUE)
-				.where(PROPERTYVALUE.PROPERTYID.in(
-					db
-					.select(PROPERTY.PROPERTYID)
-					.from(PROPERTY)
-					.where(PROPERTY.PROPERTYDEFINITIONID.eq(propertyDefinition.getId())))),
-				db
-				.delete(PROPERTY)
-				.where(PROPERTY.PROPERTYDEFINITIONID.eq(propertyDefinition.getId())),
+//				db
+//				.delete(PROPERTYVALUE)
+//				.where(PROPERTYVALUE.PROPERTYID.in(
+//					db
+//					.select(PROPERTY.PROPERTYID)
+//					.from(PROPERTY)
+//					.where(PROPERTY.PROPERTYDEFINITIONID.eq(propertyDefinition.getId())))),
+//				db
+//				.delete(PROPERTY)
+//				.where(PROPERTY.PROPERTYDEFINITIONID.eq(propertyDefinition.getId())),
 				db
 				.delete(PROPERTYDEF_POSSIBLEVALUE)
 				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.eq(propertyDefinition.getId())),
