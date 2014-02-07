@@ -54,20 +54,38 @@
    		<load-on-startup>2</load-on-startup>
 	</servlet>
 	
+	<servlet>  
+    	<servlet-name>CatmaAPI</servlet-name>  
+    	<servlet-class>org.restlet.ext.servlet.ServerServlet</servlet-class>
+    	<init-param>
+        	<!-- Application class name -->
+        	<param-name>org.restlet.application</param-name>
+        	<param-value>de.catma.api.CatmaApiApplication</param-value>
+		</init-param>
+		<load-on-startup>2</load-on-startup>
+	</servlet>  
+	
 	<servlet> 
 		<servlet-name>HeurecleaPeriodicExportInitializerServlet</servlet-name> 
 		<servlet-class>de.catma.heureclea.HeurecleaPeriodicExportInitializerServlet</servlet-class> 
 		<load-on-startup>3</load-on-startup>
 	</servlet>
 	
+	<servlet-mapping>  
+    	<servlet-name>CatmaAPI</servlet-name>  
+		<url-pattern>/api/*</url-pattern>  
+	</servlet-mapping>  
+	
 	<servlet-mapping>
 		<servlet-name>Clea</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
+	
 	<servlet-mapping>
     	<servlet-name>default</servlet-name>
     	<url-pattern>/manual/*</url-pattern>
 	</servlet-mapping>
+	
 	<welcome-file-list>
 		<welcome-file>index.html</welcome-file>
 		<welcome-file>index.htm</welcome-file>
