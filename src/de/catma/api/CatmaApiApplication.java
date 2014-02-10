@@ -12,7 +12,10 @@ import org.restlet.routing.Router;
 import org.restlet.security.ChallengeAuthenticator;
 import org.restlet.security.MapVerifier;
 
+import de.catma.api.service.CorpusExport;
 import de.catma.api.service.CorpusList;
+import de.catma.api.service.SourceDocumentExport;
+import de.catma.api.service.UserMarkupCollectionExport;
 
 public class CatmaApiApplication extends Application {
 	
@@ -31,7 +34,8 @@ public class CatmaApiApplication extends Application {
 			properties.load(new FileInputStream(
 					servletContext.getRealPath("catma.properties")));
 			
-			getContext().getAttributes().put("catma_properties", properties);
+			getContext().getAttributes().put(
+				Parameter.catma_properties.name(), properties);
 	
 			ChallengeAuthenticator guard = 
 					new ChallengeAuthenticator(
@@ -52,7 +56,12 @@ public class CatmaApiApplication extends Application {
 	        
 	        router.attach("/corpus/list", CorpusList.class);
 	        
-	
+	        router.attach("/corpus/get", CorpusExport.class);
+	        
+	        router.attach("/src/get", SourceDocumentExport.class);
+	        
+	        router.attach("/umc/get", UserMarkupCollectionExport.class);
+	        
 			guard.setNext(router);
 			
 	        

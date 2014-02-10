@@ -18,7 +18,6 @@
  */
 package de.catma.repository.db;
 
-import static de.catma.repository.db.jooqgen.catmarepository.Tables.CORPUS_SOURCEDOCUMENT;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.CORPUS_USERMARKUPCOLLECTION;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTY;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTYDEFINITION;
