@@ -1,8 +1,37 @@
-
+/*   
+ *   CATMA Computer Aided Text Markup and Analysis
+ *   
+ *   Copyright (C) 2009-2013  University Of Hamburg
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 delimiter $$
 
 DROP PROCEDURE IF EXISTS searchPhrase$$
-
+/**
+ * Searches a phrase consisting of up to five tokens. Each token can contain 
+ * SQL wildcards.
+ * 
+ * term1 - first token in the phrase
+ * term2 - second token in the phrase
+ * ...
+ * docID - localUri of the sourceDocument
+ * wild - true->with wildcards
+ * limitresult - limit of the result set
+ * 
+ * author: marco.petris@web.de
+ */
 CREATE PROCEDURE searchPhrase (
     term1 VARCHAR(300), term2 VARCHAR(300), 
     term3 VARCHAR(300), term4 VARCHAR(300), term5 VARCHAR(300), 
@@ -17,11 +46,14 @@ BEGIN
         characterEnd INT
     );
 
+    /* create term buffers for each non null term2 to term5*/
     CREATE temporary TABLE termbuf1 (
         tokenOffset INT,
         characterEnd INT
     ); 
     
+    /* fill each term buffer termbufX with offset and endpositions for terms that
+     * match termX */
     IF (term2 IS NOT NULL)
     THEN
         INSERT INTO termbuf1(tokenOffset, characterEnd) 
@@ -86,6 +118,9 @@ BEGIN
         ELSE t.term like term5 END;
     END IF;
     
+    /* fill result with all terms matching term1 that have an entry with 
+     * the corresponding tokenoffset for all non null term2-term5
+     * this gives us all tokenOffsets and characterStarts for valid term1 entries*/
     INSERT INTO result(tokenOffset, characterStart, characterEnd)
     SELECT
     pos.tokenOffset as tokenOffset,
@@ -113,6 +148,8 @@ BEGIN
         SELECT tm4.tokenOffset FROM termbuf4 tm4
     ) ELSE 1=1 END;
 
+    /* now we fill the result with the end positions of the matching phrases, i. e. the characterEnd of the 
+     * terms that matched the last non null term and belong to a matching phrase*/
     IF (term5 IS NOT NULL) THEN
         UPDATE result r, termbuf4 t SET r.characterEnd = t.characterEnd WHERE r.tokenOffset+4=t.tokenOffset;
     ELSEIF (term4 IS NOT NULL) THEN
@@ -123,6 +160,7 @@ BEGIN
         UPDATE result r, termbuf1 t SET r.characterEnd = t.characterEnd WHERE r.tokenOffset+1=t.tokenOffset;
     END IF;
 
+    /* respect the limit */ 
     IF (limitresult > 0) THEN
         SET @dynSQL = CONCAT('SELECT tokenOffset, characterStart, characterEnd FROM result LIMIT 0,', limitresult);
         PREPARE stmt FROM @dynSQL;

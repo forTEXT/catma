@@ -42,17 +42,36 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.repository.db.CatmaDataSourceName;
 
+/**
+ * Searches for phrases with optional wildcards % (0 or more characters) and _ (exactly one character).
+ * 
+ * @author marco.petris@web.de
+ *
+ */
 class PhraseSearcher {
 	private static final int MAX_DIRECT_SEARCH_TERMS = 5;
 	private DataSource dataSource;
 //	private Logger logger = Logger.getLogger(this.getClass().getName());
 	
+	/**
+	 * @throws NamingException error accessing DB.
+	 */
 	public PhraseSearcher() throws NamingException {
 		super();
 		Context  context = new InitialContext();
 		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
 	}
 
+	/**
+	 * Plain phrase search without wildcards.
+	 * 
+	 * @param documentIdList list of source document IDs (localUri)
+	 * @param phrase the whole phrase to search for
+	 * @param termList the tokenized phrase
+	 * @param limit a limit for the result set
+	 * @return a query result
+	 * @throws IOException failure
+	 */
 	public QueryResult search(List<String> documentIdList,
 			String phrase, List<String> termList, int limit) throws IOException {
 		
@@ -61,7 +80,9 @@ class PhraseSearcher {
 		}
 		
 		QueryResultRowArray queryResult = new QueryResultRowArray();
+		// do we have a limit for the result set?
 		if (limit != 0) {
+			// respect the limit even when having more than one call to D
 			for (String documentId : documentIdList) {
 				limit -= ((QueryResultRowArray)queryResult).size();
 				if  (limit >= 0) {
@@ -71,7 +92,7 @@ class PhraseSearcher {
 				}
 			}
 		}
-		else {
+		else { // no limits
 			for (String documentId : documentIdList) {
 				queryResult.addAll(
 					searchPhrase(
@@ -81,11 +102,22 @@ class PhraseSearcher {
 		return queryResult;
 	}
 
+	/**
+	 * Phrase search with optional wildcards.
+	 * 
+	 * @param documentIdList list of source document IDs (localUri)
+	 * @param phrase the whole phrase to search for
+	 * @param termList the tokenized phrase
+	 * @param withWildcards <code>true</code> search with wildcards
+	 * @param limit a limit for the result set
+	 * @return  a query result 
+	 * @throws IOException failure
+	 */
 	private QueryResultRowArray searchPhrase(String documentId,
 			String phrase, List<String> termList, boolean withWildcards, int limit) throws IOException {
 
 		QueryResultRowArray result = new QueryResultRowArray();
-		if (termList.size() == 0) {
+		if (termList.size() == 0) { // we do not support search for empty character sequence
 			return result;
 		}
 		else {
@@ -98,10 +130,13 @@ class PhraseSearcher {
 			spSearchPhrase.setDocumentId(documentId);
 			spSearchPhrase.setWithWildcards(withWildcards);
 			
+			// search for the phrase or at least for the first part of
+			// the phrase when the number of tokens exceeds MAX_DIRECT_SEARCH_TERMS
 			Result<Record> records = spSearchPhrase.execute(db);
 
 			SpGetTerms spGetTerms = null;
 			
+			// prepare for refining the search result with the remaining tokens
 			if (termList.size() > MAX_DIRECT_SEARCH_TERMS) {
 				spGetTerms = new SpGetTerms();
 				spGetTerms.setDocumentId(documentId);
@@ -109,27 +144,35 @@ class PhraseSearcher {
 
 			
 			for (Record r : records) {
+				// refine result
 				if (termList.size() > MAX_DIRECT_SEARCH_TERMS) {
-						int tokenOffset = 
-							(Integer)r.getValue(SpSearchPhrase.ResultColumn.tokenOffset.name());
-						
-						spGetTerms.setBasePos(tokenOffset+MAX_DIRECT_SEARCH_TERMS-1);
-						
-						spGetTerms.setTermCount(termList.size()-MAX_DIRECT_SEARCH_TERMS);
-						
-						Result<Record> termResultRecords = spGetTerms.execute(db);
-						if (match(termResultRecords, termList, withWildcards)) {
-							result.add(
-								new QueryResultRow(
-									documentId,
-									new Range(
-										tokenOffset,
-										(Integer)termResultRecords.getValue(
-												termResultRecords.size()-1, 
-												SpGetTerms.ResultColumn.characterEnd.name())),
-									phrase));
-						}
+					
+					int tokenOffset = 
+						(Integer)r.getValue(SpSearchPhrase.ResultColumn.tokenOffset.name());
+					
+					// ok, the base token offset has to be counted from the tokenoffset of 
+					// the last token in the current record
+					spGetTerms.setBasePos(tokenOffset+MAX_DIRECT_SEARCH_TERMS-1);
+					
+					// number of remaining tokens in the termList 
+					spGetTerms.setTermCount(termList.size()-MAX_DIRECT_SEARCH_TERMS);
+					
+					Result<Record> termResultRecords = spGetTerms.execute(db);
+					// do we still have a valid row?
+					if (match(termResultRecords, termList, withWildcards)) {
+						// yes, ok then add to query result
+						result.add(
+							new QueryResultRow(
+								documentId,
+								new Range(
+									tokenOffset,
+									(Integer)termResultRecords.getValue(
+											termResultRecords.size()-1, 
+											SpGetTerms.ResultColumn.characterEnd.name())),
+								phrase));
+					}
 				}
+				// no refinement necessary, just create query result
 				else {
 					result.add(
 						new QueryResultRow(
@@ -151,28 +194,40 @@ class PhraseSearcher {
 	
 	
 
+	/**
+	 * Matches a list of tokens from the DB (termResultRecords) with the tokens 
+	 * of the phrase (termList).
+	 * @param termResultRecords tokens from the DB
+	 * @param termList tokens of the phrase to search
+	 * @param withWildcards <code>true</code>->consider wildcards
+	 * @return true if all tokens from the DB have a match
+	 */
 	private boolean match(
 			Result<Record> termResultRecords, List<String> termList,
 			boolean withWildcards) {
 		
 		int termListIdx = 0;
+		// validate each term from the DB
 		for (Record r : termResultRecords) {
 			String curTermResult = (String)r.getValue(SpGetTerms.ResultColumn.term.name());
 			String curTerm = termList.get(MAX_DIRECT_SEARCH_TERMS+termListIdx);
-			if (!withWildcards) {
+			
+			if (!withWildcards) { // no wildcards so we use plain old equals
 				if (!curTermResult.equals(curTerm)) {
 					return false;
 				}
 			}
-			else {
+			else { // with wildcards
 				
+				// first we break up in chunks seperated by %
 				String[] percentParts = curTerm.split("((?<=[^\\\\])%)|(^%)");
 				StringBuilder pattern = new StringBuilder();
 				String percentConc = "";
 				
+				// connect the %-parts and the _-parts with the corresponding regex
 				for (String percentPart : percentParts) {
 					pattern.append(percentConc);
-	
+					// then we break up in chunks seperated by _
 					String[] underscoreParts = percentPart.split("((?<=[^\\\\])_)|(^_)");
 					String underScoreConc = "";
 					for (String underScorePart : underscoreParts) {
@@ -194,6 +249,7 @@ class PhraseSearcher {
 					pattern.append(percentConc);
 				}
 				
+				// validate
 				if (!curTermResult.matches(pattern.toString())) {
 					return false; 
 				}
@@ -202,6 +258,11 @@ class PhraseSearcher {
 		return true;
 	}
 	
+	/**
+	 * @param term the term we want positions for
+	 * @param documentId the document we want positions for
+	 * @return a list of positions for the given term in the given document
+	 */
 	public QueryResultRowArray getPositionsForTerm(
 			String term, String documentId) {
 		
@@ -221,6 +282,14 @@ class PhraseSearcher {
 		return result;
 	}
 	
+	/**
+	 * Searches a phrase that may contain wildcards
+	 * @param documentIdList list of source document IDs (localUri)
+	 * @param termList the tokenized phrase
+	 * @param limit  limit of the query result
+	 * @return a query result
+	 * @throws IOException failure
+	 */
 	public QueryResult searchWildcard(List<String> documentIdList,
 			List<String> termList, int limit) throws IOException {
 		
@@ -231,7 +300,7 @@ class PhraseSearcher {
 		}
 		else {
 			queryResult = new QueryResultRowArray();
-
+			// respect limit even when doing multiple queries to the DB
 			if (limit != 0) {
 				for (String documentId : documentIdList) {
 					limit -= ((QueryResultRowArray)queryResult).size();
