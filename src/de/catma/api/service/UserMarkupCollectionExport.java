@@ -34,7 +34,7 @@ public class UserMarkupCollectionExport extends ServerResource {
 
 			Form form = getRequest().getResourceRef().getQueryAsForm();
 			
-			String umcId = form.getFirstValue(Parameter.id.name());
+			String umcId = form.getFirstValue(Parameter.uid.name());
 			String format = form.getFirstValue(Parameter.format.name());
 
 			if ((format != null) && !format.trim().toLowerCase().equals("tei")) {

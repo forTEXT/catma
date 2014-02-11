@@ -35,7 +35,7 @@ public class CorpusExport extends ServerResource {
 	
 			Collection<Corpus> corpora = repo.getCorpora();
 			Form form = getRequest().getResourceRef().getQueryAsForm();
-			String corpusId = form.getFirstValue(Parameter.id.name());
+			String corpusId = form.getFirstValue(Parameter.cid.name());
 			String format = form.getFirstValue(Parameter.format.name());
 			
 			if ((format != null) && !format.trim().toLowerCase().equals("plain,tei")) {

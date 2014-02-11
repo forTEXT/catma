@@ -29,7 +29,7 @@ public class SourceDocumentExport extends ServerResource{
 
 			Form form = getRequest().getResourceRef().getQueryAsForm();
 			
-			String sourceDocId = form.getFirstValue(Parameter.id.name());
+			String sourceDocId = form.getFirstValue(Parameter.sid.name());
 			String format = form.getFirstValue(Parameter.format.name());
 
 			if ((format != null) && !format.trim().toLowerCase().equals("plain")) {

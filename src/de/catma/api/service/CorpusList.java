@@ -34,7 +34,7 @@ public class CorpusList extends ServerResource {
 
 			Collection<Corpus> corpora = repo.getCorpora();
 			Form form = getRequest().getResourceRef().getQueryAsForm();
-			String corpusId = form.getFirstValue(Parameter.id.name());
+			String corpusId = form.getFirstValue(Parameter.cid.name());
 
 			if (corpusId != null) {
 				for (Corpus c : corpora) {

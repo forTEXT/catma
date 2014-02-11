@@ -2,7 +2,9 @@ package de.catma.api;
 
 public enum Parameter {
 	catma_properties,
-	id, 
+	uid, 
 	format,
+	sid,
+	cid,
 	;
 }
