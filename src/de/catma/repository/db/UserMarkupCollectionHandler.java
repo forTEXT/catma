@@ -199,20 +199,23 @@ class UserMarkupCollectionHandler {
 		final UserMarkupCollection umc =
 				userMarkupCollectionSerializationHandler.deserialize(null, inputStream);
 
-		TransactionalDSLContext db = 
-				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
-
+		
+		// the import is not a transaction by intention
+		// import can become a pretty long running operation
+		// and would block other users 
+		// the last DB action prior to indexing 
+		// is the linking between the umc and the user
+		// so in case of failure the user won't have access to the
+		// corrupt umc and the DB cleaner job will take care of it
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+		
 		try {
-			db.beginTransaction();
-			
 			dbRepository.getDbTagLibraryHandler().importTagLibrary(
 				db, umc.getTagLibrary(), false);
 			
 			UserMarkupCollectionReference umcRef = importUserMarkupCollection(
 					db, umc, sourceDocument);
 
-			db.commitTransaction();
-			
 			// index the imported collection
 			dbRepository.getIndexer().index(
 					umc.getTagReferences(), 
@@ -229,19 +232,12 @@ class UserMarkupCollectionHandler {
 
 		}
 		catch (Exception dae) {
-			db.rollbackTransaction();
-			db.close();
 			dbRepository.setTagManagerListenersEnabled(true);
 
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					RepositoryChangeEvent.exceptionOccurred.name(),
 					null, 
 					new IOException(dae));				
-		}
-		finally {
-			if (db!=null) {
-				db.close();
-			}
 		}
 	}
 	
@@ -271,24 +267,25 @@ class UserMarkupCollectionHandler {
 		.fetchOne()
 		.map(new IDFieldToIntegerMapper(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID));
 		
-		db
-		.insertInto(
-			USER_USERMARKUPCOLLECTION,
-				USER_USERMARKUPCOLLECTION.USERID,
-				USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID,
-				USER_USERMARKUPCOLLECTION.ACCESSMODE,
-				USER_USERMARKUPCOLLECTION.OWNER)
-		.values(
-			dbRepository.getCurrentUser().getUserId(),
-			userMarkupCollectionId,
-			AccessMode.WRITE.getNumericRepresentation(),
-			(byte)1)
-		.execute();
 
 		umc.setId(String.valueOf(userMarkupCollectionId));
 		
 		addTagReferences(db, umc);
 
+		db
+		.insertInto(
+				USER_USERMARKUPCOLLECTION,
+				USER_USERMARKUPCOLLECTION.USERID,
+				USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID,
+				USER_USERMARKUPCOLLECTION.ACCESSMODE,
+				USER_USERMARKUPCOLLECTION.OWNER)
+				.values(
+						dbRepository.getCurrentUser().getUserId(),
+						userMarkupCollectionId,
+						AccessMode.WRITE.getNumericRepresentation(),
+						(byte)1)
+						.execute();
+		
 		UserMarkupCollectionReference umcRef = 
 				new UserMarkupCollectionReference(
 						String.valueOf(userMarkupCollectionId), 

@@ -1,0 +1,73 @@
+CATMA RESTful Webservice API v1.0
+
+all commands require BASIC HTTP authentication
+
+**list all Corpora for the autenticated user**
+https://www.digitialhumanities.it/catma/api/corpus/list
+GET
+returns JSON encoded list
+example
+[{"ID": "myCorpusID", "name": "myCorpusName"},…] 
+
+**list contents of the Corpus with the given ID**
+https://www.digitialhumanities.it/catma/api/corpus/list?cid=4713
+GET with cid argument
+returns JSON encoded Corpus
+example
+{
+    "ID": "myCorpusID",
+    "name": "myCorpusName",
+    "contents": [
+        {
+            "sourceDocID": "sUUID",
+			"sourceDocName": "mySourceDocumentName",
+			"sourceDocAuthor": "mySourceDocumentAuthor",
+			"sourceDocDescription": "mySourceDocumentDescription",
+			"sourceDocPublisher": "mySourceDocumentPublisher",
+            "umcList": [
+                {
+                    "umcID": "myUmcID",
+                    "umcName": "myUmcName",
+					"umcAuthor": "myUmcAuthor",
+					"umcDescription": "myUmcDescription",
+					"umcPublisher": "myUmcPublisher"
+                }
+            ]
+        }
+	]
+}
+throws error 404 when Corpus is not available
+
+**export Source Document with the given ID using the given format**
+https://www.digitialhumanities.it/catma/api/src/get?sid=CATMA_4712f&format=plain
+GET with sid argument and format argument (optional, default: plain)
+returns Source Document as UTF8 plain text
+throws error 404 when Source Document is not available
+throws error 501 when requested format is not implemented
+
+**export Corpus with the given ID using the given formats**
+https://www.digitialhumanities.it/catma/api/corpus/get?cid=4713f&format=plain,tei
+GET with cid argument and format argument (optional, default: plain,tei)
+returns corpus.tar.gz with Source Document as UTF8 plain text and User Markup Collections as XML/TEI
+throws error 404 when Corpus is not available
+throws error 501 when requested format is not implemented
+
+**export User Markup Collection**
+https://www.digitialhumanities.it/catma/api/umc/get?uid=4711&format=tei 
+GET with uid argument and format argument (optional, default:tei)
+returns User Markup Collection as XML/TEI
+throws error 404 when User Markup Collection is not available
+throws error 501 when requested format is not implemented
+
+**import of User Markup Collection in CATMA flavoured XML/TEI**
+https://www.digitalhumanities.it/catma/api/umc/add?sid=CATMA_4712&cid=4714
+POST with User Markup Collection in CATMA flavoured XML/TEI as data and sId argument for Source Document ID and optional cId argument as corpusId
+when providing argument cId user must have write access to the corpus with that cId
+returns new userMarkupCollectionID
+throws error 404 when Source Document is not available
+throws error 404 when Corpus is not available
+
+
+
+
+
