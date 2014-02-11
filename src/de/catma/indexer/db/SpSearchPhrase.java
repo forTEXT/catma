@@ -56,7 +56,7 @@ public class SpSearchPhrase {
 				builder.append(" null, ");
 			}
 			else {
-				builder.append("'"+term.replace("'", "\'") + "', ");
+				builder.append("'"+term.replace("\\", "\\\\").replace("'", "''") + "', ");
 			}
 		}
 		
