@@ -28,6 +28,7 @@ import de.catma.api.service.UserMarkupCollectionImport;
 import de.catma.util.CloseSafe;
 
 public class CatmaApiApplication extends Application {
+
 	public CatmaApiApplication() {
 		this.getStatusService().setHomeRef(new Reference("http://www.catma.de"));
 	}
@@ -46,12 +47,10 @@ public class CatmaApiApplication extends Application {
 			getContext().getAttributes().put(
 				Parameter.catma_properties.name(), properties);
 	
-			ChallengeAuthenticator guard = 
-					new ChallengeAuthenticator(
+			ChallengeAuthenticator guard = new ChallengeAuthenticator(
 						getContext(), 
 						ChallengeScheme.HTTP_BASIC, 
-						"catma_realm");
-			
+						"CATMA WS API");
 			
 			MapVerifier mapVerifier = new MapVerifier();
 			loadValidApiUsers(
@@ -81,6 +80,8 @@ public class CatmaApiApplication extends Application {
 			return null;
 		}
 	}
+	
+	
 
 	private void loadValidApiUsers(MapVerifier mapVerifier, String apiUsersFilePath) 
 					throws IOException, JSONException {
