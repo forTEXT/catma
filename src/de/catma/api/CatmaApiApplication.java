@@ -1,5 +1,6 @@
 package de.catma.api;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
@@ -83,22 +84,24 @@ public class CatmaApiApplication extends Application {
 
 	private void loadValidApiUsers(MapVerifier mapVerifier, String apiUsersFilePath) 
 					throws IOException, JSONException {
+		File apiUsersFile = new File(apiUsersFilePath);
+		if (apiUsersFile.exists()) {
+			FileInputStream fis = new FileInputStream(apiUsersFile);
+			try {
+				String apiUsersJson = IOUtils.toString(fis, "UTF-8");
+				JSONArray apiUsersList = new JSONArray(apiUsersJson);
+				
+				for (int i=0; i<apiUsersList.length(); i++) {
+					JSONObject entry = apiUsersList.getJSONObject(i);
+					mapVerifier.getLocalSecrets().put(
+						entry.getString("u"), 
+						entry.getString("p").toCharArray());
+				}
 		
-		FileInputStream fis = new FileInputStream(apiUsersFilePath);
-		try {
-			String apiUsersJson = IOUtils.toString(fis, "UTF-8");
-			JSONArray apiUsersList = new JSONArray(apiUsersJson);
-			
-			for (int i=0; i<apiUsersList.length(); i++) {
-				JSONObject entry = apiUsersList.getJSONObject(i);
-				mapVerifier.getLocalSecrets().put(
-					entry.getString("u"), 
-					entry.getString("p").toCharArray());
 			}
-	
-		}
-		finally {
-			CloseSafe.close(fis);
+			finally {
+				CloseSafe.close(fis);
+			}
 		}
 	}
 
