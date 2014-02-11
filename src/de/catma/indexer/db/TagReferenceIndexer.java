@@ -145,8 +145,21 @@ public class TagReferenceIndexer {
 							value);
 					}
 				}
-				
-				//user defined properties get indexed individually!
+
+				// normal addition of TagReferences does not produce user defined properties
+				// as each property is created and indexed individually
+				// however import of umc does come with tagreferences that have user defined props
+				for (Property property : tr.getTagInstance().getUserDefinedProperties()) {
+					byte[] propertyDefUUIDBytes = idGenerator.catmaIDToUUIDBytes(
+							property.getPropertyDefinition().getUuid());
+					for (String value : property.getPropertyValueList().getValues()) {
+						insertPropertyBatch.bind(
+							tagInstanceUUIDBytes,
+							propertyDefUUIDBytes,
+							property.getName(),
+							value);
+					}
+				}
 			}
 			
 			insertTagRefBatch.execute();
