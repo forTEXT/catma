@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import com.csvreader.CsvWriter;
+import com.vaadin.addon.tableexport.CsvExport;
 import com.vaadin.addon.tableexport.ExcelExport;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -77,6 +79,7 @@ public class PhraseResultPanel extends VerticalLayout {
 	private Button btDoubleTree;
 	private Button btExcelExport;
 	private Button btKwicExcelExport;
+	private Button btKwicCsvExport;
 
 	public PhraseResultPanel(
 			Repository repository, 
@@ -189,6 +192,16 @@ public class PhraseResultPanel extends VerticalLayout {
                 excelExport.excludeCollapsedColumns();
                 excelExport.setReportTitle("CATMA Query Result Kwic");
                 excelExport.export();
+			}
+		});
+		
+		btKwicCsvExport.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+            	CsvWriter csvExport = 
+            			new CsvWriter(kwicPanel.getKwicTable(), 
+            					"Y://test.csv");
+            	csvExport.close();             
 			}
 		});
 
@@ -319,6 +332,14 @@ public class PhraseResultPanel extends VerticalLayout {
 		btKwicExcelExport.setDescription(
 				"Export all Query result data as an Excel spreadsheet.");
 		kwicButtonPanel.addComponent(btKwicExcelExport);
+		
+		btKwicCsvExport = new Button();
+		btKwicCsvExport.setIcon(new ClassResource(
+				"ui/analyzer/resources/csv_text.png", 
+				getApplication())); //http://findicons.com/icon/84601/csv_text
+		btKwicCsvExport.setDescription(
+				"Export all Query result data as CSV File.");
+		kwicButtonPanel.addComponent(btKwicCsvExport);
 
 		Label helpLabel = new Label();
 		helpLabel.setIcon(new ClassResource(
