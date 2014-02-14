@@ -1,4 +1,4 @@
-// $ANTLR 3.5.1 /Users/evelyn/Documents/workspace/catma/grammars/tree/CatmaQueryWalker.g 2014-01-14 14:02:32
+// $ANTLR 3.5.1 /Users/evelyn/Documents/workspace/catma/grammars/tree/CatmaQueryWalker.g 2014-02-14 12:23:57
 
 package de.catma.queryengine.parser;
 

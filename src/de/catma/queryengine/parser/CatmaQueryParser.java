@@ -1,4 +1,4 @@
-// $ANTLR 3.5.1 /Users/evelyn/Documents/workspace/catma/grammars/ast/CatmaQuery.g 2014-01-14 13:56:42
+// $ANTLR 3.5.1 /Users/evelyn/Documents/workspace/catma/grammars/ast/CatmaQuery.g 2014-02-14 12:23:45
 
 package de.catma.queryengine.parser;
 
@@ -236,7 +236,7 @@ public class CatmaQueryParser extends Parser {
 			}
 
 			// AST REWRITE
-			// elements: queryExpression, refinement
+			// elements: refinement, queryExpression
 			// token labels: 
 			// rule labels: retval
 			// token list labels: 
@@ -1609,7 +1609,7 @@ public class CatmaQueryParser extends Parser {
 					}
 
 					// AST REWRITE
-					// elements: TAG_MATCH_MODE, phrase, phrase
+					// elements: phrase, phrase, TAG_MATCH_MODE
 					// token labels: 
 					// rule labels: retval
 					// token list labels: 
@@ -1718,7 +1718,7 @@ public class CatmaQueryParser extends Parser {
 					}
 
 					// AST REWRITE
-					// elements: TAG_MATCH_MODE, phrase, phrase, phrase
+					// elements: phrase, TAG_MATCH_MODE, phrase, phrase
 					// token labels: 
 					// rule labels: retval
 					// token list labels: 
@@ -1840,7 +1840,7 @@ public class CatmaQueryParser extends Parser {
 			}
 
 			// AST REWRITE
-			// elements: phrase, 43
+			// elements: 43, phrase
 			// token labels: 
 			// rule labels: retval
 			// token list labels: 
@@ -1985,7 +1985,7 @@ public class CatmaQueryParser extends Parser {
 					}
 
 					// AST REWRITE
-					// elements: EQUAL, INT, INT
+					// elements: INT, INT, EQUAL
 					// token labels: 
 					// rule labels: retval
 					// token list labels: 
@@ -2029,7 +2029,7 @@ public class CatmaQueryParser extends Parser {
 					stream_INT.add(INT62);
 
 					// AST REWRITE
-					// elements: INT, UNEQUAL
+					// elements: UNEQUAL, INT
 					// token labels: 
 					// rule labels: retval
 					// token list labels: 
@@ -2148,7 +2148,7 @@ public class CatmaQueryParser extends Parser {
 			}
 
 			// AST REWRITE
-			// elements: INT, phrase
+			// elements: phrase, INT
 			// token labels: 
 			// rule labels: retval
 			// token list labels: 
