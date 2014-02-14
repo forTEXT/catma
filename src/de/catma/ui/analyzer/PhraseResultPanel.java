@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import com.csvreader.CsvWriter;
-import com.vaadin.addon.tableexport.CsvExport;
 import com.vaadin.addon.tableexport.ExcelExport;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -54,7 +52,8 @@ import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
-import de.catma.ui.HierarchicalExcelExport;
+import de.catma.ui.component.export.CsvExport;
+import de.catma.ui.component.export.HierarchicalExcelExport;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 
@@ -186,22 +185,30 @@ public class PhraseResultPanel extends VerticalLayout {
 		btKwicExcelExport.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-            	ExcelExport excelExport = 
-            			new HierarchicalExcelExport(kwicPanel.getKwicTable(), 
-            					"CATMA Query Result Kwic");
-                excelExport.excludeCollapsedColumns();
-                excelExport.setReportTitle("CATMA Query Result Kwic");
-                excelExport.export();
+            	try {
+					ExcelExport excelExport = 
+							new HierarchicalExcelExport(kwicPanel.getKwicTable(), 
+									"CATMA Query Result Kwic");
+					excelExport.excludeCollapsedColumns();
+					excelExport.setReportTitle("CATMA Query Result Kwic");
+					excelExport.export();
+				} catch (IllegalArgumentException e) {
+					getWindow().showNotification("Error", "Excel export failed. " + "<br>" + "Reason: " + e.getMessage() + "<br>" + "Please use CSV export.", Notification.TYPE_WARNING_MESSAGE, true);
+					e.printStackTrace();
+				}
 			}
 		});
 		
 		btKwicCsvExport.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-            	CsvWriter csvExport = 
-            			new CsvWriter(kwicPanel.getKwicTable(), 
-            					"Y://test.csv");
-            	csvExport.close();             
+//            	CsvWriter csvExport = 
+//            			new CsvWriter(kwicPanel.getKwicTable(), 
+//            					"Y://test.csv");
+//            	csvExport.close();            
+				CsvExport csvExport = new CsvExport(kwicPanel.getKwicTable());
+				csvExport.convertTable();
+				csvExport.sendConverted();
 			}
 		});
 
