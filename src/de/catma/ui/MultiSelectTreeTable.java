@@ -35,9 +35,10 @@ public class MultiSelectTreeTable extends TreeTable {
                 Object startItemId = itemIdMapper.get(split[0]);
 
                 Object previousItemId = findPreviousItemId(startItemId);
-
-                Collection<?> gapItemIds = getGapItemIds(previousItemId, startItemId);
-                newValue.addAll(gapItemIds);
+                if (previousItemId != null) {
+	                Collection<?> gapItemIds = getGapItemIds(previousItemId, startItemId);
+	                newValue.addAll(gapItemIds);
+                }
 	        }
 	        
 	        setValue(newValue, true);
@@ -67,13 +68,15 @@ public class MultiSelectTreeTable extends TreeTable {
 	private Object findPreviousItemId(Object itemId) {
 		Object tempPreviousItemId= null;
 		
-		for (Object curItemId : (Set<?>)getValue()) {
-			if (curItemId.equals(itemId)) {
-				return tempPreviousItemId;
+		Object value = getValue();
+		if (value != null) {
+			for (Object curItemId : (Set<?>)value) {
+				if (curItemId.equals(itemId)) {
+					return tempPreviousItemId;
+				}
+				tempPreviousItemId = curItemId;
 			}
-			tempPreviousItemId = curItemId;
-		}
-		
+		}		
 		return null;
 	}
 

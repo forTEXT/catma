@@ -339,13 +339,13 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	private void handleFileType() {
 		sourceDocumentInfo.getTechInfoSet().setFileType(
 				(FileType)cbFileType.getValue());
-		onAdvance = true;
 		switch(sourceDocumentInfo.getTechInfoSet().getFileType()) {
 			case TEXT : {
 				setVisibleXSLTInputComponents(false);
 				setVisiblePreviewComponents(true);
 				fileEncodingTree.setVisible(true);
 				showPreview();
+				onAdvance = true;
 				break;
 			}
 			case XML : {
@@ -359,6 +359,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 				setVisiblePreviewComponents(true);
 				fileEncodingTree.setVisible(false);
 				showPreview();
+				onAdvance = true;
 			}
 		}
 		wizardStepListener.stepChanged(FileTypePanel.this);

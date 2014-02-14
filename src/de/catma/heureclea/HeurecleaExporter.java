@@ -19,7 +19,7 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 
-import de.catma.backgroundservice.DebugBackgroundServiceProvider;
+import de.catma.backgroundservice.DefaultBackgroundServiceProvider;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
@@ -51,7 +51,7 @@ public class HeurecleaExporter {
 			
 			TagManager tagManager = new TagManager();
 			RepositoryManager repoManager = new RepositoryManager(
-					new DebugBackgroundServiceProvider(), 
+					new DefaultBackgroundServiceProvider(), 
 					tagManager, properties);
 			if (!repoManager.getRepositoryReferences().isEmpty()) {
 				RepositoryReference repoRef = 

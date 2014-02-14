@@ -29,8 +29,15 @@ import nu.xom.Elements;
  */
 public class StringPropertyValueFactory extends BasicSingleValuePropertyValueFactory {
 	
+	private int idx;
+	
 	public StringPropertyValueFactory(TeiElement teiElement) {
+		this(teiElement, 0);
+	}
+	
+	public StringPropertyValueFactory(TeiElement teiElement, int idx) {
 		super(teiElement);
+		this.idx = idx;
 	}
 
 	/* (non-Javadoc)
@@ -39,7 +46,7 @@ public class StringPropertyValueFactory extends BasicSingleValuePropertyValueFac
 	public String getValue() {
 		Elements elements = getTeiElement().getChildElements();
 		
-		return elements.get( 0 ).getValue();
+		return elements.get( idx ).getValue();
 	}
 	
 	/* (non-Javadoc)
@@ -47,7 +54,7 @@ public class StringPropertyValueFactory extends BasicSingleValuePropertyValueFac
 	 */
 	public void setValue(Object value ) {
 		Elements elements = getTeiElement().getChildElements();
-		TeiElement stringElement = (TeiElement)elements.get( 0 );
+		TeiElement stringElement = (TeiElement)elements.get( idx );
 		stringElement.removeChildren();
 		stringElement.appendChild( value.toString() );
 	}

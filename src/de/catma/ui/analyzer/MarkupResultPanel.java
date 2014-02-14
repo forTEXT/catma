@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -370,6 +371,8 @@ public class MarkupResultPanel extends VerticalLayout {
 						try {
 							UserMarkupCollectionManager umcManager = 
 									new UserMarkupCollectionManager(repository);
+							List<String> toBeDeletedIDs = new ArrayList<String>();
+							
 							for (QueryResultRow row : selection) {
 								TagQueryResultRow tagRow = (TagQueryResultRow)row;
 								if (!umcManager.contains(tagRow.getMarkupCollectionId())) {
@@ -379,8 +382,10 @@ public class MarkupResultPanel extends VerticalLayout {
 													tagRow.getMarkupCollectionId(), 
 													new ContentInfoSet())));
 								}
-								umcManager.removeTagInstance(tagRow.getTagInstanceId());
+								toBeDeletedIDs.add(tagRow.getTagInstanceId());
 							}
+							umcManager.removeTagInstance(toBeDeletedIDs);
+							
 						} catch (IOException e) {
 							((CatmaApplication)getApplication()).showAndLogError(
 									"Error untagging search results!", e);
