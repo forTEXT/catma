@@ -20,7 +20,10 @@ package de.catma.ui.repository;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collections;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
@@ -54,6 +57,7 @@ import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.CatmaApplication;
 import de.catma.document.Corpus;
+import de.catma.document.corpus.CorpusExporter;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.UnknownUserException;
 import de.catma.document.source.SourceDocument;
@@ -66,6 +70,7 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.ui.repository.sharing.SharingOptions;
 import de.catma.ui.repository.sharing.SharingOptionsFieldFactory;
+import de.catma.user.Role;
 
 public class CorpusPanel extends VerticalLayout {
 	private static class CorpusProperty extends AbstractProperty {
@@ -116,6 +121,8 @@ public class CorpusPanel extends VerticalLayout {
 	private HierarchicalContainer corporaContainer;
 
 	private MenuItem miShareCorpus;
+
+	private MenuItem miExportCorpus;
 	
 	public CorpusPanel(
 			Repository repository, ValueChangeListener valueChangeListener) {
@@ -199,6 +206,7 @@ public class CorpusPanel extends VerticalLayout {
 				miRemoveCorpus.setEnabled(corpusModificationButtonsEnabled);
 				miRenameCorpus.setEnabled(corpusModificationButtonsEnabled);
 				miShareCorpus.setEnabled(corpusModificationButtonsEnabled);
+				miExportCorpus.setEnabled(corpusModificationButtonsEnabled);
 			}
 		});
 		
@@ -309,8 +317,41 @@ public class CorpusPanel extends VerticalLayout {
 
 		});
 		miShareCorpus.setEnabled(false);
+		
+		miExportCorpus = miMoreCorpusActions.addItem("Export Corpus", new Command() {
+			public void menuSelected(MenuItem selectedItem) {
+				Object selectedValue = corporaTree.getValue();
+				if ((selectedValue != null) 
+						&& !selectedValue.equals(allDocuments)) {
+					handleExportCorpusRequest((Corpus)selectedValue);
+				}
+			}
+		});
+		
+		miExportCorpus.setVisible(repository.getUser().getRole().equals(Role.ADMIN));
+		miExportCorpus.setEnabled(false);
 	}
 	
+	private void handleExportCorpusRequest(Corpus selectedValue) {
+		final CorpusExporter corpusExporter = new CorpusExporter(repository);
+		final String name = corpusExporter.cleanupName(selectedValue.toString());
+		final String fileName = name + corpusExporter.getDate() + ".tar.gz";
+		try {
+			FileOutputStream corpusOut = new FileOutputStream(
+				new File(((CatmaApplication)getApplication()).getTempDirectory() 
+						+ "/" +fileName));
+			
+			corpusExporter.export(
+				name,
+				Collections.singletonList(selectedValue), corpusOut);
+			
+		}
+		catch (IOException e) {
+			((CatmaApplication)getApplication()).showAndLogError(
+					"Error exporting Corpus!", e);
+		}
+	}
+
 	protected void handleShareCorpusRequest(final Corpus corpus) {
 		SharingOptions sharingOptions = new SharingOptions();
 		

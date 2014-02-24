@@ -443,6 +443,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		documentsTree.addListener(new ItemClickListener() {
 			
 			public void itemClick(ItemClickEvent event) {
+				//FIXME: documentsTree needs to be converted to TreeTable because Tree is buggy with double clicks
 				if (event.isDoubleClick()) {
 					Object item = event.getItemId();
 					handleOpenDocumentRequest(item);
@@ -1122,6 +1123,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		contentInfoButtonsPanel.setStyleName(Reindeer.PANEL_LIGHT);
 		
 		btEditContentInfo = new Button("Edit");
+		btEditContentInfo.setEnabled(false);
 		contentInfoButtonsPanel.addComponent(btEditContentInfo);
 		btSaveContentInfoChanges = new Button("Save");
 		btSaveContentInfoChanges.setVisible(false);
@@ -1311,6 +1313,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		if (value != null) {
 			if (value instanceof SourceDocument) {
 				contentInfoForm.setEnabled(true);
+				btEditContentInfo.setEnabled(true);
 				contentInfoForm.setItemDataSource(
 					new BeanItem<ContentInfoSet>(
 						new ContentInfoSet(((SourceDocument)value).getSourceContentHandler()
@@ -1325,7 +1328,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			else if (value instanceof MarkupCollectionReference) {
 				btOpenDocument.setCaption("Open Markup Collection");
 				btOpenDocument.setEnabled(true);
-				
+				btEditContentInfo.setEnabled(true);
 				if (value instanceof UserMarkupCollectionReference) {
 					contentInfoForm.setEnabled(true);
 					contentInfoForm.setItemDataSource(
@@ -1343,6 +1346,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				}
 			}
 			else {
+				btEditContentInfo.setEnabled(false);
 				contentInfoForm.setEnabled(false);
 				contentInfoForm.setItemDataSource(
 						new BeanItem<ContentInfoSet>(emptyContentInfoSet));
@@ -1354,6 +1358,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 		}
 		else {
+			btEditContentInfo.setEnabled(false);
 			contentInfoForm.setEnabled(false);
 			contentInfoForm.setItemDataSource(
 					new BeanItem<ContentInfoSet>(emptyContentInfoSet));

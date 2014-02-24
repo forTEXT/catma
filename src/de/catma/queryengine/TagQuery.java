@@ -74,21 +74,21 @@ public class TagQuery extends Query {
         List<String> relevantUserMarkupCollIDs = 
         		queryOptions.getRelevantUserMarkupCollIDs();
         
-        if (relevantUserMarkupCollIDs.isEmpty() 
-        		&& !queryOptions.getRelevantSourceDocumentIDs().isEmpty()) {
-        	relevantUserMarkupCollIDs = new ArrayList<String>();
-        	for (String sourceDocumentId 
-        			: queryOptions.getRelevantSourceDocumentIDs()) {
-        		for (UserMarkupCollectionReference umcRef : 
-        			repository.getSourceDocument(sourceDocumentId).getUserMarkupCollectionRefs()) {
-        			relevantUserMarkupCollIDs.add(umcRef.getId());
-        		}
-        	}
+//        if (relevantUserMarkupCollIDs.isEmpty() 
+//        		&& !queryOptions.getRelevantSourceDocumentIDs().isEmpty()) {
+//        	relevantUserMarkupCollIDs = new ArrayList<String>();
+//        	for (String sourceDocumentId 
+//        			: queryOptions.getRelevantSourceDocumentIDs()) {
+//        		for (UserMarkupCollectionReference umcRef : 
+//        			repository.getSourceDocument(sourceDocumentId).getUserMarkupCollectionRefs()) {
+//        			relevantUserMarkupCollIDs.add(umcRef.getId());
+//        		}
+//        	}
         	
         	if (relevantUserMarkupCollIDs.isEmpty()) {
         		return new QueryResultRowArray();
         	}
-        }
+//        }
         
         QueryResult result = 
 				indexer.searchTagDefinitionPath(

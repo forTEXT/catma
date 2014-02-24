@@ -90,6 +90,7 @@ public class UploadDialog extends VerticalLayout {
             	upload.setCaption("Uploading file \"" + event.getFilename()
                         + "\" succeeded");
             	saveCancelListener.savePressed(data.toByteArray());
+            	upload.removeListener(this);
             	UploadDialog.this.close();
             }
         });

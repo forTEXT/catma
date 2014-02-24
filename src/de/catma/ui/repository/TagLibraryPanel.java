@@ -225,6 +225,8 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		contentInfoButtonsPanel.setStyleName(Reindeer.PANEL_LIGHT);
 		
 		btEditContentInfo = new Button("Edit");
+		btEditContentInfo.setEnabled(false);
+
 		contentInfoButtonsPanel.addComponent(btEditContentInfo);
 		btSaveContentInfoChanges = new Button("Save");
 		btSaveContentInfoChanges.setVisible(false);
@@ -303,6 +305,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 				btOpenTagLibrary.setEnabled(value!=null);
 				if (value != null) {
 					contentInfoForm.setEnabled(true);
+					btEditContentInfo.setEnabled(true);
 					contentInfoForm.setItemDataSource(
 						new BeanItem<ContentInfoSet>(
 							new ContentInfoSet(
@@ -313,6 +316,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 
 				}
 				else {
+					btEditContentInfo.setEnabled(false);
 					contentInfoForm.setEnabled(false);
 					contentInfoForm.setItemDataSource(
 							new BeanItem<ContentInfoSet>(emptyContentInfoSet));
