@@ -16,81 +16,117 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.catma.ui.tagmanager;
+package de.catma.ui.tagger;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import com.vaadin.data.util.HierarchicalContainer;
-import com.vaadin.data.util.PropertysetItem;
-import com.vaadin.terminal.ClassResource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.CheckBox;
-import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.ui.Window.Notification;
 
-import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
-import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.PropertyValueList;
-import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
-import de.catma.tag.TagsetDefinition;
-
-import de.catma.ui.data.util.PropertyDependentItemSorter;
-import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.ui.dialog.StringListProperty;
-import de.catma.ui.tagger.MarkupPanel;
-import de.catma.ui.tagger.TagInstanceTree;
-import de.catma.util.IDGenerator;
 
-public class InstancePropertyDefinitionDialog extends Window {
+public class PropertyEditDialog extends Window {
 
 	private static enum TreePropertyName {
-		caption,
-		propertyname,
+		property,
 		value,
-		select, 
-		markupcollection, 
+		assigned, 
 		;
 	}
 	
-	private TreeTable instancePropertyTree;
-	private ListSelect valueInput;
-	private Property property;
-	private PropertyDefinition propertyDefinition;
+	private TreeTable propertyTree;
 	private TextField newValueInput;
 	private Button btAdd;
 	private Button btSave;
 	private Button btCancel;
 	private TagInstance tagInstance;
-	private Object tagInstanceTree;
-	private int TagInstanceInfo;
 
-	public InstancePropertyDefinitionDialog(TagInstance tagInstance,
+	public PropertyEditDialog(TagInstance tagInstance,
 			SaveCancelListener<List<Property>> saveCancelListener) {
 		this.tagInstance = tagInstance; 
 		initComponents();
 		initActions(saveCancelListener);
+		initData();
+	}
+
+	private void initData() {
+		for (Property p : tagInstance.getUserDefinedProperties()) {
+			PropertyDefinition propertyDefinition = p.getPropertyDefinition();
+			
+			propertyTree.addItem(
+					new Object[] {
+							propertyDefinition.getName(),
+							null,
+							null},
+					propertyDefinition);
+			propertyTree.setChildrenAllowed(propertyDefinition, true);
+			
+			for (String pValue : 
+				propertyDefinition.getPossibleValueList().getPropertyValueList().getValues()) {
+				
+				String pValueItemId = propertyDefinition.getUuid() + "_" + pValue;
+				propertyTree.addItem(
+					new Object[] {
+							null,
+							pValue,
+							createCheckBox(p, pValue)
+					},
+					pValueItemId);
+				
+				propertyTree.setParent(pValueItemId, propertyDefinition);
+				propertyTree.setChildrenAllowed(pValueItemId, false);
+			}
+		
+			propertyTree.setCollapsed(propertyDefinition, false);
+		}
+	}
+
+	private CheckBox createCheckBox(final Property p, final String pValue) {
+		final CheckBox cb = new CheckBox(
+			null, p.getPropertyValueList().getValues().contains(pValue));
+		
+		cb.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				propertyValueChanged(p, pValue, cb.booleanValue());
+			}
+		});
+		
+		return cb;
+	}
+
+	private void propertyValueChanged(Property p, String pValue, boolean add) {
+		
+		List<String> valueList = new ArrayList<String>();
+		valueList.addAll(p.getPropertyValueList().getValues());
+		if (add) {
+			valueList.add(pValue);
+		}
+		else {
+			valueList.remove(pValue);
+		}
+		
+		p.setPropertyValueList(new PropertyValueList(valueList));
+		
+		// TODO: bookkeeping about which p has changed for saveCancelListener
 	}
 
 	private void initActions(SaveCancelListener<List<Property>> saveCancelListener){
-		
+		// TODO: call save/cancel
+		// TODO: add new value functionality
 	}
 
 	private void initComponents(){
@@ -98,24 +134,21 @@ public class InstancePropertyDefinitionDialog extends Window {
 		mainLayout.setMargin(true);
 		mainLayout.setSpacing(true);
 		
-		instancePropertyTree = new TreeTable();
-		instancePropertyTree.setSelectable(true);
-		instancePropertyTree.setMultiSelect(true);
-		instancePropertyTree.setSizeFull();
+		propertyTree = new TreeTable();
+		propertyTree.setSelectable(true);
+		propertyTree.setMultiSelect(true);
+		propertyTree.setSizeFull();
 		
-		instancePropertyTree.addContainerProperty(TreePropertyName.propertyname, String.class, "");
-		instancePropertyTree.setColumnHeader(TreePropertyName.propertyname, "Property");
+		propertyTree.addContainerProperty(TreePropertyName.property, String.class, "");
+		propertyTree.setColumnHeader(TreePropertyName.property, "Property");
 		
-		instancePropertyTree.addContainerProperty(TreePropertyName.value, String.class, "");
-		instancePropertyTree.setColumnHeader(TreePropertyName.value, "Value");
-		
-		instancePropertyTree.addItem(TagInstance.class);
-		instancePropertyTree.setPageLength(instancePropertyTree.size());
-		
-		
-				
-		mainLayout.addComponent(instancePropertyTree);
-		
+		propertyTree.addContainerProperty(TreePropertyName.value, String.class, "");
+		propertyTree.setColumnHeader(TreePropertyName.value, "Value");
+
+		propertyTree.addContainerProperty(TreePropertyName.assigned, CheckBox.class, "");
+		propertyTree.setColumnHeader(TreePropertyName.assigned, "Assigned");
+
+		mainLayout.addComponent(propertyTree);
 		
 		HorizontalLayout textField = new HorizontalLayout();
 		textField.setSpacing(true);
@@ -144,39 +177,13 @@ public class InstancePropertyDefinitionDialog extends Window {
 		
 		mainLayout.addComponent(buttonPanel);
 		mainLayout.setComponentAlignment(buttonPanel, Alignment.MIDDLE_RIGHT);
-
-		
 			
 		setContent(mainLayout);
 		setWidth("30%");
 		setHeight("70%");
+		setModal(true);
 		center();
 	}
-	
-	public void addPropertyTree(PropertyDefinition propertyDefinition) {
-		instancePropertyTree.removeAllItems();
-				
-		instancePropertyTree.addItem(property);
-		
-
-		establishHierarchy(propertyDefinition, property);
-		
-		}	
-	
-	private void establishHierarchy(
-			PropertyDefinition propertyDefinition, Property property) {
-		String baseID = propertyDefinition.getUuid();
-		if (baseID.isEmpty()) {
-			instancePropertyTree.setChildrenAllowed(property, true);
-			instancePropertyTree.setParent(propertyDefinition, property);
-		}
-		else {
-			PropertyDefinition parent = property.getPropertyDefinition();
-			instancePropertyTree.setChildrenAllowed(parent, true);
-			instancePropertyTree.setParent(property, parent);
-		}		
-	}
-	
 
 	public void show(Window parent) {
 		parent.addWindow(this);
