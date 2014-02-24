@@ -48,6 +48,7 @@ import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.StringListProperty;
 import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
+import de.catma.ui.tagmanager.InstancePropertyDefinitionDialog;
 
 public class TagInstanceTree extends HorizontalLayout {
 	
@@ -170,15 +171,39 @@ public class TagInstanceTree extends HorizontalLayout {
 		tagInstanceTree.addListener(new ItemClickEvent.ItemClickListener() {
 			
 			public void itemClick(ItemClickEvent event) {
+				Object selection = tagInstanceTree.getValue();
+//				final Property property = getProperty((Set<?>)selection);
+				final TagInstance tagInstance = getTagInstance((Set<?>)selection);
 				
-				if (event.isDoubleClick()){
-					btEditPropertyValues.click();
-				}				
+				if ((event.isDoubleClick()) && (tagInstance != null)){
+					InstancePropertyDefinitionDialog dialog = 
+							new InstancePropertyDefinitionDialog(
+									tagInstance,
+									new SaveCancelListener<List<Property>>() {
+										public void cancelPressed() {}
+										public void savePressed(List<Property> list) {
+											
+										}
+									});
+					dialog.show(getApplication().getMainWindow());
+				}
+				
 			}
 		});
 
 	}	
 
+	private TagInstance getTagInstance(Set<?> selection) {
+		if (selection.iterator().hasNext()) {
+			Object selVal = selection.iterator().next();
+			while ((selVal != null) && !(selVal instanceof TagInstance)) {
+				selVal = tagInstanceTree.getParent(selVal);
+			}
+			return (TagInstance)selVal;
+		}
+		return null;
+	}
+	
 	private Property getProperty(Set<?> selection) {
 		if (selection.iterator().hasNext()) {
 			Object selVal = selection.iterator().next();
