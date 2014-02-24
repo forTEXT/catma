@@ -84,7 +84,6 @@ import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
 public class DBRepository implements IndexedRepository {
-	//TODO: handle sqlstate 40001 deadlock
 	
 	private String name;
 	

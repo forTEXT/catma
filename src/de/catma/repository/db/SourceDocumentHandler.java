@@ -83,7 +83,7 @@ import de.catma.util.Pair;
 
 class SourceDocumentHandler {
 
-	private static final String SOURCEDOCS_FOLDER = "sourcedocuments";
+	static final String SOURCEDOCS_FOLDER = "sourcedocuments";
 	static final String REPO_URI_SCHEME = "catma://";
 	
 	private DBRepository dbRepository;

@@ -67,6 +67,7 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
+import de.catma.repository.db.MaintenanceSemaphore.Type;
 import de.catma.repository.db.jooq.TransactionalDSLContext;
 import de.catma.repository.db.mapper.FieldToValueMapper;
 import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
@@ -199,6 +200,27 @@ class UserMarkupCollectionHandler {
 		final UserMarkupCollection umc =
 				userMarkupCollectionSerializationHandler.deserialize(null, inputStream);
 
+		MaintenanceSemaphore mSem = null;
+		
+		try {
+			mSem = new MaintenanceSemaphore(Type.IMPORT);
+			
+			if (!mSem.hasAccess()) {
+				dbRepository.getPropertyChangeSupport().firePropertyChange(
+						RepositoryChangeEvent.notification.name(),
+						null, 
+						"Currently we cannot import the collection," +
+						" please try again in a few minutes!");	
+				return;
+			}
+		}
+		catch (IOException e) {
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, 
+					new IOException(e));	
+			return;
+		}
 		
 		// the import is not a transaction by intention
 		// import can become a pretty long running operation
@@ -216,6 +238,8 @@ class UserMarkupCollectionHandler {
 			UserMarkupCollectionReference umcRef = importUserMarkupCollection(
 					db, umc, sourceDocument);
 
+			mSem.release();
+			
 			// index the imported collection
 			dbRepository.getIndexer().index(
 					umc.getTagReferences(), 
@@ -232,6 +256,8 @@ class UserMarkupCollectionHandler {
 
 		}
 		catch (Exception dae) {
+			mSem.release();
+
 			dbRepository.setTagManagerListenersEnabled(true);
 
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
