@@ -124,8 +124,15 @@ public class PropertyEditDialog extends Window {
 		// TODO: bookkeeping about which p has changed for saveCancelListener
 	}
 
-	private void initActions(SaveCancelListener<List<Property>> saveCancelListener){
+	private void initActions(final SaveCancelListener<List<Property>> saveCancelListener){
 		// TODO: call save/cancel
+		btCancel.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				getParent().removeWindow(PropertyEditDialog.this);
+				saveCancelListener.cancelPressed();
+			}
+		});
 		// TODO: add new value functionality
 	}
 
