@@ -16,7 +16,7 @@ public class MaintenanceJob implements Job {
 
 	public void execute(JobExecutionContext ctx) throws JobExecutionException {
 		try {
-			new DBMaintainer((String)ctx.getJobDetail().getJobDataMap().get(
+			new DBRepositoryMaintainer((String)ctx.getJobDetail().getJobDataMap().get(
 					JobInstaller.JobDataKey.PROPERTIES_PATH.name())).run();
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "error executing HeurecleaExporterJob", e);

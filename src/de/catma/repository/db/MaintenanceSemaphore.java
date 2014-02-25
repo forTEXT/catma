@@ -1,145 +1,73 @@
 package de.catma.repository.db;
 
-import static de.catma.repository.db.jooqgen.catmarepository.Tables.MAINTENANCE_SEM;
-
-import java.io.IOException;
-import java.util.logging.Level;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.sql.DataSource;
-
-import org.jooq.DSLContext;
-import org.jooq.Record;
-import org.jooq.Result;
-import org.jooq.SQLDialect;
-import org.jooq.impl.DSL;
-
-import de.catma.repository.db.jooq.TransactionalDSLContext;
-import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
-
 public class MaintenanceSemaphore {
-	
-	public class AccessDeniedException extends IllegalStateException {
-		
-	}
-	
+
 	public enum Type {
 		CLEANING,
 		IMPORT,
 		SYNCH,
 		;
-		
-
-		public String[] getExclusionTypes() {
-			switch (this) {
-			case CLEANING : {
-				return new String[] {CLEANING.name(), IMPORT.name(), SYNCH.name()};
-			}
-			case IMPORT : {
-				return new String[] {CLEANING.name()};
-			}
-			case SYNCH : {
-				return new String[] {CLEANING.name()};
-			}
-			}
-			
-			return new String[] {CLEANING.name(), IMPORT.name(), SYNCH.name()};
-		}
 	}
 	
-	private DataSource dataSource;
-	private Integer maintenanceSemId = null;
+	private final static ReentrantLock CLEANING_LOCK = new ReentrantLock();
+	private final static AtomicInteger IMPORT_SYNCH_COUNT = new AtomicInteger();
+	
 	private Type semType;
+	private boolean access = false;
+	private Logger logger = Logger.getLogger(MaintenanceSemaphore.class.getName());
 	
-	public MaintenanceSemaphore(Type semType) throws IOException {
+	public MaintenanceSemaphore(Type semType) {
 		this.semType = semType;
-		try {
-			Context  context = new InitialContext();
-			this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
-			
-			createAccess();
-		}
-		catch (NamingException ne) {
-			throw new IOException(ne);
-		}
+		createAccess();
 	}
 
-	private void createAccess() throws IOException {
-		TransactionalDSLContext db = new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
-		try {
-			db.beginTransaction();
-
-			Result<Record> otherExclusiveAccess = db
-			.select()
-			.from(MAINTENANCE_SEM)
-			.where(MAINTENANCE_SEM.TYPE.in(semType.getExclusionTypes()))
-			.forUpdate()
-			.fetch();
-			
-			if (otherExclusiveAccess.isEmpty()) {
-				maintenanceSemId = db
-					.insertInto(MAINTENANCE_SEM, MAINTENANCE_SEM.TYPE)
-					.values(semType.name())
-					.returning(MAINTENANCE_SEM.MAINTENANCE_SEMID)
-					.fetchOne()
-					.map(new IDFieldToIntegerMapper(
-						MAINTENANCE_SEM.MAINTENANCE_SEMID));
-				Logger.getLogger(
-						MaintenanceSemaphore.class.getName()).info(
-							"aquired maintenance semaphore type " 
-							+ semType + " id " + maintenanceSemId);
+	private void createAccess() {
+		logger.info("trying to get access for type " + semType);
+		
+		if (semType.equals(Type.CLEANING)) {
+			CLEANING_LOCK.lock();
+			if (IMPORT_SYNCH_COUNT.get() > 0) {
+				CLEANING_LOCK.unlock();
+				logger.info("could not get access because imports or synchs are running");
 			}
-			
-			db.commitTransaction();
-			
-			if (maintenanceSemId == null) {
-				Logger.getLogger(
-					MaintenanceSemaphore.class.getName()).info(
-						"aquiring maintenance semaphore type " 
-						+ semType + " failed!");
+			else {
+				access = true;
+				logger.info("access aquired for type " + semType);
 			}
 		}
-		catch (Exception dae) {
-			db.rollbackTransaction();
-			db.close();
-			throw new IOException(dae);
-		}
-		finally {
-			if (db!=null) {
-				db.close();
+		else {
+			IMPORT_SYNCH_COUNT.incrementAndGet();
+			if (CLEANING_LOCK.isLocked()) {
+				IMPORT_SYNCH_COUNT.decrementAndGet();
+				logger.info("could not get access because a cleaning is running");
+			}
+			else {
+				access = true;
+				logger.info("access aquired for type " + semType 
+						+ " current value " + IMPORT_SYNCH_COUNT.get());
 			}
 		}
 	}
 
-	boolean hasAccess() {
-		return maintenanceSemId != null;
+	public boolean hasAccess() {
+		return access;
 	}
 	
 	public void release() {
-		try {
-			if (maintenanceSemId != null) {
-				DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
-				db
-				.delete(MAINTENANCE_SEM)
-				.where(MAINTENANCE_SEM.MAINTENANCE_SEMID.eq(maintenanceSemId))
-				.execute();
-
-				Logger.getLogger(
-					MaintenanceSemaphore.class.getName()).info(
-						"released maintenance semaphore type " 
-						+ semType + " id " + maintenanceSemId);
-						
-				maintenanceSemId = null;
+		if (access) {
+			if (semType.equals(Type.CLEANING)) {
+				CLEANING_LOCK.unlock();
+				logger.info("semaphore released for type " + semType);
 			}
-		}
-		catch (Exception e) {
-			Logger.getLogger(MaintenanceSemaphore.class.getName()).log(
-				Level.SEVERE, 
-				"error releasing the maintenance semaphore type " 
-				+ semType + " id " + maintenanceSemId);
+			else {
+				IMPORT_SYNCH_COUNT.decrementAndGet();
+				logger.info("semaphore released for type " + semType 
+						+ " current value " + IMPORT_SYNCH_COUNT.get());
+			}
 		}
 	}
 }

@@ -200,27 +200,17 @@ class UserMarkupCollectionHandler {
 		final UserMarkupCollection umc =
 				userMarkupCollectionSerializationHandler.deserialize(null, inputStream);
 
-		MaintenanceSemaphore mSem = null;
+		MaintenanceSemaphore mSem = new MaintenanceSemaphore(Type.IMPORT);
 		
-		try {
-			mSem = new MaintenanceSemaphore(Type.IMPORT);
-			
-			if (!mSem.hasAccess()) {
-				dbRepository.getPropertyChangeSupport().firePropertyChange(
-						RepositoryChangeEvent.notification.name(),
-						null, 
-						"Currently we cannot import the collection," +
-						" please try again in a few minutes!");	
-				return;
-			}
-		}
-		catch (IOException e) {
+		if (!mSem.hasAccess()) {
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
-					RepositoryChangeEvent.exceptionOccurred.name(),
+					RepositoryChangeEvent.notification.name(),
 					null, 
-					new IOException(e));	
+					"Currently we cannot import the collection," +
+					" please try again in a few minutes!");	
 			return;
 		}
+
 		
 		// the import is not a transaction by intention
 		// import can become a pretty long running operation
