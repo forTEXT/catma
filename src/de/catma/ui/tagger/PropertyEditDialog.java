@@ -19,12 +19,19 @@
 package de.catma.ui.tagger;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import com.vaadin.data.Validator.InvalidValueException;
+import com.vaadin.data.util.PropertysetItem;
+import com.vaadin.event.ItemClickEvent;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.TextField;
@@ -34,9 +41,12 @@ import com.vaadin.ui.Window;
 
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
+import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagInstance;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.dialog.StringListProperty;
+import de.catma.util.IDGenerator;
 
 public class PropertyEditDialog extends Window {
 
@@ -53,6 +63,7 @@ public class PropertyEditDialog extends Window {
 	private Button btSave;
 	private Button btCancel;
 	private TagInstance tagInstance;
+	List<Property> propertyList;
 
 	public PropertyEditDialog(TagInstance tagInstance,
 			SaveCancelListener<List<Property>> saveCancelListener) {
@@ -122,10 +133,14 @@ public class PropertyEditDialog extends Window {
 		p.setPropertyValueList(new PropertyValueList(valueList));
 		
 		// TODO: bookkeeping about which p has changed for saveCancelListener
+		propertyList.add(p);
+		tagInstance.getProperty(p.getPropertyDefinition().getUuid());
+		
+		
 	}
 
 	private void initActions(final SaveCancelListener<List<Property>> saveCancelListener){
-		// TODO: call save/cancel
+		// TODO: call save
 		btCancel.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -133,7 +148,54 @@ public class PropertyEditDialog extends Window {
 				saveCancelListener.cancelPressed();
 			}
 		});
+		
+		btSave.addListener(new ClickListener() {
+			
+		@SuppressWarnings("unchecked")
+			public void buttonClick(ClickEvent event) {
+				getParent().removeWindow(PropertyEditDialog.this);
+				saveCancelListener.savePressed(propertyList);
+			}
+		});
+		
 		// TODO: add new value functionality
+		btAdd.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				Object selection = propertyTree.getValue();
+				final Property property = getProperty(selection);
+				final String pValue = (String)newValueInput.getValue();
+				if ((pValue == null)||(pValue.isEmpty())) {
+					getApplication().getMainWindow().showNotification(
+						"Info", "The value can not be empty!", 
+						Notification.TYPE_TRAY_NOTIFICATION);
+				}
+				else {
+							
+					if ( (property == null) ) {
+						getWindow().showNotification(
+							"Information", 
+							"Please select at least one Property from the list first!",
+							Notification.TYPE_TRAY_NOTIFICATION);
+					}
+					else {
+
+						String pValueItemId = property.getPropertyDefinition().getUuid() + "_" + pValue;
+						propertyTree.addItem(
+								new Object[] {
+										null,
+										pValue,
+										createCheckBox(property, pValue)
+								},
+								pValueItemId);		
+						propertyTree.setParent(pValueItemId, property.getPropertyDefinition());
+						propertyTree.setChildrenAllowed(pValueItemId, false);
+						newValueInput.setValue("");
+					}
+					
+				}
+			}
+		});
 	}
 
 	private void initComponents(){
@@ -145,6 +207,7 @@ public class PropertyEditDialog extends Window {
 		propertyTree.setSelectable(true);
 		propertyTree.setMultiSelect(true);
 		propertyTree.setSizeFull();
+		propertyTree.setImmediate(true);
 		
 		propertyTree.addContainerProperty(TreePropertyName.property, String.class, "");
 		propertyTree.setColumnHeader(TreePropertyName.property, "Property");
@@ -191,6 +254,16 @@ public class PropertyEditDialog extends Window {
 		setModal(true);
 		center();
 	}
+	
+	private Property getProperty(Object selVal) {
+			selVal = propertyTree.getValue();
+			while ((selVal != null) && !(selVal instanceof Property)) {
+				selVal = propertyTree.getParent(selVal);
+			return (Property)selVal;
+		}
+		return null;
+	}
+	
 
 	public void show(Window parent) {
 		parent.addWindow(this);
