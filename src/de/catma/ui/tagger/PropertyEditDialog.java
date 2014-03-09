@@ -163,7 +163,7 @@ public class PropertyEditDialog extends Window {
 			
 			public void buttonClick(ClickEvent event) {
 				Object selection = propertyTree.getValue();
-				final Property property = getProperty(selection);
+				final Property property = getProperty((Set<?>)selection);
 				final String pValue = (String)newValueInput.getValue();
 				if ((pValue == null)||(pValue.isEmpty())) {
 					getApplication().getMainWindow().showNotification(
@@ -172,7 +172,9 @@ public class PropertyEditDialog extends Window {
 				}
 				else {
 							
-					if ( (property == null) ) {
+					if (((Set<?>)selection).isEmpty()
+//							||(property == null)
+							){
 						getWindow().showNotification(
 							"Information", 
 							"Please select at least one Property from the list first!",
@@ -255,10 +257,12 @@ public class PropertyEditDialog extends Window {
 		center();
 	}
 	
-	private Property getProperty(Object selVal) {
-			selVal = propertyTree.getValue();
+	private Property getProperty(Set<?> selection) {
+		if (!selection.isEmpty()){
+			Object selVal = selection;
 			while ((selVal != null) && !(selVal instanceof Property)) {
 				selVal = propertyTree.getParent(selVal);
+			}
 			return (Property)selVal;
 		}
 		return null;
