@@ -176,11 +176,11 @@ public class TagInstanceTree extends HorizontalLayout {
 				
 				if ((event.isDoubleClick()) && (tagInstance != null)){
 					PropertyEditDialog dialog = 
-							new PropertyEditDialog(
+							new PropertyEditDialog("Edit Properties for Tag "+tagInstance.getTagDefinition().getName(),
 									tagInstance,
-									new SaveCancelListener<List<Property>>() {
+									new SaveCancelListener<Set<Property>>() {
 										public void cancelPressed() {}
-										public void savePressed(List<Property> list) {
+										public void savePressed(Set<Property> list) {
 											
 										}
 									});

@@ -63,11 +63,13 @@ public class PropertyEditDialog extends Window {
 	private Button btSave;
 	private Button btCancel;
 	private TagInstance tagInstance;
-	List<Property> propertyList;
+	private Set<Property> changedProperties;
 
-	public PropertyEditDialog(TagInstance tagInstance,
-			SaveCancelListener<List<Property>> saveCancelListener) {
+	public PropertyEditDialog(String caption, TagInstance tagInstance,
+			SaveCancelListener<Set<Property>> saveCancelListener) {
+		super(caption);
 		this.tagInstance = tagInstance; 
+		changedProperties = new HashSet<Property>();
 		initComponents();
 		initActions(saveCancelListener);
 		initData();
@@ -82,12 +84,16 @@ public class PropertyEditDialog extends Window {
 							propertyDefinition.getName(),
 							null,
 							null},
-					propertyDefinition);
-			propertyTree.setChildrenAllowed(propertyDefinition, true);
+					p);
+			propertyTree.setChildrenAllowed(p, true);
 			
-			for (String pValue : 
-				propertyDefinition.getPossibleValueList().getPropertyValueList().getValues()) {
-				
+
+			
+			Set<String> values = new HashSet<String>();
+			values.addAll(propertyDefinition.getPossibleValueList().getPropertyValueList().getValues());
+			values.addAll(p.getPropertyValueList().getValues());
+			
+			for (String pValue : values) {
 				String pValueItemId = propertyDefinition.getUuid() + "_" + pValue;
 				propertyTree.addItem(
 					new Object[] {
@@ -97,12 +103,17 @@ public class PropertyEditDialog extends Window {
 					},
 					pValueItemId);
 				
-				propertyTree.setParent(pValueItemId, propertyDefinition);
+				propertyTree.setParent(pValueItemId, p);
 				propertyTree.setChildrenAllowed(pValueItemId, false);
 			}
-		
-			propertyTree.setCollapsed(propertyDefinition, false);
+			
+			propertyTree.setCollapsed(p, false);
 		}
+		
+		if (tagInstance.getUserDefinedProperties().size() == 1){
+			propertyTree.setValue(tagInstance.getUserDefinedProperties().iterator().next());
+		}
+		
 	}
 
 	private CheckBox createCheckBox(final Property p, final String pValue) {
@@ -132,14 +143,12 @@ public class PropertyEditDialog extends Window {
 		
 		p.setPropertyValueList(new PropertyValueList(valueList));
 		
-		// TODO: bookkeeping about which p has changed for saveCancelListener
-		propertyList.add(p);
-		tagInstance.getProperty(p.getPropertyDefinition().getUuid());
-		
+		changedProperties.add(
+				tagInstance.getProperty(p.getPropertyDefinition().getUuid()));
 		
 	}
 
-	private void initActions(final SaveCancelListener<List<Property>> saveCancelListener){
+	private void initActions(final SaveCancelListener<Set<Property>> saveCancelListener){
 		// TODO: call save
 		btCancel.addListener(new ClickListener() {
 			
@@ -151,19 +160,20 @@ public class PropertyEditDialog extends Window {
 		
 		btSave.addListener(new ClickListener() {
 			
-		@SuppressWarnings("unchecked")
 			public void buttonClick(ClickEvent event) {
+				
+				
+				
 				getParent().removeWindow(PropertyEditDialog.this);
-				saveCancelListener.savePressed(propertyList);
+				saveCancelListener.savePressed(changedProperties);
 			}
 		});
 		
-		// TODO: add new value functionality
 		btAdd.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				Object selection = propertyTree.getValue();
-				final Property property = getProperty((Set<?>)selection);
+				final Property property = getProperty(selection);
 				final String pValue = (String)newValueInput.getValue();
 				if ((pValue == null)||(pValue.isEmpty())) {
 					getApplication().getMainWindow().showNotification(
@@ -172,16 +182,23 @@ public class PropertyEditDialog extends Window {
 				}
 				else {
 							
-					if (((Set<?>)selection).isEmpty()
-//							||(property == null)
-							){
+					if (property == null) {
 						getWindow().showNotification(
 							"Information", 
-							"Please select at least one Property from the list first!",
+							"Please select exactly one Property from the list first!",
 							Notification.TYPE_TRAY_NOTIFICATION);
 					}
 					else {
-
+						if (property.getPropertyValueList().getValues().contains(
+								pValue) ||
+							property.getPropertyDefinition()
+								.getPossibleValueList().getPropertyValueList().getValues().contains(pValue)){
+								getApplication().getMainWindow().showNotification(
+										"Info", "This value already exists. Please choose another name!", 
+										Notification.TYPE_TRAY_NOTIFICATION);
+						}
+						
+						propertyValueChanged(property, pValue, true);
 						String pValueItemId = property.getPropertyDefinition().getUuid() + "_" + pValue;
 						propertyTree.addItem(
 								new Object[] {
@@ -193,6 +210,7 @@ public class PropertyEditDialog extends Window {
 						propertyTree.setParent(pValueItemId, property.getPropertyDefinition());
 						propertyTree.setChildrenAllowed(pValueItemId, false);
 						newValueInput.setValue("");
+						
 					}
 					
 				}
@@ -207,8 +225,9 @@ public class PropertyEditDialog extends Window {
 		
 		propertyTree = new TreeTable();
 		propertyTree.setSelectable(true);
-		propertyTree.setMultiSelect(true);
+
 		propertyTree.setSizeFull();
+		propertyTree.setPageLength(10);
 		propertyTree.setImmediate(true);
 		
 		propertyTree.addContainerProperty(TreePropertyName.property, String.class, "");
@@ -257,15 +276,12 @@ public class PropertyEditDialog extends Window {
 		center();
 	}
 	
-	private Property getProperty(Set<?> selection) {
-		if (!selection.isEmpty()){
-			Object selVal = selection;
-			while ((selVal != null) && !(selVal instanceof Property)) {
-				selVal = propertyTree.getParent(selVal);
-			}
-			return (Property)selVal;
+	private Property getProperty(Object selection) {
+		Object selVal = selection;
+		while ((selVal != null) && !(selVal instanceof Property)) {
+			selVal = propertyTree.getParent(selVal);
 		}
-		return null;
+		return (Property)selVal;
 	}
 	
 
