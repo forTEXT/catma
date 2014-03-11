@@ -24,16 +24,22 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.vaadin.data.Item;
 import com.vaadin.data.Validator.InvalidValueException;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
+import com.vaadin.terminal.ClassResource;
+import com.vaadin.terminal.Resource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
@@ -51,6 +57,7 @@ import de.catma.util.IDGenerator;
 public class PropertyEditDialog extends Window {
 
 	private static enum TreePropertyName {
+		icon,
 		property,
 		value,
 		assigned, 
@@ -64,6 +71,7 @@ public class PropertyEditDialog extends Window {
 	private Button btCancel;
 	private TagInstance tagInstance;
 	private Set<Property> changedProperties;
+	private Label hintText;
 
 	public PropertyEditDialog(String caption, TagInstance tagInstance,
 			SaveCancelListener<Set<Property>> saveCancelListener) {
@@ -78,6 +86,8 @@ public class PropertyEditDialog extends Window {
 	private void initData() {
 		for (Property p : tagInstance.getUserDefinedProperties()) {
 			PropertyDefinition propertyDefinition = p.getPropertyDefinition();
+//			ClassResource pIcon = new ClassResource(
+//					"ui/tagmanager/resources/ylwdiamd.gif", getApplication());
 			
 			propertyTree.addItem(
 					new Object[] {
@@ -223,6 +233,9 @@ public class PropertyEditDialog extends Window {
 		mainLayout.setMargin(true);
 		mainLayout.setSpacing(true);
 		
+		hintText = new Label("Please use the check boxes to select values.");
+		mainLayout.addComponent(hintText);
+		
 		propertyTree = new TreeTable();
 		propertyTree.setSelectable(true);
 
@@ -233,11 +246,23 @@ public class PropertyEditDialog extends Window {
 		propertyTree.addContainerProperty(TreePropertyName.property, String.class, "");
 		propertyTree.setColumnHeader(TreePropertyName.property, "Property");
 		
+		propertyTree.addContainerProperty(TreePropertyName.icon, Resource.class, null);
+		
 		propertyTree.addContainerProperty(TreePropertyName.value, String.class, "");
 		propertyTree.setColumnHeader(TreePropertyName.value, "Value");
 
 		propertyTree.addContainerProperty(TreePropertyName.assigned, CheckBox.class, "");
 		propertyTree.setColumnHeader(TreePropertyName.assigned, "Assigned");
+		
+		propertyTree.setItemCaptionPropertyId(TreePropertyName.property);
+		propertyTree.setItemIconPropertyId(TreePropertyName.icon);
+		
+		propertyTree.setVisibleColumns(
+				new Object[] {
+						TreePropertyName.property,
+						TreePropertyName.value,
+						TreePropertyName.assigned
+				});
 
 		mainLayout.addComponent(propertyTree);
 		
@@ -245,6 +270,7 @@ public class PropertyEditDialog extends Window {
 		textField.setSpacing(true);
 		
 		newValueInput = new TextField("Add possible value");
+		
 		textField.addComponent(newValueInput);
 
 		
@@ -254,6 +280,9 @@ public class PropertyEditDialog extends Window {
 		
 		mainLayout.addComponent(textField);
 		
+		hintText = new Label("New property values created here exist only for this tag instance! "
+				+ "For the creation of new systematic values use the Tag Manager.");
+		mainLayout.addComponent(hintText);
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setSpacing(true);
