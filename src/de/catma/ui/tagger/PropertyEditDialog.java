@@ -24,17 +24,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.vaadin.data.Item;
 import com.vaadin.data.Validator.InvalidValueException;
 import com.vaadin.data.util.PropertysetItem;
-import com.vaadin.event.ItemClickEvent;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.Resource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.CheckBox;
@@ -47,18 +44,16 @@ import com.vaadin.ui.Window;
 
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
-import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagInstance;
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.ui.dialog.StringListProperty;
 import de.catma.util.IDGenerator;
 
 public class PropertyEditDialog extends Window {
 
 	private static enum TreePropertyName {
-		icon,
 		property,
+		icon,
 		value,
 		assigned, 
 		;
@@ -76,7 +71,7 @@ public class PropertyEditDialog extends Window {
 	public PropertyEditDialog(String caption, TagInstance tagInstance,
 			SaveCancelListener<Set<Property>> saveCancelListener) {
 		super(caption);
-		this.tagInstance = tagInstance; 
+		this.tagInstance = tagInstance;
 		changedProperties = new HashSet<Property>();
 		initComponents();
 		initActions(saveCancelListener);
@@ -86,8 +81,8 @@ public class PropertyEditDialog extends Window {
 	private void initData() {
 		for (Property p : tagInstance.getUserDefinedProperties()) {
 			PropertyDefinition propertyDefinition = p.getPropertyDefinition();
-//			ClassResource pIcon = new ClassResource(
-//					"ui/tagmanager/resources/ylwdiamd.gif", getApplication());
+			ClassResource pIcon = new ClassResource(
+					"ui/tagmanager/resources/ylwdiamd.gif", getApplication());
 			
 			propertyTree.addItem(
 					new Object[] {
@@ -95,9 +90,10 @@ public class PropertyEditDialog extends Window {
 							null,
 							null},
 					p);
+			propertyTree.getContainerProperty(
+					propertyDefinition, TreePropertyName.icon).setValue(pIcon);
 			propertyTree.setChildrenAllowed(p, true);
 			
-
 			
 			Set<String> values = new HashSet<String>();
 			values.addAll(propertyDefinition.getPossibleValueList().getPropertyValueList().getValues());
@@ -246,7 +242,7 @@ public class PropertyEditDialog extends Window {
 		propertyTree.addContainerProperty(TreePropertyName.property, String.class, "");
 		propertyTree.setColumnHeader(TreePropertyName.property, "Property");
 		
-		propertyTree.addContainerProperty(TreePropertyName.icon, Resource.class, null);
+		propertyTree.addContainerProperty(TreePropertyName.icon, Resource.class, "");
 		
 		propertyTree.addContainerProperty(TreePropertyName.value, String.class, "");
 		propertyTree.setColumnHeader(TreePropertyName.value, "Value");
@@ -306,11 +302,10 @@ public class PropertyEditDialog extends Window {
 	}
 	
 	private Property getProperty(Object selection) {
-		Object selVal = selection;
-		while ((selVal != null) && !(selVal instanceof Property)) {
-			selVal = propertyTree.getParent(selVal);
+		while ((selection != null) && !(selection instanceof Property)) {
+			selection = propertyTree.getParent(selection);
 		}
-		return (Property)selVal;
+		return (Property)selection;
 	}
 	
 
