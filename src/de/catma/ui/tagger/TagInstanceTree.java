@@ -76,8 +76,8 @@ public class TagInstanceTree extends HorizontalLayout {
 	private TagIntanceActionListener tagInstanceActionListener;
 	private Button btRemoveTagInstance;
 	private Button btEditPropertyValues;
-	private TagInstanceInfo emptyContentInfoSet;
-	private Form contentInfoForm;
+	private TagInstanceInfo emptyTagInstanceInfo = new TagInstanceInfo();;
+	private Form tiInfoForm;
 
 	public TagInstanceTree(TagIntanceActionListener tagInstanceActionListener) {
 		this.tagInstanceActionListener = tagInstanceActionListener;
@@ -177,9 +177,9 @@ public class TagInstanceTree extends HorizontalLayout {
 		
 		tagInstanceTree.addListener(new ItemClickEvent.ItemClickListener() {
 			
+			@SuppressWarnings("unchecked")
 			public void itemClick(ItemClickEvent event) {
 				Object selection = tagInstanceTree.getValue();
-//				final Property property = getProperty((Set<?>)selection);
 				final TagInstance tagInstance = getTagInstance((Set<?>)selection);
 				
 				if ((event.isDoubleClick()) && (tagInstance != null)){
@@ -194,6 +194,17 @@ public class TagInstanceTree extends HorizontalLayout {
 										}
 									});
 					dialog.show(getApplication().getMainWindow());
+				}
+				else if (selection != null){
+					getTagInstance(selection);
+					tiInfoForm.setEnabled(true);
+//					tiInfoForm.setItemDataSource(
+//							new BeanItem<TagInstanceInfo>(
+//									new TagInstanceInfo(
+//											((TagInstance)selection).getTagInstanceInfo())));
+//					tiInfoForm.setVisibleItemProperties(new String[] {
+//							"tagPath","ti","umc"
+//					});
 				}
 				
 			}
@@ -262,18 +273,23 @@ public class TagInstanceTree extends HorizontalLayout {
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.caption, String.class, null);
 		tagInstanceTree.setColumnHeader(TagInstanceTreePropertyName.caption, "Tag Instance");
+		tagInstanceTree.setColumnExpandRatio(TagInstanceTreePropertyName.caption, 3);
 		
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.icon, Resource.class, null);
 
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.path, String.class, null);
+		tagInstanceTree.setColumnCollapsed(TagInstanceTreePropertyName.path, true);
+		tagInstanceTree.setColumnExpandRatio(TagInstanceTreePropertyName.path, 2);
 
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.instanceId, String.class, null);
+		tagInstanceTree.setColumnCollapsed(TagInstanceTreePropertyName.instanceId, true);
 		
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.umc, String.class, null);
+		tagInstanceTree.setColumnCollapsed(TagInstanceTreePropertyName.umc, true);
 
 		tagInstanceTree.setItemCaptionPropertyId(TagInstanceTreePropertyName.caption);
 		tagInstanceTree.setItemIconPropertyId(TagInstanceTreePropertyName.icon);
@@ -329,9 +345,9 @@ public class TagInstanceTree extends HorizontalLayout {
 		contentInfoPanel.setSpacing(true);
 		contentInfoPanel.setSizeFull();
 		contentInfoPanel.setMargin(true, true, true, true);
-		Component contentInfoForm = createContentInfoForm();
-		contentInfoPanel.addComponent(contentInfoForm);
-		contentInfoPanel.setExpandRatio(contentInfoForm, 1.0f);
+		Component tiInfoForm = createContentInfoForm();
+		contentInfoPanel.addComponent(tiInfoForm);
+		contentInfoPanel.setExpandRatio(tiInfoForm, 1.0f);
 		
 		return contentInfoPanel;
 	}
@@ -342,21 +358,22 @@ public class TagInstanceTree extends HorizontalLayout {
 		contentInfoPanel.getContent().setWidth("100%");
 		contentInfoPanel.setSizeFull();
 		
-		contentInfoForm = new Form();
-		contentInfoForm.setSizeFull();
-		contentInfoForm.setWriteThrough(false);
-		contentInfoForm.setReadOnly(true);
-		contentInfoForm.setEnabled(false);
+		tiInfoForm = new Form();
+		tiInfoForm.setSizeFull();
+		tiInfoForm.setWriteThrough(false);
+		tiInfoForm.setReadOnly(true);
+		tiInfoForm.setEnabled(false);
 		
-//		BeanItem<TagInstanceInfo> contentInfoItem = 
-//				new BeanItem<TagInstanceInfo>(emptyContentInfoSet);
-//		contentInfoForm.setItemDataSource(contentInfoItem);
-		contentInfoForm.setVisibleItemProperties(new String[] {
-				"path", "tagInstance", "userMarkupCollection"
+		BeanItem<TagInstanceInfo> tiInfoItem = 
+				new BeanItem<TagInstanceInfo>(emptyTagInstanceInfo);
+		
+		tiInfoForm.setItemDataSource(tiInfoItem);
+		tiInfoForm.setVisibleItemProperties(new String[] {
+				"tagPath", "tagInstance", "userMarkupCollection"
 		});
 		
-		contentInfoForm.setReadOnly(true);
-		contentInfoPanel.addComponent(contentInfoForm);
+		tiInfoForm.setReadOnly(true);
+		contentInfoPanel.addComponent(tiInfoForm);
 		
 		return contentInfoPanel;
 	}
