@@ -26,6 +26,7 @@ import java.util.Set;
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.vaadin.data.Item;
+import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
@@ -34,11 +35,16 @@ import com.vaadin.terminal.Resource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.Form;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeTable;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window.Notification;
 
+import de.catma.document.source.ContentInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyValueList;
@@ -70,6 +76,8 @@ public class TagInstanceTree extends HorizontalLayout {
 	private TagIntanceActionListener tagInstanceActionListener;
 	private Button btRemoveTagInstance;
 	private Button btEditPropertyValues;
+	private TagInstanceInfo emptyTagInstanceInfo = new TagInstanceInfo();;
+	private Form tiInfoForm;
 
 	public TagInstanceTree(TagIntanceActionListener tagInstanceActionListener) {
 		this.tagInstanceActionListener = tagInstanceActionListener;
@@ -169,22 +177,34 @@ public class TagInstanceTree extends HorizontalLayout {
 		
 		tagInstanceTree.addListener(new ItemClickEvent.ItemClickListener() {
 			
+			@SuppressWarnings("unchecked")
 			public void itemClick(ItemClickEvent event) {
 				Object selection = tagInstanceTree.getValue();
-//				final Property property = getProperty((Set<?>)selection);
 				final TagInstance tagInstance = getTagInstance((Set<?>)selection);
 				
 				if ((event.isDoubleClick()) && (tagInstance != null)){
 					PropertyEditDialog dialog = 
-							new PropertyEditDialog(
+							new PropertyEditDialog("Edit Properties for Tag "
+									+tagInstance.getTagDefinition().getName(),
 									tagInstance,
-									new SaveCancelListener<List<Property>>() {
+									new SaveCancelListener<Set<Property>>() {
 										public void cancelPressed() {}
-										public void savePressed(List<Property> list) {
+										public void savePressed(Set<Property> list) {
 											
 										}
 									});
 					dialog.show(getApplication().getMainWindow());
+				}
+				else if (selection != null){
+					getTagInstance(selection);
+					tiInfoForm.setEnabled(true);
+//					tiInfoForm.setItemDataSource(
+//							new BeanItem<TagInstanceInfo>(
+//									new TagInstanceInfo(
+//											((TagInstance)selection).getTagInstanceInfo())));
+//					tiInfoForm.setVisibleItemProperties(new String[] {
+//							"tagPath","ti","umc"
+//					});
 				}
 				
 			}
@@ -253,18 +273,23 @@ public class TagInstanceTree extends HorizontalLayout {
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.caption, String.class, null);
 		tagInstanceTree.setColumnHeader(TagInstanceTreePropertyName.caption, "Tag Instance");
+		tagInstanceTree.setColumnExpandRatio(TagInstanceTreePropertyName.caption, 3);
 		
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.icon, Resource.class, null);
 
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.path, String.class, null);
+		tagInstanceTree.setColumnCollapsed(TagInstanceTreePropertyName.path, true);
+		tagInstanceTree.setColumnExpandRatio(TagInstanceTreePropertyName.path, 2);
 
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.instanceId, String.class, null);
+		tagInstanceTree.setColumnCollapsed(TagInstanceTreePropertyName.instanceId, true);
 		
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.umc, String.class, null);
+		tagInstanceTree.setColumnCollapsed(TagInstanceTreePropertyName.umc, true);
 
 		tagInstanceTree.setItemCaptionPropertyId(TagInstanceTreePropertyName.caption);
 		tagInstanceTree.setItemIconPropertyId(TagInstanceTreePropertyName.icon);
@@ -292,6 +317,8 @@ public class TagInstanceTree extends HorizontalLayout {
 		addComponent(tagInstanceTree);
 		setExpandRatio(tagInstanceTree, 1.0f);
 		
+		VerticalLayout buttonsAndInfo = new VerticalLayout();
+		
 		GridLayout buttonGrid = new GridLayout(1, 2);
 		buttonGrid.setMargin(false, true, true, true);
 		buttonGrid.setSpacing(true);
@@ -302,7 +329,53 @@ public class TagInstanceTree extends HorizontalLayout {
 		btEditPropertyValues = new Button("Edit Property values");
 		buttonGrid.addComponent(btEditPropertyValues);
 		
-		addComponent(buttonGrid);
+		buttonsAndInfo.addComponent(buttonGrid);
+		
+		VerticalLayout contentInfoPanel = new VerticalLayout();
+		contentInfoPanel.addComponent(createContentInfoPanel());
+		
+		buttonsAndInfo.addComponent(contentInfoPanel);
+		
+		addComponent(buttonsAndInfo);
+		setExpandRatio(buttonsAndInfo, 1.0f);
+	}
+	
+	private Component createContentInfoPanel(){
+		HorizontalLayout contentInfoPanel = new HorizontalLayout();
+		contentInfoPanel.setSpacing(true);
+		contentInfoPanel.setSizeFull();
+		contentInfoPanel.setMargin(true, true, true, true);
+		Component tiInfoForm = createContentInfoForm();
+		contentInfoPanel.addComponent(tiInfoForm);
+		contentInfoPanel.setExpandRatio(tiInfoForm, 1.0f);
+		
+		return contentInfoPanel;
+	}
+	
+	private Component createContentInfoForm(){
+		Panel contentInfoPanel = new Panel();
+		contentInfoPanel.getContent().setSizeUndefined();
+		contentInfoPanel.getContent().setWidth("100%");
+		contentInfoPanel.setSizeFull();
+		
+		tiInfoForm = new Form();
+		tiInfoForm.setSizeFull();
+		tiInfoForm.setWriteThrough(false);
+		tiInfoForm.setReadOnly(true);
+		tiInfoForm.setEnabled(false);
+		
+		BeanItem<TagInstanceInfo> tiInfoItem = 
+				new BeanItem<TagInstanceInfo>(emptyTagInstanceInfo);
+		
+		tiInfoForm.setItemDataSource(tiInfoItem);
+		tiInfoForm.setVisibleItemProperties(new String[] {
+				"tagPath", "tagInstance", "userMarkupCollection"
+		});
+		
+		tiInfoForm.setReadOnly(true);
+		contentInfoPanel.addComponent(tiInfoForm);
+		
+		return contentInfoPanel;
 	}
 	
 	public void setTagInstances(List<TagInstanceInfo> tagInstances) {

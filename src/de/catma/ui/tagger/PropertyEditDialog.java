@@ -19,14 +19,24 @@
 package de.catma.ui.tagger;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import com.vaadin.data.Validator.InvalidValueException;
+import com.vaadin.data.util.PropertysetItem;
+import com.vaadin.terminal.ClassResource;
+import com.vaadin.terminal.Resource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
@@ -37,11 +47,13 @@ import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagInstance;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.util.IDGenerator;
 
 public class PropertyEditDialog extends Window {
 
 	private static enum TreePropertyName {
 		property,
+		icon,
 		value,
 		assigned, 
 		;
@@ -53,10 +65,14 @@ public class PropertyEditDialog extends Window {
 	private Button btSave;
 	private Button btCancel;
 	private TagInstance tagInstance;
+	private Set<Property> changedProperties;
+	private Label hintText;
 
-	public PropertyEditDialog(TagInstance tagInstance,
-			SaveCancelListener<List<Property>> saveCancelListener) {
-		this.tagInstance = tagInstance; 
+	public PropertyEditDialog(String caption, TagInstance tagInstance,
+			SaveCancelListener<Set<Property>> saveCancelListener) {
+		super(caption);
+		this.tagInstance = tagInstance;
+		changedProperties = new HashSet<Property>();
 		initComponents();
 		initActions(saveCancelListener);
 		initData();
@@ -65,18 +81,25 @@ public class PropertyEditDialog extends Window {
 	private void initData() {
 		for (Property p : tagInstance.getUserDefinedProperties()) {
 			PropertyDefinition propertyDefinition = p.getPropertyDefinition();
+			ClassResource pIcon = new ClassResource(
+					"ui/tagmanager/resources/ylwdiamd.gif", getApplication());
 			
 			propertyTree.addItem(
 					new Object[] {
 							propertyDefinition.getName(),
 							null,
 							null},
-					propertyDefinition);
-			propertyTree.setChildrenAllowed(propertyDefinition, true);
+					p);
+			propertyTree.getContainerProperty(
+					propertyDefinition, TreePropertyName.icon).setValue(pIcon);
+			propertyTree.setChildrenAllowed(p, true);
 			
-			for (String pValue : 
-				propertyDefinition.getPossibleValueList().getPropertyValueList().getValues()) {
-				
+			
+			Set<String> values = new HashSet<String>();
+			values.addAll(propertyDefinition.getPossibleValueList().getPropertyValueList().getValues());
+			values.addAll(p.getPropertyValueList().getValues());
+			
+			for (String pValue : values) {
 				String pValueItemId = propertyDefinition.getUuid() + "_" + pValue;
 				propertyTree.addItem(
 					new Object[] {
@@ -86,12 +109,17 @@ public class PropertyEditDialog extends Window {
 					},
 					pValueItemId);
 				
-				propertyTree.setParent(pValueItemId, propertyDefinition);
+				propertyTree.setParent(pValueItemId, p);
 				propertyTree.setChildrenAllowed(pValueItemId, false);
 			}
-		
-			propertyTree.setCollapsed(propertyDefinition, false);
+			
+			propertyTree.setCollapsed(p, false);
 		}
+		
+		if (tagInstance.getUserDefinedProperties().size() == 1){
+			propertyTree.setValue(tagInstance.getUserDefinedProperties().iterator().next());
+		}
+		
 	}
 
 	private CheckBox createCheckBox(final Property p, final String pValue) {
@@ -121,12 +149,79 @@ public class PropertyEditDialog extends Window {
 		
 		p.setPropertyValueList(new PropertyValueList(valueList));
 		
-		// TODO: bookkeeping about which p has changed for saveCancelListener
+		changedProperties.add(
+				tagInstance.getProperty(p.getPropertyDefinition().getUuid()));
+		
 	}
 
-	private void initActions(SaveCancelListener<List<Property>> saveCancelListener){
-		// TODO: call save/cancel
-		// TODO: add new value functionality
+	private void initActions(final SaveCancelListener<Set<Property>> saveCancelListener){
+		// TODO: call save
+		btCancel.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				getParent().removeWindow(PropertyEditDialog.this);
+				saveCancelListener.cancelPressed();
+			}
+		});
+		
+		btSave.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				
+				
+				
+				getParent().removeWindow(PropertyEditDialog.this);
+				saveCancelListener.savePressed(changedProperties);
+			}
+		});
+		
+		btAdd.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				Object selection = propertyTree.getValue();
+				final Property property = getProperty(selection);
+				final String pValue = (String)newValueInput.getValue();
+				if ((pValue == null)||(pValue.isEmpty())) {
+					getApplication().getMainWindow().showNotification(
+						"Info", "The value can not be empty!", 
+						Notification.TYPE_TRAY_NOTIFICATION);
+				}
+				else {
+							
+					if (property == null) {
+						getWindow().showNotification(
+							"Information", 
+							"Please select exactly one Property from the list first!",
+							Notification.TYPE_TRAY_NOTIFICATION);
+					}
+					else {
+						if (property.getPropertyValueList().getValues().contains(
+								pValue) ||
+							property.getPropertyDefinition()
+								.getPossibleValueList().getPropertyValueList().getValues().contains(pValue)){
+								getApplication().getMainWindow().showNotification(
+										"Info", "This value already exists. Please choose another name!", 
+										Notification.TYPE_TRAY_NOTIFICATION);
+						}
+						
+						propertyValueChanged(property, pValue, true);
+						String pValueItemId = property.getPropertyDefinition().getUuid() + "_" + pValue;
+						propertyTree.addItem(
+								new Object[] {
+										null,
+										pValue,
+										createCheckBox(property, pValue)
+								},
+								pValueItemId);		
+						propertyTree.setParent(pValueItemId, property.getPropertyDefinition());
+						propertyTree.setChildrenAllowed(pValueItemId, false);
+						newValueInput.setValue("");
+						
+					}
+					
+				}
+			}
+		});
 	}
 
 	private void initComponents(){
@@ -134,19 +229,36 @@ public class PropertyEditDialog extends Window {
 		mainLayout.setMargin(true);
 		mainLayout.setSpacing(true);
 		
+		hintText = new Label("Please use the check boxes to select values.");
+		mainLayout.addComponent(hintText);
+		
 		propertyTree = new TreeTable();
 		propertyTree.setSelectable(true);
-		propertyTree.setMultiSelect(true);
+
 		propertyTree.setSizeFull();
+		propertyTree.setPageLength(10);
+		propertyTree.setImmediate(true);
 		
 		propertyTree.addContainerProperty(TreePropertyName.property, String.class, "");
 		propertyTree.setColumnHeader(TreePropertyName.property, "Property");
+		
+		propertyTree.addContainerProperty(TreePropertyName.icon, Resource.class, "");
 		
 		propertyTree.addContainerProperty(TreePropertyName.value, String.class, "");
 		propertyTree.setColumnHeader(TreePropertyName.value, "Value");
 
 		propertyTree.addContainerProperty(TreePropertyName.assigned, CheckBox.class, "");
 		propertyTree.setColumnHeader(TreePropertyName.assigned, "Assigned");
+		
+		propertyTree.setItemCaptionPropertyId(TreePropertyName.property);
+		propertyTree.setItemIconPropertyId(TreePropertyName.icon);
+		
+		propertyTree.setVisibleColumns(
+				new Object[] {
+						TreePropertyName.property,
+						TreePropertyName.value,
+						TreePropertyName.assigned
+				});
 
 		mainLayout.addComponent(propertyTree);
 		
@@ -154,6 +266,7 @@ public class PropertyEditDialog extends Window {
 		textField.setSpacing(true);
 		
 		newValueInput = new TextField("Add possible value");
+		
 		textField.addComponent(newValueInput);
 
 		
@@ -163,6 +276,9 @@ public class PropertyEditDialog extends Window {
 		
 		mainLayout.addComponent(textField);
 		
+		hintText = new Label("New property values created here exist only for this tag instance! "
+				+ "For the creation of new systematic values use the Tag Manager.");
+		mainLayout.addComponent(hintText);
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setSpacing(true);
@@ -184,6 +300,14 @@ public class PropertyEditDialog extends Window {
 		setModal(true);
 		center();
 	}
+	
+	private Property getProperty(Object selection) {
+		while ((selection != null) && !(selection instanceof Property)) {
+			selection = propertyTree.getParent(selection);
+		}
+		return (Property)selection;
+	}
+	
 
 	public void show(Window parent) {
 		parent.addWindow(this);
