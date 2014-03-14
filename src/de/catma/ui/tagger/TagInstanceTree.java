@@ -20,13 +20,15 @@ package de.catma.ui.tagger;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.vaadin.data.Item;
-import com.vaadin.data.util.BeanItem;
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
@@ -35,16 +37,13 @@ import com.vaadin.terminal.Resource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.Form;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window.Notification;
 
-import de.catma.document.source.ContentInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyValueList;
@@ -53,10 +52,11 @@ import de.catma.tag.TagInstance;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.StringListProperty;
+import de.catma.ui.dialog.StringProperty;
 import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
 
 public class TagInstanceTree extends HorizontalLayout {
-	
+
 	static interface TagIntanceActionListener {
 		public void removeTagInstances(List<String> tagInstanceIDs);
 		public void updateProperty(TagInstance tagInstance, Property property);		
@@ -72,11 +72,18 @@ public class TagInstanceTree extends HorizontalLayout {
 		;
 	}
 	
+	private static enum TagInstanceFormPropertyName {
+		Instance,
+		Path,
+		ID,
+		Collection,
+		;
+	}
+	
 	private TreeTable tagInstanceTree;
 	private TagIntanceActionListener tagInstanceActionListener;
 	private Button btRemoveTagInstance;
 	private Button btEditPropertyValues;
-	private TagInstanceInfo emptyTagInstanceInfo = new TagInstanceInfo();;
 	private Form tiInfoForm;
 
 	public TagInstanceTree(TagIntanceActionListener tagInstanceActionListener) {
@@ -163,9 +170,6 @@ public class TagInstanceTree extends HorizontalLayout {
 									
 									property.setPropertyValueList(
 										new PropertyValueList(stringList.getList()));
-									// update prop values
-									// update prop value index
-									// (handle deletion of prop defs, update should be fine, needs testing) 
 									
 									tagInstanceActionListener.updateProperty(tagInstance, property);
 								}
@@ -177,62 +181,65 @@ public class TagInstanceTree extends HorizontalLayout {
 		
 		tagInstanceTree.addListener(new ItemClickEvent.ItemClickListener() {
 			
-			@SuppressWarnings("unchecked")
 			public void itemClick(ItemClickEvent event) {
+				
 				Object selection = tagInstanceTree.getValue();
-				final TagInstance tagInstance = getTagInstance((Set<?>)selection);
+				List<TagInstance> tagInstanceList = getTagInstance(selection);
 				
-				if ((event.isDoubleClick()) && (tagInstance != null)){
-					PropertyEditDialog dialog = 
-							new PropertyEditDialog("Edit Properties for Tag "
-									+tagInstance.getTagDefinition().getName(),
-									tagInstance,
-									new SaveCancelListener<Set<Property>>() {
-										public void cancelPressed() {}
-										public void savePressed(Set<Property> list) {
-											
-										}
-									});
-					dialog.show(getApplication().getMainWindow());
+				if (tagInstanceList.size() == 1) {
+					final TagInstance tagInstance  = tagInstanceList.get(0);
+					
+					if (event.isDoubleClick()){
+						PropertyEditDialog dialog = 
+								new PropertyEditDialog(
+										tagInstance,
+										new SaveCancelListener<Set<Property>>() {
+											public void cancelPressed() {}
+											public void savePressed(Set<Property> list) {
+												
+											}
+										});
+						dialog.show(getApplication().getMainWindow());
+					}
 				}
-				else if (selection != null){
-					getTagInstance(selection);
-					tiInfoForm.setEnabled(true);
-//					tiInfoForm.setItemDataSource(
-//							new BeanItem<TagInstanceInfo>(
-//									new TagInstanceInfo(
-//											((TagInstance)selection).getTagInstanceInfo())));
-//					tiInfoForm.setVisibleItemProperties(new String[] {
-//							"tagPath","ti","umc"
-//					});
-				}
-				
 			}
 		});
 
+		tagInstanceTree.addListener(new ValueChangeListener() {
+			
+			public void valueChange(ValueChangeEvent event) {
+				Object selection = tagInstanceTree.getValue();
+				List<TagInstance> tagInstanceList = getTagInstance(selection);
+				
+				if (tagInstanceList.size() == 1) {
+					final TagInstance tagInstance  = tagInstanceList.get(0);
+					
+					tiInfoForm.getItemProperty(TagInstanceFormPropertyName.Instance).setValue(
+					tagInstance.getTagDefinition().getName());
+					
+					Item tiItem = tagInstanceTree.getItem(tagInstance);
+					tiInfoForm.getItemProperty(TagInstanceFormPropertyName.Path).setValue(
+							tiItem.getItemProperty(TagInstanceTreePropertyName.path).getValue());
+					tiInfoForm.getItemProperty(TagInstanceFormPropertyName.ID).setValue(
+							tiItem.getItemProperty(TagInstanceTreePropertyName.instanceId).getValue());
+					tiInfoForm.getItemProperty(TagInstanceFormPropertyName.Collection).setValue(
+							tiItem.getItemProperty(TagInstanceTreePropertyName.umc).getValue());
+				}
+				else {
+					tiInfoForm.getItemProperty(TagInstanceFormPropertyName.Instance).setValue("");
+					tiInfoForm.getItemProperty(TagInstanceFormPropertyName.Path).setValue("");
+					tiInfoForm.getItemProperty(TagInstanceFormPropertyName.ID).setValue("");
+					tiInfoForm.getItemProperty(TagInstanceFormPropertyName.Collection).setValue("");
+		
+				}
+				tiInfoForm.getField(TagInstanceFormPropertyName.Instance).requestRepaint();
+				tiInfoForm.getField(TagInstanceFormPropertyName.Path).requestRepaint();
+				tiInfoForm.getField(TagInstanceFormPropertyName.ID).requestRepaint();
+				tiInfoForm.getField(TagInstanceFormPropertyName.Collection).requestRepaint();
+			}
+		});
 	}	
 
-	private TagInstance getTagInstance(Set<?> selection) {
-		if (selection.iterator().hasNext()) {
-			Object selVal = selection.iterator().next();
-			while ((selVal != null) && !(selVal instanceof TagInstance)) {
-				selVal = tagInstanceTree.getParent(selVal);
-			}
-			return (TagInstance)selVal;
-		}
-		return null;
-	}
-	
-	private Property getProperty(Set<?> selection) {
-		if (selection.iterator().hasNext()) {
-			Object selVal = selection.iterator().next();
-			while ((selVal != null) && !(selVal instanceof Property)) {
-				selVal = tagInstanceTree.getParent(selVal);
-			}
-			return (Property)selVal;
-		}
-		return null;
-	}
 
 	private void removeTagInstanceFromTree(TagInstance ti) {
 		for (Property p : ti.getUserDefinedProperties()) {
@@ -258,6 +265,18 @@ public class TagInstanceTree extends HorizontalLayout {
 			}
 		}
 		return selectedTagInstances;
+	}
+	
+	private Property getProperty(Set<?> selection) {
+		Iterator<?> iter = selection.iterator(); 
+		if (iter.hasNext()) {
+			Object selVal = iter.next();
+			while ((selVal != null) && !(selVal instanceof Property)) {
+				selVal = tagInstanceTree.getParent(selVal);
+			}
+			return (Property)selVal;
+		}
+		return null;
 	}
 
 	private void initComponents() {
@@ -331,53 +350,27 @@ public class TagInstanceTree extends HorizontalLayout {
 		
 		buttonsAndInfo.addComponent(buttonGrid);
 		
-		VerticalLayout contentInfoPanel = new VerticalLayout();
-		contentInfoPanel.addComponent(createContentInfoPanel());
+		tiInfoForm = new Form();
+		tiInfoForm.setCaption("Tag Instance Info");
 		
-		buttonsAndInfo.addComponent(contentInfoPanel);
+		tiInfoForm.addItemProperty(TagInstanceFormPropertyName.Instance, new StringProperty(""));
+		tiInfoForm.addItemProperty(TagInstanceFormPropertyName.Path, new StringProperty(""));
+		tiInfoForm.addItemProperty(TagInstanceFormPropertyName.ID, new StringProperty(""));
+		tiInfoForm.addItemProperty(TagInstanceFormPropertyName.Collection, new StringProperty(""));
 		
+		tiInfoForm.getItemProperty(TagInstanceFormPropertyName.Instance).setReadOnly(true);
+		tiInfoForm.getItemProperty(TagInstanceFormPropertyName.Path).setReadOnly(true);
+		tiInfoForm.getItemProperty(TagInstanceFormPropertyName.ID).setReadOnly(true);
+		tiInfoForm.getItemProperty(TagInstanceFormPropertyName.Collection).setReadOnly(true);
+		
+		tiInfoForm.setReadOnly(true);
+		
+		buttonsAndInfo.addComponent(tiInfoForm);
+
 		addComponent(buttonsAndInfo);
 		setExpandRatio(buttonsAndInfo, 1.0f);
 	}
-	
-	private Component createContentInfoPanel(){
-		HorizontalLayout contentInfoPanel = new HorizontalLayout();
-		contentInfoPanel.setSpacing(true);
-		contentInfoPanel.setSizeFull();
-		contentInfoPanel.setMargin(true, true, true, true);
-		Component tiInfoForm = createContentInfoForm();
-		contentInfoPanel.addComponent(tiInfoForm);
-		contentInfoPanel.setExpandRatio(tiInfoForm, 1.0f);
-		
-		return contentInfoPanel;
-	}
-	
-	private Component createContentInfoForm(){
-		Panel contentInfoPanel = new Panel();
-		contentInfoPanel.getContent().setSizeUndefined();
-		contentInfoPanel.getContent().setWidth("100%");
-		contentInfoPanel.setSizeFull();
-		
-		tiInfoForm = new Form();
-		tiInfoForm.setSizeFull();
-		tiInfoForm.setWriteThrough(false);
-		tiInfoForm.setReadOnly(true);
-		tiInfoForm.setEnabled(false);
-		
-		BeanItem<TagInstanceInfo> tiInfoItem = 
-				new BeanItem<TagInstanceInfo>(emptyTagInstanceInfo);
-		
-		tiInfoForm.setItemDataSource(tiInfoItem);
-		tiInfoForm.setVisibleItemProperties(new String[] {
-				"tagPath", "tagInstance", "userMarkupCollection"
-		});
-		
-		tiInfoForm.setReadOnly(true);
-		contentInfoPanel.addComponent(tiInfoForm);
-		
-		return contentInfoPanel;
-	}
-	
+
 	public void setTagInstances(List<TagInstanceInfo> tagInstances) {
 		tagInstanceTree.removeAllItems();
 		for (TagInstanceInfo ti : tagInstances) {
