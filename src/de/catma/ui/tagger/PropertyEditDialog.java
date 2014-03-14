@@ -19,24 +19,19 @@
 package de.catma.ui.tagger;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.vaadin.data.Validator.InvalidValueException;
-import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.Resource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Table;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
@@ -47,7 +42,6 @@ import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagInstance;
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.util.IDGenerator;
 
 public class PropertyEditDialog extends Window {
 
@@ -67,16 +61,28 @@ public class PropertyEditDialog extends Window {
 	private TagInstance tagInstance;
 	private Set<Property> changedProperties;
 	private Label hintText;
+	private boolean init = false;
 
-	public PropertyEditDialog(String caption, TagInstance tagInstance,
+	public PropertyEditDialog(TagInstance tagInstance,
 			SaveCancelListener<Set<Property>> saveCancelListener) {
-		super(caption);
+		super("Edit Properties for Tag "
+				+tagInstance.getTagDefinition().getName());
 		this.tagInstance = tagInstance;
 		changedProperties = new HashSet<Property>();
 		initComponents();
 		initActions(saveCancelListener);
-		initData();
 	}
+	
+	@Override
+	public void attach() {
+		super.attach();
+		
+		if (!init ) {
+			initData();
+			init = true;
+		}
+	}
+	
 
 	private void initData() {
 		for (Property p : tagInstance.getUserDefinedProperties()) {
@@ -91,7 +97,7 @@ public class PropertyEditDialog extends Window {
 							null},
 					p);
 			propertyTree.getContainerProperty(
-					propertyDefinition, TreePropertyName.icon).setValue(pIcon);
+					p, TreePropertyName.icon).setValue(pIcon);
 			propertyTree.setChildrenAllowed(p, true);
 			
 			
@@ -155,7 +161,7 @@ public class PropertyEditDialog extends Window {
 	}
 
 	private void initActions(final SaveCancelListener<Set<Property>> saveCancelListener){
-		// TODO: call save
+
 		btCancel.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
