@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,6 +62,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.IndexedRepository;
 import de.catma.queryengine.result.computation.DistributionComputation;
+import de.catma.repository.db.maintenance.UserManager;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.ui.DefaultProgressListener;
@@ -86,8 +86,6 @@ import de.catma.ui.visualizer.VisualizationManagerWindow;
 public class CatmaApplication extends Application
 	implements BackgroundServiceProvider, AnalyzerProvider, ParameterHandler {
 	
-	private static AtomicInteger userCount = new AtomicInteger(0);
-	
 	private static final String MINORVERSION = 
 			"(v"+new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date())+")";
 	private static final String WEB_INF_DIR = "WEB-INF";
@@ -108,6 +106,7 @@ public class CatmaApplication extends Application
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private Map<String,String[]> parameters = new HashMap<String, String[]>();
 	private boolean repositoryOpened = false;
+	private UserManager userManager = new UserManager();
 
 	@Override
 	public void init() {
@@ -281,8 +280,7 @@ public class CatmaApplication extends Application
 
 	public void openRepository(Repository repository) {
 		repositoryOpened = true;
-		userCount.incrementAndGet();
-		logger.info("user" + getUser() + " has been added to user count (" + getUserCount() + ")" );
+		logger.info("user" + getUser() + " has been added to user count (" + userManager.getUserCount() + ")" );
 		repositoryManagerView.openRepository(repository);
 		logger.info("repository has been opened for user" + getUser());
 	}
@@ -410,8 +408,7 @@ public class CatmaApplication extends Application
 		logger.info("application for user" + getUser() + " has been closed");
 		if (repositoryOpened) {
 			repositoryOpened = false;
-			userCount.decrementAndGet();
-			logger.info("user" + getUser() + " has been substracted from user count (" + getUserCount() + ")" );
+			logger.info("user" + getUser() + " has been substracted from user count (" + userManager.getUserCount() + ")" );
 		}
 		super.close();
 	}
@@ -450,7 +447,4 @@ public class CatmaApplication extends Application
 		visualizationManagerView.addDoubleTree(kwics);
 	}
 
-	public static int getUserCount() {
-		return userCount.get();
-	}
 }
