@@ -99,9 +99,12 @@ public class UserMarkupCollectionImport extends ServerResource {
 					newUmcListener);
 			}
 		}
+		catch (ResourceException re) {
+			throw new ResourceException(re.getStatus(), re.getMessage(), re);
+		}
 		catch (Exception e) {
 			throw new ResourceException(
-					Status.SERVER_ERROR_INTERNAL, "service implementation error");
+					Status.SERVER_ERROR_INTERNAL, "service implementation error", e);
 		}
 	}
 

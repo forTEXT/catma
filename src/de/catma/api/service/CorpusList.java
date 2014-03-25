@@ -49,10 +49,14 @@ public class CorpusList extends ServerResource {
 				return corpusEncoder.encodeAsList(corpora);
 			}
 		}
+		catch (ResourceException re) {
+			throw new ResourceException(re.getStatus(), re.getMessage(), re);
+		}
 		catch (Exception e) {
 			throw new ResourceException(
-					Status.SERVER_ERROR_INTERNAL, "service implementation error");
+					Status.SERVER_ERROR_INTERNAL, "service implementation error", e);
 		}
+
 	}
 
 }
