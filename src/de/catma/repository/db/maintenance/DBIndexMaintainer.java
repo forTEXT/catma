@@ -67,6 +67,11 @@ public class DBIndexMaintainer {
 				checkStaleIndexTagReferences(db);
 				// delete all index.proeprty that are no longer in repo.propertyvalue
 				checkStaleIndexProperties(db);
+				
+				//TODO: check time and exit after fixed period
+				
+				//TODO: maintain term/position index
+
 			}
 			else {
 				logger.info("there are users logged in, skipping index maintenance");

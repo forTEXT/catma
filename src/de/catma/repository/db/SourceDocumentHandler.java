@@ -81,10 +81,16 @@ import de.catma.util.CloseSafe;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
-class SourceDocumentHandler {
+/**
+ * This class is public only for implementation reasons, do not use outside this package or its subpackages.
+ * 
+ * @author marco.petris@web.de
+ *
+ */
+public class SourceDocumentHandler {
 
 	static final String SOURCEDOCS_FOLDER = "sourcedocuments";
-	static final String REPO_URI_SCHEME = "catma://";
+	public static final String REPO_URI_SCHEME = "catma://";
 	
 	private DBRepository dbRepository;
 	private String sourceDocsPath;
