@@ -96,7 +96,7 @@ public class DBRepositoryMaintainer {
 				logger.info("DB maintenance aborted, could not get semaphore access!");
 			}
 			//TODO. cleanup file only sds
-			//TODO: maintain index
+			//TODO: maintain term/position index
 			mSem.release();
 		}
 		catch (Exception e) {
