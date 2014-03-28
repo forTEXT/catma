@@ -42,10 +42,16 @@ public class DBIndexMaintainer {
 
 	private Logger logger;
 
-	public DBIndexMaintainer() {
+	public DBIndexMaintainer(int repoTagReferenceRowOffset,
+			int repoPropertyRowOffset, int indexTagReferenceRowOffset,
+			int indexPropertyRowOffset) {
+		this.repoTagReferenceRowOffset = repoTagReferenceRowOffset;
+		this.repoPropertyRowOffset = repoPropertyRowOffset;
+		this.indexTagReferenceRowOffset = indexTagReferenceRowOffset;
+		this.indexPropertyRowOffset = indexPropertyRowOffset;
 		this.logger = Logger.getLogger(DBIndexMaintainer.class.getName());
 	}
-	
+
 	public void run() throws IOException {
 		UserManager userManager = new UserManager();
 		try {
@@ -338,5 +344,21 @@ public class DBIndexMaintainer {
 			.execute();
 			
 		}
+	}
+	
+	public int getIndexPropertyRowOffset() {
+		return indexPropertyRowOffset;
+	}
+	
+	public int getIndexTagReferenceRowOffset() {
+		return indexTagReferenceRowOffset;
+	}
+	
+	public int getRepoPropertyRowOffset() {
+		return repoPropertyRowOffset;
+	}
+	
+	public int getRepoTagReferenceRowOffset() {
+		return repoTagReferenceRowOffset;
 	}
 }

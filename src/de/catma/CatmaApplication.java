@@ -62,6 +62,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.IndexedRepository;
 import de.catma.queryengine.result.computation.DistributionComputation;
+import de.catma.repository.LoginToken;
 import de.catma.repository.db.maintenance.UserManager;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
@@ -84,7 +85,7 @@ import de.catma.ui.visualizer.VisualizationManagerView;
 import de.catma.ui.visualizer.VisualizationManagerWindow;
 
 public class CatmaApplication extends Application
-	implements BackgroundServiceProvider, AnalyzerProvider, ParameterHandler {
+	implements BackgroundServiceProvider, AnalyzerProvider, ParameterHandler, LoginToken {
 	
 	private static final String MINORVERSION = 
 			"(v"+new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date())+")";
@@ -280,6 +281,7 @@ public class CatmaApplication extends Application
 
 	public void openRepository(Repository repository) {
 		repositoryOpened = true;
+		userManager.incrementUserCount(this);
 		logger.info("user" + getUser() + " has been added to user count (" + userManager.getUserCount() + ")" );
 		repositoryManagerView.openRepository(repository);
 		logger.info("repository has been opened for user" + getUser());
@@ -407,6 +409,7 @@ public class CatmaApplication extends Application
 		repositoryManagerView.getRepositoryManager().close();
 		logger.info("application for user" + getUser() + " has been closed");
 		if (repositoryOpened) {
+			userManager.decrementUserCount(this);
 			repositoryOpened = false;
 			logger.info("user" + getUser() + " has been substracted from user count (" + userManager.getUserCount() + ")" );
 		}

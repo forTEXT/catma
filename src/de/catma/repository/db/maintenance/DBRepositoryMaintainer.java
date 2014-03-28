@@ -59,8 +59,9 @@ public class DBRepositoryMaintainer {
 	private Logger logger;
 	private int fileCleanOffset = 0;
 
-	public DBRepositoryMaintainer(String fullPropertyFilePath) {
+	public DBRepositoryMaintainer(String fullPropertyFilePath, int fileCleanOffset) {
 		this.fullPropertyFilePath = fullPropertyFilePath;
+		this.fileCleanOffset = fileCleanOffset;
 		this.logger = Logger.getLogger(DBRepositoryMaintainer.class.getName());
 	}
 
@@ -694,5 +695,9 @@ public class DBRepositoryMaintainer {
 			logger.info("finished deleting obsolete SourceDocuments " + sourceDocumentIds);
 		}
 		
+	}
+	
+	public int getFileCleanOffset() {
+		return fileCleanOffset;
 	}
 }
