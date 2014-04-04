@@ -5,9 +5,9 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
-import org.quartz.CronScheduleBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.SchedulerException;
+import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 
@@ -33,8 +33,9 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 						DBRepoMaintenanceJob.class.getName()+"_Trigger",
 		    			TriggerGroup.DEFAULT.name()))
 				.startNow()
-//				.withSchedule(SimpleScheduleBuilder.repeatHourlyForTotalCount(1))
-				.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(0, 30).withMisfireHandlingInstructionDoNothing())
+				.withSchedule(SimpleScheduleBuilder.repeatHourlyForTotalCount(1))
+				.withSchedule(SimpleScheduleBuilder.repeatSecondlyForever(10))
+//				.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(0, 30).withMisfireHandlingInstructionDoNothing())
 //				.withSchedule(CalendarIntervalScheduleBuilder.calendarIntervalSchedule().withIntervalInSeconds(60))
 			    .build(),
 				jobDataMap);
@@ -46,8 +47,9 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 						DBIndexMaintenanceJob.class.getName()+"_Trigger",
 		    			TriggerGroup.DEFAULT.name()))
 				.startNow()
-//					.withSchedule(SimpleScheduleBuilder.repeatHourlyForTotalCount(1))
-				.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(0, 30).withMisfireHandlingInstructionDoNothing())
+					.withSchedule(SimpleScheduleBuilder.repeatHourlyForTotalCount(1))
+//					.withSchedule(SimpleScheduleBuilder.repeatSecondlyForever(10))
+//				.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(0, 30).withMisfireHandlingInstructionDoNothing())
 //					.withSchedule(CalendarIntervalScheduleBuilder.calendarIntervalSchedule().withIntervalInSeconds(60))
 			    .build(),
 				new JobDataMap());

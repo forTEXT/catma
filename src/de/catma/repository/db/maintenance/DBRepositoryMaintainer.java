@@ -28,7 +28,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -38,7 +37,6 @@ import javax.naming.InitialContext;
 import javax.sql.DataSource;
 
 import org.jooq.DSLContext;
-import org.jooq.Record1;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 
@@ -47,21 +45,17 @@ import de.catma.repository.db.CatmaDataSourceName;
 import de.catma.repository.db.FileURLFactory;
 import de.catma.repository.db.MaintenanceSemaphore;
 import de.catma.repository.db.MaintenanceSemaphore.Type;
-import de.catma.repository.db.SourceDocumentHandler;
 import de.catma.repository.db.mapper.FieldToValueMapper;
 import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
 
 public class DBRepositoryMaintainer {
 
-	private static final int MAX_FILE_CLEAN_COUNT = 10;
 	private String fullPropertyFilePath;
 	private String repoFolderPath;
 	private Logger logger;
-	private int fileCleanOffset = 0;
 
-	public DBRepositoryMaintainer(String fullPropertyFilePath, int fileCleanOffset) {
+	public DBRepositoryMaintainer(String fullPropertyFilePath) {
 		this.fullPropertyFilePath = fullPropertyFilePath;
-		this.fileCleanOffset = fileCleanOffset;
 		this.logger = Logger.getLogger(DBRepositoryMaintainer.class.getName());
 	}
 
@@ -97,7 +91,6 @@ public class DBRepositoryMaintainer {
 				cleanupPropertyDefPossibleValues(db);
 				
 				cleanupCorpora(db);
-				cleanupSourceDocumentFiles(db);
 			}
 			else {
 				logger.info("DB maintenance aborted, could not get semaphore access!");
@@ -111,46 +104,6 @@ public class DBRepositoryMaintainer {
 			}
 			throw new IOException(e);
 		}
-	}
-
-	private void cleanupSourceDocumentFiles(DSLContext db) {
-		logger.info("cleaning up stale sourcedocument files");
-		String sourceDocsPath =  
-				repoFolderPath + "/" + 
-				FileURLFactory.SOURCEDOCS_FOLDER + "/";
-		
-		File sourceDocsDir = new File(sourceDocsPath);
-		String[] fileNames = sourceDocsDir.list();
-		
-		Arrays.sort(fileNames);
-		if (fileNames.length <= fileCleanOffset) {
-			fileCleanOffset = 0;
-		}
-		for (int idx=fileCleanOffset; idx<fileNames.length; idx++) {
-			
-			String sourceDocName = fileNames[idx];
-			String localUri = SourceDocumentHandler.REPO_URI_SCHEME + sourceDocName;
-			
-			Record1<Integer> repoRow = db
-					.selectOne()
-					.from(SOURCEDOCUMENT)
-					.where(SOURCEDOCUMENT.LOCALURI.eq(localUri))
-					.fetchOne();
-			
-			if (repoRow == null) {
-				File sourceDocFile = new File(sourceDocsPath, sourceDocName);
-				
-				logger.info(sourceDocFile.getAbsolutePath() + " is stale and will be removed now");
-				sourceDocFile.delete();
-			}
-			
-			if (idx-fileCleanOffset > MAX_FILE_CLEAN_COUNT) {
-				fileCleanOffset+=(idx-fileCleanOffset);
-				break;
-			}
-			
-		}
-		
 	}
 
 	private void cleanupCorpora(DSLContext db) {
@@ -696,8 +649,5 @@ public class DBRepositoryMaintainer {
 		}
 		
 	}
-	
-	public int getFileCleanOffset() {
-		return fileCleanOffset;
-	}
+
 }

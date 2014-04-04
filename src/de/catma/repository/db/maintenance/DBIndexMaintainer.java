@@ -9,9 +9,13 @@ import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGINSTANCE;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGREFERENCE;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.USERMARKUPCOLLECTION;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.naming.Context;
@@ -27,14 +31,22 @@ import org.jooq.Record8;
 import org.jooq.Record9;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
+import org.jooq.conf.ParamType;
 import org.jooq.impl.DSL;
 
+import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.repository.db.CatmaDataSourceName;
+import de.catma.repository.db.FileURLFactory;
+import de.catma.repository.db.SourceDocumentHandler;
 import de.catma.repository.db.jooqgen.catmaindex.Routines;
 
 public class DBIndexMaintainer {
-	
+
+	private static final int MAX_FILE_CLEAN_COUNT = 10;
 	private static final int MAX_ROW_COUNT = 10;
+	private String fullPropertyFilePath;
+	private String repoFolderPath;
+	private int fileCleanOffset = 0;
 	private int repoTagReferenceRowOffset = 0;
 	private int repoPropertyRowOffset = 0;
 	private int indexTagReferenceRowOffset = 0;
@@ -42,9 +54,13 @@ public class DBIndexMaintainer {
 
 	private Logger logger;
 
-	public DBIndexMaintainer(int repoTagReferenceRowOffset,
+	public DBIndexMaintainer(String fullPropertyFilePath, int fileCleanOffset, int repoTagReferenceRowOffset,
 			int repoPropertyRowOffset, int indexTagReferenceRowOffset,
 			int indexPropertyRowOffset) {
+
+		this.fullPropertyFilePath = fullPropertyFilePath;
+		this.fileCleanOffset = fileCleanOffset;
+
 		this.repoTagReferenceRowOffset = repoTagReferenceRowOffset;
 		this.repoPropertyRowOffset = repoPropertyRowOffset;
 		this.indexTagReferenceRowOffset = indexTagReferenceRowOffset;
@@ -55,6 +71,11 @@ public class DBIndexMaintainer {
 	public void run() throws IOException {
 		UserManager userManager = new UserManager();
 		try {
+			Properties properties = new Properties();
+			properties.load(new FileInputStream(fullPropertyFilePath));
+			this.repoFolderPath = 
+				RepositoryPropertyKey.RepositoryFolderPath.getProperty(properties, 1);
+			
 			userManager.lockLogin();
 			logger.info("starting index maintenance");
 			if (userManager.getUserCount() == 0 ) {
@@ -74,10 +95,13 @@ public class DBIndexMaintainer {
 				// delete all index.proeprty that are no longer in repo.propertyvalue
 				checkStaleIndexProperties(db);
 				
+				cleanupSourceDocumentFiles(db);
+
 				//TODO: check time and exit after fixed period
 				
 				//TODO: maintain term/position index
 
+				logger.info("finished index maintenance");
 			}
 			else {
 				logger.info("there are users logged in, skipping index maintenance");
@@ -89,6 +113,46 @@ public class DBIndexMaintainer {
 			userManager.unlockLogin();
 			throw new IOException(e);
 		}	
+	}
+
+	private void cleanupSourceDocumentFiles(DSLContext db) {
+		logger.info("cleaning up stale sourcedocument files");
+		String sourceDocsPath =  
+				repoFolderPath + "/" + 
+				FileURLFactory.SOURCEDOCS_FOLDER + "/";
+		
+		File sourceDocsDir = new File(sourceDocsPath);
+		String[] fileNames = sourceDocsDir.list();
+		
+		Arrays.sort(fileNames);
+		if (fileNames.length <= fileCleanOffset) {
+			fileCleanOffset = 0;
+		}
+		for (int idx=fileCleanOffset; idx<fileNames.length; idx++) {
+			
+			String sourceDocName = fileNames[idx];
+			String localUri = SourceDocumentHandler.REPO_URI_SCHEME + sourceDocName;
+			
+			Record1<Integer> repoRow = db
+					.selectOne()
+					.from(SOURCEDOCUMENT)
+					.where(SOURCEDOCUMENT.LOCALURI.eq(localUri))
+					.fetchOne();
+			
+			if (repoRow == null) {
+				File sourceDocFile = new File(sourceDocsPath, sourceDocName);
+				
+				logger.info(sourceDocFile.getAbsolutePath() + " is stale and will be removed now");
+				sourceDocFile.delete();
+			}
+			
+			if (idx-fileCleanOffset > MAX_FILE_CLEAN_COUNT) {
+				fileCleanOffset+=(idx-fileCleanOffset);
+				break;
+			}
+			
+		}
+		
 	}
 
 	private void checkStaleIndexProperties(DSLContext db) {
@@ -119,12 +183,12 @@ public class DBIndexMaintainer {
 				.on(PROPERTY.PROPERTYID.eq(PROPERTYVALUE.PROPERTYID))
 			.join(PROPERTYDEFINITION)
 				.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID.eq(PROPERTY.PROPERTYDEFINITIONID))
-				.and(PROPERTYDEFINITION.UUID.eq(row.field2()))
-				.and(PROPERTYDEFINITION.NAME.eq(row.field3()))
+				.and(PROPERTYDEFINITION.UUID.eq(row.value2()))
+				.and(PROPERTYDEFINITION.NAME.eq(row.value3()))
 			.join(TAGINSTANCE)
 				.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
-				.and(TAGINSTANCE.UUID.eq(row.field1()))
-			.where(PROPERTYVALUE.VALUE.eq(row.field4()))
+				.and(TAGINSTANCE.UUID.eq(row.value1()))
+			.where(PROPERTYVALUE.VALUE.eq(row.value4()))
 			.fetchOne();
 			
 			if (repoRow == null) {
@@ -135,11 +199,16 @@ public class DBIndexMaintainer {
 		
 		logger.info("index tagreference entries " + toBeDeleted + " are removed from the index");
 		if (!toBeDeleted.isEmpty()) {
-			db
-			.delete(indexProperty)
-			.where(indexProperty.PROPERTYID.in(toBeDeleted))
-			.execute();
+//			db
+//			.delete(indexProperty)
+//			.where(indexProperty.PROPERTYID.in(toBeDeleted))
+//			.execute();
+//
 			
+			System.out.println(db
+					.delete(indexProperty)
+					.where(indexProperty.PROPERTYID.in(toBeDeleted))
+					.getSQL(ParamType.INLINED));		
 			indexPropertyRowOffset -= toBeDeleted.size();
 		}
 	}
@@ -176,20 +245,20 @@ public class DBIndexMaintainer {
 			.from(TAGREFERENCE)
 			.join(TAGINSTANCE)
 				.on(TAGINSTANCE.TAGINSTANCEID.eq(TAGREFERENCE.TAGINSTANCEID))
-				.and(TAGINSTANCE.UUID.eq(row.field5()))
+				.and(TAGINSTANCE.UUID.eq(row.value5()))
 			.join(TAGDEFINITION)
 				.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
-				.and(TAGDEFINITION.UUID.eq(row.field4()))
-				.and(Routines.gettagdefinitionpath(TAGDEFINITION.TAGDEFINITIONID).eq(row.field3()))
+				.and(TAGDEFINITION.UUID.eq(row.value4()))
+				.and(Routines.gettagdefinitionpath(TAGDEFINITION.TAGDEFINITIONID).eq(row.value3()))
 			.join(USERMARKUPCOLLECTION)
 				.on(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
 						.eq(TAGREFERENCE.USERMARKUPCOLLECTIONID))
 				.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.eq(Integer.valueOf(row.value2())))
 			.join(SOURCEDOCUMENT)
 				.on(SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(USERMARKUPCOLLECTION.SOURCEDOCUMENTID))
-				.and(SOURCEDOCUMENT.LOCALURI.eq(row.field1()))
-			.where(TAGREFERENCE.CHARACTERSTART.eq(row.field7()))
-			.and(TAGREFERENCE.CHARACTEREND.eq(row.field8()))
+				.and(SOURCEDOCUMENT.LOCALURI.eq(row.value1()))
+			.where(TAGREFERENCE.CHARACTERSTART.eq(row.value7()))
+			.and(TAGREFERENCE.CHARACTEREND.eq(row.value8()))
 			.fetchOne();
 			
 			if (repoRow == null) {
@@ -200,11 +269,16 @@ public class DBIndexMaintainer {
 
 		logger.info("index property entries " + toBeDeleted + " are removed from the index");
 		if (!toBeDeleted.isEmpty()) {
-			db
+//			db
+//			.delete(indexTagReference)
+//			.where(indexTagReference.TAGREFERENCEID.in(toBeDeleted))
+//			.execute();
+//			
+			System.out.println(db
 			.delete(indexTagReference)
 			.where(indexTagReference.TAGREFERENCEID.in(toBeDeleted))
-			.execute();
-			
+			.getSQL(ParamType.INLINED));
+
 			indexTagReferenceRowOffset -= toBeDeleted.size();
 		}
 	}
@@ -227,7 +301,12 @@ public class DBIndexMaintainer {
 		.limit(repoPropertyRowOffset, MAX_ROW_COUNT)
 		.fetch();
 		
-		repoPropertyRowOffset += result.size();
+		if (result.size() < MAX_ROW_COUNT) {
+			repoPropertyRowOffset = 0;
+		}
+		else {
+			repoPropertyRowOffset += result.size();
+		}
 			
 		de.catma.repository.db.jooqgen.catmaindex.tables.Property indexProperty = 
 				de.catma.repository.db.jooqgen.catmaindex.Tables.PROPERTY;
@@ -239,10 +318,10 @@ public class DBIndexMaintainer {
 			Record1<Integer> indexedRow = db
 			.selectOne()
 			.from(indexProperty)
-			.where(indexProperty.TAGINSTANCEID.eq(row.field1()))
-			.and(indexProperty.PROPERTYDEFINITIONID.eq(row.field2()))
-			.and(indexProperty.NAME.eq(row.field3()))
-			.and(indexProperty.VALUE.eq(row.field4()))
+			.where(indexProperty.TAGINSTANCEID.eq(row.value1()))
+			.and(indexProperty.PROPERTYDEFINITIONID.eq(row.value2()))
+			.and(indexProperty.NAME.eq(row.value3()))
+			.and(indexProperty.VALUE.eq(row.value4()))
 			.fetchOne();
 			
 			if (indexedRow == null) {
@@ -252,7 +331,20 @@ public class DBIndexMaintainer {
 		logger.info("there are " + rowsNeedIndexing.size() + " property rows that need indexing");
 		for (Record4<byte[],byte[],String,String> row : rowsNeedIndexing) {
 			logger.info("indexing property row " + row);
-			db
+//			db
+//			.insertInto(
+//				indexProperty,
+//					indexProperty.TAGINSTANCEID,
+//					indexProperty.PROPERTYDEFINITIONID,
+//					indexProperty.NAME,
+//					indexProperty.VALUE)
+//			.values(
+//				(Field<byte[]>)DSL.val(row.value1()),
+//				(Field<byte[]>)DSL.val(row.value2()),
+//				(Field<String>)DSL.val(row.value3()),
+//				(Field<String>)DSL.val(row.value4()))
+//			.execute();
+			System.out.println(db
 			.insertInto(
 				indexProperty,
 					indexProperty.TAGINSTANCEID,
@@ -264,7 +356,8 @@ public class DBIndexMaintainer {
 				(Field<byte[]>)DSL.val(row.value2()),
 				(Field<String>)DSL.val(row.value3()),
 				(Field<String>)DSL.val(row.value4()))
-			.execute();
+			.getSQL(ParamType.INLINED));
+
 		}
 		
 	}
@@ -293,7 +386,12 @@ public class DBIndexMaintainer {
 		.limit(repoTagReferenceRowOffset, MAX_ROW_COUNT)
 		.fetch();
 		
-		repoTagReferenceRowOffset += result.size();
+		if (result.size() < MAX_ROW_COUNT) {
+			repoTagReferenceRowOffset = 0;
+		}
+		else {
+			repoTagReferenceRowOffset += result.size();
+		}
 		
 		de.catma.repository.db.jooqgen.catmaindex.tables.Tagreference indexTagReference =
 				de.catma.repository.db.jooqgen.catmaindex.Tables.TAGREFERENCE;
@@ -342,7 +440,27 @@ public class DBIndexMaintainer {
 					(Field<Integer>)DSL.val(row.value6()),
 					(Field<Integer>)DSL.val(row.value7())))
 			.execute();
-			
+//			System.out.println(db
+//			.insertInto(
+//				indexTagReference,
+//					indexTagReference.DOCUMENTID,
+//					indexTagReference.USERMARKUPCOLLECTIONID,
+//					indexTagReference.TAGDEFINITIONPATH,
+//					indexTagReference.TAGDEFINITIONID,
+//					indexTagReference.TAGINSTANCEID,
+//					indexTagReference.TAGDEFINITIONVERSION,
+//					indexTagReference.CHARACTERSTART,
+//					indexTagReference.CHARACTEREND)
+//			.select(db.select(
+//					(Field<String>)DSL.val(row.value1()),
+//					(Field<String>)DSL.val(String.valueOf(row.value2())),
+//					Routines.gettagdefinitionpath(row.value8()),
+//					(Field<byte[]>)DSL.val(row.value3()),
+//					(Field<byte[]>)DSL.val(row.value4()),
+//					(Field<String>)DSL.val(row.value5().toString()),
+//					(Field<Integer>)DSL.val(row.value6()),
+//					(Field<Integer>)DSL.val(row.value7())))
+//			.getSQL(ParamType.INLINED));
 		}
 	}
 	
@@ -360,5 +478,9 @@ public class DBIndexMaintainer {
 	
 	public int getRepoTagReferenceRowOffset() {
 		return repoTagReferenceRowOffset;
+	}
+	
+	public int getFileCleanOffset() {
+		return fileCleanOffset;
 	}
 }
