@@ -132,7 +132,7 @@ queryExpression
 
 
 unionQuery[CommonTree startTerm] 
-	:	',' term -> ^(ND_UNION {$startTerm} term)
+	:	',' term 'EXCL'? -> ^(ND_UNION {$startTerm} term 'EXCL'?)
 	;
 	catch[RecognitionException e] {throw e;}
 	
