@@ -23,8 +23,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.vaadin.event.ShortcutAction.KeyCode;
+import com.vaadin.event.ShortcutAction.ModifierKey;
 import com.vaadin.terminal.ClassResource;
 import com.vaadin.terminal.Resource;
+import com.vaadin.ui.AbstractField;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -62,6 +65,7 @@ public class PropertyEditDialog extends Window {
 	private Set<Property> changedProperties;
 	private Label hintText;
 	private boolean init = false;
+	private CheckBox cb;
 
 	public PropertyEditDialog(TagInstance tagInstance,
 			SaveCancelListener<Set<Property>> saveCancelListener) {
@@ -107,6 +111,7 @@ public class PropertyEditDialog extends Window {
 			
 			for (String pValue : values) {
 				String pValueItemId = propertyDefinition.getUuid() + "_" + pValue;
+				
 				propertyTree.addItem(
 					new Object[] {
 							null,
@@ -118,10 +123,8 @@ public class PropertyEditDialog extends Window {
 				propertyTree.setParent(pValueItemId, p);
 				propertyTree.setChildrenAllowed(pValueItemId, false);
 			}
-			
 			propertyTree.setCollapsed(p, false);
 		}
-		
 		if (tagInstance.getUserDefinedProperties().size() == 1){
 			propertyTree.setValue(tagInstance.getUserDefinedProperties().iterator().next());
 		}
@@ -138,12 +141,13 @@ public class PropertyEditDialog extends Window {
 				propertyValueChanged(p, pValue, cb.booleanValue());
 			}
 		});
-		
+//		cb.addShortcutListener(new AbstractField.FocusShortcut(
+//				cb, KeyCode.ARROW_RIGHT, ModifierKey.CTRL));
+//		cb.setClickShortcut(KeyCode.ENTER, ModifierKey.ALT);
 		return cb;
 	}
-
-	private void propertyValueChanged(Property p, String pValue, boolean add) {
-		
+	
+	private void propertyValueChanged(Property p, String pValue, boolean add){
 		List<String> valueList = new ArrayList<String>();
 		valueList.addAll(p.getPropertyValueList().getValues());
 		if (add) {
@@ -244,6 +248,9 @@ public class PropertyEditDialog extends Window {
 		propertyTree.setSizeFull();
 		propertyTree.setPageLength(10);
 		propertyTree.setImmediate(true);
+		propertyTree.focus();
+		propertyTree.addShortcutListener(new AbstractField.FocusShortcut(
+				propertyTree, KeyCode.ARROW_UP, ModifierKey.CTRL));
 		
 		propertyTree.addContainerProperty(TreePropertyName.property, String.class, "");
 		propertyTree.setColumnHeader(TreePropertyName.property, "Property");
@@ -271,12 +278,15 @@ public class PropertyEditDialog extends Window {
 		HorizontalLayout textField = new HorizontalLayout();
 		textField.setSpacing(true);
 		
-		newValueInput = new TextField("Add possible value");
+		newValueInput = new TextField("Add value");
+		newValueInput.addShortcutListener(new AbstractField.FocusShortcut(
+				newValueInput, KeyCode.ARROW_DOWN, ModifierKey.CTRL));
 		
 		textField.addComponent(newValueInput);
 
 		
 		btAdd = new Button("+");
+		btAdd.setClickShortcut(KeyCode.INSERT);
 		textField.addComponent(btAdd);
 		textField.setComponentAlignment(btAdd, Alignment.BOTTOM_RIGHT);
 		
@@ -290,10 +300,12 @@ public class PropertyEditDialog extends Window {
 		buttonPanel.setSpacing(true);
 		
 		btSave = new Button("Save");
+		btSave.setClickShortcut(KeyCode.ENTER, ModifierKey.ALT);
 		buttonPanel.addComponent(btSave);
 		buttonPanel.setComponentAlignment(btSave, Alignment.MIDDLE_RIGHT);
 		
 		btCancel = new Button("Cancel");
+		btCancel.setClickShortcut(KeyCode.ESCAPE);
 		buttonPanel.addComponent(btCancel);
 		buttonPanel.setComponentAlignment(btCancel, Alignment.MIDDLE_RIGHT);
 		

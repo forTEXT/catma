@@ -134,6 +134,23 @@ public class TaggerView extends VerticalLayout
 					}
 					tagger.setVisible(relevantTagReferences, true);
 					
+					// pruefen ob nur eine TagInstance
+					List<TagInstance> tagInstanceList = new ArrayList<TagInstance>();
+//					
+//					int tiZähler = 0;
+					for (TagReference tr : relevantTagReferences){
+//						if (!tagInstanceList.contains(tr.getTagInstanceID())){
+						tagInstanceList.add(tr.getTagInstance());
+//						tiZähler++;
+					}
+					if (tagInstanceList.size() == 1){
+							markupPanel.showPropertyEditDialog(relevantTagReferences.get(0).getTagInstance());
+						}
+//					}
+//						
+//					if (relevantTagReferences.size()==1) {
+//						markupPanel.showPropertyEditDialog(relevantTagReferences.get(0).getTagInstance());
+//					}
 				}
 				else if (evt.getOldValue() != null) {
 					@SuppressWarnings("unchecked")
