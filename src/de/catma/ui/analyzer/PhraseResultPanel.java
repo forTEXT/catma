@@ -52,7 +52,8 @@ import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
-import de.catma.ui.HierarchicalExcelExport;
+import de.catma.ui.component.export.CsvExport;
+import de.catma.ui.component.export.HierarchicalExcelExport;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 
@@ -77,6 +78,7 @@ public class PhraseResultPanel extends VerticalLayout {
 	private Button btDoubleTree;
 	private Button btExcelExport;
 	private Button btKwicExcelExport;
+	private Button btKwicCsvExport;
 
 	public PhraseResultPanel(
 			Repository repository, 
@@ -183,12 +185,30 @@ public class PhraseResultPanel extends VerticalLayout {
 		btKwicExcelExport.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-            	ExcelExport excelExport = 
-            			new HierarchicalExcelExport(kwicPanel.getKwicTable(), 
-            					"CATMA Query Result Kwic");
-                excelExport.excludeCollapsedColumns();
-                excelExport.setReportTitle("CATMA Query Result Kwic");
-                excelExport.export();
+            	try {
+					ExcelExport excelExport = 
+							new HierarchicalExcelExport(kwicPanel.getKwicTable(), 
+									"CATMA Query Result Kwic");
+					excelExport.excludeCollapsedColumns();
+					excelExport.setReportTitle("CATMA Query Result Kwic");
+					excelExport.export();
+				} catch (IllegalArgumentException e) {
+					getWindow().showNotification("Error", "Excel export failed. " + "<br>" + "Reason: " + e.getMessage() + "<br>" + "Please use CSV export.", Notification.TYPE_WARNING_MESSAGE, true);
+					e.printStackTrace();
+				}
+			}
+		});
+		
+		btKwicCsvExport.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+//            	CsvWriter csvExport = 
+//            			new CsvWriter(kwicPanel.getKwicTable(), 
+//            					"Y://test.csv");
+//            	csvExport.close();            
+				CsvExport csvExport = new CsvExport(kwicPanel.getKwicTable());
+				csvExport.convertTable();
+				csvExport.sendConverted();
 			}
 		});
 
@@ -319,6 +339,14 @@ public class PhraseResultPanel extends VerticalLayout {
 		btKwicExcelExport.setDescription(
 				"Export all Query result data as an Excel spreadsheet.");
 		kwicButtonPanel.addComponent(btKwicExcelExport);
+		
+		btKwicCsvExport = new Button();
+		btKwicCsvExport.setIcon(new ClassResource(
+				"ui/analyzer/resources/csv_text.png", 
+				getApplication())); //http://findicons.com/icon/84601/csv_text
+		btKwicCsvExport.setDescription(
+				"Export all Query result data as CSV File.");
+		kwicButtonPanel.addComponent(btKwicCsvExport);
 
 		Label helpLabel = new Label();
 		helpLabel.setIcon(new ClassResource(
