@@ -5,9 +5,9 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
+import org.quartz.CronScheduleBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.SchedulerException;
-import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 
@@ -20,12 +20,15 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
 		try {
-			JobDataMap jobDataMap = new JobDataMap();
-			jobDataMap.put(JobInstaller.JobDataKey.PROPERTIES_PATH.name(), 
-					config.getServletContext().getRealPath("catma.properties"));
 			
 			JobInstaller jobInstaller = new JobInstaller();
 			
+			
+			JobDataMap repoJobDataMap = new JobDataMap();
+			repoJobDataMap.put(JobInstaller.JobDataKey.PROPERTIES_PATH.name(), 
+					config.getServletContext().getRealPath("catma.properties"));
+			
+
 			jobInstaller.install(
 				DBRepoMaintenanceJob.class,
 				TriggerBuilder.newTrigger()
@@ -33,12 +36,16 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 						DBRepoMaintenanceJob.class.getName()+"_Trigger",
 		    			TriggerGroup.DEFAULT.name()))
 				.startNow()
-				.withSchedule(SimpleScheduleBuilder.repeatHourlyForTotalCount(1))
-				.withSchedule(SimpleScheduleBuilder.repeatSecondlyForever(10))
-//				.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(0, 30).withMisfireHandlingInstructionDoNothing())
-//				.withSchedule(CalendarIntervalScheduleBuilder.calendarIntervalSchedule().withIntervalInSeconds(60))
+//				.withSchedule(SimpleScheduleBuilder.repeatHourlyForTotalCount(1))
+//				.withSchedule(SimpleScheduleBuilder.repeatSecondlyForever(10))
+				.withSchedule(CronScheduleBuilder.cronSchedule("0 0/10 22-5 * * ?")
+						.withMisfireHandlingInstructionDoNothing())
 			    .build(),
-				jobDataMap);
+			    repoJobDataMap);
+			
+			JobDataMap indexJobDataMap = new JobDataMap();
+			indexJobDataMap.put(JobInstaller.JobDataKey.PROPERTIES_PATH.name(), 
+					config.getServletContext().getRealPath("catma.properties"));
 			
 			jobInstaller.install(
 				DBIndexMaintenanceJob.class,
@@ -47,12 +54,10 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 						DBIndexMaintenanceJob.class.getName()+"_Trigger",
 		    			TriggerGroup.DEFAULT.name()))
 				.startNow()
-					.withSchedule(SimpleScheduleBuilder.repeatHourlyForTotalCount(1))
-//					.withSchedule(SimpleScheduleBuilder.repeatSecondlyForever(10))
-//				.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(0, 30).withMisfireHandlingInstructionDoNothing())
-//					.withSchedule(CalendarIntervalScheduleBuilder.calendarIntervalSchedule().withIntervalInSeconds(60))
+				.withSchedule(CronScheduleBuilder.cronSchedule("30 0/3 * * * ?")
+						.withMisfireHandlingInstructionDoNothing())
 			    .build(),
-				new JobDataMap());
+			    indexJobDataMap);
 		}
 		catch (SchedulerException se) {
 			throw new ServletException(se);

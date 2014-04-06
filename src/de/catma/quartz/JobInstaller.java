@@ -6,6 +6,7 @@ import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
+import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
@@ -40,12 +41,11 @@ public class JobInstaller {
     			TriggerGroup.DEFAULT.name());
         
         Trigger trigger = scheduler.getTrigger(triggerKey);
-    	JobDetail jobDetail = null; 
 
         if (trigger == null) {
         	logger.info("installing " + jobClass.getSimpleName() + "...");
         	
-        	jobDetail = 
+        	JobDetail jobDetail = 
         		JobBuilder.newJob(jobClass)
         		.withIdentity(
         			jobClass.getName(),
@@ -61,6 +61,19 @@ public class JobInstaller {
         else {
         	logger.info(jobClass.getSimpleName() + " is already intalled.");
 
+        	JobDetail jobDetail = scheduler.getJobDetail(
+        			JobKey.jobKey(jobClass.getName(), JobGroup.DEFAULT.name()));
+        	
+        	for (JobDataKey key : JobDataKey.values()) {
+        		if (jobData.containsKey(key.name())) {
+        			jobDetail.getJobDataMap().put(key.name(), jobData.get(key.name()));
+        		}
+        		else if (jobDetail.getJobDataMap().containsKey(key.name())){
+        			jobDetail.getJobDataMap().remove(key.name());
+        		}
+        	}
+        	scheduler.addJob(jobDetail, true, true);
+        	
         	trigger = jobTrigger.getTriggerBuilder().build();
         	scheduler.rescheduleJob(triggerKey, trigger);
         	logger.info(jobClass.getSimpleName() + " rescheduled!");

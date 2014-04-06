@@ -71,13 +71,17 @@
 		<load-on-startup>3</load-on-startup>
 	</servlet>
 	
-		
 	<servlet> 
 		<servlet-name>DBMaintenanceInitializerServlet</servlet-name> 
 		<servlet-class>de.catma.repository.db.maintenance.DBMaintenanceInitializerServlet</servlet-class> 
 		<load-on-startup>3</load-on-startup>
 	</servlet>
 	
+	<servlet> 
+		<servlet-name>UserManagerMaintenanceServlet</servlet-name> 
+		<servlet-class>de.catma.servlet.UserManagerMaintenanceServlet</servlet-class> 
+		<load-on-startup>3</load-on-startup>
+	</servlet>
 	
 	<servlet-mapping>  
     	<servlet-name>CatmaAPI</servlet-name>  

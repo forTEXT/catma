@@ -53,9 +53,9 @@ public class UserManagerMaintenanceServlet extends HttpServlet {
 					UserManagerMaintenanceJob.class.getName()+"_Trigger",
 		    			TriggerGroup.DEFAULT.name()))
 				.startNow()
-//				.withSchedule(SimpleScheduleBuilder.repeatHourlyForTotalCount(1))
-				.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(0, 30).withMisfireHandlingInstructionDoNothing())
-//				.withSchedule(CalendarIntervalScheduleBuilder.calendarIntervalSchedule().withIntervalInSeconds(60))
+				.withSchedule(CronScheduleBuilder.cronSchedule("0 0 4,12,20 * * ?")
+						.withMisfireHandlingInstructionDoNothing())
+//				.withSchedule(SimpleScheduleBuilder.repeatSecondlyForever(30))
 			    .build(),
 				new JobDataMap());
 

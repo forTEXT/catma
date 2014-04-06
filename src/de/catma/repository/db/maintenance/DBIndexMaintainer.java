@@ -77,40 +77,43 @@ public class DBIndexMaintainer {
 				RepositoryPropertyKey.RepositoryFolderPath.getProperty(properties, 1);
 			
 			userManager.lockLogin();
-			logger.info("starting index maintenance");
-			if (userManager.getUserCount() == 0 ) {
-				logger.info("no user logged in, proceeding with index maintenance");
-				Context  context = new InitialContext();
-				DataSource dataSource = (DataSource) context.lookup(
-						CatmaDataSourceName.CATMADS.name());
-				DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+			try {
+				logger.info("starting index maintenance");
+				if (userManager.getUserCount() == 0 ) {
+					logger.info("no user logged in, proceeding with index maintenance");
+					Context  context = new InitialContext();
+					DataSource dataSource = (DataSource) context.lookup(
+							CatmaDataSourceName.CATMADS.name());
+					DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+		
+					// all repo.tagreferences need an entry in index.tagref
+					checkRepoTagReferences(db);
+					// all repo.propertyvalues need an entry in index.property
+					checkRepoProperties(db);
+					
+					// delete all index.tagref that are no longer in repo.tagreference
+					checkStaleIndexTagReferences(db);
+					// delete all index.proeprty that are no longer in repo.propertyvalue
+					checkStaleIndexProperties(db);
+					
+					// cleaning up stale sourcedocument files
+					cleanupSourceDocumentFiles(db);
 	
-				// all repo.tagreferences need an entry in index.tagref
-				checkRepoTagReferences(db);
-				// all repo.propertyvalues need an entry in index.property
-				checkRepoProperties(db);
-				
-				// delete all index.tagref that are no longer in repo.tagreference
-				checkStaleIndexTagReferences(db);
-				// delete all index.proeprty that are no longer in repo.propertyvalue
-				checkStaleIndexProperties(db);
-				
-				cleanupSourceDocumentFiles(db);
-
-				//TODO: check time and exit after fixed period
-				
-				//TODO: maintain term/position index
-
-				logger.info("finished index maintenance");
+					//TODO: check time and exit after fixed period
+					
+					//TODO: maintain term/position index
+	
+					logger.info("finished index maintenance");
+				}
+				else {
+					logger.info("there are users logged in, skipping index maintenance");
+				}
 			}
-			else {
-				logger.info("there are users logged in, skipping index maintenance");
+			finally {
+				userManager.unlockLogin();
 			}
-			
-			userManager.unlockLogin();
 		}
 		catch (Exception e) {
-			userManager.unlockLogin();
 			throw new IOException(e);
 		}	
 	}

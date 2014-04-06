@@ -281,8 +281,7 @@ public class CatmaApplication extends Application
 
 	public void openRepository(Repository repository) {
 		repositoryOpened = true;
-		userManager.incrementUserCount(this);
-		logger.info("user" + getUser() + " has been added to user count (" + userManager.getUserCount() + ")" );
+		userManager.login(this);
 		repositoryManagerView.openRepository(repository);
 		logger.info("repository has been opened for user" + getUser());
 	}
@@ -409,9 +408,8 @@ public class CatmaApplication extends Application
 		repositoryManagerView.getRepositoryManager().close();
 		logger.info("application for user" + getUser() + " has been closed");
 		if (repositoryOpened) {
-			userManager.decrementUserCount(this);
+			userManager.logout(this);
 			repositoryOpened = false;
-			logger.info("user" + getUser() + " has been substracted from user count (" + userManager.getUserCount() + ")" );
 		}
 		super.close();
 	}

@@ -2,12 +2,12 @@ package de.catma.repository.db.maintenance;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Logger;
 
 import de.catma.repository.LoginToken;
 
@@ -16,23 +16,26 @@ public class UserManager {
 	private static AtomicInteger userCount = new AtomicInteger(0);
 	private static Lock loginLock = new ReentrantLock();
 	private static WeakHashMap<LoginToken, Long> loginEvents = new WeakHashMap<LoginToken, Long>();
+	private Logger logger = Logger.getLogger(UserManager.class.getName());
 	
-	public void incrementUserCount(LoginToken loginToken) {
+	public void login(LoginToken loginToken) {
 		loginLock.lock();
 		try {
 			loginEvents.put(loginToken, new Date().getTime());
 			userCount.incrementAndGet();
+			logger.info("user" + loginToken.getUser() + " has been added to user count (" + getUserCount() + ")" );
 		}
 		finally {
 			loginLock.unlock();
 		}
 	}
 
-	public void decrementUserCount(LoginToken loginToken) {
+	public void logout(LoginToken loginToken) {
 		loginLock.lock();
 		try {
 			loginEvents.remove(loginToken);
 			userCount.decrementAndGet();
+			logger.info("user" + loginToken.getUser() + " has been substracted from user count (" + getUserCount() + ")" );
 		}
 		finally {
 			loginLock.unlock();
@@ -52,6 +55,8 @@ public class UserManager {
 	}
 	
 	public void clearStaleLoginTokens() {
+		logger.info("checking stale login tokens");
+		
 		loginLock.lock();
 		try {
 			ArrayList<LoginToken> staleLoginTokens = new ArrayList<LoginToken>();
@@ -60,6 +65,9 @@ public class UserManager {
 				long timestamp = entry.getValue();
 				long now = System.currentTimeMillis();
 				if ((timestamp-now) > TWELVEHOURS_IN_MILLISECONDS) {
+					logger.info("found stale login token " 
+							+ loginToken.getUser() 
+							+ " logged in since " + new Date(timestamp));
 					staleLoginTokens.add(loginToken);
 				}
 			}
@@ -70,6 +78,7 @@ public class UserManager {
 		}
 		finally {
 			loginLock.unlock();
+			logger.info("finished checking stale login tokens");
 		}
 	}
 }
