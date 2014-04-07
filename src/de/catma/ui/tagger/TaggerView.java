@@ -23,6 +23,7 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -135,15 +136,12 @@ public class TaggerView extends VerticalLayout
 					tagger.setVisible(relevantTagReferences, true);
 					
 					// pruefen ob nur eine TagInstance
-					List<TagInstance> tagInstanceList = new ArrayList<TagInstance>();
+					Set<String> tagInstanceUuidList = new HashSet<String>();
 //					
-//					int tiZähler = 0;
 					for (TagReference tr : relevantTagReferences){
-//						if (!tagInstanceList.contains(tr.getTagInstanceID())){
-						tagInstanceList.add(tr.getTagInstance());
-//						tiZähler++;
+						tagInstanceUuidList.add(tr.getTagInstance().getUuid());
 					}
-					if (tagInstanceList.size() == 1){
+					if (tagInstanceUuidList.size() == 1){
 							markupPanel.showPropertyEditDialog(relevantTagReferences.get(0).getTagInstance());
 						}
 //					}
