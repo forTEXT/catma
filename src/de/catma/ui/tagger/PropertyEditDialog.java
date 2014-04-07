@@ -65,7 +65,6 @@ public class PropertyEditDialog extends Window {
 	private Set<Property> changedProperties;
 	private Label hintText;
 	private boolean init = false;
-	private CheckBox cb;
 
 	public PropertyEditDialog(TagInstance tagInstance,
 			SaveCancelListener<Set<Property>> saveCancelListener) {
