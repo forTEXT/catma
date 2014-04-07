@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.vaadin.addon.tableexport.ExcelExport;
+import com.vaadin.data.Item;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
@@ -38,6 +39,7 @@ import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Table;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window.Notification;
@@ -80,7 +82,9 @@ public class PhraseResultPanel extends VerticalLayout {
 	private Button btExcelExport;
 	private Button btKwicExcelExport;
 	private Button btKwicCsvExport;
-
+	private Button btCsvExport;
+	private Table hiddenFlatTable;
+	
 	public PhraseResultPanel(
 			Repository repository, 
 			GroupedQueryResultSelectionListener resultSelectionListener, 
@@ -230,8 +234,51 @@ public class PhraseResultPanel extends VerticalLayout {
                 excelExport.export();
 			}
 		});
+		
+		btCsvExport.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				try {
+					CsvExport csvExport = new CsvExport(fillFlatTable());
+					csvExport.convertTable();
+					csvExport.sendConverted();
+				}
+				catch (CsvExportException e) {
+					((CatmaApplication)getApplication()).showAndLogError(
+							"Error creating CSV export!", e);
+				}
+			}
+		});
 	}
 	
+	private Table fillFlatTable() {
+		hiddenFlatTable.removeAllItems();
+		
+		hiddenFlatTable.addContainerProperty(
+				"source document", String.class, null);
+		hiddenFlatTable.addContainerProperty(
+				"phrase", String.class, null);		
+		hiddenFlatTable.addContainerProperty(
+				"frequency", Integer.class, null);
+		
+		for (Object itemId : resultTable.getItemIds()) {
+			if (itemId instanceof GroupedQueryResult) {
+				GroupedQueryResult result= (GroupedQueryResult)itemId;
+				for (String sourceDocumentID : result.getSourceDocumentIDs()) {
+					SourceDocument sourceDocument = 
+							repository.getSourceDocument(sourceDocumentID);
+					
+					Item curItem = hiddenFlatTable.addItem(result+sourceDocumentID);
+					curItem.getItemProperty("source document").setValue(sourceDocument.toString());
+					curItem.getItemProperty("phrase").setValue(result.getGroup());
+					curItem.getItemProperty("frequency").setValue(result.getFrequency(sourceDocumentID));
+				}
+			}
+		}
+
+		return hiddenFlatTable;
+	}
+
 	private void selectAllForKwic(boolean selected) {
 		for (Object o : resultTable.getItemIds()) {
 			if (resultTable.getParent(o) == null) {
@@ -319,6 +366,16 @@ public class PhraseResultPanel extends VerticalLayout {
 		btExcelExport.setDescription("Export all Query result data as an Excel spreadsheet.");
 		buttonPanel.addComponent(btExcelExport);
 		
+		
+		btCsvExport = new Button();
+		btCsvExport.setIcon(new ClassResource(
+				"ui/analyzer/resources/csv_text.png", 
+				getApplication())); //http://findicons.com/icon/84601/csv_text
+		btCsvExport.setDescription(
+				"Export all Query result data as flat CSV File.");
+		buttonPanel.addComponent(btCsvExport);
+		
+		
 		btSelectAll = new Button("Select all for Kwic");
 		
 		buttonPanel.addComponent(btSelectAll);
@@ -381,6 +438,10 @@ public class PhraseResultPanel extends VerticalLayout {
 		
 		rightComponent.addComponent(kwicButtonPanel);
 		rightComponent.setComponentAlignment(kwicButtonPanel, Alignment.MIDDLE_RIGHT);
+		
+		hiddenFlatTable = new Table();
+		hiddenFlatTable.setVisible(false);
+		kwicButtonPanel.addComponent(hiddenFlatTable);
 		
 		splitPanel.addComponent(rightComponent);
 		addComponent(splitPanel);
