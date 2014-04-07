@@ -167,12 +167,18 @@ public class CatmaApplication extends Application
 							"Visualizer",
 							new VisualizationManagerWindow(visualizationManagerView))
 					);
+			Link latestFeaturesLink = new Link(
+					"Latest Features", new ExternalResource("http://www.catma.de/latestfeatures"));
+			latestFeaturesLink.setTargetName("_blank");
+			mainLayout.addComponent(latestFeaturesLink);
+			mainLayout.setComponentAlignment(latestFeaturesLink, Alignment.TOP_RIGHT);
+			mainLayout.setExpandRatio(latestFeaturesLink, 1.0f);
+			
 			Link aboutLink = new Link(
 					"About", new ExternalResource("http://www.catma.de"));
 			aboutLink.setTargetName("_blank");
 			mainLayout.addComponent(aboutLink);
 			mainLayout.setComponentAlignment(aboutLink, Alignment.TOP_RIGHT);
-			mainLayout.setExpandRatio(aboutLink, 1.0f);
 			
 			Link helpLink = new Link(
 					"Help", new ExternalResource(getURL()+"manual/"));

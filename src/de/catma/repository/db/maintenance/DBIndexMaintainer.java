@@ -31,7 +31,6 @@ import org.jooq.Record8;
 import org.jooq.Record9;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
-import org.jooq.conf.ParamType;
 import org.jooq.impl.DSL;
 
 import de.catma.document.repository.RepositoryPropertyKey;
@@ -159,7 +158,7 @@ public class DBIndexMaintainer {
 	}
 
 	private void checkStaleIndexProperties(DSLContext db) {
-		logger.info("checking stale index tagreferences");
+		logger.info("checking stale index properties");
 		de.catma.repository.db.jooqgen.catmaindex.tables.Property indexProperty = 
 				de.catma.repository.db.jooqgen.catmaindex.Tables.PROPERTY;
 
@@ -195,29 +194,24 @@ public class DBIndexMaintainer {
 			.fetchOne();
 			
 			if (repoRow == null) {
-				logger.info("index tagreference row " + row + " is stale and will be removed");
+				logger.info("index property row " + row + " is stale and will be removed");
 				toBeDeleted.add(row.value5());
 			}
 		}
 		
-		logger.info("index tagreference entries " + toBeDeleted + " are removed from the index");
+		logger.info("index property entries " + toBeDeleted + " are removed from the index");
 		if (!toBeDeleted.isEmpty()) {
-//			db
-//			.delete(indexProperty)
-//			.where(indexProperty.PROPERTYID.in(toBeDeleted))
-//			.execute();
-//
-			
-			System.out.println(db
-					.delete(indexProperty)
-					.where(indexProperty.PROPERTYID.in(toBeDeleted))
-					.getSQL(ParamType.INLINED));		
+			db
+			.delete(indexProperty)
+			.where(indexProperty.PROPERTYID.in(toBeDeleted))
+			.execute();
+	
 			indexPropertyRowOffset -= toBeDeleted.size();
 		}
 	}
 
 	private void checkStaleIndexTagReferences(DSLContext db) {
-		logger.info("checking stale index properties");
+		logger.info("checking stale index tagreferences");
 
 		de.catma.repository.db.jooqgen.catmaindex.tables.Tagreference indexTagReference =
 				de.catma.repository.db.jooqgen.catmaindex.Tables.TAGREFERENCE;
@@ -265,23 +259,17 @@ public class DBIndexMaintainer {
 			.fetchOne();
 			
 			if (repoRow == null) {
-				logger.info("index property row " + row + " is stale and will be removed");
+				logger.info("index tagreference row " + row + " is stale and will be removed");
 				toBeDeleted.add(row.value9());
 			}
 		}
 
-		logger.info("index property entries " + toBeDeleted + " are removed from the index");
+		logger.info("index tagreference entries " + toBeDeleted + " are removed from the index");
 		if (!toBeDeleted.isEmpty()) {
-//			db
-//			.delete(indexTagReference)
-//			.where(indexTagReference.TAGREFERENCEID.in(toBeDeleted))
-//			.execute();
-//			
-			System.out.println(db
+			db
 			.delete(indexTagReference)
 			.where(indexTagReference.TAGREFERENCEID.in(toBeDeleted))
-			.getSQL(ParamType.INLINED));
-
+			.execute();
 			indexTagReferenceRowOffset -= toBeDeleted.size();
 		}
 	}
@@ -334,20 +322,7 @@ public class DBIndexMaintainer {
 		logger.info("there are " + rowsNeedIndexing.size() + " property rows that need indexing");
 		for (Record4<byte[],byte[],String,String> row : rowsNeedIndexing) {
 			logger.info("indexing property row " + row);
-//			db
-//			.insertInto(
-//				indexProperty,
-//					indexProperty.TAGINSTANCEID,
-//					indexProperty.PROPERTYDEFINITIONID,
-//					indexProperty.NAME,
-//					indexProperty.VALUE)
-//			.values(
-//				(Field<byte[]>)DSL.val(row.value1()),
-//				(Field<byte[]>)DSL.val(row.value2()),
-//				(Field<String>)DSL.val(row.value3()),
-//				(Field<String>)DSL.val(row.value4()))
-//			.execute();
-			System.out.println(db
+			db
 			.insertInto(
 				indexProperty,
 					indexProperty.TAGINSTANCEID,
@@ -359,8 +334,7 @@ public class DBIndexMaintainer {
 				(Field<byte[]>)DSL.val(row.value2()),
 				(Field<String>)DSL.val(row.value3()),
 				(Field<String>)DSL.val(row.value4()))
-			.getSQL(ParamType.INLINED));
-
+			.execute();
 		}
 		
 	}
@@ -443,27 +417,6 @@ public class DBIndexMaintainer {
 					(Field<Integer>)DSL.val(row.value6()),
 					(Field<Integer>)DSL.val(row.value7())))
 			.execute();
-//			System.out.println(db
-//			.insertInto(
-//				indexTagReference,
-//					indexTagReference.DOCUMENTID,
-//					indexTagReference.USERMARKUPCOLLECTIONID,
-//					indexTagReference.TAGDEFINITIONPATH,
-//					indexTagReference.TAGDEFINITIONID,
-//					indexTagReference.TAGINSTANCEID,
-//					indexTagReference.TAGDEFINITIONVERSION,
-//					indexTagReference.CHARACTERSTART,
-//					indexTagReference.CHARACTEREND)
-//			.select(db.select(
-//					(Field<String>)DSL.val(row.value1()),
-//					(Field<String>)DSL.val(String.valueOf(row.value2())),
-//					Routines.gettagdefinitionpath(row.value8()),
-//					(Field<byte[]>)DSL.val(row.value3()),
-//					(Field<byte[]>)DSL.val(row.value4()),
-//					(Field<String>)DSL.val(row.value5().toString()),
-//					(Field<Integer>)DSL.val(row.value6()),
-//					(Field<Integer>)DSL.val(row.value7())))
-//			.getSQL(ParamType.INLINED));
 		}
 	}
 	

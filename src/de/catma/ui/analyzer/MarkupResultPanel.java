@@ -368,11 +368,21 @@ public class MarkupResultPanel extends VerticalLayout {
 		btResultExcelExport.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-            	ExcelExport excelExport = 
-            			new HierarchicalExcelExport(resultTable, "CATMA Query Result");
-                excelExport.excludeCollapsedColumns();
-                excelExport.setReportTitle("CATMA Query Result");
-                excelExport.export();
+				try {
+	            	ExcelExport excelExport = 
+	            			new HierarchicalExcelExport(resultTable, "CATMA Query Result");
+	                excelExport.excludeCollapsedColumns();
+	                excelExport.setReportTitle("CATMA Query Result");
+	                excelExport.export();
+				} catch (IllegalArgumentException e) {
+					getWindow().showNotification(
+						"Error", 
+						"Excel export failed. " + "<br>" + "Reason: " 
+						+ e.getMessage() + "<br>" + "Please use CSV export.", 
+						Notification.TYPE_WARNING_MESSAGE, true);
+					
+					e.printStackTrace();
+				}
 			}
 		});
 		
