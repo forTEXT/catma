@@ -49,6 +49,7 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Link;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -260,6 +261,13 @@ public class AuthenticationDialog extends VerticalLayout {
 		dialogWindow = new Window(caption);
 		dialogWindow.setModal(true);
 		
+		Label termsOfUse = new Label(
+				"By logging in you accept the " +
+				"<a target=\"blank\" href=\"http://www.catma.de/termsofuse\">terms of use</a>!");
+		termsOfUse.setContentMode(Label.CONTENT_XHTML);
+		termsOfUse.setSizeFull();
+		addComponent(termsOfUse);
+		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setSpacing(true);
 		
@@ -359,7 +367,7 @@ public class AuthenticationDialog extends VerticalLayout {
 	}
 	
 	public void show(Window parent) {
-		show(parent, "25%");
+		show(parent, "35%");
 	}
 	
 }

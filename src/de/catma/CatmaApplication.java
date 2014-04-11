@@ -180,6 +180,12 @@ public class CatmaApplication extends Application
 			mainLayout.addComponent(aboutLink);
 			mainLayout.setComponentAlignment(aboutLink, Alignment.TOP_RIGHT);
 			
+			Link termsOfUseLink = new Link(
+					"Terms of Use", new ExternalResource("http://www.catma.de/termsofuse"));
+			termsOfUseLink.setTargetName("_blank");
+			mainLayout.addComponent(termsOfUseLink);
+			mainLayout.setComponentAlignment(termsOfUseLink, Alignment.TOP_RIGHT);
+
 			Link helpLink = new Link(
 					"Help", new ExternalResource(getURL()+"manual/"));
 			helpLink.setTargetName("_blank");
