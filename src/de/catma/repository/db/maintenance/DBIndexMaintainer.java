@@ -15,7 +15,10 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.naming.Context;
@@ -38,6 +41,7 @@ import de.catma.repository.db.CatmaDataSourceName;
 import de.catma.repository.db.FileURLFactory;
 import de.catma.repository.db.SourceDocumentHandler;
 import de.catma.repository.db.jooqgen.catmaindex.Routines;
+import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
 
 public class DBIndexMaintainer {
 
@@ -306,17 +310,30 @@ public class DBIndexMaintainer {
 				new ArrayList<Record4<byte[],byte[],String,String>>();
 		
 		for (Record4<byte[],byte[],String,String> row : result) {
-			Record1<Integer> indexedRow = db
-			.selectOne()
+			List<Integer> indexedRows = db
+			.select(indexProperty.PROPERTYID)
 			.from(indexProperty)
 			.where(indexProperty.TAGINSTANCEID.eq(row.value1()))
 			.and(indexProperty.PROPERTYDEFINITIONID.eq(row.value2()))
 			.and(indexProperty.NAME.eq(row.value3()))
 			.and(indexProperty.VALUE.eq(row.value4()))
-			.fetchOne();
+			.fetch()
+			.map(new IDFieldToIntegerMapper(indexProperty.PROPERTYID));
 			
-			if (indexedRow == null) {
+			if (indexedRows.size() == 0) {
 				rowsNeedIndexing.add(row);
+			}
+			else if (indexedRows.size() > 1) { 
+				
+				Set<Integer> toBeDeleted = new HashSet<Integer>(indexedRows);
+				Integer remainingOne = toBeDeleted.iterator().next();
+				toBeDeleted.remove(remainingOne);
+				
+				logger.info("over indexed property, deleting all " + toBeDeleted + " but one " + remainingOne);
+				db
+				.delete(indexProperty)
+				.where(indexProperty.PROPERTYID.in(toBeDeleted))
+				.execute();
 			}
 		}
 		logger.info("there are " + rowsNeedIndexing.size() + " property rows that need indexing");

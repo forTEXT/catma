@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
@@ -13,7 +12,6 @@ import de.catma.repository.LoginToken;
 
 public class UserManager {
 	private static final long TWELVEHOURS_IN_MILLISECONDS = 43200000L;
-	private static AtomicInteger userCount = new AtomicInteger(0);
 	private static Lock loginLock = new ReentrantLock();
 	private static WeakHashMap<LoginToken, Long> loginEvents = new WeakHashMap<LoginToken, Long>();
 	private Logger logger = Logger.getLogger(UserManager.class.getName());
@@ -22,7 +20,6 @@ public class UserManager {
 		loginLock.lock();
 		try {
 			loginEvents.put(loginToken, new Date().getTime());
-			userCount.incrementAndGet();
 			logger.info("user" + loginToken.getUser() + " has been added to user count (" + getUserCount() + ")" );
 		}
 		finally {
@@ -34,7 +31,6 @@ public class UserManager {
 		loginLock.lock();
 		try {
 			loginEvents.remove(loginToken);
-			userCount.decrementAndGet();
 			logger.info("user" + loginToken.getUser() + " has been substracted from user count (" + getUserCount() + ")" );
 		}
 		finally {
@@ -43,7 +39,7 @@ public class UserManager {
 	}
 	
 	public int getUserCount() {
-		return userCount.get();
+		return loginEvents.size();
 	}
 	
 	public void lockLogin() {

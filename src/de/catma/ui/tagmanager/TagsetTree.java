@@ -91,25 +91,16 @@ public class TagsetTree extends HorizontalLayout {
 	private PropertyChangeListener tagsetDefinitionChangedListener;
 	private PropertyChangeListener tagDefinitionChangedListener;
 	private PropertyChangeListener userPropertyDefinitionChangedListener;
-	private boolean withButtonPanel;
 	private Application application;
 	private Button btReload;
 
 	public TagsetTree(TagManager tagManager, TagLibrary tagLibrary) {
 		this(tagManager, tagLibrary, true, null);
 	}
-	
+
 	public TagsetTree(
 			TagManager tagManager, final TagLibrary tagLibrary, 
 			boolean withTagsetButtons, 
-			ColorButtonListener colorButtonListener) {
-		this(tagManager, tagLibrary, withTagsetButtons, true, colorButtonListener);
-	}
-	
-	public TagsetTree(
-			TagManager tagManager, final TagLibrary tagLibrary, 
-			boolean withTagsetButtons, 
-			boolean withButtonPanel,
 			ColorButtonListener colorButtonListener) {
 		this.tagManager = tagManager;
 		this.tagLibrary = tagLibrary;
@@ -117,7 +108,6 @@ public class TagsetTree extends HorizontalLayout {
 			tagManager.addTagLibrary(tagLibrary);
 		}
 		this.withTagsetButtons = withTagsetButtons;
-		this.withButtonPanel = withButtonPanel;
 		this.colorButtonListener = colorButtonListener;
 	}
 	
@@ -133,13 +123,12 @@ public class TagsetTree extends HorizontalLayout {
 	}
 	
 	private void initActions() {
-		if (withTagsetButtons) {
-
-			tagsetDefinitionChangedListener = 
-					new PropertyChangeListener() {
-				
-				public void propertyChange(PropertyChangeEvent evt) {
-					if (evt.getOldValue()==null) {
+		tagsetDefinitionChangedListener = 
+				new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (evt.getOldValue()==null) {
+					if (withTagsetButtons) {
 						@SuppressWarnings("unchecked")
 						Pair<TagLibrary, TagsetDefinition> addOperationResult = 
 							(Pair<TagLibrary,TagsetDefinition>)evt.getNewValue();
@@ -148,33 +137,33 @@ public class TagsetTree extends HorizontalLayout {
 							addTagsetDefinition(addOperationResult.getSecond());
 						}
 					}
-					else if (evt.getNewValue() == null) {
-						@SuppressWarnings("unchecked")
-						Pair<TagLibrary, TagsetDefinition> removeOperationResult = 
-							(Pair<TagLibrary,TagsetDefinition>)evt.getOldValue();
-						
-						if (tagLibrary.equals(removeOperationResult.getFirst())) {
-							TagsetDefinition tagsetDef = 
-									removeOperationResult.getSecond();
-							removeTagsetDefinitionFromTree(tagsetDef);
-						}
-					}
-					else {
-						TagsetDefinition tagsetDefinition = 
-								(TagsetDefinition)evt.getNewValue();
-						if (tagTree.containsId(tagsetDefinition)) {
-							tagTree.getContainerProperty(
-								tagsetDefinition, TagTreePropertyName.caption).setValue(
-										tagsetDefinition.getName());
-						}
+				}
+				else if (evt.getNewValue() == null) {
+					@SuppressWarnings("unchecked")
+					Pair<TagLibrary, TagsetDefinition> removeOperationResult = 
+						(Pair<TagLibrary,TagsetDefinition>)evt.getOldValue();
+					
+					TagsetDefinition tagsetDef = 
+							removeOperationResult.getSecond();
+					removeTagsetDefinitionFromTree(tagsetDef);
+				}
+				else {
+					TagsetDefinition tagsetDefinition = 
+							(TagsetDefinition)evt.getNewValue();
+					if (tagTree.containsId(tagsetDefinition)) {
+						tagTree.getContainerProperty(
+							tagsetDefinition, TagTreePropertyName.caption).setValue(
+									tagsetDefinition.getName());
 					}
 				}
-			};
-			
-			this.tagManager.addPropertyChangeListener(
-					TagManagerEvent.tagsetDefinitionChanged,
-					tagsetDefinitionChangedListener);
-			
+			}
+		};
+		
+		this.tagManager.addPropertyChangeListener(
+				TagManagerEvent.tagsetDefinitionChanged,
+				tagsetDefinitionChangedListener);
+		
+		if (withTagsetButtons) {
 			this.btInsertTagset.addListener(new ClickListener() {
 				public void buttonClick(ClickEvent event) {
 					handleInsertTagsetDefinitionRequest();
@@ -870,11 +859,6 @@ public class TagsetTree extends HorizontalLayout {
 		
 		addComponent(buttonGrid);
 		setExpandRatio(buttonGrid, 0);
-		
-		if (!withButtonPanel) {
-			buttonGrid.setVisible(false);
-		}
-
 	}
 
 	public void addTagsetDefinition(Collection<TagsetDefinition> tagsetDefinitions) {
@@ -977,10 +961,10 @@ public class TagsetTree extends HorizontalLayout {
 	}
 	
 	public void close() {
+		tagManager.removePropertyChangeListener(
+				TagManagerEvent.tagsetDefinitionChanged,
+				tagsetDefinitionChangedListener);
 		if (withTagsetButtons) {
-			tagManager.removePropertyChangeListener(
-					TagManagerEvent.tagsetDefinitionChanged,
-					tagsetDefinitionChangedListener);
 			tagManager.removeTagLibrary(tagLibrary);
 		}
 		tagManager.removePropertyChangeListener(
