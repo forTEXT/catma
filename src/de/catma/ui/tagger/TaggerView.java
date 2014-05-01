@@ -134,6 +134,7 @@ public class TaggerView extends VerticalLayout
 						}
 					}
 					tagger.setVisible(relevantTagReferences, true);
+<<<<<<< HEAD
 					
 					// pruefen ob nur eine TagInstance
 					Set<String> tagInstanceUuidList = new HashSet<String>();
@@ -149,6 +150,18 @@ public class TaggerView extends VerticalLayout
 //					if (relevantTagReferences.size()==1) {
 //						markupPanel.showPropertyEditDialog(relevantTagReferences.get(0).getTagInstance());
 //					}
+=======
+
+					Set<String> tagInstanceUuids = new HashSet<String>();
+
+					for (TagReference tr : relevantTagReferences){
+						tagInstanceUuids.add(tr.getTagInstance().getUuid());
+					}
+					
+					if (tagInstanceUuids.size() == 1){
+						markupPanel.showPropertyEditDialog(relevantTagReferences.get(0).getTagInstance());
+					}
+>>>>>>> 736e6f0430c9ab8e2f0ae87e9d02c96ac0a5261a
 				}
 				else if (evt.getOldValue() != null) {
 					@SuppressWarnings("unchecked")
