@@ -134,7 +134,7 @@ public class TaggerView extends VerticalLayout
 						}
 					}
 					tagger.setVisible(relevantTagReferences, true);
-
+// here start
 					Set<String> tagInstanceUuids = new HashSet<String>();
 
 					for (TagReference tr : relevantTagReferences){
