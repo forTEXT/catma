@@ -23,9 +23,9 @@
 			<attribute name="owner.project.facets" value="jst.web"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/java6"/>
 	<classpathentry kind="lib" path="genlib/jooq-codegen-3.1.0.jar" sourcepath="C:/data/jtools/jooq310/src/jooq-codegen-3.1.0-sources.jar"/>
 	<classpathentry kind="lib" path="genlib/jooq-console-3.1.0.jar"/>
 	<classpathentry kind="lib" path="genlib/jooq-meta-3.1.0.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.7.0"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
