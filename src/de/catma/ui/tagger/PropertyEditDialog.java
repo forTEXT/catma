@@ -33,9 +33,9 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
+import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.TextField;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -57,7 +57,9 @@ public class PropertyEditDialog extends Window {
 	}
 	
 	private TreeTable propertyTree;
-	private TextField newValueInput;
+//	private Set<String> instanceValues;
+	private InstanceValuesBin valuesSet;
+	private ComboBox selectNewValue;
 	private Button btAdd;
 	private Button btSave;
 	private Button btCancel;
@@ -72,6 +74,7 @@ public class PropertyEditDialog extends Window {
 				+tagInstance.getTagDefinition().getName());
 		this.tagInstance = tagInstance;
 		changedProperties = new HashSet<Property>();
+//		instanceValues = new HashSet<String>();
 		initComponents();
 		initActions(saveCancelListener);
 	}
@@ -103,19 +106,20 @@ public class PropertyEditDialog extends Window {
 					p, TreePropertyName.icon).setValue(pIcon);
 			propertyTree.setChildrenAllowed(p, true);
 			
-			
 			Set<String> values = new HashSet<String>();
+			
 			values.addAll(propertyDefinition.getPossibleValueList().getPropertyValueList().getValues());
 			values.addAll(p.getPropertyValueList().getValues());
 			
 			for (String pValue : values) {
 				String pValueItemId = propertyDefinition.getUuid() + "_" + pValue;
+				CheckBox cb = createCheckBox(p, pValue);
 				
 				propertyTree.addItem(
 					new Object[] {
 							null,
 							pValue,
-							createCheckBox(p, pValue)
+							cb
 					},
 					pValueItemId);
 				
@@ -124,8 +128,15 @@ public class PropertyEditDialog extends Window {
 			}
 			propertyTree.setCollapsed(p, false);
 		}
+		
 		if (tagInstance.getUserDefinedProperties().size() == 1){
 			propertyTree.setValue(tagInstance.getUserDefinedProperties().iterator().next());
+		}
+		
+//		Populate the combo box with values.
+		valuesSet = new InstanceValuesBin();
+		for (String value : valuesSet.getValues()){
+			selectNewValue.addItem(value);
 		}
 		
 	}
@@ -140,20 +151,20 @@ public class PropertyEditDialog extends Window {
 				propertyValueChanged(p, pValue, cb.booleanValue());
 			}
 		});
-//		cb.addShortcutListener(new AbstractField.FocusShortcut(
-//				cb, KeyCode.ARROW_RIGHT, ModifierKey.CTRL));
-//		cb.setClickShortcut(KeyCode.ENTER, ModifierKey.ALT);
 		return cb;
 	}
 	
 	private void propertyValueChanged(Property p, String pValue, boolean add){
 		List<String> valueList = new ArrayList<String>();
 		valueList.addAll(p.getPropertyValueList().getValues());
+		
 		if (add) {
 			valueList.add(pValue);
+			valuesSet.setValues(pValue);
 		}
 		else {
 			valueList.remove(pValue);
+			valuesSet.remove(pValue);
 		}
 		
 		p.setPropertyValueList(new PropertyValueList(valueList));
@@ -184,12 +195,14 @@ public class PropertyEditDialog extends Window {
 			}
 		});
 		
+		
 		btAdd.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				Object selection = propertyTree.getValue();
 				final Property property = getProperty(selection);
-				final String pValue = (String)newValueInput.getValue();
+				final String pValue = (String)selectNewValue.getValue();
+				
 				if ((pValue == null)||(pValue.isEmpty())) {
 					getApplication().getMainWindow().showNotification(
 						"Info", "The value can not be empty!", 
@@ -199,7 +212,6 @@ public class PropertyEditDialog extends Window {
 							
 					if (property == null) {
 						getWindow().showNotification(
-							"Information", 
 							"Please select exactly one Property from the list first!",
 							Notification.TYPE_TRAY_NOTIFICATION);
 					}
@@ -224,8 +236,7 @@ public class PropertyEditDialog extends Window {
 								pValueItemId);		
 						propertyTree.setParent(pValueItemId, property.getPropertyDefinition());
 						propertyTree.setChildrenAllowed(pValueItemId, false);
-						newValueInput.setValue("");
-						
+						selectNewValue.setValue("");
 					}
 					
 				}
@@ -247,6 +258,7 @@ public class PropertyEditDialog extends Window {
 		propertyTree.setSizeFull();
 		propertyTree.setPageLength(10);
 		propertyTree.setImmediate(true);
+		
 		propertyTree.focus();
 		propertyTree.addShortcutListener(new AbstractField.FocusShortcut(
 				propertyTree, KeyCode.ARROW_UP, ModifierKey.CTRL));
@@ -274,22 +286,24 @@ public class PropertyEditDialog extends Window {
 
 		mainLayout.addComponent(propertyTree);
 		
-		HorizontalLayout textField = new HorizontalLayout();
-		textField.setSpacing(true);
+		HorizontalLayout comboBox = new HorizontalLayout();
+		comboBox.setSpacing(true);
 		
-		newValueInput = new TextField("Add value");
-		newValueInput.addShortcutListener(new AbstractField.FocusShortcut(
-				newValueInput, KeyCode.ARROW_DOWN, ModifierKey.CTRL));
+		selectNewValue = new ComboBox("Add value");
+		selectNewValue.setTextInputAllowed(true);
+		selectNewValue.setNewItemsAllowed(true);
+		selectNewValue.setImmediate(true);
+		selectNewValue.addShortcutListener(new AbstractField.FocusShortcut(
+				selectNewValue, KeyCode.ARROW_DOWN, ModifierKey.CTRL));
 		
-		textField.addComponent(newValueInput);
-
+		comboBox.addComponent(selectNewValue);
 		
 		btAdd = new Button("+");
 		btAdd.setClickShortcut(KeyCode.INSERT);
-		textField.addComponent(btAdd);
-		textField.setComponentAlignment(btAdd, Alignment.BOTTOM_RIGHT);
+		comboBox.addComponent(btAdd);
+		comboBox.setComponentAlignment(btAdd, Alignment.BOTTOM_RIGHT);
 		
-		mainLayout.addComponent(textField);
+		mainLayout.addComponent(comboBox);
 		
 		hintText = new Label("New property values created here exist only for this tag instance! "
 				+ "For the creation of new systematic values use the Tag Manager.");
@@ -325,6 +339,14 @@ public class PropertyEditDialog extends Window {
 		return (Property)selection;
 	}
 	
+//	Set values shown in the combo box.
+//	private void setValues(String value){
+//		instanceValues.add(value);
+//	}
+//	
+//	private Set<String> getValues(){
+//		return instanceValues;
+//	}
 
 	public void show(Window parent) {
 		parent.addWindow(this);

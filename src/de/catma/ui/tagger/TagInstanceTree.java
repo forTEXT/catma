@@ -199,7 +199,6 @@ public class TagInstanceTree extends HorizontalLayout {
 										new SaveCancelListener<Set<Property>>() {
 											public void cancelPressed() {}
 											public void savePressed(Set<Property> list) {
-												
 											}
 										});
 						dialog.show(getApplication().getMainWindow());
@@ -470,7 +469,6 @@ public class TagInstanceTree extends HorizontalLayout {
 						new SaveCancelListener<Set<Property>>() {
 							public void cancelPressed() {}
 							public void savePressed(Set<Property> list) {
-								
 							}
 						});
 		dialog.show(getApplication().getMainWindow());
