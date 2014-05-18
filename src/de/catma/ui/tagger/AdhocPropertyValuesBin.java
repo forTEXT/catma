@@ -2,7 +2,6 @@ package de.catma.ui.tagger;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -11,25 +10,25 @@ import java.util.Set;
  * @author alexandra.krah@googlemail.com
  *
  */
-public class InstanceValuesBin {
+public class AdhocPropertyValuesBin {
 	
 	private Set<String> instanceValues;
 	
-	public InstanceValuesBin(String pValue){
+	public AdhocPropertyValuesBin(String pValue){
 		this();
 		instanceValues.add(pValue);
 	}
 	
-	public InstanceValuesBin(Set<String> values){
+	public AdhocPropertyValuesBin(Set<String> values){
 		this.instanceValues = values;
 	}
 	
-	public InstanceValuesBin(){
+	public AdhocPropertyValuesBin(){
 		instanceValues = new HashSet<String>();
 	}
 	
 //	Set values shown in the combo box.
-	void setValues(String value){
+	void addValue(String value){
 		instanceValues.add(value);
 	}
 	

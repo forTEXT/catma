@@ -46,7 +46,6 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window.Notification;
 
 import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
@@ -54,7 +53,6 @@ import de.catma.tag.TagInstance;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.StringListProperty;
-import de.catma.ui.dialog.StringProperty;
 import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
 
 public class TagInstanceTree extends HorizontalLayout {
@@ -88,11 +86,13 @@ public class TagInstanceTree extends HorizontalLayout {
 	private Button btEditPropertyValues;
 	private Form tiInfoForm;
 	private TagInstanceInfoSet emptyInfoSet = new TagInstanceInfoSet();
-
+	private AdhocPropertyValuesBin bin;
+	
 	public TagInstanceTree(TagIntanceActionListener tagInstanceActionListener) {
 		this.tagInstanceActionListener = tagInstanceActionListener;
 		initComponents();
 		initActions();
+		bin = new AdhocPropertyValuesBin();
 	}
 
 	private void initActions() {
@@ -200,7 +200,7 @@ public class TagInstanceTree extends HorizontalLayout {
 											public void cancelPressed() {}
 											public void savePressed(Set<Property> list) {
 											}
-										});
+										}, bin);
 						dialog.show(getApplication().getMainWindow());
 					}
 				}
@@ -470,7 +470,7 @@ public class TagInstanceTree extends HorizontalLayout {
 							public void cancelPressed() {}
 							public void savePressed(Set<Property> list) {
 							}
-						});
+						}, bin);
 		dialog.show(getApplication().getMainWindow());
 	}
 }

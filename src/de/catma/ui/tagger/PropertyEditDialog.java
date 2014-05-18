@@ -57,8 +57,7 @@ public class PropertyEditDialog extends Window {
 	}
 	
 	private TreeTable propertyTree;
-//	private Set<String> instanceValues;
-	private InstanceValuesBin valuesSet;
+	private AdhocPropertyValuesBin bin = new AdhocPropertyValuesBin();
 	private ComboBox selectNewValue;
 	private Button btAdd;
 	private Button btSave;
@@ -69,12 +68,13 @@ public class PropertyEditDialog extends Window {
 	private boolean init = false;
 
 	public PropertyEditDialog(TagInstance tagInstance,
-			SaveCancelListener<Set<Property>> saveCancelListener) {
+			SaveCancelListener<Set<Property>> saveCancelListener,
+			AdhocPropertyValuesBin bin) {
 		super("Edit Properties for Tag "
 				+tagInstance.getTagDefinition().getName());
 		this.tagInstance = tagInstance;
+		this.bin = bin;
 		changedProperties = new HashSet<Property>();
-//		instanceValues = new HashSet<String>();
 		initComponents();
 		initActions(saveCancelListener);
 	}
@@ -134,8 +134,7 @@ public class PropertyEditDialog extends Window {
 		}
 		
 //		Populate the combo box with values.
-		valuesSet = new InstanceValuesBin();
-		for (String value : valuesSet.getValues()){
+		for (String value : bin.getValues()){
 			selectNewValue.addItem(value);
 		}
 		
@@ -160,11 +159,10 @@ public class PropertyEditDialog extends Window {
 		
 		if (add) {
 			valueList.add(pValue);
-			valuesSet.setValues(pValue);
+			bin.addValue(pValue);
 		}
 		else {
 			valueList.remove(pValue);
-			valuesSet.remove(pValue);
 		}
 		
 		p.setPropertyValueList(new PropertyValueList(valueList));
@@ -179,6 +177,7 @@ public class PropertyEditDialog extends Window {
 		btCancel.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
+				
 				getParent().removeWindow(PropertyEditDialog.this);
 				saveCancelListener.cancelPressed();
 			}
@@ -187,9 +186,6 @@ public class PropertyEditDialog extends Window {
 		btSave.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				
-				
-				
 				getParent().removeWindow(PropertyEditDialog.this);
 				saveCancelListener.savePressed(changedProperties);
 			}
@@ -233,9 +229,11 @@ public class PropertyEditDialog extends Window {
 										pValue,
 										createCheckBox(property, pValue)
 								},
-								pValueItemId);		
+								pValueItemId);	
+						
 						propertyTree.setParent(pValueItemId, property.getPropertyDefinition());
 						propertyTree.setChildrenAllowed(pValueItemId, false);
+						
 						selectNewValue.setValue("");
 					}
 					
@@ -339,15 +337,6 @@ public class PropertyEditDialog extends Window {
 		return (Property)selection;
 	}
 	
-//	Set values shown in the combo box.
-//	private void setValues(String value){
-//		instanceValues.add(value);
-//	}
-//	
-//	private Set<String> getValues(){
-//		return instanceValues;
-//	}
-
 	public void show(Window parent) {
 		parent.addWindow(this);
 	}
