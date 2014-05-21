@@ -83,8 +83,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
-import de.catma.indexer.graph.SourceDocumentBatchInserter;
-import de.catma.indexer.graph.SourceDocumentToCypher;
+import de.catma.indexer.graph.SourceDocumentInserter;
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
@@ -322,7 +321,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				else{
 					final SourceDocument sourceDocument = (SourceDocument)value;
 
-					SourceDocumentBatchInserter inserter = new SourceDocumentBatchInserter();
+					SourceDocumentInserter inserter = new SourceDocumentInserter();
 					try {
 						inserter.insert(sourceDocument);
 					} catch (IOException e) {

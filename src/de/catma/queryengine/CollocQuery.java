@@ -28,6 +28,7 @@ import java.util.Set;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
+import de.catma.indexer.Indexer;
 import de.catma.indexer.KwicProvider;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
@@ -90,42 +91,48 @@ public class CollocQuery extends Query {
     	QueryResult baseResult = query1.execute();
     	QueryResult collocCondition = query2.execute();
     	
-    	Map<String,KwicProvider> kwicProviders = new HashMap<String, KwicProvider>(); 
-    	Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
-    	Repository repository = getQueryOptions().getRepository();
     	
-    	Map<QueryResultRow, List<TermInfo>> termInfos = 
-    			new HashMap<QueryResultRow, List<TermInfo>>();
-    	
-    	QueryResultRowArray result = new QueryResultRowArray();
-    	
-    	for (QueryResultRow row : baseResult) {
-    		SourceDocument sd = 
-    				repository.getSourceDocument(row.getSourceDocumentId());
-    		if (!sd.isLoaded()) {
-    			//TODO: unload SourceDocuments to free space if tobeUnloaded.size() > 10
-    			toBeUnloaded.add(sd);
-    		}
-    		
-    		if (!kwicProviders.containsKey(sd.getID())) {
-    			kwicProviders.put(sd.getID(), new KwicProvider(sd));
-    		}
-    		KwicProvider kwicProvider = kwicProviders.get(sd.getID());
-    		SpanContext spanContext =
-				kwicProvider.getSpanContextFor(	
-					row.getRange(), 
-					spanContextSize, direction);
-    		
-    		if (spanContextMeetsCollocCondition
-    				(spanContext, collocCondition, termInfos)) {
-    			result.add(row);
-    		}
-    	}
-    	for (SourceDocument sd : toBeUnloaded) {
-    		sd.unload();
-    	}
-   
-    	return result;
+    	Indexer indexer = getQueryOptions().getIndexer();
+    	return indexer.searchCollocation(baseResult, collocCondition, spanContextSize, SpanDirection.Both);
+//    	
+//    	
+//    	
+//    	Map<String,KwicProvider> kwicProviders = new HashMap<String, KwicProvider>(); 
+//    	Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
+//    	Repository repository = getQueryOptions().getRepository();
+//    	
+//    	Map<QueryResultRow, List<TermInfo>> termInfos = 
+//    			new HashMap<QueryResultRow, List<TermInfo>>();
+//    	
+//    	QueryResultRowArray result = new QueryResultRowArray();
+//    	
+//    	for (QueryResultRow row : baseResult) {
+//    		SourceDocument sd = 
+//    				repository.getSourceDocument(row.getSourceDocumentId());
+//    		if (!sd.isLoaded()) {
+//    			//TODO: unload SourceDocuments to free space if tobeUnloaded.size() > 10
+//    			toBeUnloaded.add(sd);
+//    		}
+//    		
+//    		if (!kwicProviders.containsKey(sd.getID())) {
+//    			kwicProviders.put(sd.getID(), new KwicProvider(sd));
+//    		}
+//    		KwicProvider kwicProvider = kwicProviders.get(sd.getID());
+//    		SpanContext spanContext =
+//				kwicProvider.getSpanContextFor(	
+//					row.getRange(), 
+//					spanContextSize, direction);
+//    		
+//    		if (spanContextMeetsCollocCondition
+//    				(spanContext, collocCondition, termInfos)) {
+//    			result.add(row);
+//    		}
+//    	}
+//    	for (SourceDocument sd : toBeUnloaded) {
+//    		sd.unload();
+//    	}
+//   
+//    	return result;
     }
 
 	private boolean spanContextMeetsCollocCondition(

@@ -1,25 +1,27 @@
 package de.catma.indexer.graph;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 
 import org.neo4j.graphdb.DynamicLabel;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.schema.IndexCreator;
-import org.neo4j.unsafe.batchinsert.BatchInserter;
-import org.neo4j.unsafe.batchinsert.BatchInserters;
+import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
 
-public class SourceDocumentBatchInserter {
+public class SourceDocumentInserter {
 
 	public enum RelType implements RelationshipType {
 		IS_PART_OF,
@@ -27,12 +29,15 @@ public class SourceDocumentBatchInserter {
 		HAS_POSITION,
 		;
 	}
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 	
-	public SourceDocumentBatchInserter() {
+	public SourceDocumentInserter() {
 		
 	}
 
 	public void insert(SourceDocument sourceDocument) throws IOException {
+
+		logger.info("start indexing sourcedocument");
 		
 		List<String> unseparableCharacterSequences = 
 				sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
@@ -53,70 +58,80 @@ public class SourceDocumentBatchInserter {
 		
 		Map<String, List<TermInfo>> terms = termExtractor.getTerms();
 
+		logger.info("term extraction finished");
+		logger.info("starting graphdb");
 		
-		BatchInserter inserter = 
-				BatchInserters.inserter("C:/data/projects/catma/graphdb");
+		GraphDatabaseService graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( "C:/data/projects/catma/graphdb" );
+		
+		logger.info("graph db started");
 		
 		Label sourceDocLabel = DynamicLabel.label( "SourceDocument" );
 //		inserter.createDeferredSchemaIndex( so ).on( "name" ).create();
-		Map<String, Object> properties = new HashMap<String, Object>();
 		
+		Transaction tx = graphDb.beginTx();
 		
-		properties.put("localUri", sourceDocument.getID());
-		properties.put("title", sourceDocument.toString());
+		Node sdNode = graphDb.createNode(sourceDocLabel);
 		
-		long sdNode = inserter.createNode(properties, sourceDocLabel);
+		sdNode.setProperty("localUri", sourceDocument.getID());
+		sdNode.setProperty("title", sourceDocument.toString());
+		
+		tx.success();
+		tx.close();
 		Label termLabel = DynamicLabel.label("Term");
 		Label positionLabel = DynamicLabel.label("Position");
 		
-		properties.clear();
 		Map<TermInfo,Long> termInfoToNodeId = new HashMap<TermInfo, Long>();
 		TreeSet<TermInfo> orderedTermInfos = new TreeSet<TermInfo>(TermInfo.TOKENOFFSETCOMPARATOR);
 		
 		for (Map.Entry<String, List<TermInfo>> entry : terms.entrySet()) {
+			tx = graphDb.beginTx();
 			String term = entry.getKey();
 			List<TermInfo> termInfos = entry.getValue();
 			
-			properties.put("literal", term);
-			long termNodeId = inserter.createNode(properties, termLabel);
-			properties.clear();
+			Node termNode = graphDb.createNode(termLabel);
+			termNode.setProperty("literal", term);
 			
 			for (TermInfo ti : termInfos) {
 				orderedTermInfos.add(ti);
 				
-				properties.put("position", ti.getTokenOffset());
-				properties.put("range", new Integer[] {ti.getRange().getStartPoint(), ti.getRange().getEndPoint()});
-				properties.put("literal", ti.getTerm());
+				Node positionNode = graphDb.createNode(positionLabel);
+				positionNode.setProperty("position", ti.getTokenOffset());
+				positionNode.setProperty("start", ti.getRange().getStartPoint());
+				positionNode.setProperty("end", ti.getRange().getEndPoint());
+				positionNode.setProperty("literal", ti.getTerm());
 				
-				long positionNodeId = inserter.createNode(properties, positionLabel);
-				termInfoToNodeId.put(ti, positionNodeId);
-				inserter.createRelationship(termNodeId, positionNodeId, RelType.HAS_POSITION, Collections.<String,Object>emptyMap());
-				inserter.createRelationship(termNodeId, sdNode, RelType.IS_PART_OF, Collections.<String, Object>emptyMap());
+				termInfoToNodeId.put(ti, positionNode.getId());
+				Relationship rsHasPosition = termNode.createRelationshipTo(positionNode, RelType.HAS_POSITION);
+				rsHasPosition.setProperty("sourceDoc", sourceDocument.getID());
+				
+				termNode.createRelationshipTo(sdNode, RelType.IS_PART_OF);
 			}
+			tx.success();
+			tx.close();
+			
 		}
-
-		
 		
 		TermInfo prevTi = null;
-		properties.clear();
-		
+		tx = graphDb.beginTx();
 		for (TermInfo ti : orderedTermInfos) {
+
 			if (prevTi != null) {
-				properties.put("sourceDoc", sourceDocument.getID());
-				inserter.createRelationship(
-					termInfoToNodeId.get(prevTi), termInfoToNodeId.get(ti), 
-					RelType.ADJACENT_TO, properties);
+				graphDb.getNodeById(termInfoToNodeId.get(prevTi)).createRelationshipTo(
+					graphDb.getNodeById(termInfoToNodeId.get(ti)), 
+					RelType.ADJACENT_TO);
 			}
 			prevTi = ti;
 		}
-		IndexCreator termIndexCreator = inserter.createDeferredSchemaIndex(termLabel).on("literal");
-		termIndexCreator.create();
-		
-		inserter.createDeferredSchemaIndex(termLabel).on("localUri").create();
-		inserter.createDeferredSchemaIndex(termLabel).on("title").create();
-		
-		inserter.shutdown();
+
+		tx.success();
+		tx.close();
+		logger.info("insertion of source document finished");
+		graphDb.index();
+		logger.info("indexing finished");
+		graphDb.shutdown();
+		logger.info("graphdb stopped");
 	}
 	
 }
+
 
