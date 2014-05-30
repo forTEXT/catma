@@ -180,12 +180,12 @@ public class DBIndexer implements Indexer {
 			QueryResult collocationConditionResult, int spanContextSize,
 			SpanDirection direction) throws IOException {
 		try {
-			CollocationSearcher collocationSearcher = 
-					new CollocationSearcher();
+			CollocationSearcher2 collocationSearcher = 
+					new CollocationSearcher2();
 			return collocationSearcher.search(
 				baseResult, collocationConditionResult, spanContextSize, direction);
 		}
-		catch (NamingException ne) {
+		catch (Exception ne) {
 			throw new IOException(ne);
 		}
 	}

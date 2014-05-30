@@ -24,8 +24,9 @@ public class MultiSelectTreeTable extends TreeTable {
         if (isSelectable() 
         		&& isMultiSelect()
                 && variables.containsKey("selected")
-                && getMultiSelectMode() == MultiSelectMode.DEFAULT
-                && ranges.length > 0) {
+                && (getMultiSelectMode() == MultiSelectMode.DEFAULT)
+                && (ranges != null)
+                && (ranges.length > 0)) {
 	        @SuppressWarnings("unchecked")
 	        HashSet<Object> newValue = new LinkedHashSet<Object>(
 	                (Collection<Object>) getValue());
