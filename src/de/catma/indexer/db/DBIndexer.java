@@ -23,9 +23,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.naming.InitialContext;
 import javax.naming.NamingException;
+
+import org.neo4j.graphdb.GraphDatabaseService;
 
 import de.catma.document.Range;
 import de.catma.document.source.SourceDocument;
@@ -36,6 +40,7 @@ import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
 import de.catma.indexer.TermInfo;
+import de.catma.indexer.graph.CatmaGraphDbName;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.tag.Property;
@@ -229,6 +234,19 @@ public class DBIndexer implements Indexer {
 		}
 	}
 	
-	public void close() { /*noop sessionfactory is closed by repository*/ }
+	public void close() {
+		//TODO: where to close? do we need closing at all?
+//		try {
+//			GraphDatabaseService graphDb = 
+//					(GraphDatabaseService) new InitialContext().lookup(
+//							CatmaGraphDbName.CATMAGRAPHDB.name());
+//			graphDb.shutdown();
+//			logger.info("graphdb stopped");
+//		}
+//		catch (Exception e) {
+//			logger.log(Level.SEVERE, "error stopping graphdb", e);
+//		}
+
+	}
 
 }

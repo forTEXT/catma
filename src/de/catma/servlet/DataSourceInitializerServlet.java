@@ -8,9 +8,13 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.indexer.graph.CatmaGraphDbName;
 import de.catma.repository.db.CatmaDataSourceName;
 
 public class DataSourceInitializerServlet extends HttpServlet {
@@ -46,9 +50,19 @@ public class DataSourceInitializerServlet extends HttpServlet {
 			cpds.setPassword(pass); 
 			cpds.setIdleConnectionTestPeriod(10);
 	
-			new InitialContext().bind(CatmaDataSourceName.CATMADS.name(), cpds);
+			InitialContext context = new InitialContext();
+			context.bind(CatmaDataSourceName.CATMADS.name(), cpds);
 			
 			log("CATMA DataSource initialized.");
+			
+			String graphDbPath = properties.getProperty(RepositoryPropertyKey.GraphDbPath.name());
+			
+			GraphDatabaseService graphDb = 
+				new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(graphDbPath)
+				.loadPropertiesFromFile(cfg.getServletContext().getRealPath("neo4j.properties"))
+				.newGraphDatabase();
+			
+			context.bind(CatmaGraphDbName.CATMAGRAPHDB.name(), graphDb);
         }
         catch (Exception e) {
         	throw new ServletException(e);

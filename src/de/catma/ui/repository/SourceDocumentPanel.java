@@ -309,7 +309,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				handleShareSourceDocumentRequest();
 			}
 		});
-		miMoreDocumentActions.addItem("Export Document to Cypher", new Command() {
+		miMoreDocumentActions.addItem("Index Document in Graph DB", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
 				Object value = documentsTree.getValue();
 				if ((value == null) || !(value instanceof SourceDocument)) {

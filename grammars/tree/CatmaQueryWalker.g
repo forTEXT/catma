@@ -59,7 +59,7 @@ unionQuery returns [Query query]
 	catch[RecognitionException e] {throw e;}
 	
 collocQuery returns [Query query]
-	:	^(ND_COLLOC term1=term term2=term INT?) { $query = new CollocQuery($term1.query, $term2.query, $INT.text); }
+	:	^(ND_COLLOC term1=term term2=term INT? grMarker='GR'?) { $query = new CollocQuery($term1.query, $term2.query, $INT.text, $grMarker.text); }
 	;
 	catch[RecognitionException e] {throw e;}
 	

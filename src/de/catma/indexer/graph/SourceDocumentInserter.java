@@ -8,6 +8,9 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
 import org.neo4j.graphdb.DynamicLabel;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
@@ -61,7 +64,13 @@ public class SourceDocumentInserter {
 		logger.info("term extraction finished");
 		logger.info("starting graphdb");
 		
-		GraphDatabaseService graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( "C:/data/projects/catma/graphdb" );
+		GraphDatabaseService graphDb = null;
+		
+		try {
+			graphDb = (GraphDatabaseService) new InitialContext().lookup(CatmaGraphDbName.CATMAGRAPHDB.name());
+		} catch (NamingException e) {
+			throw new IOException(e);
+		}
 		
 		logger.info("graph db started");
 		
@@ -75,8 +84,6 @@ public class SourceDocumentInserter {
 		sdNode.setProperty("localUri", sourceDocument.getID());
 		sdNode.setProperty("title", sourceDocument.toString());
 		
-		tx.success();
-		tx.close();
 		Label termLabel = DynamicLabel.label("Term");
 		Label positionLabel = DynamicLabel.label("Position");
 		
@@ -84,7 +91,6 @@ public class SourceDocumentInserter {
 		TreeSet<TermInfo> orderedTermInfos = new TreeSet<TermInfo>(TermInfo.TOKENOFFSETCOMPARATOR);
 		
 		for (Map.Entry<String, List<TermInfo>> entry : terms.entrySet()) {
-			tx = graphDb.beginTx();
 			String term = entry.getKey();
 			List<TermInfo> termInfos = entry.getValue();
 			
@@ -106,13 +112,9 @@ public class SourceDocumentInserter {
 				
 				termNode.createRelationshipTo(sdNode, RelType.IS_PART_OF);
 			}
-			tx.success();
-			tx.close();
-			
 		}
 		
 		TermInfo prevTi = null;
-		tx = graphDb.beginTx();
 		for (TermInfo ti : orderedTermInfos) {
 
 			if (prevTi != null) {
@@ -128,8 +130,6 @@ public class SourceDocumentInserter {
 		logger.info("insertion of source document finished");
 		graphDb.index();
 		logger.info("indexing finished");
-		graphDb.shutdown();
-		logger.info("graphdb stopped");
 	}
 	
 }
