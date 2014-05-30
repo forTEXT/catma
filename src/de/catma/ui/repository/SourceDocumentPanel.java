@@ -83,6 +83,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
+import de.catma.indexer.graph.SourceDocumentInserter;
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
@@ -308,7 +309,28 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				handleShareSourceDocumentRequest();
 			}
 		});
-		
+		miMoreDocumentActions.addItem("Export Document to Cypher", new Command() {
+			public void menuSelected(MenuItem selectedItem) {
+				Object value = documentsTree.getValue();
+				if ((value == null) || !(value instanceof SourceDocument)) {
+					 getWindow().showNotification(
+		                    "Information",
+		                    "Please select a Source Document first",
+		                    Notification.TYPE_TRAY_NOTIFICATION);
+				}
+				else{
+					final SourceDocument sourceDocument = (SourceDocument)value;
+
+					SourceDocumentInserter inserter = new SourceDocumentInserter();
+					try {
+						inserter.insert(sourceDocument);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+		});
 		miMoreDocumentActions.addSeparator();
 		
 		miMoreDocumentActions.addItem("Create User Markup Collection", new Command() {
