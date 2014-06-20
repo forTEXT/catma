@@ -28,11 +28,11 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
-import com.vaadin.ui.Button;
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.themes.Reindeer;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.GridLayout;
@@ -41,7 +41,9 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TextField;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.CatmaApplication;
 import de.catma.document.source.IndexInfoSet;
@@ -136,7 +138,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 	}
 
 	private void initActions() {
-		this.languagesListSelect.addListener(new ValueChangeListener() {
+		this.languagesListSelect.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				onAdvance = (languagesListSelect.getValue() != null);
@@ -149,7 +151,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 			}
 		});
 		
-		this.tfUcs.addListener(new TextChangeListener() {
+		this.tfUcs.addTextChangeListener(new TextChangeListener() {
 			public void textChange(TextChangeEvent event) {
 				btAddUcs.setEnabled(
 					(event.getText() != null) 
@@ -157,27 +159,27 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 			}
 		});
 		
-		this.tfUcs.addListener(new ValueChangeListener() {
+		this.tfUcs.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				addUcs(tfUcs.getValue().toString());
 			}
 		});
 		
-		this.unseparableCharacterSequencesListSelect.addListener(new ItemSetChangeListener() {
+		this.unseparableCharacterSequencesListSelect.addItemSetChangeListener(new ItemSetChangeListener() {
 			public void containerItemSetChange(ItemSetChangeEvent event) {
 				btRemoveUcs.setEnabled(
 					unseparableCharacterSequencesListSelect.getContainerDataSource().size() > 0);
 			}
 		});
 		
-		btAddUcs.addListener(new ClickListener() {
+		btAddUcs.addClickListener(new ClickListener() {
 			public void buttonClick(ClickEvent event) {
 				addUcs(tfUcs.getValue().toString());
 			}
 		});
 		
-		btRemoveUcs.addListener(new ClickListener() {
+		btRemoveUcs.addClickListener(new ClickListener() {
 			public void buttonClick(ClickEvent event) {
 				unseparableCharacterSequencesListSelect.removeItem(
 						unseparableCharacterSequencesListSelect.getValue());
@@ -190,11 +192,11 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 			}
 		});
 		
-		cbUseApostrophe.addListener(new ValueChangeListener() {
+		cbUseApostrophe.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				
-				if (cbUseApostrophe.booleanValue() 
+				if (cbUseApostrophe.getValue() 
 						&& (sourceDocumentInfo.getIndexInfoSet().getUserDefinedSeparatingCharacters().isEmpty())) {
 					sourceDocumentInfo.getIndexInfoSet().addUserDefinedSeparatingCharacter(APOSTROPHE);
 				}
@@ -211,7 +213,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		
 		Label infoLabel = new Label();
 		
-		infoLabel.setContentMode(Label.CONTENT_XHTML);
+		infoLabel.setContentMode(ContentMode.HTML);
 		infoLabel.setValue(
 				"<p>This section allows you to finetune the creation " +
 				"of the word list of your Source Document.</p>" +
@@ -256,18 +258,18 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
         
         btAddUcs = new Button("Add entry");
         btAddUcs.setEnabled(false);
-        ucsAddRemovePanel.addComponent(btAddUcs);
+        ucsAddRemoveLayout.addComponent(btAddUcs);
         tfUcs = new TextField();
         tfUcs.setInputPrompt("Add things like 'e.g.' as you see fit.");
         tfUcs.setImmediate(true);
         tfUcs.setTextChangeEventMode(TextChangeEventMode.EAGER);
         tfUcs.setWidth("100%");
         
-        ucsAddRemovePanel.addComponent(tfUcs);
+        ucsAddRemoveLayout.addComponent(tfUcs);
         ucsAddRemoveLayout.setExpandRatio(tfUcs, 2);
         btRemoveUcs = new Button("Remove entry");
         btRemoveUcs.setEnabled(false);
-        ucsAddRemovePanel.addComponent(btRemoveUcs);
+        ucsAddRemoveLayout.addComponent(btRemoveUcs);
         
         addComponent(ucsAddRemovePanel, 1, 4);
 
@@ -325,7 +327,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 			
 			
 		} catch (IOException e) {
-			((CatmaApplication)getApplication()).showAndLogError(
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error during language detection!", e);
 		}
 

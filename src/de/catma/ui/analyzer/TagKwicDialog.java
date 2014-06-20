@@ -35,6 +35,7 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TreeTable;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
@@ -70,23 +71,23 @@ public class TagKwicDialog extends VerticalLayout {
 	}
 
 	private void initActions() {
-		btCancel.addListener(new ClickListener() {
+		btCancel.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				window.getParent().removeWindow(window);
+				UI.getCurrent().removeWindow(window);
 				saveCancelListener.cancelPressed();
 			}
 		});
 		
-		btOk.addListener(new ClickListener() {
+		btOk.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				try {
-					window.getParent().removeWindow(window);
+					UI.getCurrent().removeWindow(window);
 					Map<String,UserMarkupCollection> result = collectionUmc();
 					saveCancelListener.savePressed(result);
 				} catch (IOException e) {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							"error opening User Markup Collection", e);
 					saveCancelListener.cancelPressed();
 				}
@@ -110,7 +111,7 @@ public class TagKwicDialog extends VerticalLayout {
 					for (UserMarkupCollectionReference curChild : children) {
 						boolean isTarget = ((CheckBox)(umcTable.getItem(
 								curChild).getItemProperty(
-									UmcTableProperty.TARGET)).getValue()).booleanValue();
+									UmcTableProperty.TARGET)).getValue()).getValue();
 						if (isTarget) {
 							UserMarkupCollection umc = 
 									repository.getUserMarkupCollection(curChild);
@@ -201,7 +202,7 @@ public class TagKwicDialog extends VerticalLayout {
 		}
 		CheckBox cb = new CheckBox(null, isTarget);
 		cb.setImmediate(true);
-		cb.addListener(new ValueChangeListener() {
+		cb.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				if (!valueChangeEventActive) {
@@ -226,7 +227,7 @@ public class TagKwicDialog extends VerticalLayout {
 		return cb;
 	}
 	
-	public void show(Window parent) {
-		parent.addWindow(window);
+	public void show() {
+		UI.getCurrent().addWindow(window);
 	}
 }

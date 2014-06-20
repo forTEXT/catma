@@ -20,6 +20,7 @@ package de.catma.ui.analyzer.querybuilder;
 
 import com.vaadin.data.Validator;
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickListener;
@@ -28,6 +29,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.ProgressIndicator;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.TreeTable;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.CatmaApplication;
@@ -64,7 +66,7 @@ public class ResultPanel extends VerticalLayout {
 
 	private void initComponents() {
 		setSpacing(true);
-		setMargin(true, false, false, false);
+		setMargin(new MarginInfo(true, false, false, false));
 		HorizontalLayout buttonPanel = new HorizontalLayout(); 
 		buttonPanel.setSpacing(true);
 		
@@ -78,16 +80,6 @@ public class ResultPanel extends VerticalLayout {
 		maxTotalFrequencyField = new TextField();
 		maxTotalFrequencyField.setValue("50");
 		maxTotalFrequencyField.addValidator(new Validator() {
-			public boolean isValid(Object value) {
-				try {
-					Integer.valueOf((String)value);
-					return true;
-				}
-				catch (NumberFormatException nfe) {
-					return false;
-				}
-			}
-			
 			public void validate(Object value) throws InvalidValueException {
 				try {
 					Integer.valueOf((String)value);
@@ -161,7 +153,7 @@ public class ResultPanel extends VerticalLayout {
 				queryOptions);
 		pi.setCaption("Searching...");
 		pi.setEnabled(true);
-		((BackgroundServiceProvider)getApplication()).getBackgroundService().submit(
+		((BackgroundServiceProvider)UI.getCurrent()).getBackgroundService().submit(
 				job, 
 				new ExecutionListener<QueryResult>() {
 				public void done(QueryResult result) {
@@ -170,7 +162,7 @@ public class ResultPanel extends VerticalLayout {
 					pi.setEnabled(false);
 				};
 				public void error(Throwable t) {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error during search!", t);
 					pi.setCaption("");
 					pi.setEnabled(false);
@@ -228,7 +220,7 @@ public class ResultPanel extends VerticalLayout {
 	}
 
 	public void addBtShowInPreviewListener(ClickListener clickListener) {
-		btShowInPreview.addListener(clickListener);
+		btShowInPreview.addClickListener(clickListener);
 	}
 
 	public void clear() {

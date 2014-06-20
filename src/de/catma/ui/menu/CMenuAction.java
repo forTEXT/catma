@@ -1,7 +1,7 @@
 package de.catma.ui.menu;
 
 import com.vaadin.event.Action;
-import com.vaadin.terminal.Resource;
+import com.vaadin.server.Resource;
 
 public abstract class CMenuAction<T> extends Action {
 

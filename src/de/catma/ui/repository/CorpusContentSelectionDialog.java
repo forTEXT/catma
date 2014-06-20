@@ -34,6 +34,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeTable;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
@@ -72,16 +73,16 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 	}
 
 	private void initActions() {
-		btCancel.addListener(new ClickListener() {
+		btCancel.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				dialogWindow.getParent().removeWindow(dialogWindow);
+				UI.getCurrent().removeWindow(dialogWindow);
 				listener.cancelPressed();
 				listener = null;
 			}
 		});
 		
-		btOk.addListener(new ClickListener() {
+		btOk.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				Corpus corpus = new Corpus(sourceDocument.toString());
@@ -98,11 +99,11 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 					Property prop = documentsTree.getItem(umcRef).getItemProperty(
 							DocumentTreeProperty.include);
 					CheckBox cb = (CheckBox) prop.getValue();
-					if (cb.booleanValue()) {
+					if (cb.getValue()) {
 						corpus.addUserMarkupCollectionReference(umcRef);
 					}
 				}
-				dialogWindow.getParent().removeWindow(dialogWindow);
+				UI.getCurrent().removeWindow(dialogWindow);
 				listener.savePressed(corpus);
 			}
 		});
@@ -110,6 +111,9 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 
 	private void initComponents() {
 		setSizeFull();
+		VerticalLayout documentsPanelContent = new VerticalLayout();
+		documentsPanelContent.setMargin(true);
+		
 		Panel documentsPanel = new Panel();
 		documentsPanel.getContent().setSizeUndefined();
 		documentsPanel.getContent().setWidth("100%");
@@ -162,7 +166,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 			pageLength = 15;
 		}
 		documentsTree.setPageLength(pageLength);
-		documentsPanel.addComponent(documentsTree);
+		documentsPanelContent.addComponent(documentsTree);
 		
 		addComponent(documentsPanel);
 		setExpandRatio(documentsPanel, 1.0f);
@@ -193,10 +197,6 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		cb.setImmediate(true);
 
 		cb.addValidator(new Validator() {
-
-			public boolean isValid(Object value) {
-				return editable || ((Boolean)value); 
-			}
 			
 			public void validate(Object value) throws InvalidValueException {
 				if (!editable && !(Boolean)value) {
@@ -211,13 +211,13 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		return cb;
 	}
 	
-	public void show(Window parent, String dialogWidth) {
+	public void show(String dialogWidth) {
 		dialogWindow.setWidth(dialogWidth);
-		parent.addWindow(dialogWindow);
+		UI.getCurrent().addWindow(dialogWindow);
 		dialogWindow.center();
 	}
 	
-	public void show(Window parent) {
-		show(parent, "25%");
+	public void show() {
+		show("25%");
 	}
 }

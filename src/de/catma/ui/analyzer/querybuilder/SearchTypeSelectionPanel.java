@@ -62,7 +62,7 @@ public class SearchTypeSelectionPanel
 
 	private void initActions() {
 		
-		searchTypeSelect.addListener(new ValueChangeListener() {
+		searchTypeSelect.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				Object value = event.getProperty().getValue();

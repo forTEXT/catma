@@ -23,6 +23,7 @@ import java.util.List;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComboBox;
@@ -65,7 +66,7 @@ public class FreqPanel extends AbstractSearchPanel {
 
 		});
 		
-		freqComparatorCombo.addListener(new ValueChangeListener() {
+		freqComparatorCombo.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				FreqComparator curComparator = 
@@ -126,7 +127,7 @@ public class FreqPanel extends AbstractSearchPanel {
 
 	private Component createSearchPanel() {
 		HorizontalLayout searchPanel = new HorizontalLayout();
-		searchPanel.setMargin(true, false, false, false);
+		searchPanel.setMargin(new MarginInfo(true, false, false, false));
 		
 		searchPanel.setSpacing(true);
 	

@@ -70,7 +70,7 @@ public class ComplexTypeSelectionPanel extends VerticalLayout implements
 	}
 
 	private void initActions() {
-		complexTypeSelect.addListener(new ValueChangeListener() {
+		complexTypeSelect.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				if (typeAdded) {

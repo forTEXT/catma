@@ -33,20 +33,25 @@ import java.util.logging.Logger;
 
 import org.vaadin.jouni.animator.Animator;
 
-import com.vaadin.Application;
-import com.vaadin.terminal.ClassResource;
-import com.vaadin.terminal.ExternalResource;
-import com.vaadin.terminal.ParameterHandler;
+import com.vaadin.annotations.PreserveOnRefresh;
+import com.vaadin.annotations.Theme;
+import com.vaadin.server.ClassResource;
+import com.vaadin.server.ExternalResource;
+import com.vaadin.server.Page;
+import com.vaadin.server.VaadinRequest;
+import com.vaadin.server.VaadinServlet;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Link;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.MenuItem;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.ProgressIndicator;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.ui.Window.Notification;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.BackgroundServiceProvider;
@@ -84,8 +89,10 @@ import de.catma.ui.tagmanager.TagManagerWindow;
 import de.catma.ui.visualizer.VisualizationManagerView;
 import de.catma.ui.visualizer.VisualizationManagerWindow;
 
-public class CatmaApplication extends Application
-	implements BackgroundServiceProvider, AnalyzerProvider, ParameterHandler, LoginToken {
+@Theme("cleatheme")
+@PreserveOnRefresh
+public class CatmaApplication extends UI
+	implements BackgroundServiceProvider, AnalyzerProvider, LoginToken {
 	
 	private static final String MINORVERSION = 
 			"(v"+new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date())+")";
@@ -108,23 +115,25 @@ public class CatmaApplication extends Application
 	private Map<String,String[]> parameters = new HashMap<String, String[]>();
 	private boolean repositoryOpened = false;
 	private UserManager userManager = new UserManager();
+	private Object user;
 
 	@Override
-	public void init() {
+	protected void init(VaadinRequest request) {
 		
 		Properties properties = loadProperties();
 		backgroundService = new BackgroundService(this);
 		
+		handleParameters(request.getParameterMap());
 		
-		final Window mainWindow = new Window("CATMA 4.1 - CLÉA " + MINORVERSION);
-		mainWindow.addParameterHandler(this);
+		Page.getCurrent().setTitle("CATMA 4.2 - CLÉA " + MINORVERSION);
+		
 		HorizontalLayout mainLayout = new HorizontalLayout();
 		mainLayout.setSizeUndefined();
 		mainLayout.setMargin(true);
 		mainLayout.setSpacing(true);
-		mainWindow.addStyleName("catma-mainwindow");
+//		mainWindow.addStyleName("catma-mainwindow");
 		
-		mainWindow.setContent(mainLayout);
+//		mainWindow.setContent(mainLayout);
 		MenuFactory menuFactory = new MenuFactory();
 		try {
 			initTempDirectory(properties);
@@ -187,15 +196,14 @@ public class CatmaApplication extends Application
 			mainLayout.setComponentAlignment(termsOfUseLink, Alignment.TOP_RIGHT);
 
 			Link helpLink = new Link(
-					"Help", new ExternalResource(getURL()+"manual/"));
+					"Help", 
+					new ExternalResource(request.getContextPath()+"manual/"));
 			helpLink.setTargetName("_blank");
 			mainLayout.addComponent(helpLink);
 			mainLayout.setComponentAlignment(helpLink, Alignment.TOP_RIGHT);
 			
 			Label helpLabel = new Label();
-			helpLabel.setIcon(new ClassResource(
-					"ui/resources/icon-help.gif", 
-					this));
+			helpLabel.setIcon(new ClassResource("ui/resources/icon-help.gif"));
 			helpLabel.setWidth("20px");
 			helpLabel.setDescription(
 					"<h3>Hints</h3>" +
@@ -220,7 +228,7 @@ public class CatmaApplication extends Application
 			
 			MenuBar loginLogoutMenu = new MenuBar();
 			LoginLogoutCommand loginLogoutCommand = 
-					new LoginLogoutCommand(menu, repositoryManagerView, this);
+					new LoginLogoutCommand(menu, repositoryManagerView);
 			MenuItem loginLogoutitem = loginLogoutMenu.addItem("Login", loginLogoutCommand);
 			loginLogoutCommand.setLoginLogoutItem(loginLogoutitem);
 			
@@ -231,9 +239,8 @@ public class CatmaApplication extends Application
 			showAndLogError("The system could not be initialized!", e);
 		}
 
-		setMainWindow(mainWindow);
+		setContent(mainLayout);
 		
-		setTheme("cleatheme");
 	}
 	
 	public void handleParameters(Map<String, String[]> parameters) {
@@ -252,17 +259,17 @@ public class CatmaApplication extends Application
 		
 		return null;
 	}
+	
 	private void initTempDirectory(Properties properties) throws IOException {
 		String tempDirProp = properties.getProperty(RepositoryPropertyKey.TempDir.name());
 		File tempDir = new File(tempDirProp);
 
 		if (!tempDir.isAbsolute()) {
 			this.tempDirectory = 
-					this.getContext().getBaseDirectory() 
-					+ System.getProperty("file.separator") 
-					+ WEB_INF_DIR
+					VaadinServlet.getCurrent().getServletContext().getRealPath(//TODO: check
+					WEB_INF_DIR
 					+ System.getProperty("file.separator")
-					+ tempDirProp;
+					+ tempDirProp);
 		}
 		else {
 			this.tempDirectory = tempDirProp;
@@ -277,9 +284,9 @@ public class CatmaApplication extends Application
 
 	private Properties loadProperties() {
 		String path = 
-				this.getContext().getBaseDirectory() 
-				+ System.getProperty("file.separator") 
-				+ CATMA_PROPERTY_FILE;
+			VaadinServlet.getCurrent().getServletContext().getRealPath(
+				System.getProperty("file.separator") 
+				+ CATMA_PROPERTY_FILE);
 		
 		Properties properties = new Properties();
 		try {
@@ -299,27 +306,27 @@ public class CatmaApplication extends Application
 	}
 	 
 	public void openTagLibrary(Repository repository, TagLibrary tagLibrary) {
-		if (tagManagerView.getApplication() == null) {
+		if (!tagManagerView.isAttached()) {
 			menu.executeEntry(tagManagerView);
 		}
 		else {
-			tagManagerView.getWindow().bringToFront();
+			((Window)tagManagerView.getParent()).bringToFront();
 		}
 		tagManagerView.openTagLibrary(repository, tagLibrary);
 	}
 
 	public TaggerView openSourceDocument(
 			SourceDocument sourceDocument, Repository repository) {
-		if (taggerManagerView.getApplication() == null) {
+		if (!taggerManagerView.isAttached()) {
 			menu.executeEntry(taggerManagerView);
-			getMainWindow().showNotification(
+			Notification.show(
 					"Information", 
 					"To markup your text please drag Tagsets from a Tag Library " +
 					"into the currently active Tagsets area!",
-					Notification.TYPE_TRAY_NOTIFICATION);
+					Type.TRAY_NOTIFICATION);
 		}
 		else {
-			taggerManagerView.getWindow().bringToFront();
+			((Window)taggerManagerView.getParent()).bringToFront();
 		}
 		return taggerManagerView.openSourceDocument(
 				sourceDocument, repository);
@@ -393,22 +400,22 @@ public class CatmaApplication extends Application
 	}
 	
 	public void analyze(Corpus corpus, IndexedRepository repository) {
-		if (analyzerManagerView.getApplication() == null) {
+		if (!analyzerManagerView.isAttached()) {
 			menu.executeEntry(analyzerManagerView);
 		}
 		else {
-			analyzerManagerView.getWindow().bringToFront();
+			((Window)analyzerManagerView.getParent()).bringToFront();
 		}
 		analyzerManagerView.analyzeDocuments(corpus, repository);
 	}
 	
 	public int addVisualization(Integer visualizationId, String caption,
 			DistributionComputation distributionComputation) {
-		if (visualizationManagerView.getApplication() == null) {
+		if (!visualizationManagerView.isAttached()) {
 			menu.executeEntry(visualizationManagerView);
 		}
 		else {
-			visualizationManagerView.getWindow().bringToFront();
+			((Window)visualizationManagerView.getParent()).bringToFront();
 		}
 		
 		return visualizationManagerView.addVisualization(visualizationId, caption,
@@ -433,14 +440,14 @@ public class CatmaApplication extends Application
 		if (message == null) {
 			message = "internal error"; 
 		}
-		
-		getMainWindow().showNotification(
+		//TODO: HTMLNotification
+		Notification.show(
 			"Error", 
 			"An error has occurred!<br />" +
 			"We've been notified about this error and it will be fixed soon.<br />" +
 			"The underlying error message is:<br />" + message +
 			"<br />" + e.getMessage(), 
-			Notification.TYPE_ERROR_MESSAGE);
+			Type.ERROR_MESSAGE);
 	}
 
 	public void openSourceDocument(SourceDocument sd, Repository repository,
@@ -450,14 +457,22 @@ public class CatmaApplication extends Application
 	}
 
 	public void addDoubleTree(List<KeywordInContext> kwics) {
-		if (visualizationManagerView.getApplication() == null) {
+		if (!visualizationManagerView.isAttached()) {
 			menu.executeEntry(visualizationManagerView);
 		}
 		else {
-			visualizationManagerView.getWindow().bringToFront();
+			((Window)visualizationManagerView.getParent()).bringToFront();
 		}
 
 		visualizationManagerView.addDoubleTree(kwics);
 	}
 
+	@Override
+	public Object getUser() {
+		return user;
+	}
+	
+	public void setUser(Object user) {
+		this.user = user;
+	}
 }
