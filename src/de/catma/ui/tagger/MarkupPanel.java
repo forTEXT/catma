@@ -28,19 +28,19 @@ import java.util.Set;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
-import com.vaadin.Application;
 import com.vaadin.data.Container;
 import com.vaadin.event.Action;
 import com.vaadin.event.DataBoundTransferable;
 import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
-import com.vaadin.terminal.ClassResource;
+import com.vaadin.server.ClassResource;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
@@ -74,7 +74,6 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	private TagInstanceTree tagInstancesTree;
 	private Repository repository;
 	private PropertyChangeListener propertyValueChangeListener;
-	private Application application;
 	private PropertyChangeListener tagDefinitionSelectionListener;
 	private PropertyChangeListener tagDefinitionsRemovedListener;
 	
@@ -195,9 +194,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		
 		Label helpLabel = new Label();
 		
-		helpLabel.setIcon(new ClassResource(
-				"ui/resources/icon-help.gif", 
-				application));
+		helpLabel.setIcon(new ClassResource("ui/resources/icon-help.gif"));
 		helpLabel.setWidth("20px");
 		helpLabel.setDescription(
 				"<h3>Hints</h3>" +
@@ -240,7 +237,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getNewValue() != null) {
 					writableUserMarkupCollectionLabel.setValue(
-							evt.getNewValue());
+							evt.getNewValue().toString());
 				}
 				else {
 					writableUserMarkupCollectionLabel.setValue("");
@@ -280,9 +277,6 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	public void attach() {
 		super.attach();
 		if (init) {
-			
-			application = getApplication();
-
 			initComponents( 
 					tagDefinitionSelectionListener,
 					tagDefinitionsRemovedListener);
@@ -354,7 +348,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		}
 		else {
 			ConfirmDialog.show(
-					application.getMainWindow(), 
+					UI.getCurrent(), 
 					"One or more of the active Tagsets are different from their "
 					+ " correpsonding Tagsets in the User Markup Collection you want to open!"
 					+ " The Collection will be updated with the versions of the active Tagsets! " 

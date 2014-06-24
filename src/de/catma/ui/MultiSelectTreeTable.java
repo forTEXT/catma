@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.vaadin.shared.ui.MultiSelectMode;
 import com.vaadin.ui.TreeTable;
 
 public class MultiSelectTreeTable extends TreeTable {

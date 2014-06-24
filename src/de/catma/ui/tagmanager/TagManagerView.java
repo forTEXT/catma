@@ -25,6 +25,7 @@ import java.io.IOException;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.UI;
 
 import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
@@ -84,7 +85,7 @@ public class TagManagerView extends TabbedView {
 						openTagLibrary(repository, reloadedTagLibrary);
 						
 					} catch (IOException e) {
-						((CatmaApplication)getApplication()).showAndLogError(
+						((CatmaApplication)UI.getCurrent()).showAndLogError(
 								"error refreshing Tag Library", e);
 					}
 				}

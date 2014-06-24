@@ -31,7 +31,6 @@ public class ProgressWindow extends CatmaWindow {
 		setDraggable(false);
 		setWidth("300px");
 		setHeight("100px");
-		setStayOnTop(true);
 	}
 	
 	@Override

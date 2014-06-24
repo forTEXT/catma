@@ -462,6 +462,13 @@ public class DBRepository implements IndexedRepository {
 	
 	public void delete(SourceDocument sourceDocument) throws IOException {
 		dbSourceDocumentHandler.remove(sourceDocument);
+		try {
+			DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+			dbCorpusHandler.reloadCorpora(db);
+		}
+		catch (Exception e) {
+			throw new IOException(e);
+		}	
 	}
 
 	public SourceDocument getSourceDocument(UserMarkupCollectionReference umcRef) {
@@ -638,6 +645,13 @@ public class DBRepository implements IndexedRepository {
 			UserMarkupCollectionReference userMarkupCollectionReference)
 			throws IOException {
 		dbUserMarkupCollectionHandler.delete(userMarkupCollectionReference);
+		try {
+			DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+			dbCorpusHandler.reloadCorpora(db);
+		}
+		catch (Exception e) {
+			throw new IOException(e);
+		}	
 	}
 
 

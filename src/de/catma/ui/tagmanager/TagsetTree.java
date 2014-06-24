@@ -26,22 +26,21 @@ import java.util.List;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
-import com.vaadin.Application;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.Action;
-import com.vaadin.terminal.ClassResource;
-import com.vaadin.terminal.Resource;
+import com.vaadin.server.ClassResource;
+import com.vaadin.server.Resource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.TreeTable;
 
@@ -91,7 +90,6 @@ public class TagsetTree extends HorizontalLayout {
 	private PropertyChangeListener tagsetDefinitionChangedListener;
 	private PropertyChangeListener tagDefinitionChangedListener;
 	private PropertyChangeListener userPropertyDefinitionChangedListener;
-	private Application application;
 	private Button btReload;
 
 	public TagsetTree(TagManager tagManager, TagLibrary tagLibrary) {
@@ -115,7 +113,6 @@ public class TagsetTree extends HorizontalLayout {
 	public void attach() {
 		super.attach();
 		if (init){
-			application = getApplication();
 			initComponents();
 			initActions();
 			init = false;
@@ -164,19 +161,19 @@ public class TagsetTree extends HorizontalLayout {
 				tagsetDefinitionChangedListener);
 		
 		if (withTagsetButtons) {
-			this.btInsertTagset.addListener(new ClickListener() {
+			this.btInsertTagset.addClickListener(new ClickListener() {
 				public void buttonClick(ClickEvent event) {
 					handleInsertTagsetDefinitionRequest();
 				}
 			});
 			
-			this.btEditTagset.addListener(new ClickListener() {
+			this.btEditTagset.addClickListener(new ClickListener() {
 				public void buttonClick(ClickEvent event) {
 					handleEditTagsetDefinitionRequest();
 				}
 			});
 
-			btRemoveTagset.addListener(new ClickListener() {
+			btRemoveTagset.addClickListener(new ClickListener() {
 				public void buttonClick(ClickEvent event) {
 					handleRemoveTagsetDefinitionRequest();
 				}

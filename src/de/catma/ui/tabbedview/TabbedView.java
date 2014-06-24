@@ -44,7 +44,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler, Iterable
 	}
 
 	private void initActions() {
-		tabSheet.addListener(new SelectedTabChangeListener() {
+		tabSheet.addSelectedTabChangeListener(new SelectedTabChangeListener() {
 			
 			public void selectedTabChange(SelectedTabChangeEvent event) {
 				if (lastTab != null) {
@@ -119,7 +119,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler, Iterable
 	}
 
 	public Iterator<Component> iterator() {
-		return tabSheet.getComponentIterator();
+		return tabSheet.iterator();
 	}
 	
 	protected void setSelectedTab(Component tabContent) {

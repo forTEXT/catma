@@ -21,10 +21,7 @@ package de.catma.ui.client.ui.tagmanager;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.ui.HTML;
-import com.vaadin.terminal.gwt.client.ApplicationConnection;
-import com.vaadin.terminal.gwt.client.UIDL;
-import com.vaadin.terminal.gwt.client.ui.VButton;
-
+import com.vaadin.client.ui.VButton;
 
 public class VColorButton extends VButton {
 	
@@ -35,26 +32,20 @@ public class VColorButton extends VButton {
 	public VColorButton() {
 	}
 
-	
-	@Override
-	public void updateFromUIDL(UIDL uidl, ApplicationConnection client) {
-		super.updateFromUIDL(uidl, client);
-		
-		if (uidl.hasAttribute(COLOR_ATTRIBUTE)) {
-			if (!this.color.equals(uidl.getStringAttribute(COLOR_ATTRIBUTE))) {
-				HTML html = new HTML(SafeHtmlUtils.fromTrustedString(
-						"<span style=\"background-color:#"
-						+ uidl.getStringAttribute(COLOR_ATTRIBUTE)
-						+ ";margin-left:3px;\">&nbsp;&nbsp;&nbsp;&nbsp;</span>"));
-				if (colorElement == null) {
-					wrapper.appendChild(html.getElement());
-				}
-				else {
-					wrapper.replaceChild(html.getElement(), colorElement);
-				}
-				colorElement = html.getElement();
-				color = uidl.getStringAttribute(COLOR_ATTRIBUTE);
+	public void setColor(String color) {
+		if (!this.color.equals(color)) {
+			HTML html = new HTML(SafeHtmlUtils.fromTrustedString(
+					"<span style=\"background-color:#"
+					+ color
+					+ ";margin-left:3px;\">&nbsp;&nbsp;&nbsp;&nbsp;</span>"));
+			if (colorElement == null) {
+				wrapper.appendChild(html.getElement());
 			}
+			else {
+				wrapper.replaceChild(html.getElement(), colorElement);
+			}
+			colorElement = html.getElement();
+			this.color = color;
 		}
 	}
 }

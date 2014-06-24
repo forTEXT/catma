@@ -29,15 +29,18 @@ import com.vaadin.data.Item;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
-import com.vaadin.terminal.ClassResource;
-import com.vaadin.terminal.Resource;
+import com.vaadin.server.ClassResource;
+import com.vaadin.server.Resource;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeTable;
-import com.vaadin.ui.Window.Notification;
+import com.vaadin.ui.UI;
 
 import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
 import de.catma.tag.Property;
@@ -79,7 +82,7 @@ public class TagInstanceTree extends HorizontalLayout {
 
 	private void initActions() {
 		
-		btRemoveTagInstance.addListener(new ClickListener() {
+		btRemoveTagInstance.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				Object selItem = tagInstanceTree.getValue();
@@ -88,13 +91,13 @@ public class TagInstanceTree extends HorizontalLayout {
 						getTagInstance(selItem);
 				
 				if (selectedItems.isEmpty()) {
-					getWindow().showNotification(
+					Notification.show(
 						"Information", 
 						"Please select one or more Tag Instances in the list first!",
-						Notification.TYPE_TRAY_NOTIFICATION);
+						Type.TRAY_NOTIFICATION);
 				}
 				else {
-					ConfirmDialog.show(getApplication().getMainWindow(), 
+					ConfirmDialog.show(UI.getCurrent(), 
 							"Remove Tag Instances", 
 							"Do you want to remove the selected Tag Instances?", 
 							"Yes", "No", new ConfirmDialog.Listener() {
@@ -115,7 +118,7 @@ public class TagInstanceTree extends HorizontalLayout {
 			}
 		});
 		
-		btEditPropertyValues.addListener(new ClickListener() {
+		btEditPropertyValues.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				Object selection = tagInstanceTree.getValue();
@@ -123,10 +126,10 @@ public class TagInstanceTree extends HorizontalLayout {
 				final TagInstance tagInstance = (TagInstance) tagInstanceTree.getParent(property);
 				
 				if ((((Set<?>)selection).size()>1) || (property == null)) {
-					getWindow().showNotification(
+					Notification.show(
 						"Information", 
 						"Please select excactly one Property from the list first!",
-						Notification.TYPE_TRAY_NOTIFICATION);
+						Type.TRAY_NOTIFICATION);
 				}
 				else {
 					final String valuesProp = "values";
@@ -162,12 +165,12 @@ public class TagInstanceTree extends HorizontalLayout {
 									tagInstanceActionListener.updateProperty(tagInstance, property);
 								}
 							});
-					editValueDlg.show(getApplication().getMainWindow());
+					editValueDlg.show();
 				}	
 			}
 		});
 		
-		tagInstanceTree.addListener(new ItemClickEvent.ItemClickListener() {
+		tagInstanceTree.addItemClickListener(new ItemClickEvent.ItemClickListener() {
 			
 			public void itemClick(ItemClickEvent event) {
 				
@@ -269,7 +272,7 @@ public class TagInstanceTree extends HorizontalLayout {
 		setExpandRatio(tagInstanceTree, 1.0f);
 		
 		GridLayout buttonGrid = new GridLayout(1, 2);
-		buttonGrid.setMargin(false, true, true, true);
+		buttonGrid.setMargin(new MarginInfo(false, true, true, true));
 		buttonGrid.setSpacing(true);
 		
 		btRemoveTagInstance = new Button("Remove Tag Instance");
@@ -285,8 +288,7 @@ public class TagInstanceTree extends HorizontalLayout {
 		tagInstanceTree.removeAllItems();
 		for (TagInstanceInfo ti : tagInstances) {
 			ClassResource tagIcon = 
-					new ClassResource(
-						"ui/tagmanager/resources/reddiamd.gif", getApplication());
+					new ClassResource("ui/tagmanager/resources/reddiamd.gif");
 			
 			tagInstanceTree.addItem(ti.getTagInstance());
 			Item item = tagInstanceTree.getItem(ti.getTagInstance());
@@ -312,8 +314,7 @@ public class TagInstanceTree extends HorizontalLayout {
 			
 			for (Property property : ti.getTagInstance().getUserDefinedProperties()) {
 				ClassResource propIcon = 
-						new ClassResource(
-							"ui/tagmanager/resources/ylwdiamd.gif", getApplication());
+						new ClassResource("ui/tagmanager/resources/ylwdiamd.gif");
 				List<String> values = property.getPropertyValueList().getValues();
 				String caption = property.getName();
 				if (values.isEmpty()) {
