@@ -38,7 +38,7 @@ public class Slider extends VerticalLayout {
 		setSizeUndefined();
 		HorizontalLayout sliderLayout = new HorizontalLayout();
 		sliderLayout.setSpacing(true);
-		this.sliderComp = new SliderComp(min, max);
+		this.sliderComp = new com.vaadin.ui.Slider(min, max);
 		minLabel = new Label(String.valueOf(min));
 		maxLabel = new Label(String.valueOf(max));
 		

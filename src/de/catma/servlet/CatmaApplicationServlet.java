@@ -83,17 +83,20 @@ public class CatmaApplicationServlet extends VaadinServlet {
 					+ response.getRequest().getContextPath() +"/VAADIN/" + lib + "\" />");
 			}
 
+			StringBuilder scriptBuilder = new StringBuilder();
 			
-			response.getDocument().body().append(
+			scriptBuilder.append(
 					"<script type=\"text/javascript\">\n");
-			response.getDocument().body().append("//<![CDATA[\n");
+			scriptBuilder.append("//<![CDATA[\n");
 			for (JsLib lib : JsLib.values()) {
-				response.getDocument().body().append(
+				scriptBuilder.append(
 						"document.write(\"<script language='javascript' src='" 
 								+ response.getRequest().getContextPath() 
 								+ "/VAADIN/" + lib + "'><\\/script>\");\n");
 			}
-			response.getDocument().body().append("//]]>\n</script>\n");
+			scriptBuilder.append("//]]>\n</script>\n");
+			
+			response.getDocument().body().prepend(scriptBuilder.toString());
 		}
 	}
 	

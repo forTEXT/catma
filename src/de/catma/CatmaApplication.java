@@ -76,6 +76,7 @@ import de.catma.ui.ProgressWindow;
 import de.catma.ui.analyzer.AnalyzerManagerView;
 import de.catma.ui.analyzer.AnalyzerManagerWindow;
 import de.catma.ui.analyzer.AnalyzerProvider;
+import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.menu.LoginLogoutCommand;
 import de.catma.ui.menu.Menu;
 import de.catma.ui.menu.MenuFactory;
@@ -285,9 +286,8 @@ public class CatmaApplication extends UI
 	private Properties loadProperties() {
 		String path = 
 			VaadinServlet.getCurrent().getServletContext().getRealPath(
-//				System.getProperty("file.separator") 
 				CATMA_PROPERTY_FILE);
-		System.out.println(path);
+
 		Properties properties = new Properties();
 		try {
 			properties.load(new FileInputStream(path));
@@ -440,8 +440,8 @@ public class CatmaApplication extends UI
 		if (message == null) {
 			message = "internal error"; 
 		}
-		//TODO: HTMLNotification
-		Notification.show(
+
+		HTMLNotification.show(
 			"Error", 
 			"An error has occurred!<br />" +
 			"We've been notified about this error and it will be fixed soon.<br />" +

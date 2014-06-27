@@ -97,7 +97,7 @@ public class TagManagerView extends TabbedView {
 	
 	
 	private TagLibraryView getTagLibraryView(String tagLibraryID) {
-		for (Component tabContent : this) {
+		for (Component tabContent : this.getTabSheet()) {
 			TagLibraryView tagLibraryView = (TagLibraryView)tabContent;
 			if (tagLibraryView.getTagLibrary().getId().equals(tagLibraryID)) {
 				return tagLibraryView;

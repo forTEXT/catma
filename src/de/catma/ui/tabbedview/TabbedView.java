@@ -118,7 +118,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		return tab;
 	}
 
-	public Iterable<Component> getTabIterator() {
+	public Iterable<Component> getTabSheet() {
 		return tabSheet;
 	}
 	

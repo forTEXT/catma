@@ -28,13 +28,12 @@ public class DoubleTreeView  extends Panel implements ClosableTab {
 		doubleTree.setupFromArrays(kwics, true);
 	}
 
+	
 	private void initActions() {
 		cbCaseSensitive.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
-				
 				doubleTree.setupFromArrays(kwics, cbCaseSensitive.getValue());
-				markAsDirty();
 			}
 		});
 		

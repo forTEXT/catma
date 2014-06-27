@@ -34,7 +34,6 @@ import de.catma.ui.client.ui.tagger.TaggerClientRpc;
 import de.catma.ui.client.ui.tagger.TaggerServerRpc;
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
-import de.catma.ui.client.ui.tagger.shared.TaggerMessageAttribute;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.data.util.JSONSerializationException;
 import de.catma.ui.tagger.pager.Page;
@@ -107,7 +106,7 @@ public class Tagger extends AbstractComponent {
 		this.taggerListener = taggerListener;
 		this.tagInstanceJSONSerializer = new ClientTagInstanceJSONSerializer();
 		this.taggerID = String.valueOf(taggerID);
-		attributes.put(TaggerMessageAttribute.ID.name(), this.taggerID);
+		getRpcProxy(TaggerClientRpc.class).setTaggerId(this.taggerID);
 	}
 
 	

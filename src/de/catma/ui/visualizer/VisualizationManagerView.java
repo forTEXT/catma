@@ -78,7 +78,7 @@ public class VisualizationManagerView extends TabbedView {
 	 */
 	@Override
 	public void onTabClose(TabSheet tabsheet, Component tabContent) {
-		Iterator<Component>  compIter = tabsheet.getComponentIterator();
+		Iterator<Component>  compIter = tabsheet.iterator();
 		HashSet<Component> contents = new HashSet<Component>();
 		while (compIter.hasNext()){
 			contents.add(compIter.next());

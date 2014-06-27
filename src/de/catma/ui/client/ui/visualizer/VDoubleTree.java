@@ -20,9 +20,9 @@ public class VDoubleTree extends Composite {
 	public void updateTreeData(String treeData) {
 		KwicList kwicList = KwicList.fromJSON(treeData);
 			
-			doubleTreeWidget.setupFromArrays(
-				kwicList.getPrefixes(), kwicList.getTokens(), kwicList.getPostfixes(),
-				kwicList.isCaseSensitive()); 
+		doubleTreeWidget.setupFromArrays(
+			kwicList.getPrefixes(), kwicList.getTokens(), kwicList.getPostfixes(),
+			kwicList.isCaseSensitive()); 
 	}
 	
 	public void updateTreeWidth(String width) {

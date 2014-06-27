@@ -20,10 +20,12 @@ package de.catma.ui.menu;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.net.URI;
 
+import com.vaadin.server.Page;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
-import com.vaadin.ui.UI;
 
 import de.catma.document.repository.RepositoryManager;
 import de.catma.ui.repository.RepositoryManagerView;
@@ -42,10 +44,8 @@ public class LoginLogoutCommand implements Command {
 			}
 			else {
 				loginLogoutItem.setText("Login");
-				UI ui = UI.getCurrent();
-				if (ui != null) {
-					ui.close();
-				}			}
+				logout();
+			}
 		}
 	};
 	
@@ -63,15 +63,20 @@ public class LoginLogoutCommand implements Command {
 	public void menuSelected(MenuItem selectedItem) {
 		if (repositoryManagerView.getRepositoryManager().hasOpenRepository()) {
 			repositoryManagerView.closeCurrentRepository();
-			UI ui = UI.getCurrent();
-			if (ui != null) {
-				ui.close();
-			}
+			logout();
 		}
 		else {
 			menu.executeEntry(repositoryManagerView);
 			repositoryManagerView.openFirstRepository();
 		}
+	}
+	
+	private void logout() {
+		URI location = Page.getCurrent().getLocation();
+		String afterLogoutRedirect = 
+				location.getScheme() + "://" + location.getAuthority() + location.getPath();
+		Page.getCurrent().setLocation(afterLogoutRedirect);
+		VaadinSession.getCurrent().close();
 	}
 
 

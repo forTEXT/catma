@@ -114,7 +114,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		VerticalLayout documentsPanelContent = new VerticalLayout();
 		documentsPanelContent.setMargin(true);
 		
-		Panel documentsPanel = new Panel();
+		Panel documentsPanel = new Panel(documentsPanelContent);
 		documentsPanel.getContent().setSizeUndefined();
 		documentsPanel.getContent().setWidth("100%");
 		documentsPanel.setSizeFull();
@@ -213,6 +213,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 	
 	public void show(String dialogWidth) {
 		dialogWindow.setWidth(dialogWidth);
+		dialogWindow.setHeight("50%");
 		UI.getCurrent().addWindow(dialogWindow);
 		dialogWindow.center();
 	}

@@ -359,11 +359,11 @@ public class KwicPanel extends VerticalLayout {
 		kwicTable.setColumnAlignment(KwicPropertyName.rightContext, Align.LEFT);
 		
 		kwicTable.addContainerProperty(
-				KwicPropertyName.startPoint, String.class, null);
+				KwicPropertyName.startPoint, Integer.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.startPoint, "Start Point");
 		
 		kwicTable.addContainerProperty(
-				KwicPropertyName.endPoint, String.class, null);
+				KwicPropertyName.endPoint, Integer.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.endPoint, "End Point");
 		
 		kwicTable.setPageLength(12); //TODO: config

@@ -701,7 +701,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private void addUserMarkupCollectionToTree(
 			UserMarkupCollection userMarkupCollection) {
 		markupCollectionsTree.addItem(
-				new Object[] {userMarkupCollection, new Label(), createCheckbox(userMarkupCollection)},
+				new Object[] {userMarkupCollection.toString(), new Label(), createCheckbox(userMarkupCollection)},
 				userMarkupCollection);
 		markupCollectionsTree.setParent(userMarkupCollection, userMarkupItem);
 		markupCollectionsTree.setCollapsed(userMarkupItem, false);
