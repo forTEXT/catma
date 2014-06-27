@@ -23,17 +23,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.vaadin.terminal.PaintException;
-import com.vaadin.terminal.PaintTarget;
-import com.vaadin.terminal.gwt.server.WebApplicationContext;
-import com.vaadin.terminal.gwt.server.WebBrowser;
+import com.vaadin.server.WebBrowser;
 import com.vaadin.ui.AbstractComponent;
-import com.vaadin.ui.ClientWidget;
+import com.vaadin.ui.UI;
 
 import de.catma.CatmaApplication;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.tag.TagDefinition;
-import de.catma.ui.client.ui.tagger.VTagger;
+import de.catma.ui.client.ui.tagger.TaggerClientRpc;
+import de.catma.ui.client.ui.tagger.TaggerServerRpc;
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TaggerMessageAttribute;
@@ -48,7 +46,6 @@ import de.catma.util.ColorConverter;
  * @author marco.petris@web.de
  *
  */
-@ClientWidget(VTagger.class)
 public class Tagger extends AbstractComponent {
 	
 	public static interface TaggerListener {
@@ -57,6 +54,44 @@ public class Tagger extends AbstractComponent {
 	}
 	
 	private static final long serialVersionUID = 1L;
+	
+	private TaggerServerRpc rpc = new TaggerServerRpc() {
+		
+		@Override
+		public void tagInstancesSelected(String instanceIDsJson) {
+			try {
+				List<String> instanceIDs =
+					tagInstanceJSONSerializer.fromInstanceIDJSONArray(instanceIDsJson);
+				
+				taggerListener.tagInstancesSelected(instanceIDs);
+				
+			} catch (JSONSerializationException e) {
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
+					"Error displaying Tag information!", e);
+			}
+		}
+		
+		@Override
+		public void tagInstanceAdded(String tagInstanceJson) {
+			try {
+				ClientTagInstance tagInstance = 
+						tagInstanceJSONSerializer.fromJSON(tagInstanceJson);
+				
+				pager.getCurrentPage().addRelativeTagInstance(tagInstance);
+				taggerListener.tagInstanceAdded(
+						pager.getCurrentPage().getAbsoluteTagInstance(tagInstance));
+			} catch (JSONSerializationException e) {
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
+					"Error adding the Tag!", e);
+			}
+		}
+		
+		@Override
+		public void log(String msg) {
+			System.out.println(
+					"Got log message from client: " +  msg);
+		}
+	};
 
 	private Map<String,String> attributes = new HashMap<String, String>();
 	private Pager pager;
@@ -66,6 +101,8 @@ public class Tagger extends AbstractComponent {
 	private String taggerID;
 	
 	public Tagger(int taggerID, Pager pager, TaggerListener taggerListener) {
+		registerRpc(rpc);
+		
 		this.pager = pager;
 		this.taggerListener = taggerListener;
 		this.tagInstanceJSONSerializer = new ClientTagInstanceJSONSerializer();
@@ -73,98 +110,42 @@ public class Tagger extends AbstractComponent {
 		attributes.put(TaggerMessageAttribute.ID.name(), this.taggerID);
 	}
 
-	@Override
-	public void paintContent(PaintTarget target) throws PaintException {
-		super.paintContent(target);
-		
-		if (target.isFullRepaint() 
-				&& !pager.isEmpty() 
-				&& !attributes.containsKey(TaggerMessageAttribute.PAGE_SET.name())) {
-
-			attributes.put(TaggerMessageAttribute.ID.name(), this.taggerID);
-
-			attributes.put(
-				TaggerMessageAttribute.PAGE_SET.name(), 
-				pager.getCurrentPage().toHTML());
-			
-			try {
-				attributes.put(
-						TaggerMessageAttribute.TAGINSTANCES_ADD.name(),
-						tagInstanceJSONSerializer.toJSON(
-								pager.getCurrentPage().getRelativeTagInstances()));
-			}
-			catch(JSONSerializationException e) {
-				//TODO: handle
-				e.printStackTrace();
-			}
-
-		}
-
-		for (Map.Entry<String, String> entry : attributes.entrySet()) {
-			target.addAttribute(entry.getKey(), entry.getValue());
-		}
-		
-		attributes.clear();
-	}
-
-	/**
-	 * Receive and handle events and other variable changes from the client.
-	 * 
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void changeVariables(Object source, Map<String, Object> variables) {
-		super.changeVariables(source, variables);
-
-		if (variables.containsKey(TaggerMessageAttribute.TAGINSTANCE_ADD.name())) {
-			try {
-				ClientTagInstance tagInstance = tagInstanceJSONSerializer.fromJSON(
-						(String)variables.get(TaggerMessageAttribute.TAGINSTANCE_ADD.name()));
-				
-				pager.getCurrentPage().addRelativeTagInstance(tagInstance);
-				taggerListener.tagInstanceAdded(
-						pager.getCurrentPage().getAbsoluteTagInstance(tagInstance));
-			} catch (JSONSerializationException e) {
-				((CatmaApplication)getApplication()).showAndLogError(
-					"Error adding the Tag!", e);
-			}
-		}
-		
-		if (variables.containsKey(TaggerMessageAttribute.LOGMESSAGE.name())) {
-			System.out.println(
-				"Got log message from client: "  
-					+ variables.get(TaggerMessageAttribute.LOGMESSAGE.name()));
-		}
-		
-		if (variables.containsKey(TaggerMessageAttribute.TAGINSTANCES_SELECT.name())) {
-			try {
-				List<String> instanceIDs =
-					tagInstanceJSONSerializer.fromInstanceIDJSONArray(
-						(String)variables.get(
-								TaggerMessageAttribute.TAGINSTANCES_SELECT.name()));
-				
-				taggerListener.tagInstancesSelected(instanceIDs);
-				
-			} catch (JSONSerializationException e) {
-				((CatmaApplication)getApplication()).showAndLogError(
-					"Error displaying Tag information!", e);
-			}
-		}
-	}
 	
+//TODO: vaadin7 handle reload
+//		if (target.isFullRepaint() 
+//				&& !pager.isEmpty() 
+//				&& !attributes.containsKey(TaggerMessageAttribute.PAGE_SET.name())) {
+//
+//			attributes.put(TaggerMessageAttribute.ID.name(), this.taggerID);
+//
+//			attributes.put(
+//				TaggerMessageAttribute.PAGE_SET.name(), 
+//				pager.getCurrentPage().toHTML());
+//			
+//			try {
+//				attributes.put(
+//						TaggerMessageAttribute.TAGINSTANCES_ADD.name(),
+//						tagInstanceJSONSerializer.toJSON(
+//								pager.getCurrentPage().getRelativeTagInstances()));
+//			}
+//			catch(JSONSerializationException e) {
+//				//TODO: handle
+//				e.printStackTrace();
+//			}
+//
+//		}
+
 	private void setPage(String pageContent) {
-		attributes.put(TaggerMessageAttribute.ID.name(), this.taggerID);
-		attributes.put(TaggerMessageAttribute.PAGE_SET.name(), pageContent);
+		getRpcProxy(TaggerClientRpc.class).setTaggerId(this.taggerID);
+		getRpcProxy(TaggerClientRpc.class).setPage(pageContent);
 		try {
-			attributes.put(
-					TaggerMessageAttribute.TAGINSTANCES_ADD.name(),
+			getRpcProxy(TaggerClientRpc.class).addTagInstances(
 					tagInstanceJSONSerializer.toJSON(
 							pager.getCurrentPage().getRelativeTagInstances()));
 		} catch (JSONSerializationException e) {
-			((CatmaApplication)getApplication()).showAndLogError(
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error setting the page!", e);
 		}
-		requestRepaint();
 	}
 
 	public void setText(String text) {
@@ -212,39 +193,38 @@ public class Tagger extends AbstractComponent {
 		currentRelativePageTagInstancesCopy.retainAll(tagInstances);
 		
 		if (!currentRelativePageTagInstancesCopy.isEmpty()) {
-			String taggerMessageAttribute = 
-					TaggerMessageAttribute.TAGINSTANCES_ADD.name();
 			if (!visible) {
-				taggerMessageAttribute = 
-					TaggerMessageAttribute.TAGINSTANCES_REMOVE.name();
+				try {
+					getRpcProxy(TaggerClientRpc.class).removeTagInstances(
+							tagInstanceJSONSerializer.toJSON(
+									currentRelativePageTagInstancesCopy));
+				} catch (JSONSerializationException e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+						"Error hiding Tags!", e);
+				}
 			}
-			
-			try {
-				attributes.put(
-						taggerMessageAttribute,
-						tagInstanceJSONSerializer.join( //TODO: check if other message attributes need a join as well
-								attributes.get(taggerMessageAttribute),
-								currentRelativePageTagInstancesCopy));
-			} catch (JSONSerializationException e) {
-				((CatmaApplication)getApplication()).showAndLogError(
-					"Error showing Tags!", e);
+			else {
+				try {
+					getRpcProxy(TaggerClientRpc.class).addTagInstances(
+							tagInstanceJSONSerializer.toJSON(
+									currentRelativePageTagInstancesCopy));
+				} catch (JSONSerializationException e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+						"Error showing Tags!", e);
+				}
 			}
-			
-			requestRepaint();
 		}
 	}
 
 	public void addTagInstanceWith(TagDefinition tagDefinition) {
 		try {
-			attributes.put(
-				TaggerMessageAttribute.TAGDEFINITION_SELECTED.name(), 
+			getRpcProxy(TaggerClientRpc.class).addTagInstanceWith(
 				new ClientTagDefinitionJSONSerializer().toJSON(
 						new ClientTagDefinition(
 							tagDefinition.getUuid(),
 							ColorConverter.toHex(tagDefinition.getColor()))));
-			requestRepaint();
 		} catch (JSONSerializationException e) {
-			((CatmaApplication)getApplication()).showAndLogError(
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"Error adding Tag!", e);
 		}
 	}
@@ -273,11 +253,9 @@ public class Tagger extends AbstractComponent {
 	public void attach() {
 		super.attach();
 		if (init) {
-			WebApplicationContext context = 
-					((WebApplicationContext) getApplication().getContext());
-			WebBrowser wb = context.getBrowser();
+			WebBrowser wb = com.vaadin.server.Page.getCurrent().getWebBrowser();
 			
-			setHeight(wb.getScreenHeight()*0.47f, UNITS_PIXELS);
+			setHeight(wb.getScreenHeight()*0.47f, Unit.PIXELS);
 			init = false;
 		}
 		else {
@@ -287,11 +265,10 @@ public class Tagger extends AbstractComponent {
 
 	public void highlight(TextRange relativeTextRange) {
 		try {
-			attributes.put(TaggerMessageAttribute.HIGHLIGHT.name(),
+			getRpcProxy(TaggerClientRpc.class).highlight(
 					new TextRangeJSONSerializer().toJSON(relativeTextRange));
-			requestRepaint();
 		} catch (JSONSerializationException e) {
-			((CatmaApplication)getApplication()).showAndLogError(
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"Error showing KWIC in the Tagger!", e);
 		}		
 	}

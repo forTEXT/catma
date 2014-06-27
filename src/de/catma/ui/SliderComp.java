@@ -18,12 +18,9 @@
  */
 package de.catma.ui;
 
-import com.vaadin.ui.ClientWidget;
 import com.vaadin.ui.Slider;
-
-import de.catma.ui.client.ui.VSliderComp;
-
-@ClientWidget(VSliderComp.class)
+//TODO:vaadin7
+//@ClientWidget(VSliderComp.class)
 public class SliderComp extends Slider {
 
 

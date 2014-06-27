@@ -19,7 +19,6 @@
 package de.catma.ui.repository;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +39,6 @@ import org.openid4java.message.ax.FetchRequest;
 import org.openid4java.message.ax.FetchResponse;
 
 import com.vaadin.server.ClassResource;
-import com.vaadin.server.DownloadStream;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.Page;
 import com.vaadin.server.RequestHandler;
@@ -69,7 +67,7 @@ import de.catma.util.IDGenerator;
 
 public class AuthenticationDialog extends VerticalLayout {
 	
-	private static class AuthenticationParamHandler implements ParameterHandler, RequestHandler {
+	private static class AuthenticationRequestHandler implements RequestHandler {
 		
 		private Logger logger = Logger.getLogger(this.getClass().getName());
 		private String returnURL;
@@ -83,7 +81,7 @@ public class AuthenticationDialog extends VerticalLayout {
 		private String signed;
 		private String sig;
 
-		public AuthenticationParamHandler(
+		public AuthenticationRequestHandler(
 				String returnURL, ConsumerManager consumerManager,
 				DiscoveryInformation discovered, 
 				RepositoryReference repositoryReference,
@@ -98,21 +96,18 @@ public class AuthenticationDialog extends VerticalLayout {
 			this.dialogWindow = dialogWindow;
 			this.handle = handle;
 		}
-
-		public void handleParameters(Map<String, String[]> parameters) {
-			openidResp = new ParameterList(parameters);
 			
-			signed = openidResp.getParameterValue("openid.signed");
-			sig = openidResp.getParameterValue("openid.sig");
-			
-		}
-					
 		@Override
 		public boolean handleRequest(VaadinSession session,
 				VaadinRequest request, VaadinResponse response)
 				throws IOException {
 
 			try {
+				openidResp = new ParameterList(request.getParameterMap());
+				
+				signed = openidResp.getParameterValue("openid.signed");
+				sig = openidResp.getParameterValue("openid.sig");
+				
 				// extract the parameters from the authentication response
 				// (which comes in as a HTTP request from the OpenID provider)
 				if (!openidResp.hasParameter("openid.mode")) {
@@ -156,9 +151,7 @@ public class AuthenticationDialog extends VerticalLayout {
 					logger.info("got openid.sig: " + openidResp.getParameterValue("openid.sig"));
 				}
 				
-				application.getMainWindow().removeURIHandler(this);
-				
-				application.getMainWindow().removeParameterHandler(this);
+				VaadinSession.getCurrent().removeRequestHandler(this);
 				
 				UI.getCurrent().removeWindow(dialogWindow);
 				
@@ -214,12 +207,14 @@ public class AuthenticationDialog extends VerticalLayout {
                 				repositoryReference, userIdentification );
 	                    
 	                    ((CatmaApplication)UI.getCurrent()).openRepository(repository);
-	                    
-	                    response.getOutputStream().write(
-	                    
-	                    return new DownloadStream(
-	                    		Page.getCurrent().getLocation().toURL().openStream(), 
-	                    		"text/html", "CATMA 4");
+	                  
+	                    return true;
+//	                    Page.getCurrent().setLocation(uri);
+//	                    response.getOutputStream().write(
+//	                    
+//	                    return new DownloadStream(
+//	                    		Page.getCurrent().getLocation().toURL().openStream(), 
+//	                    		"text/html", "CATMA 4");
 	                }
 				}
 				else {
@@ -339,27 +334,22 @@ public class AuthenticationDialog extends VerticalLayout {
 						new ExternalResource(authReq.getDestinationUrl(true)));
 			logInLink.setIcon(icon);
 			
-			final AuthenticationParamHandler authenticationParamHandler =
-					new AuthenticationParamHandler(
+			final AuthenticationRequestHandler authenticationRequestHandler =
+					new AuthenticationRequestHandler(
 							returnURL, 
 							consumerManager, discovered, 
 							repositoryReference,
 							repositoryManager, 
 							dialogWindow, 
 							handle);
-					
-			application.getMainWindow().addParameterHandler(
-					authenticationParamHandler);
-			application.getMainWindow().addURIHandler(
-					authenticationParamHandler);
+			
+			
+			VaadinSession.getCurrent().addRequestHandler(authenticationRequestHandler);
 			
 			btCancel.addClickListener(new ClickListener() {
 				
 				public void buttonClick(ClickEvent event) {
-					application.getMainWindow().removeParameterHandler(
-							authenticationParamHandler);
-					application.getMainWindow().removeURIHandler(
-							authenticationParamHandler);
+					VaadinSession.getCurrent().removeRequestHandler(authenticationRequestHandler);
 					
 					UI.getCurrent().removeWindow(dialogWindow);
 				}
@@ -368,7 +358,7 @@ public class AuthenticationDialog extends VerticalLayout {
 			return logInLink;
 		}
 		catch (Exception e) {
-			e.printStackTrace(); //TODO: handle
+			((CatmaApplication)UI.getCurrent()).showAndLogError("Error during authentication!", e);
 		}
 		return null;
 	}

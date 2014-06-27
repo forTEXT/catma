@@ -33,6 +33,7 @@ import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.Action;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.Resource;
+import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -41,8 +42,9 @@ import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
-import com.vaadin.ui.Tree;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeTable;
+import com.vaadin.ui.UI;
 
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
@@ -273,14 +275,14 @@ public class TagsetTree extends HorizontalLayout {
 				TagManagerEvent.userPropertyDefinitionChanged,
 				userPropertyDefinitionChangedListener);
 		
-		btInsertTag.addListener(new ClickListener() {
+		btInsertTag.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				handleInsertTagDefinitionRequest();
 			}
 		});
 		
-		btRemoveTag.addListener(new ClickListener() {
+		btRemoveTag.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				handleRemoveTagDefinitionRequest();
@@ -288,35 +290,35 @@ public class TagsetTree extends HorizontalLayout {
 
 		});
 
-		btEditTag.addListener(new ClickListener() {
+		btEditTag.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				handleEditTagDefinitionRequest();
 			}
 		});
 		
-		btInsertProperty.addListener(new ClickListener() {
+		btInsertProperty.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				handleInsertPropertyDefinitionRequest();
 			}
 		});
 		
-		btEditProperty.addListener(new ClickListener() {
+		btEditProperty.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				handleEditPropertyDefinitionRequest();
 			}
 		});
 		
-		btRemoveProperty.addListener(new ClickListener() {
+		btRemoveProperty.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				handleDeletePropertyDefinitionRequest();
 			}
 		});
 		
-		tagTree.addListener(
+		tagTree.addValueChangeListener(
 				new ButtonStateManager(
 						withTagsetButtons,
 						btRemoveTagset, btEditTagset, 
@@ -344,7 +346,7 @@ public class TagsetTree extends HorizontalLayout {
 		final TagDefinition parent = (TagDefinition)tagTree.getParent(pd);
 
 		ConfirmDialog.show(
-				getApplication().getMainWindow(), 
+				UI.getCurrent(), 
 				"Delete User Defined Property",
 				"Are you sure you want to delete this Property?", "Yes", "No",
 				new ConfirmDialog.Listener() {
@@ -376,7 +378,7 @@ public class TagsetTree extends HorizontalLayout {
 									parent, result);
 						}
 					});
-			propertyDefinitionDialog.show(getApplication().getMainWindow());
+			propertyDefinitionDialog.show();
 		
 		
 	}
@@ -401,7 +403,7 @@ public class TagsetTree extends HorizontalLayout {
 						tagManager.addUserDefinedPropertyDefinition(td, result);
 					}
 				});
-		propertyDefinitionDialog.show(getApplication().getMainWindow());
+		propertyDefinitionDialog.show();
 	}
 
 	private void handleEditTagDefinitionRequest() {
@@ -430,11 +432,11 @@ public class TagsetTree extends HorizontalLayout {
 					public void savePressed(
 							PropertysetItem propertysetItem) {
 						
-						Property nameProperty =
+						Property<?> nameProperty =
 							propertysetItem.getItemProperty(
 									tagDefNameProp);
 						
-						Property colorProperty =
+						Property<?> colorProperty =
 							propertysetItem.getItemProperty(
 									tagDefColorProp);
 
@@ -445,7 +447,7 @@ public class TagsetTree extends HorizontalLayout {
 										(String)colorProperty.getValue()));
 					}
 				});
-			tagFormDialog.show(application.getMainWindow(), "50%");
+			tagFormDialog.show("50%");
 		}
 		
 	}
@@ -486,7 +488,7 @@ public class TagsetTree extends HorizontalLayout {
 			final TagDefinition td = (TagDefinition)selValue;
 			
 			ConfirmDialog.show(
-				application.getMainWindow(),
+				UI.getCurrent(),
 				"Remove Tag", 
 				"Do you really want to delete this Tag " +
 				"with all its properties?", "Yes", "No", 
@@ -515,9 +517,9 @@ public class TagsetTree extends HorizontalLayout {
 				tagTree.getValue();
 		
 		if (selectedParent == null) {
-			getWindow().showNotification(
+			Notification.show(
 				"Info", "Please select a Tagset or parent Tag first!", 
-				Notification.TYPE_TRAY_NOTIFICATION);
+				Type.TRAY_NOTIFICATION);
 			return;
 		}
 		
@@ -532,11 +534,11 @@ public class TagsetTree extends HorizontalLayout {
 					public void savePressed(
 							PropertysetItem propertysetItem) {
 						
-						Property nameProperty =
+						Property<?> nameProperty =
 							propertysetItem.getItemProperty(
 									tagDefNameProp);
 						
-						Property colorProperty =
+						Property<?> colorProperty =
 							propertysetItem.getItemProperty(
 									tagDefColorProp);
 						
@@ -587,7 +589,7 @@ public class TagsetTree extends HorizontalLayout {
 								tagDefinition);
 					}
 				});
-		tagFormDialog.show(application.getMainWindow(), "50%");
+		tagFormDialog.show("50%");
 	}
 
 	public TagsetDefinition getTagsetDefinition(TagDefinition tagDefinition) {
@@ -608,7 +610,7 @@ public class TagsetTree extends HorizontalLayout {
 			final TagsetDefinition td = (TagsetDefinition)selValue;
 			
 			ConfirmDialog.show(
-				application.getMainWindow(),
+				UI.getCurrent(),
 				"Remove Tagset", 
 				"Do you really want to delete this Tagset " +
 				"with all its Tags?", "Yes", "No", 
@@ -638,7 +640,7 @@ public class TagsetTree extends HorizontalLayout {
 					public void cancelPressed() {}
 					public void savePressed(
 							PropertysetItem propertysetItem) {
-						Property property = 
+						Property<?> property = 
 								propertysetItem.getItemProperty(
 										tagsetdefinitionnameProperty);
 						TagsetDefinition td = 
@@ -654,7 +656,7 @@ public class TagsetTree extends HorizontalLayout {
 				});
 		configureTagsetFormDialog(
 				tagsetFormDialog, tagsetdefinitionnameProperty);
-		tagsetFormDialog.show(application.getMainWindow());
+		tagsetFormDialog.show();
 	}
 	
 	private void handleEditTagsetDefinitionRequest() {
@@ -683,7 +685,7 @@ public class TagsetTree extends HorizontalLayout {
 						public void cancelPressed() {}
 						public void savePressed(
 								PropertysetItem propertysetItem) {
-							Property property = 
+							Property<?> property = 
 									propertysetItem.getItemProperty(
 										tagsetdefinitionnameProperty);
 							
@@ -695,7 +697,7 @@ public class TagsetTree extends HorizontalLayout {
 			configureTagsetFormDialog(
 					tagsetFormDialog, tagsetdefinitionnameProperty);
 
-			tagsetFormDialog.show(application.getMainWindow());
+			tagsetFormDialog.show();
 		}
 	}
 
@@ -728,7 +730,7 @@ public class TagsetTree extends HorizontalLayout {
 
 		tagTree.setItemCaptionPropertyId(TagTreePropertyName.caption);
 		tagTree.setItemIconPropertyId(TagTreePropertyName.icon);
-		tagTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_PROPERTY);
+		tagTree.setItemCaptionMode(ItemCaptionMode.PROPERTY);
 	
 		tagTree.setVisibleColumns(
 				new Object[] {
@@ -757,9 +759,7 @@ public class TagsetTree extends HorizontalLayout {
 		
 		if (withTagsetButtons) {
 			btReload = new Button(""); 
-			btReload.setIcon(new ClassResource(
-					"ui/resources/icon-reload.gif",
-					getApplication()));
+			btReload.setIcon(new ClassResource("ui/resources/icon-reload.gif"));
 			btReload.addStyleName("icon-button");
 			buttonGrid.addComponent(btReload);
 			buttonGrid.setComponentAlignment(btReload, Alignment.MIDDLE_RIGHT);
@@ -767,9 +767,7 @@ public class TagsetTree extends HorizontalLayout {
 
 			Label tagsetLabel = new Label();
 			tagsetLabel.setIcon(
-					new ClassResource(
-							"ui/tagmanager/resources/grndiamd.gif", 
-							application));
+					new ClassResource("ui/tagmanager/resources/grndiamd.gif"));
 			tagsetLabel.setCaption("Tagset");
 			
 			buttonGrid.addComponent(tagsetLabel);
@@ -794,9 +792,7 @@ public class TagsetTree extends HorizontalLayout {
 		
 		Label tagLabel = new Label();
 		tagLabel.setIcon(
-				new ClassResource(
-						"ui/tagmanager/resources/reddiamd.gif", 
-						application));
+				new ClassResource("ui/tagmanager/resources/reddiamd.gif"));
 		tagLabel.setCaption("Tag");
 		
 		buttonGrid.addComponent(
@@ -825,9 +821,7 @@ public class TagsetTree extends HorizontalLayout {
 		
 		Label propertyLabel = new Label();
 		propertyLabel.setIcon(
-				new ClassResource(
-						"ui/tagmanager/resources/ylwdiamd.gif", 
-						application));
+				new ClassResource("ui/tagmanager/resources/ylwdiamd.gif"));
 		propertyLabel.setCaption("Property");
 		
 		
@@ -867,8 +861,7 @@ public class TagsetTree extends HorizontalLayout {
 	public void addTagsetDefinition(TagsetDefinition tagsetDefinition) {
 		
 		ClassResource tagsetIcon = 
-				new ClassResource(
-					"ui/tagmanager/resources/grndiamd.gif", application);
+				new ClassResource("ui/tagmanager/resources/grndiamd.gif");
 		tagTree.addItem(tagsetDefinition);
 		tagTree.getContainerProperty(
 				tagsetDefinition, TagTreePropertyName.caption).setValue(
@@ -913,8 +906,7 @@ public class TagsetTree extends HorizontalLayout {
 
 	private void addTagDefinition(TagDefinition tagDefinition) {
 		ClassResource tagIcon = 
-			new ClassResource(
-				"ui/tagmanager/resources/reddiamd.gif", application);
+			new ClassResource("ui/tagmanager/resources/reddiamd.gif");
 
 		tagTree.addItem(tagDefinition);
 		tagTree.getContainerProperty(
@@ -934,9 +926,7 @@ public class TagsetTree extends HorizontalLayout {
 	private void addUserDefinedPropertyDefinition(
 			PropertyDefinition propertyDefinition, TagDefinition tagDefinition) {
 		ClassResource propertyIcon = 
-				new ClassResource(
-					"ui/tagmanager/resources/ylwdiamd.gif", 
-					application);
+				new ClassResource("ui/tagmanager/resources/ylwdiamd.gif");
 		
 		tagTree.addItem(propertyDefinition);
 		tagTree.setChildrenAllowed(tagDefinition, true);
@@ -1002,11 +992,11 @@ public class TagsetTree extends HorizontalLayout {
 	}
 	
 	public void addValueChangeListener(ValueChangeListener valueChangeListener) {
-		tagTree.addListener(valueChangeListener);
+		tagTree.addValueChangeListener(valueChangeListener);
 	}
 	
 	public void removeValueChangeListener(ValueChangeListener valueChangeListener) {
-		tagTree.removeListener(valueChangeListener);
+		tagTree.removeValueChangeListener(valueChangeListener);
 	}
 	
 	public List<TagsetDefinition> getTagsetDefinitions() {
@@ -1027,6 +1017,6 @@ public class TagsetTree extends HorizontalLayout {
 	}
 	
 	public void addBtReloadListener(ClickListener listener) {
-		btReload.addListener(listener);
+		btReload.addClickListener(listener);
 	}
 }

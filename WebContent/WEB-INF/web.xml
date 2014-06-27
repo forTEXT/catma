@@ -22,9 +22,7 @@
 		<servlet-class>de.catma.servlet.CatmaApplicationServlet</servlet-class>
 		<!-- <servlet-class>com.vaadin.terminal.gwt.server.ApplicationServlet</servlet-class>  -->
 		<init-param>
-			<description>
-			Vaadin application class to start</description>
-			<param-name>application</param-name>
+			<param-name>UI</param-name>
 			<param-value>de.catma.CatmaApplication</param-value>
 		</init-param>
 		<init-param>

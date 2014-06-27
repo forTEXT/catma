@@ -75,7 +75,7 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 		cbComplexQuery.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
-				if (cbComplexQuery.s()) {
+				if (cbComplexQuery.getValue()) {
 					if (complexTypeSelectionPanel == null) {
 						complexTypeSelectionPanel = 
 								new ComplexTypeSelectionPanel(queryTree);

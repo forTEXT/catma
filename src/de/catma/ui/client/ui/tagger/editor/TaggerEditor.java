@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -42,7 +43,6 @@ import com.google.gwt.event.dom.client.MouseUpHandler;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.FocusWidget;
 import com.google.gwt.user.client.ui.HTML;
-import com.vaadin.terminal.gwt.client.VConsole;
 
 import de.catma.ui.client.ui.tagger.DebugUtil;
 import de.catma.ui.client.ui.tagger.editor.TaggerEditorListener.TaggerEditorEventType;
@@ -56,7 +56,7 @@ import de.catma.ui.client.ui.tagger.shared.TextRange;
 public class TaggerEditor extends FocusWidget 
 	implements MouseUpHandler, BlurHandler, FocusHandler, 
 		MouseDownHandler, KeyUpHandler {
-	
+	private static Logger logger = Logger.getLogger(TaggerEditor.class.getName());
 	private static SelectionHandlerImplStandard impl = 
 			 GWT.create(SelectionHandlerImplStandard.class);
 
@@ -122,7 +122,7 @@ public class TaggerEditor extends FocusWidget
 
 	public void onMouseUp(MouseUpEvent event) {
 		lastRangeList = impl.getRangeList();
-		VConsole.log("Ranges: " + lastRangeList.size());
+		logger.info("Ranges: " + lastRangeList.size());
 	}
 
  	public void setHTML(HTML pageHtmlContent) {
@@ -152,9 +152,9 @@ public class TaggerEditor extends FocusWidget
 			
 			for (TextRange textRange : textRanges) {
 				NodeRange nodeRange = converter.convertToNodeRange(textRange);
-				VConsole.log("adding tag to range: " + nodeRange);
+				logger.info("adding tag to range: " + nodeRange);
 				addTagInstanceForRange(taggedSpanFactory, nodeRange);
-				VConsole.log("added tag to range");
+				logger.info("added tag to range");
 			}
 
 			if (!textRanges.isEmpty()) {
@@ -169,7 +169,7 @@ public class TaggerEditor extends FocusWidget
 			
 		}
 		else {
-			VConsole.log("no range to tag");
+			logger.info("no range to tag");
 		}
 		lastTextRanges = null;
 	}
@@ -187,12 +187,12 @@ public class TaggerEditor extends FocusWidget
 				TextRange textRange = validateTextRange(converter.convertToTextRange(range));
 
 				if (!textRange.isPoint()) {
-					VConsole.log("converted and adding range " + textRange );
+					logger.info("converted and adding range " + textRange );
 					textRanges.add(textRange);
 				}
 				else {
 					//TODO: consider tagging points (needs different visualization)
-					VConsole.log(
+					logger.info(
 						"won't tag range " + textRange + " because it is a point");
 				}
 			}
@@ -206,26 +206,26 @@ public class TaggerEditor extends FocusWidget
 				int endOffset = range.getEndOffset();
 
 				if (range.getStartNode().equals(getRootNode())) {
-					VConsole.log("startNode is root!");
+					logger.info("startNode is root!");
 					LeafFinder leafFinder = 
 						new LeafFinder(
 								getRootNode().getChild(range.getStartOffset()),
 								getRootNode());
 					startNode = leafFinder.getNextRightLeaf();
 					startOffset = 0;
-					VConsole.log(
+					logger.info(
 						"Setting new startNode with Offset 0: " + startNode );
 				}
 				
 				if (range.getEndNode().equals(getRootNode())) {
-					VConsole.log("endNode is root!");
+					logger.info("endNode is root!");
 					LeafFinder leafFinder = 
 						new LeafFinder(
 								getRootNode().getChild(range.getEndOffset()),
 								getRootNode());
 					endNode = leafFinder.getNextLeftTextLeaf();
 					endOffset = endNode.getNodeValue().length();
-					VConsole.log(
+					logger.info(
 						"Setting new endNode with Offset " 
 								+ endOffset + ": " + endNode );
 				}
@@ -234,11 +234,11 @@ public class TaggerEditor extends FocusWidget
 						startNode, endNode, startOffset, endOffset));
 				
 				if (!textRange.isPoint()) {
-					VConsole.log("converted and adding range " + textRange );
+					logger.info("converted and adding range " + textRange );
 					textRanges.add(textRange);
 				}
 				else {
-					VConsole.log(
+					logger.info(
 						"won't tag range " + textRange + " because it is a point");
 				}
 			}
@@ -267,19 +267,19 @@ public class TaggerEditor extends FocusWidget
 		int endOffset = range.getEndOffset();
 		
 		DebugUtil.printNode(startNode);
-		VConsole.log("startOffset: " + startOffset);
+		logger.info("startOffset: " + startOffset);
 		
 		DebugUtil.printNode(endNode);
-		VConsole.log("endOffset: " + endOffset);
+		logger.info("endOffset: " + endOffset);
 
 		if (startNode.equals(endNode)) {
-			VConsole.log("startNode equals endNode");
+			logger.info("startNode equals endNode");
 			addTagInstance(
 				taggedSpanFactory, 
 				startNode, startOffset, endOffset);
 		}
 		else {
-			VConsole.log("startNode and endNode are not on the same branch");
+			logger.info("startNode and endNode are not on the same branch");
 			
 			addTagInstance(
 				taggedSpanFactory, 
@@ -339,7 +339,7 @@ public class TaggerEditor extends FocusWidget
 		Node endNodeParent = endNode.getParentNode();
 		
 		if (endNodeText == null) { // node is a non text node like line breaks
-			VConsole.log("Found no text within the following node:");
+			logger.info("Found no text within the following node:");
 			DebugUtil.printNode(endNode);
 			endNodeText = "";
 		}
@@ -413,7 +413,7 @@ public class TaggerEditor extends FocusWidget
 			taggedSpan = 
 				spanFactory.createTaggedSpan(affectedNode.getNodeValue());
 			
-			VConsole.log("affected Node and its taggedSpan:");
+			logger.info("affected Node and its taggedSpan:");
 			DebugUtil.printNode(affectedNode);
 			DebugUtil.printNode(taggedSpan);
 			
@@ -456,22 +456,22 @@ public class TaggerEditor extends FocusWidget
 	}
 	
 	public boolean hasSelection() {
-		VConsole.log("checking for selection");
+		logger.info("checking for selection");
 		if ((lastTextRanges != null) && !lastTextRanges.isEmpty()) {
-			VConsole.log("found lastTextRanges: " + lastTextRanges.size());
+			logger.info("found lastTextRanges: " + lastTextRanges.size());
 			return true;
 		}
 		
 		if ((lastRangeList != null) && !lastRangeList.isEmpty()) {
-			VConsole.log("found lastRangeList: " + lastRangeList.size());
+			logger.info("found lastRangeList: " + lastRangeList.size());
 			for (Range r : lastRangeList) {
 				if ((r.getEndNode()!=r.getStartNode()) 
 						|| (r.getEndOffset() != r.getStartOffset())) {
-					VConsole.log("found at least one range: " + r);
+					logger.info("found at least one range: " + r);
 					return true;
 				}
 			}
-			VConsole.log("lastRangeList contains only a point");
+			logger.info("lastRangeList contains only a point");
 		}
 		
 		return false;
@@ -508,13 +508,13 @@ public class TaggerEditor extends FocusWidget
 				addTagInstanceForRange(
 					taggedSpanFactory, rangeConverter.convertToNodeRange(textRange));
 			}
-			VConsole.log("TAGINSTANCES size: " + tagInstances.size());
+			logger.info("TAGINSTANCES size: " + tagInstances.size());
 		}
 		
 	}
 
 	public void setTaggerID(String taggerID) {
-		VConsole.log("Setting taggerID: " + taggerID);
+		logger.info("Setting taggerID: " + taggerID);
 		this.taggerID = taggerID;
 	}
 	
@@ -528,7 +528,7 @@ public class TaggerEditor extends FocusWidget
 	}
 
 	public void highlight(TextRange textRange) {
-		VConsole.log("Highlighting textrange: " + textRange);
+		logger.info("Highlighting textrange: " + textRange);
 		RangeConverter rangeConverter = new RangeConverter(taggerID);
 		NodeRange nodeRange = rangeConverter.convertToNodeRange(textRange);
 
@@ -541,7 +541,7 @@ public class TaggerEditor extends FocusWidget
 	
 	
 	public void onBlur(BlurEvent event) {
-		VConsole.log(event.toDebugString());
+		logger.info(event.toDebugString());
 		if (hasSelection()) {
 			HighlightedSpanFactory highlightedSpanFactory = 
 					new HighlightedSpanFactory("#3399FF");
@@ -573,36 +573,36 @@ public class TaggerEditor extends FocusWidget
 	
 	public void onKeyUp(KeyUpEvent event) {
 		lastRangeList = impl.getRangeList();
-		VConsole.log("Ranges: " + lastRangeList.size());
+		logger.info("Ranges: " + lastRangeList.size());
 	}
 
 	public void onMouseDown(MouseDownEvent event) {
 		lastClientX = event.getClientX();
 		lastClientY = event.getClientY();
-		VConsole.log("mouse down at: " + lastClientX + "," + lastClientY);
+		logger.info("mouse down at: " + lastClientX + "," + lastClientY);
 		fireTagsSelected();
 	}
 	
 	private void fireTagsSelected() {
 		Element line = findClosestLine();
 		if (line != null) {
-			VConsole.log("fireTagsSelected: line found: " + line);
+			logger.info("fireTagsSelected: line found: " + line);
 			
 			List<Element> taggedSpans = findTargetSpan(line);
 			List<String> tagInstanceIDs = new ArrayList<String>(); 
 			
 			for (Element span : taggedSpans) {
 				String tagInstanceID = getTagInstanceID(span.getAttribute("id"));
-				VConsole.log("fireTagsSelected: testing tagInstanceID " + tagInstanceID);
+				logger.info("fireTagsSelected: testing tagInstanceID " + tagInstanceID);
 				if (tagInstances.containsKey(tagInstanceID)) {
-					VConsole.log("fireTagsSelected: valid tagInstanceID found " + tagInstanceID);
+					logger.info("fireTagsSelected: valid tagInstanceID found " + tagInstanceID);
 					tagInstanceIDs.add(0, tagInstanceID);
 				}
 			}
 			
 			if (!tagInstanceIDs.equals(lastTagInstanceIDs)) {
 				lastTagInstanceIDs = tagInstanceIDs;
-				VConsole.log("fireTagsSelected: notifying listeners");
+				logger.info("fireTagsSelected: notifying listeners");
 				taggerEditorListener.tagsSelected(tagInstanceIDs);
 			}
 		}

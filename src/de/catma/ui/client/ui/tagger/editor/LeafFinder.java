@@ -18,10 +18,11 @@
  */   
 package de.catma.ui.client.ui.tagger.editor;
 
+import java.util.logging.Logger;
+
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
-import com.vaadin.terminal.gwt.client.VConsole;
 
 import de.catma.ui.client.ui.tagger.DebugUtil;
 
@@ -30,6 +31,8 @@ import de.catma.ui.client.ui.tagger.DebugUtil;
  *
  */
 public class LeafFinder {
+
+	private static Logger logger = Logger.getLogger(LeafFinder.class.getName());
 
 	private Node nextLeftLeaf;
 	private Node nextRightLeaf;
@@ -61,7 +64,7 @@ public class LeafFinder {
 				}
 			}
 		}
-		VConsole.log("next right leaf is " + DebugUtil.getNodeInfo(this.nextRightLeaf));
+		logger.info("next right leaf is " + DebugUtil.getNodeInfo(this.nextRightLeaf));
 	}
 
 	private void findNextLeftLeaf() {
@@ -146,7 +149,7 @@ public class LeafFinder {
 			getNextRightLeaf();
 		}
 		while ((this.nextRightLeaf != null) && (Element.is(this.nextRightLeaf)));
-		VConsole.log("next right text leaf is " + DebugUtil.getNodeInfo(this.nextRightLeaf));
+		logger.info("next right text leaf is " + DebugUtil.getNodeInfo(this.nextRightLeaf));
 		return this.nextRightLeaf;
 	}
 
@@ -160,16 +163,16 @@ public class LeafFinder {
 	}
 	
 	public static Node getFirstTextLeaf(Node root) {
-		VConsole.log("looking for first text leaf for root: " + DebugUtil.getNodeInfo(root));
+		logger.info("looking for first text leaf for root: " + DebugUtil.getNodeInfo(root));
 		if (root.hasChildNodes()) {
 			Node candidate = root.getFirstChild();
 			while(candidate.hasChildNodes()) {
 				candidate = candidate.getFirstChild();
 			}
-			VConsole.log("outer left child node: " + DebugUtil.getNodeInfo(candidate));
+			logger.info("outer left child node: " + DebugUtil.getNodeInfo(candidate));
 			
 			if (Element.is(candidate) || (candidate.getNodeValue().isEmpty())) {
-				VConsole.log("outer left node is not a text leaf, we start searching to the right now");
+				logger.info("outer left node is not a text leaf, we start searching to the right now");
 				LeafFinder leafFinder = new LeafFinder(candidate);
 //				return leafFinder.getNextRightTextLeaf();
 				return leafFinder.getNextNonEmptyRightTextLeaf();

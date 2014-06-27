@@ -22,10 +22,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
+import java.util.logging.Logger;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
-import com.vaadin.terminal.gwt.client.VConsole;
 
 import de.catma.ui.client.ui.tagger.DebugUtil;
 
@@ -35,6 +35,7 @@ import de.catma.ui.client.ui.tagger.DebugUtil;
  */
 public class AffectedNodesFinder {
 	
+	private static Logger logger = Logger.getLogger(AffectedNodesFinder.class.getName());
     private Node startNode;
     private Node outerLeftNode;
     private Node outerRightNode;
@@ -48,9 +49,9 @@ public class AffectedNodesFinder {
 		affectedNodes = new Stack<Node>();
 		
 		setStartNodeAndOuterLimits(root, node1, node2);
-		VConsole.log("AffectedNodesFinder startNode: " + DebugUtil.getNodeInfo(startNode));
-		VConsole.log("AffectedNodesFinder outerLeftNode: " + DebugUtil.getNodeInfo(outerLeftNode));
-		VConsole.log("AffectedNodesFinder outerRightNode: " + DebugUtil.getNodeInfo(outerRightNode));
+		logger.info("AffectedNodesFinder startNode: " + DebugUtil.getNodeInfo(startNode));
+		logger.info("AffectedNodesFinder outerLeftNode: " + DebugUtil.getNodeInfo(outerLeftNode));
+		logger.info("AffectedNodesFinder outerRightNode: " + DebugUtil.getNodeInfo(outerRightNode));
 		walk(startNode);
 
 		DebugUtil.printNodes("AffectedNodesFinder affectedNodes", affectedNodes);
@@ -70,7 +71,7 @@ public class AffectedNodesFinder {
 			// we can check (for greater index numbers there is no partner parent to check against)
 			int maxParentIdx = Math.min(node1Parents.size(), node2Parents.size());
 
-			VConsole.log("maxParentIdx: " + maxParentIdx);
+			logger.info("maxParentIdx: " + maxParentIdx);
 
 			DebugUtil.printNodes("node1Parents", node1Parents);
 			DebugUtil.printNodes("node2Parents", node2Parents);
@@ -78,7 +79,7 @@ public class AffectedNodesFinder {
 			// find the closest common parent node
 			for (; idx<maxParentIdx; idx++){
 				
-				VConsole.log("searching for the closest common parent, checking index: " + idx);
+				logger.info("searching for the closest common parent, checking index: " + idx);
 				if (!node1Parents.get(idx).equals(node2Parents.get(idx))) {
 					// ok, the last one was the closest, because now we are no longer on the common branch
 					break;
@@ -118,7 +119,7 @@ public class AffectedNodesFinder {
 	 * @param curNode the (relative) root node to start with 
 	 */
 	private void walk(Node curNode) {
-		VConsole.log("AffectedNodesFinder walking node: " + DebugUtil.getNodeInfo(curNode));
+		logger.info("AffectedNodesFinder walking node: " + DebugUtil.getNodeInfo(curNode));
 		
 		// check if we're still within the affected subtree 
 		// and the current node has any taggable content
@@ -129,16 +130,16 @@ public class AffectedNodesFinder {
 			// all text nodes gets added, in case we get into the affected subtree with this 
 			// node or one of its children 
 			if (curNode.getNodeType() == Node.TEXT_NODE) {
-				VConsole.log("AffectedNodesFinder pushing text node: " + DebugUtil.getNodeInfo(curNode));
+				logger.info("AffectedNodesFinder pushing text node: " + DebugUtil.getNodeInfo(curNode));
 				affectedNodes.push(curNode);
 			}
 			else {
-				VConsole.log("no text node " + DebugUtil.getNodeInfo(curNode));
+				logger.info("no text node " + DebugUtil.getNodeInfo(curNode));
 			}
 			
 			// we check for children and go down the subtrees
 			if (curNode.hasChildNodes()) {
-				VConsole.log("AffectedNodesFinder walking down: " + DebugUtil.getNodeInfo(curNode));
+				logger.info("AffectedNodesFinder walking down: " + DebugUtil.getNodeInfo(curNode));
 				for (int i=0; i<curNode.getChildCount(); i++) {
 					walk(curNode.getChild(i));
 				}
@@ -146,14 +147,14 @@ public class AffectedNodesFinder {
 			// if we reach the outer left node
 			// we're in the affacted subtree -> all parent nodes can stay on the stack
 			else if(curNode.equals(outerLeftNode)) {
-				VConsole.log("AffectedNodesFinder outer left node reached: " + DebugUtil.getNodeInfo(curNode));
+				logger.info("AffectedNodesFinder outer left node reached: " + DebugUtil.getNodeInfo(curNode));
 
 				this.inAffectedSubtree = true;
 			}
 			// if we reach the outer right node
 			// we reject all the rest of the upcoming nodes
 			else if(curNode.equals(outerRightNode)) {
-				VConsole.log("AffectedNodesFinder outer right node reached: " + DebugUtil.getNodeInfo(curNode));
+				logger.info("AffectedNodesFinder outer right node reached: " + DebugUtil.getNodeInfo(curNode));
 				this.outOfAffectedSubtree = true;
 			}
 			// if the current node is a text node it has already been pushed onto the stack
@@ -162,7 +163,7 @@ public class AffectedNodesFinder {
 			//  children is the outer left node)
 			if (!inAffectedSubtree && (curNode.getNodeType() == Node.TEXT_NODE)) {
 				Node poppedNode = affectedNodes.pop();
-				VConsole.log("not in affected subtree, popped node " +  DebugUtil.getNodeInfo(poppedNode));
+				logger.info("not in affected subtree, popped node " +  DebugUtil.getNodeInfo(poppedNode));
 			}
 		}
 	}

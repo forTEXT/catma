@@ -51,7 +51,7 @@ public class RepositoryManagerView extends TabbedView implements CloseHandler {
 	}
 	
 	private RepositoryView getRepositoryView(Repository repository) {
-		for (Component tabContent : this) {
+		for (Component tabContent : this.getTabIterator()) {
 			if (tabContent != repositoryListView) {
 				RepositoryView view = (RepositoryView)tabContent;
 				Repository curRepo = view.getRepository();

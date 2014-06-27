@@ -19,19 +19,15 @@
 package de.catma.ui.client.ui.tagger;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTML;
-import com.vaadin.terminal.gwt.client.ApplicationConnection;
-import com.vaadin.terminal.gwt.client.Paintable;
-import com.vaadin.terminal.gwt.client.UIDL;
-import com.vaadin.terminal.gwt.client.VConsole;
 
 import de.catma.ui.client.ui.tagger.editor.TaggerEditor;
 import de.catma.ui.client.ui.tagger.editor.TaggerEditorListener;
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
-import de.catma.ui.client.ui.tagger.shared.TaggerMessageAttribute;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 
@@ -39,18 +35,16 @@ import de.catma.ui.client.ui.tagger.shared.TextRange;
  * @author marco.petris@web.de
  *
  */
-public class VTagger extends Composite implements Paintable {
-
-	// The client side widget identifier 
-	private String clientID;
-
-	// Reference to the server connection object. 
-	private ApplicationConnection serverConnection;
+public class VTagger extends Composite {
+	
+	private static Logger logger = Logger.getLogger(VTagger.class.getName());
 	
 	private TaggerEditor taggerEditor;
 	private ClientTagInstanceJSONSerializer tagInstanceJSONSerializer;
 	private ClientTagDefinitionJSONSerializer tagDefinitionJSONSerializer;
 	private TextRangeJSONSerializer textRangeJSONSerializer;
+
+	private TaggerListener taggerListener;
 	
 	/**
 	 * The constructor should first call super() to initialize the component and
@@ -72,8 +66,7 @@ public class VTagger extends Composite implements Paintable {
 				
 					case ADD : {
 						ClientTagInstance tagInstance = (ClientTagInstance)args[0];
-						sendMessage(
-								TaggerMessageAttribute.TAGINSTANCE_ADD, 
+						taggerListener.tagInstanceAdded( 
 								tagInstanceJSONSerializer.toJSONObject(tagInstance));
 						break;
 					}
@@ -82,20 +75,16 @@ public class VTagger extends Composite implements Paintable {
 						String tagInstanceID  = (String)args[0];
 						boolean reportToServer = (Boolean)args[1];
 						if (reportToServer) {
-							sendMessage(
-								TaggerMessageAttribute.TAGINSTANCE_REMOVE, 
-								tagInstanceID);
+							taggerListener.tagInstanceRemoved(tagInstanceID);
 						}
 						break;
 					}
-				
+					
 				}
-				
 			}
 			
 			public void tagsSelected(List<String> tagInstanceIDs) {
-				sendMessage(
-						TaggerMessageAttribute.TAGINSTANCES_SELECT, 
+				taggerListener.tagInstancesSelected(
 						tagInstanceJSONSerializer.toJSONArray(tagInstanceIDs));
 			}
 			
@@ -107,91 +96,54 @@ public class VTagger extends Composite implements Paintable {
 		initWidget(taggerEditor);
 	}
 	
-
-    /**
-     * Called whenever an update is received from the server 
-     */
-	public void updateFromUIDL(UIDL uidl, ApplicationConnection client) {
-		// This call should be made first. 
-		// It handles sizes, captions, tooltips, etc. automatically.
-		if (client.updateComponent(this, uidl, true)) {
-		    // If client.updateComponent returns true there has been no changes and we
-		    // do not need to update anything.
-			return;
-		}
-
-		// Save reference to server connection object to be able to send
-		// user interaction later
-		this.serverConnection = client;
-
-		// Save the client side identifier (paintable id) for the widget
-		this.clientID = uidl.getId();
-		
-		if (uidl.hasAttribute(TaggerMessageAttribute.ID.name())) {
-			taggerEditor.setTaggerID(
-					uidl.getStringAttribute(TaggerMessageAttribute.ID.name()));
-		}
-		
-		if (uidl.hasAttribute(TaggerMessageAttribute.PAGE_SET.name())) {
-			VConsole.log("setting page content");
-			taggerEditor.setHTML(
-				new HTML(
-					uidl.getStringAttribute(TaggerMessageAttribute.PAGE_SET.name())));
-		}
-
-		if (uidl.hasAttribute(TaggerMessageAttribute.TAGINSTANCES_REMOVE.name())) {
-			List<ClientTagInstance> tagInstances = 
-					tagInstanceJSONSerializer.fromJSONArray(
-							uidl.getStringAttribute(
-									TaggerMessageAttribute.TAGINSTANCES_REMOVE.name()));
-			
-			for (ClientTagInstance tagInstance : tagInstances) {
-				VConsole.log("got TagInstance from server (hide): " + tagInstance);
-				taggerEditor.removeTagInstance(
-						tagInstance.getInstanceID(), 
-						false); //don't report to server
-			}
-		}
-		
-		if (uidl.hasAttribute(TaggerMessageAttribute.TAGINSTANCES_ADD.name())) {
-			List<ClientTagInstance> tagInstances = 
-					tagInstanceJSONSerializer.fromJSONArray(
-						uidl.getStringAttribute(
-							TaggerMessageAttribute.TAGINSTANCES_ADD.name()));
-			for (ClientTagInstance tagInstance : tagInstances) {
-				VConsole.log("got tag instance from server (show): " + tagInstance);
-				taggerEditor.addTagInstance(tagInstance);
-			}
-		}
-		
-		
-		if (uidl.hasAttribute(TaggerMessageAttribute.TAGDEFINITION_SELECTED.name())) {
-			ClientTagDefinition tagDefinition = 
-				tagDefinitionJSONSerializer.fromJSON(
-					uidl.getStringAttribute(
-						TaggerMessageAttribute.TAGDEFINITION_SELECTED.name()));
-			taggerEditor.createAndAddTagIntance(tagDefinition);
-		}
-		
-
-		if (uidl.hasAttribute(TaggerMessageAttribute.HIGHLIGHT.name())) {
-			TextRange textRange = 
-					textRangeJSONSerializer.fromJSON(uidl.getStringAttribute(
-							TaggerMessageAttribute.HIGHLIGHT.name()));
-			taggerEditor.highlight(textRange);
-		}
-		
-	}
-	
 	public void logToServer(String logMsg) {
-		sendMessage(TaggerMessageAttribute.LOGMESSAGE, logMsg);
+		taggerListener.log(logMsg);
 	}
 
-	private void sendMessage(TaggerMessageAttribute taggerEventAttribute, String message) {
-		VConsole.log("sending message " + taggerEventAttribute + "["+message+"] to the server");
-		serverConnection.updateVariable(
-				clientID, taggerEventAttribute.name(), message, true);
+	public void setTaggerListener(TaggerListener taggerListener) {
+		this.taggerListener = taggerListener;
+	}
+
+	public void setTaggerId(String taggerId) {
+		taggerEditor.setTaggerID(taggerId);
+	}
+
+	public void setPage(String page) {
+		logger.info("setting page content");
+		taggerEditor.setHTML(new HTML(page));
+	}
+
+	public void removeTagInstances(String tagInstancesJson) {
+		List<ClientTagInstance> tagInstances = 
+				tagInstanceJSONSerializer.fromJSONArray(tagInstancesJson);
 		
+		for (ClientTagInstance tagInstance : tagInstances) {
+			logger.info("got TagInstance from server (hide): " + tagInstance);
+			taggerEditor.removeTagInstance(
+					tagInstance.getInstanceID(), 
+					false); //don't report to server
+		}
+	}
+
+	public void highlight(String textRangeJson) {
+		TextRange textRange = textRangeJSONSerializer.fromJSON(textRangeJson);
+		taggerEditor.highlight(textRange);
+	}
+
+	public void addTagInstances(String tagInstancesJson) {
+		List<ClientTagInstance> tagInstances = 
+				tagInstanceJSONSerializer.fromJSONArray(tagInstancesJson);
+		
+		for (ClientTagInstance tagInstance : tagInstances) {
+			logger.info("got tag instance from server (show): " + tagInstance);
+			taggerEditor.addTagInstance(tagInstance);
+		}
+	}
+
+	public void addTagInstanceWith(String tagDefinitionJson) {
+		ClientTagDefinition tagDefinition = 
+				tagDefinitionJSONSerializer.fromJSON(tagDefinitionJson);
+			taggerEditor.createAndAddTagIntance(tagDefinition);
 	}
 
 }

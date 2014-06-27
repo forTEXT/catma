@@ -31,14 +31,14 @@ public enum TaggerMessageAttribute {
 	PAGE_SET,
 	/**
 	 * Attribute signals the selection of a TagDefinition that
-	 * takes part in a tagging action.
+	 * takes part in a tagging action. to client
 	 */
 	TAGDEFINITION_SELECTED,
 	/**
 	 * Attribute signals the selction of a Tagset that gets added
 	 * to the currently available Tagsets for tagging actions.
 	 */
-	TAGSETDEFINITION_ATTACH,
+//	TAGSETDEFINITION_ATTACH,
 	/**
 	 * Attributes signals to the server that a TagInstance has been added
 	 * by a tagging action.

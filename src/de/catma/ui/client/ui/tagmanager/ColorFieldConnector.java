@@ -12,7 +12,7 @@ import de.catma.ui.dialog.ColorField;
 @Connect(ColorField.class)
 public class ColorFieldConnector extends AbstractFieldConnector {
 	
-    ColorFieldServerRpc rpc = RpcProxy.create(ColorFieldServerRpc.class, this);
+    private ColorFieldServerRpc rpc = RpcProxy.create(ColorFieldServerRpc.class, this);
     
     public ColorFieldConnector() {
     	getWidget().setColorFieldListener(new VColorFieldListener() {
@@ -35,7 +35,7 @@ public class ColorFieldConnector extends AbstractFieldConnector {
 	}
 	
 	 @OnStateChange("hexcolor")
-	 void updateColor() {
+	 private void updateColor() {
 		 getWidget().setHexColor(getState().hexcolor);
 	 }
 	 

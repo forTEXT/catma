@@ -109,7 +109,7 @@ public class CatmaApplication extends UI
 	private TagManager tagManager;
 	private ProgressIndicator defaultProgressIndicator;
 	private int defaultPIbackgroundJobs = 0;
-	private ProgressWindow progressWindow;
+//	private ProgressWindow progressWindow;
 	private VisualizationManagerView visualizationManagerView;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private Map<String,String[]> parameters = new HashMap<String, String[]>();
@@ -156,7 +156,7 @@ public class CatmaApplication extends UI
 			defaultProgressIndicator.setIndeterminate(true);
 			defaultProgressIndicator.setEnabled(false);
 			defaultProgressIndicator.setPollingInterval(500);
-			progressWindow = new ProgressWindow(defaultProgressIndicator);
+//			progressWindow = new ProgressWindow(defaultProgressIndicator);
 			
 			menu = menuFactory.createMenu(
 					mainLayout, 
@@ -285,9 +285,9 @@ public class CatmaApplication extends UI
 	private Properties loadProperties() {
 		String path = 
 			VaadinServlet.getCurrent().getServletContext().getRealPath(
-				System.getProperty("file.separator") 
-				+ CATMA_PROPERTY_FILE);
-		
+//				System.getProperty("file.separator") 
+				CATMA_PROPERTY_FILE);
+		System.out.println(path);
 		Properties properties = new Properties();
 		try {
 			properties.load(new FileInputStream(path));
