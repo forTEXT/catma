@@ -463,8 +463,8 @@ public class PhraseResultPanel extends VerticalLayout {
 		int totalCount = 0;
 		int totalFreq = 0;
 		
-		for (GroupedQueryResult phraseResult : 
-				queryResult.asGroupedSet()) {
+		for (GroupedQueryResult phraseResult : //hat eine methode filter; muss die ganze QuerryResult durchgehen; es gibt die methode getQueryResult
+				queryResult.asGroupedSet()) { //holt sich den Rückgabewert von der methode asGroupedSet
 			addPhraseResult(phraseResult);
 			totalFreq+=phraseResult.getTotalFrequency();
 			totalCount++;
