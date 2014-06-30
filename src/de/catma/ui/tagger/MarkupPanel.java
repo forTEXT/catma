@@ -443,4 +443,10 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		markupCollectionsPanel.updateProperty(tagInstance, property);
 		
 	}
+
+	public void showPropertyEditDialog(TagInstance tagInstance) {
+		showTagInstanceInfo(Collections.singletonList(tagInstance.getUuid()));
+		//test if there are any properties - only then open 
+		tagInstancesTree.showPropertyEditDialog();
+	}
 }

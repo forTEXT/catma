@@ -23,6 +23,7 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -133,7 +134,16 @@ public class TaggerView extends VerticalLayout
 						}
 					}
 					tagger.setVisible(relevantTagReferences, true);
+
+					Set<String> tagInstanceUuids = new HashSet<String>();
+
+					for (TagReference tr : relevantTagReferences){
+						tagInstanceUuids.add(tr.getTagInstance().getUuid());
+					}
 					
+					if (tagInstanceUuids.size() == 1){
+						markupPanel.showPropertyEditDialog(relevantTagReferences.get(0).getTagInstance());
+					}
 				}
 				else if (evt.getOldValue() != null) {
 					@SuppressWarnings("unchecked")
@@ -236,9 +246,6 @@ public class TaggerView extends VerticalLayout
 		tagger.setWidth("550px");
 		
 		taggerPanel.addComponent(tagger);
-		
-//		Panel actionPanel = new Panel(new HorizontalLayout());
-//		((HorizontalLayout)actionPanel.getContent()).setSpacing(true);
 	
 		HorizontalLayout actionPanel = new HorizontalLayout();
 		actionPanel.setSpacing(true);
