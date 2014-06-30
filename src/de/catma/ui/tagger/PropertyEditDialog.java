@@ -62,7 +62,7 @@ public class PropertyEditDialog extends Window {
 	}
 	
 	private TreeTable propertyTree;
-	private Set<String> values;
+	private AdhocPropertyValuesBin bin = new AdhocPropertyValuesBin();
 	private ComboBox selectNewValue;
 	private Button btAdd;
 	private Button btSave;
@@ -73,10 +73,12 @@ public class PropertyEditDialog extends Window {
 	private boolean init = false;
 
 	public PropertyEditDialog(TagInstance tagInstance,
-			SaveCancelListener<Set<Property>> saveCancelListener) {
+			SaveCancelListener<Set<Property>> saveCancelListener,
+			AdhocPropertyValuesBin bin) {
 		super("Edit Properties for Tag "
 				+tagInstance.getTagDefinition().getName());
 		this.tagInstance = tagInstance;
+		this.bin = bin;
 		changedProperties = new HashSet<Property>();
 		initComponents();
 		initActions(saveCancelListener);
@@ -108,7 +110,7 @@ public class PropertyEditDialog extends Window {
 					p, TreePropertyName.icon).setValue(pIcon);
 			propertyTree.setChildrenAllowed(p, true);
 			
-			values = new HashSet<String>();
+			Set<String> values = new HashSet<String>();
 			
 			values.addAll(propertyDefinition.getPossibleValueList().getPropertyValueList().getValues());
 			values.addAll(p.getPropertyValueList().getValues());
@@ -138,11 +140,17 @@ public class PropertyEditDialog extends Window {
 //			}
 //			cb.setClickShortcut(KeyCode.NUM0, ModifierKey.ALT);
 		}
+		
 		if (tagInstance.getUserDefinedProperties().size() == 1){
 			propertyTree.setValue(tagInstance.getUserDefinedProperties().iterator().next());
 		}
-		Object selection = propertyTree.getValue();
-		for (String value : getValues(selection)){
+//		Object selection = propertyTree.getValue();
+//		for (String value : getValues(selection)){
+//			selectNewValue.addItem(value);
+//		}
+		
+//		Populate the combo box with values.
+		for (String value : bin.getValues()){
 			selectNewValue.addItem(value);
 		}
 		
@@ -165,8 +173,10 @@ public class PropertyEditDialog extends Window {
 	private void propertyValueChanged(Property p, String pValue, boolean add){
 		List<String> valueList = new ArrayList<String>();
 		valueList.addAll(p.getPropertyValueList().getValues());
+		
 		if (add) {
 			valueList.add(pValue);
+			bin.addValue(pValue);
 		}
 		else {
 			valueList.remove(pValue);
@@ -236,11 +246,11 @@ public class PropertyEditDialog extends Window {
 										pValue,
 										createCheckBox(property, pValue)
 								},
-								pValueItemId);		
+								pValueItemId);	
+						
 						propertyTree.setParent(pValueItemId, property.getPropertyDefinition());
 						propertyTree.setChildrenAllowed(pValueItemId, false);
 						selectNewValue.setValue("");
-						
 					}
 					
 				}
@@ -343,16 +353,16 @@ public class PropertyEditDialog extends Window {
 		return (Property)selection;
 	}
 	
-	private Set<String> getValues(Object selection){
-
-		while ((selection != null) && !(selection instanceof Property)) {
-			selection = propertyTree.getParent(selection);
-			values.addAll(getProperty(selection).getPropertyDefinition().getPossibleValueList().getPropertyValueList().getValues());
-			values.addAll(getProperty(selection).getPropertyValueList().getValues());
-		}
-		
-		return values;
-	}
+//	private Set<String> getValues(Object selection){
+//
+//		while ((selection != null) && !(selection instanceof Property)) {
+//			selection = propertyTree.getParent(selection);
+//			values.addAll(getProperty(selection).getPropertyDefinition().getPossibleValueList().getPropertyValueList().getValues());
+//			values.addAll(getProperty(selection).getPropertyValueList().getValues());
+//		}
+//		
+//		return values;
+//	}
 	
 
 	public void show() {

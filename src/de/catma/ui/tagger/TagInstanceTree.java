@@ -89,11 +89,13 @@ public class TagInstanceTree extends HorizontalLayout {
 	private Button btEditPropertyValues;
 	private Form tiInfoForm;
 	private TagInstanceInfoSet emptyInfoSet = new TagInstanceInfoSet();
-
+	private AdhocPropertyValuesBin bin;
+	
 	public TagInstanceTree(TagIntanceActionListener tagInstanceActionListener) {
 		this.tagInstanceActionListener = tagInstanceActionListener;
 		initComponents();
 		initActions();
+		bin = new AdhocPropertyValuesBin();
 	}
 
 	private void initActions() {
@@ -200,9 +202,8 @@ public class TagInstanceTree extends HorizontalLayout {
 										new SaveCancelListener<Set<Property>>() {
 											public void cancelPressed() {}
 											public void savePressed(Set<Property> list) {
-												
 											}
-										});
+										}, bin);
 						dialog.show();
 					}
 				}
@@ -469,9 +470,8 @@ public class TagInstanceTree extends HorizontalLayout {
 						new SaveCancelListener<Set<Property>>() {
 							public void cancelPressed() {}
 							public void savePressed(Set<Property> list) {
-								
 							}
-						});
+						}, bin);
 		dialog.show();
 	}
 }
