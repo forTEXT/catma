@@ -19,7 +19,19 @@
 package de.catma.queryengine.querybuilder;
 
 public class WildcardBuilder {
-	
+
+	public String getWildcardFor(
+			String exactWord, int position) {
+		StringBuilder builder = new StringBuilder();
+		
+		for (int i=1; i<position; i++) {
+			builder.append(" % ");
+		}
+		builder.append(escape(exactWord));
+		
+		return builder.toString(); 
+	}
+
 	public String getWildcardFor(
 			String startsWith, String contains, String endsWith, int position) {
 		

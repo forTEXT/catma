@@ -11,7 +11,7 @@ package de.catma.repository.db.jooqgen.catmarepository;
 @java.lang.SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Catmarepository extends org.jooq.impl.SchemaImpl {
 
-	private static final long serialVersionUID = -1582226383;
+	private static final long serialVersionUID = -1754931650;
 
 	/**
 	 * The singleton instance of <code>CatmaRepository</code>
@@ -38,6 +38,7 @@ public class Catmarepository extends org.jooq.impl.SchemaImpl {
 			de.catma.repository.db.jooqgen.catmarepository.tables.CorpusSourcedocument.CORPUS_SOURCEDOCUMENT,
 			de.catma.repository.db.jooqgen.catmarepository.tables.CorpusStaticmarkupcollection.CORPUS_STATICMARKUPCOLLECTION,
 			de.catma.repository.db.jooqgen.catmarepository.tables.CorpusUsermarkupcollection.CORPUS_USERMARKUPCOLLECTION,
+			de.catma.repository.db.jooqgen.catmarepository.tables.MaintenanceSem.MAINTENANCE_SEM,
 			de.catma.repository.db.jooqgen.catmarepository.tables.Mlog.MLOG,
 			de.catma.repository.db.jooqgen.catmarepository.tables.Property.PROPERTY,
 			de.catma.repository.db.jooqgen.catmarepository.tables.Propertydefinition.PROPERTYDEFINITION,

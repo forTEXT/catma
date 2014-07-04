@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.vaadin.addon.tableexport.ExcelExport;
+import com.vaadin.data.Item;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
@@ -38,6 +39,7 @@ import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Table;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window.Notification;
@@ -52,7 +54,9 @@ import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
-import de.catma.ui.HierarchicalExcelExport;
+import de.catma.ui.component.export.CsvExport;
+import de.catma.ui.component.export.CsvExport.CsvExportException;
+import de.catma.ui.component.export.HierarchicalExcelExport;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 
@@ -77,7 +81,11 @@ public class PhraseResultPanel extends VerticalLayout {
 	private Button btDoubleTree;
 	private Button btExcelExport;
 	private Button btKwicExcelExport;
-
+	private Button btKwicCsvExport;
+	private Button btCsvExport;
+	private Table hiddenFlatTable;
+	private Button btSelectAllKwic;
+	
 	public PhraseResultPanel(
 			Repository repository, 
 			GroupedQueryResultSelectionListener resultSelectionListener, 
@@ -183,26 +191,112 @@ public class PhraseResultPanel extends VerticalLayout {
 		btKwicExcelExport.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-            	ExcelExport excelExport = 
-            			new HierarchicalExcelExport(kwicPanel.getKwicTable(), 
-            					"CATMA Query Result Kwic");
-                excelExport.excludeCollapsedColumns();
-                excelExport.setReportTitle("CATMA Query Result Kwic");
-                excelExport.export();
+            	try {
+					ExcelExport excelExport = 
+							new HierarchicalExcelExport(kwicPanel.getKwicTable(), 
+									"CATMA Query Result Kwic");
+					excelExport.excludeCollapsedColumns();
+					excelExport.setReportTitle("CATMA Query Result Kwic");
+					excelExport.export();
+				} catch (IllegalArgumentException e) {
+					getWindow().showNotification(
+						"Error", 
+						"Excel export failed. " + "<br>" + "Reason: " 
+						+ e.getMessage() + "<br>" + "Please use CSV export.", 
+						Notification.TYPE_WARNING_MESSAGE, true);
+					
+					e.printStackTrace();
+				}
 			}
 		});
-
+		
+		btKwicCsvExport.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {         
+				try {
+					CsvExport csvExport = new CsvExport(kwicPanel.getKwicTable());
+					csvExport.convertTable();
+					csvExport.sendConverted();
+				}
+				catch (CsvExportException e) {
+					((CatmaApplication)getApplication()).showAndLogError(
+							"Error creating CSV export!", e);
+				}
+			}
+		});
+		
+		btSelectAllKwic.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				kwicPanel.selectAll();
+			}
+		});
+		
 		btExcelExport.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-            	ExcelExport excelExport = new HierarchicalExcelExport(resultTable, "CATMA Query Result");
-                excelExport.excludeCollapsedColumns();
-                excelExport.setReportTitle("CATMA Query Result");
-                excelExport.export();
+				try{
+	            	ExcelExport excelExport = 
+	            			new HierarchicalExcelExport(resultTable, "CATMA Query Result");
+	                excelExport.excludeCollapsedColumns();
+	                excelExport.setReportTitle("CATMA Query Result");
+	                excelExport.export();
+				} catch (IllegalArgumentException e) {
+					getWindow().showNotification(
+						"Error", 
+						"Excel export failed. " + "<br>" + "Reason: " 
+						+ e.getMessage() + "<br>" + "Please use CSV export.", 
+						Notification.TYPE_WARNING_MESSAGE, true);
+					
+					e.printStackTrace();
+				}	                
+			}
+		});
+		
+		btCsvExport.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				try {
+					CsvExport csvExport = new CsvExport(fillFlatTable());
+					csvExport.convertTable();
+					csvExport.sendConverted();
+				}
+				catch (CsvExportException e) {
+					((CatmaApplication)getApplication()).showAndLogError(
+							"Error creating CSV export!", e);
+				}
 			}
 		});
 	}
 	
+	private Table fillFlatTable() {
+		hiddenFlatTable.removeAllItems();
+		
+		hiddenFlatTable.addContainerProperty(
+				"source document", String.class, null);
+		hiddenFlatTable.addContainerProperty(
+				"phrase", String.class, null);		
+		hiddenFlatTable.addContainerProperty(
+				"frequency", Integer.class, null);
+		
+		for (Object itemId : resultTable.getItemIds()) {
+			if (itemId instanceof GroupedQueryResult) {
+				GroupedQueryResult result= (GroupedQueryResult)itemId;
+				for (String sourceDocumentID : result.getSourceDocumentIDs()) {
+					SourceDocument sourceDocument = 
+							repository.getSourceDocument(sourceDocumentID);
+					
+					Item curItem = hiddenFlatTable.addItem(result+sourceDocumentID);
+					curItem.getItemProperty("source document").setValue(sourceDocument.toString());
+					curItem.getItemProperty("phrase").setValue(result.getGroup());
+					curItem.getItemProperty("frequency").setValue(result.getFrequency(sourceDocumentID));
+				}
+			}
+		}
+
+		return hiddenFlatTable;
+	}
+
 	private void selectAllForKwic(boolean selected) {
 		for (Object o : resultTable.getItemIds()) {
 			if (resultTable.getParent(o) == null) {
@@ -290,6 +384,16 @@ public class PhraseResultPanel extends VerticalLayout {
 		btExcelExport.setDescription("Export all Query result data as an Excel spreadsheet.");
 		buttonPanel.addComponent(btExcelExport);
 		
+		
+		btCsvExport = new Button();
+		btCsvExport.setIcon(new ClassResource(
+				"ui/analyzer/resources/csv_text.png", 
+				getApplication())); //http://findicons.com/icon/84601/csv_text
+		btCsvExport.setDescription(
+				"Export all Query result data as flat CSV File.");
+		buttonPanel.addComponent(btCsvExport);
+		
+		
 		btSelectAll = new Button("Select all for Kwic");
 		
 		buttonPanel.addComponent(btSelectAll);
@@ -319,12 +423,30 @@ public class PhraseResultPanel extends VerticalLayout {
 		btKwicExcelExport.setDescription(
 				"Export all Query result data as an Excel spreadsheet.");
 		kwicButtonPanel.addComponent(btKwicExcelExport);
+		kwicButtonPanel.setComponentAlignment(
+				btKwicExcelExport, Alignment.MIDDLE_LEFT);
+		
+		btKwicCsvExport = new Button();
+		btKwicCsvExport.setIcon(new ClassResource(
+				"ui/analyzer/resources/csv_text.png", 
+				getApplication())); //http://findicons.com/icon/84601/csv_text
+		btKwicCsvExport.setDescription(
+				"Export all Query result data as CSV File.");
+		kwicButtonPanel.addComponent(btKwicCsvExport);
+		kwicButtonPanel.setComponentAlignment(
+				btKwicCsvExport, Alignment.MIDDLE_LEFT);
 
+		
+		btSelectAllKwic = new Button("Select all");
+		kwicButtonPanel.addComponent(btSelectAllKwic);
+		kwicButtonPanel.setComponentAlignment(btSelectAllKwic, Alignment.MIDDLE_RIGHT);
+		kwicButtonPanel.setExpandRatio(btSelectAllKwic, 1f);
+		
 		Label helpLabel = new Label();
 		helpLabel.setIcon(new ClassResource(
 				"ui/resources/icon-help.gif", 
 				getApplication()));
-		
+		helpLabel.setWidth("20px");
 		helpLabel.setDescription(
 				"<h3>Hints</h3>" +
 				"<h4>Tagging search results</h4>" +
@@ -339,11 +461,14 @@ public class PhraseResultPanel extends VerticalLayout {
 				"to untag markup for selected search results in the Kwic-view.");
 		
 		kwicButtonPanel.addComponent(helpLabel);
-		kwicButtonPanel.setExpandRatio(helpLabel, 1f);
 		kwicButtonPanel.setComponentAlignment(helpLabel, Alignment.MIDDLE_RIGHT);
 		
 		rightComponent.addComponent(kwicButtonPanel);
 		rightComponent.setComponentAlignment(kwicButtonPanel, Alignment.MIDDLE_RIGHT);
+		
+		hiddenFlatTable = new Table();
+		hiddenFlatTable.setVisible(false);
+		kwicButtonPanel.addComponent(hiddenFlatTable);
 		
 		splitPanel.addComponent(rightComponent);
 		addComponent(splitPanel);

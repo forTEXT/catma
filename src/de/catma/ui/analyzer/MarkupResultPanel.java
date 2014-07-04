@@ -66,7 +66,9 @@ import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
-import de.catma.ui.HierarchicalExcelExport;
+import de.catma.ui.component.export.CsvExport;
+import de.catma.ui.component.export.HierarchicalExcelExport;
+import de.catma.ui.component.export.CsvExport.CsvExportException;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 
@@ -224,10 +226,14 @@ public class MarkupResultPanel extends VerticalLayout {
 	private Button btUntagResults;
 	private Button btResultExcelExport;
 	private Button btKwicExcelExport;
+	private Button btKwicCsvExport;
+	private Button btResultCsvExport;
+
 	private CheckBox cbFlatTable;
 	private CheckBox cbPropAsColumns;
 	private boolean resetColumns = false;
 	private QueryResult curQueryResult;
+	private Button btSelectAllKwic;
 	
 	public MarkupResultPanel(
 			Repository repository, 
@@ -266,15 +272,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		cbFlatTable.addListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
-				cbPropAsColumns.setVisible(cbFlatTable.booleanValue());
-				QueryResult queryResult = getQueryResult();
-				
-				try {
-					setQueryResult(queryResult);
-				} catch (IOException e) {
-					((CatmaApplication)getApplication()).showAndLogError(
-							"error converting Query Result!", e);
-				}
+				handleCbFlatTableRequest();
 			}
 		});
 		btDist.addListener(new ClickListener() {
@@ -331,30 +329,102 @@ public class MarkupResultPanel extends VerticalLayout {
 			}
 		});
 		
+		btSelectAllKwic.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				kwicPanel.selectAll();
+			}
+		});
+		
 		btKwicExcelExport.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-            	ExcelExport excelExport = 
-            			new HierarchicalExcelExport(kwicPanel.getKwicTable(), 
-            					"CATMA Query Result Kwic");
-                excelExport.excludeCollapsedColumns();
-                excelExport.setReportTitle("CATMA Query Result Kwic");
-                excelExport.export();
+            	try {
+					ExcelExport excelExport = 
+							new HierarchicalExcelExport(kwicPanel.getKwicTable(), 
+									"CATMA Query Result Kwic");
+					excelExport.excludeCollapsedColumns();
+					excelExport.setReportTitle("CATMA Query Result Kwic");
+					excelExport.export();
+				} catch (IllegalArgumentException e) {
+					getWindow().showNotification(
+						"Error", 
+						"Excel export failed. " + "<br>" + "Reason: " 
+						+ e.getMessage() + "<br>" + "Please use CSV export.", 
+						Notification.TYPE_WARNING_MESSAGE, true);
+					
+					e.printStackTrace();
+				}
+			}
+		});
+		
+		btKwicCsvExport.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {         
+				try {
+					CsvExport csvExport = new CsvExport(kwicPanel.getKwicTable());
+					csvExport.convertTable();
+					csvExport.sendConverted();
+				}
+				catch (CsvExportException e) {
+					((CatmaApplication)getApplication()).showAndLogError(
+							"Error creating CSV export!", e);
+				}
 			}
 		});
 
 		btResultExcelExport.addListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-            	ExcelExport excelExport = 
-            			new HierarchicalExcelExport(resultTable, "CATMA Query Result");
-                excelExport.excludeCollapsedColumns();
-                excelExport.setReportTitle("CATMA Query Result");
-                excelExport.export();
+				try {
+	            	ExcelExport excelExport = 
+	            			new HierarchicalExcelExport(resultTable, "CATMA Query Result");
+	                excelExport.excludeCollapsedColumns();
+	                excelExport.setReportTitle("CATMA Query Result");
+	                excelExport.export();
+				} catch (IllegalArgumentException e) {
+					getWindow().showNotification(
+						"Error", 
+						"Excel export failed. " + "<br>" + "Reason: " 
+						+ e.getMessage() + "<br>" + "Please use CSV export.", 
+						Notification.TYPE_WARNING_MESSAGE, true);
+					
+					e.printStackTrace();
+				}
+			}
+		});
+		
+		btResultCsvExport.addListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				try {
+					if(!cbFlatTable.booleanValue()) {
+						cbFlatTable.setValue(Boolean.TRUE);
+					}
+					CsvExport csvExport = new CsvExport(resultTable);
+					csvExport.convertTable();
+					csvExport.sendConverted();
+				}
+				catch (CsvExportException e) {
+					((CatmaApplication)getApplication()).showAndLogError(
+							"Error creating CSV export!", e);
+				}
 			}
 		});
 	}
 	
+	private void handleCbFlatTableRequest() {
+		cbPropAsColumns.setVisible(cbFlatTable.booleanValue());
+		QueryResult queryResult = getQueryResult();
+		
+		try {
+			setQueryResult(queryResult);
+		} catch (IOException e) {
+			((CatmaApplication)getApplication()).showAndLogError(
+					"error converting Query Result!", e);
+		}
+	}
+
 	private QueryResult getQueryResult() {
 		return curQueryResult;
 	}
@@ -520,6 +590,15 @@ public class MarkupResultPanel extends VerticalLayout {
 				"Export all Query result data as an Excel spreadsheet.");
 		buttonPanel.addComponent(btResultExcelExport);
 		
+		
+		btResultCsvExport = new Button();
+		btResultCsvExport.setIcon(new ClassResource(
+				"ui/analyzer/resources/csv_text.png", 
+				getApplication())); //http://findicons.com/icon/84601/csv_text
+		btResultCsvExport.setDescription(
+				"Export all Query result data as a flat CSV File.");
+		buttonPanel.addComponent(btResultCsvExport);
+		
 		cbFlatTable = new CheckBox("flat table", false);
 		cbFlatTable.setDescription(
 			"<p>Display query results as a flat table for sortability by Source " +
@@ -577,10 +656,26 @@ public class MarkupResultPanel extends VerticalLayout {
 		kwicButtonPanel.setComponentAlignment(
 				btKwicExcelExport, Alignment.MIDDLE_LEFT);
 		
+		btKwicCsvExport = new Button();
+		btKwicCsvExport.setIcon(new ClassResource(
+				"ui/analyzer/resources/csv_text.png", 
+				getApplication())); //http://findicons.com/icon/84601/csv_text
+		btKwicCsvExport.setDescription(
+				"Export all Query result data as CSV File.");
+		kwicButtonPanel.addComponent(btKwicCsvExport);
+		kwicButtonPanel.setComponentAlignment(
+				btKwicCsvExport, Alignment.MIDDLE_LEFT);
+		
+
+		btSelectAllKwic = new Button("Select all");
+		kwicButtonPanel.addComponent(btSelectAllKwic);
+		kwicButtonPanel.setComponentAlignment(btSelectAllKwic, Alignment.MIDDLE_RIGHT);
+		kwicButtonPanel.setExpandRatio(btSelectAllKwic, 1f);
+		
 		btUntagResults = new Button("Untag selected Kwics");
 		kwicButtonPanel.addComponent(btUntagResults);
 		kwicButtonPanel.setComponentAlignment(btUntagResults, Alignment.MIDDLE_RIGHT);
-		kwicButtonPanel.setExpandRatio(btUntagResults, 1f);
+		kwicButtonPanel.setExpandRatio(btUntagResults, 0f);
 		
 		Label helpLabel = new Label();
 		helpLabel.setIcon(new ClassResource(

@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,6 +62,8 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.IndexedRepository;
 import de.catma.queryengine.result.computation.DistributionComputation;
+import de.catma.repository.LoginToken;
+import de.catma.repository.db.maintenance.UserManager;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.ui.DefaultProgressListener;
@@ -84,9 +85,7 @@ import de.catma.ui.visualizer.VisualizationManagerView;
 import de.catma.ui.visualizer.VisualizationManagerWindow;
 
 public class CatmaApplication extends Application
-	implements BackgroundServiceProvider, AnalyzerProvider, ParameterHandler {
-	
-	private static AtomicInteger userCount = new AtomicInteger(0);
+	implements BackgroundServiceProvider, AnalyzerProvider, ParameterHandler, LoginToken {
 	
 	private static final String MINORVERSION = 
 			"(v"+new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date())+")";
@@ -108,6 +107,7 @@ public class CatmaApplication extends Application
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private Map<String,String[]> parameters = new HashMap<String, String[]>();
 	private boolean repositoryOpened = false;
+	private UserManager userManager = new UserManager();
 
 	@Override
 	public void init() {
@@ -167,13 +167,25 @@ public class CatmaApplication extends Application
 							"Visualizer",
 							new VisualizationManagerWindow(visualizationManagerView))
 					);
+			Link latestFeaturesLink = new Link(
+					"Latest Features", new ExternalResource("http://www.catma.de/latestfeatures"));
+			latestFeaturesLink.setTargetName("_blank");
+			mainLayout.addComponent(latestFeaturesLink);
+			mainLayout.setComponentAlignment(latestFeaturesLink, Alignment.TOP_RIGHT);
+			mainLayout.setExpandRatio(latestFeaturesLink, 1.0f);
+			
 			Link aboutLink = new Link(
 					"About", new ExternalResource("http://www.catma.de"));
 			aboutLink.setTargetName("_blank");
 			mainLayout.addComponent(aboutLink);
 			mainLayout.setComponentAlignment(aboutLink, Alignment.TOP_RIGHT);
-			mainLayout.setExpandRatio(aboutLink, 1.0f);
 			
+			Link termsOfUseLink = new Link(
+					"Terms of Use", new ExternalResource("http://www.catma.de/termsofuse"));
+			termsOfUseLink.setTargetName("_blank");
+			mainLayout.addComponent(termsOfUseLink);
+			mainLayout.setComponentAlignment(termsOfUseLink, Alignment.TOP_RIGHT);
+
 			Link helpLink = new Link(
 					"Help", new ExternalResource(getURL()+"manual/"));
 			helpLink.setTargetName("_blank");
@@ -281,8 +293,7 @@ public class CatmaApplication extends Application
 
 	public void openRepository(Repository repository) {
 		repositoryOpened = true;
-		userCount.incrementAndGet();
-		logger.info("user" + getUser() + " has been added to user count (" + getUserCount() + ")" );
+		userManager.login(this);
 		repositoryManagerView.openRepository(repository);
 		logger.info("repository has been opened for user" + getUser());
 	}
@@ -409,9 +420,8 @@ public class CatmaApplication extends Application
 		repositoryManagerView.getRepositoryManager().close();
 		logger.info("application for user" + getUser() + " has been closed");
 		if (repositoryOpened) {
+			userManager.logout(this);
 			repositoryOpened = false;
-			userCount.decrementAndGet();
-			logger.info("user" + getUser() + " has been substracted from user count (" + getUserCount() + ")" );
 		}
 		super.close();
 	}
@@ -450,7 +460,4 @@ public class CatmaApplication extends Application
 		visualizationManagerView.addDoubleTree(kwics);
 	}
 
-	public static int getUserCount() {
-		return userCount.get();
-	}
 }

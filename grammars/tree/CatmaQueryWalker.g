@@ -54,7 +54,7 @@ queryExpression returns [Query query]
 
 
 unionQuery returns [Query query]
-	:	^(ND_UNION term1=term term2=term) { $query = new UnionQuery($term1.query, $term2.query); }
+	:	^(ND_UNION term1=term term2=term exclusiveMarker='EXCL'?) { $query = new UnionQuery($term1.query, $term2.query, $exclusiveMarker.text); }
 	;
 	catch[RecognitionException e] {throw e;}
 	

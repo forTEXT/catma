@@ -165,7 +165,8 @@ class PhraseSearcher {
 							new QueryResultRow(
 								documentId,
 								new Range(
-									tokenOffset,
+									(Integer)r.getValue(
+											SpSearchPhrase.ResultColumn.characterStart.name()),
 									(Integer)termResultRecords.getValue(
 											termResultRecords.size()-1, 
 											SpGetTerms.ResultColumn.characterEnd.name())),
@@ -254,6 +255,7 @@ class PhraseSearcher {
 					return false; 
 				}
 			}
+			termListIdx++;
 		}
 		return true;
 	}

@@ -135,7 +135,7 @@ public class TagKwicDialog extends VerticalLayout {
 		setSizeFull();
 		
 		Label tagResultsLabel = 
-			new Label("The selected User Markup Collections will be modfied by this tagging operation. Are sure?");
+			new Label("The selected User Markup Collections will be modfied by this tagging operation. Are you sure?");
 		addComponent(tagResultsLabel);
 		
 		umcTable = new TreeTable("User Markup Collections");

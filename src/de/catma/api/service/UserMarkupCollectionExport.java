@@ -65,9 +65,12 @@ public class UserMarkupCollectionExport extends ServerResource {
 					Status.CLIENT_ERROR_NOT_FOUND, "user markup collection not found");
 			
 		}
+		catch (ResourceException re) {
+			throw new ResourceException(re.getStatus(), re.getMessage(), re);
+		}
 		catch (Exception e) {
 			throw new ResourceException(
-					Status.SERVER_ERROR_INTERNAL, "service implementation error");
+					Status.SERVER_ERROR_INTERNAL, "service implementation error", e);
 		}
 
 	}

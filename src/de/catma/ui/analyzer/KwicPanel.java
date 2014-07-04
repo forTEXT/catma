@@ -427,4 +427,8 @@ public class KwicPanel extends VerticalLayout {
 	TreeTable getKwicTable() {
 		return kwicTable;
 	}
+
+	public void selectAll() {
+		kwicTable.setValue(kwicTable.getItemIds());
+	}
 }

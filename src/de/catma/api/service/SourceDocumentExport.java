@@ -51,9 +51,12 @@ public class SourceDocumentExport extends ServerResource{
 					Status.CLIENT_ERROR_NOT_FOUND, "source document not found");
 			
 		}
+		catch (ResourceException re) {
+			throw new ResourceException(re.getStatus(), re.getMessage(), re);
+		}
 		catch (Exception e) {
 			throw new ResourceException(
-					Status.SERVER_ERROR_INTERNAL, "service implementation error");
+					Status.SERVER_ERROR_INTERNAL, "service implementation error", e);
 		}
 	}
 }

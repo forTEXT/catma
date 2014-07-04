@@ -15,6 +15,7 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
+import de.catma.api.ApiLoginToken;
 import de.catma.api.Parameter;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
@@ -23,6 +24,7 @@ import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.repository.db.maintenance.UserManager;
 import de.catma.util.Pair;
 
 public class UserMarkupCollectionImport extends ServerResource {
@@ -51,6 +53,9 @@ public class UserMarkupCollectionImport extends ServerResource {
 						}
 					}
 			};
+			UserManager userManager = new UserManager();
+			ApiLoginToken loginToken = new ApiLoginToken(cr.getIdentifier());
+			
 			try {
 				repo.addPropertyChangeListener(
 						RepositoryChangeEvent.userMarkupCollectionChanged,
@@ -71,7 +76,7 @@ public class UserMarkupCollectionImport extends ServerResource {
 						is = new BOMFilterInputStream(
 								is, Charset.forName("UTF-8"));
 					}
-				
+					userManager.login(loginToken);
 					repo.importUserMarkupCollection(is, sd);
 					
 					if (corpusId != null) {
@@ -93,15 +98,20 @@ public class UserMarkupCollectionImport extends ServerResource {
 				return result;
 			}
 			finally {
+				userManager.logout(loginToken);
+				
 				newUmcID = null;
 				repo.removePropertyChangeListener(
 					RepositoryChangeEvent.userMarkupCollectionChanged, 
 					newUmcListener);
 			}
 		}
+		catch (ResourceException re) {
+			throw new ResourceException(re.getStatus(), re.getMessage(), re);
+		}
 		catch (Exception e) {
 			throw new ResourceException(
-					Status.SERVER_ERROR_INTERNAL, "service implementation error");
+					Status.SERVER_ERROR_INTERNAL, "service implementation error", e);
 		}
 	}
 

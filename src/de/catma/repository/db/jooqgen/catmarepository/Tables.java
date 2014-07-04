@@ -34,6 +34,11 @@ public class Tables {
 	public static final de.catma.repository.db.jooqgen.catmarepository.tables.CorpusUsermarkupcollection CORPUS_USERMARKUPCOLLECTION = de.catma.repository.db.jooqgen.catmarepository.tables.CorpusUsermarkupcollection.CORPUS_USERMARKUPCOLLECTION;
 
 	/**
+	 * The table CatmaRepository.maintenance_sem
+	 */
+	public static final de.catma.repository.db.jooqgen.catmarepository.tables.MaintenanceSem MAINTENANCE_SEM = de.catma.repository.db.jooqgen.catmarepository.tables.MaintenanceSem.MAINTENANCE_SEM;
+
+	/**
 	 * The table CatmaRepository.mlog
 	 */
 	public static final de.catma.repository.db.jooqgen.catmarepository.tables.Mlog MLOG = de.catma.repository.db.jooqgen.catmarepository.tables.Mlog.MLOG;
