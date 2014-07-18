@@ -177,6 +177,9 @@ public class WordPanel extends GridLayout{
 	public String getWildcardWord() {
 		String exactValue = (String)exactField.getValue();
 		if ((exactValue != null) && !exactValue.isEmpty()) {
+			if (withPositionBox) {
+				return wildcardBuilder.getWildcardFor(exactValue, ((PositionItem)positionBox.getValue()).getPosition());
+			}
 			return exactValue;
 		}
 		return wildcardBuilder.getWildcardFor(

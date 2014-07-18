@@ -87,6 +87,7 @@ public class PhraseResultPanel extends VerticalLayout {
 	private Button btKwicCsvExport;
 	private Button btCsvExport;
 	private Table hiddenFlatTable;
+	private Button btSelectAllKwic;
 	
 	public PhraseResultPanel(
 			Repository repository, 
@@ -227,6 +228,14 @@ public class PhraseResultPanel extends VerticalLayout {
 			}
 		});
 
+		
+		btSelectAllKwic.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				kwicPanel.selectAll();
+			}
+		});
+		
 		btExcelExport.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -414,6 +423,8 @@ public class PhraseResultPanel extends VerticalLayout {
 		btKwicExcelExport.setDescription(
 				"Export all Query result data as an Excel spreadsheet.");
 		kwicButtonPanel.addComponent(btKwicExcelExport);
+		kwicButtonPanel.setComponentAlignment(
+				btKwicExcelExport, Alignment.MIDDLE_LEFT);
 		
 		btKwicCsvExport = new Button();
 		btKwicCsvExport.setIcon(new ClassResource(
@@ -421,10 +432,20 @@ public class PhraseResultPanel extends VerticalLayout {
 		btKwicCsvExport.setDescription(
 				"Export all Query result data as CSV File.");
 		kwicButtonPanel.addComponent(btKwicCsvExport);
+		kwicButtonPanel.setComponentAlignment(
+				btKwicCsvExport, Alignment.MIDDLE_LEFT);
 
+		
+		btSelectAllKwic = new Button("Select all");
+		kwicButtonPanel.addComponent(btSelectAllKwic);
+		kwicButtonPanel.setComponentAlignment(btSelectAllKwic, Alignment.MIDDLE_RIGHT);
+		kwicButtonPanel.setExpandRatio(btSelectAllKwic, 1f);
+		
 		Label helpLabel = new Label();
+
 		helpLabel.setIcon(new ClassResource("ui/resources/icon-help.gif"));
 		
+		helpLabel.setWidth("20px");
 		helpLabel.setDescription(
 				"<h3>Hints</h3>" +
 				"<h4>Tagging search results</h4>" +
@@ -439,7 +460,6 @@ public class PhraseResultPanel extends VerticalLayout {
 				"to untag markup for selected search results in the Kwic-view.");
 		
 		kwicButtonPanel.addComponent(helpLabel);
-		kwicButtonPanel.setExpandRatio(helpLabel, 1f);
 		kwicButtonPanel.setComponentAlignment(helpLabel, Alignment.MIDDLE_RIGHT);
 		
 		rightComponent.addComponent(kwicButtonPanel);

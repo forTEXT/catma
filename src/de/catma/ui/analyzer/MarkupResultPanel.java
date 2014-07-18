@@ -236,6 +236,7 @@ public class MarkupResultPanel extends VerticalLayout {
 	private CheckBox cbPropAsColumns;
 	private boolean resetColumns = false;
 	private QueryResult curQueryResult;
+	private Button btSelectAllKwic;
 	
 	public MarkupResultPanel(
 			Repository repository, 
@@ -329,6 +330,13 @@ public class MarkupResultPanel extends VerticalLayout {
 			
 			public void buttonClick(ClickEvent event) {
 				untagResults();
+			}
+		});
+		
+		btSelectAllKwic.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				kwicPanel.selectAll();
 			}
 		});
 		
@@ -658,10 +666,16 @@ public class MarkupResultPanel extends VerticalLayout {
 		kwicButtonPanel.setComponentAlignment(
 				btKwicCsvExport, Alignment.MIDDLE_LEFT);
 		
+
+		btSelectAllKwic = new Button("Select all");
+		kwicButtonPanel.addComponent(btSelectAllKwic);
+		kwicButtonPanel.setComponentAlignment(btSelectAllKwic, Alignment.MIDDLE_RIGHT);
+		kwicButtonPanel.setExpandRatio(btSelectAllKwic, 1f);
+		
 		btUntagResults = new Button("Untag selected Kwics");
 		kwicButtonPanel.addComponent(btUntagResults);
 		kwicButtonPanel.setComponentAlignment(btUntagResults, Alignment.MIDDLE_RIGHT);
-		kwicButtonPanel.setExpandRatio(btUntagResults, 1f);
+		kwicButtonPanel.setExpandRatio(btUntagResults, 0f);
 		
 		Label helpLabel = new Label();
 		helpLabel.setIcon(new ClassResource("ui/resources/icon-help.gif"));

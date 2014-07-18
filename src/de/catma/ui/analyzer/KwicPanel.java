@@ -58,7 +58,6 @@ import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagsetDefinition;
-import de.catma.ui.MultiSelectTreeTable;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToReversedTrimmedStringCIComparator;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
@@ -316,7 +315,7 @@ public class KwicPanel extends VerticalLayout {
 	private void initComponents() {
 		setSizeFull();
 		
-		kwicTable = new MultiSelectTreeTable();
+		kwicTable = new TreeTable();
 		
 		kwicTable.setSizeFull();
 		kwicTable.setSelectable(true);
@@ -428,5 +427,9 @@ public class KwicPanel extends VerticalLayout {
 	
 	TreeTable getKwicTable() {
 		return kwicTable;
+	}
+
+	public void selectAll() {
+		kwicTable.setValue(kwicTable.getItemIds());
 	}
 }
