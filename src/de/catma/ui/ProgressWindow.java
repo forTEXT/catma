@@ -21,6 +21,7 @@ package de.catma.ui;
 import com.vaadin.ui.ProgressIndicator;
 import com.vaadin.ui.VerticalLayout;
 
+@Deprecated
 public class ProgressWindow extends CatmaWindow {
 
 	public ProgressWindow(ProgressIndicator pi) {

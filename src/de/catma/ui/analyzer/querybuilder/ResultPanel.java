@@ -26,7 +26,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.ProgressIndicator;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
@@ -35,12 +34,12 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.CatmaApplication;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
+import de.catma.backgroundservice.LogProgressListener;
 import de.catma.document.source.SourceDocument;
 import de.catma.queryengine.QueryJob;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResult;
-import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 
@@ -54,7 +53,6 @@ public class ResultPanel extends VerticalLayout {
 	private TreeTable resultTable;
 	private QueryOptions queryOptions;
 	private Label queryLabel;
-	private ProgressIndicator pi;
 	private TextField maxTotalFrequencyField;
 	private Button btShowInPreview;
 
@@ -112,14 +110,6 @@ public class ResultPanel extends VerticalLayout {
 		headerPanel.addComponent(willMatch);
 		headerPanel.setExpandRatio(willMatch, 0.2f);
 		
-		pi = new ProgressIndicator();
-		pi.setEnabled(false);
-		pi.setIndeterminate(true);
-		
-		headerPanel.addComponent(pi);
-		headerPanel.setComponentAlignment(pi, Alignment.MIDDLE_RIGHT);
-		headerPanel.setExpandRatio(pi, 0.5f);
-
 		resultTable = new TreeTable();
 		resultTable.setSizeFull();
 		resultTable.setSelectable(true);
@@ -151,24 +141,18 @@ public class ResultPanel extends VerticalLayout {
 		QueryJob job = new QueryJob(
 				query,
 				queryOptions);
-		pi.setCaption("Searching...");
-		pi.setEnabled(true);
 		((BackgroundServiceProvider)UI.getCurrent()).getBackgroundService().submit(
 				job, 
 				new ExecutionListener<QueryResult>() {
 				public void done(QueryResult result) {
 					setQueryResult(result);
-					pi.setCaption("");
-					pi.setEnabled(false);
 				};
 				public void error(Throwable t) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error during search!", t);
-					pi.setCaption("");
-					pi.setEnabled(false);
 				}
 			}, 
-			new DefaultProgressListener(pi, this));
+			new LogProgressListener());
 	}
 	
 	public void setQueryResult(QueryResult queryResult) {

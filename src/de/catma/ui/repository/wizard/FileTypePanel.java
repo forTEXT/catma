@@ -245,7 +245,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	private void initComponents() {
 		setSpacing(true);
 		setSizeFull();
-		setMargin(new MarginInfo(true, false, false, false));
+		setMargin(true);
 
 		
 		cbFileType = new ComboBox("File type");

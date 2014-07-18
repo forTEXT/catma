@@ -209,6 +209,8 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 
 	private void initComponents() {
 		setSpacing(true);
+		setMargin(true);
+		
 		setSizeFull();
 		
 		Label infoLabel = new Label();

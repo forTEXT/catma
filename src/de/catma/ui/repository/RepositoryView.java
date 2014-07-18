@@ -208,7 +208,8 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 				"<h5>Analyze a Source Document</h5>" +
 				"To analyze a Source Document, just select that document from the tree and click \"Analyze Source Document\" in the \"More Actions\"-menu." +
 				"Then follow the instructions given to you by the Analyzer component.");
-
+		helpLabel.addStyleName("help-icon-top-margin");
+		
 		labelLayout.addComponent(helpLabel);
 		labelLayout.setComponentAlignment(helpLabel, Alignment.MIDDLE_RIGHT);
 		

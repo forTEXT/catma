@@ -587,7 +587,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		buttonPanel.addComponent(btDist);
 		
 		btResultExcelExport = new Button();
-		btResultExcelExport.setIcon(new ThemeResource("../images/table-excel.png"));
+		btResultExcelExport.setIcon(new ClassResource("ui/analyzer/resources/excel.png"));
 		btResultExcelExport.setDescription(
 				"Export all Query result data as an Excel spreadsheet.");
 		buttonPanel.addComponent(btResultExcelExport);
@@ -650,7 +650,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		kwicButtonPanel.setWidth("100%");
 		
 		btKwicExcelExport = new Button();
-		btKwicExcelExport.setIcon(new ThemeResource("../images/table-excel.png"));
+		btKwicExcelExport.setIcon(new ClassResource("ui/analyzer/resources/excel.png"));
 		btKwicExcelExport.setDescription(
 				"Export all Query result data as an Excel spreadsheet.");
 		kwicButtonPanel.addComponent(btKwicExcelExport);

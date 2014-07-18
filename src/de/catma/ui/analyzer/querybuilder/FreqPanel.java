@@ -75,12 +75,20 @@ public class FreqPanel extends AbstractSearchPanel {
 				andLabel.setEnabled(curComparator.isRange());
 				freq2Input.setEnabled(curComparator.isRange());
 				freq2Input.setRequired(curComparator.isRange());
+				if (curComparator.isRange()) {
+					freq2Input.addValidator(new IntegerValueValidator(false, false));
+				}
+				else {
+					freq2Input.removeAllValidators();
+				}
 			}
 		});
 	}
 
 	private void showInPreview() {
-		if (freq1Input.isValid() && freq2Input.isValid() && freqComparatorCombo.isValid()) {
+		if (freq1Input.isValid()
+				&& (freq2Input.isValid() || !freq2Input.isEnabled())
+				&& freqComparatorCombo.isValid()) {
 			
 			StringBuilder builder = new StringBuilder("freq ");
 			FreqComparator curComparator = 
@@ -139,7 +147,7 @@ public class FreqPanel extends AbstractSearchPanel {
 		freqComparators.add(
                 new FreqComparator("greaterThan", ">"));
 		freqComparators.add(
-                new FreqComparator("lessThan", ">"));
+                new FreqComparator("lessThan", "<"));
 		freqComparators.add(
                 new FreqComparator("greaterOrEqualThan", ">="));
 		freqComparators.add(
@@ -171,8 +179,8 @@ public class FreqPanel extends AbstractSearchPanel {
 		
 		freq2Input = new TextField();
 		freq2Input.setImmediate(true);
-		freq2Input.addValidator(new IntegerValueValidator(false, false));
 		freq2Input.setInvalidAllowed(false);
+
 		searchPanel.addComponent(freq2Input);
 		searchPanel.setExpandRatio(freq2Input, 0.5f);
 		

@@ -120,9 +120,9 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 
 	private void initComponents() {
 		setSpacing(true);
-		setMargin(new MarginInfo(true, false, false, false));
+		setMargin(true);
 		
-		setSizeFull();
+//		setSizeFull();
 		HorizontalLayout remoteLayout = new HorizontalLayout();
 		remoteLayout.setMargin(true);
 		remoteLayout.setSpacing(true);

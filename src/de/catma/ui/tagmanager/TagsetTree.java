@@ -33,6 +33,7 @@ import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.Action;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.Resource;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -45,6 +46,7 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
@@ -750,107 +752,113 @@ public class TagsetTree extends HorizontalLayout {
 		addComponent(tagTree);
 		setExpandRatio(tagTree, 2);
 		
-		GridLayout buttonGrid = new GridLayout(1, 19);
-		buttonGrid.setMargin(true);
-		buttonGrid.setSpacing(true);
-
-		buttonGrid.addStyleName("taglibrary-action-grid");
-		int buttonGridRowCount = 0;
+		VerticalLayout buttonGrid = new VerticalLayout();
 		
 		if (withTagsetButtons) {
+			VerticalLayout tagsetPanel = new VerticalLayout();
+			tagsetPanel.setSpacing(true);
+			tagsetPanel.setMargin(new MarginInfo(true, true, false, true));
+			
 			btReload = new Button(""); 
 			btReload.setIcon(new ClassResource("ui/resources/icon-reload.gif"));
 			btReload.addStyleName("icon-button");
-			buttonGrid.addComponent(btReload);
-			buttonGrid.setComponentAlignment(btReload, Alignment.MIDDLE_RIGHT);
-			buttonGridRowCount++;
+			tagsetPanel.addComponent(btReload);
+			tagsetPanel.setComponentAlignment(btReload, Alignment.MIDDLE_RIGHT);
 
 			Label tagsetLabel = new Label();
+			tagsetLabel.addStyleName("tagsettree-label");
 			tagsetLabel.setIcon(
 					new ClassResource("ui/tagmanager/resources/grndiamd.gif"));
 			tagsetLabel.setCaption("Tagset");
 			
-			buttonGrid.addComponent(tagsetLabel);
-			buttonGridRowCount++;
+			tagsetPanel.addComponent(tagsetLabel);
+
 			
 			btInsertTagset = new Button("Create Tagset");
 			btInsertTagset.setEnabled(true);
 			btInsertTagset.setWidth("100%");
-			buttonGrid.addComponent(btInsertTagset);
-			buttonGridRowCount++;
+			tagsetPanel.addComponent(btInsertTagset);
+
 			
 			btRemoveTagset = new Button("Remove Tagset");
 			btRemoveTagset.setWidth("100%");
-			buttonGrid.addComponent(btRemoveTagset);
-			buttonGridRowCount++;
+			tagsetPanel.addComponent(btRemoveTagset);
+
 			
 			btEditTagset = new Button("Edit Tagset");
 			btEditTagset.setWidth("100%");
-			buttonGrid.addComponent(btEditTagset);
-			buttonGridRowCount++;
+			tagsetPanel.addComponent(btEditTagset);
+			
+			buttonGrid.addComponent(tagsetPanel);
 		}
 		
+		VerticalLayout tagPanel = new VerticalLayout();
+		tagPanel.setSpacing(true);
+		tagPanel.setMargin(new MarginInfo(true, true, false, true));
+		
 		Label tagLabel = new Label();
+		tagLabel.addStyleName("tagsettree-label");
+
 		tagLabel.setIcon(
 				new ClassResource("ui/tagmanager/resources/reddiamd.gif"));
 		tagLabel.setCaption("Tag");
 		
-		buttonGrid.addComponent(
-				tagLabel, 0, buttonGridRowCount, 0, buttonGridRowCount+4 );
-		buttonGridRowCount+=5;
-		
-		buttonGrid.setComponentAlignment(tagLabel, Alignment.BOTTOM_LEFT);
+		tagPanel.addComponent(tagLabel);
+		tagPanel.setComponentAlignment(tagLabel, Alignment.BOTTOM_LEFT);
 		
 		btInsertTag = new Button("Create Tag");
 		btInsertTag.setWidth("100%");
 		if (withTagsetButtons) {
 			btInsertTag.setEnabled(true);
 		}
-		buttonGrid.addComponent(btInsertTag);
-		buttonGridRowCount++;
+		tagPanel.addComponent(btInsertTag);
 		
 		btRemoveTag = new Button("Remove Tag");
 		btRemoveTag.setWidth("100%");
-		buttonGrid.addComponent(btRemoveTag);
-		buttonGridRowCount++;
+		tagPanel.addComponent(btRemoveTag);
 		
 		btEditTag = new Button("Edit Tag");
 		btEditTag.setWidth("100%");
-		buttonGrid.addComponent(btEditTag);
-		buttonGridRowCount++;
-		btEditTag.setHeight("45px");
+		tagPanel.addComponent(btEditTag);
+		
+		buttonGrid.addComponent(tagPanel);
+		
+		VerticalLayout propertyPanel = new VerticalLayout();
+		propertyPanel.setSpacing(true);
+		propertyPanel.setMargin(new MarginInfo(true, true, false, true));
 		
 		Label propertyLabel = new Label();
+		propertyLabel.addStyleName("tagsettree-label");
+
 		propertyLabel.setIcon(
 				new ClassResource("ui/tagmanager/resources/ylwdiamd.gif"));
 		propertyLabel.setCaption("Property");
 		propertyLabel.setHeight("15px");
+		propertyLabel.addStyleName("tagsettree-button-top-margin");
 		
-		buttonGrid.addComponent(
-				propertyLabel, 0, buttonGridRowCount, 0, buttonGridRowCount+4);
-		buttonGridRowCount+=5;
+		propertyPanel.addComponent(propertyLabel);
 		
-		buttonGrid.setComponentAlignment(propertyLabel, Alignment.BOTTOM_LEFT);
+		propertyPanel.setComponentAlignment(propertyLabel, Alignment.BOTTOM_LEFT);
 		
 		btInsertProperty = new Button("Create Property");
 		btInsertProperty.setWidth("100%");
-		buttonGrid.addComponent(btInsertProperty);
-		buttonGridRowCount++;
+		btInsertProperty.addStyleName("tagsettree-button-top-margin");
+		propertyPanel.addComponent(btInsertProperty);
 		
 		btRemoveProperty = new Button("Remove Property");
-		// commented out on purpose: somehow this forces all the other buttons to 
-		// show up in natural size...
-//		btRemoveProperty.setWidth("100%");
-		buttonGrid.addComponent(btRemoveProperty);
-		buttonGridRowCount++;
+		btRemoveProperty.addStyleName("tagsettree-button-top-margin");
+		btRemoveProperty.setWidth("100%");
+		propertyPanel.addComponent(btRemoveProperty);
 		
 		btEditProperty = new Button("Edit Property");
 		btEditProperty.setWidth("100%");
-		buttonGrid.addComponent(btEditProperty);
-		buttonGridRowCount++;
+		btEditProperty.addStyleName("tagsettree-button-top-margin");
+		propertyPanel.addComponent(btEditProperty);
+		
+		buttonGrid.addComponent(propertyPanel);
 		
 		addComponent(buttonGrid);
-		setExpandRatio(buttonGrid, 0);
+		setExpandRatio(buttonGrid, 0.9f);
 	}
 
 	public void addTagsetDefinition(Collection<TagsetDefinition> tagsetDefinitions) {

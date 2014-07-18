@@ -60,6 +60,8 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 	protected void initSearchPanelComponents(Component content) {
 		setSizeFull();
 		setSpacing(true);
+		setMargin(true);
+		
 		cbComplexQuery = new CheckBox("continue to build a complex query");
 		cbComplexQuery.setImmediate(true);
 		addComponent(cbComplexQuery);
