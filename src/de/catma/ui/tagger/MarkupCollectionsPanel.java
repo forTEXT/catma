@@ -41,8 +41,6 @@ import com.vaadin.server.ClassResource;
 import com.vaadin.server.Resource;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
@@ -1117,9 +1115,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		}
 	}
 
-	public void updateProperty(TagInstance tagInstance, de.catma.tag.Property property) {
+	public void updateProperty(TagInstance tagInstance, Collection<de.catma.tag.Property> properties) {
 		try {
-			userMarkupCollectionManager.updateProperty(tagInstance, property);
+			userMarkupCollectionManager.updateProperty(tagInstance, properties);
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError("Error updating the Property", e);
 		}

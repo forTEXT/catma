@@ -92,6 +92,15 @@ import de.catma.util.Pair;
 
 class UserMarkupCollectionHandler {
 	
+	private static class PropertyCollectionToPropertyDefIdCollection 
+		implements Function<Property, Integer> {
+		
+		@Override
+		public Integer apply(Property property) {
+			return property.getPropertyDefinition().getId();
+		}
+	}
+	
 	private DBRepository dbRepository;
 	private IDGenerator idGenerator;
 //	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -1230,7 +1239,7 @@ class UserMarkupCollectionHandler {
 		.map(new UserMarkupCollectionReferenceMapper());
 	}
 	
-	void updateProperty(TagInstance tagInstance, Property property) throws IOException {
+	void updateProperty(TagInstance tagInstance, Collection<Property> properties) throws IOException {
 		TransactionalDSLContext db = 
 				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 		byte[] tagInstanceIDbin = 
@@ -1251,74 +1260,83 @@ class UserMarkupCollectionHandler {
 
 			getUserMarkupCollectionAccessMode(db, userMarkupCollectionId, true);
 			
-			Pair<Integer,Integer> tagInstanceIdpropertyId = db
-				.select(TAGINSTANCE.TAGINSTANCEID, PROPERTY.PROPERTYID)
+			Integer tagInstanceId = db
+				.select(TAGINSTANCE.TAGINSTANCEID)
 				.from(TAGINSTANCE)
-				.leftOuterJoin(PROPERTY)
-					.on(PROPERTY.TAGINSTANCEID.eq(TAGINSTANCE.TAGINSTANCEID))
-					.and(PROPERTY.PROPERTYDEFINITIONID
-							.eq(property.getPropertyDefinition().getId()))
 				.where(TAGINSTANCE.UUID.eq(tagInstanceIDbin))
 				.fetchOne()
-				.map(new IDFieldsToIntegerPairMapper(
-						TAGINSTANCE.TAGINSTANCEID, PROPERTY.PROPERTYID));
-			Integer propertyId = tagInstanceIdpropertyId.getSecond();
+				.map(new IDFieldToIntegerMapper(
+						TAGINSTANCE.TAGINSTANCEID));
+
+			
+			Map<Integer,Integer> propertyDefintionIdToProperyIdMap = db 
+				.select(PROPERTY.PROPERTYDEFINITIONID, PROPERTY.PROPERTYID)
+				.from(PROPERTY)
+				.where(PROPERTY.TAGINSTANCEID.eq(tagInstanceId))
+				.and(PROPERTY.PROPERTYDEFINITIONID.in(
+					Collections2.transform(properties, new PropertyCollectionToPropertyDefIdCollection())))
+				.fetchMap(PROPERTY.PROPERTYDEFINITIONID, PROPERTY.PROPERTYID);
+				
 			
 			db.beginTransaction();
-			if (propertyId != null) {
-				DeleteConditionStep<Record> deleteQuery = 
-				db
-				.delete(PROPERTYVALUE)
-				.where(PROPERTYVALUE.PROPERTYID.eq(propertyId));
+			for (Property property : properties) {
+				Integer propertyId = 
+						propertyDefintionIdToProperyIdMap.get(property.getPropertyDefinition().getId());
+				
+				if (propertyId != null) {
+					DeleteConditionStep<Record> deleteQuery = 
+					db
+					.delete(PROPERTYVALUE)
+					.where(PROPERTYVALUE.PROPERTYID.eq(propertyId));
+						
+					if (!property.getPropertyValueList().getValues().isEmpty()) {
+						deleteQuery = deleteQuery.and(PROPERTYVALUE.VALUE.notIn(property.getPropertyValueList().getValues()));
+					}
 					
-				if (!property.getPropertyValueList().getValues().isEmpty()) {
-					deleteQuery = deleteQuery.and(PROPERTYVALUE.VALUE.notIn(property.getPropertyValueList().getValues()));
+					deleteQuery.execute();
 				}
 				
-				deleteQuery.execute();
-			}
-			
-			List<String> existingValues = Collections.emptyList();
-			if (propertyId != null) {
-				existingValues = 
+				List<String> existingValues = Collections.emptyList();
+				if (propertyId != null) {
+					existingValues = 
+						db
+						.select(PROPERTYVALUE.VALUE)
+						.from(PROPERTYVALUE)
+						.where(PROPERTYVALUE.PROPERTYID.eq(propertyId))
+						.fetch()
+						.map(new PropertyValueMapper());
+				}
+				else {
+					propertyId = db
+						.insertInto(
+							PROPERTY,
+								PROPERTY.PROPERTYDEFINITIONID,
+								PROPERTY.TAGINSTANCEID)
+						.values(
+							property.getPropertyDefinition().getId(),
+							tagInstanceId)
+						.returning(PROPERTY.PROPERTYID)
+						.fetchOne()
+						.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
+				}
+				
+				for(String value : 
+					Collections3.getSetDifference(
+						property.getPropertyValueList().getValues(), existingValues)) {
 					db
-					.select(PROPERTYVALUE.VALUE)
-					.from(PROPERTYVALUE)
-					.where(PROPERTYVALUE.PROPERTYID.eq(propertyId))
-					.fetch()
-					.map(new PropertyValueMapper());
-			}
-			else {
-				propertyId = db
 					.insertInto(
-						PROPERTY,
-							PROPERTY.PROPERTYDEFINITIONID,
-							PROPERTY.TAGINSTANCEID)
+						PROPERTYVALUE,
+							PROPERTYVALUE.PROPERTYID,
+							PROPERTYVALUE.VALUE)
 					.values(
-						property.getPropertyDefinition().getId(),
-						tagInstanceIdpropertyId.getFirst())
-					.returning(PROPERTY.PROPERTYID)
-					.fetchOne()
-					.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
-			}
-			
-			for(String value : 
-				Collections3.getSetDifference(
-					property.getPropertyValueList().getValues(), existingValues)) {
-				db
-				.insertInto(
-					PROPERTYVALUE,
-						PROPERTYVALUE.PROPERTYID,
-						PROPERTYVALUE.VALUE)
-				.values(
-					propertyId,
-					value)
-				.execute();
-			}
-			
+						propertyId,
+						value)
+					.execute();
+				}
+			}			
 			db.commitTransaction();
 
-			dbRepository.getIndexer().updateIndex(tagInstance, property);
+			dbRepository.getIndexer().updateIndex(tagInstance, properties);
 		}
 		catch (Exception e) {
 			db.rollbackTransaction();

@@ -19,7 +19,7 @@
 package de.catma.ui.tagger;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -31,7 +31,6 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.HierarchicalContainer;
-import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.Resource;
@@ -50,19 +49,16 @@ import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
 import de.catma.tag.Property;
-import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
-import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.ui.dialog.StringListProperty;
 import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
 
 public class TagInstanceTree extends HorizontalLayout {
 
 	static interface TagIntanceActionListener {
 		public void removeTagInstances(List<String> tagInstanceIDs);
-		public void updateProperty(TagInstance tagInstance, Property property);		
+		public void updateProperty(TagInstance tagInstance, Collection<Property> properties);		
 	}
 	
 	private static enum TagInstanceTreePropertyName {
@@ -89,13 +85,13 @@ public class TagInstanceTree extends HorizontalLayout {
 	private Button btEditPropertyValues;
 	private Form tiInfoForm;
 	private TagInstanceInfoSet emptyInfoSet = new TagInstanceInfoSet();
-	private AdhocPropertyValuesBin bin;
+	private AdhocPropertyValuesBuffer propertyValuesBin;
 	
 	public TagInstanceTree(TagIntanceActionListener tagInstanceActionListener) {
 		this.tagInstanceActionListener = tagInstanceActionListener;
 		initComponents();
 		initActions();
-		bin = new AdhocPropertyValuesBin();
+		propertyValuesBin = new AdhocPropertyValuesBuffer();
 	}
 
 	private void initActions() {
@@ -150,37 +146,7 @@ public class TagInstanceTree extends HorizontalLayout {
 						Type.TRAY_NOTIFICATION);
 				}
 				else {
-					final String valuesProp = "values";
-					PropertysetItem propertyCollection = new PropertysetItem();
-					propertyCollection.addItemProperty(valuesProp, new StringListProperty());
-					Set<String> initialValues = new HashSet<String>();
-					initialValues.addAll(
-						property.getPropertyDefinition().getPossibleValueList().getPropertyValueList().getValues());
-					initialValues.addAll(
-						property.getPropertyValueList().getValues());
-					propertyCollection.getItemProperty(valuesProp).setValue(
-							property.getPropertyValueList().getValues());
-					FormDialog<PropertysetItem> editValueDlg = new FormDialog<PropertysetItem>(
-							"Edit Property values", 
-							"New property values created here exist only for this tag instance! " +
-							"For the creation of new systematic values use the Tag Manager.",
-							propertyCollection, 
-							new PropertyValueEditorFormFieldFactory(
-								initialValues),
-							new SaveCancelListener<PropertysetItem>() {
-								public void cancelPressed() {}
-								public void savePressed(PropertysetItem result) {
-									
-									StringListProperty stringList =
-											(StringListProperty) result.getItemProperty(valuesProp);
-									
-									property.setPropertyValueList(
-										new PropertyValueList(stringList.getList()));
-									
-									tagInstanceActionListener.updateProperty(tagInstance, property);
-								}
-							});
-					editValueDlg.show();
+					showPropertyEditDialog(tagInstance);
 				}	
 			}
 		});
@@ -196,15 +162,7 @@ public class TagInstanceTree extends HorizontalLayout {
 					final TagInstance tagInstance  = tagInstanceList.get(0);
 					
 					if (event.isDoubleClick()){
-						PropertyEditDialog dialog = 
-								new PropertyEditDialog(
-										tagInstance,
-										new SaveCancelListener<Set<Property>>() {
-											public void cancelPressed() {}
-											public void savePressed(Set<Property> list) {
-											}
-										}, bin);
-						dialog.show();
+						showPropertyEditDialog(tagInstance);
 					}
 				}
 			}
@@ -345,9 +303,9 @@ public class TagInstanceTree extends HorizontalLayout {
 		setExpandRatio(tagInstanceTree, 1.0f);
 		
 		VerticalLayout buttonsAndInfo = new VerticalLayout();
-		
+		buttonsAndInfo.setMargin(new MarginInfo(false, false, false, true));
 		GridLayout buttonGrid = new GridLayout(1, 2);
-		buttonGrid.setMargin(new MarginInfo(false, true, true, true));
+		buttonGrid.setMargin(new MarginInfo(false, true, true, false));
 		buttonGrid.setSpacing(true);
 		
 		btRemoveTagInstance = new Button("Remove Tag Instance");
@@ -463,15 +421,17 @@ public class TagInstanceTree extends HorizontalLayout {
 		return idList;
 	}
 
-	public void showPropertyEditDialog() {
+	public void showPropertyEditDialog(final TagInstance tagInstance) {
 		PropertyEditDialog dialog = 
-				new PropertyEditDialog(
-						(TagInstance)tagInstanceTree.getItemIds().iterator().next(),
-						new SaveCancelListener<Set<Property>>() {
-							public void cancelPressed() {}
-							public void savePressed(Set<Property> list) {
-							}
-						}, bin);
+			new PropertyEditDialog(
+				tagInstance,
+				new SaveCancelListener<Set<Property>>() {
+					public void cancelPressed() {}
+					public void savePressed(Set<Property> changedProperties) {
+						tagInstanceActionListener.updateProperty(
+								tagInstance, changedProperties);
+					}
+				}, propertyValuesBin);
 		dialog.show();
 	}
 }

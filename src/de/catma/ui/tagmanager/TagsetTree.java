@@ -818,12 +818,13 @@ public class TagsetTree extends HorizontalLayout {
 		btEditTag.setWidth("100%");
 		buttonGrid.addComponent(btEditTag);
 		buttonGridRowCount++;
+		btEditTag.setHeight("45px");
 		
 		Label propertyLabel = new Label();
 		propertyLabel.setIcon(
 				new ClassResource("ui/tagmanager/resources/ylwdiamd.gif"));
 		propertyLabel.setCaption("Property");
-		
+		propertyLabel.setHeight("15px");
 		
 		buttonGrid.addComponent(
 				propertyLabel, 0, buttonGridRowCount, 0, buttonGridRowCount+4);

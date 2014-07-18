@@ -10,20 +10,11 @@ import java.util.Set;
  * @author alexandra.krah@googlemail.com
  *
  */
-public class AdhocPropertyValuesBin {
+public class AdhocPropertyValuesBuffer {
 	
 	private Set<String> instanceValues;
 	
-	public AdhocPropertyValuesBin(String pValue){
-		this();
-		instanceValues.add(pValue);
-	}
-	
-	public AdhocPropertyValuesBin(Set<String> values){
-		this.instanceValues = values;
-	}
-	
-	public AdhocPropertyValuesBin(){
+	public AdhocPropertyValuesBuffer(){
 		instanceValues = new HashSet<String>();
 	}
 	

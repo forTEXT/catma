@@ -21,6 +21,7 @@ package de.catma.ui.tagger;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -439,14 +440,14 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		
 	}
 	
-	public void updateProperty(TagInstance tagInstance, Property property) {
-		markupCollectionsPanel.updateProperty(tagInstance, property);
-		
+	public void updateProperty(TagInstance tagInstance, Collection<Property> properties) {
+		markupCollectionsPanel.updateProperty(tagInstance, properties);
 	}
 
 	public void showPropertyEditDialog(TagInstance tagInstance) {
 		showTagInstanceInfo(Collections.singletonList(tagInstance.getUuid()));
-		//test if there are any properties - only then open 
-		tagInstancesTree.showPropertyEditDialog();
+		if (!tagInstance.getUserDefinedProperties().isEmpty()) {
+			tagInstancesTree.showPropertyEditDialog(tagInstance);
+		}
 	}
 }
