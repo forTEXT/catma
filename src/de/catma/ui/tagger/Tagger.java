@@ -18,11 +18,14 @@
  */   
 package de.catma.ui.tagger;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.vaadin.server.VaadinRequest;
+import com.vaadin.server.VaadinResponse;
 import com.vaadin.server.WebBrowser;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.UI;
@@ -108,31 +111,14 @@ public class Tagger extends AbstractComponent {
 		this.taggerID = String.valueOf(taggerID);
 		getRpcProxy(TaggerClientRpc.class).setTaggerId(this.taggerID);
 	}
-
 	
-//TODO: vaadin7 handle reload
-//		if (target.isFullRepaint() 
-//				&& !pager.isEmpty() 
-//				&& !attributes.containsKey(TaggerMessageAttribute.PAGE_SET.name())) {
-//
-//			attributes.put(TaggerMessageAttribute.ID.name(), this.taggerID);
-//
-//			attributes.put(
-//				TaggerMessageAttribute.PAGE_SET.name(), 
-//				pager.getCurrentPage().toHTML());
-//			
-//			try {
-//				attributes.put(
-//						TaggerMessageAttribute.TAGINSTANCES_ADD.name(),
-//						tagInstanceJSONSerializer.toJSON(
-//								pager.getCurrentPage().getRelativeTagInstances()));
-//			}
-//			catch(JSONSerializationException e) {
-//				//TODO: handle
-//				e.printStackTrace();
-//			}
-//
-//		}
+	@Override
+	public void beforeClientResponse(boolean initial) {
+		super.beforeClientResponse(initial);
+		if (initial) {
+			setPage(pager.getCurrentPageNumber());
+		}
+	}
 
 	private void setPage(String pageContent) {
 		getRpcProxy(TaggerClientRpc.class).setTaggerId(this.taggerID);
