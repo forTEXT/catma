@@ -27,10 +27,6 @@ public class DoubleTree extends AbstractComponent {
 		}	
 	}
 	
-	public void setVisWidth(int width) {
-//		getState().treeWidth = width;
-	}
-	
 	@Override
 	protected DoubleTreeState getState() {
 		return (DoubleTreeState) super.getState();

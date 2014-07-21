@@ -25,7 +25,4 @@ public class VDoubleTree extends Composite {
 			kwicList.isCaseSensitive()); 
 	}
 	
-	public void updateTreeWidth(int width) {
-		doubleTreeWidget.setVisWidth(width);
-	}
 }

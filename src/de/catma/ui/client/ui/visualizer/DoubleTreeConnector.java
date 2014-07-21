@@ -25,11 +25,6 @@ public class DoubleTreeConnector extends AbstractComponentConnector {
 		getWidget().updateTreeData(getState().treeData);
 	}
 	
-	@OnStateChange("treeWidth")
-	private void updateWidth() {
-		getWidget().updateTreeWidth(getState().treeWidth);
-	}
-	
 	@Override
 	public VDoubleTree getWidget() {
 		return (VDoubleTree) super.getWidget();

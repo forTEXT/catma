@@ -4,5 +4,4 @@ import com.vaadin.shared.AbstractComponentState;
 
 public class DoubleTreeState extends AbstractComponentState {
 	public String treeData;
-	public int treeWidth;
 }
