@@ -10,6 +10,12 @@ import java.util.Set;
 
 import com.vaadin.ui.TreeTable;
 
+
+/**
+ * @author marco.petris@web.de
+ * @deprecated the issue seems to be solved in vaadin 7
+ */
+@Deprecated
 public class MultiSelectTreeTable extends TreeTable {
 	public MultiSelectTreeTable() {
 	}
