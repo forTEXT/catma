@@ -55,7 +55,6 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
-import de.catma.CatmaApplication;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
@@ -71,6 +70,7 @@ import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.computation.DistributionComputation;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzer.querybuilder.QueryBuilderWizardFactory;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.repository.MarkupCollectionItem;
@@ -136,7 +136,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		super.attach();
 		if (!init) {
 			init = true;
-			helpLabel.setIcon(new ClassResource("ui/resources/icon-help.gif"));
+			helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
 		}
 		
 	}

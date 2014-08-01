@@ -30,9 +30,9 @@ import com.vaadin.server.WebBrowser;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.UI;
 
-import de.catma.CatmaApplication;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.tag.TagDefinition;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.client.ui.tagger.TaggerClientRpc;
 import de.catma.ui.client.ui.tagger.TaggerServerRpc;
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;

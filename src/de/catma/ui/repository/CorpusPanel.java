@@ -59,7 +59,6 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
 
-import de.catma.CatmaApplication;
 import de.catma.document.Corpus;
 import de.catma.document.corpus.CorpusExporter;
 import de.catma.document.repository.Repository;
@@ -68,6 +67,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.SaveCancelListener;

@@ -49,7 +49,6 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
@@ -67,6 +66,7 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.menu.CMenuAction;
 import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
 import de.catma.util.Pair;
@@ -736,7 +736,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			UserMarkupCollection userMarkupCollection) {
 		
 		ClassResource tagsetIcon = 
-				new ClassResource("ui/tagmanager/resources/grndiamd.gif");
+				new ClassResource("tagmanager/resources/grndiamd.gif");
 
 		markupCollectionsTree.addItem(
 				new Object[]{tagsetDefinition.getName(), 
@@ -775,7 +775,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 
 	private void insertTagDefinitionIntoTree(TagDefinition tagDefinition) {
 		ClassResource tagIcon = 
-				new ClassResource("ui/tagmanager/resources/reddiamd.gif");
+				new ClassResource("tagmanager/resources/reddiamd.gif");
 		
 		markupCollectionsTree.addItem(
 				new Object[]{

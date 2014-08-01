@@ -70,7 +70,6 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.themes.Reindeer;
 
-import de.catma.CatmaApplication;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
@@ -96,6 +95,7 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.SaveCancelListener;

@@ -59,10 +59,10 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
-import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
 import de.catma.document.repository.RepositoryReference;
+import de.catma.ui.CatmaApplication;
 import de.catma.util.IDGenerator;
 
 public class AuthenticationDialog extends VerticalLayout {
@@ -327,7 +327,7 @@ public class AuthenticationDialog extends VerticalLayout {
 
 			ClassResource icon =
 					new ClassResource(
-							"ui/repository/resources/google.png");
+							"repository/resources/google.png");
 			Link logInLink = 
 					new Link(
 						"Log in via Google", 

@@ -5,8 +5,8 @@ import java.util.List;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.UI;
 
-import de.catma.CatmaApplication;
 import de.catma.document.source.KeywordInContext;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.client.ui.visualizer.DoubleTreeState;
 import de.catma.ui.data.util.JSONSerializationException;
 

@@ -213,18 +213,18 @@ public class PagerComponent extends HorizontalLayout {
 		if (init) {
 			ClassResource firstPageIcon = 
 					new ClassResource(
-							"ui/tagger/pager/resources/page-first.gif");
+							"tagger/pager/resources/page-first.gif");
 			firstPageButton.setIcon(firstPageIcon);
 			ClassResource previousPageIcon = 
 					new ClassResource(
-							"ui/tagger/pager/resources/page-prev.gif");
+							"tagger/pager/resources/page-prev.gif");
 			previousPageButton.setIcon(previousPageIcon);
 			ClassResource nextPageIcon = 
 					new ClassResource(
-							"ui/tagger/pager/resources/page-next.gif");
+							"tagger/pager/resources/page-next.gif");
 			nextPageButton.setIcon(nextPageIcon);
 			ClassResource lastPageIcon = new ClassResource(
-					"ui/tagger/pager/resources/page-last.gif");
+					"tagger/pager/resources/page-last.gif");
 			lastPageButton.setIcon(lastPageIcon);
 			init = false;
 		}

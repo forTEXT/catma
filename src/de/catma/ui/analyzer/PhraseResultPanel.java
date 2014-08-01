@@ -46,7 +46,6 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
@@ -56,6 +55,7 @@ import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.export.CsvExport;
 import de.catma.ui.component.export.CsvExport.CsvExportException;
@@ -366,7 +366,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		buttonPanel.setWidth("100%");
 		
 		btDist = new Button();
-		btDist.setIcon(new ClassResource("ui/analyzer/resources/chart.gif"));
+		btDist.setIcon(new ClassResource("analyzer/resources/chart.gif"));
 		btDist.setDescription(
 			"Show selected phrases as a distribution trend in a " +
 			"chart like visualization.");
@@ -374,21 +374,21 @@ public class PhraseResultPanel extends VerticalLayout {
 		buttonPanel.addComponent(btDist);
 		
 		btDoubleTree = new Button();
-		btDoubleTree.setIcon(new ClassResource("ui/analyzer/resources/doubletree.gif"));
+		btDoubleTree.setIcon(new ClassResource("analyzer/resources/doubletree.gif"));
 		btDoubleTree.setDescription(
 			"Show a selected phrase with a doubletree kwic visualization.");
 		
 		buttonPanel.addComponent(btDoubleTree);
 		
 		btExcelExport = new Button();
-		btExcelExport.setIcon(new ClassResource("ui/analyzer/resources/excel.png"));
+		btExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png"));
 		btExcelExport.setDescription("Export all Query result data as an Excel spreadsheet.");
 		buttonPanel.addComponent(btExcelExport);
 		
 		
 		btCsvExport = new Button();
 		btCsvExport.setIcon(new ClassResource(
-				"ui/analyzer/resources/csv_text.png")); //http://findicons.com/icon/84601/csv_text
+				"analyzer/resources/csv_text.png")); //http://findicons.com/icon/84601/csv_text
 		btCsvExport.setDescription(
 				"Export all Query result data as flat CSV File.");
 		buttonPanel.addComponent(btCsvExport);
@@ -428,7 +428,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		
 		btKwicCsvExport = new Button();
 		btKwicCsvExport.setIcon(new ClassResource(
-				"ui/analyzer/resources/csv_text.png")); //http://findicons.com/icon/84601/csv_text
+				"analyzer/resources/csv_text.png")); //http://findicons.com/icon/84601/csv_text
 		btKwicCsvExport.setDescription(
 				"Export all Query result data as CSV File.");
 		kwicButtonPanel.addComponent(btKwicCsvExport);
@@ -443,7 +443,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		
 		Label helpLabel = new Label();
 
-		helpLabel.setIcon(new ClassResource("ui/resources/icon-help.gif"));
+		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
 		
 		helpLabel.setWidth("20px");
 		helpLabel.setDescription(

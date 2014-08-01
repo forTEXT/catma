@@ -40,9 +40,9 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
-import de.catma.CatmaApplication;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.admin.AdminWindow;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.user.Role;
@@ -186,13 +186,13 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		labelLayout.setComponentAlignment(btAdmin, Alignment.MIDDLE_RIGHT);
 		
 		btReload = new Button(""); 
-		btReload.setIcon(new ClassResource("ui/resources/icon-reload.gif"));
+		btReload.setIcon(new ClassResource("resources/icon-reload.gif"));
 		btReload.addStyleName("icon-button");
 		labelLayout.addComponent(btReload);
 		labelLayout.setComponentAlignment(btReload, Alignment.MIDDLE_RIGHT);
 		
 		Label helpLabel = new Label();
-		helpLabel.setIcon(new ClassResource("ui/resources/icon-help.gif"));
+		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
 		helpLabel.setWidth("20px");
 		helpLabel.setDescription(
 				"<h3>Hints</h3>" +

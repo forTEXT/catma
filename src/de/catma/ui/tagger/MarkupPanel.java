@@ -195,7 +195,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		
 		Label helpLabel = new Label();
 		
-		helpLabel.setIcon(new ClassResource("ui/resources/icon-help.gif"));
+		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
 		helpLabel.setWidth("20px");
 		helpLabel.setDescription(
 				"<h3>Hints</h3>" +

@@ -39,11 +39,11 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
-import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.dialog.SaveCancelListener;
 
 public class TagKwicDialog extends VerticalLayout {
