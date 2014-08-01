@@ -42,7 +42,6 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
-import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
@@ -50,6 +49,7 @@ import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.TagMatchMode;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.tag.TagDefinitionPathInfo;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.EndorsedTreeTable;
 import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
 import de.catma.util.ColorConverter;
@@ -190,7 +190,7 @@ public class TagPanel extends AbstractSearchPanel {
 		
 		if (!(tagsetTree).containsId(tagsetDefinitionName)) {
 			ClassResource tagsetIcon = 
-					new ClassResource("ui/tagmanager/resources/grndiamd.gif");
+					new ClassResource("tagmanager/resources/grndiamd.gif");
 			tagsetTree.addItem(tagsetDefinitionName);
 			tagsetTree.getContainerProperty(
 				tagsetDefinitionName, TagTreePropertyName.caption).setValue(
@@ -214,7 +214,7 @@ public class TagPanel extends AbstractSearchPanel {
 			String curId = tagsetDefinitionName + curPath; 
 			if (!tagsetTree.containsId(curId)) {
 				ClassResource tagIcon = new ClassResource(
-						"ui/tagmanager/resources/reddiamd.gif");
+						"tagmanager/resources/reddiamd.gif");
 				tagsetTree.addItem(curId);
 				tagsetTree.getContainerProperty(
 						curId, TagTreePropertyName.caption).setValue(

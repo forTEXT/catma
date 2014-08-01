@@ -760,7 +760,7 @@ public class TagsetTree extends HorizontalLayout {
 			tagsetPanel.setMargin(new MarginInfo(true, true, false, true));
 			
 			btReload = new Button(""); 
-			btReload.setIcon(new ClassResource("ui/resources/icon-reload.gif"));
+			btReload.setIcon(new ClassResource("resources/icon-reload.gif"));
 			btReload.addStyleName("icon-button");
 			tagsetPanel.addComponent(btReload);
 			tagsetPanel.setComponentAlignment(btReload, Alignment.MIDDLE_RIGHT);
@@ -768,7 +768,7 @@ public class TagsetTree extends HorizontalLayout {
 			Label tagsetLabel = new Label();
 			tagsetLabel.addStyleName("tagsettree-label");
 			tagsetLabel.setIcon(
-					new ClassResource("ui/tagmanager/resources/grndiamd.gif"));
+					new ClassResource("tagmanager/resources/grndiamd.gif"));
 			tagsetLabel.setCaption("Tagset");
 			
 			tagsetPanel.addComponent(tagsetLabel);
@@ -800,7 +800,7 @@ public class TagsetTree extends HorizontalLayout {
 		tagLabel.addStyleName("tagsettree-label");
 
 		tagLabel.setIcon(
-				new ClassResource("ui/tagmanager/resources/reddiamd.gif"));
+				new ClassResource("tagmanager/resources/reddiamd.gif"));
 		tagLabel.setCaption("Tag");
 		
 		tagPanel.addComponent(tagLabel);
@@ -831,7 +831,7 @@ public class TagsetTree extends HorizontalLayout {
 		propertyLabel.addStyleName("tagsettree-label");
 
 		propertyLabel.setIcon(
-				new ClassResource("ui/tagmanager/resources/ylwdiamd.gif"));
+				new ClassResource("tagmanager/resources/ylwdiamd.gif"));
 		propertyLabel.setCaption("Property");
 		propertyLabel.setHeight("15px");
 		propertyLabel.addStyleName("tagsettree-button-top-margin");
@@ -870,7 +870,7 @@ public class TagsetTree extends HorizontalLayout {
 	public void addTagsetDefinition(TagsetDefinition tagsetDefinition) {
 		
 		ClassResource tagsetIcon = 
-				new ClassResource("ui/tagmanager/resources/grndiamd.gif");
+				new ClassResource("tagmanager/resources/grndiamd.gif");
 		tagTree.addItem(tagsetDefinition);
 		tagTree.getContainerProperty(
 				tagsetDefinition, TagTreePropertyName.caption).setValue(
@@ -915,7 +915,7 @@ public class TagsetTree extends HorizontalLayout {
 
 	private void addTagDefinition(TagDefinition tagDefinition) {
 		ClassResource tagIcon = 
-			new ClassResource("ui/tagmanager/resources/reddiamd.gif");
+			new ClassResource("tagmanager/resources/reddiamd.gif");
 
 		tagTree.addItem(tagDefinition);
 		tagTree.getContainerProperty(
@@ -935,7 +935,7 @@ public class TagsetTree extends HorizontalLayout {
 	private void addUserDefinedPropertyDefinition(
 			PropertyDefinition propertyDefinition, TagDefinition tagDefinition) {
 		ClassResource propertyIcon = 
-				new ClassResource("ui/tagmanager/resources/ylwdiamd.gif");
+				new ClassResource("tagmanager/resources/ylwdiamd.gif");
 		
 		tagTree.addItem(propertyDefinition);
 		tagTree.setChildrenAllowed(tagDefinition, true);

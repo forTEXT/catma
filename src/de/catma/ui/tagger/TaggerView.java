@@ -43,7 +43,6 @@ import com.vaadin.ui.Slider.ValueOutOfBoundsException;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.CatmaApplication;
 import de.catma.document.Corpus;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
@@ -58,6 +57,7 @@ import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.Slider;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
@@ -231,7 +231,7 @@ public class TaggerView extends VerticalLayout
 
 		Label helpLabel = new Label();
 		
-		helpLabel.setIcon(new ClassResource("ui/resources/icon-help.gif"));
+		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
 		helpLabel.setWidth("20px");
 		helpLabel.setDescription(
 				"<h3>Hints</h3>" +

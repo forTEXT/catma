@@ -27,12 +27,12 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.UI;
 
-import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.tabbedview.TabbedView;
 
 public class TagManagerView extends TabbedView {

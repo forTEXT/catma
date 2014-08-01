@@ -16,7 +16,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.catma;
+package de.catma.ui;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,18 +28,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.vaadin.jouni.animator.Animator;
-
 import com.vaadin.annotations.PreserveOnRefresh;
+import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
+import com.vaadin.shared.communication.PushMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -48,14 +50,14 @@ import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.ProgressIndicator;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
+import de.catma.ExceptionHandler;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
+import de.catma.backgroundservice.LogProgressListener;
 import de.catma.backgroundservice.ProgressCallable;
 import de.catma.document.Corpus;
 import de.catma.document.Range;
@@ -71,8 +73,6 @@ import de.catma.repository.LoginToken;
 import de.catma.repository.db.maintenance.UserManager;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
-import de.catma.ui.DefaultProgressListener;
-import de.catma.ui.ProgressWindow;
 import de.catma.ui.analyzer.AnalyzerManagerView;
 import de.catma.ui.analyzer.AnalyzerManagerWindow;
 import de.catma.ui.analyzer.AnalyzerProvider;
@@ -90,6 +90,7 @@ import de.catma.ui.tagmanager.TagManagerWindow;
 import de.catma.ui.visualizer.VisualizationManagerView;
 import de.catma.ui.visualizer.VisualizationManagerWindow;
 
+@Push(PushMode.MANUAL)
 @Theme("cleatheme")
 @PreserveOnRefresh
 public class CatmaApplication extends UI
@@ -108,15 +109,13 @@ public class CatmaApplication extends UI
 	private TaggerManagerView taggerManagerView;
 	private AnalyzerManagerView analyzerManagerView;
 	private TagManager tagManager;
-	private ProgressIndicator defaultProgressIndicator;
-	private int defaultPIbackgroundJobs = 0;
-//	private ProgressWindow progressWindow;
 	private VisualizationManagerView visualizationManagerView;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private Map<String,String[]> parameters = new HashMap<String, String[]>();
 	private boolean repositoryOpened = false;
 	private UserManager userManager = new UserManager();
 	private Object user;
+	private HorizontalLayout mainLayout;
 
 	@Override
 	protected void init(VaadinRequest request) {
@@ -128,13 +127,12 @@ public class CatmaApplication extends UI
 		
 		Page.getCurrent().setTitle("CATMA 4.2 - CLÉA " + MINORVERSION);
 		
-		HorizontalLayout mainLayout = new HorizontalLayout();
+		mainLayout = new HorizontalLayout();
 		mainLayout.setSizeUndefined();
 		mainLayout.setMargin(true);
 		mainLayout.setSpacing(true);
-//		mainWindow.addStyleName("catma-mainwindow");
+		addStyleName("catma-mainwindow");
 		
-//		mainWindow.setContent(mainLayout);
 		MenuFactory menuFactory = new MenuFactory();
 		try {
 			initTempDirectory(properties);
@@ -152,12 +150,6 @@ public class CatmaApplication extends UI
 			analyzerManagerView = new AnalyzerManagerView();
 			
 			visualizationManagerView = new VisualizationManagerView();
-			
-			defaultProgressIndicator = new ProgressIndicator();
-			defaultProgressIndicator.setIndeterminate(true);
-			defaultProgressIndicator.setEnabled(false);
-			defaultProgressIndicator.setPollingInterval(500);
-//			progressWindow = new ProgressWindow(defaultProgressIndicator);
 			
 			menu = menuFactory.createMenu(
 					mainLayout, 
@@ -203,8 +195,8 @@ public class CatmaApplication extends UI
 			mainLayout.addComponent(helpLink);
 			mainLayout.setComponentAlignment(helpLink, Alignment.TOP_RIGHT);
 			
-			Label helpLabel = new Label();
-			helpLabel.setIcon(new ClassResource("ui/resources/icon-help.gif"));
+			final Label helpLabel = new Label();
+			helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
 			helpLabel.setWidth("20px");
 			helpLabel.setDescription(
 					"<h3>Hints</h3>" +
@@ -215,17 +207,55 @@ public class CatmaApplication extends UI
 					"Once you're logged in, you will see the Repository Manager, " +
 					"which will explain the first steps to you. " +
 					"Just hover your mouse over the question mark icons!");
-			VerticalLayout helpWrapper = new VerticalLayout();
-			helpWrapper.addComponent(helpLabel);
-			helpWrapper.setComponentAlignment(helpLabel, Alignment.TOP_RIGHT);
-			
-			Animator helpAnimator = new Animator(helpWrapper);
-			
-			helpAnimator.setFadedOut(true);
-			
-			mainLayout.addComponent(helpAnimator);
-			mainLayout.setComponentAlignment(helpAnimator, Alignment.TOP_RIGHT);
-			helpAnimator.fadeIn(2000, 300);
+//			helpLabel.setVisible(false);
+//			
+//			Timer timer = new Timer();
+//			timer.schedule(new TimerTask() {
+//				
+//				@Override
+//				public void run() {
+//					CatmaApplication.this.access(new Runnable() {
+//						
+//						@Override
+//						public void run() {
+//							helpLabel.setVisible(true);
+//							push();
+//						}
+//					});
+//				}
+//			}, 1000);
+//			
+//			timer.schedule(new TimerTask() {
+//				
+//				@Override
+//				public void run() {
+//					CatmaApplication.this.access(new Runnable() {
+//						
+//						@Override
+//						public void run() {
+//							helpLabel.setIcon(new ClassResource("resources/icon-help_l.gif"));
+//							push();
+//						}
+//					});
+//				}
+//			}, 4000);
+//			
+//			timer.schedule(new TimerTask() {
+//				
+//				@Override
+//				public void run() {
+//					CatmaApplication.this.access(new Runnable() {
+//						
+//						@Override
+//						public void run() {
+//							helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
+//							push();
+//						}
+//					});
+//				}
+//			}, 5000);
+
+			mainLayout.addComponent(helpLabel);
 			
 			MenuBar loginLogoutMenu = new MenuBar();
 			LoginLogoutCommand loginLogoutCommand = 
@@ -236,12 +266,12 @@ public class CatmaApplication extends UI
 			mainLayout.addComponent(loginLogoutMenu);
 			mainLayout.setComponentAlignment(loginLogoutMenu, Alignment.TOP_RIGHT);
 			mainLayout.setWidth("100%");
+
+			setContent(mainLayout);
 		} catch (Exception e) {
 			showAndLogError("The system could not be initialized!", e);
 		}
 
-		setContent(mainLayout);
-		
 	}
 	
 	public void handleParameters(Map<String, String[]> parameters) {
@@ -340,53 +370,22 @@ public class CatmaApplication extends UI
 		return backgroundService;
 	}
 	
-	private void setDefaultProgressIndicatorEnabled(
-			String caption, boolean enabled) {
-		
-		defaultProgressIndicator.setVisible(enabled);
-		defaultProgressIndicator.setCaption(caption);
-		
-		//TODO: enable progress window together with background loading
-//		if (enabled) {
-//			if (progressWindow.getParent() == null) {
-//				getMainWindow().addWindow(progressWindow);
-//			}
-//		}
-//		else {
-//			if (progressWindow.getParent() != null) {
-//				getMainWindow().removeWindow(progressWindow);
-//			}
-//		}
-		defaultProgressIndicator.setEnabled(enabled);
-		
-	}
 	public <T> void submit( 
 			String caption,
 			final ProgressCallable<T> callable, 
 			final ExecutionListener<T> listener) {
-		setDefaultProgressIndicatorEnabled(caption, true);
 		logger.info("submitting job '" + caption +  "' " + callable);
-		defaultPIbackgroundJobs++;
 		getBackgroundService().submit(
 			callable, new ExecutionListener<T>() {
 				public void done(T result) {
 					listener.done(result);
-					defaultPIbackgroundJobs--;
-					if (defaultPIbackgroundJobs == 0) {
-						setDefaultProgressIndicatorEnabled("", false);
-					}
-					
 				};
 				
 				public void error(Throwable t) {
 					listener.error(t);
-					defaultPIbackgroundJobs--;
-					if (defaultPIbackgroundJobs == 0) {
-						setDefaultProgressIndicatorEnabled("", false);
-					}
 				}
 			}, 
-			new DefaultProgressListener(defaultProgressIndicator, this));
+			new LogProgressListener());
 	}
 	
 
@@ -474,5 +473,10 @@ public class CatmaApplication extends UI
 	
 	public void setUser(Object user) {
 		this.user = user;
+	}
+	
+	@Override
+	public void attach() {
+		super.attach();
 	}
 }

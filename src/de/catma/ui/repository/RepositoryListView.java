@@ -34,10 +34,10 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
 import de.catma.document.repository.RepositoryReference;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.tabbedview.TabComponent;
 
 public class RepositoryListView extends VerticalLayout implements TabComponent {

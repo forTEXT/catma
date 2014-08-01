@@ -52,7 +52,6 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
@@ -68,6 +67,7 @@ import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.export.CsvExport;
 import de.catma.ui.component.export.CsvExport.CsvExportException;
@@ -583,11 +583,11 @@ public class MarkupResultPanel extends VerticalLayout {
 		buttonPanel.setWidth("100%");
 		
 		btDist = new Button();
-		btDist.setIcon(new ClassResource("ui/analyzer/resources/chart.gif"));
+		btDist.setIcon(new ClassResource("analyzer/resources/chart.gif"));
 		buttonPanel.addComponent(btDist);
 		
 		btResultExcelExport = new Button();
-		btResultExcelExport.setIcon(new ClassResource("ui/analyzer/resources/excel.png"));
+		btResultExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png"));
 		btResultExcelExport.setDescription(
 				"Export all Query result data as an Excel spreadsheet.");
 		buttonPanel.addComponent(btResultExcelExport);
@@ -595,7 +595,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 		btResultCsvExport = new Button();
 		btResultCsvExport.setIcon(new ClassResource(
-				"ui/analyzer/resources/csv_text.png")); //http://findicons.com/icon/84601/csv_text
+				"analyzer/resources/csv_text.png")); //http://findicons.com/icon/84601/csv_text
 		btResultCsvExport.setDescription(
 				"Export all Query result data as a flat CSV File.");
 		buttonPanel.addComponent(btResultCsvExport);
@@ -650,7 +650,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		kwicButtonPanel.setWidth("100%");
 		
 		btKwicExcelExport = new Button();
-		btKwicExcelExport.setIcon(new ClassResource("ui/analyzer/resources/excel.png"));
+		btKwicExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png"));
 		btKwicExcelExport.setDescription(
 				"Export all Query result data as an Excel spreadsheet.");
 		kwicButtonPanel.addComponent(btKwicExcelExport);
@@ -659,7 +659,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 		btKwicCsvExport = new Button();
 		btKwicCsvExport.setIcon(new ClassResource(
-				"ui/analyzer/resources/csv_text.png")); //http://findicons.com/icon/84601/csv_text
+				"analyzer/resources/csv_text.png")); //http://findicons.com/icon/84601/csv_text
 		btKwicCsvExport.setDescription(
 				"Export all Query result data as CSV File.");
 		kwicButtonPanel.addComponent(btKwicCsvExport);
@@ -678,7 +678,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		kwicButtonPanel.setExpandRatio(btUntagResults, 0f);
 		
 		Label helpLabel = new Label();
-		helpLabel.setIcon(new ClassResource("ui/resources/icon-help.gif"));
+		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
 		helpLabel.setWidth("20px");
 		
 		helpLabel.setDescription(

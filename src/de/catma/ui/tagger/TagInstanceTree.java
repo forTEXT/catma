@@ -341,7 +341,7 @@ public class TagInstanceTree extends HorizontalLayout {
 		tagInstanceTree.removeAllItems();
 		for (TagInstanceInfo ti : tagInstances) {
 			ClassResource tagIcon = 
-					new ClassResource("ui/tagmanager/resources/reddiamd.gif");
+					new ClassResource("tagmanager/resources/reddiamd.gif");
 			
 			tagInstanceTree.addItem(ti.getTagInstance());
 			Item item = tagInstanceTree.getItem(ti.getTagInstance());
@@ -367,7 +367,7 @@ public class TagInstanceTree extends HorizontalLayout {
 			
 			for (Property property : ti.getTagInstance().getUserDefinedProperties()) {
 				ClassResource propIcon = 
-						new ClassResource("ui/tagmanager/resources/ylwdiamd.gif");
+						new ClassResource("tagmanager/resources/ylwdiamd.gif");
 				List<String> values = property.getPropertyValueList().getValues();
 				String caption = property.getName();
 				if (values.isEmpty()) {

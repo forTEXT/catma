@@ -98,7 +98,7 @@ public class PropertyEditDialog extends Window {
 	private void initData() {
 		for (Property p : tagInstance.getUserDefinedProperties()) {
 			PropertyDefinition propertyDefinition = p.getPropertyDefinition();
-			ClassResource pIcon = new ClassResource("ui/tagmanager/resources/ylwdiamd.gif");
+			ClassResource pIcon = new ClassResource("tagmanager/resources/ylwdiamd.gif");
 			
 			propertyTree.addItem(
 					new Object[] {

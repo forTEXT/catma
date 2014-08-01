@@ -40,7 +40,6 @@ import com.vaadin.ui.Tree;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.CatmaApplication;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
@@ -56,6 +55,7 @@ import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.contenthandler.DefaultProtocolHandler;
 import de.catma.document.source.contenthandler.HttpProtocolHandler;
 import de.catma.document.source.contenthandler.ProtocolHandler;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.WizardStepListener;

@@ -45,10 +45,10 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
 
-import de.catma.CatmaApplication;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.LanguageDetector;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.WizardStepListener;
 
