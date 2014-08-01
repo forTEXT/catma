@@ -36,10 +36,12 @@ import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
-import com.vaadin.ui.Table;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.Table.Align;
 import com.vaadin.ui.TreeTable;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window.Notification;
 
 import de.catma.CatmaApplication;
 import de.catma.document.Range;
@@ -95,7 +97,7 @@ public class KwicPanel extends VerticalLayout {
 	}
 
 	private void initActions() {
-		kwicTable.addListener(new ItemClickListener() {
+		kwicTable.addItemClickListener(new ItemClickListener() {
 			
 			public void itemClick(ItemClickEvent event) {
 				if (event.isDoubleClick()) {
@@ -104,7 +106,7 @@ public class KwicPanel extends VerticalLayout {
 							row.getSourceDocumentId());
 					Range range = row.getRange();
 					
-					((CatmaApplication)getApplication()).openSourceDocument(
+					((CatmaApplication)UI.getCurrent()).openSourceDocument(
 							sd, repository, range);
 					
 					List<UserMarkupCollectionReference> relatedUmcRefs = 
@@ -112,12 +114,12 @@ public class KwicPanel extends VerticalLayout {
 								getUserMarkupCollectionRefs(sd);
 					try {
 						for (UserMarkupCollectionReference ref : relatedUmcRefs) {
-							((CatmaApplication)getApplication()).openUserMarkupCollection(
+							((CatmaApplication)UI.getCurrent()).openUserMarkupCollection(
 								sd, repository.getUserMarkupCollection(ref), repository);
 						}
 					}
 					catch (IOException e) {
-						((CatmaApplication)getApplication()).showAndLogError(
+						((CatmaApplication)UI.getCurrent()).showAndLogError(
 							"Error opening related User Markup Collection!", e);
 					}
 				}
@@ -154,7 +156,7 @@ public class KwicPanel extends VerticalLayout {
 							applyTagOperationToAllSelectedResults(
 									incomingTagsetDef, incomingTagDef, true);
 						} catch (Exception e) {
-							((CatmaApplication)getApplication()).showAndLogError(
+							((CatmaApplication)UI.getCurrent()).showAndLogError(
 									"Error tagging search results!", e);
 						}
                 	}
@@ -206,12 +208,12 @@ public class KwicPanel extends VerticalLayout {
 			public void savePressed(Map<String, UserMarkupCollection> result) {
 				try {
 					tagKwic(result, selectedRows, incomingTagsetDef, incomingTagDef);
-					KwicPanel.this.getWindow().showNotification(
+					Notification.show(
 							"Info", "The search results have been tagged!", 
-							Notification.TYPE_TRAY_NOTIFICATION);
+							Type.TRAY_NOTIFICATION);
 
 				} catch (URISyntaxException e) {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							"error creating tag reference", e);
 				}
 			}
@@ -242,12 +244,12 @@ public class KwicPanel extends VerticalLayout {
 			}
 		}
 		if (umcFound) {
-			tagKwicDialog.show(getApplication().getMainWindow());
+			tagKwicDialog.show();
 		}
 		else {
-			getWindow().showNotification(
+			Notification.show(
 				"Information", "Please create a User Markup Collection first!",
-				Notification.TYPE_TRAY_NOTIFICATION);
+				Type.TRAY_NOTIFICATION);
 		}
 	}
 
@@ -343,24 +345,24 @@ public class KwicPanel extends VerticalLayout {
 		kwicTable.addContainerProperty(
 				KwicPropertyName.leftContext, String.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.leftContext, "Left Context");
-		kwicTable.setColumnAlignment(KwicPropertyName.leftContext, Table.ALIGN_RIGHT);
+		kwicTable.setColumnAlignment(KwicPropertyName.leftContext, Align.RIGHT);
 		
 		kwicTable.addContainerProperty(
 				KwicPropertyName.keyword, String.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.keyword, "Keyword");
-		kwicTable.setColumnAlignment(KwicPropertyName.keyword, Table.ALIGN_CENTER);
+		kwicTable.setColumnAlignment(KwicPropertyName.keyword, Align.CENTER);
 		
 		kwicTable.addContainerProperty(
 				KwicPropertyName.rightContext, String.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.rightContext, "Right Context");	
-		kwicTable.setColumnAlignment(KwicPropertyName.rightContext, Table.ALIGN_LEFT);
+		kwicTable.setColumnAlignment(KwicPropertyName.rightContext, Align.LEFT);
 		
 		kwicTable.addContainerProperty(
-				KwicPropertyName.startPoint, String.class, null);
+				KwicPropertyName.startPoint, Integer.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.startPoint, "Start Point");
 		
 		kwicTable.addContainerProperty(
-				KwicPropertyName.endPoint, String.class, null);
+				KwicPropertyName.endPoint, Integer.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.endPoint, "End Point");
 		
 		kwicTable.setPageLength(12); //TODO: config

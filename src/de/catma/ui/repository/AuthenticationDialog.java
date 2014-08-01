@@ -18,7 +18,7 @@
  */
 package de.catma.ui.repository;
 
-import java.net.URL;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,12 +38,14 @@ import org.openid4java.message.ax.AxMessage;
 import org.openid4java.message.ax.FetchRequest;
 import org.openid4java.message.ax.FetchResponse;
 
-import com.vaadin.Application;
-import com.vaadin.terminal.ClassResource;
-import com.vaadin.terminal.DownloadStream;
-import com.vaadin.terminal.ExternalResource;
-import com.vaadin.terminal.ParameterHandler;
-import com.vaadin.terminal.URIHandler;
+import com.vaadin.server.ClassResource;
+import com.vaadin.server.ExternalResource;
+import com.vaadin.server.Page;
+import com.vaadin.server.RequestHandler;
+import com.vaadin.server.VaadinRequest;
+import com.vaadin.server.VaadinResponse;
+import com.vaadin.server.VaadinSession;
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -51,9 +53,11 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Link;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.ui.Window.Notification;
 
 import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
@@ -63,10 +67,9 @@ import de.catma.util.IDGenerator;
 
 public class AuthenticationDialog extends VerticalLayout {
 	
-	private static class AuthenticationParamHandler implements ParameterHandler, URIHandler {
+	private static class AuthenticationRequestHandler implements RequestHandler {
 		
 		private Logger logger = Logger.getLogger(this.getClass().getName());
-		private Application application;
 		private String returnURL;
 		private ConsumerManager consumerManager;
 		private DiscoveryInformation discovered;
@@ -78,13 +81,12 @@ public class AuthenticationDialog extends VerticalLayout {
 		private String signed;
 		private String sig;
 
-		public AuthenticationParamHandler(Application application,
+		public AuthenticationRequestHandler(
 				String returnURL, ConsumerManager consumerManager,
 				DiscoveryInformation discovered, 
 				RepositoryReference repositoryReference,
 				RepositoryManager repositoryManager, Window dialogWindow, String handle) {
 			super();
-			this.application = application;
 			this.returnURL = returnURL;
 			logger.info("authentication dialog construction returnUrl: " + returnURL);
 			this.consumerManager = consumerManager;
@@ -94,17 +96,18 @@ public class AuthenticationDialog extends VerticalLayout {
 			this.dialogWindow = dialogWindow;
 			this.handle = handle;
 		}
+			
+		@Override
+		public boolean handleRequest(VaadinSession session,
+				VaadinRequest request, VaadinResponse response)
+				throws IOException {
 
-		public void handleParameters(Map<String, String[]> parameters) {
-			openidResp = new ParameterList(parameters);
-			
-			signed = openidResp.getParameterValue("openid.signed");
-			sig = openidResp.getParameterValue("openid.sig");
-			
-		}
-					
-		public DownloadStream handleURI(URL context, String relativeUri) {
 			try {
+				openidResp = new ParameterList(request.getParameterMap());
+				
+				signed = openidResp.getParameterValue("openid.signed");
+				sig = openidResp.getParameterValue("openid.sig");
+				
 				// extract the parameters from the authentication response
 				// (which comes in as a HTTP request from the OpenID provider)
 				if (!openidResp.hasParameter("openid.mode")) {
@@ -148,11 +151,9 @@ public class AuthenticationDialog extends VerticalLayout {
 					logger.info("got openid.sig: " + openidResp.getParameterValue("openid.sig"));
 				}
 				
-				application.getMainWindow().removeURIHandler(this);
+				VaadinSession.getCurrent().removeRequestHandler(this);
 				
-				application.getMainWindow().removeParameterHandler(this);
-				
-				application.getMainWindow().removeWindow(dialogWindow);
+				UI.getCurrent().removeWindow(dialogWindow);
 				
 				dialogWindow = null;
 				logger.info("verifying returnurl: " + returnURL);
@@ -198,39 +199,43 @@ public class AuthenticationDialog extends VerticalLayout {
 	                    
 	                    logger.info("opening repository for user: " + email);
 	                    
-	                    application.setUser(userIdentification);
+	                    ((CatmaApplication)UI.getCurrent()).setUser(
+	                    		userIdentification);
 
 	                    Repository repository = 
                     		repositoryManager.openRepository(
                 				repositoryReference, userIdentification );
 	                    
-	                    ((CatmaApplication)application).openRepository(repository);
-	                    
-	                    
-	                    return new DownloadStream(
-	                    		application.getURL().openStream(), 
-	                    		"text/html", "CATMA 4");
+	                    ((CatmaApplication)UI.getCurrent()).openRepository(repository);
+	                  
+	                    return true;
+//	                    Page.getCurrent().setLocation(uri);
+//	                    response.getOutputStream().write(
+//	                    
+//	                    return new DownloadStream(
+//	                    		Page.getCurrent().getLocation().toURL().openStream(), 
+//	                    		"text/html", "CATMA 4");
 	                }
 				}
 				else {
 					logger.info("authentication failure");
-					application.getMainWindow().showNotification(
+					Notification.show(
                             "Authentication failure",
                             "The authentication failed, you are not " +
                             "allowed to access this repository!",
-                            Notification.TYPE_ERROR_MESSAGE);
+                            Type.ERROR_MESSAGE);
 
 				}
 				
 			}
 			catch (Exception e) {
-				((CatmaApplication)application).showAndLogError(
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error opening repository!", e);
 			}
 			
-			application.close();
+			UI.getCurrent().close();
 			
-			return null;
+			return true;
 		}
 	}
 	
@@ -257,14 +262,15 @@ public class AuthenticationDialog extends VerticalLayout {
 	private void initComponents() {
 		setSizeFull();
 		setSpacing(true);
-		
-		dialogWindow = new Window(caption);
+		VerticalLayout content = new VerticalLayout();
+		content.setMargin(true);
+		dialogWindow = new Window(caption, content);
 		dialogWindow.setModal(true);
 		
 		Label termsOfUse = new Label(
 				"By logging in you accept the " +
 				"<a target=\"blank\" href=\"http://www.catma.de/termsofuse\">terms of use</a>!");
-		termsOfUse.setContentMode(Label.CONTENT_XHTML);
+		termsOfUse.setContentMode(ContentMode.HTML);
 		termsOfUse.setSizeFull();
 		addComponent(termsOfUse);
 		
@@ -277,7 +283,7 @@ public class AuthenticationDialog extends VerticalLayout {
 		addComponent(buttonPanel);
 		this.setComponentAlignment(buttonPanel, Alignment.BOTTOM_RIGHT);
 		
-		dialogWindow.addComponent(this);
+		content.addComponent(this);
 		
 	}
 	
@@ -285,17 +291,17 @@ public class AuthenticationDialog extends VerticalLayout {
 	public void attach() {
 		super.attach();
 		if (logInLink == null) {
-			logInLink = createLogInLink(getApplication());
+			logInLink = createLogInLink();
 			addComponent(logInLink, 0);
 		}
 	}
 
-	private Link createLogInLink(final Application application) {
+	private Link createLogInLink() {
 		try {
 			ConsumerManager consumerManager = new ConsumerManager();
 			
 			String returnURL = 
-				application.getURL().toString() +
+				Page.getCurrent().getLocation().toString() +
 				new IDGenerator().generate();
 			logger.info("return url in login link creation " + returnURL);
 			
@@ -321,53 +327,49 @@ public class AuthenticationDialog extends VerticalLayout {
 
 			ClassResource icon =
 					new ClassResource(
-							"ui/repository/resources/google.png", application);
+							"ui/repository/resources/google.png");
 			Link logInLink = 
 					new Link(
 						"Log in via Google", 
 						new ExternalResource(authReq.getDestinationUrl(true)));
 			logInLink.setIcon(icon);
 			
-			final AuthenticationParamHandler authenticationParamHandler =
-					new AuthenticationParamHandler(
-							application, returnURL, 
+			final AuthenticationRequestHandler authenticationRequestHandler =
+					new AuthenticationRequestHandler(
+							returnURL, 
 							consumerManager, discovered, 
 							repositoryReference,
 							repositoryManager, 
 							dialogWindow, 
 							handle);
-					
-			application.getMainWindow().addParameterHandler(
-					authenticationParamHandler);
-			application.getMainWindow().addURIHandler(
-					authenticationParamHandler);
 			
-			btCancel.addListener(new ClickListener() {
+			
+			VaadinSession.getCurrent().addRequestHandler(authenticationRequestHandler);
+			
+			btCancel.addClickListener(new ClickListener() {
 				
 				public void buttonClick(ClickEvent event) {
-					application.getMainWindow().removeParameterHandler(
-							authenticationParamHandler);
-					application.getMainWindow().removeURIHandler(
-							authenticationParamHandler);
-					application.getMainWindow().removeWindow(dialogWindow);
+					VaadinSession.getCurrent().removeRequestHandler(authenticationRequestHandler);
+					
+					UI.getCurrent().removeWindow(dialogWindow);
 				}
 			});
 			
 			return logInLink;
 		}
 		catch (Exception e) {
-			e.printStackTrace(); //TODO: handle
+			((CatmaApplication)UI.getCurrent()).showAndLogError("Error during authentication!", e);
 		}
 		return null;
 	}
 	
-	public void show(Window parent, String dialogWidth) {
+	public void show(String dialogWidth) {
 		dialogWindow.setWidth(dialogWidth);
-		parent.addWindow(dialogWindow);
+		UI.getCurrent().addWindow(dialogWindow);
 	}
 	
-	public void show(Window parent) {
-		show(parent, "35%");
+	public void show() {
+		show("35%");
 	}
 	
 }

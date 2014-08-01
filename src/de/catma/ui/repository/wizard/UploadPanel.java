@@ -31,6 +31,7 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.ProgressIndicator;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.Upload;
 import com.vaadin.ui.Upload.FailedEvent;
 import com.vaadin.ui.Upload.FailedListener;
@@ -58,7 +59,7 @@ class UploadPanel extends HorizontalLayout {
 	}
 
 	private void initActions() {
-		upload.addListener(new StartedListener() {
+		upload.addStartedListener(new StartedListener() {
 			
 			public void uploadStarted(StartedEvent event) {
 				pi.setValue(0f);
@@ -69,13 +70,13 @@ class UploadPanel extends HorizontalLayout {
 			}
 		});
 		
-		upload.addListener(new ProgressListener() {
+		upload.addProgressListener(new ProgressListener() {
 			
 			public void updateProgress(long readBytes, long contentLength) {
 				pi.setValue(Float.valueOf(readBytes)/Float.valueOf(contentLength));
 			}
 		});
-		upload.addListener(new FailedListener() {
+		upload.addFailedListener(new FailedListener() {
 			
 			public void uploadFailed(FailedEvent event) {
 				pi.setVisible(false);
@@ -85,7 +86,7 @@ class UploadPanel extends HorizontalLayout {
 			}
 		});
 		
-		upload.addListener(new SucceededListener() {
+		upload.addSucceededListener(new SucceededListener() {
 			
 			public void uploadSucceeded(SucceededEvent event) {
 				pi.setVisible(false);
@@ -101,7 +102,7 @@ class UploadPanel extends HorizontalLayout {
 
 				try {
 					String tempDir = 
-							((CatmaApplication)getApplication()).getTempDirectory();
+							((CatmaApplication)UI.getCurrent()).getTempDirectory();
 					IDGenerator idGenerator = new IDGenerator();
 					
 					File uploadFile = new File(new File(tempDir), idGenerator.generate());
@@ -119,7 +120,7 @@ class UploadPanel extends HorizontalLayout {
 			}
 		});
 		
-		btCancelUpload.addListener(new ClickListener() {
+		btCancelUpload.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				upload.interruptUpload();
@@ -153,15 +154,15 @@ class UploadPanel extends HorizontalLayout {
 	}
 
 	public void addListener(StartedListener listener) {
-		upload.addListener(listener);
+		upload.addStartedListener(listener);
 	}
 
 	public void addListener(FailedListener listener) {
-		upload.addListener(listener);
+		upload.addFailedListener(listener);
 	}
 
 	public void addListener(SucceededListener listener) {
-		upload.addListener(listener);
+		upload.addSucceededListener(listener);
 	}
 	
 	public URI getUploadedFileUri() {

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.vaadin.shared.ui.MultiSelectMode;
 import com.vaadin.ui.TreeTable;
 
 
@@ -21,35 +22,35 @@ public class MultiSelectTreeTable extends TreeTable {
 	}
 
 	
-	@Override
-	public void changeVariables(Object source, Map<String, Object> variables) {
-		final String[] ranges = (String[]) variables.get("selectedRanges");
-
-		super.changeVariables(source, variables);
-        
-        if (isSelectable() 
-        		&& isMultiSelect()
-                && variables.containsKey("selected")
-                && getMultiSelectMode() == MultiSelectMode.DEFAULT
-                && ranges.length > 0) {
-	        @SuppressWarnings("unchecked")
-	        HashSet<Object> newValue = new LinkedHashSet<Object>(
-	                (Collection<Object>) getValue());
-
-	        for (String range : ranges) {
-                String[] split = range.split("-");
-                Object startItemId = itemIdMapper.get(split[0]);
-
-                Object previousItemId = findPreviousItemId(startItemId);
-                if (previousItemId != null) {
-	                Collection<?> gapItemIds = getGapItemIds(previousItemId, startItemId);
-	                newValue.addAll(gapItemIds);
-                }
-	        }
-	        
-	        setValue(newValue, true);
-        }
-	}
+//	@Override
+//	public void changeVariables(Object source, Map<String, Object> variables) {
+//		final String[] ranges = (String[]) variables.get("selectedRanges");
+//
+//		super.changeVariables(source, variables);
+//        
+//        if (isSelectable() 
+//        		&& isMultiSelect()
+//                && variables.containsKey("selected")
+//                && getMultiSelectMode() == MultiSelectMode.DEFAULT
+//                && ranges.length > 0) {
+//	        @SuppressWarnings("unchecked")
+//	        HashSet<Object> newValue = new LinkedHashSet<Object>(
+//	                (Collection<Object>) getValue());
+//
+//	        for (String range : ranges) {
+//                String[] split = range.split("-");
+//                Object startItemId = itemIdMapper.get(split[0]);
+//
+//                Object previousItemId = findPreviousItemId(startItemId);
+//                if (previousItemId != null) {
+//	                Collection<?> gapItemIds = getGapItemIds(previousItemId, startItemId);
+//	                newValue.addAll(gapItemIds);
+//                }
+//	        }
+//	        
+//	        setValue(newValue, true);
+//        }
+//	}
 
 
 	private Collection<?> getGapItemIds(Object startGapItemId,

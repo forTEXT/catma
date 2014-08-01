@@ -18,7 +18,6 @@
  */
 package de.catma.ui.dialog.wizard;
 
-import org.apache.tools.ant.taskdefs.Get;
 import org.vaadin.teemu.wizards.Wizard;
 import org.vaadin.teemu.wizards.WizardStep;
 

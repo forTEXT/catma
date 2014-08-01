@@ -18,7 +18,7 @@
  */
 package de.catma.ui.repository;
 
-import com.vaadin.ui.Window;
+import com.vaadin.ui.UI;
 
 import de.catma.ui.CatmaWindow;
 
@@ -38,12 +38,11 @@ public class RepositoryManagerWindow extends CatmaWindow {
 	@Override
 	public void setPosition() {
 		
-		Window mainWindow = getApplication().getMainWindow();
-		if ((mainWindow.getWidthUnits() == UNITS_PIXELS) && (mainWindow.getWidth() > 0)) {
-			setPositionX(Float.valueOf(Math.min(mainWindow.getWidth(), 50)).intValue());
+		if ((UI.getCurrent().getWidthUnits() == Unit.PIXELS) && (UI.getCurrent().getWidth() > 0)) {
+			setPositionX(Float.valueOf(Math.min(UI.getCurrent().getWidth(), 50)).intValue());
 			
-			if ((mainWindow.getHeightUnits() == UNITS_PIXELS) && (mainWindow.getHeight() > 0)) {
-				setPositionY(Float.valueOf(Math.min(mainWindow.getHeight(), 50)).intValue());
+			if ((UI.getCurrent().getHeightUnits() == Unit.PIXELS) && (UI.getCurrent().getHeight() > 0)) {
+				setPositionY(Float.valueOf(Math.min(UI.getCurrent().getHeight(), 50)).intValue());
 			}
 		}
 		else {

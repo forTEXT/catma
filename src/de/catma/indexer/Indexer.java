@@ -86,7 +86,7 @@ public interface Indexer {
 	
 	public void close();
 
-	public void updateIndex(TagInstance tagInstance, Property property) throws IOException;
+	public void updateIndex(TagInstance tagInstance, Collection<Property> properties) throws IOException;
 
 	public void removeUserMarkupCollections(Collection<String> usermarkupCollectionIDs) throws IOException;
 

@@ -21,7 +21,6 @@ package de.catma.ui.analyzer.querybuilder;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Alignment;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.VerticalLayout;
@@ -61,6 +60,8 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 	protected void initSearchPanelComponents(Component content) {
 		setSizeFull();
 		setSpacing(true);
+		setMargin(true);
+		
 		cbComplexQuery = new CheckBox("continue to build a complex query");
 		cbComplexQuery.setImmediate(true);
 		addComponent(cbComplexQuery);
@@ -73,10 +74,10 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 	}
 
 	private void initSearchPanelActions() {
-		cbComplexQuery.addListener(new ValueChangeListener() {
+		cbComplexQuery.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
-				if (cbComplexQuery.booleanValue()) {
+				if (cbComplexQuery.getValue()) {
 					if (complexTypeSelectionPanel == null) {
 						complexTypeSelectionPanel = 
 								new ComplexTypeSelectionPanel(queryTree);
@@ -98,8 +99,8 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 					}
 				}
 				
-				onFinishOnly = !cbComplexQuery.booleanValue();
-				onFinish = (!cbComplexQuery.booleanValue() 
+				onFinishOnly = !cbComplexQuery.getValue();
+				onFinish = (!cbComplexQuery.getValue() 
 							&& (curQuery != null) && !curQuery.isEmpty());
 				
 				toggleButtonStateListener.stepChanged(AbstractSearchPanel.this);
@@ -108,8 +109,8 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 		});
 	}
 
-	public void addCbComplexQueryListener(ClickListener listener) {
-		cbComplexQuery.addListener(listener);
+	public void addCbComplexQueryListener(ValueChangeListener listener) {
+		cbComplexQuery.addValueChangeListener(listener);
 	}
 	
 	public void stepActivated(boolean forward) {
@@ -149,7 +150,7 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 	}
 
 	public boolean isComplexQuery() {
-		return cbComplexQuery.booleanValue();
+		return cbComplexQuery.getValue();
 	}
 	
 	@Override

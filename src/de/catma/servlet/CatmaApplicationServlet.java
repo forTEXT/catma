@@ -18,26 +18,26 @@
  */
 package de.catma.servlet;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
 
-import com.vaadin.Application;
-import com.vaadin.terminal.gwt.server.ApplicationServlet;
-import com.vaadin.ui.Window;
+import com.vaadin.server.BootstrapFragmentResponse;
+import com.vaadin.server.BootstrapListener;
+import com.vaadin.server.BootstrapPageResponse;
+import com.vaadin.server.ServiceException;
+import com.vaadin.server.SessionInitEvent;
+import com.vaadin.server.SessionInitListener;
+import com.vaadin.server.VaadinServlet;
 
-public class CatmaApplicationServlet extends ApplicationServlet {
+public class CatmaApplicationServlet extends VaadinServlet {
 	
 	private enum JsLib {
 		JQUERY("jquery/jquery-1.7.2.min.js"),
 		HIGHCHARTS("highcharts/highcharts.js"),
 //		EXPORTING("highcharts/exporting.js"),
-//		D3("doubletreejs/d3.v3.js"),
-//		CLASSLISTSUBSTITUTE("doubletreejs/classListSubstitute.js"),
-//		DOUBLETREE("doubletreejs/DoubleTree.js"),
-//		DT_TRIE("doubletreejs/Trie.js"),
+//		D3("doubletreejs_debug/d3.v3.js"),
+//		CLASSLISTSUBSTITUTE("doubletreejs_debug/classListSubstitute.js"),
+//		DOUBLETREE("doubletreejs_debug/DoubleTree.js"),
+//		DT_TRIE("doubletreejs_debug/Trie.js"),
 		D3("doubletreejs/d3.min.js"),
 		CLASSLISTSUBSTITUTE("doubletreejs/classListSubstitute.min.js"),
 		DOUBLETREE("doubletreejs/DoubleTree.min.js"),
@@ -70,49 +70,45 @@ public class CatmaApplicationServlet extends ApplicationServlet {
 		}
 	}
 	
-	@Override
-	protected void writeAjaxPageHtmlVaadinScripts(Window window,
-			String themeName, Application application, BufferedWriter page,
-			String appUrl, String themeUri, String appId,
-			HttpServletRequest request) throws ServletException, IOException {
-		page.write("<script type=\"text/javascript\">\n");
-		page.write("//<![CDATA[\n");
-		for (JsLib lib : JsLib.values()) {
-			page.write(
-					"document.write(\"<script language='javascript' src='" 
-		    		+ request.getContextPath() 
-		    		+ "/VAADIN/" + lib + "'><\\/script>\");\n");
+	private static class CatmaBootstrapListener implements BootstrapListener {
+		@Override
+		public void modifyBootstrapFragment(BootstrapFragmentResponse response) {
+			// noop
 		}
-		
-		page.write("//]]>\n</script>\n");
-	      
-		super.writeAjaxPageHtmlVaadinScripts(window, themeName, application, page,
-				appUrl, themeUri, appId, request);
-	}
-	
+		@Override
+		public void modifyBootstrapPage(BootstrapPageResponse response) {
+			for (CssLib lib : CssLib.values()) {
+				response.getDocument().head().append(
+					"<link rel=\"stylesheet\" href=\"" 
+					+ response.getRequest().getContextPath() +"/VAADIN/" + lib + "\" />");
+			}
 
-	@Override
-	protected void writeAjaxPageHtmlHeader(BufferedWriter page, String title,
-			String themeUri, HttpServletRequest request) throws IOException {
-		
-		for (CssLib lib : CssLib.values()) {
-			page.write(
-				"<link rel=\"stylesheet\" href=\"" 
-				+ request.getContextPath() +"/VAADIN/" + lib + "\" />");
+			StringBuilder scriptBuilder = new StringBuilder();
+			
+			scriptBuilder.append(
+					"<script type=\"text/javascript\">\n");
+			scriptBuilder.append("//<![CDATA[\n");
+			for (JsLib lib : JsLib.values()) {
+				scriptBuilder.append(
+						"document.write(\"<script language='javascript' src='" 
+								+ response.getRequest().getContextPath() 
+								+ "/VAADIN/" + lib + "'><\\/script>\");\n");
+			}
+			scriptBuilder.append("//]]>\n</script>\n");
+			
+			response.getDocument().body().prepend(scriptBuilder.toString());
 		}
-		
-		super.writeAjaxPageHtmlHeader(page, title, themeUri, request);
 	}
 	
-//	@Override
-//	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-//			throws ServletException, IOException {
-//		super.doGet(req, resp);
-//	}
-//	
-//	@Override
-//	protected void service(HttpServletRequest request,
-//			HttpServletResponse response) throws ServletException, IOException {
-//		super.service(request, response);
-//	}
+	@Override
+	protected void servletInitialized() throws ServletException {
+		super.servletInitialized();
+		getService().addSessionInitListener(new SessionInitListener() {
+			
+			@Override
+			public void sessionInit(SessionInitEvent event) throws ServiceException {
+				event.getSession().addBootstrapListener(new CatmaBootstrapListener());
+			}
+		});
+	}
 }

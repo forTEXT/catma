@@ -540,7 +540,6 @@ public class SourceDocumentHandler {
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					RepositoryChangeEvent.sourceDocumentChanged.name(),
 					sourceDocument, null);
-
 		}
 		catch (Exception dae) {
 			db.rollbackTransaction();

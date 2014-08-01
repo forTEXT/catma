@@ -35,8 +35,8 @@ import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
-import com.vaadin.terminal.ClassResource;
-import com.vaadin.terminal.ThemeResource;
+import com.vaadin.server.ClassResource;
+import com.vaadin.server.ThemeResource;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -46,9 +46,11 @@ import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeTable;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window.Notification;
 
 import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
@@ -66,9 +68,10 @@ import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
+import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.export.CsvExport;
-import de.catma.ui.component.export.HierarchicalExcelExport;
 import de.catma.ui.component.export.CsvExport.CsvExportException;
+import de.catma.ui.component.export.HierarchicalExcelExport;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 
@@ -256,26 +259,27 @@ public class MarkupResultPanel extends VerticalLayout {
 	}
 	
 	private void initActions() {
-		cbPropAsColumns.addListener(new ClickListener() {
+		cbPropAsColumns.addValueChangeListener(new ValueChangeListener() {
 			
-			public void buttonClick(ClickEvent event) {
+			@Override
+			public void valueChange(ValueChangeEvent event) {
 				QueryResult queryResult = getQueryResult();
 				
 				try {
 					setQueryResult(queryResult);
 				} catch (IOException e) {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							"error converting Query Result!", e);
 				}
 			}
 		});
-		cbFlatTable.addListener(new ValueChangeListener() {
+		cbFlatTable.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				handleCbFlatTableRequest();
 			}
 		});
-		btDist.addListener(new ClickListener() {
+		btDist.addClickListener(new ClickListener() {
 			
 			@SuppressWarnings("unchecked")
 			public void buttonClick(ClickEvent event) {
@@ -301,42 +305,42 @@ public class MarkupResultPanel extends VerticalLayout {
 					resultSelectionListener.resultsSelected(set);
 				}
 				else {
-					getWindow().showNotification(
+					Notification.show(
 							"Information", "Please select one or more result rows!", 
-							Notification.TYPE_TRAY_NOTIFICATION);
+							Type.TRAY_NOTIFICATION);
 				}
 			}
 
 
 		});
-		btSelectAll.addListener(new ClickListener() {
+		btSelectAll.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				selectAllForKwic(true);
 			}
 		});
-		btDeselectAll.addListener(new ClickListener() {
+		btDeselectAll.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				selectAllForKwic(false);
 			}
 		});
 		
-		btUntagResults.addListener(new ClickListener() {
+		btUntagResults.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				untagResults();
 			}
 		});
 		
-		btSelectAllKwic.addListener(new ClickListener() {
+		btSelectAllKwic.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				kwicPanel.selectAll();
 			}
 		});
 		
-		btKwicExcelExport.addListener(new ClickListener() {
+		btKwicExcelExport.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
             	try {
@@ -347,18 +351,18 @@ public class MarkupResultPanel extends VerticalLayout {
 					excelExport.setReportTitle("CATMA Query Result Kwic");
 					excelExport.export();
 				} catch (IllegalArgumentException e) {
-					getWindow().showNotification(
+					HTMLNotification.show(
 						"Error", 
 						"Excel export failed. " + "<br>" + "Reason: " 
 						+ e.getMessage() + "<br>" + "Please use CSV export.", 
-						Notification.TYPE_WARNING_MESSAGE, true);
+						Type.WARNING_MESSAGE);
 					
 					e.printStackTrace();
 				}
 			}
 		});
 		
-		btKwicCsvExport.addListener(new ClickListener() {
+		btKwicCsvExport.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {         
 				try {
@@ -367,13 +371,13 @@ public class MarkupResultPanel extends VerticalLayout {
 					csvExport.sendConverted();
 				}
 				catch (CsvExportException e) {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							"Error creating CSV export!", e);
 				}
 			}
 		});
 
-		btResultExcelExport.addListener(new ClickListener() {
+		btResultExcelExport.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				try {
@@ -383,22 +387,22 @@ public class MarkupResultPanel extends VerticalLayout {
 	                excelExport.setReportTitle("CATMA Query Result");
 	                excelExport.export();
 				} catch (IllegalArgumentException e) {
-					getWindow().showNotification(
+					HTMLNotification.show(
 						"Error", 
 						"Excel export failed. " + "<br>" + "Reason: " 
 						+ e.getMessage() + "<br>" + "Please use CSV export.", 
-						Notification.TYPE_WARNING_MESSAGE, true);
+						Type.WARNING_MESSAGE);
 					
 					e.printStackTrace();
 				}
 			}
 		});
 		
-		btResultCsvExport.addListener(new ClickListener() {
+		btResultCsvExport.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				try {
-					if(!cbFlatTable.booleanValue()) {
+					if(!cbFlatTable.getValue()) {
 						cbFlatTable.setValue(Boolean.TRUE);
 					}
 					CsvExport csvExport = new CsvExport(resultTable);
@@ -406,7 +410,7 @@ public class MarkupResultPanel extends VerticalLayout {
 					csvExport.sendConverted();
 				}
 				catch (CsvExportException e) {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							"Error creating CSV export!", e);
 				}
 			}
@@ -414,13 +418,13 @@ public class MarkupResultPanel extends VerticalLayout {
 	}
 	
 	private void handleCbFlatTableRequest() {
-		cbPropAsColumns.setVisible(cbFlatTable.booleanValue());
+		cbPropAsColumns.setVisible(cbFlatTable.getValue());
 		QueryResult queryResult = getQueryResult();
 		
 		try {
 			setQueryResult(queryResult);
 		} catch (IOException e) {
-			((CatmaApplication)getApplication()).showAndLogError(
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"error converting Query Result!", e);
 		}
 	}
@@ -432,7 +436,7 @@ public class MarkupResultPanel extends VerticalLayout {
 	private void untagResults() {
 		final Set<QueryResultRow> selection = kwicPanel.getSelection();
 		if ((selection != null) && !selection.isEmpty()) {
-			ConfirmDialog.show(getApplication().getMainWindow(), 
+			ConfirmDialog.show(UI.getCurrent(), 
 					"Remove Tag Instances", 
 					"Do you want to remove the selected Tag Instances?", 
 					"Yes", "No", new ConfirmDialog.Listener() {
@@ -457,7 +461,7 @@ public class MarkupResultPanel extends VerticalLayout {
 							umcManager.removeTagInstance(toBeDeletedIDs);
 							
 						} catch (IOException e) {
-							((CatmaApplication)getApplication()).showAndLogError(
+							((CatmaApplication)UI.getCurrent()).showAndLogError(
 									"Error untagging search results!", e);
 						}
 					}
@@ -467,10 +471,10 @@ public class MarkupResultPanel extends VerticalLayout {
 
 		}
 		else {
-			getWindow().showNotification(
+			Notification.show(
 					"Information", 
 					"Please select one or more rows in the Kwic view first!",
-					Notification.TYPE_TRAY_NOTIFICATION);
+					Type.TRAY_NOTIFICATION);
 		}
 	}
 
@@ -520,7 +524,7 @@ public class MarkupResultPanel extends VerticalLayout {
 				tagQueryResult.add(row);
 			}
 			catch (IOException ioe) {
-				((CatmaApplication)getApplication()).showAndLogError(
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error preparing markup results!",
 						ioe);
 			}
@@ -579,13 +583,11 @@ public class MarkupResultPanel extends VerticalLayout {
 		buttonPanel.setWidth("100%");
 		
 		btDist = new Button();
-		btDist.setIcon(new ClassResource(
-				"ui/analyzer/resources/chart.gif", 
-				getApplication()));
+		btDist.setIcon(new ClassResource("ui/analyzer/resources/chart.gif"));
 		buttonPanel.addComponent(btDist);
 		
 		btResultExcelExport = new Button();
-		btResultExcelExport.setIcon(new ThemeResource("../images/table-excel.png"));
+		btResultExcelExport.setIcon(new ClassResource("ui/analyzer/resources/excel.png"));
 		btResultExcelExport.setDescription(
 				"Export all Query result data as an Excel spreadsheet.");
 		buttonPanel.addComponent(btResultExcelExport);
@@ -593,8 +595,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 		btResultCsvExport = new Button();
 		btResultCsvExport.setIcon(new ClassResource(
-				"ui/analyzer/resources/csv_text.png", 
-				getApplication())); //http://findicons.com/icon/84601/csv_text
+				"ui/analyzer/resources/csv_text.png")); //http://findicons.com/icon/84601/csv_text
 		btResultCsvExport.setDescription(
 				"Export all Query result data as a flat CSV File.");
 		buttonPanel.addComponent(btResultCsvExport);
@@ -649,7 +650,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		kwicButtonPanel.setWidth("100%");
 		
 		btKwicExcelExport = new Button();
-		btKwicExcelExport.setIcon(new ThemeResource("../images/table-excel.png"));
+		btKwicExcelExport.setIcon(new ClassResource("ui/analyzer/resources/excel.png"));
 		btKwicExcelExport.setDescription(
 				"Export all Query result data as an Excel spreadsheet.");
 		kwicButtonPanel.addComponent(btKwicExcelExport);
@@ -658,8 +659,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 		btKwicCsvExport = new Button();
 		btKwicCsvExport.setIcon(new ClassResource(
-				"ui/analyzer/resources/csv_text.png", 
-				getApplication())); //http://findicons.com/icon/84601/csv_text
+				"ui/analyzer/resources/csv_text.png")); //http://findicons.com/icon/84601/csv_text
 		btKwicCsvExport.setDescription(
 				"Export all Query result data as CSV File.");
 		kwicButtonPanel.addComponent(btKwicCsvExport);
@@ -678,9 +678,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		kwicButtonPanel.setExpandRatio(btUntagResults, 0f);
 		
 		Label helpLabel = new Label();
-		helpLabel.setIcon(new ClassResource(
-				"ui/resources/icon-help.gif", 
-				getApplication()));
+		helpLabel.setIcon(new ClassResource("ui/resources/icon-help.gif"));
 		helpLabel.setWidth("20px");
 		
 		helpLabel.setDescription(
@@ -768,7 +766,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 		if (!(queryResult instanceof GroupedQueryResultSet)) { // performance opt for Wordlists which are freqency based GroupedQueryResultSets
 																// and we want to avoid expensive iteration
-			if (cbFlatTable.booleanValue() && cbPropAsColumns.booleanValue()) {
+			if (cbFlatTable.getValue() && cbPropAsColumns.getValue()) {
 				resetColumns = true;
 				totalFreq = setQueryResultGroupedByTagInstance(
 						queryResult, tagDefinitions);
@@ -788,6 +786,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 	}
 	
+	@SuppressWarnings("unchecked")
 	private int setQueryResultGroupedByTagInstance(
 			QueryResult queryResult,
 			Set<String> tagDefinitions) throws IOException {
@@ -896,7 +895,7 @@ public class MarkupResultPanel extends VerticalLayout {
 			if (row instanceof TagQueryResultRow) {
 				TagQueryResultRow tRow = (TagQueryResultRow)row;
 				tagDefinitions.add(tRow.getTagDefinitionId());
-				if (cbFlatTable.booleanValue()) {
+				if (cbFlatTable.getValue()) {
 					addFlatTagQueryResultRow(tRow);
 				}
 				else {
@@ -912,7 +911,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		ArrayList<Object> visibleColumns = new ArrayList<Object>();
 		visibleColumns.add(TreePropertyName.caption);
 		
-		if (cbFlatTable.booleanValue()) {
+		if (cbFlatTable.getValue()) {
 			visibleColumns.add(TreePropertyName.sourcedocument);
 			visibleColumns.add(TreePropertyName.markupcollection);
 			visibleColumns.add(TreePropertyName.phrase);
@@ -935,6 +934,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		return totalFreq;
 	}
 
+	@SuppressWarnings("unchecked")
 	private void addFlatTagQueryResultRow(TagQueryResultRow row) throws IOException {
 		String markupCollectionsId = row.getMarkupCollectionId();
 		SourceDocument sourceDocument = 
@@ -967,6 +967,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		resultTable.setChildrenAllowed(wrapper, false);
 	}
 
+	@SuppressWarnings("unchecked")
 	private void addTagQueryResultRow(final TagQueryResultRow row) 
 				throws IOException {
 		
@@ -990,7 +991,7 @@ public class MarkupResultPanel extends VerticalLayout {
 								resultTable, tagDefinitionItemID)));
 		}
 
-		Property tagDefFreqProperty = 
+		Property<Integer> tagDefFreqProperty = 
 				resultTable.getItem(tagDefinitionItemID).getItemProperty(
 						TreePropertyName.frequency);
 		tagDefFreqProperty.setValue(((Integer)tagDefFreqProperty.getValue())+1);
@@ -1011,7 +1012,7 @@ public class MarkupResultPanel extends VerticalLayout {
 			resultTable.setParent(sourceDocumentItemID, tagDefinitionItemID);
 		}
 		
-		Property sourceDocFreqProperty = 
+		Property<Integer> sourceDocFreqProperty = 
 				resultTable.getItem(sourceDocumentItemID).getItemProperty(
 						TreePropertyName.frequency);
 		sourceDocFreqProperty.setValue(
@@ -1031,7 +1032,7 @@ public class MarkupResultPanel extends VerticalLayout {
 			resultTable.setParent(umcItemID, sourceDocumentItemID);
 		}
 		
-		Property userMarkupCollFreqProperty = 
+		Property<Integer> userMarkupCollFreqProperty = 
 				resultTable.getItem(umcItemID).getItemProperty(
 						TreePropertyName.frequency);
 		userMarkupCollFreqProperty.setValue(
@@ -1067,11 +1068,11 @@ public class MarkupResultPanel extends VerticalLayout {
 			final TreeEntrySelectionHandler treeEntrySelectionHandler) {
 		final CheckBox cbShowInKwicView = new CheckBox();
 		cbShowInKwicView.setImmediate(true);
-		cbShowInKwicView.addListener(new ValueChangeListener() {
+		cbShowInKwicView.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				boolean selected = 
-						cbShowInKwicView.booleanValue();
+						cbShowInKwicView.getValue();
 
 				fireShowInKwicViewSelected(
 					treeEntrySelectionHandler, selected);
@@ -1092,7 +1093,7 @@ public class MarkupResultPanel extends VerticalLayout {
 			try {
 				kwicPanel.addQueryResultRows(queryResult);
 			} catch (IOException e) {
-				((CatmaApplication)getApplication()).showAndLogError(
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"Error showing KWIC results!", e);
 			}
 		}

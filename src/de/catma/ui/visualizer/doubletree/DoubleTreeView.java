@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.terminal.ExternalResource;
+import com.vaadin.server.ExternalResource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
@@ -28,13 +28,12 @@ public class DoubleTreeView  extends Panel implements ClosableTab {
 		doubleTree.setupFromArrays(kwics, true);
 	}
 
+	
 	private void initActions() {
-		cbCaseSensitive.addListener(new ValueChangeListener() {
+		cbCaseSensitive.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
-				
-				doubleTree.setupFromArrays(kwics, cbCaseSensitive.booleanValue());
-				requestRepaint();
+				doubleTree.setupFromArrays(kwics, cbCaseSensitive.getValue());
 			}
 		});
 		
@@ -74,7 +73,6 @@ public class DoubleTreeView  extends Panel implements ClosableTab {
 		
 		content.addComponent(doubleTree);
 		setContent(content);
-		setScrollable(true);
 		setScrollLeft(400);
 	}
 	

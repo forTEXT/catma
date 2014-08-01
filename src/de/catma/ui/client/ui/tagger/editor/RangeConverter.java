@@ -18,10 +18,11 @@
  */   
 package de.catma.ui.client.ui.tagger.editor;
 
+import java.util.logging.Logger;
+
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
-import com.vaadin.terminal.gwt.client.VConsole;
 
 import de.catma.ui.client.ui.tagger.DebugUtil;
 import de.catma.ui.client.ui.tagger.impl.SelectionHandlerImplStandard.Range;
@@ -38,6 +39,8 @@ public class RangeConverter {
 		LEFT;
 	}
 
+	private static Logger logger = Logger.getLogger(RangeConverter.class.getName());
+	
 	private String taggerID;
 
 	
@@ -59,7 +62,7 @@ public class RangeConverter {
 		int startPos = findPos(startNode, root)+startOffset;
 		int endPos = findPos(endNode, root)+endOffset;
 		TextRange tr = new TextRange(startPos, endPos);
-		VConsole.log("RANGE!: " + tr);
+		logger.info("RANGE!: " + tr);
 		
 		return tr;
 	}
@@ -70,7 +73,7 @@ public class RangeConverter {
 		
 		Node textLeaf = LeafFinder.getFirstTextLeaf(root);
 		//TODO: should not return null, but better handle this case here and elsewhere in this class 
-		VConsole.log("converting Text- to NodeRange starting at first text leaf: " + DebugUtil.getNodeInfo(textLeaf));
+		logger.info("converting Text- to NodeRange starting at first text leaf: " + DebugUtil.getNodeInfo(textLeaf));
 		
 		LeafFinder leafFinder = new LeafFinder(textLeaf,root);
 		NodeRange nodeRange = new NodeRange();
@@ -78,10 +81,10 @@ public class RangeConverter {
 		
 		findAndAddNode(lastSize, leafFinder, nodeRange.getStartNode(), textRange.getEndPos(), nodeRange);
 		
-		VConsole.log("STARTNODE!: " + nodeRange.getStartNode().getNodeValue());
-		VConsole.log("STARTPOS!: " + nodeRange.getStartOffset());
-		VConsole.log("ENDNODE!: " + nodeRange.getEndNode().getNodeValue());
-		VConsole.log("ENDPOS!: " + nodeRange.getEndOffset());
+		logger.info("STARTNODE!: " + nodeRange.getStartNode().getNodeValue());
+		logger.info("STARTPOS!: " + nodeRange.getStartOffset());
+		logger.info("ENDNODE!: " + nodeRange.getEndNode().getNodeValue());
+		logger.info("ENDPOS!: " + nodeRange.getEndOffset());
 		
 		return nodeRange;
 	}
@@ -97,10 +100,10 @@ public class RangeConverter {
 			int endOffset = range.getEndOffset();
 			
 			DebugUtil.printNode(startNode);
-			VConsole.log("startOffset: " + startOffset);
+			logger.info("startOffset: " + startOffset);
 			
 			DebugUtil.printNode(endNode);
-			VConsole.log("endOffset: " + endOffset);
+			logger.info("endOffset: " + endOffset);
 
 			
 			if (taggerElement.isOrHasChild(endNode) 
@@ -108,25 +111,25 @@ public class RangeConverter {
 
 				if (Element.is(startNode)) {
 					startNode = findClosestTextNode(startNode.getChild(startOffset),Direction.RIGHT);
-					VConsole.log("Found closest text node for startNode: ");
+					logger.info("Found closest text node for startNode: ");
 					DebugUtil.printNode(startNode);
 					startOffset = 0;
 				}
 	
 				if (Element.is(endNode)) {
 					endNode = findClosestTextNode(endNode.getChild(endOffset), Direction.LEFT);
-					VConsole.log("Found closest text node for endNode: ");
+					logger.info("Found closest text node for endNode: ");
 					DebugUtil.printNode(endNode);
 					endOffset = endNode.getNodeValue().length();
 				}
 				nodeRange = new NodeRange(startNode, startOffset, endNode, endOffset);
 			}
 			else {
-				VConsole.log("at least one node is out of the tagger's bounds");
+				logger.info("at least one node is out of the tagger's bounds");
 			}
 		}
 		else {
-			VConsole.log("range is empty or out of the tagger's bounds");
+			logger.info("range is empty or out of the tagger's bounds");
 		}
 		
 		return nodeRange;
@@ -161,7 +164,7 @@ public class RangeConverter {
 	private int findAndAddNode(
 			int startPos, LeafFinder leafFinder, Node textLeaf, 
 			int pos, NodeRange nodeRange) {
-		VConsole.log(
+		logger.info(
 			"looking for position " + pos 
 			+ " from startpos " + pos + "@" + DebugUtil.getNodeInfo(textLeaf));
 		

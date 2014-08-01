@@ -20,8 +20,4 @@ public class DoubleTreeWidget extends FocusWidget {
 		doubleTree.init(getElement().getId());
 		doubleTree.setupFromArrays(prefix, tokens, postfix, caseSensitive);
 	}
-	
-	public void setVisWidth(int width) {
-		doubleTree.visWidth(width);
-	}
 }

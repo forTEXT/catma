@@ -462,6 +462,13 @@ public class DBRepository implements IndexedRepository {
 	
 	public void delete(SourceDocument sourceDocument) throws IOException {
 		dbSourceDocumentHandler.remove(sourceDocument);
+		try {
+			DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+			dbCorpusHandler.reloadCorpora(db);
+		}
+		catch (Exception e) {
+			throw new IOException(e);
+		}	
 	}
 
 	public SourceDocument getSourceDocument(UserMarkupCollectionReference umcRef) {
@@ -620,14 +627,14 @@ public class DBRepository implements IndexedRepository {
 				userMarkupCollectionReference, contentInfoSet);
 	}
 
-	public void update(final TagInstance tagInstance, final Property property)
+	public void update(final TagInstance tagInstance, final Collection<Property> properties)
 			throws IOException {
 		execShield.execute( new DBOperation<Void>() {
 			public Void execute() throws Exception {
-				dbUserMarkupCollectionHandler.updateProperty(tagInstance, property);
+				dbUserMarkupCollectionHandler.updateProperty(tagInstance, properties);
 				propertyChangeSupport.firePropertyChange(
 						RepositoryChangeEvent.propertyValueChanged.name(),
-						tagInstance, property);
+						tagInstance, properties);
 				return null;
 			}
 		});
@@ -638,6 +645,13 @@ public class DBRepository implements IndexedRepository {
 			UserMarkupCollectionReference userMarkupCollectionReference)
 			throws IOException {
 		dbUserMarkupCollectionHandler.delete(userMarkupCollectionReference);
+		try {
+			DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+			dbCorpusHandler.reloadCorpora(db);
+		}
+		catch (Exception e) {
+			throw new IOException(e);
+		}	
 	}
 
 

@@ -24,6 +24,7 @@ import java.net.URL;
 
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
@@ -88,7 +89,7 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 			}
 		});
 		
-		remoteURIInput.addListener(new TextChangeListener() {
+		remoteURIInput.addTextChangeListener(new TextChangeListener() {
 			
 			public void textChange(TextChangeEvent event) {
 				
@@ -119,9 +120,9 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 
 	private void initComponents() {
 		setSpacing(true);
-		setMargin(true, false, false, false);
+		setMargin(true);
 		
-		setSizeFull();
+//		setSizeFull();
 		HorizontalLayout remoteLayout = new HorizontalLayout();
 		remoteLayout.setMargin(true);
 		remoteLayout.setSpacing(true);
@@ -133,7 +134,7 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		remoteURIInput.setCaption("Enter an URI that is accessible over the internet:");
 		remoteURIInput.setWidth("100%");
 		remoteURIInput.setTextChangeEventMode(TextChangeEventMode.EAGER);
-		remoteURIInputPanel.addComponent(remoteURIInput);
+		remoteLayout.addComponent(remoteURIInput);
 		remoteLayout.setExpandRatio(remoteURIInput, 2);
 		
 		addComponent(remoteURIInputPanel);

@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.vaadin.data.util.AbstractProperty;
+import com.vaadin.data.util.converter.Converter.ConversionException;
 
 public class StringListProperty extends AbstractProperty {
 

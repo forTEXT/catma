@@ -84,7 +84,7 @@ public class WordPanel extends GridLayout{
 	private void initActions(
 			final List<WordPanel> wordPanelList, ValueChangeListener valueChangeListener) {
 		if (withPositionBox) {
-			btRemove.addListener(new ClickListener() {
+			btRemove.addClickListener(new ClickListener() {
 				
 				public void buttonClick(ClickEvent event) {
 					((ComponentContainer)WordPanel.this.getParent()).removeComponent(
@@ -93,7 +93,7 @@ public class WordPanel extends GridLayout{
 				}
 			});
 		}
-		exactField.addListener(new ValueChangeListener() {
+		exactField.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				String value = (String)event.getProperty().getValue();
@@ -105,10 +105,10 @@ public class WordPanel extends GridLayout{
 				}
 			}
 		});
-		startsWithField.addListener(valueChangeListener);
-		containsField.addListener(valueChangeListener);
-		endsWithField.addListener(valueChangeListener);
-		exactField.addListener(valueChangeListener);
+		startsWithField.addValueChangeListener(valueChangeListener);
+		containsField.addValueChangeListener(valueChangeListener);
+		endsWithField.addValueChangeListener(valueChangeListener);
+		exactField.addValueChangeListener(valueChangeListener);
 	}
 
 	private void setWildcardInputFieldsEnabled(boolean enabled) {

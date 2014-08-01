@@ -45,8 +45,11 @@ import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
-import com.vaadin.terminal.DownloadStream;
-import com.vaadin.terminal.FileResource;
+import com.vaadin.server.DownloadStream;
+import com.vaadin.server.FileResource;
+import com.vaadin.server.Page;
+import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -57,12 +60,14 @@ import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.Tree.TreeDragMode;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.CatmaApplication;
@@ -188,7 +193,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 							userMarkupCollectionReference);
 				}
 				else { // update
-					documentsTree.requestRepaint();
+					documentsTree.markAsDirty();
 				}
 			}
 		};
@@ -218,7 +223,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	}
 
 	private void initActions() {
-		btAddDocument.addListener(new ClickListener() {
+		btAddDocument.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				
@@ -239,7 +244,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 										generateStarterKit(wizardResult.getSourceDocument());
 									}
 								} catch (IOException e) {
-									((CatmaApplication)getApplication()).showAndLogError(
+									((CatmaApplication)UI.getCurrent()).showAndLogError(
 										"Error adding the Source Document!", e);
 								}
 							}
@@ -259,14 +264,14 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						factory.createWizardWindow(
 								"Add new Source Document", "85%",  "98%");
 				
-				getApplication().getMainWindow().addWindow(
+				UI.getCurrent().addWindow(
 						sourceDocCreationWizardWindow);
 				
 				sourceDocCreationWizardWindow.center();
 			}
 		});
 		
-		btOpenDocument.addListener(new ClickListener() {
+		btOpenDocument.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				final Object value = documentsTree.getValue();
@@ -274,7 +279,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 		});
 		
-		documentsTree.addListener(this);
+		documentsTree.addValueChangeListener(this);
 		
 		miMoreDocumentActions.addItem("Analyze Document", new Command() {
 			
@@ -396,7 +401,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 		});	
 		*/
-		btEditContentInfo.addListener(new ClickListener() {
+		btEditContentInfo.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				btEditContentInfo.setVisible(false);
@@ -406,7 +411,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 		});
 		
-		btSaveContentInfoChanges.addListener(new ClickListener() {
+		btSaveContentInfoChanges.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				btEditContentInfo.setVisible(true);
@@ -429,7 +434,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 		});
 		
-		btDiscardContentInfoChanges.addListener(new ClickListener() {
+		btDiscardContentInfoChanges.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				btEditContentInfo.setVisible(true);
@@ -440,7 +445,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 		});
 
-		documentsTree.addListener(new ItemClickListener() {
+		documentsTree.addItemClickListener(new ItemClickListener() {
 			
 			public void itemClick(ItemClickEvent event) {
 				//FIXME: documentsTree needs to be converted to TreeTable because Tree is buggy with double clicks
@@ -455,7 +460,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	private void handleSourceDocumentExportUTF8Request() {
 		Object value = documentsTree.getValue();
 		if ((value == null) || !(value instanceof SourceDocument)) {
-			 getWindow().showNotification(
+			 Notification.show(
                     "Information",
                     "Please select a Source Document first",
                     Notification.TYPE_TRAY_NOTIFICATION);
@@ -471,8 +476,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				final ByteArrayInputStream bis = 
 						new ByteArrayInputStream(bos.toByteArray());
 				
-				getWindow().open(new FileResource(null, getApplication()) {
-					public com.vaadin.terminal.DownloadStream getStream() {
+				Page.getCurrent().open(new FileResource(null) {
+					public DownloadStream getStream() {
 						DownloadStream ds = new DownloadStream(bis, 
 								getMIMEType(), getFilename());
 						ds.setParameter(
@@ -500,10 +505,11 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 							".txt";
 					};
 				},
-				"_blank");
+				"_blank",
+				true);
 				
 			} catch (IOException e) {
-				((CatmaApplication)getApplication()).showAndLogError("error exporting source document as plain text", e);
+				((CatmaApplication)UI.getCurrent()).showAndLogError("error exporting source document as plain text", e);
 			}
 			
 		}		
@@ -513,18 +519,18 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	private void handleSourceDocumentExportRequest() {
 		Object value = documentsTree.getValue();
 		if ((value == null) || !(value instanceof SourceDocument)) {
-			 getWindow().showNotification(
+			 Notification.show(
                     "Information",
                     "Please select a Source Document first",
-                    Notification.TYPE_TRAY_NOTIFICATION);
+                    Type.TRAY_NOTIFICATION);
 		}
 		else{
 			final SourceDocument sourceDocument = (SourceDocument)value;
 			
 			final File file = repository.getFile(sourceDocument);
 			
-			getWindow().open(new FileResource(null, getApplication()) {
-				public com.vaadin.terminal.DownloadStream getStream() {
+			Page.getCurrent().open(new FileResource(null) {
+				public DownloadStream getStream() {
 					
 					try {
 						DownloadStream  ds = new DownloadStream(
@@ -558,7 +564,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						"." + sourceContentHandler.getSourceDocumentInfo().getTechInfoSet().getFileType().name().toLowerCase();
 				};
 			},
-			"_blank");
+			"_blank",
+			true);
 			
 		}
 	}
@@ -586,12 +593,12 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 									result.getAccessMode());
 						} catch (IOException e) {
 							if (e.getCause() instanceof UnknownUserException) {
-								getWindow().showNotification(
+								Notification.show(
 										"Sharing failed!", e.getCause().getMessage(), 
-										Notification.TYPE_WARNING_MESSAGE);
+										Type.WARNING_MESSAGE);
 							}
 							else {
-								((CatmaApplication)getApplication()).showAndLogError(
+								((CatmaApplication)UI.getCurrent()).showAndLogError(
 									"Error sharing this corpus!", e);
 							}
 						}
@@ -599,22 +606,22 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				});
 			sharingOptionsDlg.setVisibleItemProperties(
 					new Object[] {"userIdentification", "accessMode"});
-			sharingOptionsDlg.show(getApplication().getMainWindow());
+			sharingOptionsDlg.show();
 		}
 		else {
-			getWindow().showNotification(
+			Notification.show(
 					"Information", "Please select a User Markup Collection first!",
-					Notification.TYPE_TRAY_NOTIFICATION);
+					Type.TRAY_NOTIFICATION);
 		}
 	}
 
 	private void handleShareSourceDocumentRequest() {
 		Object value = documentsTree.getValue();
 		if ((value == null) || !(value instanceof SourceDocument)) {
-			 getWindow().showNotification(
+			 Notification.show(
                     "Information",
                     "Please select a Source Document first",
-                    Notification.TYPE_TRAY_NOTIFICATION);
+                    Type.TRAY_NOTIFICATION);
 		}
 		else{
 			final SourceDocument sourceDocument = (SourceDocument)value;
@@ -634,12 +641,12 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 									result.getAccessMode());
 						} catch (IOException e) {
 							if (e.getCause() instanceof UnknownUserException) {
-								getWindow().showNotification(
+								Notification.show(
 										"Sharing failed!", e.getCause().getMessage(), 
-										Notification.TYPE_WARNING_MESSAGE);
+										Type.WARNING_MESSAGE);
 							}
 							else {
-								((CatmaApplication)getApplication()).showAndLogError(
+								((CatmaApplication)UI.getCurrent()).showAndLogError(
 									"Error sharing this corpus!", e);
 							}
 						}
@@ -647,7 +654,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				});
 			sharingOptionsDlg.setVisibleItemProperties(
 					new Object[] {"userIdentification", "accessMode"});
-			sharingOptionsDlg.show(getApplication().getMainWindow());
+			sharingOptionsDlg.show();
 		}
 		
 	}
@@ -724,7 +731,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 													tsd, td);
 												
 											} catch (IOException e) {
-												((CatmaApplication)getApplication()).showAndLogError(
+												((CatmaApplication)UI.getCurrent()).showAndLogError(
 													"Error creating the Example Tagset and Tag Definitions!", e);
 											}
 											
@@ -738,7 +745,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 								repository.removePropertyChangeListener(
 									RepositoryChangeEvent.userMarkupCollectionChanged, this);
 							} catch (IOException e) {
-								((CatmaApplication)getApplication()).showAndLogError(
+								((CatmaApplication)UI.getCurrent()).showAndLogError(
 										"Error creating Example Tag Library!", e);
 							}
 						}
@@ -748,7 +755,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			repository.createUserMarkupCollection(
 					name, sourceDocument);
 		} catch (IOException e) {
-			((CatmaApplication)getApplication()).showAndLogError(
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error creating Example User Markup Collection!", e);
 		}
 		
@@ -769,12 +776,12 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						new TagsetDefinitionUpdateLog(), 
 						umc);
 				}
-				getWindow().showNotification(
+				Notification.show(
 						"Information", "Reindexing finished!", 
-						Notification.TYPE_TRAY_NOTIFICATION);
+						Type.TRAY_NOTIFICATION);
 			}
 			catch (IOException ioe) {
-				((CatmaApplication)getApplication()).showAndLogError(
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"error reindexing User Markup Collection!", ioe);
 			}
 		}
@@ -799,8 +806,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				final ByteArrayInputStream teiDownloadStream = 
 						new ByteArrayInputStream(teiDocOut.toByteArray());
 
-				getWindow().open(new FileResource(null, getApplication()) {
-					public com.vaadin.terminal.DownloadStream getStream() {
+				Page.getCurrent().open(new FileResource(null) {
+					public DownloadStream getStream() {
 						DownloadStream ds = 
 							new DownloadStream(
 								teiDownloadStream, 
@@ -820,29 +827,30 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						return umcRef.toString().replaceAll("\\s", "_") + ".xml";
 					};
 				},
-				"_blank");
+				"_blank",
+				true);
 			} catch (IOException e) {
-				((CatmaApplication)getApplication()).showAndLogError(
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"Error exporting User Markup Collection!", e);
 			}
 			
 		}
 		else {
-			getWindow().showNotification(
+			Notification.show(
 					"Information", "Please select a User Markup Collection first!",
-					Notification.TYPE_TRAY_NOTIFICATION);
+					Type.TRAY_NOTIFICATION);
 		}
 		
 	}
 
 	private void handleOpenDocumentRequest(final Object value) {
 		if (value==null) {
-			getWindow().showNotification(
+			Notification.show(
 					"Information", "Please select a document first!",
-					Notification.TYPE_TRAY_NOTIFICATION);
+					Type.TRAY_NOTIFICATION);
 		}
 		if (value instanceof SourceDocument) {
-			((CatmaApplication)getApplication()).openSourceDocument(
+			((CatmaApplication)UI.getCurrent()).openSourceDocument(
 					(SourceDocument)value, repository);
 		}
 		else if (value instanceof StaticMarkupCollectionReference) {
@@ -854,7 +862,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					(SourceDocument)documentsTree.getParent(
 							documentsTree.getParent(value));
 			final CatmaApplication application = 
-					(CatmaApplication)getApplication();
+					(CatmaApplication)UI.getCurrent();
 			application.submit(
 					"Loading Markup collection...",
 					new DefaultProgressCallable<UserMarkupCollection>() {
@@ -875,7 +883,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						}
 						
 						public void error(Throwable t) {
-							((CatmaApplication)getApplication()).showAndLogError(
+							((CatmaApplication)UI.getCurrent()).showAndLogError(
 									"Error loading markup collection!", t);
 						}
 					});
@@ -889,7 +897,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		if (value instanceof SourceDocument) {
 			final SourceDocument sd = (SourceDocument)value;
 			ConfirmDialog.show(
-					getApplication().getMainWindow(), 
+					UI.getCurrent(), 
 					"Do you really want to delete the Source Document '"
 							+ sd.toString() + "' and all its markup collections?",
 							
@@ -900,7 +908,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 								try {
 									repository.delete(sd);
 								} catch (IOException e) {
-									((CatmaApplication)getApplication()).showAndLogError(
+									((CatmaApplication)UI.getCurrent()).showAndLogError(
 											"Error deleting the Source Document!", e);
 								}
 							}
@@ -909,9 +917,9 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			
 		}
 		else {
-			getWindow().showNotification(
+			Notification.show(
 					"Information", "Please select a Source Document!",
-					Notification.TYPE_TRAY_NOTIFICATION);
+					Type.TRAY_NOTIFICATION);
 		}
 		
 	}
@@ -925,7 +933,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					if (sd.getUserMarkupCollectionRefs().isEmpty()) {
 						Corpus c = new Corpus(sd.toString());
 						c.addSourceDocument(sd);
-						((AnalyzerProvider)getApplication()).analyze(
+						((AnalyzerProvider)UI.getCurrent()).analyze(
 								c,
 								(IndexedRepository)repository);
 					}
@@ -938,27 +946,27 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 									public void cancelPressed() {/* noop */}
 									public void savePressed(Corpus result) {
 										
-										((AnalyzerProvider)getApplication()).analyze(
+										((AnalyzerProvider)UI.getCurrent()).analyze(
 												result,
 												(IndexedRepository)repository);
 										
 									}
 								});
-						dialog.show(getApplication().getMainWindow());
+						dialog.show();
 					}
 				}
 				else {
-					getWindow().showNotification(
+					Notification.show(
 						"Information", "Please select a Source Document first!",
-						Notification.TYPE_TRAY_NOTIFICATION);
+						Type.TRAY_NOTIFICATION);
 				}
 			}			
 		}
 		else {
-			getWindow().showNotification(
+			Notification.show(
 				"Information", 
 				"This repository is not indexed, analysis is not supported!",
-				Notification.TYPE_TRAY_NOTIFICATION);
+				Type.TRAY_NOTIFICATION);
 		}
 		
 	}
@@ -987,7 +995,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		
 		VerticalLayout outerDocumentsPanel = new VerticalLayout();
 		outerDocumentsPanel.setSpacing(true);
-		outerDocumentsPanel.setMargin(false, true, true, true);
+		outerDocumentsPanel.setMargin(new MarginInfo(false, true, true, true));
 		outerDocumentsPanel.setSizeFull();
 		
 		Component documentsPanel = createDocumentsPanel();
@@ -999,28 +1007,30 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	}
 
 	private Component createDocumentButtonsPanel() {
-		
-		Panel documentButtonsPanel = new Panel(new HorizontalLayout());
+		HorizontalLayout documentButtonsPanelContent = new HorizontalLayout();
+		Panel documentButtonsPanel = new Panel(documentButtonsPanelContent);
 		documentButtonsPanel.setStyleName(Reindeer.PANEL_LIGHT);
 
 		((HorizontalLayout)documentButtonsPanel.getContent()).setSpacing(true);
 		
 		btOpenDocument = new Button("Open Document");
-		documentButtonsPanel.addComponent(btOpenDocument);
+		documentButtonsPanelContent.addComponent(btOpenDocument);
 		btAddDocument = new Button("Add Document");
-		documentButtonsPanel.addComponent(btAddDocument);
+		documentButtonsPanelContent.addComponent(btAddDocument);
 
 		MenuBar menuMoreDocumentActions = new MenuBar();
 		miMoreDocumentActions = 
 				menuMoreDocumentActions.addItem("More actions...", null);
-		documentButtonsPanel.addComponent(menuMoreDocumentActions);
+		documentButtonsPanelContent.addComponent(menuMoreDocumentActions);
 		
 		return documentButtonsPanel;
 	}
 	
 	private Component createDocumentsPanel() {
+		VerticalLayout documentsPanelContent = new VerticalLayout();
+		documentsPanelContent.setMargin(true);
 		
-		Panel documentsPanel = new Panel();
+		Panel documentsPanel = new Panel(documentsPanelContent);
 		
 		documentsContainer = new HierarchicalContainer();
 		documentsTree = new Tree();
@@ -1028,10 +1038,10 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		documentsTree.setCaption("Documents");
 		documentsTree.addStyleName("bold-label-caption");
 		documentsTree.setImmediate(true);
-		documentsTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_ID);
+		documentsTree.setItemCaptionMode(ItemCaptionMode.ID);
 		documentsTree.setDragMode(TreeDragMode.NODE);
 		
-		documentsPanel.addComponent(documentsTree);
+		documentsPanelContent.addComponent(documentsTree);
 		documentsPanel.getContent().setSizeUndefined();
 		documentsPanel.setSizeFull();
 		
@@ -1083,7 +1093,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				repository.update(currentCorpus, sd);
 				setSourceDocumentsFilter(currentCorpus);
 			} catch (IOException e) {
-				((CatmaApplication)getApplication()).showAndLogError(
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"Error adding Source Document to Corpus! " +
 					"The Source Document has been added to 'All Documents's", e);
 			}
@@ -1104,7 +1114,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		VerticalLayout contentInfoPanel = new VerticalLayout();
 		contentInfoPanel.setSpacing(true);
 		contentInfoPanel.setSizeFull();
-		contentInfoPanel.setMargin(false, false, true, true);
+		contentInfoPanel.setMargin(new MarginInfo(false, false, true, true));
 		Component contentInfoForm = createContentInfoForm();
 		contentInfoPanel.addComponent(contentInfoForm);
 		contentInfoPanel.setExpandRatio(contentInfoForm, 1.0f);
@@ -1124,20 +1134,22 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		
 		btEditContentInfo = new Button("Edit");
 		btEditContentInfo.setEnabled(false);
-		contentInfoButtonsPanel.addComponent(btEditContentInfo);
+		content.addComponent(btEditContentInfo);
 		btSaveContentInfoChanges = new Button("Save");
 		btSaveContentInfoChanges.setVisible(false);
-		contentInfoButtonsPanel.addComponent(btSaveContentInfoChanges);
+		content.addComponent(btSaveContentInfoChanges);
 		btDiscardContentInfoChanges = new Button("Discard");
 		btDiscardContentInfoChanges.setVisible(false);
-		contentInfoButtonsPanel.addComponent(btDiscardContentInfoChanges);
+		content.addComponent(btDiscardContentInfoChanges);
 		
 		return contentInfoButtonsPanel;
 	}
 
 	private Component createContentInfoForm() {
+		VerticalLayout contentInfoPanelContent = new VerticalLayout();
+		contentInfoPanelContent.setMargin(true);
 		
-		Panel contentInfoPanel = new Panel();
+		Panel contentInfoPanel = new Panel(contentInfoPanelContent);
 		contentInfoPanel.getContent().setSizeUndefined();
 		contentInfoPanel.getContent().setWidth("100%");
 		contentInfoPanel.setSizeFull();
@@ -1145,7 +1157,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		contentInfoForm = new Form();
 		contentInfoForm.setSizeFull();
 		contentInfoForm.setCaption("Information");
-		contentInfoForm.setWriteThrough(false);
+		contentInfoForm.setBuffered(true);
 		contentInfoForm.setReadOnly(true);
 		contentInfoForm.setEnabled(false);
 		
@@ -1157,7 +1169,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		});
 		
 		contentInfoForm.setReadOnly(true);
-		contentInfoPanel.addComponent(contentInfoForm);
+		contentInfoPanelContent.addComponent(contentInfoForm);
 		
 		return contentInfoPanel;
 	}
@@ -1170,10 +1182,10 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	private void handleUserMarkupCollectionImportRequest() {
 		Object value = documentsTree.getValue();
 		if ((value == null) || !(value instanceof SourceDocument)) {
-			 getWindow().showNotification(
+			 Notification.show(
                     "Information",
                     "Please select a Source Document first",
-                    Notification.TYPE_TRAY_NOTIFICATION);
+                    Type.TRAY_NOTIFICATION);
 		}
 		else{
 			final SourceDocument sourceDocument = (SourceDocument)value;
@@ -1195,7 +1207,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						repository.importUserMarkupCollection(
 								is, sourceDocument);
 					} catch (IOException e) {
-						((CatmaApplication)getApplication()).showAndLogError(
+						((CatmaApplication)UI.getCurrent()).showAndLogError(
 							"Error importing the User Markup Collection!", e);
 					}
 					finally {
@@ -1204,7 +1216,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				}
 				
 			});
-			uploadDialog.show(getApplication().getMainWindow());		
+			uploadDialog.show();		
 		}
 	}
 
@@ -1216,7 +1228,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					(UserMarkupCollectionReference) selValue;
 			
 			ConfirmDialog.show(
-				getApplication().getMainWindow(), 
+				UI.getCurrent(), 
 				"Do you really want to delete the User Markup Collection '"
 						+ userMarkupCollectionReference.toString() + "'?",
 						
@@ -1227,7 +1239,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		                	try {
 								repository.delete(userMarkupCollectionReference);
 							} catch (IOException e) {
-								((CatmaApplication)getApplication()).showAndLogError(
+								((CatmaApplication)UI.getCurrent()).showAndLogError(
 									"Error deleting the User Markup Collection!", e);
 							}
 		                }
@@ -1240,10 +1252,10 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	private void handleUserMarkupCollectionCreation() {
 		Object value = documentsTree.getValue();
 		if (value == null) {
-			 getWindow().showNotification(
+			 Notification.show(
                     "Information",
                     "Please select a Source Document first",
-                    Notification.TYPE_TRAY_NOTIFICATION);
+                    Type.TRAY_NOTIFICATION);
 		}
 		else {
 			 while (!(value instanceof SourceDocument)){
@@ -1257,7 +1269,6 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			SingleValueDialog singleValueDialog = new SingleValueDialog();
 			
 			singleValueDialog.getSingleValue(
-					getApplication().getMainWindow(),
 					"Create a new User Markup Collection",
 					"You have to enter a name!",
 					new SaveCancelListener<PropertysetItem>() {
@@ -1272,7 +1283,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						repository.createUserMarkupCollection(
 								name, sourceDocument);
 					} catch (IOException e) {
-						((CatmaApplication)getApplication()).showAndLogError(
+						((CatmaApplication)UI.getCurrent()).showAndLogError(
 							"Error creating the User Markup Collection!", e);
 					}
 				}
@@ -1299,7 +1310,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				repository.update(currentCorpus, userMarkupCollRef);
 				setSourceDocumentsFilter(currentCorpus);
 			} catch (IOException e) {
-				((CatmaApplication)getApplication()).showAndLogError(
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error adding User Markup Collection to Corpus! " +
 								"The User Markup Collection has been added to 'All Documents's", e);
 			}
