@@ -11,11 +11,16 @@ import com.vaadin.ui.AbstractComponent;
 import de.catma.queryengine.result.computation.Distribution;
 import de.catma.queryengine.result.computation.XYValues;
 import de.catma.ui.client.ui.visualizer.chart.ChartClientRpc;
+import de.catma.ui.client.ui.visualizer.chart.shared.ChartOptions;
 
 public class Chart extends AbstractComponent {
 	
 	public Chart(Distribution distribution) {
-		getRpcProxy(ChartClientRpc.class).init(distribution.getSegmentSizeInPercent(), dataToJson(distribution));
+		getRpcProxy(ChartClientRpc.class).init(
+			new ChartOptions(
+				distribution.getLabel(),
+				distribution.getSegmentSizeInPercent(), 
+				dataToJson(distribution)));
 	}
 
 	private String dataToJson(Distribution distribution) {
@@ -30,9 +35,10 @@ public class Chart extends AbstractComponent {
 					valueArray.put(Double.valueOf(pair.getValue()));
 					dataArray.put(valueArray);
 				}
-				JSONObject dataObject = new JSONObject();
-				dataObject.put("data", dataArray);
-				seriesArray.put(dataObject);
+				JSONObject seriesObject = new JSONObject();
+				seriesObject.put("data", dataArray);
+				seriesObject.put("name", values.getKey().toString());
+				seriesArray.put(seriesObject);
 			}
 			
 			return seriesArray.toString();

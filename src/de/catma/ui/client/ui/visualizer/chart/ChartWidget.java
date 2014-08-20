@@ -1,11 +1,14 @@
 package de.catma.ui.client.ui.visualizer.chart;
 
 import java.util.Date;
+import java.util.logging.Logger;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.FocusWidget;
+
+import de.catma.ui.client.ui.visualizer.chart.shared.ChartOptions;
 
 public class ChartWidget extends FocusWidget {
 
@@ -18,17 +21,23 @@ public class ChartWidget extends FocusWidget {
 		getElement().setId("ChartWidget"+chartId);
 	}
 
-	void init(final double tickInterval, final String series) {
+	void init(final ChartOptions chartOptions) {
+		
 		if (isAttached()) {
-			chartJs = ChartJs.create(getElement().getId(), tickInterval, series);
+			chartJs = ChartJs.create(
+					getElement().getId(), chartOptions);
+			Logger.getLogger(ChartWidget.class.getName()).info("ATTACHED");
 		}
 		else {
+			Logger.getLogger(ChartWidget.class.getName()).info("NOT ATTACHED");
 			attachHandlerReg = addAttachHandler(new AttachEvent.Handler() {
 				
 				@Override
 				public void onAttachOrDetach(AttachEvent event) {
 					if (event.isAttached()) {
-						chartJs = ChartJs.create(getElement().getId(), tickInterval, series);
+						chartJs = ChartJs.create(
+								getElement().getId(), 
+								chartOptions);
 						if (attachHandlerReg != null) {
 							attachHandlerReg.removeHandler();
 						}				}
