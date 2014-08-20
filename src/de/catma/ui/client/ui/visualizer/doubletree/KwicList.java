@@ -1,4 +1,4 @@
-package de.catma.ui.client.ui.visualizer;
+package de.catma.ui.client.ui.visualizer.doubletree;
 
 import java.util.ArrayList;
 
@@ -7,7 +7,7 @@ import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 
 import de.catma.ui.client.ui.util.JSONSerializer;
-import de.catma.ui.client.ui.visualizer.shared.KwicSerializationField;
+import de.catma.ui.client.ui.visualizer.doubletree.shared.KwicSerializationField;
 
 public class KwicList {
 	

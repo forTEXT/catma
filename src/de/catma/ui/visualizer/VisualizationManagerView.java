@@ -40,13 +40,11 @@ public class VisualizationManagerView extends TabbedView {
 	private int addVisualization(
 		String caption, DistributionComputation distributionComputation) {
 		DistributionChartView distChartView =
-				new DistributionChartView(
-						distributionComputation.getPercentSegmentSize(), caption);
+				new DistributionChartView(caption, distributionComputation);
 		int id = getTabPosition(
 				addClosableTab(
 						distChartView, distChartView.toString()));
 		
-		distChartView.addDistributionComputation(distributionComputation);
 		return id;
 	}
 

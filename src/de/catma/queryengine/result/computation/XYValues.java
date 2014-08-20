@@ -20,18 +20,18 @@ package de.catma.queryengine.result.computation;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
-public class XYValues<X,Y> implements Iterable<Map.Entry<X,Y>> {
+public class XYValues<X extends Comparable<X>,Y> implements Iterable<Map.Entry<X,Y>> {
 	
 	private Object key;
 	private Map<X,Y> xySeries;
 	
 	public XYValues(Object key) {
 		this.key = key;
-		xySeries = new LinkedHashMap<X,Y>();
+		xySeries = new TreeMap<X,Y>();
 	}
 	
 	public void set(X x, Y y) {

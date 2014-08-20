@@ -7,7 +7,7 @@ import com.vaadin.ui.UI;
 
 import de.catma.document.source.KeywordInContext;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.client.ui.visualizer.DoubleTreeState;
+import de.catma.ui.client.ui.visualizer.doubletree.DoubleTreeState;
 import de.catma.ui.data.util.JSONSerializationException;
 
 public class DoubleTree extends AbstractComponent {

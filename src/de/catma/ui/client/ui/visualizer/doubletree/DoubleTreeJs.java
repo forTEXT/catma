@@ -1,9 +1,9 @@
-package de.catma.ui.client.ui.visualizer;
+package de.catma.ui.client.ui.visualizer.doubletree;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 
-import de.catma.ui.client.ui.visualizer.impl.DoubleTreeJsImplStandard;
+import de.catma.ui.client.ui.visualizer.doubletree.impl.DoubleTreeJsImplStandard;
 
 public final class DoubleTreeJs extends JavaScriptObject {
 	

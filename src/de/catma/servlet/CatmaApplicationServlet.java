@@ -31,8 +31,9 @@ import com.vaadin.server.VaadinServlet;
 public class CatmaApplicationServlet extends VaadinServlet {
 	
 	private enum JsLib {
-		JQUERY("jquery/jquery-1.7.2.min.js"),
-		HIGHCHARTS("highcharts/highcharts.js"),
+//		JQUERY("jquery/jquery-1.7.2.min.js"),
+		HIGHCHARTS_SL("highcharts/standalone-framework-4.0.3.js"),
+		HIGHCHARTS("highcharts/highcharts-4.0.3.js"),
 //		EXPORTING("highcharts/exporting.js"),
 //		D3("doubletreejs_debug/d3.v3.js"),
 //		CLASSLISTSUBSTITUTE("doubletreejs_debug/classListSubstitute.js"),

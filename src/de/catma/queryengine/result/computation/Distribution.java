@@ -18,37 +18,49 @@
  */
 package de.catma.queryengine.result.computation;
 
+import java.util.ArrayList;
+import java.util.List;
 
-public class PlotBand {
+
+public class Distribution {
 	
 	private String id;
 	private String label;
-	private double start;
-	private double end;
+	private List<XYValues<Integer, Integer>> xySeries;
+	private double segmentSize;
+	private int segmentSizeInPercent;
 	
-	public PlotBand(String id, String label, double start, double end) {
+	public Distribution(String id, String label,
+			double segmentSize,
+			int segmentSizeInPercent) {
+		super();
 		this.id = id;
 		this.label = label;
-		this.start = start;
-		this.end = end;
+		this.segmentSize = segmentSize;
+		this.segmentSizeInPercent = segmentSizeInPercent;
+		this.xySeries = new ArrayList<XYValues<Integer,Integer>>();
 	}
 
 	public String getLabel() {
 		return label;
 	}
 	
-	public double getStart() {
-		return start;
-	}
-	
-	public double getEnd() {
-		return end;
-	}
-	
 	public String getId() {
 		return id;
 	}
+	
+	public double getSegmentSize() {
+		return segmentSize;
+	}
 
+	public int getSegmentSizeInPercent() {
+		return segmentSizeInPercent;
+	}
+	
+	public List<XYValues<Integer, Integer>> getXySeries() {
+		return xySeries;
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -68,7 +80,7 @@ public class PlotBand {
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		PlotBand other = (PlotBand) obj;
+		Distribution other = (Distribution) obj;
 		if (id == null) {
 			if (other.id != null) {
 				return false;
@@ -77,6 +89,10 @@ public class PlotBand {
 			return false;
 		}
 		return true;
+	}
+
+	public void add(XYValues<Integer, Integer> xyValues) {
+		xySeries.add(xyValues);
 	}
 	
 	

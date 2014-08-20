@@ -18,85 +18,51 @@
  */
 package de.catma.ui.visualizer;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.VerticalLayout;
 
+import de.catma.queryengine.result.computation.Distribution;
 import de.catma.queryengine.result.computation.DistributionComputation;
-import de.catma.queryengine.result.computation.PlotBand;
 import de.catma.ui.tabbedview.ClosableTab;
+import de.catma.ui.visualizer.chart.Chart;
 
-public class DistributionChartView extends HorizontalLayout implements ClosableTab {
+public class DistributionChartView extends VerticalLayout implements ClosableTab {
 	
-//	private InvientCharts chart;
-//	private NumberXAxis xAxis;
+	private static final int ROW_LENGTH = 3;
 	private String label;
+	private List<Distribution> distributions = new ArrayList<Distribution>();
 
-	public DistributionChartView(int xAxisSegmentSize, String label) {
+	public DistributionChartView(String label, DistributionComputation distributionComputation) {
 		this.label = label;
-		initComponents(xAxisSegmentSize);
+		this.distributions.addAll(distributionComputation.getDistributions());
+		initComponents();
 	}
 
-	private void initComponents(int xAxisSegmentSize) {
-//		InvientChartsConfig chartConfig = new InvientChartsConfig();
-//		
-//        chartConfig.getGeneralChartConfig().setType(SeriesType.LINE);
-        
-//        chartConfig.getGeneralChartConfig().setMargin(new Margin());
-//        chartConfig.getGeneralChartConfig().getMargin().setRight(130);
-//        chartConfig.getGeneralChartConfig().getMargin().setBottom(150);
-
-//        chartConfig.getTitle().setX(-20);
-//        chartConfig.getTitle().setText("Distribution chart");
-//        chartConfig.getTitle().setX(-20);
-//
-//        xAxis = new NumberXAxis();
-//        xAxis.setMin(0.0);
-//        xAxis.setMax(100.0);
-//        LinkedHashSet<XAxis> xAxesSet = new LinkedHashSet<InvientChartsConfig.XAxis>();
-//        xAxesSet.add(xAxis);
-//        chartConfig.setXAxes(xAxesSet);
-
-//        NumberYAxis numberYAxis = new NumberYAxis();
-//        numberYAxis.setTitle(new AxisTitle("Type Occurrences"));
-//        numberYAxis.setMin(0.0);
-//        LinkedHashSet<YAxis> yAxesSet = 
-//        		new LinkedHashSet<InvientChartsConfig.YAxis>();
-//        yAxesSet.add(numberYAxis);
-//        chartConfig.setYAxes(yAxesSet);
-
-//        Legend legend = new Legend();
-//        legend.setLayout(Layout.VERTICAL);
-//        legend.setWidth(380);
-//        Position legendPos = new Position();
-//        legendPos.setAlign(HorzAlign.RIGHT);
-//        legendPos.setVertAlign(VertAlign.TOP);
-//        legendPos.setX(255);
-//        legendPos.setY(100);
-//        
-//        legend.setPosition(legendPos);
-//        legend.setBorderWidth(0);
-//        chartConfig.setLegend(legend);
-
-//         Series data label formatter
-//        LineConfig lineCfg = new LineConfig();
-//        chartConfig.addSeriesConfig(lineCfg);
-//        // Tooltip formatter
-//        chartConfig
-//                .getTooltip()
-//                .setFormatterJsFunc(
-//	                "function() { "
-//	                        + " return '<b>' + this.series.name + '</b><br/>' "
-//	                        + "+(this.x-"+(xAxisSegmentSize-(xAxisSegmentSize/2))
-//	                        + ")+'-'+ (this.x + " + (xAxisSegmentSize/2) + ") + "
-//	                        + "'%: '+ this.y +' occurrences'"
-//	                        + "}");
-//        chart = new InvientCharts(chartConfig);
-//        chart.setSizeFull();
-//        chart.setHeight("400px");
-//        chart.setWidth("600px");
-
-//        addComponent(chart);
+	private void initComponents() {
+		setSpacing(true);
+		
+		int rows = distributions.size()/ROW_LENGTH;
+		
+		if (distributions.size()%ROW_LENGTH!= 0) {
+			rows++;
+		}
+		
+		for (int rowIdx=0;rowIdx<rows;rowIdx++) {
+			HorizontalLayout row = new HorizontalLayout();
+			row.setSpacing(true);
+			
+			addComponent(row);
+			int rowLength = Math.min(distributions.size()-((rowIdx)*ROW_LENGTH), ROW_LENGTH);
+			
+			for (int colIdx=0; colIdx<rowLength; colIdx++) {
+				Chart chart = new Chart(distributions.get((rowIdx*ROW_LENGTH)+colIdx));
+				row.addComponent(chart);
+			}
+		}
+		
         setSizeFull();
 	}
 	
@@ -116,50 +82,6 @@ public class DistributionChartView extends HorizontalLayout implements ClosableT
 //        	chart.addSeries(seriesData);
 //        }
 //		addPlotBands(distributionComputation.getPlotBands());
-	}
-	
-	private void addPlotBands(Set<PlotBand> plotBands) {
-		for (PlotBand plotBand : plotBands){
-			addPlotBand(plotBand);
-		}
-	}
-
-	private void addPlotBand(PlotBand plotBand) {
-//	    NumberPlotBand numberPlotBand = new NumberPlotBand(plotBand.getId());
-//		if (!xAxis.getPlotBands().contains(numberPlotBand)) {
-//		    numberPlotBand.setRange(new NumberRange(plotBand.getStart(), plotBand.getEnd()));
-//		    String label = plotBand.getLabel().substring(0,Math.min(plotBand.getLabel().length(), 10));
-//		    if (label.length() < plotBand.getLabel().length()) {
-//		    	label += "...";
-//		    }
-//		    PlotLabel plotLabel = new PlotLabel(label);
-//		    plotLabel.setRotation(-90);
-//		    numberPlotBand.setLabel(plotLabel);
-//		    int[] color = ColorConverter.getRandomNonDarkColor();
-//		    while (colorExists(color)) {
-//		    	color = ColorConverter.getRandomNonDarkColor();
-//		    }
-//		    numberPlotBand.setColor(new RGBA(color[0], color[1], color[2], 0.2f));
-//		    xAxis.addPlotBand(numberPlotBand);
-//		}
-	}
-	
-	private boolean colorExists(int[] color) {
-//		for (NumberPlotBand numberPlotBand : xAxis.getPlotBands()) {
-//			
-//			RGBA existingColor = (RGBA)numberPlotBand.getColor();
-//			if ((existingColor.getRed() == color[0]) 
-//					&& (existingColor.getGreen() == color[1])
-//					&& (existingColor.getBlue() == color[2])) {
-//				return true;
-//			}
-//			
-//		}
-		return false;
-	}
-	
-	public String getLabel() {
-		return label;
 	}
 
 	public void close() { /* noop */ }

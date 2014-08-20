@@ -31,5 +31,5 @@
     <inherits name="com.vaadin.DefaultWidgetSet" />
 	<set-property name="user.agent" value="gecko1_8, safari, opera, ie9"/>  
 
-    <inherits name="com.invient.vaadin.charts.widgetset.InvientChartsWidgetset" />
+    
 </module>
