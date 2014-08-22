@@ -21,11 +21,15 @@ package de.catma.ui.visualizer;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.queryengine.result.computation.Distribution;
 import de.catma.queryengine.result.computation.DistributionComputation;
+import de.catma.ui.Slider;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.visualizer.chart.Chart;
 
@@ -34,14 +38,36 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 	private static final int ROW_LENGTH = 3;
 	private String label;
 	private List<Distribution> distributions = new ArrayList<Distribution>();
+	private Slider zoom;
+	private List<Chart> charts = new ArrayList<Chart>();
 
 	public DistributionChartView(String label, DistributionComputation distributionComputation) {
 		this.label = label;
 		this.distributions.addAll(distributionComputation.getDistributions());
-		initComponents();
+		initComponents(distributionComputation.getMaxOccurrences());
+		initActions();
 	}
 
-	private void initComponents() {
+	private void initActions() {
+		zoom.addValueListener(new ValueChangeListener() {
+			
+			@Override
+			public void valueChange(ValueChangeEvent event) {
+				adjustSize();
+			}
+		});
+	}
+
+	private void adjustSize() {
+		Double val = (Double) zoom.getValue();
+		for (Chart chart : charts) {
+			chart.setWidth(((300/50)*val)+"px");
+			chart.setHeight(((400/50)*val)+"px");
+		}
+		markAsDirty();
+	}
+
+	private void initComponents(int maxOccurrences) {
 		setSpacing(true);
 		
 		int rows = distributions.size()/ROW_LENGTH;
@@ -55,13 +81,25 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 			row.setSpacing(true);
 			
 			addComponent(row);
+			row.setHeight("400px");
+			row.setWidth("100%");
+			
 			int rowLength = Math.min(distributions.size()-((rowIdx)*ROW_LENGTH), ROW_LENGTH);
 			
 			for (int colIdx=0; colIdx<rowLength; colIdx++) {
-				Chart chart = new Chart(distributions.get((rowIdx*ROW_LENGTH)+colIdx));
+				Chart chart = new Chart(distributions.get((rowIdx*ROW_LENGTH)+colIdx), maxOccurrences);
+				chart.setWidth("300px");
+				chart.setHeight("400px");
 				row.addComponent(chart);
+				charts.add(chart);
 			}
 		}
+		
+		zoom = new Slider("Zoom", 0, 100, "%");
+		zoom.setValue(50.0);
+		
+//		addComponent(zoom);
+//		setComponentAlignment(zoom, Alignment.BOTTOM_CENTER);
 		
         setSizeFull();
 	}

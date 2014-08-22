@@ -85,7 +85,7 @@ public class Slider extends VerticalLayout {
 		return sliderComp.getValue();
 	}
 
-	public void addListener(ValueChangeListener listener) {
+	public void addValueListener(ValueChangeListener listener) {
 		sliderComp.addValueChangeListener(listener);
 	}
 

@@ -5,7 +5,6 @@ import com.google.gwt.core.client.JsonUtils;
 import com.google.gwt.core.shared.GWT;
 
 import de.catma.ui.client.ui.visualizer.chart.impl.ChartJsImplStandard;
-import de.catma.ui.client.ui.visualizer.chart.shared.ChartOptions;
 
 public class ChartJs extends JavaScriptObject {
 	
@@ -15,12 +14,7 @@ public class ChartJs extends JavaScriptObject {
 	
 	private static ChartJsImplStandard impl = GWT.create(ChartJsImplStandard.class);
 	
-	public static ChartJs create(
-			String targetSelector, ChartOptions chartOptions) {
-		return impl.create(
-				targetSelector, 
-				chartOptions.title, 
-				chartOptions.tickInterval, 
-				JsonUtils.safeEval(chartOptions.series));
+	public static ChartJs create(String configuration) {
+		return impl.create(JsonUtils.safeEval(configuration));
 	}
 }

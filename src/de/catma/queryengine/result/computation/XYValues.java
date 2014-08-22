@@ -24,10 +24,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-public class XYValues<X extends Comparable<X>,Y> implements Iterable<Map.Entry<X,Y>> {
+public class XYValues<X extends Comparable<X>,Y extends Comparable<Y>> implements Iterable<Map.Entry<X,Y>> {
 	
 	private Object key;
 	private Map<X,Y> xySeries;
+	private Y maxYValue = null;
 	
 	public XYValues(Object key) {
 		this.key = key;
@@ -35,6 +36,9 @@ public class XYValues<X extends Comparable<X>,Y> implements Iterable<Map.Entry<X
 	}
 	
 	public void set(X x, Y y) {
+		if ((maxYValue == null) || maxYValue.compareTo(y) < 0) {
+			maxYValue = y;
+		}
 		xySeries.put(x,y);
 	}
 
@@ -48,6 +52,10 @@ public class XYValues<X extends Comparable<X>,Y> implements Iterable<Map.Entry<X
 	
 	public Iterator<Entry<X, Y>> iterator() {
 		return xySeries.entrySet().iterator();
+	}
+	
+	public Y getMaxYValue() {
+		return maxYValue;
 	}
 	
 	@Override

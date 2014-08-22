@@ -1,5 +1,6 @@
 package de.catma.ui.visualizer.chart;
 
+import java.util.Date;
 import java.util.Map.Entry;
 
 import org.json.JSONArray;
@@ -11,20 +12,49 @@ import com.vaadin.ui.AbstractComponent;
 import de.catma.queryengine.result.computation.Distribution;
 import de.catma.queryengine.result.computation.XYValues;
 import de.catma.ui.client.ui.visualizer.chart.ChartClientRpc;
-import de.catma.ui.client.ui.visualizer.chart.shared.ChartOptions;
 
 public class Chart extends AbstractComponent {
 	
-	public Chart(Distribution distribution) {
+	private String chartId; 
+	
+	public Chart(Distribution distribution, int maxOccurrences) {
+		chartId = "ChartWidget" + new Date().getTime();
+		
 		getRpcProxy(ChartClientRpc.class).init(
-			new ChartOptions(
-				distribution.getLabel(),
-				distribution.getSegmentSizeInPercent(), 
-				dataToJson(distribution)));
+				chartId,
+				createConfiguration(distribution, maxOccurrences));
 	}
 
-	private String dataToJson(Distribution distribution) {
+	private String createConfiguration(Distribution distribution, int maxOccurrences) {
 		try {
+			JSONObject configuration = 
+				new JSONObject(
+					"{"+
+						"chart: {"+
+						    "renderTo: '"+ chartId +"',"+
+						    "zoomType: 'xy'"+
+					    "},"+
+					    "xAxis: {"+
+					    	"tickInterval : "+ distribution.getSegmentSizeInPercent() + "," +
+					        "max: 100," +
+					    	"min: 0" +
+					    "},"+
+					    "plotOptions: {"+
+					    	"series: {"+
+					        	"allowPointSelect: false"+
+					         "}"+
+					    "},"+
+					    "title: {"+
+				        	"text: '"+distribution.getLabel()+"'"+
+				       	"},"+
+			       		"yAxis: {"+
+			       			"title: {"+
+			       				"text: 'Occurrences'"+
+				            "},"+
+			       			"min: 0," +
+			       			"max: "+ maxOccurrences +
+				        "}"+
+				   	"}");	
 			JSONArray seriesArray = new JSONArray();
 			
 			for (XYValues<Integer, Integer> values : distribution.getXySeries()) {
@@ -40,8 +70,11 @@ public class Chart extends AbstractComponent {
 				seriesObject.put("name", values.getKey().toString());
 				seriesArray.put(seriesObject);
 			}
+			configuration.put("series", seriesArray);
 			
-			return seriesArray.toString();
+			System.out.println(configuration.toString());
+			
+			return configuration.toString();
 		}
 		catch (JSONException jse) {
 			throw new IllegalStateException(jse);

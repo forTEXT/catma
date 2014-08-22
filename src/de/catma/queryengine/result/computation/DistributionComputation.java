@@ -39,6 +39,7 @@ public class DistributionComputation {
 	private List<String> relevantSourceDocumentIDs;
 	private int segmentSizeInPercent = 10;
 	private HashMap<String, Distribution> documentDistributions;
+	private int maxOccurrences = 0;
 	
 	public DistributionComputation(GroupedQueryResultSet groupedQueryResultSet,
 			Repository repository, List<String> relevantSourceDocumentIDs) throws IOException {
@@ -94,6 +95,9 @@ public class DistributionComputation {
 					(xyValues.get(xValue)==null)?1:xyValues.get(xValue)+1);
 			}
 			distribution.add(xyValues);
+			if (maxOccurrences < xyValues.getMaxYValue()) {
+				maxOccurrences = xyValues.getMaxYValue();
+			}
 		}
 	}
 
@@ -111,4 +115,7 @@ public class DistributionComputation {
 		return documentDistributions.values();
 	}
 
+	public int getMaxOccurrences() {
+		return maxOccurrences;
+	}
 }
