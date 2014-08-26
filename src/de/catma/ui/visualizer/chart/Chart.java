@@ -32,7 +32,8 @@ public class Chart extends AbstractComponent {
 					"{"+
 						"chart: {"+
 						    "renderTo: '"+ chartId +"',"+
-						    "zoomType: 'xy'"+
+						    "zoomType: 'xy',"+
+						    "spacingBottom: 50"+
 					    "},"+
 					    "xAxis: {"+
 					    	"tickInterval : "+ distribution.getSegmentSizeInPercent() + "," +
@@ -45,7 +46,8 @@ public class Chart extends AbstractComponent {
 					         "}"+
 					    "},"+
 					    "title: {"+
-				        	"text: '"+distribution.getLabel()+"'"+
+				        	"text: '"+distribution.getLabel()+"',"+
+				        	"verticalAlign: bottom" +
 				       	"},"+
 			       		"yAxis: {"+
 			       			"title: {"+
@@ -55,21 +57,9 @@ public class Chart extends AbstractComponent {
 			       			"max: "+ maxOccurrences +
 				        "}"+
 				   	"}");	
-			JSONArray seriesArray = new JSONArray();
+
+			JSONArray seriesArray = createSeries(distribution);
 			
-			for (XYValues<Integer, Integer> values : distribution.getXySeries()) {
-				JSONArray dataArray = new JSONArray();
-				for (Entry<Integer,Integer> pair : values) {
-					JSONArray valueArray = new JSONArray();
-					valueArray.put(Double.valueOf(pair.getKey()));
-					valueArray.put(Double.valueOf(pair.getValue()));
-					dataArray.put(valueArray);
-				}
-				JSONObject seriesObject = new JSONObject();
-				seriesObject.put("data", dataArray);
-				seriesObject.put("name", values.getKey().toString());
-				seriesArray.put(seriesObject);
-			}
 			configuration.put("series", seriesArray);
 			
 			System.out.println(configuration.toString());
@@ -79,5 +69,31 @@ public class Chart extends AbstractComponent {
 		catch (JSONException jse) {
 			throw new IllegalStateException(jse);
 		}
+	}
+	
+	private JSONArray createSeries(Distribution distribution) {
+		JSONArray seriesArray = new JSONArray();
+		for (XYValues<Integer, Integer> values : distribution.getXySeries()) {
+			JSONArray dataArray = new JSONArray();
+			for (Entry<Integer,Integer> pair : values) {
+				JSONArray valueArray = new JSONArray();
+				valueArray.put(Double.valueOf(pair.getKey()));
+				valueArray.put(Double.valueOf(pair.getValue()));
+				dataArray.put(valueArray);
+			}
+			JSONObject seriesObject = new JSONObject();
+			seriesObject.put("data", dataArray);
+			seriesObject.put("name", values.getKey().toString());
+			seriesArray.put(seriesObject);
+		}
+		return seriesArray;
+	}
+
+	public void addDistribution(Distribution distribution) {
+		
+	}
+	
+	public void setMaxOccurrences(int maxOccurrences) {
+		
 	}
 }

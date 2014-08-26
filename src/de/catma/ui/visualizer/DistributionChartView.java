@@ -19,10 +19,13 @@
 package de.catma.ui.visualizer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.VerticalLayout;
@@ -30,6 +33,7 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.queryengine.result.computation.Distribution;
 import de.catma.queryengine.result.computation.DistributionComputation;
 import de.catma.ui.Slider;
+import de.catma.ui.component.ZoomableVerticalLayout;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.visualizer.chart.Chart;
 
@@ -39,12 +43,15 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 	private String label;
 	private List<Distribution> distributions = new ArrayList<Distribution>();
 	private Slider zoom;
-	private List<Chart> charts = new ArrayList<Chart>();
-
+	private Map<String, Chart> charts = new HashMap<String, Chart>();
+	private ZoomableVerticalLayout zoomPanel;
+	private int maxOccurrences;
+	
 	public DistributionChartView(String label, DistributionComputation distributionComputation) {
 		this.label = label;
 		this.distributions.addAll(distributionComputation.getDistributions());
-		initComponents(distributionComputation.getMaxOccurrences());
+		this.maxOccurrences = distributionComputation.getMaxOccurrences();
+		initComponents();
 		initActions();
 	}
 
@@ -53,22 +60,29 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 			
 			@Override
 			public void valueChange(ValueChangeEvent event) {
-				adjustSize();
+				handleZoomRequest();
 			}
 		});
 	}
 
-	private void adjustSize() {
+	private void handleZoomRequest() {
 		Double val = (Double) zoom.getValue();
-		for (Chart chart : charts) {
-			chart.setWidth(((300/50)*val)+"px");
-			chart.setHeight(((400/50)*val)+"px");
-		}
-		markAsDirty();
+		zoomPanel.zoom(val/100);
 	}
 
-	private void initComponents(int maxOccurrences) {
+	private void initComponents() {
 		setSpacing(true);
+		setMargin(new MarginInfo(true, false, false, false));
+		addStyleName("distributionchartviewpanel");
+
+		zoom = new Slider("Zoom", 0, 100, "%");
+		zoom.setValue(100.0);
+		
+		addComponent(zoom);
+		setComponentAlignment(zoom, Alignment.TOP_CENTER);
+
+		zoomPanel = new ZoomableVerticalLayout();
+		zoomPanel.setSizeFull();
 		
 		int rows = distributions.size()/ROW_LENGTH;
 		
@@ -80,46 +94,42 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 			HorizontalLayout row = new HorizontalLayout();
 			row.setSpacing(true);
 			
-			addComponent(row);
-			row.setHeight("400px");
+			zoomPanel.addComponent(row);
 			row.setWidth("100%");
 			
 			int rowLength = Math.min(distributions.size()-((rowIdx)*ROW_LENGTH), ROW_LENGTH);
 			
 			for (int colIdx=0; colIdx<rowLength; colIdx++) {
-				Chart chart = new Chart(distributions.get((rowIdx*ROW_LENGTH)+colIdx), maxOccurrences);
+				Distribution distribution = 
+						distributions.get((rowIdx*ROW_LENGTH)+colIdx);
+				Chart chart = new Chart(distribution, maxOccurrences);
 				chart.setWidth("300px");
 				chart.setHeight("400px");
 				row.addComponent(chart);
-				charts.add(chart);
+				charts.put(distribution.getId(), chart);
 			}
 		}
 		
-		zoom = new Slider("Zoom", 0, 100, "%");
-		zoom.setValue(50.0);
-		
-//		addComponent(zoom);
-//		setComponentAlignment(zoom, Alignment.BOTTOM_CENTER);
+		addComponent(zoomPanel);
 		
         setSizeFull();
 	}
 	
 	public void addDistributionComputation(
 			DistributionComputation distributionComputation) {
-//		
-//        for (XYValues<Integer, Integer> values : 
-//        	distributionComputation.getXYSeriesCollection()) {
-//
-//        	XYSeries seriesData = new XYSeries(values.getKey().toString());
-//        	
-//        	for (Map.Entry<Integer, Integer> entry : values) {
-//        		seriesData.addPoint(
-//        			new DecimalPoint(seriesData, entry.getKey(), entry.getValue()));
-//        	}
-//
-//        	chart.addSeries(seriesData);
-//        }
-//		addPlotBands(distributionComputation.getPlotBands());
+		
+		for (Distribution distribution : distributionComputation.getDistributions()) {
+			Chart chart = charts.get(distribution.getId());
+			chart.addDistribution(distribution);
+			distributions.add(distribution);
+		}
+		if (maxOccurrences < distributionComputation.getMaxOccurrences()) {
+			
+			maxOccurrences = distributionComputation.getMaxOccurrences();
+			for (Chart chart : charts.values()) {
+				chart.setMaxOccurrences(maxOccurrences);
+			}
+		}
 	}
 
 	public void close() { /* noop */ }
