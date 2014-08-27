@@ -14,7 +14,15 @@ public class ChartJs extends JavaScriptObject {
 	
 	private static ChartJsImplStandard impl = GWT.create(ChartJsImplStandard.class);
 	
-	public static ChartJs create(String configuration) {
-		return impl.create(JsonUtils.safeEval(configuration));
+	public static ChartJs create(String configuration, ChartClickListener chartClickListener) {
+		return impl.create(JsonUtils.safeEval(configuration), chartClickListener);
+	}
+
+	public final void addSeries(String series) {
+		impl.addSeries(this, JsonUtils.safeEval(series));
+	}
+
+	public final void setYAxisExtremes(int min, int max) {
+		impl.setYAxisExtremes(this, min, max);
 	}
 }

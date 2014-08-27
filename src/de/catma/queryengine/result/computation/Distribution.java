@@ -19,26 +19,30 @@
 package de.catma.queryengine.result.computation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import de.catma.queryengine.result.QueryResultRow;
 
 
 public class Distribution {
 	
 	private String id;
 	private String label;
-	private List<XYValues<Integer, Integer>> xySeries;
+	private Map<String, XYValues<Integer, Integer, QueryResultRow>> xySeries;
 	private double segmentSize;
-	private int segmentSizeInPercent;
+	private double segmentSizeInPercent;
 	
 	public Distribution(String id, String label,
 			double segmentSize,
-			int segmentSizeInPercent) {
+			double segmentSizeInPercent) {
 		super();
 		this.id = id;
 		this.label = label;
 		this.segmentSize = segmentSize;
 		this.segmentSizeInPercent = segmentSizeInPercent;
-		this.xySeries = new ArrayList<XYValues<Integer,Integer>>();
+		this.xySeries = new HashMap<String, XYValues<Integer,Integer, QueryResultRow>>();
 	}
 
 	public String getLabel() {
@@ -53,17 +57,22 @@ public class Distribution {
 		return segmentSize;
 	}
 
-	public int getSegmentSizeInPercent() {
+	public double getSegmentSizeInPercent() {
 		return segmentSizeInPercent;
 	}
 	
-	public List<XYValues<Integer, Integer>> getXySeries() {
-		return xySeries;
+	public List<XYValues<Integer, Integer, QueryResultRow>> getXySeries() {
+		return new ArrayList<XYValues<Integer,Integer,QueryResultRow>>(this.xySeries.values());
 	}
 	
-	public void add(XYValues<Integer, Integer> xyValues) {
-		xySeries.add(xyValues);
+	public void add(XYValues<Integer, Integer, QueryResultRow> xyValues) {
+		this.xySeries.put(xyValues.getKey().toString(), xyValues);
 	}
-	
+
+	public List<QueryResultRow> getQueryResultRows(String key, int x) {
+		return xySeries.get(key).getData(x);
+	}
+
+
 	
 }

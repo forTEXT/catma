@@ -19,7 +19,7 @@
 package de.catma.queryengine.result.computation;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,7 +37,7 @@ public class DistributionComputation {
 	private GroupedQueryResultSet groupedQueryResultSet;
 	private Repository repository;
 	private List<String> relevantSourceDocumentIDs;
-	private int segmentSizeInPercent = 10;
+	private double segmentSizeInPercent = 10.0;
 	private HashMap<String, Distribution> documentDistributions;
 	private int maxOccurrences = 0;
 	
@@ -60,7 +60,7 @@ public class DistributionComputation {
 				new Distribution(
 					sd.getID(),
 					sd.toString(),
-					sd.getLength()/100*segmentSizeInPercent,
+					Double.valueOf(sd.getLength())/100.0*segmentSizeInPercent,
 					segmentSizeInPercent));		
 		}
 		for (SourceDocument sd : toBeUnloaded) {
@@ -81,18 +81,18 @@ public class DistributionComputation {
 		Object group = groupedQueryResult.getGroup();
 		
 		for (String sourceDocId : groupedQueryResult.getSourceDocumentIDs()) {
-			XYValues<Integer, Integer> xyValues = 
-					new XYValues<Integer, Integer>(group);
+			XYValues<Integer, Integer, QueryResultRow> xyValues = 
+					new XYValues<Integer, Integer, QueryResultRow>(group);
 			Distribution distribution = documentDistributions.get(sourceDocId);
 			for (QueryResultRow row : groupedQueryResult.getSubResult(sourceDocId)) {
 				int segmentNo =
 						getSegment(
 								row.getRange(), 
 								distribution.getSegmentSize());
-				int xValue = (segmentNo*segmentSizeInPercent)-(segmentSizeInPercent/2);
-				xyValues.set(
-					xValue, 
-					(xyValues.get(xValue)==null)?1:xyValues.get(xValue)+1);
+				int xValue = Double.valueOf((segmentNo*segmentSizeInPercent)-(segmentSizeInPercent/2.0)).intValue();
+				int yValue =(xyValues.get(xValue)==null)?1:xyValues.get(xValue)+1; 
+				
+				xyValues.set(xValue, yValue, row);
 			}
 			distribution.add(xyValues);
 			if (maxOccurrences < xyValues.getMaxYValue()) {
@@ -111,8 +111,8 @@ public class DistributionComputation {
 		return curSegment;
 	}
 
-	public Collection<Distribution> getDistributions() {
-		return documentDistributions.values();
+	public List<Distribution> getDistributions() {
+		return new ArrayList<Distribution>(documentDistributions.values());
 	}
 
 	public int getMaxOccurrences() {

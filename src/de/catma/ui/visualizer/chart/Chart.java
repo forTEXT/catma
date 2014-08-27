@@ -1,6 +1,6 @@
 package de.catma.ui.visualizer.chart;
 
-import java.util.Date;
+import java.util.List;
 import java.util.Map.Entry;
 
 import org.json.JSONArray;
@@ -9,20 +9,49 @@ import org.json.JSONObject;
 
 import com.vaadin.ui.AbstractComponent;
 
+import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.computation.Distribution;
+import de.catma.queryengine.result.computation.DistributionSelectionListener;
 import de.catma.queryengine.result.computation.XYValues;
 import de.catma.ui.client.ui.visualizer.chart.ChartClientRpc;
+import de.catma.ui.client.ui.visualizer.chart.ChartServerRpc;
+import de.catma.util.IDGenerator;
 
 public class Chart extends AbstractComponent {
-	
-	private String chartId; 
-	
-	public Chart(Distribution distribution, int maxOccurrences) {
-		chartId = "ChartWidget" + new Date().getTime();
+	private ChartServerRpc chartServerRpc = new ChartServerRpc() {
 		
-		getRpcProxy(ChartClientRpc.class).init(
-				chartId,
-				createConfiguration(distribution, maxOccurrences));
+		@Override
+		public void onChartPointClick(String seriesName, int x, int y) {
+			fireResultRowSelected(seriesName, x, y);
+		}
+	};
+	private String chartId;
+	private Distribution distribution;
+	private int maxOccurrences;
+	private DistributionSelectionListener distributionSelectionListener; 
+	
+	public Chart(Distribution distribution, int maxOccurrences, DistributionSelectionListener distributionSelectionListener) {
+		chartId = "ChartWidget" + new IDGenerator().generate();
+		registerRpc(chartServerRpc);
+		
+		this.distribution = distribution;
+		this.maxOccurrences = maxOccurrences;
+		this.distributionSelectionListener = distributionSelectionListener;
+	}
+	
+	private void fireResultRowSelected(String key, int x, int y) {
+		List<QueryResultRow> rows = distribution.getQueryResultRows(key, x);
+		distributionSelectionListener.queryResultRowsSelected(distribution.getLabel(), rows, x, y);
+	}
+
+	@Override
+	public void beforeClientResponse(boolean initial) {
+		super.beforeClientResponse(initial);
+		if (initial) {
+			getRpcProxy(ChartClientRpc.class).init(
+					chartId,
+					createConfiguration(distribution, maxOccurrences));
+		}
 	}
 
 	private String createConfiguration(Distribution distribution, int maxOccurrences) {
@@ -42,7 +71,12 @@ public class Chart extends AbstractComponent {
 					    "},"+
 					    "plotOptions: {"+
 					    	"series: {"+
-					        	"allowPointSelect: false"+
+					        	"allowPointSelect: false,"+
+					        	"point: {"+
+					        		"events: {"+
+					        			"click: null"+
+					        		"}"+
+					        	"}"+
 					         "}"+
 					    "},"+
 					    "title: {"+
@@ -58,11 +92,9 @@ public class Chart extends AbstractComponent {
 				        "}"+
 				   	"}");	
 
-			JSONArray seriesArray = createSeries(distribution);
+			JSONArray seriesArray = createSeriesArray(distribution);
 			
 			configuration.put("series", seriesArray);
-			
-			System.out.println(configuration.toString());
 			
 			return configuration.toString();
 		}
@@ -71,9 +103,18 @@ public class Chart extends AbstractComponent {
 		}
 	}
 	
-	private JSONArray createSeries(Distribution distribution) {
+	private JSONArray createSeriesArray(Distribution distribution) {
 		JSONArray seriesArray = new JSONArray();
-		for (XYValues<Integer, Integer> values : distribution.getXySeries()) {
+		for (XYValues<Integer, Integer, QueryResultRow> values : distribution.getXySeries()) {
+			seriesArray.put(createSeries(values));
+		}
+
+		return seriesArray;
+
+	}
+
+	private JSONObject createSeries(XYValues<Integer, Integer, QueryResultRow> values) {
+		try {
 			JSONArray dataArray = new JSONArray();
 			for (Entry<Integer,Integer> pair : values) {
 				JSONArray valueArray = new JSONArray();
@@ -84,16 +125,22 @@ public class Chart extends AbstractComponent {
 			JSONObject seriesObject = new JSONObject();
 			seriesObject.put("data", dataArray);
 			seriesObject.put("name", values.getKey().toString());
-			seriesArray.put(seriesObject);
+	
+			return seriesObject;
 		}
-		return seriesArray;
+		catch (JSONException jse) {
+			throw new IllegalStateException(jse);
+		}
 	}
 
-	public void addDistribution(Distribution distribution) {
-		
+	public void addSeries(XYValues<Integer, Integer, QueryResultRow> series) {
+		this.distribution.add(series);
+		getRpcProxy(ChartClientRpc.class).addSeries(
+			createSeries(series).toString());		
 	}
 	
 	public void setMaxOccurrences(int maxOccurrences) {
-		
+		this.maxOccurrences = maxOccurrences;
+		getRpcProxy(ChartClientRpc.class).setYAxisExtremes(0, maxOccurrences);
 	}
 }
