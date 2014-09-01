@@ -46,8 +46,7 @@ public class KwicProvider {
 		IndexInfoSet indexInfoSet = 
 				sourceDocument.getSourceContentHandler()
 					.getSourceDocumentInfo().getIndexInfoSet();
-		Locale locale = indexInfoSet.getLocale();
-		rtl = locale.equals(new Locale("iw_il", ""));
+		rtl = indexInfoSet.isRightToLeftLanguage();
 	
 		analyzer = 
 				new WhitespaceAndPunctuationAnalyzer(

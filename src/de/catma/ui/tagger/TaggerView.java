@@ -48,6 +48,7 @@ import de.catma.document.Corpus;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
+import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
@@ -246,7 +247,10 @@ public class TaggerView extends VerticalLayout
 				"<li>Now you can mark the text sequence you want to tag.</li><li>Click the colored button of the desired Tag to apply it to the marked sequence.</li></ol> " +
 				"When you click on a tagged text, i. e. a text that is underlined with colored bars, you should see " +
 				"the available Tag Instances in the section on the lower right of this view.");		
-		pager = new Pager(taggerID, 80, 30);
+		IndexInfoSet indexInfoSet = 
+			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet(); 
+		pager = new Pager(taggerID, 80, 30, 
+				indexInfoSet.isRightToLeftLanguage());
 		
 		tagger = new Tagger(taggerID, pager, this);
 		tagger.addStyleName("tagger");

@@ -60,12 +60,15 @@ public class Pager implements Iterable<Page> {
 	private int taggerID;
 	private int totalLineCount = 0;
 	private List<TextRange> currrentHighlightRanges; //this is a relative range, valid for the currentPageIndex
+
+	private boolean rightToLeftLanguage;
 	
-	public Pager(int taggerID, int approxMaxLineLength, int maxPageLengthInLines) {
+	public Pager(int taggerID, int approxMaxLineLength, int maxPageLengthInLines, boolean rightToLeftLanguage) {
 		pages = new ArrayList<Page>();
 		this.taggerID = taggerID;
 		this.approxMaxLineLength = approxMaxLineLength;
 		this.maxPageLengthInLines = maxPageLengthInLines;
+		this.rightToLeftLanguage = rightToLeftLanguage;
 		this.currrentHighlightRanges = new ArrayList<TextRange>();
 	}
 	
@@ -115,7 +118,8 @@ public class Pager implements Iterable<Page> {
 				pages.add(new Page(
 						taggerID, 
 						text.substring(pageStart, pageEnd), 
-						pageStart, pageEnd));
+						pageStart, pageEnd,
+						rightToLeftLanguage));
 				pageLines = 0;
 				pageStart = pageEnd;
 			}
@@ -135,10 +139,12 @@ public class Pager implements Iterable<Page> {
 		}
 		
 		if (pageLines != 0) {
-			pages.add(new Page(
-							taggerID, 
-							text.substring(pageStart, pageEnd), 
-							pageStart, pageEnd));
+			pages.add(
+				new Page(
+					taggerID, 
+					text.substring(pageStart, pageEnd), 
+					pageStart, pageEnd,
+					rightToLeftLanguage));
 		}
 		
 		totalLineCount = 0;
