@@ -197,7 +197,7 @@ public class TaggerView extends VerticalLayout
 			}
 		});
 		
-		linesPerPageSlider.addListener(new ValueChangeListener() {
+		linesPerPageSlider.addValueListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				Double perCentValue = (Double)linesPerPageSlider.getValue();

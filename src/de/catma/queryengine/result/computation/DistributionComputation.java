@@ -19,9 +19,7 @@
 package de.catma.queryengine.result.computation;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -39,62 +37,40 @@ public class DistributionComputation {
 	private GroupedQueryResultSet groupedQueryResultSet;
 	private Repository repository;
 	private List<String> relevantSourceDocumentIDs;
-	private int segmentSizeInPercent = 10;
-	private double segmentSize;
-	private int numberOfSegments;
-	private List<XYValues<Integer, Integer>> xySeriesCollection;
-	private Set<PlotBand> plotBands;
-	private HashMap<String, Long> documentSegmentOffsets;
-	private long totalSize = 0;
+	private double segmentSizeInPercent = 10.0;
+	private HashMap<String, Distribution> documentDistributions;
+	private int maxOccurrences = 0;
 	
 	public DistributionComputation(GroupedQueryResultSet groupedQueryResultSet,
 			Repository repository, List<String> relevantSourceDocumentIDs) throws IOException {
 		this.groupedQueryResultSet = groupedQueryResultSet;
 		this.repository = repository;
 		this.relevantSourceDocumentIDs = relevantSourceDocumentIDs;
-		this.xySeriesCollection = new ArrayList<XYValues<Integer,Integer>>();
-		plotBands = new HashSet<PlotBand>();
-		documentSegmentOffsets = new HashMap<String, Long>();
-		
-		computeSegments();
-
+		this.documentDistributions = new HashMap<String, Distribution>();
 	}
 
-	private void computeSegments() throws IOException {
+	private void prepareDistributions() throws IOException {
 		Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
 		for (String sourceDocId : relevantSourceDocumentIDs) {
 			SourceDocument sd = repository.getSourceDocument(sourceDocId);
 			if (!sd.isLoaded()) {
 				toBeUnloaded.add(sd);
 			}
-			documentSegmentOffsets.put(sourceDocId, totalSize);
-			
-			totalSize += sd.getLength();
-		}
-		
-		for (String sourceDocId : relevantSourceDocumentIDs) {
-			SourceDocument sd = repository.getSourceDocument(sourceDocId);		
-			plotBands.add(
-				new PlotBand(
+			documentDistributions.put(sourceDocId, 
+				new Distribution(
 					sd.getID(),
 					sd.toString(),
-					100.0/totalSize*documentSegmentOffsets.get(sourceDocId),
-					100.0/totalSize*
-						(sd.getLength()+documentSegmentOffsets.get(sourceDocId))));
-		
+					Double.valueOf(sd.getLength())/100.0*segmentSizeInPercent,
+					segmentSizeInPercent));		
 		}
 		for (SourceDocument sd : toBeUnloaded) {
 			sd.unload();
 		}
-		
-		segmentSize = segmentSizeInPercent / 100.0 * totalSize;
-		numberOfSegments = 
-			BigDecimal.valueOf(totalSize).divide(
-				BigDecimal.valueOf(segmentSize), BigDecimal.ROUND_UP).intValue();
 	}
 
 
-	public void compute() {
+	public void compute() throws IOException {
+		prepareDistributions();
 		for (GroupedQueryResult groupedQueryResult : groupedQueryResultSet.asGroupedSet()) {
 			compute(groupedQueryResult);
 		}
@@ -103,47 +79,43 @@ public class DistributionComputation {
 
 	private void compute(GroupedQueryResult groupedQueryResult) {
 		Object group = groupedQueryResult.getGroup();
-		XYValues<Integer, Integer> xySeries = 
-				new XYValues<Integer, Integer>(group);
 		
-		for (int i=1; i<=numberOfSegments; i++) {
-			xySeries.set((i*segmentSizeInPercent)-(segmentSizeInPercent/2), 0);
+		for (String sourceDocId : groupedQueryResult.getSourceDocumentIDs()) {
+			XYValues<Integer, Integer, QueryResultRow> xyValues = 
+					new XYValues<Integer, Integer, QueryResultRow>(group);
+			Distribution distribution = documentDistributions.get(sourceDocId);
+			for (QueryResultRow row : groupedQueryResult.getSubResult(sourceDocId)) {
+				int segmentNo =
+						getSegment(
+								row.getRange(), 
+								distribution.getSegmentSize());
+				int xValue = Double.valueOf((segmentNo*segmentSizeInPercent)-(segmentSizeInPercent/2.0)).intValue();
+				int yValue =(xyValues.get(xValue)==null)?1:xyValues.get(xValue)+1; 
+				
+				xyValues.set(xValue, yValue, row);
+			}
+			distribution.add(xyValues);
+			if (maxOccurrences < xyValues.getMaxYValue()) {
+				maxOccurrences = xyValues.getMaxYValue();
+			}
 		}
-		for (QueryResultRow row : groupedQueryResult) {
-			int segmentNo =
-				getSegment(
-					row.getRange(), 
-					documentSegmentOffsets.get(row.getSourceDocumentId()));
-			xySeries.set(
-				(segmentNo*segmentSizeInPercent)-(segmentSizeInPercent/2), 
-				xySeries.get(
-					(segmentNo*segmentSizeInPercent)-(segmentSizeInPercent/2))+1);
-		}
-		xySeriesCollection.add(xySeries);
 	}
 
-	private int getSegment(Range range, Long offset) {
+	private int getSegment(Range range, double segmentSize) {
 		double curSize = segmentSize;
 		int curSegment = 1;
-		while (offset+range.getStartPoint() > curSize) {
+		while (range.getStartPoint() > curSize) {
 			curSegment++;
 			curSize += segmentSize;
 		}
 		return curSegment;
 	}
 
-
-	public List<XYValues<Integer, Integer>> getXYSeriesCollection() {
-		return Collections.unmodifiableList(xySeriesCollection);
+	public List<Distribution> getDistributions() {
+		return new ArrayList<Distribution>(documentDistributions.values());
 	}
 
-	public int getPercentSegmentSize() {
-		return segmentSizeInPercent;
+	public int getMaxOccurrences() {
+		return maxOccurrences;
 	}
-
-	
-	public Set<PlotBand> getPlotBands() {
-		return plotBands;
-	}
-
 }

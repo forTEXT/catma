@@ -69,6 +69,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.IndexedRepository;
 import de.catma.queryengine.result.computation.DistributionComputation;
+import de.catma.queryengine.result.computation.DistributionSelectionListener;
 import de.catma.repository.LoginToken;
 import de.catma.repository.db.maintenance.UserManager;
 import de.catma.tag.TagLibrary;
@@ -409,7 +410,7 @@ public class CatmaApplication extends UI
 	}
 	
 	public int addVisualization(Integer visualizationId, String caption,
-			DistributionComputation distributionComputation) {
+			DistributionComputation distributionComputation, DistributionSelectionListener distributionSelectionListener) {
 		if (!visualizationManagerView.isAttached()) {
 			menu.executeEntry(visualizationManagerView);
 		}
@@ -418,7 +419,7 @@ public class CatmaApplication extends UI
 		}
 		
 		return visualizationManagerView.addVisualization(visualizationId, caption,
-				distributionComputation);
+				distributionComputation, distributionSelectionListener);
 	}
 
 	@Override

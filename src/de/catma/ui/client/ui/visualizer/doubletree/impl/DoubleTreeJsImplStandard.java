@@ -1,6 +1,6 @@
-package de.catma.ui.client.ui.visualizer.impl;
+package de.catma.ui.client.ui.visualizer.doubletree.impl;
 
-import de.catma.ui.client.ui.visualizer.DoubleTreeJs;
+import de.catma.ui.client.ui.visualizer.doubletree.DoubleTreeJs;
 
 public class DoubleTreeJsImplStandard {
 	public native DoubleTreeJs create() /*-{

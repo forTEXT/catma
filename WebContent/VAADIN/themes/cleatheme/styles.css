@@ -89,4 +89,17 @@
 .v-caption-tagsettree-label {
 	height: 5px;
 }
+
+.distributionchartviewpanel .v-slot {
+	height: 100% ! important;
+}
+
+.distributionchartviewpanel .v-expand {
+	height: auto ! important;
+}
+
+.distributionchartviewpanelzoom {
+/*	zoom: 50%;*/
+    -moz-transform: scale(0.5);
+/*    -webkit-transform: scale(1.0);*/
 }

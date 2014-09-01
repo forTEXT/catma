@@ -69,7 +69,9 @@ import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.computation.DistributionComputation;
+import de.catma.queryengine.result.computation.DistributionSelectionListener;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzer.querybuilder.QueryBuilderWizardFactory;
 import de.catma.ui.component.HTMLNotification;
@@ -84,7 +86,21 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	static interface CloseListener {
 		public void closeRequest(AnalyzerView analyzerView);
 	}
-	
+	private DistributionSelectionListener distributionSelectionListener = new DistributionSelectionListener() {
+		@Override
+		public void queryResultRowsSelected(String label,
+				List<QueryResultRow> rows, int x, int y) {
+			try {
+				KwicPanel kwicPanel = new KwicPanel(repository, AnalyzerView.this);
+				kwicPanel.addQueryResultRows(rows);
+				new KwicWindow("KWIC for " + label + " at chunk " + x + " (" + y + " occurrences)", kwicPanel).show();
+			}
+			catch (IOException e) {
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
+						"Error accessing the repository!", e);
+			}
+		}
+	};
 	private String userMarkupItemDisplayString = "User Markup Collections";
 	private String staticMarkupItemDisplayString = "Static Markup Collections";
 	private TextField searchInput;
@@ -638,7 +654,8 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		
 		this.visualizationId = 
 			((CatmaApplication)UI.getCurrent()).addVisualization(
-				visualizationId, (corpus==null)?"All documents":corpus.toString(), dc);
+				visualizationId, (corpus==null)?"All documents":corpus.toString(), dc,
+				distributionSelectionListener);
 	}
 
 	public void close() {

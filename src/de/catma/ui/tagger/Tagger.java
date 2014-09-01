@@ -18,14 +18,9 @@
  */   
 package de.catma.ui.tagger;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import com.vaadin.server.VaadinRequest;
-import com.vaadin.server.VaadinResponse;
 import com.vaadin.server.WebBrowser;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.UI;
@@ -95,12 +90,13 @@ public class Tagger extends AbstractComponent {
 		}
 	};
 
-	private Map<String,String> attributes = new HashMap<String, String>();
 	private Pager pager;
 	private TaggerListener taggerListener;
 	private ClientTagInstanceJSONSerializer tagInstanceJSONSerializer;
 	private boolean init = true;
 	private String taggerID;
+
+	private TextRange lastRenderedHighlight;
 	
 	public Tagger(int taggerID, Pager pager, TaggerListener taggerListener) {
 		registerRpc(rpc);
@@ -117,10 +113,15 @@ public class Tagger extends AbstractComponent {
 		super.beforeClientResponse(initial);
 		if (initial) {
 			setPage(pager.getCurrentPageNumber());
+			if (lastRenderedHighlight != null) {
+				highlight(lastRenderedHighlight);
+			}
 		}
 	}
 
 	private void setPage(String pageContent) {
+//		lastRenderedHighlight = null;
+
 		getRpcProxy(TaggerClientRpc.class).setTaggerId(this.taggerID);
 		getRpcProxy(TaggerClientRpc.class).setPage(pageContent);
 		try {
@@ -249,6 +250,7 @@ public class Tagger extends AbstractComponent {
 	}
 
 	public void highlight(TextRange relativeTextRange) {
+		this.lastRenderedHighlight = relativeTextRange;
 		try {
 			getRpcProxy(TaggerClientRpc.class).highlight(
 					new TextRangeJSONSerializer().toJSON(relativeTextRange));

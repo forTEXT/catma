@@ -27,8 +27,10 @@ import com.vaadin.ui.TabSheet;
 
 import de.catma.document.source.KeywordInContext;
 import de.catma.queryengine.result.computation.DistributionComputation;
+import de.catma.queryengine.result.computation.DistributionSelectionListener;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabbedView;
+import de.catma.ui.visualizer.chart.DistributionChartView;
 import de.catma.ui.visualizer.doubletree.DoubleTreeView;
 
 public class VisualizationManagerView extends TabbedView {
@@ -38,23 +40,24 @@ public class VisualizationManagerView extends TabbedView {
 	}
 
 	private int addVisualization(
-		String caption, DistributionComputation distributionComputation) {
+		String caption,
+		DistributionComputation distributionComputation, 
+		DistributionSelectionListener distributionSelectionListener) {
+		
 		DistributionChartView distChartView =
-				new DistributionChartView(
-						distributionComputation.getPercentSegmentSize(), caption);
+				new DistributionChartView(caption, distributionComputation, distributionSelectionListener);
 		int id = getTabPosition(
 				addClosableTab(
 						distChartView, distChartView.toString()));
 		
-		distChartView.addDistributionComputation(distributionComputation);
 		return id;
 	}
 
 	public int addVisualization(
 			Integer visualizationId, String caption, 
-			DistributionComputation distributionComputation) {
+			DistributionComputation distributionComputation, DistributionSelectionListener distributionSelectionListener) {
 		if (visualizationId == null) {
-			return addVisualization(caption, distributionComputation);
+			return addVisualization(caption, distributionComputation, distributionSelectionListener);
 		}
 		else {
 			Component comp = getComponent(visualizationId);
@@ -64,7 +67,7 @@ public class VisualizationManagerView extends TabbedView {
 				return visualizationId;
 			}
 			else {
-				return addVisualization(caption, distributionComputation);
+				return addVisualization(caption, distributionComputation, distributionSelectionListener);
 			}
 		}
 	}

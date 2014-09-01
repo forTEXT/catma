@@ -1,4 +1,4 @@
-package de.catma.ui.client.ui.visualizer;
+package de.catma.ui.client.ui.visualizer.doubletree;
 
 import com.vaadin.shared.AbstractComponentState;
 

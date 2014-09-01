@@ -1,4 +1,4 @@
-package de.catma.ui.client.ui.visualizer;
+package de.catma.ui.client.ui.visualizer.doubletree;
 
 import com.google.gwt.core.client.GWT;
 import com.vaadin.client.annotations.OnStateChange;
