@@ -419,7 +419,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		kwicButtonPanel.setWidth("100%");
 		
 		btKwicExcelExport = new Button();
-		btKwicExcelExport.setIcon(new ClassResource("ui/analyzer/resources/excel.png"));
+		btKwicExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png"));
 		btKwicExcelExport.setDescription(
 				"Export all Query result data as an Excel spreadsheet.");
 		kwicButtonPanel.addComponent(btKwicExcelExport);

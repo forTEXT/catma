@@ -96,8 +96,6 @@ public class Tagger extends AbstractComponent {
 	private boolean init = true;
 	private String taggerID;
 
-	private TextRange lastRenderedHighlight;
-	
 	public Tagger(int taggerID, Pager pager, TaggerListener taggerListener) {
 		registerRpc(rpc);
 		
@@ -113,27 +111,28 @@ public class Tagger extends AbstractComponent {
 		super.beforeClientResponse(initial);
 		if (initial) {
 			setPage(pager.getCurrentPageNumber());
-			if (lastRenderedHighlight != null) {
-				highlight(lastRenderedHighlight);
-			}
 		}
 	}
 
 	private void setPage(String pageContent) {
-//		lastRenderedHighlight = null;
-
 		getRpcProxy(TaggerClientRpc.class).setTaggerId(this.taggerID);
 		getRpcProxy(TaggerClientRpc.class).setPage(pageContent);
 		try {
 			getRpcProxy(TaggerClientRpc.class).addTagInstances(
 					tagInstanceJSONSerializer.toJSON(
 							pager.getCurrentPage().getRelativeTagInstances()));
+			if (!pager.getCurrentHighlightRanges().isEmpty()) {
+				for (TextRange relativeTextRange : pager.getCurrentHighlightRanges()) {
+					getRpcProxy(TaggerClientRpc.class).highlight(
+							new TextRangeJSONSerializer().toJSON(relativeTextRange));
+				}
+			}
 		} catch (JSONSerializationException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error setting the page!", e);
 		}
 	}
-
+	
 	public void setText(String text) {
 		pager.setText(text);
 		setPage(pager.getCurrentPage().toHTML());
@@ -250,7 +249,8 @@ public class Tagger extends AbstractComponent {
 	}
 
 	public void highlight(TextRange relativeTextRange) {
-		this.lastRenderedHighlight = relativeTextRange;
+		pager.highlight(relativeTextRange);
+		
 		try {
 			getRpcProxy(TaggerClientRpc.class).highlight(
 					new TextRangeJSONSerializer().toJSON(relativeTextRange));

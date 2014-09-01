@@ -30,6 +30,7 @@ import java.util.zip.CRC32;
 import de.catma.document.Range;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
+import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 /**
  * @author marco.petris@web.de
@@ -58,12 +59,14 @@ public class Pager implements Iterable<Page> {
 	private Long checksum = null;
 	private int taggerID;
 	private int totalLineCount = 0;
+	private List<TextRange> currrentHighlightRanges; //this is a relative range, valid for the currentPageIndex
 	
 	public Pager(int taggerID, int approxMaxLineLength, int maxPageLengthInLines) {
 		pages = new ArrayList<Page>();
 		this.taggerID = taggerID;
 		this.approxMaxLineLength = approxMaxLineLength;
 		this.maxPageLengthInLines = maxPageLengthInLines;
+		this.currrentHighlightRanges = new ArrayList<TextRange>();
 	}
 	
 	public void setText(String text) {
@@ -169,6 +172,10 @@ public class Pager implements Iterable<Page> {
 		else if (index >= pages.size()) {
 			index = pages.size()-1;
 		}
+		// invalidate highlights
+		if (currentPageIndex != index) {
+			this.currrentHighlightRanges.clear();
+		}
 		currentPageIndex = index;
 		return pages.get(index);
 	}
@@ -230,6 +237,7 @@ public class Pager implements Iterable<Page> {
 		this.checksum = null; //recalculate pages
 		this.maxPageLengthInLines = maxPageLengthInLines;
 		this.currentPageIndex = 0;
+		this.currrentHighlightRanges.clear();
 	}
 
 	public void removeTagInstances(Set<TagDefinition> tagDefinitions) {
@@ -249,5 +257,13 @@ public class Pager implements Iterable<Page> {
 	
 	public int getMaxPageLengthInLines() {
 		return maxPageLengthInLines;
+	}
+	
+	public void highlight(TextRange highlightRange) {
+		currrentHighlightRanges.add(highlightRange);
+	}
+	
+	public List<TextRange> getCurrentHighlightRanges() {
+		return currrentHighlightRanges;
 	}
 }

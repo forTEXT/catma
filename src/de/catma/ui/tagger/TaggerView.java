@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -124,12 +125,16 @@ public class TaggerView extends VerticalLayout
 				if (evt.getNewValue() != null) {
 
 					@SuppressWarnings("unchecked")
-					List<TagReference> tagReferences = (List<TagReference>)evt.getNewValue(); 
+					List<TagReference> tagReferences = 
+					(List<TagReference>)evt.getNewValue(); 
 					
-					List<TagReference> relevantTagReferences = new ArrayList<TagReference>();
+					List<TagReference> relevantTagReferences = 
+							new ArrayList<TagReference>();
 
 					for (TagReference tr : tagReferences) {
-						if (isRelevantTagReference(tr, markupPanel.getUserMarkupCollections())) {
+						if (isRelevantTagReference(
+								tr, 
+								markupPanel.getUserMarkupCollections())) {
 							relevantTagReferences.add(tr);
 						}
 					}
@@ -409,34 +414,35 @@ public class TaggerView extends VerticalLayout
 			int startPage = pager.getPageNumberFor(range.getStartPoint());
 			int endPage = pager.getPageNumberFor(range.getEndPoint());
 			
-			if (startPage != endPage) {
+			if (startPage != endPage) { // range spans several pages
 				Double perCentValue = 100.0;
 
+				// increase page zoom so that the highlighter fits into one page
 				while(startPage != endPage) {
 					pager.setMaxPageLengthInLines(pager.getMaxPageLengthInLines()+5);
 					try {
 						pager.setText(sourceDocument.getContent());
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.log(Level.SEVERE, "error adjusting  page zoom", e);
 					}
 	
 					startPage = pager.getPageNumberFor(range.getStartPoint());
 					endPage = pager.getPageNumberFor(range.getEndPoint());
 					
-					perCentValue = ((double)pager.getApproxMaxLineLength())/(((double)totalLineCount)/100.0);
+					perCentValue = 
+						((double)pager.getApproxMaxLineLength())/(((double)totalLineCount)/100.0);
 				}
-				
+				// set computed zoom value
 				linesPerPageSlider.setValue(perCentValue);
 			}
-			
+			// set page that contains the range to be highlighted
 			int pageNumber = pager.getStartPageNumberFor(range);
 			pagerComponent.setPage(pageNumber);
+			// do the highlighting
 			TextRange tr = pager.getCurrentPage().getRelativeRangeFor(range);
 			tagger.highlight(tr);
 		} catch (ValueOutOfBoundsException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "error during highlighting", e);
 		}
 	}
 	
