@@ -8,8 +8,8 @@ public class KeywordInSpanContext extends KeywordInContext {
 	private SpanContext spanContext;
 
 	public KeywordInSpanContext(String keyword, String kwic,
-			Range kwicSourceRange, int relativeKeywordStartPos, SpanContext spanContext) {
-		super(keyword, kwic, kwicSourceRange, relativeKeywordStartPos);
+			Range kwicSourceRange, int relativeKeywordStartPos, boolean rtl, SpanContext spanContext) {
+		super(keyword, kwic, kwicSourceRange, relativeKeywordStartPos, rtl);
 		this.spanContext = spanContext;
 	}
 	
