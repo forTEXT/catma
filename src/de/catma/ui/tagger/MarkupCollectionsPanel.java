@@ -660,7 +660,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 						MarkupCollectionsTreeProperty.writable});
 		
 		markupCollectionsTree.addItem(
-			new Object[] {userMarkupItem, new Label(), new Label()}, 
+			new Object[] {userMarkupItem, createVisibilityCheckbox(), new Label()}, 
 			userMarkupItem);
 		
 		markupCollectionsTree.addItem(
@@ -699,7 +699,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private void addUserMarkupCollectionToTree(
 			UserMarkupCollection userMarkupCollection) {
 		markupCollectionsTree.addItem(
-				new Object[] {userMarkupCollection.toString(), new Label(), createCheckbox(userMarkupCollection)},
+				new Object[] {userMarkupCollection.toString(), createVisibilityCheckbox(userMarkupCollection), createCheckbox(userMarkupCollection)},
 				userMarkupCollection);
 		markupCollectionsTree.setParent(userMarkupCollection, userMarkupItem);
 		markupCollectionsTree.setCollapsed(userMarkupItem, false);
@@ -825,6 +825,49 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		return cbShowTagInstances;
 	}
 
+	private CheckBox createVisibilityCheckbox(final UserMarkupCollection umc) {
+		final CheckBox cbShowTagInstances = new CheckBox();
+		cbShowTagInstances.setImmediate(true);
+		cbShowTagInstances.addValueChangeListener(new ValueChangeListener() {
+			
+			@Override
+			public void valueChange(ValueChangeEvent event) {
+				boolean selected = cbShowTagInstances.getValue();
+				for (TagsetDefinition tagsetDefinition : umc.getTagLibrary()) {
+					Item tagsetDefItem =
+							markupCollectionsTree.getItem(tagsetDefinition);
+					Property visibleProp = 
+							tagsetDefItem.getItemProperty(
+									MarkupCollectionsTreeProperty.visible);
+					CheckBox cb = (CheckBox) visibleProp.getValue();
+					cb.setValue(selected);
+				}
+			}
+		});
+		return cbShowTagInstances;
+	}
+	
+	private CheckBox createVisibilityCheckbox() {
+		final CheckBox cbShowTagInstances = new CheckBox();
+		cbShowTagInstances.setImmediate(true);
+		cbShowTagInstances.addValueChangeListener(new ValueChangeListener() {
+			
+			@Override
+			public void valueChange(ValueChangeEvent event) {
+				boolean selected = cbShowTagInstances.getValue();
+				for (UserMarkupCollection userMarkupCollection : userMarkupCollectionManager.getUserMarkupCollections()) {
+					Item userMarkupCollectionItem =
+							markupCollectionsTree.getItem(userMarkupCollection);
+					Property visibleProp = 
+							userMarkupCollectionItem.getItemProperty(
+									MarkupCollectionsTreeProperty.visible);
+					CheckBox cb = (CheckBox) visibleProp.getValue();
+					cb.setValue(selected);
+				}
+			}
+		});
+		return cbShowTagInstances;
+	}
 
 	private CheckBox createCheckbox(final TagDefinition tagDefinition) {
 		final CheckBox cbShowTagInstances = new CheckBox();
