@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import com.vaadin.data.Container;
 import com.vaadin.data.util.HierarchicalContainer;
@@ -38,7 +39,9 @@ import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.Table;
 import com.vaadin.ui.Table.Align;
+import com.vaadin.ui.Table.CellStyleGenerator;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -79,6 +82,7 @@ public class KwicPanel extends VerticalLayout {
 	private TreeTable kwicTable;
 	private boolean markupBased;
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
+	private WeakHashMap<Object, Boolean> itemDirCache = new WeakHashMap<>();
 
 	public KwicPanel(Repository repository, 
 			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider) {
@@ -364,9 +368,20 @@ public class KwicPanel extends VerticalLayout {
 		kwicTable.addContainerProperty(
 				KwicPropertyName.endPoint, Integer.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.endPoint, "End Point");
-		
+
 		kwicTable.setPageLength(12); //TODO: config
 		kwicTable.setSizeFull();
+		
+		kwicTable.setCellStyleGenerator(new CellStyleGenerator() {
+			
+			@Override
+			public String getStyle(Table source, Object itemId, Object propertyId) {
+				if (itemDirCache.get(itemId).booleanValue()) {
+					return "rtl-field";
+				}
+				return null;
+			}
+		});
 		addComponent(kwicTable);
 	}
 
@@ -387,7 +402,7 @@ public class KwicPanel extends VerticalLayout {
 			}
 			
 			KwicProvider kwicProvider = kwicProviders.get(sourceDocument.getID());
-			KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), 5);
+			KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), 5);  //TODO: config
 			String sourceDocOrMarkupCollectionDisplay = 
 					sourceDocument.toString();
 			
@@ -396,6 +411,7 @@ public class KwicPanel extends VerticalLayout {
 					sourceDocument.getUserMarkupCollectionReference(
 						((TagQueryResultRow)row).getMarkupCollectionId()).getName();
 			}
+			itemDirCache.put(row, kwic.isRightToLeft());
 			
 			kwicTable.addItem(
 				new Object[]{
