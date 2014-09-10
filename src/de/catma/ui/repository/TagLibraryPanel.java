@@ -38,8 +38,11 @@ import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
-import com.vaadin.terminal.DownloadStream;
-import com.vaadin.terminal.FileResource;
+import com.vaadin.server.DownloadStream;
+import com.vaadin.server.FileResource;
+import com.vaadin.server.Page;
+import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -50,13 +53,14 @@ import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.themes.Reindeer;
 
-import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.UnknownUserException;
 import de.catma.document.source.ContentInfoSet;
@@ -67,6 +71,7 @@ import de.catma.serialization.tei.TeiTagLibrarySerializationHandler;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
@@ -125,7 +130,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 					tagLibrariesTree.removeItem(tagLibraryRef);
 				}
 				else { //update
-					tagLibrariesTree.requestRepaint();
+					tagLibrariesTree.markAsDirty();
 				}
 			}
 		};
@@ -174,8 +179,10 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 	}
 
 	private Component createTagLibraryTreePanel() {
-
-		Panel tagLibraryPanel = new Panel();
+		VerticalLayout tagLibraryPanelContent = new VerticalLayout();
+		tagLibraryPanelContent.setMargin(true);
+		
+		Panel tagLibraryPanel = new Panel(tagLibraryPanelContent);
 		tagLibraryPanel.getContent().setSizeUndefined();
 		tagLibraryPanel.setSizeFull();
 
@@ -187,7 +194,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		tagLibrariesTree.setCaption("Tag Libraries");
 		tagLibrariesTree.addStyleName("bold-label-caption");
 		tagLibrariesTree.setImmediate(true);
-		tagLibrariesTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_ID);
+		tagLibrariesTree.setItemCaptionMode(ItemCaptionMode.ID);
 		
 		tagLibraryContainer.addContainerProperty(SORTCAP_PROP, String.class, null);
 		
@@ -196,7 +203,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		}
 		tagLibraryContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
 
-		tagLibraryPanel.addComponent(tagLibrariesTree);
+		tagLibraryPanelContent.addComponent(tagLibrariesTree);
 		
 		return tagLibraryPanel;
 	}
@@ -205,7 +212,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		VerticalLayout contentInfoPanel = new VerticalLayout();
 		contentInfoPanel.setSpacing(true);
 		contentInfoPanel.setSizeFull();
-		contentInfoPanel.setMargin(false, false, true, true);
+		contentInfoPanel.setMargin(new MarginInfo(false, false, true, true));
 		Component contentInfoForm = createContentInfoForm();
 		contentInfoPanel.addComponent(contentInfoForm);
 		contentInfoPanel.setExpandRatio(contentInfoForm, 1.0f);
@@ -227,20 +234,21 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		btEditContentInfo = new Button("Edit");
 		btEditContentInfo.setEnabled(false);
 
-		contentInfoButtonsPanel.addComponent(btEditContentInfo);
+		content.addComponent(btEditContentInfo);
 		btSaveContentInfoChanges = new Button("Save");
 		btSaveContentInfoChanges.setVisible(false);
-		contentInfoButtonsPanel.addComponent(btSaveContentInfoChanges);
+		content.addComponent(btSaveContentInfoChanges);
 		btDiscardContentInfoChanges = new Button("Discard");
 		btDiscardContentInfoChanges.setVisible(false);
-		contentInfoButtonsPanel.addComponent(btDiscardContentInfoChanges);
+		content.addComponent(btDiscardContentInfoChanges);
 		
 		return contentInfoButtonsPanel;
 	}
 	
 	private Component createContentInfoForm() {
-		
-		Panel contentInfoPanel = new Panel();
+		VerticalLayout contentInfoPanelContent = new VerticalLayout();
+		contentInfoPanelContent.setMargin(true);
+		Panel contentInfoPanel = new Panel(contentInfoPanelContent);
 		contentInfoPanel.getContent().setSizeUndefined();
 		contentInfoPanel.getContent().setWidth("100%");
 		contentInfoPanel.setSizeFull();
@@ -248,7 +256,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		contentInfoForm = new Form();
 		contentInfoForm.setSizeFull();
 		contentInfoForm.setCaption("Information");
-		contentInfoForm.setWriteThrough(false);
+		contentInfoForm.setBuffered(true);
 		contentInfoForm.setReadOnly(true);
 		contentInfoForm.setEnabled(false);
 		
@@ -260,21 +268,20 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		});
 		
 		contentInfoForm.setReadOnly(true);
-		contentInfoPanel.addComponent(contentInfoForm);
+		contentInfoPanelContent.addComponent(contentInfoForm);
 		
 		return contentInfoPanel;
 	}
 	
 	private void initActions() {
 		
-		btCreateTagLibrary.addListener(new ClickListener() {
+		btCreateTagLibrary.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				final String nameProperty = "name";
 				SingleValueDialog singleValueDialog = new SingleValueDialog();
 						
 				singleValueDialog.getSingleValue(
-						getApplication().getMainWindow(),
 						"Create a new Tag Library",
 						"You have to enter a name!",
 						new SaveCancelListener<PropertysetItem>() {
@@ -288,7 +295,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 						try {
 							repository.createTagLibrary(name);
 						} catch (IOException e) {
-							((CatmaApplication)getApplication()).showAndLogError(
+							((CatmaApplication)UI.getCurrent()).showAndLogError(
 								"Error creating the Tag Library!", e);
 						}
 					}
@@ -297,7 +304,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		});
 		
 		
-		tagLibrariesTree.addListener(new ValueChangeListener() {
+		tagLibrariesTree.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				
@@ -329,7 +336,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 			}
 		});
 		
-		btOpenTagLibrary.addListener(new ClickListener() {
+		btOpenTagLibrary.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				Object value = tagLibrariesTree.getValue();
@@ -365,7 +372,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 			}
 		});
 
-		btEditContentInfo.addListener(new ClickListener() {
+		btEditContentInfo.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				btEditContentInfo.setVisible(false);
@@ -375,7 +382,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 			}
 		});
 		
-		btSaveContentInfoChanges.addListener(new ClickListener() {
+		btSaveContentInfoChanges.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				btEditContentInfo.setVisible(true);
@@ -394,7 +401,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 			}
 		});
 		
-		btDiscardContentInfoChanges.addListener(new ClickListener() {
+		btDiscardContentInfoChanges.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				btEditContentInfo.setVisible(true);
@@ -405,7 +412,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 			}
 		});
 		
-		this.tagLibrariesTree.addListener(new ItemClickListener() {
+		this.tagLibrariesTree.addItemClickListener(new ItemClickListener() {
 			
 			public void itemClick(ItemClickEvent event) {			
 				if (event.isDoubleClick()) {
@@ -437,12 +444,12 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 									result.getAccessMode());
 						} catch (IOException e) {
 							if (e.getCause() instanceof UnknownUserException) {
-								getWindow().showNotification(
+								Notification.show(
 										"Sharing failed!", e.getCause().getMessage(), 
-										Notification.TYPE_WARNING_MESSAGE);
+										Type.WARNING_MESSAGE);
 							}
 							else {
-								((CatmaApplication)getApplication()).showAndLogError(
+								((CatmaApplication)UI.getCurrent()).showAndLogError(
 									"Error sharing this corpus!", e);
 							}
 						}
@@ -450,12 +457,12 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 				});
 			sharingOptionsDlg.setVisibleItemProperties(
 					new Object[] {"userIdentification", "accessMode"});
-			sharingOptionsDlg.show(getApplication().getMainWindow());
+			sharingOptionsDlg.show();
 		}
 		else {
-			getWindow().showNotification(
+			Notification.show(
 					"Information", "Please select a Tag Library first!",
-					Notification.TYPE_TRAY_NOTIFICATION);
+					Type.TRAY_NOTIFICATION);
 		}
 
 	}
@@ -484,8 +491,8 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 				final ByteArrayInputStream teiDownloadStream = 
 						new ByteArrayInputStream(teiDocOut.toByteArray());
 
-				getWindow().open(new FileResource(null, getApplication()) {
-					public com.vaadin.terminal.DownloadStream getStream() {
+				Page.getCurrent().open(new FileResource(null) {
+					public DownloadStream getStream() {
 						DownloadStream ds = 
 							new DownloadStream(
 								teiDownloadStream, 
@@ -505,22 +512,23 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 						return tagLibrary.toString() + ".xml";
 					};
 				},
-				"_blank");
+				"_blank",
+				true);
 
 				
 				
 			} catch (IOException e) {
-				((CatmaApplication)getApplication()).showAndLogError(
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"Error opening the Tag Library!", e);
 			} catch (ParsingException parsingException) {
-				((CatmaApplication)getApplication()).showAndLogError(
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error exporting the Tag Library!", parsingException);
 			}
 		}	
 		else {
-			getWindow().showNotification(
+			Notification.show(
 					"Information", "Please select a Tag Library first!",
-					Notification.TYPE_TRAY_NOTIFICATION);
+					Type.TRAY_NOTIFICATION);
 		}
 
 	}
@@ -532,16 +540,16 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 			TagLibrary tagLibrary;
 			try {
 				tagLibrary = repository.getTagLibrary(tagLibraryReference);
-				((CatmaApplication)getApplication()).openTagLibrary(repository, tagLibrary);
+				((CatmaApplication)UI.getCurrent()).openTagLibrary(repository, tagLibrary);
 			} catch (IOException e) {
-				((CatmaApplication)getApplication()).showAndLogError(
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"Error opening the Tag Library!", e);
 			}
 		}	
 		else {
-			getWindow().showNotification(
+			Notification.show(
 					"Information", "Please select a Tag Library first!",
-					Notification.TYPE_TRAY_NOTIFICATION);
+					Type.TRAY_NOTIFICATION);
 		}
 	}
 
@@ -564,7 +572,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 					
 					
 				} catch (IOException e) {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error importing the Tag Library!", e);
 				}
 				finally {
@@ -573,7 +581,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 			}
 			
 		});
-		uploadDialog.show(getApplication().getMainWindow());
+		uploadDialog.show();
 	}
 
 	private void addTagLibraryReferenceToTree(TagLibraryReference tlr) {
@@ -590,7 +598,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		
 		if (tagLibraryReference != null) {
 			ConfirmDialog.show(
-				getApplication().getMainWindow(), 
+				UI.getCurrent(), 
 				"Do you really want to delete Tag Library '"
 						+ tagLibraryReference.toString() + "'?",
 		        new ConfirmDialog.Listener() {
@@ -600,7 +608,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		                	try {
 								repository.delete(tagLibraryReference);
 							} catch (IOException e) {
-								((CatmaApplication)getApplication()).showAndLogError(
+								((CatmaApplication)UI.getCurrent()).showAndLogError(
 									"Error deleting the Tag Library!", e);
 							}
 		                }

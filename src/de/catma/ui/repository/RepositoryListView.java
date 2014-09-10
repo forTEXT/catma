@@ -27,14 +27,17 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.Table.ColumnHeaderMode;
 import com.vaadin.ui.Table;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window.Notification;
 
-import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
 import de.catma.document.repository.RepositoryReference;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.tabbedview.TabComponent;
 
 public class RepositoryListView extends VerticalLayout implements TabComponent {
@@ -50,15 +53,15 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 	}
 
 	private void initActions() {
-		openBt.addListener(new ClickListener() {
+		openBt.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				RepositoryReference repositoryReference = 
 						(RepositoryReference)repositoryTable.getValue();
 				if (repositoryManager.isOpen(repositoryReference)) {
-					getWindow().showNotification(
+					Notification.show(
 							"Information", "Repository is already open.",
-							Notification.TYPE_TRAY_NOTIFICATION);
+							Type.TRAY_NOTIFICATION);
 				}
 				else {
 					if (repositoryReference.isAuthenticationRequired()) {
@@ -66,12 +69,12 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 								new AuthenticationDialog(
 										"Please authenticate yourself", 
 										repositoryReference, repositoryManager);
-						authDialog.show(getApplication().getMainWindow());
+						authDialog.show();
 					}
 					else {
 						try {
 							String user = 
-								((CatmaApplication)getApplication()).getParameter(
+								((CatmaApplication)UI.getCurrent()).getParameter(
 										"user.name");
 							if (user == null) {
 								user = System.getProperty("user.name");
@@ -81,17 +84,17 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 							userIdentification.put(
 								"user.ident", user);
 							
-							getApplication().setUser(userIdentification);
+							((CatmaApplication)UI.getCurrent()).setUser(userIdentification);
 							
 							Repository repository = 
 									repositoryManager.openRepository(
 											repositoryReference, userIdentification);
 							
-							((CatmaApplication)getApplication()).openRepository(
+							((CatmaApplication)UI.getCurrent()).openRepository(
 									repository);
 							
 						} catch (Exception e) {
-							((CatmaApplication)getApplication()).showAndLogError(
+							((CatmaApplication)UI.getCurrent()).showAndLogError(
 								"Error opening the repository!", e);
 						}
 					}
@@ -99,7 +102,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 			}
 		});
 		
-		repositoryTable.addListener(new Table.ValueChangeListener() {
+		repositoryTable.addValueChangeListener(new Table.ValueChangeListener() {
             public void valueChange(ValueChangeEvent event) {
             	openBt.setEnabled(event.getProperty().getValue() != null);
             }
@@ -119,7 +122,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		repositoryTable.setContainerDataSource(container);
 
 		repositoryTable.setVisibleColumns(new Object[] {"name"});
-		repositoryTable.setColumnHeaderMode(Table.COLUMN_HEADER_MODE_HIDDEN);
+		repositoryTable.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
 		repositoryTable.setSelectable(true);
 		repositoryTable.setMultiSelect(false);
 		repositoryTable.setPageLength(3);
@@ -155,10 +158,10 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 			openBt.click();
 		}
 		else {
-			getApplication().getMainWindow().showNotification(
+			Notification.show(
 					"Information", 
 					"There are no available repositories to login!",
-					Notification.TYPE_TRAY_NOTIFICATION);
+					Type.TRAY_NOTIFICATION);
 		}
 	}
 	

@@ -28,8 +28,8 @@ import com.vaadin.data.Item;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
-import com.vaadin.terminal.ClassResource;
-import com.vaadin.terminal.ThemeResource;
+import com.vaadin.server.ClassResource;
+import com.vaadin.server.ThemeResource;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -39,12 +39,13 @@ import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TreeTable;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window.Notification;
 
-import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
@@ -54,6 +55,8 @@ import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
+import de.catma.ui.CatmaApplication;
+import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.export.CsvExport;
 import de.catma.ui.component.export.CsvExport.CsvExportException;
 import de.catma.ui.component.export.HierarchicalExcelExport;
@@ -84,6 +87,7 @@ public class PhraseResultPanel extends VerticalLayout {
 	private Button btKwicCsvExport;
 	private Button btCsvExport;
 	private Table hiddenFlatTable;
+	private Button btSelectAllKwic;
 	
 	public PhraseResultPanel(
 			Repository repository, 
@@ -105,7 +109,7 @@ public class PhraseResultPanel extends VerticalLayout {
 	}
 
 	private void initActions() {
-		btDoubleTree.addListener(new ClickListener() {
+		btDoubleTree.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				Set<?> selection = (Set<?>) resultTable.getValue();
@@ -124,23 +128,23 @@ public class PhraseResultPanel extends VerticalLayout {
 							KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), 5);
 							kwics.add(kwic);
 						}	
-						((CatmaApplication)getApplication()).addDoubleTree(kwics);
+						((CatmaApplication)UI.getCurrent()).addDoubleTree(kwics);
 					}		
 					else {
-						getWindow().showNotification(
+						Notification.show(
 							"Information", 
 							"Please select exactly one phrase!", 
-							Notification.TYPE_TRAY_NOTIFICATION);
+							Type.TRAY_NOTIFICATION);
 					}
 				} catch (IOException e) {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							"error while preparing kwic in doubletree visualization", e);
 				}
 				
 			}
 		});
 		
-		btDist.addListener(new ClickListener() {
+		btDist.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				GroupedQueryResultSet set = new GroupedQueryResultSet();
@@ -166,28 +170,28 @@ public class PhraseResultPanel extends VerticalLayout {
 					resultSelectionListener.resultsSelected(set);
 				}
 				else {
-					getWindow().showNotification(
+					Notification.show(
 							"Information", "Please select one or more result rows!",
-							Notification.TYPE_TRAY_NOTIFICATION);
+							Type.TRAY_NOTIFICATION);
 				}
 			}
 
 
 		});
-		btSelectAll.addListener(new ClickListener() {
+		btSelectAll.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				selectAllForKwic(true);
 			}
 		});
-		btDeselectAll.addListener(new ClickListener() {
+		btDeselectAll.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				selectAllForKwic(false);
 			}
 		});
 		
-		btKwicExcelExport.addListener(new ClickListener() {
+		btKwicExcelExport.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
             	try {
@@ -198,18 +202,18 @@ public class PhraseResultPanel extends VerticalLayout {
 					excelExport.setReportTitle("CATMA Query Result Kwic");
 					excelExport.export();
 				} catch (IllegalArgumentException e) {
-					getWindow().showNotification(
+					HTMLNotification.show(
 						"Error", 
 						"Excel export failed. " + "<br>" + "Reason: " 
 						+ e.getMessage() + "<br>" + "Please use CSV export.", 
-						Notification.TYPE_WARNING_MESSAGE, true);
+						Type.WARNING_MESSAGE);
 					
 					e.printStackTrace();
 				}
 			}
 		});
 		
-		btKwicCsvExport.addListener(new ClickListener() {
+		btKwicCsvExport.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {         
 				try {
@@ -218,13 +222,21 @@ public class PhraseResultPanel extends VerticalLayout {
 					csvExport.sendConverted();
 				}
 				catch (CsvExportException e) {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							"Error creating CSV export!", e);
 				}
 			}
 		});
 
-		btExcelExport.addListener(new ClickListener() {
+		
+		btSelectAllKwic.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				kwicPanel.selectAll();
+			}
+		});
+		
+		btExcelExport.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				try{
@@ -234,18 +246,18 @@ public class PhraseResultPanel extends VerticalLayout {
 	                excelExport.setReportTitle("CATMA Query Result");
 	                excelExport.export();
 				} catch (IllegalArgumentException e) {
-					getWindow().showNotification(
+					HTMLNotification.show(
 						"Error", 
 						"Excel export failed. " + "<br>" + "Reason: " 
 						+ e.getMessage() + "<br>" + "Please use CSV export.", 
-						Notification.TYPE_WARNING_MESSAGE, true);
+						Type.WARNING_MESSAGE);
 					
 					e.printStackTrace();
 				}	                
 			}
 		});
 		
-		btCsvExport.addListener(new ClickListener() {
+		btCsvExport.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				try {
@@ -254,13 +266,14 @@ public class PhraseResultPanel extends VerticalLayout {
 					csvExport.sendConverted();
 				}
 				catch (CsvExportException e) {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							"Error creating CSV export!", e);
 				}
 			}
 		});
 	}
 	
+	@SuppressWarnings("unchecked")
 	private Table fillFlatTable() {
 		hiddenFlatTable.removeAllItems();
 		
@@ -280,7 +293,7 @@ public class PhraseResultPanel extends VerticalLayout {
 					
 					Item curItem = hiddenFlatTable.addItem(result+sourceDocumentID);
 					curItem.getItemProperty("source document").setValue(sourceDocument.toString());
-					curItem.getItemProperty("phrase").setValue(result.getGroup());
+					curItem.getItemProperty("phrase").setValue(result.getGroup().toString());
 					curItem.getItemProperty("frequency").setValue(result.getFrequency(sourceDocumentID));
 				}
 			}
@@ -353,9 +366,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		buttonPanel.setWidth("100%");
 		
 		btDist = new Button();
-		btDist.setIcon(new ClassResource(
-				"ui/analyzer/resources/chart.gif", 
-				getApplication()));
+		btDist.setIcon(new ClassResource("analyzer/resources/chart.gif"));
 		btDist.setDescription(
 			"Show selected phrases as a distribution trend in a " +
 			"chart like visualization.");
@@ -363,24 +374,21 @@ public class PhraseResultPanel extends VerticalLayout {
 		buttonPanel.addComponent(btDist);
 		
 		btDoubleTree = new Button();
-		btDoubleTree.setIcon(new ClassResource(
-				"ui/analyzer/resources/doubletree.gif", 
-				getApplication()));
+		btDoubleTree.setIcon(new ClassResource("analyzer/resources/doubletree.gif"));
 		btDoubleTree.setDescription(
 			"Show a selected phrase with a doubletree kwic visualization.");
 		
 		buttonPanel.addComponent(btDoubleTree);
 		
 		btExcelExport = new Button();
-		btExcelExport.setIcon(new ThemeResource("../images/table-excel.png"));
+		btExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png"));
 		btExcelExport.setDescription("Export all Query result data as an Excel spreadsheet.");
 		buttonPanel.addComponent(btExcelExport);
 		
 		
 		btCsvExport = new Button();
 		btCsvExport.setIcon(new ClassResource(
-				"ui/analyzer/resources/csv_text.png", 
-				getApplication())); //http://findicons.com/icon/84601/csv_text
+				"analyzer/resources/csv_text.png")); //http://findicons.com/icon/84601/csv_text
 		btCsvExport.setDescription(
 				"Export all Query result data as flat CSV File.");
 		buttonPanel.addComponent(btCsvExport);
@@ -411,24 +419,33 @@ public class PhraseResultPanel extends VerticalLayout {
 		kwicButtonPanel.setWidth("100%");
 		
 		btKwicExcelExport = new Button();
-		btKwicExcelExport.setIcon(new ThemeResource("../images/table-excel.png"));
+		btKwicExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png"));
 		btKwicExcelExport.setDescription(
 				"Export all Query result data as an Excel spreadsheet.");
 		kwicButtonPanel.addComponent(btKwicExcelExport);
+		kwicButtonPanel.setComponentAlignment(
+				btKwicExcelExport, Alignment.MIDDLE_LEFT);
 		
 		btKwicCsvExport = new Button();
 		btKwicCsvExport.setIcon(new ClassResource(
-				"ui/analyzer/resources/csv_text.png", 
-				getApplication())); //http://findicons.com/icon/84601/csv_text
+				"analyzer/resources/csv_text.png")); //http://findicons.com/icon/84601/csv_text
 		btKwicCsvExport.setDescription(
 				"Export all Query result data as CSV File.");
 		kwicButtonPanel.addComponent(btKwicCsvExport);
+		kwicButtonPanel.setComponentAlignment(
+				btKwicCsvExport, Alignment.MIDDLE_LEFT);
 
-		Label helpLabel = new Label();
-		helpLabel.setIcon(new ClassResource(
-				"ui/resources/icon-help.gif", 
-				getApplication()));
 		
+		btSelectAllKwic = new Button("Select all");
+		kwicButtonPanel.addComponent(btSelectAllKwic);
+		kwicButtonPanel.setComponentAlignment(btSelectAllKwic, Alignment.MIDDLE_RIGHT);
+		kwicButtonPanel.setExpandRatio(btSelectAllKwic, 1f);
+		
+		Label helpLabel = new Label();
+
+		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
+		
+		helpLabel.setWidth("20px");
 		helpLabel.setDescription(
 				"<h3>Hints</h3>" +
 				"<h4>Tagging search results</h4>" +
@@ -443,7 +460,6 @@ public class PhraseResultPanel extends VerticalLayout {
 				"to untag markup for selected search results in the Kwic-view.");
 		
 		kwicButtonPanel.addComponent(helpLabel);
-		kwicButtonPanel.setExpandRatio(helpLabel, 1f);
 		kwicButtonPanel.setComponentAlignment(helpLabel, Alignment.MIDDLE_RIGHT);
 		
 		rightComponent.addComponent(kwicButtonPanel);
@@ -463,8 +479,8 @@ public class PhraseResultPanel extends VerticalLayout {
 		int totalCount = 0;
 		int totalFreq = 0;
 		
-		for (GroupedQueryResult phraseResult : 
-				queryResult.asGroupedSet()) {
+		for (GroupedQueryResult phraseResult : //hat eine methode filter; muss die ganze QuerryResult durchgehen; es gibt die methode getQueryResult
+				queryResult.asGroupedSet()) { //holt sich den Rückgabewert von der methode asGroupedSet
 			addPhraseResult(phraseResult);
 			totalFreq+=phraseResult.getTotalFrequency();
 			totalCount++;
@@ -477,6 +493,7 @@ public class PhraseResultPanel extends VerticalLayout {
 				TreePropertyName.frequency, "Total frequency: " + totalFreq);
 	}
 
+	@SuppressWarnings("unchecked")
 	private void addPhraseResult(GroupedQueryResult phraseResult) {
 		resultTable.addItem( 
 				new Object[] {
@@ -488,7 +505,7 @@ public class PhraseResultPanel extends VerticalLayout {
 
 		resultTable.getContainerProperty(
 			phraseResult, TreePropertyName.caption).setValue(
-					phraseResult.getGroup());
+					phraseResult.getGroup().toString());
 
 		for (String sourceDocumentID : phraseResult.getSourceDocumentIDs()) {
 			SourceDocument sourceDocument = 
@@ -516,7 +533,7 @@ public class PhraseResultPanel extends VerticalLayout {
 	private CheckBox createKwicCheckbox(final GroupedQueryResult phraseResult) {
 		final CheckBox cbShowInKwicView = new CheckBox();
 		cbShowInKwicView.setImmediate(true);
-		cbShowInKwicView.addListener(new ValueChangeListener() {
+		cbShowInKwicView.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				boolean selected = 
@@ -537,7 +554,7 @@ public class PhraseResultPanel extends VerticalLayout {
 			try {
 				kwicPanel.addQueryResultRows(phraseResult);
 			} catch (IOException e) {
-				((CatmaApplication)getApplication()).showAndLogError(
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"Error showing KWIC results!", e);
 			}
 		}

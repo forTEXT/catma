@@ -28,19 +28,20 @@ import java.util.List;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
-import com.vaadin.terminal.ClassResource;
-import com.vaadin.terminal.Resource;
+import com.vaadin.server.ClassResource;
+import com.vaadin.server.Resource;
+import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Tree;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
-import de.catma.CatmaApplication;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
@@ -48,6 +49,7 @@ import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.TagMatchMode;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.tag.TagDefinitionPathInfo;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.EndorsedTreeTable;
 import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
 import de.catma.util.ColorConverter;
@@ -106,7 +108,7 @@ public class TagPanel extends AbstractSearchPanel {
 				initActions();
 				initData();
 			} catch (IOException e) {
-				((CatmaApplication)getApplication()).showAndLogError("DB error", e);
+				((CatmaApplication)UI.getCurrent()).showAndLogError("DB error", e);
 			}
 		}
 	}
@@ -145,7 +147,7 @@ public class TagPanel extends AbstractSearchPanel {
 			}
 		});
 		
-		tagMatchModeCombo.addListener(new ValueChangeListener() {
+		tagMatchModeCombo.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				showInPreview();
@@ -181,14 +183,14 @@ public class TagPanel extends AbstractSearchPanel {
 		toggleButtonStateListener.stepChanged(TagPanel.this);
 	}
 
+	@SuppressWarnings("unchecked")
 	private void addTagDefinitionPathInfo(
 			TagDefinitionPathInfo tagDefinitionPathInfo) {
 		String tagsetDefinitionName = tagDefinitionPathInfo.getTagsetDefinitionName();
 		
 		if (!(tagsetTree).containsId(tagsetDefinitionName)) {
 			ClassResource tagsetIcon = 
-					new ClassResource(
-						"ui/tagmanager/resources/grndiamd.gif", getApplication());
+					new ClassResource("tagmanager/resources/grndiamd.gif");
 			tagsetTree.addItem(tagsetDefinitionName);
 			tagsetTree.getContainerProperty(
 				tagsetDefinitionName, TagTreePropertyName.caption).setValue(
@@ -212,8 +214,7 @@ public class TagPanel extends AbstractSearchPanel {
 			String curId = tagsetDefinitionName + curPath; 
 			if (!tagsetTree.containsId(curId)) {
 				ClassResource tagIcon = new ClassResource(
-						"ui/tagmanager/resources/reddiamd.gif", 
-						getApplication());
+						"tagmanager/resources/reddiamd.gif");
 				tagsetTree.addItem(curId);
 				tagsetTree.getContainerProperty(
 						curId, TagTreePropertyName.caption).setValue(
@@ -233,7 +234,7 @@ public class TagPanel extends AbstractSearchPanel {
 								COLORLABEL_HTML, 
 								ColorConverter.toHex((
 										tagDefinitionPathInfo.getColor()))));
-				colorLabel.setContentMode(Label.CONTENT_XHTML);
+				colorLabel.setContentMode(ContentMode.HTML);
 				tagsetTree.getContainerProperty(
 						curId, TagTreePropertyName.color).setValue(
 							colorLabel);
@@ -271,7 +272,7 @@ public class TagPanel extends AbstractSearchPanel {
 		
 		tagsetTree.setItemCaptionPropertyId(TagTreePropertyName.caption);
 		tagsetTree.setItemIconPropertyId(TagTreePropertyName.icon);
-		tagsetTree.setItemCaptionMode(Tree.ITEM_CAPTION_MODE_PROPERTY);
+		tagsetTree.setItemCaptionMode(ItemCaptionMode.PROPERTY);
 	
 		tagsetTree.setVisibleColumns(
 				new Object[] {

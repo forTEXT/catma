@@ -32,7 +32,7 @@ import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.VerticalLayout;
 
-public class TabbedView extends VerticalLayout implements CloseHandler, Iterable<Component> {
+public class TabbedView extends VerticalLayout implements CloseHandler {
 	
 	private TabSheet tabSheet;
 	private Label noOpenTabsLabel;
@@ -44,7 +44,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler, Iterable
 	}
 
 	private void initActions() {
-		tabSheet.addListener(new SelectedTabChangeListener() {
+		tabSheet.addSelectedTabChangeListener(new SelectedTabChangeListener() {
 			
 			public void selectedTabChange(SelectedTabChangeEvent event) {
 				if (lastTab != null) {
@@ -118,8 +118,8 @@ public class TabbedView extends VerticalLayout implements CloseHandler, Iterable
 		return tab;
 	}
 
-	public Iterator<Component> iterator() {
-		return tabSheet.getComponentIterator();
+	public Iterable<Component> getTabSheet() {
+		return tabSheet;
 	}
 	
 	protected void setSelectedTab(Component tabContent) {

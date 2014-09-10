@@ -28,6 +28,8 @@ import java.util.zip.CRC32;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.GridLayout;
@@ -35,8 +37,9 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.ProgressIndicator;
 import com.vaadin.ui.Tree;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 
-import de.catma.CatmaApplication;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
@@ -52,6 +55,7 @@ import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.contenthandler.DefaultProtocolHandler;
 import de.catma.document.source.contenthandler.HttpProtocolHandler;
 import de.catma.document.source.contenthandler.ProtocolHandler;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.WizardStepListener;
@@ -107,7 +111,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			
 			final String sourceDocumentFileUri = 
 					repository.getFileURL(wizardResult.getSourceDocumentID(), 
-							((CatmaApplication)getApplication()).getTempDirectory() + "/");
+							((CatmaApplication)UI.getCurrent()).getTempDirectory() + "/");
 			final String mimeTypeFromUpload = 
 					sourceDocumentInfo.getTechInfoSet().getMimeType();
 			final URI sourceDocURI = sourceDocumentInfo.getTechInfoSet().getURI();
@@ -117,7 +121,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			setVisibleXSLTInputComponents(false);
 			
 			BackgroundService backgroundService = 
-					((CatmaApplication)getApplication()).getBackgroundService();
+					((CatmaApplication)UI.getCurrent()).getBackgroundService();
 			progressIndicator.setEnabled(true);
 			progressIndicator.setCaption("Detecting file type");
 			backgroundService.submit(
@@ -178,7 +182,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 											new ByteArrayInputStream(currentByteContent));
 									wizardResult.setSourceDocument(sourceDocument);
 								} catch (Exception e) {
-									((CatmaApplication)getApplication()).showAndLogError(
+									((CatmaApplication)UI.getCurrent()).showAndLogError(
 											"Error detecting the file type!", e);
 								}
 							}
@@ -195,14 +199,14 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 						}
 						
 						public void error(Throwable t) {
-							((CatmaApplication)getApplication()).showAndLogError(
+							((CatmaApplication)UI.getCurrent()).showAndLogError(
 								"Error detecting file type", t);
 						}
 						
-					}, new DefaultProgressListener(progressIndicator, getApplication()));
+					}, new DefaultProgressListener(progressIndicator, UI.getCurrent()));
 		}
 		catch (Exception exc) {
-			((CatmaApplication)getApplication()).showAndLogError(
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error detecting file type", exc);
 		}
 	}
@@ -219,7 +223,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 					"<pre>" + sourceDocument.getContent(new Range(0, 2000)) + "</pre>");
 			wizardResult.setSourceDocument(sourceDocument);
 		} catch (Exception e) {
-			((CatmaApplication)getApplication()).showAndLogError(
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error loading the preview for the document!", e);
 		}
 	}
@@ -241,7 +245,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	private void initComponents() {
 		setSpacing(true);
 		setSizeFull();
-		setMargin(true, false, false, false);
+		setMargin(true);
 
 		
 		cbFileType = new ComboBox("File type");
@@ -284,15 +288,16 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 				fileEncodingTree.setChildrenAllowed(charset, false);
 			}
 		}
-		
-		previewPanel = new Panel("Preview");
+		VerticalLayout previewContent = new VerticalLayout();
+		previewContent.setMargin(true);
+		previewPanel = new Panel("Preview", previewContent);
 		previewPanel.getContent().setSizeUndefined();
 		previewPanel.setHeight("300px");
 		
 		
 		this.taPreview = new Label();
-		this.taPreview.setContentMode(Label.CONTENT_XHTML);
-		previewPanel.addComponent(taPreview);
+		this.taPreview.setContentMode(ContentMode.HTML);
+		previewContent.addComponent(taPreview);
 		
 		addComponent(fileEncodingTree, 0, 1);
 		addComponent(previewPanel, 1, 1);
@@ -314,7 +319,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	}
 	
 	private void initActions() {
-		cbFileType.addListener(new ValueChangeListener() {
+		cbFileType.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				handleFileType();
@@ -322,7 +327,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 
 		});
 		
-		fileEncodingTree.addListener(new ValueChangeListener() {
+		fileEncodingTree.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				if (fileEncodingTree.getValue() instanceof Charset) {

@@ -23,29 +23,32 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.vaadin.Application;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.terminal.ClassResource;
+import com.vaadin.server.ClassResource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window.Notification;
 
-import de.catma.CatmaApplication;
 import de.catma.document.Corpus;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
+import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
@@ -56,6 +59,7 @@ import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.Slider;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
@@ -88,15 +92,14 @@ public class TaggerView extends VerticalLayout
 	public TaggerView(
 			int taggerID, 
 			SourceDocument sourceDocument, Repository repository, 
-			PropertyChangeListener sourceDocChangedListener,
-			Application application) {
+			PropertyChangeListener sourceDocChangedListener) {
 		this.taggerID = taggerID;
 		this.tagManager = repository.getTagManager();
 		this.repository = repository;
 		this.sourceDocument = sourceDocument;
 		this.sourceDocChangedListener = sourceDocChangedListener;
 
-		initComponents(application);
+		initComponents();
 		initActions();
 		initListeners();
 		pager.setMaxPageLengthInLines(30);
@@ -107,7 +110,7 @@ public class TaggerView extends VerticalLayout
 				linesPerPageSlider.setValue((100/totalLineCount)*30);
 			} catch (ValueOutOfBoundsException toBeIgnored) {}
 		} catch (IOException e) {
-			((CatmaApplication)getApplication()).showAndLogError(
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error showing Source Document!", e);
 		}
 	}
@@ -123,17 +126,32 @@ public class TaggerView extends VerticalLayout
 				if (evt.getNewValue() != null) {
 
 					@SuppressWarnings("unchecked")
-					List<TagReference> tagReferences = (List<TagReference>)evt.getNewValue(); 
+					List<TagReference> tagReferences = 
+					(List<TagReference>)evt.getNewValue(); 
 					
-					List<TagReference> relevantTagReferences = new ArrayList<TagReference>();
+					List<TagReference> relevantTagReferences = 
+							new ArrayList<TagReference>();
 
 					for (TagReference tr : tagReferences) {
-						if (isRelevantTagReference(tr, markupPanel.getUserMarkupCollections())) {
+						if (isRelevantTagReference(
+								tr, 
+								markupPanel.getUserMarkupCollections())) {
 							relevantTagReferences.add(tr);
 						}
 					}
 					tagger.setVisible(relevantTagReferences, true);
+
+					Set<String> tagInstanceUuids = new HashSet<String>();
+
+					for (TagReference tr : relevantTagReferences){
+						tagInstanceUuids.add(tr.getTagInstance().getUuid());
+					}
 					
+					if (tagInstanceUuids.size() == 1){
+						markupPanel.showPropertyEditDialog(
+								relevantTagReferences.get(0).getTagInstance());
+					}
+
 				}
 				else if (evt.getOldValue() != null) {
 					@SuppressWarnings("unchecked")
@@ -163,7 +181,7 @@ public class TaggerView extends VerticalLayout
 	}
 
 	private void initActions() {
-		btAnalyze.addListener(new ClickListener() {
+		btAnalyze.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				Corpus corpus = new Corpus(sourceDocument.toString());
@@ -180,12 +198,12 @@ public class TaggerView extends VerticalLayout
 				}
 				//TODO: add static markup colls
 				
-				((AnalyzerProvider)getApplication()).analyze(
+				((AnalyzerProvider)UI.getCurrent()).analyze(
 						corpus, (IndexedRepository)markupPanel.getRepository());
 			}
 		});
 		
-		linesPerPageSlider.addListener(new ValueChangeListener() {
+		linesPerPageSlider.addValueListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				Double perCentValue = (Double)linesPerPageSlider.getValue();
@@ -202,7 +220,7 @@ public class TaggerView extends VerticalLayout
 
 					pagerComponent.setPage(1);
 				} catch (IOException e) {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error showing Source Document!", e);
 				}
 
@@ -210,7 +228,7 @@ public class TaggerView extends VerticalLayout
 		});
 	}
 
-	private void initComponents(Application application) {
+	private void initComponents() {
 		setSizeFull();
 		
 		VerticalLayout taggerPanel = new VerticalLayout();
@@ -219,9 +237,7 @@ public class TaggerView extends VerticalLayout
 
 		Label helpLabel = new Label();
 		
-		helpLabel.setIcon(new ClassResource(
-				"ui/resources/icon-help.gif", 
-				application));
+		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
 		helpLabel.setWidth("20px");
 		helpLabel.setDescription(
 				"<h3>Hints</h3>" +
@@ -231,16 +247,16 @@ public class TaggerView extends VerticalLayout
 				"<li>Now you can mark the text sequence you want to tag.</li><li>Click the colored button of the desired Tag to apply it to the marked sequence.</li></ol> " +
 				"When you click on a tagged text, i. e. a text that is underlined with colored bars, you should see " +
 				"the available Tag Instances in the section on the lower right of this view.");		
-		pager = new Pager(taggerID, 80, 30);
+		IndexInfoSet indexInfoSet = 
+			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet(); 
+		pager = new Pager(taggerID, 80, 30, 
+				indexInfoSet.isRightToLeftLanguage());
 		
 		tagger = new Tagger(taggerID, pager, this);
 		tagger.addStyleName("tagger");
 		tagger.setWidth("550px");
 		
 		taggerPanel.addComponent(tagger);
-		
-//		Panel actionPanel = new Panel(new HorizontalLayout());
-//		((HorizontalLayout)actionPanel.getContent()).setSpacing(true);
 	
 		HorizontalLayout actionPanel = new HorizontalLayout();
 		actionPanel.setSpacing(true);
@@ -280,12 +296,12 @@ public class TaggerView extends VerticalLayout
 							tagger.addTagInstanceWith(tagDefinition);
 						}
 						else {
-							getWindow().showNotification(
+							Notification.show(
 	                                "Information",
 	                                "Please select a User Markup Collection "
 	                                + " to store your markup first!<br>"
 	                                + "See 'Active Markup Collections'.",
-	                                Notification.TYPE_TRAY_NOTIFICATION);
+	                                Type.TRAY_NOTIFICATION);
 						}
 					}
 					
@@ -392,7 +408,7 @@ public class TaggerView extends VerticalLayout
 			}
 			markupPanel.addTagReferences(tagReferences);
 		} catch (URISyntaxException e) {
-			((CatmaApplication)getApplication()).showAndLogError(
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error adding Tags!", e);
 		}
 	}
@@ -402,34 +418,35 @@ public class TaggerView extends VerticalLayout
 			int startPage = pager.getPageNumberFor(range.getStartPoint());
 			int endPage = pager.getPageNumberFor(range.getEndPoint());
 			
-			if (startPage != endPage) {
+			if (startPage != endPage) { // range spans several pages
 				Double perCentValue = 100.0;
 
+				// increase page zoom so that the highlighter fits into one page
 				while(startPage != endPage) {
 					pager.setMaxPageLengthInLines(pager.getMaxPageLengthInLines()+5);
 					try {
 						pager.setText(sourceDocument.getContent());
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.log(Level.SEVERE, "error adjusting  page zoom", e);
 					}
 	
 					startPage = pager.getPageNumberFor(range.getStartPoint());
 					endPage = pager.getPageNumberFor(range.getEndPoint());
 					
-					perCentValue = ((double)pager.getApproxMaxLineLength())/(((double)totalLineCount)/100.0);
+					perCentValue = 
+						((double)pager.getApproxMaxLineLength())/(((double)totalLineCount)/100.0);
 				}
-				
+				// set computed zoom value
 				linesPerPageSlider.setValue(perCentValue);
 			}
-			
+			// set page that contains the range to be highlighted
 			int pageNumber = pager.getStartPageNumberFor(range);
 			pagerComponent.setPage(pageNumber);
+			// do the highlighting
 			TextRange tr = pager.getCurrentPage().getRelativeRangeFor(range);
 			tagger.highlight(tr);
 		} catch (ValueOutOfBoundsException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "error during highlighting", e);
 		}
 	}
 	

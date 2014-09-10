@@ -20,8 +20,10 @@ package de.catma.ui.menu;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.net.URI;
 
-import com.vaadin.Application;
+import com.vaadin.server.Page;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
 
@@ -32,7 +34,6 @@ public class LoginLogoutCommand implements Command {
 	private MenuItem loginLogoutItem;
 	private RepositoryManagerView repositoryManagerView;
 	private Menu menu;
-	final private Application application;
 	
 	private PropertyChangeListener repositoryManagerListener = 
 			new PropertyChangeListener() {
@@ -43,19 +44,15 @@ public class LoginLogoutCommand implements Command {
 			}
 			else {
 				loginLogoutItem.setText("Login");
-				if (application.isRunning()) {
-					application.close();
-				}
+				logout();
 			}
 		}
 	};
 	
 	public LoginLogoutCommand(
-			Menu menu, RepositoryManagerView repositoryManagerView, 
-			Application application) {
+			Menu menu, RepositoryManagerView repositoryManagerView) {
 		this.menu = menu;
 		this.repositoryManagerView = repositoryManagerView;
-		this.application = application;
 		repositoryManagerView.getRepositoryManager().
 			addPropertyChangeListener(
 				RepositoryManager.RepositoryManagerEvent.repositoryStateChange, 
@@ -66,14 +63,20 @@ public class LoginLogoutCommand implements Command {
 	public void menuSelected(MenuItem selectedItem) {
 		if (repositoryManagerView.getRepositoryManager().hasOpenRepository()) {
 			repositoryManagerView.closeCurrentRepository();
-			if (application.isRunning()) {
-				application.close();
-			}
+			logout();
 		}
 		else {
 			menu.executeEntry(repositoryManagerView);
 			repositoryManagerView.openFirstRepository();
 		}
+	}
+	
+	private void logout() {
+		URI location = Page.getCurrent().getLocation();
+		String afterLogoutRedirect = 
+				location.getScheme() + "://" + location.getAuthority() + location.getPath();
+		Page.getCurrent().setLocation(afterLogoutRedirect);
+		VaadinSession.getCurrent().close();
 	}
 
 

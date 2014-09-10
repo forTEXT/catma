@@ -9,6 +9,7 @@ import java.nio.charset.Charset;
 import com.csvreader.CsvWriter;
 import com.vaadin.addon.tableexport.TableExport;
 import com.vaadin.ui.Table;
+import com.vaadin.ui.UI;
 
 import de.catma.util.CloseSafe;
 import de.catma.util.IDGenerator;
@@ -23,16 +24,17 @@ public class CsvExport extends TableExport {
 	}
 	
 	private File exportFile;
+	private Table table;
 
 	public CsvExport(Table table) {
 		super(table);
+		this.table = table;
 	}
 
 	@Override
 	public void convertTable() {
 		FileOutputStream fileOut = null;
         try {
-        	Table table = getTable();
 			exportFile = File.createTempFile(new IDGenerator().generate(), ".csv");
 			fileOut = new FileOutputStream(exportFile);
 			final CsvWriter writer = new CsvWriter(fileOut, ',', Charset.forName("UTF-8"));
@@ -71,7 +73,7 @@ public class CsvExport extends TableExport {
 	@Override
 	public boolean sendConverted() {
 		return sendConvertedFileToUser(
-			getTable().getApplication(), 
+			UI.getCurrent(), 
 			exportFile, "Table-Export.csv", "text/csv");
 	}
 

@@ -24,6 +24,7 @@ import org.vaadin.teemu.wizards.event.WizardProgressListener;
 import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
 import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
+import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 
 
@@ -42,12 +43,12 @@ public class WizardManager implements
 			lastActiveStep.stepDeactivated(true);
 		}
 		wizardWindow.setVisible(false);
-		wizardWindow.getParent().removeWindow(wizardWindow);
+		UI.getCurrent().removeWindow(wizardWindow);
 	}
 
 	public void wizardCancelled(WizardCancelledEvent event) {
 		wizardWindow.setVisible(false);
-		wizardWindow.getParent().removeWindow(wizardWindow);
+		UI.getCurrent().removeWindow(wizardWindow);
 	}
 
 	public void stepSetChanged(WizardStepSetChangedEvent event) {

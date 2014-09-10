@@ -50,12 +50,13 @@ class ContentInfoPanel extends HorizontalLayout implements
 
 	private void initComponents() {
 		setSpacing(true);
+		setMargin(true);
 		setSizeFull();
 		
 		contentInfoForm = new Form();
 		addComponent(contentInfoForm);
 		contentInfoForm.setReadOnly(false);
-		contentInfoForm.setWriteThrough(true);
+		contentInfoForm.setBuffered(false);
 		contentInfoForm.setImmediate(true);
 	}
 

@@ -28,10 +28,12 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.ListSelect;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TextField;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.ui.Window.Notification;
 
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
@@ -65,14 +67,14 @@ public class PropertyDefinitionDialog extends VerticalLayout {
 	}
 
 	private void initActions(final SaveCancelListener<PropertyDefinition> saveCancelListener) {
-		btAdd.addListener(new ClickListener() {
+		btAdd.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				String val = (String)newValueInput.getValue();
 				if ((val == null)||(val.isEmpty())) {
-					getApplication().getMainWindow().showNotification(
+					Notification.show(
 						"Info", "The value can not be empty!", 
-						Notification.TYPE_TRAY_NOTIFICATION);
+						Type.TRAY_NOTIFICATION);
 				}
 				else {
 					valueInput.addItem(val);
@@ -82,30 +84,30 @@ public class PropertyDefinitionDialog extends VerticalLayout {
 			}
 		});
 		
-		btRemove.addListener(new ClickListener() {
+		btRemove.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				if (valueInput.getValue() != null) {
 					valueInput.removeItem(valueInput.getValue());
 				}
 				else {
-					getApplication().getMainWindow().showNotification(
+					Notification.show(
 							"Info", "Please select a value first!", 
-							Notification.TYPE_TRAY_NOTIFICATION);
+							Type.TRAY_NOTIFICATION);
 				}
 				
 			}
 		});
 		
-		btCancel.addListener(new ClickListener() {
+		btCancel.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				window.getParent().removeWindow(window);
+				UI.getCurrent().removeWindow(window);
 				saveCancelListener.cancelPressed();
 			}
 		});
 		
-		btSave.addListener(new ClickListener() {
+		btSave.addClickListener(new ClickListener() {
 			
 			@SuppressWarnings("unchecked")
 			public void buttonClick(ClickEvent event) {
@@ -123,7 +125,7 @@ public class PropertyDefinitionDialog extends VerticalLayout {
 					propertyDefinition.setPossibleValueList(
 							new PropertyPossibleValueList(values, true));
 				}
-				window.getParent().removeWindow(window);
+				UI.getCurrent().removeWindow(window);
 				saveCancelListener.savePressed(propertyDefinition);
 			}
 		});
@@ -194,8 +196,8 @@ public class PropertyDefinitionDialog extends VerticalLayout {
 	}
 	
 	
-	public void show(Window parent) {
-		parent.addWindow(window);
+	public void show() {
+		UI.getCurrent().addWindow(window);
 	}
 	
 }

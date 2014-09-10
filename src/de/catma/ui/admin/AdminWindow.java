@@ -23,11 +23,11 @@ public class AdminWindow extends Window {
 	}
 
 	private void initActions() {
-		btRefresh.addListener(new ClickListener() {
+		btRefresh.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				numberOfUsers.setReadOnly(false);
-				numberOfUsers.setValue(userManager.getUserCount());
+				numberOfUsers.setValue(String.valueOf(userManager.getUserCount()));
 				numberOfUsers.setReadOnly(true);
 			}
 		});
@@ -39,7 +39,7 @@ public class AdminWindow extends Window {
 		content.setMargin(true);
 		content.setSpacing(true);
 		numberOfUsers = new TextField("Current users online");
-		numberOfUsers.setValue(userManager.getUserCount());
+		numberOfUsers.setValue(String.valueOf(userManager.getUserCount()));
 		numberOfUsers.setReadOnly(true);
 		content.addComponent(numberOfUsers);
 		btRefresh = new Button("Refresh");

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -37,6 +38,7 @@ public class KwicProvider {
 	private String content;
 	private Analyzer analyzer;
 	private String sourceDocumentId;
+	private boolean rtl;
 	
 	public KwicProvider(SourceDocument sourceDocument) throws IOException {
 		this.sourceDocumentId = sourceDocument.getID();
@@ -44,7 +46,8 @@ public class KwicProvider {
 		IndexInfoSet indexInfoSet = 
 				sourceDocument.getSourceContentHandler()
 					.getSourceDocumentInfo().getIndexInfoSet();
-		
+		rtl = indexInfoSet.isRightToLeftLanguage();
+	
 		analyzer = 
 				new WhitespaceAndPunctuationAnalyzer(
 						indexInfoSet.getUnseparableCharacterSequences(),
@@ -75,6 +78,7 @@ public class KwicProvider {
             		spanContext.getBackwardRange().getStartPoint(),
                     spanContext.getForwardRange().getEndPoint()),
             range.getStartPoint()-spanContext.getBackwardRange().getStartPoint(),
+            rtl,
             spanContext);
     }	
 	

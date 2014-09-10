@@ -19,6 +19,7 @@
 package de.catma.ui.dialog;
 
 import com.vaadin.data.util.AbstractProperty;
+import com.vaadin.data.util.converter.Converter.ConversionException;
 
 public class StringProperty extends AbstractProperty {
 	

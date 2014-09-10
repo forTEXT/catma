@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import com.vaadin.data.Container;
 import com.vaadin.data.util.HierarchicalContainer;
@@ -36,12 +37,15 @@ import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Table;
+import com.vaadin.ui.Table.Align;
+import com.vaadin.ui.Table.CellStyleGenerator;
 import com.vaadin.ui.TreeTable;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window.Notification;
 
-import de.catma.CatmaApplication;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
@@ -56,7 +60,7 @@ import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagsetDefinition;
-import de.catma.ui.MultiSelectTreeTable;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToReversedTrimmedStringCIComparator;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
@@ -78,6 +82,7 @@ public class KwicPanel extends VerticalLayout {
 	private TreeTable kwicTable;
 	private boolean markupBased;
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
+	private WeakHashMap<Object, Boolean> itemDirCache = new WeakHashMap<>();
 
 	public KwicPanel(Repository repository, 
 			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider) {
@@ -96,7 +101,7 @@ public class KwicPanel extends VerticalLayout {
 	}
 
 	private void initActions() {
-		kwicTable.addListener(new ItemClickListener() {
+		kwicTable.addItemClickListener(new ItemClickListener() {
 			
 			public void itemClick(ItemClickEvent event) {
 				if (event.isDoubleClick()) {
@@ -105,7 +110,7 @@ public class KwicPanel extends VerticalLayout {
 							row.getSourceDocumentId());
 					Range range = row.getRange();
 					
-					((CatmaApplication)getApplication()).openSourceDocument(
+					((CatmaApplication)UI.getCurrent()).openSourceDocument(
 							sd, repository, range);
 					
 					List<UserMarkupCollectionReference> relatedUmcRefs = 
@@ -113,12 +118,12 @@ public class KwicPanel extends VerticalLayout {
 								getUserMarkupCollectionRefs(sd);
 					try {
 						for (UserMarkupCollectionReference ref : relatedUmcRefs) {
-							((CatmaApplication)getApplication()).openUserMarkupCollection(
+							((CatmaApplication)UI.getCurrent()).openUserMarkupCollection(
 								sd, repository.getUserMarkupCollection(ref), repository);
 						}
 					}
 					catch (IOException e) {
-						((CatmaApplication)getApplication()).showAndLogError(
+						((CatmaApplication)UI.getCurrent()).showAndLogError(
 							"Error opening related User Markup Collection!", e);
 					}
 				}
@@ -155,7 +160,7 @@ public class KwicPanel extends VerticalLayout {
 							applyTagOperationToAllSelectedResults(
 									incomingTagsetDef, incomingTagDef, true);
 						} catch (Exception e) {
-							((CatmaApplication)getApplication()).showAndLogError(
+							((CatmaApplication)UI.getCurrent()).showAndLogError(
 									"Error tagging search results!", e);
 						}
                 	}
@@ -207,12 +212,12 @@ public class KwicPanel extends VerticalLayout {
 			public void savePressed(Map<String, UserMarkupCollection> result) {
 				try {
 					tagKwic(result, selectedRows, incomingTagsetDef, incomingTagDef);
-					KwicPanel.this.getWindow().showNotification(
+					Notification.show(
 							"Info", "The search results have been tagged!", 
-							Notification.TYPE_TRAY_NOTIFICATION);
+							Type.TRAY_NOTIFICATION);
 
 				} catch (URISyntaxException e) {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							"error creating tag reference", e);
 				}
 			}
@@ -243,12 +248,12 @@ public class KwicPanel extends VerticalLayout {
 			}
 		}
 		if (umcFound) {
-			tagKwicDialog.show(getApplication().getMainWindow());
+			tagKwicDialog.show();
 		}
 		else {
-			getWindow().showNotification(
+			Notification.show(
 				"Information", "Please create a User Markup Collection first!",
-				Notification.TYPE_TRAY_NOTIFICATION);
+				Type.TRAY_NOTIFICATION);
 		}
 	}
 
@@ -314,7 +319,7 @@ public class KwicPanel extends VerticalLayout {
 	private void initComponents() {
 		setSizeFull();
 		
-		kwicTable = new MultiSelectTreeTable();
+		kwicTable = new TreeTable();
 		
 		kwicTable.setSizeFull();
 		kwicTable.setSelectable(true);
@@ -344,28 +349,39 @@ public class KwicPanel extends VerticalLayout {
 		kwicTable.addContainerProperty(
 				KwicPropertyName.leftContext, String.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.leftContext, "Left Context");
-		kwicTable.setColumnAlignment(KwicPropertyName.leftContext, Table.ALIGN_RIGHT);
+		kwicTable.setColumnAlignment(KwicPropertyName.leftContext, Align.RIGHT);
 		
 		kwicTable.addContainerProperty(
 				KwicPropertyName.keyword, String.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.keyword, "Keyword");
-		kwicTable.setColumnAlignment(KwicPropertyName.keyword, Table.ALIGN_CENTER);
+		kwicTable.setColumnAlignment(KwicPropertyName.keyword, Align.CENTER);
 		
 		kwicTable.addContainerProperty(
 				KwicPropertyName.rightContext, String.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.rightContext, "Right Context");	
-		kwicTable.setColumnAlignment(KwicPropertyName.rightContext, Table.ALIGN_LEFT);
+		kwicTable.setColumnAlignment(KwicPropertyName.rightContext, Align.LEFT);
 		
 		kwicTable.addContainerProperty(
-				KwicPropertyName.startPoint, String.class, null);
+				KwicPropertyName.startPoint, Integer.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.startPoint, "Start Point");
 		
 		kwicTable.addContainerProperty(
-				KwicPropertyName.endPoint, String.class, null);
+				KwicPropertyName.endPoint, Integer.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.endPoint, "End Point");
-		
+
 		kwicTable.setPageLength(12); //TODO: config
 		kwicTable.setSizeFull();
+		
+		kwicTable.setCellStyleGenerator(new CellStyleGenerator() {
+			
+			@Override
+			public String getStyle(Table source, Object itemId, Object propertyId) {
+				if (itemDirCache.get(itemId).booleanValue()) {
+					return "rtl-field";
+				}
+				return null;
+			}
+		});
 		addComponent(kwicTable);
 	}
 
@@ -386,7 +402,7 @@ public class KwicPanel extends VerticalLayout {
 			}
 			
 			KwicProvider kwicProvider = kwicProviders.get(sourceDocument.getID());
-			KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), 5);
+			KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), 5);  //TODO: config
 			String sourceDocOrMarkupCollectionDisplay = 
 					sourceDocument.toString();
 			
@@ -395,6 +411,7 @@ public class KwicPanel extends VerticalLayout {
 					sourceDocument.getUserMarkupCollectionReference(
 						((TagQueryResultRow)row).getMarkupCollectionId()).getName();
 			}
+			itemDirCache.put(row, kwic.isRightToLeft());
 			
 			kwicTable.addItem(
 				new Object[]{
@@ -426,5 +443,9 @@ public class KwicPanel extends VerticalLayout {
 	
 	TreeTable getKwicTable() {
 		return kwicTable;
+	}
+
+	public void selectAll() {
+		kwicTable.setValue(kwicTable.getItemIds());
 	}
 }

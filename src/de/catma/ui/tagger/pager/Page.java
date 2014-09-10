@@ -58,8 +58,17 @@ public class Page {
 	
 	private static enum HTMLAttribute {
 		id,
+		dir,
+		align,
 		;
 	}
+	
+	private static enum HTMLAttributeValue {
+		rtl,
+		right,
+		;
+	}
+	
 
 	private int taggerID;
 	private int pageStart;
@@ -68,12 +77,14 @@ public class Page {
 	private Map<String, ClientTagInstance> relativeTagInstances = 
 			new HashMap<String,ClientTagInstance>();
 	private int lineCount;
+	private boolean rightToLeftLanguage;
 	
-	public Page(int taggerID, String text, int pageStart, int pageEnd) {
+	public Page(int taggerID, String text, int pageStart, int pageEnd, boolean rightToLeftLanguage) {
 		this.taggerID = taggerID;
 		this.pageStart = pageStart;
 		this.pageEnd = pageEnd;
 		this.text = text;
+		this.rightToLeftLanguage = rightToLeftLanguage;
 	}
 	
 	@Override
@@ -87,6 +98,10 @@ public class Page {
 	private void buildModel() {
 		Matcher matcher = Pattern.compile(Pager.LINE_CONTENT_PATTERN).matcher(text);
 		Element rootDiv = new Element(HTMLElement.div.name());
+		if (rightToLeftLanguage) {
+			rootDiv.addAttribute(new Attribute(HTMLAttribute.dir.name(), HTMLAttributeValue.rtl.name()));
+			rootDiv.addAttribute(new Attribute(HTMLAttribute.align.name(), HTMLAttributeValue.right.name()));
+		}
 		rootDiv.addAttribute(
 				new Attribute(
 					HTMLAttribute.id.name(), 

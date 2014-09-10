@@ -1,4 +1,4 @@
-@import url(../reindeer/styles.css);
+@import url(../reindeer/legacy-styles.css);
 
 .catma-mainwindow {
 	background-image: url(logo.gif);
@@ -64,24 +64,12 @@
 	width: 90%;
 }
 
-.progress_window .v-window-outerheader {
-	visibility: hidden;
-	height: 0px;
-	padding: 0px;
-}
-
-.progress_window .v-window-footer {
-	visibility: hidden;
-	height: 0px;
-	padding: 0px;
-}
-
-.progress_window {
-	z-index: 40000;
-}
-
 .v-treetable-treespacer {
 	position: static;
+}
+
+.v-caption-help-icon-top-margin {
+	margin-top:9px;
 }
 
 .v-button-icon-button {
@@ -89,21 +77,34 @@
 	margin-right:5px;
 }
 
-/*
-.v-button-icon-button:focus {
-	background-image: none;	
+.v-caption-tagsettree-button-top-margin {
+	margin-top:10px;
 }
 
-.v-button-icon-button:focus .v-button-wrap {
-	background-image: none;	
+
+.tagsettree-label {
+	height: 5px;
 }
 
-.v-button-icon-button .v-button-wrap {
-	background-image: none;	
+.v-caption-tagsettree-label {
+	height: 5px;
 }
 
-.v-button-icon-button {
-	background-image: none;	
+.distributionchartviewpanel .v-slot {
+	height: 100% ! important;
 }
-*/
+
+.distributionchartviewpanel .v-expand {
+	height: auto ! important;
 }
+
+.distributionchartviewpanelzoom {
+/*	zoom: 50%;*/
+    -moz-transform: scale(0.5);
+/*    -webkit-transform: scale(1.0);*/
+}
+
+.v-table-cell-content-rtl-field {
+	direction: rtl;
+}
+

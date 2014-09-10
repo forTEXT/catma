@@ -207,9 +207,11 @@ public class DBIndexer implements Indexer {
 	}
 
 	
-	public void updateIndex(TagInstance tagInstance, Property property) 
+	public void updateIndex(TagInstance tagInstance, Collection<Property> properties) 
 			throws IOException {
-		tagReferenceIndexer.reindexProperty(tagInstance, property);
+		for (Property property : properties) {
+			tagReferenceIndexer.reindexProperty(tagInstance, property);
+		}
 	}
 	
 

@@ -18,23 +18,42 @@
  */
 package de.catma.queryengine.result.computation;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
-public class XYValues<X,Y> implements Iterable<Map.Entry<X,Y>> {
+public class XYValues<X extends Comparable<X>,Y extends Comparable<Y>, D> implements Iterable<Map.Entry<X,Y>> {
 	
 	private Object key;
 	private Map<X,Y> xySeries;
+	private Map<X,List<D>> dataMapping;
+	private Y maxYValue = null;
 	
 	public XYValues(Object key) {
 		this.key = key;
-		xySeries = new LinkedHashMap<X,Y>();
+		xySeries = new TreeMap<X,Y>();
+		dataMapping = new HashMap<X, List<D>>();
+	}
+	
+	public void set(X x, Y y, D data) {
+		set(x, y);
+		List<D> dataList = dataMapping.get(x);
+		if (dataList == null) {
+			dataList = new ArrayList<D>();
+			dataMapping.put(x, dataList);
+		}
+		dataList.add(data);
 	}
 	
 	public void set(X x, Y y) {
+		if ((maxYValue == null) || maxYValue.compareTo(y) < 0) {
+			maxYValue = y;
+		}
 		xySeries.put(x,y);
 	}
 
@@ -50,8 +69,16 @@ public class XYValues<X,Y> implements Iterable<Map.Entry<X,Y>> {
 		return xySeries.entrySet().iterator();
 	}
 	
+	public Y getMaxYValue() {
+		return maxYValue;
+	}
+	
 	@Override
 	public String toString() {
 		return key + " " + Arrays.toString(xySeries.entrySet().toArray());
+	}
+	
+	public List<D> getData(X x) {
+		return dataMapping.get(x);
 	}
 }

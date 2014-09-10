@@ -21,7 +21,7 @@ package de.catma.ui.tagger.pager;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.Validator;
-import com.vaadin.terminal.ClassResource;
+import com.vaadin.server.ClassResource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -98,7 +98,7 @@ public class PagerComponent extends HorizontalLayout {
 	}
 
 	private void initActions() {
-		firstPageButton.addListener(new ClickListener() {
+		firstPageButton.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				currentPageNumber = 1;
@@ -107,7 +107,7 @@ public class PagerComponent extends HorizontalLayout {
 				nextPageButton.setEnabled(true);
 			}
 		});
-		previousPageButton.addListener(new ClickListener() {
+		previousPageButton.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				currentPageNumber--;
@@ -118,7 +118,7 @@ public class PagerComponent extends HorizontalLayout {
 				nextPageButton.setEnabled(true);
 			}
 		});
-		nextPageButton.addListener(new ClickListener() {
+		nextPageButton.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				currentPageNumber++;
@@ -130,7 +130,7 @@ public class PagerComponent extends HorizontalLayout {
 				previousPageButton.setEnabled(true);
 			}
 		});
-		lastPageButton.addListener(new ClickListener() {
+		lastPageButton.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				currentPageNumber = lastPageNumber;
@@ -139,7 +139,7 @@ public class PagerComponent extends HorizontalLayout {
 				nextPageButton.setEnabled(false);
 			}
 		});
-		pageInput.addListener(new ValueChangeListener() {
+		pageInput.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				currentPageNumber = pageInput.getNumber();
@@ -213,22 +213,18 @@ public class PagerComponent extends HorizontalLayout {
 		if (init) {
 			ClassResource firstPageIcon = 
 					new ClassResource(
-							"ui/tagger/pager/resources/page-first.gif", 
-							getApplication());
+							"tagger/pager/resources/page-first.gif");
 			firstPageButton.setIcon(firstPageIcon);
 			ClassResource previousPageIcon = 
 					new ClassResource(
-							"ui/tagger/pager/resources/page-prev.gif", 
-							getApplication());
+							"tagger/pager/resources/page-prev.gif");
 			previousPageButton.setIcon(previousPageIcon);
 			ClassResource nextPageIcon = 
 					new ClassResource(
-							"ui/tagger/pager/resources/page-next.gif", 
-							getApplication());
+							"tagger/pager/resources/page-next.gif");
 			nextPageButton.setIcon(nextPageIcon);
 			ClassResource lastPageIcon = new ClassResource(
-					"ui/tagger/pager/resources/page-last.gif", 
-					getApplication());
+					"tagger/pager/resources/page-last.gif");
 			lastPageButton.setIcon(lastPageIcon);
 			init = false;
 		}

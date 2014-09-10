@@ -30,25 +30,26 @@ public class TagManagerWindow extends CatmaWindow {
 		setWidth("35%");
 		setHeight("85%");
 	}
-	
-	@Override
-	public void setPosition() {
-		Window mainWindow = getApplication().getMainWindow();
-		if ((mainWindow.getWidthUnits() == UNITS_PIXELS) && (mainWindow.getWidth() > 0)) {
-			
-			int posX = Float.valueOf(mainWindow.getWidth()-(mainWindow.getWidth()*38/100)).intValue();
-			if (posX > 0) {
-				setPositionX(posX);
-				if ((mainWindow.getHeightUnits() == UNITS_PIXELS) && (mainWindow.getHeight() > 0)) {
-					setPositionY(Float.valueOf(Math.min(mainWindow.getHeight(), 20)).intValue());
-				}
-			}
-			else {
-				super.setPosition();
-			}
-		}
-		else {
-			super.setPosition();
-		}
-	}
+	//TODO: vaadin7
+//	
+//	@Override
+//	public void setPosition() {
+//		Window mainWindow = getApplication().getMainWindow();
+//		if ((mainWindow.getWidthUnits() == UNITS_PIXELS) && (mainWindow.getWidth() > 0)) {
+//			
+//			int posX = Float.valueOf(mainWindow.getWidth()-(mainWindow.getWidth()*38/100)).intValue();
+//			if (posX > 0) {
+//				setPositionX(posX);
+//				if ((mainWindow.getHeightUnits() == UNITS_PIXELS) && (mainWindow.getHeight() > 0)) {
+//					setPositionY(Float.valueOf(Math.min(mainWindow.getHeight(), 20)).intValue());
+//				}
+//			}
+//			else {
+//				super.setPosition();
+//			}
+//		}
+//		else {
+//			super.setPosition();
+//		}
+//	}
 }

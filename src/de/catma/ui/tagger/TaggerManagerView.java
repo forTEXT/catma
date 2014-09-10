@@ -75,8 +75,7 @@ public class TaggerManagerView extends TabbedView {
 							}
 							
 						}
-					},
-					getApplication());
+					});
 			addClosableTab(taggerView, sourceDocument.toString());
 			setSelectedTab(taggerView);
 		}
@@ -86,7 +85,7 @@ public class TaggerManagerView extends TabbedView {
 	
 	
 	private TaggerView getTaggerView(SourceDocument sourceDocument) {
-		for (Component tabContent : this) {
+		for (Component tabContent : this.getTabSheet()) {
 			TaggerView taggerView = (TaggerView)tabContent;
 			if (taggerView.getSourceDocument().getID().equals(
 					sourceDocument.getID())) {

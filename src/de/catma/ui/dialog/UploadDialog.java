@@ -27,6 +27,7 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.ProgressIndicator;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.Upload;
 import com.vaadin.ui.Upload.FailedEvent;
 import com.vaadin.ui.Upload.Receiver;
@@ -67,7 +68,7 @@ public class UploadDialog extends VerticalLayout {
 	}
 	
 	private void initActions() {
-		 upload.addListener(new Upload.StartedListener() {
+		 upload.addStartedListener(new Upload.StartedListener() {
             public void uploadStarted(StartedEvent event) {
 //	                upload.setVisible(false);
             	pi.setVisible(true);
@@ -78,47 +79,49 @@ public class UploadDialog extends VerticalLayout {
             }
         });
 
-        upload.addListener(new Upload.ProgressListener() {
+        upload.addProgressListener(new Upload.ProgressListener() {
             public void updateProgress(long readBytes, long contentLength) {
                 pi.setValue(new Float(readBytes / (float) contentLength));
             }
 
         });
 
-        upload.addListener(new Upload.SucceededListener() {
+        upload.addSucceededListener(new Upload.SucceededListener() {
             public void uploadSucceeded(SucceededEvent event) {
             	upload.setCaption("Uploading file \"" + event.getFilename()
                         + "\" succeeded");
             	saveCancelListener.savePressed(data.toByteArray());
-            	upload.removeListener(this);
+            	upload.removeSucceededListener(this);
             	UploadDialog.this.close();
             }
         });
 
-        upload.addListener(new Upload.FailedListener() {
+        upload.addFailedListener(new Upload.FailedListener() {
             public void uploadFailed(FailedEvent event) {
             	upload.setCaption("Uploading interrupted");
             }
         });
-        btCancel.addListener(new ClickListener() {
+        btCancel.addClickListener(new ClickListener() {
         	
         	public void buttonClick(ClickEvent event) {
         		upload.interruptUpload();
-        		dialogWindow.getParent().removeWindow(dialogWindow);
+        		UI.getCurrent().removeWindow(dialogWindow);
         		saveCancelListener.cancelPressed();
         	}
         });
 	}
 
 	private void close() {
-		getApplication().getMainWindow().removeWindow(dialogWindow);
+		UI.getCurrent().removeWindow(dialogWindow);
 	}
 
 	private void initComponents() {
 		setSizeFull();
 		setSpacing(true);
+		VerticalLayout content = new VerticalLayout();
+		content.setMargin(true);
 		
-		dialogWindow = new Window(caption);
+		dialogWindow = new Window(caption, content);
 		dialogWindow.setModal(true);
 		
 		upload = new Upload(
@@ -141,19 +144,19 @@ public class UploadDialog extends VerticalLayout {
 		addComponent(buttonPanel);
 		this.setComponentAlignment(buttonPanel, Alignment.BOTTOM_RIGHT);
 		
-		dialogWindow.addComponent(this);
+		content.addComponent(this);
 		
 		upload.focus();
 
 	}
 	
-	public void show(Window parent, String dialogWidth) {
+	public void show(String dialogWidth) {
 		dialogWindow.setWidth(dialogWidth);
-		parent.addWindow(dialogWindow);
+		UI.getCurrent().addWindow(dialogWindow);
 	}
 	
-	public void show(Window parent) {
-		show(parent, "25%");
+	public void show() {
+		show("25%");
 	}
 	
 	

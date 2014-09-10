@@ -5,7 +5,7 @@
 		<description>
 		Vaadin production mode</description>
 		<param-name>productionMode</param-name>
-		<param-value>true</param-value>
+		<param-value>false</param-value>
 	</context-param>
 	<session-config>
     	<session-timeout>120</session-timeout>
@@ -22,10 +22,8 @@
 		<servlet-class>de.catma.servlet.CatmaApplicationServlet</servlet-class>
 		<!-- <servlet-class>com.vaadin.terminal.gwt.server.ApplicationServlet</servlet-class>  -->
 		<init-param>
-			<description>
-			Vaadin application class to start</description>
-			<param-name>application</param-name>
-			<param-value>de.catma.CatmaApplication</param-value>
+			<param-name>UI</param-name>
+			<param-value>de.catma.ui.CatmaApplication</param-value>
 		</init-param>
 		<init-param>
 			<description>

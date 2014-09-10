@@ -47,7 +47,7 @@ public class AnalyzerManagerView extends TabbedView {
 		
 		HashSet<String> captions = new HashSet<String>();
 		
-		for (Component c : this) {
+		for (Component c : this.getTabSheet()) {
 			captions.add(getCaption(c));
 		}
 		

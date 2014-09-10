@@ -20,10 +20,10 @@ package de.catma.ui.client.ui.tagger.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Node;
-import com.vaadin.terminal.gwt.client.VConsole;
 
 import de.catma.ui.client.ui.tagger.DebugUtil;
 
@@ -87,16 +87,18 @@ public class SelectionHandlerImplStandard {
 							&& (getEndOffset()==getStartOffset()))));
 		}
 	}
+	
+	private static Logger logger = Logger.getLogger(SelectionHandlerImplStandard.class.getName());
 
 	public final List<Range> getRangeList() {
 		List<Range> result = new ArrayList<Range>();
 		int rangeCount = getRangeCount();
 		for (int i=0; i<rangeCount; i++) {
 			JavaScriptObject jsRange = getRangeAt(i);
-			VConsole.log("jsRange: " + jsRange.toString());
+			logger.info("jsRange: " + jsRange.toString());
 			if (jsRange != null) { 
 				Range range = new Range(this,jsRange);
-				VConsole.log(range.toDetailedString());
+				logger.info(range.toDetailedString());
 				result.add(range);
 			}
 		}

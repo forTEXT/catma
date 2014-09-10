@@ -22,6 +22,7 @@ import com.vaadin.data.Validator.InvalidValueException;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ShortcutAction.KeyCode;
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -30,9 +31,10 @@ import com.vaadin.ui.Field;
 import com.vaadin.ui.Form;
 import com.vaadin.ui.FormFieldFactory;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.ui.Label;
 
 
 public class FormDialog<T> extends VerticalLayout {
@@ -80,20 +82,20 @@ public class FormDialog<T> extends VerticalLayout {
 	private void initAction(
 			final SaveCancelListener<T> saveCancelListener, 
 			final BeanItem<T> beanItem) {
-		btCancel.addListener(new ClickListener() {
+		btCancel.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				dialogWindow.getParent().removeWindow(dialogWindow);
+				UI.getCurrent().removeWindow(dialogWindow);
 				saveCancelListener.cancelPressed();
 			}
 		});
 
-		btSave.addListener(new ClickListener() {
+		btSave.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				try {
 					form.commit();
-					dialogWindow.getParent().removeWindow(dialogWindow);
+					UI.getCurrent().removeWindow(dialogWindow);
 					saveCancelListener.savePressed(beanItem.getBean());
 				}
 				catch(InvalidValueException ignore) {}
@@ -105,20 +107,20 @@ public class FormDialog<T> extends VerticalLayout {
 	private void initAction(
 		final SaveCancelListener<PropertysetItem> saveCancelListener, 
 		final PropertysetItem propertysetItem) {
-		btCancel.addListener(new ClickListener() {
+		btCancel.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				dialogWindow.getParent().removeWindow(dialogWindow);
+				UI.getCurrent().removeWindow(dialogWindow);
 				saveCancelListener.cancelPressed();
 			}
 		});
 
-		btSave.addListener(new ClickListener() {
+		btSave.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				try {
 					form.commit();
-					dialogWindow.getParent().removeWindow(dialogWindow);
+					UI.getCurrent().removeWindow(dialogWindow);
 					saveCancelListener.savePressed(propertysetItem);
 				}
 				catch(InvalidValueException ignore) {}
@@ -133,8 +135,10 @@ public class FormDialog<T> extends VerticalLayout {
 		
 		setSizeFull();
 		setSpacing(true);
+		VerticalLayout content = new VerticalLayout();
+		content.setMargin(true);
 		
-		dialogWindow = new Window(caption);
+		dialogWindow = new Window(caption, content);
 		dialogWindow.setModal(true);
 		
 		form = new Form();
@@ -142,7 +146,7 @@ public class FormDialog<T> extends VerticalLayout {
 			form.setFormFieldFactory(formFieldFactory);
 		}
 		form.setSizeFull();
-		form.setWriteThrough(false);
+		form.setBuffered(true);
 		form.setInvalidCommitted(false);
 		form.setItemDataSource(propertysetItem);
 		
@@ -152,7 +156,7 @@ public class FormDialog<T> extends VerticalLayout {
 		buttonPanel.setSpacing(true);
 		
 		hint = new Label(hintText);
-		hint.setContentMode(Label.CONTENT_TEXT);
+		hint.setContentMode(ContentMode.TEXT);
 		
 		addComponent(hint);
 		
@@ -167,7 +171,7 @@ public class FormDialog<T> extends VerticalLayout {
 		addComponent(buttonPanel);
 		this.setComponentAlignment(buttonPanel, Alignment.BOTTOM_RIGHT);
 		
-		dialogWindow.addComponent(this);
+		content.addComponent(this);
 		
 		form.focus();
 	}
@@ -178,13 +182,13 @@ public class FormDialog<T> extends VerticalLayout {
 		return form.getField(propertyId);
 	}
 
-	public void show(Window parent, String dialogWidth) {
+	public void show(String dialogWidth) {
 		dialogWindow.setWidth(dialogWidth);
-		parent.addWindow(dialogWindow);
+		UI.getCurrent().addWindow(dialogWindow);
 	}
 	
-	public void show(Window parent) {
-		show(parent, "25%");
+	public void show() {
+		show("25%");
 	}
 
 	public void setVisibleItemProperties(Object[] visibleProperties) {

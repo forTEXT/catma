@@ -37,7 +37,8 @@ import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.ShortcutAction.KeyCode;
-import com.vaadin.terminal.ClassResource;
+import com.vaadin.server.ClassResource;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -46,15 +47,14 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Panel;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.Tree;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.ui.Window.Notification;
 
-import de.catma.CatmaApplication;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
@@ -69,8 +69,12 @@ import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.computation.DistributionComputation;
+import de.catma.queryengine.result.computation.DistributionSelectionListener;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzer.querybuilder.QueryBuilderWizardFactory;
+import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabComponent;
@@ -82,7 +86,21 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	static interface CloseListener {
 		public void closeRequest(AnalyzerView analyzerView);
 	}
-	
+	private DistributionSelectionListener distributionSelectionListener = new DistributionSelectionListener() {
+		@Override
+		public void queryResultRowsSelected(String label,
+				List<QueryResultRow> rows, int x, int y) {
+			try {
+				KwicPanel kwicPanel = new KwicPanel(repository, AnalyzerView.this);
+				kwicPanel.addQueryResultRows(rows);
+				new KwicWindow("KWIC for " + label + " at chunk " + x + " (" + y + " occurrences)", kwicPanel).show();
+			}
+			catch (IOException e) {
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
+						"Error accessing the repository!", e);
+			}
+		}
+	};
 	private String userMarkupItemDisplayString = "User Markup Collections";
 	private String staticMarkupItemDisplayString = "Static Markup Collections";
 	private TextField searchInput;
@@ -108,7 +126,6 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private IndexInfoSet indexInfoSet;
 	private boolean init = false;
 	private Label helpLabel;
-	private Label helpLabel2;
 	
 	public AnalyzerView(
 			Corpus corpus, IndexedRepository repository, 
@@ -135,9 +152,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		super.attach();
 		if (!init) {
 			init = true;
-			helpLabel.setIcon(new ClassResource(
-					"ui/resources/icon-help.gif", 
-					getApplication()));
+			helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
 		}
 		
 	}
@@ -194,7 +209,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 					}
 				}
 				else { // update
-					documentsTree.requestRepaint();
+					documentsTree.markAsDirty();
 				}
 			}
 		};
@@ -293,14 +308,14 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	}
 
 	private void initActions() {
-		btExecSearch.addListener(new ClickListener() {
+		btExecSearch.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				executeSearch();
 			}
 
 		});
-		btWordList.addListener(new ClickListener() {
+		btWordList.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				searchInput.setValue("freq>0");
@@ -308,13 +323,13 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			}
 
 		});
-		btQueryBuilder.addListener(new ClickListener() {
+		btQueryBuilder.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				showQueryBuilder();
 			}
 		});
-		btNewTab.addListener(new ClickListener() {
+		btNewTab.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				openNewTab();
@@ -324,7 +339,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	}
 	//opens new analyzer tab with same constraints
 	private void openNewTab(){
-		((AnalyzerProvider)getApplication()).analyze(corpus, repository);
+		((AnalyzerProvider)UI.getCurrent()).analyze(corpus, repository);
 	}
 
 	private void showQueryBuilder() {
@@ -363,7 +378,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		Window wizardWindow = 
 				factory.createWizardWindow("Query Builder", "90%", "85%");
 		
-		getApplication().getMainWindow().addWindow(wizardWindow);
+		UI.getCurrent().addWindow(wizardWindow);
 		wizardWindow.center();
 	}
 
@@ -385,7 +400,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				searchInput.getValue().toString(),
 				queryOptions);
 		
-		((BackgroundServiceProvider)getApplication()).submit(
+		((BackgroundServiceProvider)UI.getCurrent()).submit(
 				"Searching...",
 				job, 
 				new ExecutionListener<QueryResult>() {
@@ -395,19 +410,19 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				try {
 					markupResultPanel.setQueryResult(result);
 				} catch (IOException e) {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error accessing the repository!", e);
 				} 
 				
 				if (resultTabSheet.getSelectedTab().equals(markupResultPanel)) {
 					if (markupResultPanel.isEmpty() && 
 							!phraseResultPanel.isEmpty()) {
-						getWindow().showNotification(
+						HTMLNotification.show(
 							"Info", 
 							"Your search returned phrase results " +
 								"only but you selected \"Results by markup\"!" +
 								"<br> Please consider switching to \"Results by phrase\".",
-							Notification.TYPE_TRAY_NOTIFICATION, true);
+							Type.TRAY_NOTIFICATION);
 					}
 				}
 			};
@@ -423,17 +438,19 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		            		input,
 	                        idx+1,
 	                        character);
-		            	getWindow().showNotification("Information", message, Notification.TYPE_TRAY_NOTIFICATION);
+						HTMLNotification.show(
+		            			"Information", message, Type.TRAY_NOTIFICATION);
 		            }
 		            else {
 		            	String message = MessageFormat.format(
 		            			"<html><p>There is something wrong with your query <b>{0}</b>.</p> <p>If you are unsure about how to construct a query try the Query Builder!</p></html>",
 			            		input);
-		            	getWindow().showNotification("Information", message, Notification.TYPE_TRAY_NOTIFICATION);
+						HTMLNotification.show(
+		            			"Information", message, Type.TRAY_NOTIFICATION);
 		            }
 				}
 				else {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error during search!", t);
 				}
 			}
@@ -454,7 +471,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		try {
 			handleDistributionChartRequest(groupedQueryResultSet);
 		} catch (IOException e) {
-			((CatmaApplication)getApplication()).showAndLogError(
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error showing the distribution chart",
 				e);
 		}
@@ -518,7 +535,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 
         HorizontalLayout documentsPanel = new HorizontalLayout();
         documentsPanel.setSpacing(true);
-        documentsPanel.setMargin(true, true, false, true);
+        documentsPanel.setMargin(new MarginInfo(true, true, false, true));
         documentsPanel.setWidth("100%");
 		
 		documentsContainer = new HierarchicalContainer();
@@ -636,8 +653,9 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		dc.compute();
 		
 		this.visualizationId = 
-			((CatmaApplication)getApplication()).addVisualization(
-				visualizationId, (corpus==null)?"All documents":corpus.toString(), dc);
+			((CatmaApplication)UI.getCurrent()).addVisualization(
+				visualizationId, (corpus==null)?"All documents":corpus.toString(), dc,
+				distributionSelectionListener);
 	}
 
 	public void close() {

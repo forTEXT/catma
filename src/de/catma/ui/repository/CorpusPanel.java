@@ -34,11 +34,13 @@ import com.vaadin.data.util.AbstractProperty;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
+import com.vaadin.data.util.converter.Converter.ConversionException;
 import com.vaadin.event.DataBoundTransferable;
 import com.vaadin.event.Transferable;
 import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -48,14 +50,15 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.Tree.TreeTargetDetails;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window.Notification;
 import com.vaadin.ui.themes.Reindeer;
 
-import de.catma.CatmaApplication;
 import de.catma.document.Corpus;
 import de.catma.document.corpus.CorpusExporter;
 import de.catma.document.repository.Repository;
@@ -64,6 +67,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -144,15 +148,15 @@ public class CorpusPanel extends VerticalLayout {
 					addCorpusToTree((Corpus)evt.getNewValue());
 					corporaContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
 
-					getWindow().showNotification("Information",
+					Notification.show("Information",
 							"Start adding Source Documents" +
 							" and Markup Collections by dragging them " +
 							"from the Documents section on a Corpus.",
-							Notification.TYPE_TRAY_NOTIFICATION);
+							Type.TRAY_NOTIFICATION);
 				}
 				else { //update name
 					if (evt.getOldValue() instanceof String) {
-						corporaTree.requestRepaint();
+						corporaTree.markAsDirty();
 					}
 					else if (evt.getOldValue() instanceof Corpus) {
 						Corpus oldCorpus = (Corpus) evt.getOldValue();
@@ -187,7 +191,7 @@ public class CorpusPanel extends VerticalLayout {
 	}
 
 	private void initActions(final ValueChangeListener valueChangeListener) {
-		corporaTree.addListener(new ValueChangeListener() {
+		corporaTree.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				Object value = event.getProperty().getValue();
@@ -255,19 +259,19 @@ public class CorpusPanel extends VerticalLayout {
 					}
 					
 					if (selectedCorpus.getSourceDocuments().isEmpty()) {
-						getWindow().showNotification(
+						Notification.show(
 							"Information", "The corpus is empty! " +
 									"Please add some documents first!",
-								Notification.TYPE_TRAY_NOTIFICATION);
+								Type.TRAY_NOTIFICATION);
 					}
 					else {
-						((AnalyzerProvider)getApplication()).analyze(
+						((AnalyzerProvider)UI.getCurrent()).analyze(
 								selectedCorpus, (IndexedRepository)repository);
 					}
 				}
 				else {
-					getWindow().showNotification("Information", "Please select a corpus first!",
-							Notification.TYPE_TRAY_NOTIFICATION);
+					Notification.show("Information", "Please select a corpus first!",
+							Type.TRAY_NOTIFICATION);
 				}
 			}
 		});
@@ -286,7 +290,7 @@ public class CorpusPanel extends VerticalLayout {
 		
 		miRemoveCorpus.setEnabled(false);
 		
-		btCreateCorpus.addListener(new ClickListener() {
+		btCreateCorpus.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				handleCorpusCreationRequest();
@@ -338,7 +342,7 @@ public class CorpusPanel extends VerticalLayout {
 		final String fileName = name + corpusExporter.getDate() + ".tar.gz";
 		try {
 			FileOutputStream corpusOut = new FileOutputStream(
-				new File(((CatmaApplication)getApplication()).getTempDirectory() 
+				new File(((CatmaApplication)UI.getCurrent()).getTempDirectory() 
 						+ "/" +fileName));
 			
 			corpusExporter.export(
@@ -347,7 +351,7 @@ public class CorpusPanel extends VerticalLayout {
 			
 		}
 		catch (IOException e) {
-			((CatmaApplication)getApplication()).showAndLogError(
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"Error exporting Corpus!", e);
 		}
 	}
@@ -369,12 +373,12 @@ public class CorpusPanel extends VerticalLayout {
 								result.getAccessMode());
 					} catch (IOException e) {
 						if (e.getCause() instanceof UnknownUserException) {
-							getWindow().showNotification(
+							Notification.show(
 									"Sharing failed!", e.getCause().getMessage(), 
-									Notification.TYPE_WARNING_MESSAGE);
+									Type.WARNING_MESSAGE);
 						}
 						else {
-							((CatmaApplication)getApplication()).showAndLogError(
+							((CatmaApplication)UI.getCurrent()).showAndLogError(
 								"Error sharing this corpus!", e);
 						}
 					}
@@ -382,7 +386,7 @@ public class CorpusPanel extends VerticalLayout {
 			});
 		sharingOptionsDlg.setVisibleItemProperties(
 				new Object[] {"userIdentification", "accessMode"});
-		sharingOptionsDlg.show(getApplication().getMainWindow());
+		sharingOptionsDlg.show();
 	}
 
 	private void handleRenameCorpusRequest(final Corpus corpus) {
@@ -391,7 +395,6 @@ public class CorpusPanel extends VerticalLayout {
 		SingleValueDialog singleValueDialog = new SingleValueDialog();
 		
 		singleValueDialog.getSingleValue(
-				getApplication().getMainWindow(),
 				"Rename Corpus",
 				"You have to enter a name!",
 				new SaveCancelListener<PropertysetItem>() {
@@ -405,7 +408,7 @@ public class CorpusPanel extends VerticalLayout {
 				try {
 					repository.update(corpus, name);
 				} catch (IOException e) {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error renaming corpus!", e);
 				}
 			}
@@ -414,7 +417,7 @@ public class CorpusPanel extends VerticalLayout {
 
 	private void handleRemoveCorpusRequest(final Corpus corpus) {
 		ConfirmDialog.show(
-				getApplication().getMainWindow(), 
+				UI.getCurrent(),
 				"Do you really want to delete the Corpus '"
 						+ corpus + "'? This will not delete any contents of the Corpus!",
 						
@@ -425,7 +428,7 @@ public class CorpusPanel extends VerticalLayout {
 		                	try {
 								repository.delete(corpus);
 							} catch (IOException e) {
-								((CatmaApplication)getApplication()).showAndLogError(
+								((CatmaApplication)UI.getCurrent()).showAndLogError(
 									"Error deleting corpus!", e);
 							}
 		                }
@@ -456,22 +459,22 @@ public class CorpusPanel extends VerticalLayout {
 				}
 			}
 			else {
-				getWindow().showNotification(
+				Notification.show(
 					"Information", 
 					"You can only add " +
 						"Source Documents and Markup Collections to a Corpus!",
-						Notification.TYPE_TRAY_NOTIFICATION);
+						Type.TRAY_NOTIFICATION);
 			}
 		}
 		catch (IOException e) {
-			((CatmaApplication)getApplication()).showAndLogError(
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"Error adding Item to Corpus!", e);
 		}
 	}
 
 	private void initComponents() {
 		setSpacing(true);
-		setMargin(false, true, true, false);
+		setMargin(new MarginInfo(false, true, true, false));
 		
 		setSizeFull();
 		Component corporaPanel = createCorporaPanel();
@@ -481,26 +484,28 @@ public class CorpusPanel extends VerticalLayout {
 	}
 	
 	private Component createCorporaButtonPanel() {
-		
-		Panel corporaButtonsPanel = new Panel(new HorizontalLayout());
+		HorizontalLayout content = new HorizontalLayout();
+		Panel corporaButtonsPanel = new Panel(content);
 		corporaButtonsPanel.setStyleName(Reindeer.PANEL_LIGHT);
 		((HorizontalLayout)corporaButtonsPanel.getContent()).setSpacing(true);
 		
 		btCreateCorpus = new Button("Create Corpus");
 		
-		corporaButtonsPanel.addComponent(btCreateCorpus);
+		content.addComponent(btCreateCorpus);
 		MenuBar menuMoreCorpusActions = new MenuBar();
 		miMoreCorpusActions = 
 				menuMoreCorpusActions.addItem("More actions...", null);
 		miMoreCorpusActions.setEnabled(
 				repository instanceof IndexedRepository);
-		corporaButtonsPanel.addComponent(menuMoreCorpusActions);
+		content.addComponent(menuMoreCorpusActions);
 		
 		return corporaButtonsPanel;
 	}
 
 	private Component createCorporaPanel() {
-		Panel corporaPanel = new Panel();
+		VerticalLayout content = new VerticalLayout();
+		content.setMargin(true);
+		Panel corporaPanel = new Panel(content);
 		corporaPanel.getContent().setSizeUndefined();
 		corporaPanel.setSizeFull();
 		
@@ -523,7 +528,7 @@ public class CorpusPanel extends VerticalLayout {
 
 		corporaTree.setValue(allDocuments);
 
-		corporaPanel.addComponent(corporaTree);
+		content.addComponent(corporaTree);
 		
 		return corporaPanel;
 	}
@@ -534,7 +539,6 @@ public class CorpusPanel extends VerticalLayout {
 		SingleValueDialog singleValueDialog = new SingleValueDialog();
 		
 		singleValueDialog.getSingleValue(
-				getApplication().getMainWindow(),
 				"Create a new Corpus",
 				"You have to enter a name!",
 				new SaveCancelListener<PropertysetItem>() {
@@ -548,7 +552,7 @@ public class CorpusPanel extends VerticalLayout {
 				try {
 					repository.createCorpus(name);
 				} catch (IOException e) {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error creating corpus!", e);
 				}
 			}

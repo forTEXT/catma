@@ -19,10 +19,10 @@
 package de.catma.ui.client.ui.tagger;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
-import com.vaadin.terminal.gwt.client.VConsole;
 
 /**
  * @author marco.petris@web.de
@@ -71,6 +71,6 @@ public class DebugUtil {
 	
 	private static void println(String s) {
 //		System.out.println(s);
-		VConsole.log(s);
+		Logger.getLogger(DebugUtil.class.getName()).info(s);
 	}
 }

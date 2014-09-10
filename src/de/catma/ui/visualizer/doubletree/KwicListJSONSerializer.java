@@ -9,7 +9,7 @@ import org.json.JSONObject;
 import de.catma.document.source.KeywordInContext;
 import de.catma.indexer.KeywordInSpanContext;
 import de.catma.indexer.TermInfo;
-import de.catma.ui.client.ui.visualizer.shared.KwicSerializationField;
+import de.catma.ui.client.ui.visualizer.doubletree.shared.KwicSerializationField;
 import de.catma.ui.data.util.JSONSerializationException;
 
 public class KwicListJSONSerializer {

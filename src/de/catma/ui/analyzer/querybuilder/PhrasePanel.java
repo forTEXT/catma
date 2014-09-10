@@ -56,7 +56,7 @@ public class PhrasePanel extends AbstractSearchPanel {
 	}
 
 	private void initActions() {
-		btAddWordPanel.addListener(new ClickListener() {
+		btAddWordPanel.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				WordPanel wordPanel = 
@@ -145,7 +145,7 @@ public class PhrasePanel extends AbstractSearchPanel {
 
 
 	private void addWordPanel(WordPanel wordPanel) {
-		wordSequencePanel.addComponent(wordPanel);
+		((HorizontalLayout)wordSequencePanel.getContent()).addComponent(wordPanel);
 		wordPanels.add(wordPanel);
 	}
 	

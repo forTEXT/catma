@@ -24,10 +24,10 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.vaadin.Application;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.terminal.ClassResource;
+import com.vaadin.server.ClassResource;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -36,12 +36,13 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
-import de.catma.CatmaApplication;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.admin.AdminWindow;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.user.Role;
@@ -56,7 +57,6 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	private CorpusPanel corpusPanel;
 	private TagLibraryPanel tagLibraryPanel;
 	private boolean init = false;
-	private Application application;
 	private Button btReload;
 	private Button btAdmin;
 	
@@ -66,8 +66,8 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		exceptionOccurredListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
-				if (application !=null) {
-					((CatmaApplication)application).showAndLogError(
+				if (UI.getCurrent() !=null) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Repository Error!", (Throwable)evt.getNewValue());
 				}
 				else {
@@ -87,7 +87,6 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		if (!init) {
 			initComponents();
 			initActions();
-			this.application = getApplication();
 			this.repository.addPropertyChangeListener(
 					Repository.RepositoryChangeEvent.exceptionOccurred, 
 					exceptionOccurredListener);
@@ -97,7 +96,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	}
 
 	private void initActions() {
-		btReload.addListener(new ClickListener() {
+		btReload.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				try {
@@ -107,18 +106,18 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 					corpusPanel.setSelectedCorpus(corpus);
 					
 				} catch (IOException e) {
-					((CatmaApplication)getApplication()).showAndLogError(
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							"Error reloading repository!", e);
 				}
 			}
 		});
 		
-		btAdmin.addListener(new ClickListener() {
+		btAdmin.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				AdminWindow adminWindow = new AdminWindow();
 				
-				getApplication().getMainWindow().addWindow(adminWindow);
+				UI.getCurrent().addWindow(adminWindow);
 			}
 		});
 		
@@ -126,7 +125,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 
 	private void initComponents() {
 		setSizeFull();
-		this.setMargin(false, true, true, true);
+		this.setMargin(new MarginInfo(false, true, true, true));
 		this.setSpacing(true);
 		
 		Component documentsLabel = createDocumentsLabel();
@@ -187,17 +186,13 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		labelLayout.setComponentAlignment(btAdmin, Alignment.MIDDLE_RIGHT);
 		
 		btReload = new Button(""); 
-		btReload.setIcon(new ClassResource(
-				"ui/resources/icon-reload.gif",
-				getApplication()));
+		btReload.setIcon(new ClassResource("resources/icon-reload.gif"));
 		btReload.addStyleName("icon-button");
 		labelLayout.addComponent(btReload);
 		labelLayout.setComponentAlignment(btReload, Alignment.MIDDLE_RIGHT);
 		
 		Label helpLabel = new Label();
-		helpLabel.setIcon(new ClassResource(
-				"ui/resources/icon-help.gif", 
-				getApplication()));
+		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
 		helpLabel.setWidth("20px");
 		helpLabel.setDescription(
 				"<h3>Hints</h3>" +
@@ -213,7 +208,8 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 				"<h5>Analyze a Source Document</h5>" +
 				"To analyze a Source Document, just select that document from the tree and click \"Analyze Source Document\" in the \"More Actions\"-menu." +
 				"Then follow the instructions given to you by the Analyzer component.");
-
+		helpLabel.addStyleName("help-icon-top-margin");
+		
 		labelLayout.addComponent(helpLabel);
 		labelLayout.setComponentAlignment(helpLabel, Alignment.MIDDLE_RIGHT);
 		

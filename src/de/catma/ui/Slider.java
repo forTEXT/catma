@@ -18,8 +18,6 @@
  */
 package de.catma.ui;
 
-import com.vaadin.data.Property.ConversionException;
-import com.vaadin.data.Property.ReadOnlyException;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Alignment;
@@ -40,7 +38,7 @@ public class Slider extends VerticalLayout {
 		setSizeUndefined();
 		HorizontalLayout sliderLayout = new HorizontalLayout();
 		sliderLayout.setSpacing(true);
-		this.sliderComp = new SliderComp(min, max);
+		this.sliderComp = new com.vaadin.ui.Slider(min, max);
 		minLabel = new Label(String.valueOf(min));
 		maxLabel = new Label(String.valueOf(max));
 		
@@ -59,7 +57,7 @@ public class Slider extends VerticalLayout {
 		addComponent(current);
 		setComponentAlignment(current, Alignment.MIDDLE_CENTER);
 		
-		sliderComp.addListener(new ValueChangeListener() {
+		sliderComp.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
 				current.setValue(
@@ -71,12 +69,12 @@ public class Slider extends VerticalLayout {
 
 	public void setMax(double max) {
 		sliderComp.setMax(max);
-		maxLabel.setValue(max);
+		maxLabel.setValue(String.valueOf(max));
 	}
 
 	public void setMin(double min) {
 		sliderComp.setMin(min);
-		minLabel.setValue(min);
+		minLabel.setValue(String.valueOf(min));
 	}
 
 	public void setResolution(int resolution) {
@@ -87,31 +85,17 @@ public class Slider extends VerticalLayout {
 		return sliderComp.getValue();
 	}
 
-	public void addListener(ValueChangeListener listener) {
-		sliderComp.addListener(listener);
+	public void addValueListener(ValueChangeListener listener) {
+		sliderComp.addValueChangeListener(listener);
 	}
 
 	public void setValue(Double value) throws ValueOutOfBoundsException {
 		sliderComp.setValue(value);
 	}
 
-	public void setValue(double value) throws ValueOutOfBoundsException {
-		sliderComp.setValue(value);
-	}
-
-	public void setValue(Object newValue) throws ReadOnlyException,
-			ConversionException {
-		sliderComp.setValue(newValue);
-	}
-
 	public void setImmediate(boolean immediate) {
 		super.setImmediate(immediate);
 		sliderComp.setImmediate(immediate);
 	}
-	
-	
-	
-	
-	
 	
 }
