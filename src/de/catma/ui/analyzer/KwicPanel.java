@@ -21,6 +21,7 @@ package de.catma.ui.analyzer;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +47,7 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.document.Corpus;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
@@ -54,6 +56,7 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
@@ -65,6 +68,7 @@ import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToReversedTrimmedStringCIComparator;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.repository.CorpusContentSelectionDialog;
 import de.catma.util.IDGenerator;
 
 public class KwicPanel extends VerticalLayout {
@@ -105,27 +109,43 @@ public class KwicPanel extends VerticalLayout {
 			
 			public void itemClick(ItemClickEvent event) {
 				if (event.isDoubleClick()) {
-					QueryResultRow row = (QueryResultRow) event.getItemId();
-					SourceDocument sd = repository.getSourceDocument(
+					final QueryResultRow row = (QueryResultRow) event.getItemId();
+					final SourceDocument sd = repository.getSourceDocument(
 							row.getSourceDocumentId());
-					Range range = row.getRange();
+					final Range range = row.getRange();
 					
-					((CatmaApplication)UI.getCurrent()).openSourceDocument(
-							sd, repository, range);
-					
-					List<UserMarkupCollectionReference> relatedUmcRefs = 
-							relevantUserMarkupCollectionProvider.getCorpus().
-								getUserMarkupCollectionRefs(sd);
-					try {
-						for (UserMarkupCollectionReference ref : relatedUmcRefs) {
-							((CatmaApplication)UI.getCurrent()).openUserMarkupCollection(
-								sd, repository.getUserMarkupCollection(ref), repository);
-						}
-					}
-					catch (IOException e) {
-						((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"Error opening related User Markup Collection!", e);
-					}
+					CorpusContentSelectionDialog dialog =
+						new CorpusContentSelectionDialog(
+							sd,
+							relevantUserMarkupCollectionProvider.getCorpus(),
+							"Documents to open",
+							new SaveCancelListener<Corpus>() {
+								public void cancelPressed() {/* noop */}
+								public void savePressed(Corpus result) {
+									
+									((CatmaApplication)UI.getCurrent()).openSourceDocument(
+											sd, repository, range);
+									
+									List<UserMarkupCollectionReference> relatedUmcRefs = 
+											result.getUserMarkupCollectionRefs(sd);
+									try {
+										for (UserMarkupCollectionReference ref : relatedUmcRefs) {
+											((CatmaApplication)UI.getCurrent()).openUserMarkupCollection(
+												sd, repository.getUserMarkupCollection(ref), repository);
+										}
+									}
+									catch (IOException e) {
+										((CatmaApplication)UI.getCurrent()).showAndLogError(
+											"Error opening related User Markup Collection!", e);
+									}
+									
+								}
+							},
+							((row instanceof TagQueryResultRow)?
+									Collections.<String>singletonList(((TagQueryResultRow)row).getMarkupCollectionId())
+									:Collections.<String>emptyList())
+					);
+					dialog.show();
 				}
 				
 			}

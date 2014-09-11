@@ -70,6 +70,7 @@ import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.queryengine.result.computation.DistributionComputation;
 import de.catma.queryengine.result.computation.DistributionSelectionListener;
 import de.catma.ui.CatmaApplication;
@@ -91,7 +92,11 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		public void queryResultRowsSelected(String label,
 				List<QueryResultRow> rows, int x, int y) {
 			try {
-				KwicPanel kwicPanel = new KwicPanel(repository, AnalyzerView.this);
+				boolean markupBased = false;
+				if (!rows.isEmpty()) {
+					markupBased = (rows.get(0) instanceof TagQueryResultRow);
+				}
+				KwicPanel kwicPanel = new KwicPanel(repository, AnalyzerView.this, markupBased);
 				kwicPanel.addQueryResultRows(rows);
 				new KwicWindow("KWIC for " + label + " at chunk " + x + " (" + y + " occurrences)", kwicPanel).show();
 			}
