@@ -55,14 +55,20 @@ public class SourceDocumentMapper implements
 
 	public SourceDocument map(Record record) {
 		Integer sourceDocumentId = record.getValue(SOURCEDOCUMENT.SOURCEDOCUMENTID);
-				
+		String language = record.getValue(SOURCEDOCUMENT.LOCALE);
+		String country = "";
+		if (language.contains("_")) {
+			String[] languageCountry = language.split("_");
+			language = languageCountry[0];
+			country = languageCountry[1];
+		}
 		IndexInfoSet indexInfoSet = 
 				new IndexInfoSet(
 					mapUnseparableCharSeqRecords(
 						this.unseparableCharSeqRecords.get(sourceDocumentId)),
 					mapUserDefinedSeparatingCharRecords(
 						this.userDefSepCharsRecords.get(sourceDocumentId)),
-					new Locale(record.getValue(SOURCEDOCUMENT.LOCALE)));
+					new Locale(language, country));
 		ContentInfoSet contentInfoSet = 
 				new ContentInfoSet(
 						record.getValue(SOURCEDOCUMENT.AUTHOR), 
