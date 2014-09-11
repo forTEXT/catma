@@ -129,7 +129,9 @@ public class DBIndexMaintainer {
 		
 		File sourceDocsDir = new File(sourceDocsPath);
 		String[] fileNames = sourceDocsDir.list();
-		
+		if (fileNames == null) {
+			fileNames = new String[]{};
+		}
 		Arrays.sort(fileNames);
 		if (fileNames.length <= fileCleanOffset) {
 			fileCleanOffset = 0;

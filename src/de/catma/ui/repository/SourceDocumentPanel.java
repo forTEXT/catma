@@ -318,10 +318,10 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			public void menuSelected(MenuItem selectedItem) {
 				Object value = documentsTree.getValue();
 				if ((value == null) || !(value instanceof SourceDocument)) {
-					 getWindow().showNotification(
+					 Notification.show(
 		                    "Information",
 		                    "Please select a Source Document first",
-		                    Notification.TYPE_TRAY_NOTIFICATION);
+		                    Type.TRAY_NOTIFICATION);
 				}
 				else{
 					final SourceDocument sourceDocument = (SourceDocument)value;
