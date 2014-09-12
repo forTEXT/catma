@@ -10,7 +10,6 @@ import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGREFERENCE
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.USERMARKUPCOLLECTION;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -36,6 +35,7 @@ import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 
+import de.catma.document.repository.RepositoryPropertiesName;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.repository.db.CatmaDataSourceName;
 import de.catma.repository.db.FileURLFactory;
@@ -47,7 +47,6 @@ public class DBIndexMaintainer {
 
 	private static final int MAX_FILE_CLEAN_COUNT = 10;
 	private static final int MAX_ROW_COUNT = 10;
-	private String fullPropertyFilePath;
 	private String repoFolderPath;
 	private int fileCleanOffset = 0;
 	private int repoTagReferenceRowOffset = 0;
@@ -57,11 +56,10 @@ public class DBIndexMaintainer {
 
 	private Logger logger;
 
-	public DBIndexMaintainer(String fullPropertyFilePath, int fileCleanOffset, int repoTagReferenceRowOffset,
+	public DBIndexMaintainer(int fileCleanOffset, int repoTagReferenceRowOffset,
 			int repoPropertyRowOffset, int indexTagReferenceRowOffset,
 			int indexPropertyRowOffset) {
 
-		this.fullPropertyFilePath = fullPropertyFilePath;
 		this.fileCleanOffset = fileCleanOffset;
 
 		this.repoTagReferenceRowOffset = repoTagReferenceRowOffset;
@@ -74,8 +72,9 @@ public class DBIndexMaintainer {
 	public void run() throws IOException {
 		UserManager userManager = new UserManager();
 		try {
-			Properties properties = new Properties();
-			properties.load(new FileInputStream(fullPropertyFilePath));
+			Properties properties = 
+					(Properties) new InitialContext().lookup(
+							RepositoryPropertiesName.CATMAPROPERTIES.name());
 			this.repoFolderPath = 
 				RepositoryPropertyKey.RepositoryFolderPath.getProperty(properties, 1);
 			
@@ -129,6 +128,10 @@ public class DBIndexMaintainer {
 		
 		File sourceDocsDir = new File(sourceDocsPath);
 		String[] fileNames = sourceDocsDir.list();
+		
+		if (fileNames == null) {
+			fileNames = new String[] {};
+		}
 		
 		Arrays.sort(fileNames);
 		if (fileNames.length <= fileCleanOffset) {

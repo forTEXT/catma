@@ -1,6 +1,5 @@
 package de.catma.servlet;
 
-import java.io.FileInputStream;
 import java.util.Properties;
 
 import javax.naming.InitialContext;
@@ -10,6 +9,7 @@ import javax.servlet.http.HttpServlet;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
+import de.catma.document.repository.RepositoryPropertiesName;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.repository.db.CatmaDataSourceName;
 
@@ -22,12 +22,12 @@ public class DataSourceInitializerServlet extends HttpServlet {
         try {
 	        log("CATMA Datasource initializing...");
 	        
-			Properties properties = new Properties();
-	
-			properties.load(
-				new FileInputStream(
-					cfg.getServletContext().getRealPath("catma.properties")));
+	        InitialContext context = new InitialContext();
 	        
+			Properties properties = 
+					(Properties) context.lookup(
+							RepositoryPropertiesName.CATMAPROPERTIES.name());
+	
 			int repoIndex = 1; // assume that the first configured repo is the local db repo
 			String user = RepositoryPropertyKey.RepositoryUser.getProperty(
 					properties, repoIndex);
@@ -46,7 +46,7 @@ public class DataSourceInitializerServlet extends HttpServlet {
 			cpds.setPassword(pass); 
 			cpds.setIdleConnectionTestPeriod(10);
 	
-			new InitialContext().bind(CatmaDataSourceName.CATMADS.name(), cpds);
+			context.bind(CatmaDataSourceName.CATMADS.name(), cpds);
 			
 			log("CATMA DataSource initialized.");
         }

@@ -19,7 +19,6 @@
 package de.catma.ui;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
@@ -28,10 +27,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.naming.InitialContext;
 
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
@@ -53,7 +52,6 @@ import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 
-import de.catma.ExceptionHandler;
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
@@ -63,6 +61,7 @@ import de.catma.document.Corpus;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
+import de.catma.document.repository.RepositoryPropertiesName;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
@@ -100,7 +99,6 @@ public class CatmaApplication extends UI
 	private static final String MINORVERSION = 
 			"(v"+new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date())+")";
 	private static final String WEB_INF_DIR = "WEB-INF";
-	private static final String CATMA_PROPERTY_FILE = "catma.properties";
 
 	private RepositoryManagerView repositoryManagerView;
 	private TagManagerView tagManagerView;
@@ -121,7 +119,6 @@ public class CatmaApplication extends UI
 	@Override
 	protected void init(VaadinRequest request) {
 		
-		Properties properties = loadProperties();
 		backgroundService = new BackgroundService(this);
 		
 		handleParameters(request.getParameterMap());
@@ -136,6 +133,9 @@ public class CatmaApplication extends UI
 		
 		MenuFactory menuFactory = new MenuFactory();
 		try {
+			Properties properties = 
+					(Properties) new InitialContext().lookup(
+							RepositoryPropertiesName.CATMAPROPERTIES.name());
 			initTempDirectory(properties);
 			tagManager = new TagManager();
 			
@@ -312,21 +312,6 @@ public class CatmaApplication extends UI
 			throw new IOException(
 				"could not create temporary directory: " + this.tempDirectory);
 		}
-	}
-
-	private Properties loadProperties() {
-		String path = 
-			VaadinServlet.getCurrent().getServletContext().getRealPath(
-				CATMA_PROPERTY_FILE);
-
-		Properties properties = new Properties();
-		try {
-			properties.load(new FileInputStream(path));
-		}
-		catch( IOException e) {
-			ExceptionHandler.log(e);
-		}
-		return properties;
 	}
 
 	public void openRepository(Repository repository) {

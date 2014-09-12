@@ -114,38 +114,30 @@ public class KwicPanel extends VerticalLayout {
 							row.getSourceDocumentId());
 					final Range range = row.getRange();
 					
-					CorpusContentSelectionDialog dialog =
-						new CorpusContentSelectionDialog(
-							sd,
-							relevantUserMarkupCollectionProvider.getCorpus(),
-							"Documents to open",
-							new SaveCancelListener<Corpus>() {
-								public void cancelPressed() {/* noop */}
-								public void savePressed(Corpus result) {
-									
-									((CatmaApplication)UI.getCurrent()).openSourceDocument(
-											sd, repository, range);
-									
-									List<UserMarkupCollectionReference> relatedUmcRefs = 
-											result.getUserMarkupCollectionRefs(sd);
-									try {
-										for (UserMarkupCollectionReference ref : relatedUmcRefs) {
-											((CatmaApplication)UI.getCurrent()).openUserMarkupCollection(
-												sd, repository.getUserMarkupCollection(ref), repository);
-										}
-									}
-									catch (IOException e) {
-										((CatmaApplication)UI.getCurrent()).showAndLogError(
-											"Error opening related User Markup Collection!", e);
-									}
-									
+					((CatmaApplication)UI.getCurrent()).openSourceDocument(
+							sd, repository, range);
+					
+					if (row instanceof TagQueryResultRow) {
+						try {
+							final String umcId = 
+									((TagQueryResultRow)row).getMarkupCollectionId();
+							for (UserMarkupCollectionReference ref :
+								relevantUserMarkupCollectionProvider
+									.getCorpus().getUserMarkupCollectionRefs(sd)) {
+								
+								if (ref.getId().equals(umcId)) {
+									((CatmaApplication)UI.getCurrent()).openUserMarkupCollection(
+											sd, repository.getUserMarkupCollection(ref), repository);
+									break;
 								}
-							},
-							((row instanceof TagQueryResultRow)?
-									Collections.<String>singletonList(((TagQueryResultRow)row).getMarkupCollectionId())
-									:Collections.<String>emptyList())
-					);
-					dialog.show();
+								
+							}
+						}
+						catch (IOException e) {
+							((CatmaApplication)UI.getCurrent()).showAndLogError(
+								"Error opening related User Markup Collection!", e);
+						}			
+					}
 				}
 				
 			}

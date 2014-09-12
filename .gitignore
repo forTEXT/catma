@@ -1,6 +1,7 @@
 WebContent/VAADIN/gwt-unitCache
 WebContent/VAADIN/doubletreejs_debug
 WebContent/apiusers.json
+WebContent/catma_mp.properties
 db/local/*
 testlib
 testdocs
