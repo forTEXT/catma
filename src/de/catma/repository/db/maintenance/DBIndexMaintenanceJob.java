@@ -52,8 +52,6 @@ public class DBIndexMaintenanceJob implements Job {
 			
 			DBIndexMaintainer dbIndexMaintainer = 
 					new DBIndexMaintainer(
-						dataMap.getString(
-								JobInstaller.JobDataKey.PROPERTIES_PATH.name()),
 						fileCleanOffset,
 						repoTagReferenceRowOffset, repoPropertyRowOffset, 
 						indexTagReferenceRowOffset, indexPropertyRowOffset);

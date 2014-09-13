@@ -16,7 +16,6 @@ import org.quartz.impl.SchedulerRepository;
 public class JobInstaller {
 	
 	public static enum JobDataKey {
-		PROPERTIES_PATH,
 		REPO_TAGREF_OFFSET,
 		REPO_PROP_OFFSET,
 		IDX_TAGREF_OFFSET,

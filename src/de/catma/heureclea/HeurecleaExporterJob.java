@@ -10,8 +10,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.PersistJobDataAfterExecution;
 
-import de.catma.quartz.JobInstaller;
-
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
 public class HeurecleaExporterJob implements Job {
@@ -21,8 +19,7 @@ public class HeurecleaExporterJob implements Job {
 	public void execute(JobExecutionContext ctx)
 			throws JobExecutionException {
 		try {
-			new HeurecleaExporter((String)ctx.getJobDetail().getJobDataMap().get(
-					JobInstaller.JobDataKey.PROPERTIES_PATH.name())).export();
+			new HeurecleaExporter().export();
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "error executing HeurecleaExporterJob", e);
 		}

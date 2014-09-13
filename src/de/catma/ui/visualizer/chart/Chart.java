@@ -28,6 +28,7 @@ public class Chart extends AbstractComponent {
 	private String chartId;
 	private Distribution distribution;
 	private int maxOccurrences;
+//	private double lenseZoomFactor;
 	private DistributionSelectionListener distributionSelectionListener; 
 	
 	public Chart(Distribution distribution, int maxOccurrences, DistributionSelectionListener distributionSelectionListener) {
@@ -142,5 +143,9 @@ public class Chart extends AbstractComponent {
 	public void setMaxOccurrences(int maxOccurrences) {
 		this.maxOccurrences = maxOccurrences;
 		getRpcProxy(ChartClientRpc.class).setYAxisExtremes(0, maxOccurrences);
+	}
+	
+	public void setLenseZoomFactor(double factor) {
+		getRpcProxy(ChartClientRpc.class).setLenseZoom(factor);
 	}
 }

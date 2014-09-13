@@ -501,33 +501,15 @@ public class MarkupResultPanel extends VerticalLayout {
 		Map<String, TagQueryResult> tagQueryResultsByTagDefPath = 
 				new HashMap<String, TagQueryResult>();
 		
-		HashMap<String, UserMarkupCollection> umcCache = new HashMap<String, UserMarkupCollection>();
-		
 		for(TagQueryResultRow row : rows) {
-			try {
-				if (!umcCache.containsKey(row.getMarkupCollectionId())) {
-					SourceDocument sd = repository.getSourceDocument(row.getSourceDocumentId());
-					UserMarkupCollectionReference umcRef = 
-							sd.getUserMarkupCollectionReference(row.getMarkupCollectionId());
-					UserMarkupCollection umc = repository.getUserMarkupCollection(umcRef);
-					umcCache.put(umc.getId(), umc);
-				}
-				UserMarkupCollection umc = umcCache.get(row.getMarkupCollectionId());
-				TagDefinition td = umc.getTagLibrary().getTagDefinition(row.getTagDefinitionId());
-				String tagPath = umc.getTagLibrary().getTagPath(td);
-	
-				if (!tagQueryResultsByTagDefPath.containsKey(tagPath)) {
-					tagQueryResultsByTagDefPath.put(tagPath, new TagQueryResult(tagPath));
-				}
-				
-				TagQueryResult tagQueryResult = tagQueryResultsByTagDefPath.get(tagPath);
-				tagQueryResult.add(row);
+			String tagPath = row.getTagDefinitionPath();
+
+			if (!tagQueryResultsByTagDefPath.containsKey(tagPath)) {
+				tagQueryResultsByTagDefPath.put(tagPath, new TagQueryResult(tagPath));
 			}
-			catch (IOException ioe) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error preparing markup results!",
-						ioe);
-			}
+			
+			TagQueryResult tagQueryResult = tagQueryResultsByTagDefPath.get(tagPath);
+			tagQueryResult.add(row);
 		}
 		
 		

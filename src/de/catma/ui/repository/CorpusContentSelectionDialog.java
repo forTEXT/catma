@@ -63,12 +63,18 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 	private Corpus constrainingCorpus;
 
 	public CorpusContentSelectionDialog(
-			SourceDocument sd, Corpus corpus, SaveCancelListener<Corpus> listener) {
+			SourceDocument sd, Corpus corpus, String treeTitle, SaveCancelListener<Corpus> listener) {
+		this(sd, corpus, treeTitle, listener, null);
+	}
+	
+	public CorpusContentSelectionDialog(
+			SourceDocument sd, Corpus corpus, String treeTitle, SaveCancelListener<Corpus> listener,
+			List<String> preselectUmcIds) {
 		this.sourceDocument = sd;
 		this.listener = listener;
 		this.constrainingCorpus = corpus;
 		
-		initComponents();
+		initComponents(treeTitle, preselectUmcIds);
 		initActions();
 	}
 
@@ -109,7 +115,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		});
 	}
 
-	private void initComponents() {
+	private void initComponents(String treeTitle, List<String> preselectUmcIds) {
 		setSizeFull();
 		VerticalLayout documentsPanelContent = new VerticalLayout();
 		documentsPanelContent.setMargin(true);
@@ -121,18 +127,18 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		
 		documentsContainer = new HierarchicalContainer();
 		documentsTree = new TreeTable(
-				"Documents for the analysis", documentsContainer);
+				treeTitle, documentsContainer);
 		documentsTree.setWidth("100%");
 		
 		documentsTree.addContainerProperty(
 			DocumentTreeProperty.caption, String.class, null);
 		documentsTree.addContainerProperty(
 				DocumentTreeProperty.include, AbstractComponent.class, null);
-		documentsTree.setColumnHeader(DocumentTreeProperty.caption, "document/collection");
-		documentsTree.setColumnHeader(DocumentTreeProperty.include, "include");
+		documentsTree.setColumnHeader(DocumentTreeProperty.caption, "Document/Collection");
+		documentsTree.setColumnHeader(DocumentTreeProperty.include, "Include");
 		
 		documentsTree.addItem(
-			new Object[] {sourceDocument.toString(), createCheckBox(false)},
+			new Object[] {sourceDocument.toString(), createCheckBox(false, true)},
 			sourceDocument);
 		
 		documentsTree.setCollapsed(sourceDocument, false);
@@ -153,7 +159,13 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 
 		for (UserMarkupCollectionReference umcRef : umcRefList) {
 			documentsTree.addItem(
-				new Object[] {umcRef.getName(), createCheckBox(true)}, umcRef);
+				new Object[] {
+					umcRef.getName(), 
+					createCheckBox(
+						true,
+						(preselectUmcIds==null)||preselectUmcIds.contains(umcRef.getId()))
+				}, 
+				umcRef);
 			documentsTree.setParent(umcRef, userMarkupItem);
 			documentsTree.setChildrenAllowed(umcRef, false);
 		}
@@ -190,10 +202,10 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		dialogWindow.setContent(this);
 	}
 
-	private CheckBox createCheckBox(final boolean editable) {
+	private CheckBox createCheckBox(final boolean editable, boolean initialState) {
 		CheckBox cb = new CheckBox();
 		
-		cb.setValue(true);
+		cb.setValue(initialState);
 		cb.setImmediate(true);
 
 		cb.addValidator(new Validator() {
@@ -213,12 +225,12 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 	
 	public void show(String dialogWidth) {
 		dialogWindow.setWidth(dialogWidth);
-		dialogWindow.setHeight("50%");
+		dialogWindow.setHeight("80%");
 		UI.getCurrent().addWindow(dialogWindow);
 		dialogWindow.center();
 	}
 	
 	public void show() {
-		show("25%");
+		show("45%");
 	}
 }

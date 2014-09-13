@@ -6,12 +6,9 @@ import java.util.logging.Logger;
 
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
-import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.PersistJobDataAfterExecution;
-
-import de.catma.quartz.JobInstaller;
 
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
@@ -21,12 +18,8 @@ public class DBRepoMaintenanceJob implements Job {
 
 	public void execute(JobExecutionContext ctx) throws JobExecutionException {
 		try {
-			JobDataMap dataMap = ctx.getJobDetail().getJobDataMap();
-
 			DBRepositoryMaintainer dbRepositoryMaintainer = 
-				new DBRepositoryMaintainer(
-					dataMap.getString(
-						JobInstaller.JobDataKey.PROPERTIES_PATH.name()));
+				new DBRepositoryMaintainer();
 			
 			dbRepositoryMaintainer.run();
 			

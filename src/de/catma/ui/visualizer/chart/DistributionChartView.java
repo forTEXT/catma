@@ -80,7 +80,11 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 
 	private void handleZoomRequest() {
 		Double val = (Double) zoom.getValue();
-		zoomPanel.zoom(val/100);
+		double zoomfactor = val/100.0;
+		zoomPanel.zoom(zoomfactor);
+		for (Chart chart : charts.values()) {
+			chart.setLenseZoomFactor(1/zoomfactor);
+		}
 	}
 
 	private void initComponents(DistributionComputation distributionComputation) {
