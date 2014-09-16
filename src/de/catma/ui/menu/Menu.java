@@ -18,6 +18,8 @@
  */
 package de.catma.ui.menu;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 
 import com.vaadin.ui.Component;
@@ -45,5 +47,26 @@ public class Menu {
 	public MenuBar getMenuBar() {
 		return menuBar;
 	}
+	
+	public boolean isVisible() {
+		return menuBar.isVisible();
+	}
+	
+	public void setVisible(boolean visible) {
+		menuBar.setVisible(visible);
+	}
+	
+	public PropertyChangeListener userChangeListener = 
+			new PropertyChangeListener() {
+		
+		public void propertyChange(PropertyChangeEvent evt) {
+			if (evt.getNewValue() != null) {
+				setVisible(true);
+			}
+			else {
+				setVisible(false);
+			}
+		}
+	};
 	
 }

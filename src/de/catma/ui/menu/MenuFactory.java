@@ -49,13 +49,36 @@ public class MenuFactory {
 	
 	public MenuFactory() {
 	}
-
+	
+	/**
+	 * Creates a {@link Menu}, with visibility set to <code>false</code> by default.
+	 * @param componentContainer {@link ComponentContainer}
+	 * @param menuEntryDefintions {@link MenuEntryDefinition}
+	 * @return {@link Menu}
+	 */
 	public Menu createMenu(
+			final ComponentContainer componentContainer, 
+			final MenuEntryDefinition... menuEntryDefintions) {
+		
+		return createMenu(false, componentContainer, menuEntryDefintions);
+	}
+
+	/**
+	 * Creates a {@link Menu}.
+	 * @param isVisible {@link Boolean} Whether or not the menu is visible by default.
+	 * @param componentContainer {@link ComponentContainer}
+	 * @param menuEntryDefintions {@link MenuEntryDefinition}
+	 * @return {@link Menu}
+	 */
+	public Menu createMenu(
+			final boolean isVisible,
 			final ComponentContainer componentContainer, 
 			final MenuEntryDefinition... menuEntryDefintions) {
 		
 		
 		final MenuBar menuBar = new MenuBar();
+		menuBar.setVisible(isVisible);
+		
 		Menu menu = new Menu(menuBar);
 		
 		for (final MenuEntryDefinition menuEntryDefinition : menuEntryDefintions) {

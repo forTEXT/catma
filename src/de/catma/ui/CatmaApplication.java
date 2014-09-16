@@ -18,6 +18,8 @@
  */
 package de.catma.ui;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -117,6 +119,30 @@ public class CatmaApplication extends UI
 	private UserManager userManager = new UserManager();
 	private Object user;
 	private HorizontalLayout mainLayout;
+	
+	private PropertyChangeSupport propertyChangeSupport;
+	
+	/**
+	 * Events emitted by the CatmaApplication.
+	 * 
+	 * @see CatmaApplication#addPropertyChangeListener(CatmaApplicationEvent, PropertyChangeListener)
+	 */
+	public static enum CatmaApplicationEvent {
+		/**
+		 * <p>User logged in:
+		 * <li>{@link PropertyChangeEvent#getNewValue()} = {@link Object}</li>
+		 * </p><br />
+		 * <p>User logged out:
+		 * <li>{@link PropertyChangeEvent#getNewValue()} = <code>null</code></li>
+		 * </p><br />
+		 */
+		userChange,
+		;
+	}
+	
+	public CatmaApplication() {
+		propertyChangeSupport = new PropertyChangeSupport(this);
+	}
 
 	@Override
 	protected void init(VaadinRequest request) {
@@ -170,6 +196,8 @@ public class CatmaApplication extends UI
 							"Visualizer",
 							new VisualizationManagerWindow(visualizationManagerView))
 					);
+			addPropertyChangeListener(CatmaApplicationEvent.userChange, menu.userChangeListener);
+			
 			Link latestFeaturesLink = new Link(
 					"Latest Features", new ExternalResource("http://www.catma.de/latestfeatures"));
 			latestFeaturesLink.setTargetName("_blank");
@@ -472,12 +500,34 @@ public class CatmaApplication extends UI
 		return user;
 	}
 	
-	public void setUser(Object user) {
-		this.user = user;
+	public void setUser(Object newUser) {
+		Object currentUser = this.user;
+		this.user = newUser;
+		
+		propertyChangeSupport.firePropertyChange(
+				CatmaApplicationEvent.userChange.name(), currentUser, newUser);
 	}
 	
 	@Override
 	public void attach() {
 		super.attach();
+	}
+	
+	/**
+	 * @see CatmaApplicationEvent
+	 * @see PropertyChangeSupport#addPropertyChangeListener(String, PropertyChangeListener)
+	 */
+	public void addPropertyChangeListener(CatmaApplicationEvent propertyName,
+			PropertyChangeListener listener) {
+		propertyChangeSupport.addPropertyChangeListener(propertyName.name(), listener);
+	}
+
+	/**
+	 * @see CatmaApplicationEvent
+	 * @see PropertyChangeSupport#removePropertyChangeListener(String, PropertyChangeListener)
+	 */
+	public void removePropertyChangeListener(CatmaApplicationEvent propertyName,
+			PropertyChangeListener listener) {
+		propertyChangeSupport.removePropertyChangeListener(propertyName.name(),	listener);
 	}
 }
