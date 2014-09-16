@@ -16,7 +16,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.catma.indexer.db;
+package de.catma.indexer.graph;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -36,6 +36,8 @@ import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
 import de.catma.indexer.TermInfo;
+import de.catma.indexer.db.TagDefinitionSearcher;
+import de.catma.indexer.db.TagReferenceIndexer;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.tag.Property;
@@ -44,13 +46,13 @@ import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 
-public class DBIndexer implements Indexer {
+public class GraphDBIndexer implements Indexer {
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private TagReferenceIndexer tagReferenceIndexer;
 	private SourceDocumentIndexer sourceDocumentIndexer;
-
-	public DBIndexer(Map<String, Object> properties) throws NamingException {
+	
+	public GraphDBIndexer(Map<String, Object> properties) throws NamingException {
 		tagReferenceIndexer = new TagReferenceIndexer();
 		sourceDocumentIndexer = new SourceDocumentIndexer();
 	}
@@ -164,16 +166,11 @@ public class DBIndexer implements Indexer {
 	public SpanContext getSpanContextFor(
 			String sourceDocumentId, Range range, int spanContextSize,
 			SpanDirection direction) throws IOException {
-		try {
-			CollocationSearcher collocationSearcher = 
-					new CollocationSearcher();
-			
-			return collocationSearcher.getSpanContextFor(
-					sourceDocumentId, range, spanContextSize, direction);
-		}
-		catch (NamingException ne) {
-			throw new IOException(ne);
-		}
+		CollocationSearcher collocationSearcher = 
+				new CollocationSearcher();
+		
+		return collocationSearcher.getSpanContextFor(
+				sourceDocumentId, range, spanContextSize, direction);
 	}
 	
 	public QueryResult searchCollocation(QueryResult baseResult,
@@ -191,14 +188,9 @@ public class DBIndexer implements Indexer {
 	}
 	
 	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range) throws IOException {
-		try {
-			CollocationSearcher collocationSearcher = 
-					new CollocationSearcher();
-			return collocationSearcher.getTermInfosFor(sourceDocumentId, range);
-		}
-		catch (NamingException ne) {
-			throw new IOException(ne);
-		}
+		CollocationSearcher collocationSearcher = 
+				new CollocationSearcher();
+		return collocationSearcher.getTermInfosFor(sourceDocumentId, range);
 	}
 
 	

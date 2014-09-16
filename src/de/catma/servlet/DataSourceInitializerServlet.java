@@ -54,14 +54,14 @@ public class DataSourceInitializerServlet extends HttpServlet {
 			
 			log("CATMA DataSource initialized.");
 			
-//			String graphDbPath = properties.getProperty(RepositoryPropertyKey.GraphDbPath.name());
-//			
-//			GraphDatabaseService graphDb = 
-//				new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(graphDbPath)
-//				.loadPropertiesFromFile(cfg.getServletContext().getRealPath("neo4j.properties"))
-//				.newGraphDatabase();
-//			
-//			context.bind(CatmaGraphDbName.CATMAGRAPHDB.name(), graphDb);
+			String graphDbPath = properties.getProperty(RepositoryPropertyKey.GraphDbPath.name());
+			
+			GraphDatabaseService graphDb = 
+				new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(graphDbPath)
+				.loadPropertiesFromFile(cfg.getServletContext().getRealPath("neo4j.properties"))
+				.newGraphDatabase();
+			
+			context.bind(CatmaGraphDbName.CATMAGRAPHDB.name(), graphDb);
         }
         catch (Exception e) {
         	throw new ServletException(e);

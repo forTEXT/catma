@@ -1,4 +1,4 @@
-package de.catma.indexer.db;
+package de.catma.indexer.graph;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,13 +31,12 @@ import de.catma.document.Range;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TermInfo;
-import de.catma.indexer.graph.CatmaGraphDbName;
-import de.catma.indexer.graph.SourceDocumentInserter.RelType;
+import de.catma.indexer.graph.SourceDocumentIndexer.RelType;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 
-public class CollocationSearcher2 {
+class CollocationSearcher {
 	
 	private static class NodePostionComparator implements Comparator<Node> {
 		public int compare(Node o1, Node o2) {
@@ -271,5 +270,16 @@ public class CollocationSearcher2 {
 			}
 		}
 		return false;
+	}
+
+	public SpanContext getSpanContextFor(String sourceDocumentId, Range range,
+			int spanContextSize, SpanDirection direction) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
