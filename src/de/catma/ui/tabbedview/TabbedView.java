@@ -126,6 +126,10 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		tabSheet.setSelectedTab(tabContent);
 	}
 	
+	public Component getSelectedTab() {
+		return tabSheet.getSelectedTab();
+	}
+	
 	protected int getTabPosition(Tab tab) {
 		return tabSheet.getTabPosition(tab);
 	}
