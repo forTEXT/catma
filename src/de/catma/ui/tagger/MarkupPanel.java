@@ -36,9 +36,14 @@ import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.server.ClassResource;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.UI;
@@ -193,6 +198,19 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		tabContent.setSpacing(true);
 		tabContent.setSizeFull();
 		
+		HorizontalLayout row1 = new HorizontalLayout();
+		row1.setWidth("100%");
+		row1.setMargin(new MarginInfo(true, false, false, false));
+		
+		Button btnOpenTagset = new Button("Open Tagset");
+		btnOpenTagset.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				handleOpenTagsetRequest();
+			}
+		});
+		row1.addComponent(btnOpenTagset);
+		
 		Label helpLabel = new Label();
 		
 		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
@@ -211,8 +229,10 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 				"<li>Now you can mark the text sequence you want to tag.</li><li>Click the colored button of the desired Tag to apply it to the marked sequence.</li></ol> " +
 				"When you click on a tagged text, i. e. a text that is underlined with colored bars you should see " +
 				"the available Tag Instances in the section on the lower right of this view.");
-		tabContent.addComponent(helpLabel);
-		tabContent.setComponentAlignment(helpLabel, Alignment.MIDDLE_RIGHT);
+		row1.addComponent(helpLabel);
+		row1.setComponentAlignment(helpLabel, Alignment.MIDDLE_RIGHT);
+		
+		tabContent.addComponent(row1);
 		
 		tagsetTree = 
 			new TagsetTree(
@@ -256,6 +276,10 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		addComponent(markupInfoPanel);
 	}
 	
+	private void handleOpenTagsetRequest() {
+		UI.getCurrent().addWindow(new OpenTagsetWindow(new OpenTagsetView(repository)));		
+	}
+
 	private Component createInfoPanel() {
 		VerticalLayout markupInfoPanel = new VerticalLayout();
 		markupInfoPanel.setSpacing(true);
