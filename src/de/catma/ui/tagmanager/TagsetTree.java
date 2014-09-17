@@ -91,6 +91,8 @@ public class TagsetTree extends HorizontalLayout {
 	private Button btRemoveProperty;
 	private Button btEditProperty;
 	private boolean withTagsetButtons;
+	private boolean withTagButtons;
+	private boolean withPropertyButtons;
 	private boolean withDocumentButtons;
 	private ColorButtonListener colorButtonListener;
 	private TagManager tagManager;
@@ -101,12 +103,14 @@ public class TagsetTree extends HorizontalLayout {
 	private Button btReload;
 
 	public TagsetTree(TagManager tagManager, TagLibrary tagLibrary) {
-		this(tagManager, tagLibrary, true, true, null);
+		this(tagManager, tagLibrary, true, true, true, true, null);
 	}
 
 	public TagsetTree(
 			TagManager tagManager, final TagLibrary tagLibrary, 
-			boolean withTagsetButtons, 
+			boolean withTagsetButtons,
+			boolean withTagButtons,
+			boolean withPropertyButtons,
 			boolean withDocumentButtons,
 			ColorButtonListener colorButtonListener) {
 		this.tagManager = tagManager;
@@ -115,6 +119,8 @@ public class TagsetTree extends HorizontalLayout {
 			tagManager.addTagLibrary(tagLibrary);
 		}
 		this.withTagsetButtons = withTagsetButtons;
+		this.withTagButtons = withTagButtons;
+		this.withPropertyButtons = withPropertyButtons;
 		this.withDocumentButtons = withDocumentButtons;
 		this.colorButtonListener = colorButtonListener;
 	}
@@ -170,7 +176,7 @@ public class TagsetTree extends HorizontalLayout {
 				TagManagerEvent.tagsetDefinitionChanged,
 				tagsetDefinitionChangedListener);
 		
-		if(withDocumentButtons) {
+		if (withDocumentButtons) {
 			btLoadIntoDocument.addClickListener(new ClickListener() {
 				
 				public void buttonClick(ClickEvent event) {
@@ -292,52 +298,57 @@ public class TagsetTree extends HorizontalLayout {
 				TagManagerEvent.userPropertyDefinitionChanged,
 				userPropertyDefinitionChangedListener);
 		
-		btInsertTag.addClickListener(new ClickListener() {
+		if (withTagButtons) {
+			btInsertTag.addClickListener(new ClickListener() {
+				
+				public void buttonClick(ClickEvent event) {
+					handleInsertTagDefinitionRequest();
+				}
+			});
 			
-			public void buttonClick(ClickEvent event) {
-				handleInsertTagDefinitionRequest();
-			}
-		});
-		
-		btRemoveTag.addClickListener(new ClickListener() {
-			
-			public void buttonClick(ClickEvent event) {
-				handleRemoveTagDefinitionRequest();
-			}
+			btRemoveTag.addClickListener(new ClickListener() {
+				
+				public void buttonClick(ClickEvent event) {
+					handleRemoveTagDefinitionRequest();
+				}
 
-		});
+			});
 
-		btEditTag.addClickListener(new ClickListener() {
-			
-			public void buttonClick(ClickEvent event) {
-				handleEditTagDefinitionRequest();
-			}
-		});
+			btEditTag.addClickListener(new ClickListener() {
+				
+				public void buttonClick(ClickEvent event) {
+					handleEditTagDefinitionRequest();
+				}
+			});
+		}
 		
-		btInsertProperty.addClickListener(new ClickListener() {
+		if (withPropertyButtons) {
+			btInsertProperty.addClickListener(new ClickListener() {
+				
+				public void buttonClick(ClickEvent event) {
+					handleInsertPropertyDefinitionRequest();
+				}
+			});
 			
-			public void buttonClick(ClickEvent event) {
-				handleInsertPropertyDefinitionRequest();
-			}
-		});
+			btEditProperty.addClickListener(new ClickListener() {
+				
+				public void buttonClick(ClickEvent event) {
+					handleEditPropertyDefinitionRequest();
+				}
+			});
+			
+			btRemoveProperty.addClickListener(new ClickListener() {
+				
+				public void buttonClick(ClickEvent event) {
+					handleDeletePropertyDefinitionRequest();
+				}
+			});
+		}
 		
-		btEditProperty.addClickListener(new ClickListener() {
-			
-			public void buttonClick(ClickEvent event) {
-				handleEditPropertyDefinitionRequest();
-			}
-		});
-		
-		btRemoveProperty.addClickListener(new ClickListener() {
-			
-			public void buttonClick(ClickEvent event) {
-				handleDeletePropertyDefinitionRequest();
-			}
-		});
 		
 		tagTree.addValueChangeListener(
 				new ButtonStateManager(
-						withTagsetButtons, withDocumentButtons,
+						withTagsetButtons, withTagButtons, withPropertyButtons, withDocumentButtons,
 						btLoadIntoDocument,
 						btRemoveTagset, btEditTagset, 
 						btInsertTag, btRemoveTag, btEditTag, 
@@ -786,7 +797,7 @@ public class TagsetTree extends HorizontalLayout {
 		
 		VerticalLayout buttonGrid = new VerticalLayout();
 		
-		if(withDocumentButtons){
+		if (withDocumentButtons){
 			VerticalLayout documentPanel = new VerticalLayout();
 			documentPanel.setSpacing(true);
 			documentPanel.setMargin(new MarginInfo(true, true, false, true));
@@ -845,70 +856,74 @@ public class TagsetTree extends HorizontalLayout {
 			buttonGrid.addComponent(tagsetPanel);
 		}
 		
-		VerticalLayout tagPanel = new VerticalLayout();
-		tagPanel.setSpacing(true);
-		tagPanel.setMargin(new MarginInfo(true, true, false, true));
-		
-		Label tagLabel = new Label();
-		tagLabel.addStyleName("tagsettree-label");
+		if (withTagButtons) {
+			VerticalLayout tagPanel = new VerticalLayout();
+			tagPanel.setSpacing(true);
+			tagPanel.setMargin(new MarginInfo(true, true, false, true));
+			
+			Label tagLabel = new Label();
+			tagLabel.addStyleName("tagsettree-label");
 
-		tagLabel.setIcon(
-				new ClassResource("tagmanager/resources/reddiamd.gif"));
-		tagLabel.setCaption("Tag");
-		
-		tagPanel.addComponent(tagLabel);
-		tagPanel.setComponentAlignment(tagLabel, Alignment.BOTTOM_LEFT);
-		
-		btInsertTag = new Button("Create Tag");
-		btInsertTag.setWidth("100%");
-		if (withTagsetButtons) {
-			btInsertTag.setEnabled(true);
+			tagLabel.setIcon(
+					new ClassResource("tagmanager/resources/reddiamd.gif"));
+			tagLabel.setCaption("Tag");
+			
+			tagPanel.addComponent(tagLabel);
+			tagPanel.setComponentAlignment(tagLabel, Alignment.BOTTOM_LEFT);
+			
+			btInsertTag = new Button("Create Tag");
+			btInsertTag.setWidth("100%");
+			if (withTagsetButtons) {
+				btInsertTag.setEnabled(true);
+			}
+			tagPanel.addComponent(btInsertTag);
+			
+			btRemoveTag = new Button("Remove Tag");
+			btRemoveTag.setWidth("100%");
+			tagPanel.addComponent(btRemoveTag);
+			
+			btEditTag = new Button("Edit Tag");
+			btEditTag.setWidth("100%");
+			tagPanel.addComponent(btEditTag);
+			
+			buttonGrid.addComponent(tagPanel);
 		}
-		tagPanel.addComponent(btInsertTag);
 		
-		btRemoveTag = new Button("Remove Tag");
-		btRemoveTag.setWidth("100%");
-		tagPanel.addComponent(btRemoveTag);
-		
-		btEditTag = new Button("Edit Tag");
-		btEditTag.setWidth("100%");
-		tagPanel.addComponent(btEditTag);
-		
-		buttonGrid.addComponent(tagPanel);
-		
-		VerticalLayout propertyPanel = new VerticalLayout();
-		propertyPanel.setSpacing(true);
-		propertyPanel.setMargin(new MarginInfo(true, true, false, true));
-		
-		Label propertyLabel = new Label();
-		propertyLabel.addStyleName("tagsettree-label");
+		if (withPropertyButtons) {
+			VerticalLayout propertyPanel = new VerticalLayout();
+			propertyPanel.setSpacing(true);
+			propertyPanel.setMargin(new MarginInfo(true, true, false, true));
+			
+			Label propertyLabel = new Label();
+			propertyLabel.addStyleName("tagsettree-label");
 
-		propertyLabel.setIcon(
-				new ClassResource("tagmanager/resources/ylwdiamd.gif"));
-		propertyLabel.setCaption("Property");
-		propertyLabel.setHeight("15px");
-		propertyLabel.addStyleName("tagsettree-button-top-margin");
-		
-		propertyPanel.addComponent(propertyLabel);
-		
-		propertyPanel.setComponentAlignment(propertyLabel, Alignment.BOTTOM_LEFT);
-		
-		btInsertProperty = new Button("Create Property");
-		btInsertProperty.setWidth("100%");
-		btInsertProperty.addStyleName("tagsettree-button-top-margin");
-		propertyPanel.addComponent(btInsertProperty);
-		
-		btRemoveProperty = new Button("Remove Property");
-		btRemoveProperty.addStyleName("tagsettree-button-top-margin");
-		btRemoveProperty.setWidth("100%");
-		propertyPanel.addComponent(btRemoveProperty);
-		
-		btEditProperty = new Button("Edit Property");
-		btEditProperty.setWidth("100%");
-		btEditProperty.addStyleName("tagsettree-button-top-margin");
-		propertyPanel.addComponent(btEditProperty);
-		
-		buttonGrid.addComponent(propertyPanel);
+			propertyLabel.setIcon(
+					new ClassResource("tagmanager/resources/ylwdiamd.gif"));
+			propertyLabel.setCaption("Property");
+			propertyLabel.setHeight("15px");
+			propertyLabel.addStyleName("tagsettree-button-top-margin");
+			
+			propertyPanel.addComponent(propertyLabel);
+			
+			propertyPanel.setComponentAlignment(propertyLabel, Alignment.BOTTOM_LEFT);
+			
+			btInsertProperty = new Button("Create Property");
+			btInsertProperty.setWidth("100%");
+			btInsertProperty.addStyleName("tagsettree-button-top-margin");
+			propertyPanel.addComponent(btInsertProperty);
+			
+			btRemoveProperty = new Button("Remove Property");
+			btRemoveProperty.addStyleName("tagsettree-button-top-margin");
+			btRemoveProperty.setWidth("100%");
+			propertyPanel.addComponent(btRemoveProperty);
+			
+			btEditProperty = new Button("Edit Property");
+			btEditProperty.setWidth("100%");
+			btEditProperty.addStyleName("tagsettree-button-top-margin");
+			propertyPanel.addComponent(btEditProperty);
+			
+			buttonGrid.addComponent(propertyPanel);
+		}
 		
 		addComponent(buttonGrid);
 		setExpandRatio(buttonGrid, 0.9f);

@@ -67,7 +67,7 @@ public class OpenTagsetView extends VerticalLayout {
 		addComponent(tagLibrariesTree);
 		
 		//TODO: disable all TagsetTree buttons
-		tagsetTree = new TagsetTree(repository.getTagManager(), null, false, null);
+		tagsetTree = new TagsetTree(repository.getTagManager(), null, false, false, false, true, null);
 		addComponent(tagsetTree);
 		
 		setMargin(true);

@@ -18,6 +18,7 @@
  */
 package de.catma.ui.tagmanager;
 
+import com.google.gwt.junit.client.WithProperties;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Button;
@@ -39,15 +40,23 @@ public class ButtonStateManager implements ValueChangeListener {
 	private Button btRemoveProperty;
 	private Button btEditProperty;
 	private boolean withTagsetButtons;
+	private boolean withTagButtons;
+	private boolean withPropertyButtons;
 	private boolean withDocumentButtons;
 	
-	public ButtonStateManager(boolean withTagsetButtons, boolean withDocumentButtons,
+	public ButtonStateManager(
+			boolean withTagsetButtons,
+			boolean withTagButtons,
+			boolean withPropertyButtons,
+			boolean withDocumentButtons,
 			Button btbtLoadIntoDocument,
 			Button btRemoveTagset, Button btEditTagset,
 			Button btInsertTag, Button btRemoveTag, Button btEditTag,
 			Button btInsertProperty, Button btRemoveProperty,
 			Button btEditProperty) {
 		this.withTagsetButtons = withTagsetButtons;
+		this.withTagButtons = withTagButtons;
+		this.withPropertyButtons = withPropertyButtons;
 		this.withDocumentButtons = withDocumentButtons;
 		this.btLoadIntoDocument = btbtLoadIntoDocument;
 		this.btRemoveTagset = btRemoveTagset;
@@ -94,13 +103,22 @@ public class ButtonStateManager implements ValueChangeListener {
 		if (withTagsetButtons) {
 			btEditTagset.setEnabled(selected);
 			btRemoveTagset.setEnabled(selected);
-			btInsertTag.setEnabled(selected);
+			
+			if (withTagButtons) {
+				btInsertTag.setEnabled(selected);				
+			}			
 		}
-		btRemoveTag.setEnabled(false);
-		btEditTag.setEnabled(false);
-		btInsertProperty.setEnabled(false);
-		btRemoveProperty.setEnabled(false);
-		btEditProperty.setEnabled(false);
+		
+		if (withTagButtons) {
+			btRemoveTag.setEnabled(false);
+			btEditTag.setEnabled(false);
+		}
+		
+		if (withPropertyButtons) {
+			btInsertProperty.setEnabled(false);
+			btRemoveProperty.setEnabled(false);
+			btEditProperty.setEnabled(false);
+		}
 	}
 	
 	private void tagDefSelected(boolean selected) {
@@ -111,13 +129,22 @@ public class ButtonStateManager implements ValueChangeListener {
 		if (withTagsetButtons) {
 			btEditTagset.setEnabled(false);
 			btRemoveTagset.setEnabled(false);
-			btInsertTag.setEnabled(selected);
+			
+			if (withTagButtons) {
+				btInsertTag.setEnabled(selected);
+			}			
 		}
-		btRemoveTag.setEnabled(selected);
-		btEditTag.setEnabled(selected);
-		btInsertProperty.setEnabled(selected);
-		btRemoveProperty.setEnabled(false);
-		btEditProperty.setEnabled(false);
+		
+		if (withTagButtons) {
+			btRemoveTag.setEnabled(selected);
+			btEditTag.setEnabled(selected);
+		}
+		
+		if (withPropertyButtons) {
+			btInsertProperty.setEnabled(selected);
+			btRemoveProperty.setEnabled(false);
+			btEditProperty.setEnabled(false);
+		}
 	}
 	
 	private void propDefSelected(boolean selected) {
@@ -128,13 +155,22 @@ public class ButtonStateManager implements ValueChangeListener {
 		if (withTagsetButtons) {
 			btEditTagset.setEnabled(false);
 			btRemoveTagset.setEnabled(false);
-			btInsertTag.setEnabled(false);
+			
+			if (withTagButtons) {
+				btInsertTag.setEnabled(false);
+			}			
 		}
-		btRemoveTag.setEnabled(false);
-		btEditTag.setEnabled(false);
-		btInsertProperty.setEnabled(false);
-		btRemoveProperty.setEnabled(selected);
-		btEditProperty.setEnabled(selected);
+		
+		if (withTagButtons) {
+			btRemoveTag.setEnabled(false);
+			btEditTag.setEnabled(false);
+		}
+		
+		if (withPropertyButtons) {
+			btInsertProperty.setEnabled(false);
+			btRemoveProperty.setEnabled(selected);
+			btEditProperty.setEnabled(selected);
+		}
 	}	
 
 }
