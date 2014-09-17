@@ -346,6 +346,10 @@ public class TaggerView extends VerticalLayout
 			UserMarkupCollection userMarkupCollection) {
 		markupPanel.openUserMarkupCollection(userMarkupCollection);
 	}
+	
+	public void openTagsetDefinition(TagsetDefinition tagsetDefinition){
+		markupPanel.addOrUpdateTagsetDefinition(tagsetDefinition);
+	}
 
 	public void close() {
 		markupPanel.close();
