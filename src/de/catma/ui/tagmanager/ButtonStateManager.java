@@ -29,6 +29,7 @@ import de.catma.tag.TagsetDefinition;
 
 public class ButtonStateManager implements ValueChangeListener {
 	
+	private Button btLoadIntoDocument;
 	private Button btRemoveTagset;
 	private Button btEditTagset;
 	private Button btInsertTag;
@@ -38,13 +39,17 @@ public class ButtonStateManager implements ValueChangeListener {
 	private Button btRemoveProperty;
 	private Button btEditProperty;
 	private boolean withTagsetButtons;
+	private boolean withDocumentButtons;
 	
-	public ButtonStateManager(boolean withTagsetButtons, 
+	public ButtonStateManager(boolean withTagsetButtons, boolean withDocumentButtons,
+			Button btbtLoadIntoDocument,
 			Button btRemoveTagset, Button btEditTagset,
 			Button btInsertTag, Button btRemoveTag, Button btEditTag,
 			Button btInsertProperty, Button btRemoveProperty,
 			Button btEditProperty) {
 		this.withTagsetButtons = withTagsetButtons;
+		this.withDocumentButtons = withDocumentButtons;
+		this.btLoadIntoDocument = btbtLoadIntoDocument;
 		this.btRemoveTagset = btRemoveTagset;
 		this.btEditTagset = btEditTagset;
 		this.btInsertTag = btInsertTag;
@@ -82,6 +87,10 @@ public class ButtonStateManager implements ValueChangeListener {
 	}
 	
 	private void tagsetDefSelected(boolean selected) {
+		if (withDocumentButtons){
+			btLoadIntoDocument.setEnabled(selected);
+		}
+		
 		if (withTagsetButtons) {
 			btEditTagset.setEnabled(selected);
 			btRemoveTagset.setEnabled(selected);
@@ -95,6 +104,10 @@ public class ButtonStateManager implements ValueChangeListener {
 	}
 	
 	private void tagDefSelected(boolean selected) {
+		if (withDocumentButtons){
+			btLoadIntoDocument.setEnabled(false);
+		}
+		
 		if (withTagsetButtons) {
 			btEditTagset.setEnabled(false);
 			btRemoveTagset.setEnabled(false);
@@ -108,6 +121,10 @@ public class ButtonStateManager implements ValueChangeListener {
 	}
 	
 	private void propDefSelected(boolean selected) {
+		if (withDocumentButtons){
+			btLoadIntoDocument.setEnabled(false);
+		}
+		
 		if (withTagsetButtons) {
 			btEditTagset.setEnabled(false);
 			btRemoveTagset.setEnabled(false);

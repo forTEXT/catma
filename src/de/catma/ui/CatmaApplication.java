@@ -76,6 +76,7 @@ import de.catma.repository.LoginToken;
 import de.catma.repository.db.maintenance.UserManager;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
+import de.catma.tag.TagsetDefinition;
 import de.catma.ui.analyzer.AnalyzerManagerView;
 import de.catma.ui.analyzer.AnalyzerManagerWindow;
 import de.catma.ui.analyzer.AnalyzerProvider;
@@ -355,6 +356,28 @@ public class CatmaApplication extends UI
 			ExceptionHandler.log(e);
 		}
 		return properties;
+	}
+	
+	public void addTagsetToActiveDocument(TagsetDefinition tagsetDefinition){
+		TaggerView selectedTab = (TaggerView)taggerManagerView.getSelectedTab();
+		
+		if(selectedTab == null){
+			Notification.show(
+					"Information", 
+					"There is no active document open in the Tagger",
+					Type.WARNING_MESSAGE);
+			return;
+		}
+		
+		selectedTab.openTagsetDefinition(tagsetDefinition);
+		
+		SourceDocument sd = selectedTab.getSourceDocument();
+		String sourceDocumentCaption = sd.toString();
+		
+		Notification.show(
+				"Information", 
+				"Tagset loaded into active document: '" + sourceDocumentCaption + "'",
+				Type.HUMANIZED_MESSAGE);
 	}
 
 	public void openRepository(Repository repository) {
