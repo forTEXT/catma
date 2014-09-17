@@ -56,12 +56,14 @@ import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.EndorsedTreeTable;
 import de.catma.ui.dialog.FormDialog;
 import de.catma.ui.dialog.PropertyCollection;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.StringProperty;
 import de.catma.ui.dialog.TagDefinitionFieldFactory;
+import de.catma.ui.tagger.ConfirmListener;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
@@ -78,6 +80,7 @@ public class TagsetTree extends HorizontalLayout {
 
 	private boolean init = true;
 	private TreeTable tagTree;
+	private Button btLoadIntoDocument;
 	private Button btInsertTagset;
 	private Button btRemoveTagset;
 	private Button btEditTagset;
@@ -88,6 +91,7 @@ public class TagsetTree extends HorizontalLayout {
 	private Button btRemoveProperty;
 	private Button btEditProperty;
 	private boolean withTagsetButtons;
+	private boolean withDocumentButtons;
 	private ColorButtonListener colorButtonListener;
 	private TagManager tagManager;
 	private TagLibrary tagLibrary;
@@ -97,12 +101,13 @@ public class TagsetTree extends HorizontalLayout {
 	private Button btReload;
 
 	public TagsetTree(TagManager tagManager, TagLibrary tagLibrary) {
-		this(tagManager, tagLibrary, true, null);
+		this(tagManager, tagLibrary, true, true, null);
 	}
 
 	public TagsetTree(
 			TagManager tagManager, final TagLibrary tagLibrary, 
 			boolean withTagsetButtons, 
+			boolean withDocumentButtons,
 			ColorButtonListener colorButtonListener) {
 		this.tagManager = tagManager;
 		this.tagLibrary = tagLibrary;
@@ -110,6 +115,7 @@ public class TagsetTree extends HorizontalLayout {
 			tagManager.addTagLibrary(tagLibrary);
 		}
 		this.withTagsetButtons = withTagsetButtons;
+		this.withDocumentButtons = withDocumentButtons;
 		this.colorButtonListener = colorButtonListener;
 	}
 	
@@ -163,6 +169,15 @@ public class TagsetTree extends HorizontalLayout {
 		this.tagManager.addPropertyChangeListener(
 				TagManagerEvent.tagsetDefinitionChanged,
 				tagsetDefinitionChangedListener);
+		
+		if(withDocumentButtons) {
+			btLoadIntoDocument.addClickListener(new ClickListener() {
+				
+				public void buttonClick(ClickEvent event) {
+					handleLoadIntoDocumentRequest();
+				}
+			});
+		}		
 		
 		if (withTagsetButtons) {
 			this.btInsertTagset.addClickListener(new ClickListener() {
@@ -322,7 +337,8 @@ public class TagsetTree extends HorizontalLayout {
 		
 		tagTree.addValueChangeListener(
 				new ButtonStateManager(
-						withTagsetButtons,
+						withTagsetButtons, withDocumentButtons,
+						btLoadIntoDocument,
 						btRemoveTagset, btEditTagset, 
 						btInsertTag, btRemoveTag, btEditTag, 
 						btInsertProperty, btRemoveProperty, btEditProperty));
@@ -711,6 +727,22 @@ public class TagsetTree extends HorizontalLayout {
 				propertyId).setRequiredError(
 						"You have to enter a name!");
 	}
+	
+	private void handleLoadIntoDocumentRequest() {
+		final String tagsetdefinitionnameProperty = "name";
+		
+		Object selValue = tagTree.getValue();
+		
+		if ((selValue != null)
+				&& (selValue instanceof TagsetDefinition)) {
+			
+			final TagsetDefinition curSelTagsetDefinition =
+					(TagsetDefinition)selValue;
+			
+			CatmaApplication application = ((CatmaApplication)UI.getCurrent());
+			application.addTagsetToActiveDocument(curSelTagsetDefinition);
+		}
+	}
 
 	private void initComponents() {
 		setSizeFull();
@@ -753,6 +785,27 @@ public class TagsetTree extends HorizontalLayout {
 		setExpandRatio(tagTree, 2);
 		
 		VerticalLayout buttonGrid = new VerticalLayout();
+		
+		if(withDocumentButtons){
+			VerticalLayout documentPanel = new VerticalLayout();
+			documentPanel.setSpacing(true);
+			documentPanel.setMargin(new MarginInfo(true, true, false, true));
+			
+			Label documentLabel = new Label();
+			documentLabel.addStyleName("tagsettree-label");
+			
+			documentLabel.setCaption("Active Document");
+			
+			documentPanel.addComponent(documentLabel);
+			documentPanel.setComponentAlignment(documentLabel, Alignment.BOTTOM_LEFT);
+			
+			btLoadIntoDocument = new Button("Load");
+			btLoadIntoDocument.setWidth("100%");
+			btLoadIntoDocument.setEnabled(true);
+			documentPanel.addComponent(btLoadIntoDocument);
+			
+			buttonGrid.addComponent(documentPanel);
+		}
 		
 		if (withTagsetButtons) {
 			VerticalLayout tagsetPanel = new VerticalLayout();

@@ -216,7 +216,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		
 		tagsetTree = 
 			new TagsetTree(
-				repository.getTagManager(), null, false, colorButtonListener);
+				repository.getTagManager(), null, false, false, colorButtonListener);
 		tabContent.addComponent(tagsetTree);
 		tabContent.setExpandRatio(tagsetTree, 1.0f);
 		
@@ -306,19 +306,23 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	                	TagsetDefinition incomingTagsetDef =
 	                			(TagsetDefinition)sourceItemId;
 	                	
-	                	markupCollectionsPanel.addOrUpdateTagsetDefinition(
-	                			incomingTagsetDef, 
-	                			new ConfirmListener() {
-	        			            public void confirmed() {
-	        			            	tagsetTree.addTagsetDefinition(
-	        			            			(TagsetDefinition)sourceItemId);
-	        			            }
-	                			});
+	                	addOrUpdateTagsetDefinition(incomingTagsetDef);
 	                }
 				}
 			});
 			init = false;
 		}
+	}
+	
+	public void addOrUpdateTagsetDefinition(final TagsetDefinition tagsetDefinition) {
+		markupCollectionsPanel.addOrUpdateTagsetDefinition(
+				tagsetDefinition, 
+    			new ConfirmListener() {
+		            public void confirmed() {
+		            	tagsetTree.addTagsetDefinition(
+		            			tagsetDefinition);
+		            }
+    			});
 	}
 
 	public void openUserMarkupCollection(
