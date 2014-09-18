@@ -5,10 +5,13 @@ import java.io.IOException;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
+import com.vaadin.ui.Window;
 
 import de.catma.document.repository.Repository;
 import de.catma.tag.TagLibrary;
@@ -19,6 +22,8 @@ import de.catma.ui.tagmanager.TagsetTree;
 public class OpenTagsetView extends VerticalLayout {
 	
 	private final static String SORTCAP_PROP = "SORTCAP";
+	
+	private Window dialogWindow;
 	
 	private Repository repository;
 	private TagLibrary tagLibrary;
@@ -32,11 +37,10 @@ public class OpenTagsetView extends VerticalLayout {
 		this.repository = repository;
 		
 		initComponents();
+		initListeners();
 	}
 
 	private void initComponents() {
-		//TODO: use a splitpanel or margins to separate the two trees vertically
-		
 		tagLibraryContainer = new HierarchicalContainer();
 		tagLibraryContainer.addContainerProperty(SORTCAP_PROP, String.class, null);
 		
@@ -70,9 +74,21 @@ public class OpenTagsetView extends VerticalLayout {
 		addComponent(tagsetTree);
 		
 		setMargin(true);
+		
+		dialogWindow = new Window("Open Tagset");
+		dialogWindow.setContent(this);
+	}
+	
+	private void initListeners() {
+		tagsetTree.addBtLoadIntoDocumentListener(new ClickListener() {
+
+			public void buttonClick(ClickEvent event) {
+				UI.getCurrent().removeWindow(dialogWindow);			
+			}
+		});
 	}
 
-	protected void handleTagLibrariesTreeItemClick(ItemClickEvent event) {
+	private void handleTagLibrariesTreeItemClick(ItemClickEvent event) {
 		TagLibraryReference tagLibraryReference = ((TagLibraryReference)event.getItemId());
 		
 		if (tagLibrary == null || tagLibrary.getId() != tagLibraryReference.getId()) {
@@ -86,5 +102,17 @@ public class OpenTagsetView extends VerticalLayout {
 						"Error opening the Tag Library!", e);
 			}
 		}		
+	}
+	
+	public void show(String dialogWidth) {
+		dialogWindow.setWidth(dialogWidth);
+		dialogWindow.setStyleName("open-tag-set");
+		dialogWindow.setModal(true);
+		UI.getCurrent().addWindow(dialogWindow);
+		dialogWindow.center();
+	}
+	
+	public void show() {
+		show("40%");
 	}
 }

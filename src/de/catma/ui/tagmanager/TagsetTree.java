@@ -78,7 +78,6 @@ public class TagsetTree extends HorizontalLayout {
 		;
 	}
 
-	private boolean init = true;
 	private TreeTable tagTree;
 	private Button btLoadIntoDocument;
 	private Button btInsertTagset;
@@ -123,16 +122,9 @@ public class TagsetTree extends HorizontalLayout {
 		this.withPropertyButtons = withPropertyButtons;
 		this.withDocumentButtons = withDocumentButtons;
 		this.colorButtonListener = colorButtonListener;
-	}
-	
-	@Override
-	public void attach() {
-		super.attach();
-		if (init){
-			initComponents();
-			initActions();
-			init = false;
-		}
+		
+		initComponents();
+		initActions();
 	}
 	
 	private void initActions() {
@@ -740,8 +732,6 @@ public class TagsetTree extends HorizontalLayout {
 	}
 	
 	private void handleLoadIntoDocumentRequest() {
-		final String tagsetdefinitionnameProperty = "name";
-		
 		Object selValue = tagTree.getValue();
 		
 		if ((selValue != null)
@@ -1096,5 +1086,9 @@ public class TagsetTree extends HorizontalLayout {
 	
 	public void addBtReloadListener(ClickListener listener) {
 		btReload.addClickListener(listener);
+	}
+	
+	public void addBtLoadIntoDocumentListener(ClickListener listener) {
+		btLoadIntoDocument.addClickListener(listener);
 	}
 }

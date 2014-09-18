@@ -277,7 +277,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	}
 	
 	private void handleOpenTagsetRequest() {
-		UI.getCurrent().addWindow(new OpenTagsetWindow(new OpenTagsetView(repository)));		
+		new OpenTagsetView(repository).show();
 	}
 
 	private Component createInfoPanel() {
