@@ -121,15 +121,15 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		
 		documentsContainer = new HierarchicalContainer();
 		documentsTree = new TreeTable(
-				"Documents for the analysis", documentsContainer);
+				"Select markup collections to include in analysis", documentsContainer);
 		documentsTree.setWidth("100%");
 		
 		documentsTree.addContainerProperty(
 			DocumentTreeProperty.caption, String.class, null);
 		documentsTree.addContainerProperty(
 				DocumentTreeProperty.include, AbstractComponent.class, null);
-		documentsTree.setColumnHeader(DocumentTreeProperty.caption, "document/collection");
-		documentsTree.setColumnHeader(DocumentTreeProperty.include, "include");
+		documentsTree.setColumnHeader(DocumentTreeProperty.caption, "Document / Markup Collections");
+		documentsTree.setColumnHeader(DocumentTreeProperty.include, "Include");
 		
 		documentsTree.addItem(
 			new Object[] {sourceDocument.toString(), createCheckBox(false)},
@@ -186,28 +186,15 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		buttonPanel.setComponentAlignment(btCancel, Alignment.MIDDLE_RIGHT);
 		addComponent(buttonPanel);
 		
-		dialogWindow = new Window("Selection of relevant documents");
+		dialogWindow = new Window("Analyze Document");
 		dialogWindow.setContent(this);
 	}
 
 	private CheckBox createCheckBox(final boolean editable) {
-		CheckBox cb = new CheckBox();
-		
+		CheckBox cb = new CheckBox();		
 		cb.setValue(true);
 		cb.setImmediate(true);
-
-		cb.addValidator(new Validator() {
-			
-			public void validate(Object value) throws InvalidValueException {
-				if (!editable && !(Boolean)value) {
-					throw new InvalidValueException(
-							"Source Document has to be included!");
-				}
-			}
-		});
-
-		cb.setInvalidAllowed(false);
-		
+		cb.setEnabled(editable);		
 		return cb;
 	}
 	
