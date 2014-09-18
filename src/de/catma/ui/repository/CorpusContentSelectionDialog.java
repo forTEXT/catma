@@ -22,6 +22,8 @@ import java.util.List;
 
 import com.vaadin.data.Property;
 import com.vaadin.data.Validator;
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.AbstractComponent;
@@ -132,7 +134,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		documentsTree.setColumnHeader(DocumentTreeProperty.include, "include");
 		
 		documentsTree.addItem(
-			new Object[] {sourceDocument.toString(), createCheckBox(false)},
+			new Object[] {sourceDocument.toString(), createCheckBox(true)},
 			sourceDocument);
 		
 		documentsTree.setCollapsed(sourceDocument, false);
@@ -141,7 +143,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 				new MarkupCollectionItem(
 						sourceDocument, userMarkupItemDisplayString, true);
 		documentsTree.addItem(
-			new Object[] {userMarkupItemDisplayString, new Label()},
+			new Object[] {userMarkupItemDisplayString, createCheckBox2(true)},
 			userMarkupItem);
 		documentsTree.setParent(userMarkupItem, sourceDocument);
 		
@@ -210,6 +212,46 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		
 		return cb;
 	}
+	
+	private CheckBox createCheckBox2(final boolean editable) {
+		final CheckBox cbIncludeAll = new CheckBox();
+		
+		cbIncludeAll.setValue(true);
+		cbIncludeAll.setImmediate(true);
+		cbIncludeAll.addValueChangeListener(new ValueChangeListener() {
+		
+		@Override
+		public void valueChange(ValueChangeEvent event) {
+			boolean selected = cbIncludeAll.getValue();
+			List<UserMarkupCollectionReference> umcRefList = sourceDocument.getUserMarkupCollectionRefs();
+			
+			if (constrainingCorpus != null) {
+				umcRefList = constrainingCorpus.getUserMarkupCollectionRefs(sourceDocument);
+			}
+			for (UserMarkupCollectionReference umcRef : umcRefList) {
+				Property prop = documentsTree.getItem(umcRef).getItemProperty(
+						DocumentTreeProperty.include);
+				CheckBox cb = (CheckBox) prop.getValue();
+				cb.setValue(selected);
+			}
+		}
+	});
+
+		cbIncludeAll.addValidator(new Validator() {
+			
+			public void validate(Object value) throws InvalidValueException {
+				if (!editable && !(Boolean)value) {
+					throw new InvalidValueException(
+							"Source Document has to be included!");
+				}
+			}
+		});
+
+		cbIncludeAll.setInvalidAllowed(false);
+		
+		return cbIncludeAll;
+	}
+	
 	
 	public void show(String dialogWidth) {
 		dialogWindow.setWidth(dialogWidth);

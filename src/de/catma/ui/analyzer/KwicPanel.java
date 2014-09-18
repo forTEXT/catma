@@ -211,6 +211,7 @@ public class KwicPanel extends VerticalLayout {
 					Notification.show(
 							"Info", "The search results have been tagged!", 
 							Type.TRAY_NOTIFICATION);
+					//save map
 
 				} catch (URISyntaxException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -234,6 +235,8 @@ public class KwicPanel extends VerticalLayout {
 				}
 				else if (relevantUserMarkupCollectionProvider.getCorpus().getUserMarkupCollectionRefs().contains(umcRef)) {
 					initialTarget = umcRef;
+					// if contains map from last time
+					// initialTarget = map
 					break;
 				}
 			}
