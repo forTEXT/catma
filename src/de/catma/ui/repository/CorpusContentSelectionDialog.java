@@ -208,4 +208,9 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 	public void show() {
 		show("25%");
 	}
+	
+	public void setCaptions(String windowCaption, String documentsTreeCaption){
+		dialogWindow.setCaption(windowCaption);
+		documentsTree.setCaption(documentsTreeCaption);
+	}
 }

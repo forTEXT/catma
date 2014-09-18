@@ -54,8 +54,10 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
+import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
@@ -64,6 +66,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
+import de.catma.repository.db.DBRepository;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -72,7 +75,10 @@ import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.analyzer.AnalyzerProvider;
+import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.menu.CMenuAction;
+import de.catma.ui.repository.CorpusContentSelectionDialog;
 import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
 import de.catma.util.Pair;
 
@@ -624,7 +630,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		row1.setWidth("100%");
 		row1.setMargin(new MarginInfo(true, false, true, false));
 		
-		Button btnOpenMarkupCollection = new Button("Open Markup Collection");
+		Button btnOpenMarkupCollection = new Button("Open Markup Collection(s)");
 		btnOpenMarkupCollection.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -689,8 +695,44 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 
 	protected void handleOpenMarkupCollectionRequest() {
-		// TODO Auto-generated method stub
+		CatmaApplication application = ((CatmaApplication)UI.getCurrent());
+		TaggerManagerView taggerManagerView = application.getTaggerManager();
+		TaggerView selectedTab = (TaggerView)taggerManagerView.getSelectedTab();
 		
+		if(selectedTab == null){
+			Notification.show(
+					"Information", 
+					"There is no active document open in the Tagger",
+					Type.WARNING_MESSAGE);
+			return;
+		}
+		
+		final SourceDocument sd = selectedTab.getSourceDocument();
+		
+		CorpusContentSelectionDialog dialog =
+				new CorpusContentSelectionDialog(
+					sd,
+					null,
+					new SaveCancelListener<Corpus>() {
+						public void cancelPressed() {/* noop */}
+						public void savePressed(Corpus result) {
+							
+							List<UserMarkupCollectionReference> markupCollectionReferences = result.getUserMarkupCollectionRefs(sd);
+							
+							try {
+								for (UserMarkupCollectionReference umcRef : markupCollectionReferences) {
+									UserMarkupCollection userMarkupCollection = repository.getUserMarkupCollection(umcRef);									
+									openUserMarkupCollection(userMarkupCollection);
+									}
+								}
+							catch (IOException ioe) {
+								((CatmaApplication)UI.getCurrent()).showAndLogError(
+										"Error fetching user markup collections", ioe);
+							}							
+						}
+					});
+			dialog.setCaptions("Load Markup Collections", "Choose markup collections to open for this document");
+			dialog.show();
 	}
 
 	private UserMarkupCollection getUserMarkupCollection(
