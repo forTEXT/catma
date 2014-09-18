@@ -12,9 +12,15 @@
 	</session-config>
 	
 	<servlet> 
+		<servlet-name>CATMAProperties</servlet-name> 
+		<servlet-class>de.catma.servlet.PropertiesInitializerServlet</servlet-class> 
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	
+	<servlet> 
 		<servlet-name>CATMADataSource</servlet-name> 
 		<servlet-class>de.catma.servlet.DataSourceInitializerServlet</servlet-class> 
-		<load-on-startup>1</load-on-startup>
+		<load-on-startup>2</load-on-startup>
 	</servlet>
 	
 	<servlet>
@@ -31,7 +37,7 @@
 			<param-name>widgetset</param-name>
 			<param-value>de.catma.ui.CleaWidgetset</param-value>
 		</init-param>
-		<load-on-startup>2</load-on-startup>
+		<load-on-startup>3</load-on-startup>
 	</servlet>
 	
 	<servlet> 
@@ -49,7 +55,7 @@
              <param-name>start-scheduler-on-load</param-name>
              <param-value>true</param-value>
          </init-param>
-   		<load-on-startup>2</load-on-startup>
+   		<load-on-startup>3</load-on-startup>
 	</servlet>
 	
 	<servlet>  
@@ -60,25 +66,25 @@
         	<param-name>org.restlet.application</param-name>
         	<param-value>de.catma.api.CatmaApiApplication</param-value>
 		</init-param>
-		<load-on-startup>2</load-on-startup>
+		<load-on-startup>3</load-on-startup>
 	</servlet>  
 	
 	<servlet> 
 		<servlet-name>HeurecleaPeriodicExportInitializerServlet</servlet-name> 
 		<servlet-class>de.catma.heureclea.HeurecleaPeriodicExportInitializerServlet</servlet-class> 
-		<load-on-startup>3</load-on-startup>
+		<load-on-startup>4</load-on-startup>
 	</servlet>
 	
 	<servlet> 
 		<servlet-name>DBMaintenanceInitializerServlet</servlet-name> 
 		<servlet-class>de.catma.repository.db.maintenance.DBMaintenanceInitializerServlet</servlet-class> 
-		<load-on-startup>3</load-on-startup>
+		<load-on-startup>4</load-on-startup>
 	</servlet>
 	
 	<servlet> 
 		<servlet-name>UserManagerMaintenanceServlet</servlet-name> 
 		<servlet-class>de.catma.servlet.UserManagerMaintenanceServlet</servlet-class> 
-		<load-on-startup>3</load-on-startup>
+		<load-on-startup>4</load-on-startup>
 	</servlet>
 	
 	<servlet-mapping>  

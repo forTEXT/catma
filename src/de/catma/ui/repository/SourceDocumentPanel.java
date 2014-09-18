@@ -942,6 +942,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 							new CorpusContentSelectionDialog(
 								sd,
 								currentCorpus,
+								"Documents for the analysis",
 								new SaveCancelListener<Corpus>() {
 									public void cancelPressed() {/* noop */}
 									public void savePressed(Corpus result) {

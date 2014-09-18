@@ -21,9 +21,7 @@ public class HeurecleaPeriodicExportInitializerServlet extends HttpServlet {
 		super.init(config);
 		try {
 			JobDataMap jobDataMap = new JobDataMap();
-			jobDataMap.put(JobInstaller.JobDataKey.PROPERTIES_PATH.name(), 
-					config.getServletContext().getRealPath("catma.properties"));
-			
+
 			JobInstaller jobInstaller = new JobInstaller();
 			
 			jobInstaller.install(

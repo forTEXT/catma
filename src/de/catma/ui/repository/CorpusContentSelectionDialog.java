@@ -21,9 +21,9 @@ package de.catma.ui.repository;
 import java.util.List;
 
 import com.vaadin.data.Property;
-import com.vaadin.data.Validator;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.data.Validator;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.AbstractComponent;
@@ -33,7 +33,6 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
@@ -63,14 +62,21 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 	private Button btCancel;
 	private Window dialogWindow;
 	private Corpus constrainingCorpus;
+	private List<UserMarkupCollectionReference> umcRefList;
 
 	public CorpusContentSelectionDialog(
-			SourceDocument sd, Corpus corpus, SaveCancelListener<Corpus> listener) {
+			SourceDocument sd, Corpus corpus, String treeTitle, SaveCancelListener<Corpus> listener) {
+		this(sd, corpus, treeTitle, listener, null);
+	}
+	
+	public CorpusContentSelectionDialog(
+			SourceDocument sd, Corpus corpus, String treeTitle, SaveCancelListener<Corpus> listener,
+			List<String> preselectUmcIds) {
 		this.sourceDocument = sd;
 		this.listener = listener;
 		this.constrainingCorpus = corpus;
 		
-		initComponents();
+		initComponents(treeTitle, preselectUmcIds);
 		initActions();
 	}
 
@@ -111,7 +117,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		});
 	}
 
-	private void initComponents() {
+	private void initComponents(String treeTitle, List<String> preselectUmcIds) {
 		setSizeFull();
 		VerticalLayout documentsPanelContent = new VerticalLayout();
 		documentsPanelContent.setMargin(true);
@@ -123,18 +129,18 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		
 		documentsContainer = new HierarchicalContainer();
 		documentsTree = new TreeTable(
-				"Documents for the analysis", documentsContainer);
+				treeTitle, documentsContainer);
 		documentsTree.setWidth("100%");
 		
 		documentsTree.addContainerProperty(
 			DocumentTreeProperty.caption, String.class, null);
 		documentsTree.addContainerProperty(
 				DocumentTreeProperty.include, AbstractComponent.class, null);
-		documentsTree.setColumnHeader(DocumentTreeProperty.caption, "document/collection");
-		documentsTree.setColumnHeader(DocumentTreeProperty.include, "include");
+		documentsTree.setColumnHeader(DocumentTreeProperty.caption, "Document/Collection");
+		documentsTree.setColumnHeader(DocumentTreeProperty.include, "Include");
 		
 		documentsTree.addItem(
-			new Object[] {sourceDocument.toString(), createCheckBox(true)},
+			new Object[] {sourceDocument.toString(), createCheckBox(false, true)},
 			sourceDocument);
 		
 		documentsTree.setCollapsed(sourceDocument, false);
@@ -143,11 +149,11 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 				new MarkupCollectionItem(
 						sourceDocument, userMarkupItemDisplayString, true);
 		documentsTree.addItem(
-			new Object[] {userMarkupItemDisplayString, createCheckBox2(true)},
+			new Object[] {userMarkupItemDisplayString, createToggleAllUmcCheckBox()},
 			userMarkupItem);
 		documentsTree.setParent(userMarkupItem, sourceDocument);
 		
-		List<UserMarkupCollectionReference> umcRefList = sourceDocument.getUserMarkupCollectionRefs();
+		umcRefList = sourceDocument.getUserMarkupCollectionRefs();
 		
 		if (constrainingCorpus != null) {
 			umcRefList = constrainingCorpus.getUserMarkupCollectionRefs(sourceDocument);
@@ -155,7 +161,13 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 
 		for (UserMarkupCollectionReference umcRef : umcRefList) {
 			documentsTree.addItem(
-				new Object[] {umcRef.getName(), createCheckBox(true)}, umcRef);
+				new Object[] {
+					umcRef.getName(), 
+					createCheckBox(
+						true,
+						(preselectUmcIds==null)||preselectUmcIds.contains(umcRef.getId()))
+				}, 
+				umcRef);
 			documentsTree.setParent(umcRef, userMarkupItem);
 			documentsTree.setChildrenAllowed(umcRef, false);
 		}
@@ -192,10 +204,10 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		dialogWindow.setContent(this);
 	}
 
-	private CheckBox createCheckBox(final boolean editable) {
+	private CheckBox createCheckBox(final boolean editable, boolean initialState) {
 		CheckBox cb = new CheckBox();
 		
-		cb.setValue(true);
+		cb.setValue(initialState);
 		cb.setImmediate(true);
 
 		cb.addValidator(new Validator() {
@@ -213,54 +225,37 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		return cb;
 	}
 	
-	private CheckBox createCheckBox2(final boolean editable) {
+	private CheckBox createToggleAllUmcCheckBox() {
 		final CheckBox cbIncludeAll = new CheckBox();
 		
 		cbIncludeAll.setValue(true);
 		cbIncludeAll.setImmediate(true);
 		cbIncludeAll.addValueChangeListener(new ValueChangeListener() {
-		
-		@Override
-		public void valueChange(ValueChangeEvent event) {
-			boolean selected = cbIncludeAll.getValue();
-			List<UserMarkupCollectionReference> umcRefList = sourceDocument.getUserMarkupCollectionRefs();
 			
-			if (constrainingCorpus != null) {
-				umcRefList = constrainingCorpus.getUserMarkupCollectionRefs(sourceDocument);
-			}
-			for (UserMarkupCollectionReference umcRef : umcRefList) {
-				Property prop = documentsTree.getItem(umcRef).getItemProperty(
-						DocumentTreeProperty.include);
-				CheckBox cb = (CheckBox) prop.getValue();
-				cb.setValue(selected);
-			}
-		}
-	});
-
-		cbIncludeAll.addValidator(new Validator() {
-			
-			public void validate(Object value) throws InvalidValueException {
-				if (!editable && !(Boolean)value) {
-					throw new InvalidValueException(
-							"Source Document has to be included!");
+			@Override
+			public void valueChange(ValueChangeEvent event) {
+				boolean selected = cbIncludeAll.getValue();
+				for (UserMarkupCollectionReference umcRef : umcRefList) {
+					@SuppressWarnings("rawtypes")
+					Property prop = documentsTree.getItem(umcRef).getItemProperty(
+							DocumentTreeProperty.include);
+					CheckBox cb = (CheckBox) prop.getValue();
+					cb.setValue(selected);
 				}
 			}
 		});
-
-		cbIncludeAll.setInvalidAllowed(false);
-		
 		return cbIncludeAll;
 	}
 	
 	
 	public void show(String dialogWidth) {
 		dialogWindow.setWidth(dialogWidth);
-		dialogWindow.setHeight("50%");
+		dialogWindow.setHeight("80%");
 		UI.getCurrent().addWindow(dialogWindow);
 		dialogWindow.center();
 	}
 	
 	public void show() {
-		show("25%");
+		show("45%");
 	}
 }

@@ -25,10 +25,6 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 			
 			
 			JobDataMap repoJobDataMap = new JobDataMap();
-			repoJobDataMap.put(JobInstaller.JobDataKey.PROPERTIES_PATH.name(), 
-					config.getServletContext().getRealPath("catma.properties"));
-			
-
 			jobInstaller.install(
 				DBRepoMaintenanceJob.class,
 				TriggerBuilder.newTrigger()
@@ -44,9 +40,6 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 			    repoJobDataMap);
 			
 			JobDataMap indexJobDataMap = new JobDataMap();
-			indexJobDataMap.put(JobInstaller.JobDataKey.PROPERTIES_PATH.name(), 
-					config.getServletContext().getRealPath("catma.properties"));
-			
 			jobInstaller.install(
 				DBIndexMaintenanceJob.class,
 				TriggerBuilder.newTrigger()
