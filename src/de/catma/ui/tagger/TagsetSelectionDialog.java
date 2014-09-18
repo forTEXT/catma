@@ -19,7 +19,7 @@ import de.catma.tag.TagLibraryReference;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.tagmanager.TagsetTree;
 
-public class OpenTagsetView extends VerticalLayout {
+public class TagsetSelectionDialog extends VerticalLayout {
 	
 	private final static String SORTCAP_PROP = "SORTCAP";
 	
@@ -31,7 +31,7 @@ public class OpenTagsetView extends VerticalLayout {
 	private Tree tagLibrariesTree;
 	private TagsetTree tagsetTree;
 	
-	public OpenTagsetView(Repository repository) {
+	public TagsetSelectionDialog(Repository repository) {
 		super();
 		
 		this.repository = repository;
