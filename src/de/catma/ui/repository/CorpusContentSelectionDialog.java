@@ -21,6 +21,8 @@ package de.catma.ui.repository;
 import java.util.List;
 
 import com.vaadin.data.Property;
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.Validator;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.ShortcutAction.KeyCode;
@@ -31,7 +33,6 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
@@ -61,6 +62,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 	private Button btCancel;
 	private Window dialogWindow;
 	private Corpus constrainingCorpus;
+	private List<UserMarkupCollectionReference> umcRefList;
 
 	public CorpusContentSelectionDialog(
 			SourceDocument sd, Corpus corpus, String treeTitle, SaveCancelListener<Corpus> listener) {
@@ -147,11 +149,11 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 				new MarkupCollectionItem(
 						sourceDocument, userMarkupItemDisplayString, true);
 		documentsTree.addItem(
-			new Object[] {userMarkupItemDisplayString, new Label()},
+			new Object[] {userMarkupItemDisplayString, createToggleAllUmcCheckBox()},
 			userMarkupItem);
 		documentsTree.setParent(userMarkupItem, sourceDocument);
 		
-		List<UserMarkupCollectionReference> umcRefList = sourceDocument.getUserMarkupCollectionRefs();
+		umcRefList = sourceDocument.getUserMarkupCollectionRefs();
 		
 		if (constrainingCorpus != null) {
 			umcRefList = constrainingCorpus.getUserMarkupCollectionRefs(sourceDocument);
@@ -222,6 +224,29 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		
 		return cb;
 	}
+	
+	private CheckBox createToggleAllUmcCheckBox() {
+		final CheckBox cbIncludeAll = new CheckBox();
+		
+		cbIncludeAll.setValue(true);
+		cbIncludeAll.setImmediate(true);
+		cbIncludeAll.addValueChangeListener(new ValueChangeListener() {
+			
+			@Override
+			public void valueChange(ValueChangeEvent event) {
+				boolean selected = cbIncludeAll.getValue();
+				for (UserMarkupCollectionReference umcRef : umcRefList) {
+					@SuppressWarnings("rawtypes")
+					Property prop = documentsTree.getItem(umcRef).getItemProperty(
+							DocumentTreeProperty.include);
+					CheckBox cb = (CheckBox) prop.getValue();
+					cb.setValue(selected);
+				}
+			}
+		});
+		return cbIncludeAll;
+	}
+	
 	
 	public void show(String dialogWidth) {
 		dialogWindow.setWidth(dialogWidth);
