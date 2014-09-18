@@ -90,6 +90,74 @@
 	height: 5px;
 }
 
+.v-menubar {
+	background: #131214; /* Old browsers */
+	background: -moz-linear-gradient(top, #131214 0%, #424448 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#131214), color-stop(100%,#424448)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top, #131214 0%,#424448 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top, #131214 0%,#424448 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top, #131214 0%,#424448 100%); /* IE10+ */
+	background: linear-gradient(to bottom, #131214 0%,#424448 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#131214', endColorstr='#424448',GradientType=0 ); /* IE6-9 */
+    padding: 3px!important;
+    border-radius:4px;
+    height: auto!important;
+}
+
+.v-menubar .v-menubar-menuitem-selected, .v-menubar-submenu .v-menubar-menuitem-selected {
+	background-color: #4D75A0;
+	background-image: none!important;
+	border-radius: 4px;
+}
+
+
+.v-button-wrap {
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    background-color: #fafafa;
+    background-image: linear-gradient(to bottom, #fafafa 2%, #efefef 98%)!important;
+    border-color: #c5c5c5 #c5c5c5 #bcbcbc;
+    border-image: none;
+    border-left: 1px solid #c5c5c5;
+    border-radius: 4px;
+    border-right: 1px solid #c5c5c5;
+    border-style: solid;
+    border-width: 1px;
+    box-shadow: 0 1px 0 white inset, 0 -1px 0 #e7e7e7 inset, 0 2px 3px rgba(0, 0, 0, 0.05);
+    color: #191919;
+    cursor: pointer;
+    font-weight: 400;
+    height: auto;
+    outline: medium none;
+    padding: 5px!important;
+    position: relative;
+    text-align: center;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
+    white-space: nowrap;
+}
+
+.v-button, .v-disabled.v-button { 
+	background-image: none!important;
+	height: auto!important;
+
+}
+
+.v-button-wrap, .v-disabled.v-button .v-button-wrap {
+	padding: 5px!important;
+	height: auto!important;	
+}
+
+.v-gridlayout-margin-right {
+	width: 100%!important;
+}
+
+.v-button-wrap, .v-button-caption {
+	white-space:normal!important;
+}
+
+
 .distributionchartviewpanel .v-slot {
 	height: 100% ! important;
 }
@@ -102,4 +170,29 @@
 /*	zoom: 50%;*/
     -moz-transform: scale(0.5);
 /*    -webkit-transform: scale(1.0);*/
+}
+
+.v-table-caption-container, .v-table-header-drag {
+	padding-top: 0px!important;
+}
+
+.open-tag-set .v-layout .v-horizontal .v-widget {
+	margin-top: 10px;
+}
+
+.open-tag-set {
+	height: auto!important;	
+}
+
+.open-tag-set > .v-vertical > .v-margin-bottom > .v-horizontal. > .v-margin-bottom {
+	padding-bottom: 0px!important;
+}
+
+.open-tag-set > .v-orderedlayout-margin-bottom > .v-horizontallayout-margin-bottom > .v-verticallayout-margin-bottom > .v-layout. > .v-margin-bottom {
+	padding-bottom: 0px!important;
+}
+
+
+.tagger-manager-window .v-expand[style="padding-top: 53px;"] {
+	padding-top:42px!important;
 }

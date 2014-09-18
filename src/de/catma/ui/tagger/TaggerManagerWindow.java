@@ -27,5 +27,6 @@ public class TaggerManagerWindow extends CatmaWindow {
 		setContent(taggerManagerView);
 		setHeight("85%");
 		setWidth("70%");
+		setStyleName("tagger-manager-window");
 	}
 }
