@@ -57,8 +57,7 @@ public class SourceDocumentIndexer {
 		Map<String, List<TermInfo>> terms = termExtractor.getTerms();
 
 		logger.info("term extraction finished");
-		logger.info("starting graphdb");
-		
+
 		GraphDatabaseService graphDb = null;
 		
 		try {
@@ -67,19 +66,14 @@ public class SourceDocumentIndexer {
 			throw new IOException(e);
 		}
 		
-		logger.info("graph db started");
-		
-		Label sourceDocLabel = DynamicLabel.label( "SourceDocument" );
+		logger.info("starting insertion into graph");
 		
 		Transaction tx = graphDb.beginTx();
 		
-		Node sdNode = graphDb.createNode(sourceDocLabel);
+		Node sdNode = graphDb.createNode(NodeType.SourceDocument);
 		
-		sdNode.setProperty("localUri", sourceDocument.getID());
-		sdNode.setProperty("title", sourceDocument.toString());
-		
-		Label termLabel = DynamicLabel.label("Term");
-		Label positionLabel = DynamicLabel.label("Position");
+		sdNode.setProperty(SourceDocumentProperty.localUri.name(), sourceDocument.getID());
+		sdNode.setProperty(SourceDocumentProperty.title.name(), sourceDocument.toString());
 		
 		Map<TermInfo,Long> termInfoToNodeId = new HashMap<TermInfo, Long>();
 		TreeSet<TermInfo> orderedTermInfos = new TreeSet<TermInfo>(TermInfo.TOKENOFFSETCOMPARATOR);
@@ -88,21 +82,22 @@ public class SourceDocumentIndexer {
 			String term = entry.getKey();
 			List<TermInfo> termInfos = entry.getValue();
 			
-			Node termNode = graphDb.createNode(termLabel);
-			termNode.setProperty("literal", term);
+			Node termNode = graphDb.createNode(NodeType.Term);
+			termNode.setProperty(TermProperty.literal.name(), term);
+			termNode.setProperty(TermProperty.freq.name(), termInfos.size());
 			
 			for (TermInfo ti : termInfos) {
 				orderedTermInfos.add(ti);
 				
-				Node positionNode = graphDb.createNode(positionLabel);
-				positionNode.setProperty("position", ti.getTokenOffset());
-				positionNode.setProperty("start", ti.getRange().getStartPoint());
-				positionNode.setProperty("end", ti.getRange().getEndPoint());
-				positionNode.setProperty("literal", ti.getTerm());
+				Node positionNode = graphDb.createNode(NodeType.Position);
+				positionNode.setProperty(PositionProperty.position.name(), ti.getTokenOffset());
+				positionNode.setProperty(PositionProperty.start.name(), ti.getRange().getStartPoint());
+				positionNode.setProperty(PositionProperty.end.name(), ti.getRange().getEndPoint());
+				positionNode.setProperty(PositionProperty.literal.name(), ti.getTerm());
 				
 				termInfoToNodeId.put(ti, positionNode.getId());
 				Relationship rsHasPosition = termNode.createRelationshipTo(positionNode, RelType.HAS_POSITION);
-				rsHasPosition.setProperty("sourceDoc", sourceDocument.getID());
+				rsHasPosition.setProperty(HasPositionProperty.sourceDoc.name(), sourceDocument.getID());
 				
 				termNode.createRelationshipTo(sdNode, RelType.IS_PART_OF);
 			}
@@ -122,8 +117,6 @@ public class SourceDocumentIndexer {
 		tx.success();
 		tx.close();
 		logger.info("insertion of source document finished");
-		graphDb.index();
-		logger.info("indexing finished");
 	}
 
 	public void removeSourceDocument(String sourceDocumentID) {

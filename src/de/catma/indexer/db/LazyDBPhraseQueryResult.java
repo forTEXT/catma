@@ -33,7 +33,7 @@ import de.catma.queryengine.result.PhraseResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 
-public class LazyDBPhraseQueryResult implements GroupedQueryResult {
+class LazyDBPhraseQueryResult implements GroupedQueryResult {
 	
 	private Map<String, Term> termsByDocument;
 	private String term;

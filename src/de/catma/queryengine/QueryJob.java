@@ -32,6 +32,7 @@ import de.catma.queryengine.parser.CatmaQueryLexer;
 import de.catma.queryengine.parser.CatmaQueryParser;
 import de.catma.queryengine.parser.CatmaQueryWalker;
 import de.catma.queryengine.result.QueryResult;
+import de.catma.util.StopWatch;
 
 
 /**
@@ -58,6 +59,8 @@ public class QueryJob extends DefaultProgressCallable<QueryResult> {
 
     public QueryResult call() throws Exception {
         try {
+        	StopWatch stopWatch = new StopWatch();
+        	
             // parse the query
             CatmaQueryLexer lex =
                 new CatmaQueryLexer(new ANTLRStringStream(inputQuery));
@@ -78,7 +81,7 @@ public class QueryJob extends DefaultProgressCallable<QueryResult> {
             QueryResult queryResult = query.getResult();
             
             getProgressListener().setProgress("Query finished!");
-            logger.info("query finished " + inputQuery);
+            logger.info("query finished " + inputQuery +  " duration: " + stopWatch);
             return queryResult;
         }
         catch (Exception e) {

@@ -30,6 +30,13 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Collection;
 
+import javax.naming.InitialContext;
+
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Transaction;
+import org.neo4j.tooling.GlobalGraphOperations;
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
 import org.vaadin.teemu.wizards.event.WizardCompletedEvent;
@@ -87,6 +94,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
+import de.catma.indexer.graph.CatmaGraphDbName;
 import de.catma.indexer.graph.SourceDocumentIndexer;
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 import de.catma.tag.PropertyDefinition;
@@ -333,6 +341,27 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+				}
+			}
+		});
+		miMoreDocumentActions.addItem("Clear Graph DB", new Command() {
+			public void menuSelected(MenuItem selectedItem) {
+				try {
+					GraphDatabaseService graphDb = (GraphDatabaseService) new InitialContext().lookup(
+							CatmaGraphDbName.CATMAGRAPHDB.name());
+					Transaction transaction = graphDb.beginTx();
+					GlobalGraphOperations globalGraphOperations = GlobalGraphOperations.at(graphDb);
+					for (Node n : globalGraphOperations.getAllNodes()) {
+						for (Relationship r : n.getRelationships()) {
+							r.delete();
+						}
+						n.delete();
+					}
+					transaction.success();
+					transaction.close();
+				}
+				catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 		});

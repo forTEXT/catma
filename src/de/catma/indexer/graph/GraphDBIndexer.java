@@ -224,18 +224,7 @@ public class GraphDBIndexer implements Indexer {
 	}
 	
 	public void close() {
-		//TODO: where to close? do we need closing at all?
-//		try {
-//			GraphDatabaseService graphDb = 
-//					(GraphDatabaseService) new InitialContext().lookup(
-//							CatmaGraphDbName.CATMAGRAPHDB.name());
-//			graphDb.shutdown();
-//			logger.info("graphdb stopped");
-//		}
-//		catch (Exception e) {
-//			logger.log(Level.SEVERE, "error stopping graphdb", e);
-//		}
-
+		// noop
 	}
 
 }

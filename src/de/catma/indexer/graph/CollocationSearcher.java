@@ -13,9 +13,7 @@ import java.util.TreeSet;
 import javax.naming.InitialContext;
 
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.DynamicLabel;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
@@ -40,7 +38,8 @@ class CollocationSearcher {
 	
 	private static class NodePostionComparator implements Comparator<Node> {
 		public int compare(Node o1, Node o2) {
-			return ((Integer)o1.getProperty("position")).compareTo((Integer)o2.getProperty("position"));
+			return ((Integer)o1.getProperty(PositionProperty.position.name())).compareTo(
+					(Integer)o2.getProperty(PositionProperty.position.name()));
 		}
 	}
 
@@ -54,10 +53,7 @@ class CollocationSearcher {
 			GraphDatabaseService graphDb = 
 					(GraphDatabaseService) new InitialContext().lookup(
 							CatmaGraphDbName.CATMAGRAPHDB.name());
-			
-			Label sourceDocLabel = DynamicLabel.label( "SourceDocument" );
-			final Label positionLabel = DynamicLabel.label("Position");
-			
+
 			HashMap<String,Set<QueryResultRow>> baseResultRowsByDocument = new HashMap<String, Set<QueryResultRow>>();
 			for (QueryResultRow baseRow : baseResult) {
 				 String sourceDocumentId = baseRow.getSourceDocumentId();
@@ -88,7 +84,10 @@ class CollocationSearcher {
 				final Set<QueryResultRow> collocQueryResultRows = collocResultRowsByDocument.get(sourceDocumentId);
 				if (collocQueryResultRows != null) {
 					ResourceIterable<Node> sourceDocNodes = 
-							graphDb.findNodesByLabelAndProperty(sourceDocLabel, "localUri", sourceDocumentId);
+							graphDb.findNodesByLabelAndProperty(
+									NodeType.SourceDocument, 
+									SourceDocumentProperty.localUri.name(), 
+									sourceDocumentId);
 					ResourceIterator<Node> iterator = sourceDocNodes.iterator();
 					Node sourceDocNode = iterator.next();
 					iterator.close();
@@ -100,7 +99,7 @@ class CollocationSearcher {
 								public Evaluation evaluate(Path path) {
 									Node endNode = path.endNode();
 									
-									if (endNode.hasLabel(positionLabel)) {
+									if (endNode.hasLabel(NodeType.Position)) {
 										if (isInRange(baseQueryResultRows, endNode)) {
 											return Evaluation.INCLUDE_AND_CONTINUE;
 										}
@@ -126,7 +125,7 @@ class CollocationSearcher {
 								public Evaluation evaluate(Path path) {
 									Node endNode = path.endNode();
 									
-									if (endNode.hasLabel(positionLabel)) {
+									if (endNode.hasLabel(NodeType.Position)) {
 										if (isInRange(collocQueryResultRows, endNode)) {
 											return Evaluation.INCLUDE_AND_CONTINUE;
 										}
@@ -151,10 +150,10 @@ class CollocationSearcher {
 						ArrayList<TermInfo> curTermInfos = new ArrayList<TermInfo>();
 						for (Node n : collocNodesEntry.getValue()) {
 							curTermInfos.add(new TermInfo(
-									(String)n.getProperty("literal"),
-									(Integer)n.getProperty("start"),
-									(Integer)n.getProperty("end"),
-									(Integer)n.getProperty("position")));
+								(String)n.getProperty(PositionProperty.literal.name()),
+								(Integer)n.getProperty(PositionProperty.start.name()),
+								(Integer)n.getProperty(PositionProperty.end.name()),
+								(Integer)n.getProperty(PositionProperty.position.name())));
 						}
 						collocTermInfos.add(curTermInfos);
 					}
@@ -169,18 +168,18 @@ class CollocationSearcher {
 						for (Node n : getContext(first, spanContextSize, Direction.INCOMING)) {
 							context.addBackwardToken(
 								new TermInfo(
-									(String)n.getProperty("literal"),
-									(Integer)n.getProperty("start"),
-									(Integer)n.getProperty("end"),
-									(Integer)n.getProperty("position")));
+									(String)n.getProperty(PositionProperty.literal.name()),
+									(Integer)n.getProperty(PositionProperty.start.name()),
+									(Integer)n.getProperty(PositionProperty.end.name()),
+									(Integer)n.getProperty(PositionProperty.position.name())));
 						}
 						for (Node n : getContext(last, spanContextSize, Direction.OUTGOING)) {
 							context.addForwardToken(
 								new TermInfo(
-									(String)n.getProperty("literal"),
-									(Integer)n.getProperty("start"),
-									(Integer)n.getProperty("end"),
-									(Integer)n.getProperty("position")));
+									(String)n.getProperty(PositionProperty.literal.name()),
+									(Integer)n.getProperty(PositionProperty.start.name()),
+									(Integer)n.getProperty(PositionProperty.end.name()),
+									(Integer)n.getProperty(PositionProperty.position.name())));
 						}
 						
 						System.out.println(context);
@@ -211,12 +210,11 @@ class CollocationSearcher {
 	}
 
 	private Map<QueryResultRow, TreeSet<Node>> createdOrderedNodesByRow(Traverser traverser, Set<QueryResultRow> resultRows) {
-		Label positionLabel = DynamicLabel.label("Position");
 		
 		Map<QueryResultRow, TreeSet<Node>> orderedNodesByRange = new HashMap<QueryResultRow, TreeSet<Node>>();
 		
 		for (Node n : traverser.nodes()) {
-			if (n.hasLabel(positionLabel)) {
+			if (n.hasLabel(NodeType.Position)) {
 				QueryResultRow row = getRangeFor(resultRows, n);
 				TreeSet<Node> orderedNodes = orderedNodesByRange.get(row);
 				if (orderedNodes == null) {
@@ -249,8 +247,8 @@ class CollocationSearcher {
 	private QueryResultRow getRangeFor(Set<QueryResultRow> queryResultRows, Node node) {
 		Range range =  
 				new Range(
-					(Integer)node.getProperty("start"), 
-					(Integer)node.getProperty("end"));
+					(Integer)node.getProperty(PositionProperty.start.name()), 
+					(Integer)node.getProperty(PositionProperty.end.name()));
 		for (QueryResultRow row : queryResultRows) {
 			if (row.getRange().hasOverlappingRange(range)) {
 				return row;
@@ -262,8 +260,8 @@ class CollocationSearcher {
 	private boolean isInRange(Set<QueryResultRow> queryResultRows, Node node) {
 		Range range =  
 			new Range(
-				(Integer)node.getProperty("start"), 
-				(Integer)node.getProperty("end"));
+				(Integer)node.getProperty(PositionProperty.start.name()), 
+				(Integer)node.getProperty(PositionProperty.end.name()));
 		for (QueryResultRow row : queryResultRows) {
 			if (row.getRange().hasOverlappingRange(range)) {
 				return true;
