@@ -53,6 +53,8 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 
 	private String userMarkupItemDisplayString = "User Markup Collections";
 	private String staticMarkupItemDisplayString = "Static Markup Collections";
+	private String windowCaption = "Window Caption";
+	private String documentsTreeCaption = "Documents Tree Caption";
 	private SourceDocument sourceDocument;
 	private TreeTable documentsTree;
 	private HierarchicalContainer documentsContainer;
@@ -63,10 +65,17 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 	private Corpus constrainingCorpus;
 
 	public CorpusContentSelectionDialog(
-			SourceDocument sd, Corpus corpus, SaveCancelListener<Corpus> listener) {
+			SourceDocument sd,
+			Corpus corpus,
+			SaveCancelListener<Corpus> listener,
+			String windowCaption,
+			String documentsTreeCaption
+			) {
 		this.sourceDocument = sd;
-		this.listener = listener;
 		this.constrainingCorpus = corpus;
+		this.listener = listener;
+		this.windowCaption = windowCaption;
+		this.documentsTreeCaption = documentsTreeCaption;
 		
 		initComponents();
 		initActions();
@@ -120,8 +129,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		documentsPanel.setSizeFull();
 		
 		documentsContainer = new HierarchicalContainer();
-		documentsTree = new TreeTable(
-				"Select markup collections to include in analysis", documentsContainer);
+		documentsTree = new TreeTable(documentsTreeCaption, documentsContainer);
 		documentsTree.setWidth("100%");
 		
 		documentsTree.addContainerProperty(
@@ -186,7 +194,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		buttonPanel.setComponentAlignment(btCancel, Alignment.MIDDLE_RIGHT);
 		addComponent(buttonPanel);
 		
-		dialogWindow = new Window("Analyze Document");
+		dialogWindow = new Window(windowCaption);
 		dialogWindow.setContent(this);
 	}
 

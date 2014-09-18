@@ -730,8 +730,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 										"Error fetching user markup collections", ioe);
 							}							
 						}
-					});
-			dialog.setCaptions("Load Markup Collections", "Choose markup collections to open for this document");
+					},
+					"Open Markup Collection(s)",
+					"Choose markup collections to open for this document");
 			dialog.show();
 	}
 

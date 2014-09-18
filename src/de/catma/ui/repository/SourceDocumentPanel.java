@@ -951,7 +951,10 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 												(IndexedRepository)repository);
 										
 									}
-								});
+								},
+								"Analyze Document",
+								"Select markup collections to include in analysis"
+								);
 						dialog.show();
 					}
 				}
