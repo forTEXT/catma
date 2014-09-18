@@ -199,6 +199,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 	}
 	
 	public void show(String dialogWidth) {
+		dialogWindow.setModal(true);
 		dialogWindow.setWidth(dialogWidth);
 		dialogWindow.setHeight("50%");
 		UI.getCurrent().addWindow(dialogWindow);
