@@ -25,7 +25,6 @@ public class OpenTagsetWindow extends CatmaWindow {
 	public OpenTagsetWindow(final OpenTagsetView openTagsetView) {
 		super("Open Tagset");
 		setContent(openTagsetView);
-		setHeight("0%");
 		setWidth("40%");
 		setStyleName("open-tag-set");
 		setModal(true);
