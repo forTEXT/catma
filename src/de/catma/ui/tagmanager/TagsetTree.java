@@ -804,7 +804,8 @@ public class TagsetTree extends HorizontalLayout {
 			
 			Label documentLabel = new Label();
 			documentLabel.addStyleName("tagsettree-label");
-			
+			documentLabel.setIcon(
+					new ClassResource("tagmanager/resources/magdiamd.gif"));
 			documentLabel.setCaption("Active Document");
 			
 			documentPanel.addComponent(documentLabel);
