@@ -39,9 +39,14 @@ import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.Action;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.Resource;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.CheckBox;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
@@ -615,9 +620,22 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 	
 	private void initComponents() {
-		setSizeFull();
+		HorizontalLayout row1 = new HorizontalLayout();
+		row1.setWidth("100%");
+		row1.setMargin(new MarginInfo(true, false, true, false));
+		
+		Button btnOpenMarkupCollection = new Button("Open Markup Collection");
+		btnOpenMarkupCollection.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				handleOpenMarkupCollectionRequest();
+			}
+		});
+		row1.addComponent(btnOpenMarkupCollection);
+		addComponent(row1);
+		
 		markupCollectionsTree = new TreeTable();
-		markupCollectionsTree.setSizeFull();
+		markupCollectionsTree.setWidth("100%");
 		markupCollectionsTree.setSelectable(true);
 		markupCollectionsTree.setMultiSelect(false);
 		markupCollectionsTree.setContainerDataSource(new HierarchicalContainer());
@@ -668,6 +686,11 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			staticMarkupItem );
 
 		addComponent(markupCollectionsTree);
+	}
+
+	protected void handleOpenMarkupCollectionRequest() {
+		// TODO Auto-generated method stub
+		
 	}
 
 	private UserMarkupCollection getUserMarkupCollection(
