@@ -34,16 +34,17 @@ public class ColorField extends AbstractField<String> {
 				}
 			};
 	
+	public ColorField() {
+		registerRpc(rpc);
+	}
+	
 	public ColorField(String hexColor) {
+		this();
 		if ((hexColor != null) && (!hexColor.isEmpty())) {
 			setValue(hexColor);
 		}
 	}
 	
-	public ColorField() {
-		registerRpc(rpc);
-	}
-
 	@Override
 	public Class<String> getType() {
 		return String.class;
