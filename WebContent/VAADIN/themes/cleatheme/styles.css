@@ -192,7 +192,10 @@
 	padding-bottom: 0px!important;
 }
 
+.tagger-manager-window .v-horizontallayout.v-layout.v-horizontal.v-widget.v-has-width.v-margin-top.v-margin-bottom[style="width: 100%;"] {
+	padding: 7px 0px!important;
+}
 
 .tagger-manager-window .v-expand[style="padding-top: 53px;"] {
-	padding-top:42px!important;
+	padding-top: 42px!important;
 }
