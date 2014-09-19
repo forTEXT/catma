@@ -792,16 +792,7 @@ public class TagsetTree extends HorizontalLayout {
 			documentPanel.setSpacing(true);
 			documentPanel.setMargin(new MarginInfo(true, true, false, true));
 			
-			Label documentLabel = new Label();
-			documentLabel.addStyleName("tagsettree-label");
-			documentLabel.setIcon(
-					new ClassResource("tagmanager/resources/magdiamd.gif"));
-			documentLabel.setCaption("Active Document");
-			
-			documentPanel.addComponent(documentLabel);
-			documentPanel.setComponentAlignment(documentLabel, Alignment.BOTTOM_LEFT);
-			
-			btLoadIntoDocument = new Button("Load");
+			btLoadIntoDocument = new Button("Load Tagset into currently active Document");
 			btLoadIntoDocument.setWidth("100%");
 			btLoadIntoDocument.setEnabled(true);
 			documentPanel.addComponent(btLoadIntoDocument);
