@@ -691,7 +691,12 @@ public class DBRepository implements IndexedRepository {
 	
 	public TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) 
 			throws IOException{
-		return dbTagLibraryHandler.getTagLibrary(tagLibraryReference);
+		TagLibrary tagLibrary = tagManager.getTagLibrary(tagLibraryReference);
+		if (tagLibrary == null) {
+			tagLibrary = dbTagLibraryHandler.getTagLibrary(tagLibraryReference);
+			tagManager.addTagLibrary(tagLibrary);
+		}
+		return tagLibrary;
 	}
 
 	public void delete(TagLibraryReference tagLibraryReference) throws IOException {

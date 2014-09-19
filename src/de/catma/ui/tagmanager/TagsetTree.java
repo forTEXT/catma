@@ -116,9 +116,7 @@ public class TagsetTree extends HorizontalLayout {
 			ColorButtonListener colorButtonListener) {
 		this.tagManager = tagManager;
 		this.tagLibrary = tagLibrary;
-		if (withTagsetButtons) {
-			tagManager.addTagLibrary(tagLibrary);
-		}
+
 		this.withReloadButton = withReloadButton;
 		this.withTagsetButtons = withTagsetButtons;
 		this.withTagButtons = withTagButtons;
@@ -932,37 +930,23 @@ public class TagsetTree extends HorizontalLayout {
 		ClassResource tagsetIcon = 
 				new ClassResource("tagmanager/resources/grndiamd.gif");
 		
-		//TODO: this will prevent the same tagset from being added again, but we should check whether they are in sync
-		boolean matched = false;
-		for (Object obj : tagTree.getItemIds()) {
-			if (obj instanceof TagsetDefinition) {
-				TagsetDefinition td = (TagsetDefinition)obj;
-				if (td.getId() == tagsetDefinition.getId()) {
-					matched = true;
-					break;
-				}
-			}
+		tagTree.addItem(tagsetDefinition);
+		tagTree.getContainerProperty(
+				tagsetDefinition, TagTreePropertyName.caption).setValue(
+						tagsetDefinition.getName());
+		tagTree.getContainerProperty(
+				tagsetDefinition, TagTreePropertyName.icon).setValue(tagsetIcon);
+		
+		for (TagDefinition tagDefinition : tagsetDefinition) {
+			addTagDefinition(tagDefinition);
 		}
 		
-		if (!matched) {
-			tagTree.addItem(tagsetDefinition);
-			tagTree.getContainerProperty(
-					tagsetDefinition, TagTreePropertyName.caption).setValue(
-							tagsetDefinition.getName());
-			tagTree.getContainerProperty(
-					tagsetDefinition, TagTreePropertyName.icon).setValue(tagsetIcon);
-			
-			for (TagDefinition tagDefinition : tagsetDefinition) {
-				addTagDefinition(tagDefinition);
-			}
-			
-			for (TagDefinition tagDefinition : tagsetDefinition) {
-				establishHierarchy(tagsetDefinition, tagDefinition);
-			}
-			
-			for (TagDefinition tagDefinition : tagsetDefinition) {
-				configureChildren(tagDefinition);
-			}
+		for (TagDefinition tagDefinition : tagsetDefinition) {
+			establishHierarchy(tagsetDefinition, tagDefinition);
+		}
+		
+		for (TagDefinition tagDefinition : tagsetDefinition) {
+			configureChildren(tagDefinition);
 		}
 	}
 	
