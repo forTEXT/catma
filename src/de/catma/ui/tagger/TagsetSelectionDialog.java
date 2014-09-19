@@ -70,7 +70,7 @@ public class TagsetSelectionDialog extends VerticalLayout {
 		
 		addComponent(tagLibrariesTree);
 		
-		tagsetTree = new TagsetTree(repository.getTagManager(), null, false, false, false, true, null);
+		tagsetTree = new TagsetTree(repository.getTagManager(), null, false, false, false, false, true, null);
 		addComponent(tagsetTree);
 		
 		setMargin(true);

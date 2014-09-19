@@ -89,6 +89,7 @@ public class TagsetTree extends HorizontalLayout {
 	private Button btInsertProperty;
 	private Button btRemoveProperty;
 	private Button btEditProperty;
+	private boolean withReloadButton;
 	private boolean withTagsetButtons;
 	private boolean withTagButtons;
 	private boolean withPropertyButtons;
@@ -102,11 +103,12 @@ public class TagsetTree extends HorizontalLayout {
 	private Button btReload;
 
 	public TagsetTree(TagManager tagManager, TagLibrary tagLibrary) {
-		this(tagManager, tagLibrary, true, true, true, true, null);
+		this(tagManager, tagLibrary, true, true, true, true, true, null);
 	}
 
 	public TagsetTree(
-			TagManager tagManager, final TagLibrary tagLibrary, 
+			TagManager tagManager, final TagLibrary tagLibrary,
+			boolean withReloadButton,
 			boolean withTagsetButtons,
 			boolean withTagButtons,
 			boolean withPropertyButtons,
@@ -117,6 +119,7 @@ public class TagsetTree extends HorizontalLayout {
 		if (withTagsetButtons) {
 			tagManager.addTagLibrary(tagLibrary);
 		}
+		this.withReloadButton = withReloadButton;
 		this.withTagsetButtons = withTagsetButtons;
 		this.withTagButtons = withTagButtons;
 		this.withPropertyButtons = withPropertyButtons;
@@ -787,7 +790,20 @@ public class TagsetTree extends HorizontalLayout {
 		
 		VerticalLayout buttonGrid = new VerticalLayout();
 		
-		if (withDocumentButtons){
+		if (withReloadButton) {
+			VerticalLayout reloadPanel = new VerticalLayout();
+			reloadPanel.setSpacing(true);
+			reloadPanel.setMargin(new MarginInfo(true, true, false, true));
+			
+			btReload = new Button("Reload Tagsets"); 
+			btReload.setIcon(new ClassResource("resources/icon-reload.gif"));
+			btReload.addStyleName("icon-button");
+			reloadPanel.addComponent(btReload);
+			
+			buttonGrid.addComponent(reloadPanel);
+		}
+		
+		if (withDocumentButtons) {
 			VerticalLayout documentPanel = new VerticalLayout();
 			documentPanel.setSpacing(true);
 			documentPanel.setMargin(new MarginInfo(true, true, false, true));
@@ -805,12 +821,6 @@ public class TagsetTree extends HorizontalLayout {
 			tagsetPanel.setSpacing(true);
 			tagsetPanel.setMargin(new MarginInfo(true, true, false, true));
 			
-			btReload = new Button(""); 
-			btReload.setIcon(new ClassResource("resources/icon-reload.gif"));
-			btReload.addStyleName("icon-button");
-			tagsetPanel.addComponent(btReload);
-			tagsetPanel.setComponentAlignment(btReload, Alignment.MIDDLE_RIGHT);
-
 			Label tagsetLabel = new Label();
 			tagsetLabel.addStyleName("tagsettree-label");
 			tagsetLabel.setIcon(
