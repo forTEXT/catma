@@ -365,7 +365,7 @@ public class CatmaApplication extends UI
 			Notification.show(
 					"Information", 
 					"There is no active document open in the Tagger",
-					Type.WARNING_MESSAGE);
+					Type.TRAY_NOTIFICATION);
 			return;
 		}
 		
@@ -377,7 +377,7 @@ public class CatmaApplication extends UI
 		Notification.show(
 				"Information", 
 				"Tagset loaded into active document: '" + sourceDocumentCaption + "'",
-				Type.HUMANIZED_MESSAGE);
+				Type.TRAY_NOTIFICATION);
 	}
 
 	public void openRepository(Repository repository) {
