@@ -921,23 +921,38 @@ public class TagsetTree extends HorizontalLayout {
 		
 		ClassResource tagsetIcon = 
 				new ClassResource("tagmanager/resources/grndiamd.gif");
-		tagTree.addItem(tagsetDefinition);
-		tagTree.getContainerProperty(
-				tagsetDefinition, TagTreePropertyName.caption).setValue(
-						tagsetDefinition.getName());
-		tagTree.getContainerProperty(
-				tagsetDefinition, TagTreePropertyName.icon).setValue(tagsetIcon);
 		
-		for (TagDefinition tagDefinition : tagsetDefinition) {
-			addTagDefinition(tagDefinition);
+		//TODO: this will prevent the same tagset from being added again, but we should check whether they are in sync
+		boolean matched = false;
+		for (Object obj : tagTree.getItemIds()) {
+			if (obj instanceof TagsetDefinition) {
+				TagsetDefinition td = (TagsetDefinition)obj;
+				if (td.getId() == tagsetDefinition.getId()) {
+					matched = true;
+					break;
+				}
+			}
 		}
 		
-		for (TagDefinition tagDefinition : tagsetDefinition) {
-			establishHierarchy(tagsetDefinition, tagDefinition);
-		}
-		
-		for (TagDefinition tagDefinition : tagsetDefinition) {
-			configureChildren(tagDefinition);
+		if (!matched) {
+			tagTree.addItem(tagsetDefinition);
+			tagTree.getContainerProperty(
+					tagsetDefinition, TagTreePropertyName.caption).setValue(
+							tagsetDefinition.getName());
+			tagTree.getContainerProperty(
+					tagsetDefinition, TagTreePropertyName.icon).setValue(tagsetIcon);
+			
+			for (TagDefinition tagDefinition : tagsetDefinition) {
+				addTagDefinition(tagDefinition);
+			}
+			
+			for (TagDefinition tagDefinition : tagsetDefinition) {
+				establishHierarchy(tagsetDefinition, tagDefinition);
+			}
+			
+			for (TagDefinition tagDefinition : tagsetDefinition) {
+				configureChildren(tagDefinition);
+			}
 		}
 	}
 	
