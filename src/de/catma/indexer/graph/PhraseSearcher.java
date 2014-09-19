@@ -14,7 +14,6 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.traversal.BranchState;
 import org.neo4j.graphdb.traversal.Evaluation;
@@ -23,6 +22,9 @@ import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.graphdb.traversal.Traverser;
 
 import de.catma.document.Range;
+import de.catma.indexer.EqualsMatcher;
+import de.catma.indexer.SQLWildcardMatcher;
+import de.catma.indexer.TermMatcher;
 import de.catma.indexer.graph.SourceDocumentIndexer.RelType;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
@@ -75,10 +77,17 @@ public class PhraseSearcher {
 	private static class PhraseSearchEvaluator implements Evaluator {
 		
 		private List<String> termList;
+		private TermMatcher termMatcher;
 		
-		public PhraseSearchEvaluator(List<String> termList) {
+		public PhraseSearchEvaluator(List<String> termList, boolean withWildcards) {
 			super();
 			this.termList = termList;
+			if (withWildcards) {
+				termMatcher = new SQLWildcardMatcher();
+			}
+			else {
+				termMatcher = new EqualsMatcher();
+			}
 		}
 
 		@Override
@@ -92,7 +101,8 @@ public class PhraseSearcher {
 			else if (n.hasLabel(NodeType.Term)) {
 //				System.out.println("E-Term " +  n.getProperty(TermProperty.literal.name()));
 				String literal = (String)n.getProperty(TermProperty.literal.name());
-				if(termList.get(0).equals(literal)) {
+
+				if(termMatcher.match(termList.get(0), literal)) {
 					return Evaluation.EXCLUDE_AND_CONTINUE;
 				}
 				else {
@@ -104,7 +114,7 @@ public class PhraseSearcher {
 				
 				String term = termList.get(path.length()-2);
 				String literal = (String) n.getProperty(PositionProperty.literal.name());
-				if (term.equals(literal)) {
+				if (termMatcher.match(term, literal)) {
 					if (termList.size() == path.length()-1) {
 						return Evaluation.INCLUDE_AND_PRUNE;
 					}
@@ -131,6 +141,11 @@ public class PhraseSearcher {
 
 	public QueryResult search(List<String> documentIdList, String phrase,
 			List<String> termList, int limit) throws IOException {
+		return search(documentIdList, phrase, termList, limit, false);
+	}
+	
+	private QueryResult search(List<String> documentIdList, String phrase,
+			List<String> termList, int limit, boolean withWildcards) throws IOException {
 		PathUtil pathUtil = new PathUtil();
 		
 		Transaction transaction = graphDb.beginTx();
@@ -145,7 +160,7 @@ public class PhraseSearcher {
 				TraversalDescription positionsTraversal = 
 					graphDb.traversalDescription()
 						.depthFirst()
-						.evaluator(new PhraseSearchEvaluator(termList))
+						.evaluator(new PhraseSearchEvaluator(termList, withWildcards))
 //						.expand(new PhraseSearchExpander());
 						.relationships(RelType.IS_PART_OF, Direction.INCOMING)
 						.relationships(RelType.HAS_POSITION, Direction.OUTGOING)
@@ -186,9 +201,8 @@ public class PhraseSearcher {
 
 
 	public QueryResult searchWildcard(List<String> documentIdList,
-			List<String> termList, int limit) {
-		// TODO Auto-generated method stub
-		return null;
+			List<String> termList, int limit) throws IOException {
+		return search(documentIdList, null, termList, limit, true);
 	}
 
 }
