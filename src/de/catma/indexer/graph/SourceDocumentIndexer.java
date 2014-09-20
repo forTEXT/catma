@@ -11,12 +11,9 @@ import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.neo4j.graphdb.DynamicLabel;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 
 import de.catma.document.source.SourceDocument;
@@ -25,12 +22,6 @@ import de.catma.indexer.TermInfo;
 
 public class SourceDocumentIndexer {
 	
-	public enum RelType implements RelationshipType {
-		IS_PART_OF,
-		ADJACENT_TO,
-		HAS_POSITION,
-		;
-	}
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	
 	public void index(SourceDocument sourceDocument) throws IOException {
@@ -96,10 +87,10 @@ public class SourceDocumentIndexer {
 				positionNode.setProperty(PositionProperty.literal.name(), ti.getTerm());
 				
 				termInfoToNodeId.put(ti, positionNode.getId());
-				Relationship rsHasPosition = termNode.createRelationshipTo(positionNode, RelType.HAS_POSITION);
+				Relationship rsHasPosition = termNode.createRelationshipTo(positionNode, NodeRelationType.HAS_POSITION);
 				rsHasPosition.setProperty(HasPositionProperty.sourceDoc.name(), sourceDocument.getID());
 				
-				termNode.createRelationshipTo(sdNode, RelType.IS_PART_OF);
+				termNode.createRelationshipTo(sdNode, NodeRelationType.IS_PART_OF);
 			}
 		}
 		
@@ -109,7 +100,7 @@ public class SourceDocumentIndexer {
 			if (prevTi != null) {
 				graphDb.getNodeById(termInfoToNodeId.get(prevTi)).createRelationshipTo(
 					graphDb.getNodeById(termInfoToNodeId.get(ti)), 
-					RelType.ADJACENT_TO);
+					NodeRelationType.ADJACENT_TO);
 			}
 			prevTi = ti;
 		}

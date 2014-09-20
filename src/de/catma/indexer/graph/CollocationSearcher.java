@@ -29,7 +29,6 @@ import de.catma.document.Range;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TermInfo;
-import de.catma.indexer.graph.SourceDocumentIndexer.RelType;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
@@ -94,7 +93,7 @@ class CollocationSearcher {
 					
 					TraversalDescription positionsOfBaseQueryResultRowsTraversal = graphDb.traversalDescription()
 					.depthFirst()
-					.relationships(RelType.IS_PART_OF).relationships(RelType.HAS_POSITION, Direction.OUTGOING).relationships(RelType.ADJACENT_TO).evaluator(
+					.relationships(NodeRelationType.IS_PART_OF).relationships(NodeRelationType.HAS_POSITION, Direction.OUTGOING).relationships(NodeRelationType.ADJACENT_TO).evaluator(
 							new Evaluator() {
 								public Evaluation evaluate(Path path) {
 									Node endNode = path.endNode();
@@ -120,7 +119,7 @@ class CollocationSearcher {
 					
 					TraversalDescription positionsOfCollocQueryResultRowsTraversal = graphDb.traversalDescription()
 					.depthFirst()
-					.relationships(RelType.IS_PART_OF).relationships(RelType.HAS_POSITION, Direction.OUTGOING).relationships(RelType.ADJACENT_TO).evaluator(
+					.relationships(NodeRelationType.IS_PART_OF).relationships(NodeRelationType.HAS_POSITION, Direction.OUTGOING).relationships(NodeRelationType.ADJACENT_TO).evaluator(
 							new Evaluator() {
 								public Evaluation evaluate(Path path) {
 									Node endNode = path.endNode();
@@ -231,8 +230,8 @@ class CollocationSearcher {
 		List<Node> result = new ArrayList<Node>();
 		Node current = first;
 		for (int i=0; i<spanContextSize; i++) {
-			if (current.hasRelationship(direction, RelType.ADJACENT_TO)) {
-				Relationship rsAdjacentTo = current.getRelationships(direction, RelType.ADJACENT_TO).iterator().next();
+			if (current.hasRelationship(direction, NodeRelationType.ADJACENT_TO)) {
+				Relationship rsAdjacentTo = current.getRelationships(direction, NodeRelationType.ADJACENT_TO).iterator().next();
 				current = rsAdjacentTo.getOtherNode(current);
 				result.add(current);
 			}

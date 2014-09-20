@@ -25,7 +25,6 @@ import de.catma.document.Range;
 import de.catma.indexer.EqualsMatcher;
 import de.catma.indexer.SQLWildcardMatcher;
 import de.catma.indexer.TermMatcher;
-import de.catma.indexer.graph.SourceDocumentIndexer.RelType;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
@@ -54,15 +53,15 @@ public class PhraseSearcher {
 			
 			if (n.hasLabel(NodeType.SourceDocument)) {
 //				System.out.println("SourceDocNode " + n.getProperty(SourceDocumentProperty.title.name()));
-				return n.getRelationships(RelType.IS_PART_OF, direction.reverse());
+				return n.getRelationships(NodeRelationType.IS_PART_OF, direction.reverse());
 			}
 			else if (n.hasLabel(NodeType.Term)) {
 //				System.out.println("Term " +  n.getProperty(TermProperty.literal.name()));
-				return n.getRelationships(RelType.HAS_POSITION, direction);
+				return n.getRelationships(NodeRelationType.HAS_POSITION, direction);
 			}
 			else if (n.hasLabel(NodeType.Position)) {
 //				System.out.println("Position " + n.getProperty(PositionProperty.literal.name()) + " @ " + n.getProperty(PositionProperty.position.name()));
-				return n.getRelationships(RelType.ADJACENT_TO, direction); 
+				return n.getRelationships(NodeRelationType.ADJACENT_TO, direction); 
 			}
 
 			return path.endNode().getRelationships();
@@ -162,9 +161,9 @@ public class PhraseSearcher {
 						.depthFirst()
 						.evaluator(new PhraseSearchEvaluator(termList, withWildcards))
 //						.expand(new PhraseSearchExpander());
-						.relationships(RelType.IS_PART_OF, Direction.INCOMING)
-						.relationships(RelType.HAS_POSITION, Direction.OUTGOING)
-						.relationships(RelType.ADJACENT_TO, Direction.OUTGOING);
+						.relationships(NodeRelationType.IS_PART_OF, Direction.INCOMING)
+						.relationships(NodeRelationType.HAS_POSITION, Direction.OUTGOING)
+						.relationships(NodeRelationType.ADJACENT_TO, Direction.OUTGOING);
 				
 				Traverser positionsTraverser = positionsTraversal.traverse(sourceDocNodes);
 				for (Path p : positionsTraverser) {

@@ -19,7 +19,6 @@ import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.graphdb.traversal.Traverser;
 
-import de.catma.indexer.graph.SourceDocumentIndexer.RelType;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
@@ -89,7 +88,7 @@ public class FrequencySearcher {
 				TraversalDescription termTraversal = 
 					graphDb.traversalDescription()
 						.depthFirst()
-						.relationships(RelType.IS_PART_OF, Direction.INCOMING);
+						.relationships(NodeRelationType.IS_PART_OF, Direction.INCOMING);
 				
 //				if ((freq1 > 0) || (!comp1.equals(CompareOperator.GREATERTHAN))) {
 					termTraversal = 
