@@ -1,10 +1,5 @@
 package de.catma.indexer.graph;
 
-import static de.catma.repository.db.jooqgen.catmarepository.Tables.SOURCEDOCUMENT;
-import static de.catma.repository.db.jooqgen.catmarepository.Tables.UNSEPARABLE_CHARSEQUENCE;
-import static de.catma.repository.db.jooqgen.catmarepository.Tables.USERDEFINED_SEPARATINGCHARACTER;
-import static de.catma.repository.db.jooqgen.catmarepository.Tables.USERMARKUPCOLLECTION;
-
 import java.beans.PropertyVetoException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,6 +27,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
 import de.catma.repository.db.FileURLFactory;
+import de.catma.repository.db.jooqgen.catmarepository.Tables;
 import de.catma.repository.db.mapper.SourceDocumentMapper;
 
 public class SourceDocumentBatchInserter {
@@ -51,7 +47,188 @@ public class SourceDocumentBatchInserter {
 		catmaProperties.load(
 			new FileInputStream(propertiesFile));
 
-		int repoIndex = 1; // assume that the first configured repo is the local db repo
+		List<SourceDocument> resultlist = getSourceDocuments(catmaProperties);
+
+		Map<String, String> graphConfig = new HashMap<>();
+		graphConfig.put(
+			"neostore.nodestore.db.mapped_memory", 
+			catmaProperties.getProperty("neostore.nodestore.db.mapped_memory"));
+		graphConfig.put(
+				"neostore.relationshipstore.db.mapped_memory", 
+				catmaProperties.getProperty("neostore.relationshipstore.db.mapped_memory"));
+		graphConfig.put(
+				"neostore.propertystore.db.mapped_memory", 
+				catmaProperties.getProperty("neostore.propertystore.db.mapped_memory"));
+		graphConfig.put(
+				"neostore.propertystore.db.strings.mapped_memory", 
+				catmaProperties.getProperty("neostore.propertystore.db.strings.mapped_memory"));
+		graphConfig.put(
+				"neostore.propertystore.db.arrays.mapped_memory", 
+				catmaProperties.getProperty("neostore.propertystore.db.arrays.mapped_memory"));
+		
+		graphConfig.put("neostore.propertystore.db.index.keys.mapped_memory",
+				catmaProperties.getProperty("neostore.propertystore.db.index.keys.mapped_memory", "5M"));
+		graphConfig.put("neostore.propertystore.db.index.mapped_memory",
+				catmaProperties.getProperty("neostore.propertystore.db.index.mapped_memory", "5M"));
+		
+		graphConfig.put(
+				"dump_configuration", 
+				catmaProperties.getProperty("dump_configuration", "true"));
+		graphConfig.put(
+				"cache_type",
+				catmaProperties.getProperty("cache_type", "none"));
+		graphConfig.put(
+				"use_memory_mapped_buffers",
+				catmaProperties.getProperty("use_memory_mapped_buffers", "true"));
+		
+		BatchInserter inserter = 
+				BatchInserters.inserter(graphdbPath, graphConfig);
+		
+		long totalNodeCount = 0;
+		long totalRelCount = 0;
+		
+		int totalSourceDocCount = resultlist.size();
+		System.out.println(totalSourceDocCount + " sourcedocs need indexing");
+		int currentSourceDocCount = 0;
+		try {
+			for (SourceDocument sourceDocument : resultlist) {
+				currentSourceDocCount++;
+				long currentNodeCount = 0;
+				long currentRelCount = 0;
+				try {
+					System.out.println("indexing " + sourceDocument);
+					List<String> unseparableCharacterSequences = 
+							sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+								.getIndexInfoSet().getUnseparableCharacterSequences();
+					List<Character> userDefinedSeparatingCharacters = 
+							sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+								.getIndexInfoSet().getUserDefinedSeparatingCharacters();
+					Locale locale = 
+							sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+							.getIndexInfoSet().getLocale();
+					System.out.println("term extraction " + sourceDocument);
+
+					TermExtractor termExtractor = 
+							new TermExtractor(
+								sourceDocument.getContent(), 
+								unseparableCharacterSequences, 
+								userDefinedSeparatingCharacters, 
+								locale);
+					
+					Map<String, List<TermInfo>> terms = termExtractor.getTerms();
+			
+					Map<String, Object> properties = new HashMap<String, Object>();
+					
+					System.out.println("node creation " + sourceDocument);
+
+					properties.put(SourceDocumentProperty.localUri.name(), sourceDocument.getID());
+					properties.put(SourceDocumentProperty.title.name(), sourceDocument.toString());
+					
+					long sdNode = inserter.createNode(properties, NodeType.SourceDocument);
+					currentNodeCount++;
+					
+					properties.clear();
+					Map<TermInfo,Long> termInfoToNodeId = new HashMap<TermInfo, Long>();
+					TreeSet<TermInfo> orderedTermInfos = new TreeSet<TermInfo>(TermInfo.TOKENOFFSETCOMPARATOR);
+					
+					for (Map.Entry<String, List<TermInfo>> entry : terms.entrySet()) {
+						String term = entry.getKey();
+						List<TermInfo> termInfos = entry.getValue();
+						
+						properties.put(TermProperty.literal.name(), term);
+						properties.put(TermProperty.freq.name(), termInfos.size());
+						
+						long termNodeId = inserter.createNode(properties, NodeType.Term);
+						currentNodeCount++;
+						
+						properties.clear();
+						
+						for (TermInfo ti : termInfos) {
+							orderedTermInfos.add(ti);
+							
+							properties.put(
+									PositionProperty.position.name(), ti.getTokenOffset());
+							properties.put(
+									PositionProperty.start.name(), ti.getRange().getStartPoint());
+							properties.put(
+									PositionProperty.end.name(), ti.getRange().getEndPoint());
+							properties.put(
+									PositionProperty.literal.name(), ti.getTerm());
+							
+							long positionNodeId = 
+									inserter.createNode(properties, NodeType.Position);
+							currentNodeCount++;
+							
+							termInfoToNodeId.put(ti, positionNodeId);
+							inserter.createRelationship(
+									termNodeId, 
+									positionNodeId, 
+									NodeRelationType.HAS_POSITION, 
+									Collections.<String,Object>emptyMap());
+							currentRelCount++;
+							inserter.createRelationship(
+									termNodeId, 
+									sdNode, 
+									NodeRelationType.IS_PART_OF, 
+									Collections.<String, Object>emptyMap());
+							currentRelCount++;
+						}
+					}
+			
+					
+					
+					TermInfo prevTi = null;
+					properties.clear();
+					
+					for (TermInfo ti : orderedTermInfos) {
+						if (prevTi != null) {
+							inserter.createRelationship(
+								termInfoToNodeId.get(prevTi), 
+								termInfoToNodeId.get(ti), 
+								NodeRelationType.ADJACENT_TO, 
+								Collections.<String, Object>emptyMap());
+							currentRelCount++;
+						}
+						prevTi = ti;
+					}
+				}
+				catch (Exception e) {
+					System.out.println(
+						"Could not index doc " 
+								+ sourceDocument.getID() + " " 
+								+ sourceDocument.toString());
+					e.printStackTrace();
+				}
+				totalNodeCount += currentNodeCount;
+				totalRelCount += currentRelCount;
+				System.out.println(
+					currentSourceDocCount + "/" 
+							+ totalSourceDocCount + " node creation finished, nodes " 
+							+ currentNodeCount + " rels " + currentRelCount 
+							+ " total nodes " + totalNodeCount
+							+ " total rels " + totalRelCount);
+			}
+			System.out.println("createDeferredSchemaIndex SourceDoc.localUri");
+			inserter.createDeferredSchemaIndex(NodeType.SourceDocument)
+				.on(SourceDocumentProperty.localUri.name()).create();
+			
+			System.out.println("createDeferredSchemaIndex Term.literal");
+			inserter.createDeferredSchemaIndex(NodeType.Term)
+				.on(TermProperty.literal.name()).create();
+	
+			System.out.println("createDeferredSchemaIndex Term.freq");
+			inserter.createDeferredSchemaIndex(NodeType.Term)
+				.on(TermProperty.freq.name()).create();
+			
+			System.out.println("batch finished");
+		}
+		finally {
+			inserter.shutdown();
+		}
+	}
+	
+	private List<SourceDocument> getSourceDocuments(Properties catmaProperties) throws PropertyVetoException {
+	int repoIndex = 1; // assume that the first configured repo is the local db repo
 		
 		String user = RepositoryPropertyKey.RepositoryUser.getProperty(
 				catmaProperties, repoIndex);
@@ -78,134 +255,33 @@ public class SourceDocumentBatchInserter {
 
 		Map<Integer, Result<Record>> userDefSepCharsRecords = db
 		.select()
-		.from(USERDEFINED_SEPARATINGCHARACTER)
-		.fetchGroups(USERDEFINED_SEPARATINGCHARACTER.SOURCEDOCUMENTID);
+		.from(Tables.USERDEFINED_SEPARATINGCHARACTER)
+		.fetchGroups(Tables.USERDEFINED_SEPARATINGCHARACTER.SOURCEDOCUMENTID);
 		
 		Map<Integer, Result<Record>> unseparableCharSeqRecords = db 
 		.select()
-		.from(UNSEPARABLE_CHARSEQUENCE)
-		.fetchGroups(UNSEPARABLE_CHARSEQUENCE.SOURCEDOCUMENTID);
+		.from(Tables.UNSEPARABLE_CHARSEQUENCE)
+		.fetchGroups(Tables.UNSEPARABLE_CHARSEQUENCE.SOURCEDOCUMENTID);
 		
 		Map<Integer, Result<Record>> userMarkupCollectionRecords = db
 		.select()
-		.from(USERMARKUPCOLLECTION)
-		.fetchGroups(USERMARKUPCOLLECTION.SOURCEDOCUMENTID);
+		.from(Tables.USERMARKUPCOLLECTION)
+		.fetchGroups(Tables.USERMARKUPCOLLECTION.SOURCEDOCUMENTID);
 		
 		List<SourceDocument> resultlist = db
 		.select()
-		.from(SOURCEDOCUMENT)
+		.from(Tables.SOURCEDOCUMENT)
 		.fetch()
 		.map(new SourceDocumentMapper(
 				sourceDocsPath, 
 				userDefSepCharsRecords, unseparableCharSeqRecords,
 				userMarkupCollectionRecords));
 	
-		BatchInserter inserter = 
-				BatchInserters.inserter(graphdbPath);
-		try {
-			for (SourceDocument sourceDocument : resultlist) {
-			
-				List<String> unseparableCharacterSequences = 
-						sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
-							.getIndexInfoSet().getUnseparableCharacterSequences();
-				List<Character> userDefinedSeparatingCharacters = 
-						sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
-							.getIndexInfoSet().getUserDefinedSeparatingCharacters();
-				Locale locale = 
-						sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
-						.getIndexInfoSet().getLocale();
-				
-				TermExtractor termExtractor = 
-						new TermExtractor(
-							sourceDocument.getContent(), 
-							unseparableCharacterSequences, 
-							userDefinedSeparatingCharacters, 
-							locale);
-				
-				Map<String, List<TermInfo>> terms = termExtractor.getTerms();
+		cpds.close();
 		
-				Map<String, Object> properties = new HashMap<String, Object>();
-				
-				
-				properties.put(SourceDocumentProperty.localUri.name(), sourceDocument.getID());
-				properties.put(SourceDocumentProperty.title.name(), sourceDocument.toString());
-				
-				long sdNode = inserter.createNode(properties, NodeType.SourceDocument);
-		
-				properties.clear();
-				Map<TermInfo,Long> termInfoToNodeId = new HashMap<TermInfo, Long>();
-				TreeSet<TermInfo> orderedTermInfos = new TreeSet<TermInfo>(TermInfo.TOKENOFFSETCOMPARATOR);
-				
-				for (Map.Entry<String, List<TermInfo>> entry : terms.entrySet()) {
-					String term = entry.getKey();
-					List<TermInfo> termInfos = entry.getValue();
-					
-					properties.put(TermProperty.literal.name(), term);
-					properties.put(TermProperty.freq.name(), termInfos.size());
-					
-					long termNodeId = inserter.createNode(properties, NodeType.Term);
-					properties.clear();
-					
-					for (TermInfo ti : termInfos) {
-						orderedTermInfos.add(ti);
-						
-						properties.put(
-								PositionProperty.position.name(), ti.getTokenOffset());
-						properties.put(
-								PositionProperty.start.name(), ti.getRange().getStartPoint());
-						properties.put(
-								PositionProperty.end.name(), ti.getRange().getEndPoint());
-						properties.put(
-								PositionProperty.literal.name(), ti.getTerm());
-						
-						long positionNodeId = 
-								inserter.createNode(properties, NodeType.Position);
-						
-						termInfoToNodeId.put(ti, positionNodeId);
-						inserter.createRelationship(
-								termNodeId, 
-								positionNodeId, 
-								NodeRelationType.HAS_POSITION, 
-								Collections.<String,Object>emptyMap());
-						inserter.createRelationship(
-								termNodeId, 
-								sdNode, 
-								NodeRelationType.IS_PART_OF, 
-								Collections.<String, Object>emptyMap());
-					}
-				}
-		
-				
-				
-				TermInfo prevTi = null;
-				properties.clear();
-				
-				for (TermInfo ti : orderedTermInfos) {
-					if (prevTi != null) {
-						inserter.createRelationship(
-							termInfoToNodeId.get(prevTi), 
-							termInfoToNodeId.get(ti), 
-							NodeRelationType.ADJACENT_TO, 
-							Collections.<String, Object>emptyMap());
-					}
-					prevTi = ti;
-				}
-			}
-			
-			inserter.createDeferredSchemaIndex(NodeType.SourceDocument)
-				.on(SourceDocumentProperty.localUri.name()).create();
-	
-			inserter.createDeferredSchemaIndex(NodeType.Term)
-				.on(TermProperty.literal.name()).create();
-	
-			inserter.createDeferredSchemaIndex(NodeType.Term)
-				.on(TermProperty.freq.name()).create();
-		}
-		finally {
-			inserter.shutdown();
-		}
+		return resultlist;
 	}
-	
+
 	public static void main(String[] args) {
 		try {
 			if ((args == null) || (args.length != 1)) {

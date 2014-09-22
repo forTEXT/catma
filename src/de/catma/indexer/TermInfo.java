@@ -26,7 +26,7 @@ public class TermInfo {
 	
 	static class TokenOffsetComparator implements Comparator<TermInfo> {
 		public int compare(TermInfo o1, TermInfo o2) {
-			return o1.tokenOffset-o2.tokenOffset;
+			return o1.getTokenOffset()-o2.getTokenOffset();
 		}
 	}
 	

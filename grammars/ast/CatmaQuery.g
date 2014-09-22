@@ -137,7 +137,7 @@ unionQuery[CommonTree startTerm]
 	catch[RecognitionException e] {throw e;}
 	
 collocQuery[CommonTree startTerm]  
-	:	'&' term INT? 'GR'? -> ^(ND_COLLOC {$startTerm} term INT? 'GR'?)
+	:	'&' term INT? -> ^(ND_COLLOC {$startTerm} term INT?)
 	;
 	catch[RecognitionException e] {throw e;}
 	

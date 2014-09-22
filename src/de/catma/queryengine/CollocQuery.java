@@ -20,22 +20,15 @@
 package de.catma.queryengine;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import de.catma.document.repository.Repository;
-import de.catma.document.source.SourceDocument;
 import de.catma.indexer.Indexer;
-import de.catma.indexer.KwicProvider;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TermInfo;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
-import de.catma.queryengine.result.QueryResultRowArray;
 
 /**
  * A collocation query looks for terms that form a collocation with other terms within a given
@@ -52,8 +45,6 @@ public class CollocQuery extends Query {
     private int spanContextSize;
     private SpanDirection direction;
 
-	private boolean graphImplementaion = false;
-
     /**
      * Constructor.
      * @param query1 the definiton of the search term
@@ -62,9 +53,8 @@ public class CollocQuery extends Query {
      * (needs to be parseable to {@link Integer#parseInt(String) Integer}) 
      * or <code>null</code> for the default size.
      * @param direction the direction of the span context
-     * @param graphImplementation 
      */
-    public CollocQuery(Query query1, Query query2, String spanContext, SpanDirection direction, String graphImplementation) {
+    public CollocQuery(Query query1, Query query2, String spanContext, SpanDirection direction) {
         this.query1 = query1;
         this.query2 = query2;
         
@@ -75,9 +65,6 @@ public class CollocQuery extends Query {
             spanContextSize = Integer.parseInt(spanContext);
         }
         this.direction = direction;
-        if (graphImplementation != null) {
-        	this.graphImplementaion = true;
-        }
     }
 
     /**
@@ -88,8 +75,8 @@ public class CollocQuery extends Query {
      * (needs to be parseable to {@link Integer#parseInt(String) Integer})
      * or <code>null</code> for the default size.
      */
-    public CollocQuery(Query query1, Query query2, String spanContext, String graphImplementation) {
-        this(query1, query2, spanContext, SpanDirection.Both, graphImplementation);
+    public CollocQuery(Query query1, Query query2, String spanContext) {
+        this(query1, query2, spanContext, SpanDirection.Both);
     }
 
     @Override
@@ -97,48 +84,47 @@ public class CollocQuery extends Query {
     	QueryResult baseResult = query1.execute();
     	QueryResult collocCondition = query2.execute();
     	
-    	if (graphImplementaion) {
-	    	Indexer indexer = getQueryOptions().getIndexer();
-	    	return indexer.searchCollocation(baseResult, collocCondition, spanContextSize, SpanDirection.Both);
-    	}
-    	else {
-	    	Map<String,KwicProvider> kwicProviders = new HashMap<String, KwicProvider>(); 
-	    	Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
-	    	Repository repository = getQueryOptions().getRepository();
-	    	
-	    	Map<QueryResultRow, List<TermInfo>> termInfos = 
-	    			new HashMap<QueryResultRow, List<TermInfo>>();
-	    	
-	    	QueryResultRowArray result = new QueryResultRowArray();
-	    	
-	    	for (QueryResultRow row : baseResult) {
-	    		SourceDocument sd = 
-	    				repository.getSourceDocument(row.getSourceDocumentId());
-	    		if (!sd.isLoaded()) {
-	    			//TODO: unload SourceDocuments to free space if tobeUnloaded.size() > 10
-	    			toBeUnloaded.add(sd);
-	    		}
-	    		
-	    		if (!kwicProviders.containsKey(sd.getID())) {
-	    			kwicProviders.put(sd.getID(), new KwicProvider(sd));
-	    		}
-	    		KwicProvider kwicProvider = kwicProviders.get(sd.getID());
-	    		SpanContext spanContext =
-					kwicProvider.getSpanContextFor(	
-						row.getRange(), 
-						spanContextSize, direction);
-	    		
-	    		if (spanContextMeetsCollocCondition
-	    				(spanContext, collocCondition, termInfos)) {
-	    			result.add(row);
-	    		}
-	    	}
-	    	for (SourceDocument sd : toBeUnloaded) {
-	    		sd.unload();
-	    	}
-	   
-	    	return result;
-    	}
+    	Indexer indexer = getQueryOptions().getIndexer();
+    	return indexer.searchCollocation(baseResult, collocCondition, spanContextSize, SpanDirection.Both);
+//    	}
+//    	else {
+//	    	Map<String,KwicProvider> kwicProviders = new HashMap<String, KwicProvider>(); 
+//	    	Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
+//	    	Repository repository = getQueryOptions().getRepository();
+//	    	
+//	    	Map<QueryResultRow, List<TermInfo>> termInfos = 
+//	    			new HashMap<QueryResultRow, List<TermInfo>>();
+//	    	
+//	    	QueryResultRowArray result = new QueryResultRowArray();
+//	    	
+//	    	for (QueryResultRow row : baseResult) {
+//	    		SourceDocument sd = 
+//	    				repository.getSourceDocument(row.getSourceDocumentId());
+//	    		if (!sd.isLoaded()) {
+//	    			//TODO: unload SourceDocuments to free space if tobeUnloaded.size() > 10
+//	    			toBeUnloaded.add(sd);
+//	    		}
+//	    		
+//	    		if (!kwicProviders.containsKey(sd.getID())) {
+//	    			kwicProviders.put(sd.getID(), new KwicProvider(sd));
+//	    		}
+//	    		KwicProvider kwicProvider = kwicProviders.get(sd.getID());
+//	    		SpanContext spanContext =
+//					kwicProvider.getSpanContextFor(	
+//						row.getRange(), 
+//						spanContextSize, direction);
+//	    		
+//	    		if (spanContextMeetsCollocCondition
+//	    				(spanContext, collocCondition, termInfos)) {
+//	    			result.add(row);
+//	    		}
+//	    	}
+//	    	for (SourceDocument sd : toBeUnloaded) {
+//	    		sd.unload();
+//	    	}
+//	   
+//	    	return result;
+//    	}
     }
 
 	private boolean spanContextMeetsCollocCondition(

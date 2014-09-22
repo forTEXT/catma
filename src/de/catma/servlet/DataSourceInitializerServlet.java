@@ -9,9 +9,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.graphdb.schema.IndexDefinition;
 import org.neo4j.graphdb.schema.Schema;
 
@@ -32,7 +32,7 @@ public class DataSourceInitializerServlet extends HttpServlet {
         super.init(cfg);
 
         try {
-	        log("CATMA Datasource initializing...");
+	        log("CATMA DB Datasource initializing...");
 	        
 	        InitialContext context = new InitialContext();
 	        
@@ -60,8 +60,9 @@ public class DataSourceInitializerServlet extends HttpServlet {
 	
 			context.bind(CatmaDataSourceName.CATMADS.name(), cpds);
 			
-			log("CATMA DataSource initialized.");
+			log("CATMA DB DataSource initialized.");
 			
+			log("CATMA Graph DataSource initializing...");
 			String graphDbPath = properties.getProperty(RepositoryPropertyKey.GraphDbPath.name());
 			
 			final GraphDatabaseService graphDb = 
@@ -70,45 +71,42 @@ public class DataSourceInitializerServlet extends HttpServlet {
 				.newGraphDatabase();
 			
 			context.bind(CatmaGraphDbName.CATMAGRAPHDB.name(), graphDb);
-			
-	        Runtime.getRuntime().addShutdownHook( new Thread() {
-	            @Override
-	            public void run() {
-	            	try {
-	            		graphDb.shutdown();
-	            	}
-	            	catch (Exception e) {
-	            		e.printStackTrace();
-	            	}
-	            }
-	        });
-	
+
+			log("CATMA Graph DataSource initialized.");
 	        
-//            try ( Transaction tx = graphDb.beginTx() )
-//            {
-//                IndexManager indexManager = graphDb.index();
-//                for (String name : indexManager.nodeIndexNames()) {
-//                	System.out.println(name);
-//                }
-//                Schema schema = graphDb.schema();
-//                schema.indexFor(NodeType.SourceDocument)
-//                        .on(SourceDocumentProperty.localUri.name())
-//                        .create();
-//                
-//                schema.indexFor(NodeType.Term)
-//                		.on(TermProperty.literal.name())
-//                		.create();
-//
-//                schema.indexFor(NodeType.Term)
-//                		.on(TermProperty.freq.name())
-//                		.create();
-//                
-//                tx.success();
-//            }
-//            try (Transaction tx = graphDb.beginTx()) {
-//            	Schema schema = graphDb.schema();	
-//	            schema.awaitIndexesOnline(100, TimeUnit.SECONDS );
-//            }
+            try ( Transaction tx = graphDb.beginTx() )
+            {
+                Schema schema = graphDb.schema();
+                for (IndexDefinition indexDef : schema.getIndexes(NodeType.Position)) {
+                	System.out.println(schema.getIndexState(indexDef));
+                }
+                
+            	if (!hasIndex(schema, NodeType.SourceDocument, SourceDocumentProperty.localUri)) {
+            		schema.indexFor(NodeType.SourceDocument)
+                      .on(SourceDocumentProperty.localUri.name())
+                      .create();	
+            	}
+                
+                if (!hasIndex(schema, NodeType.Term, TermProperty.literal)) {
+                	schema.indexFor(NodeType.Term)
+	                	.on(TermProperty.literal.name())
+	                	.create();
+                }
+                
+                if (!hasIndex(schema, NodeType.Term, TermProperty.freq)) {
+                	schema.indexFor(NodeType.Term)
+	                	.on(TermProperty.freq.name())
+	                	.create();
+                }
+                tx.success();
+            }
+            try (Transaction tx = graphDb.beginTx()) {
+            	Schema schema = graphDb.schema();	
+	            schema.awaitIndexesOnline(120, TimeUnit.SECONDS );
+            }
+            catch (IllegalStateException ise) {
+            	log("indexes not online yet: " + ise.getMessage());
+            }
         }
         catch (Exception e) {
         	throw new ServletException(e);
@@ -116,18 +114,38 @@ public class DataSourceInitializerServlet extends HttpServlet {
 	}
     
     
-    @Override
+    private boolean hasIndex(Schema schema, Label nodeType, Enum<?> propName) {
+    	for (IndexDefinition indexDef : schema.getIndexes(nodeType)) {
+	    	for (String property : indexDef.getPropertyKeys()) {
+	    		if (property.equals(propName.name())) {
+	    			return true;
+	    		}
+	    	}
+    	}
+    	return false;
+	}
+
+
+	@Override
     public void destroy() {
     	super.destroy();
-    	
     	try {
-    		log("Closing CATMA DataSource...");
+    		log("Closing CATMA DB DataSource...");
     		((ComboPooledDataSource)new InitialContext().lookup(
     				CatmaDataSourceName.CATMADS.name())).close();
-    		log("CATMA DataSource is closed.");
+    		log("CATMA DB DataSource is closed.");
     	}
     	catch (Exception e) {
-    		log("Error closing CATMA DataSource", e);
+    		log("Error closing CATMA DB DataSource", e);
+    	}
+    	try {
+    		log("Closing CATMA Graph DataSource...");
+    		((GraphDatabaseService)new InitialContext().lookup(
+    				CatmaGraphDbName.CATMAGRAPHDB.name())).shutdown();
+    		log("CATMA Graph DataSource is closed.");
+    	}
+    	catch (Exception e) {
+    		log("Error closing CATMA Graph DataSource", e);
     	}
     }
 
