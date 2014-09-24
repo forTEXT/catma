@@ -77,8 +77,6 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.themes.Reindeer;
 
-import de.catma.backgroundservice.DefaultProgressCallable;
-import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
@@ -95,7 +93,6 @@ import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
 import de.catma.indexer.graph.CatmaGraphDbName;
-import de.catma.indexer.graph.SourceDocumentIndexer;
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
@@ -322,28 +319,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				handleShareSourceDocumentRequest();
 			}
 		});
-		miMoreDocumentActions.addItem("Index Document in Graph DB", new Command() {
-			public void menuSelected(MenuItem selectedItem) {
-				Object value = documentsTree.getValue();
-				if ((value == null) || !(value instanceof SourceDocument)) {
-					 Notification.show(
-		                    "Information",
-		                    "Please select a Source Document first",
-		                    Type.TRAY_NOTIFICATION);
-				}
-				else{
-					final SourceDocument sourceDocument = (SourceDocument)value;
 
-					SourceDocumentIndexer inserter = new SourceDocumentIndexer();
-					try {
-						inserter.index(sourceDocument);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			}
-		});
 		miMoreDocumentActions.addItem("Clear Graph DB", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
 				try {
@@ -514,7 +490,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			 Notification.show(
                     "Information",
                     "Please select a Source Document first",
-                    Notification.TYPE_TRAY_NOTIFICATION);
+                    Type.TRAY_NOTIFICATION);
 		}
 		else{
 			final SourceDocument sourceDocument = (SourceDocument)value;
@@ -895,50 +871,39 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	}
 
 	private void handleOpenDocumentRequest(final Object value) {
-		if (value==null) {
-			Notification.show(
-					"Information", "Please select a document first!",
-					Type.TRAY_NOTIFICATION);
+		try {
+			if (value==null) {
+				Notification.show(
+						"Information", "Please select a document first!",
+						Type.TRAY_NOTIFICATION);
+			}
+			if (value instanceof SourceDocument) {
+				((CatmaApplication)UI.getCurrent()).openSourceDocument(
+						(SourceDocument)value, repository);
+			}
+			else if (value instanceof StaticMarkupCollectionReference) {
+					//TODO: implement
+				
+			}
+			else if (value instanceof UserMarkupCollectionReference) {
+				final SourceDocument sd = 
+						(SourceDocument)documentsTree.getParent(
+								documentsTree.getParent(value));
+				final CatmaApplication application = 
+						(CatmaApplication)UI.getCurrent();
+				UserMarkupCollectionReference 
+					userMarkupCollectionReference = 
+						(UserMarkupCollectionReference)value;
+	
+				application.openUserMarkupCollection(
+						sd, 
+						repository.getUserMarkupCollection(userMarkupCollectionReference), 
+						repository);
+			}
 		}
-		if (value instanceof SourceDocument) {
-			((CatmaApplication)UI.getCurrent()).openSourceDocument(
-					(SourceDocument)value, repository);
-		}
-		else if (value instanceof StaticMarkupCollectionReference) {
-				//TODO: implement
-			
-		}
-		else if (value instanceof UserMarkupCollectionReference) {
-			final SourceDocument sd = 
-					(SourceDocument)documentsTree.getParent(
-							documentsTree.getParent(value));
-			final CatmaApplication application = 
-					(CatmaApplication)UI.getCurrent();
-			application.submit(
-					"Loading Markup collection...",
-					new DefaultProgressCallable<UserMarkupCollection>() {
-						public UserMarkupCollection call()
-								throws Exception {
-							UserMarkupCollectionReference 
-								userMarkupCollectionReference = 
-									(UserMarkupCollectionReference)value;
-							
-							return repository.getUserMarkupCollection(
-									userMarkupCollectionReference);
-						}
-					},
-					new ExecutionListener<UserMarkupCollection>() {
-						public void done(UserMarkupCollection result) {
-							application.openUserMarkupCollection(
-									sd, result, repository);
-						}
-						
-						public void error(Throwable t) {
-							((CatmaApplication)UI.getCurrent()).showAndLogError(
-									"Error loading markup collection!", t);
-						}
-					});
-
+		catch (IOException e) {
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
+				"Error opening document! ", e);	
 		}
 	}
 

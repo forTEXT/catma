@@ -48,8 +48,6 @@ import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 
 import de.catma.backgroundservice.BackgroundServiceProvider;
-import de.catma.backgroundservice.DefaultProgressCallable;
-import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
 import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.UnknownUserException;
@@ -544,79 +542,61 @@ public class DBRepository implements IndexedRepository {
 
 	public void update(final UserMarkupCollection userMarkupCollection,
 			final List<TagReference> tagReferences) {
-		backgroundServiceProvider.submit(
-				"Saving User Markup Collection "
-						+ userMarkupCollection.getName() + "... ",
-				new DefaultProgressCallable<Boolean>() {
-				public Boolean call() throws Exception {
-					return execShield.execute(new DBOperation<Boolean>() {
-						public Boolean execute() throws Exception {
-							if (userMarkupCollection.getTagReferences().containsAll(
-									tagReferences)) {
-								dbUserMarkupCollectionHandler.addTagReferences(
-									userMarkupCollection, tagReferences);
-								return true;
-							}
-							else {
-								dbUserMarkupCollectionHandler.removeTagReferences(
-									tagReferences);
-								return false;
-							}
+		try {
+			boolean added = execShield.execute(new DBOperation<Boolean>() {
+					public Boolean execute() throws Exception {
+						if (userMarkupCollection.getTagReferences().containsAll(
+								tagReferences)) {
+							dbUserMarkupCollectionHandler.addTagReferences(
+								userMarkupCollection, tagReferences);
+							return true;
 						}
-					});
-				}
-			}, 
-			new ExecutionListener<Boolean>() {
-				public void done(Boolean added) { 
-					if (added) {
-						propertyChangeSupport.firePropertyChange(
-							RepositoryChangeEvent.tagReferencesChanged.name(), 
-							null, tagReferences);
+						else {
+							dbUserMarkupCollectionHandler.removeTagReferences(
+								tagReferences);
+							return false;
+						}
 					}
-					else {
-						propertyChangeSupport.firePropertyChange(
-							RepositoryChangeEvent.tagReferencesChanged.name(), 
-							tagReferences, null);
-					}
-					
-				}
-				public void error(Throwable t) {
-					propertyChangeSupport.firePropertyChange(
-							RepositoryChangeEvent.exceptionOccurred.name(),
-							null, 
-							t);				
-				}
-			});
+				});
+			if (added) {
+				propertyChangeSupport.firePropertyChange(
+						RepositoryChangeEvent.tagReferencesChanged.name(), 
+						null, tagReferences);
+			}
+			else {
+				propertyChangeSupport.firePropertyChange(
+						RepositoryChangeEvent.tagReferencesChanged.name(), 
+						tagReferences, null);
+			}
+		}
+		catch (Exception e) {
+			propertyChangeSupport.firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, 
+					e);				
+		}
 	}
 	
 	public void update(final List<UserMarkupCollection> userMarkupCollections,
 			final TagsetDefinition tagsetDefinition) {
-		backgroundServiceProvider.submit(
-				"Updating Tagset " + tagsetDefinition.getName() + "... ",
-				new DefaultProgressCallable<Void>() {
-				public Void call() throws Exception {
-					return execShield.execute( new DBOperation<Void>() {
+		try {
+			execShield.execute( new DBOperation<Void>() {
 						public Void execute() throws Exception {
 							dbUserMarkupCollectionHandler.updateTagsetDefinitionInUserMarkupCollections(
 									userMarkupCollections, tagsetDefinition);
 							return null;
 						}
 					});
-				}
-			}, 
-			new ExecutionListener<Void>() {
-				public void done(Void nothing) {
-					propertyChangeSupport.firePropertyChange(
-						RepositoryChangeEvent.userMarkupCollectionTagLibraryChanged.name(),
-						tagsetDefinition, userMarkupCollections);
-				}
-				public void error(Throwable t) {
-					propertyChangeSupport.firePropertyChange(
-							RepositoryChangeEvent.exceptionOccurred.name(),
-							null, 
-							t);				
-				}
-			});
+			propertyChangeSupport.firePropertyChange(
+					RepositoryChangeEvent.userMarkupCollectionTagLibraryChanged.name(),
+					tagsetDefinition, userMarkupCollections);
+		}
+		catch (Exception e) {
+			propertyChangeSupport.firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, 
+					e);				
+		}
 	}
 	
 	

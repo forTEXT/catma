@@ -53,12 +53,18 @@ public class DBIndexMaintainer {
 	private int repoPropertyRowOffset = 0;
 	private int indexTagReferenceRowOffset = 0;
 	private int indexPropertyRowOffset = 0;
+	private SourceDocumentIndexMaintainer sourceDocumentIndexMaintainer;
+	private int sourceDocumentIndexMaintainerMaxObjectCount;
+	private int sourceDocumentIndexMaintainerOffset = 0;
 
 	private Logger logger;
 
 	public DBIndexMaintainer(int fileCleanOffset, int repoTagReferenceRowOffset,
 			int repoPropertyRowOffset, int indexTagReferenceRowOffset,
-			int indexPropertyRowOffset) {
+			int indexPropertyRowOffset, 
+			SourceDocumentIndexMaintainer sourceDocumentIndexMaintainer,
+			int sourceDocumentIndexMaintainerMaxObjectCount,
+			int sourceDocumentIndexMaintainerOffset) {
 
 		this.fileCleanOffset = fileCleanOffset;
 
@@ -66,6 +72,11 @@ public class DBIndexMaintainer {
 		this.repoPropertyRowOffset = repoPropertyRowOffset;
 		this.indexTagReferenceRowOffset = indexTagReferenceRowOffset;
 		this.indexPropertyRowOffset = indexPropertyRowOffset;
+		this.sourceDocumentIndexMaintainer = sourceDocumentIndexMaintainer;
+		this.sourceDocumentIndexMaintainerMaxObjectCount = 
+				sourceDocumentIndexMaintainerMaxObjectCount;
+		this.sourceDocumentIndexMaintainerOffset = 
+				sourceDocumentIndexMaintainerOffset;
 		this.logger = Logger.getLogger(DBIndexMaintainer.class.getName());
 	}
 
@@ -101,9 +112,15 @@ public class DBIndexMaintainer {
 					// cleaning up stale sourcedocument files
 					cleanupSourceDocumentFiles(db);
 	
+					// cleaning up stale source doc index entries
+					sourceDocumentIndexMaintainerOffset = 
+						sourceDocumentIndexMaintainer.checkSourceDocumentIndex(
+							context, 
+							sourceDocumentIndexMaintainerMaxObjectCount,
+							sourceDocumentIndexMaintainerOffset);
+					
 					//TODO: check time and exit after fixed period
 					
-					//TODO: maintain term/position index
 	
 					logger.info("finished index maintenance");
 				}
@@ -458,5 +475,9 @@ public class DBIndexMaintainer {
 	
 	public int getFileCleanOffset() {
 		return fileCleanOffset;
+	}
+	
+	public int getSourceDocumentIndexMaintainerOffset() {
+		return sourceDocumentIndexMaintainerOffset;
 	}
 }

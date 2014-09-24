@@ -1,11 +1,13 @@
 package de.catma.indexer.graph;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
@@ -19,6 +21,10 @@ import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.graphdb.traversal.Traverser;
 
+import de.catma.indexer.IndexBufferManagerName;
+import de.catma.indexer.indexbuffer.IndexBufferManager;
+import de.catma.indexer.indexbuffer.SourceDocumentIndexBuffer;
+import de.catma.indexer.indexbuffer.TermFrequencyInfo;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
@@ -67,75 +73,109 @@ public class FrequencySearcher {
 	}
 	
 	private GraphDatabaseService graphDb;
+	private IndexBufferManager indexBufferManager;
+	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 
 	public FrequencySearcher() throws NamingException {
-		graphDb = (GraphDatabaseService) new InitialContext().lookup(
+		Context context = new InitialContext();
+		graphDb = (GraphDatabaseService) context.lookup(
 				CatmaGraphDbName.CATMAGRAPHDB.name());
+		indexBufferManager = (IndexBufferManager) context.lookup(IndexBufferManagerName.INDEXBUFFERMANAGER.name());
 	}
 
 	public QueryResult search(List<String> documentIdList,
 			CompareOperator comp1, int freq1, CompareOperator comp2, int freq2) throws IOException {
-		Transaction transaction = graphDb.beginTx();
-		try {
-			GroupedQueryResultSet groupedQueryResultSet = new GroupedQueryResultSet();	
-	
-			Collection<Node> sourceDocNodes = new SourceDocSearcher().search(graphDb, documentIdList);
-			if (sourceDocNodes.isEmpty()) {
-				logger.warning("no SourceDocument nodes found for " + documentIdList);
+		
+		ArrayList<SourceDocumentIndexBuffer> sourceDocumentIndexBuffers = new ArrayList<>();
+		List<String> nonBufferedDocumentIds = new ArrayList<>();
+		for (String sourceDocumentId : documentIdList) {
+			SourceDocumentIndexBuffer sourceDocumentIndexBuffer = 
+					indexBufferManager.get(sourceDocumentId);
+			if (sourceDocumentIndexBuffer != null) {
+				sourceDocumentIndexBuffers.add(sourceDocumentIndexBuffer);
 			}
 			else {
-				TraversalDescription termTraversal = 
-					graphDb.traversalDescription()
-						.depthFirst()
-						.relationships(NodeRelationType.IS_PART_OF, Direction.INCOMING);
-				
-//				if ((freq1 > 0) || (!comp1.equals(CompareOperator.GREATERTHAN))) {
-					termTraversal = 
-						termTraversal.evaluator(
-							new FrequencyEvaluator(comp1, freq1, comp2, freq2));
-//				}
-
-				Traverser termTraverser = termTraversal.traverse(sourceDocNodes);
-				HashMap<String, LazyGraphDBPhraseQueryResult> phraseResultMapping = 
-						new HashMap<String, LazyGraphDBPhraseQueryResult>();
-				PathUtil pathUtil = new PathUtil();
-				
-				for (Path path : termTraverser) {
-					Node sourceDocNode = path.startNode();
-					String localUri = 
-							(String) sourceDocNode.getProperty(
-									SourceDocumentProperty.localUri.name());
-
-					LazyGraphDBPhraseQueryResult qr = null;
-					Node termNode = pathUtil.getFirstTermNode(path);
-					String term = 
-						(String) termNode.getProperty(TermProperty.literal.name());
-					int freq = (Integer)termNode.getProperty(TermProperty.freq.name());
-					
-					if (!phraseResultMapping.containsKey(term)) {
-						qr = new LazyGraphDBPhraseQueryResult(term);
-						phraseResultMapping.put(term, qr);
-					}
-					else {
-						qr = phraseResultMapping.get(term);
-					}
-					
-					qr.addFrequency(localUri, freq);
-				}
-
-				groupedQueryResultSet.addAll(phraseResultMapping.values());
+				nonBufferedDocumentIds.add(sourceDocumentId);
 			}
-			transaction.success();
-			transaction.close();
+		}
+		
+		GroupedQueryResultSet groupedQueryResultSet = new GroupedQueryResultSet();	
+		HashMap<String, LazyGraphDBPhraseQueryResult> phraseResultMapping = 
+				new HashMap<String, LazyGraphDBPhraseQueryResult>();
+
+		if (!nonBufferedDocumentIds.isEmpty()) {
+			logger.info("graph based search for " + nonBufferedDocumentIds);
+
+			try (Transaction transaction = graphDb.beginTx()) {
+		
+				Collection<Node> sourceDocNodes = new SourceDocSearcher().search(graphDb, nonBufferedDocumentIds);
+				if (sourceDocNodes.isEmpty()) {
+					logger.warning("no SourceDocument nodes found for " + nonBufferedDocumentIds);
+				}
+				else {
+					TraversalDescription termTraversal = 
+						graphDb.traversalDescription()
+							.depthFirst()
+							.relationships(NodeRelationType.IS_PART_OF, Direction.INCOMING);
+					
+	//				if ((freq1 > 0) || (!comp1.equals(CompareOperator.GREATERTHAN))) {
+						termTraversal = 
+							termTraversal.evaluator(
+								new FrequencyEvaluator(comp1, freq1, comp2, freq2));
+	//				}
+	
+					Traverser termTraverser = termTraversal.traverse(sourceDocNodes);
+					PathUtil pathUtil = new PathUtil();
+					
+					for (Path path : termTraverser) {
+						Node sourceDocNode = path.startNode();
+						String localUri = 
+								(String) sourceDocNode.getProperty(
+										SourceDocumentProperty.localUri.name());
+	
+						LazyGraphDBPhraseQueryResult qr = null;
+						Node termNode = pathUtil.getFirstTermNode(path);
+						String term = 
+							(String) termNode.getProperty(TermProperty.literal.name());
+						int freq = (Integer)termNode.getProperty(TermProperty.freq.name());
+						
+						if (!phraseResultMapping.containsKey(term)) {
+							qr = new LazyGraphDBPhraseQueryResult(term);
+							phraseResultMapping.put(term, qr);
+						}
+						else {
+							qr = phraseResultMapping.get(term);
+						}
+						
+						qr.addFrequency(localUri, freq);
+					}
+	
+				}
+				transaction.success();
+			}
+		}
+		for (SourceDocumentIndexBuffer buffer : sourceDocumentIndexBuffers) {
+			logger.info("buffered search for " + buffer.getSourceDocumentId());
 			
-			return groupedQueryResultSet;
+			for (TermFrequencyInfo tfi : buffer.search(comp1, freq1, comp2, freq2)) {
+				LazyGraphDBPhraseQueryResult qr = null;
+				if (!phraseResultMapping.containsKey(tfi.getTerm())) {
+					qr = new LazyGraphDBPhraseQueryResult(tfi.getTerm());
+					phraseResultMapping.put(tfi.getTerm(), qr);
+				}
+				else {
+					qr = phraseResultMapping.get(tfi.getTerm());
+				}
+				
+				qr.addFrequency(buffer.getSourceDocumentId(), tfi.getFrequency());
+			}
 		}
-		catch (Exception e) {
-			transaction.failure();
-			transaction.close();
-			throw new IOException(e);
-		}
+		
+		groupedQueryResultSet.addAll(phraseResultMapping.values());
+		
+		return groupedQueryResultSet;
+
 	}
 
 }

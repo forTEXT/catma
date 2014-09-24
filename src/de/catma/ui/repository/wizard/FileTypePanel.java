@@ -28,21 +28,16 @@ import java.util.zip.CRC32;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.ProgressIndicator;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.backgroundservice.BackgroundService;
-import de.catma.backgroundservice.DefaultProgressCallable;
-import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.CharsetLanguageInfo;
@@ -56,30 +51,15 @@ import de.catma.document.source.contenthandler.DefaultProtocolHandler;
 import de.catma.document.source.contenthandler.HttpProtocolHandler;
 import de.catma.document.source.contenthandler.ProtocolHandler;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.DefaultProgressListener;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.WizardStepListener;
 
 class FileTypePanel extends GridLayout implements DynamicWizardStep {
-	
-	private static class BackgroundLoaderResult {
-		byte[] byteContent;
-		String encoding;
-		String mimeType;
-		public BackgroundLoaderResult(byte[] byteContent, String encoding, String mimeType) {
-			super();
-			this.byteContent = byteContent;
-			this.encoding = encoding;
-			this.mimeType = mimeType;
-		}
-		
-	}
 
 	private ComboBox cbFileType;
 	private Tree fileEncodingTree;
 	private boolean onAdvance = false;
 	private SourceDocumentInfo sourceDocumentInfo;
-	private ProgressIndicator progressIndicator;
 	private byte[] currentByteContent;
 	private Label taPreview;
 	private UploadPanel uploadPanel;
@@ -120,90 +100,64 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			setVisiblePreviewComponents(false);
 			setVisibleXSLTInputComponents(false);
 			
-			BackgroundService backgroundService = 
-					((CatmaApplication)UI.getCurrent()).getBackgroundService();
-			progressIndicator.setEnabled(true);
-			progressIndicator.setCaption("Detecting file type");
-			backgroundService.submit(
-					new DefaultProgressCallable<BackgroundLoaderResult>() {
-						public BackgroundLoaderResult call() throws Exception {	
-							ProtocolHandler protocolHandler = null;
-							if (sourceDocURI.toURL().getProtocol().toLowerCase().equals("http")) {
-								  protocolHandler = 
-										  new HttpProtocolHandler(
-												 sourceDocURI, 
-												 sourceDocumentFileUri);
-							}
-							else {
-								protocolHandler = 
-										new DefaultProtocolHandler(
-												sourceDocURI, mimeTypeFromUpload);
-							}	
-							return new BackgroundLoaderResult(
-									protocolHandler.getByteContent(),
-									protocolHandler.getEncoding(),
-									protocolHandler.getMimeType());
-						}
-					}, 
-					new ExecutionListener<BackgroundLoaderResult>() {
-						public void done(BackgroundLoaderResult result) {
-							currentByteContent = result.byteContent;
+			ProtocolHandler protocolHandler = null;
+			if (sourceDocURI.toURL().getProtocol().toLowerCase().equals("http")) {
+				  protocolHandler = 
+						  new HttpProtocolHandler(
+								 sourceDocURI, 
+								 sourceDocumentFileUri);
+			}
+			else {
+				protocolHandler = 
+						new DefaultProtocolHandler(
+								sourceDocURI, mimeTypeFromUpload);
+			}	
 
-							sourceDocumentInfo.getTechInfoSet().setMimeType(result.mimeType);
-							
-							FileType fileType = FileType.getFileType(result.mimeType);
-							
-							sourceDocumentInfo.getTechInfoSet().setFileType(fileType);
-							
-							if (fileType.equals(FileType.TEXT)
-									||fileType.equals(FileType.HTML)) {
-								
-								Charset charset = Charset.forName(result.encoding);
-								fileEncodingTree.select(charset);
-								Object parent = fileEncodingTree.getParent(charset);
-								while (parent != null) {
-									fileEncodingTree.expandItem(parent);
-									parent = fileEncodingTree.getParent(parent);
-								}
-								sourceDocumentInfo.getTechInfoSet().setCharset(charset);
-							}
-							else {
-								try {
-									sourceDocumentInfo.getTechInfoSet().setFileOSType(
-											FileOSType.INDEPENDENT);
-									SourceDocumentHandler sourceDocumentHandler = 
-											new SourceDocumentHandler();
-									SourceDocument sourceDocument =
-											sourceDocumentHandler.loadSourceDocument(
-											wizardResult.getSourceDocumentID(), 
-											sourceDocumentInfo);
-									
-									sourceDocument.getSourceContentHandler().load(
-											new ByteArrayInputStream(currentByteContent));
-									wizardResult.setSourceDocument(sourceDocument);
-								} catch (Exception e) {
-									((CatmaApplication)UI.getCurrent()).showAndLogError(
-											"Error detecting the file type!", e);
-								}
-							}
-							if ((cbFileType.getValue() != null ) 
-									&& cbFileType.getValue().equals(fileType)) {
-								handleFileType();
-							}
-							else {
-								cbFileType.setValue(fileType);
-							}
-							
-							progressIndicator.setCaption("File type detection finished!");
-							progressIndicator.setEnabled(false);
-						}
-						
-						public void error(Throwable t) {
-							((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"Error detecting file type", t);
-						}
-						
-					}, new DefaultProgressListener(progressIndicator, UI.getCurrent()));
+			currentByteContent = protocolHandler.getByteContent();
+
+			sourceDocumentInfo.getTechInfoSet().setMimeType(protocolHandler.getMimeType());
+			FileType fileType = FileType.getFileType(protocolHandler.getMimeType());
+			
+			sourceDocumentInfo.getTechInfoSet().setFileType(fileType);
+			
+			if (fileType.equals(FileType.TEXT)
+					||fileType.equals(FileType.HTML)) {
+				
+				Charset charset = Charset.forName(protocolHandler.getEncoding());
+				fileEncodingTree.select(charset);
+				Object parent = fileEncodingTree.getParent(charset);
+				while (parent != null) {
+					fileEncodingTree.expandItem(parent);
+					parent = fileEncodingTree.getParent(parent);
+				}
+				sourceDocumentInfo.getTechInfoSet().setCharset(charset);
+			}
+			else {
+				try {
+					sourceDocumentInfo.getTechInfoSet().setFileOSType(
+							FileOSType.INDEPENDENT);
+					SourceDocumentHandler sourceDocumentHandler = 
+							new SourceDocumentHandler();
+					SourceDocument sourceDocument =
+							sourceDocumentHandler.loadSourceDocument(
+							wizardResult.getSourceDocumentID(), 
+							sourceDocumentInfo);
+					
+					sourceDocument.getSourceContentHandler().load(
+							new ByteArrayInputStream(currentByteContent));
+					wizardResult.setSourceDocument(sourceDocument);
+				} catch (Exception e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+							"Error detecting the file type!", e);
+				}
+			}
+			if ((cbFileType.getValue() != null ) 
+					&& cbFileType.getValue().equals(fileType)) {
+				handleFileType();
+			}
+			else {
+				cbFileType.setValue(fileType);
+			}
 		}
 		catch (Exception exc) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -306,14 +260,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		this.uploadPanel = new UploadPanel();
 		addComponent(uploadLabel, 0, 2, 1, 2);
 		addComponent(uploadPanel, 0, 3, 1, 3);
-		
-		progressIndicator = new ProgressIndicator();
-		progressIndicator.setEnabled(false);
-		progressIndicator.setIndeterminate(true);
-		progressIndicator.setWidth("100%");
-		progressIndicator.setPollingInterval(500);
-		
-		addComponent(progressIndicator, 1, 0);
+
 		setColumnExpandRatio(1, 1);
 		
 	}

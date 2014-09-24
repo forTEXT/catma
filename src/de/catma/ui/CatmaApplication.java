@@ -119,7 +119,7 @@ public class CatmaApplication extends UI
 	@Override
 	protected void init(VaadinRequest request) {
 		
-		backgroundService = new BackgroundService(this);
+		backgroundService = new UIBackgroundService(true);
 		
 		handleParameters(request.getParameterMap());
 		

@@ -141,9 +141,16 @@ public class SourceDocumentBatchInserter {
 						long termNodeId = inserter.createNode(properties, NodeType.Term);
 						currentNodeCount++;
 						
-						properties.clear();
+						inserter.createRelationship(
+								termNodeId, 
+								sdNode, 
+								NodeRelationType.IS_PART_OF, 
+								Collections.<String, Object>emptyMap());
+						currentRelCount++;
+						
 						
 						for (TermInfo ti : termInfos) {
+							properties.clear();
 							orderedTermInfos.add(ti);
 							
 							properties.put(
@@ -166,12 +173,7 @@ public class SourceDocumentBatchInserter {
 									NodeRelationType.HAS_POSITION, 
 									Collections.<String,Object>emptyMap());
 							currentRelCount++;
-							inserter.createRelationship(
-									termNodeId, 
-									sdNode, 
-									NodeRelationType.IS_PART_OF, 
-									Collections.<String, Object>emptyMap());
-							currentRelCount++;
+
 						}
 					}
 			

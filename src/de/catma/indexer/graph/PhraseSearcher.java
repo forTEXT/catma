@@ -1,10 +1,12 @@
 package de.catma.indexer.graph;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
@@ -23,8 +25,11 @@ import org.neo4j.graphdb.traversal.Traverser;
 
 import de.catma.document.Range;
 import de.catma.indexer.EqualsMatcher;
+import de.catma.indexer.IndexBufferManagerName;
 import de.catma.indexer.SQLWildcardMatcher;
 import de.catma.indexer.TermMatcher;
+import de.catma.indexer.indexbuffer.IndexBufferManager;
+import de.catma.indexer.indexbuffer.SourceDocumentIndexBuffer;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
@@ -132,10 +137,14 @@ public class PhraseSearcher {
 	
 	private GraphDatabaseService graphDb;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private IndexBufferManager indexBufferManager;
 	
 	public PhraseSearcher() throws NamingException {
-		graphDb = (GraphDatabaseService) new InitialContext().lookup(
+		Context context = new InitialContext();
+		
+		graphDb = (GraphDatabaseService) context.lookup(
 						CatmaGraphDbName.CATMAGRAPHDB.name());
+		indexBufferManager = (IndexBufferManager) context.lookup(IndexBufferManagerName.INDEXBUFFERMANAGER.name());
 	}
 
 	public QueryResult search(List<String> documentIdList, String phrase,
@@ -145,56 +154,81 @@ public class PhraseSearcher {
 	
 	private QueryResult search(List<String> documentIdList, String phrase,
 			List<String> termList, int limit, boolean withWildcards) throws IOException {
-		PathUtil pathUtil = new PathUtil();
 		
-		Transaction transaction = graphDb.beginTx();
-		try {
-			QueryResultRowArray searchResult = new QueryResultRowArray();
-	
-			Collection<Node> sourceDocNodes = new SourceDocSearcher().search(graphDb, documentIdList);
-			if (sourceDocNodes.isEmpty()) {
-				logger.warning("no SourceDocument nodes found for " + documentIdList);
+		ArrayList<SourceDocumentIndexBuffer> sourceDocumentIndexBuffers = new ArrayList<>();
+		List<String> nonBufferedDocumentIds = new ArrayList<>();
+		for (String sourceDocumentId : documentIdList) {
+			SourceDocumentIndexBuffer sourceDocumentIndexBuffer = 
+					indexBufferManager.get(sourceDocumentId);
+			if (sourceDocumentIndexBuffer != null) {
+				sourceDocumentIndexBuffers.add(sourceDocumentIndexBuffer);
 			}
 			else {
-				TraversalDescription positionsTraversal = 
-					graphDb.traversalDescription()
-						.depthFirst()
-						.evaluator(new PhraseSearchEvaluator(termList, withWildcards))
-//						.expand(new PhraseSearchExpander());
-						.relationships(NodeRelationType.IS_PART_OF, Direction.INCOMING)
-						.relationships(NodeRelationType.HAS_POSITION, Direction.OUTGOING)
-						.relationships(NodeRelationType.ADJACENT_TO, Direction.OUTGOING);
-				
-				Traverser positionsTraverser = positionsTraversal.traverse(sourceDocNodes);
-				for (Path p : positionsTraverser) {
-//					System.out.println("RESULT " + p);
-					
-					Node sourceDocNode = p.startNode();
-					String localUri = 
-							(String) sourceDocNode.getProperty(
-									SourceDocumentProperty.localUri.name());
-					
-					Node firstPositionNode = pathUtil.getFirstPositionNode(p);
-					int start = (Integer) firstPositionNode.getProperty(PositionProperty.start.name());
-					int end = (Integer) p.endNode().getProperty(PositionProperty.end.name());
-					Range range = new Range(start, end);
-					
-					searchResult.add(new QueryResultRow(localUri, range, phrase));
-					
-					if ((limit != 0) && (limit==searchResult.size())) {
-						break;
-					}
+				nonBufferedDocumentIds.add(sourceDocumentId);
+			}
+		}
+
+		
+		PathUtil pathUtil = new PathUtil();
+		
+		
+		QueryResultRowArray searchResult = new QueryResultRowArray();
+		
+		if (!nonBufferedDocumentIds.isEmpty()) {
+			try (Transaction transaction = graphDb.beginTx()) {
+				Collection<Node> sourceDocNodes = new SourceDocSearcher().search(graphDb, nonBufferedDocumentIds);
+				if (sourceDocNodes.isEmpty()) {
+					logger.warning("no SourceDocument nodes found for " + nonBufferedDocumentIds);
 				}
-			}			
-			transaction.success();
-			transaction.close();
-			return searchResult;
+				else {
+					TraversalDescription positionsTraversal = 
+						graphDb.traversalDescription()
+							.depthFirst()
+							.evaluator(new PhraseSearchEvaluator(termList, withWildcards))
+	//						.expand(new PhraseSearchExpander());
+							.relationships(NodeRelationType.IS_PART_OF, Direction.INCOMING)
+							.relationships(NodeRelationType.HAS_POSITION, Direction.OUTGOING)
+							.relationships(NodeRelationType.ADJACENT_TO, Direction.OUTGOING);
+					
+					Traverser positionsTraverser = positionsTraversal.traverse(sourceDocNodes);
+					for (Path p : positionsTraverser) {
+	//					System.out.println("RESULT " + p);
+						
+						Node sourceDocNode = p.startNode();
+						String localUri = 
+								(String) sourceDocNode.getProperty(
+										SourceDocumentProperty.localUri.name());
+						
+						Node firstPositionNode = pathUtil.getFirstPositionNode(p);
+						int start = (Integer) firstPositionNode.getProperty(PositionProperty.start.name());
+						int end = (Integer) p.endNode().getProperty(PositionProperty.end.name());
+						Range range = new Range(start, end);
+						
+						searchResult.add(new QueryResultRow(localUri, range, phrase));
+						
+						if ((limit != 0) && (limit==searchResult.size())) {
+							break;
+						}
+					}
+				}			
+				transaction.success();
+			}
 		}
-		catch (Exception e) {
-			transaction.failure();
-			transaction.close();
-			throw new IOException(e);
+		
+		if ((limit == 0) || (limit > searchResult.size())) {
+			for (SourceDocumentIndexBuffer buffer : sourceDocumentIndexBuffers) {
+				int curSize = searchResult.size();
+				for (QueryResultRow row : 
+					buffer.search(
+							phrase, 
+							termList, 
+							(limit==0)?0:limit-curSize, withWildcards)) {
+					searchResult.add(row);
+				}
+			}
 		}
+		
+		return searchResult;
 	}
 
 

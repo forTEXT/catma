@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 
 import javax.naming.NamingException;
 
+import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.Range;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
@@ -55,7 +56,7 @@ public class DBIndexer implements Indexer {
 		sourceDocumentIndexer = new SourceDocumentIndexer();
 	}
 	
-	public void index(SourceDocument sourceDocument)
+	public void index(SourceDocument sourceDocument, BackgroundService backgroundService)
 			throws IOException {
 		
 		sourceDocumentIndexer.index(sourceDocument);
@@ -72,7 +73,8 @@ public class DBIndexer implements Indexer {
 	}
 	
 	public void removeSourceDocument(String sourceDocumentID) throws IOException {
-		sourceDocumentIndexer.removeSourceDocument(sourceDocumentID);
+		// too expensive, is done during maintenance
+//		sourceDocumentIndexer.removeSourceDocument(sourceDocumentID);
 	}
 	
 	public void removeUserMarkupCollection(String userMarkupCollectionID) throws IOException {
@@ -212,10 +214,10 @@ public class DBIndexer implements Indexer {
 
 	public void removeUserMarkupCollections(
 			Collection<String> userMarkupCollectionIDs) throws IOException {
-		//TODO: optimize with jooq
-		for (String userMarkupColl : userMarkupCollectionIDs) {
-			removeUserMarkupCollection(userMarkupColl);
-		}
+		//too expensive, is done during maintenance
+//		for (String userMarkupColl : userMarkupCollectionIDs) {
+//			removeUserMarkupCollection(userMarkupColl);
+//		}
 		
 	}
 	

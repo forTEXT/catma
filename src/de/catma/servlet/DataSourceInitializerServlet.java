@@ -19,10 +19,12 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 import de.catma.document.repository.RepositoryPropertiesName;
 import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.indexer.IndexBufferManagerName;
 import de.catma.indexer.graph.CatmaGraphDbName;
 import de.catma.indexer.graph.NodeType;
 import de.catma.indexer.graph.SourceDocumentProperty;
 import de.catma.indexer.graph.TermProperty;
+import de.catma.indexer.indexbuffer.IndexBufferManager;
 import de.catma.repository.db.CatmaDataSourceName;
 
 public class DataSourceInitializerServlet extends HttpServlet {
@@ -63,7 +65,7 @@ public class DataSourceInitializerServlet extends HttpServlet {
 			log("CATMA DB DataSource initialized.");
 			
 			log("CATMA Graph DataSource initializing...");
-			String graphDbPath = properties.getProperty(RepositoryPropertyKey.GraphDbPath.name());
+			String graphDbPath = RepositoryPropertyKey.GraphDbPath.getProperty(properties, repoIndex);
 			
 			final GraphDatabaseService graphDb = 
 				new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(graphDbPath)
@@ -72,13 +74,12 @@ public class DataSourceInitializerServlet extends HttpServlet {
 			
 			context.bind(CatmaGraphDbName.CATMAGRAPHDB.name(), graphDb);
 
-			log("CATMA Graph DataSource initialized.");
 	        
             try ( Transaction tx = graphDb.beginTx() )
             {
                 Schema schema = graphDb.schema();
-                for (IndexDefinition indexDef : schema.getIndexes(NodeType.Position)) {
-                	System.out.println(schema.getIndexState(indexDef));
+                for (IndexDefinition indexDef : schema.getIndexes()) {
+                	log(indexDef.toString() + " " + schema.getIndexState(indexDef));
                 }
                 
             	if (!hasIndex(schema, NodeType.SourceDocument, SourceDocumentProperty.localUri)) {
@@ -87,7 +88,13 @@ public class DataSourceInitializerServlet extends HttpServlet {
                       .create();	
             	}
                 
-                if (!hasIndex(schema, NodeType.Term, TermProperty.literal)) {
+            	if (!hasIndex(schema, NodeType.SourceDocument, SourceDocumentProperty.deleted)) {
+            		schema.indexFor(NodeType.SourceDocument)
+                      .on(SourceDocumentProperty.deleted.name())
+                      .create();	
+            	}
+            	
+            	if (!hasIndex(schema, NodeType.Term, TermProperty.literal)) {
                 	schema.indexFor(NodeType.Term)
 	                	.on(TermProperty.literal.name())
 	                	.create();
@@ -107,6 +114,11 @@ public class DataSourceInitializerServlet extends HttpServlet {
             catch (IllegalStateException ise) {
             	log("indexes not online yet: " + ise.getMessage());
             }
+            
+            log("CATMA Graph DataSource initialized.");
+            
+            IndexBufferManager indexBufferManager = new IndexBufferManager();
+            context.bind(IndexBufferManagerName.INDEXBUFFERMANAGER.name(), indexBufferManager);
         }
         catch (Exception e) {
         	throw new ServletException(e);
