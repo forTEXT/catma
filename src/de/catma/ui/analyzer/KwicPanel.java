@@ -391,7 +391,8 @@ public class KwicPanel extends VerticalLayout {
 			
 			@Override
 			public String getStyle(Table source, Object itemId, Object propertyId) {
-				if (itemDirCache.get(itemId).booleanValue()) {
+				Boolean isRtl = itemDirCache.get(itemId);
+				if ((isRtl != null) && isRtl.booleanValue()) {
 					return "rtl-field";
 				}
 				return null;
@@ -431,9 +432,9 @@ public class KwicPanel extends VerticalLayout {
 			kwicTable.addItem(
 				new Object[]{
 					sourceDocOrMarkupCollectionDisplay,
-					kwic.getLeftContext(),
+					kwic.getBackwardContext(),
 					kwic.getKeyword(),
-					kwic.getRightContext(),
+					kwic.getForwardContext(),
 					row.getRange().getStartPoint(),
 					row.getRange().getEndPoint()},
 					row);

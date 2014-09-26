@@ -67,7 +67,7 @@ public class KwicProvider {
     public KeywordInContext getKwic(Range range, int span) throws IOException {
 
         SpanContext spanContext =
-                getSpanContextFor(range, span, SpanDirection.Both);
+                getSpanContextFor(range, span, SpanDirection.BOTH);
 
         return new KeywordInSpanContext(
             content.substring(range.getStartPoint(), range.getEndPoint()),
@@ -153,7 +153,7 @@ public class KwicProvider {
  	        spanContext.setForwardRange(new Range(content.length(), content.length()));
         }
         
-        if(direction.equals(SpanDirection.Both)) { //backward
+        if(direction.equals(SpanDirection.BOTH)) { //backward
 
             // revert content for backward search
             StringBuffer backwardBuffer =

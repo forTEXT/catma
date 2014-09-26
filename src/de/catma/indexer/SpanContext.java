@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import de.catma.document.Range;
 
@@ -158,8 +157,8 @@ public class SpanContext {
     
     @Override
     public String toString() {
-    	return "left["+Arrays.toString(backwardTokens.toArray())+
-    	"] right["+Arrays.toString(forwardTokens.toArray()) + 
+    	return "backward["+Arrays.toString(backwardTokens.toArray())+
+    	"] forward["+Arrays.toString(forwardTokens.toArray()) + 
     	"]@" + sourceDocumentId;
     }
 
@@ -168,16 +167,26 @@ public class SpanContext {
 				|| backwardTokens.containsAll(termInfos));
 	}
 
-	public void addForwardTokens(Set<TermInfo> termInfos) {
+	public void addForwardTokens(Collection<TermInfo> termInfos) {
 		for (TermInfo ti : termInfos) {
 			addForwardToken(ti);
 		}
 	}
 	
-	public void addBackwardTokens(Set<TermInfo> termInfos) {
+	public void addBackwardTokens(Collection<TermInfo> termInfos) {
 		for (TermInfo ti : termInfos) {
 			addBackwardToken(ti);
 		}
+	}
+
+	public boolean containsAny(Collection<List<TermInfo>> termInfoLists) {
+		
+		for (List<TermInfo> termInfos : termInfoLists) {
+			if (contains(termInfos)) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 }

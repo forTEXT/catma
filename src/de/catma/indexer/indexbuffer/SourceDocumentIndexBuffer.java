@@ -2,11 +2,15 @@ package de.catma.indexer.indexbuffer;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import de.catma.indexer.SQLWildcardMatcher;
+import de.catma.indexer.SpanContext;
+import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TermInfo;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
@@ -86,4 +90,98 @@ public class SourceDocumentIndexBuffer {
 		}
 		return result;
 	}
+	
+	public QueryResult search(Set<QueryResultRow> baseResult,
+			Set<QueryResultRow> collocationConditionResult, int spanContextSize,
+			SpanDirection direction) {
+		QueryResultRowArray result = new QueryResultRowArray();
+		
+		for (QueryResultRow baseRow : baseResult) {
+			
+			SpanContext spanContext = getSpanContext(baseRow, spanContextSize, direction);
+			
+			if (spanContextContainsAny(spanContext, collocationConditionResult)) {
+				result.add(baseRow);
+			}
+		}
+		
+		return result;
+	}
+
+	private boolean spanContextContainsAny(SpanContext spanContext,
+			Set<QueryResultRow> collocationConditionResult) {
+		for (QueryResultRow row : collocationConditionResult) {
+			List<TermInfo> termInfos = getTermInfos(row);
+			if (spanContext.contains(termInfos)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private List<TermInfo> getTermInfos(QueryResultRow row) {
+		ArrayList<TermInfo> result = new ArrayList<>();
+		boolean withinRange = false;
+		
+		for (TermInfo termInfo : orderedTermInfos) {
+			if (termInfo.getRange().hasOverlappingRange(row.getRange())) {
+				result.add(termInfo);
+				withinRange = true;
+			}
+			else if (withinRange) {
+				return result;
+			}
+		}
+		
+		return result;
+	}
+
+	private SpanContext getSpanContext(QueryResultRow row, int spanContextSize,
+			SpanDirection direction) {
+		
+		SpanContext spanContext = new SpanContext(row.getSourceDocumentId());
+		ArrayList<TermInfo> backwardContext = new ArrayList<>(spanContextSize);
+		ArrayList<TermInfo> forwardContext = new ArrayList<>(spanContextSize);
+		
+		boolean withinRange = false;	
+		boolean outOfRange = false;
+		
+		for (TermInfo termInfo : orderedTermInfos) {
+			
+			if (termInfo.getRange().hasOverlappingRange(row.getRange())) {
+				withinRange = true;
+			}
+			else if (withinRange) {
+				outOfRange = true;
+			}
+			
+			if (!withinRange) {
+				if (backwardContext.size() == spanContextSize) {
+					backwardContext.remove(0);
+				}
+				backwardContext.add(termInfo);
+			}
+			
+			if (outOfRange) {
+				forwardContext.add(termInfo);
+				
+				if (forwardContext.size()==spanContextSize) {
+					break;
+				}
+			}
+			
+		}
+	
+		if (direction.equals(SpanDirection.BOTH) || direction.equals(SpanDirection.FORWARD)) {
+			spanContext.addForwardTokens(forwardContext);
+		}
+
+		if (direction.equals(SpanDirection.BOTH) || direction.equals(SpanDirection.BACKWARD)) {
+			Collections.reverse(backwardContext);
+			spanContext.addBackwardTokens(backwardContext);
+		}
+		
+		return spanContext;
+	}
+	
 }
