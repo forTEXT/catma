@@ -387,7 +387,8 @@ public class KwicPanel extends VerticalLayout {
 			
 			@Override
 			public String getStyle(Table source, Object itemId, Object propertyId) {
-				if (itemDirCache.get(itemId).booleanValue()) {
+				Boolean isRtl = itemDirCache.get(itemId);
+				if ((isRtl != null) && isRtl.booleanValue()) {
 					return "rtl-field";
 				}
 				return null;

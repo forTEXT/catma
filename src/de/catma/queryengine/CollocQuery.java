@@ -68,7 +68,7 @@ public class CollocQuery extends Query {
     }
 
     /**
-     * Constructor. ({@link de.catma.indexer.catma.queryengine.SpanDirection#Both both} directions are used as the span context)
+     * Constructor. ({@link de.catma.indexer.catma.queryengine.SpanDirection#BOTH both} directions are used as the span context)
      * @param query1 the definiton of the search term
      * @param query2 the defintion of the collocation term
      * @param spanContext the size of the context
@@ -76,7 +76,7 @@ public class CollocQuery extends Query {
      * or <code>null</code> for the default size.
      */
     public CollocQuery(Query query1, Query query2, String spanContext) {
-        this(query1, query2, spanContext, SpanDirection.Both);
+        this(query1, query2, spanContext, SpanDirection.BOTH);
     }
 
     @Override
@@ -85,7 +85,7 @@ public class CollocQuery extends Query {
     	QueryResult collocCondition = query2.execute();
     	
     	Indexer indexer = getQueryOptions().getIndexer();
-    	return indexer.searchCollocation(baseResult, collocCondition, spanContextSize, SpanDirection.Both);
+    	return indexer.searchCollocation(baseResult, collocCondition, spanContextSize, SpanDirection.BOTH);
 //    	}
 //    	else {
 //	    	Map<String,KwicProvider> kwicProviders = new HashMap<String, KwicProvider>(); 

@@ -81,8 +81,8 @@ class CollocationSearcher {
 				getTokensForRange(db, sourceDocumentId, keywordRange);
 		
 		if (tokensOfKeywordRange.size() > 0) {
-			if (direction.equals(SpanDirection.Both)
-					|| direction.equals(SpanDirection.Right)) {
+			if (direction.equals(SpanDirection.BOTH)
+					|| direction.equals(SpanDirection.FORWARD)) {
 				//forward
 				
 				int lastTokenOffset = 
@@ -101,8 +101,8 @@ class CollocationSearcher {
 				}
 			}
 			
-			if (direction.equals(SpanDirection.Both)
-					|| direction.equals(SpanDirection.Left)) {
+			if (direction.equals(SpanDirection.BOTH)
+					|| direction.equals(SpanDirection.BACKWARD)) {
 				int firstTokenOffset = 
 						tokensOfKeywordRange.get(0).getTokenOffset();
 

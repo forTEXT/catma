@@ -48,6 +48,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.Tree;
@@ -131,6 +132,8 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private IndexInfoSet indexInfoSet;
 	private boolean init = false;
 	private Label helpLabel;
+	private Component resultPanel;
+	private ProgressBar searchProgress;
 	
 	public AnalyzerView(
 			Corpus corpus, IndexedRepository repository, 
@@ -410,6 +413,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				job, 
 				new ExecutionListener<QueryResult>() {
 			public void done(QueryResult result) {
+				setSearchState(false);
 				phraseResultPanel.setQueryResult(result);
 				//TODO: lazy?!
 				try {
@@ -432,6 +436,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				}
 			};
 			public void error(Throwable t) {
+				setSearchState(false);
 				if (t instanceof QueryException) {
 					QueryJob.QueryException qe = (QueryJob.QueryException)t;
 		            String input = qe.getInput();
@@ -460,7 +465,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				}
 			}
 		});
-		
+		setSearchState(true);
 	}
 	
 	private List<String> getSourceDocumentIDs(
@@ -505,13 +510,24 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		
 		setExpandRatio(topPanel, 0.25f);
 		
-		Component resultPanel = createResultPanel();
+		resultPanel = createResultPanel();
 		resultPanel.setSizeFull();
 		
 		addComponent(resultPanel);
 		setExpandRatio(resultPanel, 0.75f);
 	}
 
+	private void setSearchState(boolean enabled) {
+		searchInput.setEnabled(!enabled);
+		btExecSearch.setEnabled(!enabled);
+		btQueryBuilder.setEnabled(!enabled);
+		btWordList.setEnabled(!enabled);
+		searchProgress.setIndeterminate(enabled);
+		searchProgress.setVisible(enabled);
+
+		resultPanel.setEnabled(!enabled);
+	}
+	
 	private Component createResultPanel() {
 		
 		resultTabSheet = new TabSheet();
@@ -646,6 +662,13 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		
 		searchPanel.addComponent(btExecSearch);
 		searchPanel.setComponentAlignment(btExecSearch, Alignment.BOTTOM_CENTER);
+		
+		searchProgress = new ProgressBar();
+		searchProgress.setIndeterminate(false);
+		searchProgress.setVisible(false);
+		
+		searchPanel.addComponent(searchProgress);
+		searchPanel.setComponentAlignment(searchProgress, Alignment.BOTTOM_CENTER);
 		
 		return searchPanel;
 	}

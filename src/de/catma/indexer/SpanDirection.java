@@ -26,13 +26,13 @@ package de.catma.indexer;
  *
  */
 public enum SpanDirection {
-	Left,
+	BACKWARD,
     /**
-     * Span at the right side of the keyword.
+     * Span of the keyword backward of read direction.
      */
-    Right,
+    FORWARD,
     /**
-     * Span at both sides of the keyword.
+     * Span of the keyword forward in read direction.
      */
-    Both;
+    BOTH;
 }
