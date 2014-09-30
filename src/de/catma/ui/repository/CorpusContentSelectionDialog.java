@@ -67,8 +67,12 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 	private List<UserMarkupCollectionReference> umcRefList;
 
 	public CorpusContentSelectionDialog(
-			SourceDocument sd, Corpus corpus, String treeTitle, SaveCancelListener<Corpus> listener) {
-		this(sd, corpus, treeTitle, listener, null);
+			SourceDocument sd, 
+			Corpus corpus, 
+			SaveCancelListener<Corpus> listener,
+			String windowCaption,
+			String documentsTreeCaption) {
+		this(sd, corpus, listener, windowCaption, documentsTreeCaption, null);
 	}
 	
 	public CorpusContentSelectionDialog(
@@ -221,7 +225,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		
 		cb.setValue(initialState);
 		cb.setImmediate(true);
-		cb.setEnabled(editable)
+		cb.setEnabled(editable);
 
 		return cb;
 	}

@@ -710,29 +710,32 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		final SourceDocument sd = selectedTab.getSourceDocument();
 		
 		CorpusContentSelectionDialog dialog =
-				new CorpusContentSelectionDialog(
-					sd,
-					null,
-					new SaveCancelListener<Corpus>() {
-						public void cancelPressed() {/* noop */}
-						public void savePressed(Corpus result) {
-							
-							List<UserMarkupCollectionReference> markupCollectionReferences = result.getUserMarkupCollectionRefs(sd);
-							
-							try {
-								for (UserMarkupCollectionReference umcRef : markupCollectionReferences) {
-									UserMarkupCollection userMarkupCollection = repository.getUserMarkupCollection(umcRef);									
-									openUserMarkupCollection(userMarkupCollection);
-									}
-								}
-							catch (IOException ioe) {
-								((CatmaApplication)UI.getCurrent()).showAndLogError(
-										"Error fetching user markup collections", ioe);
-							}							
+			new CorpusContentSelectionDialog(
+				sd,
+				null,
+				new SaveCancelListener<Corpus>() {
+					public void cancelPressed() {/* noop */}
+					public void savePressed(Corpus result) {
+						
+						List<UserMarkupCollectionReference> markupCollectionReferences = 
+								result.getUserMarkupCollectionRefs(sd);
+						
+						try {
+							for (UserMarkupCollectionReference umcRef 
+									: markupCollectionReferences) {
+								UserMarkupCollection userMarkupCollection = 
+										repository.getUserMarkupCollection(umcRef);									
+								openUserMarkupCollection(userMarkupCollection);
+							}
 						}
-					},
-					"Open Markup Collection(s)",
-					"Choose markup collections to open for this document");
+						catch (IOException ioe) {
+							((CatmaApplication)UI.getCurrent()).showAndLogError(
+									"Error fetching user markup collections", ioe);
+						}							
+					}
+				},
+				"Open Markup Collection(s)",
+				"Choose markup collections to open for this document");
 			dialog.show();
 	}
 

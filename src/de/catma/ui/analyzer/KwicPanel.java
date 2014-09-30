@@ -21,7 +21,6 @@ package de.catma.ui.analyzer;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -47,7 +46,6 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.document.Corpus;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
@@ -56,7 +54,6 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
@@ -68,7 +65,6 @@ import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToReversedTrimmedStringCIComparator;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.ui.repository.CorpusContentSelectionDialog;
 import de.catma.util.IDGenerator;
 
 public class KwicPanel extends VerticalLayout {
@@ -431,9 +427,9 @@ public class KwicPanel extends VerticalLayout {
 			kwicTable.addItem(
 				new Object[]{
 					sourceDocOrMarkupCollectionDisplay,
-					kwic.getLeftContext(),
+					kwic.getBackwardContext(),
 					kwic.getKeyword(),
-					kwic.getRightContext(),
+					kwic.getForwardContext(),
 					row.getRange().getStartPoint(),
 					row.getRange().getEndPoint()},
 					row);
