@@ -236,16 +236,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		
 		tagsetTree = 
 			new TagsetTree(
-				repository.getTagManager(), null, false, false, true, true, false, colorButtonListener); //TODO: withReloadButton = true
-		
-//		tagsetTree.addBtReloadListener(new ClickListener() {
-//
-//			public void buttonClick(ClickEvent event) {
-//				List<TagsetDefinition> tagsets = tagsetTree.getTagsetDefinitions();
-//				//TODO: reload tagsets
-//			}
-//			
-//		});
+				repository.getTagManager(), null, false, false, true, true, false, colorButtonListener); 
 		
 		tabContent.addComponent(tagsetTree);
 		tabContent.setExpandRatio(tagsetTree, 1.0f);
