@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.Range;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
@@ -38,7 +39,7 @@ import de.catma.tag.TagsetDefinition;
 public interface Indexer {
 
 	public void index(
-			SourceDocument sourceDocument) throws Exception;
+			SourceDocument sourceDocument, BackgroundService backgroundService) throws Exception;
 	
 	public void index(
 			List<TagReference> tagReferences,
@@ -55,6 +56,14 @@ public interface Indexer {
 			UserMarkupCollection userMarkupCollection) throws IOException;
 
 	
+	/**
+	 * @param documentIdList a list of SourceDocument {@link SourceDocument#getID() IDs}
+	 * @param phrase the phrase to search for
+	 * @param termList the terms of that phrase in writing order
+	 * @param limit a limit for the amount of result rows
+	 * @return occurrences of that phrase
+	 * @throws IOException
+	 */
 	public QueryResult searchPhrase(
 			List<String> documentIdList, 
 			String phrase, List<String> termList, int limit) throws IOException;

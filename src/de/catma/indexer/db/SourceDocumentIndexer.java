@@ -91,7 +91,6 @@ class SourceDocumentIndexer {
 					sourceDocument.getID(),
 					entry.getValue().size(),
 					entry.getKey());
-				System.out.println(entry.getKey());
 			}
 			
 			termInsertBatch.execute();

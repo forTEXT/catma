@@ -21,11 +21,13 @@ package de.catma.ui.analyzer;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import com.vaadin.data.Container;
 import com.vaadin.data.util.HierarchicalContainer;
@@ -38,11 +40,14 @@ import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.Table;
 import com.vaadin.ui.Table.Align;
+import com.vaadin.ui.Table.CellStyleGenerator;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.document.Corpus;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
@@ -51,6 +56,7 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
@@ -62,6 +68,7 @@ import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToReversedTrimmedStringCIComparator;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.repository.CorpusContentSelectionDialog;
 import de.catma.util.IDGenerator;
 
 public class KwicPanel extends VerticalLayout {
@@ -79,6 +86,7 @@ public class KwicPanel extends VerticalLayout {
 	private TreeTable kwicTable;
 	private boolean markupBased;
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
+	private WeakHashMap<Object, Boolean> itemDirCache = new WeakHashMap<>();
 
 	public KwicPanel(Repository repository, 
 			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider) {
@@ -101,26 +109,34 @@ public class KwicPanel extends VerticalLayout {
 			
 			public void itemClick(ItemClickEvent event) {
 				if (event.isDoubleClick()) {
-					QueryResultRow row = (QueryResultRow) event.getItemId();
-					SourceDocument sd = repository.getSourceDocument(
+					final QueryResultRow row = (QueryResultRow) event.getItemId();
+					final SourceDocument sd = repository.getSourceDocument(
 							row.getSourceDocumentId());
-					Range range = row.getRange();
+					final Range range = row.getRange();
 					
 					((CatmaApplication)UI.getCurrent()).openSourceDocument(
 							sd, repository, range);
 					
-					List<UserMarkupCollectionReference> relatedUmcRefs = 
-							relevantUserMarkupCollectionProvider.getCorpus().
-								getUserMarkupCollectionRefs(sd);
-					try {
-						for (UserMarkupCollectionReference ref : relatedUmcRefs) {
-							((CatmaApplication)UI.getCurrent()).openUserMarkupCollection(
-								sd, repository.getUserMarkupCollection(ref), repository);
+					if (row instanceof TagQueryResultRow) {
+						try {
+							final String umcId = 
+									((TagQueryResultRow)row).getMarkupCollectionId();
+							for (UserMarkupCollectionReference ref :
+								relevantUserMarkupCollectionProvider
+									.getCorpus().getUserMarkupCollectionRefs(sd)) {
+								
+								if (ref.getId().equals(umcId)) {
+									((CatmaApplication)UI.getCurrent()).openUserMarkupCollection(
+											sd, repository.getUserMarkupCollection(ref), repository);
+									break;
+								}
+								
+							}
 						}
-					}
-					catch (IOException e) {
-						((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"Error opening related User Markup Collection!", e);
+						catch (IOException e) {
+							((CatmaApplication)UI.getCurrent()).showAndLogError(
+								"Error opening related User Markup Collection!", e);
+						}			
 					}
 				}
 				
@@ -211,6 +227,7 @@ public class KwicPanel extends VerticalLayout {
 					Notification.show(
 							"Info", "The search results have been tagged!", 
 							Type.TRAY_NOTIFICATION);
+					//save map
 
 				} catch (URISyntaxException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -234,6 +251,8 @@ public class KwicPanel extends VerticalLayout {
 				}
 				else if (relevantUserMarkupCollectionProvider.getCorpus().getUserMarkupCollectionRefs().contains(umcRef)) {
 					initialTarget = umcRef;
+					// if contains map from last time
+					// initialTarget = map
 					break;
 				}
 			}
@@ -364,9 +383,20 @@ public class KwicPanel extends VerticalLayout {
 		kwicTable.addContainerProperty(
 				KwicPropertyName.endPoint, Integer.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.endPoint, "End Point");
-		
+
 		kwicTable.setPageLength(12); //TODO: config
 		kwicTable.setSizeFull();
+		
+		kwicTable.setCellStyleGenerator(new CellStyleGenerator() {
+			
+			@Override
+			public String getStyle(Table source, Object itemId, Object propertyId) {
+				if (itemDirCache.get(itemId).booleanValue()) {
+					return "rtl-field";
+				}
+				return null;
+			}
+		});
 		addComponent(kwicTable);
 	}
 
@@ -387,7 +417,7 @@ public class KwicPanel extends VerticalLayout {
 			}
 			
 			KwicProvider kwicProvider = kwicProviders.get(sourceDocument.getID());
-			KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), 5);
+			KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), 5);  //TODO: config
 			String sourceDocOrMarkupCollectionDisplay = 
 					sourceDocument.toString();
 			
@@ -396,6 +426,7 @@ public class KwicPanel extends VerticalLayout {
 					sourceDocument.getUserMarkupCollectionReference(
 						((TagQueryResultRow)row).getMarkupCollectionId()).getName();
 			}
+			itemDirCache.put(row, kwic.isRightToLeft());
 			
 			kwicTable.addItem(
 				new Object[]{

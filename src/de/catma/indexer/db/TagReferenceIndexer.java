@@ -263,7 +263,7 @@ public class TagReferenceIndexer {
 	
 	}
 	
-	void reindexProperty(TagInstance tagInstance, Property property) throws IOException {
+	public void reindexProperty(TagInstance tagInstance, Property property) throws IOException {
 		TransactionalDSLContext db = 
 				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 

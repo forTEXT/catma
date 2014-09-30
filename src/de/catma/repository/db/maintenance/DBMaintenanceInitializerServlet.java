@@ -1,17 +1,22 @@
 package de.catma.repository.db.maintenance;
 
 
+import java.util.Properties;
+
+import javax.naming.InitialContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobDataMap;
-import org.quartz.SchedulerException;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 
+import de.catma.document.repository.RepositoryPropertiesName;
+import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.quartz.JobInstaller;
+import de.catma.quartz.JobInstaller.JobDataKey;
 import de.catma.quartz.TriggerGroup;
 
 public class DBMaintenanceInitializerServlet extends HttpServlet {
@@ -23,12 +28,14 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 			
 			JobInstaller jobInstaller = new JobInstaller();
 			
-			
-			JobDataMap repoJobDataMap = new JobDataMap();
-			repoJobDataMap.put(JobInstaller.JobDataKey.PROPERTIES_PATH.name(), 
-					config.getServletContext().getRealPath("catma.properties"));
-			
+	        InitialContext context = new InitialContext();
+	        
+			Properties properties = 
+					(Properties) context.lookup(
+							RepositoryPropertiesName.CATMAPROPERTIES.name());
+			int repoIndex = 1; // assume that the first configured repo is the local db repo
 
+			JobDataMap repoJobDataMap = new JobDataMap();
 			jobInstaller.install(
 				DBRepoMaintenanceJob.class,
 				TriggerBuilder.newTrigger()
@@ -44,8 +51,15 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 			    repoJobDataMap);
 			
 			JobDataMap indexJobDataMap = new JobDataMap();
-			indexJobDataMap.put(JobInstaller.JobDataKey.PROPERTIES_PATH.name(), 
-					config.getServletContext().getRealPath("catma.properties"));
+
+			indexJobDataMap.put(
+					JobDataKey.SOURCEDOCIDXMAINTAIN.name(), 
+					RepositoryPropertyKey.SourceDocumentIndexMaintainer.getProperty(
+							properties, repoIndex));
+			indexJobDataMap.put(
+					JobDataKey.SOURCEDOCIDXMAINTAIN_MAXOBJ.name(), 
+					RepositoryPropertyKey.SourceDocumentIndexMaintainerMaxObjects.getProperty(
+							properties, repoIndex));
 			
 			jobInstaller.install(
 				DBIndexMaintenanceJob.class,
@@ -59,8 +73,8 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 			    .build(),
 			    indexJobDataMap);
 		}
-		catch (SchedulerException se) {
-			throw new ServletException(se);
+		catch (Exception e) {
+			throw new ServletException(e);
 		}
 		
 	}

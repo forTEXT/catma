@@ -2,7 +2,6 @@ package de.catma.heureclea;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -16,6 +15,8 @@ import java.util.Properties;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
+import javax.naming.InitialContext;
+
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 
@@ -23,6 +24,7 @@ import de.catma.backgroundservice.DefaultBackgroundServiceProvider;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
+import de.catma.document.repository.RepositoryPropertiesName;
 import de.catma.document.repository.RepositoryReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.SourceContentHandler;
@@ -36,16 +38,14 @@ public class HeurecleaExporter {
 	
 	private Logger logger = Logger.getLogger(HeurecleaExporter.class.getName());
 
-	private String fullPropertyFilePath;
-
-	public HeurecleaExporter(String fullPropertyFilePath) {
-		this.fullPropertyFilePath = fullPropertyFilePath;
+	public HeurecleaExporter() {
 	}
 	
 	public void export() throws IOException {
 		try {
-			Properties properties = new Properties();
-			properties.load(new FileInputStream(fullPropertyFilePath));
+			Properties properties = 
+					(Properties) new InitialContext().lookup(
+							RepositoryPropertiesName.CATMAPROPERTIES.name());
 			
 			String exportFolder = properties.getProperty("heurecleaExportFolder");
 			

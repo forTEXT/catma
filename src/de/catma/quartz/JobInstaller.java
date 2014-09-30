@@ -16,12 +16,14 @@ import org.quartz.impl.SchedulerRepository;
 public class JobInstaller {
 	
 	public static enum JobDataKey {
-		PROPERTIES_PATH,
 		REPO_TAGREF_OFFSET,
 		REPO_PROP_OFFSET,
 		IDX_TAGREF_OFFSET,
 		IDX_PROP_OFFSET,
-		FILE_CLEAN_OFFSET,
+		FILE_CLEAN_OFFSET, 
+		SOURCEDOCIDXMAINTAIN, 
+		SOURCEDOCIDXMAINTAIN_MAXOBJ, 
+		SOURCEDOCIDXMAINTAIN_OFFSET,
 		;
 	}
 	

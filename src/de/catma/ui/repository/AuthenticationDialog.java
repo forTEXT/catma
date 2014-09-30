@@ -39,6 +39,7 @@ import org.openid4java.message.ax.FetchRequest;
 import org.openid4java.message.ax.FetchResponse;
 
 import com.vaadin.server.ClassResource;
+import com.vaadin.server.DownloadStream;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.Page;
 import com.vaadin.server.RequestHandler;
@@ -80,13 +81,16 @@ public class AuthenticationDialog extends VerticalLayout {
 		private ParameterList openidResp;
 		private String signed;
 		private String sig;
+		private UI ui;
 
 		public AuthenticationRequestHandler(
+				UI ui, // UI.getCurrent() is not available during request handling, therefore we pass in the UI
 				String returnURL, ConsumerManager consumerManager,
 				DiscoveryInformation discovered, 
 				RepositoryReference repositoryReference,
 				RepositoryManager repositoryManager, Window dialogWindow, String handle) {
 			super();
+			this.ui = ui;
 			this.returnURL = returnURL;
 			logger.info("authentication dialog construction returnUrl: " + returnURL);
 			this.consumerManager = consumerManager;
@@ -153,7 +157,11 @@ public class AuthenticationDialog extends VerticalLayout {
 				
 				VaadinSession.getCurrent().removeRequestHandler(this);
 				
-				UI.getCurrent().removeWindow(dialogWindow);
+				if (ui == null) {
+					throw new NullPointerException("UI not available!");
+				}
+				
+				ui.removeWindow(dialogWindow);
 				
 				dialogWindow = null;
 				logger.info("verifying returnurl: " + returnURL);
@@ -199,22 +207,19 @@ public class AuthenticationDialog extends VerticalLayout {
 	                    
 	                    logger.info("opening repository for user: " + email);
 	                    
-	                    ((CatmaApplication)UI.getCurrent()).setUser(
+	                    ((CatmaApplication)ui).setUser(
 	                    		userIdentification);
 
 	                    Repository repository = 
                     		repositoryManager.openRepository(
                 				repositoryReference, userIdentification );
 	                    
-	                    ((CatmaApplication)UI.getCurrent()).openRepository(repository);
-	                  
+	                    ((CatmaApplication)ui).openRepository(repository);
+
+	                    new DownloadStream(
+	                    		ui.getPage().getLocation().toURL().openStream(), 
+	                    		"text/html", "CATMA 4.2").writeResponse(request, response);
 	                    return true;
-//	                    Page.getCurrent().setLocation(uri);
-//	                    response.getOutputStream().write(
-//	                    
-//	                    return new DownloadStream(
-//	                    		Page.getCurrent().getLocation().toURL().openStream(), 
-//	                    		"text/html", "CATMA 4");
 	                }
 				}
 				else {
@@ -233,7 +238,7 @@ public class AuthenticationDialog extends VerticalLayout {
 						"Error opening repository!", e);
 			}
 			
-			UI.getCurrent().close();
+			ui.close();
 			
 			return true;
 		}
@@ -291,12 +296,12 @@ public class AuthenticationDialog extends VerticalLayout {
 	public void attach() {
 		super.attach();
 		if (logInLink == null) {
-			logInLink = createLogInLink();
+			logInLink = createLogInLink(UI.getCurrent());
 			addComponent(logInLink, 0);
 		}
 	}
 
-	private Link createLogInLink() {
+	private Link createLogInLink(UI ui) {
 		try {
 			ConsumerManager consumerManager = new ConsumerManager();
 			
@@ -336,6 +341,7 @@ public class AuthenticationDialog extends VerticalLayout {
 			
 			final AuthenticationRequestHandler authenticationRequestHandler =
 					new AuthenticationRequestHandler(
+							ui,
 							returnURL, 
 							consumerManager, discovered, 
 							repositoryReference,

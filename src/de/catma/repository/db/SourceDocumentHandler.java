@@ -170,138 +170,121 @@ public class SourceDocumentHandler {
 	}
 
 	void insert(final SourceDocument sourceDocument) throws IOException {
-		
-		dbRepository.getBackgroundServiceProvider().submit(
-			"Adding Source Document...",
-			new DefaultProgressCallable<String>() {
-				public String call() throws Exception {
-					
-					TransactionalDSLContext db = new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
-					try {
-						ContentInfoSet contentInfoSet = 
-								sourceDocument.getSourceContentHandler()
-									.getSourceDocumentInfo().getContentInfoSet();
-						TechInfoSet techInfoSet = 
-								sourceDocument.getSourceContentHandler()
-									.getSourceDocumentInfo().getTechInfoSet();
-						IndexInfoSet indexInfoSet = 
-								sourceDocument.getSourceContentHandler()
-									.getSourceDocumentInfo().getIndexInfoSet();
-						
-						db.beginTransaction();
-						Integer sourceDocumentId = db
-						.insertInto(
-							SOURCEDOCUMENT,
-								SOURCEDOCUMENT.TITLE,
-								SOURCEDOCUMENT.PUBLISHER,
-								SOURCEDOCUMENT.AUTHOR,
-								SOURCEDOCUMENT.DESCRIPTION,
-								SOURCEDOCUMENT.SOURCEURI,
-								SOURCEDOCUMENT.FILETYPE,
-								SOURCEDOCUMENT.CHARSET,
-								SOURCEDOCUMENT.FILEOSTYPE,
-								SOURCEDOCUMENT.CHECKSUM,
-								SOURCEDOCUMENT.MIMETYPE,
-								SOURCEDOCUMENT.XSLTDOCUMENTLOCALURI,
-								SOURCEDOCUMENT.LOCALE,
-								SOURCEDOCUMENT.LOCALURI)
-						.values(
-							contentInfoSet.getTitle(),
-							contentInfoSet.getPublisher(),
-							contentInfoSet.getAuthor(),
-							contentInfoSet.getDescription(),
-							(techInfoSet.getURI().getScheme().equals("file")?null:
-								techInfoSet.getURI().toString()),
-							techInfoSet.getFileType().name(),
-							(techInfoSet.getCharset()==null)?null:techInfoSet.getCharset().toString(),
-							techInfoSet.getFileOSType().name(),
-							techInfoSet.getChecksum(),
-							techInfoSet.getMimeType(),
-							techInfoSet.getXsltDocumentLocalUri(),
-							indexInfoSet.getLocale().toString(),
-							sourceDocument.getID())
-						.returning(SOURCEDOCUMENT.SOURCEDOCUMENTID)
-						.fetchOne()
-						.map(new IDFieldToIntegerMapper(SOURCEDOCUMENT.SOURCEDOCUMENTID));
 
-						db
-						.insertInto(
-							USER_SOURCEDOCUMENT,
-								USER_SOURCEDOCUMENT.USERID,
-								USER_SOURCEDOCUMENT.SOURCEDOCUMENTID,
-								USER_SOURCEDOCUMENT.ACCESSMODE,
-								USER_SOURCEDOCUMENT.OWNER)
-						.values(
-							dbRepository.getCurrentUser().getUserId(),
-							sourceDocumentId,
-							AccessMode.WRITE.getNumericRepresentation(),
-							(byte)1)
-						.execute();
-						
-						for (Character udsc : 
-							indexInfoSet.getUserDefinedSeparatingCharacters()) {
-							db
-							.insertInto(
-								USERDEFINED_SEPARATINGCHARACTER,
-									USERDEFINED_SEPARATINGCHARACTER.CHR,
-									USERDEFINED_SEPARATINGCHARACTER.SOURCEDOCUMENTID)
-							.values(
-								String.valueOf(udsc),
-								sourceDocumentId)
-							.execute();
-						}
-						
-						for (String ucs : 
-							indexInfoSet.getUnseparableCharacterSequences()) {
-							db
-							.insertInto(
-								UNSEPARABLE_CHARSEQUENCE,
-									UNSEPARABLE_CHARSEQUENCE.CHARSEQUENCE,
-									UNSEPARABLE_CHARSEQUENCE.SOURCEDOCUMENTID)
-							.values(
-								ucs,
-								sourceDocumentId)
-							.execute();
-						}
-						
-						insertIntoFS(sourceDocument);
-						getProgressListener().setProgress(
-								"Indexing Source Document");
-						
-						db.commitTransaction();
-						dbRepository.getIndexer().index(sourceDocument);
-
-						return sourceDocument.getID();
-								
-					}
-					catch (Exception dae) {
-						db.rollbackTransaction();
-						db.close();
-						throw new IOException(dae);
-					}
-					finally {
-						if (db!=null) {
-							db.close();
-						}
-					}
-				}
-			},
-			new ExecutionListener<String>() {
-				public void done(String documentID) {
-					sourceDocumentsByID.put(
-							documentID, sourceDocument);
+		TransactionalDSLContext db = new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
+		try {
+			ContentInfoSet contentInfoSet = 
+					sourceDocument.getSourceContentHandler()
+						.getSourceDocumentInfo().getContentInfoSet();
+			TechInfoSet techInfoSet = 
+					sourceDocument.getSourceContentHandler()
+						.getSourceDocumentInfo().getTechInfoSet();
+			IndexInfoSet indexInfoSet = 
+					sourceDocument.getSourceContentHandler()
+						.getSourceDocumentInfo().getIndexInfoSet();
 			
-					dbRepository.getPropertyChangeSupport().firePropertyChange(
-							RepositoryChangeEvent.sourceDocumentChanged.name(),
-							null, sourceDocument.getID());
-				}
-				public void error(Throwable t) {
-					dbRepository.getPropertyChangeSupport().firePropertyChange(
-						RepositoryChangeEvent.exceptionOccurred.name(),
-						null, t);
-				}
+			db.beginTransaction();
+			Integer sourceDocumentId = db
+			.insertInto(
+				SOURCEDOCUMENT,
+					SOURCEDOCUMENT.TITLE,
+					SOURCEDOCUMENT.PUBLISHER,
+					SOURCEDOCUMENT.AUTHOR,
+					SOURCEDOCUMENT.DESCRIPTION,
+					SOURCEDOCUMENT.SOURCEURI,
+					SOURCEDOCUMENT.FILETYPE,
+					SOURCEDOCUMENT.CHARSET,
+					SOURCEDOCUMENT.FILEOSTYPE,
+					SOURCEDOCUMENT.CHECKSUM,
+					SOURCEDOCUMENT.MIMETYPE,
+					SOURCEDOCUMENT.XSLTDOCUMENTLOCALURI,
+					SOURCEDOCUMENT.LOCALE,
+					SOURCEDOCUMENT.LOCALURI)
+			.values(
+				contentInfoSet.getTitle(),
+				contentInfoSet.getPublisher(),
+				contentInfoSet.getAuthor(),
+				contentInfoSet.getDescription(),
+				(techInfoSet.getURI().getScheme().equals("file")?null:
+					techInfoSet.getURI().toString()),
+				techInfoSet.getFileType().name(),
+				(techInfoSet.getCharset()==null)?null:techInfoSet.getCharset().toString(),
+				techInfoSet.getFileOSType().name(),
+				techInfoSet.getChecksum(),
+				techInfoSet.getMimeType(),
+				techInfoSet.getXsltDocumentLocalUri(),
+				indexInfoSet.getLocale().toString(),
+				sourceDocument.getID())
+			.returning(SOURCEDOCUMENT.SOURCEDOCUMENTID)
+			.fetchOne()
+			.map(new IDFieldToIntegerMapper(SOURCEDOCUMENT.SOURCEDOCUMENTID));
+
+			db
+			.insertInto(
+				USER_SOURCEDOCUMENT,
+					USER_SOURCEDOCUMENT.USERID,
+					USER_SOURCEDOCUMENT.SOURCEDOCUMENTID,
+					USER_SOURCEDOCUMENT.ACCESSMODE,
+					USER_SOURCEDOCUMENT.OWNER)
+			.values(
+				dbRepository.getCurrentUser().getUserId(),
+				sourceDocumentId,
+				AccessMode.WRITE.getNumericRepresentation(),
+				(byte)1)
+			.execute();
+			
+			for (Character udsc : 
+				indexInfoSet.getUserDefinedSeparatingCharacters()) {
+				db
+				.insertInto(
+					USERDEFINED_SEPARATINGCHARACTER,
+						USERDEFINED_SEPARATINGCHARACTER.CHR,
+						USERDEFINED_SEPARATINGCHARACTER.SOURCEDOCUMENTID)
+				.values(
+					String.valueOf(udsc),
+					sourceDocumentId)
+				.execute();
 			}
-		);
+			
+			for (String ucs : 
+				indexInfoSet.getUnseparableCharacterSequences()) {
+				db
+				.insertInto(
+					UNSEPARABLE_CHARSEQUENCE,
+						UNSEPARABLE_CHARSEQUENCE.CHARSEQUENCE,
+						UNSEPARABLE_CHARSEQUENCE.SOURCEDOCUMENTID)
+				.values(
+					ucs,
+					sourceDocumentId)
+				.execute();
+			}
+			
+			insertIntoFS(sourceDocument);
+			
+			db.commitTransaction();
+			
+			dbRepository.getIndexer().index(
+				sourceDocument, 
+				dbRepository.getBackgroundServiceProvider().getBackgroundService());
+
+			sourceDocumentsByID.put(
+					sourceDocument.getID(), sourceDocument);
+			
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.sourceDocumentChanged.name(),
+					null, sourceDocument.getID());
+		}
+		catch (Exception e) {
+			db.rollbackTransaction();
+			db.close();
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, e);			}
+		finally {
+			if (db!=null) {
+				db.close();
+			}
+		}
 	}
 	
 	
@@ -378,42 +361,30 @@ public class SourceDocumentHandler {
 		final String publisher = contentInfoSet.getPublisher();
 		final String title = contentInfoSet.getTitle();
 		final String description = contentInfoSet.getDescription();
-		
-		dbRepository.getBackgroundServiceProvider().submit(
-				"Update Source Document...",
-				new DefaultProgressCallable<Void>() {
-					public Void call() throws Exception {
-						DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
-						getSourceDocumentAccess(db, localUri, true);
-
-						db
-						.update(SOURCEDOCUMENT)
-						.set(SOURCEDOCUMENT.AUTHOR, author)
-						.set(SOURCEDOCUMENT.TITLE, title)
-						.set(SOURCEDOCUMENT.DESCRIPTION, description)
-						.set(SOURCEDOCUMENT.PUBLISHER, publisher)
-						.where(SOURCEDOCUMENT.LOCALURI.eq(localUri))
-						.execute();
-						
-						return null;
-					}
-				},
-				new ExecutionListener<Void>() {
-					public void done(Void nothing) {
-						sourceDocument.getSourceContentHandler().getSourceDocumentInfo().setContentInfoSet(
-								contentInfoSet);
-						dbRepository.getPropertyChangeSupport().firePropertyChange(
-								RepositoryChangeEvent.sourceDocumentChanged.name(),
-								sourceDocument.getID(), sourceDocument);						
-					}
-					public void error(Throwable t) {
-						dbRepository.getPropertyChangeSupport().firePropertyChange(
-								RepositoryChangeEvent.exceptionOccurred.name(),
-								null, t);
-					}
-				}
-			);
-						
+		try {
+			DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+			getSourceDocumentAccess(db, localUri, true);
+	
+			db
+			.update(SOURCEDOCUMENT)
+			.set(SOURCEDOCUMENT.AUTHOR, author)
+			.set(SOURCEDOCUMENT.TITLE, title)
+			.set(SOURCEDOCUMENT.DESCRIPTION, description)
+			.set(SOURCEDOCUMENT.PUBLISHER, publisher)
+			.where(SOURCEDOCUMENT.LOCALURI.eq(localUri))
+			.execute();
+			
+			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().setContentInfoSet(
+					contentInfoSet);
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.sourceDocumentChanged.name(),
+					sourceDocument.getID(), sourceDocument);						
+		}
+		catch (Exception e) {
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, e);
+		}
 	}
 
 	void close() {
@@ -523,17 +494,16 @@ public class SourceDocumentHandler {
 			
 			db.commitTransaction();
 
-//			if (isOwner 
-//					&& (totalParticipants == 1)) {
-//				
-//				if (!removedUserMarkupCollectionIDs.isEmpty()) {
-//					dbRepository.getIndexer().removeUserMarkupCollections(
-//							removedUserMarkupCollectionIDs);
-//				}
-//				
-//				dbRepository.getIndexer().removeSourceDocument(
-//						sourceDocument.getID());
-//			}
+			if (totalParticipants == 1) {
+				
+				if (!removedUserMarkupCollectionIDs.isEmpty()) {
+					dbRepository.getIndexer().removeUserMarkupCollections(
+							removedUserMarkupCollectionIDs);
+				}
+				
+				dbRepository.getIndexer().removeSourceDocument(
+						sourceDocument.getID());
+			}
 			
 			sourceDocumentsByID.remove(sourceDocument.getID());
 			

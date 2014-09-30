@@ -199,3 +199,7 @@
 .tagger-manager-window .v-expand[style="padding-top: 53px;"] {
 	padding-top: 42px!important;
 }
+
+.v-table-cell-content-rtl-field {
+	direction: rtl;
+}

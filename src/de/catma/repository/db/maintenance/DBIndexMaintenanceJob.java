@@ -1,6 +1,5 @@
 package de.catma.repository.db.maintenance;
 
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,7 +27,8 @@ public class DBIndexMaintenanceJob implements Job {
 			int repoPropertyRowOffset = 0;     
 			int indexTagReferenceRowOffset = 0;
 			int indexPropertyRowOffset = 0;    
-
+			int sourceDocumentIndexMaintainerOffset=0;
+			
 			if (dataMap.containsKey(JobInstaller.JobDataKey.FILE_CLEAN_OFFSET.name())) {
 				fileCleanOffset = 
 					dataMap.getInt(JobInstaller.JobDataKey.FILE_CLEAN_OFFSET.name());
@@ -49,14 +49,31 @@ public class DBIndexMaintenanceJob implements Job {
 				indexPropertyRowOffset = 
 						dataMap.getInt(JobInstaller.JobDataKey.IDX_PROP_OFFSET.name());
 			}
+			if (dataMap.containsKey(JobInstaller.JobDataKey.SOURCEDOCIDXMAINTAIN_OFFSET.name())) {
+				sourceDocumentIndexMaintainerOffset = 
+						dataMap.getInt(JobInstaller.JobDataKey.SOURCEDOCIDXMAINTAIN_OFFSET.name());
+			}
+
+			String sourceDocumentIndexMaintainerClazzName = 
+					dataMap.getString(
+							JobInstaller.JobDataKey.SOURCEDOCIDXMAINTAIN.name());
+
+			SourceDocumentIndexMaintainer sourceDocumentIndexMaintainer = 
+					(SourceDocumentIndexMaintainer) Class.forName(
+							sourceDocumentIndexMaintainerClazzName, true, 
+							Thread.currentThread().getContextClassLoader()).newInstance();
+			
+			int sourceDocumentIndexMaintainerMaxObjectCount = 
+					dataMap.getInt(JobInstaller.JobDataKey.SOURCEDOCIDXMAINTAIN_MAXOBJ.name());
 			
 			DBIndexMaintainer dbIndexMaintainer = 
 					new DBIndexMaintainer(
-						dataMap.getString(
-								JobInstaller.JobDataKey.PROPERTIES_PATH.name()),
 						fileCleanOffset,
 						repoTagReferenceRowOffset, repoPropertyRowOffset, 
-						indexTagReferenceRowOffset, indexPropertyRowOffset);
+						indexTagReferenceRowOffset, indexPropertyRowOffset,
+						sourceDocumentIndexMaintainer,
+						sourceDocumentIndexMaintainerMaxObjectCount,
+						sourceDocumentIndexMaintainerOffset);
 			
 			dbIndexMaintainer.run();
 			
@@ -75,8 +92,10 @@ public class DBIndexMaintenanceJob implements Job {
 			dataMap.put(
 					JobInstaller.JobDataKey.IDX_PROP_OFFSET.name(), 
 					dbIndexMaintainer.getIndexPropertyRowOffset());
-
-		} catch (IOException e) {
+			dataMap.put(
+					JobInstaller.JobDataKey.SOURCEDOCIDXMAINTAIN_MAXOBJ.name(),
+					sourceDocumentIndexMaintainerOffset);
+		} catch (Exception e) {
 			logger.log(Level.SEVERE, "error executing DBIndexMaintenanceJob", e);
 		}
 		

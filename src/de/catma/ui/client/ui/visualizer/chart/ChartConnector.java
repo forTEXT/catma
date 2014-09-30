@@ -36,6 +36,11 @@ public class ChartConnector extends AbstractComponentConnector {
 			public void setYAxisExtremes(int min, int max) {
 				getWidget().setYAxisExtremes(min, max);
 			}
+			
+			@Override
+			public void setLenseZoom(double factor) {
+				getWidget().setLenseZoom(factor);
+			}
 		});
 	}
 	

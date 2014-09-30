@@ -8,4 +8,6 @@ public interface ChartClientRpc extends ClientRpc {
 	public void addSeries(String series);
 
 	public void setYAxisExtremes(int min, int max);
+	
+	public void setLenseZoom(double factor);
 }

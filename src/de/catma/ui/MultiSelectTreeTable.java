@@ -52,7 +52,6 @@ public class MultiSelectTreeTable extends TreeTable {
 //        }
 //	}
 
-
 	private Collection<?> getGapItemIds(Object startGapItemId,
 			Object endGapItemId) {
 		List<Object> gapItemIds = new ArrayList<Object>();

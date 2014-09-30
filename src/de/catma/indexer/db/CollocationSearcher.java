@@ -49,7 +49,7 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.repository.db.CatmaDataSourceName;
 
-public class CollocationSearcher {
+class CollocationSearcher {
 
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private DataSource dataSource;
