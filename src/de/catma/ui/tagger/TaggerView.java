@@ -38,7 +38,6 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
 import com.vaadin.ui.UI;
@@ -64,6 +63,7 @@ import de.catma.ui.Slider;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
+import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tagger.Tagger.TaggerListener;
 import de.catma.ui.tagger.pager.Pager;
@@ -296,7 +296,7 @@ public class TaggerView extends VerticalLayout
 							tagger.addTagInstanceWith(tagDefinition);
 						}
 						else {
-							Notification.show(
+							HTMLNotification.show(
 	                                "Information",
 	                                "Please select a User Markup Collection "
 	                                + " to store your markup first!<br>"
