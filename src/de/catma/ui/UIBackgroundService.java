@@ -34,7 +34,7 @@ public class UIBackgroundService implements BackgroundService {
                     try {
                         callable.setProgressListener( progressListener );
                         final T result = callable.call();
-                        if (UI.getCurrent().isAttached()) {
+                        if (UI.getCurrent() != null && UI.getCurrent().isAttached()) {
 	                        UI.getCurrent().access(new Runnable() {
 	                        	public void run() {
 	                        		listener.done(result);
@@ -47,7 +47,7 @@ public class UIBackgroundService implements BackgroundService {
                         	Logger.getLogger(
                         			getClass().getName()).log(
                         					Level.SEVERE, "error", t);
-                        	if (UI.getCurrent().isAttached()) {
+                        	if (UI.getCurrent() != null && UI.getCurrent().isAttached()) {
 	                            UI.getCurrent().access(new Runnable() {
 	                            	public void run() {
 	                            		listener.error(t);

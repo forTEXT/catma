@@ -29,13 +29,12 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.ComponentContainer;
-import com.vaadin.ui.GridLayout;
-import com.vaadin.ui.Label;
+import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.TextField;
 
 import de.catma.queryengine.querybuilder.WildcardBuilder;
 
-public class WordPanel extends GridLayout{
+public class WordPanel extends FormLayout {
 	
 	public static interface WordChangeListener {
 		public void wordChanged();
@@ -74,7 +73,6 @@ public class WordPanel extends GridLayout{
 	public WordPanel(
 			boolean withPositionBox, List<WordPanel> wordPanelList, 
 			ValueChangeListener valueChangeListener) {
-		super(2,withPositionBox?6:4);
 		this.wildcardBuilder = new WildcardBuilder();
 		this.withPositionBox = withPositionBox;
 		initComponents();
@@ -126,29 +124,26 @@ public class WordPanel extends GridLayout{
 		if (withPositionBox) {
 			next = " next ";
 		}
-		Label startsWithLabel = new Label("The"+next+"word starts with");
-		addComponent(startsWithLabel, 0, 0);
+
 		startsWithField = new TextField();
 		startsWithField.setImmediate(true);
-		addComponent(startsWithField, 1, 0);
+		startsWithField.setCaption("The"+next+"word starts with");
+		addComponent(startsWithField);
 		
-		Label containsLabel = new Label("The"+next+"word contains");
-		addComponent(containsLabel, 0, 1);
 		containsField = new TextField();
 		containsField.setImmediate(true);
-		addComponent(containsField, 1, 1);
+		containsField.setCaption("The"+next+"word contains");
+		addComponent(containsField);
 		
-		Label endsWithLabel = new Label("The"+next+"word ends with");
-		addComponent(endsWithLabel, 0, 2);
 		endsWithField = new TextField();
 		endsWithField.setImmediate(true);
-		addComponent(endsWithField, 1, 2);
+		endsWithField.setCaption("The"+next+"word ends with");
+		addComponent(endsWithField);
 		
-		Label exactLabel = new Label("The"+next+"word is exactly");
-		addComponent(exactLabel, 0, 3);
 		exactField = new TextField();
 		exactField.setImmediate(true);
-		addComponent(exactField, 1, 3);
+		exactField.setCaption("The"+next+"word is exactly");
+		addComponent(exactField);
 		
 		if (withPositionBox) {
 			List<PositionItem> options = new ArrayList<PositionItem>();
@@ -157,19 +152,17 @@ public class WordPanel extends GridLayout{
 					new PositionItem(
 						i, i+" word"+(i==1?"":"s")+" after the previous word"));
 			}
-			Label positionLabel = new Label("The position of this word is");
-			addComponent(positionLabel, 0, 4);
 			
 			positionBox =
-					new ComboBox("", options);
+					new ComboBox("The position of this word is", options);
 			positionBox.setImmediate(true);
-			addComponent(positionBox, 1, 4);
+			addComponent(positionBox);
 			positionBox.setNullSelectionAllowed(false);
 			positionBox.setNewItemsAllowed(false);
 			positionBox.setValue(options.get(0));
 			
 			btRemove = new Button("Remove");
-			addComponent(btRemove, 0, 5, 1, 5);
+			addComponent(btRemove);
 			setComponentAlignment(btRemove, Alignment.MIDDLE_CENTER);
 		}
 	}

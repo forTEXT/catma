@@ -159,11 +159,17 @@ public class CorpusPanel extends VerticalLayout {
 						corporaTree.markAsDirty();
 					}
 					else if (evt.getOldValue() instanceof Corpus) {
+						Object selectedValue = corporaTree.getValue();
 						Corpus oldCorpus = (Corpus) evt.getOldValue();
 						removeCorpusFromTree(oldCorpus);
 						Corpus newCorpus = (Corpus) evt.getNewValue();
 						addCorpusToTree(newCorpus);
-						corporaTree.setValue(newCorpus);
+						if (corporaTree.containsId(selectedValue)) {
+							corporaTree.setValue(selectedValue);
+						}
+						else if (!corporaTree.getItemIds().isEmpty()) {
+							corporaTree.setValue(corporaTree.getItemIds().iterator().next());
+						}
 					}
  				}
 			}
