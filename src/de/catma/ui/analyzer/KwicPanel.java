@@ -21,6 +21,7 @@ package de.catma.ui.analyzer;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -56,6 +57,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.KwicProvider;
 import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -83,6 +85,7 @@ public class KwicPanel extends VerticalLayout {
 	private boolean markupBased;
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
 	private WeakHashMap<Object, Boolean> itemDirCache = new WeakHashMap<>();
+	private int kwicSize = 5;
 
 	public KwicPanel(Repository repository, 
 			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider) {
@@ -344,10 +347,10 @@ public class KwicPanel extends VerticalLayout {
 								KwicPropertyName.keyword
 						},
 						new PropertyToTrimmedStringCIComparator());
-		//TODO: nonsense:
+		//TODO: split up context in separate columns to achieve true sortability
 		itemSorter.setPropertyComparator(
 			KwicPropertyName.leftContext, 
-			new PropertyToReversedTrimmedStringCIComparator());
+			new PropertyToTrimmedStringCIComparator());
 		
 		container.setItemSorter(itemSorter);
 		
@@ -380,7 +383,7 @@ public class KwicPanel extends VerticalLayout {
 				KwicPropertyName.endPoint, Integer.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.endPoint, "End Point");
 
-		kwicTable.setPageLength(12); //TODO: config
+//		kwicTable.setPageLength(12);
 		kwicTable.setSizeFull();
 		
 		kwicTable.setCellStyleGenerator(new CellStyleGenerator() {
@@ -414,7 +417,7 @@ public class KwicPanel extends VerticalLayout {
 			}
 			
 			KwicProvider kwicProvider = kwicProviders.get(sourceDocument.getID());
-			KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), 5);  //TODO: config
+			KeywordInContext kwic = kwicProvider.getKwic(row.getRange(), kwicSize);
 			String sourceDocOrMarkupCollectionDisplay = 
 					sourceDocument.toString();
 			
@@ -459,5 +462,14 @@ public class KwicPanel extends VerticalLayout {
 
 	public void selectAll() {
 		kwicTable.setValue(kwicTable.getItemIds());
+	}
+
+	@SuppressWarnings("unchecked")
+	public void setKwicSize(int kwicSize) throws IOException {
+		this.kwicSize = kwicSize;
+		QueryResultRowArray rows = new QueryResultRowArray();
+		rows.addAll((Collection<QueryResultRow>) kwicTable.getItemIds());
+		kwicTable.removeAllItems();
+		addQueryResultRows(rows);
 	}
 }

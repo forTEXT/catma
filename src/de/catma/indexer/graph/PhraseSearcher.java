@@ -103,7 +103,7 @@ public class PhraseSearcher {
 				return Evaluation.EXCLUDE_AND_CONTINUE;
 			}
 			else if (n.hasLabel(NodeType.Term)) {
-				System.out.println("E-Term " +  n.getProperty(TermProperty.literal.name()));
+//				System.out.println("E-Term " +  n.getProperty(TermProperty.literal.name()));
 				String literal = (String)n.getProperty(TermProperty.literal.name());
 
 				if(termMatcher.match(termList.get(0), literal)) {
@@ -114,7 +114,7 @@ public class PhraseSearcher {
 				}
 			}
 			else if (n.hasLabel(NodeType.Position)) {
-				System.out.println("E-Position " + n.getProperty(PositionProperty.literal.name()) + " @ " + n.getProperty(PositionProperty.position.name()));
+//				System.out.println("E-Position " + n.getProperty(PositionProperty.literal.name()) + " @ " + n.getProperty(PositionProperty.position.name()));
 				
 				String term = termList.get(path.length()-2);
 				String literal = (String) n.getProperty(PositionProperty.literal.name());

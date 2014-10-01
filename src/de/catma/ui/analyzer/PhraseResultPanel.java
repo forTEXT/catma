@@ -29,7 +29,6 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.server.ClassResource;
-import com.vaadin.server.ThemeResource;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -56,12 +55,14 @@ import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.Slider;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.export.CsvExport;
 import de.catma.ui.component.export.CsvExport.CsvExportException;
 import de.catma.ui.component.export.HierarchicalExcelExport;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
+import de.catma.util.StopWatch;
 
 public class PhraseResultPanel extends VerticalLayout {
 	
@@ -77,7 +78,6 @@ public class PhraseResultPanel extends VerticalLayout {
 	private KwicPanel kwicPanel;
 	private GroupedQueryResultSelectionListener resultSelectionListener;
 	private Button btDist;
-	private boolean init = false;
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
 	private Button btSelectAll;
 	private Button btDeselectAll;
@@ -88,6 +88,7 @@ public class PhraseResultPanel extends VerticalLayout {
 	private Button btCsvExport;
 	private Table hiddenFlatTable;
 	private Button btSelectAllKwic;
+	private Slider kwicSizeSlider;
 	
 	public PhraseResultPanel(
 			Repository repository, 
@@ -96,18 +97,10 @@ public class PhraseResultPanel extends VerticalLayout {
 		this.repository = repository;
 		this.resultSelectionListener = resultSelectionListener;
 		this.relevantUserMarkupCollectionProvider = relevantUserMarkupCollectionProvider;
+		initComponents();
+		initActions();
 	}
 	
-	@Override
-	public void attach() {
-		super.attach();
-		if (!init) {
-			initComponents();
-			initActions();
-			init = true;
-		}
-	}
-
 	private void initActions() {
 		btDoubleTree.addClickListener(new ClickListener() {
 			
@@ -271,6 +264,21 @@ public class PhraseResultPanel extends VerticalLayout {
 				}
 			}
 		});
+		
+		kwicSizeSlider.addValueListener(new ValueChangeListener() {
+			
+			@Override
+			public void valueChange(ValueChangeEvent event) {
+				try {
+					Double kwicSize = (Double) event.getProperty().getValue();
+					kwicPanel.setKwicSize(kwicSize.intValue());
+				}
+				catch (IOException e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+							"Error adjusting KWIC size!", e);
+				}
+			}
+		});
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -355,7 +363,6 @@ public class PhraseResultPanel extends VerticalLayout {
 		resultTable.setColumnHeader(TreePropertyName.visibleInKwic, "Visible in Kwic");
 		
 		resultTable.setItemCaptionPropertyId(TreePropertyName.caption);
-		resultTable.setPageLength(10); //TODO: config
 		resultTable.setSizeFull();
 		
 		leftComponent.addComponent(resultTable);
@@ -435,6 +442,11 @@ public class PhraseResultPanel extends VerticalLayout {
 		kwicButtonPanel.setComponentAlignment(
 				btKwicCsvExport, Alignment.MIDDLE_LEFT);
 
+		kwicSizeSlider = new Slider(null, 1, 30, "token(s) context");
+		kwicSizeSlider.setValue(5.0);
+		kwicButtonPanel.addComponent(kwicSizeSlider);
+		kwicButtonPanel.setComponentAlignment(
+				kwicSizeSlider, Alignment.MIDDLE_LEFT);
 		
 		btSelectAllKwic = new Button("Select all");
 		kwicButtonPanel.addComponent(btSelectAllKwic);
@@ -476,15 +488,15 @@ public class PhraseResultPanel extends VerticalLayout {
 	public void setQueryResult(QueryResult queryResult) {
 		kwicPanel.clear();
 		resultTable.removeAllItems();
+
 		int totalCount = 0;
 		int totalFreq = 0;
-		
+
 		for (GroupedQueryResult phraseResult : queryResult.asGroupedSet()) { 
 			addPhraseResult(phraseResult);
 			totalFreq+=phraseResult.getTotalFrequency();
 			totalCount++;
 		}
-		
 		resultTable.setFooterVisible(true);
 		resultTable.setColumnFooter(
 				TreePropertyName.caption, "Total count: " + totalCount);
@@ -501,32 +513,34 @@ public class PhraseResultPanel extends VerticalLayout {
 					createKwicCheckbox(phraseResult) 
 				},
 				phraseResult);
-
 		resultTable.getContainerProperty(
 			phraseResult, TreePropertyName.caption).setValue(
 					phraseResult.getGroup().toString());
-
+		
 		for (String sourceDocumentID : phraseResult.getSourceDocumentIDs()) {
 			SourceDocument sourceDocument = 
 					repository.getSourceDocument(sourceDocumentID);
+			
 			SourceDocumentItemID sourceDocumentItemID = 
 					new SourceDocumentItemID(
 							phraseResult.getGroup() 
 								+ "@" + sourceDocument, 
 							sourceDocumentID);
-			
+
 			resultTable.addItem(sourceDocumentItemID);
+
 			resultTable.getContainerProperty(
 					sourceDocumentItemID, TreePropertyName.frequency).setValue(
 							phraseResult.getFrequency(sourceDocumentID));
+			
 			resultTable.getContainerProperty(
 					sourceDocumentItemID, TreePropertyName.caption).setValue(
 							sourceDocument.toString());
+
 			resultTable.setParent(sourceDocumentItemID, phraseResult);
 			
 			resultTable.setChildrenAllowed(sourceDocumentItemID, false);
 		}
-		
 	}
 
 	private CheckBox createKwicCheckbox(final GroupedQueryResult phraseResult) {

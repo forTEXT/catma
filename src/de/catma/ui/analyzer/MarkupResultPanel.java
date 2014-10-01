@@ -36,7 +36,6 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.server.ClassResource;
-import com.vaadin.server.ThemeResource;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -55,7 +54,6 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.queryengine.result.AccumulativeGroupedQueryResult;
@@ -66,8 +64,8 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.tag.TagDefinition;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.Slider;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.component.export.CsvExport;
 import de.catma.ui.component.export.CsvExport.CsvExportException;
@@ -237,6 +235,7 @@ public class MarkupResultPanel extends VerticalLayout {
 	private boolean resetColumns = false;
 	private QueryResult curQueryResult;
 	private Button btSelectAllKwic;
+	private Slider kwicSizeSlider;
 	
 	public MarkupResultPanel(
 			Repository repository, 
@@ -415,6 +414,21 @@ public class MarkupResultPanel extends VerticalLayout {
 				}
 			}
 		});
+		
+		kwicSizeSlider.addValueListener(new ValueChangeListener() {
+			
+			@Override
+			public void valueChange(ValueChangeEvent event) {
+				try {
+					Double kwicSize = (Double) event.getProperty().getValue();
+					kwicPanel.setKwicSize(kwicSize.intValue());
+				}
+				catch (IOException e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+							"Error adjusting KWIC size!", e);
+				}
+			}
+		});
 	}
 	
 	private void handleCbFlatTableRequest() {
@@ -551,7 +565,6 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 		resultTable.setContainerDataSource(container);
 		setupContainerProperties();
-		resultTable.setPageLength(10); //TODO: config
 		resultTable.setSizeFull();
 		
 		//TODO: a description generator that shows the version of a Tag
@@ -648,6 +661,11 @@ public class MarkupResultPanel extends VerticalLayout {
 		kwicButtonPanel.setComponentAlignment(
 				btKwicCsvExport, Alignment.MIDDLE_LEFT);
 		
+		kwicSizeSlider = new Slider(null, 1, 30, "token(s) context");
+		kwicSizeSlider.setValue(5.0);
+		kwicButtonPanel.addComponent(kwicSizeSlider);
+		kwicButtonPanel.setComponentAlignment(
+				kwicSizeSlider, Alignment.MIDDLE_LEFT);
 
 		btSelectAllKwic = new Button("Select all");
 		kwicButtonPanel.addComponent(btSelectAllKwic);

@@ -203,3 +203,8 @@
 .v-table-cell-content-rtl-field {
 	direction: rtl;
 }
+
+
+.hidden-caption-c-slider .v-caption-c-clider {
+	display: none;
+}

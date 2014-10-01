@@ -18,6 +18,9 @@
  */
 package de.catma.ui;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Alignment;
@@ -32,15 +35,31 @@ public class Slider extends VerticalLayout {
 	private com.vaadin.ui.Slider sliderComp;
 	private Label minLabel;
 	private Label maxLabel;
+	private NumberFormat formatter;
 	
-	public Slider(String caption, int min, int max, final String unit) {
+	public Slider(String caption, int min, int max, String unit) {
+		this(caption, min, max, unit, new DecimalFormat("#"));
+	}
+	
+	/**
+	 * @param caption a caption above the slider
+	 * @param min minimum context
+	 * @param max maximum context
+	 * @param unit description of the unit, displayed next to the current value
+	 */
+	public Slider(String caption, int min, int max, final String unit, NumberFormat formatter) {
+		addStyleName("c-slider");
+		if (caption == null) {
+			addStyleName("hidden-caption-c-slider");
+		}
 		this.setCaption(caption);
+		this.formatter = formatter;
 		setSizeUndefined();
 		HorizontalLayout sliderLayout = new HorizontalLayout();
 		sliderLayout.setSpacing(true);
 		this.sliderComp = new com.vaadin.ui.Slider(min, max);
-		minLabel = new Label(String.valueOf(min));
-		maxLabel = new Label(String.valueOf(max));
+		minLabel = new Label(formatter.format(min));
+		maxLabel = new Label(formatter.format(max));
 		
 		sliderLayout.addComponent(minLabel);
 		sliderLayout.addComponent(sliderComp);
@@ -49,7 +68,7 @@ public class Slider extends VerticalLayout {
 		addComponent(sliderLayout);
 		setComponentAlignment(sliderLayout, Alignment.MIDDLE_CENTER);
 		
-		final Label current = new Label(sliderComp.getValue().toString());
+		final Label current = new Label(formatter.format(sliderComp.getValue()));
 		current.setWidth("100%");
 		
 		current.addStyleName("slider-centered-text");
@@ -61,7 +80,10 @@ public class Slider extends VerticalLayout {
 			
 			public void valueChange(ValueChangeEvent event) {
 				current.setValue(
-					event.getProperty().getValue() + (unit.isEmpty()?"":" ") + unit);
+					Slider.this.formatter.format(
+						(Double)event.getProperty().getValue())
+						+ (unit.isEmpty()?"":" ") 
+						+ unit);
 			}
 		});
 		
@@ -69,12 +91,12 @@ public class Slider extends VerticalLayout {
 
 	public void setMax(double max) {
 		sliderComp.setMax(max);
-		maxLabel.setValue(String.valueOf(max));
+		maxLabel.setValue(formatter.format(max));
 	}
 
 	public void setMin(double min) {
 		sliderComp.setMin(min);
-		minLabel.setValue(String.valueOf(min));
+		minLabel.setValue(formatter.format(min));
 	}
 
 	public void setResolution(int resolution) {
@@ -94,7 +116,6 @@ public class Slider extends VerticalLayout {
 	}
 
 	public void setImmediate(boolean immediate) {
-		super.setImmediate(immediate);
 		sliderComp.setImmediate(immediate);
 	}
 	

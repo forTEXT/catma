@@ -88,6 +88,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	static interface CloseListener {
 		public void closeRequest(AnalyzerView analyzerView);
 	}
+	
 	private DistributionSelectionListener distributionSelectionListener = new DistributionSelectionListener() {
 		@Override
 		public void queryResultRowsSelected(String label,
@@ -97,9 +98,12 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				if (!rows.isEmpty()) {
 					markupBased = (rows.get(0) instanceof TagQueryResultRow);
 				}
-				KwicPanel kwicPanel = new KwicPanel(repository, AnalyzerView.this, markupBased);
+				KwicPanel kwicPanel = 
+						new KwicPanel(repository, AnalyzerView.this, markupBased);
 				kwicPanel.addQueryResultRows(rows);
-				new KwicWindow("KWIC for " + label + " at chunk " + x + " (" + y + " occurrences)", kwicPanel).show();
+				new KwicWindow(
+						"KWIC for " + label + " at chunk " + 
+						x + " (" + y + " occurrences)", kwicPanel).show();
 			}
 			catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -415,7 +419,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			public void done(QueryResult result) {
 				setSearchState(false);
 				phraseResultPanel.setQueryResult(result);
-				//TODO: lazy?!
+				
 				try {
 					markupResultPanel.setQueryResult(result);
 				} catch (IOException e) {
