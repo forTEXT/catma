@@ -27,6 +27,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.util.Collection;
 
@@ -85,6 +86,7 @@ import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.source.contenthandler.SourceContentHandler;
+import de.catma.document.source.contenthandler.XMLContentHandler;
 import de.catma.document.standoffmarkup.MarkupCollectionReference;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
@@ -93,6 +95,7 @@ import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
 import de.catma.indexer.graph.CatmaGraphDbName;
+import de.catma.serialization.intrinsic.xml.XmlMarkupCollectionSerializationHandler;
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
@@ -116,10 +119,15 @@ import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
+@SuppressWarnings("deprecation")
 public class SourceDocumentPanel extends HorizontalSplitPanel
 	implements ValueChangeListener {
 	
 	private final static String SORTCAP_PROP = "SORTCAP";
+	private final static Object[] DEFAULT_VISIBIL_PROP = new Object[] {
+		"title", "author", "description", "publisher"
+	};
+	
 	private final ContentInfoSet emptyContentInfoSet = new ContentInfoSet();
 	private HierarchicalContainer documentsContainer;
 	private Tree documentsTree;
@@ -245,7 +253,12 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 								boolean generateStarterKit = 
 										repository.getSourceDocuments().isEmpty();
 								try {
-									repository.insert(wizardResult.getSourceDocument());
+									SourceDocument sourceDocument = wizardResult.getSourceDocument();
+									repository.insert(sourceDocument);
+									if (sourceDocument.getSourceContentHandler().hasIntrinsicMarkupCollection()) {
+										handleIntrinsicMarkupCollection(sourceDocument);
+									}
+									
 									if (generateStarterKit) {
 										generateStarterKit(wizardResult.getSourceDocument());
 									}
@@ -1076,6 +1089,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	}
 
 
+	@SuppressWarnings("unchecked")
 	private void addSourceDocumentToTree(SourceDocument sd) {
 		
 		documentsContainer.removeAllContainerFilters();
@@ -1183,9 +1197,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		BeanItem<ContentInfoSet> contentInfoItem = 
 				new BeanItem<ContentInfoSet>(emptyContentInfoSet);
 		contentInfoForm.setItemDataSource(contentInfoItem);
-		contentInfoForm.setVisibleItemProperties(new String[] {
-				"title", "author", "description", "publisher"
-		});
+		contentInfoForm.setVisibleItemProperties(DEFAULT_VISIBIL_PROP);
 		
 		contentInfoForm.setReadOnly(true);
 		contentInfoPanelContent.addComponent(contentInfoForm);
@@ -1294,7 +1306,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				public void cancelPressed() {}
 				public void savePressed(
 						PropertysetItem propertysetItem) {
-					Property property = 
+					Property<?> property = 
 							propertysetItem.getItemProperty(
 									userMarkupCollectionNameProperty);
 					String name = (String)property.getValue();
@@ -1348,9 +1360,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					new BeanItem<ContentInfoSet>(
 						new ContentInfoSet(((SourceDocument)value).getSourceContentHandler()
 							.getSourceDocumentInfo().getContentInfoSet())));
-				contentInfoForm.setVisibleItemProperties(new String[] {
-						"title", "author", "description", "publisher"
-				});
+				contentInfoForm.setVisibleItemProperties(DEFAULT_VISIBIL_PROP);
 
 				btOpenDocument.setCaption("Open Document");
 				btOpenDocument.setEnabled(true);
@@ -1366,9 +1376,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 							new ContentInfoSet(
 								((UserMarkupCollectionReference)value)
 									.getContentInfoSet())));
-					contentInfoForm.setVisibleItemProperties(new String[] {
-							"title", "author", "description", "publisher"
-					});
+					contentInfoForm.setVisibleItemProperties(DEFAULT_VISIBIL_PROP);
 
 				}
 				else {
@@ -1380,9 +1388,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				contentInfoForm.setEnabled(false);
 				contentInfoForm.setItemDataSource(
 						new BeanItem<ContentInfoSet>(emptyContentInfoSet));
-				contentInfoForm.setVisibleItemProperties(new String[] {
-						"title", "author", "description", "publisher"
-				});
+				contentInfoForm.setVisibleItemProperties(DEFAULT_VISIBIL_PROP);
 
 				btOpenDocument.setEnabled(false);
 			}
@@ -1392,9 +1398,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			contentInfoForm.setEnabled(false);
 			contentInfoForm.setItemDataSource(
 					new BeanItem<ContentInfoSet>(emptyContentInfoSet));
-			contentInfoForm.setVisibleItemProperties(new String[] {
-					"title", "author", "description", "publisher"
-			});
+			contentInfoForm.setVisibleItemProperties(DEFAULT_VISIBIL_PROP);
 			btOpenDocument.setEnabled(false);
 		}
 		contentInfoForm.setReadOnly(true);
@@ -1423,5 +1427,32 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				documentsTree.setValue(null);
 			}
 		}
+	}
+	
+	private void handleIntrinsicMarkupCollection(
+			SourceDocument sourceDocument) throws MalformedURLException, IOException {
+		//only XML supported so far
+		if (sourceDocument.getSourceContentHandler() instanceof XMLContentHandler) {
+			XmlMarkupCollectionSerializationHandler xmlMarkupCollectionSerializationHandler = 
+				new XmlMarkupCollectionSerializationHandler(
+					repository.getTagManager(), 
+					sourceDocument.getID(),
+					(XMLContentHandler)sourceDocument.getSourceContentHandler());
+			
+			try (InputStream is = 
+				sourceDocument.getSourceContentHandler()
+				.getSourceDocumentInfo()
+				.getTechInfoSet()
+				.getURI()
+				.toURL()
+				.openStream()) {
+				repository.importUserMarkupCollection(
+					is, 
+					sourceDocument, 
+					xmlMarkupCollectionSerializationHandler);
+			}
+			
+		}
+		
 	}
 }

@@ -62,8 +62,8 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	private SourceDocumentInfo sourceDocumentInfo;
 	private byte[] currentByteContent;
 	private Label taPreview;
-	private UploadPanel uploadPanel;
-	private Label uploadLabel;
+//	private UploadPanel uploadPanel;
+//	private Label uploadLabel;
 	private Panel previewPanel;
 	private WizardStepListener wizardStepListener;
 	private AddSourceDocWizardResult wizardResult;
@@ -98,7 +98,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			
 			sourceDocumentInfo.setContentInfoSet(new ContentInfoSet());
 			setVisiblePreviewComponents(false);
-			setVisibleXSLTInputComponents(false);
+//			setVisibleXSLTInputComponents(false);
 			
 			ProtocolHandler protocolHandler = null;
 			if (sourceDocURI.toURL().getProtocol().toLowerCase().equals("http")) {
@@ -256,10 +256,10 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		addComponent(fileEncodingTree, 0, 1);
 		addComponent(previewPanel, 1, 1);
 		
-		this.uploadLabel = new Label("Upload the corresponding XSLT file:");
-		this.uploadPanel = new UploadPanel();
-		addComponent(uploadLabel, 0, 2, 1, 2);
-		addComponent(uploadPanel, 0, 3, 1, 3);
+//		this.uploadLabel = new Label("Upload the corresponding XSLT file:");
+//		this.uploadPanel = new UploadPanel();
+//		addComponent(uploadLabel, 0, 2, 1, 2);
+//		addComponent(uploadPanel, 0, 3, 1, 3);
 
 		setColumnExpandRatio(1, 1);
 		
@@ -293,21 +293,21 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 				(FileType)cbFileType.getValue());
 		switch(sourceDocumentInfo.getTechInfoSet().getFileType()) {
 			case TEXT : {
-				setVisibleXSLTInputComponents(false);
+//				setVisibleXSLTInputComponents(false);
 				setVisiblePreviewComponents(true);
 				fileEncodingTree.setVisible(true);
 				showPreview();
 				onAdvance = true;
 				break;
 			}
-			case XML : {
-				setVisiblePreviewComponents(false);
-				setVisibleXSLTInputComponents(true);
-				onAdvance = false;
-				break;
-			}
+//			case XML : {
+//				setVisiblePreviewComponents(false);
+////				setVisibleXSLTInputComponents(true);
+//				onAdvance = false;
+//				break;
+//			}
 			default : {
-				setVisibleXSLTInputComponents(false);
+//				setVisibleXSLTInputComponents(false);
 				setVisiblePreviewComponents(true);
 				fileEncodingTree.setVisible(false);
 				showPreview();
@@ -317,11 +317,11 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		wizardStepListener.stepChanged(FileTypePanel.this);
 	}
 	
-	private void setVisibleXSLTInputComponents(boolean visible) {
-		uploadLabel.setVisible(visible);
-		uploadPanel.setVisible(visible);
-	}
-	
+//	private void setVisibleXSLTInputComponents(boolean visible) {
+//		uploadLabel.setVisible(visible);
+//		uploadPanel.setVisible(visible);
+//	}
+//	
 	private void setVisiblePreviewComponents(boolean visible) {
 		previewPanel.setVisible(visible);
 		if (visible) {

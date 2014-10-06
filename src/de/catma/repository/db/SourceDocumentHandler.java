@@ -64,8 +64,6 @@ import org.jooq.impl.DSL;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
-import de.catma.backgroundservice.DefaultProgressCallable;
-import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.ContentInfoSet;
@@ -151,6 +149,11 @@ public class SourceDocumentHandler {
 				CloseSafe.close(sourceTempFileStream);
 				CloseSafe.close(repoSourceFileOutputStream);
 			}
+			
+			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().setURI(
+					new URI(
+						new FileURLFactory().getFileURL(sourceDocument.getID(), 
+						sourceDocsPath)));
 			
 			sourceTempFile.delete();
 		}

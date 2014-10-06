@@ -1332,7 +1332,6 @@ class TagLibraryHandler {
 		catch (Exception e) {
 			db.rollbackTransaction();
 			db.close();
-			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
 					RepositoryChangeEvent.exceptionOccurred.name(),
 					null, 

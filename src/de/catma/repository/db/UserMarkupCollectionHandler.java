@@ -201,11 +201,19 @@ class UserMarkupCollectionHandler {
 	
 	void importUserMarkupCollection(InputStream inputStream,
 			final SourceDocument sourceDocument) throws IOException {
-		dbRepository.setTagManagerListenersEnabled(false);
-
 		UserMarkupCollectionSerializationHandler userMarkupCollectionSerializationHandler = 
 				dbRepository.getSerializationHandlerFactory().getUserMarkupCollectionSerializationHandler();
+		importUserMarkupCollection(inputStream, sourceDocument, userMarkupCollectionSerializationHandler);
+	}
+	
+	void importUserMarkupCollection(
+			InputStream inputStream,
+			final SourceDocument sourceDocument, 
+			UserMarkupCollectionSerializationHandler userMarkupCollectionSerializationHandler) 
+					throws IOException {
 		
+		dbRepository.setTagManagerListenersEnabled(false);
+
 		final UserMarkupCollection umc =
 				userMarkupCollectionSerializationHandler.deserialize(null, inputStream);
 

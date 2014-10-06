@@ -67,6 +67,7 @@ import de.catma.repository.db.jooq.TransactionalDSLContext;
 import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
 import de.catma.repository.db.mapper.UserMapper;
 import de.catma.serialization.SerializationHandlerFactory;
+import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -261,6 +262,10 @@ public class DBRepository implements IndexedRepository {
 		userDefinedPropertyChangedListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
+				
+				if (!tagManagerListenersEnabled) {
+					return;
+				}
 				Object oldValue = evt.getOldValue();
 				Object newValue = evt.getNewValue();
 
@@ -521,6 +526,15 @@ public class DBRepository implements IndexedRepository {
 			throws IOException {
 		dbUserMarkupCollectionHandler.importUserMarkupCollection(
 				inputStream, sourceDocument);
+	}
+	
+	public void importUserMarkupCollection(
+			InputStream inputStream,
+			final SourceDocument sourceDocument, 
+			UserMarkupCollectionSerializationHandler userMarkupCollectionSerializationHandler) 
+					throws IOException {
+		dbUserMarkupCollectionHandler.importUserMarkupCollection(
+				inputStream, sourceDocument, userMarkupCollectionSerializationHandler);
 	}
 	
 	/* (non-Javadoc)
