@@ -161,7 +161,9 @@ public class XmlMarkupCollectionSerializationHandler implements
 		if (element.getChildCount() == 0) {
 			xmlContentHandler.addEmptyElement(contentBuilder, element);
 		}
-        
+		else {
+			xmlContentHandler.addBreak(contentBuilder, element);
+		}
         int end = contentBuilder.length();
         Range range = new Range(start,end);
 
