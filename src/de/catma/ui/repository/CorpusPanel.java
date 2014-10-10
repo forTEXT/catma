@@ -59,6 +59,8 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
 
+import de.catma.backgroundservice.BackgroundServiceProvider;
+import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
 import de.catma.document.corpus.CorpusExporter;
 import de.catma.document.repository.Repository;
@@ -66,6 +68,8 @@ import de.catma.document.repository.UnknownUserException;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.heureclea.autotagger.AnnotationGeneratorJob;
+import de.catma.heureclea.autotagger.GenerationOptions;
 import de.catma.indexer.IndexedRepository;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzer.AnalyzerProvider;
@@ -127,6 +131,8 @@ public class CorpusPanel extends VerticalLayout {
 	private MenuItem miShareCorpus;
 
 	private MenuItem miExportCorpus;
+
+	private MenuItem miGenerateCorpusAnnotations;
 	
 	public CorpusPanel(
 			Repository repository, ValueChangeListener valueChangeListener) {
@@ -337,11 +343,59 @@ public class CorpusPanel extends VerticalLayout {
 				}
 			}
 		});
-		
 		miExportCorpus.setVisible(repository.getUser().getRole().equals(Role.ADMIN));
 		miExportCorpus.setEnabled(false);
+		
+		miGenerateCorpusAnnotations = miMoreCorpusActions.addItem(
+				"Generate annotations", new Command() {
+			@Override
+			public void menuSelected(MenuItem selectedItem) {
+				Object selectedValue = corporaTree.getValue();
+				if ((selectedValue != null) 
+						&& !selectedValue.equals(allDocuments)) {
+					handleGenrateAnnotationsRequest((Corpus)selectedValue);
+				}				
+			}
+		});
+		
 	}
 	
+	private void handleGenrateAnnotationsRequest(Corpus selectedValue) {
+		GenerationOptions generationOptions = new GenerationOptions(selectedValue.getId());
+		FormDialog<GenerationOptions> generationOptionsDlg = new FormDialog<GenerationOptions>(
+			"Please select the type of markup you want us to generate", 
+			new BeanItem<GenerationOptions>(generationOptions),
+			new GenerationOptionsFieldFactory(), 
+			new SaveCancelListener<GenerationOptions>() {
+				public void cancelPressed() {}
+				public void savePressed(GenerationOptions result) {
+					((BackgroundServiceProvider)UI.getCurrent()).submit(
+						"Generating annotations...",
+						new AnnotationGeneratorJob(result),
+						new ExecutionListener<Void>() {
+							@Override
+							public void done(Void result) {
+								try {
+									repository.reload(); // todo reload only given corpus
+								} catch (IOException e) {
+									((CatmaApplication)UI.getCurrent()).showAndLogError(
+											"Error reloading repository!", e);
+								}
+							}
+							@Override
+							public void error(Throwable t) {
+								((CatmaApplication)UI.getCurrent()).showAndLogError(
+										"Error reloading repository!", t);
+							}
+						});
+				}
+		});
+		generationOptionsDlg.setVisibleItemProperties(
+					new Object[] {"tagsetIdentification"});
+		generationOptionsDlg.show();
+
+	}
+
 	private void handleExportCorpusRequest(Corpus selectedValue) {
 		final CorpusExporter corpusExporter = new CorpusExporter(repository);
 		final String name = corpusExporter.cleanupName(selectedValue.toString());
