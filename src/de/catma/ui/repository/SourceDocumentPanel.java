@@ -333,27 +333,27 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 		});
 
-		miMoreDocumentActions.addItem("Clear Graph DB", new Command() {
-			public void menuSelected(MenuItem selectedItem) {
-				try {
-					GraphDatabaseService graphDb = (GraphDatabaseService) new InitialContext().lookup(
-							CatmaGraphDbName.CATMAGRAPHDB.name());
-					Transaction transaction = graphDb.beginTx();
-					GlobalGraphOperations globalGraphOperations = GlobalGraphOperations.at(graphDb);
-					for (Node n : globalGraphOperations.getAllNodes()) {
-						for (Relationship r : n.getRelationships()) {
-							r.delete();
-						}
-						n.delete();
-					}
-					transaction.success();
-					transaction.close();
-				}
-				catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
+//		miMoreDocumentActions.addItem("Clear Graph DB", new Command() {
+//			public void menuSelected(MenuItem selectedItem) {
+//				try {
+//					GraphDatabaseService graphDb = (GraphDatabaseService) new InitialContext().lookup(
+//							CatmaGraphDbName.CATMAGRAPHDB.name());
+//					Transaction transaction = graphDb.beginTx();
+//					GlobalGraphOperations globalGraphOperations = GlobalGraphOperations.at(graphDb);
+//					for (Node n : globalGraphOperations.getAllNodes()) {
+//						for (Relationship r : n.getRelationships()) {
+//							r.delete();
+//						}
+//						n.delete();
+//					}
+//					transaction.success();
+//					transaction.close();
+//				}
+//				catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		});
 		miMoreDocumentActions.addSeparator();
 		
 		miMoreDocumentActions.addItem("Create User Markup Collection", new Command() {
