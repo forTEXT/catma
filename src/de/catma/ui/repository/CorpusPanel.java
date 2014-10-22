@@ -376,7 +376,8 @@ public class CorpusPanel extends VerticalLayout {
 							@Override
 							public void done(Void result) {
 								try {
-									repository.reload(); // todo reload only given corpus
+									repository.reload(); 
+									Notification.show("Info", "Your annotations have been generated!", Type.TRAY_NOTIFICATION);
 								} catch (IOException e) {
 									((CatmaApplication)UI.getCurrent()).showAndLogError(
 											"Error reloading repository!", e);
