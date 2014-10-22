@@ -131,24 +131,12 @@ public class PropertyEditDialog extends Window {
 				propertyTree.setChildrenAllowed(pValueItemId, false);
 			}
 			propertyTree.setCollapsed(p, false);
-			
-//			Alex: this is part of my attempt to set key shortcuts for check boxes.
-//			It's still here because I want to keep it a little while.
-//			Set<Object> idSet = new HashSet<Object>();
-//			for (Object id : propertyTree.getItemIds()){
-//				idSet.add(id);
-//			}
-//			cb.setClickShortcut(KeyCode.NUM0, ModifierKey.ALT);
 		}
 		
 		if (tagInstance.getUserDefinedProperties().size() == 1){
 			propertyTree.setValue(
 					tagInstance.getUserDefinedProperties().iterator().next());
 		}
-//		Object selection = propertyTree.getValue();
-//		for (String value : getValues(selection)){
-//			selectNewValue.addItem(value);
-//		}
 		
 		// Populate the combo box with values.
 		for (String value : propertyValuesBuffer.getValues()){
