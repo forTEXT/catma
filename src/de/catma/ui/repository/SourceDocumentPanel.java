@@ -245,39 +245,90 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						new AddSourceDocWizardResult();
 				
 				AddSourceDocWizardFactory factory = 
-						new AddSourceDocWizardFactory(
-								new WizardProgressListener() {
-							
-							public void wizardCompleted(WizardCompletedEvent event) {
-								event.getWizard().removeListener(this);
-								boolean generateStarterKit = 
-										repository.getSourceDocuments().isEmpty();
-								try {
-									SourceDocument sourceDocument = wizardResult.getSourceDocument();
-									repository.insert(sourceDocument);
-									if (sourceDocument.getSourceContentHandler().hasIntrinsicMarkupCollection()) {
-										handleIntrinsicMarkupCollection(sourceDocument);
-									}
-									
-									if (generateStarterKit) {
-										generateStarterKit(wizardResult.getSourceDocument());
-									}
-								} catch (IOException e) {
-									((CatmaApplication)UI.getCurrent()).showAndLogError(
-										"Error adding the Source Document!", e);
-								}
-							}
+					new AddSourceDocWizardFactory(
+							new WizardProgressListener() {
+						
+						public void wizardCompleted(WizardCompletedEvent event) {
+							event.getWizard().removeListener(this);
+							final boolean generateStarterKit = 
+									repository.getSourceDocuments().isEmpty();
+							try {
+								final SourceDocument sourceDocument = 
+										wizardResult.getSourceDocument();
+								
+								repository.addPropertyChangeListener(
+									RepositoryChangeEvent.sourceDocumentChanged,
+									new PropertyChangeListener() {
 
-							public void wizardCancelled(WizardCancelledEvent event) {
-								event.getWizard().removeListener(this);
+										@Override
+										public void propertyChange(
+												PropertyChangeEvent evt) {
+											
+											if ((evt.getNewValue() == null) 
+													|| (evt.getOldValue() != null)) {
+												return; // no insert
+											}
+											
+											String newSdId = (String) evt.getNewValue();
+											if (sourceDocument.getID().equals(newSdId)) {
+												
+												repository.removePropertyChangeListener(
+													RepositoryChangeEvent.sourceDocumentChanged, 
+													this);
+												
+												if (currentCorpus != null) {
+													try {
+														repository.update(
+															currentCorpus, sourceDocument);
+														setSourceDocumentsFilter(
+																currentCorpus);
+														
+													} catch (IOException e) {
+														((CatmaApplication)UI.getCurrent()).showAndLogError(
+															"Error adding Source Document to Corpus! " +
+															"The Source Document has been added to 'All Documents's", e);
+													}
+													
+												}
+												
+												if (sourceDocument
+														.getSourceContentHandler()
+														.hasIntrinsicMarkupCollection()) {
+													try {
+														handleIntrinsicMarkupCollection(
+																sourceDocument);
+													} catch (IOException e) {
+														((CatmaApplication)UI.getCurrent()).showAndLogError(
+															"Error extracting intrinsic markup collection!", e);
+													}
+												}
+												
+												if (generateStarterKit) {
+													generateStarterKit(
+															wizardResult.getSourceDocument());
+												}
+											}
+										}
+									});
+
+								repository.insert(sourceDocument);
+								
+							} catch (IOException e) {
+								((CatmaApplication)UI.getCurrent()).showAndLogError(
+									"Error adding the Source Document!", e);
 							}
-							
-							public void stepSetChanged(WizardStepSetChangedEvent event) {/*not needed*/}
-							
-							public void activeStepChanged(WizardStepActivationEvent event) {/*not needed*/}
-						}, 
-						wizardResult,
-						repository);
+						}
+
+						public void wizardCancelled(WizardCancelledEvent event) {
+							event.getWizard().removeListener(this);
+						}
+						
+						public void stepSetChanged(WizardStepSetChangedEvent event) {/*not needed*/}
+						
+						public void activeStepChanged(WizardStepActivationEvent event) {/*not needed*/}
+					}, 
+					wizardResult,
+					repository);
 				
 				Window sourceDocCreationWizardWindow = 
 						factory.createWizardWindow(
