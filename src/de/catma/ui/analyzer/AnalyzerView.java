@@ -385,7 +385,8 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 						public void activeStepChanged(WizardStepActivationEvent event) {/*noop*/}
 					},
 					queryTree,
-					queryOptions);
+					queryOptions,
+					corpus);
 		
 		Window wizardWindow = 
 				factory.createWizardWindow("Query Builder", "90%", "85%");

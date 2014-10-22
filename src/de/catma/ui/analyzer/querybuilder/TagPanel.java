@@ -42,6 +42,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
+import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
@@ -94,8 +95,8 @@ public class TagPanel extends AbstractSearchPanel {
 	
 	public TagPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
-			QueryTree queryTree, QueryOptions queryOptions) {
-		super(toggleButtonStateListener, queryTree, queryOptions);
+			QueryTree queryTree, QueryOptions queryOptions, Corpus corpus) {
+		super(toggleButtonStateListener, queryTree, queryOptions, corpus);
 	}
 
 	@Override
@@ -125,8 +126,11 @@ public class TagPanel extends AbstractSearchPanel {
 			userMarkupCollectionIDs = new ArrayList<String>();
 			for (String sourceDocId : queryOptions.getRelevantSourceDocumentIDs()) {
 				SourceDocument sd = repository.getSourceDocument(sourceDocId);
+				
 				for (UserMarkupCollectionReference umcRef : sd.getUserMarkupCollectionRefs()) {
-					userMarkupCollectionIDs.add(umcRef.getId());
+					if (getCorpus().getUserMarkupCollectionRefs().contains(umcRef)) {
+						userMarkupCollectionIDs.add(umcRef.getId());
+					}
 				}
 			}
 		}

@@ -25,6 +25,7 @@ import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.document.Corpus;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
@@ -44,14 +45,16 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 	protected boolean onFinishOnly;
 	protected boolean onAdvance;
 	protected String curQuery = null;
+	private Corpus corpus;
 
 
 	public AbstractSearchPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
-			QueryTree queryTree, QueryOptions queryOptions) {
+			QueryTree queryTree, QueryOptions queryOptions, Corpus corpus) {
 		this.toggleButtonStateListener = toggleButtonStateListener;
 		this.queryTree = queryTree;
 		this.queryOptions = queryOptions;
+		this.corpus = corpus;
 		onFinish = false;
 		onFinishOnly = true;
 		onAdvance = false;
@@ -83,7 +86,7 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 								new ComplexTypeSelectionPanel(queryTree);
 						searchTypeSelectionPanel = new SearchTypeSelectionPanel(
 								toggleButtonStateListener, queryTree, queryOptions, 
-								true);
+								corpus, true);
 					}
 					toggleButtonStateListener.getWizard().addStep(
 							complexTypeSelectionPanel);
@@ -163,5 +166,7 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 		return this;
 	}
 
-
+	public Corpus getCorpus() {
+		return corpus;
+	}
 }

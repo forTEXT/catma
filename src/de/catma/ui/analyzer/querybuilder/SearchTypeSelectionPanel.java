@@ -28,6 +28,7 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.document.Corpus;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
@@ -45,18 +46,19 @@ public class SearchTypeSelectionPanel
 	public SearchTypeSelectionPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
 			QueryTree queryTree,
-			QueryOptions queryOptions) {
-		this(toggleButtonStateListener, queryTree, queryOptions, false);
+			QueryOptions queryOptions, Corpus corpus) {
+		this(toggleButtonStateListener, queryTree, queryOptions, corpus, false);
 	}
 	
 	public SearchTypeSelectionPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
 			QueryTree queryTree,
 			QueryOptions queryOptions,
+			Corpus corpus,
 			boolean onBack) {
 		this.toggleButtonStateListener = toggleButtonStateListener;
 		this.onBack = onBack;
-		initComponents(queryTree, queryOptions);
+		initComponents(queryTree, queryOptions, corpus);
 		initActions();
 	}
 
@@ -85,7 +87,7 @@ public class SearchTypeSelectionPanel
 	}
 
 	private void initComponents(
-			QueryTree queryTree, QueryOptions queryOptions) {
+			QueryTree queryTree, QueryOptions queryOptions, Corpus corpus) {
 		
 		setSpacing(true);
 		setWidth("100%");
@@ -93,27 +95,27 @@ public class SearchTypeSelectionPanel
 		phrasePanel = 
 			new PhrasePanel(
 				toggleButtonStateListener,
-				queryTree, queryOptions);
+				queryTree, queryOptions, corpus);
 		nextSteps.add(phrasePanel);
 		
 		nextSteps.add(
 			new SimilPanel(
 				toggleButtonStateListener, 
-				queryTree, queryOptions));
+				queryTree, queryOptions, corpus));
 		
 		nextSteps.add(
 			new TagPanel(
-				toggleButtonStateListener, queryTree, queryOptions));
+				toggleButtonStateListener, queryTree, queryOptions, corpus));
 		
 		nextSteps.add(
 			new CollocPanel(
 				toggleButtonStateListener, 
-				queryTree, queryOptions));
+				queryTree, queryOptions, corpus));
 		
 		nextSteps.add(
 				new FreqPanel(
 					toggleButtonStateListener, 
-					queryTree, queryOptions));
+					queryTree, queryOptions, corpus));
 
 		searchTypeSelect = new OptionGroup("",nextSteps);
 		
