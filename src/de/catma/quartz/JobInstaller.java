@@ -62,7 +62,7 @@ public class JobInstaller {
         	logger.info(jobClass.getSimpleName() + " installed!");
         }
         else {
-        	logger.info(jobClass.getSimpleName() + " is already intalled.");
+        	logger.info(jobClass.getSimpleName() + " is already installed.");
 
         	JobDetail jobDetail = scheduler.getJobDetail(
         			JobKey.jobKey(jobClass.getName(), JobGroup.DEFAULT.name()));
