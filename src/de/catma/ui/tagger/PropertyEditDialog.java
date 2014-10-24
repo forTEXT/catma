@@ -19,6 +19,7 @@
 package de.catma.ui.tagger;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -63,14 +64,14 @@ public class PropertyEditDialog extends Window {
 	
 	private TreeTable propertyTree;
 	private AdhocPropertyValuesBuffer propertyValuesBuffer;
-	private ComboBox cbAddNewValue;
+	private ComboBox newValueInput;
 	private Button btAdd;
 	private Button btSave;
 	private Button btCancel;
 	private TagInstance tagInstance;
 	private Set<Property> changedProperties;
 	private Label hintText;
-	private boolean init = false;
+	private HashMap<Property,List<String>> changeBuffer = new HashMap<>();
 
 	public PropertyEditDialog(TagInstance tagInstance,
 			SaveCancelListener<Set<Property>> saveCancelListener,
@@ -82,19 +83,10 @@ public class PropertyEditDialog extends Window {
 		changedProperties = new HashSet<Property>();
 		initComponents();
 		initActions(saveCancelListener);
+		initData();
 	}
 	
-	@Override
-	public void attach() {
-		super.attach();
-		
-		if (!init ) {
-			initData();
-			init = true;
-		}
-	}
-	
-
+	@SuppressWarnings("unchecked")
 	private void initData() {
 		for (Property p : tagInstance.getUserDefinedProperties()) {
 			PropertyDefinition propertyDefinition = p.getPropertyDefinition();
@@ -138,9 +130,8 @@ public class PropertyEditDialog extends Window {
 					tagInstance.getUserDefinedProperties().iterator().next());
 		}
 		
-		// Populate the combo box with values.
 		for (String value : propertyValuesBuffer.getValues()){
-			cbAddNewValue.addItem(value);
+			newValueInput.addItem(value);
 		}
 		
 	}
@@ -158,10 +149,18 @@ public class PropertyEditDialog extends Window {
 		});
 		return cb;
 	}
-	
+	private List<String> getValueListBuffer(Property p) {
+		List<String> valueList = changeBuffer.get(p);
+		if (valueList == null) {
+			valueList = new ArrayList<String>();
+			changeBuffer.put(p, valueList);
+			valueList.addAll(p.getPropertyValueList().getValues());
+		}
+		return valueList;
+	}
 	private void propertyValueChanged(Property p, String pValue, boolean add){
-		List<String> valueList = new ArrayList<String>();
-		valueList.addAll(p.getPropertyValueList().getValues());
+		
+		List<String> valueList = getValueListBuffer(p);
 		
 		if (add) {
 			valueList.add(pValue);
@@ -169,8 +168,6 @@ public class PropertyEditDialog extends Window {
 		else {
 			valueList.remove(pValue);
 		}
-		
-		p.setPropertyValueList(new PropertyValueList(valueList));
 		
 		changedProperties.add(
 				tagInstance.getProperty(p.getPropertyDefinition().getUuid()));
@@ -180,6 +177,22 @@ public class PropertyEditDialog extends Window {
 	private void initActions(
 			final SaveCancelListener<Set<Property>> saveCancelListener) {
 
+		newValueInput.addValueChangeListener(new ValueChangeListener() {
+			
+			@Override
+			public void valueChange(ValueChangeEvent event) {
+				btSave.setEnabled(newValueInput.getValue() == null);
+				if (newValueInput.getValue() == null) {
+					btSave.setDescription("");
+				}
+				else {
+					btSave.setDescription(
+						"Please use either the + button to add your adhoc value<br>"
+						+ "or empty the input field first!");
+				}
+				
+			}
+		});
 		btCancel.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -191,6 +204,10 @@ public class PropertyEditDialog extends Window {
 		btSave.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
+				for (Property p : changedProperties) {
+					p.setPropertyValueList(
+						new PropertyValueList(changeBuffer.get(p)));
+				}
 				UI.getCurrent().removeWindow(PropertyEditDialog.this);
 				saveCancelListener.savePressed(changedProperties);
 			}
@@ -202,55 +219,53 @@ public class PropertyEditDialog extends Window {
 			public void buttonClick(ClickEvent event) {
 				Object selection = propertyTree.getValue();
 				final Property property = getProperty(selection);
-				final String pValue = (String)cbAddNewValue.getValue();
+				final String pValue = (String)newValueInput.getValue();
 				
 				if ((pValue == null)||(pValue.isEmpty())) {
 					Notification.show(
 						"Info", "The value can not be empty!", 
 						Type.TRAY_NOTIFICATION);
+					return;
 				}
-				else {
-							
-					if (property == null) {
+				if (property == null) {
+					Notification.show(
+						"Info", 
+						"Please select exactly one Property from the list first!",
+						Type.TRAY_NOTIFICATION);
+					return;
+				}
+				
+				List<String> valueBuffer = getValueListBuffer(property);
+				if (valueBuffer.contains(pValue)
+					|| property.getPropertyDefinition()
+						.getPossibleValueList().getPropertyValueList()
+						.getValues().contains(pValue)) {
 						Notification.show(
-							"Info", 
-							"Please select exactly one Property from the list first!",
+							"Info",
+							"This value already exists. Please choose another name!", 
 							Type.TRAY_NOTIFICATION);
-					}
-					else {
-						if (property.getPropertyValueList().getValues().contains(
-								pValue) ||
-							property.getPropertyDefinition()
-								.getPossibleValueList().getPropertyValueList()
-								.getValues().contains(pValue)) {
-								Notification.show(
-									"Info",
-									"This value already exists. Please choose another name!", 
-									Type.TRAY_NOTIFICATION);
-						}
-						else {
-							propertyValuesBuffer.addValue(pValue);
-	
-							propertyValueChanged(property, pValue, true);
-							String pValueItemId = 
-									property.getPropertyDefinition().getUuid() 
-									+ "_" + pValue;
-							propertyTree.addItem(
-									new Object[] {
-											null,
-											pValue,
-											createCheckBox(property, pValue)
-									},
-									pValueItemId);	
-							
-							propertyTree.setParent(
-									pValueItemId, property.getPropertyDefinition());
-							propertyTree.setChildrenAllowed(pValueItemId, false);
-							cbAddNewValue.setValue("");
-						}
-					}
-					
+					return;
 				}
+				
+				propertyValuesBuffer.addValue(pValue);
+
+				String pValueItemId = 
+						property.getPropertyDefinition().getUuid() 
+						+ "_" + pValue;
+				CheckBox cb = createCheckBox(property, pValue);
+				propertyTree.addItem(
+						new Object[] {
+								null,
+								pValue,
+								cb
+						},
+						pValueItemId);	
+				cb.setValue(true);
+				
+				propertyTree.setParent(pValueItemId, property);
+				propertyTree.setChildrenAllowed(pValueItemId, false);
+				newValueInput.setValue(null);
+				btSave.setEnabled(true);
 			}
 		});
 	}
@@ -260,7 +275,7 @@ public class PropertyEditDialog extends Window {
 		mainLayout.setMargin(true);
 		mainLayout.setSpacing(true);
 		
-		hintText = new Label("Please use the check boxes to select values.");
+		hintText = new Label("Please use the check boxes to set or unset values.");
 		mainLayout.addComponent(hintText);
 		
 		propertyTree = new TreeTable();
@@ -300,14 +315,15 @@ public class PropertyEditDialog extends Window {
 		HorizontalLayout comboBox = new HorizontalLayout();
 		comboBox.setSpacing(true);
 		
-		cbAddNewValue = new ComboBox("Add value");
-		cbAddNewValue.setTextInputAllowed(true);
-		cbAddNewValue.setNewItemsAllowed(true);
-		cbAddNewValue.setImmediate(true);
-		cbAddNewValue.addShortcutListener(new AbstractField.FocusShortcut(
-				cbAddNewValue, KeyCode.ARROW_DOWN, ModifierKey.CTRL));
+		newValueInput = new ComboBox("Add adhoc value");
+		newValueInput.setTextInputAllowed(true);
+		newValueInput.setNewItemsAllowed(true);
 		
-		comboBox.addComponent(cbAddNewValue);
+		newValueInput.setImmediate(true);
+		newValueInput.addShortcutListener(new AbstractField.FocusShortcut(
+				newValueInput, KeyCode.ARROW_DOWN, ModifierKey.CTRL));
+		
+		comboBox.addComponent(newValueInput);
 		
 		btAdd = new Button("+");
 		btAdd.setClickShortcut(KeyCode.INSERT);
@@ -349,18 +365,6 @@ public class PropertyEditDialog extends Window {
 		}
 		return (Property)selection;
 	}
-	
-//	private Set<String> getValues(Object selection){
-//
-//		while ((selection != null) && !(selection instanceof Property)) {
-//			selection = propertyTree.getParent(selection);
-//			values.addAll(getProperty(selection).getPropertyDefinition().getPossibleValueList().getPropertyValueList().getValues());
-//			values.addAll(getProperty(selection).getPropertyValueList().getValues());
-//		}
-//		
-//		return values;
-//	}
-	
 
 	public void show() {
 		UI.getCurrent().addWindow(this);

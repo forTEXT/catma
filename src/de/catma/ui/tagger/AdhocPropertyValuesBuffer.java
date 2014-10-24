@@ -18,9 +18,10 @@ public class AdhocPropertyValuesBuffer {
 		instanceValues = new HashSet<String>();
 	}
 	
-//	Set values shown in the combo box.
 	void addValue(String value){
-		instanceValues.add(value);
+		if (!instanceValues.contains(value)) {
+			instanceValues.add(value);
+		}
 	}
 	
 	void remove(String value){
