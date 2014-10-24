@@ -22,6 +22,7 @@ import com.vaadin.data.util.converter.Converter.ConversionException;
 import com.vaadin.ui.AbstractField;
 
 import de.catma.ui.client.ui.tagmanager.ColorFieldServerRpc;
+import de.catma.ui.client.ui.tagmanager.ColorFieldState;
 
 
 public class ColorField extends AbstractField<String> {
@@ -42,6 +43,7 @@ public class ColorField extends AbstractField<String> {
 		this();
 		if ((hexColor != null) && (!hexColor.isEmpty())) {
 			setValue(hexColor);
+			
 		}
 	}
 	
@@ -54,10 +56,15 @@ public class ColorField extends AbstractField<String> {
 	public void setValue(String newValue) throws ReadOnlyException,
 			ConversionException {
 		super.setValue(newValue, true);
+		getState().hexcolor = newValue;
 	}
 	
 	public String getHexColor() {
-		return getValue().toString();
+		return getState().hexcolor;
 	}
 	
+	@Override
+	protected ColorFieldState getState() {
+		return (ColorFieldState) super.getState();
+	}
 }

@@ -401,7 +401,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 
 		for (TagsetDefinition activeTagsetDef : activeTagsetDefs) {
 			List<UserMarkupCollection> toBeUpdated = 
-					umcManager.getUserMarkupCollections(activeTagsetDef, false);
+					umcManager.getOutOfSyncUserMarkupCollections(activeTagsetDef);
 			
 			if (!toBeUpdated.isEmpty()) { // the list will be empty or contain exactly one element
 				outOfSyncTagsetDefs.add(activeTagsetDef);

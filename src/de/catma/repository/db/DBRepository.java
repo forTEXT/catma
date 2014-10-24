@@ -48,8 +48,8 @@ import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 
 import de.catma.backgroundservice.BackgroundServiceProvider;
+import de.catma.document.AccessMode;
 import de.catma.document.Corpus;
-import de.catma.document.repository.AccessMode;
 import de.catma.document.repository.UnknownUserException;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;

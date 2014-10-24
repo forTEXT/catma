@@ -64,7 +64,7 @@ import org.jooq.impl.DSL;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
-import de.catma.document.repository.AccessMode;
+import de.catma.document.AccessMode;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.IndexInfoSet;

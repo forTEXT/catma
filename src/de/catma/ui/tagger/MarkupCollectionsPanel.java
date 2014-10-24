@@ -53,6 +53,7 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.document.AccessMode;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
@@ -459,8 +460,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private void updateTagsetDefinition(TagsetDefinition foreignTagsetDefinition) {
 		if (updateableforeignTagsetDefinitions.contains(foreignTagsetDefinition)) {
 			List<UserMarkupCollection> outOfSynchCollections = 
-					userMarkupCollectionManager.getUserMarkupCollections(
-						foreignTagsetDefinition, false);
+					userMarkupCollectionManager.getOutOfSyncUserMarkupCollections(
+						foreignTagsetDefinition);
 
 			userMarkupCollectionManager.updateUserMarkupCollections(
 					outOfSynchCollections, foreignTagsetDefinition);
@@ -487,8 +488,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		
 		if (updateableforeignTagsetDefinitions.contains(foreignTagsetDefinition)) {
 			List<UserMarkupCollection> outOfSynchCollections = 
-					userMarkupCollectionManager.getUserMarkupCollections(
-						foreignTagsetDefinition, false);
+					userMarkupCollectionManager.getOutOfSyncUserMarkupCollections(
+						foreignTagsetDefinition);
 
 			//FIXME: update does not remove Tagsets just Tags, removal should probably occur by a button of this panel only!
 			userMarkupCollectionManager.updateUserMarkupCollections(
@@ -518,8 +519,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 
 		if (updateableforeignTagsetDefinitions.contains(foreignTagsetDefinition)) {
 			List<UserMarkupCollection> outOfSynchCollections = 
-					userMarkupCollectionManager.getUserMarkupCollections(
-						foreignTagsetDefinition, false);
+					userMarkupCollectionManager.getOutOfSyncUserMarkupCollections(
+						foreignTagsetDefinition);
 
 			userMarkupCollectionManager.updateUserMarkupCollections(
 					outOfSynchCollections, foreignTagsetDefinition);
@@ -542,8 +543,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		if (updateableforeignTagsetDefinitions.contains(foreignTagsetDefinition)) {
 			
 			List<UserMarkupCollection> outOfSynchCollections = 
-					userMarkupCollectionManager.getUserMarkupCollections(
-						foreignTagsetDefinition, false);
+					userMarkupCollectionManager.getOutOfSyncUserMarkupCollections(
+						foreignTagsetDefinition);
 
 			for (UserMarkupCollection umc : outOfSynchCollections) {
 				TagDefinition tagDefinition = umc.getTagLibrary().getTagDefinition(
@@ -582,8 +583,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		if (foreignTagsetDefinition != null) {
 			
 			List<UserMarkupCollection> outOfSynchCollections = 
-				userMarkupCollectionManager.getUserMarkupCollections(
-					foreignTagsetDefinition, false);
+				userMarkupCollectionManager.getOutOfSyncUserMarkupCollections(
+					foreignTagsetDefinition);
 			
 			userMarkupCollectionManager.updateUserMarkupCollections(
 					outOfSynchCollections, foreignTagsetDefinition);
@@ -700,7 +701,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			UserMarkupCollection userMarkupCollection) {
 		userMarkupCollectionManager.add(userMarkupCollection);
 		addUserMarkupCollectionToTree(userMarkupCollection);
-		if (userMarkupCollectionManager.getUserMarkupCollections().size() == 1) {
+		if ((userMarkupCollectionManager.getUserMarkupCollections().size() == 1) 
+				&& userMarkupCollection.getAccessMode().equals(AccessMode.WRITE)) {
 			Property property =
 				markupCollectionsTree.getItem(userMarkupCollection).getItemProperty(
 					MarkupCollectionsTreeProperty.writable);
@@ -713,7 +715,10 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private void addUserMarkupCollectionToTree(
 			UserMarkupCollection userMarkupCollection) {
 		markupCollectionsTree.addItem(
-				new Object[] {userMarkupCollection.toString(), createVisibilityCheckbox(userMarkupCollection), createCheckbox(userMarkupCollection)},
+				new Object[] {
+						userMarkupCollection.toString(), 
+						createVisibilityCheckbox(userMarkupCollection), 
+						createWritableCheckbox(userMarkupCollection)},
 				userMarkupCollection);
 		markupCollectionsTree.setParent(userMarkupCollection, userMarkupItem);
 		markupCollectionsTree.setCollapsed(userMarkupItem, false);
@@ -899,7 +904,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		return cbShowTagInstances;
 	}
 	
-	private CheckBox createCheckbox(
+	private CheckBox createWritableCheckbox(
 			final UserMarkupCollection userMarkupCollection) {
 		
 		final CheckBox cbIsWritableUserMarkupColl = new CheckBox();
@@ -915,6 +920,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 						selected, userMarkupCollection);
 			}
 		});
+		cbIsWritableUserMarkupColl.setEnabled(
+			userMarkupCollection.getAccessMode().equals(AccessMode.WRITE));
 		return cbIsWritableUserMarkupColl;
 	}
 	
@@ -1019,8 +1026,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			final ConfirmListener confirmListener) {
 		
 		final List<UserMarkupCollection> toBeUpdated = 
-				userMarkupCollectionManager.getUserMarkupCollections(
-						incomingTagsetDef, false);
+				userMarkupCollectionManager.getOutOfSyncUserMarkupCollections(
+						incomingTagsetDef);
 		
 		if (!toBeUpdated.isEmpty()) {
 			ConfirmDialog.show(

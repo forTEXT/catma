@@ -8,7 +8,7 @@ import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Field;
 
-import de.catma.document.repository.AccessMode;
+import de.catma.document.AccessMode;
 import de.catma.ui.field.FormFieldGenerator;
 
 public class AccessModeFieldGenerator implements FormFieldGenerator {

@@ -64,7 +64,6 @@ import de.catma.tag.TagInstance;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
-import de.catma.ui.data.util.PropertyToReversedTrimmedStringCIComparator;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.util.IDGenerator;
@@ -291,8 +290,8 @@ public class KwicPanel extends VerticalLayout {
 		}
 
 		final List<UserMarkupCollection> toBeUpdated = 
-				userMarkupCollectionManager.getUserMarkupCollections(
-						incomingTagsetDef, false);
+				userMarkupCollectionManager.getOutOfSyncUserMarkupCollections(
+						incomingTagsetDef);
 		
 		userMarkupCollectionManager.updateUserMarkupCollections(
     			toBeUpdated, incomingTagsetDef);

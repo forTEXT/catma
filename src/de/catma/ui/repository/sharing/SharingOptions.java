@@ -1,6 +1,6 @@
 package de.catma.ui.repository.sharing;
 
-import de.catma.document.repository.AccessMode;
+import de.catma.document.AccessMode;
 
 public class SharingOptions {
 	private String userIdentification;
