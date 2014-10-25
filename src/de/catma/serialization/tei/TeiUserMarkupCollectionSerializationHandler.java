@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import de.catma.document.AccessMode;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.serialization.DocumentSerializer;
@@ -85,7 +86,8 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 			
 			return new UserMarkupCollection(
 				id, teiDocument.getContentInfoSet(), 
-				tagLibrary, deserializer.getTagReferences());
+				tagLibrary, deserializer.getTagReferences(),
+				AccessMode.WRITE);
 			
 		} catch (Exception exc) {
 			throw new IOException(exc);

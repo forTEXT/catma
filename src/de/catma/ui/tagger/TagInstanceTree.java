@@ -135,19 +135,27 @@ public class TagInstanceTree extends HorizontalLayout {
 		btEditPropertyValues.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				Object selection = tagInstanceTree.getValue();
-				final Property property = getProperty((Set<?>)selection);
-				final TagInstance tagInstance = (TagInstance) tagInstanceTree.getParent(property);
-				
-				if ((((Set<?>)selection).size()>1) || (property == null)) {
+				Set<?> selectionset = (Set<?>)tagInstanceTree.getValue();
+				if (selectionset.size() != 1) {
 					Notification.show(
-						"Information", 
-						"Please select excactly one Property from the list first!",
-						Type.TRAY_NOTIFICATION);
+							"Information", 
+							"Please select exactly one Tag Instance or Property from the list first!",
+							Type.TRAY_NOTIFICATION);	
 				}
 				else {
+					Object selection = selectionset.iterator().next();
+					
+					TagInstance tagInstance = null;
+					if (selection instanceof TagInstance) {
+						tagInstance = (TagInstance)selection;
+					}
+					else {
+						final Property property = getProperty(selectionset);
+						tagInstance = (TagInstance) tagInstanceTree.getParent(property);
+					}
+					
 					showPropertyEditDialog(tagInstance);
-				}	
+				}
 			}
 		});
 		

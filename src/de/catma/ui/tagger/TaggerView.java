@@ -330,7 +330,8 @@ public class TaggerView extends VerticalLayout
 						pager.removeTagInstances(removedTagDefinitions);
 						tagger.setPage(pager.getCurrentPageNumber());
 					}
-				});
+				},
+				sourceDocument);
 		
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		splitPanel.addComponent(taggerPanel);

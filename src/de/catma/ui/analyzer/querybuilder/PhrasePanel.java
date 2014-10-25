@@ -34,6 +34,7 @@ import com.vaadin.ui.Panel;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
+import de.catma.document.Corpus;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.ui.dialog.wizard.ToggleButtonStateListener;
@@ -48,8 +49,9 @@ public class PhrasePanel extends AbstractSearchPanel {
 	public PhrasePanel(
 			ToggleButtonStateListener toggleButtonStateListener,
 			QueryTree queryTree,
-			QueryOptions queryOptions) {
-		super(toggleButtonStateListener, queryTree, queryOptions);
+			QueryOptions queryOptions,
+			Corpus corpus) {
+		super(toggleButtonStateListener, queryTree, queryOptions, corpus);
 		wordPanels = new ArrayList<WordPanel>();
 		initComponents();
 		initActions();

@@ -27,6 +27,7 @@ import com.vaadin.ui.Slider.ValueOutOfBoundsException;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalSplitPanel;
 
+import de.catma.document.Corpus;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.ui.data.util.NonEmptySequenceValidator;
@@ -43,8 +44,9 @@ public class SimilPanel extends AbstractSearchPanel implements DynamicWizardStep
 	public SimilPanel(
 			ToggleButtonStateListener toggleButtonStateListener,
 			QueryTree queryTree,
-			QueryOptions queryOptions) {
-		super(toggleButtonStateListener, queryTree, queryOptions);
+			QueryOptions queryOptions,
+			Corpus corpus) {
+		super(toggleButtonStateListener, queryTree, queryOptions, corpus);
 		initComponents();
 		initActions();
 	}

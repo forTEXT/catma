@@ -26,6 +26,7 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
@@ -55,6 +56,7 @@ public class ResultPanel extends VerticalLayout {
 	private Label queryLabel;
 	private TextField maxTotalFrequencyField;
 	private Button btShowInPreview;
+	private ProgressBar searchProgress;
 
 	public ResultPanel(QueryOptions queryOptions) {
 		this.queryOptions = queryOptions;
@@ -96,6 +98,11 @@ public class ResultPanel extends VerticalLayout {
 		headerPanel.setSpacing(true);
 		headerPanel.setWidth("100%");
 		addComponent(headerPanel);
+
+		searchProgress = new ProgressBar();
+		searchProgress.setIndeterminate(false);
+		searchProgress.setVisible(false);
+		headerPanel.addComponent(searchProgress);
 		
 		Label yourSearchLabel = new Label("Your search");
 		headerPanel.addComponent(yourSearchLabel);
@@ -109,6 +116,7 @@ public class ResultPanel extends VerticalLayout {
 		Label willMatch = new Label("will match for example:");
 		headerPanel.addComponent(willMatch);
 		headerPanel.setExpandRatio(willMatch, 0.2f);
+		
 		
 		resultTable = new TreeTable();
 		resultTable.setSizeFull();
@@ -137,7 +145,10 @@ public class ResultPanel extends VerticalLayout {
 		queryOptions.setLimit(limit);
 		
 		queryLabel.setValue(query);
-		
+
+		searchProgress.setIndeterminate(true);
+		searchProgress.setVisible(true);
+
 		QueryJob job = new QueryJob(
 				query,
 				queryOptions);
@@ -146,6 +157,8 @@ public class ResultPanel extends VerticalLayout {
 				new ExecutionListener<QueryResult>() {
 				public void done(QueryResult result) {
 					setQueryResult(result);
+					searchProgress.setIndeterminate(false);
+					searchProgress.setVisible(false);
 				};
 				public void error(Throwable t) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(

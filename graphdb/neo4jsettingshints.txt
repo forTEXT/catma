@@ -1,0 +1,19 @@
+nodes ~160M
+relationships ~312M
+
+file buffer cache										ondisk		thyone (12GB, 6G heap)
+neostore.nodestore.db.mapped_memory						2.3G		2G	
+neostore.relationshipstore.db.mapped_memory				10.0G		2G
+neostore.propertystore.db.index.keys.mapped_memory		330			0
+neostore.propertystore.db.index.mapped_memory			88			0
+neostore.propertystore.db.mapped_memory					7.6G		2G
+neostore.propertystore.db.strings.mapped_memory			32M			100M
+neostore.propertystore.db.arrays.mapped_memory			153			0
+
+object/rel cache
+cache_type	'none' for import	'hpc' for server
+node_cache_array_fraction						7%(5GB)				350M
+relationship_cache_array_fraction				7%(5GB)				350M
+node_cache_size														1G
+relationship_cache_size												2G
+

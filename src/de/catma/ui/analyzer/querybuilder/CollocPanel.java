@@ -18,13 +18,16 @@
  */
 package de.catma.ui.analyzer.querybuilder;
 
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
 
+import de.catma.document.Corpus;
 import de.catma.queryengine.QueryOptions;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.ui.data.util.IntegerValueValidator;
@@ -39,8 +42,9 @@ public class CollocPanel extends AbstractSearchPanel {
 	private ResultPanel resultPanel;
 
 	public CollocPanel(ToggleButtonStateListener toggleButtonStateListener,
-			QueryTree queryTree, QueryOptions queryOptions) {
-		super(toggleButtonStateListener, queryTree, queryOptions);
+			QueryTree queryTree, QueryOptions queryOptions,
+			Corpus corpus) {
+		super(toggleButtonStateListener, queryTree, queryOptions, corpus);
 		initComponents();
 		initActions();
 	}
@@ -118,6 +122,13 @@ public class CollocPanel extends AbstractSearchPanel {
 		spanSizeInput.setInvalidAllowed(false);
 		
 		searchPanel.addComponent(spanSizeInput);
+		Label infoLabel = new Label(
+			"Note: the preview frequency limit will be applied to each sub result</br> "
+			+ "because of this no preview results doesn't necessarily mean that</br>"
+			+ "there will be no query results at all!");
+		infoLabel.setContentMode(ContentMode.HTML);
+		searchPanel.addComponent(infoLabel);
+		
 		return searchPanel;
 	}
 

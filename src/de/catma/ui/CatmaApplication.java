@@ -538,8 +538,5 @@ public class CatmaApplication extends UI
 			PropertyChangeListener listener) {
 		propertyChangeSupport.removePropertyChangeListener(propertyName.name(),	listener);
 	}
-	
-	public TaggerManagerView getTaggerManager() {
-		return taggerManagerView;
-	}
+
 }

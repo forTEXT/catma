@@ -59,7 +59,7 @@ import org.jooq.impl.DSL;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
-import de.catma.document.repository.AccessMode;
+import de.catma.document.AccessMode;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
@@ -71,7 +71,6 @@ import de.catma.repository.db.MaintenanceSemaphore.Type;
 import de.catma.repository.db.jooq.TransactionalDSLContext;
 import de.catma.repository.db.mapper.FieldToValueMapper;
 import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
-import de.catma.repository.db.mapper.IDFieldsToIntegerPairMapper;
 import de.catma.repository.db.mapper.PropertyValueMapper;
 import de.catma.repository.db.mapper.TagInstanceMapper;
 import de.catma.repository.db.mapper.TagReferenceMapper;
@@ -723,6 +722,9 @@ class UserMarkupCollectionHandler {
 		
 		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
 		
+		AccessMode accessMode = 
+			getUserMarkupCollectionAccessMode(db, userMarkupCollectionId, false);
+		
 		Record umcRecord = db
 		.select()
 		.from(USERMARKUPCOLLECTION)
@@ -808,7 +810,8 @@ class UserMarkupCollectionHandler {
 		.map(new TagReferenceMapper(localSourceDocURI, tagInstances));
 		
 		UserMarkupCollection userMarkupCollection = 
-			new UserMarkupCollectionMapper(tagLibrary, tagReferences).map(umcRecord);
+			new UserMarkupCollectionMapper(
+				tagLibrary, tagReferences, accessMode).map(umcRecord);
 		
 		umcCache.put(
 				userMarkupCollection.getId(),

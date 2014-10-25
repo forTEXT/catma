@@ -42,9 +42,8 @@ import com.vaadin.server.Resource;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -54,10 +53,9 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.document.Corpus;
+import de.catma.document.AccessMode;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
-import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
@@ -66,7 +64,6 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
-import de.catma.repository.db.DBRepository;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -75,10 +72,7 @@ import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.analyzer.AnalyzerProvider;
-import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.menu.CMenuAction;
-import de.catma.ui.repository.CorpusContentSelectionDialog;
 import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
 import de.catma.util.Pair;
 
@@ -118,8 +112,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private PropertyChangeListener userMarkupCollectionChangedListener;
 	private PropertyChangeListener userMarkupCollectionTagLibraryChangedListener;
 	private PropertyChangeListener userPropertyDefinitionChangedListener;
+	private Button btnOpenMarkupCollection;
 	
-	public MarkupCollectionsPanel(Repository repository) {
+	public MarkupCollectionsPanel(Repository repository, ClickListener openMarkupCollectionsHandler) {
 		propertyChangeSupport = new PropertyChangeSupport(this);
 		this.tagManager = repository.getTagManager();
 		this.repository = repository;
@@ -127,7 +122,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				new UserMarkupCollectionManager(repository);
 		updateableforeignTagsetDefinitions = new HashSet<TagsetDefinition>();
 		initComponents();
-		initActions();
+		initActions(openMarkupCollectionsHandler);
 	}
 
 	public void addPropertyChangeListener(MarkupCollectionPanelEvent propertyName,
@@ -141,7 +136,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				listener);
 	}
 
-	private void initActions() {
+	private void initActions(ClickListener openMarkupCollectionsHandler) {
+		btnOpenMarkupCollection.addClickListener(openMarkupCollectionsHandler);
+
 		tagDefChangedListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
@@ -463,8 +460,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private void updateTagsetDefinition(TagsetDefinition foreignTagsetDefinition) {
 		if (updateableforeignTagsetDefinitions.contains(foreignTagsetDefinition)) {
 			List<UserMarkupCollection> outOfSynchCollections = 
-					userMarkupCollectionManager.getUserMarkupCollections(
-						foreignTagsetDefinition, false);
+					userMarkupCollectionManager.getOutOfSyncUserMarkupCollections(
+						foreignTagsetDefinition);
 
 			userMarkupCollectionManager.updateUserMarkupCollections(
 					outOfSynchCollections, foreignTagsetDefinition);
@@ -491,8 +488,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		
 		if (updateableforeignTagsetDefinitions.contains(foreignTagsetDefinition)) {
 			List<UserMarkupCollection> outOfSynchCollections = 
-					userMarkupCollectionManager.getUserMarkupCollections(
-						foreignTagsetDefinition, false);
+					userMarkupCollectionManager.getOutOfSyncUserMarkupCollections(
+						foreignTagsetDefinition);
 
 			//FIXME: update does not remove Tagsets just Tags, removal should probably occur by a button of this panel only!
 			userMarkupCollectionManager.updateUserMarkupCollections(
@@ -522,8 +519,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 
 		if (updateableforeignTagsetDefinitions.contains(foreignTagsetDefinition)) {
 			List<UserMarkupCollection> outOfSynchCollections = 
-					userMarkupCollectionManager.getUserMarkupCollections(
-						foreignTagsetDefinition, false);
+					userMarkupCollectionManager.getOutOfSyncUserMarkupCollections(
+						foreignTagsetDefinition);
 
 			userMarkupCollectionManager.updateUserMarkupCollections(
 					outOfSynchCollections, foreignTagsetDefinition);
@@ -546,8 +543,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		if (updateableforeignTagsetDefinitions.contains(foreignTagsetDefinition)) {
 			
 			List<UserMarkupCollection> outOfSynchCollections = 
-					userMarkupCollectionManager.getUserMarkupCollections(
-						foreignTagsetDefinition, false);
+					userMarkupCollectionManager.getOutOfSyncUserMarkupCollections(
+						foreignTagsetDefinition);
 
 			for (UserMarkupCollection umc : outOfSynchCollections) {
 				TagDefinition tagDefinition = umc.getTagLibrary().getTagDefinition(
@@ -586,8 +583,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		if (foreignTagsetDefinition != null) {
 			
 			List<UserMarkupCollection> outOfSynchCollections = 
-				userMarkupCollectionManager.getUserMarkupCollections(
-					foreignTagsetDefinition, false);
+				userMarkupCollectionManager.getOutOfSyncUserMarkupCollections(
+					foreignTagsetDefinition);
 			
 			userMarkupCollectionManager.updateUserMarkupCollections(
 					outOfSynchCollections, foreignTagsetDefinition);
@@ -626,19 +623,13 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 	
 	private void initComponents() {
-		HorizontalLayout row1 = new HorizontalLayout();
-		row1.setWidth("100%");
-		row1.setMargin(new MarginInfo(true, false, true, false));
+		HorizontalLayout buttonHeaderPanel = new HorizontalLayout();
+		buttonHeaderPanel.setWidth("100%");
+		buttonHeaderPanel.setMargin(new MarginInfo(true, false, true, false));
 		
-		Button btnOpenMarkupCollection = new Button("Open Markup Collection(s)");
-		btnOpenMarkupCollection.addClickListener(new ClickListener() {
-			
-			public void buttonClick(ClickEvent event) {
-				handleOpenMarkupCollectionRequest();
-			}
-		});
-		row1.addComponent(btnOpenMarkupCollection);
-		addComponent(row1);
+		btnOpenMarkupCollection = new Button("Open Markup Collection(s)");
+		buttonHeaderPanel.addComponent(btnOpenMarkupCollection);
+		addComponent(buttonHeaderPanel);
 		
 		markupCollectionsTree = new TreeTable();
 		markupCollectionsTree.setWidth("100%");
@@ -694,51 +685,6 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		addComponent(markupCollectionsTree);
 	}
 
-	protected void handleOpenMarkupCollectionRequest() {
-		CatmaApplication application = ((CatmaApplication)UI.getCurrent());
-		TaggerManagerView taggerManagerView = application.getTaggerManager();
-		TaggerView selectedTab = (TaggerView)taggerManagerView.getSelectedTab();
-		
-		if(selectedTab == null){
-			Notification.show(
-					"Information", 
-					"There is no active document open in the Tagger",
-					Type.WARNING_MESSAGE);
-			return;
-		}
-		
-		final SourceDocument sd = selectedTab.getSourceDocument();
-		
-		CorpusContentSelectionDialog dialog =
-			new CorpusContentSelectionDialog(
-				sd,
-				null,
-				new SaveCancelListener<Corpus>() {
-					public void cancelPressed() {/* noop */}
-					public void savePressed(Corpus result) {
-						
-						List<UserMarkupCollectionReference> markupCollectionReferences = 
-								result.getUserMarkupCollectionRefs(sd);
-						
-						try {
-							for (UserMarkupCollectionReference umcRef 
-									: markupCollectionReferences) {
-								UserMarkupCollection userMarkupCollection = 
-										repository.getUserMarkupCollection(umcRef);									
-								openUserMarkupCollection(userMarkupCollection);
-							}
-						}
-						catch (IOException ioe) {
-							((CatmaApplication)UI.getCurrent()).showAndLogError(
-									"Error fetching user markup collections", ioe);
-						}							
-					}
-				},
-				"Open Markup Collection(s)",
-				"Choose markup collections to open for this document");
-			dialog.show();
-	}
-
 	private UserMarkupCollection getUserMarkupCollection(
 			Object itemId) {
 		
@@ -755,7 +701,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			UserMarkupCollection userMarkupCollection) {
 		userMarkupCollectionManager.add(userMarkupCollection);
 		addUserMarkupCollectionToTree(userMarkupCollection);
-		if (userMarkupCollectionManager.getUserMarkupCollections().size() == 1) {
+		if ((userMarkupCollectionManager.getUserMarkupCollections().size() == 1) 
+				&& userMarkupCollection.getAccessMode().equals(AccessMode.WRITE)) {
 			Property property =
 				markupCollectionsTree.getItem(userMarkupCollection).getItemProperty(
 					MarkupCollectionsTreeProperty.writable);
@@ -768,7 +715,10 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private void addUserMarkupCollectionToTree(
 			UserMarkupCollection userMarkupCollection) {
 		markupCollectionsTree.addItem(
-				new Object[] {userMarkupCollection.toString(), createVisibilityCheckbox(userMarkupCollection), createCheckbox(userMarkupCollection)},
+				new Object[] {
+						userMarkupCollection.toString(), 
+						createVisibilityCheckbox(userMarkupCollection), 
+						createWritableCheckbox(userMarkupCollection)},
 				userMarkupCollection);
 		markupCollectionsTree.setParent(userMarkupCollection, userMarkupItem);
 		markupCollectionsTree.setCollapsed(userMarkupItem, false);
@@ -954,7 +904,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		return cbShowTagInstances;
 	}
 	
-	private CheckBox createCheckbox(
+	private CheckBox createWritableCheckbox(
 			final UserMarkupCollection userMarkupCollection) {
 		
 		final CheckBox cbIsWritableUserMarkupColl = new CheckBox();
@@ -970,6 +920,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 						selected, userMarkupCollection);
 			}
 		});
+		cbIsWritableUserMarkupColl.setEnabled(
+			userMarkupCollection.getAccessMode().equals(AccessMode.WRITE));
 		return cbIsWritableUserMarkupColl;
 	}
 	
@@ -1074,8 +1026,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			final ConfirmListener confirmListener) {
 		
 		final List<UserMarkupCollection> toBeUpdated = 
-				userMarkupCollectionManager.getUserMarkupCollections(
-						incomingTagsetDef, false);
+				userMarkupCollectionManager.getOutOfSyncUserMarkupCollections(
+						incomingTagsetDef);
 		
 		if (!toBeUpdated.isEmpty()) {
 			ConfirmDialog.show(
