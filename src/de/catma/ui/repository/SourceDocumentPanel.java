@@ -1172,18 +1172,6 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			documentsTree.setChildrenAllowed(smcr, false);
 		}
 		
-		if (currentCorpus != null) {
-			try {
-				repository.update(currentCorpus, sd);
-				setSourceDocumentsFilter(currentCorpus);
-			} catch (IOException e) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error adding Source Document to Corpus! " +
-					"The Source Document has been added to 'All Documents's", e);
-			}
-			
-		}
-		
 	}
 	
 	private void addUserMarkupCollectionReferenceToTree(
