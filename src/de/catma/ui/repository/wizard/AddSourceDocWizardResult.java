@@ -18,38 +18,41 @@
  */
 package de.catma.ui.repository.wizard;
 
+import java.util.ArrayList;
+
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 
 public class AddSourceDocWizardResult {
-
-	private SourceDocumentInfo sourceDocumentInfo;
-	private SourceDocument sourceDocument;
-	private String sourceDocumentID = null;
 	
+	private ArrayList<SourceDocumentResult> sourceDocumentResults;
+
 	public AddSourceDocWizardResult() {
 		super();
-		this.sourceDocumentInfo = new SourceDocumentInfo();
+		this.sourceDocumentResults = new ArrayList<SourceDocumentResult>();
+		
+		SourceDocumentResult initialSourceDocumentResult = new SourceDocumentResult();
+		this.sourceDocumentResults.add(initialSourceDocumentResult);
 	}
 	
 	public SourceDocumentInfo getSourceDocumentInfo() {
-		return sourceDocumentInfo;
+		return this.sourceDocumentResults.get(0).getSourceDocumentInfo();
 	}
 	
 	public SourceDocument getSourceDocument() {
-		return sourceDocument;
+		return this.sourceDocumentResults.get(0).getSourceDocument();
 	}
 	
 	public void setSourceDocument(SourceDocument sourceDocument) {
-		this.sourceDocument = sourceDocument;
+		this.sourceDocumentResults.get(0).setSourceDocument(sourceDocument);
 	}
 	
 	public void setSourceDocumentID(String sourceDocumentID) {
-		this.sourceDocumentID = sourceDocumentID;
+		this.sourceDocumentResults.get(0).setSourceDocumentID(sourceDocumentID);
 	}
 	
 	public String getSourceDocumentID() {
-		return sourceDocumentID;
+		return this.sourceDocumentResults.get(0).getSourceDocumentID();
 	}
 	
 }
