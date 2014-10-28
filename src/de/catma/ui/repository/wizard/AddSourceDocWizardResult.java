@@ -22,17 +22,21 @@ import java.util.ArrayList;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.TechInfoSet;
 
 public class AddSourceDocWizardResult {
 	
+	private TechInfoSet inputTechInfoSet;	
 	private ArrayList<SourceDocumentResult> sourceDocumentResults;
 
 	public AddSourceDocWizardResult() {
 		super();
-		this.sourceDocumentResults = new ArrayList<SourceDocumentResult>();
 		
-		SourceDocumentResult initialSourceDocumentResult = new SourceDocumentResult();
-		this.sourceDocumentResults.add(initialSourceDocumentResult);
+		this.sourceDocumentResults = new ArrayList<SourceDocumentResult>();
+	}
+	
+	public void AddSourceDocumentResults(ArrayList<SourceDocumentResult> sourceDocumentResults) {
+		this.sourceDocumentResults.addAll(sourceDocumentResults);
 	}
 	
 	public SourceDocumentInfo getSourceDocumentInfo() {
@@ -53,6 +57,14 @@ public class AddSourceDocWizardResult {
 	
 	public String getSourceDocumentID() {
 		return this.sourceDocumentResults.get(0).getSourceDocumentID();
+	}
+	
+	public TechInfoSet getInputTechInfoSet() {
+		return this.inputTechInfoSet;
+	}
+	
+	public void setInputTechInfoSet(TechInfoSet tis) {
+		this.inputTechInfoSet = tis;
 	}
 	
 }

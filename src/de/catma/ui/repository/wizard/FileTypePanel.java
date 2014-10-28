@@ -20,8 +20,10 @@ package de.catma.ui.repository.wizard;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.CRC32;
@@ -47,6 +49,7 @@ import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentHandler;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.TechInfoSet;
 import de.catma.document.source.contenthandler.DefaultProtocolHandler;
 import de.catma.document.source.contenthandler.HttpProtocolHandler;
 import de.catma.document.source.contenthandler.ProtocolHandler;
@@ -59,7 +62,6 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	private ComboBox cbFileType;
 	private Tree fileEncodingTree;
 	private boolean onAdvance = false;
-	private SourceDocumentInfo sourceDocumentInfo;
 	private byte[] currentByteContent;
 	private Label taPreview;
 //	private UploadPanel uploadPanel;
@@ -74,7 +76,6 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			Repository repository) {
 		super(2,4);
 		this.wizardResult = wizardResult;
-		this.sourceDocumentInfo = wizardResult.getSourceDocumentInfo();
 		this.wizardStepListener = wizardStepListener;
 		this.repository = repository;
 		initComponents();
@@ -85,84 +86,116 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		onAdvance = false;
 		try {
 			
-			wizardResult.setSourceDocumentID(
-				repository.getIdFromURI(
-					sourceDocumentInfo.getTechInfoSet().getURI()));
+			final TechInfoSet inputTechInfoSet = wizardResult.getInputTechInfoSet();
+			final URI inputFileURI = inputTechInfoSet.getURI();						
+			final String inputFileID = repository.getIdFromURI(inputFileURI);
+			final String mimeTypeFromUpload = inputTechInfoSet.getMimeType();
 			
-			final String sourceDocumentFileUri = 
-					repository.getFileURL(wizardResult.getSourceDocumentID(), 
-							((CatmaApplication)UI.getCurrent()).getTempDirectory() + "/");
-			final String mimeTypeFromUpload = 
-					sourceDocumentInfo.getTechInfoSet().getMimeType();
-			final URI sourceDocURI = sourceDocumentInfo.getTechInfoSet().getURI();
+			ProtocolHandler protocolHandler = getProtocolHandlerForUri(inputFileURI, inputFileID, mimeTypeFromUpload);
 			
-			sourceDocumentInfo.setContentInfoSet(new ContentInfoSet());
-			setVisiblePreviewComponents(false);
-//			setVisibleXSLTInputComponents(false);
+			String inputMimeType = protocolHandler.getMimeType();
+			inputTechInfoSet.setMimeType(inputMimeType);
 			
-			ProtocolHandler protocolHandler = null;
-			if (sourceDocURI.toURL().getProtocol().toLowerCase().equals("http")) {
-				  protocolHandler = 
-						  new HttpProtocolHandler(
-								 sourceDocURI, 
-								 sourceDocumentFileUri);
-			}
-			else {
-				protocolHandler = 
-						new DefaultProtocolHandler(
-								sourceDocURI, mimeTypeFromUpload);
-			}	
-
-			currentByteContent = protocolHandler.getByteContent();
-
-			sourceDocumentInfo.getTechInfoSet().setMimeType(protocolHandler.getMimeType());
-			FileType fileType = FileType.getFileType(protocolHandler.getMimeType());
+			ArrayList<SourceDocumentResult> sourceDocumentResults = makeSourceDocumentResultsFromInputFile(inputTechInfoSet);
 			
-			sourceDocumentInfo.getTechInfoSet().setFileType(fileType);
+			wizardResult.AddSourceDocumentResults(sourceDocumentResults);
 			
-			if (fileType.equals(FileType.TEXT)
-					||fileType.equals(FileType.HTML)) {
+			currentByteContent = protocolHandler.getByteContent(); // must be before setting charset. TODO: use outputfile
+			
+			FileType outputFileType = wizardResult.getSourceDocumentInfo().getTechInfoSet().getFileType();
+			if (outputFileType.equals(FileType.TEXT)
+					||outputFileType.equals(FileType.HTML)) {
 				
-				Charset charset = Charset.forName(protocolHandler.getEncoding());
+				Charset charset = wizardResult.getSourceDocumentInfo().getTechInfoSet().getCharset();
 				fileEncodingTree.select(charset);
 				Object parent = fileEncodingTree.getParent(charset);
 				while (parent != null) {
 					fileEncodingTree.expandItem(parent);
 					parent = fileEncodingTree.getParent(parent);
-				}
-				sourceDocumentInfo.getTechInfoSet().setCharset(charset);
-			}
-			else {
-				try {
-					sourceDocumentInfo.getTechInfoSet().setFileOSType(
-							FileOSType.INDEPENDENT);
-					SourceDocumentHandler sourceDocumentHandler = 
-							new SourceDocumentHandler();
-					SourceDocument sourceDocument =
-							sourceDocumentHandler.loadSourceDocument(
-							wizardResult.getSourceDocumentID(), 
-							sourceDocumentInfo);
-					
-					sourceDocument.getSourceContentHandler().load(
-							new ByteArrayInputStream(currentByteContent));
-					wizardResult.setSourceDocument(sourceDocument);
-				} catch (Exception e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"Error detecting the file type!", e);
-				}
-			}
+				}					
+			}	
+			
+			setVisiblePreviewComponents(false);
+//			setVisibleXSLTInputComponents(false);
+			
 			if ((cbFileType.getValue() != null ) 
-					&& cbFileType.getValue().equals(fileType)) {
+					&& cbFileType.getValue().equals(outputFileType)) {
 				handleFileType();
 			}
 			else {
-				cbFileType.setValue(fileType);
+				cbFileType.setValue(outputFileType);
 			}
 		}
 		catch (Exception exc) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error detecting file type", exc);
 		}
+	}
+	
+	private ProtocolHandler getProtocolHandlerForUri(URI inputFileURI, String fileID, String inputFileMimeType) throws MalformedURLException, IOException{
+		if (inputFileURI.toURL().getProtocol().toLowerCase().equals("http")) {
+			
+			final String destinationFileUri = repository.getFileURL(
+					fileID, ((CatmaApplication)UI.getCurrent()).getTempDirectory() + "/");
+			
+			return new HttpProtocolHandler(
+					inputFileURI, destinationFileUri);
+		}
+		else {
+			return new DefaultProtocolHandler(
+					inputFileURI, inputFileMimeType);
+		}
+	}
+	
+	private ArrayList<SourceDocumentResult> makeSourceDocumentResultsFromInputFile(TechInfoSet inputTechInfoSet) throws MalformedURLException, IOException {
+		
+		SourceDocumentResult outputSourceDocument = new SourceDocumentResult();
+		
+		String sourceDocumentID = repository.getIdFromURI(inputTechInfoSet.getURI());
+		outputSourceDocument.setSourceDocumentID(sourceDocumentID);
+		TechInfoSet outputTechInfoSet = inputTechInfoSet; // TODO: make a proper copy
+		
+		SourceDocumentInfo outputSourceDocumentInfo = outputSourceDocument.getSourceDocumentInfo();
+		outputSourceDocumentInfo.setTechInfoSet(outputTechInfoSet);
+		outputSourceDocumentInfo.setContentInfoSet(new ContentInfoSet());
+		
+		FileType fileType = FileType.getFileType(inputTechInfoSet.getMimeType());
+		
+		outputSourceDocumentInfo.getTechInfoSet().setFileType(fileType);
+		
+		if (fileType.equals(FileType.TEXT)
+				||fileType.equals(FileType.HTML)) {
+			
+			
+			ProtocolHandler protocolHandler = getProtocolHandlerForUri(inputTechInfoSet.getURI(), sourceDocumentID, inputTechInfoSet.getMimeType());
+			
+			Charset charset = Charset.forName(protocolHandler.getEncoding());
+			outputSourceDocumentInfo.getTechInfoSet().setCharset(charset);
+		}
+		else {
+			try {
+				outputSourceDocumentInfo.getTechInfoSet().setFileOSType(
+						FileOSType.INDEPENDENT);
+				SourceDocumentHandler sourceDocumentHandler = 
+						new SourceDocumentHandler();
+				SourceDocument sourceDocument =
+						sourceDocumentHandler.loadSourceDocument(
+						outputSourceDocument.getSourceDocumentID(), 
+						outputSourceDocumentInfo);
+				
+				sourceDocument.getSourceContentHandler().load(
+						new ByteArrayInputStream(currentByteContent));
+				outputSourceDocument.setSourceDocument(sourceDocument);
+			} catch (Exception e) {
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
+						"Error detecting the file type!", e);
+			}
+		}
+		
+		ArrayList<SourceDocumentResult> output = new ArrayList<SourceDocumentResult>();
+		output.add(outputSourceDocument);
+		
+		return output;
 	}
 
 	private void showPreview() {
@@ -171,7 +204,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			SourceDocument sourceDocument =
 					sourceDocumentHandler.loadSourceDocument(
 						wizardResult.getSourceDocumentID(),
-						sourceDocumentInfo);
+						wizardResult.getSourceDocumentInfo());
 			load(sourceDocument);
 			taPreview.setValue(
 					"<pre>" + sourceDocument.getContent(new Range(0, 2000)) + "</pre>");
@@ -190,10 +223,10 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		FileOSType fileOSType = 
 				FileOSType.getFileOSType(sourceDocument.getContent());
 		
-		sourceDocumentInfo.getTechInfoSet().setFileOSType(fileOSType);
+		wizardResult.getSourceDocumentInfo().getTechInfoSet().setFileOSType(fileOSType);
 		CRC32 checksum = new CRC32();
 		checksum.update(currentByteContent);
-		sourceDocumentInfo.getTechInfoSet().setChecksum(checksum.getValue());
+		wizardResult.getSourceDocumentInfo().getTechInfoSet().setChecksum(checksum.getValue());
 	}
 
 	private void initComponents() {
@@ -278,7 +311,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			
 			public void valueChange(ValueChangeEvent event) {
 				if (fileEncodingTree.getValue() instanceof Charset) {
-					sourceDocumentInfo.getTechInfoSet().setCharset(
+					wizardResult.getSourceDocumentInfo().getTechInfoSet().setCharset(
 							(Charset)fileEncodingTree.getValue());
 					showPreview();
 				}
@@ -289,9 +322,9 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	}
 	
 	private void handleFileType() {
-		sourceDocumentInfo.getTechInfoSet().setFileType(
+		wizardResult.getSourceDocumentInfo().getTechInfoSet().setFileType(
 				(FileType)cbFileType.getValue());
-		switch(sourceDocumentInfo.getTechInfoSet().getFileType()) {
+		switch(wizardResult.getSourceDocumentInfo().getTechInfoSet().getFileType()) {
 			case TEXT : {
 //				setVisibleXSLTInputComponents(false);
 				setVisiblePreviewComponents(true);

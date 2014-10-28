@@ -108,8 +108,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 	private WizardStepListener wizardStepListener;
 	private AddSourceDocWizardResult wizardResult;
 	private CheckBox cbUseApostrophe;
-	private SourceDocumentInfo sourceDocumentInfo;
-
+	
 	private ListSelect languagesListSelect;
 
 	private TreeSet<LanguageItem> sortedLangs;
@@ -132,7 +131,6 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		this.onAdvance = true;
 		this.wizardStepListener = wizardStepListener;
 		this.wizardResult = wizardResult;
-		this.sourceDocumentInfo = wizardResult.getSourceDocumentInfo();
 		initComponents();
 		initActions();
 	}
@@ -144,7 +142,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 				onAdvance = (languagesListSelect.getValue() != null);
 				if (languagesListSelect.getValue() != null) {
 					
-					sourceDocumentInfo.getIndexInfoSet().setLocale(
+					wizardResult.getSourceDocumentInfo().getIndexInfoSet().setLocale(
 							((LanguageItem)languagesListSelect.getValue()).getLocale());
 				}
 				wizardStepListener.stepChanged(IndexerOptionsPanel.this);
@@ -183,11 +181,11 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 			public void buttonClick(ClickEvent event) {
 				unseparableCharacterSequencesListSelect.removeItem(
 						unseparableCharacterSequencesListSelect.getValue());
-				sourceDocumentInfo.getIndexInfoSet().removeUnseparableCharacterSequence(
+				wizardResult.getSourceDocumentInfo().getIndexInfoSet().removeUnseparableCharacterSequence(
 						tfUcs.getValue().toString());
-				if (!sourceDocumentInfo.getIndexInfoSet().getUnseparableCharacterSequences().isEmpty()) {
+				if (!wizardResult.getSourceDocumentInfo().getIndexInfoSet().getUnseparableCharacterSequences().isEmpty()) {
 					unseparableCharacterSequencesListSelect.setValue(
-						sourceDocumentInfo.getIndexInfoSet().getUnseparableCharacterSequences().get(0));
+							wizardResult.getSourceDocumentInfo().getIndexInfoSet().getUnseparableCharacterSequences().get(0));
 				}
 			}
 		});
@@ -197,11 +195,11 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 			public void valueChange(ValueChangeEvent event) {
 				
 				if (cbUseApostrophe.getValue() 
-						&& (sourceDocumentInfo.getIndexInfoSet().getUserDefinedSeparatingCharacters().isEmpty())) {
-					sourceDocumentInfo.getIndexInfoSet().addUserDefinedSeparatingCharacter(APOSTROPHE);
+						&& (wizardResult.getSourceDocumentInfo().getIndexInfoSet().getUserDefinedSeparatingCharacters().isEmpty())) {
+					wizardResult.getSourceDocumentInfo().getIndexInfoSet().addUserDefinedSeparatingCharacter(APOSTROPHE);
 				}
 				else {
-					sourceDocumentInfo.getIndexInfoSet().removeUserDefinedSeparatingCharacter(APOSTROPHE);
+					wizardResult.getSourceDocumentInfo().getIndexInfoSet().removeUserDefinedSeparatingCharacter(APOSTROPHE);
 				}
 			}
 		});
@@ -312,11 +310,11 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 
 	public void stepActivated(boolean forward) {
 		try {
-			sourceDocumentInfo.setIndexInfoSet(new IndexInfoSet());
+			wizardResult.getSourceDocumentInfo().setIndexInfoSet(new IndexInfoSet());
 			
 			LanguageDetector ld = new LanguageDetector();
 			Locale locale = ld.getLocale(ld.detect(wizardResult.getSourceDocument().getContent()));
-			sourceDocumentInfo.getIndexInfoSet().setLocale(locale);
+			wizardResult.getSourceDocumentInfo().getIndexInfoSet().setLocale(locale);
 			
 			LanguageItem current = new LanguageItem(locale);
 			for (LanguageItem li : this.sortedLangs) {
@@ -339,7 +337,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		if ((ucs != null) && !ucs.isEmpty()) {
 			unseparableCharacterSequencesListSelect.addItem(ucs);
 			unseparableCharacterSequencesListSelect.setValue(ucs);
-			sourceDocumentInfo.getIndexInfoSet().addUnseparableCharacterSequence(ucs);
+			wizardResult.getSourceDocumentInfo().getIndexInfoSet().addUnseparableCharacterSequence(ucs);
 			tfUcs.setValue("");
 			btAddUcs.setEnabled(false);
 		}
