@@ -209,6 +209,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		return output;
 	}
 
+	// TODO: this needs to happen for every file in the list before moving to the next step
 	private void showPreview(SourceDocumentResult sdr) {
 		SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
 		try {
@@ -227,6 +228,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		}
 	}
 	
+	// TODO: this needs to happen for every file in the list before moving to the next step
 	private void load(SourceDocumentResult sdr) throws IOException {		
 		SourceDocument sourceDocument = sdr.getSourceDocument();
 		TechInfoSet techInfoSet = sdr.getSourceDocumentInfo().getTechInfoSet();
@@ -273,7 +275,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		table.setSelectable(true);
 		table.setImmediate(true);
 		
-		table.addItemClickListener(rowClickListener());
+//		table.addItemClickListener(rowClickListener());
 		table.addValueChangeListener(new ValueChangeListener() {
 			public void valueChange(ValueChangeEvent event) {
 				if(table.getValue() == null){
