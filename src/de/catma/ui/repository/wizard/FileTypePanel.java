@@ -153,7 +153,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		
 		String sourceDocumentID = repository.getIdFromURI(inputTechInfoSet.getURI());
 		outputSourceDocument.setSourceDocumentID(sourceDocumentID);
-		TechInfoSet outputTechInfoSet = inputTechInfoSet; // TODO: make a proper copy
+		TechInfoSet outputTechInfoSet = new TechInfoSet(inputTechInfoSet);
 		
 		SourceDocumentInfo outputSourceDocumentInfo = outputSourceDocument.getSourceDocumentInfo();
 		outputSourceDocumentInfo.setTechInfoSet(outputTechInfoSet);
