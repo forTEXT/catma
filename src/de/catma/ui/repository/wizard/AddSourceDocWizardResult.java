@@ -19,6 +19,7 @@
 package de.catma.ui.repository.wizard;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
@@ -33,6 +34,10 @@ public class AddSourceDocWizardResult {
 		super();
 		
 		this.sourceDocumentResults = new ArrayList<SourceDocumentResult>();
+	}
+	
+	public Collection<SourceDocumentResult> GetSourceDocumentResults() {
+		return this.sourceDocumentResults;
 	}
 	
 	public void AddSourceDocumentResults(ArrayList<SourceDocumentResult> sourceDocumentResults) {

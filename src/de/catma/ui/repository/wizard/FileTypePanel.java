@@ -24,18 +24,21 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.CRC32;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.data.util.BeanItemContainer;
+import com.vaadin.event.ItemClickEvent;
 import com.vaadin.shared.ui.label.ContentMode;
-import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.Table;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -59,10 +62,8 @@ import de.catma.ui.dialog.wizard.WizardStepListener;
 
 class FileTypePanel extends GridLayout implements DynamicWizardStep {
 
-	private ComboBox cbFileType;
-	private Tree fileEncodingTree;
+	private Table table;
 	private boolean onAdvance = false;
-	private byte[] currentByteContent;
 	private Label taPreview;
 //	private UploadPanel uploadPanel;
 //	private Label uploadLabel;
@@ -83,7 +84,16 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	}
 	
 	public void stepActivated(boolean forward) {
-		onAdvance = false;
+		if (!forward) {
+			return;
+		}
+		
+		if(wizardResult.GetSourceDocumentResults().size() > 0){
+			return;
+		}
+		
+		onAdvance = false; // TODO: this is currently being set to true in the HandleFileType event handler
+		
 		try {
 			
 			final TechInfoSet inputTechInfoSet = wizardResult.getInputTechInfoSet();
@@ -98,33 +108,15 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			
 			ArrayList<SourceDocumentResult> sourceDocumentResults = makeSourceDocumentResultsFromInputFile(inputTechInfoSet);
 			
+			BeanItemContainer<SourceDocumentResult> container = (BeanItemContainer<SourceDocumentResult>)table.getContainerDataSource();
+			for (SourceDocumentResult sdr : sourceDocumentResults) {
+				container.addBean(sdr);
+			}
+			
 			wizardResult.AddSourceDocumentResults(sourceDocumentResults);
 			
-			currentByteContent = protocolHandler.getByteContent(); // must be before setting charset. TODO: use outputfile
-			
-			FileType outputFileType = wizardResult.getSourceDocumentInfo().getTechInfoSet().getFileType();
-			if (outputFileType.equals(FileType.TEXT)
-					||outputFileType.equals(FileType.HTML)) {
-				
-				Charset charset = wizardResult.getSourceDocumentInfo().getTechInfoSet().getCharset();
-				fileEncodingTree.select(charset);
-				Object parent = fileEncodingTree.getParent(charset);
-				while (parent != null) {
-					fileEncodingTree.expandItem(parent);
-					parent = fileEncodingTree.getParent(parent);
-				}					
-			}	
-			
-			setVisiblePreviewComponents(false);
+//			setVisiblePreviewComponents(false);
 //			setVisibleXSLTInputComponents(false);
-			
-			if ((cbFileType.getValue() != null ) 
-					&& cbFileType.getValue().equals(outputFileType)) {
-				handleFileType();
-			}
-			else {
-				cbFileType.setValue(outputFileType);
-			}
 		}
 		catch (Exception exc) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -149,73 +141,96 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	
 	private ArrayList<SourceDocumentResult> makeSourceDocumentResultsFromInputFile(TechInfoSet inputTechInfoSet) throws MalformedURLException, IOException {
 		
-		SourceDocumentResult outputSourceDocument = new SourceDocumentResult();
+		ArrayList<SourceDocumentResult> output = new ArrayList<SourceDocumentResult>();
 		
-		String sourceDocumentID = repository.getIdFromURI(inputTechInfoSet.getURI());
-		outputSourceDocument.setSourceDocumentID(sourceDocumentID);
-		TechInfoSet outputTechInfoSet = inputTechInfoSet; // TODO: make a proper copy
+		FileType inputFileType = FileType.getFileType(inputTechInfoSet.getMimeType());
 		
-		SourceDocumentInfo outputSourceDocumentInfo = outputSourceDocument.getSourceDocumentInfo();
-		outputSourceDocumentInfo.setTechInfoSet(outputTechInfoSet);
-		outputSourceDocumentInfo.setContentInfoSet(new ContentInfoSet());
-		
-		FileType fileType = FileType.getFileType(inputTechInfoSet.getMimeType());
-		
-		outputSourceDocumentInfo.getTechInfoSet().setFileType(fileType);
-		
-		if (fileType.equals(FileType.TEXT)
-				||fileType.equals(FileType.HTML)) {
+		if (inputFileType != FileType.ZIP) {
+			SourceDocumentResult outputSourceDocumentResult = new SourceDocumentResult();
 			
+			String sourceDocumentID = repository.getIdFromURI(inputTechInfoSet.getURI());
+			outputSourceDocumentResult.setSourceDocumentID(sourceDocumentID);
 			
-			ProtocolHandler protocolHandler = getProtocolHandlerForUri(inputTechInfoSet.getURI(), sourceDocumentID, inputTechInfoSet.getMimeType());
+			SourceDocumentInfo outputSourceDocumentInfo = outputSourceDocumentResult.getSourceDocumentInfo();			
+			outputSourceDocumentInfo.setTechInfoSet(new TechInfoSet(inputTechInfoSet));
+			outputSourceDocumentInfo.setContentInfoSet(new ContentInfoSet());
 			
-			Charset charset = Charset.forName(protocolHandler.getEncoding());
-			outputSourceDocumentInfo.getTechInfoSet().setCharset(charset);
+			outputSourceDocumentInfo.getTechInfoSet().setFileType(inputFileType);
+			
+			output.add(outputSourceDocumentResult);
 		}
 		else {
-			try {
-				outputSourceDocumentInfo.getTechInfoSet().setFileOSType(
-						FileOSType.INDEPENDENT);
-				SourceDocumentHandler sourceDocumentHandler = 
-						new SourceDocumentHandler();
-				SourceDocument sourceDocument =
-						sourceDocumentHandler.loadSourceDocument(
-						outputSourceDocument.getSourceDocumentID(), 
-						outputSourceDocumentInfo);
-				
-				sourceDocument.getSourceContentHandler().load(
-						new ByteArrayInputStream(currentByteContent));
-				outputSourceDocument.setSourceDocument(sourceDocument);
-			} catch (Exception e) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error detecting the file type!", e);
-			}
+			// TODO: open zipfile, and find all the contents
 		}
 		
-		ArrayList<SourceDocumentResult> output = new ArrayList<SourceDocumentResult>();
-		output.add(outputSourceDocument);
+		
+		for (SourceDocumentResult sdr : output) {
+			TechInfoSet sdrTechInfoSet = sdr.getSourceDocumentInfo().getTechInfoSet();
+			String sdrSourceDocumentId = sdr.getSourceDocumentID();
+			SourceDocumentInfo sdrSourceDocumentInfo = sdr.getSourceDocumentInfo();
+			FileType sdrFileType = FileType.getFileType(sdrTechInfoSet.getMimeType());
+			
+			ProtocolHandler protocolHandler = getProtocolHandlerForUri(sdrTechInfoSet.getURI(), sdrSourceDocumentId, sdrTechInfoSet.getMimeType());
+			
+			if (sdrFileType.equals(FileType.TEXT)
+					||sdrFileType.equals(FileType.HTML)) {
+				
+				Charset charset = Charset.forName(protocolHandler.getEncoding());
+				sdrTechInfoSet.setCharset(charset);
+			}
+			else {
+				try {
+					sdrTechInfoSet.setFileOSType(
+							FileOSType.INDEPENDENT);
+					SourceDocumentHandler sourceDocumentHandler = 
+							new SourceDocumentHandler();
+					SourceDocument sourceDocument =
+							sourceDocumentHandler.loadSourceDocument(
+									sdrSourceDocumentId, 
+									sdrSourceDocumentInfo
+								);
+					
+					byte[] currentByteContent = protocolHandler.getByteContent();
+					
+					sourceDocument.getSourceContentHandler().load(
+							new ByteArrayInputStream(currentByteContent));
+					sdr.setSourceDocument(sourceDocument);
+				} catch (Exception e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+							"Error detecting the file type!", e);
+				}
+			}
+		}
 		
 		return output;
 	}
 
-	private void showPreview() {
+	private void showPreview(SourceDocumentResult sdr) {
 		SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
 		try {
 			SourceDocument sourceDocument =
 					sourceDocumentHandler.loadSourceDocument(
-						wizardResult.getSourceDocumentID(),
-						wizardResult.getSourceDocumentInfo());
-			load(sourceDocument);
+							sdr.getSourceDocumentID(),
+							sdr.getSourceDocumentInfo());
+			sdr.setSourceDocument(sourceDocument);
+			load(sdr);
 			taPreview.setValue(
 					"<pre>" + sourceDocument.getContent(new Range(0, 2000)) + "</pre>");
-			wizardResult.setSourceDocument(sourceDocument);
+			
 		} catch (Exception e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error loading the preview for the document!", e);
 		}
 	}
 	
-	private void load(SourceDocument sourceDocument) throws IOException {
+	private void load(SourceDocumentResult sdr) throws IOException {		
+		SourceDocument sourceDocument = sdr.getSourceDocument();
+		TechInfoSet techInfoSet = sdr.getSourceDocumentInfo().getTechInfoSet();
+		String documentId = sdr.getSourceDocumentID();
+		
+		ProtocolHandler protocolHandler = getProtocolHandlerForUri(techInfoSet.getURI(), documentId, techInfoSet.getMimeType());
+		
+		byte[] currentByteContent = protocolHandler.getByteContent();
 
 		sourceDocument.getSourceContentHandler().load(
 				new ByteArrayInputStream(currentByteContent));
@@ -223,71 +238,52 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		FileOSType fileOSType = 
 				FileOSType.getFileOSType(sourceDocument.getContent());
 		
-		wizardResult.getSourceDocumentInfo().getTechInfoSet().setFileOSType(fileOSType);
+		sdr.getSourceDocumentInfo().getTechInfoSet().setFileOSType(fileOSType);
 		CRC32 checksum = new CRC32();
 		checksum.update(currentByteContent);
-		wizardResult.getSourceDocumentInfo().getTechInfoSet().setChecksum(checksum.getValue());
+		sdr.getSourceDocumentInfo().getTechInfoSet().setChecksum(checksum.getValue());
 	}
 
 	private void initComponents() {
 		setSpacing(true);
 		setSizeFull();
 		setMargin(true);
-
 		
-		cbFileType = new ComboBox("File type");
-		for (FileType ft : FileType.values()) {
-			cbFileType.addItem(ft);
-		}
-		cbFileType.setNullSelectionAllowed(false);
-		cbFileType.setImmediate(true);
+		BeanItemContainer<SourceDocumentResult> container = new BeanItemContainer<SourceDocumentResult>(SourceDocumentResult.class);
+		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.fileName");
+		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.fileType");
+		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.charset");
 		
-		addComponent(cbFileType, 0, 0);
+		table = new Table("Documents", container);
 		
-		fileEncodingTree = new Tree("File encoding");
-		fileEncodingTree.setImmediate(true);
+		table.addGeneratedColumn("sourceDocumentInfo.techInfoSet.fileType", new ComboBoxColumnGenerator(Arrays.asList(FileType.values())));
+		table.addGeneratedColumn("sourceDocumentInfo.techInfoSet.charset", new ComboBoxColumnGenerator(Charset.availableCharsets().values()));
 		
-		Map<String, Map<String, List<Charset>>> regionLanguageCharsetMapping = 
-				CharsetLanguageInfo.SINGLETON.getRegionLanguageCharsetMapping();
+		table.setVisibleColumns(new Object[]{
+				"sourceDocumentInfo.techInfoSet.fileName",
+				"sourceDocumentInfo.techInfoSet.fileType",
+				"sourceDocumentInfo.techInfoSet.charset"
+		});
+		table.setColumnHeaders(new String[]{"File Name", "File Type", "Encoding"});
 		
-		for (String region : regionLanguageCharsetMapping.keySet() ) {
-			fileEncodingTree.addItem(region);
-			Map<String, List<Charset>> languages = regionLanguageCharsetMapping.get(region);
-			for (String language : languages.keySet()) {
-				fileEncodingTree.addItem(language);
-				fileEncodingTree.setParent(language, region);
-				for (Charset charset : languages.get(language)) {
-					fileEncodingTree.addItem(charset);
-					fileEncodingTree.setParent(charset, language);
-					fileEncodingTree.setChildrenAllowed(charset, false);
-				}
-			}
-		}
+		table.setSelectable(true);
+		table.setImmediate(true);
 		
-		Map<String, List<Charset>> categoryCharsetMapping = 
-				CharsetLanguageInfo.SINGLETON.getCategoryCharsetMapping();
+		table.addItemClickListener(rowClickListener());
+				
+		addComponent(table, 0, 0);
 		
-		for (String category : categoryCharsetMapping.keySet()) {
-			fileEncodingTree.addItem(category);
-			for (Charset charset : categoryCharsetMapping.get(category)) {
-				fileEncodingTree.addItem(charset);
-				fileEncodingTree.setParent(charset, category);
-				fileEncodingTree.setChildrenAllowed(charset, false);
-			}
-		}
 		VerticalLayout previewContent = new VerticalLayout();
 		previewContent.setMargin(true);
 		previewPanel = new Panel("Preview", previewContent);
 		previewPanel.getContent().setSizeUndefined();
 		previewPanel.setHeight("300px");
 		
-		
 		this.taPreview = new Label();
 		this.taPreview.setContentMode(ContentMode.HTML);
 		previewContent.addComponent(taPreview);
 		
-		addComponent(fileEncodingTree, 0, 1);
-		addComponent(previewPanel, 1, 1);
+		addComponent(previewPanel, 1, 0);
 		
 //		this.uploadLabel = new Label("Upload the corresponding XSLT file:");
 //		this.uploadPanel = new UploadPanel();
@@ -295,41 +291,50 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 //		addComponent(uploadPanel, 0, 3, 1, 3);
 
 		setColumnExpandRatio(1, 1);
-		
 	}
 	
 	private void initActions() {
-		cbFileType.addValueChangeListener(new ValueChangeListener() {
-			
-			public void valueChange(ValueChangeEvent event) {
-				handleFileType();
-			}
-
-		});
+//		cbFileType.addValueChangeListener(new ValueChangeListener() {
+//			
+//			public void valueChange(ValueChangeEvent event) {
+//				handleFileType();
+//			}
+//
+//		});
 		
-		fileEncodingTree.addValueChangeListener(new ValueChangeListener() {
-			
-			public void valueChange(ValueChangeEvent event) {
-				if (fileEncodingTree.getValue() instanceof Charset) {
-					wizardResult.getSourceDocumentInfo().getTechInfoSet().setCharset(
-							(Charset)fileEncodingTree.getValue());
-					showPreview();
-				}
-			}
-		});
+//		fileEncodingTree.addValueChangeListener(new ValueChangeListener() {
+//			
+//			public void valueChange(ValueChangeEvent event) {
+//				if (fileEncodingTree.getValue() instanceof Charset) {
+//					wizardResult.getSourceDocumentInfo().getTechInfoSet().setCharset(
+//							(Charset)fileEncodingTree.getValue());
+//					showPreview();
+//				}
+//			}
+//		});
 		
 		// TODO add listeners to uploadpanel and handle xslt loading
 	}
 	
-	private void handleFileType() {
-		wizardResult.getSourceDocumentInfo().getTechInfoSet().setFileType(
-				(FileType)cbFileType.getValue());
-		switch(wizardResult.getSourceDocumentInfo().getTechInfoSet().getFileType()) {
+	private ItemClickEvent.ItemClickListener rowClickListener() {
+		return new ItemClickEvent.ItemClickListener() {
+			
+			public void itemClick(ItemClickEvent event) {
+				handleFileType((SourceDocumentResult)event.getItemId());
+			}
+		};
+	}
+	
+	private void handleFileType(SourceDocumentResult sdr) {
+		switch(sdr.getSourceDocumentInfo().getTechInfoSet().getFileType()) {
 			case TEXT : {
 //				setVisibleXSLTInputComponents(false);
-				setVisiblePreviewComponents(true);
-				fileEncodingTree.setVisible(true);
-				showPreview();
+				
+//				setVisiblePreviewComponents(true);
+//				fileEncodingTree.setVisible(true);
+				
+				//TODO: enable encoding combobox
+				showPreview(sdr);
 				onAdvance = true;
 				break;
 			}
@@ -342,8 +347,11 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			default : {
 //				setVisibleXSLTInputComponents(false);
 				setVisiblePreviewComponents(true);
-				fileEncodingTree.setVisible(false);
-				showPreview();
+				
+//				fileEncodingTree.setVisible(false);
+				
+				//TODO: disable encoding combobox
+				showPreview(sdr);
 				onAdvance = true;
 			}
 		}

@@ -79,6 +79,7 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 
 				TechInfoSet ti = 
 						new TechInfoSet(
+								event.getFilename(),
 								new SourceDocumentHandler().getMimeType(
 									event.getFilename(), event.getMIMEType()), // the event's mimetype can be wrong (eg. RTF) 
 								uploadPanel.getUploadedFileUri());
@@ -100,7 +101,8 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 					}
 					URL url = new URL(urlText);
 					
-					TechInfoSet ti = new TechInfoSet(null, url.toURI()); //TODO: mime type detection?
+					//TODO: filename?
+					TechInfoSet ti = new TechInfoSet(null, null, url.toURI()); //TODO: mime type detection?
 					wizardResult.setInputTechInfoSet(ti);
 					onAdvance = true;
 				}
