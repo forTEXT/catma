@@ -1,0 +1,87 @@
+@import "default.scss";
+
+.cleanew {
+  @include cleanew;
+   
+	.catma-mainwindow {
+		background-image: url(logo.gif);
+		background-repeat:no-repeat;
+		background-position:center;
+	}
+	
+	.v-margin-bottom {
+		padding-bottom: 12px;
+	}
+	
+	.v-tabsheet-tabitemcell .v-caption {
+		border-top: 2px solid transparent;
+		border-bottom: none!important;
+		text-overflow: inherit!important;
+	}
+	
+	.popupContent > .v-window-wrap > .v-window-contents > .v-scrollable > .v-verticallayout > .v-expand > .v-slot > .v-panel {
+		border:none!important;
+		-webkit-box-shadow: none!important;
+		box-shadow: none!important;
+	}
+	
+	.v-tabsheet-tabitemcell .v-tabsheet-tabitem-selected .v-caption.v-caption {
+		border-color: #dfdfdf;
+		color: #197de1;
+		background-color: white!important;
+		border-left: 1px solid #dfdfdf;
+		border-right: 1px solid #dfdfdf;
+		padding: 0px 10px;
+	}
+	
+	.v-slot-light > .v-panel {
+		border: none!important;
+		-webkit-box-shadow: none!important;
+		box-shadow: none!important;
+	}
+	
+	.v-slot > .v-button {
+		white-space: normal!important;	
+	}
+	
+	.v-button {
+		padding: 5px 10px!important;
+		height: auto!important;
+		font-size: 12px;
+	}
+	
+	.v-table-caption-container {
+		padding: 10px 10px 10px!important;
+		min-height: 0px!important;
+	}
+	
+	.v-tabsheet-tabcontainer {
+		padding-left: 10px;
+	}
+	
+	.tagger {
+		height: 100%!important;
+		outline: 1px solid #ddd;
+		margin: 20px;
+		padding: 5px;
+		font-family: Arial Unicode MS, Arial, sans-serif;
+		font-size: 12px;
+		color: #000;
+		white-space: nowrap;
+		overflow: auto!important;
+		-webkit-user-select: auto!important;
+		-khtml-user-select: auto!important;
+		-moz-user-select: auto!important;
+		-o-user-select: auto!important;
+		user-select: auto!important; 
+	}
+	
+	.v-scrollable > .v-has-height > .v-expand {
+		overflow: auto;
+	}
+	
+	#CONTENT0 {
+		padding: 15px 0px 15px 20px;
+	}
+
+}
