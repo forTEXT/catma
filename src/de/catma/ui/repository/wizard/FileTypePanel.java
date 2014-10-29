@@ -115,6 +115,10 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			
 			wizardResult.AddSourceDocumentResults(sourceDocumentResults);
 			
+			if(sourceDocumentResults.size() > 0){
+				table.select(sourceDocumentResults.get(0));
+			}
+			
 //			setVisiblePreviewComponents(false);
 //			setVisibleXSLTInputComponents(false);
 		}
@@ -270,6 +274,15 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		table.setImmediate(true);
 		
 		table.addItemClickListener(rowClickListener());
+		table.addValueChangeListener(new ValueChangeListener() {
+			public void valueChange(ValueChangeEvent event) {
+				if(table.getValue() == null){
+					return;
+				}
+				
+				handleFileType((SourceDocumentResult)table.getValue());				
+			}
+		});
 				
 		addComponent(table, 0, 0);
 		
