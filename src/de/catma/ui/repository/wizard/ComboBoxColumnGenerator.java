@@ -28,9 +28,11 @@ import com.vaadin.ui.Table;
 public class ComboBoxColumnGenerator implements Table.ColumnGenerator {
 	
 	private Collection<?> options;	
+	private ValueChangeListenerGenerator valueChangeListenerGenerator;
 	
-	public ComboBoxColumnGenerator(Collection<?> options) {
+	public ComboBoxColumnGenerator(Collection<?> options, ValueChangeListenerGenerator valueChangeListenerGenerator) {
 		this.options = options;
+		this.valueChangeListenerGenerator = valueChangeListenerGenerator;
 	}
 
 	public Component generateCell(Table source, Object itemId, Object columnId) {
@@ -40,7 +42,12 @@ public class ComboBoxColumnGenerator implements Table.ColumnGenerator {
     	ComboBox comboBox = new ComboBox(null, options);
     	comboBox.setNullSelectionAllowed(false);
     	comboBox.setPropertyDataSource(prop);
+    	comboBox.setImmediate(true);
     	
+    	if(valueChangeListenerGenerator != null){
+    		comboBox.addValueChangeListener(valueChangeListenerGenerator.generateValueChangeListener(source, itemId, columnId));
+    	}    	
+
         return comboBox;
 	}
 }
