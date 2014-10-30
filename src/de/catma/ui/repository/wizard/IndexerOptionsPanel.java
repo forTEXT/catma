@@ -108,6 +108,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 	private WizardStepListener wizardStepListener;
 	private AddSourceDocWizardResult wizardResult;
 	private CheckBox cbUseApostrophe;
+	private CheckBox cbAdvanceOptions;
 	
 	private ListSelect languagesListSelect;
 
@@ -124,6 +125,10 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 	private TextField tfUcs;
 
 	private Button btRemoveUcs;
+	
+	private HorizontalLayout ucsAddRemoveLayout;
+	
+	private VerticalLayout loadSavePanel;
 
 	public IndexerOptionsPanel(WizardStepListener wizardStepListener,
 			AddSourceDocWizardResult wizardResult) {
@@ -136,6 +141,12 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 	}
 
 	private void initActions() {
+		
+		cbUseApostrophe.setVisible(false);
+		unseparableCharacterSequencesListSelect.setVisible(false);
+		loadSavePanel.setVisible(false);
+		ucsAddRemoveLayout.setVisible(false);
+
 		this.languagesListSelect.addValueChangeListener(new ValueChangeListener() {
 			
 			public void valueChange(ValueChangeEvent event) {
@@ -203,6 +214,25 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 				}
 			}
 		});
+		
+		cbAdvanceOptions.addValueChangeListener(new ValueChangeListener() {
+			
+			public void valueChange(ValueChangeEvent event) {
+				
+				if (cbAdvanceOptions.getValue()) {
+					cbUseApostrophe.setVisible(true);
+					unseparableCharacterSequencesListSelect.setVisible(true);
+					loadSavePanel.setVisible(true);
+					ucsAddRemoveLayout.setVisible(true);
+				}
+				else {
+					cbUseApostrophe.setVisible(false);
+					unseparableCharacterSequencesListSelect.setVisible(false);
+					loadSavePanel.setVisible(false);
+					ucsAddRemoveLayout.setVisible(false);
+				}
+			}
+		});
 	}
 
 	private void initComponents() {
@@ -210,21 +240,28 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		setMargin(true);
 		
 		setSizeFull();
-		
+	
 		Label infoLabel = new Label();
-		
+			
 		infoLabel.setContentMode(ContentMode.HTML);
 		infoLabel.setValue(
 				"<p>This section allows you to finetune the creation " +
 				"of the word list of your Source Document.</p>" +
 				"<p>If you are unsure what to do, just select the language " +
-				"and leave everything else unmodified.</p>");
-		addComponent(infoLabel, 0, 0, 2, 0);
+				"and leave everything else unmodified.</p>" +
+				"or you can click below for the Expert Features:"
+				);
+		
+		addComponent(infoLabel, 0, 0, 0, 0);
+		
+		cbAdvanceOptions = new CheckBox("Advanced Options");
+		
+		addComponent(cbAdvanceOptions, 0, 1, 2, 1);
 		
 		cbUseApostrophe = new CheckBox("always use the apostrophe as a word separator");
 		
-		addComponent(cbUseApostrophe, 0, 1, 2, 1);
-		
+		addComponent(cbUseApostrophe, 0, 4);
+					
         Locale[] all = Locale.getAvailableLocales();
 
         sortedLangs = new TreeSet<LanguageItem>();
@@ -241,7 +278,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
         languagesListSelect.setImmediate(true);
         
         addComponent(languagesListSelect, 0, 2, 0, 3);
-        
+               
         unseparableCharacterSequencesListSelect = 
         		new ListSelect("Unseparable character sequences:");
         unseparableCharacterSequencesListSelect.setNullSelectionAllowed(false);
@@ -250,9 +287,9 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
         
         addComponent(unseparableCharacterSequencesListSelect, 1, 2, 1, 3);
         
-        HorizontalLayout ucsAddRemoveLayout = new HorizontalLayout();
+        ucsAddRemoveLayout = new HorizontalLayout();
         Panel ucsAddRemovePanel = new Panel(ucsAddRemoveLayout);
-        ucsAddRemovePanel.setStyleName(Reindeer.PANEL_LIGHT);
+        ucsAddRemovePanel.setStyleName("no-border");
         ucsAddRemoveLayout.setSpacing(true);
         ucsAddRemoveLayout.setSizeFull();
         
@@ -273,7 +310,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
         
         addComponent(ucsAddRemovePanel, 1, 4);
 
-        VerticalLayout loadSavePanel = new VerticalLayout();
+        loadSavePanel = new VerticalLayout();
         loadSavePanel.setSpacing(true);
         loadSavePanel.setWidth("80px");
         

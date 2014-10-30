@@ -9,6 +9,10 @@
 		background-position:center;
 	}
 	
+	.v-panel.v-widget.no-border.v-panel-no-border.v-has-width {
+		border: none!important;
+	}
+	
 	.v-margin-bottom {
 		padding-bottom: 12px;
 	}
