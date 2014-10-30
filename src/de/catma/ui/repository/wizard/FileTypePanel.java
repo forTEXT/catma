@@ -35,6 +35,7 @@ import java.util.zip.CRC32;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.commons.io.FilenameUtils;
 
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -179,7 +180,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			
 			while (entries.hasMoreElements()) {
 				ZipArchiveEntry entry = entries.nextElement();
-				String fileName = entry.getName();
+				String fileName = FilenameUtils.getName(entry.getName());
 				String fileId = idGenerator.generate();
 				
 				File entryDestination = new File(tempDir, fileId);
@@ -197,22 +198,22 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 					IOUtils.copy(bis, bos);
 					IOUtils.closeQuietly(bis);
 					IOUtils.closeQuietly(bos);
+					
+					SourceDocumentResult outputSourceDocumentResult = new SourceDocumentResult();
+					URI newURI = entryDestination.toURI();
+					
+					outputSourceDocumentResult.setSourceDocumentID(fileId);
+					
+					SourceDocumentInfo outputSourceDocumentInfo = outputSourceDocumentResult.getSourceDocumentInfo();
+					TechInfoSet newTechInfoSet = new TechInfoSet(fileName, null, newURI); // TODO: MimeType detection ?
+					FileType newFileType = FileType.getFileTypeFromName(fileName);
+					newTechInfoSet.setFileType(newFileType);
+					
+					outputSourceDocumentInfo.setTechInfoSet(newTechInfoSet);
+					outputSourceDocumentInfo.setContentInfoSet(new ContentInfoSet());
+					
+					output.add(outputSourceDocumentResult);
 				}
-				
-				SourceDocumentResult outputSourceDocumentResult = new SourceDocumentResult();
-				URI newURI = entryDestination.toURI();
-				
-				outputSourceDocumentResult.setSourceDocumentID(fileId);
-				
-				SourceDocumentInfo outputSourceDocumentInfo = outputSourceDocumentResult.getSourceDocumentInfo();
-				TechInfoSet newTechInfoSet = new TechInfoSet(fileName, null, newURI); // TODO: MimeType detection ?
-				FileType newFileType = FileType.getFileTypeFromName(fileName);
-				newTechInfoSet.setFileType(newFileType);
-				
-				outputSourceDocumentInfo.setTechInfoSet(newTechInfoSet);
-				outputSourceDocumentInfo.setContentInfoSet(new ContentInfoSet());
-				
-				output.add(outputSourceDocumentResult);
 			}
 			
 			ZipFile.closeQuietly(zipFile);
