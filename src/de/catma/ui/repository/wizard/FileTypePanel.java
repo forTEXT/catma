@@ -25,28 +25,23 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 import java.util.zip.CRC32;
 
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItemContainer;
-import com.vaadin.event.ItemClickEvent;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
-import com.vaadin.ui.Tree;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
-import de.catma.document.source.CharsetLanguageInfo;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
@@ -294,6 +289,16 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 				return new Property.ValueChangeListener() {
 					public void valueChange(ValueChangeEvent event) {
 						SourceDocumentResult sdr = (SourceDocumentResult) itemId;
+						
+						FileType fileType = sdr.getSourceDocumentInfo().getTechInfoSet().getFileType();
+						
+						Property encodingProperty = table.getContainerProperty(itemId, "sourceDocumentInfo.techInfoSet.charset");
+						boolean readOnly = fileType != FileType.HTML && fileType != FileType.TEXT;
+						encodingProperty.setReadOnly(readOnly);	
+						
+						if(readOnly){
+							sdr.getSourceDocumentInfo().getTechInfoSet().setCharset(null);
+						}					
 						
 						loadSourceDocumentAndContent(sdr);
 						showSourceDocumentPreview(sdr);
