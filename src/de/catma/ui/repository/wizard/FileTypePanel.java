@@ -116,9 +116,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			ArrayList<SourceDocumentResult> sourceDocumentResults = makeSourceDocumentResultsFromInputFile(inputTechInfoSet);
 			
 			BeanItemContainer<SourceDocumentResult> container = (BeanItemContainer<SourceDocumentResult>)table.getContainerDataSource();
-			for (SourceDocumentResult sdr : sourceDocumentResults) {
-				container.addBean(sdr);
-			}
+			container.addAll(sourceDocumentResults);
 			
 			wizardResult.AddSourceDocumentResults(sourceDocumentResults);
 			
