@@ -38,6 +38,7 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
+import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
@@ -249,6 +250,17 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		setSizeFull();
 		
 		Locale[] availableLocales = Locale.getAvailableLocales();
+		
+		
+		//REMOVEME!!!
+//		ArrayList<Locale> englishes = new ArrayList<Locale>();
+//		for (Locale locale : availableLocales) {
+//			if (new LanguageItem(locale).toString().startsWith("English")){
+//				englishes.add(locale);
+//			}
+//		}
+		//!!!
+		
 		ArrayList<LanguageItem> languageItems = new ArrayList<LanguageItem>();
 		for (Locale locale : availableLocales) {
 			languageItems.add(new LanguageItem(locale));
@@ -408,13 +420,22 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 			LanguageDetector languageDetector = new LanguageDetector();
 			
 			for (SourceDocumentResult sdr : sourceDocumentResults) {
-				sdr.getSourceDocumentInfo().setIndexInfoSet(new IndexInfoSet());				
+				IndexInfoSet newIndexInfoSet = new IndexInfoSet();				
 				
 				Locale locale = languageDetector.getLocale(
 					languageDetector.detect(sdr.getSourceDocument().getContent())
 				);
+				
 //				sdr.getSourceDocumentInfo().getIndexInfoSet().setLocale(locale);
-				sdr.getSourceDocumentInfo().getIndexInfoSet().setLanguage(new LanguageItem(locale));
+				
+				//BUGFIX: the locales returned by Locale.getAvailableLocales() in initComponents, which are used to populate the language comboboxes
+				//can differ from the locale returned by the LanguageDetector - this breaks the binding when LanguageItems are compared
+				//eg: a locale with language='en' region='' from getAvailableLocales(), vs language='en' region='EN' as detected by the LanguageDetector
+				//furthermore getAvailableLocales() "Returns an array of all installed locales.", so it may be system dependent
+				//presumably it can matter for display purposes if the detected locale is not installed?
+				newIndexInfoSet.setLanguage(new LanguageItem(locale));
+				
+				sdr.getSourceDocumentInfo().setIndexInfoSet(newIndexInfoSet);
 			}
 			
 			BeanItemContainer<SourceDocumentResult> container = (BeanItemContainer<SourceDocumentResult>)table.getContainerDataSource();
@@ -423,6 +444,20 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 			if(sourceDocumentResults.size() > 0){
 				table.select(sourceDocumentResults.toArray()[0]);
 			}
+			
+			for (SourceDocumentResult sdr : sourceDocumentResults) {
+				Property prop = table.getContainerProperty(sdr, "sourceDocumentInfo.indexInfoSet.language");
+				
+				//attempt to figure out which documents don't have a language selected
+				//if this was possible.. maybe something like almostEquals() on LanguageItem which compares the values of locale.getLanguage() as below
+				//could be used to select the closest match
+				
+				//https://vaadin.com/forum/#!/thread/1226422/7822434
+				//nope
+//				ComboBox b1 = (ComboBox)prop;
+//				ComboBox b2 = (ComboBox)prop.getValue();
+			}
+			
 			
 //			wizardResult.getSourceDocumentInfo().setIndexInfoSet(new IndexInfoSet());
 //			
