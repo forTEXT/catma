@@ -247,6 +247,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		
 		table = new Table("Documents", container);
 		
+		//TODO: investigate whether using a FieldFactory would make things easier..
 		table.addGeneratedColumn("sourceDocumentInfo.techInfoSet.fileType", 
 				new ComboBoxColumnGenerator(Arrays.asList(FileType.values()), makeComboBoxListenerGenerator())
 		);
@@ -262,6 +263,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		table.setColumnHeaders(new String[]{"File Name", "File Type", "Encoding"});
 		
 		table.setSelectable(true);
+		table.setNullSelectionAllowed(false);
 		table.setImmediate(true);
 		
 		addComponent(table, 0, 0);
@@ -321,9 +323,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		switch(sdr.getSourceDocumentInfo().getTechInfoSet().getFileType()) {
 			case TEXT : {
 //				setVisibleXSLTInputComponents(false);
-				
 //				setVisiblePreviewComponents(true);
-//				fileEncodingTree.setVisible(true);
 				
 				//TODO: enable encoding combobox
 				showSourceDocumentPreview(sdr);
@@ -332,15 +332,13 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			}
 //			case XML : {
 //				setVisiblePreviewComponents(false);
-////				setVisibleXSLTInputComponents(true);
+//				setVisibleXSLTInputComponents(true);
 //				onAdvance = false;
 //				break;
 //			}
 			default : {
 //				setVisibleXSLTInputComponents(false);
 //				setVisiblePreviewComponents(true);
-				
-//				fileEncodingTree.setVisible(false);
 				
 				//TODO: disable encoding combobox
 				showSourceDocumentPreview(sdr);
