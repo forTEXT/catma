@@ -19,13 +19,17 @@
 package de.catma.ui.repository.wizard;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.TreeSet;
 
+import com.vaadin.data.Property;
 import com.vaadin.data.Container.ItemSetChangeEvent;
 import com.vaadin.data.Container.ItemSetChangeListener;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.shared.ui.label.ContentMode;
@@ -40,73 +44,76 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.LanguageDetector;
-import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.LanguageItem;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.WizardStepListener;
 
 class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 	
-    /**
-     * An item in the language list.
-     */
-    private static class LanguageItem implements Comparable<LanguageItem> {
-        private Locale locale;
-
-        /**
-         * Constructor
-         * @param locale the locale of this item
-         */
-        public LanguageItem(Locale locale) {
-            this.locale = locale;
-        }
-
-        /**
-         * @return the locale of this item
-         */
-        public Locale getLocale() {
-            return locale;
-        }
-
-        @Override
-        public String toString() {
-            return locale.getDisplayLanguage()
-                + (locale.getDisplayCountry().isEmpty()? "" : "-" + locale.getDisplayCountry());
-        }
-
-        /**
-         * Compares by string representation of the item.
-         */
-        public int compareTo(LanguageItem o) {
-            return this.toString().compareTo(o.toString());
-        }
-
-		@Override
-		public int hashCode() {
-			return locale.hashCode();
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof LanguageItem) {
-				return locale.equals(((LanguageItem)obj).locale);
-			}
-			return false;
-		}
-    }
+//    /**
+//     * An item in the language list.
+//     */
+//    private static class LanguageItem implements Comparable<LanguageItem> {
+//        private Locale locale;
+//
+//        /**
+//         * Constructor
+//         * @param locale the locale of this item
+//         */
+//        public LanguageItem(Locale locale) {
+//            this.locale = locale;
+//        }
+//
+//        /**
+//         * @return the locale of this item
+//         */
+//        public Locale getLocale() {
+//            return locale;
+//        }
+//
+//        @Override
+//        public String toString() {
+//            return locale.getDisplayLanguage()
+//                + (locale.getDisplayCountry().isEmpty()? "" : "-" + locale.getDisplayCountry());
+//        }
+//
+//        /**
+//         * Compares by string representation of the item.
+//         */
+//        public int compareTo(LanguageItem o) {
+//            return this.toString().compareTo(o.toString());
+//        }
+//
+//		@Override
+//		public int hashCode() {
+//			return locale.hashCode();
+//		}
+//
+//		@Override
+//		public boolean equals(Object obj) {
+//			if (obj instanceof LanguageItem) {
+//				return locale.equals(((LanguageItem)obj).locale);
+//			}
+//			return false;
+//		}
+//    }
 
     private static final char APOSTROPHE = '\'';
 	
 	private boolean onAdvance;
 	private WizardStepListener wizardStepListener;
 	private AddSourceDocWizardResult wizardResult;
+	
+	private Table table;
+	
 	private CheckBox cbUseApostrophe;
 	private CheckBox cbAdvanceOptions;
 	
@@ -132,7 +139,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 
 	public IndexerOptionsPanel(WizardStepListener wizardStepListener,
 			AddSourceDocWizardResult wizardResult) {
-		super(3,5);
+		super(3,6);
 		this.onAdvance = true;
 		this.wizardStepListener = wizardStepListener;
 		this.wizardResult = wizardResult;
@@ -240,6 +247,37 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		setMargin(true);
 		
 		setSizeFull();
+		
+		Locale[] availableLocales = Locale.getAvailableLocales();
+		ArrayList<LanguageItem> languageItems = new ArrayList<LanguageItem>();
+		for (Locale locale : availableLocales) {
+			languageItems.add(new LanguageItem(locale));
+		}
+		
+		BeanItemContainer<SourceDocumentResult> container = new BeanItemContainer<SourceDocumentResult>(SourceDocumentResult.class);
+		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.fileName");
+		container.addNestedContainerProperty("sourceDocumentInfo.indexInfoSet.language");
+		
+		table = new Table("Documents", container);
+		
+		//TODO: investigate whether using a FieldFactory would make things easier..
+		table.addGeneratedColumn("sourceDocumentInfo.indexInfoSet.language", 
+				new ComboBoxColumnGenerator(languageItems, makeComboBoxListenerGenerator())
+		);
+		
+		table.setVisibleColumns(new Object[]{
+				"sourceDocumentInfo.techInfoSet.fileName",
+				"sourceDocumentInfo.indexInfoSet.language"
+		});
+		table.setColumnHeaders(new String[]{"File Name", "Language"});
+		
+		table.setSelectable(true);
+		table.setNullSelectionAllowed(false);
+		table.setImmediate(true);
+		
+		addComponent(table);
+		
+		
 	
 		Label infoLabel = new Label();
 			
@@ -252,15 +290,15 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 				"or you can click below for the Expert Features:"
 				);
 		
-		addComponent(infoLabel, 0, 0, 0, 0);
+		addComponent(infoLabel, 0, 1, 0, 1);
 		
 		cbAdvanceOptions = new CheckBox("Advanced Options");
 		
-		addComponent(cbAdvanceOptions, 0, 1, 2, 1);
+		addComponent(cbAdvanceOptions, 0, 2, 2, 2);
 		
 		cbUseApostrophe = new CheckBox("always use the apostrophe as a word separator");
 		
-		addComponent(cbUseApostrophe, 0, 4);
+		addComponent(cbUseApostrophe, 0, 5);
 					
         Locale[] all = Locale.getAvailableLocales();
 
@@ -277,7 +315,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
         languagesListSelect.setSizeFull();
         languagesListSelect.setImmediate(true);
         
-        addComponent(languagesListSelect, 0, 2, 0, 3);
+        addComponent(languagesListSelect, 0, 3, 0, 4);
                
         unseparableCharacterSequencesListSelect = 
         		new ListSelect("Unseparable character sequences:");
@@ -285,7 +323,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
         unseparableCharacterSequencesListSelect.setSizeFull();
         unseparableCharacterSequencesListSelect.setImmediate(true);
         
-        addComponent(unseparableCharacterSequencesListSelect, 1, 2, 1, 3);
+        addComponent(unseparableCharacterSequencesListSelect, 1, 3, 1, 4);
         
         ucsAddRemoveLayout = new HorizontalLayout();
         Panel ucsAddRemovePanel = new Panel(ucsAddRemoveLayout);
@@ -308,7 +346,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
         btRemoveUcs.setEnabled(false);
         ucsAddRemoveLayout.addComponent(btRemoveUcs);
         
-        addComponent(ucsAddRemovePanel, 1, 4);
+        addComponent(ucsAddRemovePanel, 1, 5);
 
         loadSavePanel = new VerticalLayout();
         loadSavePanel.setSpacing(true);
@@ -319,13 +357,27 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
         btSaveUcsList = new Button("Save list");
         loadSavePanel.addComponent(btSaveUcsList);
 
-        addComponent(loadSavePanel, 2, 2);
+        addComponent(loadSavePanel, 2, 3);
         
         setColumnExpandRatio(0, 2);
         setColumnExpandRatio(1, 2);
 
-        setRowExpandRatio(2, 2);
         setRowExpandRatio(3, 2);
+        setRowExpandRatio(4, 2);
+	}
+	
+	private ValueChangeListenerGenerator makeComboBoxListenerGenerator(){
+		return new ValueChangeListenerGenerator() {
+			public ValueChangeListener generateValueChangeListener(Table source, final Object itemId, Object columnId) {
+				return new Property.ValueChangeListener() {
+					public void valueChange(ValueChangeEvent event) {
+						SourceDocumentResult sdr = (SourceDocumentResult) itemId;
+						
+						//TODO: useful things
+					}
+				};
+			}
+		};
 	}
 
 	public Component getContent() {
@@ -346,28 +398,50 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 	}
 
 	public void stepActivated(boolean forward) {
+		if (!forward) {
+			return;
+		}
+		
+		Collection<SourceDocumentResult> sourceDocumentResults = wizardResult.GetSourceDocumentResults();
+				
 		try {
-			wizardResult.getSourceDocumentInfo().setIndexInfoSet(new IndexInfoSet());
+			LanguageDetector languageDetector = new LanguageDetector();
 			
-			LanguageDetector ld = new LanguageDetector();
-			Locale locale = ld.getLocale(ld.detect(wizardResult.getSourceDocument().getContent()));
-			wizardResult.getSourceDocumentInfo().getIndexInfoSet().setLocale(locale);
-			
-			LanguageItem current = new LanguageItem(locale);
-			for (LanguageItem li : this.sortedLangs) {
-				if(li.getLocale().getLanguage().equals(
-                        current.getLocale().getLanguage())) {
-					this.languagesListSelect.setValue(li);
-					break;
-				}
+			for (SourceDocumentResult sdr : sourceDocumentResults) {
+				sdr.getSourceDocumentInfo().setIndexInfoSet(new IndexInfoSet());				
+				
+				Locale locale = languageDetector.getLocale(
+					languageDetector.detect(sdr.getSourceDocument().getContent())
+				);
+//				sdr.getSourceDocumentInfo().getIndexInfoSet().setLocale(locale);
+				sdr.getSourceDocumentInfo().getIndexInfoSet().setLanguage(new LanguageItem(locale));
 			}
 			
+			BeanItemContainer<SourceDocumentResult> container = (BeanItemContainer<SourceDocumentResult>)table.getContainerDataSource();
+			container.addAll(sourceDocumentResults);
 			
+			if(sourceDocumentResults.size() > 0){
+				table.select(sourceDocumentResults.toArray()[0]);
+			}
+			
+//			wizardResult.getSourceDocumentInfo().setIndexInfoSet(new IndexInfoSet());
+//			
+//			LanguageDetector ld = new LanguageDetector();
+//			Locale locale = ld.getLocale(ld.detect(wizardResult.getSourceDocument().getContent()));
+//			wizardResult.getSourceDocumentInfo().getIndexInfoSet().setLocale(locale);
+//			
+//			LanguageItem current = new LanguageItem(locale);
+//			for (LanguageItem li : this.sortedLangs) {
+//				if(li.getLocale().getLanguage().equals(
+//                        current.getLocale().getLanguage())) {
+//					this.languagesListSelect.setValue(li);
+//					break;
+//				}
+//			}
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error during language detection!", e);
 		}
-
 	}
 	
 	private void addUcs(String ucs) {
