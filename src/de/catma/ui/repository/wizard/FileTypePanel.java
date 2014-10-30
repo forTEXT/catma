@@ -18,14 +18,23 @@
  */
 package de.catma.ui.repository.wizard;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.zip.CRC32;
+
+import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
 
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -55,6 +64,7 @@ import de.catma.document.source.contenthandler.ProtocolHandler;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.WizardStepListener;
+import de.catma.util.IDGenerator;
 
 class FileTypePanel extends GridLayout implements DynamicWizardStep {
 
@@ -97,10 +107,10 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			final String inputFileID = repository.getIdFromURI(inputFileURI);
 			final String mimeTypeFromUpload = inputTechInfoSet.getMimeType();
 			
-			ProtocolHandler protocolHandler = getProtocolHandlerForUri(inputFileURI, inputFileID, mimeTypeFromUpload);
-			
-			String inputMimeType = protocolHandler.getMimeType();
-			inputTechInfoSet.setMimeType(inputMimeType);
+//			ProtocolHandler protocolHandler = getProtocolHandlerForUri(inputFileURI, inputFileID, mimeTypeFromUpload);
+//			
+//			String inputMimeType = protocolHandler.getMimeType();
+//			inputTechInfoSet.setMimeType(inputMimeType);
 			
 			ArrayList<SourceDocumentResult> sourceDocumentResults = makeSourceDocumentResultsFromInputFile(inputTechInfoSet);
 			
@@ -159,18 +169,65 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			
 			output.add(outputSourceDocumentResult);
 		}
-		else {
-			// TODO: open zipfile, and find all the contents
+		else { //TODO: put this somewhere sensible
+			URI uri = inputTechInfoSet.getURI();
+			ZipFile zipFile = new ZipFile(uri.getPath());
+			Enumeration<ZipArchiveEntry> entries = zipFile.getEntries();
+			
+			String tempDir = ((CatmaApplication)UI.getCurrent()).getTempDirectory();
+			IDGenerator idGenerator = new IDGenerator();
+			
+			while (entries.hasMoreElements()) {
+				ZipArchiveEntry entry = entries.nextElement();
+				String fileName = entry.getName();
+				String fileId = idGenerator.generate();
+				
+				File entryDestination = new File(tempDir, fileId);
+				if (entryDestination.exists()) {
+					entryDestination.delete();
+				}
+				
+				entryDestination.getParentFile().mkdirs();
+				if(entry.isDirectory()){
+					entryDestination.mkdirs();
+				}
+				else {
+					BufferedInputStream bis = new BufferedInputStream(zipFile.getInputStream(entry));
+					BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(entryDestination));
+					IOUtils.copy(bis, bos);
+					IOUtils.closeQuietly(bis);
+					IOUtils.closeQuietly(bos);
+				}
+				
+				SourceDocumentResult outputSourceDocumentResult = new SourceDocumentResult();
+				URI newURI = entryDestination.toURI();
+				
+				outputSourceDocumentResult.setSourceDocumentID(fileId);
+				
+				SourceDocumentInfo outputSourceDocumentInfo = outputSourceDocumentResult.getSourceDocumentInfo();
+				TechInfoSet newTechInfoSet = new TechInfoSet(fileName, null, newURI); // TODO: MimeType detection ?
+				FileType newFileType = FileType.getFileTypeFromName(fileName);
+				newTechInfoSet.setFileType(newFileType);
+				
+				outputSourceDocumentInfo.setTechInfoSet(newTechInfoSet);
+				outputSourceDocumentInfo.setContentInfoSet(new ContentInfoSet());
+				
+				output.add(outputSourceDocumentResult);
+			}
+			
+			ZipFile.closeQuietly(zipFile);
 		}
-		
+
 		
 		for (SourceDocumentResult sdr : output) {
 			TechInfoSet sdrTechInfoSet = sdr.getSourceDocumentInfo().getTechInfoSet();
 			String sdrSourceDocumentId = sdr.getSourceDocumentID();
-			SourceDocumentInfo sdrSourceDocumentInfo = sdr.getSourceDocumentInfo();
-			FileType sdrFileType = FileType.getFileType(sdrTechInfoSet.getMimeType());
 			
 			ProtocolHandler protocolHandler = getProtocolHandlerForUri(sdrTechInfoSet.getURI(), sdrSourceDocumentId, sdrTechInfoSet.getMimeType());
+			String mimeType = protocolHandler.getMimeType();
+			
+			sdrTechInfoSet.setMimeType(mimeType);			
+			FileType sdrFileType = FileType.getFileType(mimeType);
 			
 			if (sdrFileType.equals(FileType.TEXT)
 					||sdrFileType.equals(FileType.HTML)) {
@@ -330,7 +387,6 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 //				setVisibleXSLTInputComponents(false);
 //				setVisiblePreviewComponents(true);
 				
-				//TODO: enable encoding combobox
 				showSourceDocumentPreview(sdr);
 				onAdvance = true;
 				break;
@@ -345,7 +401,6 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 //				setVisibleXSLTInputComponents(false);
 //				setVisiblePreviewComponents(true);
 				
-				//TODO: disable encoding combobox
 				showSourceDocumentPreview(sdr);
 				onAdvance = true;
 			}
