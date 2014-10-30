@@ -41,6 +41,7 @@ public abstract class WizardFactory {
 		wizardWindow.setContent(wizard);
 		wizardWindow.setWidth(width);
 		wizardWindow.setHeight(height);
+		wizardWindow.setStyleName("wizardry");
 		
 		wizard.addListener(new WizardManager(wizardWindow));
 		wizard.addListener(wizardProgressListener);
