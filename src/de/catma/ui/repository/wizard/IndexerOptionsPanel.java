@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Locale;
-import java.util.TreeSet;
 
 import com.vaadin.data.Property;
 import com.vaadin.data.Container.ItemSetChangeEvent;
@@ -59,54 +58,6 @@ import de.catma.ui.dialog.wizard.WizardStepListener;
 
 class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 	
-//    /**
-//     * An item in the language list.
-//     */
-//    private static class LanguageItem implements Comparable<LanguageItem> {
-//        private Locale locale;
-//
-//        /**
-//         * Constructor
-//         * @param locale the locale of this item
-//         */
-//        public LanguageItem(Locale locale) {
-//            this.locale = locale;
-//        }
-//
-//        /**
-//         * @return the locale of this item
-//         */
-//        public Locale getLocale() {
-//            return locale;
-//        }
-//
-//        @Override
-//        public String toString() {
-//            return locale.getDisplayLanguage()
-//                + (locale.getDisplayCountry().isEmpty()? "" : "-" + locale.getDisplayCountry());
-//        }
-//
-//        /**
-//         * Compares by string representation of the item.
-//         */
-//        public int compareTo(LanguageItem o) {
-//            return this.toString().compareTo(o.toString());
-//        }
-//
-//		@Override
-//		public int hashCode() {
-//			return locale.hashCode();
-//		}
-//
-//		@Override
-//		public boolean equals(Object obj) {
-//			if (obj instanceof LanguageItem) {
-//				return locale.equals(((LanguageItem)obj).locale);
-//			}
-//			return false;
-//		}
-//    }
-
     private static final char APOSTROPHE = '\'';
     
     private ArrayList<LanguageItem> languageItems;
@@ -120,10 +71,6 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 	private CheckBox cbUseApostrophe;
 	private CheckBox cbAdvanceOptions;
 	
-	private ListSelect languagesListSelect;
-
-	private TreeSet<LanguageItem> sortedLangs;
-
 	private ListSelect unseparableCharacterSequencesListSelect;
 
 	private Button btLoadUcsList;
@@ -142,7 +89,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 
 	public IndexerOptionsPanel(WizardStepListener wizardStepListener,
 			AddSourceDocWizardResult wizardResult) {
-		super(3,6);
+		super(2,1);
 		this.onAdvance = true;
 		this.wizardStepListener = wizardStepListener;
 		this.wizardResult = wizardResult;
@@ -156,20 +103,29 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		unseparableCharacterSequencesListSelect.setVisible(false);
 		loadSavePanel.setVisible(false);
 		ucsAddRemoveLayout.setVisible(false);
-
-		this.languagesListSelect.addValueChangeListener(new ValueChangeListener() {
-			
+		
+		table.addValueChangeListener(new ValueChangeListener() {
 			public void valueChange(ValueChangeEvent event) {
-				onAdvance = (languagesListSelect.getValue() != null);
-				if (languagesListSelect.getValue() != null) {
-					
-					wizardResult.getSourceDocumentInfo().getIndexInfoSet().setLocale(
-							((LanguageItem)languagesListSelect.getValue()).getLocale());
+				if(table.getValue() == null){
+					return;
 				}
-				wizardStepListener.stepChanged(IndexerOptionsPanel.this);
+				
+				SourceDocumentResult sdr = (SourceDocumentResult)table.getValue();
+				
+				BeanItemContainer<String> container = new BeanItemContainer<String>(String.class, sdr.getSourceDocumentInfo().getIndexInfoSet().getUnseparableCharacterSequences());
+				
+//				BeanItemContainer<SourceDocumentResult> container = new BeanItemContainer<SourceDocumentResult>(SourceDocumentResult.class);
+//				container.addNestedContainerProperty("sourceDocumentInfo.indexInfoSet.unseparableCharacterSequences");
+//				container.addBean(sdr);
+				
+				unseparableCharacterSequencesListSelect.setContainerDataSource(container);
+				
+				IndexInfoSet indexInfoSet = sdr.getSourceDocumentInfo().getIndexInfoSet();
+				boolean apostropheSeperator = indexInfoSet.getUserDefinedSeparatingCharacters().contains(APOSTROPHE);				
+				cbUseApostrophe.setValue(apostropheSeperator);
 			}
 		});
-		
+
 		this.tfUcs.addTextChangeListener(new TextChangeListener() {
 			public void textChange(TextChangeEvent event) {
 				btAddUcs.setEnabled(
@@ -187,8 +143,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		
 		this.unseparableCharacterSequencesListSelect.addItemSetChangeListener(new ItemSetChangeListener() {
 			public void containerItemSetChange(ItemSetChangeEvent event) {
-				btRemoveUcs.setEnabled(
-					unseparableCharacterSequencesListSelect.getContainerDataSource().size() > 0);
+				btRemoveUcs.setEnabled(unseparableCharacterSequencesListSelect.getContainerDataSource().size() > 0);
 			}
 		});
 		
@@ -200,13 +155,12 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		
 		btRemoveUcs.addClickListener(new ClickListener() {
 			public void buttonClick(ClickEvent event) {
-				unseparableCharacterSequencesListSelect.removeItem(
-						unseparableCharacterSequencesListSelect.getValue());
-				wizardResult.getSourceDocumentInfo().getIndexInfoSet().removeUnseparableCharacterSequence(
-						tfUcs.getValue().toString());
-				if (!wizardResult.getSourceDocumentInfo().getIndexInfoSet().getUnseparableCharacterSequences().isEmpty()) {
-					unseparableCharacterSequencesListSelect.setValue(
-							wizardResult.getSourceDocumentInfo().getIndexInfoSet().getUnseparableCharacterSequences().get(0));
+				Object ucs = unseparableCharacterSequencesListSelect.getValue();
+				unseparableCharacterSequencesListSelect.removeItem(ucs);
+				IndexInfoSet indexInfoSet = ((SourceDocumentResult)table.getValue()).getSourceDocumentInfo().getIndexInfoSet();
+				indexInfoSet.removeUnseparableCharacterSequence(ucs.toString());
+				if (!indexInfoSet.getUnseparableCharacterSequences().isEmpty()) {
+					unseparableCharacterSequencesListSelect.setValue(indexInfoSet.getUnseparableCharacterSequences().get(0));
 				}
 			}
 		});
@@ -215,12 +169,12 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 			
 			public void valueChange(ValueChangeEvent event) {
 				
-				if (cbUseApostrophe.getValue() 
-						&& (wizardResult.getSourceDocumentInfo().getIndexInfoSet().getUserDefinedSeparatingCharacters().isEmpty())) {
-					wizardResult.getSourceDocumentInfo().getIndexInfoSet().addUserDefinedSeparatingCharacter(APOSTROPHE);
+				IndexInfoSet indexInfoSet = ((SourceDocumentResult)table.getValue()).getSourceDocumentInfo().getIndexInfoSet();
+				if (cbUseApostrophe.getValue() && (!indexInfoSet.getUserDefinedSeparatingCharacters().contains(APOSTROPHE))) {
+					indexInfoSet.addUserDefinedSeparatingCharacter(APOSTROPHE);
 				}
-				else {
-					wizardResult.getSourceDocumentInfo().getIndexInfoSet().removeUserDefinedSeparatingCharacter(APOSTROPHE);
+				else if(!cbUseApostrophe.getValue()){
+					indexInfoSet.removeUserDefinedSeparatingCharacter(APOSTROPHE);
 				}
 			}
 		});
@@ -278,9 +232,9 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		table.setNullSelectionAllowed(false);
 		table.setImmediate(true);
 		
-		addComponent(table);
+		addComponent(table, 0, 0);
 		
-		
+		VerticalLayout expertLayout = new VerticalLayout();
 	
 		Label infoLabel = new Label();
 			
@@ -293,40 +247,22 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 				"or you can click below for the Expert Features:"
 				);
 		
-		addComponent(infoLabel, 0, 1, 0, 1);
+		expertLayout.addComponent(infoLabel);
 		
 		cbAdvanceOptions = new CheckBox("Advanced Options");
 		
-		addComponent(cbAdvanceOptions, 0, 2, 2, 2);
+		expertLayout.addComponent(cbAdvanceOptions);
 		
 		cbUseApostrophe = new CheckBox("always use the apostrophe as a word separator");
 		
-		addComponent(cbUseApostrophe, 0, 5);
-					
-        Locale[] all = Locale.getAvailableLocales();
-
-        sortedLangs = new TreeSet<LanguageItem>();
-        for (Locale locale : all) {
-            sortedLangs.add(new LanguageItem(locale));
-        }
-
-        languagesListSelect = 
-        		new ListSelect(
-        				"Please select the predominant language of the Source Document:", 
-        				sortedLangs);
-        languagesListSelect.setNullSelectionAllowed(false);
-        languagesListSelect.setSizeFull();
-        languagesListSelect.setImmediate(true);
-        
-        addComponent(languagesListSelect, 0, 3, 0, 4);
-               
-        unseparableCharacterSequencesListSelect = 
-        		new ListSelect("Unseparable character sequences:");
+		expertLayout.addComponent(cbUseApostrophe);
+		
+        unseparableCharacterSequencesListSelect = new ListSelect("Unseparable character sequences:");
         unseparableCharacterSequencesListSelect.setNullSelectionAllowed(false);
         unseparableCharacterSequencesListSelect.setSizeFull();
         unseparableCharacterSequencesListSelect.setImmediate(true);
         
-        addComponent(unseparableCharacterSequencesListSelect, 1, 3, 1, 4);
+        expertLayout.addComponent(unseparableCharacterSequencesListSelect);
         
         ucsAddRemoveLayout = new HorizontalLayout();
         Panel ucsAddRemovePanel = new Panel(ucsAddRemoveLayout);
@@ -349,7 +285,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
         btRemoveUcs.setEnabled(false);
         ucsAddRemoveLayout.addComponent(btRemoveUcs);
         
-        addComponent(ucsAddRemovePanel, 1, 5);
+        expertLayout.addComponent(ucsAddRemovePanel);
 
         loadSavePanel = new VerticalLayout();
         loadSavePanel.setSpacing(true);
@@ -360,13 +296,15 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
         btSaveUcsList = new Button("Save list");
         loadSavePanel.addComponent(btSaveUcsList);
 
-        addComponent(loadSavePanel, 2, 3);
+        expertLayout.addComponent(loadSavePanel);
         
-        setColumnExpandRatio(0, 2);
-        setColumnExpandRatio(1, 2);
+        addComponent(expertLayout, 1, 0);
+        
+//        setColumnExpandRatio(0, 2);
+//        setColumnExpandRatio(1, 2);
 
-        setRowExpandRatio(3, 2);
-        setRowExpandRatio(4, 2);
+//        setRowExpandRatio(3, 2);
+//        setRowExpandRatio(4, 2);
 	}
 	
 	private ValueChangeListenerGenerator makeComboBoxListenerGenerator(){
@@ -376,7 +314,15 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 					public void valueChange(ValueChangeEvent event) {
 						SourceDocumentResult sdr = (SourceDocumentResult) itemId;
 						
-						//TODO: useful things
+						onAdvance = true;
+						for(SourceDocumentResult result : wizardResult.GetSourceDocumentResults()){
+							if (result.getSourceDocumentInfo().getIndexInfoSet().getLocale() == null){
+								onAdvance = false;
+								break;
+							}
+						}
+						
+						wizardStepListener.stepChanged(IndexerOptionsPanel.this);
 					}
 				};
 			}
@@ -438,6 +384,16 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 			if(sourceDocumentResults.size() > 0){
 				table.select(sourceDocumentResults.toArray()[0]);
 			}
+			
+			onAdvance = true;
+			for(SourceDocumentResult result : sourceDocumentResults){
+				if (result.getSourceDocumentInfo().getIndexInfoSet().getLocale() == null){
+					onAdvance = false;
+					break;
+				}
+			}
+			
+			
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error during language detection!", e);
@@ -448,7 +404,8 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		if ((ucs != null) && !ucs.isEmpty()) {
 			unseparableCharacterSequencesListSelect.addItem(ucs);
 			unseparableCharacterSequencesListSelect.setValue(ucs);
-			wizardResult.getSourceDocumentInfo().getIndexInfoSet().addUnseparableCharacterSequence(ucs);
+			IndexInfoSet indexInfoSet = ((SourceDocumentResult)table.getValue()).getSourceDocumentInfo().getIndexInfoSet();
+			indexInfoSet.addUnseparableCharacterSequence(ucs);
 			tfUcs.setValue("");
 			btAddUcs.setEnabled(false);
 		}

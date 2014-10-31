@@ -44,26 +44,6 @@ public class AddSourceDocWizardResult {
 		this.sourceDocumentResults.addAll(sourceDocumentResults);
 	}
 	
-	public SourceDocumentInfo getSourceDocumentInfo() {
-		return this.sourceDocumentResults.get(0).getSourceDocumentInfo();
-	}
-	
-	public SourceDocument getSourceDocument() {
-		return this.sourceDocumentResults.get(0).getSourceDocument();
-	}
-	
-	public void setSourceDocument(SourceDocument sourceDocument) {
-		this.sourceDocumentResults.get(0).setSourceDocument(sourceDocument);
-	}
-	
-	public void setSourceDocumentID(String sourceDocumentID) {
-		this.sourceDocumentResults.get(0).setSourceDocumentID(sourceDocumentID);
-	}
-	
-	public String getSourceDocumentID() {
-		return this.sourceDocumentResults.get(0).getSourceDocumentID();
-	}
-	
 	public TechInfoSet getInputTechInfoSet() {
 		return this.inputTechInfoSet;
 	}
