@@ -98,6 +98,11 @@
 		user-select: auto!important; 
 	}
 
+	.v-window-contents > .v-scrollable > .v-has-height > .v-expand {
+		overflow: visible!important;
+		padding-bottom: 15px;
+	}
+	
 	.v-scrollable > .v-has-height > .v-expand {
 		overflow: auto;
 	}
