@@ -235,17 +235,18 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		addComponent(table, 0, 0);
 		
 		VerticalLayout expertLayout = new VerticalLayout();
+		expertLayout.setStyleName("expert-features");
 	
 		Label infoLabel = new Label();
 			
 		infoLabel.setContentMode(ContentMode.HTML);
 		infoLabel.setValue(
-				"<p>This section allows you to finetune the creation " +
-				"of the word list of your Source Document.</p>" +
-				"<p>If you are unsure what to do, just select the language " +
-				"and leave everything else unmodified.</p>" +
-				"or you can click below for the Expert Features:"
-				);
+			"<p>This section allows you to finetune the creation " +
+			"of the word list of the selected Source Document.</p>" +
+			"<p>If you are unsure what to do, just select the language " +
+			"and leave everything else unmodified.<br/>" +
+			"Click below for Expert Features:</p>"
+		);
 		
 		expertLayout.addComponent(infoLabel);
 		
@@ -265,6 +266,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
         expertLayout.addComponent(unseparableCharacterSequencesListSelect);
         
         ucsAddRemoveLayout = new HorizontalLayout();
+        
         Panel ucsAddRemovePanel = new Panel(ucsAddRemoveLayout);
         ucsAddRemovePanel.setStyleName("no-border");
         ucsAddRemoveLayout.setSpacing(true);
@@ -273,14 +275,15 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
         btAddUcs = new Button("Add entry");
         btAddUcs.setEnabled(false);
         ucsAddRemoveLayout.addComponent(btAddUcs);
+        
         tfUcs = new TextField();
         tfUcs.setInputPrompt("Add things like 'e.g.' as you see fit.");
         tfUcs.setImmediate(true);
         tfUcs.setTextChangeEventMode(TextChangeEventMode.EAGER);
-        tfUcs.setWidth("100%");
-        
-        ucsAddRemoveLayout.addComponent(tfUcs);
+        tfUcs.setWidth("100%");        
+        ucsAddRemoveLayout.addComponent(tfUcs);        
         ucsAddRemoveLayout.setExpandRatio(tfUcs, 2);
+        
         btRemoveUcs = new Button("Remove entry");
         btRemoveUcs.setEnabled(false);
         ucsAddRemoveLayout.addComponent(btRemoveUcs);
@@ -292,19 +295,18 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
         loadSavePanel.setWidth("80px");
         
         btLoadUcsList = new Button("Load list");
+        btLoadUcsList.setVisible(false); // no handler
         loadSavePanel.addComponent(btLoadUcsList);
+        
         btSaveUcsList = new Button("Save list");
+        btSaveUcsList.setVisible(false); // no handler
         loadSavePanel.addComponent(btSaveUcsList);
 
         expertLayout.addComponent(loadSavePanel);
         
         addComponent(expertLayout, 1, 0);
         
-//        setColumnExpandRatio(0, 2);
-//        setColumnExpandRatio(1, 2);
-
-//        setRowExpandRatio(3, 2);
-//        setRowExpandRatio(4, 2);
+        setColumnExpandRatio(1, 1);
 	}
 	
 	private ValueChangeListenerGenerator makeComboBoxListenerGenerator(){
