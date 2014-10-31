@@ -114,6 +114,7 @@ import de.catma.ui.repository.sharing.SharingOptions;
 import de.catma.ui.repository.sharing.SharingOptionsFieldFactory;
 import de.catma.ui.repository.wizard.AddSourceDocWizardFactory;
 import de.catma.ui.repository.wizard.AddSourceDocWizardResult;
+import de.catma.ui.repository.wizard.SourceDocumentResult;
 import de.catma.util.CloseSafe;
 import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
@@ -252,61 +253,62 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 							event.getWizard().removeListener(this);
 							final boolean generateStarterKit = repository.getSourceDocuments().isEmpty();
 							try {
-								
-								final SourceDocument sourceDocument = wizardResult.getSourceDocument();
-								
-								repository.addPropertyChangeListener(
-									RepositoryChangeEvent.sourceDocumentChanged,
-									new PropertyChangeListener() {
+								for(SourceDocumentResult sdr : wizardResult.GetSourceDocumentResults()){
+									final SourceDocument sourceDocument = sdr.getSourceDocument();
+									
+									repository.addPropertyChangeListener(
+										RepositoryChangeEvent.sourceDocumentChanged,
+										new PropertyChangeListener() {
 
-										@Override
-										public void propertyChange(PropertyChangeEvent evt) {
-											
-											if ((evt.getNewValue() == null)	|| (evt.getOldValue() != null)) {
-												return; // no insert
-											}
-											
-											String newSdId = (String) evt.getNewValue();
-											if (!sourceDocument.getID().equals(newSdId)) {
-												return;
-											}
-											
+											@Override
+											public void propertyChange(PropertyChangeEvent evt) {
 												
-											repository.removePropertyChangeListener(
-												RepositoryChangeEvent.sourceDocumentChanged, 
-												this);
-											
-											if (currentCorpus != null) {
-												try {
-													repository.update(currentCorpus, sourceDocument);
-													setSourceDocumentsFilter(currentCorpus);
+												if ((evt.getNewValue() == null)	|| (evt.getOldValue() != null)) {
+													return; // no insert
+												}
+												
+												String newSdId = (String) evt.getNewValue();
+												if (!sourceDocument.getID().equals(newSdId)) {
+													return;
+												}
+												
 													
-												} catch (IOException e) {
-													((CatmaApplication)UI.getCurrent()).showAndLogError(
-														"Error adding Source Document to Corpus! " +
-														"The Source Document has been added to 'All Documents's", e);
+												repository.removePropertyChangeListener(
+													RepositoryChangeEvent.sourceDocumentChanged, 
+													this);
+												
+												if (currentCorpus != null) {
+													try {
+														repository.update(currentCorpus, sourceDocument);
+														setSourceDocumentsFilter(currentCorpus);
+														
+													} catch (IOException e) {
+														((CatmaApplication)UI.getCurrent()).showAndLogError(
+															"Error adding Source Document to Corpus! " +
+															"The Source Document has been added to 'All Documents's", e);
+													}
+													
 												}
 												
-											}
-											
-											if (sourceDocument
-													.getSourceContentHandler()
-													.hasIntrinsicMarkupCollection()) {
-												try {
-													handleIntrinsicMarkupCollection(sourceDocument);
-												} catch (IOException e) {
-													((CatmaApplication)UI.getCurrent()).showAndLogError(
-														"Error extracting intrinsic markup collection!", e);
+												if (sourceDocument
+														.getSourceContentHandler()
+														.hasIntrinsicMarkupCollection()) {
+													try {
+														handleIntrinsicMarkupCollection(sourceDocument);
+													} catch (IOException e) {
+														((CatmaApplication)UI.getCurrent()).showAndLogError(
+															"Error extracting intrinsic markup collection!", e);
+													}
+												}
+												
+												if (generateStarterKit) {
+													generateStarterKit(sourceDocument);
 												}
 											}
-											
-											if (generateStarterKit) {
-												generateStarterKit(sourceDocument);
-											}
-										}
-									});
+										});
 
-								repository.insert(sourceDocument);
+									repository.insert(sourceDocument);
+								}
 								
 							} catch (IOException e) {
 								((CatmaApplication)UI.getCurrent()).showAndLogError(
