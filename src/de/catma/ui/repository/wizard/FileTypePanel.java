@@ -137,7 +137,6 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			}
 			
 			onAdvance = canAdvance();
-			wizardStepListener.stepChanged(FileTypePanel.this);
 			
 //			setVisiblePreviewComponents(false);
 //			setVisibleXSLTInputComponents(false);
@@ -262,12 +261,11 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	}
 
 	private void showSourceDocumentPreview(SourceDocumentResult sdr){
-		SourceDocument sourceDocument = sdr.getSourceDocument();		
+		SourceDocument sourceDocument = sdr.getSourceDocument();
 		try{
 			taPreview.setValue(
 					"<pre>" + sourceDocument.getContent(new Range(0, 2000)) + "</pre>");			
 		} catch (Exception e) {
-			taPreview.setValue("");
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error loading the preview for the document!", e);
 		}		
@@ -369,15 +367,14 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 						
 						Property encodingProperty = table.getContainerProperty(itemId, "sourceDocumentInfo.techInfoSet.charset");
 						boolean readOnly = fileType != FileType.HTML && fileType != FileType.TEXT;
-						
-						if(readOnly && !encodingProperty.isReadOnly() && encodingProperty.getValue() != null){
-							encodingProperty.setValue(null);
-						}					
 						encodingProperty.setReadOnly(readOnly);	
+						
+						if(readOnly){
+							sdr.getSourceDocumentInfo().getTechInfoSet().setCharset(null);
+						}					
 						
 						loadSourceDocumentAndContent(sdr);
 						onAdvance = canAdvance();
-						wizardStepListener.stepChanged(FileTypePanel.this);
 						
 						showSourceDocumentPreview(sdr);					
 					}
@@ -409,11 +406,13 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 //				setVisiblePreviewComponents(true);
 				
 				showSourceDocumentPreview(sdr);
+				onAdvance = true;
 				break;
 			}
 //			case XML : {
 //				setVisiblePreviewComponents(false);
 //				setVisibleXSLTInputComponents(true);
+//				onAdvance = false;
 //				break;
 //			}
 			default : {
@@ -421,8 +420,10 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 //				setVisiblePreviewComponents(true);
 				
 				showSourceDocumentPreview(sdr);
+				onAdvance = true;
 			}
 		}
+		wizardStepListener.stepChanged(FileTypePanel.this);
 	}
 	
 //	private void setVisibleXSLTInputComponents(boolean visible) {
