@@ -20,11 +20,14 @@ package de.catma.ui.repository.wizard;
 
 import java.io.File;
 import java.net.URI;
+import java.util.Collection;
 
 import com.vaadin.data.util.BeanItem;
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Form;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Table;
 
 import de.catma.document.source.ContentInfoSet;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
@@ -33,11 +36,11 @@ import de.catma.ui.dialog.wizard.WizardStepListener;
 class ContentInfoPanel extends HorizontalLayout implements
 		DynamicWizardStep {
 	
+	private Table table;
 	
 	private AddSourceDocWizardResult wizardResult;
 	@SuppressWarnings("unused")
 	private WizardStepListener wizardStepListener; // not used
-	private Form contentInfoForm;
 	
 	public ContentInfoPanel(WizardStepListener wizardStepListener,
 			AddSourceDocWizardResult wizardResult) {
@@ -53,11 +56,31 @@ class ContentInfoPanel extends HorizontalLayout implements
 		setMargin(true);
 		setSizeFull();
 		
-		contentInfoForm = new Form();
-		addComponent(contentInfoForm);
-		contentInfoForm.setReadOnly(false);
-		contentInfoForm.setBuffered(false);
-		contentInfoForm.setImmediate(true);
+		BeanItemContainer<SourceDocumentResult> container = new BeanItemContainer<SourceDocumentResult>(SourceDocumentResult.class);
+		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.fileName");
+		container.addNestedContainerProperty("sourceDocumentInfo.contentInfoSet.title");
+		container.addNestedContainerProperty("sourceDocumentInfo.contentInfoSet.author");
+		container.addNestedContainerProperty("sourceDocumentInfo.contentInfoSet.description");
+		container.addNestedContainerProperty("sourceDocumentInfo.contentInfoSet.publisher");
+		
+		table = new Table("Documents", container);
+		
+		table.setVisibleColumns(new Object[]{
+				"sourceDocumentInfo.techInfoSet.fileName",
+				"sourceDocumentInfo.contentInfoSet.title",
+				"sourceDocumentInfo.contentInfoSet.author",
+				"sourceDocumentInfo.contentInfoSet.description",
+				"sourceDocumentInfo.contentInfoSet.publisher"
+		});
+		table.setColumnHeaders(new String[]{"File Name", "Title", "Author", "Description", "Publisher"});
+		
+		table.setSelectable(true);
+		table.setNullSelectionAllowed(false);
+		table.setImmediate(true);
+		table.setEditable(true);
+		
+		addComponent(table);
+		
 	}
 
 	public Component getContent() {
@@ -76,17 +99,38 @@ class ContentInfoPanel extends HorizontalLayout implements
 	public boolean onBack() {
 		return true;
 	}
+	
+	private String makeTitleFromFileName(String fileName) {
+		int indexOfLastFullStop = fileName.lastIndexOf('.');
+		if(indexOfLastFullStop > 0){
+			fileName = fileName.substring(0, indexOfLastFullStop);
+		}
+		
+		return fileName.replace("_", " ").trim();
+		
+	}
 
 	public void stepActivated(boolean forward) {
+		
+		BeanItemContainer<SourceDocumentResult> container = (BeanItemContainer<SourceDocumentResult>)table.getContainerDataSource();
+		if(container.size() > 0) {
+			return;
+		}
 	
-		ContentInfoSet contentInfoSet = wizardResult.getSourceDocumentInfo().getContentInfoSet();
+		Collection<SourceDocumentResult> sourceDocumentResults = wizardResult.GetSourceDocumentResults();
 		
-		BeanItem<ContentInfoSet> biContentInfoSet = new BeanItem<ContentInfoSet>(contentInfoSet);
+		for (SourceDocumentResult sdr : sourceDocumentResults) {
+			String fileName = sdr.getSourceDocumentInfo().getTechInfoSet().getFileName();
+			String title = makeTitleFromFileName(fileName);
+			sdr.getSourceDocumentInfo().getContentInfoSet().setTitle(title);
+		}
 		
-		contentInfoForm.setItemDataSource(biContentInfoSet);
-		contentInfoForm.setVisibleItemProperties(new String[] {
-				"title", "author", "description", "publisher"
-		});
+		container.addAll(sourceDocumentResults);
+		
+		if(sourceDocumentResults.size() > 0){
+			table.select(sourceDocumentResults.toArray()[0]);
+		}
+		
 	}
 
 	public boolean onFinish() {
@@ -98,16 +142,20 @@ class ContentInfoPanel extends HorizontalLayout implements
 	}
 	
 	public void stepDeactivated(boolean forward) {
-		if (wizardResult.getSourceDocument().toString().isEmpty()) {
-			URI uri = wizardResult.getSourceDocumentInfo().getTechInfoSet().getURI();
+		for (SourceDocumentResult sdr : wizardResult.GetSourceDocumentResults()) {
+			if (!sdr.toString().isEmpty()){
+				continue;
+			}
+			
+			URI uri = sdr.getSourceDocumentInfo().getTechInfoSet().getURI();
 			String title = uri.toString();
 			if (uri.getScheme().equals("file")) {
 				title = new File(uri).getName();
 			}
-			wizardResult.getSourceDocument()
+			sdr.getSourceDocument()
 				.getSourceContentHandler().getSourceDocumentInfo()
-				.getContentInfoSet().setTitle(title);
-		}
+				.getContentInfoSet().setTitle(title);			
+		}	
 	}
 	
 	public void stepAdded() {/* noop */}
