@@ -315,7 +315,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 						SourceDocumentResult sdr = (SourceDocumentResult) itemId;
 						
 						onAdvance = true;
-						for(SourceDocumentResult result : wizardResult.GetSourceDocumentResults()){
+						for(SourceDocumentResult result : wizardResult.getSourceDocumentResults()){
 							if (result.getSourceDocumentInfo().getIndexInfoSet().getLocale() == null){
 								onAdvance = false;
 								break;
@@ -351,7 +351,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 			return;
 		}
 		
-		Collection<SourceDocumentResult> sourceDocumentResults = wizardResult.GetSourceDocumentResults();
+		Collection<SourceDocumentResult> sourceDocumentResults = wizardResult.getSourceDocumentResults();
 				
 		try {
 			LanguageDetector languageDetector = new LanguageDetector();

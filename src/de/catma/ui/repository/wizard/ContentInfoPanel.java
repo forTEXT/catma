@@ -117,7 +117,7 @@ class ContentInfoPanel extends HorizontalLayout implements
 			return;
 		}
 	
-		Collection<SourceDocumentResult> sourceDocumentResults = wizardResult.GetSourceDocumentResults();
+		Collection<SourceDocumentResult> sourceDocumentResults = wizardResult.getSourceDocumentResults();
 		
 		for (SourceDocumentResult sdr : sourceDocumentResults) {
 			String fileName = sdr.getSourceDocumentInfo().getTechInfoSet().getFileName();
@@ -142,7 +142,7 @@ class ContentInfoPanel extends HorizontalLayout implements
 	}
 	
 	public void stepDeactivated(boolean forward) {
-		for (SourceDocumentResult sdr : wizardResult.GetSourceDocumentResults()) {
+		for (SourceDocumentResult sdr : wizardResult.getSourceDocumentResults()) {
 			if (!sdr.toString().isEmpty()){
 				continue;
 			}

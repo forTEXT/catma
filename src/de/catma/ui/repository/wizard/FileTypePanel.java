@@ -95,7 +95,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			return;
 		}
 		
-		if(wizardResult.GetSourceDocumentResults().size() > 0){
+		if(wizardResult.getSourceDocumentResults().size() > 0){
 			return;
 		}
 		
@@ -118,7 +118,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			BeanItemContainer<SourceDocumentResult> container = (BeanItemContainer<SourceDocumentResult>)table.getContainerDataSource();
 			container.addAll(sourceDocumentResults);
 			
-			wizardResult.AddSourceDocumentResults(sourceDocumentResults);
+			wizardResult.addSourceDocumentResults(sourceDocumentResults);
 			
 			if(sourceDocumentResults.size() > 0){
 				table.select(sourceDocumentResults.get(0));

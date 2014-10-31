@@ -36,11 +36,11 @@ public class AddSourceDocWizardResult {
 		this.sourceDocumentResults = new ArrayList<SourceDocumentResult>();
 	}
 	
-	public Collection<SourceDocumentResult> GetSourceDocumentResults() {
+	public Collection<SourceDocumentResult> getSourceDocumentResults() {
 		return this.sourceDocumentResults;
 	}
 	
-	public void AddSourceDocumentResults(ArrayList<SourceDocumentResult> sourceDocumentResults) {
+	public void addSourceDocumentResults(ArrayList<SourceDocumentResult> sourceDocumentResults) {
 		this.sourceDocumentResults.addAll(sourceDocumentResults);
 	}
 	

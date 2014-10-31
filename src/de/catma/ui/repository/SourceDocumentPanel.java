@@ -253,7 +253,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 							event.getWizard().removeListener(this);
 							final boolean generateStarterKit = repository.getSourceDocuments().isEmpty();
 							try {
-								for(SourceDocumentResult sdr : wizardResult.GetSourceDocumentResults()){
+								for(SourceDocumentResult sdr : wizardResult.getSourceDocumentResults()){
 									final SourceDocument sourceDocument = sdr.getSourceDocument();
 									
 									repository.addPropertyChangeListener(
