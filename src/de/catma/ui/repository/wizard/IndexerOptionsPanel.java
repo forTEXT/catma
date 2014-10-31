@@ -170,7 +170,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 			public void valueChange(ValueChangeEvent event) {
 				
 				IndexInfoSet indexInfoSet = ((SourceDocumentResult)table.getValue()).getSourceDocumentInfo().getIndexInfoSet();
-				if (cbUseApostrophe.getValue() && (indexInfoSet.getUserDefinedSeparatingCharacters().isEmpty())) {
+				if (cbUseApostrophe.getValue() && (!indexInfoSet.getUserDefinedSeparatingCharacters().contains(APOSTROPHE))) {
 					indexInfoSet.addUserDefinedSeparatingCharacter(APOSTROPHE);
 				}
 				else if(!cbUseApostrophe.getValue()){
