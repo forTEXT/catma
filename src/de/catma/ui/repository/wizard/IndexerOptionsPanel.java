@@ -21,6 +21,7 @@ package de.catma.ui.repository.wizard;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.TreeSet;
 
@@ -38,7 +39,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
-import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
@@ -108,6 +108,8 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 //    }
 
     private static final char APOSTROPHE = '\'';
+    
+    private ArrayList<LanguageItem> languageItems;
 	
 	private boolean onAdvance;
 	private WizardStepListener wizardStepListener;
@@ -250,18 +252,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		setSizeFull();
 		
 		Locale[] availableLocales = Locale.getAvailableLocales();
-		
-		
-		//REMOVEME!!!
-//		ArrayList<Locale> englishes = new ArrayList<Locale>();
-//		for (Locale locale : availableLocales) {
-//			if (new LanguageItem(locale).toString().startsWith("English")){
-//				englishes.add(locale);
-//			}
-//		}
-		//!!!
-		
-		ArrayList<LanguageItem> languageItems = new ArrayList<LanguageItem>();
+		languageItems = new ArrayList<LanguageItem>();
 		for (Locale locale : availableLocales) {
 			languageItems.add(new LanguageItem(locale));
 		}
@@ -426,17 +417,20 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 					languageDetector.detect(sdr.getSourceDocument().getContent())
 				);
 				
-//				sdr.getSourceDocumentInfo().getIndexInfoSet().setLocale(locale);
-				
-				//BUGFIX: the locales returned by Locale.getAvailableLocales() in initComponents, which are used to populate the language comboboxes
-				//can differ from the locale returned by the LanguageDetector - this breaks the binding when LanguageItems are compared
-				//eg: a locale with language='en' region='' from getAvailableLocales(), vs language='en' region='EN' as detected by the LanguageDetector
-				//furthermore getAvailableLocales() "Returns an array of all installed locales.", so it may be system dependent
-				//presumably it can matter for display purposes if the detected locale is not installed?
-				newIndexInfoSet.setLanguage(new LanguageItem(locale));
+				LanguageItem detectedLanguage = new LanguageItem(locale);
+				if (!languageItems.contains(detectedLanguage)) {
+					// Because the LanguageDetector can return a locale that is not present in the languageItems collection
+					// we explicitly add it here if it's missing
+					// See the comments in https://github.com/catmadevel/catma/commit/cd3e86b61596ce618338b0ab0295f240cbbd6f7f for more details
+					languageItems.add(detectedLanguage);
+				}
+
+				newIndexInfoSet.setLanguage(detectedLanguage);
 				
 				sdr.getSourceDocumentInfo().setIndexInfoSet(newIndexInfoSet);
 			}
+			
+			Collections.sort(languageItems); // in case items were added above
 			
 			BeanItemContainer<SourceDocumentResult> container = (BeanItemContainer<SourceDocumentResult>)table.getContainerDataSource();
 			container.addAll(sourceDocumentResults);
@@ -444,35 +438,6 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 			if(sourceDocumentResults.size() > 0){
 				table.select(sourceDocumentResults.toArray()[0]);
 			}
-			
-			for (SourceDocumentResult sdr : sourceDocumentResults) {
-				Property prop = table.getContainerProperty(sdr, "sourceDocumentInfo.indexInfoSet.language");
-				
-				//attempt to figure out which documents don't have a language selected
-				//if this was possible.. maybe something like almostEquals() on LanguageItem which compares the values of locale.getLanguage() as below
-				//could be used to select the closest match
-				
-				//https://vaadin.com/forum/#!/thread/1226422/7822434
-				//nope
-//				ComboBox b1 = (ComboBox)prop;
-//				ComboBox b2 = (ComboBox)prop.getValue();
-			}
-			
-			
-//			wizardResult.getSourceDocumentInfo().setIndexInfoSet(new IndexInfoSet());
-//			
-//			LanguageDetector ld = new LanguageDetector();
-//			Locale locale = ld.getLocale(ld.detect(wizardResult.getSourceDocument().getContent()));
-//			wizardResult.getSourceDocumentInfo().getIndexInfoSet().setLocale(locale);
-//			
-//			LanguageItem current = new LanguageItem(locale);
-//			for (LanguageItem li : this.sortedLangs) {
-//				if(li.getLocale().getLanguage().equals(
-//                        current.getLocale().getLanguage())) {
-//					this.languagesListSelect.setValue(li);
-//					break;
-//				}
-//			}
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error during language detection!", e);
