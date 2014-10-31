@@ -200,7 +200,9 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 					SourceDocumentResult outputSourceDocumentResult = new SourceDocumentResult();
 					URI newURI = entryDestination.toURI();
 					
-					outputSourceDocumentResult.setSourceDocumentID(fileId);
+					String repositoryId = repository.getIdFromURI(newURI); // we need to do this as a catma:// is appended
+					
+					outputSourceDocumentResult.setSourceDocumentID(repositoryId);
 					
 					SourceDocumentInfo outputSourceDocumentInfo = outputSourceDocumentResult.getSourceDocumentInfo();
 					TechInfoSet newTechInfoSet = new TechInfoSet(fileName, null, newURI); // TODO: MimeType detection ?
