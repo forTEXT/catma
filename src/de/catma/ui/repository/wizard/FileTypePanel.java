@@ -90,6 +90,20 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		initActions();
 	}
 	
+	public boolean canAdvance(){
+		boolean canAdvance = true;
+		for(SourceDocumentResult sdr : wizardResult.getSourceDocumentResults()){
+			TechInfoSet techInfoSet = sdr.getSourceDocumentInfo().getTechInfoSet();
+			boolean needsEncoding = techInfoSet.getFileType() == FileType.TEXT || techInfoSet.getFileType() == FileType.HTML;
+			if(needsEncoding && techInfoSet.getCharset() == null){
+				canAdvance = false;
+				break;
+			}
+		}
+		
+		return canAdvance;
+	}
+	
 	public void stepActivated(boolean forward) {
 		if (!forward) {
 			return;
@@ -98,8 +112,6 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		if(wizardResult.getSourceDocumentResults().size() > 0){
 			return;
 		}
-		
-		onAdvance = false; // TODO: this is currently being set to true in the HandleFileType event handler
 		
 		try {
 			
@@ -123,6 +135,8 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			if(sourceDocumentResults.size() > 0){
 				table.select(sourceDocumentResults.get(0));
 			}
+			
+			onAdvance = canAdvance();
 			
 //			setVisiblePreviewComponents(false);
 //			setVisibleXSLTInputComponents(false);
@@ -360,7 +374,9 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 						}					
 						
 						loadSourceDocumentAndContent(sdr);
-						showSourceDocumentPreview(sdr);
+						onAdvance = canAdvance();
+						
+						showSourceDocumentPreview(sdr);					
 					}
 				};
 			}
