@@ -119,6 +119,10 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 //				container.addBean(sdr);
 				
 				unseparableCharacterSequencesListSelect.setContainerDataSource(container);
+				
+				IndexInfoSet indexInfoSet = sdr.getSourceDocumentInfo().getIndexInfoSet();
+				boolean apostropheSeperator = indexInfoSet.getUserDefinedSeparatingCharacters().contains(APOSTROPHE);				
+				cbUseApostrophe.setValue(apostropheSeperator);
 			}
 		});
 
@@ -169,7 +173,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 				if (cbUseApostrophe.getValue() && (indexInfoSet.getUserDefinedSeparatingCharacters().isEmpty())) {
 					indexInfoSet.addUserDefinedSeparatingCharacter(APOSTROPHE);
 				}
-				else {
+				else if(!cbUseApostrophe.getValue()){
 					indexInfoSet.removeUserDefinedSeparatingCharacter(APOSTROPHE);
 				}
 			}
