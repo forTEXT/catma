@@ -323,9 +323,9 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		
 		VerticalLayout previewContent = new VerticalLayout();
 		previewContent.setMargin(true);
-		previewPanel = new Panel("Preview", previewContent);
+		previewPanel = new Panel("Preview (selected document)", previewContent);
 		previewPanel.getContent().setSizeUndefined();
-		previewPanel.setHeight("300px");
+		previewPanel.setHeight("100%");
 		previewPanel.setStyleName("preview-panel");
 		
 		this.taPreview = new Label();
