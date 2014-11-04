@@ -71,6 +71,7 @@ import de.catma.repository.db.MaintenanceSemaphore.Type;
 import de.catma.repository.db.jooq.TransactionalDSLContext;
 import de.catma.repository.db.mapper.FieldToValueMapper;
 import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
+import de.catma.repository.db.mapper.IDFieldsToIntegerPairMapper;
 import de.catma.repository.db.mapper.PropertyValueMapper;
 import de.catma.repository.db.mapper.TagInstanceMapper;
 import de.catma.repository.db.mapper.TagReferenceMapper;
@@ -79,6 +80,7 @@ import de.catma.repository.db.mapper.UserMarkupCollectionReferenceMapper;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
+import de.catma.tag.PropertyDefinition.SystemPropertyName;
 import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -925,6 +927,53 @@ class UserMarkupCollectionHandler {
 				Set<TagInstance> relevantTagInstances = 
 						new HashSet<TagInstance>();
 				
+				//  establish a mapping for colorPropertyDefinitionId->color value
+				Map<Integer, String> colorPropDefinitionIdToColor = new HashMap<>();
+				Map<Integer, Pair<String, String>> propertyIdToProprtyUuidTagDefUuidPair = new HashMap<>();
+				for (TagDefinition td : 
+						userMarkupCollection.getTagLibrary().getTagsetDefinition(
+								tagsetDefinition.getUuid())) {
+					
+					PropertyDefinition colorPropertyDefinition = 
+							td.getPropertyDefinitionByName(
+									SystemPropertyName.catma_displaycolor.name());
+						
+					colorPropDefinitionIdToColor.put(
+							colorPropertyDefinition.getId(), 
+							colorPropertyDefinition.getFirstValue());
+					
+					propertyUuidToTagDefUuid.put(
+							colorPropertyDefinition.getUuid(), td.getUuid());
+				}
+				
+				// get all propertyValueIDs and their propertyDefinitionIDs
+				// for color properties in the current collection
+				List<Pair<Integer,Integer>> propValueToPropertyDefIdMap = db
+				.select(PROPERTYVALUE.PROPERTYVALUEID, PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+				.from(PROPERTYVALUE)
+				.join(PROPERTY)
+					.on(PROPERTY.PROPERTYID.eq(PROPERTYVALUE.PROPERTYID))
+				.join(PROPERTYDEFINITION)
+					.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID
+							.eq(PROPERTY.PROPERTYDEFINITIONID))
+				.join(TAGINSTANCE)
+					.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
+				.join(TAGREFERENCE)
+					.on(TAGREFERENCE.TAGINSTANCEID.eq(TAGINSTANCE.TAGINSTANCEID))
+					.and(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
+				.where(PROPERTYDEFINITION.PROPERTYDEFINITIONID.in(colorPropDefinitionIdToColor.keySet()))
+				.fetch()
+				.map(new IDFieldsToIntegerPairMapper(
+						PROPERTYVALUE.PROPERTYVALUEID, PROPERTYDEFINITION.PROPERTYDEFINITIONID));
+				
+				// establish mapping colorPropertyValueId -> new color value
+				Map<Integer, String> colorPropertyValueIdToColorMap = new HashMap<>();
+				for (Pair<Integer, Integer> propValueToPropDefId : propValueToPropertyDefIdMap) {
+					colorPropertyValueIdToColorMap.put(
+						propValueToPropDefId.getFirst(), 
+						colorPropDefinitionIdToColor.get(propValueToPropDefId.getSecond()));
+				}
+
 				for (TagReference tr : userMarkupCollection.getTagReferences()) {
 					relevantTagInstanceUUIDs.add(
 							idGenerator.catmaIDToUUIDBytes(tr.getTagInstanceID()));
@@ -1072,6 +1121,22 @@ class UserMarkupCollectionHandler {
 					}
 
 				}
+
+				// update all modified color property values
+				BatchBindStep colorValueUpdateBatch = db.batch(db
+						.update(PROPERTYVALUE)
+						.set(PROPERTYVALUE.VALUE, (String)null)
+						.where(PROPERTYVALUE.PROPERTYVALUEID.eq((Integer)null)));
+				
+				for (Map.Entry<Integer, String> colorPropertyValueIdToColor : 
+						colorPropertyValueIdToColorMap.entrySet()) {
+					
+					colorValueUpdateBatch.bind(
+						colorPropertyValueIdToColor.getValue(), 
+						colorPropertyValueIdToColor.getKey());
+				}
+				colorValueUpdateBatch.execute();
+				
 				// addition of new properties with default values is not 
 				// represented within the umc on the database side
 				// only the tag library will be affected (see below)

@@ -234,7 +234,8 @@ public class AuthenticationDialog extends VerticalLayout {
 				
 			}
 			catch (Exception e) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError(
+				e.printStackTrace();
+				((CatmaApplication)ui).showAndLogError(
 						"Error opening repository!", e);
 			}
 			
