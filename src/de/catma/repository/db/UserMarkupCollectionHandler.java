@@ -51,6 +51,7 @@ import org.jooq.DSLContext;
 import org.jooq.DeleteConditionStep;
 import org.jooq.Field;
 import org.jooq.Record;
+import org.jooq.Record3;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.SelectConditionStep;
@@ -79,6 +80,7 @@ import de.catma.repository.db.mapper.UserMarkupCollectionReferenceMapper;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
+import de.catma.tag.PropertyDefinition.SystemPropertyName;
 import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -90,6 +92,38 @@ import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
 class UserMarkupCollectionHandler {
+	
+	private final static class ColorPropertyValueInfo {
+		private TagDefinition tagDefinition;
+		private PropertyDefinition propertyDefinition;
+
+		private List<Integer> propertyValueIds = new ArrayList<>();
+		
+		public ColorPropertyValueInfo(TagDefinition tagDefinition,
+				PropertyDefinition propertyDefinition) {
+			super();
+			this.tagDefinition = tagDefinition;
+			this.propertyDefinition = propertyDefinition;
+		}
+		
+		public void addIfChanged(Integer propertyValueId, String currentColorValue) {
+			if (!currentColorValue.equals(propertyDefinition.getFirstValue())) {
+				propertyValueIds.add(propertyValueId);
+			}
+		}
+		
+		public PropertyDefinition getPropertyDefinition() {
+			return propertyDefinition;
+		}
+		
+		public List<Integer> getPropertyValueIds() {
+			return propertyValueIds;
+		}
+		
+		public TagDefinition getTagDefinition() {
+			return tagDefinition;
+		}
+	}
 	
 	private static class PropertyCollectionToPropertyDefIdCollection 
 		implements Function<Property, Integer> {
@@ -924,7 +958,52 @@ class UserMarkupCollectionHandler {
 				
 				Set<TagInstance> relevantTagInstances = 
 						new HashSet<TagInstance>();
+			
+				// establish mapping color propertyDefinitionId to Info object
+				Map<Integer, ColorPropertyValueInfo> colorPropertyDefIdToValueInfoMap = new HashMap<>();
+				for (TagDefinition td : 
+						userMarkupCollection.getTagLibrary().getTagsetDefinition(
+								tagsetDefinition.getUuid())) {
+					
+					PropertyDefinition colorPropertyDefinition = 
+							td.getPropertyDefinitionByName(
+									SystemPropertyName.catma_displaycolor.name());
+					
+					ColorPropertyValueInfo colorPropertyValueInfo = 
+							new ColorPropertyValueInfo(td, colorPropertyDefinition);
+					
+					colorPropertyDefIdToValueInfoMap.put(
+							colorPropertyDefinition.getId(), colorPropertyValueInfo);
+				}
 				
+				// get all propertyValueIDs and their propertyDefinitionIDs
+				// for color properties in the current collection
+				Result<Record3<Integer, String, Integer>> colorPropertyValueRecords = db
+				.select(PROPERTYVALUE.PROPERTYVALUEID, PROPERTYVALUE.VALUE, PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+				.from(PROPERTYVALUE)
+				.join(PROPERTY)
+					.on(PROPERTY.PROPERTYID.eq(PROPERTYVALUE.PROPERTYID))
+				.join(PROPERTYDEFINITION)
+					.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID
+							.eq(PROPERTY.PROPERTYDEFINITIONID))
+				.join(TAGINSTANCE)
+					.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
+				.join(TAGREFERENCE)
+					.on(TAGREFERENCE.TAGINSTANCEID.eq(TAGINSTANCE.TAGINSTANCEID))
+					.and(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
+				.where(PROPERTYDEFINITION.PROPERTYDEFINITIONID.in(colorPropertyDefIdToValueInfoMap.keySet()))
+				.fetch();
+				
+				// fill with corresponding propertyValueId and current color value
+				for (Record3<Integer, String, Integer> colorPropertyValueRecord : colorPropertyValueRecords) {
+					ColorPropertyValueInfo colorPropertyValueInfo = 
+							colorPropertyDefIdToValueInfoMap
+							.get(colorPropertyValueRecord.value3());
+					
+					colorPropertyValueInfo.addIfChanged(
+						colorPropertyValueRecord.value1(), colorPropertyValueRecord.value2());
+				}
+
 				for (TagReference tr : userMarkupCollection.getTagReferences()) {
 					relevantTagInstanceUUIDs.add(
 							idGenerator.catmaIDToUUIDBytes(tr.getTagInstanceID()));
@@ -1072,6 +1151,20 @@ class UserMarkupCollectionHandler {
 					}
 
 				}
+
+				// update all modified color property values
+				for (ColorPropertyValueInfo colorPropertyValueInfo : colorPropertyDefIdToValueInfoMap.values()) {
+					if (!colorPropertyValueInfo.getPropertyValueIds().isEmpty()) {
+						db
+						.update(PROPERTYVALUE)
+						.set(
+							PROPERTYVALUE.VALUE,
+							colorPropertyValueInfo.getPropertyDefinition().getFirstValue())
+						.where(PROPERTYVALUE.PROPERTYVALUEID.in(colorPropertyValueInfo.getPropertyValueIds()))
+						.execute();
+					}
+				}
+				
 				// addition of new properties with default values is not 
 				// represented within the umc on the database side
 				// only the tag library will be affected (see below)
@@ -1084,6 +1177,16 @@ class UserMarkupCollectionHandler {
 				
 				db.commitTransaction();
 
+				// add changed color properties to update log for reindexing
+				for (ColorPropertyValueInfo colorPropertyValueInfo : colorPropertyDefIdToValueInfoMap.values())  {
+					if (!colorPropertyValueInfo.getPropertyValueIds().isEmpty()) {
+						tagsetDefinitionUpdateLog.addUpdatedPropertyDefinition(
+							colorPropertyValueInfo.getPropertyDefinition().getUuid(), 
+							colorPropertyValueInfo.getTagDefinition().getUuid());
+					}
+				}
+				
+				// reindex if necessary
 				if (!tagsetDefinitionUpdateLog.isEmpty()) {
 					dbRepository.getIndexer().reindex(
 							tagsetDefinition, 

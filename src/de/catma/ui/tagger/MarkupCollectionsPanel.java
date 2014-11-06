@@ -601,10 +601,10 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				if (captionProp != null) {
 					captionProp.setValue(tagDefinition.getName());
 				}
-				
-				boolean selected = Boolean.valueOf(markupCollectionsTree.getItem(
+				CheckBox box = (CheckBox)markupCollectionsTree.getItem(
 						tagDefinition).getItemProperty(
-								MarkupCollectionsTreeProperty.visible).toString());
+								MarkupCollectionsTreeProperty.visible).getValue();
+				boolean selected = box.getValue();
 				if (selected) {
 					fireTagDefinitionSelected(tagDefinition, false);
 					fireTagDefinitionSelected(tagDefinition, true);

@@ -220,7 +220,7 @@ public class CatmaApplication extends UI
 
 			Link helpLink = new Link(
 					"Help", 
-					new ExternalResource(request.getContextPath()+"manual/"));
+					new ExternalResource(request.getContextPath()+"/manual/"));
 			helpLink.setTargetName("_blank");
 			mainLayout.addComponent(helpLink);
 			mainLayout.setComponentAlignment(helpLink, Alignment.TOP_RIGHT);
