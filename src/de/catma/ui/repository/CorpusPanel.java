@@ -369,26 +369,38 @@ public class CorpusPanel extends VerticalLayout {
 			new SaveCancelListener<GenerationOptions>() {
 				public void cancelPressed() {}
 				public void savePressed(GenerationOptions result) {
-					((BackgroundServiceProvider)UI.getCurrent()).submit(
-						"Generating annotations...",
-						new AnnotationGeneratorJob(result),
-						new ExecutionListener<Void>() {
-							@Override
-							public void done(Void result) {
-								try {
-									repository.reload(); 
-									Notification.show("Info", "Your annotations have been generated!", Type.TRAY_NOTIFICATION);
-								} catch (IOException e) {
+					if (result.getTagsetIdentification() != null) {
+						((BackgroundServiceProvider)UI.getCurrent()).submit(
+							"Generating annotations...",
+							new AnnotationGeneratorJob(result),
+							new ExecutionListener<Void>() {
+								@Override
+								public void done(Void result) {
+									try {
+										repository.reload(); 
+										Notification.show(
+											"Info", 
+											"Your annotations have been generated!", 
+											Type.TRAY_NOTIFICATION);
+									} catch (IOException e) {
+										((CatmaApplication)UI.getCurrent()).showAndLogError(
+												"Error reloading repository!", e);
+									}
+								}
+								@Override
+								public void error(Throwable t) {
 									((CatmaApplication)UI.getCurrent()).showAndLogError(
-											"Error reloading repository!", e);
+											"Error reloading repository!", t);
 								}
 							}
-							@Override
-							public void error(Throwable t) {
-								((CatmaApplication)UI.getCurrent()).showAndLogError(
-										"Error reloading repository!", t);
-							}
-						});
+						);
+					}
+					else {
+						Notification.show(
+								"Info", 
+								"You need to select a markup type, no markup has been generated!", 
+								Type.TRAY_NOTIFICATION);
+					}
 				}
 		});
 		generationOptionsDlg.setVisibleItemProperties(

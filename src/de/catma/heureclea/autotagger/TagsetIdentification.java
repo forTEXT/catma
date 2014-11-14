@@ -1,7 +1,19 @@
 package de.catma.heureclea.autotagger;
 
 public enum TagsetIdentification {
-	pos,
-	tense,
+	pos("Parts Of Speech"),
+	tense("Tense"),
+	temporal_signals("Temporal Signals")
 	;
+	
+	private String description;
+
+	private TagsetIdentification(String description) {
+		this.description = description;
+	}
+	
+	@Override
+	public String toString() {
+		return description;
+	}
 }
