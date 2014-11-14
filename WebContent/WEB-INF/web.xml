@@ -37,6 +37,14 @@
 			<param-name>widgetset</param-name>
 			<param-value>de.catma.ui.CleaWidgetset</param-value>
 		</init-param>
+		<init-param>
+			<param-name>closeIdleSessions</param-name>
+			<param-value>true</param-value>
+		</init-param>
+		<init-param>
+			<param-name>legacyPropertyToString</param-name>
+			<param-value>true</param-value>
+		</init-param>
 		<load-on-startup>3</load-on-startup>
 	</servlet>
 	

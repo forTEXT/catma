@@ -31,13 +31,6 @@ import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.util.Collection;
 
-import javax.naming.InitialContext;
-
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.Transaction;
-import org.neo4j.tooling.GlobalGraphOperations;
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
 import org.vaadin.teemu.wizards.event.WizardCompletedEvent;
@@ -94,7 +87,6 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
-import de.catma.indexer.graph.CatmaGraphDbName;
 import de.catma.serialization.intrinsic.xml.XmlMarkupCollectionSerializationHandler;
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 import de.catma.tag.PropertyDefinition;
@@ -559,7 +551,6 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		else{
 			final SourceDocument sourceDocument = (SourceDocument)value;
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-//			OutputStreamWriter writer = new OutputStreamWriter(bos, "UTF-8");
 			
 			try {
 				bos.write(sourceDocument.getContent().getBytes(Charset.forName("UTF8")));
@@ -591,8 +582,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						if (title!=null) {
 							title = title.replaceAll("\\s", "_");
 						}
-						return sourceDocument.getID() 
-							+ (((title==null)||title.isEmpty())?"":("_"+title)) +
+						return (((title==null)||title.isEmpty())?sourceDocument.getID().replaceAll("[/:]", ""):title) +
 							".txt";
 					};
 				},
@@ -650,8 +640,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					if (title!=null) {
 						title = title.replaceAll("\\s", "_");
 					}
-					return sourceDocument.getID() 
-						+ (((title==null)||title.isEmpty())?"":("_"+title)) +
+					return  
+						(((title==null)||title.isEmpty())?sourceDocument.getID().replaceAll("[/:]", ""):title) +
 						"." + sourceContentHandler.getSourceDocumentInfo().getTechInfoSet().getFileType().name().toLowerCase();
 				};
 			},
