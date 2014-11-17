@@ -18,15 +18,24 @@
  */
 package de.catma.servlet;
 
+import java.util.Properties;
+
+import javax.naming.InitialContext;
 import javax.servlet.ServletException;
 
 import com.vaadin.server.BootstrapFragmentResponse;
 import com.vaadin.server.BootstrapListener;
 import com.vaadin.server.BootstrapPageResponse;
+import com.vaadin.server.CustomizedSystemMessages;
 import com.vaadin.server.ServiceException;
 import com.vaadin.server.SessionInitEvent;
 import com.vaadin.server.SessionInitListener;
+import com.vaadin.server.SystemMessages;
+import com.vaadin.server.SystemMessagesInfo;
+import com.vaadin.server.SystemMessagesProvider;
 import com.vaadin.server.VaadinServlet;
+
+import de.catma.document.repository.RepositoryPropertiesName;
 
 public class CatmaApplicationServlet extends VaadinServlet {
 	
@@ -120,5 +129,33 @@ public class CatmaApplicationServlet extends VaadinServlet {
 				event.getSession().addBootstrapListener(new CatmaBootstrapListener());
 			}
 		});
+		
+		getService().setSystemMessagesProvider(new SystemMessagesProvider() {
+			@Override
+			public SystemMessages getSystemMessages(
+					SystemMessagesInfo systemMessagesInfo) {
+				CustomizedSystemMessages messages = new CustomizedSystemMessages();
+				try {
+					Properties properties = 
+							(Properties) new InitialContext().lookup(
+									RepositoryPropertiesName.CATMAPROPERTIES.name());
+					
+					String problemRedirectURL = 
+							properties.getProperty(
+								"problemRedirectURL", 
+								"http://www.digitalhumanities.it/catma/");
+					messages.setOutOfSyncURL(problemRedirectURL);
+					messages.setAuthenticationErrorURL(problemRedirectURL);
+					messages.setInternalErrorURL(problemRedirectURL);
+					messages.setSessionExpiredURL(problemRedirectURL);
+					messages.setCommunicationErrorURL(problemRedirectURL);
+					messages.setCookiesDisabledURL(problemRedirectURL);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				return messages;
+			}
+		});
+
 	}
 }
