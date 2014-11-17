@@ -18,6 +18,7 @@
  */
 package de.catma.ui;
 
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
@@ -145,7 +146,6 @@ public class CatmaApplication extends UI
 
 	@Override
 	protected void init(VaadinRequest request) {
-		
 		backgroundService = new UIBackgroundService(true);
 		
 		handleParameters(request.getParameterMap());
@@ -476,14 +476,15 @@ public class CatmaApplication extends UI
 		if (message == null) {
 			message = "internal error"; 
 		}
-
-		HTMLNotification.show(
-			"Error", 
-			"An error has occurred!<br />" +
-			"We've been notified about this error and it will be fixed soon.<br />" +
-			"The underlying error message is:<br />" + message +
-			"<br />" + e.getMessage(), 
-			Type.ERROR_MESSAGE);
+		if (Page.getCurrent() != null) {
+			HTMLNotification.show(
+				"Error", 
+				"An error has occurred!<br />" +
+				"We've been notified about this error and it will be fixed soon.<br />" +
+				"The underlying error message is:<br />" + message +
+				"<br />" + e.getMessage(), 
+				Type.ERROR_MESSAGE);
+		}
 	}
 
 	public void openSourceDocument(SourceDocument sd, Repository repository,

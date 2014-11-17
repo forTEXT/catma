@@ -224,11 +224,11 @@ public class AuthenticationDialog extends VerticalLayout {
 				}
 				else {
 					logger.info("authentication failure");
-					Notification.show(
+					new Notification(
                             "Authentication failure",
                             "The authentication failed, you are not " +
                             "allowed to access this repository!",
-                            Type.ERROR_MESSAGE);
+                            Type.ERROR_MESSAGE).show(ui.getPage());
 
 				}
 				
