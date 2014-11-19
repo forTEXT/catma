@@ -36,6 +36,7 @@ import com.vaadin.server.SystemMessagesProvider;
 import com.vaadin.server.VaadinServlet;
 
 import de.catma.document.repository.RepositoryPropertiesName;
+import de.catma.document.repository.RepositoryPropertyKey;
 
 public class CatmaApplicationServlet extends VaadinServlet {
 	
@@ -142,7 +143,7 @@ public class CatmaApplicationServlet extends VaadinServlet {
 					
 					String problemRedirectURL = 
 							properties.getProperty(
-								"problemRedirectURL", 
+								RepositoryPropertyKey.BaseURL.name(), 
 								"http://www.digitalhumanities.it/catma/");
 					messages.setOutOfSyncURL(problemRedirectURL);
 					messages.setAuthenticationErrorURL(problemRedirectURL);

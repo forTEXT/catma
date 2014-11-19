@@ -20,6 +20,9 @@ package de.catma.ui.repository;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
+
+import javax.naming.InitialContext;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.util.BeanItemContainer;
@@ -36,6 +39,8 @@ import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
+import de.catma.document.repository.RepositoryPropertiesName;
+import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.repository.RepositoryReference;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.tabbedview.TabComponent;
@@ -64,15 +69,25 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 							Type.TRAY_NOTIFICATION);
 				}
 				else {
-					if (repositoryReference.isAuthenticationRequired()) {
-						AuthenticationDialog authDialog = 
-								new AuthenticationDialog(
-										"Please authenticate yourself", 
-										repositoryReference, repositoryManager);
-						authDialog.show();
-					}
-					else {
-						try {
+					try {	
+						if (repositoryReference.isAuthenticationRequired()) {
+							Properties properties = 
+									(Properties) new InitialContext().lookup(
+											RepositoryPropertiesName.CATMAPROPERTIES.name());
+							
+							String baseURL = 
+									properties.getProperty(
+										RepositoryPropertyKey.BaseURL.name(), 
+										"http://www.digitalhumanities.it/catma/");
+	
+							AuthenticationDialog authDialog = 
+									new AuthenticationDialog(
+											"Please authenticate yourself", 
+											repositoryReference, repositoryManager,
+											baseURL);
+							authDialog.show();
+						}
+						else {
 							String user = 
 								((CatmaApplication)UI.getCurrent()).getParameter(
 										"user.name");
@@ -92,11 +107,10 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 							
 							((CatmaApplication)UI.getCurrent()).openRepository(
 									repository);
-							
-						} catch (Exception e) {
-							((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"Error opening the repository!", e);
 						}
+					} catch (Exception e) {
+						((CatmaApplication)UI.getCurrent()).showAndLogError(
+								"Error opening the repository!", e);
 					}
 				}
 			}
