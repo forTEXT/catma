@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.openid4java.association.Association;
@@ -41,7 +42,6 @@ import org.openid4java.message.ax.FetchResponse;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.DownloadStream;
 import com.vaadin.server.ExternalResource;
-import com.vaadin.server.Page;
 import com.vaadin.server.RequestHandler;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinResponse;
@@ -253,14 +253,16 @@ public class AuthenticationDialog extends VerticalLayout {
 	private RepositoryManager repositoryManager;
 	private Link logInLink;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private String baseUrl;
 	
 	public AuthenticationDialog(
 			String caption, RepositoryReference repositoryReference, 
-			RepositoryManager repositoryManager) {
+			RepositoryManager repositoryManager, String baseUrl) {
 		this.caption = caption;
 		this.repositoryReference = repositoryReference;
 		this.repositoryManager = repositoryManager;
 		this.providerIdent = "https://www.google.com/accounts/o8/id";
+		this.baseUrl = baseUrl;
 		initComponents();
 	}
 
@@ -298,7 +300,13 @@ public class AuthenticationDialog extends VerticalLayout {
 		super.attach();
 		if (logInLink == null) {
 			logInLink = createLogInLink(UI.getCurrent());
-			addComponent(logInLink, 0);
+			if (logInLink == null) { //auth failure
+				addComponent(new Label("Unable to establish authentication!"));
+				logger.log(Level.SEVERE, "Log-In-Link creation failed!");
+			}
+			else {
+				addComponent(logInLink, 0);
+			}
 		}
 	}
 
@@ -307,8 +315,8 @@ public class AuthenticationDialog extends VerticalLayout {
 			ConsumerManager consumerManager = new ConsumerManager();
 			
 			String returnURL = 
-				Page.getCurrent().getLocation().toString() +
-				new IDGenerator().generate();
+					baseUrl + new IDGenerator().generate();
+			
 			logger.info("return url in login link creation " + returnURL);
 			
 			@SuppressWarnings("rawtypes")

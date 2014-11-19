@@ -67,6 +67,7 @@ import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.util.IDGenerator;
+import de.catma.util.Pair;
 
 public class KwicPanel extends VerticalLayout {
 	private enum KwicPropertyName {
@@ -221,12 +222,35 @@ public class KwicPanel extends VerticalLayout {
 			
 			public void savePressed(Map<String, UserMarkupCollection> result) {
 				try {
-					tagKwic(result, selectedRows, incomingTagsetDef, incomingTagDef);
-					Notification.show(
-							"Info", "The search results have been tagged!", 
-							Type.TRAY_NOTIFICATION);
-					//save map
-
+					Pair<Integer,Integer> countStats = 
+						tagKwic(result, selectedRows, incomingTagsetDef, incomingTagDef);
+					
+					int umcCount = countStats.getFirst();
+					int tagRefCount = countStats.getSecond();
+					
+					if (umcCount > 0) {
+						if (tagRefCount > 1) {
+							Notification.show(
+								"Info", 
+								tagRefCount + " search results have been tagged in "
+									+ umcCount + " selected collection"  
+									+ ((umcCount>1)?"s":"") + "!",
+								Type.TRAY_NOTIFICATION);
+						}
+						else {
+							Notification.show(
+								"Info",
+								tagRefCount + " search result has been tagged in "
+									+ umcCount + " selected collection"  
+									+ ((umcCount>1)?"s":"") + "!",
+								Type.TRAY_NOTIFICATION);							
+						}
+					}
+					else {
+						Notification.show(
+								"Info", "Nothing has been tagged!",
+								Type.TRAY_NOTIFICATION);
+					}
 				} catch (URISyntaxException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							"error creating tag reference", e);
@@ -247,10 +271,9 @@ public class KwicPanel extends VerticalLayout {
 				if (initialTarget == null) {
 					initialTarget = umcRef;
 				}
-				else if (relevantUserMarkupCollectionProvider.getCorpus().getUserMarkupCollectionRefs().contains(umcRef)) {
+				else if (relevantUserMarkupCollectionProvider.getCorpus()
+						.getUserMarkupCollectionRefs().contains(umcRef)) {
 					initialTarget = umcRef;
-					// if contains map from last time
-					// initialTarget = map
 					break;
 				}
 			}
@@ -270,7 +293,7 @@ public class KwicPanel extends VerticalLayout {
 		}
 	}
 
-	private void tagKwic(
+	private Pair<Integer,Integer> tagKwic(
 			Map<String, UserMarkupCollection> result, 
 			Set<QueryResultRow> selectedRows, 
 			TagsetDefinition incomingTagsetDef, TagDefinition incomingTagDef) throws URISyntaxException {
@@ -304,21 +327,22 @@ public class KwicPanel extends VerticalLayout {
 		for (QueryResultRow row : selectedRows) {
 			UserMarkupCollection umc = 
 					result.get(row.getSourceDocumentId());
-			
-			TagInstance ti = 
-					new TagInstance(
-						idGenerator.generate(), 
-						umc.getTagLibrary().getTagDefinition(
-								incomingTagDef.getUuid()));
-			
-			TagReference tr = new TagReference(
-				ti, repository.getSourceDocument(
-						row.getSourceDocumentId()).getID(), row.getRange());
-			
-			if (!tagReferences.containsKey(umc)) {
-				tagReferences.put(umc, new ArrayList<TagReference>());
+			if (umc != null) {
+				TagInstance ti = 
+						new TagInstance(
+							idGenerator.generate(), 
+							umc.getTagLibrary().getTagDefinition(
+									incomingTagDef.getUuid()));
+				
+				TagReference tr = new TagReference(
+					ti, repository.getSourceDocument(
+							row.getSourceDocumentId()).getID(), row.getRange());
+				
+				if (!tagReferences.containsKey(umc)) {
+					tagReferences.put(umc, new ArrayList<TagReference>());
+				}
+				tagReferences.get(umc).add(tr);
 			}
-			tagReferences.get(umc).add(tr);
 		}
 		
 		
@@ -326,7 +350,7 @@ public class KwicPanel extends VerticalLayout {
 			userMarkupCollectionManager.addTagReferences(entry.getValue(), entry.getKey());
 		}
 
-		
+		return new Pair<Integer, Integer>(tagReferences.size(), tagReferences.values().size()); //collection count, tag ref count
 	}
 
 	private void initComponents() {
