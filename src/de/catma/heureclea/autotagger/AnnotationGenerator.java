@@ -30,9 +30,14 @@ public class AnnotationGenerator {
 		this.logFolder = properties.getProperty("heurecleaExportFolder");
 	}
 
-	public void generate(String corpusId, TagsetIdentification tagsetIdentification) throws IOException, InterruptedException {
+	public void generate(
+			String corpusId, TagsetIdentification tagsetIdentification, 
+			String identifier, String token) throws IOException, InterruptedException {
 		ProcessBuilder pb =
-			   new ProcessBuilder(generatorPath, corpusId, tagsetIdentification.name());
+			   new ProcessBuilder(
+					   generatorPath, 
+					   corpusId, tagsetIdentification.name(), 
+					   identifier, "\"" + token + "\"");
 		File log = new File(
 				logFolder, 
 				"AnnotationGenerator" + FORMATTER.format(new Date()) + ".log");

@@ -360,53 +360,60 @@ public class CorpusPanel extends VerticalLayout {
 		
 	}
 	
-	private void handleGenrateAnnotationsRequest(Corpus selectedValue) {
-		GenerationOptions generationOptions = new GenerationOptions(selectedValue.getId());
-		FormDialog<GenerationOptions> generationOptionsDlg = new FormDialog<GenerationOptions>(
-			"Please select the type of markup you want us to generate", 
-			new BeanItem<GenerationOptions>(generationOptions),
-			new GenerationOptionsFieldFactory(), 
-			new SaveCancelListener<GenerationOptions>() {
-				public void cancelPressed() {}
-				public void savePressed(GenerationOptions result) {
-					if (result.getTagsetIdentification() != null) {
-						((BackgroundServiceProvider)UI.getCurrent()).submit(
-							"Generating annotations...",
-							new AnnotationGeneratorJob(result),
-							new ExecutionListener<Void>() {
-								@Override
-								public void done(Void result) {
-									try {
-										repository.reload(); 
-										Notification.show(
-											"Info", 
-											"Your annotations have been generated!", 
-											Type.TRAY_NOTIFICATION);
-									} catch (IOException e) {
+	private void handleGenrateAnnotationsRequest(Corpus selectedValue) { 
+		try {
+			GenerationOptions generationOptions = new GenerationOptions(
+					selectedValue.getId(), 
+					repository.getUser().getIdentifier());
+			FormDialog<GenerationOptions> generationOptionsDlg = new FormDialog<GenerationOptions>(
+				"Please select the type of markup you want us to generate", 
+				new BeanItem<GenerationOptions>(generationOptions),
+				new GenerationOptionsFieldFactory(), 
+				new SaveCancelListener<GenerationOptions>() {
+					public void cancelPressed() {}
+					public void savePressed(GenerationOptions result) {
+						if (result.getTagsetIdentification() != null) {
+							((BackgroundServiceProvider)UI.getCurrent()).submit(
+								"Generating annotations...",
+								new AnnotationGeneratorJob(result),
+								new ExecutionListener<Void>() {
+									@Override
+									public void done(Void result) {
+										try {
+											repository.reload(); 
+											Notification.show(
+												"Info", 
+												"Your annotations have been generated!", 
+												Type.TRAY_NOTIFICATION);
+										} catch (IOException e) {
+											((CatmaApplication)UI.getCurrent()).showAndLogError(
+													"Error reloading repository!", e);
+										}
+									}
+									@Override
+									public void error(Throwable t) {
 										((CatmaApplication)UI.getCurrent()).showAndLogError(
-												"Error reloading repository!", e);
+												"Error reloading repository!", t);
 									}
 								}
-								@Override
-								public void error(Throwable t) {
-									((CatmaApplication)UI.getCurrent()).showAndLogError(
-											"Error reloading repository!", t);
-								}
-							}
-						);
+							);
+						}
+						else {
+							Notification.show(
+									"Info", 
+									"You need to select a markup type, no markup has been generated!", 
+									Type.TRAY_NOTIFICATION);
+						}
 					}
-					else {
-						Notification.show(
-								"Info", 
-								"You need to select a markup type, no markup has been generated!", 
-								Type.TRAY_NOTIFICATION);
-					}
-				}
-		});
-		generationOptionsDlg.setVisibleItemProperties(
-					new Object[] {"tagsetIdentification"});
-		generationOptionsDlg.show();
-
+			});
+			generationOptionsDlg.setVisibleItemProperties(
+						new Object[] {"tagsetIdentification"});
+			generationOptionsDlg.show();
+		}
+		catch (Exception e) {
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
+					"Error generating access token!", e);
+		}
 	}
 
 	private void handleExportCorpusRequest(Corpus selectedValue) {

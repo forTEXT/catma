@@ -13,8 +13,8 @@ commons-compress-1.6.jar							Repository (Corpus exports)
 commons-io-2.1.jar									repository (SourceDocument handling)
 commons-logging-1.03.jar							openid4java-ro-svn-120615.jar, poi-3.8-20120326
 confirmdialog-1.1.1.jar								UI
-guava-14.0.1.jar									utilities like Collections2
-guice-2.0.jar										guava-14.0.1.jar, openid4java-ro-svn-120615.jar
+guava-18.jar										utilities like Collections2
+guice-2.0.jar										openid4java-ro-svn-120615.jar
 gwt-user.jar										GWT_2.4
 gwt-dev.jar											GWT_2.4
 highcharts.js (2.2.5)								invientcharts-0.8.6.jar

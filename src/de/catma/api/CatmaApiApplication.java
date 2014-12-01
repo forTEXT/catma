@@ -52,7 +52,7 @@ public class CatmaApiApplication extends Application {
 						ChallengeScheme.HTTP_BASIC, 
 						"CATMA WS API");
 			
-			MapVerifier mapVerifier = new MapVerifier();
+			MapVerifier mapVerifier = new TokenEnhancedMapVerifier();
 			loadValidApiUsers(
 				mapVerifier, servletContext.getRealPath("apiusers.json"));
 			guard.setVerifier(mapVerifier);

@@ -15,7 +15,9 @@ public class AnnotationGeneratorJob extends DefaultProgressCallable<Void> {
 	public Void call() throws Exception {
 		new AnnotationGenerator().generate(
 			generationOptions.getCorpusId(), 
-			generationOptions.getTagsetIdentification());
+			generationOptions.getTagsetIdentification(),
+			generationOptions.getIdentifier(),
+			generationOptions.getToken());
 		
 		return null;
 	}

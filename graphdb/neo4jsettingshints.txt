@@ -17,3 +17,27 @@ relationship_cache_array_fraction				7%(5GB)				350M					7%(12GB)840MB
 node_cache_size														1G						3G
 relationship_cache_size												2G						4G
 
+
+Calculation Results
+Recommended number of servers 	1
+Recommended number of cores per server 	4
+Recommended amount of RAM 	110000 MB
+Recommended Java heap size 	65500 MB
+Estimated size on disk 	43900 MB
+Current infrastructure fit factor 	0.075 (100+ recommended)
+
+Calculation Input
+Number of nodes 	180000000
+Number of relationships 	400000000
+Property storage per node (bytes) 	20 B
+Property storage per relationship (bytes) 	0 B
+Concurrent requests per second 	1
+Number of servers 	0
+Number of CPU cores per server 	0
+Amount of RAM per server 	0 MB
+
+25 user/day, 30 queries/user/day
+
+neo4j.com/hardware-sizing-calculator/
+
+
