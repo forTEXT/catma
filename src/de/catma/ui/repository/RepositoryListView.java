@@ -78,7 +78,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 							String baseURL = 
 									properties.getProperty(
 										RepositoryPropertyKey.BaseURL.name(), 
-										"http://www.digitalhumanities.it/catma/");
+										RepositoryPropertyKey.BaseURL.getDefaultValue());
 	
 							AuthenticationDialog authDialog = 
 									new AuthenticationDialog(
