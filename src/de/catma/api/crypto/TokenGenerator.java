@@ -42,11 +42,13 @@ public class TokenGenerator {
 				return true;
 			}
 			else {
-				logger.warning("received unknown key for " + value);
+				logger.warning("received unknown key for " 
+						+ value + " " + new String(key));
 			}
 		}
 		else {
-			logger.warning("received invalid key for " + value);
+			logger.warning("received invalid key for " + value 
+					 + " " + new String(key));
 		}
 		
 		return false;

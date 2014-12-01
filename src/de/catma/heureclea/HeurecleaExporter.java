@@ -25,6 +25,7 @@ import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
 import de.catma.document.repository.RepositoryPropertiesName;
+import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.repository.RepositoryReference;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.SourceContentHandler;
@@ -47,7 +48,7 @@ public class HeurecleaExporter {
 					(Properties) new InitialContext().lookup(
 							RepositoryPropertiesName.CATMAPROPERTIES.name());
 			
-			String exportFolder = properties.getProperty("heurecleaExportFolder");
+			String exportFolder = properties.getProperty(RepositoryPropertyKey.HeurecleaFolder.name());
 			
 			TagManager tagManager = new TagManager();
 			RepositoryManager repoManager = new RepositoryManager(

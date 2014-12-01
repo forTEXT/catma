@@ -27,17 +27,22 @@ public class AnnotationGenerator {
 		
 		this.generatorPath = 
 			properties.getProperty(RepositoryPropertyKey.AnnotationGeneratorPath.name());
-		this.logFolder = properties.getProperty("heurecleaExportFolder");
+		this.logFolder = properties.getProperty(RepositoryPropertyKey.HeurecleaFolder.name());
 	}
 
 	public void generate(
 			String corpusId, TagsetIdentification tagsetIdentification, 
 			String identifier, String token) throws IOException, InterruptedException {
+		
+		if (System.getProperty("os.name").toLowerCase().startsWith("win")) {
+			token = "\"" + token + "\"";
+		}
+		
 		ProcessBuilder pb =
 			   new ProcessBuilder(
 					   generatorPath, 
 					   corpusId, tagsetIdentification.name(), 
-					   identifier, "\"" + token + "\"");
+					   identifier, token);
 		File log = new File(
 				logFolder, 
 				"AnnotationGenerator" + FORMATTER.format(new Date()) + ".log");
