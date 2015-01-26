@@ -20,9 +20,6 @@ package de.catma.ui.repository;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
-
-import javax.naming.InitialContext;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.util.BeanItemContainer;
@@ -32,14 +29,13 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.Table.ColumnHeaderMode;
 import com.vaadin.ui.Table;
+import com.vaadin.ui.Table.ColumnHeaderMode;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
-import de.catma.document.repository.RepositoryPropertiesName;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.repository.RepositoryReference;
 import de.catma.ui.CatmaApplication;
@@ -71,13 +67,10 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 				else {
 					try {	
 						if (repositoryReference.isAuthenticationRequired()) {
-							Properties properties = 
-									(Properties) new InitialContext().lookup(
-											RepositoryPropertiesName.CATMAPROPERTIES.name());
+
 							
 							String baseURL = 
-									properties.getProperty(
-										RepositoryPropertyKey.BaseURL.name(), 
+									RepositoryPropertyKey.BaseURL.getValue(
 										RepositoryPropertyKey.BaseURL.getDefaultValue());
 	
 							AuthenticationDialog authDialog = 

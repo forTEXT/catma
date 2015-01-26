@@ -4,13 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.naming.InitialContext;
-
 import org.restlet.data.Status;
 import org.restlet.resource.ResourceException;
 
-import de.catma.api.crypto.TokenGenerator;
-import de.catma.api.crypto.TokenGeneratorName;
 import de.catma.backgroundservice.DefaultBackgroundServiceProvider;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
@@ -20,13 +16,6 @@ import de.catma.tag.TagManager;
 public class RepositoryLoader {
 
 	public Repository open(Properties properties, String identifier) throws Exception {
-		InitialContext context = new InitialContext();
-		TokenGenerator tokenGenerator = 
-				(TokenGenerator) context.lookup(TokenGeneratorName.TOKENGENERATOR.name());
-
-		// strip of timestamp
-		identifier = tokenGenerator.getIdentifier(identifier);
-		
 		TagManager tagManager = new TagManager();
 		RepositoryManager repoManager = new RepositoryManager(
 				new DefaultBackgroundServiceProvider(), 

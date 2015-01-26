@@ -3,14 +3,11 @@ package de.catma.servlet;
 import java.io.FileInputStream;
 import java.util.Properties;
 
-import javax.naming.InitialContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
-import de.catma.api.crypto.TokenGenerator;
-import de.catma.api.crypto.TokenGeneratorName;
-import de.catma.document.repository.RepositoryPropertiesName;
+import de.catma.document.repository.RepositoryProperties;
 import de.catma.util.NonModifiableProperties;
 
 public class PropertiesInitializerServlet extends HttpServlet {
@@ -31,20 +28,11 @@ public class PropertiesInitializerServlet extends HttpServlet {
 			properties.load(
 				new FileInputStream(
 					cfg.getServletContext().getRealPath(propertiesFile)));
-	
-			new InitialContext().bind(
-				RepositoryPropertiesName.CATMAPROPERTIES.name(), 
+			
+			RepositoryProperties.INSTANCE.setProperties( 
 				new NonModifiableProperties(properties));
 			
 			log("CATMA Properties initialized.");
-			
-	        log("Loading TokenGenerator...");
-
-			TokenGenerator tokenGenerator = new TokenGenerator();
-			
-			InitialContext context = new InitialContext();
-			context.bind(TokenGeneratorName.TOKENGENERATOR.name(), tokenGenerator);
-			log("TokenGenerator loaded.");
         }
         catch (Exception e) {
         	throw new ServletException(e);

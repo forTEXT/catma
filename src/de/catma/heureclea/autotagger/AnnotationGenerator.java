@@ -5,12 +5,9 @@ import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Properties;
 
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import de.catma.document.repository.RepositoryPropertiesName;
 import de.catma.document.repository.RepositoryPropertyKey;
 
 public class AnnotationGenerator {
@@ -20,14 +17,9 @@ public class AnnotationGenerator {
 	private String logFolder;
 
 	public AnnotationGenerator() throws NamingException {
-		InitialContext context = new InitialContext();
-		Properties properties = 
-			(Properties) context.lookup(
-				RepositoryPropertiesName.CATMAPROPERTIES.name());
-		
 		this.generatorPath = 
-			properties.getProperty(RepositoryPropertyKey.AnnotationGeneratorPath.name());
-		this.logFolder = properties.getProperty(RepositoryPropertyKey.HeurecleaFolder.name());
+			RepositoryPropertyKey.AnnotationGeneratorPath.getValue();
+		this.logFolder = RepositoryPropertyKey.HeurecleaFolder.getValue();
 	}
 
 	public void generate(

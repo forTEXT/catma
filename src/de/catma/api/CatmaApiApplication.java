@@ -42,7 +42,7 @@ public class CatmaApiApplication extends Application {
 	
 			Properties properties = new Properties();
 			properties.load(new FileInputStream(
-					servletContext.getRealPath("catma.properties")));
+					servletContext.getRealPath("catma.properties"))); // FIXME:close stream
 			
 			getContext().getAttributes().put(
 				Parameter.catma_properties.name(), properties);

@@ -18,9 +18,6 @@
  */
 package de.catma.servlet;
 
-import java.util.Properties;
-
-import javax.naming.InitialContext;
 import javax.servlet.ServletException;
 
 import com.vaadin.server.BootstrapFragmentResponse;
@@ -35,7 +32,6 @@ import com.vaadin.server.SystemMessagesInfo;
 import com.vaadin.server.SystemMessagesProvider;
 import com.vaadin.server.VaadinServlet;
 
-import de.catma.document.repository.RepositoryPropertiesName;
 import de.catma.document.repository.RepositoryPropertyKey;
 
 public class CatmaApplicationServlet extends VaadinServlet {
@@ -137,13 +133,8 @@ public class CatmaApplicationServlet extends VaadinServlet {
 					SystemMessagesInfo systemMessagesInfo) {
 				CustomizedSystemMessages messages = new CustomizedSystemMessages();
 				try {
-					Properties properties = 
-							(Properties) new InitialContext().lookup(
-									RepositoryPropertiesName.CATMAPROPERTIES.name());
-					
 					String problemRedirectURL = 
-							properties.getProperty(
-								RepositoryPropertyKey.BaseURL.name(), 
+							RepositoryPropertyKey.BaseURL.getValue( 
 								"http://www.digitalhumanities.it/catma/");
 					messages.setOutOfSyncURL(problemRedirectURL);
 					messages.setAuthenticationErrorURL(problemRedirectURL);

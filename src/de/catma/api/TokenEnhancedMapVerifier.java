@@ -1,28 +1,24 @@
 package de.catma.api;
 
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.jboss.aerogear.security.otp.Totp;
+import org.jboss.aerogear.security.otp.api.Clock;
 import org.restlet.security.MapVerifier;
 
-import de.catma.api.crypto.TokenGenerator;
-import de.catma.api.crypto.TokenGeneratorName;
+import de.catma.document.repository.RepositoryPropertyKey;
 
 public class TokenEnhancedMapVerifier extends MapVerifier {
-	
-	private TokenGenerator tokenGenerator;
 
 	public TokenEnhancedMapVerifier() throws NamingException {
-		InitialContext context = new InitialContext();
-		this.tokenGenerator = 
-			(TokenGenerator) context.lookup(TokenGeneratorName.TOKENGENERATOR.name());
 	}
 	
 	@Override
 	public int verify(String identifier, char[] secret) {
 		int result = super.verify(identifier, secret);
 		if (result != RESULT_VALID) {
-			if (tokenGenerator.isValid(identifier, secret)) {
+			Totp totp = new Totp(RepositoryPropertyKey.otpsecret.getValue()+identifier, new Clock(120));
+			if (totp.verify(new String(secret))) {
 				return RESULT_VALID;
 			}
 		}

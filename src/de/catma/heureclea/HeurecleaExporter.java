@@ -11,11 +11,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
-
-import javax.naming.InitialContext;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
@@ -24,7 +21,7 @@ import de.catma.backgroundservice.DefaultBackgroundServiceProvider;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
-import de.catma.document.repository.RepositoryPropertiesName;
+import de.catma.document.repository.RepositoryProperties;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.repository.RepositoryReference;
 import de.catma.document.source.SourceDocument;
@@ -44,16 +41,12 @@ public class HeurecleaExporter {
 	
 	public void export() throws IOException {
 		try {
-			Properties properties = 
-					(Properties) new InitialContext().lookup(
-							RepositoryPropertiesName.CATMAPROPERTIES.name());
-			
-			String exportFolder = properties.getProperty(RepositoryPropertyKey.HeurecleaFolder.name());
+			String exportFolder = RepositoryPropertyKey.HeurecleaFolder.getValue();
 			
 			TagManager tagManager = new TagManager();
 			RepositoryManager repoManager = new RepositoryManager(
 					new DefaultBackgroundServiceProvider(), 
-					tagManager, properties);
+					tagManager, RepositoryProperties.INSTANCE.getProperties());
 			if (!repoManager.getRepositoryReferences().isEmpty()) {
 				RepositoryReference repoRef = 
 					repoManager.getRepositoryReferences().iterator().next();
