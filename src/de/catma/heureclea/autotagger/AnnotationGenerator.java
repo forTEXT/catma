@@ -1,52 +1,60 @@
 package de.catma.heureclea.autotagger;
 
-import java.io.File;
 import java.io.IOException;
-import java.lang.ProcessBuilder.Redirect;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.net.URLEncoder;
 
 import javax.naming.NamingException;
+
+import org.restlet.Context;
+import org.restlet.data.Method;
+import org.restlet.resource.ClientResource;
 
 import de.catma.document.repository.RepositoryPropertyKey;
 
 public class AnnotationGenerator {
-	private static final SimpleDateFormat FORMATTER = new SimpleDateFormat("yyMMddhhmm");
 
-	private String generatorPath;
-	private String logFolder;
+	private enum Parameter {
+		cid, 
+		tid, 
+		id, 
+		token, 
+		api,
+		;
+		
+		public String asParam() {
+			return "&"+name()+"=";
+		}
+		public String asInitialParam() {
+			return "?"+name()+"=";
+		}
+	}
+
+	private String generatorURL;
 
 	public AnnotationGenerator() throws NamingException {
-		this.generatorPath = 
-			RepositoryPropertyKey.AnnotationGeneratorPath.getValue();
-		this.logFolder = RepositoryPropertyKey.HeurecleaFolder.getValue();
+		this.generatorURL = 
+			RepositoryPropertyKey.AnnotationGeneratorURL.getValue();
 	}
 
 	public void generate(
 			String corpusId, TagsetIdentification tagsetIdentification, 
-			String identifier, String token) throws IOException, InterruptedException {
+			String identifier, String token, String apiURL) throws IOException, InterruptedException {
 		
-		if (System.getProperty("os.name").toLowerCase().startsWith("win")) {
-			token = "\"" + token + "\"";
-		}
+		StringBuilder urlBuilder = new StringBuilder(generatorURL);
+		urlBuilder.append(Parameter.cid.asInitialParam()); 
+		urlBuilder.append(corpusId);
+		urlBuilder.append(Parameter.tid.asParam()); 
+		urlBuilder.append(tagsetIdentification.name());
+		urlBuilder.append(Parameter.id.asParam()); 
+		urlBuilder.append(URLEncoder.encode(identifier, "UTF-8"));
+		urlBuilder.append(Parameter.token.asParam()); 
+		urlBuilder.append(token);
+		urlBuilder.append(Parameter.api.asParam());
+		urlBuilder.append(URLEncoder.encode(apiURL, "UTF-8"));
 		
-		ProcessBuilder pb =
-			   new ProcessBuilder(
-					   generatorPath, 
-					   corpusId, tagsetIdentification.name(), 
-					   identifier, token);
-		File log = new File(
-				logFolder, 
-				"AnnotationGenerator" + FORMATTER.format(new Date()) + ".log");
-		pb.redirectErrorStream(true);
-		pb.redirectOutput(Redirect.appendTo(log));
+		ClientResource client = 
+				new ClientResource(Context.getCurrent(), Method.GET, urlBuilder.toString());
 		
-		Process proc = pb.start();
-
-		if(proc.waitFor() != 0){
-			throw new IOException(
-				"error execution annotation generator see error log for details " 
-				+ log.getAbsolutePath());
-		}
+		client.get(); //result is not of interest
 	}
 }

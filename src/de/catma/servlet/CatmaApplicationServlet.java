@@ -135,7 +135,7 @@ public class CatmaApplicationServlet extends VaadinServlet {
 				try {
 					String problemRedirectURL = 
 							RepositoryPropertyKey.BaseURL.getValue( 
-								"http://www.digitalhumanities.it/catma/");
+									RepositoryPropertyKey.BaseURL.getDefaultValue());
 					messages.setOutOfSyncURL(problemRedirectURL);
 					messages.setAuthenticationErrorURL(problemRedirectURL);
 					messages.setInternalErrorURL(problemRedirectURL);

@@ -40,9 +40,14 @@ public class CatmaApiApplication extends Application {
 			(ServletContext)getContext().getAttributes().get(
 					"org.restlet.ext.servlet.ServletContext");
 	
+			String propertiesFile = 
+					System.getProperties().containsKey("prop") ? System.getProperties().getProperty(
+					"prop") : "catma.properties";
 			Properties properties = new Properties();
-			properties.load(new FileInputStream(
-					servletContext.getRealPath("catma.properties"))); // FIXME:close stream
+			try (FileInputStream fis = new FileInputStream(
+					servletContext.getRealPath(propertiesFile))) {
+				properties.load(fis); 
+			}
 			
 			getContext().getAttributes().put(
 				Parameter.catma_properties.name(), properties);
@@ -52,7 +57,7 @@ public class CatmaApiApplication extends Application {
 						ChallengeScheme.HTTP_BASIC, 
 						"CATMA WS API");
 			
-			MapVerifier mapVerifier = new TokenEnhancedMapVerifier();
+			MapVerifier mapVerifier = new TokenEnhancedMapVerifier(properties);
 			loadValidApiUsers(
 				mapVerifier, servletContext.getRealPath("apiusers.json"));
 			guard.setVerifier(mapVerifier);

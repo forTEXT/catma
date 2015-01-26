@@ -14,12 +14,14 @@ public class GenerationOptions {
 	private TagsetIdentification tagsetIdentification;
 	private String token;
 	private String identifier;
-	
+
 	public GenerationOptions(String corpusId, String identifier) throws NamingException {
 		super();
 		this.corpusId = corpusId;
 		
-		Totp totp = new Totp(RepositoryPropertyKey.otpsecret.getValue()+identifier, new Clock(120));
+		Totp totp = new Totp(
+			RepositoryPropertyKey.otpSecret.getValue()+identifier, 
+			new Clock(Integer.valueOf(RepositoryPropertyKey.otpDuration.getValue())));
 		
 		this.identifier = identifier;
 		this.token = totp.now();
@@ -43,5 +45,9 @@ public class GenerationOptions {
 	
 	public String getIdentifier() {
 		return identifier;
+	}
+	
+	public String getApiURL() {
+		return RepositoryPropertyKey.BaseURL.getValue().trim()+"api";
 	}
 }
