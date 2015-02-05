@@ -32,11 +32,8 @@ import de.catma.queryengine.result.QueryResultRowArray;
  * <br>
  * To decide if a token of the second result should be substracted from the first
  * {@link java.util.Comparator Comparator&le;TermInfo&ge;}s are used.
- * If the {@link org.catma.queryengine.Query queries} bring their own 
- * {@link org.catma.queryengine.Query#getComparator() comparators} those custom comparators will be used
- * to test for equality, otherwise the standard equality of {@link org.catma.indexer.TermInfo} will be used.
- * If both queries provide a custom comparator only one of them needs to signal equality for a TermInfo
- * to be excluded from the final result, i. e. the one that signals equality is the one that wins.
+ * If a {@link MatchMode} is provided the Comparator of that MatchMode is used for
+ * comparison.
  *
  * @author Marco Petris <marco.petris@web.de>
  */
@@ -44,10 +41,27 @@ public class ExclusionQuery extends Query {
 
     private Query query1;
     private Query query2;
+	private MatchMode matchMode;
 
-    public ExclusionQuery(Query query1, Query query2) {
+    /**
+     * @param query1
+     * @param query2
+     * @param matchMode the match mode that provides the comparator for refinement
+     */
+    public ExclusionQuery(Query query1, Query query2, String matchMode) {
         this.query1 = query1;
         this.query2 = query2;
+        if (matchMode != null) {
+        	try {
+        		this.matchMode = MatchMode.valueOf(matchMode.toUpperCase());
+        	}
+        	catch (IllegalArgumentException iae) {
+        		this.matchMode = MatchMode.EXACT;
+        	}
+        }
+        else {
+        	this.matchMode = MatchMode.EXACT;
+        }
     }
 
     @Override
@@ -59,20 +73,14 @@ public class ExclusionQuery extends Query {
     	QueryResultRowArray result1 = query1.getResult().asQueryResultRowArray();
     	QueryResultRowArray result2 = query2.getResult().asQueryResultRowArray();
     	
-    	Comparator<QueryResultRow> comparator1 = query1.getComparator();
-    	Comparator<QueryResultRow> comparator2 = query2.getComparator();
-    	if ( (comparator1 == null) && (comparator2 == null) ) {
+
+    	if (matchMode == null) {
     		result1.removeAll(result2);
     	}
     	else {
-    		if (comparator1 != null) {
-                removeWithComparator(result1, result2, comparator1);
-            }
-
-            if ((comparator1 != comparator2) && (comparator2 != null)) {
-                removeWithComparator(result1, result2, comparator2);
-            }
+            removeWithComparator(result1, result2, matchMode.getComparator());
         }
+    	
     	return result1;
     }
 

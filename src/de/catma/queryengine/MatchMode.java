@@ -26,7 +26,7 @@ import de.catma.document.Range;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
 
-public enum TagMatchMode {
+public enum MatchMode {
 	BOUNDARY(new Comparator<QueryResultRow>() {
 		public int compare(QueryResultRow o1, QueryResultRow o2) {
 			if (!o1.getSourceDocumentId().equals(o2.getSourceDocumentId())) {
@@ -41,8 +41,8 @@ public enum TagMatchMode {
 		}
 		
 		private boolean isInBetween(QueryResultRow o1, QueryResultRow o2) {
-			Collection<Range> ranges1 = TagMatchMode.collectRanges(o1);
-			Collection<Range> ranges2 = TagMatchMode.collectRanges(o2);
+			Collection<Range> ranges1 = MatchMode.collectRanges(o1);
+			Collection<Range> ranges2 = MatchMode.collectRanges(o2);
 			
 			// this works because ranges are merged (see TagDefinitionSearcher)
 			for (Range r1 : ranges1) {
@@ -63,7 +63,7 @@ public enum TagMatchMode {
 		}
 		
 		public String toString() {
-			return TagMatchMode.BOUNDARY.name() + super.toString();
+			return MatchMode.BOUNDARY.name() + super.toString();
 		};
 	}),
 	OVERLAP(new Comparator<QueryResultRow>() {
@@ -79,12 +79,12 @@ public enum TagMatchMode {
 			}
 		}
 		public String toString() {
-			return TagMatchMode.OVERLAP.name() + super.toString();
+			return MatchMode.OVERLAP.name() + super.toString();
 		};
 		
 		private boolean hasOverlappingRange(QueryResultRow o1, QueryResultRow o2) {
-			Collection<Range> ranges1 = TagMatchMode.collectRanges(o1);
-			Collection<Range> ranges2 = TagMatchMode.collectRanges(o2);
+			Collection<Range> ranges1 = MatchMode.collectRanges(o1);
+			Collection<Range> ranges2 = MatchMode.collectRanges(o2);
 			
 			for (Range r1 : ranges1) {
 				boolean found = false;
@@ -119,12 +119,12 @@ public enum TagMatchMode {
 		}
 		
 		public String toString() {
-			return TagMatchMode.EXACT.name() + super.toString();
+			return MatchMode.EXACT.name() + super.toString();
 		};
 		
 		private boolean isExactMatch(QueryResultRow o1, QueryResultRow o2) {
-			Collection<Range> ranges1 = TagMatchMode.collectRanges(o1);
-			Collection<Range> ranges2 = TagMatchMode.collectRanges(o2);
+			Collection<Range> ranges1 = MatchMode.collectRanges(o1);
+			Collection<Range> ranges2 = MatchMode.collectRanges(o2);
 			
 			for (Range r1 : ranges1) {
 				boolean found = false;
@@ -149,7 +149,7 @@ public enum TagMatchMode {
 	
 	private Comparator<QueryResultRow> comparator;
 
-	private TagMatchMode(Comparator<QueryResultRow> comparator) {
+	private MatchMode(Comparator<QueryResultRow> comparator) {
 		this.comparator = comparator;
 	}
 	

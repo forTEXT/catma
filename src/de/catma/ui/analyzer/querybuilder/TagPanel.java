@@ -47,7 +47,7 @@ import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.queryengine.QueryOptions;
-import de.catma.queryengine.TagMatchMode;
+import de.catma.queryengine.MatchMode;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.tag.TagDefinitionPathInfo;
 import de.catma.ui.CatmaApplication;
@@ -68,14 +68,14 @@ public class TagPanel extends AbstractSearchPanel {
 	private static class TagMatchModeItem {
 		
 		private String displayText;
-		private TagMatchMode tagMatchMode;
+		private MatchMode tagMatchMode;
 		
-		public TagMatchModeItem(String displayText, TagMatchMode tagMatchMode) {
+		public TagMatchModeItem(String displayText, MatchMode tagMatchMode) {
 			this.displayText = displayText;
 			this.tagMatchMode = tagMatchMode;
 		}
 		
-		public TagMatchMode getTagMatchMode() {
+		public MatchMode getTagMatchMode() {
 			return tagMatchMode;
 		}
 		
@@ -293,14 +293,14 @@ public class TagPanel extends AbstractSearchPanel {
 		tagMatchModeCombo = new ComboBox("Please choose what you consider a match:");
 		tagMatchModeCombo.setImmediate(true);
 		TagMatchModeItem exactMatchItem = 
-				new TagMatchModeItem("exact match", TagMatchMode.EXACT);
+				new TagMatchModeItem("exact match", MatchMode.EXACT);
 		tagMatchModeCombo.addItem(exactMatchItem);
 		tagMatchModeCombo.addItem(
 				new TagMatchModeItem("boundary match", 
-						TagMatchMode.BOUNDARY));
+						MatchMode.BOUNDARY));
 		tagMatchModeCombo.addItem(
 				new TagMatchModeItem("overlap match", 
-						TagMatchMode.OVERLAP));
+						MatchMode.OVERLAP));
 		tagMatchModeCombo.setNullSelectionAllowed(false);
 		tagMatchModeCombo.setNewItemsAllowed(false);
 		

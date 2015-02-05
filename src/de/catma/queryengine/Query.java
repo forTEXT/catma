@@ -19,10 +19,7 @@
 
 package de.catma.queryengine;
 
-import java.util.Comparator;
-
 import de.catma.queryengine.result.QueryResult;
-import de.catma.queryengine.result.QueryResultRow;
 
 /**
  * The base class for all queries.
@@ -67,21 +64,6 @@ public abstract class Query {
      */
     public void setRefinement(Refinement refinement) {
         this.refinement = refinement;
-    }
-
-    /**
-     * Implementors can provide a special comparator for the {@link org.catma.indexer.TermInfo} of
-     * the execution result. This comparator will be used to define the exclusion/refinement condition for
-     * {@link org.catma.queryengine.ExclusionQuery}/{@link org.catma.queryengine.Refinement} queries.
-     *
-     * <b>Note:</b>: these comparators might impose orderings that are inconsistent with equals!!!
-     *
-     * @return a special comparator or <code>null</code>
-     * @see org.catma.queryengine.ExclusionQuery
-     * @see org.catma.queryengine.Refinement
-     */
-    public Comparator<QueryResultRow> getComparator() {
-        return null;
     }
     
     public void setQueryOptions(QueryOptions queryOptions) {

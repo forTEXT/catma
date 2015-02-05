@@ -19,8 +19,6 @@
 
 package de.catma.queryengine;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,7 +26,6 @@ import java.util.Set;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.Indexer;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
@@ -43,25 +40,13 @@ import de.catma.queryengine.result.TagQueryResultRow;
 public class TagQuery extends Query {
 
     private String tagPhrase;
-    private TagMatchMode tagMatchMode;
 
     /**
      * Constructor.
      * @param query the name of the {@link org.catma.tag.Tag}
      */
-    public TagQuery(Phrase query, String tagMatchMode) {
+    public TagQuery(Phrase query) {
         this.tagPhrase = query.getPhrase();
-        if (tagMatchMode != null) {
-        	try {
-        		this.tagMatchMode = TagMatchMode.valueOf(tagMatchMode.toUpperCase());
-        	}
-        	catch (IllegalArgumentException iae) {
-        		this.tagMatchMode = TagMatchMode.EXACT;
-        	}
-        }
-        else {
-        	this.tagMatchMode = TagMatchMode.EXACT;
-        }
     }
 
     @Override
@@ -73,22 +58,10 @@ public class TagQuery extends Query {
         Indexer indexer = queryOptions.getIndexer();
         List<String> relevantUserMarkupCollIDs = 
         		queryOptions.getRelevantUserMarkupCollIDs();
-        
-//        if (relevantUserMarkupCollIDs.isEmpty() 
-//        		&& !queryOptions.getRelevantSourceDocumentIDs().isEmpty()) {
-//        	relevantUserMarkupCollIDs = new ArrayList<String>();
-//        	for (String sourceDocumentId 
-//        			: queryOptions.getRelevantSourceDocumentIDs()) {
-//        		for (UserMarkupCollectionReference umcRef : 
-//        			repository.getSourceDocument(sourceDocumentId).getUserMarkupCollectionRefs()) {
-//        			relevantUserMarkupCollIDs.add(umcRef.getId());
-//        		}
-//        	}
         	
-        	if (relevantUserMarkupCollIDs.isEmpty()) {
-        		return new QueryResultRowArray();
-        	}
-//        }
+    	if (relevantUserMarkupCollIDs.isEmpty()) {
+    		return new QueryResultRowArray();
+    	}
         
         QueryResult result = 
 				indexer.searchTagDefinitionPath(
@@ -129,9 +102,5 @@ public class TagQuery extends Query {
         return result;
     }
 
-    @Override
-    public Comparator<QueryResultRow> getComparator() {
-    	return tagMatchMode.getComparator();
-    }
 }
 
