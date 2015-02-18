@@ -31,6 +31,7 @@ public class Distribution {
 	private String id;
 	private String label;
 	private Map<String, XYValues<Integer, Integer, QueryResultRow>> xySeries;
+	private List<PlotBand<Integer>> plotBands;
 	private double segmentSize;
 	private double segmentSizeInPercent;
 	
@@ -43,6 +44,7 @@ public class Distribution {
 		this.segmentSize = segmentSize;
 		this.segmentSizeInPercent = segmentSizeInPercent;
 		this.xySeries = new HashMap<String, XYValues<Integer,Integer, QueryResultRow>>();
+		this.plotBands = new ArrayList<>();
 	}
 
 	public String getLabel() {
@@ -71,6 +73,14 @@ public class Distribution {
 
 	public List<QueryResultRow> getQueryResultRows(String key, int x) {
 		return xySeries.get(key).getData(x);
+	}
+
+	public void addPlotBand(PlotBand<Integer> plotBand) {
+		plotBands.add(plotBand);
+	}
+	
+	public List<PlotBand<Integer>> getPlotBands() {
+		return plotBands;
 	}
 
 

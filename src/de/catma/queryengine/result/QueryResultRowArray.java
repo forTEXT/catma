@@ -86,4 +86,21 @@ public class QueryResultRowArray extends ArrayList<QueryResultRow> implements Qu
 	public QueryResultRowArray asQueryResultRowArray() {
 		return this;
 	}
+	
+	public QueryResult getSubResult(String... sourceDocumentIDs) {
+		return createSubResult(this, sourceDocumentIDs);
+	}
+	
+	public static QueryResult createSubResult(QueryResult result, String... sourceDocumentIDs) {
+		Set<String> filterSourceDocumentIds = new HashSet<String>(); 
+		filterSourceDocumentIds.addAll(Arrays.asList(sourceDocumentIDs));
+		
+		QueryResultRowArray subResult = new QueryResultRowArray();
+		for (QueryResultRow row : result) {
+			if (filterSourceDocumentIds.contains(row.getSourceDocumentId())) {
+				subResult.add(row);
+			}
+		}
+		return subResult;
+	}
 }

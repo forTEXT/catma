@@ -73,6 +73,7 @@ import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.queryengine.result.computation.DistributionComputation;
+import de.catma.queryengine.result.computation.DistributionOverTagComputation;
 import de.catma.queryengine.result.computation.DistributionSelectionListener;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzer.querybuilder.QueryBuilderWizardFactory;
@@ -484,7 +485,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 
 	public void resultsSelected(GroupedQueryResultSet groupedQueryResultSet) {
 		try {
-			handleDistributionChartRequest(groupedQueryResultSet);
+			handleDistributionChartRequest2(groupedQueryResultSet);
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error showing the distribution chart",
@@ -690,6 +691,43 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				visualizationId, (corpus==null)?"All documents":corpus.toString(), dc,
 				distributionSelectionListener);
 	}
+	
+	private void handleDistributionChartRequest2(
+			GroupedQueryResultSet groupedQueryResultSet) throws IOException {
+
+		QueryOptions queryOptions = new QueryOptions(
+				relevantSourceDocumentIDs.isEmpty()?
+						getSourceDocumentIDs(repository.getSourceDocuments()):
+							relevantSourceDocumentIDs,
+				relevantUserMarkupCollIDs,
+				relevantStaticMarkupCollIDs,
+				indexInfoSet.getUnseparableCharacterSequences(),
+				indexInfoSet.getUserDefinedSeparatingCharacters(),
+				indexInfoSet.getLocale(),
+				repository);
+		
+		QueryJob job = new QueryJob(
+				"(tag=\"TEI/text/body/div%\" property=\"type\" value=\"entry\"), (tag=\"/TEI/teiHeader\")",
+				queryOptions);
+		
+		try {
+			QueryResult tagInstances = job.call();
+			
+			DistributionOverTagComputation dc = new DistributionOverTagComputation(
+					groupedQueryResultSet, repository, relevantSourceDocumentIDs, tagInstances);
+			dc.compute();
+			
+			this.visualizationId = 
+					((CatmaApplication)UI.getCurrent()).addVisualization(
+							visualizationId, (corpus==null)?"All documents":corpus.toString(), dc,
+									distributionSelectionListener);
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 
 	public void close() {
 		this.repository.removePropertyChangeListener(

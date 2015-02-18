@@ -7,11 +7,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.sun.xml.internal.txw2.IllegalSignatureException;
 import com.vaadin.ui.AbstractComponent;
 
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.computation.Distribution;
 import de.catma.queryengine.result.computation.DistributionSelectionListener;
+import de.catma.queryengine.result.computation.PlotBand;
 import de.catma.queryengine.result.computation.XYValues;
 import de.catma.ui.client.ui.visualizer.chart.ChartClientRpc;
 import de.catma.ui.client.ui.visualizer.chart.ChartServerRpc;
@@ -51,11 +53,11 @@ public class Chart extends AbstractComponent {
 		if (initial) {
 			getRpcProxy(ChartClientRpc.class).init(
 					chartId,
-					createConfiguration(distribution, maxOccurrences));
+					createConfiguration());
 		}
 	}
 
-	private String createConfiguration(Distribution distribution, int maxOccurrences) {
+	private String createConfiguration() {
 		try {
 			JSONObject configuration = 
 				new JSONObject(
@@ -92,8 +94,11 @@ public class Chart extends AbstractComponent {
 			       			"max: "+ maxOccurrences +
 				        "}"+
 				   	"}");	
-
-			JSONArray seriesArray = createSeriesArray(distribution);
+			if (!distribution.getPlotBands().isEmpty()) {
+				JSONArray plotBandsArray = createPlotBandsArray();
+				configuration.getJSONObject("xAxis").put("plotBands", plotBandsArray);
+			}
+			JSONArray seriesArray = createSeriesArray();
 			
 			configuration.put("series", seriesArray);
 			
@@ -104,7 +109,28 @@ public class Chart extends AbstractComponent {
 		}
 	}
 	
-	private JSONArray createSeriesArray(Distribution distribution) {
+	private JSONArray createPlotBandsArray() {
+		try {
+			JSONArray plotBandsArray = new JSONArray();
+			for (PlotBand<Integer> plotBand : distribution.getPlotBands()) {
+				JSONObject plotBandObject = new JSONObject();
+				plotBandObject.put("color", "#"+plotBand.getHexColor());
+				plotBandObject.put("from", plotBand.getStartPosition());
+				plotBandObject.put("to", plotBand.getEndPosition());
+				JSONObject labelObject = new JSONObject();
+				labelObject.put("text", plotBand.getLabel());
+				plotBandObject.put("label", labelObject);
+				
+				plotBandsArray.put(plotBandObject);
+			}
+			return plotBandsArray;
+		}
+		catch (JSONException je) {
+			throw new IllegalSignatureException(je);
+		}
+	}
+
+	private JSONArray createSeriesArray() {
 		JSONArray seriesArray = new JSONArray();
 		for (XYValues<Integer, Integer, QueryResultRow> values : distribution.getXySeries()) {
 			seriesArray.put(createSeries(values));

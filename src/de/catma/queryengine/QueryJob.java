@@ -28,6 +28,7 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
 import org.antlr.runtime.tree.Tree;
 
 import de.catma.backgroundservice.DefaultProgressCallable;
+import de.catma.backgroundservice.LogProgressListener;
 import de.catma.queryengine.parser.CatmaQueryLexer;
 import de.catma.queryengine.parser.CatmaQueryParser;
 import de.catma.queryengine.parser.CatmaQueryWalker;
@@ -55,6 +56,7 @@ public class QueryJob extends DefaultProgressCallable<QueryResult> {
     public QueryJob(String inputQuery, QueryOptions queryOptions ) {
         this.inputQuery = inputQuery;
         this.queryOptions = queryOptions;
+        setProgressListener(new LogProgressListener());// default
     }
 
     public QueryResult call() throws Exception {
