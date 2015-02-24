@@ -122,8 +122,8 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 				Distribution distribution = 
 						distributions.get((rowIdx*ROW_LENGTH)+colIdx);
 				Chart chart = new Chart(distribution, maxOccurrences, distributionSelectionListener);
-				chart.setWidth("300px");
-				chart.setHeight("400px");
+				chart.setWidth("1300px");
+				chart.setHeight("500px");
 				row.addComponent(chart);
 				charts.put(distribution.getId(), chart);
 			}
