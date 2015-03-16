@@ -23,15 +23,37 @@ import java.util.Arrays;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.queryengine.MatchMode;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
 
 public class ComplexTypeSelectionPanel extends VerticalLayout implements
 		DynamicWizardStep {
+	
+	private static class TagMatchModeItem {
+		
+		private String displayText;
+		private MatchMode tagMatchMode;
+		
+		public TagMatchModeItem(String displayText, MatchMode tagMatchMode) {
+			this.displayText = displayText;
+			this.tagMatchMode = tagMatchMode;
+		}
+		
+		public MatchMode getTagMatchMode() {
+			return tagMatchMode;
+		}
+		
+		@Override
+		public String toString() {
+			return displayText;
+		}
+	}
 	
 	static enum ComplexTypeOption {
 		UNION(","),
@@ -62,6 +84,7 @@ public class ComplexTypeSelectionPanel extends VerticalLayout implements
 	private QueryTree queryTree;
 	private OptionGroup complexTypeSelect;
 	private boolean typeAdded = false;
+	private ComboBox tagMatchModeCombo;
 
 	public ComplexTypeSelectionPanel(QueryTree queryTree) {
 		this.queryTree = queryTree;
@@ -78,7 +101,28 @@ public class ComplexTypeSelectionPanel extends VerticalLayout implements
 				}
 
 				queryTree.add(
-					((ComplexTypeOption)complexTypeSelect.getValue()).getQueryElement());
+					((ComplexTypeOption)complexTypeSelect.getValue()).getQueryElement(),
+					((TagMatchModeItem)tagMatchModeCombo.getValue()).getTagMatchMode().name().toLowerCase());
+
+				typeAdded = true;
+				
+				tagMatchModeCombo.setVisible(!
+					((ComplexTypeOption)complexTypeSelect.getValue()).equals(
+						ComplexTypeOption.UNION));
+			}
+		});
+		
+		
+		tagMatchModeCombo.addValueChangeListener(new ValueChangeListener() {
+			
+			public void valueChange(ValueChangeEvent event) {
+				if (typeAdded) {
+					queryTree.removeLast();
+				}
+
+				queryTree.add(
+					((ComplexTypeOption)complexTypeSelect.getValue()).getQueryElement(),
+					((TagMatchModeItem)tagMatchModeCombo.getValue()).getTagMatchMode().name().toLowerCase());
 
 				typeAdded = true;
 			}
@@ -103,6 +147,38 @@ public class ComplexTypeSelectionPanel extends VerticalLayout implements
 		
 		addComponent(complexTypeSelect);
 		setComponentAlignment(complexTypeSelect, Alignment.MIDDLE_CENTER);
+		
+		
+		tagMatchModeCombo = new ComboBox("Please choose what you consider a match:");
+		tagMatchModeCombo.setImmediate(true);
+		TagMatchModeItem exactMatchItem = 
+				new TagMatchModeItem("exact match", MatchMode.EXACT);
+		tagMatchModeCombo.addItem(exactMatchItem);
+		tagMatchModeCombo.addItem(
+				new TagMatchModeItem("boundary match", 
+						MatchMode.BOUNDARY));
+		tagMatchModeCombo.addItem(
+				new TagMatchModeItem("overlap match", 
+						MatchMode.OVERLAP));
+		tagMatchModeCombo.setNullSelectionAllowed(false);
+		tagMatchModeCombo.setNewItemsAllowed(false);
+		
+		tagMatchModeCombo.setDescription(
+			"The three different match modes influence the way tags refine" +
+			" your search results:" +
+			"<ul>"+
+			"<li>exact match - the tag boundaries have to match exactly to " +
+			"keep a result item in the result set</li>" +
+			"<li>boundary match - result items that should be kept in the " +
+			"result set must start and end within the boundaries of the tag</li>"+
+			"<li>overlap - the result items that should be kept in the result " +
+			"set must overlap with the range of the tag</li>" +
+			"</ul>");
+		tagMatchModeCombo.setValue(exactMatchItem);
+		
+		addComponent(tagMatchModeCombo);
+		setComponentAlignment(tagMatchModeCombo, Alignment.MIDDLE_CENTER);
+		
 
 	}
 

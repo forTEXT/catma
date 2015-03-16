@@ -210,7 +210,8 @@ public class TagDefinitionSearcher {
 		
 		if ((propertyValue != null) && (!propertyValue.isEmpty())) {
 			
-			selectQuery = ((SelectOnConditionStep<Record>)selectQuery).and(PROPERTY.VALUE.eq(propertyValue));
+			selectQuery = ((SelectOnConditionStep<Record>)selectQuery).and(
+					PROPERTY.VALUE.likeIgnoreCase(propertyValue));
 		}		
 		
 		selectQuery = ((SelectOnConditionStep<Record>)selectQuery).where(

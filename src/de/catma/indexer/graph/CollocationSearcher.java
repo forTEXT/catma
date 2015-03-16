@@ -82,6 +82,14 @@ class CollocationSearcher {
 
 	private final static NodePostionComparator NODE_POSTION_COMPARATOR = new NodePostionComparator();
 	
+	/**
+	 * @param baseResult
+	 * @param collocationConditionResult
+	 * @param spanContextSize
+	 * @param direction only {@link SpanDirection#BOTH} supported!
+	 * @return
+	 * @throws IOException
+	 */
 	public QueryResult search(QueryResult baseResult,
 			QueryResult collocationConditionResult, int spanContextSize,
 			SpanDirection direction) throws IOException {

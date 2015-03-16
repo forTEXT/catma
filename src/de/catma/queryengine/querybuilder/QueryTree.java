@@ -38,6 +38,7 @@ public class QueryTree {
         private Node left;
         private Node right;
         private String value;
+		private String postfix = "";
 
         /**
          * Constructor for an empty node.
@@ -49,13 +50,15 @@ public class QueryTree {
          * Constructor.
          * @param value the value of this node, i. e. a query or one of the connector strings that are allowed to
          * chain queries together.
+         * @param postfix
          *
          * @see org.catma.queryengine.ExclusionQuery
          * @see org.catma.queryengine.UnionQuery
          * @see org.catma.queryengine.Refinement
          */
-        private Node(String value) {
+        private Node(String value, String postfix) {
             this.value = value;
+            this.postfix = postfix;
         }
 
         /**
@@ -64,13 +67,13 @@ public class QueryTree {
         @Override
         public String toString() {
             if ((left != null)&&(right != null)) {
-                return "(" + left + ") " + value + " (" +right + ")";
+                return "(" + left + ") " + value + " (" +right + ") " + postfix;
             }
             else if (left != null) {
-                return "(" + left + ") " + value + " (NA)";
+                return "(" + left + ") " + value + " (NA) " + postfix;
             }
             else if (value != null){
-                return value;
+                return value + postfix;
             }
             else {
                 return "";
@@ -93,21 +96,30 @@ public class QueryTree {
      * @param element the element to add, this can be a query string or one of the connector strings
      */
     public void add(String element) {
+    	add(element, "");
+    }
+    /**
+     * Adds the given element to this tree.
+     *
+     * @param element the element to add, this can be a query string or one of the connector strings
+     */
+    public void add(String element, String postfix) {
 
         // elements are added in that order 1. value 2. left node 3. right node
         // that ensures a correct construction of the tree
 
         if (curNode.value == null) {
             curNode.value = element;
+            curNode.postfix = postfix;
         }
         else {
             if ((curNode.left == null) || (curNode.right != null)) {
-                Node node = new Node(element);
+                Node node = new Node(element, postfix);
                 node.left = curNode;
                 curNode = node;
             }
             else if (curNode.right == null) {
-                curNode.right = new Node(element);
+                curNode.right = new Node(element, postfix);
             }
         }
     }

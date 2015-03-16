@@ -2,8 +2,7 @@
 * CATMA Query Parser Grammar
 *
 * Author: 	Malte Meister, Marco Petris
-* Version: 	2.0
-* About:	EBNF Grammar for the CATMA Query Parser with AST generation rules
+* About:	EBNF Grammar for the CATMA Query Parser with AST (tree) generation rules
 */
 
 grammar CatmaQuery;
@@ -142,7 +141,7 @@ collocQuery[CommonTree startTerm]
 	catch[RecognitionException e] {throw e;}
 	
 exclusionQuery[CommonTree startTerm] 
-	:	'-' term -> ^(ND_EXCLUSION {$startTerm} term)
+	:	'-' term MATCH_MODE?-> ^(ND_EXCLUSION {$startTerm} term MATCH_MODE?)
 	;
 	catch[RecognitionException e] {throw e;}
 	
@@ -183,14 +182,14 @@ selector
 	
 	
 tagQuery
-	:	TAG EQUAL phrase TAG_MATCH_MODE? -> ^(ND_TAG phrase TAG_MATCH_MODE?)
+	:	TAG EQUAL phrase -> ^(ND_TAG phrase)
 	;
 	catch[RecognitionException e] {throw e;}
 	
 	
 propertyQuery 
-	:	PROPERTY EQUAL phrase (VALUE EQUAL phrase)? TAG_MATCH_MODE? -> ^(ND_PROPERTY phrase phrase? TAG_MATCH_MODE?)	
-	|	TAG EQUAL phrase PROPERTY EQUAL phrase (VALUE EQUAL phrase)? TAG_MATCH_MODE? -> ^(ND_TAGPROPERTY phrase phrase phrase? TAG_MATCH_MODE?)
+	:	PROPERTY EQUAL phrase (VALUE EQUAL phrase)? -> ^(ND_PROPERTY phrase phrase?)	
+	|	TAG EQUAL phrase PROPERTY EQUAL phrase (VALUE EQUAL phrase)? -> ^(ND_TAGPROPERTY phrase phrase phrase?)
 	;
 	catch[RecognitionException e] {throw e;}
 	
@@ -228,28 +227,23 @@ refinement
 	catch[RecognitionException e] {throw e;}
 	
 refinementExpression
-	:	startRefinement=refinementTerm ( 
+	:	startRefinement=term MATCH_MODE? ( 
 			orRefinement[(CommonTree)$startRefinement.tree] -> orRefinement
 			| andRefinement[(CommonTree)$startRefinement.tree] -> andRefinement
-			| -> ^(ND_REFINE refinementTerm) )
+			| -> ^(ND_REFINE term MATCH_MODE?) )
 	;
 	catch[RecognitionException e] {throw e;}
 
 orRefinement[CommonTree startRefinement] 
-	:	'|' refinementTerm -> ^(ND_ORREFINE {$startRefinement} refinementTerm)
+	:	'|' term MATCH_MODE? -> ^(ND_ORREFINE {$startRefinement} term MATCH_MODE?)
 	;
 	catch[RecognitionException e] {throw e;}
 	
 andRefinement[CommonTree startRefinement] 
-	:	',' refinementTerm -> ^(ND_ANDREFINE {$startRefinement} refinementTerm)
+	:	',' term MATCH_MODE?-> ^(ND_ANDREFINE {$startRefinement} term MATCH_MODE?)
 	;
 	catch[RecognitionException e] {throw e;}
-	
-refinementTerm 
-	: 	selector -> selector
-		| '('refinementExpression')' -> refinementExpression
-	;
-	catch[RecognitionException e] {throw e;}
+
 	
 	
 /************************************************
@@ -259,7 +253,7 @@ refinementTerm
 TAG 	:	'tag'
 	;
 	
-TAG_MATCH_MODE 
+MATCH_MODE 
 	:	'boundary' | 'overlap' | 'exact'
 	;
 	
