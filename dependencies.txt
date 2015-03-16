@@ -1,4 +1,4 @@
-CATMA 4.1 dependencies
+CATMA 4.2 dependencies
 
 jetty-distribution-7.6.14.v20131031
 
@@ -11,15 +11,11 @@ ColorPicker-GWT-2.1.jar								UI
 commons-codec-1.3.jar								openid4java-ro-svn-120615.jar
 commons-compress-1.6.jar							Repository (Corpus exports)
 commons-io-2.1.jar									repository (SourceDocument handling)
-commons-logging-1.03.jar							openid4java-ro-svn-120615.jar, poi-3.8-20120326
+commons-logging-1.03.jar							poi-3.8-20120326
 confirmdialog-1.1.1.jar								UI
 guava-18.jar										utilities like Collections2
-guice-2.0.jar										openid4java-ro-svn-120615.jar
-gwt-user.jar										GWT_2.4
-gwt-dev.jar											GWT_2.4
-highcharts.js (2.2.5)								invientcharts-0.8.6.jar
-httpclient-4.2.jar									openid4java-ro-svn-120615.jar, SourceDocuments with http-protocol
-httpcore-4.2.jar									openid4java-ro-svn-120615.jar
+httpclient-4.2.jar									SourceDocuments with http-protocol
+httpcore-4.2.jar									SourceDocuments with http-protocol
 invientcharts-0.8.6.jar								UI (Analyzer Charts)
 javacsv.jar											UI (Analyzer result export)
 jjson.jar											UI
@@ -28,17 +24,13 @@ log4j-1.2.16.jar									jooq-3.1.0.jar, quartz-2.2.1.jar
 jquery-1.7.2.min.js									highcharts 2.2.5
 lucene-core-3.5.0.jar								Indexer (tokenization)
 mysql-connector-java-5.1.18-bin.jar					DB-Indexer, DB-Repository
-nekohtml-1.9.14.jar									openid4java-ro-svn-120615.jar
-openid4java-ro-svn-120615.jar						Repository
 quartz-2.2.1.jar									job scheduling
 slf4j-api-1.6.6.jar									quartz-2.2.1.jar
 slf4j-log4j12-1.6.6.jar								quartz-2.2.1.jar
 TableExport-1.2.9.jar								UI
 vaadin-6.8.13.jar									UI
-validation-api-1.0.0.GA-sources.jar					GWT_2.4
-validation-api-1.0.0.GA.jar							GWT_2.4
 wizards-for-vaadin-0.4.1.jar						UI
-xercesImpl-2.8.1.jar 								openid4java-ro-svn-120615.jar, XOM_1.2.7 (dtd-xercesImpl.jar 2.8.0?)
+xercesImpl-2.8.1.jar 								XOM_1.2.7 (dtd-xercesImpl.jar 2.8.0?)
 
 
 CATMA 4.1 core depencencies								
