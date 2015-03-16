@@ -353,14 +353,15 @@ public class CorpusPanel extends VerticalLayout {
 				Object selectedValue = corporaTree.getValue();
 				if ((selectedValue != null) 
 						&& !selectedValue.equals(allDocuments)) {
-					handleGenrateAnnotationsRequest((Corpus)selectedValue);
+					handleGenerateAnnotationsRequest((Corpus)selectedValue);
 				}				
 			}
 		});
 		
+		miExportCorpus.setVisible(repository.getUser().getRole().equals(Role.ADMIN));
 	}
 	
-	private void handleGenrateAnnotationsRequest(Corpus selectedValue) { 
+	private void handleGenerateAnnotationsRequest(Corpus selectedValue) { 
 		try {
 			GenerationOptions generationOptions = new GenerationOptions(
 					selectedValue.getId(), 
