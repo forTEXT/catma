@@ -63,6 +63,14 @@ import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.repository.RepositoryReference;
 import de.catma.ui.CatmaApplication;
 
+/**
+ * Authentication dialog for OpenID Connect authentication with Google.
+ * Based on: 
+ * https://developers.google.com/accounts/docs/OpenIDConnect
+ * 
+ * @author marco.petris@web.de
+ *
+ */
 public class AuthenticationDialog extends VerticalLayout {
 	
 	private static class AuthenticationRequestHandler implements RequestHandler {
