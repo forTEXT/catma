@@ -18,23 +18,31 @@
  */
 package de.catma.ui.repository;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.jboss.aerogear.security.otp.Totp;
 import org.jboss.aerogear.security.otp.api.Clock;
 import org.json.JSONObject;
-import org.restlet.Context;
-import org.restlet.data.Method;
-import org.restlet.ext.html.FormDataSet;
-import org.restlet.representation.Representation;
-import org.restlet.resource.ClientResource;
 
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.DownloadStream;
@@ -103,7 +111,6 @@ public class AuthenticationDialog extends VerticalLayout {
 				throws IOException {
 
 			// this handles the answer to the authorization request
-			
 			try {
 				// clean up
 				VaadinSession.getCurrent().removeRequestHandler(this);
@@ -119,8 +126,9 @@ public class AuthenticationDialog extends VerticalLayout {
 				
 				// extract answer
 				String authorizationCode = request.getParameter("code");
+
 				String state = request.getParameter("state");
-				
+
 				String error = request.getParameter("error");
 
 				// do we have a authorization request error?
@@ -135,29 +143,29 @@ public class AuthenticationDialog extends VerticalLayout {
 					}
 				}
 				
-				// state token get validation success?
+				// state token get validation success?	
 				if (error == null) {
+					CloseableHttpClient httpclient = HttpClients.createDefault();
+					HttpPost httpPost = 
+						new HttpPost(RepositoryPropertyKey.oauthAccessTokenRequestURL.getValue());
+					List <NameValuePair> data = new ArrayList <NameValuePair>();
+					data.add(new BasicNameValuePair("code", authorizationCode));
+					data.add(new BasicNameValuePair("grant_type", "authorization_code"));
+					data.add(new BasicNameValuePair(
+						"client_id", RepositoryPropertyKey.oauthClientId.getValue()));
+					data.add(new BasicNameValuePair(
+						"client_secret", RepositoryPropertyKey.oauthClientSecret.getValue()));
+					data.add(new BasicNameValuePair("redirect_uri", returnURL));
+					httpPost.setEntity(new UrlEncodedFormEntity(data));
+					CloseableHttpResponse tokenRequestResponse = httpclient.execute(httpPost);
+					HttpEntity entity = tokenRequestResponse.getEntity();
+					InputStream content = entity.getContent();
+					ByteArrayOutputStream bodyBuffer = new ByteArrayOutputStream();
+					IOUtils.copy(content, bodyBuffer);
 					
-					//yes, ok we proceed with authentication via access token request
-					ClientResource client = 
-						new ClientResource(
-							Context.getCurrent(), 
-							Method.POST, 
-							RepositoryPropertyKey.oauthAccessTokenRequestURL.getValue());
-
-					FormDataSet data = new FormDataSet();
-					
-					data.add("code", authorizationCode);
-					data.add("client_id", RepositoryPropertyKey.oauthClientId.getValue());
-					data.add("client_secret", RepositoryPropertyKey.oauthClientSecret.getValue());
-					data.add("redirect_uri", returnURL);
-					data.add("grant_type", "authorization_code");
-					
-					// response to access token request
-					Representation accessTokenResponse = client.post(data);
-
 					JSONObject accessTokenResponseJSon = 
-							new JSONObject(accessTokenResponse.getText());
+							new JSONObject(bodyBuffer.toString());
+
 					// we're actually not interested in the access token 
 					// but we want the email information from the id token
 					String idToken = accessTokenResponseJSon.getString("id_token");
@@ -165,15 +173,16 @@ public class AuthenticationDialog extends VerticalLayout {
 					String[] pieces = idToken.split("\\.");
 					// we skip the header and go ahead with the payload
 					String payload = pieces[1];
-
+		
 					String decodedPayload = 
 							new String(Base64.decodeBase64(payload), "UTF-8");
 					JSONObject payloadJson = new JSONObject(decodedPayload);
-
+					
+					logger.info("decodedPayload: " + decodedPayload);
+					
 					// finally the email address
 					String email = payloadJson.getString("email");
 
-					
 					// construct CATMA user identification
 					Map<String, String> userIdentification = 
 							new HashMap<String, String>();
