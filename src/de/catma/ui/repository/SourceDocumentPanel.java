@@ -21,10 +21,6 @@ package de.catma.ui.repository;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -46,9 +42,6 @@ import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
-import com.vaadin.server.DownloadStream;
-import com.vaadin.server.FileResource;
-import com.vaadin.server.Page;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Button;
@@ -78,7 +71,6 @@ import de.catma.document.repository.UnknownUserException;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
-import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.source.contenthandler.XMLContentHandler;
 import de.catma.document.standoffmarkup.MarkupCollectionReference;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
@@ -88,7 +80,6 @@ import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
 import de.catma.serialization.intrinsic.xml.XmlMarkupCollectionSerializationHandler;
-import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
@@ -357,18 +348,13 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 		});
 		
-		miMoreDocumentActions.addItem("Export Document", new Command() {
+		miMoreDocumentActions.addItem("Export Document...", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
 				handleSourceDocumentExportRequest();
 			}
 		});
-		miMoreDocumentActions.addItem("Export Document as UTF-8 plain text", new Command() {
-			
-			public void menuSelected(MenuItem selectedItem) {
-				handleSourceDocumentExportUTF8Request();
-			}
-		});
+
 		
 		miMoreDocumentActions.addItem("Share Document", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
@@ -423,22 +409,14 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 		});
 		
-		miMoreDocumentActions.addItem("Export User Markup Collection", new Command() {
+		miMoreDocumentActions.addItem("Export User Markup Collection...", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
 				
 				Object value = documentsTree.getValue();
-				handleUserMarkupCollectionExportRequest(value, false);
+				handleUserMarkupCollectionExportRequest(value);
 			}
 		});
 
-		miMoreDocumentActions.addItem("Export User Markup Collection with text", new Command() {
-			public void menuSelected(MenuItem selectedItem) {
-				
-				Object value = documentsTree.getValue();
-				handleUserMarkupCollectionExportRequest(value, true);
-			}
-		});
-		
 		miMoreDocumentActions.addItem("Remove User Markup Collection", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
 				handleUserMarkupRemoval();
@@ -540,62 +518,6 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		});
 	}
 	
-	private void handleSourceDocumentExportUTF8Request() {
-		Object value = documentsTree.getValue();
-		if ((value == null) || !(value instanceof SourceDocument)) {
-			 Notification.show(
-                    "Information",
-                    "Please select a Source Document first",
-                    Type.TRAY_NOTIFICATION);
-		}
-		else{
-			final SourceDocument sourceDocument = (SourceDocument)value;
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			
-			try {
-				bos.write(sourceDocument.getContent().getBytes(Charset.forName("UTF8")));
-			
-				final ByteArrayInputStream bis = 
-						new ByteArrayInputStream(bos.toByteArray());
-				
-				Page.getCurrent().open(new FileResource(null) {
-					public DownloadStream getStream() {
-						DownloadStream ds = new DownloadStream(bis, 
-								getMIMEType(), getFilename());
-						ds.setParameter(
-								"Content-Disposition", 
-								"attachment; filename="
-										+ getFilename());
-						ds.setCacheTime(0);
-						return ds;
-					};
-					public String getMIMEType() {
-						return "text/plain;charset=utf-8";
-					};
-					
-					public String getFilename() {
-						SourceContentHandler sourceContentHandler = 
-								sourceDocument.getSourceContentHandler();
-						String title = 
-								sourceContentHandler.getSourceDocumentInfo()
-									.getContentInfoSet().getTitle();
-						if (title!=null) {
-							title = title.replaceAll("\\s", "_");
-						}
-						return (((title==null)||title.isEmpty())?sourceDocument.getID().replaceAll("[/:]", ""):title) +
-							".txt";
-					};
-				},
-				"_blank",
-				true);
-				
-			} catch (IOException e) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError("error exporting source document as plain text", e);
-			}
-			
-		}		
-	}
-
 	
 	private void handleSourceDocumentExportRequest() {
 		Object value = documentsTree.getValue();
@@ -606,48 +528,12 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
                     Type.TRAY_NOTIFICATION);
 		}
 		else{
+			
 			final SourceDocument sourceDocument = (SourceDocument)value;
-			
-			final File file = repository.getFile(sourceDocument);
-			
-			Page.getCurrent().open(new FileResource(null) {
-				public DownloadStream getStream() {
-					
-					try {
-						DownloadStream  ds = new DownloadStream(
-							new FileInputStream(file), 
-							getMIMEType(), getFilename());
-						ds.setParameter(
-								"Content-Disposition", 
-								"attachment; filename="
-										+ getFilename());
-						ds.setCacheTime(0);
-						return ds;
-					} catch (FileNotFoundException e) {
-						throw new RuntimeException(e);
-					}
-				};
-				public String getMIMEType() {
-					return sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getMimeType();
-				};
-				
-				public String getFilename() {
-					SourceContentHandler sourceContentHandler = 
-							sourceDocument.getSourceContentHandler();
-					String title = 
-							sourceContentHandler.getSourceDocumentInfo()
-								.getContentInfoSet().getTitle();
-					if (title!=null) {
-						title = title.replaceAll("\\s", "_");
-					}
-					return  
-						(((title==null)||title.isEmpty())?sourceDocument.getID().replaceAll("[/:]", ""):title) +
-						"." + sourceContentHandler.getSourceDocumentInfo().getTechInfoSet().getFileType().name().toLowerCase();
-				};
-			},
-			"_blank",
-			true);
-			
+
+			SourceDocumentExportOptionsDialog sdExportOptionsDialog = 
+					new SourceDocumentExportOptionsDialog(repository, sourceDocument);
+			UI.getCurrent().addWindow(sdExportOptionsDialog);
 		}
 	}
 
@@ -868,52 +754,16 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		}
 	}
 
-	private void handleUserMarkupCollectionExportRequest(Object value, boolean withText) {
+	private void handleUserMarkupCollectionExportRequest(Object value) {
 		if ((value != null) && (value instanceof UserMarkupCollectionReference)) {
 			final UserMarkupCollectionReference umcRef = 
 					(UserMarkupCollectionReference)value;
 			final SourceDocument sd = 
 					(SourceDocument)documentsTree.getParent(
 							documentsTree.getParent(value));
-
-			TeiUserMarkupCollectionSerializationHandler handler =
-					new TeiUserMarkupCollectionSerializationHandler(
-							repository.getTagManager(), withText);
-			ByteArrayOutputStream teiDocOut = new ByteArrayOutputStream();
-			try {
-				handler.serialize(
-					repository.getUserMarkupCollection(umcRef), sd, teiDocOut);
-				
-				final ByteArrayInputStream teiDownloadStream = 
-						new ByteArrayInputStream(teiDocOut.toByteArray());
-
-				Page.getCurrent().open(new FileResource(null) {
-					public DownloadStream getStream() {
-						DownloadStream ds = 
-							new DownloadStream(
-								teiDownloadStream, 
-								getMIMEType(), getFilename());
-						ds.setParameter(
-							"Content-Disposition", 
-							"attachment; filename="
-			                    + getFilename());
-			            ds.setCacheTime(0);
-			            return ds;
-					};
-					public String getMIMEType() {
-						return "application/xml";
-					};
-					
-					public String getFilename() {
-						return umcRef.toString().replaceAll("\\s", "_") + ".xml";
-					};
-				},
-				"_blank",
-				true);
-			} catch (IOException e) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error exporting User Markup Collection!", e);
-			}
+			MarkupCollectionExportOptionsDialog mcExportOptionsDialog = 
+					new MarkupCollectionExportOptionsDialog(repository, sd, umcRef);
+			UI.getCurrent().addWindow(mcExportOptionsDialog);
 			
 		}
 		else {
@@ -936,7 +786,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						(SourceDocument)value, repository);
 			}
 			else if (value instanceof StaticMarkupCollectionReference) {
-					//TODO: implement
+					//TODO: remove
 				
 			}
 			else if (value instanceof UserMarkupCollectionReference) {
