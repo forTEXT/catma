@@ -151,24 +151,18 @@ public class PhraseSearcher {
 			
 			for (Node node : path.reverseNodes()) {
 				
-				if (node.hasLabel(NodeType.SourceDocument)) { // head of path
+				if (node.hasLabel(NodeType.Term)) { // head of Positions chain of this path
 					return literals;
 				}
 				
-				String literal = null;
-				
-				if (node.hasLabel(NodeType.Position)) {
-					literal = (String) node.getProperty(PositionProperty.literal.name());
-				}
-				else if (node.hasLabel(NodeType.Term)) {
-					literal = (String) node.getProperty(TermProperty.literal.name());
-				}
-				
-				literals.add(0, literal);
-				
-				if (literals.size() == termList.size()) {
-					return literals;
-				}
+				if (node.hasLabel(NodeType.Position)) { // should always be a Position node at this point
+					String literal = (String) node.getProperty(PositionProperty.literal.name());
+					literals.add(0, literal);
+					
+					if (literals.size() == termList.size()) {
+						return literals;
+					}
+				}				
 			}
 			
 			return literals;
