@@ -53,6 +53,7 @@ import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.Tree.TreeTargetDetails;
 import com.vaadin.ui.UI;
@@ -133,6 +134,7 @@ public class CorpusPanel extends VerticalLayout {
 	private MenuItem miExportCorpus;
 
 	private MenuItem miGenerateCorpusAnnotations;
+	private ProgressBar generateCorpusAnnotationsProgressBar;
 	
 	public CorpusPanel(
 			Repository repository, ValueChangeListener valueChangeListener) {
@@ -374,6 +376,10 @@ public class CorpusPanel extends VerticalLayout {
 					public void cancelPressed() {}
 					public void savePressed(GenerationOptions result) {
 						if (result.getTagsetIdentification() != null) {
+							generateCorpusAnnotationsProgressBar.setCaption("Generating annotations...");
+							generateCorpusAnnotationsProgressBar.setIndeterminate(true);
+							generateCorpusAnnotationsProgressBar.setVisible(true);
+							
 							((BackgroundServiceProvider)UI.getCurrent()).submit(
 								"Generating annotations...",
 								new AnnotationGeneratorJob(result),
@@ -382,6 +388,7 @@ public class CorpusPanel extends VerticalLayout {
 									public void done(Void result) {
 										try {
 											repository.reload(); 
+											
 											Notification.show(
 												"Info", 
 												"Your annotations have been generated!", 
@@ -390,9 +397,13 @@ public class CorpusPanel extends VerticalLayout {
 											((CatmaApplication)UI.getCurrent()).showAndLogError(
 													"Error reloading repository!", e);
 										}
+										finally {
+											generateCorpusAnnotationsProgressBar.setVisible(false);
+										}
 									}
 									@Override
 									public void error(Throwable t) {
+										generateCorpusAnnotationsProgressBar.setVisible(false);
 										((CatmaApplication)UI.getCurrent()).showAndLogError(
 												"Error reloading repository!", t);
 									}
@@ -578,7 +589,12 @@ public class CorpusPanel extends VerticalLayout {
 				menuMoreCorpusActions.addItem("More actions...", null);
 		miMoreCorpusActions.setEnabled(
 				repository instanceof IndexedRepository);
+		
 		content.addComponent(menuMoreCorpusActions);
+		
+		generateCorpusAnnotationsProgressBar = new ProgressBar();
+		generateCorpusAnnotationsProgressBar.setVisible(false);
+		content.addComponent(generateCorpusAnnotationsProgressBar);
 		
 		return corporaButtonsPanel;
 	}
