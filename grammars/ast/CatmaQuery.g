@@ -18,6 +18,7 @@ tokens {
 	ND_EXCLUSION;
 	ND_ADJACENCY;
 	ND_TAG;
+	ND_TAGDIFF;
 	ND_PROPERTY;
 	ND_TAGPROPERTY;
 	ND_REG;
@@ -172,6 +173,7 @@ phrase :	TXT -> ^(ND_PHRASE TXT)
 
 selector 
 	:	tagQuery
+	|	tagdiffQuery
 	|	propertyQuery
 	|	regQuery
 	|	freqQuery
@@ -186,7 +188,12 @@ tagQuery
 	;
 	catch[RecognitionException e] {throw e;}
 	
+tagdiffQuery 
+	:	TAGDIFF EQUAL phrase (PROPERTY EQUAL phrase)? -> ^(ND_TAGDIFF phrase phrase?)
+	;
+	catch[RecognitionException e] {throw e;}
 	
+
 propertyQuery 
 	:	PROPERTY EQUAL phrase (VALUE EQUAL phrase)? -> ^(ND_PROPERTY phrase phrase?)	
 	|	TAG EQUAL phrase PROPERTY EQUAL phrase (VALUE EQUAL phrase)? -> ^(ND_TAGPROPERTY phrase phrase phrase?)
@@ -252,6 +259,9 @@ andRefinement[CommonTree startRefinement]
 
 TAG 	:	'tag'
 	;
+
+TAGDIFF	:	'tagdiff'
+	;
 	
 MATCH_MODE 
 	:	'boundary' | 'overlap' | 'exact'
@@ -260,7 +270,7 @@ MATCH_MODE
 PROPERTY 
 	:	'property'
 	;
-	
+		
 VALUE	:	'value'
 	;	
 		

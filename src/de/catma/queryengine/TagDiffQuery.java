@@ -44,32 +44,25 @@ import de.catma.tag.TagDefinition;
  * @author Marco Petris
  *
  */
-public class PropertyQuery extends Query {
+public class TagDiffQuery extends Query {
 
+	private String tagPhrase;
     private String propertyName;
-    private String propertyValue;
-    private String tagPhrase;
     
     /**
      * Constructor
-     * @param property the name of the {@link Property}
-     * @param value the value of the {@link Property} this is optional and can be
+     * @param tag the tagpath
+     * @param property the name of the {@link Property} this is optional and can be null
      * <code>null</code>
      */
-    public PropertyQuery(Phrase tag, Phrase property, Phrase value) {
-        propertyName = property.getPhrase();
-        if (value != null) {
-            propertyValue = value.getPhrase();
-        }
-        else {
-            propertyValue = null;
-        }
-        if (tag != null){
-        	this.tagPhrase = tag.getPhrase();
-        }
-        else {
-        	this.tagPhrase = null;
-        }
+    public TagDiffQuery(Phrase tag, Phrase property) {
+    	this.tagPhrase = tag.getPhrase();
+    	if (property != null) {
+    		propertyName = property.getPhrase();
+    	}
+    	else {
+    		propertyName = null;
+    	}
     }
 
     @Override
@@ -99,9 +92,9 @@ public class PropertyQuery extends Query {
         }
         
         QueryResult result = 
-				indexer.searchProperty(
+				indexer.searchTagDiff(
 						relevantUserMarkupCollIDs,
-						propertyName, propertyValue, tagPhrase);
+						propertyName, tagPhrase);
 
         Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
 

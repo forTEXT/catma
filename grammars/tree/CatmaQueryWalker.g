@@ -96,6 +96,7 @@ phrase returns [Phrase query]
 
 selector returns [Query query]
 	:	tagQuery { $query = $tagQuery.query; }
+	|	tagdiffQuery { $query = $tagdiffQuery.query; }
 	|	propertyQuery { $query = $propertyQuery.query; }
 	|	regQuery { $query = $regQuery.query; }
 	|	freqQuery { $query = $freqQuery.query; }
@@ -110,6 +111,10 @@ tagQuery returns [Query query]
 	;
 	catch[RecognitionException e] {throw e;}
 
+tagdiffQuery returns [Query query]
+	:	^(ND_TAGDIFF tagdiff=phrase (property=phrase)?) { $query = new TagDiffQuery($tagdiff.query, $property.query); }
+	;
+	catch[RecognitionException e] {throw e;}
 propertyQuery returns [Query query]
 	:	^(ND_PROPERTY property=phrase (value=phrase)?) { $query = new PropertyQuery(null, $property.query, $value.query); }
 	|	^(ND_TAGPROPERTY tag=phrase property=phrase (value=phrase)?) { $query = new PropertyQuery($tag.query, $property.query, $value.query); }
