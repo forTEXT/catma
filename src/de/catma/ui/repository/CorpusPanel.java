@@ -225,6 +225,7 @@ public class CorpusPanel extends VerticalLayout {
 				miRenameCorpus.setEnabled(corpusModificationButtonsEnabled);
 				miShareCorpus.setEnabled(corpusModificationButtonsEnabled);
 				miExportCorpus.setEnabled(corpusModificationButtonsEnabled);
+				miGenerateCorpusAnnotations.setEnabled(corpusModificationButtonsEnabled);
 			}
 		});
 		
@@ -360,7 +361,8 @@ public class CorpusPanel extends VerticalLayout {
 			}
 		});
 		
-		miExportCorpus.setVisible(repository.getUser().getRole().equals(Role.ADMIN));
+		miGenerateCorpusAnnotations.setVisible(repository.getUser().getRole().equals(Role.ADMIN));
+		miGenerateCorpusAnnotations.setEnabled(false);
 	}
 	
 	private void handleGenerateAnnotationsRequest(Corpus selectedValue) { 
@@ -376,6 +378,12 @@ public class CorpusPanel extends VerticalLayout {
 					public void cancelPressed() {}
 					public void savePressed(GenerationOptions result) {
 						if (result.getTagsetIdentification() != null) {
+							Notification.show(
+									"Info", 
+									"CATMA is generating annotations for you, this may take a while."
+									+ "You will be notified once the annotions are ready.", 
+									Type.HUMANIZED_MESSAGE);
+							
 							generateCorpusAnnotationsProgressBar.setCaption("Generating annotations...");
 							generateCorpusAnnotationsProgressBar.setIndeterminate(true);
 							generateCorpusAnnotationsProgressBar.setVisible(true);

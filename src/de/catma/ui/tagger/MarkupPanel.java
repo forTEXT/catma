@@ -92,14 +92,14 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			Repository repository, ColorButtonListener colorButtonListener, 
 			PropertyChangeListener tagDefinitionSelectionListener,
 			PropertyChangeListener tagDefinitionsRemovedListener, 
-			SourceDocument sourceDocument) {
+			String sourceDocumentId) {
 		this.colorButtonListener = colorButtonListener;
 		this.repository = repository;
 		
 		initComponents( 
 				tagDefinitionSelectionListener,
 				tagDefinitionsRemovedListener,
-				sourceDocument);
+				sourceDocumentId);
 		initActions();
 
 		tagsetTree.getTagTree().setDropHandler(new DropHandler() {
@@ -237,7 +237,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	private void initComponents(
 			PropertyChangeListener tagDefinitionSelectionListener, 
 			PropertyChangeListener tagDefinitionsRemovedListener, 
-			final SourceDocument sourceDocument) {
+			final String sourceDocumentId) {
 		
 		tabSheet = new TabSheet();
 		tabSheet.setSizeFull();
@@ -291,7 +291,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 						
 						@Override
 						public void buttonClick(ClickEvent event) {
-							handleOpenUserMarkupCollectionRequest(sourceDocument);
+							handleOpenUserMarkupCollectionRequest(repository.getSourceDocument(sourceDocumentId));
 						}
 					});
 		markupCollectionsPanel.addPropertyChangeListener(
