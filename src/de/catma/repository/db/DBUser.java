@@ -18,7 +18,11 @@
  */
 package de.catma.repository.db;
 
-import de.catma.user.Role;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import de.catma.user.Permission;
 import de.catma.user.User;
 
 public class DBUser implements User {
@@ -26,13 +30,12 @@ public class DBUser implements User {
 	private Integer userId;
 	private String identifier;
 	private boolean locked;
-	private Integer roleValue;
+	private Set<String> permissions;
 	
-	public DBUser(Integer userId, String identifier, boolean locked, Role role) {
+	public DBUser(Integer userId, String identifier, boolean locked) {
 		this.userId = userId;
 		this.identifier = identifier;
 		this.locked = locked;
-		this.roleValue = role.getVal();
 	}
 
 	public Integer getUserId() {
@@ -55,12 +58,11 @@ public class DBUser implements User {
 		return identifier;
 	}
 	
-	public Role getRole() {
-		if (roleValue != null) {
-			return Role.getRole(roleValue);
-		}
-		else {
-			return Role.STANDARD;
-		}
+	void setPermissions(List<String> permissions) {
+		this.permissions = new HashSet<String>(permissions);
 	}
+	
+	public boolean hasPermission(Permission permission) {
+		return permissions.contains(permission.name());
+	};
 }

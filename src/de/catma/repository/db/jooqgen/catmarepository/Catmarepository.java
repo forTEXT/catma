@@ -11,7 +11,7 @@ package de.catma.repository.db.jooqgen.catmarepository;
 @java.lang.SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Catmarepository extends org.jooq.impl.SchemaImpl {
 
-	private static final long serialVersionUID = -1754931650;
+	private static final long serialVersionUID = -416971826;
 
 	/**
 	 * The singleton instance of <code>CatmaRepository</code>
@@ -39,11 +39,13 @@ public class Catmarepository extends org.jooq.impl.SchemaImpl {
 			de.catma.repository.db.jooqgen.catmarepository.tables.CorpusStaticmarkupcollection.CORPUS_STATICMARKUPCOLLECTION,
 			de.catma.repository.db.jooqgen.catmarepository.tables.CorpusUsermarkupcollection.CORPUS_USERMARKUPCOLLECTION,
 			de.catma.repository.db.jooqgen.catmarepository.tables.MaintenanceSem.MAINTENANCE_SEM,
-			de.catma.repository.db.jooqgen.catmarepository.tables.Mlog.MLOG,
+			de.catma.repository.db.jooqgen.catmarepository.tables.Permission.PERMISSION,
 			de.catma.repository.db.jooqgen.catmarepository.tables.Property.PROPERTY,
 			de.catma.repository.db.jooqgen.catmarepository.tables.Propertydefinition.PROPERTYDEFINITION,
 			de.catma.repository.db.jooqgen.catmarepository.tables.PropertydefPossiblevalue.PROPERTYDEF_POSSIBLEVALUE,
 			de.catma.repository.db.jooqgen.catmarepository.tables.Propertyvalue.PROPERTYVALUE,
+			de.catma.repository.db.jooqgen.catmarepository.tables.Role.ROLE,
+			de.catma.repository.db.jooqgen.catmarepository.tables.RolePermission.ROLE_PERMISSION,
 			de.catma.repository.db.jooqgen.catmarepository.tables.Sourcedocument.SOURCEDOCUMENT,
 			de.catma.repository.db.jooqgen.catmarepository.tables.Staticmarkupattribute.STATICMARKUPATTRIBUTE,
 			de.catma.repository.db.jooqgen.catmarepository.tables.Staticmarkupcollection.STATICMARKUPCOLLECTION,
@@ -58,6 +60,7 @@ public class Catmarepository extends org.jooq.impl.SchemaImpl {
 			de.catma.repository.db.jooqgen.catmarepository.tables.UserdefinedSeparatingcharacter.USERDEFINED_SEPARATINGCHARACTER,
 			de.catma.repository.db.jooqgen.catmarepository.tables.Usermarkupcollection.USERMARKUPCOLLECTION,
 			de.catma.repository.db.jooqgen.catmarepository.tables.UserCorpus.USER_CORPUS,
+			de.catma.repository.db.jooqgen.catmarepository.tables.UserRole.USER_ROLE,
 			de.catma.repository.db.jooqgen.catmarepository.tables.UserSourcedocument.USER_SOURCEDOCUMENT,
 			de.catma.repository.db.jooqgen.catmarepository.tables.UserStaticmarkupcollection.USER_STATICMARKUPCOLLECTION,
 			de.catma.repository.db.jooqgen.catmarepository.tables.UserTaglibrary.USER_TAGLIBRARY,

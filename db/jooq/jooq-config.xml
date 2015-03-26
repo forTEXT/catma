@@ -55,11 +55,11 @@
         
 	  <schemata>
 	  	<schema>
-	  		<inputSchema>catmarepository</inputSchema>
+	  		<inputSchema>CatmaRepository</inputSchema>
 	  		<outputSchema>CatmaRepository</outputSchema>
 	  	</schema>
 	  	<schema>
-	  		<inputSchema>catmaindex</inputSchema>
+	  		<inputSchema>CatmaIndex</inputSchema>
 	  		<outputSchema>CatmaIndex</outputSchema>
 	  	</schema>
 	  </schemata>

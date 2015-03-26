@@ -79,6 +79,7 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.ui.repository.sharing.SharingOptions;
 import de.catma.ui.repository.sharing.SharingOptionsFieldFactory;
+import de.catma.user.Permission;
 import de.catma.user.Role;
 
 public class CorpusPanel extends VerticalLayout {
@@ -346,7 +347,7 @@ public class CorpusPanel extends VerticalLayout {
 				}
 			}
 		});
-		miExportCorpus.setVisible(repository.getUser().getRole().equals(Role.ADMIN));
+		miExportCorpus.setVisible(repository.getUser().hasPermission(Permission.exportcorpus));
 		miExportCorpus.setEnabled(false);
 		
 		miGenerateCorpusAnnotations = miMoreCorpusActions.addItem(
@@ -361,7 +362,7 @@ public class CorpusPanel extends VerticalLayout {
 			}
 		});
 		
-		miGenerateCorpusAnnotations.setVisible(repository.getUser().getRole().equals(Role.ADMIN));
+		miGenerateCorpusAnnotations.setVisible(repository.getUser().hasPermission(Permission.autotagging));
 		miGenerateCorpusAnnotations.setEnabled(false);
 	}
 	

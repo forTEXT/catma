@@ -6,7 +6,6 @@ import org.jooq.Record;
 import org.jooq.RecordMapper;
 
 import de.catma.repository.db.DBUser;
-import de.catma.user.Role;
 
 public class UserMapper implements RecordMapper<Record, DBUser> {
 
@@ -17,8 +16,7 @@ public class UserMapper implements RecordMapper<Record, DBUser> {
 		return new DBUser(
 			record.getValue(USER.USERID),
 			record.getValue(USER.IDENTIFIER),
-			record.getValue(USER.LOCKED, Boolean.class),
-			Role.getRole(record.getValue(USER.ROLE)));
+			record.getValue(USER.LOCKED, Boolean.class));
 	}
 
 }
