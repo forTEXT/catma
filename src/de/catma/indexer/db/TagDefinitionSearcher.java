@@ -255,8 +255,8 @@ public class TagDefinitionSearcher {
 						PropertyDefinition.SystemPropertyName.catma_markupauthor.name()))
 				.where(t1.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
 				.and(t1.TAGDEFINITIONPATH.likeIgnoreCase(tagDefinitionPath))
-				.andNotExists(db
-					.selectOne()
+				.and(DSL.val(others.size()).ne(db
+					.selectCount()
 					.from(t2)
 					.join(p2)
 						.on(p2.TAGINSTANCEID.eq(t2.TAGINSTANCEID))
@@ -266,20 +266,20 @@ public class TagDefinitionSearcher {
 					.and(t2.CHARACTERSTART.eq(t1.CHARACTERSTART))
 					.and(t2.CHARACTEREND.eq(t1.CHARACTEREND))
 					.and(p2.PROPERTYDEFINITIONID.eq(p1.PROPERTYDEFINITIONID))
-					.and(p2.VALUE.eq(p1.VALUE)))
+					.and(p2.VALUE.eq(p1.VALUE))))
 				.union(db
 					.select(fieldsWithoutProperties)
 				.from(t1)
 				.where(t1.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
 				.and(t1.TAGDEFINITIONPATH.likeIgnoreCase(tagDefinitionPath))
-				.andNotExists(db
-					.selectOne()
+				.and(DSL.val(others.size()).ne(db
+					.selectCount()
 					.from(t2)
 					.where(t2.USERMARKUPCOLLECTIONID.in(others))
 					.and(t2.TAGDEFINITIONPATH.eq(t1.TAGDEFINITIONPATH))
 					.and(t2.TAGDEFINITIONID.eq(t1.TAGDEFINITIONID))
 					.and(t2.CHARACTERSTART.eq(t1.CHARACTERSTART))
-					.and(t2.CHARACTEREND.eq(t1.CHARACTEREND))))
+					.and(t2.CHARACTEREND.eq(t1.CHARACTEREND)))))
 				.fetch());
 			
 			for (Map.Entry<String, List<Record>> entry : recordsGroupedByInstanceUUID.entrySet()) {
