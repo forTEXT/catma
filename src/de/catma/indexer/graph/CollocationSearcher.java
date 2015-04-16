@@ -146,6 +146,7 @@ class CollocationSearcher {
 
 			SourceDocSearcher sourceDocSearcher = new SourceDocSearcher();
 			if (bufferedDocumentIds.size() != baseResultRowsByDocument.keySet().size()) {
+				PathUtil pathUtil = new PathUtil();
 				try (Transaction transaction = graphDb.beginTx()) {
 					for (Map.Entry<String,Set<QueryResultRow>> entry 
 							: baseResultRowsByDocument.entrySet()) {
@@ -205,7 +206,8 @@ class CollocationSearcher {
 									ArrayList<TermInfo> curTermInfos = new ArrayList<TermInfo>();
 									for (Node n : collocNodesEntry.getValue()) {
 										curTermInfos.add(new TermInfo(
-											(String)n.getProperty(PositionProperty.literal.name()),
+//											(String)n.getProperty(PositionProperty.literal.name()),
+											pathUtil.getLiteralFromPosition(n),
 											(Integer)n.getProperty(PositionProperty.start.name()),
 											(Integer)n.getProperty(PositionProperty.end.name()),
 											(Integer)n.getProperty(PositionProperty.position.name())));
@@ -223,7 +225,8 @@ class CollocationSearcher {
 									for (Node n : getContext(first, spanContextSize, Direction.INCOMING)) {
 										spanContext.addBackwardToken(
 											new TermInfo(
-												(String)n.getProperty(PositionProperty.literal.name()),
+//												(String)n.getProperty(PositionProperty.literal.name()),
+												pathUtil.getLiteralFromPosition(n),
 												(Integer)n.getProperty(PositionProperty.start.name()),
 												(Integer)n.getProperty(PositionProperty.end.name()),
 												(Integer)n.getProperty(PositionProperty.position.name())));
@@ -232,7 +235,8 @@ class CollocationSearcher {
 									for (Node n : getContext(last, spanContextSize, Direction.OUTGOING)) {
 										spanContext.addForwardToken(
 											new TermInfo(
-												(String)n.getProperty(PositionProperty.literal.name()),
+//												(String)n.getProperty(PositionProperty.literal.name()),
+												pathUtil.getLiteralFromPosition(n),
 												(Integer)n.getProperty(PositionProperty.start.name()),
 												(Integer)n.getProperty(PositionProperty.end.name()),
 												(Integer)n.getProperty(PositionProperty.position.name())));
@@ -266,6 +270,8 @@ class CollocationSearcher {
 			throw new IOException(e);
 		}
 	}
+	
+	
 
 	private Map<QueryResultRow, TreeSet<Node>> createdOrderedNodesByRow(
 			Traverser traverser, Set<QueryResultRow> resultRows) {

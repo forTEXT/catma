@@ -82,6 +82,7 @@ public class PhraseSearcher {
 		
 		private List<String> termList;
 		private TermMatcher termMatcher;
+		private PathUtil pathUtil = new PathUtil();
 		
 		public PhraseSearchEvaluator(List<String> termList, boolean withWildcards) {
 			super();
@@ -156,8 +157,9 @@ public class PhraseSearcher {
 				}
 				
 				if (node.hasLabel(NodeType.Position)) { // should always be a Position node at this point
-					String literal = (String) node.getProperty(PositionProperty.literal.name());
-					literals.add(0, literal);
+//					String literal = (String) node.getProperty(PositionProperty.literal.name());
+					
+					literals.add(0, pathUtil.getLiteralFromPosition(node));
 					
 					if (literals.size() == termList.size()) {
 						return literals;
