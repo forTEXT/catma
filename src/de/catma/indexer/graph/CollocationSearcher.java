@@ -82,6 +82,14 @@ class CollocationSearcher {
 
 	private final static NodePostionComparator NODE_POSTION_COMPARATOR = new NodePostionComparator();
 	
+	/**
+	 * @param baseResult
+	 * @param collocationConditionResult
+	 * @param spanContextSize
+	 * @param direction only {@link SpanDirection#BOTH} supported!
+	 * @return
+	 * @throws IOException
+	 */
 	public QueryResult search(QueryResult baseResult,
 			QueryResult collocationConditionResult, int spanContextSize,
 			SpanDirection direction) throws IOException {
@@ -97,6 +105,7 @@ class CollocationSearcher {
 					(IndexBufferManager) context.lookup(
 							IndexBufferManagerName.INDEXBUFFERMANAGER.name());
 
+			// set up mapping SourceDoc->rows of base result
 			HashMap<String,Set<QueryResultRow>> baseResultRowsByDocument = 
 					new HashMap<String, Set<QueryResultRow>>();
 			for (QueryResultRow baseRow : baseResult) {
@@ -112,6 +121,7 @@ class CollocationSearcher {
 			HashMap<String,Set<QueryResultRow>> collocResultRowsByDocument = 
 					new HashMap<String, Set<QueryResultRow>>();
 			
+			// set up mapping SourceDoc->rows of colloc result
 			for (QueryResultRow collocRow : collocationConditionResult) {
 				 String sourceDocumentId = collocRow.getSourceDocumentId();
 				 Set<QueryResultRow> resultRows = collocResultRowsByDocument.get(sourceDocumentId);
@@ -152,7 +162,7 @@ class CollocationSearcher {
 							if (collocQueryResultRows != null) {
 								Node sourceDocNode = 
 									sourceDocSearcher.search(graphDb, sourceDocumentId);
-								
+								//traversal to get all nodes of the base query rows
 								TraversalDescription positionsOfBaseQueryResultRowsTraversal = 
 									graphDb.traversalDescription()
 									.depthFirst()

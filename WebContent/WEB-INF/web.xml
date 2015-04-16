@@ -5,7 +5,7 @@
 		<description>
 		Vaadin production mode</description>
 		<param-name>productionMode</param-name>
-		<param-value>false</param-value>
+		<param-value>true</param-value>
 	</context-param>
 	<session-config>
     	<session-timeout>120</session-timeout>
@@ -36,6 +36,14 @@
 			Application widgetset</description>
 			<param-name>widgetset</param-name>
 			<param-value>de.catma.ui.CleaWidgetset</param-value>
+		</init-param>
+		<init-param>
+			<param-name>closeIdleSessions</param-name>
+			<param-value>true</param-value>
+		</init-param>
+		<init-param>
+			<param-name>legacyPropertyToString</param-name>
+			<param-value>true</param-value>
 		</init-param>
 		<load-on-startup>3</load-on-startup>
 	</servlet>
@@ -68,12 +76,6 @@
 		</init-param>
 		<load-on-startup>3</load-on-startup>
 	</servlet>  
-	
-	<servlet> 
-		<servlet-name>HeurecleaPeriodicExportInitializerServlet</servlet-name> 
-		<servlet-class>de.catma.heureclea.HeurecleaPeriodicExportInitializerServlet</servlet-class> 
-		<load-on-startup>4</load-on-startup>
-	</servlet>
 	
 	<servlet> 
 		<servlet-name>DBMaintenanceInitializerServlet</servlet-name> 

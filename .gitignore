@@ -18,3 +18,4 @@ build
 db/*.bak
 repo
 temp
+graphdb/test

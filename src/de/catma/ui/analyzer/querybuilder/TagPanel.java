@@ -25,8 +25,6 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.Resource;
@@ -34,7 +32,6 @@ import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -47,7 +44,6 @@ import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.queryengine.QueryOptions;
-import de.catma.queryengine.TagMatchMode;
 import de.catma.queryengine.querybuilder.QueryTree;
 import de.catma.tag.TagDefinitionPathInfo;
 import de.catma.ui.CatmaApplication;
@@ -64,34 +60,13 @@ public class TagPanel extends AbstractSearchPanel {
 		colorValue
 		;
 	}
-	
-	private static class TagMatchModeItem {
-		
-		private String displayText;
-		private TagMatchMode tagMatchMode;
-		
-		public TagMatchModeItem(String displayText, TagMatchMode tagMatchMode) {
-			this.displayText = displayText;
-			this.tagMatchMode = tagMatchMode;
-		}
-		
-		public TagMatchMode getTagMatchMode() {
-			return tagMatchMode;
-		}
-		
-		@Override
-		public String toString() {
-			return displayText;
-		}
-	}
+
 	
 	private EndorsedTreeTable tagsetTree;
 	private boolean init = false;
 	private VerticalSplitPanel splitPanel;
 	private ResultPanel resultPanel;
-	private ComboBox tagMatchModeCombo;
 	private VerticalLayout contentPanel;
-	private boolean inRefinement;
 	
 	public TagPanel(
 			ToggleButtonStateListener toggleButtonStateListener, 
@@ -150,13 +125,7 @@ public class TagPanel extends AbstractSearchPanel {
 				showInPreview();
 			}
 		});
-		
-		tagMatchModeCombo.addValueChangeListener(new ValueChangeListener() {
-			
-			public void valueChange(ValueChangeEvent event) {
-				showInPreview();
-			}
-		});
+
 	}
 
 	private void showInPreview() {
@@ -169,11 +138,7 @@ public class TagPanel extends AbstractSearchPanel {
 				queryTree.removeLast();
 			}
 			curQuery = "tag=\""+path+"%\"";
-			
-			if (inRefinement) {
-				curQuery += 
-					" " + ((TagMatchModeItem)tagMatchModeCombo.getValue()).getTagMatchMode().name().toLowerCase();
-			}
+
 			resultPanel.setQuery(curQuery);
 			
 			queryTree.add(curQuery);
@@ -289,37 +254,6 @@ public class TagPanel extends AbstractSearchPanel {
 		tagSearchPanel.addComponent(tagsetTree);
 		tagSearchPanel.setExpandRatio(tagsetTree, 0.8f);
 		
-		
-		tagMatchModeCombo = new ComboBox("Please choose what you consider a match:");
-		tagMatchModeCombo.setImmediate(true);
-		TagMatchModeItem exactMatchItem = 
-				new TagMatchModeItem("exact match", TagMatchMode.EXACT);
-		tagMatchModeCombo.addItem(exactMatchItem);
-		tagMatchModeCombo.addItem(
-				new TagMatchModeItem("boundary match", 
-						TagMatchMode.BOUNDARY));
-		tagMatchModeCombo.addItem(
-				new TagMatchModeItem("overlap match", 
-						TagMatchMode.OVERLAP));
-		tagMatchModeCombo.setNullSelectionAllowed(false);
-		tagMatchModeCombo.setNewItemsAllowed(false);
-		
-		tagMatchModeCombo.setDescription(
-			"The three different match modes influence the way tags refine" +
-			" your search results:" +
-			"<ul>"+
-			"<li>exact match - the tag boundaries have to match exactly to " +
-			"keep a result item in the result set</li>" +
-			"<li>boundary match - result items that should be kept in the " +
-			"result set must start and end within the boundaries of the tag</li>"+
-			"<li>overlap - the result items that should be kept in the result " +
-			"set must overlap with the range of the tag</li>" +
-			"</ul>");
-		tagMatchModeCombo.setValue(exactMatchItem);
-		
-		tagSearchPanel.addComponent(tagMatchModeCombo);
-		tagSearchPanel.setExpandRatio(tagMatchModeCombo, 0.2f);
-		
 		splitPanel = new VerticalSplitPanel();
 		contentPanel.addComponent(splitPanel);
 		
@@ -341,20 +275,5 @@ public class TagPanel extends AbstractSearchPanel {
 	@Override
 	public String toString() {
 		return "by Tag";
-	}
-
-	@Override
-	public void stepActivated(boolean forward) {
-		super.stepActivated(forward);
-		
-		if (forward) {
-			String last = queryTree.getLast();
-			inRefinement =
-				(last != null) 
-					&& (last.trim().equals(
-						ComplexTypeSelectionPanel.ComplexTypeOption.REFINMENT.getQueryElement())); 
-			this.tagMatchModeCombo.setEnabled(inRefinement);
-				
-		}
 	}
 }

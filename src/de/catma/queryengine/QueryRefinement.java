@@ -36,21 +36,34 @@ import de.catma.queryengine.result.QueryResultRowArray;
 public class QueryRefinement implements Refinement {
 
     private Query query;
+	private MatchMode matchMode;
 
     /**
      * Constructor.
      *
      * @param query the definition of this refinement
+     * @param matchMode the match mode that provides the comparator for refinement
      */
-    public QueryRefinement(Query query) {
+    public QueryRefinement(Query query, String matchMode) {
         this.query = query;
+        if (matchMode != null) {
+        	try {
+        		this.matchMode = MatchMode.valueOf(matchMode.toUpperCase());
+        	}
+        	catch (IllegalArgumentException iae) {
+        		this.matchMode = MatchMode.EXACT;
+        	}
+        }
+        else {
+        	this.matchMode = MatchMode.EXACT;
+        }
     }
     
     private QueryResult refineWithNonFreqQuery(QueryResult result) throws Exception {
 
     	QueryResult refinementResult = query.getResult();
     	
-    	Comparator<QueryResultRow> comparator = query.getComparator();
+    	Comparator<QueryResultRow> comparator = matchMode.getComparator();
     	
     	if (comparator == null) {
     		QueryResultRowArray refinedResult = result.asQueryResultRowArray();

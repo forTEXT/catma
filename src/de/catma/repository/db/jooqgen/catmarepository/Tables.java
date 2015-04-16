@@ -39,9 +39,9 @@ public class Tables {
 	public static final de.catma.repository.db.jooqgen.catmarepository.tables.MaintenanceSem MAINTENANCE_SEM = de.catma.repository.db.jooqgen.catmarepository.tables.MaintenanceSem.MAINTENANCE_SEM;
 
 	/**
-	 * The table CatmaRepository.mlog
+	 * The table CatmaRepository.permission
 	 */
-	public static final de.catma.repository.db.jooqgen.catmarepository.tables.Mlog MLOG = de.catma.repository.db.jooqgen.catmarepository.tables.Mlog.MLOG;
+	public static final de.catma.repository.db.jooqgen.catmarepository.tables.Permission PERMISSION = de.catma.repository.db.jooqgen.catmarepository.tables.Permission.PERMISSION;
 
 	/**
 	 * The table CatmaRepository.property
@@ -62,6 +62,16 @@ public class Tables {
 	 * The table CatmaRepository.propertyvalue
 	 */
 	public static final de.catma.repository.db.jooqgen.catmarepository.tables.Propertyvalue PROPERTYVALUE = de.catma.repository.db.jooqgen.catmarepository.tables.Propertyvalue.PROPERTYVALUE;
+
+	/**
+	 * The table CatmaRepository.role
+	 */
+	public static final de.catma.repository.db.jooqgen.catmarepository.tables.Role ROLE = de.catma.repository.db.jooqgen.catmarepository.tables.Role.ROLE;
+
+	/**
+	 * The table CatmaRepository.role_permission
+	 */
+	public static final de.catma.repository.db.jooqgen.catmarepository.tables.RolePermission ROLE_PERMISSION = de.catma.repository.db.jooqgen.catmarepository.tables.RolePermission.ROLE_PERMISSION;
 
 	/**
 	 * The table CatmaRepository.sourcedocument
@@ -132,6 +142,11 @@ public class Tables {
 	 * The table CatmaRepository.user_corpus
 	 */
 	public static final de.catma.repository.db.jooqgen.catmarepository.tables.UserCorpus USER_CORPUS = de.catma.repository.db.jooqgen.catmarepository.tables.UserCorpus.USER_CORPUS;
+
+	/**
+	 * The table CatmaRepository.user_role
+	 */
+	public static final de.catma.repository.db.jooqgen.catmarepository.tables.UserRole USER_ROLE = de.catma.repository.db.jooqgen.catmarepository.tables.UserRole.USER_ROLE;
 
 	/**
 	 * The table CatmaRepository.user_sourcedocument

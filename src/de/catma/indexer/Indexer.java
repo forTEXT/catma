@@ -21,7 +21,6 @@ package de.catma.indexer;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.Range;
@@ -76,7 +75,7 @@ public interface Indexer {
 			String tagDefinitionPath) throws IOException;
 	
 	public QueryResult searchProperty(
-			List<String> userMarkupCollectionIdList, Set<String> propertyDefinitionIDs,
+			List<String> userMarkupCollectionIdList,
 			String propertyName, String propertyValue, String tagValue) throws IOException;
 	
 	public QueryResult searchFreqency(
@@ -101,6 +100,9 @@ public interface Indexer {
 
 	public List<TagDefinitionPathInfo> getTagDefinitionPathInfos(
 			List<String> userMarkupCollectionIDs) throws IOException;
+
+	public QueryResult searchTagDiff(List<String> relevantUserMarkupCollIDs,
+			String propertyName, String tagPhrase) throws IOException;
 
 
 }

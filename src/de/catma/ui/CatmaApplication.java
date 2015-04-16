@@ -18,6 +18,7 @@
  */
 package de.catma.ui;
 
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
@@ -28,11 +29,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.naming.InitialContext;
 
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
@@ -63,7 +61,7 @@ import de.catma.document.Corpus;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
-import de.catma.document.repository.RepositoryPropertiesName;
+import de.catma.document.repository.RepositoryProperties;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
@@ -145,7 +143,6 @@ public class CatmaApplication extends UI
 
 	@Override
 	protected void init(VaadinRequest request) {
-		
 		backgroundService = new UIBackgroundService(true);
 		
 		handleParameters(request.getParameterMap());
@@ -160,16 +157,15 @@ public class CatmaApplication extends UI
 		
 		MenuFactory menuFactory = new MenuFactory();
 		try {
-			Properties properties = 
-					(Properties) new InitialContext().lookup(
-							RepositoryPropertiesName.CATMAPROPERTIES.name());
-			initTempDirectory(properties);
+
+			initTempDirectory();
 			tagManager = new TagManager();
 			
 			repositoryManagerView = 
 				new RepositoryManagerView(
 					new RepositoryManager(
-						this, tagManager, properties));
+						this, tagManager, 
+						RepositoryProperties.INSTANCE.getProperties()));
 		
 			tagManagerView = new TagManagerView(tagManager);
 			
@@ -220,7 +216,7 @@ public class CatmaApplication extends UI
 
 			Link helpLink = new Link(
 					"Help", 
-					new ExternalResource(request.getContextPath()+"manual/"));
+					new ExternalResource(request.getContextPath()+"/manual/"));
 			helpLink.setTargetName("_blank");
 			mainLayout.addComponent(helpLink);
 			mainLayout.setComponentAlignment(helpLink, Alignment.TOP_RIGHT);
@@ -321,8 +317,8 @@ public class CatmaApplication extends UI
 		return null;
 	}
 	
-	private void initTempDirectory(Properties properties) throws IOException {
-		String tempDirProp = properties.getProperty(RepositoryPropertyKey.TempDir.name());
+	private void initTempDirectory() throws IOException {
+		String tempDirProp = RepositoryPropertyKey.TempDir.getValue();
 		File tempDir = new File(tempDirProp);
 
 		if (!tempDir.isAbsolute()) {
@@ -476,14 +472,15 @@ public class CatmaApplication extends UI
 		if (message == null) {
 			message = "internal error"; 
 		}
-
-		HTMLNotification.show(
-			"Error", 
-			"An error has occurred!<br />" +
-			"We've been notified about this error and it will be fixed soon.<br />" +
-			"The underlying error message is:<br />" + message +
-			"<br />" + e.getMessage(), 
-			Type.ERROR_MESSAGE);
+		if (Page.getCurrent() != null) {
+			HTMLNotification.show(
+				"Error", 
+				"An error has occurred!<br />" +
+				"We've been notified about this error and it will be fixed soon.<br />" +
+				"The underlying error message is:<br />" + message +
+				"<br />" + e.getMessage(), 
+				Type.ERROR_MESSAGE);
+		}
 	}
 
 	public void openSourceDocument(SourceDocument sd, Repository repository,

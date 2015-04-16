@@ -18,8 +18,12 @@
  */
 package de.catma.repository.db;
 
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.PERMISSION;
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.ROLE;
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.ROLE_PERMISSION;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.USER;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.USER_CORPUS;
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.USER_ROLE;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.USER_SOURCEDOCUMENT;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.USER_TAGLIBRARY;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.USER_USERMARKUPCOLLECTION;
@@ -64,6 +68,7 @@ import de.catma.indexer.IndexerFactory;
 import de.catma.repository.db.executionshield.DBOperation;
 import de.catma.repository.db.executionshield.ExecutionShield;
 import de.catma.repository.db.jooq.TransactionalDSLContext;
+import de.catma.repository.db.mapper.FieldToValueMapper;
 import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
 import de.catma.repository.db.mapper.UserMapper;
 import de.catma.serialization.SerializationHandlerFactory;
@@ -335,43 +340,88 @@ public class DBRepository implements IndexedRepository {
 
 		indexer = indexerFactory.createIndexer(Collections.<String, Object>emptyMap());
 		
+		loadCurrentUser(userIdentification);
 		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
-		
-		loadCurrentUser(db, userIdentification);
 		loadContent(db);
 	}
 	
-	private void loadCurrentUser(DSLContext db,
-			Map<String, String> userIdentification) {
+	private void loadCurrentUser(
+			Map<String, String> userIdentification) throws IOException {
 
-		Record record = db
-		.select()
-		.from(USER)
-		.where(USER.IDENTIFIER.eq(userIdentification.get("user.ident")))
-		.fetchOne();
+		TransactionalDSLContext db = new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 		
-		if (record == null) {
-			Record idRecord = db
-			.insertInto(
-				USER,
-					USER.IDENTIFIER,
-					USER.LOCKED,
-					USER.ROLE)
-			.values(
-				userIdentification.get("user.ident"),
-				(byte)0,
-				Role.STANDARD.getVal())
-			.returning(USER.USERID)
+		try {
+	
+			Record record = db
+			.select()
+			.from(USER)
+			.where(USER.IDENTIFIER.eq(userIdentification.get("user.ident")))
 			.fetchOne();
 			
-			currentUser = new DBUser(
-				idRecord.getValue(USER.USERID), 
-				userIdentification.get("user.ident"),
-				false,
-				Role.STANDARD);
+			if (record == null) {
+				db.beginTransaction();
+				
+				Integer userRoleId = db
+				.select(ROLE.ROLEID)
+				.from(ROLE)
+				.where(ROLE.IDENTIFIER.eq(Role.user.name()))
+				.fetchOne()
+				.value1();
+						
+				Record idRecord = db
+				.insertInto(
+					USER,
+						USER.IDENTIFIER,
+						USER.LOCKED)
+				.values(
+					userIdentification.get("user.ident"),
+					(byte)0)
+				.returning(USER.USERID)
+				.fetchOne();
+				
+				db
+				.insertInto(
+					USER_ROLE,
+						USER_ROLE.USERID,
+						USER_ROLE.ROLEID)
+				.values(
+					idRecord.getValue(USER.USERID),
+					userRoleId)
+				.execute();
+				
+				currentUser = new DBUser(
+					idRecord.getValue(USER.USERID), 
+					userIdentification.get("user.ident"),
+					false);
+				
+				db.commitTransaction();
+			}
+			else {
+				currentUser = record.map(new UserMapper());
+			}
+	
+			List<String> permissions = db
+			.select(PERMISSION.IDENTIFIER)
+			.from(PERMISSION)
+			.join(ROLE_PERMISSION)
+				.on(ROLE_PERMISSION.PERMISSIONID.eq(PERMISSION.PERMISSIONID))
+			.join(USER_ROLE)
+				.on(USER_ROLE.ROLEID.eq(ROLE_PERMISSION.ROLEID))
+				.and(USER_ROLE.USERID.eq(currentUser.getUserId()))
+			.fetch()
+			.map(new FieldToValueMapper<String>(PERMISSION.IDENTIFIER));
+			
+			currentUser.setPermissions(permissions);
 		}
-		else {
-			currentUser = record.map(new UserMapper());
+		catch (Exception dae) {
+			db.rollbackTransaction();
+			db.close();
+			throw new IOException(dae);
+		}
+		finally {
+			if (db!=null) {
+				db.close();
+			}
 		}
 	}
 

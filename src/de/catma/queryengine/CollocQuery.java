@@ -19,16 +19,9 @@
 
 package de.catma.queryengine;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
 import de.catma.indexer.Indexer;
-import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
-import de.catma.indexer.TermInfo;
 import de.catma.queryengine.result.QueryResult;
-import de.catma.queryengine.result.QueryResultRow;
 
 /**
  * A collocation query looks for terms that form a collocation with other terms within a given
@@ -54,7 +47,7 @@ public class CollocQuery extends Query {
      * or <code>null</code> for the default size.
      * @param direction the direction of the span context
      */
-    public CollocQuery(Query query1, Query query2, String spanContext, SpanDirection direction) {
+    CollocQuery(Query query1, Query query2, String spanContext, SpanDirection direction) {
         this.query1 = query1;
         this.query2 = query2;
         
@@ -85,73 +78,8 @@ public class CollocQuery extends Query {
     	QueryResult collocCondition = query2.execute();
     	
     	Indexer indexer = getQueryOptions().getIndexer();
-    	return indexer.searchCollocation(baseResult, collocCondition, spanContextSize, SpanDirection.BOTH);
-//    	}
-//    	else {
-//	    	Map<String,KwicProvider> kwicProviders = new HashMap<String, KwicProvider>(); 
-//	    	Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
-//	    	Repository repository = getQueryOptions().getRepository();
-//	    	
-//	    	Map<QueryResultRow, List<TermInfo>> termInfos = 
-//	    			new HashMap<QueryResultRow, List<TermInfo>>();
-//	    	
-//	    	QueryResultRowArray result = new QueryResultRowArray();
-//	    	
-//	    	for (QueryResultRow row : baseResult) {
-//	    		SourceDocument sd = 
-//	    				repository.getSourceDocument(row.getSourceDocumentId());
-//	    		if (!sd.isLoaded()) {
-//	    			//TODO: unload SourceDocuments to free space if tobeUnloaded.size() > 10
-//	    			toBeUnloaded.add(sd);
-//	    		}
-//	    		
-//	    		if (!kwicProviders.containsKey(sd.getID())) {
-//	    			kwicProviders.put(sd.getID(), new KwicProvider(sd));
-//	    		}
-//	    		KwicProvider kwicProvider = kwicProviders.get(sd.getID());
-//	    		SpanContext spanContext =
-//					kwicProvider.getSpanContextFor(	
-//						row.getRange(), 
-//						spanContextSize, direction);
-//	    		
-//	    		if (spanContextMeetsCollocCondition
-//	    				(spanContext, collocCondition, termInfos)) {
-//	    			result.add(row);
-//	    		}
-//	    	}
-//	    	for (SourceDocument sd : toBeUnloaded) {
-//	    		sd.unload();
-//	    	}
-//	   
-//	    	return result;
-//    	}
+    	return indexer.searchCollocation(baseResult, collocCondition, spanContextSize, direction);
     }
-
-	private boolean spanContextMeetsCollocCondition(
-			SpanContext spanContext, QueryResult collocationConditionResult, 
-			Map<QueryResultRow, List<TermInfo>> rowToTermInfoListMapping) throws IOException {
-		
-		
-		for (QueryResultRow collocConditionRow : collocationConditionResult) {
-			if (spanContext.getSourceDocumentId().equals(
-					collocConditionRow.getSourceDocumentId())) {
-				if (!rowToTermInfoListMapping.containsKey(collocConditionRow)) {
-					rowToTermInfoListMapping.put(
-							collocConditionRow, 
-							getQueryOptions().getIndexer().getTermInfosFor( //TODO: better use direct doc access via kwicprovider instead of DB
-									collocConditionRow.getSourceDocumentId(), 
-									collocConditionRow.getRange()));
-				}
-				
-				if (spanContext.contains(
-						rowToTermInfoListMapping.get(collocConditionRow))) {
-					return true;
-				}
-			}
-		}
-		
-		return false;
-	}
 
     @Override
     public void setQueryOptions(QueryOptions queryOptions) {

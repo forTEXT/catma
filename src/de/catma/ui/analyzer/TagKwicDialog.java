@@ -84,7 +84,7 @@ public class TagKwicDialog extends VerticalLayout {
 			public void buttonClick(ClickEvent event) {
 				try {
 					UI.getCurrent().removeWindow(window);
-					Map<String,UserMarkupCollection> result = collectionUmc();
+					Map<String,UserMarkupCollection> result = getTargetCollectionsBySourceDoc();
 					saveCancelListener.savePressed(result);
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -97,7 +97,7 @@ public class TagKwicDialog extends VerticalLayout {
 		});
 		
 	}
-	private Map<String, UserMarkupCollection> collectionUmc() throws IOException {
+	private Map<String, UserMarkupCollection> getTargetCollectionsBySourceDoc() throws IOException {
 		Map<String, UserMarkupCollection> result = new HashMap<String, UserMarkupCollection>();
 		
 		Collection<?> itemIds = umcTable.getItemIds();

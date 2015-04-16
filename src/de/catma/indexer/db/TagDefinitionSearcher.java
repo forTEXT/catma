@@ -26,9 +26,11 @@ import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGDEFINITIO
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGSETDEFINITION;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.USERMARKUPCOLLECTION;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Logger;
@@ -39,6 +41,7 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.SQLDialect;
 import org.jooq.Select;
@@ -54,6 +57,8 @@ import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.repository.db.CatmaDataSourceName;
 import de.catma.repository.db.jooq.ResultUtil;
+import de.catma.repository.db.jooqgen.catmaindex.tables.Property;
+import de.catma.repository.db.jooqgen.catmaindex.tables.Tagreference;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinitionPathInfo;
 import de.catma.util.IDGenerator;
@@ -192,9 +197,110 @@ public class TagDefinitionSearcher {
 		return result;
 	}
 
+	
+	public QueryResult searchTagDiff(
+			List<String> userMarkupCollectionIdList, 
+			String propertyName, String tagDefinitionPath) {
+		
+		
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+
+		Tagreference t1 = TAGREFERENCE.as("t1");
+		Tagreference t2 = TAGREFERENCE.as("t2");
+		Property p1 = PROPERTY.as("p1");
+		Property p2 = PROPERTY.as("p2");
+		
+		if (!tagDefinitionPath.startsWith("/") && !tagDefinitionPath.equals("%")) {
+			tagDefinitionPath = "%" + tagDefinitionPath;
+		}
+		
+		if (propertyName == null) {
+			propertyName = "%";
+		}
+		
+		Map<String, List<Record>> allRecordsGroupedByInstanceUUID = new
+				HashMap<String, List<Record>>();
+		
+		for (String userMarkupCollectionId : userMarkupCollectionIdList) {
+			ArrayList<String> others = new ArrayList<String>();
+			others.addAll(userMarkupCollectionIdList);
+			others.remove(userMarkupCollectionId);
+			
+			ArrayList<Field<?>> fieldsWithoutProperties = new ArrayList<Field<?>>();
+			
+			fieldsWithoutProperties.addAll(Arrays.asList(t1.fields()));
+			
+			Field<Integer> propertyId = DSL.val((Integer)null); 
+			fieldsWithoutProperties.add(propertyId);
+			Field<byte[]> tagInstanceId = DSL.val((byte[])null);
+			fieldsWithoutProperties.add(tagInstanceId);
+			Field<byte[]> propertyDefinitionId = DSL.val((byte[])null);
+			fieldsWithoutProperties.add(propertyDefinitionId);
+			Field<String> name = DSL.value((String)null);
+			fieldsWithoutProperties.add(name);
+			Field<String> value = DSL.value((String)null);
+			fieldsWithoutProperties.add(value);
+			
+			Map<String, List<Record>> recordsGroupedByInstanceUUID =
+				ResultUtil.asGroups(
+					groupByTagInstanceIdPropertyDefIdFunction,
+				db
+				.select()
+				.from(t1)
+				.join(p1)
+					.on(p1.TAGINSTANCEID.eq(t1.TAGINSTANCEID))
+					.and(p1.NAME.likeIgnoreCase(propertyName))
+					.and(p1.NAME.notIn(
+						PropertyDefinition.SystemPropertyName.catma_displaycolor.name(), 
+						PropertyDefinition.SystemPropertyName.catma_markupauthor.name()))
+				.where(t1.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
+				.and(t1.TAGDEFINITIONPATH.likeIgnoreCase(tagDefinitionPath))
+				.and(DSL.val(others.size()).ne(db
+					.selectCount()
+					.from(t2)
+					.join(p2)
+						.on(p2.TAGINSTANCEID.eq(t2.TAGINSTANCEID))
+					.where(t2.USERMARKUPCOLLECTIONID.in(others))
+					.and(t2.TAGDEFINITIONPATH.eq(t1.TAGDEFINITIONPATH))
+					.and(t2.TAGDEFINITIONID.eq(t1.TAGDEFINITIONID))
+					.and(t2.CHARACTERSTART.eq(t1.CHARACTERSTART))
+					.and(t2.CHARACTEREND.eq(t1.CHARACTEREND))
+					.and(p2.PROPERTYDEFINITIONID.eq(p1.PROPERTYDEFINITIONID))
+					.and(p2.VALUE.eq(p1.VALUE))))
+				.union(db
+					.select(fieldsWithoutProperties)
+				.from(t1)
+				.where(t1.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
+				.and(t1.TAGDEFINITIONPATH.likeIgnoreCase(tagDefinitionPath))
+				.and(DSL.val(others.size()).ne(db
+					.selectCount()
+					.from(t2)
+					.where(t2.USERMARKUPCOLLECTIONID.in(others))
+					.and(t2.TAGDEFINITIONPATH.eq(t1.TAGDEFINITIONPATH))
+					.and(t2.TAGDEFINITIONID.eq(t1.TAGDEFINITIONID))
+					.and(t2.CHARACTERSTART.eq(t1.CHARACTERSTART))
+					.and(t2.CHARACTEREND.eq(t1.CHARACTEREND)))))
+				.fetch());
+			
+			for (Map.Entry<String, List<Record>> entry : recordsGroupedByInstanceUUID.entrySet()) {
+				if (allRecordsGroupedByInstanceUUID.containsKey(entry.getKey())) {
+					allRecordsGroupedByInstanceUUID.get(entry.getKey()).addAll(entry.getValue());
+				}
+				else {
+					allRecordsGroupedByInstanceUUID.put(entry.getKey(), entry.getValue());
+				}
+			}
+			
+		}
+		
+		return createTagQueryResult(
+			allRecordsGroupedByInstanceUUID, 
+			propertyName, true);
+	}
+	
+	
 	public QueryResult searchProperties(
 			List<String> userMarkupCollectionIdList, 
-			Set<String> propertyDefinitionIDs,
 			String propertyName,
 			String propertyValue, String tagDefinitionPath) {
 		
@@ -210,7 +316,8 @@ public class TagDefinitionSearcher {
 		
 		if ((propertyValue != null) && (!propertyValue.isEmpty())) {
 			
-			selectQuery = ((SelectOnConditionStep<Record>)selectQuery).and(PROPERTY.VALUE.eq(propertyValue));
+			selectQuery = ((SelectOnConditionStep<Record>)selectQuery).and(
+					PROPERTY.VALUE.likeIgnoreCase(propertyValue));
 		}		
 		
 		selectQuery = ((SelectOnConditionStep<Record>)selectQuery).where(

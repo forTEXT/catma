@@ -20,6 +20,7 @@ package de.catma.ui.tagger;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -412,6 +413,10 @@ public class TagInstanceTree extends HorizontalLayout {
 		}
 		tagInstanceTree.sort(
 			new Object[] {TagInstanceTreePropertyName.caption}, new boolean[] {true});
+		if (!tagInstanceTree.getItemIds().isEmpty()) {
+			tagInstanceTree.setValue(
+				Collections.singletonList(tagInstanceTree.getItemIds().iterator().next()));
+		}
 	}
 	
 	

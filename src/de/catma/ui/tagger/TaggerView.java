@@ -331,7 +331,7 @@ public class TaggerView extends VerticalLayout
 						tagger.setPage(pager.getCurrentPageNumber());
 					}
 				},
-				sourceDocument);
+				sourceDocument.getID());
 		
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		splitPanel.addComponent(taggerPanel);

@@ -86,6 +86,7 @@ public class PhraseSearcher {
 		public PhraseSearchEvaluator(List<String> termList, boolean withWildcards) {
 			super();
 			this.termList = termList;
+			
 			if (withWildcards) {
 				termMatcher = new SQLWildcardMatcher();
 			}
@@ -104,8 +105,11 @@ public class PhraseSearcher {
 			}
 			else if (n.hasLabel(NodeType.Term)) {
 //				System.out.println("E-Term " +  n.getProperty(TermProperty.literal.name()));
+				
 				String literal = (String)n.getProperty(TermProperty.literal.name());
 
+				// Term nodes are always the first literal of the matchable part of the path
+				// so we match against the first term of our term list
 				if(termMatcher.match(termList.get(0), literal)) {
 					return Evaluation.EXCLUDE_AND_CONTINUE;
 				}
@@ -114,25 +118,100 @@ public class PhraseSearcher {
 				}
 			}
 			else if (n.hasLabel(NodeType.Position)) {
+
 //				System.out.println("E-Position " + n.getProperty(PositionProperty.literal.name()) + " @ " + n.getProperty(PositionProperty.position.name()));
+
+				List<String> literals = fillWithLiteralsFromPath(path);
 				
-				String term = termList.get(path.length()-2);
-				String literal = (String) n.getProperty(PositionProperty.literal.name());
-				if (termMatcher.match(term, literal)) {
-					if (termList.size() == path.length()-1) {
-						return Evaluation.INCLUDE_AND_PRUNE;
-					}
-					else {
-						return Evaluation.EXCLUDE_AND_CONTINUE;
-					}
+				// try to get a match with the literals from the path
+				int matchCount = getMatchCount(literals);
+				
+				// do we have a full match
+				if (matchCount==termList.size()) {
+					return Evaluation.INCLUDE_AND_PRUNE;
 				}
-				else {
-					return Evaluation.EXCLUDE_AND_PRUNE;
+				// partial match, we continue our search along this path
+				else if (matchCount > 0) {
+					return Evaluation.EXCLUDE_AND_CONTINUE;
 				}
+				// no match
+				return Evaluation.EXCLUDE_AND_PRUNE;
 			}
 			
 			return Evaluation.EXCLUDE_AND_PRUNE;
 		}
+
+		/**
+		 * @param path the path of literals
+		 * @return a list filled with literals from the path going backwards, 
+		 * the list has as much as termList.size() tokens if available.
+		 */
+		private List<String> fillWithLiteralsFromPath(Path path) {
+			List<String> literals = new ArrayList<>();
+			
+			for (Node node : path.reverseNodes()) {
+				
+				if (node.hasLabel(NodeType.Term)) { // head of Positions chain of this path
+					return literals;
+				}
+				
+				if (node.hasLabel(NodeType.Position)) { // should always be a Position node at this point
+					String literal = (String) node.getProperty(PositionProperty.literal.name());
+					literals.add(0, literal);
+					
+					if (literals.size() == termList.size()) {
+						return literals;
+					}
+				}				
+			}
+			
+			return literals;
+		}
+
+		/**
+		 * @param literals
+		 * @return the number of literals that matched the termList entries
+		 */
+		private int getMatchCount(List<String> literals) {
+			// we have a shrinking window lookig onto the literals
+			for (int matchWindowSize=termList.size(); matchWindowSize>0; matchWindowSize--) {
+				// fill up the window with literals up to the current window size
+				List<String> matchWindow = new ArrayList<String>();
+				for (int i=matchWindowSize; i>0; i--) {
+					if (i>literals.size()) { // we don't have enough literals for the desired matchWindowSize
+						break;
+					}
+					matchWindow.add(literals.get(literals.size()-i));
+				}
+				// how many literals from the window matched?
+				int matchCount = getMatchCountForWindow(matchWindow);
+				// do we have a match count? if not, we continue by shrinking the window
+				if (matchCount > 0) {
+					return matchCount;
+				}
+			}
+			return 0;
+		}
+
+		/**
+		 * @param matchWindow the current window of literals
+		 * @return the number of literals of the matchWindow that matched the 
+		 * termList entries 
+		 */
+		private int getMatchCountForWindow(List<String> matchWindow) {
+			for (int matchIndex=0; matchIndex<matchWindow.size(); matchIndex++) {
+				
+				if (termList.size() <= matchIndex) {
+					return matchIndex;
+				}
+				
+				if (!termMatcher.match(termList.get(matchIndex), matchWindow.get(matchIndex))) {
+					return matchIndex;
+				}
+			}
+			return matchWindow.size();
+		}
+
 	}
 	
 	private GraphDatabaseService graphDb;
@@ -192,14 +271,17 @@ public class PhraseSearcher {
 					
 					Traverser positionsTraverser = positionsTraversal.traverse(sourceDocNodes);
 					for (Path p : positionsTraverser) {
-	//					System.out.println("RESULT " + p);
+//						System.out.println("RESULT " + p);
 						
 						Node sourceDocNode = p.startNode();
 						String localUri = 
 								(String) sourceDocNode.getProperty(
 										SourceDocumentProperty.localUri.name());
 						
-						Node firstPositionNode = pathUtil.getFirstPositionNode(p);
+						Node firstPositionNode = 
+								pathUtil.getPositionNodeBackwardsAt(
+										p, termList.size());
+						
 						int start = (Integer) firstPositionNode.getProperty(PositionProperty.start.name());
 						int end = (Integer) p.endNode().getProperty(PositionProperty.end.name());
 						Range range = new Range(start, end);

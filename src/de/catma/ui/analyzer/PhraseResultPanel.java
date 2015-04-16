@@ -344,22 +344,12 @@ public class PhraseResultPanel extends VerticalLayout {
 		resultTable = new TreeTable();
 		resultTable.setSelectable(true);
 		resultTable.setMultiSelect(true);
-		HierarchicalContainer container = new HierarchicalContainer();
-		container.setItemSorter(
-				new PropertyDependentItemSorter(
-						TreePropertyName.caption, 
-						new PropertyToTrimmedStringCIComparator()));
+		HierarchicalContainer container = createContainer();
 		
 		resultTable.setContainerDataSource(container);
 		
-		resultTable.addContainerProperty(
-				TreePropertyName.caption, String.class, null);
 		resultTable.setColumnHeader(TreePropertyName.caption, "Phrase");
-		resultTable.addContainerProperty(
-				TreePropertyName.frequency, Integer.class, null);
 		resultTable.setColumnHeader(TreePropertyName.frequency, "Frequency");
-		resultTable.addContainerProperty(
-				TreePropertyName.visibleInKwic, AbstractComponent.class, null);
 		resultTable.setColumnHeader(TreePropertyName.visibleInKwic, "Visible in Kwic");
 		
 		resultTable.setItemCaptionPropertyId(TreePropertyName.caption);
@@ -485,18 +475,40 @@ public class PhraseResultPanel extends VerticalLayout {
 		addComponent(splitPanel);
 	}
 	
+	private HierarchicalContainer createContainer() {
+		HierarchicalContainer container = new HierarchicalContainer();
+		container.setItemSorter(
+				new PropertyDependentItemSorter(
+						TreePropertyName.caption, 
+						new PropertyToTrimmedStringCIComparator()));
+		container.addContainerProperty(
+				TreePropertyName.caption, String.class, null);
+		
+		container.addContainerProperty(
+				TreePropertyName.frequency, Integer.class, null);
+		
+		container.addContainerProperty(
+				TreePropertyName.visibleInKwic, AbstractComponent.class, null);
+
+		
+		return container;
+	}
+	
 	public void setQueryResult(QueryResult queryResult) {
 		kwicPanel.clear();
-		resultTable.removeAllItems();
-
+		HierarchicalContainer container = createContainer();
+		
 		int totalCount = 0;
 		int totalFreq = 0;
 
 		for (GroupedQueryResult phraseResult : queryResult.asGroupedSet()) { 
-			addPhraseResult(phraseResult);
+			addPhraseResult(phraseResult, container);
 			totalFreq+=phraseResult.getTotalFrequency();
 			totalCount++;
 		}
+		
+		resultTable.setContainerDataSource(container);
+		
 		resultTable.setFooterVisible(true);
 		resultTable.setColumnFooter(
 				TreePropertyName.caption, "Total count: " + totalCount);
@@ -504,18 +516,17 @@ public class PhraseResultPanel extends VerticalLayout {
 				TreePropertyName.frequency, "Total frequency: " + totalFreq);
 	}
 
+	
 	@SuppressWarnings("unchecked")
-	private void addPhraseResult(GroupedQueryResult phraseResult) {
-		resultTable.addItem( 
-				new Object[] {
-					phraseResult.getGroup(), 
-					phraseResult.getTotalFrequency(),
-					createKwicCheckbox(phraseResult) 
-				},
-				phraseResult);
-		resultTable.getContainerProperty(
-			phraseResult, TreePropertyName.caption).setValue(
-					phraseResult.getGroup().toString());
+	private void addPhraseResult(GroupedQueryResult phraseResult,
+			HierarchicalContainer container) {
+		Item phraseResultItem = container.addItem(phraseResult);
+		phraseResultItem.getItemProperty(TreePropertyName.caption).setValue(
+						phraseResult.getGroup().toString());
+		phraseResultItem.getItemProperty(TreePropertyName.frequency).setValue(
+				phraseResult.getTotalFrequency());
+		phraseResultItem.getItemProperty(TreePropertyName.visibleInKwic).setValue(
+				createKwicCheckbox(phraseResult));
 		
 		for (String sourceDocumentID : phraseResult.getSourceDocumentIDs()) {
 			SourceDocument sourceDocument = 
@@ -527,21 +538,90 @@ public class PhraseResultPanel extends VerticalLayout {
 								+ "@" + sourceDocument, 
 							sourceDocumentID);
 
-			resultTable.addItem(sourceDocumentItemID);
+			container.addItem(sourceDocumentItemID);
 
-			resultTable.getContainerProperty(
+			container.getContainerProperty(
 					sourceDocumentItemID, TreePropertyName.frequency).setValue(
 							phraseResult.getFrequency(sourceDocumentID));
 			
-			resultTable.getContainerProperty(
+			container.getContainerProperty(
 					sourceDocumentItemID, TreePropertyName.caption).setValue(
 							sourceDocument.toString());
 
-			resultTable.setParent(sourceDocumentItemID, phraseResult);
+			container.setParent(sourceDocumentItemID, phraseResult);
 			
-			resultTable.setChildrenAllowed(sourceDocumentItemID, false);
+			container.setChildrenAllowed(sourceDocumentItemID, false);
 		}
 	}
+	
+//	public void setQueryResult(QueryResult queryResult) {
+//		if (isone) {
+//			setQueryResult1(queryResult);
+//		}
+//		else {
+//			setQueryResult2(queryResult);
+//		}
+//	}
+
+//	public void setQueryResult1(QueryResult queryResult) {
+//		StopWatch sw = new StopWatch("setQueryResult");
+//		kwicPanel.clear();
+//		resultTable.removeAllItems();
+//
+//		int totalCount = 0;
+//		int totalFreq = 0;
+//
+//		for (GroupedQueryResult phraseResult : queryResult.asGroupedSet()) { 
+//			addPhraseResult(phraseResult);
+//			totalFreq+=phraseResult.getTotalFrequency();
+//			totalCount++;
+//		}
+//		resultTable.setFooterVisible(true);
+//		resultTable.setColumnFooter(
+//				TreePropertyName.caption, "Total count: " + totalCount);
+//		resultTable.setColumnFooter(
+//				TreePropertyName.frequency, "Total frequency: " + totalFreq);
+//		System.out.println(sw);
+//	}
+
+//	@SuppressWarnings("unchecked")
+//	private void addPhraseResult(GroupedQueryResult phraseResult) {
+//		resultTable.addItem( 
+//				new Object[] {
+//					phraseResult.getGroup(), 
+//					phraseResult.getTotalFrequency(),
+//					createKwicCheckbox(phraseResult) 
+//				},
+//				phraseResult);
+//		resultTable.getContainerProperty(
+//			phraseResult, TreePropertyName.caption).setValue(
+//					phraseResult.getGroup().toString());
+//		
+//		for (String sourceDocumentID : phraseResult.getSourceDocumentIDs()) {
+//			SourceDocument sourceDocument = 
+//					repository.getSourceDocument(sourceDocumentID);
+//			
+//			SourceDocumentItemID sourceDocumentItemID = 
+//					new SourceDocumentItemID(
+//							phraseResult.getGroup() 
+//								+ "@" + sourceDocument, 
+//							sourceDocumentID);
+//
+//			resultTable.addItem(sourceDocumentItemID);
+//
+//			resultTable.getContainerProperty(
+//					sourceDocumentItemID, TreePropertyName.frequency).setValue(
+//							phraseResult.getFrequency(sourceDocumentID));
+//			
+//			resultTable.getContainerProperty(
+//					sourceDocumentItemID, TreePropertyName.caption).setValue(
+//							sourceDocument.toString());
+//
+//			resultTable.setParent(sourceDocumentItemID, phraseResult);
+//			
+//			resultTable.setChildrenAllowed(sourceDocumentItemID, false);
+//		}
+//	}
 
 	private CheckBox createKwicCheckbox(final GroupedQueryResult phraseResult) {
 		final CheckBox cbShowInKwicView = new CheckBox();

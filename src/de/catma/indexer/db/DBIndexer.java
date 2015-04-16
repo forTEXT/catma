@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.naming.NamingException;
@@ -137,13 +136,13 @@ public class DBIndexer implements Indexer {
 	}
 	
 	public QueryResult searchProperty(
-			List<String> userMarkupCollectionIdList, Set<String> propertyDefinitionIDs,
+			List<String> userMarkupCollectionIdList,
 			String propertyName, String propertyValue, String tagValue) throws IOException {
 
 		try {
 			TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
 			return tagSearcher.searchProperties(
-					userMarkupCollectionIdList, propertyDefinitionIDs, 
+					userMarkupCollectionIdList, 
 					propertyName, propertyValue, tagValue);
 		} catch (NamingException e) {
 			throw new IOException(e);
@@ -231,6 +230,19 @@ public class DBIndexer implements Indexer {
 		catch (Exception e) {
 			throw new IOException(e);
 		}
+	}
+	
+	@Override
+	public QueryResult searchTagDiff(List<String> relevantUserMarkupCollIDs,
+			String propertyName, String tagPhrase) throws IOException {
+		try {
+			TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
+			return tagSearcher.searchTagDiff(
+					relevantUserMarkupCollIDs, 
+					propertyName, tagPhrase);
+		} catch (NamingException e) {
+			throw new IOException(e);
+		}	
 	}
 	
 	public void close() {

@@ -45,6 +45,7 @@ import de.catma.document.repository.Repository;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.admin.AdminWindow;
 import de.catma.ui.tabbedview.ClosableTab;
+import de.catma.user.Permission;
 import de.catma.user.Role;
 
 
@@ -149,7 +150,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	private Component createDocumentsManagerPanel() {
 		
 		HorizontalSplitPanel documentsManagerPanel = new HorizontalSplitPanel();
-		documentsManagerPanel.setSplitPosition(25);
+		documentsManagerPanel.setSplitPosition(30);
 		documentsManagerPanel.setSizeFull();
 		
 		sourceDocumentPanel = new SourceDocumentPanel(repository);
@@ -180,7 +181,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		labelLayout.setExpandRatio(documentsLabel, 1.0f);
 		btAdmin = new Button("Admin");
 		btAdmin.addStyleName("icon-button"); // for top-margin
-		btAdmin.setVisible(repository.getUser().getRole().equals(Role.ADMIN));
+		btAdmin.setVisible(repository.getUser().hasPermission(Permission.adminwindow));
 		
 		labelLayout.addComponent(btAdmin);
 		labelLayout.setComponentAlignment(btAdmin, Alignment.MIDDLE_RIGHT);

@@ -38,9 +38,9 @@ import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
-import com.vaadin.server.DownloadStream;
-import com.vaadin.server.FileResource;
-import com.vaadin.server.Page;
+import com.vaadin.server.FileDownloader;
+import com.vaadin.server.StreamResource;
+import com.vaadin.server.StreamResource.StreamSource;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Button;
@@ -103,6 +103,10 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 	private TagManager tagManager;
 
 	private HierarchicalContainer tagLibraryContainer;
+
+	private FileDownloader currentFileDownloader;
+
+	private Button btExportTagLibrary;
 
 	public TagLibraryPanel(TagManager tagManager, Repository repository) {
 		this.repository = repository;
@@ -168,6 +172,9 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 
 		btCreateTagLibrary = new Button("Create Tag Library");
 		tagLibraryButtonPanel.addComponent(btCreateTagLibrary);
+		
+		btExportTagLibrary = new Button("Export Tag Library");
+		tagLibraryButtonPanel.addComponent(btExportTagLibrary);
 		
 		MenuBar menuMoreTagLibraryActions = new MenuBar();
 		miMoreTagLibraryActions = 
@@ -333,6 +340,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 
 				}
 				contentInfoForm.setReadOnly(true);
+				prepareFileExport(value);
 			}
 		});
 		
@@ -344,16 +352,18 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 			}
 		});
 
+		
 		miMoreTagLibraryActions.addItem("Import Tag Library", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
 				handleTagLibraryImport();
 			}
 		});
-		
-		miMoreTagLibraryActions.addItem("Export Tag Library", new Command() {
+		btExportTagLibrary.addClickListener(new ClickListener() {
 			
-			public void menuSelected(MenuItem selectedItem) {
+			@Override
+			public void buttonClick(ClickEvent event) {
+				// handle empty selection
 				handleTagLibraryExportRequest(tagLibrariesTree.getValue());
 			}
 		});
@@ -423,6 +433,65 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		});
 	}
 	
+	protected void prepareFileExport(Object value) {
+		
+		if (currentFileDownloader != null) {
+			currentFileDownloader.remove();
+			currentFileDownloader = null;
+		}
+		if (value != null) {
+			final TagLibraryReference tagLibraryReference = 
+					(TagLibraryReference)value;
+
+			StreamResource resultStreamResource = 
+				new StreamResource(
+					new StreamSource() {
+						@Override
+						public InputStream getStream() {
+							return createExportResultStream(tagLibraryReference);
+						}
+					}, tagLibraryReference.toString().replaceAll("[^A-Za-z0-9]", "_") + ".xml" );
+			
+			resultStreamResource.setCacheTime(0);
+			
+			currentFileDownloader = new FileDownloader(resultStreamResource);
+			currentFileDownloader.extend(btExportTagLibrary);		
+		}
+	}
+
+	protected InputStream createExportResultStream(TagLibraryReference tagLibraryReference) {
+		try {
+			final TagLibrary tagLibrary = 
+					repository.getTagLibrary(tagLibraryReference);
+			
+			TeiDocumentFactory factory = new TeiDocumentFactory();
+			TeiDocument teiDocument = 
+					factory.createEmptyDocument(tagLibrary.getId());
+			
+			teiDocument.getTeiHeader().setValues(
+				tagLibrary.getContentInfoSet());
+			
+			new TeiTagLibrarySerializationHandler(
+					teiDocument, tagManager).serialize(tagLibrary);
+			
+			ByteArrayOutputStream teiDocOut = new ByteArrayOutputStream();
+			teiDocument.printXmlDocument(teiDocOut);
+			
+			final ByteArrayInputStream teiDownloadStream = 
+					new ByteArrayInputStream(teiDocOut.toByteArray());
+			
+			return teiDownloadStream;
+			
+		} catch (IOException e) {
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
+				"Error opening the Tag Library!", e);
+		} catch (ParsingException parsingException) {
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
+				"Error exporting the Tag Library!", parsingException);
+		}
+		return null;
+	}
+
 	private void handleShareTagLibraryRequest(Object value) {
 		if (value != null) {
 			final TagLibraryReference tagLibraryReference = 
@@ -468,69 +537,11 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 	}
 
 	private void handleTagLibraryExportRequest(Object value) {
-		if (value != null) {
-			TagLibraryReference tagLibraryReference = 
-					(TagLibraryReference)value;
-			try {
-				final TagLibrary tagLibrary = 
-						repository.getTagLibrary(tagLibraryReference);
-				
-				TeiDocumentFactory factory = new TeiDocumentFactory();
-				TeiDocument teiDocument = 
-						factory.createEmptyDocument(tagLibrary.getId());
-				
-				teiDocument.getTeiHeader().setValues(
-					tagLibrary.getContentInfoSet());
-				
-				new TeiTagLibrarySerializationHandler(
-						teiDocument, tagManager).serialize(tagLibrary);
-				
-				ByteArrayOutputStream teiDocOut = new ByteArrayOutputStream();
-				teiDocument.printXmlDocument(teiDocOut);
-				
-				final ByteArrayInputStream teiDownloadStream = 
-						new ByteArrayInputStream(teiDocOut.toByteArray());
-
-				Page.getCurrent().open(new FileResource(null) {
-					public DownloadStream getStream() {
-						DownloadStream ds = 
-							new DownloadStream(
-								teiDownloadStream, 
-								getMIMEType(), getFilename());
-						ds.setParameter(
-							"Content-Disposition", 
-							"attachment; filename="
-			                    + getFilename());
-			            ds.setCacheTime(0);
-			            return ds;
-					};
-					public String getMIMEType() {
-						return "application/xml";
-					};
-					
-					public String getFilename() {
-						return tagLibrary.toString() + ".xml";
-					};
-				},
-				"_blank",
-				true);
-
-				
-				
-			} catch (IOException e) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error opening the Tag Library!", e);
-			} catch (ParsingException parsingException) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error exporting the Tag Library!", parsingException);
-			}
-		}	
-		else {
+		if (value == null) {
 			Notification.show(
 					"Information", "Please select a Tag Library first!",
 					Type.TRAY_NOTIFICATION);
 		}
-
 	}
 
 	private void handleOpenTagLibraryRequest(Object value) {

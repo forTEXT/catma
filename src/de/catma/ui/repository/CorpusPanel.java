@@ -53,12 +53,15 @@ import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.Tree.TreeTargetDetails;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
 
+import de.catma.backgroundservice.BackgroundServiceProvider;
+import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
 import de.catma.document.corpus.CorpusExporter;
 import de.catma.document.repository.Repository;
@@ -66,6 +69,8 @@ import de.catma.document.repository.UnknownUserException;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.heureclea.autotagger.AnnotationGeneratorJob;
+import de.catma.heureclea.autotagger.GenerationOptions;
 import de.catma.indexer.IndexedRepository;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzer.AnalyzerProvider;
@@ -74,6 +79,7 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.ui.repository.sharing.SharingOptions;
 import de.catma.ui.repository.sharing.SharingOptionsFieldFactory;
+import de.catma.user.Permission;
 import de.catma.user.Role;
 
 public class CorpusPanel extends VerticalLayout {
@@ -127,6 +133,9 @@ public class CorpusPanel extends VerticalLayout {
 	private MenuItem miShareCorpus;
 
 	private MenuItem miExportCorpus;
+
+	private MenuItem miGenerateCorpusAnnotations;
+	private ProgressBar generateCorpusAnnotationsProgressBar;
 	
 	public CorpusPanel(
 			Repository repository, ValueChangeListener valueChangeListener) {
@@ -217,6 +226,7 @@ public class CorpusPanel extends VerticalLayout {
 				miRenameCorpus.setEnabled(corpusModificationButtonsEnabled);
 				miShareCorpus.setEnabled(corpusModificationButtonsEnabled);
 				miExportCorpus.setEnabled(corpusModificationButtonsEnabled);
+				miGenerateCorpusAnnotations.setEnabled(corpusModificationButtonsEnabled);
 			}
 		});
 		
@@ -337,11 +347,96 @@ public class CorpusPanel extends VerticalLayout {
 				}
 			}
 		});
-		
-		miExportCorpus.setVisible(repository.getUser().getRole().equals(Role.ADMIN));
+		miExportCorpus.setVisible(repository.getUser().hasPermission(Permission.exportcorpus));
 		miExportCorpus.setEnabled(false);
+		
+		miGenerateCorpusAnnotations = miMoreCorpusActions.addItem(
+				"Generate annotations", new Command() {
+			@Override
+			public void menuSelected(MenuItem selectedItem) {
+				Object selectedValue = corporaTree.getValue();
+				if ((selectedValue != null) 
+						&& !selectedValue.equals(allDocuments)) {
+					handleGenerateAnnotationsRequest((Corpus)selectedValue);
+				}				
+			}
+		});
+		
+		miGenerateCorpusAnnotations.setVisible(repository.getUser().hasPermission(Permission.autotagging));
+		miGenerateCorpusAnnotations.setEnabled(false);
 	}
 	
+	private void handleGenerateAnnotationsRequest(Corpus selectedValue) { 
+		try {
+			GenerationOptions generationOptions = new GenerationOptions(
+					selectedValue.getId(), 
+					repository.getUser().getIdentifier());
+			FormDialog<GenerationOptions> generationOptionsDlg = new FormDialog<GenerationOptions>(
+				"Please select the type of markup you want us to generate", 
+				new BeanItem<GenerationOptions>(generationOptions),
+				new GenerationOptionsFieldFactory(), 
+				new SaveCancelListener<GenerationOptions>() {
+					public void cancelPressed() {}
+					public void savePressed(GenerationOptions result) {
+						if (result.getTagsetIdentification() != null) {
+							Notification.show(
+									"Info", 
+									"CATMA is generating annotations for you, this may take a while."
+									+ "You will be notified once the annotions are ready.", 
+									Type.HUMANIZED_MESSAGE);
+							
+							generateCorpusAnnotationsProgressBar.setCaption("Generating annotations...");
+							generateCorpusAnnotationsProgressBar.setIndeterminate(true);
+							generateCorpusAnnotationsProgressBar.setVisible(true);
+							
+							((BackgroundServiceProvider)UI.getCurrent()).submit(
+								"Generating annotations...",
+								new AnnotationGeneratorJob(result),
+								new ExecutionListener<Void>() {
+									@Override
+									public void done(Void result) {
+										try {
+											repository.reload(); 
+											
+											Notification.show(
+												"Info", 
+												"Your annotations have been generated!", 
+												Type.TRAY_NOTIFICATION);
+										} catch (IOException e) {
+											((CatmaApplication)UI.getCurrent()).showAndLogError(
+													"Error reloading repository!", e);
+										}
+										finally {
+											generateCorpusAnnotationsProgressBar.setVisible(false);
+										}
+									}
+									@Override
+									public void error(Throwable t) {
+										generateCorpusAnnotationsProgressBar.setVisible(false);
+										((CatmaApplication)UI.getCurrent()).showAndLogError(
+												"Error reloading repository!", t);
+									}
+								}
+							);
+						}
+						else {
+							Notification.show(
+									"Info", 
+									"You need to select a markup type, no markup has been generated!", 
+									Type.TRAY_NOTIFICATION);
+						}
+					}
+			});
+			generationOptionsDlg.setVisibleItemProperties(
+						new Object[] {"tagsetIdentification"});
+			generationOptionsDlg.show();
+		}
+		catch (Exception e) {
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
+					"Error generating access token!", e);
+		}
+	}
+
 	private void handleExportCorpusRequest(Corpus selectedValue) {
 		final CorpusExporter corpusExporter = new CorpusExporter(repository);
 		final String name = corpusExporter.cleanupName(selectedValue.toString());
@@ -503,7 +598,12 @@ public class CorpusPanel extends VerticalLayout {
 				menuMoreCorpusActions.addItem("More actions...", null);
 		miMoreCorpusActions.setEnabled(
 				repository instanceof IndexedRepository);
+		
 		content.addComponent(menuMoreCorpusActions);
+		
+		generateCorpusAnnotationsProgressBar = new ProgressBar();
+		generateCorpusAnnotationsProgressBar.setVisible(false);
+		content.addComponent(generateCorpusAnnotationsProgressBar);
 		
 		return corporaButtonsPanel;
 	}

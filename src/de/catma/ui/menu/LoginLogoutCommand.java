@@ -20,7 +20,8 @@ package de.catma.ui.menu;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.net.URI;
+
+import javax.naming.NamingException;
 
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinSession;
@@ -28,12 +29,14 @@ import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
 
 import de.catma.document.repository.RepositoryManager;
+import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.ui.repository.RepositoryManagerView;
 
 public class LoginLogoutCommand implements Command {
 	private MenuItem loginLogoutItem;
 	private RepositoryManagerView repositoryManagerView;
 	private Menu menu;
+	private String afterLogoutRedirectURL;
 	
 	private PropertyChangeListener repositoryManagerListener = 
 			new PropertyChangeListener() {
@@ -50,7 +53,11 @@ public class LoginLogoutCommand implements Command {
 	};
 	
 	public LoginLogoutCommand(
-			Menu menu, RepositoryManagerView repositoryManagerView) {
+			Menu menu, RepositoryManagerView repositoryManagerView) throws NamingException {
+		this.afterLogoutRedirectURL = 
+				RepositoryPropertyKey.BaseURL.getValue( 
+						RepositoryPropertyKey.BaseURL.getDefaultValue());
+		
 		this.menu = menu;
 		this.repositoryManagerView = repositoryManagerView;
 		repositoryManagerView.getRepositoryManager().
@@ -72,10 +79,7 @@ public class LoginLogoutCommand implements Command {
 	}
 	
 	private void logout() {
-		URI location = Page.getCurrent().getLocation();
-		String afterLogoutRedirect = 
-				location.getScheme() + "://" + location.getAuthority() + location.getPath();
-		Page.getCurrent().setLocation(afterLogoutRedirect);
+		Page.getCurrent().setLocation(afterLogoutRedirectURL);
 		VaadinSession.getCurrent().close();
 	}
 

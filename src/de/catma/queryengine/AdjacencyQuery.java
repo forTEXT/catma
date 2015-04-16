@@ -36,6 +36,6 @@ public class AdjacencyQuery extends CollocQuery {
      * @param query2 definition of the collocations for the search term
      */
     public AdjacencyQuery(Query query1, Query query2) {
-        super(query1, query2, "1", SpanDirection.FORWARD);
+        super(query1, query2, "1", SpanDirection.BOTH);
     }
 }

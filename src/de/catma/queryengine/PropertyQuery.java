@@ -20,30 +20,26 @@
 package de.catma.queryengine;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
-import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.Indexer;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.tag.PropertyDefinition;
+import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
-import de.catma.tag.TagsetDefinition;
 
 
 /**
- * This query looks for tokens that are tagged with a {@link Tag} that has the desired
- * {@link org.DBIndexProperty.tag.Property}.
+ * This query looks for tokens that are tagged with a {@link TagDefinition Tag} that has the desired
+ * {@link Property} and value (optional)
  *
  * @author Marco Petris
  *
@@ -53,15 +49,14 @@ public class PropertyQuery extends Query {
     private String propertyName;
     private String propertyValue;
     private String tagPhrase;
-    private TagMatchMode tagMatchMode;
     
     /**
      * Constructor
-     * @param property the name of the {@link org.DBIndexProperty.tag.Property}
-     * @param value the value of the {@link org.DBIndexProperty.tag.Property} this is optional and can be
+     * @param property the name of the {@link Property}
+     * @param value the value of the {@link Property} this is optional and can be
      * <code>null</code>
      */
-    public PropertyQuery(Phrase tag, Phrase property, Phrase value, String tagMatchMode) {
+    public PropertyQuery(Phrase tag, Phrase property, Phrase value) {
         propertyName = property.getPhrase();
         if (value != null) {
             propertyValue = value.getPhrase();
@@ -75,19 +70,6 @@ public class PropertyQuery extends Query {
         else {
         	this.tagPhrase = null;
         }
-        
-        if (tagMatchMode != null) {
-        	try {
-        		this.tagMatchMode = TagMatchMode.valueOf(tagMatchMode.toUpperCase());
-        	}
-        	catch (IllegalArgumentException iae) {
-        		this.tagMatchMode = TagMatchMode.EXACT;
-        	}
-        }
-        else {
-        	this.tagMatchMode = TagMatchMode.EXACT;
-        }
-
     }
 
     @Override
@@ -116,33 +98,9 @@ public class PropertyQuery extends Query {
         	}
         }
         
-        Set<String> propertyDefinitionIDs = new HashSet<String>();
-//        for (String userMarkupCollID : relevantUserMarkupCollIDs) {
-//        	UserMarkupCollection umc = 
-//        			repository.getUserMarkupCollection(
-//        				new UserMarkupCollectionReference(
-//        						userMarkupCollID, new ContentInfoSet()));
-//        	for (TagsetDefinition tagsetDefinition : umc.getTagLibrary()) {
-//        		
-//        		for (TagDefinition tagDef : tagsetDefinition) {
-//        			
-//        			PropertyDefinition pd = 
-//        					tagDef.getPropertyDefinitionByName(propertyName); 
-//        			if (pd != null) {
-//        				propertyDefinitionIDs.add(pd.getUuid());
-//        			}
-//        		}
-//        	}
-//        }
-//        
-//        if (propertyDefinitionIDs.isEmpty()) {
-//        	return new QueryResultRowArray();
-//        }
-        
         QueryResult result = 
 				indexer.searchProperty(
 						relevantUserMarkupCollIDs,
-						propertyDefinitionIDs,
 						propertyName, propertyValue, tagPhrase);
 
         Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
@@ -176,10 +134,5 @@ public class PropertyQuery extends Query {
         }
         
         return result;
-    }
-    
-    @Override
-    public Comparator<QueryResultRow> getComparator() {
-    	return tagMatchMode.getComparator();
     }
 }

@@ -18,30 +18,35 @@
  */
 package de.catma.ui.repository;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigInteger;
+import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.openid4java.association.Association;
-import org.openid4java.consumer.ConsumerManager;
-import org.openid4java.consumer.VerificationResult;
-import org.openid4java.discovery.DiscoveryInformation;
-import org.openid4java.discovery.Identifier;
-import org.openid4java.message.AuthRequest;
-import org.openid4java.message.AuthSuccess;
-import org.openid4java.message.MessageException;
-import org.openid4java.message.Parameter;
-import org.openid4java.message.ParameterList;
-import org.openid4java.message.ax.AxMessage;
-import org.openid4java.message.ax.FetchRequest;
-import org.openid4java.message.ax.FetchResponse;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
+import org.jboss.aerogear.security.otp.Totp;
+import org.jboss.aerogear.security.otp.api.Clock;
+import org.json.JSONObject;
 
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.DownloadStream;
 import com.vaadin.server.ExternalResource;
-import com.vaadin.server.Page;
 import com.vaadin.server.RequestHandler;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinResponse;
@@ -62,43 +67,42 @@ import com.vaadin.ui.Window;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
+import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.repository.RepositoryReference;
 import de.catma.ui.CatmaApplication;
-import de.catma.util.IDGenerator;
 
+/**
+ * Authentication dialog for OpenID Connect authentication with Google.
+ * Based on: 
+ * https://developers.google.com/accounts/docs/OpenIDConnect
+ * 
+ * @author marco.petris@web.de
+ *
+ */
 public class AuthenticationDialog extends VerticalLayout {
 	
 	private static class AuthenticationRequestHandler implements RequestHandler {
 		
 		private Logger logger = Logger.getLogger(this.getClass().getName());
 		private String returnURL;
-		private ConsumerManager consumerManager;
-		private DiscoveryInformation discovered;
 		private RepositoryReference repositoryReference;
 		private RepositoryManager repositoryManager;
 		private Window dialogWindow;
-		private String handle;
-		private ParameterList openidResp;
-		private String signed;
-		private String sig;
 		private UI ui;
+		private String token;
 
 		public AuthenticationRequestHandler(
 				UI ui, // UI.getCurrent() is not available during request handling, therefore we pass in the UI
-				String returnURL, ConsumerManager consumerManager,
-				DiscoveryInformation discovered, 
+				String returnURL, 
 				RepositoryReference repositoryReference,
-				RepositoryManager repositoryManager, Window dialogWindow, String handle) {
+				RepositoryManager repositoryManager, Window dialogWindow, String token) {
 			super();
 			this.ui = ui;
 			this.returnURL = returnURL;
-			logger.info("authentication dialog construction returnUrl: " + returnURL);
-			this.consumerManager = consumerManager;
-			this.discovered = discovered;
 			this.repositoryReference = repositoryReference;
 			this.repositoryManager = repositoryManager;
 			this.dialogWindow = dialogWindow;
-			this.handle = handle;
+			this.token = token;
 		}
 			
 		@Override
@@ -106,55 +110,9 @@ public class AuthenticationDialog extends VerticalLayout {
 				VaadinRequest request, VaadinResponse response)
 				throws IOException {
 
+			// this handles the answer to the authorization request
 			try {
-				openidResp = new ParameterList(request.getParameterMap());
-				
-				signed = openidResp.getParameterValue("openid.signed");
-				sig = openidResp.getParameterValue("openid.sig");
-				
-				// extract the parameters from the authentication response
-				// (which comes in as a HTTP request from the OpenID provider)
-				if (!openidResp.hasParameter("openid.mode")) {
-					logger.info("openid.mode is missing, trying to set required param to 'id_res'" );
-					openidResp.set(new Parameter("openid.mode", "id_res"));
-				}
-				else {
-					logger.info("got openid.mode: " + openidResp.getParameterValue("openid.mode"));
-				}
-
-				if (!openidResp.hasParameter("openid.return_to")) {
-					logger.info("openid.return_to is missing, trying to set required param to " + returnURL);
-					openidResp.set(new Parameter("openid.return_to", returnURL));
-				}
-				else {
-					logger.info("got openid.return_to: " + openidResp.getParameterValue("openid.return_to"));
-				}
-				
-				if (!openidResp.hasParameter("openid.assoc_handle")) {
-					logger.info("openid.assoc_handle is missing, trying to set required param to " + handle);
-					openidResp.set(new Parameter("openid.assoc_handle", handle));
-				}
-				else {
-					logger.info("got openid.assoc_handle: " + openidResp.getParameterValue("openid.assoc_handle"));
-				}
-				
-				if (!openidResp.hasParameter("openid.signed")) {
-					logger.info("openid.signed is missing, setting to " + signed);
-					openidResp.set(new Parameter("openid.signed", signed));
-				}
-				else {
-					logger.info("got openid.signed: " + openidResp.getParameterValue("openid.signed"));
-				}
-				
-				if (!openidResp.hasParameter("openid.sig")) {
-					logger.info("openid.sig is missing, setting to " + sig);
-					openidResp.set(new Parameter("openid.sig", sig));
-
-				}
-				else {
-					logger.info("got openid.sig: " + openidResp.getParameterValue("openid.sig"));
-				}
-				
+				// clean up
 				VaadinSession.getCurrent().removeRequestHandler(this);
 				
 				if (ui == null) {
@@ -164,102 +122,143 @@ public class AuthenticationDialog extends VerticalLayout {
 				ui.removeWindow(dialogWindow);
 				
 				dialogWindow = null;
-				logger.info("verifying returnurl: " + returnURL);
 				
-				// verify the response
-				VerificationResult verification = 
-					consumerManager.verify(
-						returnURL, openidResp, discovered);
 				
-				if (verification == null) {
-					throw new MessageException(
-							"could not verify returnurl: " + returnURL);
+				// extract answer
+				String authorizationCode = request.getParameter("code");
+
+				String state = request.getParameter("state");
+
+				String error = request.getParameter("error");
+
+				// do we have a authorization request error?
+				if (error == null) {
+					// no, so we validate the state token
+					Totp totp = new Totp(
+							RepositoryPropertyKey.otpSecret.getValue()+token, 
+							new Clock(Integer.valueOf(
+								RepositoryPropertyKey.otpDuration.getValue())));
+					if (!totp.verify(state)) {
+						error = "state token verification failed";
+					}
 				}
-				// examine the verification result and extract the verified identifier
-				Identifier verified = verification.getVerifiedId();
 				
-				if (verified != null) {
+				// state token get validation success?	
+				if (error == null) {
+					CloseableHttpClient httpclient = HttpClients.createDefault();
+					HttpPost httpPost = 
+						new HttpPost(RepositoryPropertyKey.oauthAccessTokenRequestURL.getValue());
+					List <NameValuePair> data = new ArrayList <NameValuePair>();
+					data.add(new BasicNameValuePair("code", authorizationCode));
+					data.add(new BasicNameValuePair("grant_type", "authorization_code"));
+					data.add(new BasicNameValuePair(
+						"client_id", RepositoryPropertyKey.oauthClientId.getValue()));
+					data.add(new BasicNameValuePair(
+						"client_secret", RepositoryPropertyKey.oauthClientSecret.getValue()));
+					data.add(new BasicNameValuePair("redirect_uri", returnURL));
+					httpPost.setEntity(new UrlEncodedFormEntity(data));
+					CloseableHttpResponse tokenRequestResponse = httpclient.execute(httpPost);
+					HttpEntity entity = tokenRequestResponse.getEntity();
+					InputStream content = entity.getContent();
+					ByteArrayOutputStream bodyBuffer = new ByteArrayOutputStream();
+					IOUtils.copy(content, bodyBuffer);
+					
+					JSONObject accessTokenResponseJSon = 
+							new JSONObject(bodyBuffer.toString());
+
+					// we're actually not interested in the access token 
+					// but we want the email information from the id token
+					String idToken = accessTokenResponseJSon.getString("id_token");
+					
+					String[] pieces = idToken.split("\\.");
+					// we skip the header and go ahead with the payload
+					String payload = pieces[1];
+		
+					String decodedPayload = 
+							new String(Base64.decodeBase64(payload), "UTF-8");
+					JSONObject payloadJson = new JSONObject(decodedPayload);
+					
+					logger.info("decodedPayload: " + decodedPayload);
+					
+					// finally the email address
+					String email = payloadJson.getString("email");
+
+					// construct CATMA user identification
 					Map<String, String> userIdentification = 
 							new HashMap<String, String>();
-					logger.info("verified user " + verified.getIdentifier());
-					AuthSuccess authSuccess =
-	                        (AuthSuccess) verification.getAuthResponse();
-
-	                if (authSuccess.hasExtension(AxMessage.OPENID_NS_AX)) {
-	                    FetchResponse fetchResp = (FetchResponse) authSuccess
-	                            .getExtension(AxMessage.OPENID_NS_AX);
-
-	                    @SuppressWarnings("rawtypes")
-						List emails = 
-							fetchResp.getAttributeValues("email");
-	                    
-	                    String email = (String) emails.get(0);
-	                    logger.info("retrieved email: " + email);
-
-	                    userIdentification.put(
-								"user.ident", email);
-	                    userIdentification.put(
-	                    		"user.email", email);
-	                    userIdentification.put(
-	                    		"user.name", email);
-	                    userIdentification.put(
-	                    		"user.role", "0");
-	                    
-	                    logger.info("opening repository for user: " + email);
-	                    
-	                    ((CatmaApplication)ui).setUser(
-	                    		userIdentification);
-
-	                    Repository repository = 
-                    		repositoryManager.openRepository(
-                				repositoryReference, userIdentification );
-	                    
-	                    ((CatmaApplication)ui).openRepository(repository);
-
-	                    new DownloadStream(
-	                    		ui.getPage().getLocation().toURL().openStream(), 
-	                    		"text/html", "CATMA 4.2").writeResponse(request, response);
-	                    return true;
-	                }
+					
+					logger.info("retrieved email: " + email);
+					
+	                userIdentification.put(
+							"user.ident", email);
+	                userIdentification.put(
+	                		"user.email", email);
+	                userIdentification.put(
+	                		"user.name", email);
+	                userIdentification.put(
+	                		"user.role", "0");
+	                
+	                logger.info("opening repository for user: " + email);
+	                
+	                ((CatmaApplication)ui).setUser(
+	                		userIdentification);
+	
+	                Repository repository = 
+	            		repositoryManager.openRepository(
+	        				repositoryReference, userIdentification );
+	                
+	                ((CatmaApplication)ui).openRepository(repository);
+	
+	                new DownloadStream(
+                		ui.getPage().getLocation().toURL().openStream(), 
+                		"text/html", "CATMA " + RepositoryPropertyKey.version.getValue()
+	                ).writeResponse(request, response);
+	                return true;
 				}
 				else {
-					logger.info("authentication failure");
-					Notification.show(
-                            "Authentication failure",
-                            "The authentication failed, you are not " +
-                            "allowed to access this repository!",
-                            Type.ERROR_MESSAGE);
-
+	                logger.info("authentication failure: " + error);
+					new Notification(
+                        "Authentication failure",
+                        "The authentication failed, you are not " +
+                        "allowed to access this repository!",
+                        Type.ERROR_MESSAGE).show(ui.getPage());
+	                new DownloadStream(
+                		ui.getPage().getLocation().toURL().openStream(), 
+                		"text/html", 
+                		"CATMA " + RepositoryPropertyKey.version.getValue()
+	                ).writeResponse(request, response);
+	                return true;
 				}
 				
 			}
 			catch (Exception e) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError(
+				e.printStackTrace();
+				((CatmaApplication)ui).showAndLogError(
 						"Error opening repository!", e);
 			}
 			
 			ui.close();
 			
-			return true;
+			return false;
 		}
 	}
 	
 	private Window dialogWindow;
-	private String providerIdent;
 	private String caption;
 	private Button btCancel;
 	private RepositoryReference repositoryReference;
 	private RepositoryManager repositoryManager;
 	private Link logInLink;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private String baseUrl;
 	
 	public AuthenticationDialog(
 			String caption, RepositoryReference repositoryReference, 
-			RepositoryManager repositoryManager) {
+			RepositoryManager repositoryManager, String baseUrl) {
 		this.caption = caption;
 		this.repositoryReference = repositoryReference;
 		this.repositoryManager = repositoryManager;
-		this.providerIdent = "https://www.google.com/accounts/o8/id";
+		this.baseUrl = baseUrl;
 		initComponents();
 	}
 
@@ -297,57 +296,56 @@ public class AuthenticationDialog extends VerticalLayout {
 		super.attach();
 		if (logInLink == null) {
 			logInLink = createLogInLink(UI.getCurrent());
-			addComponent(logInLink, 0);
+			if (logInLink == null) { //authorization code request failure
+				addComponent(new Label("Unable to establish authentication!"));
+				logger.log(Level.SEVERE, "Log-In-Link creation failed!");
+			}
+			else {
+				addComponent(logInLink, 0);
+			}
 		}
 	}
 
 	private Link createLogInLink(UI ui) {
 		try {
-			ConsumerManager consumerManager = new ConsumerManager();
+			String returnURL = baseUrl;
+			String token = new BigInteger(130, new SecureRandom()).toString(32);
+
+			// state token generation
+			Totp totp = new Totp(
+					RepositoryPropertyKey.otpSecret.getValue()+token, 
+					new Clock(Integer.valueOf(RepositoryPropertyKey.otpDuration.getValue())));
+
+			// creating the authorization request link 
+			StringBuilder authenticationUrlBuilder = new StringBuilder();
+			authenticationUrlBuilder.append(
+				RepositoryPropertyKey.oauthAuthorizationCodeRequestURL.getValue());
+			authenticationUrlBuilder.append("?client_id=");
+			authenticationUrlBuilder.append(
+				RepositoryPropertyKey.oauthClientId.getValue());
+			authenticationUrlBuilder.append("&response_type=code");
+			authenticationUrlBuilder.append("&scope=openid%20email&");
+			authenticationUrlBuilder.append("&redirect_uri="+returnURL);
+			authenticationUrlBuilder.append("&state=" + totp.now());
+			authenticationUrlBuilder.append("&openid.realm="+returnURL);
 			
-			String returnURL = 
-				Page.getCurrent().getLocation().toString() +
-				new IDGenerator().generate();
-			logger.info("return url in login link creation " + returnURL);
-			
-			@SuppressWarnings("rawtypes")
-			List discoveries = consumerManager.discover(this.providerIdent);
-			final DiscoveryInformation discovered = 
-					consumerManager.associate(discoveries);
-			logger.info("endpoint from consumer manager: " + discovered.getOPEndpoint().toString());
-			Association assoc = 
-					consumerManager.getAssociations().load(discovered.getOPEndpoint().toString());
-			final String handle = assoc.getHandle();
-			logger.info("handle from consumer manager: " + handle);
-
-			AuthRequest authReq = consumerManager.authenticate(discovered, returnURL);		
-            FetchRequest fetch = FetchRequest.createFetchRequest();
-            fetch.addAttribute("email",
-                    // attribute alias
-                    "http://schema.openid.net/contact/email",   // type URI
-                    true);                                      // required
-
-            // attach the extension to the authentication request
-            authReq.addExtension(fetch);
-
 			ClassResource icon =
 					new ClassResource(
 							"repository/resources/google.png");
 			Link logInLink = 
 					new Link(
 						"Log in via Google", 
-						new ExternalResource(authReq.getDestinationUrl(true)));
+						new ExternalResource(authenticationUrlBuilder.toString()));
 			logInLink.setIcon(icon);
 			
 			final AuthenticationRequestHandler authenticationRequestHandler =
 					new AuthenticationRequestHandler(
 							ui,
 							returnURL, 
-							consumerManager, discovered, 
 							repositoryReference,
 							repositoryManager, 
-							dialogWindow, 
-							handle);
+							dialogWindow,
+							token);
 			
 			
 			VaadinSession.getCurrent().addRequestHandler(authenticationRequestHandler);
@@ -358,13 +356,21 @@ public class AuthenticationDialog extends VerticalLayout {
 					VaadinSession.getCurrent().removeRequestHandler(authenticationRequestHandler);
 					
 					UI.getCurrent().removeWindow(dialogWindow);
+					
+					Notification.show(
+	                        "Authentication failure",
+	                        "The authentication failed, you are not " +
+	                        "allowed to access this repository!",
+	                        Type.ERROR_MESSAGE);
+
 				}
 			});
 			
 			return logInLink;
 		}
 		catch (Exception e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError("Error during authentication!", e);
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
+					"Error during authentication!", e);
 		}
 		return null;
 	}

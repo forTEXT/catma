@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.naming.Context;
@@ -39,7 +38,6 @@ import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 
-import de.catma.document.repository.RepositoryPropertiesName;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.repository.db.CatmaDataSourceName;
 import de.catma.repository.db.FileURLFactory;
@@ -61,11 +59,8 @@ public class DBRepositoryMaintainer {
 		MaintenanceSemaphore mSem = null;
 		
 		try {
-			Properties properties = 
-					(Properties) new InitialContext().lookup(
-							RepositoryPropertiesName.CATMAPROPERTIES.name());
 			this.repoFolderPath = 
-				RepositoryPropertyKey.RepositoryFolderPath.getProperty(properties, 1);
+				RepositoryPropertyKey.RepositoryFolderPath.getValue(1);
 			Context  context = new InitialContext();
 			DataSource dataSource = (DataSource) context.lookup(
 					CatmaDataSourceName.CATMADS.name());

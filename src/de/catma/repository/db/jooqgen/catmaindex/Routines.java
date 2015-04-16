@@ -57,15 +57,6 @@ public class Routines {
 	}
 
 	/**
-	 * Call <code>CatmaIndex.reindex</code>
-	 */
-	public static void reindex(org.jooq.Configuration configuration) {
-		de.catma.repository.db.jooqgen.catmaindex.routines.Reindex p = new de.catma.repository.db.jooqgen.catmaindex.routines.Reindex();
-
-		p.execute(configuration);
-	}
-
-	/**
 	 * Call <code>CatmaIndex.searchPhrase</code>
 	 */
 	public static void searchphrase(org.jooq.Configuration configuration, java.lang.String term1, java.lang.String term2, java.lang.String term3, java.lang.String term4, java.lang.String term5, java.lang.String docid, java.lang.Byte wild, java.lang.Integer limitresult) {

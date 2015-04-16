@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -35,7 +34,6 @@ import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 
-import de.catma.document.repository.RepositoryPropertiesName;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.repository.db.CatmaDataSourceName;
 import de.catma.repository.db.FileURLFactory;
@@ -83,11 +81,8 @@ public class DBIndexMaintainer {
 	public void run() throws IOException {
 		UserManager userManager = new UserManager();
 		try {
-			Properties properties = 
-					(Properties) new InitialContext().lookup(
-							RepositoryPropertiesName.CATMAPROPERTIES.name());
 			this.repoFolderPath = 
-				RepositoryPropertyKey.RepositoryFolderPath.getProperty(properties, 1);
+				RepositoryPropertyKey.RepositoryFolderPath.getValue(1);
 			
 			userManager.lockLogin();
 			try {

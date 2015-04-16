@@ -2,7 +2,6 @@
 * CATMA Query Walker Tree Grammar
 *
 * Author: 	Malte Meister, Marco Petris
-* Version: 	1.0
 * About:	Tree Grammar for the CATMA Query Walker
 */
 
@@ -64,7 +63,7 @@ collocQuery returns [Query query]
 	catch[RecognitionException e] {throw e;}
 	
 exclusionQuery returns [Query query]
-	:	^(ND_EXCLUSION term1=term term2=term) { $query = new ExclusionQuery($term1.query, $term2.query); }
+	:	^(ND_EXCLUSION term1=term term2=term matchMode=MATCH_MODE?) { $query = new ExclusionQuery($term1.query, $term2.query, $matchMode.text); }
 	;
 	catch[RecognitionException e] {throw e;}
 	
@@ -97,6 +96,7 @@ phrase returns [Phrase query]
 
 selector returns [Query query]
 	:	tagQuery { $query = $tagQuery.query; }
+	|	tagdiffQuery { $query = $tagdiffQuery.query; }
 	|	propertyQuery { $query = $propertyQuery.query; }
 	|	regQuery { $query = $regQuery.query; }
 	|	freqQuery { $query = $freqQuery.query; }
@@ -107,13 +107,17 @@ selector returns [Query query]
 	
 	
 tagQuery returns [Query query]
-	:	^(ND_TAG phrase tagMatchMode=TAG_MATCH_MODE?) { $query = new TagQuery($phrase.query, $tagMatchMode.text); }
+	:	^(ND_TAG phrase) { $query = new TagQuery($phrase.query); }
 	;
 	catch[RecognitionException e] {throw e;}
 
+tagdiffQuery returns [Query query]
+	:	^(ND_TAGDIFF tagdiff=phrase (property=phrase)?) { $query = new TagDiffQuery($tagdiff.query, $property.query); }
+	;
+	catch[RecognitionException e] {throw e;}
 propertyQuery returns [Query query]
-	:	^(ND_PROPERTY property=phrase (value=phrase)? tagMatchMode=TAG_MATCH_MODE?) { $query = new PropertyQuery(null, $property.query, $value.query, $tagMatchMode.text); }
-	|	^(ND_TAGPROPERTY tag=phrase property=phrase (value=phrase)? tagMatchMode=TAG_MATCH_MODE?) { $query = new PropertyQuery($tag.query, $property.query, $value.query, $tagMatchMode.text); }
+	:	^(ND_PROPERTY property=phrase (value=phrase)?) { $query = new PropertyQuery(null, $property.query, $value.query); }
+	|	^(ND_TAGPROPERTY tag=phrase property=phrase (value=phrase)?) { $query = new PropertyQuery($tag.query, $property.query, $value.query); }
 	;
 	catch[RecognitionException e] {throw e;}
 
@@ -166,10 +170,19 @@ andRefinement returns [Refinement refinement]
 			{ $refinement = new AndRefinement($rTerm1.refinement,$rTerm2.refinement); }
 	;
 	catch[RecognitionException e] {throw e;}
-	
+
+refinementTerm returns [Refinement refinement]
+	: 	selector matchMode=MATCH_MODE? { $refinement = new QueryRefinement($selector.query, $matchMode.text); }
+		| subQuery=query matchMode=MATCH_MODE? { $refinement = new QueryRefinement(new SubQuery($subQuery.query), $matchMode.text); }
+		| refinementExpression { $refinement = $refinementExpression.refinement; }
+	;
+	catch[RecognitionException e] {throw e;}
+
+/*
 refinementTerm returns [Refinement refinement]
 	: 	selector { $refinement = new QueryRefinement($selector.query); }
 		| refinementExpression { $refinement = $refinementExpression.refinement; }
 	;
 	catch[RecognitionException e] {throw e;}
-	
+*/	
+

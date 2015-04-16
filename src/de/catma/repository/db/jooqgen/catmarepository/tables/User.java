@@ -11,7 +11,7 @@ package de.catma.repository.db.jooqgen.catmarepository.tables;
 @java.lang.SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class User extends org.jooq.impl.TableImpl<org.jooq.Record> {
 
-	private static final long serialVersionUID = -959888152;
+	private static final long serialVersionUID = -1691899873;
 
 	/**
 	 * The singleton instance of <code>CatmaRepository.user</code>
@@ -40,11 +40,6 @@ public class User extends org.jooq.impl.TableImpl<org.jooq.Record> {
 	 * The column <code>CatmaRepository.user.locked</code>. 
 	 */
 	public final org.jooq.TableField<org.jooq.Record, java.lang.Byte> LOCKED = createField("locked", org.jooq.impl.SQLDataType.TINYINT, this);
-
-	/**
-	 * The column <code>CatmaRepository.user.role</code>. 
-	 */
-	public final org.jooq.TableField<org.jooq.Record, java.lang.Integer> ROLE = createField("role", org.jooq.impl.SQLDataType.INTEGER, this);
 
 	/**
 	 * Create a <code>CatmaRepository.user</code> table reference

@@ -1,6 +1,5 @@
 package de.catma.servlet;
 
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import javax.naming.InitialContext;
@@ -17,7 +16,6 @@ import org.neo4j.graphdb.schema.Schema;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
-import de.catma.document.repository.RepositoryPropertiesName;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.indexer.IndexBufferManagerName;
 import de.catma.indexer.graph.CatmaGraphDbName;
@@ -38,19 +36,12 @@ public class DataSourceInitializerServlet extends HttpServlet {
 	        
 	        InitialContext context = new InitialContext();
 	        
-			Properties properties = 
-					(Properties) context.lookup(
-							RepositoryPropertiesName.CATMAPROPERTIES.name());
-	
 			int repoIndex = 1; // assume that the first configured repo is the local db repo
-			String user = RepositoryPropertyKey.RepositoryUser.getProperty(
-					properties, repoIndex);
+			String user = RepositoryPropertyKey.RepositoryUser.getValue(repoIndex);
 					
-			String pass = RepositoryPropertyKey.RepositoryPass.getProperty(
-					properties, repoIndex);
+			String pass = RepositoryPropertyKey.RepositoryPass.getValue(repoIndex);
 			
-			String url = RepositoryPropertyKey.RepositoryUrl.getProperty(
-					properties, repoIndex);
+			String url = RepositoryPropertyKey.RepositoryUrl.getValue(repoIndex);
 	
 			ComboPooledDataSource cpds = new ComboPooledDataSource();
 			
@@ -65,7 +56,7 @@ public class DataSourceInitializerServlet extends HttpServlet {
 			log("CATMA DB DataSource initialized.");
 			
 			log("CATMA Graph DataSource initializing...");
-			String graphDbPath = RepositoryPropertyKey.GraphDbPath.getProperty(properties, repoIndex);
+			String graphDbPath = RepositoryPropertyKey.GraphDbPath.getValue(repoIndex);
 			
 			final GraphDatabaseService graphDb = 
 				new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(graphDbPath)

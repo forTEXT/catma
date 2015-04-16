@@ -1,9 +1,6 @@
 package de.catma.repository.db.maintenance;
 
 
-import java.util.Properties;
-
-import javax.naming.InitialContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -13,7 +10,6 @@ import org.quartz.JobDataMap;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 
-import de.catma.document.repository.RepositoryPropertiesName;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.quartz.JobInstaller;
 import de.catma.quartz.JobInstaller.JobDataKey;
@@ -28,11 +24,6 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 			
 			JobInstaller jobInstaller = new JobInstaller();
 			
-	        InitialContext context = new InitialContext();
-	        
-			Properties properties = 
-					(Properties) context.lookup(
-							RepositoryPropertiesName.CATMAPROPERTIES.name());
 			int repoIndex = 1; // assume that the first configured repo is the local db repo
 
 			JobDataMap repoJobDataMap = new JobDataMap();
@@ -54,12 +45,12 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 
 			indexJobDataMap.put(
 					JobDataKey.SOURCEDOCIDXMAINTAIN.name(), 
-					RepositoryPropertyKey.SourceDocumentIndexMaintainer.getProperty(
-							properties, repoIndex));
+					RepositoryPropertyKey.SourceDocumentIndexMaintainer.getValue(
+							repoIndex));
 			indexJobDataMap.put(
 					JobDataKey.SOURCEDOCIDXMAINTAIN_MAXOBJ.name(), 
-					RepositoryPropertyKey.SourceDocumentIndexMaintainerMaxObjects.getProperty(
-							properties, repoIndex));
+					RepositoryPropertyKey.SourceDocumentIndexMaintainerMaxObjects.getValue(
+							repoIndex));
 			
 			jobInstaller.install(
 				DBIndexMaintenanceJob.class,
