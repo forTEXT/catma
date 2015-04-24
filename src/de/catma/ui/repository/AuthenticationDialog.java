@@ -42,8 +42,9 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.jboss.aerogear.security.otp.Totp;
 import org.jboss.aerogear.security.otp.api.Clock;
-import org.json.JSONObject;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.DownloadStream;
 import com.vaadin.server.ExternalResource;
@@ -162,13 +163,14 @@ public class AuthenticationDialog extends VerticalLayout {
 					InputStream content = entity.getContent();
 					ByteArrayOutputStream bodyBuffer = new ByteArrayOutputStream();
 					IOUtils.copy(content, bodyBuffer);
-					
-					JSONObject accessTokenResponseJSon = 
-							new JSONObject(bodyBuffer.toString());
+					ObjectMapper mapper = new ObjectMapper();
+
+					ObjectNode accessTokenResponseJSon = 
+							mapper.readValue(bodyBuffer.toString(), ObjectNode.class);
 
 					// we're actually not interested in the access token 
 					// but we want the email information from the id token
-					String idToken = accessTokenResponseJSon.getString("id_token");
+					String idToken = accessTokenResponseJSon.get("id_token").asText();
 					
 					String[] pieces = idToken.split("\\.");
 					// we skip the header and go ahead with the payload
@@ -176,12 +178,12 @@ public class AuthenticationDialog extends VerticalLayout {
 		
 					String decodedPayload = 
 							new String(Base64.decodeBase64(payload), "UTF-8");
-					JSONObject payloadJson = new JSONObject(decodedPayload);
+					ObjectNode payloadJson = mapper.readValue(decodedPayload, ObjectNode.class);
 					
 					logger.info("decodedPayload: " + decodedPayload);
 					
 					// finally the email address
-					String email = payloadJson.getString("email");
+					String email = payloadJson.get("email").asText();
 
 					// construct CATMA user identification
 					Map<String, String> userIdentification = 

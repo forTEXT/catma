@@ -8,9 +8,6 @@ import java.util.Properties;
 import javax.servlet.ServletContext;
 
 import org.apache.commons.io.IOUtils;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.restlet.Application;
 import org.restlet.Restlet;
 import org.restlet.data.ChallengeScheme;
@@ -18,6 +15,11 @@ import org.restlet.data.Reference;
 import org.restlet.routing.Router;
 import org.restlet.security.ChallengeAuthenticator;
 import org.restlet.security.MapVerifier;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 import de.catma.api.service.ApiInfo;
 import de.catma.api.service.CorpusExport;
@@ -89,19 +91,21 @@ public class CatmaApiApplication extends Application {
 	
 
 	private void loadValidApiUsers(MapVerifier mapVerifier, String apiUsersFilePath) 
-					throws IOException, JSONException {
+					throws IOException{
 		File apiUsersFile = new File(apiUsersFilePath);
 		if (apiUsersFile.exists()) {
 			FileInputStream fis = new FileInputStream(apiUsersFile);
 			try {
-				String apiUsersJson = IOUtils.toString(fis, "UTF-8");
-				JSONArray apiUsersList = new JSONArray(apiUsersJson);
+				ObjectMapper mapper = new ObjectMapper();
 				
-				for (int i=0; i<apiUsersList.length(); i++) {
-					JSONObject entry = apiUsersList.getJSONObject(i);
+				String apiUsersJson = IOUtils.toString(fis, "UTF-8");
+				ArrayNode apiUsersList = mapper.readValue(apiUsersJson, ArrayNode.class);
+				
+				for (int i=0; i<apiUsersList.size(); i++) {
+					JsonNode entry = apiUsersList.get(i);
 					mapVerifier.getLocalSecrets().put(
-						entry.getString("u"), 
-						entry.getString("p").toCharArray());
+						entry.get("u").asText(), 
+						entry.get("p").asText().toCharArray());
 				}
 		
 			}
