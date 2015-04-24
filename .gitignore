@@ -19,3 +19,4 @@ db/*.bak
 repo
 temp
 graphdb/test
+WebContent/VAADIN/themes/cleanew/styles.css
