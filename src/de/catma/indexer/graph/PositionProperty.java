@@ -1,7 +1,7 @@
 package de.catma.indexer.graph;
 
 public enum PositionProperty {
-	literal,
+//	literal,
 	start,
 	end,
 	position,
