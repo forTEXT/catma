@@ -1,12 +1,14 @@
 package de.catma.ui.visualizer.chart;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.vaadin.ui.AbstractComponent;
 
 import de.catma.queryengine.result.QueryResultRow;
@@ -57,81 +59,81 @@ public class Chart extends AbstractComponent {
 
 	private String createConfiguration(Distribution distribution, int maxOccurrences) {
 		try {
-			JSONObject configuration = 
-				new JSONObject(
+			ObjectMapper mapper = new ObjectMapper();
+			ObjectNode configuration = 
+				mapper.readValue(
 					"{"+
-						"chart: {"+
-						    "renderTo: '"+ chartId +"',"+
-						    "zoomType: 'xy',"+
-						    "spacingBottom: 50"+
+						"\"chart\": {"+
+						    "\"renderTo\": \""+ chartId +"\","+
+						    "\"zoomType\": \"xy\","+
+						    "\"spacingBottom\": 50"+
 					    "},"+
-					    "xAxis: {"+
-					    	"tickInterval : "+ distribution.getSegmentSizeInPercent() + "," +
-					        "max: 100," +
-					    	"min: 0" +
+					    "\"xAxis\": {"+
+					    	"\"tickInterval\" : "+ distribution.getSegmentSizeInPercent() + "," +
+					        "\"max\": 100," +
+					    	"\"min\": 0" +
 					    "},"+
-					    "plotOptions: {"+
-					    	"series: {"+
-					        	"allowPointSelect: false,"+
-					        	"point: {"+
-					        		"events: {"+
-					        			"click: null"+
+					    "\"plotOptions\": {"+
+					    	"\"series\": {"+
+					        	"\"allowPointSelect\": \"false\","+
+					        	"\"point\": {"+
+					        		"\"events\": {"+
+					        			"\"click\": \"null\""+
 					        		"}"+
 					        	"}"+
 					         "}"+
 					    "},"+
-					    "title: {"+
-				        	"text: '"+distribution.getLabel()+"',"+
-				        	"verticalAlign: bottom" +
+					    "\"title\": {"+
+				        	"\"text\": \""+String.valueOf(
+				        		JsonStringEncoder.getInstance().quoteAsString(
+				        				distribution.getLabel()))+"\","+
+				        	"\"verticalAlign\": \"bottom\"" +
 				       	"},"+
-			       		"yAxis: {"+
-			       			"title: {"+
-			       				"text: 'Occurrences'"+
+			       		"\"yAxis\": {"+
+			       			"\"title\": {"+
+			       				"\"text\": \"Occurrences\""+
 				            "},"+
-			       			"min: 0," +
-			       			"max: "+ maxOccurrences +
+			       			"\"min\": 0," +
+			       			"\"max\": "+ maxOccurrences +
 				        "}"+
-				   	"}");	
+				   	"}", ObjectNode.class);	
 
-			JSONArray seriesArray = createSeriesArray(distribution);
+			ArrayNode seriesArray = createSeriesArray(distribution);
 			
-			configuration.put("series", seriesArray);
+			configuration.set("series", seriesArray);
 			
 			return configuration.toString();
 		}
-		catch (JSONException jse) {
+		catch (IOException jse) {
 			throw new IllegalStateException(jse);
 		}
 	}
 	
-	private JSONArray createSeriesArray(Distribution distribution) {
-		JSONArray seriesArray = new JSONArray();
+	private ArrayNode createSeriesArray(Distribution distribution) {
+		JsonNodeFactory factory = JsonNodeFactory.instance;
+		ArrayNode seriesArray = factory.arrayNode();
 		for (XYValues<Integer, Integer, QueryResultRow> values : distribution.getXySeries()) {
-			seriesArray.put(createSeries(values));
+			seriesArray.add(createSeries(values));
 		}
 
 		return seriesArray;
 
 	}
 
-	private JSONObject createSeries(XYValues<Integer, Integer, QueryResultRow> values) {
-		try {
-			JSONArray dataArray = new JSONArray();
-			for (Entry<Integer,Integer> pair : values) {
-				JSONArray valueArray = new JSONArray();
-				valueArray.put(Double.valueOf(pair.getKey()));
-				valueArray.put(Double.valueOf(pair.getValue()));
-				dataArray.put(valueArray);
-			}
-			JSONObject seriesObject = new JSONObject();
-			seriesObject.put("data", dataArray);
-			seriesObject.put("name", values.getKey().toString());
-	
-			return seriesObject;
+	private ObjectNode createSeries(XYValues<Integer, Integer, QueryResultRow> values) {
+		JsonNodeFactory factory = JsonNodeFactory.instance;
+		ArrayNode dataArray = factory.arrayNode();
+		for (Entry<Integer,Integer> pair : values) {
+			ArrayNode valueArray = factory.arrayNode();
+			valueArray.add(Double.valueOf(pair.getKey()));
+			valueArray.add(Double.valueOf(pair.getValue()));
+			dataArray.add(valueArray);
 		}
-		catch (JSONException jse) {
-			throw new IllegalStateException(jse);
-		}
+		ObjectNode seriesObject = factory.objectNode();
+		seriesObject.set("data", dataArray);
+		seriesObject.put("name", values.getKey().toString());
+
+		return seriesObject;
 	}
 
 	public void addSeries(XYValues<Integer, Integer, QueryResultRow> series) {

@@ -137,8 +137,7 @@ public class SourceDocumentIndexer {
 					positionNode.setProperty(PositionProperty.position.name(), ti.getTokenOffset());
 					positionNode.setProperty(PositionProperty.start.name(), ti.getRange().getStartPoint());
 					positionNode.setProperty(PositionProperty.end.name(), ti.getRange().getEndPoint());
-					positionNode.setProperty(PositionProperty.literal.name(), ti.getTerm());
-
+					
 					termNode.createRelationshipTo(positionNode, NodeRelationType.HAS_POSITION);
 					relCount++;
 				}

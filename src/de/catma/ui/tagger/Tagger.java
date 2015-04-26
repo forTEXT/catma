@@ -18,6 +18,7 @@
  */   
 package de.catma.ui.tagger;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +34,6 @@ import de.catma.ui.client.ui.tagger.TaggerServerRpc;
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
-import de.catma.ui.data.util.JSONSerializationException;
 import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
 import de.catma.util.ColorConverter;
@@ -62,7 +62,7 @@ public class Tagger extends AbstractComponent {
 				
 				taggerListener.tagInstancesSelected(instanceIDs);
 				
-			} catch (JSONSerializationException e) {
+			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"Error displaying Tag information!", e);
 			}
@@ -77,7 +77,7 @@ public class Tagger extends AbstractComponent {
 				pager.getCurrentPage().addRelativeTagInstance(tagInstance);
 				taggerListener.tagInstanceAdded(
 						pager.getCurrentPage().getAbsoluteTagInstance(tagInstance));
-			} catch (JSONSerializationException e) {
+			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"Error adding the Tag!", e);
 			}
@@ -127,7 +127,7 @@ public class Tagger extends AbstractComponent {
 							new TextRangeJSONSerializer().toJSON(relativeTextRange));
 				}
 			}
-		} catch (JSONSerializationException e) {
+		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error setting the page!", e);
 		}
@@ -183,7 +183,7 @@ public class Tagger extends AbstractComponent {
 					getRpcProxy(TaggerClientRpc.class).removeTagInstances(
 							tagInstanceJSONSerializer.toJSON(
 									currentRelativePageTagInstancesCopy));
-				} catch (JSONSerializationException e) {
+				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error hiding Tags!", e);
 				}
@@ -193,7 +193,7 @@ public class Tagger extends AbstractComponent {
 					getRpcProxy(TaggerClientRpc.class).addTagInstances(
 							tagInstanceJSONSerializer.toJSON(
 									currentRelativePageTagInstancesCopy));
-				} catch (JSONSerializationException e) {
+				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error showing Tags!", e);
 				}
@@ -208,7 +208,7 @@ public class Tagger extends AbstractComponent {
 						new ClientTagDefinition(
 							tagDefinition.getUuid(),
 							ColorConverter.toHex(tagDefinition.getColor()))));
-		} catch (JSONSerializationException e) {
+		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"Error adding Tag!", e);
 		}
@@ -254,7 +254,7 @@ public class Tagger extends AbstractComponent {
 		try {
 			getRpcProxy(TaggerClientRpc.class).highlight(
 					new TextRangeJSONSerializer().toJSON(relativeTextRange));
-		} catch (JSONSerializationException e) {
+		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"Error showing KWIC in the Tagger!", e);
 		}		

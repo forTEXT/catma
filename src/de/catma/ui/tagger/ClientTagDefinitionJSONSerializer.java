@@ -18,33 +18,30 @@
  */
 package de.catma.ui.tagger;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.io.IOException;
+
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
-import de.catma.ui.data.util.JSONSerializationException;
 
 public class ClientTagDefinitionJSONSerializer {
 
 	public String toJSON(ClientTagDefinition clientTagDefinition) 
-			throws JSONSerializationException {
+			throws IOException {
 		return toJSONObject(clientTagDefinition).toString();
 	}
 
-	private JSONObject toJSONObject(ClientTagDefinition clientTagDefinition) 
-			throws JSONSerializationException {
-		try {
-			JSONObject result = new JSONObject();
-			result.put(
-				ClientTagDefinition.SerializationField.tagDefinitionID.name(), 
-				clientTagDefinition.getId());
-			result.put(
-				ClientTagDefinition.SerializationField.colorHexValue.name(),
-				clientTagDefinition.getColor());
-			return result;
-		}
-		catch (JSONException e) {
-			throw new JSONSerializationException(e);
-		}
+	private ObjectNode toJSONObject(ClientTagDefinition clientTagDefinition) 
+			throws IOException {
+		JsonNodeFactory factory = JsonNodeFactory.instance;
+		ObjectNode result = factory.objectNode();
+		result.put(
+			ClientTagDefinition.SerializationField.tagDefinitionID.name(), 
+			clientTagDefinition.getId());
+		result.put(
+			ClientTagDefinition.SerializationField.colorHexValue.name(),
+			clientTagDefinition.getColor());
+		return result;
 	}
 }

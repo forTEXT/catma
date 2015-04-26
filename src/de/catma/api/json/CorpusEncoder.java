@@ -2,8 +2,9 @@ package de.catma.api.json;
 
 import java.util.Collection;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import de.catma.document.Corpus;
 import de.catma.document.source.ContentInfoSet;
@@ -13,14 +14,19 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 public class CorpusEncoder {
 	
 	public String encode(Corpus corpus) throws Exception {
-		JSONObject corpusJson = new JSONObject();
+		
+		JsonNodeFactory factory = JsonNodeFactory.instance;
+		
+		ObjectNode corpusJson = factory.objectNode();
+		
 		corpusJson.put("ID", corpus.getId());
 		corpusJson.put("name", corpus.toString());
-		JSONArray contentJson = new JSONArray();
-		corpusJson.put("contents", contentJson);
+		ArrayNode contentJson = factory.arrayNode();
+		
+		corpusJson.set("contents", contentJson);
 		
 		for (SourceDocument sd : corpus.getSourceDocuments()) {
-			JSONObject sourceDocJson = new JSONObject();
+			ObjectNode sourceDocJson = factory.objectNode();
 			sourceDocJson.put("sourceDocID", sd.getID());
 			sourceDocJson.put("sourceDocName", sd.toString());
 			ContentInfoSet cis = 
@@ -30,34 +36,36 @@ public class CorpusEncoder {
 			sourceDocJson.put("sourceDocDescription", cis.getDescription());
 			sourceDocJson.put("sourceDocPublisher", cis.getPublisher());
 			
-			JSONArray umcRefListJson = new JSONArray();
-			sourceDocJson.put("umcList", umcRefListJson);
+			ArrayNode umcRefListJson = factory.arrayNode();
+			sourceDocJson.set("umcList", umcRefListJson);
 			
 			for (UserMarkupCollectionReference umcRef : corpus.getUserMarkupCollectionRefs(sd)) {
-				JSONObject umcRefJson = new JSONObject();
+				ObjectNode umcRefJson = factory.objectNode();
 				umcRefJson.put("umcID", umcRef.getId());
 				umcRefJson.put("umcName", umcRef.getName());
 				ContentInfoSet umcCis = umcRef.getContentInfoSet();
 				sourceDocJson.put("umcAuthor", umcCis.getAuthor());
 				sourceDocJson.put("umcDescription", umcCis.getDescription());
 				sourceDocJson.put("umcPublisher", umcCis.getPublisher());	
-				umcRefListJson.put(umcRefJson);
+				umcRefListJson.add(umcRefJson);
 			}
-			contentJson.put(sourceDocJson);
+			contentJson.add(sourceDocJson);
 		}
 		
-		return corpusJson.toString(2);
+		return corpusJson.toString();
 	}
 
 	public String encodeAsList(Collection<Corpus> corpora) throws Exception {
-		JSONArray corporaListJson = new JSONArray();
+		JsonNodeFactory factory = JsonNodeFactory.instance;
+
+		ArrayNode corporaListJson = factory.arrayNode();
 		for (Corpus c : corpora) {
-			JSONObject corpusJson = new JSONObject();
+			ObjectNode corpusJson = factory.objectNode();
 			corpusJson.put("ID", c.getId());
 			corpusJson.put("name", c.toString());
-			corporaListJson.put(corpusJson);
+			corporaListJson.add(corpusJson);
 		}
-		return corporaListJson.toString(2);
+		return corporaListJson.toString();
 	}
 
 }

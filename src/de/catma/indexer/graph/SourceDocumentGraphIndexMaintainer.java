@@ -59,7 +59,7 @@ public class SourceDocumentGraphIndexMaintainer implements
 						
 						logger.info(
 							"found position node " + positionNode + " " 
-									+ positionNode.getProperty(PositionProperty.literal.name()) 
+									+ termNode.getProperty(TermProperty.literal.name()) 
 									+ "@[" + positionNode.getProperty(PositionProperty.start.name()) 
 									+ ","
 									+ positionNode.getProperty(PositionProperty.end.name())

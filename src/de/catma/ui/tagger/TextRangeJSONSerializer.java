@@ -18,27 +18,22 @@
  */
 package de.catma.ui.tagger;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.io.IOException;
+
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance.SerializationField;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
-import de.catma.ui.data.util.JSONSerializationException;
 
 public class TextRangeJSONSerializer {
 	
-	public String toJSON(TextRange textRange) throws JSONSerializationException {
-		try {
-			JSONObject trJSON = new JSONObject();
-			trJSON.put(SerializationField.startPos.name(), textRange.getStartPos());
-			trJSON.put(SerializationField.endPos.name(), textRange.getEndPos());
-			return trJSON.toString();
-		}
-		catch (JSONException e) {
-			throw new JSONSerializationException(e);
-		}
+	public String toJSON(TextRange textRange) throws IOException {
+		JsonNodeFactory factory = JsonNodeFactory.instance;
+		ObjectNode trJSON = factory.objectNode();
+		
+		trJSON.put(SerializationField.startPos.name(), textRange.getStartPos());
+		trJSON.put(SerializationField.endPos.name(), textRange.getEndPos());
+		return trJSON.toString();
 	}
-	
-	
-
 }
