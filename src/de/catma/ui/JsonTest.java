@@ -2,6 +2,7 @@ package de.catma.ui;
 
 import java.io.IOException;
 
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -17,9 +18,21 @@ public class JsonTest {
 		factory.arrayNode();
 		
 		ObjectMapper mapper = new ObjectMapper();
-		 
-		String bla = "{}";
+		JsonStringEncoder enc = JsonStringEncoder.getInstance();
 		
+		String bla =
+				"{"+
+					"\"chart\": {"+
+					    "\"renderTo\": \""+ "085" +"\","+
+					    "\"zoomType\": \"xy\","+
+					    "\"spacingBottom\": \"50\""+
+				    "},"+
+				    "\"title\": {"+
+			        	"\"text\": \""+String.valueOf(enc.quoteAsString("my\"bla"))+"\","+
+			        	"\"verticalAlign\": \"bottom\"" +
+			       	"}"+
+
+			   	"}";			
 		
 		ObjectNode rootNode = mapper.readValue(bla, ObjectNode.class);
 		

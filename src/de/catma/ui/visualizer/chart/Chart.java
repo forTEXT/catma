@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -62,36 +63,38 @@ public class Chart extends AbstractComponent {
 			ObjectNode configuration = 
 				mapper.readValue(
 					"{"+
-						"chart: {"+
-						    "renderTo: '"+ chartId +"',"+
-						    "zoomType: 'xy',"+
-						    "spacingBottom: 50"+
+						"\"chart\": {"+
+						    "\"renderTo\": \""+ chartId +"\","+
+						    "\"zoomType\": \"xy\","+
+						    "\"spacingBottom\": 50"+
 					    "},"+
-					    "xAxis: {"+
-					    	"tickInterval : "+ distribution.getSegmentSizeInPercent() + "," +
-					        "max: 100," +
-					    	"min: 0" +
+					    "\"xAxis\": {"+
+					    	"\"tickInterval\" : "+ distribution.getSegmentSizeInPercent() + "," +
+					        "\"max\": 100," +
+					    	"\"min\": 0" +
 					    "},"+
-					    "plotOptions: {"+
-					    	"series: {"+
-					        	"allowPointSelect: false,"+
-					        	"point: {"+
-					        		"events: {"+
-					        			"click: null"+
+					    "\"plotOptions\": {"+
+					    	"\"series\": {"+
+					        	"\"allowPointSelect\": \"false\","+
+					        	"\"point\": {"+
+					        		"\"events\": {"+
+					        			"\"click\": \"null\""+
 					        		"}"+
 					        	"}"+
 					         "}"+
 					    "},"+
-					    "title: {"+
-				        	"text: '"+distribution.getLabel()+"',"+
-				        	"verticalAlign: bottom" +
+					    "\"title\": {"+
+				        	"\"text\": \""+String.valueOf(
+				        		JsonStringEncoder.getInstance().quoteAsString(
+				        				distribution.getLabel()))+"\","+
+				        	"\"verticalAlign\": \"bottom\"" +
 				       	"},"+
-			       		"yAxis: {"+
-			       			"title: {"+
-			       				"text: 'Occurrences'"+
+			       		"\"yAxis\": {"+
+			       			"\"title\": {"+
+			       				"\"text\": \"Occurrences\""+
 				            "},"+
-			       			"min: 0," +
-			       			"max: "+ maxOccurrences +
+			       			"\"min\": 0," +
+			       			"\"max\": "+ maxOccurrences +
 				        "}"+
 				   	"}", ObjectNode.class);	
 
