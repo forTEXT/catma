@@ -23,23 +23,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance.SerializationField;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
-import de.catma.ui.data.util.JSONSerializationException;
 
 public class ClientTagInstanceJSONSerializer {
 	
-	public List<String> fromInstanceIDJSONArray(String jsonArray) throws JSONSerializationException {
+	public List<String> fromInstanceIDJSONArray(String jsonArray) throws IOException {
 		List<String> result = new ArrayList<String>();
 		ObjectMapper mapper = new ObjectMapper();
 		ArrayNode instanceIDArray = mapper.readValue(jsonArray, ArrayNode.class);
@@ -54,7 +50,7 @@ public class ClientTagInstanceJSONSerializer {
 		return result;
 	}
 	
-	public ClientTagInstance fromJSON(String json) throws JSONSerializationException {
+	public ClientTagInstance fromJSON(String json) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode tagInstanceJSON = mapper.readValue(json, ObjectNode.class);
 		String tagDefinitionID =
@@ -80,49 +76,46 @@ public class ClientTagInstanceJSONSerializer {
 		return new ClientTagInstance(tagDefinitionID, instanceID, color, ranges);
 	}
 	
-	private JSONObject toJSONObject(ClientTagInstance tagInstance) throws JSONSerializationException {
-		try {
-			JSONObject tagInstanceJSON = new JSONObject();
-			tagInstanceJSON.put(
-				SerializationField.tagDefinitionID.name(),
-				tagInstance.getTagDefinitionID());
-			tagInstanceJSON.put(
-				SerializationField.instanceID.name(), 
-				tagInstance.getInstanceID());
-			
-			tagInstanceJSON.put(
-					SerializationField.color.name(), 
-					tagInstance.getColor());
-	
-			JSONArray rangesJSON = new JSONArray();
-			tagInstanceJSON.put(
-					SerializationField.ranges.name(), 
-					rangesJSON);
-			
-	
-			for (TextRange tr : tagInstance.getRanges()) {
-				JSONObject trJSON = new JSONObject();
-				trJSON.put(SerializationField.startPos.name(), tr.getStartPos());
-				trJSON.put(SerializationField.endPos.name(), tr.getEndPos());
-				rangesJSON.put(trJSON);
-			}
-			
-			return tagInstanceJSON;
+	private ObjectNode toJSONObject(ClientTagInstance tagInstance) throws IOException {
+		JsonNodeFactory factory = JsonNodeFactory.instance;
+		ObjectNode tagInstanceJSON = factory.objectNode();
+		tagInstanceJSON.put(
+			SerializationField.tagDefinitionID.name(),
+			tagInstance.getTagDefinitionID());
+		tagInstanceJSON.put(
+			SerializationField.instanceID.name(), 
+			tagInstance.getInstanceID());
+		
+		tagInstanceJSON.put(
+				SerializationField.color.name(), 
+				tagInstance.getColor());
+
+		ArrayNode rangesJSON = factory.arrayNode();
+		tagInstanceJSON.set(
+				SerializationField.ranges.name(), 
+				rangesJSON);
+		
+
+		for (TextRange tr : tagInstance.getRanges()) {
+			ObjectNode trJSON = factory.objectNode();
+			trJSON.put(SerializationField.startPos.name(), tr.getStartPos());
+			trJSON.put(SerializationField.endPos.name(), tr.getEndPos());
+			rangesJSON.add(trJSON);
 		}
-		catch (JSONException e) {
-			throw new JSONSerializationException(e);
-		}
+		
+		return tagInstanceJSON;
 	}
 	
-	public String toJSON(ClientTagInstance tagInstance) throws JSONSerializationException {
+	public String toJSON(ClientTagInstance tagInstance) throws IOException {
 		return toJSONObject(tagInstance).toString();
 	}
 	
 	public String toJSON(Collection<ClientTagInstance> tagInstances) 
 			throws IOException {
-		JSONArray tagInstancesJSON = new JSONArray();
+		JsonNodeFactory factory = JsonNodeFactory.instance;
+		ArrayNode tagInstancesJSON = factory.arrayNode();
 		for (ClientTagInstance ti : tagInstances) {
-			tagInstancesJSON.put(toJSONObject(ti));
+			tagInstancesJSON.add(toJSONObject(ti));
 		}
 	
 		return tagInstancesJSON.toString();
@@ -130,19 +123,17 @@ public class ClientTagInstanceJSONSerializer {
 
 	public String join(
 			String jsonArray, Collection<ClientTagInstance> tagInstances) 
-					throws JSONSerializationException {
-		try {
-			if (jsonArray == null) {
-				jsonArray = "[]";
-			}
-			JSONArray tagInstancesJSON = new JSONArray(jsonArray);
-			for (ClientTagInstance ti : tagInstances) {
-				tagInstancesJSON.put(toJSONObject(ti));
-			}
-			return tagInstancesJSON.toString();
+					throws IOException {
+		if (jsonArray == null) {
+			jsonArray = "[]";
 		}
-		catch (JSONException e) {
-			throw new JSONSerializationException(e);
+		ObjectMapper mapper = new ObjectMapper();
+		
+		ArrayNode tagInstancesJSON = mapper.readValue(jsonArray, ArrayNode.class);
+		
+		for (ClientTagInstance ti : tagInstances) {
+			tagInstancesJSON.add(toJSONObject(ti));
 		}
+		return tagInstancesJSON.toString();
 	}
 }
