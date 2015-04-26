@@ -1,7 +1,9 @@
 package de.catma.indexer.graph;
 
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
+import org.neo4j.graphdb.Relationship;
 
 class PathUtil {
 
@@ -43,5 +45,14 @@ class PathUtil {
 			}
 		}
 		throw new IllegalStateException("unable to detect first " + type.name() + " node!");
+	}
+	
+	public String getLiteralFromPosition(Node n) {
+		Relationship hasPos = 
+				n.getRelationships(Direction.INCOMING, 
+				NodeRelationType.HAS_POSITION).iterator().next();
+			
+		Node termNode = hasPos.getStartNode();
+		return (String) termNode.getProperty(TermProperty.literal.name());
 	}
 }

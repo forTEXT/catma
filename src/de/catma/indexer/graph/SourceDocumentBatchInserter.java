@@ -159,8 +159,6 @@ public class SourceDocumentBatchInserter {
 									PositionProperty.start.name(), ti.getRange().getStartPoint());
 							properties.put(
 									PositionProperty.end.name(), ti.getRange().getEndPoint());
-							properties.put(
-									PositionProperty.literal.name(), ti.getTerm());
 							
 							long positionNodeId = 
 									inserter.createNode(properties, NodeType.Position);
