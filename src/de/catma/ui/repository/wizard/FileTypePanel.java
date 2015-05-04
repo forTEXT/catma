@@ -28,13 +28,12 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.zip.CRC32;
 
-import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import com.vaadin.data.Property;
@@ -72,8 +71,6 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	private Table table;
 	private boolean onAdvance = false;
 	private Label taPreview;
-//	private UploadPanel uploadPanel;
-//	private Label uploadLabel;
 	private Panel previewPanel;
 	private WizardStepListener wizardStepListener;
 	private AddSourceDocWizardResult wizardResult;
@@ -116,18 +113,12 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		try {
 			
 			final TechInfoSet inputTechInfoSet = wizardResult.getInputTechInfoSet();
-			final URI inputFileURI = inputTechInfoSet.getURI();						
-			final String inputFileID = repository.getIdFromURI(inputFileURI);
-			final String mimeTypeFromUpload = inputTechInfoSet.getMimeType();
-			
-//			ProtocolHandler protocolHandler = getProtocolHandlerForUri(inputFileURI, inputFileID, mimeTypeFromUpload);
-//			
-//			String inputMimeType = protocolHandler.getMimeType();
-//			inputTechInfoSet.setMimeType(inputMimeType);
-			
+
 			ArrayList<SourceDocumentResult> sourceDocumentResults = makeSourceDocumentResultsFromInputFile(inputTechInfoSet);
 			
-			BeanItemContainer<SourceDocumentResult> container = (BeanItemContainer<SourceDocumentResult>)table.getContainerDataSource();
+			@SuppressWarnings("unchecked")
+			BeanItemContainer<SourceDocumentResult> container = 
+				(BeanItemContainer<SourceDocumentResult>)table.getContainerDataSource();
 			container.addAll(sourceDocumentResults);
 			
 			wizardResult.addSourceDocumentResults(sourceDocumentResults);
@@ -137,9 +128,6 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			}
 			
 			onAdvance = canAdvance();
-			
-//			setVisiblePreviewComponents(false);
-//			setVisibleXSLTInputComponents(false);
 		}
 		catch (Exception exc) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -147,7 +135,9 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		}
 	}
 	
-	private ProtocolHandler getProtocolHandlerForUri(URI inputFileURI, String fileID, String inputFileMimeType) throws MalformedURLException, IOException{
+	private ProtocolHandler getProtocolHandlerForUri(
+			URI inputFileURI, String fileID, String inputFileMimeType)
+					throws MalformedURLException, IOException{
 		if (inputFileURI.toURL().getProtocol().toLowerCase().equals("http")) {
 			
 			final String destinationFileUri = repository.getFileURL(
@@ -162,7 +152,8 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		}
 	}
 	
-	private ArrayList<SourceDocumentResult> makeSourceDocumentResultsFromInputFile(TechInfoSet inputTechInfoSet) throws MalformedURLException, IOException {
+	private ArrayList<SourceDocumentResult> makeSourceDocumentResultsFromInputFile(
+			TechInfoSet inputTechInfoSet) throws MalformedURLException, IOException {
 		
 		ArrayList<SourceDocumentResult> output = new ArrayList<SourceDocumentResult>();
 		
@@ -316,7 +307,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		
 		//TODO: investigate whether using a FieldFactory would make things easier..
 		table.addGeneratedColumn("sourceDocumentInfo.techInfoSet.fileType", 
-				new ComboBoxColumnGenerator(Arrays.asList(FileType.values()), makeComboBoxListenerGenerator())
+				new ComboBoxColumnGenerator(FileType.getActiveFileTypes(), makeComboBoxListenerGenerator())
 		);
 		
 		table.addGeneratedColumn("sourceDocumentInfo.techInfoSet.charset", 
@@ -348,11 +339,6 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		
 		addComponent(previewPanel, 1, 0);
 		
-//		this.uploadLabel = new Label("Upload the corresponding XSLT file:");
-//		this.uploadPanel = new UploadPanel();
-//		addComponent(uploadLabel, 0, 2, 1, 2);
-//		addComponent(uploadPanel, 0, 3, 1, 3);
-
 		setColumnExpandRatio(1, 1);
 	}
 	

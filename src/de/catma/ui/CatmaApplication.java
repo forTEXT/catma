@@ -92,7 +92,7 @@ import de.catma.ui.visualizer.VisualizationManagerView;
 import de.catma.ui.visualizer.VisualizationManagerWindow;
 
 @Push(PushMode.MANUAL)
-@Theme("cleanew")
+@Theme("cleatheme")
 @PreserveOnRefresh
 public class CatmaApplication extends UI
 	implements BackgroundServiceProvider, AnalyzerProvider, LoginToken {
