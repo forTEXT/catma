@@ -78,6 +78,12 @@
 	</servlet>  
 	
 	<servlet> 
+		<servlet-name>HeurecleaPeriodicExportInitializerServlet</servlet-name> 
+		<servlet-class>de.catma.heureclea.HeurecleaPeriodicExportInitializerServlet</servlet-class> 
+		<load-on-startup>4</load-on-startup>
+	</servlet>
+	
+	<servlet> 
 		<servlet-name>DBMaintenanceInitializerServlet</servlet-name> 
 		<servlet-class>de.catma.repository.db.maintenance.DBMaintenanceInitializerServlet</servlet-class> 
 		<load-on-startup>4</load-on-startup>
