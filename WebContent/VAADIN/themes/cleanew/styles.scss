@@ -127,4 +127,29 @@
 		padding-left:50px;
 		padding-top:10px;
 	}
+	.distributionchartviewpanel .v-slot {
+		height: 100% ! important;
+	}
+	
+	.distributionchartviewpanel .v-expand {
+		height: auto ! important;
+	}
+	
+	.distributionchartviewpanel .v-scrollable > .v-widget {
+ 	 	overflow: visible;
+	}
+	
+	.distributionchartviewpanelzoom {
+	/*	zoom: 50%;*/
+	    -moz-transform: scale(0.5);
+	/*    -webkit-transform: scale(1.0);*/
+	}
+	.v-table-cell-content-rtl-field {
+		direction: rtl;
+	}
+	
+	
+	.hidden-caption-c-slider .v-caption-c-clider {
+		display: none;
+	}
 }
