@@ -79,21 +79,16 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.analyzer.AnalyzerManagerView;
-import de.catma.ui.analyzer.AnalyzerManagerWindow;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.menu.LoginLogoutCommand;
 import de.catma.ui.menu.Menu;
 import de.catma.ui.menu.MenuFactory;
 import de.catma.ui.repository.RepositoryManagerView;
-import de.catma.ui.repository.RepositoryManagerWindow;
 import de.catma.ui.tagger.TaggerManagerView;
-import de.catma.ui.tagger.TaggerManagerWindow;
 import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagManagerView;
-import de.catma.ui.tagmanager.TagManagerWindow;
 import de.catma.ui.visualizer.VisualizationManagerView;
-import de.catma.ui.visualizer.VisualizationManagerWindow;
 
 @Push(PushMode.MANUAL)
 @Theme("cleanew")
@@ -213,19 +208,19 @@ public class CatmaApplication extends UI
 					contentPanel,
 					new MenuFactory.MenuEntryDefinition( 
 							"Repository Manager",
-							new RepositoryManagerWindow(repositoryManagerView))
-//					new MenuFactory.MenuEntryDefinition(
-//							"Tag Manager",
-//							new TagManagerWindow(tagManagerView)),
-//					new MenuFactory.MenuEntryDefinition(
-//							"Tagger",
-//							new TaggerManagerWindow(taggerManagerView)),
-//					new MenuFactory.MenuEntryDefinition(
-//							"Analyzer",
-//							new AnalyzerManagerWindow(analyzerManagerView)),
-//					new MenuFactory.MenuEntryDefinition(
-//							"Visualizer",
-//							new VisualizationManagerWindow(visualizationManagerView))
+							repositoryManagerView),
+					new MenuFactory.MenuEntryDefinition(
+							"Tag Manager",
+							tagManagerView),
+					new MenuFactory.MenuEntryDefinition(
+							"Tagger",
+							taggerManagerView),
+					new MenuFactory.MenuEntryDefinition(
+							"Analyzer",
+							analyzerManagerView),
+					new MenuFactory.MenuEntryDefinition(
+							"Visualizer",
+							visualizationManagerView)
 					);
 			addPropertyChangeListener(CatmaApplicationEvent.userChange, menu.userChangeListener);
 			
