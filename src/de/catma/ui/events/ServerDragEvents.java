@@ -10,6 +10,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+// see for reference:
+// https://vaadin.com/wiki/-/wiki/Main/Sending%20events%20from%20the%20client%20to%20the%20server%20using%20RPC
+// https://vaadin.com/book/vaadin7/-/page/gwt.extension.html
+// https://vaadin.com/book/vaadin7/-/page/gwt.rpc.html
+// https://vaadin.com/directory#!addon/mouse-events-extension
+
 // Simple how to use:
 //
 //Button button = new Button("Button with Drag", e -> layout.addComponent(new Label("Click")));
