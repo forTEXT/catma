@@ -276,6 +276,7 @@ public class TaggerView extends VerticalLayout
 		actionPanel.addComponent(pagerComponent);
 		
 		btAnalyze = new Button("Analyze Document");
+		btAnalyze.addStyleName("primary-button");
 		btAnalyze.setEnabled(repository instanceof IndexedRepository);
 		actionPanel.addComponent(btAnalyze);
 		

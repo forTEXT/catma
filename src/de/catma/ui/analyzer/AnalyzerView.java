@@ -623,9 +623,11 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		convenienceButtonPanel.setSpacing(true);
 		
 		btQueryBuilder = new Button("Query Builder");
+		btQueryBuilder.addStyleName("secondary-button");
 		convenienceButtonPanel.addComponent(btQueryBuilder);
 		
 		btWordList = new Button("Wordlist");
+		btWordList.addStyleName("primary-button");
 		convenienceButtonPanel.addComponent(btWordList);
 		
 		helpLabel = new Label();
