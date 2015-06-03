@@ -20,10 +20,10 @@ import com.vaadin.client.ServerConnector;
 import com.vaadin.client.extensions.AbstractExtensionConnector;
 import com.vaadin.shared.ui.Connect;
 
-import de.catma.ui.events.DragEvents;
+import de.catma.ui.events.ServerDragEvents;
 
-@Connect(DragEvents.class)
-public class DragEventsConnector extends AbstractExtensionConnector implements DragStartHandler, DragEndHandler, 
+@Connect(ServerDragEvents.class)
+public class ServerDragEventsConnector extends AbstractExtensionConnector implements DragStartHandler, DragEndHandler, 
 DragEnterHandler, DragLeaveHandler, DragHandler, DragOverHandler {
 
     @Override

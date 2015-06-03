@@ -15,14 +15,14 @@ import java.util.Set;
 //Button button = new Button("Button with Drag", e -> layout.addComponent(new Label("Click")));
 // it may be useful to also include button.setImmediate(true); but the events do make it to the server without it
 //
-//DragEvents dragEvents = DragEvents.enableFor(button);
-//dragEvents.addDragStartListener(new DragEvents.DragStartListener(){
+//ServerDragEvents serverDragEvents = ServerDragEvents.enableFor(button);
+//serverDragEvents.addDragStartListener(new ServerDragEvents.DragStartListener(){
 //	public void dragStart(){
 //		logger.info("dragStart: We started to move");
 //	}
 //});
 
-public class DragEvents extends AbstractExtension {
+public class ServerDragEvents extends AbstractExtension {
 
     private Set<DragStartListener> dragStartListeners = new HashSet<DragStartListener>();
     private Set<DragEndListener> dragEndListeners = new HashSet<DragEndListener>();
@@ -88,13 +88,13 @@ public class DragEvents extends AbstractExtension {
         }
     };
 
-    protected DragEvents(AbstractClientConnector component) {
+    protected ServerDragEvents(AbstractClientConnector component) {
         registerRpc(rpc);
         extend(component);
     }
 
-    public static DragEvents enableFor(AbstractClientConnector component) {
-        return new DragEvents(component);
+    public static ServerDragEvents enableFor(AbstractClientConnector component) {
+        return new ServerDragEvents(component);
     }
 
     private void fireDragStartEvents() {
