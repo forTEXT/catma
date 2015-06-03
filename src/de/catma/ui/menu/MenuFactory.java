@@ -22,6 +22,7 @@ import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
+import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 
 import de.catma.ui.CatmaWindow;
@@ -30,9 +31,9 @@ public class MenuFactory {
 	
 	public static class MenuEntryDefinition {
 		private String caption;
-		private CatmaWindow window;
+		private Panel window;
 		
-		public MenuEntryDefinition(String caption, CatmaWindow window) {
+		public MenuEntryDefinition(String caption, Panel window) {
 			super();
 			this.caption = caption;
 			this.window = window;
@@ -42,7 +43,7 @@ public class MenuFactory {
 			return caption;
 		}
 		
-		public CatmaWindow getWindow() {
+		public Panel getWindow() {
 			return window;
 		}
 	}
@@ -57,10 +58,11 @@ public class MenuFactory {
 	 * @return {@link Menu}
 	 */
 	public Menu createMenu(
-			final ComponentContainer componentContainer, 
+			final ComponentContainer componentContainer,
+			final Panel windowContainer,
 			final MenuEntryDefinition... menuEntryDefintions) {
 		
-		return createMenu(false, componentContainer, menuEntryDefintions);
+		return createMenu(false, componentContainer, windowContainer, menuEntryDefintions);
 	}
 
 	/**
@@ -72,7 +74,8 @@ public class MenuFactory {
 	 */
 	public Menu createMenu(
 			final boolean isVisible,
-			final ComponentContainer componentContainer, 
+			final ComponentContainer componentContainer,
+			final Panel windowContainer,
 			final MenuEntryDefinition... menuEntryDefintions) {
 		
 		
@@ -85,13 +88,16 @@ public class MenuFactory {
 			Command command = new Command() {
 				
 				public void menuSelected(MenuItem selectedItem) {
-					if (menuEntryDefinition.getWindow().getParent() != null) {
-						menuEntryDefinition.getWindow().bringToFront();
+					if (windowContainer != null){
+						windowContainer.setContent(menuEntryDefinition.getWindow());
 					}
-					else {
-						UI.getCurrent().addWindow(menuEntryDefinition.getWindow());
-						menuEntryDefinition.getWindow().setPosition();
-					}
+//					if (menuEntryDefinition.getWindow().getParent() != null) {
+//						menuEntryDefinition.getWindow().bringToFront();
+//					}
+//					else {
+//						UI.getCurrent().addWindow(menuEntryDefinition.getWindow());
+//						menuEntryDefinition.getWindow().setPosition();
+//					}
 				}
 			};
 			menu.addEntry(menuEntryDefinition.getWindow().getContent(), command);

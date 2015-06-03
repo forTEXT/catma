@@ -18,35 +18,40 @@
  */
 package de.catma.ui.repository;
 
+import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 
 import de.catma.ui.CatmaWindow;
 
 
-public class RepositoryManagerWindow extends CatmaWindow {
+public class RepositoryManagerWindow extends Panel {
 
 	public RepositoryManagerWindow(RepositoryManagerView view) {
-		super("Repository Manager");
+//		super("Repository Manager");
 		this.setContent(view);
-		setWidth("75%");
-		setHeight("90%");
-		setPositionX(50);
-		setPositionY(50);
-		setEnableScrolling(true);
+//		setWidth("75%");
+		setHeight("100%");
+//		setPositionX(50);
+//		setPositionY(50);
+//		setEnableScrolling(true);
 	}
 	
-	@Override
 	public void setPosition() {
 		
-		if ((UI.getCurrent().getWidthUnits() == Unit.PIXELS) && (UI.getCurrent().getWidth() > 0)) {
-			setPositionX(Float.valueOf(Math.min(UI.getCurrent().getWidth(), 50)).intValue());
-			
-			if ((UI.getCurrent().getHeightUnits() == Unit.PIXELS) && (UI.getCurrent().getHeight() > 0)) {
-				setPositionY(Float.valueOf(Math.min(UI.getCurrent().getHeight(), 50)).intValue());
-			}
-		}
-		else {
-			super.setPosition();
-		}
 	}
+	
+//	@Override
+//	public void setPosition() {
+//		
+//		if ((UI.getCurrent().getWidthUnits() == Unit.PIXELS) && (UI.getCurrent().getWidth() > 0)) {
+//			setPositionX(Float.valueOf(Math.min(UI.getCurrent().getWidth(), 50)).intValue());
+//			
+//			if ((UI.getCurrent().getHeightUnits() == Unit.PIXELS) && (UI.getCurrent().getHeight() > 0)) {
+//				setPositionY(Float.valueOf(Math.min(UI.getCurrent().getHeight(), 50)).intValue());
+//			}
+//		}
+//		else {
+//			super.setPosition();
+//		}
+//	}
 }
