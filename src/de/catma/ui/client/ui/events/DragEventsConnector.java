@@ -30,7 +30,7 @@ DragEnterHandler, DragLeaveHandler, DragHandler, DragOverHandler {
     protected void extend(ServerConnector serverConnector) {
         Widget target = ((ComponentConnector) serverConnector).getWidget();
 
-        target.addDomHandler(this, DragStartEvent.getType()); // remember to try addDomHandler
+        target.addDomHandler(this, DragStartEvent.getType());
         target.addDomHandler(this, DragEndEvent.getType());
         target.addDomHandler(this, DragEnterEvent.getType());
         target.addDomHandler(this, DragLeaveEvent.getType());
@@ -40,6 +40,7 @@ DragEnterHandler, DragLeaveHandler, DragHandler, DragOverHandler {
 
     @Override
     public void onDragStart(DragStartEvent dragStartEvent) {
+    	// if you do want to pass something through the RPC call, it must be serializable
         getRpcProxy(DragEventsServerRPC.class).dragStart();
     }
 
