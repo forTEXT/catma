@@ -248,8 +248,10 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		HorizontalLayout buttonHeaderPanel = new HorizontalLayout();
 		buttonHeaderPanel.setWidth("100%");
 		buttonHeaderPanel.setMargin(new MarginInfo(true, false, false, false));
-		
+				
 		btnOpenTagset = new Button("Open Tagset");
+		btnOpenTagset.addStyleName("primary-button");
+				
 		buttonHeaderPanel.addComponent(btnOpenTagset);
 		
 		Label helpLabel = new Label();

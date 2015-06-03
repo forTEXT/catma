@@ -934,8 +934,10 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		((HorizontalLayout)documentButtonsPanel.getContent()).setSpacing(true);
 		
 		btOpenDocument = new Button("Open Document");
+		btOpenDocument.addStyleName("primary-button");
 		documentButtonsPanelContent.addComponent(btOpenDocument);
 		btAddDocument = new Button("Add Document");
+		btAddDocument.addStyleName("secondary-button");
 		documentButtonsPanelContent.addComponent(btAddDocument);
 
 		MenuBar menuMoreDocumentActions = new MenuBar();

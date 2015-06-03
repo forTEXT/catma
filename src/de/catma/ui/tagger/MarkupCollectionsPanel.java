@@ -628,6 +628,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		buttonHeaderPanel.setMargin(new MarginInfo(true, false, true, false));
 		
 		btnOpenMarkupCollection = new Button("Open Markup Collection(s)");
+		btnOpenMarkupCollection.addStyleName("primary-button");
 		buttonHeaderPanel.addComponent(btnOpenMarkupCollection);
 		addComponent(buttonHeaderPanel);
 		

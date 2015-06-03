@@ -807,6 +807,7 @@ public class TagsetTree extends HorizontalLayout {
 			documentPanel.setMargin(new MarginInfo(true, true, false, true));
 			
 			btLoadIntoDocument = new Button("Load Tagset into currently active Document");
+			btLoadIntoDocument.addStyleName("primary-button");
 			btLoadIntoDocument.setWidth("100%");
 			btLoadIntoDocument.setEnabled(true);
 			documentPanel.addComponent(btLoadIntoDocument);
@@ -829,6 +830,7 @@ public class TagsetTree extends HorizontalLayout {
 
 			
 			btInsertTagset = new Button("Create Tagset");
+			btInsertTagset.addStyleName("secondary-button");
 			btInsertTagset.setEnabled(true);
 			btInsertTagset.setWidth("100%");
 			tagsetPanel.addComponent(btInsertTagset);
@@ -862,6 +864,7 @@ public class TagsetTree extends HorizontalLayout {
 			tagPanel.setComponentAlignment(tagLabel, Alignment.BOTTOM_LEFT);
 			
 			btInsertTag = new Button("Create Tag");
+			btInsertTag.addStyleName("secondary-button");
 			btInsertTag.setWidth("100%");
 			if (withTagsetButtons) {
 				btInsertTag.setEnabled(true);
