@@ -18,11 +18,13 @@
  */
 package de.catma.ui.menu;
 
+import java.util.HashMap;
+
+import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.MenuBar;
-import com.vaadin.ui.MenuBar.Command;
-import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.MenuBar.MenuItem;
 
 import de.catma.ui.tabbedview.TabbedView;
 
@@ -51,53 +53,64 @@ public class MenuFactory {
 	}
 	
 	/**
-	 * Creates a {@link Menu}, with visibility set to <code>false</code> by default.
+	 * Creates a {@link MainMenu}, with visibility set to <code>false</code> by default.
 	 * @param componentContainer {@link ComponentContainer} The container for the menu.
 	 * @param viewContainer {@link Panel} The container for the views.
-	 * @param menuEntryDefintions {@link MenuEntryDefinition}
-	 * @return {@link Menu}
+	 * @param menuEntryDefinitions {@link MenuEntryDefinition}
+	 * @return {@link MainMenu}
 	 */
-	public Menu createMenu(
+	public MainMenu createMenu(
 			final ComponentContainer componentContainer,
 			final Panel viewContainer,
-			final MenuEntryDefinition... menuEntryDefintions) {
+			final MenuEntryDefinition... menuEntryDefinitions) {
 		
-		return createMenu(false, componentContainer, viewContainer, menuEntryDefintions);
+		return createMenu(false, componentContainer, viewContainer, menuEntryDefinitions);
 	}
 
 	/**
-	 * Creates a {@link Menu}.
+	 * Creates a {@link MainMenu}.
 	 * @param isVisible {@link Boolean} Whether or not the menu is visible by default.
 	 * @param componentContainer {@link ComponentContainer} The container for the menu.
 	 * @param viewContainer {@link Panel} The container for the views.
-	 * @param menuEntryDefintions {@link MenuEntryDefinition}
-	 * @return {@link Menu}
+	 * @param menuEntryDefinitions {@link MenuEntryDefinition}
+	 * @return {@link MainMenu}
 	 */
-	public Menu createMenu(
+	public MainMenu createMenu(
 			final boolean isVisible,
 			final ComponentContainer componentContainer,
 			final Panel viewContainer,
-			final MenuEntryDefinition... menuEntryDefintions) {
+			final MenuEntryDefinition... menuEntryDefinitions) {
 		
 		
-		final MenuBar menuBar = new MenuBar();
-		menuBar.setVisible(isVisible);
+		final MainMenu mainMenu = new MainMenu();
+		mainMenu.setVisible(isVisible);
 		
-		Menu menu = new Menu(menuBar);
-		
-		for (final MenuEntryDefinition menuEntryDefinition : menuEntryDefintions) {
-			Command command = new Command() {
-				
-				public void menuSelected(MenuItem selectedItem) {
-					viewContainer.setContent(menuEntryDefinition.getView());
+		MenuBar.Command command = new MenuBar.Command() {
+			MenuItem previous = null;
+			
+			@Override
+			public void menuSelected(MenuItem selectedItem) {
+				if (previous != null) {
+					previous.setStyleName(null);
 				}
-			};
-			menu.addEntry(menuEntryDefinition.getView(), command);
-			menuBar.addItem(menuEntryDefinition.getCaption(), command);
-		}
-		componentContainer.addComponent(menuBar);
+				
+				selectedItem.setStyleName("highlight");
+		        previous = selectedItem;
+		        
+		        HashMap<MenuBar.MenuItem, Component> entries = mainMenu.getEntries();
+		        Component component = entries.get(selectedItem);
+		        
+		        viewContainer.setContent(component);
+			}
+		};
 		
-		return menu;
+		for (final MenuEntryDefinition menuEntryDefinition : menuEntryDefinitions) {
+			mainMenu.addEntry(menuEntryDefinition.getCaption(), command, menuEntryDefinition.getView());
+		}
+		
+		componentContainer.addComponent(mainMenu);
+		
+		return mainMenu;
 	}
 	
 	

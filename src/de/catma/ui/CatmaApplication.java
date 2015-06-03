@@ -82,7 +82,7 @@ import de.catma.ui.analyzer.AnalyzerManagerView;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.menu.LoginLogoutCommand;
-import de.catma.ui.menu.Menu;
+import de.catma.ui.menu.MainMenu;
 import de.catma.ui.menu.MenuFactory;
 import de.catma.ui.repository.RepositoryManagerView;
 import de.catma.ui.tagger.TaggerManagerView;
@@ -102,7 +102,7 @@ public class CatmaApplication extends UI
 
 	private RepositoryManagerView repositoryManagerView;
 	private TagManagerView tagManagerView;
-	private Menu menu;
+	private MainMenu menu;
 	private String tempDirectory = null;
 	private BackgroundService backgroundService;
 	private TaggerManagerView taggerManagerView;
