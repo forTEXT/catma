@@ -94,6 +94,7 @@ public class TagsetTree extends HorizontalLayout {
 	private boolean withTagButtons;
 	private boolean withPropertyButtons;
 	private boolean withDocumentButtons;
+	private VerticalLayout propertyPanel;
 	private ColorButtonListener colorButtonListener;
 	private TagManager tagManager;
 	private TagLibrary tagLibrary;
@@ -346,6 +347,11 @@ public class TagsetTree extends HorizontalLayout {
 						btRemoveTagset, btEditTagset, 
 						btInsertTag, btRemoveTag, btEditTag, 
 						btInsertProperty, btRemoveProperty, btEditProperty));
+		
+		tagTree.addValueChangeListener(
+				new PanelStateManager(
+						propertyPanel, withPropertyButtons
+						));
 	}
 	
 	private void removeUserDefinedPropertyDefinitionFromTree(
@@ -883,7 +889,7 @@ public class TagsetTree extends HorizontalLayout {
 		}
 		
 		if (withPropertyButtons) {
-			VerticalLayout propertyPanel = new VerticalLayout();
+			propertyPanel = new VerticalLayout();
 			propertyPanel.setSpacing(true);
 			propertyPanel.setMargin(new MarginInfo(true, true, false, true));
 			
