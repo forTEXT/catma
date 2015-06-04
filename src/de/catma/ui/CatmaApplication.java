@@ -400,28 +400,21 @@ public class CatmaApplication extends UI
 	}
 	 
 	public void openTagLibrary(Repository repository, TagLibrary tagLibrary) {
-		if (!tagManagerView.isAttached()) {
-			menu.executeEntry(tagManagerView);
-		}
-		else {
-			((Window)tagManagerView.getParent()).bringToFront();
-		}
+		menu.executeEntry(tagManagerView);
 		tagManagerView.openTagLibrary(repository, tagLibrary);
 	}
 
 	public TaggerView openSourceDocument(
 			SourceDocument sourceDocument, Repository repository) {
-		if (!taggerManagerView.isAttached()) {
-			menu.executeEntry(taggerManagerView);
-			Notification.show(
-					"Information", 
-					"To markup your text please drag Tagsets from a Tag Library " +
-					"into the currently active Tagsets area!",
-					Type.TRAY_NOTIFICATION);
-		}
-		else {
-			((Window)taggerManagerView.getParent()).bringToFront();
-		}
+
+		menu.executeEntry(taggerManagerView);
+		
+//		Notification.show(
+//				"Information", 
+//				"To markup your text please drag Tagsets from a Tag Library " +
+//				"into the currently active Tagsets area!",
+//				Type.TRAY_NOTIFICATION);
+		
 		return taggerManagerView.openSourceDocument(
 				sourceDocument, repository);
 	}
@@ -463,23 +456,14 @@ public class CatmaApplication extends UI
 	}
 	
 	public void analyze(Corpus corpus, IndexedRepository repository) {
-		if (!analyzerManagerView.isAttached()) {
-			menu.executeEntry(analyzerManagerView);
-		}
-		else {
-			((Window)analyzerManagerView.getParent()).bringToFront();
-		}
+		menu.executeEntry(analyzerManagerView);
 		analyzerManagerView.analyzeDocuments(corpus, repository);
 	}
 	
 	public int addVisualization(Integer visualizationId, String caption,
 			DistributionComputation distributionComputation, DistributionSelectionListener distributionSelectionListener) {
-		if (!visualizationManagerView.isAttached()) {
-			menu.executeEntry(visualizationManagerView);
-		}
-		else {
-			((Window)visualizationManagerView.getParent()).bringToFront();
-		}
+		
+		menu.executeEntry(visualizationManagerView);
 		
 		return visualizationManagerView.addVisualization(visualizationId, caption,
 				distributionComputation, distributionSelectionListener);
@@ -521,13 +505,7 @@ public class CatmaApplication extends UI
 	}
 
 	public void addDoubleTree(List<KeywordInContext> kwics) {
-		if (!visualizationManagerView.isAttached()) {
-			menu.executeEntry(visualizationManagerView);
-		}
-		else {
-			((Window)visualizationManagerView.getParent()).bringToFront();
-		}
-
+		menu.executeEntry(visualizationManagerView);
 		visualizationManagerView.addDoubleTree(kwics);
 	}
 
