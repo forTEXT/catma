@@ -380,21 +380,16 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 				"You have to enter a name!",
 				new SaveCancelListener<PropertysetItem>() {
 					public void cancelPressed() {}
-					public void savePressed(
-							PropertysetItem propertysetItem) {
-						com.vaadin.data.Property<?> property = 
-								propertysetItem.getItemProperty(
-										userMarkupCollectionNameProperty);
-						String name = (String)property.getValue();
-						try {
-							repository.createUserMarkupCollection(
-									name, sourceDocument);
-						} catch (IOException e) {
-							((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"Error creating the User Markup Collection!", e);
+					public void savePressed(PropertysetItem propertysetItem) {
+							com.vaadin.data.Property<?> property = propertysetItem.getItemProperty(userMarkupCollectionNameProperty);
+							String name = (String)property.getValue();
+							try {
+								repository.createUserMarkupCollection(name, sourceDocument);
+							} catch (IOException e) {
+								((CatmaApplication)UI.getCurrent()).showAndLogError("Error creating the User Markup Collection!", e);
+							}
 						}
-					}
-				}, userMarkupCollectionNameProperty);
+					}, userMarkupCollectionNameProperty);
 		
 		// TODO: Automatically load the created markup collection?
 	}
