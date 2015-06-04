@@ -9,11 +9,6 @@
 	<classpathentry kind="lib" path="genlib/jooq-codegen-3.1.0.jar" sourcepath="/opt/jooq310/src/jooq-codegen-3.1.0-sources.jar"/>
 	<classpathentry kind="lib" path="genlib/jooq-console-3.1.0.jar"/>
 	<classpathentry kind="lib" path="genlib/jooq-meta-3.1.0.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jst.server.core.container/org.eclipse.jst.server.jetty.runtimeTarget/Jetty v7.6">
-		<attributes>
-			<attribute name="owner.project.facets" value="jst.web"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="con" path="org.apache.ivyde.eclipse.cpcontainer.IVYDE_CONTAINER/?project=catma&amp;ivyXmlPath=ivy.xml&amp;confs=default&amp;ivySettingsPath=%24%7Bworkspace_loc%3Acatma%2Fivysettings.xml%7D&amp;loadSettingsOnDemand=false&amp;ivyUserDir=&amp;propertyFiles=">
 		<attributes>
 			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
@@ -21,6 +16,29 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.apache.ivyde.eclipse.cpcontainer.IVYDE_CONTAINER/?project=catma&amp;ivyXmlPath=ivy.xml&amp;confs=widgetset-compile&amp;ivySettingsPath=%24%7Bworkspace_loc%3Acatma%2Fivysettings.xml%7D&amp;loadSettingsOnDemand=false&amp;ivyUserDir=&amp;propertyFiles="/>
 	<classpathentry kind="con" path="org.apache.ivyde.eclipse.cpcontainer.IVYDE_CONTAINER/?project=catma&amp;ivyXmlPath=ivy.xml&amp;confs=nodeploy&amp;ivySettingsPath=%24%7Bworkspace_loc%3Acatma%2Fivysettings.xml%7D&amp;loadSettingsOnDemand=false&amp;ivyUserDir=&amp;propertyFiles="/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7">
+		<attributes>
+			<attribute name="owner.project.facets" value="java"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/annotations/asm-5.0.1.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/annotations/asm-commons-5.0.1.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/annotations/javax.annotation-api-1.2.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/jndi/javax.mail.glassfish-1.4.1.v201005082020.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/jndi/javax.transaction-api-1.2.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/jetty-annotations-9.2.10.v20150310.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/jetty-deploy-9.2.10.v20150310.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/jetty-http-9.2.10.v20150310.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/jetty-io-9.2.10.v20150310.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/jetty-jndi-9.2.10.v20150310.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/jetty-plus-9.2.10.v20150310.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/jetty-schemas-3.1.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/jetty-security-9.2.10.v20150310.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/jetty-server-9.2.10.v20150310.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/setuid/jetty-setuid-java-1.0.1.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/jetty-util-9.2.10.v20150310.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/jetty-webapp-9.2.10.v20150310.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/jetty-xml-9.2.10.v20150310.jar"/>
+	<classpathentry kind="lib" path="/opt/jetty-distribution-9.2.10.v20150310/lib/servlet-api-3.1.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
