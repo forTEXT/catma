@@ -25,7 +25,7 @@ public class MainMenu extends MenuBar {
 	}
 	
 	public void addEntry(String caption, MenuBar.Command command, Component component) {
-		MenuBar.MenuItem menuItem = super.addItem(caption, command);
+		MenuBar.MenuItem menuItem = super.addItem(caption, null, command); //NB: have to call this overload of addItem, otherwise we end up in our overridden, not implemented method below
 		this.entries.put(menuItem, component);
 	}
 	
@@ -55,17 +55,17 @@ public class MainMenu extends MenuBar {
 	
 	
 	
-//	@Override
-//	public MenuBar.MenuItem addItem(String caption, MenuBar.Command command) {
-//		throw new UnsupportedOperationException("Use the addEntry method");
-//	}
+	@Override
+	public MenuBar.MenuItem addItem(String caption, MenuBar.Command command) {
+		throw new UnsupportedOperationException("Use the addEntry method");
+	}
 	
-//	@Override
-//	public MenuBar.MenuItem addItem(String caption, Resource icon,
-//			MenuBar.Command command) {
-//		// TODO: create an addEntry overload that accepts an icon
-//		throw new UnsupportedOperationException("Not implemented");
-//	}
+	@Override
+	public MenuBar.MenuItem addItem(String caption, Resource icon,
+			MenuBar.Command command) {
+		// TODO: create an addEntry overload that accepts an icon
+		throw new UnsupportedOperationException("Not implemented");
+	}
 	
 	@Override
 	public MenuBar.MenuItem addItemBefore(String caption, Resource icon,
