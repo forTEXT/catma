@@ -31,6 +31,7 @@ import java.util.Set;
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.vaadin.data.Container;
+import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.Action;
 import com.vaadin.event.DataBoundTransferable;
 import com.vaadin.event.dd.DragAndDropEvent;
@@ -41,11 +42,13 @@ import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -68,6 +71,7 @@ import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.ui.menu.CMenuAction;
 import de.catma.ui.repository.CorpusContentSelectionDialog;
 import de.catma.ui.tagger.MarkupCollectionsPanel.MarkupCollectionPanelEvent;
@@ -295,7 +299,14 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 						public void buttonClick(ClickEvent event) {
 							handleOpenUserMarkupCollectionRequest(repository.getSourceDocument(sourceDocumentId));
 						}
-					});
+					},
+					new ClickListener() {
+						
+						@Override
+						public void buttonClick(ClickEvent event) {
+							handleCreateUserMarkupCollectionRequest(repository.getSourceDocument(sourceDocumentId));
+						}
+					}); // TODO: new ClickListener createMarkupCollectionsHandler goes here
 		markupCollectionsPanel.addPropertyChangeListener(
 				MarkupCollectionPanelEvent.tagDefinitionSelected, 
 				tagDefinitionSelectionListener);
@@ -357,6 +368,35 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			"Choose markup collections to open for this document"
 		);
 		dialog.show();
+	}
+	
+	private void handleCreateUserMarkupCollectionRequest(final SourceDocument sourceDocument) {
+		final String userMarkupCollectionNameProperty = "name";
+			
+		SingleValueDialog singleValueDialog = new SingleValueDialog();
+		
+		singleValueDialog.getSingleValue(
+				"Create a new User Markup Collection",
+				"You have to enter a name!",
+				new SaveCancelListener<PropertysetItem>() {
+					public void cancelPressed() {}
+					public void savePressed(
+							PropertysetItem propertysetItem) {
+						com.vaadin.data.Property<?> property = 
+								propertysetItem.getItemProperty(
+										userMarkupCollectionNameProperty);
+						String name = (String)property.getValue();
+						try {
+							repository.createUserMarkupCollection(
+									name, sourceDocument);
+						} catch (IOException e) {
+							((CatmaApplication)UI.getCurrent()).showAndLogError(
+								"Error creating the User Markup Collection!", e);
+						}
+					}
+				}, userMarkupCollectionNameProperty);
+		
+		// TODO: Automatically load the created markup collection?
 	}
 
 	private void handleOpenTagsetRequest() {

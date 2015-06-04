@@ -113,8 +113,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private PropertyChangeListener userMarkupCollectionTagLibraryChangedListener;
 	private PropertyChangeListener userPropertyDefinitionChangedListener;
 	private Button btnOpenMarkupCollection;
+	private Button btnCreateMarkupCollection;
 	
-	public MarkupCollectionsPanel(Repository repository, ClickListener openMarkupCollectionsHandler) {
+	public MarkupCollectionsPanel(Repository repository, ClickListener openMarkupCollectionsHandler, ClickListener createMarkupCollectionsHandler) {
 		propertyChangeSupport = new PropertyChangeSupport(this);
 		this.tagManager = repository.getTagManager();
 		this.repository = repository;
@@ -122,7 +123,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				new UserMarkupCollectionManager(repository);
 		updateableforeignTagsetDefinitions = new HashSet<TagsetDefinition>();
 		initComponents();
-		initActions(openMarkupCollectionsHandler);
+		initActions(openMarkupCollectionsHandler, createMarkupCollectionsHandler);
 	}
 
 	public void addPropertyChangeListener(MarkupCollectionPanelEvent propertyName,
@@ -136,8 +137,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				listener);
 	}
 
-	private void initActions(ClickListener openMarkupCollectionsHandler) {
+	private void initActions(ClickListener openMarkupCollectionsHandler, ClickListener createMarkupCollectionsHandler) {
 		btnOpenMarkupCollection.addClickListener(openMarkupCollectionsHandler);
+		btnCreateMarkupCollection.addClickListener(createMarkupCollectionsHandler);
 
 		tagDefChangedListener = new PropertyChangeListener() {
 			
@@ -630,6 +632,10 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		btnOpenMarkupCollection = new Button("Open Markup Collection(s)");
 		btnOpenMarkupCollection.addStyleName("primary-button");
 		buttonHeaderPanel.addComponent(btnOpenMarkupCollection);
+		
+		btnCreateMarkupCollection = new Button("Create Markup Collection(s)");
+		btnCreateMarkupCollection.addStyleName("primary-button");
+		buttonHeaderPanel.addComponent(btnCreateMarkupCollection);
 		addComponent(buttonHeaderPanel);
 		
 		markupCollectionsTree = new TreeTable();
