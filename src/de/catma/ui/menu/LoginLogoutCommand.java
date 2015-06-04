@@ -35,7 +35,7 @@ import de.catma.ui.repository.RepositoryManagerView;
 public class LoginLogoutCommand implements Command {
 	private MenuItem loginLogoutItem;
 	private RepositoryManagerView repositoryManagerView;
-	private Menu menu;
+	private MainMenu menu;
 	private String afterLogoutRedirectURL;
 	
 	private PropertyChangeListener repositoryManagerListener = 
@@ -53,7 +53,7 @@ public class LoginLogoutCommand implements Command {
 	};
 	
 	public LoginLogoutCommand(
-			Menu menu, RepositoryManagerView repositoryManagerView) throws NamingException {
+			MainMenu menu, RepositoryManagerView repositoryManagerView) throws NamingException {
 		this.afterLogoutRedirectURL = 
 				RepositoryPropertyKey.BaseURL.getValue( 
 						RepositoryPropertyKey.BaseURL.getDefaultValue());
