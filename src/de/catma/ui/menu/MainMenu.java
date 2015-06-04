@@ -34,11 +34,10 @@ public class MainMenu extends MenuBar {
 			if (entry.getValue() == component) {
 				MenuItem menuItem = entry.getKey();
 				menuItem.getCommand().menuSelected(menuItem);
-				return;
 			}
 		}
 		
-		throw new IllegalArgumentException("Component not present in menu");
+//		throw new IllegalArgumentException("Component not present in menu");
 	}
 	
 	public PropertyChangeListener userChangeListener = 
