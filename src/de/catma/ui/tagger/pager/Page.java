@@ -112,6 +112,7 @@ public class Page {
 		int lineLength = 0;
 		int lineId = 0;
 		
+		//TODO: remove hardcoded line length
 		while(matcher.find()) {
 			if (lineLength + matcher.group().length()>80) {
 				Element lineSpan = new Element(HTMLElement.span.name());
