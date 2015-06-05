@@ -132,6 +132,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		Component documentsLabel = createDocumentsLabel();
 		addComponent(documentsLabel);
 		VerticalSplitPanel splitPanel = new VerticalSplitPanel();
+		splitPanel.setStyleName("repository-panels");
 		splitPanel.setSplitPosition(65);
 		
 		Component documentsManagerPanel = createDocumentsManagerPanel();
@@ -162,6 +163,8 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 				sourceDocumentPanel.setSourceDocumentsFilter((Corpus)value);
 			}		
 		});
+		
+		corpusPanel.setMargin(true);
 
 		documentsManagerPanel.addComponent(corpusPanel);
 		documentsManagerPanel.addComponent(sourceDocumentPanel);
