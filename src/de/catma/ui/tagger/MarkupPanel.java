@@ -244,6 +244,8 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		VerticalLayout tabContent = new VerticalLayout();
 		tabContent.setSpacing(true);
 		tabContent.setSizeFull();
+		tabContent.addStyleName("catma-tagger-panels");
+
 		
 		HorizontalLayout buttonHeaderPanel = new HorizontalLayout();
 		buttonHeaderPanel.setWidth("100%");
@@ -285,7 +287,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		tabContent.setExpandRatio(tagsetTree, 1.0f);
 		
 		tabSheet.addTab(tabContent, "Active Tagsets");
-		
+				
 		markupCollectionsPanel = 
 				new MarkupCollectionsPanel(
 					repository,
@@ -366,8 +368,10 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	private Component createInfoPanel() {
 		VerticalLayout markupInfoPanel = new VerticalLayout();
 		markupInfoPanel.setSpacing(true);
+		markupInfoPanel.addStyleName("catma-tagger-panels");
 		writableUserMarkupCollectionLabel = new Label();
 		writableUserMarkupCollectionLabel.addStyleName("bold-label-caption");
+		writableUserMarkupCollectionLabel.addStyleName("catma-label-spacing");
 		writableUserMarkupCollectionLabel.setCaption(
 				"Writable Markup Collection:");
 		markupInfoPanel.addComponent(

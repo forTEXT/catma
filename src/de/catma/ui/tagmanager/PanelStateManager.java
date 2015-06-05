@@ -30,19 +30,11 @@ import de.catma.tag.TagsetDefinition;
 public class PanelStateManager implements ValueChangeListener {
 	
 	private VerticalLayout propertyPanel;
-	
-	private boolean withPropertyButtons;
 
-	public PanelStateManager(
-			VerticalLayout propertyPanel,
-			boolean withPropertyButtons
-			) {
+	public PanelStateManager(VerticalLayout propertyPanel) {
 		this.propertyPanel = propertyPanel;
-		this.withPropertyButtons = withPropertyButtons;
 		tagsetDefSelected(false);
 	}
-
-
 
 	public void valueChange(ValueChangeEvent event) {
 		TreeTable treeTable = (TreeTable)event.getProperty();
@@ -68,20 +60,18 @@ public class PanelStateManager implements ValueChangeListener {
 	}
 	
 	private void tagsetDefSelected(boolean selected) {	
-		if (withPropertyButtons) {
 			propertyPanel.setVisible(false);
-		}
 	}
 	
 	private void tagDefSelected(boolean selected) {
-		if (withPropertyButtons && selected) {
+		if (selected) {
 			propertyPanel.setVisible(true);			
 		}
 	}
 	
 	private void propDefSelected(boolean selected) {	
-		if (withPropertyButtons) {
-			propertyPanel.setVisible(true);
+		if (selected) {
+			propertyPanel.setVisible(true);			
 		}
 	}	
 
