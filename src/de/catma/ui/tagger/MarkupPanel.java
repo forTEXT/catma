@@ -299,14 +299,8 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 						public void buttonClick(ClickEvent event) {
 							handleOpenUserMarkupCollectionRequest(repository.getSourceDocument(sourceDocumentId));
 						}
-					},
-					new ClickListener() {
-						
-						@Override
-						public void buttonClick(ClickEvent event) {
-							handleCreateUserMarkupCollectionRequest(repository.getSourceDocument(sourceDocumentId));
-						}
-					}); // TODO: new ClickListener createMarkupCollectionsHandler goes here
+					}
+				);
 		markupCollectionsPanel.addPropertyChangeListener(
 				MarkupCollectionPanelEvent.tagDefinitionSelected, 
 				tagDefinitionSelectionListener);
@@ -341,6 +335,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	
 	private void handleOpenUserMarkupCollectionRequest(final SourceDocument sourceDocument) {
 		CorpusContentSelectionDialog dialog = new CorpusContentSelectionDialog(
+			repository,
 			sourceDocument,
 			null,
 			new SaveCancelListener<Corpus>() {
@@ -364,34 +359,10 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 					}							
 				}
 			},
-			"Open Markup Collection(s)",
+			"Open Markup Collection",
 			"Choose markup collections to open for this document"
 		);
 		dialog.show();
-	}
-	
-	private void handleCreateUserMarkupCollectionRequest(final SourceDocument sourceDocument) {
-		final String userMarkupCollectionNameProperty = "name";
-			
-		SingleValueDialog singleValueDialog = new SingleValueDialog();
-		
-		singleValueDialog.getSingleValue(
-				"Create a new User Markup Collection",
-				"You have to enter a name!",
-				new SaveCancelListener<PropertysetItem>() {
-					public void cancelPressed() {}
-					public void savePressed(PropertysetItem propertysetItem) {
-							com.vaadin.data.Property<?> property = propertysetItem.getItemProperty(userMarkupCollectionNameProperty);
-							String name = (String)property.getValue();
-							try {
-								repository.createUserMarkupCollection(name, sourceDocument);
-							} catch (IOException e) {
-								((CatmaApplication)UI.getCurrent()).showAndLogError("Error creating the User Markup Collection!", e);
-							}
-						}
-					}, userMarkupCollectionNameProperty);
-		
-		// TODO: Automatically load the created markup collection?
 	}
 
 	private void handleOpenTagsetRequest() {
