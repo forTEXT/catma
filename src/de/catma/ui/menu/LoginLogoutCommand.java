@@ -24,6 +24,8 @@ import java.beans.PropertyChangeListener;
 import javax.naming.NamingException;
 
 import com.vaadin.server.Page;
+import com.vaadin.server.VaadinService;
+import com.vaadin.server.VaadinServletService;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
@@ -54,9 +56,20 @@ public class LoginLogoutCommand implements Command {
 	
 	public LoginLogoutCommand(
 			MainMenu menu, RepositoryManagerView repositoryManagerView) throws NamingException {
-		this.afterLogoutRedirectURL = 
-				RepositoryPropertyKey.BaseURL.getValue( 
-						RepositoryPropertyKey.BaseURL.getDefaultValue());
+		
+		String scheme = VaadinServletService.getCurrentServletRequest().getScheme();		
+		String serverName = VaadinServletService.getCurrentServletRequest().getServerName();		
+		Integer port = VaadinServletService.getCurrentServletRequest().getServerPort();
+		String contextPath = VaadinService.getCurrentRequest().getContextPath();
+//		String requestUri = VaadinServletService.getCurrentServletRequest().getRequestURI();
+		
+		
+		String baseUrl = String.format("%s://%s%s%s", scheme, serverName, port == 80 ? "" : ":"+port, contextPath);
+		this.afterLogoutRedirectURL = baseUrl;
+		
+//		this.afterLogoutRedirectURL = 
+//				RepositoryPropertyKey.BaseURL.getValue( 
+//						RepositoryPropertyKey.BaseURL.getDefaultValue());
 		
 		this.menu = menu;
 		this.repositoryManagerView = repositoryManagerView;
