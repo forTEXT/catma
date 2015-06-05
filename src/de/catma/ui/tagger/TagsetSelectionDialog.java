@@ -12,6 +12,7 @@ import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Window.CloseEvent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.UI;
@@ -39,6 +40,8 @@ public class TagsetSelectionDialog extends VerticalLayout {
 	private Tree tagLibrariesTree;
 	private TagsetTree tagsetTree;
 	private Button btCreateTagLibrary;
+	
+	PropertyChangeListener tagLibraryChangedListener;
 	
 	//TODO: a lot of stuff in here was copied from TagLibraryPanel and should be factored out into components
 	public TagsetSelectionDialog(Repository repository) {
@@ -133,11 +136,11 @@ public class TagsetSelectionDialog extends VerticalLayout {
 		tagsetTree.addBtLoadIntoDocumentListener(new ClickListener() {
 
 			public void buttonClick(ClickEvent event) {
-				UI.getCurrent().removeWindow(dialogWindow);			
+				dialogWindow.close();
 			}
 		});
 		
-		PropertyChangeListener tagLibraryChangedListener = new PropertyChangeListener() {
+		tagLibraryChangedListener = new PropertyChangeListener() {
 			
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getOldValue() == null) { //insert
@@ -148,20 +151,21 @@ public class TagsetSelectionDialog extends VerticalLayout {
 						new Object[] {SORTCAP_PROP}, new boolean[] { true });
 
 				}
-				else if (evt.getNewValue() == null) { //remove
-					TagLibraryReference tagLibraryRef = 
-							(TagLibraryReference)evt.getOldValue();
-					tagLibrariesTree.removeItem(tagLibraryRef);
-				}
-				else { //update
-					tagLibrariesTree.markAsDirty();
-				}
 			}
 		};
 		
 		this.repository.addPropertyChangeListener(
-				Repository.RepositoryChangeEvent.tagLibraryChanged, 
-				tagLibraryChangedListener);
+			Repository.RepositoryChangeEvent.tagLibraryChanged, 
+			tagLibraryChangedListener
+		);
+		
+		dialogWindow.addCloseListener(new Window.CloseListener() {
+			
+			@Override
+			public void windowClose(CloseEvent e) {
+				removeListeners();
+			}
+		});
 	}
 	
 	private void addTagLibraryReferenceToTree(TagLibraryReference tlr) {
@@ -197,5 +201,13 @@ public class TagsetSelectionDialog extends VerticalLayout {
 	
 	public void show() {
 		show("40%");
+	}
+	
+	// seems to get hit twice??
+	private void removeListeners() {
+		this.repository.removePropertyChangeListener(
+			Repository.RepositoryChangeEvent.tagLibraryChanged, 
+			tagLibraryChangedListener
+		);
 	}
 }
