@@ -249,6 +249,7 @@ public class TaggerView extends VerticalLayout
 				"the available Tag Instances in the section on the lower right of this view.");		
 		IndexInfoSet indexInfoSet = 
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet(); 
+		//TODO: remove hardcoded line length
 		pager = new Pager(taggerID, 80, 30, 
 				indexInfoSet.isRightToLeftLanguage());
 		

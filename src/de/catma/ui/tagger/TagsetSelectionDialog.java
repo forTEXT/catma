@@ -1,12 +1,18 @@
 package de.catma.ui.tagger;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 
+import com.vaadin.data.Property;
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -17,6 +23,8 @@ import de.catma.document.repository.Repository;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.ui.tagmanager.TagsetTree;
 
 public class TagsetSelectionDialog extends VerticalLayout {
@@ -30,21 +38,26 @@ public class TagsetSelectionDialog extends VerticalLayout {
 	private HierarchicalContainer tagLibraryContainer;
 	private Tree tagLibrariesTree;
 	private TagsetTree tagsetTree;
+	private Button btCreateTagLibrary;
 	
+	//TODO: a lot of stuff in here was copied from TagLibraryPanel and should be factored out into components
 	public TagsetSelectionDialog(Repository repository) {
 		super();
 		
 		this.repository = repository;
 		
 		initComponents();
+		initActions();
 		initListeners();
 	}
 
 	private void initComponents() {
+		HorizontalLayout tagLibrariesTreeContainer = new HorizontalLayout();
+		tagLibrariesTreeContainer.setWidth("100%");
+
 		tagLibraryContainer = new HierarchicalContainer();
-		tagLibraryContainer.addContainerProperty(SORTCAP_PROP, String.class, null);
-		
-		//TODO: factor out into component, copied from TagLibraryPanel
+		tagLibraryContainer.addContainerProperty(SORTCAP_PROP, String.class, null);		
+
 		tagLibrariesTree = new Tree();
 		tagLibrariesTree.setContainerDataSource(tagLibraryContainer);
 		
@@ -68,7 +81,14 @@ public class TagsetSelectionDialog extends VerticalLayout {
 			}
 		});
 		
-		addComponent(tagLibrariesTree);
+		tagLibrariesTreeContainer.addComponent(tagLibrariesTree);
+		tagLibrariesTreeContainer.setExpandRatio(tagLibrariesTree, 1.0f);
+		
+		btCreateTagLibrary = new Button("Create Tag Library");
+		btCreateTagLibrary.addStyleName("secondary-button");
+		tagLibrariesTreeContainer.addComponent(btCreateTagLibrary);
+		
+		addComponent(tagLibrariesTreeContainer);
 		
 		tagsetTree = new TagsetTree(repository.getTagManager(), null, false, false, false, false, true, null);
 		addComponent(tagsetTree);
@@ -79,6 +99,36 @@ public class TagsetSelectionDialog extends VerticalLayout {
 		dialogWindow.setContent(this);
 	}
 	
+	private void initActions() {
+		btCreateTagLibrary.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				final String nameProperty = "name";
+				SingleValueDialog singleValueDialog = new SingleValueDialog();
+						
+				singleValueDialog.getSingleValue(
+						"Create a new Tag Library",
+						"You have to enter a name!",
+						new SaveCancelListener<PropertysetItem>() {
+					public void cancelPressed() {}
+					public void savePressed(
+							PropertysetItem propertysetItem) {
+						Property property = 
+								propertysetItem.getItemProperty(
+										nameProperty);
+						String name = (String)property.getValue();
+						try {
+							repository.createTagLibrary(name);
+						} catch (IOException e) {
+							((CatmaApplication)UI.getCurrent()).showAndLogError(
+								"Error creating the Tag Library!", e);
+						}
+					}
+				}, nameProperty);
+			}
+		});
+	}
+	
 	private void initListeners() {
 		tagsetTree.addBtLoadIntoDocumentListener(new ClickListener() {
 
@@ -86,6 +136,39 @@ public class TagsetSelectionDialog extends VerticalLayout {
 				UI.getCurrent().removeWindow(dialogWindow);			
 			}
 		});
+		
+		PropertyChangeListener tagLibraryChangedListener = new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (evt.getOldValue() == null) { //insert
+					TagLibraryReference tagLibraryRef = 
+							(TagLibraryReference)evt.getNewValue();
+					addTagLibraryReferenceToTree(tagLibraryRef);
+					tagLibraryContainer.sort(
+						new Object[] {SORTCAP_PROP}, new boolean[] { true });
+
+				}
+				else if (evt.getNewValue() == null) { //remove
+					TagLibraryReference tagLibraryRef = 
+							(TagLibraryReference)evt.getOldValue();
+					tagLibrariesTree.removeItem(tagLibraryRef);
+				}
+				else { //update
+					tagLibrariesTree.markAsDirty();
+				}
+			}
+		};
+		
+		this.repository.addPropertyChangeListener(
+				Repository.RepositoryChangeEvent.tagLibraryChanged, 
+				tagLibraryChangedListener);
+	}
+	
+	private void addTagLibraryReferenceToTree(TagLibraryReference tlr) {
+		tagLibrariesTree.addItem(tlr);
+		tagLibrariesTree.getItem(tlr).getItemProperty(SORTCAP_PROP).setValue(
+				(tlr.toString()==null)?"":tlr.toString());
+		tagLibrariesTree.setChildrenAllowed(tlr, false);
 	}
 
 	private void handleTagLibrariesTreeItemClick(ItemClickEvent event) {

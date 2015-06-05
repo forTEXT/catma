@@ -857,6 +857,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					else {
 						CorpusContentSelectionDialog dialog =
 							new CorpusContentSelectionDialog(
+								repository,
 								sd,
 								currentCorpus,
 								new SaveCancelListener<Corpus>() {
