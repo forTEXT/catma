@@ -204,6 +204,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setSpacing(true);
 		buttonPanel.setWidth("100%");
+		buttonPanel.setStyleName("modal-button-container");
 		btOk = new Button("Ok");
 		btOk.setClickShortcut(KeyCode.ENTER);
 		btOk.focus();

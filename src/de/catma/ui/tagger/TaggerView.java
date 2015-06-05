@@ -337,6 +337,7 @@ public class TaggerView extends VerticalLayout
 		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		splitPanel.addComponent(taggerPanel);
 		splitPanel.addComponent(markupPanel);
+		splitPanel.addStyleName("catma-tab-spacing");
 		addComponent(splitPanel);
 	}
 

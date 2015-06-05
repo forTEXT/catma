@@ -626,6 +626,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		HorizontalLayout buttonHeaderPanel = new HorizontalLayout();
 		buttonHeaderPanel.setWidth("100%");
 		buttonHeaderPanel.setMargin(new MarginInfo(true, false, true, false));
+		buttonHeaderPanel.addStyleName("catma-tagger-markup-panels");
 		
 		btnOpenMarkupCollection = new Button("Open Markup Collection(s)");
 		btnOpenMarkupCollection.addStyleName("primary-button");
@@ -637,6 +638,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		markupCollectionsTree.setSelectable(true);
 		markupCollectionsTree.setMultiSelect(false);
 		markupCollectionsTree.setContainerDataSource(new HierarchicalContainer());
+		markupCollectionsTree.addStyleName("catma-tagger-markup-panels");
 
 		markupCollectionsTree.addContainerProperty(
 				MarkupCollectionsTreeProperty.caption, 

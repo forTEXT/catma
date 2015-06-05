@@ -8,9 +8,10 @@
   	}
   	
   	.catma-menu .v-menubar-menuitem-highlight {
-	    background: #CCC;
+	    background: #8AB8CF;
+	    color: #FFF;
 	}
-  
+	  
   	.contentPanel {
   		padding: 10px !important;
   		border-radius: 0;
@@ -62,14 +63,40 @@
 	}
 
 	.v-tabsheet-tabitemcell .v-tabsheet-tabitem-selected .v-caption.v-caption {
-		border-color: #dfdfdf;
-		color: #197de1;
+		color: #8AB8CF;
 		background-color: white;
 		border-left: 1px solid #dfdfdf;
 		border-right: 1px solid #dfdfdf;
+		border-top: 1px solid #dfdfdf;
 		padding: 0px 20px;
 	}
 	
+	.v-splitpanel-second-container-catma-tab-spacing {
+		padding: 10px 0px 0px 0px;
+	}
+	
+	.v-tabsheet-tabitemcell .v-caption:hover {
+		color: #8AB8CF;
+	}
+	
+	.v-slot-catma-label-spacing {
+		 padding: 10px 0px 5px 0px;
+	}
+	
+	.analyzer-panel-padding {
+		padding: 10px;
+	}
+	
+	.catma-menu:focus:after {
+		border: 0px;
+		box-shadow: none;
+		-webkit-box-shadow: none;
+	}
+	
+	.modal-button-container {
+		padding: 0px 10px 0px 0px;
+	}
+			
 	.v-tabsheet-tabitemcell .v-tabsheet-caption-close {
 		right: 3px;
 	}
@@ -78,6 +105,19 @@
 		border: none;
 		-webkit-box-shadow: none;
 		box-shadow: none;
+	}
+	
+	.catma-tagger-panels {
+		padding: 0px 0px 10px 10px;
+	}
+	
+	.v-slot-catma-tagger-markup-panels {
+		padding: 0px 0px 5px 10px;
+	}
+	
+	.pager-pageinput {
+		width: 43px;
+		text-align: center;
 	}
 
 	.v-slot > .v-button {
@@ -178,8 +218,8 @@
 	}
 	
 	.v-button-secondary-button {
-		background: #8AB8CF;
-		border: 1px solid #8AB8CF;
+		background: #9FB3BF;
+		border: 1px solid #9FB3BF;
 		color: #fff;
 		box-shadow: none;
 	}
@@ -189,6 +229,10 @@
 	}
 	
 	.v-tree-node-selected:after {
+		background: #78909C;
+	}
+	
+	.v-table [class*="-row"].v-selected {
 		background: #78909C;
 	}
 	

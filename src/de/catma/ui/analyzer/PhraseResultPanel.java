@@ -340,6 +340,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		VerticalLayout leftComponent = new VerticalLayout();
 		leftComponent.setSpacing(true);
 		leftComponent.setSizeFull();
+		leftComponent.addStyleName("analyzer-panel-padding");
 		
 		resultTable = new TreeTable();
 		resultTable.setSelectable(true);
@@ -406,6 +407,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		VerticalLayout rightComponent = new VerticalLayout();
 		rightComponent.setSpacing(true);
 		rightComponent.setSizeFull();
+		rightComponent.addStyleName("analyzer-panel-padding");
 		
 		this.kwicPanel = new KwicPanel(repository, relevantUserMarkupCollectionProvider);
 		rightComponent.addComponent(kwicPanel);

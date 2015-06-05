@@ -195,7 +195,6 @@ public class PagerComponent extends HorizontalLayout {
 		pageInput = new NumberField(1);
 		pageInput.setImmediate(true);
 		pageInput.setStyleName("pager-pageinput");
-		pageInput.setWidth("30px");
 		addComponent(pageInput);
 		lastPageNumberLabel = new Label("/NA");
 		addComponent(lastPageNumberLabel);
