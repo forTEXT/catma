@@ -348,10 +348,9 @@ public class TagsetTree extends HorizontalLayout {
 						btInsertTag, btRemoveTag, btEditTag, 
 						btInsertProperty, btRemoveProperty, btEditProperty));
 		
-		tagTree.addValueChangeListener(
-				new PanelStateManager(
-						propertyPanel, withPropertyButtons
-						));
+		if (propertyPanel != null) {
+			tagTree.addValueChangeListener(new PanelStateManager(propertyPanel));
+		}
 	}
 	
 	private void removeUserDefinedPropertyDefinitionFromTree(
