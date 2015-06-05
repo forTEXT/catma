@@ -236,5 +236,25 @@
 		background: #78909C;
 	}
 	
+	.v-splitpanel-first-container-repository-panels .v-panel.v-widget.v-has-width.v-has-height {
+		border: 0px;
+		box-shadow: none;
+	}
+	
+	.v-splitpanel-second-container-repository-panels .v-panel.v-widget.v-has-width.v-has-height {
+		border: 0px;
+		box-shadow: none;
+	}
+	
+	
+	span.v-button-wrap div.gwt-HTML span {
+		position: absolute;
+		top: 2px;
+		width: 80%;
+		height: 80%;
+		border-radius: 3px;
+		left: -1px;
+	}
+	
 
 }
