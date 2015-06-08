@@ -109,7 +109,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		btCancel.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				UI.getCurrent().removeWindow(dialogWindow);
+				dialogWindow.close();
 				listener.cancelPressed();
 				listener = null;
 			}
@@ -136,7 +136,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 						corpus.addUserMarkupCollectionReference(umcRef);
 					}
 				}
-				UI.getCurrent().removeWindow(dialogWindow);
+				dialogWindow.close();
 				listener.savePressed(corpus);
 			}
 		});
