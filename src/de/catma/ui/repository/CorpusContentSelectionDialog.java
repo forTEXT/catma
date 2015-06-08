@@ -223,6 +223,8 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		btCancel = new Button("Cancel");
 		dialogButtonPanel.addComponent(btCancel);
 		dialogButtonPanel.setComponentAlignment(btCancel, Alignment.MIDDLE_RIGHT);
+		
+		dialogButtonPanel.setStyleName("modal-button-container");
 		addComponent(dialogButtonPanel);
 		
 		dialogWindow = new Window(windowCaption);
@@ -275,7 +277,6 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 			pageLength = 15;
 		}
 		documentsTree.setPageLength(pageLength);
-		buttonPanel.setStyleName("modal-button-container");
 	}
 
 	private CheckBox createCheckBox(final boolean editable, boolean initialState) {
