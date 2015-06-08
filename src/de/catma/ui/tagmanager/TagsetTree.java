@@ -654,6 +654,13 @@ public class TagsetTree extends HorizontalLayout {
 	}
 
 	private void handleInsertTagsetDefinitionRequest() {
+		if (tagLibrary == null) {
+			Notification.show(
+				"Info", "Please select a Tag Library first!", 
+				Type.TRAY_NOTIFICATION);
+			return;
+		}
+		
 		final String tagsetdefinitionnameProperty = "name";
 		
 		PropertyCollection propertyCollection = 
@@ -926,8 +933,14 @@ public class TagsetTree extends HorizontalLayout {
 		addComponent(buttonGrid);
 		setExpandRatio(buttonGrid, 0.9f);
 	}
+	
+	private void clearTagsetDefinitions() {
+		tagTree.removeAllItems();
+	}
 
-	public void addTagsetDefinition(Collection<TagsetDefinition> tagsetDefinitions) {
+	private void setTagsetDefinitions(Collection<TagsetDefinition> tagsetDefinitions) {
+		clearTagsetDefinitions();
+		
 		for (TagsetDefinition tagsetDefinition : tagsetDefinitions) {
 			addTagsetDefinition(tagsetDefinition);
 		}
@@ -957,8 +970,6 @@ public class TagsetTree extends HorizontalLayout {
 			configureChildren(tagDefinition);
 		}
 	}
-	
-
 	
 	private void configureChildren(TagDefinition tagDefinition) {
 		if (!tagTree.hasChildren(tagDefinition)) {
@@ -1019,10 +1030,6 @@ public class TagsetTree extends HorizontalLayout {
 	
 	}
 
-	public TreeTable getTagTree() {
-		return tagTree;
-	}
-	
 	public void close() {
 		tagManager.removePropertyChangeListener(
 				TagManagerEvent.tagsetDefinitionChanged,
@@ -1036,6 +1043,16 @@ public class TagsetTree extends HorizontalLayout {
 		tagManager.removePropertyChangeListener(
 				TagManagerEvent.userPropertyDefinitionChanged,
 				userPropertyDefinitionChangedListener);
+	}
+	
+	public void setTagLibrary(TagLibrary tagLibrary) {
+		this.tagLibrary = tagLibrary;
+		
+		this.setTagsetDefinitions(tagLibrary.collection());
+	}
+	
+	public TreeTable getTagTree() {
+		return tagTree;
 	}
 	
 	public TagManager getTagManager() {

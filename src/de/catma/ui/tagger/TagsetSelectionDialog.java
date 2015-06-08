@@ -93,7 +93,7 @@ public class TagsetSelectionDialog extends VerticalLayout {
 		
 		addComponent(tagLibrariesTreeContainer);
 		
-		tagsetTree = new TagsetTree(repository.getTagManager(), null, false, false, false, false, true, null);
+		tagsetTree = new TagsetTree(repository.getTagManager(), null, false, true, false, false, true, null);
 		addComponent(tagsetTree);
 		
 		setMargin(true);
@@ -180,9 +180,8 @@ public class TagsetSelectionDialog extends VerticalLayout {
 		
 		if (tagLibrary == null || tagLibrary.getId() != tagLibraryReference.getId()) {
 			try {
-				tagsetTree.getTagTree().getContainerDataSource().removeAllItems();
 				tagLibrary = repository.getTagLibrary(tagLibraryReference);
-				tagsetTree.addTagsetDefinition(tagLibrary.collection());
+				tagsetTree.setTagLibrary(tagLibrary);
 				
 			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
