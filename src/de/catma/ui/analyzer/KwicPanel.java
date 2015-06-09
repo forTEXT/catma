@@ -29,6 +29,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import org.vaadin.peter.contextmenu.ContextMenu;
+import org.vaadin.peter.contextmenu.ContextMenu.ContextMenuItemClickEvent;
+
 import com.vaadin.data.Container;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.DataBoundTransferable;
@@ -66,6 +69,7 @@ import de.catma.ui.CatmaApplication;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.tagmanager.TagManagerView;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
@@ -86,7 +90,9 @@ public class KwicPanel extends VerticalLayout {
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
 	private WeakHashMap<Object, Boolean> itemDirCache = new WeakHashMap<>();
 	private int kwicSize = 5;
-
+	
+	private TagManagerWindow tagManagerWindow;
+	
 	public KwicPanel(Repository repository, 
 			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider) {
 		this(repository, relevantUserMarkupCollectionProvider,  false);
@@ -99,8 +105,32 @@ public class KwicPanel extends VerticalLayout {
 		this.repository = repository;
 		this.relevantUserMarkupCollectionProvider = relevantUserMarkupCollectionProvider;
 		this.markupBased = markupBased;
+		
 		initComponents();
 		initActions();
+		initContextMenu();
+	}
+	
+	private void initContextMenu() {
+		ContextMenu kwicTableContextMenu = new ContextMenu();
+		ContextMenu.ContextMenuItem tagSelectedResultsContextMenuItem = kwicTableContextMenu.addItem("Tag Selected Results");
+		
+		final TagManagerView tagManagerView = ((CatmaApplication)UI.getCurrent()).getTagManagerView();
+		
+		tagSelectedResultsContextMenuItem.addItemClickListener(new ContextMenu.ContextMenuItemClickListener() {
+			
+			@Override
+			public void contextMenuItemClicked(ContextMenuItemClickEvent event) {
+				if (tagManagerWindow != null && tagManagerWindow.isAttached()) {
+					return;
+				}
+				
+				tagManagerWindow = new TagManagerWindow("Tag Manager", tagManagerView);
+				tagManagerWindow.show();				
+			}
+		});
+	    
+		kwicTableContextMenu.setAsContextMenuOf(kwicTable);
 	}
 
 	private void initActions() {
@@ -420,6 +450,7 @@ public class KwicPanel extends VerticalLayout {
 				return null;
 			}
 		});
+		
 		addComponent(kwicTable);
 	}
 
