@@ -824,7 +824,7 @@ class TagLibraryHandler {
 			
 			db.commitTransaction();
 
-			tagLibraryReferencesById.remove(tagLibraryReference);
+			tagLibraryReferencesById.remove(tagLibraryReference.getId());
 			tagManager.removeTagLibrary(tagLibraryReference);
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
