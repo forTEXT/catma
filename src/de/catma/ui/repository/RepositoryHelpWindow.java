@@ -33,8 +33,8 @@ public class RepositoryHelpWindow extends Window {
 				"A Source Document can be a web resource pointed to by the URL or you can upload a document from your computer. " +
 				"<h5>Tagging a Source Document</h5>" +
 				"When you add your first Source Document, CATMA generates a set of example items to get you going: " +
-				"<ul><li>A User Markup Collection to hold your markup</li><li>A Tag Library with an example Tagset that contains an example Tag</li></ul> "+
-				"To start tagging a Source Document, just select the example User Markup Collection from the tree and click the \"Open User Markup Collection\"-button. " +
+				"<ul><li>A Markup Collection to hold your markup</li><li>A Tag Type Library with an example Tagset that contains an example Tag</li></ul> "+
+				"To start tagging a Source Document, just select the example Markup Collection from the tree and click the \"Open Markup Collection\"-button. " +
 				"Then follow the instructions given to you by the Tagger component." +
 				"<h5>Analyze a Source Document</h5>" +
 				"To analyze a Source Document, just select that document from the tree and click \"Analyze Source Document\" in the \"More Actions\"-menu." +

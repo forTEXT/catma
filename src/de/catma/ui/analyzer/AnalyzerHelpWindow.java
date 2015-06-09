@@ -36,9 +36,9 @@ public class AnalyzerHelpWindow extends Window {
 				"To see your search results in the context of its surrounding text, tick the \"Visible in Kwic\"-check box " +
 				"of the desired results." +
 				"<h4>Results by Markup</h4>" +
-				"When building Tag Queries where you look for occurrences of certain Tags, sometimes you " +
-				"want the results grouped by Tags (especially Subtags) and sometimes you want the results " +
-				"grouped by the tagged phrase. The \"Results by markup\" and \"Results by phrase\" tabs give you this choice for Tag Queries.", ContentMode.HTML);
+				"When building Tag Type Queries where you look for occurrences of certain Tag Types, sometimes you " +
+				"want the results grouped by Tag Types (especially Subtags) and sometimes you want the results " +
+				"grouped by the tagged phrase. The \"Results by markup\" and \"Results by phrase\" tabs give you this choice for Tag Type Queries.", ContentMode.HTML);
 		content.addComponent( helpText);
 		setContent(content);
 		
