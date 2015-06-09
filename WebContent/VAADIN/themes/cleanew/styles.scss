@@ -8,8 +8,8 @@
   	}
   	
   	.catma-menu .v-menubar-menuitem-highlight {
-	    background: #8AB8CF;
-	    color: #FFF;
+	    background: #E6E9EB;
+	    color: #000;
 	}
 	  
   	.contentPanel {
@@ -278,12 +278,9 @@
 		background: #78909C!important;
 	}
 	
-	.help-windows .v-window-closebox {
-		background: none;
-		color: #fff;
-	}
+
 	
-	.help-windows .v-window-maximizebox {
+	.help-windows .v-window-restorebox, .help-windows  .v-window-maximizebox, .help-windows .v-window-closebox {
 		background: none;
 		color: #fff;
 	}
