@@ -112,7 +112,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			}
 		}
 	};
-	private String userMarkupItemDisplayString = "User Markup Collections";
+	private String userMarkupItemDisplayString = "Markup Collections";
 	private String staticMarkupItemDisplayString = "Static Markup Collections";
 	private TextField searchInput;
 	private Button btExecSearch;
