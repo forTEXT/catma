@@ -131,7 +131,6 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 		
 		addComponent(zoomPanel);
 		
-        setSizeFull();
 	}
 	
 	public void addDistributionComputation(

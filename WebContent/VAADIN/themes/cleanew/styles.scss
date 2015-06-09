@@ -148,12 +148,12 @@
 		font-size: 12px;
 		color: #000;
 		white-space: nowrap;
-		overflow: auto!important;
-		-webkit-user-select: auto!important;
-		-khtml-user-select: auto!important;
-		-moz-user-select: auto!important;
-		-o-user-select: auto!important;
-		user-select: auto!important; 
+		overflow: auto;
+		-webkit-user-select: text;
+		-khtml-user-select: text;
+		-moz-user-select: text;
+		-o-user-select: text;
+		user-select: text; 
 	}
 
 	.v-window-contents > .v-scrollable > .v-has-height > .v-expand {
@@ -169,10 +169,6 @@
 		border-top: none;
 	}
 
-	.v-slot-icon-button {
-		margin-top: 5px;
-	}
-	
 	.v-horizontallayout > .v-expand > .v-slot-bold-label > .v-label-bold-label[style="width: 100%;"] {
 		padding-top: 10px;
 	}
@@ -254,6 +250,29 @@
 		height: 80%;
 		border-radius: 3px;
 		left: -1px;
+	}
+	
+	.help-windows .v-window-outerheader {
+		background: #78909C!important;
+	}
+	
+	.help-windows .v-window-closebox {
+		background: none;
+		color: #fff;
+	}
+	
+	.help-windows .v-window-maximizebox {
+		background: none;
+		color: #fff;
+	}
+	
+	.help-windows .v-window-header {
+		color: #fff;
+	}
+	
+		
+	.similarity-slider .v-expand .v-align-center {
+		text-align: inherit;
 	}
 	
 
