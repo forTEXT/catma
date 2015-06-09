@@ -108,13 +108,13 @@ public class TagInstanceTree extends HorizontalLayout {
 				if (selectedItems.isEmpty()) {
 					Notification.show(
 						"Information", 
-						"Please select one or more Tag in the list first!",
+						"Please select one or more Tag Instances in the list first!",
 						Type.TRAY_NOTIFICATION);
 				}
 				else {
 					ConfirmDialog.show(UI.getCurrent(), 
-							"Remove Tag", 
-							"Do you want to remove the selected Tag?", 
+							"Remove Tag Instances", 
+							"Do you want to remove the selected Tag Instances?", 
 							"Yes", "No", new ConfirmDialog.Listener() {
 						public void onClose(ConfirmDialog dialog) {
 							if (dialog.isConfirmed()) {
@@ -140,7 +140,7 @@ public class TagInstanceTree extends HorizontalLayout {
 				if (selectionset.size() != 1) {
 					Notification.show(
 							"Information", 
-							"Please select exactly one Tag or Property from the list first!",
+							"Please select exactly one Tag Instance or Property from the list first!",
 							Type.TRAY_NOTIFICATION);	
 				}
 				else {
@@ -267,7 +267,7 @@ public class TagInstanceTree extends HorizontalLayout {
 		tagInstanceTree.setContainerDataSource(new HierarchicalContainer());
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.caption, String.class, null);
-		tagInstanceTree.setColumnHeader(TagInstanceTreePropertyName.caption, "Tag");
+		tagInstanceTree.setColumnHeader(TagInstanceTreePropertyName.caption, "Tag Instance");
 		
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.icon, Resource.class, null);
@@ -305,9 +305,9 @@ public class TagInstanceTree extends HorizontalLayout {
 		tagInstanceTree.setColumnHeader(
 				TagInstanceTreePropertyName.path, "Tag Path");
 		tagInstanceTree.setColumnHeader(
-				TagInstanceTreePropertyName.instanceId, "Tag ID");
+				TagInstanceTreePropertyName.instanceId, "Tag Instance ID");
 		tagInstanceTree.setColumnHeader(
-				TagInstanceTreePropertyName.umc, "Markup Collection");
+				TagInstanceTreePropertyName.umc, "User Markup Collection");
 		addComponent(tagInstanceTree);
 		setExpandRatio(tagInstanceTree, 1.0f);
 		
@@ -317,7 +317,7 @@ public class TagInstanceTree extends HorizontalLayout {
 		buttonGrid.setMargin(new MarginInfo(false, true, true, false));
 		buttonGrid.setSpacing(true);
 		
-		btRemoveTagInstance = new Button("Remove Tag");
+		btRemoveTagInstance = new Button("Remove Tag Instance");
 		buttonGrid.addComponent(btRemoveTagInstance);
 		
 		btEditPropertyValues = new Button("Edit Property values");
@@ -326,7 +326,7 @@ public class TagInstanceTree extends HorizontalLayout {
 		buttonsAndInfo.addComponent(buttonGrid);
 		
 		tiInfoForm = new Form();
-		tiInfoForm.setCaption("Tag Info");
+		tiInfoForm.setCaption("Tag Instance Info");
 		
 		BeanItem<TagInstanceInfoSet> tiInfoItem = 
 				new BeanItem<TagInstanceInfoSet>(emptyInfoSet);

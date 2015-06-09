@@ -516,8 +516,8 @@ public class TagsetTree extends HorizontalLayout {
 			
 			ConfirmDialog.show(
 				UI.getCurrent(),
-				"Remove Tag Type", 
-				"Do you really want to delete this Tag Type " +
+				"Remove Tag", 
+				"Do you really want to delete this Tag " +
 				"with all its properties?", "Yes", "No", 
 				new ConfirmDialog.Listener() {
 					
@@ -545,7 +545,7 @@ public class TagsetTree extends HorizontalLayout {
 		
 		if (selectedParent == null) {
 			Notification.show(
-				"Info", "Please select a Tagset or parent Tag Type first!", 
+				"Info", "Please select a Tagset or parent Tag first!", 
 				Type.TRAY_NOTIFICATION);
 			return;
 		}
@@ -656,7 +656,7 @@ public class TagsetTree extends HorizontalLayout {
 	private void handleInsertTagsetDefinitionRequest() {
 		if (tagLibrary == null) {
 			Notification.show(
-				"Info", "Please select a Tag Type Library first!", 
+				"Info", "Please select a Tag Library first!", 
 				Type.TRAY_NOTIFICATION);
 			return;
 		}
@@ -794,7 +794,7 @@ public class TagsetTree extends HorizontalLayout {
 			tagTree.addGeneratedColumn(
 					TagTreePropertyName.color, new ColorLabelColumnGenerator());
 		}
-		tagTree.setColumnHeader(TagTreePropertyName.color, "Tag Type Color");
+		tagTree.setColumnHeader(TagTreePropertyName.color, "Tag Color");
 		addComponent(tagTree);
 		setExpandRatio(tagTree, 2);
 		
@@ -875,7 +875,7 @@ public class TagsetTree extends HorizontalLayout {
 			tagPanel.addComponent(tagLabel);
 			tagPanel.setComponentAlignment(tagLabel, Alignment.BOTTOM_LEFT);
 			
-			btInsertTag = new Button("Create Tag Type");
+			btInsertTag = new Button("Create Tag");
 			btInsertTag.addStyleName("secondary-button");
 			btInsertTag.setWidth("100%");
 			if (withTagsetButtons) {
@@ -883,11 +883,11 @@ public class TagsetTree extends HorizontalLayout {
 			}
 			tagPanel.addComponent(btInsertTag);
 			
-			btRemoveTag = new Button("Remove Tag Type");
+			btRemoveTag = new Button("Remove Tag");
 			btRemoveTag.setWidth("100%");
 			tagPanel.addComponent(btRemoveTag);
 			
-			btEditTag = new Button("Edit Tag Type");
+			btEditTag = new Button("Edit Tag");
 			btEditTag.setWidth("100%");
 			tagPanel.addComponent(btEditTag);
 			

@@ -76,7 +76,7 @@ public class PropertyEditDialog extends Window {
 	public PropertyEditDialog(TagInstance tagInstance,
 			SaveCancelListener<Set<Property>> saveCancelListener,
 			AdhocPropertyValuesBuffer propertyValuesBuffer) {
-		super("Edit Properties for Tag Type "
+		super("Edit Properties for Tag "
 				+tagInstance.getTagDefinition().getName());
 		this.tagInstance = tagInstance;
 		this.propertyValuesBuffer = propertyValuesBuffer;
@@ -332,8 +332,8 @@ public class PropertyEditDialog extends Window {
 		
 		mainLayout.addComponent(comboBox);
 		
-		hintText = new Label("New property values created here exist only for this tag! "
-				+ "For the creation of new systematic values use the Tag Type Manager.");
+		hintText = new Label("New property values created here exist only for this tag instance! "
+				+ "For the creation of new systematic values use the Tag Manager.");
 		mainLayout.addComponent(hintText);
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout();

@@ -358,7 +358,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 					}
 					catch (IOException ioe) {
 						((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"Error fetching markup collections", ioe);
+								"Error fetching user markup collections", ioe);
 					}							
 				}
 			},
@@ -432,7 +432,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			ConfirmDialog.show(
 					UI.getCurrent(), 
 					"One or more of the active Tagsets are different from their "
-					+ " correpsonding Tagsets in the Markup Collection you want to open!"
+					+ " correpsonding Tagsets in the User Markup Collection you want to open!"
 					+ " The Collection will be updated with the versions of the active Tagsets! " 
 					+ " Do you really want to update the attached Markup Collections?",
 								

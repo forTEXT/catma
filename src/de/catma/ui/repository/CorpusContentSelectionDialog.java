@@ -57,7 +57,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		;
 	}
 
-	private String userMarkupItemDisplayString = "Markup Collections";
+	private String userMarkupItemDisplayString = "User Markup Collections";
 	private String staticMarkupItemDisplayString = "Static Markup Collections";
 	private String windowCaption = "Window Caption";
 	private String documentsTreeCaption = "Documents Tree Caption";
@@ -150,7 +150,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 				SingleValueDialog singleValueDialog = new SingleValueDialog();
 				
 				singleValueDialog.getSingleValue(
-						"Create a new Markup Collection",
+						"Create a new User Markup Collection",
 						"You have to enter a name!",
 						new SaveCancelListener<PropertysetItem>() {
 							public void cancelPressed() {}
@@ -161,7 +161,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 										repository.createUserMarkupCollection(name, sourceDocument);
 										populateDocumentsTree();
 									} catch (IOException e) {
-										((CatmaApplication)UI.getCurrent()).showAndLogError("Error creating the Markup Collection!", e);
+										((CatmaApplication)UI.getCurrent()).showAndLogError("Error creating the User Markup Collection!", e);
 									}
 								}
 							}, userMarkupCollectionNameProperty);

@@ -689,7 +689,7 @@ class TagLibraryHandler {
 							!= AccessMode.WRITE.getNumericRepresentation())) {
 			throw new IOException(
 					"You seem to have no write access to this library! " +
-					"Please reload your Tag Type Library using the Tag Type Manager!");
+					"Please reload your Tag Library using the Tag Manager!");
 		}
 		else if (!independent) {
 			return AccessMode.WRITE;

@@ -85,7 +85,7 @@ public class MarkupCollectionExportOptionsDialog extends Window {
 			return teiDownloadStream;
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				"Error exporting Markup Collection!", e);
+				"Error exporting User Markup Collection!", e);
 		}
 		return null;
 	}

@@ -135,7 +135,7 @@ public class VTagger extends Composite {
 				tagInstanceJSONSerializer.fromJSONArray(tagInstancesJson);
 		
 		for (ClientTagInstance tagInstance : tagInstances) {
-			logger.info("got tag from server (show): " + tagInstance);
+			logger.info("got tag instance from server (show): " + tagInstance);
 			taggerEditor.addTagInstance(tagInstance);
 		}
 	}

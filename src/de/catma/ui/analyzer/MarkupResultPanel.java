@@ -463,8 +463,8 @@ public class MarkupResultPanel extends VerticalLayout {
 		final Set<QueryResultRow> selection = kwicPanel.getSelection();
 		if ((selection != null) && !selection.isEmpty()) {
 			ConfirmDialog.show(UI.getCurrent(), 
-					"Remove Tag", 
-					"Do you want to remove the selected Tag?", 
+					"Remove Tag Instances", 
+					"Do you want to remove the selected Tag Instances?", 
 					"Yes", "No", new ConfirmDialog.Listener() {
 				public void onClose(ConfirmDialog dialog) {
 					if (dialog.isConfirmed()) {
@@ -712,7 +712,7 @@ public class MarkupResultPanel extends VerticalLayout {
 	private void setupContainerProperties() {
 		resultTable.addContainerProperty(
 				TreePropertyName.caption, String.class, null);
-		resultTable.setColumnHeader(TreePropertyName.caption, "Tag Type Definition");
+		resultTable.setColumnHeader(TreePropertyName.caption, "Tag Definition");
 		
 		resultTable.addContainerProperty(
 				TreePropertyName.sourcedocument, String.class, null);

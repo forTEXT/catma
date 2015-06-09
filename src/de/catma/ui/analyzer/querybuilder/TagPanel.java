@@ -249,7 +249,7 @@ public class TagPanel extends AbstractSearchPanel {
 						TagTreePropertyName.color});
 		
 
-		tagsetTree.setColumnHeader(TagTreePropertyName.color, "Tag Type Color");
+		tagsetTree.setColumnHeader(TagTreePropertyName.color, "Tag Color");
 		
 		tagSearchPanel.addComponent(tagsetTree);
 		tagSearchPanel.setExpandRatio(tagsetTree, 0.8f);
