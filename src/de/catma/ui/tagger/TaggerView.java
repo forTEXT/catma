@@ -64,6 +64,7 @@ import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.component.HTMLNotification;
+import de.catma.ui.tagger.TaggerHelpWindow;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tagger.Tagger.TaggerListener;
 import de.catma.ui.tagger.pager.Pager;
@@ -82,6 +83,7 @@ public class TaggerView extends VerticalLayout
 	private TagManager tagManager;
 	private int taggerID;
 	private Button btAnalyze;
+	private Button btHelp;
 	private Repository repository;
 	private PropertyChangeListener sourceDocChangedListener;
 	private PagerComponent pagerComponent;
@@ -226,6 +228,18 @@ public class TaggerView extends VerticalLayout
 
 			}
 		});
+		
+		btHelp.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				
+				TaggerHelpWindow taggerHelpWindow = new TaggerHelpWindow();
+				
+				UI.getCurrent().addWindow(taggerHelpWindow);
+				
+			}
+		});
+		
 	}
 
 	private void initComponents() {
@@ -235,18 +249,11 @@ public class TaggerView extends VerticalLayout
 		
 		taggerPanel.setSpacing(true);
 
-		Label helpLabel = new Label();
+		btHelp = new Button("");
+		btHelp.addStyleName("icon-button"); // for top-margin
+		btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp.addStyleName("help-button");
 		
-		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
-		helpLabel.setWidth("20px");
-		helpLabel.setDescription(
-				"<h3>Hints</h3>" +
-				"<h4>Tag this Source Document</h4>" +
-				"<ol><li>First you have to tell CATMA which Tagset you want to use. " +
-				"Open a Tag Library from the Repository Manager and drag a Tagset to the \"Active Tagsets\" section.</li>" +
-				"<li>Now you can mark the text sequence you want to tag.</li><li>Click the colored button of the desired Tag to apply it to the marked sequence.</li></ol> " +
-				"When you click on a tagged text, i. e. a text that is underlined with colored bars, you should see " +
-				"the available Tag Instances in the section on the lower right of this view.");		
 		IndexInfoSet indexInfoSet = 
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet(); 
 		//TODO: remove hardcoded line length
@@ -272,7 +279,7 @@ public class TaggerView extends VerticalLayout
 			}
 		});
 		
-		actionPanel.addComponent(helpLabel);
+		actionPanel.addComponent(btHelp);
 		
 		actionPanel.addComponent(pagerComponent);
 		

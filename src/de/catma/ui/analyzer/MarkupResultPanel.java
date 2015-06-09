@@ -228,6 +228,7 @@ public class MarkupResultPanel extends VerticalLayout {
 	private Button btResultExcelExport;
 	private Button btKwicExcelExport;
 	private Button btKwicCsvExport;
+	private Button btHelp;
 	private Button btResultCsvExport;
 
 	private CheckBox cbFlatTable;
@@ -412,6 +413,17 @@ public class MarkupResultPanel extends VerticalLayout {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							"Error creating CSV export!", e);
 				}
+			}
+		});
+		
+		btHelp.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				
+				MarkupResultHelpWindow markupResultHelpWindow = new MarkupResultHelpWindow();
+				
+				UI.getCurrent().addWindow(markupResultHelpWindow);
+				
 			}
 		});
 		
@@ -645,6 +657,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		HorizontalLayout kwicButtonPanel = new HorizontalLayout();
 		kwicButtonPanel.setSpacing(true);
 		kwicButtonPanel.setWidth("100%");
+		kwicButtonPanel.setStyleName("help-padding-fix");
 		
 		btKwicExcelExport = new Button();
 		btKwicExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png"));
@@ -679,22 +692,14 @@ public class MarkupResultPanel extends VerticalLayout {
 		kwicButtonPanel.setComponentAlignment(btUntagResults, Alignment.MIDDLE_RIGHT);
 		kwicButtonPanel.setExpandRatio(btUntagResults, 0f);
 		
-		Label helpLabel = new Label();
-		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
-		helpLabel.setWidth("20px");
+		btHelp = new Button("");
+		btHelp.addStyleName("icon-button"); // for top-margin
+		btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp.addStyleName("help-button");
 		
-		helpLabel.setDescription(
-				"<h3>Hints</h3>" +
-				"<h4>Tagging search results</h4>" +
-				"You can tag the search results in the Kwic-view: " +
-				"<p>First select one or more rows and then drag the desired " +
-				"Tag from the Tag Manager over the Kwic-results.</p>" +
-				"<h4>Take a closer look</h4>" +
-				"You can jump to the location in the full text by double " +
-				"clicking on a row in the Kwic-view.");
-		kwicButtonPanel.addComponent(helpLabel);
+		kwicButtonPanel.addComponent(btHelp);
 
-		kwicButtonPanel.setComponentAlignment(helpLabel, Alignment.MIDDLE_RIGHT);
+		kwicButtonPanel.setComponentAlignment(btHelp, Alignment.MIDDLE_RIGHT);
 		
 		rightComponent.addComponent(kwicButtonPanel);
 		rightComponent.setComponentAlignment(kwicButtonPanel, Alignment.MIDDLE_RIGHT);
