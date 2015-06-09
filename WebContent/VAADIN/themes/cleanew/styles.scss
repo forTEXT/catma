@@ -11,8 +11,8 @@
   	}
   	
   	.catma-menu .v-menubar-menuitem-highlight {
-	    background: #8AB8CF;
-	    color: #FFF;
+	    background: #E6E9EB;
+	    color: #000;
 	}
 	  
   	.contentPanel {
@@ -224,15 +224,16 @@
 	}
 	
 	.v-tree-node-selected {
-		color: #fff;
+		color: #000;
 	}
 	
 	.v-tree-node-selected:after {
-		background: #78909C;
+		background: #E6E9EB;
 	}
 	
 	.v-table [class*="-row"].v-selected {
-		background: #78909C;
+		background: #E6E9EB;
+		color: #000;
 	}
 	
 	.v-splitpanel-first-container-repository-panels .v-panel.v-widget.v-has-width.v-has-height {
@@ -245,6 +246,10 @@
 		box-shadow: none;
 	}
 	
+	.help-padding-fix {
+		padding-right: 10px;
+	}
+	
 	
 	span.v-button-wrap div.gwt-HTML span {
 		position: absolute;
@@ -255,16 +260,30 @@
 		left: -1px;
 	}
 	
+	.help-button {
+		background: none;
+		border: none;
+		box-shadow: none;
+	}
+	
+	.help-button:focus:after {
+		border: 0px;
+		box-shadow: none;
+		-webkit-box-shadow: none;
+	}
+	
+	.help-button img {
+		margin-bottom: 3px;
+	}
+	
+	
 	.help-windows .v-window-outerheader {
 		background: #78909C!important;
 	}
 	
-	.help-windows .v-window-closebox {
-		background: none;
-		color: #fff;
-	}
+
 	
-	.help-windows .v-window-maximizebox {
+	.help-windows .v-window-restorebox, .help-windows  .v-window-maximizebox, .help-windows .v-window-closebox {
 		background: none;
 		color: #fff;
 	}

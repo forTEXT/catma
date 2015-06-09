@@ -43,11 +43,14 @@ import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.shared.communication.PushMode;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Link;
 import com.vaadin.ui.MenuBar;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
@@ -84,6 +87,7 @@ import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.menu.LoginLogoutCommand;
 import de.catma.ui.menu.MainMenu;
 import de.catma.ui.menu.MenuFactory;
+import de.catma.ui.UIHelpWindow;
 import de.catma.ui.repository.RepositoryManagerView;
 import de.catma.ui.tagger.TaggerManagerView;
 import de.catma.ui.tagger.TaggerView;
@@ -119,6 +123,7 @@ public class CatmaApplication extends UI
 	private Panel menuPanel;
 	private HorizontalLayout menuLayout;
 	private Panel contentPanel;
+	private Button btHelp;
 	
 	private ThemeResource logoResource;
 	private Image logoImage;
@@ -249,19 +254,12 @@ public class CatmaApplication extends UI
 			helpLink.setTargetName("_blank");
 			menuLayout.addComponent(helpLink);
 			menuLayout.setComponentAlignment(helpLink, Alignment.TOP_RIGHT);
+						
+			btHelp = new Button("");
+			btHelp.addStyleName("icon-button"); // for top-margin
+			btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+			btHelp.addStyleName("help-button");
 			
-			final Label helpLabel = new Label();
-			helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
-			helpLabel.setWidth("20px");
-			helpLabel.setDescription(
-					"<h3>Hints</h3>" +
-					"<p>Watch out for these little question mark icons while navigating " +
-					"through CATMA. They provide useful hints for managing the first " +
-					"steps within a CATMA component.</p>" +
-					"<h4>Login</h4>" +
-					"Once you're logged in, you will see the Repository Manager, " +
-					"which will explain the first steps to you. " +
-					"Just hover your mouse over the question mark icons!");
 //			helpLabel.setVisible(false);
 //			
 //			Timer timer = new Timer();
@@ -310,7 +308,18 @@ public class CatmaApplication extends UI
 //				}
 //			}, 5000);
 
-			menuLayout.addComponent(helpLabel);
+			menuLayout.addComponent(btHelp);
+			
+			btHelp.addClickListener(new ClickListener() {
+				
+				public void buttonClick(ClickEvent event) {
+					
+					UIHelpWindow uiHelpWindow = new UIHelpWindow();
+					
+					UI.getCurrent().addWindow(uiHelpWindow);
+					
+				}
+			});
 			
 			MenuBar loginLogoutMenu = new MenuBar();
 			LoginLogoutCommand loginLogoutCommand = 

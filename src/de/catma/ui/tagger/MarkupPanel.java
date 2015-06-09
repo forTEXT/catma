@@ -70,6 +70,7 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.UIHelpWindow;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.ui.menu.CMenuAction;
@@ -91,6 +92,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	private Repository repository;
 	private PropertyChangeListener propertyValueChangeListener;
 	private Button btnOpenTagset;
+	private Button btHelp;
 	
 	public MarkupPanel(
 			Repository repository, ColorButtonListener colorButtonListener, 
@@ -229,6 +231,18 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 				handleOpenTagsetRequest();
 			}
 		});
+		
+		btHelp.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				
+				MarkupHelpWindow markupHelpWindow = new MarkupHelpWindow();
+				
+				UI.getCurrent().addWindow(markupHelpWindow);
+				
+			}
+		});
+		
 
 	}
 	
@@ -252,7 +266,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 
 		
 		HorizontalLayout buttonHeaderPanel = new HorizontalLayout();
-		buttonHeaderPanel.setWidth("100%");
+		buttonHeaderPanel.setWidth("95%");
 		buttonHeaderPanel.setMargin(new MarginInfo(true, false, false, false));
 				
 		btnOpenTagset = new Button("Open Tagset");
@@ -260,26 +274,13 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 				
 		buttonHeaderPanel.addComponent(btnOpenTagset);
 		
-		Label helpLabel = new Label();
+		btHelp = new Button("");
+		btHelp.addStyleName("icon-button"); // for top-margin
+		btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp.addStyleName("help-button");
 		
-		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
-		helpLabel.setWidth("20px");
-		helpLabel.setDescription(
-				"<h3>Hints</h3>" +
-			    "<h4>Creating Tags</h4>" +
-				"<ol><li>First you have to tell CATMA which Tagset you want to use. " +
-				"Open a Tag Library from the Repository Manager and drag a Tagset to the \"Active Tagsets\" section." +
-				" If you already have an active Tagset you want to use, you can skip this step.</li>" +
-				"<li>Now you can select the Tagset and click the \"Create Tag\"-Button.</li></ol>"+
-				"<h4>Tag this Source Document</h4>" +
-				"<ol><li>First you have to tell CATMA which Tagset you want to use. " +
-				"Open a Tag Library from the Repository Manager and drag a Tagset to the \"Active Tagsets\" section." +
-				" If you already have an active Tagset you want to use, you can skip this step.</li>" +
-				"<li>Now you can mark the text sequence you want to tag.</li><li>Click the colored button of the desired Tag to apply it to the marked sequence.</li></ol> " +
-				"When you click on a tagged text, i. e. a text that is underlined with colored bars you should see " +
-				"the available Tag Instances in the section on the lower right of this view.");
-		buttonHeaderPanel.addComponent(helpLabel);
-		buttonHeaderPanel.setComponentAlignment(helpLabel, Alignment.MIDDLE_RIGHT);
+		buttonHeaderPanel.addComponent(btHelp);
+		buttonHeaderPanel.setComponentAlignment(btHelp, Alignment.MIDDLE_RIGHT);
 		
 		tabContent.addComponent(buttonHeaderPanel);
 		

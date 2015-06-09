@@ -86,6 +86,7 @@ public class PhraseResultPanel extends VerticalLayout {
 	private Button btKwicExcelExport;
 	private Button btKwicCsvExport;
 	private Button btCsvExport;
+	private Button btHelp;
 	private Table hiddenFlatTable;
 	private Button btSelectAllKwic;
 	private Slider kwicSizeSlider;
@@ -265,6 +266,17 @@ public class PhraseResultPanel extends VerticalLayout {
 			}
 		});
 		
+		btHelp.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				
+				PhraseResultHelpWindow phraseResultHelpWindow = new PhraseResultHelpWindow();
+				
+				UI.getCurrent().addWindow(phraseResultHelpWindow);
+				
+			}
+		});
+		
 		kwicSizeSlider.addValueListener(new ValueChangeListener() {
 			
 			@Override
@@ -416,6 +428,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		HorizontalLayout kwicButtonPanel = new HorizontalLayout();
 		kwicButtonPanel.setSpacing(true);
 		kwicButtonPanel.setWidth("100%");
+		kwicButtonPanel.setStyleName("help-padding-fix");
 		
 		btKwicExcelExport = new Button();
 		btKwicExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png"));
@@ -445,26 +458,13 @@ public class PhraseResultPanel extends VerticalLayout {
 		kwicButtonPanel.setComponentAlignment(btSelectAllKwic, Alignment.MIDDLE_RIGHT);
 		kwicButtonPanel.setExpandRatio(btSelectAllKwic, 1f);
 		
-		Label helpLabel = new Label();
-
-		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp = new Button("");
+		btHelp.addStyleName("icon-button"); // for top-margin
+		btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp.addStyleName("help-button");
 		
-		helpLabel.setWidth("20px");
-		helpLabel.setDescription(
-				"<h3>Hints</h3>" +
-				"<h4>Tagging search results</h4>" +
-				"You can tag the search results in the Kwic-view: " +
-				"<p>First select one or more rows and then drag the desired " +
-				"Tag from the Tag Manager over the Kwic-results.</p>" +
-				"<h4>Take a closer look</h4>" +
-				"You can jump to the location in the full text by double " +
-				"clicking on a row in the Kwic-view." +
-				"<h4>Untag search results</h4>" +
-				"The \"Results by markup\" tab gives you the opportunity " +
-				"to untag markup for selected search results in the Kwic-view.");
-		
-		kwicButtonPanel.addComponent(helpLabel);
-		kwicButtonPanel.setComponentAlignment(helpLabel, Alignment.MIDDLE_RIGHT);
+		kwicButtonPanel.addComponent(btHelp);
+		kwicButtonPanel.setComponentAlignment(btHelp, Alignment.MIDDLE_RIGHT);
 		
 		rightComponent.addComponent(kwicButtonPanel);
 		rightComponent.setComponentAlignment(kwicButtonPanel, Alignment.MIDDLE_RIGHT);

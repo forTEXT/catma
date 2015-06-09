@@ -44,6 +44,7 @@ import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.admin.AdminWindow;
+import de.catma.ui.repository.RepositoryHelpWindow;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.user.Permission;
 import de.catma.user.Role;
@@ -60,6 +61,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	private boolean init = false;
 	private Button btReload;
 	private Button btAdmin;
+	private Button btHelp;
 	
 	public RepositoryView(Repository repository) {
 		this.repository = repository;
@@ -122,6 +124,19 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 			}
 		});
 		
+		
+		btHelp.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				
+				RepositoryHelpWindow repositoryHelpWindow = new RepositoryHelpWindow();
+				
+				UI.getCurrent().addWindow(repositoryHelpWindow);
+				
+			}
+		});
+		
+		
 	}
 
 	private void initComponents() {
@@ -131,6 +146,8 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		
 		Component documentsLabel = createDocumentsLabel();
 		addComponent(documentsLabel);
+		documentsLabel.setHeight("50");
+		documentsLabel.setStyleName("help-padding-fix");
 		VerticalSplitPanel splitPanel = new VerticalSplitPanel();
 		splitPanel.setStyleName("repository-panels");
 		splitPanel.setSplitPosition(65);
@@ -181,7 +198,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		documentsLabel.addStyleName("bold-label");
 		
 		labelLayout.addComponent(documentsLabel);
-		labelLayout.setExpandRatio(documentsLabel, 1.0f);
+		labelLayout.setExpandRatio(documentsLabel, 0.5f);
 		btAdmin = new Button("Admin");
 		btAdmin.addStyleName("icon-button"); // for top-margin
 		btAdmin.setVisible(repository.getUser().hasPermission(Permission.adminwindow));
@@ -194,28 +211,14 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		btReload.addStyleName("icon-button");
 		labelLayout.addComponent(btReload);
 		labelLayout.setComponentAlignment(btReload, Alignment.MIDDLE_RIGHT);
+				
+		btHelp = new Button("");
+		btHelp.addStyleName("icon-button"); // for top-margin
+		btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp.addStyleName("help-button");
 		
-		Label helpLabel = new Label();
-		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
-		helpLabel.setWidth("20px");
-		helpLabel.setDescription(
-				"<h3>Hints</h3>" +
-				"<h4>First steps</h4>" +
-				"<h5>Adding a Source Document</h5>" +
-				"You can add a Source Document by clicking the \"Add Source Document\"-button. " +
-				"A Source Document can be a web resource pointed to by the URL or you can upload a document from your computer. " +
-				"<h5>Tagging a Source Document</h5>" +
-				"When you add your first Source Document, CATMA generates a set of example items to get you going: " +
-				"<ul><li>A User Markup Collection to hold your markup</li><li>A Tag Library with an example Tagset that contains an example Tag</li></ul> "+
-				"To start tagging a Source Document, just select the example User Markup Collection from the tree and click the \"Open User Markup Collection\"-button. " +
-				"Then follow the instructions given to you by the Tagger component." +
-				"<h5>Analyze a Source Document</h5>" +
-				"To analyze a Source Document, just select that document from the tree and click \"Analyze Source Document\" in the \"More Actions\"-menu." +
-				"Then follow the instructions given to you by the Analyzer component.");
-		helpLabel.addStyleName("help-icon-top-margin");
-		
-		labelLayout.addComponent(helpLabel);
-		labelLayout.setComponentAlignment(helpLabel, Alignment.MIDDLE_RIGHT);
+		labelLayout.addComponent(btHelp);
+		labelLayout.setComponentAlignment(btHelp, Alignment.MIDDLE_RIGHT);
 		
 		return labelLayout;
 	}
