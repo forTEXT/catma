@@ -238,6 +238,8 @@ public class MarkupResultPanel extends VerticalLayout {
 	private Button btSelectAllKwic;
 	private Slider kwicSizeSlider;
 	
+	MarkupResultHelpWindow markupResultHelpWindow = new MarkupResultHelpWindow();
+	
 	public MarkupResultPanel(
 			Repository repository, 
 			GroupedQueryResultSelectionListener resultSelectionListener, 
@@ -420,9 +422,11 @@ public class MarkupResultPanel extends VerticalLayout {
 			
 			public void buttonClick(ClickEvent event) {
 				
-				MarkupResultHelpWindow markupResultHelpWindow = new MarkupResultHelpWindow();
-				
-				UI.getCurrent().addWindow(markupResultHelpWindow);
+				if(markupResultHelpWindow.getParent() == null){
+					UI.getCurrent().addWindow(markupResultHelpWindow);
+				} else {
+					return;
+				}
 				
 			}
 		});

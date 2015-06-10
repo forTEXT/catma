@@ -91,6 +91,8 @@ public class TaggerView extends VerticalLayout
 	private double totalLineCount;
 	private PropertyChangeListener tagReferencesChangedListener;
 	
+	TaggerHelpWindow taggerHelpWindow = new TaggerHelpWindow();
+	
 	public TaggerView(
 			int taggerID, 
 			SourceDocument sourceDocument, Repository repository, 
@@ -232,9 +234,11 @@ public class TaggerView extends VerticalLayout
 			
 			public void buttonClick(ClickEvent event) {
 				
-				TaggerHelpWindow taggerHelpWindow = new TaggerHelpWindow();
-				
-				UI.getCurrent().addWindow(taggerHelpWindow);
+				if(taggerHelpWindow.getParent() == null){
+					UI.getCurrent().addWindow(taggerHelpWindow);
+				} else {
+					return;
+				}
 				
 			}
 		});

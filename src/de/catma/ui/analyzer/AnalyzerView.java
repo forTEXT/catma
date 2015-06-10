@@ -139,6 +139,8 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private Component resultPanel;
 	private ProgressBar searchProgress;
 	
+	AnalyzerHelpWindow analyzerHelpWindow = new AnalyzerHelpWindow();
+	
 	public AnalyzerView(
 			Corpus corpus, IndexedRepository repository, 
 			CloseListener closeListener) {
@@ -346,9 +348,11 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			
 			public void buttonClick(ClickEvent event) {
 				
-				AnalyzerHelpWindow analyzerHelpWindow = new AnalyzerHelpWindow();
-				
-				UI.getCurrent().addWindow(analyzerHelpWindow);
+				if(analyzerHelpWindow.getParent() == null){
+					UI.getCurrent().addWindow(analyzerHelpWindow);
+				} else {
+					return;
+				}
 				
 			}
 		});

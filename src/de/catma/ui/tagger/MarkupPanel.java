@@ -94,6 +94,8 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	private Button btnOpenTagset;
 	private Button btHelp;
 	
+	MarkupHelpWindow markupHelpWindow = new MarkupHelpWindow();
+	
 	public MarkupPanel(
 			Repository repository, ColorButtonListener colorButtonListener, 
 			PropertyChangeListener tagDefinitionSelectionListener,
@@ -236,9 +238,11 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			
 			public void buttonClick(ClickEvent event) {
 				
-				MarkupHelpWindow markupHelpWindow = new MarkupHelpWindow();
-				
-				UI.getCurrent().addWindow(markupHelpWindow);
+				if(markupHelpWindow.getParent() == null){
+					UI.getCurrent().addWindow(markupHelpWindow);
+				} else {
+					return;
+				}
 				
 			}
 		});
