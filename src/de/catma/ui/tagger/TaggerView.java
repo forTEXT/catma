@@ -198,7 +198,6 @@ public class TaggerView extends VerticalLayout
 								userMarkupCollRef);
 					}
 				}
-				//TODO: add static markup colls
 				
 				((AnalyzerProvider)UI.getCurrent()).analyze(
 						corpus, (IndexedRepository)markupPanel.getRepository());
