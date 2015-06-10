@@ -58,7 +58,6 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 	}
 
 	private String userMarkupItemDisplayString = "Markup Collections";
-	private String staticMarkupItemDisplayString = "Static Markup Collections";
 	private String windowCaption = "Window Caption";
 	private String documentsTreeCaption = "Documents Tree Caption";
 	private Repository repository;

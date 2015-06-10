@@ -117,7 +117,6 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	private Tree documentsTree;
 	private Repository repository;
 	private String userMarkupItemDisplayString = "Markup Collections";
-	private String staticMarkupItemDisplayString = "Static Markup Collections";
 	private Button btOpenDocument;
 	private Button btAddDocument;
 	private MenuItem miMoreDocumentActions;
@@ -426,39 +425,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 
 		});
-		/*
-		miMoreDocumentActions.addSeparator();
-		
-		miMoreDocumentActions.addItem("Create Static Markup Collection", new Command() {
-			
-			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
-			}
-		});
-		
-		miMoreDocumentActions.addItem("Import Static Markup Collection", new Command() {
-			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
-			}
-		});	
-		
-		miMoreDocumentActions.addItem("Export Static Markup Collection", new Command() {
-			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
-			}
-		});	
-		
-		
-		miMoreDocumentActions.addItem("Remove Static Markup Collection", new Command() {
-			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
-			}
-		});	
-		*/
+
 		btEditContentInfo.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -1001,16 +968,16 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			addUserMarkupCollectionReferenceToTree(ucr, userMarkupItem);
 		}
 		
-		MarkupCollectionItem staticMarkupItem = 
-				new MarkupCollectionItem(sd, staticMarkupItemDisplayString);
-		documentsTree.addItem(staticMarkupItem);
-		documentsTree.setParent(staticMarkupItem, sd);
-		
-		for (StaticMarkupCollectionReference smcr : sd.getStaticMarkupCollectionRefs()) {
-			documentsTree.addItem(smcr);
-			documentsTree.setParent(smcr, staticMarkupItem);
-			documentsTree.setChildrenAllowed(smcr, false);
-		}
+//		MarkupCollectionItem staticMarkupItem = 
+//				new MarkupCollectionItem(sd, staticMarkupItemDisplayString);
+//		documentsTree.addItem(staticMarkupItem);
+//		documentsTree.setParent(staticMarkupItem, sd);
+//		
+//		for (StaticMarkupCollectionReference smcr : sd.getStaticMarkupCollectionRefs()) {
+//			documentsTree.addItem(smcr);
+//			documentsTree.setParent(smcr, staticMarkupItem);
+//			documentsTree.setChildrenAllowed(smcr, false);
+//		}
 		
 	}
 	

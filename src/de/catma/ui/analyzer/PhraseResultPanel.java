@@ -91,6 +91,8 @@ public class PhraseResultPanel extends VerticalLayout {
 	private Button btSelectAllKwic;
 	private Slider kwicSizeSlider;
 	
+	PhraseResultHelpWindow phraseResultHelpWindow = new PhraseResultHelpWindow();
+	
 	public PhraseResultPanel(
 			Repository repository, 
 			GroupedQueryResultSelectionListener resultSelectionListener, 
@@ -270,10 +272,12 @@ public class PhraseResultPanel extends VerticalLayout {
 			
 			public void buttonClick(ClickEvent event) {
 				
-				PhraseResultHelpWindow phraseResultHelpWindow = new PhraseResultHelpWindow();
-				
-				UI.getCurrent().addWindow(phraseResultHelpWindow);
-				
+				if(phraseResultHelpWindow.getParent() == null){
+					UI.getCurrent().addWindow(phraseResultHelpWindow);
+				} else {
+					UI.getCurrent().removeWindow(phraseResultHelpWindow);
+				}
+								
 			}
 		});
 		

@@ -98,7 +98,6 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private TreeTable markupCollectionsTree;
 	private String userMarkupItem = "Markup Collections";
-	private String staticMarkupItem = "Static Markup Collections";
 	private TagManager tagManager;
 	
 	private PropertyChangeListener tagDefChangedListener;
@@ -681,9 +680,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			new Object[] {userMarkupItem, createVisibilityCheckbox(), new Label()}, 
 			userMarkupItem);
 		
-		markupCollectionsTree.addItem(
-			new Object[] {staticMarkupItem, new Label(), new Label()}, 
-			staticMarkupItem );
+//		markupCollectionsTree.addItem(
+//			new Object[] {staticMarkupItem, new Label(), new Label()}, 
+//			staticMarkupItem );
 
 		addComponent(markupCollectionsTree);
 	}

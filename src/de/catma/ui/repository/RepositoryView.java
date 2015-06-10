@@ -63,6 +63,8 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	private Button btAdmin;
 	private Button btHelp;
 	
+	RepositoryHelpWindow repositoryHelpWindow = new RepositoryHelpWindow();
+	
 	public RepositoryView(Repository repository) {
 		this.repository = repository;
 
@@ -128,10 +130,12 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		btHelp.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				
-				RepositoryHelpWindow repositoryHelpWindow = new RepositoryHelpWindow();
-				
-				UI.getCurrent().addWindow(repositoryHelpWindow);
+								
+				if(repositoryHelpWindow.getParent() == null){
+					UI.getCurrent().addWindow(repositoryHelpWindow);
+				} else {
+					UI.getCurrent().removeWindow(repositoryHelpWindow);
+				}
 				
 			}
 		});

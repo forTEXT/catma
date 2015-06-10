@@ -132,6 +132,8 @@ public class CatmaApplication extends UI
 	
 	private PropertyChangeSupport propertyChangeSupport;
 	
+	UIHelpWindow uiHelpWindow = new UIHelpWindow();
+	
 	/**
 	 * Events emitted by the CatmaApplication.
 	 * 
@@ -313,11 +315,13 @@ public class CatmaApplication extends UI
 			btHelp.addClickListener(new ClickListener() {
 				
 				public void buttonClick(ClickEvent event) {
-					
-					UIHelpWindow uiHelpWindow = new UIHelpWindow();
-					
-					UI.getCurrent().addWindow(uiHelpWindow);
-					
+										
+					if(uiHelpWindow.getParent() == null){
+						UI.getCurrent().addWindow(uiHelpWindow);
+					} else {
+						UI.getCurrent().removeWindow(uiHelpWindow);
+					}
+										
 				}
 			});
 			
