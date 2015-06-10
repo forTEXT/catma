@@ -164,7 +164,7 @@ public class KwicPanel extends VerticalLayout {
 						}
 						catch (IOException e) {
 							((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"Error opening related User Markup Collection!", e);
+								"Error opening related Markup Collection!", e);
 						}			
 					}
 				}
@@ -283,7 +283,7 @@ public class KwicPanel extends VerticalLayout {
 					}
 				} catch (URISyntaxException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"error creating tag reference", e);
+							"error creating tag type reference", e);
 				}
 			}
 			
@@ -318,7 +318,7 @@ public class KwicPanel extends VerticalLayout {
 		}
 		else {
 			Notification.show(
-				"Information", "Please create a User Markup Collection first!",
+				"Information", "Please create a Markup Collection first!",
 				Type.TRAY_NOTIFICATION);
 		}
 	}

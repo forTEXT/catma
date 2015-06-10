@@ -88,7 +88,7 @@ public class TagKwicDialog extends VerticalLayout {
 					saveCancelListener.savePressed(result);
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"error opening User Markup Collection", e);
+							"error opening Markup Collection", e);
 					saveCancelListener.cancelPressed();
 				}
 				
@@ -128,7 +128,7 @@ public class TagKwicDialog extends VerticalLayout {
 	}
 
 	private void initComponents() {
-		window = new Window("Select affected User Markup Collections");
+		window = new Window("Select affected Markup Collections");
 		window.setModal(true);
 		
 		setSpacing(true);
@@ -136,14 +136,14 @@ public class TagKwicDialog extends VerticalLayout {
 		setSizeFull();
 		
 		Label tagResultsLabel = 
-			new Label("The selected User Markup Collections will be modfied by this tagging operation. Are you sure?");
+			new Label("The selected Markup Collections will be modfied by this tagging operation. Are you sure?");
 		addComponent(tagResultsLabel);
 		
-		umcTable = new TreeTable("User Markup Collections");
+		umcTable = new TreeTable("Markup Collections");
 		umcTable.addContainerProperty(UmcTableProperty.CAPTION, String.class, null);
 		umcTable.setColumnHeader(UmcTableProperty.CAPTION, "Document/Collection");
 		umcTable.addContainerProperty(UmcTableProperty.TARGET, Component.class, null);
-		umcTable.setColumnHeader(UmcTableProperty.TARGET, "targeted User Markup Collection");
+		umcTable.setColumnHeader(UmcTableProperty.TARGET, "targeted Markup Collection");
 		umcTable.setSizeFull();
 		
 		addComponent(umcTable);

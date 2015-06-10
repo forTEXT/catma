@@ -307,7 +307,7 @@ public class TaggerView extends VerticalLayout
 						else {
 							HTMLNotification.show(
 	                                "Information",
-	                                "Please select a User Markup Collection "
+	                                "Please select a Markup Collection "
 	                                + " to store your markup first!<br>"
 	                                + "See 'Active Markup Collections'.",
 	                                Type.TRAY_NOTIFICATION);

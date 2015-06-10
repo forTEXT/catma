@@ -215,7 +215,7 @@ public class CatmaApplication extends UI
 							"Repository Manager",
 							repositoryManagerView),
 					new MenuFactory.MenuEntryDefinition(
-							"Tag Manager",
+							"Tag Type Manager",
 							tagManagerView),
 					new MenuFactory.MenuEntryDefinition(
 							"Tagger",

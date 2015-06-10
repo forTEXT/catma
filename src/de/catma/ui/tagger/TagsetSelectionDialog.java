@@ -64,7 +64,7 @@ public class TagsetSelectionDialog extends VerticalLayout {
 		tagLibrariesTree = new Tree();
 		tagLibrariesTree.setContainerDataSource(tagLibraryContainer);
 		
-		tagLibrariesTree.setCaption("Tag Libraries");
+		tagLibrariesTree.setCaption("Tag Type Libraries");
 		tagLibrariesTree.addStyleName("bold-label-caption");
 		tagLibrariesTree.setImmediate(true);
 		tagLibrariesTree.setItemCaptionMode(ItemCaptionMode.ID);
@@ -87,7 +87,7 @@ public class TagsetSelectionDialog extends VerticalLayout {
 		tagLibrariesTreeContainer.addComponent(tagLibrariesTree);
 		tagLibrariesTreeContainer.setExpandRatio(tagLibrariesTree, 1.0f);
 		
-		btCreateTagLibrary = new Button("Create Tag Library");
+		btCreateTagLibrary = new Button("Create Tag Type Library");
 		btCreateTagLibrary.addStyleName("secondary-button");
 		tagLibrariesTreeContainer.addComponent(btCreateTagLibrary);
 		
@@ -110,7 +110,7 @@ public class TagsetSelectionDialog extends VerticalLayout {
 				SingleValueDialog singleValueDialog = new SingleValueDialog();
 						
 				singleValueDialog.getSingleValue(
-						"Create a new Tag Library",
+						"Create a new Tag Type Library",
 						"You have to enter a name!",
 						new SaveCancelListener<PropertysetItem>() {
 					public void cancelPressed() {}
@@ -124,7 +124,7 @@ public class TagsetSelectionDialog extends VerticalLayout {
 							repository.createTagLibrary(name);
 						} catch (IOException e) {
 							((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"Error creating the Tag Library!", e);
+								"Error creating the Tag Type Library!", e);
 						}
 					}
 				}, nameProperty);
@@ -185,7 +185,7 @@ public class TagsetSelectionDialog extends VerticalLayout {
 				
 			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error opening the Tag Library!", e);
+						"Error opening the Tag Type Library!", e);
 			}
 		}		
 	}

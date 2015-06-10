@@ -97,7 +97,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private TreeTable markupCollectionsTree;
-	private String userMarkupItem = "User Markup Collections";
+	private String userMarkupItem = "Markup Collections";
 	private String staticMarkupItem = "Static Markup Collections";
 	private TagManager tagManager;
 	
@@ -326,7 +326,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 						openUserMarkupCollection(refreshedUmc);
 					} catch (IOException e) {
 						((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"error refreshing User Markup Collection!", e);
+								"error refreshing Markup Collection!", e);
 					}
 				}
 			};
@@ -372,7 +372,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		}
 		catch (IOException ioe) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"error reindexing User Markup Collection!", ioe);
+					"error reindexing Markup Collection!", ioe);
 		}
 		
 	}
@@ -393,7 +393,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		}
 		catch (IOException ioe) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"error reindexing User Markup Collection!", ioe);
+					"error reindexing Markup Collection!", ioe);
 		}
 	}
 
@@ -668,7 +668,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		markupCollectionsTree.addGeneratedColumn(
 				MarkupCollectionsTreeProperty.color, new ColorLabelColumnGenerator());
 		markupCollectionsTree.setColumnHeader(
-				MarkupCollectionsTreeProperty.color, "Tag color");
+				MarkupCollectionsTreeProperty.color, "Tag Type color");
 		
 		markupCollectionsTree.setVisibleColumns(
 				new Object[] {
@@ -1037,7 +1037,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				UI.getCurrent(), 
 				"There are older versions of the Tagset '" +
 					incomingTagsetDef.getName() +
-					"' in the attached User Markup Collections! " +
+					"' in the attached Markup Collections! " +
 					"Do you really want to update the attached Markup Collections?",
 							
 			        new ConfirmDialog.Listener() {
