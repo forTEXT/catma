@@ -200,10 +200,12 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		
 		HorizontalLayout actionButtonPanel = new HorizontalLayout();
 		actionButtonPanel.setWidth("100%");
+		
 		btCreateMarkupCollection = new Button("Create Markup Collection");
-		btCreateMarkupCollection.addStyleName("primary-button");
+		btCreateMarkupCollection.addStyleName("secondary-button");		
 		actionButtonPanel.addComponent(btCreateMarkupCollection);
 		actionButtonPanel.setComponentAlignment(btCreateMarkupCollection, Alignment.MIDDLE_RIGHT);
+		
 		documentsPanelContent.addComponent(actionButtonPanel);
 		
 		addComponent(documentsPanel);
@@ -213,6 +215,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		dialogButtonPanel.setSpacing(true);
 		dialogButtonPanel.setWidth("100%");
 		btOk = new Button("Ok");
+		btOk.addStyleName("primary-button");
 		btOk.setClickShortcut(KeyCode.ENTER);
 		btOk.focus();
 		
