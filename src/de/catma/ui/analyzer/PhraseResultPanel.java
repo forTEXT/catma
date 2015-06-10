@@ -23,6 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.vaadin.peter.contextmenu.ContextMenu.ContextMenuItemClickEvent;
+import org.vaadin.peter.contextmenu.ContextMenu.ContextMenuItemClickListener;
+
 import com.vaadin.addon.tableexport.ExcelExport;
 import com.vaadin.data.Item;
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -81,6 +84,7 @@ public class PhraseResultPanel extends VerticalLayout {
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
 	private Button btSelectAll;
 	private Button btDeselectAll;
+	private Button btTagResults;
 	private Button btDoubleTree;
 	private Button btExcelExport;
 	private Button btKwicExcelExport;
@@ -89,7 +93,9 @@ public class PhraseResultPanel extends VerticalLayout {
 	private Button btHelp;
 	private Table hiddenFlatTable;
 	private Button btSelectAllKwic;
-	private Slider kwicSizeSlider;
+	private Slider kwicSizeSlider;	
+	
+	private TagResultsDialog tagResultsDialog;
 	
 	PhraseResultHelpWindow phraseResultHelpWindow = new PhraseResultHelpWindow();
 	
@@ -184,6 +190,22 @@ public class PhraseResultPanel extends VerticalLayout {
 			
 			public void buttonClick(ClickEvent event) {
 				selectAllForKwic(false);
+			}
+		});
+		
+		kwicPanel.addTagResultsContextMenuClickListener(new ContextMenuItemClickListener() {
+			
+			@Override
+			public void contextMenuItemClicked(ContextMenuItemClickEvent event) {
+				tagResults();
+			}
+		});
+		
+		btTagResults.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				tagResults();
 			}
 		});
 		
@@ -325,6 +347,13 @@ public class PhraseResultPanel extends VerticalLayout {
 
 		return hiddenFlatTable;
 	}
+	
+	private void tagResults() {
+		if (tagResultsDialog == null || !tagResultsDialog.isAttached()) {
+			tagResultsDialog = new TagResultsDialog(repository);
+			tagResultsDialog.show();
+		}
+	}
 
 	private void selectAllForKwic(boolean selected) {
 		for (Object o : resultTable.getItemIds()) {
@@ -457,10 +486,15 @@ public class PhraseResultPanel extends VerticalLayout {
 		kwicButtonPanel.setComponentAlignment(
 				kwicSizeSlider, Alignment.MIDDLE_LEFT);
 		
+		btTagResults = new Button("Tag selected results");
+		btTagResults.addStyleName("primary-button");
+		kwicButtonPanel.addComponent(btTagResults);
+		kwicButtonPanel.setComponentAlignment(btTagResults, Alignment.MIDDLE_RIGHT);		
+		kwicButtonPanel.setExpandRatio(btTagResults, 1f);
+		
 		btSelectAllKwic = new Button("Select all");
 		kwicButtonPanel.addComponent(btSelectAllKwic);
-		kwicButtonPanel.setComponentAlignment(btSelectAllKwic, Alignment.MIDDLE_RIGHT);
-		kwicButtonPanel.setExpandRatio(btSelectAllKwic, 1f);
+		kwicButtonPanel.setComponentAlignment(btSelectAllKwic, Alignment.MIDDLE_RIGHT);		
 		
 		btHelp = new Button("");
 		btHelp.addStyleName("icon-button"); // for top-margin

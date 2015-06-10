@@ -29,6 +29,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.vaadin.dialogs.ConfirmDialog;
+import org.vaadin.peter.contextmenu.ContextMenu.ContextMenuItemClickEvent;
+import org.vaadin.peter.contextmenu.ContextMenu.ContextMenuItemClickListener;
 
 import com.vaadin.addon.tableexport.ExcelExport;
 import com.vaadin.data.Property;
@@ -224,6 +226,7 @@ public class MarkupResultPanel extends VerticalLayout {
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
 	private Button btSelectAll;
 	private Button btDeselectAll;
+	private Button btTagResults;
 	private Button btUntagResults;
 	private Button btResultExcelExport;
 	private Button btKwicExcelExport;
@@ -236,7 +239,9 @@ public class MarkupResultPanel extends VerticalLayout {
 	private boolean resetColumns = false;
 	private QueryResult curQueryResult;
 	private Button btSelectAllKwic;
-	private Slider kwicSizeSlider;
+	private Slider kwicSizeSlider;	
+	
+	private TagResultsDialog tagResultsDialog;
 	
 	MarkupResultHelpWindow markupResultHelpWindow = new MarkupResultHelpWindow();
 	
@@ -325,6 +330,22 @@ public class MarkupResultPanel extends VerticalLayout {
 			
 			public void buttonClick(ClickEvent event) {
 				selectAllForKwic(false);
+			}
+		});
+		
+		kwicPanel.addTagResultsContextMenuClickListener(new ContextMenuItemClickListener() {
+			
+			@Override
+			public void contextMenuItemClicked(ContextMenuItemClickEvent event) {
+				tagResults();
+			}
+		});
+		
+		btTagResults.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				tagResults();
 			}
 		});
 		
@@ -461,6 +482,13 @@ public class MarkupResultPanel extends VerticalLayout {
 
 	private QueryResult getQueryResult() {
 		return curQueryResult;
+	}
+	
+	private void tagResults() {
+		if (tagResultsDialog == null || !tagResultsDialog.isAttached()) {
+			tagResultsDialog = new TagResultsDialog(repository);
+			tagResultsDialog.show();
+		}
 	}
 
 	private void untagResults() {
@@ -691,7 +719,13 @@ public class MarkupResultPanel extends VerticalLayout {
 		kwicButtonPanel.setComponentAlignment(btSelectAllKwic, Alignment.MIDDLE_RIGHT);
 		kwicButtonPanel.setExpandRatio(btSelectAllKwic, 1f);
 		
-		btUntagResults = new Button("Untag selected Kwics");
+		btTagResults = new Button("Tag selected results");
+		btTagResults.addStyleName("primary-button");
+		kwicButtonPanel.addComponent(btTagResults);
+		kwicButtonPanel.setComponentAlignment(btTagResults, Alignment.MIDDLE_RIGHT);
+		
+		btUntagResults = new Button("Untag selected results");
+		btUntagResults.addStyleName("secondary-button");
 		kwicButtonPanel.addComponent(btUntagResults);
 		kwicButtonPanel.setComponentAlignment(btUntagResults, Alignment.MIDDLE_RIGHT);
 		kwicButtonPanel.setExpandRatio(btUntagResults, 0f);

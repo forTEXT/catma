@@ -85,6 +85,8 @@ public class KwicPanel extends VerticalLayout {
 
 	private Repository repository;
 	private TreeTable kwicTable;
+	private ContextMenu kwicTableContextMenu;
+	private ContextMenu.ContextMenuItem tagSelectedResultsContextMenuItem;
 	private boolean markupBased;
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
 	private WeakHashMap<Object, Boolean> itemDirCache = new WeakHashMap<>();
@@ -109,18 +111,13 @@ public class KwicPanel extends VerticalLayout {
 	}
 	
 	private void initContextMenu() {
-		ContextMenu kwicTableContextMenu = new ContextMenu();
-		ContextMenu.ContextMenuItem tagSelectedResultsContextMenuItem = kwicTableContextMenu.addItem("Tag Selected Results");
-		
-		tagSelectedResultsContextMenuItem.addItemClickListener(new ContextMenu.ContextMenuItemClickListener() {
-			
-			@Override
-			public void contextMenuItemClicked(ContextMenuItemClickEvent event) {
-				new TagResultsDialog(repository).show();				
-			}
-		});
-	    
+		kwicTableContextMenu = new ContextMenu();
+		tagSelectedResultsContextMenuItem = kwicTableContextMenu.addItem("Tag Selected Results");
 		kwicTableContextMenu.setAsContextMenuOf(kwicTable);
+	}
+	
+	public void addTagResultsContextMenuClickListener(ContextMenu.ContextMenuItemClickListener listener) {
+		tagSelectedResultsContextMenuItem.addItemClickListener(listener);
 	}
 
 	private void initActions() {
