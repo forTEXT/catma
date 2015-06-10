@@ -82,30 +82,11 @@ public class MenuFactory {
 			final MenuEntryDefinition... menuEntryDefinitions) {
 		
 		
-		final MainMenu mainMenu = new MainMenu();
+		final MainMenu mainMenu = new MainMenu(viewContainer);
 		mainMenu.setVisible(isVisible);
 		
-		MenuBar.Command command = new MenuBar.Command() {
-			MenuItem previous = null;
-			
-			@Override
-			public void menuSelected(MenuItem selectedItem) {
-				if (previous != null) {
-					previous.setStyleName(null);
-				}
-				
-				selectedItem.setStyleName("highlight");
-		        previous = selectedItem;
-		        
-		        HashMap<MenuBar.MenuItem, Component> entries = mainMenu.getEntries();
-		        Component component = entries.get(selectedItem);
-		        
-		        viewContainer.setContent(component);
-			}
-		};
-		
 		for (final MenuEntryDefinition menuEntryDefinition : menuEntryDefinitions) {
-			mainMenu.addEntry(menuEntryDefinition.getCaption(), command, menuEntryDefinition.getView());
+			mainMenu.addEntry(menuEntryDefinition.getCaption(), menuEntryDefinition.getView());
 		}
 		
 		componentContainer.addComponent(mainMenu);
