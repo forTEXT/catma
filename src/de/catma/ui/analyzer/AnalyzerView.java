@@ -351,7 +351,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				if(analyzerHelpWindow.getParent() == null){
 					UI.getCurrent().addWindow(analyzerHelpWindow);
 				} else {
-					return;
+					UI.getCurrent().removeWindow(analyzerHelpWindow);
 				}
 				
 			}

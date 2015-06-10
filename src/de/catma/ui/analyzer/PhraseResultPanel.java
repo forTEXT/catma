@@ -275,7 +275,7 @@ public class PhraseResultPanel extends VerticalLayout {
 				if(phraseResultHelpWindow.getParent() == null){
 					UI.getCurrent().addWindow(phraseResultHelpWindow);
 				} else {
-					return;
+					UI.getCurrent().removeWindow(phraseResultHelpWindow);
 				}
 								
 			}

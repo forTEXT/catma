@@ -241,7 +241,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 				if(markupHelpWindow.getParent() == null){
 					UI.getCurrent().addWindow(markupHelpWindow);
 				} else {
-					return;
+					UI.getCurrent().removeWindow(markupHelpWindow);
 				}
 				
 			}

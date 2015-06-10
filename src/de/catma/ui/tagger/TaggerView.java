@@ -237,7 +237,7 @@ public class TaggerView extends VerticalLayout
 				if(taggerHelpWindow.getParent() == null){
 					UI.getCurrent().addWindow(taggerHelpWindow);
 				} else {
-					return;
+					UI.getCurrent().removeWindow(taggerHelpWindow);
 				}
 				
 			}

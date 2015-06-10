@@ -425,7 +425,7 @@ public class MarkupResultPanel extends VerticalLayout {
 				if(markupResultHelpWindow.getParent() == null){
 					UI.getCurrent().addWindow(markupResultHelpWindow);
 				} else {
-					return;
+					UI.getCurrent().removeWindow(markupResultHelpWindow);
 				}
 				
 			}

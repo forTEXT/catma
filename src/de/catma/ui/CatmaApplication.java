@@ -319,7 +319,7 @@ public class CatmaApplication extends UI
 					if(uiHelpWindow.getParent() == null){
 						UI.getCurrent().addWindow(uiHelpWindow);
 					} else {
-						return;
+						UI.getCurrent().removeWindow(uiHelpWindow);
 					}
 										
 				}

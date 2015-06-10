@@ -134,7 +134,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 				if(repositoryHelpWindow.getParent() == null){
 					UI.getCurrent().addWindow(repositoryHelpWindow);
 				} else {
-					return;
+					UI.getCurrent().removeWindow(repositoryHelpWindow);
 				}
 				
 			}
