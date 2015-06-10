@@ -69,7 +69,6 @@ import de.catma.ui.CatmaApplication;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.ui.tagmanager.TagManagerView;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
@@ -90,8 +89,6 @@ public class KwicPanel extends VerticalLayout {
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
 	private WeakHashMap<Object, Boolean> itemDirCache = new WeakHashMap<>();
 	private int kwicSize = 5;
-	
-	private TagManagerWindow tagManagerWindow;
 	
 	public KwicPanel(Repository repository, 
 			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider) {
@@ -115,18 +112,11 @@ public class KwicPanel extends VerticalLayout {
 		ContextMenu kwicTableContextMenu = new ContextMenu();
 		ContextMenu.ContextMenuItem tagSelectedResultsContextMenuItem = kwicTableContextMenu.addItem("Tag Selected Results");
 		
-		final TagManagerView tagManagerView = ((CatmaApplication)UI.getCurrent()).getTagManagerView();
-		
 		tagSelectedResultsContextMenuItem.addItemClickListener(new ContextMenu.ContextMenuItemClickListener() {
 			
 			@Override
 			public void contextMenuItemClicked(ContextMenuItemClickEvent event) {
-				if (tagManagerWindow != null && tagManagerWindow.isAttached()) {
-					return;
-				}
-				
-				tagManagerWindow = new TagManagerWindow("Tag Manager", tagManagerView);
-				tagManagerWindow.show();				
+				new TagResultsDialog(repository).show();				
 			}
 		});
 	    

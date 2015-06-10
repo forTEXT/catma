@@ -531,8 +531,8 @@ public class CatmaApplication extends UI
 				CatmaApplicationEvent.userChange.name(), currentUser, newUser);
 	}
 	
-	public TagManagerView getTagManagerView() {
-		return tagManagerView;
+	public MainMenu getMenu() {
+		return menu;
 	}
 	
 	@Override
