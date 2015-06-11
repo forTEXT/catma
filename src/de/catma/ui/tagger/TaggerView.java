@@ -32,6 +32,9 @@ import java.util.logging.Logger;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.ClassResource;
+import com.vaadin.server.Sizeable.Unit;
+import com.vaadin.ui.AbstractSplitPanel.SplitterClickEvent;
+import com.vaadin.ui.AbstractSplitPanel.SplitterClickListener;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -347,10 +350,40 @@ public class TaggerView extends VerticalLayout
 				},
 				sourceDocument.getID());
 		
-		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
+		final HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
 		splitPanel.addComponent(taggerPanel);
 		splitPanel.addComponent(markupPanel);
+		splitPanel.setSplitPosition(700, Unit.PIXELS);
 		splitPanel.addStyleName("catma-tab-spacing");
+		
+		splitPanel.addSplitterClickListener(new SplitterClickListener(){
+
+			@Override
+			public void splitterClick(SplitterClickEvent event) {
+				float width = splitPanel.getSplitPosition();
+				//unit != Unit.PERCENTAGE && unit != Unit.PIXELS
+				
+				int approxMaxLineWidth = (int) (width * 0.145454);
+				
+				List<ClientTagInstance> absoluteTagInstances = 
+						pager.getAbsoluteTagInstances();
+				
+				pager.setApproxMaxLineLength(approxMaxLineWidth);
+				//recalculate pages
+				try {
+					tagger.setText(sourceDocument.getContent());
+					tagger.setTagInstancesVisible(absoluteTagInstances, true);
+
+					pagerComponent.setPage(1);
+				} catch (IOException e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+						"Error showing Source Document!", e);
+				}			
+				
+			}
+			
+		});
+		
 		addComponent(splitPanel);
 	}
 
