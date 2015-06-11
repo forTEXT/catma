@@ -1,25 +1,21 @@
 package de.catma.ui.analyzer;
 
 import com.vaadin.shared.ui.label.ContentMode;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
-import de.catma.repository.db.maintenance.UserManager;
+import de.catma.i18n.HelpTexts;
 
 public class AnalyzerHelpWindow extends Window {
 		
 	public AnalyzerHelpWindow() {
-		super("Help");
+		super(HelpTexts.getString("AnalyzerHelpWindow.title")); //$NON-NLS-1$
 		initComponents();
-		setHeight("500px");
-		setWidth("400px");
+		setHeight("500px"); //$NON-NLS-1$
+		setWidth("400px"); //$NON-NLS-1$
 		center();
-		setStyleName("help-windows");
+		setStyleName("help-windows"); //$NON-NLS-1$
 	}
 
 	private void initComponents() {
@@ -27,18 +23,7 @@ public class AnalyzerHelpWindow extends Window {
 		content.setMargin(true);
 		content.setSpacing(true);
 		
-		Label helpText = new Label("<h4>Using the wordlist</h4>" +
-				"Click on the  \"Wordlist\"-Button to get a list of all words of your document together with their frequencies." +
-				" You can now sort the list by phrase, i. e. the word, or by frequency." +
-				"<h4>Building queries</h4>" +
-				"You are free to hack your query directly into the Query box, but a large part of all possible queries can be generated with the Query Builder more conveniently." +
-				"<h4>Keywords in Context (KWIC)</h4>" +
-				"To see your search results in the context of its surrounding text, tick the \"Visible in Kwic\"-check box " +
-				"of the desired results." +
-				"<h4>Results by Markup</h4>" +
-				"When building Tag Type Queries where you look for occurrences of certain Tag Types, sometimes you " +
-				"want the results grouped by Tag Types (especially Subtags) and sometimes you want the results " +
-				"grouped by the tagged phrase. The \"Results by markup\" and \"Results by phrase\" tabs give you this choice for Tag Type Queries.", ContentMode.HTML);
+		Label helpText = new Label(HelpTexts.getString("AnalyzerHelpWindow.helpText"), ContentMode.HTML); //$NON-NLS-1$
 		content.addComponent( helpText);
 		setContent(content);
 		

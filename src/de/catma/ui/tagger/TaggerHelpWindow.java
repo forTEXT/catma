@@ -1,25 +1,21 @@
 package de.catma.ui.tagger;
 
 import com.vaadin.shared.ui.label.ContentMode;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
-import de.catma.repository.db.maintenance.UserManager;
+import de.catma.i18n.HelpTexts;
 
 public class TaggerHelpWindow extends Window {
 		
 	public TaggerHelpWindow() {
-		super("Help");
+		super(HelpTexts.getString("TaggerHelpWindow.title")); //$NON-NLS-1$
 		initComponents();
-		setHeight("500px");
-		setWidth("400px");
+		setHeight("500px"); //$NON-NLS-1$
+		setWidth("400px"); //$NON-NLS-1$
 		center();
-		setStyleName("help-windows");
+		setStyleName("help-windows"); //$NON-NLS-1$
 	}
 
 	private void initComponents() {
@@ -27,12 +23,7 @@ public class TaggerHelpWindow extends Window {
 		content.setMargin(true);
 		content.setSpacing(true);
 		
-		Label helpText = new Label("<h4>Tag this Source Document</h4>" +
-				"<ol><li>First you have to tell CATMA which Tagset you want to use. " +
-				"Open a Tag Type Library from the Repository Manager and drag a Tagset to the \"Active Tagsets\" section.</li>" +
-				"<li>Now you can mark the text sequence you want to tag.</li><li>Click the colored button of the desired Tag Type to apply it to the marked sequence.</li></ol> " +
-				"When you click on a tagged text, i. e. a text that is underlined with colored bars, you should see " +
-				"the available Tag in the section on the lower right of this view.", ContentMode.HTML);
+		Label helpText = new Label(HelpTexts.getString("TaggerHelpWindow.helpText"), ContentMode.HTML); //$NON-NLS-1$
 		content.addComponent( helpText);
 		setContent(content);
 		
