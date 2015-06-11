@@ -90,6 +90,7 @@ public class TaggerView extends VerticalLayout
 	private Slider linesPerPageSlider;
 	private double totalLineCount;
 	private PropertyChangeListener tagReferencesChangedListener;
+	private int approxMaxLineLength = 80;
 	
 	TaggerHelpWindow taggerHelpWindow = new TaggerHelpWindow();
 	
@@ -111,6 +112,7 @@ public class TaggerView extends VerticalLayout
 			tagger.setText(sourceDocument.getContent());
 			totalLineCount = pager.getTotalLineCount();
 			try {
+				// TODO: remove hardcoded line number
 				linesPerPageSlider.setValue((100/totalLineCount)*30);
 			} catch (ValueOutOfBoundsException toBeIgnored) {}
 		} catch (IOException e) {
@@ -260,12 +262,12 @@ public class TaggerView extends VerticalLayout
 		IndexInfoSet indexInfoSet = 
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet(); 
 		//TODO: remove hardcoded line length
-		pager = new Pager(taggerID, 80, 30, 
+		pager = new Pager(taggerID, approxMaxLineLength, 30, 
 				indexInfoSet.isRightToLeftLanguage());
 		
 		tagger = new Tagger(taggerID, pager, this);
 		tagger.addStyleName("tagger");
-		tagger.setWidth("550px");
+		tagger.setWidth("100%");
 		
 		taggerPanel.addComponent(tagger);
 	
