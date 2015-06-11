@@ -245,6 +245,13 @@ public class Pager implements Iterable<Page> {
 		this.currentPageIndex = 0;
 		this.currrentHighlightRanges.clear();
 	}
+	
+	public void setApproxMaxLineLength(int approxMaxLineLength) {
+		this.checksum = null; //recalculate pages
+		this.approxMaxLineLength = approxMaxLineLength;
+		this.currentPageIndex = 0;
+		this.currrentHighlightRanges.clear();
+	}
 
 	public void removeTagInstances(Set<TagDefinition> tagDefinitions) {
 		for (Page p : pages) {
