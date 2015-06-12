@@ -903,6 +903,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		
 		btOpenDocument = new Button("Open Document");
 		btOpenDocument.addStyleName("primary-button");
+		btOpenDocument.setEnabled(false);
 		documentButtonsPanelContent.addComponent(btOpenDocument);
 		btAddDocument = new Button("Add Document");
 		btAddDocument.addStyleName("secondary-button");
