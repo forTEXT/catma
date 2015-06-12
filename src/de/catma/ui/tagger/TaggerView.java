@@ -29,17 +29,20 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.neo4j.cypher.InvalidArgumentException;
+
+import com.oracle.jrockit.jfr.InvalidValueException;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.Sizeable.Unit;
+import com.vaadin.shared.EventId;
 import com.vaadin.ui.AbstractSplitPanel.SplitterClickEvent;
 import com.vaadin.ui.AbstractSplitPanel.SplitterClickListener;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
@@ -68,6 +71,8 @@ import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.tagger.TaggerHelpWindow;
+import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedEvent;
+import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedListener;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tagger.Tagger.TaggerListener;
 import de.catma.ui.tagger.pager.Pager;
@@ -93,7 +98,8 @@ public class TaggerView extends VerticalLayout
 	private Slider linesPerPageSlider;
 	private double totalLineCount;
 	private PropertyChangeListener tagReferencesChangedListener;
-	private int approxMaxLineLength = 80;
+	private int approxMaxLineLength;
+	private int initialSplitterPositionInPixels = 700;
 	
 	TaggerHelpWindow taggerHelpWindow = new TaggerHelpWindow();
 	
@@ -106,6 +112,8 @@ public class TaggerView extends VerticalLayout
 		this.repository = repository;
 		this.sourceDocument = sourceDocument;
 		this.sourceDocChangedListener = sourceDocChangedListener;
+		
+		this.approxMaxLineLength = getApproximateMaxLineLengthForSplitterPanel(initialSplitterPositionInPixels);
 
 		initComponents();
 		initActions();
@@ -350,25 +358,31 @@ public class TaggerView extends VerticalLayout
 				},
 				sourceDocument.getID());
 		
-		final HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
+		final TaggerSplitPanel splitPanel = new TaggerSplitPanel();
 		splitPanel.addComponent(taggerPanel);
 		splitPanel.addComponent(markupPanel);
-		splitPanel.setSplitPosition(700, Unit.PIXELS);
+		splitPanel.setSplitPosition(initialSplitterPositionInPixels, Unit.PIXELS);
 		splitPanel.addStyleName("catma-tab-spacing");
 		
-		splitPanel.addSplitterClickListener(new SplitterClickListener(){
+		SplitterPositionChangedListener listener = new SplitterPositionChangedListener(){
 
 			@Override
-			public void splitterClick(SplitterClickEvent event) {
-				float width = splitPanel.getSplitPosition();
-				//unit != Unit.PERCENTAGE && unit != Unit.PIXELS
+			public void positionChanged(SplitterPositionChangedEvent event) {
+				float width = event.getPosition();
 				
-				int approxMaxLineWidth = (int) (width * 0.145454);
+				// unit != Unit.PERCENTAGE && unit != Unit.PIXELS
+				// TODO: if it is PERCENTAGE, work out the splitter position in pixels
+				if (event.getPositionUnit() != Unit.PIXELS){
+					String message = "Must use PIXELS Unit for split position";
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+							message, new IllegalArgumentException(message));
+				}							
 				
-				List<ClientTagInstance> absoluteTagInstances = 
-						pager.getAbsoluteTagInstances();
+				int approxMaxLineLength = getApproximateMaxLineLengthForSplitterPanel(width);
 				
-				pager.setApproxMaxLineLength(approxMaxLineWidth);
+				List<ClientTagInstance> absoluteTagInstances = pager.getAbsoluteTagInstances();
+				
+				pager.setApproxMaxLineLength(approxMaxLineLength);
 				//recalculate pages
 				try {
 					tagger.setText(sourceDocument.getContent());
@@ -378,13 +392,22 @@ public class TaggerView extends VerticalLayout
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error showing Source Document!", e);
-				}			
-				
+				}							
 			}
 			
-		});
+		};
+		
+		splitPanel.addListener(SplitterPositionChangedEvent.class,
+                listener, SplitterPositionChangedListener.positionChangedMethod);
 		
 		addComponent(splitPanel);
+	}
+	
+	public int getApproximateMaxLineLengthForSplitterPanel(float width){
+		// based on ratio of 80:550
+		int approxMaxLineLength = (int) (width * 0.145454);
+		
+		return approxMaxLineLength;
 	}
 
 	public SourceDocument getSourceDocument() {
