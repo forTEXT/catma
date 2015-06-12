@@ -229,13 +229,16 @@ public class TaggerView extends VerticalLayout
 				List<ClientTagInstance> absoluteTagInstances = 
 						pager.getAbsoluteTagInstances();
 				
+				Page currentPage = pager.getCurrentPage();
 				pager.setMaxPageLengthInLines(lines);
 				//recalculate pages
 				try {
-					tagger.setText(sourceDocument.getContent());
+					pager.setText(sourceDocument.getContent());
+					int previousPageNumber = pager.getPageNumberFor(currentPage.getPageStart());
+					tagger.setPage(previousPageNumber);					
 					tagger.setTagInstancesVisible(absoluteTagInstances, true);
 
-					pagerComponent.setPage(1);
+					pagerComponent.setPage(previousPageNumber);
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error showing Source Document!", e);
