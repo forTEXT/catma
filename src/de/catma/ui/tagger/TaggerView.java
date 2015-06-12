@@ -124,8 +124,7 @@ public class TaggerView extends VerticalLayout
 			tagger.setText(sourceDocument.getContent());
 			totalLineCount = pager.getTotalLineCount();
 			try {
-				// TODO: remove hardcoded line number
-				linesPerPageSlider.setValue((100/totalLineCount)*maxPageLengthInLines);
+				linesPerPageSlider.setValue((100.0/totalLineCount)*maxPageLengthInLines);
 			} catch (ValueOutOfBoundsException toBeIgnored) {}
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
