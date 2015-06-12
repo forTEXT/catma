@@ -101,8 +101,10 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 					}
 					URL url = new URL(urlText);
 					
-					//TODO: filename?
-					TechInfoSet ti = new TechInfoSet(null, null, url.toURI()); //TODO: mime type detection?
+					String fileName = url.getFile();
+					fileName = fileName.substring(fileName.lastIndexOf('/') + 1).replace("%20", " ");
+					
+					TechInfoSet ti = new TechInfoSet(fileName, null, url.toURI()); //TODO: mime type detection?
 					wizardResult.setInputTechInfoSet(ti);
 					onAdvance = true;
 				}
