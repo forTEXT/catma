@@ -98,7 +98,8 @@ public class TaggerView extends VerticalLayout
 	private Slider linesPerPageSlider;
 	private double totalLineCount;
 	private PropertyChangeListener tagReferencesChangedListener;
-	private int approxMaxLineLength = 80;
+	private int approxMaxLineLength;
+	private int initialSplitterPositionInPixels = 700;
 	
 	TaggerHelpWindow taggerHelpWindow = new TaggerHelpWindow();
 	
@@ -111,6 +112,8 @@ public class TaggerView extends VerticalLayout
 		this.repository = repository;
 		this.sourceDocument = sourceDocument;
 		this.sourceDocChangedListener = sourceDocChangedListener;
+		
+		this.approxMaxLineLength = getApproximateMaxLineLengthForSplitterPanel(initialSplitterPositionInPixels);
 
 		initComponents();
 		initActions();
@@ -358,7 +361,7 @@ public class TaggerView extends VerticalLayout
 		final TaggerSplitPanel splitPanel = new TaggerSplitPanel();
 		splitPanel.addComponent(taggerPanel);
 		splitPanel.addComponent(markupPanel);
-		splitPanel.setSplitPosition(700, Unit.PIXELS);
+		splitPanel.setSplitPosition(initialSplitterPositionInPixels, Unit.PIXELS);
 		splitPanel.addStyleName("catma-tab-spacing");
 		
 		SplitterPositionChangedListener listener = new SplitterPositionChangedListener(){
@@ -375,11 +378,11 @@ public class TaggerView extends VerticalLayout
 							message, new IllegalArgumentException(message));
 				}							
 				
-				int approxMaxLineWidth = (int) (width * 0.145454);
+				int approxMaxLineLength = getApproximateMaxLineLengthForSplitterPanel(width);
 				
 				List<ClientTagInstance> absoluteTagInstances = pager.getAbsoluteTagInstances();
 				
-				pager.setApproxMaxLineLength(approxMaxLineWidth);
+				pager.setApproxMaxLineLength(approxMaxLineLength);
 				//recalculate pages
 				try {
 					tagger.setText(sourceDocument.getContent());
@@ -398,6 +401,13 @@ public class TaggerView extends VerticalLayout
                 listener, SplitterPositionChangedListener.positionChangedMethod);
 		
 		addComponent(splitPanel);
+	}
+	
+	public int getApproximateMaxLineLengthForSplitterPanel(float width){
+		// based on ratio of 80:550
+		int approxMaxLineLength = (int) (width * 0.145454);
+		
+		return approxMaxLineLength;
 	}
 
 	public SourceDocument getSourceDocument() {
