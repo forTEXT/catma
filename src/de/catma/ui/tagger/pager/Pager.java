@@ -118,7 +118,7 @@ public class Pager implements Iterable<Page> {
 				pages.add(new Page(
 						taggerID, 
 						text.substring(pageStart, pageEnd), 
-						pageStart, pageEnd,
+						pageStart, pageEnd, approxMaxLineLength,
 						rightToLeftLanguage));
 				pageLines = 0;
 				pageStart = pageEnd;
@@ -143,7 +143,7 @@ public class Pager implements Iterable<Page> {
 				new Page(
 					taggerID, 
 					text.substring(pageStart, pageEnd), 
-					pageStart, pageEnd,
+					pageStart, pageEnd, approxMaxLineLength,
 					rightToLeftLanguage));
 		}
 		
@@ -242,6 +242,13 @@ public class Pager implements Iterable<Page> {
 	public void setMaxPageLengthInLines(int maxPageLengthInLines) {
 		this.checksum = null; //recalculate pages
 		this.maxPageLengthInLines = maxPageLengthInLines;
+		this.currentPageIndex = 0;
+		this.currrentHighlightRanges.clear();
+	}
+	
+	public void setApproxMaxLineLength(int approxMaxLineLength) {
+		this.checksum = null; //recalculate pages
+		this.approxMaxLineLength = approxMaxLineLength;
 		this.currentPageIndex = 0;
 		this.currrentHighlightRanges.clear();
 	}
