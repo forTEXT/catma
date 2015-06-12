@@ -75,6 +75,7 @@ import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedEvent;
 import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedListener;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tagger.Tagger.TaggerListener;
+import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
 import de.catma.ui.tagger.pager.PagerComponent.PageChangeListener;
@@ -382,13 +383,16 @@ public class TaggerView extends VerticalLayout
 				
 				List<ClientTagInstance> absoluteTagInstances = pager.getAbsoluteTagInstances();
 				
+				Page currentPage = pager.getCurrentPage();
 				pager.setApproxMaxLineLength(approxMaxLineLength);
 				//recalculate pages
 				try {
-					tagger.setText(sourceDocument.getContent());
+					pager.setText(sourceDocument.getContent());
+					int previousPageNumber = pager.getPageNumberFor(currentPage.getPageStart());
+					tagger.setPage(previousPageNumber);					
 					tagger.setTagInstancesVisible(absoluteTagInstances, true);
 
-					pagerComponent.setPage(1);
+					pagerComponent.setPage(previousPageNumber);
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error showing Source Document!", e);
