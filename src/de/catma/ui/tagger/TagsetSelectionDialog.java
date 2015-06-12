@@ -9,6 +9,7 @@ import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -43,7 +44,6 @@ public class TagsetSelectionDialog extends VerticalLayout {
 	
 	PropertyChangeListener tagLibraryChangedListener;
 	
-	//TODO: a lot of stuff in here was copied from TagLibraryPanel and should be factored out into components
 	public TagsetSelectionDialog(Repository repository) {
 		super();
 		
@@ -54,9 +54,11 @@ public class TagsetSelectionDialog extends VerticalLayout {
 		initListeners();
 	}
 
+	// TODO: factor out a TagLibrariesTree component, lots of stuff copied from TagLibraryPanel
 	private void initComponents() {
 		HorizontalLayout tagLibrariesTreeContainer = new HorizontalLayout();
 		tagLibrariesTreeContainer.setWidth("100%");
+		tagLibrariesTreeContainer.setMargin(new MarginInfo(false, true, true, false));
 
 		tagLibraryContainer = new HierarchicalContainer();
 		tagLibraryContainer.addContainerProperty(SORTCAP_PROP, String.class, null);		

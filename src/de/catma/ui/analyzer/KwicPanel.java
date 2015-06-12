@@ -218,10 +218,15 @@ public class KwicPanel extends VerticalLayout {
 		Set<QueryResultRow> selectedRows = 
 				(Set<QueryResultRow>)kwicTable.getValue();
 		
-		if (selectedRows != null) {
-			updateAllMarkupCollections(
-				selectedRows, incomingTagsetDef, incomingTagDef);
+		if (selectedRows.isEmpty()) {
+			Notification.show(
+					"Information", "Please select one or more results first!",
+					Type.TRAY_NOTIFICATION);
+			return;
 		}
+		
+		updateAllMarkupCollections(
+			selectedRows, incomingTagsetDef, incomingTagDef);
 	}
 
 	private void updateAllMarkupCollections(

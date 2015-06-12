@@ -46,6 +46,7 @@ public class TagResultsDialog extends VerticalLayout {
 		initListeners();
 	}
 	
+	// TODO: factor out a TagLibrariesTree component, lots of stuff copied from TagLibraryPanel
 	private void initComponents() {
 		Label lblInstructions = new Label(
 				"Select a Tag Type Library and find the Tag that you want"
