@@ -590,8 +590,8 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		
 		documentsPanel.addComponent(documentsTree);
 		documentsPanel.setExpandRatio(documentsTree, 1.0f);
-		btNewTab = new Button("+");
-		btNewTab.setDescription("opens a new tab with same constraints.");
+		btNewTab = new Button("+ New Query");
+		btNewTab.setDescription("Opens a new tab with same constraints");
 		documentsPanel.addComponent(btNewTab);
 		documentsPanel.setComponentAlignment(btNewTab, Alignment.TOP_RIGHT);
 		return documentsPanel;
