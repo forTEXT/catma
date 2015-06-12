@@ -143,10 +143,10 @@
 	}
 
 	.tagger {
-		height: 100%!important;
-		outline: 1px solid #ddd;
-		margin: 20px;
-		padding: 5px;
+		height: 100% !important;
+		border-bottom: 1px solid #C5C5C5;
+		border-left: 1px solid #C5C5C5;
+		padding: 20px;
 		font-family: Arial Unicode MS, Arial, sans-serif;
 		font-size: 12px;
 		color: #000;
@@ -174,10 +174,6 @@
 
 	.v-horizontallayout > .v-expand > .v-slot-bold-label > .v-label-bold-label[style="width: 100%;"] {
 		padding-top: 10px;
-	}
-
-	.v-widget.tagger.-tagger.v-has-width.v-has-height {
-		padding: 15px 0px 15px 20px;
 	}
 
 	.v-verticallayout .expert-features {
@@ -255,7 +251,6 @@
 		padding-right: 10px;
 	}
 	
-	
 	span.v-button-wrap div.gwt-HTML span {
 		position: absolute;
 		top: 2px;
@@ -279,14 +274,11 @@
 	
 	.help-button img {
 		margin-bottom: 3px;
-	}
-	
+	}	
 	
 	.help-windows .v-window-outerheader {
 		background: #78909C!important;
 	}
-	
-
 	
 	.help-windows .v-window-restorebox, .help-windows  .v-window-maximizebox, .help-windows .v-window-closebox {
 		background: none;
@@ -302,5 +294,4 @@
 		text-align: inherit;
 	}
 	
-
 }
