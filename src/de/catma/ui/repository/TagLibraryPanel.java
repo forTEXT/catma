@@ -167,11 +167,12 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		tagLibraryButtonPanel.setSpacing(true);
 		
 		btOpenTagLibrary = new Button("Open Tag Type Library");
+		btOpenTagLibrary.addStyleName("primary-button");
 		btOpenTagLibrary.setEnabled(false);
 		tagLibraryButtonPanel.addComponent(btOpenTagLibrary);
 
 		btCreateTagLibrary = new Button("Create Tag Type Library");
-		btCreateTagLibrary.addStyleName("primary-button");
+		btCreateTagLibrary.addStyleName("secondary-button");
 		tagLibraryButtonPanel.addComponent(btCreateTagLibrary);
 		
 		btExportTagLibrary = new Button("Export Tag Type Library");
