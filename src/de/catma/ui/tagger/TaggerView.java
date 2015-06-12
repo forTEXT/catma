@@ -370,8 +370,9 @@ public class TaggerView extends VerticalLayout
 				// unit != Unit.PERCENTAGE && unit != Unit.PIXELS
 				// TODO: if it is PERCENTAGE, work out the splitter position in pixels
 				if (event.getPositionUnit() != Unit.PIXELS){
+					String message = "Must use PIXELS Unit for split position";
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"Must use pixel width for splitter panel position", null);
+							message, new IllegalArgumentException(message));
 				}							
 				
 				int approxMaxLineWidth = (int) (width * 0.145454);
