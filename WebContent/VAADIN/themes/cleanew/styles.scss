@@ -228,7 +228,12 @@
 	}
 	
 	.v-table [class*="-row"].v-selected {
-		background: #E6E9EB;
+		background: #BBD7EA;
+		color: #000;
+	}
+	
+	.v-table .v-selected[class*="-row"] + .v-selected {
+		background: #BBD7EA;
 		color: #000;
 	}
 	
