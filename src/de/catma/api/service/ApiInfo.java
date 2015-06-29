@@ -14,7 +14,7 @@ public class ApiInfo extends ServerResource {
 	public String getApiInfo() {
 		try {
 			return IOUtils.toString(
-					Thread.currentThread().getContextClassLoader().getResourceAsStream(
+					ApiInfo.class.getClassLoader().getResourceAsStream(
 							"de/catma/api/catma_api_spec.txt"));
 		} catch (IOException e) {
 			throw new ResourceException(

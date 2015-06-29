@@ -36,17 +36,18 @@ public class DBRepositoryFactory implements RepositoryFactory {
 		
 		String indexerFactoryClassName = 
 				RepositoryPropertyKey.IndexerFactory.getProperty(properties, index);
+		
 		IndexerFactory indexerFactory = 
 				(IndexerFactory)Class.forName(
 						indexerFactoryClassName, true,
-						Thread.currentThread().getContextClassLoader()).newInstance();
+						Repository.class.getClassLoader()).newInstance();
 
 		String serializationHandlerFactoryClazzName = 
 				RepositoryPropertyKey.SerializationHandlerFactory.getProperty(properties, index);
 		SerializationHandlerFactory serializationHandlerFactory = 
 				(SerializationHandlerFactory) Class.forName(
 						serializationHandlerFactoryClazzName, true, 
-						Thread.currentThread().getContextClassLoader()).newInstance();
+						Repository.class.getClassLoader()).newInstance();
 		serializationHandlerFactory.setTagManager(tagManager);
 
 		return new DBRepository(

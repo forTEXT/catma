@@ -61,7 +61,7 @@ public class DBIndexMaintenanceJob implements Job {
 			SourceDocumentIndexMaintainer sourceDocumentIndexMaintainer = 
 					(SourceDocumentIndexMaintainer) Class.forName(
 							sourceDocumentIndexMaintainerClazzName, true, 
-							Thread.currentThread().getContextClassLoader()).newInstance();
+							DBIndexMaintenanceJob.class.getClassLoader()).newInstance();
 			
 			int sourceDocumentIndexMaintainerMaxObjectCount = 
 					dataMap.getInt(JobInstaller.JobDataKey.SOURCEDOCIDXMAINTAIN_MAXOBJ.name());
