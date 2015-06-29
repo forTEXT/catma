@@ -19,8 +19,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.sql.DataSource;
 
 import org.jooq.DSLContext;
@@ -89,9 +87,9 @@ public class DBIndexMaintainer {
 				logger.info("starting index maintenance");
 				if (userManager.getUserCount() == 0 ) {
 					logger.info("no user logged in, proceeding with index maintenance");
-					Context  context = new InitialContext();
-					DataSource dataSource = (DataSource) context.lookup(
-							CatmaDataSourceName.CATMADS.name());
+
+					DataSource dataSource = 
+							CatmaDataSourceName.CATMADS.getDataSource();
 					DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
 		
 					// all repo.tagreferences need an entry in index.tagref
@@ -110,7 +108,6 @@ public class DBIndexMaintainer {
 					// cleaning up stale source doc index entries
 					sourceDocumentIndexMaintainerOffset = 
 						sourceDocumentIndexMaintainer.checkSourceDocumentIndex(
-							context, 
 							sourceDocumentIndexMaintainerMaxObjectCount,
 							sourceDocumentIndexMaintainerOffset);
 					

@@ -3,8 +3,6 @@ package de.catma.heureclea.autotagger;
 import java.io.IOException;
 import java.net.URLEncoder;
 
-import javax.naming.NamingException;
-
 import org.restlet.Context;
 import org.restlet.data.Method;
 import org.restlet.resource.ClientResource;
@@ -31,7 +29,7 @@ public class AnnotationGenerator {
 
 	private String generatorURL;
 
-	public AnnotationGenerator() throws NamingException {
+	public AnnotationGenerator() {
 		this.generatorURL = 
 			RepositoryPropertyKey.AnnotationGeneratorURL.getValue();
 	}

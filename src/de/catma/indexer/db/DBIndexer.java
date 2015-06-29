@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import javax.naming.NamingException;
-
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.Range;
 import de.catma.document.source.SourceDocument;
@@ -50,7 +48,7 @@ public class DBIndexer implements Indexer {
 	private TagReferenceIndexer tagReferenceIndexer;
 	private SourceDocumentIndexer sourceDocumentIndexer;
 
-	public DBIndexer(Map<String, Object> properties) throws NamingException {
+	public DBIndexer(Map<String, Object> properties) {
 		tagReferenceIndexer = new TagReferenceIndexer();
 		sourceDocumentIndexer = new SourceDocumentIndexer();
 	}
@@ -125,28 +123,19 @@ public class DBIndexer implements Indexer {
 	public QueryResult searchTagDefinitionPath(List<String> userMarkupCollectionIdList, 
 			String tagDefinitionPath) throws IOException {
 		
-		try {
-			TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
-		
-			return tagSearcher.search(userMarkupCollectionIdList, tagDefinitionPath);
-		} catch (NamingException e) {
-			throw new IOException(e);
-		}
-
+		TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
+	
+		return tagSearcher.search(userMarkupCollectionIdList, tagDefinitionPath);
 	}
 	
 	public QueryResult searchProperty(
 			List<String> userMarkupCollectionIdList,
 			String propertyName, String propertyValue, String tagValue) throws IOException {
 
-		try {
-			TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
-			return tagSearcher.searchProperties(
-					userMarkupCollectionIdList, 
-					propertyName, propertyValue, tagValue);
-		} catch (NamingException e) {
-			throw new IOException(e);
-		}
+		TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
+		return tagSearcher.searchProperties(
+				userMarkupCollectionIdList, 
+				propertyName, propertyValue, tagValue);
 		
 	}
 
@@ -154,27 +143,18 @@ public class DBIndexer implements Indexer {
 			List<String> documentIdList, 
 			CompareOperator comp1, int freq1,
 			CompareOperator comp2, int freq2) throws IOException {
-		try {
-			FrequencySearcher freqSearcher = new FrequencySearcher();
-			return freqSearcher.search(documentIdList, comp1, freq1, comp2, freq2);
-		} catch (NamingException e) {
-			throw new IOException(e);
-		}
+		FrequencySearcher freqSearcher = new FrequencySearcher();
+		return freqSearcher.search(documentIdList, comp1, freq1, comp2, freq2);
 	}
 
 	public SpanContext getSpanContextFor(
 			String sourceDocumentId, Range range, int spanContextSize,
 			SpanDirection direction) throws IOException {
-		try {
-			CollocationSearcher collocationSearcher = 
-					new CollocationSearcher();
-			
-			return collocationSearcher.getSpanContextFor(
-					sourceDocumentId, range, spanContextSize, direction);
-		}
-		catch (NamingException ne) {
-			throw new IOException(ne);
-		}
+		CollocationSearcher collocationSearcher = 
+				new CollocationSearcher();
+		
+		return collocationSearcher.getSpanContextFor(
+				sourceDocumentId, range, spanContextSize, direction);
 	}
 	
 	public QueryResult searchCollocation(QueryResult baseResult,
@@ -192,14 +172,9 @@ public class DBIndexer implements Indexer {
 	}
 	
 	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range) throws IOException {
-		try {
-			CollocationSearcher collocationSearcher = 
-					new CollocationSearcher();
-			return collocationSearcher.getTermInfosFor(sourceDocumentId, range);
-		}
-		catch (NamingException ne) {
-			throw new IOException(ne);
-		}
+		CollocationSearcher collocationSearcher = 
+				new CollocationSearcher();
+		return collocationSearcher.getTermInfosFor(sourceDocumentId, range);
 	}
 
 	
@@ -235,14 +210,10 @@ public class DBIndexer implements Indexer {
 	@Override
 	public QueryResult searchTagDiff(List<String> relevantUserMarkupCollIDs,
 			String propertyName, String tagPhrase) throws IOException {
-		try {
-			TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
-			return tagSearcher.searchTagDiff(
-					relevantUserMarkupCollIDs, 
-					propertyName, tagPhrase);
-		} catch (NamingException e) {
-			throw new IOException(e);
-		}	
+		TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
+		return tagSearcher.searchTagDiff(
+				relevantUserMarkupCollIDs, 
+				propertyName, tagPhrase);
 	}
 	
 	public void close() {

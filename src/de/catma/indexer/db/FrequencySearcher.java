@@ -24,9 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.jooq.DSLContext;
@@ -34,7 +31,6 @@ import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.SelectConditionStep;
-import org.jooq.conf.ParamType;
 import org.jooq.impl.DSL;
 
 import de.catma.queryengine.CompareOperator;
@@ -47,10 +43,9 @@ class FrequencySearcher {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private DataSource dataSource;
 	
-	public FrequencySearcher() throws NamingException {
+	public FrequencySearcher() {
 		super();
-		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
+		this.dataSource = CatmaDataSourceName.CATMADS.getDataSource();
 	}
 
 	public QueryResult search(

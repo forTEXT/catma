@@ -18,14 +18,10 @@
  */
 package de.catma.repository.db;
 
-import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTY;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTYDEFINITION;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTYDEF_POSSIBLEVALUE;
-import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTYVALUE;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGDEFINITION;
-import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGINSTANCE;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGLIBRARY;
-import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGREFERENCE;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.TAGSETDEFINITION;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.USER_TAGLIBRARY;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.USER_USERMARKUPCOLLECTION;
@@ -44,9 +40,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.jooq.BatchBindStep;
@@ -107,12 +100,11 @@ class TagLibraryHandler {
 	private DataSource dataSource;
 
 	public TagLibraryHandler(
-		DBRepository dbRepository, IDGenerator idGenerator) throws NamingException {
+		DBRepository dbRepository, IDGenerator idGenerator) {
 		this.dbRepository = dbRepository;
 		this.idGenerator = idGenerator;
 		tagLibraryReferencesById = new HashMap<String, TagLibraryReference>();
-		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
+		this.dataSource = CatmaDataSourceName.CATMADS.getDataSource();
 	}
 
 	public void createTagLibrary(String name) throws IOException {

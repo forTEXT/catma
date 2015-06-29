@@ -6,7 +6,6 @@ import static de.catma.repository.db.jooqgen.catmarepository.Tables.SOURCEDOCUME
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-import javax.naming.Context;
 import javax.sql.DataSource;
 
 import org.jooq.DSLContext;
@@ -25,11 +24,10 @@ public class SourceDocumentDBIndexMaintainer implements
 	private Logger logger = Logger.getLogger(SourceDocumentDBIndexMaintainer.class.getName());
 
 	@Override
-	public int checkSourceDocumentIndex(Context context, int maxObjectCount, int offset)
+	public int checkSourceDocumentIndex(int maxObjectCount, int offset)
 			throws Exception {
 
-		DataSource dataSource = (DataSource) context.lookup(
-				CatmaDataSourceName.CATMADS.name());
+		DataSource dataSource = CatmaDataSourceName.CATMADS.getDataSource();
 		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
 
 		Result<Record2<Integer, String>> result = db

@@ -41,9 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.jooq.BatchBindStep;
@@ -140,12 +137,11 @@ class UserMarkupCollectionHandler {
 	private Map<String,WeakReference<UserMarkupCollection>> umcCache;
 	private DataSource dataSource;
 	
-	UserMarkupCollectionHandler(DBRepository dbRepository) throws NamingException {
+	UserMarkupCollectionHandler(DBRepository dbRepository) {
 		this.dbRepository = dbRepository;
 		this.idGenerator = new IDGenerator();
 		this.umcCache = new HashMap<String, WeakReference<UserMarkupCollection>>();
-		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
+		this.dataSource = CatmaDataSourceName.CATMADS.getDataSource();
 	}
 
 	void createUserMarkupCollection(String name,

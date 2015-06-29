@@ -25,8 +25,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import javax.naming.NamingException;
-
 import de.catma.indexer.db.model.Term;
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.PhraseResult;
@@ -47,17 +45,12 @@ class LazyDBPhraseQueryResult implements GroupedQueryResult {
 
 	public Iterator<QueryResultRow> iterator() {
 		if (queryResultRowArray == null) {
-			try {
-				loadQueryResultRows();
-			}
-			catch (NamingException ne) {
-				throw new RuntimeException(ne);
-			}
+			loadQueryResultRows();
 		}
 		return queryResultRowArray.iterator();
 	}
 
-	private void loadQueryResultRows() throws NamingException {
+	private void loadQueryResultRows() {
 		queryResultRowArray = new QueryResultRowArray();
 		freqByDocument = new HashMap<String, Integer>();
 		PhraseSearcher phraseSearcher = new PhraseSearcher();

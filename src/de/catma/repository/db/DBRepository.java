@@ -41,9 +41,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.jooq.DSLContext;
@@ -132,7 +129,7 @@ public class DBRepository implements IndexedRepository {
 			BackgroundServiceProvider backgroundServiceProvider,
 			IndexerFactory indexerFactory, 
 			SerializationHandlerFactory serializationHandlerFactory,
-			String url, String user, String pass, String tempDir) throws NamingException {
+			String url, String user, String pass, String tempDir) {
 		
 
 		this.name = name;
@@ -325,8 +322,6 @@ public class DBRepository implements IndexedRepository {
 
 	public void open(Map<String, String> userIdentification) throws Exception {
 		initTagManagerListeners();
-		
-		Context context = new InitialContext();
 		
 		this.dataSource = CatmaDataSourceName.CATMADS.getDataSource();
 		

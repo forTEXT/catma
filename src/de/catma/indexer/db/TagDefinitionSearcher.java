@@ -35,9 +35,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.jooq.DSLContext;
@@ -99,12 +96,11 @@ public class TagDefinitionSearcher {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private DataSource dataSource;
 
-	public TagDefinitionSearcher() throws NamingException {
+	public TagDefinitionSearcher() {
 		this.idGenerator = new IDGenerator();
 		this.groupByTagInstanceIdFunction = new GroupByTagInstanceIdFunction(idGenerator);
 		this.groupByTagInstanceIdPropertyDefIdFunction = new GroupByTagInstanceIdPropertyDefIdFunction(idGenerator);
-		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
+		this.dataSource = CatmaDataSourceName.CATMADS.getDataSource();
 	}
 
 	public QueryResult search(

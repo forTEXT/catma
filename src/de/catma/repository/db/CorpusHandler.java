@@ -35,9 +35,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.jooq.DSLContext;
@@ -62,11 +59,11 @@ class CorpusHandler {
 	private Map<String, Corpus> corpora;
 	private DataSource dataSource;
 
-	public CorpusHandler(DBRepository dbRepository) throws NamingException {
+	public CorpusHandler(DBRepository dbRepository) {
 		this.dbRepository = dbRepository;
 		corpora = new HashMap<String, Corpus>();
-		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
+
+		this.dataSource = CatmaDataSourceName.CATMADS.getDataSource();
 	}
 
 	public Collection<Corpus> getCorpora() {

@@ -28,9 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.jooq.DSLContext;
@@ -54,9 +51,8 @@ class CollocationSearcher {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private DataSource dataSource;
 
-	public CollocationSearcher() throws NamingException {
-		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
+	public CollocationSearcher() {
+		this.dataSource = CatmaDataSourceName.CATMADS.getDataSource();
 	}
 	
 	public SpanContext getSpanContextFor(

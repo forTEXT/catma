@@ -30,9 +30,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.jooq.BatchBindStep;
@@ -69,10 +66,9 @@ public class TagReferenceIndexer {
 
 	private DataSource dataSource;
 
-	public TagReferenceIndexer() throws NamingException {
+	public TagReferenceIndexer() {
 		this.idGenerator = new IDGenerator();
-		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
+		this.dataSource = CatmaDataSourceName.CATMADS.getDataSource();
 	}
 
 

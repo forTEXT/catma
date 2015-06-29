@@ -1,7 +1,5 @@
 package de.catma.heureclea.autotagger;
 
-import javax.naming.NamingException;
-
 import org.jboss.aerogear.security.otp.Totp;
 import org.jboss.aerogear.security.otp.api.Clock;
 
@@ -15,7 +13,7 @@ public class GenerationOptions {
 	private String token;
 	private String identifier;
 
-	public GenerationOptions(String corpusId, String identifier) throws NamingException {
+	public GenerationOptions(String corpusId, String identifier) {
 		super();
 		this.corpusId = corpusId;
 		

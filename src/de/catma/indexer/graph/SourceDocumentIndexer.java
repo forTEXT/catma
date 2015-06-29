@@ -8,9 +8,6 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.ResourceIterable;
@@ -57,52 +54,39 @@ public class SourceDocumentIndexer {
 
 		logger.info("term extraction finished");
 		
-		try {
-			final IndexBufferManager indexBufferManager = 
-					(IndexBufferManager) new InitialContext().lookup(
-							IndexBufferManagerName.INDEXBUFFERMANAGER.name());
+		final IndexBufferManager indexBufferManager = 
+				IndexBufferManagerName.INDEXBUFFERMANAGER.getIndeBufferManager();
 
-			
-			indexBufferManager.add(sourceDocument.getID(), terms);
-			
-			logger.info("buffering finished");
-			
-			
-			backgroundService.submit(
-					new DefaultProgressCallable<String>() {
-						@Override
-						public String call() throws Exception {
-							return insertIntoGraph(sourceDocument, terms, getProgressListener());
-						}
-					},
-					new ExecutionListener<String>() {
-						@Override
-						public void done(String result) {
-							indexBufferManager.remove(result);
-						}
-						@Override
-						public void error(Throwable t) {
-							logger.log(Level.SEVERE, "error indexing document #" + sourceDocument.getID(), t);
-						}
-					},
-					new LogProgressListener());
-		} catch (NamingException e) {
-			throw new IOException(e);
-		}
+		
+		indexBufferManager.add(sourceDocument.getID(), terms);
+		
+		logger.info("buffering finished");
+		
+		backgroundService.submit(
+			new DefaultProgressCallable<String>() {
+				@Override
+				public String call() throws Exception {
+					return insertIntoGraph(sourceDocument, terms, getProgressListener());
+				}
+			},
+			new ExecutionListener<String>() {
+				@Override
+				public void done(String result) {
+					indexBufferManager.remove(result);
+				}
+				@Override
+				public void error(Throwable t) {
+					logger.log(Level.SEVERE, "error indexing document #" + sourceDocument.getID(), t);
+				}
+			},
+			new LogProgressListener());
 	}
 
 	protected String insertIntoGraph(
 			SourceDocument sourceDocument, Map<String, List<TermInfo>> terms, 
 			ProgressListener progressListener) throws IOException {
-		GraphDatabaseService graphDb = null;
-		
-		try {
-			graphDb = 
-				(GraphDatabaseService) new InitialContext().lookup(
-					CatmaGraphDbName.CATMAGRAPHDB.name());
-		} catch (NamingException e) {
-			throw new IOException(e);
-		}
+		GraphDatabaseService graphDb = 
+					CatmaGraphDbName.CATMAGRAPHDB.getGraphDatabaseService();
 		
 		progressListener.setProgress("starting insertion into graph");
 		long nodeCount = 0;
@@ -166,15 +150,8 @@ public class SourceDocumentIndexer {
 
 	public void removeSourceDocument(String sourceDocumentID) throws IOException {
 
-		GraphDatabaseService graphDb = null;
-		
-		try {
-			graphDb = 
-				(GraphDatabaseService) new InitialContext().lookup(
-					CatmaGraphDbName.CATMAGRAPHDB.name());
-		} catch (NamingException e) {
-			throw new IOException(e);
-		}
+		GraphDatabaseService graphDb = 
+					CatmaGraphDbName.CATMAGRAPHDB.getGraphDatabaseService();
 		
 		try (Transaction tx = graphDb.beginTx()) {
 			

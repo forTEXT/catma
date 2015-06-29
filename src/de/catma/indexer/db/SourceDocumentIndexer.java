@@ -26,9 +26,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.jooq.BatchBindStep;
@@ -44,9 +41,8 @@ import de.catma.repository.db.jooq.TransactionalDSLContext;
 class SourceDocumentIndexer {
 	private DataSource dataSource;
 
-	public SourceDocumentIndexer() throws NamingException {
-		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
+	public SourceDocumentIndexer() {
+		this.dataSource = CatmaDataSourceName.CATMADS.getDataSource();
 	}
 
 	void index(SourceDocument sourceDocument) throws IOException {

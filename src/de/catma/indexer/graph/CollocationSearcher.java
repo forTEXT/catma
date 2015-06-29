@@ -10,9 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -95,15 +92,11 @@ class CollocationSearcher {
 			SpanDirection direction) throws IOException {
 		QueryResultRowArray searchResult = new QueryResultRowArray();
 		try {
-			Context context = new InitialContext(); 
-			
 			GraphDatabaseService graphDb = 
-					(GraphDatabaseService) context.lookup(
-							CatmaGraphDbName.CATMAGRAPHDB.name());
+				CatmaGraphDbName.CATMAGRAPHDB.getGraphDatabaseService();
 			
 			IndexBufferManager indexBufferManager = 
-					(IndexBufferManager) context.lookup(
-							IndexBufferManagerName.INDEXBUFFERMANAGER.name());
+				IndexBufferManagerName.INDEXBUFFERMANAGER.getIndeBufferManager();
 
 			// set up mapping SourceDoc->rows of base result
 			HashMap<String,Set<QueryResultRow>> baseResultRowsByDocument = 

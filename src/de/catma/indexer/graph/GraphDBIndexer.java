@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import javax.naming.NamingException;
-
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.Range;
 import de.catma.document.source.SourceDocument;
@@ -52,7 +50,7 @@ public class GraphDBIndexer implements Indexer {
 	private TagReferenceIndexer tagReferenceIndexer;
 	private SourceDocumentIndexer sourceDocumentIndexer;
 	
-	public GraphDBIndexer(Map<String, Object> properties) throws NamingException {
+	public GraphDBIndexer(Map<String, Object> properties) {
 		tagReferenceIndexer = new TagReferenceIndexer();
 		sourceDocumentIndexer = new SourceDocumentIndexer();
 	}
@@ -126,41 +124,27 @@ public class GraphDBIndexer implements Indexer {
 	public QueryResult searchTagDefinitionPath(List<String> userMarkupCollectionIdList, 
 			String tagDefinitionPath) throws IOException {
 		
-		try {
-			TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
-		
-			return tagSearcher.search(userMarkupCollectionIdList, tagDefinitionPath);
-		} catch (NamingException e) {
-			throw new IOException(e);
-		}
-
+		TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
+	
+		return tagSearcher.search(userMarkupCollectionIdList, tagDefinitionPath);
 	}
 	
 	public QueryResult searchProperty(
 			List<String> userMarkupCollectionIdList,
 			String propertyName, String propertyValue, String tagValue) throws IOException {
 
-		try {
-			TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
-			return tagSearcher.searchProperties(
-					userMarkupCollectionIdList, 
-					propertyName, propertyValue, tagValue);
-		} catch (NamingException e) {
-			throw new IOException(e);
-		}
-		
+		TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
+		return tagSearcher.searchProperties(
+				userMarkupCollectionIdList, 
+				propertyName, propertyValue, tagValue);
 	}
 
 	public QueryResult searchFreqency(
 			List<String> documentIdList, 
 			CompareOperator comp1, int freq1,
 			CompareOperator comp2, int freq2) throws IOException {
-		try {
-			FrequencySearcher freqSearcher = new FrequencySearcher();
-			return freqSearcher.search(documentIdList, comp1, freq1, comp2, freq2);
-		} catch (NamingException e) {
-			throw new IOException(e);
-		}
+		FrequencySearcher freqSearcher = new FrequencySearcher();
+		return freqSearcher.search(documentIdList, comp1, freq1, comp2, freq2);
 	}
 
 	public SpanContext getSpanContextFor(
@@ -226,14 +210,11 @@ public class GraphDBIndexer implements Indexer {
 	@Override
 	public QueryResult searchTagDiff(List<String> relevantUserMarkupCollIDs,
 			String propertyName, String tagPhrase) throws IOException {
-		try {
-			TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
-			return tagSearcher.searchTagDiff(
-					relevantUserMarkupCollIDs, 
-					propertyName, tagPhrase);
-		} catch (NamingException e) {
-			throw new IOException(e);
-		}	
+
+		TagDefinitionSearcher tagSearcher = new TagDefinitionSearcher();
+		return tagSearcher.searchTagDiff(
+				relevantUserMarkupCollIDs, 
+				propertyName, tagPhrase);
 	}
 	
 	public void close() {

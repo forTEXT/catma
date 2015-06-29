@@ -25,9 +25,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.jooq.DSLContext;
@@ -53,13 +50,9 @@ class PhraseSearcher {
 	private DataSource dataSource;
 //	private Logger logger = Logger.getLogger(this.getClass().getName());
 	
-	/**
-	 * @throws NamingException error accessing DB.
-	 */
-	public PhraseSearcher() throws NamingException {
+	public PhraseSearcher() {
 		super();
-		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
+		this.dataSource = CatmaDataSourceName.CATMADS.getDataSource();
 	}
 
 	/**

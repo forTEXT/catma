@@ -48,9 +48,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.apache.commons.io.IOUtils;
@@ -96,7 +93,7 @@ public class SourceDocumentHandler {
 	private DataSource dataSource;
 
 	public SourceDocumentHandler(
-			DBRepository dbRepository, String repoFolderPath) throws NamingException {
+			DBRepository dbRepository, String repoFolderPath) {
 		this.dbRepository = dbRepository;
 		this.sourceDocsPath = repoFolderPath + 
 			"/" + 
@@ -109,8 +106,7 @@ public class SourceDocumentHandler {
 			}
 		}
 		this.sourceDocumentsByID = new HashMap<String, SourceDocument>();
-		Context  context = new InitialContext();
-		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
+		this.dataSource = CatmaDataSourceName.CATMADS.getDataSource();
 	}
 	
 	public String getIDFromURI(URI uri) {

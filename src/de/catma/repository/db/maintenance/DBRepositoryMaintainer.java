@@ -30,8 +30,6 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.logging.Logger;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.sql.DataSource;
 
 import org.jooq.DSLContext;
@@ -61,9 +59,8 @@ public class DBRepositoryMaintainer {
 		try {
 			this.repoFolderPath = 
 				RepositoryPropertyKey.RepositoryFolderPath.getValue(1);
-			Context  context = new InitialContext();
-			DataSource dataSource = (DataSource) context.lookup(
-					CatmaDataSourceName.CATMADS.name());
+			DataSource dataSource = 
+				CatmaDataSourceName.CATMADS.getDataSource();
 			
 			mSem = new MaintenanceSemaphore(Type.CLEANING);
 			

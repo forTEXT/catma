@@ -21,8 +21,6 @@ package de.catma.ui.menu;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import javax.naming.NamingException;
-
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.MenuBar.Command;
@@ -53,7 +51,7 @@ public class LoginLogoutCommand implements Command {
 	};
 	
 	public LoginLogoutCommand(
-			Menu menu, RepositoryManagerView repositoryManagerView) throws NamingException {
+			Menu menu, RepositoryManagerView repositoryManagerView) {
 		this.afterLogoutRedirectURL = 
 				RepositoryPropertyKey.BaseURL.getValue( 
 						RepositoryPropertyKey.BaseURL.getDefaultValue());

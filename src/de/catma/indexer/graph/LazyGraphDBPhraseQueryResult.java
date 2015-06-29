@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import javax.naming.NamingException;
-
 import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.PhraseResult;
 import de.catma.queryengine.result.QueryResult;
@@ -59,7 +57,7 @@ class LazyGraphDBPhraseQueryResult implements GroupedQueryResult {
 		return queryResult.iterator();
 	}
 
-	private void loadQueryResultRows() throws NamingException, IOException {
+	private void loadQueryResultRows() throws IOException {
 		PhraseSearcher phraseSearcher = new PhraseSearcher();
 		queryResult = phraseSearcher.search(
 			new ArrayList<>(getSourceDocumentIDs()), 
