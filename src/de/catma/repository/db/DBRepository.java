@@ -327,8 +327,8 @@ public class DBRepository implements IndexedRepository {
 		initTagManagerListeners();
 		
 		Context context = new InitialContext();
-
-		this.dataSource = (DataSource) context.lookup(CatmaDataSourceName.CATMADS.name());
+		
+		this.dataSource = CatmaDataSourceName.CATMADS.getDataSource();
 		
 		this.dbSourceDocumentHandler = 
 				new SourceDocumentHandler(this, repoFolderPath);

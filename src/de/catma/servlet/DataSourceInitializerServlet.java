@@ -50,7 +50,8 @@ public class DataSourceInitializerServlet extends HttpServlet {
 			cpds.setUser(user);
 			cpds.setPassword(pass); 
 			cpds.setIdleConnectionTestPeriod(10);
-	
+			CatmaDataSourceName.CATMADS.setDataSource(cpds);
+			
 			context.bind(CatmaDataSourceName.CATMADS.name(), cpds);
 			
 			log("CATMA DB DataSource initialized.");
