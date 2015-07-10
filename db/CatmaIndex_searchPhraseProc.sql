@@ -20,6 +20,10 @@ delimiter $$
 
 DROP PROCEDURE IF EXISTS searchPhrase$$
 /**
+ * USE CatmaIndex
+ * 
+ * Used by de.catma.indexer.db.SpSearchPhrase
+ * 
  * Searches a phrase consisting of up to five tokens. Each token can contain 
  * SQL wildcards.
  * 

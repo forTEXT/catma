@@ -20,6 +20,8 @@ delimiter $$
 
 DROP PROCEDURE IF EXISTS getTerms$$
 /**
+ * USE CatmaIndex
+ * 
  * Gives all terms that belong to the given token range (basePos, baePos+termCount) in 
  * the document with the given ID.
  * 
