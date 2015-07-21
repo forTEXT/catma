@@ -2,19 +2,20 @@ package de.catma.ui.analyzer;
 
 import java.io.IOException;
 
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.ItemClickEvent;
-import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Table.TableDragMode;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
-import com.vaadin.ui.Table.TableDragMode;
 import com.vaadin.ui.Window.CloseEvent;
 
 import de.catma.document.repository.Repository;
@@ -48,6 +49,8 @@ public class TagResultsDialog extends VerticalLayout {
 	
 	// TODO: factor out a TagLibrariesTree component, lots of stuff copied from TagLibraryPanel
 	private void initComponents() {
+		setSizeFull();
+		
 		Label lblInstructions = new Label(
 				"Select a Tag Type Library and find the Tag that you want"
 				+ " to apply to your selection in the KWIC view, then click"
@@ -78,30 +81,32 @@ public class TagResultsDialog extends VerticalLayout {
 		}
 		tagLibraryContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
 		
-		tagLibrariesTree.addItemClickListener(new ItemClickListener() {
+		tagLibrariesTree.addValueChangeListener(new ValueChangeListener() {
 			
-			public void itemClick(ItemClickEvent event) {
+			@Override
+			public void valueChange(ValueChangeEvent event) {
 				handleTagLibrariesTreeItemClick(event);				
 			}
 		});
 		
 		tagLibrariesTreeContainer.addComponent(tagLibrariesTree);
-		tagLibrariesTreeContainer.setExpandRatio(tagLibrariesTree, 1.0f);
+//		tagLibrariesTreeContainer.setExpandRatio(tagLibrariesTree, 1.0f);
 		
 		addComponent(tagLibrariesTreeContainer);
 		
 		tagsetTree = new TagsetTree(repository.getTagManager(), null, false, false, false, false, false, null);
 		tagsetTree.getTagTree().setDragMode(TableDragMode.ROW);
+	
 		addComponent(tagsetTree);
-		
+		setExpandRatio(tagsetTree, 1.0f);
 		setMargin(true);
 		
 		dialogWindow = new Window("Tags");
 		dialogWindow.setContent(this);
 	}
 	
-	private void handleTagLibrariesTreeItemClick(ItemClickEvent event) {
-		TagLibraryReference tagLibraryReference = ((TagLibraryReference)event.getItemId());
+	private void handleTagLibrariesTreeItemClick(ValueChangeEvent event) {
+		TagLibraryReference tagLibraryReference = (TagLibraryReference)event.getProperty().getValue();
 		
 		if (tagLibrary == null || tagLibrary.getId() != tagLibraryReference.getId()) {
 			try {
@@ -148,6 +153,7 @@ public class TagResultsDialog extends VerticalLayout {
 	
 	public void show(String dialogWidth) {
 		dialogWindow.setWidth(dialogWidth);
+		dialogWindow.setHeight("50%");
 		dialogWindow.setPositionX(20);
 		dialogWindow.setPositionY(80);
 		UI.getCurrent().addWindow(dialogWindow);

@@ -367,12 +367,13 @@ public class KwicPanel extends VerticalLayout {
 			}
 		}
 		
-		
+		int refCount = 0;
 		for (Map.Entry<UserMarkupCollection, List<TagReference>> entry : tagReferences.entrySet()) {
 			userMarkupCollectionManager.addTagReferences(entry.getValue(), entry.getKey());
+			refCount += entry.getValue().size();
 		}
 
-		return new Pair<Integer, Integer>(tagReferences.size(), tagReferences.values().size()); //collection count, tag ref count
+		return new Pair<Integer, Integer>(tagReferences.size(), refCount); //collection count, tag ref count
 	}
 
 	private void initComponents() {
