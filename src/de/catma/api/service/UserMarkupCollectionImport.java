@@ -31,6 +31,7 @@ public class UserMarkupCollectionImport extends ServerResource {
 	
 	private String newUmcID = null;
 
+	@SuppressWarnings("resource")
 	@Post
 	public String importUmc(String args) {
 		try {

@@ -101,7 +101,7 @@ public class CatmaApplication extends UI
 	implements BackgroundServiceProvider, AnalyzerProvider, LoginToken {
 	
 	private static final String MINORVERSION = 
-			"(v"+new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date())+")";
+			"(build "+new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date())+")";
 	private static final String WEB_INF_DIR = "WEB-INF";
 
 	private RepositoryManagerView repositoryManagerView;
@@ -162,7 +162,7 @@ public class CatmaApplication extends UI
 		
 		handleParameters(request.getParameterMap());
 		
-		Page.getCurrent().setTitle("CATMA 4.2 - CLÉA " + MINORVERSION);
+		Page.getCurrent().setTitle("CATMA 5.0 " + MINORVERSION);
 		
 		mainLayout = new VerticalLayout();
 		mainLayout.setSizeFull();
