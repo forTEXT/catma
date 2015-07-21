@@ -29,6 +29,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import org.vaadin.peter.contextmenu.ContextMenu;
+import org.vaadin.peter.contextmenu.ContextMenu.ContextMenuItemClickEvent;
+
 import com.vaadin.data.Container;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.DataBoundTransferable;
@@ -82,11 +85,13 @@ public class KwicPanel extends VerticalLayout {
 
 	private Repository repository;
 	private TreeTable kwicTable;
+	private ContextMenu kwicTableContextMenu;
+	private ContextMenu.ContextMenuItem tagSelectedResultsContextMenuItem;
 	private boolean markupBased;
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
 	private WeakHashMap<Object, Boolean> itemDirCache = new WeakHashMap<>();
 	private int kwicSize = 5;
-
+	
 	public KwicPanel(Repository repository, 
 			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider) {
 		this(repository, relevantUserMarkupCollectionProvider,  false);
@@ -99,8 +104,20 @@ public class KwicPanel extends VerticalLayout {
 		this.repository = repository;
 		this.relevantUserMarkupCollectionProvider = relevantUserMarkupCollectionProvider;
 		this.markupBased = markupBased;
+		
 		initComponents();
 		initActions();
+		initContextMenu();
+	}
+	
+	private void initContextMenu() {
+		kwicTableContextMenu = new ContextMenu();
+		tagSelectedResultsContextMenuItem = kwicTableContextMenu.addItem("Tag Selected Results");
+		kwicTableContextMenu.setAsContextMenuOf(kwicTable);
+	}
+	
+	public void addTagResultsContextMenuClickListener(ContextMenu.ContextMenuItemClickListener listener) {
+		tagSelectedResultsContextMenuItem.addItemClickListener(listener);
 	}
 
 	private void initActions() {
@@ -134,7 +151,7 @@ public class KwicPanel extends VerticalLayout {
 						}
 						catch (IOException e) {
 							((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"Error opening related User Markup Collection!", e);
+								"Error opening related Markup Collection!", e);
 						}			
 					}
 				}
@@ -201,10 +218,15 @@ public class KwicPanel extends VerticalLayout {
 		Set<QueryResultRow> selectedRows = 
 				(Set<QueryResultRow>)kwicTable.getValue();
 		
-		if (selectedRows != null) {
-			updateAllMarkupCollections(
-				selectedRows, incomingTagsetDef, incomingTagDef);
+		if (selectedRows.isEmpty()) {
+			Notification.show(
+					"Information", "Please select one or more results first!",
+					Type.TRAY_NOTIFICATION);
+			return;
 		}
+		
+		updateAllMarkupCollections(
+			selectedRows, incomingTagsetDef, incomingTagDef);
 	}
 
 	private void updateAllMarkupCollections(
@@ -253,7 +275,7 @@ public class KwicPanel extends VerticalLayout {
 					}
 				} catch (URISyntaxException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"error creating tag reference", e);
+							"error creating tag type reference", e);
 				}
 			}
 			
@@ -288,7 +310,7 @@ public class KwicPanel extends VerticalLayout {
 		}
 		else {
 			Notification.show(
-				"Information", "Please create a User Markup Collection first!",
+				"Information", "Please create a Markup Collection first!",
 				Type.TRAY_NOTIFICATION);
 		}
 	}
@@ -420,6 +442,7 @@ public class KwicPanel extends VerticalLayout {
 				return null;
 			}
 		});
+		
 		addComponent(kwicTable);
 	}
 

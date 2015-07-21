@@ -101,7 +101,6 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 					}
 					URL url = new URL(urlText);
 					
-					//TODO: filename?
 					String fileName = url.getFile();
 					fileName = fileName.substring(fileName.lastIndexOf('/') + 1).replace("%20", " ");
 					

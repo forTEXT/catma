@@ -22,18 +22,19 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import com.vaadin.server.Page;
+import com.vaadin.server.VaadinService;
+import com.vaadin.server.VaadinServletService;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
 
 import de.catma.document.repository.RepositoryManager;
-import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.ui.repository.RepositoryManagerView;
 
 public class LoginLogoutCommand implements Command {
 	private MenuItem loginLogoutItem;
 	private RepositoryManagerView repositoryManagerView;
-	private Menu menu;
+	private MainMenu menu;
 	private String afterLogoutRedirectURL;
 	
 	private PropertyChangeListener repositoryManagerListener = 
@@ -51,10 +52,20 @@ public class LoginLogoutCommand implements Command {
 	};
 	
 	public LoginLogoutCommand(
-			Menu menu, RepositoryManagerView repositoryManagerView) {
-		this.afterLogoutRedirectURL = 
-				RepositoryPropertyKey.BaseURL.getValue( 
-						RepositoryPropertyKey.BaseURL.getDefaultValue());
+		MainMenu menu, RepositoryManagerView repositoryManagerView) {
+//		this.afterLogoutRedirectURL = 
+//				RepositoryPropertyKey.BaseURL.getValue( 
+//						RepositoryPropertyKey.BaseURL.getDefaultValue());
+		
+		String scheme = VaadinServletService.getCurrentServletRequest().getScheme();		
+		String serverName = VaadinServletService.getCurrentServletRequest().getServerName();		
+		Integer port = VaadinServletService.getCurrentServletRequest().getServerPort();
+		String contextPath = VaadinService.getCurrentRequest().getContextPath();
+//		String requestUri = VaadinServletService.getCurrentServletRequest().getRequestURI();
+		
+		
+		String baseUrl = String.format("%s://%s%s%s", scheme, serverName, port == 80 ? "" : ":"+port, contextPath);
+		this.afterLogoutRedirectURL = baseUrl;
 		
 		this.menu = menu;
 		this.repositoryManagerView = repositoryManagerView;

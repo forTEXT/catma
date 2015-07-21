@@ -59,8 +59,7 @@ public class TagLibraryView extends HorizontalLayout implements ClosableTab {
 		super.attach();
 		if (init) {
 			tagsetTree.getTagTree().setDragMode(TableDragMode.ROW);
-			
-			tagsetTree.addTagsetDefinition(tagLibrary.collection());
+			tagsetTree.setTagLibrary(tagLibrary);
 			
 			initActions();
 			init = false;

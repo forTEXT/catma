@@ -681,7 +681,7 @@ class TagLibraryHandler {
 							!= AccessMode.WRITE.getNumericRepresentation())) {
 			throw new IOException(
 					"You seem to have no write access to this library! " +
-					"Please reload your Tag Library using the Tag Manager!");
+					"Please reload your Tag Type Library using the Tag Type Manager!");
 		}
 		else if (!independent) {
 			return AccessMode.WRITE;
@@ -816,7 +816,7 @@ class TagLibraryHandler {
 			
 			db.commitTransaction();
 
-			tagLibraryReferencesById.remove(tagLibraryReference);
+			tagLibraryReferencesById.remove(tagLibraryReference.getId());
 			tagManager.removeTagLibrary(tagLibraryReference);
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(

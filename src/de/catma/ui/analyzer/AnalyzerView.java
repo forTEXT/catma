@@ -75,6 +75,7 @@ import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.queryengine.result.computation.DistributionComputation;
 import de.catma.queryengine.result.computation.DistributionSelectionListener;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.analyzer.AnalyzerHelpWindow;
 import de.catma.ui.analyzer.querybuilder.QueryBuilderWizardFactory;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.repository.MarkupCollectionItem;
@@ -111,13 +112,13 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			}
 		}
 	};
-	private String userMarkupItemDisplayString = "User Markup Collections";
-	private String staticMarkupItemDisplayString = "Static Markup Collections";
+	private String userMarkupItemDisplayString = "Markup Collections";
 	private TextField searchInput;
 	private Button btExecSearch;
 	private Button btQueryBuilder;
 	private Button btWordList;
 	private Button btNewTab;
+	private Button btHelp;
 	private HierarchicalContainer documentsContainer;
 	private Tree documentsTree;
 	private TabSheet resultTabSheet;
@@ -135,9 +136,10 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private PropertyChangeListener corpusChangedListener;
 	private IndexInfoSet indexInfoSet;
 	private boolean init = false;
-	private Label helpLabel;
 	private Component resultPanel;
 	private ProgressBar searchProgress;
+	
+	AnalyzerHelpWindow analyzerHelpWindow = new AnalyzerHelpWindow();
 	
 	public AnalyzerView(
 			Corpus corpus, IndexedRepository repository, 
@@ -161,12 +163,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	
 	@Override
 	public void attach() {
-		super.attach();
-		if (!init) {
-			init = true;
-			helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
-		}
-		
+		super.attach();		
 	}
 	
 	
@@ -347,6 +344,18 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				openNewTab();
 			}
 		});
+		btHelp.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				
+				if(analyzerHelpWindow.getParent() == null){
+					UI.getCurrent().addWindow(analyzerHelpWindow);
+				} else {
+					UI.getCurrent().removeWindow(analyzerHelpWindow);
+				}
+				
+			}
+		});
 		
 	}
 	//opens new analyzer tab with same constraints
@@ -513,7 +522,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		topPanel.addComponent(documentsPanel);
 		addComponent(topPanel);
 		
-		setExpandRatio(topPanel, 0.25f);
+		setExpandRatio(topPanel, 0.24f);
 		
 		resultPanel = createResultPanel();
 		resultPanel.setSizeFull();
@@ -581,8 +590,8 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		
 		documentsPanel.addComponent(documentsTree);
 		documentsPanel.setExpandRatio(documentsTree, 1.0f);
-		btNewTab = new Button("+");
-		btNewTab.setDescription("opens a new tab with same constraints.");
+		btNewTab = new Button("+ New Query");
+		btNewTab.setDescription("Opens a new tab with same constraints");
 		documentsPanel.addComponent(btNewTab);
 		documentsPanel.setComponentAlignment(btNewTab, Alignment.TOP_RIGHT);
 		return documentsPanel;
@@ -623,29 +632,19 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		convenienceButtonPanel.setSpacing(true);
 		
 		btQueryBuilder = new Button("Query Builder");
+		btQueryBuilder.addStyleName("secondary-button");
 		convenienceButtonPanel.addComponent(btQueryBuilder);
 		
 		btWordList = new Button("Wordlist");
+		btWordList.addStyleName("primary-button");
 		convenienceButtonPanel.addComponent(btWordList);
 		
-		helpLabel = new Label();
-		helpLabel.setWidth("20px");
-		helpLabel.setDescription(
-				"<h3>Hints</h3>" +
-				"<h4>Using the wordlist</h4>" +
-				"Click on the  \"Wordlist\"-Button to get a list of all words of your document together with their frequencies." +
-				" You can now sort the list by phrase, i. e. the word, or by frequency." +
-				"<h4>Building queries</h4>" +
-				"You are free to hack your query directly into the Query box, but a large part of all possible queries can be generated with the Query Builder more conveniently." +
-				"<h4>Keywords in Context (KWIC)</h4>" +
-				"To see your search results in the context of its surrounding text, tick the \"Visible in Kwic\"-check box " +
-				"of the desired results." +
-				"<h4>Results by Markup</h4>" +
-				"When building Tag Queries where you look for occurrences of certain Tags, sometimes you " +
-				"want the results grouped by Tags (especially Subtags) and sometimes you want the results " +
-				"grouped by the tagged phrase. The \"Results by markup\" and \"Results by phrase\" tabs give you this choice for Tag Queries.");
+		btHelp = new Button("");
+		btHelp.addStyleName("icon-button"); // for top-margin
+		btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp.addStyleName("help-button");
 
-		convenienceButtonPanel.addComponent(helpLabel);
+		convenienceButtonPanel.addComponent(btHelp);
 	
 		return convenienceButtonPanel;
 	}

@@ -36,8 +36,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
 import com.vaadin.ui.UI;
@@ -66,6 +64,9 @@ import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tagger.Tagger.TaggerListener;
+import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedEvent;
+import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedListener;
+import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
 import de.catma.ui.tagger.pager.PagerComponent.PageChangeListener;
@@ -82,12 +83,18 @@ public class TaggerView extends VerticalLayout
 	private TagManager tagManager;
 	private int taggerID;
 	private Button btAnalyze;
+	private Button btHelp;
 	private Repository repository;
 	private PropertyChangeListener sourceDocChangedListener;
 	private PagerComponent pagerComponent;
 	private Slider linesPerPageSlider;
 	private double totalLineCount;
 	private PropertyChangeListener tagReferencesChangedListener;
+	private int approxMaxLineLength;
+	private int maxPageLengthInLines = 30;
+	private int initialSplitterPositionInPixels = 700;
+	
+	TaggerHelpWindow taggerHelpWindow = new TaggerHelpWindow();
 	
 	public TaggerView(
 			int taggerID, 
@@ -98,16 +105,18 @@ public class TaggerView extends VerticalLayout
 		this.repository = repository;
 		this.sourceDocument = sourceDocument;
 		this.sourceDocChangedListener = sourceDocChangedListener;
+		
+		this.approxMaxLineLength = getApproximateMaxLineLengthForSplitterPanel(initialSplitterPositionInPixels);
 
 		initComponents();
 		initActions();
 		initListeners();
-		pager.setMaxPageLengthInLines(30);
+		pager.setMaxPageLengthInLines(maxPageLengthInLines);
 		try {
 			tagger.setText(sourceDocument.getContent());
 			totalLineCount = pager.getTotalLineCount();
 			try {
-				linesPerPageSlider.setValue((100/totalLineCount)*30);
+				linesPerPageSlider.setValue((100.0/totalLineCount)*maxPageLengthInLines);
 			} catch (ValueOutOfBoundsException toBeIgnored) {}
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -196,7 +205,6 @@ public class TaggerView extends VerticalLayout
 								userMarkupCollRef);
 					}
 				}
-				//TODO: add static markup colls
 				
 				((AnalyzerProvider)UI.getCurrent()).analyze(
 						corpus, (IndexedRepository)markupPanel.getRepository());
@@ -212,13 +220,16 @@ public class TaggerView extends VerticalLayout
 				List<ClientTagInstance> absoluteTagInstances = 
 						pager.getAbsoluteTagInstances();
 				
+				Page currentPage = pager.getCurrentPage();
 				pager.setMaxPageLengthInLines(lines);
 				//recalculate pages
 				try {
-					tagger.setText(sourceDocument.getContent());
+					pager.setText(sourceDocument.getContent());
+					int previousPageNumber = pager.getPageNumberFor(currentPage.getPageStart());
+					tagger.setPage(previousPageNumber);					
 					tagger.setTagInstancesVisible(absoluteTagInstances, true);
 
-					pagerComponent.setPage(1);
+					pagerComponent.setPage(previousPageNumber);
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 						"Error showing Source Document!", e);
@@ -226,6 +237,20 @@ public class TaggerView extends VerticalLayout
 
 			}
 		});
+		
+		btHelp.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				
+				if(taggerHelpWindow.getParent() == null){
+					UI.getCurrent().addWindow(taggerHelpWindow);
+				} else {
+					UI.getCurrent().removeWindow(taggerHelpWindow);
+				}
+				
+			}
+		});
+		
 	}
 
 	private void initComponents() {
@@ -235,26 +260,20 @@ public class TaggerView extends VerticalLayout
 		
 		taggerPanel.setSpacing(true);
 
-		Label helpLabel = new Label();
+		btHelp = new Button("");
+		btHelp.addStyleName("icon-button"); // for top-margin
+		btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp.addStyleName("help-button");
 		
-		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
-		helpLabel.setWidth("20px");
-		helpLabel.setDescription(
-				"<h3>Hints</h3>" +
-				"<h4>Tag this Source Document</h4>" +
-				"<ol><li>First you have to tell CATMA which Tagset you want to use. " +
-				"Open a Tag Library from the Repository Manager and drag a Tagset to the \"Active Tagsets\" section.</li>" +
-				"<li>Now you can mark the text sequence you want to tag.</li><li>Click the colored button of the desired Tag to apply it to the marked sequence.</li></ol> " +
-				"When you click on a tagged text, i. e. a text that is underlined with colored bars, you should see " +
-				"the available Tag Instances in the section on the lower right of this view.");		
 		IndexInfoSet indexInfoSet = 
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet(); 
-		pager = new Pager(taggerID, 80, 30, 
+		//TODO: remove hardcoded line length
+		pager = new Pager(taggerID, approxMaxLineLength, maxPageLengthInLines, 
 				indexInfoSet.isRightToLeftLanguage());
 		
 		tagger = new Tagger(taggerID, pager, this);
 		tagger.addStyleName("tagger");
-		tagger.setWidth("550px");
+		tagger.setWidth("100%");
 		
 		taggerPanel.addComponent(tagger);
 	
@@ -271,11 +290,12 @@ public class TaggerView extends VerticalLayout
 			}
 		});
 		
-		actionPanel.addComponent(helpLabel);
+		actionPanel.addComponent(btHelp);
 		
 		actionPanel.addComponent(pagerComponent);
 		
 		btAnalyze = new Button("Analyze Document");
+		btAnalyze.addStyleName("primary-button");
 		btAnalyze.setEnabled(repository instanceof IndexedRepository);
 		actionPanel.addComponent(btAnalyze);
 		
@@ -298,7 +318,7 @@ public class TaggerView extends VerticalLayout
 						else {
 							HTMLNotification.show(
 	                                "Information",
-	                                "Please select a User Markup Collection "
+	                                "Please select a Markup Collection "
 	                                + " to store your markup first!<br>"
 	                                + "See 'Active Markup Collections'.",
 	                                Type.TRAY_NOTIFICATION);
@@ -333,10 +353,59 @@ public class TaggerView extends VerticalLayout
 				},
 				sourceDocument.getID());
 		
-		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
+		final TaggerSplitPanel splitPanel = new TaggerSplitPanel();
 		splitPanel.addComponent(taggerPanel);
 		splitPanel.addComponent(markupPanel);
+		splitPanel.setSplitPosition(initialSplitterPositionInPixels, Unit.PIXELS);
+		splitPanel.addStyleName("catma-tab-spacing");
+		
+		SplitterPositionChangedListener listener = new SplitterPositionChangedListener(){
+
+			@Override
+			public void positionChanged(SplitterPositionChangedEvent event) {
+				float width = event.getPosition();
+				
+				// unit != Unit.PERCENTAGE && unit != Unit.PIXELS
+				// TODO: if it is PERCENTAGE, work out the splitter position in pixels
+				if (event.getPositionUnit() != Unit.PIXELS){
+					String message = "Must use PIXELS Unit for split position";
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+							message, new IllegalArgumentException(message));
+				}							
+				
+				int approxMaxLineLength = getApproximateMaxLineLengthForSplitterPanel(width);
+				
+				List<ClientTagInstance> absoluteTagInstances = pager.getAbsoluteTagInstances();
+				
+				Page currentPage = pager.getCurrentPage();
+				pager.setApproxMaxLineLength(approxMaxLineLength);
+				//recalculate pages
+				try {
+					pager.setText(sourceDocument.getContent());
+					int previousPageNumber = pager.getPageNumberFor(currentPage.getPageStart());
+					tagger.setPage(previousPageNumber);					
+					tagger.setTagInstancesVisible(absoluteTagInstances, true);
+
+					pagerComponent.setPage(previousPageNumber);
+				} catch (IOException e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+						"Error showing Source Document!", e);
+				}							
+			}
+			
+		};
+		
+		splitPanel.addListener(SplitterPositionChangedEvent.class,
+                listener, SplitterPositionChangedListener.positionChangedMethod);
+		
 		addComponent(splitPanel);
+	}
+	
+	public int getApproximateMaxLineLengthForSplitterPanel(float width){
+		// based on ratio of 80:550
+		int approxMaxLineLength = (int) (width * 0.145454);
+		
+		return approxMaxLineLength;
 	}
 
 	public SourceDocument getSourceDocument() {

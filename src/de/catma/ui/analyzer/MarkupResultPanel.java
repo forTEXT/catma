@@ -29,6 +29,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.vaadin.dialogs.ConfirmDialog;
+import org.vaadin.peter.contextmenu.ContextMenu.ContextMenuItemClickEvent;
+import org.vaadin.peter.contextmenu.ContextMenu.ContextMenuItemClickListener;
 
 import com.vaadin.addon.tableexport.ExcelExport;
 import com.vaadin.data.Property;
@@ -224,10 +226,12 @@ public class MarkupResultPanel extends VerticalLayout {
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
 	private Button btSelectAll;
 	private Button btDeselectAll;
+	private Button btTagResults;
 	private Button btUntagResults;
 	private Button btResultExcelExport;
 	private Button btKwicExcelExport;
 	private Button btKwicCsvExport;
+	private Button btHelp;
 	private Button btResultCsvExport;
 
 	private CheckBox cbFlatTable;
@@ -235,7 +239,11 @@ public class MarkupResultPanel extends VerticalLayout {
 	private boolean resetColumns = false;
 	private QueryResult curQueryResult;
 	private Button btSelectAllKwic;
-	private Slider kwicSizeSlider;
+	private Slider kwicSizeSlider;	
+	
+	private TagResultsDialog tagResultsDialog;
+	
+	MarkupResultHelpWindow markupResultHelpWindow = new MarkupResultHelpWindow();
 	
 	public MarkupResultPanel(
 			Repository repository, 
@@ -322,6 +330,22 @@ public class MarkupResultPanel extends VerticalLayout {
 			
 			public void buttonClick(ClickEvent event) {
 				selectAllForKwic(false);
+			}
+		});
+		
+		kwicPanel.addTagResultsContextMenuClickListener(new ContextMenuItemClickListener() {
+			
+			@Override
+			public void contextMenuItemClicked(ContextMenuItemClickEvent event) {
+				tagResults();
+			}
+		});
+		
+		btTagResults.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				tagResults();
 			}
 		});
 		
@@ -415,6 +439,19 @@ public class MarkupResultPanel extends VerticalLayout {
 			}
 		});
 		
+		btHelp.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				
+				if(markupResultHelpWindow.getParent() == null){
+					UI.getCurrent().addWindow(markupResultHelpWindow);
+				} else {
+					UI.getCurrent().removeWindow(markupResultHelpWindow);
+				}
+				
+			}
+		});
+		
 		kwicSizeSlider.addValueListener(new ValueChangeListener() {
 			
 			@Override
@@ -446,13 +483,20 @@ public class MarkupResultPanel extends VerticalLayout {
 	private QueryResult getQueryResult() {
 		return curQueryResult;
 	}
+	
+	private void tagResults() {
+		if (tagResultsDialog == null || !tagResultsDialog.isAttached()) {
+			tagResultsDialog = new TagResultsDialog(repository);
+			tagResultsDialog.show();
+		}
+	}
 
 	private void untagResults() {
 		final Set<QueryResultRow> selection = kwicPanel.getSelection();
 		if ((selection != null) && !selection.isEmpty()) {
 			ConfirmDialog.show(UI.getCurrent(), 
-					"Remove Tag Instances", 
-					"Do you want to remove the selected Tag Instances?", 
+					"Remove Tag", 
+					"Do you want to remove the selected Tag?", 
 					"Yes", "No", new ConfirmDialog.Listener() {
 				public void onClose(ConfirmDialog dialog) {
 					if (dialog.isConfirmed()) {
@@ -553,6 +597,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		VerticalLayout leftComponent = new VerticalLayout();
 		leftComponent.setSpacing(true);
 		leftComponent.setSizeFull();
+		leftComponent.addStyleName("analyzer-panel-padding");
 		
 		resultTable = new TreeTable();
 		resultTable.setSelectable(true);
@@ -633,6 +678,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		VerticalLayout rightComponent = new VerticalLayout();
 		rightComponent.setSpacing(true);
 		rightComponent.setSizeFull();
+		rightComponent.addStyleName("analyzer-panel-padding");
 		
 		this.kwicPanel = 
 				new KwicPanel(
@@ -643,6 +689,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		HorizontalLayout kwicButtonPanel = new HorizontalLayout();
 		kwicButtonPanel.setSpacing(true);
 		kwicButtonPanel.setWidth("100%");
+		kwicButtonPanel.setStyleName("help-padding-fix");
 		
 		btKwicExcelExport = new Button();
 		btKwicExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png"));
@@ -672,27 +719,25 @@ public class MarkupResultPanel extends VerticalLayout {
 		kwicButtonPanel.setComponentAlignment(btSelectAllKwic, Alignment.MIDDLE_RIGHT);
 		kwicButtonPanel.setExpandRatio(btSelectAllKwic, 1f);
 		
-		btUntagResults = new Button("Untag selected Kwics");
+		btTagResults = new Button("Tag selected results");
+		btTagResults.addStyleName("primary-button");
+		kwicButtonPanel.addComponent(btTagResults);
+		kwicButtonPanel.setComponentAlignment(btTagResults, Alignment.MIDDLE_RIGHT);
+		
+		btUntagResults = new Button("Untag selected results");
+		btUntagResults.addStyleName("secondary-button");
 		kwicButtonPanel.addComponent(btUntagResults);
 		kwicButtonPanel.setComponentAlignment(btUntagResults, Alignment.MIDDLE_RIGHT);
 		kwicButtonPanel.setExpandRatio(btUntagResults, 0f);
 		
-		Label helpLabel = new Label();
-		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
-		helpLabel.setWidth("20px");
+		btHelp = new Button("");
+		btHelp.addStyleName("icon-button"); // for top-margin
+		btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp.addStyleName("help-button");
 		
-		helpLabel.setDescription(
-				"<h3>Hints</h3>" +
-				"<h4>Tagging search results</h4>" +
-				"You can tag the search results in the Kwic-view: " +
-				"<p>First select one or more rows and then drag the desired " +
-				"Tag from the Tag Manager over the Kwic-results.</p>" +
-				"<h4>Take a closer look</h4>" +
-				"You can jump to the location in the full text by double " +
-				"clicking on a row in the Kwic-view.");
-		kwicButtonPanel.addComponent(helpLabel);
+		kwicButtonPanel.addComponent(btHelp);
 
-		kwicButtonPanel.setComponentAlignment(helpLabel, Alignment.MIDDLE_RIGHT);
+		kwicButtonPanel.setComponentAlignment(btHelp, Alignment.MIDDLE_RIGHT);
 		
 		rightComponent.addComponent(kwicButtonPanel);
 		rightComponent.setComponentAlignment(kwicButtonPanel, Alignment.MIDDLE_RIGHT);
@@ -705,7 +750,7 @@ public class MarkupResultPanel extends VerticalLayout {
 	private void setupContainerProperties() {
 		resultTable.addContainerProperty(
 				TreePropertyName.caption, String.class, null);
-		resultTable.setColumnHeader(TreePropertyName.caption, "Tag Definition");
+		resultTable.setColumnHeader(TreePropertyName.caption, "Tag Type Definition");
 		
 		resultTable.addContainerProperty(
 				TreePropertyName.sourcedocument, String.class, null);

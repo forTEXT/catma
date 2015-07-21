@@ -97,8 +97,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private TreeTable markupCollectionsTree;
-	private String userMarkupItem = "User Markup Collections";
-	private String staticMarkupItem = "Static Markup Collections";
+	private String userMarkupItem = "Markup Collections";
 	private TagManager tagManager;
 	
 	private PropertyChangeListener tagDefChangedListener;
@@ -326,7 +325,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 						openUserMarkupCollection(refreshedUmc);
 					} catch (IOException e) {
 						((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"error refreshing User Markup Collection!", e);
+								"error refreshing Markup Collection!", e);
 					}
 				}
 			};
@@ -372,7 +371,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		}
 		catch (IOException ioe) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"error reindexing User Markup Collection!", ioe);
+					"error reindexing Markup Collection!", ioe);
 		}
 		
 	}
@@ -393,7 +392,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		}
 		catch (IOException ioe) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"error reindexing User Markup Collection!", ioe);
+					"error reindexing Markup Collection!", ioe);
 		}
 	}
 
@@ -626,8 +625,10 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		HorizontalLayout buttonHeaderPanel = new HorizontalLayout();
 		buttonHeaderPanel.setWidth("100%");
 		buttonHeaderPanel.setMargin(new MarginInfo(true, false, true, false));
+		buttonHeaderPanel.addStyleName("catma-tagger-markup-panels");
 		
-		btnOpenMarkupCollection = new Button("Open Markup Collection(s)");
+		btnOpenMarkupCollection = new Button("Open Markup Collection");
+		btnOpenMarkupCollection.addStyleName("primary-button");
 		buttonHeaderPanel.addComponent(btnOpenMarkupCollection);
 		addComponent(buttonHeaderPanel);
 		
@@ -636,6 +637,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		markupCollectionsTree.setSelectable(true);
 		markupCollectionsTree.setMultiSelect(false);
 		markupCollectionsTree.setContainerDataSource(new HierarchicalContainer());
+		markupCollectionsTree.addStyleName("catma-tagger-markup-panels");
 
 		markupCollectionsTree.addContainerProperty(
 				MarkupCollectionsTreeProperty.caption, 
@@ -665,7 +667,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		markupCollectionsTree.addGeneratedColumn(
 				MarkupCollectionsTreeProperty.color, new ColorLabelColumnGenerator());
 		markupCollectionsTree.setColumnHeader(
-				MarkupCollectionsTreeProperty.color, "Tag color");
+				MarkupCollectionsTreeProperty.color, "Tag Type color");
 		
 		markupCollectionsTree.setVisibleColumns(
 				new Object[] {
@@ -678,9 +680,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			new Object[] {userMarkupItem, createVisibilityCheckbox(), new Label()}, 
 			userMarkupItem);
 		
-		markupCollectionsTree.addItem(
-			new Object[] {staticMarkupItem, new Label(), new Label()}, 
-			staticMarkupItem );
+//		markupCollectionsTree.addItem(
+//			new Object[] {staticMarkupItem, new Label(), new Label()}, 
+//			staticMarkupItem );
 
 		addComponent(markupCollectionsTree);
 	}
@@ -1034,7 +1036,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				UI.getCurrent(), 
 				"There are older versions of the Tagset '" +
 					incomingTagsetDef.getName() +
-					"' in the attached User Markup Collections! " +
+					"' in the attached Markup Collections! " +
 					"Do you really want to update the attached Markup Collections?",
 							
 			        new ConfirmDialog.Listener() {

@@ -73,16 +73,18 @@ public class Page {
 	private int taggerID;
 	private int pageStart;
 	private int pageEnd;
+	private int approxMaxLineLength;
 	private String text;
 	private Map<String, ClientTagInstance> relativeTagInstances = 
 			new HashMap<String,ClientTagInstance>();
 	private int lineCount;
 	private boolean rightToLeftLanguage;
 	
-	public Page(int taggerID, String text, int pageStart, int pageEnd, boolean rightToLeftLanguage) {
+	public Page(int taggerID, String text, int pageStart, int pageEnd, int approxMaxLineLength, boolean rightToLeftLanguage) {
 		this.taggerID = taggerID;
 		this.pageStart = pageStart;
 		this.pageEnd = pageEnd;
+		this.approxMaxLineLength = approxMaxLineLength;
 		this.text = text;
 		this.rightToLeftLanguage = rightToLeftLanguage;
 	}
@@ -113,7 +115,7 @@ public class Page {
 		int lineId = 0;
 		
 		while(matcher.find()) {
-			if (lineLength + matcher.group().length()>80) {
+			if (lineLength + matcher.group().length()>approxMaxLineLength) {
 				Element lineSpan = new Element(HTMLElement.span.name());
 				lineSpan.addAttribute(
 						new Attribute(

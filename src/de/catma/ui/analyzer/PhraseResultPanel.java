@@ -23,6 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.vaadin.peter.contextmenu.ContextMenu.ContextMenuItemClickEvent;
+import org.vaadin.peter.contextmenu.ContextMenu.ContextMenuItemClickListener;
+
 import com.vaadin.addon.tableexport.ExcelExport;
 import com.vaadin.data.Item;
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -81,14 +84,20 @@ public class PhraseResultPanel extends VerticalLayout {
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
 	private Button btSelectAll;
 	private Button btDeselectAll;
+	private Button btTagResults;
 	private Button btDoubleTree;
 	private Button btExcelExport;
 	private Button btKwicExcelExport;
 	private Button btKwicCsvExport;
 	private Button btCsvExport;
+	private Button btHelp;
 	private Table hiddenFlatTable;
 	private Button btSelectAllKwic;
-	private Slider kwicSizeSlider;
+	private Slider kwicSizeSlider;	
+	
+	private TagResultsDialog tagResultsDialog;
+	
+	PhraseResultHelpWindow phraseResultHelpWindow = new PhraseResultHelpWindow();
 	
 	public PhraseResultPanel(
 			Repository repository, 
@@ -184,6 +193,22 @@ public class PhraseResultPanel extends VerticalLayout {
 			}
 		});
 		
+		kwicPanel.addTagResultsContextMenuClickListener(new ContextMenuItemClickListener() {
+			
+			@Override
+			public void contextMenuItemClicked(ContextMenuItemClickEvent event) {
+				tagResults();
+			}
+		});
+		
+		btTagResults.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				tagResults();
+			}
+		});
+		
 		btKwicExcelExport.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -265,6 +290,19 @@ public class PhraseResultPanel extends VerticalLayout {
 			}
 		});
 		
+		btHelp.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				
+				if(phraseResultHelpWindow.getParent() == null){
+					UI.getCurrent().addWindow(phraseResultHelpWindow);
+				} else {
+					UI.getCurrent().removeWindow(phraseResultHelpWindow);
+				}
+								
+			}
+		});
+		
 		kwicSizeSlider.addValueListener(new ValueChangeListener() {
 			
 			@Override
@@ -309,6 +347,13 @@ public class PhraseResultPanel extends VerticalLayout {
 
 		return hiddenFlatTable;
 	}
+	
+	private void tagResults() {
+		if (tagResultsDialog == null || !tagResultsDialog.isAttached()) {
+			tagResultsDialog = new TagResultsDialog(repository);
+			tagResultsDialog.show();
+		}
+	}
 
 	private void selectAllForKwic(boolean selected) {
 		for (Object o : resultTable.getItemIds()) {
@@ -340,6 +385,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		VerticalLayout leftComponent = new VerticalLayout();
 		leftComponent.setSpacing(true);
 		leftComponent.setSizeFull();
+		leftComponent.addStyleName("analyzer-panel-padding");
 		
 		resultTable = new TreeTable();
 		resultTable.setSelectable(true);
@@ -406,6 +452,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		VerticalLayout rightComponent = new VerticalLayout();
 		rightComponent.setSpacing(true);
 		rightComponent.setSizeFull();
+		rightComponent.addStyleName("analyzer-panel-padding");
 		
 		this.kwicPanel = new KwicPanel(repository, relevantUserMarkupCollectionProvider);
 		rightComponent.addComponent(kwicPanel);
@@ -414,6 +461,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		HorizontalLayout kwicButtonPanel = new HorizontalLayout();
 		kwicButtonPanel.setSpacing(true);
 		kwicButtonPanel.setWidth("100%");
+		kwicButtonPanel.setStyleName("help-padding-fix");
 		
 		btKwicExcelExport = new Button();
 		btKwicExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png"));
@@ -438,31 +486,23 @@ public class PhraseResultPanel extends VerticalLayout {
 		kwicButtonPanel.setComponentAlignment(
 				kwicSizeSlider, Alignment.MIDDLE_LEFT);
 		
+		btTagResults = new Button("Tag selected results");
+		btTagResults.addStyleName("primary-button");
+		kwicButtonPanel.addComponent(btTagResults);
+		kwicButtonPanel.setComponentAlignment(btTagResults, Alignment.MIDDLE_RIGHT);		
+		kwicButtonPanel.setExpandRatio(btTagResults, 1f);
+		
 		btSelectAllKwic = new Button("Select all");
 		kwicButtonPanel.addComponent(btSelectAllKwic);
-		kwicButtonPanel.setComponentAlignment(btSelectAllKwic, Alignment.MIDDLE_RIGHT);
-		kwicButtonPanel.setExpandRatio(btSelectAllKwic, 1f);
+		kwicButtonPanel.setComponentAlignment(btSelectAllKwic, Alignment.MIDDLE_RIGHT);		
 		
-		Label helpLabel = new Label();
-
-		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp = new Button("");
+		btHelp.addStyleName("icon-button"); // for top-margin
+		btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp.addStyleName("help-button");
 		
-		helpLabel.setWidth("20px");
-		helpLabel.setDescription(
-				"<h3>Hints</h3>" +
-				"<h4>Tagging search results</h4>" +
-				"You can tag the search results in the Kwic-view: " +
-				"<p>First select one or more rows and then drag the desired " +
-				"Tag from the Tag Manager over the Kwic-results.</p>" +
-				"<h4>Take a closer look</h4>" +
-				"You can jump to the location in the full text by double " +
-				"clicking on a row in the Kwic-view." +
-				"<h4>Untag search results</h4>" +
-				"The \"Results by markup\" tab gives you the opportunity " +
-				"to untag markup for selected search results in the Kwic-view.");
-		
-		kwicButtonPanel.addComponent(helpLabel);
-		kwicButtonPanel.setComponentAlignment(helpLabel, Alignment.MIDDLE_RIGHT);
+		kwicButtonPanel.addComponent(btHelp);
+		kwicButtonPanel.setComponentAlignment(btHelp, Alignment.MIDDLE_RIGHT);
 		
 		rightComponent.addComponent(kwicButtonPanel);
 		rightComponent.setComponentAlignment(kwicButtonPanel, Alignment.MIDDLE_RIGHT);

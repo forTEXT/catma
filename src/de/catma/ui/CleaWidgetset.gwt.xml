@@ -46,4 +46,6 @@
 			<when-property-is name="user.agent" value="ie9"/>
 		</any>
 	</replace-with>
+
+    <inherits name="org.vaadin.peter.contextmenu.ContextmenuWidgetset" />
 </module>
