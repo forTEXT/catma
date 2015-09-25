@@ -70,5 +70,7 @@
 		<dependency org="xerces" name="xercesImpl" rev="2.8.1"/>
 		<dependency org="com.io7m.xom" name="xom" rev="1.2.10"/>
 		<dependency org="net.sourceforge.javacsv" name="javacsv" rev="2.0"/>
+		
+		<dependency org="de.catma" name="catma-core" rev="latest.integration" />
 	</dependencies>	
 </ivy-module>
