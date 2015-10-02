@@ -45,7 +45,7 @@
 			<param-name>legacyPropertyToString</param-name>
 			<param-value>true</param-value>
 		</init-param>
-		<!-- <async-supported>true</async-supported>  --> 
+		<async-supported>true</async-supported> 
 		<load-on-startup>3</load-on-startup>
 	</servlet>
 	
