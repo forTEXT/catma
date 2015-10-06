@@ -33,14 +33,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.vaadin.annotations.PreserveOnRefresh;
-import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
-import com.vaadin.shared.communication.PushMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -91,7 +89,7 @@ import de.catma.ui.tagmanager.TagManagerWindow;
 import de.catma.ui.visualizer.VisualizationManagerView;
 import de.catma.ui.visualizer.VisualizationManagerWindow;
 
-@Push(PushMode.MANUAL)
+//@Push(value=PushMode.MANUAL, transport=Transport.LONG_POLLING)
 @Theme("cleatheme")
 @PreserveOnRefresh
 public class CatmaApplication extends UI
@@ -116,7 +114,7 @@ public class CatmaApplication extends UI
 	private UserManager userManager = new UserManager();
 	private Object user;
 	private HorizontalLayout mainLayout;
-	
+
 	private PropertyChangeSupport propertyChangeSupport;
 	
 	/**
@@ -233,53 +231,6 @@ public class CatmaApplication extends UI
 					"Once you're logged in, you will see the Repository Manager, " +
 					"which will explain the first steps to you. " +
 					"Just hover your mouse over the question mark icons!");
-//			helpLabel.setVisible(false);
-//			
-//			Timer timer = new Timer();
-//			timer.schedule(new TimerTask() {
-//				
-//				@Override
-//				public void run() {
-//					CatmaApplication.this.access(new Runnable() {
-//						
-//						@Override
-//						public void run() {
-//							helpLabel.setVisible(true);
-//							push();
-//						}
-//					});
-//				}
-//			}, 1000);
-//			
-//			timer.schedule(new TimerTask() {
-//				
-//				@Override
-//				public void run() {
-//					CatmaApplication.this.access(new Runnable() {
-//						
-//						@Override
-//						public void run() {
-//							helpLabel.setIcon(new ClassResource("resources/icon-help_l.gif"));
-//							push();
-//						}
-//					});
-//				}
-//			}, 4000);
-//			
-//			timer.schedule(new TimerTask() {
-//				
-//				@Override
-//				public void run() {
-//					CatmaApplication.this.access(new Runnable() {
-//						
-//						@Override
-//						public void run() {
-//							helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
-//							push();
-//						}
-//					});
-//				}
-//			}, 5000);
 
 			mainLayout.addComponent(helpLabel);
 			
@@ -294,6 +245,9 @@ public class CatmaApplication extends UI
 			mainLayout.setWidth("100%");
 
 			setContent(mainLayout);
+
+			setPollInterval(1000);
+			
 		} catch (Exception e) {
 			showAndLogError("The system could not be initialized!", e);
 		}

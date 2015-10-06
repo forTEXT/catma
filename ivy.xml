@@ -41,8 +41,8 @@
 		<dependency org="com.vaadin" name="vaadin-client-compiler"
 			rev="&vaadin.version;" conf="widgetset-compile->default" />
 		
-		<dependency org="com.vaadin" name="vaadin-push"
-            rev="&vaadin.version;" conf="default->default"/>
+		<!-- <dependency org="com.vaadin" name="vaadin-push"
+            rev="&vaadin.version;" conf="default->default"/> -->
 
 		<dependency org="org.vaadin.addon" name="confirmdialog" rev="2.1.2" />
 		<dependency org="org.vaadin.addons" name="wizards-for-vaadin" rev="1.1.0" />

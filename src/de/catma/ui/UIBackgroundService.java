@@ -37,8 +37,12 @@ public class UIBackgroundService implements BackgroundService {
                         if (UI.getCurrent() != null && UI.getCurrent().isAttached()) {
 	                        UI.getCurrent().access(new Runnable() {
 	                        	public void run() {
-	                        		listener.done(result);
-	                        		UI.getCurrent().push();
+	                        		try {
+	                        			listener.done(result);
+	                        		}
+	                        		finally {
+//		                        		UI.getCurrent().push();
+	                        		}
 	                        	}
 	                        });
                         }                        
@@ -50,8 +54,12 @@ public class UIBackgroundService implements BackgroundService {
                         	if (UI.getCurrent() != null && UI.getCurrent().isAttached()) {
 	                            UI.getCurrent().access(new Runnable() {
 	                            	public void run() {
-	                            		listener.error(t);
-	                            		UI.getCurrent().push();
+	                            		try {
+	                            			listener.error(t);
+	                            		}
+	                            		finally {
+//		                            		UI.getCurrent().push();
+	                            		}
 	                            	}
 	                            });
                         	}
