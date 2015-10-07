@@ -19,6 +19,8 @@
 
 package de.catma.queryengine.querybuilder;
 
+import de.catma.queryengine.MatchMode;
+
 /**
  * A tree of queries. The queries are connected via inclusion, exclusion or refinement.
  *
@@ -50,7 +52,7 @@ public class QueryTree {
          * Constructor.
          * @param value the value of this node, i. e. a query or one of the connector strings that are allowed to
          * chain queries together.
-         * @param postfix
+         * @param postfix e.g a {@link MatchMode} or an empty string (<code>null</code> is not allowed)
          *
          * @see org.catma.queryengine.ExclusionQuery
          * @see org.catma.queryengine.UnionQuery
@@ -102,6 +104,7 @@ public class QueryTree {
      * Adds the given element to this tree.
      *
      * @param element the element to add, this can be a query string or one of the connector strings
+     * @param postfix e.g a {@link MatchMode} or an empty string (<code>null</code> is not allowed)
      */
     public void add(String element, String postfix) {
 

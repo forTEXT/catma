@@ -100,9 +100,15 @@ public class ComplexTypeSelectionPanel extends VerticalLayout implements
 					queryTree.removeLast();
 				}
 
+				String postfix = "";
+				if(!((ComplexTypeOption)complexTypeSelect.getValue()).equals(
+					ComplexTypeOption.UNION)) {
+					postfix = ((TagMatchModeItem)tagMatchModeCombo.getValue()).getTagMatchMode().name().toLowerCase();
+				}
+				
 				queryTree.add(
 					((ComplexTypeOption)complexTypeSelect.getValue()).getQueryElement(),
-					((TagMatchModeItem)tagMatchModeCombo.getValue()).getTagMatchMode().name().toLowerCase());
+					postfix);
 
 				typeAdded = true;
 				

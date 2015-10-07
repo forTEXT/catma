@@ -33,7 +33,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.vaadin.annotations.PreserveOnRefresh;
-import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.ExternalResource;
@@ -41,23 +40,21 @@ import com.vaadin.server.Page;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
-import com.vaadin.shared.communication.PushMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Link;
 import com.vaadin.ui.MenuBar;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.BackgroundServiceProvider;
@@ -87,14 +84,13 @@ import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.menu.LoginLogoutCommand;
 import de.catma.ui.menu.MainMenu;
 import de.catma.ui.menu.MenuFactory;
-import de.catma.ui.UIHelpWindow;
 import de.catma.ui.repository.RepositoryManagerView;
 import de.catma.ui.tagger.TaggerManagerView;
 import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagManagerView;
 import de.catma.ui.visualizer.VisualizationManagerView;
 
-@Push(PushMode.MANUAL)
+//@Push(PushMode.MANUAL)
 @Theme("cleanew")
 @PreserveOnRefresh
 public class CatmaApplication extends UI
@@ -118,7 +114,6 @@ public class CatmaApplication extends UI
 	private boolean repositoryOpened = false;
 	private UserManager userManager = new UserManager();
 	private Object user;
-	
 	private VerticalLayout mainLayout;
 	private Panel menuPanel;
 	private HorizontalLayout menuLayout;
@@ -262,54 +257,6 @@ public class CatmaApplication extends UI
 			btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
 			btHelp.addStyleName("help-button");
 			
-//			helpLabel.setVisible(false);
-//			
-//			Timer timer = new Timer();
-//			timer.schedule(new TimerTask() {
-//				
-//				@Override
-//				public void run() {
-//					CatmaApplication.this.access(new Runnable() {
-//						
-//						@Override
-//						public void run() {
-//							helpLabel.setVisible(true);
-//							push();
-//						}
-//					});
-//				}
-//			}, 1000);
-//			
-//			timer.schedule(new TimerTask() {
-//				
-//				@Override
-//				public void run() {
-//					CatmaApplication.this.access(new Runnable() {
-//						
-//						@Override
-//						public void run() {
-//							helpLabel.setIcon(new ClassResource("resources/icon-help_l.gif"));
-//							push();
-//						}
-//					});
-//				}
-//			}, 4000);
-//			
-//			timer.schedule(new TimerTask() {
-//				
-//				@Override
-//				public void run() {
-//					CatmaApplication.this.access(new Runnable() {
-//						
-//						@Override
-//						public void run() {
-//							helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
-//							push();
-//						}
-//					});
-//				}
-//			}, 5000);
-
 			menuLayout.addComponent(btHelp);
 			
 			btHelp.addClickListener(new ClickListener() {
@@ -338,6 +285,9 @@ public class CatmaApplication extends UI
 			menuPanel.setContent(menuLayout);
 
 			setContent(mainLayout);
+
+			setPollInterval(1000);
+			
 		} catch (Exception e) {
 			showAndLogError("The system could not be initialized!", e);
 		}
