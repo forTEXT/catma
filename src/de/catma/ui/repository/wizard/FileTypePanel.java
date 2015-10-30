@@ -43,6 +43,7 @@ import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.UI;
@@ -83,10 +84,14 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 					return;
 				}
 				
-				loadSourceDocumentAndContent(sdr);
-				onAdvance = canAdvance();
-				
-				showSourceDocumentPreview(sdr);
+				if (loadSourceDocumentAndContent(sdr)) {
+					onAdvance = canAdvance();
+					
+					showSourceDocumentPreview(sdr);
+				}
+				else {
+					taPreview.setValue("");
+				}
 			}
 		}
 	}
@@ -282,7 +287,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		}		
 	}
 	
-	private void loadSourceDocumentAndContent(SourceDocumentResult sdr) {
+	private boolean loadSourceDocumentAndContent(SourceDocumentResult sdr) {
 		try {
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
 			SourceDocument sourceDocument =
@@ -307,9 +312,19 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			CRC32 checksum = new CRC32();
 			checksum.update(currentByteContent);
 			sdr.getSourceDocumentInfo().getTechInfoSet().setChecksum(checksum.getValue());
+			return true;
 		} catch (Exception e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error loading the document content!", e);
+			TechInfoSet techInfoSet = sdr.getSourceDocumentInfo().getTechInfoSet();
+			Notification.show(
+				"Information", 
+				"Sorry, CATMA wasn't able to process the file as " 
+				+ techInfoSet.getFileType() + 
+				(techInfoSet.getFileType().isCharsetSupported()
+					?" with " + ((techInfoSet.getCharset()==null)?"unknown charset":" charset " 
+							+ techInfoSet.getCharset()):"")
+				+ "\n\nThe original error message is: " + e.getLocalizedMessage(),
+				Notification.Type.WARNING_MESSAGE);
+			return false;
 		}
 	}
 	

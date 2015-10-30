@@ -18,7 +18,8 @@ public class AnnotationGeneratorJob extends DefaultProgressCallable<Void> {
 			generationOptions.getTagsetIdentification(),
 			generationOptions.getIdentifier(),
 			generationOptions.getToken(),
-			generationOptions.getApiURL());
+			generationOptions.getApiURL(),
+			generationOptions.getSourceDocId());
 		
 		return null;
 	}

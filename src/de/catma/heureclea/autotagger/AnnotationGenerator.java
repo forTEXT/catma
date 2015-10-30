@@ -17,6 +17,7 @@ public class AnnotationGenerator {
 		id, 
 		token, 
 		api,
+		sid,
 		;
 		
 		public String asParam() {
@@ -36,7 +37,7 @@ public class AnnotationGenerator {
 
 	public void generate(
 			String corpusId, TagsetIdentification tagsetIdentification, 
-			String identifier, String token, String apiURL) throws IOException, InterruptedException {
+			String identifier, String token, String apiURL, String sourceDocId) throws IOException, InterruptedException {
 		
 		StringBuilder urlBuilder = new StringBuilder(generatorURL);
 		urlBuilder.append(Parameter.cid.asInitialParam()); 
@@ -49,6 +50,8 @@ public class AnnotationGenerator {
 		urlBuilder.append(token);
 		urlBuilder.append(Parameter.api.asParam());
 		urlBuilder.append(URLEncoder.encode(apiURL, "UTF-8"));
+		urlBuilder.append(Parameter.sid.asParam());
+		urlBuilder.append(sourceDocId);
 		
 		ClientResource client = 
 				new ClientResource(Context.getCurrent(), Method.GET, urlBuilder.toString());

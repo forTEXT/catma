@@ -12,6 +12,7 @@ public class GenerationOptions {
 	private TagsetIdentification tagsetIdentification;
 	private String token;
 	private String identifier;
+	private String sourceDocId;
 
 	public GenerationOptions(String corpusId, String identifier) {
 		super();
@@ -47,5 +48,8 @@ public class GenerationOptions {
 	
 	public String getApiURL() {
 		return RepositoryPropertyKey.BaseURL.getValue().trim()+"api";
+	}
+	public String getSourceDocId() {
+		return sourceDocId;
 	}
 }
