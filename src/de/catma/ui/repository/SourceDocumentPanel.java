@@ -425,6 +425,13 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 
 		});
+		miMoreDocumentActions.addItem("Generate annotations", new Command() {
+			@Override
+			public void menuSelected(MenuItem selectedItem) {
+				handleGenerateAnnotations();
+			}
+		});
+		
 
 		btEditContentInfo.addClickListener(new ClickListener() {
 			
@@ -483,6 +490,39 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	}
 	
 	
+	private void handleGenerateAnnotations() {
+		Object value = documentsTree.getValue();
+		if ((value == null) || !(value instanceof SourceDocument)) {
+			 Notification.show(
+                    "Information",
+                    "Please select a Source Document first",
+                    Type.TRAY_NOTIFICATION);
+		}
+		else{
+			
+			final SourceDocument sourceDocument = (SourceDocument)value;
+			Corpus corpus = currentCorpus;
+			if (corpus == null) {
+				corpus = createAutoCorpus(); 
+			}
+			
+			
+			
+		}
+	}
+
+	private Corpus createAutoCorpus() {
+		try {
+			//HIER GEHTS WEITER
+			repository.createCorpus("");
+		} catch (IOException e) {
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
+				"Error creating corpus!", e);
+		}
+
+		return null;
+	}
+
 	private void handleSourceDocumentExportRequest() {
 		Object value = documentsTree.getValue();
 		if ((value == null) || !(value instanceof SourceDocument)) {

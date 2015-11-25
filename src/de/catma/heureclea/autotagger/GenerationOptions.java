@@ -25,6 +25,12 @@ public class GenerationOptions {
 		this.identifier = identifier;
 		this.token = totp.now();
 	}
+	
+	public GenerationOptions(String sourceDocId, String corpusId, String identifier) {
+		this(corpusId, identifier);
+		this.sourceDocId = sourceDocId;
+	}
+	
 	public String getCorpusId() {
 		return corpusId;
 	}
@@ -37,6 +43,7 @@ public class GenerationOptions {
 	public void setTagsetIdentification(TagsetIdentification tagsetIdentification) {
 		this.tagsetIdentification = tagsetIdentification;
 	}
+	
 	
 	public String getToken() {
 		return token;
