@@ -56,6 +56,8 @@ import org.jooq.impl.DSL;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import de.catma.document.AccessMode;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
@@ -734,6 +736,7 @@ class UserMarkupCollectionHandler {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	UserMarkupCollection getUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionReference, 
 			boolean refresh) throws IOException {
@@ -779,65 +782,68 @@ class UserMarkupCollectionHandler {
 							umcRecord.getValue(USERMARKUPCOLLECTION.PUBLISHER),
 							umcRecord.getValue(USERMARKUPCOLLECTION.TITLE))));
 
-		Map<Integer, Result<Record>> propertyValueRecordsByPropertyId = db
-		.select(PROPERTYVALUE.fields())
-		.from(PROPERTYVALUE)
-		.join(PROPERTY)
-			.on(PROPERTY.PROPERTYID.eq(PROPERTYVALUE.PROPERTYID))
-		.join(TAGINSTANCE)
-			.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
-			.and(TAGINSTANCE.TAGINSTANCEID
-				.in(db
-					.select(TAGREFERENCE.TAGINSTANCEID)
-					.from(TAGREFERENCE)
-					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))))
-		.fetchGroups(PROPERTYVALUE.PROPERTYID);
-		
-				
-		
-		Map<Integer, Result<Record>> propertyRecordsByTagInstanceId = db
-		.select()
-		.from(PROPERTY)
-		.join(PROPERTYDEFINITION)
-			.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID
-					.eq(PROPERTY.PROPERTYDEFINITIONID))
-		.join(TAGINSTANCE)
-			.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
-			.and(TAGINSTANCE.TAGINSTANCEID
-				.in(db
-					.select(TAGREFERENCE.TAGINSTANCEID)
-					.from(TAGREFERENCE)
-					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID
-							.eq(userMarkupCollectionId))))
-		.fetchGroups(TAGINSTANCE.TAGINSTANCEID);
-		
-		List<TagInstance> tagInstances = db
-		.select()
-		.from(TAGINSTANCE)
-		.join(TAGDEFINITION)
-			.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
-		.where(TAGINSTANCE.TAGINSTANCEID
-			.in(db
-				.select(TAGREFERENCE.TAGINSTANCEID)
-				.from(TAGREFERENCE)
-				.where(TAGREFERENCE.USERMARKUPCOLLECTIONID
-						.eq(userMarkupCollectionId))))
-		.fetch()
-		.map(
-			new TagInstanceMapper(
-				tagLibrary, 
-				propertyRecordsByTagInstanceId, 
-				propertyValueRecordsByPropertyId));
-				
-		@SuppressWarnings("unchecked")
-		List<TagReference> tagReferences = db
-		.select(Collections3.getUnion(TAGREFERENCE.fields(), TAGINSTANCE.UUID))
+		List<Integer> tagInstanceIDs = db 
+		.select(TAGREFERENCE.TAGINSTANCEID)
 		.from(TAGREFERENCE)
-		.join(TAGINSTANCE)
-			.on(TAGINSTANCE.TAGINSTANCEID.eq(TAGREFERENCE.TAGINSTANCEID))
 		.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
 		.fetch()
-		.map(new TagReferenceMapper(localSourceDocURI, tagInstances));
+		.map(new IDFieldToIntegerMapper(TAGREFERENCE.TAGINSTANCEID));
+
+		Map<Integer, Result<Record>> propertyValueRecordsByPropertyId = Collections.emptyMap();
+		
+		if (!tagInstanceIDs.isEmpty()) {
+			propertyValueRecordsByPropertyId = db
+			.select(PROPERTYVALUE.fields())
+			.from(PROPERTYVALUE)
+			.join(PROPERTY)
+				.on(PROPERTY.PROPERTYID.eq(PROPERTYVALUE.PROPERTYID))
+				.and(PROPERTY.TAGINSTANCEID.in(tagInstanceIDs))
+			.fetchGroups(PROPERTYVALUE.PROPERTYID);
+		}
+		
+		Map<Integer, Result<Record>> propertyRecordsByTagInstanceId =
+				Collections.emptyMap();
+		
+		if (!tagInstanceIDs.isEmpty()) {
+			propertyRecordsByTagInstanceId = db
+				.select()
+				.from(PROPERTY)
+				.join(PROPERTYDEFINITION)
+					.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID
+							.eq(PROPERTY.PROPERTYDEFINITIONID))
+				.where(PROPERTY.TAGINSTANCEID.in(tagInstanceIDs))
+				.fetchGroups(TAGINSTANCE.TAGINSTANCEID);
+		}
+
+		List<TagInstance> tagInstances = Collections.emptyList();
+		
+		if (!tagInstanceIDs.isEmpty()) {
+			tagInstances = db
+				.select()
+				.from(TAGINSTANCE)
+				.join(TAGDEFINITION)
+					.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
+				.where(TAGINSTANCE.TAGINSTANCEID.in(tagInstanceIDs))
+				.fetch()
+				.map(
+					new TagInstanceMapper(
+						tagLibrary, 
+						propertyRecordsByTagInstanceId, 
+						propertyValueRecordsByPropertyId));
+		}
+		
+		List<TagReference> tagReferences = Lists.newArrayList();
+		
+		if (!tagInstanceIDs.isEmpty()) {
+			tagReferences = db
+				.select(Collections3.getUnion(TAGREFERENCE.fields(), TAGINSTANCE.UUID))
+				.from(TAGREFERENCE)
+				.join(TAGINSTANCE)
+					.on(TAGINSTANCE.TAGINSTANCEID.eq(TAGREFERENCE.TAGINSTANCEID))
+				.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
+				.fetch()
+				.map(new TagReferenceMapper(localSourceDocURI, tagInstances));
+		}
 		
 		UserMarkupCollection userMarkupCollection = 
 			new UserMarkupCollectionMapper(
