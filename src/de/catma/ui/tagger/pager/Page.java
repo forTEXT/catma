@@ -79,7 +79,6 @@ public class Page {
 			new HashMap<String,ClientTagInstance>();
 	private int lineCount;
 	private boolean rightToLeftLanguage;
-	private ArrayList<Line> lines;
 	
 	public Page(int taggerID, String text, int pageStart, int pageEnd, int approxMaxLineLength, boolean rightToLeftLanguage) {
 		this.taggerID = taggerID;
@@ -88,7 +87,6 @@ public class Page {
 		this.approxMaxLineLength = approxMaxLineLength;
 		this.text = text;
 		this.rightToLeftLanguage = rightToLeftLanguage;
-		this.lines = new ArrayList<>();
 	}
 	
 	@Override
@@ -98,66 +96,6 @@ public class Page {
 	
 	
 	private Document htmlDocModel;
-	
-	
-	private void buildLines() {
-		Matcher matcher = Pattern.compile(Pager.LINE_CONTENT_PATTERN).matcher(text);
-
-		
-		StringBuilder lineBuilder = new StringBuilder();
-		Line currentLine = new Line();
-		int lineLength = 0;
-		int lineId = 0;
-		int pageOffset = 0;
-		
-		while(matcher.find()) {
-			if (lineLength + matcher.group().length()>approxMaxLineLength) {
-				int lineStart = pageOffset;
-				int lineEnd = pageOffset+lineLength; 
-				Line line = new Line(lineId++, lineBuilder.toString(), lineStart, lineEnd);
-				line.setLineId(lineId++);
-				lines.add(line);
-				
-				lineBuilder = new StringBuilder();
-				lineLength = 0;
-			}
-			if (matcher.group(Pager.WORDCHARACTER_GROUP) != null) {
-				lineBuilder.append(matcher.group(Pager.WORDCHARACTER_GROUP));
-			}
-			if ((matcher.group(Pager.WHITESPACE_GROUP) != null) && (!matcher.group(Pager.WHITESPACE_GROUP).isEmpty())){
-				lineBuilder.append(getSolidSpace(matcher.group(Pager.WHITESPACE_GROUP).length()));
-			}
-			if (matcher.group(Pager.LINE_SEPARATOR_GROUP) != null) {
-				lineBuilder.append(getSolidSpace(matcher.group(Pager.LINE_SEPARATOR_GROUP).length()));
-				Element lineSpan = new Element(HTMLElement.span.name());
-				lineSpan.addAttribute(
-						new Attribute(
-								HTMLAttribute.id.name(), 
-								ContentElementID.LINE.name()+taggerID+lineId++));
-				lineSpan.appendChild(new Text(lineBuilder.toString()));
-				htmlDocModel.getRootElement().appendChild(lineSpan);
-				htmlDocModel.getRootElement().appendChild(new Element(HTMLElement.br.name()));
-				lineBuilder = new StringBuilder();
-				lineLength = 0;
-			}
-			else {
-				lineLength += matcher.group().length();
-			}
-		}
-		if (lineLength != 0) {
-			Element lineSpan = new Element(HTMLElement.span.name());
-			lineSpan.addAttribute(
-					new Attribute(
-						HTMLAttribute.id.name(), 
-						ContentElementID.LINE.name()+taggerID+lineId++));
-			lineSpan.appendChild(new Text(lineBuilder.toString()));
-			htmlDocModel.getRootElement().appendChild(lineSpan);
-			htmlDocModel.getRootElement().appendChild(new Element(HTMLElement.br.name()));
-		}
-		
-		lineCount = lineId;
-	}
-
 	
 	private void buildModel() {
 		Matcher matcher = Pattern.compile(Pager.LINE_CONTENT_PATTERN).matcher(text);
