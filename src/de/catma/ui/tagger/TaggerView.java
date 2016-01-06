@@ -94,7 +94,7 @@ public class TaggerView extends VerticalLayout
 	private int maxPageLengthInLines = 30;
 	private int initialSplitterPositionInPixels = 700;
 	
-	TaggerHelpWindow taggerHelpWindow = new TaggerHelpWindow();
+	private TaggerHelpWindow taggerHelpWindow = new TaggerHelpWindow();
 	
 	public TaggerView(
 			int taggerID, 

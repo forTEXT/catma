@@ -40,7 +40,6 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Table;
@@ -65,7 +64,6 @@ import de.catma.ui.component.export.CsvExport.CsvExportException;
 import de.catma.ui.component.export.HierarchicalExcelExport;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
-import de.catma.util.StopWatch;
 
 public class PhraseResultPanel extends VerticalLayout {
 	
@@ -95,17 +93,19 @@ public class PhraseResultPanel extends VerticalLayout {
 	private Button btSelectAllKwic;
 	private Slider kwicSizeSlider;	
 	
-	private TagResultsDialog tagResultsDialog;
-	
 	PhraseResultHelpWindow phraseResultHelpWindow = new PhraseResultHelpWindow();
+	private TagKwicResultsProvider tagKwicResultsProvider;
 	
 	public PhraseResultPanel(
 			Repository repository, 
 			GroupedQueryResultSelectionListener resultSelectionListener, 
-			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider) {
+			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider,
+			TagKwicResultsProvider tagKwicResultsProvider) {
 		this.repository = repository;
+		
 		this.resultSelectionListener = resultSelectionListener;
 		this.relevantUserMarkupCollectionProvider = relevantUserMarkupCollectionProvider;
+		this.tagKwicResultsProvider = tagKwicResultsProvider;
 		initComponents();
 		initActions();
 	}
@@ -349,9 +349,11 @@ public class PhraseResultPanel extends VerticalLayout {
 	}
 	
 	private void tagResults() {
-		if (tagResultsDialog == null || !tagResultsDialog.isAttached()) {
-			tagResultsDialog = new TagResultsDialog(repository);
-			tagResultsDialog.show();
+		if (kwicPanel.getSelection().isEmpty()) {
+			Notification.show("Info", "Please select some KWIC results first!", Type.TRAY_NOTIFICATION);
+		}
+		else {
+			tagKwicResultsProvider.tagResults();
 		}
 	}
 

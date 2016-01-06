@@ -46,7 +46,6 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeTable;
@@ -241,18 +240,19 @@ public class MarkupResultPanel extends VerticalLayout {
 	private Button btSelectAllKwic;
 	private Slider kwicSizeSlider;	
 	
-	private TagResultsDialog tagResultsDialog;
-	
-	MarkupResultHelpWindow markupResultHelpWindow = new MarkupResultHelpWindow();
+	private MarkupResultHelpWindow markupResultHelpWindow = new MarkupResultHelpWindow();
+	private TagKwicResultsProvider tagKwicResultsProvider;
 	
 	public MarkupResultPanel(
 			Repository repository, 
 			GroupedQueryResultSelectionListener resultSelectionListener, 
-			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider) {
+			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider,
+			TagKwicResultsProvider tagKwicResultsProvider) {
 		this.curQueryResult = new QueryResultRowArray();
 		this.repository = repository;
 		this.resultSelectionListener = resultSelectionListener;
 		this.relevantUserMarkupCollectionProvider = relevantUserMarkupCollectionProvider;
+		this.tagKwicResultsProvider = tagKwicResultsProvider;
 	}
 	
 	@Override
@@ -485,9 +485,11 @@ public class MarkupResultPanel extends VerticalLayout {
 	}
 	
 	private void tagResults() {
-		if (tagResultsDialog == null || !tagResultsDialog.isAttached()) {
-			tagResultsDialog = new TagResultsDialog(repository);
-			tagResultsDialog.show();
+		if (kwicPanel.getSelection().isEmpty()) {
+			Notification.show("Info", "Please select some KWIC results first!", Type.TRAY_NOTIFICATION);
+		}
+		else {
+			tagKwicResultsProvider.tagResults();
 		}
 	}
 

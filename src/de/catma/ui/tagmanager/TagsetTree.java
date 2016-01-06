@@ -39,7 +39,6 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
@@ -63,7 +62,6 @@ import de.catma.ui.dialog.PropertyCollection;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.StringProperty;
 import de.catma.ui.dialog.TagDefinitionFieldFactory;
-import de.catma.ui.tagger.ConfirmListener;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
@@ -929,9 +927,10 @@ public class TagsetTree extends HorizontalLayout {
 			
 			buttonGrid.addComponent(propertyPanel);
 		}
-		
-		addComponent(buttonGrid);
-		setExpandRatio(buttonGrid, 0.9f);
+		if (buttonGrid.getComponentCount() > 0) {
+			addComponent(buttonGrid);
+			setExpandRatio(buttonGrid, 0.9f);
+		}
 	}
 	
 	private void clearTagsetDefinitions() {
@@ -1047,8 +1046,12 @@ public class TagsetTree extends HorizontalLayout {
 	
 	public void setTagLibrary(TagLibrary tagLibrary) {
 		this.tagLibrary = tagLibrary;
-		
-		this.setTagsetDefinitions(tagLibrary.collection());
+		if (this.tagLibrary == null) {
+			clearTagsetDefinitions();
+		}
+		else {
+			this.setTagsetDefinitions(tagLibrary.getTagsetDefinitions());
+		}
 	}
 	
 	public TreeTable getTagTree() {

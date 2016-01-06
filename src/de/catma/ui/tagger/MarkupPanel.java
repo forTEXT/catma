@@ -31,7 +31,6 @@ import java.util.Set;
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.vaadin.data.Container;
-import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.Action;
 import com.vaadin.event.DataBoundTransferable;
 import com.vaadin.event.dd.DragAndDropEvent;
@@ -40,15 +39,14 @@ import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.server.ClassResource;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
+import com.vaadin.ui.Panel;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -70,9 +68,7 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.UIHelpWindow;
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.ui.menu.CMenuAction;
 import de.catma.ui.repository.CorpusContentSelectionDialog;
 import de.catma.ui.tagger.MarkupCollectionsPanel.MarkupCollectionPanelEvent;
@@ -87,14 +83,15 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	private MarkupCollectionsPanel markupCollectionsPanel;
 	private PropertyChangeListener tagLibraryChangedListener;
 	private ColorButtonListener colorButtonListener;
-	private Label writableUserMarkupCollectionLabel;
 	private TagInstanceTree tagInstancesTree;
 	private Repository repository;
 	private PropertyChangeListener propertyValueChangeListener;
 	private Button btnOpenTagset;
 	private Button btHelp;
 	
-	MarkupHelpWindow markupHelpWindow = new MarkupHelpWindow();
+	private MarkupHelpWindow markupHelpWindow = new MarkupHelpWindow();
+	private Label writableUserMarkupCollectionInfo;
+	private Panel markupInfoScrollPanel;
 	
 	public MarkupPanel(
 			Repository repository, ColorButtonListener colorButtonListener, 
@@ -321,11 +318,11 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getNewValue() != null) {
-					writableUserMarkupCollectionLabel.setValue(
+					writableUserMarkupCollectionInfo.setValue(
 							evt.getNewValue().toString());
 				}
 				else {
-					writableUserMarkupCollectionLabel.setValue("");
+					writableUserMarkupCollectionInfo.setValue("no collection available");
 				}
 				colorButtonListener.setEnabled(evt.getNewValue() != null);
 			}
@@ -377,22 +374,35 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	}
 
 	private Component createInfoPanel() {
+		markupInfoScrollPanel = new Panel();
+		markupInfoScrollPanel.setSizeFull();
+		
 		VerticalLayout markupInfoPanel = new VerticalLayout();
+		markupInfoPanel.setSizeUndefined();
+		markupInfoPanel.setWidth("100%");
+		
 		markupInfoPanel.setSpacing(true);
 		markupInfoPanel.addStyleName("catma-tagger-panels");
-		writableUserMarkupCollectionLabel = new Label();
+		HorizontalLayout writableMarkupCollPanel = new HorizontalLayout();
+		writableMarkupCollPanel.setSpacing(true);
+		
+		markupInfoPanel.addComponent(writableMarkupCollPanel);
+		
+		Label writableUserMarkupCollectionLabel = new Label("Writable Markup Collection:");
 		writableUserMarkupCollectionLabel.addStyleName("bold-label-caption");
 		writableUserMarkupCollectionLabel.addStyleName("catma-label-spacing");
-		writableUserMarkupCollectionLabel.setCaption(
-				"Writable Markup Collection:");
-		markupInfoPanel.addComponent(
-				writableUserMarkupCollectionLabel);
+		writableMarkupCollPanel.addComponent(writableUserMarkupCollectionLabel);
+		
+		writableUserMarkupCollectionInfo = new Label();
+		writableUserMarkupCollectionInfo.addStyleName("bold-label-caption");
+		writableUserMarkupCollectionInfo.addStyleName("catma-label-spacing");
+		writableMarkupCollPanel.addComponent(writableUserMarkupCollectionInfo);
 		
 		tagInstancesTree = new TagInstanceTree(this);
 		tagInstancesTree.setSizeFull();
 		markupInfoPanel.addComponent(tagInstancesTree);
-		
-		return markupInfoPanel;
+		markupInfoScrollPanel.setContent(markupInfoPanel);
+		return markupInfoScrollPanel;
 	}
 
 	public void addOrUpdateTagsetDefinition(final TagsetDefinition tagsetDefinition) {
@@ -507,6 +517,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		List<TagInstanceInfo> tagInstances = 
 				markupCollectionsPanel.getTagInstances(instanceIDs);
 		tagInstancesTree.setTagInstances(tagInstances);
+		markupInfoScrollPanel.setScrollTop(1);
 	}	
 	
 	public void showTagInstanceInfo(TagReference[] deselectedTagRefs) {

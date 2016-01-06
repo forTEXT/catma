@@ -46,7 +46,6 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.TabSheet;
@@ -55,11 +54,15 @@ import com.vaadin.ui.Tree;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.Window.CloseEvent;
+import com.vaadin.ui.Window.ResizeEvent;
+import com.vaadin.ui.Window.ResizeListener;
 
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
+import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
@@ -75,7 +78,6 @@ import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.queryengine.result.computation.DistributionComputation;
 import de.catma.queryengine.result.computation.DistributionSelectionListener;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.analyzer.AnalyzerHelpWindow;
 import de.catma.ui.analyzer.querybuilder.QueryBuilderWizardFactory;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.repository.MarkupCollectionItem;
@@ -84,7 +86,7 @@ import de.catma.ui.tabbedview.TabComponent;
 import de.catma.util.Equal;
 
 public class AnalyzerView extends VerticalLayout 
-implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, RelevantUserMarkupCollectionProvider {
+implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, RelevantUserMarkupCollectionProvider, TagKwicResultsProvider {
 	
 	static interface CloseListener {
 		public void closeRequest(AnalyzerView analyzerView);
@@ -135,11 +137,17 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private CloseListener closeListener;
 	private PropertyChangeListener corpusChangedListener;
 	private IndexInfoSet indexInfoSet;
-	private boolean init = false;
 	private Component resultPanel;
 	private ProgressBar searchProgress;
+	private TagResultsDialog tagResultsDialog;
 	
+	private Object lastTagResultsDialogTagLibrarySelection;
+	private Object lastTagResultsDialogTagsetSelection;
+	private Float lastTagResultsDialogHeight = null;
+	private Float lastTagResultsDialogWidth = null;
+
 	AnalyzerHelpWindow analyzerHelpWindow = new AnalyzerHelpWindow();
+	private PropertyChangeListener tagLibraryChangedListener;
 	
 	public AnalyzerView(
 			Corpus corpus, IndexedRepository repository, 
@@ -266,6 +274,20 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				Repository.RepositoryChangeEvent.corpusChanged,
 				corpusChangedListener);
 		
+		tagLibraryChangedListener = new PropertyChangeListener() {
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (tagResultsDialog != null) {
+					lastTagResultsDialogTagLibrarySelection = tagResultsDialog.getCurrenTagLibraryTreeSelection();
+					lastTagResultsDialogTagsetSelection = tagResultsDialog.getCurrentTagsetTreeSelection();
+				}
+				tagResultsDialog = null; // reload this dialog upon next request
+			}
+		};
+		
+		this.repository.addPropertyChangeListener(
+			RepositoryChangeEvent.tagLibraryChanged, tagLibraryChangedListener);
 	}
 
 	private void addUserMarkupCollection(
@@ -557,12 +579,12 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	}
 
 	private Component createResultByMarkupView() {
-		markupResultPanel = new MarkupResultPanel(repository, this, this);
+		markupResultPanel = new MarkupResultPanel(repository, this, this, this);
 		return markupResultPanel;
 	}
 
 	private Component createResultByPhraseView() {
-		phraseResultPanel = new PhraseResultPanel(repository, this, this);
+		phraseResultPanel = new PhraseResultPanel(repository, this, this, this);
 		return phraseResultPanel;
 	}
 
@@ -699,6 +721,11 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				Repository.RepositoryChangeEvent.userMarkupCollectionChanged,
 				userMarkupDocumentChangedListener);	
 		
+		this.repository.removePropertyChangeListener(
+				RepositoryChangeEvent.corpusChanged, corpusChangedListener);
+		this.repository.removePropertyChangeListener(
+				RepositoryChangeEvent.tagLibraryChanged, tagLibraryChangedListener);
+		
 		closeListener = null;
 	}
 	
@@ -716,5 +743,31 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	
 	public Corpus getCorpus() {
 		return corpus;
+	}
+	
+	@Override
+	public void tagResults() {
+		if (tagResultsDialog == null || !tagResultsDialog.isAttached()) {
+			tagResultsDialog = new TagResultsDialog(
+				repository, lastTagResultsDialogTagLibrarySelection, lastTagResultsDialogTagsetSelection);
+			tagResultsDialog.addCloseListener(new com.vaadin.ui.Window.CloseListener() {
+				
+				@Override
+				public void windowClose(CloseEvent e) {
+					lastTagResultsDialogTagLibrarySelection = tagResultsDialog.getCurrenTagLibraryTreeSelection();
+					lastTagResultsDialogTagsetSelection = tagResultsDialog.getCurrentTagsetTreeSelection();
+				}
+			});
+			
+			tagResultsDialog.addResizeListener(new ResizeListener() {
+				
+				@Override
+				public void windowResized(ResizeEvent e) {
+					lastTagResultsDialogHeight = tagResultsDialog.getHeight();
+					lastTagResultsDialogWidth = tagResultsDialog.getWidth();
+				}
+			});
+			tagResultsDialog.show(lastTagResultsDialogHeight, lastTagResultsDialogWidth);
+		}
 	}
 }

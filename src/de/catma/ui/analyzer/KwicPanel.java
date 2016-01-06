@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 import org.vaadin.peter.contextmenu.ContextMenu;
-import org.vaadin.peter.contextmenu.ContextMenu.ContextMenuItemClickEvent;
 
 import com.vaadin.data.Container;
 import com.vaadin.data.util.HierarchicalContainer;
@@ -46,7 +45,6 @@ import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.Table.Align;
 import com.vaadin.ui.Table.CellStyleGenerator;
-import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
@@ -84,7 +82,7 @@ public class KwicPanel extends VerticalLayout {
 	}
 
 	private Repository repository;
-	private TreeTable kwicTable;
+	private Table kwicTable;
 	private ContextMenu kwicTableContextMenu;
 	private ContextMenu.ContextMenuItem tagSelectedResultsContextMenuItem;
 	private boolean markupBased;
@@ -379,7 +377,7 @@ public class KwicPanel extends VerticalLayout {
 	private void initComponents() {
 		setSizeFull();
 		
-		kwicTable = new TreeTable();
+		kwicTable = new Table();
 		
 		kwicTable.setSizeFull();
 		kwicTable.setSelectable(true);
@@ -429,7 +427,6 @@ public class KwicPanel extends VerticalLayout {
 				KwicPropertyName.endPoint, Integer.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.endPoint, "End Point");
 
-//		kwicTable.setPageLength(12);
 		kwicTable.setSizeFull();
 		
 		kwicTable.setCellStyleGenerator(new CellStyleGenerator() {
@@ -484,7 +481,6 @@ public class KwicPanel extends VerticalLayout {
 					row.getRange().getStartPoint(),
 					row.getRange().getEndPoint()},
 					row);
-			kwicTable.setChildrenAllowed(row, false);
 		}
 	}
 	
@@ -503,7 +499,7 @@ public class KwicPanel extends VerticalLayout {
 		return (Set<QueryResultRow>) kwicTable.getValue();
 	}
 	
-	TreeTable getKwicTable() {
+	Table getKwicTable() {
 		return kwicTable;
 	}
 
