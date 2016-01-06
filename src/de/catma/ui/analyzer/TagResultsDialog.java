@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalSplitPanel;
@@ -175,18 +176,18 @@ public class TagResultsDialog extends Window {
 		menu.removeMenuItemSelectedListener(menuItemSelectedListener);
 	}
 	
-	public void show(Float height, Float width) {
+	public void show(Float height, Float width, Unit lastTagResultsDialogUnit) {
 		setPositionX(20);
 		setPositionY(80);
 		if (height != null) {
-			setHeight(height, Unit.PIXELS);
+			setHeight(height, lastTagResultsDialogUnit);
 		}
 		else {
 			setHeight("50%");
 		}
 		
 		if (width != null) {
-			setWidth(width, Unit.PIXELS);
+			setWidth(width, lastTagResultsDialogUnit);
 		}
 		else {
 			setWidth("40%");

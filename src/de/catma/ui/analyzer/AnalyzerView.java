@@ -148,6 +148,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 
 	AnalyzerHelpWindow analyzerHelpWindow = new AnalyzerHelpWindow();
 	private PropertyChangeListener tagLibraryChangedListener;
+	protected Unit lastTagResultsDialogUnit;
 	
 	public AnalyzerView(
 			Corpus corpus, IndexedRepository repository, 
@@ -765,9 +766,11 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				public void windowResized(ResizeEvent e) {
 					lastTagResultsDialogHeight = tagResultsDialog.getHeight();
 					lastTagResultsDialogWidth = tagResultsDialog.getWidth();
+					lastTagResultsDialogUnit = tagResultsDialog.getHeightUnits();
 				}
+				
 			});
-			tagResultsDialog.show(lastTagResultsDialogHeight, lastTagResultsDialogWidth);
+			tagResultsDialog.show(lastTagResultsDialogHeight, lastTagResultsDialogWidth, lastTagResultsDialogUnit);
 		}
 	}
 }
