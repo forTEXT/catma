@@ -245,13 +245,20 @@ public class CatmaApplication extends UI
 			menuLayout.addComponent(termsOfUseLink);
 			menuLayout.setComponentAlignment(termsOfUseLink, Alignment.TOP_RIGHT);
 
-			Link helpLink = new Link(
-					"Help", 
+			Link manualLink = new Link(
+					"Manual", 
 					new ExternalResource(request.getContextPath()+"/manual/"));
+			manualLink.setTargetName("_blank");
+			menuLayout.addComponent(manualLink);
+			menuLayout.setComponentAlignment(manualLink, Alignment.TOP_RIGHT);
+				
+			Link helpLink = new Link(
+					"Helpdesk", 
+					new ExternalResource("http://www.catma.de/helpdesk/"));
 			helpLink.setTargetName("_blank");
 			menuLayout.addComponent(helpLink);
 			menuLayout.setComponentAlignment(helpLink, Alignment.TOP_RIGHT);
-						
+			
 			btHelp = new Button("");
 			btHelp.addStyleName("icon-button"); // for top-margin
 			btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
