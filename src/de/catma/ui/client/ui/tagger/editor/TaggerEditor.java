@@ -152,9 +152,9 @@ public class TaggerEditor extends FocusWidget
 			
 			for (TextRange textRange : textRanges) {
 				NodeRange nodeRange = converter.convertToNodeRange(textRange);
-				logger.info("adding tag type to range: " + nodeRange);
+				logger.info("adding tag instance to range: " + nodeRange);
 				addTagInstanceForRange(taggedSpanFactory, nodeRange);
-				logger.info("added tag type to range");
+				logger.info("added tag instance to range");
 			}
 
 			if (!textRanges.isEmpty()) {

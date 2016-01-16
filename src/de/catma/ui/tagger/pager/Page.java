@@ -47,7 +47,7 @@ import de.catma.ui.client.ui.tagger.shared.TextRange;
  */
 public class Page {
 
-	private static final String SOLIDSPACE = "&_nbsp;";
+	static final String SOLIDSPACE = "&_nbsp;";
 	
 	private static enum HTMLElement {
 		div,
@@ -102,9 +102,7 @@ public class Page {
 	
 	private void buildLines() {
 		Matcher matcher = Pattern.compile(Pager.LINE_CONTENT_PATTERN).matcher(text);
-
 		
-		StringBuilder lineBuilder = new StringBuilder();
 		Line currentLine = new Line();
 		int lineLength = 0;
 		int lineId = 0;
@@ -114,30 +112,35 @@ public class Page {
 			if (lineLength + matcher.group().length()>approxMaxLineLength) {
 				int lineStart = pageOffset;
 				int lineEnd = pageOffset+lineLength; 
-				Line line = new Line(lineId++, lineBuilder.toString(), lineStart, lineEnd);
-				line.setLineId(lineId++);
-				lines.add(line);
 				
-				lineBuilder = new StringBuilder();
+				currentLine.setLineId(lineId++);
+				currentLine.setTextRange(new TextRange(lineStart, lineEnd));
+				
+				lines.add(currentLine);
+				
+				pageOffset += lineEnd-lineStart;
+				currentLine = new Line();
 				lineLength = 0;
 			}
 			if (matcher.group(Pager.WORDCHARACTER_GROUP) != null) {
-				lineBuilder.append(matcher.group(Pager.WORDCHARACTER_GROUP));
+				currentLine.addCharacterContent(matcher.group(Pager.WORDCHARACTER_GROUP));
 			}
 			if ((matcher.group(Pager.WHITESPACE_GROUP) != null) && (!matcher.group(Pager.WHITESPACE_GROUP).isEmpty())){
-				lineBuilder.append(getSolidSpace(matcher.group(Pager.WHITESPACE_GROUP).length()));
+				currentLine.addWhitespaceContent(matcher.group(Pager.WHITESPACE_GROUP));
 			}
 			if (matcher.group(Pager.LINE_SEPARATOR_GROUP) != null) {
-				lineBuilder.append(getSolidSpace(matcher.group(Pager.LINE_SEPARATOR_GROUP).length()));
-				Element lineSpan = new Element(HTMLElement.span.name());
-				lineSpan.addAttribute(
-						new Attribute(
-								HTMLAttribute.id.name(), 
-								ContentElementID.LINE.name()+taggerID+lineId++));
-				lineSpan.appendChild(new Text(lineBuilder.toString()));
-				htmlDocModel.getRootElement().appendChild(lineSpan);
-				htmlDocModel.getRootElement().appendChild(new Element(HTMLElement.br.name()));
-				lineBuilder = new StringBuilder();
+				lineLength += matcher.group(Pager.LINE_SEPARATOR_GROUP).length();
+				currentLine.addLineSeparatorContent(matcher.group(Pager.LINE_SEPARATOR_GROUP));
+				int lineStart = pageOffset;
+				int lineEnd = pageOffset+lineLength; 
+
+				currentLine.setLineId(lineId++);
+				currentLine.setTextRange(new TextRange(lineStart, lineEnd));
+
+				lines.add(currentLine);
+
+				pageOffset += lineEnd-lineStart;
+				currentLine = new Line();
 				lineLength = 0;
 			}
 			else {
@@ -145,17 +148,21 @@ public class Page {
 			}
 		}
 		if (lineLength != 0) {
-			Element lineSpan = new Element(HTMLElement.span.name());
-			lineSpan.addAttribute(
-					new Attribute(
-						HTMLAttribute.id.name(), 
-						ContentElementID.LINE.name()+taggerID+lineId++));
-			lineSpan.appendChild(new Text(lineBuilder.toString()));
-			htmlDocModel.getRootElement().appendChild(lineSpan);
-			htmlDocModel.getRootElement().appendChild(new Element(HTMLElement.br.name()));
+			int lineStart = pageOffset;
+			int lineEnd = pageOffset+lineLength;
+			
+			currentLine.setLineId(lineId++);
+			currentLine.setTextRange(new TextRange(lineStart, lineEnd));
+			
+			
+			lines.add(currentLine);
 		}
 		
-		lineCount = lineId;
+//		lineCount = lineId;
+		
+		for (Line line : lines) {
+			System.out.println(line);
+		}
 	}
 
 	
@@ -237,6 +244,7 @@ public class Page {
 	
 	public String toHTML() {
 		if (htmlDocModel == null) {
+			buildLines();
 			buildModel();
 		}
 		return htmlDocModel.toXML().substring(22).replaceAll("\\Q&amp;_nbsp;\\E", "&nbsp;");
@@ -267,8 +275,26 @@ public class Page {
 			this.relativeTagInstances.put(
 					relativeTagInstance.getInstanceID(),relativeTagInstance);
 		}
+		
+		addRelativeTagInstanceToLine(relativeTagInstance);
+		for (Line line : lines) {
+			System.out.println(line.toHTML());
+		}
 	}
 	
+	private void addRelativeTagInstanceToLine(ClientTagInstance relativeTagInstance) {
+		
+		for (TextRange tr : relativeTagInstance.getRanges()) {
+			for (Line line : lines) {
+				if (line.containsTextRange(tr)) {
+					line.addRelativeTagInstanceTextRange(tr, relativeTagInstance);
+				}
+			}
+		}
+		
+	}
+
+
 	public void removeRelativeTagInstance(String tagInstanceID) {
 		this.relativeTagInstances.remove(tagInstanceID);
 	}
@@ -344,6 +370,7 @@ public class Page {
 	
 	public int getLineCount() {
 		if (htmlDocModel == null) {
+			buildLines();
 			buildModel();
 		}
 		return lineCount;

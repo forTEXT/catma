@@ -18,12 +18,15 @@
  */   
 package de.catma.ui.client.ui.tagger.shared;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @author marco.petris@web.de
  *
  */
-public class TextRange {
+public class TextRange implements Comparable<TextRange> {
 
 	private int startPos;
 	private int endPos;
@@ -32,6 +35,10 @@ public class TextRange {
 		super();
 		this.startPos = startPos;
 		this.endPos = endPos;
+	}
+
+	public TextRange(TextRange toCopy) {
+		this(toCopy.startPos, toCopy.endPos);
 	}
 
 	public int getStartPos() {
@@ -129,6 +136,42 @@ public class TextRange {
         return null;
     }
     
+    public List<TextRange> getDisjointRanges( TextRange rangeToTest ) {
+
+        List<TextRange> result = new ArrayList<TextRange>();
+
+        if( isInBetweenExclusiveEdge( rangeToTest.getStartPos()) ) {
+            result.add(
+                new TextRange(
+                    this.getStartPos(),
+                    rangeToTest.getStartPos() ) );
+
+            if( isInBetweenExclusiveEdge( rangeToTest.getEndPos() ) ) {
+                result.add(
+                    new TextRange(
+                        rangeToTest.getEndPos(),
+                        this.getEndPos() ) );
+            }
+        }
+        else if( !isAfter( rangeToTest.getEndPos() ) ) {
+            result.add(
+                new TextRange( rangeToTest.getEndPos(), this.getEndPos() )  );
+        }
+
+        return result;
+    }
+    
+    /**
+     * Tests whether the given point is in between the range of this pointer but
+     * is not one of the range's edges.
+     * @param point the point to test
+     * @return true if point &gt; startpoint and point &lt; endpoint, else false
+     */
+    private boolean isInBetweenExclusiveEdge( long point ) {
+        return ( (point > this.getStartPos())
+                    && (point < this.getEndPos()) );
+    }
+    
     private boolean isAfter( long point ) {
         return (this.getEndPos() < point);
     }
@@ -137,4 +180,46 @@ public class TextRange {
         return ( (point >= this.getStartPos())
                     && (point <= this.getEndPos()) );
     }
+    
+    public int compareTo(TextRange o) {
+        if (this.startPos==o.startPos) {
+        	if (this.endPos==o.endPos) {
+        		return 0;
+        	}
+        	else if (this.endPos<o.endPos) {
+        		return -1;
+        	}
+        	else {
+        		return 1;
+        	}
+        }
+        else {
+        	if (this.startPos==o.startPos) {
+        		return 0;
+        	}
+        	else if (this.startPos<o.startPos) {
+        		return -1;
+        	}
+        	else {
+        		return 1;
+        	}
+
+        }
+    }
+
+	public boolean isCoveredBy(Collection<TextRange> textRanges) {
+
+		for (TextRange textRange : textRanges) {
+			TextRange overlappingRange = this.getOverlappingRange(textRange);
+			if (overlappingRange != null && overlappingRange.equals(this)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
+	public int size() {
+		return getEndPos()-getStartPos();
+	}
 }

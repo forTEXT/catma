@@ -64,7 +64,7 @@ public class Tagger extends AbstractComponent {
 				
 			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error displaying Tag Type information!", e);
+					"Error displaying Tag Instance information!", e);
 			}
 		}
 		
@@ -79,7 +79,7 @@ public class Tagger extends AbstractComponent {
 						pager.getCurrentPage().getAbsoluteTagInstance(tagInstance));
 			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error adding the Tag Type!", e);
+					"Error adding the Tag Instance!", e);
 			}
 		}
 		
