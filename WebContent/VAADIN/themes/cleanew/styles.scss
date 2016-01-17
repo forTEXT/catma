@@ -299,4 +299,41 @@
 		text-align: inherit;
 	}
 	
+	table.taggerline-table {
+		border-spacing: 0;
+    	border-collapse: collapse;
+	}
+	
+	.taggerline-table td {
+		padding:0px;
+    	white-space: pre;
+	}
+	
+	.annotation-layer {
+		-webkit-touch-callout: none;
+  		-webkit-user-select: none;
+  		-khtml-user-select: none;
+  		-moz-user-select: -moz-none;
+  		-ms-user-select: none;
+  		user-select: none;
+	}
+	
+	.annotation-layer td {
+		line-height: 8px;
+	}
+	
+	.segmentation-layer {
+		-webkit-touch-callout: none;
+  		-webkit-user-select: none;
+  		-khtml-user-select: none;
+  		-moz-user-select: -moz-none;
+  		-ms-user-select: none;
+  		user-select: none;
+	}
+	
+	tr.segmentation-layer {
+		line-height: 12px;
+		background:#FFFFFF;
+		color:#FFFFFF;
+	}
 }

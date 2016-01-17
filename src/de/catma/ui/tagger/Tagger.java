@@ -115,12 +115,13 @@ public class Tagger extends AbstractComponent {
 	}
 
 	private void setPage(String pageContent) {
+		System.out.println(pageContent);
 		getRpcProxy(TaggerClientRpc.class).setTaggerId(this.taggerID);
 		getRpcProxy(TaggerClientRpc.class).setPage(pageContent);
 		try {
-			getRpcProxy(TaggerClientRpc.class).addTagInstances(
-					tagInstanceJSONSerializer.toJSON(
-							pager.getCurrentPage().getRelativeTagInstances()));
+//			getRpcProxy(TaggerClientRpc.class).addTagInstances(
+//					tagInstanceJSONSerializer.toJSON(
+//							pager.getCurrentPage().getRelativeTagInstances()));
 			if (!pager.getCurrentHighlightRanges().isEmpty()) {
 				for (TextRange relativeTextRange : pager.getCurrentHighlightRanges()) {
 					getRpcProxy(TaggerClientRpc.class).highlight(
@@ -168,37 +169,37 @@ public class Tagger extends AbstractComponent {
 				}
 			}	
 		}
-		
-		// we send only the TagInstances of the current page
-		if (visible) {
-			currentRelativePageTagInstancesCopy.clear();
-			currentRelativePageTagInstancesCopy.addAll(
-					pager.getCurrentPage().getRelativeTagInstances());
-		}
-		currentRelativePageTagInstancesCopy.retainAll(tagInstances);
-		
-		if (!currentRelativePageTagInstancesCopy.isEmpty()) {
-			if (!visible) {
-				try {
-					getRpcProxy(TaggerClientRpc.class).removeTagInstances(
-							tagInstanceJSONSerializer.toJSON(
-									currentRelativePageTagInstancesCopy));
-				} catch (IOException e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error hiding Tags!", e);
-				}
-			}
-			else {
-				try {
-					getRpcProxy(TaggerClientRpc.class).addTagInstances(
-							tagInstanceJSONSerializer.toJSON(
-									currentRelativePageTagInstancesCopy));
-				} catch (IOException e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error showing Tags!", e);
-				}
-			}
-		}
+		setPage(pager.getCurrentPage().toHTML());
+//		// we send only the TagInstances of the current page
+//		if (visible) {
+//			currentRelativePageTagInstancesCopy.clear();
+//			currentRelativePageTagInstancesCopy.addAll(
+//					pager.getCurrentPage().getRelativeTagInstances());
+//		}
+//		currentRelativePageTagInstancesCopy.retainAll(tagInstances);
+//		
+//		if (!currentRelativePageTagInstancesCopy.isEmpty()) {
+//			if (!visible) {
+//				try {
+//					getRpcProxy(TaggerClientRpc.class).removeTagInstances(
+//							tagInstanceJSONSerializer.toJSON(
+//									currentRelativePageTagInstancesCopy));
+//				} catch (IOException e) {
+//					((CatmaApplication)UI.getCurrent()).showAndLogError(
+//						"Error hiding Tags!", e);
+//				}
+//			}
+//			else {
+//				try {
+//					getRpcProxy(TaggerClientRpc.class).addTagInstances(
+//							tagInstanceJSONSerializer.toJSON(
+//									currentRelativePageTagInstancesCopy));
+//				} catch (IOException e) {
+//					((CatmaApplication)UI.getCurrent()).showAndLogError(
+//						"Error showing Tags!", e);
+//				}
+//			}
+//		}
 	}
 
 	public void addTagInstanceWith(TagDefinition tagDefinition) {

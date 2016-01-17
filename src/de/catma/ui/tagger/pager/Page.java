@@ -88,7 +88,6 @@ public class Page {
 		this.approxMaxLineLength = approxMaxLineLength;
 		this.text = text;
 		this.rightToLeftLanguage = rightToLeftLanguage;
-		this.lines = new ArrayList<>();
 	}
 	
 	@Override
@@ -96,11 +95,11 @@ public class Page {
 		return "Page["+pageStart+","+pageEnd+"]\n"+text;
 	}
 	
-	
 	private Document htmlDocModel;
 	
-	
 	private void buildLines() {
+		this.lines = new ArrayList<>();
+		
 		Matcher matcher = Pattern.compile(Pager.LINE_CONTENT_PATTERN).matcher(text);
 		
 		Line currentLine = new Line();
@@ -158,11 +157,11 @@ public class Page {
 			lines.add(currentLine);
 		}
 		
-//		lineCount = lineId;
+		lineCount = lineId;
 		
-		for (Line line : lines) {
-			System.out.println(line);
-		}
+//		for (Line line : lines) {
+//			System.out.println(line);
+//		}
 	}
 
 	
@@ -243,11 +242,29 @@ public class Page {
     }
 	
 	public String toHTML() {
-		if (htmlDocModel == null) {
+//		if (htmlDocModel == null) {
+//			buildModel();
+//		}
+//		return htmlDocModel.toXML().substring(22).replaceAll("\\Q&amp;_nbsp;\\E", "&nbsp;");
+		if (lines == null) {
 			buildLines();
-			buildModel();
 		}
-		return htmlDocModel.toXML().substring(22).replaceAll("\\Q&amp;_nbsp;\\E", "&nbsp;");
+			
+		Element rootDiv = new Element(HTMLElement.div.name());
+		if (rightToLeftLanguage) {
+			rootDiv.addAttribute(new Attribute(HTMLAttribute.dir.name(), HTMLAttributeValue.rtl.name()));
+			rootDiv.addAttribute(new Attribute(HTMLAttribute.align.name(), HTMLAttributeValue.right.name()));
+		}
+		rootDiv.addAttribute(
+				new Attribute(
+					HTMLAttribute.id.name(), 
+					ContentElementID.CONTENT.name()+String.valueOf(taggerID)));
+
+		for (Line line : lines) {
+			rootDiv.appendChild(line.toHTML());
+		}
+		
+		return rootDiv.toXML().replaceAll("\\Q&amp;_nbsp;\\E", "&nbsp;");
 	}
 	
 	public void print() {
@@ -277,12 +294,13 @@ public class Page {
 		}
 		
 		addRelativeTagInstanceToLine(relativeTagInstance);
-		for (Line line : lines) {
-			System.out.println(line.toHTML());
-		}
 	}
 	
 	private void addRelativeTagInstanceToLine(ClientTagInstance relativeTagInstance) {
+		if (lines == null) {
+			buildLines();
+		}
+
 		
 		for (TextRange tr : relativeTagInstance.getRanges()) {
 			for (Line line : lines) {
@@ -297,8 +315,19 @@ public class Page {
 
 	public void removeRelativeTagInstance(String tagInstanceID) {
 		this.relativeTagInstances.remove(tagInstanceID);
+		removeRelativeTagInstanceFromLine(tagInstanceID);
 	}
 	
+	private void removeRelativeTagInstanceFromLine(String tagInstanceID) {
+		if (lines == null) {
+			buildLines();
+		}
+
+		for (Line line : lines) {
+			line.removeRelativeTagInstance(tagInstanceID);
+		}
+	}
+
 	public Collection<ClientTagInstance> getRelativeTagInstances() {
 		return Collections.unmodifiableCollection(this.relativeTagInstances.values());
 	}
@@ -335,7 +364,14 @@ public class Page {
 	}
 
 	public void clearRelativeTagInstances() {
+		if (lines == null) {
+			buildLines();
+		}
+
 		relativeTagInstances.clear();
+		for (Line line : lines) {
+			line.clearRelativeTagInstanes();
+		}
 	}
 
 	public ClientTagInstance getRelativeTagInstance(String instanceID) {
@@ -364,14 +400,19 @@ public class Page {
 					iterator.next();
 			if (tagDefUUIds.contains(entry.getValue().getTagDefinitionID())) {
 				iterator.remove();
+				removeRelativeTagInstanceFromLine(entry.getKey());
 			}
 		}
 	}
 	
 	public int getLineCount() {
-		if (htmlDocModel == null) {
+//		if (htmlDocModel == null) {
+//			buildModel();
+//		}
+//		return lineCount;
+		
+		if (lines == null) {
 			buildLines();
-			buildModel();
 		}
 		return lineCount;
 	}

@@ -3,7 +3,9 @@ package de.catma.ui.tagger.pager;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -21,12 +23,14 @@ public class Line {
 	private TextRange textRange;
 	private int lineLength = 0;
 
-	private Multimap<ClientTagInstance, TextRange> textRangesByRelativeTagInstance;
+	private Multimap<String, TextRange> textRangesByRelativeTagInstanceID;
+	private Map<String,ClientTagInstance> relativeTagInstanceByID;
 	
 
 	public Line() {
 		lineContents = new ArrayList<>();
-		textRangesByRelativeTagInstance = ArrayListMultimap.create();
+		textRangesByRelativeTagInstanceID = ArrayListMultimap.create();
+		relativeTagInstanceByID = new HashMap<>();
 	}
 	
 	public String getPresentationContent() {
@@ -77,25 +81,29 @@ public class Line {
 		return tr.hasOverlappingRange(this.textRange);
 	}
 
-	public void addRelativeTagInstanceTextRange(TextRange tr, ClientTagInstance relativeTagInstance) {
-		//FIXME: store range by tiID and create mapping tiID->ti 
-		textRangesByRelativeTagInstance.put(relativeTagInstance, tr);
-
+	public void addRelativeTagInstanceTextRange(
+			TextRange tr, ClientTagInstance relativeTagInstance) {
+		textRangesByRelativeTagInstanceID.put(
+				relativeTagInstance.getInstanceID(), tr);
+		relativeTagInstanceByID.put(
+				relativeTagInstance.getInstanceID(), relativeTagInstance);
 	}
 	
-	public String toHTML() {
+	public Element toHTML() {
 		
 		List<TextRange> rangeParts = new ArrayList<>();
 		
 		rangeParts.add(new TextRange(this.textRange));
 		
-		for (TextRange currentTextRange : textRangesByRelativeTagInstance.values()) {
+		for (TextRange currentTextRange : textRangesByRelativeTagInstanceID.values()) {
 			
 			for (TextRange rangePart : new TreeSet<TextRange>(rangeParts)) {
 				if (rangePart.hasOverlappingRange(currentTextRange)) {
 					rangeParts.remove(rangePart);
 					rangeParts.add(rangePart.getOverlappingRange(currentTextRange));
-					for (TextRange disjointRange : rangePart.getDisjointRanges(currentTextRange)) {
+					for (TextRange disjointRange : 
+							rangePart.getDisjointRanges(currentTextRange)) {
+						
 						if (rangePart.hasOverlappingRange(disjointRange)) {
 							rangeParts.add(disjointRange);
 						}
@@ -117,6 +125,8 @@ public class Line {
 			System.out.println("now");
 		}
 		Element table = new Element("table");
+		table.addAttribute(new Attribute("class", "taggerline-table"));
+		
 		Element tbody = new Element("tbody");
 		table.appendChild(tbody);
 		
@@ -124,15 +134,17 @@ public class Line {
 		tbody.appendChild(visibleContentLayer);
 		Element visibleContentLayerContent = new Element("td");
 		visibleContentLayer.appendChild(visibleContentLayerContent);
-		visibleContentLayerContent.addAttribute(new Attribute("colspan", String.valueOf(rangeParts.size())));
+		visibleContentLayerContent.addAttribute(
+				new Attribute("colspan", String.valueOf(rangeParts.size())));
 		visibleContentLayerContent.appendChild(getPresentationContent());
 		
-		for (ClientTagInstance relativeTagInstance : textRangesByRelativeTagInstance.keys()) {
-			Collection<TextRange> textRanges = textRangesByRelativeTagInstance.get(relativeTagInstance);
+		for (ClientTagInstance relativeTagInstance : relativeTagInstanceByID.values()) {
+			Collection<TextRange> textRanges = 
+				textRangesByRelativeTagInstanceID.get(relativeTagInstance.getInstanceID());
 			Element annotationLayer = new Element("tr");
 			
-			annotationLayer.addAttribute(new Attribute("style", "line-height:4px"));
-			annotationLayer.addAttribute(new Attribute("class", "unselectable"));
+//			annotationLayer.addAttribute(new Attribute("style", "line-height:6px"));
+			annotationLayer.addAttribute(new Attribute("class", "annotation-layer"));
 			annotationLayer.addAttribute(new Attribute("unselectable", "on"));
 			
 			tbody.appendChild(annotationLayer);
@@ -141,7 +153,7 @@ public class Line {
 				
 				Element annotationLayerContent = new Element("td");
 				annotationLayer.appendChild(annotationLayerContent);
-				annotationLayerContent.appendChild(" ");
+				annotationLayerContent.appendChild(Page.SOLIDSPACE);
 				
 				if (rangePart.isCoveredBy(textRanges)) {
 					annotationLayerContent.addAttribute(
@@ -155,8 +167,9 @@ public class Line {
 		}
 		
 		Element segmentationLayer = new Element("tr");
-		segmentationLayer.addAttribute(new Attribute("style", "line-height:12px"));
-		segmentationLayer.addAttribute(new Attribute("class", "unselectable"));
+//		segmentationLayer.addAttribute(
+//			new Attribute("style", "line-height:12px;background:#FFFFFF;color:#FFFFFF"));
+		segmentationLayer.addAttribute(new Attribute("class", "segmentation-layer"));
 		segmentationLayer.addAttribute(new Attribute("unselectable", "on"));
 		tbody.appendChild(segmentationLayer);
 		
@@ -168,7 +181,7 @@ public class Line {
 			segmentationLayerContent.appendChild(getPresentationContent(rangePart));
 		}
 		
-		return table.toXML().replaceAll("\\Q&amp;_nbsp;\\E", "&nbsp;");
+		return table;
 	}
 
 	private String getPresentationContent(TextRange rangePart) {
@@ -179,6 +192,18 @@ public class Line {
 			}
 		}
 		return builder.toString();
+	}
+
+	public void removeRelativeTagInstance(String tagInstanceID) {
+		ClientTagInstance relativeTagInstance = relativeTagInstanceByID.remove(tagInstanceID);
+		if (relativeTagInstance != null) {
+			textRangesByRelativeTagInstanceID.removeAll(relativeTagInstance.getInstanceID());
+		}
+	}
+
+	public void clearRelativeTagInstanes() {
+		relativeTagInstanceByID.clear();
+		textRangesByRelativeTagInstanceID.clear();
 	}
 	
 }
