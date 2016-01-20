@@ -157,7 +157,7 @@ public class CatmaApplication extends UI
 		
 		handleParameters(request.getParameterMap());
 		
-		Page.getCurrent().setTitle("CATMA 5.0 " + MINORVERSION);
+		Page.getCurrent().setTitle("CATMA 5.0 PREVIEW " + MINORVERSION);
 		
 		mainLayout = new VerticalLayout();
 		mainLayout.setSizeFull();
@@ -258,6 +258,7 @@ public class CatmaApplication extends UI
 			helpLink.setTargetName("_blank");
 			menuLayout.addComponent(helpLink);
 			menuLayout.setComponentAlignment(helpLink, Alignment.TOP_RIGHT);
+			helpLink.setVisible(false);
 			
 			btHelp = new Button("");
 			btHelp.addStyleName("icon-button"); // for top-margin
