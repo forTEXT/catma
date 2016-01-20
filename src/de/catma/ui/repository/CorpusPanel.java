@@ -27,13 +27,13 @@ import java.util.Collections;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
-import com.vaadin.data.Property;
 import com.vaadin.data.Container.Sortable;
+import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.AbstractProperty;
 import com.vaadin.data.util.BeanItem;
-import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.data.util.IndexedContainer;
 import com.vaadin.data.util.ItemSorter;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.data.util.converter.Converter.ConversionException;
@@ -57,9 +57,8 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.ProgressBar;
+import com.vaadin.ui.Table;
 import com.vaadin.ui.Table.ColumnHeaderMode;
-import com.vaadin.ui.Tree.TreeTargetDetails;
-import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
@@ -128,13 +127,13 @@ public class CorpusPanel extends VerticalLayout {
 	private Button btCreateCorpus;
 	private MenuItem miMoreCorpusActions;
 	private MenuItem miRemoveCorpus;
-	private TreeTable corporaTree;
+	private Table corporaTree;
 
 	private Repository repository;
 	private PropertyChangeListener corpusChangedListener;
 	private MenuItem miRenameCorpus;
 
-	private HierarchicalContainer corporaContainer;
+	private IndexedContainer corporaContainer;
 
 	private MenuItem miShareCorpus;
 
@@ -205,8 +204,6 @@ public class CorpusPanel extends VerticalLayout {
 
 	private void addCorpusToTree(Corpus corpus) {
 		corporaTree.addItem(new Object[] {corpus.toString()}, corpus);
-		
-		corporaTree.setChildrenAllowed(corpus, false);
 	}
 
 	private void initActions(final ValueChangeListener valueChangeListener) {
@@ -618,7 +615,7 @@ public class CorpusPanel extends VerticalLayout {
 		content.setSizeFull();
 		content.setMargin(new MarginInfo(false, true, false, false));
 		
-		corporaContainer = new HierarchicalContainer();
+		corporaContainer = new IndexedContainer();
 		corporaContainer.setItemSorter(new ItemSorter() {
 			private boolean asc; 
 			@Override
@@ -640,7 +637,7 @@ public class CorpusPanel extends VerticalLayout {
 				return itemId2.toString().toLowerCase().compareTo(itemId1.toString().toLowerCase());
 			}
 		});
-		corporaTree = new TreeTable("Corpora");
+		corporaTree = new Table("Corpora");
 		corporaTree.setContainerDataSource(corporaContainer);
 		corporaTree.addContainerProperty(TableProperty.title.name(), String.class, null);
 		corporaTree.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
@@ -649,7 +646,7 @@ public class CorpusPanel extends VerticalLayout {
 		corporaTree.addStyleName("bold-label-caption");
 
 		corporaTree.addItem(new Object[] {allDocuments}, allDocuments);
-		corporaTree.setChildrenAllowed(allDocuments, false);
+
 		corporaTree.setImmediate(true);
 
 		corporaContainer.addContainerProperty(TableProperty.title.name(), String.class, null);

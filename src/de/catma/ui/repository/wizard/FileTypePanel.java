@@ -165,7 +165,8 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	private ProtocolHandler getProtocolHandlerForUri(
 			URI inputFileURI, String fileID, String inputFileMimeType)
 					throws MalformedURLException, IOException{
-		if (inputFileURI.toURL().getProtocol().toLowerCase().equals("http")) {
+		if (inputFileURI.toURL().getProtocol().toLowerCase().equals("http")
+				|| inputFileURI.toURL().getProtocol().toLowerCase().equals("https")) {
 			
 			final String destinationFileUri = repository.getFileURL(
 					fileID, ((CatmaApplication)UI.getCurrent()).getTempDirectory() + "/");
@@ -261,6 +262,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			
 			sdrTechInfoSet.setMimeType(mimeType);			
 			FileType sdrFileType = FileType.getFileType(mimeType);
+			sdrTechInfoSet.setFileType(sdrFileType);
 			
 			if (sdrFileType.isCharsetSupported()) {
 				Charset charset = Charset.forName(protocolHandler.getEncoding());

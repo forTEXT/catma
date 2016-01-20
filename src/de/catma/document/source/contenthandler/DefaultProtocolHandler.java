@@ -66,8 +66,8 @@ public class DefaultProtocolHandler implements ProtocolHandler {
 			
 			this.encoding = Charset.defaultCharset().name();
 			
-			if (this.mimeType.equals(FileType.TEXT.getMimeType())
-					||(this.mimeType.equals(FileType.HTML.getMimeType()))) {
+			if (FileType.TEXT.hasMimeType(this.mimeType)
+					||(FileType.HTML.hasMimeType(this.mimeType))) {
 				this.encoding = 
 						sourceDocumentHandler.getEncoding(
 								urlConnection, 
