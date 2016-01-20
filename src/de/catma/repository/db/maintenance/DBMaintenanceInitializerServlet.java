@@ -45,11 +45,11 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 
 			indexJobDataMap.put(
 					JobDataKey.SOURCEDOCIDXMAINTAIN.name(), 
-					RepositoryPropertyKey.SourceDocumentIndexMaintainer.getValue(
+					RepositoryPropertyKey.SourceDocumentIndexMaintainer.getIndexedValue(
 							repoIndex));
 			indexJobDataMap.put(
 					JobDataKey.SOURCEDOCIDXMAINTAIN_MAXOBJ.name(), 
-					RepositoryPropertyKey.SourceDocumentIndexMaintainerMaxObjects.getValue(
+					RepositoryPropertyKey.SourceDocumentIndexMaintainerMaxObjects.getIndexedValue(
 							repoIndex));
 			
 			jobInstaller.install(

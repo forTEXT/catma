@@ -28,11 +28,13 @@ import java.util.Collections;
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.vaadin.data.Property;
+import com.vaadin.data.Container.Sortable;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.AbstractProperty;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.data.util.ItemSorter;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.data.util.converter.Converter.ConversionException;
 import com.vaadin.event.DataBoundTransferable;
@@ -41,6 +43,7 @@ import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.AbstractSelect.AbstractSelectTargetDetails;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -54,8 +57,9 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.ProgressBar;
-import com.vaadin.ui.Tree;
+import com.vaadin.ui.Table.ColumnHeaderMode;
 import com.vaadin.ui.Tree.TreeTargetDetails;
+import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.Reindeer;
@@ -80,7 +84,6 @@ import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.ui.repository.sharing.SharingOptions;
 import de.catma.ui.repository.sharing.SharingOptionsFieldFactory;
 import de.catma.user.Permission;
-import de.catma.user.Role;
 
 public class CorpusPanel extends VerticalLayout {
 	private static class CorpusProperty extends AbstractProperty {
@@ -116,13 +119,16 @@ public class CorpusPanel extends VerticalLayout {
 		}
 	}
 
-	private final static String SORTCAP_PROP = "SORTCAP";
+	private enum TableProperty {
+		title,
+		;
+	}
 	
 	private String allDocuments = "All documents";
 	private Button btCreateCorpus;
 	private MenuItem miMoreCorpusActions;
 	private MenuItem miRemoveCorpus;
-	private Tree corporaTree;
+	private TreeTable corporaTree;
 
 	private Repository repository;
 	private PropertyChangeListener corpusChangedListener;
@@ -155,7 +161,7 @@ public class CorpusPanel extends VerticalLayout {
 				}
 				else if (evt.getOldValue() == null) { //add
 					addCorpusToTree((Corpus)evt.getNewValue());
-					corporaContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
+					corporaContainer.sort(new Object[] {TableProperty.title.name()}, new boolean[] { true });
 
 					Notification.show("Information",
 							"Start adding Source Documents" +
@@ -198,10 +204,8 @@ public class CorpusPanel extends VerticalLayout {
 	}
 
 	private void addCorpusToTree(Corpus corpus) {
-		corporaTree.addItem(corpus);
-		corporaTree.getItem(corpus).getItemProperty(SORTCAP_PROP).setValue(
-				(corpus.toString()==null)?"":corpus.toString().toLowerCase());
-
+		corporaTree.addItem(new Object[] {corpus.toString()}, corpus);
+		
 		corporaTree.setChildrenAllowed(corpus, false);
 	}
 
@@ -241,8 +245,8 @@ public class CorpusPanel extends VerticalLayout {
 				if (t instanceof DataBoundTransferable) {
 					Object sourceItemId = ((DataBoundTransferable) t).getItemId();
 					
-					TreeTargetDetails dropData = 
-							((TreeTargetDetails) event.getTargetDetails());
+					AbstractSelectTargetDetails dropData = 
+							((AbstractSelectTargetDetails) event.getTargetDetails());
 
 					Object targetItemId = dropData.getItemIdOver();
 					if (targetItemId instanceof Corpus) {
@@ -575,7 +579,6 @@ public class CorpusPanel extends VerticalLayout {
 
 	private void initComponents() {
 		setSpacing(true);
-		setMargin(new MarginInfo(false, true, true, false));
 		
 		setSizeFull();
 		Component corporaPanel = createCorporaPanel();
@@ -586,6 +589,8 @@ public class CorpusPanel extends VerticalLayout {
 	
 	private Component createCorporaButtonPanel() {
 		HorizontalLayout content = new HorizontalLayout();
+		content.setMargin(new MarginInfo(false, false, true, false));
+		
 		Panel corporaButtonsPanel = new Panel(content);
 		corporaButtonsPanel.setStyleName(Reindeer.PANEL_LIGHT);
 		((HorizontalLayout)corporaButtonsPanel.getContent()).setSpacing(true);
@@ -610,33 +615,55 @@ public class CorpusPanel extends VerticalLayout {
 
 	private Component createCorporaPanel() {
 		VerticalLayout content = new VerticalLayout();
-		content.setMargin(true);
-		Panel corporaPanel = new Panel(content);
-		corporaPanel.getContent().setSizeUndefined();
-		corporaPanel.setSizeFull();
+		content.setSizeFull();
+		content.setMargin(new MarginInfo(false, true, false, false));
 		
 		corporaContainer = new HierarchicalContainer();
-		corporaTree = new Tree();
+		corporaContainer.setItemSorter(new ItemSorter() {
+			private boolean asc; 
+			@Override
+			public void setSortProperties(Sortable container, Object[] propertyId, boolean[] ascending) {
+				asc = ascending[0];
+			}
+			@Override
+			public int compare(Object itemId1, Object itemId2) {
+				if (itemId1.toString().equals(allDocuments)) {
+					return 1;
+				}
+				if (itemId2.toString().equals(allDocuments)) {
+					return 1;
+				}
+				
+				if (asc) {
+					return itemId1.toString().toLowerCase().compareTo(itemId2.toString().toLowerCase());
+				}
+				return itemId2.toString().toLowerCase().compareTo(itemId1.toString().toLowerCase());
+			}
+		});
+		corporaTree = new TreeTable("Corpora");
 		corporaTree.setContainerDataSource(corporaContainer);
-
+		corporaTree.addContainerProperty(TableProperty.title.name(), String.class, null);
+		corporaTree.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
+		corporaTree.setSizeFull();
+		
 		corporaTree.addStyleName("bold-label-caption");
-		corporaTree.setCaption("Corpora");
-		corporaTree.addItem(allDocuments);
+
+		corporaTree.addItem(new Object[] {allDocuments}, allDocuments);
 		corporaTree.setChildrenAllowed(allDocuments, false);
 		corporaTree.setImmediate(true);
 
-		corporaContainer.addContainerProperty(SORTCAP_PROP, String.class, null);
+		corporaContainer.addContainerProperty(TableProperty.title.name(), String.class, null);
 		
 		for (Corpus c : repository.getCorpora()) {
 			addCorpusToTree(c);
 		}
-		corporaContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
+		corporaContainer.sort(new Object[] {TableProperty.title.name()}, new boolean[] { true });
 
 		corporaTree.setValue(allDocuments);
 
 		content.addComponent(corporaTree);
 		
-		return corporaPanel;
+		return content;
 	}
 
 	private void handleCorpusCreationRequest() {
