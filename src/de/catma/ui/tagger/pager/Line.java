@@ -142,7 +142,7 @@ public class Line {
 			Collection<TextRange> textRanges = 
 				textRangesByRelativeTagInstanceID.get(relativeTagInstance.getInstanceID());
 			Element annotationLayer = new Element("tr");
-			
+			//TODO: add instance id
 //			annotationLayer.addAttribute(new Attribute("style", "line-height:6px"));
 			annotationLayer.addAttribute(new Attribute("class", "annotation-layer"));
 			annotationLayer.addAttribute(new Attribute("unselectable", "on"));
