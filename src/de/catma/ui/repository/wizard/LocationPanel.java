@@ -127,7 +127,7 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		setMargin(true);
 		
 //		setSizeFull();
-		HorizontalLayout remoteLayout = new HorizontalLayout();
+		VerticalLayout remoteLayout = new VerticalLayout();
 		remoteLayout.setMargin(true);
 		remoteLayout.setSpacing(true);
 		remoteLayout.setSizeFull();
@@ -142,6 +142,9 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		remoteLayout.setExpandRatio(remoteURIInput, 2);
 		
 		addComponent(remoteURIInputPanel);
+		remoteLayout.addComponent(new Label("Please note that some content providers like gutenberg.org "
+				+ "block access to their documents by third party tools like CATMA. "
+				+ "If you encounter any errors loading a file via URI please consider using a mirror of that site."));
 		
 		Label localFileLabel = new Label("or upload a local file from your computer:");
 		addComponent(localFileLabel);
