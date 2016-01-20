@@ -19,6 +19,7 @@ import de.catma.backgroundservice.DefaultProgressCallable;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.backgroundservice.LogProgressListener;
 import de.catma.backgroundservice.ProgressListener;
+import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.source.SourceDocument;
 import de.catma.indexer.IndexBufferManagerName;
 import de.catma.indexer.TermExtractor;
@@ -88,13 +89,20 @@ public class SourceDocumentIndexer {
 		GraphDatabaseService graphDb = 
 					CatmaGraphDbName.CATMAGRAPHDB.getGraphDatabaseService();
 		
-		progressListener.setProgress("starting insertion into graph");
+		progressListener.setProgress("starting insertion into graph " + sourceDocument);
 		long nodeCount = 0;
 		long relCount = 0;
 		
-        try ( Transaction tx = graphDb.beginTx() )
+		long commitAfterNodeCount = Long.valueOf(RepositoryPropertyKey.commitAfterNodeCount.getValue(20000));
+		long commitAfterRelationCount= Long.valueOf(RepositoryPropertyKey.commitAfterRelationCount.getValue(40000));
+		
+		
+		Transaction tx = null;
+		
+        try 
         {
-			
+        	tx = graphDb.beginTx();
+        	
 			Node sdNode = graphDb.createNode(NodeType.SourceDocument);
 			nodeCount++;
 			sdNode.setProperty(SourceDocumentProperty.localUri.name(), sourceDocument.getID());
@@ -124,7 +132,17 @@ public class SourceDocumentIndexer {
 					
 					termNode.createRelationshipTo(positionNode, NodeRelationType.HAS_POSITION);
 					relCount++;
+					
+					if (nodeCount % commitAfterNodeCount == 0) {
+						progressListener.setProgress(
+								"graph insertion: commiting transaction nodecount "
+										+ nodeCount + " relcount " + relCount + " " + sourceDocument);
+						tx.success();
+						tx.close();
+						tx = graphDb.beginTx();
+					}
 				}
+				
 			}
 			
 			NodeTermInfo prevTi = null;
@@ -137,14 +155,28 @@ public class SourceDocumentIndexer {
 					relCount++;
 				}
 				prevTi = ti;
+				
+				if (relCount % commitAfterRelationCount == 0) {
+					progressListener.setProgress(
+							"graph insertion: commiting transaction nodecount "
+									+ nodeCount + " relcount " + relCount + " " + sourceDocument);
+					tx.success();
+					tx.close();
+					tx = graphDb.beginTx();
+				}
 			}
 	
 			tx.success();
         }
+        finally {
+        	if (tx != null) {
+        		tx.close();
+        	}
+        }
 		
         progressListener.setProgress(
         	"insertion of source document finished nodecount "
-        			+ nodeCount + " relcount " + relCount);
+        			+ nodeCount + " relcount " + relCount + " " + sourceDocument);
 		return sourceDocument.getID();
 	}
 
