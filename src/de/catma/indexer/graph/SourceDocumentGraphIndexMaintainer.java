@@ -98,6 +98,7 @@ public class SourceDocumentGraphIndexMaintainer implements
 				}
 				logger.info("deleting sd " + sdNode);
 				sdNode.delete();
+				tx.success();
 			}
 			else {
 				sdIterator.close();
