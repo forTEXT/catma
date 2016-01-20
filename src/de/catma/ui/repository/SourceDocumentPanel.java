@@ -35,15 +35,16 @@ import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
 import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
 import com.vaadin.data.Property;
+import com.vaadin.data.Container.Sortable;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.data.util.ItemSorter;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -57,8 +58,9 @@ import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.Tree;
-import com.vaadin.ui.Tree.TreeDragMode;
+import com.vaadin.ui.Table.ColumnHeaderMode;
+import com.vaadin.ui.Table.TableDragMode;
+import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -107,14 +109,17 @@ import de.catma.util.Pair;
 public class SourceDocumentPanel extends HorizontalSplitPanel
 	implements ValueChangeListener {
 	
-	private final static String SORTCAP_PROP = "SORTCAP";
+	private enum TableProperty {
+		title,
+		;
+	}
 	private final static Object[] DEFAULT_VISIBIL_PROP = new Object[] {
 		"title", "author", "description", "publisher"
 	};
 	
 	private final ContentInfoSet emptyContentInfoSet = new ContentInfoSet();
 	private HierarchicalContainer documentsContainer;
-	private Tree documentsTree;
+	private TreeTable documentsTree;
 	private Repository repository;
 	private String userMarkupItemDisplayString = "Markup Collections";
 	private Button btOpenDocument;
@@ -154,7 +159,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					SourceDocument sd = repository.getSourceDocument(
 							(String)evt.getNewValue());
 					addSourceDocumentToTree(sd);
-					documentsContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
+					documentsContainer.sort(new Object[] {TableProperty.title.name()}, new boolean[] { true });
 				}
 				else if (evt.getNewValue() == null) { //remove
 					removeSourceDocumentFromTree(
@@ -163,7 +168,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				else { //update
 					removeSourceDocumentFromTree((SourceDocument) evt.getNewValue()); //newValue intended
 					addSourceDocumentToTree((SourceDocument) evt.getNewValue());
-					documentsContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
+					documentsContainer.sort(new Object[] {TableProperty.title.name()}, new boolean[] { true });
 				}
 			}
 		};
@@ -425,13 +430,13 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 
 		});
-		miMoreDocumentActions.addItem("Generate annotations", new Command() {
+		MenuItem generateAnnotations = miMoreDocumentActions.addItem("Generate annotations", new Command() {
 			@Override
 			public void menuSelected(MenuItem selectedItem) {
 				handleGenerateAnnotations();
 			}
 		});
-		
+		generateAnnotations.setVisible(false);//TODO: implement
 
 		btEditContentInfo.addClickListener(new ClickListener() {
 			
@@ -652,7 +657,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						
 						if (sourceDocument.equals(umcResultPair.getSecond())) {
 							
-							documentsTree.expandItemsRecursively(umcResultPair.getSecond());
+							documentsTree.setCollapsed(umcResultPair.getSecond(), false);
 							documentsTree.setValue(umcResultPair.getFirst());
 							
 							try {
@@ -959,72 +964,73 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	
 	private Component createDocumentsPanel() {
 		VerticalLayout documentsPanelContent = new VerticalLayout();
-		documentsPanelContent.setMargin(true);
+		documentsPanelContent.setSizeFull();
 		
-		Panel documentsPanel = new Panel(documentsPanelContent);
 		
 		documentsContainer = new HierarchicalContainer();
-		documentsTree = new Tree();
+		documentsContainer.setItemSorter(new ItemSorter() {
+			
+			private boolean asc;
+
+			@Override
+			public void setSortProperties(Sortable container, Object[] propertyId, boolean[] ascending) {
+				this.asc = ascending[0];
+			}
+			
+			@Override
+			public int compare(Object itemId1, Object itemId2) {
+				if (asc) {
+					return itemId1.toString().toLowerCase().compareTo(itemId2.toString().toLowerCase());
+				}
+				return itemId2.toString().toLowerCase().compareTo(itemId1.toString().toLowerCase());
+			}
+		});
+		documentsTree = new TreeTable("Documents");
 		documentsTree.setContainerDataSource(documentsContainer);
-		documentsTree.setCaption("Documents");
+		documentsTree.setSizeFull();
+		
 		documentsTree.addStyleName("bold-label-caption");
-		documentsTree.setImmediate(true);
-		documentsTree.setItemCaptionMode(ItemCaptionMode.ID);
-		documentsTree.setDragMode(TreeDragMode.NODE);
+		documentsTree.setDragMode(TableDragMode.ROW);
 		
 		documentsPanelContent.addComponent(documentsTree);
-		documentsPanel.getContent().setSizeUndefined();
-		documentsPanel.setSizeFull();
+		documentsPanelContent.setExpandRatio(documentsTree, 1.0f);
 		
-		documentsContainer.addContainerProperty(SORTCAP_PROP, String.class, null);
+		documentsTree.addContainerProperty(TableProperty.title.name(), String.class, null);
+		documentsTree.setVisibleColumns(new Object[] {TableProperty.title.name()});
+		documentsTree.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
 		
 		for (SourceDocument sd : repository.getSourceDocuments()) {
 			addSourceDocumentToTree(sd);
 		}		
 
-		documentsContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
+		documentsContainer.sort(new Object[] {TableProperty.title.name()}, new boolean[] { true });
 		
-		return documentsPanel;
+		return documentsPanelContent;
 	}
 
-
-	@SuppressWarnings("unchecked")
 	private void addSourceDocumentToTree(SourceDocument sd) {
 		
 		documentsContainer.removeAllContainerFilters();
 		
-		documentsTree.addItem(sd);
-		documentsTree.getItem(sd).getItemProperty(SORTCAP_PROP).setValue(sd.toString().toLowerCase());
-
+		documentsTree.addItem(new Object[] {sd.toString()}, sd);
 		documentsTree.setChildrenAllowed(sd, true);
 		
 		
 		MarkupCollectionItem userMarkupItem =
 				new MarkupCollectionItem(sd, userMarkupItemDisplayString, true);
 
-		documentsTree.addItem(userMarkupItem);
+		documentsTree.addItem(new Object[] {userMarkupItem.toString()}, userMarkupItem);
 		documentsTree.setParent(userMarkupItem, sd);
 	
 		for (UserMarkupCollectionReference ucr : sd.getUserMarkupCollectionRefs()) {
 			addUserMarkupCollectionReferenceToTree(ucr, userMarkupItem);
 		}
 		
-//		MarkupCollectionItem staticMarkupItem = 
-//				new MarkupCollectionItem(sd, staticMarkupItemDisplayString);
-//		documentsTree.addItem(staticMarkupItem);
-//		documentsTree.setParent(staticMarkupItem, sd);
-//		
-//		for (StaticMarkupCollectionReference smcr : sd.getStaticMarkupCollectionRefs()) {
-//			documentsTree.addItem(smcr);
-//			documentsTree.setParent(smcr, staticMarkupItem);
-//			documentsTree.setChildrenAllowed(smcr, false);
-//		}
-		
 	}
 	
 	private void addUserMarkupCollectionReferenceToTree(
 			UserMarkupCollectionReference ucr, MarkupCollectionItem userMarkupItem) {
-		documentsTree.addItem(ucr);
+		documentsTree.addItem(new Object[]{ucr.toString()}, ucr);
 		documentsTree.setParent(ucr, userMarkupItem);
 		documentsTree.setChildrenAllowed(ucr, false);
 	}
@@ -1234,7 +1240,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 		}
 		documentsTree.setValue(userMarkupCollRef);
-		documentsTree.expandItemsRecursively(sourceDocument);
+		documentsTree.setCollapsed(sourceDocument, false);
 	}
 	
 	public void valueChange(ValueChangeEvent event) {

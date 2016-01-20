@@ -112,7 +112,9 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 				
 				SourceDocumentResult sdr = (SourceDocumentResult)table.getValue();
 				
-				BeanItemContainer<String> container = new BeanItemContainer<String>(String.class, sdr.getSourceDocumentInfo().getIndexInfoSet().getUnseparableCharacterSequences());
+				BeanItemContainer<String> container = 
+						new BeanItemContainer<String>(String.class, 
+							sdr.getSourceDocumentInfo().getIndexInfoSet().getUnseparableCharacterSequences());
 				
 //				BeanItemContainer<SourceDocumentResult> container = new BeanItemContainer<SourceDocumentResult>(SourceDocumentResult.class);
 //				container.addNestedContainerProperty("sourceDocumentInfo.indexInfoSet.unseparableCharacterSequences");
@@ -352,6 +354,8 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		if (!forward) {
 			return;
 		}
+		
+		table.removeAllItems();
 		
 		Collection<SourceDocumentResult> sourceDocumentResults = wizardResult.getSourceDocumentResults();
 				

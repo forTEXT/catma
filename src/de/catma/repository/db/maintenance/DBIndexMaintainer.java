@@ -80,7 +80,7 @@ public class DBIndexMaintainer {
 		UserManager userManager = new UserManager();
 		try {
 			this.repoFolderPath = 
-				RepositoryPropertyKey.RepositoryFolderPath.getValue(1);
+				RepositoryPropertyKey.RepositoryFolderPath.getIndexedValue(1);
 			
 			userManager.lockLogin();
 			try {

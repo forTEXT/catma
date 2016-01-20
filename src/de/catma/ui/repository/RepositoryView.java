@@ -184,8 +184,6 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 				sourceDocumentPanel.setSourceDocumentsFilter((Corpus)value);
 			}		
 		});
-		
-		corpusPanel.setMargin(true);
 
 		documentsManagerPanel.addComponent(corpusPanel);
 		documentsManagerPanel.addComponent(sourceDocumentPanel);

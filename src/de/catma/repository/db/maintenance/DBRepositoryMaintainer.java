@@ -58,7 +58,7 @@ public class DBRepositoryMaintainer {
 		
 		try {
 			this.repoFolderPath = 
-				RepositoryPropertyKey.RepositoryFolderPath.getValue(1);
+				RepositoryPropertyKey.RepositoryFolderPath.getIndexedValue(1);
 			DataSource dataSource = 
 				CatmaDataSourceName.CATMADS.getDataSource();
 			
