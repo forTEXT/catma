@@ -207,11 +207,20 @@ public class TextRange implements Comparable<TextRange> {
         }
     }
 
+	public boolean isCoveredBy(TextRange textRange) {
+
+		TextRange overlappingRange = this.getOverlappingRange(textRange);
+		if (overlappingRange != null && overlappingRange.equals(this)) {
+			return true;
+		}
+		
+		return false;
+	}
+    
 	public boolean isCoveredBy(Collection<TextRange> textRanges) {
 
 		for (TextRange textRange : textRanges) {
-			TextRange overlappingRange = this.getOverlappingRange(textRange);
-			if (overlappingRange != null && overlappingRange.equals(this)) {
+			if (isCoveredBy(textRange)) {
 				return true;
 			}
 		}

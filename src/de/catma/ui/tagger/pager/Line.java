@@ -1,7 +1,6 @@
 package de.catma.ui.tagger.pager;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +9,7 @@ import java.util.TreeSet;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Table;
 
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
@@ -121,9 +121,8 @@ public class Line {
 		for (TextRange rangePart : rangeParts) {
 			System.out.println(rangePart);
 		}
-		if (rangeParts.size() == 6) {
-			System.out.println("now");
-		}
+
+
 		Element table = new Element("table");
 		table.addAttribute(new Attribute("class", "taggerline-table"));
 		
@@ -138,24 +137,27 @@ public class Line {
 				new Attribute("colspan", String.valueOf(rangeParts.size())));
 		visibleContentLayerContent.appendChild(getPresentationContent());
 		
-		for (ClientTagInstance relativeTagInstance : relativeTagInstanceByID.values()) {
-			Collection<TextRange> textRanges = 
-				textRangesByRelativeTagInstanceID.get(relativeTagInstance.getInstanceID());
+		AnnotationLayerBuilder annotationLayerBuilder = new AnnotationLayerBuilder(relativeTagInstanceByID, rangeParts);
+		Table<Integer, TextRange, ClientTagInstance> layerTable = annotationLayerBuilder.getLayerTable();
+		int rowCount = layerTable.rowKeySet().size();
+		for (int rowIdx = 0; rowIdx<rowCount; rowIdx++) {
 			Element annotationLayer = new Element("tr");
 			//TODO: add instance id
-//			annotationLayer.addAttribute(new Attribute("style", "line-height:6px"));
+
 			annotationLayer.addAttribute(new Attribute("class", "annotation-layer"));
 			annotationLayer.addAttribute(new Attribute("unselectable", "on"));
-			
 			tbody.appendChild(annotationLayer);
-			
+
 			for (TextRange rangePart : rangeParts) {
 				
 				Element annotationLayerContent = new Element("td");
 				annotationLayer.appendChild(annotationLayerContent);
 				annotationLayerContent.appendChild(Page.SOLIDSPACE);
 				
-				if (rangePart.isCoveredBy(textRanges)) {
+				ClientTagInstance relativeTagInstance = 
+						layerTable.get(rowIdx, rangePart);
+				
+				if (relativeTagInstance != null) {
 					annotationLayerContent.addAttribute(
 						new Attribute(
 								"style", 
@@ -163,8 +165,8 @@ public class Line {
 								+";foreground:#"+relativeTagInstance.getColor()));
 				}
 			}
-//			System.out.println(tbody.toXML());
 		}
+		System.out.println(tbody.toXML());
 		
 		Element segmentationLayer = new Element("tr");
 //		segmentationLayer.addAttribute(

@@ -294,7 +294,7 @@ public class CatmaApplication extends UI
 
 			setContent(mainLayout);
 
-			setPollInterval(1000);
+			setPollInterval(10000);
 			
 		} catch (Exception e) {
 			showAndLogError("The system could not be initialized!", e);

@@ -27,11 +27,14 @@ import java.util.logging.Logger;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.BlurHandler;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.FocusEvent;
 import com.google.gwt.event.dom.client.FocusHandler;
 import com.google.gwt.event.dom.client.KeyUpEvent;
@@ -55,7 +58,7 @@ import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 public class TaggerEditor extends FocusWidget 
 	implements MouseUpHandler, BlurHandler, FocusHandler, 
-		MouseDownHandler, KeyUpHandler {
+		MouseDownHandler, KeyUpHandler, ClickHandler {
 	private static Logger logger = Logger.getLogger(TaggerEditor.class.getName());
 	private static SelectionHandlerImplStandard impl = 
 			 GWT.create(SelectionHandlerImplStandard.class);
@@ -82,13 +85,14 @@ public class TaggerEditor extends FocusWidget
 		this.taggerEditorListener = taggerEditorListener;
 		
 		// Tell GWT we are interested in consuming click events
-		sinkEvents(Event.ONMOUSEUP | Event.ONMOUSEDOWN | Event.ONKEYUP);
+		sinkEvents(Event.ONMOUSEUP | Event.ONMOUSEDOWN | Event.ONKEYUP | Event.ONCLICK);
 
 		addMouseUpHandler(this);
 		addMouseDownHandler(this);
 		addKeyUpHandler(this);
 		addBlurHandler(this);
 		addFocusHandler(this);
+		addClickHandler(this);
 	}
 	
 	/**
@@ -649,6 +653,12 @@ public class TaggerEditor extends FocusWidget
 		}
 		
 		return curSibling;
+	}
+	
+	@Override
+	public void onClick(ClickEvent event) {
+		EventTarget eventTarget = event.getNativeEvent().getEventTarget();
+		logger.info("CLICK " + eventTarget);
 	}
 }
 

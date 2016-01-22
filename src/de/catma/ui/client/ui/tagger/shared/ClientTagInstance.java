@@ -20,8 +20,10 @@ package de.catma.ui.client.ui.tagger.shared;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 
 /**
@@ -142,5 +144,41 @@ public class ClientTagInstance {
 		}
 	}
 
+	public int getLongestRangeSize() {
+		int result = 0;
+		for (TextRange textRange : mergeRanges(new TreeSet<>(ranges))) {
+			if (result < textRange.size()) {
+				result = textRange.size();
+			}
+		}
+		
+		return result;
+	}
 	
+    public static List<TextRange> mergeRanges(SortedSet<TextRange> sortedRanges) {
+        List<TextRange> result = new ArrayList<TextRange>();
+
+        TextRange curRange = null;
+
+        Iterator<TextRange> rangeIterator = sortedRanges.iterator();
+
+        if (rangeIterator.hasNext()) {
+            curRange = rangeIterator.next();
+
+            while (rangeIterator.hasNext()) {
+                TextRange range = rangeIterator.next();
+
+                if (curRange.getEndPos() == range.getStartPos()) { // merge
+                    curRange = new TextRange(curRange.getStartPos(), range.getEndPos());
+                }
+                else {
+                    result.add(curRange);
+                    curRange = range;
+                }
+            }
+            result.add(curRange);
+        }
+
+        return result;
+    }
 }

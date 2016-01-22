@@ -20,7 +20,10 @@ package de.catma.ui.tagger;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.vaadin.server.WebBrowser;
 import com.vaadin.ui.AbstractComponent;
@@ -145,7 +148,7 @@ public class Tagger extends AbstractComponent {
 	}
 
 	void setTagInstancesVisible(
-			List<ClientTagInstance> tagInstances, boolean visible) {
+			Collection<ClientTagInstance> tagInstances, boolean visible) {
 		
 		
 		List<ClientTagInstance> currentRelativePageTagInstancesCopy = 
@@ -216,7 +219,7 @@ public class Tagger extends AbstractComponent {
 	}
 
 	public void setVisible(List<TagReference> tagReferences, boolean visible) {
-		List<ClientTagInstance> tagInstances = new ArrayList<ClientTagInstance>();
+		Map<String, ClientTagInstance> tagInstancesByInstanceID = new HashMap<String, ClientTagInstance>();
 		
 		for (TagReference tagReference : tagReferences) {
 			List<TextRange> textRanges = new ArrayList<TextRange>();
@@ -224,15 +227,21 @@ public class Tagger extends AbstractComponent {
 					new TextRange(
 							tagReference.getRange().getStartPoint(), 
 							tagReference.getRange().getEndPoint()));
-			
-			tagInstances.add(
-				new ClientTagInstance(
-					tagReference.getTagDefinition().getUuid(),
-					tagReference.getTagInstanceID(), 
-					ColorConverter.toHex(tagReference.getColor()), 
-					textRanges));
+			ClientTagInstance tagInstance = tagInstancesByInstanceID.get(tagReference.getTagInstanceID());
+			if (tagInstance == null) {
+				tagInstancesByInstanceID.put(
+						tagReference.getTagInstanceID(),
+						new ClientTagInstance(
+								tagReference.getTagDefinition().getUuid(),
+								tagReference.getTagInstanceID(), 
+								ColorConverter.toHex(tagReference.getColor()), 
+								textRanges));
+			}
+			else {
+				tagInstance.addRanges(textRanges);
+			}
 		}
-		setTagInstancesVisible(tagInstances, visible);
+		setTagInstancesVisible(tagInstancesByInstanceID.values(), visible);
 	}
 	
 	@Override
