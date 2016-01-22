@@ -62,6 +62,7 @@ public class TagResultsDialog extends Window {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void initComponents() {
 		VerticalLayout content = new VerticalLayout();
 		content.setSizeFull();
@@ -126,6 +127,7 @@ public class TagResultsDialog extends Window {
 			if (tagLibrary == null || tagLibrary.getId() != tagLibraryReference.getId()) {
 				try {
 					tagLibrary = repository.getTagLibrary(tagLibraryReference);
+					((CatmaApplication)UI.getCurrent()).openTagLibrary(repository, tagLibrary, false);
 					tagsetTree.setTagLibrary(tagLibrary);
 					
 				} catch (IOException e) {
