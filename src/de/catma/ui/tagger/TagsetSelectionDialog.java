@@ -10,16 +10,16 @@ import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Window.CloseEvent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.Window.CloseEvent;
 
 import de.catma.document.repository.Repository;
 import de.catma.tag.TagLibrary;
@@ -94,8 +94,9 @@ public class TagsetSelectionDialog extends VerticalLayout {
 		tagLibrariesTreeContainer.addComponent(btCreateTagLibrary);
 		
 		addComponent(tagLibrariesTreeContainer);
-		
-		tagsetTree = new TagsetTree(repository.getTagManager(), null, false, true, false, false, true, null);
+
+		tagsetTree = new TagsetTree(
+			repository.getTagManager(), null, false, true, false, false, true, null);
 		addComponent(tagsetTree);
 		
 		setMargin(true);
@@ -166,6 +167,7 @@ public class TagsetSelectionDialog extends VerticalLayout {
 			@Override
 			public void windowClose(CloseEvent e) {
 				removeListeners();
+				tagsetTree.close(false);
 			}
 		});
 	}
@@ -183,6 +185,8 @@ public class TagsetSelectionDialog extends VerticalLayout {
 		if (tagLibrary == null || tagLibrary.getId() != tagLibraryReference.getId()) {
 			try {
 				tagLibrary = repository.getTagLibrary(tagLibraryReference);
+
+				((CatmaApplication)UI.getCurrent()).openTagLibrary(repository, tagLibrary, false);
 				tagsetTree.setTagLibrary(tagLibrary);
 				
 			} catch (IOException e) {

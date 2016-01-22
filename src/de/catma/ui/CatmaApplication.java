@@ -157,7 +157,7 @@ public class CatmaApplication extends UI
 		
 		handleParameters(request.getParameterMap());
 		
-		Page.getCurrent().setTitle("CATMA 5.0 " + MINORVERSION);
+		Page.getCurrent().setTitle("CATMA 5.0 PREVIEW " + MINORVERSION);
 		
 		mainLayout = new VerticalLayout();
 		mainLayout.setSizeFull();
@@ -258,6 +258,7 @@ public class CatmaApplication extends UI
 			helpLink.setTargetName("_blank");
 			menuLayout.addComponent(helpLink);
 			menuLayout.setComponentAlignment(helpLink, Alignment.TOP_RIGHT);
+			helpLink.setVisible(false);
 			
 			btHelp = new Button("");
 			btHelp.addStyleName("icon-button"); // for top-margin
@@ -370,7 +371,12 @@ public class CatmaApplication extends UI
 	}
 	 
 	public void openTagLibrary(Repository repository, TagLibrary tagLibrary) {
-		menu.executeEntry(tagManagerView);
+		openTagLibrary(repository, tagLibrary, true);
+	}
+	public void openTagLibrary(Repository repository, TagLibrary tagLibrary, boolean switchToTagManagerView) {
+		if (switchToTagManagerView) {
+			menu.executeEntry(tagManagerView);
+		}
 		tagManagerView.openTagLibrary(repository, tagLibrary);
 	}
 

@@ -139,15 +139,14 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private IndexInfoSet indexInfoSet;
 	private Component resultPanel;
 	private ProgressBar searchProgress;
-	private TagResultsDialog tagResultsDialog;
 	
 	private Object lastTagResultsDialogTagLibrarySelection;
 	private Object lastTagResultsDialogTagsetSelection;
 	private Float lastTagResultsDialogHeight = null;
 	private Float lastTagResultsDialogWidth = null;
 
-	AnalyzerHelpWindow analyzerHelpWindow = new AnalyzerHelpWindow();
-	private PropertyChangeListener tagLibraryChangedListener;
+	private AnalyzerHelpWindow analyzerHelpWindow = new AnalyzerHelpWindow();
+	
 	protected Unit lastTagResultsDialogUnit;
 	
 	public AnalyzerView(
@@ -275,20 +274,6 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				Repository.RepositoryChangeEvent.corpusChanged,
 				corpusChangedListener);
 		
-		tagLibraryChangedListener = new PropertyChangeListener() {
-			
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				if (tagResultsDialog != null) {
-					lastTagResultsDialogTagLibrarySelection = tagResultsDialog.getCurrenTagLibraryTreeSelection();
-					lastTagResultsDialogTagsetSelection = tagResultsDialog.getCurrentTagsetTreeSelection();
-				}
-				tagResultsDialog = null; // reload this dialog upon next request
-			}
-		};
-		
-		this.repository.addPropertyChangeListener(
-			RepositoryChangeEvent.tagLibraryChanged, tagLibraryChangedListener);
 	}
 
 	private void addUserMarkupCollection(
@@ -724,8 +709,6 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		
 		this.repository.removePropertyChangeListener(
 				RepositoryChangeEvent.corpusChanged, corpusChangedListener);
-		this.repository.removePropertyChangeListener(
-				RepositoryChangeEvent.tagLibraryChanged, tagLibraryChangedListener);
 		
 		closeListener = null;
 	}
@@ -748,29 +731,30 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	
 	@Override
 	public void tagResults() {
-		if (tagResultsDialog == null || !tagResultsDialog.isAttached()) {
-			tagResultsDialog = new TagResultsDialog(
-				repository, lastTagResultsDialogTagLibrarySelection, lastTagResultsDialogTagsetSelection);
-			tagResultsDialog.addCloseListener(new com.vaadin.ui.Window.CloseListener() {
-				
-				@Override
-				public void windowClose(CloseEvent e) {
-					lastTagResultsDialogTagLibrarySelection = tagResultsDialog.getCurrenTagLibraryTreeSelection();
-					lastTagResultsDialogTagsetSelection = tagResultsDialog.getCurrentTagsetTreeSelection();
-				}
-			});
+		final TagResultsDialog tagResultsDialog = new TagResultsDialog(
+			repository, lastTagResultsDialogTagLibrarySelection, lastTagResultsDialogTagsetSelection);
+		tagResultsDialog.addCloseListener(new com.vaadin.ui.Window.CloseListener() {
 			
-			tagResultsDialog.addResizeListener(new ResizeListener() {
-				
-				@Override
-				public void windowResized(ResizeEvent e) {
-					lastTagResultsDialogHeight = tagResultsDialog.getHeight();
-					lastTagResultsDialogWidth = tagResultsDialog.getWidth();
-					lastTagResultsDialogUnit = tagResultsDialog.getHeightUnits();
-				}
-				
-			});
-			tagResultsDialog.show(lastTagResultsDialogHeight, lastTagResultsDialogWidth, lastTagResultsDialogUnit);
-		}
+			@Override
+			public void windowClose(CloseEvent e) {
+				lastTagResultsDialogTagLibrarySelection = tagResultsDialog.getCurrenTagLibraryTreeSelection();
+				lastTagResultsDialogTagsetSelection = tagResultsDialog.getCurrentTagsetTreeSelection();
+				lastTagResultsDialogTagLibrarySelection = tagResultsDialog.getCurrenTagLibraryTreeSelection();
+				lastTagResultsDialogTagsetSelection = tagResultsDialog.getCurrentTagsetTreeSelection();
+			}
+		});
+		
+		tagResultsDialog.addResizeListener(new ResizeListener() {
+			
+			@Override
+			public void windowResized(ResizeEvent e) {
+				lastTagResultsDialogHeight = tagResultsDialog.getHeight();
+				lastTagResultsDialogWidth = tagResultsDialog.getWidth();
+				lastTagResultsDialogUnit = tagResultsDialog.getHeightUnits();
+			}
+			
+		});
+
+		tagResultsDialog.show(lastTagResultsDialogHeight, lastTagResultsDialogWidth, lastTagResultsDialogUnit);
 	}
 }

@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.vaadin.ui.AbstractComponent;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.computation.Distribution;
@@ -44,7 +46,12 @@ public class Chart extends AbstractComponent {
 	
 	private void fireResultRowSelected(String key, int x, int y) {
 		List<QueryResultRow> rows = distribution.getQueryResultRows(key, x);
-		distributionSelectionListener.queryResultRowsSelected(distribution.getLabel(), rows, x, y);
+		if (rows == null) {
+			Notification.show("Info", "There are no occurrences for this slot.", Type.TRAY_NOTIFICATION);
+		}
+		else {
+			distributionSelectionListener.queryResultRowsSelected(distribution.getLabel(), rows, x, y);
+		}
 	}
 
 	@Override
