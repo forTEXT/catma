@@ -47,6 +47,7 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.document.repository.Repository;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
@@ -1029,11 +1030,11 @@ public class TagsetTree extends HorizontalLayout {
 	
 	}
 
-	public void close() {
+	public void close(boolean closeLibrary) {
 		tagManager.removePropertyChangeListener(
 				TagManagerEvent.tagsetDefinitionChanged,
 				tagsetDefinitionChangedListener);
-		if (withTagsetButtons) {
+		if (closeLibrary) {
 			tagManager.removeTagLibrary(tagLibrary);
 		}
 		tagManager.removePropertyChangeListener(

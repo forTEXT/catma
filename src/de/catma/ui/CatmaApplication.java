@@ -371,7 +371,12 @@ public class CatmaApplication extends UI
 	}
 	 
 	public void openTagLibrary(Repository repository, TagLibrary tagLibrary) {
-		menu.executeEntry(tagManagerView);
+		openTagLibrary(repository, tagLibrary, true);
+	}
+	public void openTagLibrary(Repository repository, TagLibrary tagLibrary, boolean switchToTagManagerView) {
+		if (switchToTagManagerView) {
+			menu.executeEntry(tagManagerView);
+		}
 		tagManagerView.openTagLibrary(repository, tagLibrary);
 	}
 

@@ -5,7 +5,6 @@ import java.io.IOException;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
-import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalSplitPanel;
@@ -34,17 +33,12 @@ public class TagResultsDialog extends Window {
 	private Tree tagLibraryTree;
 	private TagsetTree tagsetTree;
 
-	private Object lastTagResultsDialogTagLibrarySelection;
-	private Object lastTagResultsDialogTagsetSelection;
-
 	public TagResultsDialog(Repository repository, 
 			Object lastTagResultsDialogTagLibrarySelection,
 			Object lastTagResultsDialogTagsetSelection) {
 		super("Tags");
 		
 		this.repository = repository;
-		this.lastTagResultsDialogTagLibrarySelection = lastTagResultsDialogTagLibrarySelection;
-		this.lastTagResultsDialogTagsetSelection = lastTagResultsDialogTagsetSelection;
 		initComponents();
 		initListeners();
 		
@@ -115,7 +109,8 @@ public class TagResultsDialog extends Window {
 		tagLibraryPanel.addComponent(tagLibraryTree);
 		
 
-		tagsetTree = new TagsetTree(repository.getTagManager(), null, false, false, false, false, false, null);
+		tagsetTree = new TagsetTree(
+				repository.getTagManager(), null, false, false, false, false, false, null);
 		tagsetTree.getTagTree().setDragMode(TableDragMode.ROW);
 		
 		tagLibraryPanel.addComponent(tagsetTree);

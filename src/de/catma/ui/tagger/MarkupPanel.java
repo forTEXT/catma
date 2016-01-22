@@ -257,7 +257,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			PropertyChangeListener tagDefinitionSelectionListener, 
 			PropertyChangeListener tagDefinitionsRemovedListener, 
 			final String sourceDocumentId) {
-		
+		setHeight("98%"); //necessary to prevent that the markuppanel flows out of the TaggerView
 		tabSheet = new TabSheet();
 		tabSheet.setSizeFull();
 		VerticalLayout tabContent = new VerticalLayout();
@@ -287,7 +287,8 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		
 		tagsetTree = 
 			new TagsetTree(
-				repository.getTagManager(), null, false, false, true, true, false, colorButtonListener); 
+				repository.getTagManager(), 
+				null, false, false, true, true, false, colorButtonListener); 
 		
 		tabContent.addComponent(tagsetTree);
 		tabContent.setExpandRatio(tagsetTree, 1.0f);
@@ -389,6 +390,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		markupInfoPanel.addComponent(writableMarkupCollPanel);
 		
 		Label writableUserMarkupCollectionLabel = new Label("Writable Markup Collection:");
+		
 		writableUserMarkupCollectionLabel.addStyleName("bold-label-caption");
 		writableUserMarkupCollectionLabel.addStyleName("catma-label-spacing");
 		writableMarkupCollPanel.addComponent(writableUserMarkupCollectionLabel);
@@ -482,7 +484,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			RepositoryChangeEvent.propertyValueChanged, 
 			propertyValueChangeListener);
 		
-		tagsetTree.close();
+		tagsetTree.close(false);
 	}
 	
 	public TagDefinition getTagDefinition(String tagDefinitionID) {
