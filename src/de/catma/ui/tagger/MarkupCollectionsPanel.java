@@ -622,6 +622,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 	
 	private void initComponents() {
+		setMargin(new MarginInfo(false, true, true, false));
 		HorizontalLayout buttonHeaderPanel = new HorizontalLayout();
 		buttonHeaderPanel.setWidth("100%");
 		buttonHeaderPanel.setMargin(new MarginInfo(true, false, true, false));

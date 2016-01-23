@@ -89,7 +89,7 @@ public class Line {
 				relativeTagInstance.getInstanceID(), relativeTagInstance);
 	}
 	
-	public Element toHTML() {
+	public Element toHTML(TagInstanceTextRangeIdHandler tagInstanceTextRangeIdHandler) {
 		
 		List<TextRange> rangeParts = new ArrayList<>();
 		
@@ -142,8 +142,7 @@ public class Line {
 		int rowCount = layerTable.rowKeySet().size();
 		for (int rowIdx = 0; rowIdx<rowCount; rowIdx++) {
 			Element annotationLayer = new Element("tr");
-			//TODO: add instance id
-
+			
 			annotationLayer.addAttribute(new Attribute("class", "annotation-layer"));
 			annotationLayer.addAttribute(new Attribute("unselectable", "on"));
 			tbody.appendChild(annotationLayer);
@@ -160,6 +159,13 @@ public class Line {
 				if (relativeTagInstance != null) {
 					annotationLayerContent.addAttribute(
 						new Attribute(
+							"id", 
+							relativeTagInstance.getInstanceID() 
+								+ "_" 
+								+ tagInstanceTextRangeIdHandler.getTextRangeIncrement(
+										relativeTagInstance.getInstanceID())));
+					annotationLayerContent.addAttribute(
+						new Attribute(
 								"style", 
 								"background:#"+relativeTagInstance.getColor()
 								+";foreground:#"+relativeTagInstance.getColor()));
@@ -169,8 +175,7 @@ public class Line {
 		System.out.println(tbody.toXML());
 		
 		Element segmentationLayer = new Element("tr");
-//		segmentationLayer.addAttribute(
-//			new Attribute("style", "line-height:12px;background:#FFFFFF;color:#FFFFFF"));
+
 		segmentationLayer.addAttribute(new Attribute("class", "segmentation-layer"));
 		segmentationLayer.addAttribute(new Attribute("unselectable", "on"));
 		tbody.appendChild(segmentationLayer);

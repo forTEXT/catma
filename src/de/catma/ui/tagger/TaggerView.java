@@ -257,7 +257,7 @@ public class TaggerView extends VerticalLayout
 		setSizeFull();
 		
 		VerticalLayout taggerPanel = new VerticalLayout();
-		
+		taggerPanel.setSizeFull();
 		taggerPanel.setSpacing(true);
 
 		btHelp = new Button("");
@@ -276,7 +276,8 @@ public class TaggerView extends VerticalLayout
 		tagger.setWidth("100%");
 		
 		taggerPanel.addComponent(tagger);
-	
+		taggerPanel.setExpandRatio(tagger, 1.0f);
+		
 		HorizontalLayout actionPanel = new HorizontalLayout();
 		actionPanel.setSpacing(true);
 		

@@ -88,6 +88,7 @@ public class Page {
 		this.approxMaxLineLength = approxMaxLineLength;
 		this.text = text;
 		this.rightToLeftLanguage = rightToLeftLanguage;
+		buildLines();
 	}
 	
 	@Override
@@ -242,14 +243,6 @@ public class Page {
     }
 	
 	public String toHTML() {
-//		if (htmlDocModel == null) {
-//			buildModel();
-//		}
-//		return htmlDocModel.toXML().substring(22).replaceAll("\\Q&amp;_nbsp;\\E", "&nbsp;");
-		if (lines == null) {
-			buildLines();
-		}
-			
 		Element rootDiv = new Element(HTMLElement.div.name());
 		if (rightToLeftLanguage) {
 			rootDiv.addAttribute(new Attribute(HTMLAttribute.dir.name(), HTMLAttributeValue.rtl.name()));
@@ -259,9 +252,10 @@ public class Page {
 				new Attribute(
 					HTMLAttribute.id.name(), 
 					ContentElementID.CONTENT.name()+String.valueOf(taggerID)));
-
+		
+		TagInstanceTextRangeIdHandler tagInstanceTextRangeIdHandler = new TagInstanceTextRangeIdHandler(); 
 		for (Line line : lines) {
-			rootDiv.appendChild(line.toHTML());
+			rootDiv.appendChild(line.toHTML(tagInstanceTextRangeIdHandler));
 		}
 		
 		return rootDiv.toXML().replaceAll("\\Q&amp;_nbsp;\\E", "&nbsp;");
@@ -297,11 +291,6 @@ public class Page {
 	}
 	
 	private void addRelativeTagInstanceToLine(ClientTagInstance relativeTagInstance) {
-		if (lines == null) {
-			buildLines();
-		}
-
-		
 		for (TextRange tr : relativeTagInstance.getRanges()) {
 			for (Line line : lines) {
 				if (line.containsTextRange(tr)) {
@@ -319,10 +308,6 @@ public class Page {
 	}
 	
 	private void removeRelativeTagInstanceFromLine(String tagInstanceID) {
-		if (lines == null) {
-			buildLines();
-		}
-
 		for (Line line : lines) {
 			line.removeRelativeTagInstance(tagInstanceID);
 		}
@@ -364,10 +349,6 @@ public class Page {
 	}
 
 	public void clearRelativeTagInstances() {
-		if (lines == null) {
-			buildLines();
-		}
-
 		relativeTagInstances.clear();
 		for (Line line : lines) {
 			line.clearRelativeTagInstanes();
@@ -406,14 +387,6 @@ public class Page {
 	}
 	
 	public int getLineCount() {
-//		if (htmlDocModel == null) {
-//			buildModel();
-//		}
-//		return lineCount;
-		
-		if (lines == null) {
-			buildLines();
-		}
 		return lineCount;
 	}
 	
