@@ -35,6 +35,7 @@ public class ClientTagInstance {
 	public static enum SerializationField {
 		tagDefinitionID,
 		instanceID,
+		lineID,
 		color,
 		ranges,
 		startPos,
@@ -180,5 +181,9 @@ public class ClientTagInstance {
         }
 
         return result;
+    }
+    
+    public static String getTagInstanceIDFromPartId(String tagInstancePartID) {
+    	return tagInstancePartID.substring(0, tagInstancePartID.indexOf("."));
     }
 }

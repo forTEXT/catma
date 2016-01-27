@@ -95,10 +95,8 @@ public class SelectionHandlerImplStandard {
 		int rangeCount = getRangeCount();
 		for (int i=0; i<rangeCount; i++) {
 			JavaScriptObject jsRange = getRangeAt(i);
-			logger.info("jsRange: " + jsRange.toString());
 			if (jsRange != null) { 
 				Range range = new Range(this,jsRange);
-				logger.info(range.toDetailedString());
 				result.add(range);
 			}
 		}

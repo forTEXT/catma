@@ -447,4 +447,21 @@ public class TagInstanceTree extends HorizontalLayout {
 				}, propertyValuesBin);
 		dialog.show();
 	}
+
+	public void setValue(String tagInstanceID) {
+		TagInstance tagInstance = getTagInstanceByID(tagInstanceID);
+		tagInstanceTree.setValue(Collections.singleton(tagInstance));
+	}
+
+	private TagInstance getTagInstanceByID(String tagInstanceID) {
+		for (Object itemId : tagInstanceTree.getItemIds()) {
+			if (tagInstanceTree.getParent(itemId)==null) {
+				TagInstance ti = (TagInstance)itemId;
+				if (ti.getUuid().equals(tagInstanceID)) {
+					return ti;
+				}
+			}
+		}
+		return null;
+	}
 }

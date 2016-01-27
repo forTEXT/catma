@@ -25,8 +25,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -396,5 +399,16 @@ public class Page {
 	
 	public int getPageStart() {
 		return pageStart;
+	}
+
+	public List<String> getTagInstanceIDs(String instancePartID, String lineID) {
+		try {
+			return lines.get(Integer.valueOf(lineID)).getTagInstanceIDs(instancePartID);
+		}
+		catch (NumberFormatException | ArrayIndexOutOfBoundsException e ) {
+			Logger.getLogger(Page.class.getName()).log(
+				Level.SEVERE, "No such lineID: " + lineID + " with tagInstanceID: " + instancePartID , e);
+		}
+		return Collections.emptyList();
 	}
 }

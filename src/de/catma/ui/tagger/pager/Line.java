@@ -1,6 +1,7 @@
 package de.catma.ui.tagger.pager;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -125,11 +126,13 @@ public class Line {
 
 		Element table = new Element("table");
 		table.addAttribute(new Attribute("class", "taggerline-table"));
+		table.addAttribute(new Attribute("id", String.valueOf(lineId)));
 		
 		Element tbody = new Element("tbody");
 		table.appendChild(tbody);
 		
 		Element visibleContentLayer = new Element("tr");
+		
 		tbody.appendChild(visibleContentLayer);
 		Element visibleContentLayerContent = new Element("td");
 		visibleContentLayer.appendChild(visibleContentLayerContent);
@@ -161,9 +164,13 @@ public class Line {
 						new Attribute(
 							"id", 
 							relativeTagInstance.getInstanceID() 
-								+ "_" 
+								+ "." 
 								+ tagInstanceTextRangeIdHandler.getTextRangeIncrement(
-										relativeTagInstance.getInstanceID())));
+										relativeTagInstance.getInstanceID())
+								+ "."
+								+ rangePart.getStartPos()
+								+ "."
+								+ rangePart.getEndPos()));
 					annotationLayerContent.addAttribute(
 						new Attribute(
 								"style", 
@@ -211,6 +218,25 @@ public class Line {
 	public void clearRelativeTagInstanes() {
 		relativeTagInstanceByID.clear();
 		textRangesByRelativeTagInstanceID.clear();
+	}
+
+	public List<String> getTagInstanceIDs(String instancePartID) {
+		String[] parts = instancePartID.split("\\.");
+		
+		Integer startPos = Integer.valueOf(parts[2]);
+		Integer endPos = Integer.valueOf(parts[3]);
+		TextRange range = new TextRange(startPos, endPos);
+		
+		ArrayList<String> result = new ArrayList<String>();
+		
+		for (Map.Entry<String, Collection<TextRange>> entry : textRangesByRelativeTagInstanceID.asMap().entrySet()) {
+			
+			if (range.isCoveredBy(entry.getValue())) {
+				result.add(entry.getKey());
+			}
+		}
+		
+		return result;
 	}
 	
 }

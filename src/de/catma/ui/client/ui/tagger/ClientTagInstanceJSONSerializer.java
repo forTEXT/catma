@@ -109,18 +109,35 @@ public class ClientTagInstanceJSONSerializer extends JSONSerializer {
 		
 		return tagInstanceJSON.toString();
 	}
+//	
+//	public String toJSONArray(String tagInstanceIDs) {
+//		int i=0;
+//		JSONArray result = new JSONArray();
+//		for (String tagInstanceID : tagInstanceIDs) {
+//			JSONObject instanceJSON = new JSONObject();
+//			instanceJSON.put(
+//				SerializationField.instanceID.name(), 
+//				new JSONString(tagInstanceID));
+//			result.set(i, instanceJSON);
+//			i++;
+//		}
+//		
+//		return result.toString();
+//	}
 	
-	public String toJSONArray(List<String> tagInstanceIDs) {
-		int i=0;
+	public String toJSONArray(String tagInstanceID, String lineID) {
+		
 		JSONArray result = new JSONArray();
-		for (String tagInstanceID : tagInstanceIDs) {
-			JSONObject instanceJSON = new JSONObject();
-			instanceJSON.put(
-				SerializationField.instanceID.name(), 
-				new JSONString(tagInstanceID));
-			result.set(i, instanceJSON);
-			i++;
-		}
+		JSONObject instanceJSON = new JSONObject();
+		instanceJSON.put(
+			SerializationField.instanceID.name(), 
+			new JSONString(tagInstanceID));
+		result.set(0, instanceJSON);
+			
+		instanceJSON.put(
+			SerializationField.lineID.name(), 
+			new JSONString(lineID));
+		result.set(1, instanceJSON);
 		
 		return result.toString();
 	}

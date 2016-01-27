@@ -21,8 +21,8 @@ public class TaggerConnector extends AbstractComponentConnector {
 			}
 			
 			@Override
-			public void setPage(String page) {
-				getWidget().setPage(page);
+			public void setPage(String page, String tagInstancesJson) {
+				getWidget().setPage(page, tagInstancesJson);
 			}
 			
 			@Override
@@ -61,8 +61,8 @@ public class TaggerConnector extends AbstractComponentConnector {
 				rpc.tagInstanceAdded(tagIntanceJson);
 			}
 			@Override
-			public void tagInstancesSelected(String instanceIDsJson) {
-				rpc.tagInstancesSelected(instanceIDsJson);
+			public void tagInstanceSelected(String instanceIDsJson) {
+				rpc.tagInstanceSelected(instanceIDsJson);
 			}
 			
 			@Override

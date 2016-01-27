@@ -5,5 +5,5 @@ import com.vaadin.shared.communication.ServerRpc;
 public interface TaggerServerRpc extends ServerRpc {
 	public void tagInstanceAdded(String tagInstanceJson);
 	public void log(String msg);
-	public void tagInstancesSelected(String instanceIDsJson);
+	public void tagInstanceSelected(String instanceIDsJson);
 }

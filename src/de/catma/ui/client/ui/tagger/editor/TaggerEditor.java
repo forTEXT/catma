@@ -19,7 +19,6 @@
 package de.catma.ui.client.ui.tagger.editor;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
@@ -76,12 +75,11 @@ public class TaggerEditor extends FocusWidget
 	private int lastClientX;
 	private int lastClientY;
 
-	private List<String> lastTagInstanceIDs;
+	private String lastTagInstancePartID = null;
 	
 	public TaggerEditor(TaggerEditorListener taggerEditorListener) {
 		super(Document.get().createDivElement());
 		
-		this.lastTagInstanceIDs = Collections.emptyList();
 		this.taggerEditorListener = taggerEditorListener;
 		
 		// Tell GWT we are interested in consuming click events
@@ -118,7 +116,7 @@ public class TaggerEditor extends FocusWidget
 			taggedSpan = Document.get().getElementById(tagInstanceID + "_" + currentPartID++);
 		}
 		tagInstances.remove(tagInstanceID);
-		lastTagInstanceIDs.remove(tagInstanceID);
+		lastTagInstancePartID = null;
 		
 		taggerEditorListener.tagChanged(
 				TaggerEditorEventType.REMOVE, tagInstanceID, reportToServer);
@@ -486,7 +484,7 @@ public class TaggerEditor extends FocusWidget
 	}
 	
 	public String getTagInstanceID(String tagInstancePartID) {
-		return tagInstancePartID.substring(0, tagInstancePartID.lastIndexOf("_"));
+		return ClientTagInstance.getTagInstanceIDFromPartId(tagInstancePartID);
 	}
 
 	public void clearTagInstances() {
@@ -497,20 +495,22 @@ public class TaggerEditor extends FocusWidget
 		}		
 	}
 
-	public void addTagInstance(ClientTagInstance tagInstance) {
+	public void addTagInstance(ClientTagInstance tagInstance, boolean addToAnnotationLayers) {
 		
 		if (!tagInstances.containsKey(tagInstance.getInstanceID())) {
 			
 			tagInstances.put(tagInstance.getInstanceID(), tagInstance);
 	
-			RangeConverter rangeConverter = new RangeConverter(taggerID);
-	
-			TaggedSpanFactory taggedSpanFactory = 
-					new TaggedSpanFactory(
-							tagInstance.getInstanceID(), tagInstance.getColor());
-			for (TextRange textRange : tagInstance.getRanges()) {
-				addTagInstanceForRange(
-					taggedSpanFactory, rangeConverter.convertToNodeRange(textRange));
+			if (addToAnnotationLayers) {
+				RangeConverter rangeConverter = new RangeConverter(taggerID);
+		
+				TaggedSpanFactory taggedSpanFactory = 
+						new TaggedSpanFactory(
+								tagInstance.getInstanceID(), tagInstance.getColor());
+				for (TextRange textRange : tagInstance.getRanges()) {
+					addTagInstanceForRange(
+						taggedSpanFactory, rangeConverter.convertToNodeRange(textRange));
+				}
 			}
 			logger.info("TAGINSTANCES size: " + tagInstances.size());
 		}
@@ -584,32 +584,66 @@ public class TaggerEditor extends FocusWidget
 		lastClientX = event.getClientX();
 		lastClientY = event.getClientY();
 		logger.info("mouse down at: " + lastClientX + "," + lastClientY);
-		fireTagsSelected();
 	}
 	
-	private void fireTagsSelected() {
-		Element line = findClosestLine();
-		if (line != null) {
-			logger.info("fireTagsSelected: line found: " + line);
+
+	private void fireTagsSelected(Element targetElement) {
+
+		if (targetElement.getParentElement().hasClassName("annotation-layer")) {
+			String tagInstancePartID = targetElement.getAttribute("id");
+			if (tagInstancePartID.isEmpty() && (lastTagInstancePartID == null)) {
+				return; // no annotation present and 
+			}
+			String tagInstanceID = getTagInstanceID(tagInstancePartID);
+			String lineID = getLineID(targetElement);
+			Element rootElement = Element.as(getRootNode());
 			
-			List<Element> taggedSpans = findTargetSpan(line);
-			List<String> tagInstanceIDs = new ArrayList<String>(); 
-			
-			for (Element span : taggedSpans) {
-				String tagInstanceID = getTagInstanceID(span.getAttribute("id"));
-				logger.info("fireTagsSelected: testing tagInstanceID " + tagInstanceID);
-				if (tagInstances.containsKey(tagInstanceID)) {
-					logger.info("fireTagsSelected: valid tagInstanceID found " + tagInstanceID);
-					tagInstanceIDs.add(0, tagInstanceID);
+			NodeList<Element> tagPartElements = rootElement.getElementsByTagName("td");
+
+			for (int index = 0; index<=tagPartElements.getLength(); index++) {
+				Element tagPartElement = tagPartElements.getItem(index);
+				if (tagPartElement != null) {
+					if (!tagInstanceID.isEmpty()
+						&& tagPartElement.hasAttribute("id") 
+						&& tagPartElement.getAttribute("id").startsWith(tagInstanceID)) {
+						tagPartElement.addClassName("selected-tag-instance");
+					}
+					else {
+						tagPartElement.removeClassName("selected-tag-instance");
+					}}
+			}
+			if (!tagInstanceID.isEmpty()) {
+				if ((lastTagInstancePartID == null) 
+						|| ( ! lastTagInstancePartID.equals(tagInstancePartID))) {
+					if (isKnownTagInstanceID(tagInstanceID)) {
+						this.lastTagInstancePartID = tagInstancePartID;
+						logger.info("fireTagsSelected: notifying listeners");
+						taggerEditorListener.tagSelected(tagInstancePartID, lineID);
+					}
 				}
 			}
-			
-			if (!tagInstanceIDs.equals(lastTagInstanceIDs)) {
-				lastTagInstanceIDs = tagInstanceIDs;
-				logger.info("fireTagsSelected: notifying listeners");
-				taggerEditorListener.tagsSelected(tagInstanceIDs);
+			else {
+				lastTagInstancePartID = null;
 			}
 		}
+	}
+	
+	private String getLineID(Element targetElement) {
+		
+		Element annotationLayer = targetElement.getParentElement();
+		Element lineElement = annotationLayer.getParentElement().getParentElement();
+		
+		return lineElement.getAttribute("id");
+	}
+
+	private boolean isKnownTagInstanceID(String tagInstanceID) {
+		logger.info("fireTagsSelected: testing tagInstanceID " + tagInstanceID);
+		if (tagInstances.containsKey(tagInstanceID)) {
+			logger.info("fireTagsSelected: known tagInstanceID found " + tagInstanceID);
+			return true;
+		}
+		
+		return false;
 	}
 
 	private List<Element> findTargetSpan(Element line) {
@@ -658,7 +692,10 @@ public class TaggerEditor extends FocusWidget
 	@Override
 	public void onClick(ClickEvent event) {
 		EventTarget eventTarget = event.getNativeEvent().getEventTarget();
-		logger.info("CLICK " + eventTarget);
+		if (Element.is(eventTarget)) {
+			Element targetElement = Element.as(eventTarget);
+			fireTagsSelected(targetElement);
+		}
 	}
 }
 

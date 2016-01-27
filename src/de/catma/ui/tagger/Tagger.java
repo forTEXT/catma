@@ -40,6 +40,7 @@ import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
 import de.catma.util.ColorConverter;
+import de.catma.util.Pair;
 
 
 /**
@@ -50,7 +51,7 @@ public class Tagger extends AbstractComponent {
 	
 	public static interface TaggerListener {
 		public void tagInstanceAdded(ClientTagInstance clientTagInstance);
-		public void tagInstancesSelected(List<String> instanceIDs);
+		public void tagInstanceSelected(String instancePartID, String lineID);
 	}
 	
 	private static final long serialVersionUID = 1L;
@@ -58,12 +59,12 @@ public class Tagger extends AbstractComponent {
 	private TaggerServerRpc rpc = new TaggerServerRpc() {
 		
 		@Override
-		public void tagInstancesSelected(String instanceIDsJson) {
+		public void tagInstanceSelected(String instanceIDJson) {
 			try {
-				List<String> instanceIDs =
-					tagInstanceJSONSerializer.fromInstanceIDJSONArray(instanceIDsJson);
+				Pair<String,String> instancePartIDLineID =
+					tagInstanceJSONSerializer.fromInstanceIDJSONArray(instanceIDJson);
 				
-				taggerListener.tagInstancesSelected(instanceIDs);
+				taggerListener.tagInstanceSelected(instancePartIDLineID.getFirst(), instancePartIDLineID.getSecond());
 				
 			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -117,11 +118,14 @@ public class Tagger extends AbstractComponent {
 		}
 	}
 
-	private void setPage(String pageContent) {
+	private void setPage(String pageContent, Collection<ClientTagInstance> tagInstances) {
 		System.out.println(pageContent);
 		getRpcProxy(TaggerClientRpc.class).setTaggerId(this.taggerID);
-		getRpcProxy(TaggerClientRpc.class).setPage(pageContent);
 		try {
+			getRpcProxy(TaggerClientRpc.class).setPage(
+					pageContent, 
+					tagInstanceJSONSerializer.toJSON(tagInstances));
+			
 //			getRpcProxy(TaggerClientRpc.class).addTagInstances(
 //					tagInstanceJSONSerializer.toJSON(
 //							pager.getCurrentPage().getRelativeTagInstances()));
@@ -139,12 +143,12 @@ public class Tagger extends AbstractComponent {
 	
 	public void setText(String text) {
 		pager.setText(text);
-		setPage(pager.getCurrentPage().toHTML());
+		setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getRelativeTagInstances());
 	}
 	
 	public void setPage(int pageNumber) {
 		Page page = pager.getPage(pageNumber);
-		setPage(page.toHTML());
+		setPage(page.toHTML(), page.getRelativeTagInstances());
 	}
 
 	void setTagInstancesVisible(
@@ -172,7 +176,8 @@ public class Tagger extends AbstractComponent {
 				}
 			}	
 		}
-		setPage(pager.getCurrentPage().toHTML());
+		setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getRelativeTagInstances());
+		
 //		// we send only the TagInstances of the current page
 //		if (visible) {
 //			currentRelativePageTagInstancesCopy.clear();
@@ -254,7 +259,9 @@ public class Tagger extends AbstractComponent {
 			init = false;
 		}
 		else {
-			setPage(pager.getCurrentPage().toHTML());
+			setPage(
+				pager.getCurrentPage().toHTML(),
+				pager.getCurrentPage().getRelativeTagInstances());
 		}
 	}
 

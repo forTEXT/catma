@@ -525,8 +525,10 @@ public class TaggerView extends VerticalLayout
 		}
 	}
 	
-	public void tagInstancesSelected(List<String> instanceIDs) {
-		markupPanel.showTagInstanceInfo(instanceIDs);
+	public void tagInstanceSelected(String instancePartID, String lineID) {
+		markupPanel.showTagInstanceInfo(
+			pager.getCurrentPage().getTagInstanceIDs(instancePartID, lineID), 
+			ClientTagInstance.getTagInstanceIDFromPartId(instancePartID));
 	}
 	
 	public void addClickshortCuts() { /* noop*/	}

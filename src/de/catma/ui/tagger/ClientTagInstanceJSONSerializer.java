@@ -32,22 +32,42 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance.SerializationField;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
+import de.catma.util.Pair;
 
 public class ClientTagInstanceJSONSerializer {
 	
-	public List<String> fromInstanceIDJSONArray(String jsonArray) throws IOException {
+//	public List<String> fromInstanceIDJSONArray(String jsonArray) throws IOException {
+//		List<String> result = new ArrayList<String>();
+//		ObjectMapper mapper = new ObjectMapper();
+//		ArrayNode instanceIDArray = mapper.readValue(jsonArray, ArrayNode.class);
+//		
+//		for (int i=0; i<instanceIDArray.size(); i++) {
+//			JsonNode instanceIDJSON = instanceIDArray.get(i);
+//			result.add(
+//				instanceIDJSON.get(
+//						SerializationField.instanceID.name()).asText());
+//		}
+//		
+//		return result;
+//	}
+	
+	public Pair<String, String> fromInstanceIDJSONArray(String jsonArray) throws IOException {
 		List<String> result = new ArrayList<String>();
 		ObjectMapper mapper = new ObjectMapper();
 		ArrayNode instanceIDArray = mapper.readValue(jsonArray, ArrayNode.class);
 		
-		for (int i=0; i<instanceIDArray.size(); i++) {
-			JsonNode instanceIDJSON = instanceIDArray.get(i);
-			result.add(
-				instanceIDJSON.get(
-						SerializationField.instanceID.name()).asText());
-		}
+	
+		JsonNode instanceIDJSON = instanceIDArray.get(0);
+		String instanceID = 
+			instanceIDJSON.get(
+					SerializationField.instanceID.name()).asText();
 		
-		return result;
+		JsonNode lineIDJSON = instanceIDArray.get(1);
+		String lineID = 
+			instanceIDJSON.get(
+					SerializationField.lineID.name()).asText();
+		
+		return new Pair<>(instanceID, lineID);
 	}
 	
 	public ClientTagInstance fromJSON(String json) throws IOException {

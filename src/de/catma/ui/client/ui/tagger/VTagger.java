@@ -83,9 +83,9 @@ public class VTagger extends Composite {
 				}
 			}
 			
-			public void tagsSelected(List<String> tagInstanceIDs) {
-				taggerListener.tagInstancesSelected(
-						tagInstanceJSONSerializer.toJSONArray(tagInstanceIDs));
+			public void tagSelected(String tagInstanceID, String lineID) {
+				taggerListener.tagInstanceSelected(
+						tagInstanceJSONSerializer.toJSONArray(tagInstanceID, lineID));
 			}
 			
 			public void logEvent(String event) {
@@ -108,9 +108,19 @@ public class VTagger extends Composite {
 		taggerEditor.setTaggerID(taggerId);
 	}
 
-	public void setPage(String page) {
+	public void setPage(String page, String tagInstancesJson) {
+
 		logger.info("setting page content");
 		taggerEditor.setHTML(new HTML(page));
+
+		List<ClientTagInstance> tagInstances = 
+				tagInstanceJSONSerializer.fromJSONArray(tagInstancesJson);
+
+		for (ClientTagInstance tagInstance : tagInstances) {
+			logger.info("got tag instance from server (show): " + tagInstance);
+			taggerEditor.addTagInstance(tagInstance, false);
+		}
+
 	}
 
 	public void removeTagInstances(String tagInstancesJson) {
@@ -136,7 +146,7 @@ public class VTagger extends Composite {
 		
 		for (ClientTagInstance tagInstance : tagInstances) {
 			logger.info("got tag instance from server (show): " + tagInstance);
-			taggerEditor.addTagInstance(tagInstance);
+			taggerEditor.addTagInstance(tagInstance, true);
 		}
 	}
 

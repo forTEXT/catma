@@ -173,7 +173,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 					public void propertyChange(PropertyChangeEvent evt) {
 						showTagInstanceInfo(
 							tagInstancesTree.getTagInstanceIDs(
-								(Set<TagDefinition>)evt.getOldValue()));
+								(Set<TagDefinition>)evt.getOldValue()), null);
 					}
 				});
 		
@@ -183,7 +183,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 				if ((evt.getNewValue() != null) && (evt.getOldValue() != null)) {
 					showTagInstanceInfo(
 						tagInstancesTree.getTagInstanceIDs(
-								Collections.<TagDefinition>emptySet()));
+								Collections.<TagDefinition>emptySet()), null);
 				}
 				
 			}
@@ -515,10 +515,15 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		return markupCollectionsPanel.getRepository();
 	}
 
-	public void showTagInstanceInfo(List<String> instanceIDs) {
+	public void showTagInstanceInfo(List<String> instanceIDs, String tagInstanceID) {
 		List<TagInstanceInfo> tagInstances = 
 				markupCollectionsPanel.getTagInstances(instanceIDs);
+		
 		tagInstancesTree.setTagInstances(tagInstances);
+		if (tagInstanceID != null) {
+			tagInstancesTree.setValue(tagInstanceID);
+			
+		}
 		markupInfoScrollPanel.setScrollTop(1);
 	}	
 	
@@ -528,7 +533,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			exclusionFilter.add(tr.getTagDefinition());
 		}
 		showTagInstanceInfo(
-			tagInstancesTree.getTagInstanceIDs(exclusionFilter));
+			tagInstancesTree.getTagInstanceIDs(exclusionFilter), null);
 	}
 	
 	public void removeTagInstances(List<String> tagInstanceIDs) {
@@ -541,7 +546,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	}
 
 	public void showPropertyEditDialog(TagInstance tagInstance) {
-		showTagInstanceInfo(Collections.singletonList(tagInstance.getUuid()));
+		showTagInstanceInfo(Collections.singletonList(tagInstance.getUuid()), null);
 		if (!tagInstance.getUserDefinedProperties().isEmpty()) {
 			tagInstancesTree.showPropertyEditDialog(tagInstance);
 		}
