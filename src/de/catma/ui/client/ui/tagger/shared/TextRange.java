@@ -178,7 +178,7 @@ public class TextRange implements Comparable<TextRange> {
         return (this.getEndPos() < point);
     }
 
-    private boolean isInBetweenInclusiveEdge( long point ) {
+    public boolean isInBetweenInclusiveEdge( long point ) {
         return ( (point >= this.getStartPos())
                     && (point <= this.getEndPos()) );
     }

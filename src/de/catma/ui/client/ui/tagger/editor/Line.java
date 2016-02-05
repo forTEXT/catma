@@ -17,15 +17,17 @@ import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 public class Line {
 	
+	private Element lineElement;
 	private String lineId;
 	private TextRange textRange;
 	private Set<TextRange> tagInstanceTextRanges;
 	private Collection<ClientTagInstance> relativeTagIntances;
 	private String presentationContent;
 	
-	public Line(String lineId, TextRange textRange, Set<TextRange> tagInstanceTextRanges,
+	public Line(Element lineElement, String lineId, TextRange textRange, Set<TextRange> tagInstanceTextRanges,
 			Collection<ClientTagInstance> relativeTagIntances, String presentationContent) {
 		super();
+		this.lineElement = lineElement;
 		this.lineId = lineId;
 		this.textRange = textRange;
 		this.tagInstanceTextRanges = tagInstanceTextRanges;
@@ -37,7 +39,7 @@ public class Line {
 		return presentationContent;
 	}
 	
-	public Element toHTML() {
+	public Element createLineElement() {
 		
 		List<TextRange> rangeParts = new ArrayList<>();
 		
@@ -65,11 +67,6 @@ public class Line {
 		}
 		
 		Collections.sort(rangeParts);
-		
-		for (TextRange rangePart : rangeParts) {
-			System.out.println(rangePart);
-		}
-
 
 		Element table = DOM.createTable();
 		table.setAttribute("class", "taggerline-table");
@@ -150,7 +147,7 @@ public class Line {
 	}
 
 	private String getPresentationContent(TextRange range) {
-		return presentationContent.substring(range.getStartPos()-getOffset(), range.getEndPos()-getOffset());
+		return presentationContent.substring(range.getStartPos()-getLineOffset(), range.getEndPos()-getLineOffset());
 	}
 
 	public void addTagInstance(ClientTagInstance clientTagInstance) {
@@ -158,7 +155,25 @@ public class Line {
 		tagInstanceTextRanges.addAll(clientTagInstance.getRanges());
 	}
 
-	public int getOffset() {
+	public int getLineOffset() {
 		return textRange.getStartPos();
+	}
+	
+	public TextRange getTextRange() {
+		return textRange;
+	}
+
+	public Element getLineElement() {
+		return lineElement;
+	}
+
+	public void updateLineElement() {
+		Element newLineElement = createLineElement();
+		lineElement.getParentElement().replaceChild(newLineElement, lineElement);
+		this.lineElement = newLineElement;
+	}
+	
+	public int getLineId() {
+		return Integer.valueOf(lineId.substring(lineId.indexOf('.')+1));
 	}
 }

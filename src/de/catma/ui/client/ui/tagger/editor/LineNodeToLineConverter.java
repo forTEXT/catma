@@ -53,6 +53,7 @@ public class LineNodeToLineConverter {
 		}
 		
 		line = new Line(
+			lineElement,
 			lineId, textRange, tagInstanceTextRanges, 
 			new ArrayList<ClientTagInstance>(relativeTagIntancesByID.values()), presentationContent);
 	}

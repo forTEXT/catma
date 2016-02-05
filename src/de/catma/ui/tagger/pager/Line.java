@@ -127,7 +127,7 @@ public class Line {
 
 		Element table = new Element("table");
 		table.addAttribute(new Attribute("class", "taggerline-table"));
-		table.addAttribute(new Attribute("id", String.valueOf(lineId)));
+		table.addAttribute(new Attribute("id", "LINE." + String.valueOf(lineId)));
 		
 		Element tbody = new Element("tbody");
 		table.appendChild(tbody);

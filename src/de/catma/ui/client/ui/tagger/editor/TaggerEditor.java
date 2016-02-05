@@ -42,6 +42,7 @@ import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
+import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.FocusWidget;
 import com.google.gwt.user.client.ui.HTML;
@@ -314,36 +315,94 @@ public class TaggerEditor extends FocusWidget
 		else {
 			logger.info("startNode and endNode are not on the same branch");
 			
-/*			addTagInstance(
-				taggedSpanFactory, 
-				startNode, startOffset, endNode, endOffset);*/
+			addTagInstance(
+				tagInstanceID, tagColor,
+				startNode, startOffset, endNode, endOffset);
 		}
 	}
+
+	private void addTagInstance(
+			String tagInstanceID, String tagColor, 
+			Node startNode,
+			int startOffset,
+			Node endNode,
+			int endOffset) {
+		
+		Element startLineElement = getLineElementFromDisplayLayerContentNode(startNode);
+		Element endLineElement = getLineElementFromDisplayLayerContentNode(endNode);
+		
+		if ((startLineElement != null) && (endLineElement != null)) {
+			LineNodeToLineConverter startLineNodeToLineConverter = 
+					new LineNodeToLineConverter(startLineElement);
+			
+			Line startLine = startLineNodeToLineConverter.getLine();
+			addTagInstanceToLine(
+				startLine, tagInstanceID, tagColor, 
+				startLine.getLineOffset()+startOffset,
+				startLine.getTextRange().getEndPos());
+			
+			LineNodeToLineConverter endLineNodeToLineConverter = 
+					new LineNodeToLineConverter(endLineElement);
+			
+			Line endLine = endLineNodeToLineConverter.getLine();
+			addTagInstanceToLine(
+				endLine, tagInstanceID, tagColor, 
+				endLine.getTextRange().getStartPos(), 
+				endLine.getLineOffset()+endOffset);
+			
+			for (int lineId = startLine.getLineId()+1; lineId<endLine.getLineId(); lineId++) {
+				Element lineElement = DOM.getElementById("LINE."+lineId);
+				LineNodeToLineConverter lineNodeToLineConverter = 
+						new LineNodeToLineConverter(lineElement);
+				
+				Line line = lineNodeToLineConverter.getLine();
+				
+				addTagInstanceToLine(
+						line, tagInstanceID, tagColor, 
+						line.getTextRange().getStartPos(), 
+						line.getTextRange().getEndPos());
+			}
+		}
+	}
+	
 	private void addTagInstance(
 			String tagInstanceID, String tagColor, 
 			int startOffset, int endOffset,
 			Node node) {
 		
-		Element displayLayer = node.getParentElement().getParentElement();
-		if (displayLayer.hasClassName("tagger-display-layer")) {
-			Element lineElement = 
-				displayLayer.getParentElement().getParentElement();
-			
+		Element lineElement = getLineElementFromDisplayLayerContentNode(node);
+		
+		if (lineElement != null) {
 			LineNodeToLineConverter lineNodeToLineConverter = 
 					new LineNodeToLineConverter(lineElement);
 			
 			Line line = lineNodeToLineConverter.getLine();
 			
-			TextRange textRange = new TextRange(startOffset+line.getOffset(), endOffset+line.getOffset());
-			List<TextRange> textRanges = new ArrayList<>();
-			textRanges.add(textRange);
-
-			ClientTagInstance clientTagInstance = new ClientTagInstance(null, tagInstanceID, tagColor, textRanges);
-			line.addTagInstance(clientTagInstance);
-			
-			lineElement.getParentElement().replaceChild(line.toHTML(), lineElement);
-			
+			addTagInstanceToLine(
+				line, tagInstanceID, tagColor, 
+				startOffset+line.getLineOffset(), endOffset+line.getLineOffset());
 		}
+	}
+	
+	private Element getLineElementFromDisplayLayerContentNode(Node node) {
+		Element displayLayerContent = node.getParentElement().getParentElement();
+		if (displayLayerContent.hasClassName("tagger-display-layer")) {
+			return displayLayerContent.getParentElement().getParentElement();
+		}
+		return null;
+	}
+	
+	private void addTagInstanceToLine(Line line, String tagInstanceID, String tagColor, 
+			int startOffset, int endOffset) {
+
+		TextRange textRange = new TextRange(startOffset, endOffset);
+		List<TextRange> textRanges = new ArrayList<>();
+		textRanges.add(textRange);
+
+		ClientTagInstance clientTagInstance = new ClientTagInstance(null, tagInstanceID, tagColor, textRanges);
+		line.addTagInstance(clientTagInstance);
+		
+		line.updateLineElement();	
 	}
 	
 	

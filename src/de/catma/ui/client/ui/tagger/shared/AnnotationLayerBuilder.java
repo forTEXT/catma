@@ -32,7 +32,7 @@ public class AnnotationLayerBuilder {
 			public int compare(ClientTagInstance o1, ClientTagInstance o2) {
 				int result = o2.getLongestRangeSize()-o1.getLongestRangeSize();
 				if (result == 0) {
-					return 1;
+					return 1; //equals sized longest range
 				}
 				return result;
 			}
