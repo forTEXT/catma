@@ -33,16 +33,16 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import nu.xom.Attribute;
-import nu.xom.Document;
-import nu.xom.Element;
-import nu.xom.Serializer;
-import nu.xom.Text;
 import de.catma.document.Range;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.ContentElementID;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
+import nu.xom.Attribute;
+import nu.xom.Document;
+import nu.xom.Element;
+import nu.xom.Serializer;
+import nu.xom.Text;
 
 /**
  * @author marco.petris@web.de
@@ -50,8 +50,6 @@ import de.catma.ui.client.ui.tagger.shared.TextRange;
  */
 public class Page {
 
-	static final String SOLIDSPACE = "&_nbsp;";
-	
 	private static enum HTMLElement {
 		div,
 		span, 
@@ -240,7 +238,7 @@ public class Page {
 	private String getSolidSpace(int count) {
     	StringBuilder builder = new StringBuilder();
     	for (int i=0; i<count;i++) {
-    		builder.append(SOLIDSPACE);
+    		builder.append(TextRange.NBSP);
     	}
     	return builder.toString();
     }
@@ -256,12 +254,11 @@ public class Page {
 					HTMLAttribute.id.name(), 
 					ContentElementID.CONTENT.name()+String.valueOf(taggerID)));
 		
-		TagInstanceTextRangeIdHandler tagInstanceTextRangeIdHandler = new TagInstanceTextRangeIdHandler(); 
 		for (Line line : lines) {
-			rootDiv.appendChild(line.toHTML(tagInstanceTextRangeIdHandler));
+			rootDiv.appendChild(line.toHTML());
 		}
 		
-		return rootDiv.toXML().replaceAll("\\Q&amp;_nbsp;\\E", "&nbsp;");
+		return rootDiv.toXML();
 	}
 	
 	public void print() {

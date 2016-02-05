@@ -41,6 +41,8 @@
 		<dependency org="com.vaadin" name="vaadin-client-compiler"
 			rev="&vaadin.version;" conf="widgetset-compile->default" />
 		
+		<dependency org="com.google.guava" name="guava-gwt" rev="18.0" conf="widgetset-compile->default"/>
+		
 		<!-- <dependency org="com.vaadin" name="vaadin-push"
             rev="&vaadin.version;" conf="default->default"/> -->
 

@@ -27,7 +27,7 @@ public abstract class LineContent {
 	protected String getSolidSpace(int count) {
     	StringBuilder builder = new StringBuilder();
     	for (int i=0; i<count;i++) {
-    		builder.append(Page.SOLIDSPACE);
+    		builder.append(TextRange.NBSP);
     	}
     	return builder.toString();
     }

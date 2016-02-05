@@ -155,18 +155,19 @@ public class TaggerEditor extends FocusWidget
 			for (TextRange textRange : textRanges) {
 				NodeRange nodeRange = converter.convertToNodeRange(textRange);
 				logger.info("adding tag instance to range: " + nodeRange);
-				addTagInstanceForRange(taggedSpanFactory, nodeRange);
+				addTagInstanceForRange(IDGenerator.generate(),
+						tagDefinition.getColor(), nodeRange);
 				logger.info("added tag instance to range");
 			}
 
 			if (!textRanges.isEmpty()) {
-				ClientTagInstance te = 
-						new ClientTagInstance(
-								tagDefinition.getId(),
-								taggedSpanFactory.getInstanceID(), 
-								taggedSpanFactory.getColor(), textRanges);
-				tagInstances.put(te.getInstanceID(), te);
-				taggerEditorListener.tagChanged(TaggerEditorEventType.ADD, te);
+//				ClientTagInstance te = 
+//						new ClientTagInstance(
+//								tagDefinition.getId(),
+//								taggedSpanFactory.getInstanceID(), 
+//								taggedSpanFactory.getColor(), textRanges);
+//				tagInstances.put(te.getInstanceID(), te);
+//				taggerEditorListener.tagChanged(TaggerEditorEventType.ADD, te);
 			}
 			
 		}
@@ -276,18 +277,75 @@ public class TaggerEditor extends FocusWidget
 
 		if (startNode.equals(endNode)) {
 			logger.info("startNode equals endNode");
-			addTagInstance(
-				taggedSpanFactory, 
-				startNode, startOffset, endOffset);
+			
+/*			addTagInstance(
+				taggedSpanFactory,
+				startNode, startOffset, endOffset);*/
 		}
 		else {
 			logger.info("startNode and endNode are not on the same branch");
 			
-			addTagInstance(
+/*			addTagInstance(
 				taggedSpanFactory, 
-				startNode, startOffset, endNode, endOffset);
+				startNode, startOffset, endNode, endOffset);*/
 		}
 	}
+	
+	private void addTagInstanceForRange(
+			String tagInstanceID, String tagColor, NodeRange range) {
+		
+		Node startNode = range.getStartNode();
+		int startOffset = range.getStartOffset();
+		
+		Node endNode = range.getEndNode();
+		int endOffset = range.getEndOffset();
+		
+		DebugUtil.printNode(startNode);
+		logger.info("startOffset: " + startOffset);
+		
+		DebugUtil.printNode(endNode);
+		logger.info("endOffset: " + endOffset);
+
+		if (startNode.equals(endNode)) {
+			logger.info("startNode equals endNode");
+			addTagInstance(
+				tagInstanceID, tagColor, startOffset, endOffset, startNode);
+		}
+		else {
+			logger.info("startNode and endNode are not on the same branch");
+			
+/*			addTagInstance(
+				taggedSpanFactory, 
+				startNode, startOffset, endNode, endOffset);*/
+		}
+	}
+	private void addTagInstance(
+			String tagInstanceID, String tagColor, 
+			int startOffset, int endOffset,
+			Node node) {
+		
+		Element displayLayer = node.getParentElement().getParentElement();
+		if (displayLayer.hasClassName("tagger-display-layer")) {
+			Element lineElement = 
+				displayLayer.getParentElement().getParentElement();
+			
+			LineNodeToLineConverter lineNodeToLineConverter = 
+					new LineNodeToLineConverter(lineElement);
+			
+			Line line = lineNodeToLineConverter.getLine();
+			
+			TextRange textRange = new TextRange(startOffset+line.getOffset(), endOffset+line.getOffset());
+			List<TextRange> textRanges = new ArrayList<>();
+			textRanges.add(textRange);
+
+			ClientTagInstance clientTagInstance = new ClientTagInstance(null, tagInstanceID, tagColor, textRanges);
+			line.addTagInstance(clientTagInstance);
+			
+			lineElement.getParentElement().replaceChild(line.toHTML(), lineElement);
+			
+		}
+	}
+	
 	
 	private void addTagInstance(
 			SpanFactory spanFactory, 
@@ -592,7 +650,7 @@ public class TaggerEditor extends FocusWidget
 		if (targetElement.getParentElement().hasClassName("annotation-layer")) {
 			String tagInstancePartID = targetElement.getAttribute("id");
 			if (tagInstancePartID.isEmpty() && (lastTagInstancePartID == null)) {
-				return; // no annotation present and 
+				return; // no annotation present 
 			}
 			String tagInstanceID = getTagInstanceID(tagInstancePartID);
 			String lineID = getLineID(targetElement);
@@ -607,11 +665,16 @@ public class TaggerEditor extends FocusWidget
 						&& tagPartElement.hasAttribute("id") 
 						&& tagPartElement.getAttribute("id").startsWith(tagInstanceID)) {
 						tagPartElement.addClassName("selected-tag-instance");
+						tagPartElement.removeClassName("unselected-tag-instance");
 					}
-					else {
+					else if (tagPartElement.hasClassName("selected-tag-instance")) {
 						tagPartElement.removeClassName("selected-tag-instance");
-					}}
+						tagPartElement.addClassName("unselected-tag-instance");
+					}
+				}
 			}
+			
+			
 			if (!tagInstanceID.isEmpty()) {
 				if ((lastTagInstancePartID == null) 
 						|| ( ! lastTagInstancePartID.equals(tagInstancePartID))) {

@@ -48,4 +48,5 @@
 	</replace-with>
 
     <inherits name="org.vaadin.peter.contextmenu.ContextmenuWidgetset" />
+    <inherits name="com.google.common.collect.Collect"/>
 </module>

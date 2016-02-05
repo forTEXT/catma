@@ -12,6 +12,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 
+import de.catma.ui.client.ui.tagger.shared.AnnotationLayerBuilder;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import nu.xom.Attribute;
@@ -90,7 +91,7 @@ public class Line {
 				relativeTagInstance.getInstanceID(), relativeTagInstance);
 	}
 	
-	public Element toHTML(TagInstanceTextRangeIdHandler tagInstanceTextRangeIdHandler) {
+	public Element toHTML() {
 		
 		List<TextRange> rangeParts = new ArrayList<>();
 		
@@ -131,16 +132,18 @@ public class Line {
 		Element tbody = new Element("tbody");
 		table.appendChild(tbody);
 		
-		Element visibleContentLayer = new Element("tr");
+		Element contentDisplayLayer = new Element("tr");
+		contentDisplayLayer.addAttribute(new Attribute("class", "tagger-display-layer"));
+		contentDisplayLayer.addAttribute(new Attribute("id", textRange.getStartPos()+"."+textRange.getEndPos()));
 		
-		tbody.appendChild(visibleContentLayer);
+		tbody.appendChild(contentDisplayLayer);
 		Element visibleContentLayerContent = new Element("td");
-		visibleContentLayer.appendChild(visibleContentLayerContent);
+		contentDisplayLayer.appendChild(visibleContentLayerContent);
 		visibleContentLayerContent.addAttribute(
 				new Attribute("colspan", String.valueOf(rangeParts.size())));
 		visibleContentLayerContent.appendChild(getPresentationContent());
 		
-		AnnotationLayerBuilder annotationLayerBuilder = new AnnotationLayerBuilder(relativeTagInstanceByID, rangeParts);
+		AnnotationLayerBuilder annotationLayerBuilder = new AnnotationLayerBuilder(relativeTagInstanceByID.values(), rangeParts);
 		Table<Integer, TextRange, ClientTagInstance> layerTable = annotationLayerBuilder.getLayerTable();
 		int rowCount = layerTable.rowKeySet().size();
 		for (int rowIdx = 0; rowIdx<rowCount; rowIdx++) {
@@ -154,19 +157,18 @@ public class Line {
 				
 				Element annotationLayerContent = new Element("td");
 				annotationLayer.appendChild(annotationLayerContent);
-				annotationLayerContent.appendChild(Page.SOLIDSPACE);
+				annotationLayerContent.appendChild(TextRange.NBSP);
 				
 				ClientTagInstance relativeTagInstance = 
 						layerTable.get(rowIdx, rangePart);
 				
 				if (relativeTagInstance != null) {
+					annotationLayerContent.addAttribute(new Attribute("class", "unselected-tag-instance"));
+					
 					annotationLayerContent.addAttribute(
 						new Attribute(
 							"id", 
 							relativeTagInstance.getInstanceID() 
-								+ "." 
-								+ tagInstanceTextRangeIdHandler.getTextRangeIncrement(
-										relativeTagInstance.getInstanceID())
 								+ "."
 								+ rangePart.getStartPos()
 								+ "."
@@ -175,7 +177,11 @@ public class Line {
 						new Attribute(
 								"style", 
 								"background:#"+relativeTagInstance.getColor()
-								+";foreground:#"+relativeTagInstance.getColor()));
+								+";color:#"+relativeTagInstance.getColor()));
+				}
+				else {
+					annotationLayerContent.addAttribute(
+							new Attribute("class", "empty-annotation-layer"));
 				}
 			}
 		}
@@ -221,11 +227,8 @@ public class Line {
 	}
 
 	public List<String> getTagInstanceIDs(String instancePartID) {
-		String[] parts = instancePartID.split("\\.");
-		
-		Integer startPos = Integer.valueOf(parts[2]);
-		Integer endPos = Integer.valueOf(parts[3]);
-		TextRange range = new TextRange(startPos, endPos);
+
+		TextRange range = ClientTagInstance.getTextRangeFromPartId(instancePartID);
 		
 		ArrayList<String> result = new ArrayList<String>();
 		

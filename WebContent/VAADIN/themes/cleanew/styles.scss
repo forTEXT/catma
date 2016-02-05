@@ -309,6 +309,10 @@
     	white-space: pre;
 	}
 	
+	.tagger-display-layer {
+		border:none;
+	}
+	
 	.annotation-layer {
 		-webkit-touch-callout: none;
   		-webkit-user-select: none;
@@ -337,8 +341,19 @@
 		color:#FFFFFF;
 	}
 	
+	.unselected-tag-instance {
+		border-bottom: 1px solid white;
+		border-top: 1px solid white;
+		cursor:pointer;
+	}
+	
+	.empty-annotation-layer {
+		border-bottom: 1px solid white;
+		border-top: 1px solid white;
+	}
+	
 	.selected-tag-instance {
-		border-bottom: 2px solid black;
-		border-top: 2px solid black;
+		border-bottom: 3px solid black;
+		border-top: 3px solid black;
 	}
 }

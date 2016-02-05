@@ -186,4 +186,13 @@ public class ClientTagInstance {
     public static String getTagInstanceIDFromPartId(String tagInstancePartID) {
     	return tagInstancePartID.substring(0, tagInstancePartID.indexOf("."));
     }
+    
+    public static TextRange getTextRangeFromPartId(String tagInstancePartID) {
+		String[] parts = tagInstancePartID.split("\\.");
+		
+		Integer startPos = Integer.valueOf(parts[1]);
+		Integer endPos = Integer.valueOf(parts[2]);
+		
+		return new TextRange(startPos, endPos);    	
+    }
 }

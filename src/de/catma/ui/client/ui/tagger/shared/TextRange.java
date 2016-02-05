@@ -27,6 +27,8 @@ import java.util.List;
  *
  */
 public class TextRange implements Comparable<TextRange> {
+	
+	public static final String NBSP = "\u00A0";
 
 	private int startPos;
 	private int endPos;
