@@ -118,7 +118,7 @@ public class VTagger extends Composite {
 
 		for (ClientTagInstance tagInstance : tagInstances) {
 			logger.info("got tag instance from server (show): " + tagInstance);
-			taggerEditor.addTagInstance(tagInstance, false);
+			taggerEditor.addTagInstance(tagInstance);
 		}
 
 	}
@@ -140,14 +140,15 @@ public class VTagger extends Composite {
 		taggerEditor.highlight(textRange);
 	}
 
+	//FIXME: reimplement with line replacement
 	public void addTagInstances(String tagInstancesJson) {
-		List<ClientTagInstance> tagInstances = 
-				tagInstanceJSONSerializer.fromJSONArray(tagInstancesJson);
-		
-		for (ClientTagInstance tagInstance : tagInstances) {
-			logger.info("got tag instance from server (show): " + tagInstance);
-			taggerEditor.addTagInstance(tagInstance, true);
-		}
+//		List<ClientTagInstance> tagInstances = 
+//				tagInstanceJSONSerializer.fromJSONArray(tagInstancesJson);
+//		
+//		for (ClientTagInstance tagInstance : tagInstances) {
+//			logger.info("got tag instance from server (show): " + tagInstance);
+//			taggerEditor.addTagInstance(tagInstance);
+//		}
 	}
 
 	public void addTagInstanceWith(String tagDefinitionJson) {

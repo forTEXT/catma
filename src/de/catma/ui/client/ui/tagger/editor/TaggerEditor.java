@@ -146,9 +146,7 @@ public class TaggerEditor extends FocusWidget
 
 			//TODO: flatten ranges to prevent multiple tagging of the same range with the same instance!
 			
-			RangeConverter converter = new RangeConverter(taggerID);
-
-			List<NodeRange> nodeRanges = getLastNodeRanges(converter);
+			List<NodeRange> nodeRanges = getLastNodeRanges();
 			ClientTagInstance clientTagInstance = null;
 			
 			for (NodeRange nodeRange : nodeRanges) {
@@ -183,7 +181,7 @@ public class TaggerEditor extends FocusWidget
 		lastTextRanges = null;
 	}
 	
-	private List<NodeRange> getLastNodeRanges(RangeConverter converter) {
+	private List<NodeRange> getLastNodeRanges() {
 		
 		if (lastTextRanges != null) {
 			return lastTextRanges;
@@ -256,37 +254,6 @@ public class TaggerEditor extends FocusWidget
 			return new TextRange(textRange.getEndPos(), textRange.getStartPos());
 		}
 		return textRange;
-	}
-
-	private void addTagInstanceForRange(
-			SpanFactory taggedSpanFactory, NodeRange range) {
-		
-		Node startNode = range.getStartNode();
-		int startOffset = range.getStartOffset();
-		
-		Node endNode = range.getEndNode();
-		int endOffset = range.getEndOffset();
-		
-		DebugUtil.printNode(startNode);
-		logger.info("startOffset: " + startOffset);
-		
-		DebugUtil.printNode(endNode);
-		logger.info("endOffset: " + endOffset);
-
-		if (startNode.equals(endNode)) {
-			logger.info("startNode equals endNode");
-			
-/*			addTagInstance(
-				taggedSpanFactory,
-				startNode, startOffset, endOffset);*/
-		}
-		else {
-			logger.info("startNode and endNode are not on the same branch");
-			
-/*			addTagInstance(
-				taggedSpanFactory, 
-				startNode, startOffset, endNode, endOffset);*/
-		}
 	}
 	
 	private ClientTagInstance addTagInstanceForRange(
@@ -450,23 +417,12 @@ public class TaggerEditor extends FocusWidget
 		}		
 	}
 
-	public void addTagInstance(ClientTagInstance tagInstance, boolean addToAnnotationLayers) {
+	public void addTagInstance(ClientTagInstance tagInstance) {
 		
 		if (!tagInstances.containsKey(tagInstance.getInstanceID())) {
 			
 			tagInstances.put(tagInstance.getInstanceID(), tagInstance);
-	
-			if (addToAnnotationLayers) {
-				RangeConverter rangeConverter = new RangeConverter(taggerID);
-		
-				TaggedSpanFactory taggedSpanFactory = 
-						new TaggedSpanFactory(
-								tagInstance.getInstanceID(), tagInstance.getColor());
-				for (TextRange textRange : tagInstance.getRanges()) {
-					addTagInstanceForRange(
-						taggedSpanFactory, rangeConverter.convertToNodeRange(textRange));
-				}
-			}
+
 			logger.info("TAGINSTANCES size: " + tagInstances.size());
 		}
 		
@@ -486,19 +442,20 @@ public class TaggerEditor extends FocusWidget
 				ContentElementID.CONTENT.name() + taggerID);
 	}
 
+	//TODO: reimplement
 	public void highlight(TextRange textRange) {
 		logger.info("Highlighting textrange: " + textRange);
-		RangeConverter rangeConverter = new RangeConverter(taggerID);
-		NodeRange nodeRange = rangeConverter.convertToNodeRange(textRange);
-
-		HighlightedSpanFactory highlightedSpanFactory = 
-				new HighlightedSpanFactory("#078E18");
-		addTagInstanceForRange(highlightedSpanFactory, nodeRange);
-		Document.get().getElementById(
-				highlightedSpanFactory.getLastSpanID()).scrollIntoView();
+//		RangeConverter rangeConverter = new RangeConverter(taggerID);
+//		NodeRange nodeRange = rangeConverter.convertToNodeRange(textRange);
+//
+//		HighlightedSpanFactory highlightedSpanFactory = 
+//				new HighlightedSpanFactory("#078E18");
+//		addTagInstanceForRange(highlightedSpanFactory, nodeRange);
+//		Document.get().getElementById(
+//				highlightedSpanFactory.getLastSpanID()).scrollIntoView();
 	}
 	
-	
+	//TODO: reimplement
 	public void onBlur(BlurEvent event) {
 //		logger.info(event.toDebugString());
 //		if (hasSelection()) {
@@ -517,12 +474,12 @@ public class TaggerEditor extends FocusWidget
 //			lastFocusID = highlightedSpanFactory.getInstanceID();
 //		}
 	}
-	
+	//TODO: reimplement
 	public void onFocus(FocusEvent event) {
 		clearLastFocusID();
 		lastTextRanges = null;
 	}
-	
+	//TODO: reimplement
 	private void clearLastFocusID() {
 		if (lastFocusID != null) {
 			removeTagInstance(lastFocusID, false);
