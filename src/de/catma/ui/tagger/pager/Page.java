@@ -400,9 +400,12 @@ public class Page {
 
 	public List<String> getTagInstanceIDs(String instancePartID, String lineID) {
 		try {
-			return lines.get(Integer.valueOf(lineID)).getTagInstanceIDs(instancePartID);
+			return lines.get(
+				Integer.valueOf(
+					lineID.substring(lineID.indexOf('.')+1))).getTagInstanceIDs(
+							instancePartID);
 		}
-		catch (NumberFormatException | ArrayIndexOutOfBoundsException e ) {
+		catch (NumberFormatException | ArrayIndexOutOfBoundsException | NullPointerException e) {
 			Logger.getLogger(Page.class.getName()).log(
 				Level.SEVERE, "No such lineID: " + lineID + " with tagInstanceID: " + instancePartID , e);
 		}

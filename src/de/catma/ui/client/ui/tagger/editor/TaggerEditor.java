@@ -64,7 +64,7 @@ public class TaggerEditor extends FocusWidget
 			 GWT.create(SelectionHandlerImplStandard.class);
 
 	private List<Range> lastRangeList; 
-	private List<TextRange> lastTextRanges;
+	private List<NodeRange> lastTextRanges;
 
 	private HashMap<String, ClientTagInstance> tagInstances = new HashMap<String, ClientTagInstance>();
 	private TaggerEditorListener taggerEditorListener;
@@ -141,34 +141,39 @@ public class TaggerEditor extends FocusWidget
 	 
 	public void createAndAddTagIntance(ClientTagDefinition tagDefinition) {
 		clearLastFocusID();
-		
-		TaggedSpanFactory taggedSpanFactory = 
-				new TaggedSpanFactory(tagDefinition.getColor());
-		
+
 		if (hasSelection()) {
 
 			//TODO: flatten ranges to prevent multiple tagging of the same range with the same instance!
 			
 			RangeConverter converter = new RangeConverter(taggerID);
 
-			List<TextRange> textRanges = getLastTextRanges(converter);
+			List<NodeRange> nodeRanges = getLastNodeRanges(converter);
+			ClientTagInstance clientTagInstance = null;
 			
-			for (TextRange textRange : textRanges) {
-				NodeRange nodeRange = converter.convertToNodeRange(textRange);
+			for (NodeRange nodeRange : nodeRanges) {
 				logger.info("adding tag instance to range: " + nodeRange);
-				addTagInstanceForRange(IDGenerator.generate(),
+				ClientTagInstance currentClientTagInstance = 
+					addTagInstanceForRange(IDGenerator.generate(),
 						tagDefinition.getColor(), nodeRange);
 				logger.info("added tag instance to range");
+				if (clientTagInstance == null) {
+					clientTagInstance = currentClientTagInstance;
+				}
+				else {
+					clientTagInstance.addRanges(currentClientTagInstance.getRanges());
+				}
 			}
 
-			if (!textRanges.isEmpty()) {
-//				ClientTagInstance te = 
-//						new ClientTagInstance(
-//								tagDefinition.getId(),
-//								taggedSpanFactory.getInstanceID(), 
-//								taggedSpanFactory.getColor(), textRanges);
-//				tagInstances.put(te.getInstanceID(), te);
-//				taggerEditorListener.tagChanged(TaggerEditorEventType.ADD, te);
+			if (clientTagInstance != null) {
+				ClientTagInstance ti = 
+						new ClientTagInstance(
+								tagDefinition.getId(),
+								clientTagInstance.getInstanceID(), 
+								clientTagInstance.getColor(), 
+								clientTagInstance.getRanges());
+				tagInstances.put(ti.getInstanceID(), ti);
+				taggerEditorListener.tagChanged(TaggerEditorEventType.ADD, ti);
 			}
 			
 		}
@@ -178,26 +183,26 @@ public class TaggerEditor extends FocusWidget
 		lastTextRanges = null;
 	}
 	
-	private List<TextRange> getLastTextRanges(RangeConverter converter) {
+	private List<NodeRange> getLastNodeRanges(RangeConverter converter) {
 		
 		if (lastTextRanges != null) {
 			return lastTextRanges;
 		}
 		
-		ArrayList<TextRange> textRanges = new ArrayList<TextRange>();
+		ArrayList<NodeRange> nodeRanges = new ArrayList<NodeRange>();
 		for (Range range : lastRangeList) { 
 			if (!range.getStartNode().equals(getRootNode())
 						&& !range.getEndNode().equals(getRootNode())) {
-				TextRange textRange = validateTextRange(converter.convertToTextRange(range));
-
-				if (!textRange.isPoint()) {
-					logger.info("converted and adding range " + textRange );
-					textRanges.add(textRange);
-				}
-				else {
+				NodeRange nodeRange = new NodeRange(range.getStartNode(), range.getStartOffset(), 
+						range.getEndNode(), range.getEndOffset());
+				if (nodeRange.isPoint()) {
 					//TODO: consider tagging points (needs different visualization)
 					logger.info(
-						"won't tag range " + textRange + " because it is a point");
+							"won't tag range " + nodeRange + " because it is a point");
+				}
+				else {
+					logger.info("adding range " + nodeRange );
+					nodeRanges.add(nodeRange);
 				}
 			}
 			else {
@@ -211,11 +216,7 @@ public class TaggerEditor extends FocusWidget
 
 				if (range.getStartNode().equals(getRootNode())) {
 					logger.info("startNode is root!");
-					LeafFinder leafFinder = 
-						new LeafFinder(
-								getRootNode().getChild(range.getStartOffset()),
-								getRootNode());
-					startNode = leafFinder.getNextRightLeaf();
+					startNode = LeafFinder.getFirstTextLeaf(getRootNode().getChild(range.getStartOffset()));
 					startOffset = 0;
 					logger.info(
 						"Setting new startNode with Offset 0: " + startNode );
@@ -223,32 +224,28 @@ public class TaggerEditor extends FocusWidget
 				
 				if (range.getEndNode().equals(getRootNode())) {
 					logger.info("endNode is root!");
-					LeafFinder leafFinder = 
-						new LeafFinder(
-								getRootNode().getChild(range.getEndOffset()),
-								getRootNode());
-					endNode = leafFinder.getNextLeftTextLeaf();
+					endNode =  LeafFinder.getFirstTextLeaf(getRootNode().getChild(range.getEndOffset()-1));
 					endOffset = endNode.getNodeValue().length();
 					logger.info(
 						"Setting new endNode with Offset " 
 								+ endOffset + ": " + endNode );
 				}
 				
-				TextRange textRange = validateTextRange(converter.convertToTextRange(
-						startNode, endNode, startOffset, endOffset));
-				
-				if (!textRange.isPoint()) {
-					logger.info("converted and adding range " + textRange );
-					textRanges.add(textRange);
+				NodeRange nodeRange = new NodeRange(startNode, startOffset, 
+						endNode, endOffset);
+
+				if (!nodeRange.isPoint()) {
+					logger.info("converted and adding range " + nodeRange);
+					nodeRanges.add(nodeRange);
 				}
 				else {
 					logger.info(
-						"won't tag range " + textRange + " because it is a point");
+						"won't tag range " + nodeRange + " because it is a point");
 				}
 			}
 		}
 
-		return textRanges;
+		return nodeRanges;
 	}
 
 	private TextRange validateTextRange(TextRange textRange) {
@@ -292,7 +289,7 @@ public class TaggerEditor extends FocusWidget
 		}
 	}
 	
-	private void addTagInstanceForRange(
+	private ClientTagInstance addTagInstanceForRange(
 			String tagInstanceID, String tagColor, NodeRange range) {
 		
 		Node startNode = range.getStartNode();
@@ -309,19 +306,19 @@ public class TaggerEditor extends FocusWidget
 
 		if (startNode.equals(endNode)) {
 			logger.info("startNode equals endNode");
-			addTagInstance(
+			return addTagInstance(
 				tagInstanceID, tagColor, startOffset, endOffset, startNode);
 		}
 		else {
 			logger.info("startNode and endNode are not on the same branch");
 			
-			addTagInstance(
+			return addTagInstance(
 				tagInstanceID, tagColor,
 				startNode, startOffset, endNode, endOffset);
 		}
 	}
 
-	private void addTagInstance(
+	private ClientTagInstance addTagInstance(
 			String tagInstanceID, String tagColor, 
 			Node startNode,
 			int startOffset,
@@ -336,7 +333,7 @@ public class TaggerEditor extends FocusWidget
 					new LineNodeToLineConverter(startLineElement);
 			
 			Line startLine = startLineNodeToLineConverter.getLine();
-			addTagInstanceToLine(
+			ClientTagInstance clientTagInstance = addTagInstanceToLine(
 				startLine, tagInstanceID, tagColor, 
 				startLine.getLineOffset()+startOffset,
 				startLine.getTextRange().getEndPos());
@@ -345,10 +342,11 @@ public class TaggerEditor extends FocusWidget
 					new LineNodeToLineConverter(endLineElement);
 			
 			Line endLine = endLineNodeToLineConverter.getLine();
-			addTagInstanceToLine(
-				endLine, tagInstanceID, tagColor, 
-				endLine.getTextRange().getStartPos(), 
-				endLine.getLineOffset()+endOffset);
+			clientTagInstance.addRanges(
+				addTagInstanceToLine(
+					endLine, tagInstanceID, tagColor, 
+					endLine.getTextRange().getStartPos(), 
+					endLine.getLineOffset()+endOffset).getRanges());
 			
 			for (int lineId = startLine.getLineId()+1; lineId<endLine.getLineId(); lineId++) {
 				Element lineElement = DOM.getElementById("LINE."+lineId);
@@ -357,15 +355,20 @@ public class TaggerEditor extends FocusWidget
 				
 				Line line = lineNodeToLineConverter.getLine();
 				
-				addTagInstanceToLine(
+				clientTagInstance.addRanges(
+					addTagInstanceToLine(
 						line, tagInstanceID, tagColor, 
 						line.getTextRange().getStartPos(), 
-						line.getTextRange().getEndPos());
+						line.getTextRange().getEndPos()).getRanges());
 			}
+			
+			return clientTagInstance;
 		}
+		
+		return null;
 	}
 	
-	private void addTagInstance(
+	private ClientTagInstance addTagInstance(
 			String tagInstanceID, String tagColor, 
 			int startOffset, int endOffset,
 			Node node) {
@@ -378,10 +381,12 @@ public class TaggerEditor extends FocusWidget
 			
 			Line line = lineNodeToLineConverter.getLine();
 			
-			addTagInstanceToLine(
+			return addTagInstanceToLine(
 				line, tagInstanceID, tagColor, 
 				startOffset+line.getLineOffset(), endOffset+line.getLineOffset());
 		}
+		
+		return null;
 	}
 	
 	private Element getLineElementFromDisplayLayerContentNode(Node node) {
@@ -392,7 +397,7 @@ public class TaggerEditor extends FocusWidget
 		return null;
 	}
 	
-	private void addTagInstanceToLine(Line line, String tagInstanceID, String tagColor, 
+	private ClientTagInstance addTagInstanceToLine(Line line, String tagInstanceID, String tagColor, 
 			int startOffset, int endOffset) {
 
 		TextRange textRange = new TextRange(startOffset, endOffset);
@@ -403,177 +408,10 @@ public class TaggerEditor extends FocusWidget
 		line.addTagInstance(clientTagInstance);
 		
 		line.updateLineElement();	
-	}
-	
-	
-	private void addTagInstance(
-			SpanFactory spanFactory, 
-			Node node, int originalStartOffset, int originalEndOffset) {
 		
-		// the whole text sequence is within one node
-		
-		int startOffset = Math.min(originalStartOffset, originalEndOffset);
-		int endOffset = Math.max(originalStartOffset, originalEndOffset);
-		String nodeText = node.getNodeValue();
-		Node nodeParent = node.getParentNode();
-
-		if (startOffset != 0) { // does the tagged sequence start at the beginning?
-			// no, ok so we create a separate text node for the untagged part at the beginning
-			Text t = Document.get().createTextNode(
-					nodeText.substring(0, startOffset));
-			nodeParent.insertBefore(t, node);
-		}
-
-		// get a list of tagged spans for every non-whitespace-containing-character-sequence 
-		// and text node for the separating whitespace-sequences
-		Element taggedSpan = 
-				spanFactory.createTaggedSpan(
-						nodeText.substring(startOffset, endOffset));
-		
-		// insert tagged spans and whitespace text nodes before the old node
-		nodeParent.insertBefore(taggedSpan, node);
-
-		// does the tagged sequence stretch until the end of the whole sequence? 
-		if (endOffset != nodeText.length()) {
-			// no, so we create a separate text node for the untagged sequence at the end
-			Text t = Document.get().createTextNode(
-					nodeText.substring(endOffset, nodeText.length()));
-			nodeParent.insertBefore(t, node);
-		}
-		
-		// remove the old node which is no longer needed
-		nodeParent.removeChild(node);
+		return clientTagInstance;
 	}
 
-	private void addTagInstance(
-			SpanFactory spanFactory, 
-			Node startNode, int startOffset, Node endNode, int endOffset) {
-
-		AffectedNodesFinder tw = 
-				new AffectedNodesFinder(getElement(), startNode, endNode);
-		
-		String startNodeText = startNode.getNodeValue();
-		Node startNodeParent = startNode.getParentNode();
-		String endNodeText = endNode.getNodeValue();
-		Node endNodeParent = endNode.getParentNode();
-		
-		if (endNodeText == null) { // node is a non text node like line breaks
-			logger.info("Found no text within the following node:");
-			DebugUtil.printNode(endNode);
-			endNodeText = "";
-		}
-		
-		// the range of unmarked text at the beginning of the start node's text range
-		int unmarkedStartSeqBeginIdx = 0;
-		int unmarkedStartSeqEndIdx = startOffset;
-		
-		// the marked text range of the start node
-		int markedStartSeqBeginIdx = startOffset;
-		int markedStartSeqEndIdx = startNodeText.length();
-		
-		// the range of umarked text at the end of the end node's text range
-		int unmarkedEndSeqBeginIdx = endOffset;
-		int unmarkedEndSeqEndIdx = endNodeText.length();
-		
-		// the marked text range of the end node
-		int markedEndSeqBeginIdx = 0;
-		int markedEndSeqEndIdx = endOffset;
-		
-		// if start node and end node are in reverse order within the tree 
-		// we switch start/end of sequences accordingly
-		if (!tw.isAfter()) {
-			unmarkedStartSeqBeginIdx = startOffset;
-			unmarkedStartSeqEndIdx = startNodeText.length();
-			markedStartSeqBeginIdx = 0;
-			markedStartSeqEndIdx = startOffset;
-			
-			unmarkedEndSeqBeginIdx = 0;
-			unmarkedEndSeqEndIdx = endOffset;
-			markedEndSeqBeginIdx = endOffset;
-			markedEndSeqEndIdx = endNodeText.length();
-		}
-	
-
-		// a text node for the unmarked start
-		Text unmarkedStartSeq = 
-			Document.get().createTextNode(
-				startNodeText.substring(
-						unmarkedStartSeqBeginIdx, unmarkedStartSeqEndIdx)); 
-
-		// get a tagged span for the tagged sequence of the starting node
-		Element taggedSpan = 
-			spanFactory.createTaggedSpan(
-					startNodeText.substring(markedStartSeqBeginIdx, markedStartSeqEndIdx));
-		
-		if (tw.isAfter()) {
-			// insert unmarked text seqence before the old node
-			startNodeParent.insertBefore(
-					unmarkedStartSeq, startNode);
-			// insert tagged spans before the old node
-			startNodeParent.insertBefore(taggedSpan, startNode);
-			// remove the old node
-			startNodeParent.removeChild(startNode);
-		}
-		else {
-			// insert tagged sequences before the old node
-			startNodeParent.insertBefore(taggedSpan, startNode);
-			// replace the old node with a new node for the unmarked sequence
-			startNodeParent.replaceChild(
-					unmarkedStartSeq, startNode);
-		}
-
-		List<Node> affectedNodes = tw.getAffectedNodes();
-		DebugUtil.printNodes("affectedNodes", affectedNodes);
-
-		// create and insert tagged sequences for all the affected text nodes
-		for (int i=1; i<affectedNodes.size()-1;i++) {
-			Node affectedNode = affectedNodes.get(i);
-			// create the tagged span ...
-			taggedSpan = 
-				spanFactory.createTaggedSpan(affectedNode.getNodeValue());
-			
-			logger.info("affected Node and its taggedSpan:");
-			DebugUtil.printNode(affectedNode);
-			DebugUtil.printNode(taggedSpan);
-			
-			// ... and insert it
-			affectedNode.getParentNode().insertBefore(taggedSpan, affectedNode);
-			
-			// remove the old node
-			affectedNode.getParentNode().removeChild(affectedNode);
-		}
-		
-		// the unmarked text sequence of the last node
-		Text unmarkedEndSeq = 
-			Document.get().createTextNode(
-					endNodeText.substring(
-							unmarkedEndSeqBeginIdx, unmarkedEndSeqEndIdx));
-		
-		// the tagged part of the last node
-		taggedSpan = 
-			spanFactory.createTaggedSpan(
-						endNodeText.substring(
-								markedEndSeqBeginIdx, markedEndSeqEndIdx));
-		if (tw.isAfter()) {
-			// insert tagged part
-			endNodeParent.insertBefore(taggedSpan, endNode);
-			
-			// replace old node with a text node for the unmarked part
-			endNodeParent.replaceChild(unmarkedEndSeq, endNode);
-			
-		}
-		else {
-			
-			// insert unmarked part
-			endNodeParent.insertBefore(unmarkedEndSeq, endNode);
-			
-			// insert tagged part
-			endNodeParent.insertBefore(taggedSpan, endNode);
-			// remove old node
-			endNodeParent.removeChild(endNode);
-		}
-	}
-	
 	public boolean hasSelection() {
 		logger.info("checking for selection");
 		if ((lastTextRanges != null) && !lastTextRanges.isEmpty()) {
@@ -662,22 +500,22 @@ public class TaggerEditor extends FocusWidget
 	
 	
 	public void onBlur(BlurEvent event) {
-		logger.info(event.toDebugString());
-		if (hasSelection()) {
-			HighlightedSpanFactory highlightedSpanFactory = 
-					new HighlightedSpanFactory("#3399FF");
-			
-			RangeConverter converter = new RangeConverter(taggerID);
-
-			lastTextRanges = getLastTextRanges(converter);
-			
-			for (TextRange textRange : lastTextRanges) {
-				NodeRange nodeRange = converter.convertToNodeRange(textRange);
-				addTagInstanceForRange(highlightedSpanFactory, nodeRange);
-			}
-			
-			lastFocusID = highlightedSpanFactory.getInstanceID();
-		}
+//		logger.info(event.toDebugString());
+//		if (hasSelection()) {
+//			HighlightedSpanFactory highlightedSpanFactory = 
+//					new HighlightedSpanFactory("#3399FF");
+//			
+//			RangeConverter converter = new RangeConverter(taggerID);
+//
+//			lastTextRanges = getLastTextRanges(converter);
+//			
+//			for (TextRange textRange : lastTextRanges) {
+//				NodeRange nodeRange = converter.convertToNodeRange(textRange);
+//				addTagInstanceForRange(highlightedSpanFactory, nodeRange);
+//			}
+//			
+//			lastFocusID = highlightedSpanFactory.getInstanceID();
+//		}
 	}
 	
 	public void onFocus(FocusEvent event) {
@@ -768,49 +606,6 @@ public class TaggerEditor extends FocusWidget
 		return false;
 	}
 
-	private List<Element> findTargetSpan(Element line) {
-		ArrayList<Element> result = new ArrayList<Element>();
-		
-		
-		if (line.getFirstChildElement() != null) {
-
-			Element curSpan = findClosestSibling(line.getFirstChildElement());
-			if (curSpan != null) {
-				result.add(curSpan);
-			}
-			while (curSpan!= null && (curSpan.getFirstChildElement()!=null)) {
-				curSpan = findClosestSibling(curSpan.getFirstChildElement());
-				if (curSpan != null) {
-					result.add(curSpan);
-				}
-			}
-
-		}
-		
-		return result;
-	}
-
-	private Element findClosestLine() {
-		return findClosestSibling(
-				Document.get().getElementById(
-					ContentElementID.LINE.name() + taggerID + "0"));
-	}
-	
-	private Element findClosestSibling(Element start) {
-		Element curSibling = start;
-
-		while((curSibling != null) && 
-				!( (lastClientX > curSibling.getAbsoluteLeft()) 
-						&& (lastClientX < curSibling.getAbsoluteRight())
-					&& (lastClientY > curSibling.getAbsoluteTop()) 
-						&& (lastClientY < curSibling.getAbsoluteBottom()))) {
-			
-			curSibling = curSibling.getNextSiblingElement();
-		}
-		
-		return curSibling;
-	}
-	
 	@Override
 	public void onClick(ClickEvent event) {
 		EventTarget eventTarget = event.getNativeEvent().getEventTarget();
