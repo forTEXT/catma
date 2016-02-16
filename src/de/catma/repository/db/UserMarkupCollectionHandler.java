@@ -57,7 +57,6 @@ import org.jooq.impl.DSL;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import de.catma.document.AccessMode;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
@@ -543,178 +542,13 @@ class UserMarkupCollectionHandler {
 			Integer userUmcId =
 					currentUserUmcRecord.getValue(
 							USER_USERMARKUPCOLLECTION.USER_USERMARKUPCOLLECTIOID);
-			boolean isOwner = 
-					currentUserUmcRecord.getValue(
-							USER_USERMARKUPCOLLECTION.OWNER, Boolean.class);
-			
-			int totalParticipants = 
-					(Integer)currentUserUmcRecord.getValue("totalParticipants");
-			
+
 			db
 			.delete(USER_USERMARKUPCOLLECTION)
 			.where(USER_USERMARKUPCOLLECTION.USER_USERMARKUPCOLLECTIOID.eq(userUmcId))
 			.execute();
 			
-//			if (isOwner && (totalParticipants == 1)) {
-//				
-//				List<Integer> tagInstanceIds = db
-//				.select(TAGINSTANCE.TAGINSTANCEID)
-//				.from(TAGINSTANCE)
-//				.where(TAGINSTANCE.TAGINSTANCEID.in(
-//					db
-//					.select(TAGREFERENCE.TAGINSTANCEID)
-//					.from(TAGREFERENCE)
-//					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))))
-//				.fetch()
-//				.map(new IDFieldToIntegerMapper(TAGINSTANCE.TAGINSTANCEID));
-//
-//				if (tagInstanceIds.isEmpty()) {
-//					tagInstanceIds = Collections.singletonList(-1);
-//				}
-//						
-//				db.batch(
-//					db
-//					.delete(PROPERTYVALUE)
-//					.where(PROPERTYVALUE.PROPERTYID.in(
-//						db
-//						.select(PROPERTY.PROPERTYID)
-//						.from(PROPERTY)
-//						.join(TAGINSTANCE)
-//							.on(TAGINSTANCE.TAGINSTANCEID
-//									.eq(PROPERTY.TAGINSTANCEID))
-//						.join(TAGREFERENCE)
-//							.on(TAGREFERENCE.TAGINSTANCEID
-//									.eq(TAGINSTANCE.TAGINSTANCEID))
-//							.and(TAGREFERENCE.USERMARKUPCOLLECTIONID
-//									.eq(userMarkupCollectionId)))),
-//					db
-//					.delete(PROPERTY)
-//					.where(PROPERTY.TAGINSTANCEID.in(
-//						db
-//						.select(TAGINSTANCE.TAGINSTANCEID)
-//						.from(TAGINSTANCE)
-//						.join(TAGREFERENCE)
-//							.on(TAGREFERENCE.TAGINSTANCEID
-//									.eq(TAGINSTANCE.TAGINSTANCEID))
-//							.and(TAGREFERENCE.USERMARKUPCOLLECTIONID
-//									.eq(userMarkupCollectionId)))),
-//					db
-//					.delete(TAGREFERENCE)
-//					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID
-//							.eq(userMarkupCollectionId)),
-//					db
-//					.delete(TAGINSTANCE)
-//					.where(TAGINSTANCE.TAGINSTANCEID.in(tagInstanceIds)),
-//					db
-//					.delete(PROPERTYDEF_POSSIBLEVALUE)
-//					.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
-//						db
-//						.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
-//						.from(PROPERTYDEFINITION)
-//						.join(TAGDEFINITION)
-//							.on(TAGDEFINITION.TAGDEFINITIONID
-//									.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
-//						.join(TAGSETDEFINITION)
-//							.on(TAGSETDEFINITION.TAGSETDEFINITIONID
-//									.eq(TAGDEFINITION.TAGSETDEFINITIONID))
-//						.join(TAGLIBRARY)
-//							.on(TAGLIBRARY.TAGLIBRARYID
-//									.eq(TAGSETDEFINITION.TAGLIBRARYID))
-//						.join(USERMARKUPCOLLECTION)
-//							.on(USERMARKUPCOLLECTION.TAGLIBRARYID
-//									.eq(TAGLIBRARY.TAGLIBRARYID))
-//							.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-//									.eq(userMarkupCollectionId)))),
-//					db
-//					.delete(PROPERTYDEFINITION)
-//					.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(
-//						db
-//						.select(TAGDEFINITION.TAGDEFINITIONID)
-//						.from(TAGDEFINITION)
-//						.join(TAGSETDEFINITION)
-//							.on(TAGSETDEFINITION.TAGSETDEFINITIONID
-//									.eq(TAGDEFINITION.TAGSETDEFINITIONID))
-//						.join(TAGLIBRARY)
-//							.on(TAGLIBRARY.TAGLIBRARYID
-//									.eq(TAGSETDEFINITION.TAGLIBRARYID))
-//						.join(USERMARKUPCOLLECTION)
-//							.on(USERMARKUPCOLLECTION.TAGLIBRARYID
-//									.eq(TAGLIBRARY.TAGLIBRARYID))
-//							.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-//									.eq(userMarkupCollectionId)))),
-//					db
-//					.update(TAGDEFINITION)
-//					.set(TAGDEFINITION.PARENTID, (Integer)null)
-//					.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
-//							db
-//							.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
-//							.from(TAGSETDEFINITION)
-//							.join(TAGLIBRARY)
-//								.on(TAGLIBRARY.TAGLIBRARYID
-//										.eq(TAGSETDEFINITION.TAGLIBRARYID))
-//							.join(USERMARKUPCOLLECTION)
-//								.on(USERMARKUPCOLLECTION.TAGLIBRARYID
-//										.eq(TAGLIBRARY.TAGLIBRARYID))
-//								.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-//										.eq(userMarkupCollectionId)))),
-//					db
-//					.delete(TAGDEFINITION)
-//					.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
-//						db
-//						.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
-//						.from(TAGSETDEFINITION)
-//						.join(TAGLIBRARY)
-//							.on(TAGLIBRARY.TAGLIBRARYID
-//									.eq(TAGSETDEFINITION.TAGLIBRARYID))
-//						.join(USERMARKUPCOLLECTION)
-//							.on(USERMARKUPCOLLECTION.TAGLIBRARYID
-//									.eq(TAGLIBRARY.TAGLIBRARYID))
-//							.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-//									.eq(userMarkupCollectionId)))),
-//					db
-//					.delete(TAGSETDEFINITION)
-//					.where(TAGSETDEFINITION.TAGLIBRARYID.in(
-//						db
-//						.select(TAGLIBRARY.TAGLIBRARYID)
-//						.from(TAGLIBRARY)
-//						.join(USERMARKUPCOLLECTION)
-//							.on(USERMARKUPCOLLECTION.TAGLIBRARYID
-//									.eq(TAGLIBRARY.TAGLIBRARYID))
-//							.and(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-//									.eq(userMarkupCollectionId)))))
-//				.execute();
-//
-//				Integer tagLibraryId = db
-//				.select(USERMARKUPCOLLECTION.TAGLIBRARYID)
-//				.from(USERMARKUPCOLLECTION)
-//				.where(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-//						.eq(userMarkupCollectionId))
-//				.fetchOne()
-//				.map(new IDFieldToIntegerMapper(USERMARKUPCOLLECTION.TAGLIBRARYID));
-//				
-//				db.batch(
-//					db
-//					.delete(CORPUS_USERMARKUPCOLLECTION)
-//					.where(CORPUS_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-//							.eq(userMarkupCollectionId)),
-//					db
-//					.delete(USERMARKUPCOLLECTION)
-//					.where(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-//							.eq(userMarkupCollectionId)),
-//					db
-//					.delete(TAGLIBRARY)
-//					.where(TAGLIBRARY.TAGLIBRARYID.eq(tagLibraryId)))
-//				.execute();
-//				
-//			}
-			
 			db.commitTransaction();
-
-//			if (isOwner && (totalParticipants == 1)) {
-//				dbRepository.getIndexer().removeUserMarkupCollection(
-//						userMarkupCollectionReference.getId());
-//			}			
-			
 
 			SourceDocument sd = 
 					dbRepository.getSourceDocument(userMarkupCollectionReference);
@@ -1012,21 +846,24 @@ class UserMarkupCollectionHandler {
 					relevantTagInstances.add(tr.getTagInstance());
 				}
  
-				SelectConditionStep<?> selectObsoleteTagInstanceIdsQuery = db
-				.select(TAGINSTANCE.TAGINSTANCEID)
-				.from(TAGINSTANCE)
-				.where(TAGINSTANCE.TAGINSTANCEID.in(
-					db
-					.select(TAGREFERENCE.TAGINSTANCEID)
-					.from(TAGREFERENCE)
-					.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))));
+				SelectConditionStep<?> selectObsoleteTagInstanceIdsQuery = null;
 					
 				// get list of TagInstances which are no longer present in the umc
 				// to handle deleted TagInstances (see further below)
 				if (!relevantTagInstances.isEmpty()) {
-					selectObsoleteTagInstanceIdsQuery = 
-						selectObsoleteTagInstanceIdsQuery
-							.and(TAGINSTANCE.UUID.notIn(relevantTagInstanceUUIDs));
+					selectObsoleteTagInstanceIdsQuery = db
+						.selectDistinct(TAGINSTANCE.TAGINSTANCEID)
+						.from(TAGINSTANCE)
+						.join(TAGREFERENCE)
+							.on(TAGREFERENCE.TAGINSTANCEID.eq(TAGINSTANCE.TAGINSTANCEID))
+							.and(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
+						.where(TAGINSTANCE.UUID.notIn(relevantTagInstanceUUIDs));
+				}
+				else {
+					selectObsoleteTagInstanceIdsQuery = db
+						.selectDistinct(TAGREFERENCE.TAGINSTANCEID)
+						.from(TAGREFERENCE)
+						.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId));
 				}
 				
 				List<Integer> obsoleteTagInstanceIds = 
@@ -1056,35 +893,53 @@ class UserMarkupCollectionHandler {
 					tagInstanceUUIDbinList.add(tagInstanceUUIDbin);
 				}
 					
-				db.beginTransaction();
+				List<Integer> obsoletePropertyIds = Collections.emptyList();
+				if (!obsoleteTagInstanceIds.isEmpty()) {
+					obsoletePropertyIds = db
+						.select(PROPERTY.PROPERTYID)
+						.from(PROPERTY)
+						.where(PROPERTY.TAGINSTANCEID.in(obsoleteTagInstanceIds))
+						.fetch()
+						.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
+				}
+				
 
 				// handle deleted TagInstances/TagReferences and their content
 				if (!obsoleteTagInstanceIds.isEmpty()) {
-					db.batch(
-						// delete obsolete tag references
-						db
-						.delete(TAGREFERENCE)
-						.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
-						.and(TAGREFERENCE.TAGINSTANCEID.in(obsoleteTagInstanceIds)),
-						// delete the prop values of obsolete tag instances
-						db
-						.delete(PROPERTYVALUE)
-						.where(PROPERTYVALUE.PROPERTYID
-							.in(db
-								.select(PROPERTY.PROPERTYID)
-								.from(PROPERTY)
-								.where(PROPERTY.TAGINSTANCEID.in(obsoleteTagInstanceIds)))),
-						// delete the properties of obsolete tag instances
-						db
-						.delete(PROPERTY)
-						.where(PROPERTY.TAGINSTANCEID.in(obsoleteTagInstanceIds)),
-						// delete obsolete taginstances
-						db
-						.delete(TAGINSTANCE)
-						.where(TAGINSTANCE.TAGINSTANCEID.in(obsoleteTagInstanceIds)))
-					.execute();
+					try {
+						db.beginTransaction();
+						
+						db.batch(
+							// delete obsolete tag references
+							db
+							.delete(TAGREFERENCE)
+							.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
+							.and(TAGREFERENCE.TAGINSTANCEID.in(obsoleteTagInstanceIds)),
+							// delete the prop values of obsolete tag instances
+							db
+							.delete(PROPERTYVALUE)
+							.where(PROPERTYVALUE.PROPERTYID
+								.in(obsoletePropertyIds)),
+							// delete the properties of obsolete tag instances
+							db
+							.delete(PROPERTY)
+							.where(PROPERTY.TAGINSTANCEID.in(obsoleteTagInstanceIds)),
+							// delete obsolete taginstances
+							db
+							.delete(TAGINSTANCE)
+							.where(TAGINSTANCE.TAGINSTANCEID.in(obsoleteTagInstanceIds)))
+						.execute();
+						
+						db.commitTransaction();
+					}
+					catch (Exception dae) {
+						db.rollbackTransaction();
+						db.close();
+						throw new IOException(dae);
+					}
 				}
 
+				
 				// handle deleted properties
 				if (relevantUserDefPropertyIdList.isEmpty()) { // no restriction->delete all user def properties+values
 					//collect propertyIDs
@@ -1103,19 +958,28 @@ class UserMarkupCollectionHandler {
 						.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
 					
 					if (!toBeDeletedPropertyIDs.isEmpty()) {
-						db.batch(
-							// delete property values of properties
-							db
-							.delete(PROPERTYVALUE)
-							.where(PROPERTYVALUE.PROPERTYID
-								.in(toBeDeletedPropertyIDs)),
-							// delete properties 
-							db
-							.delete(PROPERTY)
-							.where(PROPERTY.PROPERTYID
-								.in(toBeDeletedPropertyIDs))
-						)
-						.execute();
+						try {
+							db.beginTransaction();
+							db.batch(
+								// delete property values of properties
+								db
+								.delete(PROPERTYVALUE)
+								.where(PROPERTYVALUE.PROPERTYID
+									.in(toBeDeletedPropertyIDs)),
+								// delete properties 
+								db
+								.delete(PROPERTY)
+								.where(PROPERTY.PROPERTYID
+									.in(toBeDeletedPropertyIDs))
+							)
+							.execute();
+							db.commitTransaction();
+						}
+						catch (Exception dae) {
+							db.rollbackTransaction();
+							db.close();
+							throw new IOException(dae);
+						}							
 					}
 				}
 				else { // delete all properties+values which are no longer relevant
@@ -1137,19 +1001,28 @@ class UserMarkupCollectionHandler {
 						.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
 	
 					if (!toBeDeletedPropertyIDs.isEmpty()) {
-						db.batch(
-							// delete property values of properties which are no longer present
-							db
-							.delete(PROPERTYVALUE)
-							.where(PROPERTYVALUE.PROPERTYID
-								.in(toBeDeletedPropertyIDs)),
-							// delete properties which are no longer present
-							db
-							.delete(PROPERTY)
-							.where(PROPERTY.PROPERTYID.in(
-									toBeDeletedPropertyIDs))
-						)
-						.execute();
+						try {
+							db.beginTransaction();
+							db.batch(
+								// delete property values of properties which are no longer present
+								db
+								.delete(PROPERTYVALUE)
+								.where(PROPERTYVALUE.PROPERTYID
+									.in(toBeDeletedPropertyIDs)),
+								// delete properties which are no longer present
+								db
+								.delete(PROPERTY)
+								.where(PROPERTY.PROPERTYID.in(
+										toBeDeletedPropertyIDs))
+							)
+							.execute();
+							db.commitTransaction();
+						}
+						catch (Exception dae) {
+							db.rollbackTransaction();
+							db.close();
+							throw new IOException(dae);
+						}						
 					}
 
 				}
@@ -1170,37 +1043,46 @@ class UserMarkupCollectionHandler {
 				// addition of new properties with default values is not 
 				// represented within the umc on the database side
 				// only the tag library will be affected (see below)
-					
-				// handle changes in the tag library
-				final TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog = 
-						dbRepository.getDbTagLibraryHandler().updateTagsetDefinition(
-								db, tagLibrary,
-								tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()));
 				
-				db.commitTransaction();
-
-				// add changed color properties to update log for reindexing
-				for (ColorPropertyValueInfo colorPropertyValueInfo : colorPropertyDefIdToValueInfoMap.values())  {
-					if (!colorPropertyValueInfo.getPropertyValueIds().isEmpty()) {
-						tagsetDefinitionUpdateLog.addUpdatedPropertyDefinition(
-							colorPropertyValueInfo.getPropertyDefinition().getUuid(), 
-							colorPropertyValueInfo.getTagDefinition().getUuid());
+				try {
+					db.beginTransaction();
+					
+					// handle changes in the tag library
+					final TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog = 
+							dbRepository.getDbTagLibraryHandler().updateTagsetDefinition(
+									db, tagLibrary,
+									tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()));
+					
+					db.commitTransaction();
+					
+					// add changed color properties to update log for reindexing
+					for (ColorPropertyValueInfo colorPropertyValueInfo : colorPropertyDefIdToValueInfoMap.values())  {
+						if (!colorPropertyValueInfo.getPropertyValueIds().isEmpty()) {
+							tagsetDefinitionUpdateLog.addUpdatedPropertyDefinition(
+								colorPropertyValueInfo.getPropertyDefinition().getUuid(), 
+								colorPropertyValueInfo.getTagDefinition().getUuid());
+						}
+					}
+					
+					// reindex if necessary
+					if (!tagsetDefinitionUpdateLog.isEmpty()) {
+						dbRepository.getIndexer().reindex(
+								tagsetDefinition, 
+								tagsetDefinitionUpdateLog,
+								userMarkupCollection);
 					}
 				}
+				catch (Exception dae) {
+					db.rollbackTransaction();
+					db.close();
+					throw new IOException(dae);
+				}						
 				
-				// reindex if necessary
-				if (!tagsetDefinitionUpdateLog.isEmpty()) {
-					dbRepository.getIndexer().reindex(
-							tagsetDefinition, 
-							tagsetDefinitionUpdateLog,
-							userMarkupCollection);
-				}
 			}
 			
 			db.close();
 		}
 		catch (Exception dae) {
-			db.rollbackTransaction();
 			db.close();
 			throw new IOException(dae);
 		}
