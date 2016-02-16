@@ -42,7 +42,6 @@ import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
 public class DBIndexMaintainer {
 
 	private static final int MAX_FILE_CLEAN_COUNT = 10;
-	private static final int MAX_ROW_COUNT = 500;
 	private String repoFolderPath;
 	private int fileCleanOffset = 0;
 	private int repoTagReferenceRowOffset = 0;
@@ -52,12 +51,13 @@ public class DBIndexMaintainer {
 	private SourceDocumentIndexMaintainer sourceDocumentIndexMaintainer;
 	private int sourceDocumentIndexMaintainerMaxObjectCount;
 	private int sourceDocumentIndexMaintainerOffset = 0;
+	private int dbIndexMaintainerMaxObjectCount = 500;
 
 	private Logger logger;
 
 	public DBIndexMaintainer(int fileCleanOffset, int repoTagReferenceRowOffset,
 			int repoPropertyRowOffset, int indexTagReferenceRowOffset,
-			int indexPropertyRowOffset, 
+			int indexPropertyRowOffset, int dbIndexMaintainerMaxObjectCount,
 			SourceDocumentIndexMaintainer sourceDocumentIndexMaintainer,
 			int sourceDocumentIndexMaintainerMaxObjectCount,
 			int sourceDocumentIndexMaintainerOffset) {
@@ -68,6 +68,7 @@ public class DBIndexMaintainer {
 		this.repoPropertyRowOffset = repoPropertyRowOffset;
 		this.indexTagReferenceRowOffset = indexTagReferenceRowOffset;
 		this.indexPropertyRowOffset = indexPropertyRowOffset;
+		this.dbIndexMaintainerMaxObjectCount = dbIndexMaintainerMaxObjectCount;
 		this.sourceDocumentIndexMaintainer = sourceDocumentIndexMaintainer;
 		this.sourceDocumentIndexMaintainerMaxObjectCount = 
 				sourceDocumentIndexMaintainerMaxObjectCount;
@@ -183,7 +184,7 @@ public class DBIndexMaintainer {
 			.value1();
 		}
 		
-		logger.info("checking stale index properties, starting at offset: " +  (indexPropertyRowOffset-MAX_ROW_COUNT));
+		logger.info("checking stale index properties, starting at offset: " +  (indexPropertyRowOffset-dbIndexMaintainerMaxObjectCount));
 		
 		Result<Record5<byte[], byte[], String, String, Integer>> result = db
 		.select(
@@ -193,7 +194,7 @@ public class DBIndexMaintainer {
 			indexProperty.VALUE,
 			indexProperty.PROPERTYID)
 		.from(indexProperty)
-		.limit(indexPropertyRowOffset-MAX_ROW_COUNT, MAX_ROW_COUNT)
+		.limit(indexPropertyRowOffset-dbIndexMaintainerMaxObjectCount, dbIndexMaintainerMaxObjectCount)
 		.fetch();
 		
 		indexPropertyRowOffset -= result.size();
@@ -245,7 +246,7 @@ public class DBIndexMaintainer {
 			.value1();
 		}
 
-		logger.info("checking stale index tagreferences, starting offset: " + (indexTagReferenceRowOffset-MAX_ROW_COUNT));
+		logger.info("checking stale index tagreferences, starting offset: " + (indexTagReferenceRowOffset-dbIndexMaintainerMaxObjectCount));
 		
 		Result<Record9<String, String, String, byte[], byte[], String, Integer, Integer, Integer>> result = db
 		.select(
@@ -259,7 +260,7 @@ public class DBIndexMaintainer {
 			indexTagReference.CHARACTEREND,
 			indexTagReference.TAGREFERENCEID)
 		.from(indexTagReference)
-		.limit(indexTagReferenceRowOffset-MAX_ROW_COUNT, MAX_ROW_COUNT)
+		.limit(indexTagReferenceRowOffset-dbIndexMaintainerMaxObjectCount, dbIndexMaintainerMaxObjectCount)
 		.fetch();
 		
 		indexTagReferenceRowOffset -= result.size();
@@ -320,7 +321,7 @@ public class DBIndexMaintainer {
 			.value1();
 		}
 
-		logger.info("checking repo properties, starting at offset: " + (repoPropertyRowOffset-MAX_ROW_COUNT));
+		logger.info("checking repo properties, starting at offset: " + (repoPropertyRowOffset-dbIndexMaintainerMaxObjectCount));
 
 		
 		Result<Record4<byte[],byte[],String,String>> result = db
@@ -336,10 +337,10 @@ public class DBIndexMaintainer {
 			.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID.eq(PROPERTY.PROPERTYDEFINITIONID))
 		.join(TAGINSTANCE)
 			.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
-		.limit(repoPropertyRowOffset-MAX_ROW_COUNT, MAX_ROW_COUNT)
+		.limit(repoPropertyRowOffset-dbIndexMaintainerMaxObjectCount, dbIndexMaintainerMaxObjectCount)
 		.fetch();
 		
-		if (result.size() < MAX_ROW_COUNT) {
+		if (result.size() < dbIndexMaintainerMaxObjectCount) {
 			repoPropertyRowOffset = 0;
 		}
 		else {
@@ -418,7 +419,7 @@ public class DBIndexMaintainer {
 			.fetchOne()
 			.value1();
 		}
-		logger.info("checking repo tagreferences, starting at offset: " + (repoTagReferenceRowOffset-MAX_ROW_COUNT));
+		logger.info("checking repo tagreferences, starting at offset: " + (repoTagReferenceRowOffset-dbIndexMaintainerMaxObjectCount));
 		
 		Result<Record8<String,Integer,byte[],byte[], Timestamp, Integer,Integer, Integer>> result = db
 		.select(
@@ -439,10 +440,10 @@ public class DBIndexMaintainer {
 					.eq(TAGREFERENCE.USERMARKUPCOLLECTIONID))
 		.join(SOURCEDOCUMENT)
 			.on(SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(USERMARKUPCOLLECTION.SOURCEDOCUMENTID))
-		.limit(repoTagReferenceRowOffset-MAX_ROW_COUNT, MAX_ROW_COUNT)
+		.limit(repoTagReferenceRowOffset-dbIndexMaintainerMaxObjectCount, dbIndexMaintainerMaxObjectCount)
 		.fetch();
 		
-		if (result.size() < MAX_ROW_COUNT) {
+		if (result.size() < dbIndexMaintainerMaxObjectCount) {
 			repoTagReferenceRowOffset = 0;
 		}
 		else {

@@ -27,6 +27,7 @@ public class DBIndexMaintenanceJob implements Job {
 			int repoPropertyRowOffset = 0;     
 			int indexTagReferenceRowOffset = 0;
 			int indexPropertyRowOffset = 0;    
+			int dbIndexMaintainerMaxObjectCount=10;
 			int sourceDocumentIndexMaintainerOffset=0;
 			
 			if (dataMap.containsKey(JobInstaller.JobDataKey.FILE_CLEAN_OFFSET.name())) {
@@ -48,6 +49,10 @@ public class DBIndexMaintenanceJob implements Job {
 			if (dataMap.containsKey(JobInstaller.JobDataKey.IDX_PROP_OFFSET.name())) {
 				indexPropertyRowOffset = 
 						dataMap.getInt(JobInstaller.JobDataKey.IDX_PROP_OFFSET.name());
+			}
+			if (dataMap.containsKey(JobInstaller.JobDataKey.DBIDXMAINTAINMAXOBJECTCOUNT.name())) {
+				dbIndexMaintainerMaxObjectCount = 
+						dataMap.getInt(JobInstaller.JobDataKey.DBIDXMAINTAINMAXOBJECTCOUNT.name());
 			}
 			if (dataMap.containsKey(JobInstaller.JobDataKey.SOURCEDOCIDXMAINTAIN_OFFSET.name())) {
 				sourceDocumentIndexMaintainerOffset = 
@@ -71,6 +76,7 @@ public class DBIndexMaintenanceJob implements Job {
 						fileCleanOffset,
 						repoTagReferenceRowOffset, repoPropertyRowOffset, 
 						indexTagReferenceRowOffset, indexPropertyRowOffset,
+						dbIndexMaintainerMaxObjectCount,
 						sourceDocumentIndexMaintainer,
 						sourceDocumentIndexMaintainerMaxObjectCount,
 						sourceDocumentIndexMaintainerOffset);
