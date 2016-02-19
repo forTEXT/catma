@@ -20,7 +20,7 @@ delimiter $$
 
 DROP PROCEDURE IF EXISTS getTerms$$
 /**
- * USE CatmaIndex
+ * USE catmaindex
  * 
  * Gives all terms that belong to the given token range (basePos, baePos+termCount) in 
  * the document with the given ID.
@@ -51,8 +51,8 @@ BEGIN
     
         INSERT INTO result_getTerms(term, characterStart, characterEnd)
         SELECT t.term, p.characterStart, p.characterEnd
-        FROM CatmaIndex.term t
-        JOIN CatmaIndex.position p ON p.termID = t.termID
+        FROM catmaindex.term t
+        JOIN catmaindex.position p ON p.termID = t.termID
         WHERE t.documentID=docID
         AND p.tokenOffset = basePos+counter;
         SET counter = counter+1;
