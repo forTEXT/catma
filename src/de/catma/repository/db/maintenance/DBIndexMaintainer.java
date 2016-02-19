@@ -194,7 +194,7 @@ public class DBIndexMaintainer {
 			indexProperty.VALUE,
 			indexProperty.PROPERTYID)
 		.from(indexProperty)
-		.limit(indexPropertyRowOffset-dbIndexMaintainerMaxObjectCount, dbIndexMaintainerMaxObjectCount)
+		.limit(Math.max(indexPropertyRowOffset-dbIndexMaintainerMaxObjectCount,0), dbIndexMaintainerMaxObjectCount)
 		.fetch();
 		
 		indexPropertyRowOffset -= result.size();
@@ -260,7 +260,7 @@ public class DBIndexMaintainer {
 			indexTagReference.CHARACTEREND,
 			indexTagReference.TAGREFERENCEID)
 		.from(indexTagReference)
-		.limit(indexTagReferenceRowOffset-dbIndexMaintainerMaxObjectCount, dbIndexMaintainerMaxObjectCount)
+		.limit(Math.max(indexTagReferenceRowOffset-dbIndexMaintainerMaxObjectCount,0), dbIndexMaintainerMaxObjectCount)
 		.fetch();
 		
 		indexTagReferenceRowOffset -= result.size();
@@ -337,7 +337,7 @@ public class DBIndexMaintainer {
 			.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID.eq(PROPERTY.PROPERTYDEFINITIONID))
 		.join(TAGINSTANCE)
 			.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
-		.limit(repoPropertyRowOffset-dbIndexMaintainerMaxObjectCount, dbIndexMaintainerMaxObjectCount)
+		.limit(Math.max(repoPropertyRowOffset-dbIndexMaintainerMaxObjectCount,0), dbIndexMaintainerMaxObjectCount)
 		.fetch();
 		
 		if (result.size() < dbIndexMaintainerMaxObjectCount) {
@@ -440,7 +440,7 @@ public class DBIndexMaintainer {
 					.eq(TAGREFERENCE.USERMARKUPCOLLECTIONID))
 		.join(SOURCEDOCUMENT)
 			.on(SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(USERMARKUPCOLLECTION.SOURCEDOCUMENTID))
-		.limit(repoTagReferenceRowOffset-dbIndexMaintainerMaxObjectCount, dbIndexMaintainerMaxObjectCount)
+		.limit(Math.max(repoTagReferenceRowOffset-dbIndexMaintainerMaxObjectCount,0), dbIndexMaintainerMaxObjectCount)
 		.fetch();
 		
 		if (result.size() < dbIndexMaintainerMaxObjectCount) {
