@@ -6,7 +6,6 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Transaction;
 
@@ -26,14 +25,13 @@ public class SourceDocumentGraphIndexMaintainer implements
 		
 		try (Transaction tx = graphDatabaseService.beginTx()) {
 			
-			ResourceIterable<Node> sdIterable = graphDatabaseService.findNodesByLabelAndProperty(
+			int delCount = 0;
+			
+			ResourceIterator<Node> sdIterator = graphDatabaseService.findNodes(
 					NodeType.SourceDocument, 
 					SourceDocumentProperty.deleted.name(), 
 					Boolean.TRUE);
 			
-			int delCount = 0;
-			
-			ResourceIterator<Node> sdIterator = sdIterable.iterator();
 			if (sdIterator.hasNext()) {
 				Node sdNode = sdIterator.next();
 				logger.info(
