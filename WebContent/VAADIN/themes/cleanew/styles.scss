@@ -344,6 +344,7 @@
 	.unselected-tag-instance {
 		border-bottom: 1px solid white;
 		border-top: 1px solid white;
+		box-shadow: none;
 		cursor:pointer;
 	}
 	
@@ -353,7 +354,13 @@
 	}
 	
 	.selected-tag-instance {
-		border-bottom: 3px solid black;
-		border-top: 3px solid black;
-	}
+/*		border-bottom: 3px solid black;
+		border-top: 3px solid black;*/
+		outline:none;
+    	border-color-bottom:black;
+    	border-color-top:black;
+    	box-shadow: 0 12px 8px -7px black;
+    	-moz-box-shadow: 0 12px 8px -7px black;
+    	-webkit-box-shadow: 0 12px 8px -7px black;	
+    }
 }
