@@ -127,7 +127,7 @@ public class CatmaApplication extends UI
 	
 	private PropertyChangeSupport propertyChangeSupport;
 	
-	UIHelpWindow uiHelpWindow = new UIHelpWindow();
+	private UIHelpWindow uiHelpWindow = new UIHelpWindow();
 	
 	/**
 	 * Events emitted by the CatmaApplication.
@@ -453,6 +453,7 @@ public class CatmaApplication extends UI
 			userManager.logout(this);
 			repositoryOpened = false;
 		}
+		backgroundService.shutdown();
 		super.close();
 	}
 	

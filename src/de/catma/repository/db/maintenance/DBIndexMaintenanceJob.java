@@ -22,6 +22,7 @@ public class DBIndexMaintenanceJob implements Job {
 		try {
 			JobDataMap dataMap = ctx.getJobDetail().getJobDataMap();
 			
+			boolean enabled = true;
 			int fileCleanOffset = 0;
 			int repoTagReferenceRowOffset = 0; 
 			int repoPropertyRowOffset = 0;     
@@ -29,6 +30,10 @@ public class DBIndexMaintenanceJob implements Job {
 			int indexPropertyRowOffset = 0;    
 			int dbIndexMaintainerMaxObjectCount=10;
 			int sourceDocumentIndexMaintainerOffset=0;
+			
+			if (dataMap.containsKey(JobInstaller.JobDataKey.INDEX_MAINTAINER_ENABLED.name())) {
+				enabled = dataMap.getBoolean(JobInstaller.JobDataKey.INDEX_MAINTAINER_ENABLED.name());
+			}
 			
 			if (dataMap.containsKey(JobInstaller.JobDataKey.FILE_CLEAN_OFFSET.name())) {
 				fileCleanOffset = 
@@ -73,6 +78,7 @@ public class DBIndexMaintenanceJob implements Job {
 			
 			DBIndexMaintainer dbIndexMaintainer = 
 					new DBIndexMaintainer(
+						enabled,
 						fileCleanOffset,
 						repoTagReferenceRowOffset, repoPropertyRowOffset, 
 						indexTagReferenceRowOffset, indexPropertyRowOffset,

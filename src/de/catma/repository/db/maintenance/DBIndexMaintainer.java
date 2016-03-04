@@ -52,16 +52,17 @@ public class DBIndexMaintainer {
 	private int sourceDocumentIndexMaintainerMaxObjectCount;
 	private int sourceDocumentIndexMaintainerOffset = 0;
 	private int dbIndexMaintainerMaxObjectCount = 500;
+	private boolean enabled;
 
 	private Logger logger;
 
-	public DBIndexMaintainer(int fileCleanOffset, int repoTagReferenceRowOffset,
+	public DBIndexMaintainer(boolean enabled, int fileCleanOffset, int repoTagReferenceRowOffset,
 			int repoPropertyRowOffset, int indexTagReferenceRowOffset,
 			int indexPropertyRowOffset, int dbIndexMaintainerMaxObjectCount,
 			SourceDocumentIndexMaintainer sourceDocumentIndexMaintainer,
 			int sourceDocumentIndexMaintainerMaxObjectCount,
 			int sourceDocumentIndexMaintainerOffset) {
-
+		this.enabled = enabled;
 		this.fileCleanOffset = fileCleanOffset;
 
 		this.repoTagReferenceRowOffset = repoTagReferenceRowOffset;
@@ -78,6 +79,10 @@ public class DBIndexMaintainer {
 	}
 
 	public void run() throws IOException {
+		if (!enabled) {
+			return;
+		}
+		
 		UserManager userManager = new UserManager();
 		try {
 			this.repoFolderPath = 

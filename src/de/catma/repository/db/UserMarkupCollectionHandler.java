@@ -18,6 +18,7 @@
  */
 package de.catma.repository.db;
 
+import static de.catma.repository.db.jooqgen.catmarepository.Tables.CORPUS_USERMARKUPCOLLECTION;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTY;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTYDEFINITION;
 import static de.catma.repository.db.jooqgen.catmarepository.Tables.PROPERTYVALUE;
@@ -59,6 +60,8 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 
 import de.catma.document.AccessMode;
+import de.catma.document.Corpus;
+import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
@@ -136,7 +139,7 @@ class UserMarkupCollectionHandler {
 	private IDGenerator idGenerator;
 //	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private Map<String,WeakReference<UserMarkupCollection>> umcCache;
-	private DataSource dataSource;
+	private volatile DataSource dataSource;
 	
 	UserMarkupCollectionHandler(DBRepository dbRepository) {
 		this.dbRepository = dbRepository;
@@ -1346,5 +1349,80 @@ class UserMarkupCollectionHandler {
 				db.close();
 			}
 		}
+	}
+
+	public int getNewUserMarkupCollectionRefs(Corpus corpus) {
+		
+		Set<Integer> knownUserMarkupCollectionIds = new HashSet<>();
+		
+		for (UserMarkupCollectionReference ref : corpus.getUserMarkupCollectionRefs()) {
+			knownUserMarkupCollectionIds.add(Integer.valueOf(ref.getId()));
+		}
+		
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+		
+		Map<String,Record> sourceDocIdToMarkupCollRecord = null;
+		//TODO: refactor when upgrading on newer jooq version
+		if (knownUserMarkupCollectionIds.isEmpty()) {
+			sourceDocIdToMarkupCollRecord = db
+				.select()
+				.from(USERMARKUPCOLLECTION)
+				.join(USER_USERMARKUPCOLLECTION)
+					.on(USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+							.eq(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID))
+					.and(USER_USERMARKUPCOLLECTION.USERID
+							.eq(dbRepository.getCurrentUser().getUserId()))
+				.join(CORPUS_USERMARKUPCOLLECTION)
+					.on(CORPUS_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+							.eq(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID))
+					.and(CORPUS_USERMARKUPCOLLECTION.CORPUSID
+							.eq(Integer.valueOf(corpus.getId())))
+				.join(SOURCEDOCUMENT)
+					.on(SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(USERMARKUPCOLLECTION.SOURCEDOCUMENTID))
+				.fetchMap(SOURCEDOCUMENT.LOCALURI);
+		}
+		else {
+			sourceDocIdToMarkupCollRecord = db
+				.select()
+				.from(USERMARKUPCOLLECTION)
+				.join(USER_USERMARKUPCOLLECTION)
+					.on(USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+							.eq(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID))
+					.and(USER_USERMARKUPCOLLECTION.USERID
+							.eq(dbRepository.getCurrentUser().getUserId()))
+				.join(CORPUS_USERMARKUPCOLLECTION)
+					.on(CORPUS_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+							.eq(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID))
+					.and(CORPUS_USERMARKUPCOLLECTION.CORPUSID
+							.eq(Integer.valueOf(corpus.getId())))
+				.join(SOURCEDOCUMENT)
+					.on(SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(USERMARKUPCOLLECTION.SOURCEDOCUMENTID))
+				.where(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+						.notIn(knownUserMarkupCollectionIds))
+				.fetchMap(SOURCEDOCUMENT.LOCALURI);
+		}
+		
+		UserMarkupCollectionReferenceMapper mapper = new UserMarkupCollectionReferenceMapper();
+		for (Map.Entry<String, Record> mappedRecord : sourceDocIdToMarkupCollRecord.entrySet()) {
+			String sourceDocId = mappedRecord.getKey();
+			Record umcRecord = mappedRecord.getValue();
+			
+			UserMarkupCollectionReference umcRef = mapper.map(umcRecord);
+			SourceDocument sd = dbRepository.getDbSourceDocumentHandler().getSourceDocument(sourceDocId);
+			
+			sd.addUserMarkupCollectionReference(umcRef);
+			corpus.addUserMarkupCollectionReference(umcRef);
+			
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+					RepositoryChangeEvent.userMarkupCollectionChanged.name(),
+					null, new Pair<UserMarkupCollectionReference, SourceDocument>(
+							umcRef, sd));
+			
+			dbRepository.getPropertyChangeSupport().firePropertyChange(
+				Repository.RepositoryChangeEvent.corpusChanged.name(),
+				umcRef, corpus);
+		}
+		
+		return sourceDocIdToMarkupCollRecord.size();
 	}
 }

@@ -45,6 +45,10 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 			JobDataMap indexJobDataMap = new JobDataMap();
 
 			indexJobDataMap.put(
+					JobDataKey.INDEX_MAINTAINER_ENABLED.name(), 
+					RepositoryPropertyKey.IndexMaintainerEnabled.isTrueIndexed(
+							repoIndex, true));
+			indexJobDataMap.put(
 					JobDataKey.SOURCEDOCIDXMAINTAIN.name(), 
 					RepositoryPropertyKey.SourceDocumentIndexMaintainer.getIndexedValue(
 							repoIndex));
