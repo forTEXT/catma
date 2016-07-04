@@ -242,6 +242,8 @@ public class MarkupResultPanel extends VerticalLayout {
 	
 	private MarkupResultHelpWindow markupResultHelpWindow = new MarkupResultHelpWindow();
 	private TagKwicResultsProvider tagKwicResultsProvider;
+	private Button btSelectAllRows;
+	private Button btDeselectAllRows;
 	
 	public MarkupResultPanel(
 			Repository repository, 
@@ -466,6 +468,22 @@ public class MarkupResultPanel extends VerticalLayout {
 				}
 			}
 		});
+		
+		btSelectAllRows.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				resultTable.setValue(resultTable.getItemIds());
+			}
+		});
+		
+		btDeselectAllRows.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				resultTable.setValue(null);
+			}
+		});
 	}
 	
 	private void handleCbFlatTableRequest() {
@@ -663,6 +681,15 @@ public class MarkupResultPanel extends VerticalLayout {
 		buttonPanel.addComponent(cbPropAsColumns);
 		buttonPanel.setComponentAlignment(cbPropAsColumns, Alignment.MIDDLE_RIGHT);
 		cbPropAsColumns.setVisible(false);
+		
+		btSelectAllRows = new Button("Select all");
+		buttonPanel.addComponent(btSelectAllRows);
+		buttonPanel.setComponentAlignment(btSelectAllRows, Alignment.MIDDLE_RIGHT);
+		
+		btDeselectAllRows = new Button("Deselect all");
+		buttonPanel.addComponent(btDeselectAllRows);
+		buttonPanel.setComponentAlignment(btDeselectAllRows, Alignment.MIDDLE_RIGHT);
+		
 		
 		btSelectAll = new Button("Select all for Kwic");
 		
