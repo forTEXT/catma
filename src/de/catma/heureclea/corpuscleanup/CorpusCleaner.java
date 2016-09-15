@@ -3,10 +3,12 @@ package de.catma.heureclea.corpuscleanup;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
@@ -26,6 +28,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.FileType;
@@ -45,6 +49,8 @@ import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
+import de.catma.util.IDGenerator;
 
 public class CorpusCleaner {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -53,8 +59,21 @@ public class CorpusCleaner {
 	private String baseURL;
 	private String targetCid;
 	
-	private Set<String> validUmcNames = new HashSet<>();
+	private Set<String> validSourceDocNames = new HashSet<>();
+	private Set<String> validConcepts = new HashSet<>();
+	private Set<String> baseConcepts = new HashSet<>();
 	
+	private int annotatorNumber = 1;
+	private Map<String,String> annotatorMap = new HashMap<>();
+	private String tagsetUUID = new IDGenerator().generate();
+	private Version tagsetVersion = new Version();
+	private Table<String, String, UserMarkupCollection> collections = HashBasedTable.create();
+	private int includedTagInstanceCount = 0;
+	private int excludedTagInstanceCount = 0;
+	private int inputCollectionCount = 0;
+	private int outputCollectionCount = 0;
+	private int sourceDocCount = 0;
+
 	private LoadingCache<String, SourceDocument> sourceDocumentCache = 
 			CacheBuilder.newBuilder()
 			.maximumSize(2)
@@ -97,7 +116,9 @@ public class CorpusCleaner {
 		}
 		user = args[1];
 		pass = args[2];
-		loadValidUmcs(args[3]);
+		loadFromFile(args[3], validSourceDocNames);
+		loadFromFile(args[4], validConcepts);
+		loadBaseConcepts();
 		
 		String cid = "52";
 		targetCid = "2774";
@@ -127,11 +148,25 @@ public class CorpusCleaner {
 		
 		for (JsonNode sourceDocNode : contentsNode) {
 			handleSourceDocNode(sourceDocNode); 
+			sourceDocCount++;
 		}
+		
+		logger.info("finished with " + includedTagInstanceCount + " instances");
+		logger.info("excluded instance count: " + excludedTagInstanceCount);
+		logger.info("input sourcedocs/collections: " + sourceDocCount + "/" + inputCollectionCount);
+		logger.info("output collections: " + outputCollectionCount);
+	}	
+	
+	private void loadBaseConcepts() {
+		for (String concept : validConcepts) {
+			baseConcepts.add(concept.substring(0, concept.lastIndexOf("/")));
+		}
+		
+		logger.info("base concepts: " + baseConcepts);
 	}
-	
-	
-	private void loadValidUmcs(String fileName) throws FileNotFoundException, IOException {
+
+
+	private void loadFromFile(String fileName, Set<String> container) throws IOException {
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		try (FileInputStream fis = new FileInputStream(fileName)) {
 			IOUtils.copy(fis, buffer);
@@ -140,32 +175,51 @@ public class CorpusCleaner {
 		String[] names = buffer.toString("UTF-8").split(",");
 		for (String name : names) {
 			if (!name.trim().isEmpty()) {
-				validUmcNames.add(name.trim());
+				container.add(name.trim());
 			}
 		}
 		
 	}
 
-
 	private void handleSourceDocNode(JsonNode sourceDocNode) throws IOException {
 
 		String sourceDocId = sourceDocNode.get("sourceDocID").asText();
 		String sourceDocName = sourceDocNode.get("sourceDocName").asText();
-		JsonNode umcListNode = sourceDocNode.get("umcList");
-		
-		for (JsonNode umcNode : umcListNode) {
-			handleUmcNode(sourceDocId, sourceDocName, umcNode);
+		if (isValidSourceDoc(sourceDocName)) {
+			
+			JsonNode umcListNode = sourceDocNode.get("umcList");
+			
+			for (JsonNode umcNode : umcListNode) {
+				handleUmcNode(sourceDocId, sourceDocName, umcNode);
+				inputCollectionCount++;
+			}
+			
+			try {
+				for (UserMarkupCollection targetUmc : collections.values()) {
+					TeiUserMarkupCollectionSerializationHandler teiUserMarkupCollectionSerializationHandler = 
+							new TeiUserMarkupCollectionSerializationHandler(new TagManager(), false);
+					uploadUmc(teiUserMarkupCollectionSerializationHandler, targetUmc, sourceDocId);
+					outputCollectionCount++;
+				}
+				
+				collections.clear();
+				
+			} catch (ExecutionException e) {
+				throw new IOException(e);
+			}
+			
 		}
-		
-		
 	}
 
 
 	private void handleUmcNode(String sourceDocId, String sourceDocName, JsonNode umcNode) throws IOException {
 		String umcId = umcNode.get("umcID").asText();
 		String umcName = umcNode.get("umcName").asText();
-		
-		if (isIncluded(umcName)) {
+
+		if (umcName.toUpperCase().contains("UIMA")) {
+			logger.info("skipping UIMA collection " + umcName);
+		}
+		else {
 			handleUmc(sourceDocId, sourceDocName, umcId, umcName);
 		}
 	}
@@ -203,40 +257,59 @@ public class CorpusCleaner {
 		UserMarkupCollection umc = teiUserMarkupCollectionSerializationHandler.deserialize(
 			umcId, new ByteArrayInputStream(buffer.toByteArray()));
 		
+		if (umc.getTagReferences().isEmpty()) {
+			logger.info("Collection is empty, skipping " + umc);
+			return;
+		}
+		
+		String annotator = null;
+		try {
+			annotator = umc.toString().substring(0, umc.toString().indexOf(" "));
+		}
+		catch (Exception e) {
+			logger.severe("not a valid umc: " + umc);
+			return;
+		}
+
+		logger.info("annotator: " +  annotator);
+		
 		logger.info("copying relevant tag references");
 		
 		TagLibrary tagLibrary = umc.getTagLibrary();
 		TagLibrary targetLib = new TagLibrary(null, tagLibrary.getName());
 		
-		UserMarkupCollection targetUmc = 
-			new UserMarkupCollection(
-					null, new ContentInfoSet(umc.getContentInfoSet()), targetLib);
-		targetUmc.getContentInfoSet().setTitle("myTestColl");
-		
 		Set<String> includedInstances = new HashSet<>();
 		Set<String> excludedInstances = new HashSet<>();
+		TagsetDefinition targetTagsetDefinition = 
+			new TagsetDefinition(
+				null, tagsetUUID, "heureCLÉA time tagset", tagsetVersion);
+		copyTagDefs(targetTagsetDefinition, tagLibrary);
+		targetLib.add(targetTagsetDefinition);
 		
 		for (TagReference tagReference : umc.getTagReferences()) {
 			
 			TagDefinition tagDefinition = tagReference.getTagDefinition();
 			String path = tagLibrary.getTagPath(tagDefinition);
 			
-			if (isValidPath(path)) {
-				
-				TagsetDefinition tagsetDefinition = tagLibrary.getTagsetDefinition(tagDefinition);
-				if (!targetLib.contains(tagsetDefinition)) {
-					targetLib.add(tagsetDefinition);
-				}
+			if (isValidPath(path, validConcepts)) {
+
+				String conceptName = getConcept(path);
 				
 				TagInstance tagInstance = tagReference.getTagInstance();
 				PropertyDefinition propertyDefinition = 
 					tagDefinition.getPropertyDefinitionByName(
 							SystemPropertyName.catma_markupauthor.name());
 				
+				String annotatorAnonym = getAnnotatorAnonym(annotator);
+				
+				UserMarkupCollection targetUmc = getTargetUmc(
+						conceptName, umc.getContentInfoSet(), 
+						targetLib, annotator, annotatorAnonym, sourceDocName);
+				
 				//anonymizing authors
 				tagInstance.getProperty(
 					propertyDefinition.getUuid()).setPropertyValueList(
-							new PropertyValueList("Rabea"));
+							new PropertyValueList(annotatorAnonym));
 				
 				targetUmc.addTagReference(tagReference);
 				includedInstances.add(tagReference.getTagInstanceID());
@@ -247,15 +320,97 @@ public class CorpusCleaner {
 			
 		}
 		logger.info("number of included instances: " + includedInstances.size());
-		logger.info("number of excluded instances: " + excludedInstances.size());
+		logger.info("number of excluded instances: " + excludedInstances.size());		
+		logger.info("annotators " + annotatorMap.toString());
 		
-		try {
-			uploadUmc(teiUserMarkupCollectionSerializationHandler, targetUmc, sourceDocId);
-		} catch (ExecutionException e) {
-			throw new IOException(e);
+		includedTagInstanceCount += includedInstances.size();
+		excludedTagInstanceCount += excludedInstances.size();
+	}
+
+
+	private void copyTagDefs(TagsetDefinition targetTsDef, TagLibrary tagLibrary) {
+		TagsetDefinition sourceTsDef = tagLibrary.getTagsetDefinitions().iterator().next();
+		
+		for (TagDefinition tagDef : sourceTsDef) {
+			String path = tagLibrary.getTagPath(tagDef);
+			if (isValidPath(path, baseConcepts)) {
+				
+				if (isBasePath(path, baseConcepts)) {
+					TagDefinition tagDefCopy = new TagDefinition(null, tagDef.getUuid(), tagDef.getName(), tagDef.getVersion(), null, null);
+					for (PropertyDefinition pd : tagDef.getSystemPropertyDefinitions()) {
+						tagDefCopy.addSystemPropertyDefinition(new PropertyDefinition(pd));
+					}
+					for (PropertyDefinition pd : tagDef.getUserDefinedPropertyDefinitions()) {
+						tagDefCopy.addUserDefinedPropertyDefinition(new PropertyDefinition(pd));
+					}	
+					targetTsDef.addTagDefinition(tagDefCopy);
+				}
+				else {
+					targetTsDef.addTagDefinition(tagDef);
+				}
+			}
 		}
 		
+	}
+
+
+	private boolean isBasePath(String path, Set<String> baseConcepts) {
 		
+		for (String validPath : baseConcepts) {
+			if (path.equals(validPath)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+	private String getConcept(String path) {
+		
+		for (String validPath : validConcepts) {
+			if (path.startsWith(validPath)) {
+				return validPath.substring(validPath.lastIndexOf("/")+1);
+			}
+		}
+
+		
+		throw new IllegalArgumentException("concept for " + path + " not found!");
+	}
+
+
+	private String getAnnotatorAnonym(String ident) {
+		String anno = annotatorMap.get(ident);
+		if (anno == null) {
+			anno = "Annotator" + annotatorNumber;
+			annotatorNumber++;
+			annotatorMap.put(ident, anno);
+			logger.info("Mapping " + ident +"-->"+anno);
+		}
+		
+		return anno;
+	}
+
+
+	private UserMarkupCollection getTargetUmc(
+			String conceptName, ContentInfoSet contentInfoSet, TagLibrary targetLib,
+			String annotator, String annotatorAnonym, String sourceDocName) {
+		
+		UserMarkupCollection targetCollection = collections.get(annotator, conceptName);
+		
+		if (targetCollection == null) {
+			targetCollection = 
+					new UserMarkupCollection(
+							null, new ContentInfoSet(contentInfoSet), targetLib);
+			targetCollection.getContentInfoSet().setTitle(
+					annotatorAnonym + " " + sourceDocName + " " + conceptName);
+			targetCollection.getContentInfoSet().setAuthor(annotatorAnonym);
+			targetCollection.getContentInfoSet().setDescription(
+					conceptName + " annotations, source collection: " + contentInfoSet.getTitle());
+			collections.put(annotator, conceptName, targetCollection);
+			logger.info("creating Collection " + targetCollection + " for " + annotator + "/" + annotatorAnonym);
+		}
+		
+		return targetCollection;
 	}
 
 
@@ -268,6 +423,11 @@ public class CorpusCleaner {
 		
 		teiUserMarkupCollectionSerializationHandler.serialize(
 				targetUmc, sourceDocumentCache.get(sourceDocId), buffer);	
+		
+		try (FileOutputStream fos = new FileOutputStream("c:/data/projects/eheuristic/corpus_cleanup/output/" + targetUmc.getContentInfoSet().getTitle() + ".xml")) {
+			IOUtils.copy(new ByteArrayInputStream(buffer.toByteArray()), fos);
+//			logger.info("upload " + targetUmc + " successful" ); 
+		}
 		
 		StringBuilder urlBuilder = new StringBuilder(baseURL);
 
@@ -293,13 +453,18 @@ public class CorpusCleaner {
 	}
 
 
-	private boolean isValidPath(String path) {
-		return path.startsWith("/Time Tagset/time/dates");
+	private boolean isValidPath(String path, Set<String> concepts) {
+		for (String validPath : concepts) {
+			if (path.startsWith(validPath)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 
-	private boolean isIncluded(String umcName) {
-		return validUmcNames.contains(umcName.trim());
+	private boolean isValidSourceDoc(String sourceDocName) {
+		return validSourceDocNames.contains(sourceDocName.trim());
 	}
 
 
