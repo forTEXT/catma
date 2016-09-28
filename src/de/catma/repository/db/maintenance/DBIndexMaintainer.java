@@ -177,19 +177,10 @@ public class DBIndexMaintainer {
 	}
 
 	private void checkStaleIndexProperties(DSLContext db) {
-		logger.info("checking stale index properties");
+		logger.info("checking stale index properties, starting at offset: " +  (indexPropertyRowOffset-dbIndexMaintainerMaxObjectCount));
+
 		de.catma.repository.db.jooqgen.catmaindex.tables.Property indexProperty = 
 				de.catma.repository.db.jooqgen.catmaindex.Tables.PROPERTY;
-
-		if (indexPropertyRowOffset<=0) {
-			indexPropertyRowOffset = db
-			.selectCount()
-			.from(indexProperty)
-			.fetchOne()
-			.value1();
-		}
-		
-		logger.info("checking stale index properties, starting at offset: " +  (indexPropertyRowOffset-dbIndexMaintainerMaxObjectCount));
 		
 		Result<Record5<byte[], byte[], String, String, Integer>> result = db
 		.select(
@@ -202,7 +193,7 @@ public class DBIndexMaintainer {
 		.limit(Math.max(indexPropertyRowOffset-dbIndexMaintainerMaxObjectCount,0), dbIndexMaintainerMaxObjectCount)
 		.fetch();
 		
-		indexPropertyRowOffset -= result.size();
+		indexPropertyRowOffset += result.size();
 		
 		ArrayList<Integer> toBeDeleted = new ArrayList<Integer>();
 		
@@ -238,20 +229,10 @@ public class DBIndexMaintainer {
 	}
 
 	private void checkStaleIndexTagReferences(DSLContext db) {
-		logger.info("checking stale index tagreferences");
+		logger.info("checking stale index tagreferences, starting offset: " + (indexTagReferenceRowOffset-dbIndexMaintainerMaxObjectCount));
 
 		de.catma.repository.db.jooqgen.catmaindex.tables.Tagreference indexTagReference =
 				de.catma.repository.db.jooqgen.catmaindex.Tables.TAGREFERENCE;
-
-		if (indexTagReferenceRowOffset <= 0) {
-			indexTagReferenceRowOffset = db
-			.selectCount()
-			.from(indexTagReference)
-			.fetchOne()
-			.value1();
-		}
-
-		logger.info("checking stale index tagreferences, starting offset: " + (indexTagReferenceRowOffset-dbIndexMaintainerMaxObjectCount));
 		
 		Result<Record9<String, String, String, byte[], byte[], String, Integer, Integer, Integer>> result = db
 		.select(
@@ -268,7 +249,7 @@ public class DBIndexMaintainer {
 		.limit(Math.max(indexTagReferenceRowOffset-dbIndexMaintainerMaxObjectCount,0), dbIndexMaintainerMaxObjectCount)
 		.fetch();
 		
-		indexTagReferenceRowOffset -= result.size();
+		indexTagReferenceRowOffset += result.size();
 		
 		ArrayList<Integer> toBeDeleted = new ArrayList<Integer>();
 		
@@ -310,21 +291,6 @@ public class DBIndexMaintainer {
 	}
 
 	private void checkRepoProperties(DSLContext db) {
-		logger.info("checking repo properties");
-		
-		if (repoPropertyRowOffset <= 0) {
-			repoPropertyRowOffset = db
-			.selectCount()
-			.from(PROPERTYVALUE)
-			.join(PROPERTY)
-				.on(PROPERTY.PROPERTYID.eq(PROPERTYVALUE.PROPERTYID))
-			.join(PROPERTYDEFINITION)
-				.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID.eq(PROPERTY.PROPERTYDEFINITIONID))
-			.join(TAGINSTANCE)
-				.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
-			.fetchOne()
-			.value1();
-		}
 
 		logger.info("checking repo properties, starting at offset: " + (repoPropertyRowOffset-dbIndexMaintainerMaxObjectCount));
 
@@ -349,7 +315,7 @@ public class DBIndexMaintainer {
 			repoPropertyRowOffset = 0;
 		}
 		else {
-			repoPropertyRowOffset -= result.size();
+			repoPropertyRowOffset += result.size();
 		}
 			
 		de.catma.repository.db.jooqgen.catmaindex.tables.Property indexProperty = 
@@ -406,24 +372,6 @@ public class DBIndexMaintainer {
 	}
 
 	private void checkRepoTagReferences(DSLContext db) {
-		logger.info("checking repo tagreferences");
-		
-		if (repoTagReferenceRowOffset<=0) {
-			repoTagReferenceRowOffset = db
-			.selectCount()
-			.from(TAGREFERENCE)
-			.join(TAGINSTANCE)
-				.on(TAGINSTANCE.TAGINSTANCEID.eq(TAGREFERENCE.TAGINSTANCEID))
-			.join(TAGDEFINITION)
-				.on(TAGDEFINITION.TAGDEFINITIONID.eq(TAGINSTANCE.TAGDEFINITIONID))
-			.join(USERMARKUPCOLLECTION)
-				.on(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
-						.eq(TAGREFERENCE.USERMARKUPCOLLECTIONID))
-			.join(SOURCEDOCUMENT)
-				.on(SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(USERMARKUPCOLLECTION.SOURCEDOCUMENTID))
-			.fetchOne()
-			.value1();
-		}
 		logger.info("checking repo tagreferences, starting at offset: " + (repoTagReferenceRowOffset-dbIndexMaintainerMaxObjectCount));
 		
 		Result<Record8<String,Integer,byte[],byte[], Timestamp, Integer,Integer, Integer>> result = db
@@ -452,7 +400,7 @@ public class DBIndexMaintainer {
 			repoTagReferenceRowOffset = 0;
 		}
 		else {
-			repoTagReferenceRowOffset -= result.size();
+			repoTagReferenceRowOffset += result.size();
 		}
 		
 		de.catma.repository.db.jooqgen.catmaindex.tables.Tagreference indexTagReference =
