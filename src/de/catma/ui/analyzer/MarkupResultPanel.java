@@ -1051,7 +1051,7 @@ public class MarkupResultPanel extends VerticalLayout {
 				repository.getSourceDocument(row.getSourceDocumentId());
 		
 		String tagDefinitionItemID = 
-				row.getTagDefinitionId() + "#" + row.getTagDefinitionVersion();
+				row.getTagDefinitionId();// + "#" + row.getTagDefinitionVersion(); TODO: as long as we don't show the version, a differentiation is more confusing then helpful here
 
 		if (!resultTable.containsId(tagDefinitionItemID)) {
 			resultTable.addItem(tagDefinitionItemID);
