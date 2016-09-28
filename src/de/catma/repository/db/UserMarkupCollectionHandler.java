@@ -323,10 +323,16 @@ class UserMarkupCollectionHandler {
 		.insertInto(
 			USERMARKUPCOLLECTION,
 				USERMARKUPCOLLECTION.TITLE,
+				USERMARKUPCOLLECTION.AUTHOR,
+				USERMARKUPCOLLECTION.DESCRIPTION,
+				USERMARKUPCOLLECTION.PUBLISHER,
 				USERMARKUPCOLLECTION.SOURCEDOCUMENTID,
 				USERMARKUPCOLLECTION.TAGLIBRARYID)
 		.values(
 			umc.getName(),
+			umc.getContentInfoSet().getAuthor(),
+			umc.getContentInfoSet().getDescription(),
+			umc.getContentInfoSet().getPublisher(),
 			sourceDocumentId,
 			Integer.valueOf(umc.getTagLibrary().getId()))
 		.returning(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)

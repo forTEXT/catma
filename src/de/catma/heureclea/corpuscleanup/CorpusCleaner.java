@@ -55,6 +55,7 @@ import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.util.IDGenerator;
+import de.catma.util.Pair;
 
 public class CorpusCleaner {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -79,6 +80,8 @@ public class CorpusCleaner {
 	private int sourceDocCount = 0;
 	private TagsetDefinition masterTagsetDefinition;
 	private String targetDir;
+	private String publisher = "heureCLÉA http://heureclea.de/";
+	private String author = "Evelyn Gius, Janina Jacke, Jan Christoph Meister, Marco Petris";
 	
 	private LoadingCache<String, SourceDocument> sourceDocumentCache = 
 			CacheBuilder.newBuilder()
@@ -126,44 +129,59 @@ public class CorpusCleaner {
 		loadFromFile(args[4], validConcepts);
 		loadBaseConcepts();
 		loadMasterTagsetDefinition(args[5]);
-		targetDir = args[6];
 		
 		
-		String cid = "52";
-		targetCid = "2789";
+		List<Pair<String,String>> corpusIdentities = new ArrayList<>();
+		corpusIdentities.add(new Pair<>("2812","2825")); //compared
+		corpusIdentities.add(new Pair<>("2818","2823")); //uncompared
 		
-		StringBuilder urlBuilder = new StringBuilder(baseURL);
-		
-		//TODO: corpus create
-		//TODO: corpus share
-		
-		urlBuilder.append("corpus/list?");
-		urlBuilder.append("cid="+cid);
-		
-		ClientResource client = 
-				new ClientResource(Context.getCurrent(), Method.GET, urlBuilder.toString());
+		for (Pair<String,String> corpusIdentity : corpusIdentities) {
+			collections = HashBasedTable.create();
+			includedTagInstanceCount = 0;
+			excludedTagInstanceCount = 0;
+			inputCollectionCount = 0;
+			outputCollectionCount = 0;
+			sourceDocCount = 0;
+			
+			String cid = corpusIdentity.getFirst();
+			targetCid = corpusIdentity.getSecond();
+			
+			targetDir = args[6];
+			if (targetDir.endsWith("/")) {
+				targetDir = targetDir.substring(0, targetDir.length()-1);
+			}
+			targetDir += "_" + targetCid; 
+			
+			StringBuilder urlBuilder = new StringBuilder(baseURL);
 
-		client.setChallengeResponse(ChallengeScheme.HTTP_BASIC, user, pass);
-		
-		Representation corpusRepresentation = client.get(); 
-		ByteArrayOutputStream jsonStream = new ByteArrayOutputStream();
-				
-		corpusRepresentation.write(jsonStream);
-		ObjectMapper mapper = new ObjectMapper();
-		ObjectNode corpusJson = 
-			mapper.readValue(jsonStream.toString("UTF-8"), ObjectNode.class);
-
-		JsonNode contentsNode = corpusJson.get("contents");
-		
-		for (JsonNode sourceDocNode : contentsNode) {
-			handleSourceDocNode(sourceDocNode); 
-			sourceDocCount++;
+			urlBuilder.append("corpus/list?");
+			urlBuilder.append("cid="+cid);
+			
+			ClientResource client = 
+					new ClientResource(Context.getCurrent(), Method.GET, urlBuilder.toString());
+	
+			client.setChallengeResponse(ChallengeScheme.HTTP_BASIC, user, pass);
+			
+			Representation corpusRepresentation = client.get(); 
+			ByteArrayOutputStream jsonStream = new ByteArrayOutputStream();
+					
+			corpusRepresentation.write(jsonStream);
+			ObjectMapper mapper = new ObjectMapper();
+			ObjectNode corpusJson = 
+				mapper.readValue(jsonStream.toString("UTF-8"), ObjectNode.class);
+	
+			JsonNode contentsNode = corpusJson.get("contents");
+			
+			for (JsonNode sourceDocNode : contentsNode) {
+				handleSourceDocNode(sourceDocNode); 
+				sourceDocCount++;
+			}
+			
+			logger.info("finished with " + includedTagInstanceCount + " instances");
+			logger.info("excluded instance count: " + excludedTagInstanceCount);
+			logger.info("input sourcedocs/collections: " + sourceDocCount + "/" + inputCollectionCount);
+			logger.info("output collections: " + outputCollectionCount);
 		}
-		
-		logger.info("finished with " + includedTagInstanceCount + " instances");
-		logger.info("excluded instance count: " + excludedTagInstanceCount);
-		logger.info("input sourcedocs/collections: " + sourceDocCount + "/" + inputCollectionCount);
-		logger.info("output collections: " + outputCollectionCount);
 	}	
 	
 	private void loadMasterTagsetDefinition(String path) throws IOException {
@@ -182,7 +200,6 @@ public class CorpusCleaner {
 				"/Time Tagset/time",
 				"/Time Tagset/narrative_levels",
 				"/Time Tagset/timerelation_discours--histoire",
-				"/Time Tagset/self-reflexive_narration",
 				"/Time Tagset/disagreement_approved"}) {
 			baseConcepts.add(concept);
 		}
@@ -484,9 +501,10 @@ public class CorpusCleaner {
 							null, new ContentInfoSet(contentInfoSet), targetLib);
 			targetCollection.getContentInfoSet().setTitle(
 					annotatorAnonym + " " + sourceDocName + " " + conceptName);
-			targetCollection.getContentInfoSet().setAuthor(annotatorAnonym);
+			targetCollection.getContentInfoSet().setAuthor(author);
 			targetCollection.getContentInfoSet().setDescription(
 					conceptName + " annotations, source collection: " + contentInfoSet.getTitle());
+			targetCollection.getContentInfoSet().setPublisher(publisher);
 			collections.put(annotator, conceptName, targetCollection);
 			logger.info("creating Collection " + targetCollection + " for " + annotator + "/" + annotatorAnonym);
 		}
@@ -505,7 +523,9 @@ public class CorpusCleaner {
 		teiUserMarkupCollectionSerializationHandler.serialize(
 				targetUmc, sourceDocumentCache.get(sourceDocId), buffer);	
 		
-		File file = new File(targetDir + targetUmc.getContentInfoSet().getTitle() + ".xml");
+		new File(targetDir).mkdirs();
+		
+		File file = new File(targetDir, targetUmc.getContentInfoSet().getTitle() + ".xml");
 		if (file.exists()) {
 			throw new IllegalStateException("file already exists: " + file); 
 		}

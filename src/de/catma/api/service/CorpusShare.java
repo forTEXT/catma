@@ -1,7 +1,6 @@
 package de.catma.api.service;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Properties;
 
 import org.restlet.data.ChallengeResponse;
@@ -33,7 +32,6 @@ public class CorpusShare extends ServerResource {
 					new RepositoryLoader().open(properties, cr.getIdentifier());
 			try {
 
-				Collection<Corpus> corpora = repo.getCorpora();
 				Form form = getRequest().getResourceRef().getQueryAsForm();
 				
 				String corpusId = form.getFirstValue(Parameter.cid.name());
