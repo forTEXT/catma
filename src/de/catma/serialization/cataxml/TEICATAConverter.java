@@ -28,6 +28,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
+import nu.xom.Comment;
 import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Serializer;
@@ -38,6 +39,7 @@ public class TEICATAConverter {
 	private String user;
 	private String pass;
 	private TagsetDefinition structureTagsetDefinition;
+	private String structureTagsetUuid;
 
 	public void run(String[] args) throws Exception {
 		String outputDir = args[0];
@@ -66,6 +68,12 @@ public class TEICATAConverter {
 
 		JsonNode contentsNode = corpusJson.get("contents");
 		Document document = new Document(new Element("project"));
+		document.insertChild(new Comment("  Created by CATMA, http://www.catma.de  "), 0);
+		Element desc = new Element("description");
+		desc.appendChild("This project is a sample coded data file consisting "
+				+ "of 8 speeches made by the 4 candidates at the 2000 "
+				+ "presidential election.");
+		document.getRootElement().appendChild(desc);
 
 		for (JsonNode sourceDocNode : contentsNode) {
 			handleSourceDocNode(sourceDocNode, document); 
@@ -143,13 +151,13 @@ public class TEICATAConverter {
 		
 		UserMarkupCollection umc = teiUserMarkupCollectionSerializationHandler.deserialize(
 			umcId, new ByteArrayInputStream(buffer.toByteArray()));
-	
+		
 		if (this.structureTagsetDefinition != null) {
 			umc.getTagLibrary().add(structureTagsetDefinition);
 		}
 		
 		CATAMarkupCollectionSerializationHandler cataMarkupCollectionSerializationHandler = 
-				new CATAMarkupCollectionSerializationHandler(outputDocument);
+				new CATAMarkupCollectionSerializationHandler(outputDocument, "CATMA_F5C057C0-5AC4-4DF8-9640-32C4E64F5ACA");
 		
 		cataMarkupCollectionSerializationHandler.serialize(umc, sourceDocument, null);
 		if (this.structureTagsetDefinition == null) {

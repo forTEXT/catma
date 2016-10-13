@@ -4,10 +4,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import de.catma.document.Range;
 import de.catma.document.source.SourceDocument;
@@ -69,6 +73,10 @@ public class CATAMarkupCollectionSerializationHandler implements UserMarkupColle
 			
 			textElement.appendChild(codeStart);
 		}
+		@Override
+		public String toString() {
+			return "START: " + tagReference;
+		}
 	}
 	
 	private static class EndReference implements CATATagReference {
@@ -84,6 +92,11 @@ public class CATAMarkupCollectionSerializationHandler implements UserMarkupColle
 			Element codeend = new Element("codeend");
 			codeend.addAttribute(new Attribute("key", tagReference.getTagInstanceID()));
 			textElement.appendChild(codeend);
+		}
+		
+		@Override
+		public String toString() {
+			return "END: " + tagReference;
 		}
 	}
 	
@@ -143,29 +156,44 @@ public class CATAMarkupCollectionSerializationHandler implements UserMarkupColle
 			addProperties(tagLibrary.getTagsetDefinition(
 					structureTagsetUuid), userMarkupCollection, sourceDocument, unit);
 		
-		addAnnotatedText(sourceDocument, userMarkupCollection, tagLibrary, textElement);
+		try {
+			addAnnotatedText(sourceDocument, userMarkupCollection, tagLibrary, textElement);
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
 		
 	}
 
 	private void addAnnotatedText(
 			SourceDocument sourceDocument, 
 			UserMarkupCollection userMarkupCollection,
-			TagLibrary tagLibrary, Element textElement) throws IOException {
+			TagLibrary tagLibrary, Element textElement) throws Exception {
 		
-		TreeMap<Integer, CATATagReference> offsetToCATATagReference = new TreeMap<>();
+		TreeMap<Integer, List<CATATagReference>> offsetToCATATagReference = new TreeMap<>();
+		mergeReferences(userMarkupCollection);
+
 		TagsetDefinition structureTagsetDefinition = tagLibrary.getTagsetDefinition(structureTagsetUuid);
 		for (TagReference tr : userMarkupCollection.getTagReferences()) {
 			if (!structureTagsetDefinition.hasTagDefinition(tr.getTagDefinition().getUuid())) {
-				offsetToCATATagReference.put(tr.getRange().getStartPoint(), new StartReference(tr));
-				offsetToCATATagReference.put(tr.getRange().getEndPoint(), new EndReference(tr));
+				if (!offsetToCATATagReference.containsKey(tr.getRange().getStartPoint())) {
+					offsetToCATATagReference.put(tr.getRange().getStartPoint(), new ArrayList<>());
+				}
+
+				if (!offsetToCATATagReference.containsKey(tr.getRange().getEndPoint())) {
+					offsetToCATATagReference.put(tr.getRange().getEndPoint(), new ArrayList<>());
+				}
+				
+				offsetToCATATagReference.get(tr.getRange().getStartPoint()).add(new StartReference(tr));
+				offsetToCATATagReference.get(tr.getRange().getEndPoint()).add(new EndReference(tr));
 			}
-		}
+ 		}
 		
 		
 		Integer lastPos = null;
-		
-		for (Map.Entry<Integer, CATATagReference> entry : offsetToCATATagReference.entrySet()) {
+
+		for (Map.Entry<Integer, List<CATATagReference>> entry : offsetToCATATagReference.entrySet()) {
 			int pos = entry.getKey();
+
 			if ((lastPos != null) && (pos > lastPos)) {
 				Text chunk = new Text(sourceDocument.getContent(new Range(lastPos, pos)));
 				textElement.appendChild(chunk);
@@ -175,7 +203,9 @@ public class CATAMarkupCollectionSerializationHandler implements UserMarkupColle
 				textElement.appendChild(chunk);
 			}
 			
-			entry.getValue().appendTo(textElement);
+			for (CATATagReference ref : entry.getValue()) {
+				ref.appendTo(textElement);
+			}
 			
 			lastPos = pos;
 		}
@@ -191,6 +221,46 @@ public class CATAMarkupCollectionSerializationHandler implements UserMarkupColle
 		
 	}
 
+	private void mergeReferences(UserMarkupCollection userMarkupCollection) throws Exception {
+		Map<String, TagInstance> tagInstances = new HashMap<>();
+		for (TagReference tr : userMarkupCollection.getTagReferences()) {
+			tagInstances.put(tr.getTagInstanceID(), tr.getTagInstance());
+		}
+		
+		for (TagInstance ti : tagInstances.values()) {
+			List<TagReference> refs = userMarkupCollection.getTagReferences(ti);
+			if (refs.size() > 1) {
+				TreeSet<TagReference> sortedRefs = new TreeSet<>(new TagReference.RangeComparator());
+				sortedRefs.addAll(refs);
+				
+				TagReference lastRef = null; 
+				
+				for (TagReference ref : sortedRefs) {
+					if (lastRef != null) {
+						if (lastRef.getRange().isAdjacentTo(ref.getRange())) {
+							TagReference mergedRef = 
+								new TagReference(
+									lastRef.getTagInstance(), 
+									lastRef.getTarget().toString(), 
+									new Range(lastRef.getRange().getStartPoint(), 
+											ref.getRange().getEndPoint()) );
+							userMarkupCollection.removeTagReferences(Arrays.asList(lastRef, ref));
+							userMarkupCollection.addTagReference(mergedRef);
+							lastRef = mergedRef;
+						}
+						else {
+							lastRef = ref;
+						}
+					}
+					else {
+						lastRef = ref;
+					}
+					
+				}
+			}
+		}
+	}
+
 	private Element addProperties(
 			TagsetDefinition tagsetDefinition, UserMarkupCollection userMarkupCollection, 
 			SourceDocument sourceDocument, Element unit) {
@@ -200,10 +270,11 @@ public class CATAMarkupCollectionSerializationHandler implements UserMarkupColle
 			List<TagReference> tagReferences = userMarkupCollection.getTagReferences(td);
 			if (!tagReferences.isEmpty()) {
 				TagInstance ti = tagReferences.get(0).getTagInstance();
-				Property typeProperty = ti.getProperty(
-						td.getPropertyDefinitionByName("type").getUuid()); 
+				PropertyDefinition typePropertyDefinition = 
+						td.getPropertyDefinitionByName("type"); 
 				
 				Element property = new Element("property");
+				property.addAttribute(new Attribute("name", td.getName()));
 				property.addAttribute(new Attribute("id", ti.getUuid()));
 				property.addAttribute(new Attribute(
 					"author", 
@@ -220,14 +291,32 @@ public class CATAMarkupCollectionSerializationHandler implements UserMarkupColle
 				
 				unit.appendChild(property);
 				
-				if (typeProperty.getPropertyValueList().getFirstValue().equals(
+				if (typePropertyDefinition.getFirstValue().equals(
 						"text")) {
 					textElement = new Element(td.getName());
 				}
 			}
 		}
+		
 		if (textElement == null) {
+			for (TagDefinition td : tagsetDefinition) {
+				PropertyDefinition pd = td.getPropertyDefinitionByName("type");
+				if (pd.getFirstValue().equals("text")) {
+					Element property = new Element("property");
+					property.addAttribute(new Attribute("name", td.getName()));
+
+					property.addAttribute(new Attribute("id",td.getUuid()));
+					property.addAttribute(new Attribute(
+						"author", 
+						td.getAuthor()));
+					unit.appendChild(property);
+					return property;
+				}
+				
+			}
+
 			textElement = new Element("property");
+			textElement.addAttribute(new Attribute("name", "default-text"));
 			textElement.addAttribute(new Attribute("TEXT", sourceDocument.toString()));
 			unit.appendChild(textElement);
 		}
