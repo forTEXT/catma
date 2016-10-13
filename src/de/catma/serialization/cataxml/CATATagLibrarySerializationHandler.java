@@ -11,6 +11,7 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
+import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
 import nu.xom.Attribute;
 import nu.xom.Document;
@@ -127,7 +128,7 @@ public class CATATagLibrarySerializationHandler implements TagLibrarySerializati
 	private void addCategory(TagDefinition td, TagsetDefinition tsDef, Element parent) {
 		Element cat = new Element("category");
 		cat.addAttribute(new Attribute("name", td.getName()));
-		cat.addAttribute(new Attribute("color", td.getColor()));
+		cat.addAttribute(new Attribute("color", ColorConverter.toHex(td.getColor())));
 		cat.addAttribute(new Attribute("id", td.getUuid()));
 		cat.addAttribute(new Attribute("author", td.getAuthor()));
 		cat.addAttribute(new Attribute("version", td.getVersion().toString()));
@@ -155,7 +156,7 @@ public class CATATagLibrarySerializationHandler implements TagLibrarySerializati
 	private void addCode(TagDefinition td, Element parent) {
 		Element code = new Element("code");
 		code.addAttribute(new Attribute("name", td.getName()));
-		code.addAttribute(new Attribute("color", td.getColor()));
+		code.addAttribute(new Attribute("color", ColorConverter.toHex(td.getColor())));
 		code.addAttribute(new Attribute("id", td.getUuid()));
 		code.addAttribute(new Attribute("author", td.getAuthor()));
 		code.addAttribute(new Attribute("version", td.getVersion().toString()));
