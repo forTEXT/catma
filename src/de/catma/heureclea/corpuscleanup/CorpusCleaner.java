@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
@@ -119,6 +120,7 @@ public class CorpusCleaner {
 	
 	
 	public void run(String[] args) throws Exception {
+	
 		baseURL = args[0];
 		if (!baseURL.endsWith("/")) {
 			baseURL += "/";
@@ -539,22 +541,42 @@ public class CorpusCleaner {
 		urlBuilder.append("umc/add?");
 		urlBuilder.append("sid="+sourceDocId);
 		urlBuilder.append("&cid="+targetCid);
+		int tries = 100;
+		int curTry =1;
+		while (curTry <= tries) {
+			
+			ClientResource client = 
+					new ClientResource(Context.getCurrent(), Method.POST, urlBuilder.toString());
+			try {
+				client.setChallengeResponse(ChallengeScheme.HTTP_BASIC, user, pass);
 		
-		ClientResource client = 
-				new ClientResource(Context.getCurrent(), Method.POST, urlBuilder.toString());
-
-		client.setChallengeResponse(ChallengeScheme.HTTP_BASIC, user, pass);
-
-		client.post(buffer.toString("UTF-8"), MediaType.APPLICATION_XML);
-		
-		Status status = client.getStatus();
-		
-		if (!status.isSuccess()) {
-			throw new IOException(status.toString());
+				client.post(buffer.toString("UTF-8"), MediaType.APPLICATION_XML);
+				
+				Status status = client.getStatus();
+				
+				if (!status.isSuccess()) {
+					throw new IOException(status.toString());
+				}
+				else {
+					logger.info("upload " + targetUmc + " successful" ); 
+				}
+				return;
+			}
+			catch(Exception e) {
+				logger.log(Level.SEVERE, "error posting umc " +  targetUmc + " try " + curTry, e);
+				curTry++;
+			}
+			finally {
+				try {
+					client.release();
+				}
+				catch (Exception e2) {
+					logger.log(Level.SEVERE, "error releasing client", e2);
+				}
+			}
 		}
-		else {
-			logger.info("upload " + targetUmc + " successful" ); 
-		}
+		
+		throw new IllegalStateException("couldn't upload " + targetUmc + " giving up!");
 	}
 
 
