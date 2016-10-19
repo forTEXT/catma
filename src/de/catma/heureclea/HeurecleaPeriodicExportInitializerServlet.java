@@ -14,6 +14,7 @@ import org.quartz.TriggerKey;
 import de.catma.quartz.JobInstaller;
 import de.catma.quartz.TriggerGroup;
 
+@Deprecated
 public class HeurecleaPeriodicExportInitializerServlet extends HttpServlet {
 	
 	@Override

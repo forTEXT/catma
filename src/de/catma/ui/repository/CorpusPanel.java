@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
@@ -141,11 +143,15 @@ public class CorpusPanel extends VerticalLayout {
 
 	private MenuItem miGenerateCorpusAnnotations;
 	private ProgressBar generateCorpusAnnotationsProgressBar;
+	private CorpusMarkupCollectionUploadMonitor corpusMarkupCollectionUploadMonitor;
+	private ScheduledFuture<?> corpusMarkupCollectionUploadMonitorFuture;
 	
 	public CorpusPanel(
 			Repository repository, ValueChangeListener valueChangeListener) {
 		this.repository = repository;
-		
+		this.corpusMarkupCollectionUploadMonitor = 
+				new CorpusMarkupCollectionUploadMonitor(repository);
+
 		initComponents();
 		initActions(valueChangeListener);
 		initListeners();
@@ -160,7 +166,6 @@ public class CorpusPanel extends VerticalLayout {
 				}
 				else if (evt.getOldValue() == null) { //add
 					addCorpusToTree((Corpus)evt.getNewValue());
-					corporaContainer.sort(new Object[] {TableProperty.title.name()}, new boolean[] { true });
 
 					Notification.show("Information",
 							"Start adding Source Documents" +
@@ -186,6 +191,7 @@ public class CorpusPanel extends VerticalLayout {
 						}
 					}
  				}
+				corporaContainer.sort(new Object[] {TableProperty.title.name()}, new boolean[] { true });
 			}
 		};
 		
@@ -193,7 +199,7 @@ public class CorpusPanel extends VerticalLayout {
 				Repository.RepositoryChangeEvent.corpusChanged,
 				corpusChangedListener);
 	}
-
+	
 	private void removeCorpusFromTree(Corpus oldValue) {
 		if ((corporaTree.getValue() != null) 
 				&& (corporaTree.getValue().equals(oldValue))) {
@@ -396,20 +402,18 @@ public class CorpusPanel extends VerticalLayout {
 								new ExecutionListener<Void>() {
 									@Override
 									public void done(Void result) {
-										try {
-											repository.reload(); 
-											
-											Notification.show(
-												"Info", 
-												"Your annotations have been generated!", 
-												Type.TRAY_NOTIFICATION);
-										} catch (IOException e) {
-											((CatmaApplication)UI.getCurrent()).showAndLogError(
-													"Error reloading repository!", e);
+										
+										if (corpusMarkupCollectionUploadMonitorFuture == null) {
+											corpusMarkupCollectionUploadMonitorFuture = 
+													((CatmaApplication)UI.getCurrent()).getBackgroundService().scheduleWithFixedDelay(
+														corpusMarkupCollectionUploadMonitor,
+														5,
+														10,
+														TimeUnit.SECONDS);											
 										}
-										finally {
-											generateCorpusAnnotationsProgressBar.setVisible(false);
-										}
+										
+										corpusMarkupCollectionUploadMonitor.addCorpus(selectedValue);
+										generateCorpusAnnotationsProgressBar.setVisible(false);
 									}
 									@Override
 									public void error(Throwable t) {
@@ -691,6 +695,10 @@ public class CorpusPanel extends VerticalLayout {
 	}
 	
 	public void close() {
+		if (corpusMarkupCollectionUploadMonitorFuture != null) {
+			corpusMarkupCollectionUploadMonitorFuture.cancel(true);
+		}
+		
 		repository.removePropertyChangeListener(
 				Repository.RepositoryChangeEvent.corpusChanged,
 				corpusChangedListener);

@@ -136,7 +136,7 @@ public class CatmaApplicationServlet extends VaadinServlet {
 					String problemRedirectURL = 
 							RepositoryPropertyKey.BaseURL.getValue( 
 									RepositoryPropertyKey.BaseURL.getDefaultValue());
-					messages.setOutOfSyncURL(problemRedirectURL);
+
 					messages.setAuthenticationErrorURL(problemRedirectURL);
 					messages.setInternalErrorURL(problemRedirectURL);
 					messages.setSessionExpiredURL(problemRedirectURL);

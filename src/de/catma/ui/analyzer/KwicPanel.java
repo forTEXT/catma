@@ -78,6 +78,9 @@ public class KwicPanel extends VerticalLayout {
 		rightContext, 
 		startPoint,
 		endPoint,
+		tagtype,
+		propertyname,
+		propertyvalue,
 		;
 	}
 
@@ -418,7 +421,21 @@ public class KwicPanel extends VerticalLayout {
 				KwicPropertyName.rightContext, String.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.rightContext, "Right Context");	
 		kwicTable.setColumnAlignment(KwicPropertyName.rightContext, Align.LEFT);
-		
+		if (markupBased) {
+			kwicTable.addContainerProperty(KwicPropertyName.tagtype, String.class, null);
+			kwicTable.setColumnHeader(KwicPropertyName.tagtype, "Tag Type Definition");
+			kwicTable.addContainerProperty(KwicPropertyName.propertyname, String.class, null);
+			kwicTable.setColumnHeader(KwicPropertyName.propertyname, "Property Name");
+			kwicTable.addContainerProperty(KwicPropertyName.propertyvalue, String.class, null);
+			kwicTable.setColumnHeader(KwicPropertyName.propertyvalue, "Property Value");
+			kwicTable.setColumnCollapsingAllowed(true);
+			kwicTable.setColumnCollapsible(KwicPropertyName.propertyname, true);
+			kwicTable.setColumnCollapsible(KwicPropertyName.propertyvalue, true);
+			kwicTable.setColumnCollapsed( 
+					KwicPropertyName.propertyname, true);
+			kwicTable.setColumnCollapsed( 
+					KwicPropertyName.propertyvalue, true);
+		}
 		kwicTable.addContainerProperty(
 				KwicPropertyName.startPoint, Integer.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.startPoint, "Start Point");
@@ -449,7 +466,7 @@ public class KwicPanel extends VerticalLayout {
 
 		HashMap<String, KwicProvider> kwicProviders =
 				new HashMap<String, KwicProvider>();
-		
+		boolean showPropertyColumns = false;
 		for (QueryResultRow row : queryResult) {
 			SourceDocument sourceDocument = 
 					repository.getSourceDocument(row.getSourceDocumentId());
@@ -472,16 +489,44 @@ public class KwicPanel extends VerticalLayout {
 			}
 			itemDirCache.put(row, kwic.isRightToLeft());
 			
-			kwicTable.addItem(
-				new Object[]{
-					sourceDocOrMarkupCollectionDisplay,
-					kwic.getBackwardContext(),
-					kwic.getKeyword(),
-					kwic.getForwardContext(),
-					row.getRange().getStartPoint(),
-					row.getRange().getEndPoint()},
+			if (markupBased) {
+				TagQueryResultRow tRow = (TagQueryResultRow) row;
+				String propertyName = tRow.getPropertyName();
+				String propertyValue = tRow.getPropertyValue();
+				showPropertyColumns = (propertyName != null)||showPropertyColumns;
+				kwicTable.addItem(
+					new Object[]{
+						sourceDocOrMarkupCollectionDisplay,
+						kwic.getBackwardContext(),
+						kwic.getKeyword(),
+						kwic.getForwardContext(),
+						tRow.getTagDefinitionPath(),
+						propertyName,
+						propertyValue,
+						row.getRange().getStartPoint(),
+						row.getRange().getEndPoint()},
 					row);
+			}
+			else {
+				kwicTable.addItem(
+					new Object[]{
+						sourceDocOrMarkupCollectionDisplay,
+						kwic.getBackwardContext(),
+						kwic.getKeyword(),
+						kwic.getForwardContext(),
+						row.getRange().getStartPoint(),
+						row.getRange().getEndPoint()},
+					row);
+			}
 		}
+		
+		if (showPropertyColumns) {
+			kwicTable.setColumnCollapsed( 
+					KwicPropertyName.propertyname, false);
+			kwicTable.setColumnCollapsed( 
+					KwicPropertyName.propertyvalue, false);
+		}
+
 	}
 	
 	public void removeQueryResultRows(Iterable<QueryResultRow> queryResult) {

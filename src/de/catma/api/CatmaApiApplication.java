@@ -21,8 +21,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import de.catma.api.service.ApiInfo;
+import de.catma.api.service.CorpusCreate;
 import de.catma.api.service.CorpusExport;
 import de.catma.api.service.CorpusList;
+import de.catma.api.service.CorpusShare;
 import de.catma.api.service.SourceDocumentExport;
 import de.catma.api.service.UserMarkupCollectionExport;
 import de.catma.api.service.UserMarkupCollectionImport;
@@ -68,6 +70,10 @@ public class CatmaApiApplication extends Application {
 	        router.attach("/corpus/list", CorpusList.class);
 	        
 	        router.attach("/corpus/get", CorpusExport.class);
+	        
+	        router.attach("/corpus/create", CorpusCreate.class);
+	        
+	        router.attach("/corpus/share", CorpusShare.class);
 	        
 	        router.attach("/src/get", SourceDocumentExport.class);
 	        
