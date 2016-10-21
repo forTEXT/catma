@@ -31,8 +31,8 @@ public class TaggerConnector extends AbstractComponentConnector {
 			}
 			
 			@Override
-			public void highlight(String textRangeJson) {
-				getWidget().highlight(textRangeJson);
+			public void highlight(String textRangeJson, int[] lineIds) {
+				getWidget().highlight(textRangeJson, lineIds);
 			}
 			
 			@Override

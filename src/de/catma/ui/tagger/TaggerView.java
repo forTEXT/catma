@@ -338,8 +338,9 @@ public class TaggerView extends VerticalLayout
 						List<TagReference> tagReferences = 
 							(List<TagReference>)(
 									selected?evt.getNewValue():evt.getOldValue());
-						
-						tagger.setVisible(tagReferences, selected);
+						if (!tagReferences.isEmpty()) {
+							tagger.setVisible(tagReferences, selected);
+						}
 					}
 				},
 				new PropertyChangeListener() {
@@ -517,9 +518,8 @@ public class TaggerView extends VerticalLayout
 			// set page that contains the range to be highlighted
 			int pageNumber = pager.getStartPageNumberFor(range);
 			pagerComponent.setPage(pageNumber);
-			// do the highlighting
-			TextRange tr = pager.getCurrentPage().getRelativeRangeFor(range);
-			tagger.highlight(tr);
+			
+			tagger.highlight(range);
 		} catch (ValueOutOfBoundsException e) {
 			logger.log(Level.SEVERE, "error during highlighting", e);
 		}

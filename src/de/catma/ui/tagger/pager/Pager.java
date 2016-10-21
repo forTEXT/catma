@@ -30,7 +30,6 @@ import java.util.zip.CRC32;
 import de.catma.document.Range;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
-import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 /**
  * @author marco.petris@web.de
@@ -59,7 +58,6 @@ public class Pager implements Iterable<Page> {
 	private Long checksum = null;
 	private int taggerID;
 	private int totalLineCount = 0;
-	private List<TextRange> currrentHighlightRanges; //this is a relative range, valid for the currentPageIndex
 
 	private boolean rightToLeftLanguage;
 	
@@ -69,7 +67,6 @@ public class Pager implements Iterable<Page> {
 		this.approxMaxLineLength = approxMaxLineLength;
 		this.maxPageLengthInLines = maxPageLengthInLines;
 		this.rightToLeftLanguage = rightToLeftLanguage;
-		this.currrentHighlightRanges = new ArrayList<TextRange>();
 	}
 	
 	public void setText(String text) {
@@ -178,10 +175,6 @@ public class Pager implements Iterable<Page> {
 		else if (index >= pages.size()) {
 			index = pages.size()-1;
 		}
-		// invalidate highlights
-		if (currentPageIndex != index) {
-			this.currrentHighlightRanges.clear();
-		}
 		currentPageIndex = index;
 		return pages.get(index);
 	}
@@ -243,14 +236,12 @@ public class Pager implements Iterable<Page> {
 		this.checksum = null; //recalculate pages
 		this.maxPageLengthInLines = maxPageLengthInLines;
 		this.currentPageIndex = 0;
-		this.currrentHighlightRanges.clear();
 	}
 	
 	public void setApproxMaxLineLength(int approxMaxLineLength) {
 		this.checksum = null; //recalculate pages
 		this.approxMaxLineLength = approxMaxLineLength;
 		this.currentPageIndex = 0;
-		this.currrentHighlightRanges.clear();
 	}
 
 	public void removeTagInstances(Set<TagDefinition> tagDefinitions) {
@@ -272,11 +263,14 @@ public class Pager implements Iterable<Page> {
 		return maxPageLengthInLines;
 	}
 	
-	public void highlight(TextRange highlightRange) {
-		currrentHighlightRanges.add(highlightRange);
+	public void highlight(Range absoluteHighlightRange) {
+		for (Page page : pages) {
+
+			Range overlappingAbsoluteRange = page.getOverlappingRange(absoluteHighlightRange);
+			if (overlappingAbsoluteRange != null) {
+				page.addHighlight(overlappingAbsoluteRange);
+			}
+		}
 	}
-	
-	public List<TextRange> getCurrentHighlightRanges() {
-		return currrentHighlightRanges;
-	}
+
 }

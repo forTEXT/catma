@@ -135,9 +135,9 @@ public class VTagger extends Composite {
 		}
 	}
 
-	public void highlight(String textRangeJson) {
+	public void highlight(String textRangeJson, int[] lineIds) {
 		TextRange textRange = textRangeJSONSerializer.fromJSON(textRangeJson);
-		taggerEditor.highlight(textRange);
+		taggerEditor.highlight(textRange, lineIds);
 	}
 
 	//FIXME: reimplement with line replacement

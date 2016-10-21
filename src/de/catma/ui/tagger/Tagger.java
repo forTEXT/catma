@@ -29,6 +29,7 @@ import com.vaadin.server.WebBrowser;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.UI;
 
+import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.CatmaApplication;
@@ -119,22 +120,11 @@ public class Tagger extends AbstractComponent {
 	}
 
 	private void setPage(String pageContent, Collection<ClientTagInstance> tagInstances) {
-		System.out.println(pageContent);
 		getRpcProxy(TaggerClientRpc.class).setTaggerId(this.taggerID);
 		try {
 			getRpcProxy(TaggerClientRpc.class).setPage(
 					pageContent, 
 					tagInstanceJSONSerializer.toJSON(tagInstances));
-			
-//			getRpcProxy(TaggerClientRpc.class).addTagInstances(
-//					tagInstanceJSONSerializer.toJSON(
-//							pager.getCurrentPage().getRelativeTagInstances()));
-			if (!pager.getCurrentHighlightRanges().isEmpty()) {
-				for (TextRange relativeTextRange : pager.getCurrentHighlightRanges()) {
-					getRpcProxy(TaggerClientRpc.class).highlight(
-							new TextRangeJSONSerializer().toJSON(relativeTextRange));
-				}
-			}
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				"Error setting the page!", e);
@@ -143,7 +133,6 @@ public class Tagger extends AbstractComponent {
 	
 	public void setText(String text) {
 		pager.setText(text);
-		setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getRelativeTagInstances());
 	}
 	
 	public void setPage(int pageNumber) {
@@ -153,13 +142,6 @@ public class Tagger extends AbstractComponent {
 
 	void setTagInstancesVisible(
 			Collection<ClientTagInstance> tagInstances, boolean visible) {
-		
-		
-		List<ClientTagInstance> currentRelativePageTagInstancesCopy = 
-				new ArrayList<ClientTagInstance>();
-		
-		currentRelativePageTagInstancesCopy.addAll(
-				pager.getCurrentPage().getRelativeTagInstances());
 		
 		for (ClientTagInstance ti : tagInstances) {
 			List<Page> pages = pager.getPagesForAbsoluteTagInstance(ti);
@@ -176,38 +158,9 @@ public class Tagger extends AbstractComponent {
 				}
 			}	
 		}
-		setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getRelativeTagInstances());
-		
-//		// we send only the TagInstances of the current page
-//		if (visible) {
-//			currentRelativePageTagInstancesCopy.clear();
-//			currentRelativePageTagInstancesCopy.addAll(
-//					pager.getCurrentPage().getRelativeTagInstances());
-//		}
-//		currentRelativePageTagInstancesCopy.retainAll(tagInstances);
-//		
-//		if (!currentRelativePageTagInstancesCopy.isEmpty()) {
-//			if (!visible) {
-//				try {
-//					getRpcProxy(TaggerClientRpc.class).removeTagInstances(
-//							tagInstanceJSONSerializer.toJSON(
-//									currentRelativePageTagInstancesCopy));
-//				} catch (IOException e) {
-//					((CatmaApplication)UI.getCurrent()).showAndLogError(
-//						"Error hiding Tags!", e);
-//				}
-//			}
-//			else {
-//				try {
-//					getRpcProxy(TaggerClientRpc.class).addTagInstances(
-//							tagInstanceJSONSerializer.toJSON(
-//									currentRelativePageTagInstancesCopy));
-//				} catch (IOException e) {
-//					((CatmaApplication)UI.getCurrent()).showAndLogError(
-//						"Error showing Tags!", e);
-//				}
-//			}
-//		}
+		if (pager.getCurrentPage().isDirty()) {
+			setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getRelativeTagInstances());
+		}
 	}
 
 	public void addTagInstanceWith(TagDefinition tagDefinition) {
@@ -258,22 +211,9 @@ public class Tagger extends AbstractComponent {
 			setHeight(wb.getScreenHeight()*0.47f, Unit.PIXELS);
 			init = false;
 		}
-		else {
-			setPage(
-				pager.getCurrentPage().toHTML(),
-				pager.getCurrentPage().getRelativeTagInstances());
-		}
 	}
 
-	public void highlight(TextRange relativeTextRange) {
-		pager.highlight(relativeTextRange);
-		
-		try {
-			getRpcProxy(TaggerClientRpc.class).highlight(
-					new TextRangeJSONSerializer().toJSON(relativeTextRange));
-		} catch (IOException e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error showing KWIC in the Tagger!", e);
-		}		
+	public void highlight(Range absoluteRange) {
+		pager.highlight(absoluteRange);
 	}
 }

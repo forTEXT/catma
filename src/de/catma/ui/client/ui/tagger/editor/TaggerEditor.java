@@ -29,7 +29,6 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
-import com.google.gwt.dom.client.Text;
 import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -42,6 +41,8 @@ import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
+import com.google.gwt.regexp.shared.MatchResult;
+import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.FocusWidget;
@@ -59,6 +60,7 @@ import de.catma.ui.client.ui.tagger.shared.TextRange;
 public class TaggerEditor extends FocusWidget 
 	implements MouseUpHandler, BlurHandler, FocusHandler, 
 		MouseDownHandler, KeyUpHandler, ClickHandler {
+	private static final String LINEID_PREFIX = "LINE.";
 	private static Logger logger = Logger.getLogger(TaggerEditor.class.getName());
 	private static SelectionHandlerImplStandard impl = 
 			 GWT.create(SelectionHandlerImplStandard.class);
@@ -316,7 +318,7 @@ public class TaggerEditor extends FocusWidget
 					endLine.getLineOffset()+endOffset).getRanges());
 			
 			for (int lineId = startLine.getLineId()+1; lineId<endLine.getLineId(); lineId++) {
-				Element lineElement = DOM.getElementById("LINE."+lineId);
+				Element lineElement = DOM.getElementById(LINEID_PREFIX+lineId);
 				LineNodeToLineConverter lineNodeToLineConverter = 
 						new LineNodeToLineConverter(lineElement);
 				
@@ -442,17 +444,16 @@ public class TaggerEditor extends FocusWidget
 				ContentElementID.CONTENT.name() + taggerID);
 	}
 
-	//TODO: reimplement
-	public void highlight(TextRange textRange) {
+	//TODO: not needed for now, but could be usefull for a quicksearch facility within the tagger
+	public void highlight(TextRange textRange, int[] lineIds) {
 		logger.info("Highlighting textrange: " + textRange);
-//		RangeConverter rangeConverter = new RangeConverter(taggerID);
-//		NodeRange nodeRange = rangeConverter.convertToNodeRange(textRange);
-//
-//		HighlightedSpanFactory highlightedSpanFactory = 
-//				new HighlightedSpanFactory("#078E18");
-//		addTagInstanceForRange(highlightedSpanFactory, nodeRange);
-//		Document.get().getElementById(
-//				highlightedSpanFactory.getLastSpanID()).scrollIntoView();
+		for (int lineId : lineIds) {
+			Element lineElement = Document.get().getElementById(LINEID_PREFIX+lineId);
+			LineNodeToLineConverter lineNodeToLineConverter = new LineNodeToLineConverter(lineElement);
+			Line line = lineNodeToLineConverter.getLine();
+			line.addHighlightedTextRange(textRange);
+			line.updateLineElement();
+		}
 	}
 	
 	//TODO: reimplement
@@ -518,13 +519,26 @@ public class TaggerEditor extends FocusWidget
 					if (!tagInstanceID.isEmpty()
 						&& tagPartElement.hasAttribute("id") 
 						&& tagPartElement.getAttribute("id").startsWith(tagInstanceID)) {
-						tagPartElement.addClassName("selected-tag-instance");
+						
+						String cssRgbColor = tagPartElement.getStyle().getColor();
+						int red = getRedFromCssRgb(cssRgbColor);
+						if (red > 170) {
+							tagPartElement.addClassName("selected-tag-instance-black");
+						}
+						else {
+							tagPartElement.addClassName("selected-tag-instance-red");
+						}
 						tagPartElement.removeClassName("unselected-tag-instance");
 					}
-					else if (tagPartElement.hasClassName("selected-tag-instance")) {
-						tagPartElement.removeClassName("selected-tag-instance");
+					else if (tagPartElement.hasClassName("selected-tag-instance-black")) {
+						tagPartElement.removeClassName("selected-tag-instance-black");
 						tagPartElement.addClassName("unselected-tag-instance");
 					}
+					else if (tagPartElement.hasClassName("selected-tag-instance-red")) {
+						tagPartElement.removeClassName("selected-tag-instance-red");
+						tagPartElement.addClassName("unselected-tag-instance");
+					}
+
 				}
 			}
 			
@@ -543,6 +557,17 @@ public class TaggerEditor extends FocusWidget
 				lastTagInstancePartID = null;
 			}
 		}
+	}
+	
+	private Integer getRedFromCssRgb(String cssColor) {
+		RegExp c = RegExp.compile("rgb *\\( *([0-9]+), *([0-9]+), *([0-9]+) *\\)");
+	    MatchResult m = c.exec(cssColor);
+
+	    if (m != null) { 
+	    	return Integer.valueOf(m.getGroup(1)); 
+	    }
+	
+		return 0;
 	}
 	
 	private String getLineID(Element targetElement) {

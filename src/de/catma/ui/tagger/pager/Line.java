@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -27,12 +29,13 @@ public class Line {
 
 	private Multimap<String, TextRange> textRangesByRelativeTagInstanceID;
 	private Map<String,ClientTagInstance> relativeTagInstanceByID;
-	
+	private Set<TextRange> highlightedTextRanges;
 
 	public Line() {
 		lineContents = new ArrayList<>();
 		textRangesByRelativeTagInstanceID = ArrayListMultimap.create();
 		relativeTagInstanceByID = new HashMap<>();
+		highlightedTextRanges = new HashSet<>();
 	}
 	
 	public String getPresentationContent() {
@@ -72,10 +75,10 @@ public class Line {
 		this.lineId = lineId;
 	}
 	
-	public void setTextRange(TextRange textRange) {
-		this.textRange = textRange;
+	public void setTextRange(TextRange relativeTextRange) {
+		this.textRange = relativeTextRange;
 		for (LineContent lineContent : lineContents) {
-			lineContent.setLineOffset(textRange.getStartPos());
+			lineContent.setLineOffset(relativeTextRange.getStartPos());
 		}
 	}
 
@@ -97,7 +100,10 @@ public class Line {
 		
 		rangeParts.add(new TextRange(this.textRange));
 		
-		for (TextRange currentTextRange : textRangesByRelativeTagInstanceID.values()) {
+		Set<TextRange> tagInstanceAndHighlightedTextRanges = new HashSet<>(textRangesByRelativeTagInstanceID.values());
+		tagInstanceAndHighlightedTextRanges.addAll(highlightedTextRanges);
+		
+		for (TextRange currentTextRange : tagInstanceAndHighlightedTextRanges) {
 			
 			for (TextRange rangePart : new TreeSet<TextRange>(rangeParts)) {
 				if (rangePart.hasOverlappingRange(currentTextRange)) {
@@ -119,11 +125,11 @@ public class Line {
 		}
 		
 		Collections.sort(rangeParts);
-		
-		for (TextRange rangePart : rangeParts) {
-			System.out.println(rangePart);
-		}
-
+//		
+//		for (TextRange rangePart : rangeParts) {
+//			System.out.println(rangePart);
+//		}
+//
 
 		Element table = new Element("table");
 		table.addAttribute(new Attribute("class", "taggerline-table"));
@@ -131,6 +137,8 @@ public class Line {
 		
 		Element tbody = new Element("tbody");
 		table.appendChild(tbody);
+		
+		// display layer
 		
 		Element contentDisplayLayer = new Element("tr");
 		contentDisplayLayer.addAttribute(new Attribute("class", "tagger-display-layer"));
@@ -143,6 +151,30 @@ public class Line {
 				new Attribute("colspan", String.valueOf(rangeParts.size())));
 		visibleContentLayerContent.appendChild(getPresentationContent());
 		
+		// highlight layer
+		if (!highlightedTextRanges.isEmpty()) {
+			Element highlightLayer = new Element("tr");
+			highlightLayer.addAttribute(new Attribute("class", "highlight-layer"));
+			highlightLayer.addAttribute(new Attribute("unselectable", "on"));
+			tbody.appendChild(highlightLayer);
+			
+			for (TextRange rangePart : rangeParts) {
+				Element highlightLayerContent = new Element("td");
+				highlightLayer.appendChild(highlightLayerContent);
+				highlightLayerContent.appendChild(TextRange.NBSP);
+	
+				if (rangePartIsHighlighted(rangePart)) {
+					highlightLayerContent.addAttribute(
+							new Attribute("class", "highlighted-content"));
+				}
+				else {
+					highlightLayerContent.addAttribute(
+							new Attribute("class", "empty-highlight-layer"));
+				}
+			}
+		}
+		
+		// annotation layers
 		AnnotationLayerBuilder annotationLayerBuilder = new AnnotationLayerBuilder(relativeTagInstanceByID.values(), rangeParts);
 		Table<Integer, TextRange, ClientTagInstance> layerTable = annotationLayerBuilder.getLayerTable();
 		int rowCount = layerTable.rowKeySet().size();
@@ -185,8 +217,8 @@ public class Line {
 				}
 			}
 		}
-		System.out.println(tbody.toXML());
 		
+		// segmentation layer
 		Element segmentationLayer = new Element("tr");
 
 		segmentationLayer.addAttribute(new Attribute("class", "segmentation-layer"));
@@ -202,6 +234,15 @@ public class Line {
 		}
 		
 		return table;
+	}
+	
+	private boolean rangePartIsHighlighted(TextRange rangePart) {
+		for (TextRange highlightedTextRange : highlightedTextRanges) {
+			if (rangePart.isCoveredBy(highlightedTextRange)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private String getPresentationContent(TextRange rangePart) {
@@ -241,5 +282,15 @@ public class Line {
 		
 		return result;
 	}
-	
+
+
+	public TextRange getOverlappingRange(TextRange textRange) {
+		return this.textRange.getOverlappingRange(textRange);
+	}
+
+	public void addHighlight(TextRange highlightRange) {
+		highlightedTextRanges.add(highlightRange);
+	}
+
 }
+

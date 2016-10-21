@@ -3,6 +3,7 @@ package de.catma.ui.client.ui.tagger.editor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -21,6 +22,7 @@ public class Line {
 	private String lineId;
 	private TextRange textRange;
 	private Set<TextRange> tagInstanceTextRanges;
+	private Set<TextRange> highlightedTextRanges;
 	private Collection<ClientTagInstance> relativeTagIntances;
 	private String presentationContent;
 	
@@ -33,19 +35,22 @@ public class Line {
 		this.tagInstanceTextRanges = tagInstanceTextRanges;
 		this.relativeTagIntances = relativeTagIntances;
 		this.presentationContent = presentationContent;
+		this.highlightedTextRanges = new HashSet<>();
 	}
 
 	private String getPresentationContent() {
 		return presentationContent;
 	}
 	
-	public Element createLineElement() {
+	private Element createLineElement() {
 		
 		List<TextRange> rangeParts = new ArrayList<>();
 		
 		rangeParts.add(new TextRange(this.textRange));
+		Set<TextRange> tagInstanceAndHighlightedTextRanges = new HashSet<>(tagInstanceTextRanges);
+		tagInstanceAndHighlightedTextRanges.addAll(highlightedTextRanges);
 		
-		for (TextRange currentTextRange : tagInstanceTextRanges) {
+		for (TextRange currentTextRange : tagInstanceAndHighlightedTextRanges) {
 			
 			for (TextRange rangePart : new TreeSet<TextRange>(rangeParts)) {
 				if (rangePart.hasOverlappingRange(currentTextRange)) {
@@ -75,9 +80,12 @@ public class Line {
 		Element tbody = DOM.createTBody();
 		table.appendChild(tbody);
 		
+		// display layer
+		
 		Element contentDisplayLayer = DOM.createTR();
 		contentDisplayLayer.setAttribute("class", "tagger-display-layer");
-		contentDisplayLayer.setAttribute("id", textRange.getStartPos()+"."+textRange.getEndPos());
+		contentDisplayLayer.setAttribute(
+				"id", textRange.getStartPos()+"."+textRange.getEndPos());
 		
 		tbody.appendChild(contentDisplayLayer);
 		Element visibleContentLayerContent = DOM.createTD();
@@ -86,11 +94,37 @@ public class Line {
 				"colspan", String.valueOf(rangeParts.size()));
 		visibleContentLayerContent.setInnerText(getPresentationContent());
 		
+		// highlight layer
+		if (!highlightedTextRanges.isEmpty()) {
+			Element highlightLayer = DOM.createTR();
+			highlightLayer.setAttribute("class", "highlight-layer");
+			highlightLayer.setAttribute("unselectable", "on");
+			tbody.appendChild(highlightLayer);
+			
+			for (TextRange rangePart : rangeParts) {
+				Element highlightLayerContent = DOM.createTD();
+				highlightLayer.appendChild(highlightLayerContent);
+				highlightLayerContent.setInnerText(TextRange.NBSP);
+	
+				if (rangePartIsHighlighted(rangePart)) {
+					highlightLayerContent.setAttribute(
+							"class", "highlighted-content");
+				}
+				else {
+					highlightLayerContent.setAttribute(
+							"class", "empty-highlight-layer");
+				}
+			}
+		}
+		
+		// annotation layers
+		
 		AnnotationLayerBuilder annotationLayerBuilder =
 				new AnnotationLayerBuilder(relativeTagIntances, rangeParts);
 		
-		Table<Integer, TextRange, ClientTagInstance> layerTable = annotationLayerBuilder.getLayerTable();
-		int rowCount = layerTable.rowKeySet().size();
+		Table<Integer, TextRange, ClientTagInstance> annotationLayerTable = 
+				annotationLayerBuilder.getLayerTable();
+		int rowCount = annotationLayerTable.rowKeySet().size();
 		for (int rowIdx = 0; rowIdx<rowCount; rowIdx++) {
 			Element annotationLayer = DOM.createTR();
 			
@@ -105,10 +139,11 @@ public class Line {
 				annotationLayerContent.setInnerText(TextRange.NBSP);
 				
 				ClientTagInstance relativeTagInstance = 
-						layerTable.get(rowIdx, rangePart);
+						annotationLayerTable.get(rowIdx, rangePart);
 				
 				if (relativeTagInstance != null) {
-					annotationLayerContent.setAttribute("class", "unselected-tag-instance");
+					annotationLayerContent.setAttribute(
+							"class", "unselected-tag-instance");
 					
 					annotationLayerContent.setAttribute(
 							"id", 
@@ -129,6 +164,8 @@ public class Line {
 			}
 		}
 		
+		// segmentation layer
+		
 		Element segmentationLayer = DOM.createTR();
 
 		segmentationLayer.setAttribute("class", "segmentation-layer");
@@ -146,8 +183,19 @@ public class Line {
 		return table;
 	}
 
+	private boolean rangePartIsHighlighted(TextRange rangePart) {
+		for (TextRange highlightedTextRange : highlightedTextRanges) {
+			if (rangePart.isCoveredBy(highlightedTextRange)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private String getPresentationContent(TextRange range) {
-		return presentationContent.substring(range.getStartPos()-getLineOffset(), range.getEndPos()-getLineOffset());
+		return presentationContent.substring(
+				range.getStartPos()-getLineOffset(), 
+				range.getEndPos()-getLineOffset());
 	}
 
 	public void addTagInstance(ClientTagInstance clientTagInstance) {
@@ -176,4 +224,9 @@ public class Line {
 	public int getLineId() {
 		return Integer.valueOf(lineId.substring(lineId.indexOf('.')+1));
 	}
+	
+	public void addHighlightedTextRange(TextRange textRange) {
+		highlightedTextRanges.add(textRange);
+	}
+	
 }
