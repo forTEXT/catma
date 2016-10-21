@@ -135,9 +135,9 @@ public class VTagger extends Composite {
 		}
 	}
 
-	public void highlight(String textRangeJson, int[] lineIds) {
+	public void highlight(String textRangeJson) {
 		TextRange textRange = textRangeJSONSerializer.fromJSON(textRangeJson);
-		taggerEditor.highlight(textRange, lineIds);
+		taggerEditor.highlight(textRange);
 	}
 
 	//FIXME: reimplement with line replacement
@@ -155,6 +155,10 @@ public class VTagger extends Composite {
 		ClientTagDefinition tagDefinition = 
 				tagDefinitionJSONSerializer.fromJSON(tagDefinitionJson);
 			taggerEditor.createAndAddTagIntance(tagDefinition);
+	}
+
+	public void setTagInstanceSelected(String tagInstanceId) {
+		 taggerEditor.setTagInstanceSelected(tagInstanceId);
 	}
 
 }

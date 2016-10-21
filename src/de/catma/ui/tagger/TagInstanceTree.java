@@ -60,6 +60,7 @@ public class TagInstanceTree extends HorizontalLayout {
 	static interface TagIntanceActionListener {
 		public void removeTagInstances(List<String> tagInstanceIDs);
 		public void updateProperty(TagInstance tagInstance, Collection<Property> properties);		
+		public void tagInstanceSelected(TagInstance tagInstance);
 	}
 	
 	private static enum TagInstanceTreePropertyName {
@@ -204,6 +205,7 @@ public class TagInstanceTree extends HorizontalLayout {
 					
 					tiInfoForm.setReadOnly(true);
 					
+					tagInstanceActionListener.tagInstanceSelected(tagInstance);
 				}
 				else {
 					tiInfoForm.setReadOnly(false);
@@ -211,6 +213,8 @@ public class TagInstanceTree extends HorizontalLayout {
 					tiInfoForm.setValue(emptyInfoSet);
 					
 					tiInfoForm.setReadOnly(true);
+					
+					tagInstanceActionListener.tagInstanceSelected(null);
 				}
 			}
 		});

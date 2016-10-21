@@ -445,19 +445,66 @@ public class TaggerEditor extends FocusWidget
 	}
 
 	//TODO: not needed for now, but could be usefull for a quicksearch facility within the tagger
-	public void highlight(TextRange textRange, int[] lineIds) {
+	public void highlight(TextRange textRange) {
 		logger.info("Highlighting textrange: " + textRange);
-		for (int lineId : lineIds) {
-			Element lineElement = Document.get().getElementById(LINEID_PREFIX+lineId);
-			LineNodeToLineConverter lineNodeToLineConverter = new LineNodeToLineConverter(lineElement);
-			Line line = lineNodeToLineConverter.getLine();
-			line.addHighlightedTextRange(textRange);
-			line.updateLineElement();
-		}
+//		for (int lineId : lineIds) {
+//			Element lineElement = Document.get().getElementById(LINEID_PREFIX+lineId);
+//			LineNodeToLineConverter lineNodeToLineConverter = new LineNodeToLineConverter(lineElement);
+//			Line line = lineNodeToLineConverter.getLine();
+//			line.addHighlightedTextRange(textRange);
+//			line.updateLineElement();
+//		}
 	}
 	
 	//TODO: reimplement
 	public void onBlur(BlurEvent event) {
+		if (hasSelection()) {
+			List<NodeRange> lastNodeRanges = getLastNodeRanges();
+			for (NodeRange nodeRange : lastNodeRanges) {
+				Node startNode = nodeRange.getStartNode();
+				int startOffset = nodeRange.getStartOffset();
+				
+				Node endNode = nodeRange.getEndNode();
+				int endOffset = nodeRange.getEndOffset();		
+				
+				if (startNode.equals(endNode)) {
+					Element lineElement = getLineElementFromDisplayLayerContentNode(startNode);
+					LineNodeToLineConverter lineNodeToLineConverter = new LineNodeToLineConverter(lineElement);
+					Line line = lineNodeToLineConverter.getLine();
+					TextRange textRange =
+						new TextRange(
+							line.getLineOffset()+startOffset, line.getLineOffset()+endOffset);
+					line.addHighlightedTextRange(textRange);
+					line.updateLineElement();
+				}
+				else {
+					Element startLineElement = getLineElementFromDisplayLayerContentNode(startNode);
+					Element endLineElement = getLineElementFromDisplayLayerContentNode(endNode);
+					LineNodeToLineConverter startLineConverter = new LineNodeToLineConverter(startLineElement);
+					Line startLine = startLineConverter.getLine();
+					LineNodeToLineConverter endLineConverter = new LineNodeToLineConverter(endLineElement);
+					Line endLine = endLineConverter.getLine();
+
+					TextRange startRange = 
+						new TextRange(startLine.getLineOffset()+startOffset, startLine.getTextRange().getEndPos());
+					startLine.addHighlightedTextRange(startRange);
+					startLine.updateLineElement();
+					
+					TextRange endRange = 
+						new TextRange(endLine.getLineOffset(), endLine.getLineOffset() + endOffset);
+					endLine.addHighlightedTextRange(endRange);
+					endLine.updateLineElement();
+					
+					for (int lineId = startLine.getLineId()+1; lineId<endLine.getLineId(); lineId++) {
+						Element lineElement = DOM.getElementById(LINEID_PREFIX+lineId);
+						LineNodeToLineConverter lineNodeToLineConverter = new LineNodeToLineConverter(lineElement);
+						Line line = lineNodeToLineConverter.getLine();
+						line.addHighlightedTextRange(line.getTextRange());
+						line.updateLineElement();
+					}
+				}
+			}
+		}
 //		logger.info(event.toDebugString());
 //		if (hasSelection()) {
 //			HighlightedSpanFactory highlightedSpanFactory = 
@@ -503,53 +550,23 @@ public class TaggerEditor extends FocusWidget
 	private void fireTagsSelected(Element targetElement) {
 
 		if (targetElement.getParentElement().hasClassName("annotation-layer")) {
-			String tagInstancePartID = targetElement.getAttribute("id");
-			if (tagInstancePartID.isEmpty() && (lastTagInstancePartID == null)) {
+			String tagInstancePartId = targetElement.getAttribute("id");
+			if (tagInstancePartId.isEmpty() && (lastTagInstancePartID == null)) {
 				return; // no annotation present 
 			}
-			String tagInstanceID = getTagInstanceID(tagInstancePartID);
+			String tagInstanceId = getTagInstanceID(tagInstancePartId);
+			
+			setTagInstanceSelected(tagInstanceId);
+			
 			String lineID = getLineID(targetElement);
-			Element rootElement = Element.as(getRootNode());
 			
-			NodeList<Element> tagPartElements = rootElement.getElementsByTagName("td");
-
-			for (int index = 0; index<=tagPartElements.getLength(); index++) {
-				Element tagPartElement = tagPartElements.getItem(index);
-				if (tagPartElement != null) {
-					if (!tagInstanceID.isEmpty()
-						&& tagPartElement.hasAttribute("id") 
-						&& tagPartElement.getAttribute("id").startsWith(tagInstanceID)) {
-						
-						String cssRgbColor = tagPartElement.getStyle().getColor();
-						int red = getRedFromCssRgb(cssRgbColor);
-						if (red > 170) {
-							tagPartElement.addClassName("selected-tag-instance-black");
-						}
-						else {
-							tagPartElement.addClassName("selected-tag-instance-red");
-						}
-						tagPartElement.removeClassName("unselected-tag-instance");
-					}
-					else if (tagPartElement.hasClassName("selected-tag-instance-black")) {
-						tagPartElement.removeClassName("selected-tag-instance-black");
-						tagPartElement.addClassName("unselected-tag-instance");
-					}
-					else if (tagPartElement.hasClassName("selected-tag-instance-red")) {
-						tagPartElement.removeClassName("selected-tag-instance-red");
-						tagPartElement.addClassName("unselected-tag-instance");
-					}
-
-				}
-			}
-			
-			
-			if (!tagInstanceID.isEmpty()) {
+			if (!tagInstanceId.isEmpty()) {
 				if ((lastTagInstancePartID == null) 
-						|| ( ! lastTagInstancePartID.equals(tagInstancePartID))) {
-					if (isKnownTagInstanceID(tagInstanceID)) {
-						this.lastTagInstancePartID = tagInstancePartID;
+						|| ( ! lastTagInstancePartID.equals(tagInstancePartId))) {
+					if (isKnownTagInstanceID(tagInstanceId)) {
+						this.lastTagInstancePartID = tagInstancePartId;
 						logger.info("fireTagsSelected: notifying listeners");
-						taggerEditorListener.tagSelected(tagInstancePartID, lineID);
+						taggerEditorListener.tagSelected(tagInstancePartId, lineID);
 					}
 				}
 			}
@@ -594,6 +611,41 @@ public class TaggerEditor extends FocusWidget
 		if (Element.is(eventTarget)) {
 			Element targetElement = Element.as(eventTarget);
 			fireTagsSelected(targetElement);
+		}
+	}
+
+	public void setTagInstanceSelected(String tagInstanceId) {
+		Element rootElement = Element.as(getRootNode());
+		
+		NodeList<Element> tagPartElements = rootElement.getElementsByTagName("td");
+
+		for (int index = 0; index<=tagPartElements.getLength(); index++) {
+			Element tagPartElement = tagPartElements.getItem(index);
+			if (tagPartElement != null) {
+				if (!tagInstanceId.isEmpty()
+					&& tagPartElement.hasAttribute("id") 
+					&& tagPartElement.getAttribute("id").startsWith(tagInstanceId)) {
+					
+					String cssRgbColor = tagPartElement.getStyle().getColor();
+					int red = getRedFromCssRgb(cssRgbColor);
+					if (red > 170) {
+						tagPartElement.addClassName("selected-tag-instance-black");
+					}
+					else {
+						tagPartElement.addClassName("selected-tag-instance-red");
+					}
+					tagPartElement.removeClassName("unselected-tag-instance");
+				}
+				else if (tagPartElement.hasClassName("selected-tag-instance-black")) {
+					tagPartElement.removeClassName("selected-tag-instance-black");
+					tagPartElement.addClassName("unselected-tag-instance");
+				}
+				else if (tagPartElement.hasClassName("selected-tag-instance-red")) {
+					tagPartElement.removeClassName("selected-tag-instance-red");
+					tagPartElement.addClassName("unselected-tag-instance");
+				}
+
+			}
 		}
 	}
 }

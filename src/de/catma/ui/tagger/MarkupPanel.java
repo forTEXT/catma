@@ -77,6 +77,10 @@ import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 import de.catma.ui.tagmanager.TagsetTree;
 
 public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionListener {
+	
+	static interface TagInstanceSelectedListener {
+		public void tagInstanceSelected(TagInstance tagInstance);
+	}
 
 	private TagsetTree tagsetTree;
 	private TabSheet tabSheet;
@@ -92,15 +96,17 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	private MarkupHelpWindow markupHelpWindow = new MarkupHelpWindow();
 	private Label writableUserMarkupCollectionInfo;
 	private Panel markupInfoScrollPanel;
+	private TagInstanceSelectedListener tagInstanceSelectedListener;
 	
 	public MarkupPanel(
 			Repository repository, ColorButtonListener colorButtonListener, 
 			PropertyChangeListener tagDefinitionSelectionListener,
 			PropertyChangeListener tagDefinitionsRemovedListener, 
+			TagInstanceSelectedListener tagInstanceSelectedListener,
 			String sourceDocumentId) {
 		this.colorButtonListener = colorButtonListener;
 		this.repository = repository;
-		
+		this.tagInstanceSelectedListener = tagInstanceSelectedListener;
 		initComponents( 
 				tagDefinitionSelectionListener,
 				tagDefinitionsRemovedListener,
@@ -550,5 +556,10 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		if (!tagInstance.getUserDefinedProperties().isEmpty()) {
 			tagInstancesTree.showPropertyEditDialog(tagInstance);
 		}
+	}
+	
+	@Override
+	public void tagInstanceSelected(TagInstance tagInstance) {
+		tagInstanceSelectedListener.tagInstanceSelected(tagInstance);
 	}
 }

@@ -32,6 +32,7 @@ import com.vaadin.ui.UI;
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.client.ui.tagger.TaggerClientRpc;
 import de.catma.ui.client.ui.tagger.TaggerServerRpc;
@@ -65,7 +66,8 @@ public class Tagger extends AbstractComponent {
 				Pair<String,String> instancePartIDLineID =
 					tagInstanceJSONSerializer.fromInstanceIDJSONArray(instanceIDJson);
 				
-				taggerListener.tagInstanceSelected(instancePartIDLineID.getFirst(), instancePartIDLineID.getSecond());
+				taggerListener.tagInstanceSelected(
+						instancePartIDLineID.getFirst(), instancePartIDLineID.getSecond());
 				
 			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -185,7 +187,8 @@ public class Tagger extends AbstractComponent {
 					new TextRange(
 							tagReference.getRange().getStartPoint(), 
 							tagReference.getRange().getEndPoint()));
-			ClientTagInstance tagInstance = tagInstancesByInstanceID.get(tagReference.getTagInstanceID());
+			ClientTagInstance tagInstance = 
+					tagInstancesByInstanceID.get(tagReference.getTagInstanceID());
 			if (tagInstance == null) {
 				tagInstancesByInstanceID.put(
 						tagReference.getTagInstanceID(),
@@ -215,5 +218,10 @@ public class Tagger extends AbstractComponent {
 
 	public void highlight(Range absoluteRange) {
 		pager.highlight(absoluteRange);
+	}
+
+	public void setTagInstanceSelected(TagInstance tagInstance) {
+		getRpcProxy(TaggerClientRpc.class).setTagInstanceSelected(
+				tagInstance==null?"":tagInstance.getUuid());		
 	}
 }

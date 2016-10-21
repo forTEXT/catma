@@ -63,6 +63,7 @@ import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.tabbedview.ClosableTab;
+import de.catma.ui.tagger.MarkupPanel.TagInstanceSelectedListener;
 import de.catma.ui.tagger.Tagger.TaggerListener;
 import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedEvent;
 import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedListener;
@@ -351,6 +352,13 @@ public class TaggerView extends VerticalLayout
 								(Set<TagDefinition>) evt.getOldValue();
 						pager.removeTagInstances(removedTagDefinitions);
 						tagger.setPage(pager.getCurrentPageNumber());
+					}
+				},
+				new TagInstanceSelectedListener() {
+					
+					@Override
+					public void tagInstanceSelected(TagInstance tagInstance) {
+						tagger.setTagInstanceSelected(tagInstance);
 					}
 				},
 				sourceDocument.getID());

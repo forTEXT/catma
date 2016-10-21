@@ -8,5 +8,6 @@ public interface TaggerClientRpc extends ClientRpc {
 	public void removeTagInstances(String tagInstancesJson);
 	public void addTagInstances(String tagInstancesJson);
 	public void addTagInstanceWith(String tagDefinitionJson);
-	public void highlight(String textRangeJson, int[] lineIDs);
+	public void highlight(String textRangeJson);
+	public void setTagInstanceSelected(String tagInstanceId);
 }
