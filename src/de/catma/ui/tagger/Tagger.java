@@ -105,7 +105,6 @@ public class Tagger extends AbstractComponent {
 
 	public Tagger(int taggerID, Pager pager, TaggerListener taggerListener) {
 		registerRpc(rpc);
-		
 		this.pager = pager;
 		this.taggerListener = taggerListener;
 		this.tagInstanceJSONSerializer = new ClientTagInstanceJSONSerializer();
@@ -121,16 +120,11 @@ public class Tagger extends AbstractComponent {
 		}
 	}
 
-	private void setPage(String pageContent, Collection<ClientTagInstance> tagInstances) {
+	private void setPage(String pageContent, int lineCount) {
 		getRpcProxy(TaggerClientRpc.class).setTaggerId(this.taggerID);
-		try {
-			getRpcProxy(TaggerClientRpc.class).setPage(
-					pageContent, 
-					tagInstanceJSONSerializer.toJSON(tagInstances));
-		} catch (IOException e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				"Error setting the page!", e);
-		}
+		getRpcProxy(TaggerClientRpc.class).setPage(
+				pageContent, 
+				lineCount);
 	}
 	
 	public void setText(String text) {
@@ -139,7 +133,7 @@ public class Tagger extends AbstractComponent {
 	
 	public void setPage(int pageNumber) {
 		Page page = pager.getPage(pageNumber);
-		setPage(page.toHTML(), page.getRelativeTagInstances());
+		setPage(page.toHTML(), page.getLineCount());
 	}
 
 	void setTagInstancesVisible(
@@ -161,7 +155,7 @@ public class Tagger extends AbstractComponent {
 			}	
 		}
 		if (pager.getCurrentPage().isDirty()) {
-			setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getRelativeTagInstances());
+			setPage(pager.getCurrentPage().toHTML(), pager.getCurrentPage().getLineCount());
 		}
 	}
 
@@ -223,5 +217,14 @@ public class Tagger extends AbstractComponent {
 	public void setTagInstanceSelected(TagInstance tagInstance) {
 		getRpcProxy(TaggerClientRpc.class).setTagInstanceSelected(
 				tagInstance==null?"":tagInstance.getUuid());		
+	}
+
+	public void setTraceSelection(Boolean traceSelection) {
+		getRpcProxy(TaggerClientRpc.class).setTraceSelection(traceSelection);
+	}
+
+	public void removeHighlights() {
+		pager.removeHighlights();
+		getRpcProxy(TaggerClientRpc.class).removeHighlights();
 	}
 }

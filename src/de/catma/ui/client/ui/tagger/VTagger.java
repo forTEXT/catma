@@ -108,19 +108,10 @@ public class VTagger extends Composite {
 		taggerEditor.setTaggerID(taggerId);
 	}
 
-	public void setPage(String page, String tagInstancesJson) {
+	public void setPage(String page, int lineCount) {
 
 		logger.info("setting page content");
-		taggerEditor.setHTML(new HTML(page));
-
-		List<ClientTagInstance> tagInstances = 
-				tagInstanceJSONSerializer.fromJSONArray(tagInstancesJson);
-
-		for (ClientTagInstance tagInstance : tagInstances) {
-			logger.info("got tag instance from server (show): " + tagInstance);
-			taggerEditor.addTagInstance(tagInstance);
-		}
-
+		taggerEditor.setHTML(new HTML(page), lineCount);
 	}
 
 	public void removeTagInstances(String tagInstancesJson) {
@@ -133,11 +124,6 @@ public class VTagger extends Composite {
 					tagInstance.getInstanceID(), 
 					false); //don't report to server
 		}
-	}
-
-	public void highlight(String textRangeJson) {
-		TextRange textRange = textRangeJSONSerializer.fromJSON(textRangeJson);
-		taggerEditor.highlight(textRange);
 	}
 
 	//FIXME: reimplement with line replacement
@@ -159,6 +145,16 @@ public class VTagger extends Composite {
 
 	public void setTagInstanceSelected(String tagInstanceId) {
 		 taggerEditor.setTagInstanceSelected(tagInstanceId);
+	}
+
+	public void setTraceSelection(boolean traceSelection) {
+		taggerEditor.setTraceSelection(traceSelection);
+		
+	}
+
+	public void removeHighlights() {
+		taggerEditor.removeHighlights();
+		
 	}
 
 }

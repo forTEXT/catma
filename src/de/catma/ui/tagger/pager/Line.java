@@ -162,7 +162,11 @@ public class Line {
 				Element highlightLayerContent = new Element("td");
 				highlightLayer.appendChild(highlightLayerContent);
 				highlightLayerContent.appendChild(TextRange.NBSP);
-	
+				highlightLayerContent.addAttribute(
+					new Attribute(
+						"id", 
+						"h."+rangePart.getStartPos()+"."+rangePart.getEndPos()));
+
 				if (rangePartIsHighlighted(rangePart)) {
 					highlightLayerContent.addAttribute(
 							new Attribute("class", "highlighted-content"));
@@ -290,6 +294,14 @@ public class Line {
 
 	public void addHighlight(TextRange highlightRange) {
 		highlightedTextRanges.add(highlightRange);
+	}
+
+	public boolean hasHighlights() {
+		return !highlightedTextRanges.isEmpty();
+	}
+	
+	public void removeHighlights() {
+		highlightedTextRanges.clear();
 	}
 
 }

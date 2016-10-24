@@ -353,6 +353,33 @@
 	    background-image: unquote("radial-gradient(yellow 30%, red 70%)");
 	}
 	
+	.selection-layer {
+		-webkit-touch-callout: none;
+  		-webkit-user-select: none;
+  		-khtml-user-select: none;
+  		-moz-user-select: -moz-none;
+  		-ms-user-select: none;
+  		user-select: none;
+	}
+	
+	
+	.selection-layer td {
+		line-height: 8px;
+	}
+	
+	.empty-selection-layer {
+		border-bottom: 1px solid white;
+		border-top: 1px solid white;
+	}
+	
+	.selected-content {
+		background-image: -webkit-radial-gradient(white 30%, #0078D7 70%);
+	    background-image: -moz-radial-gradient(white 30%, #0078D7 70%);
+	    background-image: -ms-radial-gradient(white 30%, #0078D7 70%);
+	    background-image: -o-radial-gradient(white 30%, #0078D7 70%);
+	    background-image: unquote("radial-gradient(white 30%, #0078D7 70%)");
+	}
+	
 	.segmentation-layer {
 		-webkit-touch-callout: none;
   		-webkit-user-select: none;

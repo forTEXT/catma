@@ -273,4 +273,12 @@ public class Pager implements Iterable<Page> {
 		}
 	}
 
+	public void removeHighlights() {
+		for (Page page : pages) {
+			page.removeHighlights();
+		}
+		
+		
+	}
+
 }

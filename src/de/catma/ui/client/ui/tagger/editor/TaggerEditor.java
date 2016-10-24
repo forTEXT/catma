@@ -20,7 +20,9 @@ package de.catma.ui.client.ui.tagger.editor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import com.google.gwt.core.client.GWT;
@@ -29,8 +31,6 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
-import com.google.gwt.event.dom.client.BlurEvent;
-import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.FocusEvent;
@@ -58,7 +58,7 @@ import de.catma.ui.client.ui.tagger.shared.ContentElementID;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 public class TaggerEditor extends FocusWidget 
-	implements MouseUpHandler, BlurHandler, FocusHandler, 
+	implements MouseUpHandler, FocusHandler, 
 		MouseDownHandler, KeyUpHandler, ClickHandler {
 	private static final String LINEID_PREFIX = "LINE.";
 	private static Logger logger = Logger.getLogger(TaggerEditor.class.getName());
@@ -68,17 +68,19 @@ public class TaggerEditor extends FocusWidget
 	private List<Range> lastRangeList; 
 	private List<NodeRange> lastTextRanges;
 
-	private HashMap<String, ClientTagInstance> tagInstances = new HashMap<String, ClientTagInstance>();
 	private TaggerEditorListener taggerEditorListener;
 
 	private String taggerID;
 	
-	private String lastFocusID;
-	
 	private int lastClientX;
 	private int lastClientY;
 
+	private boolean highlightSelections = true;
+	private boolean traceSelection = false;
+	
 	private String lastTagInstancePartID = null;
+	private int lineCount;
+	private HashMap<String,Line> lineIdToLineMap;
 	
 	public TaggerEditor(TaggerEditorListener taggerEditorListener) {
 		super(Document.get().createDivElement());
@@ -91,7 +93,6 @@ public class TaggerEditor extends FocusWidget
 		addMouseUpHandler(this);
 		addMouseDownHandler(this);
 		addKeyUpHandler(this);
-		addBlurHandler(this);
 		addFocusHandler(this);
 		addClickHandler(this);
 	}
@@ -118,7 +119,6 @@ public class TaggerEditor extends FocusWidget
 			parent.removeChild(taggedSpan);
 			taggedSpan = Document.get().getElementById(tagInstanceID + "_" + currentPartID++);
 		}
-		tagInstances.remove(tagInstanceID);
 		lastTagInstancePartID = null;
 		
 		taggerEditorListener.tagChanged(
@@ -130,7 +130,7 @@ public class TaggerEditor extends FocusWidget
 		logger.info("Ranges: " + lastRangeList.size());
 	}
 
- 	public void setHTML(HTML pageHtmlContent) {
+ 	public void setHTML(HTML pageHtmlContent, int lineCount) {
 		if (getElement().hasChildNodes()) {
 			NodeList<Node> children = getElement().getChildNodes();
 			for (int i=0; i<children.getLength();i++) {
@@ -138,49 +138,44 @@ public class TaggerEditor extends FocusWidget
 			}
 		}
 		getElement().appendChild(pageHtmlContent.getElement());
-		tagInstances.clear();
+		this.lineCount = lineCount;
+		createLineModels();
 	}
 	 
+	private void createLineModels() {
+		lineIdToLineMap = new HashMap<>();
+		for (int lineId=0; lineId<this.lineCount; lineId++) {
+			Element lineElement = DOM.getElementById(LINEID_PREFIX+lineId);
+			LineNodeToLineConverter lineNodeToLineConverter = new LineNodeToLineConverter(lineElement);
+			Line line = lineNodeToLineConverter.getLine();
+			lineIdToLineMap.put(LINEID_PREFIX+lineId, line);
+		}
+	}
+
 	public void createAndAddTagIntance(ClientTagDefinition tagDefinition) {
-		clearLastFocusID();
-
-		if (hasSelection()) {
-
-			//TODO: flatten ranges to prevent multiple tagging of the same range with the same instance!
-			
-			List<NodeRange> nodeRanges = getLastNodeRanges();
-			ClientTagInstance clientTagInstance = null;
-			
-			for (NodeRange nodeRange : nodeRanges) {
-				logger.info("adding tag instance to range: " + nodeRange);
-				ClientTagInstance currentClientTagInstance = 
-					addTagInstanceForRange(IDGenerator.generate(),
-						tagDefinition.getColor(), nodeRange);
-				logger.info("added tag instance to range");
-				if (clientTagInstance == null) {
-					clientTagInstance = currentClientTagInstance;
-				}
-				else {
-					clientTagInstance.addRanges(currentClientTagInstance.getRanges());
-				}
+		String tagInstanceId = IDGenerator.generate();
+		List<TextRange> ranges = new ArrayList<>();
+		
+		for (Line line : lineIdToLineMap.values())  {
+			if (line.hasSelectedTextRanges()) {
+				ranges.addAll(line.getSelectedTextRanges());
+				line.addTagInstance(new ClientTagInstance(
+					tagDefinition.getId(), 
+					tagInstanceId, 
+					tagDefinition.getColor(), 
+					new ArrayList<>(line.getSelectedTextRanges())));
 			}
-
-			if (clientTagInstance != null) {
-				ClientTagInstance ti = 
-						new ClientTagInstance(
-								tagDefinition.getId(),
-								clientTagInstance.getInstanceID(), 
-								clientTagInstance.getColor(), 
-								clientTagInstance.getRanges());
-				tagInstances.put(ti.getInstanceID(), ti);
-				taggerEditorListener.tagChanged(TaggerEditorEventType.ADD, ti);
-			}
-			
 		}
-		else {
-			logger.info("no range to tag");
+		
+		if (!ranges.isEmpty()) {
+			ClientTagInstance ti = 
+					new ClientTagInstance(
+							tagDefinition.getId(),
+							tagInstanceId, 
+							tagDefinition.getColor(), 
+							ranges);
+			taggerEditorListener.tagChanged(TaggerEditorEventType.ADD, ti);
 		}
-		lastTextRanges = null;
 	}
 	
 	private List<NodeRange> getLastNodeRanges() {
@@ -248,6 +243,7 @@ public class TaggerEditor extends FocusWidget
 		return nodeRanges;
 	}
 
+	//TODO: better validate browser ranges
 	private TextRange validateTextRange(TextRange textRange) {
 		if (textRange.getStartPos() > textRange.getEndPos()) {
 			taggerEditorListener.logEvent(
@@ -258,106 +254,10 @@ public class TaggerEditor extends FocusWidget
 		return textRange;
 	}
 	
-	private ClientTagInstance addTagInstanceForRange(
-			String tagInstanceID, String tagColor, NodeRange range) {
-		
-		Node startNode = range.getStartNode();
-		int startOffset = range.getStartOffset();
-		
-		Node endNode = range.getEndNode();
-		int endOffset = range.getEndOffset();
-		
-		DebugUtil.printNode(startNode);
-		logger.info("startOffset: " + startOffset);
-		
-		DebugUtil.printNode(endNode);
-		logger.info("endOffset: " + endOffset);
-
-		if (startNode.equals(endNode)) {
-			logger.info("startNode equals endNode");
-			return addTagInstance(
-				tagInstanceID, tagColor, startOffset, endOffset, startNode);
-		}
-		else {
-			logger.info("startNode and endNode are not on the same branch");
-			
-			return addTagInstance(
-				tagInstanceID, tagColor,
-				startNode, startOffset, endNode, endOffset);
-		}
+	private Line getLine(Element lineElement) {
+		return lineIdToLineMap.get(lineElement.getAttribute("id"));
 	}
 
-	private ClientTagInstance addTagInstance(
-			String tagInstanceID, String tagColor, 
-			Node startNode,
-			int startOffset,
-			Node endNode,
-			int endOffset) {
-		
-		Element startLineElement = getLineElementFromDisplayLayerContentNode(startNode);
-		Element endLineElement = getLineElementFromDisplayLayerContentNode(endNode);
-		
-		if ((startLineElement != null) && (endLineElement != null)) {
-			LineNodeToLineConverter startLineNodeToLineConverter = 
-					new LineNodeToLineConverter(startLineElement);
-			
-			Line startLine = startLineNodeToLineConverter.getLine();
-			ClientTagInstance clientTagInstance = addTagInstanceToLine(
-				startLine, tagInstanceID, tagColor, 
-				startLine.getLineOffset()+startOffset,
-				startLine.getTextRange().getEndPos());
-			
-			LineNodeToLineConverter endLineNodeToLineConverter = 
-					new LineNodeToLineConverter(endLineElement);
-			
-			Line endLine = endLineNodeToLineConverter.getLine();
-			clientTagInstance.addRanges(
-				addTagInstanceToLine(
-					endLine, tagInstanceID, tagColor, 
-					endLine.getTextRange().getStartPos(), 
-					endLine.getLineOffset()+endOffset).getRanges());
-			
-			for (int lineId = startLine.getLineId()+1; lineId<endLine.getLineId(); lineId++) {
-				Element lineElement = DOM.getElementById(LINEID_PREFIX+lineId);
-				LineNodeToLineConverter lineNodeToLineConverter = 
-						new LineNodeToLineConverter(lineElement);
-				
-				Line line = lineNodeToLineConverter.getLine();
-				
-				clientTagInstance.addRanges(
-					addTagInstanceToLine(
-						line, tagInstanceID, tagColor, 
-						line.getTextRange().getStartPos(), 
-						line.getTextRange().getEndPos()).getRanges());
-			}
-			
-			return clientTagInstance;
-		}
-		
-		return null;
-	}
-	
-	private ClientTagInstance addTagInstance(
-			String tagInstanceID, String tagColor, 
-			int startOffset, int endOffset,
-			Node node) {
-		
-		Element lineElement = getLineElementFromDisplayLayerContentNode(node);
-		
-		if (lineElement != null) {
-			LineNodeToLineConverter lineNodeToLineConverter = 
-					new LineNodeToLineConverter(lineElement);
-			
-			Line line = lineNodeToLineConverter.getLine();
-			
-			return addTagInstanceToLine(
-				line, tagInstanceID, tagColor, 
-				startOffset+line.getLineOffset(), endOffset+line.getLineOffset());
-		}
-		
-		return null;
-	}
-	
 	private Element getLineElementFromDisplayLayerContentNode(Node node) {
 		Element displayLayerContent = node.getParentElement().getParentElement();
 		if (displayLayerContent.hasClassName("tagger-display-layer")) {
@@ -366,21 +266,6 @@ public class TaggerEditor extends FocusWidget
 		return null;
 	}
 	
-	private ClientTagInstance addTagInstanceToLine(Line line, String tagInstanceID, String tagColor, 
-			int startOffset, int endOffset) {
-
-		TextRange textRange = new TextRange(startOffset, endOffset);
-		List<TextRange> textRanges = new ArrayList<>();
-		textRanges.add(textRange);
-
-		ClientTagInstance clientTagInstance = new ClientTagInstance(null, tagInstanceID, tagColor, textRanges);
-		line.addTagInstance(clientTagInstance);
-		
-		line.updateLineElement();	
-		
-		return clientTagInstance;
-	}
-
 	public boolean hasSelection() {
 		logger.info("checking for selection");
 		if ((lastTextRanges != null) && !lastTextRanges.isEmpty()) {
@@ -403,31 +288,8 @@ public class TaggerEditor extends FocusWidget
 		return false;
 	}
 	
-	public ClientTagInstance getTagInstance(String tagInstanceID) {
-		return tagInstances.get(tagInstanceID);
-	}
-	
 	public String getTagInstanceID(String tagInstancePartID) {
 		return ClientTagInstance.getTagInstanceIDFromPartId(tagInstancePartID);
-	}
-
-	public void clearTagInstances() {
-		ArrayList<String> keyCopy = new ArrayList<String>();
-		keyCopy.addAll(tagInstances.keySet());
-		for (String tagInstanceID : keyCopy) {
-			removeTagInstance(tagInstanceID, false);
-		}		
-	}
-
-	public void addTagInstance(ClientTagInstance tagInstance) {
-		
-		if (!tagInstances.containsKey(tagInstance.getInstanceID())) {
-			
-			tagInstances.put(tagInstance.getInstanceID(), tagInstance);
-
-			logger.info("TAGINSTANCES size: " + tagInstances.size());
-		}
-		
 	}
 
 	public void setTaggerID(String taggerID) {
@@ -439,27 +301,18 @@ public class TaggerEditor extends FocusWidget
 		return taggerID;
 	}
 	
-	private Node getRootNode() {
+	private Element getRootNode() {
 		return Document.get().getElementById(
 				ContentElementID.CONTENT.name() + taggerID);
 	}
 
-	//TODO: not needed for now, but could be usefull for a quicksearch facility within the tagger
-	public void highlight(TextRange textRange) {
-		logger.info("Highlighting textrange: " + textRange);
-//		for (int lineId : lineIds) {
-//			Element lineElement = Document.get().getElementById(LINEID_PREFIX+lineId);
-//			LineNodeToLineConverter lineNodeToLineConverter = new LineNodeToLineConverter(lineElement);
-//			Line line = lineNodeToLineConverter.getLine();
-//			line.addHighlightedTextRange(textRange);
-//			line.updateLineElement();
-//		}
-	}
-	
-	//TODO: reimplement
-	public void onBlur(BlurEvent event) {
-		if (hasSelection()) {
+	private void highlightSelection() {
+		if (highlightSelections && hasSelection()) {
+			
 			List<NodeRange> lastNodeRanges = getLastNodeRanges();
+
+			Set<Line> modifiedLines = new HashSet<>();
+
 			for (NodeRange nodeRange : lastNodeRanges) {
 				Node startNode = nodeRange.getStartNode();
 				int startOffset = nodeRange.getStartOffset();
@@ -469,75 +322,84 @@ public class TaggerEditor extends FocusWidget
 				
 				if (startNode.equals(endNode)) {
 					Element lineElement = getLineElementFromDisplayLayerContentNode(startNode);
-					LineNodeToLineConverter lineNodeToLineConverter = new LineNodeToLineConverter(lineElement);
-					Line line = lineNodeToLineConverter.getLine();
+					Line line = getLine(lineElement);
+					modifiedLines.add(line);
+					
 					TextRange textRange =
 						new TextRange(
 							line.getLineOffset()+startOffset, line.getLineOffset()+endOffset);
-					line.addHighlightedTextRange(textRange);
+					
+					if (!traceSelection) {
+						line.removeSelectedTextRanges();
+					}
+					line.addSelectedTextRange(textRange);
 					line.updateLineElement();
 				}
 				else {
 					Element startLineElement = getLineElementFromDisplayLayerContentNode(startNode);
 					Element endLineElement = getLineElementFromDisplayLayerContentNode(endNode);
-					LineNodeToLineConverter startLineConverter = new LineNodeToLineConverter(startLineElement);
-					Line startLine = startLineConverter.getLine();
-					LineNodeToLineConverter endLineConverter = new LineNodeToLineConverter(endLineElement);
-					Line endLine = endLineConverter.getLine();
+					Line startLine = getLine(startLineElement);
+					modifiedLines.add(startLine);
+					Line endLine = getLine(endLineElement);
+					modifiedLines.add(endLine);
 
 					TextRange startRange = 
 						new TextRange(startLine.getLineOffset()+startOffset, startLine.getTextRange().getEndPos());
-					startLine.addHighlightedTextRange(startRange);
+					if (!traceSelection) {
+						startLine.removeSelectedTextRanges();
+					}
+					startLine.addSelectedTextRange(startRange);
 					startLine.updateLineElement();
 					
 					TextRange endRange = 
 						new TextRange(endLine.getLineOffset(), endLine.getLineOffset() + endOffset);
-					endLine.addHighlightedTextRange(endRange);
+					if (!traceSelection) {
+						endLine.removeSelectedTextRanges();
+					}
+					endLine.addSelectedTextRange(endRange);
 					endLine.updateLineElement();
 					
 					for (int lineId = startLine.getLineId()+1; lineId<endLine.getLineId(); lineId++) {
 						Element lineElement = DOM.getElementById(LINEID_PREFIX+lineId);
-						LineNodeToLineConverter lineNodeToLineConverter = new LineNodeToLineConverter(lineElement);
-						Line line = lineNodeToLineConverter.getLine();
-						line.addHighlightedTextRange(line.getTextRange());
+						Line line = getLine(lineElement);
+						modifiedLines.add(line);
+						if (!traceSelection) {
+							line.removeSelectedTextRanges();
+						}
+						line.addSelectedTextRange(line.getTextRange());
+						line.updateLineElement();
+					}
+				}
+			}
+			
+			if (!traceSelection) {
+				for (Line line : lineIdToLineMap.values()) {
+					if (!modifiedLines.contains(line) && line.hasSelectedTextRanges()) {
+						line.removeSelectedTextRanges();
 						line.updateLineElement();
 					}
 				}
 			}
 		}
-//		logger.info(event.toDebugString());
-//		if (hasSelection()) {
-//			HighlightedSpanFactory highlightedSpanFactory = 
-//					new HighlightedSpanFactory("#3399FF");
-//			
-//			RangeConverter converter = new RangeConverter(taggerID);
-//
-//			lastTextRanges = getLastTextRanges(converter);
-//			
-//			for (TextRange textRange : lastTextRanges) {
-//				NodeRange nodeRange = converter.convertToNodeRange(textRange);
-//				addTagInstanceForRange(highlightedSpanFactory, nodeRange);
-//			}
-//			
-//			lastFocusID = highlightedSpanFactory.getInstanceID();
-//		}
 	}
-	//TODO: reimplement
+
 	public void onFocus(FocusEvent event) {
-		clearLastFocusID();
+		for (Line line : lineIdToLineMap.values()) {
+			if (line.hasSelectedTextRanges()) {
+				line.removeSelectedTextRanges();
+				line.updateLineElement();
+			}
+		}
 		lastTextRanges = null;
-	}
-	//TODO: reimplement
-	private void clearLastFocusID() {
-		if (lastFocusID != null) {
-			removeTagInstance(lastFocusID, false);
-			lastFocusID = null;
-		}	
 	}
 	
 	public void onKeyUp(KeyUpEvent event) {
 		lastRangeList = impl.getRangeList();
 		logger.info("Ranges: " + lastRangeList.size());
+
+		if (!event.isShiftKeyDown()) {
+			highlightSelection();
+		}
 	}
 
 	public void onMouseDown(MouseDownEvent event) {
@@ -558,16 +420,14 @@ public class TaggerEditor extends FocusWidget
 			
 			setTagInstanceSelected(tagInstanceId);
 			
-			String lineID = getLineID(targetElement);
+			String lineID = getLineIDFromAnnotationLayerSegment(targetElement);
 			
 			if (!tagInstanceId.isEmpty()) {
 				if ((lastTagInstancePartID == null) 
 						|| ( ! lastTagInstancePartID.equals(tagInstancePartId))) {
-					if (isKnownTagInstanceID(tagInstanceId)) {
-						this.lastTagInstancePartID = tagInstancePartId;
-						logger.info("fireTagsSelected: notifying listeners");
-						taggerEditorListener.tagSelected(tagInstancePartId, lineID);
-					}
+					this.lastTagInstancePartID = tagInstancePartId;
+					logger.info("fireTagsSelected: notifying listeners");
+					taggerEditorListener.tagSelected(tagInstancePartId, lineID);
 				}
 			}
 			else {
@@ -587,26 +447,18 @@ public class TaggerEditor extends FocusWidget
 		return 0;
 	}
 	
-	private String getLineID(Element targetElement) {
+	private String getLineIDFromAnnotationLayerSegment(Element targetElement) {
 		
 		Element annotationLayer = targetElement.getParentElement();
 		Element lineElement = annotationLayer.getParentElement().getParentElement();
 		
 		return lineElement.getAttribute("id");
 	}
-
-	private boolean isKnownTagInstanceID(String tagInstanceID) {
-		logger.info("fireTagsSelected: testing tagInstanceID " + tagInstanceID);
-		if (tagInstances.containsKey(tagInstanceID)) {
-			logger.info("fireTagsSelected: known tagInstanceID found " + tagInstanceID);
-			return true;
-		}
-		
-		return false;
-	}
-
+	
 	@Override
 	public void onClick(ClickEvent event) {
+		highlightSelection();
+		
 		EventTarget eventTarget = event.getNativeEvent().getEventTarget();
 		if (Element.is(eventTarget)) {
 			Element targetElement = Element.as(eventTarget);
@@ -615,7 +467,7 @@ public class TaggerEditor extends FocusWidget
 	}
 
 	public void setTagInstanceSelected(String tagInstanceId) {
-		Element rootElement = Element.as(getRootNode());
+		Element rootElement = getRootNode();
 		
 		NodeList<Element> tagPartElements = rootElement.getElementsByTagName("td");
 
@@ -647,6 +499,20 @@ public class TaggerEditor extends FocusWidget
 
 			}
 		}
+	}
+
+	public void setTraceSelection(boolean traceSelection) {
+		this.traceSelection = traceSelection;
+	}
+
+	public void removeHighlights() {
+		for (Line line : lineIdToLineMap.values()) {
+			if (line.hasHighlightedTextRanges()) {
+				line.removeHighlightedTextRanges();
+				line.updateLineElement();
+			}
+		}
+		
 	}
 }
 

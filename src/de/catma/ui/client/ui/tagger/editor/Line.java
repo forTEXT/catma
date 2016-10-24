@@ -23,11 +23,12 @@ public class Line {
 	private TextRange textRange;
 	private Set<TextRange> tagInstanceTextRanges;
 	private Set<TextRange> highlightedTextRanges;
+	private Set<TextRange> selectedTextRanges;
 	private Collection<ClientTagInstance> relativeTagIntances;
 	private String presentationContent;
 	
 	public Line(Element lineElement, String lineId, TextRange textRange, Set<TextRange> tagInstanceTextRanges,
-			Collection<ClientTagInstance> relativeTagIntances, String presentationContent) {
+			Set<TextRange> highlightedTextRanges, Collection<ClientTagInstance> relativeTagIntances, String presentationContent) {
 		super();
 		this.lineElement = lineElement;
 		this.lineId = lineId;
@@ -35,7 +36,8 @@ public class Line {
 		this.tagInstanceTextRanges = tagInstanceTextRanges;
 		this.relativeTagIntances = relativeTagIntances;
 		this.presentationContent = presentationContent;
-		this.highlightedTextRanges = new HashSet<>();
+		this.highlightedTextRanges = highlightedTextRanges;
+		this.selectedTextRanges = new HashSet<>();
 	}
 
 	private String getPresentationContent() {
@@ -47,10 +49,11 @@ public class Line {
 		List<TextRange> rangeParts = new ArrayList<>();
 		
 		rangeParts.add(new TextRange(this.textRange));
-		Set<TextRange> tagInstanceAndHighlightedTextRanges = new HashSet<>(tagInstanceTextRanges);
-		tagInstanceAndHighlightedTextRanges.addAll(highlightedTextRanges);
+		Set<TextRange> segmentTextRanges = new HashSet<>(tagInstanceTextRanges);
+		segmentTextRanges.addAll(highlightedTextRanges);
+		segmentTextRanges.addAll(selectedTextRanges);
 		
-		for (TextRange currentTextRange : tagInstanceAndHighlightedTextRanges) {
+		for (TextRange currentTextRange : segmentTextRanges) {
 			
 			for (TextRange rangePart : new TreeSet<TextRange>(rangeParts)) {
 				if (rangePart.hasOverlappingRange(currentTextRange)) {
@@ -94,7 +97,34 @@ public class Line {
 				"colspan", String.valueOf(rangeParts.size()));
 		visibleContentLayerContent.setInnerText(getPresentationContent());
 		
+		// selection layer 
+		
+		if (!selectedTextRanges.isEmpty()) {
+			Element selectionLayer = DOM.createTR();
+			selectionLayer.setAttribute("class", "selection-layer");
+			selectionLayer.setAttribute("unselectable", "on");
+			tbody.appendChild(selectionLayer);
+			
+			for (TextRange rangePart : rangeParts) {
+				Element selectionLayerContent = DOM.createTD();
+				selectionLayer.appendChild(selectionLayerContent);
+				selectionLayerContent.setInnerText(TextRange.NBSP);
+				selectionLayerContent.setAttribute(
+						"id", "s"+rangePart.getStartPos()+"."+rangePart.getEndPos());
+
+				if (rangePartIsSelected(rangePart)) {
+					selectionLayerContent.setAttribute(
+							"class", "selected-content");
+				}
+				else {
+					selectionLayerContent.setAttribute(
+							"class", "empty-selection-layer");
+				}
+			}
+		}		
+		
 		// highlight layer
+		
 		if (!highlightedTextRanges.isEmpty()) {
 			Element highlightLayer = DOM.createTR();
 			highlightLayer.setAttribute("class", "highlight-layer");
@@ -105,7 +135,9 @@ public class Line {
 				Element highlightLayerContent = DOM.createTD();
 				highlightLayer.appendChild(highlightLayerContent);
 				highlightLayerContent.setInnerText(TextRange.NBSP);
-	
+				highlightLayerContent.setAttribute(
+						"id", "h."+rangePart.getStartPos()+"."+rangePart.getEndPos());
+
 				if (rangePartIsHighlighted(rangePart)) {
 					highlightLayerContent.setAttribute(
 							"class", "highlighted-content");
@@ -192,6 +224,15 @@ public class Line {
 		return false;
 	}
 
+	private boolean rangePartIsSelected(TextRange rangePart) {
+		for (TextRange selectedTextRange : selectedTextRanges) {
+			if (rangePart.isCoveredBy(selectedTextRange)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	private String getPresentationContent(TextRange range) {
 		return presentationContent.substring(
 				range.getStartPos()-getLineOffset(), 
@@ -228,5 +269,28 @@ public class Line {
 	public void addHighlightedTextRange(TextRange textRange) {
 		highlightedTextRanges.add(textRange);
 	}
+
+	public boolean hasHighlightedTextRanges() {
+		return !highlightedTextRanges.isEmpty();
+	}
 	
+	public void removeHighlightedTextRanges() {
+		highlightedTextRanges.clear();
+	}
+	
+	public void addSelectedTextRange(TextRange textRange) {
+		selectedTextRanges.add(textRange);
+	}
+	
+	public boolean hasSelectedTextRanges() {
+		return !selectedTextRanges.isEmpty();
+	}
+	
+	public void removeSelectedTextRanges() {
+		selectedTextRanges.clear();
+	}
+	
+	public Set<TextRange> getSelectedTextRanges() {
+		return Collections.unmodifiableSet(selectedTextRanges);
+	}
 }

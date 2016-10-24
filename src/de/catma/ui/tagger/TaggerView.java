@@ -32,9 +32,11 @@ import java.util.logging.Logger;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.ClassResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
@@ -96,6 +98,8 @@ public class TaggerView extends VerticalLayout
 	private int initialSplitterPositionInPixels = 700;
 	
 	private TaggerHelpWindow taggerHelpWindow = new TaggerHelpWindow();
+	private CheckBox cbTraceSelection;
+	private Button btClearSearchHighlights;
 	
 	public TaggerView(
 			int taggerID, 
@@ -191,6 +195,21 @@ public class TaggerView extends VerticalLayout
 	}
 
 	private void initActions() {
+		btClearSearchHighlights.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				tagger.removeHighlights();
+			}
+		});
+		cbTraceSelection.addValueChangeListener(new ValueChangeListener() {
+			
+			@Override
+			public void valueChange(ValueChangeEvent event) {
+				Boolean traceSelection = (Boolean) event.getProperty().getValue();
+				tagger.setTraceSelection(traceSelection);
+			}
+		});
 		btAnalyze.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -301,11 +320,16 @@ public class TaggerView extends VerticalLayout
 		btAnalyze.setEnabled(repository instanceof IndexedRepository);
 		actionPanel.addComponent(btAnalyze);
 		
-		linesPerPageSlider =  new Slider("page size zoom", 1, 100, "%");
+		linesPerPageSlider =  new Slider(null, 1, 100, "% page size");
 		linesPerPageSlider.setImmediate(true);
 		linesPerPageSlider.setWidth("150px");
-		
 		actionPanel.addComponent(linesPerPageSlider);
+		
+		cbTraceSelection = new CheckBox();
+//		cbTraceSelection.setIcon(FontAwesome.TIM);
+		actionPanel.addComponent(cbTraceSelection);
+		btClearSearchHighlights = new Button(FontAwesome.PAINT_BRUSH);
+		actionPanel.addComponent(btClearSearchHighlights);
 		
 		markupPanel = new MarkupPanel(
 				repository,

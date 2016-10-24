@@ -347,4 +347,13 @@ public class Page {
 	public boolean isDirty() {
 		return pageDiv==null;
 	}
+
+	public void removeHighlights() {
+		for (Line line : lines) {
+			if (line.hasHighlights()) {
+				line.removeHighlights();
+				pageDiv = null;
+			}
+		}
+	}
 }

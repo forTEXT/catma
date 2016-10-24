@@ -1,6 +1,8 @@
 package de.catma.ui.client.ui.tagger;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Element;
+import com.vaadin.client.TooltipInfo;
 import com.vaadin.client.communication.RpcProxy;
 import com.vaadin.client.ui.AbstractComponentConnector;
 import com.vaadin.shared.ui.Connect;
@@ -21,18 +23,13 @@ public class TaggerConnector extends AbstractComponentConnector {
 			}
 			
 			@Override
-			public void setPage(String page, String tagInstancesJson) {
-				getWidget().setPage(page, tagInstancesJson);
+			public void setPage(String page, int lineCount) {
+				getWidget().setPage(page, lineCount);
 			}
 			
 			@Override
 			public void removeTagInstances(String tagInstancesJson) {
 				getWidget().removeTagInstances(tagInstancesJson);
-			}
-			
-			@Override
-			public void highlight(String textRangeJson) {
-				getWidget().highlight(textRangeJson);
 			}
 			
 			@Override
@@ -48,6 +45,16 @@ public class TaggerConnector extends AbstractComponentConnector {
 			@Override
 			public void setTagInstanceSelected(String tagInstanceId) {
 				getWidget().setTagInstanceSelected(tagInstanceId);
+			}
+			
+			@Override
+			public void setTraceSelection(boolean traceSelection) {
+				getWidget().setTraceSelection(traceSelection);
+			}
+			
+			@Override
+			public void removeHighlights() {
+				getWidget().removeHighlights();
 			}
 			
 		});
@@ -85,4 +92,19 @@ public class TaggerConnector extends AbstractComponentConnector {
 	public VTagger getWidget() {
 		return (VTagger) super.getWidget();
 	}
+	
+    public TooltipInfo getTooltipInfo(Element element) {
+    	if (element.getId().startsWith("CATMA")) {
+    		return new TooltipInfo(element.getId(), getState().errorMessage);
+    	}
+    	else {
+    		return null;
+    	}
+    }
+    
+    @Override
+    public boolean hasTooltip() {
+    	return true;
+    }
+
 }

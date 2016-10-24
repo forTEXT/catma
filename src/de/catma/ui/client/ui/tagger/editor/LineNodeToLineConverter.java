@@ -20,12 +20,14 @@ public class LineNodeToLineConverter {
 	private String lineId;
 	private TextRange textRange;
 	private Set<TextRange> tagInstanceTextRanges;
+	private Set<TextRange> highlightedTextRanges;
 	private Map<String,ClientTagInstance> relativeTagIntancesByID;
 	private String presentationContent;
 	private Line line;
 	
 	public LineNodeToLineConverter(Element lineElement) {
 		tagInstanceTextRanges = new HashSet<>();
+		highlightedTextRanges = new HashSet<>();
 		relativeTagIntancesByID = new HashMap<>();
 		makeLineFromLineNode(lineElement);
 	}
@@ -45,6 +47,9 @@ public class LineNodeToLineConverter {
 				else if (layerElement.hasClassName("annotation-layer")) {
 					handleAnnotationLayer(layerElement);
 				}
+				else if (layerElement.hasClassName("highlight-layer")) {
+					handleHighlightLayer(layerElement);
+				}
 			}
 		}
 		
@@ -54,8 +59,29 @@ public class LineNodeToLineConverter {
 		
 		line = new Line(
 			lineElement,
-			lineId, textRange, tagInstanceTextRanges, 
-			new ArrayList<ClientTagInstance>(relativeTagIntancesByID.values()), presentationContent);
+			lineId, textRange, tagInstanceTextRanges, highlightedTextRanges,
+			new ArrayList<ClientTagInstance>(relativeTagIntancesByID.values()), 
+			presentationContent);
+	}
+
+	private void handleHighlightLayer(Element layerElement) {
+		for (int highlightedSegmentIdx = 0; 
+				highlightedSegmentIdx<layerElement.getChildCount(); highlightedSegmentIdx++) {
+			Node hightlightedSegmentNode = layerElement.getChild(highlightedSegmentIdx);
+			if (Element.is(hightlightedSegmentNode)) {
+				Element highlightedSegmentElement = Element.as(hightlightedSegmentNode);
+				
+				if (highlightedSegmentElement.hasClassName("highlighted-content")) {
+					// id is expected to have the form h.startoffset.endoffset
+					String[] rangePositions = highlightedSegmentElement.getId().split("\\.");
+					TextRange highlightedTextRange = 
+						new TextRange(
+							Integer.valueOf(rangePositions[1]),
+							Integer.valueOf(rangePositions[2]));
+					highlightedTextRanges.add(highlightedTextRange);
+				}
+			}
+		}
 	}
 
 	private void handleAnnotationLayer(Element layerElement) {
@@ -120,9 +146,13 @@ public class LineNodeToLineConverter {
 	}
 
 	private void handleDisplayLayer(Element layerElement) {
-		String[] rangePositions = layerElement.getId().split("\\.");
-		textRange = new TextRange(Integer.valueOf(rangePositions[0]),Integer.valueOf(rangePositions[1]));
+		textRange = getTextRangeFromDisplayLayer(layerElement);
 		presentationContent = layerElement.getFirstChildElement().getInnerText();
+	}
+	
+	public static TextRange getTextRangeFromDisplayLayer(Element layerElement) {
+		String[] rangePositions = layerElement.getId().split("\\.");
+		return new TextRange(Integer.valueOf(rangePositions[0]),Integer.valueOf(rangePositions[1]));
 	}
 	
 	public Line getLine() {
