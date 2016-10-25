@@ -289,7 +289,7 @@ public class TaggerView extends VerticalLayout
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet(); 
 
 		pager = new Pager(taggerID, approxMaxLineLength, maxPageLengthInLines, 
-				indexInfoSet.isRightToLeftLanguage());
+				indexInfoSet.isRightToLeftWriting());
 		
 		tagger = new Tagger(taggerID, pager, this);
 		tagger.addStyleName("tagger");

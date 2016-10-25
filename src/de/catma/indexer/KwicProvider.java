@@ -46,7 +46,7 @@ public class KwicProvider {
 		IndexInfoSet indexInfoSet = 
 				sourceDocument.getSourceContentHandler()
 					.getSourceDocumentInfo().getIndexInfoSet();
-		rtl = indexInfoSet.isRightToLeftLanguage();
+		rtl = indexInfoSet.isRightToLeftWriting();
 	
 		analyzer = 
 				new WhitespaceAndPunctuationAnalyzer(

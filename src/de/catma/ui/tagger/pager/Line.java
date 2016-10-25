@@ -30,8 +30,10 @@ public class Line {
 	private Multimap<String, TextRange> textRangesByRelativeTagInstanceID;
 	private Map<String,ClientTagInstance> relativeTagInstanceByID;
 	private Set<TextRange> highlightedTextRanges;
+	private boolean rightToLeftWriting;
 
-	public Line() {
+	public Line(boolean rightToLeftWriting) {
+		this.rightToLeftWriting = rightToLeftWriting;
 		lineContents = new ArrayList<>();
 		textRangesByRelativeTagInstanceID = ArrayListMultimap.create();
 		relativeTagInstanceByID = new HashMap<>();
@@ -228,13 +230,23 @@ public class Line {
 		segmentationLayer.addAttribute(new Attribute("class", "segmentation-layer"));
 		segmentationLayer.addAttribute(new Attribute("unselectable", "on"));
 		tbody.appendChild(segmentationLayer);
-		
+		String lastPresentationContent = null;
 		for (TextRange rangePart : rangeParts) {
 			
 			Element segmentationLayerContent = new Element("td");
 			segmentationLayer.appendChild(segmentationLayerContent);
+			String presentationContent = getPresentationContent(rangePart);
 			
-			segmentationLayerContent.appendChild(getPresentationContent(rangePart));
+			if (rightToLeftWriting 
+				&& (lastPresentationContent != null) 
+				&& !lastPresentationContent.endsWith(TextRange.NBSP)) {
+				
+				segmentationLayerContent.appendChild(presentationContent+TextRange.ZWJ);
+			}
+			else {
+				segmentationLayerContent.appendChild(presentationContent);
+			}
+			lastPresentationContent = presentationContent;
 		}
 		
 		return table;

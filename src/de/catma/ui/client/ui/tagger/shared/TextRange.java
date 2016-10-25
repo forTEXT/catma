@@ -28,8 +28,15 @@ import java.util.List;
  */
 public class TextRange implements Comparable<TextRange> {
 	
+	/**
+	 * Non Breakable Space.
+	 */
 	public static final String NBSP = "\u00A0";
-
+	/**
+	 * Zero Width Joiner.
+	 */
+	public static final String ZWJ  = "\u200D";
+	
 	private int startPos;
 	private int endPos;
 

@@ -346,11 +346,17 @@
 	}
 	
 	.highlighted-content {
-		background-image: -webkit-radial-gradient(yellow 30%, red 70%);
+		/* background-image: -webkit-radial-gradient(yellow 30%, red 70%);
 	    background-image: -moz-radial-gradient(yellow 30%, red 70%);
 	    background-image: -ms-radial-gradient(yellow 30%, red 70%);
 	    background-image: -o-radial-gradient(yellow 30%, red 70%);
-	    background-image: unquote("radial-gradient(yellow 30%, red 70%)");
+	    background-image: unquote("radial-gradient(yellow 30%, red 70%)"); */
+	    background-image: -webkit-linear-gradient(to top, red, yellow 50%, red);
+	    background-image: -moz-linear-gradient(to top, red, yellow 50%, red);
+	    background-image: -ms-linear-gradient(to top, red, yellow 50%, red);
+	    background-image: -o-linear-gradient(to top, red, yellow 50%, red);
+	    background-image: unquote("linear-gradient(to top, red, yellow 50%, red)");
+	    
 	}
 	
 	.selection-layer {
@@ -373,11 +379,18 @@
 	}
 	
 	.selected-content {
-		background-image: -webkit-radial-gradient(white 30%, #0078D7 70%);
+/*		background-image: -webkit-radial-gradient(white 30%, #0078D7 70%);
 	    background-image: -moz-radial-gradient(white 30%, #0078D7 70%);
 	    background-image: -ms-radial-gradient(white 30%, #0078D7 70%);
 	    background-image: -o-radial-gradient(white 30%, #0078D7 70%);
-	    background-image: unquote("radial-gradient(white 30%, #0078D7 70%)");
+	    background-image: unquote("radial-gradient(white 30%, #0078D7 70%)"); */
+	    
+		background-image: -webkit-linear-gradient(to top, #0078D7, white 50%, #0078D7);
+	    background-image: -moz-linear-gradient(to top, #0078D7, white 50%, #0078D7);
+	    background-image: -ms-linear-gradient(to top, #0078D7, white 50%, #0078D7);
+	    background-image: -o-linear-gradient(to top, #0078D7, white 50%, #0078D7);
+	    background-image: unquote("linear-gradient(to top, #0078D7, white 50%, #0078D7)");
+	    
 	}
 	
 	.segmentation-layer {
@@ -390,9 +403,13 @@
 	}
 	
 	tr.segmentation-layer {
-		line-height: 12px;
+		line-height: 5px;
 		background:#FFFFFF;
 		color:#FFFFFF;
+	}
+	
+	.segmentation-layer td {
+		overflow: hidden;
 	}
 	
 	.unselected-tag-instance {

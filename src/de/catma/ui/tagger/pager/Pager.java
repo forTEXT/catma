@@ -59,14 +59,14 @@ public class Pager implements Iterable<Page> {
 	private int taggerID;
 	private int totalLineCount = 0;
 
-	private boolean rightToLeftLanguage;
+	private boolean rightToLeftWriting;
 	
-	public Pager(int taggerID, int approxMaxLineLength, int maxPageLengthInLines, boolean rightToLeftLanguage) {
+	public Pager(int taggerID, int approxMaxLineLength, int maxPageLengthInLines, boolean rightToLeftWriting) {
 		pages = new ArrayList<Page>();
 		this.taggerID = taggerID;
 		this.approxMaxLineLength = approxMaxLineLength;
 		this.maxPageLengthInLines = maxPageLengthInLines;
-		this.rightToLeftLanguage = rightToLeftLanguage;
+		this.rightToLeftWriting = rightToLeftWriting;
 	}
 	
 	public void setText(String text) {
@@ -116,7 +116,7 @@ public class Pager implements Iterable<Page> {
 						taggerID, 
 						text.substring(pageStart, pageEnd), 
 						pageStart, pageEnd, approxMaxLineLength,
-						rightToLeftLanguage));
+						rightToLeftWriting));
 				pageLines = 0;
 				pageStart = pageEnd;
 			}
@@ -141,7 +141,7 @@ public class Pager implements Iterable<Page> {
 					taggerID, 
 					text.substring(pageStart, pageEnd), 
 					pageStart, pageEnd, approxMaxLineLength,
-					rightToLeftLanguage));
+					rightToLeftWriting));
 		}
 		
 		totalLineCount = 0;

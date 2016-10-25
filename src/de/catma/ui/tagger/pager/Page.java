@@ -75,17 +75,17 @@ public class Page {
 	private Map<String, ClientTagInstance> relativeTagInstances = 
 			new HashMap<String,ClientTagInstance>();
 	private int lineCount;
-	private boolean rightToLeftLanguage;
+	private boolean rightToLeftWriting;
 	private ArrayList<Line> lines;
 	private Element pageDiv;
 	
-	public Page(int taggerID, String text, int pageStart, int pageEnd, int approxMaxLineLength, boolean rightToLeftLanguage) {
+	public Page(int taggerID, String text, int pageStart, int pageEnd, int approxMaxLineLength, boolean rightToLeftWriting) {
 		this.taggerID = taggerID;
 		this.pageStart = pageStart;
 		this.pageEnd = pageEnd;
 		this.approxMaxLineLength = approxMaxLineLength;
 		this.text = text;
-		this.rightToLeftLanguage = rightToLeftLanguage;
+		this.rightToLeftWriting = rightToLeftWriting;
 		buildLines();
 	}
 	
@@ -100,7 +100,7 @@ public class Page {
 		
 		Matcher matcher = Pattern.compile(Pager.LINE_CONTENT_PATTERN).matcher(text);
 		
-		Line currentLine = new Line();
+		Line currentLine = new Line(rightToLeftWriting);
 		int lineLength = 0;
 		int lineId = 0;
 		int pageOffset = 0;
@@ -116,7 +116,7 @@ public class Page {
 				lines.add(currentLine);
 				
 				pageOffset += lineEnd-lineStart;
-				currentLine = new Line();
+				currentLine = new Line(rightToLeftWriting);
 				lineLength = 0;
 			}
 			if (matcher.group(Pager.WORDCHARACTER_GROUP) != null) {
@@ -137,7 +137,7 @@ public class Page {
 				lines.add(currentLine);
 
 				pageOffset += lineEnd-lineStart;
-				currentLine = new Line();
+				currentLine = new Line(rightToLeftWriting);
 				lineLength = 0;
 			}
 			else {
@@ -162,9 +162,11 @@ public class Page {
 	public String toHTML() {
 		if (pageDiv == null) {
 			pageDiv = new Element(HTMLElement.div.name());
-			if (rightToLeftLanguage) {
-				pageDiv.addAttribute(new Attribute(HTMLAttribute.dir.name(), HTMLAttributeValue.rtl.name()));
-				pageDiv.addAttribute(new Attribute(HTMLAttribute.align.name(), HTMLAttributeValue.right.name()));
+			if (rightToLeftWriting) {
+				pageDiv.addAttribute(
+					new Attribute(HTMLAttribute.dir.name(), HTMLAttributeValue.rtl.name()));
+				pageDiv.addAttribute(
+					new Attribute(HTMLAttribute.align.name(), HTMLAttributeValue.right.name()));
 			}
 			pageDiv.addAttribute(
 					new Attribute(

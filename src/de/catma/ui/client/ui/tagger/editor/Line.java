@@ -203,13 +203,25 @@ public class Line {
 		segmentationLayer.setAttribute("class", "segmentation-layer");
 		segmentationLayer.setAttribute("unselectable", "on");
 		tbody.appendChild(segmentationLayer);
+		boolean isRtl = isRtlWriting();
 		
+		String lastPresentationContent = null;
 		for (TextRange rangePart : rangeParts) {
 			
 			Element segmentationLayerContent = DOM.createTD();
 			segmentationLayer.appendChild(segmentationLayerContent);
+			String presentationContent = getPresentationContent(rangePart);
 			
-			segmentationLayerContent.setInnerText(getPresentationContent(rangePart));
+			if (isRtl 
+				&& (lastPresentationContent != null) 
+				&& !lastPresentationContent.endsWith(TextRange.NBSP)) {
+				segmentationLayerContent.setInnerText(presentationContent+TextRange.ZWJ);
+			}
+			else {
+				segmentationLayerContent.setInnerText(presentationContent);
+			}
+			
+			lastPresentationContent = presentationContent;
 		}
 		
 		return table;
@@ -292,5 +304,14 @@ public class Line {
 	
 	public Set<TextRange> getSelectedTextRanges() {
 		return Collections.unmodifiableSet(selectedTextRanges);
+	}
+	
+	private boolean isRtlWriting() {
+		Element parent = lineElement.getParentElement();
+		if (parent.hasAttribute("dir")) {
+			return parent.getAttribute("dir").trim().toLowerCase().equals("rtl");
+		}
+		
+		return false;
 	}
 }
