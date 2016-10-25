@@ -95,7 +95,7 @@ public class TaggerView extends VerticalLayout
 	private PropertyChangeListener tagReferencesChangedListener;
 	private int approxMaxLineLength;
 	private int maxPageLengthInLines = 30;
-	private int initialSplitterPositionInPixels = 700;
+	private int initialSplitterPositionInPixels = 725;
 	
 	private TaggerHelpWindow taggerHelpWindow = new TaggerHelpWindow();
 	private CheckBox cbTraceSelection;
@@ -326,9 +326,13 @@ public class TaggerView extends VerticalLayout
 		actionPanel.addComponent(linesPerPageSlider);
 		
 		cbTraceSelection = new CheckBox();
-//		cbTraceSelection.setIcon(FontAwesome.TIM);
+		cbTraceSelection.setIcon(FontAwesome.OBJECT_GROUP);
+		cbTraceSelection.setDescription("Allow multiple discontinous selections");
 		actionPanel.addComponent(cbTraceSelection);
-		btClearSearchHighlights = new Button(FontAwesome.PAINT_BRUSH);
+		cbTraceSelection.addStyleName("tagger-trace-checkbox");
+
+		btClearSearchHighlights = new Button(FontAwesome.ERASER);
+		btClearSearchHighlights.setDescription("Clear all search highlights");
 		actionPanel.addComponent(btClearSearchHighlights);
 		
 		markupPanel = new MarkupPanel(

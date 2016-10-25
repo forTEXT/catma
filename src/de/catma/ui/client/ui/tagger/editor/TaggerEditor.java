@@ -31,6 +31,8 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
+import com.google.gwt.event.dom.client.BlurEvent;
+import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.FocusEvent;
@@ -58,7 +60,7 @@ import de.catma.ui.client.ui.tagger.shared.ContentElementID;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
 public class TaggerEditor extends FocusWidget 
-	implements MouseUpHandler, FocusHandler, 
+	implements MouseUpHandler, FocusHandler, BlurHandler,
 		MouseDownHandler, KeyUpHandler, ClickHandler {
 	private static final String LINEID_PREFIX = "LINE.";
 	private static Logger logger = Logger.getLogger(TaggerEditor.class.getName());
@@ -94,6 +96,7 @@ public class TaggerEditor extends FocusWidget
 		addMouseDownHandler(this);
 		addKeyUpHandler(this);
 		addFocusHandler(this);
+		addBlurHandler(this);
 		addClickHandler(this);
 	}
 	
@@ -382,6 +385,13 @@ public class TaggerEditor extends FocusWidget
 			}
 		}
 	}
+	
+	@Override
+	public void onBlur(BlurEvent event) {
+		if (!traceSelection) {
+			highlightSelection();
+		}
+	}
 
 	public void onFocus(FocusEvent event) {
 		for (Line line : lineIdToLineMap.values()) {
@@ -397,7 +407,7 @@ public class TaggerEditor extends FocusWidget
 		lastRangeList = impl.getRangeList();
 		logger.info("Ranges: " + lastRangeList.size());
 
-		if (!event.isShiftKeyDown()) {
+		if (!event.isShiftKeyDown() && traceSelection) {
 			highlightSelection();
 		}
 	}
@@ -457,7 +467,9 @@ public class TaggerEditor extends FocusWidget
 	
 	@Override
 	public void onClick(ClickEvent event) {
-		highlightSelection();
+		if (traceSelection) {
+			highlightSelection();
+		}
 		
 		EventTarget eventTarget = event.getNativeEvent().getEventTarget();
 		if (Element.is(eventTarget)) {
