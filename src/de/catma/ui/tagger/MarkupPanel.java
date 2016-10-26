@@ -562,4 +562,8 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	public void tagInstanceSelected(TagInstance tagInstance) {
 		tagInstanceSelectedListener.tagInstanceSelected(tagInstance);
 	}
+
+	public TagInstanceInfo getTagInstanceInfo(String tagInstanceId) {
+		return markupCollectionsPanel.getTagInstanceInfo(tagInstanceId);
+	}
 }

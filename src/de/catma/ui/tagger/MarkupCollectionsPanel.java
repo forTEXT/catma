@@ -1236,7 +1236,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 
 	public List<TagInstanceInfo> getTagInstances(List<String> instanceIDs) {
-		return userMarkupCollectionManager.getTagInstances(instanceIDs);
+		return userMarkupCollectionManager.getTagInstanceInfos(instanceIDs);
 	}
 
 	public void removeTagInstances(List<String> tagInstanceIDs) {
@@ -1255,5 +1255,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			((CatmaApplication)UI.getCurrent()).showAndLogError("Error updating the Property", e);
 		}
 		
+	}
+
+	public TagInstanceInfo getTagInstanceInfo(String tagInstanceId) {
+		return userMarkupCollectionManager.getTagInstanceInfo(tagInstanceId);
 	}
 }

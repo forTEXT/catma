@@ -30,6 +30,7 @@ import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.UI;
 
 import de.catma.document.Range;
+import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -38,6 +39,7 @@ import de.catma.ui.client.ui.tagger.TaggerClientRpc;
 import de.catma.ui.client.ui.tagger.TaggerServerRpc;
 import de.catma.ui.client.ui.tagger.shared.ClientTagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
+import de.catma.ui.client.ui.tagger.shared.TaggerState;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
@@ -54,6 +56,7 @@ public class Tagger extends AbstractComponent {
 	public static interface TaggerListener {
 		public void tagInstanceAdded(ClientTagInstance clientTagInstance);
 		public void tagInstanceSelected(String instancePartID, String lineID);
+		public TagInstanceInfo getTagInstanceInfo(String tagInstanceId);
 	}
 	
 	private static final long serialVersionUID = 1L;
@@ -100,6 +103,7 @@ public class Tagger extends AbstractComponent {
 	private Pager pager;
 	private TaggerListener taggerListener;
 	private ClientTagInstanceJSONSerializer tagInstanceJSONSerializer;
+	private TagInstanceInfoHTMLSerializer tagInstanceInfoHTMLSerializer;
 	private boolean init = true;
 	private String taggerID;
 
@@ -108,8 +112,10 @@ public class Tagger extends AbstractComponent {
 		this.pager = pager;
 		this.taggerListener = taggerListener;
 		this.tagInstanceJSONSerializer = new ClientTagInstanceJSONSerializer();
+		this.tagInstanceInfoHTMLSerializer = new TagInstanceInfoHTMLSerializer();
 		this.taggerID = String.valueOf(taggerID);
 		getRpcProxy(TaggerClientRpc.class).setTaggerId(this.taggerID);
+		getState().tagInstanceIdToTooltipInfo = new HashMap<>();
 	}
 	
 	@Override
@@ -138,7 +144,7 @@ public class Tagger extends AbstractComponent {
 
 	void setTagInstancesVisible(
 			Collection<ClientTagInstance> tagInstances, boolean visible) {
-		
+				
 		for (ClientTagInstance ti : tagInstances) {
 			List<Page> pages = pager.getPagesForAbsoluteTagInstance(ti);
 			if (!pages.isEmpty()) {
@@ -146,11 +152,17 @@ public class Tagger extends AbstractComponent {
 					for (Page page : pages) {
 						page.addAbsoluteTagInstance(ti);
 					}
+					TagInstanceInfo tagInstanceInfo = 
+					taggerListener.getTagInstanceInfo(ti.getInstanceID());
+					getState().tagInstanceIdToTooltipInfo.put(
+						ti.getInstanceID(), 
+						tagInstanceInfoHTMLSerializer.toHTML(tagInstanceInfo));
 				}
 				else {
 					for (Page page : pages) {
 						page.removeRelativeTagInstance(ti.getInstanceID());
 					}
+					getState().tagInstanceIdToTooltipInfo.remove(ti.getInstanceID());
 				}
 			}	
 		}
@@ -227,4 +239,9 @@ public class Tagger extends AbstractComponent {
 		pager.removeHighlights();
 		getRpcProxy(TaggerClientRpc.class).removeHighlights();
 	}
+	
+	@Override
+	protected TaggerState getState() {
+		return (TaggerState)super.getState();
+	}	
 }

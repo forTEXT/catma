@@ -49,6 +49,7 @@ import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
@@ -575,4 +576,8 @@ public class TaggerView extends VerticalLayout
 		this.sourceDocument = sd;
 	}
 
+	@Override
+	public TagInstanceInfo getTagInstanceInfo(String tagInstanceId) {
+		return markupPanel.getTagInstanceInfo(tagInstanceId);
+	}
 }

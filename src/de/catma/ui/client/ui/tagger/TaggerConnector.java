@@ -7,6 +7,8 @@ import com.vaadin.client.communication.RpcProxy;
 import com.vaadin.client.ui.AbstractComponentConnector;
 import com.vaadin.shared.ui.Connect;
 
+import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
+import de.catma.ui.client.ui.tagger.shared.TaggerState;
 import de.catma.ui.tagger.Tagger;
 
 @Connect(Tagger.class)
@@ -95,7 +97,12 @@ public class TaggerConnector extends AbstractComponentConnector {
 	
     public TooltipInfo getTooltipInfo(Element element) {
     	if (element.getId().startsWith("CATMA")) {
-    		return new TooltipInfo(element.getId(), getState().errorMessage);
+    		String tooltipInfo = getState().tagInstanceIdToTooltipInfo.get(
+    				ClientTagInstance.getTagInstanceIDFromPartId(element.getId()));
+    		if (tooltipInfo == null) {
+    			tooltipInfo = "N/A";
+    		}
+    		return new TooltipInfo(tooltipInfo, getState().errorMessage);
     	}
     	else {
     		return null;
@@ -107,4 +114,8 @@ public class TaggerConnector extends AbstractComponentConnector {
     	return true;
     }
 
+    @Override
+    public TaggerState getState() {
+    	return (TaggerState) super.getState();
+    }
 }
