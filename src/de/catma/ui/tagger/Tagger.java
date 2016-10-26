@@ -87,6 +87,13 @@ public class Tagger extends AbstractComponent {
 				pager.getCurrentPage().addRelativeTagInstance(tagInstance);
 				taggerListener.tagInstanceAdded(
 						pager.getCurrentPage().getAbsoluteTagInstance(tagInstance));
+				
+				TagInstanceInfo tagInstanceInfo = 
+						taggerListener.getTagInstanceInfo(tagInstance.getInstanceID());
+				getState().tagInstanceIdToTooltipInfo.put(
+					tagInstance.getInstanceID(), 
+					tagInstanceInfoHTMLSerializer.toHTML(tagInstanceInfo));
+
 			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"Error adding the Tag Instance!", e);
@@ -153,7 +160,7 @@ public class Tagger extends AbstractComponent {
 						page.addAbsoluteTagInstance(ti);
 					}
 					TagInstanceInfo tagInstanceInfo = 
-					taggerListener.getTagInstanceInfo(ti.getInstanceID());
+							taggerListener.getTagInstanceInfo(ti.getInstanceID());
 					getState().tagInstanceIdToTooltipInfo.put(
 						ti.getInstanceID(), 
 						tagInstanceInfoHTMLSerializer.toHTML(tagInstanceInfo));
