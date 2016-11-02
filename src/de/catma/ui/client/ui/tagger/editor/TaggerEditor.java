@@ -31,6 +31,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
+import com.google.gwt.dom.client.Text;
 import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -192,8 +193,24 @@ public class TaggerEditor extends FocusWidget
 		for (Range range : lastRangeList) { 
 			if (!range.getStartNode().equals(getRootNode())
 						&& !range.getEndNode().equals(getRootNode())) {
-				NodeRange nodeRange = new NodeRange(range.getStartNode(), range.getStartOffset(), 
-						range.getEndNode(), range.getEndOffset());
+				
+				Node startNode = range.getStartNode();
+				int startOffset = range.getStartOffset();
+				Node endNode = range.getEndNode();
+				int endOffset = range.getEndOffset();
+
+				if (startNode.getNodeType() != Element.TEXT_NODE) {
+					startNode = LeafFinder.getFirstTextLeaf(startNode);
+					startOffset = 0;
+				}
+				
+				if (endNode.getNodeType() != Element.TEXT_NODE) {
+					endNode = LeafFinder.getFirstTextLeaf(endNode);
+					endOffset = Text.as(endNode).getLength();
+				}
+				
+				NodeRange nodeRange = new NodeRange(startNode, startOffset, 
+						endNode, endOffset);
 				if (nodeRange.isPoint()) {
 					//TODO: consider tagging points (needs different visualization)
 					logger.info(
