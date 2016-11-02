@@ -86,18 +86,19 @@ public class TaggerEditor extends FocusWidget
 	
 	public TaggerEditor(TaggerEditorListener taggerEditorListener) {
 		super(Document.get().createDivElement());
+		getElement().setTabIndex(0); // some browsers need the tabindex to fire blur/focus events
 		
 		this.taggerEditorListener = taggerEditorListener;
 		
-		// Tell GWT we are interested in consuming click events
-		sinkEvents(Event.ONMOUSEUP | Event.ONMOUSEDOWN | Event.ONKEYUP | Event.ONCLICK);
+		// Tell GWT the events we are interested in consuming
+		sinkEvents(Event.ONMOUSEUP | Event.ONMOUSEDOWN | Event.ONKEYUP | Event.ONCLICK | Event.ONBLUR | Event.ONFOCUS);
 
 		addMouseUpHandler(this);
 		addMouseDownHandler(this);
 		addKeyUpHandler(this);
-		addFocusHandler(this);
-		addBlurHandler(this);
 		addClickHandler(this);
+		addBlurHandler(this);
+		addFocusHandler(this);
 	}
 	
 	/**
