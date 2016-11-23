@@ -8,12 +8,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
@@ -32,6 +32,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Table;
 
 import de.catma.document.source.ContentInfoSet;
@@ -69,7 +70,7 @@ public class CorpusCleaner {
 	private Set<String> baseConcepts = new HashSet<>();
 	
 	private int annotatorNumber = 1;
-	private Map<String,String> annotatorMap = new HashMap<>();
+	private HashBiMap<String,String> annotatorMap = HashBiMap.create();
 	private String tagsetUUID = new IDGenerator().generate();
 	private Version tagsetVersion = new Version();
 	private Table<String, String, UserMarkupCollection> collections = HashBasedTable.create();
@@ -82,6 +83,7 @@ public class CorpusCleaner {
 	private String targetDir;
 	private String publisher = "heureCLÉA http://heureclea.de/";
 	private String author = "Evelyn Gius, Janina Jacke, Jan Christoph Meister, Marco Petris";
+	private Table<String, String, List<String>> sourceDocConceptUmcMap = HashBasedTable.create();
 	
 	private LoadingCache<String, SourceDocument> sourceDocumentCache = 
 			CacheBuilder.newBuilder()
@@ -113,12 +115,15 @@ public class CorpusCleaner {
 					return sourceDocument;
 				};
 			});
+	
+	private Set<String> loggedMissingConcepts = new HashSet<>();
 
 	public CorpusCleaner() throws Exception {
 	}
 	
 	
 	public void run(String[] args) throws Exception {
+		logger.addHandler(new FileHandler("c:/test/corpuscleaner.log"));
 		baseURL = args[0];
 		if (!baseURL.endsWith("/")) {
 			baseURL += "/";
@@ -129,6 +134,7 @@ public class CorpusCleaner {
 		loadFromFile(args[4], validConcepts);
 		loadBaseConcepts();
 		loadMasterTagsetDefinition(args[5]);
+		loadFromFile(args[6], sourceDocConceptUmcMap);
 		
 		
 		List<Pair<String,String>> corpusIdentities = new ArrayList<>();
@@ -146,7 +152,7 @@ public class CorpusCleaner {
 			String cid = corpusIdentity.getFirst();
 			targetCid = corpusIdentity.getSecond();
 			
-			targetDir = args[6];
+			targetDir = args[7];
 			if (targetDir.endsWith("/")) {
 				targetDir = targetDir.substring(0, targetDir.length()-1);
 			}
@@ -184,6 +190,37 @@ public class CorpusCleaner {
 		}
 	}	
 	
+	private void loadFromFile(String fileName, Table<String, String, List<String>> sourceDocConceptUmcMap) throws IOException {
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		try (FileInputStream fis = new FileInputStream(fileName)) {
+			IOUtils.copy(fis, buffer);
+		}
+		
+		try (Scanner scanner = new Scanner(buffer.toString("UTF-8"))) {
+			while (scanner.hasNextLine()) {
+				String line = scanner.nextLine();
+				
+				String[] parts = line.split(",");
+				
+				String sourceDoc = parts[0];
+				String concept = parts[1];
+				String umc = parts[2];
+				
+				List<String> umcs = sourceDocConceptUmcMap.get(sourceDoc, concept);
+				if (umcs == null) {
+					umcs = new ArrayList<>();
+					sourceDocConceptUmcMap.put(sourceDoc, concept, umcs);
+				}
+				if (umcs.contains(umc)) {
+					throw new IllegalStateException("duplicate entry: " + line);
+				}
+				
+				umcs.add(umc);
+			}
+		}
+	}
+
+
 	private void loadMasterTagsetDefinition(String path) throws IOException {
 		try (FileInputStream fis = new FileInputStream(path)) {
 			TeiTagLibrarySerializationHandler teiTagLibrarySerializationHandler = 
@@ -226,7 +263,7 @@ public class CorpusCleaner {
 	private void handleSourceDocNode(JsonNode sourceDocNode) throws IOException {
 
 		String sourceDocId = sourceDocNode.get("sourceDocID").asText();
-		String sourceDocName = sourceDocNode.get("sourceDocName").asText();
+		String sourceDocName = sourceDocNode.get("sourceDocName").asText().trim();
 		if (isValidSourceDoc(sourceDocName)) {
 			
 			JsonNode umcListNode = sourceDocNode.get("umcList");
@@ -287,7 +324,8 @@ public class CorpusCleaner {
 		client.setChallengeResponse(ChallengeScheme.HTTP_BASIC, user, pass);
 		
 		logger.info("loading " + umcName);
-		Representation umcRepresentation = client.get(); 
+		
+		Representation umcRepresentation = tryGet(client); 
 
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		
@@ -351,7 +389,7 @@ public class CorpusCleaner {
 		copyTagDefs(targetTagsetDefinition, tagLibrary);
 		targetLib.add(targetTagsetDefinition);
 		
-		List<UserMarkupCollection> affectedCollections = new ArrayList<>();
+		Set<UserMarkupCollection> affectedCollections = new HashSet<>();
 		
 		List<TagReference> diagreementApprTagRefs = new ArrayList<>();
 		
@@ -360,14 +398,13 @@ public class CorpusCleaner {
 			TagDefinition tagDefinition = tagReference.getTagDefinition();
 			String path = tagLibrary.getTagPath(tagDefinition);
 			
-			if (isValidPath(path, validConcepts)) {
 				
-				if (path.equals("/Time Tagset/disagreement_approved")) {
-					diagreementApprTagRefs.add(tagReference);
-				}
-				else {
-					String conceptName = getConcept(path);
-					
+			if (path.equals("/Time Tagset/disagreement_approved")) {
+				diagreementApprTagRefs.add(tagReference);
+			}
+			else {
+				String conceptName = getConcept(path);
+				if (conceptName != null && isValidCombination(conceptName, umc.toString(), sourceDocName)) {
 					TagInstance tagInstance = tagReference.getTagInstance();
 					PropertyDefinition propertyDefinition = 
 						tagDefinition.getPropertyDefinitionByName(
@@ -388,12 +425,11 @@ public class CorpusCleaner {
 					includedInstances.add(tagReference.getTagInstanceID());
 				
 					affectedCollections.add(targetUmc);
+				}		
+				else {
+					excludedInstances.add(tagReference.getTagInstanceID());
 				}
-			}		
-			else {
-				excludedInstances.add(tagReference.getTagInstanceID());
 			}
-			
 		}
 		
 		for (TagReference tagReference : diagreementApprTagRefs) {
@@ -423,6 +459,29 @@ public class CorpusCleaner {
 		
 		includedTagInstanceCount += includedInstances.size();
 		excludedTagInstanceCount += excludedInstances.size();
+	}
+
+
+	private Representation tryGet(ClientResource client) {
+		int i=10;
+		while (i>0) {
+			try {
+				Representation rep = client.get();
+				return rep;
+			}
+			catch (Exception e) {
+				logger.warning("tryGet failed " + i + " " + e.getMessage());
+			}
+			i--;
+		}		
+		
+		throw new RuntimeException("tryGet failed too many times");
+	}
+
+
+	private boolean isValidCombination(String conceptName, String umcName, String sourceDocName) {
+		List<String> umcNames = sourceDocConceptUmcMap.get(sourceDocName, conceptName); 
+		return (umcNames != null) && umcNames.contains(umcName);
 	}
 
 
@@ -471,8 +530,12 @@ public class CorpusCleaner {
 			}
 		}
 
+		if (!loggedMissingConcepts.contains(path)) {
+			logger.warning("concept for " + path + " not found!");
+			loggedMissingConcepts.add(path);
+		}
 		
-		throw new IllegalArgumentException("concept for " + path + " not found!");
+		return null;
 	}
 
 
@@ -524,8 +587,16 @@ public class CorpusCleaner {
 				targetUmc, sourceDocumentCache.get(sourceDocId), buffer);	
 		
 		new File(targetDir).mkdirs();
+		int firstBlankIdx = targetUmc.getContentInfoSet().getTitle().indexOf(" ");
 		
-		File file = new File(targetDir, targetUmc.getContentInfoSet().getTitle() + ".xml");
+		String fileName = 
+			targetUmc.getContentInfoSet().getTitle().substring(firstBlankIdx+1)
+			+ " "
+			+ annotatorMap.inverse().get(targetUmc.getContentInfoSet().getTitle().substring(0, firstBlankIdx))
+			+ " "
+			+ targetUmc.getContentInfoSet().getTitle().substring(0, firstBlankIdx) 
+			+ ".xml";
+		File file = new File(targetDir, fileName);
 		if (file.exists()) {
 			throw new IllegalStateException("file already exists: " + file); 
 		}
@@ -545,9 +616,7 @@ public class CorpusCleaner {
 
 		client.setChallengeResponse(ChallengeScheme.HTTP_BASIC, user, pass);
 
-		client.post(buffer.toString("UTF-8"), MediaType.APPLICATION_XML);
-		
-		Status status = client.getStatus();
+		Status status = tryPost(client, buffer);
 		
 		if (!status.isSuccess()) {
 			throw new IOException(status.toString());
@@ -555,6 +624,27 @@ public class CorpusCleaner {
 		else {
 			logger.info("upload " + targetUmc + " successful" ); 
 		}
+	}
+
+
+	private Status tryPost(ClientResource client, ByteArrayOutputStream buffer) {
+		int i=10;
+		while (i>0) {
+			try {
+				client.post(buffer.toString("UTF-8"), MediaType.APPLICATION_XML);
+				Status status = client.getStatus();
+				if (status.isSuccess()) {
+					return status;
+				}
+			}
+			catch (Exception e) {
+				logger.warning("tryPost failed " + i + " " + e.getMessage());
+			}
+			
+			i--;
+		}
+		
+		throw new RuntimeException("tryPost failed too many times.");
 	}
 
 
@@ -580,5 +670,4 @@ public class CorpusCleaner {
 			e.printStackTrace();
 		}
 	}
-
 }
