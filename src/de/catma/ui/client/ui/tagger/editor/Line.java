@@ -24,17 +24,17 @@ public class Line {
 	private Set<TextRange> tagInstanceTextRanges;
 	private Set<TextRange> highlightedTextRanges;
 	private Set<TextRange> selectedTextRanges;
-	private Collection<ClientTagInstance> relativeTagIntances;
+	private Collection<ClientTagInstance> absoluteTagIntances;
 	private String presentationContent;
 	
 	public Line(Element lineElement, String lineId, TextRange textRange, Set<TextRange> tagInstanceTextRanges,
-			Set<TextRange> highlightedTextRanges, Collection<ClientTagInstance> relativeTagIntances, String presentationContent) {
+			Set<TextRange> highlightedTextRanges, Collection<ClientTagInstance> absoluteTagIntances, String presentationContent) {
 		super();
 		this.lineElement = lineElement;
 		this.lineId = lineId;
 		this.textRange = textRange;
 		this.tagInstanceTextRanges = tagInstanceTextRanges;
-		this.relativeTagIntances = relativeTagIntances;
+		this.absoluteTagIntances = absoluteTagIntances;
 		this.presentationContent = presentationContent;
 		this.highlightedTextRanges = highlightedTextRanges;
 		this.selectedTextRanges = new HashSet<>();
@@ -152,7 +152,7 @@ public class Line {
 		// annotation layers
 		
 		AnnotationLayerBuilder annotationLayerBuilder =
-				new AnnotationLayerBuilder(relativeTagIntances, rangeParts);
+				new AnnotationLayerBuilder(absoluteTagIntances, rangeParts);
 		
 		Table<Integer, TextRange, ClientTagInstance> annotationLayerTable = 
 				annotationLayerBuilder.getLayerTable();
@@ -252,7 +252,7 @@ public class Line {
 	}
 
 	public void addTagInstance(ClientTagInstance clientTagInstance) {
-		relativeTagIntances.add(clientTagInstance);
+		absoluteTagIntances.add(clientTagInstance);
 		tagInstanceTextRanges.addAll(clientTagInstance.getRanges());
 	}
 
@@ -313,5 +313,16 @@ public class Line {
 		}
 		
 		return false;
+	}
+	
+	public Set<String> getTagInstanceIDs(TextRange relativeTextRange) {
+		HashSet<String> tagInstanceIDs = new HashSet<>();
+		for (ClientTagInstance relativeClientTagInstance : absoluteTagIntances) {
+			if (relativeClientTagInstance.hasOverlappingRange(relativeTextRange)) {
+				tagInstanceIDs.add(relativeClientTagInstance.getInstanceID());
+			}
+		}
+		
+		return tagInstanceIDs;
 	}
 }

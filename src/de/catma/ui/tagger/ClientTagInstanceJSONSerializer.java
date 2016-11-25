@@ -20,7 +20,9 @@ package de.catma.ui.tagger;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,9 +36,9 @@ import de.catma.util.Pair;
 
 public class ClientTagInstanceJSONSerializer {
 	
-	public Pair<String, String> fromInstanceIDJSONArray(String jsonArray) throws IOException {
+	public Pair<String, String> fromInstanceIDLineIDJSONArray(String instanceIDLineIDJSONArray) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
-		ArrayNode instanceIDArray = mapper.readValue(jsonArray, ArrayNode.class);
+		ArrayNode instanceIDArray = mapper.readValue(instanceIDLineIDJSONArray, ArrayNode.class);
 	
 		JsonNode instanceIDJSON = instanceIDArray.get(0);
 		String instanceID = 
@@ -49,6 +51,19 @@ public class ClientTagInstanceJSONSerializer {
 		
 		return new Pair<>(instanceID, lineID);
 	}
+	
+	public Set<String> fromInstanceIDsArray(String tagInstanceIDsJson) throws IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		ArrayNode instanceIDArray = mapper.readValue(tagInstanceIDsJson, ArrayNode.class);
+		HashSet<String> tagInstanceIDs = new HashSet<>();
+		
+		for (int i=0; i<instanceIDArray.size(); i++){
+			tagInstanceIDs.add(instanceIDArray.get(i).asText());
+		}
+		
+		return tagInstanceIDs;
+	}
+
 	
 	public ClientTagInstance fromJSON(String json) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
@@ -75,4 +90,5 @@ public class ClientTagInstanceJSONSerializer {
 		
 		return new ClientTagInstance(tagDefinitionID, instanceID, color, ranges);
 	}
+
 }

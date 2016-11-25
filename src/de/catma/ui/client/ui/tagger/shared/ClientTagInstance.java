@@ -156,6 +156,16 @@ public class ClientTagInstance {
 		return result;
 	}
 	
+	public boolean hasOverlappingRange(TextRange textRange) {
+		for (TextRange tr : ranges) {
+			if (tr.hasOverlappingRange(textRange)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
     public static List<TextRange> mergeRanges(SortedSet<TextRange> sortedRanges) {
         List<TextRange> result = new ArrayList<TextRange>();
 

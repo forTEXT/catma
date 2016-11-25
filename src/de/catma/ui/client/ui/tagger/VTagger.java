@@ -18,6 +18,7 @@
  */   
 package de.catma.ui.client.ui.tagger;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -83,9 +84,14 @@ public class VTagger extends Composite {
 				}
 			}
 			
-			public void tagSelected(String tagInstanceID, String lineID) {
+			public void tagSelected(String tagInstancePartID, String lineID) {
 				taggerListener.tagInstanceSelected(
-						tagInstanceJSONSerializer.toJSONArray(tagInstanceID, lineID));
+						tagInstanceJSONSerializer.toJSONArrayString(tagInstancePartID, lineID));
+			}
+			
+			@Override
+			public void tagsSelected(HashSet<String> tagInstanceIDs) {
+				taggerListener.tagInstancesSelected(tagInstanceJSONSerializer.toJSONArrayString(tagInstanceIDs));
 			}
 			
 			public void logEvent(String event) {

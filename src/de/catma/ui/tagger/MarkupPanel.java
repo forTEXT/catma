@@ -521,7 +521,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		return markupCollectionsPanel.getRepository();
 	}
 
-	public void showTagInstanceInfo(List<String> instanceIDs, String tagInstanceID) {
+	public void showTagInstanceInfo(Collection<String> instanceIDs, String tagInstanceID) {
 		List<TagInstanceInfo> tagInstances = 
 				markupCollectionsPanel.getTagInstances(instanceIDs);
 		

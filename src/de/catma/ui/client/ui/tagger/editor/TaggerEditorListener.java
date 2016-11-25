@@ -18,6 +18,8 @@
  */
 package de.catma.ui.client.ui.tagger.editor;
 
+import java.util.HashSet;
+
 public interface TaggerEditorListener {
 	public static enum TaggerEditorEventType {
 		ADD,
@@ -26,6 +28,7 @@ public interface TaggerEditorListener {
 	}
 	
 	public void tagChanged(TaggerEditorEventType type, Object... args);
-	public void tagSelected(String tagInstanceID, String lineID);
+	public void tagSelected(String tagInstancePartID, String lineID);
 	public void logEvent(String event);
+	public void tagsSelected(HashSet<String> tagInstanceIDs);
 }

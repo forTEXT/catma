@@ -568,6 +568,11 @@ public class TaggerView extends VerticalLayout
 			ClientTagInstance.getTagInstanceIDFromPartId(instancePartID));
 	}
 	
+	@Override
+	public void tagInstanceSelected(Set<String> tagInstanceIDs) {
+		markupPanel.showTagInstanceInfo(tagInstanceIDs, null);
+	}
+	
 	public void addClickshortCuts() { /* noop*/	}
 	
 	public void removeClickshortCuts() { /* noop*/ }

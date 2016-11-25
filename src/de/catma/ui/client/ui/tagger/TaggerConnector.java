@@ -76,8 +76,13 @@ public class TaggerConnector extends AbstractComponentConnector {
 				rpc.tagInstanceAdded(tagIntanceJson);
 			}
 			@Override
-			public void tagInstanceSelected(String instanceIDsJson) {
-				rpc.tagInstanceSelected(instanceIDsJson);
+			public void tagInstanceSelected(String instanceIDLineIDJson) {
+				rpc.tagInstanceSelected(instanceIDLineIDJson);
+			}
+			
+			@Override
+			public void tagInstancesSelected(String tagInstanceIDsJson) {
+				rpc.tagInstancesSelected(tagInstanceIDsJson);
 			}
 			
 			@Override

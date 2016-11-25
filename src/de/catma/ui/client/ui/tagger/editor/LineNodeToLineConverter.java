@@ -21,14 +21,14 @@ public class LineNodeToLineConverter {
 	private TextRange textRange;
 	private Set<TextRange> tagInstanceTextRanges;
 	private Set<TextRange> highlightedTextRanges;
-	private Map<String,ClientTagInstance> relativeTagIntancesByID;
+	private Map<String,ClientTagInstance> absoluteTagIntancesByID;
 	private String presentationContent;
 	private Line line;
 	
 	public LineNodeToLineConverter(Element lineElement) {
 		tagInstanceTextRanges = new HashSet<>();
 		highlightedTextRanges = new HashSet<>();
-		relativeTagIntancesByID = new HashMap<>();
+		absoluteTagIntancesByID = new HashMap<>();
 		makeLineFromLineNode(lineElement);
 	}
 	
@@ -53,14 +53,14 @@ public class LineNodeToLineConverter {
 			}
 		}
 		
-		for (ClientTagInstance tagInstance : relativeTagIntancesByID.values()) {
+		for (ClientTagInstance tagInstance : absoluteTagIntancesByID.values()) {
 			tagInstanceTextRanges.addAll(tagInstance.getRanges());
 		}
 		
 		line = new Line(
 			lineElement,
 			lineId, textRange, tagInstanceTextRanges, highlightedTextRanges,
-			new ArrayList<ClientTagInstance>(relativeTagIntancesByID.values()), 
+			new ArrayList<ClientTagInstance>(absoluteTagIntancesByID.values()), 
 			presentationContent);
 	}
 
@@ -108,7 +108,7 @@ public class LineNodeToLineConverter {
 		
 		String annotationId = ClientTagInstance.getTagInstanceIDFromPartId(annotationSegmentId);
 		TextRange textRange = ClientTagInstance.getTextRangeFromPartId(annotationSegmentId);
-		ClientTagInstance tagInstance = relativeTagIntancesByID.get(annotationId);
+		ClientTagInstance tagInstance = absoluteTagIntancesByID.get(annotationId);
 		if (tagInstance != null) {
 			TreeSet<TextRange> sortedRanges = new TreeSet<>(tagInstance.getRanges());
 			sortedRanges.add(textRange);
@@ -120,7 +120,7 @@ public class LineNodeToLineConverter {
 			tagInstance = new ClientTagInstance(null, annotationId, annotationColor, textRanges);
 		}
 		
-		relativeTagIntancesByID.put(annotationId, tagInstance);
+		absoluteTagIntancesByID.put(annotationId, tagInstance);
 	}
 
 	private String getConvertedColor(String annotationColor) {

@@ -19,10 +19,10 @@
 package de.catma.ui.client.ui.tagger;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import com.google.gwt.json.client.JSONArray;
-import com.google.gwt.json.client.JSONNumber;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONString;
@@ -90,48 +90,23 @@ public class ClientTagInstanceJSONSerializer extends JSONSerializer {
 				SerializationField.color.name(), 
 				new JSONString(tagInstance.getColor()));		
 		
-		JSONArray rangesJSON = new JSONArray();
-		int i=0;
-		for (TextRange tr : tagInstance.getRanges()) {
-			JSONObject trJSON = new JSONObject();
-			trJSON.put(
-				SerializationField.startPos.name(), 
-				new JSONNumber(tr.getStartPos()));
-			trJSON.put(
-				SerializationField.endPos.name(), 
-				new JSONNumber(tr.getEndPos()));
-			rangesJSON.set(i, trJSON);
-			i++;
-		}
+		TextRangeJSONSerializer textRangeJSONSerializer = new TextRangeJSONSerializer();
+		JSONArray rangesJSON = textRangeJSONSerializer.toJSONArray(tagInstance.getRanges());
 		
 		tagInstanceJSON.put(
 				SerializationField.ranges.name(), rangesJSON);
 		
 		return tagInstanceJSON.toString();
 	}
-//	
-//	public String toJSONArray(String tagInstanceIDs) {
-//		int i=0;
-//		JSONArray result = new JSONArray();
-//		for (String tagInstanceID : tagInstanceIDs) {
-//			JSONObject instanceJSON = new JSONObject();
-//			instanceJSON.put(
-//				SerializationField.instanceID.name(), 
-//				new JSONString(tagInstanceID));
-//			result.set(i, instanceJSON);
-//			i++;
-//		}
-//		
-//		return result.toString();
-//	}
+
 	
-	public String toJSONArray(String tagInstanceID, String lineID) {
+	public String toJSONArrayString(String tagInstancePartID, String lineID) {
 		
 		JSONArray result = new JSONArray();
 		JSONObject instanceJSON = new JSONObject();
 		instanceJSON.put(
 			SerializationField.instanceID.name(), 
-			new JSONString(tagInstanceID));
+			new JSONString(tagInstancePartID));
 		result.set(0, instanceJSON);
 			
 		instanceJSON.put(
@@ -139,6 +114,16 @@ public class ClientTagInstanceJSONSerializer extends JSONSerializer {
 			new JSONString(lineID));
 		result.set(1, instanceJSON);
 		
+		return result.toString();
+	}
+
+	public String toJSONArrayString(HashSet<String> tagInstanceIDs) {
+		JSONArray result = new JSONArray();
+		int i=0;
+		for (String tagInstanceID : tagInstanceIDs) {
+			result.set(i, new JSONString(tagInstanceID));
+			i++;
+		}
 		return result.toString();
 	}
 }

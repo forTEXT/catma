@@ -859,8 +859,12 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 										MarkupCollectionsTreeProperty.visible);
 						CheckBox cb = (CheckBox) visibleProp.getValue();
 						tagDefinitionSelectedEventHandlingRunning = true;
-						cb.setValue(selected);
-						tagDefinitionSelectedEventHandlingRunning = false;
+						try {
+							cb.setValue(selected);
+						}
+						finally {
+							tagDefinitionSelectedEventHandlingRunning = false;
+						}
 
 					}
 				}
@@ -891,8 +895,12 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 									MarkupCollectionsTreeProperty.visible);
 					CheckBox cb = (CheckBox) visibleProp.getValue();
 					tagDefinitionSelectedEventHandlingRunning = true;
-					cb.setValue(selected);
-					tagDefinitionSelectedEventHandlingRunning  = false;
+					try {
+						cb.setValue(selected);
+					}
+					finally {
+						tagDefinitionSelectedEventHandlingRunning  = false;
+					}
 				}
 			}
 		});
@@ -918,8 +926,12 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 									MarkupCollectionsTreeProperty.visible);
 					CheckBox cb = (CheckBox) visibleProp.getValue();
 					tagDefinitionSelectedEventHandlingRunning = true;
-					cb.setValue(selected);
-					tagDefinitionSelectedEventHandlingRunning = false;
+					try {
+						cb.setValue(selected);
+					}
+					finally {
+						tagDefinitionSelectedEventHandlingRunning = false;
+					}
 				}
 				
 				propertyChangeSupport.firePropertyChange(
@@ -1055,7 +1067,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 						cbVisible.setValue(selected);
 					}
 					finally {
-						tagDefinitionSelectedEventHandlingRunning = true;
+						tagDefinitionSelectedEventHandlingRunning = false;
 					}
 				}
 			}
@@ -1235,7 +1247,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		updateableforeignTagsetDefinitions.remove(tagsetDefinition);
 	}
 
-	public List<TagInstanceInfo> getTagInstances(List<String> instanceIDs) {
+	public List<TagInstanceInfo> getTagInstances(Collection<String> instanceIDs) {
 		return userMarkupCollectionManager.getTagInstanceInfos(instanceIDs);
 	}
 

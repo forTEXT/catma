@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.vaadin.server.WebBrowser;
 import com.vaadin.ui.AbstractComponent;
@@ -56,6 +57,7 @@ public class Tagger extends AbstractComponent {
 	public static interface TaggerListener {
 		public void tagInstanceAdded(ClientTagInstance clientTagInstance);
 		public void tagInstanceSelected(String instancePartID, String lineID);
+		public void tagInstanceSelected(Set<String> tagInstanceIDs);
 		public TagInstanceInfo getTagInstanceInfo(String tagInstanceId);
 	}
 	
@@ -64,10 +66,10 @@ public class Tagger extends AbstractComponent {
 	private TaggerServerRpc rpc = new TaggerServerRpc() {
 		
 		@Override
-		public void tagInstanceSelected(String instanceIDJson) {
+		public void tagInstanceSelected(String instanceIDLineIDJson) {
 			try {
 				Pair<String,String> instancePartIDLineID =
-					tagInstanceJSONSerializer.fromInstanceIDJSONArray(instanceIDJson);
+					tagInstanceJSONSerializer.fromInstanceIDLineIDJSONArray(instanceIDLineIDJson);
 				
 				taggerListener.tagInstanceSelected(
 						instancePartIDLineID.getFirst(), instancePartIDLineID.getSecond());
@@ -76,6 +78,19 @@ public class Tagger extends AbstractComponent {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
 					"Error displaying Tag Instance information!", e);
 			}
+		}
+		
+		@Override
+		public void tagInstancesSelected(String tagInstanceIDsJson) {
+			try {
+				Set<String> tagInstanceIDs = tagInstanceJSONSerializer.fromInstanceIDsArray(tagInstanceIDsJson);
+				taggerListener.tagInstanceSelected(tagInstanceIDs);
+			
+			} catch (IOException e) {
+				((CatmaApplication)UI.getCurrent()).showAndLogError(
+					"Error displaying Tag Instances information!", e);
+			}
+			
 		}
 		
 		@Override

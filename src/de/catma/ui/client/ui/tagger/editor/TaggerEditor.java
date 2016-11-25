@@ -133,6 +133,7 @@ public class TaggerEditor extends FocusWidget
 	public void onMouseUp(MouseUpEvent event) {
 		lastRangeList = impl.getRangeList();
 		logger.info("Ranges: " + lastRangeList.size());
+		showTagInstancesFromSelection();
 	}
 
  	public void setHTML(HTML pageHtmlContent, int lineCount) {
@@ -327,6 +328,53 @@ public class TaggerEditor extends FocusWidget
 				ContentElementID.CONTENT.name() + taggerID);
 	}
 
+	private void showTagInstancesFromSelection() {
+		if (hasSelection()) {
+			List<NodeRange> lastNodeRanges = getLastNodeRanges();
+			HashSet<String> tagInstanceIDs = new HashSet<>();
+			
+			for (NodeRange nodeRange : lastNodeRanges) {
+				Node startNode = nodeRange.getStartNode();
+				int startOffset = nodeRange.getStartOffset();
+				
+				Node endNode = nodeRange.getEndNode();
+				int endOffset = nodeRange.getEndOffset();		
+				
+				if (startNode.equals(endNode)) {
+					Element lineElement = getLineElementFromDisplayLayerContentNode(startNode);
+					Line line = getLine(lineElement);
+					
+					TextRange textRange = new TextRange(line.getLineOffset()+startOffset, line.getLineOffset()+endOffset);
+					tagInstanceIDs.addAll(line.getTagInstanceIDs(textRange));
+				}
+				else {
+					Element startLineElement = getLineElementFromDisplayLayerContentNode(startNode);
+					Element endLineElement = getLineElementFromDisplayLayerContentNode(endNode);
+					Line startLine = getLine(startLineElement);
+					Line endLine = getLine(endLineElement);
+
+					TextRange startRange = 
+						new TextRange(startLine.getLineOffset()+startOffset, startLine.getTextRange().getEndPos());
+					tagInstanceIDs.addAll(startLine.getTagInstanceIDs(startRange));
+					
+					TextRange endRange = 
+						new TextRange(endLine.getTextRange().getStartPos(), endLine.getLineOffset()+endOffset);
+					tagInstanceIDs.addAll(endLine.getTagInstanceIDs(endRange));
+					
+					for (int lineId = startLine.getLineId()+1; lineId<endLine.getLineId(); lineId++) {
+						Element lineElement = DOM.getElementById(LINEID_PREFIX+lineId);
+						Line line = getLine(lineElement);
+						tagInstanceIDs.addAll(line.getTagInstanceIDs(line.getTextRange()));
+					}
+				}
+			}
+			
+			if (!tagInstanceIDs.isEmpty()) {
+				taggerEditorListener.tagsSelected(tagInstanceIDs);
+			}
+		}
+	}
+	
 	private void highlightSelection() {
 		if (highlightSelections && hasSelection()) {
 			

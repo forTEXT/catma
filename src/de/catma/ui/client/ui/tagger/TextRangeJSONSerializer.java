@@ -18,11 +18,15 @@
  */
 package de.catma.ui.client.ui.tagger;
 
+import java.util.List;
+
+import com.google.gwt.json.client.JSONArray;
+import com.google.gwt.json.client.JSONNumber;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 
-import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance.SerializationField;
+import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.client.ui.util.JSONSerializer;
 
 public class TextRangeJSONSerializer extends JSONSerializer {
@@ -36,5 +40,32 @@ public class TextRangeJSONSerializer extends JSONSerializer {
 					getIntValueFromStringObject(
 						trJSON.get(SerializationField.endPos.name())));
 		return tr;
+	}
+	
+	public String toJSONArrayString(List<TextRange> textRanges) {
+		return toJSONArray(textRanges).toString();
+	}
+	
+	public JSONArray toJSONArray(List<TextRange> textRanges) {
+		JSONArray rangesJSON = new JSONArray();
+		int i=0;
+		for (TextRange tr : textRanges) {
+			JSONObject trJSON = toJSON(tr);
+			rangesJSON.set(i, trJSON);
+			i++;
+		}
+		
+		return rangesJSON;
+	}
+	
+	private JSONObject toJSON(TextRange tr) {
+		JSONObject trJSON = new JSONObject();
+		trJSON.put(
+			SerializationField.startPos.name(), 
+			new JSONNumber(tr.getStartPos()));
+		trJSON.put(
+			SerializationField.endPos.name(), 
+			new JSONNumber(tr.getEndPos()));
+		return trJSON;
 	}
 }
