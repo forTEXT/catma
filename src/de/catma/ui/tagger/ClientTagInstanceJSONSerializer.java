@@ -20,35 +20,50 @@ package de.catma.ui.tagger;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance.SerializationField;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
+import de.catma.util.Pair;
 
 public class ClientTagInstanceJSONSerializer {
 	
-	public List<String> fromInstanceIDJSONArray(String jsonArray) throws IOException {
-		List<String> result = new ArrayList<String>();
+	public Pair<String, String> fromInstanceIDLineIDJSONArray(String instanceIDLineIDJSONArray) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
-		ArrayNode instanceIDArray = mapper.readValue(jsonArray, ArrayNode.class);
+		ArrayNode instanceIDArray = mapper.readValue(instanceIDLineIDJSONArray, ArrayNode.class);
+	
+		JsonNode instanceIDJSON = instanceIDArray.get(0);
+		String instanceID = 
+			instanceIDJSON.get(
+					SerializationField.instanceID.name()).asText();
 		
-		for (int i=0; i<instanceIDArray.size(); i++) {
-			JsonNode instanceIDJSON = instanceIDArray.get(i);
-			result.add(
-				instanceIDJSON.get(
-						SerializationField.instanceID.name()).asText());
+		String lineID = 
+			instanceIDJSON.get(
+					SerializationField.lineID.name()).asText();
+		
+		return new Pair<>(instanceID, lineID);
+	}
+	
+	public Set<String> fromInstanceIDsArray(String tagInstanceIDsJson) throws IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		ArrayNode instanceIDArray = mapper.readValue(tagInstanceIDsJson, ArrayNode.class);
+		HashSet<String> tagInstanceIDs = new HashSet<>();
+		
+		for (int i=0; i<instanceIDArray.size(); i++){
+			tagInstanceIDs.add(instanceIDArray.get(i).asText());
 		}
 		
-		return result;
+		return tagInstanceIDs;
 	}
+
 	
 	public ClientTagInstance fromJSON(String json) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
@@ -75,65 +90,5 @@ public class ClientTagInstanceJSONSerializer {
 		
 		return new ClientTagInstance(tagDefinitionID, instanceID, color, ranges);
 	}
-	
-	private ObjectNode toJSONObject(ClientTagInstance tagInstance) throws IOException {
-		JsonNodeFactory factory = JsonNodeFactory.instance;
-		ObjectNode tagInstanceJSON = factory.objectNode();
-		tagInstanceJSON.put(
-			SerializationField.tagDefinitionID.name(),
-			tagInstance.getTagDefinitionID());
-		tagInstanceJSON.put(
-			SerializationField.instanceID.name(), 
-			tagInstance.getInstanceID());
-		
-		tagInstanceJSON.put(
-				SerializationField.color.name(), 
-				tagInstance.getColor());
 
-		ArrayNode rangesJSON = factory.arrayNode();
-		tagInstanceJSON.set(
-				SerializationField.ranges.name(), 
-				rangesJSON);
-		
-
-		for (TextRange tr : tagInstance.getRanges()) {
-			ObjectNode trJSON = factory.objectNode();
-			trJSON.put(SerializationField.startPos.name(), tr.getStartPos());
-			trJSON.put(SerializationField.endPos.name(), tr.getEndPos());
-			rangesJSON.add(trJSON);
-		}
-		
-		return tagInstanceJSON;
-	}
-	
-	public String toJSON(ClientTagInstance tagInstance) throws IOException {
-		return toJSONObject(tagInstance).toString();
-	}
-	
-	public String toJSON(Collection<ClientTagInstance> tagInstances) 
-			throws IOException {
-		JsonNodeFactory factory = JsonNodeFactory.instance;
-		ArrayNode tagInstancesJSON = factory.arrayNode();
-		for (ClientTagInstance ti : tagInstances) {
-			tagInstancesJSON.add(toJSONObject(ti));
-		}
-	
-		return tagInstancesJSON.toString();
-	}
-
-	public String join(
-			String jsonArray, Collection<ClientTagInstance> tagInstances) 
-					throws IOException {
-		if (jsonArray == null) {
-			jsonArray = "[]";
-		}
-		ObjectMapper mapper = new ObjectMapper();
-		
-		ArrayNode tagInstancesJSON = mapper.readValue(jsonArray, ArrayNode.class);
-		
-		for (ClientTagInstance ti : tagInstances) {
-			tagInstancesJSON.add(toJSONObject(ti));
-		}
-		return tagInstancesJSON.toString();
-	}
 }

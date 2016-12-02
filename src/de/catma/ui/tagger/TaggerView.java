@@ -32,9 +32,11 @@ import java.util.logging.Logger;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.ClassResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
@@ -47,6 +49,7 @@ import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
@@ -63,6 +66,7 @@ import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.tabbedview.ClosableTab;
+import de.catma.ui.tagger.MarkupPanel.TagInstanceSelectedListener;
 import de.catma.ui.tagger.Tagger.TaggerListener;
 import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedEvent;
 import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedListener;
@@ -92,9 +96,11 @@ public class TaggerView extends VerticalLayout
 	private PropertyChangeListener tagReferencesChangedListener;
 	private int approxMaxLineLength;
 	private int maxPageLengthInLines = 30;
-	private int initialSplitterPositionInPixels = 700;
+	private int initialSplitterPositionInPixels = 725;
 	
 	private TaggerHelpWindow taggerHelpWindow = new TaggerHelpWindow();
+	private CheckBox cbTraceSelection;
+	private Button btClearSearchHighlights;
 	
 	public TaggerView(
 			int taggerID, 
@@ -190,6 +196,21 @@ public class TaggerView extends VerticalLayout
 	}
 
 	private void initActions() {
+		btClearSearchHighlights.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				tagger.removeHighlights();
+			}
+		});
+		cbTraceSelection.addValueChangeListener(new ValueChangeListener() {
+			
+			@Override
+			public void valueChange(ValueChangeEvent event) {
+				Boolean traceSelection = (Boolean) event.getProperty().getValue();
+				tagger.setTraceSelection(traceSelection);
+			}
+		});
 		btAnalyze.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -257,7 +278,7 @@ public class TaggerView extends VerticalLayout
 		setSizeFull();
 		
 		VerticalLayout taggerPanel = new VerticalLayout();
-		
+		taggerPanel.setSizeFull();
 		taggerPanel.setSpacing(true);
 
 		btHelp = new Button("");
@@ -269,14 +290,15 @@ public class TaggerView extends VerticalLayout
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet(); 
 
 		pager = new Pager(taggerID, approxMaxLineLength, maxPageLengthInLines, 
-				indexInfoSet.isRightToLeftLanguage());
+				indexInfoSet.isRightToLeftWriting());
 		
 		tagger = new Tagger(taggerID, pager, this);
 		tagger.addStyleName("tagger");
 		tagger.setWidth("100%");
 		
 		taggerPanel.addComponent(tagger);
-	
+		taggerPanel.setExpandRatio(tagger, 1.0f);
+		
 		HorizontalLayout actionPanel = new HorizontalLayout();
 		actionPanel.setSpacing(true);
 		
@@ -299,11 +321,20 @@ public class TaggerView extends VerticalLayout
 		btAnalyze.setEnabled(repository instanceof IndexedRepository);
 		actionPanel.addComponent(btAnalyze);
 		
-		linesPerPageSlider =  new Slider("page size zoom", 1, 100, "%");
+		linesPerPageSlider =  new Slider(null, 1, 100, "% page size");
 		linesPerPageSlider.setImmediate(true);
 		linesPerPageSlider.setWidth("150px");
-		
 		actionPanel.addComponent(linesPerPageSlider);
+		
+		cbTraceSelection = new CheckBox();
+		cbTraceSelection.setIcon(FontAwesome.OBJECT_GROUP);
+		cbTraceSelection.setDescription("Allow multiple discontinous selections");
+		actionPanel.addComponent(cbTraceSelection);
+		cbTraceSelection.addStyleName("tagger-trace-checkbox");
+
+		btClearSearchHighlights = new Button(FontAwesome.ERASER);
+		btClearSearchHighlights.setDescription("Clear all search highlights");
+		actionPanel.addComponent(btClearSearchHighlights);
 		
 		markupPanel = new MarkupPanel(
 				repository,
@@ -337,8 +368,9 @@ public class TaggerView extends VerticalLayout
 						List<TagReference> tagReferences = 
 							(List<TagReference>)(
 									selected?evt.getNewValue():evt.getOldValue());
-						
-						tagger.setVisible(tagReferences, selected);
+						if (!tagReferences.isEmpty()) {
+							tagger.setVisible(tagReferences, selected);
+						}
 					}
 				},
 				new PropertyChangeListener() {
@@ -349,6 +381,13 @@ public class TaggerView extends VerticalLayout
 								(Set<TagDefinition>) evt.getOldValue();
 						pager.removeTagInstances(removedTagDefinitions);
 						tagger.setPage(pager.getCurrentPageNumber());
+					}
+				},
+				new TagInstanceSelectedListener() {
+					
+					@Override
+					public void tagInstanceSelected(TagInstance tagInstance) {
+						tagger.setTagInstanceSelected(tagInstance);
 					}
 				},
 				sourceDocument.getID());
@@ -516,16 +555,22 @@ public class TaggerView extends VerticalLayout
 			// set page that contains the range to be highlighted
 			int pageNumber = pager.getStartPageNumberFor(range);
 			pagerComponent.setPage(pageNumber);
-			// do the highlighting
-			TextRange tr = pager.getCurrentPage().getRelativeRangeFor(range);
-			tagger.highlight(tr);
+			
+			tagger.highlight(range);
 		} catch (ValueOutOfBoundsException e) {
 			logger.log(Level.SEVERE, "error during highlighting", e);
 		}
 	}
 	
-	public void tagInstancesSelected(List<String> instanceIDs) {
-		markupPanel.showTagInstanceInfo(instanceIDs);
+	public void tagInstanceSelected(String instancePartID, String lineID) {
+		markupPanel.showTagInstanceInfo(
+			pager.getCurrentPage().getTagInstanceIDs(instancePartID, lineID), 
+			ClientTagInstance.getTagInstanceIDFromPartId(instancePartID));
+	}
+	
+	@Override
+	public void tagInstanceSelected(Set<String> tagInstanceIDs) {
+		markupPanel.showTagInstanceInfo(tagInstanceIDs, null);
 	}
 	
 	public void addClickshortCuts() { /* noop*/	}
@@ -536,4 +581,8 @@ public class TaggerView extends VerticalLayout
 		this.sourceDocument = sd;
 	}
 
+	@Override
+	public TagInstanceInfo getTagInstanceInfo(String tagInstanceId) {
+		return markupPanel.getTagInstanceInfo(tagInstanceId);
+	}
 }

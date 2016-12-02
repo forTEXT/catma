@@ -112,6 +112,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private PropertyChangeListener userMarkupCollectionTagLibraryChangedListener;
 	private PropertyChangeListener userPropertyDefinitionChangedListener;
 	private Button btnOpenMarkupCollection;
+	private boolean tagDefinitionSelectedEventHandlingRunning = false;
 	
 	public MarkupCollectionsPanel(Repository repository, ClickListener openMarkupCollectionsHandler) {
 		propertyChangeSupport = new PropertyChangeSupport(this);
@@ -622,6 +623,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 	
 	private void initComponents() {
+		setMargin(new MarginInfo(false, true, true, false));
 		HorizontalLayout buttonHeaderPanel = new HorizontalLayout();
 		buttonHeaderPanel.setWidth("100%");
 		buttonHeaderPanel.setMargin(new MarginInfo(true, false, true, false));
@@ -794,6 +796,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private void insertTagDefinitionIntoTree(TagDefinition tagDefinition) {
 		ClassResource tagIcon = 
 				new ClassResource("tagmanager/resources/reddiamd.gif");
@@ -829,18 +832,43 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				boolean selected = cbShowTagInstances.getValue();
+				
+				UserMarkupCollection userMarkupCollection =
+						getUserMarkupCollection(tagsetDefinition);
+				
+				if (!tagDefinitionSelectedEventHandlingRunning) {
+					
+					List<TagReference> tagReferences = new ArrayList<>();
+					for (TagDefinition tagDefinition : tagsetDefinition) {
+						tagReferences.addAll(
+								userMarkupCollection.getTagReferences(
+										tagDefinition, true));
+					}
+					propertyChangeSupport.firePropertyChange(
+							MarkupCollectionPanelEvent.tagDefinitionSelected.name(), 
+							selected?null:tagReferences,
+									selected?tagReferences:null);
+				}
+				
 				for (TagDefinition tagDefinition : tagsetDefinition) {
 					if (tagDefinition.getParentUuid().isEmpty()) {
 						Item tagDefItem =
 								markupCollectionsTree.getItem(tagDefinition);
-						Property visibleProp = 
+						Property<?> visibleProp = 
 								tagDefItem.getItemProperty(
 										MarkupCollectionsTreeProperty.visible);
 						CheckBox cb = (CheckBox) visibleProp.getValue();
-						cb.setValue(selected);
-						fireTagDefinitionSelected(tagDefinition, selected);
+						tagDefinitionSelectedEventHandlingRunning = true;
+						try {
+							cb.setValue(selected);
+						}
+						finally {
+							tagDefinitionSelectedEventHandlingRunning = false;
+						}
+
 					}
 				}
+				
 			}
 		});
 		return cbShowTagInstances;
@@ -854,14 +882,25 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				boolean selected = cbShowTagInstances.getValue();
+				
+				if (!tagDefinitionSelectedEventHandlingRunning) {
+					fireMarkupCollectionSelected(umc, selected);
+				}
+
 				for (TagsetDefinition tagsetDefinition : umc.getTagLibrary()) {
 					Item tagsetDefItem =
 							markupCollectionsTree.getItem(tagsetDefinition);
-					Property visibleProp = 
+					Property<?> visibleProp = 
 							tagsetDefItem.getItemProperty(
 									MarkupCollectionsTreeProperty.visible);
 					CheckBox cb = (CheckBox) visibleProp.getValue();
-					cb.setValue(selected);
+					tagDefinitionSelectedEventHandlingRunning = true;
+					try {
+						cb.setValue(selected);
+					}
+					finally {
+						tagDefinitionSelectedEventHandlingRunning  = false;
+					}
 				}
 			}
 		});
@@ -876,15 +915,30 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				boolean selected = cbShowTagInstances.getValue();
+				ArrayList<TagReference> tagReferences = new ArrayList<>();
+				
 				for (UserMarkupCollection userMarkupCollection : userMarkupCollectionManager.getUserMarkupCollections()) {
+					tagReferences.addAll(userMarkupCollection.getTagReferences());
 					Item userMarkupCollectionItem =
 							markupCollectionsTree.getItem(userMarkupCollection);
-					Property visibleProp = 
+					Property<?> visibleProp = 
 							userMarkupCollectionItem.getItemProperty(
 									MarkupCollectionsTreeProperty.visible);
 					CheckBox cb = (CheckBox) visibleProp.getValue();
-					cb.setValue(selected);
+					tagDefinitionSelectedEventHandlingRunning = true;
+					try {
+						cb.setValue(selected);
+					}
+					finally {
+						tagDefinitionSelectedEventHandlingRunning = false;
+					}
 				}
+				
+				propertyChangeSupport.firePropertyChange(
+						MarkupCollectionPanelEvent.tagDefinitionSelected.name(), 
+						selected?null:tagReferences,
+								selected?tagReferences:null);
+				
 			}
 		});
 		return cbShowTagInstances;
@@ -965,16 +1019,39 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				userMarkupCollection, selected);
 	}
 	
+	private void fireMarkupCollectionSelected(
+			UserMarkupCollection markupCollection, boolean selected) {
+
+		List<TagReference> tagReferences =
+				markupCollection.getTagReferences();
+		
+		propertyChangeSupport.firePropertyChange(
+				MarkupCollectionPanelEvent.tagDefinitionSelected.name(), 
+				selected?null:tagReferences,
+				selected?tagReferences:null);
+	}
+
+	
 	private void fireTagDefinitionSelected(
 			TagDefinition tagDefinition, boolean selected) {
+
 		UserMarkupCollection userMarkupCollection =
 				getUserMarkupCollection(tagDefinition);
-		List<TagReference> tagReferences =
-				userMarkupCollection.getTagReferences(
-						tagDefinition, true);
+		
+		if (!tagDefinitionSelectedEventHandlingRunning) {
+			List<TagReference> tagReferences =
+					userMarkupCollection.getTagReferences(
+							tagDefinition, true);
+			
+			propertyChangeSupport.firePropertyChange(
+					MarkupCollectionPanelEvent.tagDefinitionSelected.name(), 
+					selected?null:tagReferences,
+					selected?tagReferences:null);
+		}
 		
 		List<TagDefinition> children = 
 				userMarkupCollection.getChildren(tagDefinition);
+
 		if (children != null) {
 			for (Object childId : children) {
 				Object visiblePropertyValue = 
@@ -985,15 +1062,17 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				if ((visiblePropertyValue != null) 
 						&& (visiblePropertyValue instanceof CheckBox)) {
 					CheckBox cbVisible = (CheckBox)visiblePropertyValue;
-					cbVisible.setValue(selected);
+					tagDefinitionSelectedEventHandlingRunning = true;
+					try {
+						cbVisible.setValue(selected);
+					}
+					finally {
+						tagDefinitionSelectedEventHandlingRunning = false;
+					}
 				}
 			}
 		}		
-		
-		propertyChangeSupport.firePropertyChange(
-				MarkupCollectionPanelEvent.tagDefinitionSelected.name(), 
-				selected?null:tagReferences,
-				selected?tagReferences:null);
+
 	}
 	
 	private void fireWritableUserMarkupCollectionSelected(
@@ -1168,8 +1247,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		updateableforeignTagsetDefinitions.remove(tagsetDefinition);
 	}
 
-	public List<TagInstanceInfo> getTagInstances(List<String> instanceIDs) {
-		return userMarkupCollectionManager.getTagInstances(instanceIDs);
+	public List<TagInstanceInfo> getTagInstances(Collection<String> instanceIDs) {
+		return userMarkupCollectionManager.getTagInstanceInfos(instanceIDs);
 	}
 
 	public void removeTagInstances(List<String> tagInstanceIDs) {
@@ -1188,5 +1267,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			((CatmaApplication)UI.getCurrent()).showAndLogError("Error updating the Property", e);
 		}
 		
+	}
+
+	public TagInstanceInfo getTagInstanceInfo(String tagInstanceId) {
+		return userMarkupCollectionManager.getTagInstanceInfo(tagInstanceId);
 	}
 }

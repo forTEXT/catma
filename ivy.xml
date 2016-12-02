@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE ivy-module [
-	<!ENTITY vaadin.version "7.5.10">
+	<!ENTITY vaadin.version "7.7.3">
 ]>
 <ivy-module version="2.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -41,6 +41,8 @@
 		<dependency org="com.vaadin" name="vaadin-client-compiler"
 			rev="&vaadin.version;" conf="widgetset-compile->default" />
 		
+		<dependency org="com.google.guava" name="guava-gwt" rev="18.0" conf="widgetset-compile->default"/>
+		
 		<!-- <dependency org="com.vaadin" name="vaadin-push"
             rev="&vaadin.version;" conf="default->default"/> -->
 
@@ -53,8 +55,12 @@
 		<dependency org="org.neo4j" name="neo4j-enterprise" rev="2.1.4"/>
 		<dependency org="org.antlr" name="antlr-runtime" rev="3.4"/>
 		<dependency org="c3p0" name="c3p0" rev="0.9.1.2"/>
-		<dependency org="com.google.guava" name="guava" rev="18.0"/>
+
 		<dependency org="org.jooq" name="jooq" rev="3.7.2"/>
+
+		<dependency org="com.google.guava" name="guava" rev="19.0" />
+		<dependency org="com.google.guava" name="guava-gwt" rev="19.0" conf="widgetset-compile->default" />
+
 		<dependency org="org.quartz-scheduler" name="quartz" rev="2.2.1"/>
 		<dependency org="org.apache.commons" name="commons-compress" rev="1.9"/>
 		<dependency org="org.apache.httpcomponents" name="httpcore" rev="4.3"/>

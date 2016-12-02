@@ -12,6 +12,7 @@ import org.quartz.PersistJobDataAfterExecution;
 
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
+@Deprecated
 public class HeurecleaExporterJob implements Job {
 
 	private Logger logger = Logger.getLogger(HeurecleaExporterJob.class.getName());

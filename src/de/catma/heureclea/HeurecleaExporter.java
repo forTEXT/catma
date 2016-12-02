@@ -31,6 +31,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 import de.catma.tag.TagManager;
 
+@Deprecated
 public class HeurecleaExporter {
 	private static final SimpleDateFormat FORMATTER = new SimpleDateFormat("yyMMddhhmm");
 	

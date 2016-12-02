@@ -77,6 +77,10 @@ import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 import de.catma.ui.tagmanager.TagsetTree;
 
 public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionListener {
+	
+	static interface TagInstanceSelectedListener {
+		public void tagInstanceSelected(TagInstance tagInstance);
+	}
 
 	private TagsetTree tagsetTree;
 	private TabSheet tabSheet;
@@ -92,15 +96,17 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	private MarkupHelpWindow markupHelpWindow = new MarkupHelpWindow();
 	private Label writableUserMarkupCollectionInfo;
 	private Panel markupInfoScrollPanel;
+	private TagInstanceSelectedListener tagInstanceSelectedListener;
 	
 	public MarkupPanel(
 			Repository repository, ColorButtonListener colorButtonListener, 
 			PropertyChangeListener tagDefinitionSelectionListener,
 			PropertyChangeListener tagDefinitionsRemovedListener, 
+			TagInstanceSelectedListener tagInstanceSelectedListener,
 			String sourceDocumentId) {
 		this.colorButtonListener = colorButtonListener;
 		this.repository = repository;
-		
+		this.tagInstanceSelectedListener = tagInstanceSelectedListener;
 		initComponents( 
 				tagDefinitionSelectionListener,
 				tagDefinitionsRemovedListener,
@@ -173,7 +179,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 					public void propertyChange(PropertyChangeEvent evt) {
 						showTagInstanceInfo(
 							tagInstancesTree.getTagInstanceIDs(
-								(Set<TagDefinition>)evt.getOldValue()));
+								(Set<TagDefinition>)evt.getOldValue()), null);
 					}
 				});
 		
@@ -183,7 +189,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 				if ((evt.getNewValue() != null) && (evt.getOldValue() != null)) {
 					showTagInstanceInfo(
 						tagInstancesTree.getTagInstanceIDs(
-								Collections.<TagDefinition>emptySet()));
+								Collections.<TagDefinition>emptySet()), null);
 				}
 				
 			}
@@ -515,10 +521,15 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		return markupCollectionsPanel.getRepository();
 	}
 
-	public void showTagInstanceInfo(List<String> instanceIDs) {
+	public void showTagInstanceInfo(Collection<String> instanceIDs, String tagInstanceID) {
 		List<TagInstanceInfo> tagInstances = 
 				markupCollectionsPanel.getTagInstances(instanceIDs);
+		
 		tagInstancesTree.setTagInstances(tagInstances);
+		if (tagInstanceID != null) {
+			tagInstancesTree.setValue(tagInstanceID);
+			
+		}
 		markupInfoScrollPanel.setScrollTop(1);
 	}	
 	
@@ -528,7 +539,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			exclusionFilter.add(tr.getTagDefinition());
 		}
 		showTagInstanceInfo(
-			tagInstancesTree.getTagInstanceIDs(exclusionFilter));
+			tagInstancesTree.getTagInstanceIDs(exclusionFilter), null);
 	}
 	
 	public void removeTagInstances(List<String> tagInstanceIDs) {
@@ -541,9 +552,18 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	}
 
 	public void showPropertyEditDialog(TagInstance tagInstance) {
-		showTagInstanceInfo(Collections.singletonList(tagInstance.getUuid()));
+		showTagInstanceInfo(Collections.singletonList(tagInstance.getUuid()), null);
 		if (!tagInstance.getUserDefinedProperties().isEmpty()) {
 			tagInstancesTree.showPropertyEditDialog(tagInstance);
 		}
+	}
+	
+	@Override
+	public void tagInstanceSelected(TagInstance tagInstance) {
+		tagInstanceSelectedListener.tagInstanceSelected(tagInstance);
+	}
+
+	public TagInstanceInfo getTagInstanceInfo(String tagInstanceId) {
+		return markupCollectionsPanel.getTagInstanceInfo(tagInstanceId);
 	}
 }

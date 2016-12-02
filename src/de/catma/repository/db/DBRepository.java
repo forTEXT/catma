@@ -91,7 +91,7 @@ public class DBRepository implements IndexedRepository {
 	private CorpusHandler dbCorpusHandler;
 	private SourceDocumentHandler dbSourceDocumentHandler;
 	private TagLibraryHandler dbTagLibraryHandler;
-	private UserMarkupCollectionHandler dbUserMarkupCollectionHandler;
+	private volatile UserMarkupCollectionHandler dbUserMarkupCollectionHandler;
 	
 	private IndexerFactory indexerFactory;
 	private Indexer indexer;
@@ -1113,5 +1113,10 @@ public class DBRepository implements IndexedRepository {
 	public File getFile(SourceDocument sourceDocument) {
 		return new File(
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getURI());
+	}
+	
+	@Override
+	public int getNewUserMarkupCollectionRefs(Corpus corpus) {
+		return dbUserMarkupCollectionHandler.getNewUserMarkupCollectionRefs(corpus);
 	}
 }

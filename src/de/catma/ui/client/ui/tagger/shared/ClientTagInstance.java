@@ -20,8 +20,10 @@ package de.catma.ui.client.ui.tagger.shared;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 
 /**
@@ -33,6 +35,7 @@ public class ClientTagInstance {
 	public static enum SerializationField {
 		tagDefinitionID,
 		instanceID,
+		lineID,
 		color,
 		ranges,
 		startPos,
@@ -142,5 +145,64 @@ public class ClientTagInstance {
 		}
 	}
 
+	public int getLongestRangeSize() {
+		int result = 0;
+		for (TextRange textRange : mergeRanges(new TreeSet<>(ranges))) {
+			if (result < textRange.size()) {
+				result = textRange.size();
+			}
+		}
+		
+		return result;
+	}
 	
+	public boolean hasOverlappingRange(TextRange textRange) {
+		for (TextRange tr : ranges) {
+			if (tr.hasOverlappingRange(textRange)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+    public static List<TextRange> mergeRanges(SortedSet<TextRange> sortedRanges) {
+        List<TextRange> result = new ArrayList<TextRange>();
+
+        TextRange curRange = null;
+
+        Iterator<TextRange> rangeIterator = sortedRanges.iterator();
+
+        if (rangeIterator.hasNext()) {
+            curRange = rangeIterator.next();
+
+            while (rangeIterator.hasNext()) {
+                TextRange range = rangeIterator.next();
+
+                if (curRange.getEndPos() == range.getStartPos()) { // merge
+                    curRange = new TextRange(curRange.getStartPos(), range.getEndPos());
+                }
+                else {
+                    result.add(curRange);
+                    curRange = range;
+                }
+            }
+            result.add(curRange);
+        }
+
+        return result;
+    }
+    
+    public static String getTagInstanceIDFromPartId(String tagInstancePartID) {
+    	return tagInstancePartID.substring(0, tagInstancePartID.indexOf("."));
+    }
+    
+    public static TextRange getTextRangeFromPartId(String tagInstancePartID) {
+		String[] parts = tagInstancePartID.split("\\.");
+		
+		Integer startPos = Integer.valueOf(parts[1]);
+		Integer endPos = Integer.valueOf(parts[2]);
+		
+		return new TextRange(startPos, endPos);    	
+    }
 }

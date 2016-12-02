@@ -105,4 +105,37 @@ public class TagQueryResultRow extends QueryResultRow {
 	public String getPropertyName() {
 		return propertyName;
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + ((propertyDefinitionId == null) ? 0 : propertyDefinitionId.hashCode());
+		result = prime * result + ((tagInstanceId == null) ? 0 : tagInstanceId.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		TagQueryResultRow other = (TagQueryResultRow) obj;
+		if (propertyDefinitionId == null) {
+			if (other.propertyDefinitionId != null)
+				return false;
+		} else if (!propertyDefinitionId.equals(other.propertyDefinitionId))
+			return false;
+		if (tagInstanceId == null) {
+			if (other.tagInstanceId != null)
+				return false;
+		} else if (!tagInstanceId.equals(other.tagInstanceId))
+			return false;
+		return true;
+	}
+	
+	
 }
