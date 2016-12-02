@@ -1118,7 +1118,6 @@ CREATE INDEX IDX_QRTZ_FT_JG ON QRTZ_FIRED_TRIGGERS(SCHED_NAME,JOB_GROUP);
 CREATE INDEX IDX_QRTZ_FT_T_G ON QRTZ_FIRED_TRIGGERS(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP);
 CREATE INDEX IDX_QRTZ_FT_TG ON QRTZ_FIRED_TRIGGERS(SCHED_NAME,TRIGGER_GROUP);
 
-USE catmarepository;
 
 CREATE USER 'catma'@'localhost' IDENTIFIED BY 'test';
 
@@ -1126,6 +1125,31 @@ GRANT SELECT , INSERT , UPDATE , DELETE, EXECUTE ON `catmaindex` . * TO 'catma'@
 GRANT SELECT , INSERT , UPDATE , DELETE, EXECUTE ON `catmarepository` . * TO 'catma'@'localhost';
 
 GRANT SELECT , INSERT , UPDATE , DELETE, EXECUTE ON `quartz` . * TO 'catma'@'localhost';
+
+USE catmarepository;
+
+INSERT INTO role(identifier) VALUES('admin');
+INSERT INTO role(identifier) VALUES('user');
+INSERT INTO role(identifier) VALUES('heureclea');
+
+INSERT INTO permission(identifier) VALUES('adminwindow');
+INSERT INTO permission(identifier) VALUES('autotagging');
+INSERT INTO permission(identifier) VALUES('exportcorpus');
+
+SELECT @adminRole:=roleID FROM role WHERE identifier = 'admin';
+SELECT @heurecleaRole:=roleID FROM role WHERE identifier = 'heureclea';
+SELECT @adminWindow:=permissionID FROM permission WHERE identifier = 'adminwindow';
+SELECT @autotagging:=permissionID FROM permission WHERE identifier = 'autotagging';
+SELECT @exportcorpus:=permissionID FROM permission WHERE identifier = 'exportcorpus';
+
+INSERT INTO role_permission(roleID, permissionID) VALUES (@adminRole, @adminWindow);
+INSERT INTO role_permission(roleID, permissionID) VALUES (@adminRole, @autotagging);
+INSERT INTO role_permission(roleID, permissionID) VALUES (@adminRole, @exportcorpus);
+INSERT INTO role_permission(roleID, permissionID) VALUES (@heurecleaRole, @autotagging);
+
+SELECT @userRole := roleID FROM role WHERE identifier = 'user';
+
+INSERT INTO user_role(userID, roleID) SELECT userID, @userRole FROM user;
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
