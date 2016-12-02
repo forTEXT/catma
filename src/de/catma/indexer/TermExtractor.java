@@ -56,32 +56,33 @@ public class TermExtractor {
 			locale = Locale.getDefault();
 		}
 
-		WhitespaceAndPunctuationAnalyzer analyzer = new WhitespaceAndPunctuationAnalyzer(
-				unseparableCharacterSequences, userDefinedSeparatingCharacters, locale);
+		try (WhitespaceAndPunctuationAnalyzer analyzer = new WhitespaceAndPunctuationAnalyzer(
+				unseparableCharacterSequences, userDefinedSeparatingCharacters, locale)) {
 		
-		TokenStream ts = analyzer.tokenStream(null, // our analyzer does not use
-													// the fieldname
-				new StringReader(content));
-
-		int positionCounter = 0;
-		while (ts.incrementToken()) {
-			CharTermAttribute termAttr = (CharTermAttribute) ts
-					.getAttribute(CharTermAttribute.class);
-
-			OffsetAttribute offsetAttr = (OffsetAttribute) ts
-					.getAttribute(OffsetAttribute.class);
-
-			TermInfo ti = new TermInfo(termAttr.toString(),
-					offsetAttr.startOffset(), offsetAttr.endOffset(),
-					positionCounter);
-
-			if (!terms.containsKey(ti.getTerm())) {
-				terms.put(ti.getTerm(), new ArrayList<TermInfo>());
+			TokenStream ts = analyzer.tokenStream(null, // our analyzer does not use
+														// the fieldname
+					new StringReader(content));
+			ts.reset();
+			int positionCounter = 0;
+			while (ts.incrementToken()) {
+				CharTermAttribute termAttr = (CharTermAttribute) ts
+						.getAttribute(CharTermAttribute.class);
+	
+				OffsetAttribute offsetAttr = (OffsetAttribute) ts
+						.getAttribute(OffsetAttribute.class);
+	
+				TermInfo ti = new TermInfo(termAttr.toString(),
+						offsetAttr.startOffset(), offsetAttr.endOffset(),
+						positionCounter);
+	
+				if (!terms.containsKey(ti.getTerm())) {
+					terms.put(ti.getTerm(), new ArrayList<TermInfo>());
+				}
+				terms.get(ti.getTerm()).add(ti);
+				positionCounter++;
+				
+				termsInOrder.add(ti.getTerm());
 			}
-			terms.get(ti.getTerm()).add(ti);
-			positionCounter++;
-			
-			termsInOrder.add(ti.getTerm());
 		}
 	}
 	

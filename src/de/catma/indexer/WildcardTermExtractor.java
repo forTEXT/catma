@@ -51,30 +51,30 @@ public class WildcardTermExtractor {
 			locale = Locale.getDefault();
 		}
 
-		WhitespaceAndPunctuationAnalyzer analyzer = new WhitespaceAndPunctuationAnalyzer(
-				unseparableCharacterSequences, userDefinedSeparatingCharacters, locale);
+		try (WhitespaceAndPunctuationAnalyzer analyzer = new WhitespaceAndPunctuationAnalyzer(
+				unseparableCharacterSequences, userDefinedSeparatingCharacters, locale)) {
 		
-		TokenStream ts = analyzer.tokenStream(null, // our analyzer does not use
+			TokenStream ts = analyzer.tokenStream(null, // our analyzer does not use
 													// the fieldname
 				new StringReader(content));
+			ts.reset();
 
-
-		WildcardParser wildcardParser = new WildcardParser();
-		while (ts.incrementToken()) {
-			CharTermAttribute termAttr = (CharTermAttribute) ts
-					.getAttribute(CharTermAttribute.class);
-
-			OffsetAttribute offsetAttr = (OffsetAttribute) ts
-					.getAttribute(OffsetAttribute.class);
-			wildcardParser.handle(termAttr, offsetAttr);
-		}
-		wildcardParser.finish();
-		
-		orderedTerms = new ArrayList<String>();
-		for (TermInfo ti : wildcardParser.getOrderedTermInfos()) {
-			orderedTerms.add(ti.getTerm());
-		}
-		
+			WildcardParser wildcardParser = new WildcardParser();
+			while (ts.incrementToken()) {
+				CharTermAttribute termAttr = (CharTermAttribute) ts
+						.getAttribute(CharTermAttribute.class);
+	
+				OffsetAttribute offsetAttr = (OffsetAttribute) ts
+						.getAttribute(OffsetAttribute.class);
+				wildcardParser.handle(termAttr, offsetAttr);
+			}
+			wildcardParser.finish();
+			
+			orderedTerms = new ArrayList<String>();
+			for (TermInfo ti : wildcardParser.getOrderedTermInfos()) {
+				orderedTerms.add(ti.getTerm());
+			}
+		}		
 	}
 	
 	

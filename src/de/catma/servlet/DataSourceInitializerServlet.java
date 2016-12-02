@@ -1,5 +1,6 @@
 package de.catma.servlet;
 
+import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 import javax.naming.InitialContext;
@@ -60,7 +61,7 @@ public class DataSourceInitializerServlet extends HttpServlet {
 			String graphDbPath = RepositoryPropertyKey.GraphDbPath.getIndexedValue(repoIndex);
 			
 			final GraphDatabaseService graphDb = 
-				new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(graphDbPath)
+				new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(new File(graphDbPath))
 				.loadPropertiesFromFile(cfg.getServletContext().getRealPath("neo4j.properties"))
 				.newGraphDatabase();
 			
