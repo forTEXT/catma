@@ -66,11 +66,10 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
-import de.catma.document.repository.Repository;
-import de.catma.document.repository.RepositoryManager;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.repository.RepositoryReference;
 import de.catma.ui.CatmaApplication;
+import de.catma.user.UserProperty;
 
 /**
  * Authentication dialog for OpenID Connect authentication with Google.
@@ -87,7 +86,7 @@ public class AuthenticationDialog extends VerticalLayout {
 		private Logger logger = Logger.getLogger(this.getClass().getName());
 		private String returnURL;
 		private RepositoryReference repositoryReference;
-		private RepositoryManager repositoryManager;
+		private RepositoryListView repositoryListView;
 		private Window dialogWindow;
 		private UI ui;
 		private String token;
@@ -96,12 +95,12 @@ public class AuthenticationDialog extends VerticalLayout {
 				UI ui, // UI.getCurrent() is not available during request handling, therefore we pass in the UI
 				String returnURL, 
 				RepositoryReference repositoryReference,
-				RepositoryManager repositoryManager, Window dialogWindow, String token) {
+				RepositoryListView repositoryListView, Window dialogWindow, String token) {
 			super();
 			this.ui = ui;
 			this.returnURL = returnURL;
 			this.repositoryReference = repositoryReference;
-			this.repositoryManager = repositoryManager;
+			this.repositoryListView = repositoryListView;
 			this.dialogWindow = dialogWindow;
 			this.token = token;
 		}
@@ -192,24 +191,15 @@ public class AuthenticationDialog extends VerticalLayout {
 					logger.info("retrieved email: " + email);
 					
 	                userIdentification.put(
-							"user.ident", email);
+							UserProperty.identifier.name(), email);
 	                userIdentification.put(
-	                		"user.email", email);
+	                		UserProperty.email.name(), email);
 	                userIdentification.put(
-	                		"user.name", email);
-	                userIdentification.put(
-	                		"user.role", "0");
-	                
+	                		UserProperty.name.name(), email);
+
 	                logger.info("opening repository for user: " + email);
-	                
-	                ((CatmaApplication)ui).setUser(
-	                		userIdentification);
-	
-	                Repository repository = 
-	            		repositoryManager.openRepository(
-	        				repositoryReference, userIdentification );
-	                
-	                ((CatmaApplication)ui).openRepository(repository);
+
+	                repositoryListView.open(repositoryReference, userIdentification);
 	
 	                new DownloadStream(
                 		ui.getPage().getLocation().toURL().openStream(), 
@@ -249,17 +239,17 @@ public class AuthenticationDialog extends VerticalLayout {
 	private String caption;
 	private Button btCancel;
 	private RepositoryReference repositoryReference;
-	private RepositoryManager repositoryManager;
+	private RepositoryListView repositoryListView;
 	private Link logInLink;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private String baseUrl;
 	
 	public AuthenticationDialog(
 			String caption, RepositoryReference repositoryReference, 
-			RepositoryManager repositoryManager, String baseUrl) {
+			RepositoryListView repositoryListView, String baseUrl) {
 		this.caption = caption;
 		this.repositoryReference = repositoryReference;
-		this.repositoryManager = repositoryManager;
+		this.repositoryListView = repositoryListView;
 		this.baseUrl = baseUrl;
 		initComponents();
 	}
@@ -345,7 +335,7 @@ public class AuthenticationDialog extends VerticalLayout {
 							ui,
 							returnURL, 
 							repositoryReference,
-							repositoryManager, 
+							repositoryListView, 
 							dialogWindow,
 							token);
 			

@@ -38,6 +38,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -81,6 +82,7 @@ import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.Role;
 import de.catma.user.User;
+import de.catma.user.UserProperty;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
@@ -346,11 +348,17 @@ public class DBRepository implements IndexedRepository {
 		TransactionalDSLContext db = new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 		
 		try {
-	
+			
+			boolean isGuest = 
+				(userIdentification.get(UserProperty.guest.name())==null
+					?false
+					:Boolean.valueOf(userIdentification.get(UserProperty.guest.name())));
+			
+			
 			Record record = db
 			.select()
 			.from(USER)
-			.where(USER.IDENTIFIER.eq(userIdentification.get("user.ident")))
+			.where(USER.IDENTIFIER.eq(userIdentification.get(UserProperty.identifier.name())))
 			.fetchOne();
 			
 			if (record == null) {
@@ -362,15 +370,19 @@ public class DBRepository implements IndexedRepository {
 				.where(ROLE.IDENTIFIER.eq(Role.user.name()))
 				.fetchOne()
 				.value1();
-						
+				
 				Record idRecord = db
 				.insertInto(
 					USER,
 						USER.IDENTIFIER,
-						USER.LOCKED)
+						USER.LOCKED,
+						USER.LASTLOGIN,
+						USER.GUEST)
 				.values(
-					userIdentification.get("user.ident"),
-					(byte)0)
+					userIdentification.get(UserProperty.identifier.name()),
+					(byte)0,
+					new java.sql.Timestamp(new Date().getTime()),
+					(byte)(isGuest?1:0))
 				.returning(USER.USERID)
 				.fetchOne();
 				
@@ -386,13 +398,20 @@ public class DBRepository implements IndexedRepository {
 				
 				currentUser = new DBUser(
 					idRecord.getValue(USER.USERID), 
-					userIdentification.get("user.ident"),
-					false);
+					userIdentification.get(UserProperty.identifier.name()),
+					false,
+					isGuest);
 				
 				db.commitTransaction();
 			}
 			else {
 				currentUser = record.map(new UserMapper());
+				
+				db
+				.update(USER)
+				.set(USER.LASTLOGIN,new java.sql.Timestamp(new Date().getTime()))
+				.where(USER.USERID.eq(currentUser.getUserId()))
+				.execute();
 			}
 	
 			List<String> permissions = db

@@ -5,7 +5,7 @@
     <driver>org.gjt.mm.mysql.Driver</driver>
     <url>jdbc:mysql://localhost/</url>
     <user>root</user>
-    <password></password>
+    <password>test</password>
   </jdbc>
 
   <generator>
@@ -55,11 +55,11 @@
         
 	  <schemata>
 	  	<schema>
-	  		<inputSchema>CatmaRepository</inputSchema>
+	  		<inputSchema>catmarepository</inputSchema>
 	  		<outputSchema>CatmaRepository</outputSchema>
 	  	</schema>
 	  	<schema>
-	  		<inputSchema>CatmaIndex</inputSchema>
+	  		<inputSchema>catmaindex</inputSchema>
 	  		<outputSchema>CatmaIndex</outputSchema>
 	  	</schema>
 	  </schemata>

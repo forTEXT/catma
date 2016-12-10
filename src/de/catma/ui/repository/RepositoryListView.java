@@ -20,6 +20,7 @@ package de.catma.ui.repository;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.util.BeanItemContainer;
@@ -39,7 +40,10 @@ import de.catma.document.repository.RepositoryManager;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.repository.RepositoryReference;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.Parameter;
 import de.catma.ui.tabbedview.TabComponent;
+import de.catma.user.UserProperty;
+import de.catma.util.IDGenerator;
 
 public class RepositoryListView extends VerticalLayout implements TabComponent {
 
@@ -65,41 +69,16 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 							Type.TRAY_NOTIFICATION);
 				}
 				else {
-					try {	
-						if (repositoryReference.isAuthenticationRequired()) {
-
-							
-							String baseURL = 
-									RepositoryPropertyKey.BaseURL.getValue(
-										RepositoryPropertyKey.BaseURL.getDefaultValue());
-	
-							AuthenticationDialog authDialog = 
-									new AuthenticationDialog(
-											"Please authenticate yourself", 
-											repositoryReference, repositoryManager,
-											baseURL);
-							authDialog.show();
+					try {
+						if (((CatmaApplication)UI.getCurrent()).getParameter(
+										Parameter.USER_SPAWN_ASGUEST, "0").equals("1")) {
+							openAsGuest(repositoryReference);
 						}
-						else {
-							String user = 
-								((CatmaApplication)UI.getCurrent()).getParameter(
-										"user.name");
-							if (user == null) {
-								user = System.getProperty("user.name");
-							}
-							Map<String,String> userIdentification = 
-									new HashMap<String, String>(1);
-							userIdentification.put(
-								"user.ident", user);
-							
-							((CatmaApplication)UI.getCurrent()).setUser(userIdentification);
-							
-							Repository repository = 
-									repositoryManager.openRepository(
-											repositoryReference, userIdentification);
-							
-							((CatmaApplication)UI.getCurrent()).openRepository(
-									repository);
+						else if (repositoryReference.isAuthenticationRequired()) {
+							openWithAuthentication(repositoryReference);
+						}
+						else if ( ! repositoryReference.isAuthenticationRequired()) {
+							openWithoutAuthentication(repositoryReference);
 						}
 					} catch (Exception e) {
 						((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -116,6 +95,62 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		});
 	}
 
+
+	private void openWithoutAuthentication(RepositoryReference repositoryReference) throws Exception {
+		String user = 
+				((CatmaApplication)UI.getCurrent()).getParameter(
+						Parameter.USER_IDENTIFIER);
+		if (user == null) {
+			user = System.getProperty("user.name");
+		}
+		Map<String,String> userIdentification = 
+				new HashMap<String, String>(1);
+		userIdentification.put(
+			UserProperty.identifier.name(), user);
+		open(repositoryReference, userIdentification);
+	}
+
+	private void openAsGuest(RepositoryReference repositoryReference) throws Exception {
+		IDGenerator idGenerator = new IDGenerator();
+		String userName = idGenerator.generate();
+		Map<String,String> userIdentification = 
+				new HashMap<String, String>(1);
+		userIdentification.put(
+			UserProperty.identifier.name(), userName);
+		userIdentification.put(UserProperty.guest.name(), Boolean.TRUE.toString());
+		
+		open(repositoryReference, userIdentification);
+	}
+
+	private void openWithAuthentication(RepositoryReference repositoryReference) {
+		
+		String baseURL = 
+				RepositoryPropertyKey.BaseURL.getValue(
+					RepositoryPropertyKey.BaseURL.getDefaultValue());
+
+		AuthenticationDialog authDialog = 
+				new AuthenticationDialog(
+						"Please authenticate yourself", 
+						repositoryReference, 
+						this,
+						baseURL);
+		authDialog.show();
+	}
+	
+	void open(RepositoryReference repositoryReference, Map<String,String> userIdentification) throws Exception {
+		
+		((CatmaApplication)UI.getCurrent()).setUser(userIdentification);
+		
+		//TODO: SPAWN
+		
+		Repository repository = 
+				repositoryManager.openRepository(
+						repositoryReference, userIdentification);
+		
+		((CatmaApplication)UI.getCurrent()).openRepository(
+				repository);
+
+	}
 
 	private void initComponents() {
 		repositoryTable = new Table("Available Repositories");

@@ -30,9 +30,10 @@ public class DBUser implements User {
 	private Integer userId;
 	private String identifier;
 	private boolean locked;
+	private boolean guest;
 	private Set<String> permissions;
 	
-	public DBUser(Integer userId, String identifier, boolean locked) {
+	public DBUser(Integer userId, String identifier, boolean locked, boolean guest) {
 		this.userId = userId;
 		this.identifier = identifier;
 		this.locked = locked;
@@ -50,6 +51,11 @@ public class DBUser implements User {
 		return this.locked;
 	}
 
+	@Override
+	public boolean isGuest() {
+		return guest;
+	}
+	
 	public void setLocked(boolean locked) {
 		this.locked = locked;
 	}

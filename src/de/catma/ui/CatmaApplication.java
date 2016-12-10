@@ -155,7 +155,7 @@ public class CatmaApplication extends UI
 	protected void init(VaadinRequest request) {
 		backgroundService = new UIBackgroundService(true);
 		
-		handleParameters(request.getParameterMap());
+		storeParameters(request.getParameterMap());
 		
 		Page.getCurrent().setTitle("CATMA 5.0 PREVIEW " + MINORVERSION);
 		
@@ -293,6 +293,14 @@ public class CatmaApplication extends UI
 			menuPanel.setContent(menuLayout);
 
 			setContent(mainLayout);
+			
+			if (getParameter(Parameter.USER_IDENTIFIER) != null) {
+				loginLogoutCommand.menuSelected(loginLogoutitem);
+			}
+			
+			if (repositoryOpened && (getParameter(Parameter.COMPONENT) != null)) {
+				ParameterComponentValue.show(this, getParameter(Parameter.COMPONENT));
+			}
 
 			setPollInterval(10000);
 			
@@ -302,12 +310,21 @@ public class CatmaApplication extends UI
 
 	}
 	
-	public void handleParameters(Map<String, String[]> parameters) {
+	private void storeParameters(Map<String, String[]> parameters) {
 		this.parameters.putAll(parameters);
 	}
 	
 	public Map<String, String[]> getParameters() {
 		return Collections.unmodifiableMap(parameters);
+	}
+	
+	public String getParameter(Parameter parameter) {
+		return getParameter(parameter.getKey());
+	}
+	
+	public String getParameter(Parameter parameter, String defaultValue) {
+		String value = getParameter(parameter.getKey());
+		return value==null?defaultValue:value;
 	}
 	
 	public String getParameter(String key) {
@@ -317,6 +334,14 @@ public class CatmaApplication extends UI
 		}
 		
 		return null;
+	}
+	
+	public String[] getParameters(Parameter parameter) {
+		return getParameters(parameter.getKey());
+	}
+	
+	public String[] getParameters(String key) {
+		return parameters.get(key);
 	}
 	
 	private void initTempDirectory() throws IOException {
@@ -380,17 +405,29 @@ public class CatmaApplication extends UI
 		tagManagerView.openTagLibrary(repository, tagLibrary);
 	}
 
+	public TaggerView openSourceDocument(String sourceDocumentId) {
+		
+		RepositoryManager repositoryManager = 
+				repositoryManagerView.getRepositoryManager();
+		
+		if (repositoryManager.hasOpenRepository()) {
+			Repository repository = repositoryManager.getFirstOpenRepository();
+			
+			SourceDocument sourceDocument = repository.getSourceDocument(sourceDocumentId);
+			if (sourceDocument != null) {
+				return openSourceDocument(sourceDocument, repository);
+			}
+		}
+		
+		return null;
+	}
+
+	
 	public TaggerView openSourceDocument(
 			SourceDocument sourceDocument, Repository repository) {
 
 		menu.executeEntry(taggerManagerView);
-		
-//		Notification.show(
-//				"Information", 
-//				"To markup your text please drag Tagsets from a Tag Library " +
-//				"into the currently active Tagsets area!",
-//				Type.TRAY_NOTIFICATION);
-		
+
 		return taggerManagerView.openSourceDocument(
 				sourceDocument, repository);
 	}

@@ -11,7 +11,7 @@ package de.catma.repository.db.jooqgen.catmarepository.tables;
 @java.lang.SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class User extends org.jooq.impl.TableImpl<org.jooq.Record> {
 
-	private static final long serialVersionUID = -1691899873;
+	private static final long serialVersionUID = 522346080;
 
 	/**
 	 * The singleton instance of <code>CatmaRepository.user</code>
@@ -40,6 +40,26 @@ public class User extends org.jooq.impl.TableImpl<org.jooq.Record> {
 	 * The column <code>CatmaRepository.user.locked</code>. 
 	 */
 	public final org.jooq.TableField<org.jooq.Record, java.lang.Byte> LOCKED = createField("locked", org.jooq.impl.SQLDataType.TINYINT, this);
+
+	/**
+	 * The column <code>CatmaRepository.user.email</code>. 
+	 */
+	public final org.jooq.TableField<org.jooq.Record, java.lang.String> EMAIL = createField("email", org.jooq.impl.SQLDataType.VARCHAR.length(300), this);
+
+	/**
+	 * The column <code>CatmaRepository.user.firstlogin</code>. 
+	 */
+	public final org.jooq.TableField<org.jooq.Record, java.sql.Timestamp> FIRSTLOGIN = createField("firstlogin", org.jooq.impl.SQLDataType.TIMESTAMP, this);
+
+	/**
+	 * The column <code>CatmaRepository.user.lastlogin</code>. 
+	 */
+	public final org.jooq.TableField<org.jooq.Record, java.sql.Timestamp> LASTLOGIN = createField("lastlogin", org.jooq.impl.SQLDataType.TIMESTAMP, this);
+
+	/**
+	 * The column <code>CatmaRepository.user.guest</code>. 
+	 */
+	public final org.jooq.TableField<org.jooq.Record, java.lang.Byte> GUEST = createField("guest", org.jooq.impl.SQLDataType.TINYINT, this);
 
 	/**
 	 * Create a <code>CatmaRepository.user</code> table reference
