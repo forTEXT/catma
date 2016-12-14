@@ -586,4 +586,54 @@ public class SourceDocumentHandler {
 				AccessMode.getAccessMode(accessModeRecord.getValue(USER_SOURCEDOCUMENT.ACCESSMODE)));
 		}
 	}
+
+	SourceDocument getSourceDocument(Integer sourceDocumentId) throws IOException {
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+		
+		Map<Integer, Result<Record>> userDefSepCharsRecords = db
+		.select()
+		.from(USERDEFINED_SEPARATINGCHARACTER)
+		.join(USER_SOURCEDOCUMENT)
+			.on(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(USERDEFINED_SEPARATINGCHARACTER.SOURCEDOCUMENTID))
+			.and(USER_SOURCEDOCUMENT.USERID.eq(dbRepository.getCurrentUser().getUserId()))
+			.and(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(sourceDocumentId))
+		.fetchGroups(USERDEFINED_SEPARATINGCHARACTER.SOURCEDOCUMENTID);
+		
+		Map<Integer, Result<Record>> unseparableCharSeqRecords = db 
+		.select()
+		.from(UNSEPARABLE_CHARSEQUENCE)
+		.join(USER_SOURCEDOCUMENT)
+			.on(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(UNSEPARABLE_CHARSEQUENCE.SOURCEDOCUMENTID))
+			.and(USER_SOURCEDOCUMENT.USERID.eq(dbRepository.getCurrentUser().getUserId()))
+			.and(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(sourceDocumentId))
+		.fetchGroups(UNSEPARABLE_CHARSEQUENCE.SOURCEDOCUMENTID);
+		
+		Map<Integer, Result<Record>> userMarkupCollectionRecords = db
+		.select()
+		.from(USERMARKUPCOLLECTION)
+		.join(USER_USERMARKUPCOLLECTION)
+			.on(USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID
+					.eq(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID))
+			.and(USER_USERMARKUPCOLLECTION.USERID.eq(dbRepository.getCurrentUser().getUserId()))
+		.fetchGroups(USERMARKUPCOLLECTION.SOURCEDOCUMENTID);
+		
+		SourceDocument sourceDocument = db
+		.select()
+		.from(SOURCEDOCUMENT)
+		.join(USER_SOURCEDOCUMENT)
+			.on(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(SOURCEDOCUMENT.SOURCEDOCUMENTID))
+			.and(USER_SOURCEDOCUMENT.USERID.eq(dbRepository.getCurrentUser().getUserId()))
+		.where(SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(sourceDocumentId))
+		.fetchOne()
+		.map(new SourceDocumentMapper(
+				sourceDocsPath, 
+				userDefSepCharsRecords, unseparableCharSeqRecords,
+				userMarkupCollectionRecords));
+
+		getSourceDocumentAccess(db, sourceDocument.getID(), false);
+		
+		sourceDocumentsByID.put(sourceDocument.getID(), sourceDocument);
+		
+		return sourceDocument;
+	}
 }

@@ -20,7 +20,6 @@ package de.catma.ui.repository;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.util.BeanItemContainer;
@@ -141,15 +140,20 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		
 		((CatmaApplication)UI.getCurrent()).setUser(userIdentification);
 		
-		//TODO: SPAWN
-		
 		Repository repository = 
 				repositoryManager.openRepository(
 						repositoryReference, userIdentification);
 		
-		((CatmaApplication)UI.getCurrent()).openRepository(
-				repository);
-
+		CatmaApplication catmaApplication = (CatmaApplication)UI.getCurrent();
+		
+		if (catmaApplication.getParameter(Parameter.USER_SPAWN, "0").equals("1")) {
+			repository.spawnContentFrom(
+				catmaApplication.getParameter(Parameter.USER_IDENTIFIER), 
+				catmaApplication.getParameter(Parameter.CORPORA_COPY, "0").equals("1"),
+				catmaApplication.getParameter(Parameter.TAGLIBS_COPY, "0").equals("1"));
+		}
+		
+		catmaApplication.openRepository(repository);
 	}
 
 	private void initComponents() {

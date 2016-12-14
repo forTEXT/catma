@@ -11,7 +11,7 @@ package de.catma.repository.db.jooqgen.catmarepository.tables;
 @java.lang.SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class User extends org.jooq.impl.TableImpl<org.jooq.Record> {
 
-	private static final long serialVersionUID = 522346080;
+	private static final long serialVersionUID = 115705415;
 
 	/**
 	 * The singleton instance of <code>CatmaRepository.user</code>
@@ -60,6 +60,11 @@ public class User extends org.jooq.impl.TableImpl<org.jooq.Record> {
 	 * The column <code>CatmaRepository.user.guest</code>. 
 	 */
 	public final org.jooq.TableField<org.jooq.Record, java.lang.Byte> GUEST = createField("guest", org.jooq.impl.SQLDataType.TINYINT, this);
+
+	/**
+	 * The column <code>CatmaRepository.user.spawnable</code>. 
+	 */
+	public final org.jooq.TableField<org.jooq.Record, java.lang.Byte> SPAWNABLE = createField("spawnable", org.jooq.impl.SQLDataType.TINYINT, this);
 
 	/**
 	 * Create a <code>CatmaRepository.user</code> table reference

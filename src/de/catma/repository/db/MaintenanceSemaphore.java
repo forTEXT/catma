@@ -42,14 +42,14 @@ public class MaintenanceSemaphore {
 		else {
 			IMPORT_SYNCH_COUNT.incrementAndGet();
 			if (CLEANING_LOCK.isLocked()) {
-				IMPORT_SYNCH_COUNT.decrementAndGet();
-				logger.info("could not get access because a cleaning is running");
+				logger.info("could not get access because a cleaning is running, waiting...");
+				CLEANING_LOCK.lock();
+				logger.info("got cleaning lock to signal import");
+				CLEANING_LOCK.unlock();
 			}
-			else {
-				access = true;
-				logger.info("access aquired for type " + semType 
-						+ " current value " + IMPORT_SYNCH_COUNT.get());
-			}
+			access = true;
+			logger.info("access aquired for type " + semType 
+					+ " current value " + IMPORT_SYNCH_COUNT.get());
 		}
 	}
 

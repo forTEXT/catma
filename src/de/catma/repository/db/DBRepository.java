@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
@@ -87,6 +88,8 @@ import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
 public class DBRepository implements IndexedRepository {
+	
+	private static final Logger LOG = Logger.getLogger(DBRepository.class.getName());
 	
 	private String name;
 	
@@ -400,7 +403,8 @@ public class DBRepository implements IndexedRepository {
 					idRecord.getValue(USER.USERID), 
 					userIdentification.get(UserProperty.identifier.name()),
 					false,
-					isGuest);
+					isGuest,
+					false);
 				
 				db.commitTransaction();
 			}
@@ -872,7 +876,7 @@ public class DBRepository implements IndexedRepository {
 					.execute();
 				}
 				for (SourceDocument sd : corpus.getSourceDocuments()) {
-					share(db, targetUserId, sd, userIdentification, accessMode);
+					share(db, targetUserId, sd, accessMode);
 				}
 				
 				for (UserMarkupCollectionReference umcRef : 
@@ -899,8 +903,7 @@ public class DBRepository implements IndexedRepository {
 	}
 	
 	private void share(
-		DSLContext db, Integer targetUserId, SourceDocument sourceDocument, 
-		String userIdentification, AccessMode accessMode) throws IOException {
+		DSLContext db, Integer targetUserId, SourceDocument sourceDocument, AccessMode accessMode) throws IOException {
 		
 		Pair<Integer, AccessMode> sourceDocAccess = dbSourceDocumentHandler.getSourceDocumentAccess(
 				db, sourceDocument.getID(), false);
@@ -961,7 +964,7 @@ public class DBRepository implements IndexedRepository {
 		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
 		Integer userId = getUserId(db, userIdentification); 
 		if (userId != null) {
-			share(db, userId, sourceDocument, userIdentification, accessMode);
+			share(db, userId, sourceDocument, accessMode);
 		}
 		else {
 			throw new UnknownUserException(userIdentification);
@@ -1026,7 +1029,7 @@ public class DBRepository implements IndexedRepository {
 						userMarkupCollectionRef.getId(), 
 						userMarkupCollectionRef.getContentInfoSet()));
 		
-		share(db, targetUserId, sourceDocument, userIdentification, accessMode);
+		share(db, targetUserId, sourceDocument, accessMode);
 		
 		Integer userMarkupCollectionId = 
 				Integer.valueOf(userMarkupCollectionRef.getId());
@@ -1137,5 +1140,40 @@ public class DBRepository implements IndexedRepository {
 	@Override
 	public int getNewUserMarkupCollectionRefs(Corpus corpus) {
 		return dbUserMarkupCollectionHandler.getNewUserMarkupCollectionRefs(corpus);
+	}
+	
+	@Override
+	public void spawnContentFrom(String userIdentifier, boolean copyCorpora, boolean copyTagLibs) throws IOException {
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+
+		Record record = db
+		.select()
+		.from(USER)
+		.where(USER.IDENTIFIER.eq(userIdentifier))
+		.fetchOne();
+		
+		if (record != null) {
+			DBUser user = record.map(new UserMapper());
+			if (user.isSpawnable()) {
+				if (copyCorpora || copyTagLibs) {
+					if (copyCorpora) {
+						dbCorpusHandler.copyCorpora(user.getUserId());
+					}
+					
+					if (copyTagLibs) {
+						dbTagLibraryHandler.copyTagLibraries(user.getUserId());
+					}
+				}
+				else {
+					LOG.info("won't spawn content because copyCorpora and copyTagLibs is switched off");
+				}
+			}
+			else {
+				LOG.warning("user " + userIdentifier + " cannot spawn content");
+			}
+		}
+		else {
+			LOG.warning("Could not spawn content from " + userIdentifier + ": no such user");
+		}
 	}
 }
