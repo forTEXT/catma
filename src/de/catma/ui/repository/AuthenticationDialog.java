@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.net.URLEncoder;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -90,12 +91,19 @@ public class AuthenticationDialog extends VerticalLayout {
 		private Window dialogWindow;
 		private UI ui;
 		private String token;
+		private String oauthAccessTokenRequestURL;
+		private String oauthClientId;
+		private String oauthClientSecret;
 
 		public AuthenticationRequestHandler(
 				UI ui, // UI.getCurrent() is not available during request handling, therefore we pass in the UI
 				String returnURL, 
 				RepositoryReference repositoryReference,
-				RepositoryListView repositoryListView, Window dialogWindow, String token) {
+				RepositoryListView repositoryListView, Window dialogWindow, 
+				String token,
+				String oauthAccessTokenRequestURL,
+				String oauthClientId,
+				String oauthClientSecret) {
 			super();
 			this.ui = ui;
 			this.returnURL = returnURL;
@@ -103,6 +111,9 @@ public class AuthenticationDialog extends VerticalLayout {
 			this.repositoryListView = repositoryListView;
 			this.dialogWindow = dialogWindow;
 			this.token = token;
+			this.oauthAccessTokenRequestURL = oauthAccessTokenRequestURL;
+			this.oauthClientId = oauthClientId;
+			this.oauthClientSecret = oauthClientSecret;
 		}
 			
 		@Override
@@ -147,14 +158,14 @@ public class AuthenticationDialog extends VerticalLayout {
 				if (error == null) {
 					CloseableHttpClient httpclient = HttpClients.createDefault();
 					HttpPost httpPost = 
-						new HttpPost(RepositoryPropertyKey.oauthAccessTokenRequestURL.getValue());
+						new HttpPost(oauthAccessTokenRequestURL);
 					List <NameValuePair> data = new ArrayList <NameValuePair>();
 					data.add(new BasicNameValuePair("code", authorizationCode));
 					data.add(new BasicNameValuePair("grant_type", "authorization_code"));
 					data.add(new BasicNameValuePair(
-						"client_id", RepositoryPropertyKey.oauthClientId.getValue()));
+						"client_id", oauthClientId));
 					data.add(new BasicNameValuePair(
-						"client_secret", RepositoryPropertyKey.oauthClientSecret.getValue()));
+						"client_secret", oauthClientSecret));
 					data.add(new BasicNameValuePair("redirect_uri", returnURL));
 					httpPost.setEntity(new UrlEncodedFormEntity(data));
 					CloseableHttpResponse tokenRequestResponse = httpclient.execute(httpPost);
@@ -162,6 +173,9 @@ public class AuthenticationDialog extends VerticalLayout {
 					InputStream content = entity.getContent();
 					ByteArrayOutputStream bodyBuffer = new ByteArrayOutputStream();
 					IOUtils.copy(content, bodyBuffer);
+					
+					logger.info("access token request result: " + bodyBuffer.toString("UTF-8"));
+					
 					ObjectMapper mapper = new ObjectMapper();
 
 					ObjectNode accessTokenResponseJSon = 
@@ -199,7 +213,10 @@ public class AuthenticationDialog extends VerticalLayout {
 
 	                logger.info("opening repository for user: " + email);
 
-	                repositoryListView.open(repositoryReference, userIdentification);
+	                repositoryListView.open(
+	                	(CatmaApplication) ui, 
+	                	repositoryReference, 
+	                	userIdentification);
 	
 	                new DownloadStream(
                 		ui.getPage().getLocation().toURL().openStream(), 
@@ -240,7 +257,9 @@ public class AuthenticationDialog extends VerticalLayout {
 	private Button btCancel;
 	private RepositoryReference repositoryReference;
 	private RepositoryListView repositoryListView;
-	private Link logInLink;
+	private Link catmaLogInLink;
+	private Link catmaCreateAccountLink;
+	private Link googleLogInLink;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private String baseUrl;
 	
@@ -286,19 +305,65 @@ public class AuthenticationDialog extends VerticalLayout {
 	@Override
 	public void attach() {
 		super.attach();
-		if (logInLink == null) {
-			logInLink = createLogInLink(UI.getCurrent());
-			if (logInLink == null) { //authorization code request failure
-				addComponent(new Label("Unable to establish authentication!"));
-				logger.log(Level.SEVERE, "Log-In-Link creation failed!");
+		try {
+			if (googleLogInLink == null) {
+				googleLogInLink = createLogInLink(
+						UI.getCurrent(), 
+						RepositoryPropertyKey.Google_oauthAuthorizationCodeRequestURL.getValue(),
+						RepositoryPropertyKey.Google_oauthAccessTokenRequestURL.getValue(),
+						RepositoryPropertyKey.Google_oauthClientId.getValue(),
+						RepositoryPropertyKey.Google_oauthClientSecret.getValue(),
+						"repository/resources/google.png",
+						"Log in with your Google account",
+						URLEncoder.encode(baseUrl, "UTF-8"));
+				if (googleLogInLink == null) { //authorization code request failure
+					addComponent(new Label("Unable to establish authentication!"));
+					logger.log(Level.SEVERE, "Log-In-Link creation failed!");
+				}
+				else {
+					addComponent(googleLogInLink, 0);
+				}
 			}
-			else {
-				addComponent(logInLink, 0);
+			
+			if (catmaCreateAccountLink == null) {
+				catmaCreateAccountLink = new Link("Create a CATMA account", new ExternalResource("https://auth.catma.de/openam/XUI/#register/"));
+				catmaCreateAccountLink.setIcon(new ClassResource("repository/resources/catma.png"));
+				addComponent(catmaCreateAccountLink, 0);
 			}
+			
+			if (catmaLogInLink == null) {
+				catmaLogInLink = createLogInLink(
+						UI.getCurrent(), 
+						RepositoryPropertyKey.CATMA_oauthAuthorizationCodeRequestURL.getValue(),
+						RepositoryPropertyKey.CATMA_oauthAccessTokenRequestURL.getValue(),
+						RepositoryPropertyKey.CATMA_oauthClientId.getValue(),
+						RepositoryPropertyKey.CATMA_oauthClientSecret.getValue(),
+						"repository/resources/catma.png",
+						"Log in with your CATMA account",
+						URLEncoder.encode("/", "UTF-8"));
+				if (catmaLogInLink == null) { //authorization code request failure
+					addComponent(new Label("Unable to establish authentication!"));
+					logger.log(Level.SEVERE, "Log-In-Link creation failed!");
+				}
+				else {
+					addComponent(catmaLogInLink, 0);
+				}
+			}
+		}
+		catch (Exception e) {
+			throw new IllegalStateException("Log-In-Link creation failed!", e);
 		}
 	}
 
-	private Link createLogInLink(UI ui) {
+	private Link createLogInLink(
+			UI ui, 
+			String oauthAuthorizationCodeRequestURL, 
+			String oauthAccessTokenRequestURL,
+			String oauthClientId,
+			String oauthClientSecret,
+			String linkIconResourceName, 
+			String linkCaption,
+			String openidRealm) {
 		try {
 			String returnURL = baseUrl;
 			String token = new BigInteger(130, new SecureRandom()).toString(32);
@@ -311,22 +376,22 @@ public class AuthenticationDialog extends VerticalLayout {
 			// creating the authorization request link 
 			StringBuilder authenticationUrlBuilder = new StringBuilder();
 			authenticationUrlBuilder.append(
-				RepositoryPropertyKey.oauthAuthorizationCodeRequestURL.getValue());
+				oauthAuthorizationCodeRequestURL);
 			authenticationUrlBuilder.append("?client_id=");
-			authenticationUrlBuilder.append(
-				RepositoryPropertyKey.oauthClientId.getValue());
+			authenticationUrlBuilder.append(oauthClientId);
+				
 			authenticationUrlBuilder.append("&response_type=code");
-			authenticationUrlBuilder.append("&scope=openid%20email&");
-			authenticationUrlBuilder.append("&redirect_uri="+returnURL);
+			authenticationUrlBuilder.append("&scope=openid%20email");
+			authenticationUrlBuilder.append("&redirect_uri="+URLEncoder.encode(returnURL, "UTF-8"));
 			authenticationUrlBuilder.append("&state=" + totp.now());
-			authenticationUrlBuilder.append("&openid.realm="+returnURL);
+			authenticationUrlBuilder.append("&openid.realm="+openidRealm);
 			
 			ClassResource icon =
 					new ClassResource(
-							"repository/resources/google.png");
+							linkIconResourceName);
 			Link logInLink = 
 					new Link(
-						"Log in via Google", 
+						linkCaption, 
 						new ExternalResource(authenticationUrlBuilder.toString()));
 			logInLink.setIcon(icon);
 			
@@ -337,7 +402,10 @@ public class AuthenticationDialog extends VerticalLayout {
 							repositoryReference,
 							repositoryListView, 
 							dialogWindow,
-							token);
+							token,
+							oauthAccessTokenRequestURL,
+							oauthClientId,
+							oauthClientSecret);
 			
 			
 			VaadinSession.getCurrent().addRequestHandler(authenticationRequestHandler);
@@ -373,7 +441,7 @@ public class AuthenticationDialog extends VerticalLayout {
 	}
 	
 	public void show() {
-		show("35%");
+		show("400px");
 	}
 	
 }

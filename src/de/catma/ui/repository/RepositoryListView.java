@@ -106,7 +106,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 				new HashMap<String, String>(1);
 		userIdentification.put(
 			UserProperty.identifier.name(), user);
-		open(repositoryReference, userIdentification);
+		open((CatmaApplication) getUI(),repositoryReference, userIdentification);
 	}
 
 	private void openAsGuest(RepositoryReference repositoryReference) throws Exception {
@@ -118,7 +118,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 			UserProperty.identifier.name(), userName);
 		userIdentification.put(UserProperty.guest.name(), Boolean.TRUE.toString());
 		
-		open(repositoryReference, userIdentification);
+		open((CatmaApplication) getUI(), repositoryReference, userIdentification);
 	}
 
 	private void openWithAuthentication(RepositoryReference repositoryReference) {
@@ -136,15 +136,16 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		authDialog.show();
 	}
 	
-	void open(RepositoryReference repositoryReference, Map<String,String> userIdentification) throws Exception {
+	void open(
+			CatmaApplication catmaApplication, // needs to be passed in, as getUI() may not be initialized yet 
+			RepositoryReference repositoryReference, 
+			Map<String,String> userIdentification) throws Exception {
 		
-		((CatmaApplication)UI.getCurrent()).setUser(userIdentification);
+		catmaApplication.setUser(userIdentification);
 		
 		Repository repository = 
 				repositoryManager.openRepository(
 						repositoryReference, userIdentification);
-		
-		CatmaApplication catmaApplication = (CatmaApplication)UI.getCurrent();
 		
 		if (catmaApplication.getParameter(Parameter.USER_SPAWN, "0").equals("1")) {
 			repository.spawnContentFrom(

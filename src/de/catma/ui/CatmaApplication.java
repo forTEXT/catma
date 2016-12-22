@@ -45,7 +45,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Link;
 import com.vaadin.ui.MenuBar;
@@ -91,7 +90,7 @@ import de.catma.ui.tagmanager.TagManagerView;
 import de.catma.ui.visualizer.VisualizationManagerView;
 
 //@Push(PushMode.MANUAL)
-@Theme("cleanew")
+@Theme("catma")
 @PreserveOnRefresh
 public class CatmaApplication extends UI
 	implements BackgroundServiceProvider, AnalyzerProvider, LoginToken {
@@ -121,7 +120,6 @@ public class CatmaApplication extends UI
 	private Button btHelp;
 	
 	private ThemeResource logoResource;
-	private Image logoImage;
 	
 	private Label defaultContentPanelLabel;
 	
@@ -157,7 +155,7 @@ public class CatmaApplication extends UI
 		
 		storeParameters(request.getParameterMap());
 		
-		Page.getCurrent().setTitle("CATMA 5.0 PREVIEW " + MINORVERSION);
+		Page.getCurrent().setTitle("CATMA 5.0 " + MINORVERSION);
 		
 		mainLayout = new VerticalLayout();
 		mainLayout.setSizeFull();
@@ -181,8 +179,10 @@ public class CatmaApplication extends UI
 		menuLayout.setMargin(true);
 		menuLayout.setSpacing(true);
 		
-		logoResource = new ThemeResource("logo.gif");
-		logoImage = new Image(null, logoResource);
+		logoResource = new ThemeResource("catma-logo.png");
+		Link logoImage = new Link(null, new ExternalResource("http://www.catma.de"));
+		logoImage.setIcon(logoResource);
+		logoImage.setTargetName("_blank");
 		menuLayout.addComponent(logoImage);
 		
 		MenuFactory menuFactory = new MenuFactory();
