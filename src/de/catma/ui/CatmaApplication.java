@@ -23,6 +23,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -47,13 +48,12 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Link;
-import com.vaadin.ui.MenuBar;
-import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.themes.BaseTheme;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.BackgroundServiceProvider;
@@ -279,15 +279,17 @@ public class CatmaApplication extends UI
 										
 				}
 			});
-			
-			MenuBar loginLogoutMenu = new MenuBar();
+
 			LoginLogoutCommand loginLogoutCommand = 
 					new LoginLogoutCommand(menu, repositoryManagerView);
-			MenuItem loginLogoutitem = loginLogoutMenu.addItem("Login", loginLogoutCommand);
-			loginLogoutCommand.setLoginLogoutItem(loginLogoutitem);
+			Button btloginLogout = new Button("Sign in", event -> loginLogoutCommand.menuSelected(null));
+			btloginLogout.setStyleName(BaseTheme.BUTTON_LINK);
+			btloginLogout.addStyleName("application-loginlink");
 			
-			menuLayout.addComponent(loginLogoutMenu);
-			menuLayout.setComponentAlignment(loginLogoutMenu, Alignment.TOP_RIGHT);
+			loginLogoutCommand.setLoginLogoutButton(btloginLogout);
+			
+			menuLayout.addComponent(btloginLogout);
+			menuLayout.setComponentAlignment(btloginLogout, Alignment.TOP_RIGHT);
 			menuLayout.setWidth("100%");
 			
 			menuPanel.setContent(menuLayout);
@@ -295,7 +297,7 @@ public class CatmaApplication extends UI
 			setContent(mainLayout);
 			
 			if (getParameter(Parameter.USER_IDENTIFIER) != null) {
-				loginLogoutCommand.menuSelected(loginLogoutitem);
+				btloginLogout.click();
 			}
 			
 			if (repositoryOpened && (getParameter(Parameter.COMPONENT) != null)) {
@@ -303,6 +305,18 @@ public class CatmaApplication extends UI
 			}
 
 			setPollInterval(10000);
+			
+			
+			if ((getParameter(Parameter.AUTOLOGIN) != null) && (getUser()==null)) {
+				getPage().setLocation(
+					repositoryManagerView.createAuthenticationDialog().createLogInClick(
+						this, 
+						RepositoryPropertyKey.CATMA_oauthAuthorizationCodeRequestURL.getValue(),
+						RepositoryPropertyKey.CATMA_oauthAccessTokenRequestURL.getValue(),
+						RepositoryPropertyKey.CATMA_oauthClientId.getValue(),
+						RepositoryPropertyKey.CATMA_oauthClientSecret.getValue(),
+						URLEncoder.encode("/", "UTF-8")));
+			}
 			
 		} catch (Exception e) {
 			showAndLogError("The system could not be initialized!", e);

@@ -13455,3 +13455,13 @@ div.v-layout.v-horizontal.v-widget {
 .catma .taginstanceinfo-caption {
 	font-weight: bold;
 }
+
+.catma .authdialog-loginlink {
+	font-size: 14px;
+	padding: 5px 0;
+}
+
+.catma .application-loginlink {
+	font-size: 14px;
+	padding: 0px 0;
+}

@@ -8,6 +8,7 @@ public enum Parameter {
 	TAGLIBS_COPY("catma.taglibs.copy"),
 	COMPONENT("catma.component"),
 	TAGGER_DOCUMENT("catma.tagger.document"),
+	AUTOLOGIN("catma.autologin"),
 	;
 	
 	private String key;

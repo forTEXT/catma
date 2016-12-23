@@ -55,7 +55,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		initComponents();
 		initActions();
 	}
-
+	
 	private void initActions() {
 		openBt.addClickListener(new ClickListener() {
 			
@@ -122,17 +122,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 	}
 
 	private void openWithAuthentication(RepositoryReference repositoryReference) {
-		
-		String baseURL = 
-				RepositoryPropertyKey.BaseURL.getValue(
-					RepositoryPropertyKey.BaseURL.getDefaultValue());
-
-		AuthenticationDialog authDialog = 
-				new AuthenticationDialog(
-						"Please authenticate yourself", 
-						repositoryReference, 
-						this,
-						baseURL);
+		AuthenticationDialog authDialog = createAuthenticationDialog();
 		authDialog.show();
 	}
 	
@@ -219,5 +209,23 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 	public void addClickshortCuts() { /* noop*/	}
 	
 	public void removeClickshortCuts() { /* noop*/ }
+
+	public AuthenticationDialog createAuthenticationDialog() {
+		RepositoryReference repositoryReference = 
+				(RepositoryReference)repositoryTable.getValue();
+		return createAuthenticationDialog(repositoryReference);
+	}
+	
+	private AuthenticationDialog createAuthenticationDialog(RepositoryReference repositoryReference) {
+		String baseURL = 
+				RepositoryPropertyKey.BaseURL.getValue(
+					RepositoryPropertyKey.BaseURL.getDefaultValue());
+
+		return new AuthenticationDialog(
+						"Please authenticate yourself", 
+						repositoryReference, 
+						this,
+						baseURL);
+	}
 
 }

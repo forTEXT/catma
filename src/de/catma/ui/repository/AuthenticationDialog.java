@@ -21,6 +21,7 @@ package de.catma.ui.repository;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URLEncoder;
 import java.security.SecureRandom;
@@ -28,7 +29,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
@@ -66,6 +66,7 @@ import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.themes.BaseTheme;
 
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.repository.RepositoryReference;
@@ -257,10 +258,8 @@ public class AuthenticationDialog extends VerticalLayout {
 	private Button btCancel;
 	private RepositoryReference repositoryReference;
 	private RepositoryListView repositoryListView;
-	private Link catmaLogInLink;
-	private Link catmaCreateAccountLink;
-	private Link googleLogInLink;
-	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private Button catmaLogInLink;
+	private Button googleLogInLink;
 	private String baseUrl;
 	
 	public AuthenticationDialog(
@@ -271,6 +270,102 @@ public class AuthenticationDialog extends VerticalLayout {
 		this.repositoryListView = repositoryListView;
 		this.baseUrl = baseUrl;
 		initComponents();
+		initActions();
+	}
+
+
+	private void initActions() {
+		btCancel.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+				UI.getCurrent().removeWindow(dialogWindow);
+			}
+		});
+		
+		catmaLogInLink.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				try {
+					UI.getCurrent().getPage().setLocation(createLogInClick(
+						UI.getCurrent(), 
+						RepositoryPropertyKey.CATMA_oauthAuthorizationCodeRequestURL.getValue(),
+						RepositoryPropertyKey.CATMA_oauthAccessTokenRequestURL.getValue(),
+						RepositoryPropertyKey.CATMA_oauthClientId.getValue(),
+						RepositoryPropertyKey.CATMA_oauthClientSecret.getValue(),
+						URLEncoder.encode("/", "UTF-8")));
+				}
+				catch (Exception e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError("Error during authentication!", e);
+				}
+			}
+		});
+		
+		
+		googleLogInLink.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				try {
+					UI.getCurrent().getPage().setLocation(createLogInClick(
+						UI.getCurrent(), 
+						RepositoryPropertyKey.Google_oauthAuthorizationCodeRequestURL.getValue(),
+						RepositoryPropertyKey.Google_oauthAccessTokenRequestURL.getValue(),
+						RepositoryPropertyKey.Google_oauthClientId.getValue(),
+						RepositoryPropertyKey.Google_oauthClientSecret.getValue(),
+						URLEncoder.encode(baseUrl, "UTF-8")));
+				}
+				catch (Exception e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError("Error during authentication!", e);
+				}
+			}
+		});
+	}
+	
+	public String createLogInClick(
+			UI ui, 
+			String oauthAuthorizationCodeRequestURL, 
+			String oauthAccessTokenRequestURL,
+			String oauthClientId,
+			String oauthClientSecret,
+			String openidRealm) throws UnsupportedEncodingException {
+		
+		String token = new BigInteger(130, new SecureRandom()).toString(32);
+
+		// state token generation
+		Totp totp = new Totp(
+				RepositoryPropertyKey.otpSecret.getValue()+token, 
+				new Clock(Integer.valueOf(RepositoryPropertyKey.otpDuration.getValue())));
+
+		// creating the authorization request link 
+		StringBuilder authenticationUrlBuilder = new StringBuilder();
+		authenticationUrlBuilder.append(
+			oauthAuthorizationCodeRequestURL);
+		authenticationUrlBuilder.append("?client_id=");
+		authenticationUrlBuilder.append(oauthClientId);
+			
+		authenticationUrlBuilder.append("&response_type=code");
+		authenticationUrlBuilder.append("&scope=openid%20email");
+		authenticationUrlBuilder.append("&redirect_uri="+URLEncoder.encode(baseUrl, "UTF-8"));
+		authenticationUrlBuilder.append("&state=" + totp.now());
+		authenticationUrlBuilder.append("&openid.realm="+openidRealm);
+		
+		final AuthenticationRequestHandler authenticationRequestHandler =
+				new AuthenticationRequestHandler(
+						ui,
+						baseUrl, 
+						repositoryReference,
+						repositoryListView, 
+						dialogWindow,
+						token,
+						oauthAccessTokenRequestURL,
+						oauthClientId,
+						oauthClientSecret);
+		
+		
+		VaadinSession.getCurrent().addRequestHandler(authenticationRequestHandler);
+		
+		return authenticationUrlBuilder.toString();
 	}
 
 
@@ -281,6 +376,28 @@ public class AuthenticationDialog extends VerticalLayout {
 		content.setMargin(true);
 		dialogWindow = new Window(caption, content);
 		dialogWindow.setModal(true);
+		
+		catmaLogInLink = new Button("Log in with your CATMA account");
+		catmaLogInLink.setIcon(new ClassResource("repository/resources/catma.png"));
+		catmaLogInLink.setStyleName(BaseTheme.BUTTON_LINK);
+		catmaLogInLink.addStyleName("authdialog-loginlink");
+		addComponent(catmaLogInLink);
+		
+		Link catmaCreateAccountLink = 
+			new Link(
+				"Create a CATMA account", 
+				new ExternalResource("https://auth.catma.de/openam/XUI/#register/"));
+		catmaCreateAccountLink.setIcon(
+				new ClassResource("repository/resources/catma.png"));
+		
+		addComponent(catmaCreateAccountLink);
+
+		
+		googleLogInLink = new Button("Log in with your Google account");
+		googleLogInLink.setIcon(new ClassResource("repository/resources/google.png"));
+		googleLogInLink.setStyleName(BaseTheme.BUTTON_LINK);
+		googleLogInLink.addStyleName("authdialog-loginlink");
+		addComponent(googleLogInLink);
 		
 		Label termsOfUse = new Label(
 				"By logging in you accept the " +
@@ -302,139 +419,6 @@ public class AuthenticationDialog extends VerticalLayout {
 		
 	}
 	
-	@Override
-	public void attach() {
-		super.attach();
-		try {
-			if (googleLogInLink == null) {
-				googleLogInLink = createLogInLink(
-						UI.getCurrent(), 
-						RepositoryPropertyKey.Google_oauthAuthorizationCodeRequestURL.getValue(),
-						RepositoryPropertyKey.Google_oauthAccessTokenRequestURL.getValue(),
-						RepositoryPropertyKey.Google_oauthClientId.getValue(),
-						RepositoryPropertyKey.Google_oauthClientSecret.getValue(),
-						"repository/resources/google.png",
-						"Log in with your Google account",
-						URLEncoder.encode(baseUrl, "UTF-8"));
-				if (googleLogInLink == null) { //authorization code request failure
-					addComponent(new Label("Unable to establish authentication!"));
-					logger.log(Level.SEVERE, "Log-In-Link creation failed!");
-				}
-				else {
-					addComponent(googleLogInLink, 0);
-				}
-			}
-			
-			if (catmaCreateAccountLink == null) {
-				catmaCreateAccountLink = new Link("Create a CATMA account", new ExternalResource("https://auth.catma.de/openam/XUI/#register/"));
-				catmaCreateAccountLink.setIcon(new ClassResource("repository/resources/catma.png"));
-				addComponent(catmaCreateAccountLink, 0);
-			}
-			
-			if (catmaLogInLink == null) {
-				catmaLogInLink = createLogInLink(
-						UI.getCurrent(), 
-						RepositoryPropertyKey.CATMA_oauthAuthorizationCodeRequestURL.getValue(),
-						RepositoryPropertyKey.CATMA_oauthAccessTokenRequestURL.getValue(),
-						RepositoryPropertyKey.CATMA_oauthClientId.getValue(),
-						RepositoryPropertyKey.CATMA_oauthClientSecret.getValue(),
-						"repository/resources/catma.png",
-						"Log in with your CATMA account",
-						URLEncoder.encode("/", "UTF-8"));
-				if (catmaLogInLink == null) { //authorization code request failure
-					addComponent(new Label("Unable to establish authentication!"));
-					logger.log(Level.SEVERE, "Log-In-Link creation failed!");
-				}
-				else {
-					addComponent(catmaLogInLink, 0);
-				}
-			}
-		}
-		catch (Exception e) {
-			throw new IllegalStateException("Log-In-Link creation failed!", e);
-		}
-	}
-
-	private Link createLogInLink(
-			UI ui, 
-			String oauthAuthorizationCodeRequestURL, 
-			String oauthAccessTokenRequestURL,
-			String oauthClientId,
-			String oauthClientSecret,
-			String linkIconResourceName, 
-			String linkCaption,
-			String openidRealm) {
-		try {
-			String returnURL = baseUrl;
-			String token = new BigInteger(130, new SecureRandom()).toString(32);
-
-			// state token generation
-			Totp totp = new Totp(
-					RepositoryPropertyKey.otpSecret.getValue()+token, 
-					new Clock(Integer.valueOf(RepositoryPropertyKey.otpDuration.getValue())));
-
-			// creating the authorization request link 
-			StringBuilder authenticationUrlBuilder = new StringBuilder();
-			authenticationUrlBuilder.append(
-				oauthAuthorizationCodeRequestURL);
-			authenticationUrlBuilder.append("?client_id=");
-			authenticationUrlBuilder.append(oauthClientId);
-				
-			authenticationUrlBuilder.append("&response_type=code");
-			authenticationUrlBuilder.append("&scope=openid%20email");
-			authenticationUrlBuilder.append("&redirect_uri="+URLEncoder.encode(returnURL, "UTF-8"));
-			authenticationUrlBuilder.append("&state=" + totp.now());
-			authenticationUrlBuilder.append("&openid.realm="+openidRealm);
-			
-			ClassResource icon =
-					new ClassResource(
-							linkIconResourceName);
-			Link logInLink = 
-					new Link(
-						linkCaption, 
-						new ExternalResource(authenticationUrlBuilder.toString()));
-			logInLink.setIcon(icon);
-			
-			final AuthenticationRequestHandler authenticationRequestHandler =
-					new AuthenticationRequestHandler(
-							ui,
-							returnURL, 
-							repositoryReference,
-							repositoryListView, 
-							dialogWindow,
-							token,
-							oauthAccessTokenRequestURL,
-							oauthClientId,
-							oauthClientSecret);
-			
-			
-			VaadinSession.getCurrent().addRequestHandler(authenticationRequestHandler);
-			
-			btCancel.addClickListener(new ClickListener() {
-				
-				public void buttonClick(ClickEvent event) {
-					VaadinSession.getCurrent().removeRequestHandler(authenticationRequestHandler);
-					
-					UI.getCurrent().removeWindow(dialogWindow);
-					
-					Notification.show(
-	                        "Authentication failure",
-	                        "The authentication failed, you are not " +
-	                        "allowed to access this repository!",
-	                        Type.ERROR_MESSAGE);
-
-				}
-			});
-			
-			return logInLink;
-		}
-		catch (Exception e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error during authentication!", e);
-		}
-		return null;
-	}
-	
 	public void show(String dialogWidth) {
 		dialogWindow.setWidth(dialogWidth);
 		UI.getCurrent().addWindow(dialogWindow);
@@ -443,5 +427,4 @@ public class AuthenticationDialog extends VerticalLayout {
 	public void show() {
 		show("400px");
 	}
-	
 }
