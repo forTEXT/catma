@@ -20,9 +20,15 @@ package de.catma.ui.repository;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.util.BeanItemContainer;
+import com.vaadin.server.Page;
+import com.vaadin.server.WebBrowser;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -40,12 +46,24 @@ import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.repository.RepositoryReference;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.Parameter;
+import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.tabbedview.TabComponent;
 import de.catma.user.UserProperty;
 import de.catma.util.IDGenerator;
 
 public class RepositoryListView extends VerticalLayout implements TabComponent {
 
+	private final static Logger LOGGER = Logger.getLogger(RepositoryListView.class.getName());
+	private final static Cache<String,Integer> GUEST_ACCESS_COUNT_BY_IP = 
+		CacheBuilder
+			.newBuilder()
+			.expireAfterWrite(
+				RepositoryPropertyKey.GuestAccessCountExpirationInDays.getValue(1), 
+				TimeUnit.DAYS)
+			.concurrencyLevel(
+				RepositoryPropertyKey.GuestAccessCountConcurrencyLevel.getValue(20))
+			.build();
+	
 	private RepositoryManager repositoryManager;
 	private Table repositoryTable;
 	private Button openBt;
@@ -71,7 +89,21 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 					try {
 						if (((CatmaApplication)UI.getCurrent()).getParameter(
 										Parameter.USER_SPAWN_ASGUEST, "0").equals("1")) {
-							openAsGuest(repositoryReference);
+							
+							SpamProtectionDialog dlg = new SpamProtectionDialog(new SaveCancelListener<Void>() {
+								@Override
+								public void cancelPressed() {/*noop*/}
+								@Override
+								public void savePressed(Void result) {
+									try {
+										openAsGuest(repositoryReference);
+									} catch (Exception e) {
+										((CatmaApplication)UI.getCurrent()).showAndLogError(
+												"Error opening the repository!", e);
+									}
+								}
+							});
+							dlg.show();
 						}
 						else if (repositoryReference.isAuthenticationRequired()) {
 							openWithAuthentication(repositoryReference);
@@ -110,15 +142,39 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 	}
 
 	private void openAsGuest(RepositoryReference repositoryReference) throws Exception {
-		IDGenerator idGenerator = new IDGenerator();
-		String userName = idGenerator.generate();
-		Map<String,String> userIdentification = 
-				new HashMap<String, String>(1);
-		userIdentification.put(
-			UserProperty.identifier.name(), userName);
-		userIdentification.put(UserProperty.guest.name(), Boolean.TRUE.toString());
-		
-		open((CatmaApplication) getUI(), repositoryReference, userIdentification);
+		WebBrowser webBrowser = Page.getCurrent().getWebBrowser();
+		String clientIpAddress = webBrowser.getAddress();
+		if (clientIpAddress != null ) {
+			
+			Integer currentCount = 
+					GUEST_ACCESS_COUNT_BY_IP.get(clientIpAddress, ()->0);
+			
+			if (currentCount < RepositoryPropertyKey.GuestAccessCountMax.getValue(10)) {
+				IDGenerator idGenerator = new IDGenerator();
+				String userName = idGenerator.generate();
+				Map<String,String> userIdentification = 
+						new HashMap<String, String>(1);
+				userIdentification.put(
+						UserProperty.identifier.name(), userName);
+				userIdentification.put(UserProperty.guest.name(), Boolean.TRUE.toString());
+				
+				open((CatmaApplication) getUI(), repositoryReference, userIdentification);
+				
+				GUEST_ACCESS_COUNT_BY_IP.put(clientIpAddress, currentCount+1);
+				
+				Page.getCurrent().setLocation(RepositoryPropertyKey.BaseURL.getValue());
+			}
+			else {
+				LOGGER.warning("IP " + clientIpAddress + " has exceeded max guest access count!");
+				Notification.show(
+					"Info", 
+					"You have reached the limit for guest account access within 24h!", 
+					Type.TRAY_NOTIFICATION);
+			}
+		}
+		else {
+			LOGGER.warning("cannot open guest repository, client IP is null!");
+		}
 	}
 
 	private void openWithAuthentication(RepositoryReference repositoryReference) {

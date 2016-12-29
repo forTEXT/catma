@@ -36,13 +36,14 @@ import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
-import com.vaadin.event.Action;
 import com.vaadin.server.ClassResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Resource;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
@@ -72,7 +73,6 @@ import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.menu.CMenuAction;
 import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
 import de.catma.util.Pair;
 
@@ -97,7 +97,6 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private TreeTable markupCollectionsTree;
-	private String userMarkupItem = "Markup Collections";
 	private TagManager tagManager;
 	
 	private PropertyChangeListener tagDefChangedListener;
@@ -113,6 +112,10 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private PropertyChangeListener userPropertyDefinitionChangedListener;
 	private Button btnOpenMarkupCollection;
 	private boolean tagDefinitionSelectedEventHandlingRunning = false;
+	private Button btAllVisible;
+	private Button btAllInvisible;
+	private Button btCloseMarkupCollection;
+	private Button btRefresh;
 	
 	public MarkupCollectionsPanel(Repository repository, ClickListener openMarkupCollectionsHandler) {
 		propertyChangeSupport = new PropertyChangeSupport(this);
@@ -303,19 +306,29 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				RepositoryChangeEvent.userMarkupCollectionTagLibraryChanged, 
 				userMarkupCollectionTagLibraryChangedListener);
 		
-		this.markupCollectionsTree.addActionHandler(new Action.Handler() {
-			private CMenuAction<UserMarkupCollection> close = 
-					new CMenuAction<UserMarkupCollection>("Close") {
-				@Override
-				public void handle(UserMarkupCollection umc) {
+		btCloseMarkupCollection.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				Object value = markupCollectionsTree.getValue();
+				if (value instanceof UserMarkupCollection) {
+					UserMarkupCollection umc = (UserMarkupCollection)value;
 					removeUserMarkupCollection(
-						new UserMarkupCollectionReference(umc.getId(), umc.getContentInfoSet()));
+							new UserMarkupCollectionReference(umc.getId(), umc.getContentInfoSet()));
 				}
-			};
-			private CMenuAction<UserMarkupCollection> refresh = 
-					new CMenuAction<UserMarkupCollection>("Refresh") {
-				@Override
-				public void handle(UserMarkupCollection umc) {
+				else {
+					Notification.show("Info", "Please select a Markup Collection first!", Type.TRAY_NOTIFICATION);
+				}
+			}
+		});
+		
+		btRefresh.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				Object value = markupCollectionsTree.getValue();
+				if (value instanceof UserMarkupCollection) {
+					UserMarkupCollection umc = (UserMarkupCollection)value;
 					//TODO: close all active tagsets
 					UserMarkupCollectionReference umcRef =
 							new UserMarkupCollectionReference(umc.getId(), umc.getContentInfoSet());
@@ -329,30 +342,14 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 								"error refreshing Markup Collection!", e);
 					}
 				}
-			};
-				
-			
-			@SuppressWarnings("unchecked")
-			public void handleAction(Action action, Object sender, Object target) {
-				
-				if (target instanceof UserMarkupCollection) {
-					UserMarkupCollection umc =
-							(UserMarkupCollection)target;
-						((CMenuAction<UserMarkupCollection>)action).handle(umc);
-				}
-				
-			}
-			
-			public Action[] getActions(Object target, Object sender) {
-				if ((target != null) 
-						&& (target instanceof UserMarkupCollection)) { 
-					return new Action[] {refresh,close};
-				}
 				else {
-					return new Action[] {};
+					Notification.show("Info", "Please select a Markup Collection first!", Type.TRAY_NOTIFICATION);
 				}
 			}
 		});
+		
+		btAllVisible.addClickListener(event->selectAllVisible(true));
+		btAllInvisible.addClickListener(event->selectAllVisible(false));
 	}
 	
 	private void reindex(TagsetDefinition tagsetDef) {
@@ -625,13 +622,27 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	private void initComponents() {
 		setMargin(new MarginInfo(false, true, true, false));
 		HorizontalLayout buttonHeaderPanel = new HorizontalLayout();
-		buttonHeaderPanel.setWidth("100%");
+
+		buttonHeaderPanel.setSpacing(true);
 		buttonHeaderPanel.setMargin(new MarginInfo(true, false, true, false));
 		buttonHeaderPanel.addStyleName("catma-tagger-markup-panels");
 		
 		btnOpenMarkupCollection = new Button("Open Markup Collection");
 		btnOpenMarkupCollection.addStyleName("primary-button");
 		buttonHeaderPanel.addComponent(btnOpenMarkupCollection);
+		
+		btCloseMarkupCollection = new Button("Close");
+		buttonHeaderPanel.addComponent(btCloseMarkupCollection);
+		
+		btRefresh = new Button(FontAwesome.REFRESH);
+		buttonHeaderPanel.addComponent(btRefresh);
+		
+		
+		btAllVisible = new Button("Select all visible");
+		buttonHeaderPanel.addComponent(btAllVisible);
+		btAllInvisible = new Button("Deselect all visible");
+		buttonHeaderPanel.addComponent(btAllInvisible);
+		
 		addComponent(buttonHeaderPanel);
 		
 		markupCollectionsTree = new TreeTable();
@@ -677,14 +688,6 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 						MarkupCollectionsTreeProperty.color,
 						MarkupCollectionsTreeProperty.visible,
 						MarkupCollectionsTreeProperty.writable});
-		
-		markupCollectionsTree.addItem(
-			new Object[] {userMarkupItem, createVisibilityCheckbox(), new Label()}, 
-			userMarkupItem);
-		
-//		markupCollectionsTree.addItem(
-//			new Object[] {staticMarkupItem, new Label(), new Label()}, 
-//			staticMarkupItem );
 
 		addComponent(markupCollectionsTree);
 	}
@@ -724,8 +727,6 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 						createVisibilityCheckbox(userMarkupCollection), 
 						createWritableCheckbox(userMarkupCollection)},
 				userMarkupCollection);
-		markupCollectionsTree.setParent(userMarkupCollection, userMarkupItem);
-		markupCollectionsTree.setCollapsed(userMarkupItem, false);
 		markupCollectionsTree.setCollapsed(userMarkupCollection, false);
 		
 		TagLibrary tagLibrary = userMarkupCollection.getTagLibrary();
@@ -907,41 +908,31 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		return cbShowTagInstances;
 	}
 	
-	private CheckBox createVisibilityCheckbox() {
-		final CheckBox cbShowTagInstances = new CheckBox();
-		cbShowTagInstances.setImmediate(true);
-		cbShowTagInstances.addValueChangeListener(new ValueChangeListener() {
-			
-			@Override
-			public void valueChange(ValueChangeEvent event) {
-				boolean selected = cbShowTagInstances.getValue();
-				ArrayList<TagReference> tagReferences = new ArrayList<>();
-				
-				for (UserMarkupCollection userMarkupCollection : userMarkupCollectionManager.getUserMarkupCollections()) {
-					tagReferences.addAll(userMarkupCollection.getTagReferences());
-					Item userMarkupCollectionItem =
-							markupCollectionsTree.getItem(userMarkupCollection);
-					Property<?> visibleProp = 
-							userMarkupCollectionItem.getItemProperty(
-									MarkupCollectionsTreeProperty.visible);
-					CheckBox cb = (CheckBox) visibleProp.getValue();
-					tagDefinitionSelectedEventHandlingRunning = true;
-					try {
-						cb.setValue(selected);
-					}
-					finally {
-						tagDefinitionSelectedEventHandlingRunning = false;
-					}
-				}
-				
-				propertyChangeSupport.firePropertyChange(
-						MarkupCollectionPanelEvent.tagDefinitionSelected.name(), 
-						selected?null:tagReferences,
-								selected?tagReferences:null);
-				
+	private void selectAllVisible(boolean visible) {
+		ArrayList<TagReference> tagReferences = new ArrayList<>();
+		
+		for (UserMarkupCollection userMarkupCollection : userMarkupCollectionManager.getUserMarkupCollections()) {
+			tagReferences.addAll(userMarkupCollection.getTagReferences());
+			Item userMarkupCollectionItem =
+					markupCollectionsTree.getItem(userMarkupCollection);
+			Property<?> visibleProp = 
+					userMarkupCollectionItem.getItemProperty(
+							MarkupCollectionsTreeProperty.visible);
+			CheckBox cb = (CheckBox) visibleProp.getValue();
+			tagDefinitionSelectedEventHandlingRunning = true;
+			try {
+				cb.setValue(visible);
 			}
-		});
-		return cbShowTagInstances;
+			finally {
+				tagDefinitionSelectedEventHandlingRunning = false;
+			}
+		}
+		
+		propertyChangeSupport.firePropertyChange(
+				MarkupCollectionPanelEvent.tagDefinitionSelected.name(), 
+				visible?null:tagReferences,
+						visible?tagReferences:null);
+
 	}
 
 	private CheckBox createCheckbox(final TagDefinition tagDefinition) {

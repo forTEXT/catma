@@ -31,7 +31,6 @@ import java.util.logging.Logger;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.server.ClassResource;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -281,9 +280,7 @@ public class TaggerView extends VerticalLayout
 		taggerPanel.setSizeFull();
 		taggerPanel.setSpacing(true);
 
-		btHelp = new Button("");
-		btHelp.addStyleName("icon-button"); // for top-margin
-		btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
 		btHelp.addStyleName("help-button");
 		
 		IndexInfoSet indexInfoSet = 

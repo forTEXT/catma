@@ -32,6 +32,7 @@ import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.Action;
 import com.vaadin.server.ClassResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Resource;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
@@ -804,9 +805,7 @@ public class TagsetTree extends HorizontalLayout {
 			reloadPanel.setSpacing(true);
 			reloadPanel.setMargin(new MarginInfo(true, true, false, true));
 			
-			btReload = new Button("Reload Tagsets"); 
-			btReload.setIcon(new ClassResource("resources/icon-reload.gif"));
-			btReload.addStyleName("icon-button");
+			btReload = new Button("Reload Tagsets", FontAwesome.REFRESH); 
 			reloadPanel.addComponent(btReload);
 			
 			buttonGrid.addComponent(reloadPanel);

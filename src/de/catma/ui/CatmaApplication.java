@@ -37,6 +37,7 @@ import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Theme;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.ExternalResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
@@ -260,10 +261,9 @@ public class CatmaApplication extends UI
 			menuLayout.setComponentAlignment(helpLink, Alignment.TOP_RIGHT);
 			helpLink.setVisible(false);
 			
-			btHelp = new Button("");
-			btHelp.addStyleName("icon-button"); // for top-margin
-			btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+			btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
 			btHelp.addStyleName("help-button");
+			btHelp.addStyleName("application-help-button");
 			
 			menuLayout.addComponent(btHelp);
 			

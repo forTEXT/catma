@@ -269,6 +269,11 @@
 		background: none;
 		border: none;
 		box-shadow: none;
+		font-size: 16px;
+	}
+	
+	.application-help-button {
+		padding: 0px 10px;
 	}
 	
 	.help-button:focus:after {
@@ -452,10 +457,19 @@
 	    font-size: 14px;
 	    padding: 5px 0;
     }
+    
+    .authdialog-loginlink:focus::after {
+    	border-color: none;
+    	box-shadow: none;
+    }
 
     .application-loginlink {
 	    font-size: 14px;
 	    padding: 0px 0;
     }
-    	    	
+    
+    .application-loginlink:focus::after {
+    	border-color: none;
+    	box-shadow: none;
+    }
 }

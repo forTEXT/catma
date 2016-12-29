@@ -81,6 +81,7 @@ import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
+import de.catma.user.Permission;
 import de.catma.user.Role;
 import de.catma.user.User;
 import de.catma.user.UserProperty;
@@ -823,7 +824,7 @@ public class DBRepository implements IndexedRepository {
 		TransactionalDSLContext db = new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 		
 		try {
-			Integer targetUserId = getUserId(db, userIdentification);
+			Integer targetUserId = getTargetShareUserId(db, userIdentification);
 			Integer corpusId = Integer.valueOf(corpus.getId());
 			
 			if (targetUserId != null) {
@@ -962,7 +963,7 @@ public class DBRepository implements IndexedRepository {
 			String userIdentification,
 			AccessMode accessMode) throws IOException {
 		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
-		Integer userId = getUserId(db, userIdentification); 
+		Integer userId = getTargetShareUserId(db, userIdentification); 
 		if (userId != null) {
 			share(db, userId, sourceDocument, accessMode);
 		}
@@ -971,21 +972,29 @@ public class DBRepository implements IndexedRepository {
 		}
 	}
 	
-	private Integer getUserId(DSLContext db, String userIdentification) {
-		Record idRecord = db 
-		.select(USER.USERID)
+	private Integer getTargetShareUserId(DSLContext db, String userIdentification) {
+		Record userRecord = db 
+		.select()
 		.from(USER)
 		.where(USER.IDENTIFIER.equalIgnoreCase(userIdentification))
 		.fetchOne();
 		
-		return (idRecord==null)?null:idRecord.getValue(USER.USERID);
+		if (userRecord != null) {
+			User user = userRecord.map(new UserMapper());
+			
+			if (!user.isSpawnable() || currentUser.hasPermission(Permission.sharewithspawnable)) {
+				return ((DBUser)user).getUserId();
+			}
+		}
+		
+		return null;
 	}
 
 	public void share(UserMarkupCollectionReference userMarkupCollectionRef, 
 			String userIdentification, AccessMode accessMode) throws IOException {
 		TransactionalDSLContext db = new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 		
-		Integer userId = getUserId(db, userIdentification);
+		Integer userId = getTargetShareUserId(db, userIdentification);
 		if (userId != null) {
 			try {
 				db.beginTransaction();
@@ -1080,7 +1089,7 @@ public class DBRepository implements IndexedRepository {
 		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
 		Integer tagLibraryId = Integer.valueOf(tagLibrary.getId());
 		
-		Integer targetUserId = getUserId(db, userIdentification);
+		Integer targetUserId = getTargetShareUserId(db, userIdentification);
 		if (targetUserId != null) {
 			
 			AccessMode libAccess = 
@@ -1173,7 +1182,7 @@ public class DBRepository implements IndexedRepository {
 			}
 		}
 		else {
-			LOG.warning("Could not spawn content from " + userIdentifier + ": no such user");
+			LOG.warning("could not spawn content from " + userIdentifier + ": no such user");
 		}
 	}
 }

@@ -20,6 +20,7 @@ package de.catma.ui.menu;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Map;
 
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinService;
@@ -28,9 +29,12 @@ import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
+import com.vaadin.ui.UI;
 
 import de.catma.document.repository.RepositoryManager;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.repository.RepositoryManagerView;
+import de.catma.user.UserProperty;
 
 public class LoginLogoutCommand implements Command {
 	private Button btLoginLogout;
@@ -43,7 +47,17 @@ public class LoginLogoutCommand implements Command {
 		
 		public void propertyChange(PropertyChangeEvent evt) {
 			if (repositoryManagerView.getRepositoryManager().hasOpenRepository()) {
-				btLoginLogout.setCaption("Sign out");
+				btLoginLogout.setHtmlContentAllowed(true);
+				
+				@SuppressWarnings("unchecked")
+				Map<String,String> userInfo =  (Map<String, String>) ((CatmaApplication)UI.getCurrent()).getUser();
+				
+				String identifier = userInfo.get(UserProperty.identifier.name()).toString();
+				if (Boolean.valueOf(userInfo.get(UserProperty.guest.name()))) {
+					identifier = "Guest";
+				}
+				
+				btLoginLogout.setCaption(identifier + " - Sign out");
 			}
 			else {
 				btLoginLogout.setCaption("Sign in");
@@ -62,8 +76,6 @@ public class LoginLogoutCommand implements Command {
 		String serverName = VaadinServletService.getCurrentServletRequest().getServerName();		
 		Integer port = VaadinServletService.getCurrentServletRequest().getServerPort();
 		String contextPath = VaadinService.getCurrentRequest().getContextPath();
-//		String requestUri = VaadinServletService.getCurrentServletRequest().getRequestURI();
-		
 		
 		String baseUrl = String.format("%s://%s%s%s", scheme, serverName, port == 80 ? "" : ":"+port, contextPath);
 		this.afterLogoutRedirectURL = baseUrl;

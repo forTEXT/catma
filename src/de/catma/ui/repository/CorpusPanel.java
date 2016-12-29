@@ -478,10 +478,11 @@ public class CorpusPanel extends VerticalLayout {
 								result.getUserIdentification(), 
 								result.getAccessMode());
 					} catch (IOException e) {
+						
 						if (e.getCause() instanceof UnknownUserException) {
 							Notification.show(
 									"Sharing failed!", e.getCause().getMessage(), 
-									Type.WARNING_MESSAGE);
+									Type.ERROR_MESSAGE);
 						}
 						else {
 							((CatmaApplication)UI.getCurrent()).showAndLogError(
