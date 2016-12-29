@@ -1,10 +1,54 @@
 package de.catma.ui;
 
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.tag.TagsetDefinition;
+import de.catma.ui.tagger.TaggerView;
+
 public enum ParameterComponentValue {
 	TAGGER( catmaApplication -> {
 		String sourceDocumentId = catmaApplication.getParameter(Parameter.TAGGER_DOCUMENT);
 		
-		catmaApplication.openSourceDocument(sourceDocumentId);
+		TaggerView taggerView = catmaApplication.openSourceDocument(sourceDocumentId);
+		SourceDocument sourceDocument = taggerView.getSourceDocument();
+		
+		List<UserMarkupCollectionReference> collectionRefs = 
+				sourceDocument.getUserMarkupCollectionRefs();
+
+		Set<String> tagsetDefinitionUuids = new HashSet<>();
+		for (UserMarkupCollectionReference ref : collectionRefs) {
+			try {
+				UserMarkupCollection umc = taggerView.openUserMarkupCollection(ref);
+				for (TagsetDefinition tagsetDefinition : umc.getTagLibrary()) {
+					if (!tagsetDefinitionUuids.contains(tagsetDefinition.getUuid())) {
+						tagsetDefinitionUuids.add(tagsetDefinition.getUuid());
+						taggerView.openTagsetDefinition(tagsetDefinition.getUuid(), tagsetDefinition.getVersion());
+					}
+				}
+			}
+			catch (IOException e) {
+				catmaApplication.showAndLogError("Error opening Markup Collection", e);
+			}
+		}
+		
+		
+		
+		String tagsetDefinitionUuid = catmaApplication.getParameter(Parameter.TAGGER_TAGSETDEF);
+		if (!tagsetDefinitionUuids.contains(tagsetDefinitionUuid)) {
+			try {
+				taggerView.openTagsetDefinition(tagsetDefinitionUuid, null);
+			}
+			catch (IOException e) {
+				catmaApplication.showAndLogError("Error opening Tag Library", e);
+			}
+		}
+		
 	})
 	;
 	

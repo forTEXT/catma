@@ -300,10 +300,6 @@ public class CatmaApplication extends UI
 				btloginLogout.click();
 			}
 			
-			if (repositoryOpened && (getParameter(Parameter.COMPONENT) != null)) {
-				ParameterComponentValue.show(this, getParameter(Parameter.COMPONENT));
-			}
-
 			setPollInterval(10000);
 			
 			

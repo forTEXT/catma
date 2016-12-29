@@ -46,6 +46,7 @@ import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.repository.RepositoryReference;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.Parameter;
+import de.catma.ui.ParameterComponentValue;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.tabbedview.TabComponent;
 import de.catma.user.UserProperty;
@@ -139,6 +140,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		userIdentification.put(
 			UserProperty.identifier.name(), user);
 		open((CatmaApplication) getUI(),repositoryReference, userIdentification);
+		Page.getCurrent().setLocation(RepositoryPropertyKey.BaseURL.getValue());
 	}
 
 	private void openAsGuest(RepositoryReference repositoryReference) throws Exception {
@@ -201,6 +203,13 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		}
 		
 		catmaApplication.openRepository(repository);
+		
+		if (catmaApplication.getParameter(Parameter.COMPONENT) != null) {
+			ParameterComponentValue.show(
+					catmaApplication, catmaApplication.getParameter(Parameter.COMPONENT));
+		}
+
+
 	}
 
 	private void initComponents() {

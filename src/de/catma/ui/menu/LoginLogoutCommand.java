@@ -20,7 +20,6 @@ package de.catma.ui.menu;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.Map;
 
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinService;
@@ -29,12 +28,10 @@ import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
-import com.vaadin.ui.UI;
 
 import de.catma.document.repository.RepositoryManager;
-import de.catma.ui.CatmaApplication;
 import de.catma.ui.repository.RepositoryManagerView;
-import de.catma.user.UserProperty;
+import de.catma.user.User;
 
 public class LoginLogoutCommand implements Command {
 	private Button btLoginLogout;
@@ -49,11 +46,11 @@ public class LoginLogoutCommand implements Command {
 			if (repositoryManagerView.getRepositoryManager().hasOpenRepository()) {
 				btLoginLogout.setHtmlContentAllowed(true);
 				
-				@SuppressWarnings("unchecked")
-				Map<String,String> userInfo =  (Map<String, String>) ((CatmaApplication)UI.getCurrent()).getUser();
+				User user = 
+					repositoryManagerView.getRepositoryManager().getFirstOpenRepository().getUser();
+				String identifier = user.getIdentifier();
 				
-				String identifier = userInfo.get(UserProperty.identifier.name()).toString();
-				if (Boolean.valueOf(userInfo.get(UserProperty.guest.name()))) {
+				if (user.isGuest()) {
 					identifier = "Guest";
 				}
 				

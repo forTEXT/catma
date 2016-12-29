@@ -58,6 +58,7 @@ import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.Slider;
 import de.catma.ui.analyzer.AnalyzerProvider;
@@ -448,9 +449,24 @@ public class TaggerView extends VerticalLayout
 		return sourceDocument;
 	}
 	
+	public UserMarkupCollection openUserMarkupCollection(
+			UserMarkupCollectionReference userMarkupCollectionRef) throws IOException {
+		UserMarkupCollection umc = repository.getUserMarkupCollection(userMarkupCollectionRef);
+		openUserMarkupCollection(umc);
+		return umc;
+	}
+	
 	public void openUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
 		markupPanel.openUserMarkupCollection(userMarkupCollection);
+	}
+
+	public void openTagsetDefinition(String uuid, Version version) throws IOException {
+		TagLibrary tagLibrary = repository.getTagLibraryFor(uuid, version);
+		if (tagLibrary != null) {
+			((CatmaApplication)UI.getCurrent()).openTagLibrary(repository, tagLibrary, false);
+			openTagsetDefinition(tagLibrary.getTagsetDefinition(uuid));
+		}
 	}
 	
 	public void openTagsetDefinition(TagsetDefinition tagsetDefinition){

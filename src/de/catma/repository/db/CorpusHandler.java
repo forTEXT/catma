@@ -553,23 +553,25 @@ class CorpusHandler {
 						SourceDocument sd = shareCorpusSourceDocument(db, sourceDocLocalURI, corpusId);
 						
 						// copy and import Markup Collections
-						for (Record2<Integer,Integer> umcInfo : 
-							corpusUmcs.get(Integer.valueOf(corpus.getId()))) {
+						Result<Record2<Integer,Integer>> umcInfoResult = 
+								corpusUmcs.get(Integer.valueOf(corpus.getId()));
+						if (umcInfoResult != null) {
+							for (Record2<Integer,Integer> umcInfo : umcInfoResult) {
+								
+								Integer userMarkupCollectionId =
+										umcInfo.getValue(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID);
 							
-							Integer userMarkupCollectionId =
-									umcInfo.getValue(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID);
-						
-							// the import is not a transaction by intention
-							// import can become a pretty long running operation
-							// and would block other users 
-							// the last DB action prior to indexing 
-							// is the linking between the umc and the user
-							// so in case of failure the user won't have access to the
-							// corrupt umc and the DB cleaner job will take care of it
-							dbRepository.getDbUserMarkupCollectionHandler().importUserMarkupCollection(
-									db, userMarkupCollectionId, sd, corpusId);
-						}
-						
+								// the import is not a transaction by intention
+								// import can become a pretty long running operation
+								// and would block other users 
+								// the last DB action prior to indexing 
+								// is the linking between the umc and the user
+								// so in case of failure the user won't have access to the
+								// corrupt umc and the DB cleaner job will take care of it
+								dbRepository.getDbUserMarkupCollectionHandler().importUserMarkupCollection(
+										db, userMarkupCollectionId, sd, corpusId);
+							}
+						}						
 					}
 				}
 				catch (Exception dae) {

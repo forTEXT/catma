@@ -75,6 +75,7 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
 import de.catma.util.Collections3;
 import de.catma.util.IDGenerator;
 
@@ -1446,6 +1447,36 @@ class TagLibraryHandler {
 			tagLibraryReferencesById.put(ref.getId(), ref);
 		}
 		
+	}
+
+	public TagLibrary getTagLibraryFor(String uuid, Version version) throws IOException {
+
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+		
+		List<Integer> tagLibraryIDs = db
+		.select(TAGLIBRARY.TAGLIBRARYID)
+		.from(TAGLIBRARY)
+		.join(USER_TAGLIBRARY)
+			.on(USER_TAGLIBRARY.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+			.and(USER_TAGLIBRARY.USERID.eq(dbRepository.getCurrentUser().getUserId()))
+		.join(TAGSETDEFINITION)
+			.on(TAGSETDEFINITION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+			.and(TAGSETDEFINITION.UUID.eq(idGenerator.catmaIDToUUIDBytes(uuid)))
+			.and(TAGSETDEFINITION.VERSION
+				.eq(DSL.nvl(SqlTimestamp.from(version==null?null:version.getDate()), TAGSETDEFINITION.VERSION)))
+		.where(TAGLIBRARY.INDEPENDENT.eq((byte)1))
+		.fetch()
+		.map(new IDFieldToIntegerMapper(TAGLIBRARY.TAGLIBRARYID));
+				
+		if (!tagLibraryIDs.isEmpty()) {
+			// we take the first library that contains our tagsetdefinition 
+			return getTagLibrary(
+				new TagLibraryReference(
+					String.valueOf(tagLibraryIDs.get(0)), new ContentInfoSet()));
+		}
+		
+		
+		return null;
 	}
 	
 }

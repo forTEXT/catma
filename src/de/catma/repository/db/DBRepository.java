@@ -81,6 +81,7 @@ import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
 import de.catma.user.Permission;
 import de.catma.user.Role;
 import de.catma.user.User;
@@ -1184,5 +1185,10 @@ public class DBRepository implements IndexedRepository {
 		else {
 			LOG.warning("could not spawn content from " + userIdentifier + ": no such user");
 		}
+	}
+	
+	@Override
+	public TagLibrary getTagLibraryFor(String uuid, Version version) throws IOException {
+		return dbTagLibraryHandler.getTagLibraryFor(uuid, version);
 	}
 }

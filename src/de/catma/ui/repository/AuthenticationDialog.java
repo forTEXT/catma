@@ -49,6 +49,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.DownloadStream;
 import com.vaadin.server.ExternalResource;
+import com.vaadin.server.Page;
 import com.vaadin.server.RequestHandler;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinResponse;
@@ -219,10 +220,12 @@ public class AuthenticationDialog extends VerticalLayout {
 	                	repositoryReference, 
 	                	userIdentification);
 	
-	                new DownloadStream(
-                		ui.getPage().getLocation().toURL().openStream(), 
-                		"text/html", "CATMA " + RepositoryPropertyKey.version.getValue()
-	                ).writeResponse(request, response);
+					Page.getCurrent().setLocation(RepositoryPropertyKey.BaseURL.getValue());
+//
+//	                new DownloadStream(
+//                		ui.getPage().getLocation().toURL().openStream(), 
+//                		"text/html", "CATMA " + RepositoryPropertyKey.version.getValue()
+//	                ).writeResponse(request, response);
 	                return true;
 				}
 				else {
