@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -49,7 +50,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.DownloadStream;
 import com.vaadin.server.ExternalResource;
-import com.vaadin.server.Page;
 import com.vaadin.server.RequestHandler;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinResponse;
@@ -220,12 +220,10 @@ public class AuthenticationDialog extends VerticalLayout {
 	                	repositoryReference, 
 	                	userIdentification);
 	
-					Page.getCurrent().setLocation(RepositoryPropertyKey.BaseURL.getValue());
-//
-//	                new DownloadStream(
-//                		ui.getPage().getLocation().toURL().openStream(), 
-//                		"text/html", "CATMA " + RepositoryPropertyKey.version.getValue()
-//	                ).writeResponse(request, response);
+	                new DownloadStream(
+                		new URL(RepositoryPropertyKey.BaseURL.getValue()).openStream(), 
+                		"text/html", "CATMA " + RepositoryPropertyKey.version.getValue()
+	                ).writeResponse(request, response);
 	                return true;
 				}
 				else {

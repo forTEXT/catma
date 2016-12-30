@@ -41,6 +41,7 @@ import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Record2;
+import org.jooq.Record3;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
@@ -475,8 +476,8 @@ class CorpusHandler {
 		TransactionalDSLContext db = 
 				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 
-		Map<Integer, Result<Record2<Integer, String>>> corpusSourceDocs = db
-		.select(CORPUS_SOURCEDOCUMENT.CORPUSID, SOURCEDOCUMENT.LOCALURI)
+		Map<Integer, Result<Record3<Integer,Integer,String>>> corpusSourceDocs = db
+		.select(CORPUS_SOURCEDOCUMENT.CORPUSID, CORPUS_SOURCEDOCUMENT.SOURCEDOCUMENTID, SOURCEDOCUMENT.LOCALURI)
 		.from(SOURCEDOCUMENT)
 		.join(CORPUS_SOURCEDOCUMENT)
 			.on(CORPUS_SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(SOURCEDOCUMENT.SOURCEDOCUMENTID))
@@ -488,8 +489,8 @@ class CorpusHandler {
 			.and(USER_CORPUS.USERID.eq(sourceUserId))
 		.fetchGroups(CORPUS_SOURCEDOCUMENT.CORPUSID);
 		
-		Map<Integer, Result<Record2<Integer, Integer>>> corpusUmcs = db
-		.select(CORPUS_USERMARKUPCOLLECTION.CORPUSID, USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)
+		Map<Integer, Result<Record3<Integer, Integer, Integer>>> corpusUmcs = db
+		.select(CORPUS_USERMARKUPCOLLECTION.CORPUSID, USERMARKUPCOLLECTION.SOURCEDOCUMENTID, USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)
 		.from(USERMARKUPCOLLECTION)
 		.join(CORPUS_USERMARKUPCOLLECTION)
 			.on(CORPUS_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.eq(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID))
@@ -544,32 +545,36 @@ class CorpusHandler {
 					db.commitTransaction();
 					
 					// share SourceDocs
-					for (Record2<Integer, String>  sourceDocInfo : 
+					for (Record3<Integer,Integer,String>  sourceDocInfo : 
 						corpusSourceDocs.get(Integer.valueOf(corpus.getId()))) {
-						
+						Integer sourceDocumentId = 
+								sourceDocInfo.getValue(CORPUS_SOURCEDOCUMENT.SOURCEDOCUMENTID);
 						String sourceDocLocalURI = 
 								sourceDocInfo.getValue(SOURCEDOCUMENT.LOCALURI);
 						
 						SourceDocument sd = shareCorpusSourceDocument(db, sourceDocLocalURI, corpusId);
 						
 						// copy and import Markup Collections
-						Result<Record2<Integer,Integer>> umcInfoResult = 
+						Result<Record3<Integer,Integer,Integer>> umcInfoResult = 
 								corpusUmcs.get(Integer.valueOf(corpus.getId()));
 						if (umcInfoResult != null) {
-							for (Record2<Integer,Integer> umcInfo : umcInfoResult) {
+							for (Record3<Integer,Integer,Integer> umcInfo : umcInfoResult) {
+								Integer umcSourceDocumentId = 
+										umcInfo.getValue(USERMARKUPCOLLECTION.SOURCEDOCUMENTID);
+								if (sourceDocumentId.intValue() == umcSourceDocumentId.intValue()) {
+									Integer userMarkupCollectionId =
+											umcInfo.getValue(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID);
 								
-								Integer userMarkupCollectionId =
-										umcInfo.getValue(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID);
-							
-								// the import is not a transaction by intention
-								// import can become a pretty long running operation
-								// and would block other users 
-								// the last DB action prior to indexing 
-								// is the linking between the umc and the user
-								// so in case of failure the user won't have access to the
-								// corrupt umc and the DB cleaner job will take care of it
-								dbRepository.getDbUserMarkupCollectionHandler().importUserMarkupCollection(
-										db, userMarkupCollectionId, sd, corpusId);
+									// the import is not a transaction by intention
+									// import can become a pretty long running operation
+									// and would block other users 
+									// the last DB action prior to indexing 
+									// is the linking between the umc and the user
+									// so in case of failure the user won't have access to the
+									// corrupt umc and the DB cleaner job will take care of it
+									dbRepository.getDbUserMarkupCollectionHandler().importUserMarkupCollection(
+											db, userMarkupCollectionId, sd, corpusId);
+								}
 							}
 						}						
 					}
