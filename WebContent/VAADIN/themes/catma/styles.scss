@@ -97,7 +97,7 @@
 	}
 	
 	.modal-button-container {
-		padding: 0px 10px 0px 0px;
+		padding: 0px 10px 0px 10px;
 	}
 			
 	.v-tabsheet-tabitemcell .v-tabsheet-caption-close {
@@ -472,4 +472,9 @@
     	border-color: none;
     	box-shadow: none;
     }
+    
+    .tagsetselection-dialog-create-tag-libary {
+    	margin-top: 25px;
+    }
+    
 }

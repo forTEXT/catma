@@ -13122,7 +13122,7 @@ div.v-layout.v-horizontal.v-widget {
 }
 
 .catma .modal-button-container {
-	padding: 0px 10px 0px 0px;
+	padding: 0px 10px 0px 10px;
 }
 
 .catma .v-tabsheet-tabitemcell .v-tabsheet-caption-close {
@@ -13479,4 +13479,8 @@ div.v-layout.v-horizontal.v-widget {
 .catma .application-loginlink:focus::after {
 	border-color: none;
 	box-shadow: none;
+}
+
+.catma .tagsetselection-dialog-create-tag-libary {
+	margin-top: 25px;
 }

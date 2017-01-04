@@ -796,16 +796,17 @@ public class TagsetTree extends HorizontalLayout {
 		}
 		tagTree.setColumnHeader(TagTreePropertyName.color, "Tag Type Color");
 		addComponent(tagTree);
-		setExpandRatio(tagTree, 2);
+		setExpandRatio(tagTree, 0.7f);
 		
 		VerticalLayout buttonGrid = new VerticalLayout();
 		
 		if (withReloadButton) {
 			VerticalLayout reloadPanel = new VerticalLayout();
 			reloadPanel.setSpacing(true);
-			reloadPanel.setMargin(new MarginInfo(true, true, false, true));
+			reloadPanel.setMargin(new MarginInfo(true, true, true, true));
 			
 			btReload = new Button("Reload Tagsets", FontAwesome.REFRESH); 
+			btReload.setWidth("100%");
 			reloadPanel.addComponent(btReload);
 			
 			buttonGrid.addComponent(reloadPanel);
@@ -814,7 +815,7 @@ public class TagsetTree extends HorizontalLayout {
 		if (withDocumentButtons) {
 			VerticalLayout documentPanel = new VerticalLayout();
 			documentPanel.setSpacing(true);
-			documentPanel.setMargin(new MarginInfo(true, true, false, true));
+			documentPanel.setMargin(new MarginInfo(false, true, false, true));
 			
 			btLoadIntoDocument = new Button("Load Tagset into currently active Document");
 			btLoadIntoDocument.addStyleName("primary-button");
@@ -929,7 +930,7 @@ public class TagsetTree extends HorizontalLayout {
 		}
 		if (buttonGrid.getComponentCount() > 0) {
 			addComponent(buttonGrid);
-			setExpandRatio(buttonGrid, 0.9f);
+			setExpandRatio(buttonGrid, 0.3f);
 		}
 	}
 	

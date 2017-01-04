@@ -468,10 +468,10 @@ public class PhraseResultPanel extends VerticalLayout {
 
 		
 		btSelectAll = new Button("Select all for Kwic");
-		
 		buttonPanel.addComponent(btSelectAll);
 		buttonPanel.setComponentAlignment(btSelectAll, Alignment.MIDDLE_RIGHT);
 		buttonPanel.setExpandRatio(btSelectAll, 1f);
+
 		btDeselectAll = new Button("Deselect all for Kwic");
 		buttonPanel.addComponent(btDeselectAll);
 		buttonPanel.setComponentAlignment(btDeselectAll, Alignment.MIDDLE_RIGHT);

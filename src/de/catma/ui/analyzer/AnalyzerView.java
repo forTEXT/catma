@@ -37,7 +37,6 @@ import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.ShortcutAction.KeyCode;
-import com.vaadin.server.ClassResource;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;

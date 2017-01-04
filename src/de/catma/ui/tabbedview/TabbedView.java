@@ -68,11 +68,11 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		setComponentAlignment(noOpenTabsLabel, Alignment.MIDDLE_CENTER);
 		
 		addComponent(tabSheet);
-		tabSheet.hideTabs(true);
+		tabSheet.setTabsVisible(false);
 		tabSheet.setHeight("0px");	
 		tabSheet.setCloseHandler(this);
 		
-		setSizeFull();
+//		setSizeFull();
 	}
 	
 	protected void onTabClose(Component tabContent) {
@@ -90,6 +90,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 			addComponent(noOpenTabsLabel, 0);
 			noOpenTabsLabel.setVisible(true);
 			setMargin(true);
+			setSizeUndefined();
 		}
 		
 	}
@@ -105,8 +106,9 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 			noOpenTabsLabel.setVisible(false);
 			removeComponent(noOpenTabsLabel);
 			setMargin(false);
-			tabSheet.hideTabs(false);
+			tabSheet.setTabsVisible(true);
 			tabSheet.setSizeFull();
+			setSizeFull();
 		}
 		
 		return tab;
