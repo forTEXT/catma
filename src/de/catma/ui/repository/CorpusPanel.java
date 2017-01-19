@@ -364,7 +364,18 @@ public class CorpusPanel extends VerticalLayout {
 				Object selectedValue = corporaTree.getValue();
 				if ((selectedValue != null) 
 						&& !selectedValue.equals(allDocuments)) {
-					handleGenerateAnnotationsRequest((Corpus)selectedValue);
+					Corpus corpus = (Corpus)selectedValue;
+					if (!corpus.getSourceDocuments().isEmpty()) {
+						handleGenerateAnnotationsRequest((Corpus)selectedValue);
+					}
+					else {
+						Notification.show(
+							"Info", 
+							"The corpus is empty, please add at least one Source Document "
+							+ "to the corpus to be able to generate annotations.", 
+							Type.TRAY_NOTIFICATION);
+					}
+					
 				}				
 			}
 		});
