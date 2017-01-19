@@ -32,6 +32,7 @@ import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.Action;
 import com.vaadin.server.ClassResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Resource;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
@@ -39,7 +40,6 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
@@ -48,6 +48,7 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
+import de.catma.document.repository.Repository;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
@@ -63,7 +64,6 @@ import de.catma.ui.dialog.PropertyCollection;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.StringProperty;
 import de.catma.ui.dialog.TagDefinitionFieldFactory;
-import de.catma.ui.tagger.ConfirmListener;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
@@ -94,6 +94,7 @@ public class TagsetTree extends HorizontalLayout {
 	private boolean withTagButtons;
 	private boolean withPropertyButtons;
 	private boolean withDocumentButtons;
+	private VerticalLayout propertyPanel;
 	private ColorButtonListener colorButtonListener;
 	private TagManager tagManager;
 	private TagLibrary tagLibrary;
@@ -346,6 +347,10 @@ public class TagsetTree extends HorizontalLayout {
 						btRemoveTagset, btEditTagset, 
 						btInsertTag, btRemoveTag, btEditTag, 
 						btInsertProperty, btRemoveProperty, btEditProperty));
+		
+		if (propertyPanel != null) {
+			tagTree.addValueChangeListener(new PanelStateManager(propertyPanel));
+		}
 	}
 	
 	private void removeUserDefinedPropertyDefinitionFromTree(
@@ -511,8 +516,8 @@ public class TagsetTree extends HorizontalLayout {
 			
 			ConfirmDialog.show(
 				UI.getCurrent(),
-				"Remove Tag", 
-				"Do you really want to delete this Tag " +
+				"Remove Tag Type", 
+				"Do you really want to delete this Tag Type " +
 				"with all its properties?", "Yes", "No", 
 				new ConfirmDialog.Listener() {
 					
@@ -540,7 +545,7 @@ public class TagsetTree extends HorizontalLayout {
 		
 		if (selectedParent == null) {
 			Notification.show(
-				"Info", "Please select a Tagset or parent Tag first!", 
+				"Info", "Please select a Tagset or parent Tag Type first!", 
 				Type.TRAY_NOTIFICATION);
 			return;
 		}
@@ -649,6 +654,13 @@ public class TagsetTree extends HorizontalLayout {
 	}
 
 	private void handleInsertTagsetDefinitionRequest() {
+		if (tagLibrary == null) {
+			Notification.show(
+				"Info", "Please select a Tag Type Library first!", 
+				Type.TRAY_NOTIFICATION);
+			return;
+		}
+		
 		final String tagsetdefinitionnameProperty = "name";
 		
 		PropertyCollection propertyCollection = 
@@ -782,20 +794,19 @@ public class TagsetTree extends HorizontalLayout {
 			tagTree.addGeneratedColumn(
 					TagTreePropertyName.color, new ColorLabelColumnGenerator());
 		}
-		tagTree.setColumnHeader(TagTreePropertyName.color, "Tag Color");
+		tagTree.setColumnHeader(TagTreePropertyName.color, "Tag Type Color");
 		addComponent(tagTree);
-		setExpandRatio(tagTree, 2);
+		setExpandRatio(tagTree, 0.7f);
 		
 		VerticalLayout buttonGrid = new VerticalLayout();
 		
 		if (withReloadButton) {
 			VerticalLayout reloadPanel = new VerticalLayout();
 			reloadPanel.setSpacing(true);
-			reloadPanel.setMargin(new MarginInfo(true, true, false, true));
+			reloadPanel.setMargin(new MarginInfo(true, true, true, true));
 			
-			btReload = new Button("Reload Tagsets"); 
-			btReload.setIcon(new ClassResource("resources/icon-reload.gif"));
-			btReload.addStyleName("icon-button");
+			btReload = new Button("Reload Tagsets", FontAwesome.REFRESH); 
+			btReload.setWidth("100%");
 			reloadPanel.addComponent(btReload);
 			
 			buttonGrid.addComponent(reloadPanel);
@@ -804,9 +815,10 @@ public class TagsetTree extends HorizontalLayout {
 		if (withDocumentButtons) {
 			VerticalLayout documentPanel = new VerticalLayout();
 			documentPanel.setSpacing(true);
-			documentPanel.setMargin(new MarginInfo(true, true, false, true));
+			documentPanel.setMargin(new MarginInfo(false, true, false, true));
 			
 			btLoadIntoDocument = new Button("Load Tagset into currently active Document");
+			btLoadIntoDocument.addStyleName("primary-button");
 			btLoadIntoDocument.setWidth("100%");
 			btLoadIntoDocument.setEnabled(true);
 			documentPanel.addComponent(btLoadIntoDocument);
@@ -829,6 +841,7 @@ public class TagsetTree extends HorizontalLayout {
 
 			
 			btInsertTagset = new Button("Create Tagset");
+			btInsertTagset.addStyleName("secondary-button");
 			btInsertTagset.setEnabled(true);
 			btInsertTagset.setWidth("100%");
 			tagsetPanel.addComponent(btInsertTagset);
@@ -861,18 +874,19 @@ public class TagsetTree extends HorizontalLayout {
 			tagPanel.addComponent(tagLabel);
 			tagPanel.setComponentAlignment(tagLabel, Alignment.BOTTOM_LEFT);
 			
-			btInsertTag = new Button("Create Tag");
+			btInsertTag = new Button("Create Tag Type");
+			btInsertTag.addStyleName("secondary-button");
 			btInsertTag.setWidth("100%");
 			if (withTagsetButtons) {
 				btInsertTag.setEnabled(true);
 			}
 			tagPanel.addComponent(btInsertTag);
 			
-			btRemoveTag = new Button("Remove Tag");
+			btRemoveTag = new Button("Remove Tag Type");
 			btRemoveTag.setWidth("100%");
 			tagPanel.addComponent(btRemoveTag);
 			
-			btEditTag = new Button("Edit Tag");
+			btEditTag = new Button("Edit Tag Type");
 			btEditTag.setWidth("100%");
 			tagPanel.addComponent(btEditTag);
 			
@@ -880,7 +894,7 @@ public class TagsetTree extends HorizontalLayout {
 		}
 		
 		if (withPropertyButtons) {
-			VerticalLayout propertyPanel = new VerticalLayout();
+			propertyPanel = new VerticalLayout();
 			propertyPanel.setSpacing(true);
 			propertyPanel.setMargin(new MarginInfo(true, true, false, true));
 			
@@ -914,12 +928,19 @@ public class TagsetTree extends HorizontalLayout {
 			
 			buttonGrid.addComponent(propertyPanel);
 		}
-		
-		addComponent(buttonGrid);
-		setExpandRatio(buttonGrid, 0.9f);
+		if (buttonGrid.getComponentCount() > 0) {
+			addComponent(buttonGrid);
+			setExpandRatio(buttonGrid, 0.3f);
+		}
+	}
+	
+	private void clearTagsetDefinitions() {
+		tagTree.removeAllItems();
 	}
 
-	public void addTagsetDefinition(Collection<TagsetDefinition> tagsetDefinitions) {
+	private void setTagsetDefinitions(Collection<TagsetDefinition> tagsetDefinitions) {
+		clearTagsetDefinitions();
+		
 		for (TagsetDefinition tagsetDefinition : tagsetDefinitions) {
 			addTagsetDefinition(tagsetDefinition);
 		}
@@ -949,8 +970,6 @@ public class TagsetTree extends HorizontalLayout {
 			configureChildren(tagDefinition);
 		}
 	}
-	
-
 	
 	private void configureChildren(TagDefinition tagDefinition) {
 		if (!tagTree.hasChildren(tagDefinition)) {
@@ -1011,15 +1030,11 @@ public class TagsetTree extends HorizontalLayout {
 	
 	}
 
-	public TreeTable getTagTree() {
-		return tagTree;
-	}
-	
-	public void close() {
+	public void close(boolean closeLibrary) {
 		tagManager.removePropertyChangeListener(
 				TagManagerEvent.tagsetDefinitionChanged,
 				tagsetDefinitionChangedListener);
-		if (withTagsetButtons) {
+		if (closeLibrary) {
 			tagManager.removeTagLibrary(tagLibrary);
 		}
 		tagManager.removePropertyChangeListener(
@@ -1028,6 +1043,20 @@ public class TagsetTree extends HorizontalLayout {
 		tagManager.removePropertyChangeListener(
 				TagManagerEvent.userPropertyDefinitionChanged,
 				userPropertyDefinitionChangedListener);
+	}
+	
+	public void setTagLibrary(TagLibrary tagLibrary) {
+		this.tagLibrary = tagLibrary;
+		if (this.tagLibrary == null) {
+			clearTagsetDefinitions();
+		}
+		else {
+			this.setTagsetDefinitions(tagLibrary.getTagsetDefinitions());
+		}
+	}
+	
+	public TreeTable getTagTree() {
+		return tagTree;
 	}
 	
 	public TagManager getTagManager() {

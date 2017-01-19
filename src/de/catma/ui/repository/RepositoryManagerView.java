@@ -84,4 +84,8 @@ public class RepositoryManagerView extends TabbedView implements CloseHandler {
 	public void closeCurrentRepository() {
 		closeClosables();
 	}
+	
+	public AuthenticationDialog createAuthenticationDialog() {
+		return repositoryListView.createAuthenticationDialog();
+	}
 }

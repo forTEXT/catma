@@ -78,10 +78,7 @@ public class NodeRange {
 			builder.append("null,");
 		}
 		else {
-			builder.append(startNode.getNodeValue().substring(0, Math.min(startNode.getNodeValue().length(), 10)));
-			if(startNode.getNodeValue().length() > 10) {
-				builder.append("...");
-			}
+			builder.append(startNode.toString());
 			builder.append("|");
 			builder.append(startOffset);
 			builder.append(",");
@@ -90,16 +87,28 @@ public class NodeRange {
 			builder.append("null");
 		}
 		else {
-			builder.append(endNode.getNodeValue().substring(0, Math.min(endNode.getNodeValue().length(), 10)));
-			if(endNode.getNodeValue().length() > 10) {
-				builder.append("...");
-			}
+			builder.append(endNode.toString());
 			builder.append("|");
 			builder.append(endOffset);
 			builder.append("]");
 		}
 		
 		return builder.toString();
+	}
+
+	public boolean isPoint() {
+		if ((startNode==null) && (endNode != null)) {
+			return false;
+		}
+		else if ((endNode==null) && (startNode != null)) {
+			return false;
+		}
+		else if ((startNode==null) && (endNode == null)) {
+			return true;
+		}
+		else {
+			return startNode.equals(endNode) && startOffset == endOffset;
+		}
 	}
 	
 }

@@ -35,15 +35,16 @@ import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
 import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
 import com.vaadin.data.Property;
+import com.vaadin.data.Container.Sortable;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.data.util.ItemSorter;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -57,8 +58,9 @@ import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.Tree;
-import com.vaadin.ui.Tree.TreeDragMode;
+import com.vaadin.ui.Table.ColumnHeaderMode;
+import com.vaadin.ui.Table.TableDragMode;
+import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -107,17 +109,19 @@ import de.catma.util.Pair;
 public class SourceDocumentPanel extends HorizontalSplitPanel
 	implements ValueChangeListener {
 	
-	private final static String SORTCAP_PROP = "SORTCAP";
+	private enum TableProperty {
+		title,
+		;
+	}
 	private final static Object[] DEFAULT_VISIBIL_PROP = new Object[] {
 		"title", "author", "description", "publisher"
 	};
 	
 	private final ContentInfoSet emptyContentInfoSet = new ContentInfoSet();
 	private HierarchicalContainer documentsContainer;
-	private Tree documentsTree;
+	private TreeTable documentsTree;
 	private Repository repository;
-	private String userMarkupItemDisplayString = "User Markup Collections";
-	private String staticMarkupItemDisplayString = "Static Markup Collections";
+	private String userMarkupItemDisplayString = "Markup Collections";
 	private Button btOpenDocument;
 	private Button btAddDocument;
 	private MenuItem miMoreDocumentActions;
@@ -155,7 +159,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					SourceDocument sd = repository.getSourceDocument(
 							(String)evt.getNewValue());
 					addSourceDocumentToTree(sd);
-					documentsContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
+					documentsContainer.sort(new Object[] {TableProperty.title.name()}, new boolean[] { true });
 				}
 				else if (evt.getNewValue() == null) { //remove
 					removeSourceDocumentFromTree(
@@ -164,7 +168,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				else { //update
 					removeSourceDocumentFromTree((SourceDocument) evt.getNewValue()); //newValue intended
 					addSourceDocumentToTree((SourceDocument) evt.getNewValue());
-					documentsContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
+					documentsContainer.sort(new Object[] {TableProperty.title.name()}, new boolean[] { true });
 				}
 			}
 		};
@@ -382,7 +386,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 //		});
 		miMoreDocumentActions.addSeparator();
 		
-		miMoreDocumentActions.addItem("Create User Markup Collection", new Command() {
+		miMoreDocumentActions.addItem("Create Markup Collection", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
 				handleUserMarkupCollectionCreation();
@@ -390,7 +394,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 
 		});
 		
-		miMoreDocumentActions.addItem("Reindex User Markup Collection", new Command() {
+		miMoreDocumentActions.addItem("Reindex Markup Collection", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
 				Object value = documentsTree.getValue();
@@ -399,14 +403,14 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 		});
 		
-		miMoreDocumentActions.addItem("Import User Markup Collection", new Command() {
+		miMoreDocumentActions.addItem("Import Markup Collection", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
 				handleUserMarkupCollectionImportRequest();
 			}
 		});
 		
-		miMoreDocumentActions.addItem("Export User Markup Collection...", new Command() {
+		miMoreDocumentActions.addItem("Export Markup Collection...", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
 				
 				Object value = documentsTree.getValue();
@@ -414,51 +418,26 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 		});
 
-		miMoreDocumentActions.addItem("Remove User Markup Collection", new Command() {
+		miMoreDocumentActions.addItem("Remove Markup Collection", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
 				handleUserMarkupRemoval();
 			}
 
 		});
-		miMoreDocumentActions.addItem("Share User Markup Collection", new Command() {
+		miMoreDocumentActions.addItem("Share Markup Collection", new Command() {
 			public void menuSelected(MenuItem selectedItem) {
 				handleShareUmcRequest();
 			}
 
 		});
-		/*
-		miMoreDocumentActions.addSeparator();
-		
-		miMoreDocumentActions.addItem("Create Static Markup Collection", new Command() {
-			
+		MenuItem generateAnnotations = miMoreDocumentActions.addItem("Generate annotations", new Command() {
+			@Override
 			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
+				handleGenerateAnnotations();
 			}
 		});
-		
-		miMoreDocumentActions.addItem("Import Static Markup Collection", new Command() {
-			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
-			}
-		});	
-		
-		miMoreDocumentActions.addItem("Export Static Markup Collection", new Command() {
-			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
-			}
-		});	
-		
-		
-		miMoreDocumentActions.addItem("Remove Static Markup Collection", new Command() {
-			public void menuSelected(MenuItem selectedItem) {
-				// TODO Auto-generated method stub
-				
-			}
-		});	
-		*/
+		generateAnnotations.setVisible(false);//TODO: implement
+
 		btEditContentInfo.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -516,6 +495,39 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	}
 	
 	
+	private void handleGenerateAnnotations() {
+		Object value = documentsTree.getValue();
+		if ((value == null) || !(value instanceof SourceDocument)) {
+			 Notification.show(
+                    "Information",
+                    "Please select a Source Document first",
+                    Type.TRAY_NOTIFICATION);
+		}
+		else{
+			
+			final SourceDocument sourceDocument = (SourceDocument)value;
+			Corpus corpus = currentCorpus;
+			if (corpus == null) {
+				corpus = createAutoCorpus(); 
+			}
+			
+			
+			
+		}
+	}
+
+	private Corpus createAutoCorpus() {
+		try {
+			//HIER GEHTS WEITER
+			repository.createCorpus("");
+		} catch (IOException e) {
+			((CatmaApplication)UI.getCurrent()).showAndLogError(
+				"Error creating corpus!", e);
+		}
+
+		return null;
+	}
+
 	private void handleSourceDocumentExportRequest() {
 		Object value = documentsTree.getValue();
 		if ((value == null) || !(value instanceof SourceDocument)) {
@@ -556,10 +568,10 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 									result.getUserIdentification(), 
 									result.getAccessMode());
 						} catch (IOException e) {
-							if (e.getCause() instanceof UnknownUserException) {
+							if (e instanceof UnknownUserException) {
 								Notification.show(
-										"Sharing failed!", e.getCause().getMessage(), 
-										Type.WARNING_MESSAGE);
+										"Sharing failed!", e.getMessage(), 
+										Type.ERROR_MESSAGE);
 							}
 							else {
 								((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -574,7 +586,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		}
 		else {
 			Notification.show(
-					"Information", "Please select a User Markup Collection first!",
+					"Information", "Please select a Markup Collection first!",
 					Type.TRAY_NOTIFICATION);
 		}
 	}
@@ -604,10 +616,10 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 									result.getUserIdentification(), 
 									result.getAccessMode());
 						} catch (IOException e) {
-							if (e.getCause() instanceof UnknownUserException) {
+							if (e instanceof UnknownUserException) {
 								Notification.show(
-										"Sharing failed!", e.getCause().getMessage(), 
-										Type.WARNING_MESSAGE);
+										"Sharing failed!", e.getMessage(), 
+										Type.ERROR_MESSAGE);
 							}
 							else {
 								((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -625,7 +637,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 
 	private void generateStarterKit(
 			final SourceDocument sourceDocument) {
-		String name = "Example User Markup Collection";
+		String name = "Example Markup Collection";
 		try {
 			repository.addPropertyChangeListener(
 					RepositoryChangeEvent.userMarkupCollectionChanged, 
@@ -645,7 +657,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						
 						if (sourceDocument.equals(umcResultPair.getSecond())) {
 							
-							documentsTree.expandItemsRecursively(umcResultPair.getSecond());
+							documentsTree.setCollapsed(umcResultPair.getSecond(), false);
 							documentsTree.setValue(umcResultPair.getFirst());
 							
 							try {
@@ -696,7 +708,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 												
 											} catch (IOException e) {
 												((CatmaApplication)UI.getCurrent()).showAndLogError(
-													"Error creating the Example Tagset and Tag Definitions!", e);
+													"Error creating the Example Tagset and Tag Type Definitions!", e);
 											}
 											
 											repository.removePropertyChangeListener(
@@ -705,12 +717,12 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 										}
 									}
 								});
-								repository.createTagLibrary("Example Tag Library");
+								repository.createTagLibrary("Example Tag Type Library");
 								repository.removePropertyChangeListener(
 									RepositoryChangeEvent.userMarkupCollectionChanged, this);
 							} catch (IOException e) {
 								((CatmaApplication)UI.getCurrent()).showAndLogError(
-										"Error creating Example Tag Library!", e);
+										"Error creating Example Tag Type Library!", e);
 							}
 						}
 					}
@@ -720,7 +732,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					name, sourceDocument);
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				"Error creating Example User Markup Collection!", e);
+				"Error creating Example Markup Collection!", e);
 		}
 		
 		
@@ -746,7 +758,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 			catch (IOException ioe) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"error reindexing User Markup Collection!", ioe);
+						"error reindexing Markup Collection!", ioe);
 			}
 		}
 	}
@@ -765,7 +777,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		}
 		else {
 			Notification.show(
-					"Information", "Please select a User Markup Collection first!",
+					"Information", "Please select a Markup Collection first!",
 					Type.TRAY_NOTIFICATION);
 		}
 		
@@ -857,6 +869,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 					else {
 						CorpusContentSelectionDialog dialog =
 							new CorpusContentSelectionDialog(
+								repository,
 								sd,
 								currentCorpus,
 								new SaveCancelListener<Corpus>() {
@@ -934,8 +947,11 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		((HorizontalLayout)documentButtonsPanel.getContent()).setSpacing(true);
 		
 		btOpenDocument = new Button("Open Document");
+		btOpenDocument.addStyleName("primary-button");
+		btOpenDocument.setEnabled(false);
 		documentButtonsPanelContent.addComponent(btOpenDocument);
 		btAddDocument = new Button("Add Document");
+		btAddDocument.addStyleName("secondary-button");
 		documentButtonsPanelContent.addComponent(btAddDocument);
 
 		MenuBar menuMoreDocumentActions = new MenuBar();
@@ -948,72 +964,73 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	
 	private Component createDocumentsPanel() {
 		VerticalLayout documentsPanelContent = new VerticalLayout();
-		documentsPanelContent.setMargin(true);
+		documentsPanelContent.setSizeFull();
 		
-		Panel documentsPanel = new Panel(documentsPanelContent);
 		
 		documentsContainer = new HierarchicalContainer();
-		documentsTree = new Tree();
+		documentsContainer.setItemSorter(new ItemSorter() {
+			
+			private boolean asc;
+
+			@Override
+			public void setSortProperties(Sortable container, Object[] propertyId, boolean[] ascending) {
+				this.asc = ascending[0];
+			}
+			
+			@Override
+			public int compare(Object itemId1, Object itemId2) {
+				if (asc) {
+					return itemId1.toString().toLowerCase().compareTo(itemId2.toString().toLowerCase());
+				}
+				return itemId2.toString().toLowerCase().compareTo(itemId1.toString().toLowerCase());
+			}
+		});
+		documentsTree = new TreeTable("Documents");
 		documentsTree.setContainerDataSource(documentsContainer);
-		documentsTree.setCaption("Documents");
+		documentsTree.setSizeFull();
+		
 		documentsTree.addStyleName("bold-label-caption");
-		documentsTree.setImmediate(true);
-		documentsTree.setItemCaptionMode(ItemCaptionMode.ID);
-		documentsTree.setDragMode(TreeDragMode.NODE);
+		documentsTree.setDragMode(TableDragMode.ROW);
 		
 		documentsPanelContent.addComponent(documentsTree);
-		documentsPanel.getContent().setSizeUndefined();
-		documentsPanel.setSizeFull();
+		documentsPanelContent.setExpandRatio(documentsTree, 1.0f);
 		
-		documentsContainer.addContainerProperty(SORTCAP_PROP, String.class, null);
+		documentsTree.addContainerProperty(TableProperty.title.name(), String.class, null);
+		documentsTree.setVisibleColumns(new Object[] {TableProperty.title.name()});
+		documentsTree.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
 		
 		for (SourceDocument sd : repository.getSourceDocuments()) {
 			addSourceDocumentToTree(sd);
 		}		
 
-		documentsContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
+		documentsContainer.sort(new Object[] {TableProperty.title.name()}, new boolean[] { true });
 		
-		return documentsPanel;
+		return documentsPanelContent;
 	}
 
-
-	@SuppressWarnings("unchecked")
 	private void addSourceDocumentToTree(SourceDocument sd) {
 		
 		documentsContainer.removeAllContainerFilters();
 		
-		documentsTree.addItem(sd);
-		documentsTree.getItem(sd).getItemProperty(SORTCAP_PROP).setValue(sd.toString().toLowerCase());
-
+		documentsTree.addItem(new Object[] {sd.toString()}, sd);
 		documentsTree.setChildrenAllowed(sd, true);
 		
 		
 		MarkupCollectionItem userMarkupItem =
 				new MarkupCollectionItem(sd, userMarkupItemDisplayString, true);
 
-		documentsTree.addItem(userMarkupItem);
+		documentsTree.addItem(new Object[] {userMarkupItem.toString()}, userMarkupItem);
 		documentsTree.setParent(userMarkupItem, sd);
 	
 		for (UserMarkupCollectionReference ucr : sd.getUserMarkupCollectionRefs()) {
 			addUserMarkupCollectionReferenceToTree(ucr, userMarkupItem);
 		}
 		
-		MarkupCollectionItem staticMarkupItem = 
-				new MarkupCollectionItem(sd, staticMarkupItemDisplayString);
-		documentsTree.addItem(staticMarkupItem);
-		documentsTree.setParent(staticMarkupItem, sd);
-		
-		for (StaticMarkupCollectionReference smcr : sd.getStaticMarkupCollectionRefs()) {
-			documentsTree.addItem(smcr);
-			documentsTree.setParent(smcr, staticMarkupItem);
-			documentsTree.setChildrenAllowed(smcr, false);
-		}
-		
 	}
 	
 	private void addUserMarkupCollectionReferenceToTree(
 			UserMarkupCollectionReference ucr, MarkupCollectionItem userMarkupItem) {
-		documentsTree.addItem(ucr);
+		documentsTree.addItem(new Object[]{ucr.toString()}, ucr);
 		documentsTree.setParent(ucr, userMarkupItem);
 		documentsTree.setChildrenAllowed(ucr, false);
 	}
@@ -1098,7 +1115,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			final SourceDocument sourceDocument = (SourceDocument)value;
 
 			UploadDialog uploadDialog =
-					new UploadDialog("Upload User Markup Collection", 
+					new UploadDialog("Upload Markup Collection", 
 							new SaveCancelListener<byte[]>() {
 				
 				public void cancelPressed() {}
@@ -1115,7 +1132,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 								is, sourceDocument);
 					} catch (IOException e) {
 						((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"Error importing the User Markup Collection!", e);
+							"Error importing the Markup Collection!", e);
 					}
 					finally {
 						CloseSafe.close(is);
@@ -1136,7 +1153,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			
 			ConfirmDialog.show(
 				UI.getCurrent(), 
-				"Do you really want to delete the User Markup Collection '"
+				"Do you really want to delete the Markup Collection '"
 						+ userMarkupCollectionReference.toString() + "'?",
 						
 		        new ConfirmDialog.Listener() {
@@ -1147,7 +1164,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 								repository.delete(userMarkupCollectionReference);
 							} catch (IOException e) {
 								((CatmaApplication)UI.getCurrent()).showAndLogError(
-									"Error deleting the User Markup Collection!", e);
+									"Error deleting the Markup Collection!", e);
 							}
 		                }
 		            }
@@ -1176,7 +1193,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			SingleValueDialog singleValueDialog = new SingleValueDialog();
 			
 			singleValueDialog.getSingleValue(
-					"Create a new User Markup Collection",
+					"Create a new Markup Collection",
 					"You have to enter a name!",
 					new SaveCancelListener<PropertysetItem>() {
 				public void cancelPressed() {}
@@ -1191,7 +1208,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 								name, sourceDocument);
 					} catch (IOException e) {
 						((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"Error creating the User Markup Collection!", e);
+							"Error creating the Markup Collection!", e);
 					}
 				}
 			}, userMarkupCollectionNameProperty);
@@ -1218,12 +1235,12 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				setSourceDocumentsFilter(currentCorpus);
 			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error adding User Markup Collection to Corpus! " +
-								"The User Markup Collection has been added to 'All Documents's", e);
+						"Error adding Markup Collection to Corpus! " +
+								"The Markup Collection has been added to 'All Documents's", e);
 			}
 		}
 		documentsTree.setValue(userMarkupCollRef);
-		documentsTree.expandItemsRecursively(sourceDocument);
+		documentsTree.setCollapsed(sourceDocument, false);
 	}
 	
 	public void valueChange(ValueChangeEvent event) {

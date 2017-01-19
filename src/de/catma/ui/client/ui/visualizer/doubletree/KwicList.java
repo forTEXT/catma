@@ -12,6 +12,7 @@ import de.catma.ui.client.ui.visualizer.doubletree.shared.KwicSerializationField
 public class KwicList {
 	
 	private boolean caseSensitive;
+	private boolean rightToLeftLanguage;
 	private ArrayList<ArrayList<String>> prefixArrays;
 	private ArrayList<ArrayList<String>> postfixArrays;
 	private ArrayList<String> tokenArray;
@@ -68,6 +69,13 @@ public class KwicList {
 		return caseSensitive;
 	}
 
+	public void setRightToLeftLanguage(boolean rightToLeftLanguage) {
+		this.rightToLeftLanguage = rightToLeftLanguage;
+	}
+
+	public boolean isRightToLeftLanguage() {
+		return rightToLeftLanguage;
+	}
 	
 	public static KwicList fromJSON(String jsonString){
 		KwicList kwicList = new KwicList();
@@ -88,6 +96,10 @@ public class KwicList {
 			Boolean.parseBoolean(
 				serializer.getStringValueFromStringObject(
 					kwicListJson.get(KwicSerializationField.caseSensitive.name()))));
+		kwicList.setRightToLeftLanguage(
+			Boolean.parseBoolean(
+				serializer.getStringValueFromStringObject(
+					kwicListJson.get(KwicSerializationField.rightToLeftLanguage.name()))));
 		
 		for (int i=0; i<tokens.size(); i++) {
 			
@@ -116,4 +128,5 @@ public class KwicList {
 		
 		return kwicList;
 	}
+
 }

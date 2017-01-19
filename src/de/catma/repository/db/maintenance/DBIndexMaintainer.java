@@ -42,7 +42,6 @@ import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
 public class DBIndexMaintainer {
 
 	private static final int MAX_FILE_CLEAN_COUNT = 10;
-	private static final int MAX_ROW_COUNT = 10;
 	private String repoFolderPath;
 	private int fileCleanOffset = 0;
 	private int repoTagReferenceRowOffset = 0;
@@ -52,22 +51,25 @@ public class DBIndexMaintainer {
 	private SourceDocumentIndexMaintainer sourceDocumentIndexMaintainer;
 	private int sourceDocumentIndexMaintainerMaxObjectCount;
 	private int sourceDocumentIndexMaintainerOffset = 0;
+	private int dbIndexMaintainerMaxObjectCount = 500;
+	private boolean enabled;
 
 	private Logger logger;
 
-	public DBIndexMaintainer(int fileCleanOffset, int repoTagReferenceRowOffset,
+	public DBIndexMaintainer(boolean enabled, int fileCleanOffset, int repoTagReferenceRowOffset,
 			int repoPropertyRowOffset, int indexTagReferenceRowOffset,
-			int indexPropertyRowOffset, 
+			int indexPropertyRowOffset, int dbIndexMaintainerMaxObjectCount,
 			SourceDocumentIndexMaintainer sourceDocumentIndexMaintainer,
 			int sourceDocumentIndexMaintainerMaxObjectCount,
 			int sourceDocumentIndexMaintainerOffset) {
-
+		this.enabled = enabled;
 		this.fileCleanOffset = fileCleanOffset;
 
 		this.repoTagReferenceRowOffset = repoTagReferenceRowOffset;
 		this.repoPropertyRowOffset = repoPropertyRowOffset;
 		this.indexTagReferenceRowOffset = indexTagReferenceRowOffset;
 		this.indexPropertyRowOffset = indexPropertyRowOffset;
+		this.dbIndexMaintainerMaxObjectCount = dbIndexMaintainerMaxObjectCount;
 		this.sourceDocumentIndexMaintainer = sourceDocumentIndexMaintainer;
 		this.sourceDocumentIndexMaintainerMaxObjectCount = 
 				sourceDocumentIndexMaintainerMaxObjectCount;
@@ -77,10 +79,14 @@ public class DBIndexMaintainer {
 	}
 
 	public void run() throws IOException {
+		if (!enabled) {
+			return;
+		}
+		
 		UserManager userManager = new UserManager();
 		try {
 			this.repoFolderPath = 
-				RepositoryPropertyKey.RepositoryFolderPath.getValue(1);
+				RepositoryPropertyKey.RepositoryFolderPath.getIndexedValue(1);
 			
 			userManager.lockLogin();
 			try {
@@ -111,9 +117,6 @@ public class DBIndexMaintainer {
 							sourceDocumentIndexMaintainerMaxObjectCount,
 							sourceDocumentIndexMaintainerOffset);
 					
-					//TODO: check time and exit after fixed period
-					
-	
 					logger.info("finished index maintenance");
 				}
 				else {
@@ -174,10 +177,11 @@ public class DBIndexMaintainer {
 	}
 
 	private void checkStaleIndexProperties(DSLContext db) {
-		logger.info("checking stale index properties");
+		logger.info("checking stale index properties, starting at offset: " +  (indexPropertyRowOffset-dbIndexMaintainerMaxObjectCount));
+
 		de.catma.repository.db.jooqgen.catmaindex.tables.Property indexProperty = 
 				de.catma.repository.db.jooqgen.catmaindex.Tables.PROPERTY;
-
+		
 		Result<Record5<byte[], byte[], String, String, Integer>> result = db
 		.select(
 			indexProperty.TAGINSTANCEID,
@@ -186,7 +190,7 @@ public class DBIndexMaintainer {
 			indexProperty.VALUE,
 			indexProperty.PROPERTYID)
 		.from(indexProperty)
-		.limit(indexPropertyRowOffset, MAX_ROW_COUNT)
+		.limit(Math.max(indexPropertyRowOffset-dbIndexMaintainerMaxObjectCount,0), dbIndexMaintainerMaxObjectCount)
 		.fetch();
 		
 		indexPropertyRowOffset += result.size();
@@ -221,17 +225,14 @@ public class DBIndexMaintainer {
 			.delete(indexProperty)
 			.where(indexProperty.PROPERTYID.in(toBeDeleted))
 			.execute();
-	
-			indexPropertyRowOffset -= toBeDeleted.size();
 		}
 	}
 
 	private void checkStaleIndexTagReferences(DSLContext db) {
-		logger.info("checking stale index tagreferences");
+		logger.info("checking stale index tagreferences, starting offset: " + (indexTagReferenceRowOffset-dbIndexMaintainerMaxObjectCount));
 
 		de.catma.repository.db.jooqgen.catmaindex.tables.Tagreference indexTagReference =
 				de.catma.repository.db.jooqgen.catmaindex.Tables.TAGREFERENCE;
-
 		
 		Result<Record9<String, String, String, byte[], byte[], String, Integer, Integer, Integer>> result = db
 		.select(
@@ -245,7 +246,7 @@ public class DBIndexMaintainer {
 			indexTagReference.CHARACTEREND,
 			indexTagReference.TAGREFERENCEID)
 		.from(indexTagReference)
-		.limit(indexTagReferenceRowOffset, MAX_ROW_COUNT)
+		.limit(Math.max(indexTagReferenceRowOffset-dbIndexMaintainerMaxObjectCount,0), dbIndexMaintainerMaxObjectCount)
 		.fetch();
 		
 		indexTagReferenceRowOffset += result.size();
@@ -286,12 +287,14 @@ public class DBIndexMaintainer {
 			.delete(indexTagReference)
 			.where(indexTagReference.TAGREFERENCEID.in(toBeDeleted))
 			.execute();
-			indexTagReferenceRowOffset -= toBeDeleted.size();
 		}
 	}
 
 	private void checkRepoProperties(DSLContext db) {
-		logger.info("checking repo properties");
+
+		logger.info("checking repo properties, starting at offset: " + (repoPropertyRowOffset-dbIndexMaintainerMaxObjectCount));
+
+		
 		Result<Record4<byte[],byte[],String,String>> result = db
 		.select(
 			TAGINSTANCE.UUID,
@@ -305,10 +308,10 @@ public class DBIndexMaintainer {
 			.on(PROPERTYDEFINITION.PROPERTYDEFINITIONID.eq(PROPERTY.PROPERTYDEFINITIONID))
 		.join(TAGINSTANCE)
 			.on(TAGINSTANCE.TAGINSTANCEID.eq(PROPERTY.TAGINSTANCEID))
-		.limit(repoPropertyRowOffset, MAX_ROW_COUNT)
+		.limit(Math.max(repoPropertyRowOffset-dbIndexMaintainerMaxObjectCount,0), dbIndexMaintainerMaxObjectCount)
 		.fetch();
 		
-		if (result.size() < MAX_ROW_COUNT) {
+		if (result.size() < dbIndexMaintainerMaxObjectCount) {
 			repoPropertyRowOffset = 0;
 		}
 		else {
@@ -369,7 +372,8 @@ public class DBIndexMaintainer {
 	}
 
 	private void checkRepoTagReferences(DSLContext db) {
-		logger.info("checking repo tagreferences");
+		logger.info("checking repo tagreferences, starting at offset: " + (repoTagReferenceRowOffset-dbIndexMaintainerMaxObjectCount));
+		
 		Result<Record8<String,Integer,byte[],byte[], Timestamp, Integer,Integer, Integer>> result = db
 		.select(
 			SOURCEDOCUMENT.LOCALURI, 
@@ -389,10 +393,10 @@ public class DBIndexMaintainer {
 					.eq(TAGREFERENCE.USERMARKUPCOLLECTIONID))
 		.join(SOURCEDOCUMENT)
 			.on(SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(USERMARKUPCOLLECTION.SOURCEDOCUMENTID))
-		.limit(repoTagReferenceRowOffset, MAX_ROW_COUNT)
+		.limit(Math.max(repoTagReferenceRowOffset-dbIndexMaintainerMaxObjectCount,0), dbIndexMaintainerMaxObjectCount)
 		.fetch();
 		
-		if (result.size() < MAX_ROW_COUNT) {
+		if (result.size() < dbIndexMaintainerMaxObjectCount) {
 			repoTagReferenceRowOffset = 0;
 		}
 		else {

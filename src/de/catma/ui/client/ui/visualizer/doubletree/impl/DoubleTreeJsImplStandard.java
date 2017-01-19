@@ -19,13 +19,13 @@ public class DoubleTreeJsImplStandard {
 	}-*/;
 	
 	public native void setupFromArrays(
-			DoubleTreeJs dt, String[][] prefixArr, String[] tokenArr, String[][] postfixArr, boolean caseSensitive) /*-{
+			DoubleTreeJs dt, String[][] prefixArr, String[] tokenArr, String[][] postfixArr, boolean caseSensitive, boolean rightToLeftLanguage) /*-{
 		var fieldNames = ["token"];
 		var fieldDelim = "/";
 		var distinguishingFieldsArray = ["token"];
 		dt.setupFromArrays(
-			prefixArr, tokenArr, postfixArr, caseSensitive, 
-			fieldNames, fieldDelim, distinguishingFieldsArray);	  
+			prefixArr, tokenArr, postfixArr, null, caseSensitive, 
+			fieldNames, fieldDelim, distinguishingFieldsArray, rightToLeftLanguage);	  
 	}-*/;
 	
 }

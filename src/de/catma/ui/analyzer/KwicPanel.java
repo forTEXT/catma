@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import org.vaadin.peter.contextmenu.ContextMenu;
+
 import com.vaadin.data.Container;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.DataBoundTransferable;
@@ -43,7 +45,6 @@ import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.Table.Align;
 import com.vaadin.ui.Table.CellStyleGenerator;
-import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
@@ -77,16 +78,21 @@ public class KwicPanel extends VerticalLayout {
 		rightContext, 
 		startPoint,
 		endPoint,
+		tagtype,
+		propertyname,
+		propertyvalue,
 		;
 	}
 
 	private Repository repository;
-	private TreeTable kwicTable;
+	private Table kwicTable;
+	private ContextMenu kwicTableContextMenu;
+	private ContextMenu.ContextMenuItem tagSelectedResultsContextMenuItem;
 	private boolean markupBased;
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
 	private WeakHashMap<Object, Boolean> itemDirCache = new WeakHashMap<>();
 	private int kwicSize = 5;
-
+	
 	public KwicPanel(Repository repository, 
 			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider) {
 		this(repository, relevantUserMarkupCollectionProvider,  false);
@@ -99,8 +105,20 @@ public class KwicPanel extends VerticalLayout {
 		this.repository = repository;
 		this.relevantUserMarkupCollectionProvider = relevantUserMarkupCollectionProvider;
 		this.markupBased = markupBased;
+		
 		initComponents();
 		initActions();
+		initContextMenu();
+	}
+	
+	private void initContextMenu() {
+		kwicTableContextMenu = new ContextMenu();
+		tagSelectedResultsContextMenuItem = kwicTableContextMenu.addItem("Tag Selected Results");
+		kwicTableContextMenu.setAsContextMenuOf(kwicTable);
+	}
+	
+	public void addTagResultsContextMenuClickListener(ContextMenu.ContextMenuItemClickListener listener) {
+		tagSelectedResultsContextMenuItem.addItemClickListener(listener);
 	}
 
 	private void initActions() {
@@ -134,7 +152,7 @@ public class KwicPanel extends VerticalLayout {
 						}
 						catch (IOException e) {
 							((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"Error opening related User Markup Collection!", e);
+								"Error opening related Markup Collection!", e);
 						}			
 					}
 				}
@@ -201,10 +219,15 @@ public class KwicPanel extends VerticalLayout {
 		Set<QueryResultRow> selectedRows = 
 				(Set<QueryResultRow>)kwicTable.getValue();
 		
-		if (selectedRows != null) {
-			updateAllMarkupCollections(
-				selectedRows, incomingTagsetDef, incomingTagDef);
+		if (selectedRows.isEmpty()) {
+			Notification.show(
+					"Information", "Please select one or more results first!",
+					Type.TRAY_NOTIFICATION);
+			return;
 		}
+		
+		updateAllMarkupCollections(
+			selectedRows, incomingTagsetDef, incomingTagDef);
 	}
 
 	private void updateAllMarkupCollections(
@@ -253,7 +276,7 @@ public class KwicPanel extends VerticalLayout {
 					}
 				} catch (URISyntaxException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"error creating tag reference", e);
+							"error creating tag type reference", e);
 				}
 			}
 			
@@ -288,7 +311,7 @@ public class KwicPanel extends VerticalLayout {
 		}
 		else {
 			Notification.show(
-				"Information", "Please create a User Markup Collection first!",
+				"Information", "Please create a Markup Collection first!",
 				Type.TRAY_NOTIFICATION);
 		}
 	}
@@ -345,18 +368,19 @@ public class KwicPanel extends VerticalLayout {
 			}
 		}
 		
-		
+		int refCount = 0;
 		for (Map.Entry<UserMarkupCollection, List<TagReference>> entry : tagReferences.entrySet()) {
 			userMarkupCollectionManager.addTagReferences(entry.getValue(), entry.getKey());
+			refCount += entry.getValue().size();
 		}
 
-		return new Pair<Integer, Integer>(tagReferences.size(), tagReferences.values().size()); //collection count, tag ref count
+		return new Pair<Integer, Integer>(tagReferences.size(), refCount); //collection count, tag ref count
 	}
 
 	private void initComponents() {
 		setSizeFull();
 		
-		kwicTable = new TreeTable();
+		kwicTable = new Table();
 		
 		kwicTable.setSizeFull();
 		kwicTable.setSelectable(true);
@@ -397,7 +421,21 @@ public class KwicPanel extends VerticalLayout {
 				KwicPropertyName.rightContext, String.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.rightContext, "Right Context");	
 		kwicTable.setColumnAlignment(KwicPropertyName.rightContext, Align.LEFT);
-		
+		if (markupBased) {
+			kwicTable.addContainerProperty(KwicPropertyName.tagtype, String.class, null);
+			kwicTable.setColumnHeader(KwicPropertyName.tagtype, "Tag Type Definition");
+			kwicTable.addContainerProperty(KwicPropertyName.propertyname, String.class, null);
+			kwicTable.setColumnHeader(KwicPropertyName.propertyname, "Property Name");
+			kwicTable.addContainerProperty(KwicPropertyName.propertyvalue, String.class, null);
+			kwicTable.setColumnHeader(KwicPropertyName.propertyvalue, "Property Value");
+			kwicTable.setColumnCollapsingAllowed(true);
+			kwicTable.setColumnCollapsible(KwicPropertyName.propertyname, true);
+			kwicTable.setColumnCollapsible(KwicPropertyName.propertyvalue, true);
+			kwicTable.setColumnCollapsed( 
+					KwicPropertyName.propertyname, true);
+			kwicTable.setColumnCollapsed( 
+					KwicPropertyName.propertyvalue, true);
+		}
 		kwicTable.addContainerProperty(
 				KwicPropertyName.startPoint, Integer.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.startPoint, "Start Point");
@@ -406,7 +444,6 @@ public class KwicPanel extends VerticalLayout {
 				KwicPropertyName.endPoint, Integer.class, null);
 		kwicTable.setColumnHeader(KwicPropertyName.endPoint, "End Point");
 
-//		kwicTable.setPageLength(12);
 		kwicTable.setSizeFull();
 		
 		kwicTable.setCellStyleGenerator(new CellStyleGenerator() {
@@ -420,6 +457,7 @@ public class KwicPanel extends VerticalLayout {
 				return null;
 			}
 		});
+		
 		addComponent(kwicTable);
 	}
 
@@ -428,7 +466,7 @@ public class KwicPanel extends VerticalLayout {
 
 		HashMap<String, KwicProvider> kwicProviders =
 				new HashMap<String, KwicProvider>();
-		
+		boolean showPropertyColumns = false;
 		for (QueryResultRow row : queryResult) {
 			SourceDocument sourceDocument = 
 					repository.getSourceDocument(row.getSourceDocumentId());
@@ -451,17 +489,44 @@ public class KwicPanel extends VerticalLayout {
 			}
 			itemDirCache.put(row, kwic.isRightToLeft());
 			
-			kwicTable.addItem(
-				new Object[]{
-					sourceDocOrMarkupCollectionDisplay,
-					kwic.getBackwardContext(),
-					kwic.getKeyword(),
-					kwic.getForwardContext(),
-					row.getRange().getStartPoint(),
-					row.getRange().getEndPoint()},
+			if (markupBased) {
+				TagQueryResultRow tRow = (TagQueryResultRow) row;
+				String propertyName = tRow.getPropertyName();
+				String propertyValue = tRow.getPropertyValue();
+				showPropertyColumns = (propertyName != null)||showPropertyColumns;
+				kwicTable.addItem(
+					new Object[]{
+						sourceDocOrMarkupCollectionDisplay,
+						kwic.getBackwardContext(),
+						kwic.getKeyword(),
+						kwic.getForwardContext(),
+						tRow.getTagDefinitionPath(),
+						propertyName,
+						propertyValue,
+						row.getRange().getStartPoint(),
+						row.getRange().getEndPoint()},
 					row);
-			kwicTable.setChildrenAllowed(row, false);
+			}
+			else {
+				kwicTable.addItem(
+					new Object[]{
+						sourceDocOrMarkupCollectionDisplay,
+						kwic.getBackwardContext(),
+						kwic.getKeyword(),
+						kwic.getForwardContext(),
+						row.getRange().getStartPoint(),
+						row.getRange().getEndPoint()},
+					row);
+			}
 		}
+		
+		if (showPropertyColumns) {
+			kwicTable.setColumnCollapsed( 
+					KwicPropertyName.propertyname, false);
+			kwicTable.setColumnCollapsed( 
+					KwicPropertyName.propertyvalue, false);
+		}
+
 	}
 	
 	public void removeQueryResultRows(Iterable<QueryResultRow> queryResult) {
@@ -479,7 +544,7 @@ public class KwicPanel extends VerticalLayout {
 		return (Set<QueryResultRow>) kwicTable.getValue();
 	}
 	
-	TreeTable getKwicTable() {
+	Table getKwicTable() {
 		return kwicTable;
 	}
 

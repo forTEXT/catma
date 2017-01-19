@@ -41,6 +41,7 @@ import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Record2;
+import org.jooq.Record3;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
@@ -52,6 +53,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.repository.db.jooq.TransactionalDSLContext;
 import de.catma.repository.db.mapper.CorpusMapper;
+import de.catma.repository.db.mapper.IDFieldToIntegerMapper;
 
 class CorpusHandler {
 	
@@ -59,18 +61,18 @@ class CorpusHandler {
 	private Map<String, Corpus> corpora;
 	private DataSource dataSource;
 
-	public CorpusHandler(DBRepository dbRepository) {
+	CorpusHandler(DBRepository dbRepository) {
 		this.dbRepository = dbRepository;
 		corpora = new HashMap<String, Corpus>();
 
 		this.dataSource = CatmaDataSourceName.CATMADS.getDataSource();
 	}
 
-	public Collection<Corpus> getCorpora() {
+	Collection<Corpus> getCorpora() {
 		return Collections.unmodifiableCollection(corpora.values());
 	}
 
-	public void loadCorpora(DSLContext db) {
+	void loadCorpora(DSLContext db) {
 		corpora = getCorpusList(db);
 	}
 
@@ -118,7 +120,7 @@ class CorpusHandler {
 		return result;
 	}
 
-	public void createCorpus(String name) throws IOException {
+	void createCorpus(String name) throws IOException {
 		TransactionalDSLContext db = new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 
 		try {
@@ -171,7 +173,7 @@ class CorpusHandler {
 		}
 	}
 	
-	public void addSourceDocument(Corpus corpus, SourceDocument sourceDocument) throws IOException {
+	void addSourceDocument(Corpus corpus, SourceDocument sourceDocument) throws IOException {
 		TransactionalDSLContext db = new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 		Integer corpusId = Integer.valueOf(corpus.getId());
 		getCorpusAccess(db, corpusId, true);
@@ -239,7 +241,7 @@ class CorpusHandler {
 	}
 
 	
-	public void addUserMarkupCollectionRef(Corpus corpus,
+	void addUserMarkupCollectionRef(Corpus corpus,
 			UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
 	
 		TransactionalDSLContext db = new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
@@ -328,7 +330,7 @@ class CorpusHandler {
 		}
 	}
 
-	public void delete(Corpus corpus) throws IOException {
+	void delete(Corpus corpus) throws IOException {
 		TransactionalDSLContext db = 
 				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 		Integer corpusId = Integer.valueOf(corpus.getId());
@@ -413,7 +415,7 @@ class CorpusHandler {
 		}
 	}
 	
-	public void rename(Corpus corpus, String name) throws IOException {
+	void rename(Corpus corpus, String name) throws IOException {
 		String oldName = corpus.toString();
 
 		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
@@ -432,7 +434,7 @@ class CorpusHandler {
 				oldName, corpus);
 	}
 	
-	public void reloadCorpora(DSLContext db) {
+	void reloadCorpora(DSLContext db) {
 		Map<String, Corpus> result = getCorpusList(db);
 		for (Map.Entry<String, Corpus> entry : result.entrySet()) {
 
@@ -468,6 +470,193 @@ class CorpusHandler {
 			}
 		}
 
+	}
+
+	void copyCorpora(int sourceUserId) throws IOException {
+		TransactionalDSLContext db = 
+				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
+
+		Map<Integer, Result<Record3<Integer,Integer,String>>> corpusSourceDocs = db
+		.select(CORPUS_SOURCEDOCUMENT.CORPUSID, CORPUS_SOURCEDOCUMENT.SOURCEDOCUMENTID, SOURCEDOCUMENT.LOCALURI)
+		.from(SOURCEDOCUMENT)
+		.join(CORPUS_SOURCEDOCUMENT)
+			.on(CORPUS_SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(SOURCEDOCUMENT.SOURCEDOCUMENTID))
+		.join(USER_SOURCEDOCUMENT)
+			.on(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(SOURCEDOCUMENT.SOURCEDOCUMENTID))
+			.and(USER_SOURCEDOCUMENT.USERID.eq(sourceUserId))
+		.join(USER_CORPUS)
+			.on(USER_CORPUS.CORPUSID.eq(CORPUS_SOURCEDOCUMENT.CORPUSID))
+			.and(USER_CORPUS.USERID.eq(sourceUserId))
+		.fetchGroups(CORPUS_SOURCEDOCUMENT.CORPUSID);
+		
+		Map<Integer, Result<Record3<Integer, Integer, Integer>>> corpusUmcs = db
+		.select(CORPUS_USERMARKUPCOLLECTION.CORPUSID, USERMARKUPCOLLECTION.SOURCEDOCUMENTID, USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)
+		.from(USERMARKUPCOLLECTION)
+		.join(CORPUS_USERMARKUPCOLLECTION)
+			.on(CORPUS_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.eq(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID))
+		.join(USER_USERMARKUPCOLLECTION)
+			.on(USER_USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID.eq(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID))
+			.and(USER_USERMARKUPCOLLECTION.USERID.eq(sourceUserId))
+		.join(USER_CORPUS)
+			.on(USER_CORPUS.CORPUSID.eq(CORPUS_USERMARKUPCOLLECTION.CORPUSID))
+			.and(USER_CORPUS.USERID.eq(sourceUserId))
+		.fetchGroups(CORPUS_USERMARKUPCOLLECTION.CORPUSID);
+		
+		Collection<Corpus> corpusList =  db
+		.select()
+		.from(CORPUS)
+		.join(USER_CORPUS)
+			.on(USER_CORPUS.CORPUSID.eq(CORPUS.CORPUSID))
+			.and(USER_CORPUS.USERID.eq(sourceUserId))
+		.fetch()
+		.map(new CorpusMapper(dbRepository, Collections.emptyMap(), Collections.emptyMap()));
+		
+	
+		try {
+			for (Corpus corpus : corpusList) {
+				
+				try {
+					db.beginTransaction();
+					
+					Record idRecord = db
+					.insertInto(
+							CORPUS,
+							CORPUS.NAME)
+					.values(corpus.toString())
+					.returning(CORPUS.CORPUSID)
+					.fetchOne();
+					
+					Integer corpusId = idRecord.getValue(CORPUS.CORPUSID);
+					
+					db
+					.insertInto(
+							USER_CORPUS,
+							USER_CORPUS.USERID,
+							USER_CORPUS.CORPUSID,
+							USER_CORPUS.ACCESSMODE,
+							USER_CORPUS.OWNER)
+					.values(
+							dbRepository.getCurrentUser().getUserId(),
+							corpusId,
+							AccessMode.WRITE.getNumericRepresentation(),
+							(byte)1)
+					.execute();
+					
+					db.commitTransaction();
+					
+					// share SourceDocs
+					for (Record3<Integer,Integer,String>  sourceDocInfo : 
+						corpusSourceDocs.get(Integer.valueOf(corpus.getId()))) {
+						Integer sourceDocumentId = 
+								sourceDocInfo.getValue(CORPUS_SOURCEDOCUMENT.SOURCEDOCUMENTID);
+						String sourceDocLocalURI = 
+								sourceDocInfo.getValue(SOURCEDOCUMENT.LOCALURI);
+						
+						SourceDocument sd = shareCorpusSourceDocument(db, sourceDocLocalURI, corpusId);
+						
+						// copy and import Markup Collections
+						Result<Record3<Integer,Integer,Integer>> umcInfoResult = 
+								corpusUmcs.get(Integer.valueOf(corpus.getId()));
+						if (umcInfoResult != null) {
+							for (Record3<Integer,Integer,Integer> umcInfo : umcInfoResult) {
+								Integer umcSourceDocumentId = 
+										umcInfo.getValue(USERMARKUPCOLLECTION.SOURCEDOCUMENTID);
+								if (sourceDocumentId.intValue() == umcSourceDocumentId.intValue()) {
+									Integer userMarkupCollectionId =
+											umcInfo.getValue(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID);
+								
+									// the import is not a transaction by intention
+									// import can become a pretty long running operation
+									// and would block other users 
+									// the last DB action prior to indexing 
+									// is the linking between the umc and the user
+									// so in case of failure the user won't have access to the
+									// corrupt umc and the DB cleaner job will take care of it
+									dbRepository.getDbUserMarkupCollectionHandler().importUserMarkupCollection(
+											db, userMarkupCollectionId, sd, corpusId);
+								}
+							}
+						}						
+					}
+				}
+				catch (Exception dae) {
+					db.rollbackTransaction();
+					db.close();
+					throw new IOException(dae);
+				}
+			}
+			
+			loadCorpora(db);
+		}		
+		finally {
+			if (db!=null) {
+				db.close();
+			}
+		}
+
+		
+	}
+
+	private SourceDocument shareCorpusSourceDocument(
+			DSLContext db, String sourceDocLocalURI, Integer corpusId) throws IOException {
+		Integer sourceDocumentId = db
+		.select(SOURCEDOCUMENT.SOURCEDOCUMENTID)
+		.from(SOURCEDOCUMENT)
+		.where(SOURCEDOCUMENT.LOCALURI.eq(sourceDocLocalURI))
+		.fetchOne()
+		.value1();
+		
+		
+		 Record record = db
+		.select(USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID)
+		.from(USER_SOURCEDOCUMENT)
+		.where(USER_SOURCEDOCUMENT.USERID.eq(dbRepository.getCurrentUser().getUserId()))
+		.and(USER_SOURCEDOCUMENT.SOURCEDOCUMENTID.eq(sourceDocumentId))
+		.fetchOne();
+		
+		Integer userSourceDocId = null;
+		
+		if (record != null) {
+			userSourceDocId = 
+				record.map(new IDFieldToIntegerMapper(
+						USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID));
+		}
+		
+		if (userSourceDocId == null) {
+			db
+			.insertInto(
+				USER_SOURCEDOCUMENT,
+					USER_SOURCEDOCUMENT.USERID,
+					USER_SOURCEDOCUMENT.SOURCEDOCUMENTID,
+					USER_SOURCEDOCUMENT.ACCESSMODE,
+					USER_SOURCEDOCUMENT.OWNER)
+			.values(
+				dbRepository.getCurrentUser().getUserId(),
+				sourceDocumentId,
+				AccessMode.WRITE.getNumericRepresentation(),
+				(byte)0)
+			.execute();
+		}
+		else { // eventually upgrade accessmode
+			db
+			.update(USER_SOURCEDOCUMENT)
+			.set(USER_SOURCEDOCUMENT.ACCESSMODE, AccessMode.WRITE.getNumericRepresentation())
+			.where(USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID.eq(userSourceDocId))
+			.execute();
+		}
+		
+		db
+		.insertInto(
+			CORPUS_SOURCEDOCUMENT,
+				CORPUS_SOURCEDOCUMENT.CORPUSID,
+				CORPUS_SOURCEDOCUMENT.SOURCEDOCUMENTID)
+		.values(
+			corpusId,
+			sourceDocumentId)
+		.execute();
+		
+		
+		return dbRepository.getDbSourceDocumentHandler().getSourceDocument(sourceDocumentId);
 	}
 	
 }

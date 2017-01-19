@@ -4,6 +4,7 @@ public enum KwicSerializationField {
 	prefixArrays,
 	tokenArray,
 	postfixArrays, 
-	caseSensitive,
+	caseSensitive, 
+	rightToLeftLanguage,
 	;
 }

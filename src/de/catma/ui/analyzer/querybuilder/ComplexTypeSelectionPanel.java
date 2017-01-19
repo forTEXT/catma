@@ -173,7 +173,7 @@ public class ComplexTypeSelectionPanel extends VerticalLayout implements
 			"The three different match modes influence the way tags refine" +
 			" your search results:" +
 			"<ul>"+
-			"<li>exact match - the tag boundaries have to match exactly to " +
+			"<li>exact match - the tag type boundaries have to match exactly to " +
 			"keep a result item in the result set</li>" +
 			"<li>boundary match - result items that should be kept in the " +
 			"result set must start and end within the boundaries of the tag</li>"+

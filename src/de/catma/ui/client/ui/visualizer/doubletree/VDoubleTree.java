@@ -22,7 +22,8 @@ public class VDoubleTree extends Composite {
 			
 		doubleTreeWidget.setupFromArrays(
 			kwicList.getPrefixes(), kwicList.getTokens(), kwicList.getPostfixes(),
-			kwicList.isCaseSensitive()); 
+			kwicList.isCaseSensitive(),
+			kwicList.isRightToLeftLanguage()); 
 	}
 	
 }

@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServlet;
 
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobDataMap;
+import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 
@@ -35,7 +36,7 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 		    			TriggerGroup.DEFAULT.name()))
 				.startNow()
 //				.withSchedule(SimpleScheduleBuilder.repeatHourlyForTotalCount(1))
-//				.withSchedule(SimpleScheduleBuilder.repeatSecondlyForever(10))
+//				.withSchedule(SimpleScheduleBuilder.repeatSecondlyForever(30))
 				.withSchedule(CronScheduleBuilder.cronSchedule("0 0/10 22-5 * * ?")
 						.withMisfireHandlingInstructionDoNothing())
 			    .build(),
@@ -44,13 +45,21 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 			JobDataMap indexJobDataMap = new JobDataMap();
 
 			indexJobDataMap.put(
+					JobDataKey.INDEX_MAINTAINER_ENABLED.name(), 
+					RepositoryPropertyKey.IndexMaintainerEnabled.isTrueIndexed(
+							repoIndex, true));
+			indexJobDataMap.put(
 					JobDataKey.SOURCEDOCIDXMAINTAIN.name(), 
-					RepositoryPropertyKey.SourceDocumentIndexMaintainer.getValue(
+					RepositoryPropertyKey.SourceDocumentIndexMaintainer.getIndexedValue(
 							repoIndex));
 			indexJobDataMap.put(
 					JobDataKey.SOURCEDOCIDXMAINTAIN_MAXOBJ.name(), 
-					RepositoryPropertyKey.SourceDocumentIndexMaintainerMaxObjects.getValue(
+					RepositoryPropertyKey.SourceDocumentIndexMaintainerMaxObjects.getIndexedValue(
 							repoIndex));
+			indexJobDataMap.put(
+					JobDataKey.DBIDXMAINTAINMAXOBJECTCOUNT.name(), 
+					RepositoryPropertyKey.DBIndexMaintainerMaxObjects.getIndexedValue(
+							repoIndex, 10));
 			
 			jobInstaller.install(
 				DBIndexMaintenanceJob.class,
@@ -59,8 +68,16 @@ public class DBMaintenanceInitializerServlet extends HttpServlet {
 						DBIndexMaintenanceJob.class.getName()+"_Trigger",
 		    			TriggerGroup.DEFAULT.name()))
 				.startNow()
-				.withSchedule(CronScheduleBuilder.cronSchedule("30 0/3 * * * ?")
-						.withMisfireHandlingInstructionDoNothing())
+				.withSchedule(SimpleScheduleBuilder.repeatSecondlyForever(
+					RepositoryPropertyKey.DBIndexMaintenanceJobIntervalInSeconds.getIndexedValue(
+							repoIndex, 180))
+				.withMisfireHandlingInstructionIgnoreMisfires())
+				
+//				.withSchedule(CronScheduleBuilder.cronSchedule("0 0/10 22-5 * * ?")
+//						.withMisfireHandlingInstructionDoNothing())
+				
+//				.withSchedule(CronScheduleBuilder.cronSchedule("30 0/3 * * * ?")
+//						.withMisfireHandlingInstructionDoNothing())
 			    .build(),
 			    indexJobDataMap);
 		}

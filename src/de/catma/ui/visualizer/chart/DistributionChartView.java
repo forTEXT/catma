@@ -109,6 +109,8 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 			rows++;
 		}
 		
+		Integer firstRowLength = null;
+		
 		for (int rowIdx=0;rowIdx<rows;rowIdx++) {
 			HorizontalLayout row = new HorizontalLayout();
 			row.setSpacing(true);
@@ -117,13 +119,18 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 			row.setWidth("100%");
 			
 			int rowLength = Math.min(distributions.size()-((rowIdx)*ROW_LENGTH), ROW_LENGTH);
+			if (firstRowLength == null) {
+				firstRowLength = rowLength;
+			}
+			
 			
 			for (int colIdx=0; colIdx<rowLength; colIdx++) {
 				Distribution distribution = 
 						distributions.get((rowIdx*ROW_LENGTH)+colIdx);
 				Chart chart = new Chart(distribution, maxOccurrences, distributionSelectionListener);
-				chart.setWidth("300px");
-				chart.setHeight("400px");
+				int width = (int)(500.0*(3.0/firstRowLength));
+				chart.setWidth(width+"px");
+				chart.setHeight("700px");
 				row.addComponent(chart);
 				charts.put(distribution.getId(), chart);
 			}
@@ -131,7 +138,6 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 		
 		addComponent(zoomPanel);
 		
-        setSizeFull();
 	}
 	
 	public void addDistributionComputation(

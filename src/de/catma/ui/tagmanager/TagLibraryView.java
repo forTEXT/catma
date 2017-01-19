@@ -24,7 +24,6 @@ import com.vaadin.ui.Table.TableDragMode;
 
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
-import de.catma.tag.TagsetDefinition;
 import de.catma.ui.tabbedview.ClosableTab;
 
 public class TagLibraryView extends HorizontalLayout implements ClosableTab {
@@ -59,8 +58,7 @@ public class TagLibraryView extends HorizontalLayout implements ClosableTab {
 		super.attach();
 		if (init) {
 			tagsetTree.getTagTree().setDragMode(TableDragMode.ROW);
-			
-			tagsetTree.addTagsetDefinition(tagLibrary.collection());
+			tagsetTree.setTagLibrary(tagLibrary);
 			
 			initActions();
 			init = false;
@@ -72,7 +70,7 @@ public class TagLibraryView extends HorizontalLayout implements ClosableTab {
 	}
 
 	public void close() {
-		tagsetTree.close();
+		tagsetTree.close(true);
 	}
 	
 	public void addClickshortCuts() { /* noop*/	}

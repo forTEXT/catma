@@ -41,10 +41,10 @@ public class CatmaApplicationServlet extends VaadinServlet {
 		HIGHCHARTS_SL("highcharts/standalone-framework-4.0.3.js"),
 		HIGHCHARTS("highcharts/highcharts-4.0.3.js"),
 //		EXPORTING("highcharts/exporting.js"),
-//		D3("doubletreejs_debug/d3.v3.js"),
-//		CLASSLISTSUBSTITUTE("doubletreejs_debug/classListSubstitute.js"),
-//		DOUBLETREE("doubletreejs_debug/DoubleTree.js"),
-//		DT_TRIE("doubletreejs_debug/Trie.js"),
+//		D3("doubletreejs/d3.min.js"),
+//		CLASSLISTSUBSTITUTE("doubletreejs/classListSubstitute.js"),
+//		DOUBLETREE("doubletreejs/DoubleTree.js"),
+//		DT_TRIE("doubletreejs/Trie.js"),
 		D3("doubletreejs/d3.min.js"),
 		CLASSLISTSUBSTITUTE("doubletreejs/classListSubstitute.min.js"),
 		DOUBLETREE("doubletreejs/DoubleTree.min.js"),
@@ -84,14 +84,14 @@ public class CatmaApplicationServlet extends VaadinServlet {
 		}
 		@Override
 		public void modifyBootstrapPage(BootstrapPageResponse response) {
-			response.getDocument().head().append("<script>"
-					+ "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){"
-					+ "(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),"
-					+ "m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)"
-					+ "})(window,document,'script','//www.google-analytics.com/analytics.js','ga');"
-					+ "ga('create', 'UA-38728736-8', 'auto');"
-					+ "ga('send', 'pageview');"
-					+ "</script>");
+//			response.getDocument().head().append("<script>"
+//					+ "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){"
+//					+ "(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),"
+//					+ "m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)"
+//					+ "})(window,document,'script','//www.google-analytics.com/analytics.js','ga');"
+//					+ "ga('create', 'UA-38728736-8', 'auto');"
+//					+ "ga('send', 'pageview');"
+//					+ "</script>");
 			
 			for (CssLib lib : CssLib.values()) {
 				response.getDocument().head().append(
@@ -136,7 +136,7 @@ public class CatmaApplicationServlet extends VaadinServlet {
 					String problemRedirectURL = 
 							RepositoryPropertyKey.BaseURL.getValue( 
 									RepositoryPropertyKey.BaseURL.getDefaultValue());
-					messages.setOutOfSyncURL(problemRedirectURL);
+
 					messages.setAuthenticationErrorURL(problemRedirectURL);
 					messages.setInternalErrorURL(problemRedirectURL);
 					messages.setSessionExpiredURL(problemRedirectURL);

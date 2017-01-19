@@ -81,8 +81,15 @@ public class DistributionComputation {
 		Object group = groupedQueryResult.getGroup();
 		
 		for (String sourceDocId : groupedQueryResult.getSourceDocumentIDs()) {
+			
+			String xyValuesLabel = group + " " + groupedQueryResult.getFrequency(sourceDocId);
+			
+			if (xyValuesLabel.length() > 39) {
+				xyValuesLabel = "..." + xyValuesLabel.substring(xyValuesLabel.length()-39);
+			}
+			
 			XYValues<Integer, Integer, QueryResultRow> xyValues = 
-					new XYValues<Integer, Integer, QueryResultRow>(group);
+					new XYValues<Integer, Integer, QueryResultRow>(xyValuesLabel);
 			Distribution distribution = documentDistributions.get(sourceDocId);
 			for (QueryResultRow row : groupedQueryResult.getSubResult(sourceDocId)) {
 				int segmentNo =
@@ -94,6 +101,16 @@ public class DistributionComputation {
 				
 				xyValues.set(xValue, yValue, row);
 			}
+			double segementCount = 100.0/segmentSizeInPercent;
+			
+			// set segments without occurrences to zero
+			for (int segmentNo=1; segmentNo<=segementCount; segmentNo++) {
+				int xValue = Double.valueOf((segmentNo*segmentSizeInPercent)-(segmentSizeInPercent/2.0)).intValue();
+				if (xyValues.get(xValue) == null) {
+					xyValues.set(xValue, 0);
+				}
+			}
+			
 			distribution.add(xyValues);
 			if (maxOccurrences < xyValues.getMaxYValue()) {
 				maxOccurrences = xyValues.getMaxYValue();

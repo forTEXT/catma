@@ -2,6 +2,7 @@ WebContent/VAADIN/gwt-unitCache
 WebContent/VAADIN/doubletreejs_debug
 WebContent/apiusers.json
 WebContent/catma_mp.properties
+WebContent/catma_mpm.properties
 db/local/*
 testlib
 testdocs
@@ -20,3 +21,4 @@ repo
 temp
 graphdb/test
 WebContent/VAADIN/themes/cleanew/styles.css
+WebContent/catma_infolog.properties

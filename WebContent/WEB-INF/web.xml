@@ -5,7 +5,7 @@
 		<description>
 		Vaadin production mode</description>
 		<param-name>productionMode</param-name>
-		<param-value>true</param-value>
+		<param-value>false</param-value>
 	</context-param>
 	<session-config>
     	<session-timeout>120</session-timeout>
@@ -78,13 +78,14 @@
 		</init-param>
 		<load-on-startup>3</load-on-startup>
 	</servlet>  
-	
+
+<!-- deprecated:
 	<servlet> 
 		<servlet-name>HeurecleaPeriodicExportInitializerServlet</servlet-name> 
 		<servlet-class>de.catma.heureclea.HeurecleaPeriodicExportInitializerServlet</servlet-class> 
 		<load-on-startup>4</load-on-startup>
 	</servlet>
-	
+	 -->
 	<servlet> 
 		<servlet-name>DBMaintenanceInitializerServlet</servlet-name> 
 		<servlet-class>de.catma.repository.db.maintenance.DBMaintenanceInitializerServlet</servlet-class> 

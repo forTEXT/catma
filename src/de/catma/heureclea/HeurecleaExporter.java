@@ -30,7 +30,9 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 import de.catma.tag.TagManager;
+import de.catma.user.UserProperty;
 
+@Deprecated
 public class HeurecleaExporter {
 	private static final SimpleDateFormat FORMATTER = new SimpleDateFormat("yyMMddhhmm");
 	
@@ -53,7 +55,7 @@ public class HeurecleaExporter {
 				
 				Map<String,String> userIdentification = 
 						new HashMap<String, String>(1);
-				userIdentification.put("user.ident", "heureclea");
+				userIdentification.put(UserProperty.identifier.name(), "heureclea");
 				
 				Repository repo = repoManager.openRepository(repoRef, userIdentification);
 

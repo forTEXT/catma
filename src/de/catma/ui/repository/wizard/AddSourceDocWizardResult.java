@@ -44,6 +44,10 @@ public class AddSourceDocWizardResult {
 		this.sourceDocumentResults.addAll(sourceDocumentResults);
 	}
 	
+	public void clearAllSourceDocumentResults() {
+		this.sourceDocumentResults.clear();
+	}
+	
 	public TechInfoSet getInputTechInfoSet() {
 		return this.inputTechInfoSet;
 	}

@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.ClassResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -44,6 +45,7 @@ import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.admin.AdminWindow;
+import de.catma.ui.repository.RepositoryHelpWindow;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.user.Permission;
 import de.catma.user.Role;
@@ -60,6 +62,9 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 	private boolean init = false;
 	private Button btReload;
 	private Button btAdmin;
+	private Button btHelp;
+	
+	RepositoryHelpWindow repositoryHelpWindow = new RepositoryHelpWindow();
 	
 	public RepositoryView(Repository repository) {
 		this.repository = repository;
@@ -122,6 +127,21 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 			}
 		});
 		
+		
+		btHelp.addClickListener(new ClickListener() {
+			
+			public void buttonClick(ClickEvent event) {
+								
+				if(repositoryHelpWindow.getParent() == null){
+					UI.getCurrent().addWindow(repositoryHelpWindow);
+				} else {
+					UI.getCurrent().removeWindow(repositoryHelpWindow);
+				}
+				
+			}
+		});
+		
+		
 	}
 
 	private void initComponents() {
@@ -131,7 +151,10 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		
 		Component documentsLabel = createDocumentsLabel();
 		addComponent(documentsLabel);
+		documentsLabel.setHeight("50");
+		documentsLabel.setStyleName("help-padding-fix");
 		VerticalSplitPanel splitPanel = new VerticalSplitPanel();
+		splitPanel.setStyleName("repository-panels");
 		splitPanel.setSplitPosition(65);
 		
 		Component documentsManagerPanel = createDocumentsManagerPanel();
@@ -178,41 +201,22 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		documentsLabel.addStyleName("bold-label");
 		
 		labelLayout.addComponent(documentsLabel);
-		labelLayout.setExpandRatio(documentsLabel, 1.0f);
+		labelLayout.setExpandRatio(documentsLabel, 0.5f);
 		btAdmin = new Button("Admin");
-		btAdmin.addStyleName("icon-button"); // for top-margin
 		btAdmin.setVisible(repository.getUser().hasPermission(Permission.adminwindow));
 		
 		labelLayout.addComponent(btAdmin);
 		labelLayout.setComponentAlignment(btAdmin, Alignment.MIDDLE_RIGHT);
 		
-		btReload = new Button(""); 
-		btReload.setIcon(new ClassResource("resources/icon-reload.gif"));
-		btReload.addStyleName("icon-button");
+		btReload = new Button(FontAwesome.REFRESH); 
 		labelLayout.addComponent(btReload);
 		labelLayout.setComponentAlignment(btReload, Alignment.MIDDLE_RIGHT);
+				
+		btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
+		btHelp.addStyleName("help-button");
 		
-		Label helpLabel = new Label();
-		helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
-		helpLabel.setWidth("20px");
-		helpLabel.setDescription(
-				"<h3>Hints</h3>" +
-				"<h4>First steps</h4>" +
-				"<h5>Adding a Source Document</h5>" +
-				"You can add a Source Document by clicking the \"Add Source Document\"-button. " +
-				"A Source Document can be a web resource pointed to by the URL or you can upload a document from your computer. " +
-				"<h5>Tagging a Source Document</h5>" +
-				"When you add your first Source Document, CATMA generates a set of example items to get you going: " +
-				"<ul><li>A User Markup Collection to hold your markup</li><li>A Tag Library with an example Tagset that contains an example Tag</li></ul> "+
-				"To start tagging a Source Document, just select the example User Markup Collection from the tree and click the \"Open User Markup Collection\"-button. " +
-				"Then follow the instructions given to you by the Tagger component." +
-				"<h5>Analyze a Source Document</h5>" +
-				"To analyze a Source Document, just select that document from the tree and click \"Analyze Source Document\" in the \"More Actions\"-menu." +
-				"Then follow the instructions given to you by the Analyzer component.");
-		helpLabel.addStyleName("help-icon-top-margin");
-		
-		labelLayout.addComponent(helpLabel);
-		labelLayout.setComponentAlignment(helpLabel, Alignment.MIDDLE_RIGHT);
+		labelLayout.addComponent(btHelp);
+		labelLayout.setComponentAlignment(btHelp, Alignment.MIDDLE_RIGHT);
 		
 		return labelLayout;
 	}

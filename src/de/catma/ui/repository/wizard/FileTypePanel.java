@@ -36,7 +36,6 @@ import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FilenameUtils;
 
-import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItemContainer;
@@ -44,6 +43,7 @@ import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.UI;
@@ -67,6 +67,34 @@ import de.catma.ui.dialog.wizard.WizardStepListener;
 import de.catma.util.IDGenerator;
 
 class FileTypePanel extends GridLayout implements DynamicWizardStep {
+	
+	class FileTypeCharsetValueChangeListener implements ValueChangeListener {
+		@Override
+		public void valueChange(ValueChangeEvent event) {
+			SourceDocumentResult sdr = (SourceDocumentResult) table.getValue();
+			if (sdr != null) {
+				FileType fileType = sdr.getSourceDocumentInfo().getTechInfoSet().getFileType();
+				
+				if(!fileType.isCharsetSupported()){
+					sdr.getSourceDocumentInfo().getTechInfoSet().setCharset(null);
+				}					
+
+				if (fileType.isCharsetSupported() 
+						&& sdr.getSourceDocumentInfo().getTechInfoSet().getCharset() == null) {
+					return;
+				}
+				
+				if (loadSourceDocumentAndContent(sdr)) {
+					onAdvance = canAdvance();
+					
+					showSourceDocumentPreview(sdr);
+				}
+				else {
+					taPreview.setValue("");
+				}
+			}
+		}
+	}
 
 	private Table table;
 	private boolean onAdvance = false;
@@ -91,7 +119,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		boolean canAdvance = true;
 		for(SourceDocumentResult sdr : wizardResult.getSourceDocumentResults()){
 			TechInfoSet techInfoSet = sdr.getSourceDocumentInfo().getTechInfoSet();
-			boolean needsEncoding = techInfoSet.getFileType() == FileType.TEXT || techInfoSet.getFileType() == FileType.HTML;
+			boolean needsEncoding = techInfoSet.getFileType().isCharsetSupported();
 			if(needsEncoding && techInfoSet.getCharset() == null){
 				canAdvance = false;
 				break;
@@ -106,9 +134,8 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			return;
 		}
 		
-		if(wizardResult.getSourceDocumentResults().size() > 0){
-			return;
-		}
+		wizardResult.clearAllSourceDocumentResults();
+		table.removeAllItems();
 		
 		try {
 			
@@ -138,7 +165,8 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	private ProtocolHandler getProtocolHandlerForUri(
 			URI inputFileURI, String fileID, String inputFileMimeType)
 					throws MalformedURLException, IOException{
-		if (inputFileURI.toURL().getProtocol().toLowerCase().equals("http")) {
+		if (inputFileURI.toURL().getProtocol().toLowerCase().equals("http")
+				|| inputFileURI.toURL().getProtocol().toLowerCase().equals("https")) {
 			
 			final String destinationFileUri = repository.getFileURL(
 					fileID, ((CatmaApplication)UI.getCurrent()).getTempDirectory() + "/");
@@ -234,10 +262,9 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			
 			sdrTechInfoSet.setMimeType(mimeType);			
 			FileType sdrFileType = FileType.getFileType(mimeType);
+			sdrTechInfoSet.setFileType(sdrFileType);
 			
-			if (sdrFileType.equals(FileType.TEXT)
-					||sdrFileType.equals(FileType.HTML)) {
-				
+			if (sdrFileType.isCharsetSupported()) {
 				Charset charset = Charset.forName(protocolHandler.getEncoding());
 				sdrTechInfoSet.setCharset(charset);
 			}
@@ -262,7 +289,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		}		
 	}
 	
-	private void loadSourceDocumentAndContent(SourceDocumentResult sdr) {
+	private boolean loadSourceDocumentAndContent(SourceDocumentResult sdr) {
 		try {
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler();
 			SourceDocument sourceDocument =
@@ -287,9 +314,19 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			CRC32 checksum = new CRC32();
 			checksum.update(currentByteContent);
 			sdr.getSourceDocumentInfo().getTechInfoSet().setChecksum(checksum.getValue());
+			return true;
 		} catch (Exception e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error loading the document content!", e);
+			TechInfoSet techInfoSet = sdr.getSourceDocumentInfo().getTechInfoSet();
+			Notification.show(
+				"Information", 
+				"Sorry, CATMA wasn't able to process the file as " 
+				+ techInfoSet.getFileType() + 
+				(techInfoSet.getFileType().isCharsetSupported()
+					?" with " + ((techInfoSet.getCharset()==null)?"unknown charset":" charset " 
+							+ techInfoSet.getCharset()):"")
+				+ "\n\nThe original error message is: " + e.getLocalizedMessage(),
+				Notification.Type.WARNING_MESSAGE);
+			return false;
 		}
 	}
 	
@@ -304,14 +341,8 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.charset");
 		
 		table = new Table("Documents", container);
-		
-		//TODO: investigate whether using a FieldFactory would make things easier..
-		table.addGeneratedColumn("sourceDocumentInfo.techInfoSet.fileType", 
-				new ComboBoxColumnGenerator(FileType.getActiveFileTypes(), makeComboBoxListenerGenerator())
-		);
-		
-		table.addGeneratedColumn("sourceDocumentInfo.techInfoSet.charset", 
-				new ComboBoxColumnGenerator(Charset.availableCharsets().values(), makeComboBoxListenerGenerator()));
+
+		table.setTableFieldFactory(new FileTypeFieldFactory(new FileTypeCharsetValueChangeListener()));
 		
 		table.setVisibleColumns(new Object[]{
 				"sourceDocumentInfo.techInfoSet.fileName",
@@ -323,6 +354,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		table.setSelectable(true);
 		table.setNullSelectionAllowed(false);
 		table.setImmediate(true);
+		table.setEditable(true);
 		
 		addComponent(table, 0, 0);
 		
@@ -342,33 +374,6 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		setColumnExpandRatio(1, 1);
 	}
 	
-	private ValueChangeListenerGenerator makeComboBoxListenerGenerator(){
-		return new ValueChangeListenerGenerator() {
-			public ValueChangeListener generateValueChangeListener(Table source, final Object itemId, Object columnId) {
-				return new Property.ValueChangeListener() {
-					public void valueChange(ValueChangeEvent event) {
-						SourceDocumentResult sdr = (SourceDocumentResult) itemId;
-						
-						FileType fileType = sdr.getSourceDocumentInfo().getTechInfoSet().getFileType();
-						
-						Property encodingProperty = table.getContainerProperty(itemId, "sourceDocumentInfo.techInfoSet.charset");
-						boolean readOnly = fileType != FileType.HTML && fileType != FileType.TEXT;
-						encodingProperty.setReadOnly(readOnly);	
-						
-						if(readOnly){
-							sdr.getSourceDocumentInfo().getTechInfoSet().setCharset(null);
-						}					
-						
-						loadSourceDocumentAndContent(sdr);
-						onAdvance = canAdvance();
-						
-						showSourceDocumentPreview(sdr);					
-					}
-				};
-			}
-		};
-	}
-	
 	private void initActions() {
 		table.addValueChangeListener(new ValueChangeListener() {
 			public void valueChange(ValueChangeEvent event) {
@@ -382,46 +387,21 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			}
 		});
 		
-		// TODO add listeners to uploadpanel and handle xslt loading
 	}
 	
 	private void handleFileType(SourceDocumentResult sdr) {
 		switch(sdr.getSourceDocumentInfo().getTechInfoSet().getFileType()) {
 			case TEXT : {
-//				setVisibleXSLTInputComponents(false);
-//				setVisiblePreviewComponents(true);
-				
 				showSourceDocumentPreview(sdr);
 				onAdvance = true;
 				break;
 			}
-//			case XML : {
-//				setVisiblePreviewComponents(false);
-//				setVisibleXSLTInputComponents(true);
-//				onAdvance = false;
-//				break;
-//			}
 			default : {
-//				setVisibleXSLTInputComponents(false);
-//				setVisiblePreviewComponents(true);
-				
 				showSourceDocumentPreview(sdr);
 				onAdvance = true;
 			}
 		}
 		wizardStepListener.stepChanged(FileTypePanel.this);
-	}
-	
-//	private void setVisibleXSLTInputComponents(boolean visible) {
-//		uploadLabel.setVisible(visible);
-//		uploadPanel.setVisible(visible);
-//	}
-//	
-	private void setVisiblePreviewComponents(boolean visible) {
-		previewPanel.setVisible(visible);
-		if (visible) {
-			taPreview.setValue("");
-		}
 	}
 	
 	public Component getContent() {
@@ -449,7 +429,12 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		return false;
 	}
 	
-	public void stepDeactivated(boolean forward){ /* noop */}
+	public void stepDeactivated(boolean forward){
+		if (!forward) {
+			wizardResult.clearAllSourceDocumentResults();
+			table.removeAllItems();
+		}
+	}
 
 	public void stepAdded() {/* noop */}
 

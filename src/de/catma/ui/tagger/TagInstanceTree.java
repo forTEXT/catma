@@ -60,6 +60,7 @@ public class TagInstanceTree extends HorizontalLayout {
 	static interface TagIntanceActionListener {
 		public void removeTagInstances(List<String> tagInstanceIDs);
 		public void updateProperty(TagInstance tagInstance, Collection<Property> properties);		
+		public void tagInstanceSelected(TagInstance tagInstance);
 	}
 	
 	private static enum TagInstanceTreePropertyName {
@@ -108,13 +109,13 @@ public class TagInstanceTree extends HorizontalLayout {
 				if (selectedItems.isEmpty()) {
 					Notification.show(
 						"Information", 
-						"Please select one or more Tag Instances in the list first!",
+						"Please select one or more Tag in the list first!",
 						Type.TRAY_NOTIFICATION);
 				}
 				else {
 					ConfirmDialog.show(UI.getCurrent(), 
-							"Remove Tag Instances", 
-							"Do you want to remove the selected Tag Instances?", 
+							"Remove Tag", 
+							"Do you want to remove the selected Tag?", 
 							"Yes", "No", new ConfirmDialog.Listener() {
 						public void onClose(ConfirmDialog dialog) {
 							if (dialog.isConfirmed()) {
@@ -140,7 +141,7 @@ public class TagInstanceTree extends HorizontalLayout {
 				if (selectionset.size() != 1) {
 					Notification.show(
 							"Information", 
-							"Please select exactly one Tag Instance or Property from the list first!",
+							"Please select exactly one Tag or Property from the list first!",
 							Type.TRAY_NOTIFICATION);	
 				}
 				else {
@@ -204,6 +205,7 @@ public class TagInstanceTree extends HorizontalLayout {
 					
 					tiInfoForm.setReadOnly(true);
 					
+					tagInstanceActionListener.tagInstanceSelected(tagInstance);
 				}
 				else {
 					tiInfoForm.setReadOnly(false);
@@ -211,6 +213,8 @@ public class TagInstanceTree extends HorizontalLayout {
 					tiInfoForm.setValue(emptyInfoSet);
 					
 					tiInfoForm.setReadOnly(true);
+					
+					tagInstanceActionListener.tagInstanceSelected(null);
 				}
 			}
 		});
@@ -267,7 +271,7 @@ public class TagInstanceTree extends HorizontalLayout {
 		tagInstanceTree.setContainerDataSource(new HierarchicalContainer());
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.caption, String.class, null);
-		tagInstanceTree.setColumnHeader(TagInstanceTreePropertyName.caption, "Tag Instance");
+		tagInstanceTree.setColumnHeader(TagInstanceTreePropertyName.caption, "Tag");
 		
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.icon, Resource.class, null);
@@ -305,9 +309,9 @@ public class TagInstanceTree extends HorizontalLayout {
 		tagInstanceTree.setColumnHeader(
 				TagInstanceTreePropertyName.path, "Tag Path");
 		tagInstanceTree.setColumnHeader(
-				TagInstanceTreePropertyName.instanceId, "Tag Instance ID");
+				TagInstanceTreePropertyName.instanceId, "Tag ID");
 		tagInstanceTree.setColumnHeader(
-				TagInstanceTreePropertyName.umc, "User Markup Collection");
+				TagInstanceTreePropertyName.umc, "Markup Collection");
 		addComponent(tagInstanceTree);
 		setExpandRatio(tagInstanceTree, 1.0f);
 		
@@ -317,7 +321,7 @@ public class TagInstanceTree extends HorizontalLayout {
 		buttonGrid.setMargin(new MarginInfo(false, true, true, false));
 		buttonGrid.setSpacing(true);
 		
-		btRemoveTagInstance = new Button("Remove Tag Instance");
+		btRemoveTagInstance = new Button("Remove Tag");
 		buttonGrid.addComponent(btRemoveTagInstance);
 		
 		btEditPropertyValues = new Button("Edit Property values");
@@ -326,7 +330,7 @@ public class TagInstanceTree extends HorizontalLayout {
 		buttonsAndInfo.addComponent(buttonGrid);
 		
 		tiInfoForm = new Form();
-		tiInfoForm.setCaption("Tag Instance Info");
+		tiInfoForm.setCaption("Tag Info");
 		
 		BeanItem<TagInstanceInfoSet> tiInfoItem = 
 				new BeanItem<TagInstanceInfoSet>(emptyInfoSet);
@@ -446,5 +450,22 @@ public class TagInstanceTree extends HorizontalLayout {
 					}
 				}, propertyValuesBin);
 		dialog.show();
+	}
+
+	public void setValue(String tagInstanceID) {
+		TagInstance tagInstance = getTagInstanceByID(tagInstanceID);
+		tagInstanceTree.setValue(Collections.singleton(tagInstance));
+	}
+
+	private TagInstance getTagInstanceByID(String tagInstanceID) {
+		for (Object itemId : tagInstanceTree.getItemIds()) {
+			if (tagInstanceTree.getParent(itemId)==null) {
+				TagInstance ti = (TagInstance)itemId;
+				if (ti.getUuid().equals(tagInstanceID)) {
+					return ti;
+				}
+			}
+		}
+		return null;
 	}
 }

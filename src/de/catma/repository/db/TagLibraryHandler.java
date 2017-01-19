@@ -75,10 +75,13 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
 import de.catma.util.Collections3;
 import de.catma.util.IDGenerator;
 
 class TagLibraryHandler {
+
+	private static final Logger LOGGER = Logger.getLogger(TagLibraryHandler.class.getName());
 
 	private static class PropertyDefinitionToUUID implements Function<PropertyDefinition, String> {
 		
@@ -96,7 +99,6 @@ class TagLibraryHandler {
 	private DBRepository dbRepository;
 	private HashMap<String, TagLibraryReference> tagLibraryReferencesById;
 	private IDGenerator idGenerator;
-	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private DataSource dataSource;
 
 	public TagLibraryHandler(
@@ -117,6 +119,20 @@ class TagLibraryHandler {
 			
 			Integer tagLibraryId = 
 					createTagLibrary(db, name, null, null, null, true);
+			
+			db
+			.insertInto(
+				USER_TAGLIBRARY,
+					USER_TAGLIBRARY.USERID,
+					USER_TAGLIBRARY.TAGLIBRARYID,
+					USER_TAGLIBRARY.ACCESSMODE,
+					USER_TAGLIBRARY.OWNER)
+			.values(
+				dbRepository.getCurrentUser().getUserId(),
+				tagLibraryId,
+				AccessMode.WRITE.getNumericRepresentation(),
+				(byte)1)
+			.execute();
 			
 			db.commitTransaction();
 			
@@ -161,22 +177,6 @@ class TagLibraryHandler {
 		.returning(TAGLIBRARY.TAGLIBRARYID)
 		.fetchOne()
 		.map(new IDFieldToIntegerMapper(TAGLIBRARY.TAGLIBRARYID));
-			
-		if (independent) {
-			db
-			.insertInto(
-				USER_TAGLIBRARY,
-					USER_TAGLIBRARY.USERID,
-					USER_TAGLIBRARY.TAGLIBRARYID,
-					USER_TAGLIBRARY.ACCESSMODE,
-					USER_TAGLIBRARY.OWNER)
-			.values(
-				dbRepository.getCurrentUser().getUserId(),
-				tagLibraryId,
-				AccessMode.WRITE.getNumericRepresentation(),
-				(byte)1)
-			.execute();
-		}
 		
 		return tagLibraryId;
 	}
@@ -300,9 +300,7 @@ class TagLibraryHandler {
 				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 
 		try {
-			db.beginTransaction();
 			importTagLibrary(db, tagLibrary, true);
-			db.commitTransaction();
 			
 			dbRepository.setTagManagerListenersEnabled(true);
 			
@@ -355,6 +353,22 @@ class TagLibraryHandler {
 		
 		for (TagsetDefinition tagsetDefinition : tagLibrary) {
 			createDeepTagsetDefinition(db, tagsetDefinition, tagLibraryId);
+		}
+		
+		if (independent) {
+			db
+			.insertInto(
+				USER_TAGLIBRARY,
+					USER_TAGLIBRARY.USERID,
+					USER_TAGLIBRARY.TAGLIBRARYID,
+					USER_TAGLIBRARY.ACCESSMODE,
+					USER_TAGLIBRARY.OWNER)
+			.values(
+				dbRepository.getCurrentUser().getUserId(),
+				tagLibraryId,
+				AccessMode.WRITE.getNumericRepresentation(),
+				(byte)1)
+			.execute();
 		}
 	}
 	
@@ -591,26 +605,31 @@ class TagLibraryHandler {
 
 			getLibraryAccess(db, tagLibraryId, true);
 
+			List<Integer> obsoleteTagDefinitionIds = db
+				.select(TAGDEFINITION.TAGDEFINITIONID)
+				.from(TAGDEFINITION)
+				.where(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId()))
+				.fetch()
+				.map(new IDFieldToIntegerMapper(TAGDEFINITION.TAGDEFINITIONID));
+			
+			List<Integer> obsoletePropertyDefinitionIds = db
+				.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+				.from(PROPERTYDEFINITION)
+				.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(obsoleteTagDefinitionIds))
+				.fetch()
+				.map(new IDFieldToIntegerMapper(PROPERTYDEFINITION.PROPERTYDEFINITIONID));
+			
 			db.beginTransaction();
 			
 			db.batch(
 				db
 				.delete(PROPERTYDEF_POSSIBLEVALUE)
 				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
-					db
-					.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
-					.from(PROPERTYDEFINITION)
-					.join(TAGDEFINITION)
-						.on(TAGDEFINITION.TAGDEFINITIONID
-								.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
-						.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
+						obsoletePropertyDefinitionIds)),
 				db
 				.delete(PROPERTYDEFINITION)
 				.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(
-					db
-					.select(TAGDEFINITION.TAGDEFINITIONID)
-					.from(TAGDEFINITION)
-					.where(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
+						obsoleteTagDefinitionIds)),
 				db
 				.update(TAGDEFINITION)
 				.set(TAGDEFINITION.PARENTID, (Integer)null)
@@ -681,7 +700,7 @@ class TagLibraryHandler {
 							!= AccessMode.WRITE.getNumericRepresentation())) {
 			throw new IOException(
 					"You seem to have no write access to this library! " +
-					"Please reload your Tag Library using the Tag Manager!");
+					"Please reload your Tag Type Library using the Tag Type Manager!");
 		}
 		else if (!independent) {
 			return AccessMode.WRITE;
@@ -751,13 +770,6 @@ class TagLibraryHandler {
 			Integer userTagLibId =
 					currentUserTagLibRecord.getValue(
 							USER_TAGLIBRARY.USER_TAGLIBRARYID);
-			boolean isOwner = 
-					currentUserTagLibRecord.getValue(
-							USER_TAGLIBRARY.OWNER, Boolean.class);
-			
-			int totalParticipants = 
-					(Integer)currentUserTagLibRecord.getValue("totalParticipants");
-
 			
 			db.beginTransaction();
 			
@@ -766,57 +778,9 @@ class TagLibraryHandler {
 			.where(USER_TAGLIBRARY.USER_TAGLIBRARYID.eq(userTagLibId))
 			.execute();
 			
-//			if (isOwner && (totalParticipants == 1)) {
-//				db.batch(
-//					db
-//					.delete(PROPERTYDEF_POSSIBLEVALUE)
-//					.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
-//						db
-//						.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
-//						.from(PROPERTYDEFINITION)
-//						.join(TAGDEFINITION)
-//							.on(TAGDEFINITION.TAGDEFINITIONID
-//									.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
-//						.join(TAGSETDEFINITION)
-//							.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
-//							.and(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)))),
-//					db
-//					.delete(PROPERTYDEFINITION)
-//					.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(
-//						db
-//						.select(TAGDEFINITION.TAGDEFINITIONID)
-//						.from(TAGDEFINITION)
-//						.join(TAGSETDEFINITION)
-//							.on(TAGSETDEFINITION.TAGSETDEFINITIONID.eq(TAGDEFINITION.TAGSETDEFINITIONID))
-//							.and(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)))),
-//					db
-//					.update(TAGDEFINITION)
-//					.set(TAGDEFINITION.PARENTID, (Integer)null)
-//					.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
-//						db
-//						.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
-//						.from(TAGSETDEFINITION)
-//						.where(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)))),
-//					db
-//					.delete(TAGDEFINITION)
-//					.where(TAGDEFINITION.TAGSETDEFINITIONID.in(
-//						db
-//						.select(TAGSETDEFINITION.TAGSETDEFINITIONID)
-//						.from(TAGSETDEFINITION)
-//						.where(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)))),
-//					db
-//					.delete(TAGSETDEFINITION)
-//					.where(TAGSETDEFINITION.TAGLIBRARYID.eq(tagLibraryId)),
-//					db
-//					.delete(TAGLIBRARY)
-//					.where(TAGLIBRARY.TAGLIBRARYID.eq(tagLibraryId)))
-//				.execute();
-//
-//			}
-			
 			db.commitTransaction();
 
-			tagLibraryReferencesById.remove(tagLibraryReference);
+			tagLibraryReferencesById.remove(tagLibraryReference.getId());
 			tagManager.removeTagLibrary(tagLibraryReference);
 			
 			dbRepository.getPropertyChangeSupport().firePropertyChange(
@@ -898,8 +862,8 @@ class TagLibraryHandler {
 				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 		
 		try {
-			Set<Integer> toBeDeletedIds = new HashSet<Integer>();
-			toBeDeletedIds.add(tagDefinition.getId());
+			Set<Integer> toBeDeletedTagDefIds = new HashSet<Integer>();
+			toBeDeletedTagDefIds.add(tagDefinition.getId());
 			
 			Result<Record> children = 
 					db.fetch(
@@ -907,7 +871,7 @@ class TagLibraryHandler {
 								+ tagDefinition.getId() + ")");
 			
 			for (Record r : children) {
-				toBeDeletedIds.add((Integer)r.getValue("tagDefinitionID"));
+				toBeDeletedTagDefIds.add((Integer)r.getValue("tagDefinitionID"));
 			}
 			
 			Integer tagLibraryId = db
@@ -922,60 +886,30 @@ class TagLibraryHandler {
 
 			getLibraryAccess(db, tagLibraryId, true);
 
+			List<Integer> toBeDeletedPropertyDefIds = db
+			.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+			.from(PROPERTYDEFINITION)
+			.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(toBeDeletedTagDefIds))
+			.fetch()
+			.map(new IDFieldToIntegerMapper(PROPERTYDEFINITION.PROPERTYDEFINITIONID));
+			
 			db.beginTransaction();
 			
 			db.batch(
-//				db
-//				.delete(PROPERTYVALUE)
-//				.where(PROPERTYVALUE.PROPERTYID.in(
-//					db
-//					.select(PROPERTY.PROPERTYID)
-//					.from(PROPERTY)
-//					.join(TAGINSTANCE)
-//						.on(TAGINSTANCE.TAGINSTANCEID
-//								.eq(PROPERTY.TAGINSTANCEID)
-//						.and(TAGINSTANCE.TAGDEFINITIONID.in(toBeDeletedIds))))),
-//				db
-//				.delete(PROPERTY)
-//				.where(PROPERTY.TAGINSTANCEID.in(
-//					db
-//					.select(TAGINSTANCE.TAGINSTANCEID)
-//					.from(TAGINSTANCE)
-//					.where(TAGINSTANCE.TAGDEFINITIONID.in(toBeDeletedIds)))),
-//				db
-//				.delete(TAGREFERENCE)
-//				.where(TAGREFERENCE.TAGINSTANCEID.in(
-//					db
-//					.select(TAGINSTANCE.TAGINSTANCEID)
-//					.from(TAGINSTANCE)
-//					.where(TAGINSTANCE.TAGDEFINITIONID.in(toBeDeletedIds)))),
-//				db
-//				.delete(TAGINSTANCE)
-//				.where(TAGINSTANCE.TAGDEFINITIONID.eq(tagDefinition.getId())),
 				db
 				.delete(PROPERTYDEF_POSSIBLEVALUE)
 				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(
-					db
-					.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
-					.from(PROPERTYDEFINITION)
-					.join(TAGDEFINITION)
-						.on(TAGDEFINITION.TAGDEFINITIONID
-								.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
-						.and(TAGDEFINITION.TAGDEFINITIONID.in(toBeDeletedIds)))),
+						toBeDeletedPropertyDefIds)),
 				db
 				.delete(PROPERTYDEFINITION)
-				.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(
-					db
-					.select(TAGDEFINITION.TAGDEFINITIONID)
-					.from(TAGDEFINITION)
-					.where(TAGDEFINITION.TAGDEFINITIONID.in(toBeDeletedIds)))),
+				.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(toBeDeletedTagDefIds)),
 				db
 				.update(TAGDEFINITION)
 				.set(TAGDEFINITION.PARENTID, (Integer)null)
-				.where(TAGDEFINITION.TAGDEFINITIONID.in(toBeDeletedIds)),
+				.where(TAGDEFINITION.TAGDEFINITIONID.in(toBeDeletedTagDefIds)),
 				db
 				.delete(TAGDEFINITION)
-				.where(TAGDEFINITION.TAGDEFINITIONID.in(toBeDeletedIds)),
+				.where(TAGDEFINITION.TAGDEFINITIONID.in(toBeDeletedTagDefIds)),
 				db
 				.update(TAGSETDEFINITION)
 				.set(TAGSETDEFINITION.VERSION, 
@@ -1057,45 +991,50 @@ class TagLibraryHandler {
 		.fetch()
 		.map(new UUIDByteToStringFieldMapper());
 		
-		HashSet<String> toBeDeleted = new HashSet<String>();
-		HashSet<byte[]> toBeDeletedByte = new HashSet<byte[]>();
+		HashSet<String> toBeDeletedTagDefUUID = new HashSet<String>();
+		HashSet<byte[]> toBeDeletedTagDefByteUUID = new HashSet<byte[]>();
 		for (String uuid : oldTagDefUUIDs) {
 			if (!tagsetDefinition.hasTagDefinition(uuid)) {
-				toBeDeleted.add(uuid);
-				toBeDeletedByte.add(idGenerator.catmaIDToUUIDBytes(uuid));
+				toBeDeletedTagDefUUID.add(uuid);
+				toBeDeletedTagDefByteUUID.add(idGenerator.catmaIDToUUIDBytes(uuid));
 			}
 			
 		}
 		
+		List<Integer> toBeDeletedTagDefIds = db
+			.select(TAGDEFINITION.TAGDEFINITIONID)
+			.from(TAGDEFINITION)
+			.where(TAGDEFINITION.UUID.in(toBeDeletedTagDefByteUUID))
+			.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId()))
+			.fetch()
+			.map(new IDFieldToIntegerMapper(TAGDEFINITION.TAGDEFINITIONID));
+		
+		List<Integer> toBeDeletedPropertyDefIds = db
+			.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+			.from(PROPERTYDEFINITION)
+			.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(toBeDeletedTagDefIds))
+			.fetch()
+			.map(new IDFieldToIntegerMapper(PROPERTYDEFINITION.PROPERTYDEFINITIONID));
+		
 		db.batch(
 			db
 			.delete(PROPERTYDEF_POSSIBLEVALUE)
-			.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(db
-				.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
-				.from(PROPERTYDEFINITION)
-				.join(TAGDEFINITION)
-					.on(TAGDEFINITION.TAGDEFINITIONID.eq(PROPERTYDEFINITION.TAGDEFINITIONID))
-					.and(TAGDEFINITION.UUID.in(toBeDeletedByte))
-					.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
+			.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(toBeDeletedPropertyDefIds)),
 			db
 			.delete(PROPERTYDEFINITION)
-			.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(db
-				.select(TAGDEFINITION.TAGDEFINITIONID)
-				.from(TAGDEFINITION)
-				.where(TAGDEFINITION.UUID.in(toBeDeletedByte))
-				.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))),
+			.where(PROPERTYDEFINITION.TAGDEFINITIONID.in(toBeDeletedTagDefIds)),
 			db
 			.update(TAGDEFINITION)
 			.set(TAGDEFINITION.PARENTID, (Integer)null)
-			.where(TAGDEFINITION.UUID.in(toBeDeletedByte)
+			.where(TAGDEFINITION.UUID.in(toBeDeletedTagDefByteUUID)
 			.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId()))),
 			db
 			.delete(TAGDEFINITION)
-			.where(TAGDEFINITION.UUID.in(toBeDeletedByte))
+			.where(TAGDEFINITION.UUID.in(toBeDeletedTagDefByteUUID))
 			.and(TAGDEFINITION.TAGSETDEFINITIONID.eq(tagsetDefinition.getId())))
 		.execute();
 		
-		tagsetDefinitionUpdateLog.setDeletedTagDefinitionUuids(toBeDeleted);
+		tagsetDefinitionUpdateLog.setDeletedTagDefinitionUuids(toBeDeletedTagDefUUID);
 	}
 
 	private void updateDeepTagDefinition(
@@ -1169,29 +1108,34 @@ class TagLibraryHandler {
 		.fetch()
 		.map(new UUIDByteToStringFieldMapper());
 		
-		Collection<String> toBeDeleted = 
+		Collection<String> toBeDeletedPropertyDefUUIDs = 
 			Collections3.getSetDifference(
 				oldPropertyDefinitionUUIDs, existingPropertyDefinitionUUIDs);
 		
-		Collection<byte[]> toBeDeletedByteUUIDs = 
-				Collections2.transform(toBeDeleted, new UUIDtoByteMapper());
+		Collection<byte[]> toBeDeletedPropertyDefByteUUIDs = 
+				Collections2.transform(toBeDeletedPropertyDefUUIDs, new UUIDtoByteMapper());
 
-		if (!toBeDeletedByteUUIDs.isEmpty()) {
+		if (!toBeDeletedPropertyDefByteUUIDs.isEmpty()) {
+			
+			List<Integer> toBeDeletedPropertyDefIds = db
+				.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
+				.from(PROPERTYDEFINITION)
+				.where(PROPERTYDEFINITION.UUID.in(toBeDeletedPropertyDefByteUUIDs))
+				.and(PROPERTYDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId()))
+				.fetch()
+				.map(new IDFieldToIntegerMapper(PROPERTYDEFINITION.PROPERTYDEFINITIONID));
+			
+			
 			db.batch(
 				db
 				.delete(PROPERTYDEF_POSSIBLEVALUE)
-				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(db
-					.select(PROPERTYDEFINITION.PROPERTYDEFINITIONID)
-					.from(PROPERTYDEFINITION)
-					.where(PROPERTYDEFINITION.UUID.in(toBeDeletedByteUUIDs))
-					.and(PROPERTYDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId())))),
+				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.in(toBeDeletedPropertyDefIds)),
 				db
 				.delete(PROPERTYDEFINITION)
-				.where(PROPERTYDEFINITION.UUID.in(toBeDeletedByteUUIDs))
-				.and(PROPERTYDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId())))
+				.where(PROPERTYDEFINITION.PROPERTYDEFINITIONID.in(toBeDeletedPropertyDefIds)))
 			.execute();
 		}		
-		tagsetDefinitionUpdateLog.addDeletedPropertyDefinitions(toBeDeleted);
+		tagsetDefinitionUpdateLog.addDeletedPropertyDefinitions(toBeDeletedPropertyDefUUIDs);
 	}
 
 	private boolean updateDeepPropertyDefinition(DSLContext db,
@@ -1412,16 +1356,6 @@ class TagLibraryHandler {
 				.update(TAGDEFINITION)
 				.set(TAGDEFINITION.VERSION, SqlTimestamp.from(tagDefinition.getVersion().getDate()))
 				.where(TAGDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId())),
-//				db
-//				.delete(PROPERTYVALUE)
-//				.where(PROPERTYVALUE.PROPERTYID.in(
-//					db
-//					.select(PROPERTY.PROPERTYID)
-//					.from(PROPERTY)
-//					.where(PROPERTY.PROPERTYDEFINITIONID.eq(propertyDefinition.getId())))),
-//				db
-//				.delete(PROPERTY)
-//				.where(PROPERTY.PROPERTYDEFINITIONID.eq(propertyDefinition.getId())),
 				db
 				.delete(PROPERTYDEF_POSSIBLEVALUE)
 				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.eq(propertyDefinition.getId())),
@@ -1487,6 +1421,62 @@ class TagLibraryHandler {
 						ref, null);	
 			}
 		}
+	}
+
+	void copyTagLibraries(int sourceUserId) throws IOException {
+
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+
+		List<TagLibraryReference> tagLibReferences = db
+		.select()
+		.from(TAGLIBRARY)
+		.join(USER_TAGLIBRARY)
+			.on(USER_TAGLIBRARY.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID)
+			.and(USER_TAGLIBRARY.USERID.eq(sourceUserId)))
+		.where(TAGLIBRARY.INDEPENDENT.eq((byte)1))
+		.fetch()
+		.map(new TagLibraryReferenceMapper());
+		
+		for (TagLibraryReference tagLibraryReference : tagLibReferences) {
+			TagLibrary tagLibrary = getTagLibrary(tagLibraryReference);
+			TagLibrary copyTagLibrary = new TagLibrary(tagLibrary);
+			importTagLibrary(db, copyTagLibrary, true);
+			
+			TagLibraryReference ref = new TagLibraryReference(
+					copyTagLibrary.getId(), copyTagLibrary.getContentInfoSet());
+			tagLibraryReferencesById.put(ref.getId(), ref);
+		}
+		
+	}
+
+	public TagLibrary getTagLibraryFor(String uuid, Version version) throws IOException {
+
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+		
+		List<Integer> tagLibraryIDs = db
+		.select(TAGLIBRARY.TAGLIBRARYID)
+		.from(TAGLIBRARY)
+		.join(USER_TAGLIBRARY)
+			.on(USER_TAGLIBRARY.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+			.and(USER_TAGLIBRARY.USERID.eq(dbRepository.getCurrentUser().getUserId()))
+		.join(TAGSETDEFINITION)
+			.on(TAGSETDEFINITION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+			.and(TAGSETDEFINITION.UUID.eq(idGenerator.catmaIDToUUIDBytes(uuid)))
+			.and(TAGSETDEFINITION.VERSION
+				.eq(DSL.nvl(SqlTimestamp.from(version==null?null:version.getDate()), TAGSETDEFINITION.VERSION)))
+		.where(TAGLIBRARY.INDEPENDENT.eq((byte)1))
+		.fetch()
+		.map(new IDFieldToIntegerMapper(TAGLIBRARY.TAGLIBRARYID));
+				
+		if (!tagLibraryIDs.isEmpty()) {
+			// we take the first library that contains our tagsetdefinition 
+			return getTagLibrary(
+				new TagLibraryReference(
+					String.valueOf(tagLibraryIDs.get(0)), new ContentInfoSet()));
+		}
+		
+		
+		return null;
 	}
 	
 }

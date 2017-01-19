@@ -20,9 +20,15 @@ package de.catma.ui.repository;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.util.BeanItemContainer;
+import com.vaadin.server.Page;
+import com.vaadin.server.WebBrowser;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -39,10 +45,26 @@ import de.catma.document.repository.RepositoryManager;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.repository.RepositoryReference;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.Parameter;
+import de.catma.ui.ParameterComponentValue;
+import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.tabbedview.TabComponent;
+import de.catma.user.UserProperty;
+import de.catma.util.IDGenerator;
 
 public class RepositoryListView extends VerticalLayout implements TabComponent {
 
+	private final static Logger LOGGER = Logger.getLogger(RepositoryListView.class.getName());
+	private final static Cache<String,Integer> GUEST_ACCESS_COUNT_BY_IP = 
+		CacheBuilder
+			.newBuilder()
+			.expireAfterWrite(
+				RepositoryPropertyKey.GuestAccessCountExpirationInDays.getValue(1), 
+				TimeUnit.DAYS)
+			.concurrencyLevel(
+				RepositoryPropertyKey.GuestAccessCountConcurrencyLevel.getValue(20))
+			.build();
+	
 	private RepositoryManager repositoryManager;
 	private Table repositoryTable;
 	private Button openBt;
@@ -52,7 +74,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		initComponents();
 		initActions();
 	}
-
+	
 	private void initActions() {
 		openBt.addClickListener(new ClickListener() {
 			
@@ -65,41 +87,30 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 							Type.TRAY_NOTIFICATION);
 				}
 				else {
-					try {	
-						if (repositoryReference.isAuthenticationRequired()) {
-
+					try {
+						if (((CatmaApplication)UI.getCurrent()).getParameter(
+										Parameter.USER_SPAWN_ASGUEST, "0").equals("1")) {
 							
-							String baseURL = 
-									RepositoryPropertyKey.BaseURL.getValue(
-										RepositoryPropertyKey.BaseURL.getDefaultValue());
-	
-							AuthenticationDialog authDialog = 
-									new AuthenticationDialog(
-											"Please authenticate yourself", 
-											repositoryReference, repositoryManager,
-											baseURL);
-							authDialog.show();
+							SpamProtectionDialog dlg = new SpamProtectionDialog(new SaveCancelListener<Void>() {
+								@Override
+								public void cancelPressed() {/*noop*/}
+								@Override
+								public void savePressed(Void result) {
+									try {
+										openAsGuest(repositoryReference);
+									} catch (Exception e) {
+										((CatmaApplication)UI.getCurrent()).showAndLogError(
+												"Error opening the repository!", e);
+									}
+								}
+							});
+							dlg.show();
 						}
-						else {
-							String user = 
-								((CatmaApplication)UI.getCurrent()).getParameter(
-										"user.name");
-							if (user == null) {
-								user = System.getProperty("user.name");
-							}
-							Map<String,String> userIdentification = 
-									new HashMap<String, String>(1);
-							userIdentification.put(
-								"user.ident", user);
-							
-							((CatmaApplication)UI.getCurrent()).setUser(userIdentification);
-							
-							Repository repository = 
-									repositoryManager.openRepository(
-											repositoryReference, userIdentification);
-							
-							((CatmaApplication)UI.getCurrent()).openRepository(
-									repository);
+						else if (repositoryReference.isAuthenticationRequired()) {
+							openWithAuthentication(repositoryReference);
+						}
+						else if ( ! repositoryReference.isAuthenticationRequired()) {
+							openWithoutAuthentication(repositoryReference);
 						}
 					} catch (Exception e) {
 						((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -116,6 +127,90 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		});
 	}
 
+
+	private void openWithoutAuthentication(RepositoryReference repositoryReference) throws Exception {
+		String user = 
+				((CatmaApplication)UI.getCurrent()).getParameter(
+						Parameter.USER_IDENTIFIER);
+		if (user == null) {
+			user = System.getProperty("user.name");
+		}
+		Map<String,String> userIdentification = 
+				new HashMap<String, String>(1);
+		userIdentification.put(
+			UserProperty.identifier.name(), user);
+		open((CatmaApplication) getUI(),repositoryReference, userIdentification);
+		Page.getCurrent().setLocation(RepositoryPropertyKey.BaseURL.getValue());
+	}
+
+	private void openAsGuest(RepositoryReference repositoryReference) throws Exception {
+		WebBrowser webBrowser = Page.getCurrent().getWebBrowser();
+		String clientIpAddress = webBrowser.getAddress();
+		if (clientIpAddress != null ) {
+			
+			Integer currentCount = 
+					GUEST_ACCESS_COUNT_BY_IP.get(clientIpAddress, ()->0);
+			
+			if (currentCount < RepositoryPropertyKey.GuestAccessCountMax.getValue(10)) {
+				IDGenerator idGenerator = new IDGenerator();
+				String userName = idGenerator.generate();
+				Map<String,String> userIdentification = 
+						new HashMap<String, String>(1);
+				userIdentification.put(
+						UserProperty.identifier.name(), userName);
+				userIdentification.put(UserProperty.guest.name(), Boolean.TRUE.toString());
+				
+				open((CatmaApplication) getUI(), repositoryReference, userIdentification);
+				
+				GUEST_ACCESS_COUNT_BY_IP.put(clientIpAddress, currentCount+1);
+				
+				Page.getCurrent().setLocation(RepositoryPropertyKey.BaseURL.getValue());
+			}
+			else {
+				LOGGER.warning("IP " + clientIpAddress + " has exceeded max guest access count!");
+				Notification.show(
+					"Info", 
+					"You have reached the limit for guest account access within 24h!", 
+					Type.TRAY_NOTIFICATION);
+			}
+		}
+		else {
+			LOGGER.warning("cannot open guest repository, client IP is null!");
+		}
+	}
+
+	private void openWithAuthentication(RepositoryReference repositoryReference) {
+		AuthenticationDialog authDialog = createAuthenticationDialog();
+		authDialog.show();
+	}
+	
+	void open(
+			CatmaApplication catmaApplication, // needs to be passed in, as getUI() may not be initialized yet 
+			RepositoryReference repositoryReference, 
+			Map<String,String> userIdentification) throws Exception {
+		
+		catmaApplication.setUser(userIdentification);
+		
+		Repository repository = 
+				repositoryManager.openRepository(
+						repositoryReference, userIdentification);
+		
+		if (catmaApplication.getParameter(Parameter.USER_SPAWN, "0").equals("1")) {
+			repository.spawnContentFrom(
+				catmaApplication.getParameter(Parameter.USER_IDENTIFIER), 
+				catmaApplication.getParameter(Parameter.CORPORA_COPY, "0").equals("1"),
+				catmaApplication.getParameter(Parameter.TAGLIBS_COPY, "0").equals("1"));
+		}
+		
+		catmaApplication.openRepository(repository);
+		
+		if (catmaApplication.getParameter(Parameter.COMPONENT) != null) {
+			ParameterComponentValue.show(
+					catmaApplication, catmaApplication.getParameter(Parameter.COMPONENT));
+		}
+
+
+	}
 
 	private void initComponents() {
 		repositoryTable = new Table("Available Repositories");
@@ -179,5 +274,23 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 	public void addClickshortCuts() { /* noop*/	}
 	
 	public void removeClickshortCuts() { /* noop*/ }
+
+	public AuthenticationDialog createAuthenticationDialog() {
+		RepositoryReference repositoryReference = 
+				(RepositoryReference)repositoryTable.getValue();
+		return createAuthenticationDialog(repositoryReference);
+	}
+	
+	private AuthenticationDialog createAuthenticationDialog(RepositoryReference repositoryReference) {
+		String baseURL = 
+				RepositoryPropertyKey.BaseURL.getValue(
+					RepositoryPropertyKey.BaseURL.getDefaultValue());
+
+		return new AuthenticationDialog(
+						"Please authenticate yourself", 
+						repositoryReference, 
+						this,
+						baseURL);
+	}
 
 }

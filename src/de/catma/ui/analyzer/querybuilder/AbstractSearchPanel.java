@@ -69,8 +69,8 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 		cbComplexQuery.setImmediate(true);
 		addComponent(cbComplexQuery);
 		
-		setExpandRatio(content, 0.99f);
-		setExpandRatio(cbComplexQuery, 0.01f);
+		setExpandRatio(content, 0.95f);
+		setExpandRatio(cbComplexQuery, 0.05f);
 		setComponentAlignment(cbComplexQuery, Alignment.BOTTOM_RIGHT);
 		
 		initSearchPanelActions();

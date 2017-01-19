@@ -20,9 +20,10 @@ package de.catma.ui.analyzer.querybuilder;
 
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Slider;
+import de.catma.ui.Slider;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalSplitPanel;
@@ -99,20 +100,22 @@ public class SimilPanel extends AbstractSearchPanel implements DynamicWizardStep
 	private Component createSearchPanel() {
 		HorizontalLayout searchPanel = new HorizontalLayout();
 		searchPanel.setWidth("100%");
+		searchPanel.setHeight("50");
 		searchPanel.setSpacing(true);
 		
 		inputField = new TextField();
 		inputField.setWidth("100%");
 		searchPanel.addComponent(inputField);
-		searchPanel.setExpandRatio(inputField, 0.7f);
+		searchPanel.setExpandRatio(inputField, 0.3f);
 		inputField.setImmediate(true);
 		inputField.setRequired(true);
 		inputField.setInvalidAllowed(false);
 		inputField.addValidator(new NonEmptySequenceValidator("This value may not be empty!"));
 		
-		gradeSlider = new Slider("Grade of similarity", 0, 100);
+		gradeSlider = new Slider(null, 0, 100, "Grade of similarity");
 		gradeSlider.setResolution(0);
 		gradeSlider.setSizeFull();
+		gradeSlider.setStyleName("similarity-slider");
 		try {
 			gradeSlider.setValue(80.0);
 		} catch (ValueOutOfBoundsException toBeIgnored) {}

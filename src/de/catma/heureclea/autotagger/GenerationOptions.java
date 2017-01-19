@@ -12,6 +12,7 @@ public class GenerationOptions {
 	private TagsetIdentification tagsetIdentification;
 	private String token;
 	private String identifier;
+	private String sourceDocId;
 
 	public GenerationOptions(String corpusId, String identifier) {
 		super();
@@ -24,6 +25,12 @@ public class GenerationOptions {
 		this.identifier = identifier;
 		this.token = totp.now();
 	}
+	
+	public GenerationOptions(String sourceDocId, String corpusId, String identifier) {
+		this(corpusId, identifier);
+		this.sourceDocId = sourceDocId;
+	}
+	
 	public String getCorpusId() {
 		return corpusId;
 	}
@@ -37,6 +44,7 @@ public class GenerationOptions {
 		this.tagsetIdentification = tagsetIdentification;
 	}
 	
+	
 	public String getToken() {
 		return token;
 	}
@@ -47,5 +55,8 @@ public class GenerationOptions {
 	
 	public String getApiURL() {
 		return RepositoryPropertyKey.BaseURL.getValue().trim()+"api";
+	}
+	public String getSourceDocId() {
+		return sourceDocId;
 	}
 }

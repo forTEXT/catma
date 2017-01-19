@@ -166,14 +166,16 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		HorizontalLayout tagLibraryButtonPanel = new HorizontalLayout();
 		tagLibraryButtonPanel.setSpacing(true);
 		
-		btOpenTagLibrary = new Button("Open Tag Library");
+		btOpenTagLibrary = new Button("Open Tag Type Library");
+		btOpenTagLibrary.addStyleName("primary-button");
 		btOpenTagLibrary.setEnabled(false);
 		tagLibraryButtonPanel.addComponent(btOpenTagLibrary);
 
-		btCreateTagLibrary = new Button("Create Tag Library");
+		btCreateTagLibrary = new Button("Create Tag Type Library");
+		btCreateTagLibrary.addStyleName("secondary-button");
 		tagLibraryButtonPanel.addComponent(btCreateTagLibrary);
 		
-		btExportTagLibrary = new Button("Export Tag Library");
+		btExportTagLibrary = new Button("Export Tag Type Library");
 		tagLibraryButtonPanel.addComponent(btExportTagLibrary);
 		
 		MenuBar menuMoreTagLibraryActions = new MenuBar();
@@ -198,7 +200,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		tagLibrariesTree = new Tree();
 		tagLibrariesTree.setContainerDataSource(tagLibraryContainer);
 		
-		tagLibrariesTree.setCaption("Tag Libraries");
+		tagLibrariesTree.setCaption("Tag Type Libraries");
 		tagLibrariesTree.addStyleName("bold-label-caption");
 		tagLibrariesTree.setImmediate(true);
 		tagLibrariesTree.setItemCaptionMode(ItemCaptionMode.ID);
@@ -289,7 +291,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 				SingleValueDialog singleValueDialog = new SingleValueDialog();
 						
 				singleValueDialog.getSingleValue(
-						"Create a new Tag Library",
+						"Create a new Tag Type Library",
 						"You have to enter a name!",
 						new SaveCancelListener<PropertysetItem>() {
 					public void cancelPressed() {}
@@ -303,7 +305,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 							repository.createTagLibrary(name);
 						} catch (IOException e) {
 							((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"Error creating the Tag Library!", e);
+								"Error creating the Tag Type Library!", e);
 						}
 					}
 				}, nameProperty);
@@ -353,7 +355,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		});
 
 		
-		miMoreTagLibraryActions.addItem("Import Tag Library", new Command() {
+		miMoreTagLibraryActions.addItem("Import Tag Type Library", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
 				handleTagLibraryImport();
@@ -368,14 +370,14 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 			}
 		});
 		
-		miMoreTagLibraryActions.addItem("Remove Tag Library", new Command() {
+		miMoreTagLibraryActions.addItem("Remove Tag Type Library", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
 				handleTagLibraryRemoval();
 			}
 		});
 
-		miMoreTagLibraryActions.addItem("Share Tag Library", new Command() {
+		miMoreTagLibraryActions.addItem("Share Tag Type Library", new Command() {
 			
 			public void menuSelected(MenuItem selectedItem) {
 				handleShareTagLibraryRequest(tagLibrariesTree.getValue());
@@ -484,10 +486,10 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 			
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				"Error opening the Tag Library!", e);
+				"Error opening the Tag Type Library!", e);
 		} catch (ParsingException parsingException) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				"Error exporting the Tag Library!", parsingException);
+				"Error exporting the Tag Type Library!", parsingException);
 		}
 		return null;
 	}
@@ -512,10 +514,10 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 									result.getUserIdentification(), 
 									result.getAccessMode());
 						} catch (IOException e) {
-							if (e.getCause() instanceof UnknownUserException) {
+							if (e instanceof UnknownUserException) {
 								Notification.show(
-										"Sharing failed!", e.getCause().getMessage(), 
-										Type.WARNING_MESSAGE);
+										"Sharing failed!", e.getMessage(), 
+										Type.ERROR_MESSAGE);
 							}
 							else {
 								((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -530,7 +532,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		}
 		else {
 			Notification.show(
-					"Information", "Please select a Tag Library first!",
+					"Information", "Please select a Tag Type Library first!",
 					Type.TRAY_NOTIFICATION);
 		}
 
@@ -539,7 +541,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 	private void handleTagLibraryExportRequest(Object value) {
 		if (value == null) {
 			Notification.show(
-					"Information", "Please select a Tag Library first!",
+					"Information", "Please select a Tag Type Library first!",
 					Type.TRAY_NOTIFICATION);
 		}
 	}
@@ -554,19 +556,19 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 				((CatmaApplication)UI.getCurrent()).openTagLibrary(repository, tagLibrary);
 			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error opening the Tag Library!", e);
+					"Error opening the Tag Type Library!", e);
 			}
 		}	
 		else {
 			Notification.show(
-					"Information", "Please select a Tag Library first!",
+					"Information", "Please select a Tag Type Library first!",
 					Type.TRAY_NOTIFICATION);
 		}
 	}
 
 	private void handleTagLibraryImport() {
 		UploadDialog uploadDialog =
-				new UploadDialog("Upload Tag Library", 
+				new UploadDialog("Upload Tag Type Library", 
 						new SaveCancelListener<byte[]>() {
 			
 			public void cancelPressed() {}
@@ -584,7 +586,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 					
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error importing the Tag Library!", e);
+						"Error importing the Tag Type Library!", e);
 				}
 				finally {
 					CloseSafe.close(is);
@@ -610,7 +612,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		if (tagLibraryReference != null) {
 			ConfirmDialog.show(
 				UI.getCurrent(), 
-				"Do you really want to delete Tag Library '"
+				"Do you really want to delete Tag Type Library '"
 						+ tagLibraryReference.toString() + "'?",
 		        new ConfirmDialog.Listener() {
 
@@ -620,7 +622,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 								repository.delete(tagLibraryReference);
 							} catch (IOException e) {
 								((CatmaApplication)UI.getCurrent()).showAndLogError(
-									"Error deleting the Tag Library!", e);
+									"Error deleting the Tag Type Library!", e);
 							}
 		                }
 		            }

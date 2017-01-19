@@ -23,6 +23,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -34,21 +35,25 @@ import java.util.logging.Logger;
 
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Theme;
-import com.vaadin.server.ClassResource;
 import com.vaadin.server.ExternalResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
+import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Link;
-import com.vaadin.ui.MenuBar;
-import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.Window;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.themes.BaseTheme;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.BackgroundServiceProvider;
@@ -73,35 +78,30 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.analyzer.AnalyzerManagerView;
-import de.catma.ui.analyzer.AnalyzerManagerWindow;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.menu.LoginLogoutCommand;
-import de.catma.ui.menu.Menu;
+import de.catma.ui.menu.MainMenu;
 import de.catma.ui.menu.MenuFactory;
 import de.catma.ui.repository.RepositoryManagerView;
-import de.catma.ui.repository.RepositoryManagerWindow;
 import de.catma.ui.tagger.TaggerManagerView;
-import de.catma.ui.tagger.TaggerManagerWindow;
 import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagManagerView;
-import de.catma.ui.tagmanager.TagManagerWindow;
 import de.catma.ui.visualizer.VisualizationManagerView;
-import de.catma.ui.visualizer.VisualizationManagerWindow;
 
-//@Push(value=PushMode.MANUAL, transport=Transport.LONG_POLLING)
-@Theme("cleatheme")
+//@Push(PushMode.MANUAL)
+@Theme("catma")
 @PreserveOnRefresh
 public class CatmaApplication extends UI
 	implements BackgroundServiceProvider, AnalyzerProvider, LoginToken {
 	
 	private static final String MINORVERSION = 
-			"(v"+new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date())+")";
+			"(build "+new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date())+")";
 	private static final String WEB_INF_DIR = "WEB-INF";
 
 	private RepositoryManagerView repositoryManagerView;
 	private TagManagerView tagManagerView;
-	private Menu menu;
+	private MainMenu menu;
 	private String tempDirectory = null;
 	private BackgroundService backgroundService;
 	private TaggerManagerView taggerManagerView;
@@ -113,9 +113,19 @@ public class CatmaApplication extends UI
 	private boolean repositoryOpened = false;
 	private UserManager userManager = new UserManager();
 	private Object user;
-	private HorizontalLayout mainLayout;
-
+	private VerticalLayout mainLayout;
+	private Panel menuPanel;
+	private HorizontalLayout menuLayout;
+	private Panel contentPanel;
+	private Button btHelp;
+	
+	private ThemeResource logoResource;
+	
+	private Label defaultContentPanelLabel;
+	
 	private PropertyChangeSupport propertyChangeSupport;
+	
+	private UIHelpWindow uiHelpWindow = new UIHelpWindow();
 	
 	/**
 	 * Events emitted by the CatmaApplication.
@@ -143,15 +153,37 @@ public class CatmaApplication extends UI
 	protected void init(VaadinRequest request) {
 		backgroundService = new UIBackgroundService(true);
 		
-		handleParameters(request.getParameterMap());
+		storeParameters(request.getParameterMap());
 		
-		Page.getCurrent().setTitle("CATMA 4.2 - CLÉA " + MINORVERSION);
+		Page.getCurrent().setTitle("CATMA 5.0 " + MINORVERSION);
 		
-		mainLayout = new HorizontalLayout();
-		mainLayout.setSizeUndefined();
-		mainLayout.setMargin(true);
-		mainLayout.setSpacing(true);
-		addStyleName("catma-mainwindow");
+		mainLayout = new VerticalLayout();
+		mainLayout.setSizeFull();
+		
+		menuPanel = new Panel();
+		menuPanel.addStyleName("menuPanel");
+		mainLayout.addComponent(menuPanel);
+		
+		contentPanel = new Panel();
+		contentPanel.setHeight("100%");
+		contentPanel.addStyleName("contentPanel");
+		
+		defaultContentPanelLabel = new Label("Please log in to get started");
+		defaultContentPanelLabel.addStyleName("defaultContentPanelLabel");
+		contentPanel.setContent(defaultContentPanelLabel);
+		
+		mainLayout.addComponent(contentPanel);
+		mainLayout.setExpandRatio(contentPanel, 1.0f);
+		
+		menuLayout = new HorizontalLayout();
+		menuLayout.setMargin(true);
+		menuLayout.setSpacing(true);
+		
+		logoResource = new ThemeResource("catma-logo.png");
+		Link logoImage = new Link(null, new ExternalResource("http://www.catma.de"));
+		logoImage.setIcon(logoResource);
+		logoImage.setTargetName("_blank");
+		menuLayout.addComponent(logoImage);
 		
 		MenuFactory menuFactory = new MenuFactory();
 		try {
@@ -174,79 +206,112 @@ public class CatmaApplication extends UI
 			visualizationManagerView = new VisualizationManagerView();
 			
 			menu = menuFactory.createMenu(
-					mainLayout, 
+					menuLayout,
+					contentPanel,
 					new MenuFactory.MenuEntryDefinition( 
 							"Repository Manager",
-							new RepositoryManagerWindow(repositoryManagerView)),
+							repositoryManagerView),
 					new MenuFactory.MenuEntryDefinition(
-							"Tag Manager",
-							new TagManagerWindow(tagManagerView)),
+							"Tag Type Manager",
+							tagManagerView),
 					new MenuFactory.MenuEntryDefinition(
 							"Tagger",
-							new TaggerManagerWindow(taggerManagerView)),
+							taggerManagerView),
 					new MenuFactory.MenuEntryDefinition(
 							"Analyzer",
-							new AnalyzerManagerWindow(analyzerManagerView)),
+							analyzerManagerView),
 					new MenuFactory.MenuEntryDefinition(
 							"Visualizer",
-							new VisualizationManagerWindow(visualizationManagerView))
+							visualizationManagerView)
 					);
 			addPropertyChangeListener(CatmaApplicationEvent.userChange, menu.userChangeListener);
 			
 			Link latestFeaturesLink = new Link(
 					"Latest Features", new ExternalResource("http://www.catma.de/latestfeatures"));
 			latestFeaturesLink.setTargetName("_blank");
-			mainLayout.addComponent(latestFeaturesLink);
-			mainLayout.setComponentAlignment(latestFeaturesLink, Alignment.TOP_RIGHT);
-			mainLayout.setExpandRatio(latestFeaturesLink, 1.0f);
+			menuLayout.addComponent(latestFeaturesLink);
+			menuLayout.setComponentAlignment(latestFeaturesLink, Alignment.TOP_RIGHT);
+			menuLayout.setExpandRatio(latestFeaturesLink, 1.0f);
 			
 			Link aboutLink = new Link(
 					"About", new ExternalResource("http://www.catma.de"));
 			aboutLink.setTargetName("_blank");
-			mainLayout.addComponent(aboutLink);
-			mainLayout.setComponentAlignment(aboutLink, Alignment.TOP_RIGHT);
+			menuLayout.addComponent(aboutLink);
+			menuLayout.setComponentAlignment(aboutLink, Alignment.TOP_RIGHT);
 			
 			Link termsOfUseLink = new Link(
 					"Terms of Use", new ExternalResource("http://www.catma.de/termsofuse"));
 			termsOfUseLink.setTargetName("_blank");
-			mainLayout.addComponent(termsOfUseLink);
-			mainLayout.setComponentAlignment(termsOfUseLink, Alignment.TOP_RIGHT);
+			menuLayout.addComponent(termsOfUseLink);
+			menuLayout.setComponentAlignment(termsOfUseLink, Alignment.TOP_RIGHT);
 
-			Link helpLink = new Link(
-					"Help", 
+			Link manualLink = new Link(
+					"Manual", 
 					new ExternalResource(request.getContextPath()+"/manual/"));
+			manualLink.setTargetName("_blank");
+			menuLayout.addComponent(manualLink);
+			menuLayout.setComponentAlignment(manualLink, Alignment.TOP_RIGHT);
+				
+			Link helpLink = new Link(
+					"Helpdesk", 
+					new ExternalResource("http://www.catma.de/helpdesk/"));
 			helpLink.setTargetName("_blank");
-			mainLayout.addComponent(helpLink);
-			mainLayout.setComponentAlignment(helpLink, Alignment.TOP_RIGHT);
+			menuLayout.addComponent(helpLink);
+			menuLayout.setComponentAlignment(helpLink, Alignment.TOP_RIGHT);
+			helpLink.setVisible(false);
 			
-			final Label helpLabel = new Label();
-			helpLabel.setIcon(new ClassResource("resources/icon-help.gif"));
-			helpLabel.setWidth("20px");
-			helpLabel.setDescription(
-					"<h3>Hints</h3>" +
-					"<p>Watch out for these little question mark icons while navigating " +
-					"through CATMA. They provide useful hints for managing the first " +
-					"steps within a CATMA component.</p>" +
-					"<h4>Login</h4>" +
-					"Once you're logged in, you will see the Repository Manager, " +
-					"which will explain the first steps to you. " +
-					"Just hover your mouse over the question mark icons!");
+			btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
+			btHelp.addStyleName("help-button");
+			btHelp.addStyleName("application-help-button");
+			
+			menuLayout.addComponent(btHelp);
+			
+			btHelp.addClickListener(new ClickListener() {
+				
+				public void buttonClick(ClickEvent event) {
+										
+					if(uiHelpWindow.getParent() == null){
+						UI.getCurrent().addWindow(uiHelpWindow);
+					} else {
+						UI.getCurrent().removeWindow(uiHelpWindow);
+					}
+										
+				}
+			});
 
-			mainLayout.addComponent(helpLabel);
-			
-			MenuBar loginLogoutMenu = new MenuBar();
 			LoginLogoutCommand loginLogoutCommand = 
 					new LoginLogoutCommand(menu, repositoryManagerView);
-			MenuItem loginLogoutitem = loginLogoutMenu.addItem("Login", loginLogoutCommand);
-			loginLogoutCommand.setLoginLogoutItem(loginLogoutitem);
+			Button btloginLogout = new Button("Sign in", event -> loginLogoutCommand.menuSelected(null));
+			btloginLogout.setStyleName(BaseTheme.BUTTON_LINK);
+			btloginLogout.addStyleName("application-loginlink");
 			
-			mainLayout.addComponent(loginLogoutMenu);
-			mainLayout.setComponentAlignment(loginLogoutMenu, Alignment.TOP_RIGHT);
-			mainLayout.setWidth("100%");
+			loginLogoutCommand.setLoginLogoutButton(btloginLogout);
+			
+			menuLayout.addComponent(btloginLogout);
+			menuLayout.setComponentAlignment(btloginLogout, Alignment.TOP_RIGHT);
+			menuLayout.setWidth("100%");
+			
+			menuPanel.setContent(menuLayout);
 
 			setContent(mainLayout);
-
-			setPollInterval(1000);
+			
+			if (getParameter(Parameter.USER_IDENTIFIER) != null) {
+				btloginLogout.click();
+			}
+			
+			setPollInterval(10000);
+			
+			
+			if ((getParameter(Parameter.AUTOLOGIN) != null) && (getUser()==null)) {
+				getPage().setLocation(
+					repositoryManagerView.createAuthenticationDialog().createLogInClick(
+						this, 
+						RepositoryPropertyKey.CATMA_oauthAuthorizationCodeRequestURL.getValue(),
+						RepositoryPropertyKey.CATMA_oauthAccessTokenRequestURL.getValue(),
+						RepositoryPropertyKey.CATMA_oauthClientId.getValue(),
+						RepositoryPropertyKey.CATMA_oauthClientSecret.getValue(),
+						URLEncoder.encode("/", "UTF-8")));
+			}
 			
 		} catch (Exception e) {
 			showAndLogError("The system could not be initialized!", e);
@@ -254,12 +319,21 @@ public class CatmaApplication extends UI
 
 	}
 	
-	public void handleParameters(Map<String, String[]> parameters) {
+	private void storeParameters(Map<String, String[]> parameters) {
 		this.parameters.putAll(parameters);
 	}
 	
 	public Map<String, String[]> getParameters() {
 		return Collections.unmodifiableMap(parameters);
+	}
+	
+	public String getParameter(Parameter parameter) {
+		return getParameter(parameter.getKey());
+	}
+	
+	public String getParameter(Parameter parameter, String defaultValue) {
+		String value = getParameter(parameter.getKey());
+		return value==null?defaultValue:value;
 	}
 	
 	public String getParameter(String key) {
@@ -269,6 +343,14 @@ public class CatmaApplication extends UI
 		}
 		
 		return null;
+	}
+	
+	public String[] getParameters(Parameter parameter) {
+		return getParameters(parameter.getKey());
+	}
+	
+	public String[] getParameters(String key) {
+		return parameters.get(key);
 	}
 	
 	private void initTempDirectory() throws IOException {
@@ -323,28 +405,38 @@ public class CatmaApplication extends UI
 	}
 	 
 	public void openTagLibrary(Repository repository, TagLibrary tagLibrary) {
-		if (!tagManagerView.isAttached()) {
+		openTagLibrary(repository, tagLibrary, true);
+	}
+	public void openTagLibrary(Repository repository, TagLibrary tagLibrary, boolean switchToTagManagerView) {
+		if (switchToTagManagerView) {
 			menu.executeEntry(tagManagerView);
-		}
-		else {
-			((Window)tagManagerView.getParent()).bringToFront();
 		}
 		tagManagerView.openTagLibrary(repository, tagLibrary);
 	}
 
+	public TaggerView openSourceDocument(String sourceDocumentId) {
+		
+		RepositoryManager repositoryManager = 
+				repositoryManagerView.getRepositoryManager();
+		
+		if (repositoryManager.hasOpenRepository()) {
+			Repository repository = repositoryManager.getFirstOpenRepository();
+			
+			SourceDocument sourceDocument = repository.getSourceDocument(sourceDocumentId);
+			if (sourceDocument != null) {
+				return openSourceDocument(sourceDocument, repository);
+			}
+		}
+		
+		return null;
+	}
+
+	
 	public TaggerView openSourceDocument(
 			SourceDocument sourceDocument, Repository repository) {
-		if (!taggerManagerView.isAttached()) {
-			menu.executeEntry(taggerManagerView);
-			Notification.show(
-					"Information", 
-					"To markup your text please drag Tagsets from a Tag Library " +
-					"into the currently active Tagsets area!",
-					Type.TRAY_NOTIFICATION);
-		}
-		else {
-			((Window)taggerManagerView.getParent()).bringToFront();
-		}
+
+		menu.executeEntry(taggerManagerView);
+
 		return taggerManagerView.openSourceDocument(
 				sourceDocument, repository);
 	}
@@ -386,23 +478,14 @@ public class CatmaApplication extends UI
 	}
 	
 	public void analyze(Corpus corpus, IndexedRepository repository) {
-		if (!analyzerManagerView.isAttached()) {
-			menu.executeEntry(analyzerManagerView);
-		}
-		else {
-			((Window)analyzerManagerView.getParent()).bringToFront();
-		}
+		menu.executeEntry(analyzerManagerView);
 		analyzerManagerView.analyzeDocuments(corpus, repository);
 	}
 	
 	public int addVisualization(Integer visualizationId, String caption,
 			DistributionComputation distributionComputation, DistributionSelectionListener distributionSelectionListener) {
-		if (!visualizationManagerView.isAttached()) {
-			menu.executeEntry(visualizationManagerView);
-		}
-		else {
-			((Window)visualizationManagerView.getParent()).bringToFront();
-		}
+		
+		menu.executeEntry(visualizationManagerView);
 		
 		return visualizationManagerView.addVisualization(visualizationId, caption,
 				distributionComputation, distributionSelectionListener);
@@ -416,6 +499,7 @@ public class CatmaApplication extends UI
 			userManager.logout(this);
 			repositoryOpened = false;
 		}
+		backgroundService.shutdown();
 		super.close();
 	}
 	
@@ -444,13 +528,7 @@ public class CatmaApplication extends UI
 	}
 
 	public void addDoubleTree(List<KeywordInContext> kwics) {
-		if (!visualizationManagerView.isAttached()) {
-			menu.executeEntry(visualizationManagerView);
-		}
-		else {
-			((Window)visualizationManagerView.getParent()).bringToFront();
-		}
-
+		menu.executeEntry(visualizationManagerView);
 		visualizationManagerView.addDoubleTree(kwics);
 	}
 
@@ -465,6 +543,10 @@ public class CatmaApplication extends UI
 		
 		propertyChangeSupport.firePropertyChange(
 				CatmaApplicationEvent.userChange.name(), currentUser, newUser);
+	}
+	
+	public MainMenu getMenu() {
+		return menu;
 	}
 	
 	@Override

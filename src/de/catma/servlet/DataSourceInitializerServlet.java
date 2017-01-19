@@ -37,11 +37,11 @@ public class DataSourceInitializerServlet extends HttpServlet {
 	        InitialContext context = new InitialContext();
 	        
 			int repoIndex = 1; // assume that the first configured repo is the local db repo
-			String user = RepositoryPropertyKey.RepositoryUser.getValue(repoIndex);
+			String user = RepositoryPropertyKey.RepositoryUser.getIndexedValue(repoIndex);
 					
-			String pass = RepositoryPropertyKey.RepositoryPass.getValue(repoIndex);
+			String pass = RepositoryPropertyKey.RepositoryPass.getIndexedValue(repoIndex);
 			
-			String url = RepositoryPropertyKey.RepositoryUrl.getValue(repoIndex);
+			String url = RepositoryPropertyKey.RepositoryUrl.getIndexedValue(repoIndex);
 	
 			ComboPooledDataSource cpds = new ComboPooledDataSource();
 			
@@ -57,7 +57,7 @@ public class DataSourceInitializerServlet extends HttpServlet {
 			log("CATMA DB DataSource initialized.");
 			
 			log("CATMA Graph DataSource initializing...");
-			String graphDbPath = RepositoryPropertyKey.GraphDbPath.getValue(repoIndex);
+			String graphDbPath = RepositoryPropertyKey.GraphDbPath.getIndexedValue(repoIndex);
 			
 			final GraphDatabaseService graphDb = 
 				new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(graphDbPath)

@@ -5,52 +5,7 @@
         <dependent-module archiveName="catma-core.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/catma-core/catma-core">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="xml-apis.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/xml-apis.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="serializer.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/serializer.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
         <dependent-module archiveName="lingpipe-3.9.2.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/lingpipe-3.9.2.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="juniversalchardet-1.0.3.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/juniversalchardet-1.0.3.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="xom-1.2.7.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/xom-1.2.7.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="tagsoup-1.2.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/tagsoup-1.2.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="poi-3.8-20120326.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/poi-3.8-20120326.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="poi-scratchpad-3.8-20120326.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/poi-scratchpad-3.8-20120326.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="pdfbox-1.7.0.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/pdfbox-1.7.0.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="fontbox-1.7.0.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/fontbox-1.7.0.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="jempbox-1.7.0.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/jempbox-1.7.0.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="poi-ooxml-schemas-3.8-20120326.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/poi-ooxml-schemas-3.8-20120326.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="poi-ooxml-3.8-20120326.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/poi-ooxml-3.8-20120326.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="xmlbeans-2.3.0.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/xmlbeans-2.3.0.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="stax-api-1.0.1.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/stax-api-1.0.1.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="dom4j-1.6.1.jar" deploy-path="/WEB-INF/lib" handle="module:/classpath/lib/catma-core/lib/dom4j-1.6.1.jar">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <property name="java-output-path" value="/catma/build/classes"/>

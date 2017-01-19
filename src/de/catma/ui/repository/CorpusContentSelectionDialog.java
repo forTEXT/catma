@@ -18,6 +18,7 @@
  */
 package de.catma.ui.repository;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.vaadin.data.Property;
@@ -25,7 +26,9 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.Validator;
 import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ShortcutAction.KeyCode;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -40,9 +43,12 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 import de.catma.document.Corpus;
+import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.dialog.SingleValueDialog;
 
 public class CorpusContentSelectionDialog extends VerticalLayout {
 	
@@ -52,30 +58,34 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		;
 	}
 
-	private String userMarkupItemDisplayString = "User Markup Collections";
-	private String staticMarkupItemDisplayString = "Static Markup Collections";
+	private String userMarkupItemDisplayString = "Markup Collections";
 	private String windowCaption = "Window Caption";
 	private String documentsTreeCaption = "Documents Tree Caption";
+	private Repository repository;
 	private SourceDocument sourceDocument;
 	private TreeTable documentsTree;
 	private HierarchicalContainer documentsContainer;
 	private SaveCancelListener<Corpus> listener;
+	private Button btCreateMarkupCollection;
 	private Button btOk;
 	private Button btCancel;
 	private Window dialogWindow;
 	private Corpus constrainingCorpus;
+	private List<String> preselectUmcIds;
 	private List<UserMarkupCollectionReference> umcRefList;
 
 	public CorpusContentSelectionDialog(
+			Repository repository,
 			SourceDocument sd, 
 			Corpus corpus, 
 			SaveCancelListener<Corpus> listener,
 			String windowCaption,
 			String documentsTreeCaption) {
-		this(sd, corpus, listener, windowCaption, documentsTreeCaption, null);
+		this(repository, sd, corpus, listener, windowCaption, documentsTreeCaption, null);
 	}
 	
 	public CorpusContentSelectionDialog(
+			Repository repository,
 			SourceDocument sd,
 			Corpus corpus,
 			SaveCancelListener<Corpus> listener,
@@ -83,13 +93,15 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 			String documentsTreeCaption,
 			List<String> preselectUmcIds) {
 
+		this.repository = repository;
 		this.sourceDocument = sd;
 		this.constrainingCorpus = corpus;
 		this.listener = listener;
 		this.windowCaption = windowCaption;
 		this.documentsTreeCaption = documentsTreeCaption;
+		this.preselectUmcIds = preselectUmcIds;
 		
-		initComponents(preselectUmcIds);
+		initComponents();
 		initActions();
 	}
 
@@ -97,7 +109,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		btCancel.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				UI.getCurrent().removeWindow(dialogWindow);
+				dialogWindow.close();
 				listener.cancelPressed();
 				listener = null;
 			}
@@ -124,20 +136,50 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 						corpus.addUserMarkupCollectionReference(umcRef);
 					}
 				}
-				UI.getCurrent().removeWindow(dialogWindow);
+				dialogWindow.close();
 				listener.savePressed(corpus);
+			}
+		});
+		
+		btCreateMarkupCollection.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				final String userMarkupCollectionNameProperty = "name";
+				
+				SingleValueDialog singleValueDialog = new SingleValueDialog();
+				
+				singleValueDialog.getSingleValue(
+						"Create a new Markup Collection",
+						"You have to enter a name!",
+						new SaveCancelListener<PropertysetItem>() {
+							public void cancelPressed() {}
+							public void savePressed(PropertysetItem propertysetItem) {
+									com.vaadin.data.Property<?> property = propertysetItem.getItemProperty(userMarkupCollectionNameProperty);
+									String name = (String)property.getValue();
+									try {
+										repository.createUserMarkupCollection(name, sourceDocument);
+										populateDocumentsTree();
+									} catch (IOException e) {
+										((CatmaApplication)UI.getCurrent()).showAndLogError("Error creating the Markup Collection!", e);
+									}
+								}
+							}, userMarkupCollectionNameProperty);
 			}
 		});
 	}
 
-	private void initComponents(List<String> preselectUmcIds) {
+	private void initComponents() {
 		setSizeFull();
+		
 		VerticalLayout documentsPanelContent = new VerticalLayout();
 		documentsPanelContent.setMargin(true);
+		documentsPanelContent.setSpacing(true);
+		documentsPanelContent.setSizeFull();
 		
 		Panel documentsPanel = new Panel(documentsPanelContent);
-		documentsPanel.getContent().setSizeUndefined();
-		documentsPanel.getContent().setWidth("100%");
+//		documentsPanel.getContent().setSizeUndefined();
+//		documentsPanel.getContent().setWidth("100%");
 		documentsPanel.setSizeFull();
 		
 		documentsContainer = new HierarchicalContainer();
@@ -145,6 +187,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		documentsTree = new TreeTable(documentsTreeCaption, documentsContainer);
 
 		documentsTree.setWidth("100%");
+		documentsTree.setHeight("100%");
 		
 		documentsTree.addContainerProperty(
 			DocumentTreeProperty.caption, String.class, null);
@@ -155,10 +198,51 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 
 		documentsTree.setColumnHeader(DocumentTreeProperty.include, "Include");
 		
+		populateDocumentsTree();
+		documentsPanelContent.addComponent(documentsTree);
+//		documentsPanelContent.setExpandRatio(documentsTree, 1.0f);
+
+		addComponent(documentsPanel);
+		setExpandRatio(documentsPanel, 1.0f);
+		
+		
+			
+		HorizontalLayout dialogButtonPanel = new HorizontalLayout();
+		dialogButtonPanel.setSpacing(true);
+		dialogButtonPanel.setWidth("100%");
+
+		btCreateMarkupCollection = new Button("Create Markup Collection");
+		btCreateMarkupCollection.addStyleName("secondary-button");		
+		dialogButtonPanel.addComponent(btCreateMarkupCollection);
+		dialogButtonPanel.setComponentAlignment(btCreateMarkupCollection, Alignment.MIDDLE_LEFT);
+
+		btOk = new Button("Ok");
+		btOk.addStyleName("primary-button");
+		btOk.setClickShortcut(KeyCode.ENTER);
+		btOk.focus();
+		
+		dialogButtonPanel.addComponent(btOk);
+		dialogButtonPanel.setComponentAlignment(btOk, Alignment.MIDDLE_RIGHT);
+		dialogButtonPanel.setExpandRatio(btOk, 1.0f);
+		btCancel = new Button("Cancel");
+		dialogButtonPanel.addComponent(btCancel);
+		dialogButtonPanel.setComponentAlignment(btCancel, Alignment.MIDDLE_RIGHT);
+		
+		dialogButtonPanel.addStyleName("modal-button-container");
+		addComponent(dialogButtonPanel);
+		
+		dialogWindow = new Window(windowCaption);
+		dialogWindow.setContent(this);
+	}
+	
+	private void populateDocumentsTree() {
+		documentsTree.removeAllItems();
+		
 		documentsTree.addItem(
 			new Object[] {sourceDocument.toString(), createCheckBox(false, true)},
-			sourceDocument);
-		
+			sourceDocument
+		);
+			
 		documentsTree.setCollapsed(sourceDocument, false);
 
 		MarkupCollectionItem userMarkupItem =
@@ -167,7 +251,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		documentsTree.addItem(
 			new Object[] {userMarkupItemDisplayString, createToggleAllUmcCheckBox()},
 			userMarkupItem);
-		documentsTree.setParent(userMarkupItem, sourceDocument);
+		documentsTree.setParent(userMarkupItem, sourceDocument);		
 		
 		umcRefList = sourceDocument.getUserMarkupCollectionRefs();
 		
@@ -187,8 +271,9 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 			documentsTree.setParent(umcRef, userMarkupItem);
 			documentsTree.setChildrenAllowed(umcRef, false);
 		}
+		
 		documentsTree.setCollapsed(userMarkupItem, false);
-		int pageLength = sourceDocument.getUserMarkupCollectionRefs().size() + 1;
+		int pageLength = umcRefList.size() + 1;
 		if (pageLength < 5) {
 			pageLength = 5;
 		}
@@ -196,28 +281,6 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 			pageLength = 15;
 		}
 		documentsTree.setPageLength(pageLength);
-		documentsPanelContent.addComponent(documentsTree);
-		
-		addComponent(documentsPanel);
-		setExpandRatio(documentsPanel, 1.0f);
-		
-		HorizontalLayout buttonPanel = new HorizontalLayout();
-		buttonPanel.setSpacing(true);
-		buttonPanel.setWidth("100%");
-		btOk = new Button("Ok");
-		btOk.setClickShortcut(KeyCode.ENTER);
-		btOk.focus();
-		
-		buttonPanel.addComponent(btOk);
-		buttonPanel.setComponentAlignment(btOk, Alignment.MIDDLE_RIGHT);
-		buttonPanel.setExpandRatio(btOk, 1.0f);
-		btCancel = new Button("Cancel");
-		buttonPanel.addComponent(btCancel);
-		buttonPanel.setComponentAlignment(btCancel, Alignment.MIDDLE_RIGHT);
-		addComponent(buttonPanel);
-		
-		dialogWindow = new Window(windowCaption);
-		dialogWindow.setContent(this);
 	}
 
 	private CheckBox createCheckBox(final boolean editable, boolean initialState) {
@@ -256,13 +319,13 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 	public void show(String dialogWidth) {
 		dialogWindow.setModal(true);
 		dialogWindow.setWidth(dialogWidth);
-		dialogWindow.setHeight("80%");
+		dialogWindow.setHeight("60%");
 		UI.getCurrent().addWindow(dialogWindow);
 		dialogWindow.center();
 	}
 	
 	public void show() {
-		show("45%");
+		show("50%");
 	}
 	
 	public void setCaptions(String windowCaption, String documentsTreeCaption){

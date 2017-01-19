@@ -18,28 +18,27 @@
  */   
 package de.catma.ui.tagger.pager;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import nu.xom.Attribute;
-import nu.xom.Document;
-import nu.xom.Element;
-import nu.xom.Serializer;
-import nu.xom.Text;
 import de.catma.document.Range;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.ContentElementID;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
+import nu.xom.Attribute;
+import nu.xom.Element;
 
 /**
  * @author marco.petris@web.de
@@ -47,8 +46,6 @@ import de.catma.ui.client.ui.tagger.shared.TextRange;
  */
 public class Page {
 
-	private static final String SOLIDSPACE = "&_nbsp;";
-	
 	private static enum HTMLElement {
 		div,
 		span, 
@@ -73,18 +70,23 @@ public class Page {
 	private int taggerID;
 	private int pageStart;
 	private int pageEnd;
+	private int approxMaxLineLength;
 	private String text;
 	private Map<String, ClientTagInstance> relativeTagInstances = 
 			new HashMap<String,ClientTagInstance>();
 	private int lineCount;
-	private boolean rightToLeftLanguage;
+	private boolean rightToLeftWriting;
+	private ArrayList<Line> lines;
+	private Element pageDiv;
 	
-	public Page(int taggerID, String text, int pageStart, int pageEnd, boolean rightToLeftLanguage) {
+	public Page(int taggerID, String text, int pageStart, int pageEnd, int approxMaxLineLength, boolean rightToLeftWriting) {
 		this.taggerID = taggerID;
 		this.pageStart = pageStart;
 		this.pageEnd = pageEnd;
+		this.approxMaxLineLength = approxMaxLineLength;
 		this.text = text;
-		this.rightToLeftLanguage = rightToLeftLanguage;
+		this.rightToLeftWriting = rightToLeftWriting;
+		buildLines();
 	}
 	
 	@Override
@@ -93,56 +95,49 @@ public class Page {
 	}
 	
 	
-	private Document htmlDocModel;
-	
-	private void buildModel() {
-		Matcher matcher = Pattern.compile(Pager.LINE_CONTENT_PATTERN).matcher(text);
-		Element rootDiv = new Element(HTMLElement.div.name());
-		if (rightToLeftLanguage) {
-			rootDiv.addAttribute(new Attribute(HTMLAttribute.dir.name(), HTMLAttributeValue.rtl.name()));
-			rootDiv.addAttribute(new Attribute(HTMLAttribute.align.name(), HTMLAttributeValue.right.name()));
-		}
-		rootDiv.addAttribute(
-				new Attribute(
-					HTMLAttribute.id.name(), 
-					ContentElementID.CONTENT.name()+String.valueOf(taggerID)));
-		htmlDocModel = new Document(rootDiv);
+	private void buildLines() {
+		this.lines = new ArrayList<>();
 		
-		StringBuilder lineBuilder = new StringBuilder();
+		Matcher matcher = Pattern.compile(Pager.LINE_CONTENT_PATTERN).matcher(text);
+		
+		Line currentLine = new Line(rightToLeftWriting);
 		int lineLength = 0;
 		int lineId = 0;
+		int pageOffset = 0;
 		
 		while(matcher.find()) {
-			if (lineLength + matcher.group().length()>80) {
-				Element lineSpan = new Element(HTMLElement.span.name());
-				lineSpan.addAttribute(
-						new Attribute(
-								HTMLAttribute.id.name(), 
-								ContentElementID.LINE.name()+taggerID+lineId++));
-				lineSpan.appendChild(
-						new Text(lineBuilder.toString()));
-				htmlDocModel.getRootElement().appendChild(lineSpan);
-				htmlDocModel.getRootElement().appendChild(new Element(HTMLElement.br.name()));
-				lineBuilder = new StringBuilder();
+			if (lineLength + matcher.group().length()>approxMaxLineLength) {
+				int lineStart = pageOffset;
+				int lineEnd = pageOffset+lineLength; 
+				
+				currentLine.setLineId(lineId++);
+				currentLine.setTextRange(new TextRange(lineStart, lineEnd));
+				
+				lines.add(currentLine);
+				
+				pageOffset += lineEnd-lineStart;
+				currentLine = new Line(rightToLeftWriting);
 				lineLength = 0;
 			}
 			if (matcher.group(Pager.WORDCHARACTER_GROUP) != null) {
-				lineBuilder.append(matcher.group(Pager.WORDCHARACTER_GROUP));
+				currentLine.addCharacterContent(matcher.group(Pager.WORDCHARACTER_GROUP));
 			}
 			if ((matcher.group(Pager.WHITESPACE_GROUP) != null) && (!matcher.group(Pager.WHITESPACE_GROUP).isEmpty())){
-				lineBuilder.append(getSolidSpace(matcher.group(Pager.WHITESPACE_GROUP).length()));
+				currentLine.addWhitespaceContent(matcher.group(Pager.WHITESPACE_GROUP));
 			}
 			if (matcher.group(Pager.LINE_SEPARATOR_GROUP) != null) {
-				lineBuilder.append(getSolidSpace(matcher.group(Pager.LINE_SEPARATOR_GROUP).length()));
-				Element lineSpan = new Element(HTMLElement.span.name());
-				lineSpan.addAttribute(
-						new Attribute(
-								HTMLAttribute.id.name(), 
-								ContentElementID.LINE.name()+taggerID+lineId++));
-				lineSpan.appendChild(new Text(lineBuilder.toString()));
-				htmlDocModel.getRootElement().appendChild(lineSpan);
-				htmlDocModel.getRootElement().appendChild(new Element(HTMLElement.br.name()));
-				lineBuilder = new StringBuilder();
+				lineLength += matcher.group(Pager.LINE_SEPARATOR_GROUP).length();
+				currentLine.addLineSeparatorContent(matcher.group(Pager.LINE_SEPARATOR_GROUP));
+				int lineStart = pageOffset;
+				int lineEnd = pageOffset+lineLength; 
+
+				currentLine.setLineId(lineId++);
+				currentLine.setTextRange(new TextRange(lineStart, lineEnd));
+
+				lines.add(currentLine);
+
+				pageOffset += lineEnd-lineStart;
+				currentLine = new Line(rightToLeftWriting);
 				lineLength = 0;
 			}
 			else {
@@ -150,46 +145,45 @@ public class Page {
 			}
 		}
 		if (lineLength != 0) {
-			Element lineSpan = new Element(HTMLElement.span.name());
-			lineSpan.addAttribute(
-					new Attribute(
-						HTMLAttribute.id.name(), 
-						ContentElementID.LINE.name()+taggerID+lineId++));
-			lineSpan.appendChild(new Text(lineBuilder.toString()));
-			htmlDocModel.getRootElement().appendChild(lineSpan);
-			htmlDocModel.getRootElement().appendChild(new Element(HTMLElement.br.name()));
+			int lineStart = pageOffset;
+			int lineEnd = pageOffset+lineLength;
+			
+			currentLine.setLineId(lineId++);
+			currentLine.setTextRange(new TextRange(lineStart, lineEnd));
+			
+			
+			lines.add(currentLine);
 		}
 		
 		lineCount = lineId;
+		
 	}
 
-	private String getSolidSpace(int count) {
-    	StringBuilder builder = new StringBuilder();
-    	for (int i=0; i<count;i++) {
-    		builder.append(SOLIDSPACE);
-    	}
-    	return builder.toString();
-    }
-	
 	public String toHTML() {
-		if (htmlDocModel == null) {
-			buildModel();
+		if (pageDiv == null) {
+			pageDiv = new Element(HTMLElement.div.name());
+			if (rightToLeftWriting) {
+				pageDiv.addAttribute(
+					new Attribute(HTMLAttribute.dir.name(), HTMLAttributeValue.rtl.name()));
+				pageDiv.addAttribute(
+					new Attribute(HTMLAttribute.align.name(), HTMLAttributeValue.right.name()));
+			}
+			pageDiv.addAttribute(
+					new Attribute(
+						HTMLAttribute.id.name(), 
+						ContentElementID.CONTENT.name()+String.valueOf(taggerID)));
+			
+			for (Line line : lines) {
+				pageDiv.appendChild(line.toHTML());
+			}
 		}
-		return htmlDocModel.toXML().substring(22).replaceAll("\\Q&amp;_nbsp;\\E", "&nbsp;");
-	}
-	
-	public void print() {
-		Serializer serializer;
-		try {
-			serializer = new Serializer( System.out, "UTF-8" );
-			serializer.setIndent( 4 );
-			serializer.write(htmlDocModel);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		return pageDiv.toXML();
 	}
 
 	public void addRelativeTagInstance(ClientTagInstance relativeTagInstance) {
+		
+		this.pageDiv = null; // page needs rebuild
+		
 		// for relative TagInstances the amount of text ranges varies depending 
 		// on the current page and the current page size
 		// so we need to append those that are not present
@@ -203,12 +197,34 @@ public class Page {
 			this.relativeTagInstances.put(
 					relativeTagInstance.getInstanceID(),relativeTagInstance);
 		}
+		
+		addRelativeTagInstanceToLine(relativeTagInstance);
 	}
 	
+	private void addRelativeTagInstanceToLine(ClientTagInstance relativeTagInstance) {
+		for (TextRange tr : relativeTagInstance.getRanges()) {
+			for (Line line : lines) {
+				if (line.containsTextRange(tr)) {
+					line.addRelativeTagInstanceTextRange(tr, relativeTagInstance);
+				}
+			}
+		}
+		
+	}
+
+
 	public void removeRelativeTagInstance(String tagInstanceID) {
+		pageDiv = null; // page needs rebuild
 		this.relativeTagInstances.remove(tagInstanceID);
+		removeRelativeTagInstanceFromLine(tagInstanceID);
 	}
 	
+	private void removeRelativeTagInstanceFromLine(String tagInstanceID) {
+		for (Line line : lines) {
+			line.removeRelativeTagInstance(tagInstanceID);
+		}
+	}
+
 	public Collection<ClientTagInstance> getRelativeTagInstances() {
 		return Collections.unmodifiableCollection(this.relativeTagInstances.values());
 	}
@@ -232,11 +248,11 @@ public class Page {
 	}
 
 	public boolean hasOverlappingRange(ClientTagInstance absoluteTagInstance) {
+		TextRange pageRange = new TextRange(this.pageStart, this.pageEnd);
+		
 		if (!absoluteTagInstance.getRanges().isEmpty()) {
 			for (TextRange tr : absoluteTagInstance.getRanges()) {
-				if (new Range(
-					this.pageStart, this.pageEnd).hasOverlappingRange(
-							new Range(tr.getStartPos(), tr.getEndPos()))) {
+				if (pageRange.hasOverlappingRange(tr)) {
 					return true;
 				}
 			}
@@ -245,7 +261,12 @@ public class Page {
 	}
 
 	public void clearRelativeTagInstances() {
+		pageDiv = null; // page needs rebuild
+		
 		relativeTagInstances.clear();
+		for (Line line : lines) {
+			line.clearRelativeTagInstanes();
+		}
 	}
 
 	public ClientTagInstance getRelativeTagInstance(String instanceID) {
@@ -263,6 +284,8 @@ public class Page {
 	}
 
 	public void removeTagInstances(Set<TagDefinition> tagDefinitions) {
+		pageDiv = null; // page needs rebuild
+		
 		Set<String> tagDefUUIds = new HashSet<String>();
 		for (TagDefinition td : tagDefinitions) {
 			tagDefUUIds.add(td.getUuid());
@@ -274,14 +297,12 @@ public class Page {
 					iterator.next();
 			if (tagDefUUIds.contains(entry.getValue().getTagDefinitionID())) {
 				iterator.remove();
+				removeRelativeTagInstanceFromLine(entry.getKey());
 			}
 		}
 	}
 	
 	public int getLineCount() {
-		if (htmlDocModel == null) {
-			buildModel();
-		}
 		return lineCount;
 	}
 	
@@ -291,5 +312,50 @@ public class Page {
 	
 	public int getPageStart() {
 		return pageStart;
+	}
+
+	public List<String> getTagInstanceIDs(String instancePartID, String lineID) {
+		try {
+			return lines.get(
+				Integer.valueOf(
+					lineID.substring(lineID.indexOf('.')+1))).getTagInstanceIDs(
+							instancePartID);
+		}
+		catch (NumberFormatException | ArrayIndexOutOfBoundsException | NullPointerException e) {
+			Logger.getLogger(Page.class.getName()).log(
+				Level.SEVERE, "No such lineID: " + lineID + " with tagInstanceID: " + instancePartID , e);
+		}
+		return Collections.emptyList();
+	}
+
+	public Range getOverlappingRange(Range absoluteTextRange) {
+		return new Range(
+				this.pageStart, this.pageEnd).getOverlappingRange(absoluteTextRange);
+	}
+
+	public void addHighlight(Range highlightedAbsoluteRange) {
+		pageDiv = null;
+
+		TextRange highlightedRelativeRange = getRelativeRangeFor(highlightedAbsoluteRange);
+		
+		for (Line line : lines) {
+			TextRange overlappingRange = line.getOverlappingRange(highlightedRelativeRange);
+			if (overlappingRange != null) {
+				line.addHighlight(overlappingRange);
+			}
+		}
+	}
+
+	public boolean isDirty() {
+		return pageDiv==null;
+	}
+
+	public void removeHighlights() {
+		for (Line line : lines) {
+			if (line.hasHighlights()) {
+				line.removeHighlights();
+				pageDiv = null;
+			}
+		}
 	}
 }

@@ -18,6 +18,7 @@
  */   
 package de.catma.ui.client.ui.tagger;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -83,9 +84,14 @@ public class VTagger extends Composite {
 				}
 			}
 			
-			public void tagsSelected(List<String> tagInstanceIDs) {
-				taggerListener.tagInstancesSelected(
-						tagInstanceJSONSerializer.toJSONArray(tagInstanceIDs));
+			public void tagSelected(String tagInstancePartID, String lineID) {
+				taggerListener.tagInstanceSelected(
+						tagInstanceJSONSerializer.toJSONArrayString(tagInstancePartID, lineID));
+			}
+			
+			@Override
+			public void tagsSelected(HashSet<String> tagInstanceIDs) {
+				taggerListener.tagInstancesSelected(tagInstanceJSONSerializer.toJSONArrayString(tagInstanceIDs));
 			}
 			
 			public void logEvent(String event) {
@@ -108,9 +114,10 @@ public class VTagger extends Composite {
 		taggerEditor.setTaggerID(taggerId);
 	}
 
-	public void setPage(String page) {
+	public void setPage(String page, int lineCount) {
+
 		logger.info("setting page content");
-		taggerEditor.setHTML(new HTML(page));
+		taggerEditor.setHTML(new HTML(page), lineCount);
 	}
 
 	public void removeTagInstances(String tagInstancesJson) {
@@ -125,25 +132,35 @@ public class VTagger extends Composite {
 		}
 	}
 
-	public void highlight(String textRangeJson) {
-		TextRange textRange = textRangeJSONSerializer.fromJSON(textRangeJson);
-		taggerEditor.highlight(textRange);
-	}
-
+	//FIXME: reimplement with line replacement
 	public void addTagInstances(String tagInstancesJson) {
-		List<ClientTagInstance> tagInstances = 
-				tagInstanceJSONSerializer.fromJSONArray(tagInstancesJson);
-		
-		for (ClientTagInstance tagInstance : tagInstances) {
-			logger.info("got tag instance from server (show): " + tagInstance);
-			taggerEditor.addTagInstance(tagInstance);
-		}
+//		List<ClientTagInstance> tagInstances = 
+//				tagInstanceJSONSerializer.fromJSONArray(tagInstancesJson);
+//		
+//		for (ClientTagInstance tagInstance : tagInstances) {
+//			logger.info("got tag instance from server (show): " + tagInstance);
+//			taggerEditor.addTagInstance(tagInstance);
+//		}
 	}
 
 	public void addTagInstanceWith(String tagDefinitionJson) {
 		ClientTagDefinition tagDefinition = 
 				tagDefinitionJSONSerializer.fromJSON(tagDefinitionJson);
 			taggerEditor.createAndAddTagIntance(tagDefinition);
+	}
+
+	public void setTagInstanceSelected(String tagInstanceId) {
+		 taggerEditor.setTagInstanceSelected(tagInstanceId);
+	}
+
+	public void setTraceSelection(boolean traceSelection) {
+		taggerEditor.setTraceSelection(traceSelection);
+		
+	}
+
+	public void removeHighlights() {
+		taggerEditor.removeHighlights();
+		
 	}
 
 }
