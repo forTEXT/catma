@@ -461,16 +461,17 @@ public class TaggerView extends VerticalLayout
 		markupPanel.openUserMarkupCollection(userMarkupCollection);
 	}
 
-	public void openTagsetDefinition(String uuid, Version version) throws IOException {
+	public void openTagsetDefinition(
+			CatmaApplication catmaApplication, String uuid, Version version) throws IOException {
 		TagLibrary tagLibrary = repository.getTagLibraryFor(uuid, version);
 		if (tagLibrary != null) {
-			((CatmaApplication)UI.getCurrent()).openTagLibrary(repository, tagLibrary, false);
-			openTagsetDefinition(tagLibrary.getTagsetDefinition(uuid));
+			catmaApplication.openTagLibrary(repository, tagLibrary, false);
+			openTagsetDefinition(catmaApplication, tagLibrary.getTagsetDefinition(uuid));
 		}
 	}
 	
-	public void openTagsetDefinition(TagsetDefinition tagsetDefinition){
-		markupPanel.addOrUpdateTagsetDefinition(tagsetDefinition);
+	public void openTagsetDefinition(CatmaApplication catmaApplication, TagsetDefinition tagsetDefinition){
+		markupPanel.addOrUpdateTagsetDefinition(catmaApplication, tagsetDefinition);
 	}
 
 	public void close() {

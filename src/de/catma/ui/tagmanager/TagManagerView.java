@@ -64,7 +64,7 @@ public class TagManagerView extends TabbedView {
 				TagManagerEvent.tagLibraryChanged, tagLibraryChangedListener);
 	}
 
-	public void openTagLibrary(final Repository repository, final TagLibrary tagLibrary) {
+	public void openTagLibrary(CatmaApplication catmaApplication, final Repository repository, final TagLibrary tagLibrary) {
 		TagLibraryView existingTagLibraryView = getTagLibraryView(tagLibrary.getId());
 		
 		if (existingTagLibraryView != null) {
@@ -82,10 +82,10 @@ public class TagManagerView extends TabbedView {
 						TagLibrary reloadedTagLibrary = repository.getTagLibrary(
 							new TagLibraryReference(tagLibrary.getId(), 
 									tagLibrary.getContentInfoSet()));
-						openTagLibrary(repository, reloadedTagLibrary);
+						openTagLibrary(catmaApplication, repository, reloadedTagLibrary);
 						
 					} catch (IOException e) {
-						((CatmaApplication)UI.getCurrent()).showAndLogError(
+						catmaApplication.showAndLogError(
 								"error refreshing Tag Type Library", e);
 					}
 				}

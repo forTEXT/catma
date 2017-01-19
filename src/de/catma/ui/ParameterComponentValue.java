@@ -28,7 +28,7 @@ public enum ParameterComponentValue {
 				for (TagsetDefinition tagsetDefinition : umc.getTagLibrary()) {
 					if (!tagsetDefinitionUuids.contains(tagsetDefinition.getUuid())) {
 						tagsetDefinitionUuids.add(tagsetDefinition.getUuid());
-						taggerView.openTagsetDefinition(tagsetDefinition.getUuid(), tagsetDefinition.getVersion());
+						taggerView.openTagsetDefinition(catmaApplication, 	tagsetDefinition.getUuid(), tagsetDefinition.getVersion());
 					}
 				}
 			}
@@ -42,7 +42,7 @@ public enum ParameterComponentValue {
 		String tagsetDefinitionUuid = catmaApplication.getParameter(Parameter.TAGGER_TAGSETDEF);
 		if (!tagsetDefinitionUuids.contains(tagsetDefinitionUuid)) {
 			try {
-				taggerView.openTagsetDefinition(tagsetDefinitionUuid, null);
+				taggerView.openTagsetDefinition(catmaApplication, tagsetDefinitionUuid, null);
 			}
 			catch (IOException e) {
 				catmaApplication.showAndLogError("Error opening Tag Library", e);

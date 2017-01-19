@@ -386,7 +386,7 @@ public class CatmaApplication extends UI
 			return;
 		}
 		
-		selectedTab.openTagsetDefinition(tagsetDefinition);
+		selectedTab.openTagsetDefinition(this, tagsetDefinition);
 		
 		SourceDocument sd = selectedTab.getSourceDocument();
 		String sourceDocumentCaption = sd.toString();
@@ -411,7 +411,7 @@ public class CatmaApplication extends UI
 		if (switchToTagManagerView) {
 			menu.executeEntry(tagManagerView);
 		}
-		tagManagerView.openTagLibrary(repository, tagLibrary);
+		tagManagerView.openTagLibrary(this, repository, tagLibrary);
 	}
 
 	public TaggerView openSourceDocument(String sourceDocumentId) {

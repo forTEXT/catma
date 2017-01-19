@@ -1094,6 +1094,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	}
 	
 	public void addOrUpdateTagsetDefinition(
+			UI ui,
 			final TagsetDefinition incomingTagsetDef,
 			final ConfirmListener confirmListener) {
 		
@@ -1103,7 +1104,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		
 		if (!toBeUpdated.isEmpty()) {
 			ConfirmDialog.show(
-				UI.getCurrent(), 
+				ui, 
 				"There are older versions of the Tagset '" +
 					incomingTagsetDef.getName() +
 					"' in the attached Markup Collections! " +

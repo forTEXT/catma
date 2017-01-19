@@ -136,7 +136,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
                 	TagsetDefinition incomingTagsetDef =
                 			(TagsetDefinition)sourceItemId;
                 	
-                	addOrUpdateTagsetDefinition(incomingTagsetDef);
+                	addOrUpdateTagsetDefinition(UI.getCurrent(), incomingTagsetDef);
                 }
 			}
 		});
@@ -411,8 +411,9 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		return markupInfoScrollPanel;
 	}
 
-	public void addOrUpdateTagsetDefinition(final TagsetDefinition tagsetDefinition) {
+	public void addOrUpdateTagsetDefinition(UI ui, final TagsetDefinition tagsetDefinition) {
 		markupCollectionsPanel.addOrUpdateTagsetDefinition(
+				ui,
 				tagsetDefinition, 
     			new ConfirmListener() {
 		            public void confirmed() {
