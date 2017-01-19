@@ -19,7 +19,6 @@
 package de.catma.ui.tabbedview;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import com.vaadin.ui.Alignment;
@@ -71,8 +70,6 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		tabSheet.setTabsVisible(false);
 		tabSheet.setHeight("0px");	
 		tabSheet.setCloseHandler(this);
-		
-//		setSizeFull();
 	}
 	
 	protected void onTabClose(Component tabContent) {
@@ -85,7 +82,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 
 		if (tabsheet.getComponentCount() == 0) {
 			 //setVisible(false) doesn't work here because of out of sync errors
-			tabSheet.hideTabs(true);
+			tabSheet.setTabsVisible(false);
 			tabSheet.setHeight("0px");
 			addComponent(noOpenTabsLabel, 0);
 			noOpenTabsLabel.setVisible(true);

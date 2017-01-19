@@ -1,11 +1,11 @@
 package de.catma.ui.visualizer.doubletree;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.ibm.icu.math.BigDecimal;
 
 import de.catma.document.source.KeywordInContext;
 import de.catma.indexer.KeywordInSpanContext;

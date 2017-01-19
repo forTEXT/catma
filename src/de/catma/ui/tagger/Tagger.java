@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.vaadin.server.WebBrowser;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.UI;
 
@@ -126,7 +125,6 @@ public class Tagger extends AbstractComponent {
 	private TaggerListener taggerListener;
 	private ClientTagInstanceJSONSerializer tagInstanceJSONSerializer;
 	private TagInstanceInfoHTMLSerializer tagInstanceInfoHTMLSerializer;
-	private boolean init = true;
 	private String taggerID;
 
 	public Tagger(int taggerID, Pager pager, TaggerListener taggerListener) {
@@ -231,17 +229,6 @@ public class Tagger extends AbstractComponent {
 			}
 		}
 		setTagInstancesVisible(tagInstancesByInstanceID.values(), visible);
-	}
-	
-	@Override
-	public void attach() {
-		super.attach();
-		if (init) {
-			WebBrowser wb = com.vaadin.server.Page.getCurrent().getWebBrowser();
-			
-			setHeight(wb.getScreenHeight()*0.47f, Unit.PIXELS);
-			init = false;
-		}
 	}
 
 	public void highlight(Range absoluteRange) {
