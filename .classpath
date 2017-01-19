@@ -4,8 +4,8 @@
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="lib" path="genlib/jooq-codegen-3.1.0.jar" sourcepath="/opt/jooq310/src/jooq-codegen-3.1.0-sources.jar"/>
-	<classpathentry kind="lib" path="genlib/jooq-console-3.1.0.jar"/>
+	<classpathentry kind="lib" path="genlib/jooq-codegen-3.1.0.jar" sourcepath="C:/data/opt/jooq310/src/jooq-codegen-3.1.0-sources.jar"/>
+	<classpathentry kind="lib" path="genlib/jooq-console-3.1.0.jar" sourcepath="C:/data/opt/jooq310/src/jooq-3.1.0-sources.jar"/>
 	<classpathentry kind="lib" path="genlib/jooq-meta-3.1.0.jar"/>
 	<classpathentry kind="con" path="org.apache.ivyde.eclipse.cpcontainer.IVYDE_CONTAINER/?project=catma&amp;ivyXmlPath=ivy.xml&amp;confs=default&amp;ivySettingsPath=%24%7Bworkspace_loc%3Acatma%2Fivysettings.xml%7D&amp;loadSettingsOnDemand=false&amp;ivyUserDir=&amp;propertyFiles=">
 		<attributes>
