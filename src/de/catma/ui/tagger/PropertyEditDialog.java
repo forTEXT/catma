@@ -22,10 +22,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.event.FieldEvents.BlurEvent;
+import com.vaadin.event.FieldEvents.BlurListener;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.event.ShortcutAction.ModifierKey;
 import com.vaadin.server.ClassResource;
@@ -60,6 +63,33 @@ public class PropertyEditDialog extends Window {
 		value,
 		assigned, 
 		;
+	}
+	
+	// this is a hack to get hold of the filter string and make it available to
+	// this edit dialog. Background: the filterstring can be added as a new value
+	// in the ComboBox but the addition/ValueChangeEvent is triggered by enter key
+	// only, we need to react on new values also on BlurEvents when the filterstring is
+	// still only a filterstring and not a full new value yet
+	private static class FilterExposingComboBox extends ComboBox {
+
+		private String currentFilterString;
+
+		public FilterExposingComboBox(String caption) {
+			super(caption);
+		}
+
+		@Override
+		public void changeVariables(Object source, Map<String, Object> variables) {
+			String newFilter;
+	        if ((newFilter = (String) variables.get("filter")) != null) {
+	        	currentFilterString = newFilter;
+	        }
+	        super.changeVariables(source, variables);
+		}
+		
+		public String getCurrentFilterString() {
+			return currentFilterString;
+		}
 	}
 	
 	private TreeTable propertyTree;
@@ -193,6 +223,31 @@ public class PropertyEditDialog extends Window {
 				
 			}
 		});
+		
+		
+		// we assume that having an input text on blur was intended
+		// as a new value that one can set with the btAdd Button
+		// therefore we need to set the input string as a value of the ComboBox
+		newValueInput.addBlurListener(new BlurListener() {
+			
+			@Override
+			public void blur(BlurEvent event) {
+				
+				String currentInputText = ((FilterExposingComboBox)newValueInput).getCurrentFilterString();
+				
+				if ((currentInputText != null) && !currentInputText.trim().isEmpty()) {
+					if (!newValueInput.getItemIds().contains(currentInputText)) {
+						newValueInput.addItem(currentInputText);
+					}
+					newValueInput.setValue(currentInputText);
+				}
+				else {
+					newValueInput.clear();
+				}
+			}
+		});
+		
+		
 		btCancel.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -274,6 +329,7 @@ public class PropertyEditDialog extends Window {
 		VerticalLayout mainLayout= new VerticalLayout();
 		mainLayout.setMargin(true);
 		mainLayout.setSpacing(true);
+		mainLayout.setSizeFull();
 		
 		hintText = new Label("Please use the check boxes to set or unset values.");
 		mainLayout.addComponent(hintText);
@@ -311,11 +367,11 @@ public class PropertyEditDialog extends Window {
 				});
 
 		mainLayout.addComponent(propertyTree);
-		
+		mainLayout.setExpandRatio(propertyTree, 1.0f);
 		HorizontalLayout comboBox = new HorizontalLayout();
 		comboBox.setSpacing(true);
 		
-		newValueInput = new ComboBox("Add adhoc value");
+		newValueInput = new FilterExposingComboBox("Add ad hoc value");
 		newValueInput.setTextInputAllowed(true);
 		newValueInput.setNewItemsAllowed(true);
 		
@@ -332,7 +388,7 @@ public class PropertyEditDialog extends Window {
 		
 		mainLayout.addComponent(comboBox);
 		
-		hintText = new Label("New property values created here exist only for this tag! "
+		hintText = new Label("New property values, that are created ad hoc, exist only for this tag instance! "
 				+ "For the creation of new systematic values use the Tag Type Manager.");
 		mainLayout.addComponent(hintText);
 		
@@ -353,8 +409,8 @@ public class PropertyEditDialog extends Window {
 		mainLayout.setComponentAlignment(buttonPanel, Alignment.MIDDLE_RIGHT);
 			
 		setContent(mainLayout);
-		setWidth("30%");
-		setHeight("90%");
+		setWidth("40%");
+		setHeight("80%");
 		setModal(true);
 		center();
 	}

@@ -12,6 +12,7 @@ import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
 import de.catma.document.repository.RepositoryReference;
 import de.catma.tag.TagManager;
+import de.catma.user.UserProperty;
 
 public class RepositoryLoader {
 
@@ -25,7 +26,7 @@ public class RepositoryLoader {
 				repoManager.getRepositoryReferences().iterator().next();
 			Map<String,String> userIdentification = 
 					new HashMap<String, String>(1);
-			userIdentification.put("user.ident", identifier);
+			userIdentification.put(UserProperty.identifier.name(), identifier);
 			
 			Repository repo = repoManager.openRepository(repoRef, userIdentification);
 			return repo;

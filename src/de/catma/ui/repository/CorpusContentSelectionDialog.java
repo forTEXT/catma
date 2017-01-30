@@ -28,6 +28,7 @@ import com.vaadin.data.Validator;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.event.ShortcutAction.KeyCode;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -174,10 +175,11 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		VerticalLayout documentsPanelContent = new VerticalLayout();
 		documentsPanelContent.setMargin(true);
 		documentsPanelContent.setSpacing(true);
+		documentsPanelContent.setSizeFull();
 		
 		Panel documentsPanel = new Panel(documentsPanelContent);
-		documentsPanel.getContent().setSizeUndefined();
-		documentsPanel.getContent().setWidth("100%");
+//		documentsPanel.getContent().setSizeUndefined();
+//		documentsPanel.getContent().setWidth("100%");
 		documentsPanel.setSizeFull();
 		
 		documentsContainer = new HierarchicalContainer();
@@ -185,6 +187,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		documentsTree = new TreeTable(documentsTreeCaption, documentsContainer);
 
 		documentsTree.setWidth("100%");
+		documentsTree.setHeight("100%");
 		
 		documentsTree.addContainerProperty(
 			DocumentTreeProperty.caption, String.class, null);
@@ -197,23 +200,22 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		
 		populateDocumentsTree();
 		documentsPanelContent.addComponent(documentsTree);
-		
-		HorizontalLayout actionButtonPanel = new HorizontalLayout();
-		actionButtonPanel.setWidth("100%");
-		
-		btCreateMarkupCollection = new Button("Create Markup Collection");
-		btCreateMarkupCollection.addStyleName("secondary-button");		
-		actionButtonPanel.addComponent(btCreateMarkupCollection);
-		actionButtonPanel.setComponentAlignment(btCreateMarkupCollection, Alignment.MIDDLE_RIGHT);
-		
-		documentsPanelContent.addComponent(actionButtonPanel);
-		
+//		documentsPanelContent.setExpandRatio(documentsTree, 1.0f);
+
 		addComponent(documentsPanel);
 		setExpandRatio(documentsPanel, 1.0f);
 		
+		
+			
 		HorizontalLayout dialogButtonPanel = new HorizontalLayout();
 		dialogButtonPanel.setSpacing(true);
 		dialogButtonPanel.setWidth("100%");
+
+		btCreateMarkupCollection = new Button("Create Markup Collection");
+		btCreateMarkupCollection.addStyleName("secondary-button");		
+		dialogButtonPanel.addComponent(btCreateMarkupCollection);
+		dialogButtonPanel.setComponentAlignment(btCreateMarkupCollection, Alignment.MIDDLE_LEFT);
+
 		btOk = new Button("Ok");
 		btOk.addStyleName("primary-button");
 		btOk.setClickShortcut(KeyCode.ENTER);
@@ -226,7 +228,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		dialogButtonPanel.addComponent(btCancel);
 		dialogButtonPanel.setComponentAlignment(btCancel, Alignment.MIDDLE_RIGHT);
 		
-		dialogButtonPanel.setStyleName("modal-button-container");
+		dialogButtonPanel.addStyleName("modal-button-container");
 		addComponent(dialogButtonPanel);
 		
 		dialogWindow = new Window(windowCaption);
@@ -317,13 +319,13 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 	public void show(String dialogWidth) {
 		dialogWindow.setModal(true);
 		dialogWindow.setWidth(dialogWidth);
-		dialogWindow.setHeight("80%");
+		dialogWindow.setHeight("60%");
 		UI.getCurrent().addWindow(dialogWindow);
 		dialogWindow.center();
 	}
 	
 	public void show() {
-		show("45%");
+		show("50%");
 	}
 	
 	public void setCaptions(String windowCaption, String documentsTreeCaption){

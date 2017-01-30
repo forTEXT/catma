@@ -616,9 +616,13 @@ CREATE TABLE IF NOT EXISTS `catmarepository`.`user` (
   `userID` INT NOT NULL AUTO_INCREMENT COMMENT '',
   `identifier` VARCHAR(300) NOT NULL COMMENT '',
   `locked` TINYINT(1) NOT NULL DEFAULT true COMMENT '',
+  `email` VARCHAR(300) NULL COMMENT '',
+  `lastlogin` DATETIME NULL COMMENT '',
+  `firstlogin` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP COMMENT '',
+  `guest` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '',
+  `spawnable` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '',
   PRIMARY KEY (`userID`)  COMMENT '')
-ENGINE = InnoDB;
-
+ENGINE = InnoDB
 
 -- -----------------------------------------------------
 -- Table `catmarepository`.`user_sourcedocument`

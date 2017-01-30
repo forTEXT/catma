@@ -25,14 +25,16 @@ import com.vaadin.server.Page;
 import com.vaadin.server.VaadinService;
 import com.vaadin.server.VaadinServletService;
 import com.vaadin.server.VaadinSession;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
 
 import de.catma.document.repository.RepositoryManager;
 import de.catma.ui.repository.RepositoryManagerView;
+import de.catma.user.User;
 
 public class LoginLogoutCommand implements Command {
-	private MenuItem loginLogoutItem;
+	private Button btLoginLogout;
 	private RepositoryManagerView repositoryManagerView;
 	private MainMenu menu;
 	private String afterLogoutRedirectURL;
@@ -42,10 +44,20 @@ public class LoginLogoutCommand implements Command {
 		
 		public void propertyChange(PropertyChangeEvent evt) {
 			if (repositoryManagerView.getRepositoryManager().hasOpenRepository()) {
-				loginLogoutItem.setText("Logout");
+				btLoginLogout.setHtmlContentAllowed(true);
+				
+				User user = 
+					repositoryManagerView.getRepositoryManager().getFirstOpenRepository().getUser();
+				String identifier = user.getIdentifier();
+				
+				if (user.isGuest()) {
+					identifier = "Guest";
+				}
+				
+				btLoginLogout.setCaption(identifier + " - Sign out");
 			}
 			else {
-				loginLogoutItem.setText("Login");
+				btLoginLogout.setCaption("Sign in");
 				logout();
 			}
 		}
@@ -61,8 +73,6 @@ public class LoginLogoutCommand implements Command {
 		String serverName = VaadinServletService.getCurrentServletRequest().getServerName();		
 		Integer port = VaadinServletService.getCurrentServletRequest().getServerPort();
 		String contextPath = VaadinService.getCurrentRequest().getContextPath();
-//		String requestUri = VaadinServletService.getCurrentServletRequest().getRequestURI();
-		
 		
 		String baseUrl = String.format("%s://%s%s%s", scheme, serverName, port == 80 ? "" : ":"+port, contextPath);
 		this.afterLogoutRedirectURL = baseUrl;
@@ -93,7 +103,7 @@ public class LoginLogoutCommand implements Command {
 	}
 
 
-	public void setLoginLogoutItem(MenuItem loginLogoutitem) {
-		this.loginLogoutItem = loginLogoutitem;	
+	public void setLoginLogoutButton(Button btLoginLogout) {
+		this.btLoginLogout = btLoginLogout;	
 	}
 }

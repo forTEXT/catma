@@ -38,6 +38,7 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.server.ClassResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -759,9 +760,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		kwicButtonPanel.setComponentAlignment(btUntagResults, Alignment.MIDDLE_RIGHT);
 		kwicButtonPanel.setExpandRatio(btUntagResults, 0f);
 		
-		btHelp = new Button("");
-		btHelp.addStyleName("icon-button"); // for top-margin
-		btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
 		btHelp.addStyleName("help-button");
 		
 		kwicButtonPanel.addComponent(btHelp);

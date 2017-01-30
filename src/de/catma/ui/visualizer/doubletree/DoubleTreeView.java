@@ -56,9 +56,9 @@ public class DoubleTreeView  extends Panel implements ClosableTab {
 		headerPanel.setComponentAlignment(cbCaseSensitive, Alignment.TOP_LEFT);
 		
 		Link citeLink = new Link(
-				"About DoubleTreeJS",
-				new ExternalResource(
-						"http://www.sfs.uni-tuebingen.de/~cculy/software/DoubleTreeJS/index.html"));
+			"About DoubleTreeJS",
+			new ExternalResource(
+				"http://linguistics.chrisculy.net/lx/software/DoubleTreeJS/index.html"));
 		
 		citeLink.setTargetName("_blank");
 		headerPanel.addComponent(citeLink);

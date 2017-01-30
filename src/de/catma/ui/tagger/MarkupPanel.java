@@ -36,7 +36,7 @@ import com.vaadin.event.DataBoundTransferable;
 import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
-import com.vaadin.server.ClassResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
 import com.vaadin.ui.Alignment;
@@ -136,7 +136,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
                 	TagsetDefinition incomingTagsetDef =
                 			(TagsetDefinition)sourceItemId;
                 	
-                	addOrUpdateTagsetDefinition(incomingTagsetDef);
+                	addOrUpdateTagsetDefinition(UI.getCurrent(), incomingTagsetDef);
                 }
 			}
 		});
@@ -281,9 +281,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 				
 		buttonHeaderPanel.addComponent(btnOpenTagset);
 		
-		btHelp = new Button("");
-		btHelp.addStyleName("icon-button"); // for top-margin
-		btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
 		btHelp.addStyleName("help-button");
 		
 		buttonHeaderPanel.addComponent(btHelp);
@@ -413,8 +411,9 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		return markupInfoScrollPanel;
 	}
 
-	public void addOrUpdateTagsetDefinition(final TagsetDefinition tagsetDefinition) {
+	public void addOrUpdateTagsetDefinition(UI ui, final TagsetDefinition tagsetDefinition) {
 		markupCollectionsPanel.addOrUpdateTagsetDefinition(
+				ui,
 				tagsetDefinition, 
     			new ConfirmListener() {
 		            public void confirmed() {
@@ -454,7 +453,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			ConfirmDialog.show(
 					UI.getCurrent(), 
 					"One or more of the active Tagsets are different from their "
-					+ " correpsonding Tagsets in the Markup Collection you want to open!"
+					+ " corresponding Tagsets in the Markup Collection you want to open!"
 					+ " The Collection will be updated with the versions of the active Tagsets! " 
 					+ " Do you really want to update the attached Markup Collections?",
 								

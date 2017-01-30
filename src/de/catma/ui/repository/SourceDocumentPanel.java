@@ -568,10 +568,10 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 									result.getUserIdentification(), 
 									result.getAccessMode());
 						} catch (IOException e) {
-							if (e.getCause() instanceof UnknownUserException) {
+							if (e instanceof UnknownUserException) {
 								Notification.show(
-										"Sharing failed!", e.getCause().getMessage(), 
-										Type.WARNING_MESSAGE);
+										"Sharing failed!", e.getMessage(), 
+										Type.ERROR_MESSAGE);
 							}
 							else {
 								((CatmaApplication)UI.getCurrent()).showAndLogError(
@@ -616,10 +616,10 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 									result.getUserIdentification(), 
 									result.getAccessMode());
 						} catch (IOException e) {
-							if (e.getCause() instanceof UnknownUserException) {
+							if (e instanceof UnknownUserException) {
 								Notification.show(
-										"Sharing failed!", e.getCause().getMessage(), 
-										Type.WARNING_MESSAGE);
+										"Sharing failed!", e.getMessage(), 
+										Type.ERROR_MESSAGE);
 							}
 							else {
 								((CatmaApplication)UI.getCurrent()).showAndLogError(

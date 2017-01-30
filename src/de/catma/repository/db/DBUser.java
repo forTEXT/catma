@@ -30,12 +30,16 @@ public class DBUser implements User {
 	private Integer userId;
 	private String identifier;
 	private boolean locked;
+	private boolean guest;
+	private boolean spawnable;
 	private Set<String> permissions;
 	
-	public DBUser(Integer userId, String identifier, boolean locked) {
+	public DBUser(Integer userId, String identifier, boolean locked, boolean guest, boolean spawnable) {
 		this.userId = userId;
 		this.identifier = identifier;
 		this.locked = locked;
+		this.guest = guest;
+		this.spawnable = spawnable;
 	}
 
 	public Integer getUserId() {
@@ -50,6 +54,16 @@ public class DBUser implements User {
 		return this.locked;
 	}
 
+	@Override
+	public boolean isGuest() {
+		return guest;
+	}
+	
+	@Override
+	public boolean isSpawnable() {
+		return spawnable;
+	}
+	
 	public void setLocked(boolean locked) {
 		this.locked = locked;
 	}

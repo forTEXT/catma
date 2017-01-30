@@ -31,7 +31,6 @@ import java.util.logging.Logger;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.server.ClassResource;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -59,6 +58,7 @@ import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.Slider;
 import de.catma.ui.analyzer.AnalyzerProvider;
@@ -281,9 +281,7 @@ public class TaggerView extends VerticalLayout
 		taggerPanel.setSizeFull();
 		taggerPanel.setSpacing(true);
 
-		btHelp = new Button("");
-		btHelp.addStyleName("icon-button"); // for top-margin
-		btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
 		btHelp.addStyleName("help-button");
 		
 		IndexInfoSet indexInfoSet = 
@@ -451,13 +449,29 @@ public class TaggerView extends VerticalLayout
 		return sourceDocument;
 	}
 	
+	public UserMarkupCollection openUserMarkupCollection(
+			UserMarkupCollectionReference userMarkupCollectionRef) throws IOException {
+		UserMarkupCollection umc = repository.getUserMarkupCollection(userMarkupCollectionRef);
+		openUserMarkupCollection(umc);
+		return umc;
+	}
+	
 	public void openUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
 		markupPanel.openUserMarkupCollection(userMarkupCollection);
 	}
+
+	public void openTagsetDefinition(
+			CatmaApplication catmaApplication, String uuid, Version version) throws IOException {
+		TagLibrary tagLibrary = repository.getTagLibraryFor(uuid, version);
+		if (tagLibrary != null) {
+			catmaApplication.openTagLibrary(repository, tagLibrary, false);
+			openTagsetDefinition(catmaApplication, tagLibrary.getTagsetDefinition(uuid));
+		}
+	}
 	
-	public void openTagsetDefinition(TagsetDefinition tagsetDefinition){
-		markupPanel.addOrUpdateTagsetDefinition(tagsetDefinition);
+	public void openTagsetDefinition(CatmaApplication catmaApplication, TagsetDefinition tagsetDefinition){
+		markupPanel.addOrUpdateTagsetDefinition(catmaApplication, tagsetDefinition);
 	}
 
 	public void close() {

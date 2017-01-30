@@ -37,7 +37,7 @@ import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.ShortcutAction.KeyCode;
-import com.vaadin.server.ClassResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -647,9 +647,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		btWordList.addStyleName("primary-button");
 		convenienceButtonPanel.addComponent(btWordList);
 		
-		btHelp = new Button("");
-		btHelp.addStyleName("icon-button"); // for top-margin
-		btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
 		btHelp.addStyleName("help-button");
 
 		convenienceButtonPanel.addComponent(btHelp);

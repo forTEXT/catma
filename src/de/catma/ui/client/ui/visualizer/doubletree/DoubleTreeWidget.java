@@ -15,9 +15,12 @@ public class DoubleTreeWidget extends FocusWidget {
 		doubleTree = DoubleTreeJs.create();
 	}
 	
-	public void setupFromArrays(String[][] prefix, String[] tokens, String[][] postfix, 
-			boolean caseSensitive) {
+	public void setupFromArrays(
+			String[][] prefix, 
+			String[] tokens, 
+			String[][] postfix, 
+			boolean caseSensitive, boolean rightToLeftLanguage) {
 		doubleTree.init(getElement().getId());
-		doubleTree.setupFromArrays(prefix, tokens, postfix, caseSensitive);
+		doubleTree.setupFromArrays(prefix, tokens, postfix, caseSensitive, rightToLeftLanguage);
 	}
 }

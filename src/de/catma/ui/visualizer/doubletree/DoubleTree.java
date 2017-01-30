@@ -14,8 +14,11 @@ public class DoubleTree extends AbstractComponent {
 	public DoubleTree() {
 	}
 
-	public void setupFromArrays(List<KeywordInContext> kwics, boolean caseSensitive) {
-		kwicsJson = new KwicListJSONSerializer().toJSON(kwics, caseSensitive);
+	public void setupFromArrays(
+			List<KeywordInContext> kwics,
+			boolean caseSensitive) {
+		kwicsJson = new KwicListJSONSerializer().toJSON(
+				kwics, caseSensitive);
 		getState().treeData = kwicsJson;
 	}
 	

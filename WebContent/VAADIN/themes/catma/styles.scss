@@ -3,8 +3,8 @@
 
 @include contextmenu;
 
-.cleanew {
-  @include cleanew;
+.catma {
+  @include catma;
   
   	.menuPanel {
   		border-radius: 0;
@@ -97,7 +97,7 @@
 	}
 	
 	.modal-button-container {
-		padding: 0px 10px 0px 0px;
+		padding: 0px 10px 0px 10px;
 	}
 			
 	.v-tabsheet-tabitemcell .v-tabsheet-caption-close {
@@ -213,8 +213,8 @@
 	}
 	
 	.v-button-secondary-button {
-		background: #9FB3BF;
-		border: 1px solid #9FB3BF;
+		background: #5A98A1;
+		border: 1px solid #5A98A1;
 		color: #fff;
 		box-shadow: none;
 	}
@@ -269,6 +269,11 @@
 		background: none;
 		border: none;
 		box-shadow: none;
+		font-size: 16px;
+	}
+	
+	.application-help-button {
+		padding: 0px 10px;
 	}
 	
 	.help-button:focus:after {
@@ -447,5 +452,29 @@
     .taginstanceinfo-caption {
     	font-weight: bold;
     }
-    	
+    
+    .authdialog-loginlink {
+	    font-size: 14px;
+	    padding: 5px 0;
+    }
+    
+    .authdialog-loginlink:focus::after {
+    	border-color: none;
+    	box-shadow: none;
+    }
+
+    .application-loginlink {
+	    font-size: 14px;
+	    padding: 0px 0;
+    }
+    
+    .application-loginlink:focus::after {
+    	border-color: none;
+    	box-shadow: none;
+    }
+    
+    .tagsetselection-dialog-create-tag-libary {
+    	margin-top: 25px;
+    }
+    
 }

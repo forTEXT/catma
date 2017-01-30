@@ -92,9 +92,8 @@ public class SourceDocumentIndexer {
 		long nodeCount = 0;
 		long relCount = 0;
 		
-		long commitAfterNodeCount = RepositoryPropertyKey.commitAfterNodeCount.getValue(20000);
-		long commitAfterRelationCount= RepositoryPropertyKey.commitAfterRelationCount.getValue(40000);
-		
+		long commitAfterNodeCount = RepositoryPropertyKey.commitAfterNodeCount.getValue(20000L);
+		long commitAfterRelationCount= RepositoryPropertyKey.commitAfterRelationCount.getValue(40000L);
 		
 		Transaction tx = null;
 		

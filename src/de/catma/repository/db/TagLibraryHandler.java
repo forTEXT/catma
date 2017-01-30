@@ -75,10 +75,13 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
 import de.catma.util.Collections3;
 import de.catma.util.IDGenerator;
 
 class TagLibraryHandler {
+
+	private static final Logger LOGGER = Logger.getLogger(TagLibraryHandler.class.getName());
 
 	private static class PropertyDefinitionToUUID implements Function<PropertyDefinition, String> {
 		
@@ -96,7 +99,6 @@ class TagLibraryHandler {
 	private DBRepository dbRepository;
 	private HashMap<String, TagLibraryReference> tagLibraryReferencesById;
 	private IDGenerator idGenerator;
-	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private DataSource dataSource;
 
 	public TagLibraryHandler(
@@ -117,6 +119,20 @@ class TagLibraryHandler {
 			
 			Integer tagLibraryId = 
 					createTagLibrary(db, name, null, null, null, true);
+			
+			db
+			.insertInto(
+				USER_TAGLIBRARY,
+					USER_TAGLIBRARY.USERID,
+					USER_TAGLIBRARY.TAGLIBRARYID,
+					USER_TAGLIBRARY.ACCESSMODE,
+					USER_TAGLIBRARY.OWNER)
+			.values(
+				dbRepository.getCurrentUser().getUserId(),
+				tagLibraryId,
+				AccessMode.WRITE.getNumericRepresentation(),
+				(byte)1)
+			.execute();
 			
 			db.commitTransaction();
 			
@@ -161,22 +177,6 @@ class TagLibraryHandler {
 		.returning(TAGLIBRARY.TAGLIBRARYID)
 		.fetchOne()
 		.map(new IDFieldToIntegerMapper(TAGLIBRARY.TAGLIBRARYID));
-			
-		if (independent) {
-			db
-			.insertInto(
-				USER_TAGLIBRARY,
-					USER_TAGLIBRARY.USERID,
-					USER_TAGLIBRARY.TAGLIBRARYID,
-					USER_TAGLIBRARY.ACCESSMODE,
-					USER_TAGLIBRARY.OWNER)
-			.values(
-				dbRepository.getCurrentUser().getUserId(),
-				tagLibraryId,
-				AccessMode.WRITE.getNumericRepresentation(),
-				(byte)1)
-			.execute();
-		}
 		
 		return tagLibraryId;
 	}
@@ -300,9 +300,7 @@ class TagLibraryHandler {
 				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
 
 		try {
-			db.beginTransaction();
 			importTagLibrary(db, tagLibrary, true);
-			db.commitTransaction();
 			
 			dbRepository.setTagManagerListenersEnabled(true);
 			
@@ -355,6 +353,22 @@ class TagLibraryHandler {
 		
 		for (TagsetDefinition tagsetDefinition : tagLibrary) {
 			createDeepTagsetDefinition(db, tagsetDefinition, tagLibraryId);
+		}
+		
+		if (independent) {
+			db
+			.insertInto(
+				USER_TAGLIBRARY,
+					USER_TAGLIBRARY.USERID,
+					USER_TAGLIBRARY.TAGLIBRARYID,
+					USER_TAGLIBRARY.ACCESSMODE,
+					USER_TAGLIBRARY.OWNER)
+			.values(
+				dbRepository.getCurrentUser().getUserId(),
+				tagLibraryId,
+				AccessMode.WRITE.getNumericRepresentation(),
+				(byte)1)
+			.execute();
 		}
 	}
 	
@@ -1407,6 +1421,62 @@ class TagLibraryHandler {
 						ref, null);	
 			}
 		}
+	}
+
+	void copyTagLibraries(int sourceUserId) throws IOException {
+
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+
+		List<TagLibraryReference> tagLibReferences = db
+		.select()
+		.from(TAGLIBRARY)
+		.join(USER_TAGLIBRARY)
+			.on(USER_TAGLIBRARY.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID)
+			.and(USER_TAGLIBRARY.USERID.eq(sourceUserId)))
+		.where(TAGLIBRARY.INDEPENDENT.eq((byte)1))
+		.fetch()
+		.map(new TagLibraryReferenceMapper());
+		
+		for (TagLibraryReference tagLibraryReference : tagLibReferences) {
+			TagLibrary tagLibrary = getTagLibrary(tagLibraryReference);
+			TagLibrary copyTagLibrary = new TagLibrary(tagLibrary);
+			importTagLibrary(db, copyTagLibrary, true);
+			
+			TagLibraryReference ref = new TagLibraryReference(
+					copyTagLibrary.getId(), copyTagLibrary.getContentInfoSet());
+			tagLibraryReferencesById.put(ref.getId(), ref);
+		}
+		
+	}
+
+	public TagLibrary getTagLibraryFor(String uuid, Version version) throws IOException {
+
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+		
+		List<Integer> tagLibraryIDs = db
+		.select(TAGLIBRARY.TAGLIBRARYID)
+		.from(TAGLIBRARY)
+		.join(USER_TAGLIBRARY)
+			.on(USER_TAGLIBRARY.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+			.and(USER_TAGLIBRARY.USERID.eq(dbRepository.getCurrentUser().getUserId()))
+		.join(TAGSETDEFINITION)
+			.on(TAGSETDEFINITION.TAGLIBRARYID.eq(TAGLIBRARY.TAGLIBRARYID))
+			.and(TAGSETDEFINITION.UUID.eq(idGenerator.catmaIDToUUIDBytes(uuid)))
+			.and(TAGSETDEFINITION.VERSION
+				.eq(DSL.nvl(SqlTimestamp.from(version==null?null:version.getDate()), TAGSETDEFINITION.VERSION)))
+		.where(TAGLIBRARY.INDEPENDENT.eq((byte)1))
+		.fetch()
+		.map(new IDFieldToIntegerMapper(TAGLIBRARY.TAGLIBRARYID));
+				
+		if (!tagLibraryIDs.isEmpty()) {
+			// we take the first library that contains our tagsetdefinition 
+			return getTagLibrary(
+				new TagLibraryReference(
+					String.valueOf(tagLibraryIDs.get(0)), new ContentInfoSet()));
+		}
+		
+		
+		return null;
 	}
 	
 }

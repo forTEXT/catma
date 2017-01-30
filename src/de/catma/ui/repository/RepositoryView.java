@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.ClassResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -202,21 +203,16 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		labelLayout.addComponent(documentsLabel);
 		labelLayout.setExpandRatio(documentsLabel, 0.5f);
 		btAdmin = new Button("Admin");
-		btAdmin.addStyleName("icon-button"); // for top-margin
 		btAdmin.setVisible(repository.getUser().hasPermission(Permission.adminwindow));
 		
 		labelLayout.addComponent(btAdmin);
 		labelLayout.setComponentAlignment(btAdmin, Alignment.MIDDLE_RIGHT);
 		
-		btReload = new Button(""); 
-		btReload.setIcon(new ClassResource("resources/icon-reload.gif"));
-		btReload.addStyleName("icon-button");
+		btReload = new Button(FontAwesome.REFRESH); 
 		labelLayout.addComponent(btReload);
 		labelLayout.setComponentAlignment(btReload, Alignment.MIDDLE_RIGHT);
 				
-		btHelp = new Button("");
-		btHelp.addStyleName("icon-button"); // for top-margin
-		btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
 		btHelp.addStyleName("help-button");
 		
 		labelLayout.addComponent(btHelp);

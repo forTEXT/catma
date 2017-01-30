@@ -23,6 +23,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -34,8 +35,8 @@ import java.util.logging.Logger;
 
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Theme;
-import com.vaadin.server.ClassResource;
 import com.vaadin.server.ExternalResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
@@ -45,16 +46,14 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Link;
-import com.vaadin.ui.MenuBar;
-import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.themes.BaseTheme;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.BackgroundServiceProvider;
@@ -91,7 +90,7 @@ import de.catma.ui.tagmanager.TagManagerView;
 import de.catma.ui.visualizer.VisualizationManagerView;
 
 //@Push(PushMode.MANUAL)
-@Theme("cleanew")
+@Theme("catma")
 @PreserveOnRefresh
 public class CatmaApplication extends UI
 	implements BackgroundServiceProvider, AnalyzerProvider, LoginToken {
@@ -121,7 +120,6 @@ public class CatmaApplication extends UI
 	private Button btHelp;
 	
 	private ThemeResource logoResource;
-	private Image logoImage;
 	
 	private Label defaultContentPanelLabel;
 	
@@ -155,7 +153,7 @@ public class CatmaApplication extends UI
 	protected void init(VaadinRequest request) {
 		backgroundService = new UIBackgroundService(true);
 		
-		handleParameters(request.getParameterMap());
+		storeParameters(request.getParameterMap());
 		
 		Page.getCurrent().setTitle("CATMA 6.0 " + MINORVERSION);
 		
@@ -181,8 +179,10 @@ public class CatmaApplication extends UI
 		menuLayout.setMargin(true);
 		menuLayout.setSpacing(true);
 		
-		logoResource = new ThemeResource("logo.gif");
-		logoImage = new Image(null, logoResource);
+		logoResource = new ThemeResource("catma-logo.png");
+		Link logoImage = new Link(null, new ExternalResource("http://www.catma.de"));
+		logoImage.setIcon(logoResource);
+		logoImage.setTargetName("_blank");
 		menuLayout.addComponent(logoImage);
 		
 		MenuFactory menuFactory = new MenuFactory();
@@ -260,10 +260,9 @@ public class CatmaApplication extends UI
 			menuLayout.setComponentAlignment(helpLink, Alignment.TOP_RIGHT);
 			helpLink.setVisible(false);
 			
-			btHelp = new Button("");
-			btHelp.addStyleName("icon-button"); // for top-margin
-			btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+			btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
 			btHelp.addStyleName("help-button");
+			btHelp.addStyleName("application-help-button");
 			
 			menuLayout.addComponent(btHelp);
 			
@@ -279,22 +278,40 @@ public class CatmaApplication extends UI
 										
 				}
 			});
-			
-			MenuBar loginLogoutMenu = new MenuBar();
+
 			LoginLogoutCommand loginLogoutCommand = 
 					new LoginLogoutCommand(menu, repositoryManagerView);
-			MenuItem loginLogoutitem = loginLogoutMenu.addItem("Login", loginLogoutCommand);
-			loginLogoutCommand.setLoginLogoutItem(loginLogoutitem);
+			Button btloginLogout = new Button("Sign in", event -> loginLogoutCommand.menuSelected(null));
+			btloginLogout.setStyleName(BaseTheme.BUTTON_LINK);
+			btloginLogout.addStyleName("application-loginlink");
 			
-			menuLayout.addComponent(loginLogoutMenu);
-			menuLayout.setComponentAlignment(loginLogoutMenu, Alignment.TOP_RIGHT);
+			loginLogoutCommand.setLoginLogoutButton(btloginLogout);
+			
+			menuLayout.addComponent(btloginLogout);
+			menuLayout.setComponentAlignment(btloginLogout, Alignment.TOP_RIGHT);
 			menuLayout.setWidth("100%");
 			
 			menuPanel.setContent(menuLayout);
 
 			setContent(mainLayout);
-
+			
+			if (getParameter(Parameter.USER_IDENTIFIER) != null) {
+				btloginLogout.click();
+			}
+			
 			setPollInterval(10000);
+			
+			
+			if ((getParameter(Parameter.AUTOLOGIN) != null) && (getUser()==null)) {
+				getPage().setLocation(
+					repositoryManagerView.createAuthenticationDialog().createLogInClick(
+						this, 
+						RepositoryPropertyKey.CATMA_oauthAuthorizationCodeRequestURL.getValue(),
+						RepositoryPropertyKey.CATMA_oauthAccessTokenRequestURL.getValue(),
+						RepositoryPropertyKey.CATMA_oauthClientId.getValue(),
+						RepositoryPropertyKey.CATMA_oauthClientSecret.getValue(),
+						URLEncoder.encode("/", "UTF-8")));
+			}
 			
 		} catch (Exception e) {
 			showAndLogError("The system could not be initialized!", e);
@@ -302,12 +319,21 @@ public class CatmaApplication extends UI
 
 	}
 	
-	public void handleParameters(Map<String, String[]> parameters) {
+	private void storeParameters(Map<String, String[]> parameters) {
 		this.parameters.putAll(parameters);
 	}
 	
 	public Map<String, String[]> getParameters() {
 		return Collections.unmodifiableMap(parameters);
+	}
+	
+	public String getParameter(Parameter parameter) {
+		return getParameter(parameter.getKey());
+	}
+	
+	public String getParameter(Parameter parameter, String defaultValue) {
+		String value = getParameter(parameter.getKey());
+		return value==null?defaultValue:value;
 	}
 	
 	public String getParameter(String key) {
@@ -317,6 +343,14 @@ public class CatmaApplication extends UI
 		}
 		
 		return null;
+	}
+	
+	public String[] getParameters(Parameter parameter) {
+		return getParameters(parameter.getKey());
+	}
+	
+	public String[] getParameters(String key) {
+		return parameters.get(key);
 	}
 	
 	private void initTempDirectory() throws IOException {
@@ -352,7 +386,7 @@ public class CatmaApplication extends UI
 			return;
 		}
 		
-		selectedTab.openTagsetDefinition(tagsetDefinition);
+		selectedTab.openTagsetDefinition(this, tagsetDefinition);
 		
 		SourceDocument sd = selectedTab.getSourceDocument();
 		String sourceDocumentCaption = sd.toString();
@@ -377,20 +411,32 @@ public class CatmaApplication extends UI
 		if (switchToTagManagerView) {
 			menu.executeEntry(tagManagerView);
 		}
-		tagManagerView.openTagLibrary(repository, tagLibrary);
+		tagManagerView.openTagLibrary(this, repository, tagLibrary);
 	}
 
+	public TaggerView openSourceDocument(String sourceDocumentId) {
+		
+		RepositoryManager repositoryManager = 
+				repositoryManagerView.getRepositoryManager();
+		
+		if (repositoryManager.hasOpenRepository()) {
+			Repository repository = repositoryManager.getFirstOpenRepository();
+			
+			SourceDocument sourceDocument = repository.getSourceDocument(sourceDocumentId);
+			if (sourceDocument != null) {
+				return openSourceDocument(sourceDocument, repository);
+			}
+		}
+		
+		return null;
+	}
+
+	
 	public TaggerView openSourceDocument(
 			SourceDocument sourceDocument, Repository repository) {
 
 		menu.executeEntry(taggerManagerView);
-		
-//		Notification.show(
-//				"Information", 
-//				"To markup your text please drag Tagsets from a Tag Library " +
-//				"into the currently active Tagsets area!",
-//				Type.TRAY_NOTIFICATION);
-		
+
 		return taggerManagerView.openSourceDocument(
 				sourceDocument, repository);
 	}

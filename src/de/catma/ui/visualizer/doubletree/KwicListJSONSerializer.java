@@ -1,5 +1,6 @@
 package de.catma.ui.visualizer.doubletree;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -13,7 +14,10 @@ import de.catma.ui.client.ui.visualizer.doubletree.shared.KwicSerializationField
 
 public class KwicListJSONSerializer {
 	
-	public String toJSON(List<KeywordInContext> kwicList, boolean caseSensitive) {
+	public String toJSON(
+			List<KeywordInContext> kwicList, 
+			boolean caseSensitive) {
+		
 		JsonNodeFactory factory = JsonNodeFactory.instance;
 		
 		ObjectNode kwicListJson = factory.objectNode();
@@ -27,6 +31,9 @@ public class KwicListJSONSerializer {
 		kwicListJson.put(
 				KwicSerializationField.caseSensitive.name(), 
 				Boolean.toString(caseSensitive));
+
+		int rtlCount = 0;
+		
 		for (KeywordInContext kwic : kwicList) {
 			if (kwic instanceof KeywordInSpanContext) {
 				KeywordInSpanContext spanKwic = (KeywordInSpanContext)kwic;
@@ -46,8 +53,22 @@ public class KwicListJSONSerializer {
 				for (TermInfo ti : spanKwic.getSpanContext().getForwardTokens()) {
 					postfixArrayJson.add(ti.getTerm());
 				}
+				
+				if (kwic.isRightToLeft()) {
+					rtlCount++;
+				}
 			}
 		}
+		
+		// rightToLeftLanaguage->true if more than half of the kwics stem from RTL documents
+		kwicListJson.put(
+				KwicSerializationField.rightToLeftLanguage.name(), 
+				Boolean.toString(
+					rtlCount > (BigDecimal.valueOf(kwicList.size())
+							.divide(BigDecimal.valueOf(2), BigDecimal.ROUND_HALF_UP)
+							.intValue())));
+		
+
 		
 		return kwicListJson.toString();
 	}

@@ -32,6 +32,7 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.server.ClassResource;
+import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -467,10 +468,10 @@ public class PhraseResultPanel extends VerticalLayout {
 
 		
 		btSelectAll = new Button("Select all for Kwic");
-		
 		buttonPanel.addComponent(btSelectAll);
 		buttonPanel.setComponentAlignment(btSelectAll, Alignment.MIDDLE_RIGHT);
 		buttonPanel.setExpandRatio(btSelectAll, 1f);
+
 		btDeselectAll = new Button("Deselect all for Kwic");
 		buttonPanel.addComponent(btDeselectAll);
 		buttonPanel.setComponentAlignment(btDeselectAll, Alignment.MIDDLE_RIGHT);
@@ -525,9 +526,8 @@ public class PhraseResultPanel extends VerticalLayout {
 		kwicButtonPanel.addComponent(btSelectAllKwic);
 		kwicButtonPanel.setComponentAlignment(btSelectAllKwic, Alignment.MIDDLE_RIGHT);		
 		
-		btHelp = new Button("");
-		btHelp.addStyleName("icon-button"); // for top-margin
-		btHelp.setIcon(new ClassResource("resources/icon-help.gif"));
+		btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
+//		btHelp.addStyleName("icon-button"); // for top-margin
 		btHelp.addStyleName("help-button");
 		
 		kwicButtonPanel.addComponent(btHelp);
