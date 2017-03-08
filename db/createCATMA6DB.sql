@@ -622,7 +622,7 @@ CREATE TABLE IF NOT EXISTS `catmarepository`.`user` (
   `guest` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '',
   `spawnable` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '',
   PRIMARY KEY (`userID`)  COMMENT '')
-ENGINE = InnoDB
+ENGINE = InnoDB;
 
 -- -----------------------------------------------------
 -- Table `catmarepository`.`user_sourcedocument`

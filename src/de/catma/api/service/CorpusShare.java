@@ -6,6 +6,7 @@ import java.util.Properties;
 import org.restlet.data.ChallengeResponse;
 import org.restlet.data.Form;
 import org.restlet.data.Status;
+import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
@@ -18,6 +19,7 @@ import de.catma.repository.db.maintenance.UserManager;
 
 public class CorpusShare extends ServerResource {
 
+	@Get
 	public void share() {
 		try {
 			Properties properties = 
