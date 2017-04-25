@@ -1,6 +1,7 @@
 package de.catma.api.service;
 
-import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.restlet.data.ChallengeResponse;
@@ -12,65 +13,47 @@ import org.restlet.resource.ServerResource;
 
 import de.catma.api.ApiLoginToken;
 import de.catma.api.Parameter;
-import de.catma.document.AccessMode;
-import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.repository.db.maintenance.UserManager;
+import de.catma.user.UserProperty;
 
-public class CorpusShare extends ServerResource {
+public class UserCreate extends ServerResource {
 
 	@Get
-	public void share() {
+	public String create() {
 		try {
 			Properties properties = 
 				(Properties) getContext().getAttributes().get(
 					Parameter.catma_properties.name());
 			ChallengeResponse cr = getChallengeResponse();
 
-				
 			UserManager userManager = new UserManager();
 			ApiLoginToken loginToken = new ApiLoginToken(cr.getIdentifier());
 			Repository repo = 
 					new RepositoryLoader().open(properties, cr.getIdentifier());
 			try {
-
 				Form form = getRequest().getResourceRef().getQueryAsForm();
-				
-				String corpusId = form.getFirstValue(Parameter.cid.name());
-				AccessMode accessMode = 
-					AccessMode.findValueOf(form.getFirstValue(Parameter.accessmode.name()));
 				String identifier = 
-					form.getFirstValue(Parameter.userident.name());
-					
-				if (accessMode == null) {
+						form.getFirstValue(Parameter.userident.name());
+				
+				if (identifier == null) {
 					throw new ResourceException(
-							Status.CLIENT_ERROR_BAD_REQUEST, "access mode is not valid");
+							Status.CLIENT_ERROR_BAD_REQUEST, "identifier cannot be empty");
 				}
 				
-				if ((corpusId == null) || corpusId.trim().isEmpty()) {
+				identifier = identifier.trim();
+				
+				if (identifier.isEmpty()) {
 					throw new ResourceException(
-							Status.CLIENT_ERROR_BAD_REQUEST, "cid is not valid");
+							Status.CLIENT_ERROR_BAD_REQUEST, "identifier cannot be empty");
 				}
 				
-				if ((identifier == null) || identifier.trim().isEmpty()) {
-					throw new ResourceException(
-							Status.CLIENT_ERROR_BAD_REQUEST, "userident is not valid");
-				}
+				Map<String,String> userIdentification = new HashMap<>();
+				userIdentification.put(UserProperty.identifier.name(), identifier);
 				
-				for (Corpus corpus : repo.getCorpora())  {
-					if (corpus.getId().equals(corpusId)) {
-						try {
-							repo.share(corpus, identifier, accessMode);
-						}
-						catch (IOException e) {
-							throw new ResourceException(
-									Status.CLIENT_ERROR_NOT_FOUND, "you seem to have no access rights to this corpus");
-						}
-						return;
-					}
-				}
-				throw new ResourceException(
-						Status.CLIENT_ERROR_NOT_FOUND, "corpus not found");
+				repo.createIfAbsent(userIdentification);
+				
+				return identifier;
 			}
 			finally {
 				userManager.logout(loginToken);

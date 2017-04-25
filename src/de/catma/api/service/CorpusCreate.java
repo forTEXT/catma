@@ -8,6 +8,7 @@ import java.util.Properties;
 import org.restlet.data.ChallengeResponse;
 import org.restlet.data.Form;
 import org.restlet.data.Status;
+import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
@@ -22,6 +23,7 @@ public class CorpusCreate extends ServerResource {
 
 	private String newCorpusID;
 
+	@Get
 	public String create() {
 		try {
 			Properties properties = 

@@ -13,11 +13,11 @@ import org.restlet.resource.ServerResource;
 import de.catma.api.ApiLoginToken;
 import de.catma.api.Parameter;
 import de.catma.document.AccessMode;
-import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.repository.db.maintenance.UserManager;
+import de.catma.tag.TagLibraryReference;
 
-public class CorpusShare extends ServerResource {
+public class TagLibraryShare extends ServerResource {
 
 	@Get
 	public void share() {
@@ -36,7 +36,8 @@ public class CorpusShare extends ServerResource {
 
 				Form form = getRequest().getResourceRef().getQueryAsForm();
 				
-				String corpusId = form.getFirstValue(Parameter.cid.name());
+				String tagLibraryId = form.getFirstValue(Parameter.tid.name());
+				
 				AccessMode accessMode = 
 					AccessMode.findValueOf(form.getFirstValue(Parameter.accessmode.name()));
 				String identifier = 
@@ -47,9 +48,9 @@ public class CorpusShare extends ServerResource {
 							Status.CLIENT_ERROR_BAD_REQUEST, "access mode is not valid");
 				}
 				
-				if ((corpusId == null) || corpusId.trim().isEmpty()) {
+				if ((tagLibraryId == null) || tagLibraryId.trim().isEmpty()) {
 					throw new ResourceException(
-							Status.CLIENT_ERROR_BAD_REQUEST, "cid is not valid");
+							Status.CLIENT_ERROR_BAD_REQUEST, "tid is not valid");
 				}
 				
 				if ((identifier == null) || identifier.trim().isEmpty()) {
@@ -57,14 +58,15 @@ public class CorpusShare extends ServerResource {
 							Status.CLIENT_ERROR_BAD_REQUEST, "userident is not valid");
 				}
 				
-				for (Corpus corpus : repo.getCorpora())  {
-					if (corpus.getId().equals(corpusId)) {
+				for (TagLibraryReference tagLibRef : repo.getTagLibraryReferences())  {
+					if (tagLibRef.getId().equals(tagLibraryId)) {
 						try {
-							repo.share(corpus, identifier, accessMode);
+							repo.share(tagLibRef, identifier, accessMode);
 						}
 						catch (IOException e) {
 							throw new ResourceException(
-									Status.CLIENT_ERROR_NOT_FOUND, "you seem to have no access rights to this corpus");
+									Status.CLIENT_ERROR_NOT_FOUND, 
+									"you seem to have no access rights to this tagLibrary");
 						}
 						return;
 					}

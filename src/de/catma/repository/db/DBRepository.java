@@ -347,12 +347,10 @@ public class DBRepository implements IndexedRepository {
 		loadContent(db);
 	}
 	
-	private void loadCurrentUser(
-			Map<String, String> userIdentification) throws IOException {
-
+	public DBUser createIfAbsent(Map<String, String> userIdentification) throws IOException {
 		TransactionalDSLContext db = new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
-		
 		try {
+			DBUser user = null;
 			
 			boolean isGuest = 
 				(userIdentification.get(UserProperty.guest.name())==null
@@ -363,7 +361,7 @@ public class DBRepository implements IndexedRepository {
 			Record record = db
 			.select()
 			.from(USER)
-			.where(USER.IDENTIFIER.eq(userIdentification.get(UserProperty.identifier.name())))
+			.where(USER.IDENTIFIER.equalIgnoreCase(userIdentification.get(UserProperty.identifier.name())))
 			.fetchOne();
 			
 			if (record == null) {
@@ -401,7 +399,7 @@ public class DBRepository implements IndexedRepository {
 					userRoleId)
 				.execute();
 				
-				currentUser = new DBUser(
+				user = new DBUser(
 					idRecord.getValue(USER.USERID), 
 					userIdentification.get(UserProperty.identifier.name()),
 					false,
@@ -411,12 +409,12 @@ public class DBRepository implements IndexedRepository {
 				db.commitTransaction();
 			}
 			else {
-				currentUser = record.map(new UserMapper());
+				user = record.map(new UserMapper());
 				
 				db
 				.update(USER)
 				.set(USER.LASTLOGIN,new java.sql.Timestamp(new Date().getTime()))
-				.where(USER.USERID.eq(currentUser.getUserId()))
+				.where(USER.USERID.eq(user.getUserId()))
 				.execute();
 			}
 	
@@ -427,11 +425,13 @@ public class DBRepository implements IndexedRepository {
 				.on(ROLE_PERMISSION.PERMISSIONID.eq(PERMISSION.PERMISSIONID))
 			.join(USER_ROLE)
 				.on(USER_ROLE.ROLEID.eq(ROLE_PERMISSION.ROLEID))
-				.and(USER_ROLE.USERID.eq(currentUser.getUserId()))
+				.and(USER_ROLE.USERID.eq(user.getUserId()))
 			.fetch()
 			.map(new FieldToValueMapper<String>(PERMISSION.IDENTIFIER));
 			
-			currentUser.setPermissions(permissions);
+			user.setPermissions(permissions);
+			
+			return user;
 		}
 		catch (Exception dae) {
 			db.rollbackTransaction();
@@ -443,6 +443,12 @@ public class DBRepository implements IndexedRepository {
 				db.close();
 			}
 		}
+	
+	}
+	
+	private void loadCurrentUser(
+			Map<String, String> userIdentification) throws IOException {
+		currentUser = createIfAbsent(userIdentification);
 	}
 
 	private void loadContent(DSLContext db) 
@@ -1159,7 +1165,7 @@ public class DBRepository implements IndexedRepository {
 		Record record = db
 		.select()
 		.from(USER)
-		.where(USER.IDENTIFIER.eq(userIdentifier))
+		.where(USER.IDENTIFIER.equalIgnoreCase(userIdentifier))
 		.fetchOne();
 		
 		if (record != null) {

@@ -26,6 +26,8 @@ import de.catma.api.service.CorpusExport;
 import de.catma.api.service.CorpusList;
 import de.catma.api.service.CorpusShare;
 import de.catma.api.service.SourceDocumentExport;
+import de.catma.api.service.TagLibraryShare;
+import de.catma.api.service.UserCreate;
 import de.catma.api.service.UserMarkupCollectionExport;
 import de.catma.api.service.UserMarkupCollectionImport;
 import de.catma.util.CloseSafe;
@@ -66,6 +68,7 @@ public class CatmaApiApplication extends Application {
 			guard.setVerifier(mapVerifier);
 			
 			Router router = new Router(getContext());
+			
 	
 	        router.attach("/corpus/list", CorpusList.class);
 	        
@@ -77,13 +80,17 @@ public class CatmaApiApplication extends Application {
 	        
 	        router.attach("/src/get", SourceDocumentExport.class);
 	        
+	        router.attach("/taglibrary/share", TagLibraryShare.class);
+	        
 	        router.attach("/umc/get", UserMarkupCollectionExport.class);
 	        
 	        router.attach("/umc/add", UserMarkupCollectionImport.class);
 	        
-	        router.attach("/info", ApiInfo.class);
+	        router.attach("/user/create", UserCreate.class);
 	        
-			guard.setNext(router);
+	        router.attach("/info", ApiInfo.class);
+
+	        guard.setNext(router);
 			
 	        return guard;
 		}
