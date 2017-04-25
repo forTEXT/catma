@@ -147,36 +147,32 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		WebBrowser webBrowser = Page.getCurrent().getWebBrowser();
 		String clientIpAddress = webBrowser.getAddress();
 		if (clientIpAddress != null ) {
-			
 			Integer currentCount = 
 					GUEST_ACCESS_COUNT_BY_IP.get(clientIpAddress, ()->0);
 			
-			if (currentCount < RepositoryPropertyKey.GuestAccessCountMax.getValue(10)) {
-				IDGenerator idGenerator = new IDGenerator();
-				String userName = idGenerator.generate();
-				Map<String,String> userIdentification = 
-						new HashMap<String, String>(1);
-				userIdentification.put(
-						UserProperty.identifier.name(), userName);
-				userIdentification.put(UserProperty.guest.name(), Boolean.TRUE.toString());
-				
-				open((CatmaApplication) getUI(), repositoryReference, userIdentification);
-				
+			if (currentCount > RepositoryPropertyKey.GuestAccessCountMax.getValue(50)) {
 				GUEST_ACCESS_COUNT_BY_IP.put(clientIpAddress, currentCount+1);
-				
-				Page.getCurrent().setLocation(RepositoryPropertyKey.BaseURL.getValue());
 			}
 			else {
 				LOGGER.warning("IP " + clientIpAddress + " has exceeded max guest access count!");
-				Notification.show(
-					"Info", 
-					"You have reached the limit for guest account access within 24h!", 
-					Type.TRAY_NOTIFICATION);
 			}
 		}
 		else {
-			LOGGER.warning("cannot open guest repository, client IP is null!");
+			LOGGER.warning("could not check guest account access count, client IP is null!");
 		}
+		
+		IDGenerator idGenerator = new IDGenerator();
+		String userName = idGenerator.generate();
+		Map<String,String> userIdentification = 
+				new HashMap<String, String>(1);
+		userIdentification.put(
+				UserProperty.identifier.name(), userName);
+		userIdentification.put(UserProperty.guest.name(), Boolean.TRUE.toString());
+		
+		open((CatmaApplication) getUI(), repositoryReference, userIdentification);
+		
+		Page.getCurrent().setLocation(RepositoryPropertyKey.BaseURL.getValue());
+
 	}
 
 	private void openWithAuthentication(RepositoryReference repositoryReference) {
