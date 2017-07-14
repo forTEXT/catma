@@ -238,8 +238,8 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 					outputSourceDocumentResult.setSourceDocumentID(repositoryId);
 					
 					SourceDocumentInfo outputSourceDocumentInfo = outputSourceDocumentResult.getSourceDocumentInfo();
-					TechInfoSet newTechInfoSet = new TechInfoSet(fileName, null, newURI); // TODO: MimeType detection ?
 					FileType newFileType = FileType.getFileTypeFromName(fileName);
+					TechInfoSet newTechInfoSet = new TechInfoSet(fileName, newFileType.getMimeType(), newURI);
 					newTechInfoSet.setFileType(newFileType);
 					
 					outputSourceDocumentInfo.setTechInfoSet(newTechInfoSet);
@@ -342,7 +342,17 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		
 		table = new Table("Documents", container);
 
-		table.setTableFieldFactory(new FileTypeFieldFactory(new FileTypeCharsetValueChangeListener()));
+		table.setTableFieldFactory(new FileTypeFieldFactory(new FileTypeCharsetValueChangeListener(), new ValueChangeListener() {
+			
+			@Override
+			public void valueChange(ValueChangeEvent event) {
+				Object itemId = event.getProperty().getValue();
+				
+				if (itemId != null) {
+					loadSourceDocumentAndContent((SourceDocumentResult)itemId);
+				}
+			}
+		}));
 		
 		table.setVisibleColumns(new Object[]{
 				"sourceDocumentInfo.techInfoSet.fileName",

@@ -1,6 +1,7 @@
 package de.catma.ui.repository.wizard;
 
 import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.ComboBox;
 
 import de.catma.document.source.FileType;
@@ -29,14 +30,14 @@ public class FileTypeFieldFactory extends GeneratorFieldFactory {
 	}
 	private FieldMapper fieldMapper;
 	
-	public FileTypeFieldFactory(FileTypeCharsetValueChangeListener fileTypeCharsetValueChangeListener) {
+	public FileTypeFieldFactory(FileTypeCharsetValueChangeListener fileTypeCharsetValueChangeListener, ValueChangeListener reloadSourceDocListener) {
 		this.fieldMapper = new FieldMapper();
 		FileTypeCharsetFieldConnectorFactory fileTypeCharsetFieldConnectorFactory =
 				new FileTypeCharsetFieldConnectorFactory();
 		this.tableFieldGenerators.put("sourceDocumentInfo.techInfoSet.fileName", new ReadonlyFieldGenerator());
 		this.tableFieldGenerators.put(
 			"sourceDocumentInfo.techInfoSet.fileType", 
-			new FileTypeFieldGenerator(fieldMapper, fileTypeCharsetFieldConnectorFactory, fileTypeCharsetValueChangeListener));
+			new FileTypeFieldGenerator(fieldMapper, fileTypeCharsetFieldConnectorFactory, fileTypeCharsetValueChangeListener, reloadSourceDocListener));
 		this.tableFieldGenerators.put(
 			"sourceDocumentInfo.techInfoSet.charset",
 			new CharsetFieldGenerator(fieldMapper, fileTypeCharsetFieldConnectorFactory, fileTypeCharsetValueChangeListener));

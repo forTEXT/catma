@@ -1,6 +1,10 @@
 package de.catma.ui.repository.wizard;
 
 import com.vaadin.data.Container;
+import com.vaadin.data.Property;
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.data.util.ObjectProperty;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Field;
@@ -16,14 +20,18 @@ public class FileTypeFieldGenerator implements TableFieldGenerator {
 	private FieldMapper fieldMapper;
 	private FileTypeCharsetFieldConnectorFactory fileTypeCharsetFieldConnectorFactory;
 	private FileTypeCharsetValueChangeListener fileTypeCharsetValueChangeListener;
+	private ValueChangeListener fileTypeValueChangeListener;
 
 	public FileTypeFieldGenerator(
 			FieldMapper fieldMapper, 
 			FileTypeCharsetFieldConnectorFactory fileTypeCharsetFieldConnectorFactory, 
-			FileTypeCharsetValueChangeListener fileTypeCharsetValueChangeListener) {
+			FileTypeCharsetValueChangeListener fileTypeCharsetValueChangeListener,
+			ValueChangeListener fileTypeValueChangeListener) {
+		
 		this.fieldMapper = fieldMapper;
 		this.fileTypeCharsetFieldConnectorFactory = fileTypeCharsetFieldConnectorFactory;
 		this.fileTypeCharsetValueChangeListener = fileTypeCharsetValueChangeListener;
+		this.fileTypeValueChangeListener = fileTypeValueChangeListener; 
 	}
 
 	@Override
@@ -34,7 +42,21 @@ public class FileTypeFieldGenerator implements TableFieldGenerator {
     	comboBox.setImmediate(true);
     	
     	comboBox.addValueChangeListener(fileTypeCharsetValueChangeListener);
-
+    	comboBox.addValueChangeListener(new ValueChangeListener() {
+			
+			@Override
+			public void valueChange(ValueChangeEvent event) {
+				fileTypeValueChangeListener.valueChange(new ValueChangeEvent() {
+					
+					@Override
+					public Property getProperty() {
+						return new ObjectProperty<Object>(itemId);
+					}
+				});
+			}
+		});
+    	
+    	
 		fieldMapper.registerField(
 				itemId, 
 				"sourceDocumentInfo.techInfoSet.fileType", 
