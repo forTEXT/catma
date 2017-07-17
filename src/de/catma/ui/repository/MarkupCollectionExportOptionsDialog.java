@@ -22,7 +22,7 @@ import de.catma.ui.CatmaApplication;
 public class MarkupCollectionExportOptionsDialog extends Window {
 	
 	public MarkupCollectionExportOptionsDialog(Repository repository, SourceDocument sd, UserMarkupCollectionReference umcRef) {
-		super("Markup Collection Export Options");
+		super(Messages.getString("MarkupCollectionExportOptionsDialog.annoExportOptions")); //$NON-NLS-1$
 		initComponents(repository, sd, umcRef);
 	}
 
@@ -34,7 +34,7 @@ public class MarkupCollectionExportOptionsDialog extends Window {
 		content.setMargin(true);
 		content.setSpacing(true);
 		
-		Button btExport = new Button("Export Markup Collection");
+		Button btExport = new Button(Messages.getString("MarkupCollectionExportOptionsDialog.exportAnnotations")); //$NON-NLS-1$
 		content.addComponent(btExport);
 		
 		StreamResource resultStreamResource = 
@@ -44,14 +44,14 @@ public class MarkupCollectionExportOptionsDialog extends Window {
 						public InputStream getStream() {
 							return createExportResultStream(repository, sd, umcRef, false);
 						}
-					}, umcRef.toString().replaceAll("\\s", "_") + ".xml");
+					}, umcRef.toString().replaceAll("\\s", "_") + ".xml"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			
 		resultStreamResource.setCacheTime(0);
 			
 		new FileDownloader(resultStreamResource).extend(btExport);	
 		
 		
-		Button btExportWithText = new Button("Export Markup Collection with text");
+		Button btExportWithText = new Button(Messages.getString("MarkupCollectionExportOptionsDialog.exportAnnoWithText")); //$NON-NLS-1$
 		content.addComponent(btExportWithText);
 		
 		StreamResource resultWithTextStreamResource = 
@@ -61,7 +61,7 @@ public class MarkupCollectionExportOptionsDialog extends Window {
 						public InputStream getStream() {
 							return createExportResultStream(repository, sd, umcRef, true);
 						}
-					}, umcRef.toString().replaceAll("\\s", "_") + ".xml");
+					}, umcRef.toString().replaceAll("\\s", "_") + ".xml"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			
 		resultWithTextStreamResource.setCacheTime(0);
 			
@@ -85,7 +85,7 @@ public class MarkupCollectionExportOptionsDialog extends Window {
 			return teiDownloadStream;
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				"Error exporting Markup Collection!", e);
+				Messages.getString("MarkupCollectionExportOptionsDialog.errorExportingAnnotations"), e); //$NON-NLS-1$
 		}
 		return null;
 	}

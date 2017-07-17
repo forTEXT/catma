@@ -6,7 +6,7 @@ public class GenerationOptionsFieldFactory extends GeneratorFieldFactory {
 
 	public GenerationOptionsFieldFactory() {
 		this.formFieldGenerators.put(
-				"tagsetIdentification", new TagsetIdentificationFieldGenerator());
+				"tagsetIdentification", new TagsetIdentificationFieldGenerator()); //$NON-NLS-1$
 	}
 
 }

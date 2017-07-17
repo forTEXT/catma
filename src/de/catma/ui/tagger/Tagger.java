@@ -75,7 +75,7 @@ public class Tagger extends AbstractComponent {
 				
 			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error displaying Tag Instance information!", e);
+					Messages.getString("Tagger.errorDisplayingAnnotationInstanceInfo"), e); //$NON-NLS-1$
 			}
 		}
 		
@@ -87,7 +87,7 @@ public class Tagger extends AbstractComponent {
 			
 			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error displaying Tag Instances information!", e);
+					Messages.getString("Tagger.errorDisplayingAnnotationInstancesInfo"), e); //$NON-NLS-1$
 			}
 			
 		}
@@ -110,14 +110,14 @@ public class Tagger extends AbstractComponent {
 
 			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error adding the Tag Instance!", e);
+					Messages.getString("Tagger.errorAddingAnnotation"), e); //$NON-NLS-1$
 			}
 		}
 		
 		@Override
 		public void log(String msg) {
 			System.out.println(
-					"Got log message from client: " +  msg);
+					"Got log message from client: " +  msg); //$NON-NLS-1$
 		}
 	};
 
@@ -200,7 +200,7 @@ public class Tagger extends AbstractComponent {
 							ColorConverter.toHex(tagDefinition.getColor()))));
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error adding Tag!", e);
+					Messages.getString("Tagger.errorAddingAnnotation"), e); //$NON-NLS-1$
 		}
 	}
 
@@ -237,7 +237,7 @@ public class Tagger extends AbstractComponent {
 
 	public void setTagInstanceSelected(TagInstance tagInstance) {
 		getRpcProxy(TaggerClientRpc.class).setTagInstanceSelected(
-				tagInstance==null?"":tagInstance.getUuid());		
+				tagInstance==null?"":tagInstance.getUuid());		 //$NON-NLS-1$
 	}
 
 	public void setTraceSelection(Boolean traceSelection) {

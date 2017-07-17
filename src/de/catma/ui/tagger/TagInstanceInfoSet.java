@@ -47,9 +47,9 @@ public class TagInstanceInfoSet {
 	 * Empty {@link TagInstance} information.
 	 */
 	public TagInstanceInfoSet(){
-		this.collection = "";
-		this.path = "";
-		this.ID = "";
+		this.collection = ""; //$NON-NLS-1$
+		this.path = ""; //$NON-NLS-1$
+		this.ID = ""; //$NON-NLS-1$
 	}
 	
 	
@@ -66,7 +66,7 @@ public class TagInstanceInfoSet {
 	}
 	
 	public String getInstance(){
-		return instance==null?"":instance.getTagDefinition().getName();
+		return instance==null?"":instance.getTagDefinition().getName(); //$NON-NLS-1$
 	}
 
 	

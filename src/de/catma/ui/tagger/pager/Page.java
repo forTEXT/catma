@@ -91,7 +91,7 @@ public class Page {
 	
 	@Override
 	public String toString() {
-		return "Page["+pageStart+","+pageEnd+"]\n"+text;
+		return "Page["+pageStart+","+pageEnd+"]\n"+text; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
 	
@@ -323,7 +323,7 @@ public class Page {
 		}
 		catch (NumberFormatException | ArrayIndexOutOfBoundsException | NullPointerException e) {
 			Logger.getLogger(Page.class.getName()).log(
-				Level.SEVERE, "No such lineID: " + lineID + " with tagInstanceID: " + instancePartID , e);
+				Level.SEVERE, "No such lineID: " + lineID + " with tagInstanceID: " + instancePartID , e); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		return Collections.emptyList();
 	}

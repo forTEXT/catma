@@ -18,6 +18,7 @@
  */
 package de.catma.ui.tagger;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -81,7 +82,7 @@ public class PropertyEditDialog extends Window {
 		@Override
 		public void changeVariables(Object source, Map<String, Object> variables) {
 			String newFilter;
-	        if ((newFilter = (String) variables.get("filter")) != null) {
+	        if ((newFilter = (String) variables.get("filter")) != null) { //$NON-NLS-1$
 	        	currentFilterString = newFilter;
 	        }
 	        super.changeVariables(source, variables);
@@ -106,8 +107,7 @@ public class PropertyEditDialog extends Window {
 	public PropertyEditDialog(TagInstance tagInstance,
 			SaveCancelListener<Set<Property>> saveCancelListener,
 			AdhocPropertyValuesBuffer propertyValuesBuffer) {
-		super("Edit Properties for Tag Type "
-				+tagInstance.getTagDefinition().getName());
+		super(MessageFormat.format(Messages.getString("PropertyEditDialog.editPropertiesFor"), tagInstance.getTagDefinition().getName())); //$NON-NLS-1$
 		this.tagInstance = tagInstance;
 		this.propertyValuesBuffer = propertyValuesBuffer;
 		changedProperties = new HashSet<Property>();
@@ -120,7 +120,7 @@ public class PropertyEditDialog extends Window {
 	private void initData() {
 		for (Property p : tagInstance.getUserDefinedProperties()) {
 			PropertyDefinition propertyDefinition = p.getPropertyDefinition();
-			ClassResource pIcon = new ClassResource("tagmanager/resources/ylwdiamd.gif");
+			ClassResource pIcon = new ClassResource("tagmanager/resources/ylwdiamd.gif"); //$NON-NLS-1$
 			
 			propertyTree.addItem(
 					new Object[] {
@@ -138,7 +138,7 @@ public class PropertyEditDialog extends Window {
 			values.addAll(p.getPropertyValueList().getValues());
 			
 			for (String pValue : values) {
-				String pValueItemId = propertyDefinition.getUuid() + "_" + pValue;
+				String pValueItemId = propertyDefinition.getUuid() + "_" + pValue; //$NON-NLS-1$
 				CheckBox cb = createCheckBox(p, pValue);
 				
 				propertyTree.addItem(
@@ -213,12 +213,11 @@ public class PropertyEditDialog extends Window {
 			public void valueChange(ValueChangeEvent event) {
 				btSave.setEnabled(newValueInput.getValue() == null);
 				if (newValueInput.getValue() == null) {
-					btSave.setDescription("");
+					btSave.setDescription(""); //$NON-NLS-1$
 				}
 				else {
 					btSave.setDescription(
-						"Please use either the + button to add your adhoc value<br>"
-						+ "or empty the input field first!");
+						Messages.getString("PropertyEditDialog.addValueInfo")); //$NON-NLS-1$
 				}
 				
 			}
@@ -278,14 +277,14 @@ public class PropertyEditDialog extends Window {
 				
 				if ((pValue == null)||(pValue.isEmpty())) {
 					Notification.show(
-						"Info", "The value can not be empty!", 
+						Messages.getString("PropertyEditDialog.infoTitle"), Messages.getString("PropertyEditDialog.valueMustNotBeEmpty"),  //$NON-NLS-1$ //$NON-NLS-2$
 						Type.TRAY_NOTIFICATION);
 					return;
 				}
 				if (property == null) {
 					Notification.show(
-						"Info", 
-						"Please select exactly one Property from the list first!",
+						Messages.getString("PropertyEditDialog.infoTitle"),  //$NON-NLS-1$
+						Messages.getString("PropertyEditDialog.selectOnePropertyFirst"), //$NON-NLS-1$
 						Type.TRAY_NOTIFICATION);
 					return;
 				}
@@ -296,8 +295,8 @@ public class PropertyEditDialog extends Window {
 						.getPossibleValueList().getPropertyValueList()
 						.getValues().contains(pValue)) {
 						Notification.show(
-							"Info",
-							"This value already exists. Please choose another name!", 
+							Messages.getString("PropertyEditDialog.infoTitle"), //$NON-NLS-1$
+							Messages.getString("PropertyEditDialog.valueAlreadyExists"),  //$NON-NLS-1$
 							Type.TRAY_NOTIFICATION);
 					return;
 				}
@@ -306,7 +305,7 @@ public class PropertyEditDialog extends Window {
 
 				String pValueItemId = 
 						property.getPropertyDefinition().getUuid() 
-						+ "_" + pValue;
+						+ "_" + pValue; //$NON-NLS-1$
 				CheckBox cb = createCheckBox(property, pValue);
 				propertyTree.addItem(
 						new Object[] {
@@ -331,7 +330,7 @@ public class PropertyEditDialog extends Window {
 		mainLayout.setSpacing(true);
 		mainLayout.setSizeFull();
 		
-		hintText = new Label("Please use the check boxes to set or unset values.");
+		hintText = new Label(Messages.getString("PropertyEditDialog.useCheckboxes")); //$NON-NLS-1$
 		mainLayout.addComponent(hintText);
 		
 		propertyTree = new TreeTable();
@@ -345,16 +344,16 @@ public class PropertyEditDialog extends Window {
 		propertyTree.addShortcutListener(new AbstractField.FocusShortcut(
 				propertyTree, KeyCode.ARROW_UP, ModifierKey.CTRL));
 		
-		propertyTree.addContainerProperty(TreePropertyName.property, String.class, "");
-		propertyTree.setColumnHeader(TreePropertyName.property, "Property");
+		propertyTree.addContainerProperty(TreePropertyName.property, String.class, ""); //$NON-NLS-1$
+		propertyTree.setColumnHeader(TreePropertyName.property, Messages.getString("PropertyEditDialog.Property")); //$NON-NLS-1$
 		
-		propertyTree.addContainerProperty(TreePropertyName.icon, Resource.class, "");
+		propertyTree.addContainerProperty(TreePropertyName.icon, Resource.class, ""); //$NON-NLS-1$
 		
-		propertyTree.addContainerProperty(TreePropertyName.value, String.class, "");
-		propertyTree.setColumnHeader(TreePropertyName.value, "Value");
+		propertyTree.addContainerProperty(TreePropertyName.value, String.class, ""); //$NON-NLS-1$
+		propertyTree.setColumnHeader(TreePropertyName.value, Messages.getString("PropertyEditDialog.Value")); //$NON-NLS-1$
 
-		propertyTree.addContainerProperty(TreePropertyName.assigned, CheckBox.class, "");
-		propertyTree.setColumnHeader(TreePropertyName.assigned, "Assigned");
+		propertyTree.addContainerProperty(TreePropertyName.assigned, CheckBox.class, ""); //$NON-NLS-1$
+		propertyTree.setColumnHeader(TreePropertyName.assigned, Messages.getString("PropertyEditDialog.Assigned")); //$NON-NLS-1$
 		
 		propertyTree.setItemCaptionPropertyId(TreePropertyName.property);
 		propertyTree.setItemIconPropertyId(TreePropertyName.icon);
@@ -371,7 +370,7 @@ public class PropertyEditDialog extends Window {
 		HorizontalLayout comboBox = new HorizontalLayout();
 		comboBox.setSpacing(true);
 		
-		newValueInput = new FilterExposingComboBox("Add ad hoc value");
+		newValueInput = new FilterExposingComboBox(Messages.getString("PropertyEditDialog.addAdHocValue")); //$NON-NLS-1$
 		newValueInput.setTextInputAllowed(true);
 		newValueInput.setNewItemsAllowed(true);
 		
@@ -381,26 +380,25 @@ public class PropertyEditDialog extends Window {
 		
 		comboBox.addComponent(newValueInput);
 		
-		btAdd = new Button("+");
+		btAdd = new Button(Messages.getString("PropertyEditDialog.plus")); //$NON-NLS-1$
 		btAdd.setClickShortcut(KeyCode.INSERT);
 		comboBox.addComponent(btAdd);
 		comboBox.setComponentAlignment(btAdd, Alignment.BOTTOM_RIGHT);
 		
 		mainLayout.addComponent(comboBox);
 		
-		hintText = new Label("New property values, that are created ad hoc, exist only for this tag instance! "
-				+ "For the creation of new systematic values use the Tag Type Manager.");
+		hintText = new Label(Messages.getString("PropertyEditDialog.adhocValueInfo")); //$NON-NLS-1$
 		mainLayout.addComponent(hintText);
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setSpacing(true);
 		
-		btSave = new Button("Save");
+		btSave = new Button(Messages.getString("PropertyEditDialog.Save")); //$NON-NLS-1$
 		btSave.setClickShortcut(KeyCode.ENTER, ModifierKey.ALT);
 		buttonPanel.addComponent(btSave);
 		buttonPanel.setComponentAlignment(btSave, Alignment.MIDDLE_RIGHT);
 		
-		btCancel = new Button("Cancel");
+		btCancel = new Button(Messages.getString("PropertyEditDialog.Cancel")); //$NON-NLS-1$
 		btCancel.setClickShortcut(KeyCode.ESCAPE);
 		buttonPanel.addComponent(btCancel);
 		buttonPanel.setComponentAlignment(btCancel, Alignment.MIDDLE_RIGHT);
@@ -409,8 +407,8 @@ public class PropertyEditDialog extends Window {
 		mainLayout.setComponentAlignment(buttonPanel, Alignment.MIDDLE_RIGHT);
 			
 		setContent(mainLayout);
-		setWidth("40%");
-		setHeight("80%");
+		setWidth("40%"); //$NON-NLS-1$
+		setHeight("80%"); //$NON-NLS-1$
 		setModal(true);
 		center();
 	}

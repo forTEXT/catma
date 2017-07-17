@@ -23,6 +23,7 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -125,7 +126,7 @@ public class CorpusPanel extends VerticalLayout {
 		;
 	}
 	
-	private String allDocuments = "All documents";
+	private String allDocuments = Messages.getString("CorpusPanel.allDocuments"); //$NON-NLS-1$
 	private Button btCreateCorpus;
 	private MenuItem miMoreCorpusActions;
 	private MenuItem miRemoveCorpus;
@@ -167,10 +168,8 @@ public class CorpusPanel extends VerticalLayout {
 				else if (evt.getOldValue() == null) { //add
 					addCorpusToTree((Corpus)evt.getNewValue());
 
-					Notification.show("Information",
-							"Start adding Source Documents" +
-							" and Markup Collections by dragging them " +
-							"from the Documents section on a Corpus.",
+					Notification.show(Messages.getString("CorpusPanel.infoTitle"), //$NON-NLS-1$
+							Messages.getString("CorpusPanel.firstStepsInfo"), //$NON-NLS-1$
 							Type.TRAY_NOTIFICATION);
 				}
 				else { //update name
@@ -260,7 +259,7 @@ public class CorpusPanel extends VerticalLayout {
 			}
 		});
 		
-		miMoreCorpusActions.addItem("Analyze Corpus", new Command() {
+		miMoreCorpusActions.addItem(Messages.getString("CorpusPanel.analyzeCorpus"), new Command() { //$NON-NLS-1$
 			
 			public void menuSelected(MenuItem selectedItem) {
 				Corpus selectedCorpus = null;
@@ -283,8 +282,7 @@ public class CorpusPanel extends VerticalLayout {
 					
 					if (selectedCorpus.getSourceDocuments().isEmpty()) {
 						Notification.show(
-							"Information", "The corpus is empty! " +
-									"Please add some documents first!",
+							Messages.getString("CorpusPanel.infoTitle"), Messages.getString("CorpusPanel.corpusIsEmpty"), //$NON-NLS-1$ //$NON-NLS-2$
 								Type.TRAY_NOTIFICATION);
 					}
 					else {
@@ -293,13 +291,13 @@ public class CorpusPanel extends VerticalLayout {
 					}
 				}
 				else {
-					Notification.show("Information", "Please select a corpus first!",
+					Notification.show(Messages.getString("CorpusPanel.infoTitle"), Messages.getString("CorpusPanel.selectACorpus"), //$NON-NLS-1$ //$NON-NLS-2$
 							Type.TRAY_NOTIFICATION);
 				}
 			}
 		});
 		
-		miRemoveCorpus = miMoreCorpusActions.addItem("Remove Corpus", new Command() {
+		miRemoveCorpus = miMoreCorpusActions.addItem(Messages.getString("CorpusPanel.RemoveCorpus"), new Command() { //$NON-NLS-1$
 			
 			public void menuSelected(MenuItem selectedItem) {
 				Object selectedValue = corporaTree.getValue();
@@ -320,7 +318,7 @@ public class CorpusPanel extends VerticalLayout {
 			}
 		});
 		
-		miRenameCorpus = miMoreCorpusActions.addItem("Rename Corpus", new Command() {
+		miRenameCorpus = miMoreCorpusActions.addItem(Messages.getString("CorpusPanel.RenameCorpus"), new Command() { //$NON-NLS-1$
 			public void menuSelected(MenuItem selectedItem) {
 				Object selectedValue = corporaTree.getValue();
 				if ((selectedValue != null) 
@@ -333,7 +331,7 @@ public class CorpusPanel extends VerticalLayout {
 		
 		miRenameCorpus.setEnabled(false);
 		
-		miShareCorpus = miMoreCorpusActions.addItem("Share Corpus", new Command() {
+		miShareCorpus = miMoreCorpusActions.addItem(Messages.getString("CorpusPanel.ShareCorpus"), new Command() { //$NON-NLS-1$
 			public void menuSelected(MenuItem selectedItem) {
 				Object selectedValue = corporaTree.getValue();
 				if ((selectedValue != null) 
@@ -345,7 +343,7 @@ public class CorpusPanel extends VerticalLayout {
 		});
 		miShareCorpus.setEnabled(false);
 		
-		miExportCorpus = miMoreCorpusActions.addItem("Export Corpus", new Command() {
+		miExportCorpus = miMoreCorpusActions.addItem(Messages.getString("CorpusPanel.ExportCorpus"), new Command() { //$NON-NLS-1$
 			public void menuSelected(MenuItem selectedItem) {
 				Object selectedValue = corporaTree.getValue();
 				if ((selectedValue != null) 
@@ -358,7 +356,7 @@ public class CorpusPanel extends VerticalLayout {
 		miExportCorpus.setEnabled(false);
 		
 		miGenerateCorpusAnnotations = miMoreCorpusActions.addItem(
-				"Generate annotations", new Command() {
+				Messages.getString("CorpusPanel.generateAnnotations"), new Command() { //$NON-NLS-1$
 			@Override
 			public void menuSelected(MenuItem selectedItem) {
 				Object selectedValue = corporaTree.getValue();
@@ -370,9 +368,8 @@ public class CorpusPanel extends VerticalLayout {
 					}
 					else {
 						Notification.show(
-							"Info", 
-							"The corpus is empty, please add at least one Source Document "
-							+ "to the corpus to be able to generate annotations.", 
+							Messages.getString("CorpusPanel.infoTitle"),  //$NON-NLS-1$
+							Messages.getString("CorpusPanel.generationCorpusIsEmpty"),  //$NON-NLS-1$
 							Type.TRAY_NOTIFICATION);
 					}
 					
@@ -390,7 +387,7 @@ public class CorpusPanel extends VerticalLayout {
 					selectedValue.getId(), 
 					repository.getUser().getIdentifier());
 			FormDialog<GenerationOptions> generationOptionsDlg = new FormDialog<GenerationOptions>(
-				"Please select the type of markup you want us to generate", 
+				Messages.getString("CorpusPanel.annotationsType"),  //$NON-NLS-1$
 				new BeanItem<GenerationOptions>(generationOptions),
 				new GenerationOptionsFieldFactory(), 
 				new SaveCancelListener<GenerationOptions>() {
@@ -398,17 +395,16 @@ public class CorpusPanel extends VerticalLayout {
 					public void savePressed(GenerationOptions result) {
 						if (result.getTagsetIdentification() != null) {
 							Notification.show(
-									"Info", 
-									"CATMA is generating annotations for you, this may take a while."
-									+ "You will be notified once the annotions are ready.", 
+									Messages.getString("CorpusPanel.infoTitle"),  //$NON-NLS-1$
+									Messages.getString("CorpusPanel.generatingAnnotationsFeedback"),  //$NON-NLS-1$
 									Type.HUMANIZED_MESSAGE);
 							
-							generateCorpusAnnotationsProgressBar.setCaption("Generating annotations...");
+							generateCorpusAnnotationsProgressBar.setCaption(Messages.getString("CorpusPanel.generatingAnnotations")); //$NON-NLS-1$
 							generateCorpusAnnotationsProgressBar.setIndeterminate(true);
 							generateCorpusAnnotationsProgressBar.setVisible(true);
 							
 							((BackgroundServiceProvider)UI.getCurrent()).submit(
-								"Generating annotations...",
+								Messages.getString("CorpusPanel.generatingAnnotations"), //$NON-NLS-1$
 								new AnnotationGeneratorJob(result),
 								new ExecutionListener<Void>() {
 									@Override
@@ -430,37 +426,37 @@ public class CorpusPanel extends VerticalLayout {
 									public void error(Throwable t) {
 										generateCorpusAnnotationsProgressBar.setVisible(false);
 										((CatmaApplication)UI.getCurrent()).showAndLogError(
-												"Error reloading repository!", t);
+												Messages.getString("CorpusPanel.errorReloadingRepo"), t); //$NON-NLS-1$
 									}
 								}
 							);
 						}
 						else {
 							Notification.show(
-									"Info", 
-									"You need to select a markup type, no markup has been generated!", 
+									Messages.getString("CorpusPanel.infoTitle"),  //$NON-NLS-1$
+									Messages.getString("CorpusPanel.annotationTypeSelectionObligatory"),  //$NON-NLS-1$
 									Type.TRAY_NOTIFICATION);
 						}
 					}
 			});
 			generationOptionsDlg.setVisibleItemProperties(
-						new Object[] {"tagsetIdentification"});
+						new Object[] {"tagsetIdentification"}); //$NON-NLS-1$
 			generationOptionsDlg.show();
 		}
 		catch (Exception e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error generating access token!", e);
+					Messages.getString("CorpusPanel.errorGeneratingAccessToken"), e); //$NON-NLS-1$
 		}
 	}
 
 	private void handleExportCorpusRequest(Corpus selectedValue) {
 		final CorpusExporter corpusExporter = new CorpusExporter(repository);
 		final String name = corpusExporter.cleanupName(selectedValue.toString());
-		final String fileName = name + corpusExporter.getDate() + ".tar.gz";
+		final String fileName = name + corpusExporter.getDate() + ".tar.gz"; //$NON-NLS-1$
 		try {
 			FileOutputStream corpusOut = new FileOutputStream(
 				new File(((CatmaApplication)UI.getCurrent()).getTempDirectory() 
-						+ "/" +fileName));
+						+ "/" +fileName)); //$NON-NLS-1$
 			
 			corpusExporter.export(
 				name,
@@ -469,7 +465,7 @@ public class CorpusPanel extends VerticalLayout {
 		}
 		catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error exporting Corpus!", e);
+					Messages.getString("CorpusPanel.errorExportingCorpus"), e); //$NON-NLS-1$
 		}
 	}
 
@@ -477,7 +473,7 @@ public class CorpusPanel extends VerticalLayout {
 		SharingOptions sharingOptions = new SharingOptions();
 		
 		FormDialog<SharingOptions> sharingOptionsDlg = new FormDialog<SharingOptions>(
-			"Please enter the person you want to share with", 
+			Messages.getString("CorpusPanel.enterPersonToShareWith"),  //$NON-NLS-1$
 			new BeanItem<SharingOptions>(sharingOptions),
 			new SharingOptionsFieldFactory(), 
 			new SaveCancelListener<SharingOptions>() {
@@ -492,29 +488,29 @@ public class CorpusPanel extends VerticalLayout {
 						
 						if (e.getCause() instanceof UnknownUserException) {
 							Notification.show(
-									"Sharing failed!", e.getCause().getMessage(), 
+									Messages.getString("CorpusPanel.sharingFailed"), e.getCause().getMessage(),  //$NON-NLS-1$
 									Type.ERROR_MESSAGE);
 						}
 						else {
 							((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"Error sharing this corpus!", e);
+								Messages.getString("CorpusPanel.errorSharing"), e); //$NON-NLS-1$
 						}
 					}
 				}
 			});
 		sharingOptionsDlg.setVisibleItemProperties(
-				new Object[] {"userIdentification", "accessMode"});
+				new Object[] {"userIdentification", "accessMode"}); //$NON-NLS-1$ //$NON-NLS-2$
 		sharingOptionsDlg.show();
 	}
 
 	private void handleRenameCorpusRequest(final Corpus corpus) {
-		final String corpusNameProperty = "name";
+		final String corpusNameProperty = "name"; //$NON-NLS-1$
 		
 		SingleValueDialog singleValueDialog = new SingleValueDialog();
 		
 		singleValueDialog.getSingleValue(
-				"Rename Corpus",
-				"You have to enter a name!",
+				Messages.getString("CorpusPanel.RenameCorpus"), //$NON-NLS-1$
+				Messages.getString("CorpusPanel.nameObligatory"), //$NON-NLS-1$
 				new SaveCancelListener<PropertysetItem>() {
 			public void cancelPressed() {}
 			public void savePressed(
@@ -527,7 +523,7 @@ public class CorpusPanel extends VerticalLayout {
 					repository.update(corpus, name);
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error renaming corpus!", e);
+						Messages.getString("CorpusPanel.errorRenamingCorpus"), e); //$NON-NLS-1$
 				}
 			}
 		}, corpusNameProperty);
@@ -536,8 +532,7 @@ public class CorpusPanel extends VerticalLayout {
 	private void handleRemoveCorpusRequest(final Corpus corpus) {
 		ConfirmDialog.show(
 				UI.getCurrent(),
-				"Do you really want to delete the Corpus '"
-						+ corpus + "'? This will not delete any contents of the Corpus!",
+				MessageFormat.format(Messages.getString("CorpusPanel.corpusDeletionQuestion"), corpus), //$NON-NLS-1$
 						
 		        new ConfirmDialog.Listener() {
 
@@ -547,7 +542,7 @@ public class CorpusPanel extends VerticalLayout {
 								repository.delete(corpus);
 							} catch (IOException e) {
 								((CatmaApplication)UI.getCurrent()).showAndLogError(
-									"Error deleting corpus!", e);
+									Messages.getString("CorpusPanel.errorDeletingCorpus"), e); //$NON-NLS-1$
 							}
 		                }
 		            }
@@ -578,15 +573,14 @@ public class CorpusPanel extends VerticalLayout {
 			}
 			else {
 				Notification.show(
-					"Information", 
-					"You can only add " +
-						"Source Documents and Markup Collections to a Corpus!",
+					Messages.getString("CorpusPanel.infoTitle"),  //$NON-NLS-1$
+					Messages.getString("CorpusPanel.addContentInfo"), //$NON-NLS-1$
 						Type.TRAY_NOTIFICATION);
 			}
 		}
 		catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error adding Item to Corpus!", e);
+					Messages.getString("CorpusPanel.errorAddingContent"), e); //$NON-NLS-1$
 		}
 	}
 
@@ -608,12 +602,12 @@ public class CorpusPanel extends VerticalLayout {
 		corporaButtonsPanel.setStyleName(Reindeer.PANEL_LIGHT);
 		((HorizontalLayout)corporaButtonsPanel.getContent()).setSpacing(true);
 		
-		btCreateCorpus = new Button("Create Corpus");
+		btCreateCorpus = new Button(Messages.getString("CorpusPanel.CreateCorpus")); //$NON-NLS-1$
 		
 		content.addComponent(btCreateCorpus);
 		MenuBar menuMoreCorpusActions = new MenuBar();
 		miMoreCorpusActions = 
-				menuMoreCorpusActions.addItem("More actions...", null);
+				menuMoreCorpusActions.addItem(Messages.getString("CorpusPanel.MoreActions"), null); //$NON-NLS-1$
 		miMoreCorpusActions.setEnabled(
 				repository instanceof IndexedRepository);
 		
@@ -653,13 +647,13 @@ public class CorpusPanel extends VerticalLayout {
 				return itemId2.toString().toLowerCase().compareTo(itemId1.toString().toLowerCase());
 			}
 		});
-		corporaTree = new Table("Corpora");
+		corporaTree = new Table(Messages.getString("CorpusPanel.Corpora")); //$NON-NLS-1$
 		corporaTree.setContainerDataSource(corporaContainer);
 		corporaTree.addContainerProperty(TableProperty.title.name(), String.class, null);
 		corporaTree.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
 		corporaTree.setSizeFull();
 		
-		corporaTree.addStyleName("bold-label-caption");
+		corporaTree.addStyleName("bold-label-caption"); //$NON-NLS-1$
 
 		corporaTree.addItem(new Object[] {allDocuments}, allDocuments);
 
@@ -680,13 +674,13 @@ public class CorpusPanel extends VerticalLayout {
 	}
 
 	private void handleCorpusCreationRequest() {
-		final String corpusNameProperty = "name";
+		final String corpusNameProperty = "name"; //$NON-NLS-1$
 		
 		SingleValueDialog singleValueDialog = new SingleValueDialog();
 		
 		singleValueDialog.getSingleValue(
-				"Create a new Corpus",
-				"You have to enter a name!",
+				Messages.getString("CorpusPanel.createNewCorpus"), //$NON-NLS-1$
+				Messages.getString("CorpusPanel.nameObligatory"), //$NON-NLS-1$
 				new SaveCancelListener<PropertysetItem>() {
 			public void cancelPressed() {}
 			public void savePressed(
@@ -699,7 +693,7 @@ public class CorpusPanel extends VerticalLayout {
 					repository.createCorpus(name);
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error creating corpus!", e);
+						Messages.getString("CorpusPanel.errorCreatingCorpus"), e); //$NON-NLS-1$
 				}
 			}
 		}, corpusNameProperty);

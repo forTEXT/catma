@@ -28,7 +28,7 @@ import de.catma.ui.tagmanager.TagsetTree;
 
 public class TagsetSelectionDialog extends Window {
 	
-	private final static String TAGLIB_CAPTION_PROPERTY = "TAGLIBPROPERTY";
+	private final static String TAGLIB_CAPTION_PROPERTY = "TAGLIBPROPERTY"; //$NON-NLS-1$
 	
 	private Repository repository;
 	private TagLibrary tagLibrary;
@@ -40,7 +40,7 @@ public class TagsetSelectionDialog extends Window {
 	private PropertyChangeListener tagLibraryChangedListener;
 	
 	public TagsetSelectionDialog(Repository repository) {
-		super("Open Tagset");
+		super(Messages.getString("TagsetSelectionDialog.openTagset")); //$NON-NLS-1$
 		
 		this.repository = repository;
 		
@@ -63,13 +63,13 @@ public class TagsetSelectionDialog extends Window {
 		tagLibraryContainer = new HierarchicalContainer();
 		tagLibraryContainer.addContainerProperty(TAGLIB_CAPTION_PROPERTY, String.class, null);		
 
-		tagLibrariesTable = new Table("Select a Tag Type Library:");
+		tagLibrariesTable = new Table(Messages.getString("TagsetSelectionDialog.selectTagLibrary")); //$NON-NLS-1$
 		tagLibrariesTable.setSizeFull();
 		tagLibrariesTable.setContainerDataSource(tagLibraryContainer);
 		tagLibrariesTable.setNullSelectionAllowed(false);
 		
 		tagLibrariesTable.addContainerProperty(TAGLIB_CAPTION_PROPERTY, String.class, null);
-		tagLibrariesTable.setColumnHeader(TAGLIB_CAPTION_PROPERTY, "Tag Type Libraries");
+		tagLibrariesTable.setColumnHeader(TAGLIB_CAPTION_PROPERTY, Messages.getString("TagsetSelectionDialog.TagLibraries")); //$NON-NLS-1$
 		
 		for (TagLibraryReference tlr : repository.getTagLibraryReferences()) {
 			addTagLibraryReferenceToTree(tlr);
@@ -80,9 +80,9 @@ public class TagsetSelectionDialog extends Window {
 		tagLibrariesPanel.addComponent(tagLibrariesTable);
 		tagLibrariesPanel.setExpandRatio(tagLibrariesTable, 1.0f);
 		
-		btCreateTagLibrary = new Button("Create Tag Type Library");
-		btCreateTagLibrary.addStyleName("secondary-button");
-		btCreateTagLibrary.addStyleName("tagsetselection-dialog-create-tag-libary");
+		btCreateTagLibrary = new Button(Messages.getString("TagsetSelectionDialog.createTagLibrary")); //$NON-NLS-1$
+		btCreateTagLibrary.addStyleName("secondary-button"); //$NON-NLS-1$
+		btCreateTagLibrary.addStyleName("tagsetselection-dialog-create-tag-libary"); //$NON-NLS-1$
 		tagLibrariesPanel.addComponent(btCreateTagLibrary);
 		
 		content.addComponent(tagLibrariesPanel);
@@ -90,7 +90,7 @@ public class TagsetSelectionDialog extends Window {
 		
 		tagsetTree = new TagsetTree(
 			repository.getTagManager(), null, false, true, false, false, true, null);
-		tagsetTree.setCaption("Select a Tagset: ");
+		tagsetTree.setCaption(Messages.getString("TagsetSelectionDialog.selectTagset")); //$NON-NLS-1$
 
 		content.addComponent(tagsetTree);
 		content.setExpandRatio(tagsetTree, 0.5f);
@@ -106,12 +106,12 @@ public class TagsetSelectionDialog extends Window {
 		btCreateTagLibrary.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				final String nameProperty = "name";
+				final String nameProperty = "name"; //$NON-NLS-1$
 				SingleValueDialog singleValueDialog = new SingleValueDialog();
 						
 				singleValueDialog.getSingleValue(
-						"Create a new Tag Type Library",
-						"You have to enter a name!",
+						Messages.getString("TagsetSelectionDialog.createNewTagLibrary"), //$NON-NLS-1$
+						Messages.getString("TagsetSelectionDialog.enterNameObligation"), //$NON-NLS-1$
 						new SaveCancelListener<PropertysetItem>() {
 					public void cancelPressed() {}
 					public void savePressed(
@@ -124,7 +124,7 @@ public class TagsetSelectionDialog extends Window {
 							repository.createTagLibrary(name);
 						} catch (IOException e) {
 							((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"Error creating the Tag Type Library!", e);
+								Messages.getString("TagsetSelectionDialog.errorCreatingTagLibrary"), e); //$NON-NLS-1$
 						}
 					}
 				}, nameProperty);
@@ -173,7 +173,7 @@ public class TagsetSelectionDialog extends Window {
 	}
 	
 	private void addTagLibraryReferenceToTree(TagLibraryReference tlr) {
-		tagLibrariesTable.addItem(new Object[] {(tlr.toString()==null)?"N/A":tlr.toString()}, tlr);
+		tagLibrariesTable.addItem(new Object[] {(tlr.toString()==null)?Messages.getString("TagsetSelectionDialog.notAvailable"):tlr.toString()}, tlr); //$NON-NLS-1$
 	}
 
 	private void handleTagLibrariesTreeItemClick(ValueChangeEvent event) {
@@ -188,14 +188,14 @@ public class TagsetSelectionDialog extends Window {
 				
 			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error opening the Tag Type Library!", e);
+						Messages.getString("TagsetSelectionDialog.errorOpeningTagLibrary"), e); //$NON-NLS-1$
 			}
 		}		
 	}
 	
 	public void show() {
-		setWidth("40%");
-		setHeight("65%");
+		setWidth("40%"); //$NON-NLS-1$
+		setHeight("65%"); //$NON-NLS-1$
 		setModal(true);
 		center();
 		UI.getCurrent().addWindow(this);

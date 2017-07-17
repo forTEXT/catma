@@ -126,7 +126,7 @@ public class TaggerView extends VerticalLayout
 			} catch (ValueOutOfBoundsException toBeIgnored) {}
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				"Error showing Source Document!", e);
+				Messages.getString("TaggerView.errorShowingSourceDoc"), e); //$NON-NLS-1$
 		}
 	}
 
@@ -253,7 +253,7 @@ public class TaggerView extends VerticalLayout
 					pagerComponent.setPage(previousPageNumber);
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error showing Source Document!", e);
+						Messages.getString("TaggerView.errorShowingSourceDoc"), e); //$NON-NLS-1$
 				}
 
 			}
@@ -282,7 +282,7 @@ public class TaggerView extends VerticalLayout
 		taggerPanel.setSpacing(true);
 
 		btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
-		btHelp.addStyleName("help-button");
+		btHelp.addStyleName("help-button"); //$NON-NLS-1$
 		
 		IndexInfoSet indexInfoSet = 
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet(); 
@@ -291,8 +291,8 @@ public class TaggerView extends VerticalLayout
 				indexInfoSet.isRightToLeftWriting());
 		
 		tagger = new Tagger(taggerID, pager, this);
-		tagger.addStyleName("tagger");
-		tagger.setWidth("100%");
+		tagger.addStyleName("tagger"); //$NON-NLS-1$
+		tagger.setWidth("100%"); //$NON-NLS-1$
 		
 		taggerPanel.addComponent(tagger);
 		taggerPanel.setExpandRatio(tagger, 1.0f);
@@ -314,24 +314,24 @@ public class TaggerView extends VerticalLayout
 		
 		actionPanel.addComponent(pagerComponent);
 		
-		btAnalyze = new Button("Analyze Document");
-		btAnalyze.addStyleName("primary-button");
+		btAnalyze = new Button(Messages.getString("TaggerView.analyzeDocument")); //$NON-NLS-1$
+		btAnalyze.addStyleName("primary-button"); //$NON-NLS-1$
 		btAnalyze.setEnabled(repository instanceof IndexedRepository);
 		actionPanel.addComponent(btAnalyze);
 		
-		linesPerPageSlider =  new Slider(null, 1, 100, "% page size");
+		linesPerPageSlider =  new Slider(null, 1, 100, Messages.getString("TaggerView.percentPageSize")); //$NON-NLS-1$
 		linesPerPageSlider.setImmediate(true);
-		linesPerPageSlider.setWidth("150px");
+		linesPerPageSlider.setWidth("150px"); //$NON-NLS-1$
 		actionPanel.addComponent(linesPerPageSlider);
 		
 		cbTraceSelection = new CheckBox();
 		cbTraceSelection.setIcon(FontAwesome.OBJECT_GROUP);
-		cbTraceSelection.setDescription("Allow multiple discontinous selections");
+		cbTraceSelection.setDescription(Messages.getString("TaggerView.allowMultipleDiscontSelectionsInfo")); //$NON-NLS-1$
 		actionPanel.addComponent(cbTraceSelection);
-		cbTraceSelection.addStyleName("tagger-trace-checkbox");
+		cbTraceSelection.addStyleName("tagger-trace-checkbox"); //$NON-NLS-1$
 
 		btClearSearchHighlights = new Button(FontAwesome.ERASER);
-		btClearSearchHighlights.setDescription("Clear all search highlights");
+		btClearSearchHighlights.setDescription(Messages.getString("TaggerView.clearAllSearchHighlights")); //$NON-NLS-1$
 		actionPanel.addComponent(btClearSearchHighlights);
 		
 		markupPanel = new MarkupPanel(
@@ -346,10 +346,8 @@ public class TaggerView extends VerticalLayout
 						}
 						else {
 							HTMLNotification.show(
-	                                "Information",
-	                                "Please select a Markup Collection "
-	                                + " to store your markup first!<br>"
-	                                + "See 'Active Markup Collections'.",
+	                                Messages.getString("TaggerView.infoTitle"), //$NON-NLS-1$
+	                                Messages.getString("TaggerView.selectWritableCollectionFirstInfo"), //$NON-NLS-1$
 	                                Type.TRAY_NOTIFICATION);
 						}
 					}
@@ -394,7 +392,7 @@ public class TaggerView extends VerticalLayout
 		splitPanel.addComponent(taggerPanel);
 		splitPanel.addComponent(markupPanel);
 		splitPanel.setSplitPosition(initialSplitterPositionInPixels, Unit.PIXELS);
-		splitPanel.addStyleName("catma-tab-spacing");
+		splitPanel.addStyleName("catma-tab-spacing"); //$NON-NLS-1$
 		
 		SplitterPositionChangedListener listener = new SplitterPositionChangedListener(){
 
@@ -405,7 +403,7 @@ public class TaggerView extends VerticalLayout
 				// unit != Unit.PERCENTAGE && unit != Unit.PIXELS
 				// TODO: if it is PERCENTAGE, work out the splitter position in pixels
 				if (event.getPositionUnit() != Unit.PIXELS){
-					String message = "Must use PIXELS Unit for split position";
+					String message = "Must use PIXELS Unit for split position"; //$NON-NLS-1$
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							message, new IllegalArgumentException(message));
 				}							
@@ -426,7 +424,7 @@ public class TaggerView extends VerticalLayout
 					pagerComponent.setPage(previousPageNumber);
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error showing Source Document!", e);
+						Messages.getString("TaggerView.errorShowingSourceDoc"), e); //$NON-NLS-1$
 				}							
 			}
 			
@@ -503,10 +501,10 @@ public class TaggerView extends VerticalLayout
 			else {
 				//this should not happen, because we update TagsetDefinitions immedately
 				logger.severe(
-					"TagDefinition not found, but TagsetDefinition is present, " +
-					"expected was either a complete TagsetDefiniton or no TagsetDefinition," +
-					"adding TagDefinition instead of TagsetDefinition now: orig TagsetDef: " + 
-					tagsetDef + " orig TagDef: " +tagsetDef.getTagDefinition(
+					"TagDefinition not found, but TagsetDefinition is present, " + //$NON-NLS-1$
+					"expected was either a complete TagsetDefiniton or no TagsetDefinition," + //$NON-NLS-1$
+					"adding TagDefinition instead of TagsetDefinition now: orig TagsetDef: " +  //$NON-NLS-1$
+					tagsetDef + " orig TagDef: " +tagsetDef.getTagDefinition( //$NON-NLS-1$
 							clientTagInstance.getTagDefinitionID()));
 				
 				tagManager.addTagDefinition(
@@ -536,7 +534,7 @@ public class TaggerView extends VerticalLayout
 			markupPanel.addTagReferences(tagReferences);
 		} catch (URISyntaxException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				"Error adding Tags!", e);
+				Messages.getString("TaggerView.errorAddingAnnotations"), e); //$NON-NLS-1$
 		}
 	}
 
@@ -554,7 +552,7 @@ public class TaggerView extends VerticalLayout
 					try {
 						pager.setText(sourceDocument.getContent());
 					} catch (IOException e) {
-						logger.log(Level.SEVERE, "error adjusting  page zoom", e);
+						logger.log(Level.SEVERE, "error adjusting  page zoom", e); //$NON-NLS-1$
 					}
 	
 					startPage = pager.getPageNumberFor(range.getStartPoint());
@@ -572,7 +570,7 @@ public class TaggerView extends VerticalLayout
 			
 			tagger.highlight(range);
 		} catch (ValueOutOfBoundsException e) {
-			logger.log(Level.SEVERE, "error during highlighting", e);
+			logger.log(Level.SEVERE, "error during highlighting", e); //$NON-NLS-1$
 		}
 	}
 	

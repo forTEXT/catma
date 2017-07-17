@@ -24,7 +24,7 @@ public class SpamProtectionDialog extends Window {
 	private Button btOk;
 
 	public SpamProtectionDialog(SaveCancelListener<Void> saveCancelListener) {
-		super("Guest Access");
+		super(Messages.getString("SpamProtectionDialog.guestAccess")); //$NON-NLS-1$
 		
 		initComponents();
 		initActions(saveCancelListener);
@@ -36,14 +36,14 @@ public class SpamProtectionDialog extends Window {
 			try {
 				String value = input.getValue();
 				if (value == null) {
-					value = "";
+					value = ""; //$NON-NLS-1$
 				}
 				
 				Set<String> answers = new HashSet<>();
 				
 				String correctValues = RepositoryPropertyKey.SpamProtectionAnswer.getValue();
 				
-				for (String correctValue : correctValues.split(",")) {
+				for (String correctValue : correctValues.split(",")) { //$NON-NLS-1$
 					answers.add(correctValue.trim().toLowerCase());
 				}
 				
@@ -52,8 +52,8 @@ public class SpamProtectionDialog extends Window {
 				}
 				else {
 					Notification.show(
-						"Info", 
-						"Sorry, you seem to be a robot.", 
+						Messages.getString("SpamProtectionDialog.infoTitle"),  //$NON-NLS-1$
+						Messages.getString("SpamProtectionDialog.robotFeedback"),  //$NON-NLS-1$
 						Type.HUMANIZED_MESSAGE);
 					saveCancelListener.cancelPressed();
 				}
@@ -68,8 +68,8 @@ public class SpamProtectionDialog extends Window {
 
 	private void initComponents() {
 		
-		setWidth("300px");
-		setHeight("300px");
+		setWidth("300px"); //$NON-NLS-1$
+		setHeight("300px"); //$NON-NLS-1$
 		
 		setModal(true);
 		setClosable(false);
@@ -84,7 +84,7 @@ public class SpamProtectionDialog extends Window {
 		
 		setContent(content);
 		
-		Image image = new Image("", new ThemeResource("catma-logo.png"));
+		Image image = new Image("", new ThemeResource("catma-logo.png")); //$NON-NLS-1$ //$NON-NLS-2$
 		content.addComponent(image);
 		content.setComponentAlignment(image, Alignment.TOP_CENTER);
 		input = new TextField(RepositoryPropertyKey.SpamProtectionQuestion.getValue());
@@ -92,7 +92,7 @@ public class SpamProtectionDialog extends Window {
 		content.addComponent(input);
 		content.setComponentAlignment(input, Alignment.TOP_CENTER);
 		
-		btOk =new Button("OK");
+		btOk =new Button(Messages.getString("SpamProtectionDialog.ok")); //$NON-NLS-1$
 		content.addComponent(btOk);
 		content.setComponentAlignment(btOk, Alignment.MIDDLE_CENTER);
 		btOk.setClickShortcut(KeyCode.ENTER);

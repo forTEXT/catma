@@ -16,7 +16,7 @@ public class TagsetIdentificationFieldGenerator implements FormFieldGenerator {
 	@Override
 	public Field<?> createField(Item item, Component uiContext) {
 		ComboBox field = 
-			new ComboBox("Tagset", Arrays.asList(TagsetIdentification.values()));
+			new ComboBox(Messages.getString("TagsetIdentificationFieldGenerator.Tagset"), Arrays.asList(TagsetIdentification.values())); //$NON-NLS-1$
 		
 		for (TagsetIdentification ti : TagsetIdentification.values()) {
 			field.setItemCaption(ti, ti.toString());

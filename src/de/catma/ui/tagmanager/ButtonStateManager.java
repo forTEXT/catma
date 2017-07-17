@@ -18,7 +18,6 @@
  */
 package de.catma.ui.tagmanager;
 
-import com.google.gwt.junit.client.WithProperties;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Button;

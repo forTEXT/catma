@@ -18,6 +18,8 @@
  */   
 package de.catma.ui.tagger.pager;
 
+import java.text.MessageFormat;
+
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.Validator;
@@ -92,7 +94,7 @@ public class PagerComponent extends HorizontalLayout {
 	
 	public void setLastPageNumber(int lastPageNumber) {
 		this.lastPageNumber = lastPageNumber;
-		this.lastPageNumberLabel.setValue("/"+lastPageNumber);
+		this.lastPageNumberLabel.setValue("/"+lastPageNumber); //$NON-NLS-1$
 		nextPageButton.setEnabled((currentPageNumber < lastPageNumber));
 		previousPageButton.setEnabled(currentPageNumber != 1);
 	}
@@ -102,7 +104,7 @@ public class PagerComponent extends HorizontalLayout {
 			
 			public void buttonClick(ClickEvent event) {
 				currentPageNumber = 1;
-				pageInput.setValue("1");
+				pageInput.setValue("1"); //$NON-NLS-1$
 				previousPageButton.setEnabled(false);
 				nextPageButton.setEnabled(true);
 			}
@@ -178,7 +180,7 @@ public class PagerComponent extends HorizontalLayout {
 			
 			public void validate(Object value) throws InvalidValueException {
 				if (!isValid(value)) {
-					throw new InvalidValueException("The number should be between 1 and " + lastPageNumber ); 
+					throw new InvalidValueException(MessageFormat.format(Messages.getString("PagerComponent.numberRequirements"), lastPageNumber));  //$NON-NLS-1$
 				}
 			}
 		});
@@ -194,9 +196,9 @@ public class PagerComponent extends HorizontalLayout {
 		addComponent(previousPageButton);
 		pageInput = new NumberField(1);
 		pageInput.setImmediate(true);
-		pageInput.setStyleName("pager-pageinput");
+		pageInput.setStyleName("pager-pageinput"); //$NON-NLS-1$
 		addComponent(pageInput);
-		lastPageNumberLabel = new Label("/NA");
+		lastPageNumberLabel = new Label(Messages.getString("PagerComponent.notAvailableAbbr")); //$NON-NLS-1$
 		addComponent(lastPageNumberLabel);
 		this.setComponentAlignment(lastPageNumberLabel, Alignment.MIDDLE_LEFT);
 		nextPageButton = new Button();
@@ -212,18 +214,18 @@ public class PagerComponent extends HorizontalLayout {
 		if (init) {
 			ClassResource firstPageIcon = 
 					new ClassResource(
-							"tagger/pager/resources/page-first.gif");
+							"tagger/pager/resources/page-first.gif"); //$NON-NLS-1$
 			firstPageButton.setIcon(firstPageIcon);
 			ClassResource previousPageIcon = 
 					new ClassResource(
-							"tagger/pager/resources/page-prev.gif");
+							"tagger/pager/resources/page-prev.gif"); //$NON-NLS-1$
 			previousPageButton.setIcon(previousPageIcon);
 			ClassResource nextPageIcon = 
 					new ClassResource(
-							"tagger/pager/resources/page-next.gif");
+							"tagger/pager/resources/page-next.gif"); //$NON-NLS-1$
 			nextPageButton.setIcon(nextPageIcon);
 			ClassResource lastPageIcon = new ClassResource(
-					"tagger/pager/resources/page-last.gif");
+					"tagger/pager/resources/page-last.gif"); //$NON-NLS-1$
 			lastPageButton.setIcon(lastPageIcon);
 			init = false;
 		}

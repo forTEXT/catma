@@ -26,7 +26,7 @@ import de.catma.ui.client.ui.tagmanager.ColorButtonState;
 public class ColorButton extends Button {
 
 	public ColorButton(String color, ClickListener listener) {
-		super("", listener);
+		super("", listener); //$NON-NLS-1$
 		setColor(color);
 	}
 

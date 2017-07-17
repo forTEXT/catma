@@ -42,7 +42,7 @@ public class Pager implements Iterable<Page> {
 	}
 	
 	static final String LINE_CONTENT_PATTERN = 
-			"(\\S+)|(\\p{Blank}+)|(\r\n|[\n\r\u2028\u2029\u0085])";
+			"(\\S+)|(\\p{Blank}+)|(\r\n|[\n\r\u2028\u2029\u0085])"; //$NON-NLS-1$
 	
 	static int WORDCHARACTER_GROUP = 1;
 	static int WHITESPACE_GROUP = 2;

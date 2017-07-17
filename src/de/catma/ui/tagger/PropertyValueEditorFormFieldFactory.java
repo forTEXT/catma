@@ -33,7 +33,7 @@ public class PropertyValueEditorFormFieldFactory implements FormFieldFactory {
 	public PropertyValueEditorFormFieldFactory(
 			Set<String> initialValues) {
 		valueBox = new ListSelect(
-				"Values", 
+				Messages.getString("PropertyValueEditorFormFieldFactory.Values"),  //$NON-NLS-1$
 				initialValues);
 		valueBox.setNewItemsAllowed(true);
 		valueBox.setMultiSelect(true);

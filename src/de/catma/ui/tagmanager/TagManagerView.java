@@ -40,8 +40,7 @@ public class TagManagerView extends TabbedView {
 	private PropertyChangeListener tagLibraryChangedListener;
 	
 	public TagManagerView(TagManager tagManager) {
-		super ("There are no open Tag Type Libraries. " +
-				"Please use the Repository Manager to open a Tag Type Libray.");
+		super (Messages.getString("TagManagerView.noOpenTagLibrariesInfo")); //$NON-NLS-1$
 		
 		tagLibraryChangedListener = new PropertyChangeListener() {
 			
@@ -86,7 +85,7 @@ public class TagManagerView extends TabbedView {
 						
 					} catch (IOException e) {
 						catmaApplication.showAndLogError(
-								"error refreshing Tag Type Library", e);
+								Messages.getString("TagManagerView.errorRefreshingTagLibrary"), e); //$NON-NLS-1$
 					}
 				}
 			});

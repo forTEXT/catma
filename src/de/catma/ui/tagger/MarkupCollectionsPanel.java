@@ -22,6 +22,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -317,7 +318,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 							new UserMarkupCollectionReference(umc.getId(), umc.getContentInfoSet()));
 				}
 				else {
-					Notification.show("Info", "Please select a Markup Collection first!", Type.TRAY_NOTIFICATION);
+					Notification.show(Messages.getString("MarkupCollectionsPanel.infoTitle"), Messages.getString("MarkupCollectionsPanel.selectAnnotationsFirst"), Type.TRAY_NOTIFICATION); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
 		});
@@ -339,11 +340,11 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 						openUserMarkupCollection(refreshedUmc);
 					} catch (IOException e) {
 						((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"error refreshing Markup Collection!", e);
+								Messages.getString("MarkupCollectionsPanel.errorRefreshingAnnotations"), e); //$NON-NLS-1$
 					}
 				}
 				else {
-					Notification.show("Info", "Please select a Markup Collection first!", Type.TRAY_NOTIFICATION);
+					Notification.show(Messages.getString("MarkupCollectionsPanel.infoTitle"), Messages.getString("MarkupCollectionsPanel.selectAnnotationsFirst"), Type.TRAY_NOTIFICATION); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
 		});
@@ -363,13 +364,13 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 					new TagsetDefinitionUpdateLog(), 
 					umc);
 			Notification.show(
-				"Information", "Reindexing finished!", 
+				Messages.getString("MarkupCollectionsPanel.infoTitle"), Messages.getString("MarkupCollectionsPanel.reindexingFinished"),  //$NON-NLS-1$ //$NON-NLS-2$
 				Type.TRAY_NOTIFICATION);
 
 		}
 		catch (IOException ioe) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"error reindexing Markup Collection!", ioe);
+					Messages.getString("MarkupCollectionsPanel.errorReindexingAnnotations"), ioe); //$NON-NLS-1$
 		}
 		
 	}
@@ -385,12 +386,12 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 					umc);
 			}
 			Notification.show(
-					"Information", "Reindexing finished!", 
+					Messages.getString("MarkupCollectionsPanel.infoTitle"), Messages.getString("MarkupCollectionsPanel.reindexingFinished"),  //$NON-NLS-1$ //$NON-NLS-2$
 					Type.TRAY_NOTIFICATION);
 		}
 		catch (IOException ioe) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"error reindexing Markup Collection!", ioe);
+					Messages.getString("MarkupCollectionsPanel.errorReindexingAnnotations"), ioe); //$NON-NLS-1$
 		}
 	}
 
@@ -444,10 +445,10 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			}
 			
 			logger.info(
-					"removing UserMarkupCollection " 
-							+ userMarkupCollection + "#" 
+					"removing UserMarkupCollection "  //$NON-NLS-1$
+							+ userMarkupCollection + "#"  //$NON-NLS-1$
 							+ userMarkupCollection.getId()
-							+ " from MarkupCollectionsPanel.Tree");
+							+ " from MarkupCollectionsPanel.Tree"); //$NON-NLS-1$
 			removeWithChildrenFromTree(userMarkupCollection);
 			fireWritableUserMarkupCollectionSelected(userMarkupCollection, false);
 			userMarkupCollectionManager.remove(userMarkupCollection);
@@ -625,38 +626,38 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 
 		buttonHeaderPanel.setSpacing(true);
 		buttonHeaderPanel.setMargin(new MarginInfo(true, false, true, false));
-		buttonHeaderPanel.addStyleName("catma-tagger-markup-panels");
+		buttonHeaderPanel.addStyleName("catma-tagger-markup-panels"); //$NON-NLS-1$
 		
-		btnOpenMarkupCollection = new Button("Open Markup Collection");
-		btnOpenMarkupCollection.addStyleName("primary-button");
+		btnOpenMarkupCollection = new Button(Messages.getString("MarkupCollectionsPanel.openAnnotations")); //$NON-NLS-1$
+		btnOpenMarkupCollection.addStyleName("primary-button"); //$NON-NLS-1$
 		buttonHeaderPanel.addComponent(btnOpenMarkupCollection);
 		
-		btCloseMarkupCollection = new Button("Close");
+		btCloseMarkupCollection = new Button(Messages.getString("MarkupCollectionsPanel.Close")); //$NON-NLS-1$
 		buttonHeaderPanel.addComponent(btCloseMarkupCollection);
 		
 		btRefresh = new Button(FontAwesome.REFRESH);
 		buttonHeaderPanel.addComponent(btRefresh);
 		
 		
-		btAllVisible = new Button("Select all visible");
+		btAllVisible = new Button(Messages.getString("MarkupCollectionsPanel.SelectAllVisible")); //$NON-NLS-1$
 		buttonHeaderPanel.addComponent(btAllVisible);
-		btAllInvisible = new Button("Deselect all visible");
+		btAllInvisible = new Button(Messages.getString("MarkupCollectionsPanel.DeselectAllVisible")); //$NON-NLS-1$
 		buttonHeaderPanel.addComponent(btAllInvisible);
 		
 		addComponent(buttonHeaderPanel);
 		
 		markupCollectionsTree = new TreeTable();
-		markupCollectionsTree.setWidth("100%");
+		markupCollectionsTree.setWidth("100%"); //$NON-NLS-1$
 		markupCollectionsTree.setSelectable(true);
 		markupCollectionsTree.setMultiSelect(false);
 		markupCollectionsTree.setContainerDataSource(new HierarchicalContainer());
-		markupCollectionsTree.addStyleName("catma-tagger-markup-panels");
+		markupCollectionsTree.addStyleName("catma-tagger-markup-panels"); //$NON-NLS-1$
 
 		markupCollectionsTree.addContainerProperty(
 				MarkupCollectionsTreeProperty.caption, 
 				String.class, null);
 		markupCollectionsTree.setColumnHeader(
-				MarkupCollectionsTreeProperty.caption, "Markup Collections");
+				MarkupCollectionsTreeProperty.caption, Messages.getString("MarkupCollectionsPanel.Annotations")); //$NON-NLS-1$
 		
 		markupCollectionsTree.addContainerProperty(
 				MarkupCollectionsTreeProperty.icon, Resource.class, null);
@@ -665,13 +666,13 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				MarkupCollectionsTreeProperty.visible, 
 				AbstractComponent.class, null);
 		markupCollectionsTree.setColumnHeader(
-				MarkupCollectionsTreeProperty.visible, "Visible");
+				MarkupCollectionsTreeProperty.visible, Messages.getString("MarkupCollectionsPanel.Visible")); //$NON-NLS-1$
 		
 		markupCollectionsTree.addContainerProperty(
 				MarkupCollectionsTreeProperty.writable, 
 				AbstractComponent.class, null);
 		markupCollectionsTree.setColumnHeader(
-				MarkupCollectionsTreeProperty.writable, "Writable");
+				MarkupCollectionsTreeProperty.writable, Messages.getString("MarkupCollectionsPanel.Writable")); //$NON-NLS-1$
 		
 		markupCollectionsTree.setItemCaptionMode(ItemCaptionMode.PROPERTY);
 		markupCollectionsTree.setItemCaptionPropertyId(
@@ -680,7 +681,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		markupCollectionsTree.addGeneratedColumn(
 				MarkupCollectionsTreeProperty.color, new ColorLabelColumnGenerator());
 		markupCollectionsTree.setColumnHeader(
-				MarkupCollectionsTreeProperty.color, "Tag Type color");
+				MarkupCollectionsTreeProperty.color, Messages.getString("MarkupCollectionsPanel.TagColor")); //$NON-NLS-1$
 		
 		markupCollectionsTree.setVisibleColumns(
 				new Object[] {
@@ -760,7 +761,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 			UserMarkupCollection userMarkupCollection) {
 		
 		ClassResource tagsetIcon = 
-				new ClassResource("tagmanager/resources/grndiamd.gif");
+				new ClassResource("tagmanager/resources/grndiamd.gif"); //$NON-NLS-1$
 
 		markupCollectionsTree.addItem(
 				new Object[]{tagsetDefinition.getName(), 
@@ -800,7 +801,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 	@SuppressWarnings("unchecked")
 	private void insertTagDefinitionIntoTree(TagDefinition tagDefinition) {
 		ClassResource tagIcon = 
-				new ClassResource("tagmanager/resources/reddiamd.gif");
+				new ClassResource("tagmanager/resources/reddiamd.gif"); //$NON-NLS-1$
 		
 		markupCollectionsTree.addItem(
 				new Object[]{
@@ -993,10 +994,10 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 					}
 					else {
 						logger.warning(
-							"[" + ((CatmaApplication)UI.getCurrent()).getUser() 
-							+ "] could not find UserMarkupCollection " 
-							+ umc + "#" + umc.getId() 
-							+ " in the MarkupCollectionsPanel.Tree!");
+							"[" + ((CatmaApplication)UI.getCurrent()).getUser()  //$NON-NLS-1$
+							+ "] could not find UserMarkupCollection "  //$NON-NLS-1$
+							+ umc + "#" + umc.getId()  //$NON-NLS-1$
+							+ " in the MarkupCollectionsPanel.Tree!"); //$NON-NLS-1$
 					}
 				}
 			}
@@ -1105,10 +1106,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		if (!toBeUpdated.isEmpty()) {
 			ConfirmDialog.show(
 				ui, 
-				"There are older versions of the Tagset '" +
-					incomingTagsetDef.getName() +
-					"' in the attached Markup Collections! " +
-					"Do you really want to update the attached Markup Collections?",
+				MessageFormat.format(Messages.getString("MarkupCollectionsPanel.synchronizeTagsetsQuestion"), incomingTagsetDef.getName()), //$NON-NLS-1$
 							
 			        new ConfirmDialog.Listener() {
 
@@ -1256,7 +1254,7 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		try {
 			userMarkupCollectionManager.updateProperty(tagInstance, properties);
 		} catch (IOException e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError("Error updating the Property", e);
+			((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("MarkupCollectionsPanel.errorUpdatingProperty"), e); //$NON-NLS-1$
 		}
 		
 	}

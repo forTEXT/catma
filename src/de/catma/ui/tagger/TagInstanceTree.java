@@ -108,15 +108,15 @@ public class TagInstanceTree extends HorizontalLayout {
 				
 				if (selectedItems.isEmpty()) {
 					Notification.show(
-						"Information", 
-						"Please select one or more Tag in the list first!",
+						Messages.getString("TagInstanceTree.infoTitle"),  //$NON-NLS-1$
+						Messages.getString("TagInstanceTree.selectAnnotations"), //$NON-NLS-1$
 						Type.TRAY_NOTIFICATION);
 				}
 				else {
 					ConfirmDialog.show(UI.getCurrent(), 
-							"Remove Tag", 
-							"Do you want to remove the selected Tag?", 
-							"Yes", "No", new ConfirmDialog.Listener() {
+							Messages.getString("TagInstanceTree.removeAnnotation"),  //$NON-NLS-1$
+							Messages.getString("TagInstanceTree.removeAnnotationQuestion"),  //$NON-NLS-1$
+							Messages.getString("TagInstanceTree.Yes"), Messages.getString("TagInstanceTree.No"), new ConfirmDialog.Listener() { //$NON-NLS-1$ //$NON-NLS-2$
 						public void onClose(ConfirmDialog dialog) {
 							if (dialog.isConfirmed()) {
 								List<String> tagInstanceIDs = new ArrayList<String>();
@@ -140,8 +140,8 @@ public class TagInstanceTree extends HorizontalLayout {
 				Set<?> selectionset = (Set<?>)tagInstanceTree.getValue();
 				if (selectionset.size() != 1) {
 					Notification.show(
-							"Information", 
-							"Please select exactly one Tag or Property from the list first!",
+							Messages.getString("TagInstanceTree.infoTitle"),  //$NON-NLS-1$
+							Messages.getString("TagInstanceTree.selectOneAnnotation"), //$NON-NLS-1$
 							Type.TRAY_NOTIFICATION);	
 				}
 				else {
@@ -271,7 +271,7 @@ public class TagInstanceTree extends HorizontalLayout {
 		tagInstanceTree.setContainerDataSource(new HierarchicalContainer());
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.caption, String.class, null);
-		tagInstanceTree.setColumnHeader(TagInstanceTreePropertyName.caption, "Tag");
+		tagInstanceTree.setColumnHeader(TagInstanceTreePropertyName.caption, Messages.getString("TagInstanceTree.Annotation")); //$NON-NLS-1$
 		
 		tagInstanceTree.addContainerProperty(
 				TagInstanceTreePropertyName.icon, Resource.class, null);
@@ -305,13 +305,13 @@ public class TagInstanceTree extends HorizontalLayout {
 						TagInstanceTreePropertyName.instanceId,
 						TagInstanceTreePropertyName.umc});
 		tagInstanceTree.setColumnHeader(
-				TagInstanceTreePropertyName.color, "Color");
+				TagInstanceTreePropertyName.color, Messages.getString("TagInstanceTree.Color")); //$NON-NLS-1$
 		tagInstanceTree.setColumnHeader(
-				TagInstanceTreePropertyName.path, "Tag Path");
+				TagInstanceTreePropertyName.path, Messages.getString("TagInstanceTree.TagPath")); //$NON-NLS-1$
 		tagInstanceTree.setColumnHeader(
-				TagInstanceTreePropertyName.instanceId, "Tag ID");
+				TagInstanceTreePropertyName.instanceId, Messages.getString("TagInstanceTree.AnnoationID")); //$NON-NLS-1$
 		tagInstanceTree.setColumnHeader(
-				TagInstanceTreePropertyName.umc, "Markup Collection");
+				TagInstanceTreePropertyName.umc, Messages.getString("TagInstanceTree.Collection")); //$NON-NLS-1$
 		addComponent(tagInstanceTree);
 		setExpandRatio(tagInstanceTree, 1.0f);
 		
@@ -321,16 +321,16 @@ public class TagInstanceTree extends HorizontalLayout {
 		buttonGrid.setMargin(new MarginInfo(false, true, true, false));
 		buttonGrid.setSpacing(true);
 		
-		btRemoveTagInstance = new Button("Remove Tag");
+		btRemoveTagInstance = new Button(Messages.getString("TagInstanceTree.removeAnnotation")); //$NON-NLS-1$
 		buttonGrid.addComponent(btRemoveTagInstance);
 		
-		btEditPropertyValues = new Button("Edit Property values");
+		btEditPropertyValues = new Button(Messages.getString("TagInstanceTree.editProperty")); //$NON-NLS-1$
 		buttonGrid.addComponent(btEditPropertyValues);
 		
 		buttonsAndInfo.addComponent(buttonGrid);
 		
 		tiInfoForm = new Form();
-		tiInfoForm.setCaption("Tag Info");
+		tiInfoForm.setCaption(Messages.getString("TagInstanceTree.AnnotationInfo")); //$NON-NLS-1$
 		
 		BeanItem<TagInstanceInfoSet> tiInfoItem = 
 				new BeanItem<TagInstanceInfoSet>(emptyInfoSet);
@@ -354,7 +354,7 @@ public class TagInstanceTree extends HorizontalLayout {
 		tagInstanceTree.removeAllItems();
 		for (TagInstanceInfo ti : tagInstances) {
 			ClassResource tagIcon = 
-					new ClassResource("tagmanager/resources/reddiamd.gif");
+					new ClassResource("tagmanager/resources/reddiamd.gif"); //$NON-NLS-1$
 			
 			tagInstanceTree.addItem(ti.getTagInstance());
 			Item item = tagInstanceTree.getItem(ti.getTagInstance());
@@ -380,11 +380,11 @@ public class TagInstanceTree extends HorizontalLayout {
 			
 			for (Property property : ti.getTagInstance().getUserDefinedProperties()) {
 				ClassResource propIcon = 
-						new ClassResource("tagmanager/resources/ylwdiamd.gif");
+						new ClassResource("tagmanager/resources/ylwdiamd.gif"); //$NON-NLS-1$
 				List<String> values = property.getPropertyValueList().getValues();
 				String caption = property.getName();
 				if (values.isEmpty()) {
-					caption += " (not set)";
+					caption += Messages.getString("TagInstanceTree.notSet"); //$NON-NLS-1$
 				}
 				tagInstanceTree.addItem(property);
 				item = tagInstanceTree.getItem(property);

@@ -83,13 +83,13 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 						(RepositoryReference)repositoryTable.getValue();
 				if (repositoryManager.isOpen(repositoryReference)) {
 					Notification.show(
-							"Information", "Repository is already open.",
+							Messages.getString("RepositoryListView.infoTitle"), Messages.getString("RepositoryListView.repoAlreadyOpen"), //$NON-NLS-1$ //$NON-NLS-2$
 							Type.TRAY_NOTIFICATION);
 				}
 				else {
 					try {
 						if (((CatmaApplication)UI.getCurrent()).getParameter(
-										Parameter.USER_SPAWN_ASGUEST, "0").equals("1")) {
+										Parameter.USER_SPAWN_ASGUEST, "0").equals("1")) { //$NON-NLS-1$ //$NON-NLS-2$
 							
 							SpamProtectionDialog dlg = new SpamProtectionDialog(new SaveCancelListener<Void>() {
 								@Override
@@ -100,7 +100,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 										openAsGuest(repositoryReference);
 									} catch (Exception e) {
 										((CatmaApplication)UI.getCurrent()).showAndLogError(
-												"Error opening the repository!", e);
+												Messages.getString("RepositoryListView.errorOpeningRepo"), e); //$NON-NLS-1$
 									}
 								}
 							});
@@ -114,7 +114,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 						}
 					} catch (Exception e) {
 						((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"Error opening the repository!", e);
+								Messages.getString("RepositoryListView.errorOpeningRepo"), e); //$NON-NLS-1$
 					}
 				}
 			}
@@ -133,7 +133,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 				((CatmaApplication)UI.getCurrent()).getParameter(
 						Parameter.USER_IDENTIFIER);
 		if (user == null) {
-			user = System.getProperty("user.name");
+			user = System.getProperty("user.name"); //$NON-NLS-1$
 		}
 		Map<String,String> userIdentification = 
 				new HashMap<String, String>(1);
@@ -154,11 +154,11 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 				GUEST_ACCESS_COUNT_BY_IP.put(clientIpAddress, currentCount+1);
 			}
 			else {
-				LOGGER.warning("IP " + clientIpAddress + " has exceeded max guest access count!");
+				LOGGER.warning("IP " + clientIpAddress + " has exceeded max guest access count!"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		}
 		else {
-			LOGGER.warning("could not check guest account access count, client IP is null!");
+			LOGGER.warning("could not check guest account access count, client IP is null!"); //$NON-NLS-1$
 		}
 		
 		IDGenerator idGenerator = new IDGenerator();
@@ -191,11 +191,11 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 				repositoryManager.openRepository(
 						repositoryReference, userIdentification);
 		
-		if (catmaApplication.getParameter(Parameter.USER_SPAWN, "0").equals("1")) {
+		if (catmaApplication.getParameter(Parameter.USER_SPAWN, "0").equals("1")) { //$NON-NLS-1$ //$NON-NLS-2$
 			repository.spawnContentFrom(
 				catmaApplication.getParameter(Parameter.USER_IDENTIFIER), 
-				catmaApplication.getParameter(Parameter.CORPORA_COPY, "0").equals("1"),
-				catmaApplication.getParameter(Parameter.TAGLIBS_COPY, "0").equals("1"));
+				catmaApplication.getParameter(Parameter.CORPORA_COPY, "0").equals("1"), //$NON-NLS-1$ //$NON-NLS-2$
+				catmaApplication.getParameter(Parameter.TAGLIBS_COPY, "0").equals("1")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
 		catmaApplication.openRepository(repository);
@@ -209,7 +209,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 	}
 
 	private void initComponents() {
-		repositoryTable = new Table("Available Repositories");
+		repositoryTable = new Table(Messages.getString("RepositoryListView.availableRepos")); //$NON-NLS-1$
 		BeanItemContainer<RepositoryReference> container = 
 				new BeanItemContainer<RepositoryReference>(RepositoryReference.class);
 		
@@ -219,7 +219,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		
 		repositoryTable.setContainerDataSource(container);
 
-		repositoryTable.setVisibleColumns(new Object[] {"name"});
+		repositoryTable.setVisibleColumns(new Object[] {"name"}); //$NON-NLS-1$
 		repositoryTable.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
 		repositoryTable.setSelectable(true);
 		repositoryTable.setMultiSelect(false);
@@ -231,7 +231,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		setSpacing(true);
 		
 		
-		openBt = new Button("Open");
+		openBt = new Button(Messages.getString("RepositoryListView.Open")); //$NON-NLS-1$
 		openBt.setImmediate(true);
 		
 		
@@ -257,8 +257,8 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		}
 		else {
 			Notification.show(
-					"Information", 
-					"There are no available repositories to login!",
+					Messages.getString("RepositoryListView.infoTitle"),  //$NON-NLS-1$
+					Messages.getString("RepositoryListView.noAvailableRepos"), //$NON-NLS-1$
 					Type.TRAY_NOTIFICATION);
 		}
 	}
@@ -283,7 +283,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 					RepositoryPropertyKey.BaseURL.getDefaultValue());
 
 		return new AuthenticationDialog(
-						"Please authenticate yourself", 
+						Messages.getString("RepositoryListView.authenticateYourself"),  //$NON-NLS-1$
 						repositoryReference, 
 						this,
 						baseURL);

@@ -34,9 +34,7 @@ public class TaggerManagerView extends TabbedView {
 	
 	public TaggerManagerView() {
 		super(
-			"There are no open Taggers. " +
-			"Please use the Repository Manager " +
-			"to open a Source Document in a Tagger.");
+			Messages.getString("TaggerManagerView.noOpenDocumentsInfo")); //$NON-NLS-1$
 	}
 
 	public TaggerView openSourceDocument(
