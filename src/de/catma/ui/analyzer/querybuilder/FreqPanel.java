@@ -92,14 +92,14 @@ public class FreqPanel extends AbstractSearchPanel {
 				&& (freq2Input.isValid() || !freq2Input.isEnabled())
 				&& freqComparatorCombo.isValid()) {
 			
-			StringBuilder builder = new StringBuilder("freq ");
+			StringBuilder builder = new StringBuilder("freq "); //$NON-NLS-1$
 			FreqComparator curComparator = 
 					(FreqComparator)freqComparatorCombo.getValue(); 
 			builder.append(curComparator.getComparator());
-			builder.append(" ");
+			builder.append(" "); //$NON-NLS-1$
 			builder.append(freq1Input.getValue());
 			if (curComparator.isRange()) {
-				builder.append("-");
+				builder.append("-"); //$NON-NLS-1$
 				builder.append(freq2Input.getValue());
 			}
 			
@@ -143,21 +143,21 @@ public class FreqPanel extends AbstractSearchPanel {
 	
 		List<FreqComparator> freqComparators = new ArrayList<FreqComparator>();
 		exactlyFreqComp = 
-				new FreqComparator("exactly", "=");
+				new FreqComparator("exactly", "="); //$NON-NLS-1$ //$NON-NLS-2$
 		freqComparators.add(exactlyFreqComp);
 		
 		freqComparators.add(
-                new FreqComparator("greaterThan", ">"));
+                new FreqComparator("greaterThan", ">")); //$NON-NLS-1$ //$NON-NLS-2$
 		freqComparators.add(
-                new FreqComparator("lessThan", "<"));
+                new FreqComparator("lessThan", "<")); //$NON-NLS-1$ //$NON-NLS-2$
 		freqComparators.add(
-                new FreqComparator("greaterOrEqualThan", ">="));
+                new FreqComparator("greaterOrEqualThan", ">=")); //$NON-NLS-1$ //$NON-NLS-2$
 		freqComparators.add(
-                new FreqComparator("lessOrEqualThan", "<="));
+                new FreqComparator("lessOrEqualThan", "<=")); //$NON-NLS-1$ //$NON-NLS-2$
 		freqComparators.add(
-                new FreqComparator("between", "=", true));
+                new FreqComparator("between", "=", true)); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		searchPanel.addComponent(new Label("The word shall appear"));
+		searchPanel.addComponent(new Label(Messages.getString("FreqPanel.WordShallAppear"))); //$NON-NLS-1$
 		
 		freqComparatorCombo = new ComboBox(null, freqComparators);
 		freqComparatorCombo.setImmediate(true);
@@ -176,7 +176,7 @@ public class FreqPanel extends AbstractSearchPanel {
 		searchPanel.addComponent(freq1Input);
 		searchPanel.setExpandRatio(freq1Input, 0.5f);
 		
-		andLabel = new Label("and");
+		andLabel = new Label(Messages.getString("FreqPanel.And")); //$NON-NLS-1$
 		searchPanel.addComponent(andLabel);
 		
 		freq2Input = new TextField();
@@ -186,19 +186,19 @@ public class FreqPanel extends AbstractSearchPanel {
 		searchPanel.addComponent(freq2Input);
 		searchPanel.setExpandRatio(freq2Input, 0.5f);
 		
-		searchPanel.addComponent(new Label("times."));
+		searchPanel.addComponent(new Label(Messages.getString("FreqPanel.Times"))); //$NON-NLS-1$
 
 		return searchPanel;
 	}
 
 	@Override
 	public String getCaption() {
-		return "How frequent shall it be?";
+		return Messages.getString("FreqPanel.HowFrequent"); //$NON-NLS-1$
 	}
 	
 	@Override
 	public String toString() {
-		return "by frequency";
+		return Messages.getString("FreqPanel.ByFrequency"); //$NON-NLS-1$
 	}
 	
 	

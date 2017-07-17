@@ -96,13 +96,13 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 				
 				try {
 					String urlText = event.getText();
-					if (urlText.toLowerCase().startsWith("www")) { //TODO: better scheme detection
-						urlText = "http://" + urlText;
+					if (urlText.toLowerCase().startsWith("www")) { //TODO: better scheme detection //$NON-NLS-1$
+						urlText = "http://" + urlText; //$NON-NLS-1$
 					}
 					URL url = new URL(urlText);
 					
 					String fileName = url.getFile();
-					fileName = fileName.substring(fileName.lastIndexOf('/') + 1).replace("%20", " ");
+					fileName = fileName.substring(fileName.lastIndexOf('/') + 1).replace("%20", " "); //$NON-NLS-1$ //$NON-NLS-2$
 					
 					TechInfoSet ti = new TechInfoSet(fileName, null, url.toURI()); //TODO: mime type detection?
 					wizardResult.setInputTechInfoSet(ti);
@@ -135,18 +135,16 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 		remoteURIInputPanel = new Panel(remoteLayout);
 		
 		remoteURIInput = new TextField();
-		remoteURIInput.setCaption("Enter an URI that is accessible over the internet:");
-		remoteURIInput.setWidth("100%");
+		remoteURIInput.setCaption(Messages.getString("LocationPanel.enterURL")); //$NON-NLS-1$
+		remoteURIInput.setWidth("100%"); //$NON-NLS-1$
 		remoteURIInput.setTextChangeEventMode(TextChangeEventMode.EAGER);
 		remoteLayout.addComponent(remoteURIInput);
 		remoteLayout.setExpandRatio(remoteURIInput, 2);
 		
 		addComponent(remoteURIInputPanel);
-		remoteLayout.addComponent(new Label("Please note that some content providers like gutenberg.org "
-				+ "block access to their documents by third party tools like CATMA. "
-				+ "If you encounter any errors loading a file via URI please consider using a mirror of that site."));
+		remoteLayout.addComponent(new Label(Messages.getString("LocationPanel.contentProviderHint"))); //$NON-NLS-1$
 		
-		Label localFileLabel = new Label("or upload a local file from your computer:");
+		Label localFileLabel = new Label("or upload a local file from your computer:"); //$NON-NLS-1$
 		addComponent(localFileLabel);
 		
 		uploadPanel = new UploadPanel();
@@ -155,7 +153,7 @@ class LocationPanel extends VerticalLayout implements DynamicWizardStep {
 	}
 	
 	public String getCaption() {
-		return "Source Document location";
+		return Messages.getString("LocationPanel.SourceDocLocation"); //$NON-NLS-1$
 	}
 
 	public Component getContent() {

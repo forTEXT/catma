@@ -18,6 +18,8 @@
  */
 package de.catma.ui.analyzer.querybuilder;
 
+import java.text.MessageFormat;
+
 import com.vaadin.data.Validator;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.shared.ui.MarginInfo;
@@ -70,22 +72,22 @@ public class ResultPanel extends VerticalLayout {
 		HorizontalLayout buttonPanel = new HorizontalLayout(); 
 		buttonPanel.setSpacing(true);
 		
-		btShowInPreview = new Button("Show in preview");
+		btShowInPreview = new Button(Messages.getString("ResultPanel.ShowInPreview")); //$NON-NLS-1$
 		buttonPanel.addComponent(btShowInPreview);
-		Label maxTotalFrequencyLabel = new Label("with a maximum total frequency of");
+		Label maxTotalFrequencyLabel = new Label(Messages.getString("ResultPanel.MaxTotalFrequency")); //$NON-NLS-1$
 		buttonPanel.addComponent(maxTotalFrequencyLabel);
 		buttonPanel.setComponentAlignment(
 				maxTotalFrequencyLabel, Alignment.MIDDLE_CENTER);
 		
 		maxTotalFrequencyField = new TextField();
-		maxTotalFrequencyField.setValue("50");
+		maxTotalFrequencyField.setValue("50"); //$NON-NLS-1$
 		maxTotalFrequencyField.addValidator(new Validator() {
 			public void validate(Object value) throws InvalidValueException {
 				try {
 					Integer.valueOf((String)value);
 				}
 				catch (NumberFormatException nfe) {
-					throw new InvalidValueException("Value must be an integer number!");
+					throw new InvalidValueException(Messages.getString("ResultPanel.ValueMustBeInteger")); //$NON-NLS-1$
 				}
 				
 			}
@@ -96,7 +98,7 @@ public class ResultPanel extends VerticalLayout {
 		
 		HorizontalLayout headerPanel = new HorizontalLayout();
 		headerPanel.setSpacing(true);
-		headerPanel.setWidth("100%");
+		headerPanel.setWidth("100%"); //$NON-NLS-1$
 		addComponent(headerPanel);
 
 		searchProgress = new ProgressBar();
@@ -104,16 +106,16 @@ public class ResultPanel extends VerticalLayout {
 		searchProgress.setVisible(false);
 		headerPanel.addComponent(searchProgress);
 		
-		Label yourSearchLabel = new Label("Your search");
+		Label yourSearchLabel = new Label(Messages.getString("ResultPanel.YourSearch")); //$NON-NLS-1$
 		headerPanel.addComponent(yourSearchLabel);
 		headerPanel.setExpandRatio(yourSearchLabel, 0.1f);
 		
-		queryLabel = new Label("nothing entered yet");
-		queryLabel.addStyleName("centered-bold-text");
+		queryLabel = new Label(Messages.getString("ResultPanel.NothingEnteredYet")); //$NON-NLS-1$
+		queryLabel.addStyleName("centered-bold-text"); //$NON-NLS-1$
 		headerPanel.addComponent(queryLabel);
 		headerPanel.setExpandRatio(queryLabel, 0.2f);
 		
-		Label willMatch = new Label("will match for example:");
+		Label willMatch = new Label(Messages.getString("ResultPanel.WillMatch")); //$NON-NLS-1$
 		headerPanel.addComponent(willMatch);
 		headerPanel.setExpandRatio(willMatch, 0.2f);
 		
@@ -131,10 +133,10 @@ public class ResultPanel extends VerticalLayout {
 
 		resultTable.addContainerProperty(
 				TreePropertyName.caption, String.class, null);
-		resultTable.setColumnHeader(TreePropertyName.caption, "Phrase");
+		resultTable.setColumnHeader(TreePropertyName.caption, Messages.getString("ResultPanel.Phrase")); //$NON-NLS-1$
 		resultTable.addContainerProperty(
 				TreePropertyName.frequency, Integer.class, null);
-		resultTable.setColumnHeader(TreePropertyName.frequency, "Frequency");
+		resultTable.setColumnHeader(TreePropertyName.frequency, Messages.getString("ResultPanel.Frequency")); //$NON-NLS-1$
 		addComponent(resultTable);
 	}
 
@@ -162,7 +164,7 @@ public class ResultPanel extends VerticalLayout {
 				};
 				public void error(Throwable t) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error during search!", t);
+						Messages.getString("ResultPanel.ErrorDuringSearch"), t); //$NON-NLS-1$
 				}
 			}, 
 			new LogProgressListener());
@@ -182,9 +184,9 @@ public class ResultPanel extends VerticalLayout {
 		
 		resultTable.setFooterVisible(true);
 		resultTable.setColumnFooter(
-				TreePropertyName.caption, "Total count: " + totalCount);
+				TreePropertyName.caption, MessageFormat.format(Messages.getString("ResultPanel.TotalCount"), totalCount)); //$NON-NLS-1$
 		resultTable.setColumnFooter(
-				TreePropertyName.frequency, "Total frequency: " + totalFreq);
+				TreePropertyName.frequency, MessageFormat.format(Messages.getString("ResultPanel.TotalFrequency"), totalFreq)); //$NON-NLS-1$
 	}
 
 	private void addPhraseResult(GroupedQueryResult phraseResult) {
@@ -201,7 +203,7 @@ public class ResultPanel extends VerticalLayout {
 			SourceDocument sourceDocument = 
 				queryOptions.getRepository().getSourceDocument(sourceDocumentID);
 			String sourceDocumentItemID = 
-					phraseResult.getGroup() + "@" + sourceDocument;
+					phraseResult.getGroup() + "@" + sourceDocument; //$NON-NLS-1$
 			resultTable.addItem(sourceDocumentItemID);
 			resultTable.getContainerProperty(
 					sourceDocumentItemID, TreePropertyName.frequency).setValue(

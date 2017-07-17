@@ -63,11 +63,11 @@ public class SimilPanel extends AbstractSearchPanel implements DynamicWizardStep
 
 	private void showInPreview() {
 		if (inputField.isValid()){
-			StringBuilder builder = new StringBuilder("simil=\"");
+			StringBuilder builder = new StringBuilder("simil=\""); //$NON-NLS-1$
 			builder.append(inputField.getValue());
-			builder.append("\" ");
+			builder.append("\" "); //$NON-NLS-1$
 			builder.append(((Double)gradeSlider.getValue()).intValue());
-			builder.append("%");
+			builder.append("%"); //$NON-NLS-1$
 			if (curQuery != null) {
 				queryTree.removeLast();
 			}
@@ -99,23 +99,23 @@ public class SimilPanel extends AbstractSearchPanel implements DynamicWizardStep
 
 	private Component createSearchPanel() {
 		HorizontalLayout searchPanel = new HorizontalLayout();
-		searchPanel.setWidth("100%");
-		searchPanel.setHeight("50");
+		searchPanel.setWidth("100%"); //$NON-NLS-1$
+		searchPanel.setHeight("50"); //$NON-NLS-1$
 		searchPanel.setSpacing(true);
 		
 		inputField = new TextField();
-		inputField.setWidth("100%");
+		inputField.setWidth("100%"); //$NON-NLS-1$
 		searchPanel.addComponent(inputField);
 		searchPanel.setExpandRatio(inputField, 0.3f);
 		inputField.setImmediate(true);
 		inputField.setRequired(true);
 		inputField.setInvalidAllowed(false);
-		inputField.addValidator(new NonEmptySequenceValidator("This value may not be empty!"));
+		inputField.addValidator(new NonEmptySequenceValidator(Messages.getString("SimilPanel.NonEmptyValue"))); //$NON-NLS-1$
 		
-		gradeSlider = new Slider(null, 0, 100, "Grade of similarity");
+		gradeSlider = new Slider(null, 0, 100, Messages.getString("SimilPanel.GradeOfSimilarity")); //$NON-NLS-1$
 		gradeSlider.setResolution(0);
 		gradeSlider.setSizeFull();
-		gradeSlider.setStyleName("similarity-slider");
+		gradeSlider.setStyleName("similarity-slider"); //$NON-NLS-1$
 		try {
 			gradeSlider.setValue(80.0);
 		} catch (ValueOutOfBoundsException toBeIgnored) {}
@@ -129,12 +129,12 @@ public class SimilPanel extends AbstractSearchPanel implements DynamicWizardStep
 
 	@Override
 	public String getCaption() {
-		return "The word is similar to";
+		return Messages.getString("SimilPanel.TheWordIsSimilarTo"); //$NON-NLS-1$
 	}
 	
 	@Override
 	public String toString() {
-		return "by grade of similarity";
+		return Messages.getString("SimilPanel.ByGradeOfSimilarity"); //$NON-NLS-1$
 	}
 
 }

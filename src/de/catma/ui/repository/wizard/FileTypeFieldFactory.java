@@ -34,12 +34,12 @@ public class FileTypeFieldFactory extends GeneratorFieldFactory {
 		this.fieldMapper = new FieldMapper();
 		FileTypeCharsetFieldConnectorFactory fileTypeCharsetFieldConnectorFactory =
 				new FileTypeCharsetFieldConnectorFactory();
-		this.tableFieldGenerators.put("sourceDocumentInfo.techInfoSet.fileName", new ReadonlyFieldGenerator());
+		this.tableFieldGenerators.put("sourceDocumentInfo.techInfoSet.fileName", new ReadonlyFieldGenerator()); //$NON-NLS-1$
 		this.tableFieldGenerators.put(
-			"sourceDocumentInfo.techInfoSet.fileType", 
+			"sourceDocumentInfo.techInfoSet.fileType",  //$NON-NLS-1$
 			new FileTypeFieldGenerator(fieldMapper, fileTypeCharsetFieldConnectorFactory, fileTypeCharsetValueChangeListener, reloadSourceDocListener));
 		this.tableFieldGenerators.put(
-			"sourceDocumentInfo.techInfoSet.charset",
+			"sourceDocumentInfo.techInfoSet.charset", //$NON-NLS-1$
 			new CharsetFieldGenerator(fieldMapper, fileTypeCharsetFieldConnectorFactory, fileTypeCharsetValueChangeListener));
 	}
 

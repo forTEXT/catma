@@ -105,16 +105,17 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 						new KwicPanel(repository, AnalyzerView.this, markupBased);
 				kwicPanel.addQueryResultRows(rows);
 				new KwicWindow(
-						"KWIC for " + label + " at chunk " + 
-						x + " (" + y + " occurrences)", kwicPanel).show();
+						MessageFormat.format(
+							Messages.getString("AnalyzerView.KWICtitle"), label, x, y),  //$NON-NLS-1$
+						kwicPanel).show(); 
 			}
 			catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error accessing the repository!", e);
+						Messages.getString("AnalyzerView.errorAccessingRepo"), e); //$NON-NLS-1$
 			}
 		}
 	};
-	private String userMarkupItemDisplayString = "Markup Collections";
+	private String userMarkupItemDisplayString = Messages.getString("AnalyzerView.MarkupCollections"); //$NON-NLS-1$
 	private TextField searchInput;
 	private Button btExecSearch;
 	private Button btQueryBuilder;
@@ -335,7 +336,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		btWordList.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				searchInput.setValue("freq>0");
+				searchInput.setValue("freq>0"); //$NON-NLS-1$
 				executeSearch();
 			}
 
@@ -406,7 +407,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 					corpus);
 		
 		Window wizardWindow = 
-				factory.createWizardWindow("Query Builder", "90%", "85%");
+				factory.createWizardWindow(Messages.getString("AnalyzerView.QueryBuilder"), "90%", "85%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		
 		UI.getCurrent().addWindow(wizardWindow);
 		wizardWindow.center();
@@ -431,7 +432,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				queryOptions);
 		
 		((BackgroundServiceProvider)UI.getCurrent()).submit(
-				"Searching...",
+				Messages.getString("AnalyzerView.Searching"), //$NON-NLS-1$
 				job, 
 				new ExecutionListener<QueryResult>() {
 			public void done(QueryResult result) {
@@ -442,17 +443,15 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 					markupResultPanel.setQueryResult(result);
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error accessing the repository!", e);
+						Messages.getString("AnalyzerView.errorAccessingRepo"), e); //$NON-NLS-1$
 				} 
 				
 				if (resultTabSheet.getSelectedTab().equals(markupResultPanel)) {
 					if (markupResultPanel.isEmpty() && 
 							!phraseResultPanel.isEmpty()) {
 						HTMLNotification.show(
-							"Info", 
-							"Your search returned phrase results " +
-								"only but you selected \"Results by markup\"!" +
-								"<br> Please consider switching to \"Results by phrase\".",
+							Messages.getString("AnalyzerView.InfoTitle"),  //$NON-NLS-1$
+							Messages.getString("AnalyzerView.phraseResultsHint"), //$NON-NLS-1$
 							Type.TRAY_NOTIFICATION);
 					}
 				}
@@ -466,24 +465,24 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		            if ((idx >=0) && (input.length() > idx)) {
 		                char character = input.charAt(idx);
 		            	String message = MessageFormat.format(
-		            		"<html><p>There is something wrong with your query <b>{0}</b> approximately at positon {1} character <b>{2}</b>.</p> <p>If you are unsure about how to construct a query try the Query Builder!</p></html>",
+		            		Messages.getString("AnalyzerView.queryFormatError"), //$NON-NLS-1$
 		            		input,
 	                        idx+1,
 	                        character);
 						HTMLNotification.show(
-		            			"Information", message, Type.TRAY_NOTIFICATION);
+		            			Messages.getString("AnalyzerView.InfoTitle"), message, Type.TRAY_NOTIFICATION); //$NON-NLS-1$
 		            }
 		            else {
 		            	String message = MessageFormat.format(
-		            			"<html><p>There is something wrong with your query <b>{0}</b>.</p> <p>If you are unsure about how to construct a query try the Query Builder!</p></html>",
+		            			Messages.getString("AnalyzerView.generalQueryFormatError"), //$NON-NLS-1$
 			            		input);
 						HTMLNotification.show(
-		            			"Information", message, Type.TRAY_NOTIFICATION);
+		            			Messages.getString("AnalyzerView.InfoTitle"), message, Type.TRAY_NOTIFICATION); //$NON-NLS-1$
 		            }
 				}
 				else {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error during search!", t);
+						Messages.getString("AnalyzerView.errorDuringSearch"), t); //$NON-NLS-1$
 				}
 			}
 		});
@@ -504,7 +503,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			handleDistributionChartRequest(groupedQueryResultSet);
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				"Error showing the distribution chart",
+				Messages.getString("AnalyzerView.errorShowingDistChart"), //$NON-NLS-1$
 				e);
 		}
 	}
@@ -556,10 +555,10 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		resultTabSheet.setSizeFull();
 		
 		Component resultByPhraseView = createResultByPhraseView();
-		resultTabSheet.addTab(resultByPhraseView, "Result by phrase");
+		resultTabSheet.addTab(resultByPhraseView, Messages.getString("AnalyzerView.resultByPhrase")); //$NON-NLS-1$
 		
 		Component resultByMarkupView = createResultByMarkupView();
-		resultTabSheet.addTab(resultByMarkupView, "Result by markup");
+		resultTabSheet.addTab(resultByMarkupView, Messages.getString("AnalyzerView.resultByMarkup")); //$NON-NLS-1$
 		
 		return resultTabSheet;
 	}
@@ -579,13 +578,13 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
         HorizontalLayout documentsPanel = new HorizontalLayout();
         documentsPanel.setSpacing(true);
         documentsPanel.setMargin(new MarginInfo(true, true, false, true));
-        documentsPanel.setWidth("100%");
+        documentsPanel.setWidth("100%"); //$NON-NLS-1$
 		
 		documentsContainer = new HierarchicalContainer();
 		documentsTree = new Tree();
 		documentsTree.setContainerDataSource(documentsContainer);
 		documentsTree.setCaption(
-				"Documents and collections constraining this search");
+				Messages.getString("AnalyzerView.docsConstrainingThisSearch")); //$NON-NLS-1$
 		
 		if (corpus != null) {
 			for (SourceDocument sd : corpus.getSourceDocuments()) {
@@ -593,13 +592,13 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			}
 		}
 		else {
-			documentsTree.addItem("All documents");
+			documentsTree.addItem(Messages.getString("AnalyzerView.AllDocuments")); //$NON-NLS-1$
 		}
 		
 		documentsPanel.addComponent(documentsTree);
 		documentsPanel.setExpandRatio(documentsTree, 1.0f);
-		btNewTab = new Button("+ New Query");
-		btNewTab.setDescription("Opens a new tab with same constraints");
+		btNewTab = new Button(Messages.getString("AnalyzerView.NewQuery")); //$NON-NLS-1$
+		btNewTab.setDescription(Messages.getString("AnalyzerView.NewTabSameConstrains")); //$NON-NLS-1$
 		documentsPanel.addComponent(btNewTab);
 		documentsPanel.setComponentAlignment(btNewTab, Alignment.TOP_RIGHT);
 		return documentsPanel;
@@ -639,16 +638,16 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		HorizontalLayout convenienceButtonPanel = new HorizontalLayout();
 		convenienceButtonPanel.setSpacing(true);
 		
-		btQueryBuilder = new Button("Query Builder");
-		btQueryBuilder.addStyleName("secondary-button");
+		btQueryBuilder = new Button(Messages.getString("AnalyzerView.QueryBuilder")); //$NON-NLS-1$
+		btQueryBuilder.addStyleName("secondary-button"); //$NON-NLS-1$
 		convenienceButtonPanel.addComponent(btQueryBuilder);
 		
-		btWordList = new Button("Wordlist");
-		btWordList.addStyleName("primary-button");
+		btWordList = new Button(Messages.getString("AnalyzerView.Wordlist")); //$NON-NLS-1$
+		btWordList.addStyleName("primary-button"); //$NON-NLS-1$
 		convenienceButtonPanel.addComponent(btWordList);
 		
 		btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
-		btHelp.addStyleName("help-button");
+		btHelp.addStyleName("help-button"); //$NON-NLS-1$
 
 		convenienceButtonPanel.addComponent(btHelp);
 	
@@ -658,17 +657,17 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private Component createSearchPanel() {
 		HorizontalLayout searchPanel = new HorizontalLayout();
 		searchPanel.setSpacing(true);
-		searchPanel.setWidth("100%");
+		searchPanel.setWidth("100%"); //$NON-NLS-1$
 		
 		searchInput = new TextField();
-		searchInput.setCaption("Query");
-		searchInput.setWidth("100%");
+		searchInput.setCaption(Messages.getString("AnalyzerView.Query")); //$NON-NLS-1$
+		searchInput.setWidth("100%"); //$NON-NLS-1$
 		searchInput.setImmediate(true);
 		
 		searchPanel.addComponent(searchInput);
 		searchPanel.setExpandRatio(searchInput, 1.0f);
 		
-		btExecSearch = new Button("Execute Query");
+		btExecSearch = new Button(Messages.getString("AnalyzerView.ExecQuery")); //$NON-NLS-1$
 		
 		searchPanel.addComponent(btExecSearch);
 		searchPanel.setComponentAlignment(btExecSearch, Alignment.BOTTOM_CENTER);
@@ -692,7 +691,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		
 		this.visualizationId = 
 			((CatmaApplication)UI.getCurrent()).addVisualization(
-				visualizationId, (corpus==null)?"All documents":corpus.toString(), dc,
+				visualizationId, (corpus==null)?Messages.getString("AnalyzerView.AllDocuments"):corpus.toString(), dc, //$NON-NLS-1$
 				distributionSelectionListener);
 	}
 

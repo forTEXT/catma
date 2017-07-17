@@ -22,9 +22,6 @@ import com.vaadin.client.ui.VWindow;
 
 public class VCatmaWindow extends VWindow {
 	
-//		
-//		if (uidl.hasAttribute(EventAttribute.enableScrolling.name())) {
-//			Window.enableScrolling(
-//					uidl.getBooleanAttribute(EventAttribute.enableScrolling.name()));
-//		}
+	// this class exists for historical reasons, currently we do not have any additions to VWindow 		
+
 }

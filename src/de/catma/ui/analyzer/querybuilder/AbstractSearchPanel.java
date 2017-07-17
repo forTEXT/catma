@@ -65,7 +65,7 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 		setSpacing(true);
 		setMargin(true);
 		
-		cbComplexQuery = new CheckBox("continue to build a complex query");
+		cbComplexQuery = new CheckBox(Messages.getString("AbstractSearchPanel.ContinueToBuildAComplexQuery")); //$NON-NLS-1$
 		cbComplexQuery.setImmediate(true);
 		addComponent(cbComplexQuery);
 		
@@ -159,7 +159,7 @@ public abstract class AbstractSearchPanel extends VerticalLayout implements Dyna
 	@Override
 	public void attach() {
 		super.attach();
-		getParent().setHeight("100%");
+		getParent().setHeight("100%"); //$NON-NLS-1$
 	}
 	
 	public Component getContent() {

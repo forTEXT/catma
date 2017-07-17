@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.net.URI;
 
+import com.ibm.icu.text.MessageFormat;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -81,7 +82,7 @@ class UploadPanel extends HorizontalLayout {
 			public void uploadFailed(FailedEvent event) {
 				pi.setVisible(false);
 				btCancelUpload.setVisible(false);
-				fileLabel.setValue("Upload cancelled!");
+				fileLabel.setValue(Messages.getString("UploadPanel.uploadCancelled")); //$NON-NLS-1$
 				fileLabel.setVisible(true);
 			}
 		});
@@ -91,7 +92,7 @@ class UploadPanel extends HorizontalLayout {
 			public void uploadSucceeded(SucceededEvent event) {
 				pi.setVisible(false);
 				btCancelUpload.setVisible(false);
-				fileLabel.setValue(event.getFilename() + " uploaded!");
+				fileLabel.setValue(MessageFormat.format(Messages.getString("uploadedFeedback"), event.getFilename())); //$NON-NLS-1$
 				fileLabel.setVisible(true);
 			}
 		});
@@ -133,7 +134,7 @@ class UploadPanel extends HorizontalLayout {
 	private void initComponents() {
 		setSpacing(true);
 		upload = new Upload();
-		upload.setButtonCaption("Upload local file");
+		upload.setButtonCaption(Messages.getString("UploadPanel.uploadLocalFile")); //$NON-NLS-1$
 		upload.setImmediate(true);
 		addComponent(upload);
 
@@ -142,7 +143,7 @@ class UploadPanel extends HorizontalLayout {
 		addComponent(pi);
 		setComponentAlignment(pi, Alignment.MIDDLE_CENTER);
 		
-		btCancelUpload = new Button("Cancel");
+		btCancelUpload = new Button(Messages.getString("UploadPanel.Cancel")); //$NON-NLS-1$
 		addComponent(btCancelUpload);
 		btCancelUpload.setVisible(false);
 		

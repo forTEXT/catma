@@ -18,6 +18,7 @@
  */
 package de.catma.ui.analyzer.querybuilder;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -120,29 +121,29 @@ public class WordPanel extends FormLayout {
 		setMargin(true);
 		setSizeFull();
 		
-		String next = " first ";
+		String next = Messages.getString("WordPanel.first");  //$NON-NLS-1$
 		if (withPositionBox) {
-			next = " next ";
+			next = Messages.getString("WordPanel.next"); //$NON-NLS-1$
 		}
 
 		startsWithField = new TextField();
 		startsWithField.setImmediate(true);
-		startsWithField.setCaption("The"+next+"word starts with");
+		startsWithField.setCaption(MessageFormat.format(Messages.getString("WordPanel.TheNWordStartsWith"), next)); //$NON-NLS-1$
 		addComponent(startsWithField);
 		
 		containsField = new TextField();
 		containsField.setImmediate(true);
-		containsField.setCaption("The"+next+"word contains");
+		containsField.setCaption(MessageFormat.format(Messages.getString("WordPanel.TheNWordContains"), next)); //$NON-NLS-1$
 		addComponent(containsField);
 		
 		endsWithField = new TextField();
 		endsWithField.setImmediate(true);
-		endsWithField.setCaption("The"+next+"word ends with");
+		endsWithField.setCaption(MessageFormat.format(Messages.getString("WordPanel.TheNWordEndsWith"), next)); //$NON-NLS-1$
 		addComponent(endsWithField);
 		
 		exactField = new TextField();
 		exactField.setImmediate(true);
-		exactField.setCaption("The"+next+"word is exactly");
+		exactField.setCaption(MessageFormat.format(Messages.getString("WordPanel.TheNWordIsExactly"), next)); //$NON-NLS-1$
 		addComponent(exactField);
 		
 		if (withPositionBox) {
@@ -150,18 +151,20 @@ public class WordPanel extends FormLayout {
 			for (int i=1; i<=10; i++) {
 				options.add(
 					new PositionItem(
-						i, i+" word"+(i==1?"":"s")+" after the previous word"));
+						i, MessageFormat.format(Messages.getString("WordPanel.NWordsAfterThePrevious"),  //$NON-NLS-1$  
+							i, 
+							((i==1)?Messages.getString("WordPanel.word"):Messages.getString("WordPanel.words")))));//$NON-NLS-1$ //$NON-NLS-2$
 			}
 			
 			positionBox =
-					new ComboBox("The position of this word is", options);
+					new ComboBox(Messages.getString("WordPanel.PositionOfWord"), options); //$NON-NLS-1$
 			positionBox.setImmediate(true);
 			addComponent(positionBox);
 			positionBox.setNullSelectionAllowed(false);
 			positionBox.setNewItemsAllowed(false);
 			positionBox.setValue(options.get(0));
 			
-			btRemove = new Button("Remove");
+			btRemove = new Button(Messages.getString("WordPanel.Remove")); //$NON-NLS-1$
 			addComponent(btRemove);
 			setComponentAlignment(btRemove, Alignment.MIDDLE_CENTER);
 		}

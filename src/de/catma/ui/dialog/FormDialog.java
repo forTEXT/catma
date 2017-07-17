@@ -160,11 +160,11 @@ public class FormDialog<T> extends VerticalLayout {
 		
 		addComponent(hint);
 		
-		btSave = new Button("Save");
+		btSave = new Button(Messages.getString("FormDialog.Save")); //$NON-NLS-1$
 
 		btSave.setClickShortcut(KeyCode.ENTER);
 
-		btCancel = new Button("Cancel");
+		btCancel = new Button(Messages.getString("FormDialog.Cancel")); //$NON-NLS-1$
 		buttonPanel.addComponent(btSave);
 		buttonPanel.addComponent(btCancel);
 		
@@ -188,7 +188,7 @@ public class FormDialog<T> extends VerticalLayout {
 	}
 	
 	public void show() {
-		show("25%");
+		show("25%"); //$NON-NLS-1$
 	}
 
 	public void setVisibleItemProperties(Object[] visibleProperties) {

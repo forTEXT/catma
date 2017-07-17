@@ -80,18 +80,18 @@ public class PhrasePanel extends AbstractSearchPanel {
 
 	private void showInPreviw() {
 		StringBuilder builder = new StringBuilder();
-		String conc="";
+		String conc=""; //$NON-NLS-1$
 		for (WordPanel panel : wordPanels) {
 			builder.append(conc);
 			builder.append(panel.getWildcardWord());
-			conc = " ";
+			conc = " "; //$NON-NLS-1$
 		}
 		
 		if (!builder.toString().trim().isEmpty()) {
 			if (curQuery != null) {
 				queryTree.removeLast();
 			}
-			curQuery = "wild=\"" + builder.toString() + "\"";
+			curQuery = "wild=\"" + builder.toString() + "\""; //$NON-NLS-1$ //$NON-NLS-2$
 			resultPanel.setQuery(curQuery);
 			queryTree.add(curQuery);
 			onFinish = !isComplexQuery();
@@ -133,12 +133,12 @@ public class PhrasePanel extends AbstractSearchPanel {
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		
 		Label addWordPanelLabel = 
-				new Label("If your phrase contains more words you can");
+				new Label(Messages.getString("PhrasePanel.PhraseContainsMoreWords")); //$NON-NLS-1$
 		buttonPanel.addComponent(addWordPanelLabel);
 		buttonPanel.setComponentAlignment(
 				addWordPanelLabel, Alignment.MIDDLE_CENTER);
 		
-		btAddWordPanel = new Button("add another word!");
+		btAddWordPanel = new Button(Messages.getString("PhrasePanel.AddAnotherWord")); //$NON-NLS-1$
 		buttonPanel.addComponent(btAddWordPanel);
 		searchPanel.addComponent(buttonPanel);
 		
@@ -153,19 +153,19 @@ public class PhrasePanel extends AbstractSearchPanel {
 	
 	@Override
 	public String getCaption() {
-		return "How does your phrase look like?";
+		return Messages.getString("PhrasePanel.PhraseLookLike"); //$NON-NLS-1$
 	}
 
 	@Override
 	public void attach() {
 		super.attach();
-		getParent().setHeight("100%");
+		getParent().setHeight("100%"); //$NON-NLS-1$
 	}
 	
 	
 	@Override
 	public String toString() {
-		return "by word or phrase";
+		return Messages.getString("PhrasePanel.ByWordsOrPhrase"); //$NON-NLS-1$
 	}
 
 }

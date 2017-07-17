@@ -45,13 +45,13 @@ public class CharsetFieldGenerator implements TableFieldGenerator {
     	
 		fieldMapper.registerField(
 				itemId, 
-				"sourceDocumentInfo.techInfoSet.charset", 
+				"sourceDocumentInfo.techInfoSet.charset",  //$NON-NLS-1$
 				comboBox);
 	
 		fieldMapper.connectFields(
 			itemId, 
-			"sourceDocumentInfo.techInfoSet.fileType", 
-			"sourceDocumentInfo.techInfoSet.charset", 
+			"sourceDocumentInfo.techInfoSet.fileType",  //$NON-NLS-1$
+			"sourceDocumentInfo.techInfoSet.charset",  //$NON-NLS-1$
 			fileTypeCharsetFieldConnectorFactory);
 	
 		return comboBox;

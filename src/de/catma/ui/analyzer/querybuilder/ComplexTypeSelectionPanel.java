@@ -56,9 +56,9 @@ public class ComplexTypeSelectionPanel extends VerticalLayout implements
 	}
 	
 	static enum ComplexTypeOption {
-		UNION(","),
-		EXCLUSION("-"),
-		REFINMENT("where"),
+		UNION(","), //$NON-NLS-1$
+		EXCLUSION("-"), //$NON-NLS-1$
+		REFINMENT("where"), //$NON-NLS-1$
 		;
 		String queryElement;
 		String displayString;
@@ -100,7 +100,7 @@ public class ComplexTypeSelectionPanel extends VerticalLayout implements
 					queryTree.removeLast();
 				}
 
-				String postfix = "";
+				String postfix = ""; //$NON-NLS-1$
 				if(!((ComplexTypeOption)complexTypeSelect.getValue()).equals(
 					ComplexTypeOption.UNION)) {
 					postfix = ((TagMatchModeItem)tagMatchModeCombo.getValue()).getTagMatchMode().name().toLowerCase();
@@ -138,16 +138,16 @@ public class ComplexTypeSelectionPanel extends VerticalLayout implements
 	private void initComponents() {
 		
 		setSpacing(true);
-		setWidth("100%");
+		setWidth("100%"); //$NON-NLS-1$
 		ComplexTypeOption.UNION.setDisplayString(
-				"add more results");
+				Messages.getString("ComplexTypeSelectionPanel.AddMoreResults")); //$NON-NLS-1$
 		ComplexTypeOption.EXCLUSION.setDisplayString(
-				"exclude hits from previous results");
+				Messages.getString("ComplexTypeSelectionPanel.ExcludeHitsFromPreviousResults")); //$NON-NLS-1$
 		ComplexTypeOption.REFINMENT.setDisplayString(
-				"refine previous results");
+				Messages.getString("ComplexTypeSelectionPanel.RefinePreviousResults")); //$NON-NLS-1$
 		
 		complexTypeSelect = 
-				new OptionGroup("", Arrays.asList(ComplexTypeOption.values()));
+				new OptionGroup("", Arrays.asList(ComplexTypeOption.values())); //$NON-NLS-1$
 		
 		complexTypeSelect.setImmediate(true);
 		
@@ -155,31 +155,22 @@ public class ComplexTypeSelectionPanel extends VerticalLayout implements
 		setComponentAlignment(complexTypeSelect, Alignment.MIDDLE_CENTER);
 		
 		
-		tagMatchModeCombo = new ComboBox("Please choose what you consider a match:");
+		tagMatchModeCombo = new ComboBox(Messages.getString("ComplexTypeSelectionPanel.ChooseMatch")); //$NON-NLS-1$
 		tagMatchModeCombo.setImmediate(true);
 		TagMatchModeItem exactMatchItem = 
-				new TagMatchModeItem("exact match", MatchMode.EXACT);
+				new TagMatchModeItem(Messages.getString("ComplexTypeSelectionPanel.ExactMatch"), MatchMode.EXACT); //$NON-NLS-1$
 		tagMatchModeCombo.addItem(exactMatchItem);
 		tagMatchModeCombo.addItem(
-				new TagMatchModeItem("boundary match", 
+				new TagMatchModeItem(Messages.getString("ComplexTypeSelectionPanel.BoundaryMatch"),  //$NON-NLS-1$
 						MatchMode.BOUNDARY));
 		tagMatchModeCombo.addItem(
-				new TagMatchModeItem("overlap match", 
+				new TagMatchModeItem(Messages.getString("ComplexTypeSelectionPanel.OverlapMatch"),  //$NON-NLS-1$
 						MatchMode.OVERLAP));
 		tagMatchModeCombo.setNullSelectionAllowed(false);
 		tagMatchModeCombo.setNewItemsAllowed(false);
 		
 		tagMatchModeCombo.setDescription(
-			"The three different match modes influence the way tags refine" +
-			" your search results:" +
-			"<ul>"+
-			"<li>exact match - the tag type boundaries have to match exactly to " +
-			"keep a result item in the result set</li>" +
-			"<li>boundary match - result items that should be kept in the " +
-			"result set must start and end within the boundaries of the tag</li>"+
-			"<li>overlap - the result items that should be kept in the result " +
-			"set must overlap with the range of the tag</li>" +
-			"</ul>");
+			Messages.getString("ComplexTypeSelectionPanel.MatchModeInfluence")); //$NON-NLS-1$
 		tagMatchModeCombo.setValue(exactMatchItem);
 		
 		addComponent(tagMatchModeCombo);
@@ -194,7 +185,7 @@ public class ComplexTypeSelectionPanel extends VerticalLayout implements
 	
 	@Override
 	public String getCaption() {
-		return "What do you want to do with the next query?";
+		return Messages.getString("ComplexTypeSelectionPanel.NextQuery"); //$NON-NLS-1$
 	}
 
 	public boolean onAdvance() {

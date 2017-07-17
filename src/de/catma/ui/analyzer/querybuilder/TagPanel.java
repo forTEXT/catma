@@ -84,7 +84,7 @@ public class TagPanel extends AbstractSearchPanel {
 				initActions();
 				initData();
 			} catch (IOException e) {
-				((CatmaApplication)UI.getCurrent()).showAndLogError("DB error", e);
+				((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("TagPanel.DBError"), e); //$NON-NLS-1$
 			}
 		}
 	}
@@ -137,7 +137,7 @@ public class TagPanel extends AbstractSearchPanel {
 			if (curQuery != null) {
 				queryTree.removeLast();
 			}
-			curQuery = "tag=\""+path+"%\"";
+			curQuery = "tag=\""+path+"%\""; //$NON-NLS-1$ //$NON-NLS-2$
 
 			resultPanel.setQuery(curQuery);
 			
@@ -159,7 +159,7 @@ public class TagPanel extends AbstractSearchPanel {
 		
 		if (!(tagsetTree).containsId(tagsetDefinitionName)) {
 			ClassResource tagsetIcon = 
-					new ClassResource("tagmanager/resources/grndiamd.gif");
+					new ClassResource("tagmanager/resources/grndiamd.gif"); //$NON-NLS-1$
 			tagsetTree.addItem(tagsetDefinitionName);
 			tagsetTree.getContainerProperty(
 				tagsetDefinitionName, TagTreePropertyName.caption).setValue(
@@ -173,17 +173,17 @@ public class TagPanel extends AbstractSearchPanel {
 		Object parent = tagsetDefinitionName;
 		
 		String[] tagDefinitions = 
-				tagDefinitionPathInfo.getTagDefinitionPath().substring(1).split("/"); //TODO: handle escapes
+				tagDefinitionPathInfo.getTagDefinitionPath().substring(1).split("/"); //TODO: handle escapes //$NON-NLS-1$
 		StringBuilder pathBuilder = new StringBuilder();
 		for (String tagDefinitionName : tagDefinitions) {
-			pathBuilder.append("/");
+			pathBuilder.append("/"); //$NON-NLS-1$
 			pathBuilder.append(tagDefinitionName);
 			String curPath = pathBuilder.toString();
 				
 			String curId = tagsetDefinitionName + curPath; 
 			if (!tagsetTree.containsId(curId)) {
 				ClassResource tagIcon = new ClassResource(
-						"tagmanager/resources/reddiamd.gif");
+						"tagmanager/resources/reddiamd.gif"); //$NON-NLS-1$
 				tagsetTree.addItem(curId);
 				tagsetTree.getContainerProperty(
 						curId, TagTreePropertyName.caption).setValue(
@@ -230,7 +230,7 @@ public class TagPanel extends AbstractSearchPanel {
 		
 		tagsetTree.addContainerProperty(
 				TagTreePropertyName.caption, String.class, null);
-		tagsetTree.setColumnHeader(TagTreePropertyName.caption, "Tagsets");
+		tagsetTree.setColumnHeader(TagTreePropertyName.caption, Messages.getString("TagPanel.Tagsets")); //$NON-NLS-1$
 		
 		tagsetTree.addContainerProperty(
 				TagTreePropertyName.icon, Resource.class, null);
@@ -249,7 +249,7 @@ public class TagPanel extends AbstractSearchPanel {
 						TagTreePropertyName.color});
 		
 
-		tagsetTree.setColumnHeader(TagTreePropertyName.color, "Tag Type Color");
+		tagsetTree.setColumnHeader(TagTreePropertyName.color, Messages.getString("TagPanel.TagColor")); //$NON-NLS-1$
 		
 		tagSearchPanel.addComponent(tagsetTree);
 		tagSearchPanel.setExpandRatio(tagsetTree, 0.8f);
@@ -268,12 +268,11 @@ public class TagPanel extends AbstractSearchPanel {
 
 	@Override
 	public String getCaption() {
-		return "Please choose a TagDefinition " +
-				"(only TagDefinitions that will provide results are listed)";
+		return Messages.getString("TagPanel.ChooseATag"); //$NON-NLS-1$
 	}
 	
 	@Override
 	public String toString() {
-		return "by Tag";
+		return Messages.getString("TagPanel.byTag"); //$NON-NLS-1$
 	}
 }

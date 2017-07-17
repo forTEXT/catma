@@ -22,7 +22,7 @@ public class MainMenu extends MenuBar {
 		
 		this.viewContainer = viewContainer;
 		
-		this.addStyleName("catma-menu");
+		this.addStyleName("catma-menu"); //$NON-NLS-1$
 		
 		entries = new HashMap<MenuBar.MenuItem, Component>();
 	}
@@ -36,7 +36,7 @@ public class MainMenu extends MenuBar {
 				previous.setStyleName(null);
 			}
 			
-			selectedItem.setStyleName("highlight");
+			selectedItem.setStyleName("highlight"); //$NON-NLS-1$
 	        previous = selectedItem;
 	        
 	        Component component = entries.get(selectedItem);
@@ -63,7 +63,7 @@ public class MainMenu extends MenuBar {
 			}
 		}
 		
-		throw new IllegalArgumentException("Component not present in menu");
+		throw new IllegalArgumentException("Component not present in menu"); //$NON-NLS-1$
 	}
 	
 	public PropertyChangeListener userChangeListener = 
@@ -132,32 +132,28 @@ public class MainMenu extends MenuBar {
 	
 	@Override
 	public MenuBar.MenuItem addItem(String caption, MenuBar.Command command) {
-		throw new UnsupportedOperationException("Use the addEntry method");
+		throw new UnsupportedOperationException("Use the addEntry method"); //$NON-NLS-1$
 	}
 	
 	@Override
 	public MenuBar.MenuItem addItem(String caption, Resource icon,
 			MenuBar.Command command) {
-		// TODO: create an addEntry overload that accepts an icon
-		throw new UnsupportedOperationException("Not implemented");
+		throw new UnsupportedOperationException("Not implemented"); //$NON-NLS-1$
 	}
 	
 	@Override
 	public MenuBar.MenuItem addItemBefore(String caption, Resource icon,
             MenuBar.Command command, MenuBar.MenuItem itemToAddBefore) {
-		// TODO: create addEntryBefore
-		throw new UnsupportedOperationException("Not implemented");
+		throw new UnsupportedOperationException("Not implemented"); //$NON-NLS-1$
 	}
 	
 	@Override
 	public void removeItem(MenuBar.MenuItem item) {
-		// TODO: create removeEntry
-		throw new UnsupportedOperationException("Not implemented");
+		throw new UnsupportedOperationException("Not implemented"); //$NON-NLS-1$
 	}
 	
 	@Override
 	public void removeItems() {
-		// TODO: create removeEntries
-		throw new UnsupportedOperationException("Not implemented");
+		throw new UnsupportedOperationException("Not implemented"); //$NON-NLS-1$
 	}
 }

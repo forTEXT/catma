@@ -15,7 +15,7 @@ public class AccessModeFieldGenerator implements FormFieldGenerator {
 	private List<AccessMode> accessModeList = Arrays.asList(AccessMode.values());
 	
 	public Field createField(Item item, Component uiContext) {
-		ComboBox field = new ComboBox("Share mode", accessModeList);
+		ComboBox field = new ComboBox(Messages.getString("AccessModeFieldGenerator.shareMode"), accessModeList); //$NON-NLS-1$
 		field.setValue(accessModeList.get(0));
 		field.setRequired(true);
 		field.setNullSelectionAllowed(false);

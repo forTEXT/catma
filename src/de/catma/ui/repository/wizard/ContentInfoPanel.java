@@ -57,22 +57,22 @@ class ContentInfoPanel extends HorizontalLayout implements
 		setSizeFull();
 		
 		BeanItemContainer<SourceDocumentResult> container = new BeanItemContainer<SourceDocumentResult>(SourceDocumentResult.class);
-		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.fileName");
-		container.addNestedContainerProperty("sourceDocumentInfo.contentInfoSet.title");
-		container.addNestedContainerProperty("sourceDocumentInfo.contentInfoSet.author");
-		container.addNestedContainerProperty("sourceDocumentInfo.contentInfoSet.description");
-		container.addNestedContainerProperty("sourceDocumentInfo.contentInfoSet.publisher");
+		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.fileName"); //$NON-NLS-1$
+		container.addNestedContainerProperty("sourceDocumentInfo.contentInfoSet.title"); //$NON-NLS-1$
+		container.addNestedContainerProperty("sourceDocumentInfo.contentInfoSet.author"); //$NON-NLS-1$
+		container.addNestedContainerProperty("sourceDocumentInfo.contentInfoSet.description"); //$NON-NLS-1$
+		container.addNestedContainerProperty("sourceDocumentInfo.contentInfoSet.publisher"); //$NON-NLS-1$
 		
-		table = new Table("Documents", container);
+		table = new Table(Messages.getString("ContentInfoPanel.Documents"), container); //$NON-NLS-1$
 		
 		table.setVisibleColumns(new Object[]{
-				"sourceDocumentInfo.techInfoSet.fileName",
-				"sourceDocumentInfo.contentInfoSet.title",
-				"sourceDocumentInfo.contentInfoSet.author",
-				"sourceDocumentInfo.contentInfoSet.description",
-				"sourceDocumentInfo.contentInfoSet.publisher"
+				"sourceDocumentInfo.techInfoSet.fileName", //$NON-NLS-1$
+				"sourceDocumentInfo.contentInfoSet.title", //$NON-NLS-1$
+				"sourceDocumentInfo.contentInfoSet.author", //$NON-NLS-1$
+				"sourceDocumentInfo.contentInfoSet.description", //$NON-NLS-1$
+				"sourceDocumentInfo.contentInfoSet.publisher" //$NON-NLS-1$
 		});
-		table.setColumnHeaders(new String[]{"File Name", "Title", "Author", "Description", "Publisher"});
+		table.setColumnHeaders(new String[]{Messages.getString("ContentInfoPanel.Filename"), Messages.getString("ContentInfoPanel.title"), Messages.getString("ContentInfoPanel.author"), Messages.getString("ContentInfoPanel.description"), Messages.getString("ContentInfoPanel.publisher")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 		
 		table.setSelectable(true);
 		table.setNullSelectionAllowed(false);
@@ -89,7 +89,7 @@ class ContentInfoPanel extends HorizontalLayout implements
 	
 	@Override
 	public String getCaption() {
-		return "Content details";
+		return Messages.getString("ContentInfoPanel.contentDetails"); //$NON-NLS-1$
 	}
 
 	public boolean onAdvance() {
@@ -106,7 +106,7 @@ class ContentInfoPanel extends HorizontalLayout implements
 			fileName = fileName.substring(0, indexOfLastFullStop);
 		}
 		
-		return fileName.replace("_", " ").trim();
+		return fileName.replace("_", " ").trim(); //$NON-NLS-1$ //$NON-NLS-2$
 		
 	}
 
@@ -149,7 +149,7 @@ class ContentInfoPanel extends HorizontalLayout implements
 			
 			URI uri = sdr.getSourceDocumentInfo().getTechInfoSet().getURI();
 			String title = uri.toString();
-			if (uri.getScheme().equals("file")) {
+			if (uri.getScheme().equals("file")) { //$NON-NLS-1$
 				title = new File(uri).getName();
 			}
 			sdr.getSourceDocument()
