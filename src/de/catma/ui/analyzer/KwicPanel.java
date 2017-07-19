@@ -20,6 +20,7 @@ package de.catma.ui.analyzer;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,7 +32,6 @@ import java.util.WeakHashMap;
 
 import org.vaadin.peter.contextmenu.ContextMenu;
 
-import com.ibm.icu.text.MessageFormat;
 import com.vaadin.data.Container;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.DataBoundTransferable;
