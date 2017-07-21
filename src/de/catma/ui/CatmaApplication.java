@@ -71,6 +71,7 @@ import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.IndexedRepository;
+import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.computation.DistributionComputation;
 import de.catma.queryengine.result.computation.DistributionSelectionListener;
 import de.catma.repository.LoginToken;
@@ -528,6 +529,11 @@ public class CatmaApplication extends UI
 	public void addDoubleTree(List<KeywordInContext> kwics) {
 		menu.executeEntry(visualizationManagerView);
 		visualizationManagerView.addDoubleTree(kwics);
+	}
+	
+	public void addVega(QueryResult queryResult, Repository repository) {
+		menu.executeEntry(visualizationManagerView);
+		visualizationManagerView.addVega(queryResult, repository);
 	}
 
 	@Override

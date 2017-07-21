@@ -13501,3 +13501,12 @@ div.v-layout.v-horizontal.v-widget {
 .catma .tagsetselection-dialog-create-tag-libary {
 	margin-top: 25px;
 }
+
+.catma .catma-embedded-vega {
+	margin-left: 10px;
+	margin-top: 10px;
+}
+
+.catma .catma-embedded-vega > .vega-actions a {
+	padding: 5px;
+}

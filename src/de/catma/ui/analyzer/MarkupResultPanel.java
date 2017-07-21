@@ -246,6 +246,7 @@ public class MarkupResultPanel extends VerticalLayout {
 	private TagKwicResultsProvider tagKwicResultsProvider;
 	private Button btSelectAllRows;
 	private Button btDeselectAllRows;
+	private Button btVega;
 	
 	public MarkupResultPanel(
 			Repository repository, 
@@ -270,6 +271,16 @@ public class MarkupResultPanel extends VerticalLayout {
 	}
 	
 	private void initActions() {
+		
+		btVega.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				((CatmaApplication)UI.getCurrent()).addVega(curQueryResult, repository);
+			}
+		});
+		
+
 		cbPropAsColumns.addValueChangeListener(new ValueChangeListener() {
 			
 			@Override
@@ -647,6 +658,14 @@ public class MarkupResultPanel extends VerticalLayout {
 		btDist = new Button();
 		btDist.setIcon(new ClassResource("analyzer/resources/chart.gif")); //$NON-NLS-1$
 		buttonPanel.addComponent(btDist);
+
+		btVega = new Button("Vega");
+
+		btVega.setDescription(
+			"Roll your own visualization");
+		
+		buttonPanel.addComponent(btVega);
+
 		
 		btResultExcelExport = new Button();
 		btResultExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png")); //$NON-NLS-1$
