@@ -99,6 +99,8 @@ public class PhraseResultPanel extends VerticalLayout {
 	private TagKwicResultsProvider tagKwicResultsProvider;
 	private Button btSelectAllRows;
 	private Button btDeselectAllRows;
+	private Button btVega;
+	private QueryResult queryResult;
 	
 	public PhraseResultPanel(
 			Repository repository, 
@@ -115,6 +117,16 @@ public class PhraseResultPanel extends VerticalLayout {
 	}
 	
 	private void initActions() {
+		
+		
+		btVega.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				((CatmaApplication)UI.getCurrent()).addVega(queryResult, repository);
+			}
+		});
+		
 		btDoubleTree.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
@@ -442,6 +454,13 @@ public class PhraseResultPanel extends VerticalLayout {
 			Messages.getString("PhraseResultPanel.showPhraseInDoubleTree")); //$NON-NLS-1$
 		
 		buttonPanel.addComponent(btDoubleTree);
+
+		btVega = new Button("Vega");
+
+		btVega.setDescription(
+			"Roll your own visualization");
+		
+		buttonPanel.addComponent(btVega);
 		
 		btExcelExport = new Button();
 		btExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png")); //$NON-NLS-1$
@@ -562,6 +581,8 @@ public class PhraseResultPanel extends VerticalLayout {
 	}
 	
 	public void setQueryResult(QueryResult queryResult) {
+		this.queryResult = queryResult;
+		
 		kwicPanel.clear();
 		HierarchicalContainer container = createContainer();
 		
