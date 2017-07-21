@@ -59,7 +59,7 @@ public class TaggerSplitPanel extends HorizontalSplitPanel {
     public interface SplitterPositionChangedListener extends ConnectorEventListener {
 
         public static final Method positionChangedMethod = ReflectTools.findMethod(
-        		SplitterPositionChangedListener.class, "positionChanged",
+        		SplitterPositionChangedListener.class, "positionChanged", //$NON-NLS-1$
         		SplitterPositionChangedEvent.class);
 
         /**

@@ -43,24 +43,24 @@ public class DoubleTreeView  extends Panel implements ClosableTab {
 		VerticalLayout content = new VerticalLayout();
 		content.setMargin(true);
 		content.setSpacing(true);
-		content.setWidth("1600px");
-		setHeight("100%");
+		content.setWidth("1600px"); //$NON-NLS-1$
+		setHeight("100%"); //$NON-NLS-1$
 		HorizontalLayout headerPanel = new HorizontalLayout();
 		headerPanel.setSpacing(true);
-		headerPanel.setWidth("500px");
+		headerPanel.setWidth("500px"); //$NON-NLS-1$
 		
-		cbCaseSensitive = new CheckBox("case sensitive", true);
+		cbCaseSensitive = new CheckBox(Messages.getString("DoubleTreeView.caseSensitive"), true); //$NON-NLS-1$
 		cbCaseSensitive.setImmediate(true);
 		
 		headerPanel.addComponent(cbCaseSensitive);
 		headerPanel.setComponentAlignment(cbCaseSensitive, Alignment.TOP_LEFT);
 		
 		Link citeLink = new Link(
-			"About DoubleTreeJS",
+			Messages.getString("DoubleTreeView.about"), //$NON-NLS-1$
 			new ExternalResource(
-				"http://linguistics.chrisculy.net/lx/software/DoubleTreeJS/index.html"));
+				"http://linguistics.chrisculy.net/lx/software/DoubleTreeJS/index.html")); //$NON-NLS-1$
 		
-		citeLink.setTargetName("_blank");
+		citeLink.setTargetName("_blank"); //$NON-NLS-1$
 		headerPanel.addComponent(citeLink);
 		headerPanel.setComponentAlignment(citeLink, Alignment.TOP_RIGHT);
 
@@ -68,8 +68,8 @@ public class DoubleTreeView  extends Panel implements ClosableTab {
 		content.setComponentAlignment(headerPanel, Alignment.TOP_CENTER);
 		
 		doubleTree = new DoubleTree();
-		doubleTree.setHeight("100%");
-		doubleTree.setWidth("1600px");
+		doubleTree.setHeight("100%"); //$NON-NLS-1$
+		doubleTree.setWidth("1600px"); //$NON-NLS-1$
 		
 		content.addComponent(doubleTree);
 		setContent(content);
@@ -84,6 +84,6 @@ public class DoubleTreeView  extends Panel implements ClosableTab {
 	
 	@Override
 	public String toString() {
-		return "KWIC as a DoubleTree";
+		return Messages.getString("DoubleTreeView.kwicAsDoubleTree"); //$NON-NLS-1$
 	}
 }

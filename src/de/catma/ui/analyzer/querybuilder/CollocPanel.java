@@ -62,11 +62,11 @@ public class CollocPanel extends AbstractSearchPanel {
 
 	private void showInPreview() {
 		if (wordInput.isValid() && collocInput.isValid() && spanSizeInput.isValid()) {
-			StringBuilder builder = new StringBuilder("\"");
+			StringBuilder builder = new StringBuilder("\""); //$NON-NLS-1$
 			builder.append(wordInput.getValue());
-			builder.append("\" & \"");
+			builder.append("\" & \""); //$NON-NLS-1$
 			builder.append(collocInput.getValue());
-			builder.append("\" ");
+			builder.append("\" "); //$NON-NLS-1$
 			builder.append(spanSizeInput.getValue());
 			
 			if (curQuery != null) {
@@ -104,28 +104,26 @@ public class CollocPanel extends AbstractSearchPanel {
 		searchPanel.setSpacing(true);
 		
 		wordInput = new TextField();
-		wordInput.addValidator(new NonEmptySequenceValidator("This value cannot be empty!"));
+		wordInput.addValidator(new NonEmptySequenceValidator(Messages.getString("CollocPanel.ThisValueCannotBeEmpty"))); //$NON-NLS-1$
 		wordInput.setRequired(true);
 		wordInput.setInvalidAllowed(false);
 		searchPanel.addComponent(wordInput);
 		
-		collocInput = new TextField("that appear near");
-		collocInput.addValidator(new NonEmptySequenceValidator("This value cannot be empty!"));
+		collocInput = new TextField(Messages.getString("CollocPanel.ThatAppearNear")); //$NON-NLS-1$
+		collocInput.addValidator(new NonEmptySequenceValidator(Messages.getString("CollocPanel.ThisValueCannotBeEmpty"))); //$NON-NLS-1$
 		collocInput.setRequired(true);
 		collocInput.setInvalidAllowed(false);
 		
 		searchPanel.addComponent(collocInput);
 		
-		spanSizeInput = new TextField("within a span of", "5");
+		spanSizeInput = new TextField(Messages.getString("CollocPanel.WithinASpanOf"), "5"); //$NON-NLS-1$ //$NON-NLS-2$
 		spanSizeInput.addValidator(new IntegerValueValidator(false, false));
 		spanSizeInput.setRequired(true);
 		spanSizeInput.setInvalidAllowed(false);
 		
 		searchPanel.addComponent(spanSizeInput);
 		Label infoLabel = new Label(
-			"Note: the preview frequency limit will be applied to each sub result</br> "
-			+ "because of this no preview results doesn't necessarily mean that</br>"
-			+ "there will be no query results at all!");
+			Messages.getString("CollocPanel.PreviewFrequencyLimitInfo"));  //$NON-NLS-1$
 		infoLabel.setContentMode(ContentMode.HTML);
 		searchPanel.addComponent(infoLabel);
 		
@@ -134,11 +132,11 @@ public class CollocPanel extends AbstractSearchPanel {
 
 	@Override
 	public String getCaption() {
-		return "Search for all occurrences of";
+		return Messages.getString("CollocPanel.SearchForAllOccurrencesOf"); //$NON-NLS-1$
 	}
 	
 	@Override
 	public String toString() {
-		return "by collocation";
+		return Messages.getString("CollocPanel.ByCollocation"); //$NON-NLS-1$
 	}
 }

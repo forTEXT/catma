@@ -201,7 +201,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		
 		tagsetTree.addActionHandler(new Action.Handler() {
 			private CMenuAction<TagsetDefinition> close = 
-					new CMenuAction<TagsetDefinition>("Close") {
+					new CMenuAction<TagsetDefinition>(Messages.getString("MarkupPanel.Close")) { //$NON-NLS-1$
 				@Override
 				public void handle(TagsetDefinition tagsetDefinition) {
 					closeTagsetDefinition(tagsetDefinition);
@@ -263,26 +263,26 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			PropertyChangeListener tagDefinitionSelectionListener, 
 			PropertyChangeListener tagDefinitionsRemovedListener, 
 			final String sourceDocumentId) {
-		setHeight("98%"); //necessary to prevent that the markuppanel flows out of the TaggerView
+		setHeight("98%"); //necessary to prevent that the markuppanel flows out of the TaggerView //$NON-NLS-1$
 		tabSheet = new TabSheet();
 		tabSheet.setSizeFull();
 		VerticalLayout tabContent = new VerticalLayout();
 		tabContent.setSpacing(true);
 		tabContent.setSizeFull();
-		tabContent.addStyleName("catma-tagger-panels");
+		tabContent.addStyleName("catma-tagger-panels"); //$NON-NLS-1$
 
 		
 		HorizontalLayout buttonHeaderPanel = new HorizontalLayout();
-		buttonHeaderPanel.setWidth("95%");
+		buttonHeaderPanel.setWidth("95%"); //$NON-NLS-1$
 		buttonHeaderPanel.setMargin(new MarginInfo(true, false, false, false));
 				
-		btnOpenTagset = new Button("Open Tagset");
-		btnOpenTagset.addStyleName("primary-button");
+		btnOpenTagset = new Button(Messages.getString("MarkupPanel.OpenTagset")); //$NON-NLS-1$
+		btnOpenTagset.addStyleName("primary-button"); //$NON-NLS-1$
 				
 		buttonHeaderPanel.addComponent(btnOpenTagset);
 		
 		btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
-		btHelp.addStyleName("help-button");
+		btHelp.addStyleName("help-button"); //$NON-NLS-1$
 		
 		buttonHeaderPanel.addComponent(btHelp);
 		buttonHeaderPanel.setComponentAlignment(btHelp, Alignment.MIDDLE_RIGHT);
@@ -297,7 +297,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		tabContent.addComponent(tagsetTree);
 		tabContent.setExpandRatio(tagsetTree, 1.0f);
 		
-		tabSheet.addTab(tabContent, "Active Tagsets");
+		tabSheet.addTab(tabContent, Messages.getString("MarkupPanel.ActiveTagsets")); //$NON-NLS-1$
 				
 		markupCollectionsPanel = 
 				new MarkupCollectionsPanel(
@@ -327,14 +327,14 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 							evt.getNewValue().toString());
 				}
 				else {
-					writableUserMarkupCollectionInfo.setValue("no collection available");
+					writableUserMarkupCollectionInfo.setValue(Messages.getString("MarkupPanel.noAnnotationCollectionAvailable")); //$NON-NLS-1$
 				}
 				colorButtonListener.setEnabled(evt.getNewValue() != null);
 			}
 		});
 		
 		tabSheet.addTab(
-				markupCollectionsPanel, "Active Markup Collections");
+				markupCollectionsPanel, Messages.getString("MarkupPanel.activeAnnotations")); //$NON-NLS-1$
 		
 		addComponent(tabSheet);
 		
@@ -364,12 +364,12 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 					}
 					catch (IOException ioe) {
 						((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"Error fetching markup collections", ioe);
+								Messages.getString("MarkupPanel.errorFetchingAnnotations"), ioe); //$NON-NLS-1$
 					}							
 				}
 			},
-			"Open Markup Collection",
-			"Choose markup collections to open for this document"
+			Messages.getString("MarkupPanel.openAnnotations"), //$NON-NLS-1$
+			Messages.getString("MarkupPanel.chooseAnnotationsToOpen") //$NON-NLS-1$
 		);
 		dialog.show();
 	}
@@ -384,24 +384,24 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		
 		VerticalLayout markupInfoPanel = new VerticalLayout();
 		markupInfoPanel.setSizeUndefined();
-		markupInfoPanel.setWidth("100%");
+		markupInfoPanel.setWidth("100%"); //$NON-NLS-1$
 		
 		markupInfoPanel.setSpacing(true);
-		markupInfoPanel.addStyleName("catma-tagger-panels");
+		markupInfoPanel.addStyleName("catma-tagger-panels"); //$NON-NLS-1$
 		HorizontalLayout writableMarkupCollPanel = new HorizontalLayout();
 		writableMarkupCollPanel.setSpacing(true);
 		
 		markupInfoPanel.addComponent(writableMarkupCollPanel);
 		
-		Label writableUserMarkupCollectionLabel = new Label("Writable Markup Collection:");
+		Label writableUserMarkupCollectionLabel = new Label(Messages.getString("MarkupPanel.writableAnnotationCollection")); //$NON-NLS-1$
 		
-		writableUserMarkupCollectionLabel.addStyleName("bold-label-caption");
-		writableUserMarkupCollectionLabel.addStyleName("catma-label-spacing");
+		writableUserMarkupCollectionLabel.addStyleName("bold-label-caption"); //$NON-NLS-1$
+		writableUserMarkupCollectionLabel.addStyleName("catma-label-spacing"); //$NON-NLS-1$
 		writableMarkupCollPanel.addComponent(writableUserMarkupCollectionLabel);
 		
 		writableUserMarkupCollectionInfo = new Label();
-		writableUserMarkupCollectionInfo.addStyleName("bold-label-caption");
-		writableUserMarkupCollectionInfo.addStyleName("catma-label-spacing");
+		writableUserMarkupCollectionInfo.addStyleName("bold-label-caption"); //$NON-NLS-1$
+		writableUserMarkupCollectionInfo.addStyleName("catma-label-spacing"); //$NON-NLS-1$
 		writableMarkupCollPanel.addComponent(writableUserMarkupCollectionInfo);
 		
 		tagInstancesTree = new TagInstanceTree(this);
@@ -452,10 +452,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		else {
 			ConfirmDialog.show(
 					UI.getCurrent(), 
-					"One or more of the active Tagsets are different from their "
-					+ " corresponding Tagsets in the Markup Collection you want to open!"
-					+ " The Collection will be updated with the versions of the active Tagsets! " 
-					+ " Do you really want to update the attached Markup Collections?",
+					Messages.getString("synchTagsetsQuestion"), //$NON-NLS-1$
 								
 				        new ConfirmDialog.Listener() {
 

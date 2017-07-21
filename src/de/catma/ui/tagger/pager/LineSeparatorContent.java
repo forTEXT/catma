@@ -15,7 +15,7 @@ public class LineSeparatorContent extends LineContent {
 
 	@Override
 	public String toString() {
-		return "<-" + content.length();
+		return "<-" + content.length(); //$NON-NLS-1$
 	}
 	
 	@Override

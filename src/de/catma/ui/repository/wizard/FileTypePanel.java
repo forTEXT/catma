@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.zip.CRC32;
@@ -90,7 +91,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 					showSourceDocumentPreview(sdr);
 				}
 				else {
-					taPreview.setValue("");
+					taPreview.setValue(""); //$NON-NLS-1$
 				}
 			}
 		}
@@ -158,18 +159,18 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		}
 		catch (Exception exc) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				"Error detecting file type", exc);
+				Messages.getString("FileTypePanel.errorDetectingFileType"), exc); //$NON-NLS-1$
 		}
 	}
 	
 	private ProtocolHandler getProtocolHandlerForUri(
 			URI inputFileURI, String fileID, String inputFileMimeType)
 					throws MalformedURLException, IOException{
-		if (inputFileURI.toURL().getProtocol().toLowerCase().equals("http")
-				|| inputFileURI.toURL().getProtocol().toLowerCase().equals("https")) {
+		if (inputFileURI.toURL().getProtocol().toLowerCase().equals("http") //$NON-NLS-1$
+				|| inputFileURI.toURL().getProtocol().toLowerCase().equals("https")) { //$NON-NLS-1$
 			
 			final String destinationFileUri = repository.getFileURL(
-					fileID, ((CatmaApplication)UI.getCurrent()).getTempDirectory() + "/");
+					fileID, ((CatmaApplication)UI.getCurrent()).getTempDirectory() + "/"); //$NON-NLS-1$
 			
 			return new HttpProtocolHandler(
 					inputFileURI, destinationFileUri);
@@ -238,8 +239,8 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 					outputSourceDocumentResult.setSourceDocumentID(repositoryId);
 					
 					SourceDocumentInfo outputSourceDocumentInfo = outputSourceDocumentResult.getSourceDocumentInfo();
-					TechInfoSet newTechInfoSet = new TechInfoSet(fileName, null, newURI); // TODO: MimeType detection ?
 					FileType newFileType = FileType.getFileTypeFromName(fileName);
+					TechInfoSet newTechInfoSet = new TechInfoSet(fileName, newFileType.getMimeType(), newURI);
 					newTechInfoSet.setFileType(newFileType);
 					
 					outputSourceDocumentInfo.setTechInfoSet(newTechInfoSet);
@@ -282,10 +283,10 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		SourceDocument sourceDocument = sdr.getSourceDocument();
 		try{
 			taPreview.setValue(
-					"<pre>" + sourceDocument.getContent(new Range(0, 2000)) + "</pre>");			
+					"<pre>" + sourceDocument.getContent(new Range(0, 2000)) + "</pre>");			 //$NON-NLS-1$ //$NON-NLS-2$
 		} catch (Exception e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				"Error loading the preview for the document!", e);
+				Messages.getString("FileTypePanel.errorLoadingPreview"), e); //$NON-NLS-1$
 		}		
 	}
 	
@@ -318,13 +319,13 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		} catch (Exception e) {
 			TechInfoSet techInfoSet = sdr.getSourceDocumentInfo().getTechInfoSet();
 			Notification.show(
-				"Information", 
-				"Sorry, CATMA wasn't able to process the file as " 
-				+ techInfoSet.getFileType() + 
-				(techInfoSet.getFileType().isCharsetSupported()
-					?" with " + ((techInfoSet.getCharset()==null)?"unknown charset":" charset " 
-							+ techInfoSet.getCharset()):"")
-				+ "\n\nThe original error message is: " + e.getLocalizedMessage(),
+				Messages.getString("FileTypePanel.infoTitle"),  //$NON-NLS-1$
+				MessageFormat.format(Messages.getString("FileTypePanel.unableToProcessfile"),   //$NON-NLS-1$
+						techInfoSet.getFileType(), 
+						(techInfoSet.getFileType().isCharsetSupported()?
+								((techInfoSet.getCharset()==null)?Messages.getString("FileTypePanel.unknown"):techInfoSet.getCharset()) //$NON-NLS-1$
+								:""), //$NON-NLS-1$
+						e.getLocalizedMessage()),
 				Notification.Type.WARNING_MESSAGE);
 			return false;
 		}
@@ -336,20 +337,30 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		setMargin(true);
 		
 		BeanItemContainer<SourceDocumentResult> container = new BeanItemContainer<SourceDocumentResult>(SourceDocumentResult.class);
-		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.fileName");
-		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.fileType");
-		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.charset");
+		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.fileName"); //$NON-NLS-1$
+		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.fileType"); //$NON-NLS-1$
+		container.addNestedContainerProperty("sourceDocumentInfo.techInfoSet.charset"); //$NON-NLS-1$
 		
-		table = new Table("Documents", container);
+		table = new Table(Messages.getString("FileTypePanel.documents"), container); //$NON-NLS-1$
 
-		table.setTableFieldFactory(new FileTypeFieldFactory(new FileTypeCharsetValueChangeListener()));
+		table.setTableFieldFactory(new FileTypeFieldFactory(new FileTypeCharsetValueChangeListener(), new ValueChangeListener() {
+			
+			@Override
+			public void valueChange(ValueChangeEvent event) {
+				Object itemId = event.getProperty().getValue();
+				
+				if (itemId != null) {
+					loadSourceDocumentAndContent((SourceDocumentResult)itemId);
+				}
+			}
+		}));
 		
 		table.setVisibleColumns(new Object[]{
-				"sourceDocumentInfo.techInfoSet.fileName",
-				"sourceDocumentInfo.techInfoSet.fileType",
-				"sourceDocumentInfo.techInfoSet.charset"
+				"sourceDocumentInfo.techInfoSet.fileName", //$NON-NLS-1$
+				"sourceDocumentInfo.techInfoSet.fileType", //$NON-NLS-1$
+				"sourceDocumentInfo.techInfoSet.charset" //$NON-NLS-1$
 		});
-		table.setColumnHeaders(new String[]{"File Name", "File Type", "Encoding"});
+		table.setColumnHeaders(new String[]{Messages.getString("FileTypePanel.Filename"), Messages.getString("FileTypePanel.Filetype"), Messages.getString("FileTypePanel.Encoding")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		
 		table.setSelectable(true);
 		table.setNullSelectionAllowed(false);
@@ -360,10 +371,10 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 		
 		VerticalLayout previewContent = new VerticalLayout();
 		previewContent.setMargin(true);
-		previewPanel = new Panel("Preview (selected document)", previewContent);
+		previewPanel = new Panel(Messages.getString("FileTypePanel.preview"), previewContent); //$NON-NLS-1$
 		previewPanel.getContent().setSizeUndefined();
-		previewPanel.setHeight("100%");
-		previewPanel.setStyleName("preview-panel");
+		previewPanel.setHeight("100%"); //$NON-NLS-1$
+		previewPanel.setStyleName("preview-panel"); //$NON-NLS-1$
 		
 		this.taPreview = new Label();
 		this.taPreview.setContentMode(ContentMode.HTML);
@@ -418,7 +429,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	
 	@Override
 	public String getCaption() {
-		return "Source Document file type";
+		return Messages.getString("FileTypePanel.sourceDocfiletype"); //$NON-NLS-1$
 	}
 	
 	public boolean onFinish() {

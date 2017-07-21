@@ -57,27 +57,22 @@ public class IntegerValueValidator implements Validator {
 	
 	public void validate(Object value) throws InvalidValueException {
 		if (!isValid(value)) {
-			StringBuilder builder = new StringBuilder("The value has to be a");
-			
 			if (!allowZero) {
 				if (allowNegative) {
-					builder.append(" non zero integer");
+					throw new InvalidValueException(Messages.getString("IntegerValueValidator.nonZeroInteger")); //$NON-NLS-1$
 				}
 				else {
-					builder.append("n integer greater than zero");
+					throw new InvalidValueException(Messages.getString("IntegerValueValidator.greaterThanZeroInteger")); //$NON-NLS-1$
 				}
 			}
 			else {
 				if (allowNegative) {
-					builder.append("n integer");
+					throw new InvalidValueException(Messages.getString("IntegerValueValidator.hasToBeAnInteger")); //$NON-NLS-1$
 				}
 				else {
-					builder.append("n integer value greater or equal zero");
+					throw new InvalidValueException(Messages.getString("IntegerValueValidator.greaterOrEqualToZeroInteger")); //$NON-NLS-1$
 				}
 			}
-			builder.append("!");
-			
-			throw new InvalidValueException(builder.toString());
 		}
 	}
 }

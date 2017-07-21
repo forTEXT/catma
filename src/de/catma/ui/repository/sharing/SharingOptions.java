@@ -7,7 +7,7 @@ public class SharingOptions {
 	private AccessMode accessMode;
 	
 	public SharingOptions() {
-		this.userIdentification = "";
+		this.userIdentification = ""; //$NON-NLS-1$
 		this.accessMode = AccessMode.READ;
 	}
 

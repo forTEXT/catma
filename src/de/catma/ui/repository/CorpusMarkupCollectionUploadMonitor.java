@@ -1,5 +1,6 @@
 package de.catma.ui.repository;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,8 +34,8 @@ public class CorpusMarkupCollectionUploadMonitor implements Runnable {
 					if (newUserMarkupCollectionRefCount > 0) {
 						
 						Notification.show(
-							"Info", 
-							"There are " + newUserMarkupCollectionRefCount + " new markup collections in your repository!", 
+							Messages.getString("CorpusMarkupCollectionUploadMonitor.infoTitle"),  //$NON-NLS-1$
+							MessageFormat.format(Messages.getString("CorpusMarkupCollectionUploadMonitor.newAnnotationCollectionFeedback"), newUserMarkupCollectionRefCount),  //$NON-NLS-1$
 							Type.TRAY_NOTIFICATION);
 	
 					}

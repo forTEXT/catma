@@ -26,6 +26,7 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.security.SecureRandom;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -129,7 +130,7 @@ public class AuthenticationDialog extends VerticalLayout {
 				VaadinSession.getCurrent().removeRequestHandler(this);
 				
 				if (ui == null) {
-					throw new NullPointerException("UI not available!");
+					throw new NullPointerException(Messages.getString("AuthenticationDialog.UIUnavailable")); //$NON-NLS-1$
 				}
 				
 				ui.removeWindow(dialogWindow);
@@ -138,11 +139,11 @@ public class AuthenticationDialog extends VerticalLayout {
 				
 				
 				// extract answer
-				String authorizationCode = request.getParameter("code");
+				String authorizationCode = request.getParameter("code"); //$NON-NLS-1$
 
-				String state = request.getParameter("state");
+				String state = request.getParameter("state"); //$NON-NLS-1$
 
-				String error = request.getParameter("error");
+				String error = request.getParameter("error"); //$NON-NLS-1$
 
 				// do we have a authorization request error?
 				if (error == null) {
@@ -152,7 +153,7 @@ public class AuthenticationDialog extends VerticalLayout {
 							new Clock(Integer.valueOf(
 								RepositoryPropertyKey.otpDuration.getValue())));
 					if (!totp.verify(state)) {
-						error = "state token verification failed";
+						error = "state token verification failed"; //$NON-NLS-1$
 					}
 				}
 				
@@ -162,13 +163,13 @@ public class AuthenticationDialog extends VerticalLayout {
 					HttpPost httpPost = 
 						new HttpPost(oauthAccessTokenRequestURL);
 					List <NameValuePair> data = new ArrayList <NameValuePair>();
-					data.add(new BasicNameValuePair("code", authorizationCode));
-					data.add(new BasicNameValuePair("grant_type", "authorization_code"));
+					data.add(new BasicNameValuePair("code", authorizationCode)); //$NON-NLS-1$
+					data.add(new BasicNameValuePair("grant_type", "authorization_code")); //$NON-NLS-1$ //$NON-NLS-2$
 					data.add(new BasicNameValuePair(
-						"client_id", oauthClientId));
+						"client_id", oauthClientId)); //$NON-NLS-1$
 					data.add(new BasicNameValuePair(
-						"client_secret", oauthClientSecret));
-					data.add(new BasicNameValuePair("redirect_uri", returnURL));
+						"client_secret", oauthClientSecret)); //$NON-NLS-1$
+					data.add(new BasicNameValuePair("redirect_uri", returnURL)); //$NON-NLS-1$
 					httpPost.setEntity(new UrlEncodedFormEntity(data));
 					CloseableHttpResponse tokenRequestResponse = httpclient.execute(httpPost);
 					HttpEntity entity = tokenRequestResponse.getEntity();
@@ -176,7 +177,7 @@ public class AuthenticationDialog extends VerticalLayout {
 					ByteArrayOutputStream bodyBuffer = new ByteArrayOutputStream();
 					IOUtils.copy(content, bodyBuffer);
 					
-					logger.info("access token request result: " + bodyBuffer.toString("UTF-8"));
+					logger.info("access token request result: " + bodyBuffer.toString("UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
 					
 					ObjectMapper mapper = new ObjectMapper();
 
@@ -185,26 +186,26 @@ public class AuthenticationDialog extends VerticalLayout {
 
 					// we're actually not interested in the access token 
 					// but we want the email information from the id token
-					String idToken = accessTokenResponseJSon.get("id_token").asText();
+					String idToken = accessTokenResponseJSon.get("id_token").asText(); //$NON-NLS-1$
 					
-					String[] pieces = idToken.split("\\.");
+					String[] pieces = idToken.split("\\."); //$NON-NLS-1$
 					// we skip the header and go ahead with the payload
 					String payload = pieces[1];
 		
 					String decodedPayload = 
-							new String(Base64.decodeBase64(payload), "UTF-8");
+							new String(Base64.decodeBase64(payload), "UTF-8"); //$NON-NLS-1$
 					ObjectNode payloadJson = mapper.readValue(decodedPayload, ObjectNode.class);
 					
-					logger.info("decodedPayload: " + decodedPayload);
+					logger.info("decodedPayload: " + decodedPayload); //$NON-NLS-1$
 					
 					// finally the email address
-					String email = payloadJson.get("email").asText();
+					String email = payloadJson.get("email").asText(); //$NON-NLS-1$
 
 					// construct CATMA user identification
 					Map<String, String> userIdentification = 
 							new HashMap<String, String>();
 					
-					logger.info("retrieved email: " + email);
+					logger.info("retrieved email: " + email); //$NON-NLS-1$
 					
 	                userIdentification.put(
 							UserProperty.identifier.name(), email);
@@ -213,7 +214,7 @@ public class AuthenticationDialog extends VerticalLayout {
 	                userIdentification.put(
 	                		UserProperty.name.name(), email);
 
-	                logger.info("opening repository for user: " + email);
+	                logger.info("opening repository for user: " + email); //$NON-NLS-1$
 
 	                repositoryListView.open(
 	                	(CatmaApplication) ui, 
@@ -222,21 +223,20 @@ public class AuthenticationDialog extends VerticalLayout {
 	
 	                new DownloadStream(
                 		new URL(RepositoryPropertyKey.BaseURL.getValue()).openStream(), 
-                		"text/html", "CATMA " + RepositoryPropertyKey.version.getValue()
+                		"text/html", "CATMA " + RepositoryPropertyKey.version.getValue() //$NON-NLS-1$ //$NON-NLS-2$
 	                ).writeResponse(request, response);
 	                return true;
 				}
 				else {
-	                logger.info("authentication failure: " + error);
+	                logger.info("authentication failure: " + error); //$NON-NLS-1$
 					new Notification(
-                        "Authentication failure",
-                        "The authentication failed, you are not " +
-                        "allowed to access this repository!",
+                        Messages.getString("AuthenticationDialog.authFailureTitle"), //$NON-NLS-1$
+                        Messages.getString("AuthenticationDialog.authFailureMessage"), //$NON-NLS-1$
                         Type.ERROR_MESSAGE).show(ui.getPage());
 	                new DownloadStream(
                 		ui.getPage().getLocation().toURL().openStream(), 
-                		"text/html", 
-                		"CATMA " + RepositoryPropertyKey.version.getValue()
+                		"text/html",  //$NON-NLS-1$
+                		"CATMA " + RepositoryPropertyKey.version.getValue() //$NON-NLS-1$
 	                ).writeResponse(request, response);
 	                return true;
 				}
@@ -245,7 +245,7 @@ public class AuthenticationDialog extends VerticalLayout {
 			catch (Exception e) {
 				e.printStackTrace();
 				((CatmaApplication)ui).showAndLogError(
-						"Error opening repository!", e);
+						Messages.getString("AuthenticationDialog.errorOpeningRepo"), e); //$NON-NLS-1$
 			}
 			
 			ui.close();
@@ -294,10 +294,10 @@ public class AuthenticationDialog extends VerticalLayout {
 						RepositoryPropertyKey.CATMA_oauthAccessTokenRequestURL.getValue(),
 						RepositoryPropertyKey.CATMA_oauthClientId.getValue(),
 						RepositoryPropertyKey.CATMA_oauthClientSecret.getValue(),
-						URLEncoder.encode("/", "UTF-8")));
+						URLEncoder.encode("/", "UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 				catch (Exception e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError("Error during authentication!", e);
+					((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("AuthenticationDialog.errorDuringAuth"), e); //$NON-NLS-1$
 				}
 			}
 		});
@@ -314,10 +314,10 @@ public class AuthenticationDialog extends VerticalLayout {
 						RepositoryPropertyKey.Google_oauthAccessTokenRequestURL.getValue(),
 						RepositoryPropertyKey.Google_oauthClientId.getValue(),
 						RepositoryPropertyKey.Google_oauthClientSecret.getValue(),
-						URLEncoder.encode(baseUrl, "UTF-8")));
+						URLEncoder.encode(baseUrl, "UTF-8"))); //$NON-NLS-1$
 				}
 				catch (Exception e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError("Error during authentication!", e);
+					((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("AuthenticationDialog.errorDuringAuth"), e); //$NON-NLS-1$
 				}
 			}
 		});
@@ -342,14 +342,14 @@ public class AuthenticationDialog extends VerticalLayout {
 		StringBuilder authenticationUrlBuilder = new StringBuilder();
 		authenticationUrlBuilder.append(
 			oauthAuthorizationCodeRequestURL);
-		authenticationUrlBuilder.append("?client_id=");
+		authenticationUrlBuilder.append("?client_id="); //$NON-NLS-1$
 		authenticationUrlBuilder.append(oauthClientId);
 			
-		authenticationUrlBuilder.append("&response_type=code");
-		authenticationUrlBuilder.append("&scope=openid%20email");
-		authenticationUrlBuilder.append("&redirect_uri="+URLEncoder.encode(baseUrl, "UTF-8"));
-		authenticationUrlBuilder.append("&state=" + totp.now());
-		authenticationUrlBuilder.append("&openid.realm="+openidRealm);
+		authenticationUrlBuilder.append("&response_type=code"); //$NON-NLS-1$
+		authenticationUrlBuilder.append("&scope=openid%20email"); //$NON-NLS-1$
+		authenticationUrlBuilder.append("&redirect_uri="+URLEncoder.encode(baseUrl, "UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
+		authenticationUrlBuilder.append("&state=" + totp.now()); //$NON-NLS-1$
+		authenticationUrlBuilder.append("&openid.realm="+openidRealm); //$NON-NLS-1$
 		
 		final AuthenticationRequestHandler authenticationRequestHandler =
 				new AuthenticationRequestHandler(
@@ -378,31 +378,32 @@ public class AuthenticationDialog extends VerticalLayout {
 		dialogWindow = new Window(caption, content);
 		dialogWindow.setModal(true);
 		
-		catmaLogInLink = new Button("Log in with your CATMA account");
-		catmaLogInLink.setIcon(new ClassResource("repository/resources/catma.png"));
+		catmaLogInLink = new Button(Messages.getString("AuthenticationDialog.logInWithCATMAAccount")); //$NON-NLS-1$
+		catmaLogInLink.setIcon(new ClassResource("repository/resources/catma.png")); //$NON-NLS-1$
 		catmaLogInLink.setStyleName(BaseTheme.BUTTON_LINK);
-		catmaLogInLink.addStyleName("authdialog-loginlink");
+		catmaLogInLink.addStyleName("authdialog-loginlink"); //$NON-NLS-1$
 		addComponent(catmaLogInLink);
 		
 		Link catmaCreateAccountLink = 
 			new Link(
-				"Create a CATMA account", 
-				new ExternalResource("https://auth.catma.de/openam/XUI/#register/"));
+				Messages.getString("AuthenticationDialog.createCATMAaccount"),  //$NON-NLS-1$
+				new ExternalResource("https://auth.catma.de/openam/XUI/#register/")); //$NON-NLS-1$
 		catmaCreateAccountLink.setIcon(
-				new ClassResource("repository/resources/catma.png"));
+				new ClassResource("repository/resources/catma.png")); //$NON-NLS-1$
 		
 		addComponent(catmaCreateAccountLink);
 
 		
-		googleLogInLink = new Button("Log in with your Google account");
-		googleLogInLink.setIcon(new ClassResource("repository/resources/google.png"));
+		googleLogInLink = new Button(Messages.getString("AuthenticationDialog.logInWithGoogleAccount")); //$NON-NLS-1$
+		googleLogInLink.setIcon(new ClassResource(Messages.getString("AuthenticationDialog.48"))); //$NON-NLS-1$
 		googleLogInLink.setStyleName(BaseTheme.BUTTON_LINK);
-		googleLogInLink.addStyleName("authdialog-loginlink");
+		googleLogInLink.addStyleName("authdialog-loginlink"); //$NON-NLS-1$
 		addComponent(googleLogInLink);
 		
 		Label termsOfUse = new Label(
-				"By logging in you accept the " +
-				"<a target=\"blank\" href=\"http://www.catma.de/termsofuse\">terms of use</a>!");
+				MessageFormat.format(
+					Messages.getString("AuthenticationDialog.termsOfUse"), //$NON-NLS-1$ 
+					"http://www.catma.de/termsofuse")); //$NON-NLS-1$
 		termsOfUse.setContentMode(ContentMode.HTML);
 		termsOfUse.setSizeFull();
 		addComponent(termsOfUse);
@@ -410,7 +411,7 @@ public class AuthenticationDialog extends VerticalLayout {
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setSpacing(true);
 		
-		btCancel = new Button("Cancel");
+		btCancel = new Button(Messages.getString("AuthenticationDialog.Cancel")); //$NON-NLS-1$
 		buttonPanel.addComponent(btCancel);
 		
 		addComponent(buttonPanel);
@@ -426,6 +427,6 @@ public class AuthenticationDialog extends VerticalLayout {
 	}
 	
 	public void show() {
-		show("400px");
+		show("400px"); //$NON-NLS-1$
 	}
 }

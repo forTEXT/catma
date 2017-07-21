@@ -58,9 +58,9 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		;
 	}
 
-	private String userMarkupItemDisplayString = "Markup Collections";
-	private String windowCaption = "Window Caption";
-	private String documentsTreeCaption = "Documents Tree Caption";
+	private String userMarkupItemDisplayString = Messages.getString("CorpusContentSelectionDialog.annotations"); //$NON-NLS-1$
+	private String windowCaption = "Window Caption"; //$NON-NLS-1$
+	private String documentsTreeCaption = "Documents Tree Caption"; //$NON-NLS-1$
 	private Repository repository;
 	private SourceDocument sourceDocument;
 	private TreeTable documentsTree;
@@ -145,13 +145,13 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 			
 			@Override
 			public void buttonClick(ClickEvent event) {
-				final String userMarkupCollectionNameProperty = "name";
+				final String userMarkupCollectionNameProperty = "name"; //$NON-NLS-1$
 				
 				SingleValueDialog singleValueDialog = new SingleValueDialog();
 				
 				singleValueDialog.getSingleValue(
-						"Create a new Markup Collection",
-						"You have to enter a name!",
+						Messages.getString("CorpusContentSelectionDialog.createAnnotationCollectionTitle"), //$NON-NLS-1$
+						Messages.getString("CorpusContentSelectionDialog.youHaveToEnterAName"), //$NON-NLS-1$
 						new SaveCancelListener<PropertysetItem>() {
 							public void cancelPressed() {}
 							public void savePressed(PropertysetItem propertysetItem) {
@@ -161,7 +161,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 										repository.createUserMarkupCollection(name, sourceDocument);
 										populateDocumentsTree();
 									} catch (IOException e) {
-										((CatmaApplication)UI.getCurrent()).showAndLogError("Error creating the Markup Collection!", e);
+										((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("CorpusContentSelectionDialog.errorCreatingCollection"), e); //$NON-NLS-1$
 									}
 								}
 							}, userMarkupCollectionNameProperty);
@@ -186,17 +186,17 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 
 		documentsTree = new TreeTable(documentsTreeCaption, documentsContainer);
 
-		documentsTree.setWidth("100%");
-		documentsTree.setHeight("100%");
+		documentsTree.setWidth("100%"); //$NON-NLS-1$
+		documentsTree.setHeight("100%"); //$NON-NLS-1$
 		
 		documentsTree.addContainerProperty(
 			DocumentTreeProperty.caption, String.class, null);
 		documentsTree.addContainerProperty(
 				DocumentTreeProperty.include, AbstractComponent.class, null);
 
-		documentsTree.setColumnHeader(DocumentTreeProperty.caption, "Document / Markup Collections");
+		documentsTree.setColumnHeader(DocumentTreeProperty.caption, Messages.getString("CorpusContentSelectionDialog.docAnnotations")); //$NON-NLS-1$
 
-		documentsTree.setColumnHeader(DocumentTreeProperty.include, "Include");
+		documentsTree.setColumnHeader(DocumentTreeProperty.include, Messages.getString("CorpusContentSelectionDialog.Include")); //$NON-NLS-1$
 		
 		populateDocumentsTree();
 		documentsPanelContent.addComponent(documentsTree);
@@ -209,26 +209,26 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 			
 		HorizontalLayout dialogButtonPanel = new HorizontalLayout();
 		dialogButtonPanel.setSpacing(true);
-		dialogButtonPanel.setWidth("100%");
+		dialogButtonPanel.setWidth("100%"); //$NON-NLS-1$
 
-		btCreateMarkupCollection = new Button("Create Markup Collection");
-		btCreateMarkupCollection.addStyleName("secondary-button");		
+		btCreateMarkupCollection = new Button(Messages.getString("CorpusContentSelectionDialog.createAnnotationCollection")); //$NON-NLS-1$
+		btCreateMarkupCollection.addStyleName("secondary-button");		 //$NON-NLS-1$
 		dialogButtonPanel.addComponent(btCreateMarkupCollection);
 		dialogButtonPanel.setComponentAlignment(btCreateMarkupCollection, Alignment.MIDDLE_LEFT);
 
-		btOk = new Button("Ok");
-		btOk.addStyleName("primary-button");
+		btOk = new Button(Messages.getString("CorpusContentSelectionDialog.Ok")); //$NON-NLS-1$
+		btOk.addStyleName("primary-button"); //$NON-NLS-1$
 		btOk.setClickShortcut(KeyCode.ENTER);
 		btOk.focus();
 		
 		dialogButtonPanel.addComponent(btOk);
 		dialogButtonPanel.setComponentAlignment(btOk, Alignment.MIDDLE_RIGHT);
 		dialogButtonPanel.setExpandRatio(btOk, 1.0f);
-		btCancel = new Button("Cancel");
+		btCancel = new Button(Messages.getString("CorpusContentSelectionDialog.Cancel")); //$NON-NLS-1$
 		dialogButtonPanel.addComponent(btCancel);
 		dialogButtonPanel.setComponentAlignment(btCancel, Alignment.MIDDLE_RIGHT);
 		
-		dialogButtonPanel.addStyleName("modal-button-container");
+		dialogButtonPanel.addStyleName("modal-button-container"); //$NON-NLS-1$
 		addComponent(dialogButtonPanel);
 		
 		dialogWindow = new Window(windowCaption);
@@ -319,13 +319,13 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 	public void show(String dialogWidth) {
 		dialogWindow.setModal(true);
 		dialogWindow.setWidth(dialogWidth);
-		dialogWindow.setHeight("60%");
+		dialogWindow.setHeight("60%"); //$NON-NLS-1$
 		UI.getCurrent().addWindow(dialogWindow);
 		dialogWindow.center();
 	}
 	
 	public void show() {
-		show("50%");
+		show("50%"); //$NON-NLS-1$
 	}
 	
 	public void setCaptions(String windowCaption, String documentsTreeCaption){

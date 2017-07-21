@@ -38,7 +38,7 @@ public class Slider extends VerticalLayout {
 	private NumberFormat formatter;
 	
 	public Slider(String caption, int min, int max, String unit) {
-		this(caption, min, max, unit, new DecimalFormat("#"));
+		this(caption, min, max, unit, new DecimalFormat("#")); //$NON-NLS-1$
 	}
 	
 	/**
@@ -48,9 +48,9 @@ public class Slider extends VerticalLayout {
 	 * @param unit description of the unit, displayed next to the current value
 	 */
 	public Slider(String caption, int min, int max, final String unit, NumberFormat formatter) {
-		addStyleName("c-slider");
+		addStyleName("c-slider"); //$NON-NLS-1$
 		if (caption == null) {
-			addStyleName("hidden-caption-c-slider");
+			addStyleName("hidden-caption-c-slider"); //$NON-NLS-1$
 		}
 		this.setCaption(caption);
 		this.formatter = formatter;
@@ -69,9 +69,9 @@ public class Slider extends VerticalLayout {
 		setComponentAlignment(sliderLayout, Alignment.MIDDLE_CENTER);
 		
 		final Label current = new Label(formatter.format(sliderComp.getValue()));
-		current.setWidth("100%");
+		current.setWidth("100%"); //$NON-NLS-1$
 		
-		current.addStyleName("slider-centered-text");
+		current.addStyleName("slider-centered-text"); //$NON-NLS-1$
 		
 		addComponent(current);
 		setComponentAlignment(current, Alignment.MIDDLE_CENTER);
@@ -82,7 +82,7 @@ public class Slider extends VerticalLayout {
 				current.setValue(
 					Slider.this.formatter.format(
 						(Double)event.getProperty().getValue())
-						+ (unit.isEmpty()?"":" ") 
+						+ (unit.isEmpty()?"":" ")  //$NON-NLS-1$ //$NON-NLS-2$
 						+ unit);
 			}
 		});

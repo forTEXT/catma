@@ -32,9 +32,9 @@ public class RepositoryManagerView extends TabbedView implements CloseHandler {
 	
 	
 	public RepositoryManagerView(RepositoryManager repositoryManager) {
-		super("No repositories available.");
+		super(Messages.getString("RepositoryManagerView.noReposAvailable")); //$NON-NLS-1$
 		repositoryListView = new RepositoryListView(repositoryManager);
-		addTab(repositoryListView, "Repositories Overview");
+		addTab(repositoryListView, Messages.getString("RepositoryManagerView.repoOverview")); //$NON-NLS-1$
 	}
 
 

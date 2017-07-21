@@ -19,6 +19,7 @@
 package de.catma.ui.analyzer;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -279,7 +280,7 @@ public class MarkupResultPanel extends VerticalLayout {
 					setQueryResult(queryResult);
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"error converting Query Result!", e);
+							Messages.getString("MarkupResultPanel.errorConvertingResults"), e); //$NON-NLS-1$
 				}
 			}
 		});
@@ -316,7 +317,7 @@ public class MarkupResultPanel extends VerticalLayout {
 				}
 				else {
 					Notification.show(
-							"Information", "Please select one or more result rows!", 
+							Messages.getString("MarkupResultPanel.infoTitle"), Messages.getString("MarkupResultPanel.rowSelectionHint"),  //$NON-NLS-1$ //$NON-NLS-2$
 							Type.TRAY_NOTIFICATION);
 				}
 			}
@@ -372,15 +373,15 @@ public class MarkupResultPanel extends VerticalLayout {
             	try {
 					ExcelExport excelExport = 
 							new HierarchicalExcelExport(kwicPanel.getKwicTable(), 
-									"CATMA Query Result Kwic");
+									Messages.getString("MarkupResultPanel.kwicQueryResult")); //$NON-NLS-1$
 					excelExport.excludeCollapsedColumns();
-					excelExport.setReportTitle("CATMA Query Result Kwic");
+					excelExport.setReportTitle(Messages.getString("MarkupResultPanel.kwicQueryResult")); //$NON-NLS-1$
 					excelExport.export();
 				} catch (IllegalArgumentException e) {
 					HTMLNotification.show(
-						"Error", 
-						"Excel export failed. " + "<br>" + "Reason: " 
-						+ e.getMessage() + "<br>" + "Please use CSV export.", 
+						Messages.getString("MarkupResultPanel.error"),  //$NON-NLS-1$
+						MessageFormat.format(Messages.getString("MarkupResultPanel.excelExportError"), //$NON-NLS-1$
+								e.getMessage()),
 						Type.WARNING_MESSAGE);
 					
 					e.printStackTrace();
@@ -398,7 +399,7 @@ public class MarkupResultPanel extends VerticalLayout {
 				}
 				catch (CsvExportException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"Error creating CSV export!", e);
+							Messages.getString("MarkupResultPanel.csvExportError"), e); //$NON-NLS-1$
 				}
 			}
 		});
@@ -408,15 +409,15 @@ public class MarkupResultPanel extends VerticalLayout {
 			public void buttonClick(ClickEvent event) {
 				try {
 	            	ExcelExport excelExport = 
-	            			new HierarchicalExcelExport(resultTable, "CATMA Query Result");
+	            			new HierarchicalExcelExport(resultTable, Messages.getString("MarkupResultPanel.queryResult")); //$NON-NLS-1$
 	                excelExport.excludeCollapsedColumns();
-	                excelExport.setReportTitle("CATMA Query Result");
+	                excelExport.setReportTitle(Messages.getString("MarkupResultPanel.queryResult")); //$NON-NLS-1$
 	                excelExport.export();
 				} catch (IllegalArgumentException e) {
 					HTMLNotification.show(
-						"Error", 
-						"Excel export failed. " + "<br>" + "Reason: " 
-						+ e.getMessage() + "<br>" + "Please use CSV export.", 
+						Messages.getString("MarkupResultPanel.error"),  //$NON-NLS-1$
+						MessageFormat.format(Messages.getString("MarkupResultPanel.excelExportError"), //$NON-NLS-1$
+								e.getMessage()),
 						Type.WARNING_MESSAGE);
 					
 					e.printStackTrace();
@@ -437,7 +438,7 @@ public class MarkupResultPanel extends VerticalLayout {
 				}
 				catch (CsvExportException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"Error creating CSV export!", e);
+							Messages.getString("MarkupResultPanel.csvExportError"), e); //$NON-NLS-1$
 				}
 			}
 		});
@@ -465,7 +466,7 @@ public class MarkupResultPanel extends VerticalLayout {
 				}
 				catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"Error adjusting KWIC size!", e);
+							Messages.getString("MarkupResultPanel.errorKwicSize"), e); //$NON-NLS-1$
 				}
 			}
 		});
@@ -495,7 +496,7 @@ public class MarkupResultPanel extends VerticalLayout {
 			setQueryResult(queryResult);
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"error converting Query Result!", e);
+					Messages.getString("MarkupResultPanel.errorConvertingResults"), e); //$NON-NLS-1$
 		}
 	}
 
@@ -505,7 +506,7 @@ public class MarkupResultPanel extends VerticalLayout {
 	
 	private void tagResults() {
 		if (kwicPanel.getSelection().isEmpty()) {
-			Notification.show("Info", "Please select some KWIC results first!", Type.TRAY_NOTIFICATION);
+			Notification.show(Messages.getString("MarkupResultPanel.infoTitle"), Messages.getString("MarkupResultPanel.kwicSelectionHint"), Type.TRAY_NOTIFICATION); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		else {
 			tagKwicResultsProvider.tagResults();
@@ -516,9 +517,9 @@ public class MarkupResultPanel extends VerticalLayout {
 		final Set<QueryResultRow> selection = kwicPanel.getSelection();
 		if ((selection != null) && !selection.isEmpty()) {
 			ConfirmDialog.show(UI.getCurrent(), 
-					"Remove Tag", 
-					"Do you want to remove the selected Tag?", 
-					"Yes", "No", new ConfirmDialog.Listener() {
+					Messages.getString("MarkupResultPanel.removeTag"),  //$NON-NLS-1$
+					Messages.getString("MarkupResultPanel.wantToRemoveSelectedTag"),  //$NON-NLS-1$
+					Messages.getString("MarkupResultPanel.yes"), Messages.getString("MarkupResultPanel.no"), new ConfirmDialog.Listener() { //$NON-NLS-1$ //$NON-NLS-2$
 				public void onClose(ConfirmDialog dialog) {
 					if (dialog.isConfirmed()) {
 						try {
@@ -541,7 +542,7 @@ public class MarkupResultPanel extends VerticalLayout {
 							
 						} catch (IOException e) {
 							((CatmaApplication)UI.getCurrent()).showAndLogError(
-									"Error untagging search results!", e);
+									Messages.getString("MarkupResultPanel.errorUntaggingSearchResults"), e); //$NON-NLS-1$
 						}
 					}
 				}
@@ -551,8 +552,8 @@ public class MarkupResultPanel extends VerticalLayout {
 		}
 		else {
 			Notification.show(
-					"Information", 
-					"Please select one or more rows in the Kwic view first!",
+					Messages.getString("MarkupResultPanel.infoTitle"),  //$NON-NLS-1$
+					Messages.getString("MarkupResultPanel.kwicViewRowSelectionHint"), //$NON-NLS-1$
 					Type.TRAY_NOTIFICATION);
 		}
 	}
@@ -618,7 +619,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		VerticalLayout leftComponent = new VerticalLayout();
 		leftComponent.setSpacing(true);
 		leftComponent.setSizeFull();
-		leftComponent.addStyleName("analyzer-panel-padding");
+		leftComponent.addStyleName("analyzer-panel-padding"); //$NON-NLS-1$
 		
 		resultTable = new TreeTable();
 		resultTable.setSelectable(true);
@@ -641,63 +642,59 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setSpacing(true);
-		buttonPanel.setWidth("100%");
+		buttonPanel.setWidth("100%"); //$NON-NLS-1$
 		
 		btDist = new Button();
-		btDist.setIcon(new ClassResource("analyzer/resources/chart.gif"));
+		btDist.setIcon(new ClassResource("analyzer/resources/chart.gif")); //$NON-NLS-1$
 		buttonPanel.addComponent(btDist);
 		
 		btResultExcelExport = new Button();
-		btResultExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png"));
+		btResultExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png")); //$NON-NLS-1$
 		btResultExcelExport.setDescription(
-				"Export all Query result data as an Excel spreadsheet.");
+				Messages.getString("MarkupResultPanel.exportResultToExcel")); //$NON-NLS-1$
 		buttonPanel.addComponent(btResultExcelExport);
 		
 		
 		btResultCsvExport = new Button();
 		btResultCsvExport.setIcon(new ClassResource(
-				"analyzer/resources/csv_text.png")); //http://findicons.com/icon/84601/csv_text
+				"analyzer/resources/csv_text.png")); //http://findicons.com/icon/84601/csv_text //$NON-NLS-1$
 		btResultCsvExport.setDescription(
-				"Export all Query result data as a flat CSV File.");
+				Messages.getString("MarkupResultPanel.exportResultToCSV")); //$NON-NLS-1$
 		buttonPanel.addComponent(btResultCsvExport);
 		
-		cbFlatTable = new CheckBox("flat table", false);
+		cbFlatTable = new CheckBox(Messages.getString("MarkupResultPanel.flatTable"), false); //$NON-NLS-1$
 		cbFlatTable.setDescription(
-			"<p>Display query results as a flat table for sortability by Source " +
-			"Document, Markup Collection and phrase.</p>" +
-			"<p>If the query is a <i>property</i> query this ensures sortability " +
-			"of properties as well.</p>");
+			Messages.getString("MarkupResultPanel.flatTableHint")); //$NON-NLS-1$
 		cbFlatTable.setImmediate(true);
 		
 		buttonPanel.addComponent(cbFlatTable);
 		buttonPanel.setComponentAlignment(cbFlatTable, Alignment.MIDDLE_RIGHT);
 		buttonPanel.setExpandRatio(cbFlatTable, 1f);
 		
-		cbPropAsColumns = new CheckBox("properties as columns", false);
+		cbPropAsColumns = new CheckBox(Messages.getString("MarkupResultPanel.propertiesAsColumns"), false); //$NON-NLS-1$
 		cbPropAsColumns.setDescription(
-			"Create a column for each property in the QueryResult selected " +
-			"by a <i>property</i> query.");
+			Messages.getString("MarkupResultPanel.propsAsColumnsHint")); //$NON-NLS-1$
 		
 		cbPropAsColumns.setImmediate(true);
 		buttonPanel.addComponent(cbPropAsColumns);
 		buttonPanel.setComponentAlignment(cbPropAsColumns, Alignment.MIDDLE_RIGHT);
 		cbPropAsColumns.setVisible(false);
 		
-		btSelectAllRows = new Button("Select all");
+		btSelectAllRows = new Button(Messages.getString("MarkupResultPanel.selectAll")); //$NON-NLS-1$
 		buttonPanel.addComponent(btSelectAllRows);
 		buttonPanel.setComponentAlignment(btSelectAllRows, Alignment.MIDDLE_RIGHT);
 		
-		btDeselectAllRows = new Button("Deselect all");
+		btDeselectAllRows = new Button(Messages.getString("MarkupResultPanel.deselectAll")); //$NON-NLS-1$
 		buttonPanel.addComponent(btDeselectAllRows);
 		buttonPanel.setComponentAlignment(btDeselectAllRows, Alignment.MIDDLE_RIGHT);
 		
 		
-		btSelectAll = new Button("Select all for Kwic");
+		btSelectAll = new Button(Messages.getString("MarkupResultPanel.selectAllKwic")); //$NON-NLS-1$
 		
 		buttonPanel.addComponent(btSelectAll);
 		buttonPanel.setComponentAlignment(btSelectAll, Alignment.MIDDLE_RIGHT);
 
-		btDeselectAll = new Button("Deselect all for Kwic");
+		btDeselectAll = new Button(Messages.getString("MarkupResultPanel.deselectAllKwic")); //$NON-NLS-1$
 		buttonPanel.addComponent(btDeselectAll);
 		buttonPanel.setComponentAlignment(btDeselectAll, Alignment.MIDDLE_RIGHT);
 		
@@ -708,7 +705,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		VerticalLayout rightComponent = new VerticalLayout();
 		rightComponent.setSpacing(true);
 		rightComponent.setSizeFull();
-		rightComponent.addStyleName("analyzer-panel-padding");
+		rightComponent.addStyleName("analyzer-panel-padding"); //$NON-NLS-1$
 		
 		this.kwicPanel = 
 				new KwicPanel(
@@ -718,50 +715,50 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 		HorizontalLayout kwicButtonPanel = new HorizontalLayout();
 		kwicButtonPanel.setSpacing(true);
-		kwicButtonPanel.setWidth("100%");
-		kwicButtonPanel.setStyleName("help-padding-fix");
+		kwicButtonPanel.setWidth("100%"); //$NON-NLS-1$
+		kwicButtonPanel.setStyleName("help-padding-fix"); //$NON-NLS-1$
 		
 		btKwicExcelExport = new Button();
-		btKwicExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png"));
+		btKwicExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png")); //$NON-NLS-1$
 		btKwicExcelExport.setDescription(
-				"Export all Query result data as an Excel spreadsheet.");
+				Messages.getString("MarkupResultPanel.exportResultToExcel")); //$NON-NLS-1$
 		kwicButtonPanel.addComponent(btKwicExcelExport);
 		kwicButtonPanel.setComponentAlignment(
 				btKwicExcelExport, Alignment.MIDDLE_LEFT);
 		
 		btKwicCsvExport = new Button();
 		btKwicCsvExport.setIcon(new ClassResource(
-				"analyzer/resources/csv_text.png")); //http://findicons.com/icon/84601/csv_text
+				"analyzer/resources/csv_text.png")); //http://findicons.com/icon/84601/csv_text //$NON-NLS-1$
 		btKwicCsvExport.setDescription(
-				"Export all Query result data as CSV File.");
+				Messages.getString("MarkupResultPanel.exportResultToCSV")); //$NON-NLS-1$
 		kwicButtonPanel.addComponent(btKwicCsvExport);
 		kwicButtonPanel.setComponentAlignment(
 				btKwicCsvExport, Alignment.MIDDLE_LEFT);
 		
-		kwicSizeSlider = new Slider(null, 1, 30, "token(s) context");
+		kwicSizeSlider = new Slider(null, 1, 30, Messages.getString("MarkupResultPanel.tokenContext")); //$NON-NLS-1$
 		kwicSizeSlider.setValue(5.0);
 		kwicButtonPanel.addComponent(kwicSizeSlider);
 		kwicButtonPanel.setComponentAlignment(
 				kwicSizeSlider, Alignment.MIDDLE_LEFT);
 
-		btSelectAllKwic = new Button("Select all");
+		btSelectAllKwic = new Button(Messages.getString("MarkupResultPanel.selectAll")); //$NON-NLS-1$
 		kwicButtonPanel.addComponent(btSelectAllKwic);
 		kwicButtonPanel.setComponentAlignment(btSelectAllKwic, Alignment.MIDDLE_RIGHT);
 		kwicButtonPanel.setExpandRatio(btSelectAllKwic, 1f);
 		
-		btTagResults = new Button("Tag selected results");
-		btTagResults.addStyleName("primary-button");
+		btTagResults = new Button(Messages.getString("MarkupResultPanel.tagSelectedResults")); //$NON-NLS-1$
+		btTagResults.addStyleName("primary-button"); //$NON-NLS-1$
 		kwicButtonPanel.addComponent(btTagResults);
 		kwicButtonPanel.setComponentAlignment(btTagResults, Alignment.MIDDLE_RIGHT);
 		
-		btUntagResults = new Button("Untag selected results");
-		btUntagResults.addStyleName("secondary-button");
+		btUntagResults = new Button(Messages.getString("MarkupResultPanel.untagSelectedResults")); //$NON-NLS-1$
+		btUntagResults.addStyleName("secondary-button"); //$NON-NLS-1$
 		kwicButtonPanel.addComponent(btUntagResults);
 		kwicButtonPanel.setComponentAlignment(btUntagResults, Alignment.MIDDLE_RIGHT);
 		kwicButtonPanel.setExpandRatio(btUntagResults, 0f);
 		
 		btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
-		btHelp.addStyleName("help-button");
+		btHelp.addStyleName("help-button"); //$NON-NLS-1$
 		
 		kwicButtonPanel.addComponent(btHelp);
 
@@ -778,34 +775,34 @@ public class MarkupResultPanel extends VerticalLayout {
 	private void setupContainerProperties() {
 		resultTable.addContainerProperty(
 				TreePropertyName.caption, String.class, null);
-		resultTable.setColumnHeader(TreePropertyName.caption, "Tag Type Definition");
+		resultTable.setColumnHeader(TreePropertyName.caption, Messages.getString("MarkupResultPanel.Tag")); //$NON-NLS-1$
 		
 		resultTable.addContainerProperty(
 				TreePropertyName.sourcedocument, String.class, null);
-		resultTable.setColumnHeader(TreePropertyName.sourcedocument, "Source Document");
+		resultTable.setColumnHeader(TreePropertyName.sourcedocument, Messages.getString("MarkupResultPanel.SourceDoc")); //$NON-NLS-1$
 		
 		resultTable.addContainerProperty(
 				TreePropertyName.markupcollection, String.class, null);
-		resultTable.setColumnHeader(TreePropertyName.markupcollection, "Markup Collection");
+		resultTable.setColumnHeader(TreePropertyName.markupcollection, Messages.getString("MarkupResultPanel.MarkupCollection")); //$NON-NLS-1$
 
 		resultTable.addContainerProperty(
 				TreePropertyName.phrase, String.class, null);
-		resultTable.setColumnHeader(TreePropertyName.phrase, "Phrase");
+		resultTable.setColumnHeader(TreePropertyName.phrase, Messages.getString("MarkupResultPanel.phrase")); //$NON-NLS-1$
 
 		resultTable.addContainerProperty(
 				TreePropertyName.propertyname, String.class, null);
-		resultTable.setColumnHeader(TreePropertyName.propertyname, "Property");
+		resultTable.setColumnHeader(TreePropertyName.propertyname, Messages.getString("MarkupResultPanel.propertyName")); //$NON-NLS-1$
 
 		resultTable.addContainerProperty(
 				TreePropertyName.propertyvalue, String.class, null);
-		resultTable.setColumnHeader(TreePropertyName.propertyvalue, "Property value");
+		resultTable.setColumnHeader(TreePropertyName.propertyvalue, Messages.getString("MarkupResultPanel.propertyValue")); //$NON-NLS-1$
 		
 		resultTable.addContainerProperty(
 				TreePropertyName.frequency, Integer.class, null);
-		resultTable.setColumnHeader(TreePropertyName.frequency, "Frequency");
+		resultTable.setColumnHeader(TreePropertyName.frequency, Messages.getString("MarkupResultPanel.frequency")); //$NON-NLS-1$
 		resultTable.addContainerProperty(
 				TreePropertyName.visible, AbstractComponent.class, null);
-		resultTable.setColumnHeader(TreePropertyName.visible, "Visible in Kwic");
+		resultTable.setColumnHeader(TreePropertyName.visible, Messages.getString("MarkupResultPanel.visibleInKwic")); //$NON-NLS-1$
 		
 		resultTable.setItemCaptionPropertyId(TreePropertyName.caption);
 		
@@ -853,9 +850,10 @@ public class MarkupResultPanel extends VerticalLayout {
 		resultTable.setFooterVisible(true);
 		resultTable.setColumnFooter(
 				TreePropertyName.caption, 
-				"Total count: " + tagDefinitions.size());
+				MessageFormat.format(Messages.getString("MarkupResultPanel.totalCount"), tagDefinitions.size())); //$NON-NLS-1$
 		resultTable.setColumnFooter(
-				TreePropertyName.frequency, "Total frequency: " + totalFreq);
+				TreePropertyName.frequency,
+				MessageFormat.format(Messages.getString("MarkupResultPanel.totalFrequency"), totalFreq)); //$NON-NLS-1$
 		
 	}
 	
@@ -1069,7 +1067,7 @@ public class MarkupResultPanel extends VerticalLayout {
 						TreePropertyName.frequency);
 		tagDefFreqProperty.setValue(((Integer)tagDefFreqProperty.getValue())+1);
 		
-		final String sourceDocumentItemID = tagDefinitionId+ "@" + sourceDocument;
+		final String sourceDocumentItemID = tagDefinitionId+ "@" + sourceDocument; //$NON-NLS-1$
 		
 		if (!resultTable.containsId(sourceDocumentItemID)) {
 		
@@ -1091,7 +1089,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		sourceDocFreqProperty.setValue(
 				((Integer)sourceDocFreqProperty.getValue())+1);
 		
-		final String umcItemID = sourceDocumentItemID + "@" + markupCollectionsId;
+		final String umcItemID = sourceDocumentItemID + "@" + markupCollectionsId; //$NON-NLS-1$
 		
 		if (!resultTable.containsId(umcItemID)) {
 			resultTable.addItem(umcItemID);
@@ -1167,7 +1165,7 @@ public class MarkupResultPanel extends VerticalLayout {
 				kwicPanel.addQueryResultRows(queryResult);
 			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error showing KWIC results!", e);
+					Messages.getString("MarkupResultPanel.errorShowingKwicResults"), e); //$NON-NLS-1$
 			}
 		}
 		else {

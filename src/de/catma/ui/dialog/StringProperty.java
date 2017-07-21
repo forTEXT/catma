@@ -31,7 +31,7 @@ public class StringProperty extends AbstractProperty {
 	}
 	
 	public StringProperty() {
-		this("");
+		this(""); //$NON-NLS-1$
 	}
 
 	public Object getValue() {

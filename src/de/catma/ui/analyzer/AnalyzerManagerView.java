@@ -30,10 +30,7 @@ import de.catma.ui.tabbedview.TabbedView;
 public class AnalyzerManagerView extends TabbedView {
 	
 	public AnalyzerManagerView() {
-		super("To analyze documents and collections please do the following: " +
-				"Open a Repository with the Repository Manager and use the " +
-				"analyze menu items in the corpora or source documents " +
-				"sections or the analyze button of the Tagger.");
+		super(Messages.getString("AnalyzerManagerView.intro")); //$NON-NLS-1$
 	}
 
 	public void analyzeDocuments(Corpus corpus, IndexedRepository repository) {
@@ -51,12 +48,12 @@ public class AnalyzerManagerView extends TabbedView {
 			captions.add(getCaption(c));
 		}
 		
-		String base = (corpus == null)? "All documents" : corpus.toString();
+		String base = (corpus == null)? Messages.getString("AnalyzerManagerView.allDocuments") : corpus.toString(); //$NON-NLS-1$
 		String caption = base;
 		
 		int captionIndex = 1;
 		while (captions.contains(caption)) {
-			caption = base + "("+captionIndex+")";
+			caption = base + "("+captionIndex+")"; //$NON-NLS-1$ //$NON-NLS-2$
 			captionIndex++;
 		}
 

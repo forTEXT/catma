@@ -90,7 +90,7 @@ public class SearchTypeSelectionPanel
 			QueryTree queryTree, QueryOptions queryOptions, Corpus corpus) {
 		
 		setSpacing(true);
-		setWidth("100%");
+		setWidth("100%"); //$NON-NLS-1$
 		List<Component> nextSteps = new ArrayList<Component>();
 		phrasePanel = 
 			new PhrasePanel(
@@ -117,7 +117,7 @@ public class SearchTypeSelectionPanel
 					toggleButtonStateListener, 
 					queryTree, queryOptions, corpus));
 
-		searchTypeSelect = new OptionGroup("",nextSteps);
+		searchTypeSelect = new OptionGroup("",nextSteps); //$NON-NLS-1$
 		
 		searchTypeSelect.setImmediate(true);
 		searchTypeSelect.setValue(phrasePanel);
@@ -129,7 +129,7 @@ public class SearchTypeSelectionPanel
 	
 	@Override
 	public String getCaption() {
-		return "How do you want to search?";
+		return Messages.getString("SearchTypeSelectionPanel.HowDoYouWantToSearch"); //$NON-NLS-1$
 	}
 	
 	public Component getContent() {

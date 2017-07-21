@@ -33,7 +33,7 @@ public enum ParameterComponentValue {
 				}
 			}
 			catch (IOException e) {
-				catmaApplication.showAndLogError("Error opening Markup Collection", e);
+				catmaApplication.showAndLogError(Messages.getString("ParameterComponentValue.errorOpeningAnnotations"), e); //$NON-NLS-1$
 			}
 		}
 		
@@ -45,7 +45,7 @@ public enum ParameterComponentValue {
 				taggerView.openTagsetDefinition(catmaApplication, tagsetDefinitionUuid, null);
 			}
 			catch (IOException e) {
-				catmaApplication.showAndLogError("Error opening Tag Library", e);
+				catmaApplication.showAndLogError(Messages.getString("ParameterComponentValue.errorOpeningTagLibrary"), e); //$NON-NLS-1$
 			}
 		}
 		

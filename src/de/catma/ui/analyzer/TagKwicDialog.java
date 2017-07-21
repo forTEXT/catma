@@ -88,7 +88,7 @@ public class TagKwicDialog extends VerticalLayout {
 					saveCancelListener.savePressed(result);
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"error opening Markup Collection", e);
+							Messages.getString("TagKwicDialog.errorOpeningAnnotations"), e); //$NON-NLS-1$
 					saveCancelListener.cancelPressed();
 				}
 				
@@ -128,7 +128,7 @@ public class TagKwicDialog extends VerticalLayout {
 	}
 
 	private void initComponents() {
-		window = new Window("Select affected Markup Collections");
+		window = new Window(Messages.getString("TagKwicDialog.selectAnnotations")); //$NON-NLS-1$
 		window.setModal(true);
 		
 		setSpacing(true);
@@ -136,24 +136,24 @@ public class TagKwicDialog extends VerticalLayout {
 		setSizeFull();
 		
 		Label tagResultsLabel = 
-			new Label("The selected Markup Collections will be modfied by this tagging operation. Are you sure?");
+			new Label(Messages.getString("TagKwicDialog.collectionModificationHint")); //$NON-NLS-1$
 		addComponent(tagResultsLabel);
 		
-		umcTable = new TreeTable("Markup Collections");
+		umcTable = new TreeTable(Messages.getString("TagKwicDialog.annotations")); //$NON-NLS-1$
 		umcTable.addContainerProperty(UmcTableProperty.CAPTION, String.class, null);
-		umcTable.setColumnHeader(UmcTableProperty.CAPTION, "Document/Collection");
+		umcTable.setColumnHeader(UmcTableProperty.CAPTION, Messages.getString("TagKwicDialog.documentsAnnotations")); //$NON-NLS-1$
 		umcTable.addContainerProperty(UmcTableProperty.TARGET, Component.class, null);
-		umcTable.setColumnHeader(UmcTableProperty.TARGET, "targeted Markup Collection");
+		umcTable.setColumnHeader(UmcTableProperty.TARGET, Messages.getString("TagKwicDialog.targetedAnnotations")); //$NON-NLS-1$
 		umcTable.setSizeFull();
 		
 		addComponent(umcTable);
 		
 		setExpandRatio(umcTable, 1.0f);
 		
-		btOk = new Button("Ok");
+		btOk = new Button(Messages.getString("TagKwicDialog.Ok")); //$NON-NLS-1$
 		btOk.setEnabled(false);
 		
-		btCancel = new Button("Cancel");
+		btCancel = new Button(Messages.getString("TagKwicDialog.cancel")); //$NON-NLS-1$
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setSpacing(true);
@@ -168,8 +168,8 @@ public class TagKwicDialog extends VerticalLayout {
 		setComponentAlignment(buttonPanel, Alignment.BOTTOM_RIGHT);
 		
 		window.setContent(this);
-		window.setWidth("50%");
-		window.setHeight("80%");
+		window.setWidth("50%"); //$NON-NLS-1$
+		window.setHeight("80%"); //$NON-NLS-1$
 	}
 	
 	public void addUserMarkCollections(

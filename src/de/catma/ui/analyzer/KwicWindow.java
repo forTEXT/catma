@@ -13,8 +13,8 @@ public class KwicWindow extends Window {
 	private void initComponents(KwicPanel kwicPanel) {
 		setContent(kwicPanel);
 		center();
-		setWidth("30%");
-		setHeight("30%");
+		setWidth("30%"); //$NON-NLS-1$
+		setHeight("30%"); //$NON-NLS-1$
 	}
 	
 	public void show() {

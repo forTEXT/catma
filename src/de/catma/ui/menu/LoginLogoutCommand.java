@@ -20,6 +20,7 @@ package de.catma.ui.menu;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.text.MessageFormat;
 
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinService;
@@ -51,13 +52,13 @@ public class LoginLogoutCommand implements Command {
 				String identifier = user.getIdentifier();
 				
 				if (user.isGuest()) {
-					identifier = "Guest";
+					identifier = Messages.getString("LoginLogoutCommand.Guest"); //$NON-NLS-1$
 				}
 				
-				btLoginLogout.setCaption(identifier + " - Sign out");
+				btLoginLogout.setCaption(MessageFormat.format(Messages.getString("LoginLogoutCommand.signOut"), identifier)); //$NON-NLS-1$
 			}
 			else {
-				btLoginLogout.setCaption("Sign in");
+				btLoginLogout.setCaption(Messages.getString("LoginLogoutCommand.signIn")); //$NON-NLS-1$
 				logout();
 			}
 		}
@@ -74,7 +75,7 @@ public class LoginLogoutCommand implements Command {
 		Integer port = VaadinServletService.getCurrentServletRequest().getServerPort();
 		String contextPath = VaadinService.getCurrentRequest().getContextPath();
 		
-		String baseUrl = String.format("%s://%s%s%s", scheme, serverName, port == 80 ? "" : ":"+port, contextPath);
+		String baseUrl = String.format("%s://%s%s%s", scheme, serverName, port == 80 ? "" : ":"+port, contextPath); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		this.afterLogoutRedirectURL = baseUrl;
 		
 		this.menu = menu;

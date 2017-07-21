@@ -36,7 +36,7 @@ import de.catma.ui.visualizer.doubletree.DoubleTreeView;
 public class VisualizationManagerView extends TabbedView {
 	
 	public VisualizationManagerView() {
-		super("No visualizations available. To generate visualization use the Analyzer.");
+		super(Messages.getString("VisualizationManagerView.noVizAvailable")); //$NON-NLS-1$
 	}
 
 	private int addVisualization(

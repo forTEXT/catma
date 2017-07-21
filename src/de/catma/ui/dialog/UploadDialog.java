@@ -20,6 +20,7 @@ package de.catma.ui.dialog;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
+import java.text.MessageFormat;
 
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -49,6 +50,7 @@ public class UploadDialog extends VerticalLayout {
 			return data;
 		}
 	}
+
 	
 	private Window dialogWindow;
 	private String caption;
@@ -74,8 +76,8 @@ public class UploadDialog extends VerticalLayout {
             	pi.setVisible(true);
                 pi.setValue(0f);
                 pi.setPollingInterval(500);
-                upload.setCaption("Uploading file \"" + event.getFilename()
-                        + "\"");
+                upload.setCaption(
+                		MessageFormat.format(Messages.getString("UploadDialog.uploadingFile"), event.getFilename())); //$NON-NLS-1$
             }
         });
 
@@ -88,8 +90,9 @@ public class UploadDialog extends VerticalLayout {
 
         upload.addSucceededListener(new Upload.SucceededListener() {
             public void uploadSucceeded(SucceededEvent event) {
-            	upload.setCaption("Uploading file \"" + event.getFilename()
-                        + "\" succeeded");
+            	upload.setCaption(
+            			MessageFormat.format(Messages.getString("UploadDialog.uploadingFileSuccess"), event.getFilename())); //$NON-NLS-1$
+
             	saveCancelListener.savePressed(data.toByteArray());
             	upload.removeSucceededListener(this);
             	UploadDialog.this.close();
@@ -98,7 +101,7 @@ public class UploadDialog extends VerticalLayout {
 
         upload.addFailedListener(new Upload.FailedListener() {
             public void uploadFailed(FailedEvent event) {
-            	upload.setCaption("Uploading interrupted");
+            	upload.setCaption(Messages.getString("UploadDialog.uploadingInterrupted")); //$NON-NLS-1$
             }
         });
         btCancel.addClickListener(new ClickListener() {
@@ -125,9 +128,9 @@ public class UploadDialog extends VerticalLayout {
 		dialogWindow.setModal(true);
 		
 		upload = new Upload(
-				"Please select a file to upload",
+				Messages.getString("UploadDialog.selectFileHint"), //$NON-NLS-1$
 				new DataReceiver(data));
-		upload.setButtonCaption("Select file");
+		upload.setButtonCaption(Messages.getString("UploadDialog.selectFile")); //$NON-NLS-1$
 		upload.setImmediate(true);
 		
 		addComponent(upload);
@@ -138,7 +141,7 @@ public class UploadDialog extends VerticalLayout {
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setSpacing(true);
 
-		btCancel = new Button("Cancel");
+		btCancel = new Button(Messages.getString("UploadDialog.Cancel")); //$NON-NLS-1$
 		buttonPanel.addComponent(btCancel);
 		
 		addComponent(buttonPanel);
@@ -156,7 +159,7 @@ public class UploadDialog extends VerticalLayout {
 	}
 	
 	public void show() {
-		show("25%");
+		show("25%"); //$NON-NLS-1$
 	}
 	
 	

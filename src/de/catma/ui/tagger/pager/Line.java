@@ -55,7 +55,7 @@ public class Line {
 		for (LineContent lc : lineContents) {
 			builder.append(lc);
 		}
-		return "#"+lineId+textRange+builder.toString();
+		return "#"+lineId+textRange+builder.toString(); //$NON-NLS-1$
 	}
 
 	public void addCharacterContent(String content) {
@@ -133,49 +133,49 @@ public class Line {
 //		}
 //
 
-		Element table = new Element("table");
-		table.addAttribute(new Attribute("class", "taggerline-table"));
-		table.addAttribute(new Attribute("id", "LINE." + String.valueOf(lineId)));
+		Element table = new Element("table"); //$NON-NLS-1$
+		table.addAttribute(new Attribute("class", "taggerline-table")); //$NON-NLS-1$ //$NON-NLS-2$
+		table.addAttribute(new Attribute("id", "LINE." + String.valueOf(lineId))); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		Element tbody = new Element("tbody");
+		Element tbody = new Element("tbody"); //$NON-NLS-1$
 		table.appendChild(tbody);
 		
 		// display layer
 		
-		Element contentDisplayLayer = new Element("tr");
-		contentDisplayLayer.addAttribute(new Attribute("class", "tagger-display-layer"));
-		contentDisplayLayer.addAttribute(new Attribute("id", textRange.getStartPos()+"."+textRange.getEndPos()));
+		Element contentDisplayLayer = new Element("tr"); //$NON-NLS-1$
+		contentDisplayLayer.addAttribute(new Attribute("class", "tagger-display-layer")); //$NON-NLS-1$ //$NON-NLS-2$
+		contentDisplayLayer.addAttribute(new Attribute("id", textRange.getStartPos()+"."+textRange.getEndPos())); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		tbody.appendChild(contentDisplayLayer);
-		Element visibleContentLayerContent = new Element("td");
+		Element visibleContentLayerContent = new Element("td"); //$NON-NLS-1$
 		contentDisplayLayer.appendChild(visibleContentLayerContent);
 		visibleContentLayerContent.addAttribute(
-				new Attribute("colspan", String.valueOf(rangeParts.size())));
+				new Attribute("colspan", String.valueOf(rangeParts.size()))); //$NON-NLS-1$
 		visibleContentLayerContent.appendChild(getPresentationContent());
 		
 		// highlight layer
 		if (!highlightedTextRanges.isEmpty()) {
-			Element highlightLayer = new Element("tr");
-			highlightLayer.addAttribute(new Attribute("class", "highlight-layer"));
-			highlightLayer.addAttribute(new Attribute("unselectable", "on"));
+			Element highlightLayer = new Element("tr"); //$NON-NLS-1$
+			highlightLayer.addAttribute(new Attribute("class", "highlight-layer")); //$NON-NLS-1$ //$NON-NLS-2$
+			highlightLayer.addAttribute(new Attribute("unselectable", "on")); //$NON-NLS-1$ //$NON-NLS-2$
 			tbody.appendChild(highlightLayer);
 			
 			for (TextRange rangePart : rangeParts) {
-				Element highlightLayerContent = new Element("td");
+				Element highlightLayerContent = new Element("td"); //$NON-NLS-1$
 				highlightLayer.appendChild(highlightLayerContent);
 				highlightLayerContent.appendChild(TextRange.NBSP);
 				highlightLayerContent.addAttribute(
 					new Attribute(
-						"id", 
-						"h."+rangePart.getStartPos()+"."+rangePart.getEndPos()));
+						"id",  //$NON-NLS-1$
+						"h."+rangePart.getStartPos()+"."+rangePart.getEndPos())); //$NON-NLS-1$ //$NON-NLS-2$
 
 				if (rangePartIsHighlighted(rangePart)) {
 					highlightLayerContent.addAttribute(
-							new Attribute("class", "highlighted-content"));
+							new Attribute("class", "highlighted-content")); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 				else {
 					highlightLayerContent.addAttribute(
-							new Attribute("class", "empty-highlight-layer"));
+							new Attribute("class", "empty-highlight-layer")); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
 		}
@@ -185,15 +185,15 @@ public class Line {
 		Table<Integer, TextRange, ClientTagInstance> layerTable = annotationLayerBuilder.getLayerTable();
 		int rowCount = layerTable.rowKeySet().size();
 		for (int rowIdx = 0; rowIdx<rowCount; rowIdx++) {
-			Element annotationLayer = new Element("tr");
+			Element annotationLayer = new Element("tr"); //$NON-NLS-1$
 			
-			annotationLayer.addAttribute(new Attribute("class", "annotation-layer"));
-			annotationLayer.addAttribute(new Attribute("unselectable", "on"));
+			annotationLayer.addAttribute(new Attribute("class", "annotation-layer")); //$NON-NLS-1$ //$NON-NLS-2$
+			annotationLayer.addAttribute(new Attribute("unselectable", "on")); //$NON-NLS-1$ //$NON-NLS-2$
 			tbody.appendChild(annotationLayer);
 
 			for (TextRange rangePart : rangeParts) {
 				
-				Element annotationLayerContent = new Element("td");
+				Element annotationLayerContent = new Element("td"); //$NON-NLS-1$
 				annotationLayer.appendChild(annotationLayerContent);
 				annotationLayerContent.appendChild(TextRange.NBSP);
 				
@@ -201,39 +201,39 @@ public class Line {
 						layerTable.get(rowIdx, rangePart);
 				
 				if (relativeTagInstance != null) {
-					annotationLayerContent.addAttribute(new Attribute("class", "unselected-tag-instance"));
+					annotationLayerContent.addAttribute(new Attribute("class", "unselected-tag-instance")); //$NON-NLS-1$ //$NON-NLS-2$
 					
 					annotationLayerContent.addAttribute(
 						new Attribute(
-							"id", 
+							"id",  //$NON-NLS-1$
 							relativeTagInstance.getInstanceID() 
-								+ "."
+								+ "." //$NON-NLS-1$
 								+ rangePart.getStartPos()
-								+ "."
+								+ "." //$NON-NLS-1$
 								+ rangePart.getEndPos()));
 					annotationLayerContent.addAttribute(
 						new Attribute(
-								"style", 
-								"background:#"+relativeTagInstance.getColor()
-								+";color:#"+relativeTagInstance.getColor()));
+								"style",  //$NON-NLS-1$
+								"background:#"+relativeTagInstance.getColor() //$NON-NLS-1$
+								+";color:#"+relativeTagInstance.getColor())); //$NON-NLS-1$
 				}
 				else {
 					annotationLayerContent.addAttribute(
-							new Attribute("class", "empty-annotation-layer"));
+							new Attribute("class", "empty-annotation-layer")); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
 		}
 		
 		// segmentation layer
-		Element segmentationLayer = new Element("tr");
+		Element segmentationLayer = new Element("tr"); //$NON-NLS-1$
 
-		segmentationLayer.addAttribute(new Attribute("class", "segmentation-layer"));
-		segmentationLayer.addAttribute(new Attribute("unselectable", "on"));
+		segmentationLayer.addAttribute(new Attribute("class", "segmentation-layer")); //$NON-NLS-1$ //$NON-NLS-2$
+		segmentationLayer.addAttribute(new Attribute("unselectable", "on")); //$NON-NLS-1$ //$NON-NLS-2$
 		tbody.appendChild(segmentationLayer);
 		String lastPresentationContent = null;
 		for (TextRange rangePart : rangeParts) {
 			
-			Element segmentationLayerContent = new Element("td");
+			Element segmentationLayerContent = new Element("td"); //$NON-NLS-1$
 			segmentationLayer.appendChild(segmentationLayerContent);
 			String presentationContent = getPresentationContent(rangePart);
 			

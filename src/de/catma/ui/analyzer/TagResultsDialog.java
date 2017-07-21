@@ -25,7 +25,7 @@ import de.catma.ui.tagmanager.TagsetTree;
 
 public class TagResultsDialog extends Window {
 	
-	private final static String SORTCAP_PROP = "SORTCAP";
+	private final static String SORTCAP_PROP = "SORTCAP"; //$NON-NLS-1$
 	
 	private Repository repository;
 	private TagLibrary tagLibrary;
@@ -36,7 +36,7 @@ public class TagResultsDialog extends Window {
 	public TagResultsDialog(Repository repository, 
 			Object lastTagResultsDialogTagLibrarySelection,
 			Object lastTagResultsDialogTagsetSelection) {
-		super("Tags");
+		super(Messages.getString("TagResultsDialog.Tags")); //$NON-NLS-1$
 		
 		this.repository = repository;
 		initComponents();
@@ -69,9 +69,7 @@ public class TagResultsDialog extends Window {
 		content.setSpacing(true);
 		
 		Label lblInstructions = new Label(
-				"Select a Tag Type Library and find the Tag that you want"
-				+ " to apply to your selection in the KWIC view, then click"
-				+ " and drag the Tag onto the KWIC view.");
+				Messages.getString("TagResultsDialog.tagResultsHint")); //$NON-NLS-1$
 		
 		content.addComponent(lblInstructions);
 		
@@ -85,16 +83,16 @@ public class TagResultsDialog extends Window {
 
 		tagLibraryTree = new Tree();
 		tagLibraryTree.setContainerDataSource(tagLibraryContainer);
-		tagLibraryTree.setWidth("100%");
-		tagLibraryTree.setCaption("Tag Type Libraries");
-		tagLibraryTree.addStyleName("bold-label-caption");
+		tagLibraryTree.setWidth("100%"); //$NON-NLS-1$
+		tagLibraryTree.setCaption(Messages.getString("TagResultsDialog.tagLibraries")); //$NON-NLS-1$
+		tagLibraryTree.addStyleName("bold-label-caption"); //$NON-NLS-1$
 		tagLibraryTree.setImmediate(true);
 		tagLibraryTree.setItemCaptionMode(ItemCaptionMode.ID);
 		
 		for (TagLibraryReference tlr : repository.getTagLibraryReferences()) {
 			tagLibraryTree.addItem(tlr);
 			tagLibraryTree.getItem(tlr).getItemProperty(SORTCAP_PROP).setValue(
-					(tlr.toString()==null)?"":tlr.toString());
+					(tlr.toString()==null)?"":tlr.toString()); //$NON-NLS-1$
 			tagLibraryTree.setChildrenAllowed(tlr, false);
 		}
 		tagLibraryContainer.sort(new Object[] {SORTCAP_PROP}, new boolean[] { true });
@@ -132,7 +130,7 @@ public class TagResultsDialog extends Window {
 					
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"Error opening the Tag Type Library!", e);
+							Messages.getString("TagResultsDialog.errorOpeningTagLibrary"), e); //$NON-NLS-1$
 				}
 			}
 		}
@@ -180,14 +178,14 @@ public class TagResultsDialog extends Window {
 			setHeight(height, lastTagResultsDialogUnit);
 		}
 		else {
-			setHeight("50%");
+			setHeight("50%"); //$NON-NLS-1$
 		}
 		
 		if (width != null) {
 			setWidth(width, lastTagResultsDialogUnit);
 		}
 		else {
-			setWidth("40%");
+			setWidth("40%"); //$NON-NLS-1$
 		}
 		
 		UI.getCurrent().addWindow(this);

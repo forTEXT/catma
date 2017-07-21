@@ -74,11 +74,11 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (UI.getCurrent() !=null) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Repository Error!", (Throwable)evt.getNewValue());
+						Messages.getString("RepositoryView.repoError"), (Throwable)evt.getNewValue()); //$NON-NLS-1$
 				}
 				else {
 					logger.log(
-						Level.SEVERE, "repository error", 
+						Level.SEVERE, "repository error",  //$NON-NLS-1$
 						(Throwable)evt.getNewValue());
 				}
 			}
@@ -113,7 +113,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 					
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							"Error reloading repository!", e);
+							Messages.getString("RepositoryView.errorLoadingRepo"), e); //$NON-NLS-1$
 				}
 			}
 		});
@@ -151,10 +151,10 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		
 		Component documentsLabel = createDocumentsLabel();
 		addComponent(documentsLabel);
-		documentsLabel.setHeight("50");
-		documentsLabel.setStyleName("help-padding-fix");
+		documentsLabel.setHeight("50"); //$NON-NLS-1$
+		documentsLabel.setStyleName("help-padding-fix"); //$NON-NLS-1$
 		VerticalSplitPanel splitPanel = new VerticalSplitPanel();
-		splitPanel.setStyleName("repository-panels");
+		splitPanel.setStyleName("repository-panels"); //$NON-NLS-1$
 		splitPanel.setSplitPosition(65);
 		
 		Component documentsManagerPanel = createDocumentsManagerPanel();
@@ -194,15 +194,15 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 
 	private Component createDocumentsLabel() {
 		HorizontalLayout labelLayout = new HorizontalLayout();
-		labelLayout.setWidth("100%");
+		labelLayout.setWidth("100%"); //$NON-NLS-1$
 		labelLayout.setSpacing(true);
 		
-		Label documentsLabel = new Label("Document Manager");
-		documentsLabel.addStyleName("bold-label");
+		Label documentsLabel = new Label(Messages.getString("RepositoryView.docManager")); //$NON-NLS-1$
+		documentsLabel.addStyleName("bold-label"); //$NON-NLS-1$
 		
 		labelLayout.addComponent(documentsLabel);
 		labelLayout.setExpandRatio(documentsLabel, 0.5f);
-		btAdmin = new Button("Admin");
+		btAdmin = new Button(Messages.getString("RepositoryView.Admin")); //$NON-NLS-1$
 		btAdmin.setVisible(repository.getUser().hasPermission(Permission.adminwindow));
 		
 		labelLayout.addComponent(btAdmin);
@@ -213,7 +213,7 @@ public class RepositoryView extends VerticalLayout implements ClosableTab {
 		labelLayout.setComponentAlignment(btReload, Alignment.MIDDLE_RIGHT);
 				
 		btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
-		btHelp.addStyleName("help-button");
+		btHelp.addStyleName("help-button"); //$NON-NLS-1$
 		
 		labelLayout.addComponent(btHelp);
 		labelLayout.setComponentAlignment(btHelp, Alignment.MIDDLE_RIGHT);

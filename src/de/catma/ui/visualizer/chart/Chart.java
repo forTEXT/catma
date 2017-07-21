@@ -36,7 +36,7 @@ public class Chart extends AbstractComponent {
 	private DistributionSelectionListener distributionSelectionListener; 
 	
 	public Chart(Distribution distribution, int maxOccurrences, DistributionSelectionListener distributionSelectionListener) {
-		chartId = "ChartWidget" + new IDGenerator().generate();
+		chartId = "ChartWidget" + new IDGenerator().generate(); //$NON-NLS-1$
 		registerRpc(chartServerRpc);
 		
 		this.distribution = distribution;
@@ -47,7 +47,7 @@ public class Chart extends AbstractComponent {
 	private void fireResultRowSelected(String key, int x, int y) {
 		List<QueryResultRow> rows = distribution.getQueryResultRows(key, x);
 		if (rows == null) {
-			Notification.show("Info", "There are no occurrences for this slot.", Type.TRAY_NOTIFICATION);
+			Notification.show(Messages.getString("Chart.infoTitle"), Messages.getString("Chart.noOccurrencesForThisSlot"), Type.TRAY_NOTIFICATION); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		else {
 			distributionSelectionListener.queryResultRowsSelected(distribution.getLabel(), rows, x, y);
@@ -69,45 +69,45 @@ public class Chart extends AbstractComponent {
 			ObjectMapper mapper = new ObjectMapper();
 			ObjectNode configuration = 
 				mapper.readValue(
-					"{"+
-						"\"chart\": {"+
-						    "\"renderTo\": \""+ chartId +"\","+
-						    "\"zoomType\": \"xy\","+
-						    "\"spacingBottom\": 50"+
-					    "},"+
-					    "\"xAxis\": {"+
-					    	"\"tickInterval\" : "+ distribution.getSegmentSizeInPercent() + "," +
-					        "\"max\": 100," +
-					    	"\"min\": 0" +
-					    "},"+
-					    "\"plotOptions\": {"+
-					    	"\"series\": {"+
-					        	"\"allowPointSelect\": \"false\","+
-					        	"\"point\": {"+
-					        		"\"events\": {"+
-					        			"\"click\": \"null\""+
-					        		"}"+
-					        	"}"+
-					         "}"+
-					    "},"+
-					    "\"title\": {"+
-				        	"\"text\": \""+String.valueOf(
+					"{"+ //$NON-NLS-1$
+						"\"chart\": {"+ //$NON-NLS-1$
+						    "\"renderTo\": \""+ chartId +"\","+ //$NON-NLS-1$ //$NON-NLS-2$
+						    "\"zoomType\": \"xy\","+ //$NON-NLS-1$
+						    "\"spacingBottom\": 50"+ //$NON-NLS-1$
+					    "},"+ //$NON-NLS-1$
+					    "\"xAxis\": {"+ //$NON-NLS-1$
+					    	"\"tickInterval\" : "+ distribution.getSegmentSizeInPercent() + "," + //$NON-NLS-1$ //$NON-NLS-2$
+					        "\"max\": 100," + //$NON-NLS-1$
+					    	"\"min\": 0" + //$NON-NLS-1$
+					    "},"+ //$NON-NLS-1$
+					    "\"plotOptions\": {"+ //$NON-NLS-1$
+					    	"\"series\": {"+ //$NON-NLS-1$
+					        	"\"allowPointSelect\": \"false\","+ //$NON-NLS-1$
+					        	"\"point\": {"+ //$NON-NLS-1$
+					        		"\"events\": {"+ //$NON-NLS-1$
+					        			"\"click\": \"null\""+ //$NON-NLS-1$
+					        		"}"+ //$NON-NLS-1$
+					        	"}"+ //$NON-NLS-1$
+					         "}"+ //$NON-NLS-1$
+					    "},"+ //$NON-NLS-1$
+					    "\"title\": {"+ //$NON-NLS-1$
+				        	"\"text\": \""+String.valueOf( //$NON-NLS-1$
 				        		JsonStringEncoder.getInstance().quoteAsString(
-				        				distribution.getLabel()))+"\","+
-				        	"\"verticalAlign\": \"bottom\"" +
-				       	"},"+
-			       		"\"yAxis\": {"+
-			       			"\"title\": {"+
-			       				"\"text\": \"Occurrences\""+
-				            "},"+
-			       			"\"min\": 0," +
-			       			"\"max\": "+ maxOccurrences +
-				        "}"+
-				   	"}", ObjectNode.class);	
+				        				distribution.getLabel()))+"\","+ //$NON-NLS-1$
+				        	"\"verticalAlign\": \"bottom\"" + //$NON-NLS-1$
+				       	"},"+ //$NON-NLS-1$
+			       		"\"yAxis\": {"+ //$NON-NLS-1$
+			       			"\"title\": {"+ //$NON-NLS-1$
+			       				"\"text\": \"Occurrences\""+ //$NON-NLS-1$
+				            "},"+ //$NON-NLS-1$
+			       			"\"min\": 0," + //$NON-NLS-1$
+			       			"\"max\": "+ maxOccurrences + //$NON-NLS-1$
+				        "}"+ //$NON-NLS-1$
+				   	"}", ObjectNode.class);	 //$NON-NLS-1$
 
 			ArrayNode seriesArray = createSeriesArray(distribution);
 			
-			configuration.set("series", seriesArray);
+			configuration.set("series", seriesArray); //$NON-NLS-1$
 			
 			return configuration.toString();
 		}
@@ -137,8 +137,8 @@ public class Chart extends AbstractComponent {
 			dataArray.add(valueArray);
 		}
 		ObjectNode seriesObject = factory.objectNode();
-		seriesObject.set("data", dataArray);
-		seriesObject.put("name", values.getKey().toString());
+		seriesObject.set("data", dataArray); //$NON-NLS-1$
+		seriesObject.put("name", values.getKey().toString()); //$NON-NLS-1$
 
 		return seriesObject;
 	}

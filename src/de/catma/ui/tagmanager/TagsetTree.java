@@ -374,8 +374,8 @@ public class TagsetTree extends HorizontalLayout {
 
 		ConfirmDialog.show(
 				UI.getCurrent(), 
-				"Delete User Defined Property",
-				"Are you sure you want to delete this Property?", "Yes", "No",
+				Messages.getString("TagsetTree.deleteProperty"), //$NON-NLS-1$
+				Messages.getString("TagsetTree.deletePropertyQuestion"), Messages.getString("TagsetTree.Yes"), Messages.getString("TagsetTree.No"), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				new ConfirmDialog.Listener() {
 					
 					public void onClose(ConfirmDialog dialog) {
@@ -396,7 +396,7 @@ public class TagsetTree extends HorizontalLayout {
 		
 		PropertyDefinitionDialog propertyDefinitionDialog = 
 				new PropertyDefinitionDialog(
-					"Edit Property", pd, 
+					Messages.getString("TagsetTree.editProperty"), pd,  //$NON-NLS-1$
 					new SaveCancelListener<PropertyDefinition>() {
 						
 						public void cancelPressed() {}
@@ -421,7 +421,7 @@ public class TagsetTree extends HorizontalLayout {
 		
 		PropertyDefinitionDialog propertyDefinitionDialog = 
 			new PropertyDefinitionDialog(
-				"Create Property", 
+				Messages.getString("TagsetTree.createProperty"),  //$NON-NLS-1$
 				new SaveCancelListener<PropertyDefinition>() {
 					
 					public void cancelPressed() {}
@@ -439,8 +439,8 @@ public class TagsetTree extends HorizontalLayout {
 		if ((selValue != null) 
 			&& (selValue instanceof TagDefinition)) {
 			final TagDefinition selTagDefinition = (TagDefinition)selValue;
-			final String tagDefNameProp = "name";
-			final String tagDefColorProp = "color";
+			final String tagDefNameProp = "name"; //$NON-NLS-1$
+			final String tagDefColorProp = "color"; //$NON-NLS-1$
 			
 			PropertyCollection propertyCollection = 
 					new PropertyCollection(tagDefNameProp, tagDefColorProp);
@@ -451,7 +451,7 @@ public class TagsetTree extends HorizontalLayout {
 					ColorConverter.toHex(selTagDefinition.getColor()));
 			
 			FormDialog<PropertysetItem> tagFormDialog = new FormDialog<PropertysetItem>(
-				"Edit Tag",
+				Messages.getString("TagsetTree.editTag"), //$NON-NLS-1$
 				propertyCollection,
 				new TagDefinitionFieldFactory(tagDefColorProp),
 				new SaveCancelListener<PropertysetItem>() {
@@ -474,7 +474,7 @@ public class TagsetTree extends HorizontalLayout {
 										(String)colorProperty.getValue()));
 					}
 				});
-			tagFormDialog.show("50%");
+			tagFormDialog.show("50%"); //$NON-NLS-1$
 		}
 		
 	}
@@ -516,9 +516,8 @@ public class TagsetTree extends HorizontalLayout {
 			
 			ConfirmDialog.show(
 				UI.getCurrent(),
-				"Remove Tag Type", 
-				"Do you really want to delete this Tag Type " +
-				"with all its properties?", "Yes", "No", 
+				Messages.getString("TagsetTree.deleteTag"),  //$NON-NLS-1$
+				Messages.getString("TagsetTree.deleteTagQuestion"), Messages.getString("TagsetTree.Yes"), Messages.getString("TagsetTree.No"),  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				new ConfirmDialog.Listener() {
 					
 					public void onClose(ConfirmDialog dialog) {
@@ -532,8 +531,8 @@ public class TagsetTree extends HorizontalLayout {
 	}
 	
 	private void handleInsertTagDefinitionRequest() {
-		final String tagDefNameProp = "name";
-		final String tagDefColorProp = "color";
+		final String tagDefNameProp = "name"; //$NON-NLS-1$
+		final String tagDefColorProp = "color"; //$NON-NLS-1$
 		
 		PropertyCollection propertyCollection = 
 				new PropertyCollection(tagDefNameProp, tagDefColorProp);
@@ -545,14 +544,14 @@ public class TagsetTree extends HorizontalLayout {
 		
 		if (selectedParent == null) {
 			Notification.show(
-				"Info", "Please select a Tagset or parent Tag Type first!", 
+				Messages.getString("TagsetTree.infoTitle"), Messages.getString("TagsetTree.selectTagsetParentTagFirst"),  //$NON-NLS-1$ //$NON-NLS-2$
 				Type.TRAY_NOTIFICATION);
 			return;
 		}
 		
 		FormDialog<PropertysetItem> tagFormDialog =
 			new FormDialog<PropertysetItem>(
-				"Create new Tag",
+				Messages.getString("TagsetTree.createNewTag"), //$NON-NLS-1$
 				propertyCollection,
 				new TagDefinitionFieldFactory(
 					tagDefColorProp),
@@ -573,7 +572,7 @@ public class TagsetTree extends HorizontalLayout {
 						TagsetDefinition tagsetDefinition = null;
 
 						if (selectedParent instanceof TagsetDefinition) {
-							baseID = "";
+							baseID = ""; //$NON-NLS-1$
 							tagsetDefinition = 
 									(TagsetDefinition)selectedParent;
 						}
@@ -586,8 +585,8 @@ public class TagsetTree extends HorizontalLayout {
 						}
 						else {
 							throw new IllegalStateException(
-								"a parent of a TagDefinition has to be either a"
-								+ "TagDefinition or a TagsetDefinition and not a " 
+								"a parent of a TagDefinition has to be either a" //$NON-NLS-1$
+								+ "TagDefinition or a TagsetDefinition and not a "  //$NON-NLS-1$
 								+ selectedParent.getClass().getName());
 						}
 						IDGenerator idGenerator = new IDGenerator();
@@ -616,7 +615,7 @@ public class TagsetTree extends HorizontalLayout {
 								tagDefinition);
 					}
 				});
-		tagFormDialog.show("50%");
+		tagFormDialog.show("50%"); //$NON-NLS-1$
 	}
 
 	public TagsetDefinition getTagsetDefinition(TagDefinition tagDefinition) {
@@ -638,9 +637,8 @@ public class TagsetTree extends HorizontalLayout {
 			
 			ConfirmDialog.show(
 				UI.getCurrent(),
-				"Remove Tagset", 
-				"Do you really want to delete this Tagset " +
-				"with all its Tags?", "Yes", "No", 
+				Messages.getString("TagsetTree.deleteTagset"),  //$NON-NLS-1$
+				Messages.getString("TagsetTree.deleteTagsetQuestion"), Messages.getString("TagsetTree.Yes"), Messages.getString("TagsetTree.No"),  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				new ConfirmDialog.Listener() {
 					
 					public void onClose(ConfirmDialog dialog) {
@@ -656,19 +654,19 @@ public class TagsetTree extends HorizontalLayout {
 	private void handleInsertTagsetDefinitionRequest() {
 		if (tagLibrary == null) {
 			Notification.show(
-				"Info", "Please select a Tag Type Library first!", 
+				Messages.getString("TagsetTree.infoTitle"), Messages.getString("TagsetTree.selectTagLibraryFirst"),  //$NON-NLS-1$ //$NON-NLS-2$
 				Type.TRAY_NOTIFICATION);
 			return;
 		}
 		
-		final String tagsetdefinitionnameProperty = "name";
+		final String tagsetdefinitionnameProperty = "name"; //$NON-NLS-1$
 		
 		PropertyCollection propertyCollection = 
 				new PropertyCollection(tagsetdefinitionnameProperty);
 
 		FormDialog<PropertysetItem> tagsetFormDialog =
 			new FormDialog<PropertysetItem>(
-				"Create new Tagset",
+				Messages.getString("TagsetTree.createNewTagset"), //$NON-NLS-1$
 				propertyCollection,
 				new SaveCancelListener<PropertysetItem>() {
 					public void cancelPressed() {}
@@ -694,7 +692,7 @@ public class TagsetTree extends HorizontalLayout {
 	}
 	
 	private void handleEditTagsetDefinitionRequest() {
-		final String tagsetdefinitionnameProperty = "name";
+		final String tagsetdefinitionnameProperty = "name"; //$NON-NLS-1$
 		
 		Object selValue = tagTree.getValue();
 		
@@ -713,7 +711,7 @@ public class TagsetTree extends HorizontalLayout {
 			
 			FormDialog<PropertysetItem> tagsetFormDialog =
 				new FormDialog<PropertysetItem>(
-					"Edit Tagset",
+					Messages.getString("TagsetTree.editTagset"), //$NON-NLS-1$
 					propertyCollection,
 					new SaveCancelListener<PropertysetItem>() {
 						public void cancelPressed() {}
@@ -741,7 +739,7 @@ public class TagsetTree extends HorizontalLayout {
 				propertyId).setRequired(true);
 		formDialog.getField(
 				propertyId).setRequiredError(
-						"You have to enter a name!");
+						Messages.getString("TagsetTree.enterNameObligation")); //$NON-NLS-1$
 	}
 	
 	private void handleLoadIntoDocumentRequest() {
@@ -771,7 +769,7 @@ public class TagsetTree extends HorizontalLayout {
 		
 		tagTree.addContainerProperty(
 				TagTreePropertyName.caption, String.class, null);
-		tagTree.setColumnHeader(TagTreePropertyName.caption, "Tagsets");
+		tagTree.setColumnHeader(TagTreePropertyName.caption, Messages.getString("TagsetTree.Tagsets")); //$NON-NLS-1$
 		
 		tagTree.addContainerProperty(
 				TagTreePropertyName.icon, Resource.class, null);
@@ -794,7 +792,7 @@ public class TagsetTree extends HorizontalLayout {
 			tagTree.addGeneratedColumn(
 					TagTreePropertyName.color, new ColorLabelColumnGenerator());
 		}
-		tagTree.setColumnHeader(TagTreePropertyName.color, "Tag Type Color");
+		tagTree.setColumnHeader(TagTreePropertyName.color, Messages.getString("TagsetTree.TagColor")); //$NON-NLS-1$
 		addComponent(tagTree);
 		setExpandRatio(tagTree, 0.7f);
 		
@@ -805,8 +803,8 @@ public class TagsetTree extends HorizontalLayout {
 			reloadPanel.setSpacing(true);
 			reloadPanel.setMargin(new MarginInfo(true, true, true, true));
 			
-			btReload = new Button("Reload Tagsets", FontAwesome.REFRESH); 
-			btReload.setWidth("100%");
+			btReload = new Button(Messages.getString("TagsetTree.reloadTagsets"), FontAwesome.REFRESH);  //$NON-NLS-1$
+			btReload.setWidth("100%"); //$NON-NLS-1$
 			reloadPanel.addComponent(btReload);
 			
 			buttonGrid.addComponent(reloadPanel);
@@ -817,9 +815,9 @@ public class TagsetTree extends HorizontalLayout {
 			documentPanel.setSpacing(true);
 			documentPanel.setMargin(new MarginInfo(false, true, false, true));
 			
-			btLoadIntoDocument = new Button("Load Tagset into currently active Document");
-			btLoadIntoDocument.addStyleName("primary-button");
-			btLoadIntoDocument.setWidth("100%");
+			btLoadIntoDocument = new Button(Messages.getString("TagsetTree.loadTagset")); //$NON-NLS-1$
+			btLoadIntoDocument.addStyleName("primary-button"); //$NON-NLS-1$
+			btLoadIntoDocument.setWidth("100%"); //$NON-NLS-1$
 			btLoadIntoDocument.setEnabled(true);
 			documentPanel.addComponent(btLoadIntoDocument);
 			
@@ -832,28 +830,28 @@ public class TagsetTree extends HorizontalLayout {
 			tagsetPanel.setMargin(new MarginInfo(true, true, false, true));
 			
 			Label tagsetLabel = new Label();
-			tagsetLabel.addStyleName("tagsettree-label");
+			tagsetLabel.addStyleName("tagsettree-label"); //$NON-NLS-1$
 			tagsetLabel.setIcon(
-					new ClassResource("tagmanager/resources/grndiamd.gif"));
-			tagsetLabel.setCaption("Tagset");
+					new ClassResource("tagmanager/resources/grndiamd.gif")); //$NON-NLS-1$
+			tagsetLabel.setCaption(Messages.getString("TagsetTree.Tagset")); //$NON-NLS-1$
 			
 			tagsetPanel.addComponent(tagsetLabel);
 
 			
-			btInsertTagset = new Button("Create Tagset");
-			btInsertTagset.addStyleName("secondary-button");
+			btInsertTagset = new Button(Messages.getString("TagsetTree.createTagset")); //$NON-NLS-1$
+			btInsertTagset.addStyleName("secondary-button"); //$NON-NLS-1$
 			btInsertTagset.setEnabled(true);
-			btInsertTagset.setWidth("100%");
+			btInsertTagset.setWidth("100%"); //$NON-NLS-1$
 			tagsetPanel.addComponent(btInsertTagset);
 
 			
-			btRemoveTagset = new Button("Remove Tagset");
-			btRemoveTagset.setWidth("100%");
+			btRemoveTagset = new Button(Messages.getString("TagsetTree.deleteTagset")); //$NON-NLS-1$
+			btRemoveTagset.setWidth("100%"); //$NON-NLS-1$
 			tagsetPanel.addComponent(btRemoveTagset);
 
 			
-			btEditTagset = new Button("Edit Tagset");
-			btEditTagset.setWidth("100%");
+			btEditTagset = new Button(Messages.getString("TagsetTree.editTagset")); //$NON-NLS-1$
+			btEditTagset.setWidth("100%"); //$NON-NLS-1$
 			tagsetPanel.addComponent(btEditTagset);
 			
 			buttonGrid.addComponent(tagsetPanel);
@@ -865,29 +863,29 @@ public class TagsetTree extends HorizontalLayout {
 			tagPanel.setMargin(new MarginInfo(true, true, false, true));
 			
 			Label tagLabel = new Label();
-			tagLabel.addStyleName("tagsettree-label");
+			tagLabel.addStyleName("tagsettree-label"); //$NON-NLS-1$
 
 			tagLabel.setIcon(
-					new ClassResource("tagmanager/resources/reddiamd.gif"));
-			tagLabel.setCaption("Tag");
+					new ClassResource("tagmanager/resources/reddiamd.gif")); //$NON-NLS-1$
+			tagLabel.setCaption(Messages.getString("TagsetTree.Tag")); //$NON-NLS-1$
 			
 			tagPanel.addComponent(tagLabel);
 			tagPanel.setComponentAlignment(tagLabel, Alignment.BOTTOM_LEFT);
 			
-			btInsertTag = new Button("Create Tag Type");
-			btInsertTag.addStyleName("secondary-button");
-			btInsertTag.setWidth("100%");
+			btInsertTag = new Button(Messages.getString("TagsetTree.createTag")); //$NON-NLS-1$
+			btInsertTag.addStyleName("secondary-button"); //$NON-NLS-1$
+			btInsertTag.setWidth("100%"); //$NON-NLS-1$
 			if (withTagsetButtons) {
 				btInsertTag.setEnabled(true);
 			}
 			tagPanel.addComponent(btInsertTag);
 			
-			btRemoveTag = new Button("Remove Tag Type");
-			btRemoveTag.setWidth("100%");
+			btRemoveTag = new Button(Messages.getString("TagsetTree.deleteTag")); //$NON-NLS-1$
+			btRemoveTag.setWidth("100%"); //$NON-NLS-1$
 			tagPanel.addComponent(btRemoveTag);
 			
-			btEditTag = new Button("Edit Tag Type");
-			btEditTag.setWidth("100%");
+			btEditTag = new Button(Messages.getString("TagsetTree.editTag")); //$NON-NLS-1$
+			btEditTag.setWidth("100%"); //$NON-NLS-1$
 			tagPanel.addComponent(btEditTag);
 			
 			buttonGrid.addComponent(tagPanel);
@@ -899,31 +897,31 @@ public class TagsetTree extends HorizontalLayout {
 			propertyPanel.setMargin(new MarginInfo(true, true, false, true));
 			
 			Label propertyLabel = new Label();
-			propertyLabel.addStyleName("tagsettree-label");
+			propertyLabel.addStyleName("tagsettree-label"); //$NON-NLS-1$
 
 			propertyLabel.setIcon(
-					new ClassResource("tagmanager/resources/ylwdiamd.gif"));
-			propertyLabel.setCaption("Property");
-			propertyLabel.setHeight("15px");
-			propertyLabel.addStyleName("tagsettree-button-top-margin");
+					new ClassResource("tagmanager/resources/ylwdiamd.gif")); //$NON-NLS-1$
+			propertyLabel.setCaption(Messages.getString("TagsetTree.Property")); //$NON-NLS-1$
+			propertyLabel.setHeight("15px"); //$NON-NLS-1$
+			propertyLabel.addStyleName("tagsettree-button-top-margin"); //$NON-NLS-1$
 			
 			propertyPanel.addComponent(propertyLabel);
 			
 			propertyPanel.setComponentAlignment(propertyLabel, Alignment.BOTTOM_LEFT);
 			
-			btInsertProperty = new Button("Create Property");
-			btInsertProperty.setWidth("100%");
-			btInsertProperty.addStyleName("tagsettree-button-top-margin");
+			btInsertProperty = new Button(Messages.getString("TagsetTree.createProperty")); //$NON-NLS-1$
+			btInsertProperty.setWidth("100%"); //$NON-NLS-1$
+			btInsertProperty.addStyleName("tagsettree-button-top-margin"); //$NON-NLS-1$
 			propertyPanel.addComponent(btInsertProperty);
 			
-			btRemoveProperty = new Button("Remove Property");
-			btRemoveProperty.addStyleName("tagsettree-button-top-margin");
-			btRemoveProperty.setWidth("100%");
+			btRemoveProperty = new Button(Messages.getString("TagsetTree.removeProperty")); //$NON-NLS-1$
+			btRemoveProperty.addStyleName("tagsettree-button-top-margin"); //$NON-NLS-1$
+			btRemoveProperty.setWidth("100%"); //$NON-NLS-1$
 			propertyPanel.addComponent(btRemoveProperty);
 			
-			btEditProperty = new Button("Edit Property");
-			btEditProperty.setWidth("100%");
-			btEditProperty.addStyleName("tagsettree-button-top-margin");
+			btEditProperty = new Button(Messages.getString("TagsetTree.editProperty")); //$NON-NLS-1$
+			btEditProperty.setWidth("100%"); //$NON-NLS-1$
+			btEditProperty.addStyleName("tagsettree-button-top-margin"); //$NON-NLS-1$
 			propertyPanel.addComponent(btEditProperty);
 			
 			buttonGrid.addComponent(propertyPanel);
@@ -949,7 +947,7 @@ public class TagsetTree extends HorizontalLayout {
 	public void addTagsetDefinition(TagsetDefinition tagsetDefinition) {
 		
 		ClassResource tagsetIcon = 
-				new ClassResource("tagmanager/resources/grndiamd.gif");
+				new ClassResource("tagmanager/resources/grndiamd.gif"); //$NON-NLS-1$
 		
 		tagTree.addItem(tagsetDefinition);
 		tagTree.getContainerProperty(
@@ -993,7 +991,7 @@ public class TagsetTree extends HorizontalLayout {
 
 	private void addTagDefinition(TagDefinition tagDefinition) {
 		ClassResource tagIcon = 
-			new ClassResource("tagmanager/resources/reddiamd.gif");
+			new ClassResource("tagmanager/resources/reddiamd.gif"); //$NON-NLS-1$
 
 		tagTree.addItem(tagDefinition);
 		tagTree.getContainerProperty(
@@ -1013,7 +1011,7 @@ public class TagsetTree extends HorizontalLayout {
 	private void addUserDefinedPropertyDefinition(
 			PropertyDefinition propertyDefinition, TagDefinition tagDefinition) {
 		ClassResource propertyIcon = 
-				new ClassResource("tagmanager/resources/ylwdiamd.gif");
+				new ClassResource("tagmanager/resources/ylwdiamd.gif"); //$NON-NLS-1$
 		
 		tagTree.addItem(propertyDefinition);
 		tagTree.setChildrenAllowed(tagDefinition, true);

@@ -24,6 +24,7 @@ import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -96,8 +97,8 @@ public class CatmaApplication extends UI
 	implements BackgroundServiceProvider, AnalyzerProvider, LoginToken {
 	
 	private static final String MINORVERSION = 
-			"(build "+new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date())+")";
-	private static final String WEB_INF_DIR = "WEB-INF";
+			"(build "+new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date())+")"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	private static final String WEB_INF_DIR = "WEB-INF"; //$NON-NLS-1$
 
 	private RepositoryManagerView repositoryManagerView;
 	private TagManagerView tagManagerView;
@@ -155,21 +156,21 @@ public class CatmaApplication extends UI
 		
 		storeParameters(request.getParameterMap());
 		
-		Page.getCurrent().setTitle("CATMA 6.0 " + MINORVERSION);
+		Page.getCurrent().setTitle("CATMA 6.0 " + MINORVERSION); //$NON-NLS-1$
 		
 		mainLayout = new VerticalLayout();
 		mainLayout.setSizeFull();
 		
 		menuPanel = new Panel();
-		menuPanel.addStyleName("menuPanel");
+		menuPanel.addStyleName("menuPanel"); //$NON-NLS-1$
 		mainLayout.addComponent(menuPanel);
 		
 		contentPanel = new Panel();
-		contentPanel.setHeight("100%");
-		contentPanel.addStyleName("contentPanel");
+		contentPanel.setHeight("100%"); //$NON-NLS-1$
+		contentPanel.addStyleName("contentPanel"); //$NON-NLS-1$
 		
-		defaultContentPanelLabel = new Label("Please log in to get started");
-		defaultContentPanelLabel.addStyleName("defaultContentPanelLabel");
+		defaultContentPanelLabel = new Label(Messages.getString("CatmaApplication.logInToGetStarted")); //$NON-NLS-1$
+		defaultContentPanelLabel.addStyleName("defaultContentPanelLabel"); //$NON-NLS-1$
 		contentPanel.setContent(defaultContentPanelLabel);
 		
 		mainLayout.addComponent(contentPanel);
@@ -179,10 +180,10 @@ public class CatmaApplication extends UI
 		menuLayout.setMargin(true);
 		menuLayout.setSpacing(true);
 		
-		logoResource = new ThemeResource("catma-logo.png");
-		Link logoImage = new Link(null, new ExternalResource("http://www.catma.de"));
+		logoResource = new ThemeResource("catma-logo.png"); //$NON-NLS-1$
+		Link logoImage = new Link(null, new ExternalResource("http://www.catma.de")); //$NON-NLS-1$
 		logoImage.setIcon(logoResource);
-		logoImage.setTargetName("_blank");
+		logoImage.setTargetName("_blank"); //$NON-NLS-1$
 		menuLayout.addComponent(logoImage);
 		
 		MenuFactory menuFactory = new MenuFactory();
@@ -209,60 +210,60 @@ public class CatmaApplication extends UI
 					menuLayout,
 					contentPanel,
 					new MenuFactory.MenuEntryDefinition( 
-							"Repository Manager",
+							Messages.getString("CatmaApplication.repositoryManager"), //$NON-NLS-1$
 							repositoryManagerView),
 					new MenuFactory.MenuEntryDefinition(
-							"Tag Type Manager",
+							Messages.getString("CatmaApplication.tagManager"), //$NON-NLS-1$
 							tagManagerView),
 					new MenuFactory.MenuEntryDefinition(
-							"Tagger",
+							Messages.getString("CatmaApplication.tagger"), //$NON-NLS-1$
 							taggerManagerView),
 					new MenuFactory.MenuEntryDefinition(
-							"Analyzer",
+							Messages.getString("CatmaApplication.analyzer"), //$NON-NLS-1$
 							analyzerManagerView),
 					new MenuFactory.MenuEntryDefinition(
-							"Visualizer",
+							Messages.getString("CatmaApplication.visualizer"), //$NON-NLS-1$
 							visualizationManagerView)
 					);
 			addPropertyChangeListener(CatmaApplicationEvent.userChange, menu.userChangeListener);
 			
 			Link latestFeaturesLink = new Link(
-					"Latest Features", new ExternalResource("http://www.catma.de/latestfeatures"));
-			latestFeaturesLink.setTargetName("_blank");
+					Messages.getString("CatmaApplication.latestFeatures"), new ExternalResource("http://www.catma.de/latestfeatures")); //$NON-NLS-1$ //$NON-NLS-2$
+			latestFeaturesLink.setTargetName("_blank"); //$NON-NLS-1$
 			menuLayout.addComponent(latestFeaturesLink);
 			menuLayout.setComponentAlignment(latestFeaturesLink, Alignment.TOP_RIGHT);
 			menuLayout.setExpandRatio(latestFeaturesLink, 1.0f);
 			
 			Link aboutLink = new Link(
-					"About", new ExternalResource("http://www.catma.de"));
-			aboutLink.setTargetName("_blank");
+					Messages.getString("CatmaApplication.about"), new ExternalResource("http://www.catma.de")); //$NON-NLS-1$ //$NON-NLS-2$
+			aboutLink.setTargetName("_blank"); //$NON-NLS-1$
 			menuLayout.addComponent(aboutLink);
 			menuLayout.setComponentAlignment(aboutLink, Alignment.TOP_RIGHT);
 			
 			Link termsOfUseLink = new Link(
-					"Terms of Use", new ExternalResource("http://www.catma.de/termsofuse"));
-			termsOfUseLink.setTargetName("_blank");
+					Messages.getString("CatmaApplication.termsOfUse"), new ExternalResource("http://www.catma.de/termsofuse")); //$NON-NLS-1$ //$NON-NLS-2$
+			termsOfUseLink.setTargetName("_blank"); //$NON-NLS-1$
 			menuLayout.addComponent(termsOfUseLink);
 			menuLayout.setComponentAlignment(termsOfUseLink, Alignment.TOP_RIGHT);
 
 			Link manualLink = new Link(
-					"Manual", 
-					new ExternalResource(request.getContextPath()+"/manual/"));
-			manualLink.setTargetName("_blank");
+					Messages.getString("CatmaApplication.Manual"),  //$NON-NLS-1$
+					new ExternalResource(request.getContextPath()+"/manual/")); //$NON-NLS-1$
+			manualLink.setTargetName("_blank"); //$NON-NLS-1$
 			menuLayout.addComponent(manualLink);
 			menuLayout.setComponentAlignment(manualLink, Alignment.TOP_RIGHT);
 				
 			Link helpLink = new Link(
-					"Helpdesk", 
-					new ExternalResource("http://www.catma.de/helpdesk/"));
-			helpLink.setTargetName("_blank");
+					Messages.getString("CatmaApplication.Helpdesk"),  //$NON-NLS-1$
+					new ExternalResource("http://www.catma.de/helpdesk/")); //$NON-NLS-1$
+			helpLink.setTargetName("_blank"); //$NON-NLS-1$
 			menuLayout.addComponent(helpLink);
 			menuLayout.setComponentAlignment(helpLink, Alignment.TOP_RIGHT);
 			helpLink.setVisible(false);
 			
 			btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
-			btHelp.addStyleName("help-button");
-			btHelp.addStyleName("application-help-button");
+			btHelp.addStyleName("help-button"); //$NON-NLS-1$
+			btHelp.addStyleName("application-help-button"); //$NON-NLS-1$
 			
 			menuLayout.addComponent(btHelp);
 			
@@ -281,15 +282,15 @@ public class CatmaApplication extends UI
 
 			LoginLogoutCommand loginLogoutCommand = 
 					new LoginLogoutCommand(menu, repositoryManagerView);
-			Button btloginLogout = new Button("Sign in", event -> loginLogoutCommand.menuSelected(null));
+			Button btloginLogout = new Button(Messages.getString("CatmaApplication.signIn"), event -> loginLogoutCommand.menuSelected(null)); //$NON-NLS-1$
 			btloginLogout.setStyleName(BaseTheme.BUTTON_LINK);
-			btloginLogout.addStyleName("application-loginlink");
+			btloginLogout.addStyleName("application-loginlink"); //$NON-NLS-1$
 			
 			loginLogoutCommand.setLoginLogoutButton(btloginLogout);
 			
 			menuLayout.addComponent(btloginLogout);
 			menuLayout.setComponentAlignment(btloginLogout, Alignment.TOP_RIGHT);
-			menuLayout.setWidth("100%");
+			menuLayout.setWidth("100%"); //$NON-NLS-1$
 			
 			menuPanel.setContent(menuLayout);
 
@@ -310,11 +311,11 @@ public class CatmaApplication extends UI
 						RepositoryPropertyKey.CATMA_oauthAccessTokenRequestURL.getValue(),
 						RepositoryPropertyKey.CATMA_oauthClientId.getValue(),
 						RepositoryPropertyKey.CATMA_oauthClientSecret.getValue(),
-						URLEncoder.encode("/", "UTF-8")));
+						URLEncoder.encode("/", "UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			
 		} catch (Exception e) {
-			showAndLogError("The system could not be initialized!", e);
+			showAndLogError(Messages.getString("CatmaApplication.errorSystemNotInitialized"), e); //$NON-NLS-1$
 		}
 
 	}
@@ -361,7 +362,7 @@ public class CatmaApplication extends UI
 			this.tempDirectory = 
 					VaadinServlet.getCurrent().getServletContext().getRealPath(//TODO: check
 					WEB_INF_DIR
-					+ System.getProperty("file.separator")
+					+ System.getProperty("file.separator") //$NON-NLS-1$
 					+ tempDirProp);
 		}
 		else {
@@ -371,7 +372,7 @@ public class CatmaApplication extends UI
 		tempDir = new File(this.tempDirectory);
 		if ((!tempDir.exists() && !tempDir.mkdirs())) {
 			throw new IOException(
-				"could not create temporary directory: " + this.tempDirectory);
+				"could not create temporary directory: " + this.tempDirectory); //$NON-NLS-1$
 		}
 	}
 	
@@ -380,8 +381,8 @@ public class CatmaApplication extends UI
 		
 		if(selectedTab == null){
 			Notification.show(
-					"Information", 
-					"There is no active document open in the Tagger",
+					Messages.getString("CatmaApplication.infoTitle"),  //$NON-NLS-1$
+					Messages.getString("CatmaApplication.noActiveDocumentInTagger"), //$NON-NLS-1$
 					Type.TRAY_NOTIFICATION);
 			return;
 		}
@@ -392,8 +393,8 @@ public class CatmaApplication extends UI
 		String sourceDocumentCaption = sd.toString();
 		
 		Notification.show(
-				"Information", 
-				"Tagset loaded into active document: '" + sourceDocumentCaption + "'",
+				Messages.getString("CatmaApplication.infoTitle"),  //$NON-NLS-1$
+				MessageFormat.format(Messages.getString("CatmaApplication.tagsetLoaded"), sourceDocumentCaption), //$NON-NLS-1$
 				Type.TRAY_NOTIFICATION);
 	}
 
@@ -401,7 +402,7 @@ public class CatmaApplication extends UI
 		repositoryOpened = true;
 		userManager.login(this);
 		repositoryManagerView.openRepository(repository);
-		logger.info("repository has been opened for user" + getUser());
+		logger.info("repository has been opened for user" + getUser()); //$NON-NLS-1$
 	}
 	 
 	public void openTagLibrary(Repository repository, TagLibrary tagLibrary) {
@@ -453,7 +454,7 @@ public class CatmaApplication extends UI
 			String caption,
 			final ProgressCallable<T> callable, 
 			final ExecutionListener<T> listener) {
-		logger.info("submitting job '" + caption +  "' " + callable);
+		logger.info("submitting job '" + caption +  "' " + callable); //$NON-NLS-1$ //$NON-NLS-2$
 		getBackgroundService().submit(
 			callable, new ExecutionListener<T>() {
 				public void done(T result) {
@@ -494,7 +495,7 @@ public class CatmaApplication extends UI
 	@Override
 	public void close() {
 		repositoryManagerView.getRepositoryManager().close();
-		logger.info("application for user" + getUser() + " has been closed");
+		logger.info("application for user" + getUser() + " has been closed"); //$NON-NLS-1$ //$NON-NLS-2$
 		if (repositoryOpened) {
 			userManager.logout(this);
 			repositoryOpened = false;
@@ -505,18 +506,15 @@ public class CatmaApplication extends UI
 	
 	
 	public void showAndLogError(String message, Throwable e) {
-		logger.log(Level.SEVERE, "["+getUser()+"]" + message, e);
+		logger.log(Level.SEVERE, "["+getUser()+"]" + message, e); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		if (message == null) {
-			message = "internal error"; 
+			message = Messages.getString("CatmaApplication.internalError");  //$NON-NLS-1$
 		}
 		if (Page.getCurrent() != null) {
 			HTMLNotification.show(
-				"Error", 
-				"An error has occurred!<br />" +
-				"We've been notified about this error and it will be fixed soon.<br />" +
-				"The underlying error message is:<br />" + message +
-				"<br />" + e.getMessage(), 
+				Messages.getString("CatmaApplication.error"),  //$NON-NLS-1$
+				MessageFormat.format(Messages.getString("CatmaApplication.errorOccurred"), message,  e.getMessage()),  //$NON-NLS-1$
 				Type.ERROR_MESSAGE);
 		}
 	}

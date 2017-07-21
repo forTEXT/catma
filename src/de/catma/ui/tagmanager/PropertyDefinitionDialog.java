@@ -73,12 +73,12 @@ public class PropertyDefinitionDialog extends VerticalLayout {
 				String val = (String)newValueInput.getValue();
 				if ((val == null)||(val.isEmpty())) {
 					Notification.show(
-						"Info", "The value can not be empty!", 
+						Messages.getString("PropertyDefinitionDialog.infoTitle"), Messages.getString("PropertyDefinitionDialog.valueMustNotBeEmpty"),  //$NON-NLS-1$ //$NON-NLS-2$
 						Type.TRAY_NOTIFICATION);
 				}
 				else {
 					valueInput.addItem(val);
-					newValueInput.setValue("");
+					newValueInput.setValue(""); //$NON-NLS-1$
 				}
 				
 			}
@@ -92,7 +92,7 @@ public class PropertyDefinitionDialog extends VerticalLayout {
 				}
 				else {
 					Notification.show(
-							"Info", "Please select a value first!", 
+							Messages.getString("PropertyDefinitionDialog.infoTitle"), Messages.getString("PropertyDefinitionDialog.selectAValueFirst"),  //$NON-NLS-1$ //$NON-NLS-2$
 							Type.TRAY_NOTIFICATION);
 				}
 				
@@ -139,7 +139,7 @@ public class PropertyDefinitionDialog extends VerticalLayout {
 		GridLayout propPanel = new GridLayout(3, 3);
 		propPanel.setSpacing(true);
 		
-		nameInput = new TextField("Name");
+		nameInput = new TextField(Messages.getString("PropertyDefinitionDialog.name")); //$NON-NLS-1$
 		nameInput.setRequired(true);
 		if (propertyDefinition != null) {
 			nameInput.setValue(propertyDefinition.getName());
@@ -148,26 +148,26 @@ public class PropertyDefinitionDialog extends VerticalLayout {
 		
 		if (propertyDefinition != null) {
 			valueInput = new ListSelect(
-				"Possible values", 
+				Messages.getString("PropertyDefinitionDialog.possibleValues"),  //$NON-NLS-1$
 				propertyDefinition.getPossibleValueList().getPropertyValueList().getValues());
 		}
 		else {
-			valueInput = new ListSelect("Possible values");
+			valueInput = new ListSelect(Messages.getString("PropertyDefinitionDialog.possibleValues")); //$NON-NLS-1$
 		}
-		valueInput.setWidth("100%");
+		valueInput.setWidth("100%"); //$NON-NLS-1$
 		valueInput.setRequired(true);
 		valueInput.setNullSelectionAllowed(false);
 		
 		propPanel.addComponent(valueInput, 0, 1, 2, 1);
 		
-		newValueInput = new TextField("Add possible value");
+		newValueInput = new TextField(Messages.getString("PropertyDefinitionDialog.addPossibleValue")); //$NON-NLS-1$
 		propPanel.addComponent(newValueInput, 0, 2);
 		
-		btAdd = new Button("+");
+		btAdd = new Button(Messages.getString("PropertyDefinitionDialog.Plus")); //$NON-NLS-1$
 		propPanel.addComponent(btAdd, 1, 2);
 		propPanel.setComponentAlignment(btAdd, Alignment.BOTTOM_CENTER);
 		
-		btRemove = new Button("-");
+		btRemove = new Button(Messages.getString("PropertyDefinitionDialog.Minus")); //$NON-NLS-1$
 		propPanel.addComponent(btRemove, 2, 2);
 		propPanel.setComponentAlignment(btRemove, Alignment.BOTTOM_CENTER);
 		
@@ -177,11 +177,11 @@ public class PropertyDefinitionDialog extends VerticalLayout {
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setSpacing(true);
 		
-		btSave = new Button("Save");
+		btSave = new Button(Messages.getString("PropertyDefinitionDialog.Save")); //$NON-NLS-1$
 		buttonPanel.addComponent(btSave);
 		buttonPanel.setComponentAlignment(btSave, Alignment.MIDDLE_RIGHT);
 		
-		btCancel = new Button("Cancel");
+		btCancel = new Button(Messages.getString("PropertyDefinitionDialog.Cancel")); //$NON-NLS-1$
 		buttonPanel.addComponent(btCancel);
 		buttonPanel.setComponentAlignment(btCancel, Alignment.MIDDLE_RIGHT);
 		
@@ -190,8 +190,8 @@ public class PropertyDefinitionDialog extends VerticalLayout {
 		
 		window = new Window(caption);
 		window.setContent(this);
-		window.setWidth("30%");
-		window.setHeight("70%");
+		window.setWidth("30%"); //$NON-NLS-1$
+		window.setHeight("70%"); //$NON-NLS-1$
 		window.center();
 	}
 	

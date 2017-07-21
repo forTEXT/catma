@@ -25,7 +25,7 @@ import de.catma.ui.CatmaApplication;
 public class SourceDocumentExportOptionsDialog extends Window {
 	
 	public SourceDocumentExportOptionsDialog(Repository repository, SourceDocument sd) {
-		super("Source Document Export Options");
+		super(Messages.getString("SourceDocumentExportOptionsDialog.sourceDocExportOptions")); //$NON-NLS-1$
 		initComponents(repository, sd);
 	}
 
@@ -37,7 +37,7 @@ public class SourceDocumentExportOptionsDialog extends Window {
 		content.setMargin(true);
 		content.setSpacing(true);
 		
-		Button btExport = new Button("Export Document");
+		Button btExport = new Button(Messages.getString("SourceDocumentExportOptionsDialog.exportDocument")); //$NON-NLS-1$
 		content.addComponent(btExport);
 		
 		StreamResource resultStreamResource = 
@@ -54,7 +54,7 @@ public class SourceDocumentExportOptionsDialog extends Window {
 		new FileDownloader(resultStreamResource).extend(btExport);	
 		
 		
-		Button btExportPlain = new Button("Export Document as UTF-8 plain text");
+		Button btExportPlain = new Button(Messages.getString("SourceDocumentExportOptionsDialog.exportDocAsPlainText")); //$NON-NLS-1$
 		content.addComponent(btExportPlain);
 		
 		StreamResource resultUTF8StreamResource = 
@@ -78,10 +78,10 @@ public class SourceDocumentExportOptionsDialog extends Window {
 				sourceContentHandler.getSourceDocumentInfo()
 					.getContentInfoSet().getTitle();
 		if (title!=null) {
-			title = title.replaceAll("\\s", "_");
+			title = title.replaceAll("\\s", "_"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		return (((title==null)||title.isEmpty())?sourceDocument.getID().replaceAll("[/:]", ""):title) +
-			".txt";
+		return (((title==null)||title.isEmpty())?sourceDocument.getID().replaceAll("[/:]", ""):title) + //$NON-NLS-1$ //$NON-NLS-2$
+			".txt"; //$NON-NLS-1$
 	}
 
 	private InputStream createUTF8ExportResultStream(
@@ -90,13 +90,13 @@ public class SourceDocumentExportOptionsDialog extends Window {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		
 		try {
-			bos.write(sd.getContent().getBytes(Charset.forName("UTF8")));
+			bos.write(sd.getContent().getBytes(Charset.forName("UTF8"))); //$NON-NLS-1$
 		
 			final ByteArrayInputStream bis = 
 					new ByteArrayInputStream(bos.toByteArray());
 			return bis;
 		} catch (IOException e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError("error exporting source document as plain text", e);
+			((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("SourceDocumentExportOptionsDialog.errorExportAsPlainText"), e); //$NON-NLS-1$
 		}
 		
 		return null;
@@ -119,11 +119,11 @@ public class SourceDocumentExportOptionsDialog extends Window {
 				sourceContentHandler.getSourceDocumentInfo()
 					.getContentInfoSet().getTitle();
 		if (title!=null) {
-			title = title.replaceAll("\\s", "_");
+			title = title.replaceAll("\\s", "_"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		return  
-			(((title==null)||title.isEmpty())?sourceDocument.getID().replaceAll("[/:]", ""):title) +
-			"." + sourceContentHandler.getSourceDocumentInfo().getTechInfoSet().getFileType().name().toLowerCase();
+			(((title==null)||title.isEmpty())?sourceDocument.getID().replaceAll("[/:]", ""):title) + //$NON-NLS-1$ //$NON-NLS-2$
+			"." + sourceContentHandler.getSourceDocumentInfo().getTechInfoSet().getFileType().name().toLowerCase(); //$NON-NLS-1$
 	}
 
 }

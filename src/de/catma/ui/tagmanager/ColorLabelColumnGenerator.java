@@ -31,9 +31,9 @@ import de.catma.util.ColorConverter;
 public class ColorLabelColumnGenerator implements ColumnGenerator {
 	
 	public static final String COLORLABEL_HTML = 
-			"<span style=\"background-color:#{0};margin-left:3px;\">" +
-					"&nbsp;&nbsp;&nbsp;&nbsp;" +
-			"</span>";
+			"<span style=\"background-color:#{0};margin-left:3px;\">" + //$NON-NLS-1$
+					"&nbsp;&nbsp;&nbsp;&nbsp;" + //$NON-NLS-1$
+			"</span>"; //$NON-NLS-1$
 	
 	public static interface TagDefinitionProvider {
 		public TagDefinition getTagDefinition(Object itemId);

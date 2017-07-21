@@ -11,11 +11,11 @@ import de.catma.ui.field.FormFieldGenerator;
 public class UserIdentFieldGenerator implements FormFieldGenerator {
 
 	public Field createField(Item item, Component uiContext) {
-		Field field = DefaultFieldFactory.get().createField(item, "userIdentification", uiContext);
-		field.setCaption("Share with (email)");
+		Field field = DefaultFieldFactory.get().createField(item, "userIdentification", uiContext); //$NON-NLS-1$
+		field.setCaption(Messages.getString("UserIdentFieldGenerator.shareWith")); //$NON-NLS-1$
 		field.setRequired(true);
 		field.setInvalidAllowed(false);
-		field.addValidator(new NonEmptySequenceValidator("You have to enter an email address!"));
+		field.addValidator(new NonEmptySequenceValidator(Messages.getString("UserIdentFieldGenerator.enterEmailAddress"))); //$NON-NLS-1$
 		return field;
 	}
 

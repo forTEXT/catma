@@ -18,6 +18,7 @@
  */
 package de.catma.ui.visualizer.chart;
 
+import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,9 +91,9 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 	private void initComponents(DistributionComputation distributionComputation) {
 		setSpacing(true);
 		setMargin(new MarginInfo(true, false, false, false));
-		addStyleName("distributionchartviewpanel");
+		addStyleName("distributionchartviewpanel"); //$NON-NLS-1$
 
-		zoom = new Slider("Zoom", 0, 100, "%");
+		zoom = new Slider(Messages.getString("DistributionChartView.zoom"), 0, 100, "%"); //$NON-NLS-1$ //$NON-NLS-2$
 		zoom.setValue(100.0);
 		
 		addComponent(zoom);
@@ -116,7 +117,7 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 			row.setSpacing(true);
 			
 			zoomPanel.addComponent(row);
-			row.setWidth("100%");
+			row.setWidth("100%"); //$NON-NLS-1$
 			
 			int rowLength = Math.min(distributions.size()-((rowIdx)*ROW_LENGTH), ROW_LENGTH);
 			if (firstRowLength == null) {
@@ -129,8 +130,8 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 						distributions.get((rowIdx*ROW_LENGTH)+colIdx);
 				Chart chart = new Chart(distribution, maxOccurrences, distributionSelectionListener);
 				int width = (int)(500.0*(3.0/firstRowLength));
-				chart.setWidth(width+"px");
-				chart.setHeight("700px");
+				chart.setWidth(width+"px"); //$NON-NLS-1$
+				chart.setHeight("700px"); //$NON-NLS-1$
 				row.addComponent(chart);
 				charts.put(distribution.getId(), chart);
 			}
@@ -166,6 +167,6 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 	
 	@Override
 	public String toString() {
-		return "Distribution analysis for " + label;
+		return MessageFormat.format(Messages.getString("DistributionChartView.distAnalysisFor"), label); //$NON-NLS-1$
 	}
 }

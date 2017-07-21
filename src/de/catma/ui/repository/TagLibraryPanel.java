@@ -25,8 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-
-import nu.xom.ParsingException;
+import java.text.MessageFormat;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
@@ -79,10 +78,11 @@ import de.catma.ui.dialog.UploadDialog;
 import de.catma.ui.repository.sharing.SharingOptions;
 import de.catma.ui.repository.sharing.SharingOptionsFieldFactory;
 import de.catma.util.CloseSafe;
+import nu.xom.ParsingException;
 
 public class TagLibraryPanel extends HorizontalSplitPanel {
 
-	private final static String SORTCAP_PROP = "SORTCAP";
+	private final static String SORTCAP_PROP = "SORTCAP"; //$NON-NLS-1$
 
 	private final ContentInfoSet emptyContentInfoSet = new ContentInfoSet();
 	
@@ -166,21 +166,21 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		HorizontalLayout tagLibraryButtonPanel = new HorizontalLayout();
 		tagLibraryButtonPanel.setSpacing(true);
 		
-		btOpenTagLibrary = new Button("Open Tag Type Library");
-		btOpenTagLibrary.addStyleName("primary-button");
+		btOpenTagLibrary = new Button(Messages.getString("TagLibraryPanel.openTagLibrary")); //$NON-NLS-1$
+		btOpenTagLibrary.addStyleName("primary-button"); //$NON-NLS-1$
 		btOpenTagLibrary.setEnabled(false);
 		tagLibraryButtonPanel.addComponent(btOpenTagLibrary);
 
-		btCreateTagLibrary = new Button("Create Tag Type Library");
-		btCreateTagLibrary.addStyleName("secondary-button");
+		btCreateTagLibrary = new Button(Messages.getString("TagLibraryPanel.createTagLibrary")); //$NON-NLS-1$
+		btCreateTagLibrary.addStyleName("secondary-button"); //$NON-NLS-1$
 		tagLibraryButtonPanel.addComponent(btCreateTagLibrary);
 		
-		btExportTagLibrary = new Button("Export Tag Type Library");
+		btExportTagLibrary = new Button(Messages.getString("TagLibraryPanel.exportTagLibrary")); //$NON-NLS-1$
 		tagLibraryButtonPanel.addComponent(btExportTagLibrary);
 		
 		MenuBar menuMoreTagLibraryActions = new MenuBar();
 		miMoreTagLibraryActions = 
-				menuMoreTagLibraryActions.addItem("More actions...", null);
+				menuMoreTagLibraryActions.addItem(Messages.getString("TagLibraryPanel.moreActions"), null); //$NON-NLS-1$
 		tagLibraryButtonPanel.addComponent(menuMoreTagLibraryActions);
 		
 		return tagLibraryButtonPanel;
@@ -200,8 +200,8 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		tagLibrariesTree = new Tree();
 		tagLibrariesTree.setContainerDataSource(tagLibraryContainer);
 		
-		tagLibrariesTree.setCaption("Tag Type Libraries");
-		tagLibrariesTree.addStyleName("bold-label-caption");
+		tagLibrariesTree.setCaption(Messages.getString("TagLibraryPanel.tagLibraries")); //$NON-NLS-1$
+		tagLibrariesTree.addStyleName("bold-label-caption"); //$NON-NLS-1$
 		tagLibrariesTree.setImmediate(true);
 		tagLibrariesTree.setItemCaptionMode(ItemCaptionMode.ID);
 		
@@ -240,14 +240,14 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		
 		contentInfoButtonsPanel.setStyleName(Reindeer.PANEL_LIGHT);
 		
-		btEditContentInfo = new Button("Edit");
+		btEditContentInfo = new Button(Messages.getString("TagLibraryPanel.Edit")); //$NON-NLS-1$
 		btEditContentInfo.setEnabled(false);
 
 		content.addComponent(btEditContentInfo);
-		btSaveContentInfoChanges = new Button("Save");
+		btSaveContentInfoChanges = new Button(Messages.getString("TagLibraryPanel.Save")); //$NON-NLS-1$
 		btSaveContentInfoChanges.setVisible(false);
 		content.addComponent(btSaveContentInfoChanges);
-		btDiscardContentInfoChanges = new Button("Discard");
+		btDiscardContentInfoChanges = new Button(Messages.getString("TagLibraryPanel.Discard")); //$NON-NLS-1$
 		btDiscardContentInfoChanges.setVisible(false);
 		content.addComponent(btDiscardContentInfoChanges);
 		
@@ -259,12 +259,12 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		contentInfoPanelContent.setMargin(true);
 		Panel contentInfoPanel = new Panel(contentInfoPanelContent);
 		contentInfoPanel.getContent().setSizeUndefined();
-		contentInfoPanel.getContent().setWidth("100%");
+		contentInfoPanel.getContent().setWidth("100%"); //$NON-NLS-1$
 		contentInfoPanel.setSizeFull();
 		
 		contentInfoForm = new Form();
 		contentInfoForm.setSizeFull();
-		contentInfoForm.setCaption("Information");
+		contentInfoForm.setCaption(Messages.getString("TagLibraryPanel.contentInformation")); //$NON-NLS-1$
 		contentInfoForm.setBuffered(true);
 		contentInfoForm.setReadOnly(true);
 		contentInfoForm.setEnabled(false);
@@ -273,7 +273,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 				new BeanItem<ContentInfoSet>(emptyContentInfoSet);
 		contentInfoForm.setItemDataSource(contentInfoItem);
 		contentInfoForm.setVisibleItemProperties(new String[] {
-				"title", "author", "description", "publisher"
+				"title", "author", "description", "publisher" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		});
 		
 		contentInfoForm.setReadOnly(true);
@@ -287,12 +287,12 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		btCreateTagLibrary.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				final String nameProperty = "name";
+				final String nameProperty = "name"; //$NON-NLS-1$
 				SingleValueDialog singleValueDialog = new SingleValueDialog();
 						
 				singleValueDialog.getSingleValue(
-						"Create a new Tag Type Library",
-						"You have to enter a name!",
+						Messages.getString("TagLibraryPanel.createNewTagLibrary"), //$NON-NLS-1$
+						Messages.getString("TagLibraryPanel.enterNameObligation"), //$NON-NLS-1$
 						new SaveCancelListener<PropertysetItem>() {
 					public void cancelPressed() {}
 					public void savePressed(
@@ -305,7 +305,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 							repository.createTagLibrary(name);
 						} catch (IOException e) {
 							((CatmaApplication)UI.getCurrent()).showAndLogError(
-								"Error creating the Tag Type Library!", e);
+								Messages.getString("TagLibraryPanel.errorCreatingTagLibrary"), e); //$NON-NLS-1$
 						}
 					}
 				}, nameProperty);
@@ -327,7 +327,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 							new ContentInfoSet(
 								((TagLibraryReference)value).getContentInfoSet())));
 					contentInfoForm.setVisibleItemProperties(new String[] {
-							"title", "author", "description", "publisher"
+							"title", "author", "description", "publisher" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 					});
 
 				}
@@ -337,7 +337,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 					contentInfoForm.setItemDataSource(
 							new BeanItem<ContentInfoSet>(emptyContentInfoSet));
 					contentInfoForm.setVisibleItemProperties(new String[] {
-							"title", "author", "description", "publisher"
+							"title", "author", "description", "publisher" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 					});
 
 				}
@@ -355,7 +355,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		});
 
 		
-		miMoreTagLibraryActions.addItem("Import Tag Type Library", new Command() {
+		miMoreTagLibraryActions.addItem(Messages.getString("TagLibraryPanel.importTagLibrary"), new Command() { //$NON-NLS-1$
 			
 			public void menuSelected(MenuItem selectedItem) {
 				handleTagLibraryImport();
@@ -370,14 +370,14 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 			}
 		});
 		
-		miMoreTagLibraryActions.addItem("Remove Tag Type Library", new Command() {
+		miMoreTagLibraryActions.addItem(Messages.getString("TagLibraryPanel.removeTagLibrary"), new Command() { //$NON-NLS-1$
 			
 			public void menuSelected(MenuItem selectedItem) {
 				handleTagLibraryRemoval();
 			}
 		});
 
-		miMoreTagLibraryActions.addItem("Share Tag Type Library", new Command() {
+		miMoreTagLibraryActions.addItem(Messages.getString("TagLibraryPanel.shareTagLibrary"), new Command() { //$NON-NLS-1$
 			
 			public void menuSelected(MenuItem selectedItem) {
 				handleShareTagLibraryRequest(tagLibrariesTree.getValue());
@@ -452,7 +452,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 						public InputStream getStream() {
 							return createExportResultStream(tagLibraryReference);
 						}
-					}, tagLibraryReference.toString().replaceAll("[^A-Za-z0-9]", "_") + ".xml" );
+					}, tagLibraryReference.toString().replaceAll("[^A-Za-z0-9]", "_") + ".xml" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			
 			resultStreamResource.setCacheTime(0);
 			
@@ -486,10 +486,10 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 			
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				"Error opening the Tag Type Library!", e);
+				Messages.getString("TagLibraryPanel.errorOpeningTagLibrary"), e); //$NON-NLS-1$
 		} catch (ParsingException parsingException) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				"Error exporting the Tag Type Library!", parsingException);
+				Messages.getString("TagLibraryPanel.errorExportingTagLibrary"), parsingException); //$NON-NLS-1$
 		}
 		return null;
 	}
@@ -502,7 +502,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 			SharingOptions sharingOptions = new SharingOptions();
 			
 			FormDialog<SharingOptions> sharingOptionsDlg = new FormDialog<SharingOptions>(
-				"Please enter the person you want to share with", 
+				Messages.getString("TagLibraryPanel.enterPersonToShare"),  //$NON-NLS-1$
 				new BeanItem<SharingOptions>(sharingOptions),
 				new SharingOptionsFieldFactory(), 
 				new SaveCancelListener<SharingOptions>() {
@@ -516,23 +516,23 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 						} catch (IOException e) {
 							if (e instanceof UnknownUserException) {
 								Notification.show(
-										"Sharing failed!", e.getMessage(), 
+										Messages.getString("TagLibraryPanel.sharingFailed"), e.getMessage(),  //$NON-NLS-1$
 										Type.ERROR_MESSAGE);
 							}
 							else {
 								((CatmaApplication)UI.getCurrent()).showAndLogError(
-									"Error sharing this corpus!", e);
+									Messages.getString("TagLibraryPanel.errorSharing"), e); //$NON-NLS-1$
 							}
 						}
 					}
 				});
 			sharingOptionsDlg.setVisibleItemProperties(
-					new Object[] {"userIdentification", "accessMode"});
+					new Object[] {"userIdentification", "accessMode"}); //$NON-NLS-1$ //$NON-NLS-2$
 			sharingOptionsDlg.show();
 		}
 		else {
 			Notification.show(
-					"Information", "Please select a Tag Type Library first!",
+					Messages.getString("TagLibraryPanel.infoTitle"), Messages.getString("TagLibraryPanel.selectTagLibraryFirst"), //$NON-NLS-1$ //$NON-NLS-2$
 					Type.TRAY_NOTIFICATION);
 		}
 
@@ -541,7 +541,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 	private void handleTagLibraryExportRequest(Object value) {
 		if (value == null) {
 			Notification.show(
-					"Information", "Please select a Tag Type Library first!",
+					Messages.getString("TagLibraryPanel.infoTitle"), Messages.getString("TagLibraryPanel.selectTagLibraryFirst"), //$NON-NLS-1$ //$NON-NLS-2$
 					Type.TRAY_NOTIFICATION);
 		}
 	}
@@ -556,19 +556,19 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 				((CatmaApplication)UI.getCurrent()).openTagLibrary(repository, tagLibrary);
 			} catch (IOException e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
-					"Error opening the Tag Type Library!", e);
+					Messages.getString("TagLibraryPanel.errorOpeningTagLibrary"), e); //$NON-NLS-1$
 			}
 		}	
 		else {
 			Notification.show(
-					"Information", "Please select a Tag Type Library first!",
+					Messages.getString("TagLibraryPanel.infoTitle"), Messages.getString("TagLibraryPanel.selectTagLibraryFirst"), //$NON-NLS-1$ //$NON-NLS-2$
 					Type.TRAY_NOTIFICATION);
 		}
 	}
 
 	private void handleTagLibraryImport() {
 		UploadDialog uploadDialog =
-				new UploadDialog("Upload Tag Type Library", 
+				new UploadDialog(Messages.getString("TagLibraryPanel.uploadTagLibrary"),  //$NON-NLS-1$
 						new SaveCancelListener<byte[]>() {
 			
 			public void cancelPressed() {}
@@ -578,7 +578,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 				try {
 					if (BOMFilterInputStream.hasBOM(result)) {
 						is = new BOMFilterInputStream(
-								is, Charset.forName("UTF-8"));
+								is, Charset.forName("UTF-8")); //$NON-NLS-1$
 					}
 					
 					repository.importTagLibrary(is);
@@ -586,7 +586,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 					
 				} catch (IOException e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
-						"Error importing the Tag Type Library!", e);
+						Messages.getString("TagLibraryPanel.errorImportingTagLibrary"), e); //$NON-NLS-1$
 				}
 				finally {
 					CloseSafe.close(is);
@@ -600,7 +600,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 	private void addTagLibraryReferenceToTree(TagLibraryReference tlr) {
 		tagLibrariesTree.addItem(tlr);
 		tagLibrariesTree.getItem(tlr).getItemProperty(SORTCAP_PROP).setValue(
-				(tlr.toString()==null)?"":tlr.toString());
+				(tlr.toString()==null)?"":tlr.toString()); //$NON-NLS-1$
 		tagLibrariesTree.setChildrenAllowed(tlr, false);
 	}
 	
@@ -612,8 +612,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 		if (tagLibraryReference != null) {
 			ConfirmDialog.show(
 				UI.getCurrent(), 
-				"Do you really want to delete Tag Type Library '"
-						+ tagLibraryReference.toString() + "'?",
+				MessageFormat.format(Messages.getString("TagLibraryPanel.deleteTagLibraryQuestion"), tagLibraryReference.toString()), //$NON-NLS-1$
 		        new ConfirmDialog.Listener() {
 
 		            public void onClose(ConfirmDialog dialog) {
@@ -622,7 +621,7 @@ public class TagLibraryPanel extends HorizontalSplitPanel {
 								repository.delete(tagLibraryReference);
 							} catch (IOException e) {
 								((CatmaApplication)UI.getCurrent()).showAndLogError(
-									"Error deleting the Tag Type Library!", e);
+									Messages.getString("TagLibraryPanel.errorDeletingTagLibrary"), e); //$NON-NLS-1$
 							}
 		                }
 		            }
