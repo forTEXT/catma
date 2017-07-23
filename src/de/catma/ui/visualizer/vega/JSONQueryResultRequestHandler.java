@@ -40,6 +40,8 @@ public class JSONQueryResultRequestHandler implements RequestHandler {
 			return true;
 		}
 		
+		//TODO: queries for multiple datasources
+		
 		return false;
 	}
 

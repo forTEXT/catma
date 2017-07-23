@@ -132,7 +132,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private List<String> relevantStaticMarkupCollIDs;
 	private MarkupResultPanel markupResultPanel;
 	private Corpus corpus;
-	private Integer visualizationId;
+	private Integer disChartVisualizationId;
 	private PropertyChangeListener sourceDocumentChangedListener;
 	private PropertyChangeListener userMarkupDocumentChangedListener;
 	private CloseListener closeListener;
@@ -689,9 +689,9 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				groupedQueryResultSet, repository, relevantSourceDocumentIDs);
 		dc.compute();
 		
-		this.visualizationId = 
+		this.disChartVisualizationId = 
 			((CatmaApplication)UI.getCurrent()).addVisualization(
-				visualizationId, (corpus==null)?Messages.getString("AnalyzerView.AllDocuments"):corpus.toString(), dc, //$NON-NLS-1$
+				disChartVisualizationId, (corpus==null)?Messages.getString("AnalyzerView.AllDocuments"):corpus.toString(), dc, //$NON-NLS-1$
 				distributionSelectionListener);
 	}
 
