@@ -37,12 +37,12 @@ public class JSONQueryResultBuilder {
 		startOffset,
 		endOffset,
 		phrase,
-		markupCollectionId,
-		tagDefinitionId,
-		tagDefinitionPath,
-		tagDefinitionVersion,
-		tagInstanceId,
-		propertyDefinitionId,
+		annotationCollectionId,
+		tagId,
+		tagPath,
+		tagVersion,
+		annotationId,
+		propertyId,
 		propertyName,
 		propertyValue, 
 		sourceDocumentTitle,
@@ -104,12 +104,12 @@ public class JSONQueryResultBuilder {
 	}
 
 	private void addTagQueryResultRowFields(ObjectNode rowNode, TagQueryResultRow row, Range range) {
-		rowNode.put(Field.markupCollectionId.name(), row.getMarkupCollectionId());
-		rowNode.put(Field.tagDefinitionId.name(),  row.getTagDefinitionId());
-		rowNode.put(Field.tagDefinitionPath.name(), row.getTagDefinitionPath());
-		rowNode.put(Field.tagDefinitionVersion.name(), row.getTagDefinitionVersion());
-		rowNode.put(Field.tagInstanceId.name(),  row.getTagInstanceId());
-		rowNode.put(Field.propertyDefinitionId.name(),  row.getPropertyDefinitionId());
+		rowNode.put(Field.annotationCollectionId.name(), row.getMarkupCollectionId());
+		rowNode.put(Field.tagId.name(),  row.getTagDefinitionId());
+		rowNode.put(Field.tagPath.name(), row.getTagDefinitionPath());
+		rowNode.put(Field.tagVersion.name(), row.getTagDefinitionVersion());
+		rowNode.put(Field.annotationId.name(),  row.getTagInstanceId());
+		rowNode.put(Field.propertyId.name(),  row.getPropertyDefinitionId());
 		rowNode.put(Field.propertyName.name(),  row.getPropertyName());
 		rowNode.put(Field.propertyValue.name(),  row.getPropertyValue());
 		rowNode.put(Field.startOffset.name(), range.getStartPoint());

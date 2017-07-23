@@ -13510,3 +13510,8 @@ div.v-layout.v-horizontal.v-widget {
 .catma .catma-embedded-vega > .vega-actions a {
 	padding: 5px;
 }
+
+.catma .vega-view-left-panel-component {
+	padding-left: 1px;
+	padding-right: 1px;
+}
