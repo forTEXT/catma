@@ -81,6 +81,7 @@ import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.analyzer.AnalyzerManagerView;
 import de.catma.ui.analyzer.AnalyzerProvider;
+import de.catma.ui.analyzer.QueryOptionsProvider;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.menu.LoginLogoutCommand;
 import de.catma.ui.menu.MainMenu;
@@ -531,9 +532,9 @@ public class CatmaApplication extends UI
 		visualizationManagerView.addDoubleTree(kwics);
 	}
 	
-	public void addVega(QueryResult queryResult, Repository repository) {
+	public void addVega(QueryResult queryResult, QueryOptionsProvider queryOptionsProvider) {
 		menu.executeEntry(visualizationManagerView);
-		visualizationManagerView.addVega(queryResult, repository);
+		visualizationManagerView.addVega(queryResult, queryOptionsProvider);
 	}
 
 	@Override

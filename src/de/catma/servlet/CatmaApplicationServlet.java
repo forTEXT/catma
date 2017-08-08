@@ -49,6 +49,9 @@ public class CatmaApplicationServlet extends VaadinServlet {
 		CLASSLISTSUBSTITUTE("doubletreejs/classListSubstitute.min.js"),
 		DOUBLETREE("doubletreejs/DoubleTree.min.js"),
 		DT_TRIE("doubletreejs/Trie.min.js"),
+		VEGA("vega/vega.js"),
+		VEGA_LITE("vega/vega-lite.js"),
+		VEGA_EMBED("vega/vega-embed.js"),
 		;
 		String relFilePath;
 
@@ -110,12 +113,12 @@ public class CatmaApplicationServlet extends VaadinServlet {
 								+ response.getRequest().getContextPath() 
 								+ "/VAADIN/" + lib + "'><\\/script>\");\n");
 			}
-			scriptBuilder.append(
-				"document.write(\"<script language='javascript' src='https://cdnjs.cloudflare.com/ajax/libs/vega/3.0.0-rc3/vega.js'><\\/script>\");\n");
-			scriptBuilder.append(
-				"document.write(\"<script language='javascript' src='https://cdnjs.cloudflare.com/ajax/libs/vega-lite/2.0.0-beta.10/vega-lite.js'><\\/script>\");\n");
-			scriptBuilder.append(
-				"document.write(\"<script language='javascript' src='https://cdnjs.cloudflare.com/ajax/libs/vega-embed/3.0.0-beta.19/vega-embed.js'><\\/script>\");\n");
+//			scriptBuilder.append(
+//				"document.write(\"<script language='javascript' src='https://cdnjs.cloudflare.com/ajax/libs/vega/3.0.0-rc3/vega.js'><\\/script>\");\n");
+//			scriptBuilder.append(
+//				"document.write(\"<script language='javascript' src='https://cdnjs.cloudflare.com/ajax/libs/vega-lite/2.0.0-beta.10/vega-lite.js'><\\/script>\");\n");
+//			scriptBuilder.append(
+//				"document.write(\"<script language='javascript' src='https://cdnjs.cloudflare.com/ajax/libs/vega-embed/3.0.0-beta.19/vega-embed.js'><\\/script>\");\n");
 			
 			
 			scriptBuilder.append("//]]>\n</script>\n");

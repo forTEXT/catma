@@ -247,17 +247,20 @@ public class MarkupResultPanel extends VerticalLayout {
 	private Button btSelectAllRows;
 	private Button btDeselectAllRows;
 	private Button btVega;
+	private QueryOptionsProvider queryOptionsProvider;
 	
 	public MarkupResultPanel(
 			Repository repository, 
 			GroupedQueryResultSelectionListener resultSelectionListener, 
 			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider,
-			TagKwicResultsProvider tagKwicResultsProvider) {
+			TagKwicResultsProvider tagKwicResultsProvider,
+			QueryOptionsProvider queryOptionsProvider) {
 		this.curQueryResult = new QueryResultRowArray();
 		this.repository = repository;
 		this.resultSelectionListener = resultSelectionListener;
 		this.relevantUserMarkupCollectionProvider = relevantUserMarkupCollectionProvider;
 		this.tagKwicResultsProvider = tagKwicResultsProvider;
+		this.queryOptionsProvider = queryOptionsProvider;
 	}
 	
 	@Override
@@ -276,7 +279,7 @@ public class MarkupResultPanel extends VerticalLayout {
 			
 			@Override
 			public void buttonClick(ClickEvent event) {
-				((CatmaApplication)UI.getCurrent()).addVega(curQueryResult, repository);
+				((CatmaApplication)UI.getCurrent()).addVega(curQueryResult, queryOptionsProvider);
 			}
 		});
 		

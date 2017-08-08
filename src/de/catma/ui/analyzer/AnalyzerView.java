@@ -564,12 +564,42 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	}
 
 	private Component createResultByMarkupView() {
-		markupResultPanel = new MarkupResultPanel(repository, this, this, this);
+		markupResultPanel = new MarkupResultPanel(repository, this, this, this, new QueryOptionsProvider() {
+			
+			@Override
+			public QueryOptions getQueryOptions() {
+				return new QueryOptions(
+						relevantSourceDocumentIDs.isEmpty()?
+								getSourceDocumentIDs(repository.getSourceDocuments()):
+									relevantSourceDocumentIDs,
+						relevantUserMarkupCollIDs,
+						relevantStaticMarkupCollIDs,
+						indexInfoSet.getUnseparableCharacterSequences(),
+						indexInfoSet.getUserDefinedSeparatingCharacters(),
+						indexInfoSet.getLocale(),
+						repository);
+			}
+		});
 		return markupResultPanel;
 	}
 
 	private Component createResultByPhraseView() {
-		phraseResultPanel = new PhraseResultPanel(repository, this, this, this);
+		phraseResultPanel = new PhraseResultPanel(repository, this, this, this, new QueryOptionsProvider() {
+			
+			@Override
+			public QueryOptions getQueryOptions() {
+				return new QueryOptions(
+						relevantSourceDocumentIDs.isEmpty()?
+								getSourceDocumentIDs(repository.getSourceDocuments()):
+									relevantSourceDocumentIDs,
+						relevantUserMarkupCollIDs,
+						relevantStaticMarkupCollIDs,
+						indexInfoSet.getUnseparableCharacterSequences(),
+						indexInfoSet.getUserDefinedSeparatingCharacters(),
+						indexInfoSet.getLocale(),
+						repository);
+			}
+		});
 		return phraseResultPanel;
 	}
 

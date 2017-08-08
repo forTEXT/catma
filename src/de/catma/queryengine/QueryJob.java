@@ -37,7 +37,7 @@ import de.catma.util.StopWatch;
 
 /**
  * A job for the {@link org.catma.backgroundservice.BackgroundService} that executes
- * queris.
+ * queries.
  *
  * @author Marco Petris
  *

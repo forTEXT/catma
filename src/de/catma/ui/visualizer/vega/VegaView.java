@@ -2,11 +2,17 @@ package de.catma.ui.visualizer.vega;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.text.MessageFormat;
-import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Alignment;
@@ -22,10 +28,10 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.analyzer.QueryOptionsProvider;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.util.IDGenerator;
 
@@ -45,21 +51,24 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 
 	private Button btTagExample;
 
-	public VegaView(QueryResult queryResult, Repository repository) {
+	private String vegaViewId;
+
+	private String queryResultUrl;
+
+	public VegaView(QueryResult queryResult, QueryOptionsProvider queryOptionsProvider) {
 		
-		String queryResultId = new IDGenerator().generate();
-		String queryResultPath = "queryresult/"+ queryResultId+".json";
-		String queryResultUrl = RepositoryPropertyKey.BaseURL.getValue() + queryResultPath;
-		
-		this.queryResultRequestHandler = new JSONQueryResultRequestHandler(queryResult, repository, queryResultPath);
-		
+		this.vegaViewId = new IDGenerator().generate().toLowerCase();
+		String queryResultPath = vegaViewId+"/queryresult/default.json";
+		this.queryResultUrl = RepositoryPropertyKey.BaseURL.getValue() + queryResultPath;
+
+		this.queryResultRequestHandler = new JSONQueryResultRequestHandler(queryResult, queryOptionsProvider, queryResultPath, vegaViewId);
 		VaadinSession.getCurrent().addRequestHandler(queryResultRequestHandler);
 		
-		initComponents(queryResultUrl);
-		initActions(queryResultUrl);
+		initComponents();
+		initActions();
 	}
 
-	private void initActions(final String queryResultUrl) {
+	private void initActions() {
 		btUpdate.addClickListener(new ClickListener() {
 			
 			@Override
@@ -70,8 +79,28 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 					Notification.show("Info", "Vega Specification must not be empty!", Type.TRAY_NOTIFICATION);
 				}
 				else {
-					spec = spec.replaceAll(Pattern.quote(CATMA_QUERY_URL), queryResultUrl);
-					vega.setVegaSpec(spec);
+					ObjectMapper mapper = new ObjectMapper();
+					try {
+						ObjectNode specNode = mapper.readValue(spec, ObjectNode.class);
+						
+						JsonNode dataNode = specNode.get("data");
+						if (dataNode.isArray()) {
+							ArrayNode dataArray = (ArrayNode)dataNode;
+							for (int i=0; i<dataArray.size(); i++) {
+								ObjectNode curDataNode = (ObjectNode)dataArray.get(i);
+								setQueryUrl(curDataNode);
+							}
+						}
+						else {
+							setQueryUrl((ObjectNode)dataNode);
+						}
+						
+						vega.setVegaSpec(specNode.toString());
+						
+					}
+					catch (Exception e) {
+						((CatmaApplication)UI.getCurrent()).showAndLogError("error updating vega viz", e);
+					}
 				}
 			}
 		});
@@ -125,8 +154,25 @@ public class VegaView extends HorizontalSplitPanel implements ClosableTab {
 		});
 	}
 
-	private void initComponents(String queryResultUrl) {
-//		setSizeFull();
+	private void setQueryUrl(ObjectNode dataNode) throws UnsupportedEncodingException {
+		if (dataNode.has("url")) {
+			String catmaQuery = dataNode.get("url").asText();
+					
+			if (catmaQuery.startsWith(CATMA_QUERY_URL)) {
+				if (catmaQuery.equals(CATMA_QUERY_URL)) {
+					dataNode.set("url", new TextNode(queryResultUrl));
+				}
+				else {
+					catmaQuery = catmaQuery.substring(CATMA_QUERY_URL.length()+1, catmaQuery.length()-1);
+					catmaQuery = URLEncoder.encode(catmaQuery, "UTF-8");
+					String url = RepositoryPropertyKey.BaseURL.getValue() + vegaViewId + "/query/" + catmaQuery;
+					dataNode.set("url", new TextNode(url));
+				}
+			}
+		}
+	}
+
+	private void initComponents() {
 		
 		VerticalLayout leftPanel = new VerticalLayout();
 		leftPanel.setSpacing(true);

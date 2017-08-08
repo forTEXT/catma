@@ -101,17 +101,20 @@ public class PhraseResultPanel extends VerticalLayout {
 	private Button btDeselectAllRows;
 	private Button btVega;
 	private QueryResult queryResult;
+	private QueryOptionsProvider queryOptionsProvider;
 	
 	public PhraseResultPanel(
 			Repository repository, 
 			GroupedQueryResultSelectionListener resultSelectionListener, 
 			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider,
-			TagKwicResultsProvider tagKwicResultsProvider) {
+			TagKwicResultsProvider tagKwicResultsProvider,
+			QueryOptionsProvider queryOptionsProvider) {
 		this.repository = repository;
 		
 		this.resultSelectionListener = resultSelectionListener;
 		this.relevantUserMarkupCollectionProvider = relevantUserMarkupCollectionProvider;
 		this.tagKwicResultsProvider = tagKwicResultsProvider;
+		this.queryOptionsProvider = queryOptionsProvider;
 		initComponents();
 		initActions();
 	}
@@ -123,7 +126,7 @@ public class PhraseResultPanel extends VerticalLayout {
 			
 			@Override
 			public void buttonClick(ClickEvent event) {
-				((CatmaApplication)UI.getCurrent()).addVega(queryResult, repository);
+				((CatmaApplication)UI.getCurrent()).addVega(queryResult, queryOptionsProvider);
 			}
 		});
 		

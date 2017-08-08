@@ -25,11 +25,11 @@ import java.util.List;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.TabSheet;
 
-import de.catma.document.repository.Repository;
 import de.catma.document.source.KeywordInContext;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.computation.DistributionComputation;
 import de.catma.queryengine.result.computation.DistributionSelectionListener;
+import de.catma.ui.analyzer.QueryOptionsProvider;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabbedView;
 import de.catma.ui.visualizer.chart.DistributionChartView;
@@ -113,8 +113,8 @@ public class VisualizationManagerView extends TabbedView {
 		
 	}
 
-	public void addVega(QueryResult queryResult, Repository repository) {
-		VegaView vegaView = new VegaView(queryResult, repository);
+	public void addVega(QueryResult queryResult, QueryOptionsProvider queryOptionsProvider) {
+		VegaView vegaView = new VegaView(queryResult, queryOptionsProvider);
 		
 		addClosableTab(vegaView, vegaView.toString());
 	}
