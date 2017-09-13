@@ -45,6 +45,7 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/oldcode" />
       <excludeFolder url="file://$MODULE_DIR$/src/de/catma/queryengine/computation_old" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
