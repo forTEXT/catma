@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component jdk="JavaSE-1.8" jdk_type="JavaSDK">
+	<exclude-output/>
+	<contentEntry url="file://$MODULE_DIR$"/>
+	<lib name="jooq-3.7.2.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/genlib/jooq-3.7.2.jar!/"/>
+	</lib>
+	<lib name="jooq-codegen-3.7.2.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/genlib/jooq-codegen-3.7.2.jar!/"/>
+	</lib>
+	<lib name="jooq-meta-3.7.2.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/genlib/jooq-meta-3.7.2.jar!/"/>
+	</lib>
+</component>
