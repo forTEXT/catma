@@ -1,13 +1,11 @@
 package de.catma.repository.git;
 
-import org.gitlab4j.api.GitLabApiException;
+import de.catma.repository.git.exceptions.ProjectHandlerException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.annotation.Nullable;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -30,14 +28,14 @@ public class ProjectHandlerTest {
 	}
 
 	@After
-	public void tearDown() throws GitLabApiException {
+	public void tearDown() throws ProjectHandlerException {
 		if (createdGroupId != null) {
 			projectHandler.delete(createdGroupId);
 		}
 	}
 
 	@Test
-	public void getRootRepositoryHttpUrl() throws Exception {
+	public void getRootRepositoryHttpUrl() throws ProjectHandlerException {
 		createdGroupId = projectHandler.create("Test Project", "This is a test project");
 
 		String repositoryHttpUrl = projectHandler.getRootRepositoryHttpUrl(createdGroupId);
@@ -49,7 +47,7 @@ public class ProjectHandlerTest {
 	}
 
 	@Test
-	public void create() throws Exception {
+	public void create() throws ProjectHandlerException {
 		createdGroupId = projectHandler.create("Test Project", "This is a test project");
 
 		assert createdGroupId > 0;

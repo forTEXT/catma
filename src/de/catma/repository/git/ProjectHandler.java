@@ -1,5 +1,8 @@
 package de.catma.repository.git;
 
+import de.catma.repository.IGitBasedProjectHandler;
+import de.catma.repository.IProjectHandler;
+import de.catma.repository.git.exceptions.ProjectHandlerException;
 import de.catma.util.IDGenerator;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
@@ -10,7 +13,7 @@ import org.gitlab4j.api.models.Project;
 
 import java.util.Properties;
 
-public class ProjectHandler {
+public class ProjectHandler implements IProjectHandler, IGitBasedProjectHandler {
 	private final String projectNameFormat = "group_%s_corpus";
 
 	private Properties catmaProperties;
@@ -52,18 +55,25 @@ public class ProjectHandler {
 	/**
 	 * Gets the 'root' repository for a particular CATMA Project (GitLab Group).
 	 *
-	 * @param groupId the ID of the GitLab Group
+	 * @param groupId the GitLab Group ID
 	 * @return the HTTP URL of the repository
-	 * @throws GitLabApiException if an error occurs when calling the GitLab API
+	 * @throws ProjectHandlerException if an error occurs when calling the GitLab API
 	 */
-	public String getRootRepositoryHttpUrl(int groupId) throws GitLabApiException {
+	public String getRootRepositoryHttpUrl(int groupId) throws ProjectHandlerException {
 		GroupApi groupApi = gitLabApi.getGroupApi();
 		ProjectApi projectApi = gitLabApi.getProjectApi();
 
-		Group group = groupApi.getGroup(groupId);
-		String projectNameAndPath = String.format(projectNameFormat, group.getPath());
+		Project project;
 
-		Project project = projectApi.getProject(group.getPath(), projectNameAndPath);
+		try {
+			Group group = groupApi.getGroup(groupId);
+			String projectNameAndPath = String.format(projectNameFormat, group.getPath());
+
+			project = projectApi.getProject(group.getPath(), projectNameAndPath);
+		}
+		catch (GitLabApiException e) {
+			throw new ProjectHandlerException("Error calling GitLab API", e);
+		}
 
 		return project.getHttpUrlToRepo();
 	}
@@ -75,26 +85,34 @@ public class ProjectHandler {
 	 * @param name the name of the project
 	 * @param description the description of the project
 	 * @return the GitLab Group ID
-	 * @throws GitLabApiException if an error occurs when calling the GitLab API
+	 * @throws ProjectHandlerException if an error occurs when calling the GitLab API
 	 */
-	public int create(String name, String description) throws GitLabApiException {
+	@Override
+	public int create(String name, String description) throws ProjectHandlerException {
 		GroupApi groupApi = gitLabApi.getGroupApi();
 		ProjectApi projectApi = gitLabApi.getProjectApi();
 
 		// create a unique path for the GitLab group
 		String path = idGenerator.generate();
 
-		// create the GitLab group
-		groupApi.addGroup(
-			name, path, description,
-			null, null, null, null, null, null, null
-		);
+		Group group;
 
-		// fetch the GitLab group (none of the addGroup overloads return a group or its id)
-		Group group = groupApi.getGroup(path);
+		try {
+			// create the GitLab group
+			groupApi.addGroup(
+					name, path, description,
+					null, null, null, null, null, null, null
+			);
 
-		// create the root repository
-		createRootRepository(group);
+			// fetch the GitLab group (none of the addGroup overloads return a group or its id)
+			group = groupApi.getGroup(path);
+
+			// create the root repository
+			createRootRepository(group);
+		}
+		catch (GitLabApiException e) {
+			throw new ProjectHandlerException("Error calling GitLab API", e);
+		}
 
 		return group.getId();
 	}
@@ -104,11 +122,17 @@ public class ProjectHandler {
 	 * This will also automatically delete any associated repositories (GitLab Projects).
 	 *
 	 * @param groupId the GitLab Group ID
-	 * @throws GitLabApiException if an error occurs when calling the GitLab API
+	 * @throws ProjectHandlerException if an error occurs when calling the GitLab API
 	 */
-	public void delete(int groupId) throws GitLabApiException {
+	@Override
+	public void delete(int groupId) throws ProjectHandlerException {
 		GroupApi groupApi = gitLabApi.getGroupApi();
 
-		groupApi.deleteGroup(groupId);
+		try {
+			groupApi.deleteGroup(groupId);
+		}
+		catch (GitLabApiException e) {
+			throw new ProjectHandlerException("Error calling GitLab API", e);
+		}
 	}
 }
