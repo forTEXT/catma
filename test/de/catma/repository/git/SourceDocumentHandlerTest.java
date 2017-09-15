@@ -5,6 +5,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
 import de.catma.document.source.contenthandler.StandardContentHandler;
+import de.catma.util.IDGenerator;
 import org.junit.Test;
 
 import java.io.File;
@@ -36,9 +37,10 @@ public class SourceDocumentHandlerTest {
         FileInputStream fileInputStream = new FileInputStream(inputFile);
         standardContentHandler.load(fileInputStream);
 
-        SourceDocument document = new SourceDocument(UUID.randomUUID().toString(), standardContentHandler);
+		IDGenerator idGenerator = new IDGenerator();
+        SourceDocument sourceDocument = new SourceDocument(idGenerator.generate(), standardContentHandler);
 
-        SourceDocumentHandler sdh = new SourceDocumentHandler(catmaProperties);
-        sdh.insert(document);
+        SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(catmaProperties);
+        sourceDocumentHandler.insert(sourceDocument);
     }
 }
