@@ -20,43 +20,76 @@ package de.catma.ui.analyzer;
 
 import java.util.HashSet;
 
+import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 
 import de.catma.document.Corpus;
 import de.catma.indexer.IndexedRepository;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.analyzer.AnalyzerView.CloseListener;
 import de.catma.ui.tabbedview.TabbedView;
 
 public class AnalyzerManagerView extends TabbedView {
 	
+	
+	
+
 	public AnalyzerManagerView() {
 		super(Messages.getString("AnalyzerManagerView.intro")); //$NON-NLS-1$
+		
+		initComponents();
+		initActions();
+	
 	}
 
 	public void analyzeDocuments(Corpus corpus, IndexedRepository repository) {
-		AnalyzerView analyzerView = 
-				new AnalyzerView(corpus, repository, new CloseListener() {
-					
-					public void closeRequest(AnalyzerView analyzerView) {
-						onTabClose(analyzerView);
-					}
-				});
-		
+		// super.btnAnalyzeCurrentActiveDoc.setVisible(false);
+
+		AnalyzerView analyzerView = new AnalyzerView(corpus, repository, new CloseListener() {
+
+			public void closeRequest(AnalyzerView analyzerView) {
+				onTabClose(analyzerView);
+			}
+		});
+
 		HashSet<String> captions = new HashSet<String>();
-		
+
 		for (Component c : this.getTabSheet()) {
 			captions.add(getCaption(c));
 		}
-		
-		String base = (corpus == null)? Messages.getString("AnalyzerManagerView.allDocuments") : corpus.toString(); //$NON-NLS-1$
+
+		String base = (corpus == null) ? Messages.getString("AnalyzerManagerView.allDocuments") : corpus.toString(); //$NON-NLS-1$
 		String caption = base;
-		
+
 		int captionIndex = 1;
 		while (captions.contains(caption)) {
-			caption = base + "("+captionIndex+")"; //$NON-NLS-1$ //$NON-NLS-2$
+			caption = base + "(" + captionIndex + ")"; //$NON-NLS-1$ //$NON-NLS-2$
 			captionIndex++;
 		}
 
 		addClosableTab(analyzerView, caption);
 	}
+	
+	private void initComponents(){
+		  //super.btnAnalyzeCurrentActiveDoc.setVisible(true);
+		
+	}
+	
+	 private void initActions(){
+		super.btnAnalyzeCurrentActiveDoc.addClickListener(new ClickListener() {
+			public void buttonClick(ClickEvent event) {
+				((CatmaApplication) UI.getCurrent()).analyzeCurrentlyActiveDocument();
+			}});	
+	}
+	
+	
+
+
+
+
 }

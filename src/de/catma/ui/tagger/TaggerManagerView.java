@@ -32,13 +32,22 @@ public class TaggerManagerView extends TabbedView {
 	
 	private int nextTaggerID = 0;
 	
+
+	
 	public TaggerManagerView() {
 		super(
 			Messages.getString("TaggerManagerView.noOpenDocumentsInfo")); //$NON-NLS-1$
 	}
 
+	
+	
+
+
+
+
 	public TaggerView openSourceDocument(
 			final SourceDocument sourceDocument, Repository repository) {
+
 		TaggerView taggerView = getTaggerView(sourceDocument);
 		if (taggerView != null) {
 			setSelectedTab(taggerView);
@@ -98,4 +107,8 @@ public class TaggerManagerView extends TabbedView {
 			UserMarkupCollection userMarkupCollection) {
 		taggerView.openUserMarkupCollection(userMarkupCollection);
 	}
+	
+	
+	
+	//  analyzeAktiveDokument methode die den aktiven Tab erkennt und 
 }

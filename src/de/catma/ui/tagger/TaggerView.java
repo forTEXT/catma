@@ -194,7 +194,29 @@ public class TaggerView extends VerticalLayout
 		
 		return false;
 	}
+// TaggerView ist der active Tab!!	
+	public void  analyzeDocument(){
+		Corpus corpus = new Corpus(sourceDocument.toString());
+		corpus.addSourceDocument(sourceDocument);
+		for (UserMarkupCollection umc : 
+			markupPanel.getUserMarkupCollections()) {
+			// die markupcollection die im panel verfügbar ist
+			UserMarkupCollectionReference userMarkupCollRef =
+					sourceDocument.getUserMarkupCollectionReference(
+							umc.getId());
+			if (userMarkupCollRef != null) {
+				corpus.addUserMarkupCollectionReference(
+						userMarkupCollRef);
+			}
+		}	
+		((AnalyzerProvider)UI.getCurrent()).analyze(
+				corpus, (IndexedRepository)markupPanel.getRepository());	
+	}
 
+	
+	
+	
+	
 	private void initActions() {
 		btClearSearchHighlights.addClickListener(new ClickListener() {
 			

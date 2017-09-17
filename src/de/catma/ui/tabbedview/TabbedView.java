@@ -22,27 +22,53 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.TabSheet.CloseHandler;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.TabSheet.Tab;
+
+import de.catma.ui.CatmaApplication;
+import de.catma.ui.analyzer.Messages;
+
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 
 public class TabbedView extends VerticalLayout implements CloseHandler {
 	
 	private TabSheet tabSheet;
 	private Label noOpenTabsLabel;
-	private TabComponent lastTab;
+	public TabComponent lastTab;
+	public Button btnAnalyzeCurrentActiveDoc;
+	private String incomingText;
+
 	
 	public TabbedView(String noOpenTabsText) {
 		initComponents(noOpenTabsText);
 		initActions();
+		
+		if(noOpenTabsText.toString()== Messages.getString("AnalyzerManagerView.intro")){
+			createBtnAndFunctionality();
+			incomingText=noOpenTabsText;
+		}
 	}
-
+	
+		private void createBtnAndFunctionality(){
+			btnAnalyzeCurrentActiveDoc = new Button("Analyze current open Document");
+			btnAnalyzeCurrentActiveDoc.setVisible(true);
+			addComponent(btnAnalyzeCurrentActiveDoc);
+	
+		}
+		
+		
 	private void initActions() {
+		
+		
 		tabSheet.addSelectedTabChangeListener(new SelectedTabChangeListener() {
 			
 			public void selectedTabChange(SelectedTabChangeEvent event) {
@@ -53,6 +79,9 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 				lastTab.addClickshortCuts();
 			}
 		});
+		
+		
+		
 	}
 
 	private void initComponents(String noOpenTabsText) {
@@ -60,18 +89,27 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		tabSheet.setSizeFull();
 		noOpenTabsLabel = 
 				new Label(noOpenTabsText);
+						
 		
 		noOpenTabsLabel.setSizeFull();
 		setMargin(true);
 		addComponent(noOpenTabsLabel);
 		setComponentAlignment(noOpenTabsLabel, Alignment.MIDDLE_CENTER);
 		
+
+		
+		
+		
+		
+		
 		addComponent(tabSheet);
 		tabSheet.setTabsVisible(false);
 		tabSheet.setHeight("0px");	
 		tabSheet.setCloseHandler(this);
+		
+		
 	}
-	
+
 	protected void onTabClose(Component tabContent) {
 		onTabClose(tabSheet, tabContent);
 	}
@@ -81,11 +119,17 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		((ClosableTab)tabContent).close();
 
 		if (tabsheet.getComponentCount() == 0) {
-			 //setVisible(false) doesn't work here because of out of sync errors
 			tabSheet.setTabsVisible(false);
 			tabSheet.setHeight("0px");
 			addComponent(noOpenTabsLabel, 0);
 			noOpenTabsLabel.setVisible(true);
+			if(incomingText!=null){
+				btnAnalyzeCurrentActiveDoc.setVisible(true);
+				
+			}
+			
+			
+			
 			setMargin(true);
 			setSizeUndefined();
 		}
@@ -101,6 +145,9 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		
 		if (tabSheet.getComponentCount() != 0) {
 			noOpenTabsLabel.setVisible(false);
+			if(incomingText!=null){
+			btnAnalyzeCurrentActiveDoc.setVisible(false);
+			}
 			removeComponent(noOpenTabsLabel);
 			setMargin(false);
 			tabSheet.setTabsVisible(true);
