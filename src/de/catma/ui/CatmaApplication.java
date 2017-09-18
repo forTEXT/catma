@@ -461,22 +461,17 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 	// Diese Methode wird vom AnalyzeCurrentDoc im Analyze-Menue-Tab aufgerufen
 	public void analyzeCurrentlyActiveDocument() {
 		menu.executeEntry(analyzerManagerView);
-		//analyzerManagerView.setBtnInvisible();
-		// Auf die superKlasse(TaggerManagerView extends TabbedView) TabbedView
-		// zugreifen die die Methode getSelectedTab anbietet, die gibt n
-		// Component zurück
 		Component selectedTab = taggerManagerView.getSelectedTab();
 		if (selectedTab != null) {
-			// component zu taggerview casten und darauf dann Methode analyzeDoc aufrufen
-	
-			// ((TaggerView)selectedTab).analyzeDocument();
 			TaggerView taggerView = (TaggerView) selectedTab;
 			taggerView.analyzeDocument();
 		} else {
 			Notification.show("Selected Tab is", " null", Notification.Type.HUMANIZED_MESSAGE);
 		}
-		
+	
 	}
+	
+	
 
 	public int addVisualization(Integer visualizationId, String caption,
 			DistributionComputation distributionComputation,
@@ -566,5 +561,7 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 	public void removePropertyChangeListener(CatmaApplicationEvent propertyName, PropertyChangeListener listener) {
 		propertyChangeSupport.removePropertyChangeListener(propertyName.name(), listener);
 	}
+
+
 
 }

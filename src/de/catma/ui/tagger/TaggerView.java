@@ -194,14 +194,13 @@ public class TaggerView extends VerticalLayout
 		
 		return false;
 	}
-// TaggerView ist der active Tab!!	
+//________________neu_______
 	public void  analyzeDocument(){
 		Corpus corpus = new Corpus(sourceDocument.toString());
 		corpus.addSourceDocument(sourceDocument);
 		for (UserMarkupCollection umc : 
 			markupPanel.getUserMarkupCollections()) {
-			// die markupcollection die im panel verfügbar ist
-			UserMarkupCollectionReference userMarkupCollRef =
+					UserMarkupCollectionReference userMarkupCollRef =
 					sourceDocument.getUserMarkupCollectionReference(
 							umc.getId());
 			if (userMarkupCollRef != null) {

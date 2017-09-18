@@ -42,7 +42,6 @@ public class AnalyzerManagerView extends TabbedView {
 	public AnalyzerManagerView() {
 		super(Messages.getString("AnalyzerManagerView.intro")); //$NON-NLS-1$
 		
-		initComponents();
 		initActions();
 	
 	}
@@ -73,11 +72,6 @@ public class AnalyzerManagerView extends TabbedView {
 		}
 
 		addClosableTab(analyzerView, caption);
-	}
-	
-	private void initComponents(){
-		  //super.btnAnalyzeCurrentActiveDoc.setVisible(true);
-		
 	}
 	
 	 private void initActions(){

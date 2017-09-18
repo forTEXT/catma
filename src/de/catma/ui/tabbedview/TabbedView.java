@@ -43,7 +43,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 	
 	private TabSheet tabSheet;
 	private Label noOpenTabsLabel;
-	public TabComponent lastTab;
+	private TabComponent lastTab;
 	public Button btnAnalyzeCurrentActiveDoc;
 	private String incomingText;
 
@@ -123,13 +123,10 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 			tabSheet.setHeight("0px");
 			addComponent(noOpenTabsLabel, 0);
 			noOpenTabsLabel.setVisible(true);
+			
 			if(incomingText!=null){
-				btnAnalyzeCurrentActiveDoc.setVisible(true);
-				
-			}
-			
-			
-			
+				btnAnalyzeCurrentActiveDoc.setVisible(true);			
+			}					
 			setMargin(true);
 			setSizeUndefined();
 		}
@@ -145,9 +142,11 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		
 		if (tabSheet.getComponentCount() != 0) {
 			noOpenTabsLabel.setVisible(false);
+			
 			if(incomingText!=null){
 			btnAnalyzeCurrentActiveDoc.setVisible(false);
 			}
+			
 			removeComponent(noOpenTabsLabel);
 			setMargin(false);
 			tabSheet.setTabsVisible(true);
