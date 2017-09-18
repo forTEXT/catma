@@ -14,6 +14,7 @@ import org.gitlab4j.api.models.Project;
 import java.util.Properties;
 
 public class ProjectHandler implements IProjectHandler, IGitBasedProjectHandler {
+	// using 'corpus' and not 'project' here so as not to confuse CATMA Projects with GitLab Projects
 	private final String projectNameFormat = "group_%s_corpus";
 
 	private Properties catmaProperties;
@@ -43,7 +44,6 @@ public class ProjectHandler implements IProjectHandler, IGitBasedProjectHandler 
 	private int createRootRepository(Group group) throws GitLabApiException {
 		ProjectApi projectApi = gitLabApi.getProjectApi();
 
-		// using 'corpus' and not 'project' here so as not to confuse CATMA Projects with GitLab Projects
 		String projectNameAndPath = String.format(projectNameFormat, group.getPath());
 
 		Project project = projectApi.createProject(group.getId(), projectNameAndPath);
@@ -90,7 +90,6 @@ public class ProjectHandler implements IProjectHandler, IGitBasedProjectHandler 
 	@Override
 	public int create(String name, String description) throws ProjectHandlerException {
 		GroupApi groupApi = gitLabApi.getGroupApi();
-		ProjectApi projectApi = gitLabApi.getProjectApi();
 
 		// create a unique path for the GitLab group
 		String path = idGenerator.generate();
