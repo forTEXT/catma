@@ -177,16 +177,12 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.commons/commons-compress/jars/commons-compress-1.9.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-logging/commons-logging/jars/commons-logging-1.1.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/jars/commons-codec-1.6.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-databind/bundles/jackson-databind-2.5.2.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-core/bundles/jackson-core-2.5.1.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-annotations/bundles/jackson-annotations-2.5.2.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet/jars/org.restlet-2.3.4.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet.ext.html/jars/org.restlet.ext.html-2.3.4.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet.ext.jackson/jars/org.restlet.ext.jackson-2.3.4.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.dataformat/jackson-dataformat-csv/bundles/jackson-dataformat-csv-2.4.4.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.dataformat/jackson-dataformat-smile/bundles/jackson-dataformat-smile-2.4.4.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.dataformat/jackson-dataformat-xml/bundles/jackson-dataformat-xml-2.4.4.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/bundles/jackson-module-jaxb-annotations-2.4.4.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.codehaus.woodstox/stax2-api/bundles/stax2-api-3.1.4.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/bundles/jackson-dataformat-yaml-2.4.4.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.module/jackson-module-jsonSchema/bundles/jackson-module-jsonSchema-2.4.4.jar!/" />
@@ -222,6 +218,27 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/com.googlecode.javaewah/JavaEWAH/bundles/JavaEWAH-1.1.6.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient/jars/httpclient-4.3.6.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore/jars/httpcore-4.3.3.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.gitlab4j/gitlab4j-api/jars/gitlab4j-api-4.4.8.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/bundles/jackson-jaxrs-json-provider-2.8.8.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/bundles/jackson-jaxrs-base-2.8.8.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-core/bundles/jackson-core-2.8.8.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-databind/bundles/jackson-databind-2.8.8.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-annotations/bundles/jackson-annotations-2.8.0.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/bundles/jackson-module-jaxb-annotations-2.8.8.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.core/jersey-client/jars/jersey-client-2.25.1.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.ws.rs/javax.ws.rs-api/jars/javax.ws.rs-api-2.0.1.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.core/jersey-common/jars/jersey-common-2.25.1.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.annotation/javax.annotation-api/jars/javax.annotation-api-1.2.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.bundles.repackaged/jersey-guava/bundles/jersey-guava-2.25.1.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/hk2-api/jars/hk2-api-2.5.0-b32.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/hk2-utils/jars/hk2-utils-2.5.0-b32.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2.external/aopalliance-repackaged/jars/aopalliance-repackaged-2.5.0-b32.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2.external/javax.inject/jars/javax.inject-2.5.0-b32.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/hk2-locator/jars/hk2-locator-2.5.0-b32.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.javassist/javassist/bundles/javassist-3.20.0-GA.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/osgi-resource-locator/jars/osgi-resource-locator-1.0.1.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.inject/javax.inject/jars/javax.inject-1.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.servlet/javax.servlet-api/jars/javax.servlet-api-3.1.0.jar!/" />
         </CLASSES>
         <JAVADOC>
           <root url="jar://$USER_HOME$/.ivy2/cache/com.vaadin/vaadin-server/javadocs/vaadin-server-7.7.7-javadoc.jar!/" />
@@ -293,16 +310,12 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.commons/commons-compress/javadocs/commons-compress-1.9-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-logging/commons-logging/javadocs/commons-logging-1.1.3-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/javadocs/commons-codec-1.6-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-databind/javadocs/jackson-databind-2.5.2-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-core/javadocs/jackson-core-2.5.1-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-annotations/javadocs/jackson-annotations-2.5.2-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet/javadocs/org.restlet-2.3.4-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet.ext.html/javadocs/org.restlet.ext.html-2.3.4-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet.ext.jackson/javadocs/org.restlet.ext.jackson-2.3.4-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.dataformat/jackson-dataformat-csv/javadocs/jackson-dataformat-csv-2.4.4-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.dataformat/jackson-dataformat-smile/javadocs/jackson-dataformat-smile-2.4.4-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.dataformat/jackson-dataformat-xml/javadocs/jackson-dataformat-xml-2.4.4-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/javadocs/jackson-module-jaxb-annotations-2.4.4-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.codehaus.woodstox/stax2-api/javadocs/stax2-api-3.1.4-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/javadocs/jackson-dataformat-yaml-2.4.4-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.module/jackson-module-jsonSchema/javadocs/jackson-module-jsonSchema-2.4.4-javadoc.jar!/" />
@@ -331,6 +344,26 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/com.googlecode.javaewah/JavaEWAH/javadocs/JavaEWAH-1.1.6-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient/javadocs/httpclient-4.3.6-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore/javadocs/httpcore-4.3.3-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.gitlab4j/gitlab4j-api/javadocs/gitlab4j-api-4.4.8-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/javadocs/jackson-jaxrs-json-provider-2.8.8-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/javadocs/jackson-jaxrs-base-2.8.8-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-core/javadocs/jackson-core-2.8.8-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-databind/javadocs/jackson-databind-2.8.8-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-annotations/javadocs/jackson-annotations-2.8.0-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/javadocs/jackson-module-jaxb-annotations-2.8.8-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.core/jersey-client/javadocs/jersey-client-2.25.1-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.ws.rs/javax.ws.rs-api/javadocs/javax.ws.rs-api-2.0.1-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.core/jersey-common/javadocs/jersey-common-2.25.1-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.annotation/javax.annotation-api/javadocs/javax.annotation-api-1.2-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/hk2-api/javadocs/hk2-api-2.5.0-b32-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/hk2-utils/javadocs/hk2-utils-2.5.0-b32-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2.external/aopalliance-repackaged/javadocs/aopalliance-repackaged-2.5.0-b32-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2.external/javax.inject/javadocs/javax.inject-2.5.0-b32-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/hk2-locator/javadocs/hk2-locator-2.5.0-b32-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.javassist/javassist/javadocs/javassist-3.20.0-GA-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/osgi-resource-locator/javadocs/osgi-resource-locator-1.0.1-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.inject/javax.inject/javadocs/javax.inject-1-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.servlet/javax.servlet-api/javadocs/javax.servlet-api-3.1.0-javadoc.jar!/" />
         </JAVADOC>
         <SOURCES>
           <root url="jar://$USER_HOME$/.ivy2/cache/com.vaadin/vaadin-server/sources/vaadin-server-7.7.7-sources.jar!/" />
@@ -405,16 +438,12 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.commons/commons-compress/sources/commons-compress-1.9-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-logging/commons-logging/sources/commons-logging-1.1.3-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/sources/commons-codec-1.6-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-databind/sources/jackson-databind-2.5.2-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-core/sources/jackson-core-2.5.1-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-annotations/sources/jackson-annotations-2.5.2-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet/sources/org.restlet-2.3.4-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet.ext.html/sources/org.restlet.ext.html-2.3.4-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet.ext.jackson/sources/org.restlet.ext.jackson-2.3.4-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.dataformat/jackson-dataformat-csv/sources/jackson-dataformat-csv-2.4.4-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.dataformat/jackson-dataformat-smile/sources/jackson-dataformat-smile-2.4.4-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.dataformat/jackson-dataformat-xml/sources/jackson-dataformat-xml-2.4.4-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/sources/jackson-module-jaxb-annotations-2.4.4-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.codehaus.woodstox/stax2-api/sources/stax2-api-3.1.4-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/sources/jackson-dataformat-yaml-2.4.4-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.module/jackson-module-jsonSchema/sources/jackson-module-jsonSchema-2.4.4-sources.jar!/" />
@@ -447,6 +476,27 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/com.googlecode.javaewah/JavaEWAH/sources/JavaEWAH-1.1.6-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient/sources/httpclient-4.3.6-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore/sources/httpcore-4.3.3-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.gitlab4j/gitlab4j-api/sources/gitlab4j-api-4.4.8-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/sources/jackson-jaxrs-json-provider-2.8.8-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/sources/jackson-jaxrs-base-2.8.8-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-core/sources/jackson-core-2.8.8-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-databind/sources/jackson-databind-2.8.8-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-annotations/sources/jackson-annotations-2.8.0-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/sources/jackson-module-jaxb-annotations-2.8.8-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.core/jersey-client/sources/jersey-client-2.25.1-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.ws.rs/javax.ws.rs-api/sources/javax.ws.rs-api-2.0.1-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.core/jersey-common/sources/jersey-common-2.25.1-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.annotation/javax.annotation-api/sources/javax.annotation-api-1.2-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.bundles.repackaged/jersey-guava/sources/jersey-guava-2.25.1-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/hk2-api/sources/hk2-api-2.5.0-b32-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/hk2-utils/sources/hk2-utils-2.5.0-b32-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2.external/aopalliance-repackaged/sources/aopalliance-repackaged-2.5.0-b32-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2.external/javax.inject/sources/javax.inject-2.5.0-b32-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/hk2-locator/sources/hk2-locator-2.5.0-b32-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.javassist/javassist/sources/javassist-3.20.0-GA-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/osgi-resource-locator/sources/osgi-resource-locator-1.0.1-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.inject/javax.inject/sources/javax.inject-1-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.servlet/javax.servlet-api/sources/javax.servlet-api-3.1.0-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>

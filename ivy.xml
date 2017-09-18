@@ -77,7 +77,10 @@
 
 		<!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
 		<dependency org="org.eclipse.jgit" name="org.eclipse.jgit" rev="4.8.0.201706111038-r"/>
-		
+
+		<!-- https://mvnrepository.com/artifact/org.gitlab4j/gitlab4j-api -->
+		<dependency org="org.gitlab4j" name="gitlab4j-api" rev="4.4.8"/>
+
 		<dependency org="de.catma" name="catma-core" rev="latest.integration" />
 	</dependencies>	
 </ivy-module>
