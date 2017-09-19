@@ -9,7 +9,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Properties;
