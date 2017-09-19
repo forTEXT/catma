@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Properties;
@@ -49,12 +50,17 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void init() throws Exception {
-		this.repoManager.init(this.testRepoPath.getName());
+		this.repoManager.init(this.testRepoPath.getName(), "Test Description");
 
 		assert this.repoManager.isAttached();
 		assert this.testRepoPath.exists();
 		assert this.testRepoPath.isDirectory();
 		assert Arrays.asList(this.testRepoPath.list()).contains(".git");
+
+		File gitDescriptionFile = new File(this.testRepoPath, ".git/description");
+		assertEquals(
+			"Test Description", new String(Files.readAllBytes(gitDescriptionFile.toPath()))
+		);
 	}
 
 	@Test
@@ -64,7 +70,7 @@ public class LocalGitRepositoryManagerTest {
 		try (LocalGitRepositoryManager repoManager = new LocalGitRepositoryManager(
 			this.catmaProperties
 		)) {
-			repoManager.init(this.testRepoPath.getName());
+			repoManager.init(this.testRepoPath.getName(), null);
 		}
 
 		this.repoManager.open(this.testRepoPath.getName());
@@ -74,7 +80,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void add() throws Exception {
-		this.repoManager.init(this.testRepoPath.getName());
+		this.repoManager.init(this.testRepoPath.getName(), null);
 
 		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
 		byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
@@ -95,7 +101,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void addAndCommit() throws Exception {
-		this.repoManager.init(this.testRepoPath.getName());
+		this.repoManager.init(this.testRepoPath.getName(), null);
 
 		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
 		byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
@@ -115,7 +121,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void commit() throws Exception {
-		this.repoManager.init(this.testRepoPath.getName());
+		this.repoManager.init(this.testRepoPath.getName(), null);
 
 		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
 		byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
