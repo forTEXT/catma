@@ -94,6 +94,8 @@ public class RemoteGitServerManagerTest {
 
 		assertNotNull(project);
 		assertEquals("test-repo", project.getName());
+
+		// TODO: assert that the repo is in the group
 	}
 
 	@Test

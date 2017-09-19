@@ -65,6 +65,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	 */
 	@Override
 	public void init(String repositoryName) throws LocalGitRepositoryManagerException {
+		// TODO: set .git/description
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `init` on an attached instance");
 		}
