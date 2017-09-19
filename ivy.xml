@@ -81,6 +81,9 @@
 		<!-- https://mvnrepository.com/artifact/org.gitlab4j/gitlab4j-api -->
 		<dependency org="org.gitlab4j" name="gitlab4j-api" rev="4.4.8"/>
 
+		<!-- https://mvnrepository.com/artifact/org.awaitility/awaitility -->
+		<dependency org="org.awaitility" name="awaitility" rev="3.0.0"/>
+
 		<dependency org="de.catma" name="catma-core" rev="latest.integration" />
 	</dependencies>	
 </ivy-module>
