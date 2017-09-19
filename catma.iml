@@ -42,6 +42,9 @@
         </propertiesSettings>
       </configuration>
     </facet>
+    <facet type="google-app-engine" name="Google App Engine">
+      <configuration />
+    </facet>
   </component>
   <component name="NewModuleRootManager">
     <output url="file://$MODULE_DIR$/build/classes" />
@@ -517,5 +520,6 @@
         </SOURCES>
       </library>
     </orderEntry>
+    <orderEntry type="library" name="gwt-user" level="project" />
   </component>
 </module>
