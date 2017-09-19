@@ -9,12 +9,12 @@ public interface IRemoteGitServerManager {
 			throws RemoteGitServerManagerException;
 
 	int createRepository(String name, @Nullable String path, int groupId)
-					throws RemoteGitServerManagerException;
+			throws RemoteGitServerManagerException;
 
 	void deleteRepository(int repositoryId) throws RemoteGitServerManagerException;
 
 	int createGroup(String name, String path, @Nullable String description)
-							throws RemoteGitServerManagerException;
+			throws RemoteGitServerManagerException;
 
 	void deleteGroup(int groupId) throws RemoteGitServerManagerException;
 }

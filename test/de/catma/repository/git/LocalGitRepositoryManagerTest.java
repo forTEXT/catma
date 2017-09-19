@@ -33,7 +33,7 @@ public class LocalGitRepositoryManagerTest {
 	public void setUp() throws Exception {
 		this.repoManager = new LocalGitRepositoryManager(this.catmaProperties);
 		this.testRepoPath = new File(
-				this.repoManager.getRepositoryBasePath() + "/test-repo"
+			this.repoManager.getRepositoryBasePath() + "/test-repo"
 		);
 	}
 
@@ -62,7 +62,7 @@ public class LocalGitRepositoryManagerTest {
 		// we use a separate LocalGitRepositoryManager instance to init the repo as we can't call
 		// open on an attached instance
 		try (LocalGitRepositoryManager repoManager = new LocalGitRepositoryManager(
-				this.catmaProperties
+			this.catmaProperties
 		)) {
 			repoManager.init(this.testRepoPath.getName());
 		}

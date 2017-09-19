@@ -108,7 +108,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 		}
 
 		File repositoryPath = new File(
-				this.repositoryBasePath + "/" + repositoryName + "/"
+			this.repositoryBasePath + "/" + repositoryName + "/"
 		);
 
 		// could also check for the absence of a child .git directory
