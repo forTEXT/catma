@@ -33,6 +33,15 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 		this.gitLabApi = new GitLabApi(this.gitLabServerUrl, this.gitLabAdminPersonalAccessToken);
 	}
 
+	/**
+	 * Creates a new remote repository with the <code>name</code> and <code>path</code> supplied.
+	 *
+	 * @param name the name of the repository to create
+	 * @param path the path of the repository to create
+	 * @return the repository ID
+	 * @throws RemoteGitServerManagerException if something went wrong while creating the remote
+	 *         repository
+	 */
 	@Override
 	public int createRepository(String name, @Nullable String path)
 			throws RemoteGitServerManagerException {
@@ -54,6 +63,17 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 		}
 	}
 
+	/**
+	 * Creates a new remote repository with the <code>name</code> and <code>path</code> supplied
+	 * within the group specified by the <code>groupId</code>.
+	 *
+	 * @param name the name of the repository to create
+	 * @param path the path of the repository to create
+	 * @param groupId the ID of the group within which to create the repository
+	 * @return the new repository ID
+	 * @throws RemoteGitServerManagerException if something went wrong while creating the remote
+	 *         repository
+	 */
 	@Override
 	public int createRepository(String name, @Nullable String path, int groupId)
 			throws RemoteGitServerManagerException {
@@ -79,6 +99,13 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 		}
 	}
 
+	/**
+	 * Deletes an existing remote repository identified by <code>repositoryId</code>.
+	 *
+	 * @param repositoryId the ID of the repository to delete
+	 * @throws RemoteGitServerManagerException if something went wrong while deleting the remote
+	 *         repository
+	 */
 	@Override
 	public void deleteRepository(int repositoryId) throws RemoteGitServerManagerException {
 		ProjectApi projectApi = this.gitLabApi.getProjectApi();
@@ -91,6 +118,17 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 		}
 	}
 
+	/**
+	 * Creates a new remote group with the <code>name</code>, <code>path</code> and
+	 * <code>description</code> supplied.
+	 *
+	 * @param name the name of the group to create
+	 * @param path the path of the group to create
+	 * @param description the description of the group to create
+	 * @return the new group ID
+	 * @throws RemoteGitServerManagerException if something went wrong while creating the remote
+	 *         group
+	 */
 	@Override
 	public int createGroup(String name, String path, @Nullable String description)
 			throws RemoteGitServerManagerException {
@@ -113,6 +151,15 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 		}
 	}
 
+	/**
+	 * Deletes an existing remote group identified by <code>groupId</code>.
+	 * <p>
+	 * NB: Also deletes any child repositories!
+	 *
+	 * @param groupId the ID of the group to delete
+	 * @throws RemoteGitServerManagerException if something went wrong while deleting the remote
+	 *         group
+	 */
 	@Override
 	public void deleteGroup(int groupId) throws RemoteGitServerManagerException {
 		GroupApi groupApi = gitLabApi.getGroupApi();
