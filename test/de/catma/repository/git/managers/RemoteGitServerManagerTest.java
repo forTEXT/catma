@@ -1,4 +1,4 @@
-package de.catma.repository.git;
+package de.catma.repository.git.managers;
 
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;

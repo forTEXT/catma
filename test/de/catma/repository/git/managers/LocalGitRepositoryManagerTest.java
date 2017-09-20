@@ -1,4 +1,4 @@
-package de.catma.repository.git;
+package de.catma.repository.git.managers;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
@@ -58,7 +58,8 @@ public class LocalGitRepositoryManagerTest {
 
 		File gitDescriptionFile = new File(this.testRepoPath, ".git/description");
 		assertEquals(
-			"Test Description", new String(Files.readAllBytes(gitDescriptionFile.toPath()))
+			"Test Description\n",
+			new String(Files.readAllBytes(gitDescriptionFile.toPath()))
 		);
 	}
 
