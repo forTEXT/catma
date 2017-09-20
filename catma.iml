@@ -114,7 +114,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.vaadin.addons/wizards-for-vaadin/jars/wizards-for-vaadin-1.1.0.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.vaadin.addons/contextmenu/jars/contextmenu-4.5.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/groupId/tableexport-for-vaadin/jars/tableexport-for-vaadin-1.5.1.3.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/commons-io/commons-io/jars/commons-io-2.2.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.poi/poi/jars/poi-3.10-FINAL.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-enterprise/jars/neo4j-enterprise-3.0.7.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j/jars/neo4j-3.0.7.jar!/" />
@@ -164,7 +163,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-ha/jars/neo4j-ha-3.0.7.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-metrics/jars/neo4j-metrics-3.0.7.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/io.dropwizard.metrics/metrics-core/bundles/metrics-core-3.1.2.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.7.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/io.dropwizard.metrics/metrics-graphite/bundles/metrics-graphite-3.1.2.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-management/jars/neo4j-management-3.0.7.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.antlr/antlr-runtime/jars/antlr-runtime-3.4.jar!/" />
@@ -175,8 +173,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/com.google.guava/guava/bundles/guava-19.0.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.quartz-scheduler/quartz/jars/quartz-2.2.1.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.commons/commons-compress/jars/commons-compress-1.9.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/commons-logging/commons-logging/jars/commons-logging-1.1.3.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/jars/commons-codec-1.6.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet/jars/org.restlet-2.3.4.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet.ext.html/jars/org.restlet.ext.html-2.3.4.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet.ext.jackson/jars/org.restlet.ext.jackson-2.3.4.jar!/" />
@@ -216,14 +212,9 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.eclipse.jgit/org.eclipse.jgit/jars/org.eclipse.jgit-4.8.0.201706111038-r.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.jcraft/jsch/jars/jsch-0.1.54.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.googlecode.javaewah/JavaEWAH/bundles/JavaEWAH-1.1.6.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient/jars/httpclient-4.3.6.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore/jars/httpcore-4.3.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.gitlab4j/gitlab4j-api/jars/gitlab4j-api-4.4.8.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/bundles/jackson-jaxrs-json-provider-2.8.8.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/bundles/jackson-jaxrs-base-2.8.8.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-core/bundles/jackson-core-2.8.8.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-databind/bundles/jackson-databind-2.8.8.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-annotations/bundles/jackson-annotations-2.8.0.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/bundles/jackson-module-jaxb-annotations-2.8.8.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.core/jersey-client/jars/jersey-client-2.25.1.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.ws.rs/javax.ws.rs-api/jars/javax.ws.rs-api-2.0.1.jar!/" />
@@ -239,10 +230,27 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/osgi-resource-locator/jars/osgi-resource-locator-1.0.1.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.inject/javax.inject/jars/javax.inject-1.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.servlet/javax.servlet-api/jars/javax.servlet-api-3.1.0.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.github.jsonld-java/jsonld-java/bundles/jsonld-java-0.11.1.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-core/bundles/jackson-core-2.9.0.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-databind/bundles/jackson-databind-2.9.0.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-annotations/bundles/jackson-annotations-2.9.0.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.awaitility/awaitility/jars/awaitility-3.0.0.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.hamcrest/hamcrest-library/jars/hamcrest-library-1.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.hamcrest/hamcrest-core/jars/hamcrest-core-1.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.objenesis/objenesis/jars/objenesis-2.5.1.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient-osgi/bundles/httpclient-osgi-4.5.3.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient/jars/httpclient-4.5.3.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore/jars/httpcore-4.4.6.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/commons-logging/commons-logging/jars/commons-logging-1.2.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/jars/commons-codec-1.10.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpmime/jars/httpmime-4.5.3.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient-cache/jars/httpclient-cache-4.5.3.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/fluent-hc/jars/fluent-hc-4.5.3.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore-osgi/bundles/httpcore-osgi-4.4.6.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore-nio/jars/httpcore-nio-4.4.6.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.25.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/commons-io/commons-io/jars/commons-io-2.5.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/jcl-over-slf4j/jars/jcl-over-slf4j-1.7.25.jar!/" />
         </CLASSES>
         <JAVADOC>
           <root url="jar://$USER_HOME$/.ivy2/cache/com.vaadin/vaadin-server/javadocs/vaadin-server-7.7.7-javadoc.jar!/" />
@@ -254,7 +262,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/com.vaadin.external.slf4j/vaadin-slf4j-jdk14/javadocs/vaadin-slf4j-jdk14-1.6.1-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.vaadin.addon/confirmdialog/javadocs/confirmdialog-2.1.2-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.vaadin.addons/wizards-for-vaadin/javadocs/wizards-for-vaadin-1.1.0-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/commons-io/commons-io/javadocs/commons-io-2.2-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-enterprise/javadocs/neo4j-enterprise-3.0.7-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j/javadocs/neo4j-3.0.7-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-kernel/javadocs/neo4j-kernel-3.0.7-javadoc.jar!/" />
@@ -303,7 +310,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-ha/javadocs/neo4j-ha-3.0.7-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-metrics/javadocs/neo4j-metrics-3.0.7-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/io.dropwizard.metrics/metrics-core/javadocs/metrics-core-3.1.2-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/slf4j-api/javadocs/slf4j-api-1.7.7-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/io.dropwizard.metrics/metrics-graphite/javadocs/metrics-graphite-3.1.2-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-management/javadocs/neo4j-management-3.0.7-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.antlr/antlr-runtime/javadocs/antlr-runtime-3.4-javadoc.jar!/" />
@@ -312,8 +318,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/com.google.guava/guava/javadocs/guava-19.0-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.quartz-scheduler/quartz/javadocs/quartz-2.2.1-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.commons/commons-compress/javadocs/commons-compress-1.9-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/commons-logging/commons-logging/javadocs/commons-logging-1.1.3-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/javadocs/commons-codec-1.6-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet/javadocs/org.restlet-2.3.4-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet.ext.html/javadocs/org.restlet.ext.html-2.3.4-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet.ext.jackson/javadocs/org.restlet.ext.jackson-2.3.4-javadoc.jar!/" />
@@ -346,14 +350,9 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.eclipse.jgit/org.eclipse.jgit/javadocs/org.eclipse.jgit-4.8.0.201706111038-r-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.jcraft/jsch/javadocs/jsch-0.1.54-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.googlecode.javaewah/JavaEWAH/javadocs/JavaEWAH-1.1.6-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient/javadocs/httpclient-4.3.6-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore/javadocs/httpcore-4.3.3-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.gitlab4j/gitlab4j-api/javadocs/gitlab4j-api-4.4.8-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/javadocs/jackson-jaxrs-json-provider-2.8.8-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/javadocs/jackson-jaxrs-base-2.8.8-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-core/javadocs/jackson-core-2.8.8-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-databind/javadocs/jackson-databind-2.8.8-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-annotations/javadocs/jackson-annotations-2.8.0-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/javadocs/jackson-module-jaxb-annotations-2.8.8-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.core/jersey-client/javadocs/jersey-client-2.25.1-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.ws.rs/javax.ws.rs-api/javadocs/javax.ws.rs-api-2.0.1-javadoc.jar!/" />
@@ -368,10 +367,26 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/osgi-resource-locator/javadocs/osgi-resource-locator-1.0.1-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.inject/javax.inject/javadocs/javax.inject-1-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.servlet/javax.servlet-api/javadocs/javax.servlet-api-3.1.0-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.github.jsonld-java/jsonld-java/javadocs/jsonld-java-0.11.1-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-core/javadocs/jackson-core-2.9.0-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-databind/javadocs/jackson-databind-2.9.0-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-annotations/javadocs/jackson-annotations-2.9.0-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.awaitility/awaitility/javadocs/awaitility-3.0.0-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.hamcrest/hamcrest-library/javadocs/hamcrest-library-1.3-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.hamcrest/hamcrest-core/javadocs/hamcrest-core-1.3-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.objenesis/objenesis/javadocs/objenesis-2.5.1-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient-osgi/javadocs/httpclient-osgi-4.5.3-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient/javadocs/httpclient-4.5.3-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore/javadocs/httpcore-4.4.6-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/commons-logging/commons-logging/javadocs/commons-logging-1.2-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/javadocs/commons-codec-1.10-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpmime/javadocs/httpmime-4.5.3-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient-cache/javadocs/httpclient-cache-4.5.3-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/fluent-hc/javadocs/fluent-hc-4.5.3-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore-nio/javadocs/httpcore-nio-4.4.6-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/slf4j-api/javadocs/slf4j-api-1.7.25-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/commons-io/commons-io/javadocs/commons-io-2.5-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/jcl-over-slf4j/javadocs/jcl-over-slf4j-1.7.25-javadoc.jar!/" />
         </JAVADOC>
         <SOURCES>
           <root url="jar://$USER_HOME$/.ivy2/cache/com.vaadin/vaadin-server/sources/vaadin-server-7.7.7-sources.jar!/" />
@@ -384,7 +399,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/com.vaadin.external.slf4j/vaadin-slf4j-jdk14/sources/vaadin-slf4j-jdk14-1.6.1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.vaadin.addon/confirmdialog/sources/confirmdialog-2.1.2-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.vaadin.addons/wizards-for-vaadin/sources/wizards-for-vaadin-1.1.0-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/commons-io/commons-io/sources/commons-io-2.2-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.poi/poi/sources/poi-3.10-FINAL-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-enterprise/sources/neo4j-enterprise-3.0.7-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j/sources/neo4j-3.0.7-sources.jar!/" />
@@ -434,7 +448,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-ha/sources/neo4j-ha-3.0.7-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-metrics/sources/neo4j-metrics-3.0.7-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/io.dropwizard.metrics/metrics-core/sources/metrics-core-3.1.2-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/slf4j-api/sources/slf4j-api-1.7.7-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/io.dropwizard.metrics/metrics-graphite/sources/metrics-graphite-3.1.2-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-management/sources/neo4j-management-3.0.7-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.antlr/antlr-runtime/sources/antlr-runtime-3.4-sources.jar!/" />
@@ -444,8 +457,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/com.google.guava/guava/sources/guava-19.0-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.quartz-scheduler/quartz/sources/quartz-2.2.1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.commons/commons-compress/sources/commons-compress-1.9-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/commons-logging/commons-logging/sources/commons-logging-1.1.3-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/sources/commons-codec-1.6-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet/sources/org.restlet-2.3.4-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet.ext.html/sources/org.restlet.ext.html-2.3.4-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.restlet.jee/org.restlet.ext.jackson/sources/org.restlet.ext.jackson-2.3.4-sources.jar!/" />
@@ -482,14 +493,9 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.eclipse.jgit/org.eclipse.jgit/sources/org.eclipse.jgit-4.8.0.201706111038-r-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.jcraft/jsch/sources/jsch-0.1.54-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.googlecode.javaewah/JavaEWAH/sources/JavaEWAH-1.1.6-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient/sources/httpclient-4.3.6-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore/sources/httpcore-4.3.3-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.gitlab4j/gitlab4j-api/sources/gitlab4j-api-4.4.8-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/sources/jackson-jaxrs-json-provider-2.8.8-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/sources/jackson-jaxrs-base-2.8.8-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-core/sources/jackson-core-2.8.8-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-databind/sources/jackson-databind-2.8.8-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-annotations/sources/jackson-annotations-2.8.0-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/sources/jackson-module-jaxb-annotations-2.8.8-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.core/jersey-client/sources/jersey-client-2.25.1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.ws.rs/javax.ws.rs-api/sources/javax.ws.rs-api-2.0.1-sources.jar!/" />
@@ -505,10 +511,27 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/osgi-resource-locator/sources/osgi-resource-locator-1.0.1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.inject/javax.inject/sources/javax.inject-1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.servlet/javax.servlet-api/sources/javax.servlet-api-3.1.0-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.github.jsonld-java/jsonld-java/sources/jsonld-java-0.11.1-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-core/sources/jackson-core-2.9.0-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-databind/sources/jackson-databind-2.9.0-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.fasterxml.jackson.core/jackson-annotations/sources/jackson-annotations-2.9.0-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.awaitility/awaitility/sources/awaitility-3.0.0-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.hamcrest/hamcrest-library/sources/hamcrest-library-1.3-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.hamcrest/hamcrest-core/sources/hamcrest-core-1.3-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.objenesis/objenesis/sources/objenesis-2.5.1-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient-osgi/sources/httpclient-osgi-4.5.3-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient/sources/httpclient-4.5.3-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore/sources/httpcore-4.4.6-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/commons-logging/commons-logging/sources/commons-logging-1.2-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/sources/commons-codec-1.10-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpmime/sources/httpmime-4.5.3-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient-cache/sources/httpclient-cache-4.5.3-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/fluent-hc/sources/fluent-hc-4.5.3-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore-osgi/sources/httpcore-osgi-4.4.6-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore-nio/sources/httpcore-nio-4.4.6-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/slf4j-api/sources/slf4j-api-1.7.25-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/commons-io/commons-io/sources/commons-io-2.5-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/jcl-over-slf4j/sources/jcl-over-slf4j-1.7.25-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
