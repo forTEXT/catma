@@ -139,7 +139,7 @@ See [Migrating From Eclipse to IntelliJ IDEA](https://www.jetbrains.com/help/ide
 	5. Click the Configure... button next to "Application Server" at the top
 	6. Browse to the Jetty Home directory (`[...]/dev/jetty-distribution-9.3.20.v20170531`)
     7. Click OK twice to close the dialog window
-	8. You should now see a warning at the bottom saying "JMC module is not included". Click the Fix button.
+	8. You should now see a warning at the bottom saying "JMX module is not included". Click the Fix button.
     9. You should now see a warning at the bottom saying "No artifacts marked for deployment". Click the Fix button.
 	10. The "catma:Web" artifact will be added under the "Deployment" tab
     11. Still on the "Deployment" tab, tick the checkbox labelled "Use custom context root" and type `/catma/` into the text box underneath
@@ -153,4 +153,3 @@ See [Migrating From Eclipse to IntelliJ IDEA](https://www.jetbrains.com/help/ide
     2. Browse to `http://localhost:8080/catma/` in your favourite browser
     
     
- 
