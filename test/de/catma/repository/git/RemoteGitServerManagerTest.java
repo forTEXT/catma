@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.FileInputStream;
+import java.util.List;
 import java.util.Properties;
 
 import static org.awaitility.Awaitility.*;
@@ -95,7 +96,11 @@ public class RemoteGitServerManagerTest {
 		assertNotNull(project);
 		assertEquals("test-repo", project.getName());
 
-		// TODO: assert that the repo is in the group
+		List<Project> repositoriesInGroup = this.serverManager.getGitLabApi().getGroupApi()
+				.getProjects(this.createdGroupId);
+
+		assertEquals(1, repositoriesInGroup.size());
+		assertEquals(this.createdRepositoryId, repositoriesInGroup.get(0).getId());
 	}
 
 	@Test
