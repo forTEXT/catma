@@ -33,7 +33,7 @@ public class LocalGitRepositoryManagerTest {
 	public void setUp() throws Exception {
 		this.repoManager = new LocalGitRepositoryManager(this.catmaProperties);
 		this.testRepoPath = new File(
-				this.repoManager.getRepositoryBasePath() + "/test-repo"
+			this.repoManager.getRepositoryBasePath() + "/test-repo"
 		);
 	}
 
@@ -49,12 +49,17 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void init() throws Exception {
-		this.repoManager.init(this.testRepoPath.getName());
+		this.repoManager.init(this.testRepoPath.getName(), "Test Description");
 
 		assert this.repoManager.isAttached();
 		assert this.testRepoPath.exists();
 		assert this.testRepoPath.isDirectory();
 		assert Arrays.asList(this.testRepoPath.list()).contains(".git");
+
+		File gitDescriptionFile = new File(this.testRepoPath, ".git/description");
+		assertEquals(
+			"Test Description", new String(Files.readAllBytes(gitDescriptionFile.toPath()))
+		);
 	}
 
 	@Test
@@ -62,9 +67,9 @@ public class LocalGitRepositoryManagerTest {
 		// we use a separate LocalGitRepositoryManager instance to init the repo as we can't call
 		// open on an attached instance
 		try (LocalGitRepositoryManager repoManager = new LocalGitRepositoryManager(
-				this.catmaProperties
+			this.catmaProperties
 		)) {
-			repoManager.init(this.testRepoPath.getName());
+			repoManager.init(this.testRepoPath.getName(), null);
 		}
 
 		this.repoManager.open(this.testRepoPath.getName());
@@ -74,7 +79,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void add() throws Exception {
-		this.repoManager.init(this.testRepoPath.getName());
+		this.repoManager.init(this.testRepoPath.getName(), null);
 
 		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
 		byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
@@ -95,7 +100,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void addAndCommit() throws Exception {
-		this.repoManager.init(this.testRepoPath.getName());
+		this.repoManager.init(this.testRepoPath.getName(), null);
 
 		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
 		byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
@@ -115,7 +120,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void commit() throws Exception {
-		this.repoManager.init(this.testRepoPath.getName());
+		this.repoManager.init(this.testRepoPath.getName(), null);
 
 		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
 		byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());

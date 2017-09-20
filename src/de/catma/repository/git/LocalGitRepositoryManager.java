@@ -5,6 +5,7 @@ import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -57,20 +58,23 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	}
 
 	/**
-	 * Initialises a new Git repository with the directory name <code>repositoryName</code>.
+	 * Initialises a new Git repository with the directory name <code>name</code> and stores the
+	 * <code>description</code> in '.git/description'.
 	 *
-	 * @param repositoryName the directory name of the Git repository to initialise
+	 * @param name the directory name of the Git repository to initialise
+	 * @param description the description of the Git repository to initialise
 	 * @throws LocalGitRepositoryManagerException if the Git repository already exists or couldn't
 	 *         be initialised for some other reason
 	 */
 	@Override
-	public void init(String repositoryName) throws LocalGitRepositoryManagerException {
+	public void init(String name, @Nullable String description)
+			throws LocalGitRepositoryManagerException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `init` on an attached instance");
 		}
 
 		File repositoryPath = new File(
-			this.repositoryBasePath + "/" + repositoryName + "/"
+			this.repositoryBasePath + "/" + name + "/"
 		);
 
 		// if the directory exists we assume it's a Git repo, could also check for a child .git
@@ -80,7 +84,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 				String.format(
 					"A Git repository with the name '%s' already exists at base path '%s'. " +
 					"Did you mean to call `open`?",
-					repositoryName,
+						name,
 					this.repositoryBasePath
 				)
 			);
@@ -88,27 +92,28 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 
 		try {
 			this.gitApi = Git.init().setDirectory(repositoryPath).call();
+			this.gitApi.getRepository().setGitwebDescription(description);
 		}
-		catch (GitAPIException e) {
+		catch (GitAPIException|IOException e) {
 			throw new LocalGitRepositoryManagerException("Failed to init Git repository", e);
 		}
 	}
 
 	/**
-	 * Opens an existing Git repository with the directory name <code>repositoryName</code>.
+	 * Opens an existing Git repository with the directory name <code>name</code>.
 	 *
-	 * @param repositoryName the directory name of the Git repository to open
+	 * @param name the directory name of the Git repository to open
 	 * @throws LocalGitRepositoryManagerException if the Git repository couldn't be found or
 	 *         couldn't be opened for some other reason
 	 */
 	@Override
-	public void open(String repositoryName) throws LocalGitRepositoryManagerException {
+	public void open(String name) throws LocalGitRepositoryManagerException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `open` on an attached instance");
 		}
 
 		File repositoryPath = new File(
-				this.repositoryBasePath + "/" + repositoryName + "/"
+			this.repositoryBasePath + "/" + name + "/"
 		);
 
 		// could also check for the absence of a child .git directory
@@ -117,7 +122,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 				String.format(
 					"Couldn't find a Git repository with the name '%s' at base path '%s'. " +
 					"Did you mean to call `init`?",
-					repositoryName,
+						name,
 					this.repositoryBasePath
 				)
 			);
