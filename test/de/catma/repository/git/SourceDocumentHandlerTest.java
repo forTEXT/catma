@@ -4,6 +4,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
 import de.catma.document.source.contenthandler.StandardContentHandler;
+import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.util.IDGenerator;
 import org.junit.Test;
 
@@ -52,8 +53,12 @@ public class SourceDocumentHandlerTest {
 			idGenerator.generate(), standardContentHandler
 		);
 
-        SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
+		LocalGitRepositoryManager localGitRepositoryManager = new LocalGitRepositoryManager(
 			this.catmaProperties
+		);
+
+        SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
+			localGitRepositoryManager
 		);
         sourceDocumentHandler.insert(originalSourceDocumentBytes, sourceDocument, null);
 
