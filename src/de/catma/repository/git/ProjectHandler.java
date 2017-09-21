@@ -14,7 +14,8 @@ import org.gitlab4j.api.models.Project;
 import java.util.Properties;
 
 public class ProjectHandler implements IProjectHandler, IGitBasedProjectHandler {
-	// using 'corpus' and not 'project' here so as not to confuse CATMA Projects with GitLab Projects
+	// using 'corpus' and not 'project' here so as not to confuse CATMA Projects with GitLab
+	// Projects
 	private final String projectNameFormat = "group_%s_corpus";
 
 	private Properties catmaProperties;
@@ -26,7 +27,9 @@ public class ProjectHandler implements IProjectHandler, IGitBasedProjectHandler 
 	public ProjectHandler(Properties catmaProperties) {
 		this.catmaProperties = catmaProperties;
 
-		this.gitLabAdminPersonalAccessToken = catmaProperties.getProperty("GitLabAdminPersonalAccessToken");
+		this.gitLabAdminPersonalAccessToken = catmaProperties.getProperty(
+			"GitLabAdminPersonalAccessToken"
+		);
 		this.gitLabServerUrl = catmaProperties.getProperty("GitLabServerUrl");
 
 		this.gitLabApi = new GitLabApi(this.gitLabServerUrl, this.gitLabAdminPersonalAccessToken);
@@ -36,7 +39,8 @@ public class ProjectHandler implements IProjectHandler, IGitBasedProjectHandler 
 
 	/**
 	 * Creates the 'root' repository (GitLab Project) for the CATMA Project (GitLab Group).
-	 * This repository will reference other repositories (Tagsets, Markup Collections and Source Documents) in the CATMA Project.
+	 * This repository will reference other repositories (Tagsets, Markup Collections and Source
+	 * Documents) in the CATMA Project.
 	 *
 	 * @param group the GitLab Group within which to create the root repository
 	 * @return the GitLab Project ID
@@ -99,8 +103,9 @@ public class ProjectHandler implements IProjectHandler, IGitBasedProjectHandler 
 		try {
 			// create the GitLab group
 			groupApi.addGroup(
-					name, path, description,
-					null, null, null, null, null, null, null
+				name, path, description,
+				null, null, null, null,
+				null, null, null
 			);
 
 			// fetch the GitLab group (none of the addGroup overloads return a group or its id)
