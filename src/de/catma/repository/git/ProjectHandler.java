@@ -1,6 +1,6 @@
 package de.catma.repository.git;
 
-import de.catma.repository.IGitBasedProjectHandler;
+import de.catma.repository.git.interfaces.IGitBasedProjectHandler;
 import de.catma.repository.IProjectHandler;
 import de.catma.repository.git.exceptions.ProjectHandlerException;
 import de.catma.util.IDGenerator;
