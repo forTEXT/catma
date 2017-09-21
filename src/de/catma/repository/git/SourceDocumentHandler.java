@@ -24,6 +24,8 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 
     	// TODO: do something with groupId
 		// TODO: write the SourceDocumentInfo to header.json
+		// TODO: create and push to a remote repo (and consider the various scenarios to decide
+		// whether that's really this class's responsibility)
 
 		TechInfoSet techInfoSet = sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
 				.getTechInfoSet();
