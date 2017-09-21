@@ -1,6 +1,5 @@
 package de.catma.repository.git;
 
-import de.catma.document.source.FileType;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
@@ -12,35 +11,52 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Properties;
-import java.util.UUID;
 
 import static org.junit.Assert.*;
 
 public class SourceDocumentHandlerTest {
+	private Properties catmaProperties;
+
+    public SourceDocumentHandlerTest() throws Exception {
+		String propertiesFile = System.getProperties().containsKey("prop") ?
+				System.getProperties().getProperty("prop") : "catma.properties";
+
+		this.catmaProperties = new Properties();
+		this.catmaProperties.load(new FileInputStream(propertiesFile));
+    }
+
     @Test
     public void insert() throws Exception {
-        String propertiesFile = System.getProperties().containsKey("prop") ? System.getProperties().getProperty("prop") : "catma.properties";
+    	File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
+        File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
 
-        Properties catmaProperties = new Properties();
-        catmaProperties.load(new FileInputStream(propertiesFile));
+		byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
 
-        File inputFile = new File("testdocs/rose_for_emily.txt");
-
-        TechInfoSet techInfoSet = new TechInfoSet(inputFile.getName(), Files.probeContentType(inputFile.toPath()), inputFile.toURI());
+        TechInfoSet techInfoSet = new TechInfoSet(convertedSourceDocument.getName(),
+			Files.probeContentType(convertedSourceDocument.toPath()),
+			convertedSourceDocument.toURI()
+		);
         techInfoSet.setCharset(Charset.forName("UTF-8"));
-        StandardContentHandler standardContentHandler = new StandardContentHandler();
-        standardContentHandler.setSourceDocumentInfo(new SourceDocumentInfo(null, null, techInfoSet));
 
-        FileInputStream fileInputStream = new FileInputStream(inputFile);
+        StandardContentHandler standardContentHandler = new StandardContentHandler();
+        standardContentHandler.setSourceDocumentInfo(
+			new SourceDocumentInfo(null, null, techInfoSet)
+		);
+
+        FileInputStream fileInputStream = new FileInputStream(convertedSourceDocument);
         standardContentHandler.load(fileInputStream);
 
 		IDGenerator idGenerator = new IDGenerator();
-        SourceDocument sourceDocument = new SourceDocument(idGenerator.generate(), standardContentHandler);
+        SourceDocument sourceDocument = new SourceDocument(
+			idGenerator.generate(), standardContentHandler
+		);
 
-        SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(catmaProperties);
-        sourceDocumentHandler.insert(sourceDocument);
+        SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
+			this.catmaProperties
+		);
+        sourceDocumentHandler.insert(originalSourceDocumentBytes, sourceDocument, null);
+
+        // TODO: assert something
     }
 }

@@ -1,43 +1,46 @@
 package de.catma.repository.git;
 
-import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.TechInfoSet;
 import de.catma.repository.ISourceDocumentHandler;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
+import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
+import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
+import de.catma.repository.git.managers.LocalGitRepositoryManager;
 
+import javax.annotation.Nullable;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Properties;
 
 public class SourceDocumentHandler implements ISourceDocumentHandler {
-
     private Properties catmaProperties;
+	private String repositoryBasePath;
+    private LocalGitRepositoryManager localGitRepositoryManager;
 
     public SourceDocumentHandler(Properties catmaProperties) {
         this.catmaProperties = catmaProperties;
+		this.repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
+        this.localGitRepositoryManager = new LocalGitRepositoryManager(catmaProperties);
     }
 
     @Override
-    public void insert(SourceDocument sourceDocument) throws IOException, GitAPIException {
-        int repoIndex = 1; // assume that the first configured repo is the local repo
+    public void insert(byte[] originalSourceDocumentBytes, SourceDocument sourceDocument,
+					   @Nullable Integer groupId)
+            throws SourceDocumentHandlerException {
 
-        // TODO: remove hardcoding of repo name - this will probably just be a UUID or similar for tagset, markup collection and source document repos
-		// but we need to think about how to handle this for the CATMA project repo, whose name/path need to be unique (if we don't want to track the association externally)
-		// for the GitLab groups it looks like you can set the group path independently from the name, so we could maybe just make the group path something unique and allow names
-		// to be reused? see https://docs.gitlab.com/ce/user/group/index.html#create-a-new-group
-        String repoPath = RepositoryPropertyKey.RepositoryFolderPath.getProperty(this.catmaProperties, repoIndex) + "/" + "test-project" + "/";
+    	// TODO: do something with groupId
 
-        TechInfoSet techInfoSet = sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet();
-        File targetFile = new File(repoPath + techInfoSet.getFileName());
+		TechInfoSet techInfoSet = sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+				.getTechInfoSet();
 
-        // TODO: factor out repo creation and file addition
-        try (Git git = Git.init().setDirectory(new File(repoPath)).call(); FileOutputStream fileOutputStream = new FileOutputStream(targetFile)) {
-            fileOutputStream.write(sourceDocument.getContent().getBytes(techInfoSet.getCharset()));
-            git.add().addFilepattern(targetFile.getAbsolutePath());
-            git.commit().setMessage(String.format("Adding %s", targetFile.getName())).call();
-        }
+		File targetFile = new File(this.repositoryBasePath + "/" +
+				techInfoSet.getFileName());
+
+        try {
+			this.localGitRepositoryManager.init(sourceDocument.getID(), null);
+			this.localGitRepositoryManager.addAndCommit(targetFile, originalSourceDocumentBytes);
+		}
+		catch (LocalGitRepositoryManagerException e) {
+        	throw new SourceDocumentHandlerException("Failed to insert source document", e);
+		}
     }
 }
