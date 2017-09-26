@@ -19,7 +19,8 @@ public class ProjectHandlerTest {
 
 	@Before
 	public void setUp() throws IOException {
-		String propertiesFile = System.getProperties().containsKey("prop") ? System.getProperties().getProperty("prop") : "catma.properties";
+		String propertiesFile = System.getProperties().containsKey("prop") ?
+				System.getProperties().getProperty("prop") : "catma.properties";
 
 		this.catmaProperties = new Properties();
 		this.catmaProperties.load(new FileInputStream(propertiesFile));
@@ -36,7 +37,9 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void getRootRepositoryHttpUrl() throws ProjectHandlerException {
-		createdGroupId = projectHandler.create("Test Project", "This is a test project");
+		createdGroupId = projectHandler.create(
+			"Test Project", "This is a test project"
+		);
 
 		String repositoryHttpUrl = projectHandler.getRootRepositoryHttpUrl(createdGroupId);
 
@@ -48,7 +51,9 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void create() throws ProjectHandlerException {
-		createdGroupId = projectHandler.create("Test Project", "This is a test project");
+		createdGroupId = projectHandler.create(
+			"Test Project", "This is a test project"
+		);
 
 		assert createdGroupId > 0;
 	}

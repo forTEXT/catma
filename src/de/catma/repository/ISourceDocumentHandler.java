@@ -1,10 +1,12 @@
 package de.catma.repository;
 
 import de.catma.document.source.SourceDocument;
-import org.eclipse.jgit.api.errors.GitAPIException;
+import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
 
-import java.io.IOException;
+import javax.annotation.Nullable;
 
 public interface ISourceDocumentHandler {
-    void insert(final SourceDocument sourceDocument) throws IOException, GitAPIException;
+    void insert(byte[] originalSourceDocumentBytes, SourceDocument sourceDocument,
+				@Nullable Integer projectId)
+			throws SourceDocumentHandlerException;
 }

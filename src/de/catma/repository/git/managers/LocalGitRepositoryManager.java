@@ -16,13 +16,13 @@ import java.util.Properties;
 public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, AutoCloseable {
 	private String repositoryBasePath;
 
-	public String getRepositoryBasePath() {
+	String getRepositoryBasePath() {
 		return this.repositoryBasePath;
 	}
 
 	private Git gitApi;
 
-	protected Git getGitApi() {
+	Git getGitApi() {
 		return this.gitApi;
 	}
 
@@ -33,6 +33,19 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	 */
 	public boolean isAttached() {
 		return this.gitApi != null;
+	}
+
+	/**
+	 * Gets the current Git working tree for the repository this instance is attached to, if any.
+	 *
+	 * @return a {@link File} object
+	 */
+	public File getRepositoryWorkTree() {
+		if (!this.isAttached()) {
+			return null;
+		}
+
+		return this.gitApi.getRepository().getWorkTree();
 	}
 
 	public LocalGitRepositoryManager(Properties catmaProperties) {

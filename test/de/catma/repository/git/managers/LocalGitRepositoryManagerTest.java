@@ -47,6 +47,8 @@ public class LocalGitRepositoryManagerTest {
 		}
 	}
 
+	// TODO: add tests for isAttached and getRepositoryWorkTree
+
 	@Test
 	public void init() throws Exception {
 		this.repoManager.init(this.testRepoPath.getName(), "Test Description");

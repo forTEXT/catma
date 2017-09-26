@@ -20,7 +20,7 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 
 	private GitLabApi gitLabApi;
 
-	protected GitLabApi getGitLabApi() {
+	GitLabApi getGitLabApi() {
 		return this.gitLabApi;
 	}
 

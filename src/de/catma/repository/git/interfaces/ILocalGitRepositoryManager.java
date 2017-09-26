@@ -6,6 +6,10 @@ import javax.annotation.Nullable;
 import java.io.File;
 
 public interface ILocalGitRepositoryManager {
+	boolean isAttached();
+
+	File getRepositoryWorkTree();
+
 	void init(String name, @Nullable String description) throws LocalGitRepositoryManagerException;
 
 	void open(String name) throws LocalGitRepositoryManagerException;
