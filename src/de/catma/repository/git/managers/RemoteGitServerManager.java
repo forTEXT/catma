@@ -12,6 +12,8 @@ import org.gitlab4j.api.models.Namespace;
 import org.gitlab4j.api.models.Project;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.net.URL;
 import java.util.Properties;
 
 public class RemoteGitServerManager implements IRemoteGitServerManager {
@@ -23,6 +25,29 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 	GitLabApi getGitLabApi() {
 		return this.gitLabApi;
 	}
+
+	// <for testing purposes only
+	public boolean replaceGitLabServerUrl = false;
+
+	private String checkGitLabServerUrl(String url) {
+		if (!this.replaceGitLabServerUrl) {
+			return url;
+		}
+
+		try {
+			URL currentUrl = new URL(url);
+			URL gitLabServerUrl = new URL(this.gitLabServerUrl);
+			URL newUrl = new URL(
+				gitLabServerUrl.getProtocol(), gitLabServerUrl.getHost(), gitLabServerUrl.getPort(),
+				currentUrl.getFile()
+			);
+			return newUrl.toString();
+		}
+		catch (IOException e) {
+			return null;
+		}
+	}
+	// />
 
 	public RemoteGitServerManager(Properties catmaProperties) {
 		this.gitLabAdminPersonalAccessToken = catmaProperties.getProperty(
@@ -38,12 +63,12 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 	 *
 	 * @param name the name of the repository to create
 	 * @param path the path of the repository to create
-	 * @return the repository ID
+	 * @return a {@link CreateRepositoryResponse} object containing the repository ID and HTTP URL
 	 * @throws RemoteGitServerManagerException if something went wrong while creating the remote
 	 *         repository
 	 */
 	@Override
-	public int createRepository(String name, @Nullable String path)
+	public CreateRepositoryResponse createRepository(String name, @Nullable String path)
 			throws RemoteGitServerManagerException {
 		ProjectApi projectApi = this.gitLabApi.getProjectApi();
 
@@ -56,7 +81,10 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 
 		try {
 			project = projectApi.createProject(project);
-			return project.getId();
+			return new CreateRepositoryResponse(
+				null, project.getId(),
+				this.checkGitLabServerUrl(project.getHttpUrlToRepo())
+			);
 		}
 		catch (GitLabApiException e) {
 			throw new RemoteGitServerManagerException("Failed to create remote Git repository", e);
@@ -69,30 +97,37 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 	 *
 	 * @param name the name of the repository to create
 	 * @param path the path of the repository to create
-	 * @param groupId the ID of the group within which to create the repository
-	 * @return the new repository ID
+	 * @param groupPath the path of the group within which to create the repository
+	 * @return a {@link CreateRepositoryResponse} object containing the repository ID and HTTP URL
 	 * @throws RemoteGitServerManagerException if something went wrong while creating the remote
 	 *         repository
 	 */
 	@Override
-	public int createRepository(String name, @Nullable String path, int groupId)
+	public CreateRepositoryResponse createRepository(
+			String name, @Nullable String path, String groupPath)
 			throws RemoteGitServerManagerException {
+		GroupApi groupApi = this.gitLabApi.getGroupApi();
 		ProjectApi projectApi = this.gitLabApi.getProjectApi();
 
-		Namespace namespace = new Namespace();
-		namespace.setId(groupId);
-
-		Project project = new Project();
-		project.setName(name);
-		project.setNamespace(namespace);
-
-		if (StringUtils.isNotEmpty(path)) {
-			project.setPath(path);
-		}
-
 		try {
+			Group group = groupApi.getGroup(groupPath);
+
+			Namespace namespace = new Namespace();
+			namespace.setId(group.getId());
+
+			Project project = new Project();
+			project.setName(name);
+			project.setNamespace(namespace);
+
+			if (StringUtils.isNotEmpty(path)) {
+				project.setPath(path);
+			}
+
 			project = projectApi.createProject(project);
-			return project.getId();
+			return new CreateRepositoryResponse(
+				groupPath, project.getId(),
+				this.checkGitLabServerUrl(project.getHttpUrlToRepo())
+			);
 		}
 		catch (GitLabApiException e) {
 			throw new RemoteGitServerManagerException("Failed to create remote Git repository", e);
@@ -125,12 +160,12 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 	 * @param name the name of the group to create
 	 * @param path the path of the group to create
 	 * @param description the description of the group to create
-	 * @return the new group ID
+	 * @return the new group path
 	 * @throws RemoteGitServerManagerException if something went wrong while creating the remote
 	 *         group
 	 */
 	@Override
-	public int createGroup(String name, String path, @Nullable String description)
+	public String createGroup(String name, String path, @Nullable String description)
 			throws RemoteGitServerManagerException {
 		GroupApi groupApi = this.gitLabApi.getGroupApi();
 
@@ -142,9 +177,7 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 				null, null, null
 			);
 
-			// fetch the group (none of the addGroup overloads return a group or its id)
-			Group group = groupApi.getGroup(path);
-			return group.getId();
+			return path;
 		}
 		catch (GitLabApiException e) {
 			throw new RemoteGitServerManagerException("Failed to create remote group", e);
@@ -152,20 +185,21 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 	}
 
 	/**
-	 * Deletes an existing remote group identified by <code>groupId</code>.
+	 * Deletes an existing remote group identified by <code>path</code>.
 	 * <p>
 	 * NB: Also deletes any child repositories!
 	 *
-	 * @param groupId the ID of the group to delete
+	 * @param path the path of the group to delete
 	 * @throws RemoteGitServerManagerException if something went wrong while deleting the remote
 	 *         group
 	 */
 	@Override
-	public void deleteGroup(int groupId) throws RemoteGitServerManagerException {
+	public void deleteGroup(String path) throws RemoteGitServerManagerException {
 		GroupApi groupApi = gitLabApi.getGroupApi();
 
 		try {
-			groupApi.deleteGroup(groupId);
+			Group group = groupApi.getGroup(path);
+			groupApi.deleteGroup(group);
 		}
 		catch (GitLabApiException e) {
 			throw new RemoteGitServerManagerException("Failed to delete remote group", e);

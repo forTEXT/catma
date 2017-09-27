@@ -1,5 +1,6 @@
 package de.catma.repository.git.managers;
 
+import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
 import org.junit.After;
@@ -17,8 +18,8 @@ public class RemoteGitServerManagerTest {
 	private Properties catmaProperties;
 	private RemoteGitServerManager serverManager;
 
-	private Integer createdGroupId = null;
-	private Integer createdRepositoryId = null;
+	private IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse = null;
+	private String createdGroupPath = null;
 
 	public RemoteGitServerManagerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
@@ -35,32 +36,44 @@ public class RemoteGitServerManagerTest {
 
 	@After
 	public void tearDown() throws Exception {
-		// delete repos first, otherwise the call fails if the repo was deleted as part of the group
-		if (this.createdRepositoryId != null) {
-			this.serverManager.deleteRepository(this.createdRepositoryId);
+		if (this.createRepositoryResponse != null) {
+			this.serverManager.deleteRepository(this.createRepositoryResponse.repositoryId);
 			await().until(
 				() -> this.serverManager.getGitLabApi().getProjectApi().getProjects().isEmpty()
 			);
+
+			if (this.createRepositoryResponse.groupPath != null) {
+				this.serverManager.deleteGroup(this.createRepositoryResponse.groupPath);
+				await().until(
+					() -> this.serverManager.getGitLabApi().getGroupApi().getGroups().isEmpty()
+				);
+			}
+
+			this.createRepositoryResponse = null;
 		}
-		if (this.createdGroupId != null) {
-			this.serverManager.deleteGroup(this.createdGroupId);
+
+		if (this.createdGroupPath != null) {
+			this.serverManager.deleteGroup(this.createdGroupPath);
 			await().until(
 				() -> this.serverManager.getGitLabApi().getGroupApi().getGroups().isEmpty()
 			);
+			this.createdGroupPath = null;
 		}
 	}
 
 	@Test
 	public void createRepository() throws Exception {
-		this.createdRepositoryId = this.serverManager.createRepository(
+		this.createRepositoryResponse = this.serverManager.createRepository(
 			"test-repo", null
 		);
 
-		assertNotNull(this.createdRepositoryId);
-		assert this.createdRepositoryId > 0;
+		assertNotNull(this.createRepositoryResponse);
+		assert this.createRepositoryResponse.repositoryId > 0;
+		assertNotNull(this.createRepositoryResponse.repositoryHttpUrl);
+		assertNull(this.createRepositoryResponse.groupPath);
 
 		Project project = this.serverManager.getGitLabApi().getProjectApi().getProject(
-			this.createdRepositoryId
+			this.createRepositoryResponse.repositoryId
 		);
 
 		assertNotNull(project);
@@ -69,89 +82,95 @@ public class RemoteGitServerManagerTest {
 
 	@Test
 	public void createRepositoryInGroup() throws Exception {
-		this.createdGroupId = this.serverManager.createGroup(
+		this.createdGroupPath = this.serverManager.createGroup(
 			"test-group", "test-group", null
 		);
 
-		assertNotNull(this.createdGroupId);
-		assert this.createdGroupId > 0;
+		assertNotNull(this.createdGroupPath);
 
-		Group group = this.serverManager.getGitLabApi().getGroupApi().getGroup(this.createdGroupId);
+		Group group = this.serverManager.getGitLabApi().getGroupApi().getGroup(
+			this.createdGroupPath
+		);
 
 		assertNotNull(group);
 		assertEquals("test-group", group.getName());
 		assertEquals("test-group", group.getPath());
 
-		this.createdRepositoryId = this.serverManager.createRepository(
-			"test-repo", null, this.createdGroupId
+		this.createRepositoryResponse = this.serverManager.createRepository(
+			"test-repo", null, this.createdGroupPath
 		);
 
-		assertNotNull(this.createdRepositoryId);
-		assert this.createdRepositoryId > 0;
+		assertNotNull(this.createRepositoryResponse);
+		assert this.createRepositoryResponse.repositoryId > 0;
 
 		Project project = this.serverManager.getGitLabApi().getProjectApi().getProject(
-			this.createdRepositoryId
+			this.createRepositoryResponse.repositoryId
 		);
 
 		assertNotNull(project);
 		assertEquals("test-repo", project.getName());
 
 		List<Project> repositoriesInGroup = this.serverManager.getGitLabApi().getGroupApi()
-				.getProjects(this.createdGroupId);
+				.getProjects(group.getId());
 
 		assertEquals(1, repositoriesInGroup.size());
-		assertEquals(this.createdRepositoryId, repositoriesInGroup.get(0).getId());
+		assertEquals(
+			this.createRepositoryResponse.repositoryId, (long)repositoriesInGroup.get(0).getId()
+		);
+
+		// prevent tearDown from attempting to delete the group twice
+		this.createdGroupPath = null;
 	}
 
 	@Test
 	public void deleteRepository() throws Exception {
-		this.createdRepositoryId = this.serverManager.createRepository(
+		this.createRepositoryResponse = this.serverManager.createRepository(
 			"test-repo", null
 		);
 
-		assertNotNull(this.createdRepositoryId);
-		assert this.createdRepositoryId > 0;
+		assertNotNull(this.createRepositoryResponse);
+		assert this.createRepositoryResponse.repositoryId > 0;
 
-		this.serverManager.deleteRepository(this.createdRepositoryId);
+		this.serverManager.deleteRepository(this.createRepositoryResponse.repositoryId);
 
 		await().until(
 			() -> this.serverManager.getGitLabApi().getProjectApi().getProjects().isEmpty()
 		);
 
 		// prevent tearDown from also attempting to delete the repository
-		this.createdRepositoryId = null;
+		this.createRepositoryResponse = null;
 	}
 
 	@Test
 	public void createGroup() throws Exception {
-		this.createdGroupId = this.serverManager.createGroup(
+		this.createdGroupPath = this.serverManager.createGroup(
 			"test-group", "test-group", null
 		);
 
-		assertNotNull(this.createdGroupId);
-		assert this.createdGroupId > 0;
+		assertNotNull(this.createdGroupPath);
 
-		Group group = this.serverManager.getGitLabApi().getGroupApi().getGroup(this.createdGroupId);
+		Group group = this.serverManager.getGitLabApi().getGroupApi().getGroup(
+			this.createdGroupPath
+		);
 		assertNotNull(group);
 		assertEquals("test-group", group.getName());
 	}
 
 	@Test
 	public void deleteGroup() throws Exception {
-		this.createdGroupId = this.serverManager.createGroup(
+		this.createdGroupPath = this.serverManager.createGroup(
 			"test-group", "test-group", null
 		);
 
-		assertNotNull(this.createdGroupId);
-		assert this.createdGroupId > 0;
+		assertNotNull(this.createdGroupPath);
 
-		this.serverManager.deleteGroup(this.createdGroupId);
+		this.serverManager.deleteGroup(this.createdGroupPath);
 
 		await().until(
 			() -> this.serverManager.getGitLabApi().getGroupApi().getGroups().isEmpty()
 		);
 
 		// prevent tearDown from also attempting to delete the group
-		this.createdGroupId = null;
+		this.createdGroupPath = null;
 	}
 }

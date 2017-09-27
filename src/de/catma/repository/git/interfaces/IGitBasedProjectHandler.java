@@ -4,5 +4,5 @@ import de.catma.repository.IProjectHandler;
 import de.catma.repository.git.exceptions.ProjectHandlerException;
 
 public interface IGitBasedProjectHandler extends IProjectHandler {
-	String getRootRepositoryHttpUrl(int projectId) throws ProjectHandlerException;
+//	String getRootRepositoryHttpUrl(int projectId) throws ProjectHandlerException;
 }

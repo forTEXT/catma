@@ -2,19 +2,24 @@ package de.catma.repository.git.managers;
 
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
 public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, AutoCloseable {
 	private String repositoryBasePath;
+	private String gitLabAdminPersonalAccessToken;
 
 	String getRepositoryBasePath() {
 		return this.repositoryBasePath;
@@ -50,6 +55,9 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 
 	public LocalGitRepositoryManager(Properties catmaProperties) {
 		this.repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
+		this.gitLabAdminPersonalAccessToken = catmaProperties.getProperty(
+			"GitLabAdminPersonalAccessToken"
+		);
 	}
 
 	/**
@@ -110,6 +118,55 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 		catch (GitAPIException|IOException e) {
 			throw new LocalGitRepositoryManagerException("Failed to init Git repository", e);
 		}
+	}
+
+	/**
+	 * Clones a remote repository whose address is specified via the <code>uri</code> parameter.
+	 *
+	 * @param uri the URI of the remote repository to clone
+	 * @return the name of the cloned repository
+	 */
+	@Override
+	public String clone(String uri) throws LocalGitRepositoryManagerException {
+		if (isAttached()) {
+			throw new IllegalStateException("Can't call `clone` on an attached instance");
+		}
+
+		String repositoryName = uri.substring(uri.lastIndexOf("/") + 1);
+		if (repositoryName.endsWith(".git")) {
+			repositoryName = repositoryName.substring(0, repositoryName.length() - 4);
+		}
+		File repositoryPath = new File(this.repositoryBasePath, repositoryName);
+
+		try {
+			// TODO: figure out how we can make this class not be aware of any GitLab specifics
+			// TODO: don't hardcode the admin user
+			// TODO: don't authenticate unless necessary (eg: cloneRepo test)
+			// http://www.codeaffine.com/2014/12/09/jgit-authentication/
+			URI repositoryUri = new URI(uri);
+			String authorityComponent = String.format(
+				"gitlab-ci-token:%s", this.gitLabAdminPersonalAccessToken
+			);
+			URI authenticatedUri = new URI(
+				repositoryUri.getScheme(), authorityComponent, repositoryUri.getHost(),
+				repositoryUri.getPort(), repositoryUri.getPath(), repositoryUri.getQuery(),
+				repositoryUri.getFragment()
+			);
+
+			CloneCommand cloneCommand = Git.cloneRepository().setURI(authenticatedUri.toString())
+					.setDirectory(repositoryPath);
+			cloneCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
+				"root", this.gitLabAdminPersonalAccessToken
+			));
+			this.gitApi = cloneCommand.call();
+		}
+		catch (URISyntaxException|GitAPIException e) {
+			throw new LocalGitRepositoryManagerException(
+				"Failed to clone remote Git repository", e
+			);
+		}
+
+		return repositoryName;
 	}
 
 	/**

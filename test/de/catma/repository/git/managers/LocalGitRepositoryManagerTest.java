@@ -32,9 +32,7 @@ public class LocalGitRepositoryManagerTest {
 	@Before
 	public void setUp() throws Exception {
 		this.repoManager = new LocalGitRepositoryManager(this.catmaProperties);
-		this.testRepoPath = new File(
-			this.repoManager.getRepositoryBasePath() + "/test-repo"
-		);
+		this.testRepoPath = new File(this.repoManager.getRepositoryBasePath(), "test-repo");
 	}
 
 	@After
@@ -47,7 +45,20 @@ public class LocalGitRepositoryManagerTest {
 		}
 	}
 
-	// TODO: add tests for isAttached and getRepositoryWorkTree
+	@Test
+	public void isAttached() throws Exception {
+		// init(), open() and clone() test that the response is true when it should be
+		assertFalse(this.repoManager.isAttached());
+	}
+
+	@Test
+	public void getRepositoryWorkTree() throws Exception {
+		assertNull(this.repoManager.getRepositoryWorkTree());
+
+		this.repoManager.init(this.testRepoPath.getName(), null);
+
+		assertEquals(this.testRepoPath, this.repoManager.getRepositoryWorkTree());
+	}
 
 	@Test
 	public void init() throws Exception {
@@ -63,6 +74,20 @@ public class LocalGitRepositoryManagerTest {
 			"Test Description\n",
 			new String(Files.readAllBytes(gitDescriptionFile.toPath()))
 		);
+	}
+
+	@Test
+	public void cloneRepo() throws Exception {
+		String repoName = this.repoManager.clone("https://github.com/maltem-za/tiny.git");
+
+		this.testRepoPath = new File(this.repoManager.getRepositoryBasePath(), "tiny");
+
+		assert this.repoManager.isAttached();
+		assertEquals(repoName, "tiny");
+		assert this.testRepoPath.exists();
+		assert this.testRepoPath.isDirectory();
+		assert Arrays.asList(this.testRepoPath.list()).contains(".git");
+		assert Arrays.asList(this.testRepoPath.list()).contains("README.md");
 	}
 
 	@Test
