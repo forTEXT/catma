@@ -2,14 +2,13 @@ package de.catma.repository.git;
 
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
-import de.catma.repository.git.interfaces.IGitBasedProjectHandler;
 import de.catma.repository.git.interfaces.IProjectHandler;
 import de.catma.repository.git.exceptions.ProjectHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.util.IDGenerator;
 
-public class ProjectHandler implements IProjectHandler, IGitBasedProjectHandler {
+public class ProjectHandler implements IProjectHandler {
 	private ILocalGitRepositoryManager localGitRepositoryManager;
 	private IRemoteGitServerManager remoteGitServerManager;
 
@@ -28,38 +27,11 @@ public class ProjectHandler implements IProjectHandler, IGitBasedProjectHandler 
 	}
 
 	/**
-	 * Gets the 'root' repository for a particular CATMA Project (GitLab Group).
-	 *
-	 * @param groupId the GitLab Group ID
-	 * @return the HTTP URL of the repository
-	 * @throws ProjectHandlerException if an error occurs when calling the GitLab API
-	 */
-//	@Override
-//	public String getRootRepositoryHttpUrl(int groupId) throws ProjectHandlerException {
-//		GroupApi groupApi = gitLabApi.getGroupApi();
-//		ProjectApi projectApi = gitLabApi.getProjectApi();
-//
-//		Project project;
-//
-//		try {
-//			Group group = groupApi.getGroup(groupId);
-//			String projectNameAndPath = String.format(projectRootRepositoryNameFormat, group.getPath());
-//
-//			project = projectApi.getProject(group.getPath(), projectNameAndPath);
-//		}
-//		catch (GitLabApiException e) {
-//			throw new ProjectHandlerException("Error calling GitLab API", e);
-//		}
-//
-//		return project.getHttpUrlToRepo();
-//	}
-
-	/**
 	 * Creates a new project.
 	 *
-	 * @param name the name of the project
-	 * @param description the description of the project
-	 * @return the project ID
+	 * @param name the name of the project to create
+	 * @param description the description of the project to create
+	 * @return the new project ID
 	 * @throws ProjectHandlerException if an error occurs when creating the project
 	 */
 	@Override
@@ -96,7 +68,7 @@ public class ProjectHandler implements IProjectHandler, IGitBasedProjectHandler 
 	 * <p>
 	 * This will also delete any associated repositories automatically.
 	 *
-	 * @param projectId the project ID
+	 * @param projectId the ID of the project to delete
 	 * @throws ProjectHandlerException if an error occurs when deleting the project
 	 */
 	@Override

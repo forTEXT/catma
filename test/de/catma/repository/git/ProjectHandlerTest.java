@@ -47,20 +47,6 @@ public class ProjectHandlerTest {
 		}
 	}
 
-//	@Test
-//	public void getRootRepositoryHttpUrl() throws Exception {
-//		createdGroupId = projectHandler.create(
-//			"Test Project", "This is a test project"
-//		);
-//
-//		String repositoryHttpUrl = projectHandler.getRootRepositoryHttpUrl(createdGroupId);
-//
-//		assertNotNull(repositoryHttpUrl);
-//		assert repositoryHttpUrl.length() > 0;
-//		assert repositoryHttpUrl.startsWith("http://");
-//		assert repositoryHttpUrl.endsWith(".git");
-//	}
-
 	@Test
 	public void create() throws Exception {
 		this.createdProjectId = this.projectHandler.create(
