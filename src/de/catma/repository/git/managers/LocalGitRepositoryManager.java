@@ -18,8 +18,8 @@ import java.nio.file.Paths;
 import java.util.Properties;
 
 public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, AutoCloseable {
-	private String repositoryBasePath;
-	private String gitLabAdminPersonalAccessToken;
+	private final String repositoryBasePath;
+	private final String gitLabAdminPersonalAccessToken;
 
 	String getRepositoryBasePath() {
 		return this.repositoryBasePath;

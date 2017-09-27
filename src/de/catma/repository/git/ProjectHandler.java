@@ -9,10 +9,10 @@ import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.util.IDGenerator;
 
 public class ProjectHandler implements IProjectHandler {
-	private ILocalGitRepositoryManager localGitRepositoryManager;
-	private IRemoteGitServerManager remoteGitServerManager;
+	private final ILocalGitRepositoryManager localGitRepositoryManager;
+	private final IRemoteGitServerManager remoteGitServerManager;
 
-	private IDGenerator idGenerator;
+	private final IDGenerator idGenerator;
 
 	// using 'corpus' and not 'project' here so as not to confuse CATMA Projects with GitLab
 	// Projects

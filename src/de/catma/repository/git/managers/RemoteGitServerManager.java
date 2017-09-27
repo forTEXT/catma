@@ -17,10 +17,10 @@ import java.net.URL;
 import java.util.Properties;
 
 public class RemoteGitServerManager implements IRemoteGitServerManager {
-	private String gitLabAdminPersonalAccessToken;
-	private String gitLabServerUrl;
+	private final String gitLabAdminPersonalAccessToken;
+	private final String gitLabServerUrl;
 
-	private GitLabApi gitLabApi;
+	private final GitLabApi gitLabApi;
 
 	GitLabApi getGitLabApi() {
 		return this.gitLabApi;
