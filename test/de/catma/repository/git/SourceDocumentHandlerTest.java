@@ -6,6 +6,7 @@ import de.catma.document.source.TechInfoSet;
 import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.util.IDGenerator;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -28,6 +29,7 @@ public class SourceDocumentHandlerTest {
     }
 
     @Test
+	@Ignore
     public void insert() throws Exception {
     	File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
         File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
