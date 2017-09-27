@@ -9,4 +9,6 @@ public interface ISourceDocumentHandler {
     void insert(byte[] originalSourceDocumentBytes, SourceDocument sourceDocument,
 				@Nullable Integer projectId)
 			throws SourceDocumentHandlerException;
+
+    void remove(String sourceDocumentId);
 }
