@@ -3,7 +3,7 @@ package de.catma.repository.git;
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.interfaces.IGitBasedProjectHandler;
-import de.catma.repository.IProjectHandler;
+import de.catma.repository.git.interfaces.IProjectHandler;
 import de.catma.repository.git.exceptions.ProjectHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;

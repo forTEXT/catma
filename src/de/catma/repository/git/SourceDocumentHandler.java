@@ -2,7 +2,7 @@ package de.catma.repository.git;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.TechInfoSet;
-import de.catma.repository.ISourceDocumentHandler;
+import de.catma.repository.git.interfaces.ISourceDocumentHandler;
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;

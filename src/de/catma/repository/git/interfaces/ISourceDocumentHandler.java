@@ -1,4 +1,4 @@
-package de.catma.repository;
+package de.catma.repository.git.interfaces;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
