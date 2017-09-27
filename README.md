@@ -28,6 +28,10 @@ See [Migrating From Eclipse to IntelliJ IDEA](https://www.jetbrains.com/help/ide
 
 ### Instructions:
 
+_You can find screenshots for most of these steps in /doc/readme-images/_
+
+_Note also that since writing this, the IntelliJ IDEA .eml and .iml project files have been checked in, and that this will affect which steps you need to perform._
+
 1. Clone the CATMA Git repositories:
    1. Clone the "catma" repo, branch: "catma6" (https://github.com/mpetris/catma.git)
    2. Clone the "catma-core" repo, branch: "catma6" (https://github.com/mpetris/catma-core.git)
