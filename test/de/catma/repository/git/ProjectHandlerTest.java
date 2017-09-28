@@ -2,7 +2,6 @@ package de.catma.repository.git;
 
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
-import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -74,9 +73,32 @@ public class ProjectHandlerTest {
 
 		assert expectedRootRepositoryPath.exists();
 		assert expectedRootRepositoryPath.isDirectory();
+	}
 
-		// cleanup
-		// TODO: move to tearDown?
-		FileUtils.deleteDirectory(expectedRootRepositoryPath);
+	@Test
+	public void delete() throws Exception {
+		this.createdProjectId = this.projectHandler.create(
+			"Test CATMA Project", "This is a test CATMA project"
+		);
+
+		assertNotNull(this.createdProjectId);
+		assert this.createdProjectId.startsWith("CATMA_");
+
+		String expectedRootRepositoryName = String.format(
+			ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, this.createdProjectId
+		);
+		String repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
+
+		File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
+
+		assert expectedRootRepositoryPath.exists();
+		assert expectedRootRepositoryPath.isDirectory();
+
+		this.projectHandler.delete(this.createdProjectId);
+
+		assertFalse(expectedRootRepositoryPath.exists());
+
+		// prevent tearDown from also attempting to delete the project
+		this.createdProjectId = null;
 	}
 }

@@ -7,6 +7,11 @@ import de.catma.repository.git.exceptions.ProjectHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.util.IDGenerator;
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 public class ProjectHandler implements IProjectHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -66,7 +71,7 @@ public class ProjectHandler implements IProjectHandler {
 	/**
 	 * Deletes an existing project.
 	 * <p>
-	 * This will also delete any associated repositories automatically.
+	 * This will also delete any associated repositories automatically (local & remote).
 	 *
 	 * @param projectId the ID of the project to delete
 	 * @throws ProjectHandlerException if an error occurs when deleting the project
@@ -74,9 +79,19 @@ public class ProjectHandler implements IProjectHandler {
 	@Override
 	public void delete(String projectId) throws ProjectHandlerException {
 		try {
+			List<String> repositoryNames = this.remoteGitServerManager.getGroupRepositoryNames(
+				projectId
+			);
+
+			for (String name : repositoryNames) {
+				FileUtils.deleteDirectory(
+					new File(this.localGitRepositoryManager.getRepositoryBasePath(), name)
+				);
+			}
+
 			this.remoteGitServerManager.deleteGroup(projectId);
 		}
-		catch (RemoteGitServerManagerException e) {
+		catch (RemoteGitServerManagerException|IOException e) {
 			throw new ProjectHandlerException("Failed to delete project", e);
 		}
 	}
