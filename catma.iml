@@ -251,6 +251,7 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.25.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-io/commons-io/jars/commons-io-2.5.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/jcl-over-slf4j/jars/jcl-over-slf4j-1.7.25.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.jsoniter/jsoniter/jars/jsoniter-0.9.15.jar!/" />
         </CLASSES>
         <JAVADOC>
           <root url="jar://$USER_HOME$/.ivy2/cache/com.vaadin/vaadin-server/javadocs/vaadin-server-7.7.7-javadoc.jar!/" />
@@ -387,6 +388,7 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/slf4j-api/javadocs/slf4j-api-1.7.25-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-io/commons-io/javadocs/commons-io-2.5-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/jcl-over-slf4j/javadocs/jcl-over-slf4j-1.7.25-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.jsoniter/jsoniter/javadocs/jsoniter-0.9.15-javadoc.jar!/" />
         </JAVADOC>
         <SOURCES>
           <root url="jar://$USER_HOME$/.ivy2/cache/com.vaadin/vaadin-server/sources/vaadin-server-7.7.7-sources.jar!/" />
@@ -532,6 +534,7 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/slf4j-api/sources/slf4j-api-1.7.25-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-io/commons-io/sources/commons-io-2.5-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/jcl-over-slf4j/sources/jcl-over-slf4j-1.7.25-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/com.jsoniter/jsoniter/sources/jsoniter-0.9.15-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
