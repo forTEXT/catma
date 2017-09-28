@@ -42,4 +42,9 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
         	throw new SourceDocumentHandlerException("Failed to insert source document", e);
 		}
     }
+
+    @Override
+	public void remove(String sourceDocumentId) {
+    	
+	}
 }

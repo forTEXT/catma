@@ -9,14 +9,14 @@ import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.util.IDGenerator;
 
 public class ProjectHandler implements IProjectHandler {
-	private ILocalGitRepositoryManager localGitRepositoryManager;
-	private IRemoteGitServerManager remoteGitServerManager;
+	private final ILocalGitRepositoryManager localGitRepositoryManager;
+	private final IRemoteGitServerManager remoteGitServerManager;
 
-	private IDGenerator idGenerator;
+	private final IDGenerator idGenerator;
 
 	// using 'corpus' and not 'project' here so as not to confuse CATMA Projects with GitLab
 	// Projects
-	final String projectRootRepositoryNameFormat = "%s_corpus";
+	static final String PROJECT_ROOT_REPOSITORY_NAME_FORMAT = "%s_corpus";
 
 	public ProjectHandler(ILocalGitRepositoryManager localGitRepositoryManager,
 						  IRemoteGitServerManager remoteGitServerManager) {
@@ -46,7 +46,7 @@ public class ProjectHandler implements IProjectHandler {
 
 			// create the root repository
 			String projectNameAndPath = String.format(
-				this.projectRootRepositoryNameFormat, projectId
+				ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId
 			);
 			IRemoteGitServerManager.CreateRepositoryResponse response =
 					this.remoteGitServerManager.createRepository(

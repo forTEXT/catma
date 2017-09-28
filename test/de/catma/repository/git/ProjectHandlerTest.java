@@ -56,7 +56,7 @@ public class ProjectHandlerTest {
 		assertNotNull(this.createdProjectId);
 
 		String expectedRootRepositoryName = String.format(
-			this.projectHandler.projectRootRepositoryNameFormat, this.createdProjectId
+			ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, this.createdProjectId
 		);
 		String repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
 
