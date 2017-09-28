@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -154,6 +155,43 @@ public class RemoteGitServerManagerTest {
 		);
 		assertNotNull(group);
 		assertEquals("test-group", group.getName());
+	}
+
+	@Test
+	public void getGroupRepositoryNames() throws Exception {
+		this.createdGroupPath = this.serverManager.createGroup(
+			"test-group", "test-group", null
+		);
+
+		assertNotNull(this.createdGroupPath);
+
+		this.createRepositoryResponse = this.serverManager.createRepository(
+			"test-repo-1", null, this.createdGroupPath
+		);
+
+		assertNotNull(this.createRepositoryResponse);
+		assert this.createRepositoryResponse.repositoryId > 0;
+
+		this.createRepositoryResponse = this.serverManager.createRepository(
+			"test-repo-2", null, this.createdGroupPath
+		);
+
+		assertNotNull(this.createRepositoryResponse);
+		assert this.createRepositoryResponse.repositoryId > 0;
+
+		List<String> repositoryNames = this.serverManager.getGroupRepositoryNames(
+			this.createdGroupPath
+		);
+		repositoryNames.sort(null);
+
+		List<String> expectedRepositoryNames = new ArrayList<String>(2);
+		expectedRepositoryNames.add("test-repo-1");
+		expectedRepositoryNames.add("test-repo-2");
+
+		assertArrayEquals(expectedRepositoryNames.toArray(), repositoryNames.toArray());
+
+		// prevent tearDown from attempting to delete the group twice
+		this.createRepositoryResponse = null;
 	}
 
 	@Test

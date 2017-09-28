@@ -14,7 +14,9 @@ import org.gitlab4j.api.models.Project;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class RemoteGitServerManager implements IRemoteGitServerManager {
 	private final String gitLabAdminPersonalAccessToken;
@@ -181,6 +183,31 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 		}
 		catch (GitLabApiException e) {
 			throw new RemoteGitServerManagerException("Failed to create remote group", e);
+		}
+	}
+
+	/**
+	 * Gets the names of all repositories in the remote group identified by <code>path</code>.
+	 *
+	 * @param path the path of the group whose repository names you want to get
+	 * @return a {@link List<String>} of names
+	 * @throws RemoteGitServerManagerException if something went wrong while fetching the repository
+	 *         names of the remote group
+	 */
+	@Override
+	public List<String> getGroupRepositoryNames(String path)
+			throws RemoteGitServerManagerException {
+		GroupApi groupApi = gitLabApi.getGroupApi();
+
+		try {
+			Group group = groupApi.getGroup(path);
+			List<Project> projects = group.getProjects();
+			return projects.stream().map(Project::getName).collect(Collectors.toList());
+		}
+		catch (GitLabApiException e) {
+			throw new RemoteGitServerManagerException(
+				"Failed to get repository names for group", e
+			);
 		}
 	}
 

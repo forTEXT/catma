@@ -3,6 +3,7 @@ package de.catma.repository.git.interfaces;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 public interface IRemoteGitServerManager {
 	class CreateRepositoryResponse {
@@ -28,6 +29,8 @@ public interface IRemoteGitServerManager {
 
 	String createGroup(String name, String path, @Nullable String description)
 			throws RemoteGitServerManagerException;
+
+	List<String> getGroupRepositoryNames(String path) throws RemoteGitServerManagerException;
 
 	void deleteGroup(String path) throws RemoteGitServerManagerException;
 }
