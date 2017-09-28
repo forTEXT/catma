@@ -24,6 +24,24 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
         this.remoteGitServerManager = remoteGitServerManager;
     }
 
+	/**
+	 * Inserts a new source document.
+	 *
+	 * @param originalSourceDocumentStream a {@link InputStream} object representing the original,
+	 *                                     unmodified source document
+	 * @param originalSourceDocumentFileName the file name of the original, unmodified source
+	 *                                       document
+	 * @param convertedSourceDocumentStream a {@link InputStream} object representing the converted,
+	 *                                      UTF-8 encoded source document
+	 * @param convertedSourceDocumentFileName the file name of the converted, UTF-8 encoded source
+	 *                                        document
+	 * @param sourceDocumentId the ID of the source document to insert. If none is provided, a new
+	 *                         ID will be generated.
+	 * @param projectId the ID of the project that the source document must be inserted into
+	 * @return the <code>sourceDocumentId</code> if one was provided, otherwise a new source
+	 *         document ID
+	 * @throws SourceDocumentHandlerException if an error occurs while inserting the source document
+	 */
 	@Override
 	public String insert(InputStream originalSourceDocumentStream,
 						 String originalSourceDocumentFileName,
@@ -36,7 +54,7 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 			sourceDocumentId = idGenerator.generate();
 		}
 
-		// TODO: write the SourceDocumentInfo to header.json
+		// TODO: create header.json and write the SourceDocumentInfo into it
 
 		try {
 			// create the source document repository
