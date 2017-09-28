@@ -55,15 +55,15 @@ public class SourceDocumentHandlerTest {
 			idGenerator.generate(), standardContentHandler
 		);
 
-		LocalGitRepositoryManager localGitRepositoryManager = new LocalGitRepositoryManager(
-			this.catmaProperties
-		);
+        try (LocalGitRepositoryManager localGitRepositoryManager = new LocalGitRepositoryManager(
+				this.catmaProperties)
+		) {
+			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
+				localGitRepositoryManager
+			);
+			sourceDocumentHandler.insert(originalSourceDocumentBytes, sourceDocument, null);
 
-        SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
-			localGitRepositoryManager
-		);
-        sourceDocumentHandler.insert(originalSourceDocumentBytes, sourceDocument, null);
-
-        // TODO: assert something
+			// TODO: assert something
+		}
     }
 }

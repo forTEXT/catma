@@ -39,9 +39,11 @@ public class LocalGitRepositoryManagerTest {
 	public void tearDown() throws Exception {
 		if (this.repoManager != null) {
 			this.repoManager.close();
+			this.repoManager = null;
 		}
 		if (this.testRepoPath != null) {
 			FileUtils.deleteDirectory(this.testRepoPath);
+			this.testRepoPath = null;
 		}
 	}
 
