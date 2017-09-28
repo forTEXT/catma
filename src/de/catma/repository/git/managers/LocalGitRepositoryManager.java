@@ -21,7 +21,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	private final String repositoryBasePath;
 	private final String gitLabAdminPersonalAccessToken;
 
-	String getRepositoryBasePath() {
+	public String getRepositoryBasePath() {
 		return this.repositoryBasePath;
 	}
 
