@@ -1,12 +1,15 @@
 package de.catma.repository.git;
 
+import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import org.apache.commons.io.FileUtils;
 import org.gitlab4j.api.models.Project;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -170,5 +173,16 @@ public class SourceDocumentHandlerTest {
 		// prevent tearDown from also attempting to delete the source document repository (it would
 		// have been deleted as part of the project)
 		this.insertedSourceDocumentId = null;
+	}
+
+	// how to test for exceptions: https://stackoverflow.com/a/31826781
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
+
+	@Test
+	public void remove() throws Exception {
+		thrown.expect(SourceDocumentHandlerException.class);
+		thrown.expectMessage("Not implemented");
+		this.sourceDocumentHandler.remove("fake");
 	}
 }
