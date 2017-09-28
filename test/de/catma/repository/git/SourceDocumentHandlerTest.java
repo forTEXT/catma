@@ -88,6 +88,9 @@ public class SourceDocumentHandlerTest {
 			null, null
 		);
 
+        assertNotNull(this.insertedSourceDocumentId);
+        assert this.insertedSourceDocumentId.startsWith("CATMA_");
+
 		File expectedRepoPath = new File(
 			this.localGitRepositoryManager.getRepositoryBasePath(), this.insertedSourceDocumentId
 		);
@@ -105,5 +108,67 @@ public class SourceDocumentHandlerTest {
 		assert FileUtils.contentEquals(
 			convertedSourceDocument, new File(expectedRepoPath, "rose_for_emily.txt")
 		);
+	}
+
+	@Test
+	public void insertIntoProject() throws Exception {
+		// we use a separate LocalGitRepositoryManager instance to create the ProjectHandler as the
+		// instance that was passed to SourceDocumentHandler in setUp needs to stay unattached
+		LocalGitRepositoryManager tempLocalGitRepositoryManager = new LocalGitRepositoryManager(
+			this.catmaProperties
+		);
+
+		ProjectHandler projectHandler = new ProjectHandler(
+			tempLocalGitRepositoryManager, this.remoteGitServerManager
+		);
+
+		String projectId = projectHandler.create("Test CATMA Project", null);
+
+		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
+		File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
+
+		FileInputStream originalSourceDocumentStream = new FileInputStream(originalSourceDocument);
+		FileInputStream convertedSourceDocumentStream = new FileInputStream(
+			convertedSourceDocument
+		);
+
+		this.insertedSourceDocumentId = this.sourceDocumentHandler.insert(
+			originalSourceDocumentStream, originalSourceDocument.getName(),
+			convertedSourceDocumentStream, convertedSourceDocument.getName(),
+			null, projectId
+		);
+
+		assertNotNull(this.insertedSourceDocumentId);
+		assert this.insertedSourceDocumentId.startsWith("CATMA_");
+
+		File expectedRepoPath = new File(
+			this.localGitRepositoryManager.getRepositoryBasePath(), this.insertedSourceDocumentId
+		);
+
+		assert expectedRepoPath.exists();
+		assert expectedRepoPath.isDirectory();
+
+		this.createdRepositoryPath = expectedRepoPath;
+
+		assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.pdf");
+		assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.txt");
+		assert FileUtils.contentEquals(
+			originalSourceDocument, new File(expectedRepoPath, "rose_for_emily.pdf")
+		);
+		assert FileUtils.contentEquals(
+			convertedSourceDocument, new File(expectedRepoPath, "rose_for_emily.txt")
+		);
+
+		// cleanup
+		// TODO: move to tearDown?
+		projectHandler.delete(projectId);
+		await().until(
+			() -> this.remoteGitServerManager.getGitLabApi().getGroupApi().getGroups().isEmpty()
+		);
+		tempLocalGitRepositoryManager.close();
+
+		// prevent tearDown from also attempting to delete the source document repository (it would
+		// have been deleted as part of the project)
+		this.insertedSourceDocumentId = null;
 	}
 }

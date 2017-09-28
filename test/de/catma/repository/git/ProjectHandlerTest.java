@@ -63,6 +63,7 @@ public class ProjectHandlerTest {
 		);
 
 		assertNotNull(this.createdProjectId);
+		assert this.createdProjectId.startsWith("CATMA_");
 
 		String expectedRootRepositoryName = String.format(
 			ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, this.createdProjectId
