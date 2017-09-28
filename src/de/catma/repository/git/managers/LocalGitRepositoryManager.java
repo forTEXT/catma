@@ -21,10 +21,6 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	private final String repositoryBasePath;
 	private final String gitLabAdminPersonalAccessToken;
 
-	public String getRepositoryBasePath() {
-		return this.repositoryBasePath;
-	}
-
 	private Git gitApi;
 
 	Git getGitApi() {
@@ -38,6 +34,15 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	 */
 	public boolean isAttached() {
 		return this.gitApi != null;
+	}
+
+	/**
+	 * Gets the repository base path for this instance.
+	 *
+	 * @return the base path as a String
+	 */
+	public String getRepositoryBasePath() {
+		return this.repositoryBasePath;
 	}
 
 	/**

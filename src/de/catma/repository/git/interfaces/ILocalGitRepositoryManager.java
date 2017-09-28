@@ -8,6 +8,8 @@ import java.io.File;
 public interface ILocalGitRepositoryManager {
 	boolean isAttached();
 
+	String getRepositoryBasePath();
+
 	File getRepositoryWorkTree();
 
 	void init(String name, @Nullable String description) throws LocalGitRepositoryManagerException;
