@@ -15,6 +15,7 @@ import static org.junit.Assert.*;
 
 public class ProjectHandlerTest {
 	private Properties catmaProperties;
+	private LocalGitRepositoryManager localGitRepositoryManager;
 	private ProjectHandler projectHandler;
 
 	private String createdProjectId = null;
@@ -34,8 +35,10 @@ public class ProjectHandlerTest {
 		);
 		remoteGitServerManager.replaceGitLabServerUrl = true;
 
+		this.localGitRepositoryManager = new LocalGitRepositoryManager(this.catmaProperties);
+
 		this.projectHandler = new ProjectHandler(
-			new LocalGitRepositoryManager(this.catmaProperties),
+			this.localGitRepositoryManager,
 			remoteGitServerManager
 		);
 	}
@@ -44,6 +47,12 @@ public class ProjectHandlerTest {
 	public void tearDown() throws Exception {
 		if (this.createdProjectId != null) {
 			this.projectHandler.delete(this.createdProjectId);
+			this.createdProjectId = null;
+		}
+
+		if (this.localGitRepositoryManager != null) {
+			this.localGitRepositoryManager.close();
+			this.localGitRepositoryManager = null;
 		}
 	}
 
