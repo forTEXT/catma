@@ -211,4 +211,9 @@ public class RemoteGitServerManagerTest {
 		// prevent tearDown from also attempting to delete the group
 		this.createdGroupPath = null;
 	}
+
+	@Test
+	public void createImpersonationToken() throws Exception {
+		this.serverManager.createImpersonationToken();
+	}
 }

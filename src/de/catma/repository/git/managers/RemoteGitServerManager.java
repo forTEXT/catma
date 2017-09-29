@@ -1,12 +1,10 @@
 package de.catma.repository.git.managers;
 
+import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import org.apache.commons.lang3.StringUtils;
-import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.GroupApi;
-import org.gitlab4j.api.ProjectApi;
+import org.gitlab4j.api.*;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Namespace;
 import org.gitlab4j.api.models.Project;
@@ -14,8 +12,7 @@ import org.gitlab4j.api.models.Project;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class RemoteGitServerManager implements IRemoteGitServerManager {
@@ -197,7 +194,7 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 	@Override
 	public List<String> getGroupRepositoryNames(String path)
 			throws RemoteGitServerManagerException {
-		GroupApi groupApi = gitLabApi.getGroupApi();
+		GroupApi groupApi = this.gitLabApi.getGroupApi();
 
 		try {
 			Group group = groupApi.getGroup(path);
@@ -222,7 +219,7 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 	 */
 	@Override
 	public void deleteGroup(String path) throws RemoteGitServerManagerException {
-		GroupApi groupApi = gitLabApi.getGroupApi();
+		GroupApi groupApi = this.gitLabApi.getGroupApi();
 
 		try {
 			Group group = groupApi.getGroup(path);
@@ -230,6 +227,28 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 		}
 		catch (GitLabApiException e) {
 			throw new RemoteGitServerManagerException("Failed to delete remote group", e);
+		}
+	}
+
+	@Override
+	public void createUser() {
+
+	}
+
+	public void createImpersonationToken() throws RemoteGitServerManagerException {
+		CustomUserApi customUserApi = new CustomUserApi(this.gitLabApi);
+
+		try {
+			GregorianCalendar cal = new GregorianCalendar();
+			cal.set(2017, 9, 30);
+			Date expiryDate = cal.getTime();
+
+			customUserApi.createImpersonationToken(
+				1, "dev", null, null
+			);
+		}
+		catch (GitLabApiException e) {
+			throw new RemoteGitServerManagerException("Failed to create impersonation token", e);
 		}
 	}
 }

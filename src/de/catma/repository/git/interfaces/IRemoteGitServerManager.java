@@ -33,4 +33,6 @@ public interface IRemoteGitServerManager {
 	List<String> getGroupRepositoryNames(String path) throws RemoteGitServerManagerException;
 
 	void deleteGroup(String path) throws RemoteGitServerManagerException;
+
+	void createUser() throws RemoteGitServerManagerException;
 }
