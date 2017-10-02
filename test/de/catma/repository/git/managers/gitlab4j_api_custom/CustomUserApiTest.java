@@ -1,5 +1,6 @@
 package de.catma.repository.git.managers.gitlab4j_api_custom;
 
+import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.User;
@@ -69,20 +70,27 @@ public class CustomUserApiTest {
 		this.createdUserId = user.getId();
 
 		// create an impersonation token for the user
-		CreateImpersonationTokenResponse response = this.customUserApi.createImpersonationToken(
+		ImpersonationToken impersonationToken = this.customUserApi.createImpersonationToken(
 			this.createdUserId, "test-token", null, null
 		);
 
-		assertNotNull(response);
-		assert response.id > 0;
-		assertFalse(response.revoked);
-		assertArrayEquals(new String[] {"api"}, response.scopes);
-		assert response.token.length() > 0;
-		assert response.active;
-		assert response.impersonation;
-		assertEquals("test-token", response.name);
-		assert response.createdAt.length() > 0;
-		assertNull(response.expiresAt);
+		assertNotNull(impersonationToken);
+		assert impersonationToken.id > 0;
+		assertFalse(impersonationToken.revoked);
+		assertArrayEquals(new String[] {"api"}, impersonationToken.scopes);
+		assert impersonationToken.token.length() > 0;
+		assert impersonationToken.active;
+		assert impersonationToken.impersonation;
+		assertEquals("test-token", impersonationToken.name);
+		assert impersonationToken.createdAt.length() > 0;
+		assertNull(impersonationToken.expiresAt);
+
+		List<ImpersonationToken> impersonationTokens = this.customUserApi.getImpersonationTokens(
+			this.createdUserId, null
+		);
+
+		assertEquals(1, impersonationTokens.size());
+		assertEquals(impersonationToken.id, impersonationTokens.get(0).id);
 	}
 
 	@Test
@@ -101,23 +109,30 @@ public class CustomUserApiTest {
 		cal.add(Calendar.DATE, 1);
 		Date expiryDate = cal.getTime();
 
-		CreateImpersonationTokenResponse response = this.customUserApi.createImpersonationToken(
+		ImpersonationToken impersonationToken = this.customUserApi.createImpersonationToken(
 			this.createdUserId, "test-token", expiryDate, new String[] {"api", "read_user"}
 		);
 
-		assertNotNull(response);
-		assert response.id > 0;
-		assertFalse(response.revoked);
-		assertArrayEquals(new String[] {"api", "read_user"}, response.scopes);
-		assert response.token.length() > 0;
-		assert response.active;
-		assert response.impersonation;
-		assertEquals("test-token", response.name);
-		assert response.createdAt.length() > 0;
+		assertNotNull(impersonationToken);
+		assert impersonationToken.id > 0;
+		assertFalse(impersonationToken.revoked);
+		assertArrayEquals(new String[] {"api", "read_user"}, impersonationToken.scopes);
+		assert impersonationToken.token.length() > 0;
+		assert impersonationToken.active;
+		assert impersonationToken.impersonation;
+		assertEquals("test-token", impersonationToken.name);
+		assert impersonationToken.createdAt.length() > 0;
 
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		String expectedIsoFormattedExpiryDate = df.format(expiryDate);
 
-		assertEquals(expectedIsoFormattedExpiryDate, response.expiresAt);
+		assertEquals(expectedIsoFormattedExpiryDate, impersonationToken.expiresAt);
+
+		List<ImpersonationToken> impersonationTokens = this.customUserApi.getImpersonationTokens(
+			this.createdUserId, null
+		);
+
+		assertEquals(1, impersonationTokens.size());
+		assertEquals(impersonationToken.id, impersonationTokens.get(0).id);
 	}
 }
