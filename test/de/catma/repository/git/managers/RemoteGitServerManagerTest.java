@@ -1,8 +1,10 @@
 package de.catma.repository.git.managers;
 
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.User;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,6 +23,7 @@ public class RemoteGitServerManagerTest {
 
 	private IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse = null;
 	private String createdGroupPath = null;
+	private Integer createdUserId = null;
 
 	public RemoteGitServerManagerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
@@ -59,6 +62,19 @@ public class RemoteGitServerManagerTest {
 				() -> this.serverManager.getGitLabApi().getGroupApi().getGroups().isEmpty()
 			);
 			this.createdGroupPath = null;
+		}
+
+		if (this.createdUserId != null) {
+			this.serverManager.getGitLabApi().getUserApi().deleteUser(this.createdUserId);
+			await().until(() -> {
+				try {
+					this.serverManager.getGitLabApi().getUserApi().getUser(this.createdUserId);
+					return false;
+				}
+				catch (GitLabApiException e) {
+					return true;
+				}
+			});
 		}
 	}
 
@@ -213,7 +229,49 @@ public class RemoteGitServerManagerTest {
 	}
 
 	@Test
+	public void createUser() throws Exception {
+		this.createdUserId = this.serverManager.createUser(
+			"testuser@catma.de", "testuser", null, "Test User",
+			null
+		);
+
+		assertNotNull(this.createdUserId);
+		assert this.createdUserId > 0;
+
+		User user = this.serverManager.getGitLabApi().getUserApi().getUser(this.createdUserId);
+		assertNotNull(user);
+		assertEquals("testuser@catma.de", user.getEmail());
+		assertEquals("testuser", user.getUsername());
+		assertEquals("Test User", user.getName());
+//		assertFalse(user.getIsAdmin()); // seems to always return null
+		assert user.getCanCreateGroup();
+		assert user.getCanCreateProject();
+		assertEquals("active", user.getState());
+	}
+
+	@Test
+	public void createAdminUser() throws Exception {
+		this.createdUserId = this.serverManager.createUser(
+			"testadminuser@catma.de", "testadminuser", null,
+			"Test AdminUser", true
+		);
+
+		assertNotNull(this.createdUserId);
+		assert this.createdUserId > 0;
+
+		User user = this.serverManager.getGitLabApi().getUserApi().getUser(this.createdUserId);
+		assertNotNull(user);
+		assertEquals("testadminuser@catma.de", user.getEmail());
+		assertEquals("testadminuser", user.getUsername());
+		assertEquals("Test AdminUser", user.getName());
+//		assert user.getIsAdmin(); // seems to always return null
+		assert user.getCanCreateGroup();
+		assert user.getCanCreateProject();
+		assertEquals("active", user.getState());
+	}
+
+	@Test
 	public void createImpersonationToken() throws Exception {
-		this.serverManager.createImpersonationToken();
+//		this.serverManager.createImpersonationToken();
 	}
 }

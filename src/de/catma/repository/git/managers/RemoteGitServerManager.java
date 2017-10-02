@@ -3,15 +3,18 @@ package de.catma.repository.git.managers;
 import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.*;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Namespace;
 import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.User;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URL;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,6 +50,11 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 		}
 	}
 	// />
+
+	private static final char[] PWD_CHARS = (
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" +
+			"0123456789~`!@#$%^&*()-_=+[{]}\\|;:\'\",<.>/?"
+	).toCharArray();
 
 	public RemoteGitServerManager(Properties catmaProperties) {
 		this.gitLabAdminPersonalAccessToken = catmaProperties.getProperty(
@@ -230,9 +238,51 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 		}
 	}
 
+	/**
+	 * Creates a new remote user.
+	 *
+	 * @param email the email address of the user to create
+	 * @param username the username of the user to create
+	 * @param password the password of the user to create. A random, 12 character password will be
+	 *                 generated if none is supplied.
+	 * @param name the name of the user to create
+	 * @param isAdmin whether the user to create should be an admin or not. Defaults to false if not
+	 *                supplied.
+	 * @return the new user ID
+	 * @throws RemoteGitServerManagerException if something went wrong while creating the remote
+	 *         user
+	 */
 	@Override
-	public void createUser() {
+	public int createUser(String email, String username, @Nullable String password,
+						   String name, @Nullable Boolean isAdmin)
+			throws RemoteGitServerManagerException {
+		UserApi userApi = this.gitLabApi.getUserApi();
 
+		if (password == null) {
+			// generate a random password
+			password = RandomStringUtils.random(
+				12, 0, RemoteGitServerManager.PWD_CHARS.length-1,
+				false, false, RemoteGitServerManager.PWD_CHARS, new SecureRandom()
+			);
+		}
+
+		if (isAdmin == null) {
+			isAdmin = false;
+		}
+
+		User user = new User();
+		user.setEmail(email);
+		user.setUsername(username);
+		user.setName(name);
+		user.setIsAdmin(isAdmin);
+
+		try {
+			user = userApi.createUser(user, password, null);
+			return user.getId();
+		}
+		catch (GitLabApiException e) {
+			throw new RemoteGitServerManagerException("Failed to create user", e);
+		}
 	}
 
 	public void createImpersonationToken() throws RemoteGitServerManagerException {

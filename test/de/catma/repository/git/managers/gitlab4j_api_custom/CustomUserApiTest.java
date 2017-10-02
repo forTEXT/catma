@@ -61,7 +61,7 @@ public class CustomUserApiTest {
 	public void createImpersonationToken() throws Exception {
 		// create a user
 		User user = new User();
-		user.setEmail("test@catma.de");
+		user.setEmail("testuser@catma.de");
 		user.setUsername("testuser");
 		user.setName("Test User");
 
@@ -89,7 +89,7 @@ public class CustomUserApiTest {
 	public void createImpersonationTokenWithExpiryAndScopes() throws Exception {
 		// create a user
 		User user = new User();
-		user.setEmail("test@catma.de");
+		user.setEmail("testuser@catma.de");
 		user.setUsername("testuser");
 		user.setName("Test User");
 
