@@ -132,7 +132,7 @@ public class RemoteGitServerManagerTest {
 
 		assertEquals(1, repositoriesInGroup.size());
 		assertEquals(
-			this.createRepositoryResponse.repositoryId, (long)repositoriesInGroup.get(0).getId()
+			this.createRepositoryResponse.repositoryId, (int)repositoriesInGroup.get(0).getId()
 		);
 
 		// prevent tearDown from attempting to delete the group twice
@@ -272,6 +272,19 @@ public class RemoteGitServerManagerTest {
 
 	@Test
 	public void createImpersonationToken() throws Exception {
-//		this.serverManager.createImpersonationToken();
+		this.createdUserId = this.serverManager.createUser(
+			"testuser@catma.de", "testuser", null, "Test User",
+			null
+		);
+
+		assertNotNull(this.createdUserId);
+		assert this.createdUserId > 0;
+
+		String impersonationToken = this.serverManager.createImpersonationToken(
+			this.createdUserId, "test-token"
+		);
+
+		assertNotNull(impersonationToken);
+		assert impersonationToken.length() > 0;
 	}
 }

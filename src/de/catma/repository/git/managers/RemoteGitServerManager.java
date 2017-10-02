@@ -1,5 +1,6 @@
 package de.catma.repository.git.managers;
 
+import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
 import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
@@ -285,17 +286,24 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 		}
 	}
 
-	public void createImpersonationToken() throws RemoteGitServerManagerException {
+	/**
+	 * Creates a new impersonation token for the user identified by <code>userId</code>.
+	 *
+	 * @param userId the ID of the user for which to create the impersonation token
+	 * @param tokenName the name of the impersonation token to create
+	 * @return the new token
+	 * @throws RemoteGitServerManagerException if something went wrong while creating the
+	 *         impersonation token
+	 */
+	public String createImpersonationToken(int userId, String tokenName)
+			throws RemoteGitServerManagerException {
 		CustomUserApi customUserApi = new CustomUserApi(this.gitLabApi);
 
 		try {
-			GregorianCalendar cal = new GregorianCalendar();
-			cal.set(2017, 9, 30);
-			Date expiryDate = cal.getTime();
-
-			customUserApi.createImpersonationToken(
-				1, "dev", null, null
+			ImpersonationToken impersonationToken = customUserApi.createImpersonationToken(
+				userId, tokenName, null, null
 			);
+			return impersonationToken.token;
 		}
 		catch (GitLabApiException e) {
 			throw new RemoteGitServerManagerException("Failed to create impersonation token", e);
