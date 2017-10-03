@@ -37,7 +37,4 @@ public interface IRemoteGitServerManager {
 	int createUser(String email, String username, @Nullable String password,
 				   String name, @Nullable Boolean isAdmin)
 			throws RemoteGitServerManagerException;
-
-	String createImpersonationToken(int userId, String tokenName)
-			throws RemoteGitServerManagerException;
 }

@@ -1,7 +1,10 @@
 package de.catma.repository.git.managers;
 
+import de.catma.repository.db.DBUser;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
-import org.gitlab4j.api.GitLabApiException;
+import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
+import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
+import org.gitlab4j.api.*;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
@@ -15,10 +18,12 @@ import java.util.List;
 import java.util.Properties;
 
 import static org.awaitility.Awaitility.*;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 public class RemoteGitServerManagerTest {
 	private Properties catmaProperties;
+	private de.catma.user.User catmaUser;
 	private RemoteGitServerManager serverManager;
 
 	private IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse = null;
@@ -35,47 +40,127 @@ public class RemoteGitServerManagerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		this.serverManager = new RemoteGitServerManager(this.catmaProperties);
+		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
+		this.catmaUser = new DBUser(
+			1, "catma-testuser", false, false, false
+		);
+
+		this.serverManager = new RemoteGitServerManager(this.catmaProperties, this.catmaUser);
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		if (this.createRepositoryResponse != null) {
-			this.serverManager.deleteRepository(this.createRepositoryResponse.repositoryId);
-			await().until(
-				() -> this.serverManager.getGitLabApi().getProjectApi().getProjects().isEmpty()
-			);
+		GitLabApi adminGitLabApi = this.serverManager.getAdminGitLabApi();
+		GroupApi groupApi = adminGitLabApi.getGroupApi();
+		ProjectApi projectApi = adminGitLabApi.getProjectApi();
+		UserApi userApi = adminGitLabApi.getUserApi();
 
+		// delete any GitLab resources created by test methods
+		if (this.createRepositoryResponse != null) {
 			if (this.createRepositoryResponse.groupPath != null) {
+				// if the repo referenced by this.createRepositoryResponse was created within a
+				// group, we can just delete the group (and any associated repos will be deleted
+				// too) ...
 				this.serverManager.deleteGroup(this.createRepositoryResponse.groupPath);
-				await().until(
-					() -> this.serverManager.getGitLabApi().getGroupApi().getGroups().isEmpty()
-				);
+				await().until(() -> groupApi.getGroups().isEmpty());
+			}
+			else {
+				// ... otherwise we must delete the repo
+				this.serverManager.deleteRepository(this.createRepositoryResponse.repositoryId);
+				await().until(() -> projectApi.getProjects().isEmpty());
 			}
 
 			this.createRepositoryResponse = null;
 		}
 
+		// group created separately from any repo
 		if (this.createdGroupPath != null) {
 			this.serverManager.deleteGroup(this.createdGroupPath);
-			await().until(
-				() -> this.serverManager.getGitLabApi().getGroupApi().getGroups().isEmpty()
-			);
+			await().until(() -> groupApi.getGroups().isEmpty());
 			this.createdGroupPath = null;
 		}
 
+		// not the same user as would have been created by the RemoteGitServerManager constructor,
+		// see below
 		if (this.createdUserId != null) {
-			this.serverManager.getGitLabApi().getUserApi().deleteUser(this.createdUserId);
-			await().until(() -> {
-				try {
-					this.serverManager.getGitLabApi().getUserApi().getUser(this.createdUserId);
-					return false;
-				}
-				catch (GitLabApiException e) {
-					return true;
-				}
-			});
+			userApi.deleteUser(this.createdUserId);
+			RemoteGitServerManagerTest.awaitUserDeleted(userApi, this.createdUserId);
 		}
+
+		// delete the GitLab user that the RemoteGitServerManager constructor in setUp would have
+		// created
+		// we do this last because GitLab seems to ignore deleteUser calls if the user still has
+		// contributions (groups or repos), but that's probably because gitlab4j doesn't pass the
+		// "hard_delete" parameter (which *is* safer, but it would be nice to have control over it)
+		// the fact that the UI only shows the hard delete option for users that still have
+		// contributions confirms this theory, as does the documentation at
+		// https://docs.gitlab.com/ee/user/profile/account/delete_account.html#associated-records
+		User user = this.serverManager.getGitLabUser();
+		userApi.deleteUser(user.getId());
+		RemoteGitServerManagerTest.awaitUserDeleted(userApi, user.getId());
+	}
+
+	private static void awaitUserDeleted(UserApi userApi, int userId) {
+		await().until(() -> {
+			try {
+				userApi.getUser(userId);
+				return false;
+			}
+			catch (GitLabApiException e) {
+				return true;
+			}
+		});
+	}
+
+	@Test
+	public void testInstantiationCreatesGitLabUser() throws Exception {
+		UserApi userApi = this.serverManager.getAdminGitLabApi().getUserApi();
+		List<User> users = userApi.getUsers();
+
+		// we should have an admin user, the "ghost" user & one representing the CATMA user
+		assertEquals(3, users.size());
+
+		// hamcrest's hasItem(T item) matcher is not behaving as documented and is expecting the
+		// users collection to contain *only* this.serverManager.getGitLabUser()
+//		assertThat(users, hasItem(this.serverManager.getGitLabUser()));
+
+		User matchedUser = null;
+		for (User user : users) {
+			if (user.getId().equals(this.serverManager.getGitLabUser().getId())) {
+				matchedUser = user;
+				break;
+			}
+		}
+
+		assertNotNull(matchedUser);
+		assertEquals(this.catmaUser.getIdentifier(), matchedUser.getUsername());
+		assertEquals(this.catmaUser.getName(), matchedUser.getName());
+		String expectedGitLabUserEmailAddress = String.format(
+			RemoteGitServerManager.GITLAB_USER_EMAIL_ADDRESS_FORMAT, this.catmaUser.getUserId()
+		);
+		assertEquals(expectedGitLabUserEmailAddress, matchedUser.getEmail());
+
+		// assert that the user has the expected impersonation token
+		CustomUserApi customUserApi = new CustomUserApi(this.serverManager.getAdminGitLabApi());
+		List<ImpersonationToken> impersonationTokens = customUserApi.getImpersonationTokens(
+			this.serverManager.getGitLabUser().getId(), null
+		);
+
+		assertEquals(1, impersonationTokens.size());
+		assertEquals(RemoteGitServerManager.GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME,
+			impersonationTokens.get(0).name
+		);
+
+		// assert that re-instantiating the RemoteGitServerManager causes it to re-use the existing
+		// GitLab user
+		RemoteGitServerManager tmpServerManager = new RemoteGitServerManager(
+			this.catmaProperties, this.catmaUser
+		);
+
+		users = userApi.getUsers();
+
+		// we should *still* have an admin user, the "ghost" user & one representing the CATMA user
+		assertEquals(3, users.size());
 	}
 
 	@Test
@@ -89,12 +174,13 @@ public class RemoteGitServerManagerTest {
 		assertNotNull(this.createRepositoryResponse.repositoryHttpUrl);
 		assertNull(this.createRepositoryResponse.groupPath);
 
-		Project project = this.serverManager.getGitLabApi().getProjectApi().getProject(
+		Project project = this.serverManager.getAdminGitLabApi().getProjectApi().getProject(
 			this.createRepositoryResponse.repositoryId
 		);
 
 		assertNotNull(project);
 		assertEquals("test-repo", project.getName());
+		assertEquals(this.serverManager.getGitLabUser().getId(), project.getOwner().getId());
 	}
 
 	@Test
@@ -105,13 +191,20 @@ public class RemoteGitServerManagerTest {
 
 		assertNotNull(this.createdGroupPath);
 
-		Group group = this.serverManager.getGitLabApi().getGroupApi().getGroup(
+		Group group = this.serverManager.getAdminGitLabApi().getGroupApi().getGroup(
 			this.createdGroupPath
 		);
 
 		assertNotNull(group);
 		assertEquals("test-group", group.getName());
 		assertEquals("test-group", group.getPath());
+
+		// to assert that the user is the owner of the new group, get the groups for the user using
+		// the *user-specific* GitLabApi instance
+		List<Group> groups = this.serverManager.getUserGitLabApi().getGroupApi().getGroups();
+
+		assertEquals(1, groups.size());
+		assertEquals(group.getId(), groups.get(0).getId());
 
 		this.createRepositoryResponse = this.serverManager.createRepository(
 			"test-repo", null, this.createdGroupPath
@@ -120,14 +213,15 @@ public class RemoteGitServerManagerTest {
 		assertNotNull(this.createRepositoryResponse);
 		assert this.createRepositoryResponse.repositoryId > 0;
 
-		Project project = this.serverManager.getGitLabApi().getProjectApi().getProject(
+		Project project = this.serverManager.getAdminGitLabApi().getProjectApi().getProject(
 			this.createRepositoryResponse.repositoryId
 		);
 
 		assertNotNull(project);
 		assertEquals("test-repo", project.getName());
+		assertEquals(this.serverManager.getGitLabUser().getId(), project.getCreatorId());
 
-		List<Project> repositoriesInGroup = this.serverManager.getGitLabApi().getGroupApi()
+		List<Project> repositoriesInGroup = this.serverManager.getAdminGitLabApi().getGroupApi()
 				.getProjects(group.getId());
 
 		assertEquals(1, repositoriesInGroup.size());
@@ -151,7 +245,7 @@ public class RemoteGitServerManagerTest {
 		this.serverManager.deleteRepository(this.createRepositoryResponse.repositoryId);
 
 		await().until(
-			() -> this.serverManager.getGitLabApi().getProjectApi().getProjects().isEmpty()
+			() -> this.serverManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
 		);
 
 		// prevent tearDown from also attempting to delete the repository
@@ -166,11 +260,19 @@ public class RemoteGitServerManagerTest {
 
 		assertNotNull(this.createdGroupPath);
 
-		Group group = this.serverManager.getGitLabApi().getGroupApi().getGroup(
+		Group group = this.serverManager.getAdminGitLabApi().getGroupApi().getGroup(
 			this.createdGroupPath
 		);
 		assertNotNull(group);
 		assertEquals("test-group", group.getName());
+		assertEquals("test-group", group.getPath());
+
+		// to assert that the user is the owner of the new group, get the groups for the user using
+		// the *user-specific* GitLabApi instance
+		List<Group> groups = this.serverManager.getUserGitLabApi().getGroupApi().getGroups();
+
+		assertEquals(1, groups.size());
+		assertEquals(group.getId(), groups.get(0).getId());
 	}
 
 	@Test
@@ -221,7 +323,7 @@ public class RemoteGitServerManagerTest {
 		this.serverManager.deleteGroup(this.createdGroupPath);
 
 		await().until(
-			() -> this.serverManager.getGitLabApi().getGroupApi().getGroups().isEmpty()
+			() -> this.serverManager.getAdminGitLabApi().getGroupApi().getGroups().isEmpty()
 		);
 
 		// prevent tearDown from also attempting to delete the group
@@ -238,7 +340,7 @@ public class RemoteGitServerManagerTest {
 		assertNotNull(this.createdUserId);
 		assert this.createdUserId > 0;
 
-		User user = this.serverManager.getGitLabApi().getUserApi().getUser(this.createdUserId);
+		User user = this.serverManager.getAdminGitLabApi().getUserApi().getUser(this.createdUserId);
 		assertNotNull(user);
 		assertEquals("testuser@catma.de", user.getEmail());
 		assertEquals("testuser", user.getUsername());
@@ -259,7 +361,7 @@ public class RemoteGitServerManagerTest {
 		assertNotNull(this.createdUserId);
 		assert this.createdUserId > 0;
 
-		User user = this.serverManager.getGitLabApi().getUserApi().getUser(this.createdUserId);
+		User user = this.serverManager.getAdminGitLabApi().getUserApi().getUser(this.createdUserId);
 		assertNotNull(user);
 		assertEquals("testadminuser@catma.de", user.getEmail());
 		assertEquals("testadminuser", user.getUsername());
@@ -268,23 +370,5 @@ public class RemoteGitServerManagerTest {
 		assert user.getCanCreateGroup();
 		assert user.getCanCreateProject();
 		assertEquals("active", user.getState());
-	}
-
-	@Test
-	public void createImpersonationToken() throws Exception {
-		this.createdUserId = this.serverManager.createUser(
-			"testuser@catma.de", "testuser", null, "Test User",
-			null
-		);
-
-		assertNotNull(this.createdUserId);
-		assert this.createdUserId > 0;
-
-		String impersonationToken = this.serverManager.createImpersonationToken(
-			this.createdUserId, "test-token"
-		);
-
-		assertNotNull(impersonationToken);
-		assert impersonationToken.length() > 0;
 	}
 }

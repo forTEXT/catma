@@ -27,78 +27,78 @@ public class ProjectHandlerTest {
 		this.catmaProperties.load(new FileInputStream(propertiesFile));
 	}
 
-	@Before
-	public void setUp() throws Exception {
-		RemoteGitServerManager remoteGitServerManager = new RemoteGitServerManager(
-			this.catmaProperties
-		);
-		remoteGitServerManager.replaceGitLabServerUrl = true;
-
-		this.localGitRepositoryManager = new LocalGitRepositoryManager(this.catmaProperties);
-
-		this.projectHandler = new ProjectHandler(
-			this.localGitRepositoryManager,
-			remoteGitServerManager
-		);
-	}
-
-	@After
-	public void tearDown() throws Exception {
-		if (this.createdProjectId != null) {
-			this.projectHandler.delete(this.createdProjectId);
-			this.createdProjectId = null;
-		}
-
-		if (this.localGitRepositoryManager != null) {
-			this.localGitRepositoryManager.close();
-			this.localGitRepositoryManager = null;
-		}
-	}
-
-	@Test
-	public void create() throws Exception {
-		this.createdProjectId = this.projectHandler.create(
-			"Test CATMA Project", "This is a test CATMA project"
-		);
-
-		assertNotNull(this.createdProjectId);
-		assert this.createdProjectId.startsWith("CATMA_");
-
-		String expectedRootRepositoryName = String.format(
-			ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, this.createdProjectId
-		);
-		String repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
-
-		File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
-
-		assert expectedRootRepositoryPath.exists();
-		assert expectedRootRepositoryPath.isDirectory();
-	}
-
-	@Test
-	public void delete() throws Exception {
-		this.createdProjectId = this.projectHandler.create(
-			"Test CATMA Project", "This is a test CATMA project"
-		);
-
-		assertNotNull(this.createdProjectId);
-		assert this.createdProjectId.startsWith("CATMA_");
-
-		String expectedRootRepositoryName = String.format(
-			ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, this.createdProjectId
-		);
-		String repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
-
-		File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
-
-		assert expectedRootRepositoryPath.exists();
-		assert expectedRootRepositoryPath.isDirectory();
-
-		this.projectHandler.delete(this.createdProjectId);
-
-		assertFalse(expectedRootRepositoryPath.exists());
-
-		// prevent tearDown from also attempting to delete the project
-		this.createdProjectId = null;
-	}
+//	@Before
+//	public void setUp() throws Exception {
+//		RemoteGitServerManager remoteGitServerManager = new RemoteGitServerManager(
+//			this.catmaProperties
+//		);
+//		remoteGitServerManager.replaceGitLabServerUrl = true;
+//
+//		this.localGitRepositoryManager = new LocalGitRepositoryManager(this.catmaProperties);
+//
+//		this.projectHandler = new ProjectHandler(
+//			this.localGitRepositoryManager,
+//			remoteGitServerManager
+//		);
+//	}
+//
+//	@After
+//	public void tearDown() throws Exception {
+//		if (this.createdProjectId != null) {
+//			this.projectHandler.delete(this.createdProjectId);
+//			this.createdProjectId = null;
+//		}
+//
+//		if (this.localGitRepositoryManager != null) {
+//			this.localGitRepositoryManager.close();
+//			this.localGitRepositoryManager = null;
+//		}
+//	}
+//
+//	@Test
+//	public void create() throws Exception {
+//		this.createdProjectId = this.projectHandler.create(
+//			"Test CATMA Project", "This is a test CATMA project"
+//		);
+//
+//		assertNotNull(this.createdProjectId);
+//		assert this.createdProjectId.startsWith("CATMA_");
+//
+//		String expectedRootRepositoryName = String.format(
+//			ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, this.createdProjectId
+//		);
+//		String repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
+//
+//		File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
+//
+//		assert expectedRootRepositoryPath.exists();
+//		assert expectedRootRepositoryPath.isDirectory();
+//	}
+//
+//	@Test
+//	public void delete() throws Exception {
+//		this.createdProjectId = this.projectHandler.create(
+//			"Test CATMA Project", "This is a test CATMA project"
+//		);
+//
+//		assertNotNull(this.createdProjectId);
+//		assert this.createdProjectId.startsWith("CATMA_");
+//
+//		String expectedRootRepositoryName = String.format(
+//			ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, this.createdProjectId
+//		);
+//		String repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
+//
+//		File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
+//
+//		assert expectedRootRepositoryPath.exists();
+//		assert expectedRootRepositoryPath.isDirectory();
+//
+//		this.projectHandler.delete(this.createdProjectId);
+//
+//		assertFalse(expectedRootRepositoryPath.exists());
+//
+//		// prevent tearDown from also attempting to delete the project
+//		this.createdProjectId = null;
+//	}
 }
