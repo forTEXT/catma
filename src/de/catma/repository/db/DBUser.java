@@ -42,16 +42,28 @@ public class DBUser implements User {
 		this.spawnable = spawnable;
 	}
 
+	@Override
 	public Integer getUserId() {
 		return this.userId;
 	}
 
+	@Override
 	public String getIdentifier() {
 		return this.identifier;
 	}
 
+	@Override
+	public String getName() {
+		return identifier;
+	}
+
+	@Override
 	public boolean isLocked() {
 		return this.locked;
+	}
+
+	public void setLocked(boolean locked) {
+		this.locked = locked;
 	}
 
 	@Override
@@ -63,20 +75,13 @@ public class DBUser implements User {
 	public boolean isSpawnable() {
 		return spawnable;
 	}
-	
-	public void setLocked(boolean locked) {
-		this.locked = locked;
-	}
-	
-	public String getName() {
-		return identifier;
-	}
-	
-	void setPermissions(List<String> permissions) {
-		this.permissions = new HashSet<String>(permissions);
-	}
-	
+
+	@Override
 	public boolean hasPermission(Permission permission) {
 		return permissions.contains(permission.name());
-	};
+	}
+
+	void setPermissions(List<String> permissions) {
+		this.permissions = new HashSet<>(permissions);
+	}
 }
