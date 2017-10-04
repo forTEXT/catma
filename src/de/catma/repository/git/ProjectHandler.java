@@ -6,11 +6,13 @@ import de.catma.repository.git.interfaces.IProjectHandler;
 import de.catma.repository.git.exceptions.ProjectHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
 
 public class ProjectHandler implements IProjectHandler {
@@ -59,11 +61,24 @@ public class ProjectHandler implements IProjectHandler {
 			);
 
 			// clone the root repository locally
-			this.localGitRepositoryManager.clone(response.repositoryHttpUrl, null,
-				null
+			RemoteGitServerManager remoteGitServerManagerImpl =
+					(RemoteGitServerManager)this.remoteGitServerManager;
+			String gitLabUserImpersonationToken = remoteGitServerManagerImpl
+					.getGitLabUserImpersonationToken();
+
+			String authenticatedRepositoryUrl = GitLabAuthenticationHelper
+					.buildAuthenticatedRepositoryUrl(
+						response.repositoryHttpUrl, gitLabUserImpersonationToken
+					);
+
+			this.localGitRepositoryManager.clone(
+				authenticatedRepositoryUrl,
+				remoteGitServerManagerImpl.getGitLabUser().getUsername(),
+				gitLabUserImpersonationToken
 			);
 		}
-		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException e) {
+		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|
+				URISyntaxException e) {
 			throw new ProjectHandlerException("Failed to create project", e);
 		}
 
