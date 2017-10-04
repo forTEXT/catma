@@ -6,6 +6,7 @@ import de.catma.repository.git.interfaces.ISourceDocumentHandler;
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.IOUtils;
 
@@ -13,6 +14,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 
 public class SourceDocumentHandler implements ISourceDocumentHandler {
     private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -71,8 +73,20 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 			}
 
 			// clone the repository locally
-			this.localGitRepositoryManager.clone(response.repositoryHttpUrl, null,
-				null
+			RemoteGitServerManager remoteGitServerManagerImpl =
+					(RemoteGitServerManager)this.remoteGitServerManager;
+			String gitLabUserImpersonationToken = remoteGitServerManagerImpl
+					.getGitLabUserImpersonationToken();
+
+			String authenticatedRepositoryUrl = GitLabAuthenticationHelper
+					.buildAuthenticatedRepositoryUrl(
+						response.repositoryHttpUrl, gitLabUserImpersonationToken
+					);
+
+			this.localGitRepositoryManager.clone(
+				authenticatedRepositoryUrl,
+				remoteGitServerManagerImpl.getGitLabUser().getUsername(),
+				gitLabUserImpersonationToken
 			);
 
 			// write the original and converted source document files into the local repo
@@ -95,7 +109,8 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 					convertedSourceDocumentFileName);
 			this.localGitRepositoryManager.commit(commitMessage);
 		}
-		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|IOException e) {
+		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|IOException
+				|URISyntaxException e) {
 			throw new SourceDocumentHandlerException("Failed to insert source document", e);
 		}
 
