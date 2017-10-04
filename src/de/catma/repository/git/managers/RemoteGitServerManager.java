@@ -38,6 +38,10 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 
 	private final String gitLabUserImpersonationToken;
 
+	public String getGitLabUserImpersonationToken() {
+		return this.gitLabUserImpersonationToken;
+	}
+
 	private final GitLabApi userGitLabApi;
 
 	public GitLabApi getUserGitLabApi() {

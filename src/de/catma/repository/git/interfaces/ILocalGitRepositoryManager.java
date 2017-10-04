@@ -14,7 +14,8 @@ public interface ILocalGitRepositoryManager {
 
 	void init(String name, @Nullable String description) throws LocalGitRepositoryManagerException;
 
-	String clone(String uri) throws LocalGitRepositoryManagerException;
+	String clone(String uri, @Nullable String username, @Nullable String password)
+			throws LocalGitRepositoryManagerException;
 
 	void open(String name) throws LocalGitRepositoryManagerException;
 

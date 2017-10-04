@@ -1,19 +1,24 @@
 package de.catma.repository.git.managers;
 
+import de.catma.repository.db.DBUser;
+import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
+import org.gitlab4j.api.GitLabApiException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.net.URI;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.Set;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
 
 public class LocalGitRepositoryManagerTest {
@@ -80,7 +85,9 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void cloneRepo() throws Exception {
-		String repoName = this.repoManager.clone("https://github.com/maltem-za/tiny.git");
+		String repoName = this.repoManager.clone("https://github.com/maltem-za/tiny.git",
+			null, null
+		);
 
 		this.testRepoPath = new File(this.repoManager.getRepositoryBasePath(), "tiny");
 
@@ -90,6 +97,67 @@ public class LocalGitRepositoryManagerTest {
 		assert this.testRepoPath.isDirectory();
 		assert Arrays.asList(this.testRepoPath.list()).contains(".git");
 		assert Arrays.asList(this.testRepoPath.list()).contains("README.md");
+	}
+
+	@Test
+	public void cloneGitLabRepoWithAuthentication() throws Exception {
+		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
+		DBUser catmaUser = new DBUser(
+			1, "catma-testuser", false, false, false
+		);
+
+		RemoteGitServerManager remoteGitServerManager = new RemoteGitServerManager(
+			this.catmaProperties, catmaUser
+		);
+		remoteGitServerManager.replaceGitLabServerUrl = true;
+
+		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
+				remoteGitServerManager.createRepository("test-repo", null);
+
+		// http://www.codeaffine.com/2014/12/09/jgit-authentication/
+		URI repositoryUri = new URI(createRepositoryResponse.repositoryHttpUrl);
+		String authorityComponent = String.format(
+			"gitlab-ci-token:%s", remoteGitServerManager.getGitLabUserImpersonationToken()
+		);
+		URI authenticatedUri = new URI(
+			repositoryUri.getScheme(), authorityComponent, repositoryUri.getHost(),
+			repositoryUri.getPort(), repositoryUri.getPath(), repositoryUri.getQuery(),
+			repositoryUri.getFragment()
+		);
+
+		String repoName = this.repoManager.clone(
+			authenticatedUri.toString(),
+			remoteGitServerManager.getGitLabUser().getUsername(),
+			remoteGitServerManager.getGitLabUserImpersonationToken()
+		);
+
+		assert this.repoManager.isAttached();
+		assertEquals(repoName, "test-repo");
+		assert this.testRepoPath.exists();
+		assert this.testRepoPath.isDirectory();
+		assert Arrays.asList(this.testRepoPath.list()).contains(".git");
+
+		// cleanup
+		remoteGitServerManager.deleteRepository(createRepositoryResponse.repositoryId);
+		await().until(
+			() -> remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
+		);
+
+		remoteGitServerManager.getAdminGitLabApi().getUserApi().deleteUser(
+			remoteGitServerManager.getGitLabUser().getId()
+		);
+		await().until(() -> {
+			try {
+				remoteGitServerManager.getAdminGitLabApi().getUserApi().getUser(
+					remoteGitServerManager.getGitLabUser().getId()
+				);
+				return false;
+			}
+			catch (GitLabApiException e) {
+				return true;
+			}
+		});
+		// tearDown() will take care of deleting the this.testRepoPath directory
 	}
 
 	@Test
