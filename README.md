@@ -30,7 +30,8 @@ See [Migrating From Eclipse to IntelliJ IDEA](https://www.jetbrains.com/help/ide
 
 _You can find screenshots for most of these steps in /doc/readme-images/_
 
-_Note also that since writing this, the IntelliJ IDEA .eml and .iml project files have been checked in, and that this will affect which steps you need to perform._
+_Note also that since writing this, the IntelliJ IDEA .eml and .iml project files have been checked in, and that this will affect which steps you need to perform.
+See the Troubleshooting section if you run into any issues._
 
 1. Clone the CATMA Git repositories:
    1. Clone the "catma" repo, branch: "catma6" (https://github.com/mpetris/catma.git)
@@ -156,4 +157,42 @@ _Note also that since writing this, the IntelliJ IDEA .eml and .iml project file
     1. Click the green play button in the toolbar at the top-right of the IDE to start the Jetty server (it should start after some time)
     2. Browse to `http://localhost:8080/catma/` in your favourite browser
     
-    
+### Troubleshooting:
+
+##### Problem: javax.ws.rs-api dependency fails to be resolved
+
+###### Symptoms:
+You see the following error message in the IvyIDEA console when resolving dependencies:
+`javax.ws.rs#javax.ws.rs-api;2.1:	Unrecognized artifact type: ${packaging.type}, will not add this as a dependency in IntelliJ.`
+
+###### Description & Solution:
+The javax.ws.rs-api pom.xml file contains a variable, `${packaging.type}`, which is not understood by Ivy and which causes the download of the package to fail.
+See [this open issue](https://github.com/jax-rs/api/issues/572).
+At time of writing the only known workaround is to manually download the jar files from [the Maven repository](https://repo1.maven.org/maven2/javax/ws/rs/javax.ws.rs-api/2.1/),
+put them into your Ivy cache directory and update your `catma.iml` file to add the following "root" nodes under the respective sections of the "IvyIDEA" library node.
+
+```
+      <library name="IvyIDEA">
+        <CLASSES>
+          ...
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.ws.rs/javax.ws.rs-api/jars/javax.ws.rs-api-2.1.jar!/" />
+        </CLASSES>
+        <JAVADOC>
+          ...
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.ws.rs/javax.ws.rs-api/javadocs/javax.ws.rs-api-2.1-javadoc.jar!/" />
+        </JAVADOC>
+        <SOURCES>
+          ...
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.ws.rs/javax.ws.rs-api/sources/javax.ws.rs-api-2.1-sources.jar!/" />
+        </SOURCES>
+      </library>
+```
+
+##### Problem: No IvyIDEA element for the catma-core module
+
+###### Symptoms:
+There is no IvyIDEA element for the catma-core module under "Artifacts" in the "Project Structure" dialog and the build fails due to missing dependencies.
+
+###### Description & Solution:
+This might be caused by a dependency resolution failure, for example as described in the previous problem.
+Try resolving dependencies only for the catma-core module (right-click the catma-core module in the project tree > IvyIDEA > Resolve for catma-core module).
