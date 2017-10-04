@@ -1,6 +1,7 @@
 package de.catma.repository.git.managers;
 
 import de.catma.repository.db.DBUser;
+import de.catma.repository.git.GitLabAuthenticationHelper;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
@@ -12,7 +13,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.net.URI;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Properties;
@@ -114,19 +114,14 @@ public class LocalGitRepositoryManagerTest {
 		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
 				remoteGitServerManager.createRepository("test-repo", null);
 
-		// http://www.codeaffine.com/2014/12/09/jgit-authentication/
-		URI repositoryUri = new URI(createRepositoryResponse.repositoryHttpUrl);
-		String authorityComponent = String.format(
-			"gitlab-ci-token:%s", remoteGitServerManager.getGitLabUserImpersonationToken()
-		);
-		URI authenticatedUri = new URI(
-			repositoryUri.getScheme(), authorityComponent, repositoryUri.getHost(),
-			repositoryUri.getPort(), repositoryUri.getPath(), repositoryUri.getQuery(),
-			repositoryUri.getFragment()
-		);
+		String authenticatedRepositoryUrl = GitLabAuthenticationHelper
+				.buildAuthenticatedRepositoryUrl(
+					createRepositoryResponse.repositoryHttpUrl,
+					remoteGitServerManager.getGitLabUserImpersonationToken()
+				);
 
 		String repoName = this.repoManager.clone(
-			authenticatedUri.toString(),
+			authenticatedRepositoryUrl,
 			remoteGitServerManager.getGitLabUser().getUsername(),
 			remoteGitServerManager.getGitLabUserImpersonationToken()
 		);
