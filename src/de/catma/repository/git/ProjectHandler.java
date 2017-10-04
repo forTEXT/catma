@@ -59,7 +59,9 @@ public class ProjectHandler implements IProjectHandler {
 			);
 
 			// clone the root repository locally
-			this.localGitRepositoryManager.clone(response.repositoryHttpUrl);
+			this.localGitRepositoryManager.clone(response.repositoryHttpUrl, null,
+				null
+			);
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException e) {
 			throw new ProjectHandlerException("Failed to create project", e);

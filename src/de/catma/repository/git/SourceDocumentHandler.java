@@ -71,7 +71,9 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 			}
 
 			// clone the repository locally
-			this.localGitRepositoryManager.clone(response.repositoryHttpUrl);
+			this.localGitRepositoryManager.clone(response.repositoryHttpUrl, null,
+				null
+			);
 
 			// write the original and converted source document files into the local repo
 			File targetOriginalSourceDocumentFile = new File(
