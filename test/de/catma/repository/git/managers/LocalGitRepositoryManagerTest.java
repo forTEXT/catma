@@ -7,6 +7,7 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.models.User;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -138,20 +139,13 @@ public class LocalGitRepositoryManagerTest {
 			() -> remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
 		);
 
-		remoteGitServerManager.getAdminGitLabApi().getUserApi().deleteUser(
-			remoteGitServerManager.getGitLabUser().getId()
+		// see RemoteGitServerManagerTest tearDown() for more info
+		User user = remoteGitServerManager.getGitLabUser();
+		remoteGitServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
+		RemoteGitServerManagerTest.awaitUserDeleted(
+			remoteGitServerManager.getAdminGitLabApi().getUserApi(), user.getId()
 		);
-		await().until(() -> {
-			try {
-				remoteGitServerManager.getAdminGitLabApi().getUserApi().getUser(
-					remoteGitServerManager.getGitLabUser().getId()
-				);
-				return false;
-			}
-			catch (GitLabApiException e) {
-				return true;
-			}
-		});
+
 		// tearDown() will take care of deleting the this.testRepoPath directory
 	}
 

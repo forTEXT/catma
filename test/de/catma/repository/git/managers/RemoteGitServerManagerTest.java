@@ -100,7 +100,7 @@ public class RemoteGitServerManagerTest {
 		RemoteGitServerManagerTest.awaitUserDeleted(userApi, user.getId());
 	}
 
-	private static void awaitUserDeleted(UserApi userApi, int userId) {
+	public static void awaitUserDeleted(UserApi userApi, int userId) {
 		await().until(() -> {
 			try {
 				userApi.getUser(userId);
