@@ -63,7 +63,8 @@ public class ProjectHandlerTest {
 			this.localGitRepositoryManager = null;
 		}
 
-		// see RemoteGitServerManagerTest tearDown() for more info
+		// delete the GitLab user that the RemoteGitServerManager constructor in setUp would have
+		// created - see RemoteGitServerManagerTest tearDown() for more info
 		User user = this.remoteGitServerManager.getGitLabUser();
 		this.remoteGitServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
 		RemoteGitServerManagerTest.awaitUserDeleted(
