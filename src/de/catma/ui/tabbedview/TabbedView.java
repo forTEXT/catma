@@ -21,142 +21,108 @@ package de.catma.ui.tabbedview;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
-import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.UI;
 import com.vaadin.ui.TabSheet.CloseHandler;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.TabSheet.Tab;
-
-import de.catma.ui.CatmaApplication;
-import de.catma.ui.analyzer.Messages;
-
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 
 public class TabbedView extends VerticalLayout implements CloseHandler {
-	
+
 	private TabSheet tabSheet;
 	private Label noOpenTabsLabel;
+	private VerticalLayout introPanel;
 	private TabComponent lastTab;
-	public Button btnAnalyzeCurrentActiveDoc;
-	private String incomingText;
 
-	
 	public TabbedView(String noOpenTabsText) {
+	
 		initComponents(noOpenTabsText);
 		initActions();
-		
-		if(noOpenTabsText.toString()== Messages.getString("AnalyzerManagerView.intro")){
-			createBtnAndFunctionality();
-			incomingText=noOpenTabsText;
-		}
 	}
-	
-		private void createBtnAndFunctionality(){
-			btnAnalyzeCurrentActiveDoc = new Button("Analyze current open Document");
-			btnAnalyzeCurrentActiveDoc.setVisible(true);
-			addComponent(btnAnalyzeCurrentActiveDoc);
-	
-		}
-		
-		
+	public void setHtmlLabel(){
+	Label htmlLabel = new Label(noOpenTabsLabel, ContentMode.HTML);
+	introPanel.removeComponent(noOpenTabsLabel);
+	introPanel.addComponent(htmlLabel);
+	}
 	private void initActions() {
-		
-		
+
 		tabSheet.addSelectedTabChangeListener(new SelectedTabChangeListener() {
-			
+
 			public void selectedTabChange(SelectedTabChangeEvent event) {
 				if (lastTab != null) {
 					lastTab.removeClickshortCuts();
 				}
-				lastTab = (TabComponent)tabSheet.getSelectedTab();
+				lastTab = (TabComponent) tabSheet.getSelectedTab();
 				lastTab.addClickshortCuts();
 			}
 		});
-		
-		
-		
+
 	}
 
 	private void initComponents(String noOpenTabsText) {
 		tabSheet = new TabSheet();
 		tabSheet.setSizeFull();
-		noOpenTabsLabel = 
-				new Label(noOpenTabsText);
-						
-		
+
+		introPanel = new VerticalLayout();
+		introPanel.setSpacing(true);
+		addComponent(introPanel);
+
+		noOpenTabsLabel = new Label(noOpenTabsText);
+
 		noOpenTabsLabel.setSizeFull();
 		setMargin(true);
-		addComponent(noOpenTabsLabel);
-		setComponentAlignment(noOpenTabsLabel, Alignment.MIDDLE_CENTER);
-		
 
-		
-		
-		
-		
-		
+		introPanel.addComponent(noOpenTabsLabel);
+		introPanel.setComponentAlignment(noOpenTabsLabel, Alignment.MIDDLE_CENTER);
+
 		addComponent(tabSheet);
 		tabSheet.setTabsVisible(false);
-		tabSheet.setHeight("0px");	
+		tabSheet.setHeight("0px");
 		tabSheet.setCloseHandler(this);
-		
-		
+
 	}
 
 	protected void onTabClose(Component tabContent) {
 		onTabClose(tabSheet, tabContent);
 	}
-	
+
 	public void onTabClose(TabSheet tabsheet, Component tabContent) {
 		tabsheet.removeComponent(tabContent);
-		((ClosableTab)tabContent).close();
+		((ClosableTab) tabContent).close();
 
 		if (tabsheet.getComponentCount() == 0) {
 			tabSheet.setTabsVisible(false);
 			tabSheet.setHeight("0px");
-			addComponent(noOpenTabsLabel, 0);
-			noOpenTabsLabel.setVisible(true);
-			
-			if(incomingText!=null){
-				btnAnalyzeCurrentActiveDoc.setVisible(true);			
-			}					
+			introPanel.setVisible(true);
 			setMargin(true);
 			setSizeUndefined();
 		}
-		
+
 	}
-	
+
 	protected Tab addTab(TabComponent component, String caption) {
-		
+
 		Tab tab = tabSheet.addTab(component, caption);
-		
+
 		tab.setClosable(false);
 		tabSheet.setSelectedTab(tab.getComponent());
-		
+
 		if (tabSheet.getComponentCount() != 0) {
-			noOpenTabsLabel.setVisible(false);
-			
-			if(incomingText!=null){
-			btnAnalyzeCurrentActiveDoc.setVisible(false);
-			}
-			
-			removeComponent(noOpenTabsLabel);
+			introPanel.setVisible(false);
 			setMargin(false);
 			tabSheet.setTabsVisible(true);
 			tabSheet.setSizeFull();
 			setSizeFull();
 		}
-		
+
 		return tab;
 	}
-	
+
 	protected Tab addClosableTab(ClosableTab closableTab, String caption) {
 		Tab tab = addTab(closableTab, caption);
 		tab.setClosable(true);
@@ -166,15 +132,15 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 	public Iterable<Component> getTabSheet() {
 		return tabSheet;
 	}
-	
+
 	protected void setSelectedTab(Component tabContent) {
 		tabSheet.setSelectedTab(tabContent);
 	}
-	
+
 	public Component getSelectedTab() {
 		return tabSheet.getSelectedTab();
 	}
-	
+
 	protected int getTabPosition(Tab tab) {
 		return tabSheet.getTabPosition(tab);
 	}
@@ -182,22 +148,20 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 	public Component getComponent(int position) {
 		if (tabSheet.getComponentCount() > position) {
 			return tabSheet.getTab(position).getComponent();
-		}
-		else {
+		} else {
 			return null;
 		}
 	}
-	
+
 	public String getCaption(Component c) {
 		Tab t = tabSheet.getTab(c);
 		if (t != null) {
 			return t.getCaption();
-		}
-		else {
+		} else {
 			return "";
 		}
 	}
-	
+
 	public void closeClosables() {
 		Set<Component> componentBuffer = new HashSet<Component>();
 		for (Component comp : this) {
@@ -208,5 +172,9 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 				onTabClose(tabSheet, comp);
 			}
 		}
+	}
+
+	protected VerticalLayout getIntroPanel() {
+		return introPanel;
 	}
 }

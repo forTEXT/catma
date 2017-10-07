@@ -1,0 +1,147 @@
+package de.catma.ui.tagger;
+
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.time.LocalDateTime;
+
+import com.vaadin.event.ShortcutAction.KeyCode;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
+
+import de.catma.document.repository.Repository;
+import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.ui.CatmaApplication;
+import de.catma.ui.repository.CorpusContentSelectionDialog;
+import de.catma.ui.repository.Messages;
+import de.catma.util.Pair;
+
+public class ChooseAnnotationCollectionDialog extends Window {
+	
+	public static interface AnnotationCollectionListener {
+		public void collectionCreated(UserMarkupCollection userMarkupCollection);
+	}
+
+	private Button btOpenOrCreateCollection;
+	private Button btContinueWithout;
+	private Repository repository;
+	private SourceDocument sourceDocument;
+	private String sourceDocumentId;
+	private CorpusContentSelectionDialog dialog;
+	private AnnotationCollectionListener annotationCollectionListener;
+
+	public ChooseAnnotationCollectionDialog(ClickListener openOrCreateCollListener, Repository repository,
+			String sourceDocumentId, AnnotationCollectionListener annotationCollectionListener) {
+		super("Choose one of the Options");
+		this.repository = repository;
+		this.annotationCollectionListener = annotationCollectionListener;
+		sourceDocument = repository.getSourceDocument(sourceDocumentId);
+		initComponents();
+		initActions(openOrCreateCollListener);
+
+	}
+
+	private void initActions(final ClickListener openOrCreateCollListener) {
+
+
+		btOpenOrCreateCollection.addClickListener(new ClickListener() {
+			public void buttonClick(ClickEvent event) {
+				try {
+					openOrCreateCollListener.buttonClick(event);// diese Methode tut:die handleOUMC2 aufrufen->die ein CollectionListner erzeugt der in  einer Methode tagger.addIntanceWith ausführt
+				} finally {
+					UI.getCurrent().removeWindow(ChooseAnnotationCollectionDialog.this);
+				}
+			}
+		});
+
+		
+		btContinueWithout.addClickListener(new ClickListener() {
+			public void buttonClick(ClickEvent event) {
+				PropertyChangeListener userMarkupDocumentChangedListener = new PropertyChangeListener() {
+					public void propertyChange(PropertyChangeEvent evt) {
+						if (evt.getOldValue() == null) {
+							@SuppressWarnings("unchecked")
+							Pair<UserMarkupCollectionReference, SourceDocument> result = (Pair<UserMarkupCollectionReference, SourceDocument>) evt
+									.getNewValue();
+							try {
+								UserMarkupCollection umc = repository.getUserMarkupCollection(result.getFirst());							
+								annotationCollectionListener.collectionCreated(umc); 							
+							} catch (IOException e) {
+								((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("CorpusContentSelectionDialog.errorCreatingCollection"), e);
+							}
+						}
+						repository.removePropertyChangeListener(
+								Repository.RepositoryChangeEvent.userMarkupCollectionChanged, this);
+					}
+				};
+
+				repository.addPropertyChangeListener(Repository.RepositoryChangeEvent.userMarkupCollectionChanged,
+						userMarkupDocumentChangedListener);
+				try {
+
+					String collectionName = generateCollectionName();
+					try {
+						repository.createUserMarkupCollection(collectionName, sourceDocument);
+					} catch (IOException e) {
+
+						e.printStackTrace();
+					}
+				} finally {
+					UI.getCurrent().removeWindow(ChooseAnnotationCollectionDialog.this);
+
+				}
+
+			}
+		});
+
+	}
+
+	private String generateCollectionName() {
+		String userName = repository.getUser().getName();
+		String sourceDocumentName = sourceDocument.toString();
+		LocalDateTime timePoint = LocalDateTime.now();
+		String collectionName = sourceDocumentName + "_" + userName + "_" + timePoint;
+		return collectionName;
+	}
+
+	private void initComponents() {
+		setWidth("300px"); //$NON-NLS-1$
+		setHeight("150px"); //$NON-NLS-1$
+
+		setModal(true);
+		setClosable(true);
+		setResizable(false);
+
+		center();
+
+		VerticalLayout content = new VerticalLayout();
+		content.setMargin(true);
+		content.setSizeFull();
+		content.setSpacing(true);
+
+		setContent(content);
+
+		btContinueWithout = new Button("Continue without");
+		btContinueWithout.setWidth("90%");
+		btOpenOrCreateCollection = new Button("Open or Create Collection");
+		btOpenOrCreateCollection.setWidth("90%");
+		content.addComponent(btOpenOrCreateCollection);
+		content.addComponent(btContinueWithout);
+
+		// content.setComponentAlignment(btOk, Alignment.MIDDLE_CENTER);
+		btOpenOrCreateCollection.setClickShortcut(KeyCode.ENTER);
+		btContinueWithout.setClickShortcut(KeyCode.ENTER);
+
+	}
+
+	public void show() {
+		UI.getCurrent().addWindow(this);
+	}
+}

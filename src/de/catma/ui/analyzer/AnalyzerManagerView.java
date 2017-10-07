@@ -20,8 +20,10 @@ package de.catma.ui.analyzer;
 
 import java.util.HashSet;
 
+import com.vaadin.server.AbstractErrorMessage.ContentMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -36,18 +38,38 @@ import de.catma.ui.tabbedview.TabbedView;
 
 public class AnalyzerManagerView extends TabbedView {
 	
-	
+	private Button btnAnalyzeCurrentOpenDoc;
 	
 
 	public AnalyzerManagerView() {
-		super(Messages.getString("AnalyzerManagerView.intro")); //$NON-NLS-1$
 		
-		initActions();
 	
+		
+		super(Messages.getString("AnalyzerManagerView.intro")); //$NON-NLS-1$
+		super.setHtmlLabel();
+		initComponents();
+		initAnalyzerAction();
+		
+	
+	}
+	private void initAnalyzerAction() {
+		this.btnAnalyzeCurrentOpenDoc.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				((CatmaApplication) UI.getCurrent()).analyzeCurrentlyActiveDocument();
+			}
+		});
+		
+	}
+
+	private void initComponents() {
+		this.btnAnalyzeCurrentOpenDoc = new Button("Analyze currently open document");
+		getIntroPanel().addComponent(btnAnalyzeCurrentOpenDoc);
 	}
 
 	public void analyzeDocuments(Corpus corpus, IndexedRepository repository) {
-		// super.btnAnalyzeCurrentActiveDoc.setVisible(false);
+		
 
 		AnalyzerView analyzerView = new AnalyzerView(corpus, repository, new CloseListener() {
 
@@ -74,16 +96,5 @@ public class AnalyzerManagerView extends TabbedView {
 		addClosableTab(analyzerView, caption);
 	}
 	
-	 private void initActions(){
-		super.btnAnalyzeCurrentActiveDoc.addClickListener(new ClickListener() {
-			public void buttonClick(ClickEvent event) {
-				((CatmaApplication) UI.getCurrent()).analyzeCurrentlyActiveDocument();
-			}});	
-	}
-	
-	
-
-
-
 
 }

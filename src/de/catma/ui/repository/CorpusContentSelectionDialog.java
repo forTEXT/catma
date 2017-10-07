@@ -18,7 +18,10 @@
  */
 package de.catma.ui.repository;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.vaadin.data.Property;
@@ -45,10 +48,12 @@ import com.vaadin.ui.Window;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
+import de.catma.util.Pair;
 
 public class CorpusContentSelectionDialog extends VerticalLayout {
 	
@@ -145,6 +150,8 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 			
 			@Override
 			public void buttonClick(ClickEvent event) {
+				
+				
 				final String userMarkupCollectionNameProperty = "name"; //$NON-NLS-1$
 				
 				SingleValueDialog singleValueDialog = new SingleValueDialog();
@@ -157,9 +164,35 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 							public void savePressed(PropertysetItem propertysetItem) {
 									com.vaadin.data.Property<?> property = propertysetItem.getItemProperty(userMarkupCollectionNameProperty);
 									String name = (String)property.getValue();
+									
+									
 									try {
-										repository.createUserMarkupCollection(name, sourceDocument);
-										populateDocumentsTree();
+										PropertyChangeListener saveLastAnnotationCollectionListener = new PropertyChangeListener() {
+											
+											@Override
+											public void propertyChange(PropertyChangeEvent evt) {
+												if (evt.getOldValue() == null) {// dh ne neue umc wurde erstellt
+												System.out.println(evt.getNewValue());	
+												@SuppressWarnings("unchecked")
+												Pair<UserMarkupCollectionReference, SourceDocument> result = (Pair<UserMarkupCollectionReference, SourceDocument>) evt
+														.getNewValue();
+												String lastAdded =	result.getFirst().getId();										
+												preselectUmcIds =  new ArrayList<String>();
+												preselectUmcIds.add(lastAdded);
+													
+												}
+												repository.removePropertyChangeListener(Repository.RepositoryChangeEvent.userMarkupCollectionChanged, this);
+												// im listenr gleich die neue id dem preselectedumid zutun...
+												
+											}
+										};
+										
+										
+										repository.addPropertyChangeListener(Repository.RepositoryChangeEvent.userMarkupCollectionChanged,
+												saveLastAnnotationCollectionListener);
+										
+										repository.createUserMarkupCollection(name, sourceDocument);// hier springt der listener an! hier ein listener aufs repo setzten , danach gleich entfernen. im listenr gleich die neue id dem preselectedumid zutun...
+										populateDocumentsTree();// hier wird entschieden welche checkboxes angecklickt sind
 									} catch (IOException e) {
 										((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("CorpusContentSelectionDialog.errorCreatingCollection"), e); //$NON-NLS-1$
 									}
