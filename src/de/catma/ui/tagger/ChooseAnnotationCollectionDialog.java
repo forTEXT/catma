@@ -26,7 +26,8 @@ import de.catma.util.Pair;
 public class ChooseAnnotationCollectionDialog extends Window {
 	
 	public static interface AnnotationCollectionListener {
-		public void collectionCreated(UserMarkupCollection userMarkupCollection);
+		public void defaultCollectionCreated(UserMarkupCollection userMarkupCollection);
+		public void openOrCreateCollection();
 	}
 
 	private Button btOpenOrCreateCollection;
@@ -37,24 +38,23 @@ public class ChooseAnnotationCollectionDialog extends Window {
 	private CorpusContentSelectionDialog dialog;
 	private AnnotationCollectionListener annotationCollectionListener;
 
-	public ChooseAnnotationCollectionDialog(ClickListener openOrCreateCollListener, Repository repository,
+	public ChooseAnnotationCollectionDialog( Repository repository,
 			String sourceDocumentId, AnnotationCollectionListener annotationCollectionListener) {
 		super("Choose one of the Options");
 		this.repository = repository;
 		this.annotationCollectionListener = annotationCollectionListener;
 		sourceDocument = repository.getSourceDocument(sourceDocumentId);
 		initComponents();
-		initActions(openOrCreateCollListener);
+		initActions(annotationCollectionListener);
 
 	}
 
-	private void initActions(final ClickListener openOrCreateCollListener) {
-
+	private void initActions(AnnotationCollectionListener annotationCollectionListener) {
 
 		btOpenOrCreateCollection.addClickListener(new ClickListener() {
 			public void buttonClick(ClickEvent event) {
 				try {
-					openOrCreateCollListener.buttonClick(event);// diese Methode tut:die handleOUMC2 aufrufen->die ein CollectionListner erzeugt der in  einer Methode tagger.addIntanceWith ausführt
+					annotationCollectionListener.openOrCreateCollection();
 				} finally {
 					UI.getCurrent().removeWindow(ChooseAnnotationCollectionDialog.this);
 				}
@@ -64,6 +64,7 @@ public class ChooseAnnotationCollectionDialog extends Window {
 		
 		btContinueWithout.addClickListener(new ClickListener() {
 			public void buttonClick(ClickEvent event) {
+				
 				PropertyChangeListener userMarkupDocumentChangedListener = new PropertyChangeListener() {
 					public void propertyChange(PropertyChangeEvent evt) {
 						if (evt.getOldValue() == null) {
@@ -72,7 +73,7 @@ public class ChooseAnnotationCollectionDialog extends Window {
 									.getNewValue();
 							try {
 								UserMarkupCollection umc = repository.getUserMarkupCollection(result.getFirst());							
-								annotationCollectionListener.collectionCreated(umc); 							
+								annotationCollectionListener.defaultCollectionCreated(umc); 							
 							} catch (IOException e) {
 								((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("CorpusContentSelectionDialog.errorCreatingCollection"), e);
 							}
@@ -82,6 +83,7 @@ public class ChooseAnnotationCollectionDialog extends Window {
 					}
 				};
 
+						
 				repository.addPropertyChangeListener(Repository.RepositoryChangeEvent.userMarkupCollectionChanged,
 						userMarkupDocumentChangedListener);
 				try {
@@ -90,8 +92,8 @@ public class ChooseAnnotationCollectionDialog extends Window {
 					try {
 						repository.createUserMarkupCollection(collectionName, sourceDocument);
 					} catch (IOException e) {
-
-						e.printStackTrace();
+						((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("CorpusContentSelectionDialog.errorCreatingCollection"), //$NON-NLS-1$
+								e);
 					}
 				} finally {
 					UI.getCurrent().removeWindow(ChooseAnnotationCollectionDialog.this);

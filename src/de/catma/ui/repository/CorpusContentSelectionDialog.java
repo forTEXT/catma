@@ -56,11 +56,9 @@ import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.util.Pair;
 
 public class CorpusContentSelectionDialog extends VerticalLayout {
-	
+
 	private enum DocumentTreeProperty {
-		caption,
-		include,
-		;
+		caption, include,;
 	}
 
 	private String userMarkupItemDisplayString = Messages.getString("CorpusContentSelectionDialog.annotations"); //$NON-NLS-1$
@@ -79,23 +77,13 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 	private List<String> preselectUmcIds;
 	private List<UserMarkupCollectionReference> umcRefList;
 
-	public CorpusContentSelectionDialog(
-			Repository repository,
-			SourceDocument sd, 
-			Corpus corpus, 
-			SaveCancelListener<Corpus> listener,
-			String windowCaption,
-			String documentsTreeCaption) {
+	public CorpusContentSelectionDialog(Repository repository, SourceDocument sd, Corpus corpus,
+			SaveCancelListener<Corpus> listener, String windowCaption, String documentsTreeCaption) {
 		this(repository, sd, corpus, listener, windowCaption, documentsTreeCaption, null);
 	}
-	
-	public CorpusContentSelectionDialog(
-			Repository repository,
-			SourceDocument sd,
-			Corpus corpus,
-			SaveCancelListener<Corpus> listener,
-			String windowCaption,
-			String documentsTreeCaption,
+
+	public CorpusContentSelectionDialog(Repository repository, SourceDocument sd, Corpus corpus,
+			SaveCancelListener<Corpus> listener, String windowCaption, String documentsTreeCaption,
 			List<String> preselectUmcIds) {
 
 		this.repository = repository;
@@ -105,37 +93,36 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		this.windowCaption = windowCaption;
 		this.documentsTreeCaption = documentsTreeCaption;
 		this.preselectUmcIds = preselectUmcIds;
-		
+
 		initComponents();
 		initActions();
 	}
 
 	private void initActions() {
 		btCancel.addClickListener(new ClickListener() {
-			
+
 			public void buttonClick(ClickEvent event) {
 				dialogWindow.close();
 				listener.cancelPressed();
 				listener = null;
 			}
 		});
-		
+
 		btOk.addClickListener(new ClickListener() {
-			
+
 			public void buttonClick(ClickEvent event) {
 				Corpus corpus = new Corpus(sourceDocument.toString());
 				corpus.addSourceDocument(sourceDocument);
-				
+
 				List<UserMarkupCollectionReference> umcRefList = sourceDocument.getUserMarkupCollectionRefs();
-				
+
 				if (constrainingCorpus != null) {
 					umcRefList = constrainingCorpus.getUserMarkupCollectionRefs(sourceDocument);
 				}
-				
+
 				for (UserMarkupCollectionReference umcRef : umcRefList) {
-					
-					Property prop = documentsTree.getItem(umcRef).getItemProperty(
-							DocumentTreeProperty.include);
+
+					Property prop = documentsTree.getItem(umcRef).getItemProperty(DocumentTreeProperty.include);
 					CheckBox cb = (CheckBox) prop.getValue();
 					if (cb.getValue()) {
 						corpus.addUserMarkupCollectionReference(umcRef);
@@ -145,107 +132,109 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 				listener.savePressed(corpus);
 			}
 		});
-		
+
 		btCreateMarkupCollection.addClickListener(new ClickListener() {
-			
+
 			@Override
 			public void buttonClick(ClickEvent event) {
-				
-				
+
 				final String userMarkupCollectionNameProperty = "name"; //$NON-NLS-1$
-				
+
 				SingleValueDialog singleValueDialog = new SingleValueDialog();
-				
+
 				singleValueDialog.getSingleValue(
 						Messages.getString("CorpusContentSelectionDialog.createAnnotationCollectionTitle"), //$NON-NLS-1$
 						Messages.getString("CorpusContentSelectionDialog.youHaveToEnterAName"), //$NON-NLS-1$
 						new SaveCancelListener<PropertysetItem>() {
-							public void cancelPressed() {}
+							public void cancelPressed() {
+							}
+
 							public void savePressed(PropertysetItem propertysetItem) {
-									com.vaadin.data.Property<?> property = propertysetItem.getItemProperty(userMarkupCollectionNameProperty);
-									String name = (String)property.getValue();
-									
-									
-									try {
-										PropertyChangeListener saveLastAnnotationCollectionListener = new PropertyChangeListener() {
-											
-											@Override
-											public void propertyChange(PropertyChangeEvent evt) {
-												if (evt.getOldValue() == null) {// dh ne neue umc wurde erstellt
-												System.out.println(evt.getNewValue());	
+								com.vaadin.data.Property<?> property = propertysetItem
+										.getItemProperty(userMarkupCollectionNameProperty);
+								String name = (String) property.getValue();
+
+								try {
+									PropertyChangeListener saveLastAnnotationCollectionListener = new PropertyChangeListener() {
+
+										@Override
+										public void propertyChange(PropertyChangeEvent evt) {
+											if (evt.getOldValue() == null) {
+												System.out.println(evt.getNewValue());
 												@SuppressWarnings("unchecked")
 												Pair<UserMarkupCollectionReference, SourceDocument> result = (Pair<UserMarkupCollectionReference, SourceDocument>) evt
 														.getNewValue();
-												String lastAdded =	result.getFirst().getId();										
-												preselectUmcIds =  new ArrayList<String>();
+												String lastAdded = result.getFirst().getId();
+												preselectUmcIds = new ArrayList<String>();
 												preselectUmcIds.add(lastAdded);
-													
-												}
-												repository.removePropertyChangeListener(Repository.RepositoryChangeEvent.userMarkupCollectionChanged, this);
-												// im listenr gleich die neue id dem preselectedumid zutun...
-												
+
 											}
-										};
-										
-										
-										repository.addPropertyChangeListener(Repository.RepositoryChangeEvent.userMarkupCollectionChanged,
-												saveLastAnnotationCollectionListener);
-										
-										repository.createUserMarkupCollection(name, sourceDocument);// hier springt der listener an! hier ein listener aufs repo setzten , danach gleich entfernen. im listenr gleich die neue id dem preselectedumid zutun...
-										populateDocumentsTree();// hier wird entschieden welche checkboxes angecklickt sind
-									} catch (IOException e) {
-										((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("CorpusContentSelectionDialog.errorCreatingCollection"), e); //$NON-NLS-1$
-									}
+											repository.removePropertyChangeListener(
+													Repository.RepositoryChangeEvent.userMarkupCollectionChanged, this);									
+										}
+									};
+									repository.addPropertyChangeListener(
+											Repository.RepositoryChangeEvent.userMarkupCollectionChanged,
+											saveLastAnnotationCollectionListener);
+
+									repository.createUserMarkupCollection(name, sourceDocument);
+																								
+									populateDocumentsTree();
+															
+								} catch (IOException e) {
+									((CatmaApplication) UI.getCurrent()).showAndLogError(
+											Messages.getString("CorpusContentSelectionDialog.errorCreatingCollection"), //$NON-NLS-1$
+											e);
 								}
-							}, userMarkupCollectionNameProperty);
+							}
+						}, userMarkupCollectionNameProperty);
 			}
 		});
 	}
 
 	private void initComponents() {
 		setSizeFull();
-		
+
 		VerticalLayout documentsPanelContent = new VerticalLayout();
 		documentsPanelContent.setMargin(true);
 		documentsPanelContent.setSpacing(true);
 		documentsPanelContent.setSizeFull();
-		
+
 		Panel documentsPanel = new Panel(documentsPanelContent);
-//		documentsPanel.getContent().setSizeUndefined();
-//		documentsPanel.getContent().setWidth("100%");
+		// documentsPanel.getContent().setSizeUndefined();
+		// documentsPanel.getContent().setWidth("100%");
 		documentsPanel.setSizeFull();
-		
+
 		documentsContainer = new HierarchicalContainer();
 
 		documentsTree = new TreeTable(documentsTreeCaption, documentsContainer);
 
 		documentsTree.setWidth("100%"); //$NON-NLS-1$
 		documentsTree.setHeight("100%"); //$NON-NLS-1$
-		
-		documentsTree.addContainerProperty(
-			DocumentTreeProperty.caption, String.class, null);
-		documentsTree.addContainerProperty(
-				DocumentTreeProperty.include, AbstractComponent.class, null);
 
-		documentsTree.setColumnHeader(DocumentTreeProperty.caption, Messages.getString("CorpusContentSelectionDialog.docAnnotations")); //$NON-NLS-1$
+		documentsTree.addContainerProperty(DocumentTreeProperty.caption, String.class, null);
+		documentsTree.addContainerProperty(DocumentTreeProperty.include, AbstractComponent.class, null);
 
-		documentsTree.setColumnHeader(DocumentTreeProperty.include, Messages.getString("CorpusContentSelectionDialog.Include")); //$NON-NLS-1$
-		
+		documentsTree.setColumnHeader(DocumentTreeProperty.caption,
+				Messages.getString("CorpusContentSelectionDialog.docAnnotations")); //$NON-NLS-1$
+
+		documentsTree.setColumnHeader(DocumentTreeProperty.include,
+				Messages.getString("CorpusContentSelectionDialog.Include")); //$NON-NLS-1$
+
 		populateDocumentsTree();
 		documentsPanelContent.addComponent(documentsTree);
-//		documentsPanelContent.setExpandRatio(documentsTree, 1.0f);
+		// documentsPanelContent.setExpandRatio(documentsTree, 1.0f);
 
 		addComponent(documentsPanel);
 		setExpandRatio(documentsPanel, 1.0f);
-		
-		
-			
+
 		HorizontalLayout dialogButtonPanel = new HorizontalLayout();
 		dialogButtonPanel.setSpacing(true);
 		dialogButtonPanel.setWidth("100%"); //$NON-NLS-1$
 
-		btCreateMarkupCollection = new Button(Messages.getString("CorpusContentSelectionDialog.createAnnotationCollection")); //$NON-NLS-1$
-		btCreateMarkupCollection.addStyleName("secondary-button");		 //$NON-NLS-1$
+		btCreateMarkupCollection = new Button(
+				Messages.getString("CorpusContentSelectionDialog.createAnnotationCollection")); //$NON-NLS-1$
+		btCreateMarkupCollection.addStyleName("secondary-button"); //$NON-NLS-1$
 		dialogButtonPanel.addComponent(btCreateMarkupCollection);
 		dialogButtonPanel.setComponentAlignment(btCreateMarkupCollection, Alignment.MIDDLE_LEFT);
 
@@ -253,58 +242,51 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		btOk.addStyleName("primary-button"); //$NON-NLS-1$
 		btOk.setClickShortcut(KeyCode.ENTER);
 		btOk.focus();
-		
+
 		dialogButtonPanel.addComponent(btOk);
 		dialogButtonPanel.setComponentAlignment(btOk, Alignment.MIDDLE_RIGHT);
 		dialogButtonPanel.setExpandRatio(btOk, 1.0f);
 		btCancel = new Button(Messages.getString("CorpusContentSelectionDialog.Cancel")); //$NON-NLS-1$
 		dialogButtonPanel.addComponent(btCancel);
 		dialogButtonPanel.setComponentAlignment(btCancel, Alignment.MIDDLE_RIGHT);
-		
+
 		dialogButtonPanel.addStyleName("modal-button-container"); //$NON-NLS-1$
 		addComponent(dialogButtonPanel);
-		
+
 		dialogWindow = new Window(windowCaption);
 		dialogWindow.setContent(this);
 	}
-	
+
 	private void populateDocumentsTree() {
 		documentsTree.removeAllItems();
-		
-		documentsTree.addItem(
-			new Object[] {sourceDocument.toString(), createCheckBox(false, true)},
-			sourceDocument
-		);
-			
+
+		documentsTree.addItem(new Object[] { sourceDocument.toString(), createCheckBox(false, true) }, sourceDocument);
+
 		documentsTree.setCollapsed(sourceDocument, false);
 
-		MarkupCollectionItem userMarkupItem =
-				new MarkupCollectionItem(
-						sourceDocument, userMarkupItemDisplayString, true);
-		documentsTree.addItem(
-			new Object[] {userMarkupItemDisplayString, createToggleAllUmcCheckBox()},
-			userMarkupItem);
-		documentsTree.setParent(userMarkupItem, sourceDocument);		
-		
+		MarkupCollectionItem userMarkupItem = new MarkupCollectionItem(sourceDocument, userMarkupItemDisplayString,
+				true);
+		documentsTree.addItem(new Object[] { userMarkupItemDisplayString, createToggleAllUmcCheckBox() },
+				userMarkupItem);
+		documentsTree.setParent(userMarkupItem, sourceDocument);
+
 		umcRefList = sourceDocument.getUserMarkupCollectionRefs();
-		
+
 		if (constrainingCorpus != null) {
 			umcRefList = constrainingCorpus.getUserMarkupCollectionRefs(sourceDocument);
 		}
 
 		for (UserMarkupCollectionReference umcRef : umcRefList) {
-			documentsTree.addItem(
-				new Object[] {
-					umcRef.getName(), 
-					createCheckBox(
-						true,
-						(preselectUmcIds==null)||preselectUmcIds.contains(umcRef.getId()))
-				}, 
-				umcRef);
+			documentsTree
+					.addItem(
+							new Object[] { umcRef.getName(),
+									createCheckBox(true,
+											(preselectUmcIds == null) || preselectUmcIds.contains(umcRef.getId())) },
+							umcRef);
 			documentsTree.setParent(umcRef, userMarkupItem);
 			documentsTree.setChildrenAllowed(umcRef, false);
 		}
-		
+
 		documentsTree.setCollapsed(userMarkupItem, false);
 		int pageLength = umcRefList.size() + 1;
 		if (pageLength < 5) {
@@ -318,28 +300,27 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 
 	private CheckBox createCheckBox(final boolean editable, boolean initialState) {
 		CheckBox cb = new CheckBox();
-		
+
 		cb.setValue(initialState);
 		cb.setImmediate(true);
 		cb.setEnabled(editable);
 
 		return cb;
 	}
-	
+
 	private CheckBox createToggleAllUmcCheckBox() {
 		final CheckBox cbIncludeAll = new CheckBox();
-		
+
 		cbIncludeAll.setValue(true);
 		cbIncludeAll.setImmediate(true);
 		cbIncludeAll.addValueChangeListener(new ValueChangeListener() {
-			
+
 			@Override
 			public void valueChange(ValueChangeEvent event) {
 				boolean selected = cbIncludeAll.getValue();
 				for (UserMarkupCollectionReference umcRef : umcRefList) {
 					@SuppressWarnings("rawtypes")
-					Property prop = documentsTree.getItem(umcRef).getItemProperty(
-							DocumentTreeProperty.include);
+					Property prop = documentsTree.getItem(umcRef).getItemProperty(DocumentTreeProperty.include);
 					CheckBox cb = (CheckBox) prop.getValue();
 					cb.setValue(selected);
 				}
@@ -347,8 +328,7 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		});
 		return cbIncludeAll;
 	}
-	
-	
+
 	public void show(String dialogWidth) {
 		dialogWindow.setModal(true);
 		dialogWindow.setWidth(dialogWidth);
@@ -356,12 +336,12 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 		UI.getCurrent().addWindow(dialogWindow);
 		dialogWindow.center();
 	}
-	
+
 	public void show() {
 		show("50%"); //$NON-NLS-1$
 	}
-	
-	public void setCaptions(String windowCaption, String documentsTreeCaption){
+
+	public void setCaptions(String windowCaption, String documentsTreeCaption) {
 		dialogWindow.setCaption(windowCaption);
 		documentsTree.setCaption(documentsTreeCaption);
 	}
