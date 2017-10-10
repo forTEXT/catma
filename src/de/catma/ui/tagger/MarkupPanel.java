@@ -327,9 +327,11 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		buttonHeaderPanel.setComponentAlignment(btHelp, Alignment.MIDDLE_RIGHT);
 
 		tabContent.addComponent(buttonHeaderPanel);
-
+		TagsetSelectionHandler tagsetSelectionHandler = 
+				new TagsetSelectionHandler();
+		
 		tagsetTree = new TagsetTree(repository.getTagManager(), null, false, false, true, true, false,
-				colorButtonListener);
+				colorButtonListener, tagsetSelectionHandler);
 
 		tabContent.addComponent(tagsetTree);
 		tabContent.setExpandRatio(tagsetTree, 1.0f);

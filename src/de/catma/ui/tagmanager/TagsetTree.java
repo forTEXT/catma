@@ -531,6 +531,42 @@ public class TagsetTree extends HorizontalLayout {
 	}
 	
 	private void handleInsertTagDefinitionRequest() {
+		final Object selectedParent = 
+				tagTree.getValue();
+		
+		if (selectedParent == null) {
+			
+			if (tagsetSelectionHandler != null) {
+				
+				tagsetSelectionHandler.handleSelection(new TagsetSelectedListener() {
+					public void tagsetSelected(Object selectedParent) {
+						if (selectedParent == null) {
+							Notification.show(
+									Messages.getString("TagsetTree.infoTitle"), Messages.getString("TagsetTree.selectTagsetParentTagFirst"),  //$NON-NLS-1$ //$NON-NLS-2$
+									Type.TRAY_NOTIFICATION);
+						}
+						else {
+							handleInsertTagDefinitionRequest(selectedparent);
+						}
+					}
+				});
+				
+			}
+			else {
+				Notification.show(
+						Messages.getString("TagsetTree.infoTitle"), Messages.getString("TagsetTree.selectTagsetParentTagFirst"),  //$NON-NLS-1$ //$NON-NLS-2$
+						Type.TRAY_NOTIFICATION);
+			}
+		}
+		else {
+			handleInsertTagDefinitionRequest(selectedParent);
+		}
+		
+
+	
+	}
+
+	private void handleInsertTagDefinitionRequest(Object selectedParent) {
 		final String tagDefNameProp = "name"; //$NON-NLS-1$
 		final String tagDefColorProp = "color"; //$NON-NLS-1$
 		
@@ -539,15 +575,6 @@ public class TagsetTree extends HorizontalLayout {
 		propertyCollection.getItemProperty(tagDefColorProp).setValue(
 				ColorConverter.randomHex());
 
-		final Object selectedParent = 
-				tagTree.getValue();
-		
-		if (selectedParent == null) {
-			Notification.show(
-				Messages.getString("TagsetTree.infoTitle"), Messages.getString("TagsetTree.selectTagsetParentTagFirst"),  //$NON-NLS-1$ //$NON-NLS-2$
-				Type.TRAY_NOTIFICATION);
-			return;
-		}
 		
 		FormDialog<PropertysetItem> tagFormDialog =
 			new FormDialog<PropertysetItem>(
@@ -616,8 +643,9 @@ public class TagsetTree extends HorizontalLayout {
 					}
 				});
 		tagFormDialog.show("50%"); //$NON-NLS-1$
+		
 	}
-
+	
 	public TagsetDefinition getTagsetDefinition(TagDefinition tagDefinition) {
 		Object parent = tagTree.getParent(tagDefinition);
 		if (parent instanceof TagsetDefinition) {
