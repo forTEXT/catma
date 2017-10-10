@@ -1,10 +1,12 @@
 package de.catma.repository.git;
 
+import de.catma.document.source.*;
 import de.catma.repository.db.DBUser;
 import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
+import de.catma.repository.git.model_wrappers.GitSourceDocumentInfo;
 import org.apache.commons.io.FileUtils;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
@@ -16,8 +18,10 @@ import org.junit.rules.ExpectedException;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 
 import static org.awaitility.Awaitility.await;
@@ -101,9 +105,35 @@ public class SourceDocumentHandlerTest {
 			convertedSourceDocument
 		);
 
+		IndexInfoSet indexInfoSet = new IndexInfoSet();
+		indexInfoSet.setLocale(Locale.ENGLISH);
+
+		ContentInfoSet contentInfoSet = new ContentInfoSet(
+			"William Faulkner",
+			"",
+			"",
+			"A Rose for Emily"
+		);
+
+		// TODO: should the TechInfoSet represent the original or the converted source document?
+		TechInfoSet techInfoSet = new TechInfoSet(
+			FileType.TEXT,
+			StandardCharsets.UTF_8,
+			FileOSType.INDEPENDENT,
+			705211438L,
+			null
+		);
+
+		SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(
+			indexInfoSet, contentInfoSet, techInfoSet
+		);
+
+		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
+
         this.insertedSourceDocumentId = this.sourceDocumentHandler.insert(
 			originalSourceDocumentStream, originalSourceDocument.getName(),
 			convertedSourceDocumentStream, convertedSourceDocument.getName(),
+			gitSourceDocumentInfo,
 			null, null
 		);
 
@@ -126,6 +156,38 @@ public class SourceDocumentHandlerTest {
 		);
 		assert FileUtils.contentEquals(
 			convertedSourceDocument, new File(expectedRepoPath, "rose_for_emily.txt")
+		);
+
+		assert Arrays.asList(expectedRepoPath.list()).contains("header.json");
+
+		String expectedSerializedSourceDocumentInfo = "" +
+				"{\n" +
+				"\t\"gitContentInfoSet\":{\n" +
+				"\t\t\"author\":\"William Faulkner\",\n" +
+				"\t\t\"description\":\"\",\n" +
+				"\t\t\"publisher\":\"\",\n" +
+				"\t\t\"title\":\"A Rose for Emily\"\n" +
+				"\t},\n" +
+				"\t\"gitIndexInfoSet\":{\n" +
+				"\t\t\"locale\":\"en\",\n" +
+				"\t\t\"unseparableCharacterSequences\":[],\n" +
+				"\t\t\"userDefinedSeparatingCharacters\":[]\n" +
+				"\t},\n" +
+				"\t\"gitTechInfoSet\":{\n" +
+				"\t\t\"charset\":\"UTF-8\",\n" +
+				"\t\t\"checksum\":705211438,\n" +
+				"\t\t\"fileName\":null,\n" +
+				"\t\t\"fileOSType\":\"INDEPENDENT\",\n" +
+				"\t\t\"fileType\":\"TEXT\",\n" +
+				"\t\t\"mimeType\":null,\n" +
+				"\t\t\"uRI\":null,\n" +
+				"\t\t\"xsltDocumentLocalUri\":null\n" +
+				"\t}\n" +
+				"}";
+
+		assertEquals(
+			expectedSerializedSourceDocumentInfo.replaceAll("[\n\t]", ""),
+			FileUtils.readFileToString(new File(expectedRepoPath, "header.json"), StandardCharsets.UTF_8)
 		);
 	}
 
@@ -151,9 +213,35 @@ public class SourceDocumentHandlerTest {
 			convertedSourceDocument
 		);
 
+		IndexInfoSet indexInfoSet = new IndexInfoSet();
+		indexInfoSet.setLocale(Locale.ENGLISH);
+
+		ContentInfoSet contentInfoSet = new ContentInfoSet(
+			"William Faulkner",
+			"",
+			"",
+			"A Rose for Emily"
+		);
+
+		// TODO: should the TechInfoSet represent the original or the converted source document?
+		TechInfoSet techInfoSet = new TechInfoSet(
+			FileType.TEXT,
+			StandardCharsets.UTF_8,
+			FileOSType.INDEPENDENT,
+			705211438L,
+			null
+		);
+
+		SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(
+			indexInfoSet, contentInfoSet, techInfoSet
+		);
+
+		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
+
 		this.insertedSourceDocumentId = this.sourceDocumentHandler.insert(
 			originalSourceDocumentStream, originalSourceDocument.getName(),
 			convertedSourceDocumentStream, convertedSourceDocument.getName(),
+			gitSourceDocumentInfo,
 			null, projectId
 		);
 
@@ -176,6 +264,38 @@ public class SourceDocumentHandlerTest {
 		);
 		assert FileUtils.contentEquals(
 			convertedSourceDocument, new File(expectedRepoPath, "rose_for_emily.txt")
+		);
+
+		assert Arrays.asList(expectedRepoPath.list()).contains("header.json");
+
+		String expectedSerializedSourceDocumentInfo = "" +
+				"{\n" +
+				"\t\"gitContentInfoSet\":{\n" +
+				"\t\t\"author\":\"William Faulkner\",\n" +
+				"\t\t\"description\":\"\",\n" +
+				"\t\t\"publisher\":\"\",\n" +
+				"\t\t\"title\":\"A Rose for Emily\"\n" +
+				"\t},\n" +
+				"\t\"gitIndexInfoSet\":{\n" +
+				"\t\t\"locale\":\"en\",\n" +
+				"\t\t\"unseparableCharacterSequences\":[],\n" +
+				"\t\t\"userDefinedSeparatingCharacters\":[]\n" +
+				"\t},\n" +
+				"\t\"gitTechInfoSet\":{\n" +
+				"\t\t\"charset\":\"UTF-8\",\n" +
+				"\t\t\"checksum\":705211438,\n" +
+				"\t\t\"fileName\":null,\n" +
+				"\t\t\"fileOSType\":\"INDEPENDENT\",\n" +
+				"\t\t\"fileType\":\"TEXT\",\n" +
+				"\t\t\"mimeType\":null,\n" +
+				"\t\t\"uRI\":null,\n" +
+				"\t\t\"xsltDocumentLocalUri\":null\n" +
+				"\t}\n" +
+				"}";
+
+		assertEquals(
+			expectedSerializedSourceDocumentInfo.replaceAll("[\n\t]", ""),
+			FileUtils.readFileToString(new File(expectedRepoPath, "header.json"), StandardCharsets.UTF_8)
 		);
 
 		// cleanup
