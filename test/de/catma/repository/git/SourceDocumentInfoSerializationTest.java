@@ -59,7 +59,7 @@ public class SourceDocumentInfoSerializationTest {
 			FileType.TEXT,
 			Charset.defaultCharset(),
 			FileOSType.INDEPENDENT,
-			(long)123456789,
+			123456789L,
 			"fake.xslt"
 		);
 
