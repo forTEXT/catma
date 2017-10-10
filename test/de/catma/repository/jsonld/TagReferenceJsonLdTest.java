@@ -1,6 +1,5 @@
 package de.catma.repository.jsonld;
 
-import com.github.jsonldjava.utils.JsonUtils;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.output.JsonStream;
 import de.catma.document.Range;
@@ -8,7 +7,13 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.Version;
+
+import mockit.Expectations;
+import mockit.Injectable;
+import mockit.Verifications;
+import mockit.integration.junit4.JMockit;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -17,6 +22,7 @@ import java.util.logging.Logger;
 
 import static org.junit.Assert.*;
 
+@RunWith(JMockit.class)
 public class TagReferenceJsonLdTest {
 	private String Original = "{\n" +
 			"\t\"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n" +
@@ -84,11 +90,27 @@ public class TagReferenceJsonLdTest {
 	@Test
 	public void deserializeFromJsonLd() throws Exception {
 
+		TagReferenceJsonLd tagReferenceJsonLdMock = new TagReferenceJsonLd();
 		InputStream inputStream = new ByteArrayInputStream(LessSimple.getBytes(StandardCharsets.UTF_8.name()));
 
-		TagReferenceJsonLd deserialized = TagReferenceJsonLd.Deserialize(inputStream);
+		Version version = new Version();
+		TagDefinition fakeTagDefinition = new TagDefinition(1, "CATMA_1234", "FAKE_TAG_DEFINITION", version, null, null);
+		TagInstance fakeTagInstance = new TagInstance("CATMA_ABCD", fakeTagDefinition);
+
+		new Expectations(tagReferenceJsonLdMock) {{
+			tagReferenceJsonLdMock.FindTagInstanceFromUUID(anyString);
+			result = fakeTagInstance;
+		}};
+
+		TagReferenceJsonLd deserialized = tagReferenceJsonLdMock.Deserialize(inputStream);
+
+		new Verifications() {{
+			tagReferenceJsonLdMock.FindTagInstanceFromUUID(anyString);
+		}};
 
 		assertNotNull(deserialized);
+
+		assertEquals(fakeTagInstance.getUuid(), deserialized.getTagReference().getTagInstance().getUuid());
 	}
 
 	@Test
