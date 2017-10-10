@@ -7,6 +7,7 @@ import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
+import de.catma.repository.git.model_wrappers.GitSourceDocumentInfo;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.IOUtils;
 
@@ -15,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 
 public class SourceDocumentHandler implements ISourceDocumentHandler {
     private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -37,6 +39,7 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 	 *                                      UTF-8 encoded source document
 	 * @param convertedSourceDocumentFileName the file name of the converted, UTF-8 encoded source
 	 *                                        document
+	 * @param gitSourceDocumentInfo a {@link GitSourceDocumentInfo} wrapper object
 	 * @param sourceDocumentId the ID of the source document to insert. If none is provided, a new
 	 *                         ID will be generated.
 	 * @param projectId the ID of the project that the source document must be inserted into
@@ -49,14 +52,13 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 						 String originalSourceDocumentFileName,
 						 InputStream convertedSourceDocumentStream,
 						 String convertedSourceDocumentFileName,
+						 GitSourceDocumentInfo gitSourceDocumentInfo,
 						 @Nullable String sourceDocumentId,
 						 @Nullable String projectId) throws SourceDocumentHandlerException {
 		if (sourceDocumentId == null) {
 			IDGenerator idGenerator = new IDGenerator();
 			sourceDocumentId = idGenerator.generate();
 		}
-
-		// TODO: create header.json and write the SourceDocumentInfo into it
 
 		try {
 			// create the source document repository
@@ -104,9 +106,19 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 			bytes = IOUtils.toByteArray(convertedSourceDocumentStream);
 			this.localGitRepositoryManager.add(targetConvertedSourceDocumentFile, bytes);
 
+			// write header.json into the local repo
+			File targetHeaderFile = new File(
+				this.localGitRepositoryManager.getRepositoryWorkTree(), "header.json"
+			);
+			String serializedGitSourceDocumentInfo = new SerializationHelper<GitSourceDocumentInfo>()
+					.serialize(gitSourceDocumentInfo);
+			this.localGitRepositoryManager.add(
+				targetHeaderFile, serializedGitSourceDocumentInfo.getBytes(StandardCharsets.UTF_8)
+			);
+
 			// commit newly added files
-			String commitMessage = String.format("Adding %s and %s", originalSourceDocumentFileName,
-					convertedSourceDocumentFileName);
+			String commitMessage = String.format("Adding %s, %s and %s", originalSourceDocumentFileName,
+					convertedSourceDocumentFileName, targetHeaderFile.getName());
 			this.localGitRepositoryManager.commit(commitMessage);
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|IOException
