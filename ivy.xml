@@ -90,6 +90,9 @@
 		<!-- https://mvnrepository.com/artifact/com.jsoniter/jsoniter -->
 		<dependency org="com.jsoniter" name="jsoniter" rev="0.9.15"/>
 
+		<!-- https://mvnrepository.com/artifact/org.jmockit/jmockit -->
+		<dependency org="org.jmockit" name="jmockit" rev="1.35"/>
+
 		<dependency org="de.catma" name="catma-core" rev="latest.integration" />
 	</dependencies>	
 </ivy-module>
