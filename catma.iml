@@ -213,7 +213,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.eclipse.jgit/org.eclipse.jgit/jars/org.eclipse.jgit-4.8.0.201706111038-r.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.jcraft/jsch/jars/jsch-0.1.54.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.googlecode.javaewah/JavaEWAH/bundles/JavaEWAH-1.1.6.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/javax.annotation/javax.annotation-api/jars/javax.annotation-api-1.2.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/osgi-resource-locator/jars/osgi-resource-locator-1.0.1.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.inject/javax.inject/jars/javax.inject-1.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.servlet/javax.servlet-api/jars/javax.servlet-api-3.1.0.jar!/" />
@@ -254,6 +253,7 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.core/jersey-client/jars/jersey-client-2.26.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.ws.rs/javax.ws.rs-api/jars/javax.ws.rs-api-2.1.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.jmockit/jmockit/jars/jmockit-1.35.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.annotation/javax.annotation-api/jars/javax.annotation-api-1.3.1.jar!/" />
         </CLASSES>
         <JAVADOC>
           <root url="jar://$USER_HOME$/.ivy2/cache/com.vaadin/vaadin-server/javadocs/vaadin-server-7.7.7-javadoc.jar!/" />
@@ -353,7 +353,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.eclipse.jgit/org.eclipse.jgit/javadocs/org.eclipse.jgit-4.8.0.201706111038-r-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.jcraft/jsch/javadocs/jsch-0.1.54-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.googlecode.javaewah/JavaEWAH/javadocs/JavaEWAH-1.1.6-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/javax.annotation/javax.annotation-api/javadocs/javax.annotation-api-1.2-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/osgi-resource-locator/javadocs/osgi-resource-locator-1.0.1-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.inject/javax.inject/javadocs/javax.inject-1-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.servlet/javax.servlet-api/javadocs/javax.servlet-api-3.1.0-javadoc.jar!/" />
@@ -392,6 +391,7 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.core/jersey-client/javadocs/jersey-client-2.26-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.ws.rs/javax.ws.rs-api/javadocs/javax.ws.rs-api-2.1-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.jmockit/jmockit/javadocs/jmockit-1.35-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.annotation/javax.annotation-api/javadocs/javax.annotation-api-1.3.1-javadoc.jar!/" />
         </JAVADOC>
         <SOURCES>
           <root url="jar://$USER_HOME$/.ivy2/cache/com.vaadin/vaadin-server/sources/vaadin-server-7.7.7-sources.jar!/" />
@@ -498,7 +498,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.eclipse.jgit/org.eclipse.jgit/sources/org.eclipse.jgit-4.8.0.201706111038-r-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.jcraft/jsch/sources/jsch-0.1.54-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/com.googlecode.javaewah/JavaEWAH/sources/JavaEWAH-1.1.6-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/javax.annotation/javax.annotation-api/sources/javax.annotation-api-1.2-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/osgi-resource-locator/sources/osgi-resource-locator-1.0.1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.inject/javax.inject/sources/javax.inject-1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.servlet/javax.servlet-api/sources/javax.servlet-api-3.1.0-sources.jar!/" />
@@ -539,6 +538,7 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.core/jersey-client/sources/jersey-client-2.26-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.ws.rs/javax.ws.rs-api/sources/javax.ws.rs-api-2.1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.jmockit/jmockit/sources/jmockit-1.35-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/javax.annotation/javax.annotation-api/sources/javax.annotation-api-1.3.1-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
