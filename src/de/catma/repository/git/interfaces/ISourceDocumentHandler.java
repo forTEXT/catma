@@ -8,11 +8,10 @@ import java.io.InputStream;
 
 public interface ISourceDocumentHandler {
     String insert(InputStream originalSourceDocumentStream, String originalSourceDocumentFileName,
-				InputStream convertedSourceDocumentStream, String convertedSourceDocumentFileName,
-				GitSourceDocumentInfo gitSourceDocumentInfo,
-				@Nullable String sourceDocumentId,
-				@Nullable String projectId)
-			throws SourceDocumentHandlerException;
+				  InputStream convertedSourceDocumentStream, String convertedSourceDocumentFileName,
+				  GitSourceDocumentInfo gitSourceDocumentInfo,
+				  @Nullable String sourceDocumentId,
+				  @Nullable String projectId) throws SourceDocumentHandlerException;
 
     void remove(String sourceDocumentId) throws SourceDocumentHandlerException;
 }
