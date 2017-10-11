@@ -36,18 +36,17 @@ public class TagReferenceJsonLd {
 		return this.tagReference;
 	}
 
-	public TagDefinition FindTagDefinitionForTagInstance(String uuid){
+	public TagDefinition findTagDefinitionForTagInstance(String uuid){
 		//TODO: replace with proper calls to the Repo/DB
 		Version version = new Version();
 		return new TagDefinition(1, uuid, "FAKE_TAG_DEFINITION", version, null, null);
 	}
 
 	public TagInstance buildTagInstanceFromJson(TagInstanceLd tagInstanceLd){
-		//TODO: replace with proper calls to the Repo/DB
 		String tagInstanceUUID = tagInstanceLd.getTagInstanceUuid();
 		String tagDefinitionUUID = tagInstanceLd.body.getTagDefinitionUuid();
 
-		TagDefinition tagDefinition = this.FindTagDefinitionForTagInstance(tagDefinitionUUID);
+		TagDefinition tagDefinition = this.findTagDefinitionForTagInstance(tagDefinitionUUID);
 
 		TagInstance tagInstance = new TagInstance(tagInstanceUUID, tagDefinition);
 
@@ -65,6 +64,8 @@ public class TagReferenceJsonLd {
 	}
 
 	public PropertyDefinition FindPropertyDefinitionFromUUID(String uuid){
+		//TODO: replace with proper calls to the Repo/DB
+
 		String name = uuid;
 		List<String> possibleValues = new ArrayList<>();
 		PropertyPossibleValueList propertyPossibleValueList = new PropertyPossibleValueList(possibleValues, false);
@@ -117,7 +118,7 @@ public class TagReferenceJsonLd {
 		for (Property property : userDefinedProperties) {
 			tagInstanceLd.body.context.put(property.getName(), "http://catma.de/portal/tag/" + tagDefinitionUuid + "/property/" + property.getPropertyDefinition().getUuid());
 
-			// TODO: Have multiple user defined values
+			// TODO: Have multiple user defined values per property
 			tagInstanceLd.body.properties.put(property.getName(), property.getPropertyValueList().getFirstValue());
 		}
 

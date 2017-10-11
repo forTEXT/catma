@@ -1,5 +1,6 @@
 package de.catma.repository.jsonld;
 
+import de.catma.tag.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -7,9 +8,6 @@ import com.jsoniter.JsonIterator;
 import com.jsoniter.output.JsonStream;
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.tag.TagDefinition;
-import de.catma.tag.TagInstance;
-import de.catma.tag.Version;
 
 import mockit.*;
 import mockit.integration.junit4.JMockit;
@@ -74,8 +72,16 @@ public class TagReferenceJsonLdTest {
 
 		Range range = new Range(42, 125);
 
+		PropertyPossibleValueList possibleValueList = new PropertyPossibleValueList("TestPossibleValue");
+		PropertyDefinition propertyDefinition = new PropertyDefinition(1, "CATMA_PROPDEF", "FAKE_PROP_DEF", possibleValueList);
 		TagDefinition tagDefinition = new TagDefinition(1, "CATMA_1", "Weather", new Version(), null, null);
+		tagDefinition.addUserDefinedPropertyDefinition(propertyDefinition);
+
+		PropertyValueList instancePropertyValueList = new PropertyValueList("SimplePropertyValue");
+		Property property = new Property(propertyDefinition, instancePropertyValueList);
 		TagInstance tagInstance = new TagInstance("CATMA_129837", tagDefinition);
+		tagInstance.addUserDefinedProperty(property);
+
 		TagReference internalReference = new TagReference(tagInstance, uri, range);
 		TagReferenceJsonLd ldWrapper = new TagReferenceJsonLd(internalReference);
 
@@ -93,23 +99,24 @@ public class TagReferenceJsonLdTest {
 		InputStream inputStream = new ByteArrayInputStream(LessSimple.getBytes(StandardCharsets.UTF_8.name()));
 
 		Version version = new Version();
-		TagDefinition fakeTagDefinition = new TagDefinition(1, "CATMA_1234", "FAKE_TAG_DEFINITION", version, null, null);
-		TagInstance fakeTagInstance = new TagInstance("CATMA_ABCD", fakeTagDefinition);
+		TagDefinition fakeTagDefinition = new TagDefinition(1, "CATMA_TAGDEFINITION", "FAKE_TAG_DEFINITION", version, null, null);
 
 		new Expectations(tagReferenceJsonLdMock) {{
-			tagReferenceJsonLdMock.buildTagInstanceFromJson(withInstanceOf(TagInstanceLd.class));
-			result = fakeTagInstance;
+			tagReferenceJsonLdMock.findTagDefinitionForTagInstance(withInstanceOf(String.class));
+			result = fakeTagDefinition;
 		}};
 
 		TagReferenceJsonLd deserialized = tagReferenceJsonLdMock.Deserialize(inputStream);
 
 		new Verifications() {{
-			tagReferenceJsonLdMock.buildTagInstanceFromJson(withInstanceOf(TagInstanceLd.class));
+			tagReferenceJsonLdMock.findTagDefinitionForTagInstance(withInstanceOf(String.class));
 		}};
 
 		assertNotNull(deserialized);
 
-		assertEquals(fakeTagInstance.getUuid(), deserialized.getTagReference().getTagInstance().getUuid());
+		assertEquals(fakeTagDefinition.getUuid(), deserialized.getTagReference().getTagInstance().getTagDefinition().getUuid());
+
+		assertEquals("CATMA_554", deserialized.getTagReference().getTagInstance().getUserDefinedProperty("CATMA_554").getName());
 	}
 
 	@Test
