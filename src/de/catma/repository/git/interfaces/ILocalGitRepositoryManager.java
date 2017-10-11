@@ -5,7 +5,7 @@ import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import javax.annotation.Nullable;
 import java.io.File;
 
-public interface ILocalGitRepositoryManager {
+public interface ILocalGitRepositoryManager extends AutoCloseable {
 	boolean isAttached();
 
 	void detach();
@@ -26,4 +26,7 @@ public interface ILocalGitRepositoryManager {
 	void addAndCommit(File targetFile, byte[] bytes) throws LocalGitRepositoryManagerException;
 
 	void commit(String message) throws LocalGitRepositoryManagerException;
+
+	@Override
+	void close();
 }
