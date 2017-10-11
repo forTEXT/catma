@@ -4,6 +4,7 @@ import de.catma.repository.db.DBUser;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
+import org.apache.commons.io.FileUtils;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
 import org.junit.Before;
@@ -11,6 +12,8 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Properties;
 
 import static org.junit.Assert.*;
@@ -90,6 +93,30 @@ public class ProjectHandlerTest {
 
 		assert expectedRootRepositoryPath.exists();
 		assert expectedRootRepositoryPath.isDirectory();
+
+		assert Arrays.asList(expectedRootRepositoryPath.list()).contains(".gitignore");
+		assertEquals(
+			ProjectHandler.PROJECT_ROOT_REPOSITORY_DEFAULT_GITIGNORE,
+			FileUtils.readFileToString(new File(expectedRootRepositoryPath, ".gitignore"), StandardCharsets.UTF_8)
+		);
+
+		assert Arrays.asList(expectedRootRepositoryPath.list()).contains("tagsets.json");
+		assertEquals(
+			"", FileUtils.readFileToString(
+					new File(expectedRootRepositoryPath, "tagsets.json"), StandardCharsets.UTF_8)
+		);
+
+		assert Arrays.asList(expectedRootRepositoryPath.list()).contains("collections.json");
+		assertEquals(
+			"", FileUtils.readFileToString(
+					new File(expectedRootRepositoryPath, "collections.json"), StandardCharsets.UTF_8)
+		);
+
+		assert Arrays.asList(expectedRootRepositoryPath.list()).contains("documents.json");
+		assertEquals(
+			"", FileUtils.readFileToString(
+					new File(expectedRootRepositoryPath, "documents.json"), StandardCharsets.UTF_8)
+		);
 	}
 
 	@Test

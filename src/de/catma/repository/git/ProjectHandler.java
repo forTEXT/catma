@@ -13,6 +13,7 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class ProjectHandler implements IProjectHandler {
@@ -24,6 +25,8 @@ public class ProjectHandler implements IProjectHandler {
 	// using 'corpus' and not 'project' here so as not to confuse CATMA Projects with GitLab
 	// Projects
 	static final String PROJECT_ROOT_REPOSITORY_NAME_FORMAT = "%s_corpus";
+
+	static final String PROJECT_ROOT_REPOSITORY_DEFAULT_GITIGNORE = "tagsets\ncollections\ndocuments";
 
 	public ProjectHandler(ILocalGitRepositoryManager localGitRepositoryManager,
 						  IRemoteGitServerManager remoteGitServerManager) {
@@ -76,6 +79,30 @@ public class ProjectHandler implements IProjectHandler {
 				remoteGitServerManagerImpl.getGitLabUser().getUsername(),
 				gitLabUserImpersonationToken
 			);
+
+			File repositoryWorkTree = this.localGitRepositoryManager.getRepositoryWorkTree();
+
+			// write .gitignore into the local repo
+			File targetGitIgnoreFile = new File(repositoryWorkTree, ".gitignore");
+			this.localGitRepositoryManager.add(
+				targetGitIgnoreFile,
+				ProjectHandler.PROJECT_ROOT_REPOSITORY_DEFAULT_GITIGNORE.getBytes(StandardCharsets.UTF_8)
+			);
+
+			// write empty tagsets.json, collections.json & documents.json into the local repo
+			File targetTagsetsFile = new File(repositoryWorkTree, "tagsets.json");
+			this.localGitRepositoryManager.add(targetTagsetsFile, new byte[]{});
+
+			File targetCollectionsFile = new File(repositoryWorkTree, "collections.json");
+			this.localGitRepositoryManager.add(targetCollectionsFile, new byte[]{});
+
+			File targetDocumentsFile = new File(repositoryWorkTree, "documents.json");
+			this.localGitRepositoryManager.add(targetDocumentsFile, new byte[]{});
+
+			// commit newly added files
+			String commitMessage = String.format("Adding %s, %s, %s and %s", targetTagsetsFile.getName(),
+					targetCollectionsFile.getName(), targetDocumentsFile.getName(), targetGitIgnoreFile.getName());
+			this.localGitRepositoryManager.commit(commitMessage);
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|
 				URISyntaxException e) {
