@@ -8,6 +8,8 @@ import java.io.File;
 public interface ILocalGitRepositoryManager {
 	boolean isAttached();
 
+	void detach();
+
 	String getRepositoryBasePath();
 
 	File getRepositoryWorkTree();

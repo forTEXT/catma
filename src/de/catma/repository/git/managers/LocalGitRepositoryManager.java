@@ -34,6 +34,22 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	}
 
 	/**
+	 * Detach this instance from the currently attached Git repository, if any. If this instance is currently attached,
+	 * this will allow you to re-use it to make calls to methods that require it to be detached, for example
+	 * <code>init</code>, <code>clone</code> or <code>open</code>.
+	 * <p>
+	 * Whenever possible, you should use a try-with-resources statement instead, which will do this for you
+	 * automatically.
+	 * <p>
+	 * Calling this method or using a try-with-resources statement will cause {@link #close()} to be called.
+	 *
+	 * @see <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">The try-with-resources Statement</a>
+	 */
+	public void detach() {
+		this.close();
+	}
+
+	/**
 	 * Gets the repository base path for this instance.
 	 *
 	 * @return the base path as a String
@@ -275,9 +291,10 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	}
 
 	@Override // AutoCloseable
-	public void close() throws Exception {
+	public void close() {
 		if (this.gitApi != null) {
 			this.gitApi.close();
+			this.gitApi = null;
 		}
 	}
 }
