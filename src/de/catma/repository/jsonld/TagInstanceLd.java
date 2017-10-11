@@ -16,7 +16,7 @@ public class TagInstanceLd {
 
 	public TagInstanceLdTarget target;
 
-	public String getUuidFromId(){
+	public String getTagInstanceUuid(){
 		int startIndex = this.id.indexOf("CATMA_");
 
 		return this.id.substring(startIndex);

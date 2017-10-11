@@ -19,4 +19,16 @@ public class TagInstanceLdBody {
 
 	public HashMap<String, String> properties;
 
+	public String getTagDefinitionUuid(){
+		int startIndex = this.tag.indexOf("CATMA_");
+
+		return this.tag.substring(startIndex);
+	};
+
+	public String getPropertyDefinitionUuid(String propertyName){
+		String contextValue = this.context.get(propertyName);
+		String array[] = contextValue.split("/");
+
+		return array[array.length-1];
+	}
 }

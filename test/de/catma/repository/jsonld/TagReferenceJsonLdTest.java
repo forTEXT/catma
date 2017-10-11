@@ -1,5 +1,8 @@
 package de.catma.repository.jsonld;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import com.jsoniter.JsonIterator;
 import com.jsoniter.output.JsonStream;
 import de.catma.document.Range;
@@ -8,12 +11,8 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.Version;
 
-import mockit.Expectations;
-import mockit.Injectable;
-import mockit.Verifications;
+import mockit.*;
 import mockit.integration.junit4.JMockit;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -98,14 +97,14 @@ public class TagReferenceJsonLdTest {
 		TagInstance fakeTagInstance = new TagInstance("CATMA_ABCD", fakeTagDefinition);
 
 		new Expectations(tagReferenceJsonLdMock) {{
-			tagReferenceJsonLdMock.FindTagInstanceFromUUID(anyString);
+			tagReferenceJsonLdMock.buildTagInstanceFromJson(withInstanceOf(TagInstanceLd.class));
 			result = fakeTagInstance;
 		}};
 
 		TagReferenceJsonLd deserialized = tagReferenceJsonLdMock.Deserialize(inputStream);
 
 		new Verifications() {{
-			tagReferenceJsonLdMock.FindTagInstanceFromUUID(anyString);
+			tagReferenceJsonLdMock.buildTagInstanceFromJson(withInstanceOf(TagInstanceLd.class));
 		}};
 
 		assertNotNull(deserialized);
