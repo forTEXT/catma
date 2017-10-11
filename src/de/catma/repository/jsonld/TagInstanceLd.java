@@ -1,6 +1,6 @@
 package de.catma.repository.jsonld;
 
-import com.jsoniter.annotation.JsonCreator;
+import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
 
 public class TagInstanceLd {
@@ -16,6 +16,7 @@ public class TagInstanceLd {
 
 	public TagInstanceLdTarget target;
 
+	@JsonIgnore
 	public String getTagInstanceUuid(){
 		int startIndex = this.id.indexOf("CATMA_");
 
