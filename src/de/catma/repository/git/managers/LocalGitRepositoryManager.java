@@ -2,9 +2,12 @@ package de.catma.repository.git.managers;
 
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.SubmoduleAddCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import javax.annotation.Nullable;
@@ -298,16 +301,28 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	 * @throws LocalGitRepositoryManagerException if the submodule couldn't be added
 	 */
 	@Override
-	public void addSubModule(File path, String uri) throws LocalGitRepositoryManagerException {
+	public void addSubmodule(File path, String uri, @Nullable String username, @Nullable String password)
+			throws LocalGitRepositoryManagerException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `commit` on a detached instance");
 		}
 
 		Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
 		Path relativeSubmodulePath = basePath.relativize(path.toPath());
+		// NB: Git doesn't understand Windows path separators (\) in the .gitmodules file
+		String unixStyleRelativeSubmodulePath = FilenameUtils.separatorsToUnix(relativeSubmodulePath.toString());
 
 		try {
-			this.gitApi.submoduleAdd().setURI(uri).setPath(relativeSubmodulePath.toString()).call();
+			SubmoduleAddCommand submoduleAddCommand = this.gitApi.submoduleAdd().setURI(uri)
+					.setPath(unixStyleRelativeSubmodulePath);
+			if (username != null) {
+				submoduleAddCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
+					username, password
+				));
+			}
+
+			Repository repository = submoduleAddCommand.call();
+			repository.close();
 		}
 		catch (GitAPIException e) {
 			throw new LocalGitRepositoryManagerException("Failed to add submodule", e);

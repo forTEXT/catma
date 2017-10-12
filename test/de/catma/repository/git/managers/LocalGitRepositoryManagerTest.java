@@ -233,7 +233,7 @@ public class LocalGitRepositoryManagerTest {
 	}
 
 	@Test
-	public void addSubModule() throws Exception {
+	public void addSubmodule() throws Exception {
 		// init container repo
 		try (LocalGitRepositoryManager repoMan = this.repoManager) {
 			repoMan.init(this.testRepoPath.getName(), null);
@@ -250,8 +250,9 @@ public class LocalGitRepositoryManagerTest {
 		this.repoManager.open(this.testRepoPath.getName());
 
 		// add a submodule to the container repo
-		this.repoManager.addSubModule(
-			new File(this.testRepoPath, testSubmoduleRepoPath.getName()), "../test-repo-2"
+		this.repoManager.addSubmodule(
+			new File(this.testRepoPath, testSubmoduleRepoPath.getName()), "../test-repo-2",
+			null, null
 		);
 
 		assert Arrays.asList(this.testRepoPath.list()).contains(".gitmodules");
@@ -271,11 +272,11 @@ public class LocalGitRepositoryManagerTest {
 
 		File subModuleGitFilePath = new File(subModulePath, ".git");
 		// example: "gitdir: C:\Code\catma\dev\repo\git\test-repo\.git\modules\test-repo-2"
-		String expectedSubModuleGitFileContents = String.format(
+		String expectedSubmoduleGitFileContents = String.format(
 			"gitdir: %s", new File(this.testRepoPath, ".git/modules/test-repo-2").toString()
 		);
 		assertEquals(
-			expectedSubModuleGitFileContents, FileUtils.readFileToString(subModuleGitFilePath, StandardCharsets.UTF_8)
+			expectedSubmoduleGitFileContents, FileUtils.readFileToString(subModuleGitFilePath, StandardCharsets.UTF_8)
 		);
 
 		// cleanup
