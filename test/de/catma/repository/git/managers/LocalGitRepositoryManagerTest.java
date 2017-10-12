@@ -278,6 +278,7 @@ public class LocalGitRepositoryManagerTest {
 			expectedSubModuleGitFileContents, FileUtils.readFileToString(subModuleGitFilePath, StandardCharsets.UTF_8)
 		);
 
+		// cleanup
 		FileUtils.deleteDirectory(testSubmoduleRepoPath);
 	}
 }
