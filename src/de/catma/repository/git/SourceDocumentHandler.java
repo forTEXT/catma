@@ -60,7 +60,7 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 			sourceDocumentId = idGenerator.generate();
 		}
 
-		try {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// create the source document repository
 			IRemoteGitServerManager.CreateRepositoryResponse response;
 
@@ -85,7 +85,7 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 						response.repositoryHttpUrl, gitLabUserImpersonationToken
 					);
 
-			this.localGitRepositoryManager.clone(
+			localGitRepoManager.clone(
 				authenticatedRepositoryUrl,
 				remoteGitServerManagerImpl.getGitLabUser().getUsername(),
 				gitLabUserImpersonationToken
@@ -93,33 +93,33 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 
 			// write the original and converted source document files into the local repo
 			File targetOriginalSourceDocumentFile = new File(
-				this.localGitRepositoryManager.getRepositoryWorkTree(),
+				localGitRepoManager.getRepositoryWorkTree(),
 				originalSourceDocumentFileName
 			);
 			File targetConvertedSourceDocumentFile = new File(
-				this.localGitRepositoryManager.getRepositoryWorkTree(),
+				localGitRepoManager.getRepositoryWorkTree(),
 				convertedSourceDocumentFileName
 			);
 
 			byte[] bytes = IOUtils.toByteArray(originalSourceDocumentStream);
-			this.localGitRepositoryManager.add(targetOriginalSourceDocumentFile, bytes);
+			localGitRepoManager.add(targetOriginalSourceDocumentFile, bytes);
 			bytes = IOUtils.toByteArray(convertedSourceDocumentStream);
-			this.localGitRepositoryManager.add(targetConvertedSourceDocumentFile, bytes);
+			localGitRepoManager.add(targetConvertedSourceDocumentFile, bytes);
 
 			// write header.json into the local repo
 			File targetHeaderFile = new File(
-				this.localGitRepositoryManager.getRepositoryWorkTree(), "header.json"
+				localGitRepoManager.getRepositoryWorkTree(), "header.json"
 			);
 			String serializedGitSourceDocumentInfo = new SerializationHelper<GitSourceDocumentInfo>()
 					.serialize(gitSourceDocumentInfo);
-			this.localGitRepositoryManager.add(
+			localGitRepoManager.add(
 				targetHeaderFile, serializedGitSourceDocumentInfo.getBytes(StandardCharsets.UTF_8)
 			);
 
 			// commit newly added files
 			String commitMessage = String.format("Adding %s, %s and %s", originalSourceDocumentFileName,
 					convertedSourceDocumentFileName, targetHeaderFile.getName());
-			this.localGitRepositoryManager.commit(commitMessage);
+			localGitRepoManager.commit(commitMessage);
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|IOException
 				|URISyntaxException e) {
