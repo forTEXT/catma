@@ -290,6 +290,30 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 		}
 	}
 
+	/**
+	 * Adds a new submodule to the attached Git repository.
+	 *
+	 * @param path a {@link File} object representing the target path of the submodule
+	 * @param uri the URI of the remote repository to add as a submodule
+	 * @throws LocalGitRepositoryManagerException if the submodule couldn't be added
+	 */
+	@Override
+	public void addSubModule(File path, String uri) throws LocalGitRepositoryManagerException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `commit` on a detached instance");
+		}
+
+		Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
+		Path relativeSubmodulePath = basePath.relativize(path.toPath());
+
+		try {
+			this.gitApi.submoduleAdd().setURI(uri).setPath(relativeSubmodulePath.toString()).call();
+		}
+		catch (GitAPIException e) {
+			throw new LocalGitRepositoryManagerException("Failed to add submodule", e);
+		}
+	}
+
 	@Override // AutoCloseable
 	public void close() {
 		if (this.gitApi != null) {

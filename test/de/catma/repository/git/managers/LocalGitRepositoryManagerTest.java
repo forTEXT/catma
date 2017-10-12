@@ -6,7 +6,6 @@ import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
-import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
 import org.junit.Before;
@@ -14,6 +13,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Properties;
@@ -230,5 +230,54 @@ public class LocalGitRepositoryManagerTest {
 		status = gitApi.status().call();
 		assert status.isClean();
 		assertFalse(status.hasUncommittedChanges());
+	}
+
+	@Test
+	public void addSubModule() throws Exception {
+		// init container repo
+		try (LocalGitRepositoryManager repoMan = this.repoManager) {
+			repoMan.init(this.testRepoPath.getName(), null);
+		}
+
+		// init another repo which will be a submodule in the container repo
+		File testSubmoduleRepoPath = new File(this.repoManager.getRepositoryBasePath(), "test-repo-2");
+
+		try (LocalGitRepositoryManager repoMan = this.repoManager) {
+			this.repoManager.init(testSubmoduleRepoPath.getName(), null);
+		}
+
+		// re-attach the repo manager to the container repo
+		this.repoManager.open(this.testRepoPath.getName());
+
+		// add a submodule to the container repo
+		this.repoManager.addSubModule(
+			new File(this.testRepoPath, testSubmoduleRepoPath.getName()), "../test-repo-2"
+		);
+
+		assert Arrays.asList(this.testRepoPath.list()).contains(".gitmodules");
+		assert Arrays.asList(this.testRepoPath.list()).contains("test-repo-2");
+
+		File gitModulesFilePath = new File(this.testRepoPath, ".gitmodules");
+		String expectedGitModulesFileContents = "" +
+				"[submodule \"test-repo-2\"]\n" +
+				"\tpath = test-repo-2\n" +
+				"\turl = ../test-repo-2\n";
+		assertEquals(
+			expectedGitModulesFileContents, FileUtils.readFileToString(gitModulesFilePath, StandardCharsets.UTF_8)
+		);
+
+		File subModulePath = new File(this.testRepoPath, "test-repo-2");
+		assert Arrays.asList(subModulePath.list()).contains(".git");
+
+		File subModuleGitFilePath = new File(subModulePath, ".git");
+		// example: "gitdir: C:\Code\catma\dev\repo\git\test-repo\.git\modules\test-repo-2"
+		String expectedSubModuleGitFileContents = String.format(
+			"gitdir: %s", new File(this.testRepoPath, ".git/modules/test-repo-2").toString()
+		);
+		assertEquals(
+			expectedSubModuleGitFileContents, FileUtils.readFileToString(subModuleGitFilePath, StandardCharsets.UTF_8)
+		);
+
+		FileUtils.deleteDirectory(testSubmoduleRepoPath);
 	}
 }
