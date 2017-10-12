@@ -8,6 +8,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.SubmoduleAddCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import javax.annotation.Nullable;
@@ -32,6 +33,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	 *
 	 * @return true if attached, otherwise false
 	 */
+	@Override
 	public boolean isAttached() {
 		return this.gitApi != null;
 	}
@@ -48,6 +50,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	 *
 	 * @see <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">The try-with-resources Statement</a>
 	 */
+	@Override
 	public void detach() {
 		this.close();
 	}
@@ -57,6 +60,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	 *
 	 * @return the base path as a String
 	 */
+	@Override
 	public String getRepositoryBasePath() {
 		return this.repositoryBasePath;
 	}
@@ -66,12 +70,34 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	 *
 	 * @return a {@link File} object
 	 */
+	@Override
 	public File getRepositoryWorkTree() {
 		if (!this.isAttached()) {
 			return null;
 		}
 
 		return this.gitApi.getRepository().getWorkTree();
+	}
+
+	/**
+	 * Gets the URL for the remote with the name <code>remoteName</code>.
+	 *
+	 * @param remoteName the name of the remote for which the URL should be fetched. Defaults to 'origin' if not
+	 *                   supplied.
+	 * @return the remote URL
+	 */
+	@Override
+	public String getRemoteUrl(@Nullable String remoteName) {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `getRemoteUrl` on a detached instance");
+		}
+
+		if (remoteName == null) {
+			remoteName = "origin";
+		}
+
+		StoredConfig config = this.gitApi.getRepository().getConfig();
+		return config.getString("remote", remoteName, "url");
 	}
 
 	public LocalGitRepositoryManager(Properties catmaProperties) {
