@@ -33,7 +33,7 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 	static final String GITLAB_USER_EMAIL_ADDRESS_FORMAT = "catma-user-%s@catma.de";
 	static final String GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME = "catma-default-ipt";
 
-	// for testing purposes only
+	// only relevant when running under test - see checkGitLabServerUrl
 	public boolean replaceGitLabServerUrl = false;
 
 	private static final char[] PWD_CHARS = (
@@ -85,7 +85,13 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 		return this.gitLabUserImpersonationToken;
 	}
 
-	// for testing purposes only
+	// only relevant when running under test
+	// for example, if you're running a GitLab instance as a docker container locally with --hostname, then your machine
+	// probably can't resolve that hostname (unless you've changed your hosts file, but that shouldn't be a requirement
+	// for running the tests)
+	// this becomes an issue when you ask a gitlab4j Project object for the repository HTTP URL, because it will
+	// contain that unresolvable hostname - this method takes care of the replacement using the "GitLabServerUrl" from
+	// the properties file
 	private String checkGitLabServerUrl(String url) {
 		if (!this.replaceGitLabServerUrl) {
 			return url;
