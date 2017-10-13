@@ -355,6 +355,20 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 		}
 	}
 
+	@Override
+	public void push() throws LocalGitRepositoryManagerException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `commit` on a detached instance");
+		}
+
+		try {
+			this.gitApi.push().call();
+		}
+		catch (GitAPIException e) {
+			throw new LocalGitRepositoryManagerException("Failed to push", e);
+		}
+	}
+
 	@Override // AutoCloseable
 	public void close() {
 		if (this.gitApi != null) {
