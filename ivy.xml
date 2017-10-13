@@ -28,8 +28,6 @@
 
 		<!-- Servlet 3.0 API -->
 		<dependency org="javax.servlet" name="javax.servlet-api" rev="3.0.1" conf="nodeploy->default" />
-		<!-- https://mvnrepository.com/artifact/javax.ws.rs/javax.ws.rs-api -->
-		<dependency org="javax.ws.rs" name="javax.ws.rs-api" rev="2.1"  conf="nodeploy->default"/>
 
 		<!-- Precompiled DefaultWidgetSet -->
 		<dependency org="com.vaadin" name="vaadin-client-compiled"
