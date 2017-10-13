@@ -3,9 +3,12 @@ package de.catma.repository.git.managers;
 import de.catma.repository.db.DBUser;
 import de.catma.repository.git.GitLabAuthenticationHelper;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
 import org.junit.Before;
@@ -15,9 +18,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
@@ -281,5 +282,42 @@ public class LocalGitRepositoryManagerTest {
 
 		// cleanup
 		FileUtils.deleteDirectory(testSubmoduleRepoPath);
+	}
+
+	@Test
+	public void push() throws Exception {
+		try (Git gitApi = Git.init().setDirectory(this.testRepoPath).setBare(true).call()) {
+		}
+
+		File clonedRepositoryPath = new File(this.repoManager.getRepositoryBasePath(), "cloned");
+
+		CloneCommand cloneCommand = Git.cloneRepository().setURI(this.testRepoPath.toURI().toString()).setDirectory(
+			clonedRepositoryPath
+		);
+		try (Git gitApi = cloneCommand.call()) {
+		}
+
+		try (LocalGitRepositoryManager repoMan = this.repoManager) {
+			repoMan.open("cloned");
+
+			File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
+			byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
+
+			File targetFile = new File(clonedRepositoryPath, originalSourceDocument.getName());
+
+			repoMan.addAndCommit(targetFile, originalSourceDocumentBytes);
+
+			repoMan.push(null, null);
+		}
+
+		this.repoManager.open(this.testRepoPath.getName());
+		Iterable<RevCommit> commits = this.repoManager.getGitApi().log().all().call();
+		@SuppressWarnings("unchecked")
+		List<RevCommit> commitsList = IteratorUtils.toList(commits.iterator());
+		assertEquals(1, commitsList.size());
+		assertEquals("Adding rose_for_emily.pdf" , commitsList.get(0).getFullMessage());
+
+		// cleanup
+		FileUtils.deleteDirectory(clonedRepositoryPath);
 	}
 }

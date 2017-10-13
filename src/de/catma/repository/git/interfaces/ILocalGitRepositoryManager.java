@@ -32,6 +32,8 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 	void addSubmodule(File path, String uri, @Nullable String username, @Nullable String password)
 			throws LocalGitRepositoryManagerException;
 
+	void push(@Nullable String username, @Nullable String password) throws LocalGitRepositoryManagerException;
+
 	@Override
 	void close();
 }

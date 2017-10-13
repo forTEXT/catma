@@ -5,6 +5,7 @@ import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.SubmoduleAddCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
@@ -24,7 +25,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 
 	private Git gitApi;
 
-	Git getGitApi() {
+	public Git getGitApi() {
 		return this.gitApi;
 	}
 
@@ -352,6 +353,26 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 		}
 		catch (GitAPIException e) {
 			throw new LocalGitRepositoryManagerException("Failed to add submodule", e);
+		}
+	}
+
+	@Override
+	public void push(@Nullable String username, @Nullable String password) throws LocalGitRepositoryManagerException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `commit` on a detached instance");
+		}
+
+		try {
+			PushCommand pushCommand = this.gitApi.push();
+			if (username != null) {
+				pushCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
+					username, password
+				));
+			}
+			pushCommand.call();
+		}
+		catch (GitAPIException e) {
+			throw new LocalGitRepositoryManagerException("Failed to push", e);
 		}
 	}
 
