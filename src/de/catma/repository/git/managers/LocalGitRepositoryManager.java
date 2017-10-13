@@ -25,6 +25,28 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 
 	private Git gitApi;
 
+	public LocalGitRepositoryManager(Properties catmaProperties) {
+		this.repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
+	}
+
+	/**
+	 * Creates an instance of this class and opens an existing Git repository with the directory
+	 * name <code>repositoryName</code>.
+	 * <p>
+	 * Calls <code>open(String)</code> internally.
+	 *
+	 * @param catmaProperties a {@link Properties} object
+	 * @param repositoryName the directory name of the Git repository to open
+	 * @throws LocalGitRepositoryManagerException if the Git repository couldn't be found or
+	 *         couldn't be opened for some other reason
+	 */
+	public LocalGitRepositoryManager(Properties catmaProperties, String repositoryName)
+			throws LocalGitRepositoryManagerException {
+		this(catmaProperties);
+
+		this.open(repositoryName);
+	}
+
 	public Git getGitApi() {
 		return this.gitApi;
 	}
@@ -99,28 +121,6 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 
 		StoredConfig config = this.gitApi.getRepository().getConfig();
 		return config.getString("remote", remoteName, "url");
-	}
-
-	public LocalGitRepositoryManager(Properties catmaProperties) {
-		this.repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
-	}
-
-	/**
-	 * Creates an instance of this class and opens an existing Git repository with the directory
-	 * name <code>repositoryName</code>.
-	 * <p>
-	 * Calls <code>open(String)</code> internally.
-	 *
-	 * @param catmaProperties a {@link Properties} object
-	 * @param repositoryName the directory name of the Git repository to open
-	 * @throws LocalGitRepositoryManagerException if the Git repository couldn't be found or
-	 *         couldn't be opened for some other reason
-	 */
-	public LocalGitRepositoryManager(Properties catmaProperties, String repositoryName)
-			throws LocalGitRepositoryManagerException {
-		this(catmaProperties);
-
-		this.open(repositoryName);
 	}
 
 	/**
