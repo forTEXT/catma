@@ -25,54 +25,16 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 	private final String gitLabServerUrl;
 
 	private final GitLabApi adminGitLabApi;
-
-	public GitLabApi getAdminGitLabApi() {
-		return this.adminGitLabApi;
-	}
-
-	private final User gitLabUser;
-
-	public User getGitLabUser() {
-		return this.gitLabUser;
-	}
-
-	private final String gitLabUserImpersonationToken;
-
-	public String getGitLabUserImpersonationToken() {
-		return this.gitLabUserImpersonationToken;
-	}
-
 	private final GitLabApi userGitLabApi;
 
-	public GitLabApi getUserGitLabApi() {
-		return this.userGitLabApi;
-	}
+	private final User gitLabUser;
+	private final String gitLabUserImpersonationToken;
 
 	static final String GITLAB_USER_EMAIL_ADDRESS_FORMAT = "catma-user-%s@catma.de";
 	static final String GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME = "catma-default-ipt";
 
-	// <for testing purposes only
+	// for testing purposes only
 	public boolean replaceGitLabServerUrl = false;
-
-	private String checkGitLabServerUrl(String url) {
-		if (!this.replaceGitLabServerUrl) {
-			return url;
-		}
-
-		try {
-			URL currentUrl = new URL(url);
-			URL gitLabServerUrl = new URL(this.gitLabServerUrl);
-			URL newUrl = new URL(
-				gitLabServerUrl.getProtocol(), gitLabServerUrl.getHost(), gitLabServerUrl.getPort(),
-				currentUrl.getFile()
-			);
-			return newUrl.toString();
-		}
-		catch (IOException e) {
-			return null;
-		}
-	}
-	// />
 
 	private static final char[] PWD_CHARS = (
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" +
@@ -105,6 +67,42 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 		this.gitLabUserImpersonationToken = userRawTokenPair.getSecond();
 
 		this.userGitLabApi = new GitLabApi(this.gitLabServerUrl, this.gitLabUserImpersonationToken);
+	}
+
+	public GitLabApi getAdminGitLabApi() {
+		return this.adminGitLabApi;
+	}
+
+	public GitLabApi getUserGitLabApi() {
+		return this.userGitLabApi;
+	}
+
+	public User getGitLabUser() {
+		return this.gitLabUser;
+	}
+
+	public String getGitLabUserImpersonationToken() {
+		return this.gitLabUserImpersonationToken;
+	}
+
+	// for testing purposes only
+	private String checkGitLabServerUrl(String url) {
+		if (!this.replaceGitLabServerUrl) {
+			return url;
+		}
+
+		try {
+			URL currentUrl = new URL(url);
+			URL gitLabServerUrl = new URL(this.gitLabServerUrl);
+			URL newUrl = new URL(
+					gitLabServerUrl.getProtocol(), gitLabServerUrl.getHost(), gitLabServerUrl.getPort(),
+					currentUrl.getFile()
+			);
+			return newUrl.toString();
+		}
+		catch (IOException e) {
+			return null;
+		}
 	}
 
 	/**
