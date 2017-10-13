@@ -16,20 +16,15 @@ import org.junit.Test;
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
 public class ProjectHandlerTest {
 	private Properties catmaProperties;
 	private RemoteGitServerManager remoteGitServerManager;
-	private LocalGitRepositoryManager localGitRepositoryManager;
-	private ProjectHandler projectHandler;
 
-	private String createdProjectId = null;
+	private ArrayList<String> projectsToDeleteOnTearDown = new ArrayList<>();
 
 	public ProjectHandlerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
@@ -50,25 +45,19 @@ public class ProjectHandlerTest {
 			this.catmaProperties, catmaUser
 		);
 		this.remoteGitServerManager.replaceGitLabServerUrl = true;
-
-		this.localGitRepositoryManager = new LocalGitRepositoryManager(this.catmaProperties);
-
-		this.projectHandler = new ProjectHandler(
-			this.localGitRepositoryManager,
-			this.remoteGitServerManager
-		);
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		if (this.createdProjectId != null) {
-			this.projectHandler.delete(this.createdProjectId);
-			this.createdProjectId = null;
-		}
+		if (this.projectsToDeleteOnTearDown.size() > 0) {
+			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
-		if (this.localGitRepositoryManager != null) {
-			this.localGitRepositoryManager.close();
-			this.localGitRepositoryManager = null;
+				for (String projectId : this.projectsToDeleteOnTearDown) {
+					projectHandler.delete(projectId);
+				}
+				this.projectsToDeleteOnTearDown.clear();
+			}
 		}
 
 		// delete the GitLab user that the RemoteGitServerManager constructor in setUp would have
@@ -82,84 +71,83 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		this.createdProjectId = this.projectHandler.create(
-			"Test CATMA Project", "This is a test CATMA project"
-		);
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
-		assertNotNull(this.createdProjectId);
-		assert this.createdProjectId.startsWith("CATMA_");
+			String projectId = projectHandler.create(
+				"Test CATMA Project", "This is a test CATMA project"
+			);
+			this.projectsToDeleteOnTearDown.add(projectId);
 
-		String expectedRootRepositoryName = String.format(
-			ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, this.createdProjectId
-		);
-		String repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
+			assertNotNull(projectId);
+			assert projectId.startsWith("CATMA_");
 
-		File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
+			String expectedRootRepositoryName = String.format(
+				ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId
+			);
+			String repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
 
-		assert expectedRootRepositoryPath.exists();
-		assert expectedRootRepositoryPath.isDirectory();
+			File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
 
-		assert Arrays.asList(expectedRootRepositoryPath.list()).contains("tagsets.json");
-		assertEquals(
-			"", FileUtils.readFileToString(
-					new File(expectedRootRepositoryPath, "tagsets.json"), StandardCharsets.UTF_8)
-		);
+			assert expectedRootRepositoryPath.exists();
+			assert expectedRootRepositoryPath.isDirectory();
 
-		assert Arrays.asList(expectedRootRepositoryPath.list()).contains("collections.json");
-		assertEquals(
-			"", FileUtils.readFileToString(
-					new File(expectedRootRepositoryPath, "collections.json"), StandardCharsets.UTF_8)
-		);
+			assert Arrays.asList(expectedRootRepositoryPath.list()).contains("tagsets.json");
+			assertEquals(
+				"", FileUtils.readFileToString(
+						new File(expectedRootRepositoryPath, "tagsets.json"), StandardCharsets.UTF_8)
+			);
 
-		assert Arrays.asList(expectedRootRepositoryPath.list()).contains("documents.json");
-		assertEquals(
-			"", FileUtils.readFileToString(
-					new File(expectedRootRepositoryPath, "documents.json"), StandardCharsets.UTF_8)
-		);
+			assert Arrays.asList(expectedRootRepositoryPath.list()).contains("collections.json");
+			assertEquals(
+				"", FileUtils.readFileToString(
+						new File(expectedRootRepositoryPath, "collections.json"), StandardCharsets.UTF_8)
+			);
+
+			assert Arrays.asList(expectedRootRepositoryPath.list()).contains("documents.json");
+			assertEquals(
+				"", FileUtils.readFileToString(
+						new File(expectedRootRepositoryPath, "documents.json"), StandardCharsets.UTF_8)
+			);
+		}
 	}
 
 	@Test
 	public void delete() throws Exception {
-		this.createdProjectId = this.projectHandler.create(
-			"Test CATMA Project", "This is a test CATMA project"
-		);
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
-		assertNotNull(this.createdProjectId);
-		assert this.createdProjectId.startsWith("CATMA_");
+			String projectId = projectHandler.create(
+				"Test CATMA Project", "This is a test CATMA project"
+			);
+			// we don't add the projectId to this.projectsToDeleteOnTearDown as this is the delete test
 
-		String expectedRootRepositoryName = String.format(
-			ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, this.createdProjectId
-		);
-		String repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
+			assertNotNull(projectId);
+			assert projectId.startsWith("CATMA_");
 
-		File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
+			String expectedRootRepositoryName = String.format(
+				ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId
+			);
+			String repositoryBasePath = this.catmaProperties.getProperty("GitBasedRepositoryBasePath");
 
-		assert expectedRootRepositoryPath.exists();
-		assert expectedRootRepositoryPath.isDirectory();
+			File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
 
-		this.projectHandler.delete(this.createdProjectId);
+			assert expectedRootRepositoryPath.exists();
+			assert expectedRootRepositoryPath.isDirectory();
 
-		assertFalse(expectedRootRepositoryPath.exists());
+			projectHandler.delete(projectId);
 
-		// prevent tearDown from also attempting to delete the project
-		this.createdProjectId = null;
+			assertFalse(expectedRootRepositoryPath.exists());
+		}
 	}
 
 	@Test
 	public void insertSourceDocument() throws Exception {
-		this.createdProjectId = this.projectHandler.create(
-			"Test CATMA Project", "This is a test CATMA project"
-		);
-
-		assertFalse(this.localGitRepositoryManager.isAttached());
-
 		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
 		File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
 
 		FileInputStream originalSourceDocumentStream = new FileInputStream(originalSourceDocument);
-		FileInputStream convertedSourceDocumentStream = new FileInputStream(
-			convertedSourceDocument
-		);
+		FileInputStream convertedSourceDocumentStream = new FileInputStream(convertedSourceDocument);
 
 		IndexInfoSet indexInfoSet = new IndexInfoSet();
 		indexInfoSet.setLocale(Locale.ENGLISH);
@@ -186,21 +174,38 @@ public class ProjectHandlerTest {
 
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		String sourceDocumentId = this.projectHandler.insertSourceDocument(
-			this.createdProjectId,
-			originalSourceDocumentStream, originalSourceDocument.getName(),
-			convertedSourceDocumentStream, convertedSourceDocument.getName(),
-			gitSourceDocumentInfo, null
-		);
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
-		this.localGitRepositoryManager.open(
-			String.format(ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, this.createdProjectId)
-		);
-		Status status = this.localGitRepositoryManager.getGitApi().status().call();
-		Set<String> added = status.getAdded();
+			String projectId = projectHandler.create(
+				"Test CATMA Project", "This is a test CATMA project"
+			);
+			this.projectsToDeleteOnTearDown.add(projectId);
 
-		assert status.hasUncommittedChanges();
-		assert added.contains(".gitmodules");
-		assert added.contains("documents/" + sourceDocumentId);
+			// the LocalGitRepositoryManager instance should always be in a detached state after ProjectHandler calls
+			// return
+			assertFalse(localGitRepoManager.isAttached());
+
+			String sourceDocumentId = projectHandler.insertSourceDocument(
+				projectId,
+				originalSourceDocumentStream, originalSourceDocument.getName(),
+				convertedSourceDocumentStream, convertedSourceDocument.getName(),
+				gitSourceDocumentInfo, null
+			);
+
+			// the LocalGitRepositoryManager instance should always be in a detached state after ProjectHandler calls
+			// return
+			assertFalse(localGitRepoManager.isAttached());
+
+			localGitRepoManager.open(
+				String.format(ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId)
+			);
+			Status status = localGitRepoManager.getGitApi().status().call();
+			Set<String> added = status.getAdded();
+
+			assert status.hasUncommittedChanges();
+			assert added.contains(".gitmodules");
+			assert added.contains("documents/" + sourceDocumentId);
+		}
 	}
 }
