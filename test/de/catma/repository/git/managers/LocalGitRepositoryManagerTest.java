@@ -307,7 +307,7 @@ public class LocalGitRepositoryManagerTest {
 
 			repoMan.addAndCommit(targetFile, originalSourceDocumentBytes);
 
-			repoMan.push();
+			repoMan.push(null, null);
 		}
 
 		this.repoManager.open(this.testRepoPath.getName());
