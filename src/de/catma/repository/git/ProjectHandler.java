@@ -2,18 +2,22 @@ package de.catma.repository.git;
 
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
+import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
 import de.catma.repository.git.interfaces.IProjectHandler;
 import de.catma.repository.git.exceptions.ProjectHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
+import de.catma.repository.git.model_wrappers.GitSourceDocumentInfo;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class ProjectHandler implements IProjectHandler {
@@ -25,8 +29,6 @@ public class ProjectHandler implements IProjectHandler {
 	// using 'corpus' and not 'project' here so as not to confuse CATMA Projects with GitLab
 	// Projects
 	static final String PROJECT_ROOT_REPOSITORY_NAME_FORMAT = "%s_corpus";
-
-	static final String PROJECT_ROOT_REPOSITORY_DEFAULT_GITIGNORE = "tagsets\ncollections\ndocuments";
 
 	public ProjectHandler(ILocalGitRepositoryManager localGitRepositoryManager,
 						  IRemoteGitServerManager remoteGitServerManager) {
@@ -48,7 +50,7 @@ public class ProjectHandler implements IProjectHandler {
 	public String create(String name, String description) throws ProjectHandlerException {
 		String projectId = idGenerator.generate();
 
-		try {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// create the group
 			String groupPath = this.remoteGitServerManager.createGroup(
 				name, projectId, description
@@ -74,35 +76,28 @@ public class ProjectHandler implements IProjectHandler {
 						response.repositoryHttpUrl, gitLabUserImpersonationToken
 					);
 
-			this.localGitRepositoryManager.clone(
+			localGitRepoManager.clone(
 				authenticatedRepositoryUrl,
 				remoteGitServerManagerImpl.getGitLabUser().getUsername(),
 				gitLabUserImpersonationToken
 			);
 
-			File repositoryWorkTree = this.localGitRepositoryManager.getRepositoryWorkTree();
-
-			// write .gitignore into the local repo
-			File targetGitIgnoreFile = new File(repositoryWorkTree, ".gitignore");
-			this.localGitRepositoryManager.add(
-				targetGitIgnoreFile,
-				ProjectHandler.PROJECT_ROOT_REPOSITORY_DEFAULT_GITIGNORE.getBytes(StandardCharsets.UTF_8)
-			);
+			File repositoryWorkTree = localGitRepoManager.getRepositoryWorkTree();
 
 			// write empty tagsets.json, collections.json & documents.json into the local repo
 			File targetTagsetsFile = new File(repositoryWorkTree, "tagsets.json");
-			this.localGitRepositoryManager.add(targetTagsetsFile, new byte[]{});
+			localGitRepoManager.add(targetTagsetsFile, new byte[]{});
 
 			File targetCollectionsFile = new File(repositoryWorkTree, "collections.json");
-			this.localGitRepositoryManager.add(targetCollectionsFile, new byte[]{});
+			localGitRepoManager.add(targetCollectionsFile, new byte[]{});
 
 			File targetDocumentsFile = new File(repositoryWorkTree, "documents.json");
-			this.localGitRepositoryManager.add(targetDocumentsFile, new byte[]{});
+			localGitRepoManager.add(targetDocumentsFile, new byte[]{});
 
 			// commit newly added files
-			String commitMessage = String.format("Adding %s, %s, %s and %s", targetTagsetsFile.getName(),
-					targetCollectionsFile.getName(), targetDocumentsFile.getName(), targetGitIgnoreFile.getName());
-			this.localGitRepositoryManager.commit(commitMessage);
+			String commitMessage = String.format("Adding %s, %s and %s", targetTagsetsFile.getName(),
+					targetCollectionsFile.getName(), targetDocumentsFile.getName());
+			localGitRepoManager.commit(commitMessage);
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|
 				URISyntaxException e) {
@@ -138,5 +133,75 @@ public class ProjectHandler implements IProjectHandler {
 		catch (RemoteGitServerManagerException|IOException e) {
 			throw new ProjectHandlerException("Failed to delete project", e);
 		}
+	}
+
+	// source document operations
+
+	/**
+	 * Inserts a new source document into the project identified by <code>projectId</code>.
+	 *
+	 * @param projectId the ID of the project that the source document must be inserted into
+	 * @param originalSourceDocumentStream a {@link InputStream} object representing the original,
+	 *                                     unmodified source document
+	 * @param originalSourceDocumentFileName the file name of the original, unmodified source
+	 *                                       document
+	 * @param convertedSourceDocumentStream a {@link InputStream} object representing the converted,
+	 *                                      UTF-8 encoded source document
+	 * @param convertedSourceDocumentFileName the file name of the converted, UTF-8 encoded source
+	 *                                        document
+	 * @param gitSourceDocumentInfo a {@link GitSourceDocumentInfo} wrapper object
+	 * @param sourceDocumentId the ID of the source document to insert. If none is provided, a new
+	 *                         ID will be generated.
+	 * @return the <code>sourceDocumentId</code> if one was provided, otherwise a new source
+	 *         document ID
+	 * @throws ProjectHandlerException if an error occurs while inserting the source document
+	 */
+	@Override
+	public String insertSourceDocument(
+			String projectId,
+			InputStream originalSourceDocumentStream, String originalSourceDocumentFileName,
+			InputStream convertedSourceDocumentStream, String convertedSourceDocumentFileName,
+			GitSourceDocumentInfo gitSourceDocumentInfo,
+			@Nullable String sourceDocumentId) throws ProjectHandlerException {
+		try (ILocalGitRepositoryManager repoManager = this.localGitRepositoryManager) {
+			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
+				repoManager, this.remoteGitServerManager
+			);
+
+			// insert the source document into the project
+			sourceDocumentId = sourceDocumentHandler.insert(
+					originalSourceDocumentStream, originalSourceDocumentFileName,
+					convertedSourceDocumentStream, convertedSourceDocumentFileName,
+					gitSourceDocumentInfo, sourceDocumentId, projectId);
+
+			RemoteGitServerManager remoteGitServerManagerImpl = (RemoteGitServerManager)this.remoteGitServerManager;
+			String gitLabUserImpersonationToken = remoteGitServerManagerImpl.getGitLabUserImpersonationToken();
+
+			repoManager.open(sourceDocumentId);
+			repoManager.push(remoteGitServerManagerImpl.getGitLabUser().getUsername(), gitLabUserImpersonationToken);
+
+			String remoteUri = repoManager.getRemoteUrl(null);
+			repoManager.close();
+
+			// open the project root repository
+			repoManager.open(String.format(ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId));
+
+			// create the submodule
+			File targetSubmodulePath = Paths.get(
+				repoManager.getRepositoryWorkTree().toString(), "documents", sourceDocumentId
+			).toFile();
+
+			repoManager.addSubmodule(
+				targetSubmodulePath, remoteUri,
+				remoteGitServerManagerImpl.getGitLabUser().getUsername(), gitLabUserImpersonationToken
+			);
+
+			// TODO: update the documents.json file
+		}
+		catch (SourceDocumentHandlerException|LocalGitRepositoryManagerException e) {
+			throw new ProjectHandlerException("Failed to insert source document", e);
+		}
+
+		return sourceDocumentId;
 	}
 }
