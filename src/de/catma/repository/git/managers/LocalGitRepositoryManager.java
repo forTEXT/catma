@@ -325,6 +325,8 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	 *
 	 * @param path a {@link File} object representing the target path of the submodule
 	 * @param uri the URI of the remote repository to add as a submodule
+	 * @param username the username to authenticate with
+	 * @param password the password to authenticate with
 	 * @throws LocalGitRepositoryManagerException if the submodule couldn't be added
 	 */
 	@Override
@@ -356,6 +358,13 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 		}
 	}
 
+	/**
+	 * Pushes commits made locally to the associated remote repository ('origin' remote).
+	 *
+	 * @param username the username to authenticate with
+	 * @param password the password to authenticate with
+	 * @throws LocalGitRepositoryManagerException if the push operation failed
+	 */
 	@Override
 	public void push(@Nullable String username, @Nullable String password) throws LocalGitRepositoryManagerException {
 		if (!isAttached()) {
