@@ -1,8 +1,9 @@
 package de.catma.repository.git.managers.gitlab4j_api_custom;
 
+import de.catma.repository.git.managers.RemoteGitServerManagerTest;
 import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
 import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
 import org.junit.Before;
@@ -13,7 +14,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
 
 public class CustomUserApiTest {
@@ -22,7 +22,7 @@ public class CustomUserApiTest {
 
 	private CustomUserApi customUserApi;
 
-	private Integer createdUserId;
+	private ArrayList<Integer> usersToDeleteOnTearDown = new ArrayList<>();
 
 	public CustomUserApiTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
@@ -44,17 +44,12 @@ public class CustomUserApiTest {
 
 	@After
 	public void tearDown() throws Exception {
-		if (this.createdUserId != null) {
-			this.gitLabApi.getUserApi().deleteUser(this.createdUserId);
-			await().until(() -> {
-				try {
-					this.gitLabApi.getUserApi().getUser(this.createdUserId);
-					return false;
-				}
-				catch (GitLabApiException e) {
-					return true;
-				}
-			});
+		if (this.usersToDeleteOnTearDown.size() > 0) {
+			for (Integer userId : this.usersToDeleteOnTearDown) {
+				UserApi userApi = this.gitLabApi.getUserApi();
+				userApi.deleteUser(userId);
+				RemoteGitServerManagerTest.awaitUserDeleted(userApi, userId);
+			}
 		}
 	}
 
@@ -67,11 +62,11 @@ public class CustomUserApiTest {
 		user.setName("Test User");
 
 		user = this.gitLabApi.getUserApi().createUser(user, "password", null);
-		this.createdUserId = user.getId();
+		this.usersToDeleteOnTearDown.add(user.getId());
 
 		// create an impersonation token for the user
 		ImpersonationToken impersonationToken = this.customUserApi.createImpersonationToken(
-			this.createdUserId, "test-token", null, null
+			user.getId(), "test-token", null, null
 		);
 
 		assertNotNull(impersonationToken);
@@ -86,7 +81,7 @@ public class CustomUserApiTest {
 		assertNull(impersonationToken.expiresAt);
 
 		List<ImpersonationToken> impersonationTokens = this.customUserApi.getImpersonationTokens(
-			this.createdUserId, null
+			user.getId(), null
 		);
 
 		assertEquals(1, impersonationTokens.size());
@@ -102,7 +97,7 @@ public class CustomUserApiTest {
 		user.setName("Test User");
 
 		user = this.gitLabApi.getUserApi().createUser(user, "password", null);
-		this.createdUserId = user.getId();
+		this.usersToDeleteOnTearDown.add(user.getId());
 
 		// create an impersonation token for the user, with expiresAt and scopes
 		GregorianCalendar cal = new GregorianCalendar();
@@ -110,7 +105,7 @@ public class CustomUserApiTest {
 		Date expiryDate = cal.getTime();
 
 		ImpersonationToken impersonationToken = this.customUserApi.createImpersonationToken(
-			this.createdUserId, "test-token", expiryDate, new String[] {"api", "read_user"}
+			user.getId(), "test-token", expiryDate, new String[] {"api", "read_user"}
 		);
 
 		assertNotNull(impersonationToken);
@@ -129,7 +124,7 @@ public class CustomUserApiTest {
 		assertEquals(expectedIsoFormattedExpiryDate, impersonationToken.expiresAt);
 
 		List<ImpersonationToken> impersonationTokens = this.customUserApi.getImpersonationTokens(
-			this.createdUserId, null
+			user.getId(), null
 		);
 
 		assertEquals(1, impersonationTokens.size());
