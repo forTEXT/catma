@@ -101,18 +101,6 @@ public class ProjectHandlerTest {
 				"", FileUtils.readFileToString(
 						new File(expectedRootRepositoryPath, "tagsets.json"), StandardCharsets.UTF_8)
 			);
-
-			assert Arrays.asList(expectedRootRepositoryPath.list()).contains("collections.json");
-			assertEquals(
-				"", FileUtils.readFileToString(
-						new File(expectedRootRepositoryPath, "collections.json"), StandardCharsets.UTF_8)
-			);
-
-			assert Arrays.asList(expectedRootRepositoryPath.list()).contains("documents.json");
-			assertEquals(
-				"", FileUtils.readFileToString(
-						new File(expectedRootRepositoryPath, "documents.json"), StandardCharsets.UTF_8)
-			);
 		}
 	}
 

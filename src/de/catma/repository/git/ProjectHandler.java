@@ -85,20 +85,9 @@ public class ProjectHandler implements IProjectHandler {
 
 			File repositoryWorkTree = localGitRepoManager.getRepositoryWorkTree();
 
-			// write empty tagsets.json, collections.json & documents.json into the local repo
+			// write empty tagsets.json into the local repo
 			File targetTagsetsFile = new File(repositoryWorkTree, "tagsets.json");
-			localGitRepoManager.add(targetTagsetsFile, new byte[]{});
-
-			File targetCollectionsFile = new File(repositoryWorkTree, "collections.json");
-			localGitRepoManager.add(targetCollectionsFile, new byte[]{});
-
-			File targetDocumentsFile = new File(repositoryWorkTree, "documents.json");
-			localGitRepoManager.add(targetDocumentsFile, new byte[]{});
-
-			// commit newly added files
-			String commitMessage = String.format("Adding %s, %s and %s", targetTagsetsFile.getName(),
-					targetCollectionsFile.getName(), targetDocumentsFile.getName());
-			localGitRepoManager.commit(commitMessage);
+			localGitRepoManager.addAndCommit(targetTagsetsFile, new byte[]{});
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|
 				URISyntaxException e) {
@@ -196,8 +185,6 @@ public class ProjectHandler implements IProjectHandler {
 				targetSubmodulePath, remoteUri,
 				remoteGitServerManagerImpl.getGitLabUser().getUsername(), gitLabUserImpersonationToken
 			);
-
-			// TODO: update the documents.json file
 		}
 		catch (SourceDocumentHandlerException|LocalGitRepositoryManagerException e) {
 			throw new ProjectHandlerException("Failed to insert source document", e);
