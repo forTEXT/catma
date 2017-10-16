@@ -8,6 +8,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
@@ -73,6 +74,34 @@ public class LocalGitRepositoryManagerTest {
 			assert testRepoPath.isDirectory();
 			this.directoriesToDeleteOnTearDown.add(testRepoPath);
 			assertEquals(testRepoPath, localGitRepoManager.getRepositoryWorkTree());
+		}
+	}
+
+	@Test
+	public void getRemoteUrl() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
+
+			localGitRepoManager.init(testRepoPath.getName(), null);
+
+			assert testRepoPath.exists();
+			assert testRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(testRepoPath);
+
+			StoredConfig config = localGitRepoManager.getGitApi().getRepository().getConfig();
+			config.setString(
+				"remote", "origin", "url", "http://fake.it/till/you/make/it"
+			);
+			config.setString(
+				"remote", "other", "url", "http://fake.it/till/you/make/it/other"
+			);
+
+			assertEquals(
+				"http://fake.it/till/you/make/it", localGitRepoManager.getRemoteUrl(null)
+			);
+			assertEquals(
+				"http://fake.it/till/you/make/it/other", localGitRepoManager.getRemoteUrl("other")
+			);
 		}
 	}
 
