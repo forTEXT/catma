@@ -30,6 +30,8 @@ import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.CRC32;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -104,6 +106,7 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	private WizardStepListener wizardStepListener;
 	private AddSourceDocWizardResult wizardResult;
 	private Repository repository;
+	private SourceDocument currentPreviewDocument = null;
 	
 	public FileTypePanel(
 			WizardStepListener wizardStepListener, AddSourceDocWizardResult wizardResult, 
@@ -213,6 +216,9 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 			while (entries.hasMoreElements()) {
 				ZipArchiveEntry entry = entries.nextElement();
 				String fileName = FilenameUtils.getName(entry.getName());
+				if (fileName.startsWith(".")) {
+					continue; // we treat them as hidden files, that's probably what most users would expect
+				}
 				String fileId = idGenerator.generate();
 				
 				File entryDestination = new File(tempDir, fileId);
@@ -280,10 +286,14 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 	}
 
 	private void showSourceDocumentPreview(SourceDocumentResult sdr){
-		SourceDocument sourceDocument = sdr.getSourceDocument();
+		if (currentPreviewDocument != null) {
+			currentPreviewDocument.unload();
+		}
+
+		currentPreviewDocument = sdr.getSourceDocument();
 		try{
 			taPreview.setValue(
-					"<pre>" + sourceDocument.getContent(new Range(0, 2000)) + "</pre>");			 //$NON-NLS-1$ //$NON-NLS-2$
+					"<pre>" + currentPreviewDocument.getContent(new Range(0, 2000)) + "</pre>");			 //$NON-NLS-1$ //$NON-NLS-2$
 		} catch (Exception e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
 				Messages.getString("FileTypePanel.errorLoadingPreview"), e); //$NON-NLS-1$
@@ -298,36 +308,51 @@ class FileTypePanel extends GridLayout implements DynamicWizardStep {
 							sdr.getSourceDocumentID(),
 							sdr.getSourceDocumentInfo());
 			sdr.setSourceDocument(sourceDocument);
-			
-			TechInfoSet techInfoSet = sdr.getSourceDocumentInfo().getTechInfoSet();
-			String documentId = sdr.getSourceDocumentID();
-			
-			ProtocolHandler protocolHandler = getProtocolHandlerForUri(techInfoSet.getURI(), documentId, techInfoSet.getMimeType());
-			
-			byte[] currentByteContent = protocolHandler.getByteContent();
-
-			sourceDocument.getSourceContentHandler().load(
-					new ByteArrayInputStream(currentByteContent));
-			
-			FileOSType fileOSType = FileOSType.getFileOSType(sourceDocument.getContent());
-			
-			sdr.getSourceDocumentInfo().getTechInfoSet().setFileOSType(fileOSType);
-			CRC32 checksum = new CRC32();
-			checksum.update(currentByteContent);
-			sdr.getSourceDocumentInfo().getTechInfoSet().setChecksum(checksum.getValue());
-			return true;
+			try {
+				TechInfoSet techInfoSet = sdr.getSourceDocumentInfo().getTechInfoSet();
+				String documentId = sdr.getSourceDocumentID();
+				
+				ProtocolHandler protocolHandler = getProtocolHandlerForUri(techInfoSet.getURI(), documentId, techInfoSet.getMimeType());
+				
+				byte[] currentByteContent = protocolHandler.getByteContent();
+	
+				sourceDocument.getSourceContentHandler().load(
+						new ByteArrayInputStream(currentByteContent));
+	
+				FileOSType fileOSType = FileOSType.getFileOSType(sourceDocument.getContent());
+				
+				sdr.getSourceDocumentInfo().getTechInfoSet().setFileOSType(fileOSType);
+				CRC32 checksum = new CRC32();
+				checksum.update(currentByteContent);
+				sdr.getSourceDocumentInfo().getTechInfoSet().setChecksum(checksum.getValue());
+				return true;
+			}
+			finally {
+				sourceDocument.unload();
+			}
 		} catch (Exception e) {
 			TechInfoSet techInfoSet = sdr.getSourceDocumentInfo().getTechInfoSet();
-			Notification.show(
-				Messages.getString("FileTypePanel.infoTitle"),  //$NON-NLS-1$
-				MessageFormat.format(Messages.getString("FileTypePanel.unableToProcessfile"),   //$NON-NLS-1$
-						techInfoSet.getFileType(), 
-						(techInfoSet.getFileType().isCharsetSupported()?
-								((techInfoSet.getCharset()==null)?Messages.getString("FileTypePanel.unknown"):techInfoSet.getCharset()) //$NON-NLS-1$
-								:""), //$NON-NLS-1$
-						e.getLocalizedMessage()),
-				Notification.Type.WARNING_MESSAGE);
-			return false;
+			if (techInfoSet.getFileType().equals(FileType.DOC)) {
+				Logger.getLogger(FileTypePanel.class.getName()).log(
+					Level.WARNING, 
+					"error loading DOC file, retrying load as DOCX: " //$NON-NLS-1$
+							+ techInfoSet.getFileName(), 
+					e);
+				techInfoSet.setFileType(FileType.DOCX);
+				return loadSourceDocumentAndContent(sdr);
+			}
+			else {
+				Notification.show(
+					Messages.getString("FileTypePanel.infoTitle"),  //$NON-NLS-1$
+					MessageFormat.format(Messages.getString("FileTypePanel.unableToProcessfile"),   //$NON-NLS-1$
+							techInfoSet.getFileType(), 
+							(techInfoSet.getFileType().isCharsetSupported()?
+									((techInfoSet.getCharset()==null)?Messages.getString("FileTypePanel.unknown"):techInfoSet.getCharset()) //$NON-NLS-1$
+									:""), //$NON-NLS-1$
+							e.getLocalizedMessage()),
+					Notification.Type.WARNING_MESSAGE);
+				return false;
+			}
 		}
 	}
 	

@@ -22,10 +22,12 @@ public class SourceDocumentIndexBuffer {
 	private Map<String, List<TermInfo>> termInfos;
 	private TreeSet<TermInfo> orderedTermInfos;
 	private String sourceDocumentId;
+	private int size;
 
-	public SourceDocumentIndexBuffer(String sourceDocumentId, Map<String, List<TermInfo>> termInfos) {
+	public SourceDocumentIndexBuffer(String sourceDocumentId, int size, Map<String, List<TermInfo>> termInfos) {
 		super();
 		this.sourceDocumentId = sourceDocumentId;
+		this.size = size;
 		this.termInfos = termInfos;
 		createTermInfoArray();
 	}
@@ -184,4 +186,7 @@ public class SourceDocumentIndexBuffer {
 		return spanContext;
 	}
 	
+	public int getSize() {
+		return size;
+	}
 }

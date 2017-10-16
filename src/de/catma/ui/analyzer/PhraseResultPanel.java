@@ -18,7 +18,10 @@
  */
 package de.catma.ui.analyzer;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +36,10 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.server.ClassResource;
+import com.vaadin.server.FileDownloader;
 import com.vaadin.server.FontAwesome;
+import com.vaadin.server.StreamResource;
+import com.vaadin.server.StreamResource.StreamSource;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -45,6 +51,8 @@ import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Table;
+import com.vaadin.ui.Tree.ExpandEvent;
+import com.vaadin.ui.Tree.ExpandListener;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -58,6 +66,7 @@ import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
+import de.catma.serialization.xls.QueryResultExcelExporter;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.Slider;
 import de.catma.ui.component.HTMLNotification;
@@ -99,6 +108,7 @@ public class PhraseResultPanel extends VerticalLayout {
 	private TagKwicResultsProvider tagKwicResultsProvider;
 	private Button btSelectAllRows;
 	private Button btDeselectAllRows;
+	private QueryResult queryResult;
 	
 	public PhraseResultPanel(
 			Repository repository, 
@@ -257,25 +267,33 @@ public class PhraseResultPanel extends VerticalLayout {
 			}
 		});
 		
-		btExcelExport.addClickListener(new ClickListener() {
-			
-			public void buttonClick(ClickEvent event) {
-				try{
-	            	ExcelExport excelExport = 
-	            			new HierarchicalExcelExport(resultTable, Messages.getString("PhraseResultPanel.queryResults")); //$NON-NLS-1$
-	                excelExport.excludeCollapsedColumns();
-	                excelExport.setReportTitle(Messages.getString("PhraseResultPanel.queryResults")); //$NON-NLS-1$
-	                excelExport.export();
-				} catch (IllegalArgumentException e) {
-					HTMLNotification.show(
-						Messages.getString("PhraseResultPanel.error"),  //$NON-NLS-1$
-						MessageFormat.format(Messages.getString("PhraseResultPanel.excelExportError"), e.getMessage()),  //$NON-NLS-1$
-						Type.WARNING_MESSAGE);
+		FileDownloader excelExportDownloader = new FileDownloader(new StreamResource(new StreamSource() {
+
+			@Override
+			public InputStream getStream() {
+				
+				if (queryResult != null) {
+					ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+					QueryResultExcelExporter exporter = new QueryResultExcelExporter();
+					try {
+						exporter.export(repository, queryResult, "CATMA Query Result", buffer);
+						return new ByteArrayInputStream(buffer.toByteArray());
+					} catch (Exception e) {
+						HTMLNotification.show(
+							Messages.getString("PhraseResultPanel.error"),  //$NON-NLS-1$
+							MessageFormat.format(Messages.getString("PhraseResultPanel.excelExportError"), e.getMessage()),  //$NON-NLS-1$
+							Type.WARNING_MESSAGE);
 					
-					e.printStackTrace();
-				}	                
+						e.printStackTrace();
+					}
+				}
+				
+				return null;
 			}
-		});
+			
+		},
+		"CATMA-QueryResults.xlsx"));
+		excelExportDownloader.extend(btExcelExport);
 		
 		btCsvExport.addClickListener(new ClickListener() {
 			
@@ -336,6 +354,44 @@ public class PhraseResultPanel extends VerticalLayout {
 			}
 		});
 
+		
+		resultTable.addExpandListener(new ExpandListener() {
+			
+			@SuppressWarnings("unchecked")
+			@Override
+			public void nodeExpand(ExpandEvent event) {
+				Object itemId = event.getItemId();
+				
+				if (!resultTable.hasChildren(itemId)) {
+					GroupedQueryResult phraseResult = (GroupedQueryResult) itemId;
+					for (String sourceDocumentID : phraseResult.getSourceDocumentIDs()) {
+						SourceDocument sourceDocument = 
+								repository.getSourceDocument(sourceDocumentID);
+						
+						SourceDocumentItemID sourceDocumentItemID = 
+								new SourceDocumentItemID(
+										phraseResult.getGroup() 
+											+ "@" + sourceDocument,  //$NON-NLS-1$
+										sourceDocumentID);
+			
+						Item sourceDocumentItem = resultTable.addItem(sourceDocumentItemID);
+			
+						sourceDocumentItem.getItemProperty(
+								TreePropertyName.frequency).setValue(
+										phraseResult.getFrequency(sourceDocumentID));
+						
+						sourceDocumentItem.getItemProperty(
+								TreePropertyName.caption).setValue(
+										sourceDocument.toString());
+			
+						resultTable.setParent(sourceDocumentItemID, phraseResult);
+						
+						resultTable.setChildrenAllowed(sourceDocumentItemID, false);
+					}					
+				}
+				
+			}
+		});
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -563,12 +619,17 @@ public class PhraseResultPanel extends VerticalLayout {
 	
 	public void setQueryResult(QueryResult queryResult) {
 		kwicPanel.clear();
+		
+		this.queryResult = queryResult;
+		
 		HierarchicalContainer container = createContainer();
 		
 		int totalCount = 0;
 		int totalFreq = 0;
 
-		for (GroupedQueryResult phraseResult : queryResult.asGroupedSet()) { 
+		Set<GroupedQueryResult> groupedQueryResults = queryResult.asGroupedSet();
+		
+		for (GroupedQueryResult phraseResult : groupedQueryResults) { 
 			addPhraseResult(phraseResult, container);
 			totalFreq+=phraseResult.getTotalFrequency();
 			totalCount++;
@@ -594,31 +655,6 @@ public class PhraseResultPanel extends VerticalLayout {
 				phraseResult.getTotalFrequency());
 		phraseResultItem.getItemProperty(TreePropertyName.visibleInKwic).setValue(
 				createKwicCheckbox(phraseResult));
-		
-		for (String sourceDocumentID : phraseResult.getSourceDocumentIDs()) {
-			SourceDocument sourceDocument = 
-					repository.getSourceDocument(sourceDocumentID);
-			
-			SourceDocumentItemID sourceDocumentItemID = 
-					new SourceDocumentItemID(
-							phraseResult.getGroup() 
-								+ "@" + sourceDocument,  //$NON-NLS-1$
-							sourceDocumentID);
-
-			container.addItem(sourceDocumentItemID);
-
-			container.getContainerProperty(
-					sourceDocumentItemID, TreePropertyName.frequency).setValue(
-							phraseResult.getFrequency(sourceDocumentID));
-			
-			container.getContainerProperty(
-					sourceDocumentItemID, TreePropertyName.caption).setValue(
-							sourceDocument.toString());
-
-			container.setParent(sourceDocumentItemID, phraseResult);
-			
-			container.setChildrenAllowed(sourceDocumentItemID, false);
-		}
 	}
 	
 	private CheckBox createKwicCheckbox(final GroupedQueryResult phraseResult) {
