@@ -169,27 +169,28 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	 * Clones a remote repository whose address is specified via the <code>uri</code> parameter.
 	 *
 	 * @param uri the URI of the remote repository to clone
+	 * @param path the destination path of the clone operation
 	 * @param username the username to authenticate with
 	 * @param password the password to authenticate with
 	 * @return the name of the cloned repository
 	 */
 	@Override
-	public String clone(String uri, @Nullable String username, @Nullable String password)
+	public String clone(String uri, @Nullable File path, @Nullable String username, @Nullable String password)
 			throws LocalGitRepositoryManagerException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `clone` on an attached instance");
 		}
 
-		String repositoryName = uri.substring(uri.lastIndexOf("/") + 1);
-		if (repositoryName.endsWith(".git")) {
-			repositoryName = repositoryName.substring(0, repositoryName.length() - 4);
+		if (path == null) {
+			String repositoryName = uri.substring(uri.lastIndexOf("/") + 1);
+			if (repositoryName.endsWith(".git")) {
+				repositoryName = repositoryName.substring(0, repositoryName.length() - 4);
+			}
+			path = new File(this.repositoryBasePath, repositoryName);
 		}
-		File repositoryPath = new File(this.repositoryBasePath, repositoryName);
 
 		try {
-			CloneCommand cloneCommand = Git.cloneRepository().setURI(uri).setDirectory(
-				repositoryPath
-			);
+			CloneCommand cloneCommand = Git.cloneRepository().setURI(uri).setDirectory(path);
 			if (username != null) {
 				cloneCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
 					username, password
@@ -203,7 +204,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 			);
 		}
 
-		return repositoryName;
+		return path.getName();
 	}
 
 	/**

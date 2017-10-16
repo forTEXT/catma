@@ -78,6 +78,7 @@ public class ProjectHandler implements IProjectHandler {
 
 			localGitRepoManager.clone(
 				authenticatedRepositoryUrl,
+				null,
 				remoteGitServerManagerImpl.getGitLabUser().getUsername(),
 				gitLabUserImpersonationToken
 			);

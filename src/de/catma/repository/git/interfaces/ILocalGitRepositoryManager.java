@@ -18,7 +18,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	void init(String name, @Nullable String description) throws LocalGitRepositoryManagerException;
 
-	String clone(String uri, @Nullable String username, @Nullable String password)
+	String clone(String uri, @Nullable File path, @Nullable String username, @Nullable String password)
 			throws LocalGitRepositoryManagerException;
 
 	void open(String name) throws LocalGitRepositoryManagerException;

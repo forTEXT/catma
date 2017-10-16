@@ -87,6 +87,7 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 
 			localGitRepoManager.clone(
 				authenticatedRepositoryUrl,
+				null,
 				remoteGitServerManagerImpl.getGitLabUser().getUsername(),
 				gitLabUserImpersonationToken
 			);

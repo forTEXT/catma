@@ -5,7 +5,6 @@ import de.catma.repository.git.GitLabAuthenticationHelper;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -100,19 +99,25 @@ public class LocalGitRepositoryManagerTest {
 	@Test
 	public void cloneRepo() throws Exception {
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			// create a bare repository that will act as the remote
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
+
+			try (Git gitApi = Git.init().setDirectory(testRepoPath).setBare(true).call()) {}
+			this.directoriesToDeleteOnTearDown.add(testRepoPath);
+
+			// clone it
+			File clonedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "cloned");
+
 			String repoName = localGitRepoManager.clone(
-				"https://github.com/maltem-za/tiny.git", null, null
+				testRepoPath.toURI().toString(), clonedRepoPath, null, null
 			);
 
 			assert localGitRepoManager.isAttached();
-			assertEquals(repoName, "tiny");
-
-			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "tiny");
-			assert testRepoPath.exists();
-			assert testRepoPath.isDirectory();
-			this.directoriesToDeleteOnTearDown.add(testRepoPath);
-			assert Arrays.asList(testRepoPath.list()).contains(".git");
-			assert Arrays.asList(testRepoPath.list()).contains("README.md");
+			assertEquals(repoName, clonedRepoPath.getName());
+			assert clonedRepoPath.exists();
+			assert clonedRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(clonedRepoPath);
+			assert Arrays.asList(clonedRepoPath.list()).contains(".git");
 		}
 	}
 
@@ -140,6 +145,7 @@ public class LocalGitRepositoryManagerTest {
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
 			String repoName = localGitRepoManager.clone(
 				authenticatedRepositoryUrl,
+				null,
 				remoteGitServerManager.getGitLabUser().getUsername(),
 				remoteGitServerManager.getGitLabUserImpersonationToken()
 			);
@@ -353,10 +359,14 @@ public class LocalGitRepositoryManagerTest {
 			// clone it
 			File clonedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "cloned");
 
-			CloneCommand cloneCommand = Git.cloneRepository().setURI(testRepoPath.toURI().toString()).setDirectory(
-				clonedRepoPath
+			String repoName = localGitRepoManager.clone(
+				testRepoPath.toURI().toString(), clonedRepoPath, null, null
 			);
-			try (Git gitApi = cloneCommand.call()) {}
+
+			assert localGitRepoManager.isAttached();
+			assertEquals(repoName, clonedRepoPath.getName());
+			assert clonedRepoPath.exists();
+			assert clonedRepoPath.isDirectory();
 			this.directoriesToDeleteOnTearDown.add(clonedRepoPath);
 
 			localGitRepoManager.detach();  // can't call open on an attached instance
