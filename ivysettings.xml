@@ -27,11 +27,16 @@
 				</url>
 			</dual>
 		</chain>
-	</resolvers>
+	   <filesystem name="mylocal">
+	      <ivy pattern= "${ivy.default.ivy.user.dir}/local/[organisation]/[module]/[type]s/[artifact]-[revision].[ext]" />
+	      <artifact pattern= "${ivy.default.ivy.user.dir}/local/[organisation]/[module]/[type]s/[artifact]-[revision].[ext]" />
+	   </filesystem>
+   	</resolvers>
 	<modules>
 		<!-- Vaadin patched SmartSprites -->
 		<module organisation="com.carrotsearch" name="smartsprites"
 			revision="0.2.3-itmill" resolver="custom-smartsprites" />
+		<module organisation="javax.ws.rs" name="javax.ws.rs-api" revision="2.1" resolver="mylocal" />
 	</modules>
 
 

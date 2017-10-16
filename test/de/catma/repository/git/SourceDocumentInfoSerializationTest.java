@@ -4,6 +4,7 @@ import com.jsoniter.JsonIterator;
 import com.jsoniter.output.EncodingMode;
 import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.DecodingMode;
+import com.jsoniter.spi.JsonException;
 import de.catma.document.source.*;
 import de.catma.repository.git.model_wrappers.GitSourceDocumentInfo;
 import org.junit.Test;
@@ -69,7 +70,11 @@ public class SourceDocumentInfoSerializationTest {
 
 		GitSourceDocumentInfo inputGitSourceDocumentInfo = new GitSourceDocumentInfo(inputSourceDocumentInfo);
 
-		JsoniterAlphabeticOrderingExtension.enable();
+		// handle com.jsoniter.spi.JsonException: JsoniterAlphabeticOrderingExtension.enable can only be called once
+		try {
+			JsoniterAlphabeticOrderingExtension.enable();
+		}
+		catch (JsonException e) {}
 		JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
 		String serialized = JsonStream.serialize(inputGitSourceDocumentInfo);
 

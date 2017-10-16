@@ -25,54 +25,16 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 	private final String gitLabServerUrl;
 
 	private final GitLabApi adminGitLabApi;
-
-	public GitLabApi getAdminGitLabApi() {
-		return this.adminGitLabApi;
-	}
-
-	private final User gitLabUser;
-
-	public User getGitLabUser() {
-		return this.gitLabUser;
-	}
-
-	private final String gitLabUserImpersonationToken;
-
-	public String getGitLabUserImpersonationToken() {
-		return this.gitLabUserImpersonationToken;
-	}
-
 	private final GitLabApi userGitLabApi;
 
-	public GitLabApi getUserGitLabApi() {
-		return this.userGitLabApi;
-	}
+	private final User gitLabUser;
+	private final String gitLabUserImpersonationToken;
 
 	static final String GITLAB_USER_EMAIL_ADDRESS_FORMAT = "catma-user-%s@catma.de";
 	static final String GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME = "catma-default-ipt";
 
-	// <for testing purposes only
+	// only relevant when running under test - see checkGitLabServerUrl
 	public boolean replaceGitLabServerUrl = false;
-
-	private String checkGitLabServerUrl(String url) {
-		if (!this.replaceGitLabServerUrl) {
-			return url;
-		}
-
-		try {
-			URL currentUrl = new URL(url);
-			URL gitLabServerUrl = new URL(this.gitLabServerUrl);
-			URL newUrl = new URL(
-				gitLabServerUrl.getProtocol(), gitLabServerUrl.getHost(), gitLabServerUrl.getPort(),
-				currentUrl.getFile()
-			);
-			return newUrl.toString();
-		}
-		catch (IOException e) {
-			return null;
-		}
-	}
-	// />
 
 	private static final char[] PWD_CHARS = (
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" +
@@ -105,6 +67,48 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 		this.gitLabUserImpersonationToken = userRawTokenPair.getSecond();
 
 		this.userGitLabApi = new GitLabApi(this.gitLabServerUrl, this.gitLabUserImpersonationToken);
+	}
+
+	public GitLabApi getAdminGitLabApi() {
+		return this.adminGitLabApi;
+	}
+
+	public GitLabApi getUserGitLabApi() {
+		return this.userGitLabApi;
+	}
+
+	public User getGitLabUser() {
+		return this.gitLabUser;
+	}
+
+	public String getGitLabUserImpersonationToken() {
+		return this.gitLabUserImpersonationToken;
+	}
+
+	// only relevant when running under test
+	// for example, if you're running a GitLab instance as a docker container locally with --hostname, then your machine
+	// probably can't resolve that hostname (unless you've changed your hosts file, but that shouldn't be a requirement
+	// for running the tests)
+	// this becomes an issue when you ask a gitlab4j Project object for the repository HTTP URL, because it will
+	// contain that unresolvable hostname - this method takes care of the replacement using the "GitLabServerUrl" from
+	// the properties file
+	private String checkGitLabServerUrl(String url) {
+		if (!this.replaceGitLabServerUrl) {
+			return url;
+		}
+
+		try {
+			URL currentUrl = new URL(url);
+			URL gitLabServerUrl = new URL(this.gitLabServerUrl);
+			URL newUrl = new URL(
+					gitLabServerUrl.getProtocol(), gitLabServerUrl.getHost(), gitLabServerUrl.getPort(),
+					currentUrl.getFile()
+			);
+			return newUrl.toString();
+		}
+		catch (IOException e) {
+			return null;
+		}
 	}
 
 	/**

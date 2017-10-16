@@ -19,10 +19,7 @@ import org.junit.rules.ExpectedException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Properties;
+import java.util.*;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
@@ -30,11 +27,10 @@ import static org.junit.Assert.*;
 public class SourceDocumentHandlerTest {
 	private Properties catmaProperties;
 	private RemoteGitServerManager remoteGitServerManager;
-	private LocalGitRepositoryManager localGitRepositoryManager;
-	private SourceDocumentHandler sourceDocumentHandler;
 
-	private File createdRepositoryPath = null;
-	private String insertedSourceDocumentId = null;
+	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
+	private ArrayList<String> sourceDocumentReposToDeleteOnTearDown = new ArrayList<>();
+	private ArrayList<String> projectsToDeleteOnTearDown = new ArrayList<>();
 
     public SourceDocumentHandlerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
@@ -53,37 +49,41 @@ public class SourceDocumentHandlerTest {
 
 		this.remoteGitServerManager = new RemoteGitServerManager(this.catmaProperties, catmaUser);
 		this.remoteGitServerManager.replaceGitLabServerUrl = true;
-
-		this.localGitRepositoryManager = new LocalGitRepositoryManager(this.catmaProperties);
-
-		this.sourceDocumentHandler = new SourceDocumentHandler(
-			this.localGitRepositoryManager, this.remoteGitServerManager
-		);
 	}
 
 	@After
 	public void tearDown() throws Exception {
-    	if (this.createdRepositoryPath != null) {
-			FileUtils.deleteDirectory(this.createdRepositoryPath);
-			this.createdRepositoryPath = null;
-		}
-
-		if (this.insertedSourceDocumentId != null) {
-    		List<Project> projects = this.remoteGitServerManager.getAdminGitLabApi().getProjectApi()
-					.getProjects(this.insertedSourceDocumentId);
-			for (Project project : projects) {
-				this.remoteGitServerManager.deleteRepository(project.getId());
+		if (this.directoriesToDeleteOnTearDown.size() > 0) {
+			for (File dir : this.directoriesToDeleteOnTearDown) {
+				FileUtils.deleteDirectory(dir);
 			}
-			await().until(
-				() -> this.remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects()
-						.isEmpty()
-			);
-			this.insertedSourceDocumentId = null;
+			this.directoriesToDeleteOnTearDown.clear();
 		}
 
-		if (this.localGitRepositoryManager != null) {
-			this.localGitRepositoryManager.close();
-			this.localGitRepositoryManager = null;
+		if (this.sourceDocumentReposToDeleteOnTearDown.size() > 0) {
+			for (String sourceDocumentId : this.sourceDocumentReposToDeleteOnTearDown) {
+				List<Project> projects = this.remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects(
+					sourceDocumentId
+				); // this getProjects overload does a search
+				for (Project project : projects) {
+					this.remoteGitServerManager.deleteRepository(project.getId());
+				}
+				await().until(
+					() -> this.remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
+				);
+			}
+			this.sourceDocumentReposToDeleteOnTearDown.clear();
+		}
+
+		if (this.projectsToDeleteOnTearDown.size() > 0) {
+			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
+
+				for (String projectId : this.projectsToDeleteOnTearDown) {
+					projectHandler.delete(projectId);
+				}
+				this.projectsToDeleteOnTearDown.clear();
+			}
 		}
 
 		// delete the GitLab user that the RemoteGitServerManager constructor in setUp would have
@@ -97,13 +97,11 @@ public class SourceDocumentHandlerTest {
 
     @Test
     public void insert() throws Exception {
-    	File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
-        File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
+		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
+		File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
 
-        FileInputStream originalSourceDocumentStream = new FileInputStream(originalSourceDocument);
-        FileInputStream convertedSourceDocumentStream = new FileInputStream(
-			convertedSourceDocument
-		);
+		FileInputStream originalSourceDocumentStream = new FileInputStream(originalSourceDocument);
+		FileInputStream convertedSourceDocumentStream = new FileInputStream(convertedSourceDocument);
 
 		IndexInfoSet indexInfoSet = new IndexInfoSet();
 		indexInfoSet.setLocale(Locale.ENGLISH);
@@ -130,81 +128,71 @@ public class SourceDocumentHandlerTest {
 
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-        this.insertedSourceDocumentId = this.sourceDocumentHandler.insert(
-			originalSourceDocumentStream, originalSourceDocument.getName(),
-			convertedSourceDocumentStream, convertedSourceDocument.getName(),
-			gitSourceDocumentInfo,
-			null, null
-		);
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
+				localGitRepoManager, this.remoteGitServerManager
+			);
 
-        assertNotNull(this.insertedSourceDocumentId);
-        assert this.insertedSourceDocumentId.startsWith("CATMA_");
+			String sourceDocumentId = sourceDocumentHandler.insert(
+				originalSourceDocumentStream, originalSourceDocument.getName(),
+				convertedSourceDocumentStream, convertedSourceDocument.getName(),
+				gitSourceDocumentInfo,
+				null, null
+			);
+			this.sourceDocumentReposToDeleteOnTearDown.add(sourceDocumentId);
 
-		File expectedRepoPath = new File(
-			this.localGitRepositoryManager.getRepositoryBasePath(), this.insertedSourceDocumentId
-		);
+			assertNotNull(sourceDocumentId);
+			assert sourceDocumentId.startsWith("CATMA_");
 
-		assert expectedRepoPath.exists();
-		assert expectedRepoPath.isDirectory();
+			File expectedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), sourceDocumentId);
+			assert expectedRepoPath.exists();
+			assert expectedRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(expectedRepoPath);
+			assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.pdf");
+			assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.txt");
+			assert FileUtils.contentEquals(
+				originalSourceDocument, new File(expectedRepoPath, "rose_for_emily.pdf")
+			);
+			assert FileUtils.contentEquals(
+				convertedSourceDocument, new File(expectedRepoPath, "rose_for_emily.txt")
+			);
 
-		this.createdRepositoryPath = expectedRepoPath;
+			assert Arrays.asList(expectedRepoPath.list()).contains("header.json");
 
-		assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.pdf");
-		assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.txt");
-		assert FileUtils.contentEquals(
-			originalSourceDocument, new File(expectedRepoPath, "rose_for_emily.pdf")
-		);
-		assert FileUtils.contentEquals(
-			convertedSourceDocument, new File(expectedRepoPath, "rose_for_emily.txt")
-		);
+			String expectedSerializedSourceDocumentInfo = "" +
+					"{\n" +
+					"\t\"gitContentInfoSet\":{\n" +
+					"\t\t\"author\":\"William Faulkner\",\n" +
+					"\t\t\"description\":\"\",\n" +
+					"\t\t\"publisher\":\"\",\n" +
+					"\t\t\"title\":\"A Rose for Emily\"\n" +
+					"\t},\n" +
+					"\t\"gitIndexInfoSet\":{\n" +
+					"\t\t\"locale\":\"en\",\n" +
+					"\t\t\"unseparableCharacterSequences\":[],\n" +
+					"\t\t\"userDefinedSeparatingCharacters\":[]\n" +
+					"\t},\n" +
+					"\t\"gitTechInfoSet\":{\n" +
+					"\t\t\"charset\":\"UTF-8\",\n" +
+					"\t\t\"checksum\":705211438,\n" +
+					"\t\t\"fileName\":null,\n" +
+					"\t\t\"fileOSType\":\"INDEPENDENT\",\n" +
+					"\t\t\"fileType\":\"TEXT\",\n" +
+					"\t\t\"mimeType\":null,\n" +
+					"\t\t\"uRI\":null,\n" +
+					"\t\t\"xsltDocumentLocalUri\":null\n" +
+					"\t}\n" +
+					"}";
 
-		assert Arrays.asList(expectedRepoPath.list()).contains("header.json");
-
-		String expectedSerializedSourceDocumentInfo = "" +
-				"{\n" +
-				"\t\"gitContentInfoSet\":{\n" +
-				"\t\t\"author\":\"William Faulkner\",\n" +
-				"\t\t\"description\":\"\",\n" +
-				"\t\t\"publisher\":\"\",\n" +
-				"\t\t\"title\":\"A Rose for Emily\"\n" +
-				"\t},\n" +
-				"\t\"gitIndexInfoSet\":{\n" +
-				"\t\t\"locale\":\"en\",\n" +
-				"\t\t\"unseparableCharacterSequences\":[],\n" +
-				"\t\t\"userDefinedSeparatingCharacters\":[]\n" +
-				"\t},\n" +
-				"\t\"gitTechInfoSet\":{\n" +
-				"\t\t\"charset\":\"UTF-8\",\n" +
-				"\t\t\"checksum\":705211438,\n" +
-				"\t\t\"fileName\":null,\n" +
-				"\t\t\"fileOSType\":\"INDEPENDENT\",\n" +
-				"\t\t\"fileType\":\"TEXT\",\n" +
-				"\t\t\"mimeType\":null,\n" +
-				"\t\t\"uRI\":null,\n" +
-				"\t\t\"xsltDocumentLocalUri\":null\n" +
-				"\t}\n" +
-				"}";
-
-		assertEquals(
-			expectedSerializedSourceDocumentInfo.replaceAll("[\n\t]", ""),
-			FileUtils.readFileToString(new File(expectedRepoPath, "header.json"), StandardCharsets.UTF_8)
-		);
+			assertEquals(
+				expectedSerializedSourceDocumentInfo.replaceAll("[\n\t]", ""),
+				FileUtils.readFileToString(new File(expectedRepoPath, "header.json"), StandardCharsets.UTF_8)
+			);
+		}
 	}
 
 	@Test
 	public void insertIntoProject() throws Exception {
-		// we use a separate LocalGitRepositoryManager instance to create the ProjectHandler as the
-		// instance that was passed to SourceDocumentHandler in setUp needs to stay unattached
-		LocalGitRepositoryManager tempLocalGitRepositoryManager = new LocalGitRepositoryManager(
-			this.catmaProperties
-		);
-
-		ProjectHandler projectHandler = new ProjectHandler(
-			tempLocalGitRepositoryManager, this.remoteGitServerManager
-		);
-
-		String projectId = projectHandler.create("Test CATMA Project", null);
-
 		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
 		File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
 
@@ -238,77 +226,81 @@ public class SourceDocumentHandlerTest {
 
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		this.insertedSourceDocumentId = this.sourceDocumentHandler.insert(
-			originalSourceDocumentStream, originalSourceDocument.getName(),
-			convertedSourceDocumentStream, convertedSourceDocument.getName(),
-			gitSourceDocumentInfo,
-			null, projectId
-		);
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
+				localGitRepoManager, this.remoteGitServerManager
+			);
 
-		assertNotNull(this.insertedSourceDocumentId);
-		assert this.insertedSourceDocumentId.startsWith("CATMA_");
+			ProjectHandler projectHandler = new ProjectHandler(
+				localGitRepoManager, this.remoteGitServerManager
+			);
 
-		File expectedRepoPath = new File(
-			this.localGitRepositoryManager.getRepositoryBasePath(), this.insertedSourceDocumentId
-		);
+			String projectId = projectHandler.create(
+				"Test CATMA Project", "This is a test CATMA project"
+			);
+			this.projectsToDeleteOnTearDown.add(projectId);
 
-		assert expectedRepoPath.exists();
-		assert expectedRepoPath.isDirectory();
+			localGitRepoManager.detach();  // can't call sourceDocumentHandler.insert if the localGitRepoManager
+			                               // instance is attached
 
-		this.createdRepositoryPath = expectedRepoPath;
+			String sourceDocumentId = sourceDocumentHandler.insert(
+				originalSourceDocumentStream, originalSourceDocument.getName(),
+				convertedSourceDocumentStream, convertedSourceDocument.getName(),
+				gitSourceDocumentInfo,
+				null, projectId
+			);
+			// we don't add the sourceDocumentId to this.sourceDocumentReposToDeleteOnTearDown as deletion of the
+			// project will take care of that for us
 
-		assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.pdf");
-		assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.txt");
-		assert FileUtils.contentEquals(
-			originalSourceDocument, new File(expectedRepoPath, "rose_for_emily.pdf")
-		);
-		assert FileUtils.contentEquals(
-			convertedSourceDocument, new File(expectedRepoPath, "rose_for_emily.txt")
-		);
+			assertNotNull(sourceDocumentId);
+			assert sourceDocumentId.startsWith("CATMA_");
 
-		assert Arrays.asList(expectedRepoPath.list()).contains("header.json");
+			File expectedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), sourceDocumentId);
 
-		String expectedSerializedSourceDocumentInfo = "" +
-				"{\n" +
-				"\t\"gitContentInfoSet\":{\n" +
-				"\t\t\"author\":\"William Faulkner\",\n" +
-				"\t\t\"description\":\"\",\n" +
-				"\t\t\"publisher\":\"\",\n" +
-				"\t\t\"title\":\"A Rose for Emily\"\n" +
-				"\t},\n" +
-				"\t\"gitIndexInfoSet\":{\n" +
-				"\t\t\"locale\":\"en\",\n" +
-				"\t\t\"unseparableCharacterSequences\":[],\n" +
-				"\t\t\"userDefinedSeparatingCharacters\":[]\n" +
-				"\t},\n" +
-				"\t\"gitTechInfoSet\":{\n" +
-				"\t\t\"charset\":\"UTF-8\",\n" +
-				"\t\t\"checksum\":705211438,\n" +
-				"\t\t\"fileName\":null,\n" +
-				"\t\t\"fileOSType\":\"INDEPENDENT\",\n" +
-				"\t\t\"fileType\":\"TEXT\",\n" +
-				"\t\t\"mimeType\":null,\n" +
-				"\t\t\"uRI\":null,\n" +
-				"\t\t\"xsltDocumentLocalUri\":null\n" +
-				"\t}\n" +
-				"}";
+			assert expectedRepoPath.exists();
+			assert expectedRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(expectedRepoPath);
+			assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.pdf");
+			assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.txt");
+			assert FileUtils.contentEquals(
+				originalSourceDocument, new File(expectedRepoPath, "rose_for_emily.pdf")
+			);
+			assert FileUtils.contentEquals(
+				convertedSourceDocument, new File(expectedRepoPath, "rose_for_emily.txt")
+			);
 
-		assertEquals(
-			expectedSerializedSourceDocumentInfo.replaceAll("[\n\t]", ""),
-			FileUtils.readFileToString(new File(expectedRepoPath, "header.json"), StandardCharsets.UTF_8)
-		);
+			assert Arrays.asList(expectedRepoPath.list()).contains("header.json");
 
-		// cleanup
-		projectHandler.delete(projectId);
-		await().until(
-			() -> this.remoteGitServerManager.getAdminGitLabApi().getGroupApi().getGroups()
-					.isEmpty()
-		);
-		tempLocalGitRepositoryManager.close();
+			String expectedSerializedSourceDocumentInfo = "" +
+					"{\n" +
+					"\t\"gitContentInfoSet\":{\n" +
+					"\t\t\"author\":\"William Faulkner\",\n" +
+					"\t\t\"description\":\"\",\n" +
+					"\t\t\"publisher\":\"\",\n" +
+					"\t\t\"title\":\"A Rose for Emily\"\n" +
+					"\t},\n" +
+					"\t\"gitIndexInfoSet\":{\n" +
+					"\t\t\"locale\":\"en\",\n" +
+					"\t\t\"unseparableCharacterSequences\":[],\n" +
+					"\t\t\"userDefinedSeparatingCharacters\":[]\n" +
+					"\t},\n" +
+					"\t\"gitTechInfoSet\":{\n" +
+					"\t\t\"charset\":\"UTF-8\",\n" +
+					"\t\t\"checksum\":705211438,\n" +
+					"\t\t\"fileName\":null,\n" +
+					"\t\t\"fileOSType\":\"INDEPENDENT\",\n" +
+					"\t\t\"fileType\":\"TEXT\",\n" +
+					"\t\t\"mimeType\":null,\n" +
+					"\t\t\"uRI\":null,\n" +
+					"\t\t\"xsltDocumentLocalUri\":null\n" +
+					"\t}\n" +
+					"}";
 
-		// prevent tearDown from also attempting to delete the source document repository (it would
-		// have been deleted as part of the project)
-		this.insertedSourceDocumentId = null;
+			assertEquals(
+				expectedSerializedSourceDocumentInfo.replaceAll("[\n\t]", ""),
+				FileUtils.readFileToString(new File(expectedRepoPath, "header.json"), StandardCharsets.UTF_8)
+			);
+		}
 	}
 
 	// how to test for exceptions: https://stackoverflow.com/a/31826781
@@ -317,8 +309,14 @@ public class SourceDocumentHandlerTest {
 
 	@Test
 	public void remove() throws Exception {
-		thrown.expect(SourceDocumentHandlerException.class);
-		thrown.expectMessage("Not implemented");
-		this.sourceDocumentHandler.remove("fake");
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
+				localGitRepoManager, this.remoteGitServerManager
+			);
+
+			thrown.expect(SourceDocumentHandlerException.class);
+			thrown.expectMessage("Not implemented");
+			sourceDocumentHandler.remove("fake");
+		}
 	}
 }

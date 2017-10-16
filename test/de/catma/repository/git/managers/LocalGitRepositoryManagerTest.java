@@ -25,8 +25,8 @@ import static org.junit.Assert.*;
 
 public class LocalGitRepositoryManagerTest {
 	private Properties catmaProperties;
-	private LocalGitRepositoryManager repoManager;
-	private File testRepoPath;
+
+	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
 
 	public LocalGitRepositoryManagerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
@@ -38,67 +38,82 @@ public class LocalGitRepositoryManagerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		this.repoManager = new LocalGitRepositoryManager(this.catmaProperties);
-		this.testRepoPath = new File(this.repoManager.getRepositoryBasePath(), "test-repo");
+
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		if (this.repoManager != null) {
-			this.repoManager.close();
-			this.repoManager = null;
-		}
-		if (this.testRepoPath != null) {
-			FileUtils.deleteDirectory(this.testRepoPath);
-			this.testRepoPath = null;
+		if (this.directoriesToDeleteOnTearDown.size() > 0) {
+			for (File dir : this.directoriesToDeleteOnTearDown) {
+				FileUtils.deleteDirectory(dir);
+			}
+			this.directoriesToDeleteOnTearDown.clear();
 		}
 	}
 
 	@Test
 	public void isAttached() throws Exception {
-		// init(), open() and clone() test that the response is true when it should be
-		assertFalse(this.repoManager.isAttached());
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			// the other tests test that the response is true when it should be
+			assertFalse(localGitRepoManager.isAttached());
+		}
 	}
 
 	@Test
 	public void getRepositoryWorkTree() throws Exception {
-		assertNull(this.repoManager.getRepositoryWorkTree());
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			assertNull(localGitRepoManager.getRepositoryWorkTree());
 
-		this.repoManager.init(this.testRepoPath.getName(), null);
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
 
-		assertEquals(this.testRepoPath, this.repoManager.getRepositoryWorkTree());
+			localGitRepoManager.init(testRepoPath.getName(), null);
+
+			assert localGitRepoManager.isAttached();
+			assert testRepoPath.exists();
+			assert testRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(testRepoPath);
+			assertEquals(testRepoPath, localGitRepoManager.getRepositoryWorkTree());
+		}
 	}
 
 	@Test
 	public void init() throws Exception {
-		this.repoManager.init(this.testRepoPath.getName(), "Test Description");
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
 
-		assert this.repoManager.isAttached();
-		assert this.testRepoPath.exists();
-		assert this.testRepoPath.isDirectory();
-		assert Arrays.asList(this.testRepoPath.list()).contains(".git");
+			localGitRepoManager.init(testRepoPath.getName(), "Test Description");
 
-		File gitDescriptionFile = new File(this.testRepoPath, ".git/description");
-		assertEquals(
-			"Test Description\n",
-			new String(Files.readAllBytes(gitDescriptionFile.toPath()))
-		);
+			assert localGitRepoManager.isAttached();
+			assert testRepoPath.exists();
+			assert testRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(testRepoPath);
+			assert Arrays.asList(testRepoPath.list()).contains(".git");
+
+			File gitDescriptionFile = new File(testRepoPath, ".git/description");
+			assertEquals(
+				"Test Description\n",
+				new String(Files.readAllBytes(gitDescriptionFile.toPath()))
+			);
+		}
 	}
 
 	@Test
 	public void cloneRepo() throws Exception {
-		String repoName = this.repoManager.clone("https://github.com/maltem-za/tiny.git",
-			null, null
-		);
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			String repoName = localGitRepoManager.clone(
+				"https://github.com/maltem-za/tiny.git", null, null
+			);
 
-		this.testRepoPath = new File(this.repoManager.getRepositoryBasePath(), "tiny");
+			assert localGitRepoManager.isAttached();
+			assertEquals(repoName, "tiny");
 
-		assert this.repoManager.isAttached();
-		assertEquals(repoName, "tiny");
-		assert this.testRepoPath.exists();
-		assert this.testRepoPath.isDirectory();
-		assert Arrays.asList(this.testRepoPath.list()).contains(".git");
-		assert Arrays.asList(this.testRepoPath.list()).contains("README.md");
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "tiny");
+			assert testRepoPath.exists();
+			assert testRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(testRepoPath);
+			assert Arrays.asList(testRepoPath.list()).contains(".git");
+			assert Arrays.asList(testRepoPath.list()).contains("README.md");
+		}
 	}
 
 	@Test
@@ -122,19 +137,24 @@ public class LocalGitRepositoryManagerTest {
 					remoteGitServerManager.getGitLabUserImpersonationToken()
 				);
 
-		String repoName = this.repoManager.clone(
-			authenticatedRepositoryUrl,
-			remoteGitServerManager.getGitLabUser().getUsername(),
-			remoteGitServerManager.getGitLabUserImpersonationToken()
-		);
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			String repoName = localGitRepoManager.clone(
+				authenticatedRepositoryUrl,
+				remoteGitServerManager.getGitLabUser().getUsername(),
+				remoteGitServerManager.getGitLabUserImpersonationToken()
+			);
 
-		assert this.repoManager.isAttached();
-		assertEquals(repoName, "test-repo");
-		assert this.testRepoPath.exists();
-		assert this.testRepoPath.isDirectory();
-		assert Arrays.asList(this.testRepoPath.list()).contains(".git");
+			assert localGitRepoManager.isAttached();
+			assertEquals(repoName, "test-repo");
 
-		// cleanup
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), repoName);
+			assert testRepoPath.exists();
+			assert testRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(testRepoPath);
+			assert Arrays.asList(testRepoPath.list()).contains(".git");
+		}
+
+		// cleanup (these are not handled by tearDown)
 		remoteGitServerManager.deleteRepository(createRepositoryResponse.repositoryId);
 		await().until(
 			() -> remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
@@ -146,178 +166,223 @@ public class LocalGitRepositoryManagerTest {
 		RemoteGitServerManagerTest.awaitUserDeleted(
 			remoteGitServerManager.getAdminGitLabApi().getUserApi(), user.getId()
 		);
-
-		// tearDown() will take care of deleting the this.testRepoPath directory
 	}
 
 	@Test
 	public void open() throws Exception {
-		// we use a separate LocalGitRepositoryManager instance to init the repo as we can't call
-		// open on an attached instance
-		try (LocalGitRepositoryManager repoManager = new LocalGitRepositoryManager(
-			this.catmaProperties
-		)) {
-			repoManager.init(this.testRepoPath.getName(), null);
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
+
+			localGitRepoManager.init(testRepoPath.getName(), null);
+
+			assert localGitRepoManager.isAttached();
+			assert testRepoPath.exists();
+			assert testRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(testRepoPath);
+
+			localGitRepoManager.detach();  // can't call open on an attached instance
+
+			localGitRepoManager.open(testRepoPath.getName());
+
+			assert localGitRepoManager.isAttached();
 		}
-
-		this.repoManager.open(this.testRepoPath.getName());
-
-		assert this.repoManager.isAttached();
 	}
 
 	@Test
 	public void add() throws Exception {
-		this.repoManager.init(this.testRepoPath.getName(), null);
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
 
-		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
-		byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
+			localGitRepoManager.init(testRepoPath.getName(), null);
 
-		File targetFile = new File(
-			this.testRepoPath + "/" + originalSourceDocument.getName()
-		);
-
-		this.repoManager.add(targetFile, originalSourceDocumentBytes);
-
-		Git gitApi = this.repoManager.getGitApi();
-		Status status = gitApi.status().call();
-		Set<String> added = status.getAdded();
-
-		assert status.hasUncommittedChanges();
-		assert added.contains(originalSourceDocument.getName());
-	}
-
-	@Test
-	public void addAndCommit() throws Exception {
-		this.repoManager.init(this.testRepoPath.getName(), null);
-
-		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
-		byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
-
-		File targetFile = new File(
-			this.testRepoPath + "/" + originalSourceDocument.getName()
-		);
-
-		this.repoManager.addAndCommit(targetFile, originalSourceDocumentBytes);
-
-		Git gitApi = this.repoManager.getGitApi();
-		Status status = gitApi.status().call();
-
-		assert status.isClean();
-		assertFalse(status.hasUncommittedChanges());
-	}
-
-	@Test
-	public void commit() throws Exception {
-		this.repoManager.init(this.testRepoPath.getName(), null);
-
-		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
-		byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
-
-		File targetFile = new File(
-			this.testRepoPath + "/" + originalSourceDocument.getName()
-		);
-
-		this.repoManager.add(targetFile, originalSourceDocumentBytes);
-
-		Git gitApi = this.repoManager.getGitApi();
-		Status status = gitApi.status().call();
-		Set<String> added = status.getAdded();
-
-		assert status.hasUncommittedChanges();
-		assert added.contains(originalSourceDocument.getName());
-
-		this.repoManager.commit(String.format("Adding %s", targetFile.getName()));
-
-		status = gitApi.status().call();
-		assert status.isClean();
-		assertFalse(status.hasUncommittedChanges());
-	}
-
-	@Test
-	public void addSubmodule() throws Exception {
-		// init container repo
-		try (LocalGitRepositoryManager repoMan = this.repoManager) {
-			repoMan.init(this.testRepoPath.getName(), null);
-		}
-
-		// init another repo which will be a submodule in the container repo
-		File testSubmoduleRepoPath = new File(this.repoManager.getRepositoryBasePath(), "test-repo-2");
-
-		try (LocalGitRepositoryManager repoMan = this.repoManager) {
-			this.repoManager.init(testSubmoduleRepoPath.getName(), null);
-		}
-
-		// re-attach the repo manager to the container repo
-		this.repoManager.open(this.testRepoPath.getName());
-
-		// add a submodule to the container repo
-		this.repoManager.addSubmodule(
-			new File(this.testRepoPath, testSubmoduleRepoPath.getName()), "../test-repo-2",
-			null, null
-		);
-
-		assert Arrays.asList(this.testRepoPath.list()).contains(".gitmodules");
-		assert Arrays.asList(this.testRepoPath.list()).contains("test-repo-2");
-
-		File gitModulesFilePath = new File(this.testRepoPath, ".gitmodules");
-		String expectedGitModulesFileContents = "" +
-				"[submodule \"test-repo-2\"]\n" +
-				"\tpath = test-repo-2\n" +
-				"\turl = ../test-repo-2\n";
-		assertEquals(
-			expectedGitModulesFileContents, FileUtils.readFileToString(gitModulesFilePath, StandardCharsets.UTF_8)
-		);
-
-		File subModulePath = new File(this.testRepoPath, "test-repo-2");
-		assert Arrays.asList(subModulePath.list()).contains(".git");
-
-		File subModuleGitFilePath = new File(subModulePath, ".git");
-		// example: "gitdir: C:\Code\catma\dev\repo\git\test-repo\.git\modules\test-repo-2"
-		String expectedSubmoduleGitFileContents = String.format(
-			"gitdir: %s", new File(this.testRepoPath, ".git/modules/test-repo-2").toString()
-		);
-		assertEquals(
-			expectedSubmoduleGitFileContents, FileUtils.readFileToString(subModuleGitFilePath, StandardCharsets.UTF_8)
-		);
-
-		// cleanup
-		FileUtils.deleteDirectory(testSubmoduleRepoPath);
-	}
-
-	@Test
-	public void push() throws Exception {
-		try (Git gitApi = Git.init().setDirectory(this.testRepoPath).setBare(true).call()) {
-		}
-
-		File clonedRepositoryPath = new File(this.repoManager.getRepositoryBasePath(), "cloned");
-
-		CloneCommand cloneCommand = Git.cloneRepository().setURI(this.testRepoPath.toURI().toString()).setDirectory(
-			clonedRepositoryPath
-		);
-		try (Git gitApi = cloneCommand.call()) {
-		}
-
-		try (LocalGitRepositoryManager repoMan = this.repoManager) {
-			repoMan.open("cloned");
+			assert localGitRepoManager.isAttached();
+			assert testRepoPath.exists();
+			assert testRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(testRepoPath);
 
 			File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
 			byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
 
-			File targetFile = new File(clonedRepositoryPath, originalSourceDocument.getName());
+			File targetFile = new File(testRepoPath + "/" + originalSourceDocument.getName());
 
-			repoMan.addAndCommit(targetFile, originalSourceDocumentBytes);
+			localGitRepoManager.add(targetFile, originalSourceDocumentBytes);
 
-			repoMan.push(null, null);
+			Git gitApi = localGitRepoManager.getGitApi();
+			Status status = gitApi.status().call();
+			Set<String> added = status.getAdded();
+
+			assert status.hasUncommittedChanges();
+			assert added.contains(originalSourceDocument.getName());
 		}
+	}
 
-		this.repoManager.open(this.testRepoPath.getName());
-		Iterable<RevCommit> commits = this.repoManager.getGitApi().log().all().call();
-		@SuppressWarnings("unchecked")
-		List<RevCommit> commitsList = IteratorUtils.toList(commits.iterator());
-		assertEquals(1, commitsList.size());
-		assertEquals("Adding rose_for_emily.pdf" , commitsList.get(0).getFullMessage());
+	@Test
+	public void addAndCommit() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
 
-		// cleanup
-		FileUtils.deleteDirectory(clonedRepositoryPath);
+			localGitRepoManager.init(testRepoPath.getName(), null);
+
+			assert localGitRepoManager.isAttached();
+			assert testRepoPath.exists();
+			assert testRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(testRepoPath);
+
+			File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
+			byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
+
+			File targetFile = new File(testRepoPath + "/" + originalSourceDocument.getName());
+
+			localGitRepoManager.addAndCommit(targetFile, originalSourceDocumentBytes);
+
+			Git gitApi = localGitRepoManager.getGitApi();
+			Status status = gitApi.status().call();
+
+			assert status.isClean();
+			assertFalse(status.hasUncommittedChanges());
+		}
+	}
+
+	@Test
+	public void commit() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
+
+			localGitRepoManager.init(testRepoPath.getName(), null);
+
+			assert localGitRepoManager.isAttached();
+			assert testRepoPath.exists();
+			assert testRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(testRepoPath);
+
+			File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
+			byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
+
+			File targetFile = new File(testRepoPath + "/" + originalSourceDocument.getName());
+
+			localGitRepoManager.add(targetFile, originalSourceDocumentBytes);
+
+			Git gitApi = localGitRepoManager.getGitApi();
+			Status status = gitApi.status().call();
+			Set<String> added = status.getAdded();
+
+			assert status.hasUncommittedChanges();
+			assert added.contains(originalSourceDocument.getName());
+
+			localGitRepoManager.commit(String.format("Adding %s", targetFile.getName()));
+
+			status = gitApi.status().call();
+			assert status.isClean();
+			assertFalse(status.hasUncommittedChanges());
+		}
+	}
+
+	@Test
+	public void addSubmodule() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			File containerRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "container");
+			File submoduleRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "submodule");
+
+			// init container repo
+			localGitRepoManager.init(containerRepoPath.getName(), null);
+
+			assert localGitRepoManager.isAttached();
+			assert containerRepoPath.exists();
+			assert containerRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(containerRepoPath);
+
+			localGitRepoManager.detach();  // can't call init on an attached instance
+
+			// init another repo which will be a submodule in the container repo
+			localGitRepoManager.init(submoduleRepoPath.getName(), null);
+
+			assert localGitRepoManager.isAttached();
+			assert submoduleRepoPath.exists();
+			assert submoduleRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(submoduleRepoPath);
+
+			localGitRepoManager.detach();  // can't call open on an attached instance
+
+			// re-attach the repo manager to the container repo
+			localGitRepoManager.open(containerRepoPath.getName());
+
+			// add a submodule to the container repo
+			localGitRepoManager.addSubmodule(
+				new File(containerRepoPath, submoduleRepoPath.getName()),
+				String.format("../%s", submoduleRepoPath.getName()),
+				null, null
+			);
+
+			assert Arrays.asList(containerRepoPath.list()).contains(".gitmodules");
+			assert Arrays.asList(containerRepoPath.list()).contains(submoduleRepoPath.getName());
+
+			File gitModulesFilePath = new File(containerRepoPath, ".gitmodules");
+			String expectedGitModulesFileContents = String.format("" +
+					"[submodule \"%s\"]\n" +
+					"\tpath = %s\n" +
+					"\turl = ../%s\n",
+					submoduleRepoPath.getName(), submoduleRepoPath.getName(), submoduleRepoPath.getName());
+			assertEquals(
+				expectedGitModulesFileContents, FileUtils.readFileToString(gitModulesFilePath, StandardCharsets.UTF_8)
+			);
+
+			File subModulePath = new File(containerRepoPath, submoduleRepoPath.getName());
+			assert Arrays.asList(subModulePath.list()).contains(".git");
+
+			File subModuleGitFilePath = new File(subModulePath, ".git");
+			String expectedSubmoduleGitFileContents = String.format(
+				"gitdir: %s",
+				new File(containerRepoPath, String.format(".git/modules/%s", submoduleRepoPath.getName())).toString()
+			);
+			assertEquals(
+				expectedSubmoduleGitFileContents,
+				FileUtils.readFileToString(subModuleGitFilePath, StandardCharsets.UTF_8)
+			);
+		}
+	}
+
+	@Test
+	public void push() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			// create a bare repository that will act as the remote
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
+
+			try (Git gitApi = Git.init().setDirectory(testRepoPath).setBare(true).call()) {}
+			this.directoriesToDeleteOnTearDown.add(testRepoPath);
+
+			// clone it
+			File clonedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "cloned");
+
+			CloneCommand cloneCommand = Git.cloneRepository().setURI(testRepoPath.toURI().toString()).setDirectory(
+				clonedRepoPath
+			);
+			try (Git gitApi = cloneCommand.call()) {}
+			this.directoriesToDeleteOnTearDown.add(clonedRepoPath);
+
+			localGitRepoManager.detach();  // can't call open on an attached instance
+
+			// open the cloned repo, add and commit a file, then push
+			localGitRepoManager.open("cloned");
+
+			File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
+			byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
+
+			File targetFile = new File(clonedRepoPath, originalSourceDocument.getName());
+
+			localGitRepoManager.addAndCommit(targetFile, originalSourceDocumentBytes);
+
+			localGitRepoManager.push(null, null);
+
+			localGitRepoManager.detach();  // can't call open on an attached instance
+
+			// re-open the bare repo and assert that the push worked by inspecting the Git log
+			localGitRepoManager.open(testRepoPath.getName());
+			Iterable<RevCommit> commits = localGitRepoManager.getGitApi().log().all().call();
+			@SuppressWarnings("unchecked")
+			List<RevCommit> commitsList = IteratorUtils.toList(commits.iterator());
+
+			assertEquals(1, commitsList.size());
+			assertEquals("Adding rose_for_emily.pdf" , commitsList.get(0).getFullMessage());
+		}
 	}
 }

@@ -168,8 +168,14 @@ You see the following error message in the IvyIDEA console when resolving depend
 ###### Description & Solution:
 The javax.ws.rs-api pom.xml file contains a variable, `${packaging.type}`, which is not understood by Ivy and which causes the download of the package to fail.
 See [this open issue](https://github.com/jax-rs/api/issues/572).
-At time of writing the only known workaround is to manually download the jar files from [the Maven repository](https://repo1.maven.org/maven2/javax/ws/rs/javax.ws.rs-api/2.1/),
-put them into your Ivy cache directory and update your `catma.iml` file to add the following "root" nodes under the respective sections of the "IvyIDEA" library node.
+
+Ivy has now been configured with a custom filesystem resolver which will attempt to resolve dependencies by looking for them at this location:
+`${ivy.default.ivy.user.dir}/local/[organisation]/[module]/[type]s/[artifact]-[revision].[ext]`.
+All you should need to do is place the javax.ws.rs-api-2.1.jar file in `~/ivy2/local/javax.ws.rs/javax.ws.rs-api/jars/javax.ws.rs-api-2.1.jar`,
+and the Ivy dependency resolution process should complete successfully again.
+
+~~At time of writing the only known workaround is to manually download the jar files from [the Maven repository](https://repo1.maven.org/maven2/javax/ws/rs/javax.ws.rs-api/2.1/),
+put them into your Ivy cache directory and update your `catma.iml` file to add the following "root" nodes under the respective sections of the "IvyIDEA" library node.~~
 
 ```
       <library name="IvyIDEA">
