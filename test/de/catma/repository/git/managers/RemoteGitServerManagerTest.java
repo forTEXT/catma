@@ -4,6 +4,7 @@ import de.catma.repository.db.DBUser;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
 import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.gitlab4j.api.*;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
@@ -42,7 +43,8 @@ public class RemoteGitServerManagerTest {
 	public void setUp() throws Exception {
 		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
 		this.catmaUser = new DBUser(
-			1, "catma-testuser", false, false, false
+			1, String.format("catma-testuser-%s", RandomStringUtils.randomAlphanumeric(3)),
+			false, false, false
 		);
 
 		this.serverManager = new RemoteGitServerManager(this.catmaProperties, this.catmaUser);

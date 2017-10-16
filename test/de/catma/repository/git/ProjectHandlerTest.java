@@ -7,6 +7,7 @@ import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
 import de.catma.repository.git.model_wrappers.GitSourceDocumentInfo;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.jgit.api.Status;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
@@ -38,7 +39,8 @@ public class ProjectHandlerTest {
 	public void setUp() throws Exception {
 		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
 		de.catma.user.User catmaUser = new DBUser(
-			1, "catma-testuser", false, false, false
+			1, String.format("catma-testuser-%s", RandomStringUtils.randomAlphanumeric(3)),
+			false, false, false
 		);
 
 		this.remoteGitServerManager = new RemoteGitServerManager(

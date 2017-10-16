@@ -5,6 +5,7 @@ import de.catma.repository.git.GitLabAuthenticationHelper;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -125,7 +126,8 @@ public class LocalGitRepositoryManagerTest {
 	public void cloneGitLabRepoWithAuthentication() throws Exception {
 		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
 		DBUser catmaUser = new DBUser(
-			1, "catma-testuser", false, false, false
+			1, String.format("catma-testuser-%s", RandomStringUtils.randomAlphanumeric(3)),
+			false, false, false
 		);
 
 		RemoteGitServerManager remoteGitServerManager = new RemoteGitServerManager(
