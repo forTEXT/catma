@@ -389,7 +389,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/hk2-api/javadocs/hk2-api-2.5.0-b42-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/hk2-utils/javadocs/hk2-utils-2.5.0-b42-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.core/jersey-client/javadocs/jersey-client-2.26-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/javax.ws.rs/javax.ws.rs-api/javadocs/javax.ws.rs-api-2.1-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.jmockit/jmockit/javadocs/jmockit-1.35-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.annotation/javax.annotation-api/javadocs/javax.annotation-api-1.3.1-javadoc.jar!/" />
         </JAVADOC>
@@ -536,7 +535,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.hk2/hk2-utils/sources/hk2-utils-2.5.0-b42-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.javassist/javassist/sources/javassist-3.22.0-CR2-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.core/jersey-client/sources/jersey-client-2.26-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/javax.ws.rs/javax.ws.rs-api/sources/javax.ws.rs-api-2.1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.jmockit/jmockit/sources/jmockit-1.35-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.annotation/javax.annotation-api/sources/javax.annotation-api-1.3.1-sources.jar!/" />
         </SOURCES>
