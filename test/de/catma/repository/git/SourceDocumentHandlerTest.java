@@ -144,6 +144,10 @@ public class SourceDocumentHandlerTest {
 			assertNotNull(sourceDocumentId);
 			assert sourceDocumentId.startsWith("CATMA_");
 
+			// the LocalGitRepositoryManager instance should always be in a detached state after SourceDocumentHandler
+			// calls return
+			assertFalse(localGitRepoManager.isAttached());
+
 			File expectedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), sourceDocumentId);
 			assert expectedRepoPath.exists();
 			assert expectedRepoPath.isDirectory();
@@ -240,8 +244,9 @@ public class SourceDocumentHandlerTest {
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			localGitRepoManager.detach();  // can't call sourceDocumentHandler.insert if the localGitRepoManager
-			                               // instance is attached
+			// the LocalGitRepositoryManager instance should always be in a detached state after ProjectHandler calls
+			// return
+			assertFalse(localGitRepoManager.isAttached());
 
 			String sourceDocumentId = sourceDocumentHandler.insert(
 				originalSourceDocumentStream, originalSourceDocument.getName(),
@@ -254,6 +259,10 @@ public class SourceDocumentHandlerTest {
 
 			assertNotNull(sourceDocumentId);
 			assert sourceDocumentId.startsWith("CATMA_");
+
+			// the LocalGitRepositoryManager instance should always be in a detached state after SourceDocumentHandler
+			// calls return
+			assertFalse(localGitRepoManager.isAttached());
 
 			File expectedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), sourceDocumentId);
 

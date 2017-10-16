@@ -82,6 +82,10 @@ public class ProjectHandlerTest {
 			assertNotNull(projectId);
 			assert projectId.startsWith("CATMA_");
 
+			// the LocalGitRepositoryManager instance should always be in a detached state after ProjectHandler calls
+			// return
+			assertFalse(localGitRepoManager.isAttached());
+
 			String expectedRootRepositoryName = String.format(
 				ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId
 			);
@@ -125,6 +129,10 @@ public class ProjectHandlerTest {
 			assertNotNull(projectId);
 			assert projectId.startsWith("CATMA_");
 
+			// the LocalGitRepositoryManager instance should always be in a detached state after ProjectHandler calls
+			// return
+			assertFalse(localGitRepoManager.isAttached());
+
 			String expectedRootRepositoryName = String.format(
 				ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId
 			);
@@ -138,6 +146,10 @@ public class ProjectHandlerTest {
 			projectHandler.delete(projectId);
 
 			assertFalse(expectedRootRepositoryPath.exists());
+
+			// the LocalGitRepositoryManager instance should always be in a detached state after ProjectHandler calls
+			// return
+			assertFalse(localGitRepoManager.isAttached());
 		}
 	}
 
