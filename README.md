@@ -7,7 +7,7 @@
 - Eclipse Neon 3, Release 4.6.3
 - Latest Vaadin Plugin - [Download](http://vaadin.com/eclipse)
 - Latest IvyDE Plugin - [Download](http://ant.apache.org/ivy/ivyde/updatesite)
-- Jetty 9.3.20v20170531 - [Download](http://central.maven.org/maven2/org/eclipse/jetty/jetty-distribution/9.4.6.v20170531/jetty-distribution-9.4.6.v20170531.zip)
+- Jetty 9.3.20v20170531 - [Download](http://central.maven.org/maven2/org/eclipse/jetty/jetty-distribution/9.3.20.v20170531/jetty-distribution-9.3.20.v20170531.zip)
 - Latest Jetty Plugin - [Download](http://eclipse-jetty.github.io/update/) (the custom Jetty version needs to be selected in the plugin's settings)
 
 ### Instructions:
@@ -23,7 +23,7 @@ See [Migrating From Eclipse to IntelliJ IDEA](https://www.jetbrains.com/help/ide
 ### Prerequisites:
 - Maria DB 10.1.26 or later - [Download](https://downloads.mariadb.org/) (setup script: `db/createCATMA6DB.sql`)
 - IntelliJ IDEA Ultimate - [Download](https://www.jetbrains.com/idea/download) (the Ultimate Edition is needed for GWT/Vaadin and Jetty support)
-- Jetty 9.3.20v20170531 - [Download](http://central.maven.org/maven2/org/eclipse/jetty/jetty-distribution/9.4.6.v20170531/jetty-distribution-9.4.6.v20170531.zip) - [Docs](http://www.eclipse.org/jetty/documentation/current/)
+- Jetty 9.3.20v20170531 - [Download](http://central.maven.org/maven2/org/eclipse/jetty/jetty-distribution/9.3.20.v20170531/jetty-distribution-9.3.20.v20170531.zip) - [Docs](http://www.eclipse.org/jetty/documentation/current/)
 - GWT SDK 2.7.0 - [Download](http://goo.gl/t7FQSn) (make sure that the version matches that of your Vaadin version, you can check it here: `https://github.com/vaadin/framework/blob/<vaadin-version>/pom.xml` (look for a line like `<vaadin.gwt.version>2.7.0.vaadin5</vaadin.gwt.version>` under the `<properties>` node)
 
 ### Instructions:
