@@ -290,7 +290,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	 *         or the commit operation failed
 	 */
 	@Override
-	public void addAndCommit(File targetFile, byte[] bytes)
+	public void addAndCommit(File targetFile, byte[] bytes, String committerName, String committerEmail)
 			throws LocalGitRepositoryManagerException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `addAndCommit` on a detached instance");
@@ -298,7 +298,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 
 		this.add(targetFile, bytes);
 		String commitMessage = String.format("Adding %s", targetFile.getName());
-		this.commit(commitMessage);
+		this.commit(commitMessage, committerName, committerEmail);
 	}
 
 	/**
@@ -308,13 +308,14 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	 * @throws LocalGitRepositoryManagerException if the commit operation failed
 	 */
 	@Override
-	public void commit(String message) throws LocalGitRepositoryManagerException {
+	public void commit(String message, String committerName, String committerEmail)
+			throws LocalGitRepositoryManagerException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `commit` on a detached instance");
 		}
 
 		try {
-			this.gitApi.commit().setMessage(message).call();
+			this.gitApi.commit().setMessage(message).setCommitter(committerName, committerEmail).call();
 		}
 		catch (GitAPIException e) {
 			throw new LocalGitRepositoryManagerException("Failed to commit", e);

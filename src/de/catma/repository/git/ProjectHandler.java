@@ -11,6 +11,8 @@ import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.model_wrappers.GitSourceDocumentInfo;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.gitlab4j.api.models.User;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -67,13 +69,14 @@ public class ProjectHandler implements IProjectHandler {
 			// clone the root repository locally
 			RemoteGitServerManager remoteGitServerManagerImpl =
 					(RemoteGitServerManager)this.remoteGitServerManager;
+			User gitLabUser = remoteGitServerManagerImpl.getGitLabUser();
 			String gitLabUserImpersonationToken = remoteGitServerManagerImpl
 					.getGitLabUserImpersonationToken();
 
 			localGitRepoManager.clone(
 				response.repositoryHttpUrl,
 				null,
-				remoteGitServerManagerImpl.getGitLabUser().getUsername(),
+				gitLabUser.getUsername(),
 				gitLabUserImpersonationToken
 			);
 
@@ -81,7 +84,11 @@ public class ProjectHandler implements IProjectHandler {
 
 			// write empty tagsets.json into the local repo
 			File targetTagsetsFile = new File(repositoryWorkTree, "tagsets.json");
-			localGitRepoManager.addAndCommit(targetTagsetsFile, new byte[]{});
+			localGitRepoManager.addAndCommit(
+				targetTagsetsFile, new byte[]{},
+				StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername(),
+				gitLabUser.getEmail()
+			);
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException e) {
 			throw new ProjectHandlerException("Failed to create project", e);

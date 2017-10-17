@@ -264,13 +264,24 @@ public class LocalGitRepositoryManagerTest {
 
 			File targetFile = new File(testRepoPath, originalSourceDocument.getName());
 
-			localGitRepoManager.addAndCommit(targetFile, originalSourceDocumentBytes);
+			localGitRepoManager.addAndCommit(
+				targetFile, originalSourceDocumentBytes,
+				"Test Committer", "testcommitter@catma.de"
+			);
 
 			Git gitApi = localGitRepoManager.getGitApi();
 			Status status = gitApi.status().call();
 
 			assert status.isClean();
 			assertFalse(status.hasUncommittedChanges());
+
+			Iterable<RevCommit> commits = localGitRepoManager.getGitApi().log().all().call();
+			@SuppressWarnings("unchecked")
+			List<RevCommit> commitsList = IteratorUtils.toList(commits.iterator());
+
+			assertEquals(1, commitsList.size());
+			assertEquals("Test Committer" , commitsList.get(0).getCommitterIdent().getName());
+			assertEquals("testcommitter@catma.de" , commitsList.get(0).getCommitterIdent().getEmailAddress());
 		}
 	}
 
@@ -300,11 +311,22 @@ public class LocalGitRepositoryManagerTest {
 			assert status.hasUncommittedChanges();
 			assert added.contains(originalSourceDocument.getName());
 
-			localGitRepoManager.commit(String.format("Adding %s", targetFile.getName()));
+			localGitRepoManager.commit(
+				String.format("Adding %s", targetFile.getName()),
+				"Test Committer", "testcommitter@catma.de"
+			);
 
 			status = gitApi.status().call();
 			assert status.isClean();
 			assertFalse(status.hasUncommittedChanges());
+
+			Iterable<RevCommit> commits = localGitRepoManager.getGitApi().log().all().call();
+			@SuppressWarnings("unchecked")
+			List<RevCommit> commitsList = IteratorUtils.toList(commits.iterator());
+
+			assertEquals(1, commitsList.size());
+			assertEquals("Test Committer" , commitsList.get(0).getCommitterIdent().getName());
+			assertEquals("testcommitter@catma.de" , commitsList.get(0).getCommitterIdent().getEmailAddress());
 		}
 	}
 
@@ -404,7 +426,10 @@ public class LocalGitRepositoryManagerTest {
 
 			File targetFile = new File(clonedRepoPath, originalSourceDocument.getName());
 
-			localGitRepoManager.addAndCommit(targetFile, originalSourceDocumentBytes);
+			localGitRepoManager.addAndCommit(
+				targetFile, originalSourceDocumentBytes,
+				"Test Committer", "testcommitter@catma.de"
+			);
 
 			localGitRepoManager.push(null, null);
 
@@ -459,7 +484,10 @@ public class LocalGitRepositoryManagerTest {
 
 			File targetFile = new File(testRepoPath, originalSourceDocument.getName());
 
-			localGitRepoManager.addAndCommit(targetFile, originalSourceDocumentBytes);
+			localGitRepoManager.addAndCommit(
+				targetFile, originalSourceDocumentBytes,
+				"Test Committer", "testcommitter@catma.de"
+			);
 
 			localGitRepoManager.push(
 				remoteGitServerManager.getGitLabUser().getUsername(),

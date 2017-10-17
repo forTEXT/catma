@@ -25,9 +25,10 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	void add(File targetFile, byte[] bytes) throws LocalGitRepositoryManagerException;
 
-	void addAndCommit(File targetFile, byte[] bytes) throws LocalGitRepositoryManagerException;
+	void addAndCommit(File targetFile, byte[] bytes, String committerName, String committerEmail)
+			throws LocalGitRepositoryManagerException;
 
-	void commit(String message) throws LocalGitRepositoryManagerException;
+	void commit(String message, String committerName, String committerEmail) throws LocalGitRepositoryManagerException;
 
 	void addSubmodule(File path, String uri, @Nullable String username, @Nullable String password)
 			throws LocalGitRepositoryManagerException;

@@ -10,6 +10,8 @@ import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.model_wrappers.GitSourceDocumentInfo;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.gitlab4j.api.models.User;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -76,13 +78,14 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 			// clone the repository locally
 			RemoteGitServerManager remoteGitServerManagerImpl =
 					(RemoteGitServerManager)this.remoteGitServerManager;
+			User gitLabUser = remoteGitServerManagerImpl.getGitLabUser();
 			String gitLabUserImpersonationToken = remoteGitServerManagerImpl
 					.getGitLabUserImpersonationToken();
 
 			localGitRepoManager.clone(
 				response.repositoryHttpUrl,
 				null,
-				remoteGitServerManagerImpl.getGitLabUser().getUsername(),
+				gitLabUser.getUsername(),
 				gitLabUserImpersonationToken
 			);
 
@@ -114,7 +117,11 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 			// commit newly added files
 			String commitMessage = String.format("Adding %s, %s and %s", originalSourceDocumentFileName,
 					convertedSourceDocumentFileName, targetHeaderFile.getName());
-			localGitRepoManager.commit(commitMessage);
+			localGitRepoManager.commit(
+				commitMessage,
+				StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername(),
+				gitLabUser.getEmail()
+			);
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|IOException e) {
 			throw new SourceDocumentHandlerException("Failed to insert source document", e);
