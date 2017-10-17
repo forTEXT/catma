@@ -1,6 +1,7 @@
 package de.catma.repository.git;
 
 import de.catma.repository.db.DBUser;
+import de.catma.repository.git.exceptions.TagsetHandlerException;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
@@ -10,7 +11,9 @@ import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -138,8 +141,21 @@ public class TagsetHandlerTest {
 		}
 	}
 
+	// how to test for exceptions: https://stackoverflow.com/a/31826781
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
+
 	@Test
 	public void delete() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			TagsetHandler tagsetHandler = new TagsetHandler(
+					localGitRepoManager, this.remoteGitServerManager
+			);
+
+			thrown.expect(TagsetHandlerException.class);
+			thrown.expectMessage("Not implemented");
+			tagsetHandler.delete("fake");
+		}
 	}
 
 }
