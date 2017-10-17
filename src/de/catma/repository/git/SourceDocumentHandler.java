@@ -15,7 +15,6 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 
 public class SourceDocumentHandler implements ISourceDocumentHandler {
@@ -80,13 +79,8 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 			String gitLabUserImpersonationToken = remoteGitServerManagerImpl
 					.getGitLabUserImpersonationToken();
 
-			String authenticatedRepositoryUrl = GitLabAuthenticationHelper
-					.buildAuthenticatedRepositoryUrl(
-						response.repositoryHttpUrl, gitLabUserImpersonationToken
-					);
-
 			localGitRepoManager.clone(
-				authenticatedRepositoryUrl,
+				response.repositoryHttpUrl,
 				null,
 				remoteGitServerManagerImpl.getGitLabUser().getUsername(),
 				gitLabUserImpersonationToken
@@ -122,8 +116,7 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 					convertedSourceDocumentFileName, targetHeaderFile.getName());
 			localGitRepoManager.commit(commitMessage);
 		}
-		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|IOException
-				|URISyntaxException e) {
+		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|IOException e) {
 			throw new SourceDocumentHandlerException("Failed to insert source document", e);
 		}
 

@@ -1,7 +1,6 @@
 package de.catma.repository.git.managers;
 
 import de.catma.repository.db.DBUser;
-import de.catma.repository.git.GitLabAuthenticationHelper;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.FileUtils;
@@ -167,15 +166,9 @@ public class LocalGitRepositoryManagerTest {
 		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
 				remoteGitServerManager.createRepository("test-repo", null);
 
-		String authenticatedRepositoryUrl = GitLabAuthenticationHelper
-				.buildAuthenticatedRepositoryUrl(
-					createRepositoryResponse.repositoryHttpUrl,
-					remoteGitServerManager.getGitLabUserImpersonationToken()
-				);
-
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
 			String repoName = localGitRepoManager.clone(
-				authenticatedRepositoryUrl,
+				createRepositoryResponse.repositoryHttpUrl,
 				null,
 				remoteGitServerManager.getGitLabUser().getUsername(),
 				remoteGitServerManager.getGitLabUserImpersonationToken()

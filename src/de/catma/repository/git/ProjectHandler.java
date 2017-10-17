@@ -16,7 +16,6 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -71,13 +70,8 @@ public class ProjectHandler implements IProjectHandler {
 			String gitLabUserImpersonationToken = remoteGitServerManagerImpl
 					.getGitLabUserImpersonationToken();
 
-			String authenticatedRepositoryUrl = GitLabAuthenticationHelper
-					.buildAuthenticatedRepositoryUrl(
-						response.repositoryHttpUrl, gitLabUserImpersonationToken
-					);
-
 			localGitRepoManager.clone(
-				authenticatedRepositoryUrl,
+				response.repositoryHttpUrl,
 				null,
 				remoteGitServerManagerImpl.getGitLabUser().getUsername(),
 				gitLabUserImpersonationToken
@@ -89,8 +83,7 @@ public class ProjectHandler implements IProjectHandler {
 			File targetTagsetsFile = new File(repositoryWorkTree, "tagsets.json");
 			localGitRepoManager.addAndCommit(targetTagsetsFile, new byte[]{});
 		}
-		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|
-				URISyntaxException e) {
+		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException e) {
 			throw new ProjectHandlerException("Failed to create project", e);
 		}
 
