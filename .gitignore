@@ -19,7 +19,6 @@ scratch.sql
 temp
 tmp
 testlib
-testdocs
 # MS Office temp files
 ~$$*.*
 .classpath
