@@ -303,6 +303,7 @@ public class RemoteGitServerManagerTest {
 		List<String> expectedRepositoryNames = new ArrayList<String>(2);
 		expectedRepositoryNames.add(randomRepoName1);
 		expectedRepositoryNames.add(randomRepoName2);
+		expectedRepositoryNames.sort(null);
 
 		assertArrayEquals(expectedRepositoryNames.toArray(), repositoryNames.toArray());
 	}
