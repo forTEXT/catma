@@ -334,7 +334,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	public void addSubmodule(File path, String uri, @Nullable String username, @Nullable String password)
 			throws LocalGitRepositoryManagerException {
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `commit` on a detached instance");
+			throw new IllegalStateException("Can't call `addSubmodule` on a detached instance");
 		}
 
 		Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
@@ -369,7 +369,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	@Override
 	public void push(@Nullable String username, @Nullable String password) throws LocalGitRepositoryManagerException {
 		if (!isAttached()) {
-			throw new IllegalStateException("Can't call `commit` on a detached instance");
+			throw new IllegalStateException("Can't call `push` on a detached instance");
 		}
 
 		try {
