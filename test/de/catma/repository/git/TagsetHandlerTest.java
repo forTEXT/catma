@@ -120,9 +120,8 @@ public class TagsetHandlerTest {
 			assertNotNull(tagsetId);
 			assert tagsetId.startsWith("CATMA_");
 
-			// Why don't we need to do this?
-			// what is clearing the git folder?
-			// this.tagsetReposToDeleteOnTearDown.add(tagsetId);
+			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the
+			// project will take care of that for us
 
 			File expectedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), tagsetId);
 			assert expectedRepoPath.exists();
