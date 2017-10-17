@@ -9,6 +9,8 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.gitlab4j.api.CommitsApi;
+import org.gitlab4j.api.models.Commit;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
 import org.junit.Before;
@@ -417,6 +419,75 @@ public class LocalGitRepositoryManagerTest {
 
 			assertEquals(1, commitsList.size());
 			assertEquals("Adding rose_for_emily.pdf" , commitsList.get(0).getFullMessage());
+		}
+	}
+
+	@Test
+	public void pushToGitLabRepoWithAuthentication() throws Exception {
+		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
+		DBUser catmaUser = new DBUser(
+			1, String.format("catma-testuser-%s", RandomStringUtils.randomAlphanumeric(3)),
+			false, false, false
+		);
+
+		RemoteGitServerManager remoteGitServerManager = new RemoteGitServerManager(
+			this.catmaProperties, catmaUser
+		);
+		remoteGitServerManager.replaceGitLabServerUrl = true;
+
+		// create a repository
+		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
+				remoteGitServerManager.createRepository("test-repo", null);
+
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			// clone it
+			String repoName = localGitRepoManager.clone(
+				createRepositoryResponse.repositoryHttpUrl,
+				null,
+				remoteGitServerManager.getGitLabUser().getUsername(),
+				remoteGitServerManager.getGitLabUserImpersonationToken()
+			);
+
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), repoName);
+			assert testRepoPath.exists();
+			assert testRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(testRepoPath);
+
+			localGitRepoManager.detach();  // can't call open on an attached instance
+
+			// open the cloned repo, add and commit a file, then push
+			localGitRepoManager.open(testRepoPath.getName());
+
+			File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
+			byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
+
+			File targetFile = new File(testRepoPath, originalSourceDocument.getName());
+
+			localGitRepoManager.addAndCommit(targetFile, originalSourceDocumentBytes);
+
+			localGitRepoManager.push(
+				remoteGitServerManager.getGitLabUser().getUsername(),
+				remoteGitServerManager.getGitLabUserImpersonationToken()
+			);
+
+			// assert that the push worked by looking at the commits on the server
+			CommitsApi commitsApi = remoteGitServerManager.getUserGitLabApi().getCommitsApi();
+			List<Commit> commits = commitsApi.getCommits(createRepositoryResponse.repositoryId);
+			assertEquals(1, commits.size());
+			assertEquals("Adding rose_for_emily.pdf", commits.get(0).getMessage());
+
+			// cleanup (these are not handled by tearDown)
+			remoteGitServerManager.deleteRepository(createRepositoryResponse.repositoryId);
+			await().until(
+				() -> remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
+			);
+
+			// see RemoteGitServerManagerTest tearDown() for more info
+			User user = remoteGitServerManager.getGitLabUser();
+			remoteGitServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
+			RemoteGitServerManagerTest.awaitUserDeleted(
+				remoteGitServerManager.getAdminGitLabApi().getUserApi(), user.getId()
+			);
 		}
 	}
 }
