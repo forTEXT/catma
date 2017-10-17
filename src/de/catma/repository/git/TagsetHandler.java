@@ -53,13 +53,8 @@ public class TagsetHandler implements ITagsetHandler {
 			String gitLabUserImpersonationToken = remoteGitServerManagerImpl
 					.getGitLabUserImpersonationToken();
 
-			String authenticatedRepositoryUrl = GitLabAuthenticationHelper
-					.buildAuthenticatedRepositoryUrl(
-							response.repositoryHttpUrl, gitLabUserImpersonationToken
-					);
-
 			localGitRepoManager.clone(
-					authenticatedRepositoryUrl,
+					response.repositoryHttpUrl,
 					null,
 					remoteGitServerManagerImpl.getGitLabUser().getUsername(),
 					gitLabUserImpersonationToken
@@ -80,7 +75,7 @@ public class TagsetHandler implements ITagsetHandler {
 			String commitMessage = String.format("Adding %s", targetHeaderFile.getName());
 			localGitRepoManager.commit(commitMessage);
 		}
-		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|URISyntaxException e) {
+		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException e) {
 			throw new TagsetHandlerException("Failed to create Tagset repo", e);
 		}
 
