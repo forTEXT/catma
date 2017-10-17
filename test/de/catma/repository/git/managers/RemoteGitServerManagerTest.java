@@ -1,10 +1,9 @@
 package de.catma.repository.git.managers;
 
-import de.catma.repository.db.DBUser;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
 import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
-import org.apache.commons.lang3.RandomStringUtils;
+import helpers.Randomizer;
 import org.gitlab4j.api.*;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
@@ -42,10 +41,7 @@ public class RemoteGitServerManagerTest {
 	@Before
 	public void setUp() throws Exception {
 		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
-		this.catmaUser = new DBUser(
-			1, String.format("catma-testuser-%s", RandomStringUtils.randomAlphanumeric(3)),
-			false, false, false
-		);
+		this.catmaUser = Randomizer.getDbUser();
 
 		this.serverManager = new RemoteGitServerManager(this.catmaProperties, this.catmaUser);
 	}
@@ -156,8 +152,10 @@ public class RemoteGitServerManagerTest {
 
 	@Test
 	public void createRepository() throws Exception {
+		String randomRepoName = Randomizer.getRepoName();
+
 		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse = this.serverManager.createRepository(
-			"test-repo", null
+			randomRepoName, null
 		);
 		this.repositoriesToDeleteOnTearDown.add(createRepositoryResponse.repositoryId);
 
@@ -171,14 +169,16 @@ public class RemoteGitServerManagerTest {
 		);
 
 		assertNotNull(project);
-		assertEquals("test-repo", project.getName());
+		assertEquals(randomRepoName, project.getName());
 		assertEquals(this.serverManager.getGitLabUser().getId(), project.getOwner().getId());
 	}
 
 	@Test
 	public void createRepositoryInGroup() throws Exception {
+		String randomGroupNameAndPath = Randomizer.getGroupName();
+
 		String createdGroupPath = this.serverManager.createGroup(
-			"test-group", "test-group", null
+			randomGroupNameAndPath, randomGroupNameAndPath, null
 		);
 		this.groupsToDeleteOnTearDown.add(createdGroupPath);
 
@@ -187,8 +187,8 @@ public class RemoteGitServerManagerTest {
 		Group group = this.serverManager.getAdminGitLabApi().getGroupApi().getGroup(createdGroupPath);
 
 		assertNotNull(group);
-		assertEquals("test-group", group.getName());
-		assertEquals("test-group", group.getPath());
+		assertEquals(randomGroupNameAndPath, group.getName());
+		assertEquals(randomGroupNameAndPath, group.getPath());
 
 		// to assert that the user is the owner of the new group, get the groups for the user using
 		// the *user-specific* GitLabApi instance
@@ -197,8 +197,10 @@ public class RemoteGitServerManagerTest {
 		assertEquals(1, groups.size());
 		assertEquals(group.getId(), groups.get(0).getId());
 
+		String randomRepoName = Randomizer.getRepoName();
+
 		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse = this.serverManager.createRepository(
-			"test-repo", null, createdGroupPath
+			randomRepoName, null, createdGroupPath
 		);
 		// we don't add the repositoryId to this.repositoriesToDeleteOnTearDown as deletion of the group will take care
 		// of that for us
@@ -211,7 +213,7 @@ public class RemoteGitServerManagerTest {
 		);
 
 		assertNotNull(project);
-		assertEquals("test-repo", project.getName());
+		assertEquals(randomRepoName, project.getName());
 		assertEquals(this.serverManager.getGitLabUser().getId(), project.getCreatorId());
 
 		List<Project> repositoriesInGroup = this.serverManager.getAdminGitLabApi().getGroupApi()
@@ -226,7 +228,7 @@ public class RemoteGitServerManagerTest {
 	@Test
 	public void deleteRepository() throws Exception {
 		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse = this.serverManager.createRepository(
-			"test-repo", null
+			Randomizer.getRepoName(), null
 		);
 		// we don't add the repositoryId to this.repositoriesToDeleteOnTearDown as this is the delete test
 
@@ -242,8 +244,10 @@ public class RemoteGitServerManagerTest {
 
 	@Test
 	public void createGroup() throws Exception {
+		String randomGroupNameAndPath = Randomizer.getGroupName();
+
 		String createdGroupPath = this.serverManager.createGroup(
-			"test-group", "test-group", null
+			randomGroupNameAndPath, randomGroupNameAndPath, null
 		);
 		this.groupsToDeleteOnTearDown.add(createdGroupPath);
 
@@ -251,8 +255,8 @@ public class RemoteGitServerManagerTest {
 
 		Group group = this.serverManager.getAdminGitLabApi().getGroupApi().getGroup(createdGroupPath);
 		assertNotNull(group);
-		assertEquals("test-group", group.getName());
-		assertEquals("test-group", group.getPath());
+		assertEquals(randomGroupNameAndPath, group.getName());
+		assertEquals(randomGroupNameAndPath, group.getPath());
 
 		// to assert that the user is the owner of the new group, get the groups for the user using
 		// the *user-specific* GitLabApi instance
@@ -264,15 +268,18 @@ public class RemoteGitServerManagerTest {
 
 	@Test
 	public void getGroupRepositoryNames() throws Exception {
+		String randomGroupNameAndPath = Randomizer.getGroupName();
+
 		String createdGroupPath = this.serverManager.createGroup(
-			"test-group", "test-group", null
+			randomGroupNameAndPath, randomGroupNameAndPath, null
 		);
 		this.groupsToDeleteOnTearDown.add(createdGroupPath);
 
 		assertNotNull(createdGroupPath);
 
+		String randomRepoName1 = Randomizer.getRepoName();
 		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse = this.serverManager.createRepository(
-			"test-repo-1", null, createdGroupPath
+			randomRepoName1, null, createdGroupPath
 		);
 		// we don't add the repositoryId to this.repositoriesToDeleteOnTearDown as deletion of the group will take care
 		// of that for us
@@ -280,8 +287,9 @@ public class RemoteGitServerManagerTest {
 		assertNotNull(createRepositoryResponse);
 		assert createRepositoryResponse.repositoryId > 0;
 
+		String randomRepoName2 = Randomizer.getRepoName();
 		createRepositoryResponse = this.serverManager.createRepository(
-			"test-repo-2", null, createdGroupPath
+			randomRepoName2, null, createdGroupPath
 		);
 		// we don't add the repositoryId to this.repositoriesToDeleteOnTearDown as deletion of the group will take care
 		// of that for us
@@ -293,16 +301,19 @@ public class RemoteGitServerManagerTest {
 		repositoryNames.sort(null);
 
 		List<String> expectedRepositoryNames = new ArrayList<String>(2);
-		expectedRepositoryNames.add("test-repo-1");
-		expectedRepositoryNames.add("test-repo-2");
+		expectedRepositoryNames.add(randomRepoName1);
+		expectedRepositoryNames.add(randomRepoName2);
+		expectedRepositoryNames.sort(null);
 
 		assertArrayEquals(expectedRepositoryNames.toArray(), repositoryNames.toArray());
 	}
 
 	@Test
 	public void deleteGroup() throws Exception {
+		String randomGroupNameAndPath = Randomizer.getGroupName();
+
 		String createdGroupPath = this.serverManager.createGroup(
-			"test-group", "test-group", null
+			randomGroupNameAndPath, randomGroupNameAndPath, null
 		);
 		// we don't add the groupPath to this.groupsToDeleteOnTearDown as this is the delete test
 

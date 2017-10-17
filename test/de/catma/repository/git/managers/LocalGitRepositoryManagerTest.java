@@ -1,15 +1,16 @@
 package de.catma.repository.git.managers;
 
 import de.catma.repository.db.DBUser;
-import de.catma.repository.git.GitLabAuthenticationHelper;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import helpers.Randomizer;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.gitlab4j.api.CommitsApi;
+import org.gitlab4j.api.models.Commit;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
 import org.junit.Before;
@@ -65,7 +66,7 @@ public class LocalGitRepositoryManagerTest {
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
 			assertNull(localGitRepoManager.getRepositoryWorkTree());
 
-			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
 			localGitRepoManager.init(testRepoPath.getName(), null);
 
@@ -80,7 +81,7 @@ public class LocalGitRepositoryManagerTest {
 	@Test
 	public void getRemoteUrl() throws Exception {
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
-			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
 			localGitRepoManager.init(testRepoPath.getName(), null);
 
@@ -108,7 +109,7 @@ public class LocalGitRepositoryManagerTest {
 	@Test
 	public void init() throws Exception {
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
-			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
 			localGitRepoManager.init(testRepoPath.getName(), "Test Description");
 
@@ -130,7 +131,7 @@ public class LocalGitRepositoryManagerTest {
 	public void cloneRepo() throws Exception {
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
 			// create a bare repository that will act as the remote
-			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
 			try (Git gitApi = Git.init().setDirectory(testRepoPath).setBare(true).call()) {}
 			this.directoriesToDeleteOnTearDown.add(testRepoPath);
@@ -154,35 +155,28 @@ public class LocalGitRepositoryManagerTest {
 	@Test
 	public void cloneGitLabRepoWithAuthentication() throws Exception {
 		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
-		DBUser catmaUser = new DBUser(
-			1, String.format("catma-testuser-%s", RandomStringUtils.randomAlphanumeric(3)),
-			false, false, false
-		);
+		DBUser catmaUser = Randomizer.getDbUser();
 
 		RemoteGitServerManager remoteGitServerManager = new RemoteGitServerManager(
 			this.catmaProperties, catmaUser
 		);
 		remoteGitServerManager.replaceGitLabServerUrl = true;
 
-		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
-				remoteGitServerManager.createRepository("test-repo", null);
+		String randomRepoName = Randomizer.getRepoName();
 
-		String authenticatedRepositoryUrl = GitLabAuthenticationHelper
-				.buildAuthenticatedRepositoryUrl(
-					createRepositoryResponse.repositoryHttpUrl,
-					remoteGitServerManager.getGitLabUserImpersonationToken()
-				);
+		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
+				remoteGitServerManager.createRepository(randomRepoName, null);
 
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
 			String repoName = localGitRepoManager.clone(
-				authenticatedRepositoryUrl,
+				createRepositoryResponse.repositoryHttpUrl,
 				null,
 				remoteGitServerManager.getGitLabUser().getUsername(),
 				remoteGitServerManager.getGitLabUserImpersonationToken()
 			);
 
 			assert localGitRepoManager.isAttached();
-			assertEquals(repoName, "test-repo");
+			assertEquals(repoName, randomRepoName);
 
 			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), repoName);
 			assert testRepoPath.exists();
@@ -208,7 +202,7 @@ public class LocalGitRepositoryManagerTest {
 	@Test
 	public void open() throws Exception {
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
-			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
 			localGitRepoManager.init(testRepoPath.getName(), null);
 
@@ -228,7 +222,7 @@ public class LocalGitRepositoryManagerTest {
 	@Test
 	public void add() throws Exception {
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
-			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
 			localGitRepoManager.init(testRepoPath.getName(), null);
 
@@ -240,7 +234,7 @@ public class LocalGitRepositoryManagerTest {
 			File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
 			byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
 
-			File targetFile = new File(testRepoPath + "/" + originalSourceDocument.getName());
+			File targetFile = new File(testRepoPath, originalSourceDocument.getName());
 
 			localGitRepoManager.add(targetFile, originalSourceDocumentBytes);
 
@@ -256,7 +250,7 @@ public class LocalGitRepositoryManagerTest {
 	@Test
 	public void addAndCommit() throws Exception {
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
-			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
 			localGitRepoManager.init(testRepoPath.getName(), null);
 
@@ -268,7 +262,7 @@ public class LocalGitRepositoryManagerTest {
 			File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
 			byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
 
-			File targetFile = new File(testRepoPath + "/" + originalSourceDocument.getName());
+			File targetFile = new File(testRepoPath, originalSourceDocument.getName());
 
 			localGitRepoManager.addAndCommit(targetFile, originalSourceDocumentBytes);
 
@@ -283,7 +277,7 @@ public class LocalGitRepositoryManagerTest {
 	@Test
 	public void commit() throws Exception {
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
-			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
 			localGitRepoManager.init(testRepoPath.getName(), null);
 
@@ -295,7 +289,7 @@ public class LocalGitRepositoryManagerTest {
 			File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
 			byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
 
-			File targetFile = new File(testRepoPath + "/" + originalSourceDocument.getName());
+			File targetFile = new File(testRepoPath, originalSourceDocument.getName());
 
 			localGitRepoManager.add(targetFile, originalSourceDocumentBytes);
 
@@ -382,7 +376,7 @@ public class LocalGitRepositoryManagerTest {
 	public void push() throws Exception {
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
 			// create a bare repository that will act as the remote
-			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "test-repo");
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
 			try (Git gitApi = Git.init().setDirectory(testRepoPath).setBare(true).call()) {}
 			this.directoriesToDeleteOnTearDown.add(testRepoPath);
@@ -403,7 +397,7 @@ public class LocalGitRepositoryManagerTest {
 			localGitRepoManager.detach();  // can't call open on an attached instance
 
 			// open the cloned repo, add and commit a file, then push
-			localGitRepoManager.open("cloned");
+			localGitRepoManager.open(clonedRepoPath.getName());
 
 			File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
 			byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
@@ -424,6 +418,72 @@ public class LocalGitRepositoryManagerTest {
 
 			assertEquals(1, commitsList.size());
 			assertEquals("Adding rose_for_emily.pdf" , commitsList.get(0).getFullMessage());
+		}
+	}
+
+	@Test
+	public void pushToGitLabRepoWithAuthentication() throws Exception {
+		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
+		DBUser catmaUser = Randomizer.getDbUser();
+
+		RemoteGitServerManager remoteGitServerManager = new RemoteGitServerManager(
+			this.catmaProperties, catmaUser
+		);
+		remoteGitServerManager.replaceGitLabServerUrl = true;
+
+		// create a repository
+		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
+				remoteGitServerManager.createRepository(Randomizer.getRepoName(), null);
+
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			// clone it
+			String repoName = localGitRepoManager.clone(
+				createRepositoryResponse.repositoryHttpUrl,
+				null,
+				remoteGitServerManager.getGitLabUser().getUsername(),
+				remoteGitServerManager.getGitLabUserImpersonationToken()
+			);
+
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), repoName);
+			assert testRepoPath.exists();
+			assert testRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(testRepoPath);
+
+			localGitRepoManager.detach();  // can't call open on an attached instance
+
+			// open the cloned repo, add and commit a file, then push
+			localGitRepoManager.open(testRepoPath.getName());
+
+			File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
+			byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
+
+			File targetFile = new File(testRepoPath, originalSourceDocument.getName());
+
+			localGitRepoManager.addAndCommit(targetFile, originalSourceDocumentBytes);
+
+			localGitRepoManager.push(
+				remoteGitServerManager.getGitLabUser().getUsername(),
+				remoteGitServerManager.getGitLabUserImpersonationToken()
+			);
+
+			// assert that the push worked by looking at the commits on the server
+			CommitsApi commitsApi = remoteGitServerManager.getUserGitLabApi().getCommitsApi();
+			List<Commit> commits = commitsApi.getCommits(createRepositoryResponse.repositoryId);
+			assertEquals(1, commits.size());
+			assertEquals("Adding rose_for_emily.pdf", commits.get(0).getMessage());
+
+			// cleanup (these are not handled by tearDown)
+			remoteGitServerManager.deleteRepository(createRepositoryResponse.repositoryId);
+			await().until(
+				() -> remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
+			);
+
+			// see RemoteGitServerManagerTest tearDown() for more info
+			User user = remoteGitServerManager.getGitLabUser();
+			remoteGitServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
+			RemoteGitServerManagerTest.awaitUserDeleted(
+				remoteGitServerManager.getAdminGitLabApi().getUserApi(), user.getId()
+			);
 		}
 	}
 }

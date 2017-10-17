@@ -86,9 +86,6 @@
 
 		<!-- https://mvnrepository.com/artifact/org.awaitility/awaitility -->
 		<dependency org="org.awaitility" name="awaitility" rev="3.0.0"/>
-		
-		<!-- https://mvnrepository.com/artifact/com.github.jsonld-java/jsonld-java -->
-		<dependency org="com.github.jsonld-java" name="jsonld-java" rev="0.11.1"/>
 
 		<!-- https://mvnrepository.com/artifact/com.jsoniter/jsoniter -->
 		<dependency org="com.jsoniter" name="jsoniter" rev="0.9.15"/>

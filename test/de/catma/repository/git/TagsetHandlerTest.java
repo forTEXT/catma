@@ -1,12 +1,12 @@
 package de.catma.repository.git;
 
-import de.catma.repository.db.DBUser;
 import de.catma.repository.git.exceptions.TagsetHandlerException;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import helpers.Randomizer;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
@@ -48,10 +48,7 @@ public class TagsetHandlerTest {
 	@Before
 	public void setUp() throws Exception {
 		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
-		de.catma.user.User catmaUser =new DBUser(
-			1, String.format("catma-testuser-%s", RandomStringUtils.randomAlphanumeric(3)),
-			false, false, false
-		);
+		de.catma.user.User catmaUser = Randomizer.getDbUser();
 
 		this.remoteGitServerManager = new RemoteGitServerManager(this.catmaProperties, catmaUser);
 		this.remoteGitServerManager.replaceGitLabServerUrl = true;
