@@ -8,6 +8,8 @@ import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.interfaces.ITagsetHandler;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.util.IDGenerator;
+import org.apache.commons.lang3.StringUtils;
+import org.gitlab4j.api.models.User;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -50,13 +52,15 @@ public class TagsetHandler implements ITagsetHandler {
 			// clone the repository locally
 			RemoteGitServerManager remoteGitServerManagerImpl =
 					(RemoteGitServerManager)this.remoteGitServerManager;
+
+			User gitLabUser = remoteGitServerManagerImpl.getGitLabUser();
 			String gitLabUserImpersonationToken = remoteGitServerManagerImpl
 					.getGitLabUserImpersonationToken();
 
 			localGitRepoManager.clone(
 					response.repositoryHttpUrl,
 					null,
-					remoteGitServerManagerImpl.getGitLabUser().getUsername(),
+					gitLabUser.getUsername(),
 					gitLabUserImpersonationToken
 			);
 
@@ -73,7 +77,8 @@ public class TagsetHandler implements ITagsetHandler {
 
 			// commit newly added files
 			String commitMessage = String.format("Adding %s", targetHeaderFile.getName());
-			localGitRepoManager.commit(commitMessage);
+			String committerName = StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername();
+			localGitRepoManager.commit(commitMessage, committerName, gitLabUser.getEmail());
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException e) {
 			throw new TagsetHandlerException("Failed to create Tagset repo", e);
