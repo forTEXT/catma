@@ -4,6 +4,7 @@ import de.catma.repository.db.DBUser;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
@@ -13,7 +14,9 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -124,8 +127,16 @@ public class TagsetHandlerTest {
 			File expectedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), tagsetId);
 			assert expectedRepoPath.exists();
 			assert expectedRepoPath.isDirectory();
-		}
 
+			assert Arrays.asList(expectedRepoPath.list()).contains("header.json");
+
+			String expectedSerializedHeader = "Serialized properties";
+
+			assertEquals(
+					expectedSerializedHeader.replaceAll("[\n\t]", ""),
+					FileUtils.readFileToString(new File(expectedRepoPath, "header.json"), StandardCharsets.UTF_8)
+			);
+		}
 	}
 
 	@Test
