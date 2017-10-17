@@ -14,6 +14,8 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 
 public class TagsetHandler implements ITagsetHandler {
+	static final String TAGSET_ROOT_REPOSITORY_NAME_FORMAT = "%s_tagset";
+
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitServerManager remoteGitServerManager;
 
@@ -37,6 +39,10 @@ public class TagsetHandler implements ITagsetHandler {
 			// create the tagset repository
 			IRemoteGitServerManager.CreateRepositoryResponse response;
 
+			// TODO: nice name for gitlab
+//			String tagsetNameAndPath = String.format(
+//					this.TAGSET_ROOT_REPOSITORY_NAME_FORMAT, tagsetId
+//			);
 			response = this.remoteGitServerManager.createRepository(
 					tagsetId, tagsetId, projectId
 			);
