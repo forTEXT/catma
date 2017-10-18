@@ -177,7 +177,7 @@ public class SourceDocumentHandlerTest {
 					"\t\t\"charset\":\"UTF-8\",\n" +
 					"\t\t\"checksum\":705211438,\n" +
 					"\t\t\"fileName\":null,\n" +
-					"\t\t\"fileOSType\":\"INDEPENDENT\",\n" +
+					"\t\t\"fileOSType\":\"DOS\",\n" +
 					"\t\t\"fileType\":\"TEXT\",\n" +
 					"\t\t\"mimeType\":null,\n" +
 					"\t\t\"uRI\":null,\n" +
@@ -293,7 +293,7 @@ public class SourceDocumentHandlerTest {
 					"\t\t\"charset\":\"UTF-8\",\n" +
 					"\t\t\"checksum\":705211438,\n" +
 					"\t\t\"fileName\":null,\n" +
-					"\t\t\"fileOSType\":\"INDEPENDENT\",\n" +
+					"\t\t\"fileOSType\":\"DOS\",\n" +
 					"\t\t\"fileType\":\"TEXT\",\n" +
 					"\t\t\"mimeType\":null,\n" +
 					"\t\t\"uRI\":null,\n" +
