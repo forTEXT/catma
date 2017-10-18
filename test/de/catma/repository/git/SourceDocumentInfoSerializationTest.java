@@ -6,6 +6,7 @@ import com.jsoniter.output.JsonStream;
 import com.jsoniter.spi.DecodingMode;
 import com.jsoniter.spi.JsonException;
 import de.catma.document.source.*;
+import de.catma.repository.git.serialization.JsoniterAlphabeticOrderingExtension;
 import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 import org.junit.Test;
 
