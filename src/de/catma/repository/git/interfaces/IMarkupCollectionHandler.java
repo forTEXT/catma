@@ -9,7 +9,7 @@ public interface IMarkupCollectionHandler {
 				  @Nullable String markupCollectionId)
 			throws MarkupCollectionHandlerException;
 
-	void delete(String markupCollectionId);
+	void delete(String markupCollectionId) throws MarkupCollectionHandlerException;
 
 	void addTagset(String tagsetId);
 	void removeTagset(String tagsetId);

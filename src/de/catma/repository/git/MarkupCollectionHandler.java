@@ -90,8 +90,8 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	}
 
 	@Override
-	public void delete(String markupCollectionId) {
-
+	public void delete(String markupCollectionId) throws MarkupCollectionHandlerException {
+		throw new MarkupCollectionHandlerException("Not implemented");
 	}
 
 	@Override
