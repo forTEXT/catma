@@ -111,11 +111,10 @@ public class SourceDocumentHandlerTest {
 			"A Rose for Emily"
 		);
 
-		// TODO: should the TechInfoSet represent the original or the converted source document?
 		TechInfoSet techInfoSet = new TechInfoSet(
 			FileType.TEXT,
 			StandardCharsets.UTF_8,
-			FileOSType.INDEPENDENT,
+			FileOSType.DOS,
 			705211438L,
 			null
 		);
@@ -213,11 +212,10 @@ public class SourceDocumentHandlerTest {
 			"A Rose for Emily"
 		);
 
-		// TODO: should the TechInfoSet represent the original or the converted source document?
 		TechInfoSet techInfoSet = new TechInfoSet(
 			FileType.TEXT,
 			StandardCharsets.UTF_8,
-			FileOSType.INDEPENDENT,
+			FileOSType.DOS,
 			705211438L,
 			null
 		);
