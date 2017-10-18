@@ -1,4 +1,4 @@
-package de.catma.repository.git.model_wrappers;
+package de.catma.repository.git.serialization.model_wrappers;
 
 import com.jsoniter.annotation.JsonIgnore;
 import de.catma.document.source.SourceDocumentInfo;
