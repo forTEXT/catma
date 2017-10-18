@@ -103,14 +103,4 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	public void removeTagset(String tagsetId) {
 
 	}
-
-	@Override
-	public void addSourceDocument(String sourceDocumentId) {
-
-	}
-
-	@Override
-	public void removeSourceDocument(String sourceDocumentId) {
-
-	}
 }

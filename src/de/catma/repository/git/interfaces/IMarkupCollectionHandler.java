@@ -13,7 +13,4 @@ public interface IMarkupCollectionHandler {
 
 	void addTagset(String tagsetId);
 	void removeTagset(String tagsetId);
-
-	void addSourceDocument(String sourceDocumentId);
-	void removeSourceDocument(String sourceDocumentId);
 }
