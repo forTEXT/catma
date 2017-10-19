@@ -4,6 +4,8 @@ import de.catma.repository.git.exceptions.TagsetHandlerException;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
+import de.catma.repository.git.serialization.SerializationHelper;
+import de.catma.repository.git.serialization.models.TagsetDefinitionHeader;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.Version;
 import de.catma.util.IDGenerator;
@@ -119,9 +121,14 @@ public class TagsetHandlerTest {
 			this.projectsToDeleteOnTearDown.add(projectId);
 
 
+			String name = "InterestingTagset";
+			String description = "Pretty interesting stuff";
+			Version version = new Version();
+
 			String tagsetId = tagsetHandler.create(
-					"InterestingTagset",
-					"Pretty interesting stuff",
+					name,
+					description,
+					version,
 					projectId);
 
 			assertNotNull(tagsetId);
@@ -136,12 +143,18 @@ public class TagsetHandlerTest {
 
 			assert Arrays.asList(expectedRepoPath.list()).contains("header.json");
 
-			String expectedSerializedHeader = "Serialized properties";
+			TagsetDefinitionHeader expectedHeader = new TagsetDefinitionHeader(name, description, version);
 
-			assertEquals(
-					expectedSerializedHeader.replaceAll("[\n\t]", ""),
-					FileUtils.readFileToString(new File(expectedRepoPath, "header.json"), StandardCharsets.UTF_8)
-			);
+			String serialized = FileUtils.readFileToString(new File(expectedRepoPath, "header.json"), StandardCharsets.UTF_8);
+			TagsetDefinitionHeader actualHeader = new SerializationHelper<TagsetDefinitionHeader>()
+					.deserialize(
+							serialized,
+							TagsetDefinitionHeader.class
+					);
+
+			assertEquals(expectedHeader.getName(), actualHeader.getName());
+			assertEquals(expectedHeader.getDescription(), actualHeader.getDescription());
+			assertEquals(expectedHeader.getVersion(), actualHeader.getVersion());
 		}
 	}
 
@@ -175,9 +188,14 @@ public class TagsetHandlerTest {
 			this.projectsToDeleteOnTearDown.add(projectId);
 
 
+			String name = "InterestingTagset";
+			String description = "Pretty interesting stuff";
+			Version version = new Version();
+
 			String tagsetId = tagsetHandler.create(
-					"InterestingTagset",
-					"Pretty interesting stuff",
+					name,
+					description,
+					version,
 					projectId);
 
 			assertNotNull(tagsetId);
@@ -187,11 +205,11 @@ public class TagsetHandlerTest {
 //					Integer parentId, String parentUuid
 
 			String tagDefinitionId = this.idGenerator.generate();
-			Version version = new Version();
+			Version tagDefVersion = new Version();
 
 			TagDefinition tagDefinition = new TagDefinition(
 					1, tagDefinitionId,
-					"FakeTagdefinitionName", version,
+					"FakeTagdefinitionName", tagDefVersion,
 					null, null);
 
 			String result = tagsetHandler.addTagDefinition(tagsetId, tagDefinition);
@@ -228,9 +246,14 @@ public class TagsetHandlerTest {
 			this.projectsToDeleteOnTearDown.add(projectId);
 
 
+			String name = "InterestingTagset";
+			String description = "Pretty interesting stuff";
+			Version version = new Version();
+
 			String tagsetId = tagsetHandler.create(
-					"InterestingTagset",
-					"Pretty interesting stuff",
+					name,
+					description,
+					version,
 					projectId);
 
 			assertNotNull(tagsetId);
@@ -241,11 +264,11 @@ public class TagsetHandlerTest {
 
 			String tagDefinitionId = this.idGenerator.generate();
 			String parentTagDefinitionId = this.idGenerator.generate();
-			Version version = new Version();
+			Version tagDefVersion = new Version();
 
 			TagDefinition tagDefinition = new TagDefinition(
 					1, tagDefinitionId,
-					"FakeTagdefinitionName", version,
+					"FakeTagdefinitionName", tagDefVersion,
 					2, parentTagDefinitionId);
 
 			String result = tagsetHandler.addTagDefinition(tagsetId, tagDefinition);

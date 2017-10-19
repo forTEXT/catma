@@ -7,13 +7,16 @@ import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.interfaces.ITagsetHandler;
 import de.catma.repository.git.managers.RemoteGitServerManager;
+import de.catma.repository.git.serialization.SerializationHelper;
+import de.catma.repository.git.serialization.models.HeaderBase;
+import de.catma.repository.git.serialization.models.TagsetDefinitionHeader;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.Version;
 import de.catma.util.IDGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.models.User;
 
 import java.io.File;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 
 public class TagsetHandler implements ITagsetHandler {
@@ -33,10 +36,8 @@ public class TagsetHandler implements ITagsetHandler {
 	}
 
 	@Override
-	public String create(String name, String description, String projectId) throws TagsetHandlerException {
+	public String create(String name, String description, Version version, String projectId) throws TagsetHandlerException {
 		String tagsetId = idGenerator.generate();
-
-		//TODO: write the name and description into the header.json file
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// create the tagset repository
@@ -70,7 +71,9 @@ public class TagsetHandler implements ITagsetHandler {
 					localGitRepoManager.getRepositoryWorkTree(), "header.json"
 			);
 
-			byte[] headerBytes = "Serialized properties".getBytes(StandardCharsets.UTF_8);
+			TagsetDefinitionHeader header = new TagsetDefinitionHeader(name, description, version);
+			String serializedHeader = new SerializationHelper<HeaderBase>().serialize(header);
+			byte[] headerBytes = serializedHeader.getBytes(StandardCharsets.UTF_8);
 
 			localGitRepoManager.add(
 					targetHeaderFile, headerBytes

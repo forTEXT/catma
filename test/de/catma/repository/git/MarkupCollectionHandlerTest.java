@@ -4,6 +4,7 @@ import de.catma.repository.git.exceptions.MarkupCollectionHandlerException;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
+import de.catma.tag.Version;
 import helpers.Randomizer;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Status;
@@ -185,7 +186,7 @@ public class MarkupCollectionHandlerTest {
 			// return
 			assertFalse(localGitRepoManager.isAttached());
 
-			String tagsetId = tagsetHandler.create("Test Tagset", null, projectId);
+			String tagsetId = tagsetHandler.create("Test Tagset", null, new Version(), projectId);
 			// we don't add the tagsetId to this.markupCollectionReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us
 
