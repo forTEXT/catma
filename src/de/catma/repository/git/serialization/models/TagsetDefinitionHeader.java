@@ -5,6 +5,10 @@ import de.catma.tag.Version;
 public class TagsetDefinitionHeader extends HeaderBase {
 	private Version version;
 
+	public TagsetDefinitionHeader() {
+		super();
+	}
+
 	public TagsetDefinitionHeader(String name, String description, Version version) {
 		super(name, description);
 		this.version = version;
@@ -14,7 +18,7 @@ public class TagsetDefinitionHeader extends HeaderBase {
 		return this.version.toString();
 	}
 
-	public void setSourceDocumentId(String versionString) {
+	public void setVersion(String versionString) {
 		this.version = new Version(versionString);
 	}
 }
