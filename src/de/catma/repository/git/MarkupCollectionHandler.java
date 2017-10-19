@@ -17,6 +17,7 @@ import org.gitlab4j.api.models.User;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 
 public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -95,8 +96,32 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	}
 
 	@Override
-	public void addTagset(String tagsetId) {
+	public void addTagset(String tagsetId, String markupCollectionId) throws MarkupCollectionHandlerException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			// open the tagset repository so that we can get its remote
+			localGitRepoManager.open(tagsetId);
+			String tagsetRemoteUri = localGitRepoManager.getRemoteUrl(null);
+			localGitRepoManager.close();
 
+			// open the markup collection repository
+			localGitRepoManager.open(markupCollectionId);
+
+			// create the submodule
+			File targetSubmodulePath = Paths.get(
+				localGitRepoManager.getRepositoryWorkTree().toString(), "tagsets", tagsetId
+			).toFile();
+
+			RemoteGitServerManager remoteGitServerManagerImpl = (RemoteGitServerManager)this.remoteGitServerManager;
+			String gitLabUserImpersonationToken = remoteGitServerManagerImpl.getGitLabUserImpersonationToken();
+
+			localGitRepoManager.addSubmodule(
+				targetSubmodulePath, tagsetRemoteUri,
+				remoteGitServerManagerImpl.getGitLabUser().getUsername(), gitLabUserImpersonationToken
+			);
+		}
+		catch (LocalGitRepositoryManagerException e) {
+			throw new MarkupCollectionHandlerException("Failed to add tagset", e);
+		}
 	}
 
 	@Override
