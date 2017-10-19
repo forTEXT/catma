@@ -7,6 +7,7 @@ import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.interfaces.ITagsetHandler;
 import de.catma.repository.git.managers.RemoteGitServerManager;
+import de.catma.tag.TagDefinition;
 import de.catma.util.IDGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.models.User;
@@ -90,5 +91,40 @@ public class TagsetHandler implements ITagsetHandler {
 	@Override
 	public void delete(String tagsetId) throws TagsetHandlerException {
 		throw new TagsetHandlerException("Not implemented");
+	}
+
+	@Override
+	public String addTagDefinition(String tagsetId, TagDefinition tagDefinition) throws TagsetHandlerException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+
+			localGitRepoManager.open(tagsetId);
+
+
+			String propertyDefinitionPath = String.format("%s/%s", tagDefinition.getUuid(), "propertydefs.json");
+
+			// write header.json into the local repo
+			File propertyDefFile = new File(
+					localGitRepoManager.getRepositoryWorkTree(), propertyDefinitionPath
+			);
+			propertyDefFile.getParentFile().mkdirs();
+
+			byte[] propertyDefBytes = "Serialized properties".getBytes(StandardCharsets.UTF_8);
+
+			// commit newly added files
+			RemoteGitServerManager remoteGitServerManagerImpl =
+					(RemoteGitServerManager)this.remoteGitServerManager;
+
+			User gitLabUser = remoteGitServerManagerImpl.getGitLabUser();
+
+			String committerName = StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername();
+			localGitRepoManager.addAndCommit(
+					propertyDefFile, propertyDefBytes, committerName, gitLabUser.getEmail()
+			);
+
+			return tagDefinition.getUuid();
+		}
+		catch (LocalGitRepositoryManagerException e) {
+			throw new TagsetHandlerException("Failed to create add the TagDefinition to the repo", e);
+		}
 	}
 }

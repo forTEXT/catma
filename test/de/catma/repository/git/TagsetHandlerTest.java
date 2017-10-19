@@ -4,6 +4,9 @@ import de.catma.repository.git.exceptions.TagsetHandlerException;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.Version;
+import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import helpers.Randomizer;
@@ -37,12 +40,16 @@ public class TagsetHandlerTest {
 
 	private File createdRepositoryPath = null;
 
+	private IDGenerator idGenerator = null;
+
 	public TagsetHandlerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
 				System.getProperties().getProperty("prop") : "catma.properties";
 
 		this.catmaProperties = new Properties();
 		this.catmaProperties.load(new FileInputStream(propertiesFile));
+
+		this.idGenerator = new IDGenerator();
 	}
 
 	@Before
@@ -152,6 +159,113 @@ public class TagsetHandlerTest {
 			thrown.expect(TagsetHandlerException.class);
 			thrown.expectMessage("Not implemented");
 			tagsetHandler.delete("fake");
+		}
+	}
+
+	@Test
+	public void addTagDefinitionWithoutParent() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			ProjectHandler projectHandler = new ProjectHandler(
+					localGitRepoManager, this.remoteGitServerManager
+			);
+
+			String projectId = projectHandler.create(
+					"Test CATMA Project for Tagset", "This is a test CATMA project"
+			);
+			this.projectsToDeleteOnTearDown.add(projectId);
+
+
+			String tagsetId = tagsetHandler.create(
+					"InterestingTagset",
+					"Pretty interesting stuff",
+					projectId);
+
+			assertNotNull(tagsetId);
+
+//			Integer id, String uuid,
+//					String name, Version version,
+//					Integer parentId, String parentUuid
+
+			String tagDefinitionId = this.idGenerator.generate();
+			Version version = new Version();
+
+			TagDefinition tagDefinition = new TagDefinition(
+					1, tagDefinitionId,
+					"FakeTagdefinitionName", version,
+					null, null);
+
+			String result = tagsetHandler.addTagDefinition(tagsetId, tagDefinition);
+
+			assertEquals(tagDefinitionId, result);
+
+			String tagDefinitionPath = String.format("%s/%s", tagsetId, tagDefinition.getUuid());
+
+			File expectedTagDefinitionPath = new File(localGitRepoManager.getRepositoryBasePath(), tagDefinitionPath);
+			assert expectedTagDefinitionPath.exists() : "Directory does not exist";
+			assert expectedTagDefinitionPath.isDirectory() : "Path is not a directory";
+
+			assert Arrays.asList(expectedTagDefinitionPath.list()).contains("propertydefs.json");
+
+			String expectedSerializedHeader = "Serialized properties";
+
+			assertEquals(
+					expectedSerializedHeader.replaceAll("[\n\t]", ""),
+					FileUtils.readFileToString(new File(expectedTagDefinitionPath, "propertydefs.json"), StandardCharsets.UTF_8)
+			);
+		}
+	}
+
+	@Test
+	public void addTagDefinitionWithParent() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			ProjectHandler projectHandler = new ProjectHandler(
+					localGitRepoManager, this.remoteGitServerManager
+			);
+
+			String projectId = projectHandler.create(
+					"Test CATMA Project for Tagset", "This is a test CATMA project"
+			);
+			this.projectsToDeleteOnTearDown.add(projectId);
+
+
+			String tagsetId = tagsetHandler.create(
+					"InterestingTagset",
+					"Pretty interesting stuff",
+					projectId);
+
+			assertNotNull(tagsetId);
+
+//			Integer id, String uuid,
+//					String name, Version version,
+//					Integer parentId, String parentUuid
+
+			String tagDefinitionId = this.idGenerator.generate();
+			String parentTagDefinitionId = this.idGenerator.generate();
+			Version version = new Version();
+
+			TagDefinition tagDefinition = new TagDefinition(
+					1, tagDefinitionId,
+					"FakeTagdefinitionName", version,
+					2, parentTagDefinitionId);
+
+			String result = tagsetHandler.addTagDefinition(tagsetId, tagDefinition);
+
+			assertEquals(tagDefinitionId, result);
+
+			String tagDefinitionPath = String.format("%s/%s/%s", tagsetId, parentTagDefinitionId, tagDefinition.getUuid());
+
+			File expectedTagDefinitionPath = new File(localGitRepoManager.getRepositoryBasePath(), tagDefinitionPath);
+			assert expectedTagDefinitionPath.exists() : "Directory does not exist";
+			assert expectedTagDefinitionPath.isDirectory() : "Path is not a directory";
+
+			assert Arrays.asList(expectedTagDefinitionPath.list()).contains("propertydefs.json");
+
+			String expectedSerializedHeader = "Serialized properties";
+
+			assertEquals(
+					expectedSerializedHeader.replaceAll("[\n\t]", ""),
+					FileUtils.readFileToString(new File(expectedTagDefinitionPath, "propertydefs.json"), StandardCharsets.UTF_8)
+			);
 		}
 	}
 
