@@ -1,4 +1,4 @@
-package de.catma.repository.git;
+package de.catma.repository.git.serialization;
 
 import com.jsoniter.JsonIterator;
 import com.jsoniter.output.EncodingMode;

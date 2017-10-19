@@ -1,12 +1,17 @@
 package de.catma.repository.git.interfaces;
 
+import de.catma.repository.git.exceptions.MarkupCollectionHandlerException;
+
+import javax.annotation.Nullable;
+
 public interface IMarkupCollectionHandler {
-	String create(String name, String description);
-	void delete(String markupCollectionId);
+	String create(String name, String description, String sourceDocumentId, String projectId,
+				  @Nullable String markupCollectionId)
+			throws MarkupCollectionHandlerException;
 
-	void addTagset(String tagsetId);
+	void delete(String markupCollectionId) throws MarkupCollectionHandlerException;
+
+	void addTagset(String tagsetId, String markupCollectionId) throws MarkupCollectionHandlerException;
+
 	void removeTagset(String tagsetId);
-
-	void addSourceDocument(String sourceDocumentId);
-	void removeSourceDocument(String sourceDocumentId);
 }

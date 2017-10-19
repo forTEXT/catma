@@ -4,7 +4,7 @@ import de.catma.document.source.*;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
-import de.catma.repository.git.model_wrappers.GitSourceDocumentInfo;
+import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 import helpers.Randomizer;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Status;

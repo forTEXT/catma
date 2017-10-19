@@ -1,7 +1,7 @@
 package de.catma.repository.git.interfaces;
 
 import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
-import de.catma.repository.git.model_wrappers.GitSourceDocumentInfo;
+import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;

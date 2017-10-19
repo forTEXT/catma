@@ -8,7 +8,7 @@ import de.catma.repository.git.exceptions.ProjectHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
-import de.catma.repository.git.model_wrappers.GitSourceDocumentInfo;
+import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;

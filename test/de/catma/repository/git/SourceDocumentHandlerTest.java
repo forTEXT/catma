@@ -5,7 +5,7 @@ import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
-import de.catma.repository.git.model_wrappers.GitSourceDocumentInfo;
+import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 import helpers.Randomizer;
 import org.apache.commons.io.FileUtils;
 import org.gitlab4j.api.models.Project;
@@ -177,7 +177,7 @@ public class SourceDocumentHandlerTest {
 					"\t\t\"charset\":\"UTF-8\",\n" +
 					"\t\t\"checksum\":705211438,\n" +
 					"\t\t\"fileName\":null,\n" +
-					"\t\t\"fileOSType\":\"INDEPENDENT\",\n" +
+					"\t\t\"fileOSType\":\"DOS\",\n" +
 					"\t\t\"fileType\":\"TEXT\",\n" +
 					"\t\t\"mimeType\":null,\n" +
 					"\t\t\"uRI\":null,\n" +
@@ -293,7 +293,7 @@ public class SourceDocumentHandlerTest {
 					"\t\t\"charset\":\"UTF-8\",\n" +
 					"\t\t\"checksum\":705211438,\n" +
 					"\t\t\"fileName\":null,\n" +
-					"\t\t\"fileOSType\":\"INDEPENDENT\",\n" +
+					"\t\t\"fileOSType\":\"DOS\",\n" +
 					"\t\t\"fileType\":\"TEXT\",\n" +
 					"\t\t\"mimeType\":null,\n" +
 					"\t\t\"uRI\":null,\n" +
