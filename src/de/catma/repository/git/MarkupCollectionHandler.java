@@ -94,6 +94,14 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 		throw new MarkupCollectionHandlerException("Not implemented");
 	}
 
+	/**
+	 * Adds an existing tagset, identified by <code>tagsetId</code>, to the markup collection identified by
+	 * <code>markupCollectionId</code>.
+	 *
+	 * @param markupCollectionId the ID of the markup collection to add the tagset to
+	 * @param tagsetId the ID of the tagset to add
+	 * @throws MarkupCollectionHandlerException if an error occurs while adding the tagset
+	 */
 	@Override
 	public void addTagset(String markupCollectionId, String tagsetId) throws MarkupCollectionHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
