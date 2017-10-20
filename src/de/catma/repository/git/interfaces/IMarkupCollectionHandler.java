@@ -11,7 +11,7 @@ public interface IMarkupCollectionHandler {
 
 	void delete(String markupCollectionId) throws MarkupCollectionHandlerException;
 
-	void addTagset(String tagsetId, String markupCollectionId) throws MarkupCollectionHandlerException;
+	void addTagset(String markupCollectionId, String tagsetId) throws MarkupCollectionHandlerException;
 
-	void removeTagset(String tagsetId, String markupCollectionId) throws MarkupCollectionHandlerException;
+	void removeTagset(String markupCollectionId, String tagsetId) throws MarkupCollectionHandlerException;
 }

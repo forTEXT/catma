@@ -225,7 +225,7 @@ public class MarkupCollectionHandlerTest {
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
-			markupCollectionHandler.addTagset(tagsetId, markupCollectionId);
+			markupCollectionHandler.addTagset(markupCollectionId, tagsetId);
 
 			// the LocalGitRepositoryManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
@@ -250,7 +250,7 @@ public class MarkupCollectionHandlerTest {
 
 			thrown.expect(MarkupCollectionHandlerException.class);
 			thrown.expectMessage("Not implemented");
-			markupCollectionHandler.removeTagset("fakeTagsetId", "fakeMarkupCollectionId");
+			markupCollectionHandler.removeTagset("fakeMarkupCollectionId", "fakeTagsetId");
 		}
 	}
 }

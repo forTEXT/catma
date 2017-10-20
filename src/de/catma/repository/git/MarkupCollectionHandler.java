@@ -8,7 +8,6 @@ import de.catma.repository.git.interfaces.IMarkupCollectionHandler;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
-import de.catma.repository.git.serialization.models.HeaderBase;
 import de.catma.repository.git.serialization.models.MarkupCollectionHeader;
 import de.catma.util.IDGenerator;
 import org.apache.commons.lang3.StringUtils;
@@ -96,7 +95,7 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	}
 
 	@Override
-	public void addTagset(String tagsetId, String markupCollectionId) throws MarkupCollectionHandlerException {
+	public void addTagset(String markupCollectionId, String tagsetId) throws MarkupCollectionHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// open the tagset repository so that we can get its remote
 			localGitRepoManager.open(tagsetId);
@@ -125,7 +124,7 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	}
 
 	@Override
-	public void removeTagset(String tagsetId, String markupCollectionId) throws MarkupCollectionHandlerException {
+	public void removeTagset(String markupCollectionId, String tagsetId) throws MarkupCollectionHandlerException {
 		// it should only be possible to remove a tagset if there are no tag instances referring to any of its tag
 		// definitions
 		throw new MarkupCollectionHandlerException("Not implemented");
