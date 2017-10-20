@@ -8,6 +8,7 @@ import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.interfaces.ITagsetHandler;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
+import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
 import de.catma.repository.git.serialization.models.HeaderBase;
 import de.catma.repository.git.serialization.models.TagsetDefinitionHeader;
 import de.catma.tag.TagDefinition;
@@ -111,7 +112,9 @@ public class TagsetHandler implements ITagsetHandler {
 			);
 			propertyDefFile.getParentFile().mkdirs();
 
-			byte[] propertyDefBytes = "Serialized properties".getBytes(StandardCharsets.UTF_8);
+			GitTagDefinition getTagDefinition = new GitTagDefinition(tagDefinition);
+			String serializedTagDefinition = new SerializationHelper<GitTagDefinition>().serialize(getTagDefinition);
+			byte[] propertyDefBytes = serializedTagDefinition.getBytes(StandardCharsets.UTF_8);
 
 			// commit newly added files
 			RemoteGitServerManager remoteGitServerManagerImpl =

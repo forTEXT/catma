@@ -5,6 +5,7 @@ import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
 import de.catma.repository.git.serialization.SerializationHelper;
+import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
 import de.catma.repository.git.serialization.models.TagsetDefinitionHeader;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.Version;
@@ -224,12 +225,18 @@ public class TagsetHandlerTest {
 
 			assert Arrays.asList(expectedTagDefinitionPath.list()).contains("propertydefs.json");
 
-			String expectedSerializedHeader = "Serialized properties";
+			GitTagDefinition expectedGitTagDefinition = new GitTagDefinition(tagDefinition);
 
-			assertEquals(
-					expectedSerializedHeader.replaceAll("[\n\t]", ""),
-					FileUtils.readFileToString(new File(expectedTagDefinitionPath, "propertydefs.json"), StandardCharsets.UTF_8)
-			);
+			String serialized = FileUtils.readFileToString(new File(expectedTagDefinitionPath, "propertydefs.json"), StandardCharsets.UTF_8);
+			GitTagDefinition actualGitTagDefinition = new SerializationHelper<GitTagDefinition>()
+					.deserialize(
+							serialized,
+							GitTagDefinition.class
+					);
+
+			assertEquals(expectedGitTagDefinition.getName(), actualGitTagDefinition.getName());
+			assertEquals(expectedGitTagDefinition.getParentUuid(), actualGitTagDefinition.getParentUuid());
+			assertEquals(expectedGitTagDefinition.getUuid(), actualGitTagDefinition.getUuid());
 		}
 	}
 
