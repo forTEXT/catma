@@ -1,7 +1,11 @@
 package de.catma.repository.git.serialization.model_wrappers;
 
 import com.jsoniter.annotation.JsonIgnore;
+import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class GitTagDefinition {
 	private TagDefinition tagDefinition;
@@ -34,12 +38,39 @@ public class GitTagDefinition {
 
 	public void setName(String name){this.tagDefinition.setName(name);}
 
-	//TODO: property definitions
+	public HashMap<String, GitPropertyDefinition> getSystemPropertyDefinitions(){
+		HashMap<String, GitPropertyDefinition> newMap = new HashMap<>();
+
+		for(PropertyDefinition propertyDefinition : this.tagDefinition.getSystemPropertyDefinitions()){
+			newMap.put(propertyDefinition.getUuid(), new GitPropertyDefinition(propertyDefinition));
+		}
+
+		return newMap;
+	}
+
+	public void setSystemPropertyDefinitions(HashMap<String, GitPropertyDefinition> systemPropertyDefinitions){
+		for (GitPropertyDefinition value: systemPropertyDefinitions.values()) {
+			this.tagDefinition.addSystemPropertyDefinition(value.getPropertyDefinition());
+		}
+	}
+
+	public HashMap<String, GitPropertyDefinition> getUserDefinedPropertyDefinitions(){
+		HashMap<String, GitPropertyDefinition> newMap = new HashMap<>();
+
+		for(PropertyDefinition propertyDefinition : this.tagDefinition.getUserDefinedPropertyDefinitions()){
+			newMap.put(propertyDefinition.getUuid(), new GitPropertyDefinition(propertyDefinition));
+		}
+
+		return newMap;
+	}
+
+	public void setUserDefinedPropertyDefinitions(HashMap<String, GitPropertyDefinition> userPropertyDefinitions){
+		for (GitPropertyDefinition value: userPropertyDefinitions.values()) {
+			this.tagDefinition.addUserDefinedPropertyDefinition(value.getPropertyDefinition());
+		}
+	}
 
 	public String getParentUuid(){return this.tagDefinition.getParentUuid();}
 
 	public void setParentUuid(String uuid){this.tagDefinition.setParentUuid(uuid);}
-
-
-
 }
