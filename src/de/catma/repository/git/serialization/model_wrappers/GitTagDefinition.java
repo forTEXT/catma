@@ -5,7 +5,6 @@ import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 
 import java.util.HashMap;
-import java.util.Map;
 
 public class GitTagDefinition {
 	private TagDefinition tagDefinition;
