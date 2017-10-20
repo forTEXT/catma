@@ -17,9 +17,8 @@ public class TagInstanceLd {
 	public TagInstanceLdTarget target;
 
 	@JsonIgnore
-	public String getTagInstanceUuid(){
+	public String getTagInstanceUuid() {
 		int startIndex = this.id.indexOf("CATMA_");
-
 		return this.id.substring(startIndex);
-	};
+	}
 }
