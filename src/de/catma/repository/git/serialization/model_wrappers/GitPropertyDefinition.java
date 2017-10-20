@@ -2,6 +2,9 @@ package de.catma.repository.git.serialization.model_wrappers;
 
 import com.jsoniter.annotation.JsonIgnore;
 import de.catma.tag.PropertyDefinition;
+import de.catma.tag.PropertyPossibleValueList;
+
+import java.util.List;
 
 public class GitPropertyDefinition {
 	private PropertyDefinition propertyDefinition;
@@ -32,6 +35,13 @@ public class GitPropertyDefinition {
 
 	public void setName(String name){this.propertyDefinition.setName(name);}
 
-	// TODO: possible value list
+	// TODO: how to serialize singleSelect property?
+	public List<String> getPossibleValueList(){
+		return this.propertyDefinition.getPossibleValueList().getPropertyValueList().getValues();
+	}
+
+	public void setPossibleValueList(List<String> values){
+		this.propertyDefinition.setPossibleValueList(new PropertyPossibleValueList(values, true));
+	}
 
 }
