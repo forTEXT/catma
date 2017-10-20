@@ -1,10 +1,13 @@
 package de.catma.repository.git;
 
+import de.catma.document.Range;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.repository.git.exceptions.MarkupCollectionHandlerException;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
-import de.catma.tag.Version;
+import de.catma.repository.jsonld.TagReferenceJsonLd;
+import de.catma.tag.*;
 import helpers.Randomizer;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Status;
@@ -251,6 +254,109 @@ public class MarkupCollectionHandlerTest {
 			thrown.expect(MarkupCollectionHandlerException.class);
 			thrown.expectMessage("Not implemented");
 			markupCollectionHandler.removeTagset("fakeMarkupCollectionId", "fakeTagsetId");
+		}
+	}
+
+	@Test
+	public void addTagInstance() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
+				localGitRepoManager, this.remoteGitServerManager
+			);
+
+			ProjectHandler projectHandler = new ProjectHandler(
+				localGitRepoManager, this.remoteGitServerManager
+			);
+
+			String projectId = projectHandler.create(
+				"Test CATMA Project", "This is a test CATMA project"
+			);
+			this.projectsToDeleteOnTearDown.add(projectId);
+
+			// the LocalGitRepositoryManager instance should always be in a detached state after ProjectHandler calls
+			// return
+			assertFalse(localGitRepoManager.isAttached());
+
+			String markupCollectionId = markupCollectionHandler.create(
+				"Test Markup Collection", null,
+				"fakeSourceDocumentId", projectId,
+				null
+			);
+			// we don't add the markupCollectionId to this.markupCollectionReposToDeleteOnTearDown as deletion of the
+			// project will take care of that for us
+
+			// the LocalGitRepositoryManager instance should always be in a detached state after MarkupCollectionHandler
+			// calls return
+			assertFalse(localGitRepoManager.isAttached());
+
+			// TODO: create a tag instance/reference for a real tag definition with real urls etc.
+			String uri = "http://catma.de/sourcedocument/doc1";
+
+			Range range = new Range(42, 125);
+
+			PropertyPossibleValueList possibleValueList = new PropertyPossibleValueList("TestPossibleValue");
+			PropertyDefinition propertyDefinition = new PropertyDefinition(
+				1, "CATMA_PROPDEF", "FAKE_PROP_DEF", possibleValueList
+			);
+
+			TagDefinition tagDefinition = new TagDefinition(
+				1, "CATMA_1", "Weather", new Version(), null, null
+			);
+			tagDefinition.addUserDefinedPropertyDefinition(propertyDefinition);
+
+			PropertyValueList instancePropertyValueList = new PropertyValueList("SimplePropertyValue");
+			Property property = new Property(propertyDefinition, instancePropertyValueList);
+
+			TagInstance tagInstance = new TagInstance("CATMA_129837", tagDefinition);
+			tagInstance.addUserDefinedProperty(property);
+
+			TagReference internalReference = new TagReference(tagInstance, uri, range);
+			TagReferenceJsonLd ldWrapper = new TagReferenceJsonLd(internalReference);
+
+			markupCollectionHandler.addTagInstance(markupCollectionId, ldWrapper);
+
+			// the LocalGitRepositoryManager instance should always be in a detached state after MarkupCollectionHandler
+			// calls return
+			assertFalse(localGitRepoManager.isAttached());
+
+			localGitRepoManager.open(markupCollectionId);
+
+			File expectedTagInstanceJsonFilePath = new File(
+				localGitRepoManager.getRepositoryWorkTree(), "CATMA_129837.json"
+			);
+
+			assert expectedTagInstanceJsonFilePath.exists();
+			assert expectedTagInstanceJsonFilePath.isFile();
+
+			String expectedTagInstanceJsonFileContents = "" +
+					"{\n" +
+					"\t\"body\":{\n" +
+					"\t\t\"@context\":{\n" +
+					"\t\t\t\"FAKE_PROP_DEF\":\"http://catma.de/portal/tag/CATMA_1/property/CATMA_PROPDEF\",\n" +
+					"\t\t\t\"tag\":\"http://catma.de/portal/tag\"\n" +
+					"\t\t},\n" +
+					"\t\t\"properties\":{\n" +
+					"\t\t\t\"FAKE_PROP_DEF\":\"SimplePropertyValue\"\n" +
+					"\t\t},\n" +
+					"\t\t\"tag\":\"http://catma.de/portal/tag/CATMA_1\",\n" +
+					"\t\t\"type\":\"Dataset\"\n" +
+					"\t},\n" +
+					"\t\"@context\":\"http://www.w3.org/ns/anno.jsonld\",\n" +
+					"\t\"id\":\"http://catma.de/portal/annotation/CATMA_129837\",\n" +
+					"\t\"target\":{\n" +
+					"\t\t\"source\":\"http://catma.de/sourcedocument/doc1\",\n" +
+					"\t\t\"TextPositionSelector\":{\n" +
+					"\t\t\t\"end\":125,\n" +
+					"\t\t\t\"start\":42\n" +
+					"\t\t}\n" +
+					"\t},\n" +
+					"\t\"type\":\"Annotation\"\n" +
+					"}";
+
+			assertEquals(
+				expectedTagInstanceJsonFileContents.replaceAll("[\n\t]", ""),
+				FileUtils.readFileToString(expectedTagInstanceJsonFilePath, StandardCharsets.UTF_8)
+			);
 		}
 	}
 }
