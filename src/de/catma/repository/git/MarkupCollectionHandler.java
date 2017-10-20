@@ -76,7 +76,7 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 				localGitRepoManager.getRepositoryWorkTree(), "header.json"
 			);
 			MarkupCollectionHeader header = new MarkupCollectionHeader(name, description, sourceDocumentId);
-			String serializedHeader = new SerializationHelper<HeaderBase>().serialize(header);
+			String serializedHeader = new SerializationHelper<MarkupCollectionHeader>().serialize(header);
 			localGitRepoManager.addAndCommit(
 				targetHeaderFile, serializedHeader.getBytes(StandardCharsets.UTF_8),
 				StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername(),
