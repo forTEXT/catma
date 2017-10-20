@@ -1,14 +1,15 @@
 package de.catma.repository.jsonld;
 
-import com.jsoniter.JsonIterator;
-import com.jsoniter.output.JsonStream;
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.tag.*;
+import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -39,18 +40,18 @@ public class TagReferenceJsonLd {
 	}
 
 	public TagInstance buildTagInstanceFromJson(TagInstanceLd tagInstanceLd) {
-		String tagInstanceUUID = tagInstanceLd.getTagInstanceUuid();
-		String tagDefinitionUUID = tagInstanceLd.body.getTagDefinitionUuid();
+		String tagInstanceUUID = tagInstanceLd.getTagInstanceUUID();
+		String tagDefinitionUUID = tagInstanceLd.getBody().getTagDefinitionUUID();
 
 		TagDefinition tagDefinition = this.findTagDefinitionForTagInstance(tagDefinitionUUID);
 
 		TagInstance tagInstance = new TagInstance(tagInstanceUUID, tagDefinition);
 
-		for (Map.Entry<String, String> entry : tagInstanceLd.body.properties.entrySet()) {
+		for (Map.Entry<String, String> entry : tagInstanceLd.getBody().getProperties().entrySet()) {
 			String key = entry.getKey();
 			String value = entry.getValue();
 
-			String propertyDefUuid = tagInstanceLd.body.getPropertyDefinitionUuid(key);
+			String propertyDefUuid = tagInstanceLd.getBody().getPropertyDefinitionUUID(key);
 
 			Property property = this.buildProperty(propertyDefUuid, value);
 			tagInstance.addUserDefinedProperty(property);
@@ -79,51 +80,50 @@ public class TagReferenceJsonLd {
 	}
 
 	public TagReferenceJsonLd deserialize(InputStream inputStream) throws IOException, URISyntaxException {
-		JsonIterator iter = JsonIterator.parse(inputStream, 128);
-		TagInstanceLd tagInstanceLd = iter.read(TagInstanceLd.class);
-		iter.close();
+		String serializedRepresentation = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+		TagInstanceLd tagInstanceLd = new SerializationHelper<TagInstanceLd>().deserialize(serializedRepresentation, TagInstanceLd.class);
 
 		TagInstance tagInstance = this.buildTagInstanceFromJson(tagInstanceLd);
 
 		Range range = new Range(
-			tagInstanceLd.target.TextPositionSelector.start, tagInstanceLd.target.TextPositionSelector.end
+			tagInstanceLd.getTarget().getTextPositionSelector().getStart(), tagInstanceLd.getTarget().getTextPositionSelector().getEnd()
 		);
-		this.tagReference = new TagReference(tagInstance, tagInstanceLd.target.source, range);
+		this.tagReference = new TagReference(tagInstance, tagInstanceLd.getTarget().getSource(), range);
 
 		return this;
 	}
 
 	public String serialize() {
 		TagInstanceLd tagInstanceLd = new TagInstanceLd();
-		tagInstanceLd.context = "http://www.w3.org/ns/anno.jsonld";
-		tagInstanceLd.type = "Annotation";
-		tagInstanceLd.id = "http://catma.de/portal/annotation/" + this.tagReference.getTagInstance().getUuid();
+		tagInstanceLd.setContext("http://www.w3.org/ns/anno.jsonld");
+		tagInstanceLd.setType("Annotation");
+		tagInstanceLd.setId("http://catma.de/portal/annotation/" + this.tagReference.getTagInstance().getUuid());
 
-		tagInstanceLd.body = new TagInstanceLdBody();
-		tagInstanceLd.body.context.put("tag", "http://catma.de/portal/tag");
-		tagInstanceLd.body.type = "Dataset";
-		tagInstanceLd.body.tag = "http://catma.de/portal/tag/" + this.tagReference.getTagDefinition().getUuid();
+		tagInstanceLd.setBody(new TagInstanceLdBody());
+		tagInstanceLd.getBody().getContext().put("tag", "http://catma.de/portal/tag");
+		tagInstanceLd.getBody().setType("Dataset");
+		tagInstanceLd.getBody().setTag("http://catma.de/portal/tag/" + this.tagReference.getTagDefinition().getUuid());
 
-		tagInstanceLd.target = new TagInstanceLdTarget();
-		tagInstanceLd.target.source = this.tagReference.getTarget().toString();
-		tagInstanceLd.target.TextPositionSelector.start = this.tagReference.getRange().getStartPoint();
-		tagInstanceLd.target.TextPositionSelector.end = this.tagReference.getRange().getEndPoint();
+		tagInstanceLd.setTarget(new TagInstanceLdTarget());
+		tagInstanceLd.getTarget().setSource(this.tagReference.getTarget().toString());
+		tagInstanceLd.getTarget().getTextPositionSelector().setStart(this.tagReference.getRange().getStartPoint());
+		tagInstanceLd.getTarget().getTextPositionSelector().setEnd(this.tagReference.getRange().getEndPoint());
 
 		String tagDefinitionUuid = this.tagReference.getTagDefinition().getUuid();
 
 		Collection<Property> userDefinedProperties = this.tagReference.getTagInstance().getUserDefinedProperties();
 
 		for (Property property : userDefinedProperties) {
-			tagInstanceLd.body.context.put(
+			tagInstanceLd.getBody().getContext().put(
 				property.getName(),
 				"http://catma.de/portal/tag/" + tagDefinitionUuid + "/property/" +
 						property.getPropertyDefinition().getUuid()
 			);
 
 			// TODO: Have multiple user defined values per property
-			tagInstanceLd.body.properties.put(property.getName(), property.getPropertyValueList().getFirstValue());
+			tagInstanceLd.getBody().getProperties().put(property.getName(), property.getPropertyValueList().getFirstValue());
 		}
 
-		return JsonStream.serialize(tagInstanceLd);
+		return new SerializationHelper<TagInstanceLd>().serialize(tagInstanceLd);
 	}
 }
