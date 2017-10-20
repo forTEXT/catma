@@ -125,7 +125,9 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	}
 
 	@Override
-	public void removeTagset(String tagsetId) {
-
+	public void removeTagset(String tagsetId, String markupCollectionId) throws MarkupCollectionHandlerException {
+		// it should only be possible to remove a tagset if there are no tag instances referring to any of its tag
+		// definitions
+		throw new MarkupCollectionHandlerException("Not implemented");
 	}
 }

@@ -240,4 +240,17 @@ public class MarkupCollectionHandlerTest {
 			assert added.contains("tagsets/" + tagsetId);
 		}
 	}
+
+	@Test
+	public void removeTagset() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
+				localGitRepoManager, this.remoteGitServerManager
+			);
+
+			thrown.expect(MarkupCollectionHandlerException.class);
+			thrown.expectMessage("Not implemented");
+			markupCollectionHandler.removeTagset("fakeTagsetId", "fakeMarkupCollectionId");
+		}
+	}
 }
