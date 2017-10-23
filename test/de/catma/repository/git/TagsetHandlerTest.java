@@ -302,8 +302,6 @@ public class TagsetHandlerTest {
 
 			assert Arrays.asList(expectedTagDefinitionPath.list()).contains("propertydefs.json");
 
-			assert Arrays.asList(expectedTagDefinitionPath.list()).contains("propertydefs.json");
-
 			GitTagDefinition expectedGitTagDefinition = new GitTagDefinition(tagDefinition);
 
 			String serialized = FileUtils.readFileToString(new File(expectedTagDefinitionPath, "propertydefs.json"), StandardCharsets.UTF_8);
