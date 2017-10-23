@@ -106,6 +106,10 @@ public class TagsetHandler implements ITagsetHandler {
 
 			String propertyDefinitionPath = String.format("%s/%s", tagDefinition.getUuid(), "propertydefs.json");
 
+			if(StringUtils.isNotEmpty(tagDefinition.getParentUuid())){
+				propertyDefinitionPath = String.format("%s/%s", tagDefinition.getParentUuid(), propertyDefinitionPath);
+			}
+
 			// write header.json into the local repo
 			File propertyDefFile = new File(
 					localGitRepoManager.getRepositoryWorkTree(), propertyDefinitionPath

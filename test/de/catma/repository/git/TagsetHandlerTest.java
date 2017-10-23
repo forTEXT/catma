@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
@@ -293,18 +294,28 @@ public class TagsetHandlerTest {
 
 			String tagDefinitionPath = String.format("%s/%s/%s", tagsetId, parentTagDefinitionId, tagDefinition.getUuid());
 
+			Logger.getLogger(this.getClass().toString()).info(tagDefinitionPath);
+
 			File expectedTagDefinitionPath = new File(localGitRepoManager.getRepositoryBasePath(), tagDefinitionPath);
 			assert expectedTagDefinitionPath.exists() : "Directory does not exist";
 			assert expectedTagDefinitionPath.isDirectory() : "Path is not a directory";
 
 			assert Arrays.asList(expectedTagDefinitionPath.list()).contains("propertydefs.json");
 
-			String expectedSerializedHeader = "Serialized properties";
+			assert Arrays.asList(expectedTagDefinitionPath.list()).contains("propertydefs.json");
 
-			assertEquals(
-					expectedSerializedHeader.replaceAll("[\n\t]", ""),
-					FileUtils.readFileToString(new File(expectedTagDefinitionPath, "propertydefs.json"), StandardCharsets.UTF_8)
-			);
+			GitTagDefinition expectedGitTagDefinition = new GitTagDefinition(tagDefinition);
+
+			String serialized = FileUtils.readFileToString(new File(expectedTagDefinitionPath, "propertydefs.json"), StandardCharsets.UTF_8);
+			GitTagDefinition actualGitTagDefinition = new SerializationHelper<GitTagDefinition>()
+					.deserialize(
+							serialized,
+							GitTagDefinition.class
+					);
+
+			assertEquals(expectedGitTagDefinition.getName(), actualGitTagDefinition.getName());
+			assertEquals(expectedGitTagDefinition.getParentUuid(), actualGitTagDefinition.getParentUuid());
+			assertEquals(expectedGitTagDefinition.getUuid(), actualGitTagDefinition.getUuid());
 		}
 	}
 
