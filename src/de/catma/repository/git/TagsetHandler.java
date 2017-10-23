@@ -22,6 +22,9 @@ import org.gitlab4j.api.models.User;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class TagsetHandler implements ITagsetHandler {
 	static final String TAGSET_ROOT_REPOSITORY_NAME_FORMAT = "%s_tagset";
@@ -100,14 +103,21 @@ public class TagsetHandler implements ITagsetHandler {
 		throw new TagsetHandlerException("Not implemented");
 	}
 
+	private ArrayList<TagDefinition> openTagDefinition(String tagdefinitionId){
+		ArrayList<TagDefinition> tagDefinitions = new ArrayList<>();
+
+		return tagDefinitions;
+	}
+
 	@Override
 	public TagsetDefinition open(String tagsetId, String projectId) throws TagsetHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 
 			localGitRepoManager.open(tagsetId);
 
+			File repositoryWorkTreeFile = localGitRepoManager.getRepositoryWorkTree();
 			File targetHeaderFile = new File(
-					localGitRepoManager.getRepositoryWorkTree(), "header.json"
+					repositoryWorkTreeFile, "header.json"
 			);
 
 			String serialized = FileUtils.readFileToString(targetHeaderFile, StandardCharsets.UTF_8);
@@ -118,7 +128,25 @@ public class TagsetHandler implements ITagsetHandler {
 					);
 
 			//Integer id, String uuid, String tagsetName, Version version
-			return new TagsetDefinition(null, tagsetId, tagsetDefinitionHeader.getName(), tagsetDefinitionHeader.version());
+			TagsetDefinition tagsetdefinition = new TagsetDefinition(null, tagsetId, tagsetDefinitionHeader.getName(), tagsetDefinitionHeader.version());
+
+			List<String> contents = Arrays.asList(repositoryWorkTreeFile.list());
+
+			for(String item : contents){
+				File target = new File(repositoryWorkTreeFile, item);
+				if(!target.isDirectory()){
+					continue;
+				}
+
+				ArrayList<TagDefinition> tagDefinitions = this.openTagDefinition(item);
+
+				for(TagDefinition tagdefinition : tagDefinitions){
+					tagsetdefinition.addTagDefinition(tagdefinition);
+				}
+			}
+
+
+			return tagsetdefinition;
 		}
 		catch (LocalGitRepositoryManagerException | IOException e) {
 			throw new TagsetHandlerException("Failed to open the Tagset repo", e);
