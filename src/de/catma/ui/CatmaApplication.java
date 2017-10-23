@@ -92,6 +92,7 @@ import de.catma.ui.tabbedview.TabbedView;
 import de.catma.ui.tagger.TaggerManagerView;
 import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagManagerView;
+import de.catma.ui.tagmanager.TagsetSelectionListener;
 import de.catma.ui.visualizer.VisualizationManagerView;
 
 //@Push(PushMode.MANUAL)
@@ -363,7 +364,30 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 			throw new IOException("could not create temporary directory: " + this.tempDirectory); //$NON-NLS-1$
 		}
 	}
+	
+	// neue Version 
+	public void addTagsetToActiveDocument(TagsetDefinition tagsetDefinition, TagsetSelectionListener tagsetSelectionListener) {
+		TaggerView selectedTab = (TaggerView) taggerManagerView.getSelectedTab();
 
+		if (selectedTab == null) {
+			Notification.show(Messages.getString("CatmaApplication.infoTitle"), //$NON-NLS-1$
+					Messages.getString("CatmaApplication.noActiveDocumentInTagger"), //$NON-NLS-1$
+					Type.TRAY_NOTIFICATION);
+			return;
+		}
+
+		selectedTab.openTagsetDefinition(this, tagsetDefinition,tagsetSelectionListener);
+
+		SourceDocument sd = selectedTab.getSourceDocument();
+		String sourceDocumentCaption = sd.toString();
+
+		Notification.show(Messages.getString("CatmaApplication.infoTitle"), //$NON-NLS-1$
+				MessageFormat.format(Messages.getString("CatmaApplication.tagsetLoaded"), sourceDocumentCaption), //$NON-NLS-1$
+				Type.TRAY_NOTIFICATION);
+	}
+	
+	
+//alte Version
 	public void addTagsetToActiveDocument(TagsetDefinition tagsetDefinition) {
 		TaggerView selectedTab = (TaggerView) taggerManagerView.getSelectedTab();
 

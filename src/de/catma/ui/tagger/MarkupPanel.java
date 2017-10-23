@@ -79,6 +79,7 @@ import de.catma.ui.tagger.MarkupCollectionsPanel.MarkupCollectionPanelEvent;
 import de.catma.ui.tagger.TagInstanceTree.TagIntanceActionListener;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 import de.catma.ui.tagmanager.TagsetTree;
+import de.catma.ui.tagmanager.TagsetSelectionListener;
 
 public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionListener {
 
@@ -327,11 +328,15 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		buttonHeaderPanel.setComponentAlignment(btHelp, Alignment.MIDDLE_RIGHT);
 
 		tabContent.addComponent(buttonHeaderPanel);
-		TagsetSelectionHandler tagsetSelectionHandler = 
-				new TagsetSelectionHandler();
+		
+		
+		//**********hier Erzeugen des MarkupPanel-TagsetTrees  mit repository ohne tagsetSelectionListener **
+
+				
 		
 		tagsetTree = new TagsetTree(repository.getTagManager(), null, false, false, true, true, false,
-				colorButtonListener, tagsetSelectionHandler);
+				colorButtonListener,repository);
+		//******************
 
 		tabContent.addComponent(tagsetTree);
 		tabContent.setExpandRatio(tagsetTree, 1.0f);
@@ -468,13 +473,20 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		markupInfoScrollPanel.setContent(markupInfoPanel);
 		return markupInfoScrollPanel;
 	}
-
-	public void addOrUpdateTagsetDefinition(UI ui, final TagsetDefinition tagsetDefinition) {
+	
+	// neue Version
+	public void addOrUpdateTagsetDefinition(UI ui, final TagsetDefinition tagsetDefinition,TagsetSelectionListener tagsetSelectionListener) {
 		markupCollectionsPanel.addOrUpdateTagsetDefinition(ui, tagsetDefinition, new ConfirmListener() {
 			public void confirmed() {
-				tagsetTree.addTagsetDefinition(tagsetDefinition);
+				tagsetTree.addTagsetDefinition(tagsetDefinition,tagsetSelectionListener);
 			}
 		});
+	}
+	
+	
+// alte Version
+	public void addOrUpdateTagsetDefinition(UI ui, final TagsetDefinition tagsetDefinition) {
+		addOrUpdateTagsetDefinition(ui, tagsetDefinition, null);
 	}
 
 	public void openUserMarkupCollection(final UserMarkupCollection userMarkupCollection) {

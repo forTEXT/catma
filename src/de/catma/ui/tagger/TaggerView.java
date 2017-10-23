@@ -75,6 +75,7 @@ import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
 import de.catma.ui.tagger.pager.PagerComponent.PageChangeListener;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
+import de.catma.ui.tagmanager.TagsetSelectionListener;
 
 public class TaggerView extends VerticalLayout 
 	implements TaggerListener, ClosableTab {
@@ -471,6 +472,12 @@ public class TaggerView extends VerticalLayout
 		}
 	}
 	
+	//neue Version
+	public void openTagsetDefinition(CatmaApplication catmaApplication, TagsetDefinition tagsetDefinition, TagsetSelectionListener tagsetSelectionListener){
+		markupPanel.addOrUpdateTagsetDefinition(catmaApplication, tagsetDefinition,tagsetSelectionListener);
+	}
+	
+	// alte version
 	public void openTagsetDefinition(CatmaApplication catmaApplication, TagsetDefinition tagsetDefinition){
 		markupPanel.addOrUpdateTagsetDefinition(catmaApplication, tagsetDefinition);
 	}
