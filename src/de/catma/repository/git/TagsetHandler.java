@@ -106,6 +106,11 @@ public class TagsetHandler implements ITagsetHandler {
 	private ArrayList<TagDefinition> openTagDefinition(String tagdefinitionId){
 		ArrayList<TagDefinition> tagDefinitions = new ArrayList<>();
 
+		// todo: list contents of directory
+		//
+		// if item is propertydefs.json, read it into a TagDefinition
+		// if it is a directory, recurse into it adding results to the current tagDefinitions list
+
 		return tagDefinitions;
 	}
 
