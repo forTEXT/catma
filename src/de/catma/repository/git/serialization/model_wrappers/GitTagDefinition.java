@@ -5,6 +5,7 @@ import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 
 import java.util.HashMap;
+import java.util.TreeMap;
 
 public class GitTagDefinition {
 	private TagDefinition tagDefinition;
@@ -37,8 +38,8 @@ public class GitTagDefinition {
 
 	public void setName(String name){this.tagDefinition.setName(name);}
 
-	public HashMap<String, GitPropertyDefinition> getSystemPropertyDefinitions(){
-		HashMap<String, GitPropertyDefinition> newMap = new HashMap<>();
+	public TreeMap<String, GitPropertyDefinition> getSystemPropertyDefinitions(){
+		TreeMap<String, GitPropertyDefinition> newMap = new TreeMap<>();
 
 		for(PropertyDefinition propertyDefinition : this.tagDefinition.getSystemPropertyDefinitions()){
 			newMap.put(propertyDefinition.getUuid(), new GitPropertyDefinition(propertyDefinition));
@@ -53,8 +54,8 @@ public class GitTagDefinition {
 		}
 	}
 
-	public HashMap<String, GitPropertyDefinition> getUserDefinedPropertyDefinitions(){
-		HashMap<String, GitPropertyDefinition> newMap = new HashMap<>();
+	public TreeMap<String, GitPropertyDefinition> getUserDefinedPropertyDefinitions(){
+		TreeMap<String, GitPropertyDefinition> newMap = new TreeMap<>();
 
 		for(PropertyDefinition propertyDefinition : this.tagDefinition.getUserDefinedPropertyDefinitions()){
 			newMap.put(propertyDefinition.getUuid(), new GitPropertyDefinition(propertyDefinition));
