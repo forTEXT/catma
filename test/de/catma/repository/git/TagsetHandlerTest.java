@@ -317,4 +317,17 @@ public class TagsetHandlerTest {
 		}
 	}
 
+	@Test
+	public void open() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			TagsetHandler tagsetHandler = new TagsetHandler(
+					localGitRepoManager, this.remoteGitServerManager
+			);
+
+			thrown.expect(TagsetHandlerException.class);
+			thrown.expectMessage("Not implemented");
+			tagsetHandler.open("fake", "fakeproject");
+		}
+	}
+
 }

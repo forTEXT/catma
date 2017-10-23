@@ -12,6 +12,7 @@ import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
 import de.catma.repository.git.serialization.models.HeaderBase;
 import de.catma.repository.git.serialization.models.TagsetDefinitionHeader;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.util.IDGenerator;
 import org.apache.commons.lang3.StringUtils;
@@ -94,6 +95,11 @@ public class TagsetHandler implements ITagsetHandler {
 
 	@Override
 	public void delete(String tagsetId) throws TagsetHandlerException {
+		throw new TagsetHandlerException("Not implemented");
+	}
+
+	@Override
+	public TagsetDefinition open(String tagsetId, String projectId) throws TagsetHandlerException {
 		throw new TagsetHandlerException("Not implemented");
 	}
 
