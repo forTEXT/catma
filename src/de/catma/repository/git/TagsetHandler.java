@@ -15,10 +15,12 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.util.IDGenerator;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.models.User;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class TagsetHandler implements ITagsetHandler {
@@ -100,7 +102,28 @@ public class TagsetHandler implements ITagsetHandler {
 
 	@Override
 	public TagsetDefinition open(String tagsetId, String projectId) throws TagsetHandlerException {
-		throw new TagsetHandlerException("Not implemented");
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+
+			localGitRepoManager.open(tagsetId);
+
+			File targetHeaderFile = new File(
+					localGitRepoManager.getRepositoryWorkTree(), "header.json"
+			);
+
+			String serialized = FileUtils.readFileToString(targetHeaderFile, StandardCharsets.UTF_8);
+			TagsetDefinitionHeader tagsetDefinitionHeader = new SerializationHelper<TagsetDefinitionHeader>()
+					.deserialize(
+							serialized,
+							TagsetDefinitionHeader.class
+					);
+
+			//Integer id, String uuid, String tagsetName, Version version
+			return new TagsetDefinition(null, tagsetId, tagsetDefinitionHeader.getName(), tagsetDefinitionHeader.version());
+		}
+		catch (LocalGitRepositoryManagerException | IOException e) {
+			throw new TagsetHandlerException("Failed to open the Tagset repo", e);
+		}
+
 	}
 
 	@Override

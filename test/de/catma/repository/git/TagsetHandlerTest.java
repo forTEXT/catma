@@ -7,10 +7,7 @@ import de.catma.repository.git.managers.RemoteGitServerManagerTest;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
 import de.catma.repository.git.serialization.models.TagsetDefinitionHeader;
-import de.catma.tag.PropertyDefinition;
-import de.catma.tag.PropertyPossibleValueList;
-import de.catma.tag.TagDefinition;
-import de.catma.tag.Version;
+import de.catma.tag.*;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -320,13 +317,33 @@ public class TagsetHandlerTest {
 	@Test
 	public void open() throws Exception {
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
-			TagsetHandler tagsetHandler = new TagsetHandler(
+			ProjectHandler projectHandler = new ProjectHandler(
 					localGitRepoManager, this.remoteGitServerManager
 			);
 
-			thrown.expect(TagsetHandlerException.class);
-			thrown.expectMessage("Not implemented");
-			tagsetHandler.open("fake", "fakeproject");
+			String projectId = projectHandler.create(
+					"Test CATMA Project for Tagset", "This is a test CATMA project"
+			);
+			this.projectsToDeleteOnTearDown.add(projectId);
+
+
+			String name = "InterestingTagset";
+			String description = "Pretty interesting stuff";
+			Version version = new Version();
+
+			String tagsetId = tagsetHandler.create(
+					name,
+					description,
+					version,
+					projectId);
+
+			TagsetDefinition tagsetDefinition = tagsetHandler.open(tagsetId, projectId);
+
+			assertEquals(name, tagsetDefinition.getName());
+			assertEquals(tagsetId, tagsetDefinition.getUuid());
+			assertEquals(version, tagsetDefinition.getVersion());
+
+			assertEquals(true, tagsetDefinition.isEmpty());
 		}
 	}
 
