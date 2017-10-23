@@ -1,16 +1,14 @@
 package de.catma.repository.jsonld;
 
-import de.catma.tag.*;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import com.jsoniter.JsonIterator;
 import com.jsoniter.output.JsonStream;
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
-
+import de.catma.repository.git.serialization.SerializationHelper;
+import de.catma.tag.*;
 import mockit.*;
 import mockit.integration.junit4.JMockit;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -21,7 +19,7 @@ import static org.junit.Assert.*;
 
 @RunWith(JMockit.class)
 public class TagReferenceJsonLdTest {
-	private String Original = "{\n" +
+	private String original = "{\n" +
 			"\t\"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n" +
 			"\t\"type\": \"Annotation\",\n" +
 			"\t\"id\": \"http://catma.de/portal/annotation/CATMA_4711\",\n" +
@@ -42,7 +40,7 @@ public class TagReferenceJsonLdTest {
 			"\t}\n" +
 			"}";
 
-	private String LessSimple = "{\n" +
+	private String lessSimple = "{\n" +
 			"\t\"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n" +
 			"\t\"type\": \"Annotation\",\n" +
 			"\t\"id\": \"http://catma.de/portal/annotation/CATMA_4711\",\n" +
@@ -64,28 +62,32 @@ public class TagReferenceJsonLdTest {
 			"\t}\n" +
 			"}";
 
-
 	@Test
 	public void serializeToJsonLd() throws Exception {
-
 		String uri = "http://catma.de/sourcedocument/doc1";
 
 		Range range = new Range(42, 125);
 
 		PropertyPossibleValueList possibleValueList = new PropertyPossibleValueList("TestPossibleValue");
-		PropertyDefinition propertyDefinition = new PropertyDefinition(1, "CATMA_PROPDEF", "FAKE_PROP_DEF", possibleValueList);
-		TagDefinition tagDefinition = new TagDefinition(1, "CATMA_1", "Weather", new Version(), null, null);
+		PropertyDefinition propertyDefinition = new PropertyDefinition(
+			1, "CATMA_PROPDEF", "FAKE_PROP_DEF", possibleValueList
+		);
+
+		TagDefinition tagDefinition = new TagDefinition(
+			1, "CATMA_1", "Weather", new Version(), null, null
+		);
 		tagDefinition.addUserDefinedPropertyDefinition(propertyDefinition);
 
 		PropertyValueList instancePropertyValueList = new PropertyValueList("SimplePropertyValue");
 		Property property = new Property(propertyDefinition, instancePropertyValueList);
+
 		TagInstance tagInstance = new TagInstance("CATMA_129837", tagDefinition);
 		tagInstance.addUserDefinedProperty(property);
 
 		TagReference internalReference = new TagReference(tagInstance, uri, range);
 		TagReferenceJsonLd ldWrapper = new TagReferenceJsonLd(internalReference);
 
-		String serialized = ldWrapper.Serialize();
+		String serialized = ldWrapper.serialize();
 
 		Logger.getLogger("TagReferenceJsonLdTest").info(serialized);
 
@@ -94,66 +96,65 @@ public class TagReferenceJsonLdTest {
 
 	@Test
 	public void deserializeFromJsonLd() throws Exception {
-
 		TagReferenceJsonLd tagReferenceJsonLdMock = new TagReferenceJsonLd();
-		InputStream inputStream = new ByteArrayInputStream(LessSimple.getBytes(StandardCharsets.UTF_8.name()));
+
+		InputStream inputStream = new ByteArrayInputStream(this.lessSimple.getBytes(StandardCharsets.UTF_8.name()));
 
 		Version version = new Version();
-		TagDefinition fakeTagDefinition = new TagDefinition(1, "CATMA_TAGDEFINITION", "FAKE_TAG_DEFINITION", version, null, null);
+		TagDefinition fakeTagDefinition = new TagDefinition(
+			1, "CATMA_TAGDEFINITION", "FAKE_TAG_DEFINITION", version, null, null
+		);
 
 		new Expectations(tagReferenceJsonLdMock) {{
 			tagReferenceJsonLdMock.findTagDefinitionForTagInstance(withInstanceOf(String.class));
 			result = fakeTagDefinition;
 		}};
 
-		TagReferenceJsonLd deserialized = tagReferenceJsonLdMock.Deserialize(inputStream);
+		TagReferenceJsonLd deserialized = tagReferenceJsonLdMock.deserialize(inputStream);
 
 		new Verifications() {{
 			tagReferenceJsonLdMock.findTagDefinitionForTagInstance(withInstanceOf(String.class));
 		}};
 
 		assertNotNull(deserialized);
-
-		assertEquals(fakeTagDefinition.getUuid(), deserialized.getTagReference().getTagInstance().getTagDefinition().getUuid());
-
-		assertEquals("CATMA_554", deserialized.getTagReference().getTagInstance().getUserDefinedProperty("CATMA_554").getName());
+		assertEquals(
+			fakeTagDefinition.getUuid(), deserialized.getTagReference().getTagInstance().getTagDefinition().getUuid()
+		);
+		assertEquals(
+			"CATMA_554",
+			deserialized.getTagReference().getTagInstance().getUserDefinedProperty("CATMA_554").getName()
+		);
 	}
 
 	@Test
-	public void JsonIterDeserializeFromJsonLdIntoIntermediate() throws Exception {
-
-		InputStream inputStream = new ByteArrayInputStream(LessSimple.getBytes(StandardCharsets.UTF_8.name()));
-
-		JsonIterator iter = JsonIterator.parse(inputStream, 128);
-
-		TagInstanceLd deserialized = iter.read(TagInstanceLd.class);
-		iter.close();
+	public void jsonIterDeserializeFromJsonLdIntoIntermediate() throws Exception {
+		TagInstanceLd deserialized = new SerializationHelper<TagInstanceLd>().deserialize(
+			this.lessSimple, TagInstanceLd.class
+		);
 
 		assertNotNull(deserialized);
 
-		assertEquals("http://www.w3.org/ns/anno.jsonld", deserialized.context);
-		assertEquals("Annotation", deserialized.type);
-		assertEquals("http://catma.de/portal/annotation/CATMA_4711", deserialized.id);
+		assertEquals("http://www.w3.org/ns/anno.jsonld", deserialized.getContext());
+		assertEquals("Annotation", deserialized.getType());
+		assertEquals("http://catma.de/portal/annotation/CATMA_4711", deserialized.getId());
 
-		assertNotNull(deserialized.body);
+		assertNotNull(deserialized.getBody());
+		assertEquals(
+			"http://catma.de/portal/tag/CATMA_789456/property/CATMA_554",
+			deserialized.getBody().getContext().get("myProp1")
+		);
+		assertEquals("http://catma.de/portal/tag", deserialized.getBody().getContext().get("tag"));
+		assertEquals("Dataset", deserialized.getBody().getType());
+		assertEquals("http://catma.de/portal/tag/CATMA_789456", deserialized.getBody().getTag());
+		assertEquals("myVal", deserialized.getBody().getProperties().get("myProp1"));
 
-		assertEquals("http://catma.de/portal/tag/CATMA_789456/property/CATMA_554", deserialized.body.context.get("myProp1"));
-		assertEquals("http://catma.de/portal/tag", deserialized.body.context.get("tag"));
-
-		assertEquals("Dataset", deserialized.body.type);
-		assertEquals("http://catma.de/portal/tag/CATMA_789456", deserialized.body.tag);
-
-		assertEquals("myVal", deserialized.body.properties.get("myProp1"));
-
-		assertNotNull(deserialized.target);
-
-		assertEquals("http://catma.de/sourcedocument/doc1", deserialized.target.source);
-		assertEquals(42, deserialized.target.TextPositionSelector.start);
-		assertEquals(125, deserialized.target.TextPositionSelector.end);
+		assertNotNull(deserialized.getTarget());
+		assertEquals("http://catma.de/sourcedocument/doc1", deserialized.getTarget().getSource());
+		assertEquals(42, deserialized.getTarget().getTextPositionSelector().getStart());
+		assertEquals(125, deserialized.getTarget().getTextPositionSelector().getEnd());
 
 		String result = JsonStream.serialize(deserialized);
 
 		Logger.getLogger("TagReferenceJsonLdTest").info(result);
 	}
-
 }

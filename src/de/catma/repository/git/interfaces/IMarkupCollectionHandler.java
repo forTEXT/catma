@@ -1,6 +1,7 @@
 package de.catma.repository.git.interfaces;
 
 import de.catma.repository.git.exceptions.MarkupCollectionHandlerException;
+import de.catma.repository.jsonld.TagReferenceJsonLd;
 
 import javax.annotation.Nullable;
 
@@ -11,7 +12,10 @@ public interface IMarkupCollectionHandler {
 
 	void delete(String markupCollectionId) throws MarkupCollectionHandlerException;
 
-	void addTagset(String tagsetId, String markupCollectionId) throws MarkupCollectionHandlerException;
+	void addTagset(String markupCollectionId, String tagsetId) throws MarkupCollectionHandlerException;
 
-	void removeTagset(String tagsetId);
+	void removeTagset(String markupCollectionId, String tagsetId) throws MarkupCollectionHandlerException;
+
+	void addTagInstance(String markupCollectionId, TagReferenceJsonLd tagReference)
+			throws MarkupCollectionHandlerException;
 }
