@@ -103,13 +103,32 @@ public class TagsetHandler implements ITagsetHandler {
 		throw new TagsetHandlerException("Not implemented");
 	}
 
-	private ArrayList<TagDefinition> openTagDefinition(String tagdefinitionId){
+	private ArrayList<TagDefinition> openTagDefinitions(File parentDirectory) throws IOException {
 		ArrayList<TagDefinition> tagDefinitions = new ArrayList<>();
 
-		// todo: list contents of directory
-		//
-		// if item is propertydefs.json, read it into a TagDefinition
-		// if it is a directory, recurse into it adding results to the current tagDefinitions list
+		List<String> contents = Arrays.asList(parentDirectory.list());
+
+		for(String item : contents){
+			File target = new File(parentDirectory, item);
+
+			// if it is a directory, recurse into it adding results to the current tagDefinitions list
+			if(target.isDirectory() && !target.getName().equalsIgnoreCase(".git")){
+				tagDefinitions.addAll(this.openTagDefinitions(target));
+				continue;
+			}
+
+			// if item is propertydefs.json, read it into a TagDefinition
+			if(target.isFile() && target.getName().equalsIgnoreCase("propertydefs.json")){
+				String serialized = FileUtils.readFileToString(target, StandardCharsets.UTF_8);
+				GitTagDefinition gitTagDefinition = new SerializationHelper<GitTagDefinition>()
+						.deserialize(
+								serialized,
+								GitTagDefinition.class
+						);
+
+				tagDefinitions.add(gitTagDefinition.getTagDefinition());
+			}
+		}
 
 		return tagDefinitions;
 	}
@@ -135,21 +154,11 @@ public class TagsetHandler implements ITagsetHandler {
 			//Integer id, String uuid, String tagsetName, Version version
 			TagsetDefinition tagsetdefinition = new TagsetDefinition(null, tagsetId, tagsetDefinitionHeader.getName(), tagsetDefinitionHeader.version());
 
-			List<String> contents = Arrays.asList(repositoryWorkTreeFile.list());
+			ArrayList<TagDefinition> tagDefinitions = this.openTagDefinitions(repositoryWorkTreeFile);
 
-			for(String item : contents){
-				File target = new File(repositoryWorkTreeFile, item);
-				if(!target.isDirectory()){
-					continue;
-				}
-
-				ArrayList<TagDefinition> tagDefinitions = this.openTagDefinition(item);
-
-				for(TagDefinition tagdefinition : tagDefinitions){
-					tagsetdefinition.addTagDefinition(tagdefinition);
-				}
+			for(TagDefinition tagdefinition : tagDefinitions){
+				tagsetdefinition.addTagDefinition(tagdefinition);
 			}
-
 
 			return tagsetdefinition;
 		}

@@ -337,13 +337,24 @@ public class TagsetHandlerTest {
 					version,
 					projectId);
 
+			String tagDefinitionId = this.idGenerator.generate();
+			String parentTagDefinitionId = this.idGenerator.generate();
+			Version tagDefVersion = new Version();
+
+			TagDefinition tagDefinition = new TagDefinition(
+					1, tagDefinitionId,
+					"FakeTagdefinitionName", tagDefVersion,
+					2, parentTagDefinitionId);
+
+			tagsetHandler.addTagDefinition(tagsetId, tagDefinition);
+
 			TagsetDefinition tagsetDefinition = tagsetHandler.open(tagsetId, projectId);
 
 			assertEquals(name, tagsetDefinition.getName());
 			assertEquals(tagsetId, tagsetDefinition.getUuid());
 			assertEquals(version, tagsetDefinition.getVersion());
 
-			assertEquals(true, tagsetDefinition.isEmpty());
+			assertFalse(tagsetDefinition.isEmpty());
 		}
 	}
 
