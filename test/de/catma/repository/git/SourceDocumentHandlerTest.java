@@ -327,14 +327,58 @@ public class SourceDocumentHandlerTest {
 
 	@Test
 	public void open() throws Exception {
+		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
+		File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
+
+		FileInputStream originalSourceDocumentStream = new FileInputStream(originalSourceDocument);
+		FileInputStream convertedSourceDocumentStream = new FileInputStream(convertedSourceDocument);
+
+		IndexInfoSet indexInfoSet = new IndexInfoSet();
+		indexInfoSet.setLocale(Locale.ENGLISH);
+
+		ContentInfoSet contentInfoSet = new ContentInfoSet(
+				"William Faulkner",
+				"",
+				"",
+				"A Rose for Emily"
+		);
+
+		TechInfoSet techInfoSet = new TechInfoSet(
+				FileType.TEXT,
+				StandardCharsets.UTF_8,
+				FileOSType.DOS,
+				705211438L,
+				null
+		);
+
+		SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(
+				indexInfoSet, contentInfoSet, techInfoSet
+		);
+
+		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
+
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
 					localGitRepoManager, this.remoteGitServerManager
 			);
 
-			thrown.expect(SourceDocumentHandlerException.class);
-			thrown.expectMessage("Not implemented");
-			sourceDocumentHandler.open("fake", "fakeProject");
+			String sourceDocumentId = sourceDocumentHandler.insert(
+					originalSourceDocumentStream, originalSourceDocument.getName(),
+					convertedSourceDocumentStream, convertedSourceDocument.getName(),
+					gitSourceDocumentInfo,
+					null, null
+			);
+			this.sourceDocumentReposToDeleteOnTearDown.add(sourceDocumentId);
+			File expectedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), sourceDocumentId);
+			assert expectedRepoPath.exists();
+			assert expectedRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(expectedRepoPath);
+
+			assertNotNull(sourceDocumentId);
+
+			SourceDocument loadedSourceDocument = sourceDocumentHandler.open(sourceDocumentId, null);
+
+			assertNotNull(loadedSourceDocument);
 		}
 	}
 }

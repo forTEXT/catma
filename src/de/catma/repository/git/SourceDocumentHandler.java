@@ -11,6 +11,7 @@ import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 import de.catma.util.IDGenerator;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.models.User;
@@ -139,6 +140,28 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 
 	@Override
 	public SourceDocument open(String sourceDocumentId, String projectId) throws SourceDocumentHandlerException {
-		throw new SourceDocumentHandlerException("Not implemented");
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+
+			localGitRepoManager.open(sourceDocumentId);
+
+			File repositoryWorkTreeFile = localGitRepoManager.getRepositoryWorkTree();
+			File targetHeaderFile = new File(
+					repositoryWorkTreeFile, "header.json"
+			);
+
+			String serialized = FileUtils.readFileToString(targetHeaderFile, StandardCharsets.UTF_8);
+			GitSourceDocumentInfo gitSourceDocumentInfo = new SerializationHelper<GitSourceDocumentInfo>()
+					.deserialize(
+							serialized,
+							GitSourceDocumentInfo.class
+					);
+
+			SourceDocument sourceDocument = new SourceDocument(sourceDocumentId, null);
+
+			return sourceDocument;
+		}
+		catch (LocalGitRepositoryManagerException | IOException e) {
+			throw new SourceDocumentHandlerException("Failed to open the SourceDocument repo", e);
+		}
 	}
 }
