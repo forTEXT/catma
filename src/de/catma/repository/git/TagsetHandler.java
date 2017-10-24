@@ -12,13 +12,19 @@ import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
 import de.catma.repository.git.serialization.models.HeaderBase;
 import de.catma.repository.git.serialization.models.TagsetDefinitionHeader;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.util.IDGenerator;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.models.User;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class TagsetHandler implements ITagsetHandler {
 	static final String TAGSET_ROOT_REPOSITORY_NAME_FORMAT = "%s_tagset";
@@ -97,6 +103,71 @@ public class TagsetHandler implements ITagsetHandler {
 		throw new TagsetHandlerException("Not implemented");
 	}
 
+	private ArrayList<TagDefinition> openTagDefinitions(File parentDirectory) throws IOException {
+		ArrayList<TagDefinition> tagDefinitions = new ArrayList<>();
+
+		List<String> contents = Arrays.asList(parentDirectory.list());
+
+		for(String item : contents){
+			File target = new File(parentDirectory, item);
+
+			// if it is a directory, recurse into it adding results to the current tagDefinitions list
+			if(target.isDirectory() && !target.getName().equalsIgnoreCase(".git")){
+				tagDefinitions.addAll(this.openTagDefinitions(target));
+				continue;
+			}
+
+			// if item is propertydefs.json, read it into a TagDefinition
+			if(target.isFile() && target.getName().equalsIgnoreCase("propertydefs.json")){
+				String serialized = FileUtils.readFileToString(target, StandardCharsets.UTF_8);
+				GitTagDefinition gitTagDefinition = new SerializationHelper<GitTagDefinition>()
+						.deserialize(
+								serialized,
+								GitTagDefinition.class
+						);
+
+				tagDefinitions.add(gitTagDefinition.getTagDefinition());
+			}
+		}
+
+		return tagDefinitions;
+	}
+
+	@Override
+	public TagsetDefinition open(String tagsetId, String projectId) throws TagsetHandlerException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+
+			localGitRepoManager.open(tagsetId);
+
+			File repositoryWorkTreeFile = localGitRepoManager.getRepositoryWorkTree();
+			File targetHeaderFile = new File(
+					repositoryWorkTreeFile, "header.json"
+			);
+
+			String serialized = FileUtils.readFileToString(targetHeaderFile, StandardCharsets.UTF_8);
+			TagsetDefinitionHeader tagsetDefinitionHeader = new SerializationHelper<TagsetDefinitionHeader>()
+					.deserialize(
+							serialized,
+							TagsetDefinitionHeader.class
+					);
+
+			//Integer id, String uuid, String tagsetName, Version version
+			TagsetDefinition tagsetdefinition = new TagsetDefinition(null, tagsetId, tagsetDefinitionHeader.getName(), tagsetDefinitionHeader.version());
+
+			ArrayList<TagDefinition> tagDefinitions = this.openTagDefinitions(repositoryWorkTreeFile);
+
+			for(TagDefinition tagdefinition : tagDefinitions){
+				tagsetdefinition.addTagDefinition(tagdefinition);
+			}
+
+			return tagsetdefinition;
+		}
+		catch (LocalGitRepositoryManagerException | IOException e) {
+			throw new TagsetHandlerException("Failed to open the Tagset repo", e);
+		}
+
+	}
+
 	@Override
 	public String addTagDefinition(String tagsetId, TagDefinition tagDefinition) throws TagsetHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
@@ -105,6 +176,10 @@ public class TagsetHandler implements ITagsetHandler {
 
 
 			String propertyDefinitionPath = String.format("%s/%s", tagDefinition.getUuid(), "propertydefs.json");
+
+			if(StringUtils.isNotEmpty(tagDefinition.getParentUuid())){
+				propertyDefinitionPath = String.format("%s/%s", tagDefinition.getParentUuid(), propertyDefinitionPath);
+			}
 
 			// write header.json into the local repo
 			File propertyDefFile = new File(

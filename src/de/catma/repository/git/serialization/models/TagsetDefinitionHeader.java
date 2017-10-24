@@ -1,5 +1,6 @@
 package de.catma.repository.git.serialization.models;
 
+import com.jsoniter.annotation.JsonIgnore;
 import de.catma.tag.Version;
 
 public class TagsetDefinitionHeader extends HeaderBase {
@@ -20,5 +21,10 @@ public class TagsetDefinitionHeader extends HeaderBase {
 
 	public void setVersion(String versionString) {
 		this.version = new Version(versionString);
+	}
+
+	@JsonIgnore
+	public Version version() {
+		return this.version;
 	}
 }

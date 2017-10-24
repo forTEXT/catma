@@ -1,5 +1,6 @@
 package de.catma.repository.git.interfaces;
 
+import de.catma.document.source.SourceDocument;
 import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
 import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 
@@ -14,4 +15,6 @@ public interface ISourceDocumentHandler {
 				  @Nullable String projectId) throws SourceDocumentHandlerException;
 
     void remove(String sourceDocumentId) throws SourceDocumentHandlerException;
+
+    SourceDocument open(String sourceDocumentId, String projectId) throws SourceDocumentHandlerException;
 }

@@ -7,10 +7,7 @@ import de.catma.repository.git.managers.RemoteGitServerManagerTest;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
 import de.catma.repository.git.serialization.models.TagsetDefinitionHeader;
-import de.catma.tag.PropertyDefinition;
-import de.catma.tag.PropertyPossibleValueList;
-import de.catma.tag.TagDefinition;
-import de.catma.tag.Version;
+import de.catma.tag.*;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -30,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
@@ -293,18 +291,79 @@ public class TagsetHandlerTest {
 
 			String tagDefinitionPath = String.format("%s/%s/%s", tagsetId, parentTagDefinitionId, tagDefinition.getUuid());
 
+			Logger.getLogger(this.getClass().toString()).info(tagDefinitionPath);
+
 			File expectedTagDefinitionPath = new File(localGitRepoManager.getRepositoryBasePath(), tagDefinitionPath);
 			assert expectedTagDefinitionPath.exists() : "Directory does not exist";
 			assert expectedTagDefinitionPath.isDirectory() : "Path is not a directory";
 
 			assert Arrays.asList(expectedTagDefinitionPath.list()).contains("propertydefs.json");
 
-			String expectedSerializedHeader = "Serialized properties";
+			GitTagDefinition expectedGitTagDefinition = new GitTagDefinition(tagDefinition);
 
-			assertEquals(
-					expectedSerializedHeader.replaceAll("[\n\t]", ""),
-					FileUtils.readFileToString(new File(expectedTagDefinitionPath, "propertydefs.json"), StandardCharsets.UTF_8)
+			String serialized = FileUtils.readFileToString(new File(expectedTagDefinitionPath, "propertydefs.json"), StandardCharsets.UTF_8);
+			GitTagDefinition actualGitTagDefinition = new SerializationHelper<GitTagDefinition>()
+					.deserialize(
+							serialized,
+							GitTagDefinition.class
+					);
+
+			assertEquals(expectedGitTagDefinition.getName(), actualGitTagDefinition.getName());
+			assertEquals(expectedGitTagDefinition.getParentUuid(), actualGitTagDefinition.getParentUuid());
+			assertEquals(expectedGitTagDefinition.getUuid(), actualGitTagDefinition.getUuid());
+		}
+	}
+
+	@Test
+	public void open() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			ProjectHandler projectHandler = new ProjectHandler(
+					localGitRepoManager, this.remoteGitServerManager
 			);
+
+			String projectId = projectHandler.create(
+					"Test CATMA Project for Tagset", "This is a test CATMA project"
+			);
+			this.projectsToDeleteOnTearDown.add(projectId);
+
+
+			String name = "InterestingTagset";
+			String description = "Pretty interesting stuff";
+			Version version = new Version();
+
+			String tagsetId = tagsetHandler.create(
+					name,
+					description,
+					version,
+					projectId);
+
+			String tagDefinitionId = this.idGenerator.generate();
+			String parentTagDefinitionId = this.idGenerator.generate();
+			Version tagDefVersion = new Version();
+
+			TagDefinition tagDefinition = new TagDefinition(
+					1, tagDefinitionId,
+					"FakeTagdefinitionName", tagDefVersion,
+					2, parentTagDefinitionId);
+
+			tagsetHandler.addTagDefinition(tagsetId, tagDefinition);
+
+			TagsetDefinition tagsetDefinition = tagsetHandler.open(tagsetId, projectId);
+
+			assertEquals(name, tagsetDefinition.getName());
+			assertEquals(tagsetId, tagsetDefinition.getUuid());
+			assertEquals(version, tagsetDefinition.getVersion());
+
+			assertFalse(tagsetDefinition.isEmpty());
+
+			TagDefinition loadedTagDefinition = tagsetDefinition.getTagDefinition(tagDefinitionId);
+
+			assertNotNull(loadedTagDefinition);
+
+			assertEquals(tagDefinition.getUuid(), loadedTagDefinition.getUuid());
+			assertEquals(tagDefinition.getName(), loadedTagDefinition.getName());
+			assertEquals(tagDefinition.getParentUuid(), loadedTagDefinition.getParentUuid());
+
 		}
 	}
 
