@@ -1,5 +1,6 @@
 package de.catma.repository.git;
 
+import de.catma.document.source.SourceDocument;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.interfaces.ISourceDocumentHandler;
@@ -134,5 +135,10 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 	@Override
 	public void remove(String sourceDocumentId) throws SourceDocumentHandlerException {
     	throw new SourceDocumentHandlerException("Not implemented");
+	}
+
+	@Override
+	public SourceDocument open(String sourceDocumentId, String projectId) throws SourceDocumentHandlerException {
+		throw new SourceDocumentHandlerException("Not implemented");
 	}
 }

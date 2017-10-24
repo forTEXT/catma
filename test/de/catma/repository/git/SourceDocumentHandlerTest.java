@@ -324,4 +324,17 @@ public class SourceDocumentHandlerTest {
 			sourceDocumentHandler.remove("fake");
 		}
 	}
+
+	@Test
+	public void open() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
+					localGitRepoManager, this.remoteGitServerManager
+			);
+
+			thrown.expect(SourceDocumentHandlerException.class);
+			thrown.expectMessage("Not implemented");
+			sourceDocumentHandler.open("fake", "fakeProject");
+		}
+	}
 }
