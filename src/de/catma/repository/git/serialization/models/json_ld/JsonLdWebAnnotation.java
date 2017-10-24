@@ -1,10 +1,15 @@
 package de.catma.repository.git.serialization.models.json_ld;
 
+import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
+import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
+import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -79,6 +84,45 @@ public class JsonLdWebAnnotation {
 	}
 
 	public List<TagReference> toTagReferenceList() throws JsonLdWebAnnotationException {
+		TagInstance tagInstance = this.getTagInstance();
+		String sourceDocumentUri = this.getSourceDocumentUri();
+		List<Range> ranges = this.getRanges();
+
+		// TODO: figure out how to do this with .stream().map while handling exceptions properly
+		// see https://stackoverflow.com/a/33218789 & https://stackoverflow.com/a/30118121 for pointers
+		ArrayList<TagReference> tagReferences = new ArrayList<>();
+		try {
+			for (Range range : ranges) {
+				tagReferences.add(new TagReference(tagInstance, sourceDocumentUri, range));
+			}
+		}
+		catch (URISyntaxException e) {
+			throw new JsonLdWebAnnotationException(
+				"Failed to turn internal representation back into a collection of TagReference objects", e
+			);
+		}
+
+		return tagReferences;
+	}
+
+	private String getSourceDocumentUri() throws JsonLdWebAnnotationException {
+		return this.target.getItems().first().getSource();
+	}
+
+	private List<Range> getRanges() throws JsonLdWebAnnotationException {
+		return this.target.getItems().stream().map(jsonLdWebAnnotationTarget -> {
+			JsonLdWebAnnotationTextPositionSelector selector = jsonLdWebAnnotationTarget.getSelector();
+			return new Range(selector.getStart(), selector.getEnd());
+		}).collect(Collectors.toList());
+	}
+
+	@JsonIgnore
+	TagInstance getTagInstance() throws JsonLdWebAnnotationException {
+//		TagDefinition tagDefinition = this.getTagDefinition();
+		throw new JsonLdWebAnnotationException("Not implemented");
+	}
+
+	private TagDefinition getTagDefinition() throws JsonLdWebAnnotationException {
 		throw new JsonLdWebAnnotationException("Not implemented");
 	}
 }

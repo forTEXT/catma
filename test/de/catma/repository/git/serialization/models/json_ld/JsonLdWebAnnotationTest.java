@@ -2,13 +2,13 @@ package de.catma.repository.git.serialization.models.json_ld;
 
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
-import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.tag.*;
-import org.junit.Rule;
+import mockit.Expectations;
+import mockit.Verifications;
+import mockit.integration.junit4.JMockit;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +16,7 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
+@RunWith(JMockit.class)
 public class JsonLdWebAnnotationTest {
 	private final String expectedSerializedRepresentation = "" +
 			"{\n" +
@@ -56,10 +57,7 @@ public class JsonLdWebAnnotationTest {
 			"\t\"type\":\"Annotation\"\n" +
 			"}";
 
-	@Test
-	public void serialize() throws Exception {
-		String sourceDocumentUri = "http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC";
-
+	private TagInstance getFakeTagInstance() {
 		PropertyPossibleValueList systemPropertyPossibleValues = new PropertyPossibleValueList(
 			Arrays.asList("SYSPROP_VAL_1", "SYSPROP_VAL_2"), true
 		);
@@ -87,10 +85,19 @@ public class JsonLdWebAnnotationTest {
 		tagInstance.addSystemProperty(systemProperty);
 		tagInstance.addUserDefinedProperty(userProperty);
 
+		return tagInstance;
+	}
+
+	@Test
+	public void serialize() throws Exception {
+		TagInstance tagInstance = this.getFakeTagInstance();
+
+		String sourceDocumentUri = "http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC";
+
 		Range range1 = new Range(12, 18);
 		Range range2 = new Range(41, 47);
 
-		List<TagReference> tagReferences = new ArrayList<TagReference>(
+		List<TagReference> tagReferences = new ArrayList<>(
 			Arrays.asList(
 				new TagReference(tagInstance, sourceDocumentUri, range1),
 				new TagReference(tagInstance, sourceDocumentUri, range2)
@@ -118,20 +125,28 @@ public class JsonLdWebAnnotationTest {
 		assert this.expectedSerializedRepresentation.replaceAll("[\n\t]", "").equals(serialized);
 	}
 
-	// how to test for exceptions: https://stackoverflow.com/a/31826781
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
-
 	@Test
 	public void toTagReferenceList() throws Exception {
 		JsonLdWebAnnotation jsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>().deserialize(
-				this.expectedSerializedRepresentation, JsonLdWebAnnotation.class
+			this.expectedSerializedRepresentation, JsonLdWebAnnotation.class
 		);
 
 		assertNotNull(jsonLdWebAnnotation);
 
-		thrown.expect(JsonLdWebAnnotationException.class);
-		thrown.expectMessage("Not implemented");
-		jsonLdWebAnnotation.toTagReferenceList();
+		// mock out the getTagInstance method on JsonLdWebAnnotation
+		// TODO: stop mocking once implemented
+		new Expectations(jsonLdWebAnnotation) {{
+			jsonLdWebAnnotation.getTagInstance(); result = getFakeTagInstance();
+		}};
+
+		List<TagReference> tagReferences = jsonLdWebAnnotation.toTagReferenceList();
+
+		new Verifications() {{
+			jsonLdWebAnnotation.getTagInstance();
+		}};
+
+		assertEquals(2, tagReferences.size());
+
+		// TODO: add assertions
 	}
 }
