@@ -355,6 +355,15 @@ public class TagsetHandlerTest {
 			assertEquals(version, tagsetDefinition.getVersion());
 
 			assertFalse(tagsetDefinition.isEmpty());
+
+			TagDefinition loadedTagDefinition = tagsetDefinition.getTagDefinition(tagDefinitionId);
+
+			assertNotNull(loadedTagDefinition);
+
+			assertEquals(tagDefinition.getUuid(), loadedTagDefinition.getUuid());
+			assertEquals(tagDefinition.getName(), loadedTagDefinition.getName());
+			assertEquals(tagDefinition.getParentUuid(), loadedTagDefinition.getParentUuid());
+
 		}
 	}
 
