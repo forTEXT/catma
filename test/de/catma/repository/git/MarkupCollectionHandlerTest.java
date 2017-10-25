@@ -400,8 +400,8 @@ public class MarkupCollectionHandlerTest {
 
 			String markupCollectionId = markupCollectionHandler.create(
 					"Test Markup Collection", null,
-					"fakeSourceDocumentId", projectId,
-					null
+					"fakeSourceDocumentId", "fakeSourceDocumentVersion",
+					projectId, null
 			);
 			// we don't add the markupCollectionId to this.markupCollectionReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us
