@@ -379,6 +379,11 @@ public class SourceDocumentHandlerTest {
 			SourceDocument loadedSourceDocument = sourceDocumentHandler.open(sourceDocumentId, null);
 
 			assertNotNull(loadedSourceDocument);
+
+			assertEquals(
+					sourceDocumentInfo.getTechInfoSet().getURI(),
+					loadedSourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getURI()
+			);
 		}
 	}
 }
