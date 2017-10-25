@@ -10,6 +10,13 @@ public interface IProjectHandler {
 	String create(String name, String description) throws ProjectHandlerException;
 	void delete(String projectId) throws ProjectHandlerException;
 
+	// tagset operations
+
+
+	// markup collection operations
+	void addTagsetToMarkupCollection(String projectId, String markupCollectionId, String tagsetId, String tagsetVersion)
+			throws ProjectHandlerException;
+
 	// source document operations
 	String insertSourceDocument(
 			String projectId,

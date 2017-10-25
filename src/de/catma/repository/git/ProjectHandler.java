@@ -1,10 +1,7 @@
 package de.catma.repository.git;
 
-import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
-import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
-import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
+import de.catma.repository.git.exceptions.*;
 import de.catma.repository.git.interfaces.IProjectHandler;
-import de.catma.repository.git.exceptions.ProjectHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
@@ -122,6 +119,60 @@ public class ProjectHandler implements IProjectHandler {
 		}
 		catch (RemoteGitServerManagerException|IOException e) {
 			throw new ProjectHandlerException("Failed to delete project", e);
+		}
+	}
+
+	// tagset operations
+
+
+	// markup collection operations
+	/**
+	 * Adds an existing tagset, identified by <code>tagsetId</code> and <code>tagsetVersion</code>, to the markup
+	 * collection identified by <code>projectId</code> and <code>markupCollectionId</code>.
+	 *
+	 * @param projectId the ID of the project that contains the markup collection the tagset must be added to
+	 * @param markupCollectionId the ID of the markup collection that the tagset must be added to
+	 * @param tagsetId the ID of the tagset to add
+	 * @param tagsetVersion the version of the tagset to add
+	 * @throws ProjectHandlerException if an error occurs while adding the tagset
+	 */
+	public void addTagsetToMarkupCollection(String projectId, String markupCollectionId,
+											String tagsetId, String tagsetVersion)
+			throws ProjectHandlerException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
+				localGitRepoManager, this.remoteGitServerManager
+			);
+
+			// add the tagset to the markup collection
+			// TODO: this should affect the submodule directly, not the original repo (which might not even exist
+			// anymore locally as we only need it for the initial push)
+			markupCollectionHandler.addTagset(markupCollectionId, tagsetId, tagsetVersion);
+
+			RemoteGitServerManager remoteGitServerManagerImpl = (RemoteGitServerManager)this.remoteGitServerManager;
+			String gitLabUserImpersonationToken = remoteGitServerManagerImpl.getGitLabUserImpersonationToken();
+
+			// TODO: see TODO above, this should push the submodule
+			localGitRepoManager.open(markupCollectionId);
+			localGitRepoManager.push(
+				remoteGitServerManagerImpl.getGitLabUser().getUsername(), gitLabUserImpersonationToken
+			);
+			localGitRepoManager.close();
+
+			// open the markup collection submodule
+			// TODO: see TODOs above, currently we're doing "Getting an update from the submodule’s remote", but we'll
+			// (probably) want to do "Updating a submodule in-place in the container" instead
+			String projectRepoName = String.format(ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId);
+			localGitRepoManager.open(String.format("%s/collections/%s", projectRepoName, markupCollectionId));
+
+			// update submodule
+			// - git fetch
+			// - git checkout <rev>
+			// - git commit <project repo>
+
+		}
+		catch (MarkupCollectionHandlerException|LocalGitRepositoryManagerException e) {
+			throw new ProjectHandlerException("Failed to add tagset to markup collection", e);
 		}
 	}
 
