@@ -2,6 +2,7 @@ package de.catma.repository.git;
 
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.repository.git.exceptions.MarkupCollectionHandlerException;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
@@ -375,9 +376,47 @@ public class MarkupCollectionHandlerTest {
 					localGitRepoManager, this.remoteGitServerManager
 			);
 
-			thrown.expect(MarkupCollectionHandlerException.class);
-			thrown.expectMessage("Not implemented");
-			markupCollectionHandler.open("fake");
+			ProjectHandler projectHandler = new ProjectHandler(
+					localGitRepoManager, this.remoteGitServerManager
+			);
+
+			String projectId = projectHandler.create(
+					"Test CATMA Project", "This is a test CATMA project"
+			);
+			this.projectsToDeleteOnTearDown.add(projectId);
+
+			String markupCollectionId = markupCollectionHandler.create(
+					"Test Markup Collection", null,
+					"fakeSourceDocumentId", projectId,
+					null
+			);
+			// we don't add the markupCollectionId to this.markupCollectionReposToDeleteOnTearDown as deletion of the
+			// project will take care of that for us
+
+			// TODO: create a tag instance/reference for a real tag definition with real urls etc.
+			String sourceDocumentUri = "http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC";
+
+			TagInstance tagInstance = JsonLdWebAnnotationTest.getFakeTagInstance();
+
+			Range range1 = new Range(12, 18);
+			Range range2 = new Range(41, 47);
+
+			List<TagReference> tagReferences = new ArrayList<>(
+					Arrays.asList(
+							new TagReference(tagInstance, sourceDocumentUri, range1),
+							new TagReference(tagInstance, sourceDocumentUri, range2)
+					)
+			);
+
+			JsonLdWebAnnotation jsonLdWebAnnotation = new JsonLdWebAnnotation(tagReferences);
+
+			markupCollectionHandler.addTagInstance(markupCollectionId, jsonLdWebAnnotation);
+
+			UserMarkupCollection markupCollection = markupCollectionHandler.open(markupCollectionId);
+
+			assertNotNull(markupCollection);
+
+			assertEquals(tagReferences.size(), markupCollection.getTagReferences().size());
 		}
 	}
 }

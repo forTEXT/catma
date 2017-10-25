@@ -1,5 +1,7 @@
 package de.catma.repository.git;
 
+import de.catma.document.AccessMode;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.exceptions.MarkupCollectionHandlerException;
@@ -11,6 +13,7 @@ import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.MarkupCollectionHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
+import de.catma.tag.TagLibrary;
 import de.catma.util.IDGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.models.User;
@@ -19,6 +22,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -180,6 +184,12 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 
 	@Override
 	public UserMarkupCollection open(String markupCollectionId)  throws MarkupCollectionHandlerException {
-		throw new MarkupCollectionHandlerException("Not implemented");
+
+		// we are hoping to get rid of tag libraries altogether
+		TagLibrary tagLibrary = new TagLibrary(null, "");
+		ArrayList<TagReference> tagReferences = new ArrayList<>();
+		UserMarkupCollection markupCollection = new UserMarkupCollection(markupCollectionId, null, tagLibrary, tagReferences, AccessMode.WRITE);
+
+		return markupCollection;
 	}
 }
