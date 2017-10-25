@@ -9,7 +9,7 @@ import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.MarkupCollectionHeader;
-import de.catma.repository.jsonld.TagReferenceJsonLd;
+import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.util.IDGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.models.User;
@@ -143,11 +143,11 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	 * Adds a tag instance (annotation) to the markup collection identified by <code>markupCollectionId</code>.
 	 *
 	 * @param markupCollectionId the ID of the markup collection to add the tag instance to
-	 * @param tagReference a {@link TagReferenceJsonLd} object representing the tag instance
+	 * @param annotation a {@link JsonLdWebAnnotation} object representing the tag instance
 	 * @throws MarkupCollectionHandlerException if an error occurs while adding the tag instance
 	 */
 	@Override
-	public void addTagInstance(String markupCollectionId, TagReferenceJsonLd tagReference)
+	public void addTagInstance(String markupCollectionId, JsonLdWebAnnotation annotation)
 			throws MarkupCollectionHandlerException {
 		// TODO: check that the markup collection references the tagset for the tag instance being added
 		// TODO: check that the tag instance is for the correct document
@@ -158,9 +158,9 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 			// write the serialized tag instance to the repository
 			File targetSerializedTagInstanceFilePath = new File(
 				localGitRepoManager.getRepositoryWorkTree(),
-				String.format("%s.json", tagReference.getTagReference().getTagInstanceID())
+				String.format("%s.json", annotation.getId().substring(annotation.getId().lastIndexOf("/")))
 			);
-			String serializedTagInstance = tagReference.serialize();
+			String serializedTagInstance = new SerializationHelper<JsonLdWebAnnotation>().serialize(annotation);
 
 			RemoteGitServerManager remoteGitServerManagerImpl = (RemoteGitServerManager)this.remoteGitServerManager;
 			User gitLabUser = remoteGitServerManagerImpl.getGitLabUser();

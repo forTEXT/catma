@@ -6,7 +6,8 @@ import de.catma.repository.git.exceptions.MarkupCollectionHandlerException;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
-import de.catma.repository.jsonld.TagReferenceJsonLd;
+import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
+import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
 import de.catma.tag.*;
 import helpers.Randomizer;
 import org.apache.commons.io.FileUtils;
@@ -290,30 +291,23 @@ public class MarkupCollectionHandlerTest {
 			assertFalse(localGitRepoManager.isAttached());
 
 			// TODO: create a tag instance/reference for a real tag definition with real urls etc.
-			String uri = "http://catma.de/sourcedocument/doc1";
+			String sourceDocumentUri = "http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC";
 
-			Range range = new Range(42, 125);
+			TagInstance tagInstance = JsonLdWebAnnotationTest.getFakeTagInstance();
 
-			PropertyPossibleValueList possibleValueList = new PropertyPossibleValueList("TestPossibleValue");
-			PropertyDefinition propertyDefinition = new PropertyDefinition(
-				1, "CATMA_PROPDEF", "FAKE_PROP_DEF", possibleValueList
+			Range range1 = new Range(12, 18);
+			Range range2 = new Range(41, 47);
+
+			List<TagReference> tagReferences = new ArrayList<>(
+				Arrays.asList(
+					new TagReference(tagInstance, sourceDocumentUri, range1),
+					new TagReference(tagInstance, sourceDocumentUri, range2)
+				)
 			);
 
-			TagDefinition tagDefinition = new TagDefinition(
-				1, "CATMA_1", "Weather", new Version(), null, null
-			);
-			tagDefinition.addUserDefinedPropertyDefinition(propertyDefinition);
+			JsonLdWebAnnotation jsonLdWebAnnotation = new JsonLdWebAnnotation(tagReferences);
 
-			PropertyValueList instancePropertyValueList = new PropertyValueList("SimplePropertyValue");
-			Property property = new Property(propertyDefinition, instancePropertyValueList);
-
-			TagInstance tagInstance = new TagInstance("CATMA_129837", tagDefinition);
-			tagInstance.addUserDefinedProperty(property);
-
-			TagReference internalReference = new TagReference(tagInstance, uri, range);
-			TagReferenceJsonLd ldWrapper = new TagReferenceJsonLd(internalReference);
-
-			markupCollectionHandler.addTagInstance(markupCollectionId, ldWrapper);
+			markupCollectionHandler.addTagInstance(markupCollectionId, jsonLdWebAnnotation);
 
 			// the LocalGitRepositoryManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
@@ -322,7 +316,7 @@ public class MarkupCollectionHandlerTest {
 			localGitRepoManager.open(markupCollectionId);
 
 			File expectedTagInstanceJsonFilePath = new File(
-				localGitRepoManager.getRepositoryWorkTree(), "CATMA_129837.json"
+				localGitRepoManager.getRepositoryWorkTree(), "CATMA_TAG_INST.json"
 			);
 
 			assert expectedTagInstanceJsonFilePath.exists();
@@ -332,23 +326,37 @@ public class MarkupCollectionHandlerTest {
 					"{\n" +
 					"\t\"body\":{\n" +
 					"\t\t\"@context\":{\n" +
-					"\t\t\t\"FAKE_PROP_DEF\":\"http://catma.de/portal/tag/CATMA_1/property/CATMA_PROPDEF\",\n" +
+					"\t\t\t\"SYSPROP_DEF\":\"http://catma.de/portal/tag/CATMA_TAG_DEF/property/CATMA_SYSPROP_DEF\",\n" +
+					"\t\t\t\"UPROP_DEF\":\"http://catma.de/portal/tag/CATMA_TAG_DEF/property/CATMA_UPROP_DEF\",\n" +
 					"\t\t\t\"tag\":\"http://catma.de/portal/tag\"\n" +
 					"\t\t},\n" +
 					"\t\t\"properties\":{\n" +
-					"\t\t\t\"FAKE_PROP_DEF\":\"SimplePropertyValue\"\n" +
+					"\t\t\t\"SYSPROP_DEF\":[\"SYSPROP_VAL_1\"],\n" +
+					"\t\t\t\"UPROP_DEF\":[\"UPROP_VAL_2\"]\n" +
 					"\t\t},\n" +
-					"\t\t\"tag\":\"http://catma.de/portal/tag/CATMA_1\",\n" +
+					"\t\t\"tag\":\"http://catma.de/portal/tag/CATMA_TAG_DEF\",\n" +
 					"\t\t\"type\":\"Dataset\"\n" +
 					"\t},\n" +
 					"\t\"@context\":\"http://www.w3.org/ns/anno.jsonld\",\n" +
-					"\t\"id\":\"http://catma.de/portal/annotation/CATMA_129837\",\n" +
+					"\t\"id\":\"http://catma.de/portal/annotation/CATMA_TAG_INST\",\n" +
 					"\t\"target\":{\n" +
-					"\t\t\"source\":\"http://catma.de/sourcedocument/doc1\",\n" +
-					"\t\t\"TextPositionSelector\":{\n" +
-					"\t\t\t\"end\":125,\n" +
-					"\t\t\t\"start\":42\n" +
-					"\t\t}\n" +
+					"\t\t\"items\":[{\n" +
+					"\t\t\t\"selector\":{\n" +
+					"\t\t\t\t\"end\":18,\n" +
+					"\t\t\t\t\"start\":12,\n" +
+					"\t\t\t\t\"type\":\"TextPositionSelector\"\n" +
+					"\t\t\t},\n" +
+					"\t\t\t\"source\":\"http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC\"\n" +
+					"\t\t},\n" +
+					"\t\t{\n" +
+					"\t\t\t\"selector\":{\n" +
+					"\t\t\t\t\"end\":47,\n" +
+					"\t\t\t\t\"start\":41,\n" +
+					"\t\t\t\t\"type\":\"TextPositionSelector\"\n" +
+					"\t\t\t},\n" +
+					"\t\t\t\"source\":\"http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC\"\n" +
+					"\t\t}],\n" +
+					"\t\t\"type\":\"List\"\n" +
 					"\t},\n" +
 					"\t\"type\":\"Annotation\"\n" +
 					"}";

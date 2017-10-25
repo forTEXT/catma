@@ -90,6 +90,9 @@
 		<!-- https://mvnrepository.com/artifact/com.jsoniter/jsoniter -->
 		<dependency org="com.jsoniter" name="jsoniter" rev="0.9.15"/>
 
+		<!-- https://mvnrepository.com/artifact/org.javassist/javassist -->
+		<dependency org="org.javassist" name="javassist" rev="3.21.0-GA"/>
+
 		<!-- https://mvnrepository.com/artifact/org.jmockit/jmockit -->
 		<dependency org="org.jmockit" name="jmockit" rev="1.35"/>
 
