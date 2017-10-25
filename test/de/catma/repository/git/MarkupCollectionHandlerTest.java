@@ -387,6 +387,14 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void open() throws Exception {
+		JsonLdWebAnnotation anyInstance = new JsonLdWebAnnotation();
+
+		// TODO: Stop mocking this once getTagInstance works. The jsonLdWebAnnotationNotImplementedCheck
+		// should fail at that point as a reminder.
+		new Expectations(JsonLdWebAnnotation.class) {{
+			anyInstance.getTagInstance(); result = JsonLdWebAnnotationTest.getFakeTagInstance();
+		}};
+
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
 					localGitRepoManager, this.remoteGitServerManager
@@ -433,6 +441,12 @@ public class MarkupCollectionHandlerTest {
 			assertNotNull(markupCollection);
 
 			assertEquals(tagReferences.size(), markupCollection.getTagReferences().size());
+
+			assertTrue(tagReferences.get(0).getRange().equals(range1));
 		}
+
+		new Verifications() {{
+			anyInstance.getTagInstance();
+		}};
 	}
 }
