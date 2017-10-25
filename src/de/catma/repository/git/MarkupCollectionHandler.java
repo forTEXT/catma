@@ -1,6 +1,7 @@
 package de.catma.repository.git;
 
 import de.catma.document.AccessMode;
+import de.catma.document.source.ContentInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
@@ -238,7 +239,24 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 
 			ArrayList<TagReference> tagReferences = this.openTagReferences(repositoryWorkTreeFile);
 
-			UserMarkupCollection markupCollection = new UserMarkupCollection(markupCollectionId, null, tagLibrary, tagReferences, AccessMode.WRITE);
+			File targetHeaderFile = new File(
+					localGitRepoManager.getRepositoryWorkTree(), "header.json"
+			);
+			String serialized = FileUtils.readFileToString(targetHeaderFile, StandardCharsets.UTF_8);
+			MarkupCollectionHeader header  = new SerializationHelper<MarkupCollectionHeader>()
+					.deserialize(
+							serialized,
+							MarkupCollectionHeader.class
+					);
+
+			ContentInfoSet contentInfoSet = new ContentInfoSet(
+					header.getAuthor(),
+					header.getDescription(),
+					header.getPublisher(),
+					header.getName()
+			);
+
+			UserMarkupCollection markupCollection = new UserMarkupCollection(markupCollectionId, contentInfoSet, tagLibrary, tagReferences, AccessMode.WRITE);
 
 			return markupCollection;
 		}

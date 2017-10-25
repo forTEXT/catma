@@ -440,8 +440,9 @@ public class MarkupCollectionHandlerTest {
 
 			assertNotNull(markupCollection);
 
-			assertEquals(tagReferences.size(), markupCollection.getTagReferences().size());
+			assertEquals("Test Markup Collection", markupCollection.getContentInfoSet().getTitle());
 
+			assertEquals(tagReferences.size(), markupCollection.getTagReferences().size());
 			assertTrue(tagReferences.get(0).getRange().equals(range1));
 		}
 
