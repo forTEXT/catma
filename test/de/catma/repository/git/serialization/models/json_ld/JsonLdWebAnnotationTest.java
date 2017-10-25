@@ -58,7 +58,7 @@ public class JsonLdWebAnnotationTest {
 			"\t\"type\":\"Annotation\"\n" +
 			"}";
 
-	private TagInstance getFakeTagInstance() {
+	public static TagInstance getFakeTagInstance() {
 		PropertyPossibleValueList systemPropertyPossibleValues = new PropertyPossibleValueList(
 			Arrays.asList("SYSPROP_VAL_1", "SYSPROP_VAL_2"), true
 		);
@@ -91,7 +91,7 @@ public class JsonLdWebAnnotationTest {
 
 	@Test
 	public void serialize() throws Exception {
-		TagInstance tagInstance = this.getFakeTagInstance();
+		TagInstance tagInstance = JsonLdWebAnnotationTest.getFakeTagInstance();
 
 		String sourceDocumentUri = "http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC";
 
