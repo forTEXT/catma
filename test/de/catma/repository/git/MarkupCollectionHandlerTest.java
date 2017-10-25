@@ -11,6 +11,9 @@ import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
 import de.catma.tag.*;
 import helpers.Randomizer;
+import mockit.Expectations;
+import mockit.Verifications;
+import mockit.integration.junit4.JMockit;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Status;
 import org.gitlab4j.api.models.Project;
@@ -20,6 +23,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,6 +33,7 @@ import java.util.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
 
+@RunWith(JMockit.class)
 public class MarkupCollectionHandlerTest {
 	private Properties catmaProperties;
 	private RemoteGitServerManager remoteGitServerManager;
@@ -367,6 +372,17 @@ public class MarkupCollectionHandlerTest {
 				FileUtils.readFileToString(expectedTagInstanceJsonFilePath, StandardCharsets.UTF_8)
 			);
 		}
+	}
+
+	@Test
+	public void jsonLdWebAnnotationNotImplementedCheck() throws Exception {
+		// this check should pass while JsonLdWebAnnotation.getTagInstance still throws a not implemented exception
+
+		// When this test fails, check the mocking of this function in the open() test
+		JsonLdWebAnnotation webAnnotation = new JsonLdWebAnnotation();
+		thrown.expect(de.catma.repository.git.exceptions.JsonLdWebAnnotationException.class);
+		thrown.expectMessage("Not implemented");
+		webAnnotation.toTagReferenceList();
 	}
 
 	@Test
