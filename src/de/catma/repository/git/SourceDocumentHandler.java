@@ -1,6 +1,7 @@
 package de.catma.repository.git;
 
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentInfo;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.interfaces.ISourceDocumentHandler;
@@ -156,11 +157,15 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 							GitSourceDocumentInfo.class
 					);
 
-			SourceDocument sourceDocument = new SourceDocument(sourceDocumentId, null);
+			// Need to use SourceDocumentHandler to decide on the correct SourceContentHandler based on filetype
+			de.catma.document.source.SourceDocumentHandler handler = new de.catma.document.source.SourceDocumentHandler();
+
+			SourceDocumentInfo sourceDocumentInfo = gitSourceDocumentInfo.getSourceDocumentInfo();
+			SourceDocument sourceDocument = handler.loadSourceDocument(sourceDocumentId, sourceDocumentInfo);
 
 			return sourceDocument;
 		}
-		catch (LocalGitRepositoryManagerException | IOException e) {
+		catch (LocalGitRepositoryManagerException | IOException | IllegalAccessException | InstantiationException e) {
 			throw new SourceDocumentHandlerException("Failed to open the SourceDocument repo", e);
 		}
 	}
