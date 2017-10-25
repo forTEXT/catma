@@ -8,6 +8,9 @@ public class MarkupCollectionHeader extends HeaderBase {
 	private String sourceDocumentVersion;
 
 	private TreeMap<String, String> tagsets; // <UUID, version>
+	
+	private String author;
+	private String publisher;
 
 	public MarkupCollectionHeader() {
 		this.tagsets = new TreeMap<>();
@@ -53,4 +56,12 @@ public class MarkupCollectionHeader extends HeaderBase {
 	public void removeTagset(String tagsetUuid) {
 		this.tagsets.remove(tagsetUuid);
 	}
+
+	public String getAuthor(){return this.author;}
+
+	public void setAuthor(String author){ this.author = author; }
+
+	public String getPublisher(){ return this.publisher; }
+
+	public void setPublisher(String publisher) { this.publisher = publisher; }
 }

@@ -2,6 +2,7 @@ package de.catma.repository.git;
 
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.repository.git.exceptions.MarkupCollectionHandlerException;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
@@ -10,6 +11,9 @@ import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
 import de.catma.tag.*;
 import helpers.Randomizer;
+import mockit.Expectations;
+import mockit.Verifications;
+import mockit.integration.junit4.JMockit;
 import org.apache.commons.io.FileUtils;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
@@ -18,6 +22,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,6 +32,7 @@ import java.util.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
 
+@RunWith(JMockit.class)
 public class MarkupCollectionHandlerTest {
 	private Properties catmaProperties;
 	private RemoteGitServerManager remoteGitServerManager;
@@ -355,5 +361,82 @@ public class MarkupCollectionHandlerTest {
 				FileUtils.readFileToString(expectedTagInstanceJsonFilePath, StandardCharsets.UTF_8)
 			);
 		}
+	}
+
+	@Test
+	public void jsonLdWebAnnotationNotImplementedCheck() throws Exception {
+		// this check should pass while JsonLdWebAnnotation.getTagInstance still throws a not implemented exception
+
+		// When this test fails, check the mocking of this function in the open() test
+		JsonLdWebAnnotation webAnnotation = new JsonLdWebAnnotation();
+		thrown.expect(de.catma.repository.git.exceptions.JsonLdWebAnnotationException.class);
+		thrown.expectMessage("Not implemented");
+		webAnnotation.toTagReferenceList();
+	}
+
+	@Test
+	public void open() throws Exception {
+		JsonLdWebAnnotation anyInstance = new JsonLdWebAnnotation();
+
+		// TODO: Stop mocking this once getTagInstance works. The jsonLdWebAnnotationNotImplementedCheck
+		// should fail at that point as a reminder.
+		new Expectations(JsonLdWebAnnotation.class) {{
+			anyInstance.getTagInstance(); result = JsonLdWebAnnotationTest.getFakeTagInstance();
+		}};
+
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
+					localGitRepoManager, this.remoteGitServerManager
+			);
+
+			ProjectHandler projectHandler = new ProjectHandler(
+					localGitRepoManager, this.remoteGitServerManager
+			);
+
+			String projectId = projectHandler.create(
+					"Test CATMA Project", "This is a test CATMA project"
+			);
+			this.projectsToDeleteOnTearDown.add(projectId);
+
+			String markupCollectionId = markupCollectionHandler.create(
+					"Test Markup Collection", null,
+					"fakeSourceDocumentId", projectId,
+					null
+			);
+			// we don't add the markupCollectionId to this.markupCollectionReposToDeleteOnTearDown as deletion of the
+			// project will take care of that for us
+
+			// TODO: create a tag instance/reference for a real tag definition with real urls etc.
+			String sourceDocumentUri = "http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC";
+
+			TagInstance tagInstance = JsonLdWebAnnotationTest.getFakeTagInstance();
+
+			Range range1 = new Range(12, 18);
+			Range range2 = new Range(41, 47);
+
+			List<TagReference> tagReferences = new ArrayList<>(
+					Arrays.asList(
+							new TagReference(tagInstance, sourceDocumentUri, range1),
+							new TagReference(tagInstance, sourceDocumentUri, range2)
+					)
+			);
+
+			JsonLdWebAnnotation jsonLdWebAnnotation = new JsonLdWebAnnotation(tagReferences);
+
+			markupCollectionHandler.addTagInstance(markupCollectionId, jsonLdWebAnnotation);
+
+			UserMarkupCollection markupCollection = markupCollectionHandler.open(markupCollectionId);
+
+			assertNotNull(markupCollection);
+
+			assertEquals("Test Markup Collection", markupCollection.getContentInfoSet().getTitle());
+
+			assertEquals(tagReferences.size(), markupCollection.getTagReferences().size());
+			assertTrue(tagReferences.get(0).getRange().equals(range1));
+		}
+
+		new Verifications() {{
+			anyInstance.getTagInstance();
+		}};
 	}
 }

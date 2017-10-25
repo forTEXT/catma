@@ -1,5 +1,10 @@
 package de.catma.repository.git;
 
+import de.catma.document.AccessMode;
+import de.catma.document.source.ContentInfoSet;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.exceptions.MarkupCollectionHandlerException;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
@@ -10,6 +15,7 @@ import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.MarkupCollectionHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
+import de.catma.tag.TagLibrary;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +26,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -184,6 +193,83 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 		}
 		catch (LocalGitRepositoryManagerException e) {
 			throw new MarkupCollectionHandlerException("Failed to add tag instance", e);
+		}
+	}
+
+	private boolean isTagInstanceFilename(String fileName){
+		// TODO: split filename parts and check if it is a CATMA uuid
+		return !fileName.equalsIgnoreCase("header.json");
+	}
+
+	private ArrayList<TagReference> openTagReferences(File parentDirectory) throws IOException, JsonLdWebAnnotationException {
+		ArrayList<TagReference> tagReferences = new ArrayList<>();
+
+		List<String> contents = Arrays.asList(parentDirectory.list());
+
+		for(String item : contents){
+			File target = new File(parentDirectory, item);
+
+			// if it is a directory, recurse into it adding results to the current tagDefinitions list
+			if(target.isDirectory() && !target.getName().equalsIgnoreCase(".git")){
+				tagReferences.addAll(this.openTagReferences(target));
+				continue;
+			}
+
+			// if item is propertydefs.json, read it into a TagDefinition
+			if(target.isFile() && isTagInstanceFilename(target.getName())){
+				String serialized = FileUtils.readFileToString(target, StandardCharsets.UTF_8);
+				JsonLdWebAnnotation jsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>()
+						.deserialize(
+								serialized,
+								JsonLdWebAnnotation.class
+						);
+
+				tagReferences.addAll(jsonLdWebAnnotation.toTagReferenceList());
+			}
+		}
+
+		return tagReferences;
+	}
+
+	@Override
+	public UserMarkupCollection open(String markupCollectionId)  throws MarkupCollectionHandlerException {
+
+		// we are hoping to get rid of tag libraries altogether
+		TagLibrary tagLibrary = new TagLibrary(null, "");
+
+
+
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			// open the markup collection repository
+			localGitRepoManager.open(markupCollectionId);
+
+			File repositoryWorkTreeFile = localGitRepoManager.getRepositoryWorkTree();
+
+			ArrayList<TagReference> tagReferences = this.openTagReferences(repositoryWorkTreeFile);
+
+			File targetHeaderFile = new File(
+					localGitRepoManager.getRepositoryWorkTree(), "header.json"
+			);
+			String serialized = FileUtils.readFileToString(targetHeaderFile, StandardCharsets.UTF_8);
+			MarkupCollectionHeader header  = new SerializationHelper<MarkupCollectionHeader>()
+					.deserialize(
+							serialized,
+							MarkupCollectionHeader.class
+					);
+
+			ContentInfoSet contentInfoSet = new ContentInfoSet(
+					header.getAuthor(),
+					header.getDescription(),
+					header.getPublisher(),
+					header.getName()
+			);
+
+			UserMarkupCollection markupCollection = new UserMarkupCollection(markupCollectionId, contentInfoSet, tagLibrary, tagReferences, AccessMode.WRITE);
+
+			return markupCollection;
+		}
+		catch (LocalGitRepositoryManagerException | IOException | JsonLdWebAnnotationException e) {
+			throw new MarkupCollectionHandlerException("Failed to open MarkupCollection repo", e);
 		}
 	}
 }

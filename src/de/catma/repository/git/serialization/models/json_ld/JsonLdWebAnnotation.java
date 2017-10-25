@@ -117,7 +117,7 @@ public class JsonLdWebAnnotation {
 	}
 
 	@JsonIgnore
-	TagInstance getTagInstance() throws JsonLdWebAnnotationException {
+	public TagInstance getTagInstance() throws JsonLdWebAnnotationException {
 //		TagDefinition tagDefinition = this.getTagDefinition();
 		throw new JsonLdWebAnnotationException("Not implemented");
 	}
