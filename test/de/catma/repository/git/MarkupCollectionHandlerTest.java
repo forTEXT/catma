@@ -11,7 +11,6 @@ import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationT
 import de.catma.tag.*;
 import helpers.Randomizer;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.api.Status;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
@@ -119,8 +118,8 @@ public class MarkupCollectionHandlerTest {
 
 			String markupCollectionId = markupCollectionHandler.create(
 				"Test Markup Collection", null,
-				"fakeSourceDocumentId", projectId,
-				null
+				"fakeSourceDocumentId", "fakeSourceDocumentVersion",
+				projectId, null
 			);
 			// we don't add the markupCollectionId to this.markupCollectionReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us
@@ -143,7 +142,9 @@ public class MarkupCollectionHandlerTest {
 					"{\n" +
 					"\t\"description\":null,\n" +
 					"\t\"name\":\"Test Markup Collection\",\n" +
-					"\t\"sourceDocumentId\":\"fakeSourceDocumentId\"\n" +
+					"\t\"sourceDocumentId\":\"fakeSourceDocumentId\",\n" +
+					"\t\"sourceDocumentVersion\":\"fakeSourceDocumentVersion\",\n" +
+					"\t\"tagsets\":{}\n" +
 					"}";
 
 			assertEquals(
@@ -179,8 +180,6 @@ public class MarkupCollectionHandlerTest {
 
 			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
-			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
-
 			String projectId = projectHandler.create(
 				"Test CATMA Project", "This is a test CATMA project"
 			);
@@ -190,34 +189,10 @@ public class MarkupCollectionHandlerTest {
 			// return
 			assertFalse(localGitRepoManager.isAttached());
 
-			String tagsetId = tagsetHandler.create("Test Tagset", null, new Version(), projectId);
-			// we don't add the tagsetId to this.markupCollectionReposToDeleteOnTearDown as deletion of the
-			// project will take care of that for us
-
-			// the LocalGitRepositoryManager instance should always be in a detached state after TagsetHandler calls
-			// return
-			assertFalse(localGitRepoManager.isAttached());
-
-			User gitLabUser = this.remoteGitServerManager.getGitLabUser();
-			String gitLabUserImpersonationToken = this.remoteGitServerManager.getGitLabUserImpersonationToken();
-
-			// because we're adding an existing tagset, it needs to exist on the server with at least an initial commit,
-			// otherwise the addition of the submodule within addTagset below won't work...
-			// it won't fail, but the problem will become evident if you do a `git status`:
-			// "error: cache entry has null sha1: <path-to-submodule>"
-			// with status.submoduleSummary turned on in git config you would also see:
-			// "Warn: <path-to-submodule> doesn't contain commit 0000000000000000000000000000000000000000"
-			// under the submodule changes, or when doing a status call through JGit you would see:
-			// "org.eclipse.jgit.api.errors.JGitInternalException: Missing unknown 0000000000000000000000000000000000000000"
-			localGitRepoManager.open(tagsetId);
-			localGitRepoManager.push(gitLabUser.getUsername(), gitLabUserImpersonationToken);
-
-			localGitRepoManager.detach(); // can't call clone on an attached instance
-
 			String markupCollectionId = markupCollectionHandler.create(
 				"Test Markup Collection", null,
-				"fakeSourceDocumentId", projectId,
-				null
+				"fakeSourceDocumentId", "fakeSourceDocumentVersion",
+				projectId, null
 			);
 			// we don't add the markupCollectionId to this.markupCollectionReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us
@@ -229,19 +204,33 @@ public class MarkupCollectionHandlerTest {
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
-			markupCollectionHandler.addTagset(markupCollectionId, tagsetId);
+			markupCollectionHandler.addTagset(
+				markupCollectionId, "fakeTagsetId", "fakeTagsetVersion"
+			);
 
 			// the LocalGitRepositoryManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
 			localGitRepoManager.open(markupCollectionId);
-			Status status = localGitRepoManager.getGitApi().status().call();
-			Set<String> added = status.getAdded();
 
-			assert status.hasUncommittedChanges();
-			assert added.contains(".gitmodules");
-			assert added.contains("tagsets/" + tagsetId);
+			String expectedSerializedHeader = "" +
+					"{\n" +
+					"\t\"description\":null,\n" +
+					"\t\"name\":\"Test Markup Collection\",\n" +
+					"\t\"sourceDocumentId\":\"fakeSourceDocumentId\",\n" +
+					"\t\"sourceDocumentVersion\":\"fakeSourceDocumentVersion\",\n" +
+					"\t\"tagsets\":{\n" +
+					"\t\t\"fakeTagsetId\":\"fakeTagsetVersion\"\n" +
+					"\t}\n" +
+					"}";
+
+			assertEquals(
+				expectedSerializedHeader.replaceAll("[\n\t]", ""),
+				FileUtils.readFileToString(
+					new File(localGitRepoManager.getRepositoryWorkTree(), "header.json"), StandardCharsets.UTF_8
+				)
+			);
 		}
 	}
 
@@ -280,8 +269,8 @@ public class MarkupCollectionHandlerTest {
 
 			String markupCollectionId = markupCollectionHandler.create(
 				"Test Markup Collection", null,
-				"fakeSourceDocumentId", projectId,
-				null
+				"fakeSourceDocumentId", "fakeSourceDocumentVersion",
+				projectId, null
 			);
 			// we don't add the markupCollectionId to this.markupCollectionReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us

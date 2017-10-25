@@ -11,13 +11,15 @@ import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.MarkupCollectionHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.util.IDGenerator;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.models.User;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
+import java.util.AbstractMap;
 
 public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -35,6 +37,7 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	 * @param name the name of the new markup collection
 	 * @param description the description of the new markup collection
 	 * @param sourceDocumentId the ID of the source document to which the new markup collection relates
+	 * @param sourceDocumentVersion the version of the source document to which the new markup collection relates
 	 * @param projectId the ID of the project within which the new markup collection must be created
 	 * @param markupCollectionId the ID of the new markup collection. If none is provided, a new ID will be
 	 *                           generated.
@@ -42,8 +45,8 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	 * @throws MarkupCollectionHandlerException if an error occurs while creating the markup collection
 	 */
 	@Override
-	public String create(String name, String description, String sourceDocumentId, String projectId,
-						 @Nullable String markupCollectionId)
+	public String create(String name, String description, String sourceDocumentId, String sourceDocumentVersion,
+						 String projectId, @Nullable String markupCollectionId)
 			throws MarkupCollectionHandlerException {
 		if (markupCollectionId == null) {
 			IDGenerator idGenerator = new IDGenerator();
@@ -75,7 +78,9 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 			File targetHeaderFile = new File(
 				localGitRepoManager.getRepositoryWorkTree(), "header.json"
 			);
-			MarkupCollectionHeader header = new MarkupCollectionHeader(name, description, sourceDocumentId);
+			MarkupCollectionHeader header = new MarkupCollectionHeader(
+				name, description, sourceDocumentId, sourceDocumentVersion
+			);
 			String serializedHeader = new SerializationHelper<MarkupCollectionHeader>().serialize(header);
 			localGitRepoManager.addAndCommit(
 				targetHeaderFile, serializedHeader.getBytes(StandardCharsets.UTF_8),
@@ -96,38 +101,43 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	}
 
 	/**
-	 * Adds an existing tagset, identified by <code>tagsetId</code>, to the markup collection identified by
-	 * <code>markupCollectionId</code>.
+	 * Adds an existing tagset, identified by <code>tagsetId</code> and <code>tagsetVersion</code>, to the markup
+	 * collection identified by <code>markupCollectionId</code>.
 	 *
 	 * @param markupCollectionId the ID of the markup collection to add the tagset to
 	 * @param tagsetId the ID of the tagset to add
+	 * @param tagsetVersion the version of the tagset to add
 	 * @throws MarkupCollectionHandlerException if an error occurs while adding the tagset
 	 */
 	@Override
-	public void addTagset(String markupCollectionId, String tagsetId) throws MarkupCollectionHandlerException {
+	public void addTagset(String markupCollectionId, String tagsetId, String tagsetVersion)
+			throws MarkupCollectionHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			// open the tagset repository so that we can get its remote
-			localGitRepoManager.open(tagsetId);
-			String tagsetRemoteUri = localGitRepoManager.getRemoteUrl(null);
-			localGitRepoManager.close();
-
 			// open the markup collection repository
 			localGitRepoManager.open(markupCollectionId);
 
-			// create the submodule
-			File targetSubmodulePath = Paths.get(
-				localGitRepoManager.getRepositoryWorkTree().toString(), "tagsets", tagsetId
-			).toFile();
+			// update header.json
+			File headerFile = new File(
+				localGitRepoManager.getRepositoryWorkTree(), "header.json"
+			);
+			SerializationHelper<MarkupCollectionHeader> serializationHelper = new SerializationHelper<>();
+			MarkupCollectionHeader markupCollectionHeader = serializationHelper.deserialize(
+				FileUtils.readFileToString(headerFile, StandardCharsets.UTF_8), MarkupCollectionHeader.class
+			);
+			markupCollectionHeader.addTagset(new AbstractMap.SimpleEntry<>(tagsetId, tagsetVersion));
+			String serializedHeader = serializationHelper.serialize(markupCollectionHeader);
 
-			RemoteGitServerManager remoteGitServerManagerImpl = (RemoteGitServerManager)this.remoteGitServerManager;
-			String gitLabUserImpersonationToken = remoteGitServerManagerImpl.getGitLabUserImpersonationToken();
+			RemoteGitServerManager remoteGitServerManagerImpl =
+					(RemoteGitServerManager)this.remoteGitServerManager;
+			User gitLabUser = remoteGitServerManagerImpl.getGitLabUser();
 
-			localGitRepoManager.addSubmodule(
-				targetSubmodulePath, tagsetRemoteUri,
-				remoteGitServerManagerImpl.getGitLabUser().getUsername(), gitLabUserImpersonationToken
+			localGitRepoManager.addAndCommit(
+				headerFile, serializedHeader.getBytes(StandardCharsets.UTF_8),
+				StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername(),
+				gitLabUser.getEmail()
 			);
 		}
-		catch (LocalGitRepositoryManagerException e) {
+		catch (LocalGitRepositoryManagerException|IOException e) {
 			throw new MarkupCollectionHandlerException("Failed to add tagset", e);
 		}
 	}
