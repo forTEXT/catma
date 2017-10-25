@@ -1,5 +1,6 @@
 package de.catma.repository.git.interfaces;
 
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.repository.git.exceptions.MarkupCollectionHandlerException;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 
@@ -18,4 +19,7 @@ public interface IMarkupCollectionHandler {
 
 	void addTagInstance(String markupCollectionId, JsonLdWebAnnotation annotation)
 			throws MarkupCollectionHandlerException;
+
+	UserMarkupCollection open(String markupCollectionId) throws MarkupCollectionHandlerException;
+
 }

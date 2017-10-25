@@ -367,4 +367,17 @@ public class MarkupCollectionHandlerTest {
 			);
 		}
 	}
+
+	@Test
+	public void open() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
+					localGitRepoManager, this.remoteGitServerManager
+			);
+
+			thrown.expect(MarkupCollectionHandlerException.class);
+			thrown.expectMessage("Not implemented");
+			markupCollectionHandler.open("fake");
+		}
+	}
 }

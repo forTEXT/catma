@@ -1,5 +1,6 @@
 package de.catma.repository.git;
 
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.exceptions.MarkupCollectionHandlerException;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
@@ -175,5 +176,10 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 		catch (LocalGitRepositoryManagerException e) {
 			throw new MarkupCollectionHandlerException("Failed to add tag instance", e);
 		}
+	}
+
+	@Override
+	public UserMarkupCollection open(String markupCollectionId)  throws MarkupCollectionHandlerException {
+		throw new MarkupCollectionHandlerException("Not implemented");
 	}
 }
