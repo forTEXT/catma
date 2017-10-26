@@ -146,8 +146,10 @@ public class MarkupCollectionHandlerTest {
 
 			String expectedSerializedHeader = "" +
 					"{\n" +
+					"\t\"author\":null,\n" +
 					"\t\"description\":null,\n" +
 					"\t\"name\":\"Test Markup Collection\",\n" +
+					"\t\"publisher\":null,\n" +
 					"\t\"sourceDocumentId\":\"fakeSourceDocumentId\",\n" +
 					"\t\"sourceDocumentVersion\":\"fakeSourceDocumentVersion\",\n" +
 					"\t\"tagsets\":{}\n" +
@@ -222,8 +224,10 @@ public class MarkupCollectionHandlerTest {
 
 			String expectedSerializedHeader = "" +
 					"{\n" +
+					"\t\"author\":null,\n" +
 					"\t\"description\":null,\n" +
 					"\t\"name\":\"Test Markup Collection\",\n" +
+					"\t\"publisher\":null,\n" +
 					"\t\"sourceDocumentId\":\"fakeSourceDocumentId\",\n" +
 					"\t\"sourceDocumentVersion\":\"fakeSourceDocumentVersion\",\n" +
 					"\t\"tagsets\":{\n" +
