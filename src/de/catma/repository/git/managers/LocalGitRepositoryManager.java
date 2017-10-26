@@ -3,6 +3,7 @@ package de.catma.repository.git.managers;
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PushCommand;
@@ -22,11 +23,17 @@ import java.util.Properties;
 
 public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, AutoCloseable {
 	private final String repositoryBasePath;
+	private String userName;
 
 	private Git gitApi;
 
 	public LocalGitRepositoryManager(Properties catmaProperties) {
+		this(catmaProperties, "");
+	}
+
+	public LocalGitRepositoryManager(Properties catmaProperties, String userName) {
 		this.repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
+		this.userName = userName;
 	}
 
 	/**
@@ -40,9 +47,9 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	 * @throws LocalGitRepositoryManagerException if the Git repository couldn't be found or
 	 *         couldn't be opened for some other reason
 	 */
-	public LocalGitRepositoryManager(Properties catmaProperties, String repositoryName)
+	public LocalGitRepositoryManager(Properties catmaProperties, String userName, String repositoryName)
 			throws LocalGitRepositoryManagerException {
-		this(catmaProperties);
+		this(catmaProperties, userName);
 
 		this.open(repositoryName);
 	}
@@ -85,7 +92,11 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	 */
 	@Override
 	public String getRepositoryBasePath() {
-		return this.repositoryBasePath;
+		if(StringUtils.isEmpty(this.userName)){
+			return this.repositoryBasePath;
+		}
+
+		return String.format("%s/%s", this.repositoryBasePath, this.userName);
 	}
 
 	/**
@@ -101,6 +112,10 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 
 		return this.gitApi.getRepository().getWorkTree();
 	}
+
+	public String getUserName(){ return this.userName; }
+
+	public void setUserName(String userName){ this.userName = userName; }
 
 	/**
 	 * Gets the URL for the remote with the name <code>remoteName</code>.
@@ -140,7 +155,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 		}
 
 		File repositoryPath = new File(
-			this.repositoryBasePath + "/" + name + "/"
+			this.getRepositoryBasePath() + "/" + name + "/"
 		);
 
 		// if the directory exists we assume it's a Git repo, could also check for a child .git
@@ -151,7 +166,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 					"A Git repository with the name '%s' already exists at base path '%s'. " +
 					"Did you mean to call `open`?",
 						name,
-					this.repositoryBasePath
+					this.getRepositoryBasePath()
 				)
 			);
 		}
@@ -186,7 +201,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 			if (repositoryName.endsWith(".git")) {
 				repositoryName = repositoryName.substring(0, repositoryName.length() - 4);
 			}
-			path = new File(this.repositoryBasePath, repositoryName);
+			path = new File(this.getRepositoryBasePath(), repositoryName);
 		}
 
 		try {
@@ -221,7 +236,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 		}
 
 		File repositoryPath = new File(
-			this.repositoryBasePath + "/" + name + "/"
+			this.getRepositoryBasePath() + "/" + name + "/"
 		);
 
 		// could also check for the absence of a child .git directory
@@ -231,7 +246,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 					"Couldn't find a Git repository with the name '%s' at base path '%s'. " +
 					"Did you mean to call `init`?",
 						name,
-					this.repositoryBasePath
+					this.getRepositoryBasePath()
 				)
 			);
 		}

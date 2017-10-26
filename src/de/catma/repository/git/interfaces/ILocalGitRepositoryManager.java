@@ -14,6 +14,10 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	File getRepositoryWorkTree();
 
+	String getUserName();
+
+	void setUserName(String userName);
+
 	String getRemoteUrl(@Nullable String remoteName);
 
 	void init(String name, @Nullable String description) throws LocalGitRepositoryManagerException;
