@@ -48,7 +48,7 @@ public class ProjectHandlerTest {
 	@After
 	public void tearDown() throws Exception {
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
 				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
@@ -69,7 +69,7 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
 			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			String projectId = projectHandler.create(
@@ -87,7 +87,7 @@ public class ProjectHandlerTest {
 			String expectedRootRepositoryName = String.format(
 				ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId
 			);
-			String repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
+			String repositoryBasePath = String.format("%s/%s", this.catmaProperties.getProperty("GitBasedRepositoryBasePath"), "fakeUserIdentifier");
 
 			File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
 
@@ -104,7 +104,7 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
 			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			String projectId = projectHandler.create(
@@ -122,7 +122,7 @@ public class ProjectHandlerTest {
 			String expectedRootRepositoryName = String.format(
 				ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId
 			);
-			String repositoryBasePath = this.catmaProperties.getProperty("GitBasedRepositoryBasePath");
+			String repositoryBasePath = String.format("%s/%s", this.catmaProperties.getProperty("GitBasedRepositoryBasePath"), "fakeUserIdentifier");
 
 			File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
 
@@ -171,7 +171,7 @@ public class ProjectHandlerTest {
 
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
 			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			String projectId = projectHandler.create(
