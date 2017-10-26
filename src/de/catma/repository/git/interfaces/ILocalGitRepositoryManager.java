@@ -35,6 +35,10 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	void push(@Nullable String username, @Nullable String password) throws LocalGitRepositoryManagerException;
 
+	void fetch(@Nullable String username, @Nullable String password) throws LocalGitRepositoryManagerException;
+
+	void checkout(String name) throws LocalGitRepositoryManagerException;
+
 	@Override
 	void close();
 }

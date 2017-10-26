@@ -6,9 +6,13 @@ import helpers.Randomizer;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.RemoteAddCommand;
 import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.transport.URIish;
 import org.gitlab4j.api.CommitsApi;
 import org.gitlab4j.api.models.Commit;
 import org.gitlab4j.api.models.User;
@@ -512,6 +516,145 @@ public class LocalGitRepositoryManagerTest {
 			RemoteGitServerManagerTest.awaitUserDeleted(
 				remoteGitServerManager.getAdminGitLabApi().getUserApi(), user.getId()
 			);
+		}
+	}
+
+	@Test
+	public void fetch() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			// create a bare repository that will act as the remote
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
+
+			try (Git gitApi = Git.init().setDirectory(testRepoPath).setBare(true).call()) {}
+			this.directoriesToDeleteOnTearDown.add(testRepoPath);
+
+			// clone it
+			File clonedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "cloned");
+
+			String repoName = localGitRepoManager.clone(
+				testRepoPath.toURI().toString(), clonedRepoPath, null, null
+			);
+
+			assert localGitRepoManager.isAttached();
+			assertEquals(repoName, clonedRepoPath.getName());
+			assert clonedRepoPath.exists();
+			assert clonedRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(clonedRepoPath);
+
+			localGitRepoManager.detach();  // can't call open on an attached instance
+
+			// open the cloned repo, add and commit a file, then push
+			localGitRepoManager.open(clonedRepoPath.getName());
+
+			File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
+			byte[] originalSourceDocumentBytes = Files.readAllBytes(originalSourceDocument.toPath());
+
+			File targetFile = new File(clonedRepoPath, originalSourceDocument.getName());
+
+			localGitRepoManager.addAndCommit(
+				targetFile, originalSourceDocumentBytes,
+				"Test Committer", "testcommitter@catma.de"
+			);
+
+			localGitRepoManager.push(null, null);
+
+			localGitRepoManager.detach();  // can't call init on an attached instance
+
+			File fetchRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "testfetch");
+
+			// init a new repository, add the remote and do a fetch
+			localGitRepoManager.init(fetchRepoPath.getName(), null);
+			this.directoriesToDeleteOnTearDown.add(fetchRepoPath);
+
+			RemoteAddCommand remoteAddCommand = localGitRepoManager.getGitApi().remoteAdd();
+			remoteAddCommand.setName("origin");
+			remoteAddCommand.setUri(new URIish("../" + testRepoPath.getName()));
+			remoteAddCommand.call();
+
+			localGitRepoManager.fetch(null, null);
+
+			// assert that the commit was fetched by inspecting the Git log
+			Iterable<RevCommit> commits = localGitRepoManager.getGitApi().log().all().call();
+			@SuppressWarnings("unchecked")
+			List<RevCommit> commitsList = IteratorUtils.toList(commits.iterator());
+
+			assertEquals(1, commitsList.size());
+			assertEquals("Adding rose_for_emily.pdf" , commitsList.get(0).getFullMessage());
+
+			// TODO: figure out why we need to call close on the repository explicitly
+			// this is supposed to happen automatically as all repos are opened by static factory methods on
+			// org.eclipse.jgit.api.Git (see the documentation for the close method on the Git class)
+			// LocalGitRepositoryManager init, clone and open methods all use the static factory methods
+			// lots of discussion on this should you be interested:
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=474093
+			// https://www.google.com/search?q=jgit+not+releasing+pack+file+handle
+			localGitRepoManager.getGitApi().getRepository().close();
+		}
+	}
+
+	@Test
+	public void checkout() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			// init a new repository and make 2 commits
+			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
+
+			localGitRepoManager.init(testRepoPath.getName(), null);
+
+			assert localGitRepoManager.isAttached();
+			assert testRepoPath.exists();
+			assert testRepoPath.isDirectory();
+			this.directoriesToDeleteOnTearDown.add(testRepoPath);
+
+			File file1 = new File("testdocs/rose_for_emily.txt");
+			byte[] file1Bytes = Files.readAllBytes(file1.toPath());
+			File targetFile1 = new File(testRepoPath, file1.getName());
+
+			File file2 = new File("testdocs/kafka_utf8.txt");
+			byte[] file2Bytes = Files.readAllBytes(file2.toPath());
+			File targetFile2 = new File(testRepoPath, file2.getName());
+
+			localGitRepoManager.addAndCommit(
+				targetFile1, file1Bytes, "Test Committer", "testcommitter@catma.de"
+			);
+			localGitRepoManager.addAndCommit(
+				targetFile2, file2Bytes, "Test Committer", "testcommitter@catma.de"
+			);
+
+			// get the commit hashes by inspecting the Git log
+			Iterable<RevCommit> commits = localGitRepoManager.getGitApi().log().all().call();
+			@SuppressWarnings("unchecked")
+			List<RevCommit> commitsList = IteratorUtils.toList(commits.iterator());
+
+			assertEquals(2, commitsList.size());
+
+			// commitsList is in descending order by date
+			String file1CommitHash = commitsList.get(1).getName();
+			String file2CommitHash = commitsList.get(0).getName();
+
+			// assert that HEAD is pointing to the commit of the 2nd file
+			assertEquals(
+				file2CommitHash, localGitRepoManager.getGitApi().getRepository().resolve(Constants.HEAD).getName()
+			);
+
+			// assert that we ARE NOT in a detached head state
+			List<Ref> refs = localGitRepoManager.getGitApi().branchList().call();
+			assertEquals(1, refs.size());
+
+			// check out the 1st commit
+			localGitRepoManager.checkout(file1CommitHash);
+
+			// assert that HEAD is pointing to the commit of the 1st file
+			assertEquals(
+				file1CommitHash, localGitRepoManager.getGitApi().getRepository().resolve(Constants.HEAD).getName()
+			);
+
+			// assert that we ARE in a detached head state
+			refs = localGitRepoManager.getGitApi().branchList().call();
+			assertEquals(2, refs.size());
+
+			// assert that the file from the 2nd commit does not appear in the worktree
+			assert targetFile1.exists();
+			assertFalse(targetFile2.exists());
 		}
 	}
 }

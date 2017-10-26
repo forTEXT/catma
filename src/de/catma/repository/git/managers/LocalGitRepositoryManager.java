@@ -3,10 +3,7 @@ package de.catma.repository.git.managers;
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import org.apache.commons.io.FilenameUtils;
-import org.eclipse.jgit.api.CloneCommand;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.PushCommand;
-import org.eclipse.jgit.api.SubmoduleAddCommand;
+import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
@@ -384,6 +381,54 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 		}
 		catch (GitAPIException e) {
 			throw new LocalGitRepositoryManagerException("Failed to push", e);
+		}
+	}
+
+	/**
+	 * Fetches refs from the associated remote repository ('origin' remote).
+	 *
+	 * @param username the username to authenticate with
+	 * @param password the password to authenticate with
+	 * @throws LocalGitRepositoryManagerException if the fetch operation failed
+	 */
+	@Override
+	public void fetch(@Nullable String username, @Nullable String password) throws LocalGitRepositoryManagerException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `fetch` on a detached instance");
+		}
+
+		try {
+			FetchCommand fetchCommand = this.gitApi.fetch();
+			if (username != null) {
+				fetchCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
+					username, password
+				));
+			}
+			fetchCommand.call();
+		}
+		catch (GitAPIException e) {
+			throw new LocalGitRepositoryManagerException("Failed to fetch", e);
+		}
+	}
+
+	/**
+	 * Checks out a branch or commit identified by <code>name</code>.
+	 *
+	 * @param name the name of the branch or commit to check out
+	 * @throws LocalGitRepositoryManagerException if the checkout operation failed
+	 */
+	@Override
+	public void checkout(String name) throws LocalGitRepositoryManagerException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `checkout` on a detached instance");
+		}
+
+		try {
+			CheckoutCommand checkoutCommand = this.gitApi.checkout();
+			checkoutCommand.setName(name).call();
+		}
+		catch (GitAPIException e) {
+			throw new LocalGitRepositoryManagerException("Failed to checkout", e);
 		}
 	}
 
