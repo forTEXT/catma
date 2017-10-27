@@ -47,10 +47,14 @@ public class TagsetDefinitionMapper implements
 
 
 	private void addTagDefinitions(TagsetDefinition tagsetDefinition) {
-		if (tagDefByTagsetDefUuid.containsKey(tagsetDefinition.getUuid())) {
-			
-			for (Record r : tagDefByTagsetDefUuid.get(tagsetDefinition.getUuid())) {
-				tagsetDefinition.addTagDefinition(tagDefinitionMapper.map(r));
+		String tagsetDefinitionUuid = tagsetDefinition.getUuid();
+
+		if (tagDefByTagsetDefUuid.containsKey(tagsetDefinitionUuid)) {
+
+			for (Record r : tagDefByTagsetDefUuid.get(tagsetDefinitionUuid)) {
+				tagsetDefinition.addTagDefinition(
+					tagDefinitionMapper.mapWithTagsetDefinitionUuid(r, tagsetDefinitionUuid)
+				);
 			}
 		}
 	}

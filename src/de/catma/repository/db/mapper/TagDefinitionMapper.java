@@ -42,6 +42,12 @@ public class TagDefinitionMapper implements RecordMapper<Record, TagDefinition> 
 		return tagDefinition;
 	}
 
+	public TagDefinition mapWithTagsetDefinitionUuid(Record record, String tagsetDefinitionUuid) {
+		TagDefinition tagDefinition = this.map(record);
+		tagDefinition.setTagsetDefinitionUuid(tagsetDefinitionUuid);
+		return tagDefinition;
+	}
+
 	private void addPropertyDefinitions(TagDefinition tagDefinition) {
 		
 		if (propertyDefByTagDefUuid.containsKey(tagDefinition.getUuid())) {
