@@ -23,13 +23,16 @@ public class TagReferenceMapper implements
 	private Map<String, TagInstance> tagInstancesByUUID = new HashMap<String, TagInstance>();
 	private IDGenerator idGenerator;
 	private String localSourceDocURI;
+	private String userMarkupCollectionUuid;
 	
-	public TagReferenceMapper(String localSourceDocURI, List<TagInstance> tagInstances) {
+	public TagReferenceMapper(String localSourceDocURI, List<TagInstance> tagInstances,
+							  String userMarkupCollectionUuid) {
 		this.localSourceDocURI = localSourceDocURI;
 		for (TagInstance ti : tagInstances) {
 			tagInstancesByUUID.put(ti.getUuid(), ti);
 		}
 		this.idGenerator = new IDGenerator();
+		this.userMarkupCollectionUuid = userMarkupCollectionUuid;
 	}
 	
 	public TagReference map(Record record) {
@@ -39,7 +42,10 @@ public class TagReferenceMapper implements
 				localSourceDocURI,
 				new Range(
 						record.getValue(TAGREFERENCE.CHARACTERSTART),
-						record.getValue(TAGREFERENCE.CHARACTEREND)));
+						record.getValue(TAGREFERENCE.CHARACTEREND)
+				),
+				this.userMarkupCollectionUuid
+			);
 		}
 		catch(URISyntaxException e) {
 			throw new DataAccessException("error loading TagReference", e);

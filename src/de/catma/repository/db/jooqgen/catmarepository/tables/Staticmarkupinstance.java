@@ -35,7 +35,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Staticmarkupinstance extends TableImpl<Record> {
 
-	private static final long serialVersionUID = -253447222;
+	private static final long serialVersionUID = 118383215;
 
 	/**
 	 * The reference instance of <code>catmarepository.staticmarkupinstance</code>
@@ -63,7 +63,7 @@ public class Staticmarkupinstance extends TableImpl<Record> {
 	/**
 	 * The column <code>catmarepository.staticmarkupinstance.staticMarkupCollectionID</code>.
 	 */
-	public final TableField<Record, Integer> STATICMARKUPCOLLECTIONID = createField("staticMarkupCollectionID", org.jooq.impl.SQLDataType.INTEGER, this, "");
+	public final TableField<Record, Integer> STATICMARKUPCOLLECTIONID = createField("staticMarkupCollectionID", org.jooq.impl.SQLDataType.INTEGER.defaulted(true), this, "");
 
 	/**
 	 * Create a <code>catmarepository.staticmarkupinstance</code> table reference

@@ -35,7 +35,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Propertyvalue extends TableImpl<Record> {
 
-	private static final long serialVersionUID = 946430079;
+	private static final long serialVersionUID = 1805291364;
 
 	/**
 	 * The reference instance of <code>catmarepository.propertyvalue</code>
@@ -63,7 +63,7 @@ public class Propertyvalue extends TableImpl<Record> {
 	/**
 	 * The column <code>catmarepository.propertyvalue.value</code>.
 	 */
-	public final TableField<Record, String> VALUE = createField("value", org.jooq.impl.SQLDataType.VARCHAR.length(1024), this, "");
+	public final TableField<Record, String> VALUE = createField("value", org.jooq.impl.SQLDataType.VARCHAR.length(1024).defaulted(true), this, "");
 
 	/**
 	 * Create a <code>catmarepository.propertyvalue</code> table reference

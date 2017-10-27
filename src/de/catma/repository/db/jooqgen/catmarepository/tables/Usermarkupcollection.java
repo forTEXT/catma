@@ -35,7 +35,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Usermarkupcollection extends TableImpl<Record> {
 
-	private static final long serialVersionUID = 162857634;
+	private static final long serialVersionUID = -1900658606;
 
 	/**
 	 * The reference instance of <code>catmarepository.usermarkupcollection</code>
@@ -58,22 +58,22 @@ public class Usermarkupcollection extends TableImpl<Record> {
 	/**
 	 * The column <code>catmarepository.usermarkupcollection.title</code>.
 	 */
-	public final TableField<Record, String> TITLE = createField("title", org.jooq.impl.SQLDataType.VARCHAR.length(300), this, "");
+	public final TableField<Record, String> TITLE = createField("title", org.jooq.impl.SQLDataType.VARCHAR.length(300).defaulted(true), this, "");
 
 	/**
 	 * The column <code>catmarepository.usermarkupcollection.publisher</code>.
 	 */
-	public final TableField<Record, String> PUBLISHER = createField("publisher", org.jooq.impl.SQLDataType.VARCHAR.length(300), this, "");
+	public final TableField<Record, String> PUBLISHER = createField("publisher", org.jooq.impl.SQLDataType.VARCHAR.length(300).defaulted(true), this, "");
 
 	/**
 	 * The column <code>catmarepository.usermarkupcollection.author</code>.
 	 */
-	public final TableField<Record, String> AUTHOR = createField("author", org.jooq.impl.SQLDataType.VARCHAR.length(300), this, "");
+	public final TableField<Record, String> AUTHOR = createField("author", org.jooq.impl.SQLDataType.VARCHAR.length(300).defaulted(true), this, "");
 
 	/**
 	 * The column <code>catmarepository.usermarkupcollection.description</code>.
 	 */
-	public final TableField<Record, String> DESCRIPTION = createField("description", org.jooq.impl.SQLDataType.VARCHAR.length(300), this, "");
+	public final TableField<Record, String> DESCRIPTION = createField("description", org.jooq.impl.SQLDataType.VARCHAR.length(300).defaulted(true), this, "");
 
 	/**
 	 * The column <code>catmarepository.usermarkupcollection.sourceDocumentID</code>.
@@ -84,6 +84,11 @@ public class Usermarkupcollection extends TableImpl<Record> {
 	 * The column <code>catmarepository.usermarkupcollection.tagLibraryID</code>.
 	 */
 	public final TableField<Record, Integer> TAGLIBRARYID = createField("tagLibraryID", org.jooq.impl.SQLDataType.INTEGER.nullable(false), this, "");
+
+	/**
+	 * The column <code>catmarepository.usermarkupcollection.uuid</code>.
+	 */
+	public final TableField<Record, byte[]> UUID = createField("uuid", org.jooq.impl.SQLDataType.BINARY.length(16).nullable(false), this, "");
 
 	/**
 	 * Create a <code>catmarepository.usermarkupcollection</code> table reference
@@ -128,7 +133,7 @@ public class Usermarkupcollection extends TableImpl<Record> {
 	 */
 	@Override
 	public List<UniqueKey<Record>> getKeys() {
-		return Arrays.<UniqueKey<Record>>asList(Keys.KEY_USERMARKUPCOLLECTION_PRIMARY);
+		return Arrays.<UniqueKey<Record>>asList(Keys.KEY_USERMARKUPCOLLECTION_PRIMARY, Keys.KEY_USERMARKUPCOLLECTION_UK_UMC_UUID);
 	}
 
 	/**

@@ -35,7 +35,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class PropertydefPossiblevalue extends TableImpl<Record> {
 
-	private static final long serialVersionUID = 1832835275;
+	private static final long serialVersionUID = -2108641040;
 
 	/**
 	 * The reference instance of <code>catmarepository.propertydef_possiblevalue</code>
@@ -58,7 +58,7 @@ public class PropertydefPossiblevalue extends TableImpl<Record> {
 	/**
 	 * The column <code>catmarepository.propertydef_possiblevalue.value</code>.
 	 */
-	public final TableField<Record, String> VALUE = createField("value", org.jooq.impl.SQLDataType.VARCHAR.length(255), this, "");
+	public final TableField<Record, String> VALUE = createField("value", org.jooq.impl.SQLDataType.VARCHAR.length(255).defaulted(true), this, "");
 
 	/**
 	 * The column <code>catmarepository.propertydef_possiblevalue.propertyDefinitionID</code>.

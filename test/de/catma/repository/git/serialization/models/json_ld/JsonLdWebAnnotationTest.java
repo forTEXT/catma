@@ -108,7 +108,9 @@ public class JsonLdWebAnnotationTest {
 			)
 		);
 
-		JsonLdWebAnnotation jsonLdWebAnnotation = new JsonLdWebAnnotation(tagReferences);
+		JsonLdWebAnnotation jsonLdWebAnnotation = new JsonLdWebAnnotation(
+			"http://catma.de/git/", "fakeProjectId", tagReferences
+		);
 
 		String serialized = new SerializationHelper<JsonLdWebAnnotation>().serialize(jsonLdWebAnnotation);
 

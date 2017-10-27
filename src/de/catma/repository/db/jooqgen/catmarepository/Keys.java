@@ -133,6 +133,7 @@ public class Keys {
 	public static final UniqueKey<Record> KEY_USER_PRIMARY = UniqueKeys0.KEY_USER_PRIMARY;
 	public static final UniqueKey<Record> KEY_USERDEFINED_SEPARATINGCHARACTER_PRIMARY = UniqueKeys0.KEY_USERDEFINED_SEPARATINGCHARACTER_PRIMARY;
 	public static final UniqueKey<Record> KEY_USERMARKUPCOLLECTION_PRIMARY = UniqueKeys0.KEY_USERMARKUPCOLLECTION_PRIMARY;
+	public static final UniqueKey<Record> KEY_USERMARKUPCOLLECTION_UK_UMC_UUID = UniqueKeys0.KEY_USERMARKUPCOLLECTION_UK_UMC_UUID;
 	public static final UniqueKey<Record> KEY_USER_CORPUS_PRIMARY = UniqueKeys0.KEY_USER_CORPUS_PRIMARY;
 	public static final UniqueKey<Record> KEY_USER_ROLE_PRIMARY = UniqueKeys0.KEY_USER_ROLE_PRIMARY;
 	public static final UniqueKey<Record> KEY_USER_SOURCEDOCUMENT_PRIMARY = UniqueKeys0.KEY_USER_SOURCEDOCUMENT_PRIMARY;
@@ -256,6 +257,7 @@ public class Keys {
 		public static final UniqueKey<Record> KEY_USER_PRIMARY = createUniqueKey(User.USER, User.USER.USERID);
 		public static final UniqueKey<Record> KEY_USERDEFINED_SEPARATINGCHARACTER_PRIMARY = createUniqueKey(UserdefinedSeparatingcharacter.USERDEFINED_SEPARATINGCHARACTER, UserdefinedSeparatingcharacter.USERDEFINED_SEPARATINGCHARACTER.UDSCID);
 		public static final UniqueKey<Record> KEY_USERMARKUPCOLLECTION_PRIMARY = createUniqueKey(Usermarkupcollection.USERMARKUPCOLLECTION, Usermarkupcollection.USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID);
+		public static final UniqueKey<Record> KEY_USERMARKUPCOLLECTION_UK_UMC_UUID = createUniqueKey(Usermarkupcollection.USERMARKUPCOLLECTION, Usermarkupcollection.USERMARKUPCOLLECTION.UUID);
 		public static final UniqueKey<Record> KEY_USER_CORPUS_PRIMARY = createUniqueKey(UserCorpus.USER_CORPUS, UserCorpus.USER_CORPUS.USER_CORPUSID);
 		public static final UniqueKey<Record> KEY_USER_ROLE_PRIMARY = createUniqueKey(UserRole.USER_ROLE, UserRole.USER_ROLE.USER_ROLEID);
 		public static final UniqueKey<Record> KEY_USER_SOURCEDOCUMENT_PRIMARY = createUniqueKey(UserSourcedocument.USER_SOURCEDOCUMENT, UserSourcedocument.USER_SOURCEDOCUMENT.USER_SOURCEDOCUMENTID);

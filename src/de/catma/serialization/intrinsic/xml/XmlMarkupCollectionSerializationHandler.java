@@ -80,7 +80,8 @@ public class XmlMarkupCollectionSerializationHandler implements
 	        Stack<String> elementStack = new Stack<String>();
 	        UserMarkupCollection userMarkupCollection = 
 	        	new UserMarkupCollection(
-	        		null, 
+	        		null,
+	        		new IDGenerator().generate(),
 	        		new ContentInfoSet(
 	        			"", "Intrinsic Markup", "", "Intrinsic Markup"), 
 	        		tagLibrary);

@@ -36,7 +36,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Tagdefinition extends TableImpl<Record> {
 
-	private static final long serialVersionUID = 1931402834;
+	private static final long serialVersionUID = -2133969230;
 
 	/**
 	 * The reference instance of <code>catmarepository.tagdefinition</code>
@@ -79,12 +79,12 @@ public class Tagdefinition extends TableImpl<Record> {
 	/**
 	 * The column <code>catmarepository.tagdefinition.parentID</code>.
 	 */
-	public final TableField<Record, Integer> PARENTID = createField("parentID", org.jooq.impl.SQLDataType.INTEGER, this, "");
+	public final TableField<Record, Integer> PARENTID = createField("parentID", org.jooq.impl.SQLDataType.INTEGER.defaulted(true), this, "");
 
 	/**
 	 * The column <code>catmarepository.tagdefinition.parentUuid</code>.
 	 */
-	public final TableField<Record, byte[]> PARENTUUID = createField("parentUuid", org.jooq.impl.SQLDataType.BINARY.length(16), this, "");
+	public final TableField<Record, byte[]> PARENTUUID = createField("parentUuid", org.jooq.impl.SQLDataType.BINARY.length(16).defaulted(true), this, "");
 
 	/**
 	 * Create a <code>catmarepository.tagdefinition</code> table reference

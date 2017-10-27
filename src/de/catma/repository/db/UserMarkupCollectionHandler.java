@@ -731,7 +731,10 @@ class UserMarkupCollectionHandler {
 					.on(TAGINSTANCE.TAGINSTANCEID.eq(TAGREFERENCE.TAGINSTANCEID))
 				.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.eq(userMarkupCollectionId))
 				.fetch()
-				.map(new TagReferenceMapper(localSourceDocURI, tagInstances));
+				.map(new TagReferenceMapper(
+						localSourceDocURI, tagInstances,
+						idGenerator.uuidBytesToCatmaID(umcRecord.getValue(USERMARKUPCOLLECTION.UUID)))
+				);
 		}
 		
 		return	new UserMarkupCollectionMapper(

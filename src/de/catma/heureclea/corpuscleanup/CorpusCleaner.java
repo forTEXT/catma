@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
+import de.catma.util.IDGenerator;
 import org.apache.commons.io.IOUtils;
 import org.restlet.Context;
 import org.restlet.data.ChallengeScheme;
@@ -560,7 +561,7 @@ public class CorpusCleaner {
 		if (targetCollection == null) {
 			targetCollection = 
 					new UserMarkupCollection(
-							null, new ContentInfoSet(contentInfoSet), targetLib);
+							null, new IDGenerator().generate(), new ContentInfoSet(contentInfoSet), targetLib);
 			targetCollection.getContentInfoSet().setTitle(
 					annotatorAnonym + " " + sourceDocName + " " + conceptName);
 			targetCollection.getContentInfoSet().setAuthor(author);

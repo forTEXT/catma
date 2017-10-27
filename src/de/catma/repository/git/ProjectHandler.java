@@ -28,7 +28,11 @@ public class ProjectHandler implements IProjectHandler {
 
 	// using 'corpus' and not 'project' here so as not to confuse CATMA Projects with GitLab
 	// Projects
-	static final String PROJECT_ROOT_REPOSITORY_NAME_FORMAT = "%s_corpus";
+	private static final String PROJECT_ROOT_REPOSITORY_NAME_FORMAT = "%s_corpus";
+
+	public static String getProjectRepoName(String projectId) {
+		return String.format(PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId);
+	}
 
 	public ProjectHandler(ILocalGitRepositoryManager localGitRepositoryManager,
 						  IRemoteGitServerManager remoteGitServerManager) {
@@ -36,10 +40,6 @@ public class ProjectHandler implements IProjectHandler {
 		this.remoteGitServerManager = remoteGitServerManager;
 
 		this.idGenerator = new IDGenerator();
-	}
-
-	String getProjectRepoName(String projectId){
-		return String.format(PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId);
 	}
 
 	/**

@@ -4,11 +4,14 @@ import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.repository.git.ProjectHandler;
 import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +34,8 @@ public class JsonLdWebAnnotation {
 
 	}
 
-	public JsonLdWebAnnotation(List<TagReference> tagReferences) throws JsonLdWebAnnotationException {
+	public JsonLdWebAnnotation(String gitServerBaseUrl, String projectId, List<TagReference> tagReferences)
+			throws JsonLdWebAnnotationException {
 		// assert that all TagReference objects are for the same TagInstance and thus share the same TagDefinition and
 		// properties
 		Set<TagInstance> uniqueTagInstances = new HashSet<>(tagReferences.stream().map(TagReference::getTagInstance)
@@ -42,12 +46,32 @@ public class JsonLdWebAnnotation {
 			);
 		}
 
-		this.id = String.format(
-			"http://catma.de/portal/annotation/%s", tagReferences.get(0).getTagInstance().getUuid()
-		);  // TODO: actual GitLab URL
+		String projectRootRepositoryName = ProjectHandler.getProjectRepoName(projectId);
+
+		try {
+			this.id = this.buildTagInstanceUrl(
+				gitServerBaseUrl, projectRootRepositoryName, tagReferences.get(0).getTagInstance().getUuid()
+			).toString();
+		}
+		catch (MalformedURLException e) {
+			throw new JsonLdWebAnnotationException("Failed to build tag instance URL", e);
+		}
+		
+//		this.id = String.format(
+//			"http://catma.de/portal/annotation/%s", tagReferences.get(0).getTagInstance().getUuid()
+//		);  // TODO: actual GitLab URL
 
 		this.body = new JsonLdWebAnnotationBody_Dataset(tagReferences);
 		this.target = new JsonLdWebAnnotationTarget_List(tagReferences);
+	}
+
+	private URL buildTagInstanceUrl(String gitServerBaseUrl, String projectRootRepositoryName, String tagInstanceUuid)
+			throws MalformedURLException {
+		URL gitServerUrl = new URL(gitServerBaseUrl);
+		return new URL(
+			gitServerUrl.getProtocol(), gitServerUrl.getHost(), gitServerUrl.getPort(),
+			String.format("%s/%s", projectRootRepositoryName, tagInstanceUuid)
+		);
 	}
 
 	@JsonProperty(to="@context")

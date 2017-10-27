@@ -7,6 +7,7 @@ package de.catma.repository.db.jooqgen.catmarepository.tables;
 import de.catma.repository.db.jooqgen.catmarepository.Catmarepository;
 import de.catma.repository.db.jooqgen.catmarepository.Keys;
 
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,7 +35,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class User extends TableImpl<Record> {
 
-	private static final long serialVersionUID = 115705415;
+	private static final long serialVersionUID = 1481546690;
 
 	/**
 	 * The reference instance of <code>catmarepository.user</code>
@@ -65,36 +66,32 @@ public class User extends TableImpl<Record> {
 	public final TableField<Record, Byte> LOCKED = createField("locked", org.jooq.impl.SQLDataType.TINYINT.nullable(false).defaulted(true), this, "");
 
 	/**
-<<<<<<< HEAD
+	 * The column <code>catmarepository.user.email</code>.
+	 */
+	public final TableField<Record, String> EMAIL = createField("email", org.jooq.impl.SQLDataType.VARCHAR.length(300).defaulted(true), this, "");
+
+	/**
+	 * The column <code>catmarepository.user.lastlogin</code>.
+	 */
+	public final TableField<Record, Timestamp> LASTLOGIN = createField("lastlogin", org.jooq.impl.SQLDataType.TIMESTAMP.defaulted(true), this, "");
+
+	/**
+	 * The column <code>catmarepository.user.firstlogin</code>.
+	 */
+	public final TableField<Record, Timestamp> FIRSTLOGIN = createField("firstlogin", org.jooq.impl.SQLDataType.TIMESTAMP.defaulted(true), this, "");
+
+	/**
+	 * The column <code>catmarepository.user.guest</code>.
+	 */
+	public final TableField<Record, Byte> GUEST = createField("guest", org.jooq.impl.SQLDataType.TINYINT.nullable(false).defaulted(true), this, "");
+
+	/**
+	 * The column <code>catmarepository.user.spawnable</code>.
+	 */
+	public final TableField<Record, Byte> SPAWNABLE = createField("spawnable", org.jooq.impl.SQLDataType.TINYINT.nullable(false).defaulted(true), this, "");
+
+	/**
 	 * Create a <code>catmarepository.user</code> table reference
-=======
-	 * The column <code>CatmaRepository.user.email</code>. 
-	 */
-	public final org.jooq.TableField<org.jooq.Record, java.lang.String> EMAIL = createField("email", org.jooq.impl.SQLDataType.VARCHAR.length(300), this);
-
-	/**
-	 * The column <code>CatmaRepository.user.firstlogin</code>. 
-	 */
-	public final org.jooq.TableField<org.jooq.Record, java.sql.Timestamp> FIRSTLOGIN = createField("firstlogin", org.jooq.impl.SQLDataType.TIMESTAMP, this);
-
-	/**
-	 * The column <code>CatmaRepository.user.lastlogin</code>. 
-	 */
-	public final org.jooq.TableField<org.jooq.Record, java.sql.Timestamp> LASTLOGIN = createField("lastlogin", org.jooq.impl.SQLDataType.TIMESTAMP, this);
-
-	/**
-	 * The column <code>CatmaRepository.user.guest</code>. 
-	 */
-	public final org.jooq.TableField<org.jooq.Record, java.lang.Byte> GUEST = createField("guest", org.jooq.impl.SQLDataType.TINYINT, this);
-
-	/**
-	 * The column <code>CatmaRepository.user.spawnable</code>. 
-	 */
-	public final org.jooq.TableField<org.jooq.Record, java.lang.Byte> SPAWNABLE = createField("spawnable", org.jooq.impl.SQLDataType.TINYINT, this);
-
-	/**
-	 * Create a <code>CatmaRepository.user</code> table reference
->>>>>>> master
 	 */
 	public User() {
 		this("user", null);
