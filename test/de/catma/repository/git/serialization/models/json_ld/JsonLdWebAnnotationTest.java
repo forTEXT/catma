@@ -126,7 +126,7 @@ public class JsonLdWebAnnotationTest {
 		// re-serialize and assert that what comes out is what went in
 		String serialized = new SerializationHelper<JsonLdWebAnnotation>().serialize(jsonLdWebAnnotation);
 
-		assert this.expectedSerializedRepresentation.replaceAll("[\n\t]", "").equals(serialized);
+		assertEquals(this.expectedSerializedRepresentation.replaceAll("[\n\t]", ""), serialized);
 	}
 
 	@Test

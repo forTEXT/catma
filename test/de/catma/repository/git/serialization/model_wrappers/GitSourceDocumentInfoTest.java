@@ -78,7 +78,7 @@ public class GitSourceDocumentInfoTest {
 		JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
 		String serialized = JsonStream.serialize(inputGitSourceDocumentInfo);
 
-		assert this.expectedSerializedRepresentation.replaceAll("[\n\t]", "").equals(serialized);
+		assertEquals(this.expectedSerializedRepresentation.replaceAll("[\n\t]", ""), serialized);
 
 		JsonIterator.setMode(DecodingMode.DYNAMIC_MODE_AND_MATCH_FIELD_STRICTLY);
 		GitSourceDocumentInfo outputGitSourceDocumentInfo = JsonIterator.deserialize(
