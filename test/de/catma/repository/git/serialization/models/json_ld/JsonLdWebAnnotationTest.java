@@ -25,13 +25,15 @@ public class JsonLdWebAnnotationTest {
 			"\t\t\"@context\":{\n" +
 			"\t\t\t\"SYSPROP_DEF\":\"http://catma.de/portal/tag/CATMA_TAG_DEF/property/CATMA_SYSPROP_DEF\",\n" +
 			"\t\t\t\"UPROP_DEF\":\"http://catma.de/portal/tag/CATMA_TAG_DEF/property/CATMA_UPROP_DEF\",\n" +
-			"\t\t\t\"tag\":\"http://catma.de/portal/tag\"\n" +
+			"\t\t\t\"tag\":\"http://catma.de/portal/tag\",\n" +
+			"\t\t\t\"tagset\":\"http://catma.de/portal/tagset\"\n" +
 			"\t\t},\n" +
 			"\t\t\"properties\":{\n" +
 			"\t\t\t\"SYSPROP_DEF\":[\"SYSPROP_VAL_1\"],\n" +
 			"\t\t\t\"UPROP_DEF\":[\"UPROP_VAL_2\"]\n" +
 			"\t\t},\n" +
 			"\t\t\"tag\":\"http://catma.de/portal/tag/CATMA_TAG_DEF\",\n" +
+			"\t\t\"tagset\":\"http://catma.de/portal/tagset/CATMA_TAGSET_DEF\",\n" +
 			"\t\t\"type\":\"Dataset\"\n" +
 			"\t},\n" +
 			"\t\"@context\":\"http://www.w3.org/ns/anno.jsonld\",\n" +
@@ -74,7 +76,8 @@ public class JsonLdWebAnnotationTest {
 		);
 
 		TagDefinition tagDefinition = new TagDefinition(
-			1, "CATMA_TAG_DEF", "TAG_DEF", new Version(), null, null
+			1, "CATMA_TAG_DEF", "TAG_DEF", new Version(), null, null,
+			"CATMA_TAGSET_DEF"
 		);
 		tagDefinition.addSystemPropertyDefinition(systemPropertyDefinition);
 		tagDefinition.addUserDefinedPropertyDefinition(userPropertyDefinition);
@@ -109,7 +112,7 @@ public class JsonLdWebAnnotationTest {
 
 		String serialized = new SerializationHelper<JsonLdWebAnnotation>().serialize(jsonLdWebAnnotation);
 
-		assert this.expectedSerializedRepresentation.replaceAll("[\n\t]", "").equals(serialized);
+		assertEquals(this.expectedSerializedRepresentation.replaceAll("[\n\t]", ""), serialized);
 	}
 
 	@Test
@@ -152,6 +155,7 @@ public class JsonLdWebAnnotationTest {
 			TagDefinition tagDefinition = tagReference.getTagDefinition();
 			TagInstance tagInstance = tagReference.getTagInstance();
 
+			assertEquals("CATMA_TAGSET_DEF", tagDefinition.getTagsetDefinitionUuid());
 			assertEquals("CATMA_TAG_DEF", tagDefinition.getUuid());
 			assertEquals("TAG_DEF", tagDefinition.getName());
 			assertEquals("", tagDefinition.getParentUuid());

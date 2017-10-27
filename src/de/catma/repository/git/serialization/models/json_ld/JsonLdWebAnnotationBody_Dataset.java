@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 public class JsonLdWebAnnotationBody_Dataset {
 	// we use the TreeMap and TreeSet types so that we get automatic sorting
 	private TreeMap<String, String> context;
+	private String tagset;
 	private String tag;
 	private TreeMap<String, TreeSet<String>> properties;
 
@@ -27,6 +28,7 @@ public class JsonLdWebAnnotationBody_Dataset {
 
 	public JsonLdWebAnnotationBody_Dataset(List<TagReference> tagReferences) throws JsonLdWebAnnotationException {
 		this();
+		this.context.put("tagset", "http://catma.de/portal/tagset");  // TODO: what should this URL be?
 		this.context.put("tag", "http://catma.de/portal/tag");  // TODO: what should this URL be?
 
 		// assert that all TagReference objects are for the same TagInstance and thus share the same TagDefinition and
@@ -39,9 +41,11 @@ public class JsonLdWebAnnotationBody_Dataset {
 			);
 		}
 
+		String tagsetDefinitionUuid = tagReferences.get(0).getTagDefinition().getTagsetDefinitionUuid();
 		String tagDefinitionUuid = tagReferences.get(0).getTagDefinition().getUuid();
 		TagInstance tagInstance = tagReferences.get(0).getTagInstance();
 
+		this.tagset = String.format("http://catma.de/portal/tagset/%s", tagsetDefinitionUuid);  // TODO: actual GitLab URL
 		this.tag = String.format("http://catma.de/portal/tag/%s", tagDefinitionUuid);  // TODO: actual GitLab URL
 
 		this.addProperties(tagInstance.getUserDefinedProperties(), tagDefinitionUuid);
@@ -77,6 +81,14 @@ public class JsonLdWebAnnotationBody_Dataset {
 
 	public String getType() {
 		return "Dataset";
+	}
+
+	public String getTagset() {
+		return this.tagset;
+	}
+
+	public void setTagset(String tagset) {
+		this.tagset = tagset;
 	}
 
 	public String getTag() {
