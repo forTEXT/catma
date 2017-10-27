@@ -38,6 +38,10 @@ public class ProjectHandler implements IProjectHandler {
 		this.idGenerator = new IDGenerator();
 	}
 
+	String getProjectRepoName(String projectId){
+		return String.format(PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId);
+	}
+
 	/**
 	 * Creates a new project.
 	 *
@@ -57,9 +61,8 @@ public class ProjectHandler implements IProjectHandler {
 			);
 
 			// create the root repository
-			String projectNameAndPath = String.format(
-				ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId
-			);
+			String projectNameAndPath = getProjectRepoName(projectId);
+
 			IRemoteGitServerManager.CreateRepositoryResponse response =
 					this.remoteGitServerManager.createRepository(
 				projectNameAndPath, projectNameAndPath, groupPath
@@ -162,7 +165,7 @@ public class ProjectHandler implements IProjectHandler {
 			String markupCollectionRemoteUrl = localGitRepoManager.getRemoteUrl(null);
 			localGitRepoManager.close();
 
-			String projectRepoName = String.format(ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId);
+			String projectRepoName = getProjectRepoName(projectId);
 			localGitRepoManager.open(projectRepoName);
 			File markupCollectionSubmoduleTargetPath = new File(
 				String.format("%s/collections/%s", localGitRepoManager.getRepositoryWorkTree(), markupCollectionId)
@@ -262,7 +265,7 @@ public class ProjectHandler implements IProjectHandler {
 			repoManager.close();
 
 			// open the project root repository
-			repoManager.open(String.format(ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId));
+			repoManager.open(getProjectRepoName(projectId));
 
 			// create the submodule
 			File targetSubmodulePath = Paths.get(

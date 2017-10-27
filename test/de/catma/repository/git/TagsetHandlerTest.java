@@ -75,8 +75,9 @@ public class TagsetHandlerTest {
 
 		if (this.tagsetReposToDeleteOnTearDown.size() > 0) {
 			for (String tagsetId : this.tagsetReposToDeleteOnTearDown) {
+				String tagsetRepoName = this.tagsetHandler.getTagsetRepoName(tagsetId);
 				List<Project> projects = this.remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects(
-						tagsetId
+						tagsetRepoName
 				); // this getProjects overload does a search
 				for (Project project : projects) {
 					this.remoteGitServerManager.deleteRepository(project.getId());
@@ -138,7 +139,7 @@ public class TagsetHandlerTest {
 			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us
 
-			File expectedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), tagsetId);
+			File expectedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), tagsetHandler.getTagsetRepoName(tagsetId));
 			assert expectedRepoPath.exists();
 			assert expectedRepoPath.isDirectory();
 
@@ -224,7 +225,11 @@ public class TagsetHandlerTest {
 
 			assertEquals(tagDefinitionId, result);
 
-			String tagDefinitionPath = String.format("%s/%s", tagsetId, tagDefinition.getUuid());
+			String tagDefinitionPath = String.format(
+					"%s/%s",
+					tagsetHandler.getTagsetRepoName(tagsetId),
+					tagDefinition.getUuid()
+			);
 
 			File expectedTagDefinitionPath = new File(localGitRepoManager.getRepositoryBasePath(), tagDefinitionPath);
 			assert expectedTagDefinitionPath.exists() : "Directory does not exist";
@@ -289,7 +294,12 @@ public class TagsetHandlerTest {
 
 			assertEquals(tagDefinitionId, result);
 
-			String tagDefinitionPath = String.format("%s/%s/%s", tagsetId, parentTagDefinitionId, tagDefinition.getUuid());
+			String tagDefinitionPath = String.format(
+					"%s/%s/%s",
+					tagsetHandler.getTagsetRepoName(tagsetId),
+					parentTagDefinitionId,
+					tagDefinition.getUuid()
+			);
 
 			Logger.getLogger(this.getClass().toString()).info(tagDefinitionPath);
 
