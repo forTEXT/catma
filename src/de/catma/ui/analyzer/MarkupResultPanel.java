@@ -1041,8 +1041,7 @@ public class MarkupResultPanel extends VerticalLayout {
 	@SuppressWarnings("unchecked")
 	private void addTagQueryResultRow(final TagQueryResultRow row) 
 				throws IOException {
-		//TODO: use expandlistener 
-		
+		//TODO: use expand
 		String tagDefinitionId = row.getTagDefinitionId();
 		String markupCollectionsId = row.getMarkupCollectionId();
 		SourceDocument sourceDocument = 
