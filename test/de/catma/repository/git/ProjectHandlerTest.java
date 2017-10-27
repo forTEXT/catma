@@ -5,9 +5,13 @@ import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
 import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
+import de.catma.tag.Version;
 import helpers.Randomizer;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
 import org.junit.Before;
@@ -203,6 +207,86 @@ public class ProjectHandlerTest {
 			assert status.hasUncommittedChanges();
 			assert added.contains(".gitmodules");
 			assert added.contains("documents/" + sourceDocumentId);
+		}
+	}
+
+	@Test
+	public void addTagsetToMarkupCollection() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
+			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
+				localGitRepoManager, this.remoteGitServerManager
+			);
+
+			// create a project
+			String projectId = projectHandler.create(
+				"Test CATMA Project", "This is a test CATMA project"
+			);
+			this.projectsToDeleteOnTearDown.add(projectId);
+
+			assertNotNull(projectId);
+			assert projectId.startsWith("CATMA_");
+
+			// the LocalGitRepositoryManager instance should always be in a detached state after ProjectHandler calls
+			// return
+			assertFalse(localGitRepoManager.isAttached());
+
+			// create a tagset
+			String tagsetId = tagsetHandler.create("Test Tagset", null, new Version(), projectId);
+
+			// the LocalGitRepositoryManager instance should always be in a detached state after TagsetHandler calls
+			// return
+			assertFalse(localGitRepoManager.isAttached());
+
+			// re-open the tagset repo to get the commit hash
+			localGitRepoManager.open(tagsetId);
+			ObjectId tagsetHead = localGitRepoManager.getGitApi().getRepository().resolve(Constants.HEAD);
+			String tagsetCommitHash = tagsetHead.getName();
+
+			localGitRepoManager.detach();  // can't call clone on an attached instance
+
+			// create a markup collection
+			String markupCollectionId = markupCollectionHandler.create(
+				"Test Markup Collection", null,
+				"fakeSourceDocumentId", "fakeSourceDocumentVersion",
+				projectId, null
+			);
+
+			// the LocalGitRepositoryManager instance should always be in a detached state after MarkupCollectionHandler
+			// calls return
+			assertFalse(localGitRepoManager.isAttached());
+
+			User gitLabUser = this.remoteGitServerManager.getGitLabUser();
+			String gitLabUserImpersonationToken = this.remoteGitServerManager.getGitLabUserImpersonationToken();
+
+			// re-open the markup collection repo to get the commit hash and because we need to push
+			localGitRepoManager.open(markupCollectionId);
+			ObjectId markupCollectionHead = localGitRepoManager.getGitApi().getRepository().resolve(Constants.HEAD);
+			String markupCollectionCommitHash = markupCollectionHead.getName();
+
+			// push the markup collection repo to the server so that it can be added as a submodule to the project
+			// TODO: the markup collection should already be a submodule in the project at the time
+			// addTagsetToMarkupCollection is called
+			localGitRepoManager.push(gitLabUser.getUsername(), gitLabUserImpersonationToken);
+
+			localGitRepoManager.detach();  // can't call open on an attached instance
+
+			projectHandler.addTagsetToMarkupCollection(projectId, markupCollectionId, tagsetId, tagsetCommitHash);
+
+			// the LocalGitRepositoryManager instance should always be in a detached state after ProjectHandler
+			// calls return
+			assertFalse(localGitRepoManager.isAttached());
+
+			// assert that the markup collection submodule in the project is pointing at the correct commit hash
+			String projectRepoName = String.format(ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId);
+			localGitRepoManager.open(projectRepoName);
+			Map<String, SubmoduleStatus> statusMap = localGitRepoManager.getGitApi().submoduleStatus().call();
+
+			assertEquals(1, statusMap.size());
+
+			SubmoduleStatus status = statusMap.get(String.format("collections/%s", markupCollectionId));
+			assertEquals(markupCollectionCommitHash, status.getHeadId().getName());
 		}
 	}
 }
