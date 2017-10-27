@@ -161,7 +161,7 @@ public class ProjectHandler implements IProjectHandler {
 
 			// TODO: this shouldn't happen here at all - the markup collection should have been added to the project
 			// already before this method is called
-			localGitRepoManager.open(markupCollectionId);
+			localGitRepoManager.open(markupCollectionHandler.getMarkupCollectionRepoName(markupCollectionId));
 			String markupCollectionRemoteUrl = localGitRepoManager.getRemoteUrl(null);
 			localGitRepoManager.close();
 
@@ -182,7 +182,7 @@ public class ProjectHandler implements IProjectHandler {
 			markupCollectionHandler.addTagset(markupCollectionId, tagsetId, tagsetVersion);
 
 			// TODO: this should push the submodule, not the original markup collection repo
-			localGitRepoManager.open(markupCollectionId);
+			localGitRepoManager.open(markupCollectionHandler.getMarkupCollectionRepoName(markupCollectionId));
 			localGitRepoManager.push(gitLabUser.getUsername(), gitLabUserImpersonationToken);
 			localGitRepoManager.close();
 
@@ -258,7 +258,7 @@ public class ProjectHandler implements IProjectHandler {
 			RemoteGitServerManager remoteGitServerManagerImpl = (RemoteGitServerManager)this.remoteGitServerManager;
 			String gitLabUserImpersonationToken = remoteGitServerManagerImpl.getGitLabUserImpersonationToken();
 
-			repoManager.open(sourceDocumentId);
+			repoManager.open(sourceDocumentHandler.getSourceDocumentRepoName(sourceDocumentId));
 			repoManager.push(remoteGitServerManagerImpl.getGitLabUser().getUsername(), gitLabUserImpersonationToken);
 
 			String remoteUri = repoManager.getRemoteUrl(null);
