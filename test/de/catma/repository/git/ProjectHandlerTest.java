@@ -88,9 +88,7 @@ public class ProjectHandlerTest {
 			// return
 			assertFalse(localGitRepoManager.isAttached());
 
-			String expectedRootRepositoryName = String.format(
-				ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId
-			);
+			String expectedRootRepositoryName = projectHandler.getProjectRepoName(projectId);
 			String repositoryBasePath = String.format("%s/%s", this.catmaProperties.getProperty("GitBasedRepositoryBasePath"), "fakeUserIdentifier");
 
 			File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
@@ -123,9 +121,7 @@ public class ProjectHandlerTest {
 			// return
 			assertFalse(localGitRepoManager.isAttached());
 
-			String expectedRootRepositoryName = String.format(
-				ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId
-			);
+			String expectedRootRepositoryName = projectHandler.getProjectRepoName(projectId);
 			String repositoryBasePath = String.format("%s/%s", this.catmaProperties.getProperty("GitBasedRepositoryBasePath"), "fakeUserIdentifier");
 
 			File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
@@ -198,9 +194,7 @@ public class ProjectHandlerTest {
 			// return
 			assertFalse(localGitRepoManager.isAttached());
 
-			localGitRepoManager.open(
-				String.format(ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId)
-			);
+			localGitRepoManager.open(projectHandler.getProjectRepoName(projectId));
 			Status status = localGitRepoManager.getGitApi().status().call();
 			Set<String> added = status.getAdded();
 
@@ -212,7 +206,7 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void addTagsetToMarkupCollection() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
 			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
@@ -240,7 +234,7 @@ public class ProjectHandlerTest {
 			assertFalse(localGitRepoManager.isAttached());
 
 			// re-open the tagset repo to get the commit hash
-			localGitRepoManager.open(tagsetId);
+			localGitRepoManager.open(tagsetHandler.getTagsetRepoName(tagsetId));
 			ObjectId tagsetHead = localGitRepoManager.getGitApi().getRepository().resolve(Constants.HEAD);
 			String tagsetCommitHash = tagsetHead.getName();
 
@@ -261,7 +255,7 @@ public class ProjectHandlerTest {
 			String gitLabUserImpersonationToken = this.remoteGitServerManager.getGitLabUserImpersonationToken();
 
 			// re-open the markup collection repo to get the commit hash and because we need to push
-			localGitRepoManager.open(markupCollectionId);
+			localGitRepoManager.open(markupCollectionHandler.getMarkupCollectionRepoName(markupCollectionId));
 			ObjectId markupCollectionHead = localGitRepoManager.getGitApi().getRepository().resolve(Constants.HEAD);
 			String markupCollectionCommitHash = markupCollectionHead.getName();
 
@@ -279,7 +273,7 @@ public class ProjectHandlerTest {
 			assertFalse(localGitRepoManager.isAttached());
 
 			// assert that the markup collection submodule in the project is pointing at the correct commit hash
-			String projectRepoName = String.format(ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId);
+			String projectRepoName = projectHandler.getProjectRepoName(projectId);
 			localGitRepoManager.open(projectRepoName);
 			Map<String, SubmoduleStatus> statusMap = localGitRepoManager.getGitApi().submoduleStatus().call();
 

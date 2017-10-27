@@ -38,6 +38,10 @@ public class ProjectHandler implements IProjectHandler {
 		this.idGenerator = new IDGenerator();
 	}
 
+	String getProjectRepoName(String projectId){
+		return String.format(PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId);
+	}
+
 	/**
 	 * Creates a new project.
 	 *
@@ -57,9 +61,8 @@ public class ProjectHandler implements IProjectHandler {
 			);
 
 			// create the root repository
-			String projectNameAndPath = String.format(
-				ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId
-			);
+			String projectNameAndPath = getProjectRepoName(projectId);
+
 			IRemoteGitServerManager.CreateRepositoryResponse response =
 					this.remoteGitServerManager.createRepository(
 				projectNameAndPath, projectNameAndPath, groupPath
@@ -158,11 +161,11 @@ public class ProjectHandler implements IProjectHandler {
 
 			// TODO: this shouldn't happen here at all - the markup collection should have been added to the project
 			// already before this method is called
-			localGitRepoManager.open(markupCollectionId);
+			localGitRepoManager.open(markupCollectionHandler.getMarkupCollectionRepoName(markupCollectionId));
 			String markupCollectionRemoteUrl = localGitRepoManager.getRemoteUrl(null);
 			localGitRepoManager.close();
 
-			String projectRepoName = String.format(ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId);
+			String projectRepoName = getProjectRepoName(projectId);
 			localGitRepoManager.open(projectRepoName);
 			File markupCollectionSubmoduleTargetPath = new File(
 				String.format("%s/collections/%s", localGitRepoManager.getRepositoryWorkTree(), markupCollectionId)
@@ -179,7 +182,7 @@ public class ProjectHandler implements IProjectHandler {
 			markupCollectionHandler.addTagset(markupCollectionId, tagsetId, tagsetVersion);
 
 			// TODO: this should push the submodule, not the original markup collection repo
-			localGitRepoManager.open(markupCollectionId);
+			localGitRepoManager.open(markupCollectionHandler.getMarkupCollectionRepoName(markupCollectionId));
 			localGitRepoManager.push(gitLabUser.getUsername(), gitLabUserImpersonationToken);
 			localGitRepoManager.close();
 
@@ -255,14 +258,14 @@ public class ProjectHandler implements IProjectHandler {
 			RemoteGitServerManager remoteGitServerManagerImpl = (RemoteGitServerManager)this.remoteGitServerManager;
 			String gitLabUserImpersonationToken = remoteGitServerManagerImpl.getGitLabUserImpersonationToken();
 
-			repoManager.open(sourceDocumentId);
+			repoManager.open(sourceDocumentHandler.getSourceDocumentRepoName(sourceDocumentId));
 			repoManager.push(remoteGitServerManagerImpl.getGitLabUser().getUsername(), gitLabUserImpersonationToken);
 
 			String remoteUri = repoManager.getRemoteUrl(null);
 			repoManager.close();
 
 			// open the project root repository
-			repoManager.open(String.format(ProjectHandler.PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId));
+			repoManager.open(getProjectRepoName(projectId));
 
 			// create the submodule
 			File targetSubmodulePath = Paths.get(

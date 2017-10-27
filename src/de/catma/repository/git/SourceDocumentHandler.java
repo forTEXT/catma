@@ -24,6 +24,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 public class SourceDocumentHandler implements ISourceDocumentHandler {
+	static final String SOURCEDOCUMENT_ROOT_REPOSITORY_NAME_FORMAT = "%s_sourcedocument";
+
     private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitServerManager remoteGitServerManager;
 
@@ -32,6 +34,10 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
         this.localGitRepositoryManager = localGitRepositoryManager;
         this.remoteGitServerManager = remoteGitServerManager;
     }
+
+	String getSourceDocumentRepoName(String sourceDocumentId){
+		return String.format(SOURCEDOCUMENT_ROOT_REPOSITORY_NAME_FORMAT, sourceDocumentId);
+	}
 
 	/**
 	 * Inserts a new source document.
@@ -69,13 +75,15 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 			// create the source document repository
 			IRemoteGitServerManager.CreateRepositoryResponse response;
 
+			String sourceDocumentRepoName = getSourceDocumentRepoName(sourceDocumentId);
+
 			if (projectId == null) {
 				response = this.remoteGitServerManager.createRepository(
-					sourceDocumentId, sourceDocumentId
+						sourceDocumentRepoName, sourceDocumentRepoName
 				);
 			} else {
 				response = this.remoteGitServerManager.createRepository(
-					sourceDocumentId, sourceDocumentId, projectId
+						sourceDocumentRepoName, sourceDocumentRepoName, projectId
 				);
 			}
 
@@ -143,7 +151,7 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 	public SourceDocument open(String sourceDocumentId, String projectId) throws SourceDocumentHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 
-			localGitRepoManager.open(sourceDocumentId);
+			localGitRepoManager.open(getSourceDocumentRepoName(sourceDocumentId));
 
 			File repositoryWorkTreeFile = localGitRepoManager.getRepositoryWorkTree();
 			File targetHeaderFile = new File(
