@@ -74,7 +74,7 @@ public class SourceDocumentHandlerTest {
 		}
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
 				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
@@ -125,7 +125,7 @@ public class SourceDocumentHandlerTest {
 
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
 				localGitRepoManager, this.remoteGitServerManager
 			);
@@ -226,7 +226,7 @@ public class SourceDocumentHandlerTest {
 
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
 				localGitRepoManager, this.remoteGitServerManager
 			);
@@ -314,7 +314,7 @@ public class SourceDocumentHandlerTest {
 
 	@Test
 	public void remove() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
 				localGitRepoManager, this.remoteGitServerManager
 			);
@@ -357,7 +357,7 @@ public class SourceDocumentHandlerTest {
 
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
 					localGitRepoManager, this.remoteGitServerManager
 			);

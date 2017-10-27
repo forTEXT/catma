@@ -63,7 +63,7 @@ public class TagsetHandlerTest {
 		this.remoteGitServerManager = new RemoteGitServerManager(this.catmaProperties, catmaUser);
 		this.remoteGitServerManager.replaceGitLabServerUrl = true;
 
-		this.localGitRepositoryManager = new LocalGitRepositoryManager(this.catmaProperties);
+		this.localGitRepositoryManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier");
 
 		this.tagsetHandler = new TagsetHandler(
 			this.localGitRepositoryManager, this.remoteGitServerManager
@@ -89,7 +89,7 @@ public class TagsetHandlerTest {
 		}
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
 				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
@@ -110,7 +110,7 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
 
 			ProjectHandler projectHandler = new ProjectHandler(
 					localGitRepoManager, this.remoteGitServerManager
@@ -165,7 +165,7 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
 			TagsetHandler tagsetHandler = new TagsetHandler(
 					localGitRepoManager, this.remoteGitServerManager
 			);
@@ -178,7 +178,7 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void addTagDefinitionWithoutParent() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
 			ProjectHandler projectHandler = new ProjectHandler(
 					localGitRepoManager, this.remoteGitServerManager
 			);
@@ -249,7 +249,7 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void addTagDefinitionWithParent() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
 			ProjectHandler projectHandler = new ProjectHandler(
 					localGitRepoManager, this.remoteGitServerManager
 			);
@@ -316,7 +316,7 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void open() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties,"fakeUserIdentifier")) {
 			ProjectHandler projectHandler = new ProjectHandler(
 					localGitRepoManager, this.remoteGitServerManager
 			);
