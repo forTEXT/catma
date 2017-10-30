@@ -103,13 +103,17 @@ public class JsonLdWebAnnotationTest {
 
 		List<TagReference> tagReferences = new ArrayList<>(
 			Arrays.asList(
-				new TagReference(tagInstance, sourceDocumentUri, range1),
-				new TagReference(tagInstance, sourceDocumentUri, range2)
+				new TagReference(
+					tagInstance, sourceDocumentUri, range1, "fakeUserMarkupCollectionUuid"
+				),
+				new TagReference(
+					tagInstance, sourceDocumentUri, range2, "fakeUserMarkupCollectionUuid"
+				)
 			)
 		);
 
 		JsonLdWebAnnotation jsonLdWebAnnotation = new JsonLdWebAnnotation(
-			"http://catma.de/git/", "fakeProjectId", tagReferences
+			"http://catma.de/git", "fakeProjectId", tagReferences
 		);
 
 		String serialized = new SerializationHelper<JsonLdWebAnnotation>().serialize(jsonLdWebAnnotation);

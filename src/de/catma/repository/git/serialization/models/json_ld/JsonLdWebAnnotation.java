@@ -50,13 +50,14 @@ public class JsonLdWebAnnotation {
 
 		try {
 			this.id = this.buildTagInstanceUrl(
-				gitServerBaseUrl, projectRootRepositoryName, tagReferences.get(0).getTagInstance().getUuid()
+				gitServerBaseUrl, projectRootRepositoryName, tagReferences.get(0).getUserMarkupCollectionUuid(),
+				tagReferences.get(0).getTagInstance().getUuid()
 			).toString();
 		}
 		catch (MalformedURLException e) {
 			throw new JsonLdWebAnnotationException("Failed to build tag instance URL", e);
 		}
-		
+
 //		this.id = String.format(
 //			"http://catma.de/portal/annotation/%s", tagReferences.get(0).getTagInstance().getUuid()
 //		);  // TODO: actual GitLab URL
@@ -65,12 +66,21 @@ public class JsonLdWebAnnotation {
 		this.target = new JsonLdWebAnnotationTarget_List(tagReferences);
 	}
 
-	private URL buildTagInstanceUrl(String gitServerBaseUrl, String projectRootRepositoryName, String tagInstanceUuid)
+	private URL buildTagInstanceUrl(String gitServerBaseUrl, String projectRootRepositoryName,
+									String userMarkupCollectionUuid, String tagInstanceUuid)
 			throws MalformedURLException {
+		// WOW - absence of a trailing slash on the file/path component is handled really badly by both URI and URL
+		// URL(URL context, String spec) only works if the file/path component of context has a trailing slash...
+		// URI normalize or resolve methods do not fix it either
 		URL gitServerUrl = new URL(gitServerBaseUrl);
+		String gitServerUrlPath = gitServerUrl.getPath();
+		gitServerUrlPath = gitServerUrlPath.endsWith("/") ? gitServerUrlPath : gitServerUrlPath + "/";
+
 		return new URL(
 			gitServerUrl.getProtocol(), gitServerUrl.getHost(), gitServerUrl.getPort(),
-			String.format("%s/%s", projectRootRepositoryName, tagInstanceUuid)
+			String.format("%s%s/collections/%s/annotations/%s",
+					gitServerUrlPath, projectRootRepositoryName, userMarkupCollectionUuid, tagInstanceUuid
+			)
 		);
 	}
 
