@@ -2,22 +2,26 @@ package de.catma.repository.git.serialization.models.json_ld;
 
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.repository.git.managers.LocalGitRepositoryManager;
+import de.catma.repository.git.managers.RemoteGitServerManager;
+import de.catma.repository.git.managers.RemoteGitServerManagerTest;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.tag.*;
-import mockit.Expectations;
-import mockit.Verifications;
-import mockit.integration.junit4.JMockit;
+import helpers.Randomizer;
+import org.gitlab4j.api.models.User;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
+import java.io.FileInputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 import static org.junit.Assert.*;
 
-@RunWith(JMockit.class)
 public class JsonLdWebAnnotationTest {
 	private final String expectedSerializedRepresentation = "" +
 			"{\n" +
@@ -59,6 +63,39 @@ public class JsonLdWebAnnotationTest {
 			"\t},\n" +
 			"\t\"type\":\"Annotation\"\n" +
 			"}";
+
+	private Properties catmaProperties;
+	private RemoteGitServerManager remoteGitServerManager;
+
+	public JsonLdWebAnnotationTest() throws Exception {
+		String propertiesFile = System.getProperties().containsKey("prop") ?
+				System.getProperties().getProperty("prop") : "catma.properties";
+
+		this.catmaProperties = new Properties();
+		this.catmaProperties.load(new FileInputStream(propertiesFile));
+	}
+
+	@Before
+	public void setUp() throws Exception {
+		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
+		de.catma.user.User catmaUser = Randomizer.getDbUser();
+
+		this.remoteGitServerManager = new RemoteGitServerManager(
+			this.catmaProperties, catmaUser
+		);
+		this.remoteGitServerManager.replaceGitLabServerUrl = true;
+	}
+
+	@After
+	public void tearDown() throws Exception {
+		// delete the GitLab user that the RemoteGitServerManager constructor in setUp would have
+		// created - see RemoteGitServerManagerTest tearDown() for more info
+		User user = this.remoteGitServerManager.getGitLabUser();
+		this.remoteGitServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
+		RemoteGitServerManagerTest.awaitUserDeleted(
+			this.remoteGitServerManager.getAdminGitLabApi().getUserApi(), user.getId()
+		);
+	}
 
 	public static TagInstance getFakeTagInstance() {
 		PropertyPossibleValueList systemPropertyPossibleValues = new PropertyPossibleValueList(
@@ -113,7 +150,7 @@ public class JsonLdWebAnnotationTest {
 		);
 
 		JsonLdWebAnnotation jsonLdWebAnnotation = new JsonLdWebAnnotation(
-			"http://catma.de/git", "fakeProjectId", tagReferences
+			"http://catma.de/gitlab", "fakeProjectId", tagReferences
 		);
 
 		String serialized = new SerializationHelper<JsonLdWebAnnotation>().serialize(jsonLdWebAnnotation);
@@ -137,86 +174,81 @@ public class JsonLdWebAnnotationTest {
 
 	@Test
 	public void toTagReferenceList() throws Exception {
-		JsonLdWebAnnotation jsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>().deserialize(
-			this.expectedSerializedRepresentation, JsonLdWebAnnotation.class
-		);
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
+			JsonLdWebAnnotation jsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>().deserialize(
+				this.expectedSerializedRepresentation, JsonLdWebAnnotation.class
+			);
 
-		assertNotNull(jsonLdWebAnnotation);
+			assertNotNull(jsonLdWebAnnotation);
 
-		// mock out the getTagInstance method on JsonLdWebAnnotation
-		// TODO: stop mocking once implemented
-		new Expectations(jsonLdWebAnnotation) {{
-			jsonLdWebAnnotation.getTagInstance(); result = getFakeTagInstance();
-		}};
+			List<TagReference> tagReferences = jsonLdWebAnnotation.toTagReferenceList(
+				"fakeProjectId", "fakeMarkupCollectionId",
+				localGitRepoManager, this.remoteGitServerManager
+			);
 
-		List<TagReference> tagReferences = jsonLdWebAnnotation.toTagReferenceList(
-			"fakeMarkupCollectionId"
-		);
+			assertEquals(2, tagReferences.size());
 
-		new Verifications() {{
-			jsonLdWebAnnotation.getTagInstance();
-		}};
+			for (TagReference tagReference : tagReferences) {
+				TagDefinition tagDefinition = tagReference.getTagDefinition();
+				TagInstance tagInstance = tagReference.getTagInstance();
 
-		assertEquals(2, tagReferences.size());
+				assertEquals("CATMA_TAGSET_DEF", tagDefinition.getTagsetDefinitionUuid());
+				assertEquals("CATMA_TAG_DEF", tagDefinition.getUuid());
+				assertEquals("TAG_DEF", tagDefinition.getName());
+				assertEquals("", tagDefinition.getParentUuid());
 
-		for (TagReference tagReference : tagReferences) {
-			TagDefinition tagDefinition = tagReference.getTagDefinition();
-			TagInstance tagInstance = tagReference.getTagInstance();
-
-			assertEquals("CATMA_TAGSET_DEF", tagDefinition.getTagsetDefinitionUuid());
-			assertEquals("CATMA_TAG_DEF", tagDefinition.getUuid());
-			assertEquals("TAG_DEF", tagDefinition.getName());
-			assertEquals("", tagDefinition.getParentUuid());
-
-			PropertyDefinition[] systemPropertyDefinitions = tagDefinition.getSystemPropertyDefinitions()
-					.toArray(new PropertyDefinition[0]);
-			assertEquals(1, systemPropertyDefinitions.length);
-			assertEquals("CATMA_SYSPROP_DEF", systemPropertyDefinitions[0].getUuid());
-			assertEquals("SYSPROP_DEF", systemPropertyDefinitions[0].getName());
-			List<String> possibleSystemPropertyValues = systemPropertyDefinitions[0].getPossibleValueList()
-					.getPropertyValueList().getValues();
-			assertEquals(2, possibleSystemPropertyValues.size());
-			assertArrayEquals(
+				PropertyDefinition[] systemPropertyDefinitions = tagDefinition.getSystemPropertyDefinitions()
+						.toArray(new PropertyDefinition[0]);
+				assertEquals(1, systemPropertyDefinitions.length);
+				assertEquals("CATMA_SYSPROP_DEF", systemPropertyDefinitions[0].getUuid());
+				assertEquals("SYSPROP_DEF", systemPropertyDefinitions[0].getName());
+				List<String> possibleSystemPropertyValues = systemPropertyDefinitions[0].getPossibleValueList()
+						.getPropertyValueList().getValues();
+				assertEquals(2, possibleSystemPropertyValues.size());
+				assertArrayEquals(
 					new String[]{"SYSPROP_VAL_1", "SYSPROP_VAL_2"}, possibleSystemPropertyValues.toArray(new String[0])
-			);
+				);
 
-			PropertyDefinition[] userPropertyDefinitions = tagDefinition.getUserDefinedPropertyDefinitions()
-					.toArray(new PropertyDefinition[0]);
-			assertEquals(1, userPropertyDefinitions.length);
-			assertEquals("CATMA_UPROP_DEF", userPropertyDefinitions[0].getUuid());
-			assertEquals("UPROP_DEF", userPropertyDefinitions[0].getName());
-			List<String> possibleUserPropertyValues = userPropertyDefinitions[0].getPossibleValueList()
-					.getPropertyValueList().getValues();
-			assertEquals(2, possibleUserPropertyValues.size());
-			assertArrayEquals(
+				PropertyDefinition[] userPropertyDefinitions = tagDefinition.getUserDefinedPropertyDefinitions()
+						.toArray(new PropertyDefinition[0]);
+				assertEquals(1, userPropertyDefinitions.length);
+				assertEquals("CATMA_UPROP_DEF", userPropertyDefinitions[0].getUuid());
+				assertEquals("UPROP_DEF", userPropertyDefinitions[0].getName());
+				List<String> possibleUserPropertyValues = userPropertyDefinitions[0].getPossibleValueList()
+						.getPropertyValueList().getValues();
+				assertEquals(2, possibleUserPropertyValues.size());
+				assertArrayEquals(
 					new String[]{"UPROP_VAL_1", "UPROP_VAL_2"}, possibleUserPropertyValues.toArray(new String[0])
+				);
+
+				assertEquals("CATMA_TAG_INST", tagInstance.getUuid());
+
+				Property[] systemProperties = tagInstance.getSystemProperties().toArray(new Property[0]);
+				assertEquals(1, systemProperties.length);
+				assertEquals(systemPropertyDefinitions[0], systemProperties[0].getPropertyDefinition());
+				List<String> systemPropertyValues = systemProperties[0].getPropertyValueList().getValues();
+				assertEquals(1, systemPropertyValues.size());
+				assertEquals("SYSPROP_VAL_1", systemPropertyValues.get(0));
+
+				Property[] userProperties = tagInstance.getUserDefinedProperties().toArray(new Property[0]);
+				assertEquals(1, userProperties.length);
+				assertEquals(userPropertyDefinitions[0], userProperties[0].getPropertyDefinition());
+				List<String> userPropertyValues = userProperties[0].getPropertyValueList().getValues();
+				assertEquals(1, userPropertyValues.size());
+				assertEquals("UPROP_VAL_2", userPropertyValues.get(0));
+			}
+
+			assertEquals(
+				new URI("http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC"), tagReferences.get(0).getTarget()
 			);
+			assertEquals(new Range(12, 18), tagReferences.get(0).getRange());
 
-			assertEquals("CATMA_TAG_INST", tagInstance.getUuid());
-
-			Property[] systemProperties = tagInstance.getSystemProperties().toArray(new Property[0]);
-			assertEquals(1, systemProperties.length);
-			assertEquals(systemPropertyDefinitions[0], systemProperties[0].getPropertyDefinition());
-			List<String> systemPropertyValues = systemProperties[0].getPropertyValueList().getValues();
-			assertEquals(1, systemPropertyValues.size());
-			assertEquals("SYSPROP_VAL_1", systemPropertyValues.get(0));
-
-			Property[] userProperties = tagInstance.getUserDefinedProperties().toArray(new Property[0]);
-			assertEquals(1, userProperties.length);
-			assertEquals(userPropertyDefinitions[0], userProperties[0].getPropertyDefinition());
-			List<String> userPropertyValues = userProperties[0].getPropertyValueList().getValues();
-			assertEquals(1, userPropertyValues.size());
-			assertEquals("UPROP_VAL_2", userPropertyValues.get(0));
+			assertEquals(
+				new URI("http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC"), tagReferences.get(1).getTarget()
+			);
+			assertEquals(new Range(41, 47), tagReferences.get(1).getRange());
 		}
-
-		assertEquals(
-			new URI("http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC"), tagReferences.get(0).getTarget()
-		);
-		assertEquals(new Range(12, 18), tagReferences.get(0).getRange());
-
-		assertEquals(
-			new URI("http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC"), tagReferences.get(1).getTarget()
-		);
-		assertEquals(new Range(41, 47), tagReferences.get(1).getRange());
 	}
 }

@@ -5,9 +5,14 @@ import com.jsoniter.annotation.JsonProperty;
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.repository.git.ProjectHandler;
+import de.catma.repository.git.TagsetHandler;
 import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
+import de.catma.repository.git.exceptions.TagsetHandlerException;
+import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
+import de.catma.tag.TagsetDefinition;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -113,8 +118,11 @@ public class JsonLdWebAnnotation {
 		this.target = target;
 	}
 
-	public List<TagReference> toTagReferenceList(String markupCollectionId) throws JsonLdWebAnnotationException {
-		TagInstance tagInstance = this.getTagInstance();
+	public List<TagReference> toTagReferenceList(
+			String projectId, String markupCollectionId,
+			ILocalGitRepositoryManager localGitRepositoryManager, IRemoteGitServerManager remoteGitServerManager)
+				throws JsonLdWebAnnotationException {
+		TagInstance tagInstance = this.getTagInstance(localGitRepositoryManager, remoteGitServerManager, projectId);
 		String sourceDocumentUri = this.getSourceDocumentUri();
 		List<Range> ranges = this.getRanges();
 
@@ -147,12 +155,34 @@ public class JsonLdWebAnnotation {
 	}
 
 	@JsonIgnore
-	public TagInstance getTagInstance() throws JsonLdWebAnnotationException {
-//		TagDefinition tagDefinition = this.getTagDefinition();
-		throw new JsonLdWebAnnotationException("Not implemented");
+	public TagInstance getTagInstance(ILocalGitRepositoryManager localGitRepositoryManager,
+									  IRemoteGitServerManager remoteGitServerManager, String projectId)
+			throws JsonLdWebAnnotationException {
+		TagDefinition tagDefinition = this.getTagDefinition(
+			localGitRepositoryManager, remoteGitServerManager, projectId
+		);
+
+		return new TagInstance(this.getLastPathSegmentFromUrl(this.id), tagDefinition);
 	}
 
-	private TagDefinition getTagDefinition() throws JsonLdWebAnnotationException {
-		throw new JsonLdWebAnnotationException("Not implemented");
+	private TagDefinition getTagDefinition(ILocalGitRepositoryManager localGitRepositoryManager,
+										   IRemoteGitServerManager remoteGitServerManager, String projectId)
+			throws JsonLdWebAnnotationException {
+		TagsetHandler tagsetHandler = new TagsetHandler(localGitRepositoryManager, remoteGitServerManager);
+
+		try {
+			// TODO: open a TagDefinition directly?
+			TagsetDefinition tagsetDefinition = tagsetHandler.open(
+				this.getLastPathSegmentFromUrl(this.body.getTagset()), projectId
+			);
+			return tagsetDefinition.getTagDefinition(this.getLastPathSegmentFromUrl(this.body.getTag()));
+		}
+		catch (TagsetHandlerException e) {
+			throw new JsonLdWebAnnotationException("Failed to open tagset", e);
+		}
+	}
+
+	private String getLastPathSegmentFromUrl(String url) {
+		return url.substring(url.lastIndexOf("/") + 1);
 	}
 }

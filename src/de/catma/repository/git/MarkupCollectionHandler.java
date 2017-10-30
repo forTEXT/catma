@@ -184,7 +184,7 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 			// write the serialized tag instance to the repository
 			File targetSerializedTagInstanceFilePath = new File(
 				localGitRepoManager.getRepositoryWorkTree(),
-				String.format("%s.json", annotation.getId().substring(annotation.getId().lastIndexOf("/")))
+				String.format("%s.json", annotation.getId().substring(annotation.getId().lastIndexOf("/") + 1))
 			);
 			String serializedTagInstance = new SerializationHelper<JsonLdWebAnnotation>().serialize(annotation);
 
@@ -208,7 +208,7 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 		return !fileName.equalsIgnoreCase("header.json");
 	}
 
-	private ArrayList<TagReference> openTagReferences(File parentDirectory, String markupCollectionId)
+	private ArrayList<TagReference> openTagReferences(String projectId, String markupCollectionId, File parentDirectory)
 			throws IOException, JsonLdWebAnnotationException {
 		ArrayList<TagReference> tagReferences = new ArrayList<>();
 
@@ -219,7 +219,7 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 
 			// if it is a directory, recurse into it adding results to the current tagDefinitions list
 			if(target.isDirectory() && !target.getName().equalsIgnoreCase(".git")){
-				tagReferences.addAll(this.openTagReferences(target, markupCollectionId));
+				tagReferences.addAll(this.openTagReferences(projectId, markupCollectionId, target));
 				continue;
 			}
 
@@ -232,7 +232,11 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 								JsonLdWebAnnotation.class
 						);
 
-				tagReferences.addAll(jsonLdWebAnnotation.toTagReferenceList(markupCollectionId));
+				tagReferences.addAll(
+					jsonLdWebAnnotation.toTagReferenceList(
+						projectId, markupCollectionId, this.localGitRepositoryManager, this.remoteGitServerManager
+					)
+				);
 			}
 		}
 
@@ -240,8 +244,8 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	}
 
 	@Override
-	public UserMarkupCollection open(String markupCollectionId)  throws MarkupCollectionHandlerException {
-
+	public UserMarkupCollection open(String projectId, String markupCollectionId)
+			throws MarkupCollectionHandlerException {
 		// we are hoping to get rid of tag libraries altogether
 		TagLibrary tagLibrary = new TagLibrary(null, "");
 
@@ -251,7 +255,9 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 
 			File repositoryWorkTreeFile = localGitRepoManager.getRepositoryWorkTree();
 
-			ArrayList<TagReference> tagReferences = this.openTagReferences(repositoryWorkTreeFile, markupCollectionId);
+			ArrayList<TagReference> tagReferences = this.openTagReferences(
+				projectId, markupCollectionId, repositoryWorkTreeFile
+			);
 
 			File targetHeaderFile = new File(
 					localGitRepoManager.getRepositoryWorkTree(), "header.json"
