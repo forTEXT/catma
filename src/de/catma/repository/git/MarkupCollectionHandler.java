@@ -208,7 +208,8 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 		return !fileName.equalsIgnoreCase("header.json");
 	}
 
-	private ArrayList<TagReference> openTagReferences(File parentDirectory) throws IOException, JsonLdWebAnnotationException {
+	private ArrayList<TagReference> openTagReferences(File parentDirectory, String markupCollectionId)
+			throws IOException, JsonLdWebAnnotationException {
 		ArrayList<TagReference> tagReferences = new ArrayList<>();
 
 		List<String> contents = Arrays.asList(parentDirectory.list());
@@ -218,7 +219,7 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 
 			// if it is a directory, recurse into it adding results to the current tagDefinitions list
 			if(target.isDirectory() && !target.getName().equalsIgnoreCase(".git")){
-				tagReferences.addAll(this.openTagReferences(target));
+				tagReferences.addAll(this.openTagReferences(target, markupCollectionId));
 				continue;
 			}
 
@@ -231,7 +232,7 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 								JsonLdWebAnnotation.class
 						);
 
-				tagReferences.addAll(jsonLdWebAnnotation.toTagReferenceList());
+				tagReferences.addAll(jsonLdWebAnnotation.toTagReferenceList(markupCollectionId));
 			}
 		}
 
@@ -244,15 +245,13 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 		// we are hoping to get rid of tag libraries altogether
 		TagLibrary tagLibrary = new TagLibrary(null, "");
 
-
-
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// open the markup collection repository
 			localGitRepoManager.open(getMarkupCollectionRepoName(markupCollectionId));
 
 			File repositoryWorkTreeFile = localGitRepoManager.getRepositoryWorkTree();
 
-			ArrayList<TagReference> tagReferences = this.openTagReferences(repositoryWorkTreeFile);
+			ArrayList<TagReference> tagReferences = this.openTagReferences(repositoryWorkTreeFile, markupCollectionId);
 
 			File targetHeaderFile = new File(
 					localGitRepoManager.getRepositoryWorkTree(), "header.json"

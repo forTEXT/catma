@@ -113,7 +113,7 @@ public class JsonLdWebAnnotation {
 		this.target = target;
 	}
 
-	public List<TagReference> toTagReferenceList() throws JsonLdWebAnnotationException {
+	public List<TagReference> toTagReferenceList(String markupCollectionId) throws JsonLdWebAnnotationException {
 		TagInstance tagInstance = this.getTagInstance();
 		String sourceDocumentUri = this.getSourceDocumentUri();
 		List<Range> ranges = this.getRanges();
@@ -123,7 +123,7 @@ public class JsonLdWebAnnotation {
 		ArrayList<TagReference> tagReferences = new ArrayList<>();
 		try {
 			for (Range range : ranges) {
-				tagReferences.add(new TagReference(tagInstance, sourceDocumentUri, range));
+				tagReferences.add(new TagReference(tagInstance, sourceDocumentUri, range, markupCollectionId));
 			}
 		}
 		catch (URISyntaxException e) {

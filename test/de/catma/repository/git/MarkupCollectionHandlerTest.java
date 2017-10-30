@@ -377,7 +377,7 @@ public class MarkupCollectionHandlerTest {
 		JsonLdWebAnnotation webAnnotation = new JsonLdWebAnnotation();
 		thrown.expect(de.catma.repository.git.exceptions.JsonLdWebAnnotationException.class);
 		thrown.expectMessage("Not implemented");
-		webAnnotation.toTagReferenceList();
+		webAnnotation.toTagReferenceList("fakeUserMarkupCollectionId");
 	}
 
 	@Test

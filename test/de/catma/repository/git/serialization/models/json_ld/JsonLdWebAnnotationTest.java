@@ -149,7 +149,9 @@ public class JsonLdWebAnnotationTest {
 			jsonLdWebAnnotation.getTagInstance(); result = getFakeTagInstance();
 		}};
 
-		List<TagReference> tagReferences = jsonLdWebAnnotation.toTagReferenceList();
+		List<TagReference> tagReferences = jsonLdWebAnnotation.toTagReferenceList(
+			"fakeMarkupCollectionId"
+		);
 
 		new Verifications() {{
 			jsonLdWebAnnotation.getTagInstance();
