@@ -64,6 +64,8 @@ import de.catma.ui.dialog.PropertyCollection;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.StringProperty;
 import de.catma.ui.dialog.TagDefinitionFieldFactory;
+import de.catma.ui.tagger.CurrentWritableUserMarkupCollectionProvider;
+import de.catma.ui.tagger.MarkupPanel;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
@@ -101,20 +103,16 @@ public class TagsetTree extends HorizontalLayout {
 	private Button btReload;
 	private TagsetSelectionListener tagsetSelectionListener;
 	private Repository repository;
+	private CurrentWritableUserMarkupCollectionProvider currentWritableUserMarkupCollectionProvider;
 
-	public TagsetTree(TagManager tagManager, TagLibrary tagLibrary) {
-		this(tagManager, tagLibrary, true, true, true, true, true, null);
-	}
 
-	// neuer Konstruktor mit tagsetSelectionListener  und mit Repository!!!
 	public TagsetTree(TagManager tagManager, final TagLibrary tagLibrary, boolean withReloadButton,
 			boolean withTagsetButtons, boolean withTagButtons, boolean withPropertyButtons, boolean withDocumentButtons,
 			ColorButtonListener colorButtonListener, 
 			 TagsetSelectionListener tagsetSelectionListener,
-			Repository repository ) {
+			Repository repository,CurrentWritableUserMarkupCollectionProvider currentWritableUserMarkupCollectionProvider ) {
 		this.tagManager = tagManager;
 		this.tagLibrary = tagLibrary;
-
 		this.withReloadButton = withReloadButton;
 		this.withTagsetButtons = withTagsetButtons;
 		this.withTagButtons = withTagButtons;
@@ -123,47 +121,37 @@ public class TagsetTree extends HorizontalLayout {
 		this.colorButtonListener = colorButtonListener;
 		this.tagsetSelectionListener = tagsetSelectionListener;
 		this.repository = repository;
+		this.currentWritableUserMarkupCollectionProvider= currentWritableUserMarkupCollectionProvider;
 
 		initComponents();
 		initActions();
 	}
-	// zweiter neuer Konstruktor ohne tagsetSelectionListener  und mit Repository!!!
+
+		public TagsetTree(TagManager tagManager, TagLibrary tagLibrary) {
+			this(tagManager, tagLibrary, true, true, true, true, true, null,null,null,null);
+		}
+
 	public TagsetTree(TagManager tagManager, final TagLibrary tagLibrary, boolean withReloadButton,
 			boolean withTagsetButtons, boolean withTagButtons, boolean withPropertyButtons, boolean withDocumentButtons,
 			ColorButtonListener colorButtonListener, 
-		
+			TagsetSelectionListener tagsetSelectionListener,
 			Repository repository ) {
-		this.tagManager = tagManager;
-		this.tagLibrary = tagLibrary;
+		this(tagManager,tagLibrary,withReloadButton,withTagsetButtons,withTagButtons,withPropertyButtons,withDocumentButtons,colorButtonListener,tagsetSelectionListener,repository,null);
+	}
 
-		this.withReloadButton = withReloadButton;
-		this.withTagsetButtons = withTagsetButtons;
-		this.withTagButtons = withTagButtons;
-		this.withPropertyButtons = withPropertyButtons;
-		this.withDocumentButtons = withDocumentButtons;
-		this.colorButtonListener = colorButtonListener;
-	
-		this.repository = repository;
-
-		initComponents();
-		initActions();
+	public TagsetTree(TagManager tagManager, final TagLibrary tagLibrary, boolean withReloadButton,
+			boolean withTagsetButtons, boolean withTagButtons, boolean withPropertyButtons, boolean withDocumentButtons,
+			ColorButtonListener colorButtonListener, 
+			Repository repository,CurrentWritableUserMarkupCollectionProvider currentWritableUserMarkupCollectionProvider ) {
+		this(tagManager,tagLibrary,withReloadButton,withTagsetButtons,withTagButtons,withPropertyButtons,withDocumentButtons,colorButtonListener,null,repository, currentWritableUserMarkupCollectionProvider);
+		
 	}
 
 	public TagsetTree(TagManager tagManager, final TagLibrary tagLibrary, boolean withReloadButton,
 			boolean withTagsetButtons, boolean withTagButtons, boolean withPropertyButtons, boolean withDocumentButtons,
 			ColorButtonListener colorButtonListener) {
-		this.tagManager = tagManager;
-		this.tagLibrary = tagLibrary;
+		this(tagManager,tagLibrary,withReloadButton,withTagsetButtons,withTagButtons,withPropertyButtons,withDocumentButtons,colorButtonListener,null,null, null);
 
-		this.withReloadButton = withReloadButton;
-		this.withTagsetButtons = withTagsetButtons;
-		this.withTagButtons = withTagButtons;
-		this.withPropertyButtons = withPropertyButtons;
-		this.withDocumentButtons = withDocumentButtons;
-		this.colorButtonListener = colorButtonListener;
-
-		initComponents();
-		initActions();
 	}
 
 	private void initActions() {
@@ -519,13 +507,12 @@ public class TagsetTree extends HorizontalLayout {
 		}
 	}
 
-	// **********************
+
 	private void handleInsertTagDefinitionRequest() {
 		
 	final Object selectedParent = tagTree.getValue();	
 	 boolean noOpenTagsets = tagTree.getItemIds().isEmpty();
 		
-	
 		if (selectedParent == null ) {
 
 			if (!noOpenTagsets) {
@@ -541,7 +528,7 @@ public class TagsetTree extends HorizontalLayout {
 							public void tagsetSelected(Object selectedParent) {
 								handleInsertTagDefinitionRequest(selectedParent);
 							}
-						}, repository);
+						}, repository,currentWritableUserMarkupCollectionProvider);
 				noTagsetCreateTagDialog.show();
 			}
 
@@ -551,7 +538,6 @@ public class TagsetTree extends HorizontalLayout {
 
 	}
 
-	// visibility bleibt jetzt private !!!
 	private void handleInsertTagDefinitionRequest(Object selectedParent) {
 		final String tagDefNameProp = "name"; //$NON-NLS-1$
 		final String tagDefColorProp = "color"; //$NON-NLS-1$
@@ -697,7 +683,7 @@ public class TagsetTree extends HorizontalLayout {
 		formDialog.getField(propertyId).setRequiredError(Messages.getString("TagsetTree.enterNameObligation")); //$NON-NLS-1$
 	}
 
-	// neue Varaiante
+
 	private void handleLoadIntoDocumentRequest(TagsetSelectionListener tagsetSelectionListener) {
 
 		Object selValue = tagTree.getValue();
@@ -711,20 +697,6 @@ public class TagsetTree extends HorizontalLayout {
 		}
 	}
 	
-
-
-	// alte Variante ??? wird nirgendwo aufgerufen ????
-	private void handleLoadIntoDocumentRequest() {
-		Object selValue = tagTree.getValue();
-
-		if ((selValue != null) && (selValue instanceof TagsetDefinition)) {
-
-			final TagsetDefinition curSelTagsetDefinition = (TagsetDefinition) selValue;
-
-			CatmaApplication application = ((CatmaApplication) UI.getCurrent());
-			application.addTagsetToActiveDocument(curSelTagsetDefinition, tagsetSelectionListener);
-		}
-	}
 
 	private void initComponents() {
 		setSizeFull();
@@ -900,7 +872,7 @@ public class TagsetTree extends HorizontalLayout {
 		}
 	}
 
-	// neue Version
+
 	public void addTagsetDefinition(TagsetDefinition tagsetDefinition,
 			TagsetSelectionListener tagsetSelectionListener) {
 
@@ -921,14 +893,14 @@ public class TagsetTree extends HorizontalLayout {
 
 		for (TagDefinition tagDefinition : tagsetDefinition) {
 			configureChildren(tagDefinition);
-		}//  diesen schritt nur wenn mit listener im Parameter aufgerufen 
+		}
 		if (tagsetSelectionListener != null) {
 			tagsetSelectionListener.tagsetSelected(tagsetDefinition);
 		}
 
 	}
 
-	// alte Version-maskiert die neue version 
+
 	public void addTagsetDefinition(TagsetDefinition tagsetDefinition) {
 		addTagsetDefinition(tagsetDefinition, null);
 
@@ -1058,12 +1030,6 @@ public class TagsetTree extends HorizontalLayout {
 		btReload.addClickListener(listener);
 	}
 	
-	
-	// neue Variante... unnötig ? da tagsetSelectionListener jetzt als Memebervaraiable existiert
-/*		public void addBtLoadIntoDocumentListener(TagsetSelectionListener tagsetSelectionListener,ClickListener listener) {
-			btLoadIntoDocument.addClickListener(listener);		
-		}*/
-// alte Variante
 	public void addBtLoadIntoDocumentListener(ClickListener listener) {
 		btLoadIntoDocument.addClickListener(listener);
 	}

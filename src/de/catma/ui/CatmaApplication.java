@@ -365,7 +365,6 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 		}
 	}
 	
-	// neue Version 
 	public void addTagsetToActiveDocument(TagsetDefinition tagsetDefinition, TagsetSelectionListener tagsetSelectionListener) {
 		TaggerView selectedTab = (TaggerView) taggerManagerView.getSelectedTab();
 
@@ -375,8 +374,13 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 					Type.TRAY_NOTIFICATION);
 			return;
 		}
-
-		selectedTab.openTagsetDefinition(this, tagsetDefinition,tagsetSelectionListener);
+		if(tagsetSelectionListener!=null){
+			selectedTab.openTagsetDefinition(this, tagsetDefinition,tagsetSelectionListener);	
+		}
+		else{
+			selectedTab.openTagsetDefinition(this, tagsetDefinition,tagsetSelectionListener);	
+		}
+		selectedTab.openTagsetDefinition(this, tagsetDefinition);
 
 		SourceDocument sd = selectedTab.getSourceDocument();
 		String sourceDocumentCaption = sd.toString();
@@ -386,26 +390,8 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 				Type.TRAY_NOTIFICATION);
 	}
 	
-	
-//alte Version
 	public void addTagsetToActiveDocument(TagsetDefinition tagsetDefinition) {
-		TaggerView selectedTab = (TaggerView) taggerManagerView.getSelectedTab();
-
-		if (selectedTab == null) {
-			Notification.show(Messages.getString("CatmaApplication.infoTitle"), //$NON-NLS-1$
-					Messages.getString("CatmaApplication.noActiveDocumentInTagger"), //$NON-NLS-1$
-					Type.TRAY_NOTIFICATION);
-			return;
-		}
-
-		selectedTab.openTagsetDefinition(this, tagsetDefinition);
-
-		SourceDocument sd = selectedTab.getSourceDocument();
-		String sourceDocumentCaption = sd.toString();
-
-		Notification.show(Messages.getString("CatmaApplication.infoTitle"), //$NON-NLS-1$
-				MessageFormat.format(Messages.getString("CatmaApplication.tagsetLoaded"), sourceDocumentCaption), //$NON-NLS-1$
-				Type.TRAY_NOTIFICATION);
+		addTagsetToActiveDocument(tagsetDefinition, null);
 	}
 
 	public void openRepository(Repository repository) {

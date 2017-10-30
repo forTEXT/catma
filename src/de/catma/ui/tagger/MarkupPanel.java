@@ -95,7 +95,6 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	private TabSheet tabSheet;
 	private MarkupCollectionsPanel markupCollectionsPanel;
 	private PropertyChangeListener tagLibraryChangedListener;
-	// private ColorButtonListener colorButtonListener;
 	private TagInstanceTree tagInstancesTree;
 	private Repository repository;
 	private PropertyChangeListener propertyValueChangeListener;
@@ -328,15 +327,18 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		buttonHeaderPanel.setComponentAlignment(btHelp, Alignment.MIDDLE_RIGHT);
 
 		tabContent.addComponent(buttonHeaderPanel);
-		
-		
-		//**********hier Erzeugen des MarkupPanel-TagsetTrees  mit repository ohne tagsetSelectionListener **
-
 				
 		
 		tagsetTree = new TagsetTree(repository.getTagManager(), null, false, false, true, true, false,
-				colorButtonListener,repository);
-		//******************
+				colorButtonListener,repository,new CurrentWritableUserMarkupCollectionProvider() {
+					
+					@Override
+					public UserMarkupCollection getTheCurrentWritableUserMarkupCollection() {
+						UserMarkupCollection umc = getCurrentWritableUserMarkupCollection();
+						return umc;
+					}
+				});
+	
 
 		tabContent.addComponent(tagsetTree);
 		tabContent.setExpandRatio(tagsetTree, 1.0f);
@@ -404,7 +406,6 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		dialog.show();
 	}
 
-	//
 	private void handleOpenUserMarkupCollectionRequest(final SourceDocument sourceDocument,
 			final CollectionSelectionListener collectionSelectionListener) {
 		CorpusContentSelectionDialog dialog = new CorpusContentSelectionDialog(repository, sourceDocument, null,
@@ -473,8 +474,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		markupInfoScrollPanel.setContent(markupInfoPanel);
 		return markupInfoScrollPanel;
 	}
-	
-	// neue Version
+
 	public void addOrUpdateTagsetDefinition(UI ui, final TagsetDefinition tagsetDefinition,TagsetSelectionListener tagsetSelectionListener) {
 		markupCollectionsPanel.addOrUpdateTagsetDefinition(ui, tagsetDefinition, new ConfirmListener() {
 			public void confirmed() {
@@ -482,9 +482,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 			}
 		});
 	}
-	
-	
-// alte Version
+
 	public void addOrUpdateTagsetDefinition(UI ui, final TagsetDefinition tagsetDefinition) {
 		addOrUpdateTagsetDefinition(ui, tagsetDefinition, null);
 	}

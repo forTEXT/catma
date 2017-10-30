@@ -472,12 +472,11 @@ public class TaggerView extends VerticalLayout
 		}
 	}
 	
-	//neue Version
+
 	public void openTagsetDefinition(CatmaApplication catmaApplication, TagsetDefinition tagsetDefinition, TagsetSelectionListener tagsetSelectionListener){
 		markupPanel.addOrUpdateTagsetDefinition(catmaApplication, tagsetDefinition,tagsetSelectionListener);
 	}
 	
-	// alte version
 	public void openTagsetDefinition(CatmaApplication catmaApplication, TagsetDefinition tagsetDefinition){
 		markupPanel.addOrUpdateTagsetDefinition(catmaApplication, tagsetDefinition);
 	}
