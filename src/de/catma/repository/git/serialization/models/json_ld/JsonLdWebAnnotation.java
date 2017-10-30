@@ -58,10 +58,6 @@ public class JsonLdWebAnnotation {
 			throw new JsonLdWebAnnotationException("Failed to build tag instance URL", e);
 		}
 
-//		this.id = String.format(
-//			"http://catma.de/portal/annotation/%s", tagReferences.get(0).getTagInstance().getUuid()
-//		);  // TODO: actual GitLab URL
-
 		this.body = new JsonLdWebAnnotationBody_Dataset(tagReferences);
 		this.target = new JsonLdWebAnnotationTarget_List(tagReferences);
 	}
