@@ -69,6 +69,10 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 		this.userGitLabApi = new GitLabApi(this.gitLabServerUrl, this.gitLabUserImpersonationToken);
 	}
 
+	public String getGitLabServerUrl() {
+		return this.gitLabServerUrl;
+	}
+
 	public GitLabApi getAdminGitLabApi() {
 		return this.adminGitLabApi;
 	}

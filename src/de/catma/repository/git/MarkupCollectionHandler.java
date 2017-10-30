@@ -271,8 +271,9 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 					header.getName()
 			);
 
-			// TODO: get umc uuid
-			UserMarkupCollection markupCollection = new UserMarkupCollection(markupCollectionId, contentInfoSet, tagLibrary, tagReferences, AccessMode.WRITE);
+			UserMarkupCollection markupCollection = new UserMarkupCollection(
+				null, markupCollectionId, contentInfoSet, tagLibrary, tagReferences, AccessMode.WRITE
+			);
 
 			return markupCollection;
 		}

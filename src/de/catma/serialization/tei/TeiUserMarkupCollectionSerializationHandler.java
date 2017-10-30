@@ -83,9 +83,10 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 			TeiUserMarkupCollectionDeserializer deserializer = 
 					new TeiUserMarkupCollectionDeserializer(
 							teiDocument, tagLibrary);
-			
+
+			// TODO: serialize and deserialize the UMC UUID
 			return new UserMarkupCollection(
-				id, teiDocument.getContentInfoSet(), 
+				id, null, teiDocument.getContentInfoSet(),
 				tagLibrary, deserializer.getTagReferences(),
 				AccessMode.WRITE);
 			

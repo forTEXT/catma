@@ -304,7 +304,9 @@ public class MarkupCollectionHandlerTest {
 				)
 			);
 
-			JsonLdWebAnnotation jsonLdWebAnnotation = new JsonLdWebAnnotation(tagReferences);
+			JsonLdWebAnnotation jsonLdWebAnnotation = new JsonLdWebAnnotation(
+				this.remoteGitServerManager.getGitLabServerUrl(), projectId, tagReferences
+			);
 
 			markupCollectionHandler.addTagInstance(markupCollectionId, jsonLdWebAnnotation);
 
@@ -425,7 +427,9 @@ public class MarkupCollectionHandlerTest {
 					)
 			);
 
-			JsonLdWebAnnotation jsonLdWebAnnotation = new JsonLdWebAnnotation(tagReferences);
+			JsonLdWebAnnotation jsonLdWebAnnotation = new JsonLdWebAnnotation(
+				this.remoteGitServerManager.getGitLabServerUrl(), projectId, tagReferences
+			);
 
 			markupCollectionHandler.addTagInstance(markupCollectionId, jsonLdWebAnnotation);
 
