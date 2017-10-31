@@ -2,6 +2,7 @@ package de.catma.repository.git.serialization.models.json_ld;
 
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.repository.git.ProjectHandler;
 import de.catma.repository.git.managers.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
@@ -15,10 +16,7 @@ import org.junit.Test;
 
 import java.io.FileInputStream;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -67,6 +65,8 @@ public class JsonLdWebAnnotationTest {
 	private Properties catmaProperties;
 	private RemoteGitServerManager remoteGitServerManager;
 
+	private ArrayList<String> projectsToDeleteOnTearDown = new ArrayList<>();
+
 	public JsonLdWebAnnotationTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
 				System.getProperties().getProperty("prop") : "catma.properties";
@@ -88,6 +88,18 @@ public class JsonLdWebAnnotationTest {
 
 	@After
 	public void tearDown() throws Exception {
+		if (this.projectsToDeleteOnTearDown.size() > 0) {
+			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+					this.catmaProperties, "fakeUserIdentifier")) {
+				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
+
+				for (String projectId : this.projectsToDeleteOnTearDown) {
+					projectHandler.delete(projectId);
+				}
+				this.projectsToDeleteOnTearDown.clear();
+			}
+		}
+
 		// delete the GitLab user that the RemoteGitServerManager constructor in setUp would have
 		// created - see RemoteGitServerManagerTest tearDown() for more info
 		User user = this.remoteGitServerManager.getGitLabUser();
@@ -127,6 +139,35 @@ public class JsonLdWebAnnotationTest {
 		tagInstance.addUserDefinedProperty(userProperty);
 
 		return tagInstance;
+	}
+
+	/**
+	 * @return a HashMap<String, Object> with a key 'tagInstance' for the TagInstance object and the following
+	 *         additional keys which are to be used when formatting the expectedSerializedRepresentation string:
+	 *         projectRootRepositoryName, tagsetRepositoryName, tagDefinitionUuid, systemPropertyDefinitionUuid,
+	 *         userPropertyDefinitionUuid, markupCollectionRepositoryName, tagInstanceUuid, sourceDocumentRepositoryName
+	 */
+	public HashMap<String, Object> getTagInstance() throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties, "fakeUserIdentifier")) {
+			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
+
+			String projectId = projectHandler.create(
+					"Test CATMA Project", "This is a test CATMA project"
+			);
+			this.projectsToDeleteOnTearDown.add(projectId);
+
+			// TODO: complete this once all of the necessary ProjectHandler methods exist
+			// add new tagset to project
+			// add new source document to project
+			// add new markup collection to project
+
+			// create TagInstance object
+			// use the real TagInstance object in the toTagReferenceList test to create real TagReference objects, which
+			// are then used to construct a JsonLdWebAnnotation object
+		}
+
+		return new HashMap<>();
 	}
 
 	@Test
@@ -174,6 +215,9 @@ public class JsonLdWebAnnotationTest {
 
 	@Test
 	public void toTagReferenceList() throws Exception {
+		// TODO: use getTagInstance once it's been implemented
+		// TODO: test with a hierarchy of tag definitions
+
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
@@ -241,12 +285,14 @@ public class JsonLdWebAnnotationTest {
 			}
 
 			assertEquals(
-				new URI("http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC"), tagReferences.get(0).getTarget()
+				new URI("http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC"),
+				tagReferences.get(0).getTarget()
 			);
 			assertEquals(new Range(12, 18), tagReferences.get(0).getRange());
 
 			assertEquals(
-				new URI("http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC"), tagReferences.get(1).getTarget()
+				new URI("http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC"),
+				tagReferences.get(1).getTarget()
 			);
 			assertEquals(new Range(41, 47), tagReferences.get(1).getRange());
 		}
