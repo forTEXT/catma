@@ -132,7 +132,7 @@ public class MarkupCollectionHandlerTest {
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
-			File expectedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), markupCollectionHandler.getMarkupCollectionRepoName(markupCollectionId));
+			File expectedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
 
 			assert expectedRepoPath.exists();
 			assert expectedRepoPath.isDirectory();
@@ -215,7 +215,7 @@ public class MarkupCollectionHandlerTest {
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
-			localGitRepoManager.open(markupCollectionHandler.getMarkupCollectionRepoName(markupCollectionId));
+			localGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
 
 			String expectedSerializedHeader = "" +
 					"{\n" +
@@ -309,7 +309,7 @@ public class MarkupCollectionHandlerTest {
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
-			localGitRepoManager.open(markupCollectionHandler.getMarkupCollectionRepoName(markupCollectionId));
+			localGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
 
 			File expectedTagInstanceJsonFilePath = new File(
 				localGitRepoManager.getRepositoryWorkTree(), "CATMA_TAG_INST.json"

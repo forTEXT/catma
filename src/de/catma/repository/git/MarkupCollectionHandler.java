@@ -31,19 +31,19 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MarkupCollectionHandler implements IMarkupCollectionHandler {
-	static final String MARKUPCOLLECTION_ROOT_REPOSITORY_NAME_FORMAT = "%s_markupcollection";
-
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitServerManager remoteGitServerManager;
+
+	private static final String MARKUPCOLLECTION_REPOSITORY_NAME_FORMAT = "%s_markupcollection";
+
+	public static String getMarkupCollectionRepositoryName(String markupCollectionId) {
+		return String.format(MARKUPCOLLECTION_REPOSITORY_NAME_FORMAT, markupCollectionId);
+	}
 
 	public MarkupCollectionHandler(ILocalGitRepositoryManager localGitRepositoryManager,
 								   IRemoteGitServerManager remoteGitServerManager) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
-	}
-
-	String getMarkupCollectionRepoName(String markupCollectionId){
-		return String.format(MARKUPCOLLECTION_ROOT_REPOSITORY_NAME_FORMAT, markupCollectionId);
 	}
 
 	/**
@@ -70,7 +70,7 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// create the markup collection repository
-			String markupCollectionRepoName = getMarkupCollectionRepoName(markupCollectionId);
+			String markupCollectionRepoName = MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId);
 			IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
 					this.remoteGitServerManager.createRepository(
 							markupCollectionRepoName, markupCollectionRepoName, projectId
@@ -130,7 +130,7 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 			throws MarkupCollectionHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// open the markup collection repository
-			localGitRepoManager.open(getMarkupCollectionRepoName(markupCollectionId));
+			localGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
 
 			// update header.json
 			File headerFile = new File(
@@ -179,7 +179,7 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 		// TODO: check that the tag instance is for the correct document
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// open the markup collection repository
-			localGitRepoManager.open(getMarkupCollectionRepoName(markupCollectionId));
+			localGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
 
 			// write the serialized tag instance to the repository
 			File targetSerializedTagInstanceFilePath = new File(
@@ -251,7 +251,7 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// open the markup collection repository
-			localGitRepoManager.open(getMarkupCollectionRepoName(markupCollectionId));
+			localGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
 
 			File repositoryWorkTreeFile = localGitRepoManager.getRepositoryWorkTree();
 

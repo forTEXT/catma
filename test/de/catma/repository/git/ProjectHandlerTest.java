@@ -255,7 +255,7 @@ public class ProjectHandlerTest {
 			String gitLabUserImpersonationToken = this.remoteGitServerManager.getGitLabUserImpersonationToken();
 
 			// re-open the markup collection repo to get the commit hash and because we need to push
-			localGitRepoManager.open(markupCollectionHandler.getMarkupCollectionRepoName(markupCollectionId));
+			localGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
 			ObjectId markupCollectionHead = localGitRepoManager.getGitApi().getRepository().resolve(Constants.HEAD);
 			String markupCollectionCommitHash = markupCollectionHead.getName();
 
