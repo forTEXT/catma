@@ -88,7 +88,6 @@ import de.catma.ui.menu.LoginLogoutCommand;
 import de.catma.ui.menu.MainMenu;
 import de.catma.ui.menu.MenuFactory;
 import de.catma.ui.repository.RepositoryManagerView;
-import de.catma.ui.tabbedview.TabbedView;
 import de.catma.ui.tagger.TaggerManagerView;
 import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagManagerView;

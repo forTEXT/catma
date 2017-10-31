@@ -522,14 +522,14 @@ public class TagsetTree extends HorizontalLayout {
 
 			} else {
 
-				NoTagsetCreateTagDialog noTagsetCreateTagDialog = new NoTagsetCreateTagDialog(
+				CreateTagsetOptionsSelectionDialog createTagsetOptionsSelectionDialog = new CreateTagsetOptionsSelectionDialog(
 						new TagsetSelectionListener() {
 							@Override
 							public void tagsetSelected(Object selectedParent) {
 								handleInsertTagDefinitionRequest(selectedParent);
 							}
 						}, repository,currentWritableUserMarkupCollectionProvider);
-				noTagsetCreateTagDialog.show();
+				createTagsetOptionsSelectionDialog.show();
 			}
 
 		} else {

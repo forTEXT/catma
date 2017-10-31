@@ -106,8 +106,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	private Panel markupInfoScrollPanel;
 	private TagInstanceSelectedListener tagInstanceSelectedListener;
 	private Tagger tagger;
-	MarkupPanel markupPanel = this;
-
+	
 	public MarkupPanel(Repository repository, Tagger tagger, PropertyChangeListener tagDefinitionSelectionListener,
 			PropertyChangeListener tagDefinitionsRemovedListener,
 			TagInstanceSelectedListener tagInstanceSelectedListener, String sourceDocumentId) {
@@ -333,8 +332,8 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 				colorButtonListener,repository,new CurrentWritableUserMarkupCollectionProvider() {
 					
 					@Override
-					public UserMarkupCollection getTheCurrentWritableUserMarkupCollection() {
-						UserMarkupCollection umc = getCurrentWritableUserMarkupCollection();
+					public UserMarkupCollection getCurrentWritableUserMarkupCollection() {
+						UserMarkupCollection umc = this.getCurrentWritableUserMarkupCollection();
 						return umc;
 					}
 				});
@@ -424,7 +423,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 								openUserMarkupCollection(userMarkupCollection, false);
 
 							}
-							// hier ruf ich den event- handler auf ...
+				
 							collectionSelectionListener.collectionSelected();
 						} catch (IOException ioe) {
 							((CatmaApplication) UI.getCurrent())

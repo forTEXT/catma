@@ -9,7 +9,6 @@ import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -132,7 +131,7 @@ public class ChooseAnnotationCollectionDialog extends Window {
 
 		btContinueWithout = new Button("Continue without");
 		btContinueWithout.setWidth("90%");
-		btOpenOrCreateCollection = new Button("Open or Create Collection");
+		btOpenOrCreateCollection = new Button("Open or create Collection");
 		btOpenOrCreateCollection.setWidth("90%");
 		content.addComponent(btOpenOrCreateCollection);
 		content.addComponent(btContinueWithout);

@@ -31,14 +31,14 @@ import de.catma.ui.tagger.TagsetSelectionDialog;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
-public class NoTagsetCreateTagDialog extends Window {
+public class CreateTagsetOptionsSelectionDialog extends Window {
 
 	private Button btOpenTagset;
 	private Button btAutoCreateTagset;
 	private Button btOpenTagsetFromActiveAnnotationCollection;
 
 
-	public NoTagsetCreateTagDialog(TagsetSelectionListener tagsetSelectionListener, Repository repository,
+	public CreateTagsetOptionsSelectionDialog(TagsetSelectionListener tagsetSelectionListener, Repository repository,
 			CurrentWritableUserMarkupCollectionProvider collectionProvider) {
 		super("Choose one of the options");
 		initComponents();
@@ -52,7 +52,7 @@ public class NoTagsetCreateTagDialog extends Window {
 
 			public void buttonClick(ClickEvent event) {
 			
-				UI.getCurrent().removeWindow(NoTagsetCreateTagDialog.this);
+				UI.getCurrent().removeWindow(CreateTagsetOptionsSelectionDialog.this);
 
 				TagsetSelectionDialog tagsetSelectionDialog = new TagsetSelectionDialog(repository,
 						tagsetSelectionListener);
@@ -125,14 +125,14 @@ public class NoTagsetCreateTagDialog extends Window {
 							.showAndLogError(Messages.getString("TagLibraryPanel.errorCreatingTagLibrary"), e); //$NON-NLS-1$
 				}
 
-				UI.getCurrent().removeWindow(NoTagsetCreateTagDialog.this);
+				UI.getCurrent().removeWindow(CreateTagsetOptionsSelectionDialog.this);
 			}
 		});
 
 		btOpenTagsetFromActiveAnnotationCollection.addClickListener(new ClickListener() {
 			public void buttonClick(ClickEvent event) {
 
-				UserMarkupCollection umc = collectionProvider.getTheCurrentWritableUserMarkupCollection();
+				UserMarkupCollection umc = collectionProvider.getCurrentWritableUserMarkupCollection();
 				if (umc != null) {
 
 					int numberOfTagsets = umc.getTagLibrary().getTagsetDefinitions().size();
@@ -168,7 +168,7 @@ public class NoTagsetCreateTagDialog extends Window {
 					HTMLNotification.show(Messages.getString("CatmaApplication.error"), //$NON-NLS-1$
 							"No Annotation Collection for this Document found", Type.HUMANIZED_MESSAGE);
 				}
-				UI.getCurrent().removeWindow(NoTagsetCreateTagDialog.this);
+				UI.getCurrent().removeWindow(CreateTagsetOptionsSelectionDialog.this);
 			}
 		});
 

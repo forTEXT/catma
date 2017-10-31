@@ -160,7 +160,6 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 										@Override
 										public void propertyChange(PropertyChangeEvent evt) {
 											if (evt.getOldValue() == null) {
-												System.out.println(evt.getNewValue());
 												@SuppressWarnings("unchecked")
 												Pair<UserMarkupCollectionReference, SourceDocument> result = (Pair<UserMarkupCollectionReference, SourceDocument>) evt
 														.getNewValue();

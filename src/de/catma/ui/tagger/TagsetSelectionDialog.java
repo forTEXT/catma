@@ -42,13 +42,7 @@ public class TagsetSelectionDialog extends Window {
 	private TagsetSelectionListener tagsetSelectionListener;
 	
 	public TagsetSelectionDialog(Repository repository) {
-		super(Messages.getString("TagsetSelectionDialog.openTagset")); //$NON-NLS-1$
-		
-		this.repository = repository;
-		
-		initComponents();
-		initActions();
-		initListeners();
+		this(repository ,null);
 	}
 	
 	public TagsetSelectionDialog(Repository repository,TagsetSelectionListener tagsetSelectionListener) {
@@ -145,7 +139,7 @@ public class TagsetSelectionDialog extends Window {
 			}
 		});
 	}
-	// tagsetTree nr 2 mit allen existenden Tagsets, Button fuer "Load Tagset into..."
+	
 	private void initListeners() {
 		tagsetTree.addBtLoadIntoDocumentListener( new ClickListener() {
 

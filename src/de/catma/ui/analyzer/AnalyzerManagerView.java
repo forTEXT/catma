@@ -43,15 +43,12 @@ public class AnalyzerManagerView extends TabbedView {
 
 	public AnalyzerManagerView() {
 		
-	
-		
 		super(Messages.getString("AnalyzerManagerView.intro")); //$NON-NLS-1$
 		super.setHtmlLabel();
 		initComponents();
-		initAnalyzerAction();
-		
-	
+		initAnalyzerAction();	
 	}
+	
 	private void initAnalyzerAction() {
 		this.btnAnalyzeCurrentOpenDoc.addClickListener(new ClickListener() {
 			
@@ -70,7 +67,6 @@ public class AnalyzerManagerView extends TabbedView {
 
 	public void analyzeDocuments(Corpus corpus, IndexedRepository repository) {
 		
-
 		AnalyzerView analyzerView = new AnalyzerView(corpus, repository, new CloseListener() {
 
 			public void closeRequest(AnalyzerView analyzerView) {

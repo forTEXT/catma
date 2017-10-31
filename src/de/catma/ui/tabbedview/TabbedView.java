@@ -44,11 +44,13 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		initComponents(noOpenTabsText);
 		initActions();
 	}
+	
 	public void setHtmlLabel(){
 	Label htmlLabel = new Label(noOpenTabsLabel, ContentMode.HTML);
 	introPanel.removeComponent(noOpenTabsLabel);
 	introPanel.addComponent(htmlLabel);
 	}
+	
 	private void initActions() {
 
 		tabSheet.addSelectedTabChangeListener(new SelectedTabChangeListener() {
