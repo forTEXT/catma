@@ -21,6 +21,6 @@ public interface IMarkupCollectionHandler {
 	void addTagInstance(String markupCollectionId, JsonLdWebAnnotation annotation)
 			throws MarkupCollectionHandlerException;
 
-	UserMarkupCollection open(String markupCollectionId) throws MarkupCollectionHandlerException;
+	UserMarkupCollection open(String projectId, String markupCollectionId) throws MarkupCollectionHandlerException;
 
 }

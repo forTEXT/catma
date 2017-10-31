@@ -99,6 +99,9 @@
 		<!-- https://mvnrepository.com/artifact/org.neo4j.driver/neo4j-java-driver -->
 		<dependency org="org.neo4j.driver" name="neo4j-java-driver" rev="1.4.4"/>
 
+		<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
+		<dependency org="commons-io" name="commons-io" rev="2.6"/>
+
 		<dependency org="de.catma" name="catma-core" rev="latest.integration" />
 	</dependencies>	
 </ivy-module>

@@ -11,9 +11,6 @@ import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
 import de.catma.tag.*;
 import helpers.Randomizer;
-import mockit.Expectations;
-import mockit.Verifications;
-import mockit.integration.junit4.JMockit;
 import org.apache.commons.io.FileUtils;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
@@ -22,7 +19,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,7 +28,6 @@ import java.util.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
 
-@RunWith(JMockit.class)
 public class MarkupCollectionHandlerTest {
 	private Properties catmaProperties;
 	private RemoteGitServerManager remoteGitServerManager;
@@ -299,8 +294,8 @@ public class MarkupCollectionHandlerTest {
 
 			List<TagReference> tagReferences = new ArrayList<>(
 				Arrays.asList(
-					new TagReference(tagInstance, sourceDocumentUri, range1),
-					new TagReference(tagInstance, sourceDocumentUri, range2)
+					new TagReference(tagInstance, sourceDocumentUri, range1, markupCollectionId),
+					new TagReference(tagInstance, sourceDocumentUri, range2, markupCollectionId)
 				)
 			);
 
@@ -370,27 +365,10 @@ public class MarkupCollectionHandlerTest {
 	}
 
 	@Test
-	public void jsonLdWebAnnotationNotImplementedCheck() throws Exception {
-		// this check should pass while JsonLdWebAnnotation.getTagInstance still throws a not implemented exception
-
-		// When this test fails, check the mocking of this function in the open() test
-		JsonLdWebAnnotation webAnnotation = new JsonLdWebAnnotation();
-		thrown.expect(de.catma.repository.git.exceptions.JsonLdWebAnnotationException.class);
-		thrown.expectMessage("Not implemented");
-		webAnnotation.toTagReferenceList("fakeUserMarkupCollectionId");
-	}
-
-	@Test
 	public void open() throws Exception {
-		JsonLdWebAnnotation anyInstance = new JsonLdWebAnnotation();
-
-		// TODO: Stop mocking this once getTagInstance works. The jsonLdWebAnnotationNotImplementedCheck
-		// should fail at that point as a reminder.
-		new Expectations(JsonLdWebAnnotation.class) {{
-			anyInstance.getTagInstance(); result = JsonLdWebAnnotationTest.getFakeTagInstance();
-		}};
-
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
 					localGitRepoManager, this.remoteGitServerManager
 			);
@@ -422,8 +400,8 @@ public class MarkupCollectionHandlerTest {
 
 			List<TagReference> tagReferences = new ArrayList<>(
 					Arrays.asList(
-							new TagReference(tagInstance, sourceDocumentUri, range1),
-							new TagReference(tagInstance, sourceDocumentUri, range2)
+							new TagReference(tagInstance, sourceDocumentUri, range1, markupCollectionId),
+							new TagReference(tagInstance, sourceDocumentUri, range2, markupCollectionId)
 					)
 			);
 
@@ -433,7 +411,7 @@ public class MarkupCollectionHandlerTest {
 
 			markupCollectionHandler.addTagInstance(markupCollectionId, jsonLdWebAnnotation);
 
-			UserMarkupCollection markupCollection = markupCollectionHandler.open(markupCollectionId);
+			UserMarkupCollection markupCollection = markupCollectionHandler.open(projectId, markupCollectionId);
 
 			assertNotNull(markupCollection);
 
@@ -442,9 +420,5 @@ public class MarkupCollectionHandlerTest {
 			assertEquals(tagReferences.size(), markupCollection.getTagReferences().size());
 			assertTrue(tagReferences.get(0).getRange().equals(range1));
 		}
-
-		new Verifications() {{
-			anyInstance.getTagInstance();
-		}};
 	}
 }
