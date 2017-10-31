@@ -30,7 +30,7 @@ public class ProjectHandler implements IProjectHandler {
 	// Projects
 	private static final String PROJECT_ROOT_REPOSITORY_NAME_FORMAT = "%s_corpus";
 
-	public static String getProjectRepoName(String projectId) {
+	public static String getProjectRootRepositoryName(String projectId) {
 		return String.format(PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId);
 	}
 
@@ -61,7 +61,7 @@ public class ProjectHandler implements IProjectHandler {
 			);
 
 			// create the root repository
-			String projectNameAndPath = getProjectRepoName(projectId);
+			String projectNameAndPath = getProjectRootRepositoryName(projectId);
 
 			IRemoteGitServerManager.CreateRepositoryResponse response =
 					this.remoteGitServerManager.createRepository(
@@ -165,7 +165,7 @@ public class ProjectHandler implements IProjectHandler {
 			String markupCollectionRemoteUrl = localGitRepoManager.getRemoteUrl(null);
 			localGitRepoManager.close();
 
-			String projectRepoName = getProjectRepoName(projectId);
+			String projectRepoName = getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectRepoName);
 			File markupCollectionSubmoduleTargetPath = new File(
 				String.format("%s/collections/%s", localGitRepoManager.getRepositoryWorkTree(), markupCollectionId)
@@ -265,7 +265,7 @@ public class ProjectHandler implements IProjectHandler {
 			repoManager.close();
 
 			// open the project root repository
-			repoManager.open(getProjectRepoName(projectId));
+			repoManager.open(getProjectRootRepositoryName(projectId));
 
 			// create the submodule
 			File targetSubmodulePath = Paths.get(

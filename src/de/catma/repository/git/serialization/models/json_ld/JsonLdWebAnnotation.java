@@ -52,7 +52,7 @@ public class JsonLdWebAnnotation {
 			);
 		}
 
-		String projectRootRepositoryName = ProjectHandler.getProjectRepoName(projectId);
+		String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
 
 		try {
 			this.id = this.buildTagInstanceUrl(

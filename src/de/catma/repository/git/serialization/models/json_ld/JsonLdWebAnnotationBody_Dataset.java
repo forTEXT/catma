@@ -50,7 +50,7 @@ public class JsonLdWebAnnotationBody_Dataset {
 		TagDefinition tagDefinition = tagReferences.get(0).getTagDefinition();
 		TagInstance tagInstance = tagReferences.get(0).getTagInstance();
 
-		String projectRootRepositoryName = ProjectHandler.getProjectRepoName(projectId);
+		String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
 
 		try {
 			this.tagset = this.buildTagsetUrl(
