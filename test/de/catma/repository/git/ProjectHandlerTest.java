@@ -88,7 +88,7 @@ public class ProjectHandlerTest {
 			// return
 			assertFalse(localGitRepoManager.isAttached());
 
-			String expectedRootRepositoryName = projectHandler.getProjectRootRepositoryName(projectId);
+			String expectedRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
 			String repositoryBasePath = String.format("%s/%s", this.catmaProperties.getProperty("GitBasedRepositoryBasePath"), "fakeUserIdentifier");
 
 			File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
@@ -121,7 +121,7 @@ public class ProjectHandlerTest {
 			// return
 			assertFalse(localGitRepoManager.isAttached());
 
-			String expectedRootRepositoryName = projectHandler.getProjectRootRepositoryName(projectId);
+			String expectedRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
 			String repositoryBasePath = String.format("%s/%s", this.catmaProperties.getProperty("GitBasedRepositoryBasePath"), "fakeUserIdentifier");
 
 			File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
@@ -194,7 +194,7 @@ public class ProjectHandlerTest {
 			// return
 			assertFalse(localGitRepoManager.isAttached());
 
-			localGitRepoManager.open(projectHandler.getProjectRootRepositoryName(projectId));
+			localGitRepoManager.open(ProjectHandler.getProjectRootRepositoryName(projectId));
 			Status status = localGitRepoManager.getGitApi().status().call();
 			Set<String> added = status.getAdded();
 
@@ -273,7 +273,7 @@ public class ProjectHandlerTest {
 			assertFalse(localGitRepoManager.isAttached());
 
 			// assert that the markup collection submodule in the project is pointing at the correct commit hash
-			String projectRepoName = projectHandler.getProjectRootRepositoryName(projectId);
+			String projectRepoName = ProjectHandler.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectRepoName);
 			Map<String, SubmoduleStatus> statusMap = localGitRepoManager.getGitApi().submoduleStatus().call();
 
