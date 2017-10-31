@@ -194,11 +194,13 @@ class UserMarkupCollectionHandler {
 				USERMARKUPCOLLECTION,
 					USERMARKUPCOLLECTION.TITLE,
 					USERMARKUPCOLLECTION.SOURCEDOCUMENTID,
-					USERMARKUPCOLLECTION.TAGLIBRARYID)
+					USERMARKUPCOLLECTION.TAGLIBRARYID,
+					USERMARKUPCOLLECTION.UUID)
 			.values(
 				name,
 				sourceDocumentId,
-				tagLibraryId)
+				tagLibraryId,
+				idGenerator.catmaIDToUUIDBytes(idGenerator.generate()))
 			.returning(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)
 			.fetchOne()
 			.map(new IDFieldToIntegerMapper(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID));
@@ -358,14 +360,16 @@ class UserMarkupCollectionHandler {
 				USERMARKUPCOLLECTION.DESCRIPTION,
 				USERMARKUPCOLLECTION.PUBLISHER,
 				USERMARKUPCOLLECTION.SOURCEDOCUMENTID,
-				USERMARKUPCOLLECTION.TAGLIBRARYID)
+				USERMARKUPCOLLECTION.TAGLIBRARYID,
+				USERMARKUPCOLLECTION.UUID)
 		.values(
 			umc.getName(),
 			umc.getContentInfoSet().getAuthor(),
 			umc.getContentInfoSet().getDescription(),
 			umc.getContentInfoSet().getPublisher(),
 			sourceDocumentId,
-			Integer.valueOf(umc.getTagLibrary().getId()))
+			Integer.valueOf(umc.getTagLibrary().getId()),
+			idGenerator.catmaIDToUUIDBytes(umc.getUuid()))
 		.returning(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)
 		.fetchOne()
 		.map(new IDFieldToIntegerMapper(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID));
