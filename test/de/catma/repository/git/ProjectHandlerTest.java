@@ -234,7 +234,7 @@ public class ProjectHandlerTest {
 			assertFalse(localGitRepoManager.isAttached());
 
 			// re-open the tagset repo to get the commit hash
-			localGitRepoManager.open(tagsetHandler.getTagsetRepoName(tagsetId));
+			localGitRepoManager.open(TagsetHandler.getTagsetRepositoryName(tagsetId));
 			ObjectId tagsetHead = localGitRepoManager.getGitApi().getRepository().resolve(Constants.HEAD);
 			String tagsetCommitHash = tagsetHead.getName();
 

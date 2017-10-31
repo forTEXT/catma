@@ -27,12 +27,16 @@ import java.util.Arrays;
 import java.util.List;
 
 public class TagsetHandler implements ITagsetHandler {
-	static final String TAGSET_ROOT_REPOSITORY_NAME_FORMAT = "%s_tagset";
-
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitServerManager remoteGitServerManager;
 
 	private final IDGenerator idGenerator;
+
+	private static final String TAGSET_REPOSITORY_NAME_FORMAT = "%s_tagset";
+
+	public static String getTagsetRepositoryName(String tagsetId) {
+		return String.format(TAGSET_REPOSITORY_NAME_FORMAT, tagsetId);
+	}
 
 	public TagsetHandler(ILocalGitRepositoryManager localGitRepositoryManager,
 							 IRemoteGitServerManager remoteGitServerManager) {
@@ -51,7 +55,7 @@ public class TagsetHandler implements ITagsetHandler {
 			IRemoteGitServerManager.CreateRepositoryResponse response;
 
 			// TODO: nice name for gitlab
-			String tagsetRepoName = this.getTagsetRepoName(tagsetId);
+			String tagsetRepoName = TagsetHandler.getTagsetRepositoryName(tagsetId);
 			response = this.remoteGitServerManager.createRepository(
 					tagsetRepoName, tagsetRepoName, projectId
 			);
@@ -101,10 +105,6 @@ public class TagsetHandler implements ITagsetHandler {
 		throw new TagsetHandlerException("Not implemented");
 	}
 
-	String getTagsetRepoName(String tagsetId){
-		return String.format(TAGSET_ROOT_REPOSITORY_NAME_FORMAT, tagsetId);
-	}
-
 	private ArrayList<TagDefinition> openTagDefinitions(File parentDirectory) throws IOException {
 		ArrayList<TagDefinition> tagDefinitions = new ArrayList<>();
 
@@ -139,7 +139,7 @@ public class TagsetHandler implements ITagsetHandler {
 	public TagsetDefinition open(String tagsetId, String projectId) throws TagsetHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 
-			localGitRepoManager.open(this.getTagsetRepoName(tagsetId));
+			localGitRepoManager.open(TagsetHandler.getTagsetRepositoryName(tagsetId));
 
 			File repositoryWorkTreeFile = localGitRepoManager.getRepositoryWorkTree();
 			File targetHeaderFile = new File(
@@ -174,7 +174,7 @@ public class TagsetHandler implements ITagsetHandler {
 	public String addTagDefinition(String tagsetId, TagDefinition tagDefinition) throws TagsetHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 
-			localGitRepoManager.open(this.getTagsetRepoName(tagsetId));
+			localGitRepoManager.open(TagsetHandler.getTagsetRepositoryName(tagsetId));
 
 			String propertyDefinitionPath = String.format("%s/%s", tagDefinition.getUuid(), "propertydefs.json");
 

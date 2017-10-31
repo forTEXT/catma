@@ -10,7 +10,6 @@ import de.catma.repository.git.serialization.models.TagsetDefinitionHeader;
 import de.catma.tag.*;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import helpers.Randomizer;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
@@ -75,7 +74,7 @@ public class TagsetHandlerTest {
 
 		if (this.tagsetReposToDeleteOnTearDown.size() > 0) {
 			for (String tagsetId : this.tagsetReposToDeleteOnTearDown) {
-				String tagsetRepoName = this.tagsetHandler.getTagsetRepoName(tagsetId);
+				String tagsetRepoName = TagsetHandler.getTagsetRepositoryName(tagsetId);
 				List<Project> projects = this.remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects(
 						tagsetRepoName
 				); // this getProjects overload does a search
@@ -139,7 +138,7 @@ public class TagsetHandlerTest {
 			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us
 
-			File expectedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), tagsetHandler.getTagsetRepoName(tagsetId));
+			File expectedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), TagsetHandler.getTagsetRepositoryName(tagsetId));
 			assert expectedRepoPath.exists();
 			assert expectedRepoPath.isDirectory();
 
@@ -227,7 +226,7 @@ public class TagsetHandlerTest {
 
 			String tagDefinitionPath = String.format(
 					"%s/%s",
-					tagsetHandler.getTagsetRepoName(tagsetId),
+					TagsetHandler.getTagsetRepositoryName(tagsetId),
 					tagDefinition.getUuid()
 			);
 
@@ -296,7 +295,7 @@ public class TagsetHandlerTest {
 
 			String tagDefinitionPath = String.format(
 					"%s/%s/%s",
-					tagsetHandler.getTagsetRepoName(tagsetId),
+					TagsetHandler.getTagsetRepositoryName(tagsetId),
 					parentTagDefinitionId,
 					tagDefinition.getUuid()
 			);
