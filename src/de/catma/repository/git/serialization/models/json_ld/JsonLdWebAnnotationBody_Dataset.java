@@ -3,6 +3,7 @@ package de.catma.repository.git.serialization.models.json_ld;
 import com.jsoniter.annotation.JsonProperty;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.repository.git.ProjectHandler;
+import de.catma.repository.git.TagsetHandler;
 import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
@@ -70,10 +71,11 @@ public class JsonLdWebAnnotationBody_Dataset {
 	private URL buildTagsetUrl(String gitServerBaseUrl, String projectRootRepositoryName, String tagsetUuid)
 			throws MalformedURLException {
 		URL gitServerUrl = JsonLdWebAnnotation.sanitizeUrl(gitServerBaseUrl);
+		String tagsetRepositoryName = TagsetHandler.getTagsetRepositoryName(tagsetUuid);
 
 		return new URL(
 			gitServerUrl.getProtocol(), gitServerUrl.getHost(), gitServerUrl.getPort(),
-			String.format("%s%s/tagsets/%s", gitServerUrl.getPath(), projectRootRepositoryName, tagsetUuid)
+			String.format("%s%s/tagsets/%s", gitServerUrl.getPath(), projectRootRepositoryName, tagsetRepositoryName)
 		);
 	}
 
