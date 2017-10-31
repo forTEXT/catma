@@ -147,7 +147,7 @@ public class SourceDocumentHandlerTest {
 
 			File expectedRepoPath = new File(
 					localGitRepoManager.getRepositoryBasePath(),
-					sourceDocumentHandler.getSourceDocumentRepoName(sourceDocumentId)
+					SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId)
 			);
 			assert expectedRepoPath.exists();
 			assert expectedRepoPath.isDirectory();
@@ -265,7 +265,7 @@ public class SourceDocumentHandlerTest {
 
 			File expectedRepoPath = new File(
 					localGitRepoManager.getRepositoryBasePath(),
-					sourceDocumentHandler.getSourceDocumentRepoName(sourceDocumentId)
+					SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId)
 			);
 
 			assert expectedRepoPath.exists();
@@ -377,7 +377,7 @@ public class SourceDocumentHandlerTest {
 			this.sourceDocumentReposToDeleteOnTearDown.add(sourceDocumentId);
 			File expectedRepoPath = new File(
 					localGitRepoManager.getRepositoryBasePath(),
-					sourceDocumentHandler.getSourceDocumentRepoName(sourceDocumentId)
+					SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId)
 			);
 			assert expectedRepoPath.exists() : String.format("We expect %s to exist", expectedRepoPath.getAbsolutePath());
 			assert expectedRepoPath.isDirectory();

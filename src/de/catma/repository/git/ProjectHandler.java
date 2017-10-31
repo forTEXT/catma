@@ -258,7 +258,7 @@ public class ProjectHandler implements IProjectHandler {
 			RemoteGitServerManager remoteGitServerManagerImpl = (RemoteGitServerManager)this.remoteGitServerManager;
 			String gitLabUserImpersonationToken = remoteGitServerManagerImpl.getGitLabUserImpersonationToken();
 
-			repoManager.open(sourceDocumentHandler.getSourceDocumentRepoName(sourceDocumentId));
+			repoManager.open(SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId));
 			repoManager.push(remoteGitServerManagerImpl.getGitLabUser().getUsername(), gitLabUserImpersonationToken);
 
 			String remoteUri = repoManager.getRemoteUrl(null);
