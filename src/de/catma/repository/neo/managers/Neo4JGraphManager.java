@@ -27,7 +27,9 @@ public class Neo4JGraphManager implements AutoCloseable {
 	@Override
 	public void close() throws Exception {
 		for(Session session : sessions){
-			session.close();
+			if(session.isOpen()){
+				session.close();
+			}
 		}
 
 		Driver safeDriver = this.driver;

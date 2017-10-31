@@ -4,6 +4,9 @@ import de.catma.repository.neo.exceptions.NeoTagsetHandlerException;
 import de.catma.repository.neo.managers.Neo4JGraphManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.util.IDGenerator;
+import org.neo4j.driver.v1.Session;
+
+import static org.neo4j.driver.v1.Values.parameters;
 
 public class NeoTagsetHandler {
 	private final Neo4JGraphManager graphManager;
@@ -15,6 +18,11 @@ public class NeoTagsetHandler {
 	}
 
 	public void insertTagset(TagsetDefinition tagsetDefinition) throws NeoTagsetHandlerException{
-		throw new NeoTagsetHandlerException("Not implemented");
+		try(Session session = this.graphManager.openSession()){
+			session.run(
+					"CREATE (a:TagsetDefinition {uuid: {uuid}, name: {name}})",
+					parameters("uuid", tagsetDefinition.getUuid(), "name", tagsetDefinition.getName())
+					);
+		}
 	}
 }
