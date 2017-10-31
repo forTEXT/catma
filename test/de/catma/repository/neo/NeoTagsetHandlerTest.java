@@ -4,9 +4,11 @@ import de.catma.repository.neo.exceptions.NeoTagsetHandlerException;
 import de.catma.repository.neo.managers.Neo4JGraphManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.util.IDGenerator;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.neo4j.driver.v1.Session;
 
 import java.io.FileInputStream;
 import java.util.Properties;
@@ -27,6 +29,16 @@ public class NeoTagsetHandlerTest {
 
 		this.idGenerator = new IDGenerator();
 	}
+
+	@After
+	public void tearDown() throws Exception {
+		try (Neo4JGraphManager graphManager = new Neo4JGraphManager(this.catmaProperties)) {
+			Session session = graphManager.openSession();
+
+			session.run("MATCH (n) DETACH DELETE n");
+		}
+	}
+
 	// how to test for exceptions: https://stackoverflow.com/a/31826781
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
