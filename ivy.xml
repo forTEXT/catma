@@ -96,6 +96,9 @@
 		<!-- https://mvnrepository.com/artifact/org.jmockit/jmockit -->
 		<dependency org="org.jmockit" name="jmockit" rev="1.35"/>
 
+		<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
+		<dependency org="commons-io" name="commons-io" rev="2.6"/>
+
 		<dependency org="de.catma" name="catma-core" rev="latest.integration" />
 	</dependencies>	
 </ivy-module>
