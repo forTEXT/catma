@@ -27,8 +27,8 @@ public class JsonLdWebAnnotationTest {
 			"{\n" +
 			"\t\"body\":{\n" +
 			"\t\t\"@context\":{\n" +
-			"\t\t\t\"SYSPROP_DEF\":\"http://catma.de/portal/tag/CATMA_TAG_DEF/property/CATMA_SYSPROP_DEF\",\n" +
-			"\t\t\t\"UPROP_DEF\":\"http://catma.de/portal/tag/CATMA_TAG_DEF/property/CATMA_UPROP_DEF\",\n" +
+			"\t\t\t\"SYSPROP_DEF\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF/CATMA_TAG_DEF/propertydefs.json/CATMA_SYSPROP_DEF\",\n" +
+			"\t\t\t\"UPROP_DEF\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF/CATMA_TAG_DEF/propertydefs.json/CATMA_UPROP_DEF\",\n" +
 			"\t\t\t\"tag\":\"http://catma.de/portal/tag\",\n" +
 			"\t\t\t\"tagset\":\"http://catma.de/portal/tagset\"\n" +
 			"\t\t},\n" +
@@ -36,12 +36,12 @@ public class JsonLdWebAnnotationTest {
 			"\t\t\t\"SYSPROP_DEF\":[\"SYSPROP_VAL_1\"],\n" +
 			"\t\t\t\"UPROP_DEF\":[\"UPROP_VAL_2\"]\n" +
 			"\t\t},\n" +
-			"\t\t\"tag\":\"http://catma.de/portal/tag/CATMA_TAG_DEF\",\n" +
-			"\t\t\"tagset\":\"http://catma.de/portal/tagset/CATMA_TAGSET_DEF\",\n" +
+			"\t\t\"tag\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF/CATMA_TAG_DEF\",\n" +
+			"\t\t\"tagset\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF\",\n" +
 			"\t\t\"type\":\"Dataset\"\n" +
 			"\t},\n" +
 			"\t\"@context\":\"http://www.w3.org/ns/anno.jsonld\",\n" +
-			"\t\"id\":\"http://catma.de/portal/annotation/CATMA_TAG_INST\",\n" +
+			"\t\"id\":\"http://catma.de/gitlab/fakeProjectId_corpus/collections/fakeUserMarkupCollectionUuid/annotations/CATMA_TAG_INST.json\",\n" +
 			"\t\"target\":{\n" +
 			"\t\t\"items\":[{\n" +
 			"\t\t\t\"selector\":{\n" +
@@ -49,7 +49,7 @@ public class JsonLdWebAnnotationTest {
 			"\t\t\t\t\"start\":12,\n" +
 			"\t\t\t\t\"type\":\"TextPositionSelector\"\n" +
 			"\t\t\t},\n" +
-			"\t\t\t\"source\":\"http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC\"\n" +
+			"\t\t\t\"source\":\"http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC\"\n" +
 			"\t\t},\n" +
 			"\t\t{\n" +
 			"\t\t\t\"selector\":{\n" +
@@ -57,7 +57,7 @@ public class JsonLdWebAnnotationTest {
 			"\t\t\t\t\"start\":41,\n" +
 			"\t\t\t\t\"type\":\"TextPositionSelector\"\n" +
 			"\t\t\t},\n" +
-			"\t\t\t\"source\":\"http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC\"\n" +
+			"\t\t\t\"source\":\"http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC\"\n" +
 			"\t\t}],\n" +
 			"\t\t\"type\":\"List\"\n" +
 			"\t},\n" +
@@ -133,7 +133,7 @@ public class JsonLdWebAnnotationTest {
 	public void serialize() throws Exception {
 		TagInstance tagInstance = JsonLdWebAnnotationTest.getFakeTagInstance();
 
-		String sourceDocumentUri = "http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC";
+		String sourceDocumentUri = "http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC";
 
 		Range range1 = new Range(12, 18);
 		Range range2 = new Range(41, 47);

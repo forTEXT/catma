@@ -2,10 +2,15 @@ package de.catma.repository.git.serialization.models.json_ld;
 
 import com.jsoniter.annotation.JsonProperty;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.repository.git.ProjectHandler;
 import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
 import de.catma.tag.Property;
+import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
+import org.apache.commons.lang3.StringUtils;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,7 +31,8 @@ public class JsonLdWebAnnotationBody_Dataset {
 		this.properties = new TreeMap<>();
 	}
 
-	public JsonLdWebAnnotationBody_Dataset(List<TagReference> tagReferences) throws JsonLdWebAnnotationException {
+	public JsonLdWebAnnotationBody_Dataset(String gitServerBaseUrl, String projectId, List<TagReference> tagReferences)
+			throws JsonLdWebAnnotationException {
 		this();
 		this.context.put("tagset", "http://catma.de/portal/tagset");  // TODO: what should this URL be?
 		this.context.put("tag", "http://catma.de/portal/tag");  // TODO: what should this URL be?
@@ -41,27 +47,66 @@ public class JsonLdWebAnnotationBody_Dataset {
 			);
 		}
 
-		String tagsetDefinitionUuid = tagReferences.get(0).getTagDefinition().getTagsetDefinitionUuid();
-		String tagDefinitionUuid = tagReferences.get(0).getTagDefinition().getUuid();
+		TagDefinition tagDefinition = tagReferences.get(0).getTagDefinition();
 		TagInstance tagInstance = tagReferences.get(0).getTagInstance();
 
-		this.tagset = String.format("http://catma.de/portal/tagset/%s", tagsetDefinitionUuid);  // TODO: actual GitLab URL
-		this.tag = String.format("http://catma.de/portal/tag/%s", tagDefinitionUuid);  // TODO: actual GitLab URL
+		String projectRootRepositoryName = ProjectHandler.getProjectRepoName(projectId);
 
-		this.addProperties(tagInstance.getUserDefinedProperties(), tagDefinitionUuid);
-		this.addProperties(tagInstance.getSystemProperties(), tagDefinitionUuid);
+		try {
+			this.tagset = this.buildTagsetUrl(
+				gitServerBaseUrl, projectRootRepositoryName, tagDefinition.getTagsetDefinitionUuid()
+			).toString();
+
+			this.tag = this.buildTagDefinitionUrl(this.tagset, tagDefinition).toString();
+
+			this.addProperties(this.tag, tagInstance.getUserDefinedProperties());
+			this.addProperties(this.tag, tagInstance.getSystemProperties());
+		}
+		catch (MalformedURLException e) {
+			throw new JsonLdWebAnnotationException("Failed to build tagset URL", e);
+		}
 	}
 
-	private void addProperties(Collection<Property> properties, String tagDefinitionUuid) {
+	private URL buildTagsetUrl(String gitServerBaseUrl, String projectRootRepositoryName, String tagsetUuid)
+			throws MalformedURLException {
+		URL gitServerUrl = JsonLdWebAnnotation.sanitizeUrl(gitServerBaseUrl);
+
+		return new URL(
+			gitServerUrl.getProtocol(), gitServerUrl.getHost(), gitServerUrl.getPort(),
+			String.format("%s%s/tagsets/%s", gitServerUrl.getPath(), projectRootRepositoryName, tagsetUuid)
+		);
+	}
+
+	private URL buildTagDefinitionUrl(String tagsetUrl, TagDefinition tagDefinition)
+			throws MalformedURLException {
+		URL _tagsetUrl = JsonLdWebAnnotation.sanitizeUrl(tagsetUrl);
+
+		return new URL(
+			_tagsetUrl.getProtocol(), _tagsetUrl.getHost(), _tagsetUrl.getPort(),
+			StringUtils.isEmpty(tagDefinition.getParentUuid()) ?
+					String.format("%s%s", _tagsetUrl.getPath(), tagDefinition.getUuid()) :
+					String.format(
+						"%s%s/%s", _tagsetUrl.getPath(), tagDefinition.getParentUuid(), tagDefinition.getUuid()
+					)
+		);
+	}
+
+	private URL buildPropertyDefinitionUrl(String tagDefinitionUrl, String propertyDefinitionUuid)
+			throws MalformedURLException {
+		URL _tagDefinitionUrl = JsonLdWebAnnotation.sanitizeUrl(tagDefinitionUrl);
+
+		return new URL(
+			_tagDefinitionUrl.getProtocol(), _tagDefinitionUrl.getHost(), _tagDefinitionUrl.getPort(),
+			String.format("%spropertydefs.json/%s", _tagDefinitionUrl.getPath(), propertyDefinitionUuid)
+		);
+	}
+
+	private void addProperties(String tagDefinitionUrl, Collection<Property> properties) throws MalformedURLException {
 		for (Property property : properties) {
 			// add entries to the context that allow us to have PropertyDefinition URLs aliased by name
 			this.context.put(
-					property.getName(),
-					String.format(
-						"http://catma.de/portal/tag/%s/property/%s",  // TODO: actual GitLab URL
-						tagDefinitionUuid,
-						property.getPropertyDefinition().getUuid()
-					)
+				property.getName(),
+				this.buildPropertyDefinitionUrl(tagDefinitionUrl, property.getPropertyDefinition().getUuid()).toString()
 			);
 
 			// add property values
