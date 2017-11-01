@@ -34,13 +34,10 @@ import static org.junit.Assert.*;
 public class TagsetHandlerTest {
 	private Properties catmaProperties;
 	private RemoteGitServerManager remoteGitServerManager;
-	private LocalGitRepositoryManager localGitRepositoryManager;
-	private TagsetHandler tagsetHandler;
 
+	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<String> tagsetReposToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<String> projectsToDeleteOnTearDown = new ArrayList<>();
-
-	private File createdRepositoryPath = null;
 
 	private IDGenerator idGenerator = null;
 
@@ -61,35 +58,37 @@ public class TagsetHandlerTest {
 
 		this.remoteGitServerManager = new RemoteGitServerManager(this.catmaProperties, catmaUser);
 		this.remoteGitServerManager.replaceGitLabServerUrl = true;
-
-		this.localGitRepositoryManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier");
-
-		this.tagsetHandler = new TagsetHandler(
-			this.localGitRepositoryManager, this.remoteGitServerManager
-		);
 	}
 
 	@After
 	public void tearDown() throws Exception {
+		if (this.directoriesToDeleteOnTearDown.size() > 0) {
+			for (File dir : this.directoriesToDeleteOnTearDown) {
+				FileUtils.deleteDirectory(dir);
+			}
+			this.directoriesToDeleteOnTearDown.clear();
+		}
 
 		if (this.tagsetReposToDeleteOnTearDown.size() > 0) {
 			for (String tagsetId : this.tagsetReposToDeleteOnTearDown) {
 				String tagsetRepoName = TagsetHandler.getTagsetRepositoryName(tagsetId);
 				List<Project> projects = this.remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects(
-						tagsetRepoName
+					tagsetRepoName
 				); // this getProjects overload does a search
 				for (Project project : projects) {
 					this.remoteGitServerManager.deleteRepository(project.getId());
 				}
 				await().until(
-						() -> this.remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
+					() -> this.remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
 				);
 			}
 			this.tagsetReposToDeleteOnTearDown.clear();
 		}
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
+			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+					this.catmaProperties, "fakeUserIdentifier"
+			)) {
 				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
@@ -110,35 +109,37 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
 
-			ProjectHandler projectHandler = new ProjectHandler(
-					localGitRepoManager, this.remoteGitServerManager
-			);
+			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			String projectId = projectHandler.create(
-					"Test CATMA Project for Tagset", "This is a test CATMA project"
+				"Test CATMA Project for Tagset", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
+			// the LocalGitRepositoryManager instance should always be in a detached state after ProjectHandler
+			// calls return
+			assertFalse(localGitRepoManager.isAttached());
+
+			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			String name = "InterestingTagset";
 			String description = "Pretty interesting stuff";
 			Version version = new Version();
 
-			String tagsetId = tagsetHandler.create(
-					name,
-					description,
-					version,
-					projectId);
+			String tagsetId = tagsetHandler.create(name, description, version, projectId);
+			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the
+			// project will take care of that for us
 
 			assertNotNull(tagsetId);
 			assert tagsetId.startsWith("CATMA_");
 
-			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the
-			// project will take care of that for us
-
-			File expectedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), TagsetHandler.getTagsetRepositoryName(tagsetId));
+			File expectedRepoPath = new File(
+				localGitRepoManager.getRepositoryBasePath(), TagsetHandler.getTagsetRepositoryName(tagsetId)
+			);
 			assert expectedRepoPath.exists();
 			assert expectedRepoPath.isDirectory();
 
@@ -146,12 +147,12 @@ public class TagsetHandlerTest {
 
 			TagsetDefinitionHeader expectedHeader = new TagsetDefinitionHeader(name, description, version);
 
-			String serialized = FileUtils.readFileToString(new File(expectedRepoPath, "header.json"), StandardCharsets.UTF_8);
-			TagsetDefinitionHeader actualHeader = new SerializationHelper<TagsetDefinitionHeader>()
-					.deserialize(
-							serialized,
-							TagsetDefinitionHeader.class
-					);
+			String serialized = FileUtils.readFileToString(
+				new File(expectedRepoPath, "header.json"), StandardCharsets.UTF_8
+			);
+			TagsetDefinitionHeader actualHeader = new SerializationHelper<TagsetDefinitionHeader>().deserialize(
+				serialized, TagsetDefinitionHeader.class
+			);
 
 			assertEquals(expectedHeader.getName(), actualHeader.getName());
 			assertEquals(expectedHeader.getDescription(), actualHeader.getDescription());
@@ -165,10 +166,11 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
-			TagsetHandler tagsetHandler = new TagsetHandler(
-					localGitRepoManager, this.remoteGitServerManager
-			);
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
+
+			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			thrown.expect(TagsetHandlerException.class);
 			thrown.expectMessage("Not implemented");
@@ -178,46 +180,40 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void addTagDefinitionWithoutParent() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
-			ProjectHandler projectHandler = new ProjectHandler(
-					localGitRepoManager, this.remoteGitServerManager
-			);
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
+
+			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			String projectId = projectHandler.create(
-					"Test CATMA Project for Tagset", "This is a test CATMA project"
+				"Test CATMA Project for Tagset", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
+			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			String name = "InterestingTagset";
 			String description = "Pretty interesting stuff";
 			Version version = new Version();
 
-			String tagsetId = tagsetHandler.create(
-					name,
-					description,
-					version,
-					projectId);
+			String tagsetId = tagsetHandler.create(name, description, version, projectId);
+			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the
+			// project will take care of that for us
 
 			assertNotNull(tagsetId);
-
-//			Integer id, String uuid,
-//					String name, Version version,
-//					Integer parentId, String parentUuid
 
 			String tagDefinitionId = this.idGenerator.generate();
 			Version tagDefVersion = new Version();
 
 			TagDefinition tagDefinition = new TagDefinition(
-					1, tagDefinitionId,
-					"FakeTagdefinitionName", tagDefVersion,
-					null, null);
+				null, tagDefinitionId, "FakeTagDefinitionName", tagDefVersion, null, null
+			);
 
-			PropertyDefinition propDef = new PropertyDefinition();
-			propDef.setId(1);
-			propDef.setUuid("CATMA_userPropdefUUID");
-			propDef.setName("CunningProperty");
-			propDef.setPossibleValueList(new PropertyPossibleValueList("Weather"));
+			PropertyDefinition propDef = new PropertyDefinition(
+				null, "CATMA_userPropdefUUID", "CunningProperty",
+				new PropertyPossibleValueList("Weather")
+			);
 			tagDefinition.addUserDefinedPropertyDefinition(propDef);
 
 			String result = tagsetHandler.addTagDefinition(tagsetId, tagDefinition);
@@ -225,9 +221,9 @@ public class TagsetHandlerTest {
 			assertEquals(tagDefinitionId, result);
 
 			String tagDefinitionPath = String.format(
-					"%s/%s",
-					TagsetHandler.getTagsetRepositoryName(tagsetId),
-					tagDefinition.getUuid()
+				"%s/%s",
+				TagsetHandler.getTagsetRepositoryName(tagsetId),
+				tagDefinition.getUuid()
 			);
 
 			File expectedTagDefinitionPath = new File(localGitRepoManager.getRepositoryBasePath(), tagDefinitionPath);
@@ -238,12 +234,12 @@ public class TagsetHandlerTest {
 
 			GitTagDefinition expectedGitTagDefinition = new GitTagDefinition(tagDefinition);
 
-			String serialized = FileUtils.readFileToString(new File(expectedTagDefinitionPath, "propertydefs.json"), StandardCharsets.UTF_8);
-			GitTagDefinition actualGitTagDefinition = new SerializationHelper<GitTagDefinition>()
-					.deserialize(
-							serialized,
-							GitTagDefinition.class
-					);
+			String serialized = FileUtils.readFileToString(
+				new File(expectedTagDefinitionPath, "propertydefs.json"), StandardCharsets.UTF_8
+			);
+			GitTagDefinition actualGitTagDefinition = new SerializationHelper<GitTagDefinition>().deserialize(
+				serialized, GitTagDefinition.class
+			);
 
 			assertEquals(expectedGitTagDefinition.getName(), actualGitTagDefinition.getName());
 			assertEquals(expectedGitTagDefinition.getParentUuid(), actualGitTagDefinition.getParentUuid());
@@ -253,51 +249,47 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void addTagDefinitionWithParent() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
+
 			ProjectHandler projectHandler = new ProjectHandler(
-					localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.remoteGitServerManager
 			);
 
 			String projectId = projectHandler.create(
-					"Test CATMA Project for Tagset", "This is a test CATMA project"
+				"Test CATMA Project for Tagset", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
+			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			String name = "InterestingTagset";
 			String description = "Pretty interesting stuff";
 			Version version = new Version();
 
-			String tagsetId = tagsetHandler.create(
-					name,
-					description,
-					version,
-					projectId);
+			String tagsetId = tagsetHandler.create(name, description, version, projectId);
 
 			assertNotNull(tagsetId);
-
-//			Integer id, String uuid,
-//					String name, Version version,
-//					Integer parentId, String parentUuid
 
 			String tagDefinitionId = this.idGenerator.generate();
 			String parentTagDefinitionId = this.idGenerator.generate();
 			Version tagDefVersion = new Version();
 
 			TagDefinition tagDefinition = new TagDefinition(
-					1, tagDefinitionId,
-					"FakeTagdefinitionName", tagDefVersion,
-					2, parentTagDefinitionId);
+				null, tagDefinitionId, "FakeTagdefinitionName", tagDefVersion,
+				null, parentTagDefinitionId
+			);
 
 			String result = tagsetHandler.addTagDefinition(tagsetId, tagDefinition);
 
 			assertEquals(tagDefinitionId, result);
 
 			String tagDefinitionPath = String.format(
-					"%s/%s/%s",
-					TagsetHandler.getTagsetRepositoryName(tagsetId),
-					parentTagDefinitionId,
-					tagDefinition.getUuid()
+				"%s/%s/%s",
+				TagsetHandler.getTagsetRepositoryName(tagsetId),
+				parentTagDefinitionId,
+				tagDefinition.getUuid()
 			);
 
 			Logger.getLogger(this.getClass().toString()).info(tagDefinitionPath);
@@ -310,12 +302,12 @@ public class TagsetHandlerTest {
 
 			GitTagDefinition expectedGitTagDefinition = new GitTagDefinition(tagDefinition);
 
-			String serialized = FileUtils.readFileToString(new File(expectedTagDefinitionPath, "propertydefs.json"), StandardCharsets.UTF_8);
-			GitTagDefinition actualGitTagDefinition = new SerializationHelper<GitTagDefinition>()
-					.deserialize(
-							serialized,
-							GitTagDefinition.class
-					);
+			String serialized = FileUtils.readFileToString(
+				new File(expectedTagDefinitionPath, "propertydefs.json"), StandardCharsets.UTF_8
+			);
+			GitTagDefinition actualGitTagDefinition = new SerializationHelper<GitTagDefinition>().deserialize(
+				serialized, GitTagDefinition.class
+			);
 
 			assertEquals(expectedGitTagDefinition.getName(), actualGitTagDefinition.getName());
 			assertEquals(expectedGitTagDefinition.getParentUuid(), actualGitTagDefinition.getParentUuid());
@@ -325,55 +317,75 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void open() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties,"fakeUserIdentifier")) {
-			ProjectHandler projectHandler = new ProjectHandler(
-					localGitRepoManager, this.remoteGitServerManager
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties,"fakeUserIdentifier"
+		)) {
+			// TODO: use JsonLdWebAnnotationTest.getTagInstance once it's been implemented
+			// for now, we need to create a fake project repo with fake submodules to make this test pass
+			File fakeProjectPath = new File(localGitRepoManager.getRepositoryBasePath(), "fakeProjectId_corpus");
+			// need to init the fake project repo, otherwise LocalGitRepositoryManager will fail to open it later
+			localGitRepoManager.init(fakeProjectPath.getName(), null);
+			localGitRepoManager.detach();  // can't call open on an attached instance
+			this.directoriesToDeleteOnTearDown.add(fakeProjectPath);
+
+			File fakeTagsetSubmodulePath = new File(fakeProjectPath, "tagsets/CATMA_TAGSET_DEF_tagset");
+
+			File fakeTagsetHeaderFilePath = new File(fakeTagsetSubmodulePath, "header.json");
+			String fakeSerializedTagsetHeader = "" +
+					"{\n" +
+					"\t\"description\":\"\",\n" +
+					"\t\"name\":\"TAGSET_DEF\",\n" +
+					"\t\"version\":\"2017-10-31T14:40:00+0200\"\n" +
+					"}";
+			FileUtils.writeStringToFile(fakeTagsetHeaderFilePath, fakeSerializedTagsetHeader, StandardCharsets.UTF_8);
+
+			File fakeTagDefinitionPath = new File(fakeTagsetSubmodulePath, "CATMA_TAG_DEF");
+
+			File fakeTagDefinitionPropertyDefsFilePath = new File(fakeTagDefinitionPath, "propertydefs.json");
+			String fakeSerializedTagDefinition = "" +
+					"{\n" +
+					"\t\"name\":\"TAG_DEF\",\n" +
+					"\t\"parentUuid\":\"\",\n" +
+					"\t\"systemPropertyDefinitions\":{\n" +
+					"\t\t\"CATMA_SYSPROP_DEF\":{\n" +
+					"\t\t\t\"name\":\"catma_markupauthor\",\n" +
+					"\t\t\t\"possibleValueList\":[\"SYSPROP_VAL_1\",\"SYSPROP_VAL_2\"],\n" +
+					"\t\t\t\"uuid\":\"CATMA_SYSPROP_DEF\"\n" +
+					"\t\t}\n" +
+					"\t},\n" +
+					"\t\"tagsetDefinitionUuid\":\"CATMA_TAGSET_DEF\",\n" +
+					"\t\"userDefinedPropertyDefinitions\":{\n" +
+					"\t\t\"CATMA_UPROP_DEF\":{\n" +
+					"\t\t\t\"name\":\"UPROP_DEF\",\n" +
+					"\t\t\t\"possibleValueList\":[\"UPROP_VAL_1\",\"UPROP_VAL_2\"],\n" +
+					"\t\t\t\"uuid\":\"CATMA_UPROP_DEF\"\n" +
+					"\t\t}\n" +
+					"\t},\n" +
+					"\t\"uuid\":\"CATMA_TAG_DEF\"\n" +
+					"}";
+			FileUtils.writeStringToFile(
+				fakeTagDefinitionPropertyDefsFilePath, fakeSerializedTagDefinition, StandardCharsets.UTF_8
 			);
 
-			String projectId = projectHandler.create(
-					"Test CATMA Project for Tagset", "This is a test CATMA project"
+			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+
+			TagsetDefinition tagsetDefinition = tagsetHandler.open(
+				"CATMA_TAGSET_DEF", "fakeProjectId"
 			);
-			this.projectsToDeleteOnTearDown.add(projectId);
 
-
-			String name = "InterestingTagset";
-			String description = "Pretty interesting stuff";
-			Version version = new Version();
-
-			String tagsetId = tagsetHandler.create(
-					name,
-					description,
-					version,
-					projectId);
-
-			String tagDefinitionId = this.idGenerator.generate();
-			String parentTagDefinitionId = this.idGenerator.generate();
-			Version tagDefVersion = new Version();
-
-			TagDefinition tagDefinition = new TagDefinition(
-					1, tagDefinitionId,
-					"FakeTagdefinitionName", tagDefVersion,
-					2, parentTagDefinitionId);
-
-			tagsetHandler.addTagDefinition(tagsetId, tagDefinition);
-
-			TagsetDefinition tagsetDefinition = tagsetHandler.open(tagsetId, projectId);
-
-			assertEquals(name, tagsetDefinition.getName());
-			assertEquals(tagsetId, tagsetDefinition.getUuid());
-			assertEquals(version, tagsetDefinition.getVersion());
+			assertEquals("CATMA_TAGSET_DEF", tagsetDefinition.getUuid());
+			assertEquals("TAGSET_DEF", tagsetDefinition.getName());
+			assertEquals("2017-10-31T14:40:00.000+0200", tagsetDefinition.getVersion().toString());
 
 			assertFalse(tagsetDefinition.isEmpty());
 
-			TagDefinition loadedTagDefinition = tagsetDefinition.getTagDefinition(tagDefinitionId);
+			TagDefinition loadedTagDefinition = tagsetDefinition.getTagDefinition("CATMA_TAG_DEF");
 
 			assertNotNull(loadedTagDefinition);
 
-			assertEquals(tagDefinition.getUuid(), loadedTagDefinition.getUuid());
-			assertEquals(tagDefinition.getName(), loadedTagDefinition.getName());
-			assertEquals(tagDefinition.getParentUuid(), loadedTagDefinition.getParentUuid());
-
+			assertEquals("CATMA_TAG_DEF", loadedTagDefinition.getUuid());
+			assertEquals("TAG_DEF", loadedTagDefinition.getName());
+			assertEquals("", loadedTagDefinition.getParentUuid());
 		}
 	}
-
 }
