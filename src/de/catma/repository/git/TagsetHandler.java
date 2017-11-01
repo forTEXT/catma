@@ -138,15 +138,17 @@ public class TagsetHandler implements ITagsetHandler {
 	@Override
 	public TagsetDefinition open(String tagsetId, String projectId) throws TagsetHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+			localGitRepoManager.open(projectRootRepositoryName);
 
-			localGitRepoManager.open(TagsetHandler.getTagsetRepositoryName(tagsetId));
+			String tagsetRepositoryName = TagsetHandler.getTagsetRepositoryName(tagsetId);
 
-			File repositoryWorkTreeFile = localGitRepoManager.getRepositoryWorkTree();
-			File targetHeaderFile = new File(
-					repositoryWorkTreeFile, "header.json"
+			File tagsetHeaderFile = new File(
+				localGitRepoManager.getRepositoryWorkTree(),
+				String.format("tagsets/%s/header.json", tagsetRepositoryName)
 			);
 
-			String serialized = FileUtils.readFileToString(targetHeaderFile, StandardCharsets.UTF_8);
+			String serialized = FileUtils.readFileToString(tagsetHeaderFile, StandardCharsets.UTF_8);
 			TagsetDefinitionHeader tagsetDefinitionHeader = new SerializationHelper<TagsetDefinitionHeader>()
 					.deserialize(
 							serialized,
@@ -154,9 +156,11 @@ public class TagsetHandler implements ITagsetHandler {
 					);
 
 			//Integer id, String uuid, String tagsetName, Version version
-			TagsetDefinition tagsetdefinition = new TagsetDefinition(null, tagsetId, tagsetDefinitionHeader.getName(), tagsetDefinitionHeader.version());
+			TagsetDefinition tagsetdefinition = new TagsetDefinition(
+				null, tagsetId, tagsetDefinitionHeader.getName(), tagsetDefinitionHeader.version()
+			);
 
-			ArrayList<TagDefinition> tagDefinitions = this.openTagDefinitions(repositoryWorkTreeFile);
+			ArrayList<TagDefinition> tagDefinitions = this.openTagDefinitions(tagsetHeaderFile.getParentFile());
 
 			for(TagDefinition tagdefinition : tagDefinitions){
 				tagsetdefinition.addTagDefinition(tagdefinition);
@@ -167,7 +171,6 @@ public class TagsetHandler implements ITagsetHandler {
 		catch (LocalGitRepositoryManagerException | IOException e) {
 			throw new TagsetHandlerException("Failed to open the Tagset repo", e);
 		}
-
 	}
 
 	@Override
