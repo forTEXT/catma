@@ -12,7 +12,6 @@ import de.catma.repository.git.exceptions.TagsetHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.tag.*;
-import org.apache.commons.lang3.StringUtils;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -71,7 +70,7 @@ public class JsonLdWebAnnotation {
 		// NB: this method does not care about query params and will strip them if they exist in the URL
 		URL _url = new URL(url);
 		String path = _url.getPath();
-		if (!StringUtils.isEmpty(path) && !path.endsWith("/")) {
+		if (!path.endsWith("/")) {
 			path = path + "/";
 		}
 		return new URL(_url.getProtocol(), _url.getHost(), _url.getPort(), path);
