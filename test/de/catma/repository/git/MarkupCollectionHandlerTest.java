@@ -79,7 +79,10 @@ public class MarkupCollectionHandlerTest {
 		}
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
+			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+					this.catmaProperties, "fakeUserIdentifier"
+			)) {
+
 				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
@@ -100,7 +103,10 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
+
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
 				localGitRepoManager, this.remoteGitServerManager
 			);
@@ -133,7 +139,10 @@ public class MarkupCollectionHandlerTest {
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
-			File expectedRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
+			File expectedRepoPath = new File(
+				localGitRepoManager.getRepositoryBasePath(),
+				MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId)
+			);
 
 			assert expectedRepoPath.exists();
 			assert expectedRepoPath.isDirectory();
@@ -164,7 +173,10 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
+
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
 				localGitRepoManager, this.remoteGitServerManager
 			);
@@ -177,7 +189,10 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void addTagset() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
+
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
 				localGitRepoManager, this.remoteGitServerManager
 			);
@@ -242,7 +257,10 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void removeTagset() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
+
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
 				localGitRepoManager, this.remoteGitServerManager
 			);
@@ -255,7 +273,10 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void addTagInstance() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
+
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
 				localGitRepoManager, this.remoteGitServerManager
 			);

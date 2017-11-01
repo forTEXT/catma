@@ -52,7 +52,10 @@ public class ProjectHandlerTest {
 	@After
 	public void tearDown() throws Exception {
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
+			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+					this.catmaProperties, "fakeUserIdentifier"
+			)) {
+
 				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
@@ -73,7 +76,10 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
+
 			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			String projectId = projectHandler.create(
@@ -89,7 +95,9 @@ public class ProjectHandlerTest {
 			assertFalse(localGitRepoManager.isAttached());
 
 			String expectedRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
-			String repositoryBasePath = String.format("%s/%s", this.catmaProperties.getProperty("GitBasedRepositoryBasePath"), "fakeUserIdentifier");
+			String repositoryBasePath = String.format(
+				"%s/%s", this.catmaProperties.getProperty("GitBasedRepositoryBasePath"), "fakeUserIdentifier"
+			);
 
 			File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
 
@@ -106,7 +114,10 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
+
 			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			String projectId = projectHandler.create(
@@ -122,7 +133,9 @@ public class ProjectHandlerTest {
 			assertFalse(localGitRepoManager.isAttached());
 
 			String expectedRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
-			String repositoryBasePath = String.format("%s/%s", this.catmaProperties.getProperty("GitBasedRepositoryBasePath"), "fakeUserIdentifier");
+			String repositoryBasePath = String.format(
+				"%s/%s", this.catmaProperties.getProperty("GitBasedRepositoryBasePath"), "fakeUserIdentifier"
+			);
 
 			File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
 
@@ -171,7 +184,10 @@ public class ProjectHandlerTest {
 
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
+
 			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			String projectId = projectHandler.create(
@@ -206,7 +222,10 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void addTagsetToMarkupCollection() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties, "fakeUserIdentifier")) {
+		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
+
 			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
 			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
