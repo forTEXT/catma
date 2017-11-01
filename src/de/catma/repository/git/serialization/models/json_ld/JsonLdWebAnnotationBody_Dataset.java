@@ -25,11 +25,16 @@ public class JsonLdWebAnnotationBody_Dataset {
 	private TreeMap<String, String> context;
 	private String tagset;
 	private String tag;
-	private TreeMap<String, TreeSet<String>> properties;
+	private TreeMap<String, TreeMap<String, TreeSet<String>>> properties;
+
+	public final static String SYSTEM_PROPERTIES_KEY = "system";
+	public final static String USER_PROPERTIES_KEY = "user";
 
 	public JsonLdWebAnnotationBody_Dataset() {
 		this.context = new TreeMap<>();
 		this.properties = new TreeMap<>();
+		this.properties.put(SYSTEM_PROPERTIES_KEY, new TreeMap<>());
+		this.properties.put(USER_PROPERTIES_KEY, new TreeMap<>());
 	}
 
 	public JsonLdWebAnnotationBody_Dataset(String gitServerBaseUrl, String projectId, List<TagReference> tagReferences)
@@ -60,8 +65,8 @@ public class JsonLdWebAnnotationBody_Dataset {
 
 			this.tag = this.buildTagDefinitionUrl(this.tagset, tagDefinition).toString();
 
-			this.addProperties(this.tag, tagInstance.getUserDefinedProperties());
-			this.addProperties(this.tag, tagInstance.getSystemProperties());
+			this.addProperties(this.tag, tagInstance.getUserDefinedProperties(), false);
+			this.addProperties(this.tag, tagInstance.getSystemProperties(), true);
 		}
 		catch (MalformedURLException e) {
 			throw new JsonLdWebAnnotationException("Failed to build tagset URL", e);
@@ -103,7 +108,8 @@ public class JsonLdWebAnnotationBody_Dataset {
 		);
 	}
 
-	private void addProperties(String tagDefinitionUrl, Collection<Property> properties) throws MalformedURLException {
+	private void addProperties(String tagDefinitionUrl, Collection<Property> properties, boolean system)
+			throws MalformedURLException {
 		for (Property property : properties) {
 			// add entries to the context that allow us to have PropertyDefinition URLs aliased by name
 			this.context.put(
@@ -112,7 +118,16 @@ public class JsonLdWebAnnotationBody_Dataset {
 			);
 
 			// add property values
-			this.properties.put(property.getName(), new TreeSet<>(property.getPropertyValueList().getValues()));
+			if (system) {
+				this.properties.get("system").put(
+					property.getName(), new TreeSet<>(property.getPropertyValueList().getValues())
+				);
+			}
+			else {
+				this.properties.get("user").put(
+					property.getName(), new TreeSet<>(property.getPropertyValueList().getValues())
+				);
+			}
 		}
 	}
 
@@ -146,11 +161,11 @@ public class JsonLdWebAnnotationBody_Dataset {
 		this.tag = tag;
 	}
 
-	public TreeMap<String, TreeSet<String>> getProperties() {
+	public TreeMap<String, TreeMap<String, TreeSet<String>>> getProperties() {
 		return this.properties;
 	}
 
-	public void setProperties(TreeMap<String, TreeSet<String>> properties) {
+	public void setProperties(TreeMap<String, TreeMap<String, TreeSet<String>>> properties) {
 		this.properties = properties;
 	}
 }
