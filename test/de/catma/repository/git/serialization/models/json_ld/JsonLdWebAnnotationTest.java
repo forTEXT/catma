@@ -9,13 +9,16 @@ import de.catma.repository.git.managers.RemoteGitServerManagerTest;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.tag.*;
 import helpers.Randomizer;
+import org.apache.commons.io.FileUtils;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -25,14 +28,18 @@ public class JsonLdWebAnnotationTest {
 			"{\n" +
 			"\t\"body\":{\n" +
 			"\t\t\"@context\":{\n" +
-			"\t\t\t\"SYSPROP_DEF\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF_tagset/CATMA_TAG_DEF/propertydefs.json/CATMA_SYSPROP_DEF\",\n" +
 			"\t\t\t\"UPROP_DEF\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF_tagset/CATMA_TAG_DEF/propertydefs.json/CATMA_UPROP_DEF\",\n" +
+			"\t\t\t\"catma_markupauthor\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF_tagset/CATMA_TAG_DEF/propertydefs.json/CATMA_SYSPROP_DEF\",\n" +
 			"\t\t\t\"tag\":\"http://catma.de/portal/tag\",\n" +
 			"\t\t\t\"tagset\":\"http://catma.de/portal/tagset\"\n" +
 			"\t\t},\n" +
 			"\t\t\"properties\":{\n" +
-			"\t\t\t\"SYSPROP_DEF\":[\"SYSPROP_VAL_1\"],\n" +
-			"\t\t\t\"UPROP_DEF\":[\"UPROP_VAL_2\"]\n" +
+			"\t\t\t\"system\":{\n" +
+			"\t\t\t\t\"catma_markupauthor\":[\"SYSPROP_VAL_1\"]\n" +
+			"\t\t\t},\n" +
+			"\t\t\t\"user\":{\n" +
+			"\t\t\t\t\"UPROP_DEF\":[\"UPROP_VAL_2\"]\n" +
+			"\t\t\t}\n" +
 			"\t\t},\n" +
 			"\t\t\"tag\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF_tagset/CATMA_TAG_DEF\",\n" +
 			"\t\t\"tagset\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF_tagset\",\n" +
@@ -67,6 +74,8 @@ public class JsonLdWebAnnotationTest {
 
 	private ArrayList<String> projectsToDeleteOnTearDown = new ArrayList<>();
 
+	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
+
 	public JsonLdWebAnnotationTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
 				System.getProperties().getProperty("prop") : "catma.properties";
@@ -100,6 +109,13 @@ public class JsonLdWebAnnotationTest {
 			}
 		}
 
+		if (this.directoriesToDeleteOnTearDown.size() > 0) {
+			for (File dir : this.directoriesToDeleteOnTearDown) {
+				FileUtils.deleteDirectory(dir);
+			}
+			this.directoriesToDeleteOnTearDown.clear();
+		}
+
 		// delete the GitLab user that the RemoteGitServerManager constructor in setUp would have
 		// created - see RemoteGitServerManagerTest tearDown() for more info
 		User user = this.remoteGitServerManager.getGitLabUser();
@@ -114,7 +130,8 @@ public class JsonLdWebAnnotationTest {
 			Arrays.asList("SYSPROP_VAL_1", "SYSPROP_VAL_2"), true
 		);
 		PropertyDefinition systemPropertyDefinition = new PropertyDefinition(
-			1, "CATMA_SYSPROP_DEF", "SYSPROP_DEF", systemPropertyPossibleValues
+			1, "CATMA_SYSPROP_DEF", PropertyDefinition.SystemPropertyName.catma_markupauthor.toString(),
+			systemPropertyPossibleValues
 		);
 
 		PropertyPossibleValueList userPropertyPossibleValues = new PropertyPossibleValueList(
@@ -215,9 +232,6 @@ public class JsonLdWebAnnotationTest {
 
 	@Test
 	public void toTagReferenceList() throws Exception {
-		// TODO: use getTagInstance once it's been implemented
-		// TODO: test with a hierarchy of tag definitions
-
 		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
@@ -226,6 +240,54 @@ public class JsonLdWebAnnotationTest {
 			);
 
 			assertNotNull(jsonLdWebAnnotation);
+
+			// TODO: use getTagInstance once it's been implemented
+			// TODO: test with a hierarchy of tag definitions
+			// for now, we need to create a fake project repo with fake submodules to make this test pass
+			File fakeProjectPath = new File(localGitRepoManager.getRepositoryBasePath(), "fakeProjectId_corpus");
+			// need to init the fake project repo, otherwise LocalGitRepositoryManager will fail to open it later
+			localGitRepoManager.init(fakeProjectPath.getName(), null);
+			localGitRepoManager.detach();  // can't call open on an attached instance
+			this.directoriesToDeleteOnTearDown.add(fakeProjectPath);
+
+			File fakeTagsetSubmodulePath = new File(fakeProjectPath, "tagsets/CATMA_TAGSET_DEF_tagset");
+
+			File fakeTagsetHeaderFilePath = new File(fakeTagsetSubmodulePath, "header.json");
+			String fakeSerializedTagsetHeader = "" +
+					"{\n" +
+					"\t\"description\":\"\",\n" +
+					"\t\"name\":\"TAGSET_DEF\",\n" +
+					"\t\"version\":\"2017-10-31T14:40:00+0200\"\n" +
+					"}";
+			FileUtils.writeStringToFile(fakeTagsetHeaderFilePath, fakeSerializedTagsetHeader, StandardCharsets.UTF_8);
+
+			File fakeTagDefinitionPath = new File(fakeTagsetSubmodulePath, "CATMA_TAG_DEF");
+
+			File fakeTagDefinitionPropertyDefsFilePath = new File(fakeTagDefinitionPath, "propertydefs.json");
+			String fakeSerializedTagDefinition = "" +
+					"{\n" +
+					"\t\"name\":\"TAG_DEF\",\n" +
+					"\t\"parentUuid\":\"\",\n" +
+					"\t\"systemPropertyDefinitions\":{\n" +
+					"\t\t\"CATMA_SYSPROP_DEF\":{\n" +
+					"\t\t\t\"name\":\"catma_markupauthor\",\n" +
+					"\t\t\t\"possibleValueList\":[\"SYSPROP_VAL_1\",\"SYSPROP_VAL_2\"],\n" +
+					"\t\t\t\"uuid\":\"CATMA_SYSPROP_DEF\"\n" +
+					"\t\t}\n" +
+					"\t},\n" +
+					"\t\"tagsetDefinitionUuid\":\"CATMA_TAGSET_DEF\",\n" +
+					"\t\"userDefinedPropertyDefinitions\":{\n" +
+					"\t\t\"CATMA_UPROP_DEF\":{\n" +
+					"\t\t\t\"name\":\"UPROP_DEF\",\n" +
+					"\t\t\t\"possibleValueList\":[\"UPROP_VAL_1\",\"UPROP_VAL_2\"],\n" +
+					"\t\t\t\"uuid\":\"CATMA_UPROP_DEF\"\n" +
+					"\t\t}\n" +
+					"\t},\n" +
+					"\t\"uuid\":\"CATMA_TAG_DEF\"\n" +
+					"}";
+			FileUtils.writeStringToFile(
+				fakeTagDefinitionPropertyDefsFilePath, fakeSerializedTagDefinition, StandardCharsets.UTF_8
+			);
 
 			List<TagReference> tagReferences = jsonLdWebAnnotation.toTagReferenceList(
 				"fakeProjectId", "fakeMarkupCollectionId",
@@ -247,7 +309,7 @@ public class JsonLdWebAnnotationTest {
 						.toArray(new PropertyDefinition[0]);
 				assertEquals(1, systemPropertyDefinitions.length);
 				assertEquals("CATMA_SYSPROP_DEF", systemPropertyDefinitions[0].getUuid());
-				assertEquals("SYSPROP_DEF", systemPropertyDefinitions[0].getName());
+				assertEquals("catma_markupauthor", systemPropertyDefinitions[0].getName());
 				List<String> possibleSystemPropertyValues = systemPropertyDefinitions[0].getPossibleValueList()
 						.getPropertyValueList().getValues();
 				assertEquals(2, possibleSystemPropertyValues.size());
@@ -285,13 +347,13 @@ public class JsonLdWebAnnotationTest {
 			}
 
 			assertEquals(
-				new URI("http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC"),
+				new URI("http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC_sourcedocument"),
 				tagReferences.get(0).getTarget()
 			);
 			assertEquals(new Range(12, 18), tagReferences.get(0).getRange());
 
 			assertEquals(
-				new URI("http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC"),
+				new URI("http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC_sourcedocument"),
 				tagReferences.get(1).getTarget()
 			);
 			assertEquals(new Range(41, 47), tagReferences.get(1).getRange());

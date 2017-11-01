@@ -25,6 +25,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TagsetHandler implements ITagsetHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -36,6 +38,13 @@ public class TagsetHandler implements ITagsetHandler {
 
 	public static String getTagsetRepositoryName(String tagsetId) {
 		return String.format(TAGSET_REPOSITORY_NAME_FORMAT, tagsetId);
+	}
+
+	public static String getTagsetUuidFromRepositoryName(String tagsetRepositoryName) {
+		Pattern pattern = Pattern.compile(TAGSET_REPOSITORY_NAME_FORMAT.replace("%s", "(.*)"));
+		Matcher matcher = pattern.matcher(tagsetRepositoryName);
+		matcher.matches();
+		return matcher.group(1);
 	}
 
 	public TagsetHandler(ILocalGitRepositoryManager localGitRepositoryManager,

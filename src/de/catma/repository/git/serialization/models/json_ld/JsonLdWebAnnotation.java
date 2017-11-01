@@ -11,18 +11,13 @@ import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
 import de.catma.repository.git.exceptions.TagsetHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
-import de.catma.tag.TagDefinition;
-import de.catma.tag.TagInstance;
-import de.catma.tag.TagsetDefinition;
+import de.catma.tag.*;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -176,7 +171,34 @@ public class JsonLdWebAnnotation {
 			localGitRepositoryManager, remoteGitServerManager, projectId
 		);
 
-		return new TagInstance(this.getLastPathSegmentFromUrl(this.id), tagDefinition);
+		TagInstance tagInstance = new TagInstance(
+			this.getLastPathSegmentFromUrl(this.id).replace(".json", ""),
+			tagDefinition
+		);
+
+		// the TagInstance constructor sets default values for system properties, so we need to clear them
+		for (Property property : tagInstance.getSystemProperties()) {
+			property.setPropertyValueList(new PropertyValueList());
+		}
+
+		TreeMap<String, TreeMap<String, TreeSet<String>>> properties = this.body.getProperties();
+
+		for (Map.Entry<String, TreeMap<String, TreeSet<String>>> entry : properties.entrySet()) {
+			for (Map.Entry<String, TreeSet<String>> subEntry : entry.getValue().entrySet()) {
+				Property property = new Property(
+					tagDefinition.getPropertyDefinitionByName(subEntry.getKey()),
+					new PropertyValueList(new ArrayList<>(subEntry.getValue()))
+				);
+				if (entry.getKey().equals(JsonLdWebAnnotationBody_Dataset.SYSTEM_PROPERTIES_KEY)) {
+					tagInstance.addSystemProperty(property);
+				}
+				else {
+					tagInstance.addUserDefinedProperty(property);
+				}
+			}
+		}
+
+		return tagInstance;
 	}
 
 	private TagDefinition getTagDefinition(ILocalGitRepositoryManager localGitRepositoryManager,
@@ -187,7 +209,8 @@ public class JsonLdWebAnnotation {
 		try {
 			// TODO: open a TagDefinition directly?
 			TagsetDefinition tagsetDefinition = tagsetHandler.open(
-				this.getLastPathSegmentFromUrl(this.body.getTagset()), projectId
+				TagsetHandler.getTagsetUuidFromRepositoryName(this.getLastPathSegmentFromUrl(this.body.getTagset())),
+				projectId
 			);
 			return tagsetDefinition.getTagDefinition(this.getLastPathSegmentFromUrl(this.body.getTag()));
 		}
