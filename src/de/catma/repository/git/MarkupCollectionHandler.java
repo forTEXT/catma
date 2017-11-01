@@ -217,13 +217,13 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 		for(String item : contents){
 			File target = new File(parentDirectory, item);
 
-			// if it is a directory, recurse into it adding results to the current tagDefinitions list
+			// if it is a directory, recurse into it adding results to the current tagReferences list
 			if(target.isDirectory() && !target.getName().equalsIgnoreCase(".git")){
 				tagReferences.addAll(this.openTagReferences(projectId, markupCollectionId, target));
 				continue;
 			}
 
-			// if item is propertydefs.json, read it into a TagDefinition
+			// if item is <CATMA_UUID>.json, read it into a list of TagReference objects
 			if(target.isFile() && isTagInstanceFilename(target.getName())){
 				String serialized = FileUtils.readFileToString(target, StandardCharsets.UTF_8);
 				JsonLdWebAnnotation jsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>()
