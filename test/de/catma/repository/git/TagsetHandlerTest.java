@@ -1,9 +1,9 @@
 package de.catma.repository.git;
 
 import de.catma.repository.git.exceptions.TagsetHandlerException;
+import de.catma.repository.git.managers.GitLabServerManagerTest;
 import de.catma.repository.git.managers.JGitRepoManager;
-import de.catma.repository.git.managers.RemoteGitServerManager;
-import de.catma.repository.git.managers.RemoteGitServerManagerTest;
+import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
 import de.catma.repository.git.serialization.models.TagsetDefinitionHeader;
@@ -33,7 +33,7 @@ import static org.junit.Assert.*;
 
 public class TagsetHandlerTest {
 	private Properties catmaProperties;
-	private RemoteGitServerManager remoteGitServerManager;
+	private GitLabServerManager gitLabServerManager;
 
 	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<String> tagsetReposToDeleteOnTearDown = new ArrayList<>();
@@ -53,11 +53,11 @@ public class TagsetHandlerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
+		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager
 		de.catma.user.User catmaUser = Randomizer.getDbUser();
 
-		this.remoteGitServerManager = new RemoteGitServerManager(this.catmaProperties, catmaUser);
-		this.remoteGitServerManager.replaceGitLabServerUrl = true;
+		this.gitLabServerManager = new GitLabServerManager(this.catmaProperties, catmaUser);
+		this.gitLabServerManager.replaceGitLabServerUrl = true;
 	}
 
 	@After
@@ -72,14 +72,14 @@ public class TagsetHandlerTest {
 		if (this.tagsetReposToDeleteOnTearDown.size() > 0) {
 			for (String tagsetId : this.tagsetReposToDeleteOnTearDown) {
 				String tagsetRepoName = TagsetHandler.getTagsetRepositoryName(tagsetId);
-				List<Project> projects = this.remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects(
+				List<Project> projects = this.gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects(
 					tagsetRepoName
 				); // this getProjects overload does a search
 				for (Project project : projects) {
-					this.remoteGitServerManager.deleteRepository(project.getId());
+					this.gitLabServerManager.deleteRepository(project.getId());
 				}
 				await().until(
-					() -> this.remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
+					() -> this.gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
 				);
 			}
 			this.tagsetReposToDeleteOnTearDown.clear();
@@ -89,7 +89,7 @@ public class TagsetHandlerTest {
 			try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 					this.catmaProperties, "fakeUserIdentifier"
 			)) {
-				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
+				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
 					projectHandler.delete(projectId);
@@ -98,12 +98,12 @@ public class TagsetHandlerTest {
 			}
 		}
 
-		// delete the GitLab user that the RemoteGitServerManager constructor in setUp would have
-		// created - see RemoteGitServerManagerTest tearDown() for more info
-		User user = this.remoteGitServerManager.getGitLabUser();
-		this.remoteGitServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
-		RemoteGitServerManagerTest.awaitUserDeleted(
-			this.remoteGitServerManager.getAdminGitLabApi().getUserApi(), user.getId()
+		// delete the GitLab user that the GitLabServerManager constructor in setUp would have
+		// created - see GitLabServerManagerTest tearDown() for more info
+		User user = this.gitLabServerManager.getGitLabUser();
+		this.gitLabServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
+		GitLabServerManagerTest.awaitUserDeleted(
+			this.gitLabServerManager.getAdminGitLabApi().getUserApi(), user.getId()
 		);
 	}
 
@@ -113,7 +113,7 @@ public class TagsetHandlerTest {
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
-			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
 				"Test CATMA Project for Tagset", "This is a test CATMA project"
@@ -124,7 +124,7 @@ public class TagsetHandlerTest {
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
-			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.gitLabServerManager);
 
 			String name = "InterestingTagset";
 			String description = "Pretty interesting stuff";
@@ -170,7 +170,7 @@ public class TagsetHandlerTest {
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
-			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.gitLabServerManager);
 
 			thrown.expect(TagsetHandlerException.class);
 			thrown.expectMessage("Not implemented");
@@ -184,14 +184,14 @@ public class TagsetHandlerTest {
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
-			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
 				"Test CATMA Project for Tagset", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.gitLabServerManager);
 
 			String name = "InterestingTagset";
 			String description = "Pretty interesting stuff";
@@ -254,7 +254,7 @@ public class TagsetHandlerTest {
 		)) {
 
 			ProjectHandler projectHandler = new ProjectHandler(
-				localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.gitLabServerManager
 			);
 
 			String projectId = projectHandler.create(
@@ -262,7 +262,7 @@ public class TagsetHandlerTest {
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.gitLabServerManager);
 
 			String name = "InterestingTagset";
 			String description = "Pretty interesting stuff";
@@ -367,7 +367,7 @@ public class TagsetHandlerTest {
 				fakeTagDefinitionPropertyDefsFilePath, fakeSerializedTagDefinition, StandardCharsets.UTF_8
 			);
 
-			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.gitLabServerManager);
 
 			TagsetDefinition tagsetDefinition = tagsetHandler.open(
 				"CATMA_TAGSET_DEF", "fakeProjectId"

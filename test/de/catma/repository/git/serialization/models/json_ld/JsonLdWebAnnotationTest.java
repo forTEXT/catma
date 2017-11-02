@@ -4,8 +4,8 @@ import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.repository.git.ProjectHandler;
 import de.catma.repository.git.managers.JGitRepoManager;
-import de.catma.repository.git.managers.RemoteGitServerManager;
-import de.catma.repository.git.managers.RemoteGitServerManagerTest;
+import de.catma.repository.git.managers.GitLabServerManager;
+import de.catma.repository.git.managers.GitLabServerManagerTest;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.tag.*;
 import helpers.Randomizer;
@@ -70,7 +70,7 @@ public class JsonLdWebAnnotationTest {
 			"}";
 
 	private Properties catmaProperties;
-	private RemoteGitServerManager remoteGitServerManager;
+	private GitLabServerManager gitLabServerManager;
 
 	private ArrayList<String> projectsToDeleteOnTearDown = new ArrayList<>();
 
@@ -86,13 +86,13 @@ public class JsonLdWebAnnotationTest {
 
 	@Before
 	public void setUp() throws Exception {
-		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
+		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager
 		de.catma.user.User catmaUser = Randomizer.getDbUser();
 
-		this.remoteGitServerManager = new RemoteGitServerManager(
+		this.gitLabServerManager = new GitLabServerManager(
 			this.catmaProperties, catmaUser
 		);
-		this.remoteGitServerManager.replaceGitLabServerUrl = true;
+		this.gitLabServerManager.replaceGitLabServerUrl = true;
 	}
 
 	@After
@@ -100,7 +100,7 @@ public class JsonLdWebAnnotationTest {
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
 			try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 					this.catmaProperties, "fakeUserIdentifier")) {
-				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
+				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
 					projectHandler.delete(projectId);
@@ -116,12 +116,12 @@ public class JsonLdWebAnnotationTest {
 			this.directoriesToDeleteOnTearDown.clear();
 		}
 
-		// delete the GitLab user that the RemoteGitServerManager constructor in setUp would have
-		// created - see RemoteGitServerManagerTest tearDown() for more info
-		User user = this.remoteGitServerManager.getGitLabUser();
-		this.remoteGitServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
-		RemoteGitServerManagerTest.awaitUserDeleted(
-			this.remoteGitServerManager.getAdminGitLabApi().getUserApi(), user.getId()
+		// delete the GitLab user that the GitLabServerManager constructor in setUp would have
+		// created - see GitLabServerManagerTest tearDown() for more info
+		User user = this.gitLabServerManager.getGitLabUser();
+		this.gitLabServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
+		GitLabServerManagerTest.awaitUserDeleted(
+			this.gitLabServerManager.getAdminGitLabApi().getUserApi(), user.getId()
 		);
 	}
 
@@ -167,7 +167,7 @@ public class JsonLdWebAnnotationTest {
 	public HashMap<String, Object> getTagInstance() throws Exception {
 		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier")) {
-			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
 					"Test CATMA Project", "This is a test CATMA project"
@@ -291,7 +291,7 @@ public class JsonLdWebAnnotationTest {
 
 			List<TagReference> tagReferences = jsonLdWebAnnotation.toTagReferenceList(
 				"fakeProjectId", "fakeMarkupCollectionId",
-				localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.gitLabServerManager
 			);
 
 			assertEquals(2, tagReferences.size());

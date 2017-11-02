@@ -158,25 +158,25 @@ public class JGitRepoManagerTest {
 
 	@Test
 	public void cloneGitLabRepoWithAuthentication() throws Exception {
-		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
+		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager
 		DBUser catmaUser = Randomizer.getDbUser();
 
-		RemoteGitServerManager remoteGitServerManager = new RemoteGitServerManager(
+		GitLabServerManager gitLabServerManager = new GitLabServerManager(
 			this.catmaProperties, catmaUser
 		);
-		remoteGitServerManager.replaceGitLabServerUrl = true;
+		gitLabServerManager.replaceGitLabServerUrl = true;
 
 		String randomRepoName = Randomizer.getRepoName();
 
 		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
-				remoteGitServerManager.createRepository(randomRepoName, null);
+				gitLabServerManager.createRepository(randomRepoName, null);
 
 		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			String repoName = localGitRepoManager.clone(
 				createRepositoryResponse.repositoryHttpUrl,
 				null,
-				remoteGitServerManager.getGitLabUser().getUsername(),
-				remoteGitServerManager.getGitLabUserImpersonationToken()
+				gitLabServerManager.getGitLabUser().getUsername(),
+				gitLabServerManager.getGitLabUserImpersonationToken()
 			);
 
 			assert localGitRepoManager.isAttached();
@@ -190,16 +190,16 @@ public class JGitRepoManagerTest {
 		}
 
 		// cleanup (these are not handled by tearDown)
-		remoteGitServerManager.deleteRepository(createRepositoryResponse.repositoryId);
+		gitLabServerManager.deleteRepository(createRepositoryResponse.repositoryId);
 		await().until(
-			() -> remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
+			() -> gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
 		);
 
-		// see RemoteGitServerManagerTest tearDown() for more info
-		User user = remoteGitServerManager.getGitLabUser();
-		remoteGitServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
-		RemoteGitServerManagerTest.awaitUserDeleted(
-			remoteGitServerManager.getAdminGitLabApi().getUserApi(), user.getId()
+		// see GitLabServerManagerTest tearDown() for more info
+		User user = gitLabServerManager.getGitLabUser();
+		gitLabServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
+		GitLabServerManagerTest.awaitUserDeleted(
+			gitLabServerManager.getAdminGitLabApi().getUserApi(), user.getId()
 		);
 	}
 
@@ -452,25 +452,25 @@ public class JGitRepoManagerTest {
 
 	@Test
 	public void pushToGitLabRepoWithAuthentication() throws Exception {
-		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
+		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager
 		DBUser catmaUser = Randomizer.getDbUser();
 
-		RemoteGitServerManager remoteGitServerManager = new RemoteGitServerManager(
+		GitLabServerManager gitLabServerManager = new GitLabServerManager(
 			this.catmaProperties, catmaUser
 		);
-		remoteGitServerManager.replaceGitLabServerUrl = true;
+		gitLabServerManager.replaceGitLabServerUrl = true;
 
 		// create a repository
 		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
-				remoteGitServerManager.createRepository(Randomizer.getRepoName(), null);
+				gitLabServerManager.createRepository(Randomizer.getRepoName(), null);
 
 		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			// clone it
 			String repoName = localGitRepoManager.clone(
 				createRepositoryResponse.repositoryHttpUrl,
 				null,
-				remoteGitServerManager.getGitLabUser().getUsername(),
-				remoteGitServerManager.getGitLabUserImpersonationToken()
+				gitLabServerManager.getGitLabUser().getUsername(),
+				gitLabServerManager.getGitLabUserImpersonationToken()
 			);
 
 			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), repoName);
@@ -494,27 +494,27 @@ public class JGitRepoManagerTest {
 			);
 
 			localGitRepoManager.push(
-				remoteGitServerManager.getGitLabUser().getUsername(),
-				remoteGitServerManager.getGitLabUserImpersonationToken()
+				gitLabServerManager.getGitLabUser().getUsername(),
+				gitLabServerManager.getGitLabUserImpersonationToken()
 			);
 
 			// assert that the push worked by looking at the commits on the server
-			CommitsApi commitsApi = remoteGitServerManager.getUserGitLabApi().getCommitsApi();
+			CommitsApi commitsApi = gitLabServerManager.getUserGitLabApi().getCommitsApi();
 			List<Commit> commits = commitsApi.getCommits(createRepositoryResponse.repositoryId);
 			assertEquals(1, commits.size());
 			assertEquals("Adding rose_for_emily.pdf", commits.get(0).getMessage());
 
 			// cleanup (these are not handled by tearDown)
-			remoteGitServerManager.deleteRepository(createRepositoryResponse.repositoryId);
+			gitLabServerManager.deleteRepository(createRepositoryResponse.repositoryId);
 			await().until(
-				() -> remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
+				() -> gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
 			);
 
-			// see RemoteGitServerManagerTest tearDown() for more info
-			User user = remoteGitServerManager.getGitLabUser();
-			remoteGitServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
-			RemoteGitServerManagerTest.awaitUserDeleted(
-				remoteGitServerManager.getAdminGitLabApi().getUserApi(), user.getId()
+			// see GitLabServerManagerTest tearDown() for more info
+			User user = gitLabServerManager.getGitLabUser();
+			gitLabServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
+			GitLabServerManagerTest.awaitUserDeleted(
+				gitLabServerManager.getAdminGitLabApi().getUserApi(), user.getId()
 			);
 		}
 	}

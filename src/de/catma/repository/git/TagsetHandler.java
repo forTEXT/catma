@@ -6,7 +6,7 @@ import de.catma.repository.git.exceptions.TagsetHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.interfaces.ITagsetHandler;
-import de.catma.repository.git.managers.RemoteGitServerManager;
+import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
 import de.catma.repository.git.serialization.models.HeaderBase;
@@ -70,11 +70,11 @@ public class TagsetHandler implements ITagsetHandler {
 			);
 
 			// clone the repository locally
-			RemoteGitServerManager remoteGitServerManagerImpl =
-					(RemoteGitServerManager)this.remoteGitServerManager;
+			GitLabServerManager gitLabServerManager =
+					(GitLabServerManager)this.remoteGitServerManager;
 
-			User gitLabUser = remoteGitServerManagerImpl.getGitLabUser();
-			String gitLabUserImpersonationToken = remoteGitServerManagerImpl
+			User gitLabUser = gitLabServerManager.getGitLabUser();
+			String gitLabUserImpersonationToken = gitLabServerManager
 					.getGitLabUserImpersonationToken();
 
 			localGitRepoManager.clone(
@@ -205,10 +205,10 @@ public class TagsetHandler implements ITagsetHandler {
 			byte[] propertyDefBytes = serializedTagDefinition.getBytes(StandardCharsets.UTF_8);
 
 			// commit newly added files
-			RemoteGitServerManager remoteGitServerManagerImpl =
-					(RemoteGitServerManager)this.remoteGitServerManager;
+			GitLabServerManager gitLabServerManager =
+					(GitLabServerManager)this.remoteGitServerManager;
 
-			User gitLabUser = remoteGitServerManagerImpl.getGitLabUser();
+			User gitLabUser = gitLabServerManager.getGitLabUser();
 
 			String committerName = StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername();
 			localGitRepoManager.addAndCommit(

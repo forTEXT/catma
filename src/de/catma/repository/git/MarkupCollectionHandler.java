@@ -11,7 +11,7 @@ import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IMarkupCollectionHandler;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
-import de.catma.repository.git.managers.RemoteGitServerManager;
+import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.MarkupCollectionHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
@@ -77,10 +77,10 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 					);
 
 			// clone the repository locally
-			RemoteGitServerManager remoteGitServerManagerImpl =
-					(RemoteGitServerManager)this.remoteGitServerManager;
-			User gitLabUser = remoteGitServerManagerImpl.getGitLabUser();
-			String gitLabUserImpersonationToken = remoteGitServerManagerImpl
+			GitLabServerManager gitLabServerManager =
+					(GitLabServerManager)this.remoteGitServerManager;
+			User gitLabUser = gitLabServerManager.getGitLabUser();
+			String gitLabUserImpersonationToken = gitLabServerManager
 					.getGitLabUserImpersonationToken();
 
 			localGitRepoManager.clone(
@@ -143,9 +143,9 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 			markupCollectionHeader.addTagset(new AbstractMap.SimpleEntry<>(tagsetId, tagsetVersion));
 			String serializedHeader = serializationHelper.serialize(markupCollectionHeader);
 
-			RemoteGitServerManager remoteGitServerManagerImpl =
-					(RemoteGitServerManager)this.remoteGitServerManager;
-			User gitLabUser = remoteGitServerManagerImpl.getGitLabUser();
+			GitLabServerManager gitLabServerManager =
+					(GitLabServerManager)this.remoteGitServerManager;
+			User gitLabUser = gitLabServerManager.getGitLabUser();
 
 			localGitRepoManager.addAndCommit(
 				headerFile, serializedHeader.getBytes(StandardCharsets.UTF_8),
@@ -192,8 +192,8 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 			);
 			String serializedTagInstance = new SerializationHelper<JsonLdWebAnnotation>().serialize(annotation);
 
-			RemoteGitServerManager remoteGitServerManagerImpl = (RemoteGitServerManager)this.remoteGitServerManager;
-			User gitLabUser = remoteGitServerManagerImpl.getGitLabUser();
+			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
+			User gitLabUser = gitLabServerManager.getGitLabUser();
 
 			localGitRepoManager.addAndCommit(
 				targetSerializedTagInstanceFilePath,

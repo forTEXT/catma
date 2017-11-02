@@ -4,8 +4,8 @@ import de.catma.repository.git.exceptions.*;
 import de.catma.repository.git.interfaces.IProjectHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.JGitRepoManager;
-import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
@@ -69,10 +69,10 @@ public class ProjectHandler implements IProjectHandler {
 			);
 
 			// clone the root repository locally
-			RemoteGitServerManager remoteGitServerManagerImpl =
-					(RemoteGitServerManager)this.remoteGitServerManager;
-			User gitLabUser = remoteGitServerManagerImpl.getGitLabUser();
-			String gitLabUserImpersonationToken = remoteGitServerManagerImpl
+			GitLabServerManager gitLabServerManager =
+					(GitLabServerManager)this.remoteGitServerManager;
+			User gitLabUser = gitLabServerManager.getGitLabUser();
+			String gitLabUserImpersonationToken = gitLabServerManager
 					.getGitLabUserImpersonationToken();
 
 			localGitRepoManager.clone(
@@ -155,9 +155,9 @@ public class ProjectHandler implements IProjectHandler {
 			// (probably) want to do "Updating a submodule in-place in the container" instead
 			// https://medium.com/@porteneuve/mastering-git-submodules-34c65e940407
 
-			RemoteGitServerManager remoteGitServerManagerImpl = (RemoteGitServerManager)this.remoteGitServerManager;
-			User gitLabUser = remoteGitServerManagerImpl.getGitLabUser();
-			String gitLabUserImpersonationToken = remoteGitServerManagerImpl.getGitLabUserImpersonationToken();
+			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
+			User gitLabUser = gitLabServerManager.getGitLabUser();
+			String gitLabUserImpersonationToken = gitLabServerManager.getGitLabUserImpersonationToken();
 
 			// TODO: this shouldn't happen here at all - the markup collection should have been added to the project
 			// already before this method is called
@@ -255,11 +255,11 @@ public class ProjectHandler implements IProjectHandler {
 					convertedSourceDocumentStream, convertedSourceDocumentFileName,
 					gitSourceDocumentInfo, sourceDocumentId, projectId);
 
-			RemoteGitServerManager remoteGitServerManagerImpl = (RemoteGitServerManager)this.remoteGitServerManager;
-			String gitLabUserImpersonationToken = remoteGitServerManagerImpl.getGitLabUserImpersonationToken();
+			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
+			String gitLabUserImpersonationToken = gitLabServerManager.getGitLabUserImpersonationToken();
 
 			repoManager.open(SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId));
-			repoManager.push(remoteGitServerManagerImpl.getGitLabUser().getUsername(), gitLabUserImpersonationToken);
+			repoManager.push(gitLabServerManager.getGitLabUser().getUsername(), gitLabUserImpersonationToken);
 
 			String remoteUri = repoManager.getRemoteUrl(null);
 			repoManager.close();
@@ -274,7 +274,7 @@ public class ProjectHandler implements IProjectHandler {
 
 			repoManager.addSubmodule(
 				targetSubmodulePath, remoteUri,
-				remoteGitServerManagerImpl.getGitLabUser().getUsername(), gitLabUserImpersonationToken
+				gitLabServerManager.getGitLabUser().getUsername(), gitLabUserImpersonationToken
 			);
 		}
 		catch (SourceDocumentHandlerException|LocalGitRepositoryManagerException e) {

@@ -1,9 +1,9 @@
 package de.catma.repository.git;
 
 import de.catma.document.source.*;
+import de.catma.repository.git.managers.GitLabServerManager;
+import de.catma.repository.git.managers.GitLabServerManagerTest;
 import de.catma.repository.git.managers.JGitRepoManager;
-import de.catma.repository.git.managers.RemoteGitServerManager;
-import de.catma.repository.git.managers.RemoteGitServerManagerTest;
 import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 import de.catma.tag.Version;
 import helpers.Randomizer;
@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
 
 public class ProjectHandlerTest {
 	private Properties catmaProperties;
-	private RemoteGitServerManager remoteGitServerManager;
+	private GitLabServerManager gitLabServerManager;
 
 	private ArrayList<String> projectsToDeleteOnTearDown = new ArrayList<>();
 
@@ -40,13 +40,13 @@ public class ProjectHandlerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
+		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager
 		de.catma.user.User catmaUser = Randomizer.getDbUser();
 
-		this.remoteGitServerManager = new RemoteGitServerManager(
+		this.gitLabServerManager = new GitLabServerManager(
 			this.catmaProperties, catmaUser
 		);
-		this.remoteGitServerManager.replaceGitLabServerUrl = true;
+		this.gitLabServerManager.replaceGitLabServerUrl = true;
 	}
 
 	@After
@@ -56,7 +56,7 @@ public class ProjectHandlerTest {
 					this.catmaProperties, "fakeUserIdentifier"
 			)) {
 
-				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
+				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
 					projectHandler.delete(projectId);
@@ -65,12 +65,12 @@ public class ProjectHandlerTest {
 			}
 		}
 
-		// delete the GitLab user that the RemoteGitServerManager constructor in setUp would have
-		// created - see RemoteGitServerManagerTest tearDown() for more info
-		User user = this.remoteGitServerManager.getGitLabUser();
-		this.remoteGitServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
-		RemoteGitServerManagerTest.awaitUserDeleted(
-			this.remoteGitServerManager.getAdminGitLabApi().getUserApi(), user.getId()
+		// delete the GitLab user that the GitLabServerManager constructor in setUp would have
+		// created - see GitLabServerManagerTest tearDown() for more info
+		User user = this.gitLabServerManager.getGitLabUser();
+		this.gitLabServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
+		GitLabServerManagerTest.awaitUserDeleted(
+			this.gitLabServerManager.getAdminGitLabApi().getUserApi(), user.getId()
 		);
 	}
 
@@ -80,7 +80,7 @@ public class ProjectHandlerTest {
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
-			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
 				"Test CATMA Project", "This is a test CATMA project"
@@ -118,7 +118,7 @@ public class ProjectHandlerTest {
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
-			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
 				"Test CATMA Project", "This is a test CATMA project"
@@ -188,7 +188,7 @@ public class ProjectHandlerTest {
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
-			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
 				"Test CATMA Project", "This is a test CATMA project"
@@ -226,10 +226,10 @@ public class ProjectHandlerTest {
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
-			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
-			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
+			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.gitLabServerManager);
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.gitLabServerManager
 			);
 
 			// create a project
@@ -270,8 +270,8 @@ public class ProjectHandlerTest {
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
-			User gitLabUser = this.remoteGitServerManager.getGitLabUser();
-			String gitLabUserImpersonationToken = this.remoteGitServerManager.getGitLabUserImpersonationToken();
+			User gitLabUser = this.gitLabServerManager.getGitLabUser();
+			String gitLabUserImpersonationToken = this.gitLabServerManager.getGitLabUserImpersonationToken();
 
 			// re-open the markup collection repo to get the commit hash and because we need to push
 			localGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));

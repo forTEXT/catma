@@ -4,9 +4,9 @@ import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.repository.git.exceptions.MarkupCollectionHandlerException;
+import de.catma.repository.git.managers.GitLabServerManagerTest;
 import de.catma.repository.git.managers.JGitRepoManager;
-import de.catma.repository.git.managers.RemoteGitServerManager;
-import de.catma.repository.git.managers.RemoteGitServerManagerTest;
+import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
@@ -31,7 +31,7 @@ import static org.junit.Assert.*;
 
 public class MarkupCollectionHandlerTest {
 	private Properties catmaProperties;
-	private RemoteGitServerManager remoteGitServerManager;
+	private GitLabServerManager gitLabServerManager;
 
 	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<String> markupCollectionReposToDeleteOnTearDown = new ArrayList<>();
@@ -47,11 +47,11 @@ public class MarkupCollectionHandlerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
+		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager
 		de.catma.user.User catmaUser = Randomizer.getDbUser();
 
-		this.remoteGitServerManager = new RemoteGitServerManager(this.catmaProperties, catmaUser);
-		this.remoteGitServerManager.replaceGitLabServerUrl = true;
+		this.gitLabServerManager = new GitLabServerManager(this.catmaProperties, catmaUser);
+		this.gitLabServerManager.replaceGitLabServerUrl = true;
 	}
 
 	@After
@@ -65,14 +65,14 @@ public class MarkupCollectionHandlerTest {
 
 		if (this.markupCollectionReposToDeleteOnTearDown.size() > 0) {
 			for (String markupCollectionId : this.markupCollectionReposToDeleteOnTearDown) {
-				List<Project> projects = this.remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects(
+				List<Project> projects = this.gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects(
 					markupCollectionId
 				); // this getProjects overload does a search
 				for (Project project : projects) {
-					this.remoteGitServerManager.deleteRepository(project.getId());
+					this.gitLabServerManager.deleteRepository(project.getId());
 				}
 				await().until(
-					() -> this.remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
+					() -> this.gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
 				);
 			}
 			this.markupCollectionReposToDeleteOnTearDown.clear();
@@ -83,7 +83,7 @@ public class MarkupCollectionHandlerTest {
 					this.catmaProperties, "fakeUserIdentifier"
 			)) {
 
-				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
+				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
 					projectHandler.delete(projectId);
@@ -92,12 +92,12 @@ public class MarkupCollectionHandlerTest {
 			}
 		}
 
-		// delete the GitLab user that the RemoteGitServerManager constructor in setUp would have
-		// created - see RemoteGitServerManagerTest tearDown() for more info
-		User user = this.remoteGitServerManager.getGitLabUser();
-		this.remoteGitServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
-		RemoteGitServerManagerTest.awaitUserDeleted(
-			this.remoteGitServerManager.getAdminGitLabApi().getUserApi(), user.getId()
+		// delete the GitLab user that the GitLabServerManager constructor in setUp would have
+		// created - see GitLabServerManagerTest tearDown() for more info
+		User user = this.gitLabServerManager.getGitLabUser();
+		this.gitLabServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
+		GitLabServerManagerTest.awaitUserDeleted(
+			this.gitLabServerManager.getAdminGitLabApi().getUserApi(), user.getId()
 		);
 	}
 
@@ -108,11 +108,11 @@ public class MarkupCollectionHandlerTest {
 		)) {
 
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.gitLabServerManager
 			);
 
 			ProjectHandler projectHandler = new ProjectHandler(
-				localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.gitLabServerManager
 			);
 
 			String projectId = projectHandler.create(
@@ -178,7 +178,7 @@ public class MarkupCollectionHandlerTest {
 		)) {
 
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.gitLabServerManager
 			);
 
 			thrown.expect(MarkupCollectionHandlerException.class);
@@ -194,10 +194,10 @@ public class MarkupCollectionHandlerTest {
 		)) {
 
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.gitLabServerManager
 			);
 
-			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
 				"Test CATMA Project", "This is a test CATMA project"
@@ -262,7 +262,7 @@ public class MarkupCollectionHandlerTest {
 		)) {
 
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.gitLabServerManager
 			);
 
 			thrown.expect(MarkupCollectionHandlerException.class);
@@ -278,11 +278,11 @@ public class MarkupCollectionHandlerTest {
 		)) {
 
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.gitLabServerManager
 			);
 
 			ProjectHandler projectHandler = new ProjectHandler(
-				localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.gitLabServerManager
 			);
 
 			String projectId = projectHandler.create(
@@ -322,7 +322,7 @@ public class MarkupCollectionHandlerTest {
 			);
 
 			JsonLdWebAnnotation jsonLdWebAnnotation = new JsonLdWebAnnotation(
-				this.remoteGitServerManager.getGitLabServerUrl(), projectId, tagReferences
+				this.gitLabServerManager.getGitLabServerUrl(), projectId, tagReferences
 			);
 
 			markupCollectionHandler.addTagInstance(markupCollectionId, jsonLdWebAnnotation);
@@ -510,7 +510,7 @@ public class MarkupCollectionHandlerTest {
 //			markupCollectionHandler.addTagInstance(markupCollectionId, jsonLdWebAnnotation);
 
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.gitLabServerManager
 			);
 
 			UserMarkupCollection markupCollection = markupCollectionHandler.open(

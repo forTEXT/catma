@@ -3,8 +3,8 @@ package de.catma.repository.git;
 import de.catma.document.source.*;
 import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
 import de.catma.repository.git.managers.JGitRepoManager;
-import de.catma.repository.git.managers.RemoteGitServerManager;
-import de.catma.repository.git.managers.RemoteGitServerManagerTest;
+import de.catma.repository.git.managers.GitLabServerManager;
+import de.catma.repository.git.managers.GitLabServerManagerTest;
 import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 import helpers.Randomizer;
 import org.apache.commons.io.FileUtils;
@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
 
 public class SourceDocumentHandlerTest {
 	private Properties catmaProperties;
-	private RemoteGitServerManager remoteGitServerManager;
+	private GitLabServerManager gitLabServerManager;
 
 	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<String> sourceDocumentReposToDeleteOnTearDown = new ArrayList<>();
@@ -42,11 +42,11 @@ public class SourceDocumentHandlerTest {
 
     @Before
 	public void setUp() throws Exception {
-		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
+		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager
 		de.catma.user.User catmaUser = Randomizer.getDbUser();
 
-		this.remoteGitServerManager = new RemoteGitServerManager(this.catmaProperties, catmaUser);
-		this.remoteGitServerManager.replaceGitLabServerUrl = true;
+		this.gitLabServerManager = new GitLabServerManager(this.catmaProperties, catmaUser);
+		this.gitLabServerManager.replaceGitLabServerUrl = true;
 	}
 
 	@After
@@ -60,14 +60,14 @@ public class SourceDocumentHandlerTest {
 
 		if (this.sourceDocumentReposToDeleteOnTearDown.size() > 0) {
 			for (String sourceDocumentId : this.sourceDocumentReposToDeleteOnTearDown) {
-				List<Project> projects = this.remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects(
+				List<Project> projects = this.gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects(
 					sourceDocumentId
 				); // this getProjects overload does a search
 				for (Project project : projects) {
-					this.remoteGitServerManager.deleteRepository(project.getId());
+					this.gitLabServerManager.deleteRepository(project.getId());
 				}
 				await().until(
-					() -> this.remoteGitServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
+					() -> this.gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects().isEmpty()
 				);
 			}
 			this.sourceDocumentReposToDeleteOnTearDown.clear();
@@ -78,7 +78,7 @@ public class SourceDocumentHandlerTest {
 					this.catmaProperties, "fakeUserIdentifier"
 			)) {
 
-				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
+				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
 					projectHandler.delete(projectId);
@@ -87,12 +87,12 @@ public class SourceDocumentHandlerTest {
 			}
 		}
 
-		// delete the GitLab user that the RemoteGitServerManager constructor in setUp would have
-		// created - see RemoteGitServerManagerTest tearDown() for more info
-		User user = this.remoteGitServerManager.getGitLabUser();
-		this.remoteGitServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
-		RemoteGitServerManagerTest.awaitUserDeleted(
-			this.remoteGitServerManager.getAdminGitLabApi().getUserApi(), user.getId()
+		// delete the GitLab user that the GitLabServerManager constructor in setUp would have
+		// created - see GitLabServerManagerTest tearDown() for more info
+		User user = this.gitLabServerManager.getGitLabUser();
+		this.gitLabServerManager.getAdminGitLabApi().getUserApi().deleteUser(user.getId());
+		GitLabServerManagerTest.awaitUserDeleted(
+			this.gitLabServerManager.getAdminGitLabApi().getUserApi(), user.getId()
 		);
 	}
 
@@ -133,7 +133,7 @@ public class SourceDocumentHandlerTest {
 		)) {
 
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
-				localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.gitLabServerManager
 			);
 
 			String sourceDocumentId = sourceDocumentHandler.insert(
@@ -240,11 +240,11 @@ public class SourceDocumentHandlerTest {
 		)) {
 
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
-				localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.gitLabServerManager
 			);
 
 			ProjectHandler projectHandler = new ProjectHandler(
-				localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.gitLabServerManager
 			);
 
 			String projectId = projectHandler.create(
@@ -334,7 +334,7 @@ public class SourceDocumentHandlerTest {
 		)) {
 
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
-				localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.gitLabServerManager
 			);
 
 			thrown.expect(SourceDocumentHandlerException.class);
@@ -377,7 +377,7 @@ public class SourceDocumentHandlerTest {
 		)) {
 
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
-				localGitRepoManager, this.remoteGitServerManager
+				localGitRepoManager, this.gitLabServerManager
 			);
 
 			String sourceDocumentId = sourceDocumentHandler.insert(
