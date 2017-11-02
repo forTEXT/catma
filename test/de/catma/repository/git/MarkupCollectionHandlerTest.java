@@ -79,11 +79,11 @@ public class MarkupCollectionHandlerTest {
 		}
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 					this.catmaProperties, "fakeUserIdentifier"
 			)) {
 
-				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
+				ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
 					projectHandler.delete(projectId);
@@ -103,16 +103,16 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				localGitRepoManager, this.gitLabServerManager
+				jGitRepoManager, this.gitLabServerManager
 			);
 
 			ProjectHandler projectHandler = new ProjectHandler(
-				localGitRepoManager, this.gitLabServerManager
+				jGitRepoManager, this.gitLabServerManager
 			);
 
 			String projectId = projectHandler.create(
@@ -122,7 +122,7 @@ public class MarkupCollectionHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
 			// return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			String markupCollectionId = markupCollectionHandler.create(
 				"Test Markup Collection", null,
@@ -137,10 +137,10 @@ public class MarkupCollectionHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			File expectedRepoPath = new File(
-				localGitRepoManager.getRepositoryBasePath(),
+				jGitRepoManager.getRepositoryBasePath(),
 				MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId)
 			);
 
@@ -173,12 +173,12 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				localGitRepoManager, this.gitLabServerManager
+				jGitRepoManager, this.gitLabServerManager
 			);
 
 			thrown.expect(MarkupCollectionHandlerException.class);
@@ -189,15 +189,15 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void addTagset() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				localGitRepoManager, this.gitLabServerManager
+				jGitRepoManager, this.gitLabServerManager
 			);
 
-			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
 				"Test CATMA Project", "This is a test CATMA project"
@@ -206,7 +206,7 @@ public class MarkupCollectionHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
 			// return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			String markupCollectionId = markupCollectionHandler.create(
 				"Test Markup Collection", null,
@@ -221,7 +221,7 @@ public class MarkupCollectionHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			markupCollectionHandler.addTagset(
 				markupCollectionId, "fakeTagsetId", "fakeTagsetVersion"
@@ -229,9 +229,9 @@ public class MarkupCollectionHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
-			localGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
+			jGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
 
 			String expectedSerializedHeader = "" +
 					"{\n" +
@@ -249,7 +249,7 @@ public class MarkupCollectionHandlerTest {
 			assertEquals(
 				expectedSerializedHeader.replaceAll("[\n\t]", ""),
 				FileUtils.readFileToString(
-					new File(localGitRepoManager.getRepositoryWorkTree(), "header.json"), StandardCharsets.UTF_8
+					new File(jGitRepoManager.getRepositoryWorkTree(), "header.json"), StandardCharsets.UTF_8
 				)
 			);
 		}
@@ -257,12 +257,12 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void removeTagset() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				localGitRepoManager, this.gitLabServerManager
+				jGitRepoManager, this.gitLabServerManager
 			);
 
 			thrown.expect(MarkupCollectionHandlerException.class);
@@ -273,16 +273,16 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void addTagInstance() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				localGitRepoManager, this.gitLabServerManager
+				jGitRepoManager, this.gitLabServerManager
 			);
 
 			ProjectHandler projectHandler = new ProjectHandler(
-				localGitRepoManager, this.gitLabServerManager
+				jGitRepoManager, this.gitLabServerManager
 			);
 
 			String projectId = projectHandler.create(
@@ -292,7 +292,7 @@ public class MarkupCollectionHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
 			// return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			String markupCollectionId = markupCollectionHandler.create(
 				"Test Markup Collection", null,
@@ -304,7 +304,7 @@ public class MarkupCollectionHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			// TODO: create a tag instance/reference for a real tag definition with real urls etc.
 			String sourceDocumentUri = "http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC";
@@ -329,15 +329,15 @@ public class MarkupCollectionHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			String markupCollectionRepositoryName = MarkupCollectionHandler.getMarkupCollectionRepositoryName(
 				markupCollectionId
 			);
-			localGitRepoManager.open(markupCollectionRepositoryName);
+			jGitRepoManager.open(markupCollectionRepositoryName);
 
 			File expectedTagInstanceJsonFilePath = new File(
-				localGitRepoManager.getRepositoryWorkTree(), "annotations/CATMA_TAG_INST.json"
+				jGitRepoManager.getRepositoryWorkTree(), "annotations/CATMA_TAG_INST.json"
 			);
 
 			assert expectedTagInstanceJsonFilePath.exists();
@@ -403,15 +403,15 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void open() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 			// TODO: use JsonLdWebAnnotationTest.getTagInstance once it's been implemented
 			// for now, we need to create a fake project repo with fake submodules to make this test pass
-			File fakeProjectPath = new File(localGitRepoManager.getRepositoryBasePath(), "fakeProjectId_corpus");
+			File fakeProjectPath = new File(jGitRepoManager.getRepositoryBasePath(), "fakeProjectId_corpus");
 			// need to init the fake project repo, otherwise JGitRepoManager will fail to open it later
-			localGitRepoManager.init(fakeProjectPath.getName(), null);
-			localGitRepoManager.detach();  // can't call open on an attached instance
+			jGitRepoManager.init(fakeProjectPath.getName(), null);
+			jGitRepoManager.detach();  // can't call open on an attached instance
 			this.directoriesToDeleteOnTearDown.add(fakeProjectPath);
 
 			File fakeTagsetSubmodulePath = new File(fakeProjectPath, "tagsets/CATMA_TAGSET_DEF_tagset");
@@ -510,7 +510,7 @@ public class MarkupCollectionHandlerTest {
 //			markupCollectionHandler.addTagInstance(markupCollectionId, jsonLdWebAnnotation);
 
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				localGitRepoManager, this.gitLabServerManager
+				jGitRepoManager, this.gitLabServerManager
 			);
 
 			UserMarkupCollection markupCollection = markupCollectionHandler.open(
@@ -519,7 +519,7 @@ public class MarkupCollectionHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			assertNotNull(markupCollection);
 			assertEquals("Test Markup Collection", markupCollection.getContentInfoSet().getTitle());

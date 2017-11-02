@@ -52,11 +52,11 @@ public class ProjectHandlerTest {
 	@After
 	public void tearDown() throws Exception {
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 					this.catmaProperties, "fakeUserIdentifier"
 			)) {
 
-				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
+				ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
 					projectHandler.delete(projectId);
@@ -76,11 +76,11 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
-			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
 				"Test CATMA Project", "This is a test CATMA project"
@@ -92,7 +92,7 @@ public class ProjectHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
 			// return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			String expectedRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
 			String repositoryBasePath = String.format(
@@ -114,11 +114,11 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
-			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
 				"Test CATMA Project", "This is a test CATMA project"
@@ -130,7 +130,7 @@ public class ProjectHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
 			// return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			String expectedRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
 			String repositoryBasePath = String.format(
@@ -148,7 +148,7 @@ public class ProjectHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
 			// return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 		}
 	}
 
@@ -184,11 +184,11 @@ public class ProjectHandlerTest {
 
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
-			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
 				"Test CATMA Project", "This is a test CATMA project"
@@ -197,7 +197,7 @@ public class ProjectHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
 			// return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			String sourceDocumentId = projectHandler.insertSourceDocument(
 				projectId,
@@ -208,10 +208,10 @@ public class ProjectHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
 			// return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
-			localGitRepoManager.open(ProjectHandler.getProjectRootRepositoryName(projectId));
-			Status status = localGitRepoManager.getGitApi().status().call();
+			jGitRepoManager.open(ProjectHandler.getProjectRootRepositoryName(projectId));
+			Status status = jGitRepoManager.getGitApi().status().call();
 			Set<String> added = status.getAdded();
 
 			assert status.hasUncommittedChanges();
@@ -222,14 +222,14 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void addTagsetToMarkupCollection() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
-			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
-			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.gitLabServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				localGitRepoManager, this.gitLabServerManager
+				jGitRepoManager, this.gitLabServerManager
 			);
 
 			// create a project
@@ -243,21 +243,21 @@ public class ProjectHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
 			// return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			// create a tagset
 			String tagsetId = tagsetHandler.create("Test Tagset", null, new Version(), projectId);
 
 			// the JGitRepoManager instance should always be in a detached state after TagsetHandler calls
 			// return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			// re-open the tagset repo to get the commit hash
-			localGitRepoManager.open(TagsetHandler.getTagsetRepositoryName(tagsetId));
-			ObjectId tagsetHead = localGitRepoManager.getGitApi().getRepository().resolve(Constants.HEAD);
+			jGitRepoManager.open(TagsetHandler.getTagsetRepositoryName(tagsetId));
+			ObjectId tagsetHead = jGitRepoManager.getGitApi().getRepository().resolve(Constants.HEAD);
 			String tagsetCommitHash = tagsetHead.getName();
 
-			localGitRepoManager.detach();  // can't call clone on an attached instance
+			jGitRepoManager.detach();  // can't call clone on an attached instance
 
 			// create a markup collection
 			String markupCollectionId = markupCollectionHandler.create(
@@ -268,33 +268,33 @@ public class ProjectHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			User gitLabUser = this.gitLabServerManager.getGitLabUser();
 			String gitLabUserImpersonationToken = this.gitLabServerManager.getGitLabUserImpersonationToken();
 
 			// re-open the markup collection repo to get the commit hash and because we need to push
-			localGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
-			ObjectId markupCollectionHead = localGitRepoManager.getGitApi().getRepository().resolve(Constants.HEAD);
+			jGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
+			ObjectId markupCollectionHead = jGitRepoManager.getGitApi().getRepository().resolve(Constants.HEAD);
 			String markupCollectionCommitHash = markupCollectionHead.getName();
 
 			// push the markup collection repo to the server so that it can be added as a submodule to the project
 			// TODO: the markup collection should already be a submodule in the project at the time
 			// addTagsetToMarkupCollection is called
-			localGitRepoManager.push(gitLabUser.getUsername(), gitLabUserImpersonationToken);
+			jGitRepoManager.push(gitLabUser.getUsername(), gitLabUserImpersonationToken);
 
-			localGitRepoManager.detach();  // can't call open on an attached instance
+			jGitRepoManager.detach();  // can't call open on an attached instance
 
 			projectHandler.addTagsetToMarkupCollection(projectId, markupCollectionId, tagsetId, tagsetCommitHash);
 
 			// the JGitRepoManager instance should always be in a detached state after ProjectHandler
 			// calls return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			// assert that the markup collection submodule in the project is pointing at the correct commit hash
 			String projectRepoName = ProjectHandler.getProjectRootRepositoryName(projectId);
-			localGitRepoManager.open(projectRepoName);
-			Map<String, SubmoduleStatus> statusMap = localGitRepoManager.getGitApi().submoduleStatus().call();
+			jGitRepoManager.open(projectRepoName);
+			Map<String, SubmoduleStatus> statusMap = jGitRepoManager.getGitApi().submoduleStatus().call();
 
 			assertEquals(1, statusMap.size());
 

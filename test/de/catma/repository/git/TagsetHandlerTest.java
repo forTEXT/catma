@@ -86,10 +86,10 @@ public class TagsetHandlerTest {
 		}
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 					this.catmaProperties, "fakeUserIdentifier"
 			)) {
-				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
+				ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
 					projectHandler.delete(projectId);
@@ -109,11 +109,11 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
-			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
 				"Test CATMA Project for Tagset", "This is a test CATMA project"
@@ -122,9 +122,9 @@ public class TagsetHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after ProjectHandler
 			// calls return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
-			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.gitLabServerManager);
+			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
 
 			String name = "InterestingTagset";
 			String description = "Pretty interesting stuff";
@@ -138,7 +138,7 @@ public class TagsetHandlerTest {
 			assert tagsetId.startsWith("CATMA_");
 
 			File expectedRepoPath = new File(
-				localGitRepoManager.getRepositoryBasePath(), TagsetHandler.getTagsetRepositoryName(tagsetId)
+				jGitRepoManager.getRepositoryBasePath(), TagsetHandler.getTagsetRepositoryName(tagsetId)
 			);
 			assert expectedRepoPath.exists();
 			assert expectedRepoPath.isDirectory();
@@ -166,11 +166,11 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
-			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.gitLabServerManager);
+			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
 
 			thrown.expect(TagsetHandlerException.class);
 			thrown.expectMessage("Not implemented");
@@ -180,18 +180,18 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void addTagDefinitionWithoutParent() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
-			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
 				"Test CATMA Project for Tagset", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.gitLabServerManager);
+			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
 
 			String name = "InterestingTagset";
 			String description = "Pretty interesting stuff";
@@ -226,7 +226,7 @@ public class TagsetHandlerTest {
 				tagDefinition.getUuid()
 			);
 
-			File expectedTagDefinitionPath = new File(localGitRepoManager.getRepositoryBasePath(), tagDefinitionPath);
+			File expectedTagDefinitionPath = new File(jGitRepoManager.getRepositoryBasePath(), tagDefinitionPath);
 			assert expectedTagDefinitionPath.exists() : "Directory does not exist";
 			assert expectedTagDefinitionPath.isDirectory() : "Path is not a directory";
 
@@ -249,12 +249,12 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void addTagDefinitionWithParent() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
 			ProjectHandler projectHandler = new ProjectHandler(
-				localGitRepoManager, this.gitLabServerManager
+				jGitRepoManager, this.gitLabServerManager
 			);
 
 			String projectId = projectHandler.create(
@@ -262,7 +262,7 @@ public class TagsetHandlerTest {
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.gitLabServerManager);
+			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
 
 			String name = "InterestingTagset";
 			String description = "Pretty interesting stuff";
@@ -294,7 +294,7 @@ public class TagsetHandlerTest {
 
 			Logger.getLogger(this.getClass().toString()).info(tagDefinitionPath);
 
-			File expectedTagDefinitionPath = new File(localGitRepoManager.getRepositoryBasePath(), tagDefinitionPath);
+			File expectedTagDefinitionPath = new File(jGitRepoManager.getRepositoryBasePath(), tagDefinitionPath);
 			assert expectedTagDefinitionPath.exists() : "Directory does not exist";
 			assert expectedTagDefinitionPath.isDirectory() : "Path is not a directory";
 
@@ -317,15 +317,15 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void open() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties,"fakeUserIdentifier"
 		)) {
 			// TODO: use JsonLdWebAnnotationTest.getTagInstance once it's been implemented
 			// for now, we need to create a fake project repo with fake submodules to make this test pass
-			File fakeProjectPath = new File(localGitRepoManager.getRepositoryBasePath(), "fakeProjectId_corpus");
+			File fakeProjectPath = new File(jGitRepoManager.getRepositoryBasePath(), "fakeProjectId_corpus");
 			// need to init the fake project repo, otherwise JGitRepoManager will fail to open it later
-			localGitRepoManager.init(fakeProjectPath.getName(), null);
-			localGitRepoManager.detach();  // can't call open on an attached instance
+			jGitRepoManager.init(fakeProjectPath.getName(), null);
+			jGitRepoManager.detach();  // can't call open on an attached instance
 			this.directoriesToDeleteOnTearDown.add(fakeProjectPath);
 
 			File fakeTagsetSubmodulePath = new File(fakeProjectPath, "tagsets/CATMA_TAGSET_DEF_tagset");
@@ -367,7 +367,7 @@ public class TagsetHandlerTest {
 				fakeTagDefinitionPropertyDefsFilePath, fakeSerializedTagDefinition, StandardCharsets.UTF_8
 			);
 
-			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.gitLabServerManager);
+			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
 
 			TagsetDefinition tagsetDefinition = tagsetHandler.open(
 				"CATMA_TAGSET_DEF", "fakeProjectId"

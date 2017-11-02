@@ -74,11 +74,11 @@ public class SourceDocumentHandlerTest {
 		}
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 					this.catmaProperties, "fakeUserIdentifier"
 			)) {
 
-				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
+				ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
 					projectHandler.delete(projectId);
@@ -128,12 +128,12 @@ public class SourceDocumentHandlerTest {
 
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
-				localGitRepoManager, this.gitLabServerManager
+				jGitRepoManager, this.gitLabServerManager
 			);
 
 			String sourceDocumentId = sourceDocumentHandler.insert(
@@ -149,10 +149,10 @@ public class SourceDocumentHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after SourceDocumentHandler
 			// calls return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			File expectedRepoPath = new File(
-					localGitRepoManager.getRepositoryBasePath(),
+					jGitRepoManager.getRepositoryBasePath(),
 					SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId)
 			);
 			assert expectedRepoPath.exists();
@@ -235,16 +235,16 @@ public class SourceDocumentHandlerTest {
 
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
-				localGitRepoManager, this.gitLabServerManager
+				jGitRepoManager, this.gitLabServerManager
 			);
 
 			ProjectHandler projectHandler = new ProjectHandler(
-				localGitRepoManager, this.gitLabServerManager
+				jGitRepoManager, this.gitLabServerManager
 			);
 
 			String projectId = projectHandler.create(
@@ -254,7 +254,7 @@ public class SourceDocumentHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
 			// return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			String sourceDocumentId = sourceDocumentHandler.insert(
 				originalSourceDocumentStream, originalSourceDocument.getName(),
@@ -270,10 +270,10 @@ public class SourceDocumentHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after SourceDocumentHandler
 			// calls return
-			assertFalse(localGitRepoManager.isAttached());
+			assertFalse(jGitRepoManager.isAttached());
 
 			File expectedRepoPath = new File(
-				localGitRepoManager.getRepositoryBasePath(),
+				jGitRepoManager.getRepositoryBasePath(),
 				SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId)
 			);
 
@@ -329,12 +329,12 @@ public class SourceDocumentHandlerTest {
 
 	@Test
 	public void remove() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
-				localGitRepoManager, this.gitLabServerManager
+				jGitRepoManager, this.gitLabServerManager
 			);
 
 			thrown.expect(SourceDocumentHandlerException.class);
@@ -372,12 +372,12 @@ public class SourceDocumentHandlerTest {
 		SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(indexInfoSet, contentInfoSet, techInfoSet);
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
-				localGitRepoManager, this.gitLabServerManager
+				jGitRepoManager, this.gitLabServerManager
 			);
 
 			String sourceDocumentId = sourceDocumentHandler.insert(
@@ -388,7 +388,7 @@ public class SourceDocumentHandlerTest {
 			);
 			this.sourceDocumentReposToDeleteOnTearDown.add(sourceDocumentId);
 			File expectedRepoPath = new File(
-				localGitRepoManager.getRepositoryBasePath(),
+				jGitRepoManager.getRepositoryBasePath(),
 				SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId)
 			);
 			assert expectedRepoPath.exists() : String.format("We expect %s to exist", expectedRepoPath.getAbsolutePath());

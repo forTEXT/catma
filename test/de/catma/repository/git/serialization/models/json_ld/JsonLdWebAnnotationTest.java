@@ -98,9 +98,9 @@ public class JsonLdWebAnnotationTest {
 	@After
 	public void tearDown() throws Exception {
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 					this.catmaProperties, "fakeUserIdentifier")) {
-				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
+				ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
 					projectHandler.delete(projectId);
@@ -165,9 +165,9 @@ public class JsonLdWebAnnotationTest {
 	 *         userPropertyDefinitionUuid, markupCollectionRepositoryName, tagInstanceUuid, sourceDocumentRepositoryName
 	 */
 	public HashMap<String, Object> getTagInstance() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier")) {
-			ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.gitLabServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
 					"Test CATMA Project", "This is a test CATMA project"
@@ -232,7 +232,7 @@ public class JsonLdWebAnnotationTest {
 
 	@Test
 	public void toTagReferenceList() throws Exception {
-		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 			JsonLdWebAnnotation jsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>().deserialize(
@@ -244,10 +244,10 @@ public class JsonLdWebAnnotationTest {
 			// TODO: use getTagInstance once it's been implemented
 			// TODO: test with a hierarchy of tag definitions
 			// for now, we need to create a fake project repo with fake submodules to make this test pass
-			File fakeProjectPath = new File(localGitRepoManager.getRepositoryBasePath(), "fakeProjectId_corpus");
+			File fakeProjectPath = new File(jGitRepoManager.getRepositoryBasePath(), "fakeProjectId_corpus");
 			// need to init the fake project repo, otherwise JGitRepoManager will fail to open it later
-			localGitRepoManager.init(fakeProjectPath.getName(), null);
-			localGitRepoManager.detach();  // can't call open on an attached instance
+			jGitRepoManager.init(fakeProjectPath.getName(), null);
+			jGitRepoManager.detach();  // can't call open on an attached instance
 			this.directoriesToDeleteOnTearDown.add(fakeProjectPath);
 
 			File fakeTagsetSubmodulePath = new File(fakeProjectPath, "tagsets/CATMA_TAGSET_DEF_tagset");
@@ -291,7 +291,7 @@ public class JsonLdWebAnnotationTest {
 
 			List<TagReference> tagReferences = jsonLdWebAnnotation.toTagReferenceList(
 				"fakeProjectId", "fakeMarkupCollectionId",
-				localGitRepoManager, this.gitLabServerManager
+				jGitRepoManager, this.gitLabServerManager
 			);
 
 			assertEquals(2, tagReferences.size());
