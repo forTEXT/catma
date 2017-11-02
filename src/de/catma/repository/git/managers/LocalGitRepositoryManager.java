@@ -2,6 +2,7 @@ package de.catma.repository.git.managers;
 
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.*;
@@ -273,7 +274,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 			throw new IllegalStateException("Can't call `add` on a detached instance");
 		}
 
-		try (FileOutputStream fileOutputStream = new FileOutputStream(targetFile)) {
+		try (FileOutputStream fileOutputStream = FileUtils.openOutputStream(targetFile)) {
 			fileOutputStream.write(bytes);
 
 			Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
