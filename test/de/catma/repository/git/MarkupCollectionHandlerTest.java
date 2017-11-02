@@ -4,7 +4,7 @@ import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.repository.git.exceptions.MarkupCollectionHandlerException;
-import de.catma.repository.git.managers.LocalGitRepositoryManager;
+import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
 import de.catma.repository.git.serialization.SerializationHelper;
@@ -79,7 +79,7 @@ public class MarkupCollectionHandlerTest {
 		}
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+			try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 					this.catmaProperties, "fakeUserIdentifier"
 			)) {
 
@@ -103,7 +103,7 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
@@ -120,7 +120,7 @@ public class MarkupCollectionHandlerTest {
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			// the LocalGitRepositoryManager instance should always be in a detached state after ProjectHandler calls
+			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
 			// return
 			assertFalse(localGitRepoManager.isAttached());
 
@@ -135,7 +135,7 @@ public class MarkupCollectionHandlerTest {
 			assertNotNull(markupCollectionId);
 			assert markupCollectionId.startsWith("CATMA_");
 
-			// the LocalGitRepositoryManager instance should always be in a detached state after MarkupCollectionHandler
+			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
@@ -173,7 +173,7 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
@@ -189,7 +189,7 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void addTagset() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
@@ -204,7 +204,7 @@ public class MarkupCollectionHandlerTest {
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			// the LocalGitRepositoryManager instance should always be in a detached state after ProjectHandler calls
+			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
 			// return
 			assertFalse(localGitRepoManager.isAttached());
 
@@ -219,7 +219,7 @@ public class MarkupCollectionHandlerTest {
 			assertNotNull(markupCollectionId);
 			assert markupCollectionId.startsWith("CATMA_");
 
-			// the LocalGitRepositoryManager instance should always be in a detached state after MarkupCollectionHandler
+			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
@@ -227,7 +227,7 @@ public class MarkupCollectionHandlerTest {
 				markupCollectionId, "fakeTagsetId", "fakeTagsetVersion"
 			);
 
-			// the LocalGitRepositoryManager instance should always be in a detached state after MarkupCollectionHandler
+			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
@@ -257,7 +257,7 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void removeTagset() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
@@ -273,7 +273,7 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void addTagInstance() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
@@ -290,7 +290,7 @@ public class MarkupCollectionHandlerTest {
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			// the LocalGitRepositoryManager instance should always be in a detached state after ProjectHandler calls
+			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
 			// return
 			assertFalse(localGitRepoManager.isAttached());
 
@@ -302,7 +302,7 @@ public class MarkupCollectionHandlerTest {
 			// we don't add the markupCollectionId to this.markupCollectionReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us
 
-			// the LocalGitRepositoryManager instance should always be in a detached state after MarkupCollectionHandler
+			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
@@ -327,7 +327,7 @@ public class MarkupCollectionHandlerTest {
 
 			markupCollectionHandler.addTagInstance(markupCollectionId, jsonLdWebAnnotation);
 
-			// the LocalGitRepositoryManager instance should always be in a detached state after MarkupCollectionHandler
+			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
@@ -403,13 +403,13 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void open() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 			// TODO: use JsonLdWebAnnotationTest.getTagInstance once it's been implemented
 			// for now, we need to create a fake project repo with fake submodules to make this test pass
 			File fakeProjectPath = new File(localGitRepoManager.getRepositoryBasePath(), "fakeProjectId_corpus");
-			// need to init the fake project repo, otherwise LocalGitRepositoryManager will fail to open it later
+			// need to init the fake project repo, otherwise JGitRepoManager will fail to open it later
 			localGitRepoManager.init(fakeProjectPath.getName(), null);
 			localGitRepoManager.detach();  // can't call open on an attached instance
 			this.directoriesToDeleteOnTearDown.add(fakeProjectPath);
@@ -517,7 +517,7 @@ public class MarkupCollectionHandlerTest {
 				"fakeProjectId", "fakeUserMarkupCollectionUuid"
 			);
 
-			// the LocalGitRepositoryManager instance should always be in a detached state after MarkupCollectionHandler
+			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 

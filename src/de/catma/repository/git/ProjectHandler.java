@@ -4,7 +4,7 @@ import de.catma.repository.git.exceptions.*;
 import de.catma.repository.git.interfaces.IProjectHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
-import de.catma.repository.git.managers.LocalGitRepositoryManager;
+import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 import de.catma.util.IDGenerator;
@@ -201,7 +201,7 @@ public class ProjectHandler implements IProjectHandler {
 //			localGitRepoManager.checkout(tagsetVersion);
 //			localGitRepoManager.commit(
 //				// TODO: get the new markup collection commit hash, replacing "?" below
-//				// LocalGitRepositoryManager should probably always return the new hash when commit or addAndCommit are
+//				// JGitRepoManager should probably always return the new hash when commit or addAndCommit are
 //				// called
 //				String.format("Updating markup collection submodule %s to version %s", markupCollectionId, "?"),
 //				StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername(),
@@ -209,7 +209,7 @@ public class ProjectHandler implements IProjectHandler {
 //			);
 
 			localGitRepoManager.open(projectRepoName);
-			((LocalGitRepositoryManager)localGitRepoManager).getGitApi().submoduleUpdate().call();
+			((JGitRepoManager)localGitRepoManager).getGitApi().submoduleUpdate().call();
 		}
 		catch (MarkupCollectionHandlerException|LocalGitRepositoryManagerException|GitAPIException e) {
 			throw new ProjectHandlerException("Failed to add tagset to markup collection", e);

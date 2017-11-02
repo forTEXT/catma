@@ -29,12 +29,12 @@ import java.util.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
 
-public class LocalGitRepositoryManagerTest {
+public class JGitRepoManagerTest {
 	private Properties catmaProperties;
 
 	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
 
-	public LocalGitRepositoryManagerTest() throws Exception {
+	public JGitRepoManagerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
 				System.getProperties().getProperty("prop") : "catma.properties";
 
@@ -59,7 +59,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void isAttached() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			// the other tests test that the response is true when it should be
 			assertFalse(localGitRepoManager.isAttached());
 		}
@@ -67,7 +67,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void getRepositoryWorkTree() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			assertNull(localGitRepoManager.getRepositoryWorkTree());
 
 			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
@@ -84,7 +84,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void getRemoteUrl() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
 			localGitRepoManager.init(testRepoPath.getName(), null);
@@ -112,7 +112,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void init() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
 			localGitRepoManager.init(testRepoPath.getName(), "Test Description");
@@ -133,7 +133,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void cloneRepo() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			// create a bare repository that will act as the remote
 			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
@@ -171,7 +171,7 @@ public class LocalGitRepositoryManagerTest {
 		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
 				remoteGitServerManager.createRepository(randomRepoName, null);
 
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			String repoName = localGitRepoManager.clone(
 				createRepositoryResponse.repositoryHttpUrl,
 				null,
@@ -205,7 +205,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void open() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
 			localGitRepoManager.init(testRepoPath.getName(), null);
@@ -225,7 +225,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void add() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
 			localGitRepoManager.init(testRepoPath.getName(), null);
@@ -253,7 +253,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void addAndCommit() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
 			localGitRepoManager.init(testRepoPath.getName(), null);
@@ -291,7 +291,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void commit() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
 			localGitRepoManager.init(testRepoPath.getName(), null);
@@ -336,7 +336,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void addSubmodule() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			File containerRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "container");
 			File submoduleRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), "submodule");
 
@@ -400,7 +400,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void push() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			// create a bare repository that will act as the remote
 			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
@@ -464,7 +464,7 @@ public class LocalGitRepositoryManagerTest {
 		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
 				remoteGitServerManager.createRepository(Randomizer.getRepoName(), null);
 
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			// clone it
 			String repoName = localGitRepoManager.clone(
 				createRepositoryResponse.repositoryHttpUrl,
@@ -521,7 +521,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void fetch() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			// create a bare repository that will act as the remote
 			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 
@@ -584,7 +584,7 @@ public class LocalGitRepositoryManagerTest {
 			// TODO: figure out why we need to call close on the repository explicitly
 			// this is supposed to happen automatically as all repos are opened by static factory methods on
 			// org.eclipse.jgit.api.Git (see the documentation for the close method on the Git class)
-			// LocalGitRepositoryManager init, clone and open methods all use the static factory methods
+			// JGitRepoManager init, clone and open methods all use the static factory methods
 			// lots of discussion on this should you be interested:
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=474093
 			// https://www.google.com/search?q=jgit+not+releasing+pack+file+handle
@@ -594,7 +594,7 @@ public class LocalGitRepositoryManagerTest {
 
 	@Test
 	public void checkout() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(this.catmaProperties)) {
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(this.catmaProperties)) {
 			// init a new repository and make 2 commits
 			File testRepoPath = new File(localGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
 

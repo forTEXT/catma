@@ -2,7 +2,7 @@ package de.catma.repository.git;
 
 import de.catma.document.source.*;
 import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
-import de.catma.repository.git.managers.LocalGitRepositoryManager;
+import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
 import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
@@ -74,7 +74,7 @@ public class SourceDocumentHandlerTest {
 		}
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+			try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 					this.catmaProperties, "fakeUserIdentifier"
 			)) {
 
@@ -128,7 +128,7 @@ public class SourceDocumentHandlerTest {
 
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
@@ -147,7 +147,7 @@ public class SourceDocumentHandlerTest {
 			assertNotNull(sourceDocumentId);
 			assert sourceDocumentId.startsWith("CATMA_");
 
-			// the LocalGitRepositoryManager instance should always be in a detached state after SourceDocumentHandler
+			// the JGitRepoManager instance should always be in a detached state after SourceDocumentHandler
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
@@ -235,7 +235,7 @@ public class SourceDocumentHandlerTest {
 
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
@@ -252,7 +252,7 @@ public class SourceDocumentHandlerTest {
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			// the LocalGitRepositoryManager instance should always be in a detached state after ProjectHandler calls
+			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
 			// return
 			assertFalse(localGitRepoManager.isAttached());
 
@@ -268,7 +268,7 @@ public class SourceDocumentHandlerTest {
 			assertNotNull(sourceDocumentId);
 			assert sourceDocumentId.startsWith("CATMA_");
 
-			// the LocalGitRepositoryManager instance should always be in a detached state after SourceDocumentHandler
+			// the JGitRepoManager instance should always be in a detached state after SourceDocumentHandler
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
@@ -329,7 +329,7 @@ public class SourceDocumentHandlerTest {
 
 	@Test
 	public void remove() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
@@ -372,7 +372,7 @@ public class SourceDocumentHandlerTest {
 		SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(indexInfoSet, contentInfoSet, techInfoSet);
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 

@@ -1,7 +1,7 @@
 package de.catma.repository.git;
 
 import de.catma.repository.git.exceptions.TagsetHandlerException;
-import de.catma.repository.git.managers.LocalGitRepositoryManager;
+import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.RemoteGitServerManager;
 import de.catma.repository.git.managers.RemoteGitServerManagerTest;
 import de.catma.repository.git.serialization.SerializationHelper;
@@ -86,7 +86,7 @@ public class TagsetHandlerTest {
 		}
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+			try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 					this.catmaProperties, "fakeUserIdentifier"
 			)) {
 				ProjectHandler projectHandler = new ProjectHandler(localGitRepoManager, this.remoteGitServerManager);
@@ -109,7 +109,7 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
@@ -120,7 +120,7 @@ public class TagsetHandlerTest {
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			// the LocalGitRepositoryManager instance should always be in a detached state after ProjectHandler
+			// the JGitRepoManager instance should always be in a detached state after ProjectHandler
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
@@ -166,7 +166,7 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
@@ -180,7 +180,7 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void addTagDefinitionWithoutParent() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
@@ -249,7 +249,7 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void addTagDefinitionWithParent() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
@@ -317,13 +317,13 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void open() throws Exception {
-		try (LocalGitRepositoryManager localGitRepoManager = new LocalGitRepositoryManager(
+		try (JGitRepoManager localGitRepoManager = new JGitRepoManager(
 				this.catmaProperties,"fakeUserIdentifier"
 		)) {
 			// TODO: use JsonLdWebAnnotationTest.getTagInstance once it's been implemented
 			// for now, we need to create a fake project repo with fake submodules to make this test pass
 			File fakeProjectPath = new File(localGitRepoManager.getRepositoryBasePath(), "fakeProjectId_corpus");
-			// need to init the fake project repo, otherwise LocalGitRepositoryManager will fail to open it later
+			// need to init the fake project repo, otherwise JGitRepoManager will fail to open it later
 			localGitRepoManager.init(fakeProjectPath.getName(), null);
 			localGitRepoManager.detach();  // can't call open on an attached instance
 			this.directoriesToDeleteOnTearDown.add(fakeProjectPath);
