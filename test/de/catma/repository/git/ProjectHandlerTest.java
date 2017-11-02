@@ -153,6 +153,43 @@ public class ProjectHandlerTest {
 	}
 
 	@Test
+	public void createTagset() throws Exception {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
+
+			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+
+			String projectId = projectHandler.create(
+					"Test CATMA Project",
+					"This is a test CATMA project"
+			);
+			this.projectsToDeleteOnTearDown.add(projectId);
+
+			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls return
+			assertFalse(jGitRepoManager.isAttached());
+
+			String tagsetId = projectHandler.createTagset(
+					projectId,
+					null,
+					"Test Tagset",
+					null
+			);
+
+			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls return
+			assertFalse(jGitRepoManager.isAttached());
+
+			jGitRepoManager.open(ProjectHandler.getProjectRootRepositoryName(projectId));
+			Status status = jGitRepoManager.getGitApi().status().call();
+			Set<String> added = status.getAdded();
+
+			assert status.hasUncommittedChanges();
+			assert added.contains(".gitmodules");
+			assert added.contains(String.format("%s/%s", ProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetId));
+		}
+	}
+
+	@Test
 	public void insertSourceDocument() throws Exception {
 		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
 		File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");

@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.gitlab4j.api.models.User;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +34,10 @@ public class ProjectHandler implements IProjectHandler {
 	public static String getProjectRootRepositoryName(String projectId) {
 		return String.format(PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId);
 	}
+
+	public static final String TAGSET_SUBMODULES_DIRECTORY_NAME = "tagsets";
+	public static final String MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME = "collections";
+	public static final String SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME = "documents";
 
 	public ProjectHandler(ILocalGitRepositoryManager localGitRepositoryManager,
 						  IRemoteGitServerManager remoteGitServerManager) {
@@ -128,7 +133,54 @@ public class ProjectHandler implements IProjectHandler {
 	}
 
 	// tagset operations
+	public String createTagset(@Nonnull String projectId,
+							   @Nullable String tagsetId,
+							   @Nonnull String name,
+							   @Nullable String description
+	) throws ProjectHandlerException {
 
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+
+			// create the tagset
+			String newTagsetId = tagsetHandler.create(projectId, tagsetId, name, description);
+
+			// push the newly created tagset repo to the server in preparation for adding it to the project root repo
+			// as a submodule
+			// TODO: create a provider to retrieve the auth details so that we don't have to cast to the implementation
+			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
+
+			User gitLabUser = gitLabServerManager.getGitLabUser();
+			String gitLabUserImpersonationToken = gitLabServerManager.getGitLabUserImpersonationToken();
+
+			localGitRepoManager.open(TagsetHandler.getTagsetRepositoryName(newTagsetId));
+			localGitRepoManager.push(gitLabUser.getUsername(), gitLabUserImpersonationToken);
+			String tagsetRepoRemoteUrl = localGitRepoManager.getRemoteUrl(null);
+			localGitRepoManager.detach(); // need to explicitly detach so that we can call open below
+
+			// open the project root repo
+			localGitRepoManager.open(ProjectHandler.getProjectRootRepositoryName(projectId));
+
+			// add the submodule
+			File targetSubmodulePath = Paths.get(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					TAGSET_SUBMODULES_DIRECTORY_NAME,
+					newTagsetId
+			).toFile();
+
+			localGitRepoManager.addSubmodule(
+					targetSubmodulePath,
+					tagsetRepoRemoteUrl,
+					gitLabUser.getUsername(),
+					gitLabUserImpersonationToken
+			);
+
+			return newTagsetId;
+		}
+		catch (TagsetHandlerException|LocalGitRepositoryManagerException e) {
+			throw new ProjectHandlerException("Failed to create tagset", e);
+		}
+	}
 
 	// markup collection operations
 	/**
@@ -269,7 +321,9 @@ public class ProjectHandler implements IProjectHandler {
 
 			// create the submodule
 			File targetSubmodulePath = Paths.get(
-				repoManager.getRepositoryWorkTree().toString(), "documents", sourceDocumentId
+					repoManager.getRepositoryWorkTree().toString(),
+					SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
+					sourceDocumentId
 			).toFile();
 
 			repoManager.addSubmodule(
