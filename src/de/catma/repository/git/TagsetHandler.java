@@ -9,16 +9,16 @@ import de.catma.repository.git.interfaces.ITagsetHandler;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
-import de.catma.repository.git.serialization.models.HeaderBase;
 import de.catma.repository.git.serialization.models.TagsetDefinitionHeader;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
-import de.catma.tag.Version;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.models.User;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -31,8 +31,6 @@ import java.util.regex.Pattern;
 public class TagsetHandler implements ITagsetHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitServerManager remoteGitServerManager;
-
-	private final IDGenerator idGenerator;
 
 	private static final String TAGSET_REPOSITORY_NAME_FORMAT = "%s_tagset";
 
@@ -48,62 +46,59 @@ public class TagsetHandler implements ITagsetHandler {
 	}
 
 	public TagsetHandler(ILocalGitRepositoryManager localGitRepositoryManager,
-							 IRemoteGitServerManager remoteGitServerManager) {
+						 IRemoteGitServerManager remoteGitServerManager) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
-
-		this.idGenerator = new IDGenerator();
 	}
 
 	@Override
-	public String create(String name, String description, Version version, String projectId) throws TagsetHandlerException {
-		String tagsetId = idGenerator.generate();
+	public String create(@Nonnull String projectId,
+						 @Nullable String tagsetId,
+						 @Nonnull String name,
+						 @Nullable String description
+	) throws TagsetHandlerException {
+
+		if (tagsetId == null) {
+			IDGenerator idGenerator = new IDGenerator();
+			tagsetId = idGenerator.generate();
+		}
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			// create the tagset repository
-			IRemoteGitServerManager.CreateRepositoryResponse response;
-
-			// TODO: nice name for gitlab
+			// create the remote tagset repository
 			String tagsetRepoName = TagsetHandler.getTagsetRepositoryName(tagsetId);
-			response = this.remoteGitServerManager.createRepository(
-					tagsetRepoName, tagsetRepoName, projectId
-			);
+
+			IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
+					this.remoteGitServerManager.createRepository(tagsetRepoName, tagsetRepoName, projectId);
 
 			// clone the repository locally
-			GitLabServerManager gitLabServerManager =
-					(GitLabServerManager)this.remoteGitServerManager;
+			// TODO: create a provider to retrieve the auth details so that we don't have to cast to the implementation
+			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
 
 			User gitLabUser = gitLabServerManager.getGitLabUser();
-			String gitLabUserImpersonationToken = gitLabServerManager
-					.getGitLabUserImpersonationToken();
+			String gitLabUserImpersonationToken = gitLabServerManager.getGitLabUserImpersonationToken();
 
 			localGitRepoManager.clone(
-					response.repositoryHttpUrl,
+					createRepositoryResponse.repositoryHttpUrl,
 					null,
 					gitLabUser.getUsername(),
 					gitLabUserImpersonationToken
 			);
 
 			// write header.json into the local repo
-			File targetHeaderFile = new File(
-					localGitRepoManager.getRepositoryWorkTree(), "header.json"
+			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), "header.json");
+
+			TagsetDefinitionHeader header = new TagsetDefinitionHeader(name, description);
+			String serializedHeader = new SerializationHelper<TagsetDefinitionHeader>().serialize(header);
+
+			localGitRepoManager.addAndCommit(
+					targetHeaderFile,
+					serializedHeader.getBytes(StandardCharsets.UTF_8),
+					StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername(),
+					gitLabUser.getEmail()
 			);
-
-			TagsetDefinitionHeader header = new TagsetDefinitionHeader(name, description, version);
-			String serializedHeader = new SerializationHelper<HeaderBase>().serialize(header);
-			byte[] headerBytes = serializedHeader.getBytes(StandardCharsets.UTF_8);
-
-			localGitRepoManager.add(
-					targetHeaderFile, headerBytes
-			);
-
-			// commit newly added files
-			String commitMessage = String.format("Adding %s", targetHeaderFile.getName());
-			String committerName = StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername();
-			localGitRepoManager.commit(commitMessage, committerName, gitLabUser.getEmail());
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException e) {
-			throw new TagsetHandlerException("Failed to create Tagset repo", e);
+			throw new TagsetHandlerException("Failed to create tagset", e);
 		}
 
 		return tagsetId;
@@ -166,7 +161,7 @@ public class TagsetHandler implements ITagsetHandler {
 
 			//Integer id, String uuid, String tagsetName, Version version
 			TagsetDefinition tagsetdefinition = new TagsetDefinition(
-				null, tagsetId, tagsetDefinitionHeader.getName(), tagsetDefinitionHeader.version()
+				null, tagsetId, tagsetDefinitionHeader.getName(), null
 			);
 
 			ArrayList<TagDefinition> tagDefinitions = this.openTagDefinitions(tagsetHeaderFile.getParentFile());

@@ -126,11 +126,10 @@ public class TagsetHandlerTest {
 
 			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
 
-			String name = "InterestingTagset";
-			String description = "Pretty interesting stuff";
-			Version version = new Version();
+			String name = "Test Tagset";
+			String description = "Test Tagset Description";
 
-			String tagsetId = tagsetHandler.create(name, description, version, projectId);
+			String tagsetId = tagsetHandler.create(projectId, null, name, description);
 			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us
 
@@ -145,7 +144,7 @@ public class TagsetHandlerTest {
 
 			assert Arrays.asList(expectedRepoPath.list()).contains("header.json");
 
-			TagsetDefinitionHeader expectedHeader = new TagsetDefinitionHeader(name, description, version);
+			TagsetDefinitionHeader expectedHeader = new TagsetDefinitionHeader(name, description);
 
 			String serialized = FileUtils.readFileToString(
 				new File(expectedRepoPath, "header.json"), StandardCharsets.UTF_8
@@ -156,7 +155,6 @@ public class TagsetHandlerTest {
 
 			assertEquals(expectedHeader.getName(), actualHeader.getName());
 			assertEquals(expectedHeader.getDescription(), actualHeader.getDescription());
-			assertEquals(expectedHeader.getVersion(), actualHeader.getVersion());
 		}
 	}
 
@@ -193,11 +191,7 @@ public class TagsetHandlerTest {
 
 			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
 
-			String name = "InterestingTagset";
-			String description = "Pretty interesting stuff";
-			Version version = new Version();
-
-			String tagsetId = tagsetHandler.create(name, description, version, projectId);
+			String tagsetId = tagsetHandler.create(projectId, null, "Test Tagset", null);
 			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us
 
@@ -264,11 +258,7 @@ public class TagsetHandlerTest {
 
 			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
 
-			String name = "InterestingTagset";
-			String description = "Pretty interesting stuff";
-			Version version = new Version();
-
-			String tagsetId = tagsetHandler.create(name, description, version, projectId);
+			String tagsetId = tagsetHandler.create(projectId, null, "Test Tagset", null);
 
 			assertNotNull(tagsetId);
 
@@ -334,8 +324,7 @@ public class TagsetHandlerTest {
 			String fakeSerializedTagsetHeader = "" +
 					"{\n" +
 					"\t\"description\":\"\",\n" +
-					"\t\"name\":\"TAGSET_DEF\",\n" +
-					"\t\"version\":\"2017-10-31T14:40:00+0200\"\n" +
+					"\t\"name\":\"TAGSET_DEF\"\n" +
 					"}";
 			FileUtils.writeStringToFile(fakeTagsetHeaderFilePath, fakeSerializedTagsetHeader, StandardCharsets.UTF_8);
 
@@ -375,7 +364,6 @@ public class TagsetHandlerTest {
 
 			assertEquals("CATMA_TAGSET_DEF", tagsetDefinition.getUuid());
 			assertEquals("TAGSET_DEF", tagsetDefinition.getName());
-			assertEquals("2017-10-31T14:40:00.000+0200", tagsetDefinition.getVersion().toString());
 
 			assertFalse(tagsetDefinition.isEmpty());
 

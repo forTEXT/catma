@@ -246,7 +246,7 @@ public class ProjectHandlerTest {
 			assertFalse(jGitRepoManager.isAttached());
 
 			// create a tagset
-			String tagsetId = tagsetHandler.create("Test Tagset", null, new Version(), projectId);
+			String tagsetId = tagsetHandler.create(projectId, null, "Test Tagset", null);
 
 			// the JGitRepoManager instance should always be in a detached state after TagsetHandler calls
 			// return
