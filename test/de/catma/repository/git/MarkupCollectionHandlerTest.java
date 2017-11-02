@@ -331,10 +331,13 @@ public class MarkupCollectionHandlerTest {
 			// calls return
 			assertFalse(localGitRepoManager.isAttached());
 
-			localGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
+			String markupCollectionRepositoryName = MarkupCollectionHandler.getMarkupCollectionRepositoryName(
+				markupCollectionId
+			);
+			localGitRepoManager.open(markupCollectionRepositoryName);
 
 			File expectedTagInstanceJsonFilePath = new File(
-				localGitRepoManager.getRepositoryWorkTree(), "CATMA_TAG_INST.json"
+				localGitRepoManager.getRepositoryWorkTree(), "annotations/CATMA_TAG_INST.json"
 			);
 
 			assert expectedTagInstanceJsonFilePath.exists();
@@ -344,19 +347,25 @@ public class MarkupCollectionHandlerTest {
 					"{\n" +
 					"\t\"body\":{\n" +
 					"\t\t\"@context\":{\n" +
-					"\t\t\t\"SYSPROP_DEF\":\"http://catma.de/portal/tag/CATMA_TAG_DEF/property/CATMA_SYSPROP_DEF\",\n" +
-					"\t\t\t\"UPROP_DEF\":\"http://catma.de/portal/tag/CATMA_TAG_DEF/property/CATMA_UPROP_DEF\",\n" +
-					"\t\t\t\"tag\":\"http://catma.de/portal/tag\"\n" +
+					"\t\t\t\"UPROP_DEF\":\"http://localhost:8081/%1$s/tagsets/CATMA_TAGSET_DEF_tagset/CATMA_TAG_DEF/propertydefs.json/CATMA_UPROP_DEF\",\n" +
+					"\t\t\t\"catma_markupauthor\":\"http://localhost:8081/%1$s/tagsets/CATMA_TAGSET_DEF_tagset/CATMA_TAG_DEF/propertydefs.json/CATMA_SYSPROP_DEF\",\n" +
+					"\t\t\t\"tag\":\"http://catma.de/portal/tag\",\n" +
+					"\t\t\t\"tagset\":\"http://catma.de/portal/tagset\"\n" +
 					"\t\t},\n" +
 					"\t\t\"properties\":{\n" +
-					"\t\t\t\"SYSPROP_DEF\":[\"SYSPROP_VAL_1\"],\n" +
-					"\t\t\t\"UPROP_DEF\":[\"UPROP_VAL_2\"]\n" +
+					"\t\t\t\"system\":{\n" +
+					"\t\t\t\t\"catma_markupauthor\":[\"SYSPROP_VAL_1\"]\n" +
+					"\t\t\t},\n" +
+					"\t\t\t\"user\":{\n" +
+					"\t\t\t\t\"UPROP_DEF\":[\"UPROP_VAL_2\"]\n" +
+					"\t\t\t}\n" +
 					"\t\t},\n" +
-					"\t\t\"tag\":\"http://catma.de/portal/tag/CATMA_TAG_DEF\",\n" +
+					"\t\t\"tag\":\"http://localhost:8081/%1$s/tagsets/CATMA_TAGSET_DEF_tagset/CATMA_TAG_DEF\",\n" +
+					"\t\t\"tagset\":\"http://localhost:8081/%1$s/tagsets/CATMA_TAGSET_DEF_tagset\",\n" +
 					"\t\t\"type\":\"Dataset\"\n" +
 					"\t},\n" +
 					"\t\"@context\":\"http://www.w3.org/ns/anno.jsonld\",\n" +
-					"\t\"id\":\"http://catma.de/portal/annotation/CATMA_TAG_INST\",\n" +
+					"\t\"id\":\"http://localhost:8081/%1$s/collections/%2$s/annotations/CATMA_TAG_INST.json\",\n" +
 					"\t\"target\":{\n" +
 					"\t\t\"items\":[{\n" +
 					"\t\t\t\"selector\":{\n" +
@@ -378,6 +387,12 @@ public class MarkupCollectionHandlerTest {
 					"\t},\n" +
 					"\t\"type\":\"Annotation\"\n" +
 					"}";
+
+			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+
+			expectedTagInstanceJsonFileContents = String.format(
+				expectedTagInstanceJsonFileContents, projectRootRepositoryName, markupCollectionRepositoryName
+			);
 
 			assertEquals(
 				expectedTagInstanceJsonFileContents.replaceAll("[\n\t]", ""),

@@ -184,7 +184,11 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 			// write the serialized tag instance to the repository
 			File targetSerializedTagInstanceFilePath = new File(
 				localGitRepoManager.getRepositoryWorkTree(),
-				String.format("%s.json", annotation.getId().substring(annotation.getId().lastIndexOf("/") + 1))
+				// TODO: do something like getLastPathSegmentFromUrl + getTagsetUuidFromRepositoryName
+				//String.format("%s.json", annotation.getId().substring(annotation.getId().lastIndexOf("/") + 1))
+				String.format(
+					"annotations/%s", annotation.getId().substring(annotation.getId().lastIndexOf("/") + 1)
+				)
 			);
 			String serializedTagInstance = new SerializationHelper<JsonLdWebAnnotation>().serialize(annotation);
 
