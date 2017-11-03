@@ -73,4 +73,12 @@ public class GitTagDefinition {
 	public String getParentUuid(){return this.tagDefinition.getParentUuid();}
 
 	public void setParentUuid(String uuid){this.tagDefinition.setParentUuid(uuid);}
+
+	public String getTagsetDefinitionUuid() {
+		return this.tagDefinition.getTagsetDefinitionUuid();
+	}
+
+	public void setTagsetDefinitionUuid(String tagsetDefinitionUuid) {
+		this.tagDefinition.setTagsetDefinitionUuid(tagsetDefinitionUuid);
+	}
 }

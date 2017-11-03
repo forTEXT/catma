@@ -8,7 +8,7 @@ import de.catma.repository.git.interfaces.ISourceDocumentHandler;
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.managers.RemoteGitServerManager;
+import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 import de.catma.util.IDGenerator;
@@ -24,19 +24,19 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 public class SourceDocumentHandler implements ISourceDocumentHandler {
-	static final String SOURCEDOCUMENT_ROOT_REPOSITORY_NAME_FORMAT = "%s_sourcedocument";
-
     private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitServerManager remoteGitServerManager;
 
-    public SourceDocumentHandler(ILocalGitRepositoryManager localGitRepositoryManager,
-								 IRemoteGitServerManager remoteGitServerManager) {
-        this.localGitRepositoryManager = localGitRepositoryManager;
-        this.remoteGitServerManager = remoteGitServerManager;
-    }
+	private static final String SOURCEDOCUMENT_REPOSITORY_NAME_FORMAT = "%s_sourcedocument";
 
-	String getSourceDocumentRepoName(String sourceDocumentId){
-		return String.format(SOURCEDOCUMENT_ROOT_REPOSITORY_NAME_FORMAT, sourceDocumentId);
+	public static String getSourceDocumentRepositoryName(String sourceDocumentId) {
+		return String.format(SOURCEDOCUMENT_REPOSITORY_NAME_FORMAT, sourceDocumentId);
+	}
+
+	public SourceDocumentHandler(ILocalGitRepositoryManager localGitRepositoryManager,
+								 IRemoteGitServerManager remoteGitServerManager) {
+		this.localGitRepositoryManager = localGitRepositoryManager;
+		this.remoteGitServerManager = remoteGitServerManager;
 	}
 
 	/**
@@ -75,7 +75,7 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 			// create the source document repository
 			IRemoteGitServerManager.CreateRepositoryResponse response;
 
-			String sourceDocumentRepoName = getSourceDocumentRepoName(sourceDocumentId);
+			String sourceDocumentRepoName = SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId);
 
 			if (projectId == null) {
 				response = this.remoteGitServerManager.createRepository(
@@ -88,10 +88,10 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 			}
 
 			// clone the repository locally
-			RemoteGitServerManager remoteGitServerManagerImpl =
-					(RemoteGitServerManager)this.remoteGitServerManager;
-			User gitLabUser = remoteGitServerManagerImpl.getGitLabUser();
-			String gitLabUserImpersonationToken = remoteGitServerManagerImpl
+			GitLabServerManager gitLabServerManager =
+					(GitLabServerManager)this.remoteGitServerManager;
+			User gitLabUser = gitLabServerManager.getGitLabUser();
+			String gitLabUserImpersonationToken = gitLabServerManager
 					.getGitLabUserImpersonationToken();
 
 			localGitRepoManager.clone(
@@ -151,7 +151,7 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 	public SourceDocument open(String sourceDocumentId, String projectId) throws SourceDocumentHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 
-			localGitRepoManager.open(getSourceDocumentRepoName(sourceDocumentId));
+			localGitRepoManager.open(SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId));
 
 			File repositoryWorkTreeFile = localGitRepoManager.getRepositoryWorkTree();
 			File targetHeaderFile = new File(

@@ -2,6 +2,7 @@ package de.catma.repository.git.managers;
 
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.*;
@@ -18,17 +19,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
-public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, AutoCloseable {
+public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseable {
 	private final String repositoryBasePath;
 	private String userName;
 
 	private Git gitApi;
 
-	public LocalGitRepositoryManager(Properties catmaProperties) {
+	public JGitRepoManager(Properties catmaProperties) {
 		this(catmaProperties, "");
 	}
 
-	public LocalGitRepositoryManager(Properties catmaProperties, String userName) {
+	public JGitRepoManager(Properties catmaProperties, String userName) {
 		this.repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
 		this.userName = userName;
 	}
@@ -44,7 +45,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 	 * @throws LocalGitRepositoryManagerException if the Git repository couldn't be found or
 	 *         couldn't be opened for some other reason
 	 */
-	public LocalGitRepositoryManager(Properties catmaProperties, String userName, String repositoryName)
+	public JGitRepoManager(Properties catmaProperties, String userName, String repositoryName)
 			throws LocalGitRepositoryManagerException {
 		this(catmaProperties, userName);
 
@@ -273,7 +274,7 @@ public class LocalGitRepositoryManager implements ILocalGitRepositoryManager, Au
 			throw new IllegalStateException("Can't call `add` on a detached instance");
 		}
 
-		try (FileOutputStream fileOutputStream = new FileOutputStream(targetFile)) {
+		try (FileOutputStream fileOutputStream = FileUtils.openOutputStream(targetFile)) {
 			fileOutputStream.write(bytes);
 
 			Path basePath = this.gitApi.getRepository().getWorkTree().toPath();

@@ -18,19 +18,18 @@ import java.util.List;
 import java.util.Properties;
 
 import static org.awaitility.Awaitility.*;
-import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
-public class RemoteGitServerManagerTest {
+public class GitLabServerManagerTest {
 	private Properties catmaProperties;
 	private de.catma.user.User catmaUser;
-	private RemoteGitServerManager serverManager;
+	private GitLabServerManager serverManager;
 
 	private ArrayList<String> groupsToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<Integer> repositoriesToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<Integer> usersToDeleteOnTearDown = new ArrayList<>();
 
-	public RemoteGitServerManagerTest() throws Exception {
+	public GitLabServerManagerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
 				System.getProperties().getProperty("prop") : "catma.properties";
 
@@ -40,10 +39,10 @@ public class RemoteGitServerManagerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		// create a fake CATMA user which we'll use to instantiate the RemoteGitServerManager
+		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager
 		this.catmaUser = Randomizer.getDbUser();
 
-		this.serverManager = new RemoteGitServerManager(this.catmaProperties, this.catmaUser);
+		this.serverManager = new GitLabServerManager(this.catmaProperties, this.catmaUser);
 	}
 
 	@After
@@ -70,11 +69,11 @@ public class RemoteGitServerManagerTest {
 		if (this.usersToDeleteOnTearDown.size() > 0) {
 			for (Integer userId : this.usersToDeleteOnTearDown) {
 				userApi.deleteUser(userId);
-				RemoteGitServerManagerTest.awaitUserDeleted(userApi,userId);
+				GitLabServerManagerTest.awaitUserDeleted(userApi,userId);
 			}
 		}
 
-		// delete the GitLab user that the RemoteGitServerManager constructor in setUp would have
+		// delete the GitLab user that the GitLabServerManager constructor in setUp would have
 		// created
 		// we do this last because GitLab seems to ignore deleteUser calls if the user still has
 		// contributions (groups or repos), but that's probably because gitlab4j doesn't pass the
@@ -84,7 +83,7 @@ public class RemoteGitServerManagerTest {
 		// https://docs.gitlab.com/ee/user/profile/account/delete_account.html#associated-records
 		User user = this.serverManager.getGitLabUser();
 		userApi.deleteUser(user.getId());
-		RemoteGitServerManagerTest.awaitUserDeleted(userApi, user.getId());
+		GitLabServerManagerTest.awaitUserDeleted(userApi, user.getId());
 	}
 
 	public static void awaitUserDeleted(UserApi userApi, int userId) {
@@ -123,7 +122,7 @@ public class RemoteGitServerManagerTest {
 		assertEquals(this.catmaUser.getIdentifier(), matchedUser.getUsername());
 		assertEquals(this.catmaUser.getName(), matchedUser.getName());
 		String expectedGitLabUserEmailAddress = String.format(
-			RemoteGitServerManager.GITLAB_USER_EMAIL_ADDRESS_FORMAT, this.catmaUser.getUserId()
+			GitLabServerManager.GITLAB_USER_EMAIL_ADDRESS_FORMAT, this.catmaUser.getUserId()
 		);
 		assertEquals(expectedGitLabUserEmailAddress, matchedUser.getEmail());
 
@@ -134,13 +133,13 @@ public class RemoteGitServerManagerTest {
 		);
 
 		assertEquals(1, impersonationTokens.size());
-		assertEquals(RemoteGitServerManager.GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME,
+		assertEquals(GitLabServerManager.GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME,
 			impersonationTokens.get(0).name
 		);
 
-		// assert that re-instantiating the RemoteGitServerManager causes it to re-use the existing
+		// assert that re-instantiating the GitLabServerManager causes it to re-use the existing
 		// GitLab user
-		RemoteGitServerManager tmpServerManager = new RemoteGitServerManager(
+		GitLabServerManager tmpServerManager = new GitLabServerManager(
 			this.catmaProperties, this.catmaUser
 		);
 

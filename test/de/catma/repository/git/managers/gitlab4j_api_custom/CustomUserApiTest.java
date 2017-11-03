@@ -1,6 +1,6 @@
 package de.catma.repository.git.managers.gitlab4j_api_custom;
 
-import de.catma.repository.git.managers.RemoteGitServerManagerTest;
+import de.catma.repository.git.managers.GitLabServerManagerTest;
 import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.UserApi;
@@ -48,7 +48,7 @@ public class CustomUserApiTest {
 			for (Integer userId : this.usersToDeleteOnTearDown) {
 				UserApi userApi = this.gitLabApi.getUserApi();
 				userApi.deleteUser(userId);
-				RemoteGitServerManagerTest.awaitUserDeleted(userApi, userId);
+				GitLabServerManagerTest.awaitUserDeleted(userApi, userId);
 			}
 		}
 	}

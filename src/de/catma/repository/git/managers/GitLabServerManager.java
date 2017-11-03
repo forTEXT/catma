@@ -20,7 +20,7 @@ import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class RemoteGitServerManager implements IRemoteGitServerManager {
+public class GitLabServerManager implements IRemoteGitServerManager {
 	private final String gitLabAdminPersonalAccessToken;
 	private final String gitLabServerUrl;
 
@@ -42,7 +42,7 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 	).toCharArray();
 
 	/**
-	 * Creates a new RemoteGitServerManager instance.
+	 * Creates a new GitLabServerManager instance.
 	 * <p>
 	 * Unless stated otherwise, all actions are performed as the <code>catmaUser</code> supplied
 	 * (technically, as a GitLab user that represents the CATMA user).
@@ -51,7 +51,7 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 	 * @param catmaUser a {@link de.catma.user.User} object
 	 * @throws RemoteGitServerManagerException if something went wrong during instantiation
 	 */
-	public RemoteGitServerManager(Properties catmaProperties, de.catma.user.User catmaUser)
+	public GitLabServerManager(Properties catmaProperties, de.catma.user.User catmaUser)
 			throws RemoteGitServerManagerException {
 		this.gitLabAdminPersonalAccessToken = catmaProperties.getProperty(
 			"GitLabAdminPersonalAccessToken"
@@ -313,7 +313,7 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 		if (wasCreated) {
 			// if the user was newly created, we need to create an impersonation token
 			impersonationToken = this.createImpersonationToken(
-				user.getId(), RemoteGitServerManager.GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME
+				user.getId(), GitLabServerManager.GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME
 			);
 		}
 		else {
@@ -330,7 +330,7 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 				// created through this class, but this at least allows for special cases
 				for (ImpersonationToken token : impersonationTokens) {
 					if (token.name.equals(
-							RemoteGitServerManager.GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME)) {
+							GitLabServerManager.GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME)) {
 						impersonationToken = token.token;
 						break;
 					}
@@ -350,7 +350,7 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 				"active impersonation token called `%s`, or has so many tokens that " +
 				"CustomUserApi.getImpersonationTokens(int, String) is not returning it.",
 				catmaUser.getUserId(), catmaUser.getIdentifier(),
-				user.getId(), RemoteGitServerManager.GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME
+				user.getId(), GitLabServerManager.GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME
 			);
 			throw new RemoteGitServerManagerException(errorMessage);
 		}
@@ -390,7 +390,7 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 			// 3. we don't want GitLab to send any emails to the users
 			if (user == null) {
 				String gitLabUserEmailAddress = String.format(
-					RemoteGitServerManager.GITLAB_USER_EMAIL_ADDRESS_FORMAT, catmaUser.getUserId()
+					GitLabServerManager.GITLAB_USER_EMAIL_ADDRESS_FORMAT, catmaUser.getUserId()
 				);
 				user = this._createUser(
 					gitLabUserEmailAddress, catmaUser.getIdentifier(), null,
@@ -416,8 +416,8 @@ public class RemoteGitServerManager implements IRemoteGitServerManager {
 		if (password == null) {
 			// generate a random password
 			password = RandomStringUtils.random(
-				12, 0, RemoteGitServerManager.PWD_CHARS.length-1,
-				false, false, RemoteGitServerManager.PWD_CHARS, new SecureRandom()
+				12, 0, GitLabServerManager.PWD_CHARS.length-1,
+				false, false, GitLabServerManager.PWD_CHARS, new SecureRandom()
 			);
 		}
 
