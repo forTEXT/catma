@@ -38,7 +38,7 @@ public class ChooseAnnotationCollectionDialog extends Window {
 
 	public ChooseAnnotationCollectionDialog( Repository repository,
 			String sourceDocumentId, AnnotationCollectionListener annotationCollectionListener) {
-		super("Choose one of the Options"); //$NON-NLS-1$
+		super(Messages.getString("ChooseAnnotationCollectionDialog.chooseOneOfTheOptions"));  //$NON-NLS-1$
 		this.repository = repository;
 	
 		sourceDocument = repository.getSourceDocument(sourceDocumentId);
@@ -107,7 +107,7 @@ public class ChooseAnnotationCollectionDialog extends Window {
 		String userName = repository.getUser().getName();
 		String sourceDocumentName = sourceDocument.toString();
 		LocalDateTime timePoint = LocalDateTime.now();
-		String collectionName = sourceDocumentName + "_" + userName + "_" + timePoint; //$NON-NLS-1$ 
+		String collectionName = sourceDocumentName + "_" + userName + Messages.getString("ChooseAnnotationCollectionDialog.chooseOneOfTheOptions1") + timePoint; //$NON-NLS-1$ //$NON-NLS-2$ 
 		return collectionName;
 	}
 

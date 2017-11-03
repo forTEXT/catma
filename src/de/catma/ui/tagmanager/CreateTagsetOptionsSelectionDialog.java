@@ -40,7 +40,7 @@ public class CreateTagsetOptionsSelectionDialog extends Window {
 
 	public CreateTagsetOptionsSelectionDialog(TagsetSelectionListener tagsetSelectionListener, Repository repository,
 			CurrentWritableUserMarkupCollectionProvider collectionProvider) {
-		super("Choose one of the options");
+		super(Messages.getString("CreateTagsetOptionsSelectionDialog.chooseOnOfTheOptions")); //$NON-NLS-1$
 		initComponents();
 		initActions(repository, tagsetSelectionListener, collectionProvider);
 	}
@@ -85,7 +85,7 @@ public class CreateTagsetOptionsSelectionDialog extends Window {
 																							
 							} catch (IOException e) {
 								((CatmaApplication) UI.getCurrent()).showAndLogError(
-										Messages.getString("TagLibraryPanel.errorCreatingTagLibrary"), e);
+										Messages.getString("TagLibraryPanel.errorCreatingTagLibrary"), e); //$NON-NLS-1$
 							}
 
 						}
@@ -156,17 +156,17 @@ public class CreateTagsetOptionsSelectionDialog extends Window {
 								TagsetDefinition tagsetDefinition = (TagsetDefinition) iterator.next();
 								((CatmaApplication) UI.getCurrent()).addTagsetToActiveDocument(tagsetDefinition);
 							}
-							Notification.show(Messages.getString("CatmaApplication.info"), //$NON-NLS-1$
-									"Select first one Tagset ", Notification.Type.HUMANIZED_MESSAGE);
+							Notification.show("",  //$NON-NLS-1$
+									Messages.getString("CreateTagsetOptionsSelectionDialog.selectFirstOneTagset"), Notification.Type.HUMANIZED_MESSAGE);  //$NON-NLS-1$
 						}
 
 					} else {
-						HTMLNotification.show(Messages.getString("CatmaApplication.error"), //$NON-NLS-1$
-								"There is no Tagset for this Document", Type.HUMANIZED_MESSAGE);
+						HTMLNotification.show("",  //$NON-NLS-1$
+								Messages.getString("CreateTagsetOptionsSelectionDialog.thereIsNoTagsetForThisDocument"), Type.HUMANIZED_MESSAGE);  //$NON-NLS-1$
 					}
 				} else {
-					HTMLNotification.show(Messages.getString("CatmaApplication.error"), //$NON-NLS-1$
-							"No Annotation Collection for this Document found", Type.HUMANIZED_MESSAGE);
+					HTMLNotification.show("",  //$NON-NLS-1$
+							Messages.getString("CreateTagsetOptionsSelectionDialog.noAnnotationCollectionforThisDocumentFound"), Type.HUMANIZED_MESSAGE);   //$NON-NLS-1$
 				}
 				UI.getCurrent().removeWindow(CreateTagsetOptionsSelectionDialog.this);
 			}
@@ -177,14 +177,14 @@ public class CreateTagsetOptionsSelectionDialog extends Window {
 	private String generateTagLibraryName(Repository repository) {
 		String userName = repository.getUser().getName();
 		LocalDateTime timePoint = LocalDateTime.now();
-		String tagLibName = "Tag Library created for user " + userName + " at " + timePoint;
+		String tagLibName = "Tag Library created for user " + userName + " at " + timePoint; //$NON-NLS-1$ //$NON-NLS-2$
 		return tagLibName;
 	}
 
 	private String generateTagsetName(Repository repository) {
 		String userName = repository.getUser().getName();
 		LocalDateTime timePoint = LocalDateTime.now();
-		String tagSetName = "Tagset created for user " + userName + " at " + timePoint;
+		String tagSetName = "Tagset created for user " + userName + " at " + timePoint; //$NON-NLS-1$ //$NON-NLS-2$
 		return tagSetName;
 	}
 
@@ -205,14 +205,14 @@ public class CreateTagsetOptionsSelectionDialog extends Window {
 
 		setContent(content);
 
-		btOpenTagset = new Button("Open Tagsets");
-		btOpenTagset.setWidth("90%");
+		btOpenTagset = new Button("Open Tagsets"); //$NON-NLS-1$
+		btOpenTagset.setWidth("90%"); //$NON-NLS-1$
 
-		btAutoCreateTagset = new Button("Continue without");
-		btAutoCreateTagset.setWidth("90%");
+		btAutoCreateTagset = new Button("Continue without"); //$NON-NLS-1$
+		btAutoCreateTagset.setWidth("90%"); //$NON-NLS-1$
 
-		btOpenTagsetFromActiveAnnotationCollection = new Button("Open Tagsets from the active Annotation Collection");
-		btOpenTagsetFromActiveAnnotationCollection.setWidth("90%");
+		btOpenTagsetFromActiveAnnotationCollection = new Button("Open Tagsets from the active Annotation Collection"); //$NON-NLS-1$
+		btOpenTagsetFromActiveAnnotationCollection.setWidth("90%"); //$NON-NLS-1$
 
 		content.addComponent(btOpenTagset);
 		content.addComponent(btAutoCreateTagset);
