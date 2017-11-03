@@ -5,16 +5,18 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 import de.catma.tag.TagDefinition;
+import org.neo4j.ogm.annotation.Relationship;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@NodeEntity
+@NodeEntity(label="TagsetDefinition")
 public class Neo4JTagsetDefinition {
 	@Id
 	private String uuid;
 	private String name;
 
+	@Relationship(type = "HAS_TAG_DEFINITION", direction = Relationship.OUTGOING)
 	private List<Neo4JTagDefinition> tagDefinitions;
 
 	public Neo4JTagsetDefinition(){
