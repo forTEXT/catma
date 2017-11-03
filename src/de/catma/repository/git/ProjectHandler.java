@@ -183,6 +183,66 @@ public class ProjectHandler implements IProjectHandler {
 	}
 
 	// markup collection operations
+	public String createMarkupCollection(@Nonnull String projectId,
+										 @Nullable String markupCollectionId,
+										 @Nonnull String name,
+										 @Nullable String description,
+										 @Nonnull String sourceDocumentId,
+										 @Nonnull String sourceDocumentVersion
+	) throws ProjectHandlerException {
+
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
+					localGitRepoManager, this.remoteGitServerManager
+			);
+
+			// create the markup collection
+			String newMarkupCollectionId = markupCollectionHandler.create(
+					projectId,
+					markupCollectionId,
+					name,
+					description,
+					sourceDocumentId,
+					sourceDocumentVersion
+			);
+
+			// push the newly created markup collection repo to the server in preparation for adding it to the project
+			// root repo as a submodule
+			// TODO: create a provider to retrieve the auth details so that we don't have to cast to the implementation
+			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
+
+			User gitLabUser = gitLabServerManager.getGitLabUser();
+			String gitLabUserImpersonationToken = gitLabServerManager.getGitLabUserImpersonationToken();
+
+			localGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(newMarkupCollectionId));
+			localGitRepoManager.push(gitLabUser.getUsername(), gitLabUserImpersonationToken);
+			String markupCollectionRepoRemoteUrl = localGitRepoManager.getRemoteUrl(null);
+			localGitRepoManager.detach(); // need to explicitly detach so that we can call open below
+
+			// open the project root repo
+			localGitRepoManager.open(ProjectHandler.getProjectRootRepositoryName(projectId));
+
+			// add the submodule
+			File targetSubmodulePath = Paths.get(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
+					newMarkupCollectionId
+			).toFile();
+
+			localGitRepoManager.addSubmodule(
+					targetSubmodulePath,
+					markupCollectionRepoRemoteUrl,
+					gitLabUser.getUsername(),
+					gitLabUserImpersonationToken
+			);
+
+			return newMarkupCollectionId;
+		}
+		catch (MarkupCollectionHandlerException|LocalGitRepositoryManagerException e) {
+			throw new ProjectHandlerException("Failed to create markup collection", e);
+		}
+	}
+
 	/**
 	 * Adds an existing tagset, identified by <code>tagsetId</code> and <code>tagsetVersion</code>, to the markup
 	 * collection identified by <code>projectId</code> and <code>markupCollectionId</code>.

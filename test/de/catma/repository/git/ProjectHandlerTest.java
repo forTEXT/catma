@@ -5,7 +5,6 @@ import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
-import de.catma.tag.Version;
 import helpers.Randomizer;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Status;
@@ -176,6 +175,8 @@ public class ProjectHandlerTest {
 					null
 			);
 
+			assertNotNull(tagsetId);
+
 			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
@@ -186,6 +187,51 @@ public class ProjectHandlerTest {
 			assert status.hasUncommittedChanges();
 			assert added.contains(".gitmodules");
 			assert added.contains(String.format("%s/%s", ProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetId));
+		}
+	}
+
+	@Test
+	public void createMarkupCollection() throws Exception {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
+				this.catmaProperties, "fakeUserIdentifier"
+		)) {
+
+			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+
+			String projectId = projectHandler.create(
+					"Test CATMA Project",
+					"This is a test CATMA project"
+			);
+			this.projectsToDeleteOnTearDown.add(projectId);
+
+			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls return
+			assertFalse(jGitRepoManager.isAttached());
+
+			String markupCollectionId = projectHandler.createMarkupCollection(
+					projectId,
+					null,
+					"Test Markup Collection",
+					null,
+					"fakeSourceDocumentId",
+					"fakeSourceDocumentVersion"
+			);
+
+			assertNotNull(markupCollectionId);
+
+			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls return
+			assertFalse(jGitRepoManager.isAttached());
+
+			jGitRepoManager.open(ProjectHandler.getProjectRootRepositoryName(projectId));
+			Status status = jGitRepoManager.getGitApi().status().call();
+			Set<String> added = status.getAdded();
+
+			assert status.hasUncommittedChanges();
+			assert added.contains(".gitmodules");
+			assert added.contains(
+					String.format(
+							"%s/%s", ProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, markupCollectionId
+					)
+			);
 		}
 	}
 

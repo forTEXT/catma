@@ -20,6 +20,14 @@ public interface IProjectHandler {
 	) throws ProjectHandlerException;
 
 	// markup collection operations
+	String createMarkupCollection(@Nonnull String projectId,
+								  @Nullable String markupCollectionId,
+								  @Nonnull String name,
+								  @Nullable String description,
+								  @Nonnull String sourceDocumentId,
+								  @Nonnull String sourceDocumentVersion
+	) throws ProjectHandlerException;
+
 	void addTagsetToMarkupCollection(String projectId, String markupCollectionId, String tagsetId, String tagsetVersion)
 			throws ProjectHandlerException;
 
