@@ -467,17 +467,17 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 		analyzerManagerView.analyzeDocuments(corpus, repository);
 	}
 
-	// Diese Methode wird vom AnalyzeCurrentDoc im Analyze-Menue-Tab aufgerufen
 	public void analyzeCurrentlyActiveDocument() {
 		menu.executeEntry(analyzerManagerView);
+		
 		Component selectedTab = taggerManagerView.getSelectedTab();
+		
 		if (selectedTab != null) {
 			TaggerView taggerView = (TaggerView) selectedTab;
 			taggerView.analyzeDocument();
 		} else {
-			Notification.show("Selected Tab is", " null", Notification.Type.HUMANIZED_MESSAGE);
+			Notification.show(Messages.getString("CatmaApplication.noOpenDocument"), Type.TRAY_NOTIFICATION); //$NON-NLS-1$
 		}
-	
 	}
 	
 	

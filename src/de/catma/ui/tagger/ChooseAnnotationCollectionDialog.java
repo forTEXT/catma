@@ -18,9 +18,10 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.repository.CorpusContentSelectionDialog;
 import de.catma.ui.repository.Messages;
 import de.catma.util.Pair;
+
+
 
 public class ChooseAnnotationCollectionDialog extends Window {
 	
@@ -33,15 +34,13 @@ public class ChooseAnnotationCollectionDialog extends Window {
 	private Button btContinueWithout;
 	private Repository repository;
 	private SourceDocument sourceDocument;
-	private String sourceDocumentId;
-	private CorpusContentSelectionDialog dialog;
-	private AnnotationCollectionListener annotationCollectionListener;
+
 
 	public ChooseAnnotationCollectionDialog( Repository repository,
 			String sourceDocumentId, AnnotationCollectionListener annotationCollectionListener) {
-		super("Choose one of the Options");
+		super("Choose one of the Options"); //$NON-NLS-1$
 		this.repository = repository;
-		this.annotationCollectionListener = annotationCollectionListener;
+	
 		sourceDocument = repository.getSourceDocument(sourceDocumentId);
 		initComponents();
 		initActions(annotationCollectionListener);
@@ -74,7 +73,7 @@ public class ChooseAnnotationCollectionDialog extends Window {
 								UserMarkupCollection umc = repository.getUserMarkupCollection(result.getFirst());							
 								annotationCollectionListener.defaultCollectionCreated(umc); 							
 							} catch (IOException e) {
-								((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("CorpusContentSelectionDialog.errorCreatingCollection"), e);
+								((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("CorpusContentSelectionDialog.errorCreatingCollection"), e); //$NON-NLS-1$
 							}
 						}
 						repository.removePropertyChangeListener(
@@ -108,7 +107,7 @@ public class ChooseAnnotationCollectionDialog extends Window {
 		String userName = repository.getUser().getName();
 		String sourceDocumentName = sourceDocument.toString();
 		LocalDateTime timePoint = LocalDateTime.now();
-		String collectionName = sourceDocumentName + "_" + userName + "_" + timePoint;
+		String collectionName = sourceDocumentName + "_" + userName + "_" + timePoint; //$NON-NLS-1$ 
 		return collectionName;
 	}
 
@@ -128,11 +127,10 @@ public class ChooseAnnotationCollectionDialog extends Window {
 		content.setSpacing(true);
 
 		setContent(content);
-
-		btContinueWithout = new Button("Continue without");
-		btContinueWithout.setWidth("90%");
-		btOpenOrCreateCollection = new Button("Open or create Collection");
-		btOpenOrCreateCollection.setWidth("90%");
+		btOpenOrCreateCollection = new Button(Messages.getString("ChooseAnnotationCollectionDialog.openOrCreateCollection")); //$NON-NLS-1$
+		btContinueWithout = new Button(Messages.getString("ChooseAnnotationCollectionDialog.continueWithout")); //$NON-NLS-1$
+		btContinueWithout.setWidth("90%"); //$NON-NLS-1$
+		btOpenOrCreateCollection.setWidth("90%"); //$NON-NLS-1$
 		content.addComponent(btOpenOrCreateCollection);
 		content.addComponent(btContinueWithout);
 

@@ -20,13 +20,9 @@ package de.catma.ui.analyzer;
 
 import java.util.HashSet;
 
-import com.vaadin.server.AbstractErrorMessage.ContentMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 
@@ -44,7 +40,7 @@ public class AnalyzerManagerView extends TabbedView {
 	public AnalyzerManagerView() {
 		
 		super(Messages.getString("AnalyzerManagerView.intro")); //$NON-NLS-1$
-		super.setHtmlLabel();
+
 		initComponents();
 		initAnalyzerAction();	
 	}
@@ -59,10 +55,14 @@ public class AnalyzerManagerView extends TabbedView {
 		});
 		
 	}
+	
 
 	private void initComponents() {
-		this.btnAnalyzeCurrentOpenDoc = new Button("Analyze currently open document");
+		btnAnalyzeCurrentOpenDoc = new Button(Messages.getString("AnalyzerManagerView.analyzeCurrentlyOpenDocument")); //$NON-NLS-1$
 		getIntroPanel().addComponent(btnAnalyzeCurrentOpenDoc);
+	    setHtmlLabel();
+	  
+	  
 	}
 
 	public void analyzeDocuments(Corpus corpus, IndexedRepository repository) {
