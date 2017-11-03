@@ -99,6 +99,10 @@
 		<!-- https://mvnrepository.com/artifact/org.neo4j.driver/neo4j-java-driver -->
 		<dependency org="org.neo4j.driver" name="neo4j-java-driver" rev="1.4.4"/>
 
+		<!-- https://mvnrepository.com/artifact/org.neo4j/neo4j-ogm-core -->
+		<dependency org="org.neo4j" name="neo4j-ogm-core" rev="3.0.0"/>
+		<dependency org="org.neo4j" name="neo4j-ogm-bolt-driver" rev="3.0.0"/>
+
 		<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
 		<dependency org="commons-io" name="commons-io" rev="2.6"/>
 

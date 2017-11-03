@@ -126,7 +126,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-primitive-collections/jars/neo4j-primitive-collections-3.0.7.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-unsafe/jars/neo4j-unsafe-3.0.7.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-io/jars/neo4j-io-3.0.7.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.commons/commons-lang3/jars/commons-lang3-3.3.2.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-csv/jars/neo4j-csv-3.0.7.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-logging/jars/neo4j-logging-3.0.7.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-security/jars/neo4j-security-3.0.7.jar!/" />
@@ -240,13 +239,18 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.ws.rs/javax.ws.rs-api/jars/javax.ws.rs-api-2.1.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.jmockit/jmockit/jars/jmockit-1.35.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.annotation/javax.annotation-api/jars/javax.annotation-api-1.3.1.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.7.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-logging/commons-logging/jars/commons-logging-1.1.3.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/jars/commons-codec-1.6.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient/jars/httpclient-4.3.6.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore/jars/httpcore-4.3.3.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j.driver/neo4j-java-driver/jars/neo4j-java-driver-1.4.4.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-io/commons-io/jars/commons-io-2.6.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-ogm-core/jars/neo4j-ogm-core-3.0.0.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-ogm-api/jars/neo4j-ogm-api-3.0.0.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.21.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/jars/commons-codec-1.10.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.commons/commons-lang3/jars/commons-lang3-3.4.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/io.github.lukehutch/fast-classpath-scanner/jars/fast-classpath-scanner-2.0.18.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-ogm-bolt-driver/jars/neo4j-ogm-bolt-driver-3.0.0.jar!/" />
         </CLASSES>
         <JAVADOC>
           <root url="jar://$USER_HOME$/.ivy2/cache/com.vaadin/vaadin-server/javadocs/vaadin-server-7.7.7-javadoc.jar!/" />
@@ -268,7 +272,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-primitive-collections/javadocs/neo4j-primitive-collections-3.0.7-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-unsafe/javadocs/neo4j-unsafe-3.0.7-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-io/javadocs/neo4j-io-3.0.7-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.commons/commons-lang3/javadocs/commons-lang3-3.3.2-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-csv/javadocs/neo4j-csv-3.0.7-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-logging/javadocs/neo4j-logging-3.0.7-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-security/javadocs/neo4j-security-3.0.7-javadoc.jar!/" />
@@ -371,13 +374,18 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.core/jersey-client/javadocs/jersey-client-2.26-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.jmockit/jmockit/javadocs/jmockit-1.35-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.annotation/javax.annotation-api/javadocs/javax.annotation-api-1.3.1-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/slf4j-api/javadocs/slf4j-api-1.7.7-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-logging/commons-logging/javadocs/commons-logging-1.1.3-javadoc.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/javadocs/commons-codec-1.6-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient/javadocs/httpclient-4.3.6-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore/javadocs/httpcore-4.3.3-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j.driver/neo4j-java-driver/javadocs/neo4j-java-driver-1.4.4-javadoc.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-io/commons-io/javadocs/commons-io-2.6-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-ogm-core/javadocs/neo4j-ogm-core-3.0.0-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-ogm-api/javadocs/neo4j-ogm-api-3.0.0-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/slf4j-api/javadocs/slf4j-api-1.7.21-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/javadocs/commons-codec-1.10-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.commons/commons-lang3/javadocs/commons-lang3-3.4-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/io.github.lukehutch/fast-classpath-scanner/javadocs/fast-classpath-scanner-2.0.18-javadoc.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-ogm-bolt-driver/javadocs/neo4j-ogm-bolt-driver-3.0.0-javadoc.jar!/" />
         </JAVADOC>
         <SOURCES>
           <root url="jar://$USER_HOME$/.ivy2/cache/com.vaadin/vaadin-server/sources/vaadin-server-7.7.7-sources.jar!/" />
@@ -401,7 +409,6 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-primitive-collections/sources/neo4j-primitive-collections-3.0.7-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-unsafe/sources/neo4j-unsafe-3.0.7-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-io/sources/neo4j-io-3.0.7-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.commons/commons-lang3/sources/commons-lang3-3.3.2-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-csv/sources/neo4j-csv-3.0.7-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-logging/sources/neo4j-logging-3.0.7-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-security/sources/neo4j-security-3.0.7-sources.jar!/" />
@@ -510,13 +517,18 @@
           <root url="jar://$USER_HOME$/.ivy2/cache/org.glassfish.jersey.core/jersey-client/sources/jersey-client-2.26-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.jmockit/jmockit/sources/jmockit-1.35-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/javax.annotation/javax.annotation-api/sources/javax.annotation-api-1.3.1-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/slf4j-api/sources/slf4j-api-1.7.7-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-logging/commons-logging/sources/commons-logging-1.1.3-sources.jar!/" />
-          <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/sources/commons-codec-1.6-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpclient/sources/httpclient-4.3.6-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.httpcomponents/httpcore/sources/httpcore-4.3.3-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j.driver/neo4j-java-driver/sources/neo4j-java-driver-1.4.4-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ivy2/cache/commons-io/commons-io/sources/commons-io-2.6-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-ogm-core/sources/neo4j-ogm-core-3.0.0-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-ogm-api/sources/neo4j-ogm-api-3.0.0-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/slf4j-api/sources/slf4j-api-1.7.21-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/commons-codec/commons-codec/sources/commons-codec-1.10-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.apache.commons/commons-lang3/sources/commons-lang3-3.4-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/io.github.lukehutch/fast-classpath-scanner/sources/fast-classpath-scanner-2.0.18-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.neo4j/neo4j-ogm-bolt-driver/sources/neo4j-ogm-bolt-driver-3.0.0-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
