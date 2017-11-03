@@ -333,7 +333,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 					
 					@Override
 					public UserMarkupCollection getCurrentWritableUserMarkupCollection() {
-						UserMarkupCollection umc = this.getCurrentWritableUserMarkupCollection();
+						UserMarkupCollection umc = MarkupPanel.this.getCurrentWritableUserMarkupCollection();
 						return umc;
 					}
 				});

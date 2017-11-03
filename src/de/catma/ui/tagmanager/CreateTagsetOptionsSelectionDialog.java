@@ -205,13 +205,13 @@ public class CreateTagsetOptionsSelectionDialog extends Window {
 
 		setContent(content);
 
-		btOpenTagset = new Button("Open Tagsets"); //$NON-NLS-1$
+		btOpenTagset = new Button(Messages.getString("CreateTagsetOptionsSelectionDialog.openTagsets"));  //$NON-NLS-1$
 		btOpenTagset.setWidth("90%"); //$NON-NLS-1$
 
-		btAutoCreateTagset = new Button("Continue without"); //$NON-NLS-1$
+		btAutoCreateTagset = new Button(Messages.getString("CreateTagsetOptionsSelectionDialog.continueWithout"));  //$NON-NLS-1$
 		btAutoCreateTagset.setWidth("90%"); //$NON-NLS-1$
 
-		btOpenTagsetFromActiveAnnotationCollection = new Button("Open Tagsets from the active Annotation Collection"); //$NON-NLS-1$
+		btOpenTagsetFromActiveAnnotationCollection = new Button(Messages.getString("CreateTagsetOptionsSelectionDialog.openTagsetFromTheActiveAnnotationCollection"));  //$NON-NLS-1$
 		btOpenTagsetFromActiveAnnotationCollection.setWidth("90%"); //$NON-NLS-1$
 
 		content.addComponent(btOpenTagset);
