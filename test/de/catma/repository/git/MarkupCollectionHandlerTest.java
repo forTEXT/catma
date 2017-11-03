@@ -107,16 +107,10 @@ public class MarkupCollectionHandlerTest {
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
-			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				jGitRepoManager, this.gitLabServerManager
-			);
-
-			ProjectHandler projectHandler = new ProjectHandler(
-				jGitRepoManager, this.gitLabServerManager
-			);
+			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
-				"Test CATMA Project", "This is a test CATMA project"
+					"Test CATMA Project", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
@@ -124,10 +118,17 @@ public class MarkupCollectionHandlerTest {
 			// return
 			assertFalse(jGitRepoManager.isAttached());
 
+			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
+					jGitRepoManager, this.gitLabServerManager
+			);
+
 			String markupCollectionId = markupCollectionHandler.create(
-				"Test Markup Collection", null,
-				"fakeSourceDocumentId", "fakeSourceDocumentVersion",
-				projectId, null
+					projectId,
+					null,
+					"Test Markup Collection",
+					null,
+					"fakeSourceDocumentId",
+					"fakeSourceDocumentVersion"
 			);
 			// we don't add the markupCollectionId to this.markupCollectionReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us
