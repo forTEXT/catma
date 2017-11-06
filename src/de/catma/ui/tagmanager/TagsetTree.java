@@ -192,7 +192,7 @@ public class TagsetTree extends HorizontalLayout {
 			btLoadIntoDocument.addClickListener(new ClickListener() {
 
 				public void buttonClick(ClickEvent event) {
-					handleLoadIntoDocumentRequest(tagsetSelectionListener); // hier sonst ohne parameter
+					handleLoadIntoDocumentRequest(tagsetSelectionListener); 
 				}
 			});
 		}
