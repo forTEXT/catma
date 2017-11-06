@@ -131,44 +131,57 @@ public class CreateTagsetOptionsSelectionDialog extends Window {
 
 		btOpenTagsetFromActiveAnnotationCollection.addClickListener(new ClickListener() {
 			public void buttonClick(ClickEvent event) {
-
-				UserMarkupCollection umc = collectionProvider.getCurrentWritableUserMarkupCollection();
-				if (umc != null) {
-
-					int numberOfTagsets = umc.getTagLibrary().getTagsetDefinitions().size();
-					if (numberOfTagsets != 0) {
-
-						if (numberOfTagsets == 1) {
-							Collection<TagsetDefinition> allTagsetDefinitions = umc.getTagLibrary()
-									.getTagsetDefinitions();
-							Iterator<TagsetDefinition> iterator = allTagsetDefinitions.iterator();
-							while (iterator.hasNext()) {
-								TagsetDefinition tagsetDefinition = (TagsetDefinition) iterator.next();
-								((CatmaApplication) UI.getCurrent()).addTagsetToActiveDocument(tagsetDefinition,
-										tagsetSelectionListener);
+				try {
+					UserMarkupCollection umc = collectionProvider.getCurrentWritableUserMarkupCollection();
+					if (umc != null) {
+	
+						int numberOfTagsets = umc.getTagLibrary().getTagsetDefinitions().size();
+						if (numberOfTagsets != 0) {
+	
+							if (numberOfTagsets == 1) {
+								Collection<TagsetDefinition> allTagsetDefinitions = umc.getTagLibrary()
+										.getTagsetDefinitions();
+								Iterator<TagsetDefinition> iterator = allTagsetDefinitions.iterator();
+								while (iterator.hasNext()) {
+									TagsetDefinition tagsetDefinition = (TagsetDefinition) iterator.next();
+									TagLibrary tagLibrary = repository.getTagLibraryFor(tagsetDefinition.getUuid(), null);
+									if (tagLibrary != null) {
+										((CatmaApplication) UI.getCurrent()).openTagLibrary(repository, tagLibrary, false);
+										((CatmaApplication) UI.getCurrent()).addTagsetToActiveDocument(tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()),
+												tagsetSelectionListener);
+									}
+								}
+	
+							} else {
+								Collection<TagsetDefinition> allTagsetDefinitions = umc.getTagLibrary()
+										.getTagsetDefinitions();
+								Iterator<TagsetDefinition> iterator = allTagsetDefinitions.iterator();
+								while (iterator.hasNext()) {
+									TagsetDefinition tagsetDefinition = (TagsetDefinition) iterator.next();
+									TagLibrary tagLibrary = repository.getTagLibraryFor(tagsetDefinition.getUuid(), null);
+									if (tagLibrary != null) {
+										((CatmaApplication) UI.getCurrent()).openTagLibrary(repository, tagLibrary, false);
+										((CatmaApplication) UI.getCurrent()).addTagsetToActiveDocument(tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()));
+									}
+								}
+								Notification.show("",  //$NON-NLS-1$
+										Messages.getString("CreateTagsetOptionsSelectionDialog.selectFirstOneTagset"), Notification.Type.HUMANIZED_MESSAGE);  //$NON-NLS-1$
 							}
-
+	
 						} else {
-							Collection<TagsetDefinition> allTagsetDefinitions = umc.getTagLibrary()
-									.getTagsetDefinitions();
-							Iterator<TagsetDefinition> iterator = allTagsetDefinitions.iterator();
-							while (iterator.hasNext()) {
-								TagsetDefinition tagsetDefinition = (TagsetDefinition) iterator.next();
-								((CatmaApplication) UI.getCurrent()).addTagsetToActiveDocument(tagsetDefinition);
-							}
-							Notification.show("",  //$NON-NLS-1$
-									Messages.getString("CreateTagsetOptionsSelectionDialog.selectFirstOneTagset"), Notification.Type.HUMANIZED_MESSAGE);  //$NON-NLS-1$
+							HTMLNotification.show("",  //$NON-NLS-1$
+									Messages.getString("CreateTagsetOptionsSelectionDialog.thereIsNoTagsetForThisDocument"), Type.HUMANIZED_MESSAGE);  //$NON-NLS-1$
 						}
-
 					} else {
 						HTMLNotification.show("",  //$NON-NLS-1$
-								Messages.getString("CreateTagsetOptionsSelectionDialog.thereIsNoTagsetForThisDocument"), Type.HUMANIZED_MESSAGE);  //$NON-NLS-1$
+								Messages.getString("CreateTagsetOptionsSelectionDialog.noAnnotationCollectionforThisDocumentFound"), Type.HUMANIZED_MESSAGE);   //$NON-NLS-1$
 					}
-				} else {
-					HTMLNotification.show("",  //$NON-NLS-1$
-							Messages.getString("CreateTagsetOptionsSelectionDialog.noAnnotationCollectionforThisDocumentFound"), Type.HUMANIZED_MESSAGE);   //$NON-NLS-1$
+					UI.getCurrent().removeWindow(CreateTagsetOptionsSelectionDialog.this);
 				}
-				UI.getCurrent().removeWindow(CreateTagsetOptionsSelectionDialog.this);
+				catch (IOException e) {
+					((CatmaApplication) UI.getCurrent())
+					.showAndLogError(Messages.getString("TagLibraryPanel.errorOpeningTagLibrary"), e); //$NON-NLS-1$
+				}
 			}
 		});
 

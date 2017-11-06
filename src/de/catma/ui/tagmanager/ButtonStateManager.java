@@ -74,7 +74,7 @@ public class ButtonStateManager implements ValueChangeListener {
 	public void valueChange(ValueChangeEvent event) {
 		TreeTable treeTable = (TreeTable)event.getProperty();
 		
-		Object value = treeTable.getValue();
+		Object value = treeTable.getValue();// wenn  hier multiselect enabeld ist . return ein Set, wenn nix selected -> leerer set, nicht null !
 		
 		if (value == null) {
 			tagsetDefSelected(false); // all disabled

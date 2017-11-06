@@ -445,6 +445,7 @@ public class TaggerView extends VerticalLayout
 	public void openUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
 		markupPanel.openUserMarkupCollection(userMarkupCollection);
+		// hier die library holen ueber tagset loopen und dann openTgsetDef ausfuehren
 	}
 
 	public void openTagsetDefinition(
