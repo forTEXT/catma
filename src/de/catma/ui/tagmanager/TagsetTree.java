@@ -510,8 +510,8 @@ public class TagsetTree extends HorizontalLayout {
 
 	private void handleInsertTagDefinitionRequest() {
 		
-	final Object selectedParent = tagTree.getValue();	
-	 boolean noOpenTagsets = tagTree.getItemIds().isEmpty();
+		final Object selectedParent = tagTree.getValue();	
+		boolean noOpenTagsets = tagTree.getItemIds().isEmpty();
 		
 		if (selectedParent == null ) {
 
@@ -538,6 +538,7 @@ public class TagsetTree extends HorizontalLayout {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	private void handleInsertTagDefinitionRequest(Object selectedParent) {
 		final String tagDefNameProp = "name"; //$NON-NLS-1$
 		final String tagDefColorProp = "color"; //$NON-NLS-1$
@@ -883,6 +884,8 @@ public class TagsetTree extends HorizontalLayout {
 				.setValue(tagsetDefinition.getName());
 		tagTree.getContainerProperty(tagsetDefinition, TagTreePropertyName.icon).setValue(tagsetIcon);
 
+		tagTree.setCollapsed(tagsetDefinition, false);
+		
 		for (TagDefinition tagDefinition : tagsetDefinition) {
 			addTagDefinition(tagDefinition);
 		}
