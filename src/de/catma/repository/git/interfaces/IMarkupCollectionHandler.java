@@ -24,8 +24,11 @@ public interface IMarkupCollectionHandler {
 
 	void removeTagset(String markupCollectionId, String tagsetId) throws MarkupCollectionHandlerException;
 
-	void addTagInstance(String markupCollectionId, JsonLdWebAnnotation annotation)
-			throws MarkupCollectionHandlerException;
+	String createTagInstance(
+			@Nonnull String projectId,
+			@Nonnull String markupCollectionId,
+			@Nonnull JsonLdWebAnnotation annotation
+	) throws MarkupCollectionHandlerException;
 
 	UserMarkupCollection open(String projectId, String markupCollectionId) throws MarkupCollectionHandlerException;
 

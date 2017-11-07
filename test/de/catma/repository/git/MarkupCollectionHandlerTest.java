@@ -273,42 +273,41 @@ public class MarkupCollectionHandlerTest {
 	}
 
 	@Test
-	public void addTagInstance() throws Exception {
+	public void createTagInstance() throws Exception {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
 				this.catmaProperties, "fakeUserIdentifier"
 		)) {
 
-			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				jGitRepoManager, this.gitLabServerManager
+			// TODO: use JsonLdWebAnnotationTest.getTagInstance once it's been implemented
+			// for now, we need to create a fake project repo with fake submodules to make this test pass
+			File fakeProjectPath = new File(jGitRepoManager.getRepositoryBasePath(), "fakeProjectId_corpus");
+			// need to init the fake project repo, otherwise JGitRepoManager will fail to open it later
+			jGitRepoManager.init(fakeProjectPath.getName(), null);
+			jGitRepoManager.detach();  // can't call open on an attached instance
+			this.directoriesToDeleteOnTearDown.add(fakeProjectPath);
+
+			File fakeMarkupCollectionSubmodulePath = new File(
+					fakeProjectPath, "collections/fakeUserMarkupCollectionUuid"
 			);
 
-			ProjectHandler projectHandler = new ProjectHandler(
-				jGitRepoManager, this.gitLabServerManager
+			File fakeMarkupCollectionHeaderFilePath = new File(fakeMarkupCollectionSubmodulePath, "header.json");
+			String fakeSerializedMarkupCollectionHeader = "" +
+					"{\n" +
+					"\t\"author\":null,\n" +
+					"\t\"description\":null,\n" +
+					"\t\"name\":\"Test Markup Collection\",\n" +
+					"\t\"publisher\":null,\n" +
+					"\t\"sourceDocumentId\":\"fakeSourceDocumentId\",\n" +
+					"\t\"sourceDocumentVersion\":\"fakeSourceDocumentVersion\",\n" +
+					"\t\"tagsets\":{\n" +
+					"\t\t\"CATMA_TAGSET_DEF\":\"fakeTagsetVersion\"\n" +
+					"\t}\n" +
+					"}";
+			FileUtils.writeStringToFile(
+					fakeMarkupCollectionHeaderFilePath, fakeSerializedMarkupCollectionHeader, StandardCharsets.UTF_8
 			);
 
-			String projectId = projectHandler.create(
-				"Test CATMA Project", "This is a test CATMA project"
-			);
-			this.projectsToDeleteOnTearDown.add(projectId);
-
-			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
-			// return
-			assertFalse(jGitRepoManager.isAttached());
-
-			String markupCollectionId = markupCollectionHandler.create(
-				"Test Markup Collection", null,
-				"fakeSourceDocumentId", "fakeSourceDocumentVersion",
-				projectId, null
-			);
-			// we don't add the markupCollectionId to this.markupCollectionReposToDeleteOnTearDown as deletion of the
-			// project will take care of that for us
-
-			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
-			// calls return
-			assertFalse(jGitRepoManager.isAttached());
-
-			// TODO: create a tag instance/reference for a real tag definition with real urls etc.
-			String sourceDocumentUri = "http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC";
+			String sourceDocumentUri = "http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC";
 
 			TagInstance tagInstance = JsonLdWebAnnotationTest.getFakeTagInstance();
 
@@ -316,29 +315,46 @@ public class MarkupCollectionHandlerTest {
 			Range range2 = new Range(41, 47);
 
 			List<TagReference> tagReferences = new ArrayList<>(
-				Arrays.asList(
-					new TagReference(tagInstance, sourceDocumentUri, range1, markupCollectionId),
-					new TagReference(tagInstance, sourceDocumentUri, range2, markupCollectionId)
-				)
+					Arrays.asList(
+							new TagReference(
+									tagInstance,
+									sourceDocumentUri,
+									range1,
+									"fakeUserMarkupCollectionUuid"
+							),
+							new TagReference(
+									tagInstance,
+									sourceDocumentUri,
+									range2,
+									"fakeUserMarkupCollectionUuid"
+							)
+					)
 			);
 
 			JsonLdWebAnnotation jsonLdWebAnnotation = new JsonLdWebAnnotation(
-				this.gitLabServerManager.getGitLabServerUrl(), projectId, tagReferences
+					this.gitLabServerManager.getGitLabServerUrl(), "fakeProjectId", tagReferences
 			);
 
-			markupCollectionHandler.addTagInstance(markupCollectionId, jsonLdWebAnnotation);
+			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
+					jGitRepoManager, this.gitLabServerManager
+			);
+
+			markupCollectionHandler.createTagInstance(
+					"fakeProjectId",
+					"fakeUserMarkupCollectionUuid",
+					jsonLdWebAnnotation
+			);
 
 			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			String markupCollectionRepositoryName = MarkupCollectionHandler.getMarkupCollectionRepositoryName(
-				markupCollectionId
-			);
-			jGitRepoManager.open(markupCollectionRepositoryName);
+			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName("fakeProjectId");
+			jGitRepoManager.open(projectRootRepositoryName);
 
 			File expectedTagInstanceJsonFilePath = new File(
-				jGitRepoManager.getRepositoryWorkTree(), "annotations/CATMA_TAG_INST.json"
+					jGitRepoManager.getRepositoryWorkTree(),
+					String.format("collections/%s/annotations/CATMA_TAG_INST.json", "fakeUserMarkupCollectionUuid")
 			);
 
 			assert expectedTagInstanceJsonFilePath.exists();
@@ -374,7 +390,7 @@ public class MarkupCollectionHandlerTest {
 					"\t\t\t\t\"start\":12,\n" +
 					"\t\t\t\t\"type\":\"TextPositionSelector\"\n" +
 					"\t\t\t},\n" +
-					"\t\t\t\"source\":\"http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC\"\n" +
+					"\t\t\t\"source\":\"http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC\"\n" +
 					"\t\t},\n" +
 					"\t\t{\n" +
 					"\t\t\t\"selector\":{\n" +
@@ -382,17 +398,15 @@ public class MarkupCollectionHandlerTest {
 					"\t\t\t\t\"start\":41,\n" +
 					"\t\t\t\t\"type\":\"TextPositionSelector\"\n" +
 					"\t\t\t},\n" +
-					"\t\t\t\"source\":\"http://catma.de/portal/sourcedocument/CATMA_SOURCEDOC\"\n" +
+					"\t\t\t\"source\":\"http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC\"\n" +
 					"\t\t}],\n" +
 					"\t\t\"type\":\"List\"\n" +
 					"\t},\n" +
 					"\t\"type\":\"Annotation\"\n" +
 					"}";
 
-			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
-
 			expectedTagInstanceJsonFileContents = String.format(
-				expectedTagInstanceJsonFileContents, projectRootRepositoryName, markupCollectionRepositoryName
+				expectedTagInstanceJsonFileContents, projectRootRepositoryName, "fakeUserMarkupCollectionUuid"
 			);
 
 			assertEquals(

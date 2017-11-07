@@ -24,6 +24,7 @@ import org.gitlab4j.api.models.User;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
@@ -177,45 +178,62 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	}
 
 	/**
-	 * Adds a tag instance (annotation) to the markup collection identified by <code>markupCollectionId</code>.
+	 * Creates a tag instance (annotation) within the markup collection identified by <code>markupCollectionId</code>.
+	 * <p>
+	 * NB: This method purposefully does NOT perform any Git add/commit operations as it is expected to be called a very
+	 * large number of times when a graph worktree is written to disk.
 	 *
-	 * @param markupCollectionId the ID of the markup collection to add the tag instance to
+	 * @param projectId the ID of the project that contains the markup collection within which the tag instance should
+	 *                  be created
+	 * @param markupCollectionId the ID of the markup collection within which to create the tag instance
 	 * @param annotation a {@link JsonLdWebAnnotation} object representing the tag instance
-	 * @throws MarkupCollectionHandlerException if an error occurs while adding the tag instance
+	 * @return the tag instance UUID contained within the <code>annotation</code> argument
+	 * @throws MarkupCollectionHandlerException if an error occurs while creating the tag instance
 	 */
 	@Override
-	public void addTagInstance(String markupCollectionId, JsonLdWebAnnotation annotation)
-			throws MarkupCollectionHandlerException {
+	public String createTagInstance(
+			@Nonnull String projectId,
+			@Nonnull String markupCollectionId,
+			@Nonnull JsonLdWebAnnotation annotation
+	) throws MarkupCollectionHandlerException {
+
 		// TODO: check that the markup collection references the tagset for the tag instance being added
 		// TODO: check that the tag instance is for the correct document
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			// open the markup collection repository
-			localGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
+			// open the project root repo
+			localGitRepoManager.open(ProjectHandler.getProjectRootRepositoryName(projectId));
 
-			// write the serialized tag instance to the repository
-			File targetSerializedTagInstanceFilePath = new File(
+			// write the serialized tag instance to the markup collection submodule
+			File targetTagInstanceFilePath = new File(
 				localGitRepoManager.getRepositoryWorkTree(),
-				// TODO: do something like getLastPathSegmentFromUrl + getTagsetUuidFromRepositoryName
-				//String.format("%s.json", annotation.getId().substring(annotation.getId().lastIndexOf("/") + 1))
 				String.format(
-					"annotations/%s", annotation.getId().substring(annotation.getId().lastIndexOf("/") + 1)
+						"collections/%s/annotations/%s.json",
+						markupCollectionId,
+						annotation.getTagInstanceUuid()
 				)
 			);
 			String serializedTagInstance = new SerializationHelper<JsonLdWebAnnotation>().serialize(annotation);
 
-			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
-			User gitLabUser = gitLabServerManager.getGitLabUser();
+			try (FileOutputStream fileOutputStream = FileUtils.openOutputStream(targetTagInstanceFilePath)) {
+				fileOutputStream.write(serializedTagInstance.getBytes(StandardCharsets.UTF_8));
+			}
 
-			localGitRepoManager.addAndCommit(
-				targetSerializedTagInstanceFilePath,
-				serializedTagInstance.getBytes(StandardCharsets.UTF_8),
-				StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername(),
-				gitLabUser.getEmail()
-			);
+			// not doing Git add/commit, see method doc comment
+//			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
+//			User gitLabUser = gitLabServerManager.getGitLabUser();
+//
+//			localGitRepoManager.addAndCommit(
+//				targetTagInstanceFilePath,
+//				serializedTagInstance.getBytes(StandardCharsets.UTF_8),
+//				StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername(),
+//				gitLabUser.getEmail()
+//			);
 		}
-		catch (LocalGitRepositoryManagerException e) {
+		catch (LocalGitRepositoryManagerException|IOException e) {
 			throw new MarkupCollectionHandlerException("Failed to add tag instance", e);
 		}
+
+		return annotation.getTagInstanceUuid();
 	}
 
 	private boolean isTagInstanceFilename(String fileName){
