@@ -52,6 +52,7 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.LanguageDetector;
@@ -60,7 +61,7 @@ import de.catma.ui.CatmaApplication;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.WizardStepListener;
 
-class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
+class IndexerOptionsPanel extends Panel implements DynamicWizardStep {
 	
     private static final char APOSTROPHE = '\'';
     
@@ -97,7 +98,6 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 
 	public IndexerOptionsPanel(WizardStepListener wizardStepListener,
 			AddSourceDocWizardResult wizardResult) {
-		super(2,2);
 		this.onAdvance = true;
 		this.wizardStepListener = wizardStepListener;
 		this.wizardResult = wizardResult;
@@ -229,10 +229,13 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 	}
 
 	private void initComponents() {
-		setSpacing(true);
-		setMargin(true);
+		addStyleName(Reindeer.PANEL_LIGHT);
+		GridLayout content = new GridLayout(2, 2);
 		
-		setSizeFull();
+		content.setSpacing(true);
+		content.setMargin(true);
+		
+		content.setSizeFull();
 		
 		Locale[] availableLocales = Locale.getAvailableLocales();
 		languageItems = new ArrayList<LanguageItem>();
@@ -261,7 +264,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		table.setNullSelectionAllowed(false);
 		table.setImmediate(true);
 		
-		addComponent(table, 0, 0);
+		content.addComponent(table, 0, 0);
 		
 		HorizontalLayout commonLanguagePanel = new HorizontalLayout();
 		commonLanguagePanel.setSpacing(true);
@@ -272,7 +275,7 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		btApplyLangToAll = new Button("Set for all documents");
 		commonLanguagePanel.addComponent(btApplyLangToAll);
 		commonLanguagePanel.setComponentAlignment(btApplyLangToAll, Alignment.BOTTOM_CENTER);
-		addComponent(commonLanguagePanel, 0, 1);
+		content.addComponent(commonLanguagePanel, 0, 1);
 		
 		
 		VerticalLayout expertLayout = new VerticalLayout();
@@ -340,9 +343,11 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 
         expertLayout.addComponent(loadSavePanel);
         
-        addComponent(expertLayout, 1, 0);
+        content.addComponent(expertLayout, 1, 0);
         
-        setColumnExpandRatio(1, 1);
+        content.setColumnExpandRatio(1, 1);
+        
+        setContent(content);
 	}
 	
 	private ValueChangeListenerGenerator makeComboBoxListenerGenerator(){
