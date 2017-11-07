@@ -46,7 +46,7 @@ public class JsonLdWebAnnotationTest {
 			"\t\t\"type\":\"Dataset\"\n" +
 			"\t},\n" +
 			"\t\"@context\":\"http://www.w3.org/ns/anno.jsonld\",\n" +
-			"\t\"id\":\"http://catma.de/gitlab/fakeProjectId_corpus/collections/fakeUserMarkupCollectionUuid_markupcollection/annotations/CATMA_TAG_INST.json\",\n" +
+			"\t\"id\":\"http://catma.de/gitlab/fakeProjectId_corpus/collections/fakeUserMarkupCollectionUuid/annotations/CATMA_TAG_INST.json\",\n" +
 			"\t\"target\":{\n" +
 			"\t\t\"items\":[{\n" +
 			"\t\t\t\"selector\":{\n" +

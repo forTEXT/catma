@@ -210,9 +210,8 @@ public class MarkupCollectionHandlerTest {
 			assertFalse(jGitRepoManager.isAttached());
 
 			String markupCollectionId = markupCollectionHandler.create(
-				"Test Markup Collection", null,
-				"fakeSourceDocumentId", "fakeSourceDocumentVersion",
-				projectId, null
+					projectId, null,"Test Markup Collection", null,
+					"fakeSourceDocumentId", "fakeSourceDocumentVersion"
 			);
 			// we don't add the markupCollectionId to this.markupCollectionReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us

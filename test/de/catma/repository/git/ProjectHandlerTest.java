@@ -344,9 +344,8 @@ public class ProjectHandlerTest {
 
 			// create a markup collection
 			String markupCollectionId = markupCollectionHandler.create(
-				"Test Markup Collection", null,
-				"fakeSourceDocumentId", "fakeSourceDocumentVersion",
-				projectId, null
+					projectId, null, "Test Markup Collection", null,
+					"fakeSourceDocumentId", "fakeSourceDocumentVersion"
 			);
 
 			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
