@@ -175,7 +175,7 @@ public class NeoTagsetHandlerTest {
 
 			TagDefinition loadedTagDefinition1 = loadedTagsetDefinition.getTagDefinition(tagDefinition1.getUuid());
 
-			assertEquals(0, loadedTagDefinition1.getSystemPropertyDefinitions().size());
+			assertEquals(1, loadedTagDefinition1.getSystemPropertyDefinitions().size());
 			assertEquals(2, loadedTagDefinition1.getUserDefinedPropertyDefinitions().size());
 		}
 	}
