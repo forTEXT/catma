@@ -63,7 +63,7 @@ public class JsonLdWebAnnotation {
 		this.target = new JsonLdWebAnnotationTarget_List(tagReferences);
 	}
 
-	public static URL sanitizeUrl(String url) throws MalformedURLException {
+	static URL sanitizeUrl(String url) throws MalformedURLException {
 		// absence of a trailing slash on the file/path component is handled really badly by both URI and URL
 		// URL(URL context, String spec) only works if the file/path component of context has a trailing slash...
 		// URI normalize or resolve methods do not fix it either
@@ -81,14 +81,11 @@ public class JsonLdWebAnnotation {
 			throws MalformedURLException {
 
 		URL gitServerUrl = JsonLdWebAnnotation.sanitizeUrl(gitServerBaseUrl);
-		String markupCollectionRepositoryName = MarkupCollectionHandler.getMarkupCollectionRepositoryName(
-			userMarkupCollectionUuid
-		);
 
 		return new URL(
 			gitServerUrl.getProtocol(), gitServerUrl.getHost(), gitServerUrl.getPort(),
 			String.format("%s%s/collections/%s/annotations/%s.json",
-				gitServerUrl.getPath(), projectRootRepositoryName, markupCollectionRepositoryName, tagInstanceUuid
+				gitServerUrl.getPath(), projectRootRepositoryName, userMarkupCollectionUuid, tagInstanceUuid
 			)
 		);
 	}
@@ -163,6 +160,11 @@ public class JsonLdWebAnnotation {
 	}
 
 	@JsonIgnore
+	public String getTagInstanceUuid() {
+		return this.getLastPathSegmentFromUrl(this.id).replace(".json", "");
+	}
+
+	@JsonIgnore
 	public TagInstance getTagInstance(ILocalGitRepositoryManager localGitRepositoryManager,
 									  IRemoteGitServerManager remoteGitServerManager, String projectId)
 			throws JsonLdWebAnnotationException {
@@ -171,7 +173,7 @@ public class JsonLdWebAnnotation {
 		);
 
 		TagInstance tagInstance = new TagInstance(
-			this.getLastPathSegmentFromUrl(this.id).replace(".json", ""),
+			this.getTagInstanceUuid(),
 			tagDefinition
 		);
 
