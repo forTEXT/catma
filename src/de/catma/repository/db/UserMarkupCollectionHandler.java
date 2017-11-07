@@ -369,7 +369,7 @@ class UserMarkupCollectionHandler {
 			umc.getContentInfoSet().getPublisher(),
 			sourceDocumentId,
 			Integer.valueOf(umc.getTagLibrary().getId()),
-			idGenerator.catmaIDToUUIDBytes(umc.getUuid()))
+			idGenerator.catmaIDToUUIDBytes(idGenerator.generate()))
 		.returning(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)
 		.fetchOne()
 		.map(new IDFieldToIntegerMapper(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID));
