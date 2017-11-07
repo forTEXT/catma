@@ -9,7 +9,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import java.util.ArrayList;
 import java.util.List;
 
-@NodeEntity
+@NodeEntity(label="TagDefinition")
 public class Neo4JTagDefinition {
 	@Id
 	private String uuid;
@@ -19,13 +19,13 @@ public class Neo4JTagDefinition {
 	//TODO: turn into relationship as well? - already exists from the Tagset...
 	private String tagsetDefinitionUuid;
 
-	@Relationship(type = "SYSTEM_PROPERTY_DEFINITION", direction = Relationship.OUTGOING)
-	private List<PropertyDefinition> systemPropertyDefinitions;
+	@Relationship(type = "HAS_SYSTEM_PROPERTY_DEFINITION", direction = Relationship.OUTGOING)
+	private List<Neo4JPropertyDefinition> systemPropertyDefinitions;
 
-	@Relationship(type = "USER_PROPERTY_DEFINITION", direction = Relationship.OUTGOING)
-	private List<PropertyDefinition> userDefinedPropertyDefinitions;
+	@Relationship(type = "HAS_USER_PROPERTY_DEFINITION", direction = Relationship.OUTGOING)
+	private List<Neo4JPropertyDefinition> userDefinedPropertyDefinitions;
 
-	@Relationship(type = "PARENT_OF", direction = Relationship.OUTGOING)
+	@Relationship(type = "HAS_CHILD", direction = Relationship.OUTGOING)
 	private List<Neo4JTagDefinition> children;
 
 	public Neo4JTagDefinition(){
@@ -50,12 +50,12 @@ public class Neo4JTagDefinition {
 		tagDefinition.setName(this.name);
 		tagDefinition.setTagsetDefinitionUuid(this.tagsetDefinitionUuid);
 
-		for(PropertyDefinition systemPropertyDefinition : this.systemPropertyDefinitions){
-			tagDefinition.addSystemPropertyDefinition(systemPropertyDefinition);
+		for(Neo4JPropertyDefinition systemPropertyDefinition : this.systemPropertyDefinitions){
+			tagDefinition.addSystemPropertyDefinition(systemPropertyDefinition.getPropertyDefinition());
 		}
 
-		for(PropertyDefinition userPropertyDefinition : this.userDefinedPropertyDefinitions){
-			tagDefinition.addUserDefinedPropertyDefinition(userPropertyDefinition);
+		for(Neo4JPropertyDefinition userPropertyDefinition : this.userDefinedPropertyDefinitions){
+			tagDefinition.addUserDefinedPropertyDefinition(userPropertyDefinition.getPropertyDefinition());
 		}
 
 		return tagDefinition;
@@ -68,10 +68,14 @@ public class Neo4JTagDefinition {
 		this.tagsetDefinitionUuid = tagDefinition.getTagsetDefinitionUuid();
 
 		this.systemPropertyDefinitions.clear();
-		this.systemPropertyDefinitions.addAll(tagDefinition.getSystemPropertyDefinitions());
+		for(PropertyDefinition systemPropertyDefinition : tagDefinition.getSystemPropertyDefinitions()){
+			this.systemPropertyDefinitions.add(new Neo4JPropertyDefinition(systemPropertyDefinition));
+		}
 
 		this.userDefinedPropertyDefinitions.clear();
-		this.userDefinedPropertyDefinitions.addAll(tagDefinition.getUserDefinedPropertyDefinitions());
+		for(PropertyDefinition userPropertyDefinition : tagDefinition.getUserDefinedPropertyDefinitions()){
+			this.userDefinedPropertyDefinitions.add(new Neo4JPropertyDefinition(userPropertyDefinition));
+		}
 
 		this.setChildren(null);
 	}
