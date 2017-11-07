@@ -102,12 +102,6 @@ public class ProjectHandlerTest {
 
 			assert expectedRootRepositoryPath.exists();
 			assert expectedRootRepositoryPath.isDirectory();
-
-			assert Arrays.asList(expectedRootRepositoryPath.list()).contains("tagsets.json");
-			assertEquals(
-				"", FileUtils.readFileToString(
-						new File(expectedRootRepositoryPath, "tagsets.json"), StandardCharsets.UTF_8)
-			);
 		}
 	}
 

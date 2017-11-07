@@ -86,16 +86,6 @@ public class ProjectHandler implements IProjectHandler {
 				gitLabUser.getUsername(),
 				gitLabUserImpersonationToken
 			);
-
-			File repositoryWorkTree = localGitRepoManager.getRepositoryWorkTree();
-
-			// write empty tagsets.json into the local repo
-			File targetTagsetsFile = new File(repositoryWorkTree, "tagsets.json");
-			localGitRepoManager.addAndCommit(
-				targetTagsetsFile, new byte[]{},
-				StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername(),
-				gitLabUser.getEmail()
-			);
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException e) {
 			throw new ProjectHandlerException("Failed to create project", e);
