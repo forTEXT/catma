@@ -2,7 +2,7 @@ package de.catma.repository.neo4j;
 
 import de.catma.repository.neo4j.managers.Neo4JGraphManager;
 import de.catma.repository.neo4j.managers.Neo4JOGMSessionFactory;
-import de.catma.repository.neo4j.serialization.models.Neo4JTagsetDefinition;
+import de.catma.repository.neo4j.serialization.model_wrappers.Neo4JTagsetDefinition;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;

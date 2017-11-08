@@ -1,4 +1,4 @@
-package de.catma.repository.neo4j.serialization.models;
+package de.catma.repository.neo4j.serialization.model_wrappers;
 
 import de.catma.tag.TagsetDefinition;
 import org.neo4j.ogm.annotation.Id;
