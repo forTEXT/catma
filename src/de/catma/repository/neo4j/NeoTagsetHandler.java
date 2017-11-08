@@ -1,7 +1,7 @@
-package de.catma.repository.neo;
+package de.catma.repository.neo4j;
 
-import de.catma.repository.neo.exceptions.NeoTagsetHandlerException;
-import de.catma.repository.neo.managers.Neo4JGraphManager;
+import de.catma.repository.neo4j.exceptions.NeoTagsetHandlerException;
+import de.catma.repository.neo4j.managers.Neo4JGraphManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.util.IDGenerator;
 import org.neo4j.driver.v1.Session;

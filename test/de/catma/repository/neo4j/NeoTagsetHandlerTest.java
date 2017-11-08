@@ -1,9 +1,8 @@
-package de.catma.repository.neo;
+package de.catma.repository.neo4j;
 
-import de.catma.repository.neo.exceptions.NeoTagsetHandlerException;
-import de.catma.repository.neo.managers.Neo4JGraphManager;
-import de.catma.repository.neo.managers.Neo4JOGMSessionFactory;
-import de.catma.repository.neo.serialization.models.Neo4JTagsetDefinition;
+import de.catma.repository.neo4j.managers.Neo4JGraphManager;
+import de.catma.repository.neo4j.managers.Neo4JOGMSessionFactory;
+import de.catma.repository.neo4j.serialization.models.Neo4JTagsetDefinition;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;

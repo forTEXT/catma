@@ -1,4 +1,4 @@
-package de.catma.repository.neo.managers;
+package de.catma.repository.neo4j.managers;
 
 import org.neo4j.ogm.config.Configuration;
 import org.neo4j.ogm.session.Session;
@@ -15,7 +15,7 @@ public class Neo4JOGMSessionFactory implements AutoCloseable {
 				.credentials(userName, password)
 				.build();
 
-		this.sessionFactory = new SessionFactory(configuration,"de.catma.repository.neo");
+		this.sessionFactory = new SessionFactory(configuration,"de.catma.repository.neo4j");
 		sessionFactory.close();
 	}
 

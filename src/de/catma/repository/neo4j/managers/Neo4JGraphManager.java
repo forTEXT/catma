@@ -1,10 +1,9 @@
-package de.catma.repository.neo.managers;
+package de.catma.repository.neo4j.managers;
 
 import java.util.ArrayList;
 import java.util.Properties;
 
 import org.neo4j.driver.v1.*;
-import static org.neo4j.driver.v1.Values.parameters;
 
 public class Neo4JGraphManager implements AutoCloseable {
 	private Driver driver;

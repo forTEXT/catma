@@ -1,4 +1,4 @@
-package de.catma.repository.neo.exceptions;
+package de.catma.repository.neo4j.exceptions;
 
 public class NeoTagsetHandlerException extends Exception {
 	public NeoTagsetHandlerException(String message) {

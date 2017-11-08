@@ -1,4 +1,4 @@
-package de.catma.repository.neo.serialization.models;
+package de.catma.repository.neo4j.serialization.models;
 
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
