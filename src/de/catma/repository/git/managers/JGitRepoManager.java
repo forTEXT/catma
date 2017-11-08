@@ -22,7 +22,7 @@ import java.util.Properties;
 
 public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseable {
 	private final String repositoryBasePath;
-	private String userName;
+	private String username;
 
 	private Git gitApi;
 
@@ -30,14 +30,14 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		this(catmaProperties, "");
 	}
 
-	public JGitRepoManager(Properties catmaProperties, String userName) {
+	public JGitRepoManager(Properties catmaProperties, String username) {
 		this.repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
-		this.userName = userName;
+		this.username = username;
 	}
 
 	public JGitRepoManager(@Nonnull Properties catmaProperties, @Nonnull de.catma.user.User catmaUser) {
 		this.repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
-		this.userName = catmaUser.getIdentifier();
+		this.username = catmaUser.getIdentifier();
 	}
 
 	/**
@@ -51,9 +51,9 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @throws LocalGitRepositoryManagerException if the Git repository couldn't be found or
 	 *         couldn't be opened for some other reason
 	 */
-	public JGitRepoManager(Properties catmaProperties, String userName, String repositoryName)
+	public JGitRepoManager(Properties catmaProperties, String username, String repositoryName)
 			throws LocalGitRepositoryManagerException {
-		this(catmaProperties, userName);
+		this(catmaProperties, username);
 
 		this.open(repositoryName);
 	}
@@ -96,11 +96,11 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 */
 	@Override
 	public String getRepositoryBasePath() {
-		if(StringUtils.isEmpty(this.userName)){
+		if(StringUtils.isEmpty(this.username)){
 			return this.repositoryBasePath;
 		}
 
-		return String.format("%s/%s", this.repositoryBasePath, this.userName);
+		return String.format("%s/%s", this.repositoryBasePath, this.username);
 	}
 
 	/**
@@ -116,10 +116,6 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 
 		return this.gitApi.getRepository().getWorkTree();
 	}
-
-	public String getUserName(){ return this.userName; }
-
-	public void setUserName(String userName){ this.userName = userName; }
 
 	/**
 	 * Gets the URL for the remote with the name <code>remoteName</code>.
