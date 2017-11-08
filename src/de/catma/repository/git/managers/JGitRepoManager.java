@@ -11,6 +11,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -32,6 +33,11 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	public JGitRepoManager(Properties catmaProperties, String userName) {
 		this.repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
 		this.userName = userName;
+	}
+
+	public JGitRepoManager(@Nonnull Properties catmaProperties, @Nonnull de.catma.user.User catmaUser) {
+		this.repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
+		this.userName = catmaUser.getIdentifier();
 	}
 
 	/**
