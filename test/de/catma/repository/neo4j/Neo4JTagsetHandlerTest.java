@@ -20,12 +20,12 @@ import java.util.Properties;
 
 import static org.junit.Assert.*;
 
-public class NeoTagsetHandlerTest {
+public class Neo4JTagsetHandlerTest {
 	private Properties catmaProperties;
 
 	private IDGenerator idGenerator;
 
-	public NeoTagsetHandlerTest() throws Exception {
+	public Neo4JTagsetHandlerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
 				System.getProperties().getProperty("prop") : "catma.properties";
 
@@ -52,7 +52,7 @@ public class NeoTagsetHandlerTest {
 	public void insertTagset() throws Exception {
 		try (Neo4JGraphManager graphManager = new Neo4JGraphManager(this.catmaProperties)) {
 
-			NeoTagsetHandler neoTagsetHandler = new NeoTagsetHandler(graphManager);
+			Neo4JTagsetHandler neo4JTagsetHandler = new Neo4JTagsetHandler(graphManager);
 
 			String uuid = this.idGenerator.generate();
 
@@ -60,7 +60,7 @@ public class NeoTagsetHandlerTest {
 			tagsetDefinition.setUuid(uuid);
 			tagsetDefinition.setName("ALovelyName");
 
-			neoTagsetHandler.insertTagset(tagsetDefinition);
+			neo4JTagsetHandler.insertTagset(tagsetDefinition);
 		}
 	}
 
@@ -68,7 +68,7 @@ public class NeoTagsetHandlerTest {
 	public void insertTagsetWithTagDefinitions() throws Exception {
 		try (Neo4JGraphManager graphManager = new Neo4JGraphManager(this.catmaProperties)) {
 
-			NeoTagsetHandler neoTagsetHandler = new NeoTagsetHandler(graphManager);
+			Neo4JTagsetHandler neo4JTagsetHandler = new Neo4JTagsetHandler(graphManager);
 
 			String uuid = this.idGenerator.generate();
 
@@ -88,7 +88,7 @@ public class NeoTagsetHandlerTest {
 			tagsetDefinition.addTagDefinition(tagDefinition1);
 			tagsetDefinition.addTagDefinition(tagDefinition2);
 
-			neoTagsetHandler.insertTagset(tagsetDefinition);
+			neo4JTagsetHandler.insertTagset(tagsetDefinition);
 		}
 	}
 
