@@ -70,6 +70,7 @@ public class JsonLdWebAnnotationTest {
 			"}";
 
 	private Properties catmaProperties;
+	private de.catma.user.User catmaUser;
 	private GitLabServerManager gitLabServerManager;
 
 	private ArrayList<String> projectsToDeleteOnTearDown = new ArrayList<>();
@@ -86,8 +87,8 @@ public class JsonLdWebAnnotationTest {
 
 	@Before
 	public void setUp() throws Exception {
-		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager
-		de.catma.user.User catmaUser = Randomizer.getDbUser();
+		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager & JGitRepoManager
+		this.catmaUser = Randomizer.getDbUser();
 
 		this.gitLabServerManager = new GitLabServerManager(
 			this.catmaProperties, catmaUser
@@ -98,8 +99,7 @@ public class JsonLdWebAnnotationTest {
 	@After
 	public void tearDown() throws Exception {
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-					this.catmaProperties, "fakeUserIdentifier")) {
+			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 				ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
@@ -165,8 +165,9 @@ public class JsonLdWebAnnotationTest {
 	 *         userPropertyDefinitionUuid, markupCollectionRepositoryName, tagInstanceUuid, sourceDocumentRepositoryName
 	 */
 	public HashMap<String, Object> getTagInstance() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier")) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
+
 			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
@@ -232,9 +233,9 @@ public class JsonLdWebAnnotationTest {
 
 	@Test
 	public void toTagReferenceList() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
+
 			JsonLdWebAnnotation jsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>().deserialize(
 				this.expectedSerializedRepresentation, JsonLdWebAnnotation.class
 			);
@@ -248,7 +249,6 @@ public class JsonLdWebAnnotationTest {
 			// need to init the fake project repo, otherwise JGitRepoManager will fail to open it later
 			jGitRepoManager.init(fakeProjectPath.getName(), null);
 			jGitRepoManager.detach();  // can't call open on an attached instance
-			this.directoriesToDeleteOnTearDown.add(fakeProjectPath);
 
 			File fakeTagsetSubmodulePath = new File(fakeProjectPath, "tagsets/CATMA_TAGSET_DEF_tagset");
 

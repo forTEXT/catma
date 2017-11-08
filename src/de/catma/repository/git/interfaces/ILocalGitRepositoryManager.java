@@ -10,7 +10,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	void detach();
 
-	String getRepositoryBasePath();
+	File getRepositoryBasePath();
 
 	File getRepositoryWorkTree();
 

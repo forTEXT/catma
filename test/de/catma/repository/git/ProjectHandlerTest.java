@@ -25,9 +25,11 @@ import static org.junit.Assert.*;
 
 public class ProjectHandlerTest {
 	private Properties catmaProperties;
+	private de.catma.user.User catmaUser;
 	private GitLabServerManager gitLabServerManager;
 
 	private ArrayList<String> projectsToDeleteOnTearDown = new ArrayList<>();
+	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
 
 	public ProjectHandlerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
@@ -39,8 +41,8 @@ public class ProjectHandlerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager
-		de.catma.user.User catmaUser = Randomizer.getDbUser();
+		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager & JGitRepoManager
+		this.catmaUser = Randomizer.getDbUser();
 
 		this.gitLabServerManager = new GitLabServerManager(
 			this.catmaProperties, catmaUser
@@ -51,10 +53,7 @@ public class ProjectHandlerTest {
 	@After
 	public void tearDown() throws Exception {
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-					this.catmaProperties, "fakeUserIdentifier"
-			)) {
-
+			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 				ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
@@ -62,6 +61,13 @@ public class ProjectHandlerTest {
 				}
 				this.projectsToDeleteOnTearDown.clear();
 			}
+		}
+
+		if (this.directoriesToDeleteOnTearDown.size() > 0) {
+			for (File dir : this.directoriesToDeleteOnTearDown) {
+				FileUtils.deleteDirectory(dir);
+			}
+			this.directoriesToDeleteOnTearDown.clear();
 		}
 
 		// delete the GitLab user that the GitLabServerManager constructor in setUp would have
@@ -75,9 +81,8 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
@@ -94,11 +99,10 @@ public class ProjectHandlerTest {
 			assertFalse(jGitRepoManager.isAttached());
 
 			String expectedRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
-			String repositoryBasePath = String.format(
-				"%s/%s", this.catmaProperties.getProperty("GitBasedRepositoryBasePath"), "fakeUserIdentifier"
-			);
 
-			File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
+			File expectedRootRepositoryPath = new File(
+					jGitRepoManager.getRepositoryBasePath(), expectedRootRepositoryName
+			);
 
 			assert expectedRootRepositoryPath.exists();
 			assert expectedRootRepositoryPath.isDirectory();
@@ -107,9 +111,8 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
@@ -126,11 +129,10 @@ public class ProjectHandlerTest {
 			assertFalse(jGitRepoManager.isAttached());
 
 			String expectedRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
-			String repositoryBasePath = String.format(
-				"%s/%s", this.catmaProperties.getProperty("GitBasedRepositoryBasePath"), "fakeUserIdentifier"
-			);
 
-			File expectedRootRepositoryPath = new File(repositoryBasePath, expectedRootRepositoryName);
+			File expectedRootRepositoryPath = new File(
+					jGitRepoManager.getRepositoryBasePath(), expectedRootRepositoryName
+			);
 
 			assert expectedRootRepositoryPath.exists();
 			assert expectedRootRepositoryPath.isDirectory();
@@ -147,9 +149,8 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void createTagset() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
@@ -186,9 +187,8 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void createMarkupCollection() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
@@ -261,9 +261,8 @@ public class ProjectHandlerTest {
 
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
@@ -299,9 +298,8 @@ public class ProjectHandlerTest {
 
 	@Test
 	public void addTagsetToMarkupCollection() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);

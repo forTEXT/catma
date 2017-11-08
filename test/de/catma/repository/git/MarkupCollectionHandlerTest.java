@@ -31,6 +31,7 @@ import static org.junit.Assert.*;
 
 public class MarkupCollectionHandlerTest {
 	private Properties catmaProperties;
+	private de.catma.user.User catmaUser;
 	private GitLabServerManager gitLabServerManager;
 
 	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
@@ -47,8 +48,8 @@ public class MarkupCollectionHandlerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager
-		de.catma.user.User catmaUser = Randomizer.getDbUser();
+		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager & JGitRepoManager
+		this.catmaUser = Randomizer.getDbUser();
 
 		this.gitLabServerManager = new GitLabServerManager(this.catmaProperties, catmaUser);
 		this.gitLabServerManager.replaceGitLabServerUrl = true;
@@ -79,10 +80,7 @@ public class MarkupCollectionHandlerTest {
 		}
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-					this.catmaProperties, "fakeUserIdentifier"
-			)) {
-
+			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 				ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
@@ -103,9 +101,8 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
@@ -147,7 +144,6 @@ public class MarkupCollectionHandlerTest {
 
 			assert expectedRepoPath.exists();
 			assert expectedRepoPath.isDirectory();
-			this.directoriesToDeleteOnTearDown.add(expectedRepoPath);
 			assert Arrays.asList(expectedRepoPath.list()).contains("header.json");
 
 			String expectedSerializedHeader = "" +
@@ -174,10 +170,7 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
-
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
 				jGitRepoManager, this.gitLabServerManager
 			);
@@ -190,9 +183,8 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void addTagset() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
 				jGitRepoManager, this.gitLabServerManager
@@ -257,10 +249,7 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void removeTagset() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
-
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
 				jGitRepoManager, this.gitLabServerManager
 			);
@@ -273,9 +262,8 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void createTagInstance() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			// TODO: use JsonLdWebAnnotationTest.getTagInstance once it's been implemented
 			// for now, we need to create a fake project repo with fake submodules to make this test pass
@@ -283,7 +271,6 @@ public class MarkupCollectionHandlerTest {
 			// need to init the fake project repo, otherwise JGitRepoManager will fail to open it later
 			jGitRepoManager.init(fakeProjectPath.getName(), null);
 			jGitRepoManager.detach();  // can't call open on an attached instance
-			this.directoriesToDeleteOnTearDown.add(fakeProjectPath);
 
 			File fakeMarkupCollectionSubmodulePath = new File(
 					fakeProjectPath, "collections/fakeUserMarkupCollectionUuid"
@@ -417,16 +404,15 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void open() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
+
 			// TODO: use JsonLdWebAnnotationTest.getTagInstance once it's been implemented
 			// for now, we need to create a fake project repo with fake submodules to make this test pass
 			File fakeProjectPath = new File(jGitRepoManager.getRepositoryBasePath(), "fakeProjectId_corpus");
 			// need to init the fake project repo, otherwise JGitRepoManager will fail to open it later
 			jGitRepoManager.init(fakeProjectPath.getName(), null);
 			jGitRepoManager.detach();  // can't call open on an attached instance
-			this.directoriesToDeleteOnTearDown.add(fakeProjectPath);
 
 			File fakeTagsetSubmodulePath = new File(fakeProjectPath, "tagsets/CATMA_TAGSET_DEF_tagset");
 

@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 public class SourceDocumentHandlerTest {
 	private Properties catmaProperties;
+	private de.catma.user.User catmaUser;
 	private GitLabServerManager gitLabServerManager;
 
 	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
@@ -42,8 +43,8 @@ public class SourceDocumentHandlerTest {
 
     @Before
 	public void setUp() throws Exception {
-		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager
-		de.catma.user.User catmaUser = Randomizer.getDbUser();
+		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager & JGitRepoManager
+		this.catmaUser = Randomizer.getDbUser();
 
 		this.gitLabServerManager = new GitLabServerManager(this.catmaProperties, catmaUser);
 		this.gitLabServerManager.replaceGitLabServerUrl = true;
@@ -74,10 +75,7 @@ public class SourceDocumentHandlerTest {
 		}
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-					this.catmaProperties, "fakeUserIdentifier"
-			)) {
-
+			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 				ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
@@ -128,9 +126,8 @@ public class SourceDocumentHandlerTest {
 
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
 				jGitRepoManager, this.gitLabServerManager
@@ -157,7 +154,6 @@ public class SourceDocumentHandlerTest {
 			);
 			assert expectedRepoPath.exists();
 			assert expectedRepoPath.isDirectory();
-			this.directoriesToDeleteOnTearDown.add(expectedRepoPath);
 			assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.pdf");
 			assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.txt");
 			assert FileUtils.contentEquals(
@@ -235,9 +231,8 @@ public class SourceDocumentHandlerTest {
 
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
 				jGitRepoManager, this.gitLabServerManager
@@ -279,7 +274,6 @@ public class SourceDocumentHandlerTest {
 
 			assert expectedRepoPath.exists();
 			assert expectedRepoPath.isDirectory();
-			this.directoriesToDeleteOnTearDown.add(expectedRepoPath);
 			assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.pdf");
 			assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.txt");
 			assert FileUtils.contentEquals(
@@ -329,10 +323,7 @@ public class SourceDocumentHandlerTest {
 
 	@Test
 	public void remove() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
-
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
 				jGitRepoManager, this.gitLabServerManager
 			);
@@ -372,9 +363,8 @@ public class SourceDocumentHandlerTest {
 		SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(indexInfoSet, contentInfoSet, techInfoSet);
 		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
-				this.catmaProperties, "fakeUserIdentifier"
-		)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
 				jGitRepoManager, this.gitLabServerManager
@@ -393,7 +383,6 @@ public class SourceDocumentHandlerTest {
 			);
 			assert expectedRepoPath.exists() : String.format("We expect %s to exist", expectedRepoPath.getAbsolutePath());
 			assert expectedRepoPath.isDirectory();
-			this.directoriesToDeleteOnTearDown.add(expectedRepoPath);
 
 			assertNotNull(sourceDocumentId);
 

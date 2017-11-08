@@ -2,9 +2,9 @@ package de.catma.repository.git.managers;
 
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.user.User;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
@@ -26,34 +26,41 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 
 	private Git gitApi;
 
-	public JGitRepoManager(Properties catmaProperties) {
-		this(catmaProperties, "");
-	}
-
-	public JGitRepoManager(Properties catmaProperties, String username) {
-		this.repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
-		this.username = username;
-	}
-
-	public JGitRepoManager(@Nonnull Properties catmaProperties, @Nonnull de.catma.user.User catmaUser) {
+	/**
+	 * Creates a new instance of this class for the given {@link User}.
+	 * <p>
+	 * Note that the <code>catmaUser</code> argument is NOT used for authentication to remote Git servers. It is only
+	 * used to organise repositories on the local file system, based on the User's identifier. Methods of this class
+	 * that support authentication have their own username and password parameters for this purpose.
+	 *
+	 * @param catmaProperties a {@link Properties} object
+	 * @param catmaUser a {@link User} object
+	 */
+	public JGitRepoManager(@Nonnull Properties catmaProperties, @Nonnull User catmaUser) {
 		this.repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
 		this.username = catmaUser.getIdentifier();
 	}
 
 	/**
-	 * Creates an instance of this class and opens an existing Git repository with the directory
-	 * name <code>repositoryName</code>.
+	 * Creates an instance of this class for the given {@link User} and opens an existing Git repository with the
+	 * directory name <code>repositoryName</code>.
+	 * <p>
+	 * Note that the <code>catmaUser</code> argument is NOT used for authentication to remote Git servers. It is only
+	 * used to organise repositories on the local file system, based on the User's identifier. Methods of this class
+	 * that support authentication have their own username and password parameters for this purpose.
 	 * <p>
 	 * Calls <code>open(String)</code> internally.
 	 *
 	 * @param catmaProperties a {@link Properties} object
+	 * @param catmaUser a {@link User} object
 	 * @param repositoryName the directory name of the Git repository to open
 	 * @throws LocalGitRepositoryManagerException if the Git repository couldn't be found or
 	 *         couldn't be opened for some other reason
 	 */
-	public JGitRepoManager(Properties catmaProperties, String username, String repositoryName)
+	public JGitRepoManager(@Nonnull Properties catmaProperties, @Nonnull User catmaUser,
+						   @Nonnull String repositoryName)
 			throws LocalGitRepositoryManagerException {
-		this(catmaProperties, username);
+		this(catmaProperties, catmaUser);
 
 		this.open(repositoryName);
 	}
@@ -90,17 +97,13 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 
 	/**
-	 * Gets the repository base path for this instance.
+	 * Gets the repository base path for this instance, which is specific to the {@link User} supplied at instantiation.
 	 *
-	 * @return the base path as a String
+	 * @return a {@link File} object
 	 */
 	@Override
-	public String getRepositoryBasePath() {
-		if(StringUtils.isEmpty(this.username)){
-			return this.repositoryBasePath;
-		}
-
-		return String.format("%s/%s", this.repositoryBasePath, this.username);
+	public File getRepositoryBasePath() {
+		return new File(this.repositoryBasePath, this.username);
 	}
 
 	/**
