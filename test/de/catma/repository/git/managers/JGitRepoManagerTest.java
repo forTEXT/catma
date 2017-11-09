@@ -671,4 +671,62 @@ public class JGitRepoManagerTest {
 			assertFalse(targetFile2.exists());
 		}
 	}
+
+	@Test
+	public void getSubmoduleHeadRevisionHash() throws Exception {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
+
+			File containerRepoPath = new File(jGitRepoManager.getRepositoryBasePath(), "container");
+			File submoduleRepoPath = new File(jGitRepoManager.getRepositoryBasePath(), "submodule");
+
+			// init container repo
+			jGitRepoManager.init(containerRepoPath.getName(), null);
+
+			assert jGitRepoManager.isAttached();
+			assert containerRepoPath.exists();
+			assert containerRepoPath.isDirectory();
+
+			jGitRepoManager.detach();  // can't call init on an attached instance
+
+			// init another repo which will be a submodule in the container repo
+			jGitRepoManager.init(submoduleRepoPath.getName(), null);
+
+			assert jGitRepoManager.isAttached();
+			assert submoduleRepoPath.exists();
+			assert submoduleRepoPath.isDirectory();
+
+			// commit something to the submodule repo and get the revision hash
+			File file1 = new File("testdocs/rose_for_emily.txt");
+			byte[] file1Bytes = Files.readAllBytes(file1.toPath());
+			File targetFile1 = new File(submoduleRepoPath, file1.getName());
+
+			jGitRepoManager.add(targetFile1, file1Bytes);
+			RevCommit revCommit = jGitRepoManager.getGitApi().commit().setMessage("Adding rose_for_emily.txt")
+					.setCommitter("Test Committer", "testcommitter@catma.de").call();
+			String expectedSubmoduleHeadRevisionHash = revCommit.getId().getName();
+
+			jGitRepoManager.detach();  // can't call open on an attached instance
+
+			// re-attach the repo manager to the container repo
+			jGitRepoManager.open(containerRepoPath.getName());
+
+			// add the submodule to the container repo
+			jGitRepoManager.addSubmodule(
+					new File(containerRepoPath, submoduleRepoPath.getName()),
+					String.format("../%s", submoduleRepoPath.getName()),
+					null, null
+			);
+
+			assert Arrays.asList(containerRepoPath.list()).contains(".gitmodules");
+			assert Arrays.asList(containerRepoPath.list()).contains(submoduleRepoPath.getName());
+
+			// assert that the submodule's HEAD revision hash is correct
+			String submoduleHeadRevisionHash = jGitRepoManager.getSubmoduleHeadRevisionHash(
+					submoduleRepoPath.getName()
+			);
+
+			assertEquals(expectedSubmoduleHeadRevisionHash, submoduleHeadRevisionHash);
+		}
+	}
 }

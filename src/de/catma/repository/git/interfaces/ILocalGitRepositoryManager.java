@@ -39,6 +39,8 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	void checkout(String name) throws LocalGitRepositoryManagerException;
 
+	String getSubmoduleHeadRevisionHash(String submoduleName) throws LocalGitRepositoryManagerException;
+
 	@Override
 	void close();
 }

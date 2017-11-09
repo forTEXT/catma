@@ -9,6 +9,7 @@ import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import javax.annotation.Nonnull;
@@ -18,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Properties;
 
 public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseable {
@@ -450,6 +452,38 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 		catch (GitAPIException e) {
 			throw new LocalGitRepositoryManagerException("Failed to checkout", e);
+		}
+	}
+
+	/**
+	 * Gets the HEAD revision hash for the submodule with the name <code>submoduleName</code>.
+	 *
+	 * @param submoduleName the name of the submodule whose HEAD revision hash to get
+	 * @return a revision hash
+	 * @throws LocalGitRepositoryManagerException if a submodule with the name <code>submoduleName</code> doesn't exist
+	 *                                            or if the operation failed for another reason
+	 */
+	@Override
+	public String getSubmoduleHeadRevisionHash(String submoduleName) throws LocalGitRepositoryManagerException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `getSubmoduleHeadRevisionHash` on a detached instance");
+		}
+
+		try {
+			SubmoduleStatusCommand submoduleStatusCommand = this.gitApi.submoduleStatus();
+			Map<String, SubmoduleStatus> results = submoduleStatusCommand.call();
+
+			if (!results.containsKey(submoduleName)) {
+				throw new LocalGitRepositoryManagerException(
+						String.format("Failed to get HEAD revision hash for submodule `%s`. " +
+								"A submodule with that name does not appear to exist.", submoduleName)
+				);
+			}
+
+			return results.get(submoduleName).getHeadId().getName();
+		}
+		catch (GitAPIException e) {
+			throw new LocalGitRepositoryManagerException("Failed to get submodule status", e);
 		}
 	}
 
