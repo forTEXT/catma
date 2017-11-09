@@ -20,8 +20,10 @@ import org.gitlab4j.api.models.User;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -177,43 +179,58 @@ public class TagsetHandler implements ITagsetHandler {
 		}
 	}
 
+	/**
+	 * Creates a tag definition within the tagset identified by <code>tagsetId</code>.
+	 * <p>
+	 * NB: This method purposefully does NOT perform any Git add/commit operations as it is expected to be called a very
+	 * large number of times when a graph worktree is written to disk.
+	 *
+	 * @param projectId the ID of the project that contains the tagset within which the tag definition should be created
+	 * @param tagsetId the ID of the tagset within which to create the tag definition
+	 * @param tagDefinition a {@link TagDefinition} object
+	 * @return the tag definition UUID
+	 * @throws TagsetHandlerException if an error occurs while creating the tag definition
+	 */
 	@Override
-	public String addTagDefinition(String tagsetId, TagDefinition tagDefinition) throws TagsetHandlerException {
+	public String addTagDefinition(@Nonnull String projectId,
+								   @Nonnull String tagsetId,
+								   @Nonnull TagDefinition tagDefinition
+	) throws TagsetHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+			localGitRepoManager.open(projectRootRepositoryName);
 
-			localGitRepoManager.open(TagsetHandler.getTagsetRepositoryName(tagsetId));
+			String targetPropertyDefinitionsFileRelativePath = String.format(
+					"%s%s/%s",
+					StringUtils.isEmpty(tagDefinition.getParentUuid()) ? "" : String.format(
+							"%s/", tagDefinition.getParentUuid()
+					),
+					tagDefinition.getUuid(),
+					"propertydefs.json"
+			);
 
-			String propertyDefinitionPath = String.format("%s/%s", tagDefinition.getUuid(), "propertydefs.json");
+			File targetPropertyDefinitionsFileAbsolutePath = Paths.get(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					ProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
+					tagsetId,
+					targetPropertyDefinitionsFileRelativePath
+			).toFile();
 
-			if(StringUtils.isNotEmpty(tagDefinition.getParentUuid())){
-				propertyDefinitionPath = String.format("%s/%s", tagDefinition.getParentUuid(), propertyDefinitionPath);
+			GitTagDefinition gitTagDefinition = new GitTagDefinition(tagDefinition);
+			String serializedGitTagDefinition = new SerializationHelper<GitTagDefinition>().serialize(gitTagDefinition);
+
+			try (FileOutputStream fileOutputStream = FileUtils.openOutputStream(
+					targetPropertyDefinitionsFileAbsolutePath
+			)) {
+				fileOutputStream.write(serializedGitTagDefinition.getBytes(StandardCharsets.UTF_8));
 			}
 
-			// write header.json into the local repo
-			File propertyDefFile = new File(
-					localGitRepoManager.getRepositoryWorkTree(), propertyDefinitionPath
-			);
-			propertyDefFile.getParentFile().mkdirs();
-
-			GitTagDefinition getTagDefinition = new GitTagDefinition(tagDefinition);
-			String serializedTagDefinition = new SerializationHelper<GitTagDefinition>().serialize(getTagDefinition);
-			byte[] propertyDefBytes = serializedTagDefinition.getBytes(StandardCharsets.UTF_8);
-
-			// commit newly added files
-			GitLabServerManager gitLabServerManager =
-					(GitLabServerManager)this.remoteGitServerManager;
-
-			User gitLabUser = gitLabServerManager.getGitLabUser();
-
-			String committerName = StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername();
-			localGitRepoManager.addAndCommit(
-					propertyDefFile, propertyDefBytes, committerName, gitLabUser.getEmail()
-			);
-
-			return tagDefinition.getUuid();
+			// not doing Git add/commit, see method doc comment
 		}
-		catch (LocalGitRepositoryManagerException e) {
-			throw new TagsetHandlerException("Failed to create add the TagDefinition to the repo", e);
+		catch (LocalGitRepositoryManagerException|IOException e) {
+			throw new TagsetHandlerException("Failed to add tag definition", e);
 		}
+
+		return tagDefinition.getUuid();
 	}
 }

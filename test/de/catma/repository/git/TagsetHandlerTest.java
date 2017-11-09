@@ -22,11 +22,11 @@ import org.junit.rules.ExpectedException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Logger;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
@@ -176,45 +176,61 @@ public class TagsetHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
+			// create a project
 			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
-				"Test CATMA Project for Tagset", "This is a test CATMA project"
+					"Test CATMA Project for Tagset", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
+			// create a tagset
+			String tagsetId = projectHandler.createTagset(
+					projectId, null, "Test Tagset", null
+			);
+			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the project will take
+			// care of that for us
 
-			String tagsetId = tagsetHandler.create(projectId, null, "Test Tagset", null);
-			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the
-			// project will take care of that for us
-
-			assertNotNull(tagsetId);
-
+			// create a TagDefinition object
 			String tagDefinitionId = this.idGenerator.generate();
-			Version tagDefVersion = new Version();
+			Version tagDefinitionVersion = new Version();
 
 			TagDefinition tagDefinition = new TagDefinition(
-				null, tagDefinitionId, "FakeTagDefinitionName", tagDefVersion, null, null
+					null, tagDefinitionId, "FakeTagDefinitionName", tagDefinitionVersion,
+					null, null
 			);
 
-			PropertyDefinition propDef = new PropertyDefinition(
-				null, "CATMA_userPropdefUUID", "CunningProperty",
-				new PropertyPossibleValueList("Weather")
+			PropertyDefinition propertyDefinition = new PropertyDefinition(
+					null, "CATMA_fakeUserPropDefUuid", "Weather",
+					new PropertyPossibleValueList(
+							Arrays.asList("Good", "Bad", "Toto, I've a feeling we're not in Kansas anymore."),
+							true
+					)
 			);
-			tagDefinition.addUserDefinedPropertyDefinition(propDef);
+			tagDefinition.addUserDefinedPropertyDefinition(propertyDefinition);
 
-			String result = tagsetHandler.addTagDefinition(tagsetId, tagDefinition);
+			// call addTagDefinition
+			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
+			String returnedTagDefinitionId = tagsetHandler.addTagDefinition(projectId, tagsetId, tagDefinition);
 
-			assertEquals(tagDefinitionId, result);
+			assertNotNull(returnedTagDefinitionId);
+			assert returnedTagDefinitionId.startsWith("CATMA_");
 
-			String tagDefinitionPath = String.format(
-				"%s/%s",
-				TagsetHandler.getTagsetRepositoryName(tagsetId),
-				tagDefinition.getUuid()
-			);
+			// the JGitRepoManager instance should always be in a detached state after TagsetHandler calls return
+			assertFalse(jGitRepoManager.isAttached());
 
-			File expectedTagDefinitionPath = new File(jGitRepoManager.getRepositoryBasePath(), tagDefinitionPath);
+			assertEquals(tagDefinitionId, returnedTagDefinitionId);
+
+			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+
+			File expectedTagDefinitionPath = Paths.get(
+					jGitRepoManager.getRepositoryBasePath().toString(),
+					projectRootRepositoryName,
+					ProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
+					tagsetId,
+					tagDefinition.getUuid()
+			).toFile();
+
 			assert expectedTagDefinitionPath.exists() : "Directory does not exist";
 			assert expectedTagDefinitionPath.isDirectory() : "Path is not a directory";
 
@@ -222,16 +238,22 @@ public class TagsetHandlerTest {
 
 			GitTagDefinition expectedGitTagDefinition = new GitTagDefinition(tagDefinition);
 
-			String serialized = FileUtils.readFileToString(
+			String actualSerializedGitTagDefinition = FileUtils.readFileToString(
 				new File(expectedTagDefinitionPath, "propertydefs.json"), StandardCharsets.UTF_8
 			);
 			GitTagDefinition actualGitTagDefinition = new SerializationHelper<GitTagDefinition>().deserialize(
-				serialized, GitTagDefinition.class
+				actualSerializedGitTagDefinition, GitTagDefinition.class
 			);
 
-			assertEquals(expectedGitTagDefinition.getName(), actualGitTagDefinition.getName());
+			assertEquals(
+					expectedGitTagDefinition.getTagsetDefinitionUuid(),
+					actualGitTagDefinition.getTagsetDefinitionUuid()
+			);
 			assertEquals(expectedGitTagDefinition.getParentUuid(), actualGitTagDefinition.getParentUuid());
 			assertEquals(expectedGitTagDefinition.getUuid(), actualGitTagDefinition.getUuid());
+			assertEquals(expectedGitTagDefinition.getName(), actualGitTagDefinition.getName());
+
+			// TODO: assert tag definition and properties
 		}
 	}
 
@@ -240,44 +262,54 @@ public class TagsetHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			ProjectHandler projectHandler = new ProjectHandler(
-				jGitRepoManager, this.gitLabServerManager
-			);
+			// create a project
+			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
-				"Test CATMA Project for Tagset", "This is a test CATMA project"
+					"Test CATMA Project for Tagset", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
+			// create a tagset
+			String tagsetId = projectHandler.createTagset(
+					projectId, null, "Test Tagset", null
+			);
+			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the project will take
+			// care of that for us
 
-			String tagsetId = tagsetHandler.create(projectId, null, "Test Tagset", null);
-
-			assertNotNull(tagsetId);
-
+			// create a TagDefinition object that has a (fake) parent
 			String tagDefinitionId = this.idGenerator.generate();
 			String parentTagDefinitionId = this.idGenerator.generate();
-			Version tagDefVersion = new Version();
+			Version tagDefinitionVersion = new Version();
 
 			TagDefinition tagDefinition = new TagDefinition(
-				null, tagDefinitionId, "FakeTagdefinitionName", tagDefVersion,
-				null, parentTagDefinitionId
+					null, tagDefinitionId, "FakeTagDefinitionName", tagDefinitionVersion,
+					null, parentTagDefinitionId
 			);
 
-			String result = tagsetHandler.addTagDefinition(tagsetId, tagDefinition);
+			// call addTagDefinition
+			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
+			String returnedTagDefinitionId = tagsetHandler.addTagDefinition(projectId, tagsetId, tagDefinition);
 
-			assertEquals(tagDefinitionId, result);
+			assertNotNull(returnedTagDefinitionId);
+			assert returnedTagDefinitionId.startsWith("CATMA_");
 
-			String tagDefinitionPath = String.format(
-				"%s/%s/%s",
-				TagsetHandler.getTagsetRepositoryName(tagsetId),
-				parentTagDefinitionId,
-				tagDefinition.getUuid()
-			);
+			// the JGitRepoManager instance should always be in a detached state after TagsetHandler calls return
+			assertFalse(jGitRepoManager.isAttached());
 
-			Logger.getLogger(this.getClass().toString()).info(tagDefinitionPath);
+			assertEquals(tagDefinitionId, returnedTagDefinitionId);
 
-			File expectedTagDefinitionPath = new File(jGitRepoManager.getRepositoryBasePath(), tagDefinitionPath);
+			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+
+			File expectedTagDefinitionPath = Paths.get(
+					jGitRepoManager.getRepositoryBasePath().toString(),
+					projectRootRepositoryName,
+					ProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
+					tagsetId,
+					parentTagDefinitionId,
+					tagDefinition.getUuid()
+			).toFile();
+
 			assert expectedTagDefinitionPath.exists() : "Directory does not exist";
 			assert expectedTagDefinitionPath.isDirectory() : "Path is not a directory";
 
@@ -285,16 +317,22 @@ public class TagsetHandlerTest {
 
 			GitTagDefinition expectedGitTagDefinition = new GitTagDefinition(tagDefinition);
 
-			String serialized = FileUtils.readFileToString(
-				new File(expectedTagDefinitionPath, "propertydefs.json"), StandardCharsets.UTF_8
+			String actualSerializedGitTagDefinition = FileUtils.readFileToString(
+					new File(expectedTagDefinitionPath, "propertydefs.json"), StandardCharsets.UTF_8
 			);
 			GitTagDefinition actualGitTagDefinition = new SerializationHelper<GitTagDefinition>().deserialize(
-				serialized, GitTagDefinition.class
+					actualSerializedGitTagDefinition, GitTagDefinition.class
 			);
 
-			assertEquals(expectedGitTagDefinition.getName(), actualGitTagDefinition.getName());
+			assertEquals(
+					expectedGitTagDefinition.getTagsetDefinitionUuid(),
+					actualGitTagDefinition.getTagsetDefinitionUuid()
+			);
 			assertEquals(expectedGitTagDefinition.getParentUuid(), actualGitTagDefinition.getParentUuid());
 			assertEquals(expectedGitTagDefinition.getUuid(), actualGitTagDefinition.getUuid());
+			assertEquals(expectedGitTagDefinition.getName(), actualGitTagDefinition.getName());
+
+			// TODO: assert tag definition
 		}
 	}
 

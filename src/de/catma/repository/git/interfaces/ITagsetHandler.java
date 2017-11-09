@@ -18,7 +18,8 @@ public interface ITagsetHandler {
 
 	void delete(String tagsetId) throws TagsetHandlerException;
 
-	String addTagDefinition(String tagsetId, TagDefinition tagDefinition) throws TagsetHandlerException;
+	String addTagDefinition(@Nonnull String projectId, @Nonnull String tagsetId, @Nonnull TagDefinition tagDefinition)
+			throws TagsetHandlerException;
 
 	TagsetDefinition open(String tagsetId, String projectId) throws TagsetHandlerException, IOException;
 }
