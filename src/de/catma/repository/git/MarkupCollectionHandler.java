@@ -272,7 +272,7 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	}
 
 	@Override
-	public UserMarkupCollection open(String projectId, String markupCollectionId)
+	public UserMarkupCollection open(@Nonnull String projectId, @Nonnull String markupCollectionId)
 			throws MarkupCollectionHandlerException {
 
 		File projectRootRepositoryWorkTree;

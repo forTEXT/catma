@@ -30,5 +30,6 @@ public interface IMarkupCollectionHandler {
 			@Nonnull JsonLdWebAnnotation annotation
 	) throws MarkupCollectionHandlerException;
 
-	UserMarkupCollection open(String projectId, String markupCollectionId) throws MarkupCollectionHandlerException;
+	UserMarkupCollection open(@Nonnull String projectId, @Nonnull String markupCollectionId)
+			throws MarkupCollectionHandlerException;
 }
