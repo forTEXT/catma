@@ -28,10 +28,6 @@ public interface IProjectHandler {
 								  @Nonnull String sourceDocumentVersion
 	) throws ProjectHandlerException;
 
-	void addTagsetToMarkupCollection(@Nonnull String projectId, @Nonnull String markupCollectionId,
-									 @Nonnull String tagsetId, @Nonnull String tagsetVersion
-	) throws ProjectHandlerException;
-
 	// source document operations
 	String createSourceDocument(
 			@Nonnull String projectId, @Nullable String sourceDocumentId,

@@ -8,9 +8,6 @@ import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInf
 import helpers.Randomizer;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Status;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
 import org.junit.Before;
@@ -293,87 +290,6 @@ public class ProjectHandlerTest {
 			assert status.hasUncommittedChanges();
 			assert added.contains(".gitmodules");
 			assert added.contains("documents/" + sourceDocumentId);
-		}
-	}
-
-	@Test
-	public void addTagsetToMarkupCollection() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
-			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
-
-			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
-			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
-			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				jGitRepoManager, this.gitLabServerManager
-			);
-
-			// create a project
-			String projectId = projectHandler.create(
-				"Test CATMA Project", "This is a test CATMA project"
-			);
-			this.projectsToDeleteOnTearDown.add(projectId);
-
-			assertNotNull(projectId);
-			assert projectId.startsWith("CATMA_");
-
-			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
-			// return
-			assertFalse(jGitRepoManager.isAttached());
-
-			// create a tagset
-			String tagsetId = tagsetHandler.create(projectId, null, "Test Tagset", null);
-
-			// the JGitRepoManager instance should always be in a detached state after TagsetHandler calls
-			// return
-			assertFalse(jGitRepoManager.isAttached());
-
-			// re-open the tagset repo to get the commit hash
-			jGitRepoManager.open(TagsetHandler.getTagsetRepositoryName(tagsetId));
-			ObjectId tagsetHead = jGitRepoManager.getGitApi().getRepository().resolve(Constants.HEAD);
-			String tagsetCommitHash = tagsetHead.getName();
-
-			jGitRepoManager.detach();  // can't call clone on an attached instance
-
-			// create a markup collection
-			String markupCollectionId = markupCollectionHandler.create(
-					projectId, null, "Test Markup Collection", null,
-					"fakeSourceDocumentId", "fakeSourceDocumentVersion"
-			);
-
-			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
-			// calls return
-			assertFalse(jGitRepoManager.isAttached());
-
-			User gitLabUser = this.gitLabServerManager.getGitLabUser();
-			String gitLabUserImpersonationToken = this.gitLabServerManager.getGitLabUserImpersonationToken();
-
-			// re-open the markup collection repo to get the commit hash and because we need to push
-			jGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
-			ObjectId markupCollectionHead = jGitRepoManager.getGitApi().getRepository().resolve(Constants.HEAD);
-			String markupCollectionCommitHash = markupCollectionHead.getName();
-
-			// push the markup collection repo to the server so that it can be added as a submodule to the project
-			// TODO: the markup collection should already be a submodule in the project at the time
-			// addTagsetToMarkupCollection is called
-			jGitRepoManager.push(gitLabUser.getUsername(), gitLabUserImpersonationToken);
-
-			jGitRepoManager.detach();  // can't call open on an attached instance
-
-			projectHandler.addTagsetToMarkupCollection(projectId, markupCollectionId, tagsetId, tagsetCommitHash);
-
-			// the JGitRepoManager instance should always be in a detached state after ProjectHandler
-			// calls return
-			assertFalse(jGitRepoManager.isAttached());
-
-			// assert that the markup collection submodule in the project is pointing at the correct commit hash
-			String projectRepoName = ProjectHandler.getProjectRootRepositoryName(projectId);
-			jGitRepoManager.open(projectRepoName);
-			Map<String, SubmoduleStatus> statusMap = jGitRepoManager.getGitApi().submoduleStatus().call();
-
-			assertEquals(1, statusMap.size());
-
-			SubmoduleStatus status = statusMap.get(String.format("collections/%s", markupCollectionId));
-			assertEquals(markupCollectionCommitHash, status.getHeadId().getName());
 		}
 	}
 }
