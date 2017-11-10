@@ -320,10 +320,10 @@ public class ProjectHandler implements IProjectHandler {
 	// source document operations
 
 	/**
-	 * Inserts a new source document into the project identified by <code>projectId</code>.
+	 * Creates a new source document within the project identified by <code>projectId</code>.
 	 *
-	 * @param projectId the ID of the project that the source document must be inserted into
-	 * @param sourceDocumentId the ID of the source document to insert. If none is provided, a new
+	 * @param projectId the ID of the project within which the source document must be created
+	 * @param sourceDocumentId the ID of the source document to create. If none is provided, a new
 	 *                         ID will be generated.
 	 * @param originalSourceDocumentStream a {@link InputStream} object representing the original,
 	 *                                     unmodified source document
@@ -336,10 +336,10 @@ public class ProjectHandler implements IProjectHandler {
 	 * @param gitSourceDocumentInfo a {@link GitSourceDocumentInfo} wrapper object
 	 * @return the <code>sourceDocumentId</code> if one was provided, otherwise a new source
 	 *         document ID
-	 * @throws ProjectHandlerException if an error occurs while inserting the source document
+	 * @throws ProjectHandlerException if an error occurs while creating the source document
 	 */
 	@Override
-	public String insertSourceDocument(
+	public String createSourceDocument(
 			@Nonnull String projectId, @Nullable String sourceDocumentId,
 			@Nonnull InputStream originalSourceDocumentStream, @Nonnull String originalSourceDocumentFileName,
 			@Nonnull InputStream convertedSourceDocumentStream, @Nonnull String convertedSourceDocumentFileName,

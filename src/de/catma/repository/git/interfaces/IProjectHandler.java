@@ -32,7 +32,7 @@ public interface IProjectHandler {
 			throws ProjectHandlerException;
 
 	// source document operations
-	String insertSourceDocument(
+	String createSourceDocument(
 			@Nonnull String projectId, @Nullable String sourceDocumentId,
 			@Nonnull InputStream originalSourceDocumentStream, @Nonnull String originalSourceDocumentFileName,
 			@Nonnull InputStream convertedSourceDocumentStream, @Nonnull String convertedSourceDocumentFileName,

@@ -230,7 +230,7 @@ public class ProjectHandlerTest {
 	}
 
 	@Test
-	public void insertSourceDocument() throws Exception {
+	public void createSourceDocument() throws Exception {
 		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
 		File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
 
@@ -275,7 +275,7 @@ public class ProjectHandlerTest {
 			// return
 			assertFalse(jGitRepoManager.isAttached());
 
-			String sourceDocumentId = projectHandler.insertSourceDocument(
+			String sourceDocumentId = projectHandler.createSourceDocument(
 					projectId, null,
 					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
