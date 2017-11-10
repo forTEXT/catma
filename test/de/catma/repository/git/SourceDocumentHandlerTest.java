@@ -94,109 +94,6 @@ public class SourceDocumentHandlerTest {
 		);
 	}
 
-    @Test
-    public void insert() throws Exception {
-		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
-		File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
-
-		FileInputStream originalSourceDocumentStream = new FileInputStream(originalSourceDocument);
-		FileInputStream convertedSourceDocumentStream = new FileInputStream(convertedSourceDocument);
-
-		IndexInfoSet indexInfoSet = new IndexInfoSet();
-		indexInfoSet.setLocale(Locale.ENGLISH);
-
-		ContentInfoSet contentInfoSet = new ContentInfoSet(
-			"William Faulkner",
-			"",
-			"",
-			"A Rose for Emily"
-		);
-
-		TechInfoSet techInfoSet = new TechInfoSet(
-			FileType.TEXT,
-			StandardCharsets.UTF_8,
-			FileOSType.DOS,
-			705211438L,
-			null
-		);
-
-		SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(
-			indexInfoSet, contentInfoSet, techInfoSet
-		);
-
-		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
-
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
-			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
-
-			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
-				jGitRepoManager, this.gitLabServerManager
-			);
-
-			String sourceDocumentId = sourceDocumentHandler.insert(
-				originalSourceDocumentStream, originalSourceDocument.getName(),
-				convertedSourceDocumentStream, convertedSourceDocument.getName(),
-				gitSourceDocumentInfo,
-				null, null
-			);
-			this.sourceDocumentReposToDeleteOnTearDown.add(sourceDocumentId);
-
-			assertNotNull(sourceDocumentId);
-			assert sourceDocumentId.startsWith("CATMA_");
-
-			// the JGitRepoManager instance should always be in a detached state after SourceDocumentHandler
-			// calls return
-			assertFalse(jGitRepoManager.isAttached());
-
-			File expectedRepoPath = new File(
-					jGitRepoManager.getRepositoryBasePath(),
-					SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId)
-			);
-			assert expectedRepoPath.exists();
-			assert expectedRepoPath.isDirectory();
-			assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.pdf");
-			assert Arrays.asList(expectedRepoPath.list()).contains("rose_for_emily.txt");
-			assert FileUtils.contentEquals(
-				originalSourceDocument, new File(expectedRepoPath, "rose_for_emily.pdf")
-			);
-			assert FileUtils.contentEquals(
-				convertedSourceDocument, new File(expectedRepoPath, "rose_for_emily.txt")
-			);
-
-			assert Arrays.asList(expectedRepoPath.list()).contains("header.json");
-
-			String expectedSerializedSourceDocumentInfo = "" +
-					"{\n" +
-					"\t\"gitContentInfoSet\":{\n" +
-					"\t\t\"author\":\"William Faulkner\",\n" +
-					"\t\t\"description\":\"\",\n" +
-					"\t\t\"publisher\":\"\",\n" +
-					"\t\t\"title\":\"A Rose for Emily\"\n" +
-					"\t},\n" +
-					"\t\"gitIndexInfoSet\":{\n" +
-					"\t\t\"locale\":\"en\",\n" +
-					"\t\t\"unseparableCharacterSequences\":[],\n" +
-					"\t\t\"userDefinedSeparatingCharacters\":[]\n" +
-					"\t},\n" +
-					"\t\"gitTechInfoSet\":{\n" +
-					"\t\t\"charset\":\"UTF-8\",\n" +
-					"\t\t\"checksum\":705211438,\n" +
-					"\t\t\"fileName\":null,\n" +
-					"\t\t\"fileOSType\":\"DOS\",\n" +
-					"\t\t\"fileType\":\"TEXT\",\n" +
-					"\t\t\"mimeType\":null,\n" +
-					"\t\t\"uRI\":null,\n" +
-					"\t\t\"xsltDocumentLocalUri\":null\n" +
-					"\t}\n" +
-					"}";
-
-			assertEquals(
-				expectedSerializedSourceDocumentInfo.replaceAll("[\n\t]", ""),
-				FileUtils.readFileToString(new File(expectedRepoPath, "header.json"), StandardCharsets.UTF_8)
-			);
-		}
-	}
-
 	@Test
 	public void insertIntoProject() throws Exception {
 		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
@@ -252,10 +149,9 @@ public class SourceDocumentHandlerTest {
 			assertFalse(jGitRepoManager.isAttached());
 
 			String sourceDocumentId = sourceDocumentHandler.insert(
-				originalSourceDocumentStream, originalSourceDocument.getName(),
+					projectId, null, originalSourceDocumentStream, originalSourceDocument.getName(),
 				convertedSourceDocumentStream, convertedSourceDocument.getName(),
-				gitSourceDocumentInfo,
-				null, projectId
+				gitSourceDocumentInfo
 			);
 			// we don't add the sourceDocumentId to this.sourceDocumentReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us
@@ -371,10 +267,9 @@ public class SourceDocumentHandlerTest {
 			);
 
 			String sourceDocumentId = sourceDocumentHandler.insert(
-				originalSourceDocumentStream, originalSourceDocument.getName(),
+					null, null, originalSourceDocumentStream, originalSourceDocument.getName(),
 				convertedSourceDocumentStream, convertedSourceDocument.getName(),
-				gitSourceDocumentInfo,
-				null, null
+				gitSourceDocumentInfo
 			);
 			this.sourceDocumentReposToDeleteOnTearDown.add(sourceDocumentId);
 			File expectedRepoPath = new File(

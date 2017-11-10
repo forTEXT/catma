@@ -17,6 +17,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.models.User;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +43,9 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 	/**
 	 * Inserts a new source document.
 	 *
+	 * @param projectId the ID of the project that the source document must be inserted into
+	 * @param sourceDocumentId the ID of the source document to insert. If none is provided, a new
+	 *                         ID will be generated.
 	 * @param originalSourceDocumentStream a {@link InputStream} object representing the original,
 	 *                                     unmodified source document
 	 * @param originalSourceDocumentFileName the file name of the original, unmodified source
@@ -51,21 +55,18 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 	 * @param convertedSourceDocumentFileName the file name of the converted, UTF-8 encoded source
 	 *                                        document
 	 * @param gitSourceDocumentInfo a {@link GitSourceDocumentInfo} wrapper object
-	 * @param sourceDocumentId the ID of the source document to insert. If none is provided, a new
-	 *                         ID will be generated.
-	 * @param projectId the ID of the project that the source document must be inserted into
 	 * @return the <code>sourceDocumentId</code> if one was provided, otherwise a new source
 	 *         document ID
 	 * @throws SourceDocumentHandlerException if an error occurs while inserting the source document
 	 */
 	@Override
-	public String insert(InputStream originalSourceDocumentStream,
-						 String originalSourceDocumentFileName,
-						 InputStream convertedSourceDocumentStream,
-						 String convertedSourceDocumentFileName,
-						 GitSourceDocumentInfo gitSourceDocumentInfo,
-						 @Nullable String sourceDocumentId,
-						 @Nullable String projectId) throws SourceDocumentHandlerException {
+	public String insert(@Nonnull String projectId, @Nullable String sourceDocumentId,
+						 @Nonnull InputStream originalSourceDocumentStream,
+						 @Nonnull String originalSourceDocumentFileName,
+						 @Nonnull InputStream convertedSourceDocumentStream,
+						 @Nonnull String convertedSourceDocumentFileName,
+						 @Nonnull GitSourceDocumentInfo gitSourceDocumentInfo
+	) throws SourceDocumentHandlerException {
 		if (sourceDocumentId == null) {
 			IDGenerator idGenerator = new IDGenerator();
 			sourceDocumentId = idGenerator.generate();
@@ -77,15 +78,9 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 
 			String sourceDocumentRepoName = SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId);
 
-			if (projectId == null) {
-				response = this.remoteGitServerManager.createRepository(
-						sourceDocumentRepoName, sourceDocumentRepoName
-				);
-			} else {
-				response = this.remoteGitServerManager.createRepository(
-						sourceDocumentRepoName, sourceDocumentRepoName, projectId
-				);
-			}
+			response = this.remoteGitServerManager.createRepository(
+					sourceDocumentRepoName, sourceDocumentRepoName, projectId
+			);
 
 			// clone the repository locally
 			GitLabServerManager gitLabServerManager =

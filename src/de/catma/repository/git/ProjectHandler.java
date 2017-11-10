@@ -352,9 +352,11 @@ public class ProjectHandler implements IProjectHandler {
 
 			// insert the source document into the project
 			sourceDocumentId = sourceDocumentHandler.insert(
+					projectId, sourceDocumentId,
 					originalSourceDocumentStream, originalSourceDocumentFileName,
 					convertedSourceDocumentStream, convertedSourceDocumentFileName,
-					gitSourceDocumentInfo, sourceDocumentId, projectId);
+					gitSourceDocumentInfo
+			);
 
 			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
 			String gitLabUserImpersonationToken = gitLabServerManager.getGitLabUserImpersonationToken();
