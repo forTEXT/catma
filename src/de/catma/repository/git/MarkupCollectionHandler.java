@@ -219,15 +219,6 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 			}
 
 			// not doing Git add/commit, see method doc comment
-//			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
-//			User gitLabUser = gitLabServerManager.getGitLabUser();
-//
-//			localGitRepoManager.addAndCommit(
-//				targetTagInstanceFilePath,
-//				serializedTagInstance.getBytes(StandardCharsets.UTF_8),
-//				StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername(),
-//				gitLabUser.getEmail()
-//			);
 		}
 		catch (LocalGitRepositoryManagerException|IOException e) {
 			throw new MarkupCollectionHandlerException("Failed to add tag instance", e);

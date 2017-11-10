@@ -411,6 +411,8 @@ public class JGitRepoManagerTest {
 				expectedSubmoduleGitFileContents,
 				FileUtils.readFileToString(subModuleGitFilePath, StandardCharsets.UTF_8)
 			);
+
+			// TODO: assert pending changes to container repo
 		}
 	}
 
