@@ -218,7 +218,7 @@ public class SourceDocumentHandlerTest {
 	public ExpectedException thrown = ExpectedException.none();
 
 	@Test
-	public void remove() throws Exception {
+	public void delete() throws Exception {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
 				jGitRepoManager, this.gitLabServerManager
@@ -226,7 +226,7 @@ public class SourceDocumentHandlerTest {
 
 			thrown.expect(SourceDocumentHandlerException.class);
 			thrown.expectMessage("Not implemented");
-			sourceDocumentHandler.remove("fake");
+			sourceDocumentHandler.delete("fakeProjectId", "fakeSourceDocumentId");
 		}
 	}
 

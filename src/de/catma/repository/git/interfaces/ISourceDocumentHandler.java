@@ -15,7 +15,7 @@ public interface ISourceDocumentHandler {
 				  @Nonnull GitSourceDocumentInfo gitSourceDocumentInfo
 	) throws SourceDocumentHandlerException;
 
-    void remove(String sourceDocumentId) throws SourceDocumentHandlerException;
+    void delete(@Nonnull String projectId, @Nonnull String sourceDocumentId) throws SourceDocumentHandlerException;
 
     SourceDocument open(String sourceDocumentId, String projectId) throws SourceDocumentHandlerException;
 }

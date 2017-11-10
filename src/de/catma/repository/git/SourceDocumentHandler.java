@@ -138,7 +138,8 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 	}
 
 	@Override
-	public void remove(String sourceDocumentId) throws SourceDocumentHandlerException {
+	public void delete(@Nonnull String projectId, @Nonnull String sourceDocumentId)
+			throws SourceDocumentHandlerException {
     	throw new SourceDocumentHandlerException("Not implemented");
 	}
 
