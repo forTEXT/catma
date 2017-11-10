@@ -15,7 +15,7 @@ public interface ITagsetHandler {
 			@Nullable String description
 	) throws TagsetHandlerException;
 
-	void delete(String tagsetId) throws TagsetHandlerException;
+	void delete(@Nonnull String projectId, @Nonnull String tagsetId) throws TagsetHandlerException;
 
 	TagsetDefinition open(@Nonnull String projectId, @Nonnull String tagsetId) throws TagsetHandlerException;
 

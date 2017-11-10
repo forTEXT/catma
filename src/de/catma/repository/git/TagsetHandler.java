@@ -107,7 +107,7 @@ public class TagsetHandler implements ITagsetHandler {
 	}
 
 	@Override
-	public void delete(String tagsetId) throws TagsetHandlerException {
+	public void delete(@Nonnull String projectId, @Nonnull String tagsetId) throws TagsetHandlerException {
 		throw new TagsetHandlerException("Not implemented");
 	}
 

@@ -171,7 +171,7 @@ public class TagsetHandlerTest {
 
 			thrown.expect(TagsetHandlerException.class);
 			thrown.expectMessage("Not implemented");
-			tagsetHandler.delete("fake");
+			tagsetHandler.delete("fakeProjectId", "fakeTagsetId");
 		}
 	}
 
