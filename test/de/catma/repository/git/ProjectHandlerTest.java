@@ -276,10 +276,10 @@ public class ProjectHandlerTest {
 			assertFalse(jGitRepoManager.isAttached());
 
 			String sourceDocumentId = projectHandler.insertSourceDocument(
-				projectId,
-				originalSourceDocumentStream, originalSourceDocument.getName(),
-				convertedSourceDocumentStream, convertedSourceDocument.getName(),
-				gitSourceDocumentInfo, null
+					projectId, null,
+					originalSourceDocumentStream, originalSourceDocument.getName(),
+					convertedSourceDocumentStream, convertedSourceDocument.getName(),
+					gitSourceDocumentInfo
 			);
 
 			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls

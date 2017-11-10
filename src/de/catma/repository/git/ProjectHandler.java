@@ -9,7 +9,6 @@ import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.gitlab4j.api.models.User;
 
@@ -324,6 +323,8 @@ public class ProjectHandler implements IProjectHandler {
 	 * Inserts a new source document into the project identified by <code>projectId</code>.
 	 *
 	 * @param projectId the ID of the project that the source document must be inserted into
+	 * @param sourceDocumentId the ID of the source document to insert. If none is provided, a new
+	 *                         ID will be generated.
 	 * @param originalSourceDocumentStream a {@link InputStream} object representing the original,
 	 *                                     unmodified source document
 	 * @param originalSourceDocumentFileName the file name of the original, unmodified source
@@ -333,19 +334,17 @@ public class ProjectHandler implements IProjectHandler {
 	 * @param convertedSourceDocumentFileName the file name of the converted, UTF-8 encoded source
 	 *                                        document
 	 * @param gitSourceDocumentInfo a {@link GitSourceDocumentInfo} wrapper object
-	 * @param sourceDocumentId the ID of the source document to insert. If none is provided, a new
-	 *                         ID will be generated.
 	 * @return the <code>sourceDocumentId</code> if one was provided, otherwise a new source
 	 *         document ID
 	 * @throws ProjectHandlerException if an error occurs while inserting the source document
 	 */
 	@Override
 	public String insertSourceDocument(
-			String projectId,
-			InputStream originalSourceDocumentStream, String originalSourceDocumentFileName,
-			InputStream convertedSourceDocumentStream, String convertedSourceDocumentFileName,
-			GitSourceDocumentInfo gitSourceDocumentInfo,
-			@Nullable String sourceDocumentId) throws ProjectHandlerException {
+			@Nonnull String projectId, @Nullable String sourceDocumentId,
+			@Nonnull InputStream originalSourceDocumentStream, @Nonnull String originalSourceDocumentFileName,
+			@Nonnull InputStream convertedSourceDocumentStream, @Nonnull String convertedSourceDocumentFileName,
+			@Nonnull GitSourceDocumentInfo gitSourceDocumentInfo
+	) throws ProjectHandlerException {
 		try (ILocalGitRepositoryManager repoManager = this.localGitRepositoryManager) {
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
 				repoManager, this.remoteGitServerManager

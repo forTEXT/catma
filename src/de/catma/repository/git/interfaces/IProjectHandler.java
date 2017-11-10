@@ -33,9 +33,9 @@ public interface IProjectHandler {
 
 	// source document operations
 	String insertSourceDocument(
-			String projectId,
-			InputStream originalSourceDocumentStream, String originalSourceDocumentFileName,
-			InputStream convertedSourceDocumentStream, String convertedSourceDocumentFileName,
-			GitSourceDocumentInfo gitSourceDocumentInfo,
-			@Nullable String sourceDocumentId) throws ProjectHandlerException;
+			@Nonnull String projectId, @Nullable String sourceDocumentId,
+			@Nonnull InputStream originalSourceDocumentStream, @Nonnull String originalSourceDocumentFileName,
+			@Nonnull InputStream convertedSourceDocumentStream, @Nonnull String convertedSourceDocumentFileName,
+			@Nonnull GitSourceDocumentInfo gitSourceDocumentInfo
+	) throws ProjectHandlerException;
 }
