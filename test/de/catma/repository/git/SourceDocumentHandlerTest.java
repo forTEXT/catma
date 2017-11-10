@@ -268,8 +268,8 @@ public class SourceDocumentHandlerTest {
 
 			String sourceDocumentId = sourceDocumentHandler.create(
 					null, null, originalSourceDocumentStream, originalSourceDocument.getName(),
-				convertedSourceDocumentStream, convertedSourceDocument.getName(),
-				gitSourceDocumentInfo
+					convertedSourceDocumentStream, convertedSourceDocument.getName(),
+					gitSourceDocumentInfo
 			);
 			this.sourceDocumentReposToDeleteOnTearDown.add(sourceDocumentId);
 			File expectedRepoPath = new File(
@@ -281,7 +281,7 @@ public class SourceDocumentHandlerTest {
 
 			assertNotNull(sourceDocumentId);
 
-			SourceDocument loadedSourceDocument = sourceDocumentHandler.open(sourceDocumentId, null);
+			SourceDocument loadedSourceDocument = sourceDocumentHandler.open(null, sourceDocumentId);
 
 			assertNotNull(loadedSourceDocument);
 			assertEquals(

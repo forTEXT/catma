@@ -144,7 +144,8 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 	}
 
 	@Override
-	public SourceDocument open(String sourceDocumentId, String projectId) throws SourceDocumentHandlerException {
+	public SourceDocument open(@Nonnull String projectId, @Nonnull String sourceDocumentId)
+			throws SourceDocumentHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 
 			localGitRepoManager.open(SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId));

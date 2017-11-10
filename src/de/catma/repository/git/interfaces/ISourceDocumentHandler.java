@@ -17,5 +17,6 @@ public interface ISourceDocumentHandler {
 
     void delete(@Nonnull String projectId, @Nonnull String sourceDocumentId) throws SourceDocumentHandlerException;
 
-    SourceDocument open(String sourceDocumentId, String projectId) throws SourceDocumentHandlerException;
+    SourceDocument open(@Nonnull String projectId, @Nonnull String sourceDocumentId)
+			throws SourceDocumentHandlerException;
 }
