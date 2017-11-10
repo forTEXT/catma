@@ -147,11 +147,13 @@ public class TagsetHandler implements ITagsetHandler {
 			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectRootRepositoryName);
 
-			String tagsetRepositoryName = TagsetHandler.getTagsetRepositoryName(tagsetId);
+			String tagsetSubmoduleName = String.format(
+					"%s/%s", ProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetId
+			);
 
 			File tagsetHeaderFile = new File(
 				localGitRepoManager.getRepositoryWorkTree(),
-				String.format("tagsets/%s/header.json", tagsetRepositoryName)
+				String.format("%s/header.json", tagsetSubmoduleName, tagsetId)
 			);
 
 			String serialized = FileUtils.readFileToString(tagsetHeaderFile, StandardCharsets.UTF_8);

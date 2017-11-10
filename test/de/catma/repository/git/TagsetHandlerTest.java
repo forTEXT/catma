@@ -11,6 +11,10 @@ import de.catma.tag.*;
 import de.catma.util.IDGenerator;
 import org.apache.commons.io.FileUtils;
 import helpers.Randomizer;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.submodule.SubmoduleWalk;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
 import org.junit.After;
@@ -341,68 +345,103 @@ public class TagsetHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			// TODO: use JsonLdWebAnnotationTest.getTagInstance once it's been implemented
-			// for now, we need to create a fake project repo with fake submodules to make this test pass
-			File fakeProjectPath = new File(jGitRepoManager.getRepositoryBasePath(), "fakeProjectId_corpus");
-			// need to init the fake project repo, otherwise JGitRepoManager will fail to open it later
-			jGitRepoManager.init(fakeProjectPath.getName(), null);
+			// create a project
+			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+
+			String projectId = projectHandler.create("Test CATMA Project", null);
+			this.projectsToDeleteOnTearDown.add(projectId);
+
+			// create a tagset
+			String tagsetId = projectHandler.createTagset(
+					projectId, null, "Test Tagset", null
+			);
+			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the project will take
+			// care of that for us
+
+			// commit the changes to the project root repo (addition of tagset submodule)
+			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+			jGitRepoManager.open(projectRootRepositoryName);
+			jGitRepoManager.commit(
+					String.format("Adding new tagset %s", tagsetId),
+					"Test Committer",
+					"testcommitter@catma.de"
+			);
+			jGitRepoManager.detach();  // can't call clone on an attached instance
+
+			// create a TagDefinition object
+			String tagDefinitionId = this.idGenerator.generate();
+			Version tagDefinitionVersion = new Version();
+
+			TagDefinition tagDefinition = new TagDefinition(
+					null, tagDefinitionId, "FakeTagDefinitionName", tagDefinitionVersion,
+					null, null
+			);
+
+			// call addTagDefinition
+			// NB: in this case we know that the tagset submodule is on the master branch tip, ie: not in a detached
+			// head state, so it's safe to make changes to the submodule and commit them
+			// TODO: addTagDefinition should probably do some validation and fail fast if the tagset submodule is in a
+			// detached head state - in that case the submodule would need to be updated first
+			// see the "Updating a submodule in-place in the container" scenario at https://medium.com/@porteneuve/mastering-git-submodules-34c65e940407
+			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
+			String returnedTagDefinitionId = tagsetHandler.addTagDefinition(projectId, tagsetId, tagDefinition);
+
+			assertNotNull(returnedTagDefinitionId);
+			assert returnedTagDefinitionId.startsWith("CATMA_");
+
+			// the JGitRepoManager instance should always be in a detached state after TagsetHandler calls return
+			assertFalse(jGitRepoManager.isAttached());
+
+			assertEquals(tagDefinitionId, returnedTagDefinitionId);
+
+			// commit and push submodule changes
+			// TODO: add methods to JGitRepoManager to do this
+			jGitRepoManager.open(projectRootRepositoryName);
+
+			Repository projectRootRepository = jGitRepoManager.getGitApi().getRepository();
+			String tagsetSubmodulePath = String.format(
+					"%s/%s", ProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetId
+			);
+			Repository tagsetSubmoduleRepository = SubmoduleWalk.getSubmoduleRepository(
+					projectRootRepository, tagsetSubmodulePath
+			);
+			Git submoduleGit = new Git(tagsetSubmoduleRepository);
+			submoduleGit.add().addFilepattern(tagDefinitionId).call();
+			submoduleGit.commit().setMessage(
+					String.format("Adding tag definition %s", tagDefinitionId)
+			).setCommitter("Test Committer", "testcommitter@catma.de").call();
+			submoduleGit.push().setCredentialsProvider(
+					new UsernamePasswordCredentialsProvider(
+							this.gitLabServerManager.getGitLabUser().getUsername(),
+							this.gitLabServerManager.getGitLabUserImpersonationToken()
+					)
+			).call();
+			tagsetSubmoduleRepository.close();
+			submoduleGit.close();
+
+			// commit and push project root repo changes
+			jGitRepoManager.getGitApi().add().addFilepattern(tagsetSubmodulePath).call();
+			jGitRepoManager.commit(
+					String.format("Updating tagset %s", tagsetId),
+					"Test Committer",
+					"testcommitter@catma.de"
+			);
+
 			jGitRepoManager.detach();  // can't call open on an attached instance
 
-			File fakeTagsetSubmodulePath = new File(fakeProjectPath, "tagsets/CATMA_TAGSET_DEF_tagset");
+			TagsetDefinition loadedTagsetDefinition = tagsetHandler.open(tagsetId, projectId);
 
-			File fakeTagsetHeaderFilePath = new File(fakeTagsetSubmodulePath, "header.json");
-			String fakeSerializedTagsetHeader = "" +
-					"{\n" +
-					"\t\"description\":\"\",\n" +
-					"\t\"name\":\"TAGSET_DEF\"\n" +
-					"}";
-			FileUtils.writeStringToFile(fakeTagsetHeaderFilePath, fakeSerializedTagsetHeader, StandardCharsets.UTF_8);
+			assertEquals(tagsetId, loadedTagsetDefinition.getUuid());
+			assertEquals("Test Tagset", loadedTagsetDefinition.getName());
 
-			File fakeTagDefinitionPath = new File(fakeTagsetSubmodulePath, "CATMA_TAG_DEF");
+			assertFalse(loadedTagsetDefinition.isEmpty());
 
-			File fakeTagDefinitionPropertyDefsFilePath = new File(fakeTagDefinitionPath, "propertydefs.json");
-			String fakeSerializedTagDefinition = "" +
-					"{\n" +
-					"\t\"name\":\"TAG_DEF\",\n" +
-					"\t\"parentUuid\":\"\",\n" +
-					"\t\"systemPropertyDefinitions\":{\n" +
-					"\t\t\"CATMA_SYSPROP_DEF\":{\n" +
-					"\t\t\t\"name\":\"catma_markupauthor\",\n" +
-					"\t\t\t\"possibleValueList\":[\"SYSPROP_VAL_1\",\"SYSPROP_VAL_2\"],\n" +
-					"\t\t\t\"uuid\":\"CATMA_SYSPROP_DEF\"\n" +
-					"\t\t}\n" +
-					"\t},\n" +
-					"\t\"tagsetDefinitionUuid\":\"CATMA_TAGSET_DEF\",\n" +
-					"\t\"userDefinedPropertyDefinitions\":{\n" +
-					"\t\t\"CATMA_UPROP_DEF\":{\n" +
-					"\t\t\t\"name\":\"UPROP_DEF\",\n" +
-					"\t\t\t\"possibleValueList\":[\"UPROP_VAL_1\",\"UPROP_VAL_2\"],\n" +
-					"\t\t\t\"uuid\":\"CATMA_UPROP_DEF\"\n" +
-					"\t\t}\n" +
-					"\t},\n" +
-					"\t\"uuid\":\"CATMA_TAG_DEF\"\n" +
-					"}";
-			FileUtils.writeStringToFile(
-				fakeTagDefinitionPropertyDefsFilePath, fakeSerializedTagDefinition, StandardCharsets.UTF_8
-			);
-
-			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
-
-			TagsetDefinition tagsetDefinition = tagsetHandler.open(
-				"CATMA_TAGSET_DEF", "fakeProjectId"
-			);
-
-			assertEquals("CATMA_TAGSET_DEF", tagsetDefinition.getUuid());
-			assertEquals("TAGSET_DEF", tagsetDefinition.getName());
-
-			assertFalse(tagsetDefinition.isEmpty());
-
-			TagDefinition loadedTagDefinition = tagsetDefinition.getTagDefinition("CATMA_TAG_DEF");
+			TagDefinition loadedTagDefinition = loadedTagsetDefinition.getTagDefinition(tagDefinitionId);
 
 			assertNotNull(loadedTagDefinition);
 
-			assertEquals("CATMA_TAG_DEF", loadedTagDefinition.getUuid());
-			assertEquals("TAG_DEF", loadedTagDefinition.getName());
+			assertEquals(tagDefinitionId, loadedTagDefinition.getUuid());
+			assertEquals("FakeTagDefinitionName", loadedTagDefinition.getName());
 			assertEquals("", loadedTagDefinition.getParentUuid());
 		}
 	}
