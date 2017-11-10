@@ -433,6 +433,7 @@ public class TagsetHandlerTest {
 
 			assertEquals(tagsetId, loadedTagsetDefinition.getUuid());
 			assertEquals("Test Tagset", loadedTagsetDefinition.getName());
+			assertNotNull(loadedTagsetDefinition.getRevisionHash());
 
 			assertFalse(loadedTagsetDefinition.isEmpty());
 

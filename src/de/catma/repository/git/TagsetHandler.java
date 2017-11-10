@@ -163,10 +163,11 @@ public class TagsetHandler implements ITagsetHandler {
 							TagsetDefinitionHeader.class
 					);
 
-			//Integer id, String uuid, String tagsetName, Version version
 			TagsetDefinition tagsetdefinition = new TagsetDefinition(
 				null, tagsetId, tagsetDefinitionHeader.getName(), null
 			);
+			String tagsetDefinitionRevisionHash = localGitRepoManager.getSubmoduleHeadRevisionHash(tagsetSubmoduleName);
+			tagsetdefinition.setRevisionHash(tagsetDefinitionRevisionHash);
 
 			ArrayList<TagDefinition> tagDefinitions = this.openTagDefinitions(tagsetHeaderFile.getParentFile());
 
