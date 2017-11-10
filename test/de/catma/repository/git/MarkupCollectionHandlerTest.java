@@ -177,7 +177,7 @@ public class MarkupCollectionHandlerTest {
 
 			thrown.expect(MarkupCollectionHandlerException.class);
 			thrown.expectMessage("Not implemented");
-			markupCollectionHandler.delete("fake");
+			markupCollectionHandler.delete("fakeProjectId", "fakeMarkupCollectionId");
 		}
 	}
 

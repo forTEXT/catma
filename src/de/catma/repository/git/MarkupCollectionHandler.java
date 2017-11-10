@@ -124,7 +124,8 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	}
 
 	@Override
-	public void delete(String markupCollectionId) throws MarkupCollectionHandlerException {
+	public void delete(@Nonnull String projectId, @Nonnull String markupCollectionId)
+			throws MarkupCollectionHandlerException {
 		throw new MarkupCollectionHandlerException("Not implemented");
 	}
 

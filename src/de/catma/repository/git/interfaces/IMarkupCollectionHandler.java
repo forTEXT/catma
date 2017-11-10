@@ -17,7 +17,7 @@ public interface IMarkupCollectionHandler {
 			@Nonnull String sourceDocumentVersion
 	) throws MarkupCollectionHandlerException;
 
-	void delete(String markupCollectionId) throws MarkupCollectionHandlerException;
+	void delete(@Nonnull String projectId, @Nonnull String markupCollectionId) throws MarkupCollectionHandlerException;
 
 	void addTagset(String markupCollectionId, String tagsetId, String tagsetVersion)
 			throws MarkupCollectionHandlerException;
@@ -31,5 +31,4 @@ public interface IMarkupCollectionHandler {
 	) throws MarkupCollectionHandlerException;
 
 	UserMarkupCollection open(String projectId, String markupCollectionId) throws MarkupCollectionHandlerException;
-
 }
