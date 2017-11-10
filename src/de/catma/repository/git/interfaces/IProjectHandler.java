@@ -8,9 +8,9 @@ import javax.annotation.Nullable;
 import java.io.InputStream;
 
 public interface IProjectHandler {
-	String create(String name, String description) throws ProjectHandlerException;
+	String create(@Nonnull String name, @Nonnull String description) throws ProjectHandlerException;
 
-	void delete(String projectId) throws ProjectHandlerException;
+	void delete(@Nonnull String projectId) throws ProjectHandlerException;
 
 	// tagset operations
 	String createTagset(@Nonnull String projectId,
@@ -28,8 +28,9 @@ public interface IProjectHandler {
 								  @Nonnull String sourceDocumentVersion
 	) throws ProjectHandlerException;
 
-	void addTagsetToMarkupCollection(String projectId, String markupCollectionId, String tagsetId, String tagsetVersion)
-			throws ProjectHandlerException;
+	void addTagsetToMarkupCollection(@Nonnull String projectId, @Nonnull String markupCollectionId,
+									 @Nonnull String tagsetId, @Nonnull String tagsetVersion
+	) throws ProjectHandlerException;
 
 	// source document operations
 	String createSourceDocument(

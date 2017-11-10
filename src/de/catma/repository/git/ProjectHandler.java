@@ -55,7 +55,7 @@ public class ProjectHandler implements IProjectHandler {
 	 * @throws ProjectHandlerException if an error occurs when creating the project
 	 */
 	@Override
-	public String create(String name, String description) throws ProjectHandlerException {
+	public String create(@Nonnull String name, @Nonnull String description) throws ProjectHandlerException {
 		String projectId = idGenerator.generate();
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
@@ -102,7 +102,7 @@ public class ProjectHandler implements IProjectHandler {
 	 * @throws ProjectHandlerException if an error occurs when deleting the project
 	 */
 	@Override
-	public void delete(String projectId) throws ProjectHandlerException {
+	public void delete(@Nonnull String projectId) throws ProjectHandlerException {
 		try {
 			List<String> repositoryNames = this.remoteGitServerManager.getGroupRepositoryNames(
 				projectId
@@ -242,8 +242,8 @@ public class ProjectHandler implements IProjectHandler {
 	 * @param tagsetVersion the version of the tagset to add
 	 * @throws ProjectHandlerException if an error occurs while adding the tagset
 	 */
-	public void addTagsetToMarkupCollection(String projectId, String markupCollectionId,
-											String tagsetId, String tagsetVersion)
+	public void addTagsetToMarkupCollection(@Nonnull String projectId, @Nonnull String markupCollectionId,
+											@Nonnull String tagsetId, @Nonnull String tagsetVersion)
 			throws ProjectHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
