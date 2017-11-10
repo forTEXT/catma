@@ -256,7 +256,9 @@ public class MarkupCollectionHandlerTest {
 
 			thrown.expect(MarkupCollectionHandlerException.class);
 			thrown.expectMessage("Not implemented");
-			markupCollectionHandler.removeTagset("fakeMarkupCollectionId", "fakeTagsetId");
+			markupCollectionHandler.removeTagset(
+					"fakeProjectId","fakeMarkupCollectionId", "fakeTagsetId"
+			);
 		}
 	}
 

@@ -22,7 +22,8 @@ public interface IMarkupCollectionHandler {
 	void addTagset(String markupCollectionId, String tagsetId, String tagsetVersion)
 			throws MarkupCollectionHandlerException;
 
-	void removeTagset(String markupCollectionId, String tagsetId) throws MarkupCollectionHandlerException;
+	void removeTagset(@Nonnull String projectId, @Nonnull String markupCollectionId, @Nonnull String tagsetId)
+			throws MarkupCollectionHandlerException;
 
 	String createTagInstance(
 			@Nonnull String projectId,
