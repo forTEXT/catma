@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -133,37 +134,48 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	 * Adds an existing tagset, identified by <code>tagsetId</code> and <code>tagsetVersion</code>, to the markup
 	 * collection identified by <code>markupCollectionId</code>.
 	 *
+	 * @param projectId the ID of the project that contains the markup collection to which the tagset should be added
 	 * @param markupCollectionId the ID of the markup collection to add the tagset to
 	 * @param tagsetId the ID of the tagset to add
 	 * @param tagsetVersion the version of the tagset to add
 	 * @throws MarkupCollectionHandlerException if an error occurs while adding the tagset
 	 */
 	@Override
-	public void addTagset(String markupCollectionId, String tagsetId, String tagsetVersion)
-			throws MarkupCollectionHandlerException {
+	public void addTagset(@Nonnull String projectId,
+						  @Nonnull String markupCollectionId,
+						  @Nonnull String tagsetId,
+						  @Nonnull String tagsetVersion
+	) throws MarkupCollectionHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			// open the markup collection repository
-			localGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
+			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+			localGitRepoManager.open(projectRootRepositoryName);
+
+			File targetMarkupCollectionHeaderFilePath = Paths.get(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					ProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
+					markupCollectionId,
+					"header.json"
+			).toFile();
 
 			// update header.json
-			File headerFile = new File(
-				localGitRepoManager.getRepositoryWorkTree(), "header.json"
-			);
 			SerializationHelper<MarkupCollectionHeader> serializationHelper = new SerializationHelper<>();
 			MarkupCollectionHeader markupCollectionHeader = serializationHelper.deserialize(
-				FileUtils.readFileToString(headerFile, StandardCharsets.UTF_8), MarkupCollectionHeader.class
+					FileUtils.readFileToString(targetMarkupCollectionHeaderFilePath, StandardCharsets.UTF_8),
+					MarkupCollectionHeader.class
 			);
+
 			markupCollectionHeader.addTagset(new AbstractMap.SimpleEntry<>(tagsetId, tagsetVersion));
+
 			String serializedHeader = serializationHelper.serialize(markupCollectionHeader);
 
-			GitLabServerManager gitLabServerManager =
-					(GitLabServerManager)this.remoteGitServerManager;
+			// TODO: create a provider to retrieve the auth details so that we don't have to cast to the implementation
+			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
 			User gitLabUser = gitLabServerManager.getGitLabUser();
 
 			localGitRepoManager.addAndCommit(
-				headerFile, serializedHeader.getBytes(StandardCharsets.UTF_8),
-				StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername(),
-				gitLabUser.getEmail()
+					targetMarkupCollectionHeaderFilePath, serializedHeader.getBytes(StandardCharsets.UTF_8),
+					StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername(),
+					gitLabUser.getEmail()
 			);
 		}
 		catch (LocalGitRepositoryManagerException|IOException e) {

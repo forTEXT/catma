@@ -24,6 +24,7 @@ import org.junit.rules.ExpectedException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static org.awaitility.Awaitility.await;
@@ -186,45 +187,43 @@ public class MarkupCollectionHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				jGitRepoManager, this.gitLabServerManager
-			);
-
+			// create a project
 			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 			String projectId = projectHandler.create(
-				"Test CATMA Project", "This is a test CATMA project"
+					"Test CATMA Project", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
-			// return
-			assertFalse(jGitRepoManager.isAttached());
+			// create a tagset
+			String tagsetId = projectHandler.createTagset(
+					projectId, null, "Test Tagset", null
+			);
+			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the project will take
+			// care of that for us
 
-			String markupCollectionId = markupCollectionHandler.create(
+			// create a markup collection
+			String markupCollectionId = projectHandler.createMarkupCollection(
 					projectId, null,"Test Markup Collection", null,
 					"fakeSourceDocumentId", "fakeSourceDocumentVersion"
 			);
 			// we don't add the markupCollectionId to this.markupCollectionReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us
 
-			assertNotNull(markupCollectionId);
-			assert markupCollectionId.startsWith("CATMA_");
-
-			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
-			// calls return
-			assertFalse(jGitRepoManager.isAttached());
+			// add the tagset to the markup collection
+			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
+					jGitRepoManager, this.gitLabServerManager
+			);
 
 			markupCollectionHandler.addTagset(
-				markupCollectionId, "fakeTagsetId", "fakeTagsetVersion"
+					projectId, markupCollectionId, tagsetId, "fakeTagsetVersion"
 			);
 
 			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
 			// calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			jGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
-
+			// assert that the markup collection header file was updated as expected
 			String expectedSerializedHeader = "" +
 					"{\n" +
 					"\t\"author\":null,\n" +
@@ -234,15 +233,23 @@ public class MarkupCollectionHandlerTest {
 					"\t\"sourceDocumentId\":\"fakeSourceDocumentId\",\n" +
 					"\t\"sourceDocumentVersion\":\"fakeSourceDocumentVersion\",\n" +
 					"\t\"tagsets\":{\n" +
-					"\t\t\"fakeTagsetId\":\"fakeTagsetVersion\"\n" +
+					"\t\t\"%s\":\"fakeTagsetVersion\"\n" +
 					"\t}\n" +
 					"}";
 
+			expectedSerializedHeader = String.format(expectedSerializedHeader, tagsetId);
+
+			File markupCollectionHeaderFilePath = Paths.get(
+					jGitRepoManager.getRepositoryBasePath().toString(),
+					ProjectHandler.getProjectRootRepositoryName(projectId),
+					ProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
+					markupCollectionId,
+					"header.json"
+			).toFile();
+
 			assertEquals(
 				expectedSerializedHeader.replaceAll("[\n\t]", ""),
-				FileUtils.readFileToString(
-					new File(jGitRepoManager.getRepositoryWorkTree(), "header.json"), StandardCharsets.UTF_8
-				)
+				FileUtils.readFileToString(markupCollectionHeaderFilePath, StandardCharsets.UTF_8)
 			);
 		}
 	}
