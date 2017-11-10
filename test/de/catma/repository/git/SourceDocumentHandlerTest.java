@@ -95,7 +95,7 @@ public class SourceDocumentHandlerTest {
 	}
 
 	@Test
-	public void insertIntoProject() throws Exception {
+	public void create() throws Exception {
 		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
 		File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
 
@@ -148,7 +148,7 @@ public class SourceDocumentHandlerTest {
 			// return
 			assertFalse(jGitRepoManager.isAttached());
 
-			String sourceDocumentId = sourceDocumentHandler.insert(
+			String sourceDocumentId = sourceDocumentHandler.create(
 					projectId, null, originalSourceDocumentStream, originalSourceDocument.getName(),
 				convertedSourceDocumentStream, convertedSourceDocument.getName(),
 				gitSourceDocumentInfo
@@ -266,7 +266,7 @@ public class SourceDocumentHandlerTest {
 				jGitRepoManager, this.gitLabServerManager
 			);
 
-			String sourceDocumentId = sourceDocumentHandler.insert(
+			String sourceDocumentId = sourceDocumentHandler.create(
 					null, null, originalSourceDocumentStream, originalSourceDocument.getName(),
 				convertedSourceDocumentStream, convertedSourceDocument.getName(),
 				gitSourceDocumentInfo

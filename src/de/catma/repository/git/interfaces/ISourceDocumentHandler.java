@@ -9,7 +9,7 @@ import javax.annotation.Nullable;
 import java.io.InputStream;
 
 public interface ISourceDocumentHandler {
-    String insert(@Nonnull String projectId, @Nullable String sourceDocumentId,
+    String create(@Nonnull String projectId, @Nullable String sourceDocumentId,
 				  @Nonnull InputStream originalSourceDocumentStream, @Nonnull String originalSourceDocumentFileName,
 				  @Nonnull InputStream convertedSourceDocumentStream, @Nonnull String convertedSourceDocumentFileName,
 				  @Nonnull GitSourceDocumentInfo gitSourceDocumentInfo

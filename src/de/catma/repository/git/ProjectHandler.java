@@ -350,8 +350,8 @@ public class ProjectHandler implements IProjectHandler {
 				repoManager, this.remoteGitServerManager
 			);
 
-			// insert the source document into the project
-			sourceDocumentId = sourceDocumentHandler.insert(
+			// create the source document within the project
+			sourceDocumentId = sourceDocumentHandler.create(
 					projectId, sourceDocumentId,
 					originalSourceDocumentStream, originalSourceDocumentFileName,
 					convertedSourceDocumentStream, convertedSourceDocumentFileName,
@@ -383,7 +383,7 @@ public class ProjectHandler implements IProjectHandler {
 			);
 		}
 		catch (SourceDocumentHandlerException|LocalGitRepositoryManagerException e) {
-			throw new ProjectHandlerException("Failed to insert source document", e);
+			throw new ProjectHandlerException("Failed to create source document", e);
 		}
 
 		return sourceDocumentId;
