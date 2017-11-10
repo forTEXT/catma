@@ -6,7 +6,6 @@ import de.catma.tag.TagsetDefinition;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.IOException;
 
 public interface ITagsetHandler {
 	String create(
@@ -18,7 +17,7 @@ public interface ITagsetHandler {
 
 	void delete(String tagsetId) throws TagsetHandlerException;
 
-	TagsetDefinition open(String tagsetId, String projectId) throws TagsetHandlerException, IOException;
+	TagsetDefinition open(@Nonnull String projectId, @Nonnull String tagsetId) throws TagsetHandlerException;
 
 	String createTagDefinition(@Nonnull String projectId, @Nonnull String tagsetId,
 							   @Nonnull TagDefinition tagDefinition)

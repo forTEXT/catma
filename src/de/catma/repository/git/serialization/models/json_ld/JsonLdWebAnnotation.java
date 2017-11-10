@@ -4,7 +4,6 @@ import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.repository.git.MarkupCollectionHandler;
 import de.catma.repository.git.ProjectHandler;
 import de.catma.repository.git.TagsetHandler;
 import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
@@ -210,8 +209,8 @@ public class JsonLdWebAnnotation {
 		try {
 			// TODO: open a TagDefinition directly?
 			TagsetDefinition tagsetDefinition = tagsetHandler.open(
-				TagsetHandler.getTagsetUuidFromRepositoryName(this.getLastPathSegmentFromUrl(this.body.getTagset())),
-				projectId
+					projectId,
+					TagsetHandler.getTagsetUuidFromRepositoryName(this.getLastPathSegmentFromUrl(this.body.getTagset()))
 			);
 			return tagsetDefinition.getTagDefinition(this.getLastPathSegmentFromUrl(this.body.getTag()));
 		}

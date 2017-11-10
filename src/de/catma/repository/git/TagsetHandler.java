@@ -142,7 +142,7 @@ public class TagsetHandler implements ITagsetHandler {
 	}
 
 	@Override
-	public TagsetDefinition open(String tagsetId, String projectId) throws TagsetHandlerException {
+	public TagsetDefinition open(@Nonnull String projectId, @Nonnull String tagsetId) throws TagsetHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectRootRepositoryName);

@@ -429,7 +429,7 @@ public class TagsetHandlerTest {
 
 			jGitRepoManager.detach();  // can't call open on an attached instance
 
-			TagsetDefinition loadedTagsetDefinition = tagsetHandler.open(tagsetId, projectId);
+			TagsetDefinition loadedTagsetDefinition = tagsetHandler.open(projectId, tagsetId);
 
 			assertEquals(tagsetId, loadedTagsetDefinition.getUuid());
 			assertEquals("Test Tagset", loadedTagsetDefinition.getName());
