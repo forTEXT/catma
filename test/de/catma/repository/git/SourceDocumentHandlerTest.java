@@ -263,16 +263,26 @@ public class SourceDocumentHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
+			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+
+			String projectId = projectHandler.create(
+					"Test CATMA Project", "This is a test CATMA project"
+			);
+			this.projectsToDeleteOnTearDown.add(projectId);
+
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
 				jGitRepoManager, this.gitLabServerManager
 			);
 
 			String sourceDocumentId = sourceDocumentHandler.create(
-					null, null, originalSourceDocumentStream, originalSourceDocument.getName(),
+					projectId, null,
+					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
 					gitSourceDocumentInfo
 			);
-			this.sourceDocumentReposToDeleteOnTearDown.add(sourceDocumentId);
+			// we don't add the sourceDocumentId to this.sourceDocumentReposToDeleteOnTearDown as deletion of the
+			// project will take care of that for us
+
 			File expectedRepoPath = new File(
 				jGitRepoManager.getRepositoryBasePath(),
 				SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId)
@@ -282,7 +292,7 @@ public class SourceDocumentHandlerTest {
 
 			assertNotNull(sourceDocumentId);
 
-			SourceDocument loadedSourceDocument = sourceDocumentHandler.open(null, sourceDocumentId);
+			SourceDocument loadedSourceDocument = sourceDocumentHandler.open(projectId, sourceDocumentId);
 
 			assertNotNull(loadedSourceDocument);
 			assertEquals(
