@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 import java.io.InputStream;
 
 public interface IProjectHandler {
-	String create(@Nonnull String name, @Nonnull String description) throws ProjectHandlerException;
+	String create(@Nonnull String name, @Nullable String description) throws ProjectHandlerException;
 
 	void delete(@Nonnull String projectId) throws ProjectHandlerException;
 

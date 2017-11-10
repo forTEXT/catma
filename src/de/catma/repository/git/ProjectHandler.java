@@ -55,7 +55,7 @@ public class ProjectHandler implements IProjectHandler {
 	 * @throws ProjectHandlerException if an error occurs when creating the project
 	 */
 	@Override
-	public String create(@Nonnull String name, @Nonnull String description) throws ProjectHandlerException {
+	public String create(@Nonnull String name, @Nullable String description) throws ProjectHandlerException {
 		String projectId = idGenerator.generate();
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
