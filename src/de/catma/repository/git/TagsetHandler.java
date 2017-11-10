@@ -195,9 +195,9 @@ public class TagsetHandler implements ITagsetHandler {
 	 * @throws TagsetHandlerException if an error occurs while creating the tag definition
 	 */
 	@Override
-	public String addTagDefinition(@Nonnull String projectId,
-								   @Nonnull String tagsetId,
-								   @Nonnull TagDefinition tagDefinition
+	public String createTagDefinition(@Nonnull String projectId,
+									  @Nonnull String tagsetId,
+									  @Nonnull TagDefinition tagDefinition
 	) throws TagsetHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);

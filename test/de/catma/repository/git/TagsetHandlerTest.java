@@ -176,7 +176,7 @@ public class TagsetHandlerTest {
 	}
 
 	@Test
-	public void addTagDefinitionWithoutParent() throws Exception {
+	public void createTagDefinitionWithoutParent() throws Exception {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
@@ -213,9 +213,9 @@ public class TagsetHandlerTest {
 			);
 			tagDefinition.addUserDefinedPropertyDefinition(propertyDefinition);
 
-			// call addTagDefinition
+			// call createTagDefinition
 			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
-			String returnedTagDefinitionId = tagsetHandler.addTagDefinition(projectId, tagsetId, tagDefinition);
+			String returnedTagDefinitionId = tagsetHandler.createTagDefinition(projectId, tagsetId, tagDefinition);
 
 			assertNotNull(returnedTagDefinitionId);
 			assert returnedTagDefinitionId.startsWith("CATMA_");
@@ -262,7 +262,7 @@ public class TagsetHandlerTest {
 	}
 
 	@Test
-	public void addTagDefinitionWithParent() throws Exception {
+	public void createTagDefinitionWithParent() throws Exception {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
@@ -291,9 +291,9 @@ public class TagsetHandlerTest {
 					null, parentTagDefinitionId
 			);
 
-			// call addTagDefinition
+			// call createTagDefinition
 			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
-			String returnedTagDefinitionId = tagsetHandler.addTagDefinition(projectId, tagsetId, tagDefinition);
+			String returnedTagDefinitionId = tagsetHandler.createTagDefinition(projectId, tagsetId, tagDefinition);
 
 			assertNotNull(returnedTagDefinitionId);
 			assert returnedTagDefinitionId.startsWith("CATMA_");
@@ -377,14 +377,14 @@ public class TagsetHandlerTest {
 					null, null
 			);
 
-			// call addTagDefinition
+			// call createTagDefinition
 			// NB: in this case we know that the tagset submodule is on the master branch tip, ie: not in a detached
 			// head state, so it's safe to make changes to the submodule and commit them
-			// TODO: addTagDefinition should probably do some validation and fail fast if the tagset submodule is in a
+			// TODO: createTagDefinition should probably do some validation and fail fast if the tagset submodule is in a
 			// detached head state - in that case the submodule would need to be updated first
 			// see the "Updating a submodule in-place in the container" scenario at https://medium.com/@porteneuve/mastering-git-submodules-34c65e940407
 			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
-			String returnedTagDefinitionId = tagsetHandler.addTagDefinition(projectId, tagsetId, tagDefinition);
+			String returnedTagDefinitionId = tagsetHandler.createTagDefinition(projectId, tagsetId, tagDefinition);
 
 			assertNotNull(returnedTagDefinitionId);
 			assert returnedTagDefinitionId.startsWith("CATMA_");
