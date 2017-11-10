@@ -149,9 +149,10 @@ public class SourceDocumentHandlerTest {
 			assertFalse(jGitRepoManager.isAttached());
 
 			String sourceDocumentId = sourceDocumentHandler.create(
-					projectId, null, originalSourceDocumentStream, originalSourceDocument.getName(),
-				convertedSourceDocumentStream, convertedSourceDocument.getName(),
-				gitSourceDocumentInfo
+					projectId, null,
+					originalSourceDocumentStream, originalSourceDocument.getName(),
+					convertedSourceDocumentStream, convertedSourceDocument.getName(),
+					gitSourceDocumentInfo
 			);
 			// we don't add the sourceDocumentId to this.sourceDocumentReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us
