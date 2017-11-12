@@ -446,6 +446,18 @@ public class TaggerView extends VerticalLayout
 			UserMarkupCollection userMarkupCollection) {
 		markupPanel.openUserMarkupCollection(userMarkupCollection);
 		// hier die library holen ueber tagset loopen und dann openTgsetDef ausfuehren
+		/*for (TagsetDefinition ts : userMarkupCollection.getTagLibrary()) {
+			geht so da TagLib ein Iterable ist...
+			und dann sowat 	:
+			
+								TagLibrary tagLibrary = repository.getTagLibraryFor(tagsetDefinition.getUuid(), null);--> version vielleicht hier doch dabei und nicht null
+								if (tagLibrary != null) {
+										((CatmaApplication) UI.getCurrent()).openTagLibrary(repository, tagLibrary, false);
+										((CatmaApplication) UI.getCurrent()).addTagsetToActiveDocument(tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()),
+												tagsetSelectionListener);
+									}
+								}.
+		}*/
 	}
 
 	public void openTagsetDefinition(
