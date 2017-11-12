@@ -177,9 +177,8 @@ public class TeiUserMarkupCollectionDeserializer {
 							List<String> valueList = new ArrayList<String>();
 							
 							for (int j=0; j<vColl.getChildElements().size(); j++) {
-								TeiElement collValElement = (TeiElement) vColl.getChildElements().get(j);
 								valueList.add(new StringPropertyValueFactory(
-													collValElement).getValue());
+													vColl, j).getValue());
 							}
 							
 							addPropertyHandler.addProperty(new Property(

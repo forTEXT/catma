@@ -1195,6 +1195,9 @@ public class DBRepository implements IndexedRepository {
 	
 	@Override
 	public TagLibrary getTagLibraryFor(String uuid, Version version) throws IOException {
-		return dbTagLibraryHandler.getTagLibraryFor(uuid, version);
+		TagLibrary tagLibrary = dbTagLibraryHandler.getTagLibraryFor(uuid, version);
+		TagLibrary openLibrary = 
+			tagManager.getTagLibrary(new TagLibraryReference(tagLibrary.getId(), tagLibrary.getContentInfoSet()));
+		return openLibrary!=null?openLibrary:tagLibrary;
 	}
 }

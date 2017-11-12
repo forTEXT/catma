@@ -373,13 +373,8 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 					Type.TRAY_NOTIFICATION);
 			return;
 		}
-		if(tagsetSelectionListener!=null){
-			selectedTab.openTagsetDefinition(this, tagsetDefinition,tagsetSelectionListener);	
-		}
-		else{
-			selectedTab.openTagsetDefinition(this, tagsetDefinition,tagsetSelectionListener);	
-		}
-		selectedTab.openTagsetDefinition(this, tagsetDefinition);
+
+		selectedTab.openTagsetDefinition(this, tagsetDefinition,tagsetSelectionListener);	
 
 		SourceDocument sd = selectedTab.getSourceDocument();
 		String sourceDocumentCaption = sd.toString();
