@@ -273,60 +273,18 @@ public class MarkupCollectionHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			// TODO: use JsonLdWebAnnotationTest.getTagInstance once it's been implemented
-			// for now, we need to create a fake project repo with fake submodules to make this test pass
-			File fakeProjectPath = new File(jGitRepoManager.getRepositoryBasePath(), "fakeProjectId_corpus");
-			// need to init the fake project repo, otherwise JGitRepoManager will fail to open it later
-			jGitRepoManager.init(fakeProjectPath.getName(), null);
-			jGitRepoManager.detach();  // can't call open on an attached instance
-
-			File fakeMarkupCollectionSubmodulePath = new File(
-					fakeProjectPath, "collections/fakeUserMarkupCollectionUuid"
+			HashMap<String, Object> getJsonLdWebAnnotationResult = JsonLdWebAnnotationTest.getJsonLdWebAnnotation(
+					jGitRepoManager, this.gitLabServerManager
 			);
 
-			File fakeMarkupCollectionHeaderFilePath = new File(fakeMarkupCollectionSubmodulePath, "header.json");
-			String fakeSerializedMarkupCollectionHeader = "" +
-					"{\n" +
-					"\t\"author\":null,\n" +
-					"\t\"description\":null,\n" +
-					"\t\"name\":\"Test Markup Collection\",\n" +
-					"\t\"publisher\":null,\n" +
-					"\t\"sourceDocumentId\":\"fakeSourceDocumentId\",\n" +
-					"\t\"sourceDocumentVersion\":\"fakeSourceDocumentVersion\",\n" +
-					"\t\"tagsets\":{\n" +
-					"\t\t\"CATMA_TAGSET_DEF\":\"fakeTagsetVersion\"\n" +
-					"\t}\n" +
-					"}";
-			FileUtils.writeStringToFile(
-					fakeMarkupCollectionHeaderFilePath, fakeSerializedMarkupCollectionHeader, StandardCharsets.UTF_8
-			);
+			String projectId = (String)getJsonLdWebAnnotationResult.get("projectUuid");
+			String markupCollectionId = (String)getJsonLdWebAnnotationResult.get("userMarkupCollectionUuid");
+			String tagInstanceId = (String)getJsonLdWebAnnotationResult.get("tagInstanceUuid");
 
-			String sourceDocumentUri = "http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC";
+			this.projectsToDeleteOnTearDown.add(projectId);
 
-			TagInstance tagInstance = JsonLdWebAnnotationTest.getFakeTagInstance();
-
-			Range range1 = new Range(12, 18);
-			Range range2 = new Range(41, 47);
-
-			List<TagReference> tagReferences = new ArrayList<>(
-					Arrays.asList(
-							new TagReference(
-									tagInstance,
-									sourceDocumentUri,
-									range1,
-									"fakeUserMarkupCollectionUuid"
-							),
-							new TagReference(
-									tagInstance,
-									sourceDocumentUri,
-									range2,
-									"fakeUserMarkupCollectionUuid"
-							)
-					)
-			);
-
-			JsonLdWebAnnotation jsonLdWebAnnotation = new JsonLdWebAnnotation(
-					this.gitLabServerManager.getGitLabServerUrl(), "fakeProjectId", tagReferences
+			JsonLdWebAnnotation jsonLdWebAnnotation = (JsonLdWebAnnotation) getJsonLdWebAnnotationResult.get(
+					"jsonLdWebAnnotation"
 			);
 
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
@@ -334,8 +292,8 @@ public class MarkupCollectionHandlerTest {
 			);
 
 			markupCollectionHandler.createTagInstance(
-					"fakeProjectId",
-					"fakeUserMarkupCollectionUuid",
+					projectId,
+					markupCollectionId,
 					jsonLdWebAnnotation
 			);
 
@@ -343,68 +301,33 @@ public class MarkupCollectionHandlerTest {
 			// calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName("fakeProjectId");
+			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
 			jGitRepoManager.open(projectRootRepositoryName);
 
 			File expectedTagInstanceJsonFilePath = new File(
 					jGitRepoManager.getRepositoryWorkTree(),
-					String.format("collections/%s/annotations/CATMA_TAG_INST.json", "fakeUserMarkupCollectionUuid")
+					String.format("collections/%s/annotations/%s.json", markupCollectionId, tagInstanceId)
 			);
 
 			assert expectedTagInstanceJsonFilePath.exists();
 			assert expectedTagInstanceJsonFilePath.isFile();
 
-			String expectedTagInstanceJsonFileContents = "" +
-					"{\n" +
-					"\t\"body\":{\n" +
-					"\t\t\"@context\":{\n" +
-					"\t\t\t\"UPROP_DEF\":\"http://localhost:8081/%1$s/tagsets/CATMA_TAGSET_DEF/CATMA_TAG_DEF/propertydefs.json/CATMA_UPROP_DEF\",\n" +
-					"\t\t\t\"catma_markupauthor\":\"http://localhost:8081/%1$s/tagsets/CATMA_TAGSET_DEF/CATMA_TAG_DEF/propertydefs.json/CATMA_SYSPROP_DEF\",\n" +
-					"\t\t\t\"tag\":\"http://catma.de/portal/tag\",\n" +
-					"\t\t\t\"tagset\":\"http://catma.de/portal/tagset\"\n" +
-					"\t\t},\n" +
-					"\t\t\"properties\":{\n" +
-					"\t\t\t\"system\":{\n" +
-					"\t\t\t\t\"catma_markupauthor\":[\"SYSPROP_VAL_1\"]\n" +
-					"\t\t\t},\n" +
-					"\t\t\t\"user\":{\n" +
-					"\t\t\t\t\"UPROP_DEF\":[\"UPROP_VAL_2\"]\n" +
-					"\t\t\t}\n" +
-					"\t\t},\n" +
-					"\t\t\"tag\":\"http://localhost:8081/%1$s/tagsets/CATMA_TAGSET_DEF/CATMA_TAG_DEF\",\n" +
-					"\t\t\"tagset\":\"http://localhost:8081/%1$s/tagsets/CATMA_TAGSET_DEF\",\n" +
-					"\t\t\"type\":\"Dataset\"\n" +
-					"\t},\n" +
-					"\t\"@context\":\"http://www.w3.org/ns/anno.jsonld\",\n" +
-					"\t\"id\":\"http://localhost:8081/%1$s/collections/%2$s/annotations/CATMA_TAG_INST.json\",\n" +
-					"\t\"target\":{\n" +
-					"\t\t\"items\":[{\n" +
-					"\t\t\t\"selector\":{\n" +
-					"\t\t\t\t\"end\":18,\n" +
-					"\t\t\t\t\"start\":12,\n" +
-					"\t\t\t\t\"type\":\"TextPositionSelector\"\n" +
-					"\t\t\t},\n" +
-					"\t\t\t\"source\":\"http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC\"\n" +
-					"\t\t},\n" +
-					"\t\t{\n" +
-					"\t\t\t\"selector\":{\n" +
-					"\t\t\t\t\"end\":47,\n" +
-					"\t\t\t\t\"start\":41,\n" +
-					"\t\t\t\t\"type\":\"TextPositionSelector\"\n" +
-					"\t\t\t},\n" +
-					"\t\t\t\"source\":\"http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC\"\n" +
-					"\t\t}],\n" +
-					"\t\t\"type\":\"List\"\n" +
-					"\t},\n" +
-					"\t\"type\":\"Annotation\"\n" +
-					"}";
-
+			String expectedTagInstanceJsonFileContents = JsonLdWebAnnotationTest.EXPECTED_SERIALIZED_ANNOTATION
+					.replaceAll("[\n\t]", "");
 			expectedTagInstanceJsonFileContents = String.format(
-				expectedTagInstanceJsonFileContents, projectRootRepositoryName, "fakeUserMarkupCollectionUuid"
+					expectedTagInstanceJsonFileContents,
+					getJsonLdWebAnnotationResult.get("projectRootRepositoryName"),
+					getJsonLdWebAnnotationResult.get("tagsetDefinitionUuid"),
+					getJsonLdWebAnnotationResult.get("tagDefinitionUuid"),
+					getJsonLdWebAnnotationResult.get("userPropertyDefinitionUuid"),
+					getJsonLdWebAnnotationResult.get("systemPropertyDefinitionUuid"),
+					getJsonLdWebAnnotationResult.get("userMarkupCollectionUuid"),
+					getJsonLdWebAnnotationResult.get("tagInstanceUuid"),
+					getJsonLdWebAnnotationResult.get("sourceDocumentUuid")
 			);
 
 			assertEquals(
-				expectedTagInstanceJsonFileContents.replaceAll("[\n\t]", ""),
+				expectedTagInstanceJsonFileContents,
 				FileUtils.readFileToString(expectedTagInstanceJsonFilePath, StandardCharsets.UTF_8)
 			);
 		}
