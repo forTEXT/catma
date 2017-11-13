@@ -38,7 +38,7 @@ public class ChooseAnnotationCollectionDialog extends Window {
 
 	public ChooseAnnotationCollectionDialog( Repository repository,
 			String sourceDocumentId, AnnotationCollectionListener annotationCollectionListener) {
-		super(Messages.getString("ChooseAnnotationCollectionDialog.whatIsYourOption"));  //$NON-NLS-1$
+		super(Messages.getString("ChooseAnnotationCollectionDialog.whatIsYourChoice"));  //$NON-NLS-1$
 		this.repository = repository;
 	
 		sourceDocument = repository.getSourceDocument(sourceDocumentId);
