@@ -184,17 +184,22 @@ public class JsonLdWebAnnotationTest {
 	 *         projectRootRepositoryName, tagsetDefinitionUuid, tagDefinitionUuid, userPropertyDefinitionUuid,
 	 *         systemPropertyDefinitionUuid, userMarkupCollectionUuid, tagInstanceUuid, sourceDocumentUuid
 	 */
-	private HashMap<String, Object> getJsonLdWebAnnotation() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
-			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
+	public static HashMap<String, Object> getJsonLdWebAnnotation(JGitRepoManager jGitRepoManager,
+																 GitLabServerManager gitLabServerManager
+	) throws Exception {
+
+		try (JGitRepoManager localJGitRepoManager = jGitRepoManager) {
+			// caller should do the following:
+//			this.directoriesToDeleteOnTearDown.add(localJGitRepoManager.getRepositoryBasePath());
 
 			// create project
-			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			ProjectHandler projectHandler = new ProjectHandler(localJGitRepoManager, gitLabServerManager);
 
 			String projectId = projectHandler.create(
 					"Test CATMA Project", "This is a test CATMA project"
 			);
-			this.projectsToDeleteOnTearDown.add(projectId);
+			// caller should do the following:
+//			this.projectsToDeleteOnTearDown.add(projectId);
 
 			// add new tagset to project
 			String tagsetId = projectHandler.createTagset(
@@ -248,8 +253,8 @@ public class JsonLdWebAnnotationTest {
 			// commit the changes to the project root repo (addition of tagset, source document and markup collection
 			// submodules)
 			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
-			jGitRepoManager.open(projectRootRepositoryName);
-			jGitRepoManager.commit(
+			localJGitRepoManager.open(projectRootRepositoryName);
+			localJGitRepoManager.commit(
 					String.format(
 							"Adding new tagset %s, source document %s and markup collection %s",
 							tagsetId,
@@ -259,7 +264,7 @@ public class JsonLdWebAnnotationTest {
 					"Test Committer",
 					"testcommitter@catma.de"
 			);
-			jGitRepoManager.detach();  // can't call open on an attached instance
+			localJGitRepoManager.detach();  // can't call open on an attached instance
 
 			// construct TagDefinition object
 			IDGenerator idGenerator = new IDGenerator();
@@ -297,22 +302,22 @@ public class JsonLdWebAnnotationTest {
 			// a detached head state - in that case the submodule would need to be updated first
 			// see the "Updating a submodule in-place in the container" scenario at
 			// https://medium.com/@porteneuve/mastering-git-submodules-34c65e940407
-			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
+			TagsetHandler tagsetHandler = new TagsetHandler(localJGitRepoManager, gitLabServerManager);
 			String returnedTagDefinitionId = tagsetHandler.createTagDefinition(projectId, tagsetId, tagDefinition);
 
 			assertNotNull(returnedTagDefinitionId);
 			assert returnedTagDefinitionId.startsWith("CATMA_");
 
 			// the JGitRepoManager instance should always be in a detached state after TagsetHandler calls return
-			assertFalse(jGitRepoManager.isAttached());
+			assertFalse(localJGitRepoManager.isAttached());
 
 			assertEquals(tagDefinitionUuid, returnedTagDefinitionId);
 
 			// commit and push submodule changes (creation of tag definition)
 			// TODO: add methods to JGitRepoManager to do this
-			jGitRepoManager.open(projectRootRepositoryName);
+			localJGitRepoManager.open(projectRootRepositoryName);
 
-			Repository projectRootRepository = jGitRepoManager.getGitApi().getRepository();
+			Repository projectRootRepository = localJGitRepoManager.getGitApi().getRepository();
 			String tagsetSubmodulePath = String.format(
 					"%s/%s", ProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetId
 			);
@@ -326,22 +331,21 @@ public class JsonLdWebAnnotationTest {
 			).setCommitter("Test Committer", "testcommitter@catma.de").call();
 			submoduleGit.push().setCredentialsProvider(
 					new UsernamePasswordCredentialsProvider(
-							this.gitLabServerManager.getGitLabUser().getUsername(),
-							this.gitLabServerManager.getGitLabUserImpersonationToken()
+							gitLabServerManager.getGitLabUser().getUsername(),
+							gitLabServerManager.getGitLabUserImpersonationToken()
 					)
 			).call();
 			tagsetSubmoduleRepository.close();
 			submoduleGit.close();
 
 			// commit and push project root repo changes (update of tagset submodule)
-			jGitRepoManager.getGitApi().add().addFilepattern(tagsetSubmodulePath).call();
-			jGitRepoManager.commit(
+			localJGitRepoManager.getGitApi().add().addFilepattern(tagsetSubmodulePath).call();
+			localJGitRepoManager.commit(
 					String.format("Updating tagset %s", tagsetId),
 					"Test Committer",
 					"testcommitter@catma.de"
 			);
-
-			jGitRepoManager.detach();  // can't call open on an attached instance
+//			localJGitRepoManager.detach();  // can't call open on an attached instance
 
 			// construct TagInstance object
 			Property systemProperty = new Property(systemPropertyDefinition, new PropertyValueList("SYSPROP_VAL_1"));
@@ -393,29 +397,37 @@ public class JsonLdWebAnnotationTest {
 
 	@Test
 	public void serialize() throws Exception {
-		HashMap<String, Object> getJsonLdWebAnnotationResult = this.getJsonLdWebAnnotation();
-		JsonLdWebAnnotation jsonLdWebAnnotation = (JsonLdWebAnnotation)getJsonLdWebAnnotationResult.get(
-				"jsonLdWebAnnotation"
-		);
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-		String serialized = new SerializationHelper<JsonLdWebAnnotation>().serialize(jsonLdWebAnnotation);
+			HashMap<String, Object> getJsonLdWebAnnotationResult = JsonLdWebAnnotationTest.getJsonLdWebAnnotation(
+					jGitRepoManager, this.gitLabServerManager
+			);
+			this.projectsToDeleteOnTearDown.add((String)getJsonLdWebAnnotationResult.get("projectUuid"));
 
-		String expectedSerializedRepresentation = this.expectedSerializedRepresentation.replaceAll(
-				"[\n\t]", ""
-		);
-		expectedSerializedRepresentation = String.format(
-				expectedSerializedRepresentation,
-				getJsonLdWebAnnotationResult.get("projectRootRepositoryName"),
-				getJsonLdWebAnnotationResult.get("tagsetDefinitionUuid"),
-				getJsonLdWebAnnotationResult.get("tagDefinitionUuid"),
-				getJsonLdWebAnnotationResult.get("userPropertyDefinitionUuid"),
-				getJsonLdWebAnnotationResult.get("systemPropertyDefinitionUuid"),
-				getJsonLdWebAnnotationResult.get("userMarkupCollectionUuid"),
-				getJsonLdWebAnnotationResult.get("tagInstanceUuid"),
-				getJsonLdWebAnnotationResult.get("sourceDocumentUuid")
-		);
+			JsonLdWebAnnotation jsonLdWebAnnotation = (JsonLdWebAnnotation) getJsonLdWebAnnotationResult.get(
+					"jsonLdWebAnnotation"
+			);
 
-		assertEquals(expectedSerializedRepresentation, serialized);
+			String serialized = new SerializationHelper<JsonLdWebAnnotation>().serialize(jsonLdWebAnnotation);
+
+			String expectedSerializedRepresentation = this.expectedSerializedRepresentation.replaceAll(
+					"[\n\t]", ""
+			);
+			expectedSerializedRepresentation = String.format(
+					expectedSerializedRepresentation,
+					getJsonLdWebAnnotationResult.get("projectRootRepositoryName"),
+					getJsonLdWebAnnotationResult.get("tagsetDefinitionUuid"),
+					getJsonLdWebAnnotationResult.get("tagDefinitionUuid"),
+					getJsonLdWebAnnotationResult.get("userPropertyDefinitionUuid"),
+					getJsonLdWebAnnotationResult.get("systemPropertyDefinitionUuid"),
+					getJsonLdWebAnnotationResult.get("userMarkupCollectionUuid"),
+					getJsonLdWebAnnotationResult.get("tagInstanceUuid"),
+					getJsonLdWebAnnotationResult.get("sourceDocumentUuid")
+			);
+
+			assertEquals(expectedSerializedRepresentation, serialized);
+		}
 	}
 
 	@Test
@@ -451,10 +463,13 @@ public class JsonLdWebAnnotationTest {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			// TODO: test with a hierarchy of tag definitions
-			HashMap<String, Object> getJsonLdWebAnnotationResult = this.getJsonLdWebAnnotation();
+			HashMap<String, Object> getJsonLdWebAnnotationResult = JsonLdWebAnnotationTest.getJsonLdWebAnnotation(
+					jGitRepoManager, this.gitLabServerManager
+			);
 			JsonLdWebAnnotation jsonLdWebAnnotation = (JsonLdWebAnnotation)getJsonLdWebAnnotationResult.get(
 					"jsonLdWebAnnotation"
 			);
+			this.projectsToDeleteOnTearDown.add((String)getJsonLdWebAnnotationResult.get("projectUuid"));
 
 			assertNotNull(jsonLdWebAnnotation);List<TagReference> tagReferences = jsonLdWebAnnotation.toTagReferenceList(
 					(String)getJsonLdWebAnnotationResult.get("projectUuid"),
