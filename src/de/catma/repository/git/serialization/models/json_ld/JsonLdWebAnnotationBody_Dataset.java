@@ -76,11 +76,10 @@ public class JsonLdWebAnnotationBody_Dataset {
 	private URL buildTagsetUrl(String gitServerBaseUrl, String projectRootRepositoryName, String tagsetUuid)
 			throws MalformedURLException {
 		URL gitServerUrl = JsonLdWebAnnotation.sanitizeUrl(gitServerBaseUrl);
-		String tagsetRepositoryName = TagsetHandler.getTagsetRepositoryName(tagsetUuid);
 
 		return new URL(
 			gitServerUrl.getProtocol(), gitServerUrl.getHost(), gitServerUrl.getPort(),
-			String.format("%s%s/tagsets/%s", gitServerUrl.getPath(), projectRootRepositoryName, tagsetRepositoryName)
+			String.format("%s%s/tagsets/%s", gitServerUrl.getPath(), projectRootRepositoryName, tagsetUuid)
 		);
 	}
 

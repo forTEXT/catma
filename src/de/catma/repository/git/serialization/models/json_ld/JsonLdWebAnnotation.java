@@ -210,7 +210,7 @@ public class JsonLdWebAnnotation {
 			// TODO: open a TagDefinition directly?
 			TagsetDefinition tagsetDefinition = tagsetHandler.open(
 					projectId,
-					TagsetHandler.getTagsetUuidFromRepositoryName(this.getLastPathSegmentFromUrl(this.body.getTagset()))
+					this.getLastPathSegmentFromUrl(this.body.getTagset())
 			);
 			return tagsetDefinition.getTagDefinition(this.getLastPathSegmentFromUrl(this.body.getTag()));
 		}

@@ -40,13 +40,6 @@ public class TagsetHandler implements ITagsetHandler {
 		return String.format(TAGSET_REPOSITORY_NAME_FORMAT, tagsetId);
 	}
 
-	public static String getTagsetUuidFromRepositoryName(String tagsetRepositoryName) {
-		Pattern pattern = Pattern.compile(TAGSET_REPOSITORY_NAME_FORMAT.replace("%s", "(.*)"));
-		Matcher matcher = pattern.matcher(tagsetRepositoryName);
-		matcher.matches();
-		return matcher.group(1);
-	}
-
 	public TagsetHandler(ILocalGitRepositoryManager localGitRepositoryManager,
 						 IRemoteGitServerManager remoteGitServerManager) {
 		this.localGitRepositoryManager = localGitRepositoryManager;

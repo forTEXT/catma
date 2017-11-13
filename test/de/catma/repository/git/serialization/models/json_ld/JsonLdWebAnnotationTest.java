@@ -28,8 +28,8 @@ public class JsonLdWebAnnotationTest {
 			"{\n" +
 			"\t\"body\":{\n" +
 			"\t\t\"@context\":{\n" +
-			"\t\t\t\"UPROP_DEF\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF_tagset/CATMA_TAG_DEF/propertydefs.json/CATMA_UPROP_DEF\",\n" +
-			"\t\t\t\"catma_markupauthor\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF_tagset/CATMA_TAG_DEF/propertydefs.json/CATMA_SYSPROP_DEF\",\n" +
+			"\t\t\t\"UPROP_DEF\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF/CATMA_TAG_DEF/propertydefs.json/CATMA_UPROP_DEF\",\n" +
+			"\t\t\t\"catma_markupauthor\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF/CATMA_TAG_DEF/propertydefs.json/CATMA_SYSPROP_DEF\",\n" +
 			"\t\t\t\"tag\":\"http://catma.de/portal/tag\",\n" +
 			"\t\t\t\"tagset\":\"http://catma.de/portal/tagset\"\n" +
 			"\t\t},\n" +
@@ -41,8 +41,8 @@ public class JsonLdWebAnnotationTest {
 			"\t\t\t\t\"UPROP_DEF\":[\"UPROP_VAL_2\"]\n" +
 			"\t\t\t}\n" +
 			"\t\t},\n" +
-			"\t\t\"tag\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF_tagset/CATMA_TAG_DEF\",\n" +
-			"\t\t\"tagset\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF_tagset\",\n" +
+			"\t\t\"tag\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF/CATMA_TAG_DEF\",\n" +
+			"\t\t\"tagset\":\"http://catma.de/gitlab/fakeProjectId_corpus/tagsets/CATMA_TAGSET_DEF\",\n" +
 			"\t\t\"type\":\"Dataset\"\n" +
 			"\t},\n" +
 			"\t\"@context\":\"http://www.w3.org/ns/anno.jsonld\",\n" +
@@ -54,7 +54,7 @@ public class JsonLdWebAnnotationTest {
 			"\t\t\t\t\"start\":12,\n" +
 			"\t\t\t\t\"type\":\"TextPositionSelector\"\n" +
 			"\t\t\t},\n" +
-			"\t\t\t\"source\":\"http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC_sourcedocument\"\n" +
+			"\t\t\t\"source\":\"http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC\"\n" +
 			"\t\t},\n" +
 			"\t\t{\n" +
 			"\t\t\t\"selector\":{\n" +
@@ -62,7 +62,7 @@ public class JsonLdWebAnnotationTest {
 			"\t\t\t\t\"start\":41,\n" +
 			"\t\t\t\t\"type\":\"TextPositionSelector\"\n" +
 			"\t\t\t},\n" +
-			"\t\t\t\"source\":\"http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC_sourcedocument\"\n" +
+			"\t\t\t\"source\":\"http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC\"\n" +
 			"\t\t}],\n" +
 			"\t\t\"type\":\"List\"\n" +
 			"\t},\n" +
@@ -192,7 +192,7 @@ public class JsonLdWebAnnotationTest {
 	public void serialize() throws Exception {
 		TagInstance tagInstance = JsonLdWebAnnotationTest.getFakeTagInstance();
 
-		String sourceDocumentUri = "http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC_sourcedocument";
+		String sourceDocumentUri = "http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC";
 
 		Range range1 = new Range(12, 18);
 		Range range2 = new Range(41, 47);
@@ -250,7 +250,7 @@ public class JsonLdWebAnnotationTest {
 			jGitRepoManager.init(fakeProjectPath.getName(), null);
 			jGitRepoManager.detach();  // can't call open on an attached instance
 
-			File fakeTagsetSubmodulePath = new File(fakeProjectPath, "tagsets/CATMA_TAGSET_DEF_tagset");
+			File fakeTagsetSubmodulePath = new File(fakeProjectPath, "tagsets/CATMA_TAGSET_DEF");
 
 			File fakeTagsetHeaderFilePath = new File(fakeTagsetSubmodulePath, "header.json");
 			String fakeSerializedTagsetHeader = "" +
@@ -347,13 +347,13 @@ public class JsonLdWebAnnotationTest {
 			}
 
 			assertEquals(
-				new URI("http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC_sourcedocument"),
+				new URI("http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC"),
 				tagReferences.get(0).getTarget()
 			);
 			assertEquals(new Range(12, 18), tagReferences.get(0).getRange());
 
 			assertEquals(
-				new URI("http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC_sourcedocument"),
+				new URI("http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC"),
 				tagReferences.get(1).getTarget()
 			);
 			assertEquals(new Range(41, 47), tagReferences.get(1).getRange());
