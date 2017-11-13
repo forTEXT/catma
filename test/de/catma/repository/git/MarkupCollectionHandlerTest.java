@@ -335,32 +335,22 @@ public class MarkupCollectionHandlerTest {
 
 	@Test
 	public void open() throws Exception {
+		// TODO: don't hardcode anything in assertions (markup collection name...)
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			// create a project
-			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			HashMap<String, Object> getJsonLdWebAnnotationResult = JsonLdWebAnnotationTest.getJsonLdWebAnnotation(
+					jGitRepoManager, this.gitLabServerManager
+			);
+			JsonLdWebAnnotation jsonLdWebAnnotation = (JsonLdWebAnnotation)getJsonLdWebAnnotationResult.get(
+					"jsonLdWebAnnotation"
+			);
 
-			String projectId = projectHandler.create("Test CATMA Project", null);
+			String projectId = (String)getJsonLdWebAnnotationResult.get("projectUuid");
+			String markupCollectionId = (String)getJsonLdWebAnnotationResult.get("userMarkupCollectionUuid");
+			String tagsetId = (String)getJsonLdWebAnnotationResult.get("tagsetDefinitionUuid");
+
 			this.projectsToDeleteOnTearDown.add(projectId);
-
-			// create a markup collection
-			String markupCollectionId = projectHandler.createMarkupCollection(
-					projectId, null, "Test Markup Collection", null,
-					"fakeSourceDocumentId", "fakeSourceDocumentVersion"
-			);
-
-			// create a tagset
-			String tagsetId = projectHandler.createTagset(
-					projectId, "CATMA_TAGSET_DEF", "Test Tagset", null
-			);
-
-			// create a tag definition in the tagset
-			// TODO: use JsonLdWebAnnotationTest.getTagInstance once it's been implemented
-			TagInstance tagInstance = JsonLdWebAnnotationTest.getFakeTagInstance();
-
-			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
-			tagsetHandler.createTagDefinition(projectId, tagsetId, tagInstance.getTagDefinition());
 
 			// add the tagset to the markup collection
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
@@ -377,30 +367,6 @@ public class MarkupCollectionHandlerTest {
 			assertFalse(jGitRepoManager.isAttached());
 
 			// create the tag instance within the markup collection
-			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
-
-			String fakeSourceDocumentUri = String.format(
-					"http://catma.de/gitlab/%s/documents/fakeSourceDocumentId", projectRootRepositoryName
-			);
-
-			Range range1 = new Range(12, 18);
-			Range range2 = new Range(41, 47);
-
-			List<TagReference> tagReferences = new ArrayList<>(
-					Arrays.asList(
-							new TagReference(
-									tagInstance, fakeSourceDocumentUri, range1, markupCollectionId
-							),
-							new TagReference(
-									tagInstance, fakeSourceDocumentUri, range2, markupCollectionId
-							)
-					)
-			);
-
-			JsonLdWebAnnotation jsonLdWebAnnotation = new JsonLdWebAnnotation(
-					"http://catma.de/gitlab", projectId, tagReferences
-			);
-
 			markupCollectionHandler.createTagInstance(projectId, markupCollectionId, jsonLdWebAnnotation);
 
 			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler calls
@@ -417,8 +383,8 @@ public class MarkupCollectionHandlerTest {
 
 			assertNotNull(markupCollection);
 			assertEquals("Test Markup Collection", markupCollection.getContentInfoSet().getTitle());
-			assertEquals(tagReferences.size(), markupCollection.getTagReferences().size());
-			assertTrue(markupCollection.getTagReferences().get(0).getRange().equals(range1));
+			assertEquals(2, markupCollection.getTagReferences().size());
+			assertTrue(markupCollection.getTagReferences().get(0).getRange().equals(new Range(12, 18)));
 		}
 	}
 }
