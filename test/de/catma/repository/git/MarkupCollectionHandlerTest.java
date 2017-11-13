@@ -358,8 +358,8 @@ public class MarkupCollectionHandlerTest {
 					"{\n" +
 					"\t\"body\":{\n" +
 					"\t\t\"@context\":{\n" +
-					"\t\t\t\"UPROP_DEF\":\"http://localhost:8081/%1$s/tagsets/CATMA_TAGSET_DEF_tagset/CATMA_TAG_DEF/propertydefs.json/CATMA_UPROP_DEF\",\n" +
-					"\t\t\t\"catma_markupauthor\":\"http://localhost:8081/%1$s/tagsets/CATMA_TAGSET_DEF_tagset/CATMA_TAG_DEF/propertydefs.json/CATMA_SYSPROP_DEF\",\n" +
+					"\t\t\t\"UPROP_DEF\":\"http://localhost:8081/%1$s/tagsets/CATMA_TAGSET_DEF/CATMA_TAG_DEF/propertydefs.json/CATMA_UPROP_DEF\",\n" +
+					"\t\t\t\"catma_markupauthor\":\"http://localhost:8081/%1$s/tagsets/CATMA_TAGSET_DEF/CATMA_TAG_DEF/propertydefs.json/CATMA_SYSPROP_DEF\",\n" +
 					"\t\t\t\"tag\":\"http://catma.de/portal/tag\",\n" +
 					"\t\t\t\"tagset\":\"http://catma.de/portal/tagset\"\n" +
 					"\t\t},\n" +
@@ -371,8 +371,8 @@ public class MarkupCollectionHandlerTest {
 					"\t\t\t\t\"UPROP_DEF\":[\"UPROP_VAL_2\"]\n" +
 					"\t\t\t}\n" +
 					"\t\t},\n" +
-					"\t\t\"tag\":\"http://localhost:8081/%1$s/tagsets/CATMA_TAGSET_DEF_tagset/CATMA_TAG_DEF\",\n" +
-					"\t\t\"tagset\":\"http://localhost:8081/%1$s/tagsets/CATMA_TAGSET_DEF_tagset\",\n" +
+					"\t\t\"tag\":\"http://localhost:8081/%1$s/tagsets/CATMA_TAGSET_DEF/CATMA_TAG_DEF\",\n" +
+					"\t\t\"tagset\":\"http://localhost:8081/%1$s/tagsets/CATMA_TAGSET_DEF\",\n" +
 					"\t\t\"type\":\"Dataset\"\n" +
 					"\t},\n" +
 					"\t\"@context\":\"http://www.w3.org/ns/anno.jsonld\",\n" +
