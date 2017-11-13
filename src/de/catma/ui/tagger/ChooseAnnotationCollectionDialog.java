@@ -38,7 +38,7 @@ public class ChooseAnnotationCollectionDialog extends Window {
 
 	public ChooseAnnotationCollectionDialog( Repository repository,
 			String sourceDocumentId, AnnotationCollectionListener annotationCollectionListener) {
-		super(Messages.getString("ChooseAnnotationCollectionDialog.chooseOneOfTheOptions"));  //$NON-NLS-1$
+		super(Messages.getString("ChooseAnnotationCollectionDialog.whatIsYourOption"));  //$NON-NLS-1$
 		this.repository = repository;
 	
 		sourceDocument = repository.getSourceDocument(sourceDocumentId);
@@ -107,7 +107,7 @@ public class ChooseAnnotationCollectionDialog extends Window {
 		String userName = repository.getUser().getName();
 		String sourceDocumentName = sourceDocument.toString();
 		LocalDateTime timePoint = LocalDateTime.now();
-		String collectionName = sourceDocumentName + "_" + userName + Messages.getString("ChooseAnnotationCollectionDialog.chooseOneOfTheOptions1") + timePoint; //$NON-NLS-1$ //$NON-NLS-2$ 
+		String collectionName = sourceDocumentName + "_" + userName +"_"+ timePoint; //$NON-NLS-1$ //$NON-NLS-2$ 
 		return collectionName;
 	}
 
@@ -127,12 +127,13 @@ public class ChooseAnnotationCollectionDialog extends Window {
 		content.setSpacing(true);
 
 		setContent(content);
-		btOpenOrCreateCollection = new Button(Messages.getString("ChooseAnnotationCollectionDialog.openOrCreateCollection")); //$NON-NLS-1$
-		btContinueWithout = new Button(Messages.getString("ChooseAnnotationCollectionDialog.continueWithout")); //$NON-NLS-1$
+		btOpenOrCreateCollection = new Button(Messages.getString("ChooseAnnotationCollectionDialog.letMeChooseAAnnotationCollection")); //$NON-NLS-1$
+		btContinueWithout = new Button(Messages.getString("ChooseAnnotationCollectionDialog.createOneForMe")); //$NON-NLS-1$
 		btContinueWithout.setWidth("90%"); //$NON-NLS-1$
 		btOpenOrCreateCollection.setWidth("90%"); //$NON-NLS-1$
-		content.addComponent(btOpenOrCreateCollection);
+		
 		content.addComponent(btContinueWithout);
+		content.addComponent(btOpenOrCreateCollection);
 
 		// content.setComponentAlignment(btOk, Alignment.MIDDLE_CENTER);
 		btOpenOrCreateCollection.setClickShortcut(KeyCode.ENTER);

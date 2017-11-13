@@ -40,7 +40,7 @@ public class CreateTagsetOptionsSelectionDialog extends Window {
 
 	public CreateTagsetOptionsSelectionDialog(TagsetSelectionListener tagsetSelectionListener, Repository repository,
 			CurrentWritableUserMarkupCollectionProvider collectionProvider) {
-		super(Messages.getString("CreateTagsetOptionsSelectionDialog.chooseOnOfTheOptions")); //$NON-NLS-1$
+		super(Messages.getString("CreateTagsetOptionsSelectionDialog.whatIsYourChoice")); //$NON-NLS-1$
 		initComponents();
 		initActions(repository, tagsetSelectionListener, collectionProvider);
 	}
@@ -217,18 +217,18 @@ public class CreateTagsetOptionsSelectionDialog extends Window {
 		content.setSpacing(true);
 
 		setContent(content);
-
-		btOpenTagset = new Button(Messages.getString("CreateTagsetOptionsSelectionDialog.openTagsets"));  //$NON-NLS-1$
-		btOpenTagset.setWidth("90%"); //$NON-NLS-1$
-
-		btAutoCreateTagset = new Button(Messages.getString("CreateTagsetOptionsSelectionDialog.continueWithout"));  //$NON-NLS-1$
+		
+		btAutoCreateTagset = new Button(Messages.getString("CreateTagsetOptionsSelectionDialog.createATagsetForMe"));  //$NON-NLS-1$
 		btAutoCreateTagset.setWidth("90%"); //$NON-NLS-1$
+
+		btOpenTagset = new Button(Messages.getString("CreateTagsetOptionsSelectionDialog.letMeChooseATagset"));  //$NON-NLS-1$
+		btOpenTagset.setWidth("90%"); //$NON-NLS-1$
 
 		btOpenTagsetFromActiveAnnotationCollection = new Button(Messages.getString("CreateTagsetOptionsSelectionDialog.openTagsetFromTheActiveAnnotationCollection"));  //$NON-NLS-1$
 		btOpenTagsetFromActiveAnnotationCollection.setWidth("90%"); //$NON-NLS-1$
-
-		content.addComponent(btOpenTagset);
+		
 		content.addComponent(btAutoCreateTagset);
+		content.addComponent(btOpenTagset);
 		content.addComponent(btOpenTagsetFromActiveAnnotationCollection);
 
 		btOpenTagset.setClickShortcut(KeyCode.ENTER);
