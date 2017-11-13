@@ -276,21 +276,32 @@ public class MarkupCollectionHandlerTest {
 			HashMap<String, Object> getJsonLdWebAnnotationResult = JsonLdWebAnnotationTest.getJsonLdWebAnnotation(
 					jGitRepoManager, this.gitLabServerManager
 			);
-
-			String projectId = (String)getJsonLdWebAnnotationResult.get("projectUuid");
-			String markupCollectionId = (String)getJsonLdWebAnnotationResult.get("userMarkupCollectionUuid");
-			String tagInstanceId = (String)getJsonLdWebAnnotationResult.get("tagInstanceUuid");
-
-			this.projectsToDeleteOnTearDown.add(projectId);
-
 			JsonLdWebAnnotation jsonLdWebAnnotation = (JsonLdWebAnnotation) getJsonLdWebAnnotationResult.get(
 					"jsonLdWebAnnotation"
 			);
 
+			String projectId = (String)getJsonLdWebAnnotationResult.get("projectUuid");
+			String markupCollectionId = (String)getJsonLdWebAnnotationResult.get("userMarkupCollectionUuid");
+			String tagsetId = (String)getJsonLdWebAnnotationResult.get("tagsetDefinitionUuid");
+			String tagInstanceId = (String)getJsonLdWebAnnotationResult.get("tagInstanceUuid");
+
+			this.projectsToDeleteOnTearDown.add(projectId);
+
+			// add the tagset to the markup collection
 			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
 					jGitRepoManager, this.gitLabServerManager
 			);
 
+			// TODO: use the real tagset hash - currently the handler does not validate it at all
+			markupCollectionHandler.addTagset(
+					projectId, markupCollectionId, tagsetId, "fakeTagsetVersion"
+			);
+
+			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler calls
+			// return
+			assertFalse(jGitRepoManager.isAttached());
+
+			// create the tag instance
 			markupCollectionHandler.createTagInstance(
 					projectId,
 					markupCollectionId,
