@@ -345,7 +345,6 @@ public class JsonLdWebAnnotationTest {
 					"Test Committer",
 					"testcommitter@catma.de"
 			);
-//			localJGitRepoManager.detach();  // can't call open on an attached instance
 
 			// construct TagInstance object
 			Property systemProperty = new Property(systemPropertyDefinition, new PropertyValueList("SYSPROP_VAL_1"));
