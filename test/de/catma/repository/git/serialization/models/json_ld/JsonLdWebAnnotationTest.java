@@ -41,7 +41,7 @@ public class JsonLdWebAnnotationTest {
 	// userMarkupCollectionUuid
 	// tagInstanceUuid
 	// sourceDocumentUuid
-	private final String expectedSerializedRepresentation = "" +
+	public static final String EXPECTED_SERIALIZED_ANNOTATION = "" +
 			"{\n" +
 			"\t\"body\":{\n" +
 			"\t\t\"@context\":{\n" +
@@ -180,7 +180,7 @@ public class JsonLdWebAnnotationTest {
 	 * @return a HashMap<String, Object> with these keys:
 	 *         'jsonLdWebAnnotation' - for the JsonLdWebAnnotation object
 	 *         'projectUuid'
-	 *         - following additional keys which are to be used when formatting this.expectedSerializedRepresentation -:
+	 *         --- following additional keys which are to be used when formatting EXPECTED_SERIALIZED_ANNOTATION ---:
 	 *         projectRootRepositoryName, tagsetDefinitionUuid, tagDefinitionUuid, userPropertyDefinitionUuid,
 	 *         systemPropertyDefinitionUuid, userMarkupCollectionUuid, tagInstanceUuid, sourceDocumentUuid
 	 */
@@ -410,9 +410,8 @@ public class JsonLdWebAnnotationTest {
 
 			String serialized = new SerializationHelper<JsonLdWebAnnotation>().serialize(jsonLdWebAnnotation);
 
-			String expectedSerializedRepresentation = this.expectedSerializedRepresentation.replaceAll(
-					"[\n\t]", ""
-			);
+			String expectedSerializedRepresentation = JsonLdWebAnnotationTest.EXPECTED_SERIALIZED_ANNOTATION
+					.replaceAll("[\n\t]", "");
 			expectedSerializedRepresentation = String.format(
 					expectedSerializedRepresentation,
 					getJsonLdWebAnnotationResult.get("projectRootRepositoryName"),
@@ -431,7 +430,8 @@ public class JsonLdWebAnnotationTest {
 
 	@Test
 	public void deserialize() throws Exception {
-		String toDeserialize = this.expectedSerializedRepresentation.replaceAll("[\n\t]", "");
+		String toDeserialize = JsonLdWebAnnotationTest.EXPECTED_SERIALIZED_ANNOTATION
+				.replaceAll("[\n\t]", "");
 		toDeserialize = String.format(
 				toDeserialize,
 				"fakeProjectRootRepositoryName",
