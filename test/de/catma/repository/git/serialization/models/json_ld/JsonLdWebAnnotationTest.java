@@ -142,40 +142,6 @@ public class JsonLdWebAnnotationTest {
 		);
 	}
 
-	// TODO: remove this (use getJsonLdWebAnnotation instead)
-	public static TagInstance getFakeTagInstance() {
-		PropertyPossibleValueList systemPropertyPossibleValues = new PropertyPossibleValueList(
-			Arrays.asList("SYSPROP_VAL_1", "SYSPROP_VAL_2"), true
-		);
-		PropertyDefinition systemPropertyDefinition = new PropertyDefinition(
-			1, "CATMA_SYSPROP_DEF", PropertyDefinition.SystemPropertyName.catma_markupauthor.toString(),
-			systemPropertyPossibleValues
-		);
-
-		PropertyPossibleValueList userPropertyPossibleValues = new PropertyPossibleValueList(
-			Arrays.asList("UPROP_VAL_1", "UPROP_VAL_2"), true
-		);
-		PropertyDefinition userPropertyDefinition = new PropertyDefinition(
-			2, "CATMA_UPROP_DEF", "UPROP_DEF", userPropertyPossibleValues
-		);
-
-		TagDefinition tagDefinition = new TagDefinition(
-			1, "CATMA_TAG_DEF", "TAG_DEF", new Version(), null, null,
-			"CATMA_TAGSET_DEF"
-		);
-		tagDefinition.addSystemPropertyDefinition(systemPropertyDefinition);
-		tagDefinition.addUserDefinedPropertyDefinition(userPropertyDefinition);
-
-		Property systemProperty = new Property(systemPropertyDefinition, new PropertyValueList("SYSPROP_VAL_1"));
-		Property userProperty = new Property(userPropertyDefinition, new PropertyValueList("UPROP_VAL_2"));
-
-		TagInstance tagInstance = new TagInstance("CATMA_TAG_INST", tagDefinition);
-		tagInstance.addSystemProperty(systemProperty);
-		tagInstance.addUserDefinedProperty(userProperty);
-
-		return tagInstance;
-	}
-
 	/**
 	 * @return a HashMap<String, Object> with these keys:
 	 *         'jsonLdWebAnnotation' - for the JsonLdWebAnnotation object
