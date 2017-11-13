@@ -336,6 +336,7 @@ public class TagsetHandlerTest {
 
 	@Test
 	public void open() throws Exception {
+		// TODO: don't hardcode anything in assertions (tagset name, tag definition UUID...)
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
