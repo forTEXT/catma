@@ -243,7 +243,9 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 
 	private boolean isTagInstanceFilename(String fileName){
 		// TODO: split filename parts and check if it is a CATMA uuid
-		return !fileName.equalsIgnoreCase("header.json");
+		return !(
+				fileName.equalsIgnoreCase("header.json") || fileName.equalsIgnoreCase(".git")
+		);
 	}
 
 	private ArrayList<TagReference> openTagReferences(String projectId, String markupCollectionId, File parentDirectory)
@@ -288,58 +290,53 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 	public UserMarkupCollection open(@Nonnull String projectId, @Nonnull String markupCollectionId)
 			throws MarkupCollectionHandlerException {
 
-		File projectRootRepositoryWorkTree;
-
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectRootRepositoryName);
-			projectRootRepositoryWorkTree = localGitRepoManager.getRepositoryWorkTree();
-		}
-		catch (LocalGitRepositoryManagerException e) {
-			throw new MarkupCollectionHandlerException("Failed to open markup collection", e);
-		}
 
-		String markupCollectionRepositoryName = MarkupCollectionHandler.getMarkupCollectionRepositoryName(
-			markupCollectionId
-		);
-		File markupCollectionSubmodulePath = new File(
-			projectRootRepositoryWorkTree, String.format("collections/%s/", markupCollectionRepositoryName)
-		);
+			String markupCollectionSubmoduleName = String.format(
+					"%s/%s", ProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, markupCollectionId
+			);
 
-		ArrayList<TagReference> tagReferences = this.openTagReferences(
-			projectId, markupCollectionId, markupCollectionSubmodulePath
-		);
+			File markupCollectionSubmodulePath = new File(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					markupCollectionSubmoduleName
+			);
 
-		File markupCollectionHeaderFile = new File(
-			projectRootRepositoryWorkTree,
-			String.format("collections/%s/header.json", markupCollectionRepositoryName)
-		);
+			localGitRepoManager.detach();  // can't call open on an attached instance TODO: move outside t-w-r?
 
-		String serializedMarkupCollectionHeaderFile;
-		try {
-			serializedMarkupCollectionHeaderFile = FileUtils.readFileToString(
-				markupCollectionHeaderFile, StandardCharsets.UTF_8
+			ArrayList<TagReference> tagReferences = this.openTagReferences(
+					projectId, markupCollectionId, markupCollectionSubmodulePath
+			);
+
+			File markupCollectionHeaderFile = new File(
+					markupCollectionSubmodulePath,
+					"header.json"
+			);
+
+			String serializedMarkupCollectionHeaderFile = FileUtils.readFileToString(
+					markupCollectionHeaderFile, StandardCharsets.UTF_8
+			);
+
+			MarkupCollectionHeader markupCollectionHeader = new SerializationHelper<MarkupCollectionHeader>()
+					.deserialize(serializedMarkupCollectionHeaderFile, MarkupCollectionHeader.class);
+
+			ContentInfoSet contentInfoSet = new ContentInfoSet(
+					markupCollectionHeader.getAuthor(),
+					markupCollectionHeader.getDescription(),
+					markupCollectionHeader.getPublisher(),
+					markupCollectionHeader.getName()
+			);
+
+			// we are hoping to get rid of tag libraries altogether
+			TagLibrary tagLibrary = new TagLibrary(null, "");
+
+			return new UserMarkupCollection(
+					null, markupCollectionId, contentInfoSet, tagLibrary, tagReferences, AccessMode.WRITE
 			);
 		}
-		catch (IOException e) {
+		catch (LocalGitRepositoryManagerException|IOException e) {
 			throw new MarkupCollectionHandlerException("Failed to open markup collection", e);
 		}
-
-		MarkupCollectionHeader markupCollectionHeader = new SerializationHelper<MarkupCollectionHeader>()
-				.deserialize(serializedMarkupCollectionHeaderFile, MarkupCollectionHeader.class);
-
-		ContentInfoSet contentInfoSet = new ContentInfoSet(
-			markupCollectionHeader.getAuthor(),
-			markupCollectionHeader.getDescription(),
-			markupCollectionHeader.getPublisher(),
-			markupCollectionHeader.getName()
-		);
-
-		// we are hoping to get rid of tag libraries altogether
-		TagLibrary tagLibrary = new TagLibrary(null, "");
-
-		return new UserMarkupCollection(
-			null, markupCollectionId, contentInfoSet, tagLibrary, tagReferences, AccessMode.WRITE
-		);
 	}
 }

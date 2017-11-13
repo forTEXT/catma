@@ -416,114 +416,77 @@ public class MarkupCollectionHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
+			// create a project
+			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+
+			String projectId = projectHandler.create("Test CATMA Project", null);
+			this.projectsToDeleteOnTearDown.add(projectId);
+
+			// create a markup collection
+			String markupCollectionId = projectHandler.createMarkupCollection(
+					projectId, null, "Test Markup Collection", null,
+					"fakeSourceDocumentId", "fakeSourceDocumentVersion"
+			);
+
+			// create a tagset
+			String tagsetId = projectHandler.createTagset(
+					projectId, "CATMA_TAGSET_DEF", "Test Tagset", null
+			);
+
+			// create a tag definition in the tagset
 			// TODO: use JsonLdWebAnnotationTest.getTagInstance once it's been implemented
-			// for now, we need to create a fake project repo with fake submodules to make this test pass
-			File fakeProjectPath = new File(jGitRepoManager.getRepositoryBasePath(), "fakeProjectId_corpus");
-			// need to init the fake project repo, otherwise JGitRepoManager will fail to open it later
-			jGitRepoManager.init(fakeProjectPath.getName(), null);
-			jGitRepoManager.detach();  // can't call open on an attached instance
-
-			File fakeTagsetSubmodulePath = new File(fakeProjectPath, "tagsets/CATMA_TAGSET_DEF_tagset");
-
-			File fakeTagsetHeaderFilePath = new File(fakeTagsetSubmodulePath, "header.json");
-			String fakeSerializedTagsetHeader = "" +
-					"{\n" +
-					"\t\"description\":\"\",\n" +
-					"\t\"name\":\"TAGSET_DEF\",\n" +
-					"\t\"version\":\"2017-10-31T14:40:00+0200\"\n" +
-					"}";
-			FileUtils.writeStringToFile(fakeTagsetHeaderFilePath, fakeSerializedTagsetHeader, StandardCharsets.UTF_8);
-
-			File fakeTagDefinitionPath = new File(fakeTagsetSubmodulePath, "CATMA_TAG_DEF");
-
-			File fakeTagDefinitionPropertyDefsFilePath = new File(fakeTagDefinitionPath, "propertydefs.json");
-			String fakeSerializedTagDefinition = "" +
-					"{\n" +
-					"\t\"name\":\"TAG_DEF\",\n" +
-					"\t\"parentUuid\":\"\",\n" +
-					"\t\"systemPropertyDefinitions\":{\n" +
-					"\t\t\"CATMA_SYSPROP_DEF\":{\n" +
-					"\t\t\t\"name\":\"catma_markupauthor\",\n" +
-					"\t\t\t\"possibleValueList\":[\"SYSPROP_VAL_1\",\"SYSPROP_VAL_2\"],\n" +
-					"\t\t\t\"uuid\":\"CATMA_SYSPROP_DEF\"\n" +
-					"\t\t}\n" +
-					"\t},\n" +
-					"\t\"tagsetDefinitionUuid\":\"CATMA_TAGSET_DEF\",\n" +
-					"\t\"userDefinedPropertyDefinitions\":{\n" +
-					"\t\t\"CATMA_UPROP_DEF\":{\n" +
-					"\t\t\t\"name\":\"UPROP_DEF\",\n" +
-					"\t\t\t\"possibleValueList\":[\"UPROP_VAL_1\",\"UPROP_VAL_2\"],\n" +
-					"\t\t\t\"uuid\":\"CATMA_UPROP_DEF\"\n" +
-					"\t\t}\n" +
-					"\t},\n" +
-					"\t\"uuid\":\"CATMA_TAG_DEF\"\n" +
-					"}";
-			FileUtils.writeStringToFile(
-				fakeTagDefinitionPropertyDefsFilePath, fakeSerializedTagDefinition, StandardCharsets.UTF_8
-			);
-
-			File fakeMarkupCollectionSubmodulePath = new File(
-				fakeProjectPath, "collections/fakeUserMarkupCollectionUuid_markupcollection"
-			);
-
-			File fakeMarkupCollectionHeaderFilePath = new File(fakeMarkupCollectionSubmodulePath, "header.json");
-			String fakeSerializedMarkupCollectionHeader = "" +
-					"{\n" +
-					"\t\"author\":null,\n" +
-					"\t\"description\":null,\n" +
-					"\t\"name\":\"Test Markup Collection\",\n" +
-					"\t\"publisher\":null,\n" +
-					"\t\"sourceDocumentId\":\"fakeSourceDocumentId\",\n" +
-					"\t\"sourceDocumentVersion\":\"fakeSourceDocumentVersion\",\n" +
-					"\t\"tagsets\":{\n" +
-					"\t\t\"CATMA_TAGSET_DEF\":\"fakeTagsetVersion\"\n" +
-					"\t}\n" +
-					"}";
-			FileUtils.writeStringToFile(
-				fakeMarkupCollectionHeaderFilePath, fakeSerializedMarkupCollectionHeader, StandardCharsets.UTF_8
-			);
-
 			TagInstance tagInstance = JsonLdWebAnnotationTest.getFakeTagInstance();
 
-			String sourceDocumentUri = "http://catma.de/gitlab/fakeProjectId_corpus/documents/CATMA_SOURCEDOC_sourcedocument";
+			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
+			tagsetHandler.createTagDefinition(projectId, tagsetId, tagInstance.getTagDefinition());
+
+			// add the tagset to the markup collection
+			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
+					jGitRepoManager, this.gitLabServerManager
+			);
+
+			// TODO: use the real tagset hash - currently the handler does not validate it at all
+			markupCollectionHandler.addTagset(
+					projectId, markupCollectionId, tagsetId, "fakeTagsetVersion"
+			);
+
+			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler calls
+			// return
+			assertFalse(jGitRepoManager.isAttached());
+
+			// create the tag instance within the markup collection
+			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+
+			String fakeSourceDocumentUri = String.format(
+					"http://catma.de/gitlab/%s/documents/fakeSourceDocumentId", projectRootRepositoryName
+			);
 
 			Range range1 = new Range(12, 18);
 			Range range2 = new Range(41, 47);
 
 			List<TagReference> tagReferences = new ArrayList<>(
-				Arrays.asList(
-					new TagReference(
-						tagInstance, sourceDocumentUri, range1, "fakeUserMarkupCollectionUuid"
-					),
-					new TagReference(
-						tagInstance, sourceDocumentUri, range2, "fakeUserMarkupCollectionUuid"
+					Arrays.asList(
+							new TagReference(
+									tagInstance, fakeSourceDocumentUri, range1, markupCollectionId
+							),
+							new TagReference(
+									tagInstance, fakeSourceDocumentUri, range2, markupCollectionId
+							)
 					)
-				)
 			);
 
 			JsonLdWebAnnotation jsonLdWebAnnotation = new JsonLdWebAnnotation(
-				"http://catma.de/gitlab", "fakeProjectId", tagReferences
+					"http://catma.de/gitlab", projectId, tagReferences
 			);
 
-			File fakeTagInstanceFilePath = new File(
-				fakeMarkupCollectionSubmodulePath, "annotations/CATMA_TAG_INST.json"
-			);
-			String fakeSerializedTagInstance = new SerializationHelper<JsonLdWebAnnotation>().serialize(
-				jsonLdWebAnnotation
-			);
-			FileUtils.writeStringToFile(
-				fakeTagInstanceFilePath, fakeSerializedTagInstance, StandardCharsets.UTF_8
-			);
+			markupCollectionHandler.createTagInstance(projectId, markupCollectionId, jsonLdWebAnnotation);
 
-			// TODO: once it's possible again, use the MarkupCollectionHandler to add the tag instance
-//			markupCollectionHandler.addTagInstance(markupCollectionId, jsonLdWebAnnotation);
-
-			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
-				jGitRepoManager, this.gitLabServerManager
-			);
+			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler calls
+			// return
+			assertFalse(jGitRepoManager.isAttached());
 
 			UserMarkupCollection markupCollection = markupCollectionHandler.open(
-				"fakeProjectId", "fakeUserMarkupCollectionUuid"
+					projectId, markupCollectionId
 			);
 
 			// the JGitRepoManager instance should always be in a detached state after MarkupCollectionHandler
