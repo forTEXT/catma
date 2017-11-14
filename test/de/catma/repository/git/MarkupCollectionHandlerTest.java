@@ -396,6 +396,7 @@ public class MarkupCollectionHandlerTest {
 			assertEquals("Test Markup Collection", markupCollection.getContentInfoSet().getTitle());
 			assertEquals(2, markupCollection.getTagReferences().size());
 			assertTrue(markupCollection.getTagReferences().get(0).getRange().equals(new Range(12, 18)));
+			assertNotNull(markupCollection.getRevisionHash());
 		}
 	}
 }

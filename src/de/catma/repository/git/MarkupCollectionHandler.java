@@ -303,7 +303,11 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 					markupCollectionSubmoduleName
 			);
 
-			localGitRepoManager.detach();  // can't call open on an attached instance TODO: move outside t-w-r?
+			String markupCollectionRevisionHash = localGitRepoManager.getSubmoduleHeadRevisionHash(
+					markupCollectionSubmoduleName
+			);
+
+			localGitRepoManager.detach();  // can't call open on an attached instance
 
 			ArrayList<TagReference> tagReferences = this.openTagReferences(
 					projectId, markupCollectionId, markupCollectionSubmodulePath
@@ -329,11 +333,14 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 			);
 
 			// we are hoping to get rid of tag libraries altogether
-			TagLibrary tagLibrary = new TagLibrary(null, "");
+			TagLibrary tagLibrary = new TagLibrary(null, null);
 
-			return new UserMarkupCollection(
+			UserMarkupCollection userMarkupCollection = new UserMarkupCollection(
 					null, markupCollectionId, contentInfoSet, tagLibrary, tagReferences, AccessMode.WRITE
 			);
+			userMarkupCollection.setRevisionHash(markupCollectionRevisionHash);
+
+			return userMarkupCollection;
 		}
 		catch (LocalGitRepositoryManagerException|IOException e) {
 			throw new MarkupCollectionHandlerException("Failed to open markup collection", e);
