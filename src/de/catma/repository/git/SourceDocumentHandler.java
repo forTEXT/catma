@@ -148,30 +148,46 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 			throws SourceDocumentHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 
-			localGitRepoManager.open(SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId));
+			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+			localGitRepoManager.open(projectRootRepositoryName);
 
-			File repositoryWorkTreeFile = localGitRepoManager.getRepositoryWorkTree();
-			File targetHeaderFile = new File(
-					repositoryWorkTreeFile, "header.json"
+			String sourceDocumentSubmoduleName = String.format(
+					"%s/%s", ProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME, sourceDocumentId
 			);
 
-			String serialized = FileUtils.readFileToString(targetHeaderFile, StandardCharsets.UTF_8);
+			File sourceDocumentSubmodulePath = new File(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					sourceDocumentSubmoduleName
+			);
+
+			File headerFile = new File(
+					sourceDocumentSubmodulePath, "header.json"
+			);
+
+			String serializedHeaderFile = FileUtils.readFileToString(headerFile, StandardCharsets.UTF_8);
 			GitSourceDocumentInfo gitSourceDocumentInfo = new SerializationHelper<GitSourceDocumentInfo>()
 					.deserialize(
-							serialized,
+							serializedHeaderFile,
 							GitSourceDocumentInfo.class
 					);
 
-			// Need to use SourceDocumentHandler to decide on the correct SourceContentHandler based on filetype
-			de.catma.document.source.SourceDocumentHandler handler = new de.catma.document.source.SourceDocumentHandler();
+			// need to use the catma-core SourceDocumentHandler to decide on the correct SourceContentHandler based on
+			// filetype
+			de.catma.document.source.SourceDocumentHandler handler =
+					new de.catma.document.source.SourceDocumentHandler();
 
 			SourceDocumentInfo sourceDocumentInfo = gitSourceDocumentInfo.getSourceDocumentInfo();
 			SourceDocument sourceDocument = handler.loadSourceDocument(sourceDocumentId, sourceDocumentInfo);
 
+			String sourceDocumentRevisionHash = localGitRepoManager.getSubmoduleHeadRevisionHash(
+					sourceDocumentSubmoduleName
+			);
+			sourceDocument.setRevisionHash(sourceDocumentRevisionHash);
+
 			return sourceDocument;
 		}
-		catch (LocalGitRepositoryManagerException | IOException | IllegalAccessException | InstantiationException e) {
-			throw new SourceDocumentHandlerException("Failed to open the SourceDocument repo", e);
+		catch (LocalGitRepositoryManagerException|IOException|IllegalAccessException|InstantiationException e) {
+			throw new SourceDocumentHandlerException("Failed to open source document", e);
 		}
 	}
 }

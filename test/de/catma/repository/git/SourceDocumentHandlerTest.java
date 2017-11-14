@@ -6,6 +6,7 @@ import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
 import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
+import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
 import helpers.Randomizer;
 import org.apache.commons.io.FileUtils;
 import org.gitlab4j.api.models.Project;
@@ -233,72 +234,36 @@ public class SourceDocumentHandlerTest {
 
 	@Test
 	public void open() throws Exception {
-		File originalSourceDocument = new File("testdocs/rose_for_emily.pdf");
-		File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
-
-		FileInputStream originalSourceDocumentStream = new FileInputStream(originalSourceDocument);
-		FileInputStream convertedSourceDocumentStream = new FileInputStream(convertedSourceDocument);
-
-		IndexInfoSet indexInfoSet = new IndexInfoSet();
-		indexInfoSet.setLocale(Locale.ENGLISH);
-
-		ContentInfoSet contentInfoSet = new ContentInfoSet(
-			"William Faulkner",
-			"",
-			"",
-			"A Rose for Emily"
-		);
-
-		TechInfoSet techInfoSet = new TechInfoSet(
-			FileType.TEXT,
-			StandardCharsets.UTF_8,
-			FileOSType.DOS,
-			705211438L,
-			null
-		);
-
-		SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(indexInfoSet, contentInfoSet, techInfoSet);
-		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
-
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
-
-			String projectId = projectHandler.create(
-					"Test CATMA Project", "This is a test CATMA project"
+			HashMap<String, Object> getJsonLdWebAnnotationResult = JsonLdWebAnnotationTest.getJsonLdWebAnnotation(
+					jGitRepoManager, this.gitLabServerManager
 			);
+
+			String projectId = (String)getJsonLdWebAnnotationResult.get("projectUuid");
+			String sourceDocumentId = (String)getJsonLdWebAnnotationResult.get("sourceDocumentUuid");
+
 			this.projectsToDeleteOnTearDown.add(projectId);
 
 			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
-				jGitRepoManager, this.gitLabServerManager
+					jGitRepoManager, this.gitLabServerManager
 			);
-
-			String sourceDocumentId = sourceDocumentHandler.create(
-					projectId, null,
-					originalSourceDocumentStream, originalSourceDocument.getName(),
-					convertedSourceDocumentStream, convertedSourceDocument.getName(),
-					gitSourceDocumentInfo
-			);
-			// we don't add the sourceDocumentId to this.sourceDocumentReposToDeleteOnTearDown as deletion of the
-			// project will take care of that for us
-
-			File expectedRepoPath = new File(
-				jGitRepoManager.getRepositoryBasePath(),
-				SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId)
-			);
-			assert expectedRepoPath.exists() : String.format("We expect %s to exist", expectedRepoPath.getAbsolutePath());
-			assert expectedRepoPath.isDirectory();
-
-			assertNotNull(sourceDocumentId);
 
 			SourceDocument loadedSourceDocument = sourceDocumentHandler.open(projectId, sourceDocumentId);
 
 			assertNotNull(loadedSourceDocument);
 			assertEquals(
-				sourceDocumentInfo.getTechInfoSet().getURI(),
-				loadedSourceDocument.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getURI()
+					"William Faulkner",
+					loadedSourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet()
+							.getAuthor()
 			);
+			assertEquals(
+					"A Rose for Emily",
+					loadedSourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet()
+							.getTitle()
+			);
+			assertNotNull(loadedSourceDocument.getRevisionHash());
 		}
 	}
 }
