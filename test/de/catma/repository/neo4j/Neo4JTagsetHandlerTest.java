@@ -115,6 +115,7 @@ public class Neo4JTagsetHandlerTest {
 			TagsetDefinition tagsetDefinition = new TagsetDefinition();
 			tagsetDefinition.setUuid(uuid);
 			tagsetDefinition.setName("ALovelyName");
+			tagsetDefinition.setRevisionHash("ABC123XYZ");
 
 			TagDefinition tagDefinition1 = new TagDefinition();
 			tagDefinition1.setUuid("CATMA_TagDefinition1");
@@ -153,7 +154,11 @@ public class Neo4JTagsetHandlerTest {
 			tagsetDefinition.addTagDefinition(tagDefinition2);
 			tagsetDefinition.addTagDefinition(tagDefinition3);
 
-			Neo4JTagsetDefinition neo4JTagsetDefinition = new Neo4JTagsetDefinition(tagsetDefinition);
+			Neo4JTagsetDefinition neo4JTagsetDefinition = new Neo4JTagsetDefinition(
+					tagsetDefinition.getUuid(), tagsetDefinition.getName()
+			);
+
+			neo4JTagsetDefinition.addTagsetWorktree(tagsetDefinition);
 
 			org.neo4j.ogm.session.Session session = neo4JOGMSessionFactory.getSession();
 
@@ -162,8 +167,10 @@ public class Neo4JTagsetHandlerTest {
 
 			session = neo4JOGMSessionFactory.getSession();
 
-			Neo4JTagsetDefinition loaded = session.load(Neo4JTagsetDefinition.class, tagsetDefinition.getUuid(), 2);
-			TagsetDefinition loadedTagsetDefinition = loaded.getTagsetDefinition();
+			Neo4JTagsetDefinition loaded = session.load(
+					Neo4JTagsetDefinition.class, tagsetDefinition.getUuid(), 3
+			);
+			TagsetDefinition loadedTagsetDefinition = loaded.getTagsetWorktree(tagsetDefinition.getRevisionHash());
 
 			assertEquals(uuid, loadedTagsetDefinition.getUuid());
 			assertEquals("ALovelyName", loadedTagsetDefinition.getName());
