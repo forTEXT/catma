@@ -132,7 +132,7 @@ public class JsonLdWebAnnotation {
 
 		// TODO: figure out how to do this with .stream().map while handling exceptions properly
 		// see https://stackoverflow.com/a/33218789 & https://stackoverflow.com/a/30118121 for pointers
-		ArrayList<TagReference> tagReferences = new ArrayList<>();
+		List<TagReference> tagReferences = new ArrayList<>();
 		try {
 			for (Range range : ranges) {
 				tagReferences.add(new TagReference(tagInstance, sourceDocumentUri, range, markupCollectionId));
