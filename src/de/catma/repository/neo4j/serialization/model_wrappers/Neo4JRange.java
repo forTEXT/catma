@@ -12,8 +12,8 @@ public class Neo4JRange {
 	@GeneratedValue
 	private Long id;
 
-	private int startPoint;
-	private int endPoint;
+	protected int startPoint;
+	protected int endPoint;
 
 	public Neo4JRange() {
 
