@@ -96,9 +96,6 @@
 		<!-- https://mvnrepository.com/artifact/org.jmockit/jmockit -->
 		<dependency org="org.jmockit" name="jmockit" rev="1.35"/>
 
-		<!-- https://mvnrepository.com/artifact/org.neo4j.driver/neo4j-java-driver -->
-		<dependency org="org.neo4j.driver" name="neo4j-java-driver" rev="1.4.4"/>
-
 		<!-- https://mvnrepository.com/artifact/org.neo4j/neo4j-ogm-core -->
 		<dependency org="org.neo4j" name="neo4j-ogm-core" rev="3.0.0"/>
 
