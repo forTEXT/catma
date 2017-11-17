@@ -125,7 +125,6 @@ public class Neo4JUserMarkupCollectionTest {
 			org.neo4j.ogm.session.Session session = neo4JOGMSessionFactory.getSession();
 
 			session.save(neo4JUserMarkupCollection);
-			session.clear();
 
 			session = neo4JOGMSessionFactory.getSession();
 

@@ -62,10 +62,10 @@ public class Neo4JTagsetDefinitionTest {
 	public void insertTagsetWithTagDefinitions() throws Exception {
 		try (Neo4JOGMSessionFactory neo4JOGMSessionFactory = new Neo4JOGMSessionFactory(this.catmaProperties)) {
 
-			String uuid = this.idGenerator.generate();
+			String tagsetDefinitionUuid = this.idGenerator.generate();
 
 			TagsetDefinition tagsetDefinition = new TagsetDefinition();
-			tagsetDefinition.setUuid(uuid);
+			tagsetDefinition.setUuid(tagsetDefinitionUuid);
 			tagsetDefinition.setName("ALovelyName");
 			tagsetDefinition.setRevisionHash("ABC123XYZ");
 
@@ -123,7 +123,7 @@ public class Neo4JTagsetDefinitionTest {
 			);
 			TagsetDefinition loadedTagsetDefinition = loaded.getTagsetWorktree(tagsetDefinition.getRevisionHash());
 
-			assertEquals(uuid, loadedTagsetDefinition.getUuid());
+			assertEquals(tagsetDefinitionUuid, loadedTagsetDefinition.getUuid());
 			assertEquals("ALovelyName", loadedTagsetDefinition.getName());
 
 			assertTrue(loadedTagsetDefinition.hasTagDefinition(tagDefinition1.getUuid()));
