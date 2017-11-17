@@ -60,6 +60,7 @@ public class Neo4JSourceDocumentWorktree {
 	public Neo4JSourceDocumentWorktree() {
 		this.unseparableCharacterSequences = new ArrayList<>();
 		this.userDefinedSeparatingCharacters = new ArrayList<>();
+		this.terms = new ArrayList<>();
 	}
 
 	public Neo4JSourceDocumentWorktree(SourceDocument sourceDocument) throws Neo4JSourceDocumentException {
