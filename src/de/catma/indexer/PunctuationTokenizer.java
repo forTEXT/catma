@@ -39,7 +39,7 @@ import de.catma.indexer.unseparablecharactersequence.UnseparableCharacterSequenc
  *
  * @author Marco Petris <marco.petris@web.de>
  */
-public class PunctuationTokenizer extends TokenFilter {
+public final class PunctuationTokenizer extends TokenFilter {
 
     private CharTermAttribute termAtt;
     private OffsetAttribute offsetAtt;
