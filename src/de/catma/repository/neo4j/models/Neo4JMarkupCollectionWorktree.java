@@ -29,9 +29,12 @@ public class Neo4JMarkupCollectionWorktree {
 	@Relationship(type="HAS_TAG_INSTANCE", direction=Relationship.OUTGOING)
 	private List<Neo4JTagInstance> tagInstances;
 
-	// TODO: add source document relationship
-//	@Relationship(type="REFERENCES_SOURCE_DOCUMENT", direction=Relationship.OUTGOING)
-//	private Neo4JSourceDocument sourceDocument;
+	@Relationship(type="REFERENCES_SOURCE_DOCUMENT", direction=Relationship.OUTGOING)
+	private Neo4JSourceDocumentWorktree sourceDocument;
+
+	@Relationship(type="REFERENCES_TAGSET", direction=Relationship.OUTGOING)
+	private List<Neo4JTagsetWorktree> tagsets;
+
 
 	public Neo4JMarkupCollectionWorktree() {
 		this.tagInstances = new ArrayList<>();
