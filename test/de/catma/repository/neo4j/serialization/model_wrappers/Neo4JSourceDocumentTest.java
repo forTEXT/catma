@@ -104,6 +104,22 @@ public class Neo4JSourceDocumentTest {
 			);
 
 			assertEquals(sourceDocumentUuid, loadedSourceDocument.getUuid());
+
+			SourceDocumentInfo loadedSourceDocumentInfo = loadedSourceDocument.getSourceContentHandler()
+					.getSourceDocumentInfo();
+
+			assertEquals(
+					indexInfoSet.getLocale().toLanguageTag(),
+					loadedSourceDocumentInfo.getIndexInfoSet().getLocale().toLanguageTag()
+			);
+
+			assertEquals(contentInfoSet.getTitle(), loadedSourceDocumentInfo.getContentInfoSet().getTitle());
+			assertEquals(contentInfoSet.getAuthor(), loadedSourceDocumentInfo.getContentInfoSet().getAuthor());
+
+			assertEquals(techInfoSet.getFileType(), loadedSourceDocumentInfo.getTechInfoSet().getFileType());
+			assertEquals(techInfoSet.getCharset(), loadedSourceDocumentInfo.getTechInfoSet().getCharset());
+			assertEquals(techInfoSet.getFileOSType(), loadedSourceDocumentInfo.getTechInfoSet().getFileOSType());
+			assertEquals(techInfoSet.getChecksum(), loadedSourceDocumentInfo.getTechInfoSet().getChecksum());
 		}
 	}
 }
