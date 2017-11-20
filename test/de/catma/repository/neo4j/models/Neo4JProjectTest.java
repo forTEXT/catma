@@ -53,8 +53,6 @@ public class Neo4JProjectTest {
 
 	@Test
 	public void ogmInsertProject() throws Exception {
-		// TODO: check that all expected relationships exist, stop it from creating terms
-
 		try (Neo4JOGMSessionFactory neo4JOGMSessionFactory = new Neo4JOGMSessionFactory(this.catmaProperties)) {
 			String tagsetDefinitionUuid = this.idGenerator.generate();
 
@@ -113,9 +111,10 @@ public class Neo4JProjectTest {
 			sourceDocument.setRevisionHash("ABC123XYZ");
 
 			String projectUuid = this.idGenerator.generate();
+			String projectName = "Test Project";
 
 			Project project = new Project(
-					projectUuid, "Test Project", "Test Project Description", "ABC123XYZ"
+					projectUuid, projectName, "Test Project Description", "ABC123XYZ"
 			);
 			project.addTagset(tagsetDefinition);
 			project.addMarkupCollection(userMarkupCollection);
@@ -127,7 +126,7 @@ public class Neo4JProjectTest {
 
 			org.neo4j.ogm.session.Session session = neo4JOGMSessionFactory.getSession();
 
-			session.save(neo4JProject, 3); // limit save depth to 3 to avoid source document terms being saved
+			session.save(neo4JProject, 2); // limit save depth to 2 to avoid source document terms being saved
 
 			session = neo4JOGMSessionFactory.getSession();
 
@@ -140,6 +139,8 @@ public class Neo4JProjectTest {
 			);
 
 			assertEquals(projectUuid, loadedProject.getUuid());
+			assertEquals(projectName, loadedProject.getName());
+
 			assertEquals(1, loadedProject.getTagsets().size());
 			assertEquals(1, loadedProject.getMarkupCollections().size());
 			assertEquals(1, loadedProject.getSourceDocuments().size());
