@@ -1,4 +1,4 @@
-package de.catma.repository.neo4j.models;
+package de.catma.repository.neo4j.model_wrappers;
 
 import de.catma.document.source.*;
 import de.catma.document.source.contenthandler.SourceContentHandler;
@@ -6,6 +6,7 @@ import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
 import de.catma.repository.neo4j.exceptions.Neo4JSourceDocumentException;
+import de.catma.repository.neo4j.models.Neo4JTerm;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;

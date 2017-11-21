@@ -1,4 +1,4 @@
-package de.catma.repository.neo4j.models;
+package de.catma.repository.neo4j.model_wrappers;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;

@@ -1,10 +1,11 @@
-package de.catma.repository.neo4j.models;
+package de.catma.repository.neo4j.model_wrappers;
 
 import de.catma.document.AccessMode;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.repository.neo4j.exceptions.Neo4JUserMarkupCollectionException;
+import de.catma.repository.neo4j.models.Neo4JTagInstance;
 import de.catma.tag.TagLibrary;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;

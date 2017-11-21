@@ -2,6 +2,7 @@ package de.catma.repository.neo4j.models;
 
 import de.catma.models.Project;
 import de.catma.repository.neo4j.exceptions.Neo4JProjectException;
+import de.catma.repository.neo4j.model_wrappers.Neo4JProjectWorktree;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;

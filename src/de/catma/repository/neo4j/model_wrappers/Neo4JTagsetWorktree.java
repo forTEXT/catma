@@ -1,4 +1,4 @@
-package de.catma.repository.neo4j.models;
+package de.catma.repository.neo4j.model_wrappers;
 
 import de.catma.repository.neo4j.serialization.model_wrappers.Neo4JTagDefinition;
 import de.catma.tag.TagDefinition;
