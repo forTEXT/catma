@@ -2,7 +2,7 @@ package de.catma.repository.git;
 
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
-import de.catma.repository.git.exceptions.TagsetHandlerException;
+import de.catma.repository.git.exceptions.GitTagsetHandlerException;
 import de.catma.repository.git.interfaces.IGitTagsetHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
@@ -49,7 +49,7 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 						 @Nullable String tagsetId,
 						 @Nonnull String name,
 						 @Nullable String description
-	) throws TagsetHandlerException {
+	) throws GitTagsetHandlerException {
 
 		if (tagsetId == null) {
 			IDGenerator idGenerator = new IDGenerator();
@@ -91,15 +91,15 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 			);
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException e) {
-			throw new TagsetHandlerException("Failed to create tagset", e);
+			throw new GitTagsetHandlerException("Failed to create tagset", e);
 		}
 
 		return tagsetId;
 	}
 
 	@Override
-	public void delete(@Nonnull String projectId, @Nonnull String tagsetId) throws TagsetHandlerException {
-		throw new TagsetHandlerException("Not implemented");
+	public void delete(@Nonnull String projectId, @Nonnull String tagsetId) throws GitTagsetHandlerException {
+		throw new GitTagsetHandlerException("Not implemented");
 	}
 
 	private ArrayList<TagDefinition> openTagDefinitions(File parentDirectory) throws IOException {
@@ -133,7 +133,7 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 	}
 
 	@Override
-	public TagsetDefinition open(@Nonnull String projectId, @Nonnull String tagsetId) throws TagsetHandlerException {
+	public TagsetDefinition open(@Nonnull String projectId, @Nonnull String tagsetId) throws GitTagsetHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectRootRepositoryName);
@@ -169,7 +169,7 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 			return tagsetdefinition;
 		}
 		catch (LocalGitRepositoryManagerException | IOException e) {
-			throw new TagsetHandlerException("Failed to open the Tagset repo", e);
+			throw new GitTagsetHandlerException("Failed to open the Tagset repo", e);
 		}
 	}
 
@@ -183,13 +183,13 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 	 * @param tagsetId the ID of the tagset within which to create the tag definition
 	 * @param tagDefinition a {@link TagDefinition} object
 	 * @return the tag definition UUID
-	 * @throws TagsetHandlerException if an error occurs while creating the tag definition
+	 * @throws GitTagsetHandlerException if an error occurs while creating the tag definition
 	 */
 	@Override
 	public String createTagDefinition(@Nonnull String projectId,
 									  @Nonnull String tagsetId,
 									  @Nonnull TagDefinition tagDefinition
-	) throws TagsetHandlerException {
+	) throws GitTagsetHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectRootRepositoryName);
@@ -222,7 +222,7 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 			// not doing Git add/commit, see method doc comment
 		}
 		catch (LocalGitRepositoryManagerException|IOException e) {
-			throw new TagsetHandlerException("Failed to add tag definition", e);
+			throw new GitTagsetHandlerException("Failed to add tag definition", e);
 		}
 
 		return tagDefinition.getUuid();

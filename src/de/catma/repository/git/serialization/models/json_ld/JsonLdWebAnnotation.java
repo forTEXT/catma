@@ -7,7 +7,7 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GitTagsetHandler;
 import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
-import de.catma.repository.git.exceptions.TagsetHandlerException;
+import de.catma.repository.git.exceptions.GitTagsetHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.tag.*;
@@ -214,7 +214,7 @@ public class JsonLdWebAnnotation {
 			);
 			return tagsetDefinition.getTagDefinition(this.getLastPathSegmentFromUrl(this.body.getTag()));
 		}
-		catch (TagsetHandlerException e) {
+		catch (GitTagsetHandlerException e) {
 			throw new JsonLdWebAnnotationException("Failed to open tagset", e);
 		}
 	}

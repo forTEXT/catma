@@ -1,7 +1,7 @@
 package de.catma.repository.git;
 
 import de.catma.document.source.*;
-import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
+import de.catma.repository.git.exceptions.GitSourceDocumentHandlerException;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
@@ -226,7 +226,7 @@ public class GitSourceDocumentHandlerTest {
 				jGitRepoManager, this.gitLabServerManager
 			);
 
-			thrown.expect(SourceDocumentHandlerException.class);
+			thrown.expect(GitSourceDocumentHandlerException.class);
 			thrown.expectMessage("Not implemented");
 			gitSourceDocumentHandler.delete("fakeProjectId", "fakeSourceDocumentId");
 		}

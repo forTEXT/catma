@@ -6,7 +6,7 @@ import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.interfaces.IGitSourceDocumentHandler;
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
-import de.catma.repository.git.exceptions.SourceDocumentHandlerException;
+import de.catma.repository.git.exceptions.GitSourceDocumentHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
@@ -57,7 +57,7 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 	 * @param gitSourceDocumentInfo a {@link GitSourceDocumentInfo} wrapper object
 	 * @return the <code>sourceDocumentId</code> if one was provided, otherwise a new source
 	 *         document ID
-	 * @throws SourceDocumentHandlerException if an error occurs while creating the source document
+	 * @throws GitSourceDocumentHandlerException if an error occurs while creating the source document
 	 */
 	@Override
 	public String create(@Nonnull String projectId, @Nullable String sourceDocumentId,
@@ -66,7 +66,7 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 						 @Nonnull InputStream convertedSourceDocumentStream,
 						 @Nonnull String convertedSourceDocumentFileName,
 						 @Nonnull GitSourceDocumentInfo gitSourceDocumentInfo
-	) throws SourceDocumentHandlerException {
+	) throws GitSourceDocumentHandlerException {
 		if (sourceDocumentId == null) {
 			IDGenerator idGenerator = new IDGenerator();
 			sourceDocumentId = idGenerator.generate();
@@ -131,7 +131,7 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 			);
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|IOException e) {
-			throw new SourceDocumentHandlerException("Failed to create source document", e);
+			throw new GitSourceDocumentHandlerException("Failed to create source document", e);
 		}
 
 		return sourceDocumentId;
@@ -139,13 +139,13 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 
 	@Override
 	public void delete(@Nonnull String projectId, @Nonnull String sourceDocumentId)
-			throws SourceDocumentHandlerException {
-    	throw new SourceDocumentHandlerException("Not implemented");
+			throws GitSourceDocumentHandlerException {
+    	throw new GitSourceDocumentHandlerException("Not implemented");
 	}
 
 	@Override
 	public SourceDocument open(@Nonnull String projectId, @Nonnull String sourceDocumentId)
-			throws SourceDocumentHandlerException {
+			throws GitSourceDocumentHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 
 			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
@@ -187,7 +187,7 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 			return sourceDocument;
 		}
 		catch (LocalGitRepositoryManagerException|IOException|IllegalAccessException|InstantiationException e) {
-			throw new SourceDocumentHandlerException("Failed to open source document", e);
+			throw new GitSourceDocumentHandlerException("Failed to open source document", e);
 		}
 	}
 }

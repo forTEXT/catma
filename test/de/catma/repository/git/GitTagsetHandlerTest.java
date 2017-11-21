@@ -1,6 +1,6 @@
 package de.catma.repository.git;
 
-import de.catma.repository.git.exceptions.TagsetHandlerException;
+import de.catma.repository.git.exceptions.GitTagsetHandlerException;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.GitLabServerManager;
@@ -163,7 +163,7 @@ public class GitTagsetHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(jGitRepoManager, this.gitLabServerManager);
 
-			thrown.expect(TagsetHandlerException.class);
+			thrown.expect(GitTagsetHandlerException.class);
 			thrown.expectMessage("Not implemented");
 			gitTagsetHandler.delete("fakeProjectId", "fakeTagsetId");
 		}

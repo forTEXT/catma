@@ -1,7 +1,7 @@
 package de.catma.repository.git.interfaces;
 
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.repository.git.exceptions.MarkupCollectionHandlerException;
+import de.catma.repository.git.exceptions.GitMarkupCollectionHandlerException;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 
 import javax.annotation.Nonnull;
@@ -15,26 +15,26 @@ public interface IGitMarkupCollectionHandler {
 			@Nullable String description,
 			@Nonnull String sourceDocumentId,
 			@Nonnull String sourceDocumentVersion
-	) throws MarkupCollectionHandlerException;
+	) throws GitMarkupCollectionHandlerException;
 
-	void delete(@Nonnull String projectId, @Nonnull String markupCollectionId) throws MarkupCollectionHandlerException;
+	void delete(@Nonnull String projectId, @Nonnull String markupCollectionId) throws GitMarkupCollectionHandlerException;
 
 	void addTagset(
 			@Nonnull String projectId,
 			@Nonnull String markupCollectionId,
 			@Nonnull String tagsetId,
 			@Nonnull String tagsetVersion
-	) throws MarkupCollectionHandlerException;
+	) throws GitMarkupCollectionHandlerException;
 
 	void removeTagset(@Nonnull String projectId, @Nonnull String markupCollectionId, @Nonnull String tagsetId)
-			throws MarkupCollectionHandlerException;
+			throws GitMarkupCollectionHandlerException;
 
 	String createTagInstance(
 			@Nonnull String projectId,
 			@Nonnull String markupCollectionId,
 			@Nonnull JsonLdWebAnnotation annotation
-	) throws MarkupCollectionHandlerException;
+	) throws GitMarkupCollectionHandlerException;
 
 	UserMarkupCollection open(@Nonnull String projectId, @Nonnull String markupCollectionId)
-			throws MarkupCollectionHandlerException;
+			throws GitMarkupCollectionHandlerException;
 }

@@ -50,10 +50,10 @@ public class GitProjectHandler implements IGitProjectHandler {
 	 * @param name the name of the project to create
 	 * @param description the description of the project to create
 	 * @return the new project ID
-	 * @throws ProjectHandlerException if an error occurs when creating the project
+	 * @throws GitProjectHandlerException if an error occurs when creating the project
 	 */
 	@Override
-	public String create(@Nonnull String name, @Nullable String description) throws ProjectHandlerException {
+	public String create(@Nonnull String name, @Nullable String description) throws GitProjectHandlerException {
 		String projectId = idGenerator.generate();
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
@@ -85,7 +85,7 @@ public class GitProjectHandler implements IGitProjectHandler {
 			);
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException e) {
-			throw new ProjectHandlerException("Failed to create project", e);
+			throw new GitProjectHandlerException("Failed to create project", e);
 		}
 
 		return projectId;
@@ -97,10 +97,10 @@ public class GitProjectHandler implements IGitProjectHandler {
 	 * This will also delete any associated repositories automatically (local & remote).
 	 *
 	 * @param projectId the ID of the project to delete
-	 * @throws ProjectHandlerException if an error occurs when deleting the project
+	 * @throws GitProjectHandlerException if an error occurs when deleting the project
 	 */
 	@Override
-	public void delete(@Nonnull String projectId) throws ProjectHandlerException {
+	public void delete(@Nonnull String projectId) throws GitProjectHandlerException {
 		try {
 			List<String> repositoryNames = this.remoteGitServerManager.getGroupRepositoryNames(
 				projectId
@@ -115,7 +115,7 @@ public class GitProjectHandler implements IGitProjectHandler {
 			this.remoteGitServerManager.deleteGroup(projectId);
 		}
 		catch (RemoteGitServerManagerException|IOException e) {
-			throw new ProjectHandlerException("Failed to delete project", e);
+			throw new GitProjectHandlerException("Failed to delete project", e);
 		}
 	}
 
@@ -124,7 +124,7 @@ public class GitProjectHandler implements IGitProjectHandler {
 							   @Nullable String tagsetId,
 							   @Nonnull String name,
 							   @Nullable String description
-	) throws ProjectHandlerException {
+	) throws GitProjectHandlerException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localGitRepoManager, this.remoteGitServerManager);
@@ -164,8 +164,8 @@ public class GitProjectHandler implements IGitProjectHandler {
 
 			return newTagsetId;
 		}
-		catch (TagsetHandlerException|LocalGitRepositoryManagerException e) {
-			throw new ProjectHandlerException("Failed to create tagset", e);
+		catch (GitTagsetHandlerException |LocalGitRepositoryManagerException e) {
+			throw new GitProjectHandlerException("Failed to create tagset", e);
 		}
 	}
 
@@ -176,7 +176,7 @@ public class GitProjectHandler implements IGitProjectHandler {
 										 @Nullable String description,
 										 @Nonnull String sourceDocumentId,
 										 @Nonnull String sourceDocumentVersion
-	) throws ProjectHandlerException {
+	) throws GitProjectHandlerException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
@@ -225,8 +225,8 @@ public class GitProjectHandler implements IGitProjectHandler {
 
 			return newMarkupCollectionId;
 		}
-		catch (MarkupCollectionHandlerException|LocalGitRepositoryManagerException e) {
-			throw new ProjectHandlerException("Failed to create markup collection", e);
+		catch (GitMarkupCollectionHandlerException |LocalGitRepositoryManagerException e) {
+			throw new GitProjectHandlerException("Failed to create markup collection", e);
 		}
 	}
 
@@ -249,7 +249,7 @@ public class GitProjectHandler implements IGitProjectHandler {
 	 * @param gitSourceDocumentInfo a {@link GitSourceDocumentInfo} wrapper object
 	 * @return the <code>sourceDocumentId</code> if one was provided, otherwise a new source
 	 *         document ID
-	 * @throws ProjectHandlerException if an error occurs while creating the source document
+	 * @throws GitProjectHandlerException if an error occurs while creating the source document
 	 */
 	@Override
 	public String createSourceDocument(
@@ -257,7 +257,7 @@ public class GitProjectHandler implements IGitProjectHandler {
 			@Nonnull InputStream originalSourceDocumentStream, @Nonnull String originalSourceDocumentFileName,
 			@Nonnull InputStream convertedSourceDocumentStream, @Nonnull String convertedSourceDocumentFileName,
 			@Nonnull GitSourceDocumentInfo gitSourceDocumentInfo
-	) throws ProjectHandlerException {
+	) throws GitProjectHandlerException {
 		try (ILocalGitRepositoryManager repoManager = this.localGitRepositoryManager) {
 			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
 				repoManager, this.remoteGitServerManager
@@ -295,8 +295,8 @@ public class GitProjectHandler implements IGitProjectHandler {
 				gitLabServerManager.getGitLabUser().getUsername(), gitLabUserImpersonationToken
 			);
 		}
-		catch (SourceDocumentHandlerException|LocalGitRepositoryManagerException e) {
-			throw new ProjectHandlerException("Failed to create source document", e);
+		catch (GitSourceDocumentHandlerException |LocalGitRepositoryManagerException e) {
+			throw new GitProjectHandlerException("Failed to create source document", e);
 		}
 
 		return sourceDocumentId;

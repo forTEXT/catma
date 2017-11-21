@@ -2,7 +2,7 @@ package de.catma.repository.git;
 
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.repository.git.exceptions.MarkupCollectionHandlerException;
+import de.catma.repository.git.exceptions.GitMarkupCollectionHandlerException;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.GitLabServerManager;
@@ -173,7 +173,7 @@ public class GitMarkupCollectionHandlerTest {
 				jGitRepoManager, this.gitLabServerManager
 			);
 
-			thrown.expect(MarkupCollectionHandlerException.class);
+			thrown.expect(GitMarkupCollectionHandlerException.class);
 			thrown.expectMessage("Not implemented");
 			gitMarkupCollectionHandler.delete("fakeProjectId", "fakeMarkupCollectionId");
 		}
@@ -258,7 +258,7 @@ public class GitMarkupCollectionHandlerTest {
 				jGitRepoManager, this.gitLabServerManager
 			);
 
-			thrown.expect(MarkupCollectionHandlerException.class);
+			thrown.expect(GitMarkupCollectionHandlerException.class);
 			thrown.expectMessage("Not implemented");
 			gitMarkupCollectionHandler.removeTagset(
 					"fakeProjectId","fakeMarkupCollectionId", "fakeTagsetId"

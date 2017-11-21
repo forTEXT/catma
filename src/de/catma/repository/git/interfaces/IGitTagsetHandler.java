@@ -1,6 +1,6 @@
 package de.catma.repository.git.interfaces;
 
-import de.catma.repository.git.exceptions.TagsetHandlerException;
+import de.catma.repository.git.exceptions.GitTagsetHandlerException;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 
@@ -13,13 +13,13 @@ public interface IGitTagsetHandler {
 			@Nullable String tagsetId,
 			@Nonnull String name,
 			@Nullable String description
-	) throws TagsetHandlerException;
+	) throws GitTagsetHandlerException;
 
-	void delete(@Nonnull String projectId, @Nonnull String tagsetId) throws TagsetHandlerException;
+	void delete(@Nonnull String projectId, @Nonnull String tagsetId) throws GitTagsetHandlerException;
 
-	TagsetDefinition open(@Nonnull String projectId, @Nonnull String tagsetId) throws TagsetHandlerException;
+	TagsetDefinition open(@Nonnull String projectId, @Nonnull String tagsetId) throws GitTagsetHandlerException;
 
 	String createTagDefinition(@Nonnull String projectId, @Nonnull String tagsetId,
 							   @Nonnull TagDefinition tagDefinition)
-			throws TagsetHandlerException;
+			throws GitTagsetHandlerException;
 }
