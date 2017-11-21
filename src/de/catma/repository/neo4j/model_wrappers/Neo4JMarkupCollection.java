@@ -4,7 +4,7 @@ import de.catma.document.AccessMode;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.repository.neo4j.exceptions.Neo4JUserMarkupCollectionException;
+import de.catma.repository.neo4j.exceptions.Neo4JMarkupCollectionException;
 import de.catma.repository.neo4j.models.Neo4JTagInstance;
 import de.catma.tag.TagLibrary;
 import org.neo4j.ogm.annotation.Id;
@@ -42,14 +42,14 @@ public class Neo4JMarkupCollection {
 	}
 
 	public Neo4JMarkupCollection(UserMarkupCollection userMarkupCollection)
-			throws Neo4JUserMarkupCollectionException {
+			throws Neo4JMarkupCollectionException {
 
 		this();
 
 		this.setUserMarkupCollection(userMarkupCollection);
 	}
 
-	public UserMarkupCollection getUserMarkupCollection() throws Neo4JUserMarkupCollectionException {
+	public UserMarkupCollection getUserMarkupCollection() throws Neo4JMarkupCollectionException {
 //		List<TagReference> tagReferences = this.tagInstances.stream().map(Neo4JTagInstance::getTagReferences)
 //				.collect(Collectors.toList());
 		List<TagReference> tagReferences = new ArrayList<>();
@@ -71,7 +71,7 @@ public class Neo4JMarkupCollection {
 	}
 
 	public void setUserMarkupCollection(UserMarkupCollection userMarkupCollection)
-			throws Neo4JUserMarkupCollectionException {
+			throws Neo4JMarkupCollectionException {
 
 		this.revisionHash = userMarkupCollection.getRevisionHash();
 		this.uuid = userMarkupCollection.getUuid();

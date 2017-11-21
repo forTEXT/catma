@@ -2,7 +2,7 @@ package de.catma.repository.neo4j.models;
 
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.repository.neo4j.exceptions.Neo4JUserMarkupCollectionException;
+import de.catma.repository.neo4j.exceptions.Neo4JMarkupCollectionException;
 import de.catma.repository.neo4j.serialization.model_wrappers.Neo4JProperty;
 import de.catma.repository.neo4j.serialization.model_wrappers.Neo4JRange;
 import de.catma.repository.neo4j.serialization.model_wrappers.Neo4JTagDefinition;
@@ -44,13 +44,13 @@ public class Neo4JTagInstance {
 		this.ranges = new ArrayList<>();
 	}
 
-	public Neo4JTagInstance(List<TagReference> tagReferences) throws Neo4JUserMarkupCollectionException {
+	public Neo4JTagInstance(List<TagReference> tagReferences) throws Neo4JMarkupCollectionException {
 		this();
 
 		this.setTagReferences(tagReferences);
 	}
 
-	public List<TagReference> getTagReferences() throws Neo4JUserMarkupCollectionException {
+	public List<TagReference> getTagReferences() throws Neo4JMarkupCollectionException {
 		List<Property> userDefinedProperties = this.userDefinedProperties.stream().map(Neo4JProperty::getProperty)
 				.collect(Collectors.toList());
 
@@ -79,7 +79,7 @@ public class Neo4JTagInstance {
 			}
 		}
 		catch (URISyntaxException e) {
-			throw new Neo4JUserMarkupCollectionException(
+			throw new Neo4JMarkupCollectionException(
 					"Failed to turn internal representation back into a collection of TagReference objects", e
 			);
 		}
@@ -87,7 +87,7 @@ public class Neo4JTagInstance {
 		return tagReferences;
 	}
 
-	public void setTagReferences(List<TagReference> tagReferences) throws Neo4JUserMarkupCollectionException {
+	public void setTagReferences(List<TagReference> tagReferences) throws Neo4JMarkupCollectionException {
 		// TODO: possibly some or all of this should happen in the constructor directly
 
 		// assert that all TagReference objects are for the same TagInstance and thus share the same TagDefinition and
@@ -95,7 +95,7 @@ public class Neo4JTagInstance {
 		Set<TagInstance> uniqueTagInstances = new HashSet<>(tagReferences.stream().map(TagReference::getTagInstance)
 				.collect(Collectors.toSet()));
 		if (uniqueTagInstances.size() > 1) {
-			throw new Neo4JUserMarkupCollectionException(
+			throw new Neo4JMarkupCollectionException(
 					"Supplied TagReference objects are not all for the same TagInstance"
 			);
 		}

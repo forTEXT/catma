@@ -5,7 +5,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.models.Project;
 import de.catma.repository.neo4j.exceptions.Neo4JProjectException;
 import de.catma.repository.neo4j.exceptions.Neo4JSourceDocumentException;
-import de.catma.repository.neo4j.exceptions.Neo4JUserMarkupCollectionException;
+import de.catma.repository.neo4j.exceptions.Neo4JMarkupCollectionException;
 import de.catma.tag.TagsetDefinition;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -74,7 +74,7 @@ public class Neo4JProjectWorktree {
 				project.addSourceDocument(sourceDocument.getSourceDocument());
 			}
 		}
-		catch (Neo4JUserMarkupCollectionException|Neo4JSourceDocumentException e) {
+		catch (Neo4JMarkupCollectionException |Neo4JSourceDocumentException e) {
 			throw new Neo4JProjectException("");
 		}
 
@@ -106,7 +106,7 @@ public class Neo4JProjectWorktree {
 				this.markupCollections.add(new Neo4JMarkupCollection(userMarkupCollection));
 			}
 		}
-		catch (Neo4JUserMarkupCollectionException e) {
+		catch (Neo4JMarkupCollectionException e) {
 			throw new Neo4JProjectException("Failed to set markup collections", e);
 		}
 	}
