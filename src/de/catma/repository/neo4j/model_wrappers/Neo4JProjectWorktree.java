@@ -34,7 +34,7 @@ public class Neo4JProjectWorktree {
 	private List<Neo4JMarkupCollection> markupCollections;
 
 	@Relationship(type="HAS_SOURCE_DOCUMENT", direction=Relationship.OUTGOING)
-	private List<Neo4JSourceDocumentWorktree> sourceDocuments;
+	private List<Neo4JSourceDocument> sourceDocuments;
 
 	public Neo4JProjectWorktree() {
 		this.tagsets = new ArrayList<>();
@@ -70,8 +70,8 @@ public class Neo4JProjectWorktree {
 				project.addMarkupCollection(markupCollection.getUserMarkupCollection());
 			}
 
-			for (Neo4JSourceDocumentWorktree sourceDocumentWorktree : this.sourceDocuments) {
-				project.addSourceDocument(sourceDocumentWorktree.getSourceDocument());
+			for (Neo4JSourceDocument sourceDocument : this.sourceDocuments) {
+				project.addSourceDocument(sourceDocument.getSourceDocument());
 			}
 		}
 		catch (Neo4JUserMarkupCollectionException|Neo4JSourceDocumentException e) {
@@ -117,7 +117,7 @@ public class Neo4JProjectWorktree {
 		this.sourceDocuments.clear();
 		try {
 			for (SourceDocument sourceDocument : sourceDocuments) {
-				this.sourceDocuments.add(new Neo4JSourceDocumentWorktree(sourceDocument));
+				this.sourceDocuments.add(new Neo4JSourceDocument(sourceDocument));
 			}
 		}
 		catch (Neo4JSourceDocumentException e) {

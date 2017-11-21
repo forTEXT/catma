@@ -21,8 +21,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@NodeEntity(label="SourceDocumentWorktree")
-public class Neo4JSourceDocumentWorktree {
+@NodeEntity(label="SourceDocument")
+public class Neo4JSourceDocument {
 	@Id
 	private String revisionHash;
 
@@ -58,13 +58,13 @@ public class Neo4JSourceDocumentWorktree {
 	@Relationship(type="HAS_TERM", direction=Relationship.OUTGOING)
 	private List<Neo4JTerm> terms;
 
-	public Neo4JSourceDocumentWorktree() {
+	public Neo4JSourceDocument() {
 		this.unseparableCharacterSequences = new ArrayList<>();
 		this.userDefinedSeparatingCharacters = new ArrayList<>();
 		this.terms = new ArrayList<>();
 	}
 
-	public Neo4JSourceDocumentWorktree(SourceDocument sourceDocument) throws Neo4JSourceDocumentException {
+	public Neo4JSourceDocument(SourceDocument sourceDocument) throws Neo4JSourceDocumentException {
 		this();
 
 		this.setSourceDocument(sourceDocument);
