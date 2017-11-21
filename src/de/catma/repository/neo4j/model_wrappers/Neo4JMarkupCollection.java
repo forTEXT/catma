@@ -7,6 +7,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.repository.neo4j.exceptions.Neo4JMarkupCollectionException;
 import de.catma.repository.neo4j.models.Neo4JTagInstance;
 import de.catma.tag.TagLibrary;
+import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -19,13 +20,15 @@ import java.util.stream.Collectors;
 @NodeEntity(label="MarkupCollection")
 public class Neo4JMarkupCollection {
 	@Id
-	private String revisionHash;
+	@GeneratedValue
+	private Long id;
 
 	private String uuid;
 	private String name;
 	private String description;
 	private String author;
 	private String publisher;
+	private String revisionHash;
 
 	@Relationship(type="HAS_TAG_INSTANCE", direction=Relationship.OUTGOING)
 	private List<Neo4JTagInstance> tagInstances;

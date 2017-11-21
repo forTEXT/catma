@@ -7,6 +7,7 @@ import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
 import de.catma.repository.neo4j.exceptions.Neo4JSourceDocumentException;
 import de.catma.repository.neo4j.models.Neo4JTerm;
+import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -24,10 +25,12 @@ import java.util.stream.Collectors;
 @NodeEntity(label="SourceDocument")
 public class Neo4JSourceDocument {
 	@Id
-	private String revisionHash;
+	@GeneratedValue
+	private Long id;
 
 	private String uuid;
 	private Integer length;
+	private String revisionHash;
 
 	// could use a @Properties annotated Map for each of the InfoSet classes below, but need to investigate further
 	// in order to avoid generic Map<String, Object> that then requires each value to be cast

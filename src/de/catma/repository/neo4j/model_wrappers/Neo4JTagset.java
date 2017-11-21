@@ -3,6 +3,7 @@ package de.catma.repository.neo4j.model_wrappers;
 import de.catma.repository.neo4j.serialization.model_wrappers.Neo4JTagDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
+import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -13,9 +14,12 @@ import java.util.List;
 @NodeEntity(label="Tagset")
 public class Neo4JTagset {
 	@Id
-	private String revisionHash;
+	@GeneratedValue
+	private Long id;
+
 	private String uuid;
 	private String name;
+	private String revisionHash;
 
 	@Relationship(type="HAS_TAG_DEFINITION", direction=Relationship.OUTGOING)
 	private List<Neo4JTagDefinition> tagDefinitions;
