@@ -2,6 +2,7 @@ package de.catma.repository.neo4j.model_wrappers;
 
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
+import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -12,6 +13,9 @@ import java.util.List;
 @NodeEntity(label="TagDefinition")
 public class Neo4JTagDefinition {
 	@Id
+	@GeneratedValue
+	private Long id;
+
 	private String uuid;
 	private String parentUuid;
 	private String name;

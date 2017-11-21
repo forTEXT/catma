@@ -10,6 +10,7 @@ import de.catma.tag.Property;
 import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
+import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -21,7 +22,12 @@ import java.util.stream.Collectors;
 @NodeEntity(label="TagInstance")
 public class Neo4JTagInstance {
 	@Id
+	@GeneratedValue
+	private Long id;
+
 	private String uuid;
+	private String userMarkupCollectionUuid;
+	private String target;
 
 	@Relationship(type="HAS_TAG_DEFINITION", direction=Relationship.OUTGOING)
 	private Neo4JTagDefinition tagDefinition;
@@ -34,9 +40,6 @@ public class Neo4JTagInstance {
 
 	@Relationship(type="HAS_RANGE", direction=Relationship.OUTGOING)
 	private List<Neo4JRange> ranges;
-
-	private String userMarkupCollectionUuid;
-	private String target;
 
 	public Neo4JTagInstance() {
 		this.systemProperties = new ArrayList<>();

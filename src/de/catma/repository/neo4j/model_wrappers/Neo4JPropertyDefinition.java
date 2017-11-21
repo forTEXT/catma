@@ -2,6 +2,7 @@ package de.catma.repository.neo4j.model_wrappers;
 
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
+import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
@@ -10,8 +11,10 @@ import java.util.List;
 
 @NodeEntity(label="PropertyDefinition")
 public class Neo4JPropertyDefinition {
-
 	@Id
+	@GeneratedValue
+	private Long id;
+
 	private String uuid;
 	private String name;
 	private boolean singleSelect;
