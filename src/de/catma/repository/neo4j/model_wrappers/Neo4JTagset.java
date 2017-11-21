@@ -10,8 +10,8 @@ import org.neo4j.ogm.annotation.Relationship;
 import java.util.ArrayList;
 import java.util.List;
 
-@NodeEntity(label="TagsetWorktree")
-public class Neo4JTagsetWorktree {
+@NodeEntity(label="Tagset")
+public class Neo4JTagset {
 	@Id
 	private String revisionHash;
 	private String uuid;
@@ -20,11 +20,11 @@ public class Neo4JTagsetWorktree {
 	@Relationship(type="HAS_TAG_DEFINITION", direction=Relationship.OUTGOING)
 	private List<Neo4JTagDefinition> tagDefinitions;
 
-	public Neo4JTagsetWorktree() {
+	public Neo4JTagset() {
 		this.tagDefinitions = new ArrayList<>();
 	}
 
-	public Neo4JTagsetWorktree(TagsetDefinition tagsetDefinition) {
+	public Neo4JTagset(TagsetDefinition tagsetDefinition) {
 		this();
 
 		this.setTagsetDefinition(tagsetDefinition);

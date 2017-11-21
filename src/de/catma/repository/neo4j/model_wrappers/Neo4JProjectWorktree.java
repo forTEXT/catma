@@ -28,7 +28,7 @@ public class Neo4JProjectWorktree {
 	private String revisionHash;
 
 	@Relationship(type="HAS_TAGSET", direction=Relationship.OUTGOING)
-	private List<Neo4JTagsetWorktree> tagsets;
+	private List<Neo4JTagset> tagsets;
 
 	@Relationship(type="HAS_MARKUP_COLLECTION", direction=Relationship.OUTGOING)
 	private List<Neo4JMarkupCollection> markupCollections;
@@ -94,7 +94,7 @@ public class Neo4JProjectWorktree {
 	}
 
 	public void setTagsets(List<TagsetDefinition> tagsets) {
-		this.tagsets = tagsets.stream().map(Neo4JTagsetWorktree::new).collect(Collectors.toList());
+		this.tagsets = tagsets.stream().map(Neo4JTagset::new).collect(Collectors.toList());
 	}
 
 	public void setMarkupCollections(List<UserMarkupCollection> userMarkupCollections) throws Neo4JProjectException {

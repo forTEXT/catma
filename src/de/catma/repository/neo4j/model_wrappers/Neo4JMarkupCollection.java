@@ -34,7 +34,7 @@ public class Neo4JMarkupCollection {
 	private Neo4JSourceDocument sourceDocument;
 
 	@Relationship(type="REFERENCES_TAGSET", direction=Relationship.OUTGOING)
-	private List<Neo4JTagsetWorktree> tagsets;
+	private List<Neo4JTagset> tagsets;
 
 
 	public Neo4JMarkupCollection() {
