@@ -19,12 +19,12 @@ import java.util.Properties;
 
 import static org.junit.Assert.*;
 
-public class Neo4JUserMarkupCollectionTest {
+public class Neo4JMarkupCollectionTest {
 	private Properties catmaProperties;
 
 	private IDGenerator idGenerator;
 
-	public Neo4JUserMarkupCollectionTest() throws Exception {
+	public Neo4JMarkupCollectionTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
 				System.getProperties().getProperty("prop") : "catma.properties";
 
@@ -57,14 +57,14 @@ public class Neo4JUserMarkupCollectionTest {
 			tagDefinition.setUuid("CATMA_TagDefinition");
 			tagDefinition.setName("TagDefinition");
 
-			PropertyDefinition userDefinedPropertyDefinition = Neo4JTagsetDefinitionTest.getFakePropertyDefinition(
+			PropertyDefinition userDefinedPropertyDefinition = Neo4JTagsetTest.getFakePropertyDefinition(
 					"TagDefinitionPropDef",
 					true,
 					"Verb", "Noun"
 			);
 			tagDefinition.addUserDefinedPropertyDefinition(userDefinedPropertyDefinition);
 
-			PropertyDefinition systemPropertyDefinition = Neo4JTagsetDefinitionTest.getFakePropertyDefinition(
+			PropertyDefinition systemPropertyDefinition = Neo4JTagsetTest.getFakePropertyDefinition(
 					PropertyDefinition.SystemPropertyName.catma_markupauthor.toString(),
 					true,
 					"Frank", "Joe"
@@ -115,24 +115,18 @@ public class Neo4JUserMarkupCollectionTest {
 			);
 			userMarkupCollection.setRevisionHash("ABC123XYZ");
 
-			Neo4JUserMarkupCollection neo4JUserMarkupCollection = new Neo4JUserMarkupCollection(
-					userMarkupCollectionUuid, userMarkupCollectionName
-			);
-
-			neo4JUserMarkupCollection.addMarkupCollectionWorktree(userMarkupCollection);
+			Neo4JMarkupCollection neo4JMarkupCollection = new Neo4JMarkupCollection(userMarkupCollection);
 
 			org.neo4j.ogm.session.Session session = neo4JOGMSessionFactory.getSession();
 
-			session.save(neo4JUserMarkupCollection);
+			session.save(neo4JMarkupCollection);
 
 			session = neo4JOGMSessionFactory.getSession();
 
-			Neo4JUserMarkupCollection loaded = session.load(
-					Neo4JUserMarkupCollection.class, userMarkupCollection.getUuid(), 4
+			Neo4JMarkupCollection loaded = session.load(
+					Neo4JMarkupCollection.class, neo4JMarkupCollection.getId(), 4
 			);
-			UserMarkupCollection loadedUserMarkupCollection = loaded.getMarkupCollectionWorktree(
-					userMarkupCollection.getRevisionHash()
-			);
+			UserMarkupCollection loadedUserMarkupCollection = loaded.getUserMarkupCollection();
 
 			assertEquals(userMarkupCollectionUuid, loadedUserMarkupCollection.getUuid());
 			assertEquals(userMarkupCollectionName, loadedUserMarkupCollection.getContentInfoSet().getTitle());

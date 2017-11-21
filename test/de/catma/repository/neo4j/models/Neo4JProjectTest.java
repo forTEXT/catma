@@ -122,7 +122,7 @@ public class Neo4JProjectTest {
 
 			Neo4JProject neo4JProject = new Neo4JProject(project.getUuid(), project.getName());
 
-			neo4JProject.addProjectWorktree(project);
+			neo4JProject.setProjectRevision(project);
 
 			org.neo4j.ogm.session.Session session = neo4JOGMSessionFactory.getSession();
 
@@ -131,10 +131,10 @@ public class Neo4JProjectTest {
 			session = neo4JOGMSessionFactory.getSession();
 
 			Neo4JProject loaded = session.load(
-					Neo4JProject.class, project.getUuid(), 3
+					Neo4JProject.class, neo4JProject.getId(), 3
 			);
 
-			Project loadedProject = loaded.getProjectWorktree(
+			Project loadedProject = loaded.getProjectRevision(
 					project.getRevisionHash()
 			);
 

@@ -84,11 +84,7 @@ public class Neo4JSourceDocumentTest {
 			SourceDocument sourceDocument = new SourceDocument(null, sourceDocumentUuid, standardContentHandler);
 			sourceDocument.setRevisionHash("ABC123XYZ");
 
-			Neo4JSourceDocument neo4JSourceDocument = new Neo4JSourceDocument(
-					sourceDocumentUuid, contentInfoSet.getTitle()
-			);
-
-			neo4JSourceDocument.addSourceDocumentWorktree(sourceDocument);
+			Neo4JSourceDocument neo4JSourceDocument = new Neo4JSourceDocument(sourceDocument);
 
 			org.neo4j.ogm.session.Session session = neo4JOGMSessionFactory.getSession();
 
@@ -97,13 +93,12 @@ public class Neo4JSourceDocumentTest {
 			session = neo4JOGMSessionFactory.getSession();
 
 			Neo4JSourceDocument loaded = session.load(
-					Neo4JSourceDocument.class, sourceDocument.getUuid(), 4
-			);
-			SourceDocument loadedSourceDocument = loaded.getSourceDocumentWorktree(
-					sourceDocument.getRevisionHash()
+					Neo4JSourceDocument.class, neo4JSourceDocument.getId(), 4
 			);
 
-			assertEquals(sourceDocumentUuid, loadedSourceDocument.getUuid());
+			assertEquals(sourceDocumentUuid, loaded.getUuid());
+
+			SourceDocument loadedSourceDocument = loaded.getSourceDocument();
 
 			SourceDocumentInfo loadedSourceDocumentInfo = loadedSourceDocument.getSourceContentHandler()
 					.getSourceDocumentInfo();

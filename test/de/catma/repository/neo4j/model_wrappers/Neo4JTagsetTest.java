@@ -17,12 +17,12 @@ import java.util.Properties;
 
 import static org.junit.Assert.*;
 
-public class Neo4JTagsetDefinitionTest {
+public class Neo4JTagsetTest {
 	private Properties catmaProperties;
 
 	private IDGenerator idGenerator;
 
-	public Neo4JTagsetDefinitionTest() throws Exception {
+	public Neo4JTagsetTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
 				System.getProperties().getProperty("prop") : "catma.properties";
 
@@ -73,19 +73,19 @@ public class Neo4JTagsetDefinitionTest {
 			tagDefinition1.setName("TagDefinition1");
 
 			tagDefinition1.addUserDefinedPropertyDefinition(
-					Neo4JTagsetDefinitionTest.getFakePropertyDefinition(
+					Neo4JTagsetTest.getFakePropertyDefinition(
 							"TagDefinition1PropDef1",
 							true,
 							"Verb", "Noun"
 					));
 			tagDefinition1.addUserDefinedPropertyDefinition(
-					Neo4JTagsetDefinitionTest.getFakePropertyDefinition(
+					Neo4JTagsetTest.getFakePropertyDefinition(
 							"TagDefinition1PropDef2",
 							true,
 							"Monday", "Friday"
 					));
 			tagDefinition1.addSystemPropertyDefinition(
-					Neo4JTagsetDefinitionTest.getFakePropertyDefinition(
+					Neo4JTagsetTest.getFakePropertyDefinition(
 							PropertyDefinition.SystemPropertyName.catma_markupauthor.toString(),
 							true,
 							"Frank", "Joe"
@@ -105,22 +105,18 @@ public class Neo4JTagsetDefinitionTest {
 			tagsetDefinition.addTagDefinition(tagDefinition2);
 			tagsetDefinition.addTagDefinition(tagDefinition3);
 
-			Neo4JTagsetDefinition neo4JTagsetDefinition = new Neo4JTagsetDefinition(
-					tagsetDefinition.getUuid(), tagsetDefinition.getName()
-			);
-
-			neo4JTagsetDefinition.addTagsetWorktree(tagsetDefinition);
+			Neo4JTagset neo4JTagset = new Neo4JTagset(tagsetDefinition);
 
 			org.neo4j.ogm.session.Session session = neo4JOGMSessionFactory.getSession();
 
-			session.save(neo4JTagsetDefinition);
+			session.save(neo4JTagset);
 
 			session = neo4JOGMSessionFactory.getSession();
 
-			Neo4JTagsetDefinition loaded = session.load(
-					Neo4JTagsetDefinition.class, tagsetDefinition.getUuid(), 3
+			Neo4JTagset loaded = session.load(
+					Neo4JTagset.class, neo4JTagset.getId(), 3
 			);
-			TagsetDefinition loadedTagsetDefinition = loaded.getTagsetWorktree(tagsetDefinition.getRevisionHash());
+			TagsetDefinition loadedTagsetDefinition = loaded.getTagsetDefinition();
 
 			assertEquals(tagsetDefinitionUuid, loadedTagsetDefinition.getUuid());
 			assertEquals("ALovelyName", loadedTagsetDefinition.getName());
