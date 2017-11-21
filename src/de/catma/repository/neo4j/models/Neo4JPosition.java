@@ -1,7 +1,7 @@
 package de.catma.repository.neo4j.models;
 
 import de.catma.indexer.TermInfo;
-import de.catma.repository.neo4j.serialization.model_wrappers.Neo4JRange;
+import de.catma.repository.neo4j.model_wrappers.Neo4JRange;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 

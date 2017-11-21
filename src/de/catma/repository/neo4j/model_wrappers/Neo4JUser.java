@@ -1,4 +1,4 @@
-package de.catma.repository.neo4j.serialization.model_wrappers;
+package de.catma.repository.neo4j.model_wrappers;
 
 import de.catma.models.Project;
 import de.catma.repository.neo4j.exceptions.Neo4JProjectException;

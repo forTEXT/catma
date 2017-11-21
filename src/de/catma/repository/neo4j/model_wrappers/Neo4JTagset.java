@@ -1,6 +1,5 @@
 package de.catma.repository.neo4j.model_wrappers;
 
-import de.catma.repository.neo4j.serialization.model_wrappers.Neo4JTagDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 import org.neo4j.ogm.annotation.GeneratedValue;
