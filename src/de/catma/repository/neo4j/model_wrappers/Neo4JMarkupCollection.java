@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@NodeEntity(label="MarkupCollectionWorktree")
-public class Neo4JMarkupCollectionWorktree {
+@NodeEntity(label="MarkupCollection")
+public class Neo4JMarkupCollection {
 	@Id
 	private String revisionHash;
 
@@ -37,11 +37,11 @@ public class Neo4JMarkupCollectionWorktree {
 	private List<Neo4JTagsetWorktree> tagsets;
 
 
-	public Neo4JMarkupCollectionWorktree() {
+	public Neo4JMarkupCollection() {
 		this.tagInstances = new ArrayList<>();
 	}
 
-	public Neo4JMarkupCollectionWorktree(UserMarkupCollection userMarkupCollection)
+	public Neo4JMarkupCollection(UserMarkupCollection userMarkupCollection)
 			throws Neo4JUserMarkupCollectionException {
 
 		this();

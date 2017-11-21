@@ -31,7 +31,7 @@ public class Neo4JProjectWorktree {
 	private List<Neo4JTagsetWorktree> tagsets;
 
 	@Relationship(type="HAS_MARKUP_COLLECTION", direction=Relationship.OUTGOING)
-	private List<Neo4JMarkupCollectionWorktree> markupCollections;
+	private List<Neo4JMarkupCollection> markupCollections;
 
 	@Relationship(type="HAS_SOURCE_DOCUMENT", direction=Relationship.OUTGOING)
 	private List<Neo4JSourceDocumentWorktree> sourceDocuments;
@@ -66,8 +66,8 @@ public class Neo4JProjectWorktree {
 //					sourceDocument.getSourceDocument())
 //			);
 
-			for (Neo4JMarkupCollectionWorktree markupCollectionWorktree : this.markupCollections) {
-				project.addMarkupCollection(markupCollectionWorktree.getUserMarkupCollection());
+			for (Neo4JMarkupCollection markupCollection : this.markupCollections) {
+				project.addMarkupCollection(markupCollection.getUserMarkupCollection());
 			}
 
 			for (Neo4JSourceDocumentWorktree sourceDocumentWorktree : this.sourceDocuments) {
@@ -97,13 +97,13 @@ public class Neo4JProjectWorktree {
 		this.tagsets = tagsets.stream().map(Neo4JTagsetWorktree::new).collect(Collectors.toList());
 	}
 
-	public void setMarkupCollections(List<UserMarkupCollection> markupCollections) throws Neo4JProjectException {
+	public void setMarkupCollections(List<UserMarkupCollection> userMarkupCollections) throws Neo4JProjectException {
 		// TODO: figure out how to do this with .stream().map while handling exceptions properly
 		// see https://stackoverflow.com/a/33218789 & https://stackoverflow.com/a/30118121 for pointers
 		this.markupCollections.clear();
 		try {
-			for (UserMarkupCollection userMarkupCollection : markupCollections) {
-				this.markupCollections.add(new Neo4JMarkupCollectionWorktree(userMarkupCollection));
+			for (UserMarkupCollection userMarkupCollection : userMarkupCollections) {
+				this.markupCollections.add(new Neo4JMarkupCollection(userMarkupCollection));
 			}
 		}
 		catch (Neo4JUserMarkupCollectionException e) {
