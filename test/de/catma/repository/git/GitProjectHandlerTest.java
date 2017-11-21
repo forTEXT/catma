@@ -20,7 +20,7 @@ import java.util.*;
 
 import static org.junit.Assert.*;
 
-public class ProjectHandlerTest {
+public class GitProjectHandlerTest {
 	private Properties catmaProperties;
 	private de.catma.user.User catmaUser;
 	private GitLabServerManager gitLabServerManager;
@@ -28,7 +28,7 @@ public class ProjectHandlerTest {
 	private ArrayList<String> projectsToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
 
-	public ProjectHandlerTest() throws Exception {
+	public GitProjectHandlerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
 				System.getProperties().getProperty("prop") : "catma.properties";
 
@@ -51,10 +51,10 @@ public class ProjectHandlerTest {
 	public void tearDown() throws Exception {
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
 			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
-				ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+				GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
-					projectHandler.delete(projectId);
+					gitProjectHandler.delete(projectId);
 				}
 				this.projectsToDeleteOnTearDown.clear();
 			}
@@ -81,9 +81,9 @@ public class ProjectHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
-			String projectId = projectHandler.create(
+			String projectId = gitProjectHandler.create(
 				"Test CATMA Project", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
@@ -91,11 +91,11 @@ public class ProjectHandlerTest {
 			assertNotNull(projectId);
 			assert projectId.startsWith("CATMA_");
 
-			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
+			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls
 			// return
 			assertFalse(jGitRepoManager.isAttached());
 
-			String expectedRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+			String expectedRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
 
 			File expectedRootRepositoryPath = new File(
 					jGitRepoManager.getRepositoryBasePath(), expectedRootRepositoryName
@@ -111,9 +111,9 @@ public class ProjectHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
-			String projectId = projectHandler.create(
+			String projectId = gitProjectHandler.create(
 				"Test CATMA Project", "This is a test CATMA project"
 			);
 			// we don't add the projectId to this.projectsToDeleteOnTearDown as this is the delete test
@@ -121,11 +121,11 @@ public class ProjectHandlerTest {
 			assertNotNull(projectId);
 			assert projectId.startsWith("CATMA_");
 
-			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
+			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls
 			// return
 			assertFalse(jGitRepoManager.isAttached());
 
-			String expectedRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+			String expectedRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
 
 			File expectedRootRepositoryPath = new File(
 					jGitRepoManager.getRepositoryBasePath(), expectedRootRepositoryName
@@ -134,11 +134,11 @@ public class ProjectHandlerTest {
 			assert expectedRootRepositoryPath.exists();
 			assert expectedRootRepositoryPath.isDirectory();
 
-			projectHandler.delete(projectId);
+			gitProjectHandler.delete(projectId);
 
 			assertFalse(expectedRootRepositoryPath.exists());
 
-			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
+			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls
 			// return
 			assertFalse(jGitRepoManager.isAttached());
 		}
@@ -149,18 +149,18 @@ public class ProjectHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
-			String projectId = projectHandler.create(
+			String projectId = gitProjectHandler.create(
 					"Test CATMA Project",
 					"This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls return
+			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			String tagsetId = projectHandler.createTagset(
+			String tagsetId = gitProjectHandler.createTagset(
 					projectId,
 					null,
 					"Test Tagset",
@@ -169,16 +169,16 @@ public class ProjectHandlerTest {
 
 			assertNotNull(tagsetId);
 
-			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls return
+			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			jGitRepoManager.open(ProjectHandler.getProjectRootRepositoryName(projectId));
+			jGitRepoManager.open(GitProjectHandler.getProjectRootRepositoryName(projectId));
 			Status status = jGitRepoManager.getGitApi().status().call();
 			Set<String> added = status.getAdded();
 
 			assert status.hasUncommittedChanges();
 			assert added.contains(".gitmodules");
-			assert added.contains(String.format("%s/%s", ProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetId));
+			assert added.contains(String.format("%s/%s", GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetId));
 		}
 	}
 
@@ -187,18 +187,18 @@ public class ProjectHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
-			String projectId = projectHandler.create(
+			String projectId = gitProjectHandler.create(
 					"Test CATMA Project",
 					"This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls return
+			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			String markupCollectionId = projectHandler.createMarkupCollection(
+			String markupCollectionId = gitProjectHandler.createMarkupCollection(
 					projectId,
 					null,
 					"Test Markup Collection",
@@ -209,10 +209,10 @@ public class ProjectHandlerTest {
 
 			assertNotNull(markupCollectionId);
 
-			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls return
+			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			jGitRepoManager.open(ProjectHandler.getProjectRootRepositoryName(projectId));
+			jGitRepoManager.open(GitProjectHandler.getProjectRootRepositoryName(projectId));
 			Status status = jGitRepoManager.getGitApi().status().call();
 			Set<String> added = status.getAdded();
 
@@ -220,7 +220,7 @@ public class ProjectHandlerTest {
 			assert added.contains(".gitmodules");
 			assert added.contains(
 					String.format(
-							"%s/%s", ProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, markupCollectionId
+							"%s/%s", GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, markupCollectionId
 					)
 			);
 		}
@@ -261,29 +261,29 @@ public class ProjectHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
-			String projectId = projectHandler.create(
+			String projectId = gitProjectHandler.create(
 				"Test CATMA Project", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
+			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls
 			// return
 			assertFalse(jGitRepoManager.isAttached());
 
-			String sourceDocumentId = projectHandler.createSourceDocument(
+			String sourceDocumentId = gitProjectHandler.createSourceDocument(
 					projectId, null,
 					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
 					gitSourceDocumentInfo
 			);
 
-			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
+			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls
 			// return
 			assertFalse(jGitRepoManager.isAttached());
 
-			jGitRepoManager.open(ProjectHandler.getProjectRootRepositoryName(projectId));
+			jGitRepoManager.open(GitProjectHandler.getProjectRootRepositoryName(projectId));
 			Status status = jGitRepoManager.getGitApi().status().call();
 			Set<String> added = status.getAdded();
 

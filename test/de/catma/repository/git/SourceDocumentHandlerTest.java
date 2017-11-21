@@ -77,10 +77,10 @@ public class SourceDocumentHandlerTest {
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
 			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
-				ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+				GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
-					projectHandler.delete(projectId);
+					gitProjectHandler.delete(projectId);
 				}
 				this.projectsToDeleteOnTearDown.clear();
 			}
@@ -136,16 +136,16 @@ public class SourceDocumentHandlerTest {
 				jGitRepoManager, this.gitLabServerManager
 			);
 
-			ProjectHandler projectHandler = new ProjectHandler(
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(
 				jGitRepoManager, this.gitLabServerManager
 			);
 
-			String projectId = projectHandler.create(
+			String projectId = gitProjectHandler.create(
 				"Test CATMA Project", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			// the JGitRepoManager instance should always be in a detached state after ProjectHandler calls
+			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls
 			// return
 			assertFalse(jGitRepoManager.isAttached());
 

@@ -7,7 +7,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.InputStream;
 
-public interface IProjectHandler {
+public interface IGitProjectHandler {
 	String create(@Nonnull String name, @Nullable String description) throws ProjectHandlerException;
 
 	void delete(@Nonnull String projectId) throws ProjectHandlerException;

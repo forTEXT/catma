@@ -1,7 +1,7 @@
 package de.catma.repository.git;
 
 import de.catma.repository.git.exceptions.*;
-import de.catma.repository.git.interfaces.IProjectHandler;
+import de.catma.repository.git.interfaces.IGitProjectHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.GitLabServerManager;
@@ -18,7 +18,7 @@ import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class ProjectHandler implements IProjectHandler {
+public class GitProjectHandler implements IGitProjectHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitServerManager remoteGitServerManager;
 
@@ -36,8 +36,8 @@ public class ProjectHandler implements IProjectHandler {
 	public static final String MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME = "collections";
 	public static final String SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME = "documents";
 
-	public ProjectHandler(ILocalGitRepositoryManager localGitRepositoryManager,
-						  IRemoteGitServerManager remoteGitServerManager) {
+	public GitProjectHandler(ILocalGitRepositoryManager localGitRepositoryManager,
+							 IRemoteGitServerManager remoteGitServerManager) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
 
@@ -63,7 +63,7 @@ public class ProjectHandler implements IProjectHandler {
 			);
 
 			// create the root repository
-			String projectNameAndPath = ProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectNameAndPath = GitProjectHandler.getProjectRootRepositoryName(projectId);
 
 			IRemoteGitServerManager.CreateRepositoryResponse response =
 					this.remoteGitServerManager.createRepository(
@@ -146,7 +146,7 @@ public class ProjectHandler implements IProjectHandler {
 			localGitRepoManager.detach(); // need to explicitly detach so that we can call open below
 
 			// open the project root repo
-			localGitRepoManager.open(ProjectHandler.getProjectRootRepositoryName(projectId));
+			localGitRepoManager.open(GitProjectHandler.getProjectRootRepositoryName(projectId));
 
 			// add the submodule
 			File targetSubmodulePath = Paths.get(
@@ -207,7 +207,7 @@ public class ProjectHandler implements IProjectHandler {
 			localGitRepoManager.detach(); // need to explicitly detach so that we can call open below
 
 			// open the project root repo
-			localGitRepoManager.open(ProjectHandler.getProjectRootRepositoryName(projectId));
+			localGitRepoManager.open(GitProjectHandler.getProjectRootRepositoryName(projectId));
 
 			// add the submodule
 			File targetSubmodulePath = Paths.get(
@@ -281,7 +281,7 @@ public class ProjectHandler implements IProjectHandler {
 			repoManager.close();
 
 			// open the project root repository
-			repoManager.open(ProjectHandler.getProjectRootRepositoryName(projectId));
+			repoManager.open(GitProjectHandler.getProjectRootRepositoryName(projectId));
 
 			// create the submodule
 			File targetSubmodulePath = Paths.get(

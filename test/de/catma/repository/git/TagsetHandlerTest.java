@@ -86,10 +86,10 @@ public class TagsetHandlerTest {
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
 			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
-				ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+				GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
-					projectHandler.delete(projectId);
+					gitProjectHandler.delete(projectId);
 				}
 				this.projectsToDeleteOnTearDown.clear();
 			}
@@ -109,14 +109,14 @@ public class TagsetHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
-			String projectId = projectHandler.create(
+			String projectId = gitProjectHandler.create(
 				"Test CATMA Project for Tagset", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			// the JGitRepoManager instance should always be in a detached state after ProjectHandler
+			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler
 			// calls return
 			assertFalse(jGitRepoManager.isAttached());
 
@@ -175,15 +175,15 @@ public class TagsetHandlerTest {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			// create a project
-			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
-			String projectId = projectHandler.create(
+			String projectId = gitProjectHandler.create(
 					"Test CATMA Project for Tagset", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
 			// create a tagset
-			String tagsetId = projectHandler.createTagset(
+			String tagsetId = gitProjectHandler.createTagset(
 					projectId, null, "Test Tagset", null
 			);
 			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the project will take
@@ -219,12 +219,12 @@ public class TagsetHandlerTest {
 
 			assertEquals(tagDefinitionId, returnedTagDefinitionId);
 
-			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
 
 			File expectedTagDefinitionPath = Paths.get(
 					jGitRepoManager.getRepositoryBasePath().toString(),
 					projectRootRepositoryName,
-					ProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
+					GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
 					tagsetId,
 					tagDefinition.getUuid()
 			).toFile();
@@ -261,15 +261,15 @@ public class TagsetHandlerTest {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			// create a project
-			ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
-			String projectId = projectHandler.create(
+			String projectId = gitProjectHandler.create(
 					"Test CATMA Project for Tagset", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
 			// create a tagset
-			String tagsetId = projectHandler.createTagset(
+			String tagsetId = gitProjectHandler.createTagset(
 					projectId, null, "Test Tagset", null
 			);
 			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the project will take
@@ -297,12 +297,12 @@ public class TagsetHandlerTest {
 
 			assertEquals(tagDefinitionId, returnedTagDefinitionId);
 
-			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
 
 			File expectedTagDefinitionPath = Paths.get(
 					jGitRepoManager.getRepositoryBasePath().toString(),
 					projectRootRepositoryName,
-					ProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
+					GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
 					tagsetId,
 					parentTagDefinitionId,
 					tagDefinition.getUuid()

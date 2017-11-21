@@ -135,11 +135,11 @@ public class TagsetHandler implements ITagsetHandler {
 	@Override
 	public TagsetDefinition open(@Nonnull String projectId, @Nonnull String tagsetId) throws TagsetHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectRootRepositoryName);
 
 			String tagsetSubmoduleName = String.format(
-					"%s/%s", ProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetId
+					"%s/%s", GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetId
 			);
 
 			File tagsetHeaderFile = new File(
@@ -191,7 +191,7 @@ public class TagsetHandler implements ITagsetHandler {
 									  @Nonnull TagDefinition tagDefinition
 	) throws TagsetHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectRootRepositoryName);
 
 			String targetPropertyDefinitionsFileRelativePath = String.format(
@@ -205,7 +205,7 @@ public class TagsetHandler implements ITagsetHandler {
 
 			File targetPropertyDefinitionsFileAbsolutePath = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
-					ProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
+					GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
 					tagsetId,
 					targetPropertyDefinitionsFileRelativePath
 			).toFile();

@@ -4,7 +4,7 @@ import com.jsoniter.annotation.JsonIgnore;
 import com.jsoniter.annotation.JsonProperty;
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.repository.git.ProjectHandler;
+import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.TagsetHandler;
 import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
 import de.catma.repository.git.exceptions.TagsetHandlerException;
@@ -46,7 +46,7 @@ public class JsonLdWebAnnotation {
 			);
 		}
 
-		String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+		String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
 
 		try {
 			this.id = this.buildTagInstanceUrl(

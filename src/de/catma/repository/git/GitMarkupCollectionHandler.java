@@ -147,12 +147,12 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 						  @Nonnull String tagsetVersion
 	) throws MarkupCollectionHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectRootRepositoryName);
 
 			File targetMarkupCollectionHeaderFilePath = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
-					ProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
+					GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
 					markupCollectionId,
 					"header.json"
 			).toFile();
@@ -215,7 +215,7 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 		// TODO: check that the tag instance is for the correct document
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// open the project root repo
-			localGitRepoManager.open(ProjectHandler.getProjectRootRepositoryName(projectId));
+			localGitRepoManager.open(GitProjectHandler.getProjectRootRepositoryName(projectId));
 
 			// write the serialized tag instance to the markup collection submodule
 			File targetTagInstanceFilePath = new File(
@@ -291,11 +291,11 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 			throws MarkupCollectionHandlerException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectRootRepositoryName);
 
 			String markupCollectionSubmoduleName = String.format(
-					"%s/%s", ProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, markupCollectionId
+					"%s/%s", GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, markupCollectionId
 			);
 
 			File markupCollectionSubmodulePath = new File(

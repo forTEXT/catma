@@ -148,11 +148,11 @@ public class SourceDocumentHandler implements ISourceDocumentHandler {
 			throws SourceDocumentHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 
-			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectRootRepositoryName);
 
 			String sourceDocumentSubmoduleName = String.format(
-					"%s/%s", ProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME, sourceDocumentId
+					"%s/%s", GitProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME, sourceDocumentId
 			);
 
 			File sourceDocumentSubmodulePath = new File(

@@ -3,7 +3,7 @@ package de.catma.repository.git.serialization.models.json_ld;
 import de.catma.document.Range;
 import de.catma.document.source.*;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.repository.git.ProjectHandler;
+import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.TagsetHandler;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.GitLabServerManager;
@@ -117,10 +117,10 @@ public class JsonLdWebAnnotationTest {
 	public void tearDown() throws Exception {
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
 			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
-				ProjectHandler projectHandler = new ProjectHandler(jGitRepoManager, this.gitLabServerManager);
+				GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
-					projectHandler.delete(projectId);
+					gitProjectHandler.delete(projectId);
 				}
 				this.projectsToDeleteOnTearDown.clear();
 			}
@@ -159,16 +159,16 @@ public class JsonLdWebAnnotationTest {
 //			this.directoriesToDeleteOnTearDown.add(localJGitRepoManager.getRepositoryBasePath());
 
 			// create project
-			ProjectHandler projectHandler = new ProjectHandler(localJGitRepoManager, gitLabServerManager);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(localJGitRepoManager, gitLabServerManager);
 
-			String projectId = projectHandler.create(
+			String projectId = gitProjectHandler.create(
 					"Test CATMA Project", "This is a test CATMA project"
 			);
 			// caller should do the following:
 //			this.projectsToDeleteOnTearDown.add(projectId);
 
 			// add new tagset to project
-			String tagsetId = projectHandler.createTagset(
+			String tagsetId = gitProjectHandler.createTagset(
 					projectId, null, "Test Tagset", null
 			);
 
@@ -203,7 +203,7 @@ public class JsonLdWebAnnotationTest {
 
 			GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 
-			String sourceDocumentId = projectHandler.createSourceDocument(
+			String sourceDocumentId = gitProjectHandler.createSourceDocument(
 					projectId,
 					null, originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
@@ -211,14 +211,14 @@ public class JsonLdWebAnnotationTest {
 			);
 
 			// add new markup collection to project
-			String markupCollectionId = projectHandler.createMarkupCollection(
+			String markupCollectionId = gitProjectHandler.createMarkupCollection(
 					projectId, null, "Test Markup Collection", null,
 					sourceDocumentId, "fakeSourceDocumentVersion"
 			);
 
 			// commit the changes to the project root repo (addition of tagset, source document and markup collection
 			// submodules)
-			String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
 			localJGitRepoManager.open(projectRootRepositoryName);
 			localJGitRepoManager.commit(
 					String.format(
@@ -285,7 +285,7 @@ public class JsonLdWebAnnotationTest {
 
 			Repository projectRootRepository = localJGitRepoManager.getGitApi().getRepository();
 			String tagsetSubmodulePath = String.format(
-					"%s/%s", ProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetId
+					"%s/%s", GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetId
 			);
 			Repository tagsetSubmoduleRepository = SubmoduleWalk.getSubmoduleRepository(
 					projectRootRepository, tagsetSubmodulePath

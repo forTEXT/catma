@@ -2,7 +2,7 @@ package de.catma.repository.git.serialization.models.json_ld;
 
 import com.jsoniter.annotation.JsonProperty;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.repository.git.ProjectHandler;
+import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
@@ -55,7 +55,7 @@ public class JsonLdWebAnnotationBody_Dataset {
 		TagDefinition tagDefinition = tagReferences.get(0).getTagDefinition();
 		TagInstance tagInstance = tagReferences.get(0).getTagInstance();
 
-		String projectRootRepositoryName = ProjectHandler.getProjectRootRepositoryName(projectId);
+		String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
 
 		try {
 			this.tagset = this.buildTagsetUrl(
