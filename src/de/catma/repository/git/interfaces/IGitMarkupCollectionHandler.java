@@ -7,7 +7,7 @@ import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public interface IMarkupCollectionHandler {
+public interface IGitMarkupCollectionHandler {
 	String create(
 			@Nonnull String projectId,
 			@Nullable String markupCollectionId,

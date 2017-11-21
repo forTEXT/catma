@@ -179,12 +179,12 @@ public class ProjectHandler implements IProjectHandler {
 	) throws ProjectHandlerException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			MarkupCollectionHandler markupCollectionHandler = new MarkupCollectionHandler(
+			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
 					localGitRepoManager, this.remoteGitServerManager
 			);
 
 			// create the markup collection
-			String newMarkupCollectionId = markupCollectionHandler.create(
+			String newMarkupCollectionId = gitMarkupCollectionHandler.create(
 					projectId,
 					markupCollectionId,
 					name,
@@ -201,7 +201,7 @@ public class ProjectHandler implements IProjectHandler {
 			User gitLabUser = gitLabServerManager.getGitLabUser();
 			String gitLabUserImpersonationToken = gitLabServerManager.getGitLabUserImpersonationToken();
 
-			localGitRepoManager.open(MarkupCollectionHandler.getMarkupCollectionRepositoryName(newMarkupCollectionId));
+			localGitRepoManager.open(GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(newMarkupCollectionId));
 			localGitRepoManager.push(gitLabUser.getUsername(), gitLabUserImpersonationToken);
 			String markupCollectionRepoRemoteUrl = localGitRepoManager.getRemoteUrl(null);
 			localGitRepoManager.detach(); // need to explicitly detach so that we can call open below

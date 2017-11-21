@@ -9,7 +9,7 @@ import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.exceptions.MarkupCollectionHandlerException;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IMarkupCollectionHandler;
+import de.catma.repository.git.interfaces.IGitMarkupCollectionHandler;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
@@ -33,7 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MarkupCollectionHandler implements IMarkupCollectionHandler {
+public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitServerManager remoteGitServerManager;
 
@@ -43,8 +43,8 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 		return String.format(MARKUPCOLLECTION_REPOSITORY_NAME_FORMAT, markupCollectionId);
 	}
 
-	public MarkupCollectionHandler(ILocalGitRepositoryManager localGitRepositoryManager,
-								   IRemoteGitServerManager remoteGitServerManager) {
+	public GitMarkupCollectionHandler(ILocalGitRepositoryManager localGitRepositoryManager,
+									  IRemoteGitServerManager remoteGitServerManager) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
 	}
@@ -79,7 +79,7 @@ public class MarkupCollectionHandler implements IMarkupCollectionHandler {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// create the remote markup collection repository
-			String markupCollectionRepoName = MarkupCollectionHandler.getMarkupCollectionRepositoryName(
+			String markupCollectionRepoName = GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(
 					markupCollectionId
 			);
 
