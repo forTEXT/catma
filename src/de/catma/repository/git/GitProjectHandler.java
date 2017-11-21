@@ -259,12 +259,12 @@ public class GitProjectHandler implements IGitProjectHandler {
 			@Nonnull GitSourceDocumentInfo gitSourceDocumentInfo
 	) throws ProjectHandlerException {
 		try (ILocalGitRepositoryManager repoManager = this.localGitRepositoryManager) {
-			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
 				repoManager, this.remoteGitServerManager
 			);
 
 			// create the source document within the project
-			sourceDocumentId = sourceDocumentHandler.create(
+			sourceDocumentId = gitSourceDocumentHandler.create(
 					projectId, sourceDocumentId,
 					originalSourceDocumentStream, originalSourceDocumentFileName,
 					convertedSourceDocumentStream, convertedSourceDocumentFileName,
@@ -274,7 +274,7 @@ public class GitProjectHandler implements IGitProjectHandler {
 			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
 			String gitLabUserImpersonationToken = gitLabServerManager.getGitLabUserImpersonationToken();
 
-			repoManager.open(SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId));
+			repoManager.open(GitSourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId));
 			repoManager.push(gitLabServerManager.getGitLabUser().getUsername(), gitLabUserImpersonationToken);
 
 			String remoteUri = repoManager.getRemoteUrl(null);

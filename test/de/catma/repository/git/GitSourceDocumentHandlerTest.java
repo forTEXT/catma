@@ -25,7 +25,7 @@ import java.util.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
 
-public class SourceDocumentHandlerTest {
+public class GitSourceDocumentHandlerTest {
 	private Properties catmaProperties;
 	private de.catma.user.User catmaUser;
 	private GitLabServerManager gitLabServerManager;
@@ -34,7 +34,7 @@ public class SourceDocumentHandlerTest {
 	private ArrayList<String> sourceDocumentReposToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<String> projectsToDeleteOnTearDown = new ArrayList<>();
 
-    public SourceDocumentHandlerTest() throws Exception {
+    public GitSourceDocumentHandlerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
 				System.getProperties().getProperty("prop") : "catma.properties";
 
@@ -132,7 +132,7 @@ public class SourceDocumentHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
 				jGitRepoManager, this.gitLabServerManager
 			);
 
@@ -149,7 +149,7 @@ public class SourceDocumentHandlerTest {
 			// return
 			assertFalse(jGitRepoManager.isAttached());
 
-			String sourceDocumentId = sourceDocumentHandler.create(
+			String sourceDocumentId = gitSourceDocumentHandler.create(
 					projectId, null,
 					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
@@ -161,13 +161,13 @@ public class SourceDocumentHandlerTest {
 			assertNotNull(sourceDocumentId);
 			assert sourceDocumentId.startsWith("CATMA_");
 
-			// the JGitRepoManager instance should always be in a detached state after SourceDocumentHandler
+			// the JGitRepoManager instance should always be in a detached state after GitSourceDocumentHandler
 			// calls return
 			assertFalse(jGitRepoManager.isAttached());
 
 			File expectedRepoPath = new File(
 				jGitRepoManager.getRepositoryBasePath(),
-				SourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId)
+				GitSourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId)
 			);
 
 			assert expectedRepoPath.exists();
@@ -222,13 +222,13 @@ public class SourceDocumentHandlerTest {
 	@Test
 	public void delete() throws Exception {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
-			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
 				jGitRepoManager, this.gitLabServerManager
 			);
 
 			thrown.expect(SourceDocumentHandlerException.class);
 			thrown.expectMessage("Not implemented");
-			sourceDocumentHandler.delete("fakeProjectId", "fakeSourceDocumentId");
+			gitSourceDocumentHandler.delete("fakeProjectId", "fakeSourceDocumentId");
 		}
 	}
 
@@ -246,11 +246,11 @@ public class SourceDocumentHandlerTest {
 
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			SourceDocumentHandler sourceDocumentHandler = new SourceDocumentHandler(
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
 					jGitRepoManager, this.gitLabServerManager
 			);
 
-			SourceDocument loadedSourceDocument = sourceDocumentHandler.open(projectId, sourceDocumentId);
+			SourceDocument loadedSourceDocument = gitSourceDocumentHandler.open(projectId, sourceDocumentId);
 
 			assertNotNull(loadedSourceDocument);
 			assertEquals(

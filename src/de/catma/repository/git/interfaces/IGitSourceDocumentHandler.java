@@ -8,7 +8,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.InputStream;
 
-public interface ISourceDocumentHandler {
+public interface IGitSourceDocumentHandler {
     String create(@Nonnull String projectId, @Nullable String sourceDocumentId,
 				  @Nonnull InputStream originalSourceDocumentStream, @Nonnull String originalSourceDocumentFileName,
 				  @Nonnull InputStream convertedSourceDocumentStream, @Nonnull String convertedSourceDocumentFileName,
