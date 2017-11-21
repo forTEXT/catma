@@ -4,7 +4,7 @@ import de.catma.document.source.*;
 import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.models.Project;
-import de.catma.repository.neo4j.managers.Neo4JOGMSessionFactory;
+import de.catma.repository.neo4j.Neo4JOGMSessionFactory;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 import de.catma.util.IDGenerator;

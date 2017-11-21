@@ -5,7 +5,7 @@ import de.catma.document.Range;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.repository.neo4j.managers.Neo4JOGMSessionFactory;
+import de.catma.repository.neo4j.Neo4JOGMSessionFactory;
 import de.catma.tag.*;
 import de.catma.util.IDGenerator;
 import org.junit.After;
@@ -15,7 +15,6 @@ import org.neo4j.ogm.session.Session;
 
 import java.io.FileInputStream;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Properties;
 
 import static org.junit.Assert.*;

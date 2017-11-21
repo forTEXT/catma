@@ -2,7 +2,7 @@ package de.catma.repository.neo4j.serialization.model_wrappers;
 
 import de.catma.document.source.*;
 import de.catma.document.source.contenthandler.StandardContentHandler;
-import de.catma.repository.neo4j.managers.Neo4JOGMSessionFactory;
+import de.catma.repository.neo4j.Neo4JOGMSessionFactory;
 import de.catma.util.IDGenerator;
 import org.junit.After;
 import org.junit.Before;

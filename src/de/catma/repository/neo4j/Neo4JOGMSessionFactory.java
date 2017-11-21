@@ -1,4 +1,4 @@
-package de.catma.repository.neo4j.managers;
+package de.catma.repository.neo4j;
 
 import org.neo4j.ogm.config.Configuration;
 import org.neo4j.ogm.session.Session;

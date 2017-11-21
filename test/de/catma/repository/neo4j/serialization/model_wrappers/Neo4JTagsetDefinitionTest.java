@@ -1,6 +1,6 @@
 package de.catma.repository.neo4j.serialization.model_wrappers;
 
-import de.catma.repository.neo4j.managers.Neo4JOGMSessionFactory;
+import de.catma.repository.neo4j.Neo4JOGMSessionFactory;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
@@ -13,7 +13,6 @@ import org.neo4j.ogm.session.Session;
 
 import java.io.FileInputStream;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Properties;
 
 import static org.junit.Assert.*;
