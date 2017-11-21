@@ -1,4 +1,4 @@
-package de.catma.repository.neo4j.serialization.model_wrappers;
+package de.catma.repository.neo4j.model_wrappers;
 
 import de.catma.document.source.*;
 import de.catma.document.source.contenthandler.StandardContentHandler;
