@@ -50,7 +50,7 @@ public class Neo4JMarkupCollectionTest {
 	}
 
 	@Test
-	public void ogmInsertMarkupCollection() throws Exception {
+	public void insertMarkupCollection() throws Exception {
 		try (Neo4JOGMSessionFactory neo4JOGMSessionFactory = new Neo4JOGMSessionFactory(this.catmaProperties)) {
 
 			TagDefinition tagDefinition = new TagDefinition();

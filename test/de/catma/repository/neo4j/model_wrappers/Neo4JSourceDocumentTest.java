@@ -48,7 +48,7 @@ public class Neo4JSourceDocumentTest {
 	}
 
 	@Test
-	public void ogmInsertSourceDocument() throws Exception {
+	public void insertSourceDocument() throws Exception {
 		try (Neo4JOGMSessionFactory neo4JOGMSessionFactory = new Neo4JOGMSessionFactory(this.catmaProperties)) {
 			File convertedSourceDocument = new File("testdocs/rose_for_emily.txt");
 

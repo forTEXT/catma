@@ -52,7 +52,7 @@ public class Neo4JProjectTest {
 	}
 
 	@Test
-	public void ogmInsertProject() throws Exception {
+	public void insertProject() throws Exception {
 		try (Neo4JOGMSessionFactory neo4JOGMSessionFactory = new Neo4JOGMSessionFactory(this.catmaProperties)) {
 			String tagsetDefinitionUuid = this.idGenerator.generate();
 
