@@ -34,6 +34,10 @@ public class Neo4JProject {
 		this.name = name;
 	}
 
+	public Long getId() {
+		return this.id;
+	}
+
 	public String getUuid() {
 		return this.uuid;
 	}

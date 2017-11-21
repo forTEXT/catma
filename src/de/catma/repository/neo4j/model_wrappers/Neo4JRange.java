@@ -31,6 +31,18 @@ public class Neo4JRange {
 		this.setRange(tagReference);
 	}
 
+	public Long getId() {
+		return this.id;
+	}
+
+	public int getStartPoint() {
+		return this.startPoint;
+	}
+
+	public int getEndPoint() {
+		return this.endPoint;
+	}
+
 	public Range getRange() {
 		return new Range(this.startPoint, this.endPoint);
 	}

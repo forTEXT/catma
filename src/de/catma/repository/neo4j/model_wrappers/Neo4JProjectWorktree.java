@@ -48,6 +48,22 @@ public class Neo4JProjectWorktree {
 		this.setProject(project);
 	}
 
+	public Long getId() {
+		return this.id;
+	}
+
+	public String getUuid() {
+		return this.uuid;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public String getDescription() {
+		return this.description;
+	}
+
 	public String getRevisionHash() {
 		return this.revisionHash;
 	}

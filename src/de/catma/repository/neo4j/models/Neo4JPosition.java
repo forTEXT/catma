@@ -25,6 +25,10 @@ public class Neo4JPosition extends Neo4JRange {
 		this.setTermInfo(termInfo);
 	}
 
+	public int getOffset() {
+		return this.offset;
+	}
+
 	public TermInfo getTermInfo() {
 		return new TermInfo(null, this.startPoint, this.endPoint, this.offset);
 	}

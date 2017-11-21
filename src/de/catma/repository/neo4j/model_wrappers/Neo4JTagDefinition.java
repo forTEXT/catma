@@ -46,6 +46,26 @@ public class Neo4JTagDefinition {
 		this.setChildren(children);
 	}
 
+	public Long getId() {
+		return this.id;
+	}
+
+	public String getUuid() {
+		return this.uuid;
+	}
+
+	public String getParentUuid() {
+		return this.parentUuid;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public String getTagsetDefinitionUuid() {
+		return this.tagsetDefinitionUuid;
+	}
+
 	public TagDefinition getTagDefinition(){
 		TagDefinition tagDefinition = new TagDefinition();
 

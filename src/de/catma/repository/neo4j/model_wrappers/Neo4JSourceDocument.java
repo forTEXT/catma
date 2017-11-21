@@ -73,6 +73,22 @@ public class Neo4JSourceDocument {
 		this.setSourceDocument(sourceDocument);
 	}
 
+	public Long getId() {
+		return this.id;
+	}
+
+	public String getUuid() {
+		return this.uuid;
+	}
+
+	public Integer getLength() {
+		return this.length;
+	}
+
+	public String getRevisionHash() {
+		return this.revisionHash;
+	}
+
 	public SourceDocument getSourceDocument() throws Neo4JSourceDocumentException {
 		TechInfoSet techInfoSet = new TechInfoSet(
 				FileType.valueOf(this.fileType),

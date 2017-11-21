@@ -31,6 +31,10 @@ public class Neo4JProperty {
 		this.setProperty(property);
 	}
 
+	public Long getId() {
+		return this.id;
+	}
+
 	public Property getProperty() {
 		return new Property(this.propertyDefinition.getPropertyDefinition(), new PropertyValueList(this.values));
 	}

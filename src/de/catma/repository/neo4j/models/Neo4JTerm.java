@@ -35,8 +35,16 @@ public class Neo4JTerm {
 		this.setTermInfos(termInfos);
 	}
 
+	public Long getId() {
+		return this.id;
+	}
+
 	public String getLiteral() {
 		return this.literal;
+	}
+
+	public int getFrequency() {
+		return this.frequency;
 	}
 
 	public List<TermInfo> getTermInfos() {

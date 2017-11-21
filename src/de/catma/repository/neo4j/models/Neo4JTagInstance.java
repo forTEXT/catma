@@ -53,6 +53,22 @@ public class Neo4JTagInstance {
 		this.setTagReferences(tagReferences);
 	}
 
+	public Long getId() {
+		return this.id;
+	}
+
+	public String getUuid() {
+		return this.uuid;
+	}
+
+	public String getUserMarkupCollectionUuid() {
+		return this.userMarkupCollectionUuid;
+	}
+
+	public String getTarget() {
+		return this.target;
+	}
+
 	public List<TagReference> getTagReferences() throws Neo4JMarkupCollectionException {
 		List<Property> userDefinedProperties = this.userDefinedProperties.stream().map(Neo4JProperty::getProperty)
 				.collect(Collectors.toList());

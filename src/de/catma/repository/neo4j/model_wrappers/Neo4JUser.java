@@ -29,6 +29,10 @@ public class Neo4JUser {
 		this.identifier = user.getIdentifier();
 	}
 
+	public String getId() {
+		return this.identifier;
+	}
+
 	public String getIdentifier() {
 		return this.identifier;
 	}

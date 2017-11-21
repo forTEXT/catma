@@ -52,6 +52,34 @@ public class Neo4JMarkupCollection {
 		this.setUserMarkupCollection(userMarkupCollection);
 	}
 
+	public Long getId() {
+		return this.id;
+	}
+
+	public String getUuid() {
+		return this.uuid;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public String getDescription() {
+		return this.description;
+	}
+
+	public String getAuthor() {
+		return this.author;
+	}
+
+	public String getPublisher() {
+		return this.publisher;
+	}
+
+	public String getRevisionHash() {
+		return this.revisionHash;
+	}
+
 	public UserMarkupCollection getUserMarkupCollection() throws Neo4JMarkupCollectionException {
 //		List<TagReference> tagReferences = this.tagInstances.stream().map(Neo4JTagInstance::getTagReferences)
 //				.collect(Collectors.toList());
