@@ -4,7 +4,7 @@ import de.catma.document.Range;
 import de.catma.document.source.*;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.repository.git.GitProjectHandler;
-import de.catma.repository.git.TagsetHandler;
+import de.catma.repository.git.GitTagsetHandler;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
@@ -268,13 +268,13 @@ public class JsonLdWebAnnotationTest {
 			// a detached head state - in that case the submodule would need to be updated first
 			// see the "Updating a submodule in-place in the container" scenario at
 			// https://medium.com/@porteneuve/mastering-git-submodules-34c65e940407
-			TagsetHandler tagsetHandler = new TagsetHandler(localJGitRepoManager, gitLabServerManager);
-			String returnedTagDefinitionId = tagsetHandler.createTagDefinition(projectId, tagsetId, tagDefinition);
+			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localJGitRepoManager, gitLabServerManager);
+			String returnedTagDefinitionId = gitTagsetHandler.createTagDefinition(projectId, tagsetId, tagDefinition);
 
 			assertNotNull(returnedTagDefinitionId);
 			assert returnedTagDefinitionId.startsWith("CATMA_");
 
-			// the JGitRepoManager instance should always be in a detached state after TagsetHandler calls return
+			// the JGitRepoManager instance should always be in a detached state after GitTagsetHandler calls return
 			assertFalse(localJGitRepoManager.isAttached());
 
 			assertEquals(tagDefinitionUuid, returnedTagDefinitionId);

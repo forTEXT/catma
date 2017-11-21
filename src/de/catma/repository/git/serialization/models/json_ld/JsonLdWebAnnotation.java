@@ -5,7 +5,7 @@ import com.jsoniter.annotation.JsonProperty;
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.repository.git.GitProjectHandler;
-import de.catma.repository.git.TagsetHandler;
+import de.catma.repository.git.GitTagsetHandler;
 import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
 import de.catma.repository.git.exceptions.TagsetHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
@@ -204,11 +204,11 @@ public class JsonLdWebAnnotation {
 	private TagDefinition getTagDefinition(ILocalGitRepositoryManager localGitRepositoryManager,
 										   IRemoteGitServerManager remoteGitServerManager, String projectId)
 			throws JsonLdWebAnnotationException {
-		TagsetHandler tagsetHandler = new TagsetHandler(localGitRepositoryManager, remoteGitServerManager);
+		GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localGitRepositoryManager, remoteGitServerManager);
 
 		try {
 			// TODO: open a TagDefinition directly?
-			TagsetDefinition tagsetDefinition = tagsetHandler.open(
+			TagsetDefinition tagsetDefinition = gitTagsetHandler.open(
 					projectId,
 					this.getLastPathSegmentFromUrl(this.body.getTagset())
 			);

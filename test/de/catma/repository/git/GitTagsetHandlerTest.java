@@ -29,7 +29,7 @@ import java.util.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
 
-public class TagsetHandlerTest {
+public class GitTagsetHandlerTest {
 	private Properties catmaProperties;
 	private de.catma.user.User catmaUser;
 	private GitLabServerManager gitLabServerManager;
@@ -40,7 +40,7 @@ public class TagsetHandlerTest {
 
 	private IDGenerator idGenerator = null;
 
-	public TagsetHandlerTest() throws Exception {
+	public GitTagsetHandlerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
 				System.getProperties().getProperty("prop") : "catma.properties";
 
@@ -70,7 +70,7 @@ public class TagsetHandlerTest {
 
 		if (this.tagsetReposToDeleteOnTearDown.size() > 0) {
 			for (String tagsetId : this.tagsetReposToDeleteOnTearDown) {
-				String tagsetRepoName = TagsetHandler.getTagsetRepositoryName(tagsetId);
+				String tagsetRepoName = GitTagsetHandler.getTagsetRepositoryName(tagsetId);
 				List<Project> projects = this.gitLabServerManager.getAdminGitLabApi().getProjectApi().getProjects(
 					tagsetRepoName
 				); // this getProjects overload does a search
@@ -120,12 +120,12 @@ public class TagsetHandlerTest {
 			// calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
+			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(jGitRepoManager, this.gitLabServerManager);
 
 			String name = "Test Tagset";
 			String description = "Test Tagset Description";
 
-			String tagsetId = tagsetHandler.create(projectId, null, name, description);
+			String tagsetId = gitTagsetHandler.create(projectId, null, name, description);
 			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us
 
@@ -133,7 +133,7 @@ public class TagsetHandlerTest {
 			assert tagsetId.startsWith("CATMA_");
 
 			File expectedRepoPath = new File(
-				jGitRepoManager.getRepositoryBasePath(), TagsetHandler.getTagsetRepositoryName(tagsetId)
+				jGitRepoManager.getRepositoryBasePath(), GitTagsetHandler.getTagsetRepositoryName(tagsetId)
 			);
 			assert expectedRepoPath.exists();
 			assert expectedRepoPath.isDirectory();
@@ -161,11 +161,11 @@ public class TagsetHandlerTest {
 	@Test
 	public void delete() throws Exception {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
-			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
+			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(jGitRepoManager, this.gitLabServerManager);
 
 			thrown.expect(TagsetHandlerException.class);
 			thrown.expectMessage("Not implemented");
-			tagsetHandler.delete("fakeProjectId", "fakeTagsetId");
+			gitTagsetHandler.delete("fakeProjectId", "fakeTagsetId");
 		}
 	}
 
@@ -208,13 +208,13 @@ public class TagsetHandlerTest {
 			tagDefinition.addUserDefinedPropertyDefinition(propertyDefinition);
 
 			// call createTagDefinition
-			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
-			String returnedTagDefinitionId = tagsetHandler.createTagDefinition(projectId, tagsetId, tagDefinition);
+			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(jGitRepoManager, this.gitLabServerManager);
+			String returnedTagDefinitionId = gitTagsetHandler.createTagDefinition(projectId, tagsetId, tagDefinition);
 
 			assertNotNull(returnedTagDefinitionId);
 			assert returnedTagDefinitionId.startsWith("CATMA_");
 
-			// the JGitRepoManager instance should always be in a detached state after TagsetHandler calls return
+			// the JGitRepoManager instance should always be in a detached state after GitTagsetHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
 			assertEquals(tagDefinitionId, returnedTagDefinitionId);
@@ -286,13 +286,13 @@ public class TagsetHandlerTest {
 			);
 
 			// call createTagDefinition
-			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
-			String returnedTagDefinitionId = tagsetHandler.createTagDefinition(projectId, tagsetId, tagDefinition);
+			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(jGitRepoManager, this.gitLabServerManager);
+			String returnedTagDefinitionId = gitTagsetHandler.createTagDefinition(projectId, tagsetId, tagDefinition);
 
 			assertNotNull(returnedTagDefinitionId);
 			assert returnedTagDefinitionId.startsWith("CATMA_");
 
-			// the JGitRepoManager instance should always be in a detached state after TagsetHandler calls return
+			// the JGitRepoManager instance should always be in a detached state after GitTagsetHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
 			assertEquals(tagDefinitionId, returnedTagDefinitionId);
@@ -350,9 +350,9 @@ public class TagsetHandlerTest {
 
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			TagsetHandler tagsetHandler = new TagsetHandler(jGitRepoManager, this.gitLabServerManager);
+			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(jGitRepoManager, this.gitLabServerManager);
 
-			TagsetDefinition loadedTagsetDefinition = tagsetHandler.open(projectId, tagsetId);
+			TagsetDefinition loadedTagsetDefinition = gitTagsetHandler.open(projectId, tagsetId);
 
 			assertEquals(tagsetId, loadedTagsetDefinition.getUuid());
 			assertEquals("Test Tagset", loadedTagsetDefinition.getName());

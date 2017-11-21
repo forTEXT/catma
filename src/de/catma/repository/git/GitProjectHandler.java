@@ -127,10 +127,10 @@ public class GitProjectHandler implements IGitProjectHandler {
 	) throws ProjectHandlerException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			TagsetHandler tagsetHandler = new TagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			// create the tagset
-			String newTagsetId = tagsetHandler.create(projectId, tagsetId, name, description);
+			String newTagsetId = gitTagsetHandler.create(projectId, tagsetId, name, description);
 
 			// push the newly created tagset repo to the server in preparation for adding it to the project root repo
 			// as a submodule
@@ -140,7 +140,7 @@ public class GitProjectHandler implements IGitProjectHandler {
 			User gitLabUser = gitLabServerManager.getGitLabUser();
 			String gitLabUserImpersonationToken = gitLabServerManager.getGitLabUserImpersonationToken();
 
-			localGitRepoManager.open(TagsetHandler.getTagsetRepositoryName(newTagsetId));
+			localGitRepoManager.open(GitTagsetHandler.getTagsetRepositoryName(newTagsetId));
 			localGitRepoManager.push(gitLabUser.getUsername(), gitLabUserImpersonationToken);
 			String tagsetRepoRemoteUrl = localGitRepoManager.getRemoteUrl(null);
 			localGitRepoManager.detach(); // need to explicitly detach so that we can call open below

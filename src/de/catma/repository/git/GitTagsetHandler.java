@@ -3,9 +3,9 @@ package de.catma.repository.git;
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.exceptions.TagsetHandlerException;
+import de.catma.repository.git.interfaces.IGitTagsetHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
-import de.catma.repository.git.interfaces.ITagsetHandler;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class TagsetHandler implements ITagsetHandler {
+public class GitTagsetHandler implements IGitTagsetHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitServerManager remoteGitServerManager;
 
@@ -38,8 +38,8 @@ public class TagsetHandler implements ITagsetHandler {
 		return String.format(TAGSET_REPOSITORY_NAME_FORMAT, tagsetId);
 	}
 
-	public TagsetHandler(ILocalGitRepositoryManager localGitRepositoryManager,
-						 IRemoteGitServerManager remoteGitServerManager) {
+	public GitTagsetHandler(ILocalGitRepositoryManager localGitRepositoryManager,
+							IRemoteGitServerManager remoteGitServerManager) {
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
 	}
@@ -58,7 +58,7 @@ public class TagsetHandler implements ITagsetHandler {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// create the remote tagset repository
-			String tagsetRepoName = TagsetHandler.getTagsetRepositoryName(tagsetId);
+			String tagsetRepoName = GitTagsetHandler.getTagsetRepositoryName(tagsetId);
 
 			IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
 					this.remoteGitServerManager.createRepository(tagsetRepoName, tagsetRepoName, projectId);

@@ -7,7 +7,7 @@ import de.catma.tag.TagsetDefinition;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public interface ITagsetHandler {
+public interface IGitTagsetHandler {
 	String create(
 			@Nonnull String projectId,
 			@Nullable String tagsetId,
