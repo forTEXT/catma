@@ -1,6 +1,7 @@
 package de.catma.repository.neo4j.models;
 
 import de.catma.indexer.TermInfo;
+import de.catma.repository.neo4j.Neo4JRelationshipType;
 import de.catma.repository.neo4j.model_wrappers.Neo4JRange;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -9,10 +10,10 @@ import org.neo4j.ogm.annotation.Relationship;
 public class Neo4JPosition extends Neo4JRange {
 	private int offset;
 
-	@Relationship(type="APPEARS_AFTER", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.APPEARS_AFTER, direction=Relationship.OUTGOING)
 	private Neo4JPosition positionBefore;
 
-	@Relationship(type="APPEARS_BEFORE", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.APPEARS_BEFORE, direction=Relationship.OUTGOING)
 	private Neo4JPosition positionAfter;
 
 	public Neo4JPosition() {

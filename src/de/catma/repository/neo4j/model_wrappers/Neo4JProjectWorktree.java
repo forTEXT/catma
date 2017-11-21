@@ -3,6 +3,7 @@ package de.catma.repository.neo4j.model_wrappers;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.models.Project;
+import de.catma.repository.neo4j.Neo4JRelationshipType;
 import de.catma.repository.neo4j.exceptions.Neo4JProjectException;
 import de.catma.repository.neo4j.exceptions.Neo4JSourceDocumentException;
 import de.catma.repository.neo4j.exceptions.Neo4JMarkupCollectionException;
@@ -27,13 +28,13 @@ public class Neo4JProjectWorktree {
 	private String description;
 	private String revisionHash;
 
-	@Relationship(type="HAS_TAGSET", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_TAGSET, direction=Relationship.OUTGOING)
 	private List<Neo4JTagset> tagsets;
 
-	@Relationship(type="HAS_MARKUP_COLLECTION", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_MARKUP_COLLECTION, direction=Relationship.OUTGOING)
 	private List<Neo4JMarkupCollection> markupCollections;
 
-	@Relationship(type="HAS_SOURCE_DOCUMENT", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_SOURCE_DOCUMENT, direction=Relationship.OUTGOING)
 	private List<Neo4JSourceDocument> sourceDocuments;
 
 	public Neo4JProjectWorktree() {

@@ -1,6 +1,7 @@
 package de.catma.repository.neo4j.models;
 
 import de.catma.models.Project;
+import de.catma.repository.neo4j.Neo4JRelationshipType;
 import de.catma.repository.neo4j.exceptions.Neo4JProjectException;
 import de.catma.repository.neo4j.model_wrappers.Neo4JProjectWorktree;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -20,7 +21,7 @@ public class Neo4JProject {
 	private String uuid;
 	private String name;
 
-	@Relationship(type="HAS_WORKTREE", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_WORKTREE, direction=Relationship.OUTGOING)
 	private List<Neo4JProjectWorktree> projectWorktrees;
 
 	public Neo4JProject() {

@@ -2,6 +2,7 @@ package de.catma.repository.neo4j.models;
 
 import de.catma.document.Range;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.repository.neo4j.Neo4JRelationshipType;
 import de.catma.repository.neo4j.exceptions.Neo4JMarkupCollectionException;
 import de.catma.repository.neo4j.model_wrappers.Neo4JProperty;
 import de.catma.repository.neo4j.model_wrappers.Neo4JRange;
@@ -29,16 +30,16 @@ public class Neo4JTagInstance {
 	private String userMarkupCollectionUuid;
 	private String target;
 
-	@Relationship(type="HAS_TAG_DEFINITION", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_TAG_DEFINITION, direction=Relationship.OUTGOING)
 	private Neo4JTagDefinition tagDefinition;
 
-	@Relationship(type="HAS_SYSTEM_PROPERTY", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_SYSTEM_PROPERTY, direction=Relationship.OUTGOING)
 	private List<Neo4JProperty> systemProperties;
 
-	@Relationship(type="HAS_USER_DEFINED_PROPERTY", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_USER_DEFINED_PROPERTY, direction=Relationship.OUTGOING)
 	private List<Neo4JProperty> userDefinedProperties;
 
-	@Relationship(type="HAS_RANGE", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_RANGE, direction=Relationship.OUTGOING)
 	private List<Neo4JRange> ranges;
 
 	public Neo4JTagInstance() {

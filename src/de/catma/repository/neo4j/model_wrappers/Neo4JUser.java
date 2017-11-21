@@ -1,6 +1,7 @@
 package de.catma.repository.neo4j.model_wrappers;
 
 import de.catma.models.Project;
+import de.catma.repository.neo4j.Neo4JRelationshipType;
 import de.catma.repository.neo4j.exceptions.Neo4JProjectException;
 import de.catma.repository.neo4j.models.Neo4JProject;
 import de.catma.user.User;
@@ -16,7 +17,7 @@ public class Neo4JUser {
 	@Id
 	private String identifier;
 
-	@Relationship(type="HAS_PROJECT", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_PROJECT, direction=Relationship.OUTGOING)
 	private List<Neo4JProject> projects;
 
 	public Neo4JUser() {

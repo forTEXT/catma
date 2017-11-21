@@ -1,5 +1,6 @@
 package de.catma.repository.neo4j.model_wrappers;
 
+import de.catma.repository.neo4j.Neo4JRelationshipType;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -20,7 +21,7 @@ public class Neo4JTagset {
 	private String name;
 	private String revisionHash;
 
-	@Relationship(type="HAS_TAG_DEFINITION", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_TAG_DEFINITION, direction=Relationship.OUTGOING)
 	private List<Neo4JTagDefinition> tagDefinitions;
 
 	public Neo4JTagset() {

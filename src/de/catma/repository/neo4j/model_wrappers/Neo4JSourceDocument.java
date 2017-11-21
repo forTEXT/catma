@@ -5,6 +5,7 @@ import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
+import de.catma.repository.neo4j.Neo4JRelationshipType;
 import de.catma.repository.neo4j.exceptions.Neo4JSourceDocumentException;
 import de.catma.repository.neo4j.models.Neo4JTerm;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -58,7 +59,7 @@ public class Neo4JSourceDocument {
 	private String uri;
 	private String xsltDocumentLocalUri;
 
-	@Relationship(type="HAS_TERM", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_TERM, direction=Relationship.OUTGOING)
 	private List<Neo4JTerm> terms;
 
 	public Neo4JSourceDocument() {

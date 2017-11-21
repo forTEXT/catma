@@ -4,6 +4,7 @@ import de.catma.document.AccessMode;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.repository.neo4j.Neo4JRelationshipType;
 import de.catma.repository.neo4j.exceptions.Neo4JMarkupCollectionException;
 import de.catma.repository.neo4j.models.Neo4JTagInstance;
 import de.catma.tag.TagLibrary;
@@ -30,13 +31,13 @@ public class Neo4JMarkupCollection {
 	private String publisher;
 	private String revisionHash;
 
-	@Relationship(type="HAS_TAG_INSTANCE", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_TAG_INSTANCE, direction=Relationship.OUTGOING)
 	private List<Neo4JTagInstance> tagInstances;
 
-	@Relationship(type="REFERENCES_SOURCE_DOCUMENT", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.REFERENCES_SOURCE_DOCUMENT, direction=Relationship.OUTGOING)
 	private Neo4JSourceDocument sourceDocument;
 
-	@Relationship(type="REFERENCES_TAGSET", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.REFERENCES_TAGSET, direction=Relationship.OUTGOING)
 	private List<Neo4JTagset> tagsets;
 
 

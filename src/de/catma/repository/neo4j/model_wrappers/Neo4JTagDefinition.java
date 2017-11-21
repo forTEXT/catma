@@ -1,5 +1,6 @@
 package de.catma.repository.neo4j.model_wrappers;
 
+import de.catma.repository.neo4j.Neo4JRelationshipType;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -23,13 +24,13 @@ public class Neo4JTagDefinition {
 	//TODO: turn into relationship as well? - already exists from the Tagset...
 	private String tagsetDefinitionUuid;
 
-	@Relationship(type = "HAS_SYSTEM_PROPERTY_DEFINITION", direction = Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_SYSTEM_PROPERTY_DEFINITION, direction=Relationship.OUTGOING)
 	private List<Neo4JPropertyDefinition> systemPropertyDefinitions;
 
-	@Relationship(type = "HAS_USER_PROPERTY_DEFINITION", direction = Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_USER_PROPERTY_DEFINITION, direction = Relationship.OUTGOING)
 	private List<Neo4JPropertyDefinition> userDefinedPropertyDefinitions;
 
-	@Relationship(type = "HAS_CHILD", direction = Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_CHILD, direction = Relationship.OUTGOING)
 	private List<Neo4JTagDefinition> children;
 
 	public Neo4JTagDefinition(){

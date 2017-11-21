@@ -1,6 +1,7 @@
 package de.catma.repository.neo4j.models;
 
 import de.catma.indexer.TermInfo;
+import de.catma.repository.neo4j.Neo4JRelationshipType;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -19,7 +20,7 @@ public class Neo4JTerm {
 	private String literal;
 	private int frequency;
 
-	@Relationship(type="HAS_POSITION", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_POSITION, direction=Relationship.OUTGOING)
 	private List<Neo4JPosition> positions;
 
 	public Neo4JTerm() {

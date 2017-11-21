@@ -1,5 +1,6 @@
 package de.catma.repository.neo4j.model_wrappers;
 
+import de.catma.repository.neo4j.Neo4JRelationshipType;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyValueList;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -16,7 +17,7 @@ public class Neo4JProperty {
 	@GeneratedValue
 	private Long id;
 
-	@Relationship(type="HAS_PROPERTY_DEFINITION", direction=Relationship.OUTGOING)
+	@Relationship(type=Neo4JRelationshipType.HAS_PROPERTY_DEFINITION, direction=Relationship.OUTGOING)
 	private Neo4JPropertyDefinition propertyDefinition;
 
 	private List<String> values;
