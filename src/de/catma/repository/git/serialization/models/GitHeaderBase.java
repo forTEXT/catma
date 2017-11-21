@@ -1,12 +1,12 @@
 package de.catma.repository.git.serialization.models;
 
-public class HeaderBase {
+public class GitHeaderBase {
 	private String name;
 	private String description;
 
-	public HeaderBase(){}
+	public GitHeaderBase(){}
 
-	public HeaderBase(String name, String description) {
+	public GitHeaderBase(String name, String description) {
 		this.name = name;
 		this.description = description;
 	}

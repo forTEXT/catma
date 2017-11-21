@@ -3,7 +3,7 @@ package de.catma.repository.git.serialization.models;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class MarkupCollectionHeader extends HeaderBase {
+public class GitMarkupCollectionHeader extends GitHeaderBase {
 	private String sourceDocumentId;
 	private String sourceDocumentVersion;
 
@@ -12,12 +12,12 @@ public class MarkupCollectionHeader extends HeaderBase {
 	private String author;
 	private String publisher;
 
-	public MarkupCollectionHeader() {
+	public GitMarkupCollectionHeader() {
 		this.tagsets = new TreeMap<>();
 	}
 
-	public MarkupCollectionHeader(String name, String description,
-								  String sourceDocumentId, String sourceDocumentVersion) {
+	public GitMarkupCollectionHeader(String name, String description,
+									 String sourceDocumentId, String sourceDocumentVersion) {
 		super(name, description);
 		this.tagsets = new TreeMap<>();
 

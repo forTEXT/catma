@@ -6,7 +6,7 @@ import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
-import de.catma.repository.git.serialization.models.TagsetDefinitionHeader;
+import de.catma.repository.git.serialization.models.GitTagsetHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
 import de.catma.tag.*;
 import de.catma.util.IDGenerator;
@@ -140,13 +140,13 @@ public class GitTagsetHandlerTest {
 
 			assert Arrays.asList(expectedRepoPath.list()).contains("header.json");
 
-			TagsetDefinitionHeader expectedHeader = new TagsetDefinitionHeader(name, description);
+			GitTagsetHeader expectedHeader = new GitTagsetHeader(name, description);
 
 			String serialized = FileUtils.readFileToString(
 				new File(expectedRepoPath, "header.json"), StandardCharsets.UTF_8
 			);
-			TagsetDefinitionHeader actualHeader = new SerializationHelper<TagsetDefinitionHeader>().deserialize(
-				serialized, TagsetDefinitionHeader.class
+			GitTagsetHeader actualHeader = new SerializationHelper<GitTagsetHeader>().deserialize(
+				serialized, GitTagsetHeader.class
 			);
 
 			assertEquals(expectedHeader.getName(), actualHeader.getName());

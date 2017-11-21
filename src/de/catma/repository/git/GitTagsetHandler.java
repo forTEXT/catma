@@ -9,7 +9,7 @@ import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
-import de.catma.repository.git.serialization.models.TagsetDefinitionHeader;
+import de.catma.repository.git.serialization.models.GitTagsetHeader;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 import de.catma.util.IDGenerator;
@@ -80,8 +80,8 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 			// write header.json into the local repo
 			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), "header.json");
 
-			TagsetDefinitionHeader header = new TagsetDefinitionHeader(name, description);
-			String serializedHeader = new SerializationHelper<TagsetDefinitionHeader>().serialize(header);
+			GitTagsetHeader header = new GitTagsetHeader(name, description);
+			String serializedHeader = new SerializationHelper<GitTagsetHeader>().serialize(header);
 
 			localGitRepoManager.addAndCommit(
 					targetHeaderFile,
@@ -148,14 +148,14 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 			);
 
 			String serialized = FileUtils.readFileToString(tagsetHeaderFile, StandardCharsets.UTF_8);
-			TagsetDefinitionHeader tagsetDefinitionHeader = new SerializationHelper<TagsetDefinitionHeader>()
+			GitTagsetHeader gitTagsetHeader = new SerializationHelper<GitTagsetHeader>()
 					.deserialize(
 							serialized,
-							TagsetDefinitionHeader.class
+							GitTagsetHeader.class
 					);
 
 			TagsetDefinition tagsetdefinition = new TagsetDefinition(
-				null, tagsetId, tagsetDefinitionHeader.getName(), null
+				null, tagsetId, gitTagsetHeader.getName(), null
 			);
 			String tagsetDefinitionRevisionHash = localGitRepoManager.getSubmoduleHeadRevisionHash(tagsetSubmoduleName);
 			tagsetdefinition.setRevisionHash(tagsetDefinitionRevisionHash);

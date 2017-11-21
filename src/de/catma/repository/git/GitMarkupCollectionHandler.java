@@ -13,7 +13,7 @@ import de.catma.repository.git.interfaces.IGitMarkupCollectionHandler;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
-import de.catma.repository.git.serialization.models.MarkupCollectionHeader;
+import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.TagLibrary;
 import de.catma.util.IDGenerator;
@@ -105,10 +105,10 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 			// write header.json into the local repo
 			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), "header.json");
 
-			MarkupCollectionHeader header = new MarkupCollectionHeader(
+			GitMarkupCollectionHeader header = new GitMarkupCollectionHeader(
 					name, description, sourceDocumentId, sourceDocumentVersion
 			);
-			String serializedHeader = new SerializationHelper<MarkupCollectionHeader>().serialize(header);
+			String serializedHeader = new SerializationHelper<GitMarkupCollectionHeader>().serialize(header);
 
 			localGitRepoManager.addAndCommit(
 					targetHeaderFile,
@@ -158,10 +158,10 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 			).toFile();
 
 			// update header.json
-			SerializationHelper<MarkupCollectionHeader> serializationHelper = new SerializationHelper<>();
-			MarkupCollectionHeader markupCollectionHeader = serializationHelper.deserialize(
+			SerializationHelper<GitMarkupCollectionHeader> serializationHelper = new SerializationHelper<>();
+			GitMarkupCollectionHeader markupCollectionHeader = serializationHelper.deserialize(
 					FileUtils.readFileToString(targetMarkupCollectionHeaderFilePath, StandardCharsets.UTF_8),
-					MarkupCollectionHeader.class
+					GitMarkupCollectionHeader.class
 			);
 
 			markupCollectionHeader.addTagset(new AbstractMap.SimpleEntry<>(tagsetId, tagsetVersion));
@@ -322,8 +322,8 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 					markupCollectionHeaderFile, StandardCharsets.UTF_8
 			);
 
-			MarkupCollectionHeader markupCollectionHeader = new SerializationHelper<MarkupCollectionHeader>()
-					.deserialize(serializedMarkupCollectionHeaderFile, MarkupCollectionHeader.class);
+			GitMarkupCollectionHeader markupCollectionHeader = new SerializationHelper<GitMarkupCollectionHeader>()
+					.deserialize(serializedMarkupCollectionHeaderFile, GitMarkupCollectionHeader.class);
 
 			ContentInfoSet contentInfoSet = new ContentInfoSet(
 					markupCollectionHeader.getAuthor(),
