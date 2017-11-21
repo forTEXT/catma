@@ -7,6 +7,7 @@ import de.catma.repository.neo4j.exceptions.Neo4JProjectException;
 import de.catma.repository.neo4j.exceptions.Neo4JSourceDocumentException;
 import de.catma.repository.neo4j.exceptions.Neo4JUserMarkupCollectionException;
 import de.catma.tag.TagsetDefinition;
+import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -18,11 +19,13 @@ import java.util.stream.Collectors;
 @NodeEntity(label="ProjectWorktree")
 public class Neo4JProjectWorktree {
 	@Id
-	private String revisionHash;
+	@GeneratedValue
+	private Long id;
 
 	private String uuid;
 	private String name;
 	private String description;
+	private String revisionHash;
 
 	@Relationship(type="HAS_TAGSET", direction=Relationship.OUTGOING)
 	private List<Neo4JTagsetWorktree> tagsets;
@@ -43,6 +46,10 @@ public class Neo4JProjectWorktree {
 		this();
 
 		this.setProject(project);
+	}
+
+	public String getRevisionHash() {
+		return this.revisionHash;
 	}
 
 	public Project getProject() throws Neo4JProjectException {
