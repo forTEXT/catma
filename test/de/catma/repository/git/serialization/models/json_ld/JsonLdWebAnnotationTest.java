@@ -436,7 +436,9 @@ public class JsonLdWebAnnotationTest {
 			);
 			this.projectsToDeleteOnTearDown.add((String)getJsonLdWebAnnotationResult.get("projectUuid"));
 
-			assertNotNull(jsonLdWebAnnotation);List<TagReference> tagReferences = jsonLdWebAnnotation.toTagReferenceList(
+			assertNotNull(jsonLdWebAnnotation);
+
+			List<TagReference> tagReferences = jsonLdWebAnnotation.toTagReferenceList(
 					(String)getJsonLdWebAnnotationResult.get("projectUuid"),
 					(String)getJsonLdWebAnnotationResult.get("userMarkupCollectionUuid"),
 					jGitRepoManager, this.gitLabServerManager
