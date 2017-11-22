@@ -315,7 +315,12 @@ public class GitMarkupCollectionHandlerTest {
 
 			File expectedTagInstanceJsonFilePath = new File(
 					jGitRepoManager.getRepositoryWorkTree(),
-					String.format("collections/%s/annotations/%s.json", markupCollectionId, tagInstanceId)
+					String.format(
+							"%s/%s/annotations/%s.json",
+							GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
+							markupCollectionId,
+							tagInstanceId
+					)
 			);
 
 			assert expectedTagInstanceJsonFilePath.exists();

@@ -323,7 +323,10 @@ public class JsonLdWebAnnotationTest {
 
 			// construct JsonLdWebAnnotation object
 			String sourceDocumentUri = String.format(
-					"http://catma.de/gitlab/%s/documents/%s", projectRootRepositoryName, sourceDocumentId
+					"http://catma.de/gitlab/%s/%s/%s",
+					projectRootRepositoryName,
+					GitProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
+					sourceDocumentId
 			);
 
 			Range range1 = new Range(12, 18);
@@ -508,8 +511,9 @@ public class JsonLdWebAnnotationTest {
 			assertEquals(
 					new URI(
 							String.format(
-									"http://catma.de/gitlab/%s/documents/%s",
+									"http://catma.de/gitlab/%s/%s/%s",
 									getJsonLdWebAnnotationResult.get("projectRootRepositoryName"),
+									GitProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
 									getJsonLdWebAnnotationResult.get("sourceDocumentUuid")
 							)
 					),
@@ -520,8 +524,9 @@ public class JsonLdWebAnnotationTest {
 			assertEquals(
 					new URI(
 							String.format(
-									"http://catma.de/gitlab/%s/documents/%s",
+									"http://catma.de/gitlab/%s/%s/%s",
 									getJsonLdWebAnnotationResult.get("projectRootRepositoryName"),
+									GitProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
 									getJsonLdWebAnnotationResult.get("sourceDocumentUuid")
 							)
 					),

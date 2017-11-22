@@ -82,10 +82,17 @@ public class JsonLdWebAnnotation {
 		URL gitServerUrl = JsonLdWebAnnotation.sanitizeUrl(gitServerBaseUrl);
 
 		return new URL(
-			gitServerUrl.getProtocol(), gitServerUrl.getHost(), gitServerUrl.getPort(),
-			String.format("%s%s/collections/%s/annotations/%s.json",
-				gitServerUrl.getPath(), projectRootRepositoryName, userMarkupCollectionUuid, tagInstanceUuid
-			)
+				gitServerUrl.getProtocol(),
+				gitServerUrl.getHost(),
+				gitServerUrl.getPort(),
+				String.format(
+						"%s%s/%s/%s/annotations/%s.json",
+						gitServerUrl.getPath(),
+						projectRootRepositoryName,
+						GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
+						userMarkupCollectionUuid,
+						tagInstanceUuid
+				)
 		);
 	}
 

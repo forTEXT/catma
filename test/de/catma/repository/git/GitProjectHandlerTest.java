@@ -289,7 +289,13 @@ public class GitProjectHandlerTest {
 
 			assert status.hasUncommittedChanges();
 			assert added.contains(".gitmodules");
-			assert added.contains("documents/" + sourceDocumentId);
+			assert added.contains(
+					String.format(
+							"%s/%s",
+							GitProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
+							sourceDocumentId
+					)
+			);
 		}
 	}
 }

@@ -221,7 +221,8 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 			File targetTagInstanceFilePath = new File(
 				localGitRepoManager.getRepositoryWorkTree(),
 				String.format(
-						"collections/%s/annotations/%s.json",
+						"%s/%s/annotations/%s.json",
+						GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
 						markupCollectionId,
 						annotation.getTagInstanceUuid()
 				)

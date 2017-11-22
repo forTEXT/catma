@@ -77,8 +77,16 @@ public class JsonLdWebAnnotationBody_Dataset {
 		URL gitServerUrl = JsonLdWebAnnotation.sanitizeUrl(gitServerBaseUrl);
 
 		return new URL(
-			gitServerUrl.getProtocol(), gitServerUrl.getHost(), gitServerUrl.getPort(),
-			String.format("%s%s/tagsets/%s", gitServerUrl.getPath(), projectRootRepositoryName, tagsetUuid)
+				gitServerUrl.getProtocol(),
+				gitServerUrl.getHost(),
+				gitServerUrl.getPort(),
+				String.format(
+						"%s%s/%s/%s",
+						gitServerUrl.getPath(),
+						projectRootRepositoryName,
+						GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
+						tagsetUuid
+				)
 		);
 	}
 
