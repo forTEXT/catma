@@ -51,7 +51,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * used to organise repositories on the local file system, based on the User's identifier. Methods of this class
 	 * that support authentication have their own username and password parameters for this purpose.
 	 * <p>
-	 * Calls <code>open(String)</code> internally.
+	 * Calls {@link #open(String)} internally.
 	 *
 	 * @param catmaProperties a {@link Properties} object
 	 * @param catmaUser a {@link User} object
@@ -268,7 +268,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * Writes a new file with contents <code>bytes</code> to disk at path <code>targetFile</code>
 	 * and adds it to the attached Git repository.
 	 * <p>
-	 * It's the caller's responsibility to call <code>commit(String)</code>.
+	 * It's the caller's responsibility to call {@link #commit(String, String, String)}.
 	 *
 	 * @param targetFile a {@link File} object representing the target path
 	 * @param bytes the file contents
@@ -302,7 +302,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * Writes a new file with contents <code>bytes</code> to disk at path <code>targetFile</code>,
 	 * adds it to the attached Git repository and commits.
 	 * <p>
-	 * Calls <code>add(File, byte[])</code> and <code>commit(String)</code> internally.
+	 * Calls {@link #add(File, byte[])} and {@link #commit(String, String, String)} internally.
 	 *
 	 * @param targetFile a {@link File} object representing the target path
 	 * @param bytes the file contents
