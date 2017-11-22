@@ -44,6 +44,19 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 		this.remoteGitServerManager = remoteGitServerManager;
 	}
 
+	/**
+	 * Creates a new tagset.
+	 * <p>
+	 * NB: You probably don't want to call this method directly (it doesn't create the submodule in the project root
+	 * repo). Instead call the <code>createTagset</code> method of the {@link GitProjectHandler} class.
+	 *
+	 * @param projectId the ID of the project within which the tagset must be created
+	 * @param tagsetId the ID of the tagset to create. If none is provided, a new ID will be generated.
+	 * @param name the name of the new tagset
+	 * @param description the description of the new tagset
+	 * @return the <code>tagsetId</code> if one was provided, otherwise a new tagset ID
+	 * @throws GitTagsetHandlerException if an error occurs while creating the tagset
+	 */
 	@Override
 	public String create(@Nonnull String projectId,
 						 @Nullable String tagsetId,

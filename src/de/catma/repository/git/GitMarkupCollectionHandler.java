@@ -51,6 +51,9 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 
 	/**
 	 * Creates a new markup collection.
+	 * <p>
+	 * NB: You probably don't want to call this method directly (it doesn't create the submodule in the project root
+	 * repo). Instead call the <code>createMarkupCollection</code> method of the {@link GitProjectHandler} class.
 	 *
 	 * @param projectId the ID of the project within which the new markup collection must be created
 	 * @param markupCollectionId the ID of the new markup collection. If none is provided, a new ID will be

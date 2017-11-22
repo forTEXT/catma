@@ -42,6 +42,9 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 
 	/**
 	 * Creates a new source document within the project identified by <code>projectId</code>.
+	 * <p>
+	 * NB: You probably don't want to call this method directly (it doesn't create the submodule in the project root
+	 * repo). Instead call the <code>createSourceDocument</code> method of the {@link GitProjectHandler} class.
 	 *
 	 * @param projectId the ID of the project within which the source document must be created
 	 * @param sourceDocumentId the ID of the source document to create. If none is provided, a new
