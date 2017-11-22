@@ -1,5 +1,6 @@
 package de.catma.repository.git;
 
+import de.catma.document.source.SourceDocumentInfo;
 import de.catma.repository.git.exceptions.*;
 import de.catma.repository.git.interfaces.IGitProjectHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
@@ -246,7 +247,7 @@ public class GitProjectHandler implements IGitProjectHandler {
 	 *                                      UTF-8 encoded source document
 	 * @param convertedSourceDocumentFileName the file name of the converted, UTF-8 encoded source
 	 *                                        document
-	 * @param gitSourceDocumentInfo a {@link GitSourceDocumentInfo} wrapper object
+	 * @param sourceDocumentInfo a {@link SourceDocumentInfo} object
 	 * @return the <code>sourceDocumentId</code> if one was provided, otherwise a new source
 	 *         document ID
 	 * @throws GitProjectHandlerException if an error occurs while creating the source document
@@ -256,7 +257,7 @@ public class GitProjectHandler implements IGitProjectHandler {
 			@Nonnull String projectId, @Nullable String sourceDocumentId,
 			@Nonnull InputStream originalSourceDocumentStream, @Nonnull String originalSourceDocumentFileName,
 			@Nonnull InputStream convertedSourceDocumentStream, @Nonnull String convertedSourceDocumentFileName,
-			@Nonnull GitSourceDocumentInfo gitSourceDocumentInfo
+			@Nonnull SourceDocumentInfo sourceDocumentInfo
 	) throws GitProjectHandlerException {
 		try (ILocalGitRepositoryManager repoManager = this.localGitRepositoryManager) {
 			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
@@ -268,7 +269,7 @@ public class GitProjectHandler implements IGitProjectHandler {
 					projectId, sourceDocumentId,
 					originalSourceDocumentStream, originalSourceDocumentFileName,
 					convertedSourceDocumentStream, convertedSourceDocumentFileName,
-					gitSourceDocumentInfo
+					sourceDocumentInfo
 			);
 
 			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;

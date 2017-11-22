@@ -54,7 +54,7 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 	 *                                      UTF-8 encoded source document
 	 * @param convertedSourceDocumentFileName the file name of the converted, UTF-8 encoded source
 	 *                                        document
-	 * @param gitSourceDocumentInfo a {@link GitSourceDocumentInfo} wrapper object
+	 * @param sourceDocumentInfo a {@link SourceDocumentInfo} object
 	 * @return the <code>sourceDocumentId</code> if one was provided, otherwise a new source
 	 *         document ID
 	 * @throws GitSourceDocumentHandlerException if an error occurs while creating the source document
@@ -65,7 +65,7 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 						 @Nonnull String originalSourceDocumentFileName,
 						 @Nonnull InputStream convertedSourceDocumentStream,
 						 @Nonnull String convertedSourceDocumentFileName,
-						 @Nonnull GitSourceDocumentInfo gitSourceDocumentInfo
+						 @Nonnull SourceDocumentInfo sourceDocumentInfo
 	) throws GitSourceDocumentHandlerException {
 		if (sourceDocumentId == null) {
 			IDGenerator idGenerator = new IDGenerator();
@@ -115,6 +115,7 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 			File targetHeaderFile = new File(
 				localGitRepoManager.getRepositoryWorkTree(), "header.json"
 			);
+			GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
 			String serializedGitSourceDocumentInfo = new SerializationHelper<GitSourceDocumentInfo>()
 					.serialize(gitSourceDocumentInfo);
 			localGitRepoManager.add(

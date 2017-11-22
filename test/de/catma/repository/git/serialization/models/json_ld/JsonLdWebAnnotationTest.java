@@ -201,13 +201,11 @@ public class JsonLdWebAnnotationTest {
 					indexInfoSet, contentInfoSet, techInfoSet
 			);
 
-			GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
-
 			String sourceDocumentId = gitProjectHandler.createSourceDocument(
 					projectId,
 					null, originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
-					gitSourceDocumentInfo
+					sourceDocumentInfo
 			);
 
 			// add new markup collection to project

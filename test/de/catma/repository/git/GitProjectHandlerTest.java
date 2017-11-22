@@ -4,7 +4,6 @@ import de.catma.document.source.*;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
 import de.catma.repository.git.managers.JGitRepoManager;
-import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 import helpers.Randomizer;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Status;
@@ -256,8 +255,6 @@ public class GitProjectHandlerTest {
 			indexInfoSet, contentInfoSet, techInfoSet
 		);
 
-		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
-
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
@@ -276,7 +273,7 @@ public class GitProjectHandlerTest {
 					projectId, null,
 					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
-					gitSourceDocumentInfo
+					sourceDocumentInfo
 			);
 
 			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls

@@ -5,7 +5,6 @@ import de.catma.repository.git.exceptions.GitSourceDocumentHandlerException;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
-import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
 import helpers.Randomizer;
 import org.apache.commons.io.FileUtils;
@@ -127,8 +126,6 @@ public class GitSourceDocumentHandlerTest {
 			indexInfoSet, contentInfoSet, techInfoSet
 		);
 
-		GitSourceDocumentInfo gitSourceDocumentInfo = new GitSourceDocumentInfo(sourceDocumentInfo);
-
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
@@ -153,7 +150,7 @@ public class GitSourceDocumentHandlerTest {
 					projectId, null,
 					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
-					gitSourceDocumentInfo
+					sourceDocumentInfo
 			);
 			// we don't add the sourceDocumentId to this.sourceDocumentReposToDeleteOnTearDown as deletion of the
 			// project will take care of that for us
