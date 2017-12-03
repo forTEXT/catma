@@ -79,6 +79,7 @@ import de.catma.ui.tagger.MarkupCollectionsPanel.MarkupCollectionPanelEvent;
 import de.catma.ui.tagger.TagInstanceTree.TagIntanceActionListener;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 import de.catma.ui.tagmanager.TagsetTree;
+import de.catma.ui.tagmanager.TagsetSelectionListener;
 
 public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionListener {
 
@@ -94,7 +95,6 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	private TabSheet tabSheet;
 	private MarkupCollectionsPanel markupCollectionsPanel;
 	private PropertyChangeListener tagLibraryChangedListener;
-	// private ColorButtonListener colorButtonListener;
 	private TagInstanceTree tagInstancesTree;
 	private Repository repository;
 	private PropertyChangeListener propertyValueChangeListener;
@@ -106,8 +106,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	private Panel markupInfoScrollPanel;
 	private TagInstanceSelectedListener tagInstanceSelectedListener;
 	private Tagger tagger;
-	MarkupPanel markupPanel = this;
-
+	
 	public MarkupPanel(Repository repository, Tagger tagger, PropertyChangeListener tagDefinitionSelectionListener,
 			PropertyChangeListener tagDefinitionsRemovedListener,
 			TagInstanceSelectedListener tagInstanceSelectedListener, String sourceDocumentId) {
@@ -327,9 +326,18 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		buttonHeaderPanel.setComponentAlignment(btHelp, Alignment.MIDDLE_RIGHT);
 
 		tabContent.addComponent(buttonHeaderPanel);
-
+				
+		
 		tagsetTree = new TagsetTree(repository.getTagManager(), null, false, false, true, true, false,
-				colorButtonListener);
+				colorButtonListener,repository,new CurrentWritableUserMarkupCollectionProvider() {
+					
+					@Override
+					public UserMarkupCollection getCurrentWritableUserMarkupCollection() {
+						UserMarkupCollection umc = MarkupPanel.this.getCurrentWritableUserMarkupCollection();
+						return umc;
+					}
+				});
+	
 
 		tabContent.addComponent(tagsetTree);
 		tabContent.setExpandRatio(tagsetTree, 1.0f);
@@ -397,7 +405,6 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		dialog.show();
 	}
 
-	//
 	private void handleOpenUserMarkupCollectionRequest(final SourceDocument sourceDocument,
 			final CollectionSelectionListener collectionSelectionListener) {
 		CorpusContentSelectionDialog dialog = new CorpusContentSelectionDialog(repository, sourceDocument, null,
@@ -416,7 +423,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 								openUserMarkupCollection(userMarkupCollection, false);
 
 							}
-							// hier ruf ich den event- handler auf ...
+				
 							collectionSelectionListener.collectionSelected();
 						} catch (IOException ioe) {
 							((CatmaApplication) UI.getCurrent())
@@ -467,12 +474,16 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		return markupInfoScrollPanel;
 	}
 
-	public void addOrUpdateTagsetDefinition(UI ui, final TagsetDefinition tagsetDefinition) {
+	public void addOrUpdateTagsetDefinition(UI ui, final TagsetDefinition tagsetDefinition,TagsetSelectionListener tagsetSelectionListener) {
 		markupCollectionsPanel.addOrUpdateTagsetDefinition(ui, tagsetDefinition, new ConfirmListener() {
 			public void confirmed() {
-				tagsetTree.addTagsetDefinition(tagsetDefinition);
+				tagsetTree.addTagsetDefinition(tagsetDefinition,tagsetSelectionListener);
 			}
 		});
+	}
+
+	public void addOrUpdateTagsetDefinition(UI ui, final TagsetDefinition tagsetDefinition) {
+		addOrUpdateTagsetDefinition(ui, tagsetDefinition, null);
 	}
 
 	public void openUserMarkupCollection(final UserMarkupCollection userMarkupCollection) {

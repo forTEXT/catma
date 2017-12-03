@@ -9,7 +9,6 @@ import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -19,9 +18,10 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.ui.CatmaApplication;
-import de.catma.ui.repository.CorpusContentSelectionDialog;
 import de.catma.ui.repository.Messages;
 import de.catma.util.Pair;
+
+
 
 public class ChooseAnnotationCollectionDialog extends Window {
 	
@@ -34,15 +34,13 @@ public class ChooseAnnotationCollectionDialog extends Window {
 	private Button btContinueWithout;
 	private Repository repository;
 	private SourceDocument sourceDocument;
-	private String sourceDocumentId;
-	private CorpusContentSelectionDialog dialog;
-	private AnnotationCollectionListener annotationCollectionListener;
+
 
 	public ChooseAnnotationCollectionDialog( Repository repository,
 			String sourceDocumentId, AnnotationCollectionListener annotationCollectionListener) {
-		super("Choose one of the Options");
+		super(Messages.getString("ChooseAnnotationCollectionDialog.whatIsYourChoice"));  //$NON-NLS-1$
 		this.repository = repository;
-		this.annotationCollectionListener = annotationCollectionListener;
+	
 		sourceDocument = repository.getSourceDocument(sourceDocumentId);
 		initComponents();
 		initActions(annotationCollectionListener);
@@ -75,7 +73,7 @@ public class ChooseAnnotationCollectionDialog extends Window {
 								UserMarkupCollection umc = repository.getUserMarkupCollection(result.getFirst());							
 								annotationCollectionListener.defaultCollectionCreated(umc); 							
 							} catch (IOException e) {
-								((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("CorpusContentSelectionDialog.errorCreatingCollection"), e);
+								((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("CorpusContentSelectionDialog.errorCreatingCollection"), e); //$NON-NLS-1$
 							}
 						}
 						repository.removePropertyChangeListener(
@@ -109,7 +107,7 @@ public class ChooseAnnotationCollectionDialog extends Window {
 		String userName = repository.getUser().getName();
 		String sourceDocumentName = sourceDocument.toString();
 		LocalDateTime timePoint = LocalDateTime.now();
-		String collectionName = sourceDocumentName + "_" + userName + "_" + timePoint;
+		String collectionName = sourceDocumentName + "_" + userName +"_"+ timePoint; //$NON-NLS-1$ //$NON-NLS-2$ 
 		return collectionName;
 	}
 
@@ -129,13 +127,13 @@ public class ChooseAnnotationCollectionDialog extends Window {
 		content.setSpacing(true);
 
 		setContent(content);
-
-		btContinueWithout = new Button("Continue without");
-		btContinueWithout.setWidth("90%");
-		btOpenOrCreateCollection = new Button("Open or Create Collection");
-		btOpenOrCreateCollection.setWidth("90%");
-		content.addComponent(btOpenOrCreateCollection);
+		btOpenOrCreateCollection = new Button(Messages.getString("ChooseAnnotationCollectionDialog.letMeChooseAAnnotationCollection")); //$NON-NLS-1$
+		btContinueWithout = new Button(Messages.getString("ChooseAnnotationCollectionDialog.createOneForMe")); //$NON-NLS-1$
+		btContinueWithout.setWidth("90%"); //$NON-NLS-1$
+		btOpenOrCreateCollection.setWidth("90%"); //$NON-NLS-1$
+		
 		content.addComponent(btContinueWithout);
+		content.addComponent(btOpenOrCreateCollection);
 
 		// content.setComponentAlignment(btOk, Alignment.MIDDLE_CENTER);
 		btOpenOrCreateCollection.setClickShortcut(KeyCode.ENTER);

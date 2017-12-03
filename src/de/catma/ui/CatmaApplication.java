@@ -88,10 +88,10 @@ import de.catma.ui.menu.LoginLogoutCommand;
 import de.catma.ui.menu.MainMenu;
 import de.catma.ui.menu.MenuFactory;
 import de.catma.ui.repository.RepositoryManagerView;
-import de.catma.ui.tabbedview.TabbedView;
 import de.catma.ui.tagger.TaggerManagerView;
 import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagManagerView;
+import de.catma.ui.tagmanager.TagsetSelectionListener;
 import de.catma.ui.visualizer.VisualizationManagerView;
 
 //@Push(PushMode.MANUAL)
@@ -363,8 +363,8 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 			throw new IOException("could not create temporary directory: " + this.tempDirectory); //$NON-NLS-1$
 		}
 	}
-
-	public void addTagsetToActiveDocument(TagsetDefinition tagsetDefinition) {
+	
+	public void addTagsetToActiveDocument(TagsetDefinition tagsetDefinition, TagsetSelectionListener tagsetSelectionListener) {
 		TaggerView selectedTab = (TaggerView) taggerManagerView.getSelectedTab();
 
 		if (selectedTab == null) {
@@ -374,7 +374,7 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 			return;
 		}
 
-		selectedTab.openTagsetDefinition(this, tagsetDefinition);
+		selectedTab.openTagsetDefinition(this, tagsetDefinition,tagsetSelectionListener);	
 
 		SourceDocument sd = selectedTab.getSourceDocument();
 		String sourceDocumentCaption = sd.toString();
@@ -382,6 +382,10 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 		Notification.show(Messages.getString("CatmaApplication.infoTitle"), //$NON-NLS-1$
 				MessageFormat.format(Messages.getString("CatmaApplication.tagsetLoaded"), sourceDocumentCaption), //$NON-NLS-1$
 				Type.TRAY_NOTIFICATION);
+	}
+	
+	public void addTagsetToActiveDocument(TagsetDefinition tagsetDefinition) {
+		addTagsetToActiveDocument(tagsetDefinition, null);
 	}
 
 	public void openRepository(Repository repository) {
@@ -458,17 +462,17 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 		analyzerManagerView.analyzeDocuments(corpus, repository);
 	}
 
-	// Diese Methode wird vom AnalyzeCurrentDoc im Analyze-Menue-Tab aufgerufen
 	public void analyzeCurrentlyActiveDocument() {
 		menu.executeEntry(analyzerManagerView);
+		
 		Component selectedTab = taggerManagerView.getSelectedTab();
+		
 		if (selectedTab != null) {
 			TaggerView taggerView = (TaggerView) selectedTab;
 			taggerView.analyzeDocument();
 		} else {
-			Notification.show("Selected Tab is", " null", Notification.Type.HUMANIZED_MESSAGE);
+			Notification.show(Messages.getString("CatmaApplication.noOpenDocument"), Type.TRAY_NOTIFICATION); //$NON-NLS-1$
 		}
-	
 	}
 	
 	

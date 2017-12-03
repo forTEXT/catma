@@ -75,6 +75,7 @@ import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
 import de.catma.ui.tagger.pager.PagerComponent.PageChangeListener;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
+import de.catma.ui.tagmanager.TagsetSelectionListener;
 
 public class TaggerView extends VerticalLayout 
 	implements TaggerListener, ClosableTab {
@@ -194,7 +195,7 @@ public class TaggerView extends VerticalLayout
 		
 		return false;
 	}
-//________________neu_______
+
 	public void  analyzeDocument(){
 		Corpus corpus = new Corpus(sourceDocument.toString());
 		corpus.addSourceDocument(sourceDocument);
@@ -212,9 +213,7 @@ public class TaggerView extends VerticalLayout
 				corpus, (IndexedRepository)markupPanel.getRepository());	
 	}
 
-	
-	
-	
+
 	
 	private void initActions() {
 		btClearSearchHighlights.addClickListener(new ClickListener() {
@@ -232,24 +231,10 @@ public class TaggerView extends VerticalLayout
 				tagger.setTraceSelection(traceSelection);
 			}
 		});
-		btAnalyze.addClickListener(new ClickListener() {
+		btAnalyze.addClickListener(new ClickListener() {	
 			
-			public void buttonClick(ClickEvent event) {
-				Corpus corpus = new Corpus(sourceDocument.toString());
-				corpus.addSourceDocument(sourceDocument);
-				for (UserMarkupCollection umc : 
-					markupPanel.getUserMarkupCollections()) {
-					UserMarkupCollectionReference userMarkupCollRef =
-							sourceDocument.getUserMarkupCollectionReference(
-									umc.getId());
-					if (userMarkupCollRef != null) {
-						corpus.addUserMarkupCollectionReference(
-								userMarkupCollRef);
-					}
-				}
-				
-				((AnalyzerProvider)UI.getCurrent()).analyze(
-						corpus, (IndexedRepository)markupPanel.getRepository());
+			public void buttonClick(ClickEvent event) {	
+				analyzeDocument();
 			}
 		});
 		
@@ -296,7 +281,7 @@ public class TaggerView extends VerticalLayout
 	}
 
 	private void initComponents() {
-		//TaggerView taggerview =this;
+
 		setSizeFull();
 		
 		VerticalLayout taggerPanel = new VerticalLayout();
@@ -460,6 +445,19 @@ public class TaggerView extends VerticalLayout
 	public void openUserMarkupCollection(
 			UserMarkupCollection userMarkupCollection) {
 		markupPanel.openUserMarkupCollection(userMarkupCollection);
+		// hier die library holen ueber tagset loopen und dann openTgsetDef ausfuehren
+		/*for (TagsetDefinition ts : userMarkupCollection.getTagLibrary()) {
+			geht so da TagLib ein Iterable ist...
+			und dann sowat 	:
+			
+								TagLibrary tagLibrary = repository.getTagLibraryFor(tagsetDefinition.getUuid(), null);--> version vielleicht hier doch dabei und nicht null
+								if (tagLibrary != null) {
+										((CatmaApplication) UI.getCurrent()).openTagLibrary(repository, tagLibrary, false);
+										((CatmaApplication) UI.getCurrent()).addTagsetToActiveDocument(tagLibrary.getTagsetDefinition(tagsetDefinition.getUuid()),
+												tagsetSelectionListener);
+									}
+								}.
+		}*/
 	}
 
 	public void openTagsetDefinition(
@@ -469,6 +467,11 @@ public class TaggerView extends VerticalLayout
 			catmaApplication.openTagLibrary(repository, tagLibrary, false);
 			openTagsetDefinition(catmaApplication, tagLibrary.getTagsetDefinition(uuid));
 		}
+	}
+	
+
+	public void openTagsetDefinition(CatmaApplication catmaApplication, TagsetDefinition tagsetDefinition, TagsetSelectionListener tagsetSelectionListener){
+		markupPanel.addOrUpdateTagsetDefinition(catmaApplication, tagsetDefinition,tagsetSelectionListener);
 	}
 	
 	public void openTagsetDefinition(CatmaApplication catmaApplication, TagsetDefinition tagsetDefinition){
