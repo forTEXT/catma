@@ -75,6 +75,7 @@ import de.catma.ui.component.export.CsvExport.CsvExportException;
 import de.catma.ui.component.export.HierarchicalExcelExport;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
+import de.catma.user.Permission;
 
 public class PhraseResultPanel extends VerticalLayout {
 	
@@ -520,6 +521,7 @@ public class PhraseResultPanel extends VerticalLayout {
 			"Roll your own visualization");
 		
 		buttonPanel.addComponent(btVega);
+		btVega.setVisible(repository.getUser().hasPermission(Permission.vega));
 		
 		btExcelExport = new Button();
 		btExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png")); //$NON-NLS-1$
