@@ -55,7 +55,6 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
-import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
 public class CorpusCleaner {
@@ -71,8 +70,8 @@ public class CorpusCleaner {
 	
 	private int annotatorNumber = 1;
 	private HashBiMap<String,String> annotatorMap = HashBiMap.create();
-	private String tagsetUUID = new IDGenerator().generate();
-	private Version tagsetVersion = new Version();
+	private String tagsetUUID = "CATMA_DDEEC7B0-F3E0-42B7-8D3C-5D2F3857907A"; //new IDGenerator().generate();
+	private Version tagsetVersion = new Version("2016-11-23T17:20:54.000+0100");
 	private Table<String, String, UserMarkupCollection> collections = HashBasedTable.create();
 	private int includedTagInstanceCount = 0;
 	private int excludedTagInstanceCount = 0;
@@ -566,7 +565,7 @@ public class CorpusCleaner {
 					annotatorAnonym + " " + sourceDocName + " " + conceptName);
 			targetCollection.getContentInfoSet().setAuthor(author);
 			targetCollection.getContentInfoSet().setDescription(
-					conceptName + " annotations, source collection: " + contentInfoSet.getTitle());
+					conceptName + " annotations");
 			targetCollection.getContentInfoSet().setPublisher(publisher);
 			collections.put(annotator, conceptName, targetCollection);
 			logger.info("creating Collection " + targetCollection + " for " + annotator + "/" + annotatorAnonym);
@@ -591,8 +590,6 @@ public class CorpusCleaner {
 		
 		String fileName = 
 			targetUmc.getContentInfoSet().getTitle().substring(firstBlankIdx+1)
-			+ " "
-			+ annotatorMap.inverse().get(targetUmc.getContentInfoSet().getTitle().substring(0, firstBlankIdx))
 			+ " "
 			+ targetUmc.getContentInfoSet().getTitle().substring(0, firstBlankIdx) 
 			+ ".xml";

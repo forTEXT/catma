@@ -19,14 +19,14 @@
 
 package de.catma.indexer;
 
-import java.io.IOException;
-import java.io.Reader;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.standard.StandardFilter;
 
 import de.catma.indexer.unseparablecharactersequence.CharTree;
 import de.catma.indexer.unseparablecharactersequence.CharTreeFactory;
@@ -55,34 +55,6 @@ public class WhitespaceAndPunctuationAnalyzer extends Analyzer {
         this.locale = locale;
     }
 
-    public TokenStream tokenStream(String fieldName, Reader reader) {
-        return new PunctuationTokenizer(
-                new CatmaWhitespaceTokenizer(
-                        reader, unseparableCharacterSequences),
-                unseparableCharacterSequences,
-                userDefSeparatingPunctuationPattern,
-                locale);
-    }
-
-    @Override
-    public TokenStream reusableTokenStream(String fieldName, Reader reader) throws IOException {
-        TokenStream tokenizer = (TokenStream) getPreviousTokenStream();
-        if (tokenizer == null) {
-            tokenizer =
-                    new PunctuationTokenizer(
-                            new CatmaWhitespaceTokenizer(
-                                reader, unseparableCharacterSequences),
-                            unseparableCharacterSequences,
-                            userDefSeparatingPunctuationPattern,
-                            locale);
-                    
-            setPreviousTokenStream(tokenizer);
-        } else {
-            tokenizer.reset();
-        }
-        return tokenizer;
-    }
-    
     /**
      * Creates an OR-ed regex pattern from the list of user defined separating characters.
      * @param userDefinedSeparatingCharacters the list of user defined separating characters
@@ -106,5 +78,18 @@ public class WhitespaceAndPunctuationAnalyzer extends Analyzer {
 
         return Pattern.compile(patternBuilder.toString());
     }
+
+	@Override
+	protected TokenStreamComponents createComponents(String fieldName) {
+		Tokenizer source = new CatmaWhitespaceTokenizer(unseparableCharacterSequences);
+		TokenStream result = new PunctuationTokenizer(
+				new StandardFilter(source), 
+				unseparableCharacterSequences,
+				userDefSeparatingPunctuationPattern, locale);
+		
+		return new TokenStreamComponents(source, result);
+	}
+    
+    
 
 }

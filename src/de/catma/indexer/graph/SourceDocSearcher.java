@@ -7,7 +7,6 @@ import java.util.List;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.ResourceIterator;
 
 class SourceDocSearcher {
@@ -25,12 +24,12 @@ class SourceDocSearcher {
 		ArrayList<Node> sourceDocNodes = new ArrayList<>(documentIdList.size());
 		
 		for (String sourceDocumentId : documentIdList) {
-			ResourceIterable<Node> sourceDocNodesResult = 
-					graphDb.findNodesByLabelAndProperty(
+			ResourceIterator<Node> iterator = 
+					graphDb.findNodes(
 							NodeType.SourceDocument, 
 							SourceDocumentProperty.localUri.name(), 
 							sourceDocumentId);
-			ResourceIterator<Node> iterator = sourceDocNodesResult.iterator();
+
 			if (iterator.hasNext()) {
 				Node sourceDocNode = iterator.next();
 				sourceDocNodes.add(sourceDocNode);

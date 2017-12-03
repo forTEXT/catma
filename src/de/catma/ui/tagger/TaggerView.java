@@ -194,7 +194,28 @@ public class TaggerView extends VerticalLayout
 		
 		return false;
 	}
+//________________neu_______
+	public void  analyzeDocument(){
+		Corpus corpus = new Corpus(sourceDocument.toString());
+		corpus.addSourceDocument(sourceDocument);
+		for (UserMarkupCollection umc : 
+			markupPanel.getUserMarkupCollections()) {
+					UserMarkupCollectionReference userMarkupCollRef =
+					sourceDocument.getUserMarkupCollectionReference(
+							umc.getId());
+			if (userMarkupCollRef != null) {
+				corpus.addUserMarkupCollectionReference(
+						userMarkupCollRef);
+			}
+		}	
+		((AnalyzerProvider)UI.getCurrent()).analyze(
+				corpus, (IndexedRepository)markupPanel.getRepository());	
+	}
 
+	
+	
+	
+	
 	private void initActions() {
 		btClearSearchHighlights.addClickListener(new ClickListener() {
 			
@@ -275,6 +296,7 @@ public class TaggerView extends VerticalLayout
 	}
 
 	private void initComponents() {
+		//TaggerView taggerview =this;
 		setSizeFull();
 		
 		VerticalLayout taggerPanel = new VerticalLayout();
@@ -335,27 +357,8 @@ public class TaggerView extends VerticalLayout
 		actionPanel.addComponent(btClearSearchHighlights);
 		
 		markupPanel = new MarkupPanel(
-				repository,
-				new ColorButtonListener() {
-					
-					private boolean enabled = false;
-			
-					public void colorButtonClicked(TagDefinition tagDefinition) {
-						if (enabled) {
-							tagger.addTagInstanceWith(tagDefinition);
-						}
-						else {
-							HTMLNotification.show(
-	                                Messages.getString("TaggerView.infoTitle"), //$NON-NLS-1$
-	                                Messages.getString("TaggerView.selectWritableCollectionFirstInfo"), //$NON-NLS-1$
-	                                Type.TRAY_NOTIFICATION);
-						}
-					}
-					
-					public void setEnabled(boolean enabled) {
-						this.enabled = enabled;
-					}
-				},
+				repository,tagger,
+				
 				new PropertyChangeListener() {
 					
 					public void propertyChange(PropertyChangeEvent evt) {

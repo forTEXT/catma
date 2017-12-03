@@ -64,6 +64,7 @@ public class PunctuationTokenizer extends TokenFilter {
             Pattern userDefSeparatingPunctuationPattern,
             Locale locale) {
         super(input);
+
         termInfoBuffer = new ArrayDeque<TermInfo>();
         offsetAtt = (OffsetAttribute) input.getAttribute(OffsetAttribute.class);
         termAtt = (CharTermAttribute) input.getAttribute(CharTermAttribute.class);

@@ -82,7 +82,7 @@ public class SourceDocumentBatchInserter {
 				catmaProperties.getProperty("use_memory_mapped_buffers", "true"));
 		
 		BatchInserter inserter = 
-				BatchInserters.inserter(graphdbPath, graphConfig);
+				BatchInserters.inserter(new File(graphdbPath), graphConfig);
 		
 		long totalNodeCount = 0;
 		long totalRelCount = 0;

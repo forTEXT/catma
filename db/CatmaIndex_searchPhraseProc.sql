@@ -20,7 +20,7 @@ delimiter $$
 
 DROP PROCEDURE IF EXISTS searchPhrase$$
 /**
- * USE CatmaIndex
+ * USE catmaindex
  * 
  * Used by de.catma.indexer.db.SpSearchPhrase
  * 
@@ -62,8 +62,8 @@ BEGIN
     THEN
         INSERT INTO termbuf1(tokenOffset, characterEnd) 
         SELECT p.tokenOffset, p.characterEnd
-        FROM CatmaIndex.term t
-        JOIN CatmaIndex.position p ON p.termID = t.termID
+        FROM catmaindex.term t
+        JOIN catmaindex.position p ON p.termID = t.termID
         WHERE t.documentID=docID
         AND CASE WHEN wild = 0 THEN
             t.term = term2
@@ -79,8 +79,8 @@ BEGIN
     THEN
         INSERT INTO termbuf2(tokenOffset, characterEnd) 
         SELECT p.tokenOffset, p.characterEnd
-        FROM CatmaIndex.term t
-        JOIN CatmaIndex.position p ON p.termID = t.termID
+        FROM catmaindex.term t
+        JOIN catmaindex.position p ON p.termID = t.termID
         WHERE t.documentID=docID
         AND CASE WHEN wild = 0 THEN
             t.term = term3
@@ -97,8 +97,8 @@ BEGIN
     THEN
         INSERT INTO termbuf3(tokenOffset, characterEnd) 
         SELECT p.tokenOffset, p.characterEnd
-        FROM CatmaIndex.term t
-        JOIN CatmaIndex.position p ON p.termID = t.termID
+        FROM catmaindex.term t
+        JOIN catmaindex.position p ON p.termID = t.termID
         WHERE t.documentID=docID
         AND CASE WHEN wild = 0 THEN
             t.term = term4
@@ -114,8 +114,8 @@ BEGIN
     THEN
         INSERT INTO termbuf4(tokenOffset, characterEnd) 
         SELECT p.tokenOffset, p.characterEnd
-        FROM CatmaIndex.term t
-        JOIN CatmaIndex.position p ON p.termID = t.termID
+        FROM catmaindex.term t
+        JOIN catmaindex.position p ON p.termID = t.termID
         WHERE t.documentID=docID
         AND CASE WHEN wild = 0 THEN
             t.term = term5
@@ -130,8 +130,8 @@ BEGIN
     pos.tokenOffset as tokenOffset,
     pos.characterStart as characterStart,
     pos.characterEnd as characterEnd
-    FROM CatmaIndex.term t 
-    JOIN CatmaIndex.position pos on pos.termID=t.termID
+    FROM catmaindex.term t 
+    JOIN catmaindex.position pos on pos.termID=t.termID
     WHERE t.documentID=docID
     AND CASE WHEN wild = 0 THEN
         t.term = term1

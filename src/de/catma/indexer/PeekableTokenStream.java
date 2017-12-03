@@ -25,7 +25,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.util.Attribute;
 
-public class PeekableTokenStream extends TokenStream {
+public class PeekableTokenStream {
 
 	private TokenStream tokenStream;
 	
@@ -37,6 +37,7 @@ public class PeekableTokenStream extends TokenStream {
 
 	public PeekableTokenStream(TokenStream tokenStream) throws IOException {
 		this.tokenStream = tokenStream;
+		this.tokenStream.reset();
 		init = false;
 	}
 

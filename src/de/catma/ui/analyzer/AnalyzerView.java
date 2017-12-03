@@ -132,7 +132,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private List<String> relevantStaticMarkupCollIDs;
 	private MarkupResultPanel markupResultPanel;
 	private Corpus corpus;
-	private Integer visualizationId;
+	private Integer disChartVisualizationId;
 	private PropertyChangeListener sourceDocumentChangedListener;
 	private PropertyChangeListener userMarkupDocumentChangedListener;
 	private CloseListener closeListener;
@@ -564,12 +564,42 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	}
 
 	private Component createResultByMarkupView() {
-		markupResultPanel = new MarkupResultPanel(repository, this, this, this);
+		markupResultPanel = new MarkupResultPanel(repository, this, this, this, new QueryOptionsProvider() {
+			
+			@Override
+			public QueryOptions getQueryOptions() {
+				return new QueryOptions(
+						relevantSourceDocumentIDs.isEmpty()?
+								getSourceDocumentIDs(repository.getSourceDocuments()):
+									relevantSourceDocumentIDs,
+						relevantUserMarkupCollIDs,
+						relevantStaticMarkupCollIDs,
+						indexInfoSet.getUnseparableCharacterSequences(),
+						indexInfoSet.getUserDefinedSeparatingCharacters(),
+						indexInfoSet.getLocale(),
+						repository);
+			}
+		});
 		return markupResultPanel;
 	}
 
 	private Component createResultByPhraseView() {
-		phraseResultPanel = new PhraseResultPanel(repository, this, this, this);
+		phraseResultPanel = new PhraseResultPanel(repository, this, this, this, new QueryOptionsProvider() {
+			
+			@Override
+			public QueryOptions getQueryOptions() {
+				return new QueryOptions(
+						relevantSourceDocumentIDs.isEmpty()?
+								getSourceDocumentIDs(repository.getSourceDocuments()):
+									relevantSourceDocumentIDs,
+						relevantUserMarkupCollIDs,
+						relevantStaticMarkupCollIDs,
+						indexInfoSet.getUnseparableCharacterSequences(),
+						indexInfoSet.getUserDefinedSeparatingCharacters(),
+						indexInfoSet.getLocale(),
+						repository);
+			}
+		});
 		return phraseResultPanel;
 	}
 
@@ -689,9 +719,9 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				groupedQueryResultSet, repository, relevantSourceDocumentIDs);
 		dc.compute();
 		
-		this.visualizationId = 
+		this.disChartVisualizationId = 
 			((CatmaApplication)UI.getCurrent()).addVisualization(
-				visualizationId, (corpus==null)?Messages.getString("AnalyzerView.AllDocuments"):corpus.toString(), dc, //$NON-NLS-1$
+				disChartVisualizationId, (corpus==null)?Messages.getString("AnalyzerView.AllDocuments"):corpus.toString(), dc, //$NON-NLS-1$
 				distributionSelectionListener);
 	}
 

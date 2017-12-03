@@ -20,7 +20,7 @@ delimiter $$
 DROP PROCEDURE IF EXISTS `getTagDefinitionChildren`$$
 
 /**
- * USE CatmaRepository
+ * USE catmarepository
  *  
  * Gives all TagDefinition children for the given tagDefinitionID
  * Used by de.catma.repository.db.TagLibraryHandler#removeTagDefinition

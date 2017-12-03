@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Transaction;
 
@@ -187,13 +186,11 @@ public class SourceDocumentIndexer {
 					CatmaGraphDbName.CATMAGRAPHDB.getGraphDatabaseService();
 		
 		try (Transaction tx = graphDb.beginTx()) {
-			
-			ResourceIterable<Node> sdNodeIterable = 
-					graphDb.findNodesByLabelAndProperty(
-							NodeType.SourceDocument, 
-							SourceDocumentProperty.localUri.name(), 
-							sourceDocumentID);
-			ResourceIterator<Node> sdNodeIterator = sdNodeIterable.iterator();
+
+			ResourceIterator<Node> sdNodeIterator = graphDb.findNodes(
+					NodeType.SourceDocument, 
+					SourceDocumentProperty.localUri.name(), 
+					sourceDocumentID);
 			if (sdNodeIterator.hasNext()) {
 				Node sdNode = sdNodeIterator.next();
 				sdNodeIterator.close();

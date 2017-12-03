@@ -3,7 +3,7 @@
   <!-- Configure the database connection here -->
   <jdbc>
     <driver>org.gjt.mm.mysql.Driver</driver>
-    <url>jdbc:mysql://localhost/</url>
+    <url>jdbc:mysql://localhost:3312/</url>
     <user>root</user>
     <password>test</password>
   </jdbc>
@@ -56,11 +56,11 @@
 	  <schemata>
 	  	<schema>
 	  		<inputSchema>catmarepository</inputSchema>
-	  		<outputSchema>CatmaRepository</outputSchema>
+	  		<outputSchema>catmarepository</outputSchema>
 	  	</schema>
 	  	<schema>
 	  		<inputSchema>catmaindex</inputSchema>
-	  		<outputSchema>CatmaIndex</outputSchema>
+	  		<outputSchema>catmaindex</outputSchema>
 	  	</schema>
 	  </schemata>
     </database>

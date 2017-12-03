@@ -21,7 +21,7 @@ DELIMITER $$
 DROP PROCEDURE IF EXISTS `getTagDefinitionPath`$$
 
 /**
- * USE CatmaIndex
+ * USE catmaindex
  *  
  * Gives the TagDefinition path for the given tagDefinitionID
  * Used by de.catma.repository.db.maintenance.DBIndexMaintainer
@@ -38,17 +38,17 @@ BEGIN
   
   SELECT parentID, name 
   INTO currentParent, currentPath
-  FROM CatmaRepository.tagdefinition 
+  FROM catmarepository.tagdefinition 
   WHERE tagDefinitionID = curTagDefinitionID;
   
   WHILE currentParent is not null DO
     SELECT parentId, concat(name, '/', currentPath) 
     INTO currentParent, currentPath
-    FROM CatmaRepository.tagdefinition 
+    FROM catmarepository.tagdefinition 
     where tagDefinitionID = currentParent;
     
   END WHILE;
   
   RETURN concat('/', currentPath);
-END;
+END$$
 

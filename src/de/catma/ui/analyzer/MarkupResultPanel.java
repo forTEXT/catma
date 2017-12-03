@@ -246,17 +246,21 @@ public class MarkupResultPanel extends VerticalLayout {
 	private TagKwicResultsProvider tagKwicResultsProvider;
 	private Button btSelectAllRows;
 	private Button btDeselectAllRows;
+	private Button btVega;
+	private QueryOptionsProvider queryOptionsProvider;
 	
 	public MarkupResultPanel(
 			Repository repository, 
 			GroupedQueryResultSelectionListener resultSelectionListener, 
 			RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider,
-			TagKwicResultsProvider tagKwicResultsProvider) {
+			TagKwicResultsProvider tagKwicResultsProvider,
+			QueryOptionsProvider queryOptionsProvider) {
 		this.curQueryResult = new QueryResultRowArray();
 		this.repository = repository;
 		this.resultSelectionListener = resultSelectionListener;
 		this.relevantUserMarkupCollectionProvider = relevantUserMarkupCollectionProvider;
 		this.tagKwicResultsProvider = tagKwicResultsProvider;
+		this.queryOptionsProvider = queryOptionsProvider;
 	}
 	
 	@Override
@@ -270,6 +274,16 @@ public class MarkupResultPanel extends VerticalLayout {
 	}
 	
 	private void initActions() {
+		
+		btVega.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				((CatmaApplication)UI.getCurrent()).addVega(curQueryResult, queryOptionsProvider);
+			}
+		});
+		
+
 		cbPropAsColumns.addValueChangeListener(new ValueChangeListener() {
 			
 			@Override
@@ -647,6 +661,14 @@ public class MarkupResultPanel extends VerticalLayout {
 		btDist = new Button();
 		btDist.setIcon(new ClassResource("analyzer/resources/chart.gif")); //$NON-NLS-1$
 		buttonPanel.addComponent(btDist);
+
+		btVega = new Button("Vega");
+
+		btVega.setDescription(
+			"Roll your own visualization");
+		
+		buttonPanel.addComponent(btVega);
+
 		
 		btResultExcelExport = new Button();
 		btResultExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png")); //$NON-NLS-1$
