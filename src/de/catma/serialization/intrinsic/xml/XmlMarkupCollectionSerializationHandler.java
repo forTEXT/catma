@@ -3,23 +3,15 @@ package de.catma.serialization.intrinsic.xml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
 
-import nu.xom.Builder;
-import nu.xom.Document;
-import nu.xom.Element;
-import nu.xom.Node;
-import nu.xom.Text;
 import de.catma.document.Range;
-import de.catma.document.repository.Repository;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.XML2ContentHandler;
-import de.catma.document.source.contenthandler.XMLContentHandler;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
@@ -35,6 +27,11 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
+import nu.xom.Builder;
+import nu.xom.Document;
+import nu.xom.Element;
+import nu.xom.Node;
+import nu.xom.Text;
 
 public class XmlMarkupCollectionSerializationHandler implements
 		UserMarkupCollectionSerializationHandler {
@@ -112,7 +109,7 @@ public class XmlMarkupCollectionSerializationHandler implements
     		Stack<String> elementStack, TagManager tagManager, 
     		TagLibrary tagLibrary, 
     		TagsetDefinition tagsetDefinition,
-    		UserMarkupCollection userMarkupCollection) throws URISyntaxException {
+    		UserMarkupCollection userMarkupCollection) throws Exception {
     	
 		int start = contentBuilder.length();
 
@@ -175,34 +172,27 @@ public class XmlMarkupCollectionSerializationHandler implements
 		}
 		
 		
-		  int end = contentBuilder.length();
-		  Range range = new Range(start,end);
+		int end = contentBuilder.length();
+		Range range = new Range(start,end);
 		  
         
         if (range.isSinglePoint()) {
         	int sourceDocumentLength = 0;
     		
-			try {
-				sourceDocumentLength = sourceDocument.getLength();
-			} catch (IOException e) {
-				
-				e.printStackTrace();
+			sourceDocumentLength = sourceDocument.getLength();
+			
+			int newStart = range.getStartPoint();
+			if (newStart > 0) {
+				newStart = newStart-1;
 			}
 			
+			int newEnd = range.getEndPoint();
+			if (newEnd < sourceDocumentLength-1) {
+				newEnd = newEnd+1;
+			}
 			
-			if(end < sourceDocumentLength-2)
-	           	 range = new Range(start, end+3);
+			range = new Range(newStart, newEnd);
 			
-			if( end == sourceDocumentLength-2)
-	           	 range = new Range(start-1, end+2);
-	
-	     	if( end == sourceDocumentLength-1)
-	           	 range = new Range(start-2, end+1);
-	    	
-	     	if( end == sourceDocumentLength)
-	           	 range = new Range(start-3, end);
-	    	
-        	 
         }
         
         TagInstance tagInstance = new TagInstance(idGenerator.generate(), tagDefinition);
