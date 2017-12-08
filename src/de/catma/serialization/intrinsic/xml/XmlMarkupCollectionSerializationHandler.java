@@ -15,8 +15,10 @@ import nu.xom.Element;
 import nu.xom.Node;
 import nu.xom.Text;
 import de.catma.document.Range;
+import de.catma.document.repository.Repository;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.source.contenthandler.XML2ContentHandler;
 import de.catma.document.source.contenthandler.XMLContentHandler;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
@@ -37,15 +39,19 @@ import de.catma.util.IDGenerator;
 public class XmlMarkupCollectionSerializationHandler implements
 		UserMarkupCollectionSerializationHandler {
 	
+	private SourceDocument sourceDocument;
 	private TagManager tagManager;
 	private String sourceDocumentId;
 	private IDGenerator idGenerator;
 	private HashMap<String, TagDefinition> pathToTagDefMap;
-	private XMLContentHandler xmlContentHandler;
+	private XML2ContentHandler xmlContentHandler;
+	
+
 	
 	public XmlMarkupCollectionSerializationHandler(
-			TagManager tagManager, String sourceDocumentId, XMLContentHandler xmlContentHandler) {
+			SourceDocument sourceDocuemnt,TagManager tagManager, String sourceDocumentId, XML2ContentHandler xmlContentHandler) {
 		super();
+		this.sourceDocument=sourceDocuemnt;
 		this.tagManager = tagManager;
 		this.sourceDocumentId = sourceDocumentId;
 		this.idGenerator = new IDGenerator();
@@ -86,6 +92,7 @@ public class XmlMarkupCollectionSerializationHandler implements
 	        		tagLibrary);
 	        
 	        scanElements(
+	        	
 	        		contentBuilder, 
 	        		document.getRootElement(), 
 	        		elementStack, tagManager,
@@ -100,6 +107,7 @@ public class XmlMarkupCollectionSerializationHandler implements
 	}
 
     private void scanElements(
+    	
     		StringBuilder contentBuilder, Element element,
     		Stack<String> elementStack, TagManager tagManager, 
     		TagLibrary tagLibrary, 
@@ -147,6 +155,7 @@ public class XmlMarkupCollectionSerializationHandler implements
             }
             else if (curChild instanceof Element) { //descent
                 scanElements(
+                	
                 	contentBuilder, 
                 	(Element)curChild, 
                 	elementStack,
@@ -164,9 +173,38 @@ public class XmlMarkupCollectionSerializationHandler implements
 		else {
 			xmlContentHandler.addBreak(contentBuilder, element);
 		}
-        int end = contentBuilder.length();
-        Range range = new Range(start,end);
-
+		
+		
+		  int end = contentBuilder.length();
+		  Range range = new Range(start,end);
+		  
+        
+        if (range.isSinglePoint()) {
+        	int sourceDocumentLength = 0;
+    		
+			try {
+				sourceDocumentLength = sourceDocument.getLength();
+			} catch (IOException e) {
+				
+				e.printStackTrace();
+			}
+			
+			
+			if(end < sourceDocumentLength-2)
+	           	 range = new Range(start, end+3);
+			
+			if( end == sourceDocumentLength-2)
+	           	 range = new Range(start-1, end+2);
+	
+	     	if( end == sourceDocumentLength-1)
+	           	 range = new Range(start-2, end+1);
+	    	
+	     	if( end == sourceDocumentLength)
+	           	 range = new Range(start-3, end);
+	    	
+        	 
+        }
+        
         TagInstance tagInstance = new TagInstance(idGenerator.generate(), tagDefinition);
 
         for (int i=0; i<element.getAttributeCount(); i++) {
