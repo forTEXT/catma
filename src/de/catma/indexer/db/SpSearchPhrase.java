@@ -44,7 +44,7 @@ public class SpSearchPhrase {
 	}
 
 	public Result<Record> execute(DSLContext db) {
-		StringBuilder builder = new StringBuilder("call CatmaIndex.searchPhrase( ");
+		StringBuilder builder = new StringBuilder("call catmaindex.searchPhrase( ");
 		
 		int termCount=0;
 		for (termCount=0; 

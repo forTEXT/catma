@@ -6,7 +6,7 @@ import org.jooq.Result;
 
 public class SpGetTerms {
 
-	//call CatmaIndex.getTerms(:docID, :basePos, :termCount)
+	//call catmaindex.getTerms(:docID, :basePos, :termCount)
 	
 	public static enum ResultColumn {
 		term, 
@@ -32,7 +32,7 @@ public class SpGetTerms {
 	
 	
 	public Result<Record> execute(DSLContext db) {
-		StringBuilder builder = new StringBuilder("call CatmaIndex.getTerms( ");
+		StringBuilder builder = new StringBuilder("call catmaindex.getTerms( ");
 	
 		builder.append("'");
 		builder.append(documentId);
