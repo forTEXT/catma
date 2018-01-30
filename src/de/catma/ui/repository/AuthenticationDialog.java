@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.security.SecureRandom;
 import java.text.MessageFormat;
@@ -49,7 +48,6 @@ import org.jboss.aerogear.security.otp.api.Clock;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.vaadin.server.ClassResource;
-import com.vaadin.server.DownloadStream;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.RequestHandler;
 import com.vaadin.server.VaadinRequest;
@@ -73,6 +71,7 @@ import com.vaadin.ui.themes.BaseTheme;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.repository.RepositoryReference;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.SessionKey;
 import de.catma.user.UserProperty;
 
 /**
@@ -126,6 +125,7 @@ public class AuthenticationDialog extends VerticalLayout {
 
 			// this handles the answer to the authorization request
 			try {
+				
 				// clean up
 				VaadinSession.getCurrent().removeRequestHandler(this);
 				
@@ -220,12 +220,10 @@ public class AuthenticationDialog extends VerticalLayout {
 	                	(CatmaApplication) ui, 
 	                	repositoryReference, 
 	                	userIdentification);
-	
-	                new DownloadStream(
-                		new URL(RepositoryPropertyKey.BaseURL.getValue()).openStream(), 
-                		"text/html", "CATMA " + RepositoryPropertyKey.version.getValue() //$NON-NLS-1$ //$NON-NLS-2$
-	                ).writeResponse(request, response);
-	                return true;
+	                
+	                VaadinSession.getCurrent().setAttribute(SessionKey.USER.name(), userIdentification);
+	                
+	                return false;
 				}
 				else {
 	                logger.info("authentication failure: " + error); //$NON-NLS-1$
@@ -233,12 +231,8 @@ public class AuthenticationDialog extends VerticalLayout {
                         Messages.getString("AuthenticationDialog.authFailureTitle"), //$NON-NLS-1$
                         Messages.getString("AuthenticationDialog.authFailureMessage"), //$NON-NLS-1$
                         Type.ERROR_MESSAGE).show(ui.getPage());
-	                new DownloadStream(
-                		ui.getPage().getLocation().toURL().openStream(), 
-                		"text/html",  //$NON-NLS-1$
-                		"CATMA " + RepositoryPropertyKey.version.getValue() //$NON-NLS-1$
-	                ).writeResponse(request, response);
-	                return true;
+
+					return false;
 				}
 				
 			}
@@ -350,6 +344,7 @@ public class AuthenticationDialog extends VerticalLayout {
 		authenticationUrlBuilder.append("&redirect_uri="+URLEncoder.encode(baseUrl, "UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
 		authenticationUrlBuilder.append("&state=" + totp.now()); //$NON-NLS-1$
 		authenticationUrlBuilder.append("&openid.realm="+openidRealm); //$NON-NLS-1$
+		
 		
 		final AuthenticationRequestHandler authenticationRequestHandler =
 				new AuthenticationRequestHandler(

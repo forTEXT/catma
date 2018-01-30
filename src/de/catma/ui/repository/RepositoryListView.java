@@ -208,6 +208,18 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 
 	}
 
+	void open(
+			CatmaApplication catmaApplication, // needs to be passed in, as getUI() may not be initialized yet 
+			Map<String,String> userIdentification) throws Exception {
+
+		if ((repositoryTable.getValue() == null) 
+				&& !repositoryTable.getItemIds().isEmpty()) {
+			repositoryTable.setValue(repositoryTable.getItemIds().iterator().next());
+		}
+		
+		open(catmaApplication, (RepositoryReference) repositoryTable.getValue(), userIdentification);
+	}
+	
 	private void initComponents() {
 		repositoryTable = new Table(Messages.getString("RepositoryListView.availableRepos")); //$NON-NLS-1$
 		BeanItemContainer<RepositoryReference> container = 

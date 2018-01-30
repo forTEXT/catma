@@ -311,28 +311,30 @@ public class TagReferenceIndexer {
 				.execute();
 			}
 			
-			BatchBindStep insertPropertyBatch = db.batch(db
-			.insertInto(
-				PROPERTY,
-					PROPERTY.TAGINSTANCEID,
-					PROPERTY.PROPERTYDEFINITIONID,
-					PROPERTY.NAME,
-					PROPERTY.VALUE)
-			.values(
-				(byte[])null,
-				(byte[])null,
-				(String)null,
-				(String)null));
-					
-			for (String value : toBeIndexed) {
-				insertPropertyBatch.bind(
-					tagInstanceUUIDBytes,
-					propDefUUIDBytes,
-					property.getName(),
-					value);
+			if (!toBeIndexed.isEmpty()) {
+				BatchBindStep insertPropertyBatch = db.batch(db
+				.insertInto(
+					PROPERTY,
+						PROPERTY.TAGINSTANCEID,
+						PROPERTY.PROPERTYDEFINITIONID,
+						PROPERTY.NAME,
+						PROPERTY.VALUE)
+				.values(
+					(byte[])null,
+					(byte[])null,
+					(String)null,
+					(String)null));
+						
+				for (String value : toBeIndexed) {
+					insertPropertyBatch.bind(
+						tagInstanceUUIDBytes,
+						propDefUUIDBytes,
+						property.getName(),
+						value);
+				}
+				
+				insertPropertyBatch.execute();
 			}
-			
-			insertPropertyBatch.execute();
 			
 			db.commitTransaction();
 		}		

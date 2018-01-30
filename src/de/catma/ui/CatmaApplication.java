@@ -42,6 +42,7 @@ import com.vaadin.server.Page;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -158,10 +159,11 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 		propertyChangeSupport = new PropertyChangeSupport(this);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	protected void init(VaadinRequest request) {
 		backgroundService = new UIBackgroundService(true);
-
+		logger.info("Session: " + request.getWrappedSession().getId());
 		storeParameters(request.getParameterMap());
 
 		Page.getCurrent().setTitle("CATMA 6.0 " + MINORVERSION); //$NON-NLS-1$
@@ -305,6 +307,15 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 						RepositoryPropertyKey.CATMA_oauthClientSecret.getValue(), URLEncoder.encode("/", "UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 
+			if (VaadinSession.getCurrent().getAttribute(SessionKey.USER.name()) != null) {
+				logger.info("auto opening repo for: " + VaadinSession.getCurrent().getAttribute(SessionKey.USER.name()));
+				repositoryManagerView.openFirstRepository(this, (Map<String, String>) VaadinSession.getCurrent().getAttribute(SessionKey.USER.name()));
+				menu.executeEntry(repositoryManagerView);
+			}
+			else {
+				logger.info("SessionKey.USER not set");
+			}
+			
 		} catch (Exception e) {
 			showAndLogError(Messages.getString("CatmaApplication.errorSystemNotInitialized"), e); //$NON-NLS-1$
 		}
@@ -489,6 +500,7 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 
 	@Override
 	public void close() {
+		VaadinSession.getCurrent().setAttribute("USER", null);
 		repositoryManagerView.getRepositoryManager().close();
 		logger.info("application for user" + getUser() + " has been closed"); //$NON-NLS-1$ //$NON-NLS-2$
 		if (repositoryOpened) {
@@ -533,9 +545,11 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 	}
 
 	public void setUser(Object newUser) {
+		logger.info("Setting user-> new: " + newUser + " old:" + this.user);
+		
 		Object currentUser = this.user;
 		this.user = newUser;
-
+		
 		propertyChangeSupport.firePropertyChange(CatmaApplicationEvent.userChange.name(), currentUser, newUser);
 	}
 
