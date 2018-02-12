@@ -24,6 +24,7 @@ import de.catma.tag.TagLibraryReference;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleValueDialog;
+import de.catma.ui.tagmanager.TagsetSelectionListener;
 import de.catma.ui.tagmanager.TagsetTree;
 
 public class TagsetSelectionDialog extends Window {
@@ -38,11 +39,18 @@ public class TagsetSelectionDialog extends Window {
 	private Button btCreateTagLibrary;
 	
 	private PropertyChangeListener tagLibraryChangedListener;
+	private TagsetSelectionListener tagsetSelectionListener;
 	
 	public TagsetSelectionDialog(Repository repository) {
+		this(repository ,null);
+	}
+	
+	public TagsetSelectionDialog(Repository repository,TagsetSelectionListener tagsetSelectionListener) {
 		super(Messages.getString("TagsetSelectionDialog.openTagset")); //$NON-NLS-1$
 		
 		this.repository = repository;
+		this.tagsetSelectionListener = tagsetSelectionListener;
+		
 		
 		initComponents();
 		initActions();
@@ -89,7 +97,7 @@ public class TagsetSelectionDialog extends Window {
 		content.setExpandRatio(tagLibrariesPanel, 0.5f);
 		
 		tagsetTree = new TagsetTree(
-			repository.getTagManager(), null, false, true, false, false, true, null);
+			repository.getTagManager(), null, false, true, false, false, true, null,tagsetSelectionListener,repository);
 		tagsetTree.setCaption(Messages.getString("TagsetSelectionDialog.selectTagset")); //$NON-NLS-1$
 
 		content.addComponent(tagsetTree);
@@ -133,7 +141,7 @@ public class TagsetSelectionDialog extends Window {
 	}
 	
 	private void initListeners() {
-		tagsetTree.addBtLoadIntoDocumentListener(new ClickListener() {
+		tagsetTree.addBtLoadIntoDocumentListener( new ClickListener() {
 
 			public void buttonClick(ClickEvent event) {
 				close();

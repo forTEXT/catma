@@ -21,6 +21,7 @@ package de.catma.ui.menu;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.text.MessageFormat;
+import java.util.logging.Logger;
 
 import com.vaadin.server.Page;
 import com.vaadin.server.VaadinService;
@@ -39,6 +40,7 @@ public class LoginLogoutCommand implements Command {
 	private RepositoryManagerView repositoryManagerView;
 	private MainMenu menu;
 	private String afterLogoutRedirectURL;
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 	
 	private PropertyChangeListener repositoryManagerListener = 
 			new PropertyChangeListener() {
@@ -99,6 +101,7 @@ public class LoginLogoutCommand implements Command {
 	}
 	
 	private void logout() {
+		logger.info("closing session and redirecting to " + afterLogoutRedirectURL);
 		Page.getCurrent().setLocation(afterLogoutRedirectURL);
 		VaadinSession.getCurrent().close();
 	}

@@ -74,6 +74,7 @@ import de.catma.document.repository.UnknownUserException;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
+import de.catma.document.source.contenthandler.XML2ContentHandler;
 import de.catma.document.source.contenthandler.XMLContentHandler;
 import de.catma.document.standoffmarkup.MarkupCollectionReference;
 import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
@@ -1321,12 +1322,14 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	private void handleIntrinsicMarkupCollection(
 			SourceDocument sourceDocument) throws MalformedURLException, IOException {
 		//only XML supported so far
-		if (sourceDocument.getSourceContentHandler() instanceof XMLContentHandler) {
+		if (sourceDocument.getSourceContentHandler() instanceof XML2ContentHandler) {
 			XmlMarkupCollectionSerializationHandler xmlMarkupCollectionSerializationHandler = 
 				new XmlMarkupCollectionSerializationHandler(
+					sourceDocument,
 					repository.getTagManager(), 
 					sourceDocument.getID(),
-					(XMLContentHandler)sourceDocument.getSourceContentHandler());
+				//	sourceDocument.getLength()
+					(XML2ContentHandler)sourceDocument.getSourceContentHandler());
 			
 			try (InputStream is = 
 				sourceDocument.getSourceContentHandler()
@@ -1342,6 +1345,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			}
 			
 		}
+		
 		
 	}
 }

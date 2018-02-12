@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE ivy-module [
-	<!ENTITY vaadin.version "7.7.7">
+	<!ENTITY vaadin.version "7.7.13">
 ]>
 <ivy-module version="2.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -55,6 +55,8 @@
 		<dependency org="c3p0" name="c3p0" rev="0.9.1.2"/>
 
 		<dependency org="org.jooq" name="jooq" rev="3.7.2"/>
+		<!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-classic -->
+		<dependency org="ch.qos.logback" name="logback-classic" rev="1.2.3"/>
 
 		<dependency org="com.google.guava" name="guava" rev="19.0" />
 		<dependency org="com.google.guava" name="guava-gwt" rev="19.0" conf="widgetset-compile->default" />

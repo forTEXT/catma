@@ -867,7 +867,7 @@ class TagLibraryHandler {
 			
 			Result<Record> children = 
 					db.fetch(
-						"call CatmaRepository.getTagDefinitionChildren(" 
+						"call catmarepository.getTagDefinitionChildren(" 
 								+ tagDefinition.getId() + ")");
 			
 			for (Record r : children) {

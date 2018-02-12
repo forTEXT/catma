@@ -24,9 +24,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Locale;
 
-import com.vaadin.data.Property;
 import com.vaadin.data.Container.ItemSetChangeEvent;
 import com.vaadin.data.Container.ItemSetChangeListener;
+import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.data.util.BeanItemContainer;
@@ -34,20 +34,25 @@ import com.vaadin.event.FieldEvents.TextChangeEvent;
 import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbstractTextField.TextChangeEventMode;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
+import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.ListSelect;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.themes.Reindeer;
 
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.LanguageDetector;
@@ -56,7 +61,7 @@ import de.catma.ui.CatmaApplication;
 import de.catma.ui.dialog.wizard.DynamicWizardStep;
 import de.catma.ui.dialog.wizard.WizardStepListener;
 
-class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
+class IndexerOptionsPanel extends Panel implements DynamicWizardStep {
 	
     private static final char APOSTROPHE = '\'';
     
@@ -87,9 +92,12 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 	
 	private VerticalLayout loadSavePanel;
 
+	private ComboBox cbApplyToAllLanguageBox;
+
+	private Button btApplyLangToAll;
+
 	public IndexerOptionsPanel(WizardStepListener wizardStepListener,
 			AddSourceDocWizardResult wizardResult) {
-		super(2,1);
 		this.onAdvance = true;
 		this.wizardStepListener = wizardStepListener;
 		this.wizardResult = wizardResult;
@@ -195,13 +203,39 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 				}
 			}
 		});
+		
+		btApplyLangToAll.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+				if (cbApplyToAllLanguageBox.getValue() == null) {
+					Notification.show(
+						"Info", 
+						"Please select a common language first!", 
+						Type.TRAY_NOTIFICATION);
+				}
+				else {
+					for (Object itemId : table.getItemIds()) {
+						SourceDocumentResult sdr = (SourceDocumentResult)itemId;
+						sdr.getSourceDocumentInfo().getIndexInfoSet().setLanguage(
+								(LanguageItem) cbApplyToAllLanguageBox.getValue());
+						
+					}
+					table.refreshRowCache();
+				}
+				
+			}
+		});
 	}
 
 	private void initComponents() {
-		setSpacing(true);
-		setMargin(true);
+		addStyleName(Reindeer.PANEL_LIGHT);
+		GridLayout content = new GridLayout(2, 2);
 		
-		setSizeFull();
+		content.setSpacing(true);
+		content.setMargin(true);
+		
+		content.setSizeFull();
 		
 		Locale[] availableLocales = Locale.getAvailableLocales();
 		languageItems = new ArrayList<LanguageItem>();
@@ -230,7 +264,19 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 		table.setNullSelectionAllowed(false);
 		table.setImmediate(true);
 		
-		addComponent(table, 0, 0);
+		content.addComponent(table, 0, 0);
+		
+		HorizontalLayout commonLanguagePanel = new HorizontalLayout();
+		commonLanguagePanel.setSpacing(true);
+		
+		cbApplyToAllLanguageBox = new ComboBox("Common Language", languageItems);
+		commonLanguagePanel.addComponent(cbApplyToAllLanguageBox);
+		
+		btApplyLangToAll = new Button("Set for all documents");
+		commonLanguagePanel.addComponent(btApplyLangToAll);
+		commonLanguagePanel.setComponentAlignment(btApplyLangToAll, Alignment.BOTTOM_CENTER);
+		content.addComponent(commonLanguagePanel, 0, 1);
+		
 		
 		VerticalLayout expertLayout = new VerticalLayout();
 		expertLayout.setStyleName("expert-features"); //$NON-NLS-1$
@@ -297,9 +343,11 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 
         expertLayout.addComponent(loadSavePanel);
         
-        addComponent(expertLayout, 1, 0);
+        content.addComponent(expertLayout, 1, 0);
         
-        setColumnExpandRatio(1, 1);
+        content.setColumnExpandRatio(1, 1);
+        
+        setContent(content);
 	}
 	
 	private ValueChangeListenerGenerator makeComboBoxListenerGenerator(){
@@ -355,20 +403,25 @@ class IndexerOptionsPanel extends GridLayout implements DynamicWizardStep {
 			
 			for (SourceDocumentResult sdr : sourceDocumentResults) {
 				IndexInfoSet newIndexInfoSet = new IndexInfoSet();				
-				
-				Locale locale = languageDetector.getLocale(
-					languageDetector.detect(sdr.getSourceDocument().getContent())
-				);
-				
-				LanguageItem detectedLanguage = new LanguageItem(locale);
-				if (!languageItems.contains(detectedLanguage)) {
-					// Because the LanguageDetector can return a locale that is not present in the languageItems collection
-					// we explicitly add it here if it's missing
-					// See the comments in https://github.com/catmadevel/catma/commit/cd3e86b61596ce618338b0ab0295f240cbbd6f7f for more details
-					languageItems.add(detectedLanguage);
-				}
 
-				newIndexInfoSet.setLanguage(detectedLanguage);
+				try {
+					Locale locale = languageDetector.getLocale(
+						languageDetector.detect(sdr.getSourceDocument().getContent())
+					);
+				
+					LanguageItem detectedLanguage = new LanguageItem(locale);
+					if (!languageItems.contains(detectedLanguage)) {
+						// Because the LanguageDetector can return a locale that is not present in the languageItems collection
+						// we explicitly add it here if it's missing
+						// See the comments in https://github.com/catmadevel/catma/commit/cd3e86b61596ce618338b0ab0295f240cbbd6f7f for more details
+						languageItems.add(detectedLanguage);
+					}
+	
+					newIndexInfoSet.setLanguage(detectedLanguage);
+				}
+				finally {
+					sdr.getSourceDocument().unload();
+				}
 				
 				sdr.getSourceDocumentInfo().setIndexInfoSet(newIndexInfoSet);
 			}

@@ -75,6 +75,7 @@ import de.catma.ui.component.export.CsvExport.CsvExportException;
 import de.catma.ui.component.export.HierarchicalExcelExport;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
+import de.catma.user.Permission;
 
 public class MarkupResultPanel extends VerticalLayout {
 	
@@ -669,6 +670,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 		buttonPanel.addComponent(btVega);
 
+		btVega.setVisible(repository.getUser().hasPermission(Permission.vega));
 		
 		btResultExcelExport = new Button();
 		btResultExcelExport.setIcon(new ClassResource("analyzer/resources/excel.png")); //$NON-NLS-1$
@@ -1063,7 +1065,7 @@ public class MarkupResultPanel extends VerticalLayout {
 	@SuppressWarnings("unchecked")
 	private void addTagQueryResultRow(final TagQueryResultRow row) 
 				throws IOException {
-		
+		//TODO: use expand
 		String tagDefinitionId = row.getTagDefinitionId();
 		String markupCollectionsId = row.getMarkupCollectionId();
 		SourceDocument sourceDocument = 

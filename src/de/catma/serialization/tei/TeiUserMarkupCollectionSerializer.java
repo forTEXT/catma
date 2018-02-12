@@ -232,7 +232,7 @@ public class TeiUserMarkupCollectionSerializer {
 			vRange.appendChild(vColl);
 			for (String val : property.getPropertyValueList().getValues()) {
 				TeiElement string = new TeiElement(TeiElementName.string);
-				vRange.appendChild(string);
+				vColl.appendChild(string);
 				string.appendChild(val);
 			}
 			

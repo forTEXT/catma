@@ -46,7 +46,7 @@ public class CorpusExport extends ServerResource {
 			for (Corpus c : corpora) {
 				if (c.getId().equals(corpusId)) {
 
-					CorpusExporter corpusExporter = new CorpusExporter(repo);
+					CorpusExporter corpusExporter = new CorpusExporter(repo, false);
 					final String name = corpusExporter.cleanupName(c.toString());
 					final String fileName = name + corpusExporter.getDate() + ".tar.gz";
 					String tempDir =

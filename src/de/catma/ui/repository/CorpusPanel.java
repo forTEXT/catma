@@ -21,8 +21,10 @@ package de.catma.ui.repository;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.concurrent.ScheduledFuture;
@@ -45,6 +47,7 @@ import com.vaadin.event.Transferable;
 import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
+import com.vaadin.server.StreamResource.StreamSource;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractSelect.AbstractSelectTargetDetails;
 import com.vaadin.ui.AbstractSelect.AcceptItem;
@@ -352,7 +355,7 @@ public class CorpusPanel extends VerticalLayout {
 				}
 			}
 		});
-		miExportCorpus.setVisible(repository.getUser().hasPermission(Permission.exportcorpus));
+//		miExportCorpus.setVisible(repository.getUser().hasPermission(Permission.exportcorpus));
 		miExportCorpus.setEnabled(false);
 		
 		miGenerateCorpusAnnotations = miMoreCorpusActions.addItem(
@@ -450,23 +453,37 @@ public class CorpusPanel extends VerticalLayout {
 	}
 
 	private void handleExportCorpusRequest(Corpus selectedValue) {
-		final CorpusExporter corpusExporter = new CorpusExporter(repository);
+		final CorpusExporter corpusExporter = new CorpusExporter(repository, true);
 		final String name = corpusExporter.cleanupName(selectedValue.toString());
-		final String fileName = name + corpusExporter.getDate() + ".tar.gz"; //$NON-NLS-1$
-		try {
-			FileOutputStream corpusOut = new FileOutputStream(
-				new File(((CatmaApplication)UI.getCurrent()).getTempDirectory() 
-						+ "/" +fileName)); //$NON-NLS-1$
+		final String filename = name + corpusExporter.getDate() + ".tar.gz"; //$NON-NLS-1$
+		
+		
+		DownloadDialog dlg = new DownloadDialog(new StreamSource() {
 			
-			corpusExporter.export(
-				name,
-				Collections.singletonList(selectedValue), corpusOut);
-			
-		}
-		catch (IOException e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError(
-					Messages.getString("CorpusPanel.errorExportingCorpus"), e); //$NON-NLS-1$
-		}
+			@Override
+			public InputStream getStream() {
+				try {
+					File file = new File(((CatmaApplication)UI.getCurrent()).getTempDirectory() 
+							+ "/" +filename); //$NON-NLS-1$
+					try (FileOutputStream corpusOut = new FileOutputStream(file)) {
+						
+						corpusExporter.export(
+								name,
+								Collections.singletonList(selectedValue), corpusOut);
+					}
+					
+					return new FileInputStream(file);
+				}
+				catch (IOException e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+							Messages.getString("CorpusPanel.errorExportingCorpus"), e); //$NON-NLS-1$
+					return null;
+				}
+			}
+		}, filename);
+		
+		dlg.show();
+		
 	}
 
 	protected void handleShareCorpusRequest(final Corpus corpus) {

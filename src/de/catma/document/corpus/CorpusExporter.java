@@ -26,9 +26,12 @@ public class CorpusExporter {
 	private Repository repo;
 
 	private String date;
+
+	private boolean simpleEntryStyle;
 	
-	public CorpusExporter(Repository repo) {
+	public CorpusExporter(Repository repo, boolean simpleEntryStyle) {
 		this.repo = repo;
+		this.simpleEntryStyle = simpleEntryStyle;
 		this.date = FORMATTER.format(new Date());
 	}
 
@@ -49,16 +52,7 @@ public class CorpusExporter {
 				for (SourceDocument sd : corpus.getSourceDocuments()) {
 					
 					TarArchiveEntry sdEntry = 
-						new TarArchiveEntry(
-							exportName 
-								+ "_" 
-								+ date 
-								+ "/" 
-								+ corpusName 
-								+ "/" 
-								+ cleanupName(sd.getID()) 
-								+ "/" 
-								+ cleanupName(getFilename(sd)));
+						new TarArchiveEntry(getSourceDocEntryName(exportName, corpusName, sd));
 				
 					byte[] sdContent = 
 						sd.getContent().getBytes(Charset.forName("UTF8"));
@@ -86,16 +80,7 @@ public class CorpusExporter {
 
 						byte[] umcContent = teiDocOut.toByteArray();
 						
-						String umcEntryName = 
-								exportName 
-									+ "_" 
-									+ date 
-									+ "/"
-									+ corpusName 										 
-									+ "/" + cleanupName(sd.getID()) 
-									+ "/usermarkupcollections/" 
-									+ cleanupName(umc.getName())
-									+ ".xml";
+						String umcEntryName = getUmcEntryName(exportName, corpusName, umc, sd);
 						
 						TarArchiveEntry umcEntry = 
 							new TarArchiveEntry(umcEntryName);
@@ -108,6 +93,8 @@ public class CorpusExporter {
 						taOut.closeArchiveEntry();
 					}
 					
+					sd.unload();
+					
 				}
 			}
 		}
@@ -118,6 +105,48 @@ public class CorpusExporter {
 		
 	}
 	
+	private String getUmcEntryName(String exportName, String corpusName, UserMarkupCollection umc, SourceDocument sd) {
+		if (simpleEntryStyle) {
+			return corpusName 
+					+ "/" 
+					+ cleanupName(getFilename(sd))
+					+ "/annotationcollections/" 
+					+ cleanupName(umc.getName())
+					+ ".xml";
+		}
+		
+		return exportName 
+				+ "_" 
+				+ date 
+				+ "/"
+				+ corpusName 										 
+				+ "/" + cleanupName(sd.getID()) 
+				+ "/annotationcollections/" 
+				+ cleanupName(umc.getName())
+				+ ".xml";
+
+	}
+
+	private String getSourceDocEntryName(String exportName, String corpusName, SourceDocument sd) {
+		if (simpleEntryStyle) {
+			String cleanFilename = cleanupName(getFilename(sd));
+			return corpusName 
+					+ "/" 
+					+ cleanFilename 
+					+ "/" 
+					+ cleanFilename; 
+		}
+		return exportName 
+				+ "_" 
+				+ date 
+				+ "/" 
+				+ corpusName 
+				+ "/" 
+				+ cleanupName(sd.getID()) 
+				+ "/" 
+				+ cleanupName(getFilename(sd));
+	}
+
 	public String getDate() {
 		return date;
 	}
@@ -132,7 +161,9 @@ public class CorpusExporter {
 		String title = 
 				sourceContentHandler.getSourceDocumentInfo()
 					.getContentInfoSet().getTitle();
-
+		if (simpleEntryStyle) {
+			return sourceDocument.toString() + ".txt";
+		}
 		return sourceDocument.getID() 
 			+ (((title==null)||title.isEmpty())?"":("_"+title)) +
 			".txt";

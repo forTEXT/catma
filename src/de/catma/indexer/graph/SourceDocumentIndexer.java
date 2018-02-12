@@ -58,7 +58,9 @@ public class SourceDocumentIndexer {
 				IndexBufferManagerName.INDEXBUFFERMANAGER.getIndeBufferManager();
 
 		
-		indexBufferManager.add(sourceDocument.getID(), terms);
+		indexBufferManager.add(sourceDocument, terms);
+		
+		sourceDocument.unload();
 		
 		logger.info("buffering finished");
 		
