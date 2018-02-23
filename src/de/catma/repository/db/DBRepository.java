@@ -56,8 +56,6 @@ import de.catma.document.Corpus;
 import de.catma.document.repository.UnknownUserException;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollection;
-import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
@@ -154,6 +152,11 @@ public class DBRepository implements IndexedRepository {
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.idGenerator = new IDGenerator();
 		this.execShield = new ExecutionShield();
+	}
+	
+	@Override
+	public String getProjectId() {
+		return name;
 	}
 	
 	private void initTagManagerListeners() {
@@ -565,13 +568,7 @@ public class DBRepository implements IndexedRepository {
 	public void update(Corpus corpus, SourceDocument sourceDocument) throws IOException {
 		dbCorpusHandler.addSourceDocument(corpus, sourceDocument);
 	}
-	
-	public void update(Corpus corpus,
-			StaticMarkupCollectionReference staticMarkupCollectionReference) {
-		// TODO Auto-generated method stub
-		
-	}
-	
+
 	public void update(Corpus corpus, String name) throws IOException {
 		dbCorpusHandler.rename(corpus, name);
 	}
@@ -722,29 +719,6 @@ public class DBRepository implements IndexedRepository {
 		catch (Exception e) {
 			throw new IOException(e);
 		}	
-	}
-
-
-	public StaticMarkupCollectionReference insert(
-			StaticMarkupCollection staticMarkupCollection) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	public StaticMarkupCollection getStaticMarkupCollection(
-			StaticMarkupCollectionReference staticMarkupCollectionReference) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	public void update(StaticMarkupCollection staticMarkupCollection) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void delete(StaticMarkupCollection staticMarkupCollection) {
-		// TODO Auto-generated method stub
-
 	}
 
 	public void createTagLibrary(String name) throws IOException {

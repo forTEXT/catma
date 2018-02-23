@@ -1,21 +1,25 @@
 package de.catma.repository.git.managers.gitlab4j_api_custom;
 
-import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
-import org.gitlab4j.api.AbstractApi;
-import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.Pager;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
+
+import org.gitlab4j.api.AbstractApi;
+import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.GitLabApiForm;
+import org.gitlab4j.api.Pager;
+import org.gitlab4j.api.models.User;
+
+import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
 
 public class CustomUserApi extends AbstractApi {
 	public CustomUserApi(GitLabApi gitLabApi) {
@@ -81,4 +85,15 @@ public class CustomUserApi extends AbstractApi {
 			throws GitLabApiException {
 		throw new GitLabApiException("Not implemented");
 	}
+	
+	
+    public User getUser(String externUid, String provider) throws GitLabApiException {
+        GitLabApiForm formData = new GitLabApiForm();
+        formData.param("extern_uid", externUid);
+        formData.param("provider", provider);
+        
+        Response response = get(Response.Status.OK, formData.asMap(), "users");
+        List<User> users = response.readEntity(new GenericType<List<User>>() {});
+        return (users.isEmpty() ? null : users.get(0));
+    }
 }

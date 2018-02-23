@@ -1,5 +1,6 @@
 package de.catma.repository.git.interfaces;
 
+import de.catma.project.ProjectReference;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 
 import javax.annotation.Nullable;
@@ -37,4 +38,6 @@ public interface IRemoteGitServerManager {
 	int createUser(String email, String username, @Nullable String password,
 				   String name, @Nullable Boolean isAdmin)
 			throws RemoteGitServerManagerException;
+	
+	public List<ProjectReference> getProjectReferences() throws RemoteGitServerManagerException;
 }

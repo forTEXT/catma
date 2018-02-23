@@ -75,9 +75,7 @@ import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.source.contenthandler.XML2ContentHandler;
-import de.catma.document.source.contenthandler.XMLContentHandler;
 import de.catma.document.standoffmarkup.MarkupCollectionReference;
-import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
@@ -211,11 +209,6 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		for (UserMarkupCollectionReference umcRef : 
 			sourceDocument.getUserMarkupCollectionRefs()) {
 			documentsTree.removeItem(umcRef);
-		}
-		
-		for (StaticMarkupCollectionReference smcRef : 
-			sourceDocument.getStaticMarkupCollectionRefs()) {
-			documentsTree.removeItem(smcRef);
 		}
 		
 		while ((documentsTree.getChildren(sourceDocument) != null)
@@ -794,10 +787,6 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			if (value instanceof SourceDocument) {
 				((CatmaApplication)UI.getCurrent()).openSourceDocument(
 						(SourceDocument)value, repository);
-			}
-			else if (value instanceof StaticMarkupCollectionReference) {
-					//TODO: remove
-				
 			}
 			else if (value instanceof UserMarkupCollectionReference) {
 				final SourceDocument sd = 

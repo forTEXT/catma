@@ -1,24 +1,37 @@
 package de.catma.repository.git.managers;
 
-import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
-import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
-import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
-import de.catma.repository.git.interfaces.IRemoteGitServerManager;
-import de.catma.util.Pair;
+import java.io.IOException;
+import java.net.URL;
+import java.security.SecureRandom;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.gitlab4j.api.*;
+import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.GroupApi;
+import org.gitlab4j.api.ProjectApi;
+import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Namespace;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.net.URL;
-import java.security.SecureRandom;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.google.common.collect.Lists;
+
+import de.catma.project.ProjectReference;
+import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
+import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
+import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
+import de.catma.user.UserProperty;
+import de.catma.util.Pair;
 
 public class GitLabServerManager implements IRemoteGitServerManager {
 	private final String gitLabAdminPersonalAccessToken;
@@ -30,7 +43,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	private final User gitLabUser;
 	private final String gitLabUserImpersonationToken;
 
-	static final String GITLAB_USER_EMAIL_ADDRESS_FORMAT = "catma-user-%s@catma.de";
+//	static final String GITLAB_USER_EMAIL_ADDRESS_FORMAT = "catma-user-%s@catma.de";
 	static final String GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME = "catma-default-ipt";
 
 	// only relevant when running under test - see checkGitLabServerUrl
@@ -51,7 +64,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	 * @param catmaUser a {@link de.catma.user.User} object
 	 * @throws RemoteGitServerManagerException if something went wrong during instantiation
 	 */
-	public GitLabServerManager(Properties catmaProperties, de.catma.user.User catmaUser)
+	public GitLabServerManager(Properties catmaProperties, Map<String, String> userIdentification)
 			throws RemoteGitServerManagerException {
 		this.gitLabAdminPersonalAccessToken = catmaProperties.getProperty(
 			"GitLabAdminPersonalAccessToken"
@@ -62,7 +75,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 			this.gitLabServerUrl, this.gitLabAdminPersonalAccessToken
 		);
 
-		Pair<User, String> userRawTokenPair = this.acquireImpersonationToken(catmaUser);
+		Pair<User, String> userRawTokenPair = this.acquireImpersonationToken(userIdentification);
 		this.gitLabUser = userRawTokenPair.getFirst();
 		this.gitLabUserImpersonationToken = userRawTokenPair.getSecond();
 
@@ -296,15 +309,15 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	 * <p>
 	 * This action is performed as a GitLab admin.
 	 *
-	 * @param catmaUser a {@link de.catma.user.User} object
+	 * @param userIdentification 
 	 * @return a {@link Pair} object with the first value being a {@link User} object and the second
 	 *         value being the raw impersonation token string
 	 * @throws RemoteGitServerManagerException if something went wrong while acquiring the GitLab
 	 *         impersonation token
 	 */
-	private Pair<User, String> acquireImpersonationToken(de.catma.user.User catmaUser)
+	private Pair<User, String> acquireImpersonationToken(Map<String, String> userIdentification)
 			throws RemoteGitServerManagerException {
-		Pair<User, Boolean> userWasCreatedPair = this.acquireUser(catmaUser);
+		Pair<User, Boolean> userWasCreatedPair = this.acquireUser(userIdentification);
 		User user = userWasCreatedPair.getFirst();
 		Boolean wasCreated = userWasCreatedPair.getSecond();
 
@@ -345,18 +358,17 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 
 		if (impersonationToken == null) {
 			String errorMessage = String.format(
-				"Failed to acquire impersonation token for CATMA user ID `%s`, identifier `%s`. " +
+				"Failed to acquire impersonation token for CATMA with identifier `%s`. " +
 				"This could be because the associated GitLab user ID `%s` does not have an " +
 				"active impersonation token called `%s`, or has so many tokens that " +
 				"CustomUserApi.getImpersonationTokens(int, String) is not returning it.",
-				catmaUser.getUserId(), catmaUser.getIdentifier(),
+				userIdentification.get(UserProperty.identifier.name()),
 				user.getId(), GitLabServerManager.GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME
 			);
 			throw new RemoteGitServerManagerException(errorMessage);
 		}
 
-		@SuppressWarnings("unchecked")
-		Pair<User, String> retVal = new Pair(user, impersonationToken);
+		Pair<User, String> retVal = new Pair<>(user, impersonationToken);
 
 		return retVal;
 	}
@@ -366,42 +378,36 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	 * <p>
 	 * This action is performed as a GitLab admin.
 	 *
-	 * @param catmaUser a {@link de.catma.user.User} object
+	 * @param userIdentification 
 	 * @return a {@link Pair} object with the first value being a {@link User} object and the second
 	 *         value being a boolean indicating whether or not the user was newly created
 	 * @throws RemoteGitServerManagerException if something went wrong while acquiring the GitLab
 	 *         user
 	 */
-	private Pair<User, Boolean> acquireUser(de.catma.user.User catmaUser)
+	private Pair<User, Boolean> acquireUser(Map<String, String> userIdentification)
 			throws RemoteGitServerManagerException {
-		UserApi userApi = this.adminGitLabApi.getUserApi();
+		CustomUserApi customUserApi = new CustomUserApi(this.adminGitLabApi);
+
 		Boolean userCreated = false;
 
 		try {
-			// we use the CATMA user identifier as the GitLab username
-			User user = userApi.getUser(catmaUser.getIdentifier());
+			User user = customUserApi.getUser(
+					userIdentification.get(UserProperty.identifier.name()), 
+					userIdentification.get(UserProperty.provider.name()));
 
-			// create the GitLab user if they don't exist
-			// we generate a fake catma-user-<id>@catma.de email address for the GitLab user for a
-			// few reasons:
-			// 1. it gives us another way to match CATMA users to GitLab users, in addition to the
-			//    CATMA user identifier / GitLab username, which could in theory change
-			// 2. the CATMA user's email address could change
-			// 3. we don't want GitLab to send any emails to the users
 			if (user == null) {
-				String gitLabUserEmailAddress = String.format(
-					GitLabServerManager.GITLAB_USER_EMAIL_ADDRESS_FORMAT, catmaUser.getUserId()
-				);
+
 				user = this._createUser(
-					gitLabUserEmailAddress, catmaUser.getIdentifier(), null,
-					catmaUser.getName(), null
+						userIdentification.get(UserProperty.email.name()), 
+						userIdentification.get(UserProperty.identifier.name()),
+						null,
+						userIdentification.get(UserProperty.name.name()),
+						null
 				);
 				userCreated = true;
 			}
 
-			@SuppressWarnings("unchecked")
-			Pair<User, Boolean> retVal = new Pair(user, userCreated);
-			return retVal;
+			return new Pair<>(user, userCreated);
 		}
 		catch (GitLabApiException e) {
 			throw new RemoteGitServerManagerException("Failed to acquire remote user", e);
@@ -487,6 +493,27 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 		}
 		catch (GitLabApiException e) {
 			throw new RemoteGitServerManagerException("Failed to create impersonation token", e);
+		}
+	}
+	
+	
+	public List<ProjectReference> getProjectReferences() throws RemoteGitServerManagerException {
+		List<ProjectReference> projectRefs = Lists.newArrayList();
+		
+		GroupApi groupApi = this.userGitLabApi.getGroupApi();
+		try {
+			List<Group> groups = groupApi.getGroups();
+			
+			for (Group group : groups) {
+				projectRefs.add(
+					new ProjectReference(
+						group.getPath(), group.getName(), group.getDescription()));
+			}
+		
+			return Collections.unmodifiableList(projectRefs);
+		}
+		catch (Exception e) {
+			throw new RemoteGitServerManagerException("Failed to load groups", e);
 		}
 	}
 }

@@ -76,7 +76,6 @@ import de.catma.document.corpus.CorpusExporter;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.UnknownUserException;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.staticmarkup.StaticMarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.heureclea.autotagger.AnnotationGeneratorJob;
 import de.catma.heureclea.autotagger.GenerationOptions;
@@ -579,13 +578,6 @@ public class CorpusPanel extends VerticalLayout {
 						(UserMarkupCollectionReference)item;
 				if (!target.getUserMarkupCollectionRefs().contains(umcRef)) {
 					repository.update(target, umcRef);
-				}
-			}
-			else if (item instanceof StaticMarkupCollectionReference) {
-				StaticMarkupCollectionReference smcRef = 
-						(StaticMarkupCollectionReference)item;
-				if (!target.getStaticMarkupCollectionRefs().contains(smcRef)) {
-					repository.update(target, smcRef);
 				}
 			}
 			else {

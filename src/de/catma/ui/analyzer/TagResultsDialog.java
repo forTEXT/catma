@@ -154,21 +154,19 @@ public class TagResultsDialog extends Window {
 	};
 	
 	private void initListeners() {
-		MainMenu menu = ((CatmaApplication)UI.getCurrent()).getMenu();
-		menu.addMenuItemSelectedListener(menuItemSelectedListener);
+		//TODO: listen to detach of project view 
 		
-		addCloseListener(new Window.CloseListener() {
-			
-			@Override
-			public void windowClose(CloseEvent e) {
-				removeListeners();
-			}
-		});
-	}
-	
-	private void removeListeners() {
-		MainMenu menu = ((CatmaApplication)UI.getCurrent()).getMenu();
-		menu.removeMenuItemSelectedListener(menuItemSelectedListener);
+//		MainMenu menu = ((CatmaApplication)UI.getCurrent()).getMenu();
+//		menu.addMenuItemSelectedListener(menuItemSelectedListener);
+//		
+//		addCloseListener(new Window.CloseListener() {
+//			
+//			@Override
+//			public void windowClose(CloseEvent e) {
+//		MainMenu menu = ((CatmaApplication)UI.getCurrent()).getMenu();
+//		menu.removeMenuItemSelectedListener(menuItemSelectedListener);
+//			}
+//		});
 	}
 	
 	public void show(Float height, Float width, Unit lastTagResultsDialogUnit) {

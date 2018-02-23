@@ -55,12 +55,14 @@ public class GitProjectHandler implements IGitProjectHandler {
 	 */
 	@Override
 	public String create(@Nonnull String name, @Nullable String description) throws GitProjectHandlerException {
+		//TODO: put the name somewhere
+		//TODO: consider creating local git projects for offline use
 		String projectId = idGenerator.generate();
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// create the group
 			String groupPath = this.remoteGitServerManager.createGroup(
-				name, projectId, description
+				projectId, projectId, description
 			);
 
 			// create the root repository

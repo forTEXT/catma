@@ -185,7 +185,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 			RepositoryReference repositoryReference, 
 			Map<String,String> userIdentification) throws Exception {
 		
-		catmaApplication.setUser(userIdentification);
+//		catmaApplication.setUser(userIdentification);
 		
 		Repository repository = 
 				repositoryManager.openRepository(
@@ -198,7 +198,7 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 				catmaApplication.getParameter(Parameter.TAGLIBS_COPY, "0").equals("1")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
-		catmaApplication.openRepository(repository);
+//		catmaApplication.openRepository(repository);
 		
 		if (catmaApplication.getParameter(Parameter.COMPONENT) != null) {
 			ParameterComponentValue.show(
