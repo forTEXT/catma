@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import javax.annotation.Nullable;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -17,6 +18,7 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.GitLabApiForm;
 import org.gitlab4j.api.Pager;
+import org.gitlab4j.api.models.Identity;
 import org.gitlab4j.api.models.User;
 
 import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
@@ -96,4 +98,25 @@ public class CustomUserApi extends AbstractApi {
         List<User> users = response.readEntity(new GenericType<List<User>>() {});
         return (users.isEmpty() ? null : users.get(0));
     }
+    
+    public User createUser(User user, String password, Integer projectsLimit) throws GitLabApiException {
+        Form formData = userToForm(user, projectsLimit, password, true);
+        Response response = post(Response.Status.CREATED, formData, "users");
+        return (response.readEntity(User.class));
+    }
+
+	private Form userToForm(User user, Integer projectsLimit, String password, boolean create) {
+		 GitLabApiForm formData = new GitLabApiForm();
+         formData.param("email", user.getEmail());
+         formData.param("password", password);
+         formData.param("username", user.getUsername());
+         formData.param("name", user.getName());
+//         formData.param("external", String.valueOf(false));
+         if (!user.getIdentities().isEmpty()) {
+	         Identity identity = user.getIdentities().iterator().next();
+	         formData.param("extern_uid", identity.getExternUid());
+	         formData.param("provider", identity.getProvider());
+         }
+         return formData;
+	}
 }

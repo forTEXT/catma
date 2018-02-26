@@ -303,7 +303,10 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 					
 					ProjectManager projectManager = 
 						new GitProjectManager(
-							RepositoryProperties.INSTANCE.getProperties(), userIdentification);
+							RepositoryPropertyKey.GitLabServerUrl.getValue(),
+							RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
+							RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+							userIdentification);
 					
 					User user = projectManager.getUser();
 										
@@ -498,7 +501,9 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 	@Override
 	public void close() {
 		VaadinSession.getCurrent().setAttribute("USER", null);
-		projectManagerView.close();
+		if (projectManagerView != null) {
+			projectManagerView.close();
+		}
 		logger.info("application for user" + getUser() + " has been closed"); //$NON-NLS-1$ //$NON-NLS-2$
 		if (repositoryOpened) {
 			userManager.logout(this);

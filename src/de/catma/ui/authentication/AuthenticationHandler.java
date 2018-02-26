@@ -28,7 +28,13 @@ public class AuthenticationHandler {
 		userIdentification.put(
 			UserProperty.identifier.name(), user);
 		userIdentification.put(
-			UserProperty.provider.name(), "localhost");
+			UserProperty.provider.name(), "catma");
+		
+		userIdentification.put(
+			UserProperty.email.name(), user + "@catma.de"); //TODO: debugging purposes only
+		userIdentification.put(
+			UserProperty.name.name(), user);
+		
 		authenticationListener.authenticated(userIdentification);
 		
 	}

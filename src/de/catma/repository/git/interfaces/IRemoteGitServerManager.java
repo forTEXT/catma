@@ -1,10 +1,12 @@
 package de.catma.repository.git.interfaces;
 
-import de.catma.project.ProjectReference;
-import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
+import java.util.List;
 
 import javax.annotation.Nullable;
-import java.util.List;
+
+import de.catma.Pager;
+import de.catma.project.ProjectReference;
+import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 
 public interface IRemoteGitServerManager {
 	class CreateRepositoryResponse {
@@ -39,5 +41,5 @@ public interface IRemoteGitServerManager {
 				   String name, @Nullable Boolean isAdmin)
 			throws RemoteGitServerManagerException;
 	
-	public List<ProjectReference> getProjectReferences() throws RemoteGitServerManagerException;
+	public Pager<ProjectReference> getProjectReferences() throws RemoteGitServerManagerException;
 }

@@ -1,26 +1,33 @@
 package de.catma.repository.git.managers;
 
-import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.user.User;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.eclipse.jgit.api.*;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.lib.StoredConfig;
-import org.eclipse.jgit.submodule.SubmoduleStatus;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
-import java.util.Properties;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.eclipse.jgit.api.CheckoutCommand;
+import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.FetchCommand;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.PushCommand;
+import org.eclipse.jgit.api.SubmoduleAddCommand;
+import org.eclipse.jgit.api.SubmoduleStatusCommand;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.submodule.SubmoduleStatus;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+
+import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
+import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.user.User;
 
 public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseable {
 	private final String repositoryBasePath;
@@ -35,11 +42,11 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * used to organise repositories on the local file system, based on the User's identifier. Methods of this class
 	 * that support authentication have their own username and password parameters for this purpose.
 	 *
-	 * @param catmaProperties a {@link Properties} object
+	 * @param repositoryBasePath the repo base path
 	 * @param catmaUser a {@link User} object
 	 */
-	public JGitRepoManager(@Nonnull Properties catmaProperties, @Nonnull User catmaUser) {
-		this.repositoryBasePath = catmaProperties.getProperty("GitBasedRepositoryBasePath");
+	public JGitRepoManager(@Nonnull String repositoryBasePath, @Nonnull User catmaUser) {
+		this.repositoryBasePath = repositoryBasePath;
 		this.username = catmaUser.getIdentifier();
 	}
 
@@ -53,16 +60,16 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * <p>
 	 * Calls {@link #open(String)} internally.
 	 *
-	 * @param catmaProperties a {@link Properties} object
+	 * @param repositoryBasePath the repo base path
 	 * @param catmaUser a {@link User} object
 	 * @param repositoryName the directory name of the Git repository to open
 	 * @throws LocalGitRepositoryManagerException if the Git repository couldn't be found or
 	 *         couldn't be opened for some other reason
 	 */
-	public JGitRepoManager(@Nonnull Properties catmaProperties, @Nonnull User catmaUser,
+	public JGitRepoManager(@Nonnull String repositoryBasePath, @Nonnull User catmaUser,
 						   @Nonnull String repositoryName)
 			throws LocalGitRepositoryManagerException {
-		this(catmaProperties, catmaUser);
+		this(repositoryBasePath, catmaUser);
 
 		this.open(repositoryName);
 	}

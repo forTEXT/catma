@@ -17,14 +17,14 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.GroupApi;
 import org.gitlab4j.api.ProjectApi;
-import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.Identity;
 import org.gitlab4j.api.models.Namespace;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
 
-import com.google.common.collect.Lists;
-
+import de.catma.Pager;
+import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
@@ -46,9 +46,6 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 //	static final String GITLAB_USER_EMAIL_ADDRESS_FORMAT = "catma-user-%s@catma.de";
 	static final String GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME = "catma-default-ipt";
 
-	// only relevant when running under test - see checkGitLabServerUrl
-	public boolean replaceGitLabServerUrl = false;
-
 	private static final char[] PWD_CHARS = (
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" +
 		"0123456789~`!@#$%^&*()-_=+[{]}\\|;:\'\",<.>/?"
@@ -64,12 +61,11 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	 * @param catmaUser a {@link de.catma.user.User} object
 	 * @throws RemoteGitServerManagerException if something went wrong during instantiation
 	 */
-	public GitLabServerManager(Properties catmaProperties, Map<String, String> userIdentification)
+	public GitLabServerManager(String gitLabServerUrl, String gitLabAdminPersonalAccessToken, Map<String, String> userIdentification)
 			throws RemoteGitServerManagerException {
-		this.gitLabAdminPersonalAccessToken = catmaProperties.getProperty(
-			"GitLabAdminPersonalAccessToken"
-		);
-		this.gitLabServerUrl = catmaProperties.getProperty("GitLabServerUrl");
+		this.gitLabAdminPersonalAccessToken = RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue();
+		
+		this.gitLabServerUrl = RepositoryPropertyKey.GitLabServerUrl.getValue();
 
 		this.adminGitLabApi = new GitLabApi(
 			this.gitLabServerUrl, this.gitLabAdminPersonalAccessToken
@@ -102,18 +98,8 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 		return this.gitLabUserImpersonationToken;
 	}
 
-	// only relevant when running under test
-	// for example, if you're running a GitLab instance as a docker container locally with --hostname, then your machine
-	// probably can't resolve that hostname (unless you've changed your hosts file, but that shouldn't be a requirement
-	// for running the tests)
-	// this becomes an issue when you ask a gitlab4j Project object for the repository HTTP URL, because it will
-	// contain that unresolvable hostname - this method takes care of the replacement using the "GitLabServerUrl" from
-	// the properties file
-	private String checkGitLabServerUrl(String url) {
-		if (!this.replaceGitLabServerUrl) {
-			return url;
-		}
-
+	// needed for testing but also when gitlab runs on port other than 80
+	private String getGitLabServerUrl(String url) {
 		try {
 			URL currentUrl = new URL(url);
 			URL gitLabServerUrl = new URL(this.gitLabServerUrl);
@@ -124,6 +110,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 			return newUrl.toString();
 		}
 		catch (IOException e) {
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -153,7 +140,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 			project = projectApi.createProject(project);
 			return new CreateRepositoryResponse(
 				null, project.getId(),
-				this.checkGitLabServerUrl(project.getHttpUrlToRepo())
+				this.getGitLabServerUrl(project.getHttpUrlToRepo())
 			);
 		}
 		catch (GitLabApiException e) {
@@ -196,7 +183,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 			project = projectApi.createProject(project);
 			return new CreateRepositoryResponse(
 				groupPath, project.getId(),
-				this.checkGitLabServerUrl(project.getHttpUrlToRepo())
+				this.getGitLabServerUrl(project.getHttpUrlToRepo())
 			);
 		}
 		catch (GitLabApiException e) {
@@ -402,6 +389,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 						userIdentification.get(UserProperty.identifier.name()),
 						null,
 						userIdentification.get(UserProperty.name.name()),
+						userIdentification.get(UserProperty.provider.name()),
 						null
 				);
 				userCreated = true;
@@ -415,9 +403,9 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	}
 
 	// it's more convenient to work with the User class internally, which is why this method exists
-	private User _createUser(String email, String username, @Nullable String password, String name,
+	private User _createUser(String email, String username, @Nullable String password, String name, String provider,
 							@Nullable Boolean isAdmin) throws RemoteGitServerManagerException {
-		UserApi userApi = this.adminGitLabApi.getUserApi();
+		CustomUserApi userApi = new CustomUserApi(getAdminGitLabApi());
 
 		if (password == null) {
 			// generate a random password
@@ -436,7 +424,15 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 		user.setUsername(username);
 		user.setName(name);
 		user.setIsAdmin(isAdmin);
-
+		
+		if (provider != null) {
+			Identity identity = new Identity();
+			identity.setExternUid(username);
+			identity.setProvider(provider);
+			
+			user.setIdentities(Collections.singletonList(identity));
+		}
+		
 		try {
 			user = userApi.createUser(user, password, null);
 			return user;
@@ -466,7 +462,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	public int createUser(String email, String username, @Nullable String password,
 						   String name, @Nullable Boolean isAdmin)
 			throws RemoteGitServerManagerException {
-		User user = this._createUser(email, username, password, name, isAdmin);
+		User user = this._createUser(email, username, password, name, null, isAdmin);
 		return user.getId();
 	}
 
@@ -497,23 +493,18 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	}
 	
 	
-	public List<ProjectReference> getProjectReferences() throws RemoteGitServerManagerException {
-		List<ProjectReference> projectRefs = Lists.newArrayList();
+	public Pager<ProjectReference> getProjectReferences() throws RemoteGitServerManagerException {
 		
 		GroupApi groupApi = this.userGitLabApi.getGroupApi();
 		try {
-			List<Group> groups = groupApi.getGroups();
-			
-			for (Group group : groups) {
-				projectRefs.add(
-					new ProjectReference(
-						group.getPath(), group.getName(), group.getDescription()));
-			}
-		
-			return Collections.unmodifiableList(projectRefs);
+			return new GitLabPager<>(
+					groupApi.getGroups(30),
+					group -> new ProjectReference(
+							group.getPath(), group.getName(), group.getDescription()));
 		}
 		catch (Exception e) {
 			throw new RemoteGitServerManagerException("Failed to load groups", e);
 		}
 	}
+
 }

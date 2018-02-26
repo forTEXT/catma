@@ -25,9 +25,7 @@ public class GitProjectHandler implements IGitProjectHandler {
 
 	private final IDGenerator idGenerator;
 
-	// using 'corpus' and not 'project' here so as not to confuse CATMA Projects with GitLab
-	// Projects
-	private static final String PROJECT_ROOT_REPOSITORY_NAME_FORMAT = "%s_corpus";
+	private static final String PROJECT_ROOT_REPOSITORY_NAME_FORMAT = "%s_root";
 
 	public static String getProjectRootRepositoryName(String projectId) {
 		return String.format(PROJECT_ROOT_REPOSITORY_NAME_FORMAT, projectId);
@@ -55,14 +53,15 @@ public class GitProjectHandler implements IGitProjectHandler {
 	 */
 	@Override
 	public String create(@Nonnull String name, @Nullable String description) throws GitProjectHandlerException {
-		//TODO: put the name somewhere
+
 		//TODO: consider creating local git projects for offline use
-		String projectId = idGenerator.generate();
+
+		String projectId = idGenerator.generate() + name.replaceAll("[^\\p{Alnum}]", "_");
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// create the group
 			String groupPath = this.remoteGitServerManager.createGroup(
-				projectId, projectId, description
+				projectId, projectId, name
 			);
 
 			// create the root repository
