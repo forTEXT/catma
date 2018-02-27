@@ -77,26 +77,21 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// create the source document repository
-			IRemoteGitServerManager.CreateRepositoryResponse response;
-
 			String sourceDocumentRepoName = GitSourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId);
 
-			response = this.remoteGitServerManager.createRepository(
+			IRemoteGitServerManager.CreateRepositoryResponse response = 
+				this.remoteGitServerManager.createRepository(
 					sourceDocumentRepoName, sourceDocumentRepoName, projectId
-			);
+				);
 
 			// clone the repository locally
-			GitLabServerManager gitLabServerManager =
-					(GitLabServerManager)this.remoteGitServerManager;
-			User gitLabUser = gitLabServerManager.getGitLabUser();
-			String gitLabUserImpersonationToken = gitLabServerManager
-					.getGitLabUserImpersonationToken();
 
 			localGitRepoManager.clone(
+				projectId,
 				response.repositoryHttpUrl,
 				null,
-				gitLabUser.getUsername(),
-				gitLabUserImpersonationToken
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getPassword()
 			);
 
 			// write the original and converted source document files into the local repo
@@ -130,8 +125,8 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 					convertedSourceDocumentFileName, targetHeaderFile.getName());
 			localGitRepoManager.commit(
 				commitMessage,
-				StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername(),
-				gitLabUser.getEmail()
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail()
 			);
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|IOException e) {
@@ -153,7 +148,7 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 
 			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
-			localGitRepoManager.open(projectRootRepositoryName);
+			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			String sourceDocumentSubmoduleName = String.format(
 					"%s/%s", GitProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME, sourceDocumentId
@@ -175,7 +170,7 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 							GitSourceDocumentInfo.class
 					);
 
-			// need to use the catma-core GitSourceDocumentHandler to decide on the correct SourceContentHandler based on
+			// need to use the catma-core SourceDocumentHandler to decide on the correct SourceContentHandler based on
 			// filetype
 			de.catma.document.source.SourceDocumentHandler handler =
 					new de.catma.document.source.SourceDocumentHandler();

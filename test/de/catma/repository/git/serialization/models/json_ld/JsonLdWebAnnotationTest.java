@@ -1,18 +1,21 @@
 package de.catma.repository.git.serialization.models.json_ld;
 
-import de.catma.document.Range;
-import de.catma.document.source.*;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.repository.git.GitProjectHandler;
-import de.catma.repository.git.GitTagsetHandler;
-import de.catma.repository.git.managers.JGitRepoManager;
-import de.catma.repository.git.managers.GitLabServerManager;
-import de.catma.repository.git.managers.GitLabServerManagerTest;
-import de.catma.repository.git.serialization.SerializationHelper;
-import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
-import de.catma.tag.*;
-import de.catma.util.IDGenerator;
-import helpers.Randomizer;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Properties;
+
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
@@ -23,13 +26,31 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-
-import static org.junit.Assert.*;
+import de.catma.document.Range;
+import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.document.source.ContentInfoSet;
+import de.catma.document.source.FileOSType;
+import de.catma.document.source.FileType;
+import de.catma.document.source.IndexInfoSet;
+import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.TechInfoSet;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.repository.git.GitProjectHandler;
+import de.catma.repository.git.GitTagsetHandler;
+import de.catma.repository.git.managers.GitLabServerManager;
+import de.catma.repository.git.managers.GitLabServerManagerTest;
+import de.catma.repository.git.managers.JGitRepoManager;
+import de.catma.repository.git.serialization.SerializationHelper;
+import de.catma.tag.Property;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.PropertyPossibleValueList;
+import de.catma.tag.PropertyValueList;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
+import de.catma.tag.Version;
+import de.catma.util.IDGenerator;
+import helpers.Randomizer;
+import helpers.UserIdentification;
 
 public class JsonLdWebAnnotationTest {
 	// this string needs to be formatted with the following 8 pieces of information:
@@ -108,15 +129,15 @@ public class JsonLdWebAnnotationTest {
 		this.catmaUser = Randomizer.getDbUser();
 
 		this.gitLabServerManager = new GitLabServerManager(
-			this.catmaProperties, catmaUser
-		);
-		this.gitLabServerManager.replaceGitLabServerUrl = true;
+				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabServerUrl.name()),
+				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabAdminPersonalAccessToken.name()),
+				UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 	}
 
 	@After
 	public void tearDown() throws Exception {
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 				GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
@@ -217,7 +238,7 @@ public class JsonLdWebAnnotationTest {
 			// commit the changes to the project root repo (addition of tagset, source document and markup collection
 			// submodules)
 			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
-			localJGitRepoManager.open(projectRootRepositoryName);
+			localJGitRepoManager.open(projectId, projectRootRepositoryName);
 			localJGitRepoManager.commit(
 					String.format(
 							"Adding new tagset %s, source document %s and markup collection %s",
@@ -279,7 +300,7 @@ public class JsonLdWebAnnotationTest {
 
 			// commit and push submodule changes (creation of tag definition)
 			// TODO: add methods to JGitRepoManager to do this
-			localJGitRepoManager.open(projectRootRepositoryName);
+			localJGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			Repository projectRootRepository = localJGitRepoManager.getGitApi().getRepository();
 			String tagsetSubmodulePath = String.format(
@@ -295,8 +316,8 @@ public class JsonLdWebAnnotationTest {
 			).setCommitter("Test Committer", "testcommitter@catma.de").call();
 			submoduleGit.push().setCredentialsProvider(
 					new UsernamePasswordCredentialsProvider(
-							gitLabServerManager.getGitLabUser().getUsername(),
-							gitLabServerManager.getGitLabUserImpersonationToken()
+							gitLabServerManager.getUsername(),
+							gitLabServerManager.getPassword()
 					)
 			).call();
 			tagsetSubmoduleRepository.close();
@@ -363,7 +384,7 @@ public class JsonLdWebAnnotationTest {
 
 	@Test
 	public void serialize() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			HashMap<String, Object> getJsonLdWebAnnotationResult = JsonLdWebAnnotationTest.getJsonLdWebAnnotation(
@@ -425,7 +446,7 @@ public class JsonLdWebAnnotationTest {
 
 	@Test
 	public void toTagReferenceList() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			// TODO: test with a hierarchy of tag definitions

@@ -58,6 +58,11 @@ public class DBUser implements User {
 	}
 
 	@Override
+	public String getEmail() {
+		return this.identifier;
+	}
+	
+	@Override
 	public boolean isLocked() {
 		return this.locked;
 	}

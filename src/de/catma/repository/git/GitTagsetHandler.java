@@ -77,17 +77,12 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 					this.remoteGitServerManager.createRepository(tagsetRepoName, tagsetRepoName, projectId);
 
 			// clone the repository locally
-			// TODO: create a provider to retrieve the auth details so that we don't have to cast to the implementation
-			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
-
-			User gitLabUser = gitLabServerManager.getGitLabUser();
-			String gitLabUserImpersonationToken = gitLabServerManager.getGitLabUserImpersonationToken();
-
 			localGitRepoManager.clone(
+					projectId,
 					createRepositoryResponse.repositoryHttpUrl,
 					null,
-					gitLabUser.getUsername(),
-					gitLabUserImpersonationToken
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getPassword()
 			);
 
 			// write header.json into the local repo
@@ -99,8 +94,8 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 			localGitRepoManager.addAndCommit(
 					targetHeaderFile,
 					serializedHeader.getBytes(StandardCharsets.UTF_8),
-					StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername(),
-					gitLabUser.getEmail()
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail()
 			);
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException e) {
@@ -149,7 +144,7 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 	public TagsetDefinition open(@Nonnull String projectId, @Nonnull String tagsetId) throws GitTagsetHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
-			localGitRepoManager.open(projectRootRepositoryName);
+			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			String tagsetSubmoduleName = String.format(
 					"%s/%s", GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME, tagsetId
@@ -205,7 +200,7 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 	) throws GitTagsetHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
-			localGitRepoManager.open(projectRootRepositoryName);
+			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			String targetPropertyDefinitionsFileRelativePath = String.format(
 					"%s%s/%s",

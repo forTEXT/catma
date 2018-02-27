@@ -92,17 +92,12 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 					);
 
 			// clone the repository locally
-			// TODO: create a provider to retrieve the auth details so that we don't have to cast to the implementation
-			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
-
-			User gitLabUser = gitLabServerManager.getGitLabUser();
-			String gitLabUserImpersonationToken = gitLabServerManager.getGitLabUserImpersonationToken();
-
 			localGitRepoManager.clone(
+					projectId,
 					createRepositoryResponse.repositoryHttpUrl,
 					null,
-					gitLabUser.getUsername(),
-					gitLabUserImpersonationToken
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getPassword()
 			);
 
 			// write header.json into the local repo
@@ -116,8 +111,8 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 			localGitRepoManager.addAndCommit(
 					targetHeaderFile,
 					serializedHeader.getBytes(StandardCharsets.UTF_8),
-					StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername(),
-					gitLabUser.getEmail()
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail()
 			);
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException e) {
@@ -151,7 +146,7 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 	) throws GitMarkupCollectionHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
-			localGitRepoManager.open(projectRootRepositoryName);
+			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			File targetMarkupCollectionHeaderFilePath = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
@@ -171,14 +166,11 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 
 			String serializedHeader = serializationHelper.serialize(markupCollectionHeader);
 
-			// TODO: create a provider to retrieve the auth details so that we don't have to cast to the implementation
-			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
-			User gitLabUser = gitLabServerManager.getGitLabUser();
 
 			localGitRepoManager.addAndCommit(
 					targetMarkupCollectionHeaderFilePath, serializedHeader.getBytes(StandardCharsets.UTF_8),
-					StringUtils.isNotBlank(gitLabUser.getName()) ? gitLabUser.getName() : gitLabUser.getUsername(),
-					gitLabUser.getEmail()
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail()
 			);
 		}
 		catch (LocalGitRepositoryManagerException|IOException e) {
@@ -218,7 +210,7 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 		// TODO: check that the tag instance is for the correct document
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// open the project root repo
-			localGitRepoManager.open(GitProjectHandler.getProjectRootRepositoryName(projectId));
+			localGitRepoManager.open(projectId, GitProjectHandler.getProjectRootRepositoryName(projectId));
 
 			// write the serialized tag instance to the markup collection submodule
 			File targetTagInstanceFilePath = new File(
@@ -296,7 +288,7 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
-			localGitRepoManager.open(projectRootRepositoryName);
+			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			String markupCollectionSubmoduleName = String.format(
 					"%s/%s", GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, markupCollectionId

@@ -28,6 +28,11 @@ public class GitUser implements User {
 	}
 
 	@Override
+	public String getEmail() {
+		return gitlabUser.getEmail();
+	}
+	
+	@Override
 	public boolean isLocked() {
 		// TODO Auto-generated method stub
 		return false;

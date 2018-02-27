@@ -66,12 +66,12 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @throws LocalGitRepositoryManagerException if the Git repository couldn't be found or
 	 *         couldn't be opened for some other reason
 	 */
-	public JGitRepoManager(@Nonnull String repositoryBasePath, @Nonnull User catmaUser,
-						   @Nonnull String repositoryName)
+	public JGitRepoManager(String repositoryBasePath, @Nonnull User catmaUser, String group,
+			String repositoryName)
 			throws LocalGitRepositoryManagerException {
 		this(repositoryBasePath, catmaUser);
 
-		this.open(repositoryName);
+		this.open(group, repositoryName);
 	}
 
 	public Git getGitApi() {
@@ -112,7 +112,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 */
 	@Override
 	public File getRepositoryBasePath() {
-		return new File(this.repositoryBasePath, this.username);
+		return Paths.get(new File(repositoryBasePath).toURI()).resolve(this.username).toFile();
 	}
 
 	/**
@@ -160,15 +160,14 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 *         be initialised for some other reason
 	 */
 	@Override
-	public void init(String name, @Nullable String description)
+	public void init(String group, String name, @Nullable String description)
 			throws LocalGitRepositoryManagerException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `init` on an attached instance");
 		}
 
-		File repositoryPath = new File(
-			this.getRepositoryBasePath() + "/" + name + "/"
-		);
+		File repositoryPath = 
+			Paths.get(this.getRepositoryBasePath().toURI()).resolve(group).resolve(name).toFile();
 
 		// if the directory exists we assume it's a Git repo, could also check for a child .git
 		// directory
@@ -202,7 +201,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @return the name of the cloned repository
 	 */
 	@Override
-	public String clone(String uri, @Nullable File path, @Nullable String username, @Nullable String password)
+	public String clone(String group, String uri, @Nullable File path, @Nullable String username, @Nullable String password)
 			throws LocalGitRepositoryManagerException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `clone` on an attached instance");
@@ -213,7 +212,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			if (repositoryName.endsWith(".git")) {
 				repositoryName = repositoryName.substring(0, repositoryName.length() - 4);
 			}
-			path = new File(this.getRepositoryBasePath(), repositoryName);
+			path = Paths.get(this.getRepositoryBasePath().toURI()).resolve(group).resolve(repositoryName).toFile();
 		}
 
 		try {
@@ -242,14 +241,12 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 *         couldn't be opened for some other reason
 	 */
 	@Override
-	public void open(String name) throws LocalGitRepositoryManagerException {
+	public void open(String group, String name) throws LocalGitRepositoryManagerException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `open` on an attached instance");
 		}
 
-		File repositoryPath = new File(
-			this.getRepositoryBasePath() + "/" + name + "/"
-		);
+		File repositoryPath = Paths.get(getRepositoryBasePath().toURI()).resolve(group).resolve(name).toFile();
 
 		// could also check for the absence of a child .git directory
 		if (!repositoryPath.exists() || !repositoryPath.isDirectory()) {

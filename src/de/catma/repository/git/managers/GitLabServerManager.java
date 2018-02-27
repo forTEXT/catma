@@ -94,10 +94,6 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 		return this.gitLabUser;
 	}
 
-	public String getGitLabUserImpersonationToken() {
-		return this.gitLabUserImpersonationToken;
-	}
-
 	// needed for testing but also when gitlab runs on port other than 80
 	private String getGitLabServerUrl(String url) {
 		try {
@@ -500,11 +496,24 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 			return new GitLabPager<>(
 					groupApi.getGroups(30),
 					group -> new ProjectReference(
-							group.getPath(), group.getName(), group.getDescription()));
+							group.getPath(), group.getDescription(), "TODO"));
 		}
 		catch (Exception e) {
 			throw new RemoteGitServerManagerException("Failed to load groups", e);
 		}
 	}
 
+	@Override
+	public String getUsername() {
+		return gitLabUser.getUsername();
+	}
+	
+	@Override
+	public String getPassword() {
+		return this.gitLabUserImpersonationToken;
+	}
+	
+	public String getEmail() {
+		return gitLabUser.getEmail();
+	}
 }

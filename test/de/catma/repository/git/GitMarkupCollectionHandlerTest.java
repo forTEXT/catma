@@ -1,14 +1,22 @@
 package de.catma.repository.git;
 
-import de.catma.document.Range;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.repository.git.exceptions.GitMarkupCollectionHandlerException;
-import de.catma.repository.git.managers.GitLabServerManagerTest;
-import de.catma.repository.git.managers.JGitRepoManager;
-import de.catma.repository.git.managers.GitLabServerManager;
-import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
-import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
-import helpers.Randomizer;
+import static org.awaitility.Awaitility.await;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
 import org.apache.commons.io.FileUtils;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
@@ -18,14 +26,20 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.util.*;
+import com.google.common.collect.Maps;
 
-import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.*;
+import de.catma.document.Range;
+import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.repository.git.exceptions.GitMarkupCollectionHandlerException;
+import de.catma.repository.git.managers.GitLabServerManager;
+import de.catma.repository.git.managers.GitLabServerManagerTest;
+import de.catma.repository.git.managers.JGitRepoManager;
+import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
+import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
+import de.catma.user.UserProperty;
+import helpers.Randomizer;
+import helpers.UserIdentification;
 
 public class GitMarkupCollectionHandlerTest {
 	private Properties catmaProperties;
@@ -44,13 +58,16 @@ public class GitMarkupCollectionHandlerTest {
 		this.catmaProperties.load(new FileInputStream(propertiesFile));
 	}
 
+
 	@Before
 	public void setUp() throws Exception {
 		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager & JGitRepoManager
 		this.catmaUser = Randomizer.getDbUser();
 
-		this.gitLabServerManager = new GitLabServerManager(this.catmaProperties, catmaUser);
-		this.gitLabServerManager.replaceGitLabServerUrl = true;
+		this.gitLabServerManager = new GitLabServerManager(
+				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabServerUrl.name()),
+				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabAdminPersonalAccessToken.name()),
+				UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 	}
 
 	@After
@@ -78,7 +95,7 @@ public class GitMarkupCollectionHandlerTest {
 		}
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 				GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
@@ -99,7 +116,7 @@ public class GitMarkupCollectionHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
@@ -168,7 +185,7 @@ public class GitMarkupCollectionHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
 				jGitRepoManager, this.gitLabServerManager
 			);
@@ -181,7 +198,7 @@ public class GitMarkupCollectionHandlerTest {
 
 	@Test
 	public void addTagset() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			// create a project
@@ -253,7 +270,7 @@ public class GitMarkupCollectionHandlerTest {
 
 	@Test
 	public void removeTagset() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
 				jGitRepoManager, this.gitLabServerManager
 			);
@@ -268,7 +285,7 @@ public class GitMarkupCollectionHandlerTest {
 
 	@Test
 	public void createTagInstance() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			HashMap<String, Object> getJsonLdWebAnnotationResult = JsonLdWebAnnotationTest.getJsonLdWebAnnotation(
@@ -311,7 +328,7 @@ public class GitMarkupCollectionHandlerTest {
 			assertFalse(jGitRepoManager.isAttached());
 
 			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
-			jGitRepoManager.open(projectRootRepositoryName);
+			jGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			File expectedTagInstanceJsonFilePath = new File(
 					jGitRepoManager.getRepositoryWorkTree(),
@@ -350,7 +367,7 @@ public class GitMarkupCollectionHandlerTest {
 	@Test
 	public void open() throws Exception {
 		// TODO: don't hardcode anything in assertions (markup collection name...)
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			HashMap<String, Object> getJsonLdWebAnnotationResult = JsonLdWebAnnotationTest.getJsonLdWebAnnotation(

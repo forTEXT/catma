@@ -1,23 +1,27 @@
 package de.catma.repository.git;
 
-import de.catma.document.source.SourceDocumentInfo;
-import de.catma.repository.git.exceptions.*;
-import de.catma.repository.git.interfaces.IGitProjectHandler;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IRemoteGitServerManager;
-import de.catma.repository.git.managers.GitLabServerManager;
-import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
-import de.catma.util.IDGenerator;
-import org.apache.commons.io.FileUtils;
-import org.gitlab4j.api.models.User;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.List;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.apache.commons.io.FileUtils;
+
+import de.catma.document.source.SourceDocumentInfo;
+import de.catma.repository.git.exceptions.GitMarkupCollectionHandlerException;
+import de.catma.repository.git.exceptions.GitProjectHandlerException;
+import de.catma.repository.git.exceptions.GitSourceDocumentHandlerException;
+import de.catma.repository.git.exceptions.GitTagsetHandlerException;
+import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
+import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
+import de.catma.repository.git.interfaces.IGitProjectHandler;
+import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.util.IDGenerator;
 
 public class GitProjectHandler implements IGitProjectHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -56,7 +60,7 @@ public class GitProjectHandler implements IGitProjectHandler {
 
 		//TODO: consider creating local git projects for offline use
 
-		String projectId = idGenerator.generate() + name.replaceAll("[^\\p{Alnum}]", "_");
+		String projectId = idGenerator.generate() + "_" + name.replaceAll("[^\\p{Alnum}]", "_");
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// create the group
@@ -65,25 +69,20 @@ public class GitProjectHandler implements IGitProjectHandler {
 			);
 
 			// create the root repository
-			String projectNameAndPath = GitProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectNameAndPath = GitProjectHandler.getProjectRootRepositoryName(name);
 
 			IRemoteGitServerManager.CreateRepositoryResponse response =
 					this.remoteGitServerManager.createRepository(
-				projectNameAndPath, projectNameAndPath, groupPath
+				name, projectNameAndPath, groupPath
 			);
 
 			// clone the root repository locally
-			GitLabServerManager gitLabServerManager =
-					(GitLabServerManager)this.remoteGitServerManager;
-			User gitLabUser = gitLabServerManager.getGitLabUser();
-			String gitLabUserImpersonationToken = gitLabServerManager
-					.getGitLabUserImpersonationToken();
-
 			localGitRepoManager.clone(
+				projectId,
 				response.repositoryHttpUrl,
 				null,
-				gitLabUser.getUsername(),
-				gitLabUserImpersonationToken
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getPassword()
 			);
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException e) {
@@ -134,21 +133,13 @@ public class GitProjectHandler implements IGitProjectHandler {
 			// create the tagset
 			String newTagsetId = gitTagsetHandler.create(projectId, tagsetId, name, description);
 
-			// push the newly created tagset repo to the server in preparation for adding it to the project root repo
-			// as a submodule
-			// TODO: create a provider to retrieve the auth details so that we don't have to cast to the implementation
-			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
-
-			User gitLabUser = gitLabServerManager.getGitLabUser();
-			String gitLabUserImpersonationToken = gitLabServerManager.getGitLabUserImpersonationToken();
-
-			localGitRepoManager.open(GitTagsetHandler.getTagsetRepositoryName(newTagsetId));
-			localGitRepoManager.push(gitLabUser.getUsername(), gitLabUserImpersonationToken);
+			localGitRepoManager.open(projectId, GitTagsetHandler.getTagsetRepositoryName(newTagsetId));
+			localGitRepoManager.push(remoteGitServerManager.getUsername(), remoteGitServerManager.getPassword());
 			String tagsetRepoRemoteUrl = localGitRepoManager.getRemoteUrl(null);
 			localGitRepoManager.detach(); // need to explicitly detach so that we can call open below
 
 			// open the project root repo
-			localGitRepoManager.open(GitProjectHandler.getProjectRootRepositoryName(projectId));
+			localGitRepoManager.open(projectId, GitProjectHandler.getProjectRootRepositoryName(projectId));
 
 			// add the submodule
 			File targetSubmodulePath = Paths.get(
@@ -160,8 +151,8 @@ public class GitProjectHandler implements IGitProjectHandler {
 			localGitRepoManager.addSubmodule(
 					targetSubmodulePath,
 					tagsetRepoRemoteUrl,
-					gitLabUser.getUsername(),
-					gitLabUserImpersonationToken
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getPassword()
 			);
 
 			return newTagsetId;
@@ -197,19 +188,14 @@ public class GitProjectHandler implements IGitProjectHandler {
 
 			// push the newly created markup collection repo to the server in preparation for adding it to the project
 			// root repo as a submodule
-			// TODO: create a provider to retrieve the auth details so that we don't have to cast to the implementation
-			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
 
-			User gitLabUser = gitLabServerManager.getGitLabUser();
-			String gitLabUserImpersonationToken = gitLabServerManager.getGitLabUserImpersonationToken();
-
-			localGitRepoManager.open(GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(newMarkupCollectionId));
-			localGitRepoManager.push(gitLabUser.getUsername(), gitLabUserImpersonationToken);
+			localGitRepoManager.open(projectId, GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(newMarkupCollectionId));
+			localGitRepoManager.push(remoteGitServerManager.getUsername(), remoteGitServerManager.getPassword());
 			String markupCollectionRepoRemoteUrl = localGitRepoManager.getRemoteUrl(null);
 			localGitRepoManager.detach(); // need to explicitly detach so that we can call open below
 
 			// open the project root repo
-			localGitRepoManager.open(GitProjectHandler.getProjectRootRepositoryName(projectId));
+			localGitRepoManager.open(projectId, GitProjectHandler.getProjectRootRepositoryName(projectId));
 
 			// add the submodule
 			File targetSubmodulePath = Paths.get(
@@ -221,8 +207,8 @@ public class GitProjectHandler implements IGitProjectHandler {
 			localGitRepoManager.addSubmodule(
 					targetSubmodulePath,
 					markupCollectionRepoRemoteUrl,
-					gitLabUser.getUsername(),
-					gitLabUserImpersonationToken
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getPassword()
 			);
 
 			return newMarkupCollectionId;
@@ -273,17 +259,14 @@ public class GitProjectHandler implements IGitProjectHandler {
 					sourceDocumentInfo
 			);
 
-			GitLabServerManager gitLabServerManager = (GitLabServerManager)this.remoteGitServerManager;
-			String gitLabUserImpersonationToken = gitLabServerManager.getGitLabUserImpersonationToken();
-
-			repoManager.open(GitSourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId));
-			repoManager.push(gitLabServerManager.getGitLabUser().getUsername(), gitLabUserImpersonationToken);
+			repoManager.open(projectId, GitSourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId));
+			repoManager.push(remoteGitServerManager.getUsername(), remoteGitServerManager.getPassword());
 
 			String remoteUri = repoManager.getRemoteUrl(null);
 			repoManager.close();
 
 			// open the project root repository
-			repoManager.open(GitProjectHandler.getProjectRootRepositoryName(projectId));
+			repoManager.open(projectId, GitProjectHandler.getProjectRootRepositoryName(projectId));
 
 			// create the submodule
 			File targetSubmodulePath = Paths.get(
@@ -294,7 +277,8 @@ public class GitProjectHandler implements IGitProjectHandler {
 
 			repoManager.addSubmodule(
 				targetSubmodulePath, remoteUri,
-				gitLabServerManager.getGitLabUser().getUsername(), gitLabUserImpersonationToken
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getPassword()
 			);
 		}
 		catch (GitSourceDocumentHandlerException |LocalGitRepositoryManagerException e) {

@@ -1,10 +1,22 @@
 package de.catma.repository.git.managers;
 
-import de.catma.repository.git.interfaces.IRemoteGitServerManager;
-import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
-import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
-import helpers.Randomizer;
-import org.gitlab4j.api.*;
+import static org.awaitility.Awaitility.await;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.GroupApi;
+import org.gitlab4j.api.ProjectApi;
+import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
@@ -12,13 +24,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import com.google.common.collect.Maps;
 
-import static org.awaitility.Awaitility.*;
-import static org.junit.Assert.*;
+import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
+import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
+import de.catma.user.UserProperty;
+import helpers.Randomizer;
+import helpers.UserIdentification;
 
 public class GitLabServerManagerTest {
 	private Properties catmaProperties;
@@ -41,8 +55,11 @@ public class GitLabServerManagerTest {
 	public void setUp() throws Exception {
 		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager
 		this.catmaUser = Randomizer.getDbUser();
-
-		this.serverManager = new GitLabServerManager(this.catmaProperties, this.catmaUser);
+		
+		this.serverManager = new GitLabServerManager(
+				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabServerUrl.name()),
+				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabAdminPersonalAccessToken.name()),
+				UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 	}
 
 	@After
@@ -121,10 +138,7 @@ public class GitLabServerManagerTest {
 		assertNotNull(matchedUser);
 		assertEquals(this.catmaUser.getIdentifier(), matchedUser.getUsername());
 		assertEquals(this.catmaUser.getName(), matchedUser.getName());
-		String expectedGitLabUserEmailAddress = String.format(
-			GitLabServerManager.GITLAB_USER_EMAIL_ADDRESS_FORMAT, this.catmaUser.getUserId()
-		);
-		assertEquals(expectedGitLabUserEmailAddress, matchedUser.getEmail());
+
 
 		// assert that the user has the expected impersonation token
 		CustomUserApi customUserApi = new CustomUserApi(this.serverManager.getAdminGitLabApi());
@@ -140,9 +154,10 @@ public class GitLabServerManagerTest {
 		// assert that re-instantiating the GitLabServerManager causes it to re-use the existing
 		// GitLab user
 		GitLabServerManager tmpServerManager = new GitLabServerManager(
-			this.catmaProperties, this.catmaUser
-		);
-
+				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabServerUrl.name()),
+				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabAdminPersonalAccessToken.name()),
+				UserIdentification.userToMap(this.catmaUser.getIdentifier()));
+		
 		users = userApi.getUsers();
 
 		// we should *still* have an admin user, the "ghost" user & one representing the CATMA user

@@ -41,5 +41,10 @@ public interface IRemoteGitServerManager {
 				   String name, @Nullable Boolean isAdmin)
 			throws RemoteGitServerManagerException;
 	
-	public Pager<ProjectReference> getProjectReferences() throws RemoteGitServerManagerException;
+	Pager<ProjectReference> getProjectReferences() throws RemoteGitServerManagerException;
+	
+	String getUsername();
+	String getPassword();
+
+	String getEmail();
 }

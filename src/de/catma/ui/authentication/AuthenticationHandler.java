@@ -24,7 +24,7 @@ public class AuthenticationHandler {
 			user = System.getProperty("user.name"); //$NON-NLS-1$
 		}
 		Map<String,String> userIdentification = 
-				new HashMap<String, String>(1);
+				new HashMap<String, String>();
 		userIdentification.put(
 			UserProperty.identifier.name(), user);
 		userIdentification.put(

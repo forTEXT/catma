@@ -10,18 +10,16 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	void detach();
 
-	File getRepositoryBasePath();
-
 	File getRepositoryWorkTree();
 
 	String getRemoteUrl(@Nullable String remoteName);
 
-	void init(String name, @Nullable String description) throws LocalGitRepositoryManagerException;
+	void init(String group, String name, @Nullable String description) throws LocalGitRepositoryManagerException;
 
-	String clone(String uri, @Nullable File path, @Nullable String username, @Nullable String password)
+	String clone(String group, String uri, @Nullable File path, @Nullable String username, @Nullable String password)
 			throws LocalGitRepositoryManagerException;
 
-	void open(String name) throws LocalGitRepositoryManagerException;
+	void open(String group, String name) throws LocalGitRepositoryManagerException;
 
 	void add(File targetFile, byte[] bytes) throws LocalGitRepositoryManagerException;
 
@@ -43,4 +41,6 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	@Override
 	void close();
+
+	File getRepositoryBasePath();
 }

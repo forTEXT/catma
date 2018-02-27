@@ -1,12 +1,20 @@
 package de.catma.repository.git;
 
-import de.catma.document.source.*;
-import de.catma.repository.git.exceptions.GitSourceDocumentHandlerException;
-import de.catma.repository.git.managers.JGitRepoManager;
-import de.catma.repository.git.managers.GitLabServerManager;
-import de.catma.repository.git.managers.GitLabServerManagerTest;
-import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
-import helpers.Randomizer;
+import static org.awaitility.Awaitility.await;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Properties;
+
 import org.apache.commons.io.FileUtils;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
@@ -16,13 +24,21 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-
-import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.*;
+import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.document.source.ContentInfoSet;
+import de.catma.document.source.FileOSType;
+import de.catma.document.source.FileType;
+import de.catma.document.source.IndexInfoSet;
+import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.TechInfoSet;
+import de.catma.repository.git.exceptions.GitSourceDocumentHandlerException;
+import de.catma.repository.git.managers.GitLabServerManager;
+import de.catma.repository.git.managers.GitLabServerManagerTest;
+import de.catma.repository.git.managers.JGitRepoManager;
+import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
+import helpers.Randomizer;
+import helpers.UserIdentification;
 
 public class GitSourceDocumentHandlerTest {
 	private Properties catmaProperties;
@@ -46,8 +62,10 @@ public class GitSourceDocumentHandlerTest {
 		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager & JGitRepoManager
 		this.catmaUser = Randomizer.getDbUser();
 
-		this.gitLabServerManager = new GitLabServerManager(this.catmaProperties, catmaUser);
-		this.gitLabServerManager.replaceGitLabServerUrl = true;
+		this.gitLabServerManager = new GitLabServerManager(
+				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabServerUrl.name()),
+				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabAdminPersonalAccessToken.name()),
+				UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 	}
 
 	@After
@@ -75,7 +93,7 @@ public class GitSourceDocumentHandlerTest {
 		}
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 				GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
 
 				for (String projectId : this.projectsToDeleteOnTearDown) {
@@ -126,7 +144,7 @@ public class GitSourceDocumentHandlerTest {
 			indexInfoSet, contentInfoSet, techInfoSet
 		);
 
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
@@ -218,7 +236,7 @@ public class GitSourceDocumentHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
 				jGitRepoManager, this.gitLabServerManager
 			);
@@ -231,7 +249,7 @@ public class GitSourceDocumentHandlerTest {
 
 	@Test
 	public void open() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties, this.catmaUser)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			HashMap<String, Object> getJsonLdWebAnnotationResult = JsonLdWebAnnotationTest.getJsonLdWebAnnotation(

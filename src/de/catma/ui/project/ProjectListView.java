@@ -2,6 +2,7 @@ package de.catma.ui.project;
 
 import org.vaadin.addons.lazyquerycontainer.LazyQueryContainer;
 
+import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.PropertysetItem;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Grid;
@@ -20,11 +21,14 @@ public class ProjectListView extends HorizontalSplitPanel implements TabComponen
 	private ProjectManager projectManager;
 	private Grid projectGrid;
 	private Button btCreateProject;
+	private Button btOpenProject;
+	private ProjectListListener projectListListener;
 
 	
-	public ProjectListView(ProjectManager projectManager) {
+	public ProjectListView(ProjectManager projectManager, ProjectListListener projectListListener) {
 		this.projectManager = projectManager;
-
+		this.projectListListener = projectListListener;
+		
 		initComponents();
 		initActions();
 		initData();
@@ -45,6 +49,8 @@ public class ProjectListView extends HorizontalSplitPanel implements TabComponen
 						ProjectReference projectReference = projectManager.createProject(name, "TODO");
 						//TODO:
 						initData();
+						projectGrid.select(projectReference.getProjectId());
+						
 //						projectGrid.getContainerDataSource().addItem(projectReference);
 					}
 					catch (Exception e) {
@@ -57,12 +63,23 @@ public class ProjectListView extends HorizontalSplitPanel implements TabComponen
 				public void cancelPressed() {/*noop*/}
 			}, "name");
 		});
+		
+		btOpenProject.addClickListener(event -> {
+			for (Object projectId : projectGrid.getSelectedRows()) {
+				openProject(((BeanItem<ProjectReference>) projectGrid.getContainerDataSource().getItem(projectId)).getBean());
+			}
+		});
+	}
+
+
+
+	private void openProject(ProjectReference projectReference) {
+		projectListListener.projectOpened(projectReference);
 	}
 
 
 
 	private void initData() {
-		
 		try {
 			LazyQueryContainer container = 
 				new LazyQueryContainer(
@@ -89,6 +106,9 @@ public class ProjectListView extends HorizontalSplitPanel implements TabComponen
 		
 		buttonPanel.addComponent(btCreateProject);
 		
+		
+		btOpenProject = new Button("Open Project");
+		buttonPanel.addComponent(btOpenProject);
 		
 		leftPanel.addComponent(projectGrid);
 		leftPanel.addComponent(buttonPanel);
