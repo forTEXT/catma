@@ -1,22 +1,34 @@
 package de.catma.repository.git.serialization.models.json_ld;
 
-import com.jsoniter.annotation.JsonIgnore;
-import com.jsoniter.annotation.JsonProperty;
-import de.catma.document.Range;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.repository.git.GitProjectHandler;
-import de.catma.repository.git.GitTagsetHandler;
-import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
-import de.catma.repository.git.exceptions.GitTagsetHandlerException;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IRemoteGitServerManager;
-import de.catma.tag.*;
-
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
+
+import com.jsoniter.annotation.JsonIgnore;
+import com.jsoniter.annotation.JsonProperty;
+
+import de.catma.document.Range;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.repository.git.GitProjectHandler;
+import de.catma.repository.git.GitProjectManager;
+import de.catma.repository.git.GitTagsetHandler;
+import de.catma.repository.git.exceptions.GitTagsetHandlerException;
+import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
+import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.tag.Property;
+import de.catma.tag.PropertyValueList;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
+import de.catma.tag.TagsetDefinition;
 
 /**
  * Represents an annotation instance that, when serialized, conforms to the Web Annotation Data Model and JSON-LD
@@ -46,7 +58,7 @@ public class JsonLdWebAnnotation {
 			);
 		}
 
-		String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
+		String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 
 		try {
 			this.id = this.buildTagInstanceUrl(

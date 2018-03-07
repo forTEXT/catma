@@ -41,7 +41,7 @@ public class ProjectManagerView extends TabbedView {
 
 	private void initProjectManagerViewComponents(ProjectManager projectManager) {
 		myProjects = new ProjectListView(projectManager, projectReference -> {
-			addTab(new ProjectView(projectReference), projectReference.getName()).setClosable(true);
+			addTab(new ProjectView(projectManager, projectReference), projectReference.getName()).setClosable(true);
 		});
 		
 		addTab(myProjects, "My Projects");

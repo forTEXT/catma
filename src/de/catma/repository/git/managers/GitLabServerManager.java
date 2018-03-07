@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -26,6 +27,7 @@ import org.gitlab4j.api.models.User;
 import de.catma.Pager;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.project.ProjectReference;
+import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
@@ -488,18 +490,49 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 		}
 	}
 	
-	
 	public Pager<ProjectReference> getProjectReferences() throws RemoteGitServerManagerException {
 		
 		GroupApi groupApi = this.userGitLabApi.getGroupApi();
 		try {
 			return new GitLabPager<>(
-					groupApi.getGroups(30),
+					groupApi.getGroups(30),//TODO: constant
 					group -> new ProjectReference(
 							group.getPath(), group.getDescription(), "TODO"));
 		}
 		catch (Exception e) {
 			throw new RemoteGitServerManagerException("Failed to load groups", e);
+		}
+	}
+	
+	@Override
+	public String getProjectRootRepositoryUrl(ProjectReference projectReference) throws RemoteGitServerManagerException {
+		try {
+			ProjectApi projectApi = this.userGitLabApi.getProjectApi();
+			Project rootProject =projectApi.getProject(
+				projectReference.getProjectId(), 
+				GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()));
+			
+			return getGitLabServerUrl(rootProject.getHttpUrlToRepo());
+		}
+		catch (GitLabApiException e) {
+			throw new RemoteGitServerManagerException("Failed to load Project's Root Repository Url", e);
+		}
+	}
+	
+	@Override
+	public Set<String> getProjectRepositoryUrls(ProjectReference projectReference) throws RemoteGitServerManagerException {
+		try {
+			GroupApi groupApi = this.userGitLabApi.getGroupApi();
+			
+			Group group = groupApi.getGroup(projectReference.getProjectId());
+			return Collections.unmodifiableSet(groupApi
+				.getProjects(group.getId())
+				.stream()
+				.map(project -> this.getGitLabServerUrl(project.getHttpUrlToRepo()))
+				.collect(Collectors.toSet()));
+		}
+		catch (GitLabApiException e) {
+			throw new RemoteGitServerManagerException("Failed to load Group Repositories", e);
 		}
 	}
 

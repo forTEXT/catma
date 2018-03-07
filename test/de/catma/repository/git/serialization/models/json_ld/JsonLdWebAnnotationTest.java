@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import de.catma.document.Range;
+import de.catma.document.repository.RepositoryProperties;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.FileOSType;
@@ -36,7 +37,9 @@ import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.repository.git.GitProjectHandler;
+import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.GitTagsetHandler;
+import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
 import de.catma.repository.git.managers.JGitRepoManager;
@@ -127,7 +130,7 @@ public class JsonLdWebAnnotationTest {
 	public void setUp() throws Exception {
 		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager & JGitRepoManager
 		this.catmaUser = Randomizer.getDbUser();
-
+		RepositoryProperties.INSTANCE.setProperties(catmaProperties);
 		this.gitLabServerManager = new GitLabServerManager(
 				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabServerUrl.name()),
 				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabAdminPersonalAccessToken.name()),
@@ -137,14 +140,16 @@ public class JsonLdWebAnnotationTest {
 	@After
 	public void tearDown() throws Exception {
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
-				GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectManager gitProjectHandler = new GitProjectManager(
+					RepositoryPropertyKey.GitLabServerUrl.getValue(),
+					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
+					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 
-				for (String projectId : this.projectsToDeleteOnTearDown) {
-					gitProjectHandler.delete(projectId);
-				}
-				this.projectsToDeleteOnTearDown.clear();
+			for (String projectId : this.projectsToDeleteOnTearDown) {
+				gitProjectHandler.delete(projectId);
 			}
+			this.projectsToDeleteOnTearDown.clear();
 		}
 
 		if (this.directoriesToDeleteOnTearDown.size() > 0) {
@@ -172,7 +177,8 @@ public class JsonLdWebAnnotationTest {
 	 *         systemPropertyDefinitionUuid, userMarkupCollectionUuid, tagInstanceUuid, sourceDocumentUuid
 	 */
 	public static HashMap<String, Object> getJsonLdWebAnnotation(JGitRepoManager jGitRepoManager,
-																 GitLabServerManager gitLabServerManager
+																 IRemoteGitServerManager gitLabServerManager,
+																 de.catma.user.User catmaUser
 	) throws Exception {
 
 		try (JGitRepoManager localJGitRepoManager = jGitRepoManager) {
@@ -180,13 +186,19 @@ public class JsonLdWebAnnotationTest {
 //			this.directoriesToDeleteOnTearDown.add(localJGitRepoManager.getRepositoryBasePath());
 
 			// create project
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(localJGitRepoManager, gitLabServerManager);
+			GitProjectManager gitProjectManager = new GitProjectManager(
+					RepositoryPropertyKey.GitLabServerUrl.getValue(),
+					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
+					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					UserIdentification.userToMap(catmaUser.getIdentifier()));
 
-			String projectId = gitProjectHandler.create(
+			String projectId = gitProjectManager.create(
 					"Test CATMA Project", "This is a test CATMA project"
 			);
 			// caller should do the following:
 //			this.projectsToDeleteOnTearDown.add(projectId);
+
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, gitLabServerManager);
 
 			// add new tagset to project
 			String tagsetId = gitProjectHandler.createTagset(
@@ -237,7 +249,7 @@ public class JsonLdWebAnnotationTest {
 
 			// commit the changes to the project root repo (addition of tagset, source document and markup collection
 			// submodules)
-			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localJGitRepoManager.open(projectId, projectRootRepositoryName);
 			localJGitRepoManager.commit(
 					String.format(
@@ -388,7 +400,7 @@ public class JsonLdWebAnnotationTest {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			HashMap<String, Object> getJsonLdWebAnnotationResult = JsonLdWebAnnotationTest.getJsonLdWebAnnotation(
-					jGitRepoManager, this.gitLabServerManager
+					jGitRepoManager, this.gitLabServerManager, this.catmaUser
 			);
 			this.projectsToDeleteOnTearDown.add((String)getJsonLdWebAnnotationResult.get("projectUuid"));
 
@@ -451,7 +463,7 @@ public class JsonLdWebAnnotationTest {
 
 			// TODO: test with a hierarchy of tag definitions
 			HashMap<String, Object> getJsonLdWebAnnotationResult = JsonLdWebAnnotationTest.getJsonLdWebAnnotation(
-					jGitRepoManager, this.gitLabServerManager
+					jGitRepoManager, this.gitLabServerManager, this.catmaUser
 			);
 			JsonLdWebAnnotation jsonLdWebAnnotation = (JsonLdWebAnnotation)getJsonLdWebAnnotationResult.get(
 					"jsonLdWebAnnotation"

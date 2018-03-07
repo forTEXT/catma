@@ -26,6 +26,7 @@ import org.junit.rules.ExpectedException;
 
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.repository.git.exceptions.GitTagsetHandlerException;
+import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
 import de.catma.repository.git.managers.JGitRepoManager;
@@ -100,14 +101,16 @@ public class GitTagsetHandlerTest {
 		}
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
-				GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectManager gitProjectHandler = new GitProjectManager(
+					RepositoryPropertyKey.GitLabServerUrl.getValue(),
+					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
+					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 
-				for (String projectId : this.projectsToDeleteOnTearDown) {
-					gitProjectHandler.delete(projectId);
-				}
-				this.projectsToDeleteOnTearDown.clear();
+			for (String projectId : this.projectsToDeleteOnTearDown) {
+				gitProjectHandler.delete(projectId);
 			}
+			this.projectsToDeleteOnTearDown.clear();
 		}
 
 		// delete the GitLab user that the GitLabServerManager constructor in setUp would have
@@ -121,10 +124,14 @@ public class GitTagsetHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectManager gitProjectHandler = new GitProjectManager(
+					RepositoryPropertyKey.GitLabServerUrl.getValue(),
+					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
+					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 
 			String projectId = gitProjectHandler.create(
 				"Test CATMA Project for Tagset", "This is a test CATMA project"
@@ -175,7 +182,7 @@ public class GitTagsetHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(jGitRepoManager, this.gitLabServerManager);
 
 			thrown.expect(GitTagsetHandlerException.class);
@@ -186,16 +193,21 @@ public class GitTagsetHandlerTest {
 
 	@Test
 	public void createTagDefinitionWithoutParent() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			// create a project
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectManager gitProjectManager = new GitProjectManager(
+					RepositoryPropertyKey.GitLabServerUrl.getValue(),
+					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
+					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 
-			String projectId = gitProjectHandler.create(
+			String projectId = gitProjectManager.create(
 					"Test CATMA Project for Tagset", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, gitLabServerManager);
 
 			// create a tagset
 			String tagsetId = gitProjectHandler.createTagset(
@@ -234,7 +246,7 @@ public class GitTagsetHandlerTest {
 
 			assertEquals(tagDefinitionId, returnedTagDefinitionId);
 
-			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 
 			File expectedTagDefinitionPath = Paths.get(
 					jGitRepoManager.getRepositoryBasePath().toString(),
@@ -272,16 +284,21 @@ public class GitTagsetHandlerTest {
 
 	@Test
 	public void createTagDefinitionWithParent() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			// create a project
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectManager gitProjectManager = new GitProjectManager(
+					RepositoryPropertyKey.GitLabServerUrl.getValue(),
+					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
+					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 
-			String projectId = gitProjectHandler.create(
+			String projectId = gitProjectManager.create(
 					"Test CATMA Project for Tagset", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, gitLabServerManager);
 
 			// create a tagset
 			String tagsetId = gitProjectHandler.createTagset(
@@ -312,7 +329,7 @@ public class GitTagsetHandlerTest {
 
 			assertEquals(tagDefinitionId, returnedTagDefinitionId);
 
-			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 
 			File expectedTagDefinitionPath = Paths.get(
 					jGitRepoManager.getRepositoryBasePath().toString(),
@@ -356,7 +373,7 @@ public class GitTagsetHandlerTest {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			HashMap<String, Object> getJsonLdWebAnnotationResult = JsonLdWebAnnotationTest.getJsonLdWebAnnotation(
-					jGitRepoManager, this.gitLabServerManager
+					jGitRepoManager, this.gitLabServerManager, this.catmaUser
 			);
 
 			String projectId = (String)getJsonLdWebAnnotationResult.get("projectUuid");

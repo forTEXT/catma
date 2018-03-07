@@ -291,7 +291,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 									repository.insert(sourceDocument);
 								}
 								
-							} catch (IOException e) {
+							} catch (Exception e) {
 								((CatmaApplication)UI.getCurrent()).showAndLogError(
 									Messages.getString("SourceDocumentPanel.errorAddingSourceDoc"), e); //$NON-NLS-1$
 							}

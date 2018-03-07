@@ -24,6 +24,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import de.catma.document.repository.RepositoryProperties;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.FileOSType;
@@ -33,6 +34,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
 import de.catma.repository.git.exceptions.GitSourceDocumentHandlerException;
+import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
 import de.catma.repository.git.managers.JGitRepoManager;
@@ -61,7 +63,7 @@ public class GitSourceDocumentHandlerTest {
 	public void setUp() throws Exception {
 		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager & JGitRepoManager
 		this.catmaUser = Randomizer.getDbUser();
-
+		RepositoryProperties.INSTANCE.setProperties(catmaProperties);
 		this.gitLabServerManager = new GitLabServerManager(
 				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabServerUrl.name()),
 				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabAdminPersonalAccessToken.name()),
@@ -93,14 +95,16 @@ public class GitSourceDocumentHandlerTest {
 		}
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
-				GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectManager gitProjectHandler = new GitProjectManager(
+					RepositoryPropertyKey.GitLabServerUrl.getValue(),
+					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
+					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 
-				for (String projectId : this.projectsToDeleteOnTearDown) {
-					gitProjectHandler.delete(projectId);
-				}
-				this.projectsToDeleteOnTearDown.clear();
+			for (String projectId : this.projectsToDeleteOnTearDown) {
+				gitProjectHandler.delete(projectId);
 			}
+			this.projectsToDeleteOnTearDown.clear();
 		}
 
 		// delete the GitLab user that the GitLabServerManager constructor in setUp would have
@@ -144,16 +148,18 @@ public class GitSourceDocumentHandlerTest {
 			indexInfoSet, contentInfoSet, techInfoSet
 		);
 
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
 				jGitRepoManager, this.gitLabServerManager
 			);
 
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(
-				jGitRepoManager, this.gitLabServerManager
-			);
+			GitProjectManager gitProjectHandler = new GitProjectManager(
+					RepositoryPropertyKey.GitLabServerUrl.getValue(),
+					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
+					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 
 			String projectId = gitProjectHandler.create(
 				"Test CATMA Project", "This is a test CATMA project"
@@ -236,7 +242,7 @@ public class GitSourceDocumentHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
 				jGitRepoManager, this.gitLabServerManager
 			);
@@ -253,7 +259,7 @@ public class GitSourceDocumentHandlerTest {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			HashMap<String, Object> getJsonLdWebAnnotationResult = JsonLdWebAnnotationTest.getJsonLdWebAnnotation(
-					jGitRepoManager, this.gitLabServerManager
+					jGitRepoManager, this.gitLabServerManager, this.catmaUser
 			);
 
 			String projectId = (String)getJsonLdWebAnnotationResult.get("projectUuid");

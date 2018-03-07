@@ -62,6 +62,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.indexer.IndexedRepository;
 import de.catma.indexer.Indexer;
 import de.catma.indexer.IndexerFactory;
+import de.catma.project.OpenProjectListener;
 import de.catma.repository.db.executionshield.DBOperation;
 import de.catma.repository.db.executionshield.ExecutionShield;
 import de.catma.repository.db.jooq.TransactionalDSLContext;
@@ -157,6 +158,11 @@ public class DBRepository implements IndexedRepository {
 	@Override
 	public String getProjectId() {
 		return name;
+	}
+	
+	@Override
+	public void open(OpenProjectListener openProjectListener) {
+		throw new UnsupportedOperationException("use open(userIdentification)");
 	}
 	
 	private void initTagManagerListeners() {

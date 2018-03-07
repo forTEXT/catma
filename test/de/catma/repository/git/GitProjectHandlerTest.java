@@ -18,6 +18,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.catma.document.repository.RepositoryProperties;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.FileOSType;
@@ -25,6 +26,7 @@ import de.catma.document.source.FileType;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
+import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
 import de.catma.repository.git.managers.JGitRepoManager;
@@ -52,7 +54,7 @@ public class GitProjectHandlerTest {
 	public void setUp() throws Exception {
 		// create a fake CATMA user which we'll use to instantiate the GitLabServerManager & JGitRepoManager
 		this.catmaUser = Randomizer.getDbUser();
-
+		RepositoryProperties.INSTANCE.setProperties(catmaProperties);
 		this.gitLabServerManager = new GitLabServerManager(
 				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabServerUrl.name()),
 				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabAdminPersonalAccessToken.name()),
@@ -61,14 +63,16 @@ public class GitProjectHandlerTest {
 	@After
 	public void tearDown() throws Exception {
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
-			try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
-				GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectManager gitProjectHandler = new GitProjectManager(
+					RepositoryPropertyKey.GitLabServerUrl.getValue(),
+					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
+					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 
-				for (String projectId : this.projectsToDeleteOnTearDown) {
-					gitProjectHandler.delete(projectId);
-				}
-				this.projectsToDeleteOnTearDown.clear();
+			for (String projectId : this.projectsToDeleteOnTearDown) {
+				gitProjectHandler.delete(projectId);
 			}
+			this.projectsToDeleteOnTearDown.clear();
 		}
 
 		if (this.directoriesToDeleteOnTearDown.size() > 0) {
@@ -89,10 +93,15 @@ public class GitProjectHandlerTest {
 
 	@Test
 	public void create() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectManager gitProjectHandler = new GitProjectManager(
+					RepositoryPropertyKey.GitLabServerUrl.getValue(),
+					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
+					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
+
 
 			String projectId = gitProjectHandler.create(
 				"Test CATMA Project", "This is a test CATMA project"
@@ -106,7 +115,7 @@ public class GitProjectHandlerTest {
 			// return
 			assertFalse(jGitRepoManager.isAttached());
 
-			String expectedRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
+			String expectedRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 
 			File expectedRootRepositoryPath = new File(
 					jGitRepoManager.getRepositoryBasePath(), expectedRootRepositoryName
@@ -119,10 +128,15 @@ public class GitProjectHandlerTest {
 
 	@Test
 	public void delete() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectManager gitProjectHandler = new GitProjectManager(
+					RepositoryPropertyKey.GitLabServerUrl.getValue(),
+					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
+					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
+
 
 			String projectId = gitProjectHandler.create(
 				"Test CATMA Project", "This is a test CATMA project"
@@ -136,7 +150,7 @@ public class GitProjectHandlerTest {
 			// return
 			assertFalse(jGitRepoManager.isAttached());
 
-			String expectedRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
+			String expectedRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 
 			File expectedRootRepositoryPath = new File(
 					jGitRepoManager.getRepositoryBasePath(), expectedRootRepositoryName
@@ -160,9 +174,14 @@ public class GitProjectHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectManager gitProjectManager = new GitProjectManager(
+					RepositoryPropertyKey.GitLabServerUrl.getValue(),
+					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
+					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 
-			String projectId = gitProjectHandler.create(
+
+			String projectId = gitProjectManager.create(
 					"Test CATMA Project",
 					"This is a test CATMA project"
 			);
@@ -170,6 +189,8 @@ public class GitProjectHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
+
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, gitLabServerManager);
 
 			String tagsetId = gitProjectHandler.createTagset(
 					projectId,
@@ -183,7 +204,7 @@ public class GitProjectHandlerTest {
 			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			jGitRepoManager.open(projectId, GitProjectHandler.getProjectRootRepositoryName(projectId));
+			jGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 			Status status = jGitRepoManager.getGitApi().status().call();
 			Set<String> added = status.getAdded();
 
@@ -198,9 +219,14 @@ public class GitProjectHandlerTest {
 		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectManager gitProjectManager = new GitProjectManager(
+					RepositoryPropertyKey.GitLabServerUrl.getValue(),
+					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
+					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 
-			String projectId = gitProjectHandler.create(
+
+			String projectId = gitProjectManager.create(
 					"Test CATMA Project",
 					"This is a test CATMA project"
 			);
@@ -208,6 +234,8 @@ public class GitProjectHandlerTest {
 
 			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
+
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, gitLabServerManager);
 
 			String markupCollectionId = gitProjectHandler.createMarkupCollection(
 					projectId,
@@ -223,7 +251,7 @@ public class GitProjectHandlerTest {
 			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			jGitRepoManager.open(projectId, GitProjectHandler.getProjectRootRepositoryName(projectId));
+			jGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 			Status status = jGitRepoManager.getGitApi().status().call();
 			Set<String> added = status.getAdded();
 
@@ -267,12 +295,18 @@ public class GitProjectHandlerTest {
 			indexInfoSet, contentInfoSet, techInfoSet
 		);
 
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(
+				RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, this.gitLabServerManager);
+			GitProjectManager gitProjectManager = new GitProjectManager(
+					RepositoryPropertyKey.GitLabServerUrl.getValue(),
+					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
+					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 
-			String projectId = gitProjectHandler.create(
+
+			String projectId = gitProjectManager.create(
 				"Test CATMA Project", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
@@ -280,6 +314,8 @@ public class GitProjectHandlerTest {
 			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls
 			// return
 			assertFalse(jGitRepoManager.isAttached());
+
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, gitLabServerManager);
 
 			String sourceDocumentId = gitProjectHandler.createSourceDocument(
 					projectId, null,
@@ -292,7 +328,7 @@ public class GitProjectHandlerTest {
 			// return
 			assertFalse(jGitRepoManager.isAttached());
 
-			jGitRepoManager.open(projectId, GitProjectHandler.getProjectRootRepositoryName(projectId));
+			jGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 			Status status = jGitRepoManager.getGitApi().status().call();
 			Set<String> added = status.getAdded();
 

@@ -1,6 +1,7 @@
 package de.catma.repository.git.managers;
 
 import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.user.UserProperty;
 import helpers.Randomizer;
@@ -66,7 +67,7 @@ public class JGitRepoManagerTest {
 
 	@Test
 	public void isAttached() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			// the other tests test that the response is true when it should be
 			assertFalse(jGitRepoManager.isAttached());
 		}
@@ -74,7 +75,7 @@ public class JGitRepoManagerTest {
 
 	@Test
 	public void getRepositoryBasePath() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			File expectedRepositoryBasePath = new File(
 					this.catmaProperties.getProperty("GitBasedRepositoryBasePath"), this.catmaUser.getIdentifier()
 			);
@@ -84,7 +85,7 @@ public class JGitRepoManagerTest {
 
 	@Test
 	public void getRepositoryWorkTree() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			assertNull(jGitRepoManager.getRepositoryWorkTree());
@@ -131,7 +132,7 @@ public class JGitRepoManagerTest {
 
 	@Test
 	public void init() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			File testRepoPath = new File(jGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
@@ -153,7 +154,7 @@ public class JGitRepoManagerTest {
 
 	@Test
 	public void cloneRepo() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			// create a bare repository that will act as the remote
@@ -188,7 +189,7 @@ public class JGitRepoManagerTest {
 		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
 				gitLabServerManager.createRepository(randomRepoName, null);
 
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			String repoName = jGitRepoManager.clone(
@@ -224,7 +225,7 @@ public class JGitRepoManagerTest {
 
 	@Test
 	public void open() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			File testRepoPath = new File(jGitRepoManager.getRepositoryBasePath(), Randomizer.getRepoName());
@@ -359,7 +360,7 @@ public class JGitRepoManagerTest {
 
 	@Test
 	public void addSubmodule() throws Exception {
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			File containerRepoPath = new File(jGitRepoManager.getRepositoryBasePath(), "container");
@@ -486,7 +487,7 @@ public class JGitRepoManagerTest {
 		IRemoteGitServerManager.CreateRepositoryResponse createRepositoryResponse =
 				gitLabServerManager.createRepository(Randomizer.getRepoName(), null);
 
-		try (JGitRepoManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
+		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			// clone it

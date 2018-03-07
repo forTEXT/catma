@@ -72,21 +72,4 @@ public class GitTechInfoSet {
 	public void setMimeType(String mimeType) {
 		this.techInfoSet.setMimeType(mimeType);
 	}
-
-	public String getURI() {
-		URI uri = this.techInfoSet.getURI();
-		return uri == null ? null : uri.toString();
-	}
-
-	public void setURI(String uri) throws URISyntaxException {
-		this.techInfoSet.setURI(uri == null ? null : new URI(uri));
-	}
-
-	public String getXsltDocumentLocalUri() {
-		return this.techInfoSet.getXsltDocumentLocalUri();
-	}
-
-	public void setXsltDocumentLocalUri(String xsltDocumentLocalUri) {
-		this.techInfoSet.setXsltDocumentLocalUri(xsltDocumentLocalUri);
-	}
 }

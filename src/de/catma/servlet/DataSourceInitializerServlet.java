@@ -8,6 +8,9 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
+import org.neo4j.driver.v1.AuthTokens;
+import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Transaction;
@@ -58,60 +61,83 @@ public class DataSourceInitializerServlet extends HttpServlet {
 			log("CATMA DB DataSource initialized.");
 			
 			log("CATMA Graph DataSource initializing...");
-			String graphDbPath = RepositoryPropertyKey.GraphDbPath.getIndexedValue(repoIndex);
 			
-			final GraphDatabaseService graphDb = 
-				new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(new File(graphDbPath))
-				.loadPropertiesFromFile(cfg.getServletContext().getRealPath("neo4j.properties"))
-				.newGraphDatabase();
+			final Driver driver = GraphDatabase.driver(
+					RepositoryPropertyKey.GraphDbUri.getValue(), 
+					AuthTokens.basic(
+						RepositoryPropertyKey.GraphDbUser.getValue(), 
+						RepositoryPropertyKey.GraphDbPass.getValue()));
+			CatmaGraphDbName.CATMAGRAPHDB.setDriver(driver);
 			
-			CatmaGraphDbName.CATMAGRAPHDB.setGraphDatabaseService(graphDb);
-
-	        
-            try ( Transaction tx = graphDb.beginTx() )
-            {
-                Schema schema = graphDb.schema();
-                for (IndexDefinition indexDef : schema.getIndexes()) {
-                	log(indexDef.toString() + " " + schema.getIndexState(indexDef));
-                }
-                
-            	if (!hasIndex(schema, NodeType.SourceDocument, SourceDocumentProperty.localUri)) {
-            		schema.indexFor(NodeType.SourceDocument)
-                      .on(SourceDocumentProperty.localUri.name())
-                      .create();	
-            	}
-                
-            	if (!hasIndex(schema, NodeType.SourceDocument, SourceDocumentProperty.deleted)) {
-            		schema.indexFor(NodeType.SourceDocument)
-                      .on(SourceDocumentProperty.deleted.name())
-                      .create();	
-            	}
-            	
-            	if (!hasIndex(schema, NodeType.Term, TermProperty.literal)) {
-                	schema.indexFor(NodeType.Term)
-	                	.on(TermProperty.literal.name())
-	                	.create();
-                }
-                
-                if (!hasIndex(schema, NodeType.Term, TermProperty.freq)) {
-                	schema.indexFor(NodeType.Term)
-	                	.on(TermProperty.freq.name())
-	                	.create();
-                }
-                tx.success();
-            }
-            try (Transaction tx = graphDb.beginTx()) {
-            	Schema schema = graphDb.schema();	
-	            schema.awaitIndexesOnline(120, TimeUnit.SECONDS );
-            }
-            catch (IllegalStateException ise) {
-            	log("indexes not online yet: " + ise.getMessage());
-            }
-            
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				@Override
+				public void run() {
+					try {
+						driver.close();
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			
+			
+			//TODO: remove legacy code
+			
+//			String graphDbPath = RepositoryPropertyKey.GraphDbPath.getIndexedValue(repoIndex);
+//			
+//			final GraphDatabaseService graphDb = 
+//				new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(new File(graphDbPath))
+//				.loadPropertiesFromFile(cfg.getServletContext().getRealPath("neo4j.properties"))
+//				.newGraphDatabase();
+//			
+//			CatmaGraphDbName.CATMAGRAPHDB.setGraphDatabaseService(graphDb);
+//
+//	        
+//            try ( Transaction tx = graphDb.beginTx() )
+//            {
+//                Schema schema = graphDb.schema();
+//                for (IndexDefinition indexDef : schema.getIndexes()) {
+//                	log(indexDef.toString() + " " + schema.getIndexState(indexDef));
+//                }
+//                
+//            	if (!hasIndex(schema, NodeType.SourceDocument, SourceDocumentProperty.localUri)) {
+//            		schema.indexFor(NodeType.SourceDocument)
+//                      .on(SourceDocumentProperty.localUri.name())
+//                      .create();	
+//            	}
+//                
+//            	if (!hasIndex(schema, NodeType.SourceDocument, SourceDocumentProperty.deleted)) {
+//            		schema.indexFor(NodeType.SourceDocument)
+//                      .on(SourceDocumentProperty.deleted.name())
+//                      .create();	
+//            	}
+//            	
+//            	if (!hasIndex(schema, NodeType.Term, TermProperty.literal)) {
+//                	schema.indexFor(NodeType.Term)
+//	                	.on(TermProperty.literal.name())
+//	                	.create();
+//                }
+//                
+//                if (!hasIndex(schema, NodeType.Term, TermProperty.freq)) {
+//                	schema.indexFor(NodeType.Term)
+//	                	.on(TermProperty.freq.name())
+//	                	.create();
+//                }
+//                tx.success();
+//            }
+//            try (Transaction tx = graphDb.beginTx()) {
+//            	Schema schema = graphDb.schema();	
+//	            schema.awaitIndexesOnline(120, TimeUnit.SECONDS );
+//            }
+//            catch (IllegalStateException ise) {
+//            	log("indexes not online yet: " + ise.getMessage());
+//            }
+//            
             log("CATMA Graph DataSource initialized.");
             
             IndexBufferManager indexBufferManager = new IndexBufferManager();
-            IndexBufferManagerName.INDEXBUFFERMANAGER.setIndeBufferManager(indexBufferManager);
+            IndexBufferManagerName.INDEXBUFFERMANAGER.setIndexBufferManager(indexBufferManager);
         }
         catch (Exception e) {
         	throw new ServletException(e);

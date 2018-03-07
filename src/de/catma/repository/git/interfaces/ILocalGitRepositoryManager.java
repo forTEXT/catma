@@ -3,6 +3,9 @@ package de.catma.repository.git.interfaces;
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 
 import javax.annotation.Nullable;
+
+import org.eclipse.jgit.lib.Constants;
+
 import java.io.File;
 
 public interface ILocalGitRepositoryManager extends AutoCloseable {
@@ -43,4 +46,9 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 	void close();
 
 	File getRepositoryBasePath();
+
+	String clone(String group, String uri, File path, String username, String password, boolean initSubmodules)
+			throws LocalGitRepositoryManagerException;
+
+	String getRootRevisionHash() throws Exception;
 }

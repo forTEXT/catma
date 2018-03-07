@@ -62,7 +62,6 @@ import de.catma.backgroundservice.ProgressCallable;
 import de.catma.document.Corpus;
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
-import de.catma.document.repository.RepositoryProperties;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.source.KeywordInContext;
 import de.catma.document.source.SourceDocument;

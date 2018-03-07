@@ -1,30 +1,35 @@
 package de.catma.repository.git;
 
-import de.catma.document.source.SourceDocument;
-import de.catma.document.source.SourceDocumentInfo;
-import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
-import de.catma.repository.git.interfaces.IRemoteGitServerManager;
-import de.catma.repository.git.interfaces.IGitSourceDocumentHandler;
-import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
-import de.catma.repository.git.exceptions.GitSourceDocumentHandlerException;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.managers.GitLabServerManager;
-import de.catma.repository.git.serialization.SerializationHelper;
-import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
-import de.catma.util.IDGenerator;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.gitlab4j.api.models.User;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+
+import com.google.common.collect.Maps;
+
+import de.catma.document.source.SourceDocument;
+import de.catma.document.source.SourceDocumentInfo;
+import de.catma.indexer.TermInfo;
+import de.catma.repository.git.exceptions.GitSourceDocumentHandlerException;
+import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
+import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
+import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.repository.git.serialization.SerializationHelper;
+import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
+import de.catma.repository.git.serialization.model_wrappers.GitTermInfo;
+import de.catma.util.IDGenerator;
+
+public class GitSourceDocumentHandler {
     private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitServerManager remoteGitServerManager;
 
@@ -44,7 +49,7 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 	 * Creates a new source document within the project identified by <code>projectId</code>.
 	 * <p>
 	 * NB: You probably don't want to call this method directly (it doesn't create the submodule in the project root
-	 * repo). Instead call the <code>createSourceDocument</code> method of the {@link GitProjectHandler} class.
+	 * repo). Instead call the <code>createSourceDocument</code> method of the {@link GitProjectManager} class.
 	 *
 	 * @param projectId the ID of the project within which the source document must be created
 	 * @param sourceDocumentId the ID of the source document to create. If none is provided, a new
@@ -58,17 +63,20 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 	 * @param convertedSourceDocumentFileName the file name of the converted, UTF-8 encoded source
 	 *                                        document
 	 * @param sourceDocumentInfo a {@link SourceDocumentInfo} object
+	 * @param terms 
 	 * @return the <code>sourceDocumentId</code> if one was provided, otherwise a new source
 	 *         document ID
 	 * @throws GitSourceDocumentHandlerException if an error occurs while creating the source document
 	 */
-	@Override
-	public String create(@Nonnull String projectId, @Nullable String sourceDocumentId,
-						 @Nonnull InputStream originalSourceDocumentStream,
-						 @Nonnull String originalSourceDocumentFileName,
-						 @Nonnull InputStream convertedSourceDocumentStream,
-						 @Nonnull String convertedSourceDocumentFileName,
-						 @Nonnull SourceDocumentInfo sourceDocumentInfo
+	public String create(String projectId, @Nullable String sourceDocumentId,
+						 InputStream originalSourceDocumentStream,
+						 String originalSourceDocumentFileName,
+						 InputStream convertedSourceDocumentStream,
+						 String convertedSourceDocumentFileName,
+						 Map<String, List<TermInfo>> terms,
+						 String tokenizedSourceDocumentFileName,
+						 SourceDocumentInfo sourceDocumentInfo 
+						 
 	) throws GitSourceDocumentHandlerException {
 		if (sourceDocumentId == null) {
 			IDGenerator idGenerator = new IDGenerator();
@@ -103,12 +111,33 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 				localGitRepoManager.getRepositoryWorkTree(),
 				convertedSourceDocumentFileName
 			);
+			
+			File targetTokenizedSourceDocumentFile = new File(
+				localGitRepoManager.getRepositoryWorkTree(),
+				tokenizedSourceDocumentFileName
+			);
 
 			byte[] bytes = IOUtils.toByteArray(originalSourceDocumentStream);
 			localGitRepoManager.add(targetOriginalSourceDocumentFile, bytes);
 			bytes = IOUtils.toByteArray(convertedSourceDocumentStream);
 			localGitRepoManager.add(targetConvertedSourceDocumentFile, bytes);
 
+			Map<String, List<GitTermInfo>> gitTermInfos = Maps.newHashMap();
+			terms.forEach((term, termInfos) -> {
+				gitTermInfos.put(
+					term, 
+					termInfos
+						.stream()
+						.map(termInfo -> new GitTermInfo(termInfo))
+						.collect(Collectors.toList()));
+			});
+			
+			localGitRepoManager.add(
+				targetTokenizedSourceDocumentFile, 
+				new SerializationHelper<Map<String, List<GitTermInfo>>>()
+					.serialize(gitTermInfos)
+					.getBytes(StandardCharsets.UTF_8));
+			
 			// write header.json into the local repo
 			File targetHeaderFile = new File(
 				localGitRepoManager.getRepositoryWorkTree(), "header.json"
@@ -136,18 +165,16 @@ public class GitSourceDocumentHandler implements IGitSourceDocumentHandler {
 		return sourceDocumentId;
 	}
 
-	@Override
 	public void delete(@Nonnull String projectId, @Nonnull String sourceDocumentId)
 			throws GitSourceDocumentHandlerException {
     	throw new GitSourceDocumentHandlerException("Not implemented");
 	}
 
-	@Override
 	public SourceDocument open(@Nonnull String projectId, @Nonnull String sourceDocumentId)
 			throws GitSourceDocumentHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 
-			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			String sourceDocumentSubmoduleName = String.format(

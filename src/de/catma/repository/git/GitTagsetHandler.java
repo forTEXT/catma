@@ -1,24 +1,5 @@
 package de.catma.repository.git;
 
-import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
-import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
-import de.catma.repository.git.exceptions.GitTagsetHandlerException;
-import de.catma.repository.git.interfaces.IGitTagsetHandler;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IRemoteGitServerManager;
-import de.catma.repository.git.managers.GitLabServerManager;
-import de.catma.repository.git.serialization.SerializationHelper;
-import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
-import de.catma.repository.git.serialization.models.GitTagsetHeader;
-import de.catma.tag.TagDefinition;
-import de.catma.tag.TagsetDefinition;
-import de.catma.util.IDGenerator;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.gitlab4j.api.models.User;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -28,7 +9,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class GitTagsetHandler implements IGitTagsetHandler {
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import de.catma.repository.git.exceptions.GitTagsetHandlerException;
+import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
+import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
+import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.repository.git.serialization.SerializationHelper;
+import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
+import de.catma.repository.git.serialization.models.GitTagsetHeader;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagsetDefinition;
+import de.catma.util.IDGenerator;
+
+public class GitTagsetHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitServerManager remoteGitServerManager;
 
@@ -48,7 +47,7 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 	 * Creates a new tagset.
 	 * <p>
 	 * NB: You probably don't want to call this method directly (it doesn't create the submodule in the project root
-	 * repo). Instead call the <code>createTagset</code> method of the {@link GitProjectHandler} class.
+	 * repo). Instead call the <code>createTagset</code> method of the {@link GitProjectManager} class.
 	 *
 	 * @param projectId the ID of the project within which the tagset must be created
 	 * @param tagsetId the ID of the tagset to create. If none is provided, a new ID will be generated.
@@ -57,7 +56,6 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 	 * @return the <code>tagsetId</code> if one was provided, otherwise a new tagset ID
 	 * @throws GitTagsetHandlerException if an error occurs while creating the tagset
 	 */
-	@Override
 	public String create(@Nonnull String projectId,
 						 @Nullable String tagsetId,
 						 @Nonnull String name,
@@ -105,7 +103,6 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 		return tagsetId;
 	}
 
-	@Override
 	public void delete(@Nonnull String projectId, @Nonnull String tagsetId) throws GitTagsetHandlerException {
 		throw new GitTagsetHandlerException("Not implemented");
 	}
@@ -140,10 +137,9 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 		return tagDefinitions;
 	}
 
-	@Override
 	public TagsetDefinition open(@Nonnull String projectId, @Nonnull String tagsetId) throws GitTagsetHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			String tagsetSubmoduleName = String.format(
@@ -193,13 +189,12 @@ public class GitTagsetHandler implements IGitTagsetHandler {
 	 * @return the tag definition UUID
 	 * @throws GitTagsetHandlerException if an error occurs while creating the tag definition
 	 */
-	@Override
 	public String createTagDefinition(@Nonnull String projectId,
 									  @Nonnull String tagsetId,
 									  @Nonnull TagDefinition tagDefinition
 	) throws GitTagsetHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			String targetPropertyDefinitionsFileRelativePath = String.format(

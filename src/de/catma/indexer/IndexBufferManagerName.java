@@ -12,7 +12,7 @@ public enum IndexBufferManagerName {
 		return indeBufferManager;
 	}
 
-	public void setIndeBufferManager(IndexBufferManager indeBufferManager) {
+	public void setIndexBufferManager(IndexBufferManager indeBufferManager) {
 		this.indeBufferManager = indeBufferManager;
 	}
 	

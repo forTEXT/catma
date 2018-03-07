@@ -11,8 +11,11 @@ public class SerializationHelper<T> {
 		try {
 			JsoniterAlphabeticOrderingExtension.enable();
 		}
-		catch (JsonException e) {}
+		catch (JsonException e) {
+//			e.printStackTrace(); TODO:
+		}
 		JsonStream.setMode(EncodingMode.DYNAMIC_MODE);
+		JsonStream.setIndentionStep(2);
 		return JsonStream.serialize(object);
 	}
 

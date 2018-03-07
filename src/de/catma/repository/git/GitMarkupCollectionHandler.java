@@ -1,28 +1,5 @@
 package de.catma.repository.git;
 
-import de.catma.document.AccessMode;
-import de.catma.document.source.ContentInfoSet;
-import de.catma.document.standoffmarkup.usermarkup.TagReference;
-import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
-import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
-import de.catma.repository.git.exceptions.GitMarkupCollectionHandlerException;
-import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
-import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
-import de.catma.repository.git.interfaces.IGitMarkupCollectionHandler;
-import de.catma.repository.git.interfaces.IRemoteGitServerManager;
-import de.catma.repository.git.managers.GitLabServerManager;
-import de.catma.repository.git.serialization.SerializationHelper;
-import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
-import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
-import de.catma.tag.TagLibrary;
-import de.catma.util.IDGenerator;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.gitlab4j.api.models.User;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -33,7 +10,28 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.apache.commons.io.FileUtils;
+
+import de.catma.document.AccessMode;
+import de.catma.document.source.ContentInfoSet;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.repository.git.exceptions.GitMarkupCollectionHandlerException;
+import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
+import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
+import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
+import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
+import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.repository.git.serialization.SerializationHelper;
+import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
+import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
+import de.catma.tag.TagLibrary;
+import de.catma.util.IDGenerator;
+
+public class GitMarkupCollectionHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitServerManager remoteGitServerManager;
 
@@ -53,7 +51,7 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 	 * Creates a new markup collection.
 	 * <p>
 	 * NB: You probably don't want to call this method directly (it doesn't create the submodule in the project root
-	 * repo). Instead call the <code>createMarkupCollection</code> method of the {@link GitProjectHandler} class.
+	 * repo). Instead call the <code>createMarkupCollection</code> method of the {@link GitProjectManager} class.
 	 *
 	 * @param projectId the ID of the project within which the new markup collection must be created
 	 * @param markupCollectionId the ID of the new markup collection. If none is provided, a new ID will be
@@ -65,7 +63,6 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 	 * @return the <code>markupCollectionId</code> if one was provided, otherwise a new markup collection ID
 	 * @throws GitMarkupCollectionHandlerException if an error occurs while creating the markup collection
 	 */
-	@Override
 	public String create(
 			@Nonnull String projectId,
 			@Nullable String markupCollectionId,
@@ -122,7 +119,6 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 		return markupCollectionId;
 	}
 
-	@Override
 	public void delete(@Nonnull String projectId, @Nonnull String markupCollectionId)
 			throws GitMarkupCollectionHandlerException {
 		throw new GitMarkupCollectionHandlerException("Not implemented");
@@ -138,14 +134,13 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 	 * @param tagsetVersion the version of the tagset to add
 	 * @throws GitMarkupCollectionHandlerException if an error occurs while adding the tagset
 	 */
-	@Override
 	public void addTagset(@Nonnull String projectId,
 						  @Nonnull String markupCollectionId,
 						  @Nonnull String tagsetId,
 						  @Nonnull String tagsetVersion
 	) throws GitMarkupCollectionHandlerException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			File targetMarkupCollectionHeaderFilePath = Paths.get(
@@ -178,7 +173,6 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 		}
 	}
 
-	@Override
 	public void removeTagset(@Nonnull String projectId, @Nonnull String markupCollectionId, @Nonnull String tagsetId)
 			throws GitMarkupCollectionHandlerException {
 		// it should only be possible to remove a tagset if there are no tag instances referring to any of its tag
@@ -199,7 +193,6 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 	 * @return the tag instance UUID contained within the <code>annotation</code> argument
 	 * @throws GitMarkupCollectionHandlerException if an error occurs while creating the tag instance
 	 */
-	@Override
 	public String createTagInstance(
 			@Nonnull String projectId,
 			@Nonnull String markupCollectionId,
@@ -210,7 +203,7 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 		// TODO: check that the tag instance is for the correct document
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// open the project root repo
-			localGitRepoManager.open(projectId, GitProjectHandler.getProjectRootRepositoryName(projectId));
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
 
 			// write the serialized tag instance to the markup collection submodule
 			File targetTagInstanceFilePath = new File(
@@ -282,12 +275,11 @@ public class GitMarkupCollectionHandler implements IGitMarkupCollectionHandler {
 		return tagReferences;
 	}
 
-	@Override
 	public UserMarkupCollection open(@Nonnull String projectId, @Nonnull String markupCollectionId)
 			throws GitMarkupCollectionHandlerException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			String markupCollectionSubmoduleName = String.format(

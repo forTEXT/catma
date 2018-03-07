@@ -153,7 +153,7 @@ public class GitLabServerManagerTest {
 
 		// assert that re-instantiating the GitLabServerManager causes it to re-use the existing
 		// GitLab user
-		GitLabServerManager tmpServerManager = new GitLabServerManager(
+		IRemoteGitServerManager tmpServerManager = new GitLabServerManager(
 				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabServerUrl.name()),
 				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabAdminPersonalAccessToken.name()),
 				UserIdentification.userToMap(this.catmaUser.getIdentifier()));

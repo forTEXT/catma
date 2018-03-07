@@ -1,18 +1,26 @@
 package de.catma.repository.git.serialization.models.json_ld;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+
 import com.jsoniter.annotation.JsonProperty;
+
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.repository.git.GitProjectHandler;
+import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
-import org.apache.commons.lang3.StringUtils;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Represents a Web Annotation Data Model conformant annotation body of type 'Dataset'.
@@ -55,7 +63,7 @@ public class JsonLdWebAnnotationBody_Dataset {
 		TagDefinition tagDefinition = tagReferences.get(0).getTagDefinition();
 		TagInstance tagInstance = tagReferences.get(0).getTagInstance();
 
-		String projectRootRepositoryName = GitProjectHandler.getProjectRootRepositoryName(projectId);
+		String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 
 		try {
 			this.tagset = this.buildTagsetUrl(
