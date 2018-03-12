@@ -7,4 +7,8 @@ public enum NodeType implements Label {
 	ProjectRevision,
 	
 	;
+	
+	public static String nt(NodeType nodeType) {
+		return nodeType.name();
+	}
 }

@@ -360,17 +360,18 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * Commits pending changes to the attached Git repository.
 	 *
 	 * @param message the commit message
+	 * @return revision hash
 	 * @throws LocalGitRepositoryManagerException if the commit operation failed
 	 */
 	@Override
-	public void commit(String message, String committerName, String committerEmail)
+	public String commit(String message, String committerName, String committerEmail)
 			throws LocalGitRepositoryManagerException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `commit` on a detached instance");
 		}
 
 		try {
-			this.gitApi.commit().setMessage(message).setCommitter(committerName, committerEmail).call();
+			return this.gitApi.commit().setMessage(message).setCommitter(committerName, committerEmail).call().getName();
 		}
 		catch (GitAPIException e) {
 			throw new LocalGitRepositoryManagerException("Failed to commit", e);
@@ -412,6 +413,14 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 
 			Repository repository = submoduleAddCommand.call();
 			repository.close();
+			// TODO: pull commit up to have one commit for multiple submodules (e.g. add a corpus of documents)
+			gitApi.commit().setMessage("Added submodule " + path.toString()).call(); //TODO: resource title instead of filepath
+			gitApi
+				.push()
+				.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
+					username, password
+				))
+				.call(); //TODO: push might need a pull first in collaborative settings!
 		}
 		catch (GitAPIException e) {
 			throw new LocalGitRepositoryManagerException("Failed to add submodule", e);

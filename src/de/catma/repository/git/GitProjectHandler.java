@@ -2,7 +2,7 @@ package de.catma.repository.git;
 
 import java.io.File;
 import java.io.InputStream;
-import java.net.URI;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +10,6 @@ import java.util.Map;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.indexer.TermInfo;
 import de.catma.project.ProjectReference;
-import de.catma.repository.db.FileURLFactory;
 import de.catma.repository.git.exceptions.GitMarkupCollectionHandlerException;
 import de.catma.repository.git.exceptions.GitProjectHandlerException;
 import de.catma.repository.git.exceptions.GitSourceDocumentHandlerException;
@@ -151,8 +150,7 @@ public class GitProjectHandler {
 	 *                                        document
 	 * @param sourceDocumentInfo a {@link SourceDocumentInfo} object
 	 * @param terms 
-	 * @return the <code>sourceDocumentId</code> if one was provided, otherwise a new source
-	 *         document ID
+	 * @return the revisionHash
 	 * @throws GitProjectHandlerException if an error occurs while creating the source document
 	 */
 	public String createSourceDocument(
@@ -168,14 +166,14 @@ public class GitProjectHandler {
 			);
 
 			// create the source document within the project
-			sourceDocumentId = gitSourceDocumentHandler.create(
+			String revisionHash = gitSourceDocumentHandler.create(
 					projectId, sourceDocumentId,
 					originalSourceDocumentStream, originalSourceDocumentFileName,
 					convertedSourceDocumentStream, convertedSourceDocumentFileName,
 					terms, tokenizedSourceDocumentFileName,
 					sourceDocumentInfo
 			);
-
+			
 			localRepoManager.open(projectId, GitSourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId));
 			localRepoManager.push(remoteGitServerManager.getUsername(), remoteGitServerManager.getPassword());
 
@@ -203,12 +201,13 @@ public class GitProjectHandler {
 				remoteGitServerManager.getUsername(),
 				remoteGitServerManager.getPassword()
 			);
+		
+			return revisionHash;
 		}
 		catch (GitSourceDocumentHandlerException |LocalGitRepositoryManagerException e) {
 			throw new GitProjectHandlerException("Failed to create source document", e);
 		}
 
-		return sourceDocumentId;
 	}
 
 	public String getRootRevisionHash(ProjectReference projectReference) throws Exception {
@@ -221,4 +220,12 @@ public class GitProjectHandler {
 		}
 	}
 
+	public Path getSourceDocumentSubmodulePath(GitUser user, ProjectReference projectReference, String sourceDocumentId) {
+		return Paths.get(
+			user.getIdentifier(), 
+			projectReference.getProjectId(), 
+			GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()), 
+			SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
+			sourceDocumentId);
+	}
 }

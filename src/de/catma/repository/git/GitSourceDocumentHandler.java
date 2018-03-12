@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
@@ -18,6 +19,8 @@ import com.google.common.collect.Maps;
 
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.source.contenthandler.SourceContentHandler;
+import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.indexer.TermInfo;
 import de.catma.repository.git.exceptions.GitSourceDocumentHandlerException;
 import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
@@ -30,6 +33,8 @@ import de.catma.repository.git.serialization.model_wrappers.GitTermInfo;
 import de.catma.util.IDGenerator;
 
 public class GitSourceDocumentHandler {
+	private Logger logger = Logger.getLogger(GitSourceDocumentHandler.class.getName());
+	
     private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitServerManager remoteGitServerManager;
 
@@ -64,8 +69,7 @@ public class GitSourceDocumentHandler {
 	 *                                        document
 	 * @param sourceDocumentInfo a {@link SourceDocumentInfo} object
 	 * @param terms 
-	 * @return the <code>sourceDocumentId</code> if one was provided, otherwise a new source
-	 *         document ID
+	 * @return the revision hash
 	 * @throws GitSourceDocumentHandlerException if an error occurs while creating the source document
 	 */
 	public String create(String projectId, @Nullable String sourceDocumentId,
@@ -78,12 +82,10 @@ public class GitSourceDocumentHandler {
 						 SourceDocumentInfo sourceDocumentInfo 
 						 
 	) throws GitSourceDocumentHandlerException {
-		if (sourceDocumentId == null) {
-			IDGenerator idGenerator = new IDGenerator();
-			sourceDocumentId = idGenerator.generate();
-		}
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			logger.info("Adding SourceDocument to the local project " + projectId);
+			
 			// create the source document repository
 			String sourceDocumentRepoName = GitSourceDocumentHandler.getSourceDocumentRepositoryName(sourceDocumentId);
 
@@ -152,17 +154,19 @@ public class GitSourceDocumentHandler {
 			// commit newly added files
 			String commitMessage = String.format("Adding %s, %s and %s", originalSourceDocumentFileName,
 					convertedSourceDocumentFileName, targetHeaderFile.getName());
-			localGitRepoManager.commit(
+			String revisionHash = localGitRepoManager.commit(
 				commitMessage,
 				remoteGitServerManager.getUsername(),
 				remoteGitServerManager.getEmail()
 			);
+			
+			logger.info("Finished adding SourceDocument to the local project " + projectId);
+			
+			return revisionHash;
 		}
 		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|IOException e) {
 			throw new GitSourceDocumentHandlerException("Failed to create source document", e);
 		}
-
-		return sourceDocumentId;
 	}
 
 	public void delete(@Nonnull String projectId, @Nonnull String sourceDocumentId)
@@ -197,13 +201,16 @@ public class GitSourceDocumentHandler {
 							GitSourceDocumentInfo.class
 					);
 
-			// need to use the catma-core SourceDocumentHandler to decide on the correct SourceContentHandler based on
-			// filetype
-			de.catma.document.source.SourceDocumentHandler handler =
-					new de.catma.document.source.SourceDocumentHandler();
 
+			de.catma.document.source.SourceDocumentHandler docHandler =
+					new de.catma.document.source.SourceDocumentHandler();
+			
+			SourceContentHandler contentHandler = new StandardContentHandler();
+			
 			SourceDocumentInfo sourceDocumentInfo = gitSourceDocumentInfo.getSourceDocumentInfo();
-			SourceDocument sourceDocument = handler.loadSourceDocument(sourceDocumentId, sourceDocumentInfo);
+			contentHandler.setSourceDocumentInfo(sourceDocumentInfo);
+			
+			SourceDocument sourceDocument = docHandler.loadSourceDocument(sourceDocumentId, contentHandler);
 
 			String sourceDocumentRevisionHash = localGitRepoManager.getSubmoduleHeadRevisionHash(
 					sourceDocumentSubmoduleName

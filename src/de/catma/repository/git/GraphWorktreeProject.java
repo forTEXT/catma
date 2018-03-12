@@ -15,6 +15,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.AccessMode;
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
@@ -57,14 +58,17 @@ public class GraphWorktreeProject implements Repository {
 	private String rootRevisionHash;
 	private GraphProjectHandler graphProjectHandler;
 	private String tempDir;
+	private BackgroundServiceProvider backgroundServiceProvider;
 
 
 	public GraphWorktreeProject(GitUser user, 
 			GitProjectHandler gitProjectHandler,
-			ProjectReference projectReference) {
+			ProjectReference projectReference,
+			BackgroundServiceProvider backgroundServiceProvider) {
 		this.user = user;
 		this.gitProjectHandler = gitProjectHandler;
 		this.projectReference = projectReference;
+		this.backgroundServiceProvider = backgroundServiceProvider;
 		this.graphProjectHandler = new GraphProjectHandler();
 		this.tempDir = RepositoryPropertyKey.TempDir.getValue();
 	}
@@ -144,40 +148,40 @@ public class GraphWorktreeProject implements Repository {
 		String convertedFilename = 
 				sourceDocument.getID() + "." + UTF8_CONVERSION_FILE_EXTENSION;
 		
-		try (FileInputStream originalFileInputStream = new FileInputStream(sourceTempFile)) {
-			
-			logger.info("start indexing sourcedocument");
-			
-			List<String> unseparableCharacterSequences = 
-					sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
-						.getIndexInfoSet().getUnseparableCharacterSequences();
-			List<Character> userDefinedSeparatingCharacters = 
-					sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
-						.getIndexInfoSet().getUserDefinedSeparatingCharacters();
-			Locale locale = 
-					sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
-					.getIndexInfoSet().getLocale();
-			
-			TermExtractor termExtractor = 
-					new TermExtractor(
+		final IndexBufferManager indexBufferManager = 
+				IndexBufferManagerName.INDEXBUFFERMANAGER.getIndeBufferManager();
+
+		logger.info("start tokenizing sourcedocument");
+		
+		List<String> unseparableCharacterSequences = 
+				sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+				.getIndexInfoSet().getUnseparableCharacterSequences();
+		List<Character> userDefinedSeparatingCharacters = 
+				sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+				.getIndexInfoSet().getUserDefinedSeparatingCharacters();
+		Locale locale = 
+				sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+				.getIndexInfoSet().getLocale();
+		
+		TermExtractor termExtractor = 
+				new TermExtractor(
 						sourceDocument.getContent(), 
 						unseparableCharacterSequences, 
 						userDefinedSeparatingCharacters, 
 						locale);
+		
+		final Map<String, List<TermInfo>> terms = termExtractor.getTerms();
+		
+		logger.info("tokenization finished");
+		
+		
+		indexBufferManager.add(sourceDocument, terms);
+		
+		logger.info("buffering tokens finished");	
+		
+		try (FileInputStream originalFileInputStream = new FileInputStream(sourceTempFile)) {
 			
-			final Map<String, List<TermInfo>> terms = termExtractor.getTerms();
-
-			logger.info("term extraction finished");
-			
-			final IndexBufferManager indexBufferManager = 
-					IndexBufferManagerName.INDEXBUFFERMANAGER.getIndeBufferManager();
-
-			
-			indexBufferManager.add(sourceDocument, terms);
-			
-			logger.info("buffering finished");			
-			
-			gitProjectHandler.createSourceDocument(
+			String sourceDocRevisionHash = gitProjectHandler.createSourceDocument(
 				this.projectReference.getProjectId(), 
 				sourceDocument.getID(), 
 				originalFileInputStream,
@@ -196,15 +200,25 @@ public class GraphWorktreeProject implements Repository {
 				terms,
 				sourceDocument.getID() + "." + TOKENIZED_FILE_EXTENSION,
 				sourceDocument.getSourceContentHandler().getSourceDocumentInfo());
-			
+
 			sourceDocument.unload();
+			sourceDocument.setRevisionHash(sourceDocRevisionHash);
 		}
 		
 		sourceTempFile.delete();
+		String oldRootRevisionHash = this.rootRevisionHash;
+		
+		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(this.projectReference);
 
 		graphProjectHandler.insertSourceDocument(
-			this.projectReference.getProjectId(), this.rootRevisionHash,
-			sourceDocument);
+			this.projectReference.getProjectId(), oldRootRevisionHash, this.rootRevisionHash,
+			sourceDocument,
+			Paths
+				.get(RepositoryPropertyKey.GraphDbGitMountBasePath.getValue())
+				.resolve(gitProjectHandler.getSourceDocumentSubmodulePath(this.user, this.projectReference, sourceDocument.getID()))
+				.resolve(sourceDocument.getID() + "." + TOKENIZED_FILE_EXTENSION),
+			indexBufferManager, 
+			backgroundServiceProvider.getBackgroundService());
 	}
 
 	@Override

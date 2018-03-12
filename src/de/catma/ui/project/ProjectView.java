@@ -15,6 +15,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
+import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
@@ -33,25 +34,29 @@ public class ProjectView extends VerticalLayout implements ClosableTab {
 	private Button btAddSourceDocuments;
 	private Repository repository;
 
-	public ProjectView(ProjectManager projectManager, ProjectReference projectReference) {
-		projectManager.openProject(projectReference, new OpenProjectListener() {
+	public ProjectView(
+			ProjectManager projectManager, ProjectReference projectReference) {
+		projectManager.openProject(
+			projectReference, 
+			new OpenProjectListener() {
 			
-			@Override
-			public void ready(Repository repository) {
-				ProjectView.this.repository = repository;
-			}
-			
-			@Override
-			public void progress(String msg, Object... params) {
-				Logger.getLogger(ProjectView.class.getName()).info(msg);
+				@Override
+				public void ready(Repository repository) {
+					ProjectView.this.repository = repository;
+				}
 				
-			}
-			
-			@Override
-			public void failure(Throwable t) {
-				t.printStackTrace();
-			}
-		}); 
+				@Override
+				public void progress(String msg, Object... params) {
+					Logger.getLogger(ProjectView.class.getName()).info(msg);
+					
+				}
+				
+				@Override
+				public void failure(Throwable t) {
+					t.printStackTrace();
+				}
+			},
+			(BackgroundServiceProvider)UI.getCurrent()); 
 		initComponents();
 		initActions();
 	}

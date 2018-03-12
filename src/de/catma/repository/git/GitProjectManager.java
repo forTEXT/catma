@@ -9,6 +9,7 @@ import java.util.Map;
 import org.apache.commons.io.FileUtils;
 
 import de.catma.Pager;
+import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.repository.Repository;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
@@ -146,14 +147,18 @@ public class GitProjectManager implements ProjectManager {
 	}
 
 	@Override
-	public void openProject(ProjectReference projectReference, OpenProjectListener openProjectListener) {
+	public void openProject(
+			ProjectReference projectReference, 
+			OpenProjectListener openProjectListener, 
+			BackgroundServiceProvider backgroundServiceProvider) {
 		try {
 			cloneRootLocallyIfNotExists(projectReference, openProjectListener);
 			Repository project = 
 				new GraphWorktreeProject(
 						this.user,
 						new GitProjectHandler(this.localGitRepositoryManager, this.remoteGitServerManager),
-						projectReference);
+						projectReference, 
+						backgroundServiceProvider);
 
 			project.open(openProjectListener);
 
