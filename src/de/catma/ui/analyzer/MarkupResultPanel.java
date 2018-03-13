@@ -293,7 +293,7 @@ public class MarkupResultPanel extends VerticalLayout {
 				
 				try {
 					setQueryResult(queryResult);
-				} catch (IOException e) {
+				} catch (Exception e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							Messages.getString("MarkupResultPanel.errorConvertingResults"), e); //$NON-NLS-1$
 				}
@@ -479,7 +479,7 @@ public class MarkupResultPanel extends VerticalLayout {
 					Double kwicSize = (Double) event.getProperty().getValue();
 					kwicPanel.setKwicSize(kwicSize.intValue());
 				}
-				catch (IOException e) {
+				catch (Exception e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							Messages.getString("MarkupResultPanel.errorKwicSize"), e); //$NON-NLS-1$
 				}
@@ -509,7 +509,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		
 		try {
 			setQueryResult(queryResult);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(
 					Messages.getString("MarkupResultPanel.errorConvertingResults"), e); //$NON-NLS-1$
 		}
@@ -840,7 +840,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		});
 	}
 
-	public void setQueryResult(QueryResult queryResult) throws IOException {
+	public void setQueryResult(QueryResult queryResult) throws Exception {
 		curQueryResult = queryResult;
 		
 		kwicPanel.clear();
@@ -884,7 +884,7 @@ public class MarkupResultPanel extends VerticalLayout {
 	@SuppressWarnings("unchecked")
 	private int setQueryResultGroupedByTagInstance(
 			QueryResult queryResult,
-			Set<String> tagDefinitions) throws IOException {
+			Set<String> tagDefinitions) throws Exception {
 		
 		int totalFreq = 0;
 		
@@ -981,7 +981,7 @@ public class MarkupResultPanel extends VerticalLayout {
 
 	private int setQueryResultByRow(
 			QueryResult queryResult, 
-			Set<String> tagDefinitions) throws IOException {
+			Set<String> tagDefinitions) throws Exception {
 		
 		int totalFreq = 0;
 		boolean displayProperties = false;
@@ -1030,7 +1030,7 @@ public class MarkupResultPanel extends VerticalLayout {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void addFlatTagQueryResultRow(TagQueryResultRow row) throws IOException {
+	private void addFlatTagQueryResultRow(TagQueryResultRow row) throws Exception {
 		String markupCollectionsId = row.getMarkupCollectionId();
 		SourceDocument sourceDocument = 
 				repository.getSourceDocument(row.getSourceDocumentId());
@@ -1064,7 +1064,7 @@ public class MarkupResultPanel extends VerticalLayout {
 
 	@SuppressWarnings("unchecked")
 	private void addTagQueryResultRow(final TagQueryResultRow row) 
-				throws IOException {
+				throws Exception {
 		//TODO: use expand
 		String tagDefinitionId = row.getTagDefinitionId();
 		String markupCollectionsId = row.getMarkupCollectionId();
@@ -1187,7 +1187,7 @@ public class MarkupResultPanel extends VerticalLayout {
 		if (selected) {
 			try {
 				kwicPanel.addQueryResultRows(queryResult);
-			} catch (IOException e) {
+			} catch (Exception e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
 					Messages.getString("MarkupResultPanel.errorShowingKwicResults"), e); //$NON-NLS-1$
 			}

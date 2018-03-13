@@ -276,7 +276,7 @@ public class TeiDocument {
 		TechnicalDescription td = teiHeader.getTechnicalDescription();
 		TechInfoSet tis = new TechInfoSet(
 				td.getFileType(), td.getCharset(), td.getFileOSType(),
-				td.getChecksum(), td.getXsltDocumentName());
+				td.getChecksum());
 		
 		return tis;
 	}

@@ -144,10 +144,15 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	public void attach() {
 		super.attach();
 		if (!init) {
-			initComponents();
-			initActions();
-			initListeners();
-			init = true;
+			try {
+				initComponents();
+				initActions();
+				initListeners();
+				init = true;
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -156,10 +161,15 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 			
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getOldValue() == null) { //insert
-					SourceDocument sd = repository.getSourceDocument(
-							(String)evt.getNewValue());
-					addSourceDocumentToTree(sd);
-					documentsContainer.sort(new Object[] {TableProperty.title.name()}, new boolean[] { true });
+					try {
+						SourceDocument sd = repository.getSourceDocument(
+								(String)evt.getNewValue());
+						addSourceDocumentToTree(sd);
+						documentsContainer.sort(new Object[] {TableProperty.title.name()}, new boolean[] { true });
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 				else if (evt.getNewValue() == null) { //remove
 					removeSourceDocumentFromTree(
@@ -233,8 +243,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 						
 						public void wizardCompleted(WizardCompletedEvent event) {
 							event.getWizard().removeListener(this);
-							final boolean generateStarterKit = repository.getSourceDocuments().isEmpty();
 							try {
+								final boolean generateStarterKit = repository.getSourceDocuments().isEmpty();
 								for(SourceDocumentResult sdr : wizardResult.getSourceDocumentResults()){
 									final SourceDocument sourceDocument = sdr.getSourceDocument();
 									
@@ -906,13 +916,13 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		return null;
 	}
 
-	private void initComponents() {
+	private void initComponents() throws Exception {
 		setSplitPosition(70);
 		addComponent(createOuterDocumentsPanel());
 		addComponent(createContentInfoPanel());
 	}
 	
-	private Component createOuterDocumentsPanel() {
+	private Component createOuterDocumentsPanel() throws Exception {
 		
 		VerticalLayout outerDocumentsPanel = new VerticalLayout();
 		outerDocumentsPanel.setSpacing(true);
@@ -950,7 +960,7 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 		return documentButtonsPanel;
 	}
 	
-	private Component createDocumentsPanel() {
+	private Component createDocumentsPanel() throws Exception {
 		VerticalLayout documentsPanelContent = new VerticalLayout();
 		documentsPanelContent.setSizeFull();
 		

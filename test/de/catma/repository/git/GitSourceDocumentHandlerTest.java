@@ -140,8 +140,7 @@ public class GitSourceDocumentHandlerTest {
 			FileType.TEXT,
 			StandardCharsets.UTF_8,
 			FileOSType.DOS,
-			705211438L,
-			null
+			705211438L
 		);
 
 		SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(
@@ -174,6 +173,7 @@ public class GitSourceDocumentHandlerTest {
 					projectId, null,
 					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
+					null, null,
 					sourceDocumentInfo
 			);
 			// we don't add the sourceDocumentId to this.sourceDocumentReposToDeleteOnTearDown as deletion of the

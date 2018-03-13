@@ -57,7 +57,6 @@ public class Neo4JSourceDocument {
 	private Long checksum;
 	private String mimeType;
 	private String uri;
-	private String xsltDocumentLocalUri;
 
 	@Relationship(type=Neo4JRelationshipType.HAS_TERM, direction=Relationship.OUTGOING)
 	private List<Neo4JTerm> terms;
@@ -95,8 +94,7 @@ public class Neo4JSourceDocument {
 				FileType.valueOf(this.fileType),
 				Charset.forName(this.charset),
 				FileOSType.valueOf(this.fileOSType),
-				this.checksum,
-				this.xsltDocumentLocalUri
+				this.checksum
 		);
 		techInfoSet.setFileName(this.fileName);
 		techInfoSet.setMimeType(this.mimeType);
@@ -124,7 +122,7 @@ public class Neo4JSourceDocument {
 		// we could now reconstruct the source document contents from this.terms, but it's unlikely that the source
 		// document would be edited through the graph DB
 
-		SourceDocument sourceDocument = new SourceDocument(null, this.uuid, sourceContentHandler);
+		SourceDocument sourceDocument = new SourceDocument(this.uuid, sourceContentHandler);
 		sourceDocument.setRevisionHash(this.revisionHash);
 
 		return sourceDocument;
@@ -133,7 +131,7 @@ public class Neo4JSourceDocument {
 	public void setSourceDocument(SourceDocument sourceDocument) throws Neo4JSourceDocumentException {
 		this.revisionHash = sourceDocument.getRevisionHash();
 
-		this.uuid = sourceDocument.getUuid();
+		this.uuid = sourceDocument.getID();
 
 		try {
 			this.length = sourceDocument.getLength();
@@ -171,7 +169,7 @@ public class Neo4JSourceDocument {
 		URI uri = techInfoSet.getURI();
 		this.uri = uri == null ? null : uri.toString();
 
-		this.xsltDocumentLocalUri = techInfoSet.getXsltDocumentLocalUri();
+
 
 		String sourceDocumentContent;
 		Map<String, List<TermInfo>> terms;

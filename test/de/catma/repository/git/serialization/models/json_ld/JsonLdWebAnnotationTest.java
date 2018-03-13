@@ -226,8 +226,7 @@ public class JsonLdWebAnnotationTest {
 					FileType.TEXT,
 					StandardCharsets.UTF_8,
 					FileOSType.DOS,
-					705211438L,
-					null
+					705211438L
 			);
 
 			SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(
@@ -238,6 +237,7 @@ public class JsonLdWebAnnotationTest {
 					projectId,
 					null, originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
+					null, null,
 					sourceDocumentInfo
 			);
 

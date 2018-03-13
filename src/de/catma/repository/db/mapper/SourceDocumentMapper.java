@@ -82,8 +82,7 @@ public class SourceDocumentMapper implements
 					(record.getValue(SOURCEDOCUMENT.CHARSET)==null)?null
 							:Charset.forName(record.getValue(SOURCEDOCUMENT.CHARSET)),
 					FileOSType.valueOf(record.getValue(SOURCEDOCUMENT.FILEOSTYPE)),
-					record.getValue(SOURCEDOCUMENT.CHECKSUM),
-					record.getValue(SOURCEDOCUMENT.XSLTDOCUMENTLOCALURI));
+					record.getValue(SOURCEDOCUMENT.CHECKSUM));
 		try {
 			techInfoSet.setURI(
 					new URI(

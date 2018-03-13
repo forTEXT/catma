@@ -109,7 +109,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 							Messages.getString("AnalyzerView.KWICtitle"), label, x, y),  //$NON-NLS-1$
 						kwicPanel).show(); 
 			}
-			catch (IOException e) {
+			catch (Exception e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
 						Messages.getString("AnalyzerView.errorAccessingRepo"), e); //$NON-NLS-1$
 			}
@@ -152,7 +152,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	
 	public AnalyzerView(
 			Corpus corpus, IndexedRepository repository, 
-			CloseListener closeListener) {
+			CloseListener closeListener) throws Exception {
 		
 		this.corpus = corpus;
 		this.closeListener = closeListener;
@@ -417,9 +417,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private void executeSearch() {
 
 		QueryOptions queryOptions = new QueryOptions(
-				relevantSourceDocumentIDs.isEmpty()?
-						getSourceDocumentIDs(repository.getSourceDocuments()):
-							relevantSourceDocumentIDs,
+				relevantSourceDocumentIDs,
 				relevantUserMarkupCollIDs,
 				relevantStaticMarkupCollIDs,
 				indexInfoSet.getUnseparableCharacterSequences(),
@@ -441,7 +439,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				
 				try {
 					markupResultPanel.setQueryResult(result);
-				} catch (IOException e) {
+				} catch (Exception e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 						Messages.getString("AnalyzerView.errorAccessingRepo"), e); //$NON-NLS-1$
 				} 
@@ -508,7 +506,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		}
 	}
 	
-	private void initComponents() {
+	private void initComponents() throws Exception {
 		setSizeFull();
 		
 		Component searchPanel = createSearchPanel();
@@ -569,9 +567,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			@Override
 			public QueryOptions getQueryOptions() {
 				return new QueryOptions(
-						relevantSourceDocumentIDs.isEmpty()?
-								getSourceDocumentIDs(repository.getSourceDocuments()):
-									relevantSourceDocumentIDs,
+						relevantSourceDocumentIDs,
 						relevantUserMarkupCollIDs,
 						relevantStaticMarkupCollIDs,
 						indexInfoSet.getUnseparableCharacterSequences(),
@@ -589,9 +585,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			@Override
 			public QueryOptions getQueryOptions() {
 				return new QueryOptions(
-						relevantSourceDocumentIDs.isEmpty()?
-								getSourceDocumentIDs(repository.getSourceDocuments()):
-									relevantSourceDocumentIDs,
+						relevantSourceDocumentIDs,
 						relevantUserMarkupCollIDs,
 						relevantStaticMarkupCollIDs,
 						indexInfoSet.getUnseparableCharacterSequences(),
@@ -603,7 +597,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		return phraseResultPanel;
 	}
 
-	private Component createDocumentsPanel() {
+	private Component createDocumentsPanel() throws Exception {
 
         HorizontalLayout documentsPanel = new HorizontalLayout();
         documentsPanel.setSpacing(true);
@@ -622,6 +616,9 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			}
 		}
 		else {
+			for (SourceDocument sd : repository.getSourceDocuments()) {
+				addSourceDocument(sd);
+			}
 			documentsTree.addItem(Messages.getString("AnalyzerView.AllDocuments")); //$NON-NLS-1$
 		}
 		

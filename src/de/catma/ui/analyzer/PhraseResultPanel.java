@@ -168,7 +168,7 @@ public class PhraseResultPanel extends VerticalLayout {
 							Messages.getString("PhraseResultPanel.phraseSelectionHint"),  //$NON-NLS-1$
 							Type.TRAY_NOTIFICATION);
 					}
-				} catch (IOException e) {
+				} catch (Exception e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							Messages.getString("PhraseResultPanel.errorKwicInDoubleTree"), e); //$NON-NLS-1$
 				}
@@ -319,7 +319,7 @@ public class PhraseResultPanel extends VerticalLayout {
 					csvExport.convertTable();
 					csvExport.sendConverted();
 				}
-				catch (CsvExportException e) {
+				catch (Exception e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							Messages.getString("PhraseResultPanel.csvExportError"), e); //$NON-NLS-1$
 				}
@@ -347,7 +347,7 @@ public class PhraseResultPanel extends VerticalLayout {
 					Double kwicSize = (Double) event.getProperty().getValue();
 					kwicPanel.setKwicSize(kwicSize.intValue());
 				}
-				catch (IOException e) {
+				catch (Exception e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							Messages.getString("PhraseResultPanel.kwicSizeError"), e); //$NON-NLS-1$
 				}
@@ -376,42 +376,47 @@ public class PhraseResultPanel extends VerticalLayout {
 			@SuppressWarnings("unchecked")
 			@Override
 			public void nodeExpand(ExpandEvent event) {
-				Object itemId = event.getItemId();
+				try {
+					Object itemId = event.getItemId();
+					
+					if (!resultTable.hasChildren(itemId)) {
+						GroupedQueryResult phraseResult = (GroupedQueryResult) itemId;
+						for (String sourceDocumentID : phraseResult.getSourceDocumentIDs()) {
+							SourceDocument sourceDocument = 
+									repository.getSourceDocument(sourceDocumentID);
+							
+							SourceDocumentItemID sourceDocumentItemID = 
+									new SourceDocumentItemID(
+											phraseResult.getGroup() 
+												+ "@" + sourceDocument,  //$NON-NLS-1$
+											sourceDocumentID);
 				
-				if (!resultTable.hasChildren(itemId)) {
-					GroupedQueryResult phraseResult = (GroupedQueryResult) itemId;
-					for (String sourceDocumentID : phraseResult.getSourceDocumentIDs()) {
-						SourceDocument sourceDocument = 
-								repository.getSourceDocument(sourceDocumentID);
-						
-						SourceDocumentItemID sourceDocumentItemID = 
-								new SourceDocumentItemID(
-										phraseResult.getGroup() 
-											+ "@" + sourceDocument,  //$NON-NLS-1$
-										sourceDocumentID);
-			
-						Item sourceDocumentItem = resultTable.addItem(sourceDocumentItemID);
-			
-						sourceDocumentItem.getItemProperty(
-								TreePropertyName.frequency).setValue(
-										phraseResult.getFrequency(sourceDocumentID));
-						
-						sourceDocumentItem.getItemProperty(
-								TreePropertyName.caption).setValue(
-										sourceDocument.toString());
-			
-						resultTable.setParent(sourceDocumentItemID, phraseResult);
-						
-						resultTable.setChildrenAllowed(sourceDocumentItemID, false);
-					}					
+							Item sourceDocumentItem = resultTable.addItem(sourceDocumentItemID);
+				
+							sourceDocumentItem.getItemProperty(
+									TreePropertyName.frequency).setValue(
+											phraseResult.getFrequency(sourceDocumentID));
+							
+							sourceDocumentItem.getItemProperty(
+									TreePropertyName.caption).setValue(
+											sourceDocument.toString());
+				
+							resultTable.setParent(sourceDocumentItemID, phraseResult);
+							
+							resultTable.setChildrenAllowed(sourceDocumentItemID, false);
+						}					
+					}
 				}
-				
+				catch (Exception e) {
+					((CatmaApplication)UI.getCurrent()).showAndLogError(
+							"error" , e); //TODO
+				}
 			}
 		});
 	}
 	
 	@SuppressWarnings("unchecked")
-	private Table fillFlatTable() {
+	private Table fillFlatTable() throws Exception {
 		hiddenFlatTable.removeAllItems();
 		
 		hiddenFlatTable.addContainerProperty(
@@ -706,7 +711,7 @@ public class PhraseResultPanel extends VerticalLayout {
 		if (selected) {
 			try {
 				kwicPanel.addQueryResultRows(phraseResult);
-			} catch (IOException e) {
+			} catch (Exception e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(
 					Messages.getString("PhraseResultPanel.errorShowingKwicResults"), e); //$NON-NLS-1$
 			}

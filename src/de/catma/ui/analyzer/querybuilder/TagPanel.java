@@ -83,13 +83,13 @@ public class TagPanel extends AbstractSearchPanel {
 				initComponents();
 				initActions();
 				initData();
-			} catch (IOException e) {
+			} catch (Exception e) {
 				((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("TagPanel.DBError"), e); //$NON-NLS-1$
 			}
 		}
 	}
 	
-	private void initData() throws IOException {
+	private void initData() throws Exception {
 		List<String> userMarkupCollectionIDs = null;
 		
 		Repository repository = queryOptions.getRepository();

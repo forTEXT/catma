@@ -264,37 +264,42 @@ public class CorpusPanel extends VerticalLayout {
 		miMoreCorpusActions.addItem(Messages.getString("CorpusPanel.analyzeCorpus"), new Command() { //$NON-NLS-1$
 			
 			public void menuSelected(MenuItem selectedItem) {
-				Corpus selectedCorpus = null;
-				
-				
-				Object selectedValue = corporaTree.getValue();
-				if (selectedValue != null) {
-					if (!selectedValue.equals(allDocuments)) {
-						selectedCorpus = (Corpus)selectedValue;
-					}
-					else {
-						selectedCorpus = new Corpus(allDocuments);
-						for (SourceDocument sd : repository.getSourceDocuments()) {
-							selectedCorpus.addSourceDocument(sd);
-							for (UserMarkupCollectionReference umcRef : sd.getUserMarkupCollectionRefs()) {
-								selectedCorpus.addUserMarkupCollectionReference(umcRef);
+				try {
+					Corpus selectedCorpus = null;
+					
+					
+					Object selectedValue = corporaTree.getValue();
+					if (selectedValue != null) {
+						if (!selectedValue.equals(allDocuments)) {
+							selectedCorpus = (Corpus)selectedValue;
+						}
+						else {
+							selectedCorpus = new Corpus(allDocuments);
+							for (SourceDocument sd : repository.getSourceDocuments()) {
+								selectedCorpus.addSourceDocument(sd);
+								for (UserMarkupCollectionReference umcRef : sd.getUserMarkupCollectionRefs()) {
+									selectedCorpus.addUserMarkupCollectionReference(umcRef);
+								}
 							}
 						}
-					}
-					
-					if (selectedCorpus.getSourceDocuments().isEmpty()) {
-						Notification.show(
-							Messages.getString("CorpusPanel.infoTitle"), Messages.getString("CorpusPanel.corpusIsEmpty"), //$NON-NLS-1$ //$NON-NLS-2$
-								Type.TRAY_NOTIFICATION);
+						
+						if (selectedCorpus.getSourceDocuments().isEmpty()) {
+							Notification.show(
+								Messages.getString("CorpusPanel.infoTitle"), Messages.getString("CorpusPanel.corpusIsEmpty"), //$NON-NLS-1$ //$NON-NLS-2$
+									Type.TRAY_NOTIFICATION);
+						}
+						else {
+							((AnalyzerProvider)UI.getCurrent()).analyze(
+									selectedCorpus, (IndexedRepository)repository);
+						}
 					}
 					else {
-						((AnalyzerProvider)UI.getCurrent()).analyze(
-								selectedCorpus, (IndexedRepository)repository);
+						Notification.show(Messages.getString("CorpusPanel.infoTitle"), Messages.getString("CorpusPanel.selectACorpus"), //$NON-NLS-1$ //$NON-NLS-2$
+								Type.TRAY_NOTIFICATION);
 					}
 				}
-				else {
-					Notification.show(Messages.getString("CorpusPanel.infoTitle"), Messages.getString("CorpusPanel.selectACorpus"), //$NON-NLS-1$ //$NON-NLS-2$
-							Type.TRAY_NOTIFICATION);
+				catch (Exception e) {
+					e.printStackTrace(); //TODO:
 				}
 			}
 		});

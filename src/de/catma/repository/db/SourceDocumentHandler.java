@@ -197,7 +197,7 @@ public class SourceDocumentHandler {
 				techInfoSet.getFileOSType().name(),
 				techInfoSet.getChecksum(),
 				techInfoSet.getMimeType(),
-				techInfoSet.getXsltDocumentLocalUri(),
+				null,
 				indexInfoSet.getLocale().toString(),
 				sourceDocument.getID())
 			.returning(SOURCEDOCUMENT.SOURCEDOCUMENTID)

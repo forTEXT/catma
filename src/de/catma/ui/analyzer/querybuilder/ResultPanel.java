@@ -158,7 +158,12 @@ public class ResultPanel extends VerticalLayout {
 				job, 
 				new ExecutionListener<QueryResult>() {
 				public void done(QueryResult result) {
-					setQueryResult(result);
+					try {
+						setQueryResult(result);
+					} catch (Exception e) {
+						((CatmaApplication)UI.getCurrent()).showAndLogError(
+								Messages.getString("ResultPanel.ErrorDuringSearch"), e); //$NON-NLS-1$
+					}
 					searchProgress.setIndeterminate(false);
 					searchProgress.setVisible(false);
 				};
@@ -170,7 +175,7 @@ public class ResultPanel extends VerticalLayout {
 			new LogProgressListener());
 	}
 	
-	public void setQueryResult(QueryResult queryResult) {
+	public void setQueryResult(QueryResult queryResult) throws Exception {
 		resultTable.removeAllItems();
 		int totalCount = 0;
 		int totalFreq = 0;
@@ -189,7 +194,7 @@ public class ResultPanel extends VerticalLayout {
 				TreePropertyName.frequency, MessageFormat.format(Messages.getString("ResultPanel.TotalFrequency"), totalFreq)); //$NON-NLS-1$
 	}
 
-	private void addPhraseResult(GroupedQueryResult phraseResult) {
+	private void addPhraseResult(GroupedQueryResult phraseResult) throws Exception {
 		resultTable.addItem(new Object[]{
 				phraseResult.getGroup(), 
 				phraseResult.getTotalFrequency()},

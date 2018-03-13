@@ -350,11 +350,7 @@ public class TechnicalDescription {
 		setValue(Feature.filetype, techInfoSet.getFileType().name());
 		setValue(Feature.charset, techInfoSet.getCharset().name());
 		setValue(Feature.fileOSType, techInfoSet.getFileOSType().name());
-		
-		if (techInfoSet.getXsltDocumentLocalUri() != null) {
-			setValue(Feature.xsltDocumentName, techInfoSet.getXsltDocumentLocalUri());
-		}
-		
+
 		if( techInfoSet.getChecksum() != null ) {
 			setValue( 
 				Feature.checksum, techInfoSet.getChecksum().toString() );

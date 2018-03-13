@@ -266,42 +266,51 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 				if (enabled) {
 					tagger.addTagInstanceWith(tagDefinition);
 				} else {
-					ChooseAnnotationCollectionDialog chooseAnnotationCollectionDialog = new ChooseAnnotationCollectionDialog(
-							repository, 
-							sourceDocumentId, 
-							new AnnotationCollectionListener() {
-								
-								@Override
-								public void openOrCreateCollection() {
-									handleOpenUserMarkupCollectionRequest(
-											repository.getSourceDocument(sourceDocumentId),
-											new CollectionSelectionListener() {
-												@Override
-												public void collectionSelected() {
-													if (enabled) {
-														tagger.addTagInstanceWith(tagDefinition);
-													} else {
-														HTMLNotification.show(
-																Messages.getString("TaggerView.infoTitle"), //$NON-NLS-1$
-																Messages.getString(
-																		"TaggerView.errorAddingAnnotationToActiveDocument"), //$NON-NLS-1$
-																Type.TRAY_NOTIFICATION);
-													}
-												}
-											});
+					try {
+						ChooseAnnotationCollectionDialog chooseAnnotationCollectionDialog = new ChooseAnnotationCollectionDialog(
+								repository, 
+								sourceDocumentId, 
+								new AnnotationCollectionListener() {
 									
-									
-								}
-								@Override
-								public void defaultCollectionCreated(UserMarkupCollection userMarkupCollection) {
-									markupCollectionsPanel.openUserMarkupCollection(userMarkupCollection);
-									tagger.addTagInstanceWith(tagDefinition);
-									HTMLNotification.show(Messages.getString("TaggerView.infoTitle"), //$NON-NLS-1$
-											Messages.getString("TaggerView.dialogAnAnnotationCollectionWasCreated"), //$NON-NLS-1$
-											Type.TRAY_NOTIFICATION);
-								}
-							});
-					chooseAnnotationCollectionDialog.show();
+									@Override
+									public void openOrCreateCollection() {
+										try {
+											handleOpenUserMarkupCollectionRequest(
+													repository.getSourceDocument(sourceDocumentId),
+													new CollectionSelectionListener() {
+														@Override
+														public void collectionSelected() {
+															if (enabled) {
+																tagger.addTagInstanceWith(tagDefinition);
+															} else {
+																HTMLNotification.show(
+																		Messages.getString("TaggerView.infoTitle"), //$NON-NLS-1$
+																		Messages.getString(
+																				"TaggerView.errorAddingAnnotationToActiveDocument"), //$NON-NLS-1$
+																		Type.TRAY_NOTIFICATION);
+															}
+														}
+													});
+										
+										}
+										catch (Exception e) {
+											e.printStackTrace(); //TODO: 
+										}
+									}
+									@Override
+									public void defaultCollectionCreated(UserMarkupCollection userMarkupCollection) {
+										markupCollectionsPanel.openUserMarkupCollection(userMarkupCollection);
+										tagger.addTagInstanceWith(tagDefinition);
+										HTMLNotification.show(Messages.getString("TaggerView.infoTitle"), //$NON-NLS-1$
+												Messages.getString("TaggerView.dialogAnAnnotationCollectionWasCreated"), //$NON-NLS-1$
+												Type.TRAY_NOTIFICATION);
+									}
+								});
+						chooseAnnotationCollectionDialog.show();
+					}
+					catch (Exception e) {
+						e.printStackTrace(); //TODO:
+					}
 				}
 			}
 
@@ -348,7 +357,12 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 
 			@Override
 			public void buttonClick(ClickEvent event) {
-				handleOpenUserMarkupCollectionRequest(repository.getSourceDocument(sourceDocumentId));
+				try {
+					handleOpenUserMarkupCollectionRequest(repository.getSourceDocument(sourceDocumentId));
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		});
 		markupCollectionsPanel.addPropertyChangeListener(MarkupCollectionPanelEvent.tagDefinitionSelected,

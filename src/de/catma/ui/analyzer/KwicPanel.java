@@ -127,16 +127,16 @@ public class KwicPanel extends VerticalLayout {
 			
 			public void itemClick(ItemClickEvent event) {
 				if (event.isDoubleClick()) {
-					final QueryResultRow row = (QueryResultRow) event.getItemId();
-					final SourceDocument sd = repository.getSourceDocument(
-							row.getSourceDocumentId());
-					final Range range = row.getRange();
-					
-					((CatmaApplication)UI.getCurrent()).openSourceDocument(
-							sd, repository, range);
-					
-					if (row instanceof TagQueryResultRow) {
-						try {
+					try {
+						final QueryResultRow row = (QueryResultRow) event.getItemId();
+						final SourceDocument sd = repository.getSourceDocument(
+								row.getSourceDocumentId());
+						final Range range = row.getRange();
+						
+						((CatmaApplication)UI.getCurrent()).openSourceDocument(
+								sd, repository, range);
+						
+						if (row instanceof TagQueryResultRow) {
 							final String umcId = 
 									((TagQueryResultRow)row).getMarkupCollectionId();
 							for (UserMarkupCollectionReference ref :
@@ -151,11 +151,11 @@ public class KwicPanel extends VerticalLayout {
 								
 							}
 						}
-						catch (IOException e) {
-							((CatmaApplication)UI.getCurrent()).showAndLogError(
-								Messages.getString("KwicPanel.errorOpeningCollection"), e); //$NON-NLS-1$
-						}			
 					}
+					catch (Exception e) {
+						((CatmaApplication)UI.getCurrent()).showAndLogError(
+								Messages.getString("KwicPanel.errorOpeningSearchResults"), e); //$NON-NLS-1$
+					}			
 				}
 				
 			}
@@ -215,7 +215,7 @@ public class KwicPanel extends VerticalLayout {
 
 	private void applyTagOperationToAllSelectedResults(
 			TagsetDefinition incomingTagsetDef, TagDefinition incomingTagDef,
-			boolean applyTag) throws IOException, URISyntaxException {    	
+			boolean applyTag) throws Exception {    	
 		@SuppressWarnings("unchecked")
 		Set<QueryResultRow> selectedRows = 
 				(Set<QueryResultRow>)kwicTable.getValue();
@@ -234,7 +234,7 @@ public class KwicPanel extends VerticalLayout {
 	private void updateAllMarkupCollections(
 			final Set<QueryResultRow> selectedRows, 
 			final TagsetDefinition incomingTagsetDef, 
-			final TagDefinition incomingTagDef) throws IOException {
+			final TagDefinition incomingTagDef) throws Exception {
 		
 		Set<SourceDocument> affectedDocuments = new HashSet<SourceDocument>();
 		for (QueryResultRow row : selectedRows) {
@@ -275,7 +275,7 @@ public class KwicPanel extends VerticalLayout {
 								Messages.getString("KwicPanel.infoTitle"), Messages.getString("KwicPanel.nothingHasBeenTaggedFeedback"), //$NON-NLS-1$ //$NON-NLS-2$
 								Type.TRAY_NOTIFICATION);
 					}
-				} catch (URISyntaxException e) {
+				} catch (Exception e) {
 					((CatmaApplication)UI.getCurrent()).showAndLogError(
 							Messages.getString("KwicPanel.errorTaggingSearchResults"), e); //$NON-NLS-1$
 				}
@@ -320,7 +320,7 @@ public class KwicPanel extends VerticalLayout {
 	private Pair<Integer,Integer> tagKwic(
 			Map<String, UserMarkupCollection> result, 
 			Set<QueryResultRow> selectedRows, 
-			TagsetDefinition incomingTagsetDef, TagDefinition incomingTagDef) throws URISyntaxException {
+			TagsetDefinition incomingTagsetDef, TagDefinition incomingTagDef) throws Exception {
 		
 		UserMarkupCollectionManager userMarkupCollectionManager =
 				new UserMarkupCollectionManager(repository);
@@ -463,7 +463,7 @@ public class KwicPanel extends VerticalLayout {
 	}
 
 	public void addQueryResultRows(Iterable<QueryResultRow> queryResult) 
-			throws IOException {
+			throws Exception {
 
 		HashMap<String, KwicProvider> kwicProviders =
 				new HashMap<String, KwicProvider>();
@@ -554,7 +554,7 @@ public class KwicPanel extends VerticalLayout {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void setKwicSize(int kwicSize) throws IOException {
+	public void setKwicSize(int kwicSize) throws Exception {
 		this.kwicSize = kwicSize;
 		QueryResultRowArray rows = new QueryResultRowArray();
 		rows.addAll((Collection<QueryResultRow>) kwicTable.getItemIds());

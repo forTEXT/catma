@@ -95,8 +95,7 @@ public class Neo4JProjectTest {
 					FileType.TEXT,
 					StandardCharsets.UTF_8,
 					FileOSType.DOS,
-					705211438L,
-					null
+					705211438L
 			);
 
 			SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(
@@ -107,7 +106,7 @@ public class Neo4JProjectTest {
 			standardContentHandler.setSourceDocumentInfo(sourceDocumentInfo);
 			standardContentHandler.load(convertedSourceDocumentStream);
 
-			SourceDocument sourceDocument = new SourceDocument(null, sourceDocumentUuid, standardContentHandler);
+			SourceDocument sourceDocument = new SourceDocument(sourceDocumentUuid, standardContentHandler);
 			sourceDocument.setRevisionHash("ABC123XYZ");
 
 			String projectUuid = this.idGenerator.generate();
@@ -149,7 +148,7 @@ public class Neo4JProjectTest {
 
 			assertEquals(userMarkupCollectionUuid, loadedProject.getMarkupCollections().get(0).getUuid());
 
-			assertEquals(sourceDocumentUuid, loadedProject.getSourceDocuments().get(0).getUuid());
+			assertEquals(sourceDocumentUuid, loadedProject.getSourceDocuments().get(0).getID());
 		}
 	}
 }

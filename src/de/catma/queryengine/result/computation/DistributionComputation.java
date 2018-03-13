@@ -51,20 +51,31 @@ public class DistributionComputation {
 
 	private void prepareDistributions() throws IOException {
 		Set<SourceDocument> toBeUnloaded = new HashSet<SourceDocument>();
-		for (String sourceDocId : relevantSourceDocumentIDs) {
-			SourceDocument sd = repository.getSourceDocument(sourceDocId);
-			if (!sd.isLoaded()) {
-				toBeUnloaded.add(sd);
+		try {
+			for (String sourceDocId : relevantSourceDocumentIDs) {
+				SourceDocument sd = repository.getSourceDocument(sourceDocId);
+				if (!sd.isLoaded()) {
+					toBeUnloaded.add(sd);
+				}
+				documentDistributions.put(sourceDocId, 
+					new Distribution(
+						sd.getID(),
+						sd.toString(),
+						Double.valueOf(sd.getLength())/100.0*segmentSizeInPercent,
+						segmentSizeInPercent));		
 			}
-			documentDistributions.put(sourceDocId, 
-				new Distribution(
-					sd.getID(),
-					sd.toString(),
-					Double.valueOf(sd.getLength())/100.0*segmentSizeInPercent,
-					segmentSizeInPercent));		
+			for (SourceDocument sd : toBeUnloaded) {
+				sd.unload();
+			}
 		}
-		for (SourceDocument sd : toBeUnloaded) {
-			sd.unload();
+		catch (Exception e) {
+			try {
+				for (SourceDocument sd : toBeUnloaded) {
+					sd.unload();
+				}
+			}
+			catch (Exception e2) {e2.printStackTrace();}
+			throw new IOException(e);
 		}
 	}
 

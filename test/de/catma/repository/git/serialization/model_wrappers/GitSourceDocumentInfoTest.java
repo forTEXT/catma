@@ -60,8 +60,7 @@ public class GitSourceDocumentInfoTest {
 			FileType.TEXT,
 			Charset.defaultCharset(),
 			FileOSType.INDEPENDENT,
-			123456789L,
-			"fake.xslt"
+			123456789L
 		);
 
 		SourceDocumentInfo inputSourceDocumentInfo = new SourceDocumentInfo(
@@ -114,9 +113,6 @@ public class GitSourceDocumentInfoTest {
 		assertEquals(techInfoSet.getChecksum(), outputSourceDocumentInfo.getTechInfoSet().getChecksum());
 		assertEquals(techInfoSet.getMimeType(), outputSourceDocumentInfo.getTechInfoSet().getMimeType());
 		assertEquals(techInfoSet.getURI(), outputSourceDocumentInfo.getTechInfoSet().getURI());
-		assertEquals(
-			techInfoSet.getXsltDocumentLocalUri(),
-			outputSourceDocumentInfo.getTechInfoSet().getXsltDocumentLocalUri()
-		);
+
 	}
 }

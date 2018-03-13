@@ -106,7 +106,7 @@ public class CorpusCleaner {
 					sourceDocRepresentation.write(bos);
 					StandardContentHandler contentHandler = new StandardContentHandler();
 					TechInfoSet techInfoSet = 
-						new TechInfoSet(FileType.TEXT, Charset.forName("UTF-8"), null, null, null);
+						new TechInfoSet(FileType.TEXT, Charset.forName("UTF-8"), null, null);
 					contentHandler.setSourceDocumentInfo(new SourceDocumentInfo(null, null, techInfoSet));
 					contentHandler.load(new ByteArrayInputStream(bos.toByteArray()));
 					

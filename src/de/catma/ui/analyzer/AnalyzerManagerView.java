@@ -65,7 +65,7 @@ public class AnalyzerManagerView extends TabbedView {
 	  
 	}
 
-	public void analyzeDocuments(Corpus corpus, IndexedRepository repository) {
+	public void analyzeDocuments(Corpus corpus, IndexedRepository repository) throws Exception {
 		
 		AnalyzerView analyzerView = new AnalyzerView(corpus, repository, new CloseListener() {
 

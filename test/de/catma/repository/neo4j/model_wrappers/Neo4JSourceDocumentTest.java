@@ -68,8 +68,7 @@ public class Neo4JSourceDocumentTest {
 					FileType.TEXT,
 					StandardCharsets.UTF_8,
 					FileOSType.DOS,
-					705211438L,
-					null
+					705211438L
 			);
 
 			SourceDocumentInfo sourceDocumentInfo = new SourceDocumentInfo(
@@ -81,7 +80,7 @@ public class Neo4JSourceDocumentTest {
 			standardContentHandler.load(convertedSourceDocumentStream);
 
 			String sourceDocumentUuid = this.idGenerator.generate();
-			SourceDocument sourceDocument = new SourceDocument(null, sourceDocumentUuid, standardContentHandler);
+			SourceDocument sourceDocument = new SourceDocument(sourceDocumentUuid, standardContentHandler);
 			sourceDocument.setRevisionHash("ABC123XYZ");
 
 			Neo4JSourceDocument neo4JSourceDocument = new Neo4JSourceDocument(sourceDocument);

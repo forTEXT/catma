@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.AccessMode;
 import de.catma.document.Corpus;
-import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
@@ -26,12 +25,13 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexBufferManagerName;
+import de.catma.indexer.IndexedRepository;
+import de.catma.indexer.Indexer;
 import de.catma.indexer.TermExtractor;
 import de.catma.indexer.TermInfo;
 import de.catma.indexer.indexbuffer.IndexBufferManager;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
-import de.catma.repository.db.FileURLFactory;
 import de.catma.repository.git.graph.GraphProjectHandler;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
@@ -44,7 +44,7 @@ import de.catma.tag.Version;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 
-public class GraphWorktreeProject implements Repository {
+public class GraphWorktreeProject implements IndexedRepository {
 	
 	private static final String UTF8_CONVERSION_FILE_EXTENSION = "txt";
 	private static final String ORIG_INFIX = "_orig";
@@ -74,6 +74,12 @@ public class GraphWorktreeProject implements Repository {
 	}
 
 	@Override
+	public Indexer getIndexer() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
 	public void open(OpenProjectListener openProjectListener) {
 		try {
 			
@@ -89,7 +95,7 @@ public class GraphWorktreeProject implements Repository {
 
 	@Override
 	public void reload() throws IOException {
-		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub 
 
 	}
 
@@ -115,8 +121,7 @@ public class GraphWorktreeProject implements Repository {
 
 	@Override
 	public String getName() {
-		// TODO Auto-generated method stub
-		return null;
+		return projectReference.getName();
 	}
 
 	@Override
@@ -217,8 +222,7 @@ public class GraphWorktreeProject implements Repository {
 				.get(RepositoryPropertyKey.GraphDbGitMountBasePath.getValue())
 				.resolve(gitProjectHandler.getSourceDocumentSubmodulePath(this.user, this.projectReference, sourceDocument.getID()))
 				.resolve(sourceDocument.getID() + "." + TOKENIZED_FILE_EXTENSION),
-			indexBufferManager, 
-			backgroundServiceProvider.getBackgroundService());
+			user.getIdentifier());
 	}
 
 	@Override
@@ -228,15 +232,13 @@ public class GraphWorktreeProject implements Repository {
 	}
 
 	@Override
-	public Collection<SourceDocument> getSourceDocuments() {
-		// TODO Auto-generated method stub
-		return null;
+	public Collection<SourceDocument> getSourceDocuments() throws Exception {
+		return graphProjectHandler.getSourceDocuments(this.projectReference.getProjectId(), this.rootRevisionHash);
 	}
 
 	@Override
-	public SourceDocument getSourceDocument(String id) {
-		// TODO Auto-generated method stub
-		return null;
+	public SourceDocument getSourceDocument(String sourceDocumentId) throws Exception {
+		return graphProjectHandler.getSourceDocument(this.projectReference.getProjectId(), this.rootRevisionHash, sourceDocumentId);
 	}
 
 	@Override
