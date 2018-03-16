@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,7 +34,6 @@ import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
-import de.catma.repository.git.exceptions.GitSourceDocumentHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
@@ -247,7 +247,7 @@ public class GitSourceDocumentHandlerTest {
 				jGitRepoManager, this.gitLabServerManager
 			);
 
-			thrown.expect(GitSourceDocumentHandlerException.class);
+			thrown.expect(IOException.class);
 			thrown.expectMessage("Not implemented");
 			gitSourceDocumentHandler.delete("fakeProjectId", "fakeSourceDocumentId");
 		}

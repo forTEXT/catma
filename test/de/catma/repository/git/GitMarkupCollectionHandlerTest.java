@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -29,7 +30,6 @@ import de.catma.document.Range;
 import de.catma.document.repository.RepositoryProperties;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.repository.git.exceptions.GitMarkupCollectionHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
@@ -194,7 +194,7 @@ public class GitMarkupCollectionHandlerTest {
 				jGitRepoManager, this.gitLabServerManager
 			);
 
-			thrown.expect(GitMarkupCollectionHandlerException.class);
+			thrown.expect(IOException.class);
 			thrown.expectMessage("Not implemented");
 			gitMarkupCollectionHandler.delete("fakeProjectId", "fakeMarkupCollectionId");
 		}
@@ -285,7 +285,7 @@ public class GitMarkupCollectionHandlerTest {
 				jGitRepoManager, this.gitLabServerManager
 			);
 
-			thrown.expect(GitMarkupCollectionHandlerException.class);
+			thrown.expect(IOException.class);
 			thrown.expectMessage("Not implemented");
 			gitMarkupCollectionHandler.removeTagset(
 					"fakeProjectId","fakeMarkupCollectionId", "fakeTagsetId"
