@@ -3,9 +3,9 @@
   <!-- Configure the database connection here -->
   <jdbc>
     <driver>org.gjt.mm.mysql.Driver</driver>
-    <url>jdbc:mysql://localhost:3312/</url>
+    <url>jdbc:mysql://localhost:3306/</url>
     <user>root</user>
-    <password>test</password>
+    <password></password>
   </jdbc>
 
   <generator>
