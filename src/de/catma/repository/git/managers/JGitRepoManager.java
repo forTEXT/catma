@@ -17,20 +17,13 @@ import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.SubmoduleAddCommand;
 import org.eclipse.jgit.api.SubmoduleStatusCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.errors.RepositoryNotFoundException;
-import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.lib.RepositoryBuilder;
-import org.eclipse.jgit.lib.RepositoryCache;
-import org.eclipse.jgit.lib.RepositoryCache.FileKey;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-import org.eclipse.jgit.util.FS;
 
-import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.user.User;
 
@@ -69,12 +62,12 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @param repositoryBasePath the repo base path
 	 * @param catmaUser a {@link User} object
 	 * @param repositoryName the directory name of the Git repository to open
-	 * @throws LocalGitRepositoryManagerException if the Git repository couldn't be found or
+	 * @throws IOException if the Git repository couldn't be found or
 	 *         couldn't be opened for some other reason
 	 */
 	public JGitRepoManager(String repositoryBasePath, User catmaUser, String group,
 			String repositoryName)
-			throws LocalGitRepositoryManagerException {
+			throws IOException {
 		this(repositoryBasePath, catmaUser);
 
 		this.open(group, repositoryName);
@@ -162,12 +155,12 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 *
 	 * @param name the directory name of the Git repository to initialise
 	 * @param description the description of the Git repository to initialise
-	 * @throws LocalGitRepositoryManagerException if the Git repository already exists or couldn't
+	 * @throws IOException if the Git repository already exists or couldn't
 	 *         be initialised for some other reason
 	 */
 	@Override
 	public void init(String group, String name, String description)
-			throws LocalGitRepositoryManagerException {
+			throws IOException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `init` on an attached instance");
 		}
@@ -178,7 +171,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		// if the directory exists we assume it's a Git repo, could also check for a child .git
 		// directory
 		if (repositoryPath.exists() && repositoryPath.isDirectory()) {
-			throw new LocalGitRepositoryManagerException(
+			throw new IOException(
 				String.format(
 					"A Git repository with the name '%s' already exists at base path '%s'. " +
 					"Did you mean to call `open`?",
@@ -192,13 +185,13 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			this.gitApi = Git.init().setDirectory(repositoryPath).call();
 			this.gitApi.getRepository().setGitwebDescription(description);
 		}
-		catch (GitAPIException|IOException e) {
-			throw new LocalGitRepositoryManagerException("Failed to init Git repository", e);
+		catch (GitAPIException e) {
+			throw new IOException("Failed to init Git repository", e);
 		}
 	}
 
 	public String clone(String group, String uri, File path, String username, String password)
-			throws LocalGitRepositoryManagerException {
+			throws IOException {
 		return clone(group, uri, path, username, password, false);
 	}
 	
@@ -214,7 +207,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 */
 	@Override
 	public String clone(String group, String uri, File path, String username, String password, boolean initAndUpdateSubmodules)
-			throws LocalGitRepositoryManagerException {
+			throws IOException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `clone` on an attached instance");
 		}
@@ -242,7 +235,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			}
 		}
 		catch (GitAPIException e) {
-			throw new LocalGitRepositoryManagerException(
+			throw new IOException(
 				"Failed to clone remote Git repository", e
 			);
 		}
@@ -254,11 +247,11 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * Opens an existing Git repository with the directory name <code>name</code>.
 	 *
 	 * @param name the directory name of the Git repository to open
-	 * @throws LocalGitRepositoryManagerException if the Git repository couldn't be found or
+	 * @throws IOException if the Git repository couldn't be found or
 	 *         couldn't be opened for some other reason
 	 */
 	@Override
-	public void open(String group, String name) throws LocalGitRepositoryManagerException {
+	public void open(String group, String name) throws IOException {
 		if (isAttached()) {
 			throw new IllegalStateException("Can't call `open` on an attached instance");
 		}
@@ -267,7 +260,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 
 		// could also check for the absence of a child .git directory
 		if (!repositoryPath.exists() || !repositoryPath.isDirectory()) {
-			throw new LocalGitRepositoryManagerException(
+			throw new IOException(
 				String.format(
 					"Couldn't find a Git repository with the name '%s' at base path '%s'. " +
 					"Did you mean to call `init`?",
@@ -277,12 +270,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			);
 		}
 
-		try {
-			this.gitApi = Git.open(repositoryPath);
-		}
-		catch (IOException e) {
-			throw new LocalGitRepositoryManagerException("Failed to open Git repository", e);
-		}
+		this.gitApi = Git.open(repositoryPath);
 	}
 
 	@Override
@@ -307,11 +295,11 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 *
 	 * @param targetFile a {@link File} object representing the target path
 	 * @param bytes the file contents
-	 * @throws LocalGitRepositoryManagerException if the file contents couldn't be written to disk
+	 * @throws IOException if the file contents couldn't be written to disk
 	 *         or the file couldn't be added for some other reason
 	 */
 	@Override
-	public void add(File targetFile, byte[] bytes) throws LocalGitRepositoryManagerException {
+	public void add(File targetFile, byte[] bytes) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `add` on a detached instance");
 		}
@@ -325,11 +313,8 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 
 			this.gitApi.add().addFilepattern(relativeFilePath.toString()).call();
 		}
-		catch (IOException e) {
-			throw new LocalGitRepositoryManagerException("Failed to write file", e);
-		}
 		catch (GitAPIException e) {
-			throw new LocalGitRepositoryManagerException("");
+			throw new IOException("");
 		}
 	}
 
@@ -341,19 +326,20 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 *
 	 * @param targetFile a {@link File} object representing the target path
 	 * @param bytes the file contents
-	 * @throws LocalGitRepositoryManagerException if the file contents couldn't be written to disk
+	 * @return the revisionHash of the commit
+	 * @throws IOException if the file contents couldn't be written to disk
 	 *         or the commit operation failed
 	 */
 	@Override
-	public void addAndCommit(File targetFile, byte[] bytes, String committerName, String committerEmail)
-			throws LocalGitRepositoryManagerException {
+	public String addAndCommit(File targetFile, byte[] bytes, String committerName, String committerEmail)
+			throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `addAndCommit` on a detached instance");
 		}
 
 		this.add(targetFile, bytes);
 		String commitMessage = String.format("Adding %s", targetFile.getName());
-		this.commit(commitMessage, committerName, committerEmail);
+		return this.commit(commitMessage, committerName, committerEmail);
 	}
 
 	/**
@@ -361,11 +347,11 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 *
 	 * @param message the commit message
 	 * @return revision hash
-	 * @throws LocalGitRepositoryManagerException if the commit operation failed
+	 * @throws IOException if the commit operation failed
 	 */
 	@Override
 	public String commit(String message, String committerName, String committerEmail)
-			throws LocalGitRepositoryManagerException {
+			throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `commit` on a detached instance");
 		}
@@ -374,7 +360,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			return this.gitApi.commit().setMessage(message).setCommitter(committerName, committerEmail).call().getName();
 		}
 		catch (GitAPIException e) {
-			throw new LocalGitRepositoryManagerException("Failed to commit", e);
+			throw new IOException("Failed to commit", e);
 		}
 	}
 
@@ -385,11 +371,11 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * @param uri the URI of the remote repository to add as a submodule
 	 * @param username the username to authenticate with
 	 * @param password the password to authenticate with
-	 * @throws LocalGitRepositoryManagerException if the submodule couldn't be added
+	 * @throws IOException if the submodule couldn't be added
 	 */
 	@Override
 	public void addSubmodule(File path, String uri, String username, String password)
-			throws LocalGitRepositoryManagerException {
+			throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `addSubmodule` on a detached instance");
 		}
@@ -423,7 +409,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				.call(); //TODO: push might need a pull first in collaborative settings!
 		}
 		catch (GitAPIException e) {
-			throw new LocalGitRepositoryManagerException("Failed to add submodule", e);
+			throw new IOException("Failed to add submodule", e);
 		}
 	}
 
@@ -432,10 +418,10 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 *
 	 * @param username the username to authenticate with
 	 * @param password the password to authenticate with
-	 * @throws LocalGitRepositoryManagerException if the push operation failed
+	 * @throws IOException if the push operation failed
 	 */
 	@Override
-	public void push(String username, String password) throws LocalGitRepositoryManagerException {
+	public void push(String username, String password) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `push` on a detached instance");
 		}
@@ -450,7 +436,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			pushCommand.call();
 		}
 		catch (GitAPIException e) {
-			throw new LocalGitRepositoryManagerException("Failed to push", e);
+			throw new IOException("Failed to push", e);
 		}
 	}
 
@@ -459,10 +445,10 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 *
 	 * @param username the username to authenticate with
 	 * @param password the password to authenticate with
-	 * @throws LocalGitRepositoryManagerException if the fetch operation failed
+	 * @throws IOException if the fetch operation failed
 	 */
 	@Override
-	public void fetch(String username, String password) throws LocalGitRepositoryManagerException {
+	public void fetch(String username, String password) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `fetch` on a detached instance");
 		}
@@ -477,7 +463,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			fetchCommand.call();
 		}
 		catch (GitAPIException e) {
-			throw new LocalGitRepositoryManagerException("Failed to fetch", e);
+			throw new IOException("Failed to fetch", e);
 		}
 	}
 
@@ -485,10 +471,10 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 * Checks out a branch or commit identified by <code>name</code>.
 	 *
 	 * @param name the name of the branch or commit to check out
-	 * @throws LocalGitRepositoryManagerException if the checkout operation failed
+	 * @throws IOException if the checkout operation failed
 	 */
 	@Override
-	public void checkout(String name) throws LocalGitRepositoryManagerException {
+	public void checkout(String name) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `checkout` on a detached instance");
 		}
@@ -498,7 +484,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			checkoutCommand.setName(name).call();
 		}
 		catch (GitAPIException e) {
-			throw new LocalGitRepositoryManagerException("Failed to checkout", e);
+			throw new IOException("Failed to checkout", e);
 		}
 	}
 
@@ -507,11 +493,11 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 *
 	 * @param submoduleName the name of the submodule whose HEAD revision hash to get
 	 * @return a revision hash
-	 * @throws LocalGitRepositoryManagerException if a submodule with the name <code>submoduleName</code> doesn't exist
+	 * @throws IOException if a submodule with the name <code>submoduleName</code> doesn't exist
 	 *                                            or if the operation failed for another reason
 	 */
 	@Override
-	public String getSubmoduleHeadRevisionHash(String submoduleName) throws LocalGitRepositoryManagerException {
+	public String getSubmoduleHeadRevisionHash(String submoduleName) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `getSubmoduleHeadRevisionHash` on a detached instance");
 		}
@@ -521,7 +507,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			Map<String, SubmoduleStatus> results = submoduleStatusCommand.call();
 
 			if (!results.containsKey(submoduleName)) {
-				throw new LocalGitRepositoryManagerException(
+				throw new IOException(
 						String.format("Failed to get HEAD revision hash for submodule `%s`. " +
 								"A submodule with that name does not appear to exist.", submoduleName)
 				);
@@ -530,7 +516,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			return results.get(submoduleName).getHeadId().getName();
 		}
 		catch (GitAPIException e) {
-			throw new LocalGitRepositoryManagerException("Failed to get submodule status", e);
+			throw new IOException("Failed to get submodule status", e);
 		}
 	}
 

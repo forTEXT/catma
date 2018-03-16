@@ -19,17 +19,12 @@ import de.catma.document.AccessMode;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
-import de.catma.repository.git.exceptions.GitMarkupCollectionHandlerException;
-import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
-import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
-import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.TagLibrary;
-import de.catma.util.IDGenerator;
 
 public class GitMarkupCollectionHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -60,8 +55,8 @@ public class GitMarkupCollectionHandler {
 	 * @param description the description of the new markup collection
 	 * @param sourceDocumentId the ID of the source document to which the new markup collection relates
 	 * @param sourceDocumentVersion the version of the source document to which the new markup collection relates
-	 * @return the <code>markupCollectionId</code> if one was provided, otherwise a new markup collection ID
-	 * @throws GitMarkupCollectionHandlerException if an error occurs while creating the markup collection
+	 * @return the Collection's revisionHash
+	 * @throws IOException if an error occurs while creating the markup collection
 	 */
 	public String create(
 			@Nonnull String projectId,
@@ -70,12 +65,7 @@ public class GitMarkupCollectionHandler {
 			@Nullable String description,
 			@Nonnull String sourceDocumentId,
 			@Nonnull String sourceDocumentVersion
-	) throws GitMarkupCollectionHandlerException {
-
-		if (markupCollectionId == null) {
-			IDGenerator idGenerator = new IDGenerator();
-			markupCollectionId = idGenerator.generate();
-		}
+	) throws IOException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// create the remote markup collection repository
@@ -105,23 +95,21 @@ public class GitMarkupCollectionHandler {
 			);
 			String serializedHeader = new SerializationHelper<GitMarkupCollectionHeader>().serialize(header);
 
-			localGitRepoManager.addAndCommit(
+			return localGitRepoManager.addAndCommit(
 					targetHeaderFile,
 					serializedHeader.getBytes(StandardCharsets.UTF_8),
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail()
 			);
-		}
-		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException e) {
-			throw new GitMarkupCollectionHandlerException("Failed to create markup collection", e);
+			
+			
 		}
 
-		return markupCollectionId;
 	}
 
 	public void delete(@Nonnull String projectId, @Nonnull String markupCollectionId)
-			throws GitMarkupCollectionHandlerException {
-		throw new GitMarkupCollectionHandlerException("Not implemented");
+			throws IOException {
+		throw new UnsupportedOperationException("Not implemented");
 	}
 
 	/**
@@ -132,13 +120,13 @@ public class GitMarkupCollectionHandler {
 	 * @param markupCollectionId the ID of the markup collection to add the tagset to
 	 * @param tagsetId the ID of the tagset to add
 	 * @param tagsetVersion the version of the tagset to add
-	 * @throws GitMarkupCollectionHandlerException if an error occurs while adding the tagset
+	 * @throws IOException if an error occurs while adding the tagset
 	 */
 	public void addTagset(@Nonnull String projectId,
 						  @Nonnull String markupCollectionId,
 						  @Nonnull String tagsetId,
 						  @Nonnull String tagsetVersion
-	) throws GitMarkupCollectionHandlerException {
+	) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
@@ -168,16 +156,13 @@ public class GitMarkupCollectionHandler {
 					remoteGitServerManager.getEmail()
 			);
 		}
-		catch (LocalGitRepositoryManagerException|IOException e) {
-			throw new GitMarkupCollectionHandlerException("Failed to add tagset", e);
-		}
 	}
 
 	public void removeTagset(@Nonnull String projectId, @Nonnull String markupCollectionId, @Nonnull String tagsetId)
-			throws GitMarkupCollectionHandlerException {
+			throws IOException {
 		// it should only be possible to remove a tagset if there are no tag instances referring to any of its tag
 		// definitions
-		throw new GitMarkupCollectionHandlerException("Not implemented");
+		throw new UnsupportedOperationException("Not implemented");
 	}
 
 	/**
@@ -191,13 +176,13 @@ public class GitMarkupCollectionHandler {
 	 * @param markupCollectionId the ID of the markup collection within which to create the tag instance
 	 * @param annotation a {@link JsonLdWebAnnotation} object representing the tag instance
 	 * @return the tag instance UUID contained within the <code>annotation</code> argument
-	 * @throws GitMarkupCollectionHandlerException if an error occurs while creating the tag instance
+	 * @throws IOException if an error occurs while creating the tag instance
 	 */
 	public String createTagInstance(
 			@Nonnull String projectId,
 			@Nonnull String markupCollectionId,
 			@Nonnull JsonLdWebAnnotation annotation
-	) throws GitMarkupCollectionHandlerException {
+	) throws IOException {
 
 		// TODO: check that the markup collection references the tagset for the tag instance being added
 		// TODO: check that the tag instance is for the correct document
@@ -223,9 +208,6 @@ public class GitMarkupCollectionHandler {
 
 			// not doing Git add/commit, see method doc comment
 		}
-		catch (LocalGitRepositoryManagerException|IOException e) {
-			throw new GitMarkupCollectionHandlerException("Failed to add tag instance", e);
-		}
 
 		return annotation.getTagInstanceUuid();
 	}
@@ -238,45 +220,40 @@ public class GitMarkupCollectionHandler {
 	}
 
 	private ArrayList<TagReference> openTagReferences(String projectId, String markupCollectionId, File parentDirectory)
-			throws GitMarkupCollectionHandlerException {
+			throws IOException {
 
 		ArrayList<TagReference> tagReferences = new ArrayList<>();
 
 		List<String> contents = Arrays.asList(parentDirectory.list());
 
-		try {
-			for (String item : contents) {
-				File target = new File(parentDirectory, item);
+		for (String item : contents) {
+			File target = new File(parentDirectory, item);
 
-				// if it is a directory, recurse into it adding results to the current tagReferences list
-				if (target.isDirectory() && !target.getName().equalsIgnoreCase(".git")) {
-					tagReferences.addAll(this.openTagReferences(projectId, markupCollectionId, target));
-					continue;
-				}
-
-				// if item is <CATMA_UUID>.json, read it into a list of TagReference objects
-				if (target.isFile() && isTagInstanceFilename(target.getName())) {
-					String serialized = FileUtils.readFileToString(target, StandardCharsets.UTF_8);
-					JsonLdWebAnnotation jsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>()
-							.deserialize(serialized, JsonLdWebAnnotation.class);
-
-					tagReferences.addAll(
-						jsonLdWebAnnotation.toTagReferenceList(
-							projectId, markupCollectionId, this.localGitRepositoryManager, this.remoteGitServerManager
-						)
-					);
-				}
+			// if it is a directory, recurse into it adding results to the current tagReferences list
+			if (target.isDirectory() && !target.getName().equalsIgnoreCase(".git")) {
+				tagReferences.addAll(this.openTagReferences(projectId, markupCollectionId, target));
+				continue;
 			}
-		}
-		catch (IOException|JsonLdWebAnnotationException e) {
-			throw new GitMarkupCollectionHandlerException("Failed to open tag references", e);
+
+			// if item is <CATMA_UUID>.json, read it into a list of TagReference objects
+			if (target.isFile() && isTagInstanceFilename(target.getName())) {
+				String serialized = FileUtils.readFileToString(target, StandardCharsets.UTF_8);
+				JsonLdWebAnnotation jsonLdWebAnnotation = new SerializationHelper<JsonLdWebAnnotation>()
+						.deserialize(serialized, JsonLdWebAnnotation.class);
+
+				tagReferences.addAll(
+					jsonLdWebAnnotation.toTagReferenceList(
+						projectId, markupCollectionId, this.localGitRepositoryManager, this.remoteGitServerManager
+					)
+				);
+			}
 		}
 
 		return tagReferences;
 	}
 
 	public UserMarkupCollection open(@Nonnull String projectId, @Nonnull String markupCollectionId)
-			throws GitMarkupCollectionHandlerException {
+			throws IOException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
@@ -329,9 +306,6 @@ public class GitMarkupCollectionHandler {
 			userMarkupCollection.setRevisionHash(markupCollectionRevisionHash);
 
 			return userMarkupCollection;
-		}
-		catch (LocalGitRepositoryManagerException|IOException e) {
-			throw new GitMarkupCollectionHandlerException("Failed to open markup collection", e);
 		}
 	}
 }

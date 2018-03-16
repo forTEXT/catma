@@ -22,15 +22,11 @@ import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.source.contenthandler.StandardContentHandler;
 import de.catma.indexer.TermInfo;
-import de.catma.repository.git.exceptions.GitSourceDocumentHandlerException;
-import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
-import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitSourceDocumentInfo;
 import de.catma.repository.git.serialization.model_wrappers.GitTermInfo;
-import de.catma.util.IDGenerator;
 
 public class GitSourceDocumentHandler {
 	private Logger logger = Logger.getLogger(GitSourceDocumentHandler.class.getName());
@@ -70,7 +66,7 @@ public class GitSourceDocumentHandler {
 	 * @param sourceDocumentInfo a {@link SourceDocumentInfo} object
 	 * @param terms 
 	 * @return the revision hash
-	 * @throws GitSourceDocumentHandlerException if an error occurs while creating the source document
+	 * @throws IOException if an error occurs while creating the source document
 	 */
 	public String create(String projectId, @Nullable String sourceDocumentId,
 						 InputStream originalSourceDocumentStream,
@@ -81,7 +77,7 @@ public class GitSourceDocumentHandler {
 						 String tokenizedSourceDocumentFileName,
 						 SourceDocumentInfo sourceDocumentInfo 
 						 
-	) throws GitSourceDocumentHandlerException {
+	) throws IOException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			logger.info("Adding SourceDocument to the local project " + projectId);
@@ -164,18 +160,15 @@ public class GitSourceDocumentHandler {
 			
 			return revisionHash;
 		}
-		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException|IOException e) {
-			throw new GitSourceDocumentHandlerException("Failed to create source document", e);
-		}
 	}
 
 	public void delete(@Nonnull String projectId, @Nonnull String sourceDocumentId)
-			throws GitSourceDocumentHandlerException {
-    	throw new GitSourceDocumentHandlerException("Not implemented");
+			throws IOException {
+    	throw new UnsupportedOperationException("Not implemented");
 	}
 
 	public SourceDocument open(@Nonnull String projectId, @Nonnull String sourceDocumentId)
-			throws GitSourceDocumentHandlerException {
+			throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
@@ -218,9 +211,6 @@ public class GitSourceDocumentHandler {
 			sourceDocument.setRevisionHash(sourceDocumentRevisionHash);
 
 			return sourceDocument;
-		}
-		catch (LocalGitRepositoryManagerException|IOException|IllegalAccessException|InstantiationException e) {
-			throw new GitSourceDocumentHandlerException("Failed to open source document", e);
 		}
 	}
 }

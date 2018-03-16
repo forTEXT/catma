@@ -1,5 +1,6 @@
 package de.catma.repository.git.serialization.models.json_ld;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
@@ -17,7 +18,6 @@ import com.jsoniter.annotation.JsonProperty;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GitProjectManager;
-import de.catma.repository.git.exceptions.JsonLdWebAnnotationException;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -45,7 +45,7 @@ public class JsonLdWebAnnotationBody_Dataset {
 	}
 
 	public JsonLdWebAnnotationBody_Dataset(String gitServerBaseUrl, String projectId, List<TagReference> tagReferences)
-			throws JsonLdWebAnnotationException {
+			throws IOException {
 		this();
 		this.context.put("tagset", "http://catma.de/portal/tagset");  // TODO: what should this URL be?
 		this.context.put("tag", "http://catma.de/portal/tag");  // TODO: what should this URL be?
@@ -55,7 +55,7 @@ public class JsonLdWebAnnotationBody_Dataset {
 		Set<TagInstance> uniqueTagInstances = new HashSet<>(tagReferences.stream().map(TagReference::getTagInstance)
 				.collect(Collectors.toSet()));
 		if (uniqueTagInstances.size() > 1) {
-			throw new JsonLdWebAnnotationException(
+			throw new IllegalArgumentException(
 				"Supplied TagReference objects are not all for the same TagInstance"
 			);
 		}
@@ -65,19 +65,14 @@ public class JsonLdWebAnnotationBody_Dataset {
 
 		String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 
-		try {
-			this.tagset = this.buildTagsetUrl(
-				gitServerBaseUrl, projectRootRepositoryName, tagDefinition.getTagsetDefinitionUuid()
-			).toString();
+		this.tagset = this.buildTagsetUrl(
+			gitServerBaseUrl, projectRootRepositoryName, tagDefinition.getTagsetDefinitionUuid()
+		).toString();
 
-			this.tag = this.buildTagDefinitionUrl(this.tagset, tagDefinition).toString();
+		this.tag = this.buildTagDefinitionUrl(this.tagset, tagDefinition).toString();
 
-			this.addProperties(this.tag, tagInstance.getUserDefinedProperties(), false);
-			this.addProperties(this.tag, tagInstance.getSystemProperties(), true);
-		}
-		catch (MalformedURLException e) {
-			throw new JsonLdWebAnnotationException("Failed to build tagset URL", e);
-		}
+		this.addProperties(this.tag, tagInstance.getUserDefinedProperties(), false);
+		this.addProperties(this.tag, tagInstance.getSystemProperties(), true);
 	}
 
 	private URL buildTagsetUrl(String gitServerBaseUrl, String projectRootRepositoryName, String tagsetUuid)

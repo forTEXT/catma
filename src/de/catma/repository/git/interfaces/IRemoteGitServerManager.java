@@ -1,22 +1,13 @@
 package de.catma.repository.git.interfaces;
 
-import java.util.Collections;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.GroupApi;
-import org.gitlab4j.api.ProjectApi;
-import org.gitlab4j.api.models.Group;
-import org.gitlab4j.api.models.Project;
-
 import de.catma.Pager;
 import de.catma.project.ProjectReference;
-import de.catma.repository.git.GitProjectManager;
-import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 
 public interface IRemoteGitServerManager {
 	class CreateRepositoryResponse {
@@ -33,32 +24,32 @@ public interface IRemoteGitServerManager {
 	}
 
 	CreateRepositoryResponse createRepository(String name, @Nullable String path)
-			throws RemoteGitServerManagerException;
+			throws IOException;
 
 	CreateRepositoryResponse createRepository(String name, @Nullable String path, String groupPath)
-			throws RemoteGitServerManagerException;
+			throws IOException;
 
-	void deleteRepository(int repositoryId) throws RemoteGitServerManagerException;
+	void deleteRepository(int repositoryId) throws IOException;
 
 	String createGroup(String name, String path, @Nullable String description)
-			throws RemoteGitServerManagerException;
+			throws IOException;
 
-	List<String> getGroupRepositoryNames(String path) throws RemoteGitServerManagerException;
+	List<String> getGroupRepositoryNames(String path) throws IOException;
 
-	void deleteGroup(String path) throws RemoteGitServerManagerException;
+	void deleteGroup(String path) throws IOException;
 
 	int createUser(String email, String username, @Nullable String password,
 				   String name, @Nullable Boolean isAdmin)
-			throws RemoteGitServerManagerException;
+			throws IOException;
 	
-	Pager<ProjectReference> getProjectReferences() throws RemoteGitServerManagerException;
+	Pager<ProjectReference> getProjectReferences() throws IOException;
 	
 	String getUsername();
 	String getPassword();
 
 	String getEmail();
 
-	Set<String> getProjectRepositoryUrls(ProjectReference projectReference) throws RemoteGitServerManagerException;
+	Set<String> getProjectRepositoryUrls(ProjectReference projectReference) throws IOException;
 
-	String getProjectRootRepositoryUrl(ProjectReference projectReference) throws RemoteGitServerManagerException;
+	String getProjectRootRepositoryUrl(ProjectReference projectReference) throws IOException;
 }

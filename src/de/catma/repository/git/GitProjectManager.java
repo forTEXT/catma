@@ -14,9 +14,6 @@ import de.catma.document.repository.Repository;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
-import de.catma.repository.git.exceptions.GitProjectHandlerException;
-import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
-import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.GitLabServerManager;
@@ -43,7 +40,7 @@ public class GitProjectManager implements ProjectManager {
 			String gitLabAdminPersonalAccessToken,
 			String gitBasedRepositoryBasePath,
 			Map<String, String>	userIdentification) 
-					throws RemoteGitServerManagerException {
+					throws IOException {
 		this.gitBasedRepositoryBasePath = gitBasedRepositoryBasePath;
 		this.remoteGitServerManager = 
 				new GitLabServerManager(
@@ -62,10 +59,10 @@ public class GitProjectManager implements ProjectManager {
 	 * @param name the name of the project to create
 	 * @param description the description of the project to create
 	 * @return the new project ID
-	 * @throws GitProjectHandlerException if an error occurs when creating the project
+	 * @throws IOException if an error occurs when creating the project
 	 */
 	@Override
-	public String create(String name, String description) throws GitProjectHandlerException {
+	public String create(String name, String description) throws IOException {
 
 		//TODO: consider creating local git projects for offline use
 
@@ -94,9 +91,6 @@ public class GitProjectManager implements ProjectManager {
 				remoteGitServerManager.getPassword()
 			);
 		}
-		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException e) {
-			throw new GitProjectHandlerException("Failed to create project", e);
-		}
 
 		return projectId;
 	}
@@ -107,26 +101,21 @@ public class GitProjectManager implements ProjectManager {
 	 * This will also delete any associated repositories automatically (local & remote).
 	 *
 	 * @param projectId the ID of the project to delete
-	 * @throws GitProjectHandlerException if an error occurs when deleting the project
+	 * @throws IOException if an error occurs when deleting the project
 	 */
 	@Override
-	public void delete(String projectId) throws GitProjectHandlerException {
-		try {
-			List<String> repositoryNames = this.remoteGitServerManager.getGroupRepositoryNames(
-				projectId
+	public void delete(String projectId) throws IOException {
+		List<String> repositoryNames = this.remoteGitServerManager.getGroupRepositoryNames(
+			projectId
+		);
+
+		for (String name : repositoryNames) {
+			FileUtils.deleteDirectory(
+				new File(this.localGitRepositoryManager.getRepositoryBasePath(), name)
 			);
-
-			for (String name : repositoryNames) {
-				FileUtils.deleteDirectory(
-					new File(this.localGitRepositoryManager.getRepositoryBasePath(), name)
-				);
-			}
-
-			this.remoteGitServerManager.deleteGroup(projectId);
 		}
-		catch (RemoteGitServerManagerException|IOException e) {
-			throw new GitProjectHandlerException("Failed to delete project", e);
-		}
+
+		this.remoteGitServerManager.deleteGroup(projectId);
 	}
 	
 	@Override

@@ -1,6 +1,7 @@
 package de.catma.repository.git;
 
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,6 +20,7 @@ import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.AccessMode;
 import de.catma.document.Corpus;
 import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
@@ -43,6 +45,7 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
+import de.catma.util.Pair;
 
 public class GraphWorktreeProject implements IndexedRepository {
 	
@@ -52,6 +55,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 
+	private PropertyChangeSupport propertyChangeSupport;
+
 	private GitUser user;
 	private GitProjectHandler gitProjectHandler;
 	private ProjectReference projectReference;
@@ -59,7 +64,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private GraphProjectHandler graphProjectHandler;
 	private String tempDir;
 	private BackgroundServiceProvider backgroundServiceProvider;
-
+	private IDGenerator idGenerator = new IDGenerator();
 
 	public GraphWorktreeProject(GitUser user, 
 			GitProjectHandler gitProjectHandler,
@@ -69,6 +74,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		this.gitProjectHandler = gitProjectHandler;
 		this.projectReference = projectReference;
 		this.backgroundServiceProvider = backgroundServiceProvider;
+		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.graphProjectHandler = new GraphProjectHandler();
 		this.tempDir = RepositoryPropertyKey.TempDir.getValue();
 	}
@@ -106,17 +112,19 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
-	public void addPropertyChangeListener(RepositoryChangeEvent propertyChangeEvent,
+	public void addPropertyChangeListener(
+			RepositoryChangeEvent propertyChangeEvent,
 			PropertyChangeListener propertyChangeListener) {
-		// TODO Auto-generated method stub
-
+		this.propertyChangeSupport.addPropertyChangeListener(
+				propertyChangeEvent.name(), propertyChangeListener);
 	}
-
+	
 	@Override
-	public void removePropertyChangeListener(RepositoryChangeEvent propertyChangeEvent,
+	public void removePropertyChangeListener(
+			RepositoryChangeEvent propertyChangeEvent,
 			PropertyChangeListener propertyChangeListener) {
-		// TODO Auto-generated method stub
-
+		this.propertyChangeSupport.removePropertyChangeListener(
+				propertyChangeEvent.name(), propertyChangeListener);
 	}
 
 	@Override
@@ -147,82 +155,94 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
-	public void insert(SourceDocument sourceDocument) throws Exception {
-		File sourceTempFile = Paths.get(new File(this.tempDir).toURI()).resolve(sourceDocument.getID()).toFile();
-
-		String convertedFilename = 
-				sourceDocument.getID() + "." + UTF8_CONVERSION_FILE_EXTENSION;
-		
-		final IndexBufferManager indexBufferManager = 
-				IndexBufferManagerName.INDEXBUFFERMANAGER.getIndeBufferManager();
-
-		logger.info("start tokenizing sourcedocument");
-		
-		List<String> unseparableCharacterSequences = 
-				sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
-				.getIndexInfoSet().getUnseparableCharacterSequences();
-		List<Character> userDefinedSeparatingCharacters = 
-				sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
-				.getIndexInfoSet().getUserDefinedSeparatingCharacters();
-		Locale locale = 
-				sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
-				.getIndexInfoSet().getLocale();
-		
-		TermExtractor termExtractor = 
-				new TermExtractor(
-						sourceDocument.getContent(), 
-						unseparableCharacterSequences, 
-						userDefinedSeparatingCharacters, 
-						locale);
-		
-		final Map<String, List<TermInfo>> terms = termExtractor.getTerms();
-		
-		logger.info("tokenization finished");
-		
-		
-		indexBufferManager.add(sourceDocument, terms);
-		
-		logger.info("buffering tokens finished");	
-		
-		try (FileInputStream originalFileInputStream = new FileInputStream(sourceTempFile)) {
+	public void insert(SourceDocument sourceDocument) throws IOException {
+		try {
+			File sourceTempFile = Paths.get(new File(this.tempDir).toURI()).resolve(sourceDocument.getID()).toFile();
+	
+			String convertedFilename = 
+					sourceDocument.getID() + "." + UTF8_CONVERSION_FILE_EXTENSION;
 			
-			String sourceDocRevisionHash = gitProjectHandler.createSourceDocument(
-				this.projectReference.getProjectId(), 
-				sourceDocument.getID(), 
-				originalFileInputStream,
-				sourceDocument.getID() 
-					+ ORIG_INFIX 
-					+ "." 
-					+ sourceDocument
-						.getSourceContentHandler()
-						.getSourceDocumentInfo()
-						.getTechInfoSet()
-						.getFileType()
-						.getDefaultExtension(),
-				new ByteArrayInputStream(
-					sourceDocument.getContent().getBytes(Charset.forName("UTF-8"))), 
-				convertedFilename, 
-				terms,
-				sourceDocument.getID() + "." + TOKENIZED_FILE_EXTENSION,
-				sourceDocument.getSourceContentHandler().getSourceDocumentInfo());
+			final IndexBufferManager indexBufferManager = 
+					IndexBufferManagerName.INDEXBUFFERMANAGER.getIndeBufferManager();
+	
+			logger.info("start tokenizing sourcedocument");
+			
+			List<String> unseparableCharacterSequences = 
+					sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+					.getIndexInfoSet().getUnseparableCharacterSequences();
+			List<Character> userDefinedSeparatingCharacters = 
+					sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+					.getIndexInfoSet().getUserDefinedSeparatingCharacters();
+			Locale locale = 
+					sourceDocument.getSourceContentHandler().getSourceDocumentInfo()
+					.getIndexInfoSet().getLocale();
+			
+			TermExtractor termExtractor = 
+					new TermExtractor(
+							sourceDocument.getContent(), 
+							unseparableCharacterSequences, 
+							userDefinedSeparatingCharacters, 
+							locale);
+			
+			final Map<String, List<TermInfo>> terms = termExtractor.getTerms();
+			
+			logger.info("tokenization finished");
+			
+			
+			indexBufferManager.add(sourceDocument, terms);
+			
+			logger.info("buffering tokens finished");	
+			
+			try (FileInputStream originalFileInputStream = new FileInputStream(sourceTempFile)) {
+				
+				String sourceDocRevisionHash = gitProjectHandler.createSourceDocument(
+					this.projectReference.getProjectId(), 
+					sourceDocument.getID(), 
+					originalFileInputStream,
+					sourceDocument.getID() 
+						+ ORIG_INFIX 
+						+ "." 
+						+ sourceDocument
+							.getSourceContentHandler()
+							.getSourceDocumentInfo()
+							.getTechInfoSet()
+							.getFileType()
+							.getDefaultExtension(),
+					new ByteArrayInputStream(
+						sourceDocument.getContent().getBytes(Charset.forName("UTF-8"))), 
+					convertedFilename, 
+					terms,
+					sourceDocument.getID() + "." + TOKENIZED_FILE_EXTENSION,
+					sourceDocument.getSourceContentHandler().getSourceDocumentInfo());
+	
+				sourceDocument.unload();
+				sourceDocument.setRevisionHash(sourceDocRevisionHash);
+			}
+			
+			sourceTempFile.delete();
+			String oldRootRevisionHash = this.rootRevisionHash;
+			
+			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(this.projectReference);
+	
+			graphProjectHandler.insertSourceDocument(
+				this.projectReference.getProjectId(), oldRootRevisionHash, this.rootRevisionHash,
+				sourceDocument,
+				Paths
+					.get(RepositoryPropertyKey.GraphDbGitMountBasePath.getValue())
+					.resolve(gitProjectHandler.getSourceDocumentSubmodulePath(this.user, this.projectReference, sourceDocument.getID()))
+					.resolve(sourceDocument.getID() + "." + TOKENIZED_FILE_EXTENSION),
+				user.getIdentifier());
+			
+			propertyChangeSupport.firePropertyChange(
+					RepositoryChangeEvent.sourceDocumentChanged.name(),
+					null, sourceDocument.getID());
 
-			sourceDocument.unload();
-			sourceDocument.setRevisionHash(sourceDocRevisionHash);
 		}
-		
-		sourceTempFile.delete();
-		String oldRootRevisionHash = this.rootRevisionHash;
-		
-		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(this.projectReference);
-
-		graphProjectHandler.insertSourceDocument(
-			this.projectReference.getProjectId(), oldRootRevisionHash, this.rootRevisionHash,
-			sourceDocument,
-			Paths
-				.get(RepositoryPropertyKey.GraphDbGitMountBasePath.getValue())
-				.resolve(gitProjectHandler.getSourceDocumentSubmodulePath(this.user, this.projectReference, sourceDocument.getID()))
-				.resolve(sourceDocument.getID() + "." + TOKENIZED_FILE_EXTENSION),
-			user.getIdentifier());
+		catch (Exception e) {
+			propertyChangeSupport.firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, e);
+		}
 	}
 
 	@Override
@@ -304,7 +324,27 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	@Override
 	public void createUserMarkupCollection(String name, SourceDocument sourceDocument) throws IOException {
-		// TODO Auto-generated method stub
+		String collectionId = idGenerator.generate();
+		
+		String umcRevisionHash = gitProjectHandler.createMarkupCollection(
+					this.projectReference.getProjectId(), 
+					collectionId, 
+					name, 
+					null, //description
+					sourceDocument.getID(), 
+					sourceDocument.getRevisionHash());
+		
+		UserMarkupCollectionReference reference = 
+				new UserMarkupCollectionReference(
+						collectionId, 
+						new ContentInfoSet(name));
+		
+		sourceDocument.addUserMarkupCollectionReference(reference);
+		
+		propertyChangeSupport.firePropertyChange(
+				RepositoryChangeEvent.userMarkupCollectionChanged.name(),
+				null, new Pair<UserMarkupCollectionReference, SourceDocument>(
+						reference,sourceDocument));
 
 	}
 

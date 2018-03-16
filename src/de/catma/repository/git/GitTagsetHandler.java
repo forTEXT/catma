@@ -16,8 +16,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import de.catma.repository.git.exceptions.GitTagsetHandlerException;
-import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
-import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
@@ -60,7 +58,7 @@ public class GitTagsetHandler {
 						 @Nullable String tagsetId,
 						 @Nonnull String name,
 						 @Nullable String description
-	) throws GitTagsetHandlerException {
+	) throws IOException {
 
 		if (tagsetId == null) {
 			IDGenerator idGenerator = new IDGenerator();
@@ -95,9 +93,6 @@ public class GitTagsetHandler {
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail()
 			);
-		}
-		catch (RemoteGitServerManagerException|LocalGitRepositoryManagerException e) {
-			throw new GitTagsetHandlerException("Failed to create tagset", e);
 		}
 
 		return tagsetId;
@@ -137,7 +132,7 @@ public class GitTagsetHandler {
 		return tagDefinitions;
 	}
 
-	public TagsetDefinition open(@Nonnull String projectId, @Nonnull String tagsetId) throws GitTagsetHandlerException {
+	public TagsetDefinition open(@Nonnull String projectId, @Nonnull String tagsetId) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
@@ -172,9 +167,6 @@ public class GitTagsetHandler {
 
 			return tagsetdefinition;
 		}
-		catch (LocalGitRepositoryManagerException | IOException e) {
-			throw new GitTagsetHandlerException("Failed to open the Tagset repo", e);
-		}
 	}
 
 	/**
@@ -192,7 +184,7 @@ public class GitTagsetHandler {
 	public String createTagDefinition(@Nonnull String projectId,
 									  @Nonnull String tagsetId,
 									  @Nonnull TagDefinition tagDefinition
-	) throws GitTagsetHandlerException {
+	) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			localGitRepoManager.open(projectId, projectRootRepositoryName);
@@ -223,9 +215,6 @@ public class GitTagsetHandler {
 			}
 
 			// not doing Git add/commit, see method doc comment
-		}
-		catch (LocalGitRepositoryManagerException|IOException e) {
-			throw new GitTagsetHandlerException("Failed to add tag definition", e);
 		}
 
 		return tagDefinition.getUuid();

@@ -28,7 +28,6 @@ import de.catma.Pager;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.GitProjectManager;
-import de.catma.repository.git.exceptions.RemoteGitServerManagerException;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
 import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
@@ -61,10 +60,10 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	 *
 	 * @param catmaProperties a {@link Properties} object
 	 * @param catmaUser a {@link de.catma.user.User} object
-	 * @throws RemoteGitServerManagerException if something went wrong during instantiation
+	 * @throws IOException if something went wrong during instantiation
 	 */
 	public GitLabServerManager(String gitLabServerUrl, String gitLabAdminPersonalAccessToken, Map<String, String> userIdentification)
-			throws RemoteGitServerManagerException {
+			throws IOException {
 		this.gitLabAdminPersonalAccessToken = RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue();
 		
 		this.gitLabServerUrl = RepositoryPropertyKey.GitLabServerUrl.getValue();
@@ -119,12 +118,12 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	 * @param name the name of the repository to create
 	 * @param path the path of the repository to create
 	 * @return a {@link CreateRepositoryResponse} object containing the repository ID and HTTP URL
-	 * @throws RemoteGitServerManagerException if something went wrong while creating the remote
+	 * @throws IOException if something went wrong while creating the remote
 	 *         repository
 	 */
 	@Override
 	public CreateRepositoryResponse createRepository(String name, @Nullable String path)
-			throws RemoteGitServerManagerException {
+			throws IOException {
 		ProjectApi projectApi = this.userGitLabApi.getProjectApi();
 
 		Project project = new Project();
@@ -142,7 +141,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 			);
 		}
 		catch (GitLabApiException e) {
-			throw new RemoteGitServerManagerException("Failed to create remote Git repository", e);
+			throw new IOException("Failed to create remote Git repository", e);
 		}
 	}
 
@@ -154,13 +153,13 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	 * @param path the path of the repository to create
 	 * @param groupPath the path of the group within which to create the repository
 	 * @return a {@link CreateRepositoryResponse} object containing the repository ID and HTTP URL
-	 * @throws RemoteGitServerManagerException if something went wrong while creating the remote
+	 * @throws IOException if something went wrong while creating the remote
 	 *         repository
 	 */
 	@Override
 	public CreateRepositoryResponse createRepository(
 			String name, @Nullable String path, String groupPath)
-			throws RemoteGitServerManagerException {
+			throws IOException {
 		GroupApi groupApi = this.userGitLabApi.getGroupApi();
 		ProjectApi projectApi = this.userGitLabApi.getProjectApi();
 
@@ -185,7 +184,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 			);
 		}
 		catch (GitLabApiException e) {
-			throw new RemoteGitServerManagerException("Failed to create remote Git repository", e);
+			throw new IOException("Failed to create remote Git repository", e);
 		}
 	}
 
@@ -193,18 +192,18 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	 * Deletes an existing remote repository identified by <code>repositoryId</code>.
 	 *
 	 * @param repositoryId the ID of the repository to delete
-	 * @throws RemoteGitServerManagerException if something went wrong while deleting the remote
+	 * @throws IOException if something went wrong while deleting the remote
 	 *         repository
 	 */
 	@Override
-	public void deleteRepository(int repositoryId) throws RemoteGitServerManagerException {
+	public void deleteRepository(int repositoryId) throws IOException {
 		ProjectApi projectApi = this.userGitLabApi.getProjectApi();
 
 		try {
 			projectApi.deleteProject(repositoryId);
 		}
 		catch (GitLabApiException e) {
-			throw new RemoteGitServerManagerException("Failed to delete remote Git repository", e);
+			throw new IOException("Failed to delete remote Git repository", e);
 		}
 	}
 
@@ -216,12 +215,12 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	 * @param path the path of the group to create
 	 * @param description the description of the group to create
 	 * @return the new group path
-	 * @throws RemoteGitServerManagerException if something went wrong while creating the remote
+	 * @throws IOException if something went wrong while creating the remote
 	 *         group
 	 */
 	@Override
 	public String createGroup(String name, String path, @Nullable String description)
-			throws RemoteGitServerManagerException {
+			throws IOException {
 		GroupApi groupApi = this.userGitLabApi.getGroupApi();
 
 		try {
@@ -235,7 +234,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 			return path;
 		}
 		catch (GitLabApiException e) {
-			throw new RemoteGitServerManagerException("Failed to create remote group", e);
+			throw new IOException("Failed to create remote group", e);
 		}
 	}
 
@@ -244,12 +243,12 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	 *
 	 * @param path the path of the group whose repository names you want to get
 	 * @return a {@link List<String>} of names
-	 * @throws RemoteGitServerManagerException if something went wrong while fetching the repository
+	 * @throws IOException if something went wrong while fetching the repository
 	 *         names of the remote group
 	 */
 	@Override
 	public List<String> getGroupRepositoryNames(String path)
-			throws RemoteGitServerManagerException {
+			throws IOException {
 		GroupApi groupApi = this.userGitLabApi.getGroupApi();
 
 		try {
@@ -258,7 +257,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 			return projects.stream().map(Project::getName).collect(Collectors.toList());
 		}
 		catch (GitLabApiException e) {
-			throw new RemoteGitServerManagerException(
+			throw new IOException(
 				"Failed to get repository names for group", e
 			);
 		}
@@ -270,11 +269,11 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	 * NB: Also deletes any child repositories!
 	 *
 	 * @param path the path of the group to delete
-	 * @throws RemoteGitServerManagerException if something went wrong while deleting the remote
+	 * @throws IOException if something went wrong while deleting the remote
 	 *         group
 	 */
 	@Override
-	public void deleteGroup(String path) throws RemoteGitServerManagerException {
+	public void deleteGroup(String path) throws IOException {
 		GroupApi groupApi = this.userGitLabApi.getGroupApi();
 
 		try {
@@ -282,7 +281,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 			groupApi.deleteGroup(group);
 		}
 		catch (GitLabApiException e) {
-			throw new RemoteGitServerManagerException("Failed to delete remote group", e);
+			throw new IOException("Failed to delete remote group", e);
 		}
 	}
 
@@ -297,11 +296,11 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	 * @param userIdentification 
 	 * @return a {@link Pair} object with the first value being a {@link User} object and the second
 	 *         value being the raw impersonation token string
-	 * @throws RemoteGitServerManagerException if something went wrong while acquiring the GitLab
+	 * @throws IOException if something went wrong while acquiring the GitLab
 	 *         impersonation token
 	 */
 	private Pair<User, String> acquireImpersonationToken(Map<String, String> userIdentification)
-			throws RemoteGitServerManagerException {
+			throws IOException {
 		Pair<User, Boolean> userWasCreatedPair = this.acquireUser(userIdentification);
 		User user = userWasCreatedPair.getFirst();
 		Boolean wasCreated = userWasCreatedPair.getSecond();
@@ -335,7 +334,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 				}
 			}
 			catch (GitLabApiException e) {
-				throw new RemoteGitServerManagerException(
+				throw new IOException(
 					"Failed to acquire impersonation token", e
 				);
 			}
@@ -350,7 +349,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 				userIdentification.get(UserProperty.identifier.name()),
 				user.getId(), GitLabServerManager.GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME
 			);
-			throw new RemoteGitServerManagerException(errorMessage);
+			throw new IOException(errorMessage);
 		}
 
 		Pair<User, String> retVal = new Pair<>(user, impersonationToken);
@@ -366,11 +365,11 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	 * @param userIdentification 
 	 * @return a {@link Pair} object with the first value being a {@link User} object and the second
 	 *         value being a boolean indicating whether or not the user was newly created
-	 * @throws RemoteGitServerManagerException if something went wrong while acquiring the GitLab
+	 * @throws IOException if something went wrong while acquiring the GitLab
 	 *         user
 	 */
 	private Pair<User, Boolean> acquireUser(Map<String, String> userIdentification)
-			throws RemoteGitServerManagerException {
+			throws IOException {
 		CustomUserApi customUserApi = new CustomUserApi(this.adminGitLabApi);
 
 		Boolean userCreated = false;
@@ -396,13 +395,13 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 			return new Pair<>(user, userCreated);
 		}
 		catch (GitLabApiException e) {
-			throw new RemoteGitServerManagerException("Failed to acquire remote user", e);
+			throw new IOException("Failed to acquire remote user", e);
 		}
 	}
 
 	// it's more convenient to work with the User class internally, which is why this method exists
 	private User _createUser(String email, String username, @Nullable String password, String name, String provider,
-							@Nullable Boolean isAdmin) throws RemoteGitServerManagerException {
+							@Nullable Boolean isAdmin) throws IOException {
 		CustomUserApi userApi = new CustomUserApi(getAdminGitLabApi());
 
 		if (password == null) {
@@ -436,7 +435,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 			return user;
 		}
 		catch (GitLabApiException e) {
-			throw new RemoteGitServerManagerException("Failed to create user", e);
+			throw new IOException("Failed to create user", e);
 		}
 	}
 
@@ -453,13 +452,13 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	 * @param isAdmin whether the user to create should be an admin or not. Defaults to false if not
 	 *                supplied.
 	 * @return the new user ID
-	 * @throws RemoteGitServerManagerException if something went wrong while creating the remote
+	 * @throws IOException if something went wrong while creating the remote
 	 *         user
 	 */
 	@Override
 	public int createUser(String email, String username, @Nullable String password,
 						   String name, @Nullable Boolean isAdmin)
-			throws RemoteGitServerManagerException {
+			throws IOException {
 		User user = this._createUser(email, username, password, name, null, isAdmin);
 		return user.getId();
 	}
@@ -472,11 +471,11 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	 * @param userId the ID of the user for which to create the impersonation token
 	 * @param tokenName the name of the impersonation token to create
 	 * @return the new token
-	 * @throws RemoteGitServerManagerException if something went wrong while creating the
+	 * @throws IOException if something went wrong while creating the
 	 *         impersonation token
 	 */
 	private String createImpersonationToken(int userId, String tokenName)
-			throws RemoteGitServerManagerException {
+			throws IOException {
 		CustomUserApi customUserApi = new CustomUserApi(this.adminGitLabApi);
 
 		try {
@@ -486,11 +485,11 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 			return impersonationToken.token;
 		}
 		catch (GitLabApiException e) {
-			throw new RemoteGitServerManagerException("Failed to create impersonation token", e);
+			throw new IOException("Failed to create impersonation token", e);
 		}
 	}
 	
-	public Pager<ProjectReference> getProjectReferences() throws RemoteGitServerManagerException {
+	public Pager<ProjectReference> getProjectReferences() throws IOException {
 		
 		GroupApi groupApi = this.userGitLabApi.getGroupApi();
 		try {
@@ -500,12 +499,12 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 							group.getPath(), group.getDescription(), "TODO"));
 		}
 		catch (Exception e) {
-			throw new RemoteGitServerManagerException("Failed to load groups", e);
+			throw new IOException("Failed to load groups", e);
 		}
 	}
 	
 	@Override
-	public String getProjectRootRepositoryUrl(ProjectReference projectReference) throws RemoteGitServerManagerException {
+	public String getProjectRootRepositoryUrl(ProjectReference projectReference) throws IOException {
 		try {
 			ProjectApi projectApi = this.userGitLabApi.getProjectApi();
 			Project rootProject =projectApi.getProject(
@@ -515,12 +514,12 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 			return getGitLabServerUrl(rootProject.getHttpUrlToRepo());
 		}
 		catch (GitLabApiException e) {
-			throw new RemoteGitServerManagerException("Failed to load Project's Root Repository Url", e);
+			throw new IOException("Failed to load Project's Root Repository Url", e);
 		}
 	}
 	
 	@Override
-	public Set<String> getProjectRepositoryUrls(ProjectReference projectReference) throws RemoteGitServerManagerException {
+	public Set<String> getProjectRepositoryUrls(ProjectReference projectReference) throws IOException {
 		try {
 			GroupApi groupApi = this.userGitLabApi.getGroupApi();
 			
@@ -532,7 +531,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 				.collect(Collectors.toSet()));
 		}
 		catch (GitLabApiException e) {
-			throw new RemoteGitServerManagerException("Failed to load Group Repositories", e);
+			throw new IOException("Failed to load Group Repositories", e);
 		}
 	}
 

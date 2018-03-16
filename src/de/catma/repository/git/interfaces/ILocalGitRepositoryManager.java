@@ -1,12 +1,7 @@
 package de.catma.repository.git.interfaces;
 
-import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
-
-import javax.annotation.Nullable;
-
-import org.eclipse.jgit.lib.Constants;
-
 import java.io.File;
+import java.io.IOException;
 
 public interface ILocalGitRepositoryManager extends AutoCloseable {
 	boolean isAttached();
@@ -15,32 +10,32 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	File getRepositoryWorkTree();
 
-	String getRemoteUrl(@Nullable String remoteName);
+	String getRemoteUrl(String remoteName);
 
-	void init(String group, String name, @Nullable String description) throws LocalGitRepositoryManagerException;
+	void init(String group, String name, String description) throws IOException;
 
-	String clone(String group, String uri, @Nullable File path, @Nullable String username, @Nullable String password)
-			throws LocalGitRepositoryManagerException;
+	String clone(String group, String uri, File path, String username, String password)
+			throws IOException;
 
-	void open(String group, String name) throws LocalGitRepositoryManagerException;
+	void open(String group, String name) throws IOException;
 
-	void add(File targetFile, byte[] bytes) throws LocalGitRepositoryManagerException;
+	void add(File targetFile, byte[] bytes) throws IOException;
 
-	void addAndCommit(File targetFile, byte[] bytes, String committerName, String committerEmail)
-			throws LocalGitRepositoryManagerException;
+	String addAndCommit(File targetFile, byte[] bytes, String committerName, String committerEmail)
+			throws IOException;
 
-	String commit(String message, String committerName, String committerEmail) throws LocalGitRepositoryManagerException;
+	String commit(String message, String committerName, String committerEmail) throws IOException;
 
-	void addSubmodule(File path, String uri, @Nullable String username, @Nullable String password)
-			throws LocalGitRepositoryManagerException;
+	void addSubmodule(File path, String uri, String username, String password)
+			throws IOException;
 
-	void push(@Nullable String username, @Nullable String password) throws LocalGitRepositoryManagerException;
+	void push(String username, String password) throws IOException;
 
-	void fetch(@Nullable String username, @Nullable String password) throws LocalGitRepositoryManagerException;
+	void fetch(String username, String password) throws IOException;
 
-	void checkout(String name) throws LocalGitRepositoryManagerException;
+	void checkout(String name) throws IOException;
 
-	String getSubmoduleHeadRevisionHash(String submoduleName) throws LocalGitRepositoryManagerException;
+	String getSubmoduleHeadRevisionHash(String submoduleName) throws IOException;
 
 	@Override
 	void close();
@@ -48,7 +43,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 	File getRepositoryBasePath();
 
 	String clone(String group, String uri, File path, String username, String password, boolean initSubmodules)
-			throws LocalGitRepositoryManagerException;
+			throws IOException;
 
 	String getRootRevisionHash() throws Exception;
 }

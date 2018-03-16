@@ -1,6 +1,7 @@
 package de.catma.repository.git;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -10,11 +11,6 @@ import java.util.Map;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.indexer.TermInfo;
 import de.catma.project.ProjectReference;
-import de.catma.repository.git.exceptions.GitMarkupCollectionHandlerException;
-import de.catma.repository.git.exceptions.GitProjectHandlerException;
-import de.catma.repository.git.exceptions.GitSourceDocumentHandlerException;
-import de.catma.repository.git.exceptions.GitTagsetHandlerException;
-import de.catma.repository.git.exceptions.LocalGitRepositoryManagerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 
@@ -39,7 +35,7 @@ public class GitProjectHandler {
 							   String tagsetId,
 							   String name,
 							   String description
-	) throws GitProjectHandlerException {
+	) throws IOException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localGitRepoManager, this.remoteGitServerManager);
@@ -71,9 +67,6 @@ public class GitProjectHandler {
 
 			return newTagsetId;
 		}
-		catch (GitTagsetHandlerException |LocalGitRepositoryManagerException e) {
-			throw new GitProjectHandlerException("Failed to create tagset", e);
-		}
 	}
 
 	// markup collection operations
@@ -83,15 +76,16 @@ public class GitProjectHandler {
 										 String description,
 										 String sourceDocumentId,
 										 String sourceDocumentVersion
-	) throws GitProjectHandlerException {
+	) throws IOException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			
 			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
 					localGitRepoManager, this.remoteGitServerManager
 			);
 
 			// create the markup collection
-			String newMarkupCollectionId = gitMarkupCollectionHandler.create(
+			String revisionHash = gitMarkupCollectionHandler.create(
 					projectId,
 					markupCollectionId,
 					name,
@@ -103,7 +97,7 @@ public class GitProjectHandler {
 			// push the newly created markup collection repo to the server in preparation for adding it to the project
 			// root repo as a submodule
 
-			localGitRepoManager.open(projectId, GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(newMarkupCollectionId));
+			localGitRepoManager.open(projectId, GitMarkupCollectionHandler.getMarkupCollectionRepositoryName(markupCollectionId));
 			localGitRepoManager.push(remoteGitServerManager.getUsername(), remoteGitServerManager.getPassword());
 			String markupCollectionRepoRemoteUrl = localGitRepoManager.getRemoteUrl(null);
 			localGitRepoManager.detach(); // need to explicitly detach so that we can call open below
@@ -115,7 +109,7 @@ public class GitProjectHandler {
 			File targetSubmodulePath = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
 					MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
-					newMarkupCollectionId
+					markupCollectionId
 			).toFile();
 
 			localGitRepoManager.addSubmodule(
@@ -125,10 +119,7 @@ public class GitProjectHandler {
 					remoteGitServerManager.getPassword()
 			);
 
-			return newMarkupCollectionId;
-		}
-		catch (GitMarkupCollectionHandlerException |LocalGitRepositoryManagerException e) {
-			throw new GitProjectHandlerException("Failed to create markup collection", e);
+			return revisionHash;
 		}
 	}
 
@@ -151,7 +142,7 @@ public class GitProjectHandler {
 	 * @param sourceDocumentInfo a {@link SourceDocumentInfo} object
 	 * @param terms 
 	 * @return the revisionHash
-	 * @throws GitProjectHandlerException if an error occurs while creating the source document
+	 * @throws IOException if an error occurs while creating the source document
 	 */
 	public String createSourceDocument(
 			String projectId, String sourceDocumentId,
@@ -159,7 +150,7 @@ public class GitProjectHandler {
 			InputStream convertedSourceDocumentStream, String convertedSourceDocumentFileName,
 			Map<String, List<TermInfo>> terms, String tokenizedSourceDocumentFileName,
 			SourceDocumentInfo sourceDocumentInfo
-	) throws GitProjectHandlerException {
+	) throws IOException {
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
 				localRepoManager, this.remoteGitServerManager
@@ -204,9 +195,6 @@ public class GitProjectHandler {
 		
 			return revisionHash;
 		}
-		catch (GitSourceDocumentHandlerException |LocalGitRepositoryManagerException e) {
-			throw new GitProjectHandlerException("Failed to create source document", e);
-		}
 
 	}
 
@@ -228,4 +216,5 @@ public class GitProjectHandler {
 			SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
 			sourceDocumentId);
 	}
+
 }
