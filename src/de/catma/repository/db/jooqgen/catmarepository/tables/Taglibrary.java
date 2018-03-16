@@ -34,7 +34,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Taglibrary extends TableImpl<Record> {
 
-	private static final long serialVersionUID = 1934436632;
+	private static final long serialVersionUID = -625426691;
 
 	/**
 	 * The reference instance of <code>catmarepository.taglibrary</code>
@@ -62,17 +62,17 @@ public class Taglibrary extends TableImpl<Record> {
 	/**
 	 * The column <code>catmarepository.taglibrary.publisher</code>.
 	 */
-	public final TableField<Record, String> PUBLISHER = createField("publisher", org.jooq.impl.SQLDataType.VARCHAR.length(300).defaulted(true), this, "");
+	public final TableField<Record, String> PUBLISHER = createField("publisher", org.jooq.impl.SQLDataType.VARCHAR.length(300), this, "");
 
 	/**
 	 * The column <code>catmarepository.taglibrary.author</code>.
 	 */
-	public final TableField<Record, String> AUTHOR = createField("author", org.jooq.impl.SQLDataType.VARCHAR.length(300).defaulted(true), this, "");
+	public final TableField<Record, String> AUTHOR = createField("author", org.jooq.impl.SQLDataType.VARCHAR.length(300), this, "");
 
 	/**
 	 * The column <code>catmarepository.taglibrary.description</code>.
 	 */
-	public final TableField<Record, String> DESCRIPTION = createField("description", org.jooq.impl.SQLDataType.VARCHAR.length(300).defaulted(true), this, "");
+	public final TableField<Record, String> DESCRIPTION = createField("description", org.jooq.impl.SQLDataType.VARCHAR.length(300), this, "");
 
 	/**
 	 * The column <code>catmarepository.taglibrary.independent</code>.

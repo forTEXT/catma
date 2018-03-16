@@ -35,7 +35,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class User extends TableImpl<Record> {
 
-	private static final long serialVersionUID = 1481546690;
+	private static final long serialVersionUID = 2048988408;
 
 	/**
 	 * The reference instance of <code>catmarepository.user</code>
@@ -68,12 +68,12 @@ public class User extends TableImpl<Record> {
 	/**
 	 * The column <code>catmarepository.user.email</code>.
 	 */
-	public final TableField<Record, String> EMAIL = createField("email", org.jooq.impl.SQLDataType.VARCHAR.length(300).defaulted(true), this, "");
+	public final TableField<Record, String> EMAIL = createField("email", org.jooq.impl.SQLDataType.VARCHAR.length(300), this, "");
 
 	/**
 	 * The column <code>catmarepository.user.lastlogin</code>.
 	 */
-	public final TableField<Record, Timestamp> LASTLOGIN = createField("lastlogin", org.jooq.impl.SQLDataType.TIMESTAMP.defaulted(true), this, "");
+	public final TableField<Record, Timestamp> LASTLOGIN = createField("lastlogin", org.jooq.impl.SQLDataType.TIMESTAMP, this, "");
 
 	/**
 	 * The column <code>catmarepository.user.firstlogin</code>.

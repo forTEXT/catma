@@ -75,7 +75,6 @@ import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.contenthandler.BOMFilterInputStream;
 import de.catma.document.source.contenthandler.XML2ContentHandler;
-import de.catma.document.standoffmarkup.MarkupCollectionReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
@@ -1254,23 +1253,17 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 				btOpenDocument.setCaption(Messages.getString("SourceDocumentPanel.openDocument")); //$NON-NLS-1$
 				btOpenDocument.setEnabled(true);
 			}
-			else if (value instanceof MarkupCollectionReference) {
+			else if (value instanceof UserMarkupCollectionReference) {
 				btOpenDocument.setCaption(Messages.getString("SourceDocumentPanel.openAnnotations")); //$NON-NLS-1$
 				btOpenDocument.setEnabled(true);
 				btEditContentInfo.setEnabled(true);
-				if (value instanceof UserMarkupCollectionReference) {
-					contentInfoForm.setEnabled(true);
-					contentInfoForm.setItemDataSource(
-						new BeanItem<ContentInfoSet>(
-							new ContentInfoSet(
-								((UserMarkupCollectionReference)value)
-									.getContentInfoSet())));
-					contentInfoForm.setVisibleItemProperties(DEFAULT_VISIBIL_PROP);
-
-				}
-				else {
-					contentInfoForm.setEnabled(false);
-				}
+				contentInfoForm.setEnabled(true);
+				contentInfoForm.setItemDataSource(
+					new BeanItem<ContentInfoSet>(
+						new ContentInfoSet(
+							((UserMarkupCollectionReference)value)
+								.getContentInfoSet())));
+				contentInfoForm.setVisibleItemProperties(DEFAULT_VISIBIL_PROP);
 			}
 			else {
 				btEditContentInfo.setEnabled(false);

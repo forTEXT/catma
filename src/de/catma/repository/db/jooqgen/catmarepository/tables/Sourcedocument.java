@@ -34,7 +34,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Sourcedocument extends TableImpl<Record> {
 
-	private static final long serialVersionUID = 906329342;
+	private static final long serialVersionUID = 257189999;
 
 	/**
 	 * The reference instance of <code>catmarepository.sourcedocument</code>
@@ -57,27 +57,27 @@ public class Sourcedocument extends TableImpl<Record> {
 	/**
 	 * The column <code>catmarepository.sourcedocument.title</code>.
 	 */
-	public final TableField<Record, String> TITLE = createField("title", org.jooq.impl.SQLDataType.VARCHAR.length(300).defaulted(true), this, "");
+	public final TableField<Record, String> TITLE = createField("title", org.jooq.impl.SQLDataType.VARCHAR.length(300), this, "");
 
 	/**
 	 * The column <code>catmarepository.sourcedocument.publisher</code>.
 	 */
-	public final TableField<Record, String> PUBLISHER = createField("publisher", org.jooq.impl.SQLDataType.VARCHAR.length(300).defaulted(true), this, "");
+	public final TableField<Record, String> PUBLISHER = createField("publisher", org.jooq.impl.SQLDataType.VARCHAR.length(300), this, "");
 
 	/**
 	 * The column <code>catmarepository.sourcedocument.author</code>.
 	 */
-	public final TableField<Record, String> AUTHOR = createField("author", org.jooq.impl.SQLDataType.VARCHAR.length(300).defaulted(true), this, "");
+	public final TableField<Record, String> AUTHOR = createField("author", org.jooq.impl.SQLDataType.VARCHAR.length(300), this, "");
 
 	/**
 	 * The column <code>catmarepository.sourcedocument.description</code>.
 	 */
-	public final TableField<Record, String> DESCRIPTION = createField("description", org.jooq.impl.SQLDataType.VARCHAR.length(300).defaulted(true), this, "");
+	public final TableField<Record, String> DESCRIPTION = createField("description", org.jooq.impl.SQLDataType.VARCHAR.length(300), this, "");
 
 	/**
 	 * The column <code>catmarepository.sourcedocument.sourceUri</code>.
 	 */
-	public final TableField<Record, String> SOURCEURI = createField("sourceUri", org.jooq.impl.SQLDataType.VARCHAR.length(300).defaulted(true), this, "");
+	public final TableField<Record, String> SOURCEURI = createField("sourceUri", org.jooq.impl.SQLDataType.VARCHAR.length(300), this, "");
 
 	/**
 	 * The column <code>catmarepository.sourcedocument.fileType</code>.
@@ -87,7 +87,7 @@ public class Sourcedocument extends TableImpl<Record> {
 	/**
 	 * The column <code>catmarepository.sourcedocument.charset</code>.
 	 */
-	public final TableField<Record, String> CHARSET = createField("charset", org.jooq.impl.SQLDataType.VARCHAR.length(50).defaulted(true), this, "");
+	public final TableField<Record, String> CHARSET = createField("charset", org.jooq.impl.SQLDataType.VARCHAR.length(50), this, "");
 
 	/**
 	 * The column <code>catmarepository.sourcedocument.fileOSType</code>.
@@ -102,12 +102,12 @@ public class Sourcedocument extends TableImpl<Record> {
 	/**
 	 * The column <code>catmarepository.sourcedocument.mimeType</code>.
 	 */
-	public final TableField<Record, String> MIMETYPE = createField("mimeType", org.jooq.impl.SQLDataType.VARCHAR.length(255).defaulted(true), this, "");
+	public final TableField<Record, String> MIMETYPE = createField("mimeType", org.jooq.impl.SQLDataType.VARCHAR.length(255), this, "");
 
 	/**
 	 * The column <code>catmarepository.sourcedocument.xsltDocumentLocalUri</code>.
 	 */
-	public final TableField<Record, String> XSLTDOCUMENTLOCALURI = createField("xsltDocumentLocalUri", org.jooq.impl.SQLDataType.VARCHAR.length(300).defaulted(true), this, "");
+	public final TableField<Record, String> XSLTDOCUMENTLOCALURI = createField("xsltDocumentLocalUri", org.jooq.impl.SQLDataType.VARCHAR.length(300), this, "");
 
 	/**
 	 * The column <code>catmarepository.sourcedocument.locale</code>.
@@ -117,7 +117,7 @@ public class Sourcedocument extends TableImpl<Record> {
 	/**
 	 * The column <code>catmarepository.sourcedocument.localUri</code>.
 	 */
-	public final TableField<Record, String> LOCALURI = createField("localUri", org.jooq.impl.SQLDataType.VARCHAR.length(300).defaulted(true), this, "");
+	public final TableField<Record, String> LOCALURI = createField("localUri", org.jooq.impl.SQLDataType.VARCHAR.length(300), this, "");
 
 	/**
 	 * Create a <code>catmarepository.sourcedocument</code> table reference
