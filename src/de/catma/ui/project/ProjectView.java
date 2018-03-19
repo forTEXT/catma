@@ -10,9 +10,12 @@ import org.vaadin.teemu.wizards.event.WizardProgressListener;
 import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
 import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
+import com.vaadin.v7.data.util.BeanItemContainer;
 import com.vaadin.ui.Button;
+import com.vaadin.v7.ui.Grid;
+import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.VerticalSplitPanel;
 import com.vaadin.ui.Window;
 
 import de.catma.backgroundservice.BackgroundServiceProvider;
@@ -29,10 +32,12 @@ import de.catma.ui.repository.wizard.AddSourceDocWizardResult;
 import de.catma.ui.repository.wizard.SourceDocumentResult;
 import de.catma.ui.tabbedview.ClosableTab;
 
-public class ProjectView extends VerticalLayout implements ClosableTab {
+public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 	
 	private Button btAddSourceDocuments;
 	private Repository repository;
+	private Grid docGrid;
+	private Grid collectionGrid;
 
 	public ProjectView(
 			ProjectManager projectManager, ProjectReference projectReference) {
@@ -163,6 +168,20 @@ public class ProjectView extends VerticalLayout implements ClosableTab {
 	}
 
 	private void initComponents() {
+		setSizeFull();
+		
+		VerticalSplitPanel leftPanel = new VerticalSplitPanel();
+		leftPanel.setSizeFull();
+		
+		docGrid = new Grid("Documents", new BeanItemContainer<>(SourceDocument.class));
+		leftPanel.addComponent(docGrid);
+		
+		collectionGrid = new Grid("Annotations");
+		leftPanel.addComponent(collectionGrid);
+		
+		
+		
+		
 		btAddSourceDocuments = new Button("Add Document");
 		addComponent(btAddSourceDocuments);
 	}

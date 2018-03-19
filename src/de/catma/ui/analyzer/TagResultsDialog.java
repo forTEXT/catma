@@ -2,17 +2,17 @@ package de.catma.ui.analyzer;
 
 import java.io.IOException;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.data.util.HierarchicalContainer;
-import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
+import com.vaadin.v7.data.Property.ValueChangeEvent;
+import com.vaadin.v7.data.Property.ValueChangeListener;
+import com.vaadin.v7.data.util.HierarchicalContainer;
+import com.vaadin.v7.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Table.TableDragMode;
-import com.vaadin.ui.Tree;
+import com.vaadin.v7.ui.Label;
+import com.vaadin.v7.ui.Table.TableDragMode;
+import com.vaadin.v7.ui.Tree;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 import de.catma.document.repository.Repository;

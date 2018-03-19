@@ -123,7 +123,9 @@ public class UserMarkupCollectionImport extends ServerResource {
 					repo.update(
 						c, 
 						new UserMarkupCollectionReference(
-							newUmcID, new ContentInfoSet()));
+							newUmcID, 
+							null, //TODO: revision hash might be needed
+							new ContentInfoSet()));
 					return true;
 				} catch (IOException e) {
 					e.printStackTrace();

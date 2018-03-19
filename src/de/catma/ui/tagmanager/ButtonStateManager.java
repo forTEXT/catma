@@ -18,10 +18,10 @@
  */
 package de.catma.ui.tagmanager;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.v7.data.Property.ValueChangeEvent;
+import com.vaadin.v7.data.Property.ValueChangeListener;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.TreeTable;
+import com.vaadin.v7.ui.TreeTable;
 
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;

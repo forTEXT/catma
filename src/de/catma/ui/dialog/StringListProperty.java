@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.vaadin.data.util.AbstractProperty;
-import com.vaadin.data.util.converter.Converter.ConversionException;
+import com.vaadin.v7.data.util.AbstractProperty;
+import com.vaadin.v7.data.util.converter.Converter.ConversionException;
 
 public class StringListProperty extends AbstractProperty {
 

@@ -6,9 +6,9 @@ import com.vaadin.server.StreamResource.StreamSource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.ui.themes.BaseTheme;
+import com.vaadin.v7.ui.themes.BaseTheme;
 
 public class DownloadDialog extends Window {
 	

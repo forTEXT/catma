@@ -18,7 +18,7 @@
  */
 package de.catma.ui.data.util;
 
-import com.vaadin.data.Validator;
+import com.vaadin.v7.data.Validator;
 
 public class NonEmptySequenceValidator implements Validator {
 	private String message;

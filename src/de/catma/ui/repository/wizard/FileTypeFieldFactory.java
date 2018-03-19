@@ -1,8 +1,8 @@
 package de.catma.ui.repository.wizard;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.ui.ComboBox;
+import com.vaadin.v7.data.Property.ValueChangeEvent;
+import com.vaadin.v7.data.Property.ValueChangeListener;
+import com.vaadin.v7.ui.ComboBox;
 
 import de.catma.document.source.FileType;
 import de.catma.ui.field.FieldConnector;

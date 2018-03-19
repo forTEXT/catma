@@ -1,7 +1,4 @@
 @import "default.scss";
-@import "../contextmenu/contextmenu.scss";
-
-@include contextmenu;
 
 .catma {
   @include catma;

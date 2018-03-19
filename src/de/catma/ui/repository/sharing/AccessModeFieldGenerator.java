@@ -3,10 +3,10 @@ package de.catma.ui.repository.sharing;
 import java.util.Arrays;
 import java.util.List;
 
-import com.vaadin.data.Item;
-import com.vaadin.ui.ComboBox;
+import com.vaadin.v7.data.Item;
+import com.vaadin.v7.ui.ComboBox;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.Field;
+import com.vaadin.v7.ui.Field;
 
 import de.catma.document.AccessMode;
 import de.catma.ui.field.FormFieldGenerator;

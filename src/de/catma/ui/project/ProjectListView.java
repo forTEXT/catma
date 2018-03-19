@@ -1,15 +1,14 @@
 package de.catma.ui.project;
 
-import org.vaadin.addons.lazyquerycontainer.LazyQueryContainer;
-
-import com.vaadin.data.util.BeanItem;
-import com.vaadin.data.util.PropertysetItem;
+import com.vaadin.data.provider.DataProvider;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.data.util.PropertysetItem;
 
+import de.catma.Pager;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.ui.dialog.SaveCancelListener;
@@ -19,7 +18,7 @@ import de.catma.ui.tabbedview.TabComponent;
 public class ProjectListView extends HorizontalSplitPanel implements TabComponent {
 	
 	private ProjectManager projectManager;
-	private Grid projectGrid;
+	private Grid<ProjectReference> projectGrid;
 	private Button btCreateProject;
 	private Button btOpenProject;
 	private ProjectListListener projectListListener;
@@ -49,7 +48,7 @@ public class ProjectListView extends HorizontalSplitPanel implements TabComponen
 						ProjectReference projectReference = projectManager.createProject(name, "TODO");
 						//TODO:
 						initData();
-						projectGrid.select(projectReference.getProjectId());
+						projectGrid.select(projectReference);
 						
 //						projectGrid.getContainerDataSource().addItem(projectReference);
 					}
@@ -65,8 +64,9 @@ public class ProjectListView extends HorizontalSplitPanel implements TabComponen
 		});
 		
 		btOpenProject.addClickListener(event -> {
-			for (Object projectId : projectGrid.getSelectedRows()) {
-				openProject(((BeanItem<ProjectReference>) projectGrid.getContainerDataSource().getItem(projectId)).getBean());
+			
+			for (ProjectReference projectReference : projectGrid.getSelectedItems()) {
+				openProject(projectReference);
 			}
 		});
 	}
@@ -81,16 +81,27 @@ public class ProjectListView extends HorizontalSplitPanel implements TabComponen
 
 	private void initData() {
 		try {
-			LazyQueryContainer container = 
-				new LazyQueryContainer(
-					new ProjectQueryDefinition(projectManager), new ProjectQueryFactory());
-			projectGrid.setContainerDataSource(container);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Pager<ProjectReference> projectPager = this.projectManager.getProjectReferences();
+			
+			DataProvider<ProjectReference,Void> projectDataProvider = 
+				DataProvider.fromCallbacks(
+						query -> {
+							int page = (query.getOffset() / query.getLimit())+1;
+							
+							return projectPager
+									.page(page)
+									.stream();
+						},
+						query -> {
+							
+							return projectPager.getTotalItems();
+						}
+				);
+			projectGrid.setDataProvider(projectDataProvider);
 		}
-		
-		
+		catch (Exception e) {
+			e.printStackTrace(); //TODO
+		}
 	}
 
 
@@ -98,8 +109,9 @@ public class ProjectListView extends HorizontalSplitPanel implements TabComponen
 	private void initComponents() {
 		VerticalLayout leftPanel = new VerticalLayout();
 		
-		projectGrid = new Grid();
+		projectGrid = new Grid<ProjectReference>();
 		projectGrid.setSizeFull();
+		projectGrid.addColumn(ProjectReference::getName).setCaption("Name");
 		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		btCreateProject = new Button("Create Project");

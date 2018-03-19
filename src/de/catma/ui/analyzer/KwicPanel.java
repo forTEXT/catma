@@ -18,8 +18,6 @@
  */
 package de.catma.ui.analyzer;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,24 +28,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
-import org.vaadin.peter.contextmenu.ContextMenu;
-
-import com.vaadin.data.Container;
-import com.vaadin.data.util.HierarchicalContainer;
-import com.vaadin.event.DataBoundTransferable;
-import com.vaadin.event.ItemClickEvent;
-import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
-import com.vaadin.ui.AbstractSelect.AcceptItem;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.Table.Align;
-import com.vaadin.ui.Table.CellStyleGenerator;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.data.Container;
+import com.vaadin.v7.data.util.HierarchicalContainer;
+import com.vaadin.v7.event.DataBoundTransferable;
+import com.vaadin.v7.event.ItemClickEvent;
+import com.vaadin.v7.event.ItemClickEvent.ItemClickListener;
+import com.vaadin.v7.ui.AbstractSelect.AcceptItem;
+import com.vaadin.v7.ui.Table;
+import com.vaadin.v7.ui.Table.Align;
+import com.vaadin.v7.ui.Table.CellStyleGenerator;
+import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.document.Range;
 import de.catma.document.repository.Repository;
@@ -87,8 +83,6 @@ public class KwicPanel extends VerticalLayout {
 
 	private Repository repository;
 	private Table kwicTable;
-	private ContextMenu kwicTableContextMenu;
-	private ContextMenu.ContextMenuItem tagSelectedResultsContextMenuItem;
 	private boolean markupBased;
 	private RelevantUserMarkupCollectionProvider relevantUserMarkupCollectionProvider;
 	private WeakHashMap<Object, Boolean> itemDirCache = new WeakHashMap<>();
@@ -109,17 +103,7 @@ public class KwicPanel extends VerticalLayout {
 		
 		initComponents();
 		initActions();
-		initContextMenu();
-	}
-	
-	private void initContextMenu() {
-		kwicTableContextMenu = new ContextMenu();
-		tagSelectedResultsContextMenuItem = kwicTableContextMenu.addItem(Messages.getString("KwicPanel.tagSelectedResults")); //$NON-NLS-1$
-		kwicTableContextMenu.setAsContextMenuOf(kwicTable);
-	}
-	
-	public void addTagResultsContextMenuClickListener(ContextMenu.ContextMenuItemClickListener listener) {
-		tagSelectedResultsContextMenuItem.addItemClickListener(listener);
+
 	}
 
 	private void initActions() {

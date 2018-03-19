@@ -1,9 +1,9 @@
 package de.catma.ui.repository.sharing;
 
-import com.vaadin.data.Item;
+import com.vaadin.v7.data.Item;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.DefaultFieldFactory;
-import com.vaadin.ui.Field;
+import com.vaadin.v7.ui.DefaultFieldFactory;
+import com.vaadin.v7.ui.Field;
 
 import de.catma.ui.data.util.NonEmptySequenceValidator;
 import de.catma.ui.field.FormFieldGenerator;

@@ -21,8 +21,8 @@ package de.catma.ui.repository;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.vaadin.data.Container.Filter;
-import com.vaadin.data.Item;
+import com.vaadin.v7.data.Container.Filter;
+import com.vaadin.v7.data.Item;
 
 import de.catma.document.Corpus;
 import de.catma.document.source.SourceDocument;

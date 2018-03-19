@@ -1,8 +1,8 @@
 package de.catma.ui.field;
 
-import com.vaadin.data.Container;
+import com.vaadin.v7.data.Container;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.Field;
+import com.vaadin.v7.ui.Field;
 
 public class ReadonlyFieldGenerator implements TableFieldGenerator {
 

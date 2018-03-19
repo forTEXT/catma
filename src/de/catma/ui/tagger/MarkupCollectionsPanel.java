@@ -32,28 +32,28 @@ import java.util.logging.Logger;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
-import com.vaadin.data.Item;
-import com.vaadin.data.Property;
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Resource;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.AbstractComponent;
-import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.CheckBox;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.data.Item;
+import com.vaadin.v7.data.Property;
+import com.vaadin.v7.data.Property.ValueChangeEvent;
+import com.vaadin.v7.data.Property.ValueChangeListener;
+import com.vaadin.v7.data.util.HierarchicalContainer;
+import com.vaadin.v7.ui.AbstractSelect.ItemCaptionMode;
+import com.vaadin.v7.ui.CheckBox;
+import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.v7.ui.Label;
+import com.vaadin.v7.ui.TreeTable;
+import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.document.AccessMode;
 import de.catma.document.repository.Repository;
@@ -315,7 +315,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 				if (value instanceof UserMarkupCollection) {
 					UserMarkupCollection umc = (UserMarkupCollection)value;
 					removeUserMarkupCollection(
-							new UserMarkupCollectionReference(umc.getId(), umc.getContentInfoSet()));
+							new UserMarkupCollectionReference(
+								umc.getId(), umc.getRevisionHash(), umc.getContentInfoSet()));
 				}
 				else {
 					Notification.show(Messages.getString("MarkupCollectionsPanel.infoTitle"), Messages.getString("MarkupCollectionsPanel.selectAnnotationsFirst"), Type.TRAY_NOTIFICATION); //$NON-NLS-1$ //$NON-NLS-2$
@@ -332,7 +333,8 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 					UserMarkupCollection umc = (UserMarkupCollection)value;
 					//TODO: close all active tagsets
 					UserMarkupCollectionReference umcRef =
-							new UserMarkupCollectionReference(umc.getId(), umc.getContentInfoSet());
+							new UserMarkupCollectionReference(
+								umc.getId(), umc.getRevisionHash(), umc.getContentInfoSet());
 					removeUserMarkupCollection(umcRef);
 					UserMarkupCollection refreshedUmc;
 					try {

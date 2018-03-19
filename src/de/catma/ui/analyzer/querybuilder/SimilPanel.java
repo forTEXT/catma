@@ -22,10 +22,10 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.v7.ui.HorizontalLayout;
 import de.catma.ui.Slider;
-import com.vaadin.ui.Slider.ValueOutOfBoundsException;
-import com.vaadin.ui.TextField;
+import com.vaadin.v7.ui.Slider.ValueOutOfBoundsException;
+import com.vaadin.v7.ui.TextField;
 import com.vaadin.ui.VerticalSplitPanel;
 
 import de.catma.document.Corpus;

@@ -18,11 +18,11 @@
  */
 package de.catma.ui.dialog;
 
-import com.vaadin.data.Item;
+import com.vaadin.v7.data.Item;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.DefaultFieldFactory;
-import com.vaadin.ui.Field;
-import com.vaadin.ui.FormFieldFactory;
+import com.vaadin.v7.ui.DefaultFieldFactory;
+import com.vaadin.v7.ui.Field;
+import com.vaadin.v7.ui.FormFieldFactory;
 
 public class TagDefinitionFieldFactory implements FormFieldFactory {
 	

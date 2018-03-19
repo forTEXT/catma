@@ -20,10 +20,10 @@ package de.catma.ui.repository.wizard;
 
 import java.util.Collection;
 
-import com.vaadin.data.Property;
-import com.vaadin.ui.ComboBox;
+import com.vaadin.v7.data.Property;
+import com.vaadin.v7.ui.ComboBox;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.Table;
+import com.vaadin.v7.ui.Table;
 
 public class ComboBoxColumnGenerator implements Table.ColumnGenerator {
 	

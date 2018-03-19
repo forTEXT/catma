@@ -21,18 +21,18 @@ package de.catma.ui;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Alignment;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Slider.ValueOutOfBoundsException;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.data.Property.ValueChangeEvent;
+import com.vaadin.v7.data.Property.ValueChangeListener;
+import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.v7.ui.Label;
+import com.vaadin.v7.ui.Slider.ValueOutOfBoundsException;
+import com.vaadin.v7.ui.VerticalLayout;
 
 
 public class Slider extends VerticalLayout {
 
-	private com.vaadin.ui.Slider sliderComp;
+	private com.vaadin.v7.ui.Slider sliderComp;
 	private Label minLabel;
 	private Label maxLabel;
 	private NumberFormat formatter;
@@ -57,7 +57,7 @@ public class Slider extends VerticalLayout {
 		setSizeUndefined();
 		HorizontalLayout sliderLayout = new HorizontalLayout();
 		sliderLayout.setSpacing(true);
-		this.sliderComp = new com.vaadin.ui.Slider(min, max);
+		this.sliderComp = new com.vaadin.v7.ui.Slider(min, max);
 		minLabel = new Label(formatter.format(min));
 		maxLabel = new Label(formatter.format(max));
 		

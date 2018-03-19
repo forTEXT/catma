@@ -3,11 +3,11 @@ package de.catma.ui.field;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.vaadin.data.Container;
-import com.vaadin.data.Item;
+import com.vaadin.v7.data.Container;
+import com.vaadin.v7.data.Item;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.DefaultFieldFactory;
-import com.vaadin.ui.Field;
+import com.vaadin.v7.ui.DefaultFieldFactory;
+import com.vaadin.v7.ui.Field;
 
 public class GeneratorFieldFactory extends DefaultFieldFactory {
 	

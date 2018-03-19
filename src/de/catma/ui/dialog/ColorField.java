@@ -18,8 +18,8 @@
  */
 package de.catma.ui.dialog;
 
-import com.vaadin.data.util.converter.Converter.ConversionException;
-import com.vaadin.ui.AbstractField;
+import com.vaadin.v7.data.util.converter.Converter.ConversionException;
+import com.vaadin.v7.ui.AbstractField;
 
 import de.catma.ui.client.ui.tagmanager.ColorFieldServerRpc;
 import de.catma.ui.client.ui.tagmanager.ColorFieldState;

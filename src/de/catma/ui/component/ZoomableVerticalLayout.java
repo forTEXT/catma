@@ -1,6 +1,6 @@
 package de.catma.ui.component;
 
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.ui.client.ui.zoomableverticallayout.ZoomableClientRpc;
 

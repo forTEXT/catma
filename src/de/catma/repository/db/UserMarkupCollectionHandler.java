@@ -224,6 +224,7 @@ class UserMarkupCollectionHandler {
 			UserMarkupCollectionReference reference = 
 					new UserMarkupCollectionReference(
 							String.valueOf(userMarkupCollectionId), 
+							null,
 							new ContentInfoSet(name));
 			
 			sourceDocument.addUserMarkupCollectionReference(reference);
@@ -396,6 +397,7 @@ class UserMarkupCollectionHandler {
 		UserMarkupCollectionReference umcRef = 
 				new UserMarkupCollectionReference(
 						String.valueOf(userMarkupCollectionId), 
+						null,
 						umc.getContentInfoSet());
 		sourceDocument.addUserMarkupCollectionReference(umcRef);
 		

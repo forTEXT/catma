@@ -20,13 +20,13 @@ package de.catma.ui.analyzer.querybuilder;
 
 import java.util.Arrays;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.v7.data.Property.ValueChangeEvent;
+import com.vaadin.v7.data.Property.ValueChangeListener;
 import com.vaadin.ui.Alignment;
-import com.vaadin.ui.ComboBox;
+import com.vaadin.v7.ui.ComboBox;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.OptionGroup;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.ui.OptionGroup;
+import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.queryengine.MatchMode;
 import de.catma.queryengine.querybuilder.QueryTree;

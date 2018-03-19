@@ -51,7 +51,7 @@ public class GitTagsetHandler {
 	 * @param tagsetId the ID of the tagset to create. If none is provided, a new ID will be generated.
 	 * @param name the name of the new tagset
 	 * @param description the description of the new tagset
-	 * @return the <code>tagsetId</code> if one was provided, otherwise a new tagset ID
+	 * @return the new revisionhash
 	 * @throws GitTagsetHandlerException if an error occurs while creating the tagset
 	 */
 	public String create(@Nonnull String projectId,
@@ -59,11 +59,6 @@ public class GitTagsetHandler {
 						 @Nonnull String name,
 						 @Nullable String description
 	) throws IOException {
-
-		if (tagsetId == null) {
-			IDGenerator idGenerator = new IDGenerator();
-			tagsetId = idGenerator.generate();
-		}
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// create the remote tagset repository
@@ -87,15 +82,13 @@ public class GitTagsetHandler {
 			GitTagsetHeader header = new GitTagsetHeader(name, description);
 			String serializedHeader = new SerializationHelper<GitTagsetHeader>().serialize(header);
 
-			localGitRepoManager.addAndCommit(
+			return localGitRepoManager.addAndCommit(
 					targetHeaderFile,
 					serializedHeader.getBytes(StandardCharsets.UTF_8),
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail()
 			);
 		}
-
-		return tagsetId;
 	}
 
 	public void delete(@Nonnull String projectId, @Nonnull String tagsetId) throws GitTagsetHandlerException {

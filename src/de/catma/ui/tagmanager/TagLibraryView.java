@@ -19,8 +19,8 @@
 package de.catma.ui.tagmanager;
 
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Table.TableDragMode;
+import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.v7.ui.Table.TableDragMode;
 
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;

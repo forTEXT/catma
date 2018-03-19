@@ -3,8 +3,8 @@ package de.catma.ui.field;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import com.vaadin.ui.Field;
-import com.vaadin.ui.TableFieldFactory;
+import com.vaadin.v7.ui.Field;
+import com.vaadin.v7.ui.TableFieldFactory;
 
 public class FieldMapper {
 	// mapping: column->row->Field (itemId->propertyId->Field)

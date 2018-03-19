@@ -20,9 +20,9 @@ package de.catma.ui.tagmanager;
 
 import java.text.MessageFormat;
 
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.Table.ColumnGenerator;
+import com.vaadin.v7.ui.Label;
+import com.vaadin.v7.ui.Table;
+import com.vaadin.v7.ui.Table.ColumnGenerator;
 
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;

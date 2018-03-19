@@ -1023,6 +1023,7 @@ public class DBRepository implements IndexedRepository {
 		SourceDocument sourceDocument = 
 				getSourceDocument(new UserMarkupCollectionReference(
 						userMarkupCollectionRef.getId(), 
+						null,
 						userMarkupCollectionRef.getContentInfoSet()));
 		
 		share(db, targetUserId, sourceDocument, accessMode);

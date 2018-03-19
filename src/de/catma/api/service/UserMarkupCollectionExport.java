@@ -43,7 +43,10 @@ public class UserMarkupCollectionExport extends ServerResource {
 					"requested format not supported yet");
 			}
 			
-			UserMarkupCollectionReference umcRef = new UserMarkupCollectionReference(umcId, new ContentInfoSet());
+			UserMarkupCollectionReference umcRef = new UserMarkupCollectionReference(
+					umcId,  
+					null, //TODO: revision hash might be needed
+					new ContentInfoSet());
 			
 			for (SourceDocument sd : repo.getSourceDocuments()) {
 				if (sd.getUserMarkupCollectionRefs().contains(umcRef)) {

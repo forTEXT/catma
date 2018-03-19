@@ -20,11 +20,11 @@ package de.catma.ui.tagger;
 
 import java.util.Set;
 
-import com.vaadin.data.Item;
+import com.vaadin.v7.data.Item;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.Field;
-import com.vaadin.ui.FormFieldFactory;
-import com.vaadin.ui.ListSelect;
+import com.vaadin.v7.ui.Field;
+import com.vaadin.v7.ui.FormFieldFactory;
+import com.vaadin.v7.ui.ListSelect;
 
 public class PropertyValueEditorFormFieldFactory implements FormFieldFactory {
 	

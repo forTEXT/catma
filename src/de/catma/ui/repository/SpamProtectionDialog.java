@@ -10,10 +10,10 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Image;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.v7.ui.TextField;
+import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.ui.dialog.SaveCancelListener;

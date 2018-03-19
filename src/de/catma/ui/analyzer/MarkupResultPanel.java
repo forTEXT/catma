@@ -30,14 +30,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.vaadin.dialogs.ConfirmDialog;
-import org.vaadin.peter.contextmenu.ContextMenu.ContextMenuItemClickEvent;
-import org.vaadin.peter.contextmenu.ContextMenu.ContextMenuItemClickListener;
 
-import com.vaadin.addon.tableexport.ExcelExport;
-import com.vaadin.data.Property;
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.AbstractComponent;
@@ -45,14 +38,18 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.CheckBox;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.data.Property;
+import com.vaadin.v7.data.Property.ValueChangeEvent;
+import com.vaadin.v7.data.Property.ValueChangeListener;
+import com.vaadin.v7.data.util.HierarchicalContainer;
+import com.vaadin.v7.ui.CheckBox;
+import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.v7.ui.TreeTable;
+import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.source.ContentInfoSet;
@@ -69,10 +66,6 @@ import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.Slider;
-import de.catma.ui.component.HTMLNotification;
-import de.catma.ui.component.export.CsvExport;
-import de.catma.ui.component.export.CsvExport.CsvExportException;
-import de.catma.ui.component.export.HierarchicalExcelExport;
 import de.catma.ui.data.util.PropertyDependentItemSorter;
 import de.catma.ui.data.util.PropertyToTrimmedStringCIComparator;
 import de.catma.user.Permission;
@@ -352,14 +345,6 @@ public class MarkupResultPanel extends VerticalLayout {
 			}
 		});
 		
-		kwicPanel.addTagResultsContextMenuClickListener(new ContextMenuItemClickListener() {
-			
-			@Override
-			public void contextMenuItemClicked(ContextMenuItemClickEvent event) {
-				tagResults();
-			}
-		});
-		
 		btTagResults.addClickListener(new ClickListener() {
 			
 			@Override
@@ -385,76 +370,80 @@ public class MarkupResultPanel extends VerticalLayout {
 		btKwicExcelExport.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-            	try {
-					ExcelExport excelExport = 
-							new HierarchicalExcelExport(kwicPanel.getKwicTable(), 
-									Messages.getString("MarkupResultPanel.kwicQueryResult")); //$NON-NLS-1$
-					excelExport.excludeCollapsedColumns();
-					excelExport.setReportTitle(Messages.getString("MarkupResultPanel.kwicQueryResult")); //$NON-NLS-1$
-					excelExport.export();
-				} catch (IllegalArgumentException e) {
-					HTMLNotification.show(
-						Messages.getString("MarkupResultPanel.error"),  //$NON-NLS-1$
-						MessageFormat.format(Messages.getString("MarkupResultPanel.excelExportError"), //$NON-NLS-1$
-								e.getMessage()),
-						Type.WARNING_MESSAGE);
-					
-					e.printStackTrace();
-				}
+				//FIXME:
+//            	try {
+//					ExcelExport excelExport = 
+//							new HierarchicalExcelExport(kwicPanel.getKwicTable(), 
+//									Messages.getString("MarkupResultPanel.kwicQueryResult")); //$NON-NLS-1$
+//					excelExport.excludeCollapsedColumns();
+//					excelExport.setReportTitle(Messages.getString("MarkupResultPanel.kwicQueryResult")); //$NON-NLS-1$
+//					excelExport.export();
+//				} catch (IllegalArgumentException e) {
+//					HTMLNotification.show(
+//						Messages.getString("MarkupResultPanel.error"),  //$NON-NLS-1$
+//						MessageFormat.format(Messages.getString("MarkupResultPanel.excelExportError"), //$NON-NLS-1$
+//								e.getMessage()),
+//						Type.WARNING_MESSAGE);
+//					
+//					e.printStackTrace();
+//				}
 			}
 		});
 		
 		btKwicCsvExport.addClickListener(new ClickListener() {
 			
-			public void buttonClick(ClickEvent event) {         
-				try {
-					CsvExport csvExport = new CsvExport(kwicPanel.getKwicTable());
-					csvExport.convertTable();
-					csvExport.sendConverted();
-				}
-				catch (CsvExportException e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							Messages.getString("MarkupResultPanel.csvExportError"), e); //$NON-NLS-1$
-				}
+			public void buttonClick(ClickEvent event) {       
+				//FIXME:
+//				try {
+//					CsvExport csvExport = new CsvExport(kwicPanel.getKwicTable());
+//					csvExport.convertTable();
+//					csvExport.sendConverted();
+//				}
+//				catch (CsvExportException e) {
+//					((CatmaApplication)UI.getCurrent()).showAndLogError(
+//							Messages.getString("MarkupResultPanel.csvExportError"), e); //$NON-NLS-1$
+//				}
 			}
 		});
 
 		btResultExcelExport.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				try {
-	            	ExcelExport excelExport = 
-	            			new HierarchicalExcelExport(resultTable, Messages.getString("MarkupResultPanel.queryResult")); //$NON-NLS-1$
-	                excelExport.excludeCollapsedColumns();
-	                excelExport.setReportTitle(Messages.getString("MarkupResultPanel.queryResult")); //$NON-NLS-1$
-	                excelExport.export();
-				} catch (IllegalArgumentException e) {
-					HTMLNotification.show(
-						Messages.getString("MarkupResultPanel.error"),  //$NON-NLS-1$
-						MessageFormat.format(Messages.getString("MarkupResultPanel.excelExportError"), //$NON-NLS-1$
-								e.getMessage()),
-						Type.WARNING_MESSAGE);
-					
-					e.printStackTrace();
-				}
+				//FIXME:
+//				try {
+//	            	ExcelExport excelExport = 
+//	            			new HierarchicalExcelExport(resultTable, Messages.getString("MarkupResultPanel.queryResult")); //$NON-NLS-1$
+//	                excelExport.excludeCollapsedColumns();
+//	                excelExport.setReportTitle(Messages.getString("MarkupResultPanel.queryResult")); //$NON-NLS-1$
+//	                excelExport.export();
+//				} catch (IllegalArgumentException e) {
+//					HTMLNotification.show(
+//						Messages.getString("MarkupResultPanel.error"),  //$NON-NLS-1$
+//						MessageFormat.format(Messages.getString("MarkupResultPanel.excelExportError"), //$NON-NLS-1$
+//								e.getMessage()),
+//						Type.WARNING_MESSAGE);
+//					
+//					e.printStackTrace();
+//				}
 			}
 		});
 		
 		btResultCsvExport.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
-				try {
-					if(!cbFlatTable.getValue()) {
-						cbFlatTable.setValue(Boolean.TRUE);
-					}
-					CsvExport csvExport = new CsvExport(resultTable);
-					csvExport.convertTable();
-					csvExport.sendConverted();
-				}
-				catch (CsvExportException e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
-							Messages.getString("MarkupResultPanel.csvExportError"), e); //$NON-NLS-1$
-				}
+				//FIXME:
+//				try {
+//					if(!cbFlatTable.getValue()) {
+//						cbFlatTable.setValue(Boolean.TRUE);
+//					}
+//					CsvExport csvExport = new CsvExport(resultTable);
+//					csvExport.convertTable();
+//					csvExport.sendConverted();
+//				}
+//				catch (CsvExportException e) {
+//					((CatmaApplication)UI.getCurrent()).showAndLogError(
+//							Messages.getString("MarkupResultPanel.csvExportError"), e); //$NON-NLS-1$
+//				}
 			}
 		});
 		
@@ -548,7 +537,8 @@ public class MarkupResultPanel extends VerticalLayout {
 									umcManager.add(
 										repository.getUserMarkupCollection(
 											new UserMarkupCollectionReference(
-													tagRow.getMarkupCollectionId(), 
+													tagRow.getMarkupCollectionId(),
+													null, //TODO: revisionHash might be needed
 													new ContentInfoSet())));
 								}
 								toBeDeletedIDs.add(tagRow.getTagInstanceId());

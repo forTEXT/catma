@@ -21,9 +21,9 @@ package de.catma.ui.data.util;
 import java.util.Comparator;
 import java.util.HashMap;
 
-import com.vaadin.data.Item;
-import com.vaadin.data.Property;
-import com.vaadin.data.util.DefaultItemSorter;
+import com.vaadin.v7.data.Item;
+import com.vaadin.v7.data.Property;
+import com.vaadin.v7.data.util.DefaultItemSorter;
 
 public class PropertyDependentItemSorter extends DefaultItemSorter {
 	

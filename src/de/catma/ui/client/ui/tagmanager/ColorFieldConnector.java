@@ -3,7 +3,7 @@ package de.catma.ui.client.ui.tagmanager;
 import com.google.gwt.core.client.GWT;
 import com.vaadin.client.annotations.OnStateChange;
 import com.vaadin.client.communication.RpcProxy;
-import com.vaadin.client.ui.AbstractFieldConnector;
+import com.vaadin.v7.client.ui.AbstractFieldConnector;
 import com.vaadin.shared.ui.Connect;
 
 import de.catma.ui.client.ui.tagmanager.VColorField.VColorFieldListener;

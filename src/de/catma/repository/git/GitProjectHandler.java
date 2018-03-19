@@ -13,6 +13,7 @@ import de.catma.indexer.TermInfo;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.tag.TagsetDefinition;
 
 public class GitProjectHandler {
 
@@ -41,9 +42,9 @@ public class GitProjectHandler {
 			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			// create the tagset
-			String newTagsetId = gitTagsetHandler.create(projectId, tagsetId, name, description);
+			String tagsetRevisionHash = gitTagsetHandler.create(projectId, tagsetId, name, description);
 
-			localGitRepoManager.open(projectId, GitTagsetHandler.getTagsetRepositoryName(newTagsetId));
+			localGitRepoManager.open(projectId, GitTagsetHandler.getTagsetRepositoryName(tagsetId));
 			localGitRepoManager.push(remoteGitServerManager.getUsername(), remoteGitServerManager.getPassword());
 			String tagsetRepoRemoteUrl = localGitRepoManager.getRemoteUrl(null);
 			localGitRepoManager.detach(); // need to explicitly detach so that we can call open below
@@ -55,7 +56,7 @@ public class GitProjectHandler {
 			File targetSubmodulePath = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
 					TAGSET_SUBMODULES_DIRECTORY_NAME,
-					newTagsetId
+					tagsetId
 			).toFile();
 
 			localGitRepoManager.addSubmodule(
@@ -65,7 +66,7 @@ public class GitProjectHandler {
 					remoteGitServerManager.getPassword()
 			);
 
-			return newTagsetId;
+			return tagsetRevisionHash;
 		}
 	}
 

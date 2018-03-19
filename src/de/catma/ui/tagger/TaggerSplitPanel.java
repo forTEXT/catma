@@ -3,15 +3,11 @@ package de.catma.ui.tagger;
 import java.lang.reflect.Method;
 
 import com.vaadin.event.ConnectorEventListener;
-import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.shared.MouseEventDetails;
 import com.vaadin.shared.ui.splitpanel.AbstractSplitPanelRpc;
 import com.vaadin.shared.ui.splitpanel.AbstractSplitPanelState.SplitterState;
-import com.vaadin.ui.AbstractSplitPanel;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.AbstractSplitPanel.SplitterClickEvent;
-import com.vaadin.ui.AbstractSplitPanel.SplitterClickListener;
 import com.vaadin.util.ReflectTools;
 
 

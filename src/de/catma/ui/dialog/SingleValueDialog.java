@@ -18,7 +18,7 @@
  */
 package de.catma.ui.dialog;
 
-import com.vaadin.data.util.PropertysetItem;
+import com.vaadin.v7.data.util.PropertysetItem;
 
 public class SingleValueDialog {
 	

@@ -14,6 +14,7 @@ public class UserMarkupCollectionReferenceMapper implements
 	public UserMarkupCollectionReference map(Record record) {
 		return new UserMarkupCollectionReference(
 			String.valueOf(record.getValue(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)),
+			null,
 			new ContentInfoSet(
 				record.getValue(USERMARKUPCOLLECTION.AUTHOR),
 				record.getValue(USERMARKUPCOLLECTION.DESCRIPTION),

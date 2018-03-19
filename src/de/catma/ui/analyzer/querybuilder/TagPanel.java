@@ -20,24 +20,23 @@ package de.catma.ui.analyzer.querybuilder;
 
 import static de.catma.ui.tagmanager.ColorLabelColumnGenerator.COLORLABEL_HTML;
 
-import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.server.ClassResource;
 import com.vaadin.server.Resource;
-import com.vaadin.shared.ui.label.ContentMode;
-import com.vaadin.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
+import com.vaadin.v7.data.util.HierarchicalContainer;
+import com.vaadin.v7.shared.ui.label.ContentMode;
+import com.vaadin.v7.ui.AbstractSelect.ItemCaptionMode;
+import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.v7.ui.Label;
+import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;

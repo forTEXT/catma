@@ -25,8 +25,8 @@ import java.util.logging.Logger;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.util.BeanItemContainer;
+import com.vaadin.v7.data.Property.ValueChangeEvent;
+import com.vaadin.v7.data.util.BeanItemContainer;
 import com.vaadin.server.Page;
 import com.vaadin.server.WebBrowser;
 import com.vaadin.ui.Alignment;
@@ -35,10 +35,10 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.Table.ColumnHeaderMode;
+import com.vaadin.v7.ui.Table;
+import com.vaadin.v7.ui.Table.ColumnHeaderMode;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
@@ -244,7 +244,6 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		
 		
 		openBt = new Button(Messages.getString("RepositoryListView.Open")); //$NON-NLS-1$
-		openBt.setImmediate(true);
 		
 		
 		addComponent(openBt);

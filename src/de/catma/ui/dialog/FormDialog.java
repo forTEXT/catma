@@ -18,22 +18,22 @@
  */
 package de.catma.ui.dialog;
 
-import com.vaadin.data.Validator.InvalidValueException;
-import com.vaadin.data.util.BeanItem;
-import com.vaadin.data.util.PropertysetItem;
+import com.vaadin.v7.data.Validator.InvalidValueException;
+import com.vaadin.v7.data.util.BeanItem;
+import com.vaadin.v7.data.util.PropertysetItem;
 import com.vaadin.event.ShortcutAction.KeyCode;
-import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.v7.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Field;
-import com.vaadin.ui.Form;
-import com.vaadin.ui.FormFieldFactory;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
+import com.vaadin.v7.ui.Field;
+import com.vaadin.v7.ui.Form;
+import com.vaadin.v7.ui.FormFieldFactory;
+import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.v7.ui.Label;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 

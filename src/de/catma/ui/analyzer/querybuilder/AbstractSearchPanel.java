@@ -18,12 +18,13 @@
  */
 package de.catma.ui.analyzer.querybuilder;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
+
 import com.vaadin.ui.Alignment;
-import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.v7.data.Property.ValueChangeEvent;
+import com.vaadin.v7.data.Property.ValueChangeListener;
+import com.vaadin.v7.ui.CheckBox;
+import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.document.Corpus;
 import de.catma.queryengine.QueryOptions;
