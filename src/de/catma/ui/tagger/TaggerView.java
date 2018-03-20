@@ -29,17 +29,16 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.vaadin.v7.data.Property.ValueChangeEvent;
-import com.vaadin.v7.data.Property.ValueChangeListener;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.UI;
+import com.vaadin.v7.data.Property.ValueChangeEvent;
+import com.vaadin.v7.data.Property.ValueChangeListener;
 import com.vaadin.v7.ui.CheckBox;
 import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.ui.Notification.Type;
 import com.vaadin.v7.ui.Slider.ValueOutOfBoundsException;
-import com.vaadin.ui.UI;
 import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.document.Corpus;
@@ -64,7 +63,6 @@ import de.catma.ui.Slider;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
-import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tagger.MarkupPanel.TagInstanceSelectedListener;
 import de.catma.ui.tagger.Tagger.TaggerListener;
@@ -74,7 +72,6 @@ import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
 import de.catma.ui.tagger.pager.PagerComponent.PageChangeListener;
-import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
 
 public class TaggerView extends VerticalLayout 
@@ -89,7 +86,7 @@ public class TaggerView extends VerticalLayout
 	private int taggerID;
 	private Button btAnalyze;
 	private Button btHelp;
-	private Repository repository;
+	private Repository project;
 	private PropertyChangeListener sourceDocChangedListener;
 	private PagerComponent pagerComponent;
 	private Slider linesPerPageSlider;
@@ -105,11 +102,11 @@ public class TaggerView extends VerticalLayout
 	
 	public TaggerView(
 			int taggerID, 
-			SourceDocument sourceDocument, Repository repository, 
+			SourceDocument sourceDocument, Repository project, 
 			PropertyChangeListener sourceDocChangedListener) {
 		this.taggerID = taggerID;
-		this.tagManager = repository.getTagManager();
-		this.repository = repository;
+		this.tagManager = project.getTagManager();
+		this.project = project;
 		this.sourceDocument = sourceDocument;
 		this.sourceDocChangedListener = sourceDocChangedListener;
 		
@@ -132,7 +129,7 @@ public class TaggerView extends VerticalLayout
 	}
 
 	private void initListeners() {
-		repository.addPropertyChangeListener(
+		project.addPropertyChangeListener(
 			RepositoryChangeEvent.sourceDocumentChanged,
 			sourceDocChangedListener);
 		
@@ -179,7 +176,7 @@ public class TaggerView extends VerticalLayout
 			}
 		};
 		
-		repository.addPropertyChangeListener(
+		project.addPropertyChangeListener(
 			RepositoryChangeEvent.tagReferencesChanged, 
 			tagReferencesChangedListener);
 	}
@@ -323,7 +320,7 @@ public class TaggerView extends VerticalLayout
 		
 		btAnalyze = new Button(Messages.getString("TaggerView.analyzeDocument")); //$NON-NLS-1$
 		btAnalyze.addStyleName("primary-button"); //$NON-NLS-1$
-		btAnalyze.setEnabled(repository instanceof IndexedRepository);
+		btAnalyze.setEnabled(project instanceof IndexedRepository);
 		actionPanel.addComponent(btAnalyze);
 		
 		linesPerPageSlider =  new Slider(null, 1, 100, Messages.getString("TaggerView.percentPageSize")); //$NON-NLS-1$
@@ -342,7 +339,7 @@ public class TaggerView extends VerticalLayout
 		actionPanel.addComponent(btClearSearchHighlights);
 		
 		markupPanel = new MarkupPanel(
-				repository,tagger,
+				project,tagger,
 				
 				new PropertyChangeListener() {
 					
@@ -437,7 +434,7 @@ public class TaggerView extends VerticalLayout
 	
 	public UserMarkupCollection openUserMarkupCollection(
 			UserMarkupCollectionReference userMarkupCollectionRef) throws IOException {
-		UserMarkupCollection umc = repository.getUserMarkupCollection(userMarkupCollectionRef);
+		UserMarkupCollection umc = project.getUserMarkupCollection(userMarkupCollectionRef);
 		openUserMarkupCollection(umc);
 		return umc;
 	}
@@ -462,9 +459,9 @@ public class TaggerView extends VerticalLayout
 
 	public void openTagsetDefinition(
 			CatmaApplication catmaApplication, String uuid, Version version) throws IOException {
-		TagLibrary tagLibrary = repository.getTagLibraryFor(uuid, version);
+		TagLibrary tagLibrary = project.getTagLibraryFor(uuid, version);
 		if (tagLibrary != null) {
-			catmaApplication.openTagLibrary(repository, tagLibrary, false);
+			catmaApplication.openTagLibrary(project, tagLibrary, false);
 			openTagsetDefinition(catmaApplication, tagLibrary.getTagsetDefinition(uuid));
 		}
 	}
@@ -480,10 +477,10 @@ public class TaggerView extends VerticalLayout
 
 	public void close() {
 		markupPanel.close();
-		repository.removePropertyChangeListener(
+		project.removePropertyChangeListener(
 				RepositoryChangeEvent.sourceDocumentChanged,
 				sourceDocChangedListener);
-		repository.removePropertyChangeListener(
+		project.removePropertyChangeListener(
 				RepositoryChangeEvent.tagReferencesChanged, 
 				tagReferencesChangedListener);
 
@@ -595,7 +592,7 @@ public class TaggerView extends VerticalLayout
 	
 	public void removeClickshortCuts() { /* noop*/ }
 
-	void setSourceDocument(SourceDocument sd) {
+	public void setSourceDocument(SourceDocument sd) {
 		this.sourceDocument = sd;
 	}
 

@@ -54,6 +54,7 @@ import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.AccessMode;
 import de.catma.document.Corpus;
 import de.catma.document.repository.UnknownUserException;
+import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
@@ -595,9 +596,15 @@ public class DBRepository implements IndexedRepository {
 	}
 	
 	public void createUserMarkupCollection(String name,
-			SourceDocument sourceDocument) throws IOException {
-		dbUserMarkupCollectionHandler.createUserMarkupCollection(
-				name, sourceDocument);
+			SourceDocument sourceDocument) {
+		try {
+			dbUserMarkupCollectionHandler.createUserMarkupCollection(
+					name, sourceDocument);
+		}
+		catch (Exception e) {
+			propertyChangeSupport.firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, e);		}
 	}
 	
 	public void importUserMarkupCollection(
@@ -1180,5 +1187,16 @@ public class DBRepository implements IndexedRepository {
 		TagLibrary openLibrary = 
 			tagManager.getTagLibrary(new TagLibraryReference(tagLibrary.getId(), tagLibrary.getContentInfoSet()));
 		return openLibrary!=null?openLibrary:tagLibrary;
+	}
+	
+	@Override
+	public int getUserMarkupCollectionReferenceCount() throws Exception {
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public List<UserMarkupCollectionReference> getUserMarkupCollectionReferences(int offset, int limit)
+			throws Exception {
+		throw new UnsupportedOperationException();
 	}
 }

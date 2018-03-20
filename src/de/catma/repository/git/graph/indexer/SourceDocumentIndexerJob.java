@@ -5,9 +5,11 @@ import static de.catma.repository.git.graph.NodeType.Project;
 import static de.catma.repository.git.graph.NodeType.ProjectRevision;
 import static de.catma.repository.git.graph.NodeType.SourceDocument;
 import static de.catma.repository.git.graph.NodeType.Term;
+import static de.catma.repository.git.graph.NodeType.User;
 import static de.catma.repository.git.graph.NodeType.nt;
 import static de.catma.repository.git.graph.RelationType.hasDocument;
 import static de.catma.repository.git.graph.RelationType.hasPosition;
+import static de.catma.repository.git.graph.RelationType.hasProject;
 import static de.catma.repository.git.graph.RelationType.hasRevision;
 import static de.catma.repository.git.graph.RelationType.isAdjacentTo;
 import static de.catma.repository.git.graph.RelationType.isPartOf;
@@ -26,6 +28,8 @@ import org.quartz.JobExecutionException;
 
 import de.catma.indexer.IndexBufferManagerName;
 import de.catma.indexer.indexbuffer.IndexBufferManager;
+import de.catma.repository.git.graph.NodeType;
+import de.catma.repository.git.graph.RelationType;
 import de.catma.repository.neo4j.SessionRunner;
 import de.catma.repository.neo4j.StatementExcutor;
 
@@ -38,6 +42,7 @@ public class SourceDocumentIndexerJob implements Job {
 		sourceDocumentId,
 		sourceDocumentRevisionHash,
 		tokenizedSourceDocumentPath, 
+		userId, 
 		
 	}
 	
@@ -50,6 +55,7 @@ public class SourceDocumentIndexerJob implements Job {
 				@Override
 				public void run(Session session) throws Exception {
 					JobDataMap data = context.getJobDetail().getJobDataMap();
+					String userId = (String) data.get(DataField.userId.name());
 					String title = (String) data.get(DataField.title.name());
 					String projectId = (String)data.get(DataField.projectId.name());
 					String rootRevisionHash = (String)data.get(DataField.rootRevisionHash.name());
@@ -65,11 +71,13 @@ public class SourceDocumentIndexerJob implements Job {
 
 					session.run(
 						"CALL apoc.periodic.iterate(\""
-						+ "MATCH (:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
-							+ "(s:"+nt(SourceDocument)+"{"
-								+ "sourceDocumentId:{pSourceDocumentId}, "
-								+ "revisionHash:{pSourceDocumentRevisionHash} "
-							+ "}) "
+						+ "MATCH (:"+nt(User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+						+ "(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+						+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+						+ "(s:"+nt(SourceDocument)+"{"
+							+ "sourceDocumentId:{pSourceDocumentId}, "
+							+ "revisionHash:{pSourceDocumentRevisionHash} "
+						+ "}) "
 						+ " WITH {pFileUrl} AS url, s "
 						+ " CALL apoc.load.json(url) YIELD value"
 						+ " UNWIND keys(value) as term"
@@ -84,10 +92,11 @@ public class SourceDocumentIndexerJob implements Job {
 						+ " MERGE (t)-[:"+rt(hasPosition)+"]->(p)"
 						+ "\","
 						+ "{batchSize:{pBatchSize}, iterateList:{pIterateList}, parallel:{pParallel}, "
-						+ " params: {pProjectId:{pProjectId}, pRootRevisionHash:{pRootRevisionHash},"
+						+ " params: {pUserId:{pUserId}, pProjectId:{pProjectId}, pRootRevisionHash:{pRootRevisionHash},"
 						+ " pSourceDocumentId:{pSourceDocumentId}, pSourceDocumentRevisionHash:{pSourceDocumentRevisionHash},"
 						+ " pFileUrl:{pFileUrl}}})",
 						Values.parameters(
+							"pUserId", userId,
 							"pBatchSize", batchSize,
 							"pIterateList", false,
 							"pParallel", true,
@@ -104,7 +113,9 @@ public class SourceDocumentIndexerJob implements Job {
 						
 					session.run(
 						"CALL apoc.periodic.iterate(\""
-						+ " MATCH (:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+						+ " MATCH (:"+nt(User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+						+ "(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+						+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
 						+ " (s:"+nt(SourceDocument)+"{"
 							+ "sourceDocumentId:{pSourceDocumentId}, "
 							+ "revisionHash:{pSourceDocumentRevisionHash} "
@@ -120,9 +131,10 @@ public class SourceDocumentIndexerJob implements Job {
 						+ " MERGE (p1)-[:"+rt(isAdjacentTo)+"]->(p2)"
 						+ "\","
 						+ "{batchSize:{pBatchSize}, iterateList:{pIterateList}, parallel:{pParallel}, "
-						+ " params: {pProjectId:{pProjectId}, pRootRevisionHash:{pRootRevisionHash},"
+						+ " params: {pUserId:{pUserId}, pProjectId:{pProjectId}, pRootRevisionHash:{pRootRevisionHash},"
 						+ " pSourceDocumentId:{pSourceDocumentId}, pSourceDocumentRevisionHash:{pSourceDocumentRevisionHash}}})",
 						Values.parameters(
+							"pUserId", userId,
 							"pBatchSize", batchSize,
 							"pIterateList", false,
 							"pParallel", true,
@@ -138,13 +150,16 @@ public class SourceDocumentIndexerJob implements Job {
 							title, sourceDocumentId, projectId));
 	
 					session.run(
-						" MATCH (:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+						" MATCH (:"+nt(User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+						+ "(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+						+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
 						+ " (s:"+nt(SourceDocument)+"{"
 							+ "sourceDocumentId:{pSourceDocumentId}, "
 							+ "revisionHash:{pSourceDocumentRevisionHash} "
 						+ " }) "
 						+ " SET s.indexCompleted = {pIndexCompleted}",
 						Values.parameters(
+							"pUserId", userId,
 							"pProjectId", projectId,
 							"pRootRevisionHash", rootRevisionHash,
 							"pSourceDocumentId", sourceDocumentId,

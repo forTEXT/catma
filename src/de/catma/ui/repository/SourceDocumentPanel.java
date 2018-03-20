@@ -641,104 +641,98 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 	private void generateStarterKit(
 			final SourceDocument sourceDocument) {
 		String name = Messages.getString("SourceDocumentPanel.exampleAnnotations"); //$NON-NLS-1$
-		try {
-			repository.addPropertyChangeListener(
-					RepositoryChangeEvent.userMarkupCollectionChanged, 
-				new PropertyChangeListener() {
-				
-				public void propertyChange(PropertyChangeEvent evt) {
-					
-					if (evt.getOldValue() != null) {
-						return;
-					}
-					
-					@SuppressWarnings("unchecked")
-					Pair<UserMarkupCollectionReference, SourceDocument> umcResultPair = 
-							(Pair<UserMarkupCollectionReference, SourceDocument>) evt.getNewValue();
-					
-					if (umcResultPair != null) {
-						
-						if (sourceDocument.equals(umcResultPair.getSecond())) {
-							
-							documentsTree.setCollapsed(umcResultPair.getSecond(), false);
-							documentsTree.setValue(umcResultPair.getFirst());
-							
-							try {
-								repository.addPropertyChangeListener(
-										RepositoryChangeEvent.tagLibraryChanged, 
-										new PropertyChangeListener() {
-									
-									public void propertyChange(PropertyChangeEvent evt) {
-										TagLibraryReference tagLibRef = 
-												(TagLibraryReference)evt.getNewValue();
-										if ((tagLibRef != null)
-												&& (evt.getOldValue() == null)) {
-											IDGenerator idGenerator = new IDGenerator();
-											try {
-												TagLibrary tagLibrary = 
-														repository.getTagLibrary(tagLibRef);
-												
-												TagsetDefinition tsd = 
-														new TagsetDefinition(
-															null,
-															idGenerator.generate(), 
-															Messages.getString("SourceDocumentPanel.exampleTagset"),  //$NON-NLS-1$
-															new Version());
-												
-												repository.getTagManager().addTagsetDefinition(
-														tagLibrary, tsd);
 
-												TagDefinition td = 
-														new TagDefinition(
-																null,
-																idGenerator.generate(),
-																Messages.getString("SourceDocumentPanel.exampleTag"), //$NON-NLS-1$
-																new Version(), 
-																null, ""); //$NON-NLS-1$
-												PropertyDefinition colorPropertyDef =
-														new PropertyDefinition(
+		repository.addPropertyChangeListener(
+				RepositoryChangeEvent.userMarkupCollectionChanged, 
+			new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				
+				if (evt.getOldValue() != null) {
+					return;
+				}
+				
+				@SuppressWarnings("unchecked")
+				Pair<UserMarkupCollectionReference, SourceDocument> umcResultPair = 
+						(Pair<UserMarkupCollectionReference, SourceDocument>) evt.getNewValue();
+				
+				if (umcResultPair != null) {
+					
+					if (sourceDocument.equals(umcResultPair.getSecond())) {
+						
+						documentsTree.setCollapsed(umcResultPair.getSecond(), false);
+						documentsTree.setValue(umcResultPair.getFirst());
+						
+						try {
+							repository.addPropertyChangeListener(
+									RepositoryChangeEvent.tagLibraryChanged, 
+									new PropertyChangeListener() {
+								
+								public void propertyChange(PropertyChangeEvent evt) {
+									TagLibraryReference tagLibRef = 
+											(TagLibraryReference)evt.getNewValue();
+									if ((tagLibRef != null)
+											&& (evt.getOldValue() == null)) {
+										IDGenerator idGenerator = new IDGenerator();
+										try {
+											TagLibrary tagLibrary = 
+													repository.getTagLibrary(tagLibRef);
+											
+											TagsetDefinition tsd = 
+													new TagsetDefinition(
+														null,
+														idGenerator.generate(), 
+														Messages.getString("SourceDocumentPanel.exampleTagset"),  //$NON-NLS-1$
+														new Version());
+											
+											repository.getTagManager().addTagsetDefinition(
+													tagLibrary, tsd);
+
+											TagDefinition td = 
+													new TagDefinition(
 															null,
 															idGenerator.generate(),
-															PropertyDefinition.SystemPropertyName.
-																catma_displaycolor.name(),
-															new PropertyPossibleValueList(
-																ColorConverter.toRGBIntAsString(
-																	ColorConverter.randomHex())));
-												td.addSystemPropertyDefinition(
-														colorPropertyDef);
-												repository.getTagManager().addTagDefinition(
-													tsd, td);
-												
-											} catch (IOException e) {
-												((CatmaApplication)UI.getCurrent()).showAndLogError(
-													Messages.getString("SourceDocumentPanel.errorCreatingExampleTagset"), e); //$NON-NLS-1$
-											}
+															Messages.getString("SourceDocumentPanel.exampleTag"), //$NON-NLS-1$
+															new Version(), 
+															null, ""); //$NON-NLS-1$
+											PropertyDefinition colorPropertyDef =
+													new PropertyDefinition(
+														null,
+														idGenerator.generate(),
+														PropertyDefinition.SystemPropertyName.
+															catma_displaycolor.name(),
+														new PropertyPossibleValueList(
+															ColorConverter.toRGBIntAsString(
+																ColorConverter.randomHex())));
+											td.addSystemPropertyDefinition(
+													colorPropertyDef);
+											repository.getTagManager().addTagDefinition(
+												tsd, td);
 											
-											repository.removePropertyChangeListener(
-													RepositoryChangeEvent.tagLibraryChanged, 
-													this);
+										} catch (IOException e) {
+											((CatmaApplication)UI.getCurrent()).showAndLogError(
+												Messages.getString("SourceDocumentPanel.errorCreatingExampleTagset"), e); //$NON-NLS-1$
 										}
+										
+										repository.removePropertyChangeListener(
+												RepositoryChangeEvent.tagLibraryChanged, 
+												this);
 									}
-								});
-								repository.createTagLibrary(Messages.getString("SourceDocumentPanel.exampleTagLibrary")); //$NON-NLS-1$
-								repository.removePropertyChangeListener(
-									RepositoryChangeEvent.userMarkupCollectionChanged, this);
-							} catch (IOException e) {
-								((CatmaApplication)UI.getCurrent()).showAndLogError(
-										Messages.getString("SourceDocumentPanel.errorCreatingExampleLib"), e); //$NON-NLS-1$
-							}
+								}
+							});
+							repository.createTagLibrary(Messages.getString("SourceDocumentPanel.exampleTagLibrary")); //$NON-NLS-1$
+							repository.removePropertyChangeListener(
+								RepositoryChangeEvent.userMarkupCollectionChanged, this);
+						} catch (IOException e) {
+							((CatmaApplication)UI.getCurrent()).showAndLogError(
+									Messages.getString("SourceDocumentPanel.errorCreatingExampleLib"), e); //$NON-NLS-1$
 						}
 					}
 				}
-			});
-			repository.createUserMarkupCollection(
-					name, sourceDocument);
-		} catch (IOException e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError(
-				Messages.getString("SourceDocumentPanel.errorCreatingExampleAnnotations"), e); //$NON-NLS-1$
-		}
-		
-		
+			}
+		});
+		repository.createUserMarkupCollection(
+				name, sourceDocument);
 	}
 
 	private void handleUserMarkupCollectionReindexRequest(Object value) {
@@ -1198,13 +1192,8 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 							propertysetItem.getItemProperty(
 									userMarkupCollectionNameProperty);
 					String name = (String)property.getValue();
-					try {
-						repository.createUserMarkupCollection(
-								name, sourceDocument);
-					} catch (IOException e) {
-						((CatmaApplication)UI.getCurrent()).showAndLogError(
-							Messages.getString("SourceDocumentPanel.errorCreatingAnnotationCollection"), e); //$NON-NLS-1$
-					}
+					repository.createUserMarkupCollection(
+							name, sourceDocument);
 				}
 			}, userMarkupCollectionNameProperty);
 

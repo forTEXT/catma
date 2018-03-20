@@ -2,7 +2,9 @@ package de.catma.ui.project;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
 import org.vaadin.teemu.wizards.event.WizardCompletedEvent;
@@ -10,22 +12,31 @@ import org.vaadin.teemu.wizards.event.WizardProgressListener;
 import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
 import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
-import com.vaadin.v7.data.util.BeanItemContainer;
+import com.vaadin.data.provider.DataProvider;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Button;
-import com.vaadin.v7.ui.Grid;
+import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalSplitPanel;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.components.grid.MultiSelectionModel;
+import com.vaadin.ui.components.grid.MultiSelectionModel.SelectAllCheckBoxVisibility;
 
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.dialog.SingleValueDialog;
 import de.catma.ui.repository.Messages;
 import de.catma.ui.repository.wizard.AddSourceDocWizardFactory;
 import de.catma.ui.repository.wizard.AddSourceDocWizardResult;
@@ -35,9 +46,12 @@ import de.catma.ui.tabbedview.ClosableTab;
 public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 	
 	private Button btAddSourceDocuments;
-	private Repository repository;
-	private Grid docGrid;
-	private Grid collectionGrid;
+	private Repository project;
+	private Grid<SourceDocument> docGrid;
+	private Grid<UserMarkupCollectionReference> collectionGrid;
+	private Button btOpenSourceDocuments;
+	private Button btOpenCollections;
+	private Button btCreateCollections;
 
 	public ProjectView(
 			ProjectManager projectManager, ProjectReference projectReference) {
@@ -46,8 +60,9 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 			new OpenProjectListener() {
 			
 				@Override
-				public void ready(Repository repository) {
-					ProjectView.this.repository = repository;
+				public void ready(Repository project) {
+					ProjectView.this.project = project;
+					addProjectListener();
 				}
 				
 				@Override
@@ -64,8 +79,65 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 			(BackgroundServiceProvider)UI.getCurrent()); 
 		initComponents();
 		initActions();
+		initData();
 	}
 	
+	private void addProjectListener() {
+		project.addPropertyChangeListener(RepositoryChangeEvent.exceptionOccurred, changeEvent -> {
+			Exception e = (Exception) changeEvent.getNewValue();
+			((CatmaApplication)UI.getCurrent()).showAndLogError("Unexpected Project Error", e);
+		});
+	}
+
+	private void initData() {
+		DataProvider<SourceDocument, String> sourceDocumentProvider = 
+			DataProvider.fromFilteringCallbacks(
+				query -> {
+					try {
+						return project.getSourceDocuments().stream();
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						return Stream.empty();
+					}
+				},
+				query -> {
+					try {
+						return project.getSourceDocuments().size();
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						return 0;
+					}
+				});
+		docGrid.setDataProvider(sourceDocumentProvider);
+		
+		DataProvider<UserMarkupCollectionReference, String> collectionProvider =
+			DataProvider.fromFilteringCallbacks(
+				query -> {
+					try {
+						return project.getUserMarkupCollectionReferences(query.getOffset(), query.getLimit()).stream();
+					}
+					catch (Exception e) {
+						e.printStackTrace();//TODO:
+						return Stream.empty();
+					}
+				},
+				query -> {
+					try {
+						return project.getUserMarkupCollectionReferenceCount();
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						return 0;
+					}
+				}
+			);
+		
+		collectionGrid.setDataProvider(collectionProvider);
+		
+	}
+
 	private void initActions() {
 		btAddSourceDocuments.addClickListener(event -> {
 			
@@ -83,7 +155,7 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 							for(SourceDocumentResult sdr : wizardResult.getSourceDocumentResults()){
 								final SourceDocument sourceDocument = sdr.getSourceDocument();
 								
-								repository.addPropertyChangeListener(
+								project.addPropertyChangeListener(
 									RepositoryChangeEvent.sourceDocumentChanged,
 									new PropertyChangeListener() {
 
@@ -100,7 +172,7 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 											}
 											
 												
-											repository.removePropertyChangeListener(
+											project.removePropertyChangeListener(
 												RepositoryChangeEvent.sourceDocumentChanged, 
 												this);
 											
@@ -135,7 +207,8 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 										}
 									});
 
-								repository.insert(sourceDocument);
+								project.insert(sourceDocument);
+								docGrid.getDataProvider().refreshAll(); //TODO: all seems overkill here
 							}
 							
 						} catch (Exception e) {
@@ -153,7 +226,7 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 					public void activeStepChanged(WizardStepActivationEvent event) {/*not needed*/}
 				}, 
 				wizardResult,
-				repository);
+				project);
 			
 			Window sourceDocCreationWizardWindow = 
 					factory.createWizardWindow(
@@ -165,25 +238,111 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 			sourceDocCreationWizardWindow.center();
 			
 		});
+		
+		btOpenSourceDocuments.addClickListener(event -> {
+			Set<SourceDocument> selectedSourceDocs = docGrid.getSelectedItems();
+			if (selectedSourceDocs.isEmpty()) {
+				Notification.show("Info", "Please select one or more Documents first!", Type.TRAY_NOTIFICATION);
+			}
+			else {
+				selectedSourceDocs.forEach(
+					sourceDoc -> ((CatmaApplication)UI.getCurrent()).openSourceDocument(sourceDoc, project));
+			}
+		});
+		
+		btCreateCollections.addClickListener(event -> {
+			Set<SourceDocument> selectedSourceDocs = docGrid.getSelectedItems();
+			if (selectedSourceDocs.isEmpty()) {
+				Notification.show("Info", "Please select one or more Documents first!", Type.TRAY_NOTIFICATION);
+			}
+			else {
+				SingleValueDialog collectionNameDlg = 
+						new SingleValueDialog();
+				collectionNameDlg.getSingleValue(
+						"Create Annotation Collections", 
+						"Please enter a name pattern for the Colleciton!",
+						namePattern -> createCollections(
+								selectedSourceDocs, 
+								namePattern.getItemProperty("name").getValue().toString()), 
+						"name");
+			}
+		});
+	}
+
+	private void createCollections(Set<SourceDocument> selectedSourceDocs, String namePattern) {
+		for (SourceDocument sourceDocument : selectedSourceDocs) {
+			project.createUserMarkupCollection(namePattern, sourceDocument);
+		}
 	}
 
 	private void initComponents() {
 		setSizeFull();
+		setSplitPosition(65f, Unit.PERCENTAGE);
 		
-		VerticalSplitPanel leftPanel = new VerticalSplitPanel();
+		HorizontalSplitPanel leftCenterPanel = new HorizontalSplitPanel();
+		leftCenterPanel.setSizeFull();
+		addComponent(leftCenterPanel);
+		
+		VerticalLayout leftPanel = new VerticalLayout();
 		leftPanel.setSizeFull();
+		leftPanel.setSpacing(true);
+		leftPanel.setMargin(new MarginInfo(true, true, false, false));
+		leftCenterPanel.addComponent(leftPanel);
 		
-		docGrid = new Grid("Documents", new BeanItemContainer<>(SourceDocument.class));
+		docGrid = new Grid<SourceDocument>("Documents");
+		((MultiSelectionModel<SourceDocument>)docGrid
+			.setSelectionMode(SelectionMode.MULTI))
+			.setSelectAllCheckBoxVisibility(SelectAllCheckBoxVisibility.VISIBLE); //TODO: check how this behaves with large datasets
+		docGrid.setSizeFull();
+		
 		leftPanel.addComponent(docGrid);
+		leftPanel.setExpandRatio(docGrid, 1.0f);
 		
-		collectionGrid = new Grid("Annotations");
-		leftPanel.addComponent(collectionGrid);
+		docGrid
+			.addColumn(
+				sourceDoc -> 
+					sourceDoc
+						.getSourceContentHandler().getSourceDocumentInfo()
+						.getContentInfoSet().getTitle())
+			.setCaption("Title");
+		
+		HorizontalLayout docButtonPanel = new HorizontalLayout();
+		docButtonPanel.setSpacing(true);
+		leftPanel.addComponent(docButtonPanel);
+
+		btOpenSourceDocuments = new Button("Open Documents");
+		docButtonPanel.addComponent(btOpenSourceDocuments);
+		
+		btAddSourceDocuments = new Button("Add Documents");
+		docButtonPanel.addComponent(btAddSourceDocuments);
 		
 		
 		
+		VerticalLayout centerPanel = new VerticalLayout();
+		centerPanel.setSpacing(true);
+		centerPanel.setSizeFull();
+		centerPanel.setMargin(new MarginInfo(true, true, false, true));
+
+		leftCenterPanel.addComponent(centerPanel);
 		
-		btAddSourceDocuments = new Button("Add Document");
-		addComponent(btAddSourceDocuments);
+		collectionGrid = new Grid<UserMarkupCollectionReference>("Annotations");
+		collectionGrid.addColumn(collection -> collection.getName()).setCaption("Title");
+		
+		collectionGrid.setSizeFull();
+		
+		centerPanel.addComponent(collectionGrid);
+		centerPanel.setExpandRatio(collectionGrid, 1.0f);
+		
+		HorizontalLayout collectionButtonPanel = new HorizontalLayout();
+		collectionButtonPanel.setSpacing(true);
+		centerPanel.addComponent(collectionButtonPanel);
+		
+		btOpenCollections = new Button("Open Annotations");
+		collectionButtonPanel.addComponent(btOpenCollections);
+		
+		btCreateCollections = new Button("Create Annotation Collections");
+		collectionButtonPanel.addComponent(btCreateCollections);
+		
 	}
 
 	@Override

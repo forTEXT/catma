@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE ivy-module [
-	<!ENTITY vaadin.version "7.7.13">
+	<!ENTITY vaadin.version "8.3.2">
 ]>
 <ivy-module version="2.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -18,7 +18,7 @@
 	</configurations>
 	<dependencies defaultconf="default" defaultconfmapping="default->default">
 		<!-- The core server part of Vaadin -->
-		<dependency org="com.vaadin" name="vaadin-server" rev="&vaadin.version;" />
+		<dependency org="com.vaadin" name="vaadin-compatibility-server" rev="&vaadin.version;" />
 
 		<!-- Vaadin themes -->
 		<dependency org="com.vaadin" name="vaadin-themes" rev="&vaadin.version;" />
@@ -30,11 +30,11 @@
 		<dependency org="javax.servlet" name="javax.servlet-api" rev="3.0.1" conf="nodeploy->default" />
 
 		<!-- Precompiled DefaultWidgetSet -->
-		<dependency org="com.vaadin" name="vaadin-client-compiled"
+		<dependency org="com.vaadin" name="vaadin-compatibility-client-compiled"
 			rev="&vaadin.version;" />
 
 		<!-- Vaadin client side, needed for widget set compilation -->
-		<dependency org="com.vaadin" name="vaadin-client" rev="&vaadin.version;"
+		<dependency org="com.vaadin" name="vaadin-compatibility-client" rev="&vaadin.version;"
 			 conf="widgetset-compile->default" />
 
 		<!-- Compiler for custom widget sets. Should not be deployed -->
@@ -44,12 +44,8 @@
 		<!-- <dependency org="com.vaadin" name="vaadin-push"
             rev="&vaadin.version;" conf="default->default"/> -->
 
-		<dependency org="org.vaadin.addon" name="confirmdialog" rev="2.1.2" />
-		<dependency org="org.vaadin.addons" name="wizards-for-vaadin" rev="1.1.0" />
-		<dependency org="org.vaadin.addons" name="contextmenu" rev="4.5" />
-		<dependency org="org.vaadin.addons.lazyquerycontainer" name="vaadin-lazyquerycontainer" rev="7.6.1.3" />
-		
-		<dependency org="groupId" name="tableexport-for-vaadin" rev="1.5.1.3" />
+		<dependency org="org.vaadin.addon" name="confirmdialog" rev="3.2.0" />
+		<dependency org="org.vaadin.addons" name="wizards-for-vaadin" rev="2.0.1" />
 		
 		<dependency org="org.neo4j" name="neo4j-enterprise" rev="3.0.7"/>
 		<dependency org="org.antlr" name="antlr-runtime" rev="3.4"/>

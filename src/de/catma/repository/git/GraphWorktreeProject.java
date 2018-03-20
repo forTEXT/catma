@@ -88,7 +88,11 @@ public class GraphWorktreeProject implements IndexedRepository {
 		this.tagManager = tagManager;
 		this.backgroundServiceProvider = backgroundServiceProvider;
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
-		this.graphProjectHandler = new GraphProjectHandler(this.projectReference, this.user);
+		this.graphProjectHandler = 
+			new GraphProjectHandler(
+				this.projectReference, 
+				this.user,
+				sourceDocumentId -> getSourceDocumentURI(sourceDocumentId));
 		this.tempDir = RepositoryPropertyKey.TempDir.getValue();
 		
 	}
@@ -292,12 +296,16 @@ public class GraphWorktreeProject implements IndexedRepository {
 		
 		tagsetDefinition.setRevisionHash(tagsetRevisionHash);
 		
+		String oldRootRevisionHash = this.rootRevisionHash;
+		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(this.projectReference);
+		
 		graphProjectHandler.createTagset(
 			rootRevisionHash, 
 			tagsetDefinition.getUuid(), 
 			tagsetDefinition.getRevisionHash(),
 			tagsetDefinition.getName(),
-			""); //TODO: description
+			"",
+			oldRootRevisionHash); //TODO: description
 	}
 
 	@Override
@@ -352,7 +360,15 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	@Override
 	public String getFileURL(String sourceDocumentID, String... path) {
-		return null; //TODO:
+		return null; //TODO
+	}
+	
+	private URI getSourceDocumentURI(String sourceDocumentId) {
+		return Paths
+		.get(new File(RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
+		.resolve(gitProjectHandler.getSourceDocumentSubmodulePath(this.user, this.projectReference, sourceDocumentId))
+		.resolve(sourceDocumentId + "." + UTF8_CONVERSION_FILE_EXTENSION)
+		.toUri();
 	}
 
 	@Override
@@ -421,8 +437,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 			}
 			
 			sourceTempFile.delete();
+
 			String oldRootRevisionHash = this.rootRevisionHash;
-			
 			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(this.projectReference);
 	
 			graphProjectHandler.insertSourceDocument(
@@ -440,6 +456,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 		}
 		catch (Exception e) {
+			e.printStackTrace();
 			propertyChangeSupport.firePropertyChange(
 					RepositoryChangeEvent.exceptionOccurred.name(),
 					null, e);
@@ -524,7 +541,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
-	public void createUserMarkupCollection(String name, SourceDocument sourceDocument) throws IOException {
+	public void createUserMarkupCollection(String name, SourceDocument sourceDocument) {
 		try {
 			String collectionId = idGenerator.generate();
 			
@@ -536,10 +553,13 @@ public class GraphWorktreeProject implements IndexedRepository {
 						sourceDocument.getID(), 
 						sourceDocument.getRevisionHash());
 			
+			String oldRootRevisionHash = this.rootRevisionHash;
+			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(this.projectReference);
+
 			graphProjectHandler.createUserMarkupCollection(
 				rootRevisionHash, 
 				collectionId, name, umcRevisionHash, 
-				sourceDocument);
+				sourceDocument, oldRootRevisionHash);
 			
 			UserMarkupCollectionReference reference = 
 					new UserMarkupCollectionReference(
@@ -559,6 +579,16 @@ public class GraphWorktreeProject implements IndexedRepository {
 					RepositoryChangeEvent.exceptionOccurred.name(),
 					null, e);
 		}
+	}
+	
+	@Override
+	public List<UserMarkupCollectionReference> getUserMarkupCollectionReferences(int offset, int limit) throws Exception {
+		return graphProjectHandler.getUserMarkupCollectionReferences(rootRevisionHash, offset, limit);
+	}
+	
+	@Override
+	public int getUserMarkupCollectionReferenceCount() throws Exception {
+		return graphProjectHandler.getUserMarkupCollectionReferenceCount(rootRevisionHash);
 	}
 
 	@Override
@@ -683,8 +713,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	@Override
 	public TagManager getTagManager() {
-		// TODO Auto-generated method stub
-		return null;
+		return tagManager;
 	}
 
 	@Override

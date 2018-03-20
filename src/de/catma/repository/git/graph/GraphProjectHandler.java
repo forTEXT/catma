@@ -19,20 +19,21 @@ import static de.catma.repository.git.graph.RelationType.rt;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
+import org.neo4j.driver.internal.value.NullValue;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.Values;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
@@ -42,7 +43,7 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.SchedulerRepository;
 
-import com.google.gwt.i18n.client.impl.cldr.DateTimeFormatInfoImpl_ro;
+import com.google.common.collect.Lists;
 
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.FileOSType;
@@ -53,6 +54,7 @@ import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
 import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.source.contenthandler.StandardContentHandler;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.indexer.SourceDocumentIndexerJob;
 import de.catma.repository.git.graph.indexer.SourceDocumentIndexerJob.DataField;
@@ -69,22 +71,27 @@ public class GraphProjectHandler {
 	private Logger logger = Logger.getLogger(GraphProjectHandler.class.getName());
 	private User user;
 	private ProjectReference projectReference;
+	private FileURIProvider fileURIProvider;
 	
-	public GraphProjectHandler(ProjectReference projectReference, User user) {
+	public GraphProjectHandler(ProjectReference projectReference, User user, FileURIProvider fileURIProvider) {
 		this.projectReference = projectReference;
 		this.user = user;
+		this.fileURIProvider = fileURIProvider;
 	}
 
-	public void ensureProjectRevisionIsLoaded(String revisionHash) throws Exception {
+	public void ensureProjectRevisionIsLoaded(
+			String revisionHash, 
+			Supplier<Collection<SourceDocument>> sourceDocumentsSupplier,
+			Supplier<Collection<UserMarkupCollectionReference>> collectionsSupplier) throws Exception {
 		ValueContainer<Boolean> revisionExists = new ValueContainer<>();
 		StatementExcutor.execute(new SessionRunner() {
 			@Override
 			public void run(Session session) throws Exception {
 				StatementResult statementResult = session.run(
-					"MATCH (:"+nt(NodeType.User)+"{userId:pUserId})-[:"+rt(hasProject)+"]->"+"(p:"+nt(Project)+"{projectId:{pProjectId}})"
-					+ " -[:"+rt(hasRevision)+"]-> "
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(p:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]-> "
 					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRevisionHash}}) "
-							+ " RETURN p.projectId ", 
+					+ " RETURN p.projectId ", 
 					Values.parameters(
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
@@ -106,19 +113,83 @@ public class GraphProjectHandler {
 					session.run(
 						"MERGE (u:"+nt(User)+"{userId:{pUserId}})"
 						+ "MERGE (p:"+nt(Project)+"{projectId:{pProjectId}})"
-						+ "MERGE (u)-["+rt(hasProject)+"]->(p)"
+						+ "MERGE (u)-[:"+rt(hasProject)+"]->(p)"
 						+ " MERGE (p) "
 						+ " -[:"+rt(hasRevision)+"]-> "
 						+ "(pr:"+nt(ProjectRevision)+"{revisionHash:{pRevisionHash}}) ", 
 						Values.parameters(
+							"pUserId", user.getIdentifier(),
 							"pProjectId", projectReference.getProjectId(),
 							"pRevisionHash", revisionHash
 						)
 					);
-
+					
+					for (SourceDocument sourceDocument : sourceDocumentsSupplier.get()) {
+						SourceDocumentInfo info = 
+							sourceDocument.getSourceContentHandler().getSourceDocumentInfo();
+						session.run(
+							" MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+							+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+							+ "(pr:"+nt(ProjectRevision)+"{revisionHash:{pRevisionHash}}) "
+							+ " MERGE (pr)-[:"+rt(hasDocument)+"]->"
+							+ "(:"+nt(SourceDocument)+"{"
+							+ "sourceDocumentId:{pSourceDocumentId}, "
+							+ "revisionHash:{pSourceDocumentRevisionHash}, "
+							+ "locale:{pLocale}, "
+							+ "publisher:{pPublisher}, "
+							+ "author:{pAuthor}, "
+							+ "description:{pDescription},"
+							+ "title:{pTitle}, "
+							+ "checksum:{pChecksum}, "
+							+ "fileOSType:{pFileOSType}, "
+							+ "indexCompleted:{pIndexCompleted}"
+							+ "}) ",
+							Values.parameters(
+								"pUserId", user.getIdentifier(),
+								"pProjectId", projectReference.getProjectId(),
+								"pRevisionHash", revisionHash,
+								"pSourceDocumentId", sourceDocument.getID(),
+								"pSourceDocumentRevisionHash", sourceDocument.getRevisionHash(),
+								"pLocale", info.getIndexInfoSet().getLocale().toString(),
+								"pPublisher", info.getContentInfoSet().getPublisher(),
+								"pAuthor", info.getContentInfoSet().getAuthor(),
+								"pDescription", info.getContentInfoSet().getDescription(),
+								"pTitle", info.getContentInfoSet().getTitle(),
+								"pChecksum", info.getTechInfoSet().getChecksum(),
+								"pFileOSType", info.getTechInfoSet().getFileOSType().name(),
+								"pIndexCompleted", false
+							)
+						);
+					}
+					for (UserMarkupCollectionReference collectionReference : collectionsSupplier.get()) {
+						
+						session.run(
+							"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+							+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+							+ "(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}}) "
+							+ "SET pr.revisionHash = {pRootRevisionHash} "
+							+ "WITH pr "
+							+ "MATCH (pr)-[:"+rt(hasDocument)+"]->"
+							+ "(s:"+nt(SourceDocument)+"{sourceDocumentId:{pSourceDocumentId}}) "
+							+ "MERGE (s)-[:"+rt(hasCollection)+"]->"
+							+ "(:"+nt(MarkupCollection)+"{"
+							+ "collectionId:{pCollectionId},"
+							+ "revisionHash:{pUmcRevisionHash},"
+							+ "name:{pName}"
+							+ "})",
+							Values.parameters(
+								"pUserId", user.getIdentifier(),
+								"pProjectId", projectReference.getProjectId(),
+								"pRevisionHash", revisionHash,
+								"pSourceDocumentId", sourceDocument.getID(),
+								"pCollectionId", collectionReference.getId(),
+								"pUmcRevisionHash", collectionReference.getRevisionHash(),
+								"pName", collectionReference.getName()
+							)
+						);
+					}
 				}
 			});
-			
 			
 		}
 		
@@ -134,7 +205,7 @@ public class GraphProjectHandler {
 				SourceDocumentInfo info = sourceDocument.getSourceContentHandler().getSourceDocumentInfo();
 				
 				session.run(
-					" MATCH (:"+nt(NodeType.User)+"{userId:pUserId})-[:"+rt(hasProject)+"]->"
+					" MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
 						+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
 						+ "(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}}) "
 					+ " SET pr.revisionHash = {pRootRevisionHash}"
@@ -149,7 +220,7 @@ public class GraphProjectHandler {
 								+ "description:{pDescription},"
 								+ "title:{pTitle}, "
 								+ "checksum:{pChecksum}, "
-								+ "fileOSType:{pFileOSType}"
+								+ "fileOSType:{pFileOSType}, "
 								+ "indexCompleted:{pIndexCompleted}"
 							+ "}) ",
 					Values.parameters(
@@ -185,7 +256,8 @@ public class GraphProjectHandler {
         jobDataMap.put(
         	DataField.title.name(), 
         	sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getTitle());
-		jobDataMap.put(DataField.projectId.name(), projectId);
+        jobDataMap.put(DataField.userId.name(), user.getIdentifier());
+        jobDataMap.put(DataField.projectId.name(), projectId);
 		jobDataMap.put(DataField.rootRevisionHash.name(), rootRevisionHash);
 		jobDataMap.put(DataField.sourceDocumentId.name(), sourceDocument.getID());
 		jobDataMap.put(DataField.sourceDocumentRevisionHash.name(), sourceDocument.getRevisionHash());
@@ -216,7 +288,7 @@ public class GraphProjectHandler {
 			@Override
 			public void run(Session session) throws Exception {
 				StatementResult statementResult = session.run(
-					"MATCH (:"+nt(NodeType.User)+"{userId:pUserId})-[:"+rt(hasProject)+"]->"+""
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"+""
 					+ "(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
 					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
 					+ "(s:"+nt(SourceDocument)+") "
@@ -230,7 +302,7 @@ public class GraphProjectHandler {
 
 				while (statementResult.hasNext()) {
 					Record record = statementResult.next();
-					sourceDocuments.add(createSourceDocument(record));
+					sourceDocuments.add(createSourceDocument(record.get("s")));
 				}
 			}
 			
@@ -239,18 +311,26 @@ public class GraphProjectHandler {
 		return sourceDocuments;
 	}
 
-	private SourceDocument createSourceDocument(Record record) {
-		String sourceDocumentId = record.get("sourceDocumentId").asString();
-		String locale = record.get("locale").asString();
-		String author = record.get("author").asString();
-		String description = record.get("description").asString();
-		String publisher = record.get("publisher").asString();
-		String title = record.get("title").asString();
-		Long checksum = record.get("checksum").asLong();
-		FileOSType fileOSType = FileOSType.valueOf(record.get("fileOSType").asString());
+	private SourceDocument createSourceDocument(Value sourceDocumentValue) throws Exception {
+		String sourceDocumentId = sourceDocumentValue.get("sourceDocumentId").asString();
+		String locale = sourceDocumentValue.get("locale").asString();
+		String author = sourceDocumentValue.get("author").asString();
+		String description = sourceDocumentValue.get("description").asString();
+		String publisher = sourceDocumentValue.get("publisher").asString();
+		String title = sourceDocumentValue.get("title").asString();
+		Long checksum = sourceDocumentValue.get("checksum").equals(NullValue.NULL)?null:sourceDocumentValue.get("checksum").asLong();
+		FileOSType fileOSType = FileOSType.valueOf(sourceDocumentValue.get("fileOSType").asString());
 		
 		SourceContentHandler contentHandler = new StandardContentHandler();
+		TechInfoSet techInfoSet =
+				new TechInfoSet(
+						FileType.TEXT, 
+						StandardCharsets.UTF_8, 
+						fileOSType, 
+						checksum);
 		
+		techInfoSet.setURI(fileURIProvider.getSourceDocumentFileURI(sourceDocumentId));
+
 		SourceDocumentInfo sourceDocumentInfo = 
 				new SourceDocumentInfo(
 					new IndexInfoSet(
@@ -258,7 +338,7 @@ public class GraphProjectHandler {
 						Collections.emptyList(), //TODO
 						Locale.forLanguageTag(locale)), 
 					new ContentInfoSet(author, description, publisher, title), 
-					new TechInfoSet(FileType.TEXT, StandardCharsets.UTF_8, fileOSType, checksum));
+					techInfoSet);
 		contentHandler.setSourceDocumentInfo(sourceDocumentInfo);
 		
 		return new SourceDocument(sourceDocumentId, contentHandler);
@@ -272,7 +352,7 @@ public class GraphProjectHandler {
 			@Override
 			public void run(Session session) throws Exception {
 				StatementResult statementResult = session.run(
-					"MATCH (:"+nt(NodeType.User)+"{userId:pUserId})-[:"+rt(hasProject)+"]->"
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
 					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
 					+ "(s:"+nt(SourceDocument)+"{sourceDocumentId:{pSourceDocumentId}}) "
@@ -287,7 +367,7 @@ public class GraphProjectHandler {
 
 				if (statementResult.hasNext()) {
 					Record record = statementResult.next();
-					sourceDocumentContainer.setValue(createSourceDocument(record));
+					sourceDocumentContainer.setValue(createSourceDocument(record.get("s")));
 				}
 			}
 			
@@ -298,28 +378,34 @@ public class GraphProjectHandler {
 
 	public void createUserMarkupCollection(
 		String rootRevisionHash,
-		String collectionId, String name, String umcRevisionHash, SourceDocument sourceDocument) throws Exception {
+		String collectionId, String name, String umcRevisionHash, SourceDocument sourceDocument, String oldRootRevisionHash) throws Exception {
 
 		StatementExcutor.execute(new SessionRunner() {
 			@Override
 			public void run(Session session) throws Exception {
 				session.run(
-					"MATCH (:"+nt(NodeType.User)+"{userId:pUserId})-[:"+rt(hasProject)+"]->"
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+					+ "(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}}) "
+					+ "SET pr.revisionHash = {pRootRevisionHash} "
+					+ "WITH pr "
+					+ "MATCH (pr)-[:"+rt(hasDocument)+"]->"
 					+ "(s:"+nt(SourceDocument)+"{sourceDocumentId:{pSourceDocumentId}}) "
 					+ "MERGE (s)-[:"+rt(hasCollection)+"]->"
 					+ "(:"+nt(MarkupCollection)+"{"
 						+ "collectionId:{pCollectionId},"
-						+ "revisionHash:{pUmcRevisionHash}"
+						+ "revisionHash:{pUmcRevisionHash},"
+						+ "name:{pName}"
 					+ "})",
 					Values.parameters(
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
+						"pOldRootRevisionHash", oldRootRevisionHash,
 						"pRootRevisionHash", rootRevisionHash,
 						"pSourceDocumentId", sourceDocument.getID(),
 						"pCollectionId", collectionId,
-						"pUmcRevisionHash", umcRevisionHash
+						"pUmcRevisionHash", umcRevisionHash,
+						"pName", name
 					)
 				);
 			}
@@ -327,15 +413,17 @@ public class GraphProjectHandler {
 	}
 
 	public void createTagset(String rootRevisionHash, String tagsetId,
-			String tagsetRevisionHash, String name, String description) throws Exception {
+			String tagsetRevisionHash, String name, String description, String oldRootRevisionHash) throws Exception {
 		
 		StatementExcutor.execute(new SessionRunner() {
 			@Override
 			public void run(Session session) throws Exception {
 				session.run(
-					"MATCH (:"+nt(NodeType.User)+"{userId:pUserId})-[:"+rt(hasProject)+"]->"
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-					+ "(pr:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})"
+					+ "(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}}) "
+					+ "SET pr.revisionHash = {pRootRevisionHash} "
+					+ "WITH pr "
 					+ "MERGE (pr)-[:"+rt(hasTagset)+"]->"
 					+ "(:"+nt(Tagset)+"{"
 						+ "tagsetId:{pTagsetId},"
@@ -364,7 +452,7 @@ public class GraphProjectHandler {
 			@Override
 			public void run(Session session) throws Exception {
 				session.run(
-					"MATCH (:"+nt(NodeType.User)+"{userId:pUserId})-[:"+rt(hasProject)+"]->"
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
 					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
 					+ "(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}, revisionHash:{pTagsetRevisionHash}) "
@@ -397,5 +485,81 @@ public class GraphProjectHandler {
 			}
 		});
 		
+	}
+
+	public List<UserMarkupCollectionReference> getUserMarkupCollectionReferences(String rootRevisionHash, int offset, int limit) throws Exception {
+		List<UserMarkupCollectionReference> collectionContainer = Lists.newArrayList();
+		
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				StatementResult statementResult = session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+					+ "(:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
+					+ "(c:"+nt(MarkupCollection)+") "
+					+ "RETURN c.collectionId, c.revisionHash, c.name SKIP {pOffset} LIMIT {pLimit} ",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pOffset", offset,
+						"pLimit", limit
+					)
+				);
+				
+				while (statementResult.hasNext()) {
+					Record record = statementResult.next();
+					
+					collectionContainer.add(
+						createUserMarkupCollectionReference(
+							record.get("c.collectionId"), 
+							record.get("c.revisionHash"), 
+							record.get("c.name")));
+				}
+			}
+		});
+		
+		
+		return collectionContainer;
+	}
+
+	protected UserMarkupCollectionReference createUserMarkupCollectionReference(
+		Value idValue, Value revisionHashValue, Value nameValue) {
+		
+		return new UserMarkupCollectionReference(
+				idValue.asString(), 
+				revisionHashValue.asString(), 
+				new ContentInfoSet(nameValue.asString()));
+	}
+
+	public int getUserMarkupCollectionReferenceCount(String rootRevisionHash) throws Exception {
+		ValueContainer<Integer> countContainer = new ValueContainer<>(0);
+		
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				StatementResult statementResult = session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+					+ "(:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
+					+ "(c:"+nt(MarkupCollection)+") "
+					+ "RETURN count(c) as umcCount ",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash
+					)
+				);
+				
+				if (statementResult.hasNext()) {
+					countContainer.setValue(statementResult.next().get("umcCount").asInt());
+				}
+			}
+		});
+
+		return countContainer.getValue();
 	}
 }

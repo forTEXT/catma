@@ -154,37 +154,33 @@ public class CorpusContentSelectionDialog extends VerticalLayout {
 										.getItemProperty(userMarkupCollectionNameProperty);
 								String name = (String) property.getValue();
 
-								try {
-									PropertyChangeListener saveLastAnnotationCollectionListener = new PropertyChangeListener() {
+								//TODO: handle Repository.RepositoryChangeEvent.exceptionOccurred
+								
+								PropertyChangeListener saveLastAnnotationCollectionListener = new PropertyChangeListener() {
 
-										@Override
-										public void propertyChange(PropertyChangeEvent evt) {
-											if (evt.getOldValue() == null) {
-												@SuppressWarnings("unchecked")
-												Pair<UserMarkupCollectionReference, SourceDocument> result = (Pair<UserMarkupCollectionReference, SourceDocument>) evt
-														.getNewValue();
-												String lastAdded = result.getFirst().getId();
-												preselectUmcIds = new ArrayList<String>();
-												preselectUmcIds.add(lastAdded);
+									@Override
+									public void propertyChange(PropertyChangeEvent evt) {
+										if (evt.getOldValue() == null) {
+											@SuppressWarnings("unchecked")
+											Pair<UserMarkupCollectionReference, SourceDocument> result = (Pair<UserMarkupCollectionReference, SourceDocument>) evt
+													.getNewValue();
+											String lastAdded = result.getFirst().getId();
+											preselectUmcIds = new ArrayList<String>();
+											preselectUmcIds.add(lastAdded);
 
-											}
-											repository.removePropertyChangeListener(
-													Repository.RepositoryChangeEvent.userMarkupCollectionChanged, this);									
 										}
-									};
-									repository.addPropertyChangeListener(
-											Repository.RepositoryChangeEvent.userMarkupCollectionChanged,
-											saveLastAnnotationCollectionListener);
+										repository.removePropertyChangeListener(
+												Repository.RepositoryChangeEvent.userMarkupCollectionChanged, this);									
+									}
+								};
+								repository.addPropertyChangeListener(
+										Repository.RepositoryChangeEvent.userMarkupCollectionChanged,
+										saveLastAnnotationCollectionListener);
 
-									repository.createUserMarkupCollection(name, sourceDocument);
-																								
-									populateDocumentsTree();
-															
-								} catch (IOException e) {
-									((CatmaApplication) UI.getCurrent()).showAndLogError(
-											Messages.getString("CorpusContentSelectionDialog.errorCreatingCollection"), //$NON-NLS-1$
-											e);
-								}
+								repository.createUserMarkupCollection(name, sourceDocument);
+																							
+								populateDocumentsTree();
+
 							}
 						}, userMarkupCollectionNameProperty);
 			}

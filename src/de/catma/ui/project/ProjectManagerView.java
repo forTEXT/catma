@@ -1,5 +1,10 @@
 package de.catma.ui.project;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
+import com.vaadin.ui.Component;
+
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
@@ -13,6 +18,7 @@ import de.catma.ui.tagger.TaggerView;
 public class ProjectManagerView extends TabbedView {
 
 	private ProjectListView myProjects;
+	private int tabId = 0;
 
 
 	public ProjectManagerView(ProjectManager projectManager) {
@@ -58,12 +64,53 @@ public class ProjectManagerView extends TabbedView {
 //		tagManagerView.openTagLibrary(this, repository, tagLibrary);
 	}
 
-	public TaggerView openSourceDocument(SourceDocument sourceDocument, Repository repository) {
-//		menu.executeEntry(taggerManagerView);
-//
-//		return taggerManagerView.openSourceDocument(sourceDocument, repository);
+	public TaggerView openSourceDocument(SourceDocument sourceDocument, Repository project) {
+		TaggerView taggerView = 
+			new TaggerView(tabId, sourceDocument, project, new PropertyChangeListener() {
+				
+				public void propertyChange(PropertyChangeEvent evt) {
 
-		// TODO Auto-generated method stub
+					if (evt.getNewValue() == null) { //remove
+						SourceDocument sd = (SourceDocument) evt.getOldValue();
+						if (sd.getID().equals(sourceDocument.getID())) {
+							TaggerView taggerView = 
+									getTaggerView(sourceDocument);
+							if (taggerView != null) {
+								onTabClose(taggerView);
+							}
+						}
+					}
+					else if (evt.getOldValue() != null) { //update
+						String sdID = (String) evt.getOldValue();
+						if (sdID.equals(sourceDocument.getID())) {
+							TaggerView taggerView = 
+									getTaggerView(sourceDocument);
+							if (taggerView != null) {
+								taggerView.setSourceDocument(
+										(SourceDocument) evt.getNewValue());
+							}
+						}								
+					}
+					
+				}
+			});
+		
+		addClosableTab(taggerView, sourceDocument.toString());
+		setSelectedTab(taggerView);
+
+		return taggerView;
+	}
+	
+	
+	private TaggerView getTaggerView(SourceDocument sourceDocument) {
+		for (Component tabContent : this.getTabSheet()) {
+			TaggerView taggerView = (TaggerView)tabContent;
+			if (taggerView.getSourceDocument().getID().equals(
+					sourceDocument.getID())) {
+				return taggerView;
+			}
+		}
+		
 		return null;
 	}
 

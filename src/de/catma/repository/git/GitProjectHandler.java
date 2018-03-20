@@ -217,5 +217,4 @@ public class GitProjectHandler {
 			SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
 			sourceDocumentId);
 	}
-
 }

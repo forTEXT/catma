@@ -87,12 +87,8 @@ public class ChooseAnnotationCollectionDialog extends Window {
 				try {
 
 					String collectionName = generateCollectionName();
-					try {
-						repository.createUserMarkupCollection(collectionName, sourceDocument);
-					} catch (IOException e) {
-						((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("CorpusContentSelectionDialog.errorCreatingCollection"), //$NON-NLS-1$
-								e);
-					}
+					repository.createUserMarkupCollection(collectionName, sourceDocument);
+
 				} finally {
 					UI.getCurrent().removeWindow(ChooseAnnotationCollectionDialog.this);
 
