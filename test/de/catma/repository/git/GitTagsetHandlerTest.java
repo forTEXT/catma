@@ -207,11 +207,11 @@ public class GitTagsetHandlerTest {
 					"Test CATMA Project for Tagset", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, gitLabServerManager);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(null, projectId, jGitRepoManager, gitLabServerManager);
 
 			// create a tagset
 			String tagsetId = gitProjectHandler.createTagset(
-					projectId, null, "Test Tagset", null
+					null, "Test Tagset", null
 			);
 			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the project will take
 			// care of that for us
@@ -298,11 +298,11 @@ public class GitTagsetHandlerTest {
 					"Test CATMA Project for Tagset", "This is a test CATMA project"
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, gitLabServerManager);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(null, projectId, jGitRepoManager, gitLabServerManager);
 
 			// create a tagset
 			String tagsetId = gitProjectHandler.createTagset(
-					projectId, null, "Test Tagset", null
+					null, "Test Tagset", null
 			);
 			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the project will take
 			// care of that for us

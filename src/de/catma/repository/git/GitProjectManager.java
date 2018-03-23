@@ -146,10 +146,16 @@ public class GitProjectManager implements ProjectManager {
 			Repository project = 
 				new GraphWorktreeProject(
 						this.user,
-						new GitProjectHandler(this.localGitRepositoryManager, this.remoteGitServerManager),
+						new GitProjectHandler(
+							this.user, 
+							projectReference.getProjectId(), 
+							this.localGitRepositoryManager, 
+							this.remoteGitServerManager),
 						projectReference,
 						new TagManager(),
 						backgroundServiceProvider);
+			
+			
 
 			project.open(openProjectListener);
 

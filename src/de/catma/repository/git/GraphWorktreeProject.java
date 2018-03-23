@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
@@ -34,6 +35,7 @@ import de.catma.indexer.TermInfo;
 import de.catma.indexer.indexbuffer.IndexBufferManager;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
+import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
@@ -92,9 +94,27 @@ public class GraphWorktreeProject implements IndexedRepository {
 			new GraphProjectHandler(
 				this.projectReference, 
 				this.user,
-				sourceDocumentId -> getSourceDocumentURI(sourceDocumentId));
+				new FileInfoProvider() {
+					
+					@Override
+					public Path getTokenizedSourceDocumentPath(String documentId) throws Exception {
+						return GraphWorktreeProject.this.getTokenizedSourceDocumentPath(documentId);
+					}
+					
+					@Override
+					public URI getSourceDocumentFileURI(String documentId) throws Exception {
+						return getSourceDocumentURI(documentId);
+					}
+				});
 		this.tempDir = RepositoryPropertyKey.TempDir.getValue();
 		
+	}
+	
+	private Path getTokenizedSourceDocumentPath(String documentId) {
+		return Paths
+			.get(RepositoryPropertyKey.GraphDbGitMountBasePath.getValue())
+			.resolve(gitProjectHandler.getSourceDocumentSubmodulePath(documentId))
+			.resolve(documentId + "." + TOKENIZED_FILE_EXTENSION);
 	}
 
 	@Override
@@ -107,8 +127,16 @@ public class GraphWorktreeProject implements IndexedRepository {
 	public void open(OpenProjectListener openProjectListener) {
 		try {
 			
-			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(this.projectReference);
-			graphProjectHandler.ensureProjectRevisionIsLoaded(rootRevisionHash);
+			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
+			graphProjectHandler.ensureProjectRevisionIsLoaded(
+					rootRevisionHash,
+					() -> gitProjectHandler.getSourceDocumentStream(),
+					() -> gitProjectHandler.getUserMarkupCollectionReferenceStream());
+			
+			TagLibrary tagLibrary = new TagLibrary(projectReference.getProjectId(), projectReference.getName());
+			graphProjectHandler.getTagsets().stream().forEach(tagsetDef -> tagLibrary.add(tagsetDef));
+			tagManager.addTagLibrary(tagLibrary);
+			
 			initTagManagerListeners();
 			openProjectListener.ready(this);
 		}
@@ -291,13 +319,12 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private void addTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
 		String tagsetRevisionHash = 
 			gitProjectHandler.createTagset(
-				projectReference.getProjectId(), 
 				tagsetDefinition.getUuid(), tagsetDefinition.getName(), "");
 		
 		tagsetDefinition.setRevisionHash(tagsetRevisionHash);
 		
 		String oldRootRevisionHash = this.rootRevisionHash;
-		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(this.projectReference);
+		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 		
 		graphProjectHandler.createTagset(
 			rootRevisionHash, 
@@ -366,7 +393,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private URI getSourceDocumentURI(String sourceDocumentId) {
 		return Paths
 		.get(new File(RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue()).toURI())
-		.resolve(gitProjectHandler.getSourceDocumentSubmodulePath(this.user, this.projectReference, sourceDocumentId))
+		.resolve(gitProjectHandler.getSourceDocumentSubmodulePath(sourceDocumentId))
 		.resolve(sourceDocumentId + "." + UTF8_CONVERSION_FILE_EXTENSION)
 		.toUri();
 	}
@@ -413,7 +440,6 @@ public class GraphWorktreeProject implements IndexedRepository {
 			try (FileInputStream originalFileInputStream = new FileInputStream(sourceTempFile)) {
 				
 				String sourceDocRevisionHash = gitProjectHandler.createSourceDocument(
-					this.projectReference.getProjectId(), 
 					sourceDocument.getID(), 
 					originalFileInputStream,
 					sourceDocument.getID() 
@@ -439,16 +465,12 @@ public class GraphWorktreeProject implements IndexedRepository {
 			sourceTempFile.delete();
 
 			String oldRootRevisionHash = this.rootRevisionHash;
-			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(this.projectReference);
+			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 	
 			graphProjectHandler.insertSourceDocument(
 				oldRootRevisionHash, this.rootRevisionHash,
 				sourceDocument,
-				Paths
-					.get(RepositoryPropertyKey.GraphDbGitMountBasePath.getValue())
-					.resolve(gitProjectHandler.getSourceDocumentSubmodulePath(this.user, this.projectReference, sourceDocument.getID()))
-					.resolve(sourceDocument.getID() + "." + TOKENIZED_FILE_EXTENSION),
-				user.getIdentifier());
+				getTokenizedSourceDocumentPath(sourceDocument.getID()));
 			
 			propertyChangeSupport.firePropertyChange(
 					RepositoryChangeEvent.sourceDocumentChanged.name(),
@@ -546,7 +568,6 @@ public class GraphWorktreeProject implements IndexedRepository {
 			String collectionId = idGenerator.generate();
 			
 			String umcRevisionHash = gitProjectHandler.createMarkupCollection(
-						this.projectReference.getProjectId(), 
 						collectionId, 
 						name, 
 						null, //description
@@ -554,7 +575,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 						sourceDocument.getRevisionHash());
 			
 			String oldRootRevisionHash = this.rootRevisionHash;
-			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(this.projectReference);
+			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 
 			graphProjectHandler.createUserMarkupCollection(
 				rootRevisionHash, 
@@ -565,7 +586,11 @@ public class GraphWorktreeProject implements IndexedRepository {
 					new UserMarkupCollectionReference(
 							collectionId, 
 							umcRevisionHash,
-							new ContentInfoSet(name));
+							new ContentInfoSet(name),
+							sourceDocument.getID(),
+							sourceDocument
+							.getSourceContentHandler().getSourceDocumentInfo()
+							.getContentInfoSet().getTitle());
 			
 			sourceDocument.addUserMarkupCollectionReference(reference);
 			
@@ -680,10 +705,15 @@ public class GraphWorktreeProject implements IndexedRepository {
 		return null;
 	}
 
+	public TagLibrary getTagLibrary() {
+		//TODO: 
+		return tagManager.getTagLibrary(new TagLibraryReference(projectReference.getProjectId(), null));
+	}
+	
 	@Override
 	public TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) throws IOException {
 		// TODO Auto-generated method stub
-		return null;
+		return getTagLibrary();
 	}
 
 	@Override

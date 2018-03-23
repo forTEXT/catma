@@ -2,6 +2,7 @@ package de.catma.ui.project;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -42,6 +43,7 @@ import de.catma.ui.repository.wizard.AddSourceDocWizardFactory;
 import de.catma.ui.repository.wizard.AddSourceDocWizardResult;
 import de.catma.ui.repository.wizard.SourceDocumentResult;
 import de.catma.ui.tabbedview.ClosableTab;
+import de.catma.ui.tagmanager.TagsetTree;
 
 public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 	
@@ -77,9 +79,13 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 				}
 			},
 			(BackgroundServiceProvider)UI.getCurrent()); 
-		initComponents();
-		initActions();
-		initData();
+		try {
+			initComponents();
+			initActions();
+			initData();
+		} catch (IOException e) {
+			((CatmaApplication)UI.getCurrent()).showAndLogError("Error loading Project", e);
+		}
 	}
 	
 	private void addProjectListener() {
@@ -275,7 +281,7 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 		}
 	}
 
-	private void initComponents() {
+	private void initComponents() throws IOException {
 		setSizeFull();
 		setSplitPosition(65f, Unit.PERCENTAGE);
 		
@@ -343,6 +349,10 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 		btCreateCollections = new Button("Create Annotation Collections");
 		collectionButtonPanel.addComponent(btCreateCollections);
 		
+		TagsetTree tagsetTree = new TagsetTree(project.getTagManager(), project.getTagLibrary(null));
+		tagsetTree.setSizeFull();
+		
+		addComponent(tagsetTree);
 	}
 
 	@Override

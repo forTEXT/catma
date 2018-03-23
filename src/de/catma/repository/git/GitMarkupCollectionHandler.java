@@ -19,6 +19,7 @@ import de.catma.document.AccessMode;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
@@ -251,6 +252,52 @@ public class GitMarkupCollectionHandler {
 
 		return tagReferences;
 	}
+	
+	public UserMarkupCollectionReference getUserMarkupCollectionReference(String projectId, String markupCollectionId) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			localGitRepoManager.open(projectId, projectRootRepositoryName);
+
+			String markupCollectionSubmoduleName = String.format(
+					"%s/%s", GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME, markupCollectionId
+			);
+
+			File markupCollectionSubmodulePath = new File(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					markupCollectionSubmoduleName
+			);
+
+			String markupCollectionRevisionHash = localGitRepoManager.getSubmoduleHeadRevisionHash(
+					markupCollectionSubmoduleName
+			);
+
+			localGitRepoManager.detach();  // can't call open on an attached instance
+
+			File markupCollectionHeaderFile = new File(
+					markupCollectionSubmodulePath,
+					"header.json"
+			);
+
+			String serializedMarkupCollectionHeaderFile = FileUtils.readFileToString(
+					markupCollectionHeaderFile, StandardCharsets.UTF_8
+			);
+
+			GitMarkupCollectionHeader markupCollectionHeader = new SerializationHelper<GitMarkupCollectionHeader>()
+					.deserialize(serializedMarkupCollectionHeaderFile, GitMarkupCollectionHeader.class);
+
+			ContentInfoSet contentInfoSet = new ContentInfoSet(
+					markupCollectionHeader.getAuthor(),
+					markupCollectionHeader.getDescription(),
+					markupCollectionHeader.getPublisher(),
+					markupCollectionHeader.getName()
+			);
+
+			return  new UserMarkupCollectionReference(
+				markupCollectionId, markupCollectionRevisionHash, 
+				contentInfoSet, markupCollectionHeader.getSourceDocumentId(), "TODO"); //TODO
+		}
+
+	}
 
 	public UserMarkupCollection open(@Nonnull String projectId, @Nonnull String markupCollectionId)
 			throws IOException {
@@ -297,8 +344,7 @@ public class GitMarkupCollectionHandler {
 					markupCollectionHeader.getName()
 			);
 
-			// we are hoping to get rid of tag libraries altogether
-			TagLibrary tagLibrary = new TagLibrary(null, null);
+			TagLibrary tagLibrary = new TagLibrary(markupCollectionId, contentInfoSet.getTitle());
 
 			UserMarkupCollection userMarkupCollection = new UserMarkupCollection(
 					null, markupCollectionId, contentInfoSet, tagLibrary, tagReferences, AccessMode.WRITE

@@ -190,10 +190,10 @@ public class GitProjectHandlerTest {
 			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, gitLabServerManager);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(null, projectId, jGitRepoManager, gitLabServerManager);
 
 			String tagsetId = gitProjectHandler.createTagset(
-					projectId,
+
 					null,
 					"Test Tagset",
 					null
@@ -235,10 +235,9 @@ public class GitProjectHandlerTest {
 			// the JGitRepoManager instance should always be in a detached state after GitProjectHandler calls return
 			assertFalse(jGitRepoManager.isAttached());
 
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, gitLabServerManager);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(null, projectId, jGitRepoManager, gitLabServerManager);
 
 			String markupCollectionId = gitProjectHandler.createMarkupCollection(
-					projectId,
 					null,
 					"Test Markup Collection",
 					null,
@@ -314,10 +313,10 @@ public class GitProjectHandlerTest {
 			// return
 			assertFalse(jGitRepoManager.isAttached());
 
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, gitLabServerManager);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(null, projectId, jGitRepoManager, gitLabServerManager);
 
 			String sourceDocumentId = gitProjectHandler.createSourceDocument(
-					projectId, null,
+					null,
 					originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
 					null, null,

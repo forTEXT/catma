@@ -217,18 +217,18 @@ public class GitMarkupCollectionHandlerTest {
 			);
 			this.projectsToDeleteOnTearDown.add(projectId);
 
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, gitLabServerManager);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(null, projectId, jGitRepoManager, gitLabServerManager);
 
 			// create a tagset
 			String tagsetId = gitProjectHandler.createTagset(
-					projectId, null, "Test Tagset", null
+					null, "Test Tagset", null
 			);
 			// we don't add the tagsetId to this.tagsetReposToDeleteOnTearDown as deletion of the project will take
 			// care of that for us
 
 			// create a markup collection
 			String markupCollectionId = gitProjectHandler.createMarkupCollection(
-					projectId, null,"Test Markup Collection", null,
+					null,"Test Markup Collection", null,
 					"fakeSourceDocumentId", "fakeSourceDocumentVersion"
 			);
 			// we don't add the markupCollectionId to this.markupCollectionReposToDeleteOnTearDown as deletion of the

@@ -3,17 +3,19 @@ package de.catma.repository.git;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
+import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.TermInfo;
-import de.catma.project.ProjectReference;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
-import de.catma.tag.TagsetDefinition;
 
 public class GitProjectHandler {
 
@@ -23,17 +25,20 @@ public class GitProjectHandler {
 
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
 	private final IRemoteGitServerManager remoteGitServerManager;
+	private final GitUser user;
+	private final String projectId;
 
-	public GitProjectHandler(ILocalGitRepositoryManager localGitRepositoryManager,
+	public GitProjectHandler(GitUser user, String projectId, ILocalGitRepositoryManager localGitRepositoryManager,
 			IRemoteGitServerManager remoteGitServerManager) {
 		super();
+		this.user = user;
+		this.projectId = projectId;
 		this.localGitRepositoryManager = localGitRepositoryManager;
 		this.remoteGitServerManager = remoteGitServerManager;
 	}
 
 	// tagset operations
-	public String createTagset(String projectId,
-							   String tagsetId,
+	public String createTagset(String tagsetId,
 							   String name,
 							   String description
 	) throws IOException {
@@ -71,8 +76,7 @@ public class GitProjectHandler {
 	}
 
 	// markup collection operations
-	public String createMarkupCollection(String projectId,
-										 String markupCollectionId,
+	public String createMarkupCollection(String markupCollectionId,
 										 String name,
 										 String description,
 										 String sourceDocumentId,
@@ -129,7 +133,6 @@ public class GitProjectHandler {
 	/**
 	 * Creates a new source document within the project identified by <code>projectId</code>.
 	 *
-	 * @param projectId the ID of the project within which the source document must be created
 	 * @param sourceDocumentId the ID of the source document to create. If none is provided, a new
 	 *                         ID will be generated.
 	 * @param originalSourceDocumentStream a {@link InputStream} object representing the original,
@@ -146,7 +149,7 @@ public class GitProjectHandler {
 	 * @throws IOException if an error occurs while creating the source document
 	 */
 	public String createSourceDocument(
-			String projectId, String sourceDocumentId,
+			String sourceDocumentId,
 			InputStream originalSourceDocumentStream, String originalSourceDocumentFileName,
 			InputStream convertedSourceDocumentStream, String convertedSourceDocumentFileName,
 			Map<String, List<TermInfo>> terms, String tokenizedSourceDocumentFileName,
@@ -199,22 +202,88 @@ public class GitProjectHandler {
 
 	}
 
-	public String getRootRevisionHash(ProjectReference projectReference) throws Exception {
+	public String getRootRevisionHash() throws Exception {
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			localRepoManager.open(
-				projectReference.getProjectId(),
-				GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()));
+				projectId,
+				GitProjectManager.getProjectRootRepositoryName(projectId));
 			
 			return localRepoManager.getRootRevisionHash();
 		}
 	}
 
-	public Path getSourceDocumentSubmodulePath(GitUser user, ProjectReference projectReference, String sourceDocumentId) {
+	public Path getSourceDocumentSubmodulePath(String sourceDocumentId) {
 		return Paths.get(
 			user.getIdentifier(), 
-			projectReference.getProjectId(), 
-			GitProjectManager.getProjectRootRepositoryName(projectReference.getProjectId()), 
+			projectId, 
+			GitProjectManager.getProjectRootRepositoryName(projectId), 
 			SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
 			sourceDocumentId);
+	}
+
+	public Stream<SourceDocument> getSourceDocumentStream() {
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+					localRepoManager, this.remoteGitServerManager
+				);
+			 try {
+				 localRepoManager.open(
+						 projectId,
+						 GitProjectManager.getProjectRootRepositoryName(projectId));
+				 
+				 Path sourceDirPath = 
+						 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+						 .resolve(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME);
+				 localRepoManager.detach();
+				 
+				 return Files
+					 .walk(sourceDirPath, 1)
+					 .filter(sourceDocPath -> !sourceDocPath.equals(sourceDirPath))
+					 .map(sourceDocPath -> {
+						 String sourceDocumentId = sourceDocPath.getFileName().toString();
+						 try {
+							return gitSourceDocumentHandler.open(projectId, sourceDocumentId);
+						} catch (Exception e) {
+							throw new RuntimeException(e);
+						}
+					 });
+			 }
+			 catch (IOException e) {
+				 throw new RuntimeException(e);
+			 }
+		}
+	}
+
+	public Stream<UserMarkupCollectionReference> getUserMarkupCollectionReferenceStream() {
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
+					localRepoManager, this.remoteGitServerManager
+				);
+			 try {
+				 localRepoManager.open(
+						 projectId,
+						 GitProjectManager.getProjectRootRepositoryName(projectId));
+				 
+				 Path collectionDirPath = 
+						 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
+						 .resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME);
+				 localRepoManager.detach();
+				 
+				 return Files
+					 .walk(collectionDirPath, 1)
+					 .filter(collectionPath -> !collectionDirPath.equals(collectionPath))
+					 .map(collectionPath -> {
+						 String collectionId = collectionPath.getFileName().toString();
+						 try {
+							return gitMarkupCollectionHandler.getUserMarkupCollectionReference(projectId, collectionId);
+						} catch (Exception e) {
+							throw new RuntimeException(e);
+						}
+					 });
+			 }
+			 catch (IOException e) {
+				 throw new RuntimeException(e);
+			 }
+		}
 	}
 }

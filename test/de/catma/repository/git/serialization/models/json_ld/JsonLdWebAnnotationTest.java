@@ -39,6 +39,7 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.GitTagsetHandler;
+import de.catma.repository.git.GitUser;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
@@ -198,11 +199,11 @@ public class JsonLdWebAnnotationTest {
 			// caller should do the following:
 //			this.projectsToDeleteOnTearDown.add(projectId);
 
-			GitProjectHandler gitProjectHandler = new GitProjectHandler(jGitRepoManager, gitLabServerManager);
+			GitProjectHandler gitProjectHandler = new GitProjectHandler(null, projectId, jGitRepoManager, gitLabServerManager);
 
 			// add new tagset to project
 			String tagsetId = gitProjectHandler.createTagset(
-					projectId, null, "Test Tagset", null
+					null, "Test Tagset", null
 			);
 
 			// add new source document to project
@@ -234,7 +235,6 @@ public class JsonLdWebAnnotationTest {
 			);
 
 			String sourceDocumentId = gitProjectHandler.createSourceDocument(
-					projectId,
 					null, originalSourceDocumentStream, originalSourceDocument.getName(),
 					convertedSourceDocumentStream, convertedSourceDocument.getName(),
 					null, null,
@@ -243,7 +243,7 @@ public class JsonLdWebAnnotationTest {
 
 			// add new markup collection to project
 			String markupCollectionId = gitProjectHandler.createMarkupCollection(
-					projectId, null, "Test Markup Collection", null,
+					null, "Test Markup Collection", null,
 					sourceDocumentId, "fakeSourceDocumentVersion"
 			);
 
