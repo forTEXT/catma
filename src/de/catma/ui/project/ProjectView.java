@@ -54,17 +54,25 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 	private Button btOpenSourceDocuments;
 	private Button btOpenCollections;
 	private Button btCreateCollections;
+	private TagsetTree tagsetTree;
 
 	public ProjectView(
 			ProjectManager projectManager, ProjectReference projectReference) {
 		projectManager.openProject(
 			projectReference, 
 			new OpenProjectListener() {
-			
+				
 				@Override
 				public void ready(Repository project) {
-					ProjectView.this.project = project;
-					addProjectListener();
+					try {
+						ProjectView.this.project = project;
+						addProjectListener();
+						initComponents();
+						initActions();
+						initData();
+					} catch (IOException e) {
+						((CatmaApplication)UI.getCurrent()).showAndLogError("Error loading Project", e);
+					}
 				}
 				
 				@Override
@@ -79,13 +87,6 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 				}
 			},
 			(BackgroundServiceProvider)UI.getCurrent()); 
-		try {
-			initComponents();
-			initActions();
-			initData();
-		} catch (IOException e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError("Error loading Project", e);
-		}
 	}
 	
 	private void addProjectListener() {
@@ -141,6 +142,13 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 			);
 		
 		collectionGrid.setDataProvider(collectionProvider);
+		
+		try {
+			this.tagsetTree.setTagLibrary(project.getTagLibrary(null));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
 
@@ -292,7 +300,7 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 		VerticalLayout leftPanel = new VerticalLayout();
 		leftPanel.setSizeFull();
 		leftPanel.setSpacing(true);
-		leftPanel.setMargin(new MarginInfo(true, true, false, false));
+		leftPanel.setMargin(new MarginInfo(false, true, false, false));
 		leftCenterPanel.addComponent(leftPanel);
 		
 		docGrid = new Grid<SourceDocument>("Documents");
@@ -327,7 +335,7 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 		VerticalLayout centerPanel = new VerticalLayout();
 		centerPanel.setSpacing(true);
 		centerPanel.setSizeFull();
-		centerPanel.setMargin(new MarginInfo(true, true, false, true));
+		centerPanel.setMargin(new MarginInfo(false, true, false, true));
 
 		leftCenterPanel.addComponent(centerPanel);
 		
@@ -349,7 +357,7 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 		btCreateCollections = new Button("Create Annotation Collections");
 		collectionButtonPanel.addComponent(btCreateCollections);
 		
-		TagsetTree tagsetTree = new TagsetTree(project.getTagManager(), project.getTagLibrary(null));
+		tagsetTree = new TagsetTree(project.getTagManager(), null);
 		tagsetTree.setSizeFull();
 		
 		addComponent(tagsetTree);

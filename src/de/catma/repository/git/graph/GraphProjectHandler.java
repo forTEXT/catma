@@ -3,6 +3,7 @@ package de.catma.repository.git.graph;
 import static de.catma.repository.git.graph.NodeType.MarkupCollection;
 import static de.catma.repository.git.graph.NodeType.Project;
 import static de.catma.repository.git.graph.NodeType.ProjectRevision;
+import static de.catma.repository.git.graph.NodeType.Property;
 import static de.catma.repository.git.graph.NodeType.SourceDocument;
 import static de.catma.repository.git.graph.NodeType.Tag;
 import static de.catma.repository.git.graph.NodeType.Tagset;
@@ -12,6 +13,7 @@ import static de.catma.repository.git.graph.RelationType.hasCollection;
 import static de.catma.repository.git.graph.RelationType.hasDocument;
 import static de.catma.repository.git.graph.RelationType.hasParent;
 import static de.catma.repository.git.graph.RelationType.hasProject;
+import static de.catma.repository.git.graph.RelationType.hasProperty;
 import static de.catma.repository.git.graph.RelationType.hasRevision;
 import static de.catma.repository.git.graph.RelationType.hasTag;
 import static de.catma.repository.git.graph.RelationType.hasTagset;
@@ -36,6 +38,7 @@ import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
 import org.neo4j.driver.v1.Values;
+import org.neo4j.driver.v1.types.Node;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -62,11 +65,15 @@ import de.catma.repository.git.graph.indexer.SourceDocumentIndexerJob.DataField;
 import de.catma.repository.neo4j.SessionRunner;
 import de.catma.repository.neo4j.StatementExcutor;
 import de.catma.repository.neo4j.ValueContainer;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.PropertyPossibleValueList;
+import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.user.User;
 import de.catma.util.ColorConverter;
+import de.catma.util.IDGenerator;
 
 public class GraphProjectHandler {
 	private Logger logger = Logger.getLogger(GraphProjectHandler.class.getName());
@@ -204,7 +211,7 @@ public class GraphProjectHandler {
 		
 	}
 
-	public void insertSourceDocument(
+	public void addSourceDocument(
 			String oldRootRevisionHash, String rootRevisionHash, SourceDocument sourceDocument, 
 			Path tokenizedSourceDocumentPath) throws Exception {
 		
@@ -307,7 +314,8 @@ public class GraphProjectHandler {
 					+ "(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
 					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
 					+ "(s:"+nt(SourceDocument)+") "
-					+ "RETURN s",
+					+ "OPTIONAL MATCH (s)-[:"+rt(hasCollection)+"]->(c:"+nt(MarkupCollection)+") "
+					+ "RETURN s, COLLECT(c) as collections ",
 					Values.parameters(
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
@@ -317,7 +325,17 @@ public class GraphProjectHandler {
 
 				while (statementResult.hasNext()) {
 					Record record = statementResult.next();
-					sourceDocuments.add(createSourceDocument(record.get("s")));
+					SourceDocument sourceDocument = createSourceDocument(record.get("s"));
+					record.get("collections")
+						.asList(collectionValue -> createUserMarkupCollectionReference(
+							collectionValue.asNode(), 
+							sourceDocument.getID(), 
+							sourceDocument.toString())
+						).forEach(
+								umcRef -> 
+								sourceDocument.addUserMarkupCollectionReference(umcRef));
+
+					sourceDocuments.add(sourceDocument);
 				}
 			}
 			
@@ -371,7 +389,8 @@ public class GraphProjectHandler {
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
 					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
 					+ "(s:"+nt(SourceDocument)+"{sourceDocumentId:{pSourceDocumentId}}) "
-					+ "RETURN s",
+					+ "OPTIONAL MATCH (s)-[:"+rt(hasCollection)+"]->(c:"+nt(MarkupCollection)+") "
+					+ "RETURN s, COLLECT(c) as collections ",
 					Values.parameters(
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
@@ -382,7 +401,18 @@ public class GraphProjectHandler {
 
 				if (statementResult.hasNext()) {
 					Record record = statementResult.next();
-					sourceDocumentContainer.setValue(createSourceDocument(record.get("s")));
+					
+					SourceDocument sourceDocument = createSourceDocument(record.get("s"));
+					record.get("collections")
+						.asList(collectionValue -> createUserMarkupCollectionReference(
+							collectionValue.asNode(), 
+							sourceDocument.getID(), 
+							sourceDocument.toString())
+						).forEach(
+								umcRef -> 
+								sourceDocument.addUserMarkupCollectionReference(umcRef));
+
+					sourceDocumentContainer.setValue(sourceDocument);
 				}
 			}
 			
@@ -391,7 +421,7 @@ public class GraphProjectHandler {
 		return sourceDocumentContainer.getValue();
 	}
 
-	public void createUserMarkupCollection(
+	public void addUserMarkupCollection(
 		String rootRevisionHash,
 		String collectionId, String name, String umcRevisionHash, SourceDocument sourceDocument, String oldRootRevisionHash) throws Exception {
 
@@ -427,8 +457,11 @@ public class GraphProjectHandler {
 		});
 	}
 
-	public void createTagset(String rootRevisionHash, String tagsetId,
-			String tagsetRevisionHash, String name, String description, String oldRootRevisionHash) throws Exception {
+	public void addTagset(String rootRevisionHash, TagsetDefinition tagsetDefinition, String oldRootRevisionHash) throws Exception {
+		String tagsetId = tagsetDefinition.getUuid();
+		String tagsetRevisionHash = tagsetDefinition.getRevisionHash();
+		String name = tagsetDefinition.getName();
+		String description = ""; //TODO
 		
 		StatementExcutor.execute(new SessionRunner() {
 			@Override
@@ -544,7 +577,17 @@ public class GraphProjectHandler {
 		return collectionContainer;
 	}
 
-	protected UserMarkupCollectionReference createUserMarkupCollectionReference(
+	private UserMarkupCollectionReference createUserMarkupCollectionReference(
+			Node userMarkupCollectionNode, String sourceDocumentId, String sourceDocumentTitle) {
+			
+		return new UserMarkupCollectionReference(
+				userMarkupCollectionNode.get("collectionId").asString(), 
+				userMarkupCollectionNode.get("revisionHash").asString(), 
+				new ContentInfoSet(userMarkupCollectionNode.get("name").asString()),
+				sourceDocumentId,
+				sourceDocumentTitle);
+	}
+	private UserMarkupCollectionReference createUserMarkupCollectionReference(
 		Value idValue, Value revisionHashValue, Value nameValue, 
 		Value sourceDocumentIdValue, Value sourceDocumentTitleValue) {
 		
@@ -585,10 +628,123 @@ public class GraphProjectHandler {
 		return countContainer.getValue();
 	}
 
-	public Collection<TagsetDefinition> getTagsets() {
-
-
+	public Collection<TagsetDefinition> getTagsets(String rootRevisionHash) throws Exception {
+		ArrayList<TagsetDefinition> tagsets = new  ArrayList<>();
 		
-		return new ArrayList<>();
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				StatementResult statementResult = session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+ "(ts:"+nt(Tagset)+")"
+					+ "OPTIONAL MATCH (ts)-[:"+rt(hasTag)+"]->(t:"+nt(Tag)+") "
+					+ "OPTIONAL MATCH (t)-[:"+rt(hasProperty)+"]->(p:"+nt(Property)+") "
+					+ "WITH ts, t, COLLECT(p) as properties "
+					+ "RETURN ts, COLLECT([t, properties]) as tags ",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash
+					)
+				);
+				
+				while (statementResult.hasNext()) {
+					Record record = statementResult.next();
+					
+					TagsetDefinition tagsetDefinition = createTagset(record.get("ts").asNode());
+					
+					List<Object> tagValuePairs = record.get("tags").asList();
+					
+					for (Object tagValuePair : tagValuePairs) {
+						@SuppressWarnings("unchecked")
+						List<Object> pairList = (List<Object>)tagValuePair;
+						Node tagNode = (Node)pairList.get(0);
+						if (tagNode != null) {
+							@SuppressWarnings("unchecked")
+							List<Node> propertyNodes = (List<Node>)pairList.get(1);
+							TagDefinition tagDefinition = createTag(tagNode);
+							for (Node propertyNode : propertyNodes) {
+								tagDefinition.addUserDefinedPropertyDefinition(createPropertyDefinition(propertyNode));
+							}
+							tagsetDefinition.addTagDefinition(tagDefinition);
+						}
+					}
+
+					tagsets.add(tagsetDefinition);
+				}
+			}
+		});
+		
+		
+		return tagsets;
+	}
+
+	private PropertyDefinition createPropertyDefinition(Node propertyNode) {
+	
+		String name = propertyNode.get("name").asString();
+		List<String> values = propertyNode.get("values").asList(value -> value.toString());
+		
+		
+		return new PropertyDefinition(null, new IDGenerator().generate(), name, new PropertyPossibleValueList(values, false)); //TODO
+	}
+
+	private TagsetDefinition createTagset(Node tagsetNode) {
+
+		String tagsetId = tagsetNode.get("tagsetId").asString();
+		String name = tagsetNode.get("name").asString();
+		String revisionHash = tagsetNode.get("revisionHash").asString();
+		
+		TagsetDefinition tagsetDefinition = new TagsetDefinition(null, tagsetId, name, new Version()); //TODO:
+		tagsetDefinition.setRevisionHash(revisionHash);
+		
+		return tagsetDefinition;
+	}
+
+	private TagDefinition createTag(Node tagNode) {
+		
+		String tagId = tagNode.get("tagId").asString();
+		String name = tagNode.get("name").asString();
+		String color = tagNode.get("color").asString();
+		String modifiedDate = tagNode.get("modifiedDate").asString();
+		
+		TagDefinition tagDef = new TagDefinition(null, tagId, name, new Version(modifiedDate), null, null);
+		tagDef.addSystemPropertyDefinition(
+			new PropertyDefinition(
+				null, new IDGenerator().generate(), 
+				PropertyDefinition.SystemPropertyName.catma_displaycolor.name(),
+				new PropertyPossibleValueList(ColorConverter.toRGBIntAsString(color))));
+		
+		return tagDef;
+	}
+
+	public void addPropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
+			TagDefinition tagDefinition) throws Exception {
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+ "(:"+nt(Tagset)+")-[:"+rt(hasTag)+"]->"
+					+ "(t:"+nt(Tag)+"{tagId:{pTagId}}) "
+					+ "MERGE (t)-[:"+rt(hasProperty)+"]->"
+					+ "(:"+nt(Property)+"{"
+						+ "name:{pName},"
+						+ "values:{pValues} "
+					+ "})",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pTagId", tagDefinition.getUuid(),
+						"pName", propertyDefinition.getName(),
+						"pValues", propertyDefinition.getPossibleValueList().getPropertyValueList().getValues()
+					)
+				);
+			}
+		});		
 	}
 }

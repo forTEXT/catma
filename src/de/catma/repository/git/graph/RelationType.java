@@ -13,6 +13,7 @@ public enum RelationType implements RelationshipType {
 	hasTagset,
 	hasTag, 
 	hasParent,
+	hasProperty,
 	;
 	
 	public static String rt(RelationType relationType) {

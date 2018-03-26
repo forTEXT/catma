@@ -45,12 +45,13 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.Label;
 import com.vaadin.ui.Link;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
+import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.v7.ui.Label;
 import com.vaadin.v7.ui.VerticalLayout;
 import com.vaadin.v7.ui.themes.BaseTheme;
 
@@ -395,24 +396,25 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 	}
 	
 	public void addTagsetToActiveDocument(TagsetDefinition tagsetDefinition, TagsetSelectionListener tagsetSelectionListener) {
-		//TODO:
-//		TaggerView selectedTab = (TaggerView) taggerManagerView.getSelectedTab();
-//
-//		if (selectedTab == null) {
-//			Notification.show(Messages.getString("CatmaApplication.infoTitle"), //$NON-NLS-1$
-//					Messages.getString("CatmaApplication.noActiveDocumentInTagger"), //$NON-NLS-1$
-//					Type.TRAY_NOTIFICATION);
-//			return;
-//		}
-//
-//		selectedTab.openTagsetDefinition(this, tagsetDefinition,tagsetSelectionListener);	
-//
-//		SourceDocument sd = selectedTab.getSourceDocument();
-//		String sourceDocumentCaption = sd.toString();
-//
-//		Notification.show(Messages.getString("CatmaApplication.infoTitle"), //$NON-NLS-1$
-//				MessageFormat.format(Messages.getString("CatmaApplication.tagsetLoaded"), sourceDocumentCaption), //$NON-NLS-1$
-//				Type.TRAY_NOTIFICATION);
+		
+		//TODO: will fail when trying to load from project view since the active tab will be the project view and not a tagger view
+		TaggerView selectedTab = (TaggerView) projectManagerView.getSelectedTab();
+		
+		if (selectedTab == null) {
+			Notification.show(Messages.getString("CatmaApplication.infoTitle"), //$NON-NLS-1$
+					Messages.getString("CatmaApplication.noActiveDocumentInTagger"), //$NON-NLS-1$
+					Type.TRAY_NOTIFICATION);
+			return;
+		}		
+
+		selectedTab.openTagsetDefinition(this, tagsetDefinition,tagsetSelectionListener);	
+
+		SourceDocument sd = selectedTab.getSourceDocument();
+		String sourceDocumentCaption = sd.toString();
+
+		Notification.show(Messages.getString("CatmaApplication.infoTitle"), //$NON-NLS-1$
+				MessageFormat.format(Messages.getString("CatmaApplication.tagsetLoaded"), sourceDocumentCaption), //$NON-NLS-1$
+				Type.TRAY_NOTIFICATION);
 	}
 	
 	public void addTagsetToActiveDocument(TagsetDefinition tagsetDefinition) {

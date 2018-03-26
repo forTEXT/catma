@@ -13,6 +13,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -78,6 +79,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private PropertyChangeListener tagDefinitionChangedListener;
 	private PropertyChangeListener userDefinedPropertyChangedListener;
 	private PropertyChangeListener tagLibraryChangedListener;
+	private TagLibraryReference tagLibraryReference;
 
 	public GraphWorktreeProject(GitUser user, 
 			GitProjectHandler gitProjectHandler,
@@ -133,8 +135,15 @@ public class GraphWorktreeProject implements IndexedRepository {
 					() -> gitProjectHandler.getSourceDocumentStream(),
 					() -> gitProjectHandler.getUserMarkupCollectionReferenceStream());
 			
+			//TODO: check if we can get rid of the reference 
+			this.tagLibraryReference = 
+				new TagLibraryReference(
+						projectReference.getProjectId(), 
+						new ContentInfoSet(projectReference.getName()));
+			
 			TagLibrary tagLibrary = new TagLibrary(projectReference.getProjectId(), projectReference.getName());
-			graphProjectHandler.getTagsets().stream().forEach(tagsetDef -> tagLibrary.add(tagsetDef));
+			graphProjectHandler.getTagsets(this.rootRevisionHash).stream().forEach(tagsetDef -> tagLibrary.add(tagsetDef));
+			
 			tagManager.addTagLibrary(tagLibrary);
 			
 			initTagManagerListeners();
@@ -261,30 +270,41 @@ public class GraphWorktreeProject implements IndexedRepository {
 				}
 				Object oldValue = evt.getOldValue();
 				Object newValue = evt.getNewValue();
-
-				if (oldValue == null) { // insert
-					
-					@SuppressWarnings("unchecked")
-					Pair<PropertyDefinition, TagDefinition> newPair = 
-							(Pair<PropertyDefinition, TagDefinition>)newValue;
-					
-//					dbTagLibraryHandler.savePropertyDefinition(
-//							newPair.getFirst(), newPair.getSecond());
+				try {
+					if (oldValue == null) { // insert
+						
+						@SuppressWarnings("unchecked")
+						Pair<PropertyDefinition, TagDefinition> newPair = 
+								(Pair<PropertyDefinition, TagDefinition>)newValue;
+						
+						PropertyDefinition propertyDefinition = newPair.getFirst();
+						TagDefinition tagDefinition = newPair.getSecond();
+						
+						addPropertyDefintion(propertyDefinition, tagDefinition);
+						
+	//					dbTagLibraryHandler.savePropertyDefinition(
+	//							newPair.getFirst(), newPair.getSecond());
+					}
+					else if (newValue == null) { // delete
+						@SuppressWarnings("unchecked")
+						Pair<PropertyDefinition, TagDefinition> oldPair = 
+								(Pair<PropertyDefinition, TagDefinition>)oldValue;
+	//					dbTagLibraryHandler.removePropertyDefinition(
+	//							oldPair.getFirst(), oldPair.getSecond());
+						
+					}
+					else { // update
+						PropertyDefinition pd = (PropertyDefinition)evt.getNewValue();
+						TagDefinition td = (TagDefinition)evt.getOldValue();
+	//					dbTagLibraryHandler.updatePropertyDefinition(pd, td);
+					}
 				}
-				else if (newValue == null) { // delete
-					@SuppressWarnings("unchecked")
-					Pair<PropertyDefinition, TagDefinition> oldPair = 
-							(Pair<PropertyDefinition, TagDefinition>)oldValue;
-//					dbTagLibraryHandler.removePropertyDefinition(
-//							oldPair.getFirst(), oldPair.getSecond());
-					
-				}
-				else { // update
-					PropertyDefinition pd = (PropertyDefinition)evt.getNewValue();
-					TagDefinition td = (TagDefinition)evt.getOldValue();
-//					dbTagLibraryHandler.updatePropertyDefinition(pd, td);
-				}
-				
+				catch (Exception e) {
+					propertyChangeSupport.firePropertyChange(
+							RepositoryChangeEvent.exceptionOccurred.name(),
+							null, 
+							e);				
+				}				
 			}
 		};
 		
@@ -311,7 +331,11 @@ public class GraphWorktreeProject implements IndexedRepository {
 				tagLibraryChangedListener);
 	}
 
-	protected void addTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
+	private void addPropertyDefintion(PropertyDefinition propertyDefinition, TagDefinition tagDefinition) throws Exception {
+		graphProjectHandler.addPropertyDefinition(rootRevisionHash, propertyDefinition, tagDefinition);
+	}
+
+	private void addTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
 		graphProjectHandler.addTagDefinition(
 				rootRevisionHash, tagDefinition, tagsetDefinition);
 	}
@@ -319,20 +343,17 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private void addTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
 		String tagsetRevisionHash = 
 			gitProjectHandler.createTagset(
-				tagsetDefinition.getUuid(), tagsetDefinition.getName(), "");
+				tagsetDefinition.getUuid(), tagsetDefinition.getName(), "");//TODO:
 		
 		tagsetDefinition.setRevisionHash(tagsetRevisionHash);
 		
 		String oldRootRevisionHash = this.rootRevisionHash;
 		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 		
-		graphProjectHandler.createTagset(
+		graphProjectHandler.addTagset(
 			rootRevisionHash, 
-			tagsetDefinition.getUuid(), 
-			tagsetDefinition.getRevisionHash(),
-			tagsetDefinition.getName(),
-			"",
-			oldRootRevisionHash); //TODO: description
+			tagsetDefinition,
+			oldRootRevisionHash); 
 	}
 
 	@Override
@@ -467,7 +488,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 			String oldRootRevisionHash = this.rootRevisionHash;
 			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 	
-			graphProjectHandler.insertSourceDocument(
+			graphProjectHandler.addSourceDocument(
 				oldRootRevisionHash, this.rootRevisionHash,
 				sourceDocument,
 				getTokenizedSourceDocumentPath(sourceDocument.getID()));
@@ -577,7 +598,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 			String oldRootRevisionHash = this.rootRevisionHash;
 			this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 
-			graphProjectHandler.createUserMarkupCollection(
+			graphProjectHandler.addUserMarkupCollection(
 				rootRevisionHash, 
 				collectionId, name, umcRevisionHash, 
 				sourceDocument, oldRootRevisionHash);
@@ -701,13 +722,14 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	@Override
 	public Collection<TagLibraryReference> getTagLibraryReferences() {
-		// TODO Auto-generated method stub
-		return null;
+
+		return Collections.singleton(this.tagLibraryReference);
 	}
 
 	public TagLibrary getTagLibrary() {
 		//TODO: 
-		return tagManager.getTagLibrary(new TagLibraryReference(projectReference.getProjectId(), null));
+
+		return tagManager.getTagLibrary(this.tagLibraryReference);
 	}
 	
 	@Override

@@ -12,6 +12,7 @@ public enum NodeType implements Label {
 	MarkupCollection,
 	Tagset,
 	Tag,
+	Property,
 	;
 	
 	public static String nt(NodeType nodeType) {
