@@ -23,6 +23,7 @@ import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.AccessMode;
 import de.catma.document.Corpus;
 import de.catma.document.repository.RepositoryPropertyKey;
+import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
@@ -36,6 +37,7 @@ import de.catma.indexer.TermInfo;
 import de.catma.indexer.indexbuffer.IndexBufferManager;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
+import de.catma.repository.db.executionshield.DBOperation;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
@@ -653,20 +655,46 @@ public class GraphWorktreeProject implements IndexedRepository {
 	@Override
 	public UserMarkupCollection getUserMarkupCollection(UserMarkupCollectionReference userMarkupCollectionReference)
 			throws IOException {
-
-		return null;
+		try {
+			return graphProjectHandler.getUserMarkupCollection(rootRevisionHash, getTagLibrary(), userMarkupCollectionReference);
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
 	}
 
 	@Override
 	public UserMarkupCollection getUserMarkupCollection(UserMarkupCollectionReference userMarkupCollectionReference,
 			boolean refresh) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		return getUserMarkupCollection(userMarkupCollectionReference);
 	}
 
 	@Override
 	public void update(UserMarkupCollection userMarkupCollection, List<TagReference> tagReferences) {
-		// TODO Auto-generated method stub
+		try {
+			if (userMarkupCollection.getTagReferences().containsAll(
+					tagReferences)) {
+				graphProjectHandler.addTagReferences(
+						GraphWorktreeProject.this.rootRevisionHash, userMarkupCollection, tagReferences);
+				propertyChangeSupport.firePropertyChange(
+						RepositoryChangeEvent.tagReferencesChanged.name(), 
+						null, tagReferences);
+			}
+			else {
+				graphProjectHandler.removeTagReferences(
+					GraphWorktreeProject.this.rootRevisionHash, userMarkupCollection, tagReferences);
+
+				propertyChangeSupport.firePropertyChange(
+						RepositoryChangeEvent.tagReferencesChanged.name(), 
+						tagReferences, null);
+			}
+		}
+		catch (Exception e) {
+			propertyChangeSupport.firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, 
+					e);				
+		}
+		
 
 	}
 

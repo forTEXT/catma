@@ -6,11 +6,13 @@ import static de.catma.repository.git.graph.NodeType.ProjectRevision;
 import static de.catma.repository.git.graph.NodeType.Property;
 import static de.catma.repository.git.graph.NodeType.SourceDocument;
 import static de.catma.repository.git.graph.NodeType.Tag;
+import static de.catma.repository.git.graph.NodeType.TagInstance;
 import static de.catma.repository.git.graph.NodeType.Tagset;
 import static de.catma.repository.git.graph.NodeType.User;
 import static de.catma.repository.git.graph.NodeType.nt;
 import static de.catma.repository.git.graph.RelationType.hasCollection;
 import static de.catma.repository.git.graph.RelationType.hasDocument;
+import static de.catma.repository.git.graph.RelationType.hasInstance;
 import static de.catma.repository.git.graph.RelationType.hasParent;
 import static de.catma.repository.git.graph.RelationType.hasProject;
 import static de.catma.repository.git.graph.RelationType.hasProperty;
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.neo4j.driver.internal.value.NullValue;
@@ -47,8 +50,10 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.SchedulerRepository;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 
+import de.catma.document.Range;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.FileOSType;
 import de.catma.document.source.FileType;
@@ -58,6 +63,8 @@ import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.TechInfoSet;
 import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.source.contenthandler.StandardContentHandler;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.indexer.SourceDocumentIndexerJob;
@@ -69,6 +76,8 @@ import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.user.User;
@@ -80,6 +89,7 @@ public class GraphProjectHandler {
 	private User user;
 	private ProjectReference projectReference;
 	private FileInfoProvider fileInfoProvider;
+	private IDGenerator idGenerator;
 	
 	public GraphProjectHandler(
 			ProjectReference projectReference, 
@@ -87,6 +97,7 @@ public class GraphProjectHandler {
 		this.projectReference = projectReference;
 		this.user = user;
 		this.fileInfoProvider = fileInfoProvider;
+		this.idGenerator = new IDGenerator();
 	}
 
 	public void ensureProjectRevisionIsLoaded(
@@ -503,20 +514,20 @@ public class GraphProjectHandler {
 				session.run(
 					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
-					+ "(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}, revisionHash:{pTagsetRevisionHash}}) "
-					+ "MERGE (ts)-[:"+rt(hasTag)+"]->"
-					+ "(t:"+nt(Tag)+"{"
-						+ "tagId:{pTagId},"
-						+ "name:{pName},"
-						+ "color:{pColor},"
-//						+ "author:{pAuthor}," //TODO:
-						+ "creationDate:{pCreationDate},"
-						+ "modifiedDate:{pModifiedDate}"
-					+ "}) "
-					+ (tagDefinition.getParentUuid()==null?"": "WITH ts, t ")
-					+ "MATCH (ts)-[:"+rt(hasTag)+"]->(parent:"+nt(Tag)+"{tagId:{parentTagId}}) "
-					+ "MERGE (parent)-[:"+rt(hasParent)+"]->(t) ",
+					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}, revisionHash:{pTagsetRevisionHash}}) "
+					+"MERGE (ts)-[:"+rt(hasTag)+"]->"
+					+"(t:"+nt(Tag)+"{"
+						+"tagId:{pTagId},"
+						+"name:{pName},"
+						+"color:{pColor},"
+//						+"author:{pAuthor}," //TODO:
+						+"creationDate:{pCreationDate},"
+						+"modifiedDate:{pModifiedDate}"
+					+"}) "
+					+(tagDefinition.getParentUuid()==null?"": "WITH ts, t ")
+					+"MATCH (ts)-[:"+rt(hasTag)+"]->(parent:"+nt(Tag)+"{tagId:{parentTagId}}) "
+					+"MERGE (parent)-[:"+rt(hasParent)+"]->(t) ",
 					Values.parameters(
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
@@ -687,7 +698,11 @@ public class GraphProjectHandler {
 		List<String> values = propertyNode.get("values").asList(value -> value.toString());
 		
 		
-		return new PropertyDefinition(null, new IDGenerator().generate(), name, new PropertyPossibleValueList(values, false)); //TODO
+		return new PropertyDefinition(
+			null,  //TODO
+			idGenerator.generate(), //TODO
+			name, 
+			new PropertyPossibleValueList(values, false));
 	}
 
 	private TagsetDefinition createTagset(Node tagsetNode) {
@@ -712,7 +727,7 @@ public class GraphProjectHandler {
 		TagDefinition tagDef = new TagDefinition(null, tagId, name, new Version(modifiedDate), null, null);
 		tagDef.addSystemPropertyDefinition(
 			new PropertyDefinition(
-				null, new IDGenerator().generate(), 
+				null, idGenerator.generate(), //TODO:
 				PropertyDefinition.SystemPropertyName.catma_displaycolor.name(),
 				new PropertyPossibleValueList(ColorConverter.toRGBIntAsString(color))));
 		
@@ -727,14 +742,14 @@ public class GraphProjectHandler {
 				session.run(
 					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
-					+ "(:"+nt(Tagset)+")-[:"+rt(hasTag)+"]->"
-					+ "(t:"+nt(Tag)+"{tagId:{pTagId}}) "
-					+ "MERGE (t)-[:"+rt(hasProperty)+"]->"
-					+ "(:"+nt(Property)+"{"
+					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(:"+nt(Tagset)+")-[:"+rt(hasTag)+"]->"
+					+"(t:"+nt(Tag)+"{tagId:{pTagId}}) "
+					+"MERGE (t)-[:"+rt(hasProperty)+"]->"
+					+"(:"+nt(Property)+"{"
 						+ "name:{pName},"
 						+ "values:{pValues} "
-					+ "})",
+					+"})",
 					Values.parameters(
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
@@ -746,5 +761,89 @@ public class GraphProjectHandler {
 				);
 			}
 		});		
+	}
+
+	public UserMarkupCollection getUserMarkupCollection(String rootRevisionHash,
+			TagLibrary tagLibrary, UserMarkupCollectionReference userMarkupCollectionReference) throws Exception {
+		// TODO Auto-generated method stub
+		return new UserMarkupCollection(null, userMarkupCollectionReference.getId(), userMarkupCollectionReference.getContentInfoSet(), tagLibrary);
+	}
+
+	public void addTagReferences(String rootRevisionHash, UserMarkupCollection userMarkupCollection,
+			List<TagReference> tagReferences) throws Exception {
+		final ArrayListMultimap<TagInstance, Range> tagInstancesAndRanges = ArrayListMultimap.create();
+		
+		tagReferences.forEach(tagReference -> {
+			tagInstancesAndRanges.put(tagReference.getTagInstance(), tagReference.getRange());
+		});
+		
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				
+				for (TagInstance ti : tagInstancesAndRanges.keys()) {
+					List<Range> ranges = tagInstancesAndRanges.get(ti);
+					List<Integer> flatRanges = 
+						ranges
+						.stream()
+						.sorted()
+						.flatMap(range -> Stream.of(range.getStartPoint(), range.getEndPoint()))
+						.collect(Collectors.toList());
+					
+					PropertyDefinition authorPropertyDefinition = 
+						ti.getTagDefinition().getPropertyDefinitionByName(
+							PropertyDefinition.SystemPropertyName.catma_markupauthor.name());
+					
+					String authorPropertyUuid = authorPropertyDefinition.getUuid();
+					
+					if (ti.getSystemProperty(authorPropertyUuid).getPropertyValueList().getValues().isEmpty()) {
+						ti.addSystemProperty(
+							new de.catma.tag.Property(
+								authorPropertyDefinition, 
+								new PropertyValueList(user.getIdentifier())));
+					}
+					
+					session.run(
+						"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+						+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+						+ "(pr:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+						+ "(:"+nt(Tagset)+")-[:"+rt(hasTag)+"]->"
+						+ "(t:"+nt(Tag)+"{tagId:{pTagId}}), "
+						+ "(pr)-[:"+rt(hasDocument)+"]->"
+						+ "(:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
+						+ "(c:"+nt(MarkupCollection)+"{collectionId:{pCollectionId}}) "
+						+ "WITH t, c "
+						+ "MERGE (t)-[:"+rt(hasInstance)+"]->"
+						+ "(:"+nt(TagInstance)+"{"
+						+ "tagInstanceId:{pTagInstanceId},"
+						+ "author:{pAuthor}, "
+						+ "creationDate:{pCreationDate}, "
+						+ "ranges:{pRanges} "
+						+ "})<-[:"+rt(hasInstance)+"]-(c)",
+						Values.parameters(
+							"pUserId", user.getIdentifier(),
+							"pProjectId", projectReference.getProjectId(),
+							"pRootRevisionHash", rootRevisionHash,
+							"pTagId", ti.getTagDefinition().getUuid(),
+							"pTagInstanceId", ti.getUuid(),
+							"pAuthor", ti.getProperty(authorPropertyUuid).getPropertyValueList().getFirstValue(),
+							"pCreationDate",  ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
+							"pRanges", flatRanges
+						)
+					);
+					
+					
+					
+				}
+				
+			}
+		});		
+		
+	}
+
+	public void removeTagReferences(String rootRevisionHash, UserMarkupCollection userMarkupCollection,
+			List<TagReference> tagReferences) {
+		// TODO Auto-generated method stub
+		
 	}
 }

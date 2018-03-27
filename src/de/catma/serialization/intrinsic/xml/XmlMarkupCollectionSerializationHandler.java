@@ -233,7 +233,7 @@ public class XmlMarkupCollectionSerializationHandler implements
         	tagInstance.addUserDefinedProperty(property);
         }
         														
-        TagReference tagReference = new TagReference(tagInstance, sourceDocumentId, range);
+        TagReference tagReference = new TagReference(tagInstance, sourceDocumentId, range, userMarkupCollection.getUuid());
         userMarkupCollection.addTagReference(tagReference);
      
         elementStack.pop();	

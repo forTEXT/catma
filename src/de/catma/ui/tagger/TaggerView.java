@@ -528,10 +528,12 @@ public class TaggerView extends VerticalLayout
 		List<TagReference> tagReferences = new ArrayList<TagReference>();
 		
 		try {
+			String userMarkupCollectionUuid = 
+				markupPanel.getCurrentWritableUserMarkupCollection().getUuid();
 			for (TextRange tr : clientTagInstance.getRanges()) {
 				Range r = new Range(tr.getStartPos(), tr.getEndPos());
 				TagReference ref = 
-						new TagReference(ti, sourceDocument.getID(), r);
+						new TagReference(ti, sourceDocument.getID(), r, userMarkupCollectionUuid);
 				tagReferences.add(ref);
 			}
 			markupPanel.addTagReferences(tagReferences);

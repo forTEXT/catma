@@ -13,6 +13,7 @@ public enum NodeType implements Label {
 	Tagset,
 	Tag,
 	Property,
+	TagInstance,
 	;
 	
 	public static String nt(NodeType nodeType) {

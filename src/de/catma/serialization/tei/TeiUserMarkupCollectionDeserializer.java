@@ -44,14 +44,14 @@ public class TeiUserMarkupCollectionDeserializer {
 	private HashMap<String,String> old2newTagInstanceIDs = new HashMap<String, String>();
 
 	public TeiUserMarkupCollectionDeserializer(
-			TeiDocument teiDocument, TagLibrary tagLibrary) {
+			TeiDocument teiDocument, TagLibrary tagLibrary, String collectionId) {
 		this.teiDocument = teiDocument;
 		this.tagLibrary = tagLibrary;
 		this.tagReferences = new ArrayList<TagReference>();
-		deserialize();
+		deserialize(collectionId);
 	}
 
-	private void deserialize() {
+	private void deserialize(String collectionId) {
 		Nodes segmentNodes = teiDocument.getNodes(
 				TeiElementName.seg, AttributeValue.seg_ana_catma_tag_ref.getStartsWith());
 		
@@ -76,7 +76,8 @@ public class TeiUserMarkupCollectionDeserializer {
 						TagReference tagReference = 
 							new TagReference(
 									tagInstance, targetValues.getURI(), 
-									targetValues.getRange());
+									targetValues.getRange(),
+									collectionId);
 						tagReferences.add(tagReference);
 					}
 					catch(URISyntaxException ue) {
