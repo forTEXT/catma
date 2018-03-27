@@ -42,7 +42,7 @@ public class GitTagDefinition {
 		TreeMap<String, GitPropertyDefinition> newMap = new TreeMap<>();
 
 		for(PropertyDefinition propertyDefinition : this.tagDefinition.getSystemPropertyDefinitions()){
-			newMap.put(propertyDefinition.getUuid(), new GitPropertyDefinition(propertyDefinition));
+			newMap.put(propertyDefinition.getName(), new GitPropertyDefinition(propertyDefinition));
 		}
 
 		return newMap;
@@ -58,7 +58,7 @@ public class GitTagDefinition {
 		TreeMap<String, GitPropertyDefinition> newMap = new TreeMap<>();
 
 		for(PropertyDefinition propertyDefinition : this.tagDefinition.getUserDefinedPropertyDefinitions()){
-			newMap.put(propertyDefinition.getUuid(), new GitPropertyDefinition(propertyDefinition));
+			newMap.put(propertyDefinition.getName(), new GitPropertyDefinition(propertyDefinition));
 		}
 
 		return newMap;

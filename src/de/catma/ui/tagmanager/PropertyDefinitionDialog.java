@@ -26,19 +26,17 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.GridLayout;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.ListSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.v7.ui.TextField;
 import com.vaadin.ui.UI;
-import com.vaadin.v7.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.v7.ui.ListSelect;
+import com.vaadin.v7.ui.TextField;
+import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.tag.PropertyDefinition;
-import de.catma.tag.PropertyPossibleValueList;
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.util.IDGenerator;
 
 public class PropertyDefinitionDialog extends VerticalLayout {
 
@@ -116,14 +114,12 @@ public class PropertyDefinitionDialog extends VerticalLayout {
 				if (propertyDefinition == null)  {
 					propertyDefinition = 
 						new PropertyDefinition(
-							null, new IDGenerator().generate(), 
 							(String)nameInput.getValue(),
-							new PropertyPossibleValueList(values, true));
+							values);
 				}
 				else {
 					propertyDefinition.setName((String)nameInput.getValue());
-					propertyDefinition.setPossibleValueList(
-							new PropertyPossibleValueList(values, true));
+					propertyDefinition.setPossibleValueList(values);
 				}
 				UI.getCurrent().removeWindow(window);
 				saveCancelListener.savePressed(propertyDefinition);
@@ -149,7 +145,7 @@ public class PropertyDefinitionDialog extends VerticalLayout {
 		if (propertyDefinition != null) {
 			valueInput = new ListSelect(
 				Messages.getString("PropertyDefinitionDialog.possibleValues"),  //$NON-NLS-1$
-				propertyDefinition.getPossibleValueList().getPropertyValueList().getValues());
+				propertyDefinition.getPossibleValueList());
 		}
 		else {
 			valueInput = new ListSelect(Messages.getString("PropertyDefinitionDialog.possibleValues")); //$NON-NLS-1$

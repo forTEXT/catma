@@ -35,7 +35,6 @@ import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
 import de.catma.repository.git.serialization.models.GitTagsetHeader;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
 import de.catma.tag.PropertyDefinition;
-import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
@@ -226,11 +225,8 @@ public class GitTagsetHandlerTest {
 			);
 
 			PropertyDefinition propertyDefinition = new PropertyDefinition(
-					null, "CATMA_fakeUserPropDefUuid", "Weather",
-					new PropertyPossibleValueList(
-							Arrays.asList("Good", "Bad", "Toto, I've a feeling we're not in Kansas anymore."),
-							true
-					)
+					"Weather",
+					Arrays.asList("Good", "Bad", "Toto, I've a feeling we're not in Kansas anymore.")
 			);
 			tagDefinition.addUserDefinedPropertyDefinition(propertyDefinition);
 

@@ -18,9 +18,9 @@
  */
 package de.catma.serialization.tei;
 
-import de.catma.tag.TagLibrary;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagsetDefinition;
 
 public class TeiTagLibrarySerializer {
@@ -79,18 +79,15 @@ public class TeiTagLibrarySerializer {
 	private void write(PropertyDefinition pd, TeiElement fsDecl) {
 		TeiElement fDecl = new TeiElement(TeiElementName.fDecl);
 		fsDecl.appendChild(fDecl);
-		fDecl.setID(pd.getUuid());
-		 //TODO: check if this is a good idea
+		fDecl.setID(pd.getName()); //TODO: id is obsolete but needs a probably a version change
 		fDecl.setAttributeValue(Attribute.fDecl_name, Validator.SINGLETON.convertToXMLName(pd.getName()));
-//		fDecl.setAttributeValue(Attribute.fDecl_name, pd.getName());
 		TeiElement vRange = new TeiElement(TeiElementName.vRange);
 		fDecl.appendChild(vRange);
 
 		TeiElement vColl = new TeiElement(TeiElementName.vColl);
 		vRange.appendChild(vColl);
 		
-		for (String value :
-			pd.getPossibleValueList().getPropertyValueList().getValues()) {
+		for (String value : pd.getPossibleValueList()) {
 
 			TeiElement string = new TeiElement(TeiElementName.string);
 			string.appendChild(value);

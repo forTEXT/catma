@@ -26,8 +26,8 @@ public class TagInstanceInfoHTMLSerializer {
 		TagInstance tagInstance = tagInstanceInfo.getTagInstance();
 		
 		String author = tagInstance.getSystemProperty(
-			tagInstance.getTagDefinition().getPropertyDefinitionByName(
-				SystemPropertyName.catma_markupauthor.name()).getUuid()).getPropertyValueList().getFirstValue();
+			tagInstance.getTagDefinition().getPropertyDefinition(
+				SystemPropertyName.catma_markupauthor.name()).getName()).getFirstValue();
 		addRow(table, "Author", author); //$NON-NLS-1$
 		
 		if (!tagInstance.getUserDefinedProperties().isEmpty()) {
@@ -37,7 +37,7 @@ public class TagInstanceInfoHTMLSerializer {
 			addRow(table, propertyField, ""); //$NON-NLS-1$
 			
 			for (Property property : tagInstance.getUserDefinedProperties()) {
-				List<String> values = property.getPropertyValueList().getValues();
+				List<String> values = property.getPropertyValueList();
 				
 				addRow(table, property.getName(), values.isEmpty()?"":values.size() > 1?values.toString():values.get(0)); //$NON-NLS-1$
 			}

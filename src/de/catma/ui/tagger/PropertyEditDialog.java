@@ -52,7 +52,6 @@ import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
-import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagInstance;
 import de.catma.ui.dialog.SaveCancelListener;
 
@@ -134,11 +133,11 @@ public class PropertyEditDialog extends Window {
 			
 			Set<String> values = new HashSet<String>();
 			
-			values.addAll(propertyDefinition.getPossibleValueList().getPropertyValueList().getValues());
-			values.addAll(p.getPropertyValueList().getValues());
+			values.addAll(propertyDefinition.getPossibleValueList());
+			values.addAll(p.getPropertyValueList());
 			
 			for (String pValue : values) {
-				String pValueItemId = propertyDefinition.getUuid() + "_" + pValue; //$NON-NLS-1$
+				String pValueItemId = propertyDefinition.getName() + "_" + pValue; //$NON-NLS-1$
 				CheckBox cb = createCheckBox(p, pValue);
 				
 				propertyTree.addItem(
@@ -168,7 +167,7 @@ public class PropertyEditDialog extends Window {
 
 	private CheckBox createCheckBox(final Property p, final String pValue) {
 		final CheckBox cb = new CheckBox(
-			null, p.getPropertyValueList().getValues().contains(pValue));
+			null, p.getPropertyValueList().contains(pValue));
 		
 		cb.addValueChangeListener(new ValueChangeListener() {
 			
@@ -184,7 +183,7 @@ public class PropertyEditDialog extends Window {
 		if (valueList == null) {
 			valueList = new ArrayList<String>();
 			changeBuffer.put(p, valueList);
-			valueList.addAll(p.getPropertyValueList().getValues());
+			valueList.addAll(p.getPropertyValueList());
 		}
 		return valueList;
 	}
@@ -200,7 +199,7 @@ public class PropertyEditDialog extends Window {
 		}
 		
 		changedProperties.add(
-				tagInstance.getProperty(p.getPropertyDefinition().getUuid()));
+				tagInstance.getProperty(p.getPropertyDefinition().getName()));
 		
 	}
 
@@ -259,8 +258,7 @@ public class PropertyEditDialog extends Window {
 			
 			public void buttonClick(ClickEvent event) {
 				for (Property p : changedProperties) {
-					p.setPropertyValueList(
-						new PropertyValueList(changeBuffer.get(p)));
+					p.setPropertyValueList(changeBuffer.get(p));
 				}
 				UI.getCurrent().removeWindow(PropertyEditDialog.this);
 				saveCancelListener.savePressed(changedProperties);
@@ -292,8 +290,7 @@ public class PropertyEditDialog extends Window {
 				List<String> valueBuffer = getValueListBuffer(property);
 				if (valueBuffer.contains(pValue)
 					|| property.getPropertyDefinition()
-						.getPossibleValueList().getPropertyValueList()
-						.getValues().contains(pValue)) {
+						.getPossibleValueList().contains(pValue)) {
 						Notification.show(
 							Messages.getString("PropertyEditDialog.infoTitle"), //$NON-NLS-1$
 							Messages.getString("PropertyEditDialog.valueAlreadyExists"),  //$NON-NLS-1$
@@ -304,7 +301,7 @@ public class PropertyEditDialog extends Window {
 				propertyValuesBuffer.addValue(pValue);
 
 				String pValueItemId = 
-						property.getPropertyDefinition().getUuid() 
+						property.getPropertyDefinition().getName() 
 						+ "_" + pValue; //$NON-NLS-1$
 				CheckBox cb = createCheckBox(property, pValue);
 				propertyTree.addItem(

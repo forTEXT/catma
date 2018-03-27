@@ -222,24 +222,23 @@ public class TeiUserMarkupCollectionSerializer {
 		TeiElement f = new TeiElement(TeiElementName.f);
 		fs.appendChild(f);
 		
-		 //TODO: check if this is a good idea
 		f.setAttributeValue(Attribute.f_name, Validator.SINGLETON.convertToXMLName(property.getName()));
-//		f.setAttributeValue(Attribute.f_name, property.getName());
-		if (property.getPropertyValueList().getValues().size() > 1) {
+
+		if (property.getPropertyValueList().size() > 1) {
 			TeiElement vRange = new TeiElement(TeiElementName.vRange);
 			f.appendChild(vRange);
 			TeiElement vColl = new TeiElement(TeiElementName.vColl);
 			vRange.appendChild(vColl);
-			for (String val : property.getPropertyValueList().getValues()) {
+			for (String val : property.getPropertyValueList()) {
 				TeiElement string = new TeiElement(TeiElementName.string);
 				vColl.appendChild(string);
 				string.appendChild(val);
 			}
 			
 		}
-		else if (property.getPropertyValueList().getValues().size() == 1) {
+		else if (property.getPropertyValueList().size() == 1) {
 			TeiElement string = new TeiElement(TeiElementName.string);
-			string.appendChild(property.getPropertyValueList().getFirstValue());
+			string.appendChild(property.getFirstValue());
 			f.appendChild(string);
 		}
 	}

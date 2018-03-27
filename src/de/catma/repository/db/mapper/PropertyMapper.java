@@ -13,7 +13,6 @@ import org.jooq.RecordMapper;
 import org.jooq.Result;
 
 import de.catma.tag.Property;
-import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.util.IDGenerator;
 
@@ -39,7 +38,7 @@ public class PropertyMapper implements RecordMapper<Record, Property> {
 				createValueList(record.getValue(PROPERTY.PROPERTYID)));
 	}
 
-	private PropertyValueList createValueList(Integer propertyId) {
+	private List<String> createValueList(Integer propertyId) {
 		List<String> values = new ArrayList<String>();
 		if (propertyValueRecordsByPropertyId.containsKey(propertyId)) {
 			for (Record r : propertyValueRecordsByPropertyId.get(propertyId)) {
@@ -47,6 +46,6 @@ public class PropertyMapper implements RecordMapper<Record, Property> {
 			}
 		}
 		
-		return new PropertyValueList(values);
+		return values;
 	}
 }

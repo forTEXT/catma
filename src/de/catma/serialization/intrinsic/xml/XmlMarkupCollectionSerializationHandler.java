@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
@@ -17,8 +18,6 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
-import de.catma.tag.PropertyPossibleValueList;
-import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
@@ -135,10 +134,8 @@ public class XmlMarkupCollectionSerializationHandler implements
         			elementStack.peek(), new Version(), null, parentUuid);
         	PropertyDefinition colorDef = 
         		new PropertyDefinition(
-        			null, 
-        			idGenerator.generate(), 
         			PropertyDefinition.SystemPropertyName.catma_displaycolor.name(), 
-        			new PropertyPossibleValueList(
+        			Collections.singleton(
         				ColorConverter.toRGBIntAsString(ColorConverter.randomHex())));
         	tagDefinition.addSystemPropertyDefinition(colorDef);
         			
@@ -200,36 +197,29 @@ public class XmlMarkupCollectionSerializationHandler implements
 
         for (int i=0; i<element.getAttributeCount(); i++) {
         	PropertyDefinition propertyDefinition = 
-        		tagDefinition.getPropertyDefinitionByName(
+        		tagDefinition.getPropertyDefinition(
         				element.getAttribute(i).getQualifiedName());
         	
         	if (propertyDefinition == null) {
         		propertyDefinition = 
         			new PropertyDefinition(
-        				null, idGenerator.generate(), 
         				element.getAttribute(i).getQualifiedName(), 
-        				new PropertyPossibleValueList(element.getAttribute(i).getValue()));
+        				Collections.singleton(element.getAttribute(i).getValue()));
         		tagManager.addUserDefinedPropertyDefinition(tagDefinition, propertyDefinition);
         	}
         	else if (!propertyDefinition
         			.getPossibleValueList()
-        			.getPropertyValueList()
-        			.getValues().contains(element.getAttribute(i).getValue())) {
+        			.contains(element.getAttribute(i).getValue())) {
         		List<String> newValueList = new ArrayList<>();
-        		newValueList.addAll(
-        				propertyDefinition
-        						.getPossibleValueList()
-        						.getPropertyValueList()
-        						.getValues());
+        		newValueList.addAll(propertyDefinition.getPossibleValueList());
         		newValueList.add(element.getAttribute(i).getValue());
-        		propertyDefinition.setPossibleValueList(
-        			new PropertyPossibleValueList(newValueList, false));
+        		propertyDefinition.setPossibleValueList(newValueList);
         		
         	}
         	Property property = 
         		new Property(
         			propertyDefinition, 
-        			new PropertyValueList(element.getAttribute(i).getValue()));
+        			Collections.singleton(element.getAttribute(i).getValue()));
         	tagInstance.addUserDefinedProperty(property);
         }
         														

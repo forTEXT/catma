@@ -24,7 +24,6 @@ import de.catma.repository.git.GitTagsetHandler;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.tag.Property;
-import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagsetDefinition;
@@ -189,9 +188,9 @@ public class JsonLdWebAnnotation {
 			tagDefinition
 		);
 
-		// the TagInstance constructor sets default values for system properties, so we need to clear them
+		// the TagInstance constructor sets default values for system properties, so we need to clear them TODO: why?
 		for (Property property : tagInstance.getSystemProperties()) {
-			property.setPropertyValueList(new PropertyValueList());
+//			property.setPropertyValueList(new PropertyValueList());
 		}
 
 		TreeMap<String, TreeMap<String, TreeSet<String>>> properties = this.body.getProperties();
@@ -199,8 +198,8 @@ public class JsonLdWebAnnotation {
 		for (Map.Entry<String, TreeMap<String, TreeSet<String>>> entry : properties.entrySet()) {
 			for (Map.Entry<String, TreeSet<String>> subEntry : entry.getValue().entrySet()) {
 				Property property = new Property(
-					tagDefinition.getPropertyDefinitionByName(subEntry.getKey()),
-					new PropertyValueList(new ArrayList<>(subEntry.getValue()))
+					tagDefinition.getPropertyDefinition(subEntry.getKey()),
+					subEntry.getValue()
 				);
 				if (entry.getKey().equals(JsonLdWebAnnotationBody_Dataset.SYSTEM_PROPERTIES_KEY)) {
 					tagInstance.addSystemProperty(property);

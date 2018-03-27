@@ -22,6 +22,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.vaadin.dialogs.ConfirmDialog;
@@ -50,7 +51,6 @@ import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.document.repository.Repository;
 import de.catma.tag.PropertyDefinition;
-import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
@@ -576,9 +576,9 @@ public class TagsetTree extends HorizontalLayout {
 						TagDefinition tagDefinition = new TagDefinition(null, idGenerator.generate(),
 								(String) nameProperty.getValue(), new Version(),
 								(baseID.isEmpty() ? null : ((TagDefinition) selectedParent).getId()), baseID);
-						PropertyDefinition colorPropertyDef = new PropertyDefinition(null, idGenerator.generate(),
+						PropertyDefinition colorPropertyDef = new PropertyDefinition(
 								PropertyDefinition.SystemPropertyName.catma_displaycolor.name(),
-								new PropertyPossibleValueList(
+								Collections.singleton(
 										ColorConverter.toRGBIntAsString((String) colorProperty.getValue())));
 						tagDefinition.addSystemPropertyDefinition(colorPropertyDef);
 						tagManager.addTagDefinition(tagsetDefinition, tagDefinition);

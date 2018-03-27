@@ -223,7 +223,7 @@ public class TagInstanceTree extends HorizontalLayout {
 
 	private void removeTagInstanceFromTree(TagInstance ti) {
 		for (Property p : ti.getUserDefinedProperties()) {
-			for (String value : p.getPropertyValueList().getValues()) {
+			for (String value : p.getPropertyValueList()) {
 				tagInstanceTree.removeItem(String.valueOf(p.hashCode())+value);
 			}
 			tagInstanceTree.removeItem(p);
@@ -381,7 +381,7 @@ public class TagInstanceTree extends HorizontalLayout {
 			for (Property property : ti.getTagInstance().getUserDefinedProperties()) {
 				ClassResource propIcon = 
 						new ClassResource("tagmanager/resources/ylwdiamd.gif"); //$NON-NLS-1$
-				List<String> values = property.getPropertyValueList().getValues();
+				List<String> values = property.getPropertyValueList();
 				String caption = property.getName();
 				if (values.isEmpty()) {
 					caption += Messages.getString("TagInstanceTree.notSet"); //$NON-NLS-1$

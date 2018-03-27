@@ -131,8 +131,8 @@ public class TagReferenceIndexer {
 			
 				for (Property property : tr.getTagInstance().getSystemProperties()) {
 					byte[] propertyDefUUIDBytes = idGenerator.catmaIDToUUIDBytes(
-							property.getPropertyDefinition().getUuid());
-					for (String value : property.getPropertyValueList().getValues()) {
+							property.getPropertyDefinition().getName());
+					for (String value : property.getPropertyValueList()) {
 						insertPropertyBatch.bind(
 							tagInstanceUUIDBytes,
 							propertyDefUUIDBytes,
@@ -146,8 +146,8 @@ public class TagReferenceIndexer {
 				// however import of umc does come with tagreferences that have user defined props
 				for (Property property : tr.getTagInstance().getUserDefinedProperties()) {
 					byte[] propertyDefUUIDBytes = idGenerator.catmaIDToUUIDBytes(
-							property.getPropertyDefinition().getUuid());
-					for (String value : property.getPropertyValueList().getValues()) {
+							property.getPropertyDefinition().getName());
+					for (String value : property.getPropertyValueList()) {
 						insertPropertyBatch.bind(
 							tagInstanceUUIDBytes,
 							propertyDefUUIDBytes,
@@ -267,8 +267,8 @@ public class TagReferenceIndexer {
 			byte[] tagInstanceUUIDBytes = 
 					idGenerator.catmaIDToUUIDBytes(tagInstance.getUuid());
 			byte[] propDefUUIDBytes = 
-				idGenerator.catmaIDToUUIDBytes(
-						property.getPropertyDefinition().getUuid());
+				idGenerator.catmaIDToUUIDBytes(idGenerator.generate(
+						property.getPropertyDefinition().getName()));
 			
 			Result<Record2<Integer, String>> existingRecords = db
 					.select(PROPERTY.PROPERTYID, PROPERTY.VALUE)
@@ -283,7 +283,7 @@ public class TagReferenceIndexer {
 					existingRecords.map(new FieldToValueMapper<Integer>(PROPERTY.PROPERTYID));
 			Collection<String> toBeIndexed = 
 					Collections3.getSetDifference(
-						property.getPropertyValueList().getValues(), existingValues);
+						property.getPropertyValueList(), existingValues);
 			
 			db.beginTransaction();
 
@@ -293,11 +293,11 @@ public class TagReferenceIndexer {
 			.where(PROPERTY.TAGINSTANCEID.eq(tagInstanceUUIDBytes))
 			.and(PROPERTY.PROPERTYDEFINITIONID.eq(propDefUUIDBytes));
 			
-			if (!property.getPropertyValueList().getValues().isEmpty()) {
+			if (!property.getPropertyValueList().isEmpty()) {
 				deleteQuery = 
 					deleteQuery
 					.and(PROPERTY.VALUE
-						.notIn(property.getPropertyValueList().getValues()));
+						.notIn(property.getPropertyValueList()));
 			}
 			
 			deleteQuery.execute();

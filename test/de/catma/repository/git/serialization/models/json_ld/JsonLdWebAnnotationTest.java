@@ -11,6 +11,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -39,7 +40,6 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GitProjectManager;
 import de.catma.repository.git.GitTagsetHandler;
-import de.catma.repository.git.GitUser;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
@@ -47,8 +47,6 @@ import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
-import de.catma.tag.PropertyPossibleValueList;
-import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.Version;
@@ -266,22 +264,19 @@ public class JsonLdWebAnnotationTest {
 			// construct TagDefinition object
 			IDGenerator idGenerator = new IDGenerator();
 
-			PropertyPossibleValueList systemPropertyPossibleValues = new PropertyPossibleValueList(
-					Arrays.asList("SYSPROP_VAL_1", "SYSPROP_VAL_2"), true
-			);
-			String systemPropertyDefinitionUuid = idGenerator.generate();
+			List<String> systemPropertyPossibleValues = 
+					Arrays.asList("SYSPROP_VAL_1", "SYSPROP_VAL_2");
+			
 			PropertyDefinition systemPropertyDefinition = new PropertyDefinition(
-					null, systemPropertyDefinitionUuid,
 					PropertyDefinition.SystemPropertyName.catma_displaycolor.toString(),
 					systemPropertyPossibleValues
 			);
 
-			PropertyPossibleValueList userPropertyPossibleValues = new PropertyPossibleValueList(
-					Arrays.asList("UPROP_VAL_1", "UPROP_VAL_2"), true
-			);
-			String userPropertyDefinitionUuid = idGenerator.generate();
+			List<String> userPropertyPossibleValues = 
+					Arrays.asList("UPROP_VAL_1", "UPROP_VAL_2");
+			
 			PropertyDefinition userPropertyDefinition = new PropertyDefinition(
-					null, userPropertyDefinitionUuid, "UPROP_DEF", userPropertyPossibleValues
+					"UPROP_DEF", userPropertyPossibleValues
 			);
 
 			String tagDefinitionUuid = idGenerator.generate();
@@ -344,8 +339,8 @@ public class JsonLdWebAnnotationTest {
 			);
 
 			// construct TagInstance object
-			Property systemProperty = new Property(systemPropertyDefinition, new PropertyValueList("SYSPROP_VAL_1"));
-			Property userProperty = new Property(userPropertyDefinition, new PropertyValueList("UPROP_VAL_2"));
+			Property systemProperty = new Property(systemPropertyDefinition, Collections.singleton("SYSPROP_VAL_1"));
+			Property userProperty = new Property(userPropertyDefinition, Collections.singleton("UPROP_VAL_2"));
 
 			String tagInstanceUuid = idGenerator.generate();
 			TagInstance tagInstance = new TagInstance(tagInstanceUuid, tagDefinition);
@@ -384,8 +379,6 @@ public class JsonLdWebAnnotationTest {
 			returnValue.put("projectUuid", projectId);
 			returnValue.put("tagsetDefinitionUuid", tagsetId);
 			returnValue.put("tagDefinitionUuid", tagDefinitionUuid);
-			returnValue.put("userPropertyDefinitionUuid", userPropertyDefinitionUuid);
-			returnValue.put("systemPropertyDefinitionUuid", systemPropertyDefinitionUuid);
 			returnValue.put("userMarkupCollectionUuid", markupCollectionId);
 			returnValue.put("tagInstanceUuid", tagInstanceUuid);
 			returnValue.put("sourceDocumentUuid", sourceDocumentId);
@@ -497,11 +490,10 @@ public class JsonLdWebAnnotationTest {
 				assertEquals(1, systemPropertyDefinitions.length);
 				assertEquals(
 						getJsonLdWebAnnotationResult.get("systemPropertyDefinitionUuid"),
-						systemPropertyDefinitions[0].getUuid()
+						systemPropertyDefinitions[0].getName()
 				);
 				assertEquals("catma_displaycolor", systemPropertyDefinitions[0].getName());
-				List<String> possibleSystemPropertyValues = systemPropertyDefinitions[0].getPossibleValueList()
-						.getPropertyValueList().getValues();
+				List<String> possibleSystemPropertyValues = systemPropertyDefinitions[0].getPossibleValueList();
 				assertEquals(2, possibleSystemPropertyValues.size());
 				assertArrayEquals(
 					new String[]{"SYSPROP_VAL_1", "SYSPROP_VAL_2"}, possibleSystemPropertyValues.toArray(new String[0])
@@ -512,11 +504,10 @@ public class JsonLdWebAnnotationTest {
 				assertEquals(1, userPropertyDefinitions.length);
 				assertEquals(
 						getJsonLdWebAnnotationResult.get("userPropertyDefinitionUuid"),
-						userPropertyDefinitions[0].getUuid()
+						userPropertyDefinitions[0].getName()
 				);
 				assertEquals("UPROP_DEF", userPropertyDefinitions[0].getName());
-				List<String> possibleUserPropertyValues = userPropertyDefinitions[0].getPossibleValueList()
-						.getPropertyValueList().getValues();
+				List<String> possibleUserPropertyValues = userPropertyDefinitions[0].getPossibleValueList();
 				assertEquals(2, possibleUserPropertyValues.size());
 				assertArrayEquals(
 					new String[]{"UPROP_VAL_1", "UPROP_VAL_2"}, possibleUserPropertyValues.toArray(new String[0])
@@ -527,14 +518,14 @@ public class JsonLdWebAnnotationTest {
 				Property[] systemProperties = tagInstance.getSystemProperties().toArray(new Property[0]);
 				assertEquals(1, systemProperties.length);
 				assertEquals(systemPropertyDefinitions[0], systemProperties[0].getPropertyDefinition());
-				List<String> systemPropertyValues = systemProperties[0].getPropertyValueList().getValues();
+				List<String> systemPropertyValues = systemProperties[0].getPropertyValueList();
 				assertEquals(1, systemPropertyValues.size());
 				assertEquals("SYSPROP_VAL_1", systemPropertyValues.get(0));
 
 				Property[] userProperties = tagInstance.getUserDefinedProperties().toArray(new Property[0]);
 				assertEquals(1, userProperties.length);
 				assertEquals(userPropertyDefinitions[0], userProperties[0].getPropertyDefinition());
-				List<String> userPropertyValues = userProperties[0].getPropertyValueList().getValues();
+				List<String> userPropertyValues = userProperties[0].getPropertyValueList();
 				assertEquals(1, userPropertyValues.size());
 				assertEquals("UPROP_VAL_2", userPropertyValues.get(0));
 			}

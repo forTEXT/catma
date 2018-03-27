@@ -11,7 +11,6 @@ import org.jooq.Record;
 import org.jooq.RecordMapper;
 
 import de.catma.tag.PropertyDefinition;
-import de.catma.tag.PropertyPossibleValueList;
 import de.catma.util.IDGenerator;
 
 public class PropertyDefinitionMapper implements
@@ -30,13 +29,11 @@ public class PropertyDefinitionMapper implements
 		String propDefUuid = 
 			idGenerator.uuidBytesToCatmaID(record.getValue(PROPERTYDEFINITION.UUID));
 		return new PropertyDefinition(
-			record.getValue(PROPERTYDEFINITION.PROPERTYDEFINITIONID),
-			propDefUuid,
 			record.getValue(PROPERTYDEFINITION.NAME),
 			getPossibleValuesList(possValuesByPropDefUuid.get(propDefUuid)));
 	}
 
-	private PropertyPossibleValueList getPossibleValuesList(
+	private List<String> getPossibleValuesList(
 			List<Record> possValuesRecords) {
 		ArrayList<String> values = new ArrayList<String>();
 		
@@ -46,6 +43,6 @@ public class PropertyDefinitionMapper implements
 			}
 		}
 		
-		return new PropertyPossibleValueList(values, true);
+		return values;
 	}
 }

@@ -20,21 +20,21 @@ package de.catma.serialization.tei;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import nu.xom.Elements;
-import nu.xom.Nodes;
 import de.catma.ExceptionHandler;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.serialization.tei.PtrValueHandler.TargetValues;
-import de.catma.tag.TagLibrary;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
-import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
+import de.catma.tag.TagLibrary;
 import de.catma.util.IDGenerator;
+import nu.xom.Elements;
+import nu.xom.Nodes;
 
 public class TeiUserMarkupCollectionDeserializer {
 
@@ -138,7 +138,7 @@ public class TeiUserMarkupCollectionDeserializer {
 			try {
 				TeiElement curPropertyElement = (TeiElement)propertyElements.get(i);
 				PropertyDefinition propertyDefinition =
-						tagDefinition.getPropertyDefinitionByName(
+						tagDefinition.getPropertyDefinition(
 								curPropertyElement.getAttributeValue(Attribute.f_name));
 				
 				
@@ -146,7 +146,7 @@ public class TeiUserMarkupCollectionDeserializer {
 					addPropertyHandler.addProperty(
 							new Property(
 								propertyDefinition,
-								new PropertyValueList()));
+								Collections.emptyList()));
 				}
 				else {
 					TeiElement valueElement = 
@@ -156,9 +156,8 @@ public class TeiUserMarkupCollectionDeserializer {
 						addPropertyHandler.addProperty(
 							new Property(
 								propertyDefinition,
-								new PropertyValueList(
-										new NumericPropertyValueFactory(
-												curPropertyElement).getValueAsList())));
+									new NumericPropertyValueFactory(
+										curPropertyElement).getValueAsList()));
 					}
 					else if (valueElement.is(TeiElementName.string)) {
 						StringPropertyValueFactory stringPropFact = 
@@ -168,8 +167,7 @@ public class TeiUserMarkupCollectionDeserializer {
 							addPropertyHandler.addProperty(
 								new Property(
 									propertyDefinition,
-									new PropertyValueList(
-											stringPropFact.getValueAsList())));
+										stringPropFact.getValueAsList()));
 						}
 					}
 					else if (valueElement.is(TeiElementName.vRange)) {
@@ -184,7 +182,7 @@ public class TeiUserMarkupCollectionDeserializer {
 							
 							addPropertyHandler.addProperty(new Property(
 									propertyDefinition, 
-									new PropertyValueList(valueList)));
+									valueList));
 						}
 					}
 					else {

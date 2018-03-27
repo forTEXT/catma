@@ -86,7 +86,6 @@ import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyDefinition.SystemPropertyName;
-import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
@@ -135,7 +134,7 @@ class UserMarkupCollectionHandler {
 		
 		@Override
 		public Integer apply(Property property) {
-			return property.getPropertyDefinition().getId();
+			return 0; //property.getPropertyDefinition().getId(); obsolete
 		}
 	}
 	
@@ -455,7 +454,7 @@ class UserMarkupCollectionHandler {
 					
 					if (p.getPropertyDefinition().getName().equals(
 							PropertyDefinition.SystemPropertyName.catma_markupauthor.name())) {
-						p.setPropertyValueList(new PropertyValueList(
+						p.setPropertyValueList(Collections.singleton(
 								dbRepository.getCurrentUser().getIdentifier()));
 						authorPresent = true;
 					}
@@ -466,14 +465,14 @@ class UserMarkupCollectionHandler {
 								PROPERTY.PROPERTYDEFINITIONID,
 								PROPERTY.TAGINSTANCEID)
 						.values(
-							p.getPropertyDefinition().getId(),
+							0, //p.getPropertyDefinition().getId(), obsolete
 							curTagInstanceId)
 						.returning(PROPERTY.PROPERTYID)
 						.fetchOne()
 						.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
 				
 					
-					for (String value : p.getPropertyValueList().getValues()) {
+					for (String value : p.getPropertyValueList()) {
 						pValueInsertBatch.bind(propertyId, value);
 					}
 					
@@ -482,9 +481,9 @@ class UserMarkupCollectionHandler {
 				if (!authorPresent) {
 					Property authorNameProp = 
 						new Property(
-							tDef.getPropertyDefinitionByName(
+							tDef.getPropertyDefinition(
 								PropertyDefinition.SystemPropertyName.catma_markupauthor.name()),
-							new PropertyValueList(
+							Collections.singleton(
 								dbRepository.getCurrentUser().getIdentifier()));
 					ti.addSystemProperty(authorNameProp);
 					
@@ -494,7 +493,7 @@ class UserMarkupCollectionHandler {
 								PROPERTY.PROPERTYDEFINITIONID,
 								PROPERTY.TAGINSTANCEID)
 						.values(
-							authorNameProp.getPropertyDefinition().getId(),
+							0, //authorNameProp.getPropertyDefinition().getId(), obsolete
 							curTagInstanceId)
 						.returning(PROPERTY.PROPERTYID)
 						.fetchOne()
@@ -502,25 +501,25 @@ class UserMarkupCollectionHandler {
 
 					pValueInsertBatch.bind(
 						propertyId, 
-						authorNameProp.getPropertyValueList().getFirstValue());
+						authorNameProp.getFirstValue());
 				}
 					 
 				for (Property p : ti.getUserDefinedProperties()) {
-					if (!p.getPropertyValueList().getValues().isEmpty()) {
+					if (!p.getPropertyValueList().isEmpty()) {
 						Integer propertyId = db
 							.insertInto(
 								PROPERTY,
 									PROPERTY.PROPERTYDEFINITIONID,
 									PROPERTY.TAGINSTANCEID)
 							.values(
-								p.getPropertyDefinition().getId(),
+								0, //p.getPropertyDefinition().getId(), obsolete
 								curTagInstanceId)
 							.returning(PROPERTY.PROPERTYID)
 							.fetchOne()
 							.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
 					
 						
-						for (String value : p.getPropertyValueList().getValues()) {
+						for (String value : p.getPropertyValueList()) {
 							pValueInsertBatch.bind(propertyId, value);
 						}
 					}
@@ -858,14 +857,15 @@ class UserMarkupCollectionHandler {
 								tagsetDefinition.getUuid())) {
 					
 					PropertyDefinition colorPropertyDefinition = 
-							td.getPropertyDefinitionByName(
+							td.getPropertyDefinition(
 									SystemPropertyName.catma_displaycolor.name());
 					
 					ColorPropertyValueInfo colorPropertyValueInfo = 
 							new ColorPropertyValueInfo(td, colorPropertyDefinition);
 					
 					colorPropertyDefIdToValueInfoMap.put(
-							colorPropertyDefinition.getId(), colorPropertyValueInfo);
+							0, //colorPropertyDefinition.getId(), obsolete
+							colorPropertyValueInfo);
 				}
 				
 				// get all propertyValueIDs and their propertyDefinitionIDs
@@ -939,7 +939,7 @@ class UserMarkupCollectionHandler {
 									new Function<Property, Integer>() {
 								public Integer apply(
 										Property property) {
-									return property.getPropertyDefinition().getId();
+									return 0; // property.getPropertyDefinition().getId(); obsolete
 								}});
 					relevantUserDefPropertyIdList.addAll(relevantUserDefPropertyDefIds);
 					
@@ -1115,7 +1115,7 @@ class UserMarkupCollectionHandler {
 					for (ColorPropertyValueInfo colorPropertyValueInfo : colorPropertyDefIdToValueInfoMap.values())  {
 						if (!colorPropertyValueInfo.getPropertyValueIds().isEmpty()) {
 							tagsetDefinitionUpdateLog.addUpdatedPropertyDefinition(
-								colorPropertyValueInfo.getPropertyDefinition().getUuid(), 
+								colorPropertyValueInfo.getPropertyDefinition().getName(), 
 								colorPropertyValueInfo.getTagDefinition().getUuid());
 						}
 					}
@@ -1334,8 +1334,8 @@ class UserMarkupCollectionHandler {
 			
 			db.beginTransaction();
 			for (Property property : properties) {
-				Integer propertyId = 
-						propertyDefintionIdToProperyIdMap.get(property.getPropertyDefinition().getId());
+				Integer propertyId = 0; 
+//						propertyDefintionIdToProperyIdMap.get(property.getPropertyDefinition().getId()); obsolete
 				
 				if (propertyId != null) {
 					DeleteConditionStep<Record> deleteQuery = 
@@ -1343,8 +1343,8 @@ class UserMarkupCollectionHandler {
 					.delete(PROPERTYVALUE)
 					.where(PROPERTYVALUE.PROPERTYID.eq(propertyId));
 						
-					if (!property.getPropertyValueList().getValues().isEmpty()) {
-						deleteQuery = deleteQuery.and(PROPERTYVALUE.VALUE.notIn(property.getPropertyValueList().getValues()));
+					if (!property.getPropertyValueList().isEmpty()) {
+						deleteQuery = deleteQuery.and(PROPERTYVALUE.VALUE.notIn(property.getPropertyValueList()));
 					}
 					
 					deleteQuery.execute();
@@ -1367,7 +1367,7 @@ class UserMarkupCollectionHandler {
 								PROPERTY.PROPERTYDEFINITIONID,
 								PROPERTY.TAGINSTANCEID)
 						.values(
-							property.getPropertyDefinition().getId(),
+							0, //property.getPropertyDefinition().getId(), obsolete
 							tagInstanceId)
 						.returning(PROPERTY.PROPERTYID)
 						.fetchOne()
@@ -1376,7 +1376,7 @@ class UserMarkupCollectionHandler {
 				
 				for(String value : 
 					Collections3.getSetDifference(
-						property.getPropertyValueList().getValues(), existingValues)) {
+						property.getPropertyValueList(), existingValues)) {
 					db
 					.insertInto(
 						PROPERTYVALUE,

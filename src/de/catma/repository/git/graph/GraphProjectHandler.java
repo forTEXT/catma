@@ -73,8 +73,6 @@ import de.catma.repository.neo4j.SessionRunner;
 import de.catma.repository.neo4j.StatementExcutor;
 import de.catma.repository.neo4j.ValueContainer;
 import de.catma.tag.PropertyDefinition;
-import de.catma.tag.PropertyPossibleValueList;
-import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
@@ -508,6 +506,14 @@ public class GraphProjectHandler {
 	public void addTagDefinition(String rootRevisionHash, TagDefinition tagDefinition,
 			TagsetDefinition tagsetDefinition) throws Exception {
 		
+		if (tagDefinition.getPropertyDefinition(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()) == null) {
+			PropertyDefinition authorPropertyDefinition = 
+					new PropertyDefinition(
+						PropertyDefinition.SystemPropertyName.catma_markupauthor.name(),
+						Collections.singleton(user.getIdentifier()));
+			tagDefinition.addSystemPropertyDefinition(authorPropertyDefinition);
+		}
+		
 		StatementExcutor.execute(new SessionRunner() {
 			@Override
 			public void run(Session session) throws Exception {
@@ -521,7 +527,7 @@ public class GraphProjectHandler {
 						+"tagId:{pTagId},"
 						+"name:{pName},"
 						+"color:{pColor},"
-//						+"author:{pAuthor}," //TODO:
+						+"author:{pAuthor},"
 						+"creationDate:{pCreationDate},"
 						+"modifiedDate:{pModifiedDate}"
 					+"}) "
@@ -698,11 +704,7 @@ public class GraphProjectHandler {
 		List<String> values = propertyNode.get("values").asList(value -> value.toString());
 		
 		
-		return new PropertyDefinition(
-			null,  //TODO
-			idGenerator.generate(), //TODO
-			name, 
-			new PropertyPossibleValueList(values, false));
+		return new PropertyDefinition(name, values);
 	}
 
 	private TagsetDefinition createTagset(Node tagsetNode) {
@@ -723,14 +725,17 @@ public class GraphProjectHandler {
 		String name = tagNode.get("name").asString();
 		String color = tagNode.get("color").asString();
 		String modifiedDate = tagNode.get("modifiedDate").asString();
+		String author = tagNode.get("author").asString();
 		
 		TagDefinition tagDef = new TagDefinition(null, tagId, name, new Version(modifiedDate), null, null);
 		tagDef.addSystemPropertyDefinition(
 			new PropertyDefinition(
-				null, idGenerator.generate(), //TODO:
 				PropertyDefinition.SystemPropertyName.catma_displaycolor.name(),
-				new PropertyPossibleValueList(ColorConverter.toRGBIntAsString(color))));
-		
+				Collections.singleton(ColorConverter.toRGBIntAsString(color))));
+		tagDef.addSystemPropertyDefinition(
+			new PropertyDefinition(
+				PropertyDefinition.SystemPropertyName.catma_markupauthor.name(),
+				Collections.singleton(author)));		
 		return tagDef;
 	}
 
@@ -756,7 +761,7 @@ public class GraphProjectHandler {
 						"pRootRevisionHash", rootRevisionHash,
 						"pTagId", tagDefinition.getUuid(),
 						"pName", propertyDefinition.getName(),
-						"pValues", propertyDefinition.getPossibleValueList().getPropertyValueList().getValues()
+						"pValues", propertyDefinition.getPossibleValueList()
 					)
 				);
 			}
@@ -790,17 +795,15 @@ public class GraphProjectHandler {
 						.flatMap(range -> Stream.of(range.getStartPoint(), range.getEndPoint()))
 						.collect(Collectors.toList());
 					
-					PropertyDefinition authorPropertyDefinition = 
-						ti.getTagDefinition().getPropertyDefinitionByName(
-							PropertyDefinition.SystemPropertyName.catma_markupauthor.name());
 					
-					String authorPropertyUuid = authorPropertyDefinition.getUuid();
-					
-					if (ti.getSystemProperty(authorPropertyUuid).getPropertyValueList().getValues().isEmpty()) {
+					if (ti.getSystemProperty(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()) == null) {
+						PropertyDefinition authorPropertyDefinition = 
+								ti.getTagDefinition().getPropertyDefinition(
+										PropertyDefinition.SystemPropertyName.catma_markupauthor.name());
 						ti.addSystemProperty(
 							new de.catma.tag.Property(
 								authorPropertyDefinition, 
-								new PropertyValueList(user.getIdentifier())));
+								Collections.singleton(user.getIdentifier())));
 					}
 					
 					session.run(
@@ -825,8 +828,9 @@ public class GraphProjectHandler {
 							"pProjectId", projectReference.getProjectId(),
 							"pRootRevisionHash", rootRevisionHash,
 							"pTagId", ti.getTagDefinition().getUuid(),
+							"pCollectionId", userMarkupCollection.getUuid(),
 							"pTagInstanceId", ti.getUuid(),
-							"pAuthor", ti.getProperty(authorPropertyUuid).getPropertyValueList().getFirstValue(),
+							"pAuthor", ti.getProperty(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()).getFirstValue(),
 							"pCreationDate",  ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
 							"pRanges", flatRanges
 						)

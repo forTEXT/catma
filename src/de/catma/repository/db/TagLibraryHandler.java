@@ -69,7 +69,6 @@ import de.catma.repository.db.mapper.TagsetDefinitionMapper;
 import de.catma.repository.db.mapper.UUIDByteToStringFieldMapper;
 import de.catma.serialization.TagLibrarySerializationHandler;
 import de.catma.tag.PropertyDefinition;
-import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
@@ -86,7 +85,7 @@ class TagLibraryHandler {
 	private static class PropertyDefinitionToUUID implements Function<PropertyDefinition, String> {
 		
 		public String apply(PropertyDefinition pd) {
-			return pd.getUuid();
+			return null; //defect
 		}
 	}
 	
@@ -461,7 +460,7 @@ class TagLibraryHandler {
 				PROPERTYDEFINITION.TAGDEFINITIONID,
 				PROPERTYDEFINITION.SYSTEMPROPERTY)
 		.values(
-			idGenerator.catmaIDToUUIDBytes(propDef.getUuid()),
+			idGenerator.catmaIDToUUIDBytes(idGenerator.generate(propDef.getName())),
 			propDef.getName(),
 			tagDefinitionId,
 			(byte)(isSystemProperty?1:0))
@@ -469,10 +468,9 @@ class TagLibraryHandler {
 		.fetchOne()
 		.map(new IDFieldToIntegerMapper(PROPERTYDEFINITION.PROPERTYDEFINITIONID));
 				
-		propDef.setId(propertyDefId);
+//		propDef.setId(propertyDefId); obsolete
 		
-		for (String value : propDef.getPossibleValueList()
-				.getPropertyValueList().getValues()) {
+		for (String value : propDef.getPossibleValueList()) {
 			
 			createPossibleValue(db, value, propertyDefId);
 		}
@@ -531,11 +529,8 @@ class TagLibraryHandler {
 		if (tDef.getAuthor() == null) {
 			PropertyDefinition pdAuthor = 
 				new PropertyDefinition(
-					null,
-					idGenerator.generate(), 
 					PropertyDefinition.SystemPropertyName.catma_markupauthor.name(), 
-					new PropertyPossibleValueList(
-						dbRepository.getCurrentUser().getIdentifier()));
+					Collections.singleton(dbRepository.getCurrentUser().getIdentifier()));
 			tDef.addSystemPropertyDefinition(pdAuthor);
 		}
 	}
@@ -819,7 +814,7 @@ class TagLibraryHandler {
 			getLibraryAccess(db, tagLibraryId, true);
 
 			PropertyDefinition colorPropertyDef = 
-				tagDefinition.getPropertyDefinitionByName(
+				tagDefinition.getPropertyDefinition(
 					PropertyDefinition.SystemPropertyName.catma_displaycolor.name());
 
 			db.beginTransaction();
@@ -828,7 +823,7 @@ class TagLibraryHandler {
 				db
 				.update(PROPERTYDEF_POSSIBLEVALUE)
 				.set(PROPERTYDEF_POSSIBLEVALUE.VALUE, colorPropertyDef.getFirstValue())
-				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.eq(colorPropertyDef.getId())),
+				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.eq(0)), //defect due to refactoring
 				db
 				.update(TAGDEFINITION)
 				.set(TAGDEFINITION.NAME, tagDefinition.getName())
@@ -1044,28 +1039,28 @@ class TagLibraryHandler {
 		boolean propDefChanged = false;
 		
 		for (PropertyDefinition pd : tagDefinition.getSystemPropertyDefinitions()) {
-			if (pd.getId() == null) {
+			if (pd.getName() == null) { //defect due to refactoring
 				createDeepPropertyDefinition(db, pd, tagDefinition.getId(), true);
 				propDefChanged = true;
 			}
 			else {
 				if (updateDeepPropertyDefinition(db, pd, true, tagsetDefinitionUpdateLog)) {
 					tagsetDefinitionUpdateLog.addUpdatedPropertyDefinition(
-							pd.getUuid(), tagDefinition.getUuid());
+							pd.getName(), tagDefinition.getUuid());
 					propDefChanged = true;
 				}
 			}
 		}
 		
 		for (PropertyDefinition pd : tagDefinition.getUserDefinedPropertyDefinitions()) {
-			if (pd.getId() == null) {
+			if (pd.getName() == null) {//defect due to refactoring
 				createDeepPropertyDefinition(db, pd, tagDefinition.getId(), false);
 				propDefChanged = true;
 			}
 			else {
 				if (updateDeepPropertyDefinition(db, pd, false, tagsetDefinitionUpdateLog)) {
 					tagsetDefinitionUpdateLog.addUpdatedPropertyDefinition(
-							pd.getUuid(), tagDefinition.getUuid());
+							pd.getName(), tagDefinition.getUuid());
 					propDefChanged = true;
 				}
 			}
@@ -1148,7 +1143,7 @@ class TagLibraryHandler {
 			noOfChangedRecords += db
 			.update(PROPERTYDEFINITION)
 			.set(PROPERTYDEFINITION.NAME, pd.getName())
-			.where(PROPERTYDEFINITION.PROPERTYDEFINITIONID.eq(pd.getId()))
+			.where(PROPERTYDEFINITION.PROPERTYDEFINITIONID.eq(0)) //defect due to refactoring
 			.and(PROPERTYDEFINITION.NAME.ne(pd.getName()))
 			.execute();
 		}
@@ -1156,11 +1151,11 @@ class TagLibraryHandler {
 		List<String> oldValues = db
 		.select(PROPERTYDEF_POSSIBLEVALUE.VALUE)
 		.from(PROPERTYDEF_POSSIBLEVALUE)
-		.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.eq(pd.getId()))
+		.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.eq(0)) //defect
 		.fetch()
 		.map(new FieldToValueMapper<String>(PROPERTYDEF_POSSIBLEVALUE.VALUE));
 		
-		List<String> newValues = pd.getPossibleValueList().getPropertyValueList().getValues();
+		List<String> newValues = pd.getPossibleValueList();
 		
 		Collection<String> toBeDeleted = Collections3.getSetDifference(oldValues, newValues);
 		Collection<String> toBeInserted = Collections3.getSetDifference(newValues, oldValues);
@@ -1168,7 +1163,7 @@ class TagLibraryHandler {
 		if (!toBeDeleted.isEmpty()) {
 			noOfChangedRecords += db
 			.delete(PROPERTYDEF_POSSIBLEVALUE)
-			.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.eq(pd.getId()))
+			.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.eq(0)) //defect
 			.and(PROPERTYDEF_POSSIBLEVALUE.VALUE.in(toBeDeleted))
 			.execute();
 		}
@@ -1184,7 +1179,7 @@ class TagLibraryHandler {
 				null));
 			
 			for (String value : toBeInserted) {
-				insertBatch.bind(pd.getId(), value);
+				insertBatch.bind(0, value); //defect
 			}
 			
 			insertBatch.execute();
@@ -1358,10 +1353,10 @@ class TagLibraryHandler {
 				.where(TAGDEFINITION.TAGDEFINITIONID.eq(tagDefinition.getId())),
 				db
 				.delete(PROPERTYDEF_POSSIBLEVALUE)
-				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.eq(propertyDefinition.getId())),
+				.where(PROPERTYDEF_POSSIBLEVALUE.PROPERTYDEFINITIONID.eq(0)), //defect
 				db
 				.delete(PROPERTYDEFINITION)
-				.where(PROPERTYDEFINITION.PROPERTYDEFINITIONID.eq(propertyDefinition.getId())))
+				.where(PROPERTYDEFINITION.PROPERTYDEFINITIONID.eq(0)))//defect
 			.execute();
 			
 			db.commitTransaction();

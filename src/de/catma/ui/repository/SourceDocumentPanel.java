@@ -27,6 +27,7 @@ import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
@@ -35,6 +36,20 @@ import org.vaadin.teemu.wizards.event.WizardProgressListener;
 import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
 import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
+import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.HorizontalSplitPanel;
+import com.vaadin.ui.MenuBar;
+import com.vaadin.ui.MenuBar.Command;
+import com.vaadin.ui.MenuBar.MenuItem;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.Window;
 import com.vaadin.v7.data.Container.Sortable;
 import com.vaadin.v7.data.Property;
 import com.vaadin.v7.data.Property.ValueChangeEvent;
@@ -45,26 +60,12 @@ import com.vaadin.v7.data.util.ItemSorter;
 import com.vaadin.v7.data.util.PropertysetItem;
 import com.vaadin.v7.event.ItemClickEvent;
 import com.vaadin.v7.event.ItemClickEvent.ItemClickListener;
-import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.Component;
 import com.vaadin.v7.ui.Form;
 import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.MenuBar;
-import com.vaadin.ui.MenuBar.Command;
-import com.vaadin.ui.MenuBar.MenuItem;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.Panel;
 import com.vaadin.v7.ui.Table.ColumnHeaderMode;
 import com.vaadin.v7.ui.Table.TableDragMode;
 import com.vaadin.v7.ui.TreeTable;
-import com.vaadin.ui.UI;
 import com.vaadin.v7.ui.VerticalLayout;
-import com.vaadin.ui.Window;
 import com.vaadin.v7.ui.themes.Reindeer;
 
 import de.catma.document.Corpus;
@@ -82,7 +83,6 @@ import de.catma.indexer.Indexer;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
 import de.catma.serialization.intrinsic.xml.XmlMarkupCollectionSerializationHandler;
 import de.catma.tag.PropertyDefinition;
-import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagLibraryReference;
@@ -697,11 +697,9 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 															null, ""); //$NON-NLS-1$
 											PropertyDefinition colorPropertyDef =
 													new PropertyDefinition(
-														null,
-														idGenerator.generate(),
 														PropertyDefinition.SystemPropertyName.
 															catma_displaycolor.name(),
-														new PropertyPossibleValueList(
+														Collections.singleton(
 															ColorConverter.toRGBIntAsString(
 																ColorConverter.randomHex())));
 											td.addSystemPropertyDefinition(

@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
@@ -16,7 +17,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
-import de.catma.util.IDGenerator;
 import org.apache.commons.io.IOUtils;
 import org.restlet.Context;
 import org.restlet.data.ChallengeScheme;
@@ -49,13 +49,13 @@ import de.catma.serialization.tei.TeiTagLibrarySerializationHandler;
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.PropertyDefinition.SystemPropertyName;
-import de.catma.tag.PropertyValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
+import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
 public class CorpusCleaner {
@@ -407,7 +407,7 @@ public class CorpusCleaner {
 				if (conceptName != null && isValidCombination(conceptName, umc.toString(), sourceDocName)) {
 					TagInstance tagInstance = tagReference.getTagInstance();
 					PropertyDefinition propertyDefinition = 
-						tagDefinition.getPropertyDefinitionByName(
+						tagDefinition.getPropertyDefinition(
 								SystemPropertyName.catma_markupauthor.name());
 					
 					String annotatorAnonym = getAnnotatorAnonym(annotator);
@@ -418,8 +418,8 @@ public class CorpusCleaner {
 					
 					//anonymizing authors
 					tagInstance.getProperty(
-						propertyDefinition.getUuid()).setPropertyValueList(
-								new PropertyValueList(annotatorAnonym));
+						propertyDefinition.getName()).setPropertyValueList(
+								Collections.singleton(annotatorAnonym));
 					
 					targetUmc.addTagReference(tagReference);
 					includedInstances.add(tagReference.getTagInstanceID());
@@ -437,15 +437,15 @@ public class CorpusCleaner {
 			
 			TagInstance tagInstance = tagReference.getTagInstance();
 			PropertyDefinition propertyDefinition = 
-				tagDefinition.getPropertyDefinitionByName(
+				tagDefinition.getPropertyDefinition(
 						SystemPropertyName.catma_markupauthor.name());
 			
 			String annotatorAnonym = getAnnotatorAnonym(annotator);
 			
 			//anonymizing authors
 			tagInstance.getProperty(
-				propertyDefinition.getUuid()).setPropertyValueList(
-						new PropertyValueList(annotatorAnonym));
+				propertyDefinition.getName()).setPropertyValueList(
+						Collections.singleton(annotatorAnonym));
 
 			for (UserMarkupCollection targetUmc : affectedCollections) {
 				targetUmc.addTagReference(tagReference);

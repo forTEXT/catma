@@ -21,16 +21,15 @@ package de.catma.serialization.tei;
 import java.io.IOException;
 import java.text.ParseException;
 
-import nu.xom.Elements;
-import nu.xom.Nodes;
 import de.catma.ExceptionHandler;
 import de.catma.tag.PropertyDefinition;
-import de.catma.tag.PropertyPossibleValueList;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
+import nu.xom.Elements;
+import nu.xom.Nodes;
 
 public class TeiTagLibraryDeserializer {
 	
@@ -154,11 +153,8 @@ public class TeiTagLibraryDeserializer {
 		}
 		
 		return new PropertyDefinition(
-					null,
-					propElement.getID(),
 					propElement.getAttributeValue(Attribute.fDecl_name),
-					new PropertyPossibleValueList(pvf.getValueAsList(), 
-							pvf.isSingleSelectValue()));
+					pvf.getValueAsList());
 	}
 
 	public TagLibrary getTagLibrary() {
