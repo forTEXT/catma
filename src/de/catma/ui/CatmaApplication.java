@@ -303,8 +303,6 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 					
 					ProjectManager projectManager = 
 						new GitProjectManager(
-							RepositoryPropertyKey.GitLabServerUrl.getValue(),
-							RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
 							RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
 							userIdentification);
 					

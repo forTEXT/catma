@@ -62,7 +62,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	 * @param catmaUser a {@link de.catma.user.User} object
 	 * @throws IOException if something went wrong during instantiation
 	 */
-	public GitLabServerManager(String gitLabServerUrl, String gitLabAdminPersonalAccessToken, Map<String, String> userIdentification)
+	public GitLabServerManager(Map<String, String> userIdentification)
 			throws IOException {
 		this.gitLabAdminPersonalAccessToken = RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue();
 		

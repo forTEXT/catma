@@ -10,12 +10,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.TermInfo;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
+import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 
 public class GitProjectHandler {
 
@@ -285,5 +288,18 @@ public class GitProjectHandler {
 				 throw new RuntimeException(e);
 			 }
 		}
+	}
+
+	public void addOrUpdate(String collectionId, List<TagReference> tagReferenceList) throws IOException {
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
+					localRepoManager, this.remoteGitServerManager);
+			JsonLdWebAnnotation annotation = 
+					new JsonLdWebAnnotation(
+						RepositoryPropertyKey.GitLabServerUrl.getValue(), 
+						projectId, 
+						tagReferenceList);
+			gitMarkupCollectionHandler.createTagInstance(projectId, collectionId, annotation);
+		}		
 	}
 }

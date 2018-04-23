@@ -40,6 +40,7 @@ import de.catma.project.ProjectReference;
 import de.catma.repository.db.executionshield.DBOperation;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
+import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
@@ -366,8 +367,12 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	@Override
 	public void close() {
-		// TODO Auto-generated method stub
-
+		try {
+			synchTagInstancesToGit();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -826,4 +831,11 @@ public class GraphWorktreeProject implements IndexedRepository {
 		return null;
 	}
 
+	public void synchTagInstancesToGit() throws Exception {
+		graphProjectHandler.synchTagInstanceToGit(
+			this.rootRevisionHash,
+			(collectionId, tagReferenceList) -> {
+				gitProjectHandler.addOrUpdate(collectionId, tagReferenceList);
+			});
+	}
 }

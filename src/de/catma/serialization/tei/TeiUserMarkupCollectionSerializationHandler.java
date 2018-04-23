@@ -29,7 +29,6 @@ import de.catma.serialization.DocumentSerializer;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
-import de.catma.util.IDGenerator;
 
 public class TeiUserMarkupCollectionSerializationHandler implements
 		UserMarkupCollectionSerializationHandler {
@@ -81,14 +80,11 @@ public class TeiUserMarkupCollectionSerializationHandler implements
 					new TeiTagLibrarySerializationHandler(
 							teiDocument, tagManager).deserialize();
 			
-			IDGenerator idGenerator = new IDGenerator();
-			String collectionId =  idGenerator.generate();
 			TeiUserMarkupCollectionDeserializer deserializer = 
 					new TeiUserMarkupCollectionDeserializer(
-							teiDocument, tagLibrary, collectionId);
-			//TODO: it should be save to ignore/remove the id
+							teiDocument, tagLibrary, id);
 			return new UserMarkupCollection(
-				id, collectionId, teiDocument.getContentInfoSet(),
+				id, teiDocument.getContentInfoSet(),
 				tagLibrary, deserializer.getTagReferences(),
 				AccessMode.WRITE);
 			

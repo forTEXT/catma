@@ -180,8 +180,6 @@ public class JGitRepoManagerTest {
 	@Test
 	public void cloneGitLabRepoWithAuthentication() throws Exception {
 		GitLabServerManager gitLabServerManager = new GitLabServerManager(
-				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabServerUrl.name()),
-				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabAdminPersonalAccessToken.name()),
 				UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 		
 		String randomRepoName = Randomizer.getRepoName();
@@ -479,8 +477,6 @@ public class JGitRepoManagerTest {
 	@Test
 	public void pushToGitLabRepoWithAuthentication() throws Exception {
 		GitLabServerManager gitLabServerManager = new GitLabServerManager(
-				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabServerUrl.name()),
-				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabAdminPersonalAccessToken.name()),
 				UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 
 		// create a repository

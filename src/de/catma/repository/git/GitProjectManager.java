@@ -37,16 +37,12 @@ public class GitProjectManager implements ProjectManager {
 	}
 
 	public GitProjectManager(
-			String gitLabServerUrl, 
-			String gitLabAdminPersonalAccessToken,
 			String gitBasedRepositoryBasePath,
 			Map<String, String>	userIdentification) 
 					throws IOException {
 		this.gitBasedRepositoryBasePath = gitBasedRepositoryBasePath;
 		this.remoteGitServerManager = 
 				new GitLabServerManager(
-					gitLabAdminPersonalAccessToken, 
-					gitLabAdminPersonalAccessToken, 
 					userIdentification);
 		this.user = new GitUser(((GitLabServerManager) this.remoteGitServerManager).getGitLabUser());
 		this.localGitRepositoryManager = new JGitRepoManager(this.gitBasedRepositoryBasePath, this.user);

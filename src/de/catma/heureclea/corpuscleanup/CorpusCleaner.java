@@ -561,7 +561,7 @@ public class CorpusCleaner {
 		if (targetCollection == null) {
 			targetCollection = 
 					new UserMarkupCollection(
-							null, new IDGenerator().generate(), new ContentInfoSet(contentInfoSet), targetLib);
+							new IDGenerator().generate(), new ContentInfoSet(contentInfoSet), targetLib);
 			targetCollection.getContentInfoSet().setTitle(
 					annotatorAnonym + " " + sourceDocName + " " + conceptName);
 			targetCollection.getContentInfoSet().setAuthor(author);

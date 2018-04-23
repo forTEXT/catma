@@ -67,6 +67,7 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.project.ProjectReference;
+import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.graph.indexer.SourceDocumentIndexerJob;
 import de.catma.repository.git.graph.indexer.SourceDocumentIndexerJob.DataField;
 import de.catma.repository.neo4j.SessionRunner;
@@ -83,6 +84,10 @@ import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
 
 public class GraphProjectHandler {
+	
+	public static interface TagInstanceSynchHandler {
+		public void synch(String collectionId, List<TagReference> tagReferences) throws Exception;
+	}
 	private Logger logger = Logger.getLogger(GraphProjectHandler.class.getName());
 	private User user;
 	private ProjectReference projectReference;
@@ -655,11 +660,12 @@ public class GraphProjectHandler {
 					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
 					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
-					+ "(ts:"+nt(Tagset)+")"
+					+ "(ts:"+nt(Tagset)+") "
 					+ "OPTIONAL MATCH (ts)-[:"+rt(hasTag)+"]->(t:"+nt(Tag)+") "
 					+ "OPTIONAL MATCH (t)-[:"+rt(hasProperty)+"]->(p:"+nt(Property)+") "
-					+ "WITH ts, t, COLLECT(p) as properties "
-					+ "RETURN ts, COLLECT([t, properties]) as tags ",
+					+ "OPTIONAL MATCH (t)-[:"+rt(hasParent)+"]->(pt:"+nt(Tag)+") "
+					+ "WITH ts, t, pt, COLLECT(p) as properties "
+					+ "RETURN ts, COLLECT([t, properties, pt.tagId]) as tags ",
 					Values.parameters(
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
@@ -676,12 +682,13 @@ public class GraphProjectHandler {
 					
 					for (Object tagValuePair : tagValuePairs) {
 						@SuppressWarnings("unchecked")
-						List<Object> pairList = (List<Object>)tagValuePair;
-						Node tagNode = (Node)pairList.get(0);
+						List<Object> tagDefTripleList = (List<Object>)tagValuePair;
+						Node tagNode = (Node)tagDefTripleList.get(0);
 						if (tagNode != null) {
 							@SuppressWarnings("unchecked")
-							List<Node> propertyNodes = (List<Node>)pairList.get(1);
-							TagDefinition tagDefinition = createTag(tagNode);
+							List<Node> propertyNodes = (List<Node>)tagDefTripleList.get(1);
+							String parentTagId = (tagDefTripleList.get(2)==null)?null:((Value)tagDefTripleList.get(2)).asString();
+							TagDefinition tagDefinition = createTag(tagNode, parentTagId, tagsetDefinition.getUuid());
 							for (Node propertyNode : propertyNodes) {
 								tagDefinition.addUserDefinedPropertyDefinition(createPropertyDefinition(propertyNode));
 							}
@@ -719,7 +726,7 @@ public class GraphProjectHandler {
 		return tagsetDefinition;
 	}
 
-	private TagDefinition createTag(Node tagNode) {
+	private TagDefinition createTag(Node tagNode, String parentTagId, String tagsetUuid) {
 		
 		String tagId = tagNode.get("tagId").asString();
 		String name = tagNode.get("name").asString();
@@ -727,7 +734,7 @@ public class GraphProjectHandler {
 		String modifiedDate = tagNode.get("modifiedDate").asString();
 		String author = tagNode.get("author").asString();
 		
-		TagDefinition tagDef = new TagDefinition(null, tagId, name, new Version(modifiedDate), null, null);
+		TagDefinition tagDef = new TagDefinition(null, tagId, name, new Version(modifiedDate), null, parentTagId, tagsetUuid);
 		tagDef.addSystemPropertyDefinition(
 			new PropertyDefinition(
 				PropertyDefinition.SystemPropertyName.catma_displaycolor.name(),
@@ -769,9 +776,57 @@ public class GraphProjectHandler {
 	}
 
 	public UserMarkupCollection getUserMarkupCollection(String rootRevisionHash,
-			TagLibrary tagLibrary, UserMarkupCollectionReference userMarkupCollectionReference) throws Exception {
-		// TODO Auto-generated method stub
-		return new UserMarkupCollection(null, userMarkupCollectionReference.getId(), userMarkupCollectionReference.getContentInfoSet(), tagLibrary);
+			final TagLibrary tagLibrary, UserMarkupCollectionReference userMarkupCollectionReference) throws Exception {
+		
+		UserMarkupCollection userMarkupCollection = 
+			new UserMarkupCollection(
+				userMarkupCollectionReference.getId(), 
+				userMarkupCollectionReference.getContentInfoSet(), tagLibrary);
+		
+		
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				StatementResult statementResult = session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+					+"(s:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
+					+"(c:"+nt(MarkupCollection)+"{collectionId:{pCollectionId}})-[:"+rt(hasInstance)+"]->"
+					+"(ti:"+nt(TagInstance)+")<-[:"+rt(hasInstance)+"]-"
+					+"(td:"+nt(Tag)+")<-[:"+rt(hasTag)+"]-"
+					+"(tsd:"+nt(Tagset)+") "
+					+"RETURN s.sourceDocumentId, ti, td.tagId, tsd.tagsetId",
+					Values.parameters(
+							"pUserId", user.getIdentifier(),
+							"pProjectId", projectReference.getProjectId(),
+							"pRootRevisionHash", rootRevisionHash,
+							"pCollectionId", userMarkupCollection.getId()
+						)
+					);
+
+				while (statementResult.hasNext()) {
+					Record record = statementResult.next();
+					
+					String sourceDocumentId = record.get("s.sourceDocumentId").asString();
+					Node tagInstanceNode = record.get("ti").asNode();
+					String tagDefinitionId = record.get("td.tagId").asString();
+					String tagsetId = record.get("tsd.tagsetId").asString();
+					
+					TagDefinition tagDefinition = tagLibrary.getTagsetDefinition(tagsetId).getTagDefinition(tagDefinitionId);
+					
+					List<TagReference> tagReferences = 
+						createTagReferences(
+							tagDefinition, tagInstanceNode, 
+							userMarkupCollection.getId(), sourceDocumentId);
+
+					userMarkupCollection.addTagReferences(tagReferences);
+				}
+				
+			}
+		});
+		
+		return userMarkupCollection;
 	}
 
 	public void addTagReferences(String rootRevisionHash, UserMarkupCollection userMarkupCollection,
@@ -828,7 +883,7 @@ public class GraphProjectHandler {
 							"pProjectId", projectReference.getProjectId(),
 							"pRootRevisionHash", rootRevisionHash,
 							"pTagId", ti.getTagDefinition().getUuid(),
-							"pCollectionId", userMarkupCollection.getUuid(),
+							"pCollectionId", userMarkupCollection.getId(),
 							"pTagInstanceId", ti.getUuid(),
 							"pAuthor", ti.getProperty(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()).getFirstValue(),
 							"pCreationDate",  ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
@@ -849,5 +904,76 @@ public class GraphProjectHandler {
 			List<TagReference> tagReferences) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	public void synchTagInstanceToGit(String rootRevisionHash, TagInstanceSynchHandler tagInstanceSynchHandler) throws Exception {
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				StatementResult statementResult = session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+					+"(s:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
+					+"(c:"+nt(MarkupCollection)+")-[:"+rt(hasInstance)+"]->"
+					+"(ti:"+nt(TagInstance)+")<-[:"+rt(hasInstance)+"]-"
+					+"(td:"+nt(Tag)+")<-[:"+rt(hasTag)+"]-"
+					+"(tsd:"+nt(Tagset)+") "
+					+"OPTIONAL MATCH (td)-[:"+rt(hasParent)+"]->(ptd:"+nt(Tag)+")"
+					+"RETURN s.sourceDocumentId, c.collectionId, ti, td, tsd.tagsetId, ptd.tagId",
+					Values.parameters(
+							"pUserId", user.getIdentifier(),
+							"pProjectId", projectReference.getProjectId(),
+							"pRootRevisionHash", rootRevisionHash
+						)
+					);
+					
+					while (statementResult.hasNext()) {
+						Record record = statementResult.next();
+						
+						String sourceDocumentId = record.get("s.sourceDocumentId").asString();
+						String collectionId = record.get("c.collectionId").asString();
+						Node tagInstanceNode = record.get("ti").asNode();
+						Node tagDefNode = record.get("td").asNode();
+						String tagsetId = record.get("tsd.tagsetId").asString();
+						String parentTagDefId = record.get("ptd.tagId").equals(NullValue.NULL)?null:record.get("ptd.tagId").asString();
+						
+						TagDefinition tagDefinition = 
+								createTag(tagDefNode, parentTagDefId, tagsetId);
+						
+						List<TagReference> tagReferences = 
+							createTagReferences(tagDefinition, tagInstanceNode, collectionId, sourceDocumentId);
+						
+						tagInstanceSynchHandler.synch(collectionId, tagReferences);
+					}
+			}
+		});
+	}
+
+	private List<TagReference> createTagReferences(TagDefinition tagDefinition, Node tagInstanceNode, String collectionId, String sourceDocumentId) throws Exception {
+
+		TagInstance tagInstance = new TagInstance(tagInstanceNode.get("tagInstanceId").asString(), tagDefinition);
+		
+		List<Integer> rangeOffsets = 
+			tagInstanceNode.get("ranges").asList(value -> value.asInt());
+		
+		List<TagReference> tagReferenceList= Lists.newArrayList();
+		
+		
+		String sourceDocumentUri = String.format(
+				"http://catma.de/gitlab/%s/%s/%s", //TODO:
+				projectReference.getProjectId(),
+				GitProjectHandler.SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME,
+				sourceDocumentId
+		);
+		
+		for (int startOffsetIdx = 0; startOffsetIdx<rangeOffsets.size()-1; startOffsetIdx+=2) {
+			Range range = new Range(rangeOffsets.get(startOffsetIdx), rangeOffsets.get(startOffsetIdx+1));
+			TagReference tagReference = new TagReference(
+					tagInstance, sourceDocumentUri, range, collectionId);
+			tagReferenceList.add(tagReference);
+		}
+		
+		return tagReferenceList;
 	}
 }

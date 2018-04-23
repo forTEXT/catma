@@ -69,8 +69,6 @@ public class GitTagsetHandlerTest {
 		this.catmaUser = Randomizer.getDbUser();
 
 		this.gitLabServerManager = new GitLabServerManager(
-				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabServerUrl.name()),
-				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabAdminPersonalAccessToken.name()),
 				UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 	}
 
@@ -101,8 +99,6 @@ public class GitTagsetHandlerTest {
 
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
 			GitProjectManager gitProjectHandler = new GitProjectManager(
-					RepositoryPropertyKey.GitLabServerUrl.getValue(),
-					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
 					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 
@@ -127,8 +123,6 @@ public class GitTagsetHandlerTest {
 			this.directoriesToDeleteOnTearDown.add(jGitRepoManager.getRepositoryBasePath());
 
 			GitProjectManager gitProjectHandler = new GitProjectManager(
-					RepositoryPropertyKey.GitLabServerUrl.getValue(),
-					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
 					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 
@@ -197,8 +191,6 @@ public class GitTagsetHandlerTest {
 
 			// create a project
 			GitProjectManager gitProjectManager = new GitProjectManager(
-					RepositoryPropertyKey.GitLabServerUrl.getValue(),
-					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
 					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 
@@ -285,8 +277,6 @@ public class GitTagsetHandlerTest {
 
 			// create a project
 			GitProjectManager gitProjectManager = new GitProjectManager(
-					RepositoryPropertyKey.GitLabServerUrl.getValue(),
-					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
 					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 

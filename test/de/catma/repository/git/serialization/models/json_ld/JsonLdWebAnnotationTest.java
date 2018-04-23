@@ -131,8 +131,6 @@ public class JsonLdWebAnnotationTest {
 		this.catmaUser = Randomizer.getDbUser();
 		RepositoryProperties.INSTANCE.setProperties(catmaProperties);
 		this.gitLabServerManager = new GitLabServerManager(
-				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabServerUrl.name()),
-				this.catmaProperties.getProperty(RepositoryPropertyKey.GitLabAdminPersonalAccessToken.name()),
 				UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 	}
 
@@ -140,8 +138,6 @@ public class JsonLdWebAnnotationTest {
 	public void tearDown() throws Exception {
 		if (this.projectsToDeleteOnTearDown.size() > 0) {
 			GitProjectManager gitProjectHandler = new GitProjectManager(
-					RepositoryPropertyKey.GitLabServerUrl.getValue(),
-					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
 					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					UserIdentification.userToMap(this.catmaUser.getIdentifier()));
 
@@ -186,8 +182,6 @@ public class JsonLdWebAnnotationTest {
 
 			// create project
 			GitProjectManager gitProjectManager = new GitProjectManager(
-					RepositoryPropertyKey.GitLabServerUrl.getValue(),
-					RepositoryPropertyKey.GitLabAdminPersonalAccessToken.getValue(), 
 					RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
 					UserIdentification.userToMap(catmaUser.getIdentifier()));
 

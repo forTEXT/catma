@@ -29,7 +29,6 @@ public class UserMarkupCollectionMapper implements RecordMapper<Record, UserMark
 
 	public UserMarkupCollection map(Record record) {
 		return new UserMarkupCollection(
-			String.valueOf(record.getValue(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID)),
 			new IDGenerator().uuidBytesToCatmaID(record.getValue(USERMARKUPCOLLECTION.UUID)),
 			new ContentInfoSet(
 				record.getValue(USERMARKUPCOLLECTION.AUTHOR),

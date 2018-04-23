@@ -347,7 +347,7 @@ public class GitMarkupCollectionHandler {
 			TagLibrary tagLibrary = new TagLibrary(markupCollectionId, contentInfoSet.getTitle());
 
 			UserMarkupCollection userMarkupCollection = new UserMarkupCollection(
-					null, markupCollectionId, contentInfoSet, tagLibrary, tagReferences, AccessMode.WRITE
+					markupCollectionId, contentInfoSet, tagLibrary, tagReferences, AccessMode.WRITE
 			);
 			userMarkupCollection.setRevisionHash(markupCollectionRevisionHash);
 

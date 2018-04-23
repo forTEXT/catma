@@ -344,7 +344,7 @@ public class KwicPanel extends VerticalLayout {
 				
 				TagReference tr = new TagReference(
 					ti, repository.getSourceDocument(
-							row.getSourceDocumentId()).getID(), row.getRange(), umc.getUuid());
+							row.getSourceDocumentId()).getID(), row.getRange(), umc.getId());
 				
 				if (!tagReferences.containsKey(umc)) {
 					tagReferences.put(umc, new ArrayList<TagReference>());

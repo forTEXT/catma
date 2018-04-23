@@ -377,7 +377,6 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 
 	@Override
 	public void close() {
-		// TODO Auto-generated method stub
-		
+		project.close();
 	}
 }

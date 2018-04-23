@@ -82,7 +82,6 @@ public class XmlMarkupCollectionSerializationHandler implements
 	        Stack<String> elementStack = new Stack<String>();
 	        UserMarkupCollection userMarkupCollection = 
 	        	new UserMarkupCollection(
-	        		null,
 	        		new IDGenerator().generate(),
 	        		new ContentInfoSet(
 	        			"", "Intrinsic Markup", "", "Intrinsic Markup"), 
@@ -223,7 +222,7 @@ public class XmlMarkupCollectionSerializationHandler implements
         	tagInstance.addUserDefinedProperty(property);
         }
         														
-        TagReference tagReference = new TagReference(tagInstance, sourceDocumentId, range, userMarkupCollection.getUuid());
+        TagReference tagReference = new TagReference(tagInstance, sourceDocumentId, range, userMarkupCollection.getId());
         userMarkupCollection.addTagReference(tagReference);
      
         elementStack.pop();	
