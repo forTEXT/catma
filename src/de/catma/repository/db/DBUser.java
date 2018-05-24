@@ -32,14 +32,16 @@ public class DBUser implements User {
 	private boolean locked;
 	private boolean guest;
 	private boolean spawnable;
+	private boolean termsOfUseConsentPresent;
 	private Set<String> permissions;
 	
-	public DBUser(Integer userId, String identifier, boolean locked, boolean guest, boolean spawnable) {
+	public DBUser(Integer userId, String identifier, boolean locked, boolean guest, boolean spawnable, boolean termsOfUseConsentPresent) {
 		this.userId = userId;
 		this.identifier = identifier;
 		this.locked = locked;
 		this.guest = guest;
 		this.spawnable = spawnable;
+		this.termsOfUseConsentPresent = termsOfUseConsentPresent;
 	}
 
 	public Integer getUserId() {
@@ -79,4 +81,13 @@ public class DBUser implements User {
 	public boolean hasPermission(Permission permission) {
 		return permissions.contains(permission.name());
 	};
+	
+	@Override
+	public boolean isTermsOfUseConsentPresent() {
+		return termsOfUseConsentPresent;
+	}
+	
+	public void setTermsOfUseConsentPresent(boolean termsOfUseConsentPresent) {
+		this.termsOfUseConsentPresent = termsOfUseConsentPresent;
+	}
 }

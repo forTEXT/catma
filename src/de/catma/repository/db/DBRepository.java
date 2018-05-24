@@ -404,6 +404,7 @@ public class DBRepository implements IndexedRepository {
 					userIdentification.get(UserProperty.identifier.name()),
 					false,
 					isGuest,
+					false, 
 					false);
 				
 				db.commitTransaction();
@@ -1199,5 +1200,18 @@ public class DBRepository implements IndexedRepository {
 		TagLibrary openLibrary = 
 			tagManager.getTagLibrary(new TagLibraryReference(tagLibrary.getId(), tagLibrary.getContentInfoSet()));
 		return openLibrary!=null?openLibrary:tagLibrary;
+	}
+	
+	@Override
+	public void setTermsOfUseConsent() throws IOException {
+		DSLContext db = DSL.using(dataSource, SQLDialect.MYSQL);
+		
+		db
+		.update(USER)
+		.set(USER.TERMSOFUSECONSENT, (byte)1)
+		.where(USER.USERID.eq(currentUser.getUserId()))
+		.execute();
+		
+		currentUser.setTermsOfUseConsentPresent(true);
 	}
 }

@@ -166,7 +166,7 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 		logger.info("Session: " + request.getWrappedSession().getId());
 		storeParameters(request.getParameterMap());
 
-		Page.getCurrent().setTitle("CATMA 6.0 " + MINORVERSION); //$NON-NLS-1$
+		Page.getCurrent().setTitle("CATMA 5.2 " + MINORVERSION); //$NON-NLS-1$
 
 		mainLayout = new VerticalLayout();
 		mainLayout.setSizeFull();
@@ -226,37 +226,36 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 							visualizationManagerView));
 			addPropertyChangeListener(CatmaApplicationEvent.userChange, menu.userChangeListener);
 
-			Link latestFeaturesLink = new Link(Messages.getString("CatmaApplication.latestFeatures"), //$NON-NLS-1$
-					new ExternalResource("http://www.catma.de/latestfeatures")); //$NON-NLS-1$
-			latestFeaturesLink.setTargetName("_blank"); //$NON-NLS-1$
-			menuLayout.addComponent(latestFeaturesLink);
-			menuLayout.setComponentAlignment(latestFeaturesLink, Alignment.TOP_RIGHT);
-			menuLayout.setExpandRatio(latestFeaturesLink, 1.0f);
-
 			Link aboutLink = new Link(Messages.getString("CatmaApplication.about"), //$NON-NLS-1$
 					new ExternalResource("http://www.catma.de")); //$NON-NLS-1$
 			aboutLink.setTargetName("_blank"); //$NON-NLS-1$
 			menuLayout.addComponent(aboutLink);
 			menuLayout.setComponentAlignment(aboutLink, Alignment.TOP_RIGHT);
+			menuLayout.setExpandRatio(aboutLink, 1.0f);
 
 			Link termsOfUseLink = new Link(Messages.getString("CatmaApplication.termsOfUse"), //$NON-NLS-1$
-					new ExternalResource("http://www.catma.de/termsofuse")); //$NON-NLS-1$
+					new ExternalResource("http://www.catma.de/documentation/terms-of-use-privacy-policy/")); //$NON-NLS-1$
 			termsOfUseLink.setTargetName("_blank"); //$NON-NLS-1$
 			menuLayout.addComponent(termsOfUseLink);
 			menuLayout.setComponentAlignment(termsOfUseLink, Alignment.TOP_RIGHT);
 
+			Link imprintLink = new Link(Messages.getString("CatmaApplication.imprint"), //$NON-NLS-1$
+					new ExternalResource("http://www.catma.de/documentation/imprint/")); //$NON-NLS-1$
+			imprintLink.setTargetName("_blank"); //$NON-NLS-1$
+			menuLayout.addComponent(imprintLink);
+			menuLayout.setComponentAlignment(imprintLink, Alignment.TOP_RIGHT);
+
+			Link privacyLink = new Link(Messages.getString("CatmaApplication.privacy"), //$NON-NLS-1$
+					new ExternalResource("http://www.catma.de/documentation/privacy/")); //$NON-NLS-1$
+			privacyLink.setTargetName("_blank"); //$NON-NLS-1$
+			menuLayout.addComponent(privacyLink);
+			menuLayout.setComponentAlignment(privacyLink, Alignment.TOP_RIGHT);
+			
 			Link manualLink = new Link(Messages.getString("CatmaApplication.Manual"), //$NON-NLS-1$
 					new ExternalResource(request.getContextPath() + "/manual/")); //$NON-NLS-1$
 			manualLink.setTargetName("_blank"); //$NON-NLS-1$
 			menuLayout.addComponent(manualLink);
 			menuLayout.setComponentAlignment(manualLink, Alignment.TOP_RIGHT);
-
-			Link helpLink = new Link(Messages.getString("CatmaApplication.Helpdesk"), //$NON-NLS-1$
-					new ExternalResource("http://www.catma.de/helpdesk/")); //$NON-NLS-1$
-			helpLink.setTargetName("_blank"); //$NON-NLS-1$
-			menuLayout.addComponent(helpLink);
-			menuLayout.setComponentAlignment(helpLink, Alignment.TOP_RIGHT);
-			helpLink.setVisible(false);
 
 			btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
 			btHelp.addStyleName("help-button"); //$NON-NLS-1$

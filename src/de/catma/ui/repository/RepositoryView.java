@@ -26,7 +26,6 @@ import java.util.logging.Logger;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.server.ClassResource;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
@@ -45,10 +44,8 @@ import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.admin.AdminWindow;
-import de.catma.ui.repository.RepositoryHelpWindow;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.user.Permission;
-import de.catma.user.Role;
 
 
 public class RepositoryView extends VerticalLayout implements ClosableTab {

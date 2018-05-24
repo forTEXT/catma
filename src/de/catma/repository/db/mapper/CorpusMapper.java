@@ -14,17 +14,17 @@ import org.jooq.RecordMapper;
 import org.jooq.Result;
 
 import de.catma.document.Corpus;
+import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
-import de.catma.repository.db.DBRepository;
 
 public class CorpusMapper implements RecordMapper<Record, Corpus> {
 
-	private DBRepository dbRepository;
+	private Repository dbRepository;
 	private Map<Integer, Result<Record2<Integer, String>>> corpusSourceDocs;
 	private Map<Integer, Result<Record2<Integer, Integer>>> corpusUmcs;
 
-	public CorpusMapper(DBRepository dbRepository,
+	public CorpusMapper(Repository dbRepository,
 			Map<Integer, Result<Record2<Integer, String>>> corpusSourceDocs,
 			Map<Integer, Result<Record2<Integer, Integer>>> corpusUmcs) {
 

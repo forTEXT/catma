@@ -18,6 +18,7 @@
  */
 package de.catma.ui.repository;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -206,6 +207,25 @@ public class RepositoryListView extends VerticalLayout implements TabComponent {
 		}
 
 
+		if (!repository.getUser().isGuest() && !repository.getUser().isTermsOfUseConsentPresent()) {
+			new TermsOfUseConsentDialog(catmaApplication, new SaveCancelListener<Boolean>() {
+				@Override
+				public void cancelPressed() {
+					repositoryManager.close();
+				}
+				@Override
+				public void savePressed(Boolean result) {
+					try {
+						repository.setTermsOfUseConsent();
+					} catch (IOException e) {
+						((CatmaApplication)UI.getCurrent()).showAndLogError(
+								Messages.getString("RepositoryListView.errorOpeningRepo"), e); //$NON-NLS-1$
+						repositoryManager.close();
+					}
+				}
+			}).show();
+		}
+		
 	}
 
 	void open(

@@ -35,7 +35,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class User extends TableImpl<Record> {
 
-	private static final long serialVersionUID = 2048988408;
+	private static final long serialVersionUID = 714496817;
 
 	/**
 	 * The reference instance of <code>catmarepository.user</code>
@@ -89,6 +89,11 @@ public class User extends TableImpl<Record> {
 	 * The column <code>catmarepository.user.spawnable</code>.
 	 */
 	public final TableField<Record, Byte> SPAWNABLE = createField("spawnable", org.jooq.impl.SQLDataType.TINYINT.nullable(false).defaulted(true), this, "");
+
+	/**
+	 * The column <code>catmarepository.user.termsOfUseConsent</code>.
+	 */
+	public final TableField<Record, Byte> TERMSOFUSECONSENT = createField("termsOfUseConsent", org.jooq.impl.SQLDataType.TINYINT.nullable(false).defaulted(true), this, "");
 
 	/**
 	 * Create a <code>catmarepository.user</code> table reference

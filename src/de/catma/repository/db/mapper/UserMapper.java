@@ -18,7 +18,8 @@ public class UserMapper implements RecordMapper<Record, DBUser> {
 			record.getValue(USER.IDENTIFIER),
 			record.getValue(USER.LOCKED, Boolean.class),
 			record.getValue(USER.GUEST, Boolean.class),
-			record.getValue(USER.SPAWNABLE, Boolean.class));
+			record.getValue(USER.SPAWNABLE, Boolean.class),
+			record.getValue(USER.TERMSOFUSECONSENT, Boolean.class));
 	}
 
 }

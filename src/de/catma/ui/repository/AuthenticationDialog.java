@@ -395,14 +395,6 @@ public class AuthenticationDialog extends VerticalLayout {
 		googleLogInLink.addStyleName("authdialog-loginlink"); //$NON-NLS-1$
 		addComponent(googleLogInLink);
 		
-		Label termsOfUse = new Label(
-				MessageFormat.format(
-					Messages.getString("AuthenticationDialog.termsOfUse"), //$NON-NLS-1$ 
-					"http://www.catma.de/termsofuse")); //$NON-NLS-1$
-		termsOfUse.setContentMode(ContentMode.HTML);
-		termsOfUse.setSizeFull();
-		addComponent(termsOfUse);
-		
 		HorizontalLayout buttonPanel = new HorizontalLayout();
 		buttonPanel.setSpacing(true);
 		
