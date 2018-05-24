@@ -73,6 +73,7 @@ import de.catma.repository.git.graph.indexer.SourceDocumentIndexerJob.DataField;
 import de.catma.repository.neo4j.SessionRunner;
 import de.catma.repository.neo4j.StatementExcutor;
 import de.catma.repository.neo4j.ValueContainer;
+import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -975,5 +976,11 @@ public class GraphProjectHandler {
 		}
 		
 		return tagReferenceList;
+	}
+
+	public void updateProperties(String rootRevisionHash, TagInstance tagInstance, Collection<Property> properties) {
+		// TODO Auto-generated method stub
+		// hier
+		
 	}
 }

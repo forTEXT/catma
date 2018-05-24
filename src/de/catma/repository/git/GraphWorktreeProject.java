@@ -705,7 +705,16 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	@Override
 	public void update(TagInstance tagInstance, Collection<Property> properties) throws IOException {
-		// TODO Auto-generated method stub
+		try {
+			graphProjectHandler.updateProperties(
+					GraphWorktreeProject.this.rootRevisionHash, tagInstance, properties);
+		}
+		catch (Exception e) {
+			propertyChangeSupport.firePropertyChange(
+					RepositoryChangeEvent.exceptionOccurred.name(),
+					null, 
+					e);				
+		}
 
 	}
 

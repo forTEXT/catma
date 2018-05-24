@@ -375,7 +375,8 @@ class UserMarkupCollectionHandler {
 		.map(new IDFieldToIntegerMapper(USERMARKUPCOLLECTION.USERMARKUPCOLLECTIONID));
 		
 
-		umc.setId(String.valueOf(userMarkupCollectionId));
+//		umc.setId(String.valueOf(userMarkupCollectionId));
+		//obsolete
 		
 		addTagReferences(db, umc);
 
