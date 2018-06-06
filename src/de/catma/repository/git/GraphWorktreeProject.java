@@ -708,6 +708,9 @@ public class GraphWorktreeProject implements IndexedRepository {
 		try {
 			graphProjectHandler.updateProperties(
 					GraphWorktreeProject.this.rootRevisionHash, tagInstance, properties);
+			propertyChangeSupport.firePropertyChange(
+					RepositoryChangeEvent.propertyValueChanged.name(),
+					tagInstance, properties);
 		}
 		catch (Exception e) {
 			propertyChangeSupport.firePropertyChange(

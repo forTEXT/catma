@@ -1,5 +1,6 @@
 package de.catma.repository.git.graph;
 
+import static de.catma.repository.git.graph.NodeType.AnnotationProperty;
 import static de.catma.repository.git.graph.NodeType.MarkupCollection;
 import static de.catma.repository.git.graph.NodeType.Project;
 import static de.catma.repository.git.graph.NodeType.ProjectRevision;
@@ -797,7 +798,8 @@ public class GraphProjectHandler {
 					+"(ti:"+nt(TagInstance)+")<-[:"+rt(hasInstance)+"]-"
 					+"(td:"+nt(Tag)+")<-[:"+rt(hasTag)+"]-"
 					+"(tsd:"+nt(Tagset)+") "
-					+"RETURN s.sourceDocumentId, ti, td.tagId, tsd.tagsetId",
+					+"OPTIONAL MATCH (ti)-[:"+rt(hasProperty)+"]->(ap:"+nt(AnnotationProperty)+") "
+					+"RETURN s.sourceDocumentId, ti, td.tagId, tsd.tagsetId, COLLECT(ap) as properties ",
 					Values.parameters(
 							"pUserId", user.getIdentifier(),
 							"pProjectId", projectReference.getProjectId(),
@@ -813,13 +815,14 @@ public class GraphProjectHandler {
 					Node tagInstanceNode = record.get("ti").asNode();
 					String tagDefinitionId = record.get("td.tagId").asString();
 					String tagsetId = record.get("tsd.tagsetId").asString();
-					
+					List<Node> properties =  record.get("properties").asList(value -> value.asNode());
+
 					TagDefinition tagDefinition = tagLibrary.getTagsetDefinition(tagsetId).getTagDefinition(tagDefinitionId);
 					
 					List<TagReference> tagReferences = 
 						createTagReferences(
 							tagDefinition, tagInstanceNode, 
-							userMarkupCollection.getId(), sourceDocumentId);
+							userMarkupCollection.getId(), sourceDocumentId, properties);
 
 					userMarkupCollection.addTagReferences(tagReferences);
 				}
@@ -920,8 +923,10 @@ public class GraphProjectHandler {
 					+"(ti:"+nt(TagInstance)+")<-[:"+rt(hasInstance)+"]-"
 					+"(td:"+nt(Tag)+")<-[:"+rt(hasTag)+"]-"
 					+"(tsd:"+nt(Tagset)+") "
-					+"OPTIONAL MATCH (td)-[:"+rt(hasParent)+"]->(ptd:"+nt(Tag)+")"
-					+"RETURN s.sourceDocumentId, c.collectionId, ti, td, tsd.tagsetId, ptd.tagId",
+					+"OPTIONAL MATCH (td)-[:"+rt(hasParent)+"]->(ptd:"+nt(Tag)+") "
+					+"OPTIONAL MATCH (td)-[:"+rt(hasProperty)+"]->(pd"
+					+"OPTIONAL MATCH (ti)-[:"+rt(hasProperty)+"]->(ap:"+nt(AnnotationProperty)+") "
+					+"RETURN s.sourceDocumentId, c.collectionId, ti, td, tsd.tagsetId, ptd.tagId, COLLECT(ap) as properties ",
 					Values.parameters(
 							"pUserId", user.getIdentifier(),
 							"pProjectId", projectReference.getProjectId(),
@@ -938,12 +943,13 @@ public class GraphProjectHandler {
 						Node tagDefNode = record.get("td").asNode();
 						String tagsetId = record.get("tsd.tagsetId").asString();
 						String parentTagDefId = record.get("ptd.tagId").equals(NullValue.NULL)?null:record.get("ptd.tagId").asString();
+						List<Node> properties =  record.get("properties").asList(value -> value.asNode());
 						
 						TagDefinition tagDefinition = 
 								createTag(tagDefNode, parentTagDefId, tagsetId);
 						
 						List<TagReference> tagReferences = 
-							createTagReferences(tagDefinition, tagInstanceNode, collectionId, sourceDocumentId);
+							createTagReferences(tagDefinition, tagInstanceNode, collectionId, sourceDocumentId, properties);
 						
 						tagInstanceSynchHandler.synch(collectionId, tagReferences);
 					}
@@ -951,9 +957,15 @@ public class GraphProjectHandler {
 		});
 	}
 
-	private List<TagReference> createTagReferences(TagDefinition tagDefinition, Node tagInstanceNode, String collectionId, String sourceDocumentId) throws Exception {
+	private List<TagReference> createTagReferences(
+			TagDefinition tagDefinition, Node tagInstanceNode, 
+			String collectionId, String sourceDocumentId, List<Node> properties) throws Exception {
 
 		TagInstance tagInstance = new TagInstance(tagInstanceNode.get("tagInstanceId").asString(), tagDefinition);
+		
+		for (Node propertyNode : properties) {
+			tagInstance.addUserDefinedProperty(createAnnotationProperty(propertyNode, tagDefinition));
+		}
 		
 		List<Integer> rangeOffsets = 
 			tagInstanceNode.get("ranges").asList(value -> value.asInt());
@@ -978,9 +990,47 @@ public class GraphProjectHandler {
 		return tagReferenceList;
 	}
 
-	public void updateProperties(String rootRevisionHash, TagInstance tagInstance, Collection<Property> properties) {
-		// TODO Auto-generated method stub
-		// hier
+	private Property createAnnotationProperty(Node propertyNode, TagDefinition tagDefinition) {
 		
+		String name = propertyNode.get("name").asString();
+		
+		List<String> values = propertyNode.get("values").asList(value -> value.asString());
+		
+		PropertyDefinition propertyDefinition = tagDefinition.getPropertyDefinition(name);
+		
+		return new Property(propertyDefinition, values);
+	}
+
+	public void updateProperties(
+			String rootRevisionHash, TagInstance tagInstance, Collection<Property> properties) throws Exception {		
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				for (Property property : properties) {
+					session.run(
+						"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+						+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+						+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+						+ "(:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
+						+ "(:"+nt(MarkupCollection)+")-[:"+rt(hasInstance)+"]->"
+						+ "(i:"+nt(TagInstance)+"{tagInstanceId:{pTagInstanceId}})"
+						+ "WITH i "
+						+ "MERGE (i)-[:"+rt(hasProperty)+"]->"
+						+ "(:"+nt(AnnotationProperty)+"{"
+							+ "name:{pName},"
+							+ "values:{pValues} "
+						+"})",
+						Values.parameters(
+							"pUserId", user.getIdentifier(),
+							"pProjectId", projectReference.getProjectId(),
+							"pRootRevisionHash", rootRevisionHash,
+							"pTagInstanceId", tagInstance.getUuid(),
+							"pName", property.getName(),
+							"pValues", property.getPropertyValueList()
+						)
+					);
+				}
+			}
+		});
 	}
 }

@@ -14,6 +14,7 @@ public enum NodeType implements Label {
 	Tag,
 	Property,
 	TagInstance,
+	AnnotationProperty,
 	;
 	
 	public static String nt(NodeType nodeType) {
