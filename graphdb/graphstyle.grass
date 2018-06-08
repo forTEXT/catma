@@ -53,7 +53,7 @@ node.Tag {
 }
 
 node.Property {
-  color: #F7223E;
+  color: #1b998c;
   border-color: #FFFFFF;
   text-color-internal: #FFFFFF;
   caption: '{name}';
@@ -80,3 +80,23 @@ node.TagInstance {
   caption: '{ranges}';
 }
 
+node.AnnotationProperty {
+  color: #42f4e2;
+  border-color: #FFFFFF;
+  text-color-internal: #FFFFFF;
+  caption: '{name}';
+}
+
+node.DeletedTagInstance {
+  color: #49A1F4;
+  border-color: #FF0000;
+  text-color-internal: #FFFFFF;
+  caption: '{ranges}';
+}
+
+node.DeletedAnnotationProperty {
+  color: #42f4e2;
+  border-color: #FF0000;
+  text-color-internal: #FFFFFF;
+  caption: '{name}';
+}

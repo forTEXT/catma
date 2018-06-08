@@ -23,7 +23,6 @@ import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.AccessMode;
 import de.catma.document.Corpus;
 import de.catma.document.repository.RepositoryPropertyKey;
-import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.ContentInfoSet;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
@@ -37,10 +36,9 @@ import de.catma.indexer.TermInfo;
 import de.catma.indexer.indexbuffer.IndexBufferManager;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectReference;
-import de.catma.repository.db.executionshield.DBOperation;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
-import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
+import de.catma.repository.git.graph.GraphProjectHandler.TagInstanceSynchHandler;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
@@ -284,14 +282,12 @@ public class GraphWorktreeProject implements IndexedRepository {
 						TagDefinition tagDefinition = newPair.getSecond();
 						
 						addPropertyDefintion(propertyDefinition, tagDefinition);
-						
-	//					dbTagLibraryHandler.savePropertyDefinition(
-	//							newPair.getFirst(), newPair.getSecond());
 					}
 					else if (newValue == null) { // delete
 						@SuppressWarnings("unchecked")
 						Pair<PropertyDefinition, TagDefinition> oldPair = 
 								(Pair<PropertyDefinition, TagDefinition>)oldValue;
+						//TODO:
 	//					dbTagLibraryHandler.removePropertyDefinition(
 	//							oldPair.getFirst(), oldPair.getSecond());
 						
@@ -299,6 +295,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 					else { // update
 						PropertyDefinition pd = (PropertyDefinition)evt.getNewValue();
 						TagDefinition td = (TagDefinition)evt.getOldValue();
+						//TODO
 	//					dbTagLibraryHandler.updatePropertyDefinition(pd, td);
 					}
 				}
@@ -846,8 +843,18 @@ public class GraphWorktreeProject implements IndexedRepository {
 	public void synchTagInstancesToGit() throws Exception {
 		graphProjectHandler.synchTagInstanceToGit(
 			this.rootRevisionHash,
-			(collectionId, tagReferenceList) -> {
-				gitProjectHandler.addOrUpdate(collectionId, tagReferenceList);
-			});
+			new TagInstanceSynchHandler() {
+				
+				@Override
+				public void synch(String collectionId, String deletedTagInstanceId) throws Exception {
+					gitProjectHandler.delete(collectionId, deletedTagInstanceId);
+				}
+				
+				@Override
+				public void synch(String collectionId, List<TagReference> tagReferences) throws Exception {
+					gitProjectHandler.addOrUpdate(collectionId, tagReferences);
+				}
+			}
+		);
 	}
 }

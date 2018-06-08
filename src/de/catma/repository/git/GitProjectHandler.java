@@ -302,4 +302,12 @@ public class GitProjectHandler {
 			gitMarkupCollectionHandler.createTagInstance(projectId, collectionId, annotation);
 		}		
 	}
+
+	public void delete(String collectionId, String deletedTagInstanceId) throws IOException {
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
+					localRepoManager, this.remoteGitServerManager);
+			gitMarkupCollectionHandler.deleteTagInstance(projectId, collectionId, deletedTagInstanceId);
+		}	
+	}
 }

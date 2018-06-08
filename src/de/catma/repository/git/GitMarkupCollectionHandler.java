@@ -213,6 +213,7 @@ public class GitMarkupCollectionHandler {
 		return annotation.getTagInstanceUuid();
 	}
 
+
 	private boolean isTagInstanceFilename(String fileName){
 		// TODO: split filename parts and check if it is a CATMA uuid
 		return !(
@@ -352,6 +353,30 @@ public class GitMarkupCollectionHandler {
 			userMarkupCollection.setRevisionHash(markupCollectionRevisionHash);
 
 			return userMarkupCollection;
+		}
+	}
+
+	public void deleteTagInstance(String projectId, String collectionId, String deletedTagInstanceId) throws IOException {
+		// TODO: check that the tag instance is for the correct document
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			// open the project root repo
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+
+			// write the serialized tag instance to the markup collection submodule
+			File targetTagInstanceFilePath = new File(
+				localGitRepoManager.getRepositoryWorkTree(),
+				String.format(
+						"%s/%s/annotations/%s.json",
+						GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
+						collectionId,
+						deletedTagInstanceId
+				)
+			);
+			if (!targetTagInstanceFilePath.delete()) {
+				throw new IOException(String.format("Could not delete annotation %s", targetTagInstanceFilePath.toString()));
+			}
+			
+			// not doing Git add/commit
 		}
 	}
 }

@@ -1,6 +1,8 @@
 package de.catma.repository.git.graph;
 
 import static de.catma.repository.git.graph.NodeType.AnnotationProperty;
+import static de.catma.repository.git.graph.NodeType.DeletedAnnotationProperty;
+import static de.catma.repository.git.graph.NodeType.DeletedTagInstance;
 import static de.catma.repository.git.graph.NodeType.MarkupCollection;
 import static de.catma.repository.git.graph.NodeType.Project;
 import static de.catma.repository.git.graph.NodeType.ProjectRevision;
@@ -89,6 +91,7 @@ public class GraphProjectHandler {
 	
 	public static interface TagInstanceSynchHandler {
 		public void synch(String collectionId, List<TagReference> tagReferences) throws Exception;
+		public void synch(String collectionId, String deletedTagInstanceId) throws Exception;
 	}
 	private Logger logger = Logger.getLogger(GraphProjectHandler.class.getName());
 	private User user;
@@ -690,10 +693,7 @@ public class GraphProjectHandler {
 							@SuppressWarnings("unchecked")
 							List<Node> propertyNodes = (List<Node>)tagDefTripleList.get(1);
 							String parentTagId = (tagDefTripleList.get(2)==null)?null:((Value)tagDefTripleList.get(2)).asString();
-							TagDefinition tagDefinition = createTag(tagNode, parentTagId, tagsetDefinition.getUuid());
-							for (Node propertyNode : propertyNodes) {
-								tagDefinition.addUserDefinedPropertyDefinition(createPropertyDefinition(propertyNode));
-							}
+							TagDefinition tagDefinition = createTag(tagNode, parentTagId, tagsetDefinition.getUuid(), propertyNodes);
 							tagsetDefinition.addTagDefinition(tagDefinition);
 						}
 					}
@@ -728,7 +728,7 @@ public class GraphProjectHandler {
 		return tagsetDefinition;
 	}
 
-	private TagDefinition createTag(Node tagNode, String parentTagId, String tagsetUuid) {
+	private TagDefinition createTag(Node tagNode, String parentTagId, String tagsetUuid, Collection<Node> properties) {
 		
 		String tagId = tagNode.get("tagId").asString();
 		String name = tagNode.get("name").asString();
@@ -745,6 +745,11 @@ public class GraphProjectHandler {
 			new PropertyDefinition(
 				PropertyDefinition.SystemPropertyName.catma_markupauthor.name(),
 				Collections.singleton(author)));		
+		
+		for (Node propertyNode : properties) {
+			tagDef.addUserDefinedPropertyDefinition(createPropertyDefinition(propertyNode));
+		}
+		
 		return tagDef;
 	}
 
@@ -905,9 +910,39 @@ public class GraphProjectHandler {
 	}
 
 	public void removeTagReferences(String rootRevisionHash, UserMarkupCollection userMarkupCollection,
-			List<TagReference> tagReferences) {
-		// TODO Auto-generated method stub
+			List<TagReference> tagReferences) throws Exception {
 		
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+					+ "(:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
+					+ "(:"+nt(MarkupCollection)+"{collectionId:{pCollectionId}})-[:"+rt(hasInstance)+"]->"
+					+ "(ti:"+nt(TagInstance)+") "
+					+ "WHERE ti.tagInstanceId in {pTagInstanceIdList} "
+					+ "OPTIONAL MATCH (ti)-[:"+rt(hasProperty)+"]->(ap:"+nt(AnnotationProperty)+") "
+					+ "REMOVE ti:"+nt(TagInstance)+" "
+					+ "SET ti:"+nt(DeletedTagInstance)+" "
+					+ "REMOVE ap:"+nt(AnnotationProperty)+" "
+					+ "SET ap:"+nt(DeletedAnnotationProperty)+" ",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pCollectionId", userMarkupCollection.getId(),
+						"pTagInstanceIdList", 
+							tagReferences
+							.stream()
+							.map(ti -> ti.getTagInstance().getUuid())
+							.distinct()
+							.collect(Collectors.toList())
+					)
+				);
+			}
+		});			
 	}
 
 	public void synchTagInstanceToGit(String rootRevisionHash, TagInstanceSynchHandler tagInstanceSynchHandler) throws Exception {
@@ -924,9 +959,10 @@ public class GraphProjectHandler {
 					+"(td:"+nt(Tag)+")<-[:"+rt(hasTag)+"]-"
 					+"(tsd:"+nt(Tagset)+") "
 					+"OPTIONAL MATCH (td)-[:"+rt(hasParent)+"]->(ptd:"+nt(Tag)+") "
-					+"OPTIONAL MATCH (td)-[:"+rt(hasProperty)+"]->(pd"
+					+"OPTIONAL MATCH (td)-[:"+rt(hasProperty)+"]->(pd:"+nt(Property)+") "
 					+"OPTIONAL MATCH (ti)-[:"+rt(hasProperty)+"]->(ap:"+nt(AnnotationProperty)+") "
-					+"RETURN s.sourceDocumentId, c.collectionId, ti, td, tsd.tagsetId, ptd.tagId, COLLECT(ap) as properties ",
+					+"RETURN s.sourceDocumentId, c.collectionId, ti, td, tsd.tagsetId, "
+					+ "ptd.tagId, COLLECT(pd) as properties, COLLECT(ap) as annoProperties ",
 					Values.parameters(
 							"pUserId", user.getIdentifier(),
 							"pProjectId", projectReference.getProjectId(),
@@ -934,25 +970,67 @@ public class GraphProjectHandler {
 						)
 					);
 					
-					while (statementResult.hasNext()) {
-						Record record = statementResult.next();
-						
-						String sourceDocumentId = record.get("s.sourceDocumentId").asString();
-						String collectionId = record.get("c.collectionId").asString();
-						Node tagInstanceNode = record.get("ti").asNode();
-						Node tagDefNode = record.get("td").asNode();
-						String tagsetId = record.get("tsd.tagsetId").asString();
-						String parentTagDefId = record.get("ptd.tagId").equals(NullValue.NULL)?null:record.get("ptd.tagId").asString();
-						List<Node> properties =  record.get("properties").asList(value -> value.asNode());
-						
-						TagDefinition tagDefinition = 
-								createTag(tagDefNode, parentTagDefId, tagsetId);
-						
-						List<TagReference> tagReferences = 
-							createTagReferences(tagDefinition, tagInstanceNode, collectionId, sourceDocumentId, properties);
-						
-						tagInstanceSynchHandler.synch(collectionId, tagReferences);
-					}
+				while (statementResult.hasNext()) {
+					Record record = statementResult.next();
+					
+					String sourceDocumentId = record.get("s.sourceDocumentId").asString();
+					String collectionId = record.get("c.collectionId").asString();
+					Node tagInstanceNode = record.get("ti").asNode();
+					Node tagDefNode = record.get("td").asNode();
+					String tagsetId = record.get("tsd.tagsetId").asString();
+					String parentTagDefId = record.get("ptd.tagId").equals(NullValue.NULL)?null:record.get("ptd.tagId").asString();
+					List<Node> properties =  record.get("properties").asList(value -> value.asNode());
+					List<Node> annoProperties =  record.get("annoProperties").asList(value -> value.asNode());
+					
+					TagDefinition tagDefinition = 
+							createTag(tagDefNode, parentTagDefId, tagsetId, properties);
+					
+					List<TagReference> tagReferences = 
+						createTagReferences(tagDefinition, tagInstanceNode, collectionId, sourceDocumentId, annoProperties);
+					
+					tagInstanceSynchHandler.synch(collectionId, tagReferences);
+				}
+					
+				statementResult = session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+					+"(:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
+					+"(c:"+nt(MarkupCollection)+")-[:"+rt(hasInstance)+"]->"
+					+"(ti:"+nt(DeletedTagInstance)+") "
+					+"RETURN c.collectionId, ti.tagInstanceId ",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash
+					)
+				);
+				
+				while (statementResult.hasNext()) {
+					Record record = statementResult.next();
+					
+					String collectionId = record.get("c.collectionId").asString();
+					String deletedTagInstanceId = record.get("ti.tagInstanceId").asString();
+					
+					tagInstanceSynchHandler.synch(collectionId, deletedTagInstanceId);
+					
+				}
+				
+				session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+					+"(:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
+					+"(:"+nt(MarkupCollection)+")-[:"+rt(hasInstance)+"]->"
+					+"(ti:"+nt(DeletedTagInstance)+")-[:"+rt(hasProperty)+"]->(ap:"+nt(DeletedAnnotationProperty)+") "
+					+"DETACH DELETE ti, ap ",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash
+					)
+				);
+					
 			}
 		});
 	}
