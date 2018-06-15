@@ -10,10 +10,6 @@ import java.util.TreeMap;
 public class GitTagDefinition {
 	private TagDefinition tagDefinition;
 
-	public GitTagDefinition(){
-		this.tagDefinition = new TagDefinition();
-	}
-
 	public GitTagDefinition(TagDefinition tagDefinition){
 		this.tagDefinition = tagDefinition;
 	}

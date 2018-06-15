@@ -19,6 +19,7 @@ import de.catma.indexer.TermInfo;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
+import de.catma.tag.TagDefinition;
 
 public class GitProjectHandler {
 
@@ -75,6 +76,14 @@ public class GitProjectHandler {
 			);
 
 			return tagsetRevisionHash;
+		}
+	}
+	
+	public void createTag(String tagsetId, TagDefinition tagDefinition) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+
+			gitTagsetHandler.createTagDefinition(projectId, tagsetId, tagDefinition);
 		}
 	}
 

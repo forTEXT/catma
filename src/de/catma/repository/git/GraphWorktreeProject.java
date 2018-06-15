@@ -226,18 +226,14 @@ public class GraphWorktreeProject implements IndexedRepository {
 						addTagDefinition(tagDefinition, tagsetDefinition);
 					}
 					else if (evt.getNewValue() == null) {
-						@SuppressWarnings("unchecked")
-						final Pair<TagsetDefinition, TagDefinition> args = 
-								(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
-//						execShield.execute(new DBOperation<Void>() {
-//							public Void execute() throws Exception {
-//								dbTagLibraryHandler.removeTagDefinition(
-//										args.getFirst(), args.getSecond());
-//								return null;
-//							}
-//						});							
 					}
 					else {
+						@SuppressWarnings("unchecked")
+//						final Pair<TagsetDefinition, TagDefinition> args = 
+//						(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
+//						TagsetDefinition tagsetDefinition = args.getFirst();
+						TagDefinition tagDefinition = (TagDefinition)evt.getNewValue();
+						updateTagDefinition(tagDefinition);
 //						execShield.execute(new DBOperation<Void>() {
 //							public Void execute() throws Exception {
 //								dbTagLibraryHandler.updateTagDefinition(
@@ -336,10 +332,16 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	private void addTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
+		gitProjectHandler.createTag(tagsetDefinition.getUuid(), tagDefinition);
 		graphProjectHandler.addTagDefinition(
 				rootRevisionHash, tagDefinition, tagsetDefinition);
 	}
 
+	private void updateTagDefinition(TagDefinition tagDefinition) throws Exception {
+		graphProjectHandler.updateTagDefinition(
+				rootRevisionHash, tagDefinition);
+	}
+	
 	private void addTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
 		String tagsetRevisionHash = 
 			gitProjectHandler.createTagset(

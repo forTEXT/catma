@@ -531,7 +531,7 @@ public class GraphProjectHandler {
 					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
 					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
-					+"(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}, revisionHash:{pTagsetRevisionHash}}) "
+					+"(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}}) "
 					+"MERGE (ts)-[:"+rt(hasTag)+"]->"
 					+"(t:"+nt(Tag)+"{"
 						+"tagId:{pTagId},"
@@ -543,13 +543,12 @@ public class GraphProjectHandler {
 					+"}) "
 					+(tagDefinition.getParentUuid()==null?"": "WITH ts, t ")
 					+"MATCH (ts)-[:"+rt(hasTag)+"]->(parent:"+nt(Tag)+"{tagId:{parentTagId}}) "
-					+"MERGE (parent)-[:"+rt(hasParent)+"]->(t) ",
+					+"MERGE (t)-[:"+rt(hasParent)+"]->(parent) ",
 					Values.parameters(
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
 						"pRootRevisionHash", rootRevisionHash,
 						"pTagsetId", tagsetDefinition.getUuid(),
-						"pTagsetRevisionHash", tagsetDefinition.getRevisionHash(),
 						"pTagId", tagDefinition.getUuid(),
 						"pColor", ColorConverter.toHex(Integer.valueOf(tagDefinition.getColor())),
 						"pName", tagDefinition.getName(),
@@ -557,6 +556,44 @@ public class GraphProjectHandler {
 						"pCreationDate", ZonedDateTime.now().format(DateTimeFormatter.ofPattern(Version.DATETIMEPATTERN)),
 						"pModifiedDate", tagDefinition.getVersion().toString(), //TODO: change to java.util.time
 						"parentTagId", tagDefinition.getParentUuid()
+					)
+				);
+			}
+		});
+		
+	}
+
+	public void updateTagDefinition(String rootRevisionHash, TagDefinition tagDefinition) throws Exception {
+		
+		if (tagDefinition.getPropertyDefinition(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()) == null) {
+			PropertyDefinition authorPropertyDefinition = 
+					new PropertyDefinition(
+						PropertyDefinition.SystemPropertyName.catma_markupauthor.name(),
+						Collections.singleton(user.getIdentifier()));
+			tagDefinition.addSystemPropertyDefinition(authorPropertyDefinition);
+		}
+		
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(:"+nt(Tagset)+")-[:"+rt(hasTag)+"]->"
+					+"(t:"+nt(Tag)+"{tagId:{pTagId}}) "
+					+"SET "
+					+"t.name={pName}, "
+					+"t.color={pColor}, "
+					+"t.modifiedDate={pModifiedDate}",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pTagId", tagDefinition.getUuid(),
+						"pColor", ColorConverter.toHex(Integer.valueOf(tagDefinition.getColor())),
+						"pName", tagDefinition.getName(),
+						"pModifiedDate", tagDefinition.getVersion().toString() //TODO: change to java.util.time
 					)
 				);
 			}
