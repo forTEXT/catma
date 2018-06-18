@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
@@ -926,12 +927,11 @@ class UserMarkupCollectionHandler {
 				for (TagInstance ti : relevantTagInstances) {
 					// get all valid propertyDef IDs
 					Collection<Integer> relevantUserDefPropertyDefIds = 
-							Collections2.transform(ti.getUserDefinedProperties(),
-									new Function<Property, Integer>() {
-								public Integer apply(
-										Property property) {
-									return property.getPropertyDefinition().getId();
-								}});
+							ti.getUserDefinedProperties()
+							.stream()
+							.map(property -> property.getPropertyDefinition().getId())
+							.filter(id -> id != null) // maybe null because of newly added propertydefinitions
+							.collect(Collectors.toSet());
 					relevantUserDefPropertyIdList.addAll(relevantUserDefPropertyDefIds);
 					
 					byte[] tagInstanceUUIDbin = 
