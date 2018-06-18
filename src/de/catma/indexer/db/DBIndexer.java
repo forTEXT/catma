@@ -79,8 +79,9 @@ public class DBIndexer implements Indexer {
 	}
 	
 	public void removeTagReferences(
+			List<Integer> relevantUserMarkupCollectionIds, 
 			List<TagReference> tagReferences) throws IOException {
-		tagReferenceIndexer.removeTagReferences(tagReferences);
+		tagReferenceIndexer.removeTagReferences(relevantUserMarkupCollectionIds, tagReferences);
 	}
 	
 	public void reindex(TagsetDefinition tagsetDefinition,

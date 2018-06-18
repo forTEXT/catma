@@ -48,7 +48,7 @@ public interface Indexer {
 	
 	public void removeSourceDocument(String sourceDocumentID) throws IOException;
 	public void removeUserMarkupCollection(String userMarkupCollectionID) throws IOException;
-	public void removeTagReferences(List<TagReference> tagReferences) throws IOException;
+	public void removeTagReferences(List<Integer> relevantUserMarkupCollectionIds, List<TagReference> tagReferences) throws IOException;
 	public void reindex(
 			TagsetDefinition tagsetDefinition, 
 			TagsetDefinitionUpdateLog tagsetDefinitionUpdateLog,

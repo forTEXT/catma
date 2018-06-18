@@ -1174,39 +1174,61 @@ class UserMarkupCollectionHandler {
 				getUserMarkupCollectionAccessMode(db, userMarkupCollectionId, true);
 			}
 			
-			List<Integer> relevantTagInstanceIDs = db
+			List<Integer> obsoleteTagInstanceIds = db
 			.select(TAGINSTANCE.TAGINSTANCEID)
 			.from(TAGINSTANCE)
 			.where(TAGINSTANCE.UUID.in(relevantTagInstanceUUIDs))
 			.fetch()
 			.map(new IDFieldToIntegerMapper(TAGINSTANCE.TAGINSTANCEID));
-			
-			db.beginTransaction();
 
-			db.batch(
-				db
-				.delete(PROPERTYVALUE)
-				.where(PROPERTYVALUE.PROPERTYID.in(
-					db
+			
+			List<Integer> obsoletePropertyIds = Collections.emptyList();
+			if (!obsoleteTagInstanceIds.isEmpty()) {
+				obsoletePropertyIds = db
 					.select(PROPERTY.PROPERTYID)
 					.from(PROPERTY)
-					.where(PROPERTY.TAGINSTANCEID.in(relevantTagInstanceIDs)))),
-				db
-				.delete(PROPERTY)
-				.where(PROPERTY.TAGINSTANCEID.in(relevantTagInstanceIDs)),
-				db
-				.delete(TAGREFERENCE)
-				.where(TAGREFERENCE.TAGINSTANCEID.in(relevantTagInstanceIDs)))
-			.execute();
+					.where(PROPERTY.TAGINSTANCEID.in(obsoleteTagInstanceIds))
+					.fetch()
+					.map(new IDFieldToIntegerMapper(PROPERTY.PROPERTYID));
+			}
+			
 
-			db
-			.delete(TAGINSTANCE)
-			.where(TAGINSTANCE.TAGINSTANCEID.in(relevantTagInstanceIDs))
-			.execute();
+			// handle deleted TagInstances/TagReferences and their content
+			if (!obsoleteTagInstanceIds.isEmpty()) {
+				try {
+					db.beginTransaction();
+					
+					db.batch(
+						// delete obsolete tag references
+						db
+						.delete(TAGREFERENCE)
+						.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.in(relevantUserMarkupCollectionIds))
+						.and(TAGREFERENCE.TAGINSTANCEID.in(obsoleteTagInstanceIds)),
+						// delete the prop values of obsolete tag instances
+						db
+						.delete(PROPERTYVALUE)
+						.where(PROPERTYVALUE.PROPERTYID
+							.in(obsoletePropertyIds)),
+						// delete the properties of obsolete tag instances
+						db
+						.delete(PROPERTY)
+						.where(PROPERTY.TAGINSTANCEID.in(obsoleteTagInstanceIds)),
+						// delete obsolete taginstances
+						db
+						.delete(TAGINSTANCE)
+						.where(TAGINSTANCE.TAGINSTANCEID.in(obsoleteTagInstanceIds)))
+					.execute();
+					
+					db.commitTransaction();
+				}
+				catch (Exception dae) {
+					db.rollbackTransaction();
+					db.close();
+					throw new IOException(dae);
+				}
+			}
 
-			db.commitTransaction();
-
-			dbRepository.getIndexer().removeTagReferences(tagReferences);
+			dbRepository.getIndexer().removeTagReferences(relevantUserMarkupCollectionIds, tagReferences);
 		}
 		catch (Exception e) {
 			db.rollbackTransaction();

@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
@@ -213,7 +214,7 @@ public class TagReferenceIndexer {
 
 	
 	public void removeTagReferences(
-			List<TagReference> tagReferences) throws IOException {
+			List<Integer> relevantUserMarkupCollectionIds, List<TagReference> tagReferences) throws IOException {
 		
 		// we delete full TagInstances and attached properties
 		// removal of some TagReferences while keeping others of the same TagInstance
@@ -221,27 +222,40 @@ public class TagReferenceIndexer {
 	
 		TransactionalDSLContext db = 
 				new TransactionalDSLContext(dataSource, SQLDialect.MYSQL);
-
+		
 		Set<String> tagInstanceUUIDs = new HashSet<String>();
+		Set<String> tagDefinitionUUIDs = new HashSet<String>();
 		for (TagReference tagRef : tagReferences) {
 			tagInstanceUUIDs.add(tagRef.getTagInstanceID());
+			tagDefinitionUUIDs.add(tagRef.getTagDefinition().getUuid());
 		}
 		Set<byte[]> tagInstanceUUIDBytes = new HashSet<byte[]>();
 		for (String tagInstanceUUID : tagInstanceUUIDs) {
 			tagInstanceUUIDBytes.add(idGenerator.catmaIDToUUIDBytes(tagInstanceUUID));
 		}
+		Set<byte[]> tagDefinitionUUIDBytes = new HashSet<byte[]>();
+		for (String tagDefintionUUID : tagDefinitionUUIDs) {
+			tagDefinitionUUIDBytes.add(idGenerator.catmaIDToUUIDBytes(tagDefintionUUID));
+		}
 		
+		List<String> stringBasedCollectionIds = 
+				relevantUserMarkupCollectionIds
+				.stream()
+				.map(collectionId -> String.valueOf(collectionId))
+				.collect(Collectors.toList());
 		try {
 			db.beginTransaction();
-
-			db
-			.delete(PROPERTY)
-			.where(PROPERTY.TAGINSTANCEID.in(tagInstanceUUIDBytes))
-			.execute();
-			
-			db
-			.delete(TAGREFERENCE)
-			.where(TAGREFERENCE.TAGINSTANCEID.in(tagInstanceUUIDBytes))
+			db.batch(
+				db
+				.delete(PROPERTY)
+				.where(PROPERTY.TAGINSTANCEID.in(tagInstanceUUIDBytes)),
+				
+				db
+				.delete(TAGREFERENCE)
+				.where(TAGREFERENCE.USERMARKUPCOLLECTIONID.in(stringBasedCollectionIds))
+				.and(TAGREFERENCE.TAGDEFINITIONID.in(tagDefinitionUUIDBytes))
+				.and(TAGREFERENCE.TAGINSTANCEID.in(tagInstanceUUIDBytes))
+			)
 			.execute();
 			
 			db.commitTransaction();
