@@ -109,7 +109,7 @@ public class CorpusExporter {
 		if (simpleEntryStyle) {
 			return corpusName 
 					+ "/" 
-					+ cleanupName(getFilename(sd))
+					+ cleanupName(getFilename(sd, false))
 					+ "/annotationcollections/" 
 					+ cleanupName(umc.getName())
 					+ ".xml";
@@ -129,12 +129,11 @@ public class CorpusExporter {
 
 	private String getSourceDocEntryName(String exportName, String corpusName, SourceDocument sd) {
 		if (simpleEntryStyle) {
-			String cleanFilename = cleanupName(getFilename(sd));
 			return corpusName 
 					+ "/" 
-					+ cleanFilename 
+					+ cleanupName(getFilename(sd, false)) 
 					+ "/" 
-					+ cleanFilename; 
+					+ cleanupName(getFilename(sd, true)); 
 		}
 		return exportName 
 				+ "_" 
@@ -144,7 +143,7 @@ public class CorpusExporter {
 				+ "/" 
 				+ cleanupName(sd.getID()) 
 				+ "/" 
-				+ cleanupName(getFilename(sd));
+				+ cleanupName(getFilename(sd, true));
 	}
 
 	public String getDate() {
@@ -155,18 +154,18 @@ public class CorpusExporter {
 		return name.replaceAll("[/:]|\\s", "_");
 	}
 	
-	private String getFilename(SourceDocument sourceDocument) {
+	private String getFilename(SourceDocument sourceDocument, boolean withFileExtension) {
 		SourceContentHandler sourceContentHandler = 
 				sourceDocument.getSourceContentHandler();
 		String title = 
 				sourceContentHandler.getSourceDocumentInfo()
 					.getContentInfoSet().getTitle();
 		if (simpleEntryStyle) {
-			return sourceDocument.toString() + ".txt";
+			return sourceDocument.toString() + (withFileExtension?".txt":"");
 		}
 		return sourceDocument.getID() 
-			+ (((title==null)||title.isEmpty())?"":("_"+title)) +
-			".txt";
+			+ (((title==null)||title.isEmpty())?"":("_"+title)) 
+			+ (withFileExtension?".txt":"");
 	};
 
 }

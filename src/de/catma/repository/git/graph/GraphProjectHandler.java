@@ -486,7 +486,7 @@ public class GraphProjectHandler {
 			@Override
 			public void run(Session session) throws Exception {
 				session.run(
-					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					"MATCH (:"+nt(User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
 					+ "(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}}) "
 					+ "SET pr.revisionHash = {pRootRevisionHash} "
