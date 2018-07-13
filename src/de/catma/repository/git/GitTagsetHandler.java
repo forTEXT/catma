@@ -23,7 +23,6 @@ import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
 import de.catma.repository.git.serialization.models.GitTagsetHeader;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
-import de.catma.util.IDGenerator;
 
 public class GitTagsetHandler {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -164,17 +163,14 @@ public class GitTagsetHandler {
 
 	/**
 	 * Creates a tag definition within the tagset identified by <code>tagsetId</code>.
-	 * <p>
-	 * NB: This method purposefully does NOT perform any Git add/commit operations as it is expected to be called a very
-	 * large number of times when a graph worktree is written to disk.
 	 *
 	 * @param projectId the ID of the project that contains the tagset within which the tag definition should be created
 	 * @param tagsetId the ID of the tagset within which to create the tag definition
 	 * @param tagDefinition a {@link TagDefinition} object
-	 * @return the tag definition UUID
+	 * @return the tagset definition UUID
 	 * @throws GitTagsetHandlerException if an error occurs while creating the tag definition
 	 */
-	public String createTagDefinition(@Nonnull String projectId,
+	public String createOrUpdateTagDefinition(@Nonnull String projectId,
 									  @Nonnull String tagsetId,
 									  @Nonnull TagDefinition tagDefinition
 	) throws IOException {
@@ -207,9 +203,18 @@ public class GitTagsetHandler {
 				fileOutputStream.write(serializedGitTagDefinition.getBytes(StandardCharsets.UTF_8));
 			}
 
-			// not doing Git add/commit, see method doc comment
+			String tagsetRevision = localGitRepoManager.addAndCommit(
+				targetPropertyDefinitionsFileAbsolutePath, 
+				serializedGitTagDefinition.getBytes(StandardCharsets.UTF_8), 
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail());
+			
+			return tagsetRevision;
 		}
+	}
 
-		return tagDefinition.getUuid();
+	public String removeTagDefinition(String projectId, String tagsetId, TagDefinition tagDefinition) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

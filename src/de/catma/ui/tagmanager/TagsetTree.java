@@ -244,7 +244,7 @@ public class TagsetTree extends HorizontalLayout {
 						removeTagDefinitionFromTree(td, removeOperationResult.getFirst());
 					}
 				} else {
-					TagDefinition tagDefinition = (TagDefinition) evt.getNewValue();
+					TagDefinition tagDefinition = ((Pair<TagDefinition, TagsetDefinition>) evt.getNewValue()).getFirst();
 
 					Property prop = tagTree.getContainerProperty(tagDefinition, TagTreePropertyName.caption);
 					if (prop != null) {
@@ -452,8 +452,10 @@ public class TagsetTree extends HorizontalLayout {
 
 							Property<?> colorProperty = propertysetItem.getItemProperty(tagDefColorProp);
 
-							tagManager.setTagDefinitionTypeAndColor(selTagDefinition, (String) nameProperty.getValue(),
-									ColorConverter.toRGBIntAsString((String) colorProperty.getValue()));
+							tagManager.setTagDefinitionTypeAndColor(
+									selTagDefinition, (String) nameProperty.getValue(),
+									ColorConverter.toRGBIntAsString((String) colorProperty.getValue()),
+									getTagsetDefinition(selTagDefinition));
 						}
 					});
 			tagFormDialog.show("50%"); //$NON-NLS-1$

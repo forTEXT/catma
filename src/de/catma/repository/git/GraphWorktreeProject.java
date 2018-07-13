@@ -226,21 +226,20 @@ public class GraphWorktreeProject implements IndexedRepository {
 						addTagDefinition(tagDefinition, tagsetDefinition);
 					}
 					else if (evt.getNewValue() == null) {
+						@SuppressWarnings("unchecked")
+						final Pair<TagDefinition, TagsetDefinition> args = 
+							(Pair<TagDefinition, TagsetDefinition>)evt.getNewValue();
+						TagDefinition tagDefinition = (TagDefinition)args.getFirst();
+						TagsetDefinition tagsetDefinition = args.getSecond();
+						removeTagDefinition(tagDefinition, tagsetDefinition);
 					}
 					else {
 						@SuppressWarnings("unchecked")
-//						final Pair<TagsetDefinition, TagDefinition> args = 
-//						(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
-//						TagsetDefinition tagsetDefinition = args.getFirst();
-						TagDefinition tagDefinition = (TagDefinition)evt.getNewValue();
-						updateTagDefinition(tagDefinition);
-//						execShield.execute(new DBOperation<Void>() {
-//							public Void execute() throws Exception {
-//								dbTagLibraryHandler.updateTagDefinition(
-//										(TagDefinition)evt.getNewValue());
-//								return null;
-//							}
-//						});
+						final Pair<TagDefinition, TagsetDefinition> args = 
+							(Pair<TagDefinition, TagsetDefinition>)evt.getNewValue();
+						TagDefinition tagDefinition = (TagDefinition)args.getFirst();
+						TagsetDefinition tagsetDefinition = args.getSecond();
+						updateTagDefinition(tagDefinition, tagsetDefinition);
 					}
 				}
 				catch (Exception e) {
@@ -332,14 +331,36 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	private void addTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
-		gitProjectHandler.createTag(tagsetDefinition.getUuid(), tagDefinition);
+		String tagsetRevision = gitProjectHandler.createOrUpdateTag(tagsetDefinition.getUuid(), tagDefinition);
+		tagsetDefinition.setRevisionHash(tagsetRevision);
+		String oldRootRevisionHash = this.rootRevisionHash;
+		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 		graphProjectHandler.addTagDefinition(
-				rootRevisionHash, tagDefinition, tagsetDefinition);
+				rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
 	}
 
-	private void updateTagDefinition(TagDefinition tagDefinition) throws Exception {
+	private void updateTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
+		String tagsetRevision = gitProjectHandler.createOrUpdateTag(tagsetDefinition.getUuid(), tagDefinition);
+		tagsetDefinition.setRevisionHash(tagsetRevision);
+		
+		//TODO: update and commit annotations, commit project
+		
+		String oldRootRevisionHash = this.rootRevisionHash;
+		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 		graphProjectHandler.updateTagDefinition(
-				rootRevisionHash, tagDefinition);
+				rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
+	}
+	
+	private void removeTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
+		String tagsetRevision = gitProjectHandler.createOrUpdateTag(tagsetDefinition.getUuid(), tagDefinition);
+		tagsetDefinition.setRevisionHash(tagsetRevision);
+		
+		//TODO: update and commit annotations, commit project
+
+		String oldRootRevisionHash = this.rootRevisionHash;
+		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
+		graphProjectHandler.updateTagDefinition(
+				rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
 	}
 	
 	private void addTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
@@ -547,46 +568,40 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	}
 
+	@Deprecated
 	@Override
 	public Collection<Corpus> getCorpora() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
+	@Deprecated
 	@Override
 	public void createCorpus(String name) throws IOException {
-		// TODO Auto-generated method stub
-
 	}
 
+	@Deprecated
 	@Override
 	public void update(Corpus corpus, SourceDocument sourceDocument) throws IOException {
-		// TODO Auto-generated method stub
-
 	}
 
+	@Deprecated
 	@Override
 	public void update(Corpus corpus, UserMarkupCollectionReference userMarkupCollectionReference) throws IOException {
-		// TODO Auto-generated method stub
-
 	}
 
+	@Deprecated
 	@Override
 	public void delete(Corpus corpus) throws IOException {
-		// TODO Auto-generated method stub
-
 	}
 
+	@Deprecated
 	@Override
 	public void update(Corpus corpus, String name) throws IOException {
-		// TODO Auto-generated method stub
-
 	}
 
+	@Deprecated
 	@Override
 	public void share(Corpus corpus, String userIdentification, AccessMode accessMode) throws IOException {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override

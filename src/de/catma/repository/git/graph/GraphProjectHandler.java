@@ -514,7 +514,7 @@ public class GraphProjectHandler {
 	}
 	
 	public void addTagDefinition(String rootRevisionHash, TagDefinition tagDefinition,
-			TagsetDefinition tagsetDefinition) throws Exception {
+			TagsetDefinition tagsetDefinition, String oldRootRevisionHash) throws Exception {
 		
 		if (tagDefinition.getPropertyDefinition(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()) == null) {
 			PropertyDefinition authorPropertyDefinition = 
@@ -530,8 +530,11 @@ public class GraphProjectHandler {
 				session.run(
 					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
 					+"(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}}) "
+					+"SET pr.revisionHash = {pRootRevisionHash} "
+					+"SET ts.revisionHash = {pTagsetRevisionHash} "
+					+"WITH ts "
 					+"MERGE (ts)-[:"+rt(hasTag)+"]->"
 					+"(t:"+nt(Tag)+"{"
 						+"tagId:{pTagId},"
@@ -548,7 +551,9 @@ public class GraphProjectHandler {
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
 						"pRootRevisionHash", rootRevisionHash,
+						"pOldRootRevisionHash", oldRootRevisionHash,
 						"pTagsetId", tagsetDefinition.getUuid(),
+						"pTagsetRevisionHash", tagsetDefinition.getRevisionHash(),
 						"pTagId", tagDefinition.getUuid(),
 						"pColor", ColorConverter.toHex(Integer.valueOf(tagDefinition.getColor())),
 						"pName", tagDefinition.getName(),
@@ -563,7 +568,9 @@ public class GraphProjectHandler {
 		
 	}
 
-	public void updateTagDefinition(String rootRevisionHash, TagDefinition tagDefinition) throws Exception {
+	public void updateTagDefinition(
+			String rootRevisionHash, TagDefinition tagDefinition, 
+			TagsetDefinition tagsetDefinition, String oldRootRevisionHash) throws Exception {
 		
 		if (tagDefinition.getPropertyDefinition(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()) == null) {
 			PropertyDefinition authorPropertyDefinition = 
@@ -579,9 +586,11 @@ public class GraphProjectHandler {
 				session.run(
 					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
-					+"(:"+nt(Tagset)+")-[:"+rt(hasTag)+"]->"
+					+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(ts:"+nt(Tagset)+")-[:"+rt(hasTag)+"]->"
 					+"(t:"+nt(Tag)+"{tagId:{pTagId}}) "
+					+"SET pr.revisionHash = {pRootRevisionHash} "
+					+"SET ts.revisionHash = {pTagsetRevisionHash} "
 					+"SET "
 					+"t.name={pName}, "
 					+"t.color={pColor}, "
@@ -590,6 +599,8 @@ public class GraphProjectHandler {
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
 						"pRootRevisionHash", rootRevisionHash,
+						"pOldRootRevisionHash", oldRootRevisionHash,
+						"pTagsetRevisionHash", tagsetDefinition.getRevisionHash(),
 						"pTagId", tagDefinition.getUuid(),
 						"pColor", ColorConverter.toHex(Integer.valueOf(tagDefinition.getColor())),
 						"pName", tagDefinition.getName(),
