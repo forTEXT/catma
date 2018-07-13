@@ -289,7 +289,7 @@ public class JsonLdWebAnnotationTest {
 			// see the "Updating a submodule in-place in the container" scenario at
 			// https://medium.com/@porteneuve/mastering-git-submodules-34c65e940407
 			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localJGitRepoManager, gitLabServerManager);
-			String returnedTagDefinitionId = gitTagsetHandler.createTagDefinition(projectId, tagsetId, tagDefinition);
+			String returnedTagDefinitionId = gitTagsetHandler.createOrUpdateTagDefinition(projectId, tagsetId, tagDefinition);
 
 			assertNotNull(returnedTagDefinitionId);
 			assert returnedTagDefinitionId.startsWith("CATMA_");

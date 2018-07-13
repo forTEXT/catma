@@ -224,7 +224,7 @@ public class GitTagsetHandlerTest {
 
 			// call createTagDefinition
 			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(jGitRepoManager, this.gitLabServerManager);
-			String returnedTagDefinitionId = gitTagsetHandler.createTagDefinition(projectId, tagsetId, tagDefinition);
+			String returnedTagDefinitionId = gitTagsetHandler.createOrUpdateTagDefinition(projectId, tagsetId, tagDefinition);
 
 			assertNotNull(returnedTagDefinitionId);
 			assert returnedTagDefinitionId.startsWith("CATMA_");
@@ -305,7 +305,7 @@ public class GitTagsetHandlerTest {
 
 			// call createTagDefinition
 			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(jGitRepoManager, this.gitLabServerManager);
-			String returnedTagDefinitionId = gitTagsetHandler.createTagDefinition(projectId, tagsetId, tagDefinition);
+			String returnedTagDefinitionId = gitTagsetHandler.createOrUpdateTagDefinition(projectId, tagsetId, tagDefinition);
 
 			assertNotNull(returnedTagDefinitionId);
 			assert returnedTagDefinitionId.startsWith("CATMA_");
