@@ -79,11 +79,26 @@ public class GitProjectHandler {
 		}
 	}
 	
-	public void createTag(String tagsetId, TagDefinition tagDefinition) throws IOException {
+	public String createOrUpdateTag(String tagsetId, TagDefinition tagDefinition) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localGitRepoManager, this.remoteGitServerManager);
 
-			gitTagsetHandler.createTagDefinition(projectId, tagsetId, tagDefinition);
+			String tagsetRevision = 
+				gitTagsetHandler.createOrUpdateTagDefinition(projectId, tagsetId, tagDefinition);
+			
+			
+			return tagsetRevision;
+		}
+	}
+	
+	public String removeTag(String tagsetId, TagDefinition tagDefinition) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+
+			String tagsetRevision = 
+				gitTagsetHandler.removeTagDefinition(projectId, tagsetId, tagDefinition);
+			
+			return tagsetRevision;
 		}
 	}
 
