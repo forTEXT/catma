@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="catma:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="catma-6.0-SNAPSHOT.war">
+      <element id="artifact" artifact-name="catma:war exploded" />
+    </root>
+  </artifact>
+</component>

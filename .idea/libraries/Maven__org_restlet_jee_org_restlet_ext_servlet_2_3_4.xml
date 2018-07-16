@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.restlet.jee:org.restlet.ext.servlet:2.3.4">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/restlet/jee/org.restlet.ext.servlet/2.3.4/org.restlet.ext.servlet-2.3.4.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/restlet/jee/org.restlet.ext.servlet/2.3.4/org.restlet.ext.servlet-2.3.4-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/restlet/jee/org.restlet.ext.servlet/2.3.4/org.restlet.ext.servlet-2.3.4-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

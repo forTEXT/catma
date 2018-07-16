@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.webjars.bowergithub.polymerelements:iron-list:2.0.12">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/webjars/bowergithub/polymerelements/iron-list/2.0.12/iron-list-2.0.12.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/webjars/bowergithub/polymerelements/iron-list/2.0.12/iron-list-2.0.12-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/webjars/bowergithub/polymerelements/iron-list/2.0.12/iron-list-2.0.12-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
