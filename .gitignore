@@ -21,7 +21,7 @@ testlib
 ~$$*.*
 .classpath
 .gwt
-.idea
 .project
 .settings
 target
+.idea
