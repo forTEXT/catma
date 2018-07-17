@@ -3,6 +3,7 @@ package de.catma.repository.git.managers;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -270,7 +271,15 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			);
 		}
 
-		this.gitApi = Git.open(repositoryPath);
+		File gitDir = new File(repositoryPath, ".git");
+		if (gitDir.isFile()) {
+			gitDir = Paths.get(repositoryPath.toURI()).resolve(
+				FileUtils.readFileToString(gitDir, StandardCharsets.UTF_8)
+				.replace("gitdir:", "")
+				.trim()).normalize().toFile();
+		}
+		
+		this.gitApi = Git.open(gitDir);
 	}
 
 	@Override
@@ -314,8 +323,44 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			this.gitApi.add().addFilepattern(relativeFilePath.toString()).call();
 		}
 		catch (GitAPIException e) {
-			throw new IOException("");
+			throw new IOException(e);
 		}
+	}
+	
+	@Override
+	public void remove(File targetFile) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `remove` on a detached instance");
+		}
+
+		try {
+			if (!targetFile.delete()) {
+				throw new IOException(String.format(
+						"could not remove TagDefinition %s", 
+						targetFile.toString()));
+			}
+
+			Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
+			Path absoluteFilePath = Paths.get(targetFile.getAbsolutePath());
+			Path relativeFilePath = basePath.relativize(absoluteFilePath);
+
+			this.gitApi.rm().addFilepattern(relativeFilePath.toString()).call();
+		}
+		catch (GitAPIException e) {
+			throw new IOException(e);
+		}
+	}
+	
+	@Override
+	public String removeAndCommit(File targetFile, String committerName, String committerEmail)
+			throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `removeAndCommit` on a detached instance");
+		}
+
+		this.remove(targetFile);
+		String commitMessage = String.format("Removing %s", targetFile.getName());
+		return this.commit(commitMessage, committerName, committerEmail);
 	}
 
 	/**

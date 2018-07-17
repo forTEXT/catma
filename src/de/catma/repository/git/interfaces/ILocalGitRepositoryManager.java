@@ -46,4 +46,8 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 			throws IOException;
 
 	String getRootRevisionHash() throws Exception;
+
+	void remove(File targetFile) throws IOException;
+
+	String removeAndCommit(File targetFile, String committerName, String committerEmail) throws IOException;
 }

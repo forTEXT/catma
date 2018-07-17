@@ -1,7 +1,6 @@
 package de.catma.repository.git;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -176,7 +175,6 @@ public class GitTagsetHandler {
 	) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
-			localGitRepoManager.open(projectId, projectRootRepositoryName);
 
 			String targetPropertyDefinitionsFileRelativePath = String.format(
 					"%s%s/%s",
@@ -187,6 +185,15 @@ public class GitTagsetHandler {
 					"propertydefs.json"
 			);
 
+			String tagsetGitRepositoryName = String.format(
+					"%s/%s/%s",
+					projectRootRepositoryName,
+					GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
+					tagsetId);
+			
+			localGitRepoManager.open(
+					projectId, tagsetGitRepositoryName);
+
 			File targetPropertyDefinitionsFileAbsolutePath = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
 					GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
@@ -195,13 +202,8 @@ public class GitTagsetHandler {
 			).toFile();
 
 			GitTagDefinition gitTagDefinition = new GitTagDefinition(tagDefinition);
-			String serializedGitTagDefinition = new SerializationHelper<GitTagDefinition>().serialize(gitTagDefinition);
-
-			try (FileOutputStream fileOutputStream = FileUtils.openOutputStream(
-					targetPropertyDefinitionsFileAbsolutePath
-			)) {
-				fileOutputStream.write(serializedGitTagDefinition.getBytes(StandardCharsets.UTF_8));
-			}
+			String serializedGitTagDefinition = 
+					new SerializationHelper<GitTagDefinition>().serialize(gitTagDefinition);
 
 			String tagsetRevision = localGitRepoManager.addAndCommit(
 				targetPropertyDefinitionsFileAbsolutePath, 
@@ -213,8 +215,34 @@ public class GitTagsetHandler {
 		}
 	}
 
-	public String removeTagDefinition(String projectId, String tagsetId, TagDefinition tagDefinition) {
-		// TODO Auto-generated method stub
-		return null;
+	public String removeTagDefinition(String projectId, String tagsetId, TagDefinition tagDefinition) 
+			throws IOException {
+		
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			localGitRepoManager.open(projectId, projectRootRepositoryName);
+
+			String targetTagDefinitionsFolderRelativePath = String.format(
+					"%s%s/%s",
+					StringUtils.isEmpty(tagDefinition.getParentUuid()) ? "" : String.format(
+							"%s/", tagDefinition.getParentUuid()
+					),
+					tagDefinition.getUuid()
+			);
+
+			File targetTagDefinitionsFolderAbsolutePath = Paths.get(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
+					tagsetId,
+					targetTagDefinitionsFolderRelativePath
+			).toFile();
+
+			String tagsetRevision = localGitRepoManager.removeAndCommit(
+					targetTagDefinitionsFolderAbsolutePath, 
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail());
+				
+			return tagsetRevision;
+		}
 	}
 }
