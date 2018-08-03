@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+  <TEI xmlns="http://www.tei-c.org/ns/1.0" xml:lang="en">
+    <teiHeader>
+      <fileDesc>
+        <titleStmt>
+          <title>empty</title>
+          <author>empty</author>
+        </titleStmt>
+        <publicationStmt>
+          <publisher>empty</publisher>
+        </publicationStmt>
+        <sourceDesc>
+          <p>empty</p>
+        </sourceDesc>
+      </fileDesc>
+    </teiHeader>
+    <text>
+      <body>
+        <ab type="catma" />
+      </body>
+    </text>
+  </TEI>
