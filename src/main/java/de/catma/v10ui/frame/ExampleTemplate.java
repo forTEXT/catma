@@ -1,4 +1,4 @@
-package de.catma.v10ui;
+package de.catma.v10ui.frame;
 
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.HtmlImport;
