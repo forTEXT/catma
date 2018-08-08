@@ -46,7 +46,6 @@ public class MainView extends Div implements RouterLayout, PageConfigurator,Logi
 
     public MainView(){
         ExampleTemplate template = new ExampleTemplate();
-       // template.addClassName("main-layout__nav");
         Button button = new Button("Login",
                 event -> template.setValue("Clicked!"));
         button.addClassName("main-layout__nav");
@@ -144,7 +143,7 @@ public class MainView extends Div implements RouterLayout, PageConfigurator,Logi
                             userIdentification
                     );
 
-                    User user = projectManager.getUser();
+                   // User user = projectManager.getUser();
 
                     //TODO:
 //					if (user.isGuest()) {
