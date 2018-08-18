@@ -1,23 +1,20 @@
-package de.catma.v10ui.project;
+package de.catma.v10ui.projects;
 
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.Tag;
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.router.ParentLayout;
 import de.catma.Pager;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
-
-import java.util.List;
+import de.catma.v10ui.frame.FrameView;
 
 @Tag("projectMangerView")
+@ParentLayout(FrameView.class)
 public class ProjectManagerView extends Composite<Div> {
     private  H3 titleField = new H3();
     ProjectManager projectManager;
@@ -25,51 +22,18 @@ public class ProjectManagerView extends Composite<Div> {
 
     public ProjectManagerView(ProjectManager projectManager) {
         this.projectManager = projectManager;
-        titleField = new H3("ProjectManager View");
-        titleField.addClassName("main-layout__title");
-
-/*
-        try {
-            List<ProjectReference> projectPager = (List<ProjectReference>) this.projectManager.getProjectReferences();
-
-           // grid.addColumn(:getName).setHeader("Name");
-
-        }catch(Exception e){
-            e.printStackTrace();
-        }*/
-
-initComponents();
-initData();
-
-      getContent().add(titleField,projectGrid);
-
-    }
-
-  private void  initProjectManagerViewComponents(ProjectManager projectManager){
-
+        initComponents();
+        initData();
+        getContent().add(projectGrid);
+        getContent().addClassName("main-layout_projects");
     }
 
     private void initComponents() {
         VerticalLayout leftPanel = new VerticalLayout();
-
         projectGrid = new Grid<ProjectReference>();
         projectGrid.setSizeFull();
         projectGrid.addColumn(ProjectReference::getName).setHeader("Name");
         projectGrid.addColumn(ProjectReference::getDescription).setHeader("Description");
-/*
-        HorizontalLayout buttonPanel = new HorizontalLayout();
-        btCreateProject = new Button("Create Project");
-
-        buttonPanel.addComponent(btCreateProject);
-
-
-        btOpenProject = new Button("Open Project");
-        buttonPanel.addComponent(btOpenProject);
-
-        leftPanel.addComponent(projectGrid);
-        leftPanel.addComponent(buttonPanel);
-
-        addComponent(leftPanel);*/
     }
 
     private void initData() {

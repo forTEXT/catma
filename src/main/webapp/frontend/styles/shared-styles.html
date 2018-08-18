@@ -22,6 +22,16 @@
             max-width: 960px;
             margin: 0 auto;
         }
+        .main-layout_projects {
+            display:flex;
+            flex-direction:column-reverse;
+            width: 30%;
+            height: 30%;
+            min-height: 100vh;
+            max-width: auto;
+            margin: 4px;
+            background-color: green;
+        }
 
         .main-layout__title {
             font-size: 1em;
@@ -50,6 +60,43 @@
 
             background-color: var(--lumo-base-color);
             box-shadow: 0 1px 0 0 var(--lumo-contrast-5pct);
+        }
+        .main-layout__leftPanel {
+            display: flex;
+            flex-direction: column;
+            width: 20%;
+            height: 100%;
+            min-height: 100vh;
+            max-width: 160px;
+            margin: 0 auto;
+        }
+        .main-layout__tile {
+            font-size: 1em;
+            margin: 0;
+            /* Allow the nav-items to take all the space so they are centered */
+            width: 0;
+            line-height: 1;
+            letter-spacing: -0.02em;
+            font-weight: 500;
+            background-color: #e56e33;
+            color: #741947;
+        }
+        .main-layout_biggrey {
+            background-color: #707be5;
+            height: 75px;
+            font-weight: 900;
+            color:white;
+
+
+        }
+        .main-layout__rightPanel {
+            display: flex;
+            flex-direction: column;
+            width: 80%;
+            height: 100%;
+            min-height: 100vh;
+            max-width: 860px;
+            margin: 0 auto;
         }
 
         .main-layout__nav {

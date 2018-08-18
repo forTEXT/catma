@@ -1,4 +1,4 @@
-package de.catma.v10ui.project;
+package de.catma.v10ui.projects;
 
 import de.catma.project.ProjectReference;
 
