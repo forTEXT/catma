@@ -89,10 +89,7 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
 
         mainContent.add(leftPanel);
 
-
-        Div body = new Div();
         add(header);
-        //setClassName("main-layout");
     }
 
     private void initTempDirectory() throws IOException {
@@ -117,10 +114,6 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
             e.printStackTrace();
         }
 
-        final String afterLogoutRedirectURL =
-                String.format("%s://%s%s%s", scheme, serverName, port == 80 ? "" : ":" + port, contextPath); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-
-
         if (this.user == null) {
 
             AuthenticationHandler authenticationHandler =
@@ -136,24 +129,12 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
 
                    initTempDirectory();
 
-                    //  btloginLogout.setHtmlContentAllowed(true);
-
                     ProjectManager projectManager = new GitProjectManager(
                             RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
                             userIdentification
                     );
 
-                   // User user = projectManager.getUser();
-
-                    //TODO:
-//					if (user.isGuest()) {
-//						identifier = Messages.getString("CatmaApplication.Guest"); //$NON-NLS-1$
-//					}
-
-                    /*btloginLogout.setCaption(
-                            MessageFormat.format(
-                                    Messages.getString("CatmaApplication.signOut"), user.getName()));*/ //$NON-NLS-1$
-                    ptv = new ProjectTilesView("Klaus", projectManager);
+                    ptv = new ProjectTilesView(projectManager);
 
                     projectManagerView = new ProjectManagerView(projectManager);
 
@@ -162,28 +143,20 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
                     // contentPanel.setContent(projectManagerView);
                    mainContent.add(projectManagerView,ptv);
 
-
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             });
         } else {
-            // btloginLogout.setCaption(Messages.getString("CatmaApplication.signIn")); //$NON-NLS-1$
 
-            //  logger.info("closing session and redirecting to " + afterLogoutRedirectURL);
-            // Page.getCurrent().setLocation(afterLogoutRedirectURL);
             VaadinSession.getCurrent().close();
             close();
         }
-
-
 
     }
 
 
     public void initProperties() throws ServletException {
-
 
         try {
             System.out.println("CATMA Properties initializing...");
@@ -210,15 +183,7 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
         if (projectManagerView != null) {
           remove(mainContent);
             userManager.logout(this);
-
         }
-   /*     logger.info("application for user" + getUser() + " has been closed"); //$NON-NLS-1$ //$NON-NLS-2$
-        if (repositoryOpened) {
-            userManager.logout(this);
-            repositoryOpened = false;
-        }*/
-       // backgroundService.shutdown();
-       // super.close();
     }
 
     @Override

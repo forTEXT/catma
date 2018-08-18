@@ -23,9 +23,7 @@ public class ProjectTilesView extends Composite<Div> implements HasComponents {
     private VerticalLayout verticalLayout;
 
 
-    // composite ist zum erstellen einer neuen Componenet aus anderen Vaadin (oder von mir erstellten Components) Components wie zb Textfield oder Label
-    // die werden dem root-div mit getcontent.add hinzugetan, so wie auch css definitionen
-    public ProjectTilesView(String projectTitle, ProjectManager projectManager) {
+    public ProjectTilesView(ProjectManager projectManager) {
 
         this.projectManager = projectManager;
         verticalLayout = new VerticalLayout();
@@ -33,8 +31,6 @@ public class ProjectTilesView extends Composite<Div> implements HasComponents {
 
         verticalLayout.getStyle().set("border", "1px solid #9E9E9E");
 
-
-        // verticalLayout.setHeight("300px");
         verticalLayout.getStyle().set("background-color", "grey");
 
         try {
@@ -59,9 +55,6 @@ public class ProjectTilesView extends Composite<Div> implements HasComponents {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
-        // verticalLayout.add(firstTile,secondTile);
 
         add(verticalLayout);
         getContent().addClassName("main-layout_tile");

@@ -10,39 +10,37 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 
-
 @Tag("tilecomponent")
-public class TileComponent extends Component  {
+public class TileComponent extends Component {
 
     VerticalLayout verticalLayout;
-    HorizontalLayout projectTitleBar ;
+    HorizontalLayout projectTitleBar;
 
-    public TileComponent(String value, String color, String projectTitle){
+    public TileComponent(String value, String color, String projectTitle) {
 
+        getElement().getStyle().set("background-color", "yellow");
 
-        getElement().getStyle().set("background-color","yellow");
-
-
-       createContent(value,color,projectTitle);
+        createContent(value, color, projectTitle);
 
     }
-public void createContent(String value, String color, String projectTitle){
+
+    public void createContent(String value, String color, String projectTitle) {
         verticalLayout = new VerticalLayout();
         Label label = new Label(value);
         Label label1 = new Label(color);
 
-          projectTitleBar = new HorizontalLayout();
+        projectTitleBar = new HorizontalLayout();
 
-          Label title = new Label(projectTitle);
-          Icon trashcan = new Icon(VaadinIcon.TRASH);
+        Label title = new Label(projectTitle);
+        Icon trashcan = new Icon(VaadinIcon.TRASH);
 
-          Icon options = new Icon(VaadinIcon.OPTIONS);
-          projectTitleBar.add(title,trashcan,options);
-          projectTitleBar.setAlignItems(FlexComponent.Alignment.END);
-          verticalLayout.add(label,label1,projectTitleBar);
-          verticalLayout.getStyle().set("background-color",color);
-          getElement().setChild(0,verticalLayout.getElement());
+        Icon options = new Icon(VaadinIcon.OPTIONS);
+        projectTitleBar.add(title, trashcan, options);
+        projectTitleBar.setAlignItems(FlexComponent.Alignment.END);
+        verticalLayout.add(label, label1, projectTitleBar);
+        verticalLayout.getStyle().set("background-color", color);
+        getElement().setChild(0, verticalLayout.getElement());
 
-}
+    }
 
 }
