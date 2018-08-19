@@ -140,8 +140,9 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
 
                         add(mainContent);
 
-                    // contentPanel.setContent(projectManagerView);
-                   mainContent.add(projectManagerView,ptv);
+
+                  // mainContent.add(projectManagerView,ptv);
+                    mainContent.add(ptv);
 
                 } catch (Exception e) {
                     e.printStackTrace();
