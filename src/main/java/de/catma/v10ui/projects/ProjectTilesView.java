@@ -4,9 +4,13 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.HtmlImport;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -20,36 +24,70 @@ import de.catma.v10ui.frame.FrameView;
 import java.util.List;
 
 @Tag("tile")
-@HtmlImport("styles/projecttile-style.html")
+@HtmlImport("styles/shared-styles.html")
 public class ProjectTilesView extends Composite<Div> implements HasComponents {
     private ProjectReference projectReference;
     private ProjectManager projectManager;
 
     private VerticalLayout verticalLayout;
+    private HorizontalLayout headerBar;
+    private HorizontalLayout optionsBar;
+
+    private Button titleArrow;
 
 
     public ProjectTilesView(ProjectManager projectManager) {
 
+        getElement().getStyle().set("margin-left","0");
+        getElement().getStyle().set("padding-left","0");
+
         this.projectManager = projectManager;
         verticalLayout = new VerticalLayout();
+        verticalLayout.getStyle().set("margin","0");
+        verticalLayout.getStyle().set("padding","0");
+        headerBar= new HorizontalLayout();
+        Label allProjectsLabel = new Label("All projects");
+
+        Icon arrowUp = new Icon(VaadinIcon.ARROW_UP);
+        titleArrow = new Button("Title");
+        titleArrow.setIcon(arrowUp);
+        titleArrow.setText("title");
+        titleArrow.getStyle().set("margin-right","0");
+        titleArrow.getStyle().set("background-color","inherited");
+        headerBar.add(allProjectsLabel,titleArrow);
+        headerBar.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+
+        headerBar.getElement().getStyle().set("width","100%");
+        Icon optionsIcon =  new Icon(VaadinIcon.OPTIONS);
+        optionsIcon.getElement().getStyle().set("margin-top","20px");
+        optionsIcon.getElement().getStyle().set("margin-right","10px");
+        optionsBar = new HorizontalLayout(optionsIcon);
+
+        optionsBar.setClassName("projects_optionsbar");
+        optionsBar.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+
+         verticalLayout.add(optionsBar);
+         verticalLayout.add(headerBar);
 
 
-        verticalLayout.getStyle().set("border", "1px solid #9E9E9E");
 
-        verticalLayout.getStyle().set("background-color", "white");
+
+        verticalLayout.getStyle().set("background-color", "#e6e6e6");
 
         try {
             Pager<ProjectReference> projectPager = this.projectManager.getProjectReferences();
             while (projectPager.hasNext()) {
                 List<ProjectReference> projectRef = projectPager.next();
                 HorizontalLayout gridRow = new HorizontalLayout();
-                gridRow.getElement().getStyle().set("width","100%");
+                gridRow.getElement().getStyle().set("width","auto");
+                gridRow.getElement().getStyle().set("margin-left","25px");
 
                 for (ProjectReference project : projectRef) {
 
-                    TileComponent tileComponent = new TileComponent("Project Details", project.getDescription(), project.getName());
-                    tileComponent.getElement().getStyle().set("width","33%");
+                    TileComponent tileComponent = new TileComponent("Project Details extra extra long", project.getDescription(), project.getName());
+                    tileComponent.getElement().getStyle().set("width","31%");
                     tileComponent.getElement().getStyle().set("border-radius", "5px");
+                    tileComponent.getElement().getStyle().set("padding","20px");
 
                     gridRow.add(tileComponent);
 
@@ -57,7 +95,8 @@ public class ProjectTilesView extends Composite<Div> implements HasComponents {
                         verticalLayout.add(gridRow);
 
                         gridRow = new HorizontalLayout();
-                        gridRow.getElement().getStyle().set("width","100%");
+                        gridRow.getElement().getStyle().set("width","max");
+                        gridRow.getElement().getStyle().set("margin-left","25px");
                     }else{
                         verticalLayout.add(gridRow);
                     }
@@ -68,7 +107,7 @@ public class ProjectTilesView extends Composite<Div> implements HasComponents {
         }
 
         add(verticalLayout);
-        getContent().addClassName("main-layout_tile");
+
 
     }
 

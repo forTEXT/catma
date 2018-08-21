@@ -2,7 +2,10 @@ package de.catma.v10ui.projects;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -16,47 +19,70 @@ public class TileComponent extends Component {
     VerticalLayout verticalLayout;
     HorizontalLayout projectTitleBar;
 
-    public TileComponent(String value, String color, String projectTitle) {
+    public TileComponent(String projectDetails, String projectContent, String projectTitle) {
 
-        getElement().getStyle().set("background-color", "grey");
-        getElement().getStyle().set("width","22%");
+        getElement().getStyle().set("background-color", "#c3cee0");
+        getElement().getStyle().set("margin","0");
 
-        createContent(value, color, projectTitle);
+
+        createContent(projectDetails, projectContent, projectTitle);
 
 
     }
 
-    public void createContent(String value, String color, String projectTitle) {
+    public void createContent(String projectDetails, String projectContent, String projectTitle) {
         verticalLayout = new VerticalLayout();
         verticalLayout.getStyle().set("width","100%");
-        Label label = new Label(value);
-        label.getElement().getStyle().set("height","20px");
-        label.getElement().getStyle().set("font-size","10px");
-        label.getElement().getStyle().set("margin-left","0px");
-        label.getElement().getStyle().set("height","20px");
 
-        Label label1 = new Label(color);
+        Label details = new Label(projectDetails);
+        details.getElement().getStyle().set("height","15px");
+        details.getElement().getStyle().set("text-align","left");
+        details.getElement().getStyle().set("font-size","14px");
+        details.getElement().getStyle().set("margin-left","4px");
+        details.getElement().getStyle().set("height","20px");
+
+        Label content = new Label(projectContent);
 
         projectTitleBar = new HorizontalLayout();
 
         Label title = new Label(projectTitle);
-        title.getElement().getStyle().set("font-size","10px");
+        title.getElement().getStyle().set("overflow", "hidden");
+        title.getElement().getStyle().set("width", "30px");
+
+
         Icon trashcan = new Icon(VaadinIcon.TRASH);
         trashcan.setColor("black");
         trashcan.setSize("18px");
+       // trashcan.getElement().getStyle().set("display","inline");
+      //  trashcan.getElement().getStyle().set("float","right");
 
         Icon options = new Icon(VaadinIcon.OPTIONS);
         options.setColor("black");
         options.setSize("18px");
-        projectTitleBar.add(title, trashcan, options);
-        projectTitleBar.setAlignItems(FlexComponent.Alignment.BASELINE);
+      //  options.getElement().getStyle().set("display","inline");
+        options.getElement().getStyle().set("margin-right","0");
+      //  options.getElement().getStyle().set("float","right");
+
+       // Div iconsDiv = new Div(trashcan,options);
+
+
+
+        projectTitleBar.add(title, trashcan,options);
+        projectTitleBar.getElement().getStyle().set("css","");
+        projectTitleBar.getElement().getStyle().set("display","inline-block");
         projectTitleBar.getElement().getStyle().set("height","20px");
         projectTitleBar.getElement().getStyle().set("width","100%");
-        projectTitleBar.getElement().getStyle().set("background-color","#c3cee0");
-        verticalLayout.add(label, label1, projectTitleBar);
+        projectTitleBar.getElement().getStyle().set("background-color","white");
 
-        verticalLayout.getStyle().set("background-color", color);
-        getElement().setChild(0, verticalLayout.getElement());
+
+
+        verticalLayout.add(details, content, projectTitleBar);
+        verticalLayout.getStyle().set("padding","0");
+
+       // verticalLayout.getStyle().set("background-color", color);
+        getElement().getStyle().set("padding","0");
+        getElement().appendChild(verticalLayout.getElement());
+       // getElement().setChild(0, verticalLayout.getElement());
 
     }
 

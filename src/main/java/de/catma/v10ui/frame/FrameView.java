@@ -43,49 +43,60 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
     private Button btTags;
     private Button btAnnotate;
     private Button btAnalyze;
-    private  ProjectTilesView ptv;
+    private  ProjectTilesView projectTilesView;
 
-    private Button btAllProjects;
+
     private UserManager userManager = new UserManager();
-    HorizontalLayout mainContent;
+    private HorizontalLayout mainContent;
 
 
     public FrameView(){
-        ExampleTemplate template = new ExampleTemplate();
-        Button button = new Button("Login",
-                event -> template.setValue("Clicked!"));
-        button.addClassName("main-layout__nav");
+        H2 title = new H2("CATMA_6");
+        title.setClassName("main-layout__title");
+
         btloginLogout = new Button(("LoginLogout"),event ->  handleLoginLogoutEvent());
         btloginLogout.addClassName("main-layout__nav");
 
-        btProjects = new Button("PROJECTS");
+        btProjects = new Button("Projects");
         btProjects.setWidth("100%");
-        btProjects.setClassName("main-layout_biggrey");
-        btAnalyze = new Button("ANALYZE");
-        btAnalyze.setWidth("100%");
-        btAnnotate= new Button("ANNOTATE");
-        btAnnotate.setWidth("100%");
-        btTags= new Button("TAGS");
-        btTags.setWidth("100%");
-        btProject= new Button("PROJECT");
-        btProject.setWidth("100%");
+        btProjects.setClassName("main-layout_big_angular_btn");
 
-        H2 title = new H2("CATMA_6");
-        title.addClassName("main-layout__title");
+
+        btProject= new Button("Project");
+        btProject.setWidth("100%");
+        btProject.setClassName("main-layout_menue_btn");
+        btProject.getStyle().set("margin-top","25vh");
+
+        btTags= new Button("Tags");
+        btTags.setWidth("100%");
+        btTags.setClassName("main-layout_menue_btn");
+
+        btAnnotate= new Button("Annotate");
+        btAnnotate.setWidth("100%");
+        btAnnotate.setClassName("main-layout_menue_btn");
+
+        btAnalyze = new Button("Analyze");
+        btAnalyze.setWidth("100%");
+        btAnalyze.setClassName("main-layout_menue_btn");
+
+
+
 
 
 
         Div header = new Div(title,btloginLogout);
-
         header.addClassName("main-layout__header");
 
         mainContent = new HorizontalLayout();
 
         VerticalLayout leftPanel =new VerticalLayout();
+        leftPanel.setClassName("main-layout__leftPanel");
         leftPanel.add(btProjects,btProject,btTags,btAnnotate,btAnalyze);
-        leftPanel.setClassName("main-layout_leftPanel");
 
-        leftPanel.setWidth("15%");
+
+
+        //leftPanel.setWidth("13%");
+        //leftPanel.getStyle().set("background-color"," #d5d8d2");
 
         mainContent.add(leftPanel);
 
@@ -113,7 +124,6 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
         } catch (ServletException e) {
             e.printStackTrace();
         }
-
         if (this.user == null) {
 
             AuthenticationHandler authenticationHandler =
@@ -134,15 +144,15 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
                             userIdentification
                     );
 
-                    ptv = new ProjectTilesView(projectManager);
-
-                    projectManagerView = new ProjectManagerView(projectManager);
-
-                        add(mainContent);
+                    projectTilesView = new ProjectTilesView(projectManager);
+                  //  projectTilesView.getElement().getStyle().set("margin","0");
 
 
-                  // mainContent.add(projectManagerView,ptv);
-                    mainContent.add(ptv);
+                   // projectManagerView = new ProjectManagerView(projectManager);
+
+                    add(mainContent);
+
+                    mainContent.add(projectTilesView);
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -166,8 +176,8 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
 
             Properties properties = new Properties();
 
-         InputStream inputStream= FrameView.class.getClassLoader().getResourceAsStream(propertiesFile);
-         properties.load(inputStream);
+             InputStream inputStream= FrameView.class.getClassLoader().getResourceAsStream(propertiesFile);
+             properties.load(inputStream);
 
             RepositoryProperties.INSTANCE.setProperties(
                     new NonModifiableProperties(properties));

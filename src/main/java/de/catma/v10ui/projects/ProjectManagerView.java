@@ -45,7 +45,6 @@ public class ProjectManagerView extends Composite<Div> {
                     DataProvider.fromCallbacks(
                             query -> {
                                 int page = (query.getOffset() / query.getLimit())+1;
-
                                 return projectPager
                                         .page(page)
                                         .stream();
@@ -61,7 +60,6 @@ public class ProjectManagerView extends Composite<Div> {
             e.printStackTrace(); //TODO
         }
     }
-
 
 
 }
