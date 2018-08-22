@@ -23,9 +23,9 @@ import de.catma.v10ui.frame.FrameView;
 
 import java.util.List;
 
-@Tag("tile")
-@HtmlImport("styles/shared-styles.html")
-public class ProjectTilesView extends Composite<Div> implements HasComponents {
+@Tag("tileView")
+@HtmlImport("styles/tileView-styles.html")
+public class ProjectTilesView extends Div implements HasComponents {
     private ProjectReference projectReference;
     private ProjectManager projectManager;
 
@@ -41,10 +41,14 @@ public class ProjectTilesView extends Composite<Div> implements HasComponents {
         getElement().getStyle().set("margin-left","0");
         getElement().getStyle().set("padding-left","0");
 
+        setClassName("main_Content");
         this.projectManager = projectManager;
         verticalLayout = new VerticalLayout();
+
         verticalLayout.getStyle().set("margin","0");
         verticalLayout.getStyle().set("padding","0");
+        verticalLayout.getStyle().set("background-color", "#e6e6e6");
+
         headerBar= new HorizontalLayout();
         Label allProjectsLabel = new Label("All projects");
 
@@ -72,22 +76,24 @@ public class ProjectTilesView extends Composite<Div> implements HasComponents {
 
 
 
-        verticalLayout.getStyle().set("background-color", "#e6e6e6");
+
 
         try {
             Pager<ProjectReference> projectPager = this.projectManager.getProjectReferences();
             while (projectPager.hasNext()) {
                 List<ProjectReference> projectRef = projectPager.next();
                 HorizontalLayout gridRow = new HorizontalLayout();
-                gridRow.getElement().getStyle().set("width","auto");
-                gridRow.getElement().getStyle().set("margin-left","25px");
+                gridRow.setClassName("gridRow");
+        /*        gridRow.getElement().getStyle().set("width","auto");
+                gridRow.getElement().getStyle().set("margin-left","25px");*/
 
                 for (ProjectReference project : projectRef) {
 
                     TileComponent tileComponent = new TileComponent("Project Details extra extra long", project.getDescription(), project.getName());
-                    tileComponent.getElement().getStyle().set("width","31%");
+            /*        tileComponent.getElement().getStyle().set("width","31%");
                     tileComponent.getElement().getStyle().set("border-radius", "5px");
-                    tileComponent.getElement().getStyle().set("padding","20px");
+                    tileComponent.getElement().getStyle().set("padding","20px");*/
+
 
                     gridRow.add(tileComponent);
 
@@ -95,8 +101,10 @@ public class ProjectTilesView extends Composite<Div> implements HasComponents {
                         verticalLayout.add(gridRow);
 
                         gridRow = new HorizontalLayout();
-                        gridRow.getElement().getStyle().set("width","max");
-                        gridRow.getElement().getStyle().set("margin-left","25px");
+                        gridRow.setClassName("gridRow");
+
+             /*           gridRow.getElement().getStyle().set("width","100%");
+                        gridRow.getElement().getStyle().set("margin-left","25px");*/
                     }else{
                         verticalLayout.add(gridRow);
                     }

@@ -100,6 +100,7 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
 
         mainContent.add(leftPanel);
 
+
         add(header);
     }
 
