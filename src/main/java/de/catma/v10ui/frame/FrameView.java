@@ -45,12 +45,15 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
     private Button btAnalyze;
     private  ProjectTilesView projectTilesView;
 
-
     private UserManager userManager = new UserManager();
     private HorizontalLayout mainContent;
 
 
     public FrameView(){
+        initComponents();
+
+    }
+    private  void initComponents(){
         H2 title = new H2("CATMA_6");
         title.setClassName("main-layout__title");
 
@@ -63,26 +66,19 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
 
 
         btProject= new Button("Project");
-        btProject.setWidth("100%");
+
         btProject.setClassName("main-layout_menue_btn");
-        btProject.getStyle().set("margin-top","25vh");
+        btProject.getStyle().set("margin-top","25vh");//guarantees the distance to the top
 
         btTags= new Button("Tags");
-        btTags.setWidth("100%");
+
         btTags.setClassName("main-layout_menue_btn");
 
         btAnnotate= new Button("Annotate");
-        btAnnotate.setWidth("100%");
         btAnnotate.setClassName("main-layout_menue_btn");
 
         btAnalyze = new Button("Analyze");
-        btAnalyze.setWidth("100%");
         btAnalyze.setClassName("main-layout_menue_btn");
-
-
-
-
-
 
         Div header = new Div(title,btloginLogout);
         header.addClassName("main-layout__header");
@@ -93,17 +89,11 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
         leftPanel.setClassName("main-layout__leftPanel");
         leftPanel.add(btProjects,btProject,btTags,btAnnotate,btAnalyze);
 
-
-
-        //leftPanel.setWidth("13%");
-        //leftPanel.getStyle().set("background-color"," #d5d8d2");
-
         mainContent.add(leftPanel);
 
-
         add(header);
-    }
 
+    }
     private void initTempDirectory() throws IOException {
         String tempDirProp = RepositoryPropertyKey.TempDir.getValue();
         File tempDir = new File(tempDirProp);
@@ -115,11 +105,12 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
 
     private void handleLoginLogoutEvent() {
 
-        String scheme = VaadinServletService.getCurrentServletRequest().getScheme();
+/*        String scheme = VaadinServletService.getCurrentServletRequest().getScheme();
         String serverName = VaadinServletService.getCurrentServletRequest().getServerName();
         Integer port = VaadinServletService.getCurrentServletRequest().getServerPort();
         String contextPath = VaadinService.getCurrentRequest().getContextPath();
-        ServletConfig cfg = VaadinServlet.getCurrent().getServletConfig();
+        ServletConfig cfg = VaadinServlet.getCurrent().getServletConfig();*/
+
         try {
             initProperties();
         } catch (ServletException e) {
@@ -146,8 +137,6 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
                     );
 
                     projectTilesView = new ProjectTilesView(projectManager);
-                  //  projectTilesView.getElement().getStyle().set("margin","0");
-
 
                    // projectManagerView = new ProjectManagerView(projectManager);
 
@@ -164,26 +153,21 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
             VaadinSession.getCurrent().close();
             close();
         }
-
     }
-
 
     public void initProperties() throws ServletException {
 
         try {
-            System.out.println("CATMA Properties initializing...");
 
             String propertiesFile ="catma_cb.properties";
 
             Properties properties = new Properties();
 
-             InputStream inputStream= FrameView.class.getClassLoader().getResourceAsStream(propertiesFile);
-             properties.load(inputStream);
+            InputStream inputStream= FrameView.class.getClassLoader().getResourceAsStream(propertiesFile);
+            properties.load(inputStream);
 
             RepositoryProperties.INSTANCE.setProperties(
                     new NonModifiableProperties(properties));
-
-            System.out.println("CATMA Properties initialized.");
         }
         catch (Exception e) {
             throw new ServletException(e);
@@ -192,7 +176,7 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
 
     public void close() {
         VaadinSession.getCurrent().setAttribute("USER", null);
-        if (projectManagerView != null) {
+        if (projectTilesView != null) {
           remove(mainContent);
             userManager.logout(this);
         }

@@ -17,7 +17,6 @@ import de.catma.v10ui.frame.FrameView;
 @Tag("projectMangerView")
 @ParentLayout(FrameView.class)
 public class ProjectManagerView extends Composite<Div> {
-    private  H3 titleField = new H3();
     ProjectManager projectManager;
     Grid<ProjectReference> projectGrid;
 
