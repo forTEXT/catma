@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -75,13 +77,19 @@ public class GitProjectHandler {
 					remoteGitServerManager.getPassword()
 			);
 
+			localGitRepoManager.detach(); 
+			
+			gitTagsetHandler.checkout(
+				projectId, tagsetId, ILocalGitRepositoryManager.DEFAULT_LOCAL_DEV_BRANCH, true);
+
 			return tagsetRevisionHash;
 		}
 	}
 	
 	public String createOrUpdateTag(String tagsetId, TagDefinition tagDefinition) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+			GitTagsetHandler gitTagsetHandler = 
+				new GitTagsetHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			String tagsetRevision = 
 				gitTagsetHandler.createOrUpdateTagDefinition(projectId, tagsetId, tagDefinition);
@@ -234,8 +242,40 @@ public class GitProjectHandler {
 			localRepoManager.open(
 				projectId,
 				GitProjectManager.getProjectRootRepositoryName(projectId));
+			return localRepoManager.getRevisionHash();
+		}
+	}
+	
+	public String publishChanges() throws Exception {
+		
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			localRepoManager.open(
+				projectId,
+				GitProjectManager.getProjectRootRepositoryName(projectId));
+				
+			// get involved tagsets
+			// check for modifications
+			// fetch/merge master / merge dev into master
+			// push master
+			// rebase dev to master
 			
-			return localRepoManager.getRootRevisionHash();
+			// get involved collections
+			// check for modifications
+			// fetch/merge master / merge dev into master
+			// push master
+			// rebase dev to master
+
+			
+			// how to set root project submodule checksums correctly ?
+			// checkout submodules on commit hashes of master HEAD 
+			// add and commit changes
+			
+			//System.out.println(localRepoManager.getRevisionHash("tagsets/CATMA_6CF585DD-6D52-4571-B245-F94F2BC6789A"));
+
+			
+		
+		
+			return null;
 		}
 	}
 
@@ -262,7 +302,9 @@ public class GitProjectHandler {
 						 Paths.get(localRepoManager.getRepositoryWorkTree().toURI())
 						 .resolve(SOURCE_DOCUMENT_SUBMODULES_DIRECTORY_NAME);
 				 localRepoManager.detach();
-				 
+				 if (!sourceDirPath.toFile().exists()) {
+					 return Stream.empty();
+				 }
 				 return Files
 					 .walk(sourceDirPath, 1)
 					 .filter(sourceDocPath -> !sourceDocPath.equals(sourceDirPath))
@@ -296,6 +338,10 @@ public class GitProjectHandler {
 						 .resolve(MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME);
 				 localRepoManager.detach();
 				 
+				 if (!collectionDirPath.toFile().exists()) {
+					 return Stream.empty();
+				 }
+
 				 return Files
 					 .walk(collectionDirPath, 1)
 					 .filter(collectionPath -> !collectionDirPath.equals(collectionPath))
@@ -327,11 +373,34 @@ public class GitProjectHandler {
 		}		
 	}
 
-	public void delete(String collectionId, String deletedTagInstanceId) throws IOException {
+	public String removeTagInstances(
+		String collectionId, Collection<String> deletedTagInstanceIds, String commmitMsg) throws IOException {
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
 					localRepoManager, this.remoteGitServerManager);
-			gitMarkupCollectionHandler.deleteTagInstance(projectId, collectionId, deletedTagInstanceId);
+			gitMarkupCollectionHandler.removeTagInstances(projectId, collectionId, deletedTagInstanceIds);
+			return gitMarkupCollectionHandler.commit(projectId, collectionId, commmitMsg);
 		}	
 	}
+
+	public void removeTagInstance(
+		String collectionId, String deletedTagInstanceId) throws IOException {
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
+					localRepoManager, this.remoteGitServerManager);
+			gitMarkupCollectionHandler.removeTagInstances(projectId, collectionId, Collections.singleton(deletedTagInstanceId));
+		}	
+	}
+	
+	public String commitProject(String msg, boolean all) throws IOException{
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+
+			// open the project root repo
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+			
+			return localGitRepoManager.commit(msg, remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail(), all);
+		}
+	}
+
 }

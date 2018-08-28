@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -25,7 +26,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import de.catma.document.repository.RepositoryPropertyKey;
-import de.catma.repository.git.exceptions.GitTagsetHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.GitLabServerManagerTest;
@@ -178,7 +178,7 @@ public class GitTagsetHandlerTest {
 		try (ILocalGitRepositoryManager jGitRepoManager = new JGitRepoManager(this.catmaProperties.getProperty(RepositoryPropertyKey.GitBasedRepositoryBasePath.name()), this.catmaUser)) {
 			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(jGitRepoManager, this.gitLabServerManager);
 
-			thrown.expect(GitTagsetHandlerException.class);
+			thrown.expect(IOException.class);
 			thrown.expectMessage("Not implemented");
 			gitTagsetHandler.delete("fakeProjectId", "fakeTagsetId");
 		}

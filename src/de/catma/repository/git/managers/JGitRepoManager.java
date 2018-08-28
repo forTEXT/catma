@@ -23,6 +23,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
+import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
@@ -278,16 +279,33 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 				.replace("gitdir:", "")
 				.trim()).normalize().toFile();
 		}
-		
 		this.gitApi = Git.open(gitDir);
 	}
 
 	@Override
-	public String getRootRevisionHash() throws Exception {
+	public String getRevisionHash() throws Exception {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't determine root revision hash on a detached instance");
 		}
 		ObjectId headRevision = this.gitApi.getRepository().resolve(Constants.HEAD);
+		if (headRevision == null) {
+			return "no_commits_yet";
+		}
+		else {
+			return headRevision.getName();
+		}
+	}
+	
+	@Override
+	public String getRevisionHash(String submodule) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't determine root revision hash on a detached instance");
+		}
+		
+		ObjectId headRevision = 
+			SubmoduleWalk
+			.getSubmoduleRepository(this.gitApi.getRepository(), submodule)
+			.resolve(Constants.HEAD);
 		if (headRevision == null) {
 			return "no_commits_yet";
 		}
@@ -326,7 +344,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			throw new IOException(e);
 		}
 	}
-	
+
 	@Override
 	public void remove(File targetFile) throws IOException {
 		if (!isAttached()) {
@@ -334,9 +352,12 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 
 		try {
-			if (!targetFile.delete()) {
+			if (targetFile.isDirectory()) {
+				FileUtils.deleteDirectory(targetFile);
+			}
+			else if (!targetFile.delete()) {
 				throw new IOException(String.format(
-						"could not remove TagDefinition %s", 
+						"could not remove %s", 
 						targetFile.toString()));
 			}
 
@@ -397,18 +418,28 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	@Override
 	public String commit(String message, String committerName, String committerEmail)
 			throws IOException {
+		return this.commit(message, committerName, committerEmail, false);
+	}
+
+	@Override
+	public String commit(String message, String committerName, String committerEmail, boolean all) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `commit` on a detached instance");
 		}
 
 		try {
-			return this.gitApi.commit().setMessage(message).setCommitter(committerName, committerEmail).call().getName();
+			return this.gitApi
+				.commit()
+				.setMessage(message)
+				.setCommitter(committerName, committerEmail)
+				.setAll(all)
+				.call()
+				.getName();
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Failed to commit", e);
 		}
 	}
-
 	/**
 	 * Adds a new submodule to the attached Git repository.
 	 *
@@ -520,12 +551,25 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 */
 	@Override
 	public void checkout(String name) throws IOException {
+		this.checkout(name, false);
+	}
+	
+	/**
+	 * Checks out a branch or commit identified by <code>name</code>.
+	 *
+	 * @param name the name of the branch or commit to check out
+	 * @param createBranch equals to -b CLI option
+	 * @throws IOException if the checkout operation failed
+	 */
+	@Override
+	public void checkout(String name, boolean createBranch) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `checkout` on a detached instance");
 		}
 
 		try {
 			CheckoutCommand checkoutCommand = this.gitApi.checkout();
+			checkoutCommand.setCreateBranch(createBranch);
 			checkoutCommand.setName(name).call();
 		}
 		catch (GitAPIException e) {
@@ -572,4 +616,5 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			this.gitApi = null;
 		}
 	}
+
 }

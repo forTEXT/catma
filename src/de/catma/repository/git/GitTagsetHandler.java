@@ -14,7 +14,6 @@ import javax.annotation.Nullable;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import de.catma.repository.git.exceptions.GitTagsetHandlerException;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
@@ -50,7 +49,7 @@ public class GitTagsetHandler {
 	 * @param name the name of the new tagset
 	 * @param description the description of the new tagset
 	 * @return the new revisionhash
-	 * @throws GitTagsetHandlerException if an error occurs while creating the tagset
+	 * @throws IOException if an error occurs while creating the tagset
 	 */
 	public String create(@Nonnull String projectId,
 						 @Nullable String tagsetId,
@@ -80,17 +79,19 @@ public class GitTagsetHandler {
 			GitTagsetHeader header = new GitTagsetHeader(name, description);
 			String serializedHeader = new SerializationHelper<GitTagsetHeader>().serialize(header);
 
-			return localGitRepoManager.addAndCommit(
+			String revisionHash = localGitRepoManager.addAndCommit(
 					targetHeaderFile,
 					serializedHeader.getBytes(StandardCharsets.UTF_8),
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail()
 			);
+			
+			return revisionHash;
 		}
 	}
 
-	public void delete(@Nonnull String projectId, @Nonnull String tagsetId) throws GitTagsetHandlerException {
-		throw new GitTagsetHandlerException("Not implemented");
+	public void delete(@Nonnull String projectId, @Nonnull String tagsetId) throws IOException {
+		throw new UnsupportedOperationException("Not implemented");
 	}
 
 	private ArrayList<TagDefinition> openTagDefinitions(File parentDirectory) throws IOException {
@@ -123,6 +124,19 @@ public class GitTagsetHandler {
 		return tagDefinitions;
 	}
 
+	public void checkout(String projectId, String tagsetId, String branch, boolean createBranch) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			String tagsetGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + tagsetId;
+			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
+
+			localGitRepoManager.checkout(branch, createBranch);
+		}		
+	}
+	
 	public TagsetDefinition open(@Nonnull String projectId, @Nonnull String tagsetId) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
@@ -167,37 +181,30 @@ public class GitTagsetHandler {
 	 * @param tagsetId the ID of the tagset within which to create the tag definition
 	 * @param tagDefinition a {@link TagDefinition} object
 	 * @return the tagset definition UUID
-	 * @throws GitTagsetHandlerException if an error occurs while creating the tag definition
+	 * @throws IOException if an error occurs while creating the tag definition
 	 */
-	public String createOrUpdateTagDefinition(@Nonnull String projectId,
-									  @Nonnull String tagsetId,
-									  @Nonnull TagDefinition tagDefinition
+	public String createOrUpdateTagDefinition(
+			String projectId,
+			String tagsetId,
+			TagDefinition tagDefinition
 	) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 
-			String targetPropertyDefinitionsFileRelativePath = String.format(
-					"%s%s/%s",
-					StringUtils.isEmpty(tagDefinition.getParentUuid()) ? "" : String.format(
-							"%s/", tagDefinition.getParentUuid()
-					),
-					tagDefinition.getUuid(),
-					"propertydefs.json"
-			);
+			String targetPropertyDefinitionsFileRelativePath =
+				(StringUtils.isEmpty(tagDefinition.getParentUuid()) ? "" : (tagDefinition.getParentUuid() + "/"))
+				+ tagDefinition.getUuid()
+				+ "/propertydefs.json";
 
-			String tagsetGitRepositoryName = String.format(
-					"%s/%s/%s",
-					projectRootRepositoryName,
-					GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
-					tagsetId);
+			String tagsetGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + tagsetId;
 			
-			localGitRepoManager.open(
-					projectId, tagsetGitRepositoryName);
+			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
 
 			File targetPropertyDefinitionsFileAbsolutePath = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
-					GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
-					tagsetId,
 					targetPropertyDefinitionsFileRelativePath
 			).toFile();
 
@@ -220,20 +227,20 @@ public class GitTagsetHandler {
 		
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
-			localGitRepoManager.open(projectId, projectRootRepositoryName);
+			
+			String tagsetGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + tagsetId;
 
-			String targetTagDefinitionsFolderRelativePath = String.format(
-					"%s%s/%s",
-					StringUtils.isEmpty(tagDefinition.getParentUuid()) ? "" : String.format(
-							"%s/", tagDefinition.getParentUuid()
-					),
-					tagDefinition.getUuid()
-			);
+			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
+
+			String targetTagDefinitionsFolderRelativePath = 
+				(StringUtils.isEmpty(tagDefinition.getParentUuid()) ? "" : (tagDefinition.getParentUuid()+"/"))
+				+ tagDefinition.getUuid();
 
 			File targetTagDefinitionsFolderAbsolutePath = Paths.get(
 					localGitRepoManager.getRepositoryWorkTree().toString(),
-					GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME,
-					tagsetId,
 					targetTagDefinitionsFolderRelativePath
 			).toFile();
 

@@ -377,6 +377,8 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 
 	@Override
 	public void close() {
-		project.close();
+		if (project != null) {
+			project.close();
+		}
 	}
 }

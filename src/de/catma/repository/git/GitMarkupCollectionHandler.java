@@ -8,7 +8,9 @@ import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -188,18 +190,18 @@ public class GitMarkupCollectionHandler {
 		// TODO: check that the markup collection references the tagset for the tag instance being added
 		// TODO: check that the tag instance is for the correct document
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			// open the project root repo
-			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			
+			String collectionGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + markupCollectionId;
 
+			localGitRepoManager.open(projectId, collectionGitRepositoryName);
 			// write the serialized tag instance to the markup collection submodule
 			File targetTagInstanceFilePath = new File(
 				localGitRepoManager.getRepositoryWorkTree(),
-				String.format(
-						"%s/%s/annotations/%s.json",
-						GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
-						markupCollectionId,
-						annotation.getTagInstanceUuid()
-				)
+				"annotations/" + annotation.getTagInstanceUuid() + ".json"
 			);
 			String serializedTagInstance = new SerializationHelper<JsonLdWebAnnotation>().serialize(annotation);
 
@@ -355,27 +357,47 @@ public class GitMarkupCollectionHandler {
 			return userMarkupCollection;
 		}
 	}
-
-	public void deleteTagInstance(String projectId, String collectionId, String deletedTagInstanceId) throws IOException {
-		// TODO: check that the tag instance is for the correct document
+	
+	public String commit(String projectId, String collectionId, String message) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
-			// open the project root repo
-			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
-
-			// write the serialized tag instance to the markup collection submodule
-			File targetTagInstanceFilePath = new File(
-				localGitRepoManager.getRepositoryWorkTree(),
-				String.format(
-						"%s/%s/annotations/%s.json",
-						GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME,
-						collectionId,
-						deletedTagInstanceId
-				)
-			);
-			if (!targetTagInstanceFilePath.delete()) {
-				throw new IOException(String.format("Could not delete annotation %s", targetTagInstanceFilePath.toString()));
-			}
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
 			
+			String collectionGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + collectionId;
+
+			localGitRepoManager.open(projectId, collectionGitRepositoryName);
+
+			return localGitRepoManager.commit(
+					message,
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail());
+		}
+	}
+
+	public void removeTagInstances(String projectId, String collectionId, Collection<String> deletedTagInstanceIds) throws IOException {
+
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			
+			String collectionGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + collectionId;
+
+			localGitRepoManager.open(projectId, collectionGitRepositoryName);
+			
+			for (String deletedTagInstanceId : deletedTagInstanceIds) {
+				// remove TagInstance file
+				File targetTagInstanceFilePath = Paths.get(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					"annotations",
+					deletedTagInstanceId+".json"
+				).toFile();
+
+				localGitRepoManager.remove(targetTagInstanceFilePath);
+			}				
 			// not doing Git add/commit
 		}
 	}

@@ -54,7 +54,9 @@ import org.quartz.TriggerBuilder;
 import org.quartz.impl.SchedulerRepository;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 import de.catma.document.Range;
 import de.catma.document.source.ContentInfoSet;
@@ -1158,5 +1160,123 @@ public class GraphProjectHandler {
 				}
 			}
 		});
+	}
+
+	public Multimap<String, String> getAnnotationIdsByCollectionId(
+			String rootRevisionHash, TagDefinition tagDefinition) throws Exception {
+		final Multimap<String, String> annotationIdsByCollectionId = 
+				HashMultimap.create();
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				StatementResult statementResult = session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+					+ "(:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
+					+ "(c:"+nt(MarkupCollection)+")-[:"+rt(hasInstance)+"]->"
+					+ "(i:"+nt(TagInstance)+")"
+					+ "<-[:"+rt(hasInstance)+"]-"+"(:"+nt(Tag)+"{tagId:{pTagId}})"
+					+ "RETURN c.collectionId, i.tagInstanceId "
+					,
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pTagId", tagDefinition.getUuid()
+					)
+				);
+				
+				while (statementResult.hasNext()) {
+					Record record = statementResult.next();
+					String collectionId = record.get("c.collectionId").asString();
+					String tagInstanceId = record.get("i.tagInstanceId").asString();
+					annotationIdsByCollectionId.put(collectionId, tagInstanceId);
+				}
+		
+			}
+		});
+		return annotationIdsByCollectionId;
+	}
+
+	public void removeTagInstances(
+			String rootRevisionHash, String collectionId, Collection<String> tagInstanceIds, 
+			String collectionRevisionHash) throws Exception{
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+					+ "(:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
+					+ "(c:"+nt(MarkupCollection)+"{collectionId:{pCollectionId}})-[:"+rt(hasInstance)+"]->"
+					+ "(i:"+nt(TagInstance)+") "
+					+ "WHERE i.tagInstanceId IN {pTagInstanceIds} "
+					+ "OPTIONAL MATCH (i)-[:"+rt(hasProperty)+"]->"
+					+ "(ap:"+nt(AnnotationProperty)+") "
+					+ "SET c.revisionHash = {pCollectionRevisionHash} "
+					+ "DETACH DELETE i, ap"
+					,
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pCollectionId", collectionId,
+						"pTagInstanceIds", tagInstanceIds,
+						"pCollectionRevisionHash", collectionRevisionHash
+					)
+				);
+		
+			}
+		});
+		
+	}
+
+	public void removeTagDefinition(String rootRevisionHash, TagDefinition tagDefinition,
+			TagsetDefinition tagsetDefinition) throws Exception {
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}})-[:"+rt(hasTag)+"]->"
+					+"(t:"+nt(Tag)+"{tagId:{pTagId}}) "
+					+"OPTIONAL MATCH (t)-[:"+rt(hasProperty)+"]->(p:"+nt(Property)+") "
+					+"SET ts.revisionHash = {pTagsetRevisionHash} "
+					+"DETACH DELETE t, p ",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pTagsetId", tagsetDefinition.getUuid(),
+						"pTagId", tagDefinition.getUuid(),
+						"pTagsetRevisionHash", tagsetDefinition.getRevisionHash()
+					)
+				);
+			}
+		});			
+	}
+
+	public void updateProjectRevisionHash(String oldRootRevisionHash, String rootRevisionHash) throws Exception {
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}}) "
+					+"SET pr.revisionHash = {pRootRevisionHash} ",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pOldRootRevisionHash", oldRootRevisionHash,
+						"pRootRevisionHash", rootRevisionHash
+					)
+				);
+			}
+		});				
 	}
 }
