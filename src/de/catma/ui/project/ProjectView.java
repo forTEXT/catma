@@ -55,6 +55,7 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 	private Button btOpenCollections;
 	private Button btCreateCollections;
 	private TagsetTree tagsetTree;
+	private Button btCommitCollection;
 
 	public ProjectView(
 			ProjectManager projectManager, ProjectReference projectReference) {
@@ -281,6 +282,17 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 						"name");
 			}
 		});
+		
+		btCommitCollection.addClickListener(event -> {
+			for (UserMarkupCollectionReference ref : collectionGrid.getSelectedItems()) {
+				try {
+					project.addAndCommitChanges(ref);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
 	}
 
 	private void createCollections(Set<SourceDocument> selectedSourceDocs, String namePattern) {
@@ -356,6 +368,9 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 		
 		btCreateCollections = new Button("Create Annotation Collections");
 		collectionButtonPanel.addComponent(btCreateCollections);
+		
+		btCommitCollection = new Button("Add and commit all changes");
+		collectionButtonPanel.addComponent(btCommitCollection);
 		
 		tagsetTree = new TagsetTree(project.getTagManager(), null);
 		tagsetTree.setSizeFull();

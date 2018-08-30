@@ -48,7 +48,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 	String clone(String group, String uri, File path, String username, String password, boolean initSubmodules)
 			throws IOException;
 
-	String getRevisionHash() throws Exception;
+	String getRevisionHash() throws IOException;
 
 	void remove(File targetFile) throws IOException;
 
@@ -57,5 +57,9 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 	String getRevisionHash(String submodule) throws IOException;
 
 	String commit(String message, String committerName, String committerEmail, boolean all) throws IOException;
+
+	boolean hasUncommitedChanges() throws IOException;
+
+	String addAllAndCommit(String commitMsg, String committerName, String committerEmail) throws IOException;
 
 }

@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -376,6 +375,49 @@ public class GitMarkupCollectionHandler {
 		}
 	}
 
+	public String removeTagInstancesAndCommit(
+		String projectId, String collectionId, Collection<String> deletedTagInstanceIds, String commitMsg) throws IOException {
+
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			
+			String collectionGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + collectionId;
+
+			localGitRepoManager.open(projectId, collectionGitRepositoryName);
+			
+			removeTagInstances(localGitRepoManager, deletedTagInstanceIds);
+
+			if (localGitRepoManager.hasUncommitedChanges()) {
+				return localGitRepoManager.commit(
+						commitMsg,
+						remoteGitServerManager.getUsername(),
+						remoteGitServerManager.getEmail());
+
+			}
+			else {
+				return localGitRepoManager.getRevisionHash();
+			}
+
+		}
+	}
+	
+	private void removeTagInstances(
+			ILocalGitRepositoryManager localGitRepoManager, Collection<String> deletedTagInstanceIds) throws IOException {
+		for (String deletedTagInstanceId : deletedTagInstanceIds) {
+			// remove TagInstance file
+			File targetTagInstanceFilePath = Paths.get(
+				localGitRepoManager.getRepositoryWorkTree().toString(),
+				"annotations",
+				deletedTagInstanceId+".json"
+			).toFile();
+
+			localGitRepoManager.remove(targetTagInstanceFilePath);
+		}				
+	}
+
 	public void removeTagInstances(String projectId, String collectionId, Collection<String> deletedTagInstanceIds) throws IOException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
@@ -388,17 +430,28 @@ public class GitMarkupCollectionHandler {
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
 			
-			for (String deletedTagInstanceId : deletedTagInstanceIds) {
-				// remove TagInstance file
-				File targetTagInstanceFilePath = Paths.get(
-					localGitRepoManager.getRepositoryWorkTree().toString(),
-					"annotations",
-					deletedTagInstanceId+".json"
-				).toFile();
+			removeTagInstances(localGitRepoManager, deletedTagInstanceIds);
 
-				localGitRepoManager.remove(targetTagInstanceFilePath);
-			}				
 			// not doing Git add/commit
+		}
+	}
+
+	public String addAndCommitChanges(String projectId, String collectionId, String commitMsg) throws IOException {
+
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			
+			String collectionGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + collectionId;
+
+			localGitRepoManager.open(projectId, collectionGitRepositoryName);
+		
+			return localGitRepoManager.addAllAndCommit(
+					commitMsg, 					
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail());
 		}
 	}
 }

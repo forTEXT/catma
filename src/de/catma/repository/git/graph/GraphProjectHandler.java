@@ -1279,4 +1279,30 @@ public class GraphProjectHandler {
 			}
 		});				
 	}
+
+	public void updateCollectionRevisionHash(String rootRevisionHash, UserMarkupCollectionReference ref) throws Exception {
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+					+ "(:"+nt(SourceDocument)+")-[:"+rt(hasCollection)+"]->"
+					+ "(c:"+nt(MarkupCollection)+"{collectionId:{pCollectionId}}) "
+					+ "SET c.revisionHash = {pCollectionRevisionHash} "
+					,
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pCollectionId", ref.getId(),
+						"pCollectionRevisionHash", ref.getRevisionHash()
+					)
+				);
+		
+			}
+		});
+		
+	}
 }

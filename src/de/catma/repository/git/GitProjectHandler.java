@@ -374,12 +374,11 @@ public class GitProjectHandler {
 	}
 
 	public String removeTagInstances(
-		String collectionId, Collection<String> deletedTagInstanceIds, String commmitMsg) throws IOException {
+		String collectionId, Collection<String> deletedTagInstanceIds, String commitMsg) throws IOException {
 		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
 			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
 					localRepoManager, this.remoteGitServerManager);
-			gitMarkupCollectionHandler.removeTagInstances(projectId, collectionId, deletedTagInstanceIds);
-			return gitMarkupCollectionHandler.commit(projectId, collectionId, commmitMsg);
+			return gitMarkupCollectionHandler.removeTagInstancesAndCommit(projectId, collectionId, deletedTagInstanceIds, commitMsg);
 		}	
 	}
 
@@ -401,6 +400,20 @@ public class GitProjectHandler {
 			return localGitRepoManager.commit(msg, remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail(), all);
 		}
+	}
+
+	public String addAndCommitChanges(UserMarkupCollectionReference collectionRef) throws IOException {
+		
+		try (ILocalGitRepositoryManager localRepoManager = this.localGitRepositoryManager) {
+			GitMarkupCollectionHandler gitMarkupCollectionHandler = new GitMarkupCollectionHandler(
+					localRepoManager, this.remoteGitServerManager);
+			String revisionHash = gitMarkupCollectionHandler.addAndCommitChanges(projectId, collectionRef.getId(), "Annotations changed");
+			
+			collectionRef.setRevisionHash(revisionHash);
+			
+			return revisionHash;
+		}	
+		
 	}
 
 }

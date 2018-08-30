@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
@@ -15,9 +16,12 @@ import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PushCommand;
+import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.SubmoduleAddCommand;
 import org.eclipse.jgit.api.SubmoduleStatusCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
@@ -283,7 +287,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	}
 
 	@Override
-	public String getRevisionHash() throws Exception {
+	public String getRevisionHash() throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't determine root revision hash on a detached instance");
 		}
@@ -338,7 +342,10 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			Path absoluteFilePath = Paths.get(targetFile.getAbsolutePath());
 			Path relativeFilePath = basePath.relativize(absoluteFilePath);
 
-			this.gitApi.add().addFilepattern(relativeFilePath.toString()).call();
+			this.gitApi
+				.add()
+				.addFilepattern(FilenameUtils.separatorsToUnix(relativeFilePath.toString()))
+				.call();
 		}
 		catch (GitAPIException e) {
 			throw new IOException(e);
@@ -365,7 +372,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			Path absoluteFilePath = Paths.get(targetFile.getAbsolutePath());
 			Path relativeFilePath = basePath.relativize(absoluteFilePath);
 
-			this.gitApi.rm().addFilepattern(relativeFilePath.toString()).call();
+			this.gitApi.rm().addFilepattern(FilenameUtils.separatorsToUnix(relativeFilePath.toString())).call();
 		}
 		catch (GitAPIException e) {
 			throw new IOException(e);
@@ -428,6 +435,7 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 
 		try {
+			
 			return this.gitApi
 				.commit()
 				.setMessage(message)
@@ -606,6 +614,52 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Failed to get submodule status", e);
+		}
+	}
+	
+	@Override
+	public boolean hasUncommitedChanges() throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `status` on a detached instance");
+		}
+		
+		try {
+			return gitApi.status().call().hasUncommittedChanges();
+		} catch (GitAPIException e) {
+			throw new IOException("Failed to check for uncommited changes", e);
+		}
+	}
+	
+	@Override
+	public String addAllAndCommit(String message, String committerName, String committerEmail) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `addAllAndCommit` on a detached instance");
+		}
+
+		try {
+			gitApi.add().addFilepattern(".").call();
+			
+			List<DiffEntry> diffEntries = gitApi.diff().call();
+			if (!diffEntries.isEmpty()) {
+				RmCommand rmCmd = gitApi.rm();
+				for (DiffEntry entry : diffEntries) {
+					if (entry.getChangeType().equals(ChangeType.DELETE)) {
+						rmCmd.addFilepattern(entry.getOldPath());
+					}
+				}
+				
+				rmCmd.call();
+			}
+			
+			if (gitApi.status().call().hasUncommittedChanges()) {
+				return commit(message, committerName, committerEmail);
+			}
+			else {
+				return getRevisionHash();
+			}
+			
+		} catch (GitAPIException e) {
+			throw new IOException("Failed to add and commit changes", e);
 		}
 	}
 

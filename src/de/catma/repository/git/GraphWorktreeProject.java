@@ -912,4 +912,10 @@ public class GraphWorktreeProject implements IndexedRepository {
 			}
 		);
 	}
+	
+	@Override
+	public void addAndCommitChanges(UserMarkupCollectionReference ref) throws Exception {
+		gitProjectHandler.addAndCommitChanges(ref);
+		graphProjectHandler.updateCollectionRevisionHash(this.rootRevisionHash, ref);
+	}
 }
