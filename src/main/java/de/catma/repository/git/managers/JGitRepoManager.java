@@ -3,8 +3,10 @@ package de.catma.repository.git.managers;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
@@ -14,14 +16,18 @@ import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PushCommand;
+import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.SubmoduleAddCommand;
 import org.eclipse.jgit.api.SubmoduleStatusCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
+import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
@@ -270,15 +276,40 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			);
 		}
 
-		this.gitApi = Git.open(repositoryPath);
+		File gitDir = new File(repositoryPath, ".git");
+		if (gitDir.isFile()) {
+			gitDir = Paths.get(repositoryPath.toURI()).resolve(
+				FileUtils.readFileToString(gitDir, StandardCharsets.UTF_8)
+				.replace("gitdir:", "")
+				.trim()).normalize().toFile();
+		}
+		this.gitApi = Git.open(gitDir);
 	}
 
 	@Override
-	public String getRootRevisionHash() throws Exception {
+	public String getRevisionHash() throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't determine root revision hash on a detached instance");
 		}
 		ObjectId headRevision = this.gitApi.getRepository().resolve(Constants.HEAD);
+		if (headRevision == null) {
+			return "no_commits_yet";
+		}
+		else {
+			return headRevision.getName();
+		}
+	}
+	
+	@Override
+	public String getRevisionHash(String submodule) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't determine root revision hash on a detached instance");
+		}
+		
+		ObjectId headRevision = 
+			SubmoduleWalk
+			.getSubmoduleRepository(this.gitApi.getRepository(), submodule)
+			.resolve(Constants.HEAD);
 		if (headRevision == null) {
 			return "no_commits_yet";
 		}
@@ -311,11 +342,53 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			Path absoluteFilePath = Paths.get(targetFile.getAbsolutePath());
 			Path relativeFilePath = basePath.relativize(absoluteFilePath);
 
-			this.gitApi.add().addFilepattern(relativeFilePath.toString()).call();
+			this.gitApi
+				.add()
+				.addFilepattern(FilenameUtils.separatorsToUnix(relativeFilePath.toString()))
+				.call();
 		}
 		catch (GitAPIException e) {
-			throw new IOException("");
+			throw new IOException(e);
 		}
+	}
+
+	@Override
+	public void remove(File targetFile) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `remove` on a detached instance");
+		}
+
+		try {
+			if (targetFile.isDirectory()) {
+				FileUtils.deleteDirectory(targetFile);
+			}
+			else if (!targetFile.delete()) {
+				throw new IOException(String.format(
+						"could not remove %s", 
+						targetFile.toString()));
+			}
+
+			Path basePath = this.gitApi.getRepository().getWorkTree().toPath();
+			Path absoluteFilePath = Paths.get(targetFile.getAbsolutePath());
+			Path relativeFilePath = basePath.relativize(absoluteFilePath);
+
+			this.gitApi.rm().addFilepattern(FilenameUtils.separatorsToUnix(relativeFilePath.toString())).call();
+		}
+		catch (GitAPIException e) {
+			throw new IOException(e);
+		}
+	}
+	
+	@Override
+	public String removeAndCommit(File targetFile, String committerName, String committerEmail)
+			throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `removeAndCommit` on a detached instance");
+		}
+
+		this.remove(targetFile);
+		String commitMessage = String.format("Removing %s", targetFile.getName());
+		return this.commit(commitMessage, committerName, committerEmail);
 	}
 
 	/**
@@ -352,18 +425,29 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	@Override
 	public String commit(String message, String committerName, String committerEmail)
 			throws IOException {
+		return this.commit(message, committerName, committerEmail, false);
+	}
+
+	@Override
+	public String commit(String message, String committerName, String committerEmail, boolean all) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `commit` on a detached instance");
 		}
 
 		try {
-			return this.gitApi.commit().setMessage(message).setCommitter(committerName, committerEmail).call().getName();
+			
+			return this.gitApi
+				.commit()
+				.setMessage(message)
+				.setCommitter(committerName, committerEmail)
+				.setAll(all)
+				.call()
+				.getName();
 		}
 		catch (GitAPIException e) {
 			throw new IOException("Failed to commit", e);
 		}
 	}
-
 	/**
 	 * Adds a new submodule to the attached Git repository.
 	 *
@@ -475,12 +559,25 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 	 */
 	@Override
 	public void checkout(String name) throws IOException {
+		this.checkout(name, false);
+	}
+	
+	/**
+	 * Checks out a branch or commit identified by <code>name</code>.
+	 *
+	 * @param name the name of the branch or commit to check out
+	 * @param createBranch equals to -b CLI option
+	 * @throws IOException if the checkout operation failed
+	 */
+	@Override
+	public void checkout(String name, boolean createBranch) throws IOException {
 		if (!isAttached()) {
 			throw new IllegalStateException("Can't call `checkout` on a detached instance");
 		}
 
 		try {
 			CheckoutCommand checkoutCommand = this.gitApi.checkout();
+			checkoutCommand.setCreateBranch(createBranch);
 			checkoutCommand.setName(name).call();
 		}
 		catch (GitAPIException e) {
@@ -519,6 +616,52 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			throw new IOException("Failed to get submodule status", e);
 		}
 	}
+	
+	@Override
+	public boolean hasUncommitedChanges() throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `status` on a detached instance");
+		}
+		
+		try {
+			return gitApi.status().call().hasUncommittedChanges();
+		} catch (GitAPIException e) {
+			throw new IOException("Failed to check for uncommited changes", e);
+		}
+	}
+	
+	@Override
+	public String addAllAndCommit(String message, String committerName, String committerEmail) throws IOException {
+		if (!isAttached()) {
+			throw new IllegalStateException("Can't call `addAllAndCommit` on a detached instance");
+		}
+
+		try {
+			gitApi.add().addFilepattern(".").call();
+			
+			List<DiffEntry> diffEntries = gitApi.diff().call();
+			if (!diffEntries.isEmpty()) {
+				RmCommand rmCmd = gitApi.rm();
+				for (DiffEntry entry : diffEntries) {
+					if (entry.getChangeType().equals(ChangeType.DELETE)) {
+						rmCmd.addFilepattern(entry.getOldPath());
+					}
+				}
+				
+				rmCmd.call();
+			}
+			
+			if (gitApi.status().call().hasUncommittedChanges()) {
+				return commit(message, committerName, committerEmail);
+			}
+			else {
+				return getRevisionHash();
+			}
+			
+		} catch (GitAPIException e) {
+			throw new IOException("Failed to add and commit changes", e);
+		}
+	}
 
 	@Override // AutoCloseable
 	public void close() {
@@ -527,4 +670,5 @@ public class JGitRepoManager implements ILocalGitRepositoryManager, AutoCloseabl
 			this.gitApi = null;
 		}
 	}
+
 }

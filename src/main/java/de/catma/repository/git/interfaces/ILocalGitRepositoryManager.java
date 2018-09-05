@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 
 public interface ILocalGitRepositoryManager extends AutoCloseable {
+	static String DEFAULT_LOCAL_DEV_BRANCH = "dev";
+	
 	boolean isAttached();
 
 	void detach();
@@ -34,6 +36,7 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 	void fetch(String username, String password) throws IOException;
 
 	void checkout(String name) throws IOException;
+	void checkout(String name, boolean createBranch) throws IOException;
 
 	String getSubmoduleHeadRevisionHash(String submoduleName) throws IOException;
 
@@ -45,5 +48,18 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 	String clone(String group, String uri, File path, String username, String password, boolean initSubmodules)
 			throws IOException;
 
-	String getRootRevisionHash() throws Exception;
+	String getRevisionHash() throws IOException;
+
+	void remove(File targetFile) throws IOException;
+
+	String removeAndCommit(File targetFile, String committerName, String committerEmail) throws IOException;
+
+	String getRevisionHash(String submodule) throws IOException;
+
+	String commit(String message, String committerName, String committerEmail, boolean all) throws IOException;
+
+	boolean hasUncommitedChanges() throws IOException;
+
+	String addAllAndCommit(String commitMsg, String committerName, String committerEmail) throws IOException;
+
 }

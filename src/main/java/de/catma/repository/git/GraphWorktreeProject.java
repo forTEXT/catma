@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.Multimap;
 
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.AccessMode;
@@ -227,10 +230,10 @@ public class GraphWorktreeProject implements IndexedRepository {
 					}
 					else if (evt.getNewValue() == null) {
 						@SuppressWarnings("unchecked")
-						final Pair<TagDefinition, TagsetDefinition> args = 
-							(Pair<TagDefinition, TagsetDefinition>)evt.getNewValue();
-						TagDefinition tagDefinition = (TagDefinition)args.getFirst();
-						TagsetDefinition tagsetDefinition = args.getSecond();
+						final Pair<TagsetDefinition, TagDefinition> args = 
+							(Pair<TagsetDefinition, TagDefinition>)evt.getOldValue();
+						TagsetDefinition tagsetDefinition = args.getFirst();
+						TagDefinition tagDefinition = args.getSecond();
 						removeTagDefinition(tagDefinition, tagsetDefinition);
 					}
 					else {
@@ -352,15 +355,36 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 	
 	private void removeTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
-		String tagsetRevision = gitProjectHandler.createOrUpdateTag(tagsetDefinition.getUuid(), tagDefinition);
-		tagsetDefinition.setRevisionHash(tagsetRevision);
-		
-		//TODO: update and commit annotations, commit project
 
+		Multimap<String, String> annotationIdsByCollectionId =
+			graphProjectHandler.getAnnotationIdsByCollectionId(this.rootRevisionHash, tagDefinition);
+		
+		for (String collectionId : annotationIdsByCollectionId.keySet()) {
+			String collectionRevisionHash = gitProjectHandler.removeTagInstances(
+				collectionId, annotationIdsByCollectionId.get(collectionId), 
+				String.format("Annotations removed, caused by the removal of Tag %1$s ", 
+						tagDefinition.toString()));
+			
+			graphProjectHandler.removeTagInstances(
+				this.rootRevisionHash, collectionId,
+				annotationIdsByCollectionId.get(collectionId), 
+				collectionRevisionHash);
+		}
+		
+		String tagsetRevision = gitProjectHandler.removeTag(tagsetDefinition.getUuid(), tagDefinition);
+		tagsetDefinition.setRevisionHash(tagsetRevision);
+
+		graphProjectHandler.removeTagDefinition(
+				rootRevisionHash, tagDefinition, tagsetDefinition);
+			
 		String oldRootRevisionHash = this.rootRevisionHash;
-		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
-		graphProjectHandler.updateTagDefinition(
-				rootRevisionHash, tagDefinition, tagsetDefinition, oldRootRevisionHash);
+		this.rootRevisionHash = 
+				gitProjectHandler.commitProject(String.format("Tag removed %1$s ", 
+						tagDefinition.toString()), true);
+		
+		graphProjectHandler.updateProjectRevisionHash(oldRootRevisionHash, this.rootRevisionHash);
+		
+		//TODO: hier gehts weiter write tagset journal
 	}
 	
 	private void addTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
@@ -388,7 +412,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	@Override
 	public void close() {
 		try {
-			synchTagInstancesToGit();
+//			synchTagInstancesToGit();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -561,6 +585,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		return null;
 	}
 
+	@Deprecated
 	@Override
 	public void share(SourceDocument sourceDocument, String userIdentification, AccessMode accessMode)
 			throws IOException {
@@ -690,8 +715,12 @@ public class GraphWorktreeProject implements IndexedRepository {
 	@Override
 	public void update(UserMarkupCollection userMarkupCollection, List<TagReference> tagReferences) {
 		try {
+			
+			//TODO: hier gehts weiter: wo wird der commit fuer annotationen gemacht
 			if (userMarkupCollection.getTagReferences().containsAll(
 					tagReferences)) {
+				gitProjectHandler.addOrUpdate(
+						userMarkupCollection.getUuid(), tagReferences);
 				graphProjectHandler.addTagReferences(
 						GraphWorktreeProject.this.rootRevisionHash, userMarkupCollection, tagReferences);
 				propertyChangeSupport.firePropertyChange(
@@ -702,6 +731,15 @@ public class GraphWorktreeProject implements IndexedRepository {
 				graphProjectHandler.removeTagReferences(
 					GraphWorktreeProject.this.rootRevisionHash, userMarkupCollection, tagReferences);
 
+				
+				for (String tagInstanceId : 
+						tagReferences
+						.stream()
+						.map(tr -> tr.getTagInstanceID())
+						.collect(Collectors.toSet())) {
+					gitProjectHandler.removeTagInstance(
+							userMarkupCollection.getUuid(), tagInstanceId);
+				}
 				propertyChangeSupport.firePropertyChange(
 						RepositoryChangeEvent.tagReferencesChanged.name(), 
 						tagReferences, null);
@@ -753,6 +791,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	}
 
+	@Deprecated
 	@Override
 	public void share(UserMarkupCollectionReference userMarkupCollectionRef, String userIdentification,
 			AccessMode accessMode) throws IOException {
@@ -803,6 +842,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	}
 
+	@Deprecated
 	@Override
 	public void share(TagLibraryReference tagLibraryReference, String userIdentification, AccessMode accessMode)
 			throws IOException {
@@ -864,7 +904,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 				
 				@Override
 				public void synch(String collectionId, String deletedTagInstanceId) throws Exception {
-					gitProjectHandler.delete(collectionId, deletedTagInstanceId);
+					gitProjectHandler.removeTagInstance(collectionId, deletedTagInstanceId);
 				}
 				
 				@Override
@@ -873,5 +913,11 @@ public class GraphWorktreeProject implements IndexedRepository {
 				}
 			}
 		);
+	}
+	
+	@Override
+	public void addAndCommitChanges(UserMarkupCollectionReference ref) throws Exception {
+		gitProjectHandler.addAndCommitChanges(ref);
+		graphProjectHandler.updateCollectionRevisionHash(this.rootRevisionHash, ref);
 	}
 }
