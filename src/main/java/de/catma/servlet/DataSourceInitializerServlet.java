@@ -1,9 +1,5 @@
 package de.catma.servlet;
 
-import java.io.File;
-import java.util.concurrent.TimeUnit;
-
-import javax.naming.InitialContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -11,10 +7,7 @@ import javax.servlet.http.HttpServlet;
 import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
-import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.schema.IndexDefinition;
 import org.neo4j.graphdb.schema.Schema;
 
@@ -23,9 +16,6 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.indexer.IndexBufferManagerName;
 import de.catma.indexer.graph.CatmaGraphDbName;
-import de.catma.indexer.graph.NodeType;
-import de.catma.indexer.graph.SourceDocumentProperty;
-import de.catma.indexer.graph.TermProperty;
 import de.catma.indexer.indexbuffer.IndexBufferManager;
 import de.catma.repository.db.CatmaDataSourceName;
 
@@ -38,7 +28,7 @@ public class DataSourceInitializerServlet extends HttpServlet {
         try {
 	        log("CATMA DB Datasource initializing...");
 	        
-	        InitialContext context = new InitialContext();
+	/*        InitialContext context = new InitialContext();
 	        
 			int repoIndex = 1; // assume that the first configured repo is the local db repo
 			String user = RepositoryPropertyKey.RepositoryUser.getIndexedValue(repoIndex);
@@ -59,7 +49,7 @@ public class DataSourceInitializerServlet extends HttpServlet {
 			context.bind(CatmaDataSourceName.CATMADS.name(), cpds);
 			
 			log("CATMA DB DataSource initialized.");
-			
+			*/
 			log("CATMA Graph DataSource initializing...");
 			
 			final Driver driver = GraphDatabase.driver(
