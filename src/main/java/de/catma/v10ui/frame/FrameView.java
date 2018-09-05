@@ -159,7 +159,7 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
 
         try {
 
-            String propertiesFile ="catma_cb.properties";
+            String propertiesFile ="catma_mp_al.properties";
 
             Properties properties = new Properties();
 
