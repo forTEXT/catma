@@ -28,6 +28,7 @@
       <excludeFolder url="file://$MODULE_DIR$/oldcode" />
       <excludeFolder url="file://$MODULE_DIR$/src/de/catma/queryengine/computation_old" />
       <excludeFolder url="file://$MODULE_DIR$/src/de/catma/ui" />
+      <excludeFolder url="file://$MODULE_DIR$/src/main/java/de/catma/ui" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludePattern pattern=".classpath" />
       <excludePattern pattern=".project" />

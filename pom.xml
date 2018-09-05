@@ -301,9 +301,16 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>de/catma/ui/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
-
-        <sourceDirectory>src/main/java/</sourceDirectory>
     </build>
 
     <profiles>
