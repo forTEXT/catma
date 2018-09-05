@@ -103,8 +103,8 @@ public class GitMarkupCollectionHandler {
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail()
 			);
-			
-			
+
+
 		}
 
 	}
@@ -190,17 +190,17 @@ public class GitMarkupCollectionHandler {
 		// TODO: check that the tag instance is for the correct document
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
-			
-			String collectionGitRepositoryName = 
-					projectRootRepositoryName 
-					+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME 
-					+ "/" + markupCollectionId;
+
+			String collectionGitRepositoryName =
+					projectRootRepositoryName
+							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + markupCollectionId;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
 			// write the serialized tag instance to the markup collection submodule
 			File targetTagInstanceFilePath = new File(
-				localGitRepoManager.getRepositoryWorkTree(),
-				"annotations/" + annotation.getTagInstanceUuid() + ".json"
+					localGitRepoManager.getRepositoryWorkTree(),
+					"annotations/" + annotation.getTagInstanceUuid() + ".json"
 			);
 			String serializedTagInstance = new SerializationHelper<JsonLdWebAnnotation>().serialize(annotation);
 
@@ -245,16 +245,16 @@ public class GitMarkupCollectionHandler {
 						.deserialize(serialized, JsonLdWebAnnotation.class);
 
 				tagReferences.addAll(
-					jsonLdWebAnnotation.toTagReferenceList(
-						projectId, markupCollectionId, this.localGitRepositoryManager, this.remoteGitServerManager
-					)
+						jsonLdWebAnnotation.toTagReferenceList(
+								projectId, markupCollectionId, this.localGitRepositoryManager, this.remoteGitServerManager
+						)
 				);
 			}
 		}
 
 		return tagReferences;
 	}
-	
+
 	public UserMarkupCollectionReference getUserMarkupCollectionReference(String projectId, String markupCollectionId) throws Exception {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
@@ -295,8 +295,8 @@ public class GitMarkupCollectionHandler {
 			);
 
 			return  new UserMarkupCollectionReference(
-				markupCollectionId, markupCollectionRevisionHash, 
-				contentInfoSet, markupCollectionHeader.getSourceDocumentId(), "TODO"); //TODO
+					markupCollectionId, markupCollectionRevisionHash,
+					contentInfoSet, markupCollectionHeader.getSourceDocumentId(), "TODO"); //TODO
 		}
 
 	}
@@ -356,15 +356,15 @@ public class GitMarkupCollectionHandler {
 			return userMarkupCollection;
 		}
 	}
-	
+
 	public String commit(String projectId, String collectionId, String message) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
-			
-			String collectionGitRepositoryName = 
-					projectRootRepositoryName 
-					+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME 
-					+ "/" + collectionId;
+
+			String collectionGitRepositoryName =
+					projectRootRepositoryName
+							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + collectionId;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
 
@@ -376,18 +376,18 @@ public class GitMarkupCollectionHandler {
 	}
 
 	public String removeTagInstancesAndCommit(
-		String projectId, String collectionId, Collection<String> deletedTagInstanceIds, String commitMsg) throws IOException {
+			String projectId, String collectionId, Collection<String> deletedTagInstanceIds, String commitMsg) throws IOException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
-			
-			String collectionGitRepositoryName = 
-					projectRootRepositoryName 
-					+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME 
-					+ "/" + collectionId;
+
+			String collectionGitRepositoryName =
+					projectRootRepositoryName
+							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + collectionId;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
-			
+
 			removeTagInstances(localGitRepoManager, deletedTagInstanceIds);
 
 			if (localGitRepoManager.hasUncommitedChanges()) {
@@ -403,33 +403,33 @@ public class GitMarkupCollectionHandler {
 
 		}
 	}
-	
+
 	private void removeTagInstances(
 			ILocalGitRepositoryManager localGitRepoManager, Collection<String> deletedTagInstanceIds) throws IOException {
 		for (String deletedTagInstanceId : deletedTagInstanceIds) {
 			// remove TagInstance file
 			File targetTagInstanceFilePath = Paths.get(
-				localGitRepoManager.getRepositoryWorkTree().toString(),
-				"annotations",
-				deletedTagInstanceId+".json"
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					"annotations",
+					deletedTagInstanceId+".json"
 			).toFile();
 
 			localGitRepoManager.remove(targetTagInstanceFilePath);
-		}				
+		}
 	}
 
 	public void removeTagInstances(String projectId, String collectionId, Collection<String> deletedTagInstanceIds) throws IOException {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
-			
-			String collectionGitRepositoryName = 
-					projectRootRepositoryName 
-					+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME 
-					+ "/" + collectionId;
+
+			String collectionGitRepositoryName =
+					projectRootRepositoryName
+							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + collectionId;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
-			
+
 			removeTagInstances(localGitRepoManager, deletedTagInstanceIds);
 
 			// not doing Git add/commit
@@ -440,16 +440,16 @@ public class GitMarkupCollectionHandler {
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
-			
-			String collectionGitRepositoryName = 
-					projectRootRepositoryName 
-					+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME 
-					+ "/" + collectionId;
+
+			String collectionGitRepositoryName =
+					projectRootRepositoryName
+							+ "/" + GitProjectHandler.MARKUP_COLLECTION_SUBMODULES_DIRECTORY_NAME
+							+ "/" + collectionId;
 
 			localGitRepoManager.open(projectId, collectionGitRepositoryName);
-		
+
 			return localGitRepoManager.addAllAndCommit(
-					commitMsg, 					
+					commitMsg,
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail());
 		}

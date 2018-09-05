@@ -1199,7 +1199,7 @@ public class DBRepository implements IndexedRepository {
 			throws Exception {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	@Override
 	public void addAndCommitChanges(UserMarkupCollectionReference ref) {
 		throw new UnsupportedOperationException();
