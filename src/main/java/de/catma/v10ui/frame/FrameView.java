@@ -111,11 +111,6 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
         String contextPath = VaadinService.getCurrentRequest().getContextPath();
         ServletConfig cfg = VaadinServlet.getCurrent().getServletConfig();*/
 
-        try {
-            initProperties();
-        } catch (ServletException e) {
-            e.printStackTrace();
-        }
         if (this.user == null) {
 
             AuthenticationHandler authenticationHandler =
@@ -152,25 +147,6 @@ public class FrameView extends Div implements RouterLayout, PageConfigurator,Log
 
             VaadinSession.getCurrent().close();
             close();
-        }
-    }
-
-    public void initProperties() throws ServletException {
-
-        try {
-
-            String propertiesFile ="catma_mp_al.properties";
-
-            Properties properties = new Properties();
-
-            InputStream inputStream= FrameView.class.getClassLoader().getResourceAsStream(propertiesFile);
-            properties.load(inputStream);
-
-            RepositoryProperties.INSTANCE.setProperties(
-                    new NonModifiableProperties(properties));
-        }
-        catch (Exception e) {
-            throw new ServletException(e);
         }
     }
 

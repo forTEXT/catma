@@ -15,14 +15,9 @@ public class AuthenticationHandler {
 
 
     public void authenticate(AuthenticationListener authenticationListener) {
-/*        String user =
-                ((ParameterProvider)UI.getCurrent()).getParameter(
-                        Parameter.USER_IDENTIFIER);*/
-        String user = "christian";
 
-        if (user == null) {
-            user = System.getProperty("user.name"); //$NON-NLS-1$
-        }
+        String user = System.getProperty("user.name"); //$NON-NLS-1$
+
         Map<String,String> userIdentification =
                 new HashMap<String, String>();
         userIdentification.put(
