@@ -73,7 +73,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module" module-name="catma-core" />
     <orderEntry type="library" name="Maven: com.vaadin:vaadin-core:10.0.1" level="project" />
     <orderEntry type="library" name="Maven: com.vaadin:flow-server:1.0.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.gwt:gwt-elemental:2.8.2" level="project" />
