@@ -521,6 +521,7 @@ public class GraphProjectHandler {
 		if (tagDefinition.getPropertyDefinition(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()) == null) {
 			PropertyDefinition authorPropertyDefinition = 
 					new PropertyDefinition(
+						idGenerator.generate(),
 						PropertyDefinition.SystemPropertyName.catma_markupauthor.name(),
 						Collections.singleton(user.getIdentifier()));
 			tagDefinition.addSystemPropertyDefinition(authorPropertyDefinition);
@@ -577,6 +578,7 @@ public class GraphProjectHandler {
 		if (tagDefinition.getPropertyDefinition(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()) == null) {
 			PropertyDefinition authorPropertyDefinition = 
 					new PropertyDefinition(
+						idGenerator.generate(),
 						PropertyDefinition.SystemPropertyName.catma_markupauthor.name(),
 						Collections.singleton(user.getIdentifier()));
 			tagDefinition.addSystemPropertyDefinition(authorPropertyDefinition);
@@ -759,11 +761,12 @@ public class GraphProjectHandler {
 
 	private PropertyDefinition createPropertyDefinition(Node propertyNode) {
 	
+		String uuid = propertyNode.get("uuid").asString();
 		String name = propertyNode.get("name").asString();
 		List<String> values = propertyNode.get("values").asList(value -> value.toString());
 		
 		
-		return new PropertyDefinition(name, values);
+		return new PropertyDefinition(uuid, name, values);
 	}
 
 	private TagsetDefinition createTagset(Node tagsetNode) {
@@ -789,10 +792,12 @@ public class GraphProjectHandler {
 		TagDefinition tagDef = new TagDefinition(null, tagId, name, new Version(modifiedDate), null, parentTagId, tagsetUuid);
 		tagDef.addSystemPropertyDefinition(
 			new PropertyDefinition(
+				idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_displaycolor.name()),
 				PropertyDefinition.SystemPropertyName.catma_displaycolor.name(),
 				Collections.singleton(ColorConverter.toRGBIntAsString(color))));
 		tagDef.addSystemPropertyDefinition(
 			new PropertyDefinition(
+				idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()),
 				PropertyDefinition.SystemPropertyName.catma_markupauthor.name(),
 				Collections.singleton(author)));		
 		
@@ -804,18 +809,21 @@ public class GraphProjectHandler {
 	}
 
 	public void addPropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
-			TagDefinition tagDefinition) throws Exception {
+			TagDefinition tagDefinition, TagsetDefinition tagsetDefinition, String oldRootRevisionHash) throws Exception {
 		StatementExcutor.execute(new SessionRunner() {
 			@Override
 			public void run(Session session) throws Exception {
 				session.run(
 					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
 					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
-					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
-					+"(:"+nt(Tagset)+")-[:"+rt(hasTag)+"]->"
+					+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(ts:"+nt(Tagset)+")-[:"+rt(hasTag)+"]->"
 					+"(t:"+nt(Tag)+"{tagId:{pTagId}}) "
+					+"SET pr.revisionHash = {pRootRevisionHash} "
+					+"SET ts.revisionHash = {pTagsetRevisionHash} "
 					+"MERGE (t)-[:"+rt(hasProperty)+"]->"
 					+"(:"+nt(Property)+"{"
+						+ "uuid:{pUuid},"
 						+ "name:{pName},"
 						+ "values:{pValues} "
 					+"})",
@@ -823,7 +831,41 @@ public class GraphProjectHandler {
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
 						"pRootRevisionHash", rootRevisionHash,
+						"pOldRootRevisionHash", oldRootRevisionHash,
+						"pTagsetRevisionHash", tagsetDefinition.getRevisionHash(),
 						"pTagId", tagDefinition.getUuid(),
+						"pUuid", propertyDefinition.getUuid(),
+						"pName", propertyDefinition.getName(),
+						"pValues", propertyDefinition.getPossibleValueList()
+					)
+				);
+			}
+		});		
+	}
+	
+	public void updatePropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
+			TagDefinition tagDefinition, TagsetDefinition tagsetDefinition, String oldRootRevisionHash) throws Exception {
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(ts:"+nt(Tagset)+")-[:"+rt(hasTag)+"]->"
+					+"(:"+nt(Tag)+"{tagId:{pTagId}})-[:"+rt(hasProperty)+"]->"
+					+ "(p:"+nt(Property)+"{uuid:{pUuid}}) "
+					+"SET pr.revisionHash = {pRootRevisionHash} "
+					+"SET ts.revisionHash = {pTagsetRevisionHash} "
+					+"SET p.name = {pName}, p.values={pValues}",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pOldRootRevisionHash", oldRootRevisionHash,
+						"pTagsetRevisionHash", tagsetDefinition.getRevisionHash(),
+						"pTagId", tagDefinition.getUuid(),
+						"pUuid", propertyDefinition.getUuid(),
 						"pName", propertyDefinition.getName(),
 						"pValues", propertyDefinition.getPossibleValueList()
 					)
@@ -1120,11 +1162,11 @@ public class GraphProjectHandler {
 
 	private Property createAnnotationProperty(Node propertyNode, TagDefinition tagDefinition) {
 		
-		String name = propertyNode.get("name").asString();
+		String uuid = propertyNode.get("uuid").asString();
 		
 		List<String> values = propertyNode.get("values").asList(value -> value.asString());
 		
-		PropertyDefinition propertyDefinition = tagDefinition.getPropertyDefinition(name);
+		PropertyDefinition propertyDefinition = tagDefinition.getPropertyDefinitionByUuid(uuid);
 		
 		return new Property(propertyDefinition, values);
 	}
@@ -1145,7 +1187,7 @@ public class GraphProjectHandler {
 						+ "WITH i "
 						+ "MERGE (i)-[:"+rt(hasProperty)+"]->"
 						+ "(:"+nt(AnnotationProperty)+"{"
-							+ "name:{pName},"
+							+ "uuid:{pUuid},"
 							+ "values:{pValues} "
 						+"})",
 						Values.parameters(
@@ -1153,7 +1195,7 @@ public class GraphProjectHandler {
 							"pProjectId", projectReference.getProjectId(),
 							"pRootRevisionHash", rootRevisionHash,
 							"pTagInstanceId", tagInstance.getUuid(),
-							"pName", property.getName(),
+							"pUuid", property.getPropertyDefinition().getUuid(),
 							"pValues", property.getPropertyValueList()
 						)
 					);

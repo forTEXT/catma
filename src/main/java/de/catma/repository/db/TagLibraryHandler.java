@@ -529,6 +529,7 @@ class TagLibraryHandler {
 		if (tDef.getAuthor() == null) {
 			PropertyDefinition pdAuthor = 
 				new PropertyDefinition(
+					idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_markupauthor.name()),
 					PropertyDefinition.SystemPropertyName.catma_markupauthor.name(), 
 					Collections.singleton(dbRepository.getCurrentUser().getIdentifier()));
 			tDef.addSystemPropertyDefinition(pdAuthor);

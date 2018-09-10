@@ -30,29 +30,28 @@ import java.util.Set;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
-import com.vaadin.v7.data.Container;
 import com.vaadin.event.Action;
-import com.vaadin.v7.event.DataBoundTransferable;
 import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.v7.ui.AbstractSelect.AcceptItem;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.Label;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.UI;
-import com.vaadin.v7.ui.VerticalLayout;
 import com.vaadin.ui.VerticalSplitPanel;
+import com.vaadin.v7.data.Container;
+import com.vaadin.v7.event.DataBoundTransferable;
+import com.vaadin.v7.ui.AbstractSelect.AcceptItem;
+import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.v7.ui.Label;
+import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
@@ -78,8 +77,8 @@ import de.catma.ui.tagger.ChooseAnnotationCollectionDialog.AnnotationCollectionL
 import de.catma.ui.tagger.MarkupCollectionsPanel.MarkupCollectionPanelEvent;
 import de.catma.ui.tagger.TagInstanceTree.TagIntanceActionListener;
 import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
-import de.catma.ui.tagmanager.TagsetTree;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
+import de.catma.ui.tagmanager.TagsetTree;
 
 public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionListener {
 
@@ -613,14 +612,16 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 
 	}
 
-	public void updateProperty(TagInstance tagInstance, Collection<Property> properties) {
-		markupCollectionsPanel.updateProperty(tagInstance, properties);
+	public void updateProperty(
+			UserMarkupCollection userMarkupCollection, 
+			TagInstance tagInstance, Collection<Property> properties) {
+		markupCollectionsPanel.updateProperty(userMarkupCollection, tagInstance, properties);
 	}
 
-	public void showPropertyEditDialog(TagInstance tagInstance) {
+	public void showPropertyEditDialog(UserMarkupCollection userMarkupCollection, TagInstance tagInstance) {
 		showTagInstanceInfo(Collections.singletonList(tagInstance.getUuid()), null);
 		if (!tagInstance.getUserDefinedProperties().isEmpty()) {
-			tagInstancesTree.showPropertyEditDialog(tagInstance);
+			tagInstancesTree.showPropertyEditDialog(userMarkupCollection, tagInstance);
 		}
 	}
 

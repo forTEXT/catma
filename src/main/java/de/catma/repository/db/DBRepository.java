@@ -661,12 +661,12 @@ public class DBRepository implements IndexedRepository {
 			if (added) {
 				propertyChangeSupport.firePropertyChange(
 						RepositoryChangeEvent.tagReferencesChanged.name(), 
-						null, tagReferences);
+						null, new Pair<>(userMarkupCollection, tagReferences));
 			}
 			else {
 				propertyChangeSupport.firePropertyChange(
 						RepositoryChangeEvent.tagReferencesChanged.name(), 
-						tagReferences, null);
+						new Pair<>(userMarkupCollection, tagReferences), null);
 			}
 		}
 		catch (Exception e) {
@@ -707,7 +707,7 @@ public class DBRepository implements IndexedRepository {
 				userMarkupCollectionReference, contentInfoSet);
 	}
 
-	public void update(final TagInstance tagInstance, final Collection<Property> properties)
+	public void update(UserMarkupCollection umc, final TagInstance tagInstance, final Collection<Property> properties)
 			throws IOException {
 		execShield.execute( new DBOperation<Void>() {
 			public Void execute() throws Exception {

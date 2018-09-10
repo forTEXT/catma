@@ -73,6 +73,7 @@ import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
 import de.catma.ui.tagger.pager.PagerComponent.PageChangeListener;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
+import de.catma.util.Pair;
 
 public class TaggerView extends VerticalLayout 
 	implements TaggerListener, ClosableTab {
@@ -137,10 +138,12 @@ public class TaggerView extends VerticalLayout
 			
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getNewValue() != null) {
-
+					
 					@SuppressWarnings("unchecked")
-					List<TagReference> tagReferences = 
-					(List<TagReference>)evt.getNewValue(); 
+					Pair<UserMarkupCollection, List<TagReference>> changeValue = 
+							(Pair<UserMarkupCollection, List<TagReference>>) evt.getNewValue();
+					
+					List<TagReference> tagReferences = changeValue.getSecond(); 
 					
 					List<TagReference> relevantTagReferences = 
 							new ArrayList<TagReference>();
@@ -162,13 +165,17 @@ public class TaggerView extends VerticalLayout
 					
 					if (tagInstanceUuids.size() == 1){
 						markupPanel.showPropertyEditDialog(
+								changeValue.getFirst(),
 								relevantTagReferences.get(0).getTagInstance());
 					}
 
 				}
 				else if (evt.getOldValue() != null) {
 					@SuppressWarnings("unchecked")
-					List<TagReference> tagReferences = (List<TagReference>)evt.getOldValue(); 
+					Pair<UserMarkupCollection, List<TagReference>> changeValue = 
+							(Pair<UserMarkupCollection, List<TagReference>>) evt.getOldValue();
+					
+					List<TagReference> tagReferences = changeValue.getSecond(); 
 					tagger.setVisible(tagReferences, false);
 					markupPanel.showTagInstanceInfo(
 							tagReferences.toArray(new TagReference[]{}));

@@ -1252,9 +1252,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 		}
 	}
 
-	public void updateProperty(TagInstance tagInstance, Collection<de.catma.tag.Property> properties) {
+	public void updateProperty(UserMarkupCollection userMarkupCollection, TagInstance tagInstance, Collection<de.catma.tag.Property> properties) {
 		try {
-			userMarkupCollectionManager.updateProperty(tagInstance, properties);
+			userMarkupCollectionManager.updateProperty(userMarkupCollection, tagInstance, properties);
 		} catch (IOException e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError(Messages.getString("MarkupCollectionsPanel.errorUpdatingProperty"), e); //$NON-NLS-1$
 		}

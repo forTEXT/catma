@@ -577,8 +577,10 @@ public class TagsetTree extends HorizontalLayout {
 						IDGenerator idGenerator = new IDGenerator();
 						TagDefinition tagDefinition = new TagDefinition(null, idGenerator.generate(),
 								(String) nameProperty.getValue(), new Version(),
-								(baseID.isEmpty() ? null : ((TagDefinition) selectedParent).getId()), baseID);
+								(baseID.isEmpty() ? null : ((TagDefinition) selectedParent).getId()), baseID,
+								tagsetDefinition.getUuid());
 						PropertyDefinition colorPropertyDef = new PropertyDefinition(
+								idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_displaycolor.name()),
 								PropertyDefinition.SystemPropertyName.catma_displaycolor.name(),
 								Collections.singleton(
 										ColorConverter.toRGBIntAsString((String) colorProperty.getValue())));
