@@ -666,7 +666,7 @@ public class DBRepository implements IndexedRepository {
 			else {
 				propertyChangeSupport.firePropertyChange(
 						RepositoryChangeEvent.tagReferencesChanged.name(), 
-						new Pair<>(userMarkupCollection, tagReferences), null);
+						new Pair<>(userMarkupCollection.getUuid(), tagReferences), null);
 			}
 		}
 		catch (Exception e) {

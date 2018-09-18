@@ -23,6 +23,7 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -50,6 +51,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.tag.TagDefinition;
@@ -172,10 +174,20 @@ public class TaggerView extends VerticalLayout
 				}
 				else if (evt.getOldValue() != null) {
 					@SuppressWarnings("unchecked")
-					Pair<UserMarkupCollection, List<TagReference>> changeValue = 
-							(Pair<UserMarkupCollection, List<TagReference>>) evt.getOldValue();
+					Pair<String, Collection<String>> changeValue = 
+							(Pair<String, Collection<String>>) evt.getOldValue();
 					
-					List<TagReference> tagReferences = changeValue.getSecond(); 
+					Collection<String> annotationsIds = changeValue.getSecond(); 
+					List<TagReference> tagReferences = new ArrayList<>();
+					UserMarkupCollectionManager umcManager = 
+						markupPanel.getUserMarkupCollectionManager();
+					if (umcManager.contains(changeValue.getFirst())) {
+						for (String annotationId : annotationsIds) {
+							tagReferences.addAll(umcManager.getTagReferences(annotationId));
+						}
+						umcManager.removeTagInstance(annotationsIds, false);
+					}
+					
 					tagger.setVisible(tagReferences, false);
 					markupPanel.showTagInstanceInfo(
 							tagReferences.toArray(new TagReference[]{}));

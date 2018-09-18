@@ -633,4 +633,10 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	public TagInstanceInfo getTagInstanceInfo(String tagInstanceId) {
 		return markupCollectionsPanel.getTagInstanceInfo(tagInstanceId);
 	}
+
+	public UserMarkupCollectionManager getUserMarkupCollectionManager() {
+		return markupCollectionsPanel.getUserMarkupCollectionManager();
+	}
+	
+	
 }

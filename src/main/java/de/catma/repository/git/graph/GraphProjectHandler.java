@@ -2,6 +2,7 @@ package de.catma.repository.git.graph;
 
 import static de.catma.repository.git.graph.NodeType.AnnotationProperty;
 import static de.catma.repository.git.graph.NodeType.DeletedAnnotationProperty;
+import static de.catma.repository.git.graph.NodeType.DeletedTag;
 import static de.catma.repository.git.graph.NodeType.DeletedTagInstance;
 import static de.catma.repository.git.graph.NodeType.MarkupCollection;
 import static de.catma.repository.git.graph.NodeType.Project;
@@ -31,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
@@ -719,10 +721,11 @@ public class GraphProjectHandler {
 					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
 					+ "(ts:"+nt(Tagset)+") "
 					+ "OPTIONAL MATCH (ts)-[:"+rt(hasTag)+"]->(t:"+nt(Tag)+") "
+					+ "OPTIONAL MATCH (ts)-[:"+rt(hasTag)+"]->(dt:"+nt(DeletedTag)+") "
 					+ "OPTIONAL MATCH (t)-[:"+rt(hasProperty)+"]->(p:"+nt(Property)+") "
 					+ "OPTIONAL MATCH (t)-[:"+rt(hasParent)+"]->(pt:"+nt(Tag)+") "
-					+ "WITH ts, t, pt, COLLECT(p) as properties "
-					+ "RETURN ts, COLLECT([t, properties, pt.tagId]) as tags ",
+					+ "WITH ts, dt, t, pt, COLLECT(p) as properties "
+					+ "RETURN ts, COLLECT([t, properties, pt.tagId]) as tags, COLLECT(dt.tagId) as deletedTags ",
 					Values.parameters(
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
@@ -733,7 +736,10 @@ public class GraphProjectHandler {
 				while (statementResult.hasNext()) {
 					Record record = statementResult.next();
 					
-					TagsetDefinition tagsetDefinition = createTagset(record.get("ts").asNode());
+					TagsetDefinition tagsetDefinition = 
+						createTagset(
+							record.get("ts").asNode(), 
+							record.get("deletedTags").asList(deletedTag -> deletedTag.asString()));
 					
 					List<Object> tagValuePairs = record.get("tags").asList();
 					
@@ -745,7 +751,8 @@ public class GraphProjectHandler {
 							@SuppressWarnings("unchecked")
 							List<Node> propertyNodes = (List<Node>)tagDefTripleList.get(1);
 							String parentTagId = (tagDefTripleList.get(2)==null)?null:((Value)tagDefTripleList.get(2)).asString();
-							TagDefinition tagDefinition = createTag(tagNode, parentTagId, tagsetDefinition.getUuid(), propertyNodes);
+							TagDefinition tagDefinition = 
+								createTag(tagNode, parentTagId, tagsetDefinition.getUuid(), propertyNodes);
 							tagsetDefinition.addTagDefinition(tagDefinition);
 						}
 					}
@@ -769,13 +776,15 @@ public class GraphProjectHandler {
 		return new PropertyDefinition(uuid, name, values);
 	}
 
-	private TagsetDefinition createTagset(Node tagsetNode) {
+	private TagsetDefinition createTagset(Node tagsetNode, List<String> deletedTagUuids) {
 
 		String tagsetId = tagsetNode.get("tagsetId").asString();
 		String name = tagsetNode.get("name").asString();
 		String revisionHash = tagsetNode.get("revisionHash").asString();
 		
-		TagsetDefinition tagsetDefinition = new TagsetDefinition(null, tagsetId, name, new Version()); //TODO:
+		TagsetDefinition tagsetDefinition = 
+			new TagsetDefinition(
+				null, tagsetId, name, new Version(), new HashSet<>(deletedTagUuids)); //TODO:
 		tagsetDefinition.setRevisionHash(revisionHash);
 		
 		return tagsetDefinition;
@@ -1288,7 +1297,9 @@ public class GraphProjectHandler {
 					+"(t:"+nt(Tag)+"{tagId:{pTagId}}) "
 					+"OPTIONAL MATCH (t)-[:"+rt(hasProperty)+"]->(p:"+nt(Property)+") "
 					+"SET ts.revisionHash = {pTagsetRevisionHash} "
-					+"DETACH DELETE t, p ",
+					+"REMOVE t:"+nt(Tag)+ " "
+					+"SET t:"+nt(DeletedTag)+ " "
+					+"DETACH DELETE p ",
 					Values.parameters(
 						"pUserId", user.getIdentifier(),
 						"pProjectId", projectReference.getProjectId(),
@@ -1345,6 +1356,12 @@ public class GraphProjectHandler {
 		
 			}
 		});
+		
+	}
+
+	public void removePropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
+			TagDefinition tagDefinition, TagsetDefinition tagsetDefinition, String oldRootRevisionHash) {
+		// TODO Auto-generated method stub
 		
 	}
 }

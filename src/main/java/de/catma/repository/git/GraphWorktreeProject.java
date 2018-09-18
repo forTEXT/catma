@@ -82,7 +82,6 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private PropertyChangeListener tagsetDefinitionChangedListener;
 	private PropertyChangeListener tagDefinitionChangedListener;
 	private PropertyChangeListener userDefinedPropertyChangedListener;
-	private PropertyChangeListener tagLibraryChangedListener;
 	private TagLibraryReference tagLibraryReference;
 
 	public GraphWorktreeProject(GitUser user, 
@@ -168,20 +167,15 @@ public class GraphWorktreeProject implements IndexedRepository {
 				}
 				try {
 					if (evt.getOldValue() == null) { //insert
-						@SuppressWarnings("unchecked")
-						final Pair<TagLibrary, TagsetDefinition> args = 
-								(Pair<TagLibrary, TagsetDefinition>)evt.getNewValue();
-						
-						TagLibrary tagLibrary = args.getFirst(); //TODO: obsolete
-						TagsetDefinition tagsetDefinition = args.getSecond();
-						
+						final TagsetDefinition tagsetDefinition = 
+								(TagsetDefinition)evt.getNewValue();
 						
 						addTagsetDefinition(tagsetDefinition);
 					}
 					else if (evt.getNewValue() == null) { //delete
-						@SuppressWarnings("unchecked")
-						final Pair<TagLibrary, TagsetDefinition> args = 
-								(Pair<TagLibrary, TagsetDefinition>)evt.getOldValue();
+						final TagsetDefinition tagsetDefinition = 
+							(TagsetDefinition)evt.getOldValue();
+						//TODO:
 //						execShield.execute(new DBOperation<Void>() {
 //							public Void execute() throws Exception {
 //								dbTagLibraryHandler.removeTagsetDefinition(args.getSecond());
@@ -189,7 +183,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 //							}
 //						});
 					}
-					else { //update
+					else { //update //TODO
 //						execShield.execute(new DBOperation<Void>() {
 //							public Void execute() throws Exception {
 //								dbTagLibraryHandler.updateTagsetDefinition(
@@ -283,12 +277,13 @@ public class GraphWorktreeProject implements IndexedRepository {
 					}
 					else if (newValue == null) { // delete
 						@SuppressWarnings("unchecked")
-						Pair<PropertyDefinition, TagDefinition> oldPair = 
-								(Pair<PropertyDefinition, TagDefinition>)oldValue;
-						//TODO:
-	//					dbTagLibraryHandler.removePropertyDefinition(
-	//							oldPair.getFirst(), oldPair.getSecond());
+						Pair<PropertyDefinition, Pair<TagDefinition, TagsetDefinition>> oldPair = 
+								(Pair<PropertyDefinition, Pair<TagDefinition, TagsetDefinition>>)oldValue;
+						PropertyDefinition propertyDefinition = oldPair.getFirst();
+						TagDefinition tagDefinition = oldPair.getSecond().getFirst();
+						TagsetDefinition tagsetDefinition = oldPair.getSecond().getSecond();
 						
+						removePropertyDefinition(propertyDefinition, tagDefinition, tagsetDefinition);
 					}
 					else { // update
 						PropertyDefinition propertyDefinition = (PropertyDefinition)evt.getNewValue();
@@ -308,24 +303,6 @@ public class GraphWorktreeProject implements IndexedRepository {
 		tagManager.addPropertyChangeListener(
 				TagManagerEvent.userPropertyDefinitionChanged,
 				userDefinedPropertyChangedListener);
-		
-		tagLibraryChangedListener = new PropertyChangeListener() {
-			
-			public void propertyChange(PropertyChangeEvent evt) {
-				if (!tagManagerListenersEnabled) {
-					return;
-				}
-				
-				if ((evt.getNewValue() != null) && (evt.getOldValue() != null)) { //update
-//					dbTagLibraryHandler.update(
-//							(TagLibraryReference)evt.getNewValue());
-				}
-			}
-		};
-		
-		tagManager.addPropertyChangeListener(
-				TagManagerEvent.tagLibraryChanged,
-				tagLibraryChangedListener);
 	}
 
 	private void addPropertyDefinition(PropertyDefinition propertyDefinition, TagDefinition tagDefinition) throws Exception {
@@ -338,6 +315,20 @@ public class GraphWorktreeProject implements IndexedRepository {
 		String oldRootRevisionHash = this.rootRevisionHash;
 		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
 		graphProjectHandler.addPropertyDefinition(
+			rootRevisionHash, propertyDefinition, tagDefinition, tagsetDefinition, oldRootRevisionHash);
+	}
+
+	private void removePropertyDefinition(
+			PropertyDefinition propertyDefinition, TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
+		
+		String tagsetRevision = gitProjectHandler.removePropertyDefinition(
+				propertyDefinition, tagDefinition, tagsetDefinition);
+		
+		tagsetDefinition.setRevisionHash(tagsetRevision);
+		String oldRootRevisionHash = this.rootRevisionHash;
+		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
+		
+		graphProjectHandler.removePropertyDefinition(
 			rootRevisionHash, propertyDefinition, tagDefinition, tagsetDefinition, oldRootRevisionHash);
 	}
 
@@ -377,10 +368,12 @@ public class GraphWorktreeProject implements IndexedRepository {
 	
 	private void removeTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
 
+		// remove Annotations
 		Multimap<String, String> annotationIdsByCollectionId =
 			graphProjectHandler.getAnnotationIdsByCollectionId(this.rootRevisionHash, tagDefinition);
 		
 		for (String collectionId : annotationIdsByCollectionId.keySet()) {
+			// TODO: check permissions if commit is allowed, if that is not the case skip git removal
 			String collectionRevisionHash = gitProjectHandler.removeTagInstances(
 				collectionId, annotationIdsByCollectionId.get(collectionId), 
 				String.format("Annotations removed, caused by the removal of Tag %1$s ", 
@@ -392,12 +385,14 @@ public class GraphWorktreeProject implements IndexedRepository {
 				collectionRevisionHash);
 		}
 		
-		String tagsetRevision = gitProjectHandler.removeTag(tagsetDefinition.getUuid(), tagDefinition);
+		// remove Tag
+		String tagsetRevision = gitProjectHandler.removeTag(tagsetDefinition, tagDefinition);
 		tagsetDefinition.setRevisionHash(tagsetRevision);
 
 		graphProjectHandler.removeTagDefinition(
 				rootRevisionHash, tagDefinition, tagsetDefinition);
 			
+		// commit Project
 		String oldRootRevisionHash = this.rootRevisionHash;
 		this.rootRevisionHash = 
 				gitProjectHandler.commitProject(String.format("Tag removed %1$s ", 
@@ -405,7 +400,12 @@ public class GraphWorktreeProject implements IndexedRepository {
 		
 		graphProjectHandler.updateProjectRevisionHash(oldRootRevisionHash, this.rootRevisionHash);
 		
-		//TODO: hier gehts weiter write tagset journal
+		for (String collectionId : annotationIdsByCollectionId.keySet()) {
+			propertyChangeSupport.firePropertyChange(
+					RepositoryChangeEvent.tagReferencesChanged.name(), 
+					new Pair<>(collectionId, annotationIdsByCollectionId.get(collectionId)), null);
+		}
+
 	}
 	
 	private void addTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
@@ -750,18 +750,18 @@ public class GraphWorktreeProject implements IndexedRepository {
 				graphProjectHandler.removeTagReferences(
 					GraphWorktreeProject.this.rootRevisionHash, userMarkupCollection, tagReferences);
 
-				
-				for (String tagInstanceId : 
-						tagReferences
+				Collection<String> tagInstanceIds = tagReferences
 						.stream()
 						.map(tr -> tr.getTagInstanceID())
-						.collect(Collectors.toSet())) {
+						.collect(Collectors.toSet());
+				
+				for (String tagInstanceId : tagInstanceIds) {
 					gitProjectHandler.removeTagInstance(
 							userMarkupCollection.getUuid(), tagInstanceId);
 				}
 				propertyChangeSupport.firePropertyChange(
 						RepositoryChangeEvent.tagReferencesChanged.name(), 
-						new Pair<>(userMarkupCollection, tagReferences), null);
+						new Pair<>(userMarkupCollection.getUuid(), tagInstanceIds), null);
 			}
 		}
 		catch (Exception e) {
