@@ -35,7 +35,8 @@ public class TagDefinitionMapper implements RecordMapper<Record, TagDefinition> 
 					record.getValue(TAGDEFINITION.NAME),
 					new Version(record.getValue(TAGDEFINITION.VERSION)),
 					record.getValue(TAGDEFINITION.PARENTID),
-					idGenerator.uuidBytesToCatmaID(record.getValue(TAGDEFINITION.PARENTUUID)));
+					idGenerator.uuidBytesToCatmaID(record.getValue(TAGDEFINITION.PARENTUUID)),
+					null);
 					
 		addPropertyDefinitions(tagDefinition);				
 			

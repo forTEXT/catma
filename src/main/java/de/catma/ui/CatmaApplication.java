@@ -508,7 +508,9 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 			userManager.logout(this);
 			repositoryOpened = false;
 		}
-		backgroundService.shutdown();
+		if (backgroundService != null) {
+			backgroundService.shutdown();
+		}
 		super.close();
 	}
 

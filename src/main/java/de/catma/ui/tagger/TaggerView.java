@@ -23,6 +23,7 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -50,6 +51,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.indexer.IndexedRepository;
 import de.catma.tag.TagDefinition;
@@ -73,6 +75,7 @@ import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
 import de.catma.ui.tagger.pager.PagerComponent.PageChangeListener;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
+import de.catma.util.Pair;
 
 public class TaggerView extends VerticalLayout 
 	implements TaggerListener, ClosableTab {
@@ -137,10 +140,12 @@ public class TaggerView extends VerticalLayout
 			
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getNewValue() != null) {
-
+					
 					@SuppressWarnings("unchecked")
-					List<TagReference> tagReferences = 
-					(List<TagReference>)evt.getNewValue(); 
+					Pair<UserMarkupCollection, List<TagReference>> changeValue = 
+							(Pair<UserMarkupCollection, List<TagReference>>) evt.getNewValue();
+					
+					List<TagReference> tagReferences = changeValue.getSecond(); 
 					
 					List<TagReference> relevantTagReferences = 
 							new ArrayList<TagReference>();
@@ -162,13 +167,27 @@ public class TaggerView extends VerticalLayout
 					
 					if (tagInstanceUuids.size() == 1){
 						markupPanel.showPropertyEditDialog(
+								changeValue.getFirst(),
 								relevantTagReferences.get(0).getTagInstance());
 					}
 
 				}
 				else if (evt.getOldValue() != null) {
 					@SuppressWarnings("unchecked")
-					List<TagReference> tagReferences = (List<TagReference>)evt.getOldValue(); 
+					Pair<String, Collection<String>> changeValue = 
+							(Pair<String, Collection<String>>) evt.getOldValue();
+					
+					Collection<String> annotationsIds = changeValue.getSecond(); 
+					List<TagReference> tagReferences = new ArrayList<>();
+					UserMarkupCollectionManager umcManager = 
+						markupPanel.getUserMarkupCollectionManager();
+					if (umcManager.contains(changeValue.getFirst())) {
+						for (String annotationId : annotationsIds) {
+							tagReferences.addAll(umcManager.getTagReferences(annotationId));
+						}
+						umcManager.removeTagInstance(annotationsIds, false);
+					}
+					
 					tagger.setVisible(tagReferences, false);
 					markupPanel.showTagInstanceInfo(
 							tagReferences.toArray(new TagReference[]{}));

@@ -21,7 +21,9 @@ import de.catma.indexer.TermInfo;
 import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
+import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagsetDefinition;
 
 public class GitProjectHandler {
 
@@ -99,12 +101,12 @@ public class GitProjectHandler {
 		}
 	}
 	
-	public String removeTag(String tagsetId, TagDefinition tagDefinition) throws IOException {
+	public String removeTag(TagsetDefinition tagsetDefinition, TagDefinition tagDefinition) throws IOException {
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localGitRepoManager, this.remoteGitServerManager);
 
 			String tagsetRevision = 
-				gitTagsetHandler.removeTagDefinition(projectId, tagsetId, tagDefinition);
+				gitTagsetHandler.removeTagDefinition(projectId, tagsetDefinition, tagDefinition);
 			
 			return tagsetRevision;
 		}
@@ -414,6 +416,12 @@ public class GitProjectHandler {
 			return revisionHash;
 		}	
 		
+	}
+
+	public String removePropertyDefinition(PropertyDefinition propertyDefinition, TagDefinition tagDefinition,
+			TagsetDefinition tagsetDefinition) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

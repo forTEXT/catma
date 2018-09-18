@@ -28,6 +28,7 @@ import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
+import de.catma.util.IDGenerator;
 import nu.xom.Elements;
 import nu.xom.Nodes;
 
@@ -94,7 +95,8 @@ public class TeiTagLibraryDeserializer {
 							description,
 							new Version(tagDefinitionElement.getAttributeValue(Attribute.n)), 
 							null,
-							tagDefinitionElement.getAttributeValue(Attribute.fsDecl_baseTypes));
+							tagDefinitionElement.getAttributeValue(Attribute.fsDecl_baseTypes),
+							tagsetDefinition.getUuid());
 			
 			tagManager.addTagDefinition(tagsetDefinition, tagDef);
 			
@@ -153,8 +155,9 @@ public class TeiTagLibraryDeserializer {
 		}
 		
 		return new PropertyDefinition(
-					propElement.getAttributeValue(Attribute.fDecl_name),
-					pvf.getValueAsList());
+				propElement.getID(),
+				propElement.getAttributeValue(Attribute.fDecl_name),
+				pvf.getValueAsList());
 	}
 
 	public TagLibrary getTagLibrary() {

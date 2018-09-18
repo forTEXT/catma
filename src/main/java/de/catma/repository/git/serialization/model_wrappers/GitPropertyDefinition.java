@@ -21,6 +21,14 @@ public class GitPropertyDefinition {
 	public PropertyDefinition getPropertyDefinition() {
 		return this.propertyDefinition;
 	}
+	
+	public String getUuid() {
+		return propertyDefinition.getUuid();
+	}
+
+	public void setUuid(String uuid) {
+		propertyDefinition.setUuid(uuid);
+	}
 
 	public String getName(){return this.propertyDefinition.getName();}
 

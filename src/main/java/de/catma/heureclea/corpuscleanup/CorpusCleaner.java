@@ -493,7 +493,10 @@ public class CorpusCleaner {
 			if (isValidPath(path, baseConcepts)) {
 				
 				if (isBasePath(path, baseConcepts)) {
-					TagDefinition tagDefCopy = new TagDefinition(null, tagDef.getUuid(), tagDef.getName(), tagDef.getVersion(), null, null);
+					TagDefinition tagDefCopy = new TagDefinition(
+							null, 
+							tagDef.getUuid(), tagDef.getName(), 
+							tagDef.getVersion(), null, null, targetTsDef.getUuid());
 					for (PropertyDefinition pd : tagDef.getSystemPropertyDefinitions()) {
 						tagDefCopy.addSystemPropertyDefinition(new PropertyDefinition(pd));
 					}

@@ -6,7 +6,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.TreeSet;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -76,7 +78,7 @@ public class GitTagsetHandler {
 			// write header.json into the local repo
 			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), "header.json");
 
-			GitTagsetHeader header = new GitTagsetHeader(name, description);
+			GitTagsetHeader header = new GitTagsetHeader(name, description, new TreeSet<>());
 			String serializedHeader = new SerializationHelper<GitTagsetHeader>().serialize(header);
 
 			String revisionHash = localGitRepoManager.addAndCommit(
@@ -159,7 +161,7 @@ public class GitTagsetHandler {
 					);
 
 			TagsetDefinition tagsetdefinition = new TagsetDefinition(
-				null, tagsetId, gitTagsetHeader.getName(), null
+				null, tagsetId, gitTagsetHeader.getName(), null, gitTagsetHeader.getDeletedTags()
 			);
 			String tagsetDefinitionRevisionHash = localGitRepoManager.getSubmoduleHeadRevisionHash(tagsetSubmoduleName);
 			tagsetdefinition.setRevisionHash(tagsetDefinitionRevisionHash);
@@ -222,7 +224,7 @@ public class GitTagsetHandler {
 		}
 	}
 
-	public String removeTagDefinition(String projectId, String tagsetId, TagDefinition tagDefinition) 
+	public String removeTagDefinition(String projectId, TagsetDefinition tagsetDefinition, TagDefinition tagDefinition) 
 			throws IOException {
 		
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
@@ -231,10 +233,24 @@ public class GitTagsetHandler {
 			String tagsetGitRepositoryName = 
 					projectRootRepositoryName 
 					+ "/" + GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME 
-					+ "/" + tagsetId;
+					+ "/" + tagsetDefinition.getUuid();
 
 			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
 
+			// write header.json with deletion journal
+			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), "header.json");
+			
+			GitTagsetHeader header = 
+					new GitTagsetHeader(
+							tagsetDefinition.getName(), 
+							"", //TODO: description
+							new TreeSet<>(tagsetDefinition.getDeletedDefinitions()));
+			String serializedHeader = new SerializationHelper<GitTagsetHeader>().serialize(header);
+			
+			localGitRepoManager.add(
+					targetHeaderFile,
+					serializedHeader.getBytes(StandardCharsets.UTF_8));
+			
 			String targetTagDefinitionsFolderRelativePath = 
 				(StringUtils.isEmpty(tagDefinition.getParentUuid()) ? "" : (tagDefinition.getParentUuid()+"/"))
 				+ tagDefinition.getUuid();

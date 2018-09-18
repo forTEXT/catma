@@ -159,21 +159,16 @@ public class TagsetTree extends HorizontalLayout {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getOldValue() == null) {
 					if (withTagsetButtons) {
-						@SuppressWarnings("unchecked")
-						Pair<TagLibrary, TagsetDefinition> addOperationResult = (Pair<TagLibrary, TagsetDefinition>) evt
+						TagsetDefinition addOperationResult = (TagsetDefinition) evt
 								.getNewValue();
 
-						if (tagLibrary.equals(addOperationResult.getFirst())) {
-							addTagsetDefinition(addOperationResult.getSecond());
-						}
+						addTagsetDefinition(addOperationResult);
 					}
 				} else if (evt.getNewValue() == null) {
-					@SuppressWarnings("unchecked")
-					Pair<TagLibrary, TagsetDefinition> removeOperationResult = (Pair<TagLibrary, TagsetDefinition>) evt
+					TagsetDefinition removeOperationResult = (TagsetDefinition) evt
 							.getOldValue();
 
-					TagsetDefinition tagsetDef = removeOperationResult.getSecond();
-					removeTagsetDefinitionFromTree(tagsetDef);
+					removeTagsetDefinitionFromTree(removeOperationResult);
 				} else {
 					TagsetDefinition tagsetDefinition = (TagsetDefinition) evt.getNewValue();
 					if (tagTree.containsId(tagsetDefinition)) {
@@ -365,7 +360,7 @@ public class TagsetTree extends HorizontalLayout {
 
 		final PropertyDefinition pd = (PropertyDefinition) selectedValue;
 		final TagDefinition parent = (TagDefinition) tagTree.getParent(pd);
-
+		final TagsetDefinition tagsetDefinition = getTagsetDefinition(parent);
 		ConfirmDialog.show(UI.getCurrent(), Messages.getString("TagsetTree.deleteProperty"), //$NON-NLS-1$
 				Messages.getString("TagsetTree.deletePropertyQuestion"), Messages.getString("TagsetTree.Yes"), //$NON-NLS-1$ //$NON-NLS-2$
 				Messages.getString("TagsetTree.No"), //$NON-NLS-1$
@@ -373,7 +368,7 @@ public class TagsetTree extends HorizontalLayout {
 
 					public void onClose(ConfirmDialog dialog) {
 						if (dialog.isConfirmed()) {
-							tagManager.removeUserDefinedPropertyDefinition(pd, parent);
+							tagManager.removeUserDefinedPropertyDefinition(pd, parent, tagsetDefinition);
 						}
 					}
 				});
@@ -577,8 +572,10 @@ public class TagsetTree extends HorizontalLayout {
 						IDGenerator idGenerator = new IDGenerator();
 						TagDefinition tagDefinition = new TagDefinition(null, idGenerator.generate(),
 								(String) nameProperty.getValue(), new Version(),
-								(baseID.isEmpty() ? null : ((TagDefinition) selectedParent).getId()), baseID);
+								(baseID.isEmpty() ? null : ((TagDefinition) selectedParent).getId()), baseID,
+								tagsetDefinition.getUuid());
 						PropertyDefinition colorPropertyDef = new PropertyDefinition(
+								idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_displaycolor.name()),
 								PropertyDefinition.SystemPropertyName.catma_displaycolor.name(),
 								Collections.singleton(
 										ColorConverter.toRGBIntAsString((String) colorProperty.getValue())));

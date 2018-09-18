@@ -122,19 +122,19 @@ public class JsonLdWebAnnotationBody_Dataset {
 		for (Property property : properties) {
 			// add entries to the context that allow us to have PropertyDefinition URLs aliased by name
 			this.context.put(
-				property.getName(),
-				this.buildPropertyDefinitionUrl(tagDefinitionUrl, property.getPropertyDefinition().getName()).toString()
+				property.getPropertyDefinition().getUuid(),
+				this.buildPropertyDefinitionUrl(tagDefinitionUrl, property.getPropertyDefinition().getUuid()).toString()
 			);
 
 			// add property values
 			if (system) {
 				this.properties.get("system").put(
-					property.getName(), new TreeSet<>(property.getPropertyValueList())
+					property.getPropertyDefinition().getUuid(), new TreeSet<>(property.getPropertyValueList())
 				);
 			}
 			else {
 				this.properties.get("user").put(
-					property.getName(), new TreeSet<>(property.getPropertyValueList())
+					property.getPropertyDefinition().getUuid(), new TreeSet<>(property.getPropertyValueList())
 				);
 			}
 		}
