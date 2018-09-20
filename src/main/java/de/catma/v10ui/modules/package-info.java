@@ -1,5 +1,5 @@
 /**
- * Application specific modules from a user perspective like
+ * Application specific modules from a user perspective like:
  *
  * <ul>
  *     <li>project</li>
