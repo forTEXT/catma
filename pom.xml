@@ -19,7 +19,7 @@
 
         <!-- Dependencies -->
         <vaadin.version>11.0.1</vaadin.version>
-        <jetty.version>9.4.11.v20180605</jetty.version>
+        <jetty.version>9.4.12.v20180830</jetty.version>
     </properties>
 
     <repositories>
@@ -318,6 +318,7 @@
                     <excludes>
                         <exclude>de/catma/ui/**</exclude>
                     </excludes>
+                    <useIncrementalCompilation>false</useIncrementalCompilation>
                 </configuration>
             </plugin>
         </plugins>
