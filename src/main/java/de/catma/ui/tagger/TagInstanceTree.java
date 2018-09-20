@@ -49,6 +49,7 @@ import com.vaadin.v7.ui.TreeTable;
 import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -59,7 +60,10 @@ public class TagInstanceTree extends HorizontalLayout {
 
 	static interface TagIntanceActionListener {
 		public void removeTagInstances(List<String> tagInstanceIDs);
-		public void updateProperty(TagInstance tagInstance, Collection<Property> properties);		
+		public void updateProperty(
+				UserMarkupCollection userMarkupCollection, 
+				TagInstance tagInstance, 
+				Collection<Property> properties);		
 		public void tagInstanceSelected(TagInstance tagInstance);
 	}
 	
@@ -155,8 +159,10 @@ public class TagInstanceTree extends HorizontalLayout {
 						final Property property = getProperty(selectionset);
 						tagInstance = (TagInstance) tagInstanceTree.getParent(property);
 					}
+					UserMarkupCollection umc =
+							(UserMarkupCollection) tagInstanceTree.getContainerProperty(tagInstance, TagInstanceTreePropertyName.umc).getValue();
 					
-					showPropertyEditDialog(tagInstance);
+					showPropertyEditDialog(umc, tagInstance);
 				}
 			}
 		});
@@ -170,9 +176,10 @@ public class TagInstanceTree extends HorizontalLayout {
 				
 				if (tagInstanceList.size() == 1) {
 					final TagInstance tagInstance  = tagInstanceList.get(0);
-					
+					UserMarkupCollection umc =
+						(UserMarkupCollection) tagInstanceTree.getContainerProperty(tagInstance, TagInstanceTreePropertyName.umc).getValue();
 					if (event.isDoubleClick()){
-						showPropertyEditDialog(tagInstance);
+						showPropertyEditDialog(umc, tagInstance);
 					}
 				}
 			}
@@ -189,8 +196,8 @@ public class TagInstanceTree extends HorizontalLayout {
 					
 					Item tiItem = tagInstanceTree.getItem(tagInstance);
 					TagInstanceInfoSet tiInfoSet = new TagInstanceInfoSet(
-							(String)tiItem.getItemProperty(
-									TagInstanceTreePropertyName.umc).getValue(),
+							((UserMarkupCollection)tiItem.getItemProperty(
+									TagInstanceTreePropertyName.umc).getValue()).getName(),
 							(String)tiItem.getItemProperty(
 									TagInstanceTreePropertyName.path).getValue(),
 							(String)tiItem.getItemProperty(
@@ -285,7 +292,7 @@ public class TagInstanceTree extends HorizontalLayout {
 		tagInstanceTree.setColumnCollapsed(TagInstanceTreePropertyName.instanceId, true);
 		
 		tagInstanceTree.addContainerProperty(
-				TagInstanceTreePropertyName.umc, String.class, null);
+				TagInstanceTreePropertyName.umc, UserMarkupCollection.class, null);
 		tagInstanceTree.setColumnCollapsed(TagInstanceTreePropertyName.umc, true);
 
 		tagInstanceTree.setItemCaptionPropertyId(TagInstanceTreePropertyName.caption);
@@ -370,7 +377,7 @@ public class TagInstanceTree extends HorizontalLayout {
 							ti.getTagInstance().getUuid());
 			item.getItemProperty(
 					TagInstanceTreePropertyName.umc).setValue(
-							ti.getUserMarkupCollection().getName());
+							ti.getUserMarkupCollection());
 			item.getItemProperty(
 					TagInstanceTreePropertyName.icon).setValue(tagIcon);
 			
@@ -438,7 +445,7 @@ public class TagInstanceTree extends HorizontalLayout {
 		return idList;
 	}
 
-	public void showPropertyEditDialog(final TagInstance tagInstance) {
+	public void showPropertyEditDialog(final UserMarkupCollection userMarkupCollection, final TagInstance tagInstance) {
 		PropertyEditDialog dialog = 
 			new PropertyEditDialog(
 				tagInstance,
@@ -446,6 +453,7 @@ public class TagInstanceTree extends HorizontalLayout {
 					public void cancelPressed() {}
 					public void savePressed(Set<Property> changedProperties) {
 						tagInstanceActionListener.updateProperty(
+								userMarkupCollection,
 								tagInstance, changedProperties);
 					}
 				}, propertyValuesBin);

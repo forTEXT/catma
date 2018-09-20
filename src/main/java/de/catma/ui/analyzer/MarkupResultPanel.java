@@ -543,7 +543,7 @@ public class MarkupResultPanel extends VerticalLayout {
 								}
 								toBeDeletedIDs.add(tagRow.getTagInstanceId());
 							}
-							umcManager.removeTagInstance(toBeDeletedIDs);
+							umcManager.removeTagInstance(toBeDeletedIDs, true);
 							
 						} catch (IOException e) {
 							((CatmaApplication)UI.getCurrent()).showAndLogError(

@@ -29,6 +29,7 @@ public class PropertyDefinitionMapper implements
 		String propDefUuid = 
 			idGenerator.uuidBytesToCatmaID(record.getValue(PROPERTYDEFINITION.UUID));
 		return new PropertyDefinition(
+			propDefUuid,
 			record.getValue(PROPERTYDEFINITION.NAME),
 			getPossibleValuesList(possValuesByPropDefUuid.get(propDefUuid)));
 	}

@@ -694,9 +694,11 @@ public class SourceDocumentPanel extends HorizontalSplitPanel
 															idGenerator.generate(),
 															Messages.getString("SourceDocumentPanel.exampleTag"), //$NON-NLS-1$
 															new Version(), 
-															null, ""); //$NON-NLS-1$
+															null, "", //$NON-NLS-1$
+															tsd.getUuid()); 
 											PropertyDefinition colorPropertyDef =
 													new PropertyDefinition(
+														idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_displaycolor.name()),
 														PropertyDefinition.SystemPropertyName.
 															catma_displaycolor.name(),
 														Collections.singleton(

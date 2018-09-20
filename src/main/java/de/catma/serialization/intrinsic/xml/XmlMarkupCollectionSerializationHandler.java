@@ -130,9 +130,11 @@ public class XmlMarkupCollectionSerializationHandler implements
         	tagDefinition = 
         		new TagDefinition(
         			null, idGenerator.generate(), 
-        			elementStack.peek(), new Version(), null, parentUuid);
+        			elementStack.peek(), new Version(), null, parentUuid,
+        			tagsetDefinition.getUuid());
         	PropertyDefinition colorDef = 
         		new PropertyDefinition(
+    				idGenerator.generate(PropertyDefinition.SystemPropertyName.catma_displaycolor.name()),
         			PropertyDefinition.SystemPropertyName.catma_displaycolor.name(), 
         			Collections.singleton(
         				ColorConverter.toRGBIntAsString(ColorConverter.randomHex())));
@@ -202,6 +204,7 @@ public class XmlMarkupCollectionSerializationHandler implements
         	if (propertyDefinition == null) {
         		propertyDefinition = 
         			new PropertyDefinition(
+        				idGenerator.generate(),
         				element.getAttribute(i).getQualifiedName(), 
         				Collections.singleton(element.getAttribute(i).getValue()));
         		tagManager.addUserDefinedPropertyDefinition(tagDefinition, propertyDefinition);

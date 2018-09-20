@@ -100,9 +100,7 @@ public class CreateTagsetOptionsSelectionDialog extends Window {
 						tagManager.removePropertyChangeListener(TagManager.TagManagerEvent.tagsetDefinitionChanged,
 								this);
 						if (evt.getOldValue() == null) {
-					
-							Pair pair = (Pair) evt.getNewValue();
-							final TagsetDefinition tagsetdef = (TagsetDefinition) pair.getSecond();
+							final TagsetDefinition tagsetdef = (TagsetDefinition) evt.getNewValue();
 							CatmaApplication application = ((CatmaApplication) UI.getCurrent());
 							application.addTagsetToActiveDocument(tagsetdef, tagsetSelectionListener);
 

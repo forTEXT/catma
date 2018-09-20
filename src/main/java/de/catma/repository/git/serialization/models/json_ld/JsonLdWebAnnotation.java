@@ -198,7 +198,7 @@ public class JsonLdWebAnnotation {
 		for (Map.Entry<String, TreeMap<String, TreeSet<String>>> entry : properties.entrySet()) {
 			for (Map.Entry<String, TreeSet<String>> subEntry : entry.getValue().entrySet()) {
 				Property property = new Property(
-					tagDefinition.getPropertyDefinition(subEntry.getKey()),
+					tagDefinition.getPropertyDefinitionByUuid(subEntry.getKey()),
 					subEntry.getValue()
 				);
 				if (entry.getKey().equals(JsonLdWebAnnotationBody_Dataset.SYSTEM_PROPERTIES_KEY)) {

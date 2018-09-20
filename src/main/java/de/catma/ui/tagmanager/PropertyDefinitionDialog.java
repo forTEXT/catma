@@ -37,6 +37,7 @@ import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.tag.PropertyDefinition;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.util.IDGenerator;
 
 public class PropertyDefinitionDialog extends VerticalLayout {
 
@@ -114,6 +115,7 @@ public class PropertyDefinitionDialog extends VerticalLayout {
 				if (propertyDefinition == null)  {
 					propertyDefinition = 
 						new PropertyDefinition(
+							new IDGenerator().generate(),
 							(String)nameInput.getValue(),
 							values);
 				}
