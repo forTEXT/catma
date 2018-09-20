@@ -31,9 +31,9 @@ import java.util.Properties;
 
 
 @HtmlImport("styles/shared-styles.html")
-@Route("")
+@Route("wurstbrot")
 @PageTitle("CATMA 6-flow")
-public class FrameView extends Div implements RouterLayout, PageConfigurator,LoginToken,HasComponents {
+public class FrameView extends Div implements RouterLayout, PageConfigurator, LoginToken, HasComponents {
 
     private Object user;
     private ProjectManagerView projectManagerView;

@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
+import com.google.inject.Inject;
 import org.apache.commons.io.FileUtils;
 
 import de.catma.Pager;
@@ -38,7 +39,7 @@ public class GitProjectManager implements ProjectManager {
 
 	public GitProjectManager(
 			String gitBasedRepositoryBasePath,
-			Map<String, String>	userIdentification) 
+			Map<String, String>	userIdentification)
 					throws IOException {
 		this.gitBasedRepositoryBasePath = gitBasedRepositoryBasePath;
 		this.remoteGitServerManager = 

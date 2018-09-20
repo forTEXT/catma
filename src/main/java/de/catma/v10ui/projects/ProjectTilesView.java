@@ -1,7 +1,6 @@
 package de.catma.v10ui.projects;
 
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Composite;
+import com.google.inject.Inject;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.button.Button;
@@ -13,14 +12,11 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.router.ParentLayout;
-import com.vaadin.flow.router.Route;
 import de.catma.Pager;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
-import de.catma.v10ui.frame.FrameView;
 
+import java.time.Instant;
 import java.util.List;
 
 @Tag("tilesView")
@@ -37,6 +33,7 @@ public class ProjectTilesView extends Div implements HasComponents {
     private Button titleArrowBt;
 
 
+    @Inject
     public ProjectTilesView(ProjectManager projectManager) {
 
         this.projectManager = projectManager;
@@ -93,7 +90,7 @@ public class ProjectTilesView extends Div implements HasComponents {
        headerBar= new HorizontalLayout();
        headerBar.setClassName("headerBar");
 
-       allProjectsLabel = new Label("All projects");
+       allProjectsLabel = new Label("All projects" + Instant.now());
 
        Icon arrowUp = new Icon(VaadinIcon.ARROW_UP);
        titleArrowBt = new Button("Title");
