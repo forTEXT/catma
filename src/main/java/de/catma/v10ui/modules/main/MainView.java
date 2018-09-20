@@ -18,7 +18,8 @@ import java.util.Objects;
  */
 @Route(Routes.ROOT)
 @PageTitle("Catma Main")
-public class MainView extends Div implements RouterLayout, HasComponents {
+@Tag("catma")
+public class MainView extends HtmlComponent implements RouterLayout, HasComponents {
 
     /**
      * Keep version information in VCS
@@ -52,7 +53,7 @@ public class MainView extends Div implements RouterLayout, HasComponents {
     /**
      * render the content inside the section element. e.g. don't append to blindly to body element.
      * The implemenation of adding is copied from {@link RouterLayout#showRouterLayoutContent(HasElement)}
-     * 
+     *
      * @param content
      */
     @Override

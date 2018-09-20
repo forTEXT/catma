@@ -5,8 +5,8 @@ import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HtmlComponent;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.router.Route;
-import de.catma.v10ui.modules.main.MainView;
 import de.catma.v10ui.modules.analyze.AnalyzeView;
+import de.catma.v10ui.modules.main.MainView;
 
 @Route(value = Routes.ANALYZE, layout=MainView.class)
 @Tag("analyze")

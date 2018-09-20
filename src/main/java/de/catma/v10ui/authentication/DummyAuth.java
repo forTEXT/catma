@@ -1,10 +1,8 @@
 package de.catma.v10ui.authentication;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import de.catma.user.UserProperty;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
