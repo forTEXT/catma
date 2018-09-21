@@ -21,6 +21,7 @@ import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.model_wrappers.GitTagDefinition;
 import de.catma.repository.git.serialization.models.GitTagsetHeader;
+import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 
@@ -264,6 +265,60 @@ public class GitTagsetHandler {
 					targetTagDefinitionsFolderAbsolutePath, 
 					remoteGitServerManager.getUsername(),
 					remoteGitServerManager.getEmail());
+				
+			return tagsetRevision;
+		}
+	}
+
+	public String removePropertyDefinition(
+			String projectId, TagsetDefinition tagsetDefinition,
+			TagDefinition tagDefinition, PropertyDefinition propertyDefinition) 
+		throws IOException {
+		
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+			
+			String tagsetGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + tagsetDefinition.getUuid();
+
+			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
+
+			// write header.json with deletion journal
+			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), "header.json");
+			
+			GitTagsetHeader header = 
+					new GitTagsetHeader(
+							tagsetDefinition.getName(), 
+							"", //TODO: description
+							new TreeSet<>(tagsetDefinition.getDeletedDefinitions()));
+			String serializedHeader = new SerializationHelper<GitTagsetHeader>().serialize(header);
+			
+			localGitRepoManager.add(
+					targetHeaderFile,
+					serializedHeader.getBytes(StandardCharsets.UTF_8));
+			
+			String targetPropertyDefinitionsFileRelativePath =
+					(StringUtils.isEmpty(tagDefinition.getParentUuid()) ? "" : (tagDefinition.getParentUuid() + "/"))
+					+ tagDefinition.getUuid()
+					+ "/propertydefs.json";
+			
+			File targetPropertyDefinitionsFileAbsolutePath = Paths.get(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					targetPropertyDefinitionsFileRelativePath
+			).toFile();
+
+			GitTagDefinition gitTagDefinition = new GitTagDefinition(tagDefinition);
+			String serializedGitTagDefinition = 
+					new SerializationHelper<GitTagDefinition>().serialize(gitTagDefinition);
+
+			String tagsetRevision = localGitRepoManager.addAndCommit(
+				targetPropertyDefinitionsFileAbsolutePath, 
+				serializedGitTagDefinition.getBytes(StandardCharsets.UTF_8), 
+				remoteGitServerManager.getUsername(),
+				remoteGitServerManager.getEmail());
+			
 				
 			return tagsetRevision;
 		}

@@ -31,19 +31,20 @@ public class UIBackgroundService implements BackgroundService {
 	public <T> void submit(final ProgressCallable<T> callable,
 			final ExecutionListener<T> listener, final ProgressListener progressListener) {
         if (background) {
+        	final UI ui = UI.getCurrent();
             backgroundThread.submit( new Runnable() {
                 public void run() {
                     try {
                         callable.setProgressListener( progressListener );
                         final T result = callable.call();
-                        if (UI.getCurrent() != null && UI.getCurrent().isAttached()) {
-	                        UI.getCurrent().access(new Runnable() {
+                        if (ui != null && ui.isAttached()) {
+	                        ui.access(new Runnable() {
 	                        	public void run() {
 	                        		try {
 	                        			listener.done(result);
 	                        		}
 	                        		finally {
-//		                        		UI.getCurrent().push();
+//		                        		ui.push();
 	                        		}
 	                        	}
 	                        });
@@ -53,14 +54,14 @@ public class UIBackgroundService implements BackgroundService {
                         	Logger.getLogger(
                         			getClass().getName()).log(
                         					Level.SEVERE, "error", t); //$NON-NLS-1$
-                        	if (UI.getCurrent() != null && UI.getCurrent().isAttached()) {
-	                            UI.getCurrent().access(new Runnable() {
+                        	if (ui != null && ui.isAttached()) {
+	                            ui.access(new Runnable() {
 	                            	public void run() {
 	                            		try {
 	                            			listener.error(t);
 	                            		}
 	                            		finally {
-//		                            		UI.getCurrent().push();
+//		                            		ui.push();
 	                            		}
 	                            	}
 	                            });

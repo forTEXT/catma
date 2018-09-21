@@ -6,17 +6,22 @@ public enum NodeType implements Label {
 	User,
 	Project, 
 	ProjectRevision,
+	
 	SourceDocument,
 	Term,
 	Position,
+	
 	MarkupCollection,
+	TagInstance,
+	AnnotationProperty,
+	
 	Tagset,
 	Tag,
-	DeletedTag,
 	Property,
-	TagInstance,
+	
+	DeletedTag,
+	DeletedProperty,
 	DeletedTagInstance,
-	AnnotationProperty,
 	DeletedAnnotationProperty,
 	;
 	

@@ -2,8 +2,10 @@ package de.catma.ui.project;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.HashSet;
 
 import com.vaadin.ui.Component;
+import com.vaadin.ui.UI;
 
 import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
@@ -12,6 +14,10 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.IndexedRepository;
 import de.catma.project.ProjectManager;
 import de.catma.tag.TagLibrary;
+import de.catma.ui.CatmaApplication;
+import de.catma.ui.analyzer.AnalyzerView;
+import de.catma.ui.analyzer.AnalyzerView.CloseListener;
+import de.catma.ui.analyzer.Messages;
 import de.catma.ui.tabbedview.TabbedView;
 import de.catma.ui.tagger.TaggerView;
 
@@ -115,10 +121,34 @@ public class ProjectManagerView extends TabbedView {
 	}
 
 	public void analyze(Corpus corpus, IndexedRepository repository) {
-		// TODO Auto-generated method stub
-//		menu.executeEntry(analyzerManagerView);
-//		analyzerManagerView.analyzeDocuments(corpus, repository);
-		
+		try {
+			AnalyzerView analyzerView = new AnalyzerView(corpus, repository, new CloseListener() {
+	
+				public void closeRequest(AnalyzerView analyzerView) {
+					onTabClose(analyzerView);
+				}
+			});
+	
+			HashSet<String> captions = new HashSet<String>();
+	
+			for (Component c : this.getTabSheet()) {
+				captions.add(getCaption(c));
+			}
+	
+			String base = (corpus == null) ? Messages.getString("AnalyzerManagerView.allDocuments") : corpus.toString(); //$NON-NLS-1$
+			String caption = base;
+	
+			int captionIndex = 1;
+			while (captions.contains(caption)) {
+				caption = base + "(" + captionIndex + ")"; //$NON-NLS-1$ //$NON-NLS-2$
+				captionIndex++;
+			}
+	
+			addClosableTab(analyzerView, caption);
+		}
+		catch (Exception e) {
+			((CatmaApplication)UI.getCurrent()).showAndLogError("Error showing Analyzer", e);
+		}
 	}
 
 	public void analyzeCurrentlyActiveDocument(Repository repository) {
