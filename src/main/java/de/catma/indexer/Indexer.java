@@ -68,7 +68,7 @@ public interface Indexer {
 			String phrase, List<String> termList, int limit) throws Exception;
 	
 	public QueryResult searchWildcardPhrase(List<String> documentIdList,
-			List<String> termList, int limit) throws IOException;
+			List<String> termList, int limit) throws Exception;
 	
 	public QueryResult searchTagDefinitionPath(
 			List<String> userMarkupCollectionIdList, 

@@ -30,6 +30,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.Indexer;
+import de.catma.indexer.SQLWildcard2RegexConverter;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
@@ -112,14 +113,13 @@ public class GraphProjectIndexer implements Indexer {
 					+ "(s:"+nt(SourceDocument)+")"
 					+ "<-[:"+rt(isPartOf)+"]-(t0:"+nt(Term)+"{literal:{pLiteral0}})-[:"+rt(hasPosition)+"]->"
 					+ "(p0:"+nt(NodeType.Position)+")"
-					+ createTermPositionPathCypher(termList.size()-1)
+					+ createTermPositionPathCypher(termList.size()-1, true)
 					+ " WHERE s.sourceDocumentId IN {pDocumentIdList} "
 					+ " RETURN s.sourceDocumentId, p0.startOffset AS startOffset"
-					+ ", p"+(termList.size()-1)+".endOffset AS endOffset "
-//					+ createReturnTermListCypher(termList.size()-1)
-					,	
+					+ ", p"+(termList.size()-1)+".endOffset AS endOffset ",	
 					Values.parameters(createParametersWithTermList(
 							termList.size()>1?termList.subList(1, termList.size()):Collections.emptyList(),
+							false,
 							"pUserId", user.getIdentifier(),
 							"pProjectId", projectReference.getProjectId(),
 							"pRootRevisionHash", rootRevisionHashSupplier.get(),
@@ -144,25 +144,7 @@ public class GraphProjectIndexer implements Indexer {
 		return result;
 	}
 
-	private String createReturnTermListCypher(int termCount) {
-		if (termCount == 0) {
-			return "";
-		}
-
-		StringBuilder builder = new StringBuilder();
-		
-		// , t2, p2, ...
-		for (int idx=1; idx<=termCount; idx++) {
-			builder.append(", t");
-			builder.append(idx);
-			builder.append(", p");
-			builder.append(idx);
-		}
-
-		return builder.toString();
-	}
-
-	private Object[] createParametersWithTermList(List<String> termList, Object...keysAndValues) {
+	private Object[] createParametersWithTermList(List<String> termList, boolean convertWildcard, Object...keysAndValues) {
 
 		Object[] parameters = new Object[(termList.size()*2)+keysAndValues.length];
 		
@@ -176,7 +158,7 @@ public class GraphProjectIndexer implements Indexer {
 		for (String term : termList) {
 			parameters[idx] = "pLiteral"+termIdx;
 			idx++;
-			parameters[idx] = term; 
+			parameters[idx] = convertWildcard?SQLWildcard2RegexConverter.convert(term):term; 
 			idx++;
 			
 			termIdx++;
@@ -185,7 +167,7 @@ public class GraphProjectIndexer implements Indexer {
 		return parameters;
 	}
 
-	private String createTermPositionPathCypher(int termCount) {
+	private String createTermPositionPathCypher(int termCount, boolean includeLiteralMatching) {
 		if (termCount == 0) {
 			return "";
 		}
@@ -205,9 +187,13 @@ public class GraphProjectIndexer implements Indexer {
 			builder.append(argIdx);
 			builder.append(")<-[:hasPosition]-(t");
 			builder.append(argIdx);
-			builder.append(":Term{literal:{pLiteral");
-			builder.append(argIdx);
-			builder.append("}})");
+			builder.append(":Term");
+			if (includeLiteralMatching) {
+				builder.append("{literal:{pLiteral");
+				builder.append(argIdx);
+				builder.append("}}");
+			}
+			builder.append(")");
 		}
 
 		return builder.toString();
@@ -215,9 +201,63 @@ public class GraphProjectIndexer implements Indexer {
 	
 	@Override
 	public QueryResult searchWildcardPhrase(List<String> documentIdList, List<String> termList, int limit)
-			throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+			throws Exception {
+		final QueryResultRowArray result = new QueryResultRowArray();
+
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				StatementResult statementResult = session.run(
+					" MATCH (:"+nt(User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+ "(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+					+ "(s:"+nt(SourceDocument)+")"
+					+ "<-[:"+rt(isPartOf)+"]-(t0:"+nt(Term)+")-[:"+rt(hasPosition)+"]->"
+					+ "(p0:"+nt(NodeType.Position)+")"
+					+ createTermPositionPathCypher(termList.size()-1, false)
+					+ " WHERE s.sourceDocumentId IN {pDocumentIdList} "
+					+ createWhereCypherWithWildcardMatch(termList.size())
+					+ " RETURN s.sourceDocumentId, p0.startOffset AS startOffset"
+					+ ", p"+(termList.size()-1)+".endOffset AS endOffset ",	
+					Values.parameters(createParametersWithTermList(
+							termList.size()>1?termList.subList(1, termList.size()):Collections.emptyList(),
+							true,
+							"pUserId", user.getIdentifier(),
+							"pProjectId", projectReference.getProjectId(),
+							"pRootRevisionHash", rootRevisionHashSupplier.get(),
+							"pDocumentIdList", documentIdList,
+							"pLiteral0", SQLWildcard2RegexConverter.convert(termList.get(0))
+						))
+				);
+				
+				while (statementResult.hasNext()) {
+					Record record = statementResult.next();
+					
+					String sourceDocumentId = record.get("s.sourceDocumentId").asString();
+					int startOffset = record.get("startOffset").asInt();
+					int endOffset = record.get("endOffset").asInt();
+					
+					QueryResultRow row = new QueryResultRow(sourceDocumentId, new Range(startOffset, endOffset));
+					result.add(row);
+				}
+			}
+		});
+		
+		return result;
+	}
+
+	private String createWhereCypherWithWildcardMatch(int termCount) {
+		StringBuilder builder = new StringBuilder();
+		
+		for (int termIdx = 0; termIdx<termCount; termIdx++) {
+			builder.append(" AND t");
+			builder.append(termIdx);
+			builder.append(".literal =~ {pLiteral");
+			builder.append(termIdx);
+			builder.append("} ");
+		}
+		
+		return builder.toString();
 	}
 
 	@Override
