@@ -1,12 +1,11 @@
 package de.catma.v10ui.modules.analyze;
 
-import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.HasComponents;
-import com.vaadin.flow.component.HtmlComponent;
+import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
-import elemental.html.HtmlElement;
 
 import java.time.Instant;
 
@@ -15,15 +14,17 @@ import java.time.Instant;
  * A dummy View for now
  * @author db
  */
-@Tag("analyze-view")
-public class AnalyzeView extends HtmlComponent implements HasComponents{
+public class AnalyzeView extends Composite<Div> implements HasComponents, HasStyle {
 
     public AnalyzeView() {
-        initComponents();
     }
 
-    private void initComponents(){
+    @Override
+    protected Div initContent() {
         Button testButton = new Button("Dummy " + Instant.now());
-        add(testButton);
+        Div content = new Div(testButton);
+        content.setClassName("analyze-view");
+        return content;
     }
+
 }

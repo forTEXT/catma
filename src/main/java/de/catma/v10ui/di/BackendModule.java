@@ -10,10 +10,16 @@ import java.io.IOException;
 
 import static de.catma.v10ui.authentication.DummyAuth.DUMMYIDENT;
 
-public class GitProjectManagerModule extends AbstractModule {
+/**
+ * Provides all backend Objects
+ *
+ */
+public class BackendModule extends AbstractModule {
+
 
     //TODO: remove DUMMYIdent and do proper authentication using DI with guice
-    @Provides @UIScope
+    @Provides
+    @UIScope
     GitProjectManager provideGitRepoManager() throws IOException {
         return new GitProjectManager( RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(), DUMMYIDENT);
     }

@@ -1,9 +1,10 @@
 package de.catma.v10ui.modules.main;
 
-import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.HasComponents;
+import com.vaadin.flow.component.HasStyle;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Nav;
-import com.vaadin.flow.component.html.OrderedList;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.router.RouterLink;
 import de.catma.v10ui.routing.AnalyzeRoute;
 import de.catma.v10ui.routing.ProjectRoute;
@@ -15,25 +16,20 @@ import de.catma.v10ui.routing.ProjectRoute;
  *
  * @author db
  */
-public class CatmaNav extends Composite<Nav> implements HasComponents {
+public class CatmaNav extends Nav {
 
-    private final RouterLink projectsLi = new RouterLink("Projects", ProjectRoute.class);
+    private final RouterLink projectsLink = new RouterLink("Project", ProjectRoute.class);
    // private final RouterLink tagsLi = new RouterLink("Tags",Pr);
    // private final RouterLink annotateLi = new RouterLink("Annotate",null);
-    private final RouterLink analyzeLi = new RouterLink("Analyze", AnalyzeRoute.class);
+    private final RouterLink analyzeLink = new RouterLink("Analyze", AnalyzeRoute.class);
 
-    private final OrderedList navigationList = new OrderedList();
 
     public CatmaNav(){
         initComponents();
     }
 
     private void initComponents() {
-        navigationList.add(projectsLi);
-    //    navigationList.add(tagsLi);
-    //    navigationList.add(annotateLi);
-        navigationList.add(analyzeLi);
-        add(navigationList);
+        add(new H3(projectsLink));
+        add(new H3(analyzeLink));
     }
-
 }
