@@ -1,14 +1,19 @@
 package de.catma.v10ui.modules.dashboard;
 
+import com.google.inject.Inject;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.binder.HasItems;
+import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.v10ui.modules.main.ErrorLogger;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -17,8 +22,14 @@ public class ProjectCard extends Composite<VerticalLayout> implements HasItems<P
 
     private ProjectReference item;
 
-    public ProjectCard(ProjectReference t){
+    private final ErrorLogger errorLogger;
+    private final ProjectManager projectManager;
+
+    @Inject
+    ProjectCard(ProjectReference t, ProjectManager projectManager, ErrorLogger errorLogger){
         setItems(t);
+        this.projectManager = projectManager;
+        this.errorLogger = errorLogger;
     }
 
     @Override
@@ -53,6 +64,24 @@ public class ProjectCard extends Composite<VerticalLayout> implements HasItems<P
         buttonRemove.getElement().setAttribute("theme","icon");
         descriptionBar.add(buttonRemove);
 
+        buttonRemove.addClickListener(
+                (event -> {
+                    ConfirmDialog dialog = new ConfirmDialog("delete Project",
+                            "do you want to delete Project: " + item.getName(),
+                            "OK",
+                            (evt) -> {
+                                try {
+                                    projectManager.delete(item.getProjectId());
+                                } catch (Exception e) {
+                                    errorLogger.showAndLogError("can't delete project " + item.getName(), e);
+                                }
+                            },
+                            "Cancel",
+                            (evt) -> {}
+                    );
+                    dialog.open();
+                }
+                ));
         Button buttonAction = new Button(null, VaadinIcon.ELLIPSIS_DOTS_V.create());
         buttonAction.getElement().setAttribute("theme","icon");
         descriptionBar.add(buttonAction);

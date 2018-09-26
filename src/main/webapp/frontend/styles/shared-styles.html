@@ -15,6 +15,27 @@
             width: 100%;
         }
 
+        header {
+            background-color: #0c719a;
+            color: white;
+            padding: 0.5em;
+            height: 56px;
+            display: flex;
+            align-items: center;
+        }
+
+        header a {
+            color: white;
+        }
+
+        header a:hover {
+            text-decoration: none;
+        }
+
+        header h1, header h2, header h3, header h4, header h5, header h6 {
+            margin: 0em;
+        }
+
         .main-view {
             display: flex;
             flex-direction: column;
@@ -28,19 +49,23 @@
         .main-section {
             flex-direction: row;
             display: flex;
+            flex-grow: 1;
         }
 
 
         .view-section {
             flex-direction: row;
             display: flex;
+            flex-grow: 1;
         }
 
         nav {
             flex-direction: column;
             display: flex;
-            min-height: 600px;
             align-items: center;
+            background-color: #e0e0e0;
+            flex-grow: 1;
+            padding: 1em;
         }
 
         nav a {
@@ -48,7 +73,7 @@
             margin-right: 20px;
             margin-top: 10px;
             margin-bottom: 10px;
-            color: inherit;
+            color: var(--lumo-body-text-color);
         }
 
         nav a:hover {

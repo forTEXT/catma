@@ -10,6 +10,7 @@ import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.v10ui.modules.main.ErrorLogger;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -35,7 +36,7 @@ public class DashboardView extends Composite<Div> {
         Div content = new Div();
         content.setClassName("dashboard-view");
 
-        ProjectList projects = new ProjectList();
+        ProjectList projects = new ProjectList(projectManager, errorLogger);
         FlexLayout receivedResources = new FlexLayout();
 
         try {

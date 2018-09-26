@@ -1,9 +1,12 @@
 package de.catma.v10ui.modules.dashboard;
 
+import com.google.inject.Inject;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasStyle;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -13,7 +16,9 @@ import com.vaadin.flow.data.binder.HasItemsAndComponents;
 import com.vaadin.flow.data.provider.DataChangeEvent;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.Query;
+import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.v10ui.modules.main.ErrorLogger;
 
 import java.util.Objects;
 
@@ -23,6 +28,15 @@ import java.util.Objects;
  */
 public class ProjectList extends Composite<VerticalLayout> implements
         HasDataProvider<ProjectReference> {
+
+    private final ProjectManager projectManager;
+    private final ErrorLogger errorLogger;
+
+    @Inject
+    ProjectList(ProjectManager projectManager, ErrorLogger errorLogger) {
+        this.errorLogger = errorLogger;
+        this.projectManager = projectManager;
+    }
 
     //data elements
     private DataProvider<ProjectReference, ?> dataProvider = DataProvider.ofItems();;
@@ -47,7 +61,7 @@ public class ProjectList extends Composite<VerticalLayout> implements
 
     private void rebuild() {
         projectsLayout.removeAll();
-        this.dataProvider.fetch(new Query<>()).map(ProjectCard::new)
+        this.dataProvider.fetch(new Query<>()).map((prj) -> new ProjectCard(prj,projectManager,errorLogger))
                 .forEach(projectsLayout::add);
     }
 
@@ -55,19 +69,24 @@ public class ProjectList extends Composite<VerticalLayout> implements
     protected VerticalLayout initContent() {
         VerticalLayout content = new VerticalLayout();
         content.setSpacing(false);
-        content.setPadding(false);
+        content.setPadding(true);
         HorizontalLayout descriptionBar = new HorizontalLayout();
         Span description = new Span("all projects");
-        //description.setWidth("100%");
+        description.setWidth("100%");
 
         Span title = new Span("title");
 
+        Button upAction = new Button(null, VaadinIcon.ARROW_UP.create());
+        upAction.getElement().setAttribute("theme","icon");
+
         descriptionBar.add(description);
         descriptionBar.add(title);
+        descriptionBar.add(upAction);
+
         descriptionBar.setWidth("100%");
         descriptionBar.setAlignItems(FlexComponent.Alignment.BASELINE);
-        descriptionBar.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-        descriptionBar.setSpacing(false);
+        descriptionBar.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+        descriptionBar.setSpacing(true);
 
         content.add(descriptionBar);
 

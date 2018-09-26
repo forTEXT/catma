@@ -1,13 +1,13 @@
 package de.catma.v10ui.di;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.mysql.jdbc.Messages;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.page.Page;
 import com.vaadin.guice.annotation.UIScope;
-import de.catma.user.User;
 import de.catma.v10ui.modules.main.ErrorLogger;
 
 import java.text.MessageFormat;
@@ -37,11 +37,14 @@ public class NotificationAndLogfileLogger implements ErrorLogger {
             message = Messages.getString("CatmaApplication.internalError"); //$NON-NLS-1$
         }
         if (page != null) {
-            Notification notification = new Notification(MessageFormat.format(
+            Div content = new Div();
+            content.addClassName("c__error");
+            content.setText(MessageFormat.format(
                     Messages.getString("CatmaApplication.errorOccurred"), message, e.getMessage()));
-            notification.setText(message);
-            notification.setDuration(2000);
-            notification.setPosition(Notification.Position.MIDDLE);
+            content.setSizeFull();
+            Notification notification = new Notification(content);
+            notification.setPosition(Notification.Position.TOP_STRETCH);
+            notification.setDuration(0);
             UI.getCurrent().access(() -> notification.open());
         }
     }

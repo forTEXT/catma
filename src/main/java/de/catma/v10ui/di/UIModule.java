@@ -27,7 +27,6 @@ public class UIModule extends AbstractModule {
     }
 
     @Provides
-    @UIScope
     public DashboardView provideDashboardView(GitProjectManager gitProjectManager, ErrorLogger errorLogger){
         return new DashboardView(gitProjectManager, errorLogger);
     }
