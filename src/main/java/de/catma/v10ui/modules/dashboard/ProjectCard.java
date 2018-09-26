@@ -1,21 +1,27 @@
 package de.catma.v10ui.modules.dashboard;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.binder.HasItems;
+import com.vaadin.flow.router.QueryParameters;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.v10ui.modules.main.ErrorLogger;
+import de.catma.v10ui.routing.Routes;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 
 public class ProjectCard extends Composite<VerticalLayout> implements HasItems<ProjectReference> {
@@ -45,10 +51,16 @@ public class ProjectCard extends Composite<VerticalLayout> implements HasItems<P
         layout.setPadding(false);
         layout.setSpacing(false);
         layout.setWidth("352px");
-        VerticalLayout preview = new VerticalLayout();
+
+        Div preview = new Div(){};
         preview.addClassName("projectlist__card__preview");
         preview.add(new Span(item.getDescription()));
         preview.add(new Span(item.getProjectId()));
+
+        Map<String,String> queryParams = ImmutableMap.of("pid",item.getProjectId());
+
+        preview.addClickListener((click) -> UI.getCurrent().navigate(Routes.PROJECTS,QueryParameters.simple(queryParams)));
+
         layout.add(preview);
 
         HorizontalLayout descriptionBar = new HorizontalLayout();

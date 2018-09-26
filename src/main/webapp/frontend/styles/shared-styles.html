@@ -57,6 +57,7 @@
             flex-direction: row;
             display: flex;
             flex-grow: 1;
+            width: 100%;
         }
 
         nav {
@@ -74,6 +75,11 @@
             margin-top: 10px;
             margin-bottom: 10px;
             color: var(--lumo-body-text-color);
+        }
+
+        nav h3 {
+            color: var(--lumo-disabled-text-color);
+
         }
 
         nav a:hover {
@@ -109,6 +115,10 @@
         .projectlist__card__preview {
             height: 176px;
             background-color: #cdcdcd;
+            display: flex;
+            flex-direction: column;
+            padding: 0.5em;
+            cursor: pointer;
         }
 
 

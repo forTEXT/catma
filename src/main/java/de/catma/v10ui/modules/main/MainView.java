@@ -76,6 +76,7 @@ public class MainView extends Div implements RouterLayout, HasComponents, Before
     @Override
     public void showRouterLayoutContent(HasElement content) {
         viewSection.getElement().appendChild(new Element[]{(Element)Objects.requireNonNull(content.getElement())});
+        navigation.refresh();
     }
 
     @Override
