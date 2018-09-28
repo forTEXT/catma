@@ -751,7 +751,7 @@ public class GraphProjectHandler {
 						if (tagNode != null) {
 							@SuppressWarnings("unchecked")
 							List<Node> propertyNodes = (List<Node>)tagDefTripleList.get(1);
-							String parentTagId = (tagDefTripleList.get(2)==null)?null:((Value)tagDefTripleList.get(2)).asString();
+							String parentTagId = (tagDefTripleList.get(2)==null)?null:tagDefTripleList.get(2).toString();
 							TagDefinition tagDefinition = 
 								createTag(tagNode, parentTagId, tagsetDefinition.getUuid(), propertyNodes);
 							tagsetDefinition.addTagDefinition(tagDefinition);

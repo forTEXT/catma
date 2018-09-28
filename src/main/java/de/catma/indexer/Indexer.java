@@ -72,11 +72,11 @@ public interface Indexer {
 	
 	public QueryResult searchTagDefinitionPath(
 			List<String> userMarkupCollectionIdList, 
-			String tagDefinitionPath) throws IOException;
+			String tagDefinitionPath) throws Exception;
 	
 	public QueryResult searchProperty(
 			List<String> userMarkupCollectionIdList,
-			String propertyName, String propertyValue, String tagValue) throws IOException;
+			String propertyName, String propertyValue, String tagValue) throws Exception;
 	
 	public QueryResult searchFreqency(
 			List<String> documentIdList, 

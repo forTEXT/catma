@@ -6,13 +6,18 @@ public class SQLWildcard2RegexConverter {
 
 	private static final String ANY_CHAR_WILDCARD = "%";
 	private static final String SINGLE_CHAR_WILDCARD = "_";
-	private static final String UNESCAPED_ANY_CHAR_WILDCARD = "((?<=[^\\\\])%)|(^%)";
-	private static final String UNESCAPED_SINGLE_CHAR_WILDCARD = "((?<=[^\\\\])_)|(^_)";
+	public static final String UNESCAPED_ANY_CHAR_WILDCARD = "((?<=[^\\\\])%)|(^%)";
+	public static final String UNESCAPED_SINGLE_CHAR_WILDCARD = "((?<=[^\\\\])_)|(^_)";
 
 	private static final String SINGLE_CHAR_WILDCARD_REPLACEMENT_PATTERN = ".{1}?";
 	private static final String ANY_CHAR_WILDCARD_REPLACEMENT_PATTERN = ".*?";
 
-
+	public static boolean containsWildcard(String term) {
+		return term.matches(
+			ANY_CHAR_WILDCARD_REPLACEMENT_PATTERN+UNESCAPED_ANY_CHAR_WILDCARD+ANY_CHAR_WILDCARD_REPLACEMENT_PATTERN) 
+				|| term.matches(ANY_CHAR_WILDCARD_REPLACEMENT_PATTERN+UNESCAPED_SINGLE_CHAR_WILDCARD+ANY_CHAR_WILDCARD_REPLACEMENT_PATTERN);
+	}
+	
 	public static String convert(String wildcardTerm) {
 		
 		// match all?
