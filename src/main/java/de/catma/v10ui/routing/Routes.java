@@ -11,12 +11,12 @@ public final class Routes {
      */
     private Routes() { }
 
-
     public static final String ROOT = "";
     public static final String PROJECTS = "projects";
     public static final String TAGS = "tags";
     public static final String ANNOTATE = "annotate";
     public static final String ANALYZE = "analyze";
+    public static final String DASHBOARD = "dashboard";
 
 
 }

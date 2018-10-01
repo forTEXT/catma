@@ -11,7 +11,116 @@
             /* Avoid horizontal scrollbars, mainly on IE11 */
             overflow-x: hidden;
             background-color: var(--lumo-contrast-5pct);
+            height:100%;
+            width: 100%;
         }
+
+        header {
+            background-color: #0c719a;
+            color: white;
+            padding: 0.5em;
+            height: 56px;
+            display: flex;
+            align-items: center;
+        }
+
+        header a {
+            color: white;
+        }
+
+        header a:hover {
+            text-decoration: none;
+        }
+
+        header h1, header h2, header h3, header h4, header h5, header h6 {
+            margin: 0em;
+        }
+
+        .main-view {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            min-height: 100vh;
+            max-width: 1960px;
+            margin: 0 auto;
+        }
+
+        .main-section {
+            flex-direction: row;
+            display: flex;
+            flex-grow: 1;
+        }
+
+
+        .view-section {
+            flex-direction: row;
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+        }
+
+        nav {
+            flex-direction: column;
+            display: flex;
+            align-items: center;
+            background-color: #e0e0e0;
+            flex-grow: 1;
+            padding: 1em;
+        }
+
+        nav a {
+            margin-left: 20px;
+            margin-right: 20px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            color: var(--lumo-body-text-color);
+        }
+
+        nav h3 {
+            color: var(--lumo-disabled-text-color);
+
+        }
+
+        nav a:hover {
+            text-decoration: none;
+        }
+
+
+        /*
+        * Projectlist in dashboard
+        */
+
+        .projectlist {
+            flex-wrap: wrap;
+        }
+
+        .projectlist vaadin-button {
+            background-color: transparent;
+        }
+
+        .projectlist .vaadin-button-container {
+            width: 500px;
+        }
+
+
+        .projectlist__card {
+            width: 352px;
+            border-radius: 4px;
+            background-color: #ffffff;
+            border: solid 1px rgba(151, 151, 151, 0.12);
+            margin: 10px;
+        }
+
+        .projectlist__card__preview {
+            height: 176px;
+            background-color: #cdcdcd;
+            display: flex;
+            flex-direction: column;
+            padding: 0.5em;
+            cursor: pointer;
+        }
+
 
         .main-layout {
             display: flex;
@@ -22,6 +131,7 @@
             max-width: 1960px;
             margin: 0 auto;
         }
+
         .main-layout__title {
             font-size: 1em;
             margin: 0;
