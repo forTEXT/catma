@@ -246,7 +246,7 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 				btloginLogout.click();
 			}
 
-			setPollInterval(10000);
+			setPollInterval(1000);
 
 			
 //TODO:

@@ -61,22 +61,22 @@ public interface Indexer {
 	 * @param termList the terms of that phrase in writing order
 	 * @param limit a limit for the amount of result rows
 	 * @return occurrences of that phrase
-	 * @throws IOException
+	 * @throws Exception 
 	 */
 	public QueryResult searchPhrase(
 			List<String> documentIdList, 
-			String phrase, List<String> termList, int limit) throws IOException;
+			String phrase, List<String> termList, int limit) throws Exception;
 	
 	public QueryResult searchWildcardPhrase(List<String> documentIdList,
-			List<String> termList, int limit) throws IOException;
+			List<String> termList, int limit) throws Exception;
 	
 	public QueryResult searchTagDefinitionPath(
 			List<String> userMarkupCollectionIdList, 
-			String tagDefinitionPath) throws IOException;
+			String tagDefinitionPath) throws Exception;
 	
 	public QueryResult searchProperty(
 			List<String> userMarkupCollectionIdList,
-			String propertyName, String propertyValue, String tagValue) throws IOException;
+			String propertyName, String propertyValue, String tagValue) throws Exception;
 	
 	public QueryResult searchFreqency(
 			List<String> documentIdList, 

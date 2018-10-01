@@ -42,6 +42,7 @@ import de.catma.project.ProjectReference;
 import de.catma.repository.git.graph.FileInfoProvider;
 import de.catma.repository.git.graph.GraphProjectHandler;
 import de.catma.repository.git.graph.GraphProjectHandler.TagInstanceSynchHandler;
+import de.catma.repository.git.graph.indexer.GraphProjectIndexer;
 import de.catma.serialization.UserMarkupCollectionSerializationHandler;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
@@ -83,6 +84,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private PropertyChangeListener tagDefinitionChangedListener;
 	private PropertyChangeListener userDefinedPropertyChangedListener;
 	private TagLibraryReference tagLibraryReference;
+	private GraphProjectIndexer indexer;
 
 	public GraphWorktreeProject(GitUser user, 
 			GitProjectHandler gitProjectHandler,
@@ -112,7 +114,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 					}
 				});
 		this.tempDir = RepositoryPropertyKey.TempDir.getValue();
-		
+		this.indexer = new GraphProjectIndexer(user, projectReference, () -> this.rootRevisionHash);
 	}
 	
 	private Path getTokenizedSourceDocumentPath(String documentId) {
@@ -124,8 +126,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	@Override
 	public Indexer getIndexer() {
-		// TODO Auto-generated method stub
-		return null;
+		return indexer;
 	}
 	
 	@Override
@@ -874,8 +875,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 
 	@Override
 	public User getUser() {
-		// TODO 
-		return null;
+		return user;
 	}
 
 	@Override

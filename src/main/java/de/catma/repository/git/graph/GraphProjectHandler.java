@@ -2,6 +2,7 @@ package de.catma.repository.git.graph;
 
 import static de.catma.repository.git.graph.NodeType.AnnotationProperty;
 import static de.catma.repository.git.graph.NodeType.DeletedAnnotationProperty;
+import static de.catma.repository.git.graph.NodeType.DeletedProperty;
 import static de.catma.repository.git.graph.NodeType.DeletedTag;
 import static de.catma.repository.git.graph.NodeType.DeletedTagInstance;
 import static de.catma.repository.git.graph.NodeType.MarkupCollection;
@@ -750,7 +751,7 @@ public class GraphProjectHandler {
 						if (tagNode != null) {
 							@SuppressWarnings("unchecked")
 							List<Node> propertyNodes = (List<Node>)tagDefTripleList.get(1);
-							String parentTagId = (tagDefTripleList.get(2)==null)?null:((Value)tagDefTripleList.get(2)).asString();
+							String parentTagId = (tagDefTripleList.get(2)==null)?null:tagDefTripleList.get(2).toString();
 							TagDefinition tagDefinition = 
 								createTag(tagNode, parentTagId, tagsetDefinition.getUuid(), propertyNodes);
 							tagsetDefinition.addTagDefinition(tagDefinition);
@@ -1360,8 +1361,31 @@ public class GraphProjectHandler {
 	}
 
 	public void removePropertyDefinition(String rootRevisionHash, PropertyDefinition propertyDefinition,
-			TagDefinition tagDefinition, TagsetDefinition tagsetDefinition, String oldRootRevisionHash) {
-		// TODO Auto-generated method stub
-		
+			TagDefinition tagDefinition, TagsetDefinition tagsetDefinition, String oldRootRevisionHash) throws Exception {
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}})-[:"+rt(hasTag)+"]->"
+					+"(:"+nt(Tag)+"{tagId:{pTagId}})-[:"+rt(hasProperty)+"]->"
+					+"(p:"+nt(Property)+"{uuid:{pPropertyId}}) "
+					+"SET ts.revisionHash = {pTagsetRevisionHash} "
+					+"REMOVE p:"+nt(Property)+ " "
+					+"SET p:"+nt(DeletedProperty)+ " ",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pTagsetId", tagsetDefinition.getUuid(),
+						"pTagId", tagDefinition.getUuid(),
+						"pPropertyId", propertyDefinition.getUuid(),
+						"pTagsetRevisionHash", tagsetDefinition.getRevisionHash()
+					)
+				);
+			}
+		});		
 	}
 }

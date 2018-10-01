@@ -419,9 +419,15 @@ public class GitProjectHandler {
 	}
 
 	public String removePropertyDefinition(PropertyDefinition propertyDefinition, TagDefinition tagDefinition,
-			TagsetDefinition tagsetDefinition) {
-		// TODO Auto-generated method stub
-		return null;
+			TagsetDefinition tagsetDefinition) throws IOException {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+
+			String tagsetRevision = 
+				gitTagsetHandler.removePropertyDefinition(projectId, tagsetDefinition, tagDefinition, propertyDefinition);
+			
+			return tagsetRevision;
+		}
 	}
 
 }

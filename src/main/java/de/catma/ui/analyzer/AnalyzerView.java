@@ -88,7 +88,7 @@ import de.catma.util.Equal;
 public class AnalyzerView extends VerticalLayout 
 implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, RelevantUserMarkupCollectionProvider, TagKwicResultsProvider {
 	
-	static interface CloseListener {
+	public static interface CloseListener {
 		public void closeRequest(AnalyzerView analyzerView);
 	}
 	
