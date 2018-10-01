@@ -2,6 +2,7 @@ package de.catma.indexer;
 
 import java.util.regex.Pattern;
 
+@Deprecated
 public class SQLWildcard2RegexConverter {
 
 	private static final String ANY_CHAR_WILDCARD = "%";
@@ -13,9 +14,10 @@ public class SQLWildcard2RegexConverter {
 	private static final String ANY_CHAR_WILDCARD_REPLACEMENT_PATTERN = ".*?";
 
 	public static boolean containsWildcard(String term) {
+		//TODO:bug
 		return term.matches(
-			ANY_CHAR_WILDCARD_REPLACEMENT_PATTERN+UNESCAPED_ANY_CHAR_WILDCARD+ANY_CHAR_WILDCARD_REPLACEMENT_PATTERN) 
-				|| term.matches(ANY_CHAR_WILDCARD_REPLACEMENT_PATTERN+UNESCAPED_SINGLE_CHAR_WILDCARD+ANY_CHAR_WILDCARD_REPLACEMENT_PATTERN);
+			ANY_CHAR_WILDCARD_REPLACEMENT_PATTERN+"("+UNESCAPED_ANY_CHAR_WILDCARD+")"+ANY_CHAR_WILDCARD_REPLACEMENT_PATTERN) 
+				|| term.matches(ANY_CHAR_WILDCARD_REPLACEMENT_PATTERN+"("+UNESCAPED_SINGLE_CHAR_WILDCARD+")"+ANY_CHAR_WILDCARD_REPLACEMENT_PATTERN);
 	}
 	
 	public static String convert(String wildcardTerm) {
@@ -52,8 +54,10 @@ public class SQLWildcard2RegexConverter {
 				// catch ANY_CHAR_WILDCARD parts that consist of nonwildcard chars 
 				// and end with unescaped single char wildcard
 				if ((anyCharWildcardPart.length()>1) 
+						//TODO: cope with more than one _
 						&& (anyCharWildcardPart.matches(
 							ANY_CHAR_WILDCARD_REPLACEMENT_PATTERN + UNESCAPED_SINGLE_CHAR_WILDCARD))) {
+				
 					pattern.append(singleCharWildcardConc);
 				}
 			}

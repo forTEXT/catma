@@ -18,6 +18,8 @@
  */
 package de.catma.indexer;
 
+import de.catma.indexer.wildcard2regex.SQLWildcard2RegexConverter;
+
 /**
  * Matches a first term that can contain the SQL-wildcards % (zero or more) and _ (excactly one) 
  * against a second term.  

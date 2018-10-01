@@ -51,11 +51,11 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.indexer.Indexer;
-import de.catma.indexer.SQLWildcard2RegexConverter;
 import de.catma.indexer.SpanContext;
 import de.catma.indexer.SpanDirection;
 import de.catma.indexer.TagsetDefinitionUpdateLog;
 import de.catma.indexer.TermInfo;
+import de.catma.indexer.wildcard2regex.SQLWildcard2RegexConverter;
 import de.catma.project.ProjectReference;
 import de.catma.queryengine.CompareOperator;
 import de.catma.queryengine.result.QueryResult;
@@ -63,7 +63,6 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.repository.git.graph.NodeType;
-import de.catma.repository.git.graph.RelationType;
 import de.catma.repository.neo4j.SessionRunner;
 import de.catma.repository.neo4j.StatementExcutor;
 import de.catma.tag.Property;
@@ -74,34 +73,6 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
 
 public class GraphProjectIndexer implements Indexer {
-	
-	private static class TagPathElement {
-		private String elementDefinition;
-		private String pattern;
-		private String parameterName;
-		
-		public TagPathElement(String elementDefinition, String pattern, String parameterName) {
-			super();
-			this.elementDefinition = elementDefinition;
-			this.pattern = pattern;
-			this.parameterName = parameterName;
-		}
-
-		String getElementDefinition() {
-			return elementDefinition;
-		}
-
-		String getPattern() {
-			return pattern;
-		}
-
-		String getParameterName() {
-			return parameterName;
-		}
-		
-		
-		
-	}
 
 	private User user;
 	private ProjectReference projectReference;
@@ -431,7 +402,9 @@ public class GraphProjectIndexer implements Indexer {
 	@Override
 	public QueryResult searchProperty(List<String> userMarkupCollectionIdList, String propertyName,
 			String propertyValue, String tagDefinitionPath) throws Exception {
-		
+		if (tagDefinitionPath != null && !tagDefinitionPath.startsWith("/")) {
+			tagDefinitionPath = "%"+tagDefinitionPath;
+		}
 		
 		final QueryResultRowArray result = new QueryResultRowArray();
 		final String tagDefinitionPathRegex = 
@@ -505,7 +478,7 @@ public class GraphProjectIndexer implements Indexer {
 					+ "<-[:"+rt(hasInstance)+"]-(c:"+nt(MarkupCollection)+") " 
 					+ "<-[:"+rt(hasCollection)+"]-(s:"+nt(SourceDocument)+"), "
 					+ "(t)-[:"+rt(hasProperty)+"]->(p:"+nt(Property)+"), "
-					+ "(a)-[:"+rt(hasProperty)+"]->(ap:"+nt(AnnotationProperty)+") "
+					+ "(a)-[:"+rt(hasProperty)+"]->(ap:"+nt(AnnotationProperty)+"{uuid:p.uuid}) "
 					+ "WHERE t.tagId IN {pTagIdList} "
 					+ "AND c.collectionId IN {pCollectionIdList} "
 					+ (propertyName!=null?" AND p.name =~ {pPropertyName} ":"")
@@ -584,9 +557,9 @@ public class GraphProjectIndexer implements Indexer {
 	}
 
 	@Override
+	@Deprecated
 	public SpanContext getSpanContextFor(String sourceDocumentId, Range range, int spanContextSize,
 			SpanDirection direction) throws IOException {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -598,8 +571,8 @@ public class GraphProjectIndexer implements Indexer {
 	}
 
 	@Override
+	@Deprecated
 	public List<TermInfo> getTermInfosFor(String sourceDocumentId, Range range) throws IOException {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
