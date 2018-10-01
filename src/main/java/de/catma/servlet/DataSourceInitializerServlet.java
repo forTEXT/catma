@@ -1,24 +1,21 @@
 package de.catma.servlet;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
-import org.neo4j.graphdb.Label;
-import org.neo4j.graphdb.schema.IndexDefinition;
-import org.neo4j.graphdb.schema.Schema;
-
 import com.mchange.v2.c3p0.ComboPooledDataSource;
-
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.indexer.IndexBufferManagerName;
 import de.catma.indexer.graph.CatmaGraphDbName;
 import de.catma.indexer.indexbuffer.IndexBufferManager;
 import de.catma.repository.db.CatmaDataSourceName;
+import org.neo4j.driver.v1.AuthTokens;
+import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.v1.GraphDatabase;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+
+@WebServlet(name = "CATMADataSource", urlPatterns = "/CATMADataSource", loadOnStartup = 2)
 public class DataSourceInitializerServlet extends HttpServlet {
 	
     @Override
@@ -135,16 +132,16 @@ public class DataSourceInitializerServlet extends HttpServlet {
 	}
     
     
-    private boolean hasIndex(Schema schema, Label nodeType, Enum<?> propName) {
-    	for (IndexDefinition indexDef : schema.getIndexes(nodeType)) {
-	    	for (String property : indexDef.getPropertyKeys()) {
-	    		if (property.equals(propName.name())) {
-	    			return true;
-	    		}
-	    	}
-    	}
-    	return false;
-	}
+//    private boolean hasIndex(Schema schema, Label nodeType, Enum<?> propName) {
+//    	for (IndexDefinition indexDef : schema.getIndexes(nodeType)) {
+//	    	for (String property : indexDef.getPropertyKeys()) {
+//	    		if (property.equals(propName.name())) {
+//	    			return true;
+//	    		}
+//	    	}
+//    	}
+//    	return false;
+//	}
 
 
 	@Override
