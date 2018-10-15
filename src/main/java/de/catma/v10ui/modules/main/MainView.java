@@ -1,5 +1,7 @@
 package de.catma.v10ui.modules.main;
 
+import com.google.common.eventbus.EventBus;
+import com.google.inject.Inject;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasElement;
 import com.vaadin.flow.component.dependency.HtmlImport;
@@ -10,6 +12,7 @@ import com.vaadin.flow.component.html.Section;
 import com.vaadin.flow.component.page.Viewport;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.router.*;
+import com.vaadin.flow.server.VaadinServletConfiguration;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 import de.catma.v10ui.routing.Routes;
@@ -27,12 +30,13 @@ import java.util.Objects;
 @HtmlImport("styles/shared-styles.html")
 @Viewport(Viewport.DEFAULT)
 @Theme(value = Lumo.class, variant = Lumo.LIGHT)
-public class MainView extends Div implements RouterLayout, HasComponents, BeforeEnterObserver {
+public class MainView extends Div implements RouterLayout, HasComponents, BeforeEnterObserver, AfterNavigationObserver {
 
     /**
-     * Keep version information in VCS
+     * Header part
      */
-    private final CatmaHeader header = new CatmaHeader();
+
+    private final CatmaHeader header;
 
     /**
      * mainSection is the combined section (nav and content) of catma
@@ -50,7 +54,15 @@ public class MainView extends Div implements RouterLayout, HasComponents, Before
      */
     private final CatmaNav navigation = new CatmaNav();
 
-    public MainView() {
+    /**
+     * global communication via eventbus
+     */
+    private final EventBus eventBus;
+
+    @Inject
+    public MainView(EventBus eventBus) {
+        this.eventBus = eventBus;
+        this.header = new CatmaHeader(eventBus);
         initComponents();
         setClassName("main-view");
     }
@@ -87,4 +99,10 @@ public class MainView extends Div implements RouterLayout, HasComponents, Before
             }
       //  }
     }
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        navigation.afterNavigation(event);
+    }
+
 }

@@ -1,23 +1,16 @@
 package de.catma.v10ui.modules.main;
 
-import com.google.common.collect.Lists;
-import com.vaadin.flow.component.HasComponents;
-import com.vaadin.flow.component.HasElement;
-import com.vaadin.flow.component.HasStyle;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Nav;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.page.History;
-import com.vaadin.flow.component.page.Page;
-import com.vaadin.flow.router.Location;
+import com.vaadin.flow.router.AfterNavigationEvent;
+import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.RouterLink;
 import de.catma.v10ui.routing.AnalyzeRoute;
 import de.catma.v10ui.routing.ProjectRoute;
 import de.catma.v10ui.routing.Routes;
-import org.restlet.routing.Router;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Stateful Catma navigation
@@ -26,12 +19,7 @@ import java.util.List;
  *
  * @author db
  */
-public class CatmaNav extends Nav {
-
-    private final RouterLink projectsLink = new RouterLink("Project", ProjectRoute.class);
-   // private final RouterLink tagsLi = new RouterLink("Tags",Pr);
-   // private final RouterLink annotateLi = new RouterLink("Annotate",null);
-    private final RouterLink analyzeLink = new RouterLink("Analyze", AnalyzeRoute.class);
+public class CatmaNav extends Nav implements AfterNavigationObserver {
 
     public CatmaNav(){
         refresh();
@@ -39,13 +27,32 @@ public class CatmaNav extends Nav {
 
     public void refresh() {
         removeAll();
-        String firstSegment = UI.getCurrent().getInternals().getActiveViewLocation().getFirstSegment();
-        if(firstSegment.equals(Routes.PROJECTS)){
-            add(new H3(projectsLink));
-            add(new H3(analyzeLink));
+        add(new H3("Project"));
+        add(new H3("Analyze"));
+    }
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        removeAll();
+        String firstSegment = event.getLocation().getFirstSegment();
+        List<String> otherSegments = event.getLocation().getSegments()
+                .stream()
+                .filter(seg -> !firstSegment.equals(seg))
+                .collect(Collectors.toList());
+        // Can't use the Router, because the public API doesn't allow to get current Route with parameters
+        // query parameter still don't work correctly
+        // RouteRegistry registry = UI.getCurrent().getRouter().getRegistry();
+        // Optional<Class<? extends Component>> navT = registry.getNavigationTarget(firstSegment, otherSegments);
+
+        if(firstSegment.equals(
+                Routes.PROJECT) &&
+                ! otherSegments.isEmpty() &&
+                ! otherSegments.iterator().next().isEmpty()){
+            add(new H3(new RouterLink("Project", ProjectRoute.class, otherSegments.iterator().next())));
+            add(new H3(new RouterLink("Analyze", AnalyzeRoute.class)));
         } else {
-           add(new H3("Project"));
-           add(new H3("Analyze"));
+            refresh();
         }
+
     }
 }

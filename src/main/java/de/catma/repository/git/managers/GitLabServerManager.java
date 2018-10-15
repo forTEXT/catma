@@ -3,11 +3,7 @@ package de.catma.repository.git.managers;
 import java.io.IOException;
 import java.net.URL;
 import java.security.SecureRandom;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -488,7 +484,19 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 			throw new IOException("Failed to create impersonation token", e);
 		}
 	}
-	
+
+	@Override
+	public ProjectReference findProjectReferenceById(String projectId) throws IOException {
+		try {
+
+			Group group = this.userGitLabApi.getGroupApi().getGroup(Objects.requireNonNull(projectId));
+			return new ProjectReference(group.getPath(),group.getDescription(),"TODO");
+		} catch (GitLabApiException e) {
+			throw new IOException("failed to fetch project ", e);
+		}
+	}
+
+	@Override
 	public Pager<ProjectReference> getProjectReferences() throws IOException {
 		
 		GroupApi groupApi = this.userGitLabApi.getGroupApi();
@@ -544,7 +552,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 	public String getPassword() {
 		return this.gitLabUserImpersonationToken;
 	}
-	
+
 	public String getEmail() {
 		return gitLabUser.getEmail();
 	}

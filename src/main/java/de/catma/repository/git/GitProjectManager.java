@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-import com.google.inject.Inject;
 import org.apache.commons.io.FileUtils;
 
 import de.catma.Pager;
@@ -127,6 +127,11 @@ public class GitProjectManager implements ProjectManager {
 	}
 
 	@Override
+	public ProjectReference findProjectReferenceById(String projectId) throws IOException {
+		return remoteGitServerManager.findProjectReferenceById(Objects.requireNonNull(projectId));
+	}
+
+	@Override
 	public ProjectReference createProject(String name, String description) throws Exception {
 		String projectId = create(name, description);
 		
@@ -135,9 +140,8 @@ public class GitProjectManager implements ProjectManager {
 
 	@Override
 	public void openProject(
-			ProjectReference projectReference, 
-			OpenProjectListener openProjectListener, 
-			BackgroundServiceProvider backgroundServiceProvider) {
+			ProjectReference projectReference,
+			OpenProjectListener openProjectListener) {
 		try {
 			cloneRootLocallyIfNotExists(projectReference, openProjectListener);
 			Repository project = 
@@ -149,8 +153,8 @@ public class GitProjectManager implements ProjectManager {
 							this.localGitRepositoryManager, 
 							this.remoteGitServerManager),
 						projectReference,
-						new TagManager(),
-						backgroundServiceProvider);
+						new TagManager()
+						);
 			
 			
 

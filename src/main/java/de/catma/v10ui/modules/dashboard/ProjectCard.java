@@ -1,12 +1,11 @@
 package de.catma.v10ui.modules.dashboard;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -14,16 +13,20 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.binder.HasItems;
-import com.vaadin.flow.router.QueryParameters;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.v10ui.components.IconButton;
 import de.catma.v10ui.modules.main.ErrorLogger;
-import de.catma.v10ui.routing.Routes;
+import de.catma.v10ui.routing.ProjectRoute;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Displays a single project reference as a card
+ *
+ * @author db
+ */
 public class ProjectCard extends Composite<VerticalLayout> implements HasItems<ProjectReference> {
 
     private ProjectReference item;
@@ -57,11 +60,11 @@ public class ProjectCard extends Composite<VerticalLayout> implements HasItems<P
         preview.add(new Span(item.getDescription()));
         preview.add(new Span(item.getProjectId()));
 
-        Map<String,String> queryParams = ImmutableMap.of("pid",item.getProjectId());
-
-        preview.addClickListener((click) -> UI.getCurrent().navigate(Routes.PROJECTS,QueryParameters.simple(queryParams)));
-
-        layout.add(preview);
+        Anchor previewLink = new Anchor();
+        previewLink.setHref(UI.getCurrent().getRouter()
+                .getUrl(ProjectRoute.class, item.getProjectId()));
+        previewLink.add(preview);
+        layout.add(previewLink);
 
         HorizontalLayout descriptionBar = new HorizontalLayout();
         descriptionBar.setAlignItems(FlexComponent.Alignment.BASELINE);
@@ -72,8 +75,7 @@ public class ProjectCard extends Composite<VerticalLayout> implements HasItems<P
         descriptionBar.add(name);
         descriptionBar.expand(name);
 
-        Button buttonRemove = new Button(null, VaadinIcon.TRASH.create());
-        buttonRemove.getElement().setAttribute("theme","icon");
+        IconButton buttonRemove = new IconButton(VaadinIcon.TRASH.create());
         descriptionBar.add(buttonRemove);
 
         buttonRemove.addClickListener(
@@ -94,8 +96,7 @@ public class ProjectCard extends Composite<VerticalLayout> implements HasItems<P
                     dialog.open();
                 }
                 ));
-        Button buttonAction = new Button(null, VaadinIcon.ELLIPSIS_DOTS_V.create());
-        buttonAction.getElement().setAttribute("theme","icon");
+        IconButton buttonAction = new IconButton(VaadinIcon.ELLIPSIS_DOTS_V.create());
         descriptionBar.add(buttonAction);
 
         layout.add(descriptionBar);

@@ -23,4 +23,5 @@ public class BackendModule extends AbstractModule {
     GitProjectManager provideGitRepoManager() throws IOException {
         return new GitProjectManager( RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(), DUMMYIDENT);
     }
+
 }

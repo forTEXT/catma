@@ -1,5 +1,6 @@
 package de.catma.v10ui.di;
 
+import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.vaadin.flow.component.UI;
@@ -20,6 +21,11 @@ public class BaseModule extends AbstractModule {
     @Provides @UIScope
     ErrorLogger provideErrorLogger(Map<String, String> user, Page page) {
         return new NotificationAndLogfileLogger(user, page);
+    }
+
+    @Provides @UIScope
+    EventBus provideEventBus(){
+        return new EventBus();
     }
 
     @Provides

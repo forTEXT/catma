@@ -1,6 +1,7 @@
 <custom-style>
     <!-- This is where your App's styling should go. You can use .css files too. -->
-    <style>
+</custom-style>
+<style>
         html {
             height: auto;
             --main-layout-header-height: 64px;
@@ -15,27 +16,7 @@
             width: 100%;
         }
 
-        header {
-            background-color: #0c719a;
-            color: white;
-            padding: 0.5em;
-            height: 56px;
-            display: flex;
-            align-items: center;
-        }
-
-        header a {
-            color: white;
-        }
-
-        header a:hover {
-            text-decoration: none;
-        }
-
-        header h1, header h2, header h3, header h4, header h5, header h6 {
-            margin: 0em;
-        }
-
+        /* main views */
         .main-view {
             display: flex;
             flex-direction: column;
@@ -52,14 +33,40 @@
             flex-grow: 1;
         }
 
-
-        .view-section {
-            flex-direction: row;
+        /* Header */
+        header {
+            background-color: #0c719a;
+            color: white;
+            padding: 0.5em;
+            height: 56px;
             display: flex;
-            flex-grow: 1;
+            align-items: center;
+        }
+
+        header a {
+            color: white;
+            text-decoration: none;
+        }
+
+        header a:hover {
+            text-decoration: none;
+        }
+
+        header h1, header h2, header h3, header h4, header h5, header h6 {
+            margin: 0em;
+        }
+
+        header .header__context {
+            display: flex;
+            justify-content: center;
             width: 100%;
         }
 
+        header .header__version {
+            width: 160px;
+        }
+
+        /* Navigation */
         nav {
             flex-direction: column;
             display: flex;
@@ -67,6 +74,7 @@
             background-color: #e0e0e0;
             flex-grow: 1;
             padding: 1em;
+            width: 160px;
         }
 
         nav a {
@@ -86,6 +94,87 @@
             text-decoration: none;
         }
 
+
+        .view-section {
+            flex-direction: row;
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+            background-color: #808080;
+        }
+
+        .dialog__bg {
+          border-radius: 2px;
+          box-shadow: 0 19px 38px 0 rgba(0, 0, 0, 0.3), 0 15px 12px 0 rgba(0, 0, 0, 0.22);
+          border-style: solid;
+          border-width: 0.5px;
+          border-image-source: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4) 5%, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0));
+          border-image-slice: 1;
+          background-color: #fafafa;
+          background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4) 5%, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0));
+          background-origin: border-box;
+          background-clip: content-box, border-box;
+          margin:20px;
+          width: 100%;
+        }
+
+        /* buttons */
+        .button__icon {
+            border: none;
+            background: transparent;
+            opacity: 0.54;
+            cursor: pointer;
+        }
+
+        .button__icon:focus {
+            outline: none;
+        }
+        /* Huge card */
+        .hugecard {
+          flex-direction: column;
+          display: flex;
+          flex-grow: 1;
+          width: 100%;
+          height: 100%;
+        }
+
+        .hugecard__bar {
+            align-items:center;
+            background-color: #23a2cc;
+            color: white;
+            flex-direction: row;
+            display: flex;
+            padding: 0.75em;
+            font-weight: 500;
+        }
+
+        .hugecard__bar__moreoptions {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .hugecard__bar__moreoptions__btn {
+            color: white;
+            background-color: transparent;
+            border:none;
+        }
+
+
+        /* actiongrid */
+
+        .actiongrid {
+            width: 400px;
+        }
+
+        .actiongrid vaadin-grid-cell-content {
+            padding: 0px;
+        }
+        /* dashboard */
+
+        dashboard {
+            background-color: white;
+        }
 
         /*
         * Projectlist in dashboard
@@ -112,6 +201,11 @@
             margin: 10px;
         }
 
+        .projectlist__card a {
+            text-decoration: none;
+            color: var(--lumo-body-text-color);
+        }
+
         .projectlist__card__preview {
             height: 176px;
             background-color: #cdcdcd;
@@ -121,7 +215,7 @@
             cursor: pointer;
         }
 
-
+        /* END  old stuff below */
         .main-layout {
             display: flex;
             flex-direction: column;
@@ -268,4 +362,3 @@
 
 
     </style>
-</custom-style>

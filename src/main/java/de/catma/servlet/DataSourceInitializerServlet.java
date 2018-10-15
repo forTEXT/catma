@@ -48,7 +48,6 @@ public class DataSourceInitializerServlet extends HttpServlet {
 			log("CATMA DB DataSource initialized.");
 			*/
 			log("CATMA Graph DataSource initializing...");
-			
 			final Driver driver = GraphDatabase.driver(
 					RepositoryPropertyKey.GraphDbUri.getValue(), 
 					AuthTokens.basic(

@@ -89,13 +89,11 @@ public class GraphWorktreeProject implements IndexedRepository {
 	public GraphWorktreeProject(GitUser user, 
 			GitProjectHandler gitProjectHandler,
 			ProjectReference projectReference,
-			TagManager tagManager,
-			BackgroundServiceProvider backgroundServiceProvider) {
+			TagManager tagManager) {
 		this.user = user;
 		this.gitProjectHandler = gitProjectHandler;
 		this.projectReference = projectReference;
 		this.tagManager = tagManager;
-		this.backgroundServiceProvider = backgroundServiceProvider;
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.graphProjectHandler = 
 			new GraphProjectHandler(
@@ -588,6 +586,11 @@ public class GraphWorktreeProject implements IndexedRepository {
 	@Override
 	public Collection<SourceDocument> getSourceDocuments() throws Exception {
 		return graphProjectHandler.getSourceDocuments( this.rootRevisionHash);
+	}
+
+	@Override
+	public int getSourceDocumentsCount() throws Exception {
+		return graphProjectHandler.getSourceDocumentsCount( this.rootRevisionHash);
 	}
 
 	@Override
