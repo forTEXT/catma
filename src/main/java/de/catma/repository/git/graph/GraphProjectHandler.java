@@ -336,7 +336,6 @@ public class GraphProjectHandler {
 								+ "(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
 								+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
 								+ "(s:"+nt(SourceDocument)+") "
-								+ "OPTIONAL MATCH (s)-[:"+rt(hasCollection)+"]->(c:"+nt(MarkupCollection)+") "
 								+ "RETURN count(s) as counter ",
 						Values.parameters(
 								"pUserId", user.getIdentifier(),
