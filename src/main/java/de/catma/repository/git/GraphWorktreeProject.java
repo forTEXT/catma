@@ -584,6 +584,17 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
+	public Collection<TagsetDefinition> getTagsets() throws Exception {
+		return graphProjectHandler.getTagsets( this.rootRevisionHash);
+	}
+
+	@Override
+	public int getTagsetsCount() throws Exception {
+		return graphProjectHandler.getTagsetsCount( this.rootRevisionHash);
+	}
+
+
+	@Override
 	public Collection<SourceDocument> getSourceDocuments() throws Exception {
 		return graphProjectHandler.getSourceDocuments( this.rootRevisionHash);
 	}

@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.NativeButton;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -19,9 +18,11 @@ import de.catma.document.source.SourceDocument;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
-import de.catma.v10ui.components.hugecard.HugeCard;
+import de.catma.tag.TagsetDefinition;
+import de.catma.user.User;
 import de.catma.v10ui.components.IconButton;
 import de.catma.v10ui.components.actiongrid.ActionGridComponent;
+import de.catma.v10ui.components.hugecard.HugeCard;
 import de.catma.v10ui.modules.main.ErrorLogger;
 import de.catma.v10ui.modules.main.HeaderContextChangeEvent;
 
@@ -52,16 +53,37 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
             (query) -> {
                 query.getOffset(); //NOOP calls *sigh*
                 query.getLimit(); //NOOP calls *sigh*
-                return getDocuments();
+                return getResources(repository::getSourceDocuments);
             },
-            (query) -> getDocumentsCount()
+            (query) -> getResourceCount(repository::getSourceDocumentsCount)
     );
+
+    private final DataProvider<TagsetDefinition, Void> tagsetsDP = DataProvider.fromCallbacks(
+            (query) -> {
+                query.getOffset(); //NOOP calls *sigh*
+                query.getLimit(); //NOOP calls *sigh*
+                return getResources(repository::getTagsets);
+            },
+            (query) -> getResourceCount(repository::getTagsetsCount)
+    );
+
+    private final DataProvider<User, Void> membersDP;
+
 
     @Inject
     public ProjectView(ProjectManager projectManager, ErrorLogger errorLogger, EventBus eventBus){
         this.projectManager = projectManager;
         this.errorLogger = errorLogger;
         this.eventBus = eventBus;
+
+        membersDP = DataProvider.fromCallbacks(
+                (query) -> {
+                    query.getOffset(); //NOOP calls *sigh*
+                    query.getLimit(); //NOOP calls *sigh*
+                    return getResources(() -> projectManager.getProjectMembers(projectReference.getProjectId()));
+                },
+                (query) -> getResourceCount(() -> projectManager.getProjectMembers(projectReference.getProjectId()).size())
+        );
     }
 
     @Override
@@ -69,27 +91,26 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
         HugeCard content = new HugeCard("Project");
 
         HorizontalLayout mainColumns = new HorizontalLayout();
+        mainColumns.getStyle().set("flex-wrap","wrap");
 
         resources = new VerticalLayout();
-
+        resources.setSizeUndefined(); // don't set width 100%
         resources.add(new Span("resources"));
 
         mainColumns.add(resources);
 
+
         team = new VerticalLayout();
+        team.setSizeUndefined(); // don't set width 100%
         team.add(new Span("team"));
 
         mainColumns.add(team);
-        mainColumns.expand(resources);
 
         content.add(mainColumns);
         content.expand(mainColumns);
 
         HorizontalLayout resourceContent = new HorizontalLayout();
-        resourceContent.setFlexGrow(1);
         resources.add(resourceContent);
-        NativeButton nativeButton = new NativeButton();
-        nativeButton.add();
 
         Grid<SourceDocument> documentsGrid = new Grid<>();
         documentsGrid.setDataProvider(sourceDocumentDP);
@@ -106,13 +127,57 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
                 .setFlexGrow(0).setWidth("2em");
 
         Span documentsAnnotations = new Span("Documents & Annotations");
+
         documentsAnnotations.setWidth("100%");
-        ActionGridComponent actionGridComponent = new ActionGridComponent<Grid<SourceDocument>>(
+        ActionGridComponent sourceDocumentsGridComponent = new ActionGridComponent<Grid<SourceDocument>>(
                 documentsAnnotations,
                 documentsGrid
         );
 
-        resourceContent.add(actionGridComponent);
+        resourceContent.add(sourceDocumentsGridComponent);
+
+        Grid<TagsetDefinition> tagsetGrid = new Grid<>();
+        tagsetGrid.setDataProvider(tagsetsDP);
+
+        tagsetGrid.addColumn(
+                new ComponentRenderer(() -> VaadinIcon.TAGS.create())).setFlexGrow(0).setWidth("3em");
+        tagsetGrid.addColumn(
+                TagsetDefinition::getName).setFlexGrow(1);
+        tagsetGrid.addColumn(
+                new ComponentRenderer((nan) -> new IconButton(VaadinIcon.ELLIPSIS_DOTS_V.create())))
+                .setFlexGrow(0).setWidth("2em");
+
+        Span tagsetsAnnotations = new Span("Tagsets");
+        documentsAnnotations.setWidth("100%");
+        ActionGridComponent tagsetsGridComponent = new ActionGridComponent<Grid<TagsetDefinition>>(
+                tagsetsAnnotations,
+                tagsetGrid
+        );
+
+        resourceContent.add(tagsetsGridComponent);
+
+        HorizontalLayout teamContent = new HorizontalLayout();
+        team.add(teamContent);
+
+        Grid<User> teamGrid = new Grid<>();
+        teamGrid.setDataProvider(membersDP);
+
+        teamGrid.addColumn(
+                new ComponentRenderer(() -> VaadinIcon.USER.create())).setFlexGrow(0).setWidth("3em");
+        teamGrid.addColumn(
+                User::getName).setFlexGrow(1);
+        teamGrid.addColumn(
+                new ComponentRenderer((nan) -> new IconButton(VaadinIcon.ELLIPSIS_DOTS_V.create())))
+                .setFlexGrow(0).setWidth("2em");
+
+        Span membersAnnotations = new Span("Members");
+        documentsAnnotations.setWidth("100%");
+        ActionGridComponent membersGridComponent = new ActionGridComponent<Grid<User>>(
+                membersAnnotations,
+                teamGrid
+        );
+
+        teamContent.add(membersGridComponent);
 
         return content;
     }
@@ -143,6 +208,7 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
 
             @Override
             public void ready(Repository repository) {
+
                 ProjectView.this.repository = repository;
             }
 
@@ -153,35 +219,35 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
         });
     }
 
-    private Stream<SourceDocument> getDocuments(){
+    private <T> Stream<T> getResources(ResourceProvider<T> resources){
         try {
-            if(repository == null)
+            if(repository == null || projectReference == null)
                 return Stream.empty();
-            return repository.getSourceDocuments().stream();
+            return resources.getResources().stream();
         } catch (Exception e) {
-            errorLogger.showAndLogError("Documents couldn't be retrieved",e);
+            errorLogger.showAndLogError("Resources couldn't be retrieved",e);
             return Stream.empty();
         }
     }
 
-    /**
-     * @return number of documents
-     */
-    private int getDocumentsCount(){
+    private int getResourceCount(ResourceCountProvider resourceCountProvider){
         try {
-            if(repository == null){
+            if(repository == null || projectReference == null){
                 return 0;
             }
-            return repository.getSourceDocumentsCount();
+            return resourceCountProvider.getResourceCount();
         } catch (Exception e) {
-            errorLogger.showAndLogError("Documentscount couldn't be retrieved",e);
+            errorLogger.showAndLogError("Resourcecount couldn't be retrieved",e);
             return 0;
         }
     }
 
+
     public void initData() {
         initProject(projectReference);
         sourceDocumentDP.refreshAll();
+        tagsetsDP.refreshAll();
+        membersDP.refreshAll();
     }
 
 

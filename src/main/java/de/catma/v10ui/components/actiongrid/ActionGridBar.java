@@ -29,9 +29,9 @@ public class ActionGridBar extends Composite<HorizontalLayout> {
     protected HorizontalLayout initContent() {
         HorizontalLayout content = new HorizontalLayout();
         content.setAlignItems(FlexComponent.Alignment.CENTER);
+        content.addClassName(".actiongrid__bar");
         content.setSpacing(false);
         content.add(titleComponent);
-
         btnSearch = new IconButton( VaadinIcon.SEARCH.create(),(evt) -> {});
         btnAdd = new IconButton( VaadinIcon.PLUS.create(),(evt) -> {});
         btnMoreOptions = new IconButton(VaadinIcon.ELLIPSIS_DOTS_V.create(), (evt) -> {});

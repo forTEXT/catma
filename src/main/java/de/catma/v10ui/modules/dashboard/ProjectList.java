@@ -18,6 +18,7 @@ import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.Query;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.v10ui.components.IconButton;
 import de.catma.v10ui.modules.main.ErrorLogger;
 
 import java.util.Objects;
@@ -76,8 +77,7 @@ public class ProjectList extends Composite<VerticalLayout> implements
 
         Span title = new Span("title");
 
-        Button upAction = new Button(null, VaadinIcon.ARROW_UP.create());
-        upAction.getElement().setAttribute("theme","icon");
+        IconButton upAction = new IconButton(VaadinIcon.ARROW_UP.create());
 
         descriptionBar.add(description);
         descriptionBar.add(title);
