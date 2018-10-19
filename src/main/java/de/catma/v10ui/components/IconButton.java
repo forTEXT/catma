@@ -18,7 +18,7 @@ public class IconButton extends Composite<NativeButton> implements ClickNotifier
     private final ComponentEventListener<ClickEvent<NativeButton>> listener;
 
     public IconButton(Icon icon){
-        this(icon,(evt -> {}));
+        this(icon, (evt -> {}));
     }
 
     public IconButton(Icon icon, ComponentEventListener<ClickEvent<NativeButton>> listener ){
@@ -42,7 +42,7 @@ public class IconButton extends Composite<NativeButton> implements ClickNotifier
 
     @Override
     public Registration addClickListener(ComponentEventListener<ClickEvent<NativeButton>> listener) {
-        return this.addClickListener(listener);
+        return getContent().addClickListener(listener);
     }
 
 }

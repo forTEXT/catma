@@ -47,6 +47,7 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
 
     private ProjectReference projectReference;
     private Repository repository;
+
     private final DataProvider<SourceDocument, Void> sourceDocumentDP = DataProvider.fromCallbacks(
             (query) -> {
                 query.getOffset(); //NOOP calls *sigh*
