@@ -143,8 +143,8 @@ public class GitProjectManager implements ProjectManager {
 			ProjectReference projectReference,
 			OpenProjectListener openProjectListener) {
 		try {
-			cloneRootLocallyIfNotExists(projectReference, openProjectListener);
-			Repository project = 
+
+			Repository project =
 				new GraphWorktreeProject(
 						this.user,
 						new GitProjectHandler(
@@ -177,7 +177,8 @@ public class GitProjectManager implements ProjectManager {
 				.toFile()
 				.exists();
 	}
-	
+
+	//TODO: make this part of accepting new project membership
 	private void cloneRootLocallyIfNotExists(ProjectReference projectReference, OpenProjectListener openProjectListener) throws Exception {
 		if (!Paths.get(new File(this.gitBasedRepositoryBasePath).toURI())
 			.resolve(user.getIdentifier())
