@@ -8,6 +8,9 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import de.catma.repository.git.GitMember;
+import de.catma.repository.git.GitUser;
+import de.catma.user.Permission;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.GitLabApi;
@@ -494,6 +497,15 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 		} catch (GitLabApiException e) {
 			throw new IOException("failed to fetch project ", e);
 		}
+	}
+
+	@Override
+	public List<de.catma.user.User> getProjectMembers(String projectId) throws Exception {
+		Group group = this.userGitLabApi.getGroupApi().getGroup(Objects.requireNonNull(projectId));
+		return this.userGitLabApi.getGroupApi().getMembers(group.getId())
+				.stream()
+				.map(member -> new GitMember(member))
+				.collect(Collectors.toList());
 	}
 
 	@Override
