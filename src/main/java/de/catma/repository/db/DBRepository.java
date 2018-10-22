@@ -1215,4 +1215,14 @@ public class DBRepository implements IndexedRepository {
 	public void addAndCommitChanges(UserMarkupCollectionReference ref) {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public Collection<TagsetDefinition> getTagsets() throws Exception {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int getTagsetsCount() throws Exception {
+		throw new UnsupportedOperationException();
+	}
 }
