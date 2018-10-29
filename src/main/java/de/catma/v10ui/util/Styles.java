@@ -21,5 +21,6 @@ public class Styles {
 
     public static final String actiongrid = "actiongrid";
 
+    public static final String actiongrid__hidethead = actiongrid + "__hidethead";
     public static final String button__icon = "button__icon";
 }
