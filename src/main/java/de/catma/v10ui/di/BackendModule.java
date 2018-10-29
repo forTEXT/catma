@@ -23,7 +23,7 @@ public class BackendModule extends AbstractModule {
     //TODO: remove DUMMYIdent and do proper authentication using DI with guice
     @Provides
     @UIScope
-    GitProjectManager provideGitRepoManager() throws IOException {
+    GitProjectManager provideProjectManager() throws IOException {
         return new GitProjectManager(
                 RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
                 DUMMYIDENT,

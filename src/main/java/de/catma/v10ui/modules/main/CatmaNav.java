@@ -8,6 +8,7 @@ import com.vaadin.flow.router.RouterLink;
 import de.catma.v10ui.routing.AnalyzeRoute;
 import de.catma.v10ui.routing.ProjectRoute;
 import de.catma.v10ui.routing.Routes;
+import de.catma.v10ui.routing.TagsRoute;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,6 +29,7 @@ public class CatmaNav extends Nav implements AfterNavigationObserver {
     public void refresh() {
         removeAll();
         add(new H3("Project"));
+        add(new H3("Tags"));
         add(new H3("Analyze"));
     }
 
@@ -44,11 +46,12 @@ public class CatmaNav extends Nav implements AfterNavigationObserver {
         // RouteRegistry registry = UI.getCurrent().getRouter().getRegistry();
         // Optional<Class<? extends Component>> navT = registry.getNavigationTarget(firstSegment, otherSegments);
 
-        if(firstSegment.equals(
-                Routes.PROJECT) &&
+        if((firstSegment.equals(
+                Routes.PROJECT) || firstSegment.equals(Routes.TAGS)) &&
                 ! otherSegments.isEmpty() &&
                 ! otherSegments.iterator().next().isEmpty()){
             add(new H3(new RouterLink("Project", ProjectRoute.class, otherSegments.iterator().next())));
+            add(new H3(new RouterLink("Tags", TagsRoute.class, otherSegments.iterator().next())));
             add(new H3(new RouterLink("Analyze", AnalyzeRoute.class)));
         } else {
             refresh();

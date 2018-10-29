@@ -37,6 +37,7 @@ public class HugeCardBar extends Composite<Div> {
         Div content = new Div();
         content.addClassName(Styles.hugecard__bar);
         Span headerText = new Span(title);
+        headerText.setWidth("100%");
         content.add(headerText);
         moreOptions.setClassName(Styles.hugecard__bar__moreoptions);
         buttonMoreOptions.setClassName(Styles.hugecard__bar__moreoptions__btn);

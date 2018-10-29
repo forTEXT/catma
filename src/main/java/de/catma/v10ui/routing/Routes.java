@@ -13,7 +13,7 @@ public final class Routes {
 
     public static final String ROOT = "";
     public static final String PROJECT = "project";
-    public static final String TAG = "tag";
+    public static final String TAGS = "tags";
     public static final String ANNOTATE = "annotate";
     public static final String ANALYZE = "analyze";
     public static final String DASHBOARD = "dashboard";

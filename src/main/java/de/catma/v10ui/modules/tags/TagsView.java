@@ -1,16 +1,13 @@
-package de.catma.v10ui.modules.project;
+package de.catma.v10ui.modules.tags;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.vaadin.flow.component.Composite;
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -30,6 +27,8 @@ import de.catma.v10ui.components.actiongrid.ActionGridComponent;
 import de.catma.v10ui.components.hugecard.HugeCard;
 import de.catma.v10ui.modules.main.ErrorLogger;
 import de.catma.v10ui.modules.main.HeaderContextChangeEvent;
+import de.catma.v10ui.modules.project.ResourceCountProvider;
+import de.catma.v10ui.modules.project.ResourceProvider;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -37,31 +36,22 @@ import java.util.stream.Stream;
 
 /**
  *
- * Renders one project with all resources
+ * Renders one project with all tagsetsPanel
  *
  * @author db
  */
-public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<String> {
+public class TagsView extends Composite<HugeCard> implements HasUrlParameter<String> {
 
     private final ProjectManager projectManager;
 
     private final ErrorLogger errorLogger;
 
     private final EventBus eventBus;
-    private VerticalLayout resources;
-    private VerticalLayout team;
+    private VerticalLayout tagsetsPanel;
+    private VerticalLayout propertiesPanel;
 
     private ProjectReference projectReference;
     private Repository repository;
-
-    private final DataProvider<SourceDocument, Void> sourceDocumentDP = DataProvider.fromCallbacks(
-            (query) -> {
-                query.getOffset(); //NOOP calls *sigh*
-                query.getLimit(); //NOOP calls *sigh*
-                return getResources(repository::getSourceDocuments);
-            },
-            (query) -> getResourceCount(repository::getSourceDocumentsCount)
-    );
 
     private final DataProvider<TagsetDefinition, Void> tagsetsDP = DataProvider.fromCallbacks(
             (query) -> {
@@ -72,127 +62,81 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
             (query) -> getResourceCount(repository::getTagsetsCount)
     );
 
-    private final DataProvider<User, Void> membersDP;
-
-
     @Inject
-    public ProjectView(ProjectManager projectManager, ErrorLogger errorLogger, EventBus eventBus){
+    public TagsView(ProjectManager projectManager, ErrorLogger errorLogger, EventBus eventBus){
         this.projectManager = projectManager;
         this.errorLogger = errorLogger;
         this.eventBus = eventBus;
-
-        membersDP = DataProvider.fromCallbacks(
-                (query) -> {
-                    query.getOffset(); //NOOP calls *sigh*
-                    query.getLimit(); //NOOP calls *sigh*
-                    return getResources(() -> projectManager.getProjectMembers(projectReference.getProjectId()));
-                },
-                (query) -> getResourceCount(() -> projectManager.getProjectMembers(projectReference.getProjectId()).size())
-        );
     }
 
     @Override
     protected HugeCard initContent() {
-        HugeCard content = new HugeCard("Project");
+        HugeCard content = new HugeCard("Manage Tags");
 
         HorizontalLayout mainColumns = new HorizontalLayout();
         mainColumns.getStyle().set("flex-wrap","wrap");
-
-        resources = new VerticalLayout();
-        resources.setSizeUndefined(); // don't set width 100%
-        resources.add(new Span("Resources"));
-
-        mainColumns.add(resources);
-
-
-        team = new VerticalLayout();
-        team.setSizeUndefined(); // don't set width 100%
-        team.add(new Span("Team"));
-
-        mainColumns.add(team);
-
         content.add(mainColumns);
         content.expand(mainColumns);
 
         ContextMenu hugeCardMoreOptions = content.getBtnMoreOptionsContextMenu();
-        hugeCardMoreOptions.addItem("Share Ressources", e -> Notification.show("Sharing"));
-        hugeCardMoreOptions .addItem("Delete Ressources", e -> Notification.show("Deleting"));
+        hugeCardMoreOptions.addItem("Add Tagset", e -> Notification.show("Adding Tagset"));
         hugeCardMoreOptions .setOpenOnClick(true);
 
-        HorizontalLayout resourceContent = new HorizontalLayout();
-        resources.add(resourceContent);
-
-        Grid<SourceDocument> documentsGrid = new Grid<>();
-        documentsGrid.setDataProvider(sourceDocumentDP);
-
-        documentsGrid.addColumn(
-                new ComponentRenderer(() -> VaadinIcon.FILE.create())).setFlexGrow(0).setWidth("3em");
-        documentsGrid.addColumn(
-                SourceDocument::toString).setFlexGrow(1);
-        documentsGrid.addColumn(
-                new ComponentRenderer((nan) -> new IconButton(VaadinIcon.ELLIPSIS_DOTS_V.create())))
-                .setFlexGrow(0).setWidth("2em");
-        documentsGrid.addColumn(
-                new ComponentRenderer((nan) -> new IconButton(VaadinIcon.ANGLE_DOWN.create())))
-                .setFlexGrow(0).setWidth("2em");
-
-        Span documentsAnnotations = new Span("Documents & Annotations");
-
-        documentsAnnotations.setWidth("100%");
-        ActionGridComponent sourceDocumentsGridComponent = new ActionGridComponent<Grid<SourceDocument>>(
-                documentsAnnotations,
-                documentsGrid
-        );
-
-        ContextMenu contextMenu = sourceDocumentsGridComponent.getActionGridBar().getBtnAddContextMenu();
-        contextMenu.addItem("Add Document", e -> Notification.show("Hell"));
-        contextMenu.addItem("Add Annotation Collection", e -> Notification.show("Fire"));
-        contextMenu.setOpenOnClick(true);
-
-        resourceContent.add(sourceDocumentsGridComponent);
+        VerticalLayout tagsetPanel = new VerticalLayout();
+        tagsetPanel.setSizeUndefined();
+        mainColumns.add(tagsetPanel);
+        mainColumns.setFlexGrow(1.0, tagsetPanel);
 
         Grid<TagsetDefinition> tagsetGrid = new Grid<>();
+        tagsetGrid.setWidth("100%");
         tagsetGrid.setDataProvider(tagsetsDP);
 
         tagsetGrid.addColumn(
-                new ComponentRenderer(() -> VaadinIcon.TAGS.create())).setFlexGrow(0).setWidth("5em");
+                new ComponentRenderer(() -> VaadinIcon.TAGS.create())).setFlexGrow(0).setWidth("3em");
         tagsetGrid.addColumn(
                 TagsetDefinition::getName).setFlexGrow(1);
         tagsetGrid.addColumn(
                 new ComponentRenderer((nan) -> new IconButton(VaadinIcon.ELLIPSIS_DOTS_V.create())))
                 .setFlexGrow(0).setWidth("2em");
 
-        Span tagsetsAnnotations = new Span("Tagsets");
-        documentsAnnotations.setWidth("100%");
+        Span tagsetsLabel = new Span("Tagsets");
+        tagsetsLabel.setWidth("100%");
+
         ActionGridComponent tagsetsGridComponent = new ActionGridComponent<Grid<TagsetDefinition>>(
-                tagsetsAnnotations,
+                tagsetsLabel,
                 tagsetGrid
         );
+        tagsetsGridComponent.setWidth("100%");
+        tagsetPanel.add(tagsetsGridComponent);
 
-        resourceContent.add(tagsetsGridComponent);
+        VerticalLayout propertiesPanel = new VerticalLayout();
+        propertiesPanel.setSizeUndefined();
+        mainColumns.add(propertiesPanel);
 
-        HorizontalLayout teamContent = new HorizontalLayout();
-        team.add(teamContent);
+        ContextMenu contextMenu = tagsetsGridComponent.getActionGridBar().getBtnAddContextMenu();
+        contextMenu.addItem("Add Tag", e -> Notification.show("Hell"));
+        contextMenu.addItem("Add Subtag", e -> Notification.show("Fire"));
+        contextMenu.setOpenOnClick(true);
 
-        Grid<User> teamGrid = new Grid<>();
-        teamGrid.setDataProvider(membersDP);
+        Grid<User> propertiesGrid = new Grid<>();
+//        teamGrid.setDataProvider(membersDP);
 
-        teamGrid.addColumn(
-                new ComponentRenderer(() -> VaadinIcon.USER.create())).setFlexGrow(0).setWidth("3em");
-        teamGrid.addColumn(
-                User::getName).setFlexGrow(1);
-        teamGrid.addColumn(
-                new ComponentRenderer((nan) -> new IconButton(VaadinIcon.ELLIPSIS_DOTS_V.create())))
-                .setFlexGrow(0).setWidth("2em");
+//        teamGrid.addColumn(
+//                new ComponentRenderer(() -> VaadinIcon.USER.create())).setFlexGrow(0).setWidth("3em");
+//        teamGrid.addColumn(
+//                User::getName).setFlexGrow(1);
+//        teamGrid.addColumn(
+//                new ComponentRenderer((nan) -> new IconButton(VaadinIcon.ELLIPSIS_DOTS_V.create())))
+//                .setFlexGrow(0).setWidth("2em");
 
-        Span membersAnnotations = new Span("Members");
-        documentsAnnotations.setWidth("100%");
-        ActionGridComponent membersGridComponent = new ActionGridComponent<Grid<User>>(
-                membersAnnotations,
-                teamGrid
+        Span propertiesLabel = new Span("Properties");
+        propertiesLabel.setWidth("100%");
+        ActionGridComponent propertiesGridComponent = new ActionGridComponent<Grid<User>>(
+                propertiesLabel,
+                propertiesGrid
         );
 
-        teamContent.add(membersGridComponent);
+        propertiesPanel.add(propertiesGridComponent);
 
         return content;
     }
@@ -203,15 +147,13 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
             projectReference = projectManager.findProjectReferenceById(Objects.requireNonNull(projectId));
             eventBus.post(new HeaderContextChangeEvent(
                     new Div(new Span(projectReference.getName()))));
-            initData();
+            initProject(projectReference);
         } catch (IOException e) {
             errorLogger.showAndLogError("Project " + projectId+ "couldn't be opened", e);
         }
     }
 
     /**
-     * @// TODO: 15.10.18 refactor ProjectManager to directly return repository, remove listener
-     * @deprecated 
      * @param projectReference
      */
     private void initProject(ProjectReference projectReference) {
@@ -223,8 +165,8 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
 
             @Override
             public void ready(Repository repository) {
-
-                ProjectView.this.repository = repository;
+                TagsView.this.repository = repository;
+                initData();
             }
 
             @Override
@@ -259,10 +201,7 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
 
 
     public void initData() {
-        initProject(projectReference);
-        sourceDocumentDP.refreshAll();
         tagsetsDP.refreshAll();
-        membersDP.refreshAll();
     }
 
     /* Actions */
