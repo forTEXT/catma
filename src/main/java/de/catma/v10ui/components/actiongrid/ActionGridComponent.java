@@ -18,11 +18,23 @@ public class ActionGridComponent<G extends Grid<?>> extends Composite<Div> imple
     private final Component titleCompennt;
     private final G dataGrid;
     private final ActionGridBar actionGridBar;
+    private  boolean multiselect = false;
 
     public ActionGridComponent(Component titleComponent, G dataGrid){
         this.titleCompennt = titleComponent;
         this.dataGrid = dataGrid;
         this.actionGridBar = new ActionGridBar(titleCompennt); // TODO: 15.10.18 refactor to guice
+        this.actionGridBar.addBtnToggleListSelect(
+                (event) -> {
+                    if(! multiselect) {
+                        dataGrid.setSelectionMode(Grid.SelectionMode.MULTI);
+                        multiselect = true;
+                    }else {
+                        dataGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
+                        multiselect = false;
+                    }
+                }
+        );
     }
 
     @Override

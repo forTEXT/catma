@@ -5,6 +5,8 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeButton;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.shared.Registration;
+import de.catma.v10ui.components.IconButton;
+import de.catma.v10ui.components.contextmenu.ContextMenu;
 import de.catma.v10ui.util.Styles;
 
 /**
@@ -17,7 +19,7 @@ public class HugeCard extends Composite<Div> implements HasComponents,
 
     private final HugeCardBar hugeCardBar;
 
-    public HugeCard(String title){
+    public HugeCard(String title) {
         this.hugeCardBar = new HugeCardBar(title);
     }
 

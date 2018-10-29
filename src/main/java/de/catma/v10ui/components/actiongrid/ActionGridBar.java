@@ -17,11 +17,16 @@ public class ActionGridBar extends Composite<HorizontalLayout> {
 
     private final Component titleComponent;
 
-    private IconButton btnSearch;
-    private IconButton btnAdd;
-    private IconButton btnMoreOptions;
+    private final IconButton btnSearch;
+    private final IconButton btnAdd;
+    private final IconButton btnMoreOptions;
+    private final IconButton btnToggleMultiselect;
 
     public ActionGridBar(Component titleComponent){
+        btnSearch = new IconButton( VaadinIcon.SEARCH.create());
+        btnAdd = new IconButton( VaadinIcon.PLUS.create());
+        btnMoreOptions = new IconButton(VaadinIcon.ELLIPSIS_DOTS_V.create());
+        btnToggleMultiselect = new IconButton(VaadinIcon.LIST_SELECT.create());
         this.titleComponent = titleComponent;
     }
 
@@ -31,10 +36,10 @@ public class ActionGridBar extends Composite<HorizontalLayout> {
         content.setAlignItems(FlexComponent.Alignment.CENTER);
         content.addClassName(".actiongrid__bar");
         content.setSpacing(false);
+
+        content.add(btnToggleMultiselect);
         content.add(titleComponent);
-        btnSearch = new IconButton( VaadinIcon.SEARCH.create(),(evt) -> {});
-        btnAdd = new IconButton( VaadinIcon.PLUS.create(),(evt) -> {});
-        btnMoreOptions = new IconButton(VaadinIcon.ELLIPSIS_DOTS_V.create(), (evt) -> {});
+
 
         content.add(btnSearch);
         content.add(btnAdd);
@@ -55,5 +60,9 @@ public class ActionGridBar extends Composite<HorizontalLayout> {
 
     public Registration addBtnMoreOptionsClickListener(ComponentEventListener<ClickEvent<NativeButton>> listener){
         return btnMoreOptions.addClickListener(listener);
+    }
+
+    public Registration addBtnToggleListSelect(ComponentEventListener<ClickEvent<NativeButton>> listener){
+        return btnToggleMultiselect.addClickListener(listener);
     }
 }

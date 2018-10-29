@@ -556,6 +556,16 @@ public class DBRepository implements IndexedRepository {
 		return 0;
 	}
 
+	@Override
+	public Collection<TagsetDefinition> getTagsets() throws Exception {
+		return null;
+	}
+
+	@Override
+	public int getTagsetsCount() throws Exception {
+		return 0;
+	}
+
 	public SourceDocument getSourceDocument(String id) {
 		return dbSourceDocumentHandler.getSourceDocument(id);
 	}

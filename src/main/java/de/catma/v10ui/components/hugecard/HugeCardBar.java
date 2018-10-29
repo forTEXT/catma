@@ -10,6 +10,8 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.shared.Registration;
 import de.catma.v10ui.components.IconButton;
+import de.catma.v10ui.components.contextmenu.ContextMenu;
+import de.catma.v10ui.components.html.I;
 import de.catma.v10ui.util.Styles;
 
 /**
@@ -21,6 +23,7 @@ public class HugeCardBar extends Composite<Div> implements ClickNotifier<NativeB
 
     private final String title;
     private IconButton buttonMoreOptions;
+    private Div moreOptions;
 
     public HugeCardBar(String title){
         this.title = title;
@@ -33,7 +36,7 @@ public class HugeCardBar extends Composite<Div> implements ClickNotifier<NativeB
 
         Span headerText = new Span(title);
         content.add(headerText);
-        Div moreOptions = new Div();
+        moreOptions = new Div();
         moreOptions.setClassName(Styles.hugecard__bar__moreoptions);
         buttonMoreOptions = new IconButton( VaadinIcon.ELLIPSIS_DOTS_V.create());
         buttonMoreOptions.setClassName(Styles.hugecard__bar__moreoptions__btn);
