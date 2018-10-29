@@ -2,9 +2,12 @@ package de.catma.v10ui.di;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.guice.annotation.UIScope;
+import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.repository.RepositoryPropertyKey;
 import de.catma.repository.git.GitProjectManager;
+import de.catma.v10ui.background.UIBackgroundService;
 
 import java.io.IOException;
 
@@ -21,7 +24,11 @@ public class BackendModule extends AbstractModule {
     @Provides
     @UIScope
     GitProjectManager provideGitRepoManager() throws IOException {
-        return new GitProjectManager( RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(), DUMMYIDENT);
+        return new GitProjectManager(
+                RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
+                DUMMYIDENT,
+                (BackgroundService)VaadinSession.getCurrent().getAttribute(
+                        CatmaSessionHandler.SessionAttributeKey.BACKGROUNDSERVICE.name()));
     }
 
 }

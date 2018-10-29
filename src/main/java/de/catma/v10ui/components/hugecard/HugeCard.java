@@ -5,8 +5,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeButton;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.shared.Registration;
-import de.catma.v10ui.components.IconButton;
-import de.catma.v10ui.components.contextmenu.ContextMenu;
 import de.catma.v10ui.util.Styles;
 
 /**

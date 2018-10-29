@@ -9,18 +9,12 @@ import de.catma.v10ui.modules.analyze.AnalyzeView;
 import de.catma.v10ui.modules.dashboard.DashboardView;
 import de.catma.v10ui.modules.main.ErrorLogger;
 import de.catma.v10ui.modules.project.ProjectView;
-import de.catma.v10ui.projects.ProjectTilesView;
 
 /**
  * Provides all views
  */
 public class UIModule extends AbstractModule {
 
-    @Provides
-    @UIScope
-    ProjectTilesView provideOldProjects(GitProjectManager gitProjectManager){
-        return new ProjectTilesView(gitProjectManager);
-    }
 
     @Provides
     @UIScope

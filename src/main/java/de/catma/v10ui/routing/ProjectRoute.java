@@ -10,7 +10,6 @@ import com.vaadin.flow.router.*;
 import de.catma.v10ui.modules.main.HeaderContextChangeEvent;
 import de.catma.v10ui.modules.main.MainView;
 import de.catma.v10ui.modules.project.ProjectView;
-import de.catma.v10ui.projects.ProjectTilesView;
 import de.catma.v10ui.util.Styles;
 
 @Route(value = Routes.PROJECT, layout=MainView.class)

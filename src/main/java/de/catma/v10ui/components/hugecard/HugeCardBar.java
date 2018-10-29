@@ -10,8 +10,6 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.shared.Registration;
 import de.catma.v10ui.components.IconButton;
-import de.catma.v10ui.components.contextmenu.ContextMenu;
-import de.catma.v10ui.components.html.I;
 import de.catma.v10ui.util.Styles;
 
 /**

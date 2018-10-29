@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
 
+import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.AccessMode;
 import de.catma.document.Corpus;
@@ -74,7 +75,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private String rootRevisionHash;
 	private GraphProjectHandler graphProjectHandler;
 	private String tempDir;
-	private BackgroundServiceProvider backgroundServiceProvider;
+	private BackgroundService backgroundService;
 
 	private boolean tagManagerListenersEnabled = true;
 
@@ -86,14 +87,16 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private TagLibraryReference tagLibraryReference;
 	private GraphProjectIndexer indexer;
 
-	public GraphWorktreeProject(GitUser user, 
-			GitProjectHandler gitProjectHandler,
-			ProjectReference projectReference,
-			TagManager tagManager) {
+	public GraphWorktreeProject(GitUser user,
+								GitProjectHandler gitProjectHandler,
+								ProjectReference projectReference,
+								TagManager tagManager,
+								BackgroundService backgroundService) {
 		this.user = user;
 		this.gitProjectHandler = gitProjectHandler;
 		this.projectReference = projectReference;
 		this.tagManager = tagManager;
+		this.backgroundService = backgroundService;
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.graphProjectHandler = 
 			new GraphProjectHandler(
