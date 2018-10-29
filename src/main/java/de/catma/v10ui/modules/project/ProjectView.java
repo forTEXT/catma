@@ -114,13 +114,10 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
         content.add(mainColumns);
         content.expand(mainColumns);
 
-        Button buttonShareResources = new Button("Share Ressources");
-        Button buttonDeleteResources = new Button("Delete Ressources");
-        ListBox options = new ListBox();
-        options.add(buttonShareResources);
-        options.add(buttonDeleteResources);
-
-        Dialog dialog = new Dialog();
+        ContextMenu hugeCardMoreOptions = content.getBtnMoreOptionsContextMenu();
+        hugeCardMoreOptions.addItem("Share Ressources", e -> Notification.show("Sharing"));
+        hugeCardMoreOptions .addItem("Delete Ressources", e -> Notification.show("Deleting"));
+        hugeCardMoreOptions .setOpenOnClick(true);
 
         HorizontalLayout resourceContent = new HorizontalLayout();
         resources.add(resourceContent);

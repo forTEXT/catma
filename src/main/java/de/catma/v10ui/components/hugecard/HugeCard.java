@@ -1,6 +1,7 @@
 package de.catma.v10ui.components.hugecard;
 
 import com.vaadin.flow.component.*;
+import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeButton;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -12,8 +13,7 @@ import de.catma.v10ui.util.Styles;
  *
  * @author db
  */
-public class HugeCard extends Composite<Div> implements HasComponents,
-        ClickNotifier<NativeButton>, FlexComponent<Div> {
+public class HugeCard extends Composite<Div> implements HasComponents, FlexComponent<Div> {
 
     private final HugeCardBar hugeCardBar;
 
@@ -30,8 +30,6 @@ public class HugeCard extends Composite<Div> implements HasComponents,
         return content;
     }
 
-    @Override
-    public Registration addClickListener(ComponentEventListener<ClickEvent<NativeButton>> listener) {
-        return hugeCardBar.addClickListener(listener);
-    }
+    public ContextMenu getBtnMoreOptionsContextMenu() { return hugeCardBar.getBtnMoreOptionsContextMenu(); }
+
 }

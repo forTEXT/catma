@@ -67,9 +67,8 @@ public class ActionGridBar extends Composite<HorizontalLayout> {
         return this.ctmSearch;
     }
 
-    public ContextMenu getBtnMoreOptionsContextMenu() {
-        return this.ctmMoreOptions;
-    }
+    public ContextMenu getBtnMoreOptionsContextMenu() { return this.ctmMoreOptions; }
+
     public Registration addBtnAddClickListener(ComponentEventListener<ClickEvent<NativeButton>> listener){
        return btnAdd.addClickListener(listener);
     }
