@@ -23,7 +23,7 @@ public class ActionGridComponent<G extends Grid<?>> extends Composite<Div> imple
     public ActionGridComponent(Component titleComponent, G dataGrid){
         this.titleCompennt = titleComponent;
         this.dataGrid = dataGrid;
-        this.actionGridBar = new ActionGridBar(titleCompennt); // TODO: 15.10.18 refactor to guice
+        this.actionGridBar = new ActionGridBar(titleCompennt);
         this.actionGridBar.addBtnToggleListSelect(
                 (event) -> {
                     if(! multiselect) {

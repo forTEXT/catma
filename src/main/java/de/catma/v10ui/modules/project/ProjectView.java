@@ -1,10 +1,14 @@
 package de.catma.v10ui.modules.project;
 
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
+import com.vaadin.flow.component.ClickEvent;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
+import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
@@ -25,14 +29,19 @@ import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.tag.TagsetDefinition;
 import de.catma.user.User;
+import de.catma.v10ui.CanReloadAll;
+import de.catma.v10ui.components.CenteredIcon;
 import de.catma.v10ui.components.IconButton;
 import de.catma.v10ui.components.actiongrid.ActionGridComponent;
 import de.catma.v10ui.components.hugecard.HugeCard;
+import de.catma.v10ui.events.ResourcesChangedEvent;
 import de.catma.v10ui.modules.main.ErrorLogger;
 import de.catma.v10ui.modules.main.HeaderContextChangeEvent;
+import de.catma.v10ui.util.Styles;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -41,7 +50,7 @@ import java.util.stream.Stream;
  *
  * @author db
  */
-public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<String> {
+public class ProjectView extends Composite<HugeCard> implements CanReloadAll, HasUrlParameter<String> {
 
     private final ProjectManager projectManager;
 
@@ -89,7 +98,10 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
                 },
                 (query) -> getResourceCount(() -> projectManager.getProjectMembers(projectReference.getProjectId()).size())
         );
+        eventBus.register(this);
     }
+
+    /* build the GUI */
 
     @Override
     protected HugeCard initContent() {
@@ -104,7 +116,6 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
 
         mainColumns.add(resources);
 
-
         team = new VerticalLayout();
         team.setSizeUndefined(); // don't set width 100%
         team.add(new Span("Team"));
@@ -115,27 +126,52 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
         content.expand(mainColumns);
 
         ContextMenu hugeCardMoreOptions = content.getBtnMoreOptionsContextMenu();
-        hugeCardMoreOptions.addItem("Share Ressources", e -> Notification.show("Sharing"));
-        hugeCardMoreOptions .addItem("Delete Ressources", e -> Notification.show("Deleting"));
-        hugeCardMoreOptions .setOpenOnClick(true);
+        hugeCardMoreOptions.addItem("Share Ressources", e -> Notification.show("Sharing"));// TODO: 29.10.18 actually share something
+        hugeCardMoreOptions.addItem("Delete Ressources", e -> Notification.show("Deleting")); // TODO: 29.10.18 actually delete something
+        hugeCardMoreOptions.setOpenOnClick(true);
 
+        resources.add(initResourceContent());
+        team.add(initTeamContent());
+
+        return content;
+    }
+
+
+    /**
+     * initialize the resource part
+     * @return
+     */
+    private Component initResourceContent() {
         HorizontalLayout resourceContent = new HorizontalLayout();
-        resources.add(resourceContent);
 
         Grid<SourceDocument> documentsGrid = new Grid<>();
+        documentsGrid.addClassName(Styles.actiongrid__hidethead);
+
         documentsGrid.setDataProvider(sourceDocumentDP);
 
         documentsGrid.addColumn(
-                new ComponentRenderer(() -> VaadinIcon.FILE.create())).setFlexGrow(0).setWidth("3em");
-        documentsGrid.addColumn(
-                SourceDocument::toString).setFlexGrow(1);
+                new ComponentRenderer(() -> new CenteredIcon(VaadinIcon.FILE.create())))
+                .setFlexGrow(0)
+                .setWidth("3em");
+        documentsGrid.addComponentColumn((doc) -> {
+           Div docAndAuthor = new Div();
+           docAndAuthor.addClassName("documentsgrid__doc");
+           Span title = new Span(doc.toString());
+           title.addClassName("documentsgrid__doc__title");
+           Span author = new Span(doc.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getAuthor());
+           author.addClassName("documentsgrid__doc__author");
+
+           docAndAuthor.add(title);
+           docAndAuthor.add(author);
+           return docAndAuthor;
+        })
+                .setFlexGrow(1);
         documentsGrid.addColumn(
                 new ComponentRenderer((nan) -> new IconButton(VaadinIcon.ELLIPSIS_DOTS_V.create())))
                 .setFlexGrow(0).setWidth("2em");
         documentsGrid.addColumn(
                 new ComponentRenderer((nan) -> new IconButton(VaadinIcon.ANGLE_DOWN.create())))
                 .setFlexGrow(0).setWidth("2em");
-
         Span documentsAnnotations = new Span("Documents & Annotations");
 
         documentsAnnotations.setWidth("100%");
@@ -144,18 +180,26 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
                 documentsGrid
         );
 
-        ContextMenu contextMenu = sourceDocumentsGridComponent.getActionGridBar().getBtnAddContextMenu();
-        contextMenu.addItem("Add Document", e -> Notification.show("Hell"));
-        contextMenu.addItem("Add Annotation Collection", e -> Notification.show("Fire"));
-        contextMenu.setOpenOnClick(true);
+        ContextMenu addContextMenu = sourceDocumentsGridComponent.getActionGridBar().getBtnAddContextMenu();
+        addContextMenu.addItem("Add Document", e -> Notification.show("Hell"));// TODO: 29.10.18 actually do something
+        addContextMenu.addItem("Add Annotation Collection", e -> Notification.show("Fire")); // TODO: 29.10.18 actually do something
+        addContextMenu.setOpenOnClick(true);
+
+        ContextMenu BtnMoreOptionsContextMenu = sourceDocumentsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+        BtnMoreOptionsContextMenu.addItem("Delete documents / collections",(evt) -> handleDeleteResources(evt, documentsGrid));
+        BtnMoreOptionsContextMenu.addItem("Share documents / collections", (evt) -> handleShareResources(evt, documentsGrid));
+        BtnMoreOptionsContextMenu.setOpenOnClick(true);
+
 
         resourceContent.add(sourceDocumentsGridComponent);
 
         Grid<TagsetDefinition> tagsetGrid = new Grid<>();
+        tagsetGrid.addClassName(Styles.actiongrid__hidethead);
+
         tagsetGrid.setDataProvider(tagsetsDP);
 
         tagsetGrid.addColumn(
-                new ComponentRenderer(() -> VaadinIcon.TAGS.create())).setFlexGrow(0).setWidth("5em");
+                new ComponentRenderer(() -> new CenteredIcon(VaadinIcon.TAGS.create()))).setFlexGrow(0).setWidth("3em");
         tagsetGrid.addColumn(
                 TagsetDefinition::getName).setFlexGrow(1);
         tagsetGrid.addColumn(
@@ -170,15 +214,19 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
         );
 
         resourceContent.add(tagsetsGridComponent);
+        return resourceContent;
+    }
 
+    private Component initTeamContent() {
         HorizontalLayout teamContent = new HorizontalLayout();
-        team.add(teamContent);
 
         Grid<User> teamGrid = new Grid<>();
+        teamGrid.addClassName(Styles.actiongrid__hidethead);
+
         teamGrid.setDataProvider(membersDP);
 
         teamGrid.addColumn(
-                new ComponentRenderer(() -> VaadinIcon.USER.create())).setFlexGrow(0).setWidth("3em");
+                new ComponentRenderer(() -> new CenteredIcon(VaadinIcon.USER.create()))).setFlexGrow(0).setWidth("3em");
         teamGrid.addColumn(
                 User::getName).setFlexGrow(1);
         teamGrid.addColumn(
@@ -186,28 +234,17 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
                 .setFlexGrow(0).setWidth("2em");
 
         Span membersAnnotations = new Span("Members");
-        documentsAnnotations.setWidth("100%");
-        ActionGridComponent membersGridComponent = new ActionGridComponent<Grid<User>>(
+        ActionGridComponent membersGridComponent = new ActionGridComponent<>(
                 membersAnnotations,
                 teamGrid
         );
 
         teamContent.add(membersGridComponent);
-
-        return content;
+        return teamContent;
     }
 
-    @Override
-    public void setParameter(BeforeEvent event, String projectId) {
-        try {
-            projectReference = projectManager.findProjectReferenceById(Objects.requireNonNull(projectId));
-            eventBus.post(new HeaderContextChangeEvent(
-                    new Div(new Span(projectReference.getName()))));
-            initData();
-        } catch (IOException e) {
-            errorLogger.showAndLogError("Project " + projectId+ "couldn't be opened", e);
-        }
-    }
+
+
 
     /**
      * @// TODO: 15.10.18 refactor ProjectManager to directly return repository, remove listener
@@ -258,13 +295,119 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
     }
 
 
-    public void initData() {
+
+    /* Event handler */
+
+    /**
+     * reloads all data in this view
+     */
+    @Override
+    public void reloadAll() {
         initProject(projectReference);
         sourceDocumentDP.refreshAll();
         tagsetsDP.refreshAll();
         membersDP.refreshAll();
     }
 
-    /* Actions */
+    /**
+     * handler for vaadin navigation
+     * @param event
+     * @param projectId
+     */
+    @Override
+    public void setParameter(BeforeEvent event, String projectId) {
+        try {
+            projectReference = projectManager.findProjectReferenceById(Objects.requireNonNull(projectId));
+            eventBus.post(new HeaderContextChangeEvent(
+                    new Div(new Span(projectReference.getName()))));
+            reloadAll();
+        } catch (IOException e) {
+            errorLogger.showAndLogError("Project " + projectId+ "couldn't be opened", e);
+        }
+    }
 
+    /**
+     * called when {@link ResourcesChangedEvent} is fired e.g. when source documents have been removed or added
+     * @param resourcesChangedEvent
+     */
+    @Subscribe
+    public void handleResourceChanged(ResourcesChangedEvent resourcesChangedEvent){
+        sourceDocumentDP.refreshAll();
+    }
+
+    /**
+     * deletes selected resources
+     *
+     * @param clickEvent
+     * @param resourceGrid
+     */
+    private void handleDeleteResources(ClickEvent<MenuItem> clickEvent, Grid<SourceDocument> resourceGrid) {
+        Dialog dialog = new Dialog();
+        VerticalLayout dialogContent = new VerticalLayout();
+        dialogContent.setWidth("100%");
+        dialog.add(dialogContent);
+
+        ListBox<SourceDocument> listBox = new ListBox<>();
+        Set<SourceDocument> resources = resourceGrid.getSelectedItems();
+        listBox.setDataProvider(DataProvider.fromStream(resources.stream()));
+        listBox.setReadOnly(true);
+
+        dialogContent.add(new Span("The following resources will be deleted"));
+
+        dialogContent.add(listBox);
+
+        HorizontalLayout buttonPanel = new HorizontalLayout();
+        Button delete = new Button("YES DELETE");
+        Button cancel = new Button("Cancel");
+        buttonPanel.add(cancel);
+        buttonPanel.add(delete);
+        buttonPanel.expand(cancel);
+        dialogContent.add(buttonPanel);
+
+        delete.addClickListener((evt) -> {
+            for (SourceDocument resource: resources) {
+                //try {
+                Notification.show("resouce has been fake deleted");
+                //repository.delete(resource); // TODO: 29.10.18 delete all resources at once wrapped in a transaction
+                //} catch (IOException e) {
+                //    errorLogger.showAndLogError("Resouce couldn't be deleted",e);
+                //    dialog.close();
+                //}
+
+            }
+            eventBus.post(new ResourcesChangedEvent());
+            dialog.close();
+        });
+        cancel.addClickListener((evt)-> dialog.close());
+        dialog.open();
+    }
+
+    /**
+     * TODO: 29.10.18 actually share resources
+     *
+     * @param clickEvent
+     * @param resourceGrid
+     */
+    private void handleShareResources(ClickEvent<MenuItem> clickEvent, Grid<SourceDocument> resourceGrid) {
+        Dialog dialog = new Dialog();
+        VerticalLayout dialogContent = new VerticalLayout();
+        dialogContent.setWidth("100%");
+        dialog.add(dialogContent);
+
+        dialogContent.add(new Span("The following resources will be shared"));
+
+        HorizontalLayout buttonPanel = new HorizontalLayout();
+        Button share = new Button("Share");
+        Button cancel = new Button("Cancel");
+        buttonPanel.add(cancel);
+        buttonPanel.add(share);
+        buttonPanel.expand(cancel);
+        dialogContent.add(buttonPanel);
+
+        share.addClickListener((evt) -> {
+            dialog.close();
+        });
+        cancel.addClickListener((evt)-> dialog.close());
+        dialog.open();
+    }
  }
