@@ -176,6 +176,8 @@
 
         .actiongrid {
             width: 400px;
+            display: flex;
+            flex-direction: column;
         }
 
         .actiongrid vaadin-grid-cell-content {
@@ -187,6 +189,16 @@
 
         .actiongrid flow-component-renderer {
             flex-grow: 1;
+        }
+
+        .actiongrid vaadin-grid-tree-toggle {
+            margin-left: 0;
+        }
+
+        .actiongrid combined-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .actiongrid__bar {

@@ -18,12 +18,17 @@ import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.hierarchy.TreeData;
+import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.renderer.TemplateRenderer;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
@@ -40,8 +45,7 @@ import de.catma.v10ui.modules.main.HeaderContextChangeEvent;
 import de.catma.v10ui.util.Styles;
 
 import java.io.IOException;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -52,25 +56,14 @@ import java.util.stream.Stream;
  */
 public class ProjectView extends Composite<HugeCard> implements CanReloadAll, HasUrlParameter<String> {
 
+    private ProjectReference projectReference;
+    private Repository repository;
+
     private final ProjectManager projectManager;
 
     private final ErrorLogger errorLogger;
 
     private final EventBus eventBus;
-    private VerticalLayout resources;
-    private VerticalLayout team;
-
-    private ProjectReference projectReference;
-    private Repository repository;
-
-    private final DataProvider<SourceDocument, Void> sourceDocumentDP = DataProvider.fromCallbacks(
-            (query) -> {
-                query.getOffset(); //NOOP calls *sigh*
-                query.getLimit(); //NOOP calls *sigh*
-                return getResources(repository::getSourceDocuments);
-            },
-            (query) -> getResourceCount(repository::getSourceDocumentsCount)
-    );
 
     private final DataProvider<TagsetDefinition, Void> tagsetsDP = DataProvider.fromCallbacks(
             (query) -> {
@@ -82,6 +75,8 @@ public class ProjectView extends Composite<HugeCard> implements CanReloadAll, Ha
     );
 
     private final DataProvider<User, Void> membersDP;
+
+    private final TreeGrid<Resource> resourceGrid = new TreeGrid<>();;
 
 
     @Inject
@@ -110,13 +105,14 @@ public class ProjectView extends Composite<HugeCard> implements CanReloadAll, Ha
         HorizontalLayout mainColumns = new HorizontalLayout();
         mainColumns.getStyle().set("flex-wrap","wrap");
 
-        resources = new VerticalLayout();
+        VerticalLayout resources = new VerticalLayout();
+
         resources.setSizeUndefined(); // don't set width 100%
         resources.add(new Span("Resources"));
 
         mainColumns.add(resources);
 
-        team = new VerticalLayout();
+        VerticalLayout team = new VerticalLayout();
         team.setSizeUndefined(); // don't set width 100%
         team.add(new Span("Team"));
 
@@ -136,7 +132,6 @@ public class ProjectView extends Composite<HugeCard> implements CanReloadAll, Ha
         return content;
     }
 
-
     /**
      * initialize the resource part
      * @return
@@ -144,40 +139,60 @@ public class ProjectView extends Composite<HugeCard> implements CanReloadAll, Ha
     private Component initResourceContent() {
         HorizontalLayout resourceContent = new HorizontalLayout();
 
-        Grid<SourceDocument> documentsGrid = new Grid<>();
-        documentsGrid.addClassName(Styles.actiongrid__hidethead);
+        resourceGrid.addClassName(Styles.actiongrid__hidethead);
 
-        documentsGrid.setDataProvider(sourceDocumentDP);
+        resourceGrid.setDataProvider(buildResourceDataProvider());
 
-        documentsGrid.addColumn(
-                new ComponentRenderer(() -> new CenteredIcon(VaadinIcon.FILE.create())))
-                .setFlexGrow(0)
-                .setWidth("3em");
-        documentsGrid.addComponentColumn((doc) -> {
-           Div docAndAuthor = new Div();
-           docAndAuthor.addClassName("documentsgrid__doc");
-           Span title = new Span(doc.toString());
-           title.addClassName("documentsgrid__doc__title");
-           Span author = new Span(doc.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getAuthor());
-           author.addClassName("documentsgrid__doc__author");
+        StringBuilder rt = new StringBuilder();
+        rt
+                .append("<vaadin-grid-tree-toggle ")
+                .append("leaf='[[item.leaf]]' expanded='{{expanded}}' level='[[level]]' class='documentsgrid__combined' >")
+                .append("</vaadin-grid-tree-toggle>")
+                .append("<combined-cell>")
+                .append("<centered-icon>")
+                .append("<iron-icon icon='[[item.icon]]'>")
+                .append("</iron-icon>")
+                .append("</centered-icon>")
+                .append("<div class='documentsgrid__doc'> ")
+                .append("<span class='documentsgrid__doc__title'> ")
+                .append("[[item.title]]")
+                .append("</span>")
+                .append("<span class='documentsgrid__doc__author'> ")
+                .append("[[item.detail]]")
+                .append("</span>")
+                .append("</div>")
+                .append("</combined-cell>");
 
-           docAndAuthor.add(title);
-           docAndAuthor.add(author);
-           return docAndAuthor;
-        })
-                .setFlexGrow(1);
-        documentsGrid.addColumn(
+        resourceGrid.addColumn(TemplateRenderer
+                .<Resource> of(rt.toString())
+
+                .withProperty("leaf",
+                        item -> ! resourceGrid.getDataProvider().hasChildren(item))
+                .withProperty("icon",
+                        item -> {
+                            if(item instanceof SourceDocumentResource){
+                                return "vaadin:file";
+                            }
+                            if(item instanceof UserMarkupResource){
+                                return "vaadin:file-text";
+                            }
+                            return "";
+                        })
+
+                .withProperty("title", res -> res.toString())
+                .withProperty("detail", res -> res.hasDetail()?res.detail():null)
+
+        ).setFlexGrow(1);
+
+        resourceGrid.addColumn(
                 new ComponentRenderer((nan) -> new IconButton(VaadinIcon.ELLIPSIS_DOTS_V.create())))
-                .setFlexGrow(0).setWidth("2em");
-        documentsGrid.addColumn(
-                new ComponentRenderer((nan) -> new IconButton(VaadinIcon.ANGLE_DOWN.create())))
                 .setFlexGrow(0).setWidth("2em");
         Span documentsAnnotations = new Span("Documents & Annotations");
 
         documentsAnnotations.setWidth("100%");
-        ActionGridComponent sourceDocumentsGridComponent = new ActionGridComponent<Grid<SourceDocument>>(
+        ActionGridComponent sourceDocumentsGridComponent = new ActionGridComponent<>(
                 documentsAnnotations,
-                documentsGrid
+                resourceGrid
         );
 
         ContextMenu addContextMenu = sourceDocumentsGridComponent.getActionGridBar().getBtnAddContextMenu();
@@ -186,8 +201,8 @@ public class ProjectView extends Composite<HugeCard> implements CanReloadAll, Ha
         addContextMenu.setOpenOnClick(true);
 
         ContextMenu BtnMoreOptionsContextMenu = sourceDocumentsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
-        BtnMoreOptionsContextMenu.addItem("Delete documents / collections",(evt) -> handleDeleteResources(evt, documentsGrid));
-        BtnMoreOptionsContextMenu.addItem("Share documents / collections", (evt) -> handleShareResources(evt, documentsGrid));
+        BtnMoreOptionsContextMenu.addItem("Delete documents / collections",(evt) -> handleDeleteResources(evt, resourceGrid));
+        BtnMoreOptionsContextMenu.addItem("Share documents / collections", (evt) -> handleShareResources(evt, resourceGrid));
         BtnMoreOptionsContextMenu.setOpenOnClick(true);
 
 
@@ -294,6 +309,28 @@ public class ProjectView extends Composite<HugeCard> implements CanReloadAll, Ha
         }
     }
 
+    private TreeDataProvider<Resource> buildResourceDataProvider() {
+        if(repository == null || projectReference == null){
+            return new TreeDataProvider(new TreeData());
+        }
+        try {
+            TreeData<Resource> treeData = new TreeData();
+            Collection<SourceDocument> srcDocs = repository.getSourceDocuments();
+            for(SourceDocument srcDoc : srcDocs){
+                SourceDocumentResource srcDocResource = new SourceDocumentResource(srcDoc);
+                treeData.addItem(null,srcDocResource);
+                List<UserMarkupCollectionReference> collections = srcDoc.getUserMarkupCollectionRefs();
+                if(!collections.isEmpty()){
+                    treeData.addItems(srcDocResource,collections.stream().map(UserMarkupResource::new));
+                }
+            }
+            return new TreeDataProvider(treeData);
+
+        } catch (Exception e) {
+            errorLogger.showAndLogError("Can't retrieve resources", e);
+        }
+        return new TreeDataProvider(new TreeData());
+    }
 
 
     /* Event handler */
@@ -304,7 +341,7 @@ public class ProjectView extends Composite<HugeCard> implements CanReloadAll, Ha
     @Override
     public void reloadAll() {
         initProject(projectReference);
-        sourceDocumentDP.refreshAll();
+        resourceGrid.setDataProvider(buildResourceDataProvider());
         tagsetsDP.refreshAll();
         membersDP.refreshAll();
     }
@@ -331,8 +368,8 @@ public class ProjectView extends Composite<HugeCard> implements CanReloadAll, Ha
      * @param resourcesChangedEvent
      */
     @Subscribe
-    public void handleResourceChanged(ResourcesChangedEvent resourcesChangedEvent){
-        sourceDocumentDP.refreshAll();
+    public void handleResourceChanged(ResourcesChangedEvent<TreeGrid<Resource>> resourcesChangedEvent){
+        resourcesChangedEvent.getComponent().setDataProvider(buildResourceDataProvider());
     }
 
     /**
@@ -341,14 +378,14 @@ public class ProjectView extends Composite<HugeCard> implements CanReloadAll, Ha
      * @param clickEvent
      * @param resourceGrid
      */
-    private void handleDeleteResources(ClickEvent<MenuItem> clickEvent, Grid<SourceDocument> resourceGrid) {
+    private void handleDeleteResources(ClickEvent<MenuItem> clickEvent, TreeGrid<Resource> resourceGrid) {
         Dialog dialog = new Dialog();
         VerticalLayout dialogContent = new VerticalLayout();
         dialogContent.setWidth("100%");
         dialog.add(dialogContent);
 
-        ListBox<SourceDocument> listBox = new ListBox<>();
-        Set<SourceDocument> resources = resourceGrid.getSelectedItems();
+        ListBox<Resource> listBox = new ListBox<>();
+        Set<Resource> resources = resourceGrid.getSelectedItems();
         listBox.setDataProvider(DataProvider.fromStream(resources.stream()));
         listBox.setReadOnly(true);
 
@@ -365,9 +402,15 @@ public class ProjectView extends Composite<HugeCard> implements CanReloadAll, Ha
         dialogContent.add(buttonPanel);
 
         delete.addClickListener((evt) -> {
-            for (SourceDocument resource: resources) {
+            for (Resource resource: resources) {
                 //try {
                 Notification.show("resouce has been fake deleted");
+                //                if(resource instanceof SourceDocument) {
+                //                    repository.delete((SourceDocument) resource);
+                //                }
+                //                if(resource instanceof UserMarkupCollectionReference) {
+                //                    repository.delete((UserMarkupCollectionReference) resource);
+                //                }
                 //repository.delete(resource); // TODO: 29.10.18 delete all resources at once wrapped in a transaction
                 //} catch (IOException e) {
                 //    errorLogger.showAndLogError("Resouce couldn't be deleted",e);
@@ -375,7 +418,7 @@ public class ProjectView extends Composite<HugeCard> implements CanReloadAll, Ha
                 //}
 
             }
-            eventBus.post(new ResourcesChangedEvent());
+            eventBus.post(new ResourcesChangedEvent(resourceGrid));
             dialog.close();
         });
         cancel.addClickListener((evt)-> dialog.close());
@@ -388,7 +431,7 @@ public class ProjectView extends Composite<HugeCard> implements CanReloadAll, Ha
      * @param clickEvent
      * @param resourceGrid
      */
-    private void handleShareResources(ClickEvent<MenuItem> clickEvent, Grid<SourceDocument> resourceGrid) {
+    private void handleShareResources(ClickEvent<MenuItem> clickEvent, TreeGrid<Resource> resourceGrid) {
         Dialog dialog = new Dialog();
         VerticalLayout dialogContent = new VerticalLayout();
         dialogContent.setWidth("100%");
