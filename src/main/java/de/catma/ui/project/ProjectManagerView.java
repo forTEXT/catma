@@ -15,6 +15,8 @@ import de.catma.indexer.IndexedRepository;
 import de.catma.project.ProjectManager;
 import de.catma.tag.TagLibrary;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.analyzenew.AnalyzeNewView;
+import de.catma.ui.analyzenew.AnalyzeNewView.CloseListenerNew;
 import de.catma.ui.analyzer.AnalyzerView;
 import de.catma.ui.analyzer.AnalyzerView.CloseListener;
 import de.catma.ui.analyzer.Messages;
@@ -149,6 +151,19 @@ public class ProjectManagerView extends TabbedView {
 		catch (Exception e) {
 			((CatmaApplication)UI.getCurrent()).showAndLogError("Error showing Analyzer", e);
 		}
+	}
+	
+	public void analyzeNew(Corpus corpus, IndexedRepository repository) {
+		try {
+			AnalyzeNewView analyzeNewView = new AnalyzeNewView(corpus, repository, new CloseListenerNew() {
+	
+				public void closeRequest(AnalyzeNewView analyzeNewView) {
+					onTabClose(analyzeNewView);
+				}
+			});
+			addClosableTab(analyzeNewView," NewAnalyzer");
+		}	catch (Exception e) {
+			((CatmaApplication)UI.getCurrent()).showAndLogError("Error showing Analyzer", e);}
 	}
 
 	public void analyzeCurrentlyActiveDocument(Repository repository) {

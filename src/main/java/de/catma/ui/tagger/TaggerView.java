@@ -88,6 +88,7 @@ public class TaggerView extends VerticalLayout
 	private TagManager tagManager;
 	private int taggerID;
 	private Button btAnalyze;
+	private Button btAnalyzeNew;
 	private Button btHelp;
 	private Repository project;
 	private PropertyChangeListener sourceDocChangedListener;
@@ -228,6 +229,22 @@ public class TaggerView extends VerticalLayout
 		((AnalyzerProvider)UI.getCurrent()).analyze(
 				corpus, (IndexedRepository)markupPanel.getRepository());	
 	}
+	public void  analyzeDocumentNew(){
+		Corpus corpus = new Corpus(sourceDocument.toString());
+		corpus.addSourceDocument(sourceDocument);
+		for (UserMarkupCollection umc : 
+			markupPanel.getUserMarkupCollections()) {
+					UserMarkupCollectionReference userMarkupCollRef =
+					sourceDocument.getUserMarkupCollectionReference(
+							umc.getId());
+			if (userMarkupCollRef != null) {
+				corpus.addUserMarkupCollectionReference(
+						userMarkupCollRef);
+			}
+		}	
+		((AnalyzerProvider)UI.getCurrent()).analyzeNew(
+				corpus, (IndexedRepository)markupPanel.getRepository());	
+	}
 
 
 	
@@ -247,12 +264,20 @@ public class TaggerView extends VerticalLayout
 				tagger.setTraceSelection(traceSelection);
 			}
 		});
+
+		
 		btAnalyze.addClickListener(new ClickListener() {	
 			
 			public void buttonClick(ClickEvent event) {	
 				analyzeDocument();
 			}
 		});
+		btAnalyzeNew.addClickListener(new ClickListener() {	
+		
+		public void buttonClick(ClickEvent event) {	
+			analyzeDocumentNew();
+		}
+	});
 		
 		linesPerPageSlider.addValueListener(new ValueChangeListener() {
 			
@@ -341,6 +366,11 @@ public class TaggerView extends VerticalLayout
 		btAnalyze.addStyleName("primary-button"); //$NON-NLS-1$
 		btAnalyze.setEnabled(project instanceof IndexedRepository);
 		actionPanel.addComponent(btAnalyze);
+		
+		btAnalyzeNew = new Button("Analyze C 6"); //$NON-NLS-1$
+		btAnalyzeNew.addStyleName("primary-button"); //$NON-NLS-1$
+		btAnalyzeNew.setEnabled(project instanceof IndexedRepository);
+		actionPanel.addComponent(btAnalyzeNew);
 		
 		linesPerPageSlider =  new Slider(null, 1, 100, Messages.getString("TaggerView.percentPageSize")); //$NON-NLS-1$
 		linesPerPageSlider.setImmediate(true);

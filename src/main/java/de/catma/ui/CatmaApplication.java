@@ -476,6 +476,10 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 	public void analyze(Corpus corpus, IndexedRepository repository) {
 		projectManagerView.analyze(corpus, repository);
 	}
+	
+	public void analyzeNew(Corpus corpus, IndexedRepository repository) {
+		projectManagerView.analyzeNew(corpus, repository);
+	}
 
 	public void analyzeCurrentlyActiveDocument() {
 		//TODO:
