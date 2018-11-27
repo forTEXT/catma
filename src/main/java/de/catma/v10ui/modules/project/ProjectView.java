@@ -3,10 +3,12 @@ package de.catma.v10ui.modules.project;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.DataProvider;
@@ -95,14 +97,14 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
 
         resources = new VerticalLayout();
         resources.setSizeUndefined(); // don't set width 100%
-        resources.add(new Span("resources"));
+        resources.add(new Span("Resources"));
 
         mainColumns.add(resources);
 
 
         team = new VerticalLayout();
         team.setSizeUndefined(); // don't set width 100%
-        team.add(new Span("team"));
+        team.add(new Span("Team"));
 
         mainColumns.add(team);
 
@@ -133,6 +135,11 @@ public class ProjectView extends Composite<HugeCard> implements HasUrlParameter<
                 documentsAnnotations,
                 documentsGrid
         );
+
+        ContextMenu contextMenu = sourceDocumentsGridComponent.getActionGridBar().getBtnAddContextMenu();
+        contextMenu.addItem("Add Document", e -> Notification.show("Hell"));
+        contextMenu.addItem("Add Annotation Collection", e -> Notification.show("Fire"));
+        contextMenu.setOpenOnClick(true);
 
         resourceContent.add(sourceDocumentsGridComponent);
 
