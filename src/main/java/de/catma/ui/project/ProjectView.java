@@ -86,8 +86,7 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 				public void failure(Throwable t) {
 					t.printStackTrace();
 				}
-			},
-			(BackgroundServiceProvider)UI.getCurrent()); 
+			}); 
 	}
 	
 	private void addProjectListener() {

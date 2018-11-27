@@ -202,6 +202,10 @@
 		display: none;
 	}
 	
+	.c-slider {
+		padding: unset;
+	}
+	
 	.v-button-primary-button {
 		background: #5A98A1;
 		border: 1px solid #5A98A1;
@@ -487,4 +491,26 @@
     	padding-left: 1px;
     	padding-right: 1px;
     }
+    
+    .annotate-tag-tree-item {
+    	width: 15px;
+    	height: 100%;
+    }
+    
+    .annotate-tagsets-grid button {
+		background-color: white;
+		border: none;    
+    }
+    
+    .annotate-right-padding {
+    	padding-right: 3px;
+    }
+    
+    .annotate-properties-details-tree {
+    }
+    
+    .annotate-properties-details-tree .v-captiontext {
+    	font-size: smaller;
+    }
+
 }

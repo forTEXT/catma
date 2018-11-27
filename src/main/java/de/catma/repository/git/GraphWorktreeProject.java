@@ -853,18 +853,20 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
+	@Deprecated
 	public Collection<TagLibraryReference> getTagLibraryReferences() {
 
 		return Collections.singleton(this.tagLibraryReference);
 	}
 
-	public TagLibrary getTagLibrary() {
+	private TagLibrary getTagLibrary() {
 		//TODO: 
 
 		return tagManager.getTagLibrary(this.tagLibraryReference);
 	}
 	
 	@Override
+	@Deprecated
 	public TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) throws IOException {
 		// TODO:
 		return getTagLibrary();

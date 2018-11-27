@@ -15252,6 +15252,10 @@ div.v-layout.v-horizontal.v-widget {
 	display: none;
 }
 
+.catma .c-slider {
+	padding: unset;
+}
+
 .catma .v-button-primary-button {
 	background: #5A98A1;
 	border: 1px solid #5A98A1;
@@ -15519,4 +15523,22 @@ div.v-layout.v-horizontal.v-widget {
 .catma .vega-view-left-panel-component {
 	padding-left: 1px;
 	padding-right: 1px;
+}
+
+.catma .annotate-tag-tree-item {
+	width: 15px;
+	height: 100%;
+}
+
+.catma .annotate-tagsets-grid button {
+	background-color: white;
+	border: none;
+}
+
+.catma .annotate-right-padding {
+	padding-right: 3px;
+}
+
+.catma .annotate-properties-details-tree .v-captiontext {
+	font-size: smaller;
 }

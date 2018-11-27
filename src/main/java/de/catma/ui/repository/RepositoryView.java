@@ -50,7 +50,7 @@ import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.user.Permission;
 import de.catma.user.Role;
 
-
+@Deprecated
 public class RepositoryView extends VerticalLayout implements ClosableTab {
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
