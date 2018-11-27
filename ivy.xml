@@ -55,7 +55,11 @@
 		<!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-classic -->
 		<dependency org="ch.qos.logback" name="logback-classic" rev="1.2.3"/>
 
-		<dependency org="com.google.guava" name="guava" rev="19.0" />
+		<dependency org="com.google.guava" name="guava" rev="26.0-jre" >
+			<exclude org="com.google.code.findbugs" name="jsr305" />
+		</dependency>
+		
+		<dependency org="com.github.appreciated" name="material" rev="1.1.8" />				
 		<dependency org="com.google.guava" name="guava-gwt" rev="19.0" conf="widgetset-compile->default" />
 
 		<dependency org="org.quartz-scheduler" name="quartz" rev="2.2.1"/>
@@ -103,7 +107,7 @@
 
 		<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
 		<dependency org="commons-io" name="commons-io" rev="2.6"/>
-
+		
 		<dependency org="de.catma" name="catma-core" rev="latest.integration" />
 	</dependencies>	
 </ivy-module>

@@ -27,11 +27,12 @@ public class PropertiesInitializerServlet extends HttpServlet {
 					System.getProperties().containsKey("prop") ? System.getProperties().getProperty(
 					"prop") : "catma.properties";
 
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            InputStream input = classLoader.getResourceAsStream(propertiesFile);
-            Properties properties = new Properties();
-			properties.load(input);
-
+			Properties properties = new Properties();
+	
+			properties.load(
+				new FileInputStream(
+					cfg.getServletContext().getRealPath(propertiesFile)));
+			
 			RepositoryProperties.INSTANCE.setProperties( 
 				new NonModifiableProperties(properties));
 			

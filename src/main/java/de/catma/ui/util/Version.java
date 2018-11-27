@@ -1,4 +1,4 @@
-package de.catma.v10ui.util;
+package de.catma.ui.util;
 
 /**
  *

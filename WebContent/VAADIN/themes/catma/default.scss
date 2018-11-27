@@ -1,7 +1,9 @@
 $v-font-size: 14px;
 
-@import "../valo/valo.scss";
+@import "../valo/valo.scss"; 
+@import "flex-layout.scss";
 
 @mixin catma {
-  @include valo;
+  @include valo; 
+  @include flex-layout;
 }
