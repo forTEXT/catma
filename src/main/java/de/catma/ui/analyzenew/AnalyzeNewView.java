@@ -10,8 +10,13 @@ import org.antlr.runtime.RecognitionException;
 import org.apache.bcel.verifier.VerificationResult;
 
 import com.vaadin.data.HasValue.ValueChangeEvent;
+import com.vaadin.event.selection.SingleSelectionEvent;
+import com.vaadin.event.selection.SingleSelectionListener;
+import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.ComboBox.NewItemHandler;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -63,8 +68,12 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private Button btExecuteSearch;
 	private Button btQueryBuilder;
 	private TextField searchInput;
-	private ComboBox<String > predefQueries;
+	private ComboBox<String > queryComboBox;
 	private ResultPanelNew  queryResultPanel;
+	private HorizontalLayout resultAndVisualizationPanel;
+	private VerticalLayout resultPanel;
+    private VerticalLayout visualizationPanel;
+    MarginInfo margin;
 	
 	
 	 public AnalyzeNewView(Corpus corpus, IndexedRepository repository, CloseListenerNew closeListener2) throws Exception{
@@ -87,7 +96,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	}
 	 private void initListeners() {
 		 
-		 predefQueries.addValueChangeListener(event -> {
+		 queryComboBox.addValueChangeListener(event -> {
             if (event.getSource().isEmpty()) {
                     // show some message
             } else {
@@ -98,16 +107,37 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		 
 	 }
 	 private void initComponents() throws Exception{
+			margin = new MarginInfo(true, true, true, true);
 		 	createHeaderInfo();
+		 	
 		 	Component searchPanel = createSearchPanel();
 		    Component visIconsPanel=	createVisIconsPanel();		
 			HorizontalLayout searchAndVisIconsPanel = new HorizontalLayout();
 			searchAndVisIconsPanel.addComponents(searchPanel, visIconsPanel);
 			searchAndVisIconsPanel.setWidth("100%");
-			searchAndVisIconsPanel.setExpandRatio(searchPanel,  0.5f);
-			searchAndVisIconsPanel.setExpandRatio(visIconsPanel,  0.5f);
+			searchAndVisIconsPanel.setExpandRatio(searchPanel,  1);
+			searchAndVisIconsPanel.setExpandRatio(visIconsPanel,  1);
+			searchAndVisIconsPanel.setMargin(margin);
 			addComponent(searchAndVisIconsPanel);
-		 
+			
+			
+			
+			resultAndVisualizationPanel = new HorizontalLayout();
+			resultAndVisualizationPanel.setWidth("100%");
+		    resultPanel = new VerticalLayout();
+		    resultPanel.setHeightUndefined(); 
+	
+		    visualizationPanel = new VerticalLayout();
+			resultAndVisualizationPanel.addComponents(resultPanel,visualizationPanel);
+			resultAndVisualizationPanel.setExpandRatio(resultPanel, 1);
+			resultAndVisualizationPanel.setExpandRatio(visualizationPanel, 1);
+		
+			resultAndVisualizationPanel.setMargin(margin);
+			setMargin(true);
+			addComponent(resultAndVisualizationPanel);
+			
+			
+	 
 	 }
 	 private void initActions() {
 		 btExecuteSearch.addClickListener(new ClickListener() {
@@ -122,12 +152,12 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 
 			});
 		 
-			btQueryBuilder.addClickListener(new ClickListener() {
+			/*btQueryBuilder.addClickListener(new ClickListener() {
 				
 				public void buttonClick(ClickEvent event) {
 					//showQueryBuilder();
 				}
-			});
+			});*/
 		 
 	 }
 	 
@@ -201,15 +231,47 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		VerticalLayout searchPanel = new VerticalLayout();
 		Label searchPanelLabel = new Label ("Queries");
 		HorizontalLayout searchRow = new HorizontalLayout();
-		btQueryBuilder = new Button ("+ BUILD QUERY");
-		predefQueries = new ComboBox<>();
-		predefQueries.setItems("freq>0","tag ='Tag1'","wild = 'someWord'");
+		
 		searchInput = new TextField();
+		btQueryBuilder = new Button ("+ BUILD QUERY");
+		btQueryBuilder.setStyleName("primary");
+		queryComboBox = new ComboBox<>();
+	
+		List<String> predefQueries = new ArrayList<>();
+		predefQueries.add(new String("tag=\"Tag1\""));
+		predefQueries.add(new String("wild = \"Blumen\""));
+		predefQueries.add(new String("freq>0"));
+		queryComboBox.setItems(predefQueries);
+		
+		queryComboBox.setNewItemHandler( new NewItemHandler() {
+			
+			@Override
+			public void accept(String t) {
+		
+			
+			searchInput.setValue(t);
+				
+			}
+		});
+		
+		queryComboBox.addSelectionListener(new SingleSelectionListener<String>() {
+			
+			@Override
+			public void selectionChange(SingleSelectionEvent<String> event) {
+			searchInput.setValue(	event.getValue());
+				
+			}
+		});
+	
 		
 		btExecuteSearch = new Button ("SEARCH");
 		btExecuteSearch.setWidth("100%");
-		searchRow.addComponents(btQueryBuilder,predefQueries,searchInput);
-		searchRow.setExpandRatio(predefQueries, 0.7f);
+		btExecuteSearch.setStyleName("body");
+		searchRow.setWidth("100%");
+		queryComboBox.setWidth("100%");
+		searchRow.addComponents(btQueryBuilder,queryComboBox);
+		searchRow.setComponentAlignment(queryComboBox, Alignment.MIDDLE_CENTER);
+		searchRow.setExpandRatio(queryComboBox, 0.6f);
 		//searchPanelLabel.setWidth("500px");
 		
 		searchPanel.addComponents(searchPanelLabel,searchRow,btExecuteSearch);	
@@ -271,10 +333,12 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				new ExecutionListener<QueryResult>() {
 			public void done(QueryResult result) {
 			System.out.println("Einmal durch !");
-			 queryResultPanel = new ResultPanelNew(result);
-			 addComponent(queryResultPanel);
-			   
-		
+			 queryResultPanel = new ResultPanelNew(result,"result for query: "+searchInput.getValue());
+			 queryResultPanel.setWidth("100%");
+			 resultPanel.setSpacing(true);
+			// resultPanel.addComponent(queryResultPanel);
+			 resultPanel.addComponentAsFirst(queryResultPanel);
+			   	
 			};
 			public void error(Throwable t) {
 			
