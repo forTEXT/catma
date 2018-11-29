@@ -97,6 +97,7 @@ public class ResultPanelNew extends Panel {
 		QueryResultRowArray resultRowArrayArrayList = queryResult.asQueryResultRowArray();
 		int resultSize = resultRowArrayArrayList.size();
 		queryInfo = new Label(queryAsString + "(" + resultSize + ")");
+		queryInfo.setStyleName("body");
 		contentVerticalLayout.addComponent(queryInfo);
 	}
 

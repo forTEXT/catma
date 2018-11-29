@@ -13,6 +13,8 @@ import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.event.selection.SingleSelectionEvent;
 import com.vaadin.event.selection.SingleSelectionListener;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.FontAwesome;
+import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -22,6 +24,7 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Notification.Type;
@@ -68,6 +71,10 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private IndexInfoSet indexInfoSet;
 	private Button btExecuteSearch;
 	private Button btQueryBuilder;
+	private Button kwicBt;
+	private Button distBt;
+	private Button wordCloudBt;
+	private Button networkBt;
 	private TextField searchInput;
 	private ComboBox<String > queryComboBox;
 	private ResultPanelNew  queryResultPanel;
@@ -275,7 +282,50 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private Component createVisIconsPanel() {
 		VerticalLayout visIconsPanel = new VerticalLayout();
 		Label visIconsLabel = new Label ("Visualisations");
+		visIconsLabel.setWidth("100%");
+		HorizontalLayout visIconBar = new HorizontalLayout();
+		
+		kwicBt = new Button("KWIC",VaadinIcons.BAR_CHART);
+		kwicBt.addStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
+		kwicBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		kwicBt.setWidth("100%");
+		kwicBt.setHeight("100%");
+		
+		distBt= new Button("DISTRIBUTION",VaadinIcons.CHART_LINE);
+		distBt.addStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
+		distBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		distBt.setWidth("100%");
+		distBt.setHeight("100%");
+		
+		wordCloudBt= new Button("WORDCLOUD",VaadinIcons.CLOUD);
+		wordCloudBt.addStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
+		wordCloudBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		wordCloudBt.setWidth("100%");
+		wordCloudBt.setHeight("100%");
+		
+		networkBt= new Button("NETWORK",VaadinIcons.CLUSTER);
+		networkBt.addStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
+		networkBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		networkBt.setWidth("100%");
+		networkBt.setHeight("100%");
+		
+/*		VerticalLayout barchartIconLayout = new VerticalLayout();
+		Label icon = new Label(FontAwesome.BAR_CHART.getHtml(), ContentMode.HTML);
+		icon.addStyleName(ValoTheme.LABEL_H1);
+		icon.setHeight("100%");
+		icon.setWidth("100%");
+		Label iconText = new Label("barchart");
+		barchartIconLayout.addComponents(icon,iconText);*/
+		
+		
+		visIconBar.addComponents(kwicBt,distBt,wordCloudBt,networkBt);
+		visIconBar.setWidth("100%");
+		visIconBar.setHeight("100%");
+		
 		visIconsPanel.addComponent(visIconsLabel);	
+		visIconsPanel.setComponentAlignment(visIconsLabel, Alignment.MIDDLE_CENTER);
+		visIconsPanel.addComponent(visIconBar);
+		visIconsPanel.setHeight("100%");
 		return visIconsPanel;	
 	}
 
