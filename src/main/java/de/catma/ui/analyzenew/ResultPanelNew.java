@@ -66,7 +66,7 @@ public class ResultPanelNew extends Panel {
 			}
 		});
 		
-	caretUpBt.addClickListener(new ClickListener() {
+		caretUpBt.addClickListener(new ClickListener() {
 			
 			public void buttonClick(ClickEvent event) {
 				contentVerticalLayout.removeComponent(queryResultTable);
@@ -90,11 +90,8 @@ public class ResultPanelNew extends Panel {
 			row1.getItemProperty("Range").setValue(queryResultRow.getRange().toString());
 		}
 		queryResultTable.setWidth("100%");
-		//contentVerticalLayout.addComponent(queryResultTable);
 	
 	}
-
-
 
 	private void createResultInfoBar() {
 		QueryResultRowArray resultRowArrayArrayList = queryResult.asQueryResultRowArray();
@@ -123,12 +120,5 @@ public class ResultPanelNew extends Panel {
 		contentVerticalLayout.setComponentAlignment(groupedIcons, Alignment.MIDDLE_RIGHT);
 	}
 
-	private void showResult() {
-
-	}
-
-	private void handleArrawUpAndDownAction() {
-
-	}
 
 }
