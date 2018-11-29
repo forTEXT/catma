@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE ivy-module [
-	<!ENTITY vaadin.version "8.3.2">
+	<!ENTITY vaadin.version "8.6.2">
 ]>
 <ivy-module version="2.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -46,7 +46,7 @@
 
 		<dependency org="org.vaadin.addon" name="confirmdialog" rev="3.2.0" />
 		<dependency org="org.vaadin.addons" name="wizards-for-vaadin" rev="2.0.1" />
-		
+		<dependency org="com.vaadin" name="vaadin-context-menu" rev="3.0.0" />
 		<dependency org="org.neo4j" name="neo4j-enterprise" rev="3.0.7"/>
 		<dependency org="org.antlr" name="antlr-runtime" rev="3.4"/>
 		<dependency org="c3p0" name="c3p0" rev="0.9.1.2"/>

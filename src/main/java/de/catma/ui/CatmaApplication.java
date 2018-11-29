@@ -82,7 +82,8 @@ import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.analyzer.QueryOptionsProvider;
 import de.catma.ui.authentication.AuthenticationHandler;
 import de.catma.ui.component.HTMLNotification;
-import de.catma.ui.modules.dashboard.DashboardView;
+import de.catma.ui.events.routing.RouteToDashboardEvent;
+import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.modules.main.ErrorLogger;
 import de.catma.ui.modules.main.MainView;
 import de.catma.ui.project.ProjectManagerView;
@@ -93,7 +94,8 @@ import de.catma.user.User;
 //@Push(PushMode.MANUAL)
 @Theme("catma")
 @PreserveOnRefresh
-public class CatmaApplication extends UI implements BackgroundServiceProvider, ErrorLogger, AnalyzerProvider, LoginToken, ParameterProvider {
+public class CatmaApplication extends UI implements 
+	BackgroundServiceProvider, ErrorLogger, AnalyzerProvider, LoginToken, ParameterProvider {
 
 	private static final String MINORVERSION = "(build " + new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date()) //$NON-NLS-1$ //$NON-NLS-2$
 			+ ")"; //$NON-NLS-1$
@@ -125,7 +127,9 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, E
 	
 	private ProjectManagerView projectManagerView;
 	
-	private final MainView mainView = new MainView(new EventBus());
+	private final EventBus eventBus = new EventBus();
+	
+//	private final MainView mainView = new MainView(new EventBus());
 
 	public CatmaApplication() {
 	}
@@ -330,8 +334,9 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, E
 
 					// new design test
 					// TODO: set this correctly later :-)
-					setContent(mainView);
-					mainView.setContent(new DashboardView(projectManager));
+					MainView mainView = new MainView(projectManager, eventBus);
+//					setContent(mainView);
+					eventBus.post(new RouteToDashboardEvent());
 					
 				} catch (Exception e) {
 					showAndLogError(Messages.getString("CatmaApplication.errorSystemNotInitialized"), e); //$NON-NLS-1$

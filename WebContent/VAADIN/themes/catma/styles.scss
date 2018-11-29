@@ -549,11 +549,23 @@
             display: flex;
             align-items: center;
             background-color: #e0e0e0;
+            color: rgba(0, 0, 0, 0.87);
             flex-grow: 1;
-            padding: 1em;
             width: 160px;
         }
-
+        
+        .nav div:first-child {
+        	margin-top: 20px;
+        }
+        
+		.nav .v-label {
+			margin-left: 20px;
+            margin-right: 20px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding:0px;
+            height: 32px;
+		}
         .nav .v-button {
             margin-left: 20px;
             margin-right: 20px;
@@ -562,6 +574,7 @@
             text-decoration: none;
             cursor: pointer;           
             color: var(--lumo-body-text-color);
+            padding:0px;
         }
 
         .nav .h3 {
@@ -603,20 +616,34 @@
             background: transparent;
             opacity: 0.54;
             cursor: pointer;
-            display: flex;
             justify-content: center;
+            box-shadow: none;
+            font-size: 16px;
+            color: rgb(0, 0, 0);
+            display:flex;
         }
 
         .button__icon:focus {
             outline: none;
+            background-color:none
         }
+        
+        .button__icon:focus:after,.button__icon:after {
+            border: none; 
+    		box-shadow: none;
+        }
+                
         /* Huge card */
         .hugecard {
           flex-direction: column;
           display: flex;
           flex-grow: 1;
-          width: 100%;
-          height: 100%;
+          margin: 20px;
+    	  background-color: white;
+        }
+        
+        .hugecard__bar + div {
+        	overflow: auto;
         }
 
         .hugecard__bar {
@@ -628,6 +655,11 @@
             padding: 0.75em;
             font-weight: 500;
         }
+        
+		.hugecard__bar > .v-label {
+		    font-size: 1.2em;
+		    font-weight: 500;
+		}
 
         .hugecard__bar__moreoptions {
             width: 100%;
@@ -640,24 +672,46 @@
             background-color: transparent;
             border:none;
             cursor: pointer;
+            box-shadow: none;
+		    background-image: none;
+		    font-size: 16px;
         }
 
 
         /* actiongrid */
 
         .actiongrid {
-            width: 400px;
+            min-width: 400px;
             display: flex;
             flex-direction: column;
+            margin: 10px;
         }
 
-        .actiongrid vaadin-grid-cell-content {
+		.actiongrid__hidethead thead {
+            display: none;
+         }
+         
+        /* .actiongrid .v-grid-cell {
             padding: 0px;
             display: flex;
             align-items: center;
             height: 100%;
-        }
+        }*/
 
+		/* remove border in actiongrids */
+		.actiongrid .v-grid-row > td, .actiongrid .v-grid-editor-cells > div, .actiongrid .v-grid-cell.frozen {
+			border-left: none;
+			border-bottom: none;
+			display: flex;
+			align-items: center;
+		}
+		
+		.actiongrid .v-grid-cell div.component-wrap {
+		    display: flex;
+		    align-items: center;
+		    justify-content: center;
+		}
+		
         .actiongrid flow-component-renderer {
             flex-grow: 1;
         }
@@ -673,7 +727,7 @@
         }
 
         .actiongrid__bar {
-            margin-left: 1em;
+          /*  margin-left: 1em; */
         }
 
         centered-icon {
@@ -701,6 +755,7 @@
         .dashboard-view {
             background-color: white;
             width: 100%;
+            overflow: auto;
         }
 
         /*
@@ -741,5 +796,9 @@
             flex-direction: column;
             padding: 0.5em;
             cursor: pointer;
+        }
+        .projectlist__card__descriptionbar {
+        	padding-left: 1em;
+   			padding-bottom: 0.25em;
         }
 }

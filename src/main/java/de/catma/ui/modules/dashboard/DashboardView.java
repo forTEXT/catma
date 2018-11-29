@@ -2,6 +2,7 @@ package de.catma.ui.modules.dashboard;
 
 import java.util.List;
 
+import com.google.common.eventbus.EventBus;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.UI;
@@ -23,8 +24,11 @@ public class DashboardView extends CssLayout {
 
     private final ErrorLogger errorLogger;
 
-    public DashboardView(ProjectManager projectManager){
+	private final EventBus eventBus;
+
+    public DashboardView(ProjectManager projectManager, EventBus eventBus){
         this.projectManager = projectManager;
+        this.eventBus = eventBus;
         this.errorLogger = (ErrorLogger)(UI.getCurrent());
         initComponents();
     }
@@ -32,7 +36,7 @@ public class DashboardView extends CssLayout {
     protected void initComponents() {
         setStyleName("dashboard-view");
         
-        ProjectList projects = new ProjectList(projectManager, errorLogger);
+        ProjectList projects = new ProjectList(projectManager, eventBus);
         CssLayout receivedResources = new CssLayout();
         receivedResources.setStyleName("flexlayout");
         

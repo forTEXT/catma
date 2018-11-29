@@ -1,4 +1,4 @@
-package de.catma.ui.events;
+package de.catma.ui.events.routing;
 
 import de.catma.project.ProjectReference;
 
@@ -7,11 +7,11 @@ import de.catma.project.ProjectReference;
  * @author db
  *
  */
-public class ProjectSelectedEvent {
+public class RouteToProjectEvent {
 
 	private final ProjectReference projectReference;
 	
-	public ProjectSelectedEvent(ProjectReference projectReference) {
+	public RouteToProjectEvent(ProjectReference projectReference) {
 		this.projectReference = projectReference;
 	}
 	

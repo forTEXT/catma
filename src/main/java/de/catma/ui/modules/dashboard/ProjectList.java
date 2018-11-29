@@ -3,12 +3,14 @@ package de.catma.ui.modules.dashboard;
 import java.util.Collection;
 import java.util.Objects;
 
+import com.google.common.eventbus.EventBus;
 import com.vaadin.data.HasDataProvider;
 import com.vaadin.data.provider.DataChangeEvent;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.Query;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectManager;
@@ -26,9 +28,11 @@ public class ProjectList extends VerticalLayout implements
 
     private final ProjectManager projectManager;
     private final ErrorLogger errorLogger;
+	private final EventBus eventBus;
 
-    ProjectList(ProjectManager projectManager, ErrorLogger errorLogger) {
-        this.errorLogger = errorLogger;
+    ProjectList(ProjectManager projectManager, EventBus eventBus) {
+        this.errorLogger = (ErrorLogger)UI.getCurrent();
+        this.eventBus = eventBus;
         this.projectManager = projectManager;
         initComponents();
     }
@@ -56,7 +60,7 @@ public class ProjectList extends VerticalLayout implements
 
     private void rebuild() {
         projectsLayout.removeAllComponents();
-        this.dataProvider.fetch(new Query<>()).map((prj) -> new ProjectCard(prj, projectManager))
+        this.dataProvider.fetch(new Query<>()).map((prj) -> new ProjectCard(prj, projectManager, eventBus))
                 .forEach(projectsLayout::addComponent);
     }
 

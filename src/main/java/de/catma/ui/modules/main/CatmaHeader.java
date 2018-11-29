@@ -4,8 +4,10 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.CssLayout;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.themes.ValoTheme;
 
+import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.util.Version;
 
 
@@ -16,8 +18,11 @@ import de.catma.ui.util.Version;
  */
 public class CatmaHeader extends CssLayout {
 
-    public CatmaHeader(EventBus eventBus){
+    private final EventBus eventBus;
+
+	public CatmaHeader(EventBus eventBus){
         super();
+        this.eventBus = eventBus;
         eventBus.register(this);
         initComponents();
     }
@@ -28,6 +33,7 @@ public class CatmaHeader extends CssLayout {
     	setStyleName("header");
     	
 		Button home = new Button("Catma " + Version.LATEST);
+		home.addClickListener((evt) -> eventBus.post(new RouteToDashboardEvent()));
 		home.addStyleNames(ValoTheme.BUTTON_LINK, ValoTheme.LABEL_H3);
 		
         addComponents(home);

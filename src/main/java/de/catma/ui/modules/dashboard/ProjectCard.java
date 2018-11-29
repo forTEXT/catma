@@ -4,9 +4,9 @@ import java.util.Objects;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
+import com.google.common.eventbus.EventBus;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.CssLayout;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -14,6 +14,8 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.ui.component.IconButton;
+import de.catma.ui.events.routing.RouteToProjectEvent;
+import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.modules.main.ErrorLogger;
 
 /**
@@ -28,9 +30,12 @@ public class ProjectCard extends VerticalLayout  {
     private final ErrorLogger errorLogger;
     private final ProjectManager projectManager;
 
-    ProjectCard(ProjectReference t, ProjectManager projectManager){
+	private final EventBus eventbus;
+
+    ProjectCard(ProjectReference t, ProjectManager projectManager, EventBus eventbus){
         this.item = Objects.requireNonNull(t) ;
         this.projectManager = projectManager;
+        this.eventbus = eventbus;
         this.errorLogger = (ErrorLogger) UI.getCurrent();
         initComponents();
     }
@@ -45,21 +50,27 @@ public class ProjectCard extends VerticalLayout  {
 
         CssLayout preview = new CssLayout();
         preview.addStyleName("projectlist__card__preview");
-        preview.addComponents(new Label(item.getDescription()));
-        preview.addComponents(new Label(item.getProjectId()));
+        Label labelDesc = new Label(item.getDescription());
+        labelDesc.setWidth("100%");
+        preview.addComponents(labelDesc);
+        Label labelProjectId = new Label(item.getProjectId());
+        labelProjectId.setWidth("100%");
+        preview.addComponents(labelProjectId);
 
-        preview.addLayoutClickListener(evt -> {} );// TODO: open project));
+        preview.addLayoutClickListener(evt -> eventbus.post(new RouteToProjectEvent(item)));
         addComponent(preview);
 
-        HorizontalLayout descriptionBar = new HorizontalLayout();
-        
-//        descriptionBar.setAlignItems(FlexComponent.Alignment.BASELINE);
+        FlexLayout descriptionBar = new FlexLayout();
+        descriptionBar.addStyleName("projectlist__card__descriptionbar");
+        descriptionBar.setAlignItems(FlexLayout.AlignItems.BASELINE);
         descriptionBar.setWidth("100%");
-
+        
+        
         Label name = new Label(item.getName());
         name.setWidth("100%");
+        
         descriptionBar.addComponent(name);
-        descriptionBar.setExpandRatio(name,1.0f);
+//        descriptionBar.setExpandRatio(name,1.0f);
 
         IconButton buttonRemove = new IconButton(VaadinIcons.TRASH);
         descriptionBar.addComponents(buttonRemove);
