@@ -49,6 +49,8 @@
 		
 		<dependency org="org.vaadin.addons" name="vaadin-sliderpanel" rev="2.2.0" />
 		
+		<dependency org="com.github.appreciated" name="material" rev="1.1.8" />
+		
 		<dependency org="org.neo4j" name="neo4j-enterprise" rev="3.0.7"/>
 		<dependency org="org.antlr" name="antlr-runtime" rev="3.4"/>
 		<dependency org="c3p0" name="c3p0" rev="0.9.1.2"/>
