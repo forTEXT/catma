@@ -15439,6 +15439,10 @@ div.v-layout.v-horizontal.v-widget {
 	display: none;
 }
 
+.catma .c-slider {
+	padding: unset;
+}
+
 .catma .v-button-primary-button {
 	background: #5A98A1;
 	border: 1px solid #5A98A1;
@@ -15990,4 +15994,22 @@ div.v-layout.v-horizontal.v-widget {
 .catma .projectlist__card__descriptionbar {
 	padding-left: 1em;
 	padding-bottom: 0.25em;
+}
+
+.catma .annotate-tag-tree-item {
+	width: 15px;
+	height: 100%;
+}
+
+.catma .annotate-tagsets-grid button {
+	background-color: white;
+	border: none;
+}
+
+.catma .annotate-right-padding {
+	padding-right: 3px;
+}
+
+.catma .annotate-properties-details-tree .v-captiontext {
+	font-size: smaller;
 }

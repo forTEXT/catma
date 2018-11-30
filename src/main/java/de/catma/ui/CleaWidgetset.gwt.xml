@@ -55,4 +55,7 @@
     <inherits name="com.vaadin.DefaultWidgetSet" />
 
     <inherits name="com.vaadin.contextmenu.WidgetSet" />
+
+    <inherits name="org.vaadin.sliderpanel.WidgetSet" />
+
 </module>
