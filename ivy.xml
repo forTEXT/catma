@@ -48,6 +48,7 @@
 		<dependency org="org.vaadin.addons" name="wizards-for-vaadin" rev="2.0.1" />
 		<dependency org="com.vaadin" name="vaadin-context-menu" rev="3.0.0" />
 		<dependency org="org.vaadin.addons" name="vaadin-sliderpanel" rev="2.2.0" />
+		<dependency org="com.github.appreciated" name="material" rev="1.1.8" />
 		
 
 		<dependency org="org.neo4j" name="neo4j-enterprise" rev="3.0.7"/>
