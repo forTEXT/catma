@@ -24,6 +24,7 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.repository.Repository;
@@ -139,10 +140,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	resourceContent.addStyleNames("flex-horizontal");
 
         resourceGrid.addStyleName(Styles.actiongrid__hidethead);
-        resourceGrid.setWidth("400px");
-        
+        resourceGrid.setWidth("402px");
         resourceGrid.setDataProvider(buildResourceDataProvider());
-
+        resourceGrid.removeHeaderRow(0);
+        
         StringBuilder rt = new StringBuilder();
         rt
                 .append("<vaadin-grid-tree-toggle ")
@@ -237,23 +238,14 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         teamGrid.addStyleName(Styles.actiongrid__hidethead);
         teamGrid.setWidth("402px");
         teamGrid.setDataProvider(membersDP);
-
-        Column<User, String> coluser = teamGrid.addColumn((nan) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
-//        coluser.setWidth(48);
-        //.setFlexGrow(0).setWidth("3em");
-        Column<User, String> colName = teamGrid.addColumn(User::getName);
-        colName.setExpandRatio(1);
-//        colName.setWidth(300);
-        //.setFlexGrow(1);
-        
-        Column<User, Component> coldots = teamGrid.addComponentColumn((nan) -> new IconButton(VaadinIcons.ELLIPSIS_DOTS_V));
-//        coldots.setWidth(32);
-        
-                //.setFlexGrow(0).setWidth("2em");
-
-        
+        teamGrid.removeHeaderRow(0);
+        teamGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
+        teamGrid.addColumn(User::getName).setExpandRatio(1);
+        ButtonRenderer<User> moreoptionbutton = new ButtonRenderer<>((user) -> Notification.show("clicked"));
+        moreoptionbutton.setHtmlContentAllowed(true);
+        teamGrid.addColumn((user) -> VaadinIcons.ELLIPSIS_DOTS_V.getHtml(), moreoptionbutton);        
         Label membersAnnotations = new Label("Members");
-        ActionGridComponent membersGridComponent = new ActionGridComponent<>(
+        ActionGridComponent<Grid<User>> membersGridComponent = new ActionGridComponent<>(
                 membersAnnotations,
                 teamGrid
         );

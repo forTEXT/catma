@@ -541,7 +541,8 @@
         .header__context {
             display: flex;
             justify-content: center;
-            width: 100%;
+		    flex-grow: 1;
+		    font-size: 1.5em;
         }
 
         .header__version {
@@ -580,6 +581,7 @@
             cursor: pointer;           
             color: var(--lumo-body-text-color);
             padding:0px;
+            text-transform: none;
         }
 
         .nav .h3 {
@@ -648,6 +650,8 @@
         }
         
         .hugecard__bar + div {
+            margin-left: 32px;
+    		margin-top: 14px;
         	overflow: auto;
         }
 
@@ -672,7 +676,7 @@
             justify-content: flex-end;
         }
 
-        .hugecard__bar__moreoptions__btn {
+        .v-button.hugecard__bar__moreoptions__btn {
             color: white;
             background-color: transparent;
             border:none;
@@ -680,6 +684,7 @@
             box-shadow: none;
 		    background-image: none;
 		    font-size: 16px;
+		    opacity: inherit;
         }
 
 
@@ -690,8 +695,31 @@
             display: flex;
             flex-direction: column;
             margin: 10px;
+            font-size: 16px;
         }
 
+		.v-grid button.v-nativebutton {
+            border: none;
+            background: transparent;
+            opacity: 0.54;
+            cursor: pointer;
+            justify-content: center;
+            box-shadow: none;
+            font-size: 16px;
+            color: rgb(0, 0, 0);
+            display:flex;
+        }
+
+        .v-grid  button.v-nativebutton:focus {
+            outline: none;
+            background-color:none
+        }
+        
+        .v-grid  button.v-nativebutton:focus:after,.v-grid  button.v-nativebutton:after {
+            border: none; 
+    		box-shadow: none;
+        }
+		
 		.actiongrid__hidethead thead {
             display: none;
          }
@@ -732,7 +760,9 @@
         }
 
         .actiongrid__bar {
-          /*  margin-left: 1em; */
+        	background-color: #e0e0e0;
+        	color: rgba(0, 0, 0, 0.87);
+        	padding: 14px;
         }
 
         centered-icon {
