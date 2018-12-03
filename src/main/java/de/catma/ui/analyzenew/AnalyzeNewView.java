@@ -135,6 +135,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	 }
 	 
 	 private void initListeners() {	 
+		 
 		 	queryComboBox.addValueChangeListener(event -> {
          if (event.getSource().isEmpty()) {
                  // show some message
@@ -143,6 +144,12 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
         searchInput.setValue(predefQueryString);
          }
      });
+		 	
+		 kwicBt.addClickListener(new ClickListener() {		
+			public void buttonClick(ClickEvent event) {
+				//create the KWIC PreviewBox
+				}
+			});
 		 
 	 }
 	 private void initActions() {
@@ -285,7 +292,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		visIconsLabel.setWidth("100%");
 		HorizontalLayout visIconBar = new HorizontalLayout();
 		
-		kwicBt = new Button("KWIC",VaadinIcons.BAR_CHART);
+		kwicBt = new Button("KWIC",VaadinIcons.SPLIT);
 		kwicBt.addStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
 		kwicBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		kwicBt.setWidth("100%");
