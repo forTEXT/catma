@@ -4,8 +4,10 @@ $v-unit-size: round(1.8 * $v-font-size);
 /* @import "../valo/valo.scss"; */ 
 @import "../material/material.scss";
 @import "flex-layout.scss";
+@import "v-tree-grid.scss";
 
 @mixin catma {
   @include material; 
   @include flex-layout;
+  @include v-tree-grid;
 }

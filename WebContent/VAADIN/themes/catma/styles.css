@@ -14526,7 +14526,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	background: transparent;
 }
 
-.catma .material-border, .catma .floating-border, .catma .card-0, .catma .card-0-5, .catma .card-1, .catma .card-1-5, .catma .card-2, .catma .card-3, .catma .card-4, .catma .card-5, .catma .card-hoverable, .catma :not(.v-component-group) > .v-textfield.floating, .catma .v-filterselect.floating, .catma .v-datefield.floating, .catma .v-inline-datefield:not(.borderless), .catma .v-textarea:not(.borderless), .catma .v-richtextarea:not(.borderless), .catma .v-table:not(.borderless), .catma .v-grid:not(.borderless), .catma .v-grid-editor, .catma .v-select-twincol select:not(.borderless), .catma select.v-select-select:not(.borderless), .catma .v-splitpanel-horizontal:not(.borderless), .catma .v-splitpanel-vertical:not(.borderless), .catma .v-component-group.material, .catma .v-Notification, .catma .v-tooltip, .catma .v-reconnect-dialog {
+.catma .material-border, .catma .floating-border, .catma .card-0, .catma .card-0-5, .catma .card-1, .catma .card-1-5, .catma .card-2, .catma .card-3, .catma .card-4, .catma .card-5, .catma .card-hoverable, .catma :not(.v-component-group) > .v-textfield.floating, .catma .v-filterselect.floating, .catma .v-datefield.floating, .catma .v-inline-datefield:not(.borderless), .catma .v-textarea:not(.borderless), .catma .v-richtextarea:not(.borderless), .catma .v-table:not(.borderless), .catma .v-grid:not(.borderless), .catma .v-grid-editor, .catma .v-select-twincol select:not(.borderless), .catma select.v-select-select:not(.borderless), .catma .v-splitpanel-horizontal:not(.borderless), .catma .v-splitpanel-vertical:not(.borderless), .catma .v-component-group.material, .catma .v-Notification, .catma .v-tooltip, .catma .v-treegrid:not(.borderless), .catma .v-treegrid-editor, .catma .v-reconnect-dialog {
 	border-radius: 2px;
 	border: none;
 	background: white;
@@ -14537,11 +14537,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	box-shadow: 0 0px 0px 0 transparent, 0 0px 0px 0 transparent, 0 0px 0px 0px transparent;
 }
 
-.catma .z-depth-0-5, .catma .card-0-5, .catma .v-table:not(.borderless) .v-table-header, .catma .v-grid:not(.borderless) .v-grid-header::after {
+.catma .z-depth-0-5, .catma .card-0-5, .catma .v-table:not(.borderless) .v-table-header, .catma .v-grid:not(.borderless) .v-grid-header::after, .catma .v-treegrid:not(.borderless) .v-treegrid-header::after {
 	box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1), 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 3px 1px -3px rgba(0, 0, 0, 0.15);
 }
 
-.catma .z-depth-1, .catma .floating-border, .catma .card-1, .catma .v-label-success:not(.borderless), .catma .v-label-failure:not(.borderless), .catma .v-table:not(.borderless) .v-table-footer, .catma .v-select-twincol-buttons:not(.borderless) .v-button, .catma .v-upload:not(.v-disabled):not(.floating-action-upload):not(.flat):not(.borderless):not(.border):not(.borderless-colored):not(.quiet):not(.link), .catma :not(.v-component-group) > .v-textfield.floating, .catma .v-filterselect.floating, .catma .v-datefield.floating, .catma .v-inline-datefield:not(.borderless), .catma .v-textarea:not(.borderless), .catma .v-richtextarea:not(.borderless), .catma .v-table:not(.borderless), .catma .v-grid:not(.borderless), .catma .v-grid-editor, .catma .v-select-twincol select:not(.borderless), .catma select.v-select-select:not(.borderless), .catma .v-splitpanel-horizontal:not(.borderless), .catma .v-splitpanel-vertical:not(.borderless), .catma .v-component-group.material, .catma .v-Notification, .catma .v-tooltip {
+.catma .z-depth-1, .catma .floating-border, .catma .card-1, .catma .v-label-success:not(.borderless), .catma .v-label-failure:not(.borderless), .catma .v-table:not(.borderless) .v-table-footer, .catma .v-select-twincol-buttons:not(.borderless) .v-button, .catma .v-upload:not(.v-disabled):not(.floating-action-upload):not(.flat):not(.borderless):not(.border):not(.borderless-colored):not(.quiet):not(.link), .catma :not(.v-component-group) > .v-textfield.floating, .catma .v-filterselect.floating, .catma .v-datefield.floating, .catma .v-inline-datefield:not(.borderless), .catma .v-textarea:not(.borderless), .catma .v-richtextarea:not(.borderless), .catma .v-table:not(.borderless), .catma .v-grid:not(.borderless), .catma .v-grid-editor, .catma .v-select-twincol select:not(.borderless), .catma select.v-select-select:not(.borderless), .catma .v-splitpanel-horizontal:not(.borderless), .catma .v-splitpanel-vertical:not(.borderless), .catma .v-component-group.material, .catma .v-Notification, .catma .v-tooltip, .catma .v-treegrid:not(.borderless), .catma .v-treegrid-editor {
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
 
@@ -14549,7 +14549,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	box-shadow: 0 3px 3px 0 rgba(0, 0, 0, 0.14), 0 1px 7px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -1px rgba(0, 0, 0, 0.2);
 }
 
-.catma .z-depth-2, .catma .card-2, .catma .v-grid-editor {
+.catma .z-depth-2, .catma .card-2, .catma .v-grid-editor, .catma .v-treegrid-editor {
 	box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
 }
 
@@ -16917,6 +16917,206 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	flex-direction: column;
 	align-items: flex-start;
 	box-sizing: border-box;
+}
+
+.catma .v-treegrid.borderless {
+	overflow: hidden;
+}
+
+.catma .v-treegrid-row-selected > .v-treegrid-cell {
+	color: inherit;
+	border-top: 1px solid #d9d9d9;
+}
+
+.catma .v-treegrid-row-stripe > td {
+	background-color: white;
+}
+
+.catma .v-treegrid-column-header-content {
+	color: #666666;
+}
+
+.catma .v-treegrid-body .v-treegrid-row:not(:first-child) {
+	border-top: 1px solid #d9d9d9;
+}
+
+.catma .v-treegrid-row-selected > .v-treegrid-cell {
+	border-top: none;
+}
+
+.catma .v-treegrid-scroller.v-treegrid-scroller-horizontal {
+	overflow-x: auto !important;
+}
+
+.catma .v-treegrid-cell {
+	height: 30px;
+	line-height: 30px;
+	background-color: white !important;
+	padding: 0 13px;
+}
+
+.catma .v-treegrid-column-header-content, .catma .v-treegrid-column-footer-content {
+	line-height: 30px;
+}
+
+.catma .v-treegrid-cell.frozen {
+	box-shadow: none;
+}
+
+.catma .v-treegrid-scroller.v-treegrid-scroller-horizontal > div {
+	margin: 0 -12px;
+}
+
+.catma .v-treegrid-tablewrapper {
+	overflow: visible;
+	position: unset;
+	width: 100% !important;
+}
+
+.catma .v-treegrid-header {
+	width: auto;
+}
+
+.catma .v-treegrid:not(.borderless) .v-treegrid-header::after {
+	width: 100%;
+	position: absolute;
+	height: 30px;
+	left: 0px;
+	top: 0px;
+	z-index: -1;
+	content: "";
+	background: white;
+}
+
+.catma .last-frozen {
+	border-right: 1px solid #d9d9d9 !important;
+}
+
+.catma .v-treegrid-editor {
+	background-color: white;
+}
+
+.catma .v-treegrid-editor * .gwt-CheckBox:after {
+	position: absolute;
+	content: "...";
+	text-align: center;
+	top: 0px;
+	left: 0px;
+	line-height: 30px;
+	width: 60px;
+}
+
+.catma .v-treegrid-editor * .gwt-CheckBox > input {
+	display: none;
+}
+
+.catma .v-treegrid-editor-save, .catma .v-treegrid-editor-cancel {
+	height: 21px;
+	color: #0072C6;
+	transition: box-shadow 0.3s ease-out, background 0.3s;
+	padding: 0 20px;
+	border-radius: 2px;
+}
+
+.catma .v-treegrid-cell-focused, .catma .v-treegrid-row-selected .v-treegrid-cell {
+	position: relative;
+	border-color: transparent;
+	z-index: 0;
+}
+
+.catma .v-treegrid-cell-focused:before, .catma .v-treegrid-row-selected .v-treegrid-cell:before {
+	border: 1px solid transparent !important;
+	background-color: #ececec !important;
+	z-index: -1;
+	content: "";
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	pointer-events: none;
+}
+
+.catma .v-treegrid-row-selected .v-treegrid-cell:before {
+	display: block;
+}
+
+.catma .v-treegrid-cell.frozen {
+	z-index: 1;
+}
+
+.catma .v-treegrid-editor-footer {
+	height: 27px;
+	font-size: 15px;
+	margin-left: 10px;
+	background-color: white;
+}
+
+.catma .v-treegrid-select-all-checkbox, .catma .v-treegrid-selection-checkbox {
+	width: 8.5px;
+	position: relative;
+	margin: 8.5px auto;
+}
+
+.catma .v-treegrid-select-all-checkbox label, .catma .v-treegrid-selection-checkbox label {
+	width: 8.5px;
+	height: 8.5px;
+	cursor: pointer;
+	position: absolute;
+	top: calc(50% - 6.25px);
+	left: 0;
+	border-radius: 2px;
+	border: 2px solid #595959;
+	transition: background 0.1s ease, border 0.1s ease;
+	color: transparent !important;
+}
+
+.catma .v-treegrid-select-all-checkbox label:after, .catma .v-treegrid-selection-checkbox label:after {
+	content: "";
+	width: 4.375px;
+	height: 1.875px;
+	position: absolute;
+	top: 0.7px;
+	left: 0.62px;
+	border: 3px solid white;
+	border-top: none;
+	border-right: none;
+	background: transparent;
+	opacity: 0;
+	transform: rotate(-45deg);
+}
+
+.catma .v-treegrid-select-all-checkbox input[type="checkbox"], .catma .v-treegrid-selection-checkbox input[type="checkbox"] {
+	opacity: 0;
+	width: 8.5px;
+}
+
+.catma .v-treegrid-select-all-checkbox input[type="checkbox"]:checked + label:after, .catma .v-treegrid-selection-checkbox input[type="checkbox"]:checked + label:after {
+	opacity: 1;
+}
+
+.catma .v-treegrid-select-all-checkbox input[type="checkbox"]:checked + label, .catma .v-treegrid-selection-checkbox input[type="checkbox"]:checked + label {
+	background: #0072C6;
+	border-color: #0072C6;
+}
+
+.catma .v-treegrid-scroller, .catma .v-treegrid-horizontal-scrollbar-deco {
+	background: transparent !important;
+}
+
+.catma :not(.v-treegrid-header) > .v-treegrid-row:last-child {
+	border-bottom: 1px solid #d9d9d9;
+}
+
+.catma .v-treegrid-horizontal-scrollbar-deco:after {
+	position: absolute;
+	bottom: -10px;
+	z-index: 5;
+	right: -1px;
+	height: 10px;
+	content: "";
+	width: 1px;
+	background: #d9d9d9;
 }
 
 .catma .menuPanel {

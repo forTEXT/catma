@@ -161,6 +161,8 @@ public class AnnotationPanel extends VerticalLayout {
 		tagsetsGrid = new TreeGrid<>();
 		tagsetsGrid.addStyleName("annotate-tagsets-grid");
 		tagsetsGrid.setSizeFull();
+		tagsetsGrid.setSelectionMode(SelectionMode.SINGLE);
+		
 		addComponent(tagsetsGrid);
 		setExpandRatio(tagsetsGrid, 1.0f);
 		tagsetsGrid.setDetailsGenerator(new DetailsGenerator<TagTreeItem>() {

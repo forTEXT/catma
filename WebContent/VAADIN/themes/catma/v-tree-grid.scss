@@ -1,0 +1,186 @@
+@mixin v-tree-grid {
+  .v-treegrid:not(.borderless) {
+    @extend .floating-border;
+  }
+  
+  .v-treegrid.borderless {
+    overflow: hidden;
+  }
+  
+  .v-treegrid-row-selected > .v-treegrid-cell {
+    color: inherit;
+    border-top: 1px solid $v-table-border-color;
+  }
+  
+  .v-treegrid-row-stripe > td {
+    background-color: $mat-card-color;
+  }
+
+  .v-treegrid-column-header-content {
+    color: valo-font-color($mat-card-color, 0.6);
+  }
+  .v-treegrid-body .v-treegrid-row:not(:first-child) {
+    border-top: 1px solid $v-table-border-color;
+  }
+  .v-treegrid-row-selected > .v-treegrid-cell {
+    border-top: none;
+  }
+  .v-treegrid-scroller.v-treegrid-scroller-horizontal {
+    overflow-x: auto !important;
+  }
+  .v-treegrid-cell {
+    height: $v-unit-size--large;
+    line-height: $v-unit-size--large;
+    background-color: $mat-card-color !important;
+    padding: 0 round($v-unit-size/2);
+  }
+  
+  .v-treegrid-column-header-content,
+  .v-treegrid-column-footer-content {
+    line-height: $v-unit-size--large;
+  }
+  .v-treegrid-cell.frozen {
+    box-shadow: none;
+  }
+  .v-treegrid-scroller.v-treegrid-scroller-horizontal > div {
+    margin: 0 -12px;
+  }
+  .v-treegrid-tablewrapper {
+    overflow: visible;
+    position: unset;
+    width: 100% !important;
+  }
+  .v-treegrid-header {
+    width: auto;
+  }
+  .v-treegrid:not(.borderless) .v-treegrid-header::after {
+    width: 100%;
+    position: absolute;
+    height: $v-unit-size--large;
+    left: 0px;
+    top: 0px;
+    z-index: -1;
+    content: "";
+    background: $mat-card-color;
+    @extend .z-depth-0-5;
+  }
+  .last-frozen {
+    border-right: 1px solid $v-table-border-color !important;
+  }
+  .v-treegrid-editor {
+    @extend .floating-border;
+    @extend .z-depth-2;
+    background-color: $mat-card-color;
+  }
+  .v-treegrid-editor * .gwt-CheckBox:after {
+    position: absolute;
+    content: "...";
+    text-align: center;
+    top: 0px;
+    left: 0px;
+    line-height: $v-unit-size--large;
+    width: 60px;
+  }
+  .v-treegrid-editor * .gwt-CheckBox > input {
+    display: none;
+  }
+  .v-treegrid-editor-save,
+  .v-treegrid-editor-cancel {
+    height: $v-unit-size--small;
+    color: $v-focus-color;
+    transition: box-shadow .3s ease-out, background .3s;
+    padding: 0 20px;
+    border-radius: $v-border-radius;
+  }
+  .v-treegrid-cell-focused,
+  .v-treegrid-row-selected .v-treegrid-cell {
+    position: relative;
+    border-color: transparent;
+    z-index: 0;
+  }
+  .v-treegrid-cell-focused:before,
+  .v-treegrid-row-selected .v-treegrid-cell:before {
+    border: 1px solid transparent !important;
+    background-color: $v-table-row-selected-color !important;
+    z-index: -1;
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    pointer-events: none;
+  }
+  .v-treegrid-row-selected .v-treegrid-cell:before {
+    display: block;
+  }
+  .v-treegrid-cell.frozen {
+    z-index: 1;
+  }
+  .v-treegrid-editor-footer {
+    height: $v-unit-size + 2px;
+    font-size: 15px;
+    margin-left: 10px;
+    background-color: $mat-card-color;
+  }
+  $label-width: $v-unit-size/2 - 4px;
+  $label-top-margin: $v-unit-size / 4;
+  .v-treegrid-select-all-checkbox, .v-treegrid-selection-checkbox {
+    width: $label-width;
+    position: relative;
+    margin: $label-width auto;
+    label {
+      width: $label-width;
+      height: $label-width;
+      cursor: pointer;
+      position: absolute;
+      top: calc(50% - $label-top-margin);
+      left: 0;
+      border-radius: $v-border-radius;
+      border: 2px solid valo-font-color($v-background-color, 0.65);
+      transition: background 0.1s ease, border 0.1s ease;
+      color: transparent !important;
+      &:after {
+        content: '';
+        width: $v-unit-size * 0.175;
+        height: $v-unit-size * 0.075;
+        position: absolute;
+        top: $v-unit-size * 0.22 - 4.8px; // 40 ->  4; 55 -> 7.3
+        left: $v-unit-size * 0.15 - 3.13px; // 40 -> 3; 55 -> 5.3
+        border: 3px solid white;
+        border-top: none;
+        border-right: none;
+        background: transparent;
+        opacity: 0;
+        transform: rotate(-45deg);
+      }
+    }
+    input[type="checkbox"] {
+      opacity: 0;
+      width: $label-width;
+      &:checked + label:after {
+        opacity: 1;
+      }
+      &:checked + label {
+        background: $v-selection-color;
+        border-color: $v-selection-color;
+      }
+    }
+  }
+  .v-treegrid-scroller, .v-treegrid-horizontal-scrollbar-deco {
+    background: transparent !important;
+  }
+  :not(.v-treegrid-header) > .v-treegrid-row:last-child {
+    border-bottom: 1px solid $v-table-border-color;
+  }
+  .v-treegrid-horizontal-scrollbar-deco:after {
+    position: absolute;
+    bottom: -10px;
+    z-index: 5;
+    right: -1px;
+    height: 10px;
+    content: "";
+    width: 1px;
+    background: $v-table-border-color;
+  }
+}
