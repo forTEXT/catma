@@ -3,6 +3,7 @@ package de.catma.ui.tagger.annotationpanel;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+import com.github.appreciated.material.MaterialTheme;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
@@ -20,13 +21,14 @@ import com.vaadin.ui.components.grid.DetailsGenerator;
 import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
-import com.vaadin.ui.themes.ValoTheme;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
+import de.catma.ui.component.IconButton;
+import de.catma.ui.component.actiongrid.ActionGridComponent;
 
 public class AnnotationPanel extends VerticalLayout {
 	private class PropertyDisplayItem {
@@ -89,6 +91,7 @@ public class AnnotationPanel extends VerticalLayout {
             	}
             }
         } catch (Exception e) {
+			// TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -102,9 +105,12 @@ public class AnnotationPanel extends VerticalLayout {
         }
     }
 	private void initActions() {
-		tagsetsGrid.addColumn(tagTreeItem -> tagTreeItem.getColor(), new HtmlRenderer()).setExpandRatio(1);
+		tagsetsGrid.addColumn(tagTreeItem -> tagTreeItem.getColor(), new HtmlRenderer())
+//			.setCaption("Tagset")
+			.setExpandRatio(1);
 		tagsetsGrid.setHierarchyColumn(
 			tagsetsGrid.addColumn(tagTreeItem -> tagTreeItem.getName())
+			.setCaption("Tags")
 			.setExpandRatio(3));
 		
 //		tagsetsGrid.addColumn(tagTreeItem -> tagTreeItem.getName())
@@ -131,8 +137,8 @@ public class AnnotationPanel extends VerticalLayout {
 		currentEditableCollectionBox = new ComboBox<>("Collection currently being edited");
 		currentEditableCollectionBox.setWidth("100%");
 		
-		addCollectionButton = new Button(VaadinIcons.PLUS);
-		addCollectionButton.addStyleName(ValoTheme.BUTTON_LINK);
+		addCollectionButton = new IconButton(VaadinIcons.PLUS);
+//		addCollectionButton.addStyleName(ValoTheme.BUTTON_LINK);
 		
 		HorizontalLayout editableCollectionPanel = 
 				new HorizontalLayout(currentEditableCollectionBox, addCollectionButton);
@@ -144,27 +150,35 @@ public class AnnotationPanel extends VerticalLayout {
 		
 		addComponent(editableCollectionPanel);
 		
-		
-		tagsetsOptions = new Button(VaadinIcons.OPTIONS);
-		tagsetsOptions.addStyleName(ValoTheme.BUTTON_LINK);
+		tagsetsOptions = new IconButton(VaadinIcons.ELLIPSIS_DOTS_V);
+//		tagsetsOptions.addStyleName(ValoTheme.BUTTON_LINK);
 		
 		Label tagsetsLabel = new Label("Tagsets");
-		HorizontalLayout tagsetsHeader = 
-				new HorizontalLayout(tagsetsLabel, tagsetsOptions);
-		tagsetsHeader.addStyleName("annotate-right-padding");
-		tagsetsHeader.setWidth("100%");
-		tagsetsHeader.setSpacing(true);
-		tagsetsHeader.setComponentAlignment(tagsetsOptions, Alignment.MIDDLE_RIGHT);
-		tagsetsHeader.setExpandRatio(tagsetsLabel, 1.0f);
-		addComponent(tagsetsHeader);
+//		HorizontalLayout tagsetsHeader = 
+//				new HorizontalLayout(tagsetsLabel, tagsetsOptions);
+//		tagsetsHeader.addStyleName("annotate-right-padding");
+//		tagsetsHeader.setWidth("100%");
+//		tagsetsHeader.setSpacing(true);
+//		tagsetsHeader.setComponentAlignment(tagsetsOptions, Alignment.MIDDLE_RIGHT);
+//		tagsetsHeader.setExpandRatio(tagsetsLabel, 1.0f);
+//		addComponent(tagsetsHeader);
 		
 		tagsetsGrid = new TreeGrid<>();
 		tagsetsGrid.addStyleName("annotate-tagsets-grid");
 		tagsetsGrid.setSizeFull();
 		tagsetsGrid.setSelectionMode(SelectionMode.SINGLE);
+		tagsetsGrid.addStyleName(MaterialTheme.GRID_BORDERLESS);
 		
-		addComponent(tagsetsGrid);
-		setExpandRatio(tagsetsGrid, 1.0f);
+		
+        ActionGridComponent<TreeGrid<TagTreeItem>> tagsetGridComponent = new ActionGridComponent<>(
+                tagsetsLabel,
+                tagsetsGrid
+        );
+        
+//		addComponent(tagsetsGrid);
+//		setExpandRatio(tagsetsGrid, 1.0f);
+        addComponent(tagsetGridComponent);
+        setExpandRatio(tagsetGridComponent, 1.0f);
 		tagsetsGrid.setDetailsGenerator(new DetailsGenerator<TagTreeItem>() {
 			
 			@Override
@@ -174,7 +188,7 @@ public class AnnotationPanel extends VerticalLayout {
 					
 					TreeData<PropertyDisplayItem> propertyData = new TreeData<>();
 					
-					final String parentItemDisplayString = "Properties: " + tag.getUserDefinedPropertyDefinitions().stream()
+					final String parentItemDisplayString = tag.getName() + " Properties: " + tag.getUserDefinedPropertyDefinitions().stream()
 					.limit(3)
 					.map(property -> property.getName())
 					.collect(Collectors.joining(","))
@@ -191,7 +205,7 @@ public class AnnotationPanel extends VerticalLayout {
 					
 					Tree<PropertyDisplayItem> properties = new Tree<>();
 					properties.addExpandListener(expandEvent -> {
-						parent.setDisplayValue("Properties");
+						parent.setDisplayValue(tag.getName() + " Properties");
 					});
 					
 					

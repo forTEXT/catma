@@ -13,6 +13,7 @@ import org.vaadin.teemu.wizards.event.WizardProgressListener;
 import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
 import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
+import com.github.appreciated.material.MaterialTheme;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Button;
@@ -320,6 +321,7 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 			.setSelectionMode(SelectionMode.MULTI))
 			.setSelectAllCheckBoxVisibility(SelectAllCheckBoxVisibility.VISIBLE); //TODO: check how this behaves with large datasets
 		docGrid.setSizeFull();
+		docGrid.addStyleName(MaterialTheme.GRID_BORDERLESS);
 		
 		leftPanel.addComponent(docGrid);
 		leftPanel.setExpandRatio(docGrid, 1.0f);
@@ -331,6 +333,10 @@ public class ProjectView extends HorizontalSplitPanel implements ClosableTab {
 						.getSourceContentHandler().getSourceDocumentInfo()
 						.getContentInfoSet().getTitle())
 			.setCaption("Title");
+		docGrid
+			.addColumn(
+				sourceDoc -> sourceDoc.getSourceContentHandler().getSourceDocumentInfo().getTechInfoSet().getFileName())
+			.setCaption("Filename");
 		
 		HorizontalLayout docButtonPanel = new HorizontalLayout();
 		docButtonPanel.setSpacing(true);

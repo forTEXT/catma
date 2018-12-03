@@ -27,7 +27,7 @@ public class TagsetDataItem implements TagTreeItem {
 	
 	@Override
 	public String getTagsetName() {
-		return tagset.getName();
+		return "<span class=\"annotate-panel-tagsetname\">"+tagset.getName()+"</span>";
 	}
 
 	public TagsetDefinition getTagset() {

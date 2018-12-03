@@ -1,4 +1,4 @@
-@mixin v-tree-grid {
+@mixin v-treegrid {
   .v-treegrid:not(.borderless) {
     @extend .floating-border;
   }
@@ -92,15 +92,28 @@
     padding: 0 20px;
     border-radius: $v-border-radius;
   }
-  .v-treegrid-cell-focused,
+ 
   .v-treegrid-row-selected .v-treegrid-cell {
     position: relative;
     border-color: transparent;
+    background-color: $v-table-row-selected-color !important;
     z-index: 0;
   }
-  .v-treegrid-cell-focused:before,
-  .v-treegrid-row-selected .v-treegrid-cell:before {
-    border: 1px solid transparent !important;
+  
+  .v-treegrid-cell:before,
+  .v-treegrid-cell-focused:before {
+	content: "";
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	border: 2px solid transparent;
+	display: none;
+	pointer-events: none;
+  }
+  
+  .v-treegrid-cell:before {
     background-color: $v-table-row-selected-color !important;
     z-index: -1;
     content: "";
@@ -182,5 +195,9 @@
     content: "";
     width: 1px;
     background: $v-table-border-color;
+  }
+  
+  .v-treegrid-spacer.stripe > td {
+ 	background-color: $mat-card-color; 
   }
 }

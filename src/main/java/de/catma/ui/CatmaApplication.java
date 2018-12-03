@@ -335,7 +335,7 @@ public class CatmaApplication extends UI implements
 					// new design test
 					// TODO: set this correctly later :-)
 					MainView mainView = new MainView(projectManager, eventBus);
-					setContent(mainView);
+//					setContent(mainView);
 					eventBus.post(new RouteToDashboardEvent());
 					
 				} catch (Exception e) {

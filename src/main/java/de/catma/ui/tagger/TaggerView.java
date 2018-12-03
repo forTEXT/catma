@@ -43,7 +43,6 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -71,6 +70,7 @@ import de.catma.ui.Slider;
 import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
+import de.catma.ui.component.IconButton;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tagger.MarkupPanel.TagInstanceSelectedListener;
 import de.catma.ui.tagger.Tagger.TaggerListener;
@@ -81,6 +81,7 @@ import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
 import de.catma.ui.tagger.pager.PagerComponent.PageChangeListener;
+import de.catma.ui.tagger.resourcepanel.ResourcePanel;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
 import de.catma.util.Pair;
 
@@ -311,8 +312,9 @@ public class TaggerView extends HorizontalLayout
 		taggerPanel.setSpacing(true);
 		taggerPanel.setMargin(new MarginInfo(true, true, true, false));
 
-		btHelp = new Button(VaadinIcons.QUESTION_CIRCLE);
+		btHelp = new IconButton(VaadinIcons.QUESTION_CIRCLE);
 		btHelp.addStyleName("help-button"); //$NON-NLS-1$
+//		btHelp.addStyleName(MaterialTheme.BUTTON_FLAT);
 		
 		IndexInfoSet indexInfoSet = 
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet(); 
@@ -468,7 +470,10 @@ public class TaggerView extends HorizontalLayout
 //		drawer.setWidth("100px");
 //		addComponent(btDrawer);
 		
-		SliderPanel drawer = new SliderPanelBuilder(new Label("Test")).mode(SliderMode.LEFT).expanded(false).build();
+		SliderPanel drawer = new SliderPanelBuilder(
+			new ResourcePanel(project, sourceDocument))
+				.mode(SliderMode.LEFT).expanded(false).build();
+		
 		addComponent(drawer);
 		
 		addComponent(splitPanel);

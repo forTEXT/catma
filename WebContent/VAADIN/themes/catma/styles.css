@@ -16949,14 +16949,14 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-treegrid-cell {
-	height: 30px;
-	line-height: 30px;
+	height: 35px;
+	line-height: 35px;
 	background-color: white !important;
-	padding: 0 13px;
+	padding: 0 15px;
 }
 
 .catma .v-treegrid-column-header-content, .catma .v-treegrid-column-footer-content {
-	line-height: 30px;
+	line-height: 35px;
 }
 
 .catma .v-treegrid-cell.frozen {
@@ -16980,7 +16980,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-treegrid:not(.borderless) .v-treegrid-header::after {
 	width: 100%;
 	position: absolute;
-	height: 30px;
+	height: 35px;
 	left: 0px;
 	top: 0px;
 	z-index: -1;
@@ -17002,7 +17002,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	text-align: center;
 	top: 0px;
 	left: 0px;
-	line-height: 30px;
+	line-height: 35px;
 	width: 60px;
 }
 
@@ -17011,21 +17011,33 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-treegrid-editor-save, .catma .v-treegrid-editor-cancel {
-	height: 21px;
+	height: 25px;
 	color: #0072C6;
 	transition: box-shadow 0.3s ease-out, background 0.3s;
 	padding: 0 20px;
 	border-radius: 2px;
 }
 
-.catma .v-treegrid-cell-focused, .catma .v-treegrid-row-selected .v-treegrid-cell {
+.catma .v-treegrid-row-selected .v-treegrid-cell {
 	position: relative;
 	border-color: transparent;
+	background-color: #ececec !important;
 	z-index: 0;
 }
 
-.catma .v-treegrid-cell-focused:before, .catma .v-treegrid-row-selected .v-treegrid-cell:before {
-	border: 1px solid transparent !important;
+.catma .v-treegrid-cell:before, .catma .v-treegrid-cell-focused:before {
+	content: "";
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	border: 2px solid transparent;
+	display: none;
+	pointer-events: none;
+}
+
+.catma .v-treegrid-cell:before {
 	background-color: #ececec !important;
 	z-index: -1;
 	content: "";
@@ -17046,24 +17058,24 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-treegrid-editor-footer {
-	height: 27px;
+	height: 31px;
 	font-size: 15px;
 	margin-left: 10px;
 	background-color: white;
 }
 
 .catma .v-treegrid-select-all-checkbox, .catma .v-treegrid-selection-checkbox {
-	width: 8.5px;
+	width: 10.5px;
 	position: relative;
-	margin: 8.5px auto;
+	margin: 10.5px auto;
 }
 
 .catma .v-treegrid-select-all-checkbox label, .catma .v-treegrid-selection-checkbox label {
-	width: 8.5px;
-	height: 8.5px;
+	width: 10.5px;
+	height: 10.5px;
 	cursor: pointer;
 	position: absolute;
-	top: calc(50% - 6.25px);
+	top: calc(50% - 7.25px);
 	left: 0;
 	border-radius: 2px;
 	border: 2px solid #595959;
@@ -17073,11 +17085,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-treegrid-select-all-checkbox label:after, .catma .v-treegrid-selection-checkbox label:after {
 	content: "";
-	width: 4.375px;
-	height: 1.875px;
+	width: 5.075px;
+	height: 2.175px;
 	position: absolute;
-	top: 0.7px;
-	left: 0.62px;
+	top: 1.58px;
+	left: 1.22px;
 	border: 3px solid white;
 	border-top: none;
 	border-right: none;
@@ -17088,7 +17100,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-treegrid-select-all-checkbox input[type="checkbox"], .catma .v-treegrid-selection-checkbox input[type="checkbox"] {
 	opacity: 0;
-	width: 8.5px;
+	width: 10.5px;
 }
 
 .catma .v-treegrid-select-all-checkbox input[type="checkbox"]:checked + label:after, .catma .v-treegrid-selection-checkbox input[type="checkbox"]:checked + label:after {
@@ -17117,6 +17129,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	content: "";
 	width: 1px;
 	background: #d9d9d9;
+}
+
+.catma .v-treegrid-spacer.stripe > td {
+	background-color: white;
 }
 
 .catma .menuPanel {
@@ -17156,49 +17172,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	margin-top: 24px;
 }
 
-.catma .v-panel.v-widget.no-border.v-panel-no-border.v-has-width {
-	border: none;
-	-webkit-box-shadow: none;
-	box-shadow: none;
-}
-
-.catma .v-margin-bottom {
-	padding-bottom: 12px;
-}
-
-.catma .v-tabsheet-tabitemcell .v-caption {
-	border-top: 2px solid transparent;
-	border-bottom: none;
-	text-overflow: inherit;
-}
-
-.catma .popupContent > .v-window-wrap > .v-window-contents > .v-scrollable > .v-verticallayout > .v-expand > .v-slot > .v-panel {
-	border: none;
-	-webkit-box-shadow: none;
-	box-shadow: none;
-}
-
-.catma .v-tabsheet-tabitemcell .v-tabsheet-tabitem-selected .v-caption.v-caption {
-	color: #8AB8CF;
-	background-color: white;
-	border-left: 1px solid #dfdfdf;
-	border-right: 1px solid #dfdfdf;
-	border-top: 1px solid #dfdfdf;
-	padding: 0px 20px;
-}
-
-.catma .v-splitpanel-second-container-catma-tab-spacing {
-	padding: 10px 0px 0px 0px;
-}
-
-.catma .v-tabsheet-tabitemcell .v-caption:hover {
-	color: #8AB8CF;
-}
-
-.catma .v-slot-catma-label-spacing {
-	padding: 10px 0px 5px 0px;
-}
-
 .catma .analyzer-panel-padding {
 	padding: 10px;
 }
@@ -17213,46 +17186,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 0px 10px 0px 10px;
 }
 
-.catma .v-tabsheet-tabitemcell .v-tabsheet-caption-close {
-	right: 3px;
-}
-
-.catma .v-slot-light > .v-panel {
-	border: none;
-	-webkit-box-shadow: none;
-	box-shadow: none;
-}
-
-.catma .catma-tagger-panels {
-	padding: 0px 0px 10px 10px;
-}
-
-.catma .v-slot-catma-tagger-markup-panels {
-	padding: 0px 0px 5px 10px;
-}
-
 .catma .pager-pageinput {
 	width: 43px;
 	text-align: center;
-}
-
-.catma .v-slot > .v-button {
-	white-space: normal;
-}
-
-.catma .v-button {
-	padding: 5px 10px;
-	height: auto;
-	font-size: 12px;
-}
-
-.catma .v-table-caption-container {
-	padding: 10px 10px 10px;
-	min-height: 0px;
-}
-
-.catma .v-tabsheet-tabcontainer {
-	padding-left: 10px;
 }
 
 .catma .tagger {
@@ -17270,28 +17206,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-moz-user-select: text;
 	-o-user-select: text;
 	user-select: text;
-}
-
-.catma .v-window-contents > .v-scrollable > .v-has-height > .v-expand {
-	overflow: visible;
-	padding-bottom: 15px;
-}
-
-.catma .v-scrollable > .v-has-height > .v-expand {
-	overflow: auto;
-}
-
-.catma .v-splitpanel-first-container * .v-caption {
-	border-top: none;
-}
-
-.catma .v-horizontallayout > .v-expand > .v-slot-bold-label > .v-label-bold-label[style="width: 100%;"] {
-	padding-top: 10px;
-}
-
-.catma .v-verticallayout .expert-features {
-	padding-left: 50px;
-	padding-top: 10px;
 }
 
 .catma .distributionchartviewpanel .v-slot {
@@ -17320,53 +17234,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .c-slider {
 	padding: unset;
-}
-
-.catma .v-button-primary-button {
-	background: #5A98A1;
-	border: 1px solid #5A98A1;
-	color: #fff;
-	box-shadow: none;
-}
-
-.catma .v-button-secondary-button {
-	background: #5A98A1;
-	border: 1px solid #5A98A1;
-	color: #fff;
-	box-shadow: none;
-}
-
-.catma .v-tree-node-selected {
-	color: #000;
-}
-
-.catma .v-tree-node-selected:after {
-	background: #E6E9EB;
-}
-
-.catma .v-table [class*="-row"].v-selected {
-	background: #BBD7EA;
-	color: #000;
-}
-
-.catma .v-table .v-selected[class*="-row"] + .v-selected {
-	background: #BBD7EA;
-	color: #000;
-}
-
-.catma .v-menubar > .v-menubar-menuitem-selected {
-	background: #E6E9EB;
-	color: #000;
-}
-
-.catma .v-splitpanel-first-container-repository-panels .v-panel.v-widget.v-has-width.v-has-height {
-	border: 0px;
-	box-shadow: none;
-}
-
-.catma .v-splitpanel-second-container-repository-panels .v-panel.v-widget.v-has-width.v-has-height {
-	border: 0px;
-	box-shadow: none;
 }
 
 .catma .help-padding-fix {
@@ -17788,7 +17655,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-size: 16px;
 }
 
-.catma .v-grid button.v-nativebutton {
+.catma .actiongrid .v-grid button.v-nativebutton {
 	border: none;
 	background: transparent;
 	opacity: 0.54;
@@ -17800,12 +17667,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	display: flex;
 }
 
-.catma .v-grid button.v-nativebutton:focus {
+.catma .actiongrid .v-grid button.v-nativebutton:focus {
 	outline: none;
 	background-color: none;
 }
 
-.catma .v-grid button.v-nativebutton:focus:after, .catma .v-grid button.v-nativebutton:after {
+.catma .actiongrid .v-grid button.v-nativebutton:focus:after, .catma .v-grid button.v-nativebutton:after {
 	border: none;
 	box-shadow: none;
 }
@@ -17844,7 +17711,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .actiongrid__bar {
 	background-color: #e0e0e0;
 	color: rgba(0, 0, 0, 0.87);
-	padding: 14px;
+	padding-top: 14px;
+	padding-bottom: 14px;
 }
 
 .catma centered-icon {
@@ -17915,7 +17783,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .annotate-tagsets-grid button {
-	background-color: white;
+	background-color: transparent;
 	border: none;
 }
 
@@ -17923,6 +17791,20 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-right: 3px;
 }
 
+.catma .annotate-panel-tagsetname {
+	font-size: 12px;
+}
+
 .catma .annotate-properties-details-tree .v-captiontext {
 	font-size: smaller;
+}
+
+.catma .annotate-resource-grid {
+	background: #FFFFFF;
+	color: #000000;
+}
+
+.catma .annotate-resource-grid button {
+	background-color: transparent;
+	border: none;
 }
