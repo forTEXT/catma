@@ -695,25 +695,25 @@
 
 @-webkit-keyframes valo-grid-editor-footer-animate-in {
 		0% {
-		margin-top: -25px;
+		margin-top: -29px;
 	}
 	}
 
 @-moz-keyframes valo-grid-editor-footer-animate-in {
 		0% {
-		margin-top: -25px;
+		margin-top: -29px;
 	}
 	}
 
 @keyframes valo-grid-editor-footer-animate-in {
 		0% {
-		margin-top: -25px;
+		margin-top: -29px;
 	}
 	}
 
 @-webkit-keyframes valo-grid-editor-footer-animate-in-alt {
 		0% {
-		margin-bottom: -25px;
+		margin-bottom: -29px;
 	}
 		100% {
 		margin-bottom: 0;
@@ -722,7 +722,7 @@
 
 @-moz-keyframes valo-grid-editor-footer-animate-in-alt {
 		0% {
-		margin-bottom: -25px;
+		margin-bottom: -29px;
 	}
 		100% {
 		margin-bottom: 0;
@@ -731,7 +731,7 @@
 
 @keyframes valo-grid-editor-footer-animate-in-alt {
 		0% {
-		margin-bottom: -25px;
+		margin-bottom: -29px;
 	}
 		100% {
 		margin-bottom: 0;
@@ -899,25 +899,25 @@
 
 @-webkit-keyframes valo-grid-editor-footer-animate-in {
 		0% {
-		margin-top: -25px;
+		margin-top: -29px;
 	}
 	}
 
 @-moz-keyframes valo-grid-editor-footer-animate-in {
 		0% {
-		margin-top: -25px;
+		margin-top: -29px;
 	}
 	}
 
 @keyframes valo-grid-editor-footer-animate-in {
 		0% {
-		margin-top: -25px;
+		margin-top: -29px;
 	}
 	}
 
 @-webkit-keyframes valo-grid-editor-footer-animate-in-alt {
 		0% {
-		margin-bottom: -25px;
+		margin-bottom: -29px;
 	}
 		100% {
 		margin-bottom: 0;
@@ -926,7 +926,7 @@
 
 @-moz-keyframes valo-grid-editor-footer-animate-in-alt {
 		0% {
-		margin-bottom: -25px;
+		margin-bottom: -29px;
 	}
 		100% {
 		margin-bottom: 0;
@@ -935,7 +935,7 @@
 
 @keyframes valo-grid-editor-footer-animate-in-alt {
 		0% {
-		margin-bottom: -25px;
+		margin-bottom: -29px;
 	}
 		100% {
 		margin-bottom: 0;
@@ -949,25 +949,25 @@
 
 @-webkit-keyframes valo-grid-editor-footer-animate-in {
 		0% {
-		margin-top: -25px;
+		margin-top: -29px;
 	}
 	}
 
 @-moz-keyframes valo-grid-editor-footer-animate-in {
 		0% {
-		margin-top: -25px;
+		margin-top: -29px;
 	}
 	}
 
 @keyframes valo-grid-editor-footer-animate-in {
 		0% {
-		margin-top: -25px;
+		margin-top: -29px;
 	}
 	}
 
 @-webkit-keyframes valo-grid-editor-footer-animate-in-alt {
 		0% {
-		margin-bottom: -25px;
+		margin-bottom: -29px;
 	}
 		100% {
 		margin-bottom: 0;
@@ -976,7 +976,7 @@
 
 @-moz-keyframes valo-grid-editor-footer-animate-in-alt {
 		0% {
-		margin-bottom: -25px;
+		margin-bottom: -29px;
 	}
 		100% {
 		margin-bottom: 0;
@@ -985,7 +985,7 @@
 
 @keyframes valo-grid-editor-footer-animate-in-alt {
 		0% {
-		margin-bottom: -25px;
+		margin-bottom: -29px;
 	}
 		100% {
 		margin-bottom: 0;
@@ -1550,19 +1550,19 @@ div.v-layout.v-horizontal.v-widget {
 }
 
 .v-tabsheet-content  > div > .v-scrollable  > .v-margin-top {
-	padding-top: 8px;
+	padding-top: 10px;
 }
 
 .v-tabsheet-content  > div > .v-scrollable  > .v-margin-right {
-	padding-right: 8px;
+	padding-right: 10px;
 }
 
 .v-tabsheet-content  > div > .v-scrollable  > .v-margin-bottom {
-	padding-bottom: 8px;
+	padding-bottom: 10px;
 }
 
 .v-tabsheet-content  > div > .v-scrollable  > .v-margin-left {
-	padding-left: 8px;
+	padding-left: 10px;
 }
 
 .v-splitpanel-vertical, .v-splitpanel-horizontal {
@@ -1894,7 +1894,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma.v-app, .catma.v-app-loading {
-	font: 400 14px/1.55 "Source Sans Pro", sans-serif;
+	font: 400 16px/1.55 "Source Sans Pro", sans-serif;
 	color: #464646;
 	background-color: #fafafa;
 	cursor: default;
@@ -1914,9 +1914,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	left: 50%;
 	width: 28px;
 	height: 28px;
-	padding: 6px;
-	margin-top: -21px;
-	margin-left: -21px;
+	padding: 7px;
+	margin-top: -22px;
+	margin-left: -22px;
 	background: #fff url(../valo/shared/img/spinner.gif) no-repeat 50%;
 	border-radius: 2px;
 }
@@ -1983,7 +1983,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-caption {
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: 400;
 	padding-bottom: 0.3em;
 	padding-left: 1px;
@@ -1995,7 +1995,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-icon + .v-captiontext, .catma .v-icon + span {
-	margin-left: 5px;
+	margin-left: 6px;
 }
 
 .catma .v-icon + .v-captiontext:empty, .catma .v-icon + span:empty {
@@ -2005,7 +2005,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-errorindicator {
 	color: #d32f2f;
 	font-weight: 600;
-	width: 13px;
+	width: 15px;
 	text-align: center;
 }
 
@@ -2016,7 +2016,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-errorindicator-info {
 	color: #00a7f5;
 	font-weight: 600;
-	width: 13px;
+	width: 15px;
 	text-align: center;
 }
 
@@ -2027,7 +2027,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-errorindicator-warning {
 	color: #fc9c00;
 	font-weight: 600;
-	width: 13px;
+	width: 15px;
 	text-align: center;
 }
 
@@ -2038,7 +2038,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-errorindicator-error {
 	color: #ed473b;
 	font-weight: 600;
-	width: 13px;
+	width: 15px;
 	text-align: center;
 }
 
@@ -2049,7 +2049,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-errorindicator-critical {
 	color: #fa007d;
 	font-weight: 600;
-	width: 13px;
+	width: 15px;
 	text-align: center;
 }
 
@@ -2060,7 +2060,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-errorindicator-system {
 	color: #bb00ff;
 	font-weight: 600;
-	width: 13px;
+	width: 15px;
 	text-align: center;
 }
 
@@ -2077,7 +2077,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font: inherit;
 	font-weight: 400;
 	line-height: inherit;
-	padding: 3px;
+	padding: 4px;
 	margin: 0;
 	border-radius: 2px;
 	border: 0 solid #b2b2b2;
@@ -2116,11 +2116,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 	color: white;
-	padding: 3px 6px;
+	padding: 4px 7px;
 	border-radius: 1px;
 	max-width: 35em;
 	overflow: hidden !important;
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-tooltip div[style*="width"] {
@@ -2131,8 +2131,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	background-color: white;
 	background-color: #fff;
 	color: #d32f2f;
-	margin: -3px -6px;
-	padding: 3px 6px;
+	margin: -4px -7px;
+	padding: 4px 7px;
 	max-height: 10em;
 	overflow: auto;
 	font-weight: 500;
@@ -2166,7 +2166,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-tooltip .v-tooltip-text {
 	max-height: 10em;
 	overflow: auto;
-	margin-top: 6px;
+	margin-top: 8px;
 }
 
 .catma .v-tooltip .v-tooltip-text pre {
@@ -2218,8 +2218,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-contextmenu .gwt-MenuItem {
 	cursor: pointer;
-	line-height: 25px;
-	padding: 0 14px 0 7px;
+	line-height: 29px;
+	padding: 0 16px 0 8px;
 	font-weight: 400;
 	white-space: nowrap;
 	position: relative;
@@ -2241,7 +2241,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-contextmenu .gwt-MenuItem .v-icon {
-	max-height: 25px;
+	max-height: 29px;
 	margin-right: 4px;
 	min-width: 1em;
 }
@@ -2254,16 +2254,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-reconnect-dialog {
 	color: white;
-	top: 8px;
-	right: 8px;
+	top: 10px;
+	right: 10px;
 	max-width: 100%;
 	border-radius: 0;
 	-webkit-box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
 	box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
-	padding: 8px 10px;
+	padding: 10px 12px;
 	background-color: #444;
 	background-color: rgba(68, 68, 68, 0.9);
-	line-height: 20px;
+	line-height: 22px;
 	text-align: center;
 }
 
@@ -2325,8 +2325,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-spacing {
-	width: 8px;
-	height: 8px;
+	width: 10px;
+	height: 10px;
 }
 
 .catma .v-verticallayout-well, .catma .v-horizontallayout-well {
@@ -2345,19 +2345,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-verticallayout-well  > .v-margin-top, .catma .v-horizontallayout-well  > .v-margin-top {
-	padding-top: 8px;
+	padding-top: 10px;
 }
 
 .catma .v-verticallayout-well  > .v-margin-right, .catma .v-horizontallayout-well  > .v-margin-right {
-	padding-right: 8px;
+	padding-right: 10px;
 }
 
 .catma .v-verticallayout-well  > .v-margin-bottom, .catma .v-horizontallayout-well  > .v-margin-bottom {
-	padding-bottom: 8px;
+	padding-bottom: 10px;
 }
 
 .catma .v-verticallayout-well  > .v-margin-left, .catma .v-horizontallayout-well  > .v-margin-left {
-	padding-left: 8px;
+	padding-left: 10px;
 }
 
 .catma .v-verticallayout-card, .catma .v-horizontallayout-card {
@@ -2370,19 +2370,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-verticallayout-card  > .v-margin-top, .catma .v-horizontallayout-card  > .v-margin-top {
-	padding-top: 8px;
+	padding-top: 10px;
 }
 
 .catma .v-verticallayout-card  > .v-margin-right, .catma .v-horizontallayout-card  > .v-margin-right {
-	padding-right: 8px;
+	padding-right: 10px;
 }
 
 .catma .v-verticallayout-card  > .v-margin-bottom, .catma .v-horizontallayout-card  > .v-margin-bottom {
-	padding-bottom: 8px;
+	padding-bottom: 10px;
 }
 
 .catma .v-verticallayout-card  > .v-margin-left, .catma .v-horizontallayout-card  > .v-margin-left {
-	padding-left: 8px;
+	padding-left: 10px;
 }
 
 .catma .v-horizontallayout-wrapping {
@@ -2390,7 +2390,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-horizontallayout-wrapping > .v-spacing + .v-slot, .catma .v-horizontallayout-wrapping > .v-slot:first-child {
-	margin-bottom: 8px;
+	margin-bottom: 10px;
 }
 
 .catma .v-horizontallayout-wrapping > .v-slot:first-child:last-child {
@@ -2399,7 +2399,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-checkbox {
 	position: relative;
-	line-height: 13px;
+	line-height: 15px;
 	white-space: nowrap;
 }
 
@@ -2408,7 +2408,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-checkbox {
-	padding-left: 17px;
+	padding-left: 19px;
 }
 
 :root .catma .v-checkbox label {
@@ -2437,19 +2437,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	content: "";
 	display: inline-block;
 	box-sizing: border-box;
-	width: 13px;
-	height: 13px;
+	width: 15px;
+	height: 15px;
 	position: absolute;
 	top: 0;
 	left: 0;
 	border-radius: 2px;
-	font-size: 11px;
+	font-size: 13px;
 	text-align: center;
 }
 
 :root .catma .v-checkbox > input ~ label:before {
-	height: 12.5px;
-	padding: 0 6px;
+	height: 14.5px;
+	padding: 0 7px;
 	color: #1a1a1a;
 	font-weight: 500;
 	
@@ -2460,7 +2460,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	padding: 0;
-	height: 13px;
+	height: 15px;
 }
 
 :root .catma .v-checkbox > input ~ label:after {
@@ -2481,7 +2481,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-checkbox > .v-icon, .catma .v-checkbox > label .v-icon {
-	margin: 0 4px 0 2px;
+	margin: 0 5px 0 2px;
 	min-width: 1em;
 	cursor: pointer;
 }
@@ -2519,9 +2519,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-checkbox-small {
 	position: relative;
-	line-height: 11px;
+	line-height: 13px;
 	white-space: nowrap;
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-checkbox-small.v-has-width label {
@@ -2529,7 +2529,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-checkbox-small {
-	padding-left: 14px;
+	padding-left: 17px;
 }
 
 :root .catma .v-checkbox-small label {
@@ -2558,19 +2558,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	content: "";
 	display: inline-block;
 	box-sizing: border-box;
-	width: 11px;
-	height: 11px;
+	width: 13px;
+	height: 13px;
 	position: absolute;
 	top: 0;
 	left: 0;
 	border-radius: 2px;
-	font-size: 9px;
+	font-size: 11px;
 	text-align: center;
 }
 
 :root .catma .v-checkbox-small > input ~ label:before {
-	height: 10.5px;
-	padding: 0 5px;
+	height: 12.5px;
+	padding: 0 6px;
 	color: #1a1a1a;
 	font-weight: 500;
 	
@@ -2581,7 +2581,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	padding: 0;
-	height: 11px;
+	height: 13px;
 }
 
 :root .catma .v-checkbox-small > input ~ label:after {
@@ -2640,9 +2640,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-checkbox-large {
 	position: relative;
-	line-height: 15px;
+	line-height: 18px;
 	white-space: nowrap;
-	font-size: 17px;
+	font-size: 20px;
 }
 
 .catma .v-checkbox-large.v-has-width label {
@@ -2650,7 +2650,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-checkbox-large {
-	padding-left: 20px;
+	padding-left: 23px;
 }
 
 :root .catma .v-checkbox-large label {
@@ -2679,19 +2679,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	content: "";
 	display: inline-block;
 	box-sizing: border-box;
-	width: 15px;
-	height: 15px;
+	width: 18px;
+	height: 18px;
 	position: absolute;
 	top: 0;
 	left: 0;
 	border-radius: 2px;
-	font-size: 13px;
+	font-size: 15px;
 	text-align: center;
 }
 
 :root .catma .v-checkbox-large > input ~ label:before {
-	height: 15px;
-	padding: 0 7px;
+	height: 17.5px;
+	padding: 0 8px;
 	color: #1a1a1a;
 	font-weight: 500;
 	
@@ -2702,7 +2702,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	padding: 0;
-	height: 15px;
+	height: 18px;
 }
 
 :root .catma .v-checkbox-large > input ~ label:after {
@@ -2723,7 +2723,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-checkbox-large > .v-icon, .catma .v-checkbox-large > label .v-icon {
-	margin: 0 5px 0 3px;
+	margin: 0 6px 0 3px;
 	min-width: 1em;
 	cursor: pointer;
 }
@@ -2761,8 +2761,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-filterselect {
 	position: relative;
-	width: 125px;
-	height: 25px;
+	width: 145px;
+	height: 29px;
 	border-radius: 2px;
 	white-space: nowrap;
 }
@@ -2783,7 +2783,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 25px;
+	height: 29px;
 	border-radius: 2px;
 	padding: 3px 6px;
 	border: 0 solid #afafaf;
@@ -2796,7 +2796,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	transition: box-shadow 180ms, border 180ms;
 	width: 100% !important;
 	height: 100%;
-	padding-right: 26px;
+	padding-right: 30px;
 	border-radius: inherit;
 }
 
@@ -2820,17 +2820,17 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-filterselect .v-icon + [class*="input"] {
-	padding-left: 25px;
+	padding-left: 29px;
 }
 
 .catma .v-filterselect img.v-icon {
-	max-height: 25px;
+	max-height: 29px;
 	margin-left: 6px;
 }
 
 .catma .v-filterselect span.v-icon {
 	color: #474747;
-	width: 25px;
+	width: 29px;
 	line-height: 1;
 	padding-top: 0.12em;
 	margin-left: 6px;
@@ -2845,7 +2845,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-touch-callout: none;
 	cursor: pointer;
 	position: absolute;
-	width: 25px;
+	width: 29px;
 	top: 0;
 	right: 0;
 	bottom: 0;
@@ -2861,7 +2861,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-moz-transition: color 140ms;
 	transition: color 140ms;
 	position: absolute;
-	width: 25px;
+	width: 29px;
 	text-align: center;
 	top: 50%;
 	line-height: 1;
@@ -3031,12 +3031,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-filterselect-suggestpopup .gwt-MenuItem {
 	cursor: pointer;
-	line-height: 25px;
-	padding: 0 14px 0 7px;
+	line-height: 29px;
+	padding: 0 16px 0 8px;
 	font-weight: 400;
 	white-space: nowrap;
 	position: relative;
-	height: 25px;
+	height: 29px;
 	box-sizing: border-box;
 	text-overflow: ellipsis;
 	overflow-x: hidden;
@@ -3057,7 +3057,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-filterselect-suggestpopup .gwt-MenuItem .v-icon {
-	max-height: 25px;
+	max-height: 29px;
 	margin-right: 4px;
 	min-width: 1em;
 }
@@ -3074,11 +3074,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	background: rgba(217, 217, 217, 0.9);
 	color: #3d3d3d;
 	border-radius: 0 0 2px 2px;
-	height: 16px;
-	bottom: -16px;
-	font-size: 11px;
-	line-height: 16px;
-	padding: 0 4px;
+	height: 18px;
+	bottom: -18px;
+	font-size: 12px;
+	line-height: 18px;
+	padding: 0 5px;
 	cursor: default;
 	pointer-events: none;
 	-webkit-animation: valo-animate-in-slide-down 200ms 80ms backwards;
@@ -3101,9 +3101,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-transition: all 200ms;
 	-moz-transition: all 200ms;
 	transition: all 200ms;
-	width: 17px;
-	height: 17px;
-	line-height: 17px;
+	width: 20px;
+	height: 20px;
+	line-height: 20px;
 	text-align: center;
 	font-family: ThemeIcons;
 	-webkit-transform: scale(0.8);
@@ -3258,9 +3258,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-filterselect-tiny {
-	height: 19px;
+	height: 22px;
 	
-	font-size: 11px;
+	font-size: 12px;
 }
 
 .catma .v-filterselect-tiny [class*="input"] {
@@ -3279,7 +3279,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 19px;
+	height: 22px;
 	
 	padding: 2px 4px;
 	
@@ -3289,22 +3289,22 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	transition: box-shadow 180ms, border 180ms;
 	width: 100% !important;
 	height: 100%;
-	padding-right: 20px;
+	padding-right: 23px;
 	border-radius: inherit;
 }
 
 .catma .v-filterselect-tiny .v-icon + [class*="input"] {
-	padding-left: 19px;
+	padding-left: 22px;
 }
 
 .catma .v-filterselect-tiny img.v-icon {
-	max-height: 19px;
+	max-height: 22px;
 	margin-left: 4px;
 }
 
 .catma .v-filterselect-tiny span.v-icon {
 	
-	width: 19px;
+	width: 22px;
 	line-height: 1;
 	padding-top: 0.12em;
 	margin-left: 4px;
@@ -3315,7 +3315,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-touch-callout: none;
 	cursor: pointer;
 	position: absolute;
-	width: 19px;
+	width: 22px;
 	border-radius: 0 2px 2px 0;
 }
 
@@ -3326,7 +3326,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-moz-transition: color 140ms;
 	transition: color 140ms;
 	position: absolute;
-	width: 19px;
+	width: 22px;
 	text-align: center;
 	top: 50%;
 	line-height: 1;
@@ -3379,7 +3379,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-filterselect-compact, .catma .v-filterselect-small {
-	height: 21px;
+	height: 25px;
 	
 }
 
@@ -3399,9 +3399,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 21px;
+	height: 25px;
 	
-	padding: 2px 4px;
+	padding: 3px 5px;
 	
 	
 	-webkit-transition: box-shadow 180ms, border 180ms;
@@ -3409,25 +3409,25 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	transition: box-shadow 180ms, border 180ms;
 	width: 100% !important;
 	height: 100%;
-	padding-right: 22px;
+	padding-right: 26px;
 	border-radius: inherit;
 }
 
 .catma .v-filterselect-compact .v-icon + [class*="input"], .catma .v-filterselect-small .v-icon + [class*="input"] {
-	padding-left: 21px;
+	padding-left: 25px;
 }
 
 .catma .v-filterselect-compact img.v-icon, .catma .v-filterselect-small img.v-icon {
-	max-height: 21px;
-	margin-left: 4px;
+	max-height: 25px;
+	margin-left: 5px;
 }
 
 .catma .v-filterselect-compact span.v-icon, .catma .v-filterselect-small span.v-icon {
 	
-	width: 21px;
+	width: 25px;
 	line-height: 1;
 	padding-top: 0.12em;
-	margin-left: 4px;
+	margin-left: 5px;
 }
 
 .catma .v-filterselect-compact [class$="button"], .catma .v-filterselect-small [class$="button"] {
@@ -3435,7 +3435,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-touch-callout: none;
 	cursor: pointer;
 	position: absolute;
-	width: 21px;
+	width: 25px;
 	border-radius: 0 2px 2px 0;
 }
 
@@ -3446,7 +3446,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-moz-transition: color 140ms;
 	transition: color 140ms;
 	position: absolute;
-	width: 21px;
+	width: 25px;
 	text-align: center;
 	top: 50%;
 	line-height: 1;
@@ -3499,13 +3499,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-filterselect-small {
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-filterselect-large {
-	height: 30px;
+	height: 35px;
 	
-	font-size: 17px;
+	font-size: 20px;
 }
 
 .catma .v-filterselect-large [class*="input"] {
@@ -3524,9 +3524,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 30px;
+	height: 35px;
 	
-	padding: 3px 5px;
+	padding: 4px 6px;
 	
 	
 	-webkit-transition: box-shadow 180ms, border 180ms;
@@ -3534,25 +3534,25 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	transition: box-shadow 180ms, border 180ms;
 	width: 100% !important;
 	height: 100%;
-	padding-right: 31px;
+	padding-right: 36px;
 	border-radius: inherit;
 }
 
 .catma .v-filterselect-large .v-icon + [class*="input"] {
-	padding-left: 30px;
+	padding-left: 35px;
 }
 
 .catma .v-filterselect-large img.v-icon {
-	max-height: 30px;
-	margin-left: 5px;
+	max-height: 35px;
+	margin-left: 6px;
 }
 
 .catma .v-filterselect-large span.v-icon {
 	
-	width: 30px;
+	width: 35px;
 	line-height: 1;
 	padding-top: 0.12em;
-	margin-left: 5px;
+	margin-left: 6px;
 }
 
 .catma .v-filterselect-large [class$="button"] {
@@ -3560,7 +3560,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-touch-callout: none;
 	cursor: pointer;
 	position: absolute;
-	width: 30px;
+	width: 35px;
 	border-radius: 0 2px 2px 0;
 }
 
@@ -3571,7 +3571,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-moz-transition: color 140ms;
 	transition: color 140ms;
 	position: absolute;
-	width: 30px;
+	width: 35px;
 	text-align: center;
 	top: 50%;
 	line-height: 1;
@@ -3624,9 +3624,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-filterselect-huge {
-	height: 40px;
+	height: 46px;
 	
-	font-size: 23px;
+	font-size: 26px;
 }
 
 .catma .v-filterselect-huge [class*="input"] {
@@ -3645,9 +3645,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 40px;
+	height: 46px;
 	
-	padding: 4px 7px;
+	padding: 5px 8px;
 	
 	
 	-webkit-transition: box-shadow 180ms, border 180ms;
@@ -3655,25 +3655,25 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	transition: box-shadow 180ms, border 180ms;
 	width: 100% !important;
 	height: 100%;
-	padding-right: 41px;
+	padding-right: 47px;
 	border-radius: inherit;
 }
 
 .catma .v-filterselect-huge .v-icon + [class*="input"] {
-	padding-left: 40px;
+	padding-left: 46px;
 }
 
 .catma .v-filterselect-huge img.v-icon {
-	max-height: 40px;
-	margin-left: 7px;
+	max-height: 46px;
+	margin-left: 8px;
 }
 
 .catma .v-filterselect-huge span.v-icon {
 	
-	width: 40px;
+	width: 46px;
 	line-height: 1;
 	padding-top: 0.12em;
-	margin-left: 7px;
+	margin-left: 8px;
 }
 
 .catma .v-filterselect-huge [class$="button"] {
@@ -3681,7 +3681,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-touch-callout: none;
 	cursor: pointer;
 	position: absolute;
-	width: 40px;
+	width: 46px;
 	border-radius: 0 2px 2px 0;
 }
 
@@ -3692,7 +3692,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-moz-transition: color 140ms;
 	transition: color 140ms;
 	position: absolute;
-	width: 40px;
+	width: 46px;
 	text-align: center;
 	top: 50%;
 	line-height: 1;
@@ -3760,19 +3760,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-csslayout-well  > .v-margin-top {
-	padding-top: 8px;
+	padding-top: 10px;
 }
 
 .catma .v-csslayout-well  > .v-margin-right {
-	padding-right: 8px;
+	padding-right: 10px;
 }
 
 .catma .v-csslayout-well  > .v-margin-bottom {
-	padding-bottom: 8px;
+	padding-bottom: 10px;
 }
 
 .catma .v-csslayout-well  > .v-margin-left {
-	padding-left: 8px;
+	padding-left: 10px;
 }
 
 .catma .v-csslayout-card {
@@ -3785,19 +3785,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-csslayout-card  > .v-margin-top {
-	padding-top: 8px;
+	padding-top: 10px;
 }
 
 .catma .v-csslayout-card  > .v-margin-right {
-	padding-right: 8px;
+	padding-right: 10px;
 }
 
 .catma .v-csslayout-card  > .v-margin-bottom {
-	padding-bottom: 8px;
+	padding-bottom: 10px;
 }
 
 .catma .v-csslayout-card  > .v-margin-left {
-	padding-left: 8px;
+	padding-left: 10px;
 }
 
 .catma .v-csslayout-v-component-group {
@@ -3876,7 +3876,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma [class*="spacing"] > tbody > [class*="row"] > td {
-	padding-top: 8px;
+	padding-top: 10px;
 }
 
 .catma [class*="spacing"] > tbody > [class*="firstrow"] > td {
@@ -3917,12 +3917,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-formlayout-error-indicator {
-	width: 13px;
+	width: 15px;
 }
 
 .catma .v-formlayout-captioncell {
 	vertical-align: top;
-	line-height: 24px;
+	line-height: 28px;
 }
 
 .catma .v-formlayout-captioncell .v-caption {
@@ -3953,7 +3953,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-formlayout.light  > table > tbody > tr > td {
 	padding-top: 0;
-	height: 25px;
+	height: 29px;
 	border-bottom: 0 solid #e3e3e3;
 }
 
@@ -3964,8 +3964,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-formlayout.light  > table > tbody > tr > [class*="captioncell"] {
 	color: gray;
 	text-align: right;
-	padding-left: 9px;
-	line-height: 25px;
+	padding-left: 10px;
+	line-height: 29px;
 }
 
 .catma .v-formlayout.light  > table > tbody > [class*="row"] > [class*="contentcell"] {
@@ -3991,7 +3991,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 25px;
+	height: 29px;
 	border-radius: 0;
 	padding: 3px 5px;
 	
@@ -4043,7 +4043,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-formlayout.light .v-richtextarea {
-	margin: 3px 0;
+	margin: 4px 0;
 }
 
 .catma .v-formlayout.light .v-filterselect-button, .catma .v-formlayout.light .v-datefield-button {
@@ -4168,7 +4168,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	white-space: nowrap;
 	box-sizing: border-box;
 	overflow: hidden;
-	font-size: 14px;
+	font-size: 16px;
 }
 
 .catma .v-grid-cell.frozen {
@@ -4273,7 +4273,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	content: "\f0c9";
 	display: block;
 	font-family: ThemeIcons, sans-serif;
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-grid-sidebar.v-contextmenu.closed {
@@ -4286,7 +4286,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-grid-sidebar.v-contextmenu.open .v-grid-sidebar-button:after {
 	content: "\f0c9";
-	font-size: 12px;
+	font-size: 14px;
 	line-height: 1;
 }
 
@@ -4306,8 +4306,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-grid-cell {
 	background-color: white;
-	padding: 0 12px;
-	line-height: 25px;
+	padding: 0 15px;
+	line-height: 29px;
 	text-overflow: ellipsis;
 }
 
@@ -4367,7 +4367,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-grid-header th {
 	position: relative;
 	background-color: white;
-	font-size: 12px;
+	font-size: 14px;
 	font-weight: inherit;
 	border-left: 0 solid #c1c1c1;
 	border-bottom: 0 solid #c1c1c1;
@@ -4380,15 +4380,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-grid-header .sort-asc, .catma .v-grid-header .sort-desc {
-	padding-right: 26px;
+	padding-right: 32px;
 }
 
 .catma .v-grid-header .sort-asc:after, .catma .v-grid-header .sort-desc:after {
 	font-family: ThemeIcons, sans-serif;
 	content: "\f0de" " " attr(sort-order);
 	position: absolute;
-	right: 12px;
-	font-size: 10px;
+	right: 15px;
+	font-size: 12px;
 }
 
 .catma .v-grid-header .sort-desc:after {
@@ -4397,8 +4397,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-grid-column-resize-handle {
 	position: absolute;
-	width: 24px;
-	right: -12px;
+	width: 30px;
+	right: -15px;
 	top: 0px;
 	bottom: 0px;
 	cursor: col-resize;
@@ -4414,7 +4414,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	position: absolute;
 	width: 3px;
 	top: 0px;
-	left: 12px;
+	left: 15px;
 	z-index: 9001;
 	background: #fff;
 	box-shadow: 0px 0px 5px #000;
@@ -4427,7 +4427,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-grid-footer td {
 	background-color: white;
-	font-size: 12px;
+	font-size: 14px;
 	font-weight: inherit;
 	border-left: 0 solid #c1c1c1;
 	border-top: 0 solid #c1c1c1;
@@ -4447,7 +4447,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	width: 100%;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	line-height: 25px;
+	line-height: 29px;
 	vertical-align: baseline;
 }
 
@@ -4541,15 +4541,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-grid-editor-cells  > div input[type="text"], .catma .v-grid-editor-cells  > div input[type="text"].v-filterselect-input, .catma .v-grid-editor-cells  > div input[type="password"] {
-	padding-left: 12px;
+	padding-left: 15px;
 }
 
 .catma .v-grid-editor-cells  > div input[type="text"]:not(.v-filterselect-input), .catma .v-grid-editor-cells  > div input[type="password"] {
-	padding-right: 6px;
+	padding-right: 7.5px;
 }
 
 .catma .v-grid-editor-cells  > div input[type="checkbox"] {
-	margin-left: 12px;
+	margin-left: 15px;
 }
 
 .catma .v-grid-editor-cells  > div .v-textfield, .catma .v-grid-editor-cells  > div .v-datefield, .catma .v-grid-editor-cells  > div .v-filterselect {
@@ -4584,7 +4584,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-grid-editor-footer {
 	display: table;
-	height: 25px;
+	height: 29px;
 	border-top: 0 solid #c1c1c1;
 	margin-top: 0;
 	background: white;
@@ -4619,7 +4619,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	width: 100%;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	line-height: 25px;
+	line-height: 29px;
 	top: 0;
 }
 
@@ -4693,7 +4693,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-grid-header .v-grid-cell.dragged-column-header {
-	margin-top: -13px;
+	margin-top: -15px;
 }
 
 .catma .v-grid-footer .v-grid-cell {
@@ -4725,8 +4725,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-grid-editor-footer {
-	font-size: 12px;
-	padding: 0 4px;
+	font-size: 14px;
+	padding: 0 5px;
 	background: #fafafa;
 	-webkit-animation: valo-grid-editor-footer-animate-in 200ms 120ms backwards;
 	-moz-animation: valo-grid-editor-footer-animate-in 200ms 120ms backwards;
@@ -4755,8 +4755,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-grid-editor-cells > div .error::before {
-	border-top: 6px solid #d32f2f;
-	border-right: 6px solid transparent;
+	border-top: 7px solid #d32f2f;
+	border-right: 7px solid transparent;
 }
 
 .catma .v-grid-editor-cells > div .error, .catma .v-grid-editor-cells > div .error > input {
@@ -4772,7 +4772,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-grid-editor-cells > div input[type="text"].v-datefield-textfield {
-	padding-left: 30.0px;
+	padding-left: 34.8px;
 }
 
 .catma .v-grid-editor-cells > div .v-textfield-focus, .catma .v-grid-editor-cells > div .v-datefield .v-textfield-focus, .catma .v-grid-editor-cells > div .v-filterselect-input:focus {
@@ -4780,12 +4780,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-grid-editor-cells > div .v-select {
-	padding-left: 6px;
-	padding-right: 6px;
+	padding-left: 8px;
+	padding-right: 8px;
 }
 
 .catma .v-grid-editor-cells > div .v-checkbox {
-	margin: 0 6px 0 12px;
+	margin: 0 8px 0 15px;
 }
 
 .catma .v-grid-editor-cells > div .v-checkbox  > input[type="checkbox"] {
@@ -4800,7 +4800,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	display: inline-block;
 	color: #d32f2f;
 	font-weight: 600;
-	width: 13px;
+	width: 15px;
 	text-align: center;
 	content: "!";
 }
@@ -4817,7 +4817,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	text-decoration: none;
 	border: none;
 	background: transparent;
-	padding: 4px 4px;
+	padding: 5px 5px;
 	margin: 0;
 	outline: none;
 }
@@ -4951,7 +4951,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 25px;
+	height: 29px;
 	border-radius: 2px;
 	padding: 3px 6px;
 	border: 0 solid #afafaf;
@@ -4962,7 +4962,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-transition: box-shadow 180ms, border 180ms;
 	-moz-transition: box-shadow 180ms, border 180ms;
 	transition: box-shadow 180ms, border 180ms;
-	width: 125px;
+	width: 145px;
 }
 
 .catma .v-textfield.v-disabled {
@@ -5067,7 +5067,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 19px;
+	height: 22px;
 	border-radius: 2px;
 	padding: 2px 5px;
 	
@@ -5075,7 +5075,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-transition: box-shadow 180ms, border 180ms;
 	-moz-transition: box-shadow 180ms, border 180ms;
 	transition: box-shadow 180ms, border 180ms;
-	font-size: 11px;
+	font-size: 12px;
 }
 
 .catma .v-textfield-compact, .catma .v-textfield-small {
@@ -5093,9 +5093,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 21px;
+	height: 25px;
 	border-radius: 2px;
-	padding: 2px 5px;
+	padding: 3px 6px;
 	
 	
 	-webkit-transition: box-shadow 180ms, border 180ms;
@@ -5104,7 +5104,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-textfield-small {
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-textfield-large {
@@ -5122,15 +5122,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 30px;
+	height: 35px;
 	border-radius: 2px;
-	padding: 3px 6px;
+	padding: 4px 7px;
 	
 	
 	-webkit-transition: box-shadow 180ms, border 180ms;
 	-moz-transition: box-shadow 180ms, border 180ms;
 	transition: box-shadow 180ms, border 180ms;
-	font-size: 17px;
+	font-size: 20px;
 }
 
 .catma .v-textfield-huge {
@@ -5148,15 +5148,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 40px;
+	height: 46px;
 	border-radius: 2px;
-	padding: 4px 8px;
+	padding: 5px 9px;
 	
 	
 	-webkit-transition: box-shadow 180ms, border 180ms;
 	-moz-transition: box-shadow 180ms, border 180ms;
 	transition: box-shadow 180ms, border 180ms;
-	font-size: 23px;
+	font-size: 26px;
 }
 
 .catma .v-slot-inline-icon {
@@ -5168,7 +5168,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-caption-inline-icon .v-captiontext {
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: 400;
 	padding-bottom: 0.3em;
 	padding-left: 1px;
@@ -5183,19 +5183,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-caption-inline-icon span.v-icon {
 	left: 0;
 	bottom: 0;
-	width: 25px;
-	line-height: 25px;
+	width: 29px;
+	line-height: 29px;
 	text-align: center;
-	font-size: 14px;
+	font-size: 16px;
 }
 
 .catma .v-caption-inline-icon img.v-icon {
-	left: 5px;
-	bottom: 5px;
+	left: 7px;
+	bottom: 7px;
 }
 
 .catma .v-textfield-inline-icon  {
-	padding-left: 25px;
+	padding-left: 29px;
 }
 
 .catma .v-slot-inline-icon.v-slot-tiny {
@@ -5207,7 +5207,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-caption-inline-icon.v-caption-tiny .v-captiontext {
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: 400;
 	padding-bottom: 0.3em;
 	padding-left: 1px;
@@ -5222,19 +5222,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-caption-inline-icon.v-caption-tiny span.v-icon {
 	left: 0;
 	bottom: 0;
-	width: 19px;
-	line-height: 19px;
+	width: 22px;
+	line-height: 22px;
 	text-align: center;
-	font-size: 11px;
+	font-size: 12px;
 }
 
 .catma .v-caption-inline-icon.v-caption-tiny img.v-icon {
-	left: 2px;
-	bottom: 2px;
+	left: 3px;
+	bottom: 3px;
 }
 
 .catma .v-textfield-inline-icon.v-textfield-tiny  {
-	padding-left: 19px;
+	padding-left: 22px;
 }
 
 .catma .v-slot-inline-icon.v-slot-compact {
@@ -5246,7 +5246,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-caption-inline-icon.v-caption-compact .v-captiontext {
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: 400;
 	padding-bottom: 0.3em;
 	padding-left: 1px;
@@ -5261,19 +5261,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-caption-inline-icon.v-caption-compact span.v-icon {
 	left: 0;
 	bottom: 0;
-	width: 21px;
-	line-height: 21px;
+	width: 25px;
+	line-height: 25px;
 	text-align: center;
-	font-size: 14px;
+	font-size: 16px;
 }
 
 .catma .v-caption-inline-icon.v-caption-compact img.v-icon {
-	left: 3px;
-	bottom: 3px;
+	left: 5px;
+	bottom: 5px;
 }
 
 .catma .v-textfield-inline-icon.v-textfield-compact  {
-	padding-left: 21px;
+	padding-left: 25px;
 }
 
 .catma .v-slot-inline-icon.v-slot-small {
@@ -5285,7 +5285,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-caption-inline-icon.v-caption-small .v-captiontext {
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: 400;
 	padding-bottom: 0.3em;
 	padding-left: 1px;
@@ -5300,19 +5300,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-caption-inline-icon.v-caption-small span.v-icon {
 	left: 0;
 	bottom: 0;
-	width: 21px;
-	line-height: 21px;
+	width: 25px;
+	line-height: 25px;
 	text-align: center;
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-caption-inline-icon.v-caption-small img.v-icon {
-	left: 3px;
-	bottom: 3px;
+	left: 5px;
+	bottom: 5px;
 }
 
 .catma .v-textfield-inline-icon.v-textfield-small  {
-	padding-left: 21px;
+	padding-left: 25px;
 }
 
 .catma .v-slot-inline-icon.v-slot-large {
@@ -5324,7 +5324,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-caption-inline-icon.v-caption-large .v-captiontext {
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: 400;
 	padding-bottom: 0.3em;
 	padding-left: 1px;
@@ -5339,19 +5339,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-caption-inline-icon.v-caption-large span.v-icon {
 	left: 0;
 	bottom: 0;
-	width: 30px;
-	line-height: 30px;
+	width: 35px;
+	line-height: 35px;
 	text-align: center;
-	font-size: 17px;
+	font-size: 20px;
 }
 
 .catma .v-caption-inline-icon.v-caption-large img.v-icon {
-	left: 7px;
-	bottom: 7px;
+	left: 10px;
+	bottom: 10px;
 }
 
 .catma .v-textfield-inline-icon.v-textfield-large  {
-	padding-left: 30px;
+	padding-left: 35px;
 }
 
 .catma .v-slot-inline-icon.v-slot-huge {
@@ -5363,7 +5363,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-caption-inline-icon.v-caption-huge .v-captiontext {
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: 400;
 	padding-bottom: 0.3em;
 	padding-left: 1px;
@@ -5378,19 +5378,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-caption-inline-icon.v-caption-huge span.v-icon {
 	left: 0;
 	bottom: 0;
-	width: 40px;
-	line-height: 40px;
+	width: 46px;
+	line-height: 46px;
 	text-align: center;
-	font-size: 23px;
+	font-size: 26px;
 }
 
 .catma .v-caption-inline-icon.v-caption-huge img.v-icon {
-	left: 12px;
-	bottom: 12px;
+	left: 15px;
+	bottom: 15px;
 }
 
 .catma .v-textfield-inline-icon.v-textfield-huge  {
-	padding-left: 40px;
+	padding-left: 46px;
 }
 
 .catma .v-textfield-align-right {
@@ -5416,9 +5416,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 25px;
+	height: 29px;
 	border-radius: 2px;
-	padding: 4px;
+	padding: 5px;
 	border: 0 solid #afafaf;
 	background: white;
 	color: #474747;
@@ -5430,7 +5430,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: auto;
 	resize: none;
 	white-space: pre-wrap;
-	width: 125px;
+	width: 145px;
 }
 
 .catma .v-textarea.v-disabled {
@@ -5505,9 +5505,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 19px;
+	height: 22px;
 	border-radius: 2px;
-	padding: 4px;
+	padding: 5px;
 	
 	
 	
@@ -5517,7 +5517,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: auto;
 	resize: none;
 	white-space: pre-wrap;
-	font-size: 11px;
+	font-size: 12px;
 }
 
 .catma .v-textarea-small {
@@ -5535,9 +5535,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 21px;
+	height: 25px;
 	border-radius: 2px;
-	padding: 4px;
+	padding: 5px;
 	
 	
 	
@@ -5547,7 +5547,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: auto;
 	resize: none;
 	white-space: pre-wrap;
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-textarea-large {
@@ -5565,9 +5565,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 30px;
+	height: 35px;
 	border-radius: 2px;
-	padding: 4px;
+	padding: 5px;
 	
 	
 	
@@ -5577,7 +5577,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: auto;
 	resize: none;
 	white-space: pre-wrap;
-	font-size: 17px;
+	font-size: 20px;
 }
 
 .catma .v-textarea-huge {
@@ -5595,9 +5595,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 40px;
+	height: 46px;
 	border-radius: 2px;
-	padding: 4px;
+	padding: 5px;
 	
 	
 	
@@ -5607,7 +5607,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: auto;
 	resize: none;
 	white-space: pre-wrap;
-	font-size: 23px;
+	font-size: 26px;
 }
 
 .catma .v-textarea-align-right {
@@ -5620,8 +5620,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-datefield {
 	position: relative;
-	width: 125px;
-	height: 25px;
+	width: 145px;
+	height: 29px;
 	border-radius: 2px;
 }
 
@@ -5641,7 +5641,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 25px;
+	height: 29px;
 	border-radius: 2px;
 	padding: 3px 6px;
 	border: 0 solid #afafaf;
@@ -5652,7 +5652,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-transition: box-shadow 180ms, border 180ms;
 	-moz-transition: box-shadow 180ms, border 180ms;
 	transition: box-shadow 180ms, border 180ms;
-	padding-left: 30.0px;
+	padding-left: 34.8px;
 	width: 100%;
 	height: 100%;
 	border-radius: inherit;
@@ -5690,8 +5690,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 0;
 	position: absolute;
 	z-index: 10;
-	width: 25px;
-	line-height: 25px;
+	width: 29px;
+	line-height: 29px;
 	text-align: center;
 	font: inherit;
 	outline: none;
@@ -5830,19 +5830,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-datefield-full {
-	width: 210px;
+	width: 240px;
 }
 
 .catma .v-datefield-day {
-	width: 125px;
+	width: 145px;
 }
 
 .catma .v-datefield-month {
-	width: 105px;
+	width: 120px;
 }
 
 .catma .v-datefield-year {
-	width: 91px;
+	width: 104px;
 }
 
 .catma .v-datefield-popup {
@@ -5886,7 +5886,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-datefield-popup .v-datefield-calendarpanel {
-	font-size: 14px;
+	font-size: 16px;
 	text-align: center;
 }
 
@@ -5896,12 +5896,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-datefield-popup .v-datefield-calendarpanel-day {
 	box-sizing: border-box;
-	width: 20px;
-	height: 18px;
+	width: 23px;
+	height: 20px;
 	border: 0 solid transparent;
-	line-height: 18px;
+	line-height: 20px;
 	text-align: center;
-	font-size: 13px;
+	font-size: 14px;
 	background: white;
 	border-radius: 1px;
 	-webkit-transition: color 200ms;
@@ -5944,13 +5944,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-datefield-popup .v-datefield-calendarpanel-weekdays {
-	height: 18px;
+	height: 20px;
 	color: rgba(135, 135, 135, 0.85);
 }
 
 .catma .v-datefield-popup .v-datefield-calendarpanel-weekdays strong {
 	font: inherit;
-	font-size: 13px;
+	font-size: 14px;
 }
 
 .catma .v-datefield-popup .v-datefield-calendarpanel-header {
@@ -5970,8 +5970,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	cursor: pointer;
 	color: transparent;
 	font-size: 0;
-	width: 13px;
-	height: 17px;
+	width: 15px;
+	height: 19px;
 	outline: none;
 	position: relative;
 	vertical-align: middle;
@@ -5979,8 +5979,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-datefield-popup td[class*="year"] button:before, .catma .v-datefield-popup td[class*="month"] button:before {
 	color: #a3a3a3;
-	font-size: 18px;
-	line-height: 21px;
+	font-size: 21px;
+	line-height: 24px;
 	-webkit-transition: color 200ms;
 	-moz-transition: color 200ms;
 	transition: color 200ms;
@@ -6021,18 +6021,18 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-datefield-popup td.v-datefield-calendarpanel-month {
-	width: 100px;
+	width: 116px;
 	color: #0072C6;
 }
 
 .catma .v-datefield-popup .v-datefield-calendarpanel-year td.v-datefield-calendarpanel-month {
-	width: 50px;
+	width: 58px;
 }
 
 .catma .v-datefield-popup .v-datefield-calendarpanel-weeknumber, .catma .v-datefield-popup .v-datefield-calendarpanel-weekdays.v-datefield-calendarpanel-weeknumbers td:first-child {
-	width: 20px;
+	width: 23px;
 	color: rgba(135, 135, 135, 0.85);
-	font-size: 13px;
+	font-size: 14px;
 	display: inline-block;
 	text-align: left;
 }
@@ -6044,10 +6044,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-datefield-popup .v-datefield-calendarpanel-weeknumbers .v-first:before {
 	content: "";
 	position: absolute;
-	top: 27px;
+	top: 29px;
 	bottom: 0;
 	left: 0;
-	width: 24px;
+	width: 26px;
 	border-top: 0 solid #e3e3e3;
 	border-right: 0 solid #e3e3e3;
 	border-top-right-radius: 2px;
@@ -6057,7 +6057,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-datefield-popup td.v-datefield-calendarpanel-time {
 	width: 100%;
-	font-size: 13px;
+	font-size: 14px;
 }
 
 .catma .v-datefield-popup td.v-datefield-calendarpanel-time .v-label {
@@ -6067,7 +6067,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-datefield-calendarpanel {
-	font-size: 14px;
+	font-size: 16px;
 	text-align: center;
 }
 
@@ -6077,12 +6077,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-datefield-calendarpanel-day {
 	box-sizing: border-box;
-	width: 20px;
-	height: 18px;
+	width: 23px;
+	height: 20px;
 	border: 0 solid transparent;
-	line-height: 18px;
+	line-height: 20px;
 	text-align: center;
-	font-size: 13px;
+	font-size: 14px;
 	background: white;
 	border-radius: 1px;
 	-webkit-transition: color 200ms;
@@ -6125,13 +6125,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-datefield-calendarpanel-weekdays {
-	height: 18px;
+	height: 20px;
 	color: rgba(135, 135, 135, 0.85);
 }
 
 .catma .v-datefield-calendarpanel-weekdays strong {
 	font: inherit;
-	font-size: 13px;
+	font-size: 14px;
 }
 
 .catma .v-datefield-calendarpanel-header {
@@ -6151,8 +6151,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	cursor: pointer;
 	color: transparent;
 	font-size: 0;
-	width: 13px;
-	height: 17px;
+	width: 15px;
+	height: 19px;
 	outline: none;
 	position: relative;
 	vertical-align: middle;
@@ -6160,8 +6160,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma td[class*="year"] button:before, .catma td[class*="month"] button:before {
 	color: #a3a3a3;
-	font-size: 18px;
-	line-height: 21px;
+	font-size: 21px;
+	line-height: 24px;
 	-webkit-transition: color 200ms;
 	-moz-transition: color 200ms;
 	transition: color 200ms;
@@ -6202,18 +6202,18 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma td.v-datefield-calendarpanel-month {
-	width: 100px;
+	width: 116px;
 	color: #0072C6;
 }
 
 .catma .v-datefield-calendarpanel-year td.v-datefield-calendarpanel-month {
-	width: 50px;
+	width: 58px;
 }
 
 .catma .v-datefield-calendarpanel-weeknumber, .catma .v-datefield-calendarpanel-weekdays.v-datefield-calendarpanel-weeknumbers td:first-child {
-	width: 20px;
+	width: 23px;
 	color: rgba(135, 135, 135, 0.85);
-	font-size: 13px;
+	font-size: 14px;
 	display: inline-block;
 	text-align: left;
 }
@@ -6225,10 +6225,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-datefield-calendarpanel-weeknumbers .v-first:before {
 	content: "";
 	position: absolute;
-	top: 27px;
+	top: 29px;
 	bottom: 0;
 	left: 0;
-	width: 24px;
+	width: 26px;
 	border-top: 0 solid #e3e3e3;
 	border-right: 0 solid #e3e3e3;
 	border-top-right-radius: 2px;
@@ -6238,7 +6238,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma td.v-datefield-calendarpanel-time {
 	width: 100%;
-	font-size: 13px;
+	font-size: 14px;
 }
 
 .catma td.v-datefield-calendarpanel-time .v-label {
@@ -6283,9 +6283,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-datefield-tiny {
-	height: 19px;
+	height: 22px;
 	border-radius: 2px;
-	font-size: 11px;
+	font-size: 12px;
 }
 
 .catma .v-datefield-tiny [class*="textfield"] {
@@ -6304,7 +6304,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 19px;
+	height: 22px;
 	border-radius: 2px;
 	padding: 2px 5px;
 	
@@ -6313,7 +6313,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-transition: box-shadow 180ms, border 180ms;
 	-moz-transition: box-shadow 180ms, border 180ms;
 	transition: box-shadow 180ms, border 180ms;
-	padding-left: 22.8px;
+	padding-left: 26.4px;
 	width: 100%;
 	height: 100%;
 	border-radius: inherit;
@@ -6328,8 +6328,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 0;
 	position: absolute;
 	z-index: 10;
-	width: 19px;
-	line-height: 19px;
+	width: 22px;
+	line-height: 22px;
 	text-align: center;
 	font: inherit;
 	outline: none;
@@ -6391,7 +6391,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-datefield-compact, .catma .v-datefield-small {
-	height: 21px;
+	height: 25px;
 	border-radius: 2px;
 }
 
@@ -6411,16 +6411,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 21px;
+	height: 25px;
 	border-radius: 2px;
-	padding: 2px 5px;
+	padding: 3px 6px;
 	
 	
 	
 	-webkit-transition: box-shadow 180ms, border 180ms;
 	-moz-transition: box-shadow 180ms, border 180ms;
 	transition: box-shadow 180ms, border 180ms;
-	padding-left: 25.2px;
+	padding-left: 30.0px;
 	width: 100%;
 	height: 100%;
 	border-radius: inherit;
@@ -6435,8 +6435,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 0;
 	position: absolute;
 	z-index: 10;
-	width: 21px;
-	line-height: 21px;
+	width: 25px;
+	line-height: 25px;
 	text-align: center;
 	font: inherit;
 	outline: none;
@@ -6498,13 +6498,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-datefield-small {
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-datefield-large {
-	height: 30px;
+	height: 35px;
 	border-radius: 2px;
-	font-size: 17px;
+	font-size: 20px;
 }
 
 .catma .v-datefield-large [class*="textfield"] {
@@ -6523,16 +6523,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 30px;
+	height: 35px;
 	border-radius: 2px;
-	padding: 3px 6px;
+	padding: 4px 7px;
 	
 	
 	
 	-webkit-transition: box-shadow 180ms, border 180ms;
 	-moz-transition: box-shadow 180ms, border 180ms;
 	transition: box-shadow 180ms, border 180ms;
-	padding-left: 36px;
+	padding-left: 42px;
 	width: 100%;
 	height: 100%;
 	border-radius: inherit;
@@ -6547,8 +6547,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 0;
 	position: absolute;
 	z-index: 10;
-	width: 30px;
-	line-height: 30px;
+	width: 35px;
+	line-height: 35px;
 	text-align: center;
 	font: inherit;
 	outline: none;
@@ -6610,9 +6610,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-datefield-huge {
-	height: 40px;
+	height: 46px;
 	border-radius: 2px;
-	font-size: 23px;
+	font-size: 26px;
 }
 
 .catma .v-datefield-huge [class*="textfield"] {
@@ -6631,16 +6631,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 40px;
+	height: 46px;
 	border-radius: 2px;
-	padding: 4px 8px;
+	padding: 5px 9px;
 	
 	
 	
 	-webkit-transition: box-shadow 180ms, border 180ms;
 	-moz-transition: box-shadow 180ms, border 180ms;
 	transition: box-shadow 180ms, border 180ms;
-	padding-left: 48px;
+	padding-left: 55.2px;
 	width: 100%;
 	height: 100%;
 	border-radius: inherit;
@@ -6655,8 +6655,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding: 0;
 	position: absolute;
 	z-index: 10;
-	width: 40px;
-	line-height: 40px;
+	width: 46px;
+	line-height: 46px;
 	text-align: center;
 	font: inherit;
 	outline: none;
@@ -6718,7 +6718,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-inline-datefield-calendarpanel {
-	font-size: 14px;
+	font-size: 16px;
 	text-align: center;
 }
 
@@ -6728,12 +6728,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-inline-datefield-calendarpanel-day {
 	box-sizing: border-box;
-	width: 20px;
-	height: 18px;
+	width: 23px;
+	height: 20px;
 	border: 0 solid transparent;
-	line-height: 18px;
+	line-height: 20px;
 	text-align: center;
-	font-size: 13px;
+	font-size: 14px;
 	background: white;
 	border-radius: 1px;
 	-webkit-transition: color 200ms;
@@ -6776,13 +6776,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-inline-datefield-calendarpanel-weekdays {
-	height: 18px;
+	height: 20px;
 	color: rgba(135, 135, 135, 0.85);
 }
 
 .catma .v-inline-datefield-calendarpanel-weekdays strong {
 	font: inherit;
-	font-size: 13px;
+	font-size: 14px;
 }
 
 .catma .v-inline-datefield-calendarpanel-header {
@@ -6802,8 +6802,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	cursor: pointer;
 	color: transparent;
 	font-size: 0;
-	width: 13px;
-	height: 17px;
+	width: 15px;
+	height: 19px;
 	outline: none;
 	position: relative;
 	vertical-align: middle;
@@ -6811,8 +6811,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma td[class*="year"] button:before, .catma td[class*="month"] button:before {
 	color: #a3a3a3;
-	font-size: 18px;
-	line-height: 21px;
+	font-size: 21px;
+	line-height: 24px;
 	-webkit-transition: color 200ms;
 	-moz-transition: color 200ms;
 	transition: color 200ms;
@@ -6853,18 +6853,18 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma td.v-inline-datefield-calendarpanel-month {
-	width: 100px;
+	width: 116px;
 	color: #0072C6;
 }
 
 .catma .v-inline-datefield-calendarpanel-year td.v-inline-datefield-calendarpanel-month {
-	width: 50px;
+	width: 58px;
 }
 
 .catma .v-inline-datefield-calendarpanel-weeknumber, .catma .v-inline-datefield-calendarpanel-weekdays.v-inline-datefield-calendarpanel-weeknumbers td:first-child {
-	width: 20px;
+	width: 23px;
 	color: rgba(135, 135, 135, 0.85);
-	font-size: 13px;
+	font-size: 14px;
 	display: inline-block;
 	text-align: left;
 }
@@ -6876,10 +6876,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-inline-datefield-calendarpanel-weeknumbers .v-first:before {
 	content: "";
 	position: absolute;
-	top: 27px;
+	top: 29px;
 	bottom: 0;
 	left: 0;
-	width: 24px;
+	width: 26px;
 	border-top: 0 solid #e3e3e3;
 	border-right: 0 solid #e3e3e3;
 	border-top-right-radius: 2px;
@@ -6889,7 +6889,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma td.v-inline-datefield-calendarpanel-time {
 	width: 100%;
-	font-size: 13px;
+	font-size: 14px;
 }
 
 .catma td.v-inline-datefield-calendarpanel-time .v-label {
@@ -6901,7 +6901,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-inline-datefield-calendarpanel {
 	position: relative;
 	background: white;
-	padding: 4px;
+	padding: 5px;
 }
 
 .catma .v-gridlayout-margin-top {
@@ -6921,8 +6921,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-gridlayout-spacing-on {
-	padding-left: 8px;
-	padding-top: 8px;
+	padding-left: 10px;
+	padding-top: 10px;
 }
 
 .catma .v-menubar {
@@ -6933,8 +6933,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-tap-highlight-color: transparent;
 	-webkit-touch-callout: none;
 	cursor: pointer;
-	height: 25px;
-	padding: 0 11px;
+	height: 29px;
+	padding: 0 13px;
 	color: #1a1a1a;
 	font-weight: 500;
 	
@@ -6946,7 +6946,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	padding: 0;
 	text-align: left;
-	line-height: 25px;
+	line-height: 29px;
 }
 
 .catma .v-menubar:after {
@@ -6990,11 +6990,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar  > .v-menubar-menuitem {
-	padding: 0 10px;
+	padding: 0 11px;
 }
 
 .catma .v-menubar  > .v-menubar-menuitem[class*="-icon-only"] {
-	width: 25px;
+	width: 29px;
 }
 
 .catma .v-menubar:active:after {
@@ -7006,8 +7006,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	z-index: 1;
 	display: inline-block;
 	box-sizing: border-box;
-	height: 25px;
-	padding: 0 10px;
+	height: 29px;
+	padding: 0 12px;
 	color: inherit;
 	font-weight: 500;
 	
@@ -7072,7 +7072,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar > .v-menubar-menuitem[class*="-icon-only"] {
-	width: 25px;
+	width: 29px;
 	padding: 0;
 }
 
@@ -7173,13 +7173,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-menubar-popup .v-menubar-menuitem {
 	display: block;
 	cursor: pointer;
-	line-height: 25px;
-	padding: 0 14px 0 7px;
+	line-height: 29px;
+	padding: 0 16px 0 8px;
 	font-weight: 400;
 	white-space: nowrap;
 	position: relative;
-	padding-left: 29px;
-	padding-right: 25px;
+	padding-left: 33px;
+	padding-right: 29px;
 	position: relative;
 }
 
@@ -7198,7 +7198,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar-popup .v-menubar-menuitem .v-icon {
-	max-height: 25px;
+	max-height: 29px;
 	margin-right: 4px;
 	min-width: 1em;
 }
@@ -7209,10 +7209,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-menubar-popup .v-menubar-submenu-indicator  + .v-menubar-menuitem-caption:after {
 	position: absolute;
-	right: 7px;
+	right: 8px;
 	font-family: ThemeIcons;
 	content: "\f054";
-	line-height: 27px;
+	line-height: 31px;
 }
 
 .catma .v-menubar-popup .v-menubar-menuitem-selected {
@@ -7234,7 +7234,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	content: "\f00c";
 	font-family: ThemeIcons;
 	position: absolute;
-	left: 7px;
+	left: 8px;
 }
 
 .catma .v-menubar-popup [class*="unchecked"] .v-menubar-menuitem-caption:before {
@@ -7246,8 +7246,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar-small {
-	height: 21px;
-	padding: 0 10px;
+	height: 25px;
+	padding: 0 11px;
 	
 	font-weight: 500;
 	
@@ -7255,8 +7255,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border-radius: 2px;
 	padding: 0;
 	text-align: left;
-	line-height: 21px;
-	font-size: 12px;
+	line-height: 25px;
+	font-size: 14px;
 }
 
 .catma .v-menubar-small:after {
@@ -7268,11 +7268,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar-small  > .v-menubar-menuitem {
-	padding: 0 8px;
+	padding: 0 10px;
 }
 
 .catma .v-menubar-small  > .v-menubar-menuitem[class*="-icon-only"] {
-	width: 21px;
+	width: 25px;
 }
 
 .catma .v-menubar-borderless {
@@ -7297,7 +7297,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	margin-right: 1px;
 	border-radius: 2px;
 	color: #0072C6;
-	padding: 0 8px;
+	padding: 0 10px;
 	-webkit-transition: color 140ms;
 	-moz-transition: color 140ms;
 	transition: color 140ms;
@@ -7344,7 +7344,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-radiobutton {
 	position: relative;
-	line-height: 13px;
+	line-height: 15px;
 	white-space: nowrap;
 }
 
@@ -7353,7 +7353,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-radiobutton {
-	padding-left: 17px;
+	padding-left: 19px;
 }
 
 :root .catma .v-radiobutton label {
@@ -7382,19 +7382,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	content: "";
 	display: inline-block;
 	box-sizing: border-box;
-	width: 13px;
-	height: 13px;
+	width: 15px;
+	height: 15px;
 	position: absolute;
 	top: 0;
 	left: 0;
 	border-radius: 2px;
-	font-size: 11px;
+	font-size: 13px;
 	text-align: center;
 }
 
 :root .catma .v-radiobutton > input ~ label:before {
-	height: 12.5px;
-	padding: 0 6px;
+	height: 14.5px;
+	padding: 0 7px;
 	color: #1a1a1a;
 	font-weight: 500;
 	
@@ -7405,7 +7405,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	padding: 0;
-	height: 13px;
+	height: 15px;
 }
 
 :root .catma .v-radiobutton > input ~ label:after {
@@ -7426,7 +7426,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-radiobutton > .v-icon, .catma .v-radiobutton > label .v-icon {
-	margin: 0 4px 0 2px;
+	margin: 0 5px 0 2px;
 	min-width: 1em;
 	cursor: pointer;
 }
@@ -7465,8 +7465,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 :root .catma .v-radiobutton > input:checked ~ label:after {
 	width: 5px;
 	height: 5px;
-	top: 4px;
-	left: 4px;
+	top: 5px;
+	left: 5px;
 	background: #0072C6;
 }
 
@@ -7477,15 +7477,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-select-optiongroup .v-radiobutton, .catma .v-select-optiongroup .v-checkbox {
 	display: block;
-	margin: 6px 14px 0 0;
+	margin: 7px 16px 0 0;
 }
 
 .catma .v-select-optiongroup .v-radiobutton:first-child, .catma .v-select-optiongroup .v-checkbox:first-child {
-	margin-top: 4px;
+	margin-top: 5px;
 }
 
 .catma .v-select-optiongroup .v-radiobutton:last-child, .catma .v-select-optiongroup .v-checkbox:last-child {
-	margin-bottom: 4px;
+	margin-bottom: 5px;
 }
 
 .catma .v-select-optiongroup.v-has-width label {
@@ -7493,12 +7493,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-select-optiongroup-small {
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-select-optiongroup-small .v-checkbox {
 	position: relative;
-	line-height: 11px;
+	line-height: 13px;
 	white-space: nowrap;
 }
 
@@ -7507,7 +7507,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-select-optiongroup-small .v-checkbox {
-	padding-left: 14px;
+	padding-left: 17px;
 }
 
 :root .catma .v-select-optiongroup-small .v-checkbox label {
@@ -7536,19 +7536,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	content: "";
 	display: inline-block;
 	box-sizing: border-box;
-	width: 11px;
-	height: 11px;
+	width: 13px;
+	height: 13px;
 	position: absolute;
 	top: 0;
 	left: 0;
 	border-radius: 2px;
-	font-size: 9px;
+	font-size: 11px;
 	text-align: center;
 }
 
 :root .catma .v-select-optiongroup-small .v-checkbox > input ~ label:before {
-	height: 10.5px;
-	padding: 0 5px;
+	height: 12.5px;
+	padding: 0 6px;
 	color: #1a1a1a;
 	font-weight: 500;
 	
@@ -7559,7 +7559,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	padding: 0;
-	height: 11px;
+	height: 13px;
 }
 
 :root .catma .v-select-optiongroup-small .v-checkbox > input ~ label:after {
@@ -7618,7 +7618,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-select-optiongroup-small .v-radiobutton {
 	position: relative;
-	line-height: 11px;
+	line-height: 13px;
 	white-space: nowrap;
 }
 
@@ -7627,7 +7627,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-select-optiongroup-small .v-radiobutton {
-	padding-left: 14px;
+	padding-left: 17px;
 }
 
 :root .catma .v-select-optiongroup-small .v-radiobutton label {
@@ -7656,19 +7656,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	content: "";
 	display: inline-block;
 	box-sizing: border-box;
-	width: 11px;
-	height: 11px;
+	width: 13px;
+	height: 13px;
 	position: absolute;
 	top: 0;
 	left: 0;
 	border-radius: 2px;
-	font-size: 9px;
+	font-size: 11px;
 	text-align: center;
 }
 
 :root .catma .v-select-optiongroup-small .v-radiobutton > input ~ label:before {
-	height: 10.5px;
-	padding: 0 5px;
+	height: 12.5px;
+	padding: 0 6px;
 	color: #1a1a1a;
 	font-weight: 500;
 	
@@ -7679,7 +7679,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	padding: 0;
-	height: 11px;
+	height: 13px;
 }
 
 :root .catma .v-select-optiongroup-small .v-radiobutton > input ~ label:after {
@@ -7737,8 +7737,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-select-optiongroup-small .v-radiobutton > input:checked ~ label:after {
-	width: 4px;
-	height: 4px;
+	width: 5px;
+	height: 5px;
 	top: 4px;
 	left: 4px;
 	background: #0072C6;
@@ -7751,7 +7751,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-select-optiongroup-small .v-radiobutton, .catma .v-select-optiongroup-small .v-checkbox {
 	display: block;
-	margin: 5px 14px 0 0;
+	margin: 6px 16px 0 0;
 }
 
 .catma .v-select-optiongroup-small .v-radiobutton:first-child, .catma .v-select-optiongroup-small .v-checkbox:first-child {
@@ -7767,12 +7767,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-select-optiongroup-large {
-	font-size: 17px;
+	font-size: 20px;
 }
 
 .catma .v-select-optiongroup-large .v-checkbox {
 	position: relative;
-	line-height: 15px;
+	line-height: 18px;
 	white-space: nowrap;
 }
 
@@ -7781,7 +7781,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-select-optiongroup-large .v-checkbox {
-	padding-left: 20px;
+	padding-left: 23px;
 }
 
 :root .catma .v-select-optiongroup-large .v-checkbox label {
@@ -7810,19 +7810,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	content: "";
 	display: inline-block;
 	box-sizing: border-box;
-	width: 15px;
-	height: 15px;
+	width: 18px;
+	height: 18px;
 	position: absolute;
 	top: 0;
 	left: 0;
 	border-radius: 2px;
-	font-size: 13px;
+	font-size: 15px;
 	text-align: center;
 }
 
 :root .catma .v-select-optiongroup-large .v-checkbox > input ~ label:before {
-	height: 15px;
-	padding: 0 7px;
+	height: 17.5px;
+	padding: 0 8px;
 	color: #1a1a1a;
 	font-weight: 500;
 	
@@ -7833,7 +7833,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	padding: 0;
-	height: 15px;
+	height: 18px;
 }
 
 :root .catma .v-select-optiongroup-large .v-checkbox > input ~ label:after {
@@ -7854,7 +7854,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-select-optiongroup-large .v-checkbox > .v-icon, .catma .v-select-optiongroup-large .v-checkbox > label .v-icon {
-	margin: 0 5px 0 3px;
+	margin: 0 6px 0 3px;
 	min-width: 1em;
 	cursor: pointer;
 }
@@ -7892,7 +7892,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-select-optiongroup-large .v-radiobutton {
 	position: relative;
-	line-height: 15px;
+	line-height: 18px;
 	white-space: nowrap;
 }
 
@@ -7901,7 +7901,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-select-optiongroup-large .v-radiobutton {
-	padding-left: 20px;
+	padding-left: 23px;
 }
 
 :root .catma .v-select-optiongroup-large .v-radiobutton label {
@@ -7930,19 +7930,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	content: "";
 	display: inline-block;
 	box-sizing: border-box;
-	width: 15px;
-	height: 15px;
+	width: 18px;
+	height: 18px;
 	position: absolute;
 	top: 0;
 	left: 0;
 	border-radius: 2px;
-	font-size: 13px;
+	font-size: 15px;
 	text-align: center;
 }
 
 :root .catma .v-select-optiongroup-large .v-radiobutton > input ~ label:before {
-	height: 15px;
-	padding: 0 7px;
+	height: 17.5px;
+	padding: 0 8px;
 	color: #1a1a1a;
 	font-weight: 500;
 	
@@ -7953,7 +7953,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	padding: 0;
-	height: 15px;
+	height: 18px;
 }
 
 :root .catma .v-select-optiongroup-large .v-radiobutton > input ~ label:after {
@@ -7974,7 +7974,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-select-optiongroup-large .v-radiobutton > .v-icon, .catma .v-select-optiongroup-large .v-radiobutton > label .v-icon {
-	margin: 0 5px 0 3px;
+	margin: 0 6px 0 3px;
 	min-width: 1em;
 	cursor: pointer;
 }
@@ -8011,10 +8011,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 :root .catma .v-select-optiongroup-large .v-radiobutton > input:checked ~ label:after {
-	width: 5px;
-	height: 5px;
-	top: 5px;
-	left: 5px;
+	width: 6px;
+	height: 6px;
+	top: 6px;
+	left: 6px;
 	background: #0072C6;
 }
 
@@ -8025,15 +8025,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-select-optiongroup-large .v-radiobutton, .catma .v-select-optiongroup-large .v-checkbox {
 	display: block;
-	margin: 8px 14px 0 0;
+	margin: 9px 16px 0 0;
 }
 
 .catma .v-select-optiongroup-large .v-radiobutton:first-child, .catma .v-select-optiongroup-large .v-checkbox:first-child {
-	margin-top: 5px;
+	margin-top: 6px;
 }
 
 .catma .v-select-optiongroup-large .v-radiobutton:last-child, .catma .v-select-optiongroup-large .v-checkbox:last-child {
-	margin-bottom: 5px;
+	margin-bottom: 6px;
 }
 
 .catma .v-select-optiongroup-large.v-has-width label {
@@ -8105,11 +8105,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-link-small {
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-link-large {
-	font-size: 17px;
+	font-size: 20px;
 }
 
 .catma .v-window {
@@ -8126,8 +8126,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.14), 0 6px 30px 5px rgba(0, 0, 0, 0.12), 0 8px 10px -5px rgba(0, 0, 0, 0.3);
 	box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.14), 0 6px 30px 5px rgba(0, 0, 0, 0.12), 0 8px 10px -5px rgba(0, 0, 0, 0.3);
 	padding: 0;
-	min-width: 100px !important;
-	min-height: 25px !important;
+	min-width: 116px !important;
+	min-height: 29px !important;
 	white-space: nowrap;
 	overflow: hidden !important;
 	-webkit-transition: width 200ms, height 200ms, top 200ms, left 200ms;
@@ -8211,9 +8211,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-window-header {
-	line-height: 24px;
-	padding-left: 8px;
-	margin-right: 50px;
+	line-height: 28px;
+	padding-left: 10px;
+	margin-right: 58px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -8221,11 +8221,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-window-restorebox-disabled  ~ .v-window-closebox ~ .v-window-header, .catma .v-window-maximizebox-disabled  ~ .v-window-closebox ~ .v-window-header {
-	margin-right: 25px;
+	margin-right: 29px;
 }
 
 .catma .v-window-restorebox-disabled  ~ .v-window-closebox-disabled ~ .v-window-header, .catma .v-window-maximizebox-disabled  ~ .v-window-closebox-disabled ~ .v-window-header {
-	margin-right: 8px;
+	margin-right: 10px;
 }
 
 .catma .v-window-closebox, .catma .v-window-maximizebox, .catma .v-window-restorebox {
@@ -8234,13 +8234,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	top: 0;
 	right: 0;
 	box-sizing: border-box;
-	width: 22px;
-	height: 24px;
+	width: 26px;
+	height: 28px;
 	background-color: white;
-	line-height: 22px;
+	line-height: 26px;
 	text-align: center;
 	cursor: pointer;
-	font-size: 18px;
+	font-size: 21px;
 	color: #999999;
 	-webkit-transition: color 140ms;
 	-moz-transition: color 140ms;
@@ -8264,20 +8264,20 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-window-closebox:focus::after {
 	content: "";
 	position: absolute;
-	top: 4px;
-	right: 4px;
-	bottom: 4px;
-	left: 1px;
+	top: 5px;
+	right: 5px;
+	bottom: 5px;
+	left: 2px;
 	border-radius: 2px;
 }
 
 .catma .v-window-maximizebox:focus::after, .catma .v-window-restorebox:focus::after {
 	content: "";
 	position: absolute;
-	top: 4px;
-	right: 1px;
-	bottom: 4px;
-	left: 4px;
+	top: 5px;
+	right: 2px;
+	bottom: 5px;
+	left: 5px;
 	border-radius: 2px;
 }
 
@@ -8291,7 +8291,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-window-maximizebox, .catma .v-window-restorebox {
-	right: 22px;
+	right: 26px;
 	padding-left: 3px;
 	border-radius: 0 0 0 2px;
 }
@@ -8305,13 +8305,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-window-closebox-disabled  + .v-window-closebox, .catma .v-window-resizebox-disabled  + .v-window-closebox, .catma .v-window-restorebox-disabled  + .v-window-closebox, .catma .v-window-maximizebox-disabled  + .v-window-closebox {
-	width: 25px;
+	width: 29px;
 	padding-right: 0;
 	border-bottom-left-radius: 2px;
 }
 
 .catma .v-window-closebox-disabled  + .v-window-closebox:focus::after, .catma .v-window-resizebox-disabled  + .v-window-closebox:focus::after, .catma .v-window-restorebox-disabled  + .v-window-closebox:focus::after, .catma .v-window-maximizebox-disabled  + .v-window-closebox:focus::after {
-	left: 4px;
+	left: 5px;
 }
 
 .catma .v-window-maximizebox:before {
@@ -8337,43 +8337,43 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-window-contents  > .v-scrollable  > .v-margin-top {
-	padding-top: 8px;
+	padding-top: 10px;
 }
 
 .catma .v-window-contents  > .v-scrollable  > .v-margin-right {
-	padding-right: 8px;
+	padding-right: 10px;
 }
 
 .catma .v-window-contents  > .v-scrollable  > .v-margin-bottom {
-	padding-bottom: 8px;
+	padding-bottom: 10px;
 }
 
 .catma .v-window-contents  > .v-scrollable  > .v-margin-left {
-	padding-left: 8px;
+	padding-left: 10px;
 }
 
 .catma .v-window-contents  > .v-scrollable  > .v-formlayout [class*="margin-top"] > tbody > [class*="firstrow"] > td {
-	padding-top: 8px;
+	padding-top: 10px;
 }
 
 .catma .v-window-contents  > .v-scrollable  > .v-formlayout [class*="margin-bottom"] > tbody > [class*="lastrow"] > td {
-	padding-bottom: 8px;
+	padding-bottom: 10px;
 }
 
 .catma .v-window-contents  > .v-scrollable  > .v-formlayout [class*="margin-left"] > tbody > [class*="row"] > [class*="captioncell"] {
-	padding-left: 8px;
+	padding-left: 10px;
 }
 
 .catma .v-window-contents  > .v-scrollable  > .v-formlayout [class*="margin-left"] > tbody > [class*="row"] > [class*="contentcell"]  > .v-label-h2, .catma .v-window-contents  > .v-scrollable  > .v-formlayout [class*="margin-left"] > tbody > [class*="row"] > [class*="contentcell"]  > .v-label-h3, .catma .v-window-contents  > .v-scrollable  > .v-formlayout [class*="margin-left"] > tbody > [class*="row"] > [class*="contentcell"]  > .v-label-h4 {
-	left: 8px;
+	left: 10px;
 }
 
 .catma .v-window-contents  > .v-scrollable  > .v-formlayout [class*="margin-right"] > tbody > [class*="row"] > [class*="contentcell"] {
-	padding-right: 8px;
+	padding-right: 10px;
 }
 
 .catma .v-window-contents  > .v-scrollable  > .v-formlayout [class*="margin-right"] > tbody > [class*="row"] > [class*="contentcell"]  > .v-label-h2, .catma .v-window-contents  > .v-scrollable  > .v-formlayout [class*="margin-right"] > tbody > [class*="row"] > [class*="contentcell"]  > .v-label-h3, .catma .v-window-contents  > .v-scrollable  > .v-formlayout [class*="margin-right"] > tbody > [class*="row"] > [class*="contentcell"]  > .v-label-h4 {
-	right: 8px;
+	right: 10px;
 }
 
 .catma .v-window-contents  > .v-scrollable:focus {
@@ -8408,8 +8408,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	z-index: 1000;
 	right: 0;
 	bottom: 0;
-	width: 13px;
-	height: 13px;
+	width: 15px;
+	height: 15px;
 	cursor: nwse-resize;
 }
 
@@ -8424,15 +8424,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-window-top-toolbar .v-label, .catma .v-window-bottom-toolbar .v-label {
-	line-height: 24px;
+	line-height: 28px;
 }
 
 .catma .v-window-top-toolbar .v-spacing, .catma .v-window-bottom-toolbar .v-spacing {
-	width: 4px;
+	width: 5px;
 }
 
 .catma .v-window-top-toolbar.v-layout {
-	padding: 5px 8px;
+	padding: 6px 10px;
 	position: relative;
 	z-index: 2;
 	border-top: 0 solid #d8d8d8;
@@ -8441,17 +8441,17 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-window-top-toolbar.v-menubar {
-	margin: 8px 8px 4px;
+	margin: 10px 10px 5px;
 }
 
 .catma .v-window-top-toolbar.v-menubar-borderless {
-	padding-left: 4px;
-	padding-right: 4px;
-	margin: 4px 0;
+	padding-left: 5px;
+	padding-right: 5px;
+	margin: 5px 0;
 }
 
 .catma .v-window-bottom-toolbar.v-layout {
-	padding: 5px 8px;
+	padding: 6px 10px;
 	background-color: white;
 	background-image: -webkit-linear-gradient(top, white 0, white 3px);
 	background-image: linear-gradient(to bottom,white 0, white 3px);
@@ -8461,7 +8461,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-margin-left.v-margin-right.v-margin-top .v-window-top-toolbar.v-layout {
 	box-sizing: content-box;
-	margin: -8px -8px 0;
+	margin: -10px -10px 0;
 }
 
 .catma .v-margin-left.v-margin-right.v-margin-top .v-window-top-toolbar.v-menubar {
@@ -8469,13 +8469,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-margin-left.v-margin-right.v-margin-top .v-window-top-toolbar.v-menubar-borderless {
-	margin: -4px -4px 0;
+	margin: -5px -5px 0;
 	padding: 0;
 }
 
 .catma .v-margin-left.v-margin-right.v-margin-bottom .v-window-bottom-toolbar.v-layout {
 	box-sizing: content-box;
-	margin: 0 -8px -8px;
+	margin: 0 -10px -10px;
 }
 
 .catma .v-tree {
@@ -8493,15 +8493,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	display: inline-block;
 	z-index: 3;
 	width: 1.9em;
-	height: 19px;
+	height: 22px;
 	cursor: pointer;
 	background: red;
 	opacity: 0;
 }
 
 .catma .v-tree-node-caption {
-	height: 19px;
-	line-height: 18px;
+	height: 22px;
+	line-height: 21px;
 	overflow: hidden;
 	white-space: nowrap;
 	vertical-align: top;
@@ -8527,7 +8527,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tree-node-caption span {
-	padding-right: 19px;
+	padding-right: 22px;
 	cursor: pointer;
 	display: inline-block;
 	width: 100%;
@@ -8550,9 +8550,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	position: absolute;
 	z-index: 1;
 	left: 0;
-	margin-top: -19px;
+	margin-top: -22px;
 	width: 100%;
-	height: 19px;
+	height: 22px;
 	border-radius: 2px;
 	opacity: 0;
 	-webkit-transition: opacity 120ms;
@@ -8591,7 +8591,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tree-node-children {
-	padding-left: 13px;
+	padding-left: 15px;
 }
 
 .catma .v-tree-node-drag-top:before, .catma .v-tree-node-drag-bottom:after, .catma .v-tree-node-drag-bottom.v-tree-node-dragfolder.v-tree-node-expanded > .v-tree-node-children:before {
@@ -8601,7 +8601,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	height: 2px;
 	width: 100%;
 	background: #0072C6;
-	font-size: 28px;
+	font-size: 32px;
 	line-height: 2px;
 	color: #0072C6;
 	text-indent: -4px;
@@ -8730,7 +8730,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	white-space: nowrap;
 	box-sizing: border-box;
 	overflow: hidden;
-	font-size: 14px;
+	font-size: 16px;
 }
 
 .catma .v-tree8-cell.frozen {
@@ -8835,7 +8835,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	content: "\f0c9";
 	display: block;
 	font-family: ThemeIcons, sans-serif;
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-tree8-sidebar.v-contextmenu.closed {
@@ -8848,7 +8848,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-tree8-sidebar.v-contextmenu.open .v-tree8-sidebar-button:after {
 	content: "\f0c9";
-	font-size: 12px;
+	font-size: 14px;
 	line-height: 1;
 }
 
@@ -8868,8 +8868,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-tree8-cell {
 	background-color: white;
-	padding: 0 12px;
-	line-height: 25px;
+	padding: 0 15px;
+	line-height: 29px;
 	text-overflow: ellipsis;
 }
 
@@ -8929,7 +8929,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-tree8-header th {
 	position: relative;
 	background-color: white;
-	font-size: 12px;
+	font-size: 14px;
 	font-weight: inherit;
 	border-left: 0 solid #c1c1c1;
 	border-bottom: 0 solid #c1c1c1;
@@ -8942,15 +8942,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tree8-header .sort-asc, .catma .v-tree8-header .sort-desc {
-	padding-right: 26px;
+	padding-right: 32px;
 }
 
 .catma .v-tree8-header .sort-asc:after, .catma .v-tree8-header .sort-desc:after {
 	font-family: ThemeIcons, sans-serif;
 	content: "\f0de" " " attr(sort-order);
 	position: absolute;
-	right: 12px;
-	font-size: 10px;
+	right: 15px;
+	font-size: 12px;
 }
 
 .catma .v-tree8-header .sort-desc:after {
@@ -8959,8 +8959,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-tree8-column-resize-handle {
 	position: absolute;
-	width: 24px;
-	right: -12px;
+	width: 30px;
+	right: -15px;
 	top: 0px;
 	bottom: 0px;
 	cursor: col-resize;
@@ -8976,7 +8976,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	position: absolute;
 	width: 3px;
 	top: 0px;
-	left: 12px;
+	left: 15px;
 	z-index: 9001;
 	background: #fff;
 	box-shadow: 0px 0px 5px #000;
@@ -8989,7 +8989,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-tree8-footer td {
 	background-color: white;
-	font-size: 12px;
+	font-size: 14px;
 	font-weight: inherit;
 	border-left: 0 solid #c1c1c1;
 	border-top: 0 solid #c1c1c1;
@@ -9009,7 +9009,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	width: 100%;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	line-height: 25px;
+	line-height: 29px;
 	vertical-align: baseline;
 }
 
@@ -9103,15 +9103,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tree8-editor-cells  > div input[type="text"], .catma .v-tree8-editor-cells  > div input[type="text"].v-filterselect-input, .catma .v-tree8-editor-cells  > div input[type="password"] {
-	padding-left: 12px;
+	padding-left: 15px;
 }
 
 .catma .v-tree8-editor-cells  > div input[type="text"]:not(.v-filterselect-input), .catma .v-tree8-editor-cells  > div input[type="password"] {
-	padding-right: 6px;
+	padding-right: 7.5px;
 }
 
 .catma .v-tree8-editor-cells  > div input[type="checkbox"] {
-	margin-left: 12px;
+	margin-left: 15px;
 }
 
 .catma .v-tree8-editor-cells  > div .v-textfield, .catma .v-tree8-editor-cells  > div .v-datefield, .catma .v-tree8-editor-cells  > div .v-filterselect {
@@ -9146,7 +9146,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-tree8-editor-footer {
 	display: table;
-	height: 25px;
+	height: 29px;
 	border-top: 0 solid #c1c1c1;
 	margin-top: 0;
 	background: white;
@@ -9181,7 +9181,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	width: 100%;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	line-height: 25px;
+	line-height: 29px;
 	top: 0;
 }
 
@@ -9255,7 +9255,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tree8-header .v-tree8-cell.dragged-column-header {
-	margin-top: -13px;
+	margin-top: -15px;
 }
 
 .catma .v-tree8-footer .v-tree8-cell {
@@ -9287,8 +9287,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tree8-editor-footer {
-	font-size: 12px;
-	padding: 0 4px;
+	font-size: 14px;
+	padding: 0 5px;
 	background: #fafafa;
 	-webkit-animation: valo-grid-editor-footer-animate-in 200ms 120ms backwards;
 	-moz-animation: valo-grid-editor-footer-animate-in 200ms 120ms backwards;
@@ -9317,8 +9317,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tree8-editor-cells > div .error::before {
-	border-top: 6px solid #d32f2f;
-	border-right: 6px solid transparent;
+	border-top: 7px solid #d32f2f;
+	border-right: 7px solid transparent;
 }
 
 .catma .v-tree8-editor-cells > div .error, .catma .v-tree8-editor-cells > div .error > input {
@@ -9334,7 +9334,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tree8-editor-cells > div input[type="text"].v-datefield-textfield {
-	padding-left: 30.0px;
+	padding-left: 34.8px;
 }
 
 .catma .v-tree8-editor-cells > div .v-textfield-focus, .catma .v-tree8-editor-cells > div .v-datefield .v-textfield-focus, .catma .v-tree8-editor-cells > div .v-filterselect-input:focus {
@@ -9342,12 +9342,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tree8-editor-cells > div .v-select {
-	padding-left: 6px;
-	padding-right: 6px;
+	padding-left: 8px;
+	padding-right: 8px;
 }
 
 .catma .v-tree8-editor-cells > div .v-checkbox {
-	margin: 0 6px 0 12px;
+	margin: 0 8px 0 15px;
 }
 
 .catma .v-tree8-editor-cells > div .v-checkbox  > input[type="checkbox"] {
@@ -9362,7 +9362,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	display: inline-block;
 	color: #d32f2f;
 	font-weight: 600;
-	width: 13px;
+	width: 15px;
 	text-align: center;
 	content: "!";
 }
@@ -9379,7 +9379,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	text-decoration: none;
 	border: none;
 	background: transparent;
-	padding: 4px 4px;
+	padding: 5px 5px;
 	margin: 0;
 	outline: none;
 }
@@ -9796,7 +9796,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	white-space: nowrap;
 	box-sizing: border-box;
 	overflow: hidden;
-	font-size: 14px;
+	font-size: 16px;
 }
 
 .catma .v-treegrid-cell.frozen {
@@ -9901,7 +9901,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	content: "\f0c9";
 	display: block;
 	font-family: ThemeIcons, sans-serif;
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-treegrid-sidebar.v-contextmenu.closed {
@@ -9914,7 +9914,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-treegrid-sidebar.v-contextmenu.open .v-treegrid-sidebar-button:after {
 	content: "\f0c9";
-	font-size: 12px;
+	font-size: 14px;
 	line-height: 1;
 }
 
@@ -9934,8 +9934,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-treegrid-cell {
 	background-color: white;
-	padding: 0 12px;
-	line-height: 25px;
+	padding: 0 15px;
+	line-height: 29px;
 	text-overflow: ellipsis;
 }
 
@@ -9995,7 +9995,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-treegrid-header th {
 	position: relative;
 	background-color: white;
-	font-size: 12px;
+	font-size: 14px;
 	font-weight: inherit;
 	border-left: 0 solid #c1c1c1;
 	border-bottom: 0 solid #c1c1c1;
@@ -10008,15 +10008,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-treegrid-header .sort-asc, .catma .v-treegrid-header .sort-desc {
-	padding-right: 26px;
+	padding-right: 32px;
 }
 
 .catma .v-treegrid-header .sort-asc:after, .catma .v-treegrid-header .sort-desc:after {
 	font-family: ThemeIcons, sans-serif;
 	content: "\f0de" " " attr(sort-order);
 	position: absolute;
-	right: 12px;
-	font-size: 10px;
+	right: 15px;
+	font-size: 12px;
 }
 
 .catma .v-treegrid-header .sort-desc:after {
@@ -10025,8 +10025,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-treegrid-column-resize-handle {
 	position: absolute;
-	width: 24px;
-	right: -12px;
+	width: 30px;
+	right: -15px;
 	top: 0px;
 	bottom: 0px;
 	cursor: col-resize;
@@ -10042,7 +10042,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	position: absolute;
 	width: 3px;
 	top: 0px;
-	left: 12px;
+	left: 15px;
 	z-index: 9001;
 	background: #fff;
 	box-shadow: 0px 0px 5px #000;
@@ -10055,7 +10055,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-treegrid-footer td {
 	background-color: white;
-	font-size: 12px;
+	font-size: 14px;
 	font-weight: inherit;
 	border-left: 0 solid #c1c1c1;
 	border-top: 0 solid #c1c1c1;
@@ -10075,7 +10075,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	width: 100%;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	line-height: 25px;
+	line-height: 29px;
 	vertical-align: baseline;
 }
 
@@ -10169,15 +10169,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-treegrid-editor-cells  > div input[type="text"], .catma .v-treegrid-editor-cells  > div input[type="text"].v-filterselect-input, .catma .v-treegrid-editor-cells  > div input[type="password"] {
-	padding-left: 12px;
+	padding-left: 15px;
 }
 
 .catma .v-treegrid-editor-cells  > div input[type="text"]:not(.v-filterselect-input), .catma .v-treegrid-editor-cells  > div input[type="password"] {
-	padding-right: 6px;
+	padding-right: 7.5px;
 }
 
 .catma .v-treegrid-editor-cells  > div input[type="checkbox"] {
-	margin-left: 12px;
+	margin-left: 15px;
 }
 
 .catma .v-treegrid-editor-cells  > div .v-textfield, .catma .v-treegrid-editor-cells  > div .v-datefield, .catma .v-treegrid-editor-cells  > div .v-filterselect {
@@ -10212,7 +10212,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-treegrid-editor-footer {
 	display: table;
-	height: 25px;
+	height: 29px;
 	border-top: 0 solid #c1c1c1;
 	margin-top: 0;
 	background: white;
@@ -10247,7 +10247,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	width: 100%;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	line-height: 25px;
+	line-height: 29px;
 	top: 0;
 }
 
@@ -10321,7 +10321,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-treegrid-header .v-treegrid-cell.dragged-column-header {
-	margin-top: -13px;
+	margin-top: -15px;
 }
 
 .catma .v-treegrid-footer .v-treegrid-cell {
@@ -10353,8 +10353,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-treegrid-editor-footer {
-	font-size: 12px;
-	padding: 0 4px;
+	font-size: 14px;
+	padding: 0 5px;
 	background: #fafafa;
 	-webkit-animation: valo-grid-editor-footer-animate-in 200ms 120ms backwards;
 	-moz-animation: valo-grid-editor-footer-animate-in 200ms 120ms backwards;
@@ -10383,8 +10383,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-treegrid-editor-cells > div .error::before {
-	border-top: 6px solid #d32f2f;
-	border-right: 6px solid transparent;
+	border-top: 7px solid #d32f2f;
+	border-right: 7px solid transparent;
 }
 
 .catma .v-treegrid-editor-cells > div .error, .catma .v-treegrid-editor-cells > div .error > input {
@@ -10400,7 +10400,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-treegrid-editor-cells > div input[type="text"].v-datefield-textfield {
-	padding-left: 30.0px;
+	padding-left: 34.8px;
 }
 
 .catma .v-treegrid-editor-cells > div .v-textfield-focus, .catma .v-treegrid-editor-cells > div .v-datefield .v-textfield-focus, .catma .v-treegrid-editor-cells > div .v-filterselect-input:focus {
@@ -10408,12 +10408,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-treegrid-editor-cells > div .v-select {
-	padding-left: 6px;
-	padding-right: 6px;
+	padding-left: 8px;
+	padding-right: 8px;
 }
 
 .catma .v-treegrid-editor-cells > div .v-checkbox {
-	margin: 0 6px 0 12px;
+	margin: 0 8px 0 15px;
 }
 
 .catma .v-treegrid-editor-cells > div .v-checkbox  > input[type="checkbox"] {
@@ -10428,7 +10428,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	display: inline-block;
 	color: #d32f2f;
 	font-weight: 600;
-	width: 13px;
+	width: 15px;
 	text-align: center;
 	content: "!";
 }
@@ -10445,7 +10445,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	text-decoration: none;
 	border: none;
 	background: transparent;
-	padding: 4px 4px;
+	padding: 5px 5px;
 	margin: 0;
 	outline: none;
 }
@@ -10709,7 +10709,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border: 0 solid #d9d9d9;
 	background: white;
 	white-space: nowrap;
-	font-size: 12px;
+	font-size: 14px;
 	text-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
@@ -10735,12 +10735,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-table-footer-container, .catma .v-table-caption-container {
 	overflow: hidden;
 	line-height: 1;
-	min-height: 25px;
+	min-height: 29px;
 	box-sizing: border-box;
 }
 
 .catma .v-table-footer-container {
-	padding: 7px 8px 7px;
+	padding: 8px 10px 8px;
 	float: right;
 }
 
@@ -10749,16 +10749,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-table-caption-container, .catma .v-table-header-drag {
-	padding: 7px 8px 7px;
+	padding: 8px 10px 8px;
 	border-left: 0 solid #d9d9d9;
 }
 
 .catma .v-table-caption-container-align-right {
-	padding-right: 2px;
+	padding-right: 4px;
 }
 
 .catma .v-table-resizer {
-	height: 25px;
+	height: 29px;
 	width: 6px;
 	cursor: e-resize;
 	cursor: col-resize;
@@ -10771,7 +10771,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-table-cell-content {
 	border-left: 0 solid #d9d9d9;
 	overflow: hidden;
-	height: 25px;
+	height: 29px;
 	vertical-align: middle;
 }
 
@@ -10786,13 +10786,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-table-cell-wrapper {
 	line-height: 1;
-	padding: 0 8px;
+	padding: 0 10px;
 	box-sizing: border-box;
 	margin-right: 0 !important;
 }
 
 .catma .v-table-cell-wrapper  > .v-widget {
-	margin: 2px -4px;
+	margin: 3px -5px;
 }
 
 .catma .v-table-cell-wrapper  > .v-widget.v-label, .catma .v-table-cell-wrapper  > .v-widget.v-checkbox, .catma .v-table-cell-wrapper  > .v-widget.v-select-optiongroup {
@@ -10865,10 +10865,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-table-header-cell-asc .v-table-sort-indicator, .catma .v-table-header-cell-desc .v-table-sort-indicator {
 	background: transparent;
-	width: 13px;
-	height: 25px;
-	line-height: 25px;
-	margin-left: -13px;
+	width: 15px;
+	height: 29px;
+	line-height: 29px;
+	margin-left: -15px;
 }
 
 .catma .v-table-header-cell-asc .v-table-sort-indicator:before, .catma .v-table-header-cell-desc .v-table-sort-indicator:before {
@@ -10904,7 +10904,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	position: absolute;
 	opacity: 0.9;
 	filter: alpha(opacity=90) ;
-	margin-top: -13px;
+	margin-top: -15px;
 	z-index: 30000;
 	line-height: 1;
 }
@@ -10925,8 +10925,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-table-column-selector {
-	height: 25px;
-	padding: 0 11px;
+	height: 29px;
+	padding: 0 13px;
 	color: #1a1a1a;
 	font-weight: 500;
 	
@@ -10940,9 +10940,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	z-index: 2;
 	top: 0;
 	right: 0;
-	width: 13px;
-	height: 13px;
-	line-height: 13px;
+	width: 15px;
+	height: 15px;
+	line-height: 15px;
 	padding: 0;
 	border-top-width: 0;
 	border-right-width: 0;
@@ -11007,7 +11007,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	content: "\f00c";
 	font-family: ThemeIcons;
 	font-size: 0.9em;
-	margin-right: 4px;
+	margin-right: 5px;
 }
 
 .catma .v-on div, .catma .v-off div {
@@ -11055,9 +11055,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	position: absolute;
 	top: 50%;
 	width: 100%;
-	height: 25px;
-	line-height: 25px;
-	margin: -13px 0 0 !important;
+	height: 29px;
+	line-height: 29px;
+	margin: -15px 0 0 !important;
 	text-align: center;
 }
 
@@ -11082,7 +11082,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-table-row-drag-bottom td.v-table-cell-content {
 	border-bottom: 2px solid #0072C6;
-	height: 23px;
+	height: 27px;
 }
 
 .catma .v-table-row-drag-bottom .v-table-cell-wrapper {
@@ -11091,7 +11091,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-table-row-drag-top td.v-table-cell-content {
 	border-top: 2px solid #0072C6;
-	height: 23px;
+	height: 27px;
 }
 
 .catma .v-table-row-drag-top .v-table-cell-wrapper {
@@ -11108,7 +11108,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-table-no-vertical-lines.v-treetable .v-table-cell-content {
-	padding-left: 8px;
+	padding-left: 10px;
 }
 
 .catma .v-table-no-horizontal-lines .v-table-cell-content {
@@ -11117,7 +11117,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-table-no-horizontal-lines .v-table-row-drag-top .v-table-cell-content, .catma .v-table-no-horizontal-lines .v-table-row-drag-bottom .v-table-cell-content {
-	height: 24px;
+	height: 28px;
 }
 
 .catma .v-table-no-header .v-table-header-wrap {
@@ -11137,18 +11137,18 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-table-compact .v-table-header-wrap, .catma .v-table-compact .v-table-footer-wrap, .catma .v-table-compact .v-table-header-drag, .catma .v-table-small .v-table-header-wrap, .catma .v-table-small .v-table-footer-wrap, .catma .v-table-small .v-table-header-drag {
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-table-compact .v-table-footer-container, .catma .v-table-small .v-table-footer-container {
-	padding: 5px 4px 5px;
+	padding: 6px 5px 6px;
 }
 
 .catma .v-table-compact .v-table-caption-container, .catma .v-table-compact .v-table-header-drag, .catma .v-table-small .v-table-caption-container, .catma .v-table-small .v-table-header-drag {
-	padding-top: 5px;
-	padding-bottom: 5px;
-	padding-left: 4px;
-	padding-right: 4px;
+	padding-top: 6px;
+	padding-bottom: 6px;
+	padding-left: 5px;
+	padding-right: 5px;
 }
 
 .catma .v-table-compact .v-table-caption-container-align-right, .catma .v-table-small .v-table-caption-container-align-right {
@@ -11156,20 +11156,20 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-table-compact .v-table-resizer, .catma .v-table-small .v-table-resizer {
-	height: 21px;
+	height: 25px;
 }
 
 .catma .v-table-compact .v-table-cell-content, .catma .v-table-small .v-table-cell-content {
-	height: 21px;
+	height: 25px;
 }
 
 .catma .v-table-compact .v-table-cell-wrapper, .catma .v-table-small .v-table-cell-wrapper {
-	padding-left: 4px;
-	padding-right: 4px;
+	padding-left: 5px;
+	padding-right: 5px;
 }
 
 .catma .v-table-compact .v-table-cell-wrapper  > .v-widget, .catma .v-table-small .v-table-cell-wrapper  > .v-widget {
-	margin: 1px -2px;
+	margin: 1px -3px;
 }
 
 .catma .v-table-compact .v-table-cell-wrapper  > .v-widget.v-label, .catma .v-table-compact .v-table-cell-wrapper  > .v-widget.v-checkbox, .catma .v-table-compact .v-table-cell-wrapper  > .v-widget.v-select-optiongroup, .catma .v-table-small .v-table-cell-wrapper  > .v-widget.v-label, .catma .v-table-small .v-table-cell-wrapper  > .v-widget.v-checkbox, .catma .v-table-small .v-table-cell-wrapper  > .v-widget.v-select-optiongroup {
@@ -11182,44 +11182,44 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-table-compact .v-table-header-cell-asc .v-table-sort-indicator, .catma .v-table-compact .v-table-header-cell-desc .v-table-sort-indicator, .catma .v-table-small .v-table-header-cell-asc .v-table-sort-indicator, .catma .v-table-small .v-table-header-cell-desc .v-table-sort-indicator {
-	height: 21px;
-	line-height: 21px;
+	height: 25px;
+	line-height: 25px;
 }
 
 .catma .v-table-compact .v-table-header-drag, .catma .v-table-small .v-table-header-drag {
-	margin-top: -11px;
+	margin-top: -13px;
 }
 
 .catma .v-table-compact.v-treetable .v-table-cell-wrapper, .catma .v-table-small.v-treetable .v-table-cell-wrapper {
 	padding-left: 0;
 	padding-right: 0;
-	min-height: 14px;
+	min-height: 16px;
 }
 
 .catma .v-table-compact.v-treetable .v-table-cell-content, .catma .v-table-small.v-treetable .v-table-cell-content {
-	padding-left: 4px;
-	padding-right: 4px;
+	padding-left: 5px;
+	padding-right: 5px;
 }
 
 .catma .v-table-compact.v-treetable .v-table-cell-content:first-child, .catma .v-table-small.v-treetable .v-table-cell-content:first-child {
-	padding-left: 4px;
+	padding-left: 5px;
 }
 
 .catma .v-table-compact.v-treetable .v-table-footer-container, .catma .v-table-small.v-treetable .v-table-footer-container {
-	padding-left: 4px;
-	padding-right: 4px;
+	padding-left: 5px;
+	padding-right: 5px;
 }
 
 .catma .v-table-compact .v-table-row-drag-top .v-table-cell-content, .catma .v-table-compact .v-table-row-drag-bottom .v-table-cell-content, .catma .v-table-small .v-table-row-drag-top .v-table-cell-content, .catma .v-table-small .v-table-row-drag-bottom .v-table-cell-content {
-	height: 20px;
+	height: 24px;
 }
 
 .catma .v-table-small {
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-table-small.v-treetable .v-table-cell-wrapper {
-	min-height: 12px;
+	min-height: 14px;
 }
 
 .catma .v-treetable [class*="caption-container"], .catma .v-treetable [class*="footer-container"], .catma .v-treetable [class*="cell-wrapper"] {
@@ -11229,39 +11229,39 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-treetable [class*="caption-container"], .catma .v-treetable [class*="footer-container"] {
-	min-height: 11px;
+	min-height: 13px;
 }
 
 .catma .v-treetable [class*="cell-wrapper"] {
-	min-height: 14px;
+	min-height: 16px;
 }
 
 .catma .v-treetable [class*="caption-container"] {
-	padding-left: 8px;
+	padding-left: 10px;
 }
 
 .catma .v-treetable [class*="caption-container-align-right"] {
-	padding-left: 14px;
+	padding-left: 16px;
 }
 
 .catma .v-treetable [class*="footer-container"] {
-	padding-right: 8px;
+	padding-right: 10px;
 }
 
 .catma .v-treetable [class*="cell-content"] {
-	padding-left: 8px;
-	padding-right: 8px;
+	padding-left: 10px;
+	padding-right: 10px;
 }
 
 .catma .v-treetable [class*="cell-content"]:first-child {
-	padding-left: 8px;
+	padding-left: 10px;
 }
 
 .catma .v-treetable-treespacer {
 	display: inline-block;
 	position: absolute;
-	width: 13px !important;
-	margin-left: -17px;
+	width: 15px !important;
+	margin-left: -20px;
 	text-align: center;
 	cursor: pointer;
 }
@@ -11281,13 +11281,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-splitpanel-horizontal  > div > .v-splitpanel-hsplitter:after {
-	left: -4px;
-	right: -4px;
+	left: -5px;
+	right: -5px;
 }
 
 .catma .v-splitpanel-horizontal  > div > .v-splitpanel-hsplitter div:before {
-	height: 25px;
-	padding: 0 11px;
+	height: 29px;
+	padding: 0 13px;
 	color: #1a1a1a;
 	font-weight: 500;
 	
@@ -11332,13 +11332,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-splitpanel-vertical  > div > .v-splitpanel-vsplitter:after {
-	top: -4px;
-	bottom: -4px;
+	top: -5px;
+	bottom: -5px;
 }
 
 .catma .v-splitpanel-vertical  > div > .v-splitpanel-vsplitter div:before {
-	height: 25px;
-	padding: 0 11px;
+	height: 29px;
+	padding: 0 13px;
 	color: #1a1a1a;
 	font-weight: 500;
 	
@@ -11374,7 +11374,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-splitpanel-horizontal.large  > div > .v-splitpanel-hsplitter {
-	width: 8px;
+	width: 10px;
 }
 
 .catma .v-splitpanel-horizontal.large  > div > .v-splitpanel-hsplitter:after {
@@ -11383,8 +11383,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-splitpanel-horizontal.large  > div > .v-splitpanel-hsplitter div:before {
-	height: 25px;
-	padding: 0 11px;
+	height: 29px;
+	padding: 0 13px;
 	color: #1a1a1a;
 	font-weight: 500;
 	
@@ -11429,17 +11429,17 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	top: 50%;
 	left: 50%;
 	width: 0;
-	height: 25px;
+	height: 29px;
 	margin-left: 0;
-	margin-top: -13px;
+	margin-top: -15px;
 }
 
 .catma .v-splitpanel-horizontal.large  > div > .v-splitpanel-second-container {
-	margin-left: 8px;
+	margin-left: 10px;
 }
 
 .catma .v-splitpanel-vertical.large  > div > .v-splitpanel-vsplitter {
-	height: 8px;
+	height: 10px;
 }
 
 .catma .v-splitpanel-vertical.large  > div > .v-splitpanel-vsplitter:after {
@@ -11448,8 +11448,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-splitpanel-vertical.large  > div > .v-splitpanel-vsplitter div:before {
-	height: 25px;
-	padding: 0 11px;
+	height: 29px;
+	padding: 0 13px;
 	color: #1a1a1a;
 	font-weight: 500;
 	
@@ -11492,18 +11492,18 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	position: absolute;
 	top: 50%;
 	left: 50%;
-	width: 25px;
+	width: 29px;
 	height: 0;
-	margin-left: -13px;
+	margin-left: -15px;
 	margin-top: 0;
 }
 
 .catma .v-progressbar-wrapper {
 	border-radius: 2px;
-	height: 6px;
+	height: 7px;
 	background: #d9d9d9;
 	box-sizing: border-box;
-	min-width: 50px;
+	min-width: 58px;
 }
 
 .catma .v-progressbar-indicator {
@@ -11541,7 +11541,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border: 0 solid #004f8a;
 	box-sizing: border-box;
 	max-width: 100%;
-	width: 6px;
+	width: 7px;
 	vertical-align: top;
 }
 
@@ -11582,12 +11582,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-slider-base {
 	border-radius: 2px;
-	height: 6px;
+	height: 7px;
 	background: #d9d9d9;
 	box-sizing: border-box;
-	min-width: 50px;
+	min-width: 58px;
 	height: 4px;
-	margin: 11px 7px;
+	margin: 13px 8px;
 	white-space: nowrap;
 	overflow: hidden;
 	
@@ -11596,9 +11596,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-slider-base:before {
 	content: "";
 	position: absolute;
-	top: 11px;
-	bottom: 11px;
-	left: 7px;
+	top: 13px;
+	bottom: 13px;
+	left: 8px;
 	width: 4px;
 	border-radius: 2px;
 	border-left: 0 solid #004f8a;
@@ -11625,15 +11625,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-slider-handle {
-	margin-top: -11px;
+	margin-top: -13px;
 	width: 0.1px;
 	display: inline-block;
 	vertical-align: top;
 }
 
 .catma .v-slider-handle:before {
-	height: 25px;
-	padding: 0 11px;
+	height: 29px;
+	padding: 0 13px;
 	color: #1a1a1a;
 	font-weight: 500;
 	
@@ -11678,13 +11678,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	content: "";
 	box-sizing: border-box;
 	padding: 0;
-	width: 14px;
-	height: 14px;
-	border-radius: 7px;
+	width: 16px;
+	height: 16px;
+	border-radius: 8px;
 	position: absolute;
 	z-index: 1;
-	margin-top: 6px;
-	margin-left: -7px;
+	margin-top: 7px;
+	margin-left: -8px;
 }
 
 .catma .v-slider-feedback {
@@ -11692,16 +11692,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-webkit-box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 	color: white;
-	padding: 3px 6px;
+	padding: 4px 7px;
 	border-radius: 1px;
 	max-width: 35em;
 	overflow: hidden !important;
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-slider-vertical {
-	padding: 7px 0;
-	height: 64px;
+	padding: 8px 0;
+	height: 74px;
 }
 
 .catma .v-slider-vertical .v-slider-base {
@@ -11709,14 +11709,14 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	width: 4px;
 	height: 100% !important;
 	min-width: 0;
-	margin: 0 11px;
+	margin: 0 13px;
 }
 
 .catma .v-slider-vertical .v-slider-base:before {
 	top: auto;
-	bottom: 7px;
-	left: 11px;
-	right: 11px;
+	bottom: 8px;
+	left: 13px;
+	right: 13px;
 	width: auto;
 	height: 4px;
 	border-left: none;
@@ -11732,15 +11732,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-slider-vertical .v-slider-handle {
 	width: 0;
 	height: 0.1px;
-	width: 25px;
+	width: 29px;
 	display: block;
 }
 
 .catma .v-slider-vertical .v-slider-handle:before, .catma .v-slider-vertical .v-slider-handle:after {
-	width: 14px;
-	height: 14px;
-	margin-top: -7px;
-	margin-left: -5px;
+	width: 16px;
+	height: 16px;
+	margin-top: -8px;
+	margin-left: -6px;
 }
 
 .catma .v-slider-no-indicator .v-slider-base:before, .catma .v-slider-no-indicator .v-slider-base:after {
@@ -11784,13 +11784,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tabsheet-tabitemcell .v-caption {
-	margin-left: 13px;
+	margin-left: 15px;
 	padding: 0 3px;
 	box-sizing: border-box;
 	cursor: pointer;
 	text-align: center;
-	line-height: 25px;
-	font-size: 13px;
+	line-height: 29px;
+	font-size: 15px;
 	font-weight: 400;
 	color: #696969;
 	width: auto !important;
@@ -11808,7 +11808,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tabsheet-tabitemcell .v-caption .v-icon + .v-captiontext {
-	margin-left: 6px;
+	margin-left: 7px;
 }
 
 .catma .v-tabsheet-tabitemcell .v-caption:hover {
@@ -11840,7 +11840,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tabsheet-tabitemcell .v-caption-closable {
-	padding-right: 18px;
+	padding-right: 21px;
 }
 
 .catma .v-tabsheet-tabitemcell.icons-on-top .v-caption-closable {
@@ -11851,10 +11851,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	position: absolute;
 	right: 0;
 	top: 50%;
-	margin: -7px 0 0;
-	font-size: 15px;
-	line-height: 15px;
-	width: 15px;
+	margin: -8px 0 0;
+	font-size: 18px;
+	line-height: 18px;
+	width: 18px;
 	text-align: center;
 	border-radius: 1px;
 	color: #969696;
@@ -11875,7 +11875,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	top: 0;
 	right: 0;
 	bottom: 0;
-	padding-left: 13px;
+	padding-left: 15px;
 	background-color: transparent;
 	background-image: -webkit-linear-gradient(right, white 70%, rgba(255, 255, 255, 0) 100%);
 	background-image: linear-gradient(to left,white 70%, rgba(255, 255, 255, 0) 100%);
@@ -11907,7 +11907,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	color: inherit;
 	height: 100%;
 	margin: 0;
-	padding: 0 6px;
+	padding: 0 7px;
 	outline: none;
 	cursor: pointer;
 	pointer-events: auto;
@@ -11933,7 +11933,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tabsheet-scroller [class*="Next"] {
-	padding-left: 3px;
+	padding-left: 4px;
 }
 
 .catma .v-tabsheet-scroller [class*="Next"]:before {
@@ -11942,7 +11942,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tabsheet-scroller [class*="Prev"] {
-	padding-right: 3px;
+	padding-right: 4px;
 }
 
 .catma .v-tabsheet-scroller [class*="Prev"]:before {
@@ -11964,8 +11964,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tabsheet-deco {
-	height: 14px !important;
-	width: 14px !important;
+	height: 16px !important;
+	width: 16px !important;
 	box-sizing: border-box;
 	border: 2px solid rgba(0, 114, 198, 0.2);
 	border-top-color: #0072C6;
@@ -11979,9 +11979,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	position: absolute;
 	z-index: 1;
 	bottom: 50%;
-	margin-bottom: -20px;
+	margin-bottom: -23px;
 	left: 50%;
-	margin-left: -7px;
+	margin-left: -8px;
 }
 
 .catma .v-tabsheet-loading .v-tabsheet-deco {
@@ -12008,10 +12008,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-tabsheet-framed  > .v-tabsheet-tabcontainer .v-caption {
 	margin-left: 3px;
-	padding: 0 8px;
+	padding: 0 10px;
 	background-color: #fafafa;
 	border: 0 solid transparent;
-	line-height: 25px;
+	line-height: 29px;
 	border-radius: 2px 2px 0 0;
 	font-weight: 500;
 	-webkit-transition: background-color 160ms;
@@ -12029,7 +12029,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tabsheet-framed  > .v-tabsheet-tabcontainer .v-caption-closable {
-	padding-right: 23px;
+	padding-right: 28px;
 }
 
 .catma .v-tabsheet-framed  > .v-tabsheet-tabcontainer .v-tabsheet-caption-close {
@@ -12066,11 +12066,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border: 0 solid #d4d4d4;
 	border-bottom: none;
 	background: white;
-	padding-top: 4px;
+	padding-top: 5px;
 }
 
 .catma .v-tabsheet-framed.icons-on-top  > .v-tabsheet-tabcontainer .v-tabsheet-tabitem-selected .v-caption {
-	padding-bottom: 4px;
+	padding-bottom: 5px;
 }
 
 .catma .v-tabsheet-centered-tabs  > .v-tabsheet-tabcontainer {
@@ -12090,12 +12090,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tabsheet-padded-tabbar  > .v-tabsheet-tabcontainer .v-tabsheet-tabs {
-	padding: 0 6px;
+	padding: 0 7px;
 }
 
 .catma .v-tabsheet-icons-on-top  > .v-tabsheet-tabcontainer .v-caption {
-	padding-top: 4px;
-	padding-bottom: 4px;
+	padding-top: 5px;
+	padding-bottom: 5px;
 	line-height: 1.2;
 }
 
@@ -12108,7 +12108,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-tabsheet-icons-on-top  > .v-tabsheet-tabcontainer .v-caption-closable {
-	padding-right: 8px;
+	padding-right: 10px;
 }
 
 .catma .v-tabsheet-icons-on-top  > .v-tabsheet-tabcontainer .v-tabsheet-caption-close {
@@ -12133,11 +12133,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-colorpicker-popup .v-tabsheet-tabs {
-	padding: 0 6px;
+	padding: 0 7px;
 }
 
 .catma .v-colorpicker-popup [class$="sliders"] {
-	padding: 8px;
+	padding: 10px;
 }
 
 .catma .v-colorpicker-popup [class$="sliders"] .v-widget {
@@ -12147,22 +12147,22 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-colorpicker-popup [class$="sliders"] .v-has-caption {
 	white-space: nowrap;
-	padding-left: 42px;
+	padding-left: 48px;
 }
 
 .catma .v-colorpicker-popup [class$="sliders"] .v-caption {
 	display: inline-block;
-	margin-left: -42px;
-	width: 42px;
+	margin-left: -48px;
+	width: 48px;
 }
 
 .catma .v-colorpicker-popup [class$="sliders"] .v-slot-hue-slider + .v-slot .v-has-caption {
-	padding-left: 70px;
+	padding-left: 80px;
 }
 
 .catma .v-colorpicker-popup [class$="sliders"] .v-slot-hue-slider + .v-slot .v-caption {
-	margin-left: -70px;
-	width: 70px;
+	margin-left: -80px;
+	width: 80px;
 }
 
 .catma .v-colorpicker-popup .v-slider-red .v-slider-base:after {
@@ -12208,7 +12208,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-colorpicker-popup .v-horizontallayout {
 	height: auto !important;
-	padding: 6px 0;
+	padding: 7px 0;
 	background-color: white;
 	border-top: 0 solid #f2f2f2;
 }
@@ -12224,7 +12224,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-colorpicker-preview {
 	width: 100% !important;
 	height: auto !important;
-	padding: 6px;
+	padding: 7px;
 	display: inline-flex;
 }
 
@@ -12240,17 +12240,17 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-colorpicker-button-color {
 	position: absolute;
-	top: 4px;
-	right: 4px;
-	bottom: 4px;
-	left: 4px;
+	top: 5px;
+	right: 5px;
+	bottom: 5px;
+	left: 5px;
 	border-radius: 1px;
 	border: 1px solid rgba(0, 0, 0, 0.5);
-	max-width: 15px;
+	max-width: 17px;
 }
 
 .catma .v-colorpicker-button-color  + .v-button-caption:not(:empty) {
-	margin-left: 13px;
+	margin-left: 15px;
 }
 
 .catma .v-accordion {
@@ -12306,7 +12306,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
 	padding: 20px 0 0 20px;
-	line-height: 25px;
+	line-height: 29px;
 	color: #474747;
 	font-size: 27px;
 	font-weight: 200;
@@ -12348,19 +12348,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-accordion-item-content  > .v-margin-top {
-	padding-top: 8px;
+	padding-top: 10px;
 }
 
 .catma .v-accordion-item-content  > .v-margin-right {
-	padding-right: 8px;
+	padding-right: 10px;
 }
 
 .catma .v-accordion-item-content  > .v-margin-bottom {
-	padding-bottom: 8px;
+	padding-bottom: 10px;
 }
 
 .catma .v-accordion-item-content  > .v-margin-left {
-	padding-left: 8px;
+	padding-left: 10px;
 }
 
 .catma .v-accordion-borderless {
@@ -12390,15 +12390,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-select-twincol .v-textfield, .catma .v-select-twincol .v-nativebutton {
 	width: auto !important;
-	margin-top: 6px;
+	margin-top: 7px;
 }
 
 .catma .v-select-twincol .v-nativebutton {
-	margin-left: 6px;
+	margin-left: 7px;
 }
 
 .catma .v-select-twincol-caption-left, .catma .v-select-twincol-caption-right {
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: 400;
 	padding-bottom: 0.3em;
 	padding-left: 1px;
@@ -12419,9 +12419,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	text-align: left;
 	white-space: normal;
 	position: absolute;
-	left: 6px;
-	right: 6px;
-	top: 25px;
+	left: 7px;
+	right: 7px;
+	top: 29px;
 	padding: 0;
 	text-align: center;
 }
@@ -12508,12 +12508,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-select-select  + .v-textfield {
 	width: auto !important;
-	margin-top: 6px;
+	margin-top: 7px;
 }
 
 .catma .v-select-select  + .v-textfield  + .v-nativebutton {
-	margin-top: 6px;
-	margin-left: 6px;
+	margin-top: 7px;
+	margin-left: 7px;
 }
 
 .catma .v-select-error .v-select-select {
@@ -12525,7 +12525,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-calendar-header-day {
 	font-weight: 500;
 	text-align: center;
-	padding: 5px 0;
+	padding: 6px 0;
 }
 
 .catma .v-calendar-header-week .v-calendar-back, .catma .v-calendar-header-week .v-calendar-next {
@@ -12599,13 +12599,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-calendar-bottom-spacer, .catma .v-calendar-spacer, .catma .v-calendar-bottom-spacer-empty {
-	height: 17px;
+	height: 19px;
 	margin-bottom: 2px;
 }
 
 .catma .v-calendar-bottom-spacer {
 	font-size: 0.8em;
-	padding: 0 3px;
+	padding: 0 4px;
 	cursor: pointer;
 }
 
@@ -12614,10 +12614,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-calendar-day-number {
-	line-height: 17px;
-	font-size: 14px;
+	line-height: 19px;
+	font-size: 16px;
 	text-align: right;
-	margin: 0 3px;
+	margin: 0 4px;
 	white-space: nowrap;
 	border-top: 1px solid #f7f7f7;
 	cursor: pointer;
@@ -12635,9 +12635,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-weight: 500;
 	color: #0072C6;
 	border-top: 2px solid #0072C6;
-	line-height: 16px;
+	line-height: 18px;
 	margin: 0;
-	padding: 0 3px;
+	padding: 0 4px;
 }
 
 .catma .v-calendar-month-day-selected {
@@ -12658,7 +12658,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-calendar-weekly-longevents .v-calendar-event-all-day {
-	height: 19px;
+	height: 22px;
 	line-height: 1.6;
 	margin-bottom: 2px;
 }
@@ -12680,7 +12680,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-calendar-time {
 	text-align: right;
-	padding-right: 6px;
+	padding-right: 7px;
 	margin-top: -6px;
 	padding-bottom: 6px;
 }
@@ -12707,7 +12707,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-calendar .v-datecellslot, .catma .v-calendar .v-datecellslot-even {
-	margin-right: 3px;
+	margin-right: 4px;
 }
 
 .catma .v-calendar-current-time {
@@ -12763,19 +12763,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-calendar-event-month {
-	padding: 0 3px;
+	padding: 0 4px;
 	box-sizing: border-box;
 	margin-bottom: 2px;
 	white-space: nowrap;
 	text-overflow: ellipsis;
-	height: 17px;
-	line-height: 17px;
+	height: 19px;
+	line-height: 19px;
 }
 
 .catma .v-calendar-event-month .v-calendar-event-time {
 	float: right;
 	font-size: 0.9em;
-	line-height: 17px;
+	line-height: 19px;
 	opacity: 0.5;
 	filter: alpha(opacity=50) ;
 }
@@ -12786,10 +12786,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-calendar-event-all-day {
-	padding: 0 3px;
+	padding: 0 4px;
 	box-sizing: border-box;
-	height: 17px;
-	line-height: 17px;
+	height: 19px;
+	line-height: 19px;
 	border-radius: 0;
 	margin-left: -1px;
 	white-space: nowrap;
@@ -12812,23 +12812,23 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-calendar-event-start {
 	border-top-left-radius: 2px;
 	border-bottom-left-radius: 2px;
-	margin-left: 3px;
+	margin-left: 4px;
 }
 
 .catma .v-calendar-event-end {
 	border-top-right-radius: 2px;
 	border-bottom-right-radius: 2px;
-	margin-right: 3px;
+	margin-right: 4px;
 }
 
 .catma .v-calendar-event-caption {
 	font-weight: 600;
 	line-height: 1.2;
-	padding: 3px 0;
+	padding: 4px 0;
 	position: absolute;
 	overflow: hidden;
-	right: 6px;
-	left: 3px;
+	right: 7px;
+	left: 4px;
 	bottom: 0;
 	top: 0;
 }
@@ -12847,7 +12847,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border-radius: 3px;
 	border: 1px solid #fafafa;
 	padding-top: 3px;
-	margin-right: 3px;
+	margin-right: 4px;
 }
 
 .catma .v-calendar-event-month:before {
@@ -12998,7 +12998,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma h4, .catma .v-label-h4 {
 	line-height: 1.1;
 	font-weight: 600;
-	font-size: 12px;
+	font-size: 14px;
 	color: #414141;
 	text-transform: uppercase;
 	letter-spacing: 0;
@@ -13007,11 +13007,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-csslayout  > h1:first-child, .catma .v-csslayout  > h2:first-child, .catma .v-csslayout  > h3:first-child, .catma .v-csslayout  > h4 > .v-label-h1:first-child, .catma .v-csslayout  > .v-label-h2:first-child, .catma .v-csslayout  > .v-label-h3:first-child, .catma .v-csslayout  > .v-label-h4:first-child {
-	margin-top: 14px;
+	margin-top: 16px;
 }
 
 .catma .v-verticallayout > .v-slot:first-child h1, .catma .v-verticallayout > .v-slot:first-child .v-label-h1, .catma .v-verticallayout > .v-slot:first-child h2, .catma .v-verticallayout > .v-slot:first-child .v-label-h2, .catma .v-verticallayout > .v-slot:first-child h3, .catma .v-verticallayout > .v-slot:first-child .v-label-h3, .catma .v-verticallayout > .v-slot:first-child h4, .catma .v-verticallayout > .v-slot:first-child .v-label-h4, .catma .v-verticallayout > div > .v-slot:first-child h1, .catma .v-verticallayout > div > .v-slot:first-child .v-label-h1, .catma .v-verticallayout > div > .v-slot:first-child h2, .catma .v-verticallayout > div > .v-slot:first-child .v-label-h2, .catma .v-verticallayout > div > .v-slot:first-child h3, .catma .v-verticallayout > div > .v-slot:first-child .v-label-h3, .catma .v-verticallayout > div > .v-slot:first-child h4, .catma .v-verticallayout > div > .v-slot:first-child .v-label-h4 {
-	margin-top: 14px;
+	margin-top: 16px;
 }
 
 .catma .v-verticallayout > .v-slot:first-child .v-formlayout-contentcell h1, .catma .v-verticallayout > .v-slot:first-child .v-formlayout-contentcell .v-label-h1, .catma .v-verticallayout > .v-slot:first-child .v-formlayout-contentcell h2, .catma .v-verticallayout > .v-slot:first-child .v-formlayout-contentcell .v-label-h2, .catma .v-verticallayout > .v-slot:first-child .v-formlayout-contentcell h3, .catma .v-verticallayout > .v-slot:first-child .v-formlayout-contentcell .v-label-h3, .catma .v-verticallayout > .v-slot:first-child .v-formlayout-contentcell h4, .catma .v-verticallayout > .v-slot:first-child .v-formlayout-contentcell .v-label-h4, .catma .v-verticallayout > div > .v-slot:first-child .v-formlayout-contentcell h1, .catma .v-verticallayout > div > .v-slot:first-child .v-formlayout-contentcell .v-label-h1, .catma .v-verticallayout > div > .v-slot:first-child .v-formlayout-contentcell h2, .catma .v-verticallayout > div > .v-slot:first-child .v-formlayout-contentcell .v-label-h2, .catma .v-verticallayout > div > .v-slot:first-child .v-formlayout-contentcell h3, .catma .v-verticallayout > div > .v-slot:first-child .v-formlayout-contentcell .v-label-h3, .catma .v-verticallayout > div > .v-slot:first-child .v-formlayout-contentcell h4, .catma .v-verticallayout > div > .v-slot:first-child .v-formlayout-contentcell .v-label-h4 {
@@ -13027,19 +13027,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-label-large {
-	font-size: 17px;
+	font-size: 20px;
 }
 
 .catma .v-label-small {
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-label-tiny {
-	font-size: 11px;
+	font-size: 12px;
 }
 
 .catma .v-label-huge {
-	font-size: 23px;
+	font-size: 26px;
 }
 
 .catma .v-label-bold {
@@ -13077,16 +13077,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	color: #474747;
 	border: 2px solid #4caf50;
 	border-radius: 2px;
-	padding: 5px 13px 5px 25px;
+	padding: 6px 15px 6px 29px;
 	font-weight: 500;
-	font-size: 13px;
+	font-size: 15px;
 }
 
 .catma .v-label-success:before, .catma .v-label-failure:before {
 	font-family: ThemeIcons;
 	content: "\f00c";
 	margin-right: 0.5em;
-	margin-left: -13px;
+	margin-left: -15px;
 	color: #4caf50;
 }
 
@@ -13222,12 +13222,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-select-select  + .v-textfield {
 	width: auto !important;
-	margin-top: 6px;
+	margin-top: 7px;
 }
 
 .catma .v-select-select  + .v-textfield  + .v-nativebutton {
-	margin-top: 6px;
-	margin-left: 6px;
+	margin-top: 7px;
+	margin-left: 7px;
 }
 
 .catma .v-select-error .v-select-select {
@@ -13281,23 +13281,23 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-popupview-popup .popupContent  > .v-margin-top {
-	padding-top: 8px;
+	padding-top: 10px;
 }
 
 .catma .v-popupview-popup .popupContent  > .v-margin-right {
-	padding-right: 8px;
+	padding-right: 10px;
 }
 
 .catma .v-popupview-popup .popupContent  > .v-margin-bottom {
-	padding-bottom: 8px;
+	padding-bottom: 10px;
 }
 
 .catma .v-popupview-popup .popupContent  > .v-margin-left {
-	padding-left: 8px;
+	padding-left: 10px;
 }
 
 .catma .v-popupview-loading {
-	margin: 8px 8px;
+	margin: 10px 10px;
 	height: 24px !important;
 	width: 24px !important;
 	box-sizing: border-box;
@@ -13326,7 +13326,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	font-weight: 400;
 	line-height: normal;
-	height: 25px;
+	height: 29px;
 	border-radius: 2px;
 	padding: 0;
 	border: 0 solid #afafaf;
@@ -13355,8 +13355,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-richtextarea .gwt-ToggleButton, .catma .v-richtextarea .gwt-PushButton {
 	display: inline-block;
-	line-height: 25px;
-	width: 25px;
+	line-height: 29px;
+	width: 29px;
 	text-align: center;
 	outline: none;
 }
@@ -13452,12 +13452,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-richtextarea .gwt-RichTextToolbar-bottom {
-	font-size: 11px;
-	padding: 0 6px 6px 0;
+	font-size: 13px;
+	padding: 0 7px 7px 0;
 }
 
 .catma .v-richtextarea .gwt-RichTextToolbar-bottom select {
-	margin: 6px 0 0 6px;
+	margin: 7px 0 0 7px;
 }
 
 .catma .v-richtextarea .gwt-RichTextArea {
@@ -13467,7 +13467,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-richtextarea-readonly {
-	padding: 3px 5px;
+	padding: 4px 5px;
 	background: transparent;
 }
 
@@ -13489,26 +13489,26 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	z-index: -1;
 	position: absolute;
 	right: 0;
-	height: 25px;
+	height: 29px;
 	text-align: right;
 	border: none;
 	background: transparent;
 }
 
 .catma .v-Notification.v-position-top {
-	top: 8px;
+	top: 10px;
 }
 
 .catma .v-Notification.v-position-right {
-	right: 8px;
+	right: 10px;
 }
 
 .catma .v-Notification.v-position-bottom {
-	bottom: 8px;
+	bottom: 10px;
 }
 
 .catma .v-Notification.v-position-left {
-	left: 8px;
+	left: 10px;
 }
 
 .catma .v-Notification.v-position-assistive {
@@ -13557,12 +13557,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	background: white;
 	-webkit-box-shadow: 0px 5px 15px 0px rgba(0, 0, 0, 0.15);
 	box-shadow: 0px 5px 15px 0px rgba(0, 0, 0, 0.15);
-	padding: 13px 15px;
+	padding: 15px 17px;
 }
 
 .catma .v-Notification .v-Notification-caption {
 	color: #0072C6;
-	font-size: 17px;
+	font-size: 19px;
 	line-height: 1;
 }
 
@@ -13591,11 +13591,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-Notification-caption ~ .v-Notification-description, .catma .v-Notification-caption ~ .v-Notification-details {
-	margin-left: 21px;
+	margin-left: 24px;
 }
 
 .catma .v-icon + .v-Notification-caption {
-	margin-left: 14px;
+	margin-left: 16px;
 }
 
 .catma .v-Notification-system {
@@ -13606,11 +13606,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border-radius: 0;
 	-webkit-box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
 	box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
-	padding: 8px 10px;
+	padding: 10px 12px;
 	background-color: #444;
 	background-color: rgba(68, 68, 68, 0.9);
 	font-weight: 500;
-	line-height: 20px;
+	line-height: 22px;
 }
 
 .catma .v-Notification-system .v-Notification-description, .catma .v-Notification-system .v-Notification-details {
@@ -13688,7 +13688,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-weight: 500;
 	-webkit-box-shadow: 0px 5px 15px 0px rgba(0, 0, 0, 0.25);
 	box-shadow: 0px 5px 15px 0px rgba(0, 0, 0, 0.25);
-	padding-right: 40px;
+	padding-right: 46px;
 	overflow: hidden !important;
 	cursor: pointer;
 }
@@ -13706,11 +13706,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-size: 1.5em;
 	position: absolute;
 	top: 50%;
-	margin-top: -8px;
-	right: 8px;
-	width: 17px;
-	height: 17px;
-	line-height: 16px;
+	margin-top: -10px;
+	right: 10px;
+	width: 19px;
+	height: 19px;
+	line-height: 18px;
 	cursor: pointer;
 	color: #000;
 	opacity: 0.5;
@@ -13754,7 +13754,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	background-color: #444;
 	background-color: rgba(68, 68, 68, 0.9);
 	font-weight: 500;
-	line-height: 20px;
+	line-height: 22px;
 }
 
 .catma .v-Notification.dark .v-Notification-caption {
@@ -13774,7 +13774,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border-radius: 0;
 	-webkit-box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
 	box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
-	padding: 8px 10px;
+	padding: 10px 12px;
 }
 
 .catma .v-Notification.bar .v-Notification-description, .catma .v-Notification.bar .v-Notification-details {
@@ -13814,15 +13814,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-Notification.small {
-	padding: 8px 9px;
+	padding: 9px 10px;
 }
 
 .catma .v-Notification.small .v-Notification-caption {
-	font-size: 14px;
+	font-size: 16px;
 }
 
 .catma .v-Notification.small .v-Notification-description {
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .catma .v-Notification.critical-error {
@@ -13841,7 +13841,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-Notification.closable {
-	padding-right: 40px;
+	padding-right: 46px;
 	overflow: hidden !important;
 	cursor: pointer;
 }
@@ -13851,11 +13851,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-size: 1.5em;
 	position: absolute;
 	top: 50%;
-	margin-top: -8px;
-	right: 8px;
-	width: 17px;
-	height: 17px;
-	line-height: 16px;
+	margin-top: -10px;
+	right: 10px;
+	width: 19px;
+	height: 19px;
+	line-height: 18px;
 	cursor: pointer;
 	color: #000;
 	opacity: 0.5;
@@ -13896,7 +13896,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-Notification.closable.tray:after {
-	top: 11px;
+	top: 13px;
 	margin-top: 0;
 }
 
@@ -13936,11 +13936,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .valo-menu {
 	height: 100%;
 	background-color: #0072C6;
-	background-image: -webkit-linear-gradient(right, #0072c6 0%, #0072C6 6px);
-	background-image: linear-gradient(to left,#0072c6 0%, #0072C6 6px);
+	background-image: -webkit-linear-gradient(right, #0072c6 0%, #0072C6 7px);
+	background-image: linear-gradient(to left,#0072c6 0%, #0072C6 7px);
 	color: #77baeb;
-	font-size: 13px;
-	line-height: 20px;
+	font-size: 14px;
+	line-height: 23px;
 	border-right: 0 solid #004f8a;
 	white-space: nowrap;
 }
@@ -13957,7 +13957,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .valo-menu-part {
 	border-left: 0 solid #005da2;
 	height: 100%;
-	padding-bottom: 25px;
+	padding-bottom: 29px;
 	overflow: auto;
 }
 
@@ -13974,7 +13974,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .valo-menu-title .valo-menu-badge, .catma .valo-menu-subtitle .valo-menu-badge, .catma .valo-menu-item .valo-menu-badge {
 	position: absolute;
-	right: 13px;
+	right: 15px;
 }
 
 .catma .valo-menu-title {
@@ -13982,8 +13982,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	background: #0072C6;
 	color: white;
 	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
-	padding: 8px 13px;
-	font-size: 13px;
+	padding: 10px 15px;
+	font-size: 14px;
 	border-bottom: 0 solid #004f8a;
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
@@ -14004,7 +14004,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	
 	
 	text-shadow: inherit;
-	font-size: 14px;
+	font-size: 16px;
 	border-color: inherit;
 }
 
@@ -14023,7 +14023,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	text-shadow: none;
 	background: transparent;
 	color: inherit;
-	margin: 13px 5px;
+	margin: 15px 6px;
 	display: block;
 	overflow: hidden;
 	text-align: center;
@@ -14042,7 +14042,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	margin-right: 1px;
 	border-radius: 2px;
 	color: #0072C6;
-	padding: 0 8px;
+	padding: 0 10px;
 	-webkit-transition: color 140ms;
 	-moz-transition: color 140ms;
 	transition: color 140ms;
@@ -14095,9 +14095,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-menubar-user-menu  > .v-menubar-menuitem img.v-icon {
-	width: 38px;
-	height: 38px;
-	border-radius: 19px;
+	width: 44px;
+	height: 44px;
+	border-radius: 22px;
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	display: block;
 	margin: 0 auto 0.3em;
@@ -14117,7 +14117,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .valo-menu-subtitle {
 	color: #3fa4ee;
-	margin: 5px 0 5px 13px;
+	margin: 6px 0 6px 15px;
 	border-bottom: 0 solid #2687ce;
 }
 
@@ -14132,7 +14132,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .valo-menu-item {
 	outline: none;
 	font-weight: 500;
-	padding: 0 25px 0 13px;
+	padding: 0 29px 0 15px;
 	cursor: pointer;
 	position: relative;
 	overflow: hidden;
@@ -14147,7 +14147,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	display: inline-block;
 	width: 90%;
 	max-width: 15em;
-	padding-right: 13px;
+	padding-right: 15px;
 	text-overflow: ellipsis;
 	overflow: hidden;
 }
@@ -14175,7 +14175,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .valo-menu-item span.v-icon {
 	min-width: 1em;
-	margin-right: 13px;
+	margin-right: 15px;
 	text-align: center;
 	vertical-align: middle;
 }
@@ -14190,21 +14190,21 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-moz-transition: background-color 300ms;
 	transition: background-color 300ms;
 	line-height: 1;
-	padding: 3px 4px;
-	min-width: 9px;
+	padding: 3px 5px;
+	min-width: 11px;
 	text-align: center;
-	top: 0.5px;
+	top: 1.5px;
 	border-radius: 2px;
 }
 
 .catma .valo-menu-part.large-icons {
 	background-color: #0072C6;
-	min-width: 50px;
-	max-width: 75px;
+	min-width: 58px;
+	max-width: 87px;
 }
 
 .catma .valo-menu-part.large-icons .valo-menu-title {
-	font-size: 11px;
+	font-size: 12px;
 }
 
 .catma .valo-menu-part.large-icons .valo-menu-title .v-label-undef-w {
@@ -14214,28 +14214,28 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .valo-menu-part.large-icons .v-menubar-user-menu {
 	margin-left: 0;
 	margin-right: 0;
-	font-size: 10px;
+	font-size: 11px;
 }
 
 .catma .valo-menu-part.large-icons .v-menubar-user-menu img.v-icon {
-	width: 19px;
-	height: 19px;
+	width: 22px;
+	height: 22px;
 }
 
 .catma .valo-menu-part.large-icons [class*="subtitle"] {
-	margin: 6px 0 0;
-	padding: 5px 17px 5px 6px;
+	margin: 7px 0 0;
+	padding: 6px 19px 6px 7px;
 	line-height: 1;
 	border: none;
 	text-overflow: ellipsis;
 	overflow: hidden;
 	background: #0060a7;
-	font-size: 11px;
+	font-size: 13px;
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
 
 .catma .valo-menu-part.large-icons [class*="subtitle"] [class*="badge"] {
-	right: 6px;
+	right: 7px;
 }
 
 .catma .valo-menu-part.large-icons [class*="subtitle"]  + .valo-menu-item {
@@ -14244,9 +14244,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .valo-menu-part.large-icons .valo-menu-item {
 	display: block;
-	font-size: 22px;
+	font-size: 26px;
 	line-height: 1;
-	padding: 8px;
+	padding: 10px;
 	text-align: center;
 	border-top: 0 solid #0f7ac9;
 }
@@ -14260,7 +14260,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	width: auto;
 	margin: 0.3em 0 0;
 	padding: 0;
-	font-size: 10px;
+	font-size: 11px;
 	line-height: 1.3;
 }
 
@@ -14287,23 +14287,23 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .valo-menu-part.large-icons .valo-menu-item [class*="badge"] {
 	padding-left: 3px;
 	padding-right: 3px;
-	top: 5px;
-	right: 5px;
+	top: 6px;
+	right: 6px;
 	border: 2px solid #0072C6;
 }
 
 .catma .valo-menu-logo {
 	display: block;
 	overflow: hidden;
-	width: 30px !important;
-	height: 30px;
+	width: 35px !important;
+	height: 35px;
 	border-radius: 2px;
 	text-align: center;
 	background: #0072C6;
 	color: white;
-	font-size: 17px;
-	line-height: 30px;
-	margin: 13px auto;
+	font-size: 19px;
+	line-height: 35px;
+	margin: 15px auto;
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
@@ -14314,12 +14314,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .valo-menu-responsive[width-range~="801px-1100px"] .valo-menu-part {
 	background-color: #0072C6;
-	min-width: 50px;
-	max-width: 75px;
+	min-width: 58px;
+	max-width: 87px;
 }
 
 .catma .valo-menu-responsive[width-range~="801px-1100px"] .valo-menu-part .valo-menu-title {
-	font-size: 11px;
+	font-size: 12px;
 }
 
 .catma .valo-menu-responsive[width-range~="801px-1100px"] .valo-menu-part .valo-menu-title .v-label-undef-w {
@@ -14329,28 +14329,28 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .valo-menu-responsive[width-range~="801px-1100px"] .valo-menu-part .v-menubar-user-menu {
 	margin-left: 0;
 	margin-right: 0;
-	font-size: 10px;
+	font-size: 11px;
 }
 
 .catma .valo-menu-responsive[width-range~="801px-1100px"] .valo-menu-part .v-menubar-user-menu img.v-icon {
-	width: 19px;
-	height: 19px;
+	width: 22px;
+	height: 22px;
 }
 
 .catma .valo-menu-responsive[width-range~="801px-1100px"] .valo-menu-part [class*="subtitle"] {
-	margin: 6px 0 0;
-	padding: 5px 17px 5px 6px;
+	margin: 7px 0 0;
+	padding: 6px 19px 6px 7px;
 	line-height: 1;
 	border: none;
 	text-overflow: ellipsis;
 	overflow: hidden;
 	background: #0060a7;
-	font-size: 11px;
+	font-size: 13px;
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
 
 .catma .valo-menu-responsive[width-range~="801px-1100px"] .valo-menu-part [class*="subtitle"] [class*="badge"] {
-	right: 6px;
+	right: 7px;
 }
 
 .catma .valo-menu-responsive[width-range~="801px-1100px"] .valo-menu-part [class*="subtitle"]  + .valo-menu-item {
@@ -14359,9 +14359,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .valo-menu-responsive[width-range~="801px-1100px"] .valo-menu-part .valo-menu-item {
 	display: block;
-	font-size: 22px;
+	font-size: 26px;
 	line-height: 1;
-	padding: 8px;
+	padding: 10px;
 	text-align: center;
 	border-top: 0 solid #0f7ac9;
 }
@@ -14375,7 +14375,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	width: auto;
 	margin: 0.3em 0 0;
 	padding: 0;
-	font-size: 10px;
+	font-size: 11px;
 	line-height: 1.3;
 }
 
@@ -14402,19 +14402,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .valo-menu-responsive[width-range~="801px-1100px"] .valo-menu-part .valo-menu-item [class*="badge"] {
 	padding-left: 3px;
 	padding-right: 3px;
-	top: 5px;
-	right: 5px;
+	top: 6px;
+	right: 6px;
 	border: 2px solid #0072C6;
 }
 
 .catma .valo-menu-responsive[width-range~="0-800px"] {
-	padding-top: 25px;
+	padding-top: 29px;
 	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
 }
 
 .catma .valo-menu-responsive[width-range~="0-800px"] .v-loading-indicator {
-	top: 25px;
+	top: 29px;
 }
 
 .catma .valo-menu-responsive[width-range~="0-800px"]  > .v-widget {
@@ -14439,7 +14439,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	top: 0;
 	left: 0;
 	right: 0;
-	height: 25px !important;
+	height: 29px !important;
 	padding-top: 0;
 	padding-bottom: 0;
 	-webkit-backface-visibility: hidden;
@@ -14452,44 +14452,44 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	right: 0;
 	margin: 0;
 	padding: 0;
-	height: 25px;
+	height: 29px;
 	color: #77baeb;
 	max-width: 30%;
 	-webkit-backface-visibility: hidden;
 }
 
 .catma .valo-menu-responsive[width-range~="0-800px"] .valo-menu .v-menubar-user-menu .v-menubar-menuitem {
-	line-height: 24px;
+	line-height: 28px;
 	white-space: nowrap;
 }
 
 .catma .valo-menu-responsive[width-range~="0-800px"] .valo-menu .v-menubar-user-menu img.v-icon {
 	display: inline-block;
-	margin: 0 4px 0 0;
-	width: 13px;
-	height: 13px;
-	border-radius: 7px;
+	margin: 0 5px 0 0;
+	width: 15px;
+	height: 15px;
+	border-radius: 8px;
 	border: none;
 }
 
 .catma .valo-menu-responsive[width-range~="0-800px"] .valo-menuitems {
 	height: 100%;
 	background-color: #0072C6;
-	background-image: -webkit-linear-gradient(right, #0072c6 0%, #0072C6 6px);
-	background-image: linear-gradient(to left,#0072c6 0%, #0072C6 6px);
+	background-image: -webkit-linear-gradient(right, #0072c6 0%, #0072C6 7px);
+	background-image: linear-gradient(to left,#0072c6 0%, #0072C6 7px);
 	color: #77baeb;
-	font-size: 13px;
-	line-height: 20px;
+	font-size: 14px;
+	line-height: 23px;
 	border-right: 0 solid #004f8a;
 	white-space: nowrap;
 	position: fixed;
 	z-index: 9000;
-	top: 25px;
+	top: 29px;
 	bottom: 0;
 	height: auto;
 	max-width: 100%;
 	overflow: auto;
-	padding: 13px 0;
+	padding: 15px 0;
 	-webkit-transform: translatex(-100%);
 	-moz-transform: translatex(-100%);
 	-ms-transform: translatex(-100%);
@@ -14514,7 +14514,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .valo-menu-responsive[width-range~="0-500px"] .valo-menu .v-menubar-user-menu .v-menubar-menuitem-caption {
 	display: inline-block;
-	width: 13px;
+	width: 15px;
 	overflow: hidden;
 }
 
@@ -14771,7 +14771,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma :not(.v-upload) > * > .v-button {
-	height: 25px;
+	height: 29px;
 }
 
 .catma :not(.v-upload) > * > .v-button.no-border-radius {
@@ -14783,15 +14783,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma :not(.v-upload) > * > .v-button.tiny {
-	height: 19px;
+	height: 22px;
 }
 
 .catma :not(.v-upload) > * > .v-button.small {
-	height: 21px;
+	height: 25px;
 }
 
 .catma :not(.v-upload) > * > .v-button.large {
-	height: 30px;
+	height: 35px;
 }
 
 .catma :not(.v-upload) > * > .v-button:not(.icon-align-top):before {
@@ -14908,8 +14908,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-button.floating-action {
-	width: 31.25px;
-	height: 31.25px;
+	width: 36.25px;
+	height: 36.25px;
 	padding: 0px;
 	border-radius: 100%;
 	background: #0072C6;
@@ -14925,8 +14925,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-button.floating-action .v-icon {
-	line-height: 31.25px;
-	width: 31.25px;
+	line-height: 36.25px;
+	width: 36.25px;
 	text-align: center;
 }
 
@@ -15030,7 +15030,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-table-compact * .v-textfield {
-	height: 21px;
+	height: 25px;
 }
 
 .catma .v-filterselect-focus:not(.borderless):not(.floating):not(.custom):not(.v-readonly) [class*="input"] {
@@ -15065,8 +15065,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-filterselect span.v-icon {
-	width: 25px;
-	line-height: 25px;
+	width: 29px;
+	line-height: 29px;
 	text-align: center;
 	margin-top: 0;
 	margin-left: 0;
@@ -15095,7 +15095,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-select-select {
-	min-height: 25px;
+	min-height: 29px;
 }
 
 .catma .v-filterselect [class$="button"]:before {
@@ -15201,11 +15201,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-slider-base {
-	height: 2.5px;
+	height: 2.9px;
 }
 
 .catma .v-slider-vertical .v-slider-base {
-	width: 2.5px;
+	width: 2.9px;
 }
 
 .catma .v-slider-base {
@@ -15221,18 +15221,18 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-slider-vertical .v-slider-handle:before, .catma .v-slider-vertical .v-slider-handle:after {
-	width: 12.5px;
-	height: 12.5px;
-	margin-left: -5px;
+	width: 14.5px;
+	height: 14.5px;
+	margin-left: -5.8px;
 }
 
 .catma .v-slider-handle:before, .catma .v-slider-handle:after {
-	margin-top: 5.5px;
+	margin-top: 6.38px;
 }
 
 .catma .v-slider-handle:before, .catma .v-slider-handle:after {
-	width: 12.5px;
-	height: 12.5px;
+	width: 14.5px;
+	height: 14.5px;
 }
 
 .catma .v-label-spinner {
@@ -15262,7 +15262,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-accordion-item {
-	height: 27px;
+	height: 31px;
 	transition: height 0.3s ease;
 	overflow: hidden;
 	outline: none;
@@ -15379,7 +15379,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-menubar-popup .v-menubar-menuitem {
 	background: white;
-	line-height: 25px;
+	line-height: 29px;
 	transition: background 0.3s;
 }
 
@@ -15564,7 +15564,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-table-cell-content {
-	height: 30px;
+	height: 35px;
 	text-align: right;
 }
 
@@ -15625,14 +15625,14 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-grid-cell {
-	height: 30px;
-	line-height: 30px;
+	height: 35px;
+	line-height: 35px;
 	background-color: white !important;
-	padding: 0 13px;
+	padding: 0 15px;
 }
 
 .catma .v-grid-column-header-content, .catma .v-grid-column-footer-content {
-	line-height: 30px;
+	line-height: 35px;
 }
 
 .catma .v-grid-cell.frozen {
@@ -15656,7 +15656,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-grid:not(.borderless) .v-grid-header::after {
 	width: 100%;
 	position: absolute;
-	height: 30px;
+	height: 35px;
 	left: 0px;
 	top: 0px;
 	z-index: -1;
@@ -15678,7 +15678,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	text-align: center;
 	top: 0px;
 	left: 0px;
-	line-height: 30px;
+	line-height: 35px;
 	width: 60px;
 }
 
@@ -15687,7 +15687,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-grid-editor-save, .catma .v-grid-editor-cancel {
-	height: 21px;
+	height: 25px;
 	color: #0072C6;
 	transition: box-shadow 0.3s ease-out, background 0.3s;
 	padding: 0 20px;
@@ -15722,24 +15722,24 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-grid-editor-footer {
-	height: 27px;
+	height: 31px;
 	font-size: 15px;
 	margin-left: 10px;
 	background-color: white;
 }
 
 .catma .v-grid-select-all-checkbox, .catma .v-grid-selection-checkbox {
-	width: 8.5px;
+	width: 10.5px;
 	position: relative;
-	margin: 8.5px auto;
+	margin: 10.5px auto;
 }
 
 .catma .v-grid-select-all-checkbox label, .catma .v-grid-selection-checkbox label {
-	width: 8.5px;
-	height: 8.5px;
+	width: 10.5px;
+	height: 10.5px;
 	cursor: pointer;
 	position: absolute;
-	top: calc(50% - 6.25px);
+	top: calc(50% - 7.25px);
 	left: 0;
 	border-radius: 2px;
 	border: 2px solid #595959;
@@ -15749,11 +15749,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-grid-select-all-checkbox label:after, .catma .v-grid-selection-checkbox label:after {
 	content: "";
-	width: 4.375px;
-	height: 1.875px;
+	width: 5.075px;
+	height: 2.175px;
 	position: absolute;
-	top: 0.7px;
-	left: 0.62px;
+	top: 1.58px;
+	left: 1.22px;
 	border: 3px solid white;
 	border-top: none;
 	border-right: none;
@@ -15764,7 +15764,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .v-grid-select-all-checkbox input[type="checkbox"], .catma .v-grid-selection-checkbox input[type="checkbox"] {
 	opacity: 0;
-	width: 8.5px;
+	width: 10.5px;
 }
 
 .catma .v-grid-select-all-checkbox input[type="checkbox"]:checked + label:after, .catma .v-grid-selection-checkbox input[type="checkbox"]:checked + label:after {
@@ -15826,15 +15826,15 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-select-optiongroup:not(.large):not(.small) .v-checkbox > input:checked ~ label:after, .catma .v-checkbox:not(.large):not(.small) > input:checked ~ label:after {
-	line-height: 10.5px;
+	line-height: 12.5px;
 }
 
 .catma .v-select-optiongroup.large .v-checkbox > input:checked ~ label:after, .catma .v-checkbox.large > input:checked ~ label:after {
-	line-height: 13px;
+	line-height: 15.5px;
 }
 
 .catma .v-select-optiongroup.small .v-checkbox > input:checked ~ label:after, .catma .v-checkbox.small > input:checked ~ label:after {
-	line-height: 8.5px;
+	line-height: 10.5px;
 }
 
 .catma .v-checkbox > input ~ label:before {
@@ -15851,35 +15851,35 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-select-optiongroup .v-radiobutton > input ~ label:before {
-	width: 13px !important;
-	height: 13px !important;
+	width: 15px !important;
+	height: 15px !important;
 }
 
 .catma .v-select-optiongroup .v-radiobutton > input ~ label:after {
-	width: 5px !important;
-	height: 5px !important;
+	width: 7px !important;
+	height: 7px !important;
 	top: 4px !important;
 	left: 4px !important;
 }
 
 .catma .v-select-optiongroup-small .v-radiobutton > input ~ label:before {
-	width: 11px !important;
-	height: 11px !important;
+	width: 12px !important;
+	height: 12px !important;
 }
 
 .catma .v-select-optiongroup-small .v-radiobutton > input ~ label:after {
-	width: 3px !important;
-	height: 3px !important;
+	width: 4px !important;
+	height: 4px !important;
 }
 
 .catma .v-select-optiongroup-large .v-radiobutton > input ~ label:before {
-	width: 15px !important;
-	height: 15px !important;
+	width: 17px !important;
+	height: 17px !important;
 }
 
 .catma .v-select-optiongroup-large .v-radiobutton > input ~ label:after {
-	width: 7px !important;
-	height: 7px !important;
+	width: 9px !important;
+	height: 9px !important;
 }
 
 .catma .v-radiobutton > input ~ label:after {
@@ -16181,7 +16181,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .v-upload {
 	text-transform: uppercase;
 	transition: box-shadow 0.3s ease-out, background 0.3s;
-	height: 25px;
+	height: 29px;
 	border-radius: 2px;
 	outline: none;
 	text-align: center;
@@ -16194,9 +16194,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-upload-immediate .v-button {
-	line-height: 25px;
+	line-height: 29px;
 	outline: none;
-	height: 25px;
+	height: 29px;
 	padding: 0 20px;
 }
 
@@ -16234,19 +16234,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-upload {
-	height: 25px;
+	height: 29px;
 }
 
 .catma .v-upload.tiny {
-	height: 19px;
+	height: 22px;
 }
 
 .catma .v-upload.small {
-	height: 21px;
+	height: 25px;
 }
 
 .catma .v-upload.large {
-	height: 30px;
+	height: 35px;
 }
 
 .catma .floating-action-upload .v-button {
@@ -16510,25 +16510,25 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .valo-menu-responsive[width-range~="0-800px"] .valo-menu-toggle {
 	top: 0px;
 	left: 0px;
-	line-height: 30px !important;
-	height: 30px !important;
+	line-height: 35px !important;
+	height: 35px !important;
 	color: #b7d8ef;
 	z-index: 9002 !important;
 }
 
 .catma .valo-menu-responsive[width-range~="0-800px"] .valo-menu-title {
 	z-index: 9001;
-	height: 30px !important;
+	height: 35px !important;
 }
 
 .catma .valo-menu-responsive[width-range~="0-800px"] .v-menubar-user-menu {
 	color: white !important;
 	z-index: 9002 !important;
-	height: 30px !important;
+	height: 35px !important;
 }
 
 .catma .valo-menu-responsive[width-range~="0-800px"] .v-menubar-user-menu .v-menubar-menuitem {
-	line-height: 30px !important;
+	line-height: 35px !important;
 }
 
 .catma .valo-menu-responsive[width-range~="0-800px"] .valo-menuitems {
@@ -16627,7 +16627,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
 	padding: 20px 0 0 20px;
-	line-height: 25px;
+	line-height: 29px;
 	color: #474747;
 	font-size: 27px;
 	font-weight: 200;
@@ -16646,19 +16646,19 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-panel-content  > .v-margin-top {
-	padding-top: 8px;
+	padding-top: 10px;
 }
 
 .catma .v-panel-content  > .v-margin-right {
-	padding-right: 8px;
+	padding-right: 10px;
 }
 
 .catma .v-panel-content  > .v-margin-bottom {
-	padding-bottom: 8px;
+	padding-bottom: 10px;
 }
 
 .catma .v-panel-content  > .v-margin-left {
-	padding-left: 8px;
+	padding-left: 10px;
 }
 
 .catma .v-panel-borderless {
@@ -16676,7 +16676,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	box-shadow: none;
 	color: inherit;
 	padding: 0;
-	margin: 0 8px;
+	margin: 0 10px;
 	border-bottom: none;
 }
 
@@ -16732,7 +16732,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .v-panel-caption.v-horizontallayout .v-label {
-	line-height: 25px;
+	line-height: 29px;
 }
 
 .catma .v-panel-content > .v-margin-left, .catma .v-csslayout-card > .v-margin-left {
@@ -17637,7 +17637,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .header__context {
 	display: flex;
 	justify-content: center;
-	width: 100%;
+	flex-grow: 1;
+	font-size: 1.5em;
 }
 
 .catma .header__version {
@@ -17676,6 +17677,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	cursor: pointer;
 	color: var(--lumo-body-text-color);
 	padding: 0px;
+	text-transform: none;
 }
 
 .catma .nav .h3 {
@@ -17741,6 +17743,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .hugecard__bar + div {
+	margin-left: 32px;
+	margin-top: 14px;
 	overflow: auto;
 }
 
@@ -17765,7 +17769,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	justify-content: flex-end;
 }
 
-.catma .hugecard__bar__moreoptions__btn {
+.catma .v-button.hugecard__bar__moreoptions__btn {
 	color: white;
 	background-color: transparent;
 	border: none;
@@ -17773,6 +17777,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	box-shadow: none;
 	background-image: none;
 	font-size: 16px;
+	opacity: inherit;
 }
 
 .catma .actiongrid {
@@ -17780,6 +17785,29 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	display: flex;
 	flex-direction: column;
 	margin: 10px;
+	font-size: 16px;
+}
+
+.catma .v-grid button.v-nativebutton {
+	border: none;
+	background: transparent;
+	opacity: 0.54;
+	cursor: pointer;
+	justify-content: center;
+	box-shadow: none;
+	font-size: 16px;
+	color: black;
+	display: flex;
+}
+
+.catma .v-grid button.v-nativebutton:focus {
+	outline: none;
+	background-color: none;
+}
+
+.catma .v-grid button.v-nativebutton:focus:after, .catma .v-grid button.v-nativebutton:after {
+	border: none;
+	box-shadow: none;
 }
 
 .catma .actiongrid__hidethead thead {
@@ -17811,6 +17839,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	display: flex;
 	justify-content: center;
 	align-items: center;
+}
+
+.catma .actiongrid__bar {
+	background-color: #e0e0e0;
+	color: rgba(0, 0, 0, 0.87);
+	padding: 14px;
 }
 
 .catma centered-icon {
