@@ -93,7 +93,7 @@ import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
 
 public class GraphProjectHandler {
-	
+
 	public static interface TagInstanceSynchHandler {
 		public void synch(String collectionId, List<TagReference> tagReferences) throws Exception;
 		public void synch(String collectionId, String deletedTagInstanceId) throws Exception;
@@ -324,6 +324,35 @@ public class GraphProjectHandler {
 		    .build();
     	
     	scheduler.scheduleJob(jobDetail, trigger);
+	}
+
+	public int getSourceDocumentsCount(String rootRevisionHash) throws Exception {
+		final int[] result = {0};
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				StatementResult statementResult = session.run(
+						"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"+""
+								+ "(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+								+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasDocument)+"]->"
+								+ "(s:"+nt(SourceDocument)+") "
+								+ "RETURN count(s) as counter ",
+						Values.parameters(
+								"pUserId", user.getIdentifier(),
+								"pProjectId", projectReference.getProjectId(),
+								"pRootRevisionHash", rootRevisionHash
+						)
+				);
+
+				while (statementResult.hasNext()) {
+					Record record = statementResult.next();
+					Value value = record.get("counter");
+					result[0] = value.asInt();
+				}
+			}
+
+		});
+		return result[0];
 	}
 
 	public Collection<SourceDocument> getSourceDocuments(String rootRevisionHash) throws Exception {
@@ -765,6 +794,35 @@ public class GraphProjectHandler {
 		
 		
 		return tagsets;
+	}
+
+	public int getTagsetsCount(String rootRevisionHash) throws Exception {
+		final int[] result = {0};
+
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				StatementResult statementResult = session.run(
+						"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+								+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+								+ "(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+								+ "(ts:"+nt(Tagset)+") "
+								+ "RETURN count(ts) as counter",
+						Values.parameters(
+								"pUserId", user.getIdentifier(),
+								"pProjectId", projectReference.getProjectId(),
+								"pRootRevisionHash", rootRevisionHash
+						)
+				);
+
+				while (statementResult.hasNext()) {
+					Record record = statementResult.next();
+					Value value = record.get("counter");
+					result[0] = value.asInt();
+				}
+			}
+		});
+		return result[0];
 	}
 
 	private PropertyDefinition createPropertyDefinition(Node propertyNode) {

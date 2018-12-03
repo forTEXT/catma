@@ -21,18 +21,18 @@ package de.catma.ui;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
+import com.vaadin.data.HasValue.ValueChangeEvent;
+import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.ui.Alignment;
-import com.vaadin.v7.data.Property.ValueChangeEvent;
-import com.vaadin.v7.data.Property.ValueChangeListener;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.Label;
-import com.vaadin.v7.ui.Slider.ValueOutOfBoundsException;
-import com.vaadin.v7.ui.VerticalLayout;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Slider.ValueOutOfBoundsException;
 
 
 public class Slider extends VerticalLayout {
 
-	private com.vaadin.v7.ui.Slider sliderComp;
+	private com.vaadin.ui.Slider sliderComp;
 	private Label minLabel;
 	private Label maxLabel;
 	private NumberFormat formatter;
@@ -57,7 +57,7 @@ public class Slider extends VerticalLayout {
 		setSizeUndefined();
 		HorizontalLayout sliderLayout = new HorizontalLayout();
 		sliderLayout.setSpacing(true);
-		this.sliderComp = new com.vaadin.v7.ui.Slider(min, max);
+		this.sliderComp = new com.vaadin.ui.Slider(min, max);
 		minLabel = new Label(formatter.format(min));
 		maxLabel = new Label(formatter.format(max));
 		
@@ -76,12 +76,12 @@ public class Slider extends VerticalLayout {
 		addComponent(current);
 		setComponentAlignment(current, Alignment.MIDDLE_CENTER);
 		
-		sliderComp.addValueChangeListener(new ValueChangeListener() {
+		sliderComp.addValueChangeListener(new ValueChangeListener<Double>() {
 			
-			public void valueChange(ValueChangeEvent event) {
+			public void valueChange(ValueChangeEvent<Double> event) {
 				current.setValue(
 					Slider.this.formatter.format(
-						(Double)event.getProperty().getValue())
+						event.getValue())
 						+ (unit.isEmpty()?"":" ")  //$NON-NLS-1$ //$NON-NLS-2$
 						+ unit);
 			}
@@ -107,7 +107,7 @@ public class Slider extends VerticalLayout {
 		return sliderComp.getValue();
 	}
 
-	public void addValueListener(ValueChangeListener listener) {
+	public void addValueListener(ValueChangeListener<Double> listener) {
 		sliderComp.addValueChangeListener(listener);
 	}
 
@@ -115,8 +115,4 @@ public class Slider extends VerticalLayout {
 		sliderComp.setValue(value);
 	}
 
-	public void setImmediate(boolean immediate) {
-		sliderComp.setImmediate(immediate);
-	}
-	
 }

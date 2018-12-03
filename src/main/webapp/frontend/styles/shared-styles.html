@@ -1,3 +1,12 @@
+<dom-module id="actiongrid" theme-for="vaadin-grid">
+    <template>
+        <style>
+            :host(.actiongrid__hidethead) thead#header {
+                display: none;
+            }
+        </style>
+    </template>
+</dom-module>
 <custom-style>
     <!-- This is where your App's styling should go. You can use .css files too. -->
     <style>
@@ -11,9 +20,12 @@
             /* Avoid horizontal scrollbars, mainly on IE11 */
             overflow-x: hidden;
             background-color: var(--lumo-contrast-5pct);
+            height:100%;
+            width: 100%;
         }
 
-        .main-layout {
+        /* main views */
+        .main-view {
             display: flex;
             flex-direction: column;
             width: 100%;
@@ -22,140 +34,242 @@
             max-width: 1960px;
             margin: 0 auto;
         }
-        .main-layout__title {
-            font-size: 1em;
-            margin: 0;
-            /* Allow the nav-items to take all the space so they are centered */
-            width: 0;
-            line-height: 1;
-            letter-spacing: -0.02em;
-            font-weight: 500;
-        }
 
-        .main-layout > * {
-            flex: auto;
-        }
-
-        .main-layout__header {
+        .main-section {
+            flex-direction: row;
             display: flex;
-            flex: none;
+            flex-grow: 1;
+        }
+
+        /* Header */
+        header {
+            background-color: #0c719a;
+            color: white;
+            padding: 0.5em;
+            height: 56px;
+            display: flex;
             align-items: center;
-            height: var(--main-layout-header-height);
-
-            /* Stretch to fill the entire browser viewport, while keeping the content constrained to
-               parent element max-width */
-            margin: 0 calc(-50vw + 50%);
-            padding: 0 calc(50vw - 50% + 16px);
-
-            background-color: var(--lumo-base-color);
-            box-shadow: 0 1px 0 0 var(--lumo-contrast-5pct);
         }
 
-
-        .main-layout__leftPanel {
-            display: flex;
-            flex-direction: column;
-            width: 13%;
-            height: 100%;
-            min-height: 100vh;
-            max-width: 160px;
-            margin-left: 0px;
-            margin-right: 0px;
-            margin-top:0px;
-            background-color: #d5d8d2;
-            padding-right: 0px;
-            padding-left: 0px;
-        }
-        .main-layout__rightPanel{
-            display: flex;
-            flex-direction: column;
-            width: 87%;
-            height: 100%;
-            min-height: 100vh;
-            max-width: 960px;
-            margin-left: 0px;
-            margin-right: 0px;
-            margin-top:0px;
-            background-color: #d5d8d2;
-            padding-right: 0px;
-            padding-left: 0px;
-
-        }
-
-        .main-layout_big_angular_btn {
-            background-color: #00b8e6;
-            height: 70px;
-            font-weight: 900;
-            color:white;
-            border-radius: 0px;
-            margin-top:0px;
-            margin-left: 0px;
-            margin-right: 0px;
-            padding: 0px;
-
-
-        }
-        .main-layout_menue_btn{
-            background-color: inherit ;
-            color: #000000;
-            width: 100%;
-        }
-        .main-layout__rightPanel {
-            display: flex;
-            flex-direction: column;
-            width: 80%;
-            height: 100%;
-            min-height: 100vh;
-            max-width: 860px;
-            margin: 0 auto;
-        }
-
-        .main-layout__nav {
-            display: flex;
-            flex: 1;
-            justify-content: center;
-        }
-
-        .main-layout__nav-item {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 4px 8px;
-            cursor: pointer;
-            transition: 0.3s color, 0.3s transform;
-            will-change: transform;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            font-size: var(--lumo-font-size-s);
-            color: var(--lumo-secondary-text-color);
-            font-weight: 500;
-            line-height: 1.3;
-        }
-
-        .main-layout__nav-item:hover {
+        header a {
+            color: white;
             text-decoration: none;
         }
 
-        .main-layout__nav-item:not([highlight]):hover {
-            color: inherit;
+        header a:hover {
+            text-decoration: none;
         }
 
-        .main-layout__nav-item[highlight] {
-            color: var(--lumo-primary-text-color);
-            cursor: default;
+        header h1, header h2, header h3, header h4, header h5, header h6 {
+            margin: 0em;
         }
 
-        .main-layout__nav-item iron-icon {
-            /* Vaadin icons are using a 16x16 grid */
-            padding: 4px;
-            box-sizing: border-box;
-            pointer-events: none;
+        header .header__context {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        header .header__version {
+            width: 160px;
+        }
+
+        /* Navigation */
+        nav {
+            flex-direction: column;
+            display: flex;
+            align-items: center;
+            background-color: #e0e0e0;
+            flex-grow: 1;
+            padding: 1em;
+            width: 160px;
+        }
+
+        nav a {
+            margin-left: 20px;
+            margin-right: 20px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            color: var(--lumo-body-text-color);
+        }
+
+        nav h3 {
+            color: var(--lumo-disabled-text-color);
+
+        }
+
+        nav a:hover {
+            text-decoration: none;
         }
 
 
+        .view-section {
+            flex-direction: row;
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+            background-color: #808080;
+        }
 
+        .dialog__bg {
+          border-radius: 2px;
+          box-shadow: 0 19px 38px 0 rgba(0, 0, 0, 0.3), 0 15px 12px 0 rgba(0, 0, 0, 0.22);
+          border-style: solid;
+          border-width: 0.5px;
+          border-image-source: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4) 5%, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0));
+          border-image-slice: 1;
+          background-color: #fafafa;
+          background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4) 5%, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0));
+          background-origin: border-box;
+          background-clip: content-box, border-box;
+          margin:20px;
+          width: 100%;
+        }
+
+        /* buttons */
+        .button__icon {
+            border: none;
+            background: transparent;
+            opacity: 0.54;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+        }
+
+        .button__icon:focus {
+            outline: none;
+        }
+        /* Huge card */
+        .hugecard {
+          flex-direction: column;
+          display: flex;
+          flex-grow: 1;
+          width: 100%;
+          height: 100%;
+        }
+
+        .hugecard__bar {
+            align-items:center;
+            background-color: #23a2cc;
+            color: white;
+            flex-direction: row;
+            display: flex;
+            padding: 0.75em;
+            font-weight: 500;
+        }
+
+        .hugecard__bar__moreoptions {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .hugecard__bar__moreoptions__btn {
+            color: white;
+            background-color: transparent;
+            border:none;
+            cursor: pointer;
+        }
+
+
+        /* actiongrid */
+
+        .actiongrid {
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .actiongrid vaadin-grid-cell-content {
+            padding: 0px;
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
+
+        .actiongrid flow-component-renderer {
+            flex-grow: 1;
+        }
+
+        .actiongrid vaadin-grid-tree-toggle {
+            margin-left: 0;
+        }
+
+        .actiongrid combined-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .actiongrid__bar {
+            margin-left: 1em;
+        }
+
+        centered-icon {
+            display: flex;
+            justify-content: center;
+        }
+
+        .documentsgrid__doc {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .documentsgrid__doc__title {
+
+        }
+
+        .documentsgrid__doc__author {
+            font-size: 0.75em;
+            color: rgba(0, 0, 0, 0.54);
+        }
+
+        /* dashboard */
+
+        dashboard {
+            background-color: white;
+            width: 100%;
+        }
+
+        /*
+        * Projectlist in dashboard
+        */
+
+        .projectlist {
+            flex-wrap: wrap;
+        }
+
+        .projectlist vaadin-button {
+            background-color: transparent;
+        }
+
+        .projectlist .vaadin-button-container {
+            width: 500px;
+        }
+
+
+        .projectlist__card {
+            width: 352px;
+            border-radius: 4px;
+            background-color: #ffffff;
+            border: solid 1px rgba(151, 151, 151, 0.12);
+            margin: 10px;
+        }
+
+        .projectlist__card a {
+            text-decoration: none;
+            color: var(--lumo-body-text-color);
+        }
+
+        .projectlist__card__preview {
+            height: 176px;
+            background-color: #cdcdcd;
+            display: flex;
+            flex-direction: column;
+            padding: 0.5em;
+            cursor: pointer;
+        }
 
     </style>
 </custom-style>

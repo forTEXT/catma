@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
 
+import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.AccessMode;
 import de.catma.document.Corpus;
@@ -74,7 +75,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private String rootRevisionHash;
 	private GraphProjectHandler graphProjectHandler;
 	private String tempDir;
-	private BackgroundServiceProvider backgroundServiceProvider;
+	private BackgroundService backgroundService;
 
 	private boolean tagManagerListenersEnabled = true;
 
@@ -86,16 +87,16 @@ public class GraphWorktreeProject implements IndexedRepository {
 	private TagLibraryReference tagLibraryReference;
 	private GraphProjectIndexer indexer;
 
-	public GraphWorktreeProject(GitUser user, 
-			GitProjectHandler gitProjectHandler,
-			ProjectReference projectReference,
-			TagManager tagManager,
-			BackgroundServiceProvider backgroundServiceProvider) {
+	public GraphWorktreeProject(GitUser user,
+								GitProjectHandler gitProjectHandler,
+								ProjectReference projectReference,
+								TagManager tagManager,
+								BackgroundService backgroundService) {
 		this.user = user;
 		this.gitProjectHandler = gitProjectHandler;
 		this.projectReference = projectReference;
 		this.tagManager = tagManager;
-		this.backgroundServiceProvider = backgroundServiceProvider;
+		this.backgroundService = backgroundService;
 		this.propertyChangeSupport = new PropertyChangeSupport(this);
 		this.graphProjectHandler = 
 			new GraphProjectHandler(
@@ -586,8 +587,24 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
+	public Collection<TagsetDefinition> getTagsets() throws Exception {
+		return graphProjectHandler.getTagsets( this.rootRevisionHash);
+	}
+
+	@Override
+	public int getTagsetsCount() throws Exception {
+		return graphProjectHandler.getTagsetsCount( this.rootRevisionHash);
+	}
+
+
+	@Override
 	public Collection<SourceDocument> getSourceDocuments() throws Exception {
 		return graphProjectHandler.getSourceDocuments( this.rootRevisionHash);
+	}
+
+	@Override
+	public int getSourceDocumentsCount() throws Exception {
+		return graphProjectHandler.getSourceDocumentsCount( this.rootRevisionHash);
 	}
 
 	@Override
@@ -839,18 +856,20 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
+	@Deprecated
 	public Collection<TagLibraryReference> getTagLibraryReferences() {
 
 		return Collections.singleton(this.tagLibraryReference);
 	}
 
-	public TagLibrary getTagLibrary() {
+	private TagLibrary getTagLibrary() {
 		//TODO: 
 
 		return tagManager.getTagLibrary(this.tagLibraryReference);
 	}
 	
 	@Override
+	@Deprecated
 	public TagLibrary getTagLibrary(TagLibraryReference tagLibraryReference) throws IOException {
 		// TODO:
 		return getTagLibrary();

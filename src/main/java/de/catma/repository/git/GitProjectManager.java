@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+import de.catma.backgroundservice.BackgroundService;
 import org.apache.commons.io.FileUtils;
 
 import de.catma.Pager;
@@ -27,7 +29,8 @@ public class GitProjectManager implements ProjectManager {
 	private final IRemoteGitServerManager remoteGitServerManager;
 
 	private final IDGenerator idGenerator;
-	private String gitBasedRepositoryBasePath;
+    private final BackgroundService backgroundService;
+    private String gitBasedRepositoryBasePath;
 	private GitUser user;
 
 	private static final String PROJECT_ROOT_REPOSITORY_NAME_FORMAT = "%s_root";
@@ -37,13 +40,15 @@ public class GitProjectManager implements ProjectManager {
 	}
 
 	public GitProjectManager(
-			String gitBasedRepositoryBasePath,
-			Map<String, String>	userIdentification) 
+            String gitBasedRepositoryBasePath,
+            Map<String, String>	userIdentification,
+            BackgroundService backgroundService)
 					throws IOException {
 		this.gitBasedRepositoryBasePath = gitBasedRepositoryBasePath;
 		this.remoteGitServerManager = 
 				new GitLabServerManager(
 					userIdentification);
+		this.backgroundService = backgroundService;
 		this.user = new GitUser(((GitLabServerManager) this.remoteGitServerManager).getGitLabUser());
 		this.localGitRepositoryManager = new JGitRepoManager(this.gitBasedRepositoryBasePath, this.user);
 
@@ -126,6 +131,16 @@ public class GitProjectManager implements ProjectManager {
 	}
 
 	@Override
+	public List<de.catma.user.User> getProjectMembers(String projectId) throws Exception {
+		return remoteGitServerManager.getProjectMembers(Objects.requireNonNull(projectId));
+	}
+
+	@Override
+	public ProjectReference findProjectReferenceById(String projectId) throws IOException {
+		return remoteGitServerManager.findProjectReferenceById(Objects.requireNonNull(projectId));
+	}
+
+	@Override
 	public ProjectReference createProject(String name, String description) throws Exception {
 		String projectId = create(name, description);
 		
@@ -134,12 +149,11 @@ public class GitProjectManager implements ProjectManager {
 
 	@Override
 	public void openProject(
-			ProjectReference projectReference, 
-			OpenProjectListener openProjectListener, 
-			BackgroundServiceProvider backgroundServiceProvider) {
+			ProjectReference projectReference,
+			OpenProjectListener openProjectListener) {
 		try {
-			cloneRootLocallyIfNotExists(projectReference, openProjectListener);
-			Repository project = 
+
+			Repository project =
 				new GraphWorktreeProject(
 						this.user,
 						new GitProjectHandler(
@@ -149,7 +163,7 @@ public class GitProjectManager implements ProjectManager {
 							this.remoteGitServerManager),
 						projectReference,
 						new TagManager(),
-						backgroundServiceProvider);
+                        backgroundService);
 			
 			
 
@@ -172,7 +186,8 @@ public class GitProjectManager implements ProjectManager {
 				.toFile()
 				.exists();
 	}
-	
+
+	//TODO: make this part of accepting new project membership
 	private void cloneRootLocallyIfNotExists(ProjectReference projectReference, OpenProjectListener openProjectListener) throws Exception {
 		if (!Paths.get(new File(this.gitBasedRepositoryBasePath).toURI())
 			.resolve(user.getIdentifier())

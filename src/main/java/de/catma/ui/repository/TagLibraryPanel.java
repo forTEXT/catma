@@ -80,6 +80,7 @@ import de.catma.ui.repository.sharing.SharingOptionsFieldFactory;
 import de.catma.util.CloseSafe;
 import nu.xom.ParsingException;
 
+@Deprecated
 public class TagLibraryPanel extends HorizontalSplitPanel {
 
 	private final static String SORTCAP_PROP = "SORTCAP"; //$NON-NLS-1$
