@@ -23,12 +23,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.vaadin.v7.data.Property.ValueChangeEvent;
-import com.vaadin.v7.data.Property.ValueChangeListener;
+import com.vaadin.data.HasValue.ValueChangeEvent;
+import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.VerticalLayout;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.VerticalLayout;
 
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.computation.Distribution;
@@ -70,7 +70,7 @@ public class DistributionChartView extends VerticalLayout implements ClosableTab
 	}
 
 	private void initActions() {
-		zoom.addValueListener(new ValueChangeListener() {
+		zoom.addValueListener(new ValueChangeListener<Double>() {
 			
 			@Override
 			public void valueChange(ValueChangeEvent event) {

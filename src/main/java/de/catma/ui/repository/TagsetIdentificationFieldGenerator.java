@@ -2,10 +2,10 @@ package de.catma.ui.repository;
 
 import java.util.Arrays;
 
+import com.vaadin.ui.Component;
 import com.vaadin.v7.data.Item;
 import com.vaadin.v7.ui.AbstractSelect.ItemCaptionMode;
 import com.vaadin.v7.ui.ComboBox;
-import com.vaadin.ui.Component;
 import com.vaadin.v7.ui.Field;
 
 import de.catma.heureclea.autotagger.TagsetIdentification;

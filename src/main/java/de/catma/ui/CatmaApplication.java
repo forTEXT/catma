@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.eventbus.EventBus;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Theme;
 import com.vaadin.server.ExternalResource;
@@ -81,6 +82,10 @@ import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.analyzer.QueryOptionsProvider;
 import de.catma.ui.authentication.AuthenticationHandler;
 import de.catma.ui.component.HTMLNotification;
+import de.catma.ui.events.routing.RouteToDashboardEvent;
+import de.catma.ui.events.routing.RouteToProjectEvent;
+import de.catma.ui.modules.main.ErrorLogger;
+import de.catma.ui.modules.main.MainView;
 import de.catma.ui.project.ProjectManagerView;
 import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
@@ -89,7 +94,8 @@ import de.catma.user.User;
 //@Push(PushMode.MANUAL)
 @Theme("catma")
 @PreserveOnRefresh
-public class CatmaApplication extends UI implements BackgroundServiceProvider, AnalyzerProvider, LoginToken, ParameterProvider {
+public class CatmaApplication extends UI implements 
+	BackgroundServiceProvider, ErrorLogger, AnalyzerProvider, LoginToken, ParameterProvider {
 
 	private static final String MINORVERSION = "(build " + new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date()) //$NON-NLS-1$ //$NON-NLS-2$
 			+ ")"; //$NON-NLS-1$
@@ -120,6 +126,10 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 	private Button btloginLogout;
 	
 	private ProjectManagerView projectManagerView;
+	
+	private final EventBus eventBus = new EventBus();
+	
+//	private final MainView mainView = new MainView(new EventBus());
 
 	public CatmaApplication() {
 	}
@@ -304,7 +314,8 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 					ProjectManager projectManager = 
 						new GitProjectManager(
 							RepositoryPropertyKey.GitBasedRepositoryBasePath.getValue(),
-							userIdentification);
+							userIdentification,
+							backgroundService);
 					
 					User user = projectManager.getUser();
 										
@@ -320,6 +331,12 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 					projectManagerView = new ProjectManagerView(projectManager);
 					
 					contentPanel.setContent(projectManagerView);
+
+					// new design test
+					// TODO: set this correctly later :-)
+					MainView mainView = new MainView(projectManager, eventBus);
+//					setContent(mainView);
+					eventBus.post(new RouteToDashboardEvent());
 					
 				} catch (Exception e) {
 					showAndLogError(Messages.getString("CatmaApplication.errorSystemNotInitialized"), e); //$NON-NLS-1$
@@ -518,6 +535,7 @@ public class CatmaApplication extends UI implements BackgroundServiceProvider, A
 		super.close();
 	}
 
+	@Override
 	public void showAndLogError(String message, Throwable e) {
 		logger.log(Level.SEVERE, "[" + getUser() + "]" + message, e); //$NON-NLS-1$ //$NON-NLS-2$
 

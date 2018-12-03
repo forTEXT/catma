@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE ivy-module [
-	<!ENTITY vaadin.version "8.3.2">
+	<!ENTITY vaadin.version "8.6.2">
 ]>
 <ivy-module version="2.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -46,7 +46,11 @@
 
 		<dependency org="org.vaadin.addon" name="confirmdialog" rev="3.2.0" />
 		<dependency org="org.vaadin.addons" name="wizards-for-vaadin" rev="2.0.1" />
+		<dependency org="com.vaadin" name="vaadin-context-menu" rev="3.0.0" />
+		<dependency org="org.vaadin.addons" name="vaadin-sliderpanel" rev="2.2.0" />
+		<dependency org="com.github.appreciated" name="material" rev="1.1.8" />
 		
+
 		<dependency org="org.neo4j" name="neo4j-enterprise" rev="3.0.7"/>
 		<dependency org="org.antlr" name="antlr-runtime" rev="3.4"/>
 		<dependency org="c3p0" name="c3p0" rev="0.9.1.2"/>
@@ -55,7 +59,11 @@
 		<!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-classic -->
 		<dependency org="ch.qos.logback" name="logback-classic" rev="1.2.3"/>
 
-		<dependency org="com.google.guava" name="guava" rev="19.0" />
+		<dependency org="com.google.guava" name="guava" rev="26.0-jre" >
+			<exclude org="com.google.code.findbugs" name="jsr305" />
+		</dependency>
+		
+		<dependency org="com.github.appreciated" name="material" rev="1.1.8" />				
 		<dependency org="com.google.guava" name="guava-gwt" rev="19.0" conf="widgetset-compile->default" />
 
 		<dependency org="org.quartz-scheduler" name="quartz" rev="2.2.1"/>
@@ -103,7 +111,7 @@
 
 		<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
 		<dependency org="commons-io" name="commons-io" rev="2.6"/>
-
+		
 		<dependency org="de.catma" name="catma-core" rev="latest.integration" />
 	</dependencies>	
 </ivy-module>

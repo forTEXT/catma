@@ -1,11 +1,12 @@
 package de.catma.v10ui.authentication;
 
+import de.catma.user.UserProperty;
+
 import java.util.HashMap;
 import java.util.Map;
 
 //import de.catma.ui.Parameter;
 //import de.catma.ui.ParameterProvider;
-import de.catma.user.UserProperty;
 
 public class AuthenticationHandler {
 

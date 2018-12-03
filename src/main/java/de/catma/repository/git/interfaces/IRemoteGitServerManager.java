@@ -1,13 +1,12 @@
 package de.catma.repository.git.interfaces;
 
+import de.catma.Pager;
+import de.catma.project.ProjectReference;
+
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-
-import javax.annotation.Nullable;
-
-import de.catma.Pager;
-import de.catma.project.ProjectReference;
 
 public interface IRemoteGitServerManager {
 	class CreateRepositoryResponse {
@@ -41,10 +40,13 @@ public interface IRemoteGitServerManager {
 	int createUser(String email, String username, @Nullable String password,
 				   String name, @Nullable Boolean isAdmin)
 			throws IOException;
-	
+
 	Pager<ProjectReference> getProjectReferences() throws IOException;
-	
+
+	ProjectReference findProjectReferenceById(String projectId) throws IOException;
+
 	String getUsername();
+
 	String getPassword();
 
 	String getEmail();
@@ -52,4 +54,6 @@ public interface IRemoteGitServerManager {
 	Set<String> getProjectRepositoryUrls(ProjectReference projectReference) throws IOException;
 
 	String getProjectRootRepositoryUrl(ProjectReference projectReference) throws IOException;
+
+	List<de.catma.user.User> getProjectMembers(String projectId) throws Exception;
 }

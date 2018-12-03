@@ -460,12 +460,12 @@ public class MarkupResultPanel extends VerticalLayout {
 			}
 		});
 		
-		kwicSizeSlider.addValueListener(new ValueChangeListener() {
+		kwicSizeSlider.addValueListener(new com.vaadin.data.HasValue.ValueChangeListener<Double>() {
 			
 			@Override
-			public void valueChange(ValueChangeEvent event) {
+			public void valueChange(com.vaadin.data.HasValue.ValueChangeEvent<Double> event) {
 				try {
-					Double kwicSize = (Double) event.getProperty().getValue();
+					Double kwicSize = (Double) event.getValue();
 					kwicPanel.setKwicSize(kwicSize.intValue());
 				}
 				catch (Exception e) {

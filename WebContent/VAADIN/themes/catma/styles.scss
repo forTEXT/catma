@@ -202,6 +202,10 @@
 		display: none;
 	}
 	
+	.c-slider {
+		padding: unset;
+	}
+	
 	.v-button-primary-button {
 		background: #5A98A1;
 		border: 1px solid #5A98A1;
@@ -487,4 +491,345 @@
     	padding-left: 1px;
     	padding-right: 1px;
     }
+    
+
+    
+    /*New layout*/
+      /* main views */
+        .main-view {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            min-height: 100vh;
+            max-width: 1960px;
+            margin: 0 auto;
+        }
+
+        .main-section {
+            flex-direction: row;
+            display: flex;
+            flex-grow: 1;
+        }
+
+        /* Header */
+        .header {
+            background-color: #0c719a;
+            color: white;
+            padding: 0.5em;
+            height: 56px;
+            display: flex;
+            align-items: center;
+        }
+
+        .header .v-button {
+            color: white;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .header .v-button:hover {
+            text-decoration: none;
+        }
+
+        .header .h1, .header .h2, .header .h3, .header .h4, .header .h5, .header .h6 {
+            margin: 0em;
+        }
+        		
+		.header .h3 { font-size: 1.5em; }
+        
+        .header__context {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .header__version {
+            width: 160px;
+        }
+
+        /* Navigation */
+        .nav {
+            flex-direction: column;
+            display: flex;
+            align-items: center;
+            background-color: #e0e0e0;
+            color: rgba(0, 0, 0, 0.87);
+            flex-grow: 1;
+            width: 160px;
+        }
+        
+        .nav div:first-child {
+        	margin-top: 20px;
+        }
+        
+		.nav .v-label {
+			margin-left: 20px;
+            margin-right: 20px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding:0px;
+            height: 32px;
+		}
+        .nav .v-button {
+            margin-left: 20px;
+            margin-right: 20px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            text-decoration: none;
+            cursor: pointer;           
+            color: var(--lumo-body-text-color);
+            padding:0px;
+        }
+
+        .nav .h3 {
+            color: var(--lumo-disabled-text-color);
+            font-size: 1.5em;
+        }
+
+        .nav .v-button:hover {
+            text-decoration: none;
+        }
+
+
+        .view-section {
+            flex-direction: row;
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+            background-color: #808080;
+        }
+
+        .dialog__bg {
+          border-radius: 2px;
+          box-shadow: 0 19px 38px 0 rgba(0, 0, 0, 0.3), 0 15px 12px 0 rgba(0, 0, 0, 0.22);
+          border-style: solid;
+          border-width: 0.5px;
+          border-image-source: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4) 5%, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0));
+          border-image-slice: 1;
+          background-color: #fafafa;
+          background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4) 5%, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0));
+          background-origin: border-box;
+          background-clip: content-box, border-box;
+          margin:20px;
+          width: 100%;
+        }
+
+        /* buttons */
+        .button__icon {
+            border: none;
+            background: transparent;
+            opacity: 0.54;
+            cursor: pointer;
+            justify-content: center;
+            box-shadow: none;
+            font-size: 16px;
+            color: rgb(0, 0, 0);
+            display:flex;
+        }
+
+        .button__icon:focus {
+            outline: none;
+            background-color:none
+        }
+        
+        .button__icon:focus:after,.button__icon:after {
+            border: none; 
+    		box-shadow: none;
+        }
+                
+        /* Huge card */
+        .hugecard {
+          flex-direction: column;
+          display: flex;
+          flex-grow: 1;
+          margin: 20px;
+    	  background-color: white;
+        }
+        
+        .hugecard__bar + div {
+        	overflow: auto;
+        }
+
+        .hugecard__bar {
+            align-items:center;
+            background-color: #23a2cc;
+            color: white;
+            flex-direction: row;
+            display: flex;
+            padding: 0.75em;
+            font-weight: 500;
+        }
+        
+		.hugecard__bar > .v-label {
+		    font-size: 1.2em;
+		    font-weight: 500;
+		}
+
+        .hugecard__bar__moreoptions {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .hugecard__bar__moreoptions__btn {
+            color: white;
+            background-color: transparent;
+            border:none;
+            cursor: pointer;
+            box-shadow: none;
+		    background-image: none;
+		    font-size: 16px;
+        }
+
+
+        /* actiongrid */
+
+        .actiongrid {
+            min-width: 400px;
+            display: flex;
+            flex-direction: column;
+            margin: 10px;
+        }
+
+		.actiongrid__hidethead thead {
+            display: none;
+         }
+         
+        /* .actiongrid .v-grid-cell {
+            padding: 0px;
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }*/
+
+		/* remove border in actiongrids */
+		.actiongrid .v-grid-row > td, .actiongrid .v-grid-editor-cells > div, .actiongrid .v-grid-cell.frozen {
+			border-left: none;
+			border-bottom: none;
+			display: flex;
+			align-items: center;
+		}
+		
+		.actiongrid .v-grid-cell div.component-wrap {
+		    display: flex;
+		    align-items: center;
+		    justify-content: center;
+		}
+		
+        .actiongrid flow-component-renderer {
+            flex-grow: 1;
+        }
+
+        .actiongrid vaadin-grid-tree-toggle {
+            margin-left: 0;
+        }
+
+        .actiongrid combined-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .actiongrid__bar {
+          /*  margin-left: 1em; */
+        }
+
+        centered-icon {
+            display: flex;
+            justify-content: center;
+        }
+
+        .documentsgrid__doc {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .documentsgrid__doc__title {
+
+        }
+
+        .documentsgrid__doc__author {
+            font-size: 0.75em;
+            color: rgba(0, 0, 0, 0.54);
+        }
+
+        /* dashboard */
+
+        .dashboard-view {
+            background-color: white;
+            width: 100%;
+            overflow: auto;
+        }
+
+        /*
+        * Projectlist in dashboard
+        */
+
+        .projectlist {
+            flex-wrap: wrap;
+        }
+
+        .projectlist vaadin-button {
+            background-color: transparent;
+        }
+
+        .projectlist .vaadin-button-container {
+            width: 500px;
+        }
+
+
+        .projectlist__card {
+            width: 352px;
+            border-radius: 4px;
+            background-color: #ffffff;
+            border: solid 1px rgba(151, 151, 151, 0.12);
+            margin: 10px;
+            padding: 0px;
+        }
+
+        .projectlist__card a {
+            text-decoration: none;
+            color: var(--lumo-body-text-color);
+        }
+
+        .projectlist__card__preview {
+            height: 176px;
+            background-color: #cdcdcd;
+            display: flex;
+            flex-direction: column;
+            padding: 0.5em;
+            cursor: pointer;
+        }
+        .projectlist__card__descriptionbar {
+        	padding-left: 1em;
+   			padding-bottom: 0.25em;
+        }
+
+
+
+
+    .annotate-tag-tree-item {
+    	width: 15px;
+    	height: 100%;
+    }
+    
+    .annotate-tagsets-grid button {
+		background-color: white;
+		border: none;    
+    }
+    
+    .annotate-right-padding {
+    	padding-right: 3px;
+    }
+    
+    .annotate-properties-details-tree {
+    }
+    
+    .annotate-properties-details-tree .v-captiontext {
+    	font-size: smaller;
+    }
+
+
 }

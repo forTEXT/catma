@@ -30,17 +30,23 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.vaadin.server.FontAwesome;
+import org.vaadin.sliderpanel.SliderPanel;
+import org.vaadin.sliderpanel.SliderPanelBuilder;
+import org.vaadin.sliderpanel.client.SliderMode;
+
+import com.vaadin.data.HasValue.ValueChangeEvent;
+import com.vaadin.data.HasValue.ValueChangeListener;
+import com.vaadin.icons.VaadinIcons;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.CheckBox;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.Slider.ValueOutOfBoundsException;
 import com.vaadin.ui.UI;
-import com.vaadin.v7.data.Property.ValueChangeEvent;
-import com.vaadin.v7.data.Property.ValueChangeListener;
-import com.vaadin.v7.ui.CheckBox;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.Slider.ValueOutOfBoundsException;
-import com.vaadin.v7.ui.VerticalLayout;
+import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.Corpus;
 import de.catma.document.Range;
@@ -70,6 +76,7 @@ import de.catma.ui.tagger.MarkupPanel.TagInstanceSelectedListener;
 import de.catma.ui.tagger.Tagger.TaggerListener;
 import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedEvent;
 import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedListener;
+import de.catma.ui.tagger.annotationpanel.AnnotationPanel;
 import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
@@ -77,7 +84,7 @@ import de.catma.ui.tagger.pager.PagerComponent.PageChangeListener;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
 import de.catma.util.Pair;
 
-public class TaggerView extends VerticalLayout 
+public class TaggerView extends HorizontalLayout 
 	implements TaggerListener, ClosableTab {
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -98,7 +105,7 @@ public class TaggerView extends VerticalLayout
 	private PropertyChangeListener tagReferencesChangedListener;
 	private int approxMaxLineLength;
 	private int maxPageLengthInLines = 30;
-	private int initialSplitterPositionInPixels = 725;
+	private int initialSplitterPositionInPixels = 785;
 	
 	private TaggerHelpWindow taggerHelpWindow = new TaggerHelpWindow();
 	private CheckBox cbTraceSelection;
@@ -256,11 +263,11 @@ public class TaggerView extends VerticalLayout
 				tagger.removeHighlights();
 			}
 		});
-		cbTraceSelection.addValueChangeListener(new ValueChangeListener() {
+		cbTraceSelection.addValueChangeListener(new ValueChangeListener<Boolean>() {
 			
 			@Override
-			public void valueChange(ValueChangeEvent event) {
-				Boolean traceSelection = (Boolean) event.getProperty().getValue();
+			public void valueChange(ValueChangeEvent<Boolean> event) {
+				Boolean traceSelection = event.getValue();
 				tagger.setTraceSelection(traceSelection);
 			}
 		});
@@ -279,9 +286,9 @@ public class TaggerView extends VerticalLayout
 		}
 	});
 		
-		linesPerPageSlider.addValueListener(new ValueChangeListener() {
+		linesPerPageSlider.addValueListener(new ValueChangeListener<Double>() {
 			
-			public void valueChange(ValueChangeEvent event) {
+			public void valueChange(ValueChangeEvent<Double> event) {
 				Double perCentValue = (Double)linesPerPageSlider.getValue();
 				int lines = (int)((totalLineCount/100.0)*perCentValue);
 				
@@ -322,14 +329,14 @@ public class TaggerView extends VerticalLayout
 	}
 
 	private void initComponents() {
-
 		setSizeFull();
 		
 		VerticalLayout taggerPanel = new VerticalLayout();
 		taggerPanel.setSizeFull();
 		taggerPanel.setSpacing(true);
+		taggerPanel.setMargin(new MarginInfo(true, true, true, false));
 
-		btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
+		btHelp = new Button(VaadinIcons.QUESTION_CIRCLE);
 		btHelp.addStyleName("help-button"); //$NON-NLS-1$
 		
 		IndexInfoSet indexInfoSet = 
@@ -373,17 +380,16 @@ public class TaggerView extends VerticalLayout
 		actionPanel.addComponent(btAnalyzeNew);
 		
 		linesPerPageSlider =  new Slider(null, 1, 100, Messages.getString("TaggerView.percentPageSize")); //$NON-NLS-1$
-		linesPerPageSlider.setImmediate(true);
 		linesPerPageSlider.setWidth("150px"); //$NON-NLS-1$
 		actionPanel.addComponent(linesPerPageSlider);
 		
 		cbTraceSelection = new CheckBox();
-		cbTraceSelection.setIcon(FontAwesome.OBJECT_GROUP);
+		cbTraceSelection.setIcon(VaadinIcons.AREA_SELECT);
 		cbTraceSelection.setDescription(Messages.getString("TaggerView.allowMultipleDiscontSelectionsInfo")); //$NON-NLS-1$
 		actionPanel.addComponent(cbTraceSelection);
 		cbTraceSelection.addStyleName("tagger-trace-checkbox"); //$NON-NLS-1$
 
-		btClearSearchHighlights = new Button(FontAwesome.ERASER);
+		btClearSearchHighlights = new Button(VaadinIcons.ERASER);
 		btClearSearchHighlights.setDescription(Messages.getString("TaggerView.clearAllSearchHighlights")); //$NON-NLS-1$
 		actionPanel.addComponent(btClearSearchHighlights);
 		
@@ -422,9 +428,13 @@ public class TaggerView extends VerticalLayout
 				},
 				sourceDocument.getID());
 		
+		AnnotationPanel annotationPanel = new AnnotationPanel(project);
+		
 		final TaggerSplitPanel splitPanel = new TaggerSplitPanel();
 		splitPanel.addComponent(taggerPanel);
-		splitPanel.addComponent(markupPanel);
+//		splitPanel.addComponent(markupPanel);
+		splitPanel.addComponent(annotationPanel);
+		
 		splitPanel.setSplitPosition(initialSplitterPositionInPixels, Unit.PIXELS);
 		splitPanel.addStyleName("catma-tab-spacing"); //$NON-NLS-1$
 		
@@ -467,12 +477,37 @@ public class TaggerView extends VerticalLayout
 		splitPanel.addListener(SplitterPositionChangedEvent.class,
                 listener, SplitterPositionChangedListener.positionChangedMethod);
 		
+//		TreeData<SourceDocument> sourceDocsTreeData = new TreeData<>();
+//		
+//		Button btDrawer = new Button(VaadinIcons.GRID_SMALL);
+//		
+//		TreeGrid<SourceDocument> documents = new TreeGrid<>(new TreeDataProvider<>(sourceDocsTreeData));
+//		documents.setSizeFull();
+//		documents.addColumn(sd -> sd.toString());
+//		
+//		try {
+//			sourceDocsTreeData.addRootItems(project.getSourceDocuments());
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+//		PopupView drawer = new PopupView(VaadinIcons.GRID_SMALL.getHtml(), new Label("Test"));
+//		drawer.addStyleName("catma-drawer");
+//		drawer.setSizeFull();
+//		drawer.setWidth("100px");
+//		addComponent(btDrawer);
+		
+		SliderPanel drawer = new SliderPanelBuilder(new Label("Test")).mode(SliderMode.LEFT).expanded(false).build();
+		addComponent(drawer);
+		
 		addComponent(splitPanel);
+		setExpandRatio(splitPanel, 1.0f);
 	}
 	
 	public int getApproximateMaxLineLengthForSplitterPanel(float width){
 		// based on ratio of 80:550
-		int approxMaxLineLength = (int) (width * 0.145454);
+		int approxMaxLineLength = (int) (width * 0.135);
 		
 		return approxMaxLineLength;
 	}
