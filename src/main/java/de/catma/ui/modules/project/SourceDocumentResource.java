@@ -14,6 +14,10 @@ public class SourceDocumentResource implements Resource {
         return sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getAuthor();
     }
 
+    public SourceDocument getSourceDocument() {
+		return sourceDocument;
+	}
+    
     @Override
     public boolean hasDetail() {
         return true;

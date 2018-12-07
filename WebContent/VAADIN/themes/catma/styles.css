@@ -17648,7 +17648,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .actiongrid {
-	min-width: 400px;
+	min-width: 300px;
 	display: flex;
 	flex-direction: column;
 	margin: 10px;
@@ -17731,6 +17731,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	color: rgba(0, 0, 0, 0.54);
 }
 
+.catma .project-view-document-grid button {
+	background-color: transparent;
+	border: none;
+}
+
 .catma .dashboard-view {
 	background-color: white;
 	width: 100%;
@@ -17797,6 +17802,11 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .annotate-properties-details-tree .v-captiontext {
 	font-size: smaller;
+}
+
+.catma .annotate-resource-panel {
+	overflow: auto;
+	height: inherit;
 }
 
 .catma .annotate-resource-grid {

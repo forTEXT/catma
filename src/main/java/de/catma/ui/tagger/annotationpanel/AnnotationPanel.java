@@ -170,15 +170,15 @@ public class AnnotationPanel extends VerticalLayout {
 		tagsetsGrid.addStyleName(MaterialTheme.GRID_BORDERLESS);
 		
 		
-        ActionGridComponent<TreeGrid<TagTreeItem>> tagsetGridComponent = new ActionGridComponent<>(
-                tagsetsLabel,
-                tagsetsGrid
-        );
+//        ActionGridComponent<TreeGrid<TagTreeItem>> tagsetGridComponent = new ActionGridComponent<>(
+//                tagsetsLabel,
+//                tagsetsGrid
+//        );
         
-//		addComponent(tagsetsGrid);
-//		setExpandRatio(tagsetsGrid, 1.0f);
-        addComponent(tagsetGridComponent);
-        setExpandRatio(tagsetGridComponent, 1.0f);
+		addComponent(tagsetsGrid);
+		setExpandRatio(tagsetsGrid, 1.0f);
+//        addComponent(tagsetGridComponent);
+//        setExpandRatio(tagsetGridComponent, 1.0f);
 		tagsetsGrid.setDetailsGenerator(new DetailsGenerator<TagTreeItem>() {
 			
 			@Override

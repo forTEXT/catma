@@ -3,8 +3,12 @@ package de.catma.ui.tagger.resourcepanel;
 import java.util.Collection;
 
 import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
+import com.vaadin.icons.VaadinIcons;
+import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
+import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.VerticalLayout;
@@ -15,6 +19,7 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
+import de.catma.tag.TagsetDefinition;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 
 public class ResourcePanel extends VerticalLayout {
@@ -22,6 +27,7 @@ public class ResourcePanel extends VerticalLayout {
 	private Repository project;
 	private TreeGrid<DocumentTreeItem> documentTree;
 	private TreeData<DocumentTreeItem> documentsData;
+	private Grid<TagsetDefinition> tagsetGrid;
 
 	public ResourcePanel(Repository project, SourceDocument currentlySelectedSourceDocument) {
 		super();
@@ -48,6 +54,11 @@ public class ResourcePanel extends VerticalLayout {
 			}
 			
 			documentTree.setDataProvider(new TreeDataProvider<>(documentsData));
+			
+			ListDataProvider<TagsetDefinition> tagsetData = new ListDataProvider<>(project.getTagsets());
+			tagsetGrid.setDataProvider(tagsetData);
+			tagsetData.getItems().forEach(tagsetGrid::select);
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -55,6 +66,7 @@ public class ResourcePanel extends VerticalLayout {
 	}
 
 	private void initComponents() {
+		addStyleName("annotate-resource-panel");
 		Label documentTreeLabel = new Label("Documents & Annotations");
 		documentTree = new TreeGrid<>();
 		documentTree.addStyleName("annotate-resource-grid");
@@ -74,16 +86,37 @@ public class ResourcePanel extends VerticalLayout {
 			.addColumn(documentTreeItem -> documentTreeItem.getName())
 			.setCaption("Name")
 			.setExpandRatio(3);
+		documentTree.setWidth("400px");
+		documentTree.setHeight("250px");
+
 		
 		documentTree
 			.addColumn(documentTreeItem -> documentTreeItem.getIcon(), new HtmlRenderer());
-		
+
 		ActionGridComponent<TreeGrid<DocumentTreeItem>> documentActionGridComponent = 
 				new ActionGridComponent<TreeGrid<DocumentTreeItem>>(documentTreeLabel, documentTree);
 		
 		addComponent(documentActionGridComponent);
 		
+		Label tagsetLabel = new Label("Tagsets");
 		
+		tagsetGrid = new Grid<>();
+		tagsetGrid.addStyleName("annotate-resource-grid");
+		tagsetGrid.setSelectionMode(SelectionMode.MULTI);
+		tagsetGrid.setWidth("400px");
+		tagsetGrid.setHeight("230px");
+		tagsetGrid
+			.addColumn(tagset -> tagset.getName())
+			.setCaption("Name")
+			.setExpandRatio(2);
+		
+		tagsetGrid
+			.addColumn(tagset -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer());
+		
+		ActionGridComponent<Grid<TagsetDefinition>> tagsetActionGridComponent = 
+				new ActionGridComponent<Grid<TagsetDefinition>>(tagsetLabel, tagsetGrid);
+		
+		addComponent(tagsetActionGridComponent);
 	}
 
 	private void handleVisibilityClickEvent(RendererClickEvent<DocumentTreeItem> documentSelectionClick) {

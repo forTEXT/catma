@@ -34,6 +34,7 @@ import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
 import org.vaadin.sliderpanel.client.SliderMode;
 
+import com.github.appreciated.material.MaterialTheme;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.icons.VaadinIcons;
@@ -347,7 +348,9 @@ public class TaggerView extends HorizontalLayout
 		actionPanel.addComponent(pagerComponent);
 		
 		btAnalyze = new Button(Messages.getString("TaggerView.analyzeDocument")); //$NON-NLS-1$
-		btAnalyze.addStyleName("primary-button"); //$NON-NLS-1$
+		btAnalyze.addStyleName(MaterialTheme.BUTTON_FLAT);
+		btAnalyze.addStyleName(MaterialTheme.BUTTON_PRIMARY);
+		
 		btAnalyze.setEnabled(project instanceof IndexedRepository);
 		actionPanel.addComponent(btAnalyze);
 		
@@ -361,7 +364,7 @@ public class TaggerView extends HorizontalLayout
 		actionPanel.addComponent(cbTraceSelection);
 		cbTraceSelection.addStyleName("tagger-trace-checkbox"); //$NON-NLS-1$
 
-		btClearSearchHighlights = new Button(VaadinIcons.ERASER);
+		btClearSearchHighlights = new IconButton(VaadinIcons.ERASER);
 		btClearSearchHighlights.setDescription(Messages.getString("TaggerView.clearAllSearchHighlights")); //$NON-NLS-1$
 		actionPanel.addComponent(btClearSearchHighlights);
 		

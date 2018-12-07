@@ -691,7 +691,7 @@
         /* actiongrid */
 
         .actiongrid {
-            min-width: 400px;
+            min-width: 300px;
             display: flex;
             flex-direction: column;
             margin: 10px;
@@ -786,6 +786,11 @@
             color: rgba(0, 0, 0, 0.54);
         }
 
+		.project-view-document-grid button {
+			background-color: transparent;
+			border: none;   
+		}
+
         /* dashboard */
 
         .dashboard-view {
@@ -864,6 +869,11 @@
     
     .annotate-properties-details-tree .v-captiontext {
     	font-size: smaller;
+    }
+    
+    .annotate-resource-panel {
+		overflow: auto;
+		height: inherit;
     }
 
 	.annotate-resource-grid {
