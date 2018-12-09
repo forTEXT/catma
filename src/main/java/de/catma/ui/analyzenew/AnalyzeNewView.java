@@ -23,6 +23,7 @@ import com.vaadin.ui.ComboBox.NewItemHandler;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.Button.ClickEvent;
@@ -75,7 +76,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private Button distBt;
 	private Button wordCloudBt;
 	private Button networkBt;
-	private TextField searchInput;
+	private String searchInput= new String();
 	private ComboBox<String > queryComboBox;
 	private ResultPanelNew  queryResultPanel;
 	private HorizontalLayout resultAndVisualizationPanel;
@@ -138,12 +139,33 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		 
 		 	queryComboBox.addValueChangeListener(event -> {
          if (event.getSource().isEmpty()) {
-                 // show some message
+        	 Notification.show("Error",
+                     "query field is empty",
+                     Notification.Type.HUMANIZED_MESSAGE);
          } else {
         String predefQueryString= event.getSource().getValue();
-        searchInput.setValue(predefQueryString);
+        searchInput=predefQueryString;
+        Notification.show("Query",
+                "is : "+ searchInput.toString(),
+                Notification.Type.HUMANIZED_MESSAGE);
          }
      });
+		 	
+			
+/*		queryComboBox.addSelectionListener(new SingleSelectionListener<String>() {
+			@Override
+			public void selectionChange(SingleSelectionEvent<String> event) {
+			searchInput= (event.getValue().toString());
+				
+			}
+		});*/
+		
+		   queryComboBox.setNewItemHandler( new NewItemHandler() {
+				@Override
+				public void accept(String t) {	
+				searchInput =t;
+				}
+			});	
 		 	
 		 kwicBt.addClickListener(new ClickListener() {		
 			public void buttonClick(ClickEvent event) {
@@ -156,7 +178,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		 btExecuteSearch.addClickListener(new ClickListener() {
 				
 				public void buttonClick(ClickEvent event) {
-					searchInput.getValue().toString();
+					searchInput.toString();
 					
 				      // String predefQuery=  event.getSource().toString();
 			          // searchInput.setValue(predefQuery);
@@ -247,32 +269,23 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		HorizontalLayout searchRow = new HorizontalLayout();
 		searchRow.setWidth("100%");
 		
-		searchInput = new TextField();
+	
 		btQueryBuilder = new Button ("+ BUILD QUERY");
 		btQueryBuilder.setStyleName("body");
 		
 	
 		List<String> predefQueries = new ArrayList<>();
-		predefQueries.add(new String("tag=\"Tag1\""));
-		predefQueries.add(new String("wild = \"Blumen\""));
+		predefQueries.add(new String("tag=\"Tag%\""));
+		predefQueries.add(new String("tag = \"Tag1\""));
+		predefQueries.add(new String("wild = \"und\""));
+		predefQueries.add(new String("wild = \"Blumen%\""));
+		predefQueries.add(new String("wild = \"%\""));
+		
 		predefQueries.add(new String("freq>0"));
 		
 		queryComboBox = new ComboBox<>();
-		queryComboBox.setItems(predefQueries);		
-		queryComboBox.setNewItemHandler( new NewItemHandler() {
-			@Override
-			public void accept(String t) {	
-			searchInput.setValue(t);
-			}
-		});
-		
-		queryComboBox.addSelectionListener(new SingleSelectionListener<String>() {
-			@Override
-			public void selectionChange(SingleSelectionEvent<String> event) {
-			searchInput.setValue(	event.getValue());
-				
-			}
-		});
+		queryComboBox.setItems(predefQueries);	
+
 		
 		btExecuteSearch = new Button ("SEARCH",VaadinIcons.SEARCH);
 		btExecuteSearch.setWidth("100%");
@@ -373,7 +386,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 
 		
 		QueryJob job = new QueryJob(
-				searchInput.getValue().toString(),
+				searchInput.toString(),
 				queryOptions);
 		
 		((BackgroundServiceProvider)UI.getCurrent()).submit(
@@ -381,7 +394,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				job, 
 				new ExecutionListener<QueryResult>() {
 			public void done(QueryResult result) {
-			 queryResultPanel = new ResultPanelNew(result,"result for query: "+searchInput.getValue());
+			 queryResultPanel = new ResultPanelNew(repository, result,"result for query: "+searchInput.toString());
 			 queryResultPanel.setWidth("100%");
 			 resultPanel.setSpacing(true);
 			 resultPanel.addComponentAsFirst(queryResultPanel);
