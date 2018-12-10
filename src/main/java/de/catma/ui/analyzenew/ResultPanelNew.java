@@ -17,6 +17,7 @@ import com.vaadin.ui.AbstractOrderedLayout;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
@@ -68,7 +69,6 @@ public class ResultPanelNew extends Panel {
 	private Button caretUpBt;
 	private Button trashBt;
 	private Button optionsBt;
-	
 
 	private QueryResult queryResult;
 	private TagQueryResult tagQueryResult;
@@ -76,8 +76,8 @@ public class ResultPanelNew extends Panel {
 	private Repository repository;
 
 	public ResultPanelNew(Repository repository, QueryResult result, String queryAsString) {
-		
-		this.repository= repository;
+
+		this.repository = repository;
 		this.queryResult = result;
 		// this.tagQueryResult= (TagQueryResult) result;
 		this.queryAsString = queryAsString;
@@ -143,75 +143,126 @@ public class ResultPanelNew extends Panel {
 
 		TreeData<TagRowItem> tagData = new TreeData<>();
 		tagTreeGrid = new TreeGrid<>();
+		tagTreeGrid.setSelectionMode(SelectionMode.MULTI);
 
 		// Set<GroupedQueryResult> groupedQueryResults=queryResult.asGroupedSet();
 		// QueryResultRowArray tagRowsArray=queryResult.asQueryResultRowArray();
 
-		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(populateTree(repository,tagData, queryResult));
+		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(
+				populateTree(repository, tagData, queryResult));
 
-		tagTreeGrid.addColumn(TagRowItem::getTagDefinitionPath).setCaption("Tag");
-		tagTreeGrid.addColumn(TagRowItem::getSourceDocumentID).setCaption("SourceDocID");
-		tagTreeGrid.addColumn(TagRowItem::getTagInstanceID).setCaption("TagInstance");
-		tagTreeGrid.addColumn(TagRowItem::getCheckBox, new ComponentRenderer()).setCaption("Select for Visualization");
+		tagTreeGrid.addColumn(TagRowItem::getTreePath).setCaption("Tag");
+
+		tagTreeGrid.addColumn(TagRowItem::getFrequency).setCaption("Frequency");
+		
 		dataProvider.refreshAll();
 		tagTreeGrid.setDataProvider(dataProvider);
 		tagTreeGrid.setWidth("100%");
 
 	}
 
-	private TreeData<TagRowItem> populateTree(Repository repository,TreeData<TagRowItem> treeData, QueryResult queryResult) throws Exception {
-		
+	private TreeData<TagRowItem> populateTree(Repository repository, TreeData<TagRowItem> treeData,
+			QueryResult queryResult) throws Exception {
+
+		// adding tags as root items
 		ArrayList<TagRowItem> tagsAsRoot = new ArrayList<TagRowItem>();
 
 		for (QueryResultRow queryResultRow : queryResult) {
+
 			TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
 			TagRowItem tagRowItem = new TagRowItem();
+		
 			tagRowItem.setTagDefinitionPath(tagQueryResultRow.getTagDefinitionPath());
-	
-			if (!	tagsAsRoot.stream().anyMatch(var -> var.getTagDefinitionPath().equalsIgnoreCase(tagRowItem.getTagDefinitionPath()))) {
+
+			if (!tagsAsRoot.stream()
+					.anyMatch(var -> var.getTagDefinitionPath().equalsIgnoreCase(tagRowItem.getTagDefinitionPath()))) {
+		
+				tagRowItem.setTreePath(tagRowItem.getTagDefinitionPath());
 				tagsAsRoot.add(tagRowItem);
+			}else {
+				tagsAsRoot.stream().filter(x -> x.getTagDefinitionPath().equals(tagRowItem.getTagDefinitionPath()))
+		        .findFirst().get().setFrequencyOneUp();
 			}
 		}
-		
-		/*Iterator<TagRowItem>	rootIterator= tagsAsRoot.iterator();
-		while (rootIterator.hasNext()) {			
-		TagRowItem rootTagItem=	 rootIterator.next();
-			treeData.addItems(null, rootTagItem);	
-		}	
-		*/
-		treeData.addItems(null, tagsAsRoot);	
-	
-	
+		treeData.addItems(null, tagsAsRoot);
+
+		// adding documents as children for tags
 		for (TagRowItem tag : tagsAsRoot) {
-			
+
 			ArrayList<TagRowItem> docsForATag = new ArrayList<TagRowItem>();
-			String rootTagPath= tag.getTagDefinitionPath();
-			
+			String rootTagPath = tag.getTagDefinitionPath();
+
 			for (QueryResultRow queryResultRow : queryResult) {
-				
-				TagQueryResultRow tagQueryResultRow = (TagQueryResultRow)queryResultRow;
-				
-				if(rootTagPath.equalsIgnoreCase(tagQueryResultRow.getTagDefinitionPath())){
-					//SourceDocument sourceDocument = 
-						//	repository.getSourceDocument(queryResultRow.getSourceDocumentId());
+
+				TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
+
+				if (rootTagPath.equalsIgnoreCase(tagQueryResultRow.getTagDefinitionPath())) {
 					TagRowItem docItem = new TagRowItem();
-					docItem.setSourceDocumentID(queryResultRow.getSourceDocumentId());		
-					if(!docsForATag.stream().anyMatch(k -> k.getSourceDocumentID().equalsIgnoreCase(docItem.getSourceDocumentID()))) {
+					docItem.setSourceDocumentID(queryResultRow.getSourceDocumentId());
+					docItem.setSourceDocName(repository.getSourceDocument(queryResultRow.getSourceDocumentId()).toString());
+					docItem.setCollectionID(tagQueryResultRow.getMarkupCollectionId());
+					
+					
+					docItem.setTagDefinitionPath(tagQueryResultRow.getTagDefinitionPath());
+					docItem.setTreePath(docItem.getSourceDocName());
+				//	docItem.setTagDefinitionPath(repository.getSourceDocument(queryResultRow.getSourceDocumentId()).toString());
+					
+					// Name des docs als tagpath.. 
+					//docItem.setTagDefinitionPath(repository.getSourceDocument(queryResultRow.getSourceDocumentId()).toString());
+					
+					
+					if (!docsForATag.stream().anyMatch(
+							var -> var.getSourceDocumentID().equalsIgnoreCase(docItem.getSourceDocumentID()))) {
 						docsForATag.add(docItem);
 					}
-							
-				}								
+				}
 			}
-			
-		//	tag.setChildren(docsForATag);	
+
 			treeData.addItems(tag, docsForATag);
-		} 
+
+			// adding collections as children for documents
+			for (TagRowItem oneDoc : docsForATag) {
+				// query result holen in der die collection der tag und das doc zusammen
+				// auftreten und dese collection als tagrowitem in die liste speichern
+				ArrayList<TagRowItem> collectionsForADocument = new ArrayList<TagRowItem>();
+				
+				for (QueryResultRow queryResultRow : queryResult) {
+
+					TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) queryResultRow;
+
+					if ((tagQueryResultRow.getTagDefinitionPath().equalsIgnoreCase(oneDoc.getTagDefinitionPath()))
+						//	&& (tagQueryResultRow.getMarkupCollectionId().equalsIgnoreCase(oneDoc.getCollectionID()))
+							&& (tagQueryResultRow.getSourceDocumentId()
+									.equalsIgnoreCase(oneDoc.getSourceDocumentID()))) {
+
+						// int tagiInstancesPerCollection=0;
+						TagRowItem tagRowItem = new TagRowItem();
+						// tagRowItem.setTagDefinitionPath(tagQueryResultRow.getTagDefinitionPath());
+						// tagRowItem.setSourceDocumentID((tagQueryResultRow.getSourceDocumentId()));
+						tagRowItem.setCollectionID(tagQueryResultRow.getMarkupCollectionId());
 						
+						SourceDocument sourceDoc=	repository.getSourceDocument(queryResultRow.getSourceDocumentId());
+						tagRowItem.setCollectionName(sourceDoc.getUserMarkupCollectionReference(tagQueryResultRow.getMarkupCollectionId()).getName());
+						tagRowItem.setTagDefinitionPath(sourceDoc.getUserMarkupCollectionReference(tagQueryResultRow.getMarkupCollectionId()).getName());
+						tagRowItem.setTreePath(tagRowItem.getCollectionName());
+					
+
+						if (!collectionsForADocument.stream().anyMatch(
+								var -> var.getCollectionID().equalsIgnoreCase(tagRowItem.getCollectionID()))) {
+							collectionsForADocument.add(tagRowItem);
+						}
+
+					}
+
+				}
+
+				treeData.addItems(oneDoc, collectionsForADocument);
+			}
+
+		}
+
 		return treeData;
 	}
-	
-	
-	
 
 	private void setDataPhraseStyle() {
 

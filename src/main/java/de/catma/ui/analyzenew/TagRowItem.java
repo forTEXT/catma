@@ -11,18 +11,21 @@ public class TagRowItem {
 	private String sourceDocumentID;
 	private String sourceDocName;
 	private String collectionID;
+	private String collectionName;
 	private String tagInstanceID;
 	private String tagDefinitionID;
 	private String tagDefinitionPath;
 	private ArrayList <TagRowItem>children;
 	private UUID uuid;
-	private CheckBox checkBox;
+	private String treePath;
+
 	private int frequency;
 
 	
 	public TagRowItem() {
 		uuid = UUID.randomUUID();
-		checkBox = new CheckBox();
+		frequency=1;
+		
 		
 	}
 	public String getTagID() {
@@ -91,19 +94,28 @@ public class TagRowItem {
 		this.uuid = uuid;
 	}
 
-	public CheckBox getCheckBox() {
-		return checkBox;
-	}
-
-	public void setCheckBox(CheckBox checkBox) {
-		this.checkBox = checkBox;
-	}
 	public int getFrequency() {
 		return frequency;
 	}
 
 	public void setFrequency(int frequency) {
 		this.frequency = frequency;
+	}
+	public String getCollectionName() {
+		return collectionName;
+	}
+	public void setCollectionName(String collectionName) {
+		this.collectionName = collectionName;
+	}
+	public String getTreePath() {
+		return treePath;
+	}
+	public void setTreePath(String treePath) {
+		this.treePath = treePath;
+	}
+	public boolean setFrequencyOneUp() {
+		frequency++;
+		return true;
 	}
 	
 	
