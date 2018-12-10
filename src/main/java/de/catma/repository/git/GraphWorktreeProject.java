@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Multimap;
 
 import de.catma.backgroundservice.BackgroundService;
-import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.document.AccessMode;
 import de.catma.document.Corpus;
 import de.catma.document.repository.RepositoryPropertyKey;
@@ -955,4 +954,10 @@ public class GraphWorktreeProject implements IndexedRepository {
 		gitProjectHandler.addAndCommitChanges(ref);
 		graphProjectHandler.updateCollectionRevisionHash(this.rootRevisionHash, ref);
 	}
+	
+	@Override
+	public List<User> getProjectMembers() throws Exception {
+		return gitProjectHandler.getProjectMembers();
+	}
+
 }

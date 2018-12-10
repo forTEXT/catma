@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import de.catma.document.repository.RepositoryPropertyKey;
@@ -24,6 +25,7 @@ import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
+import de.catma.user.User;
 
 public class GitProjectHandler {
 
@@ -428,6 +430,10 @@ public class GitProjectHandler {
 			
 			return tagsetRevision;
 		}
+	}
+	
+	public List<User> getProjectMembers() throws Exception {
+		return remoteGitServerManager.getProjectMembers(Objects.requireNonNull(projectId));
 	}
 
 }

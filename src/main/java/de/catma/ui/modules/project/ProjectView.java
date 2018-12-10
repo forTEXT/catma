@@ -3,7 +3,6 @@ package de.catma.ui.modules.project;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.vaadin.dialogs.ConfirmDialog;
 
@@ -12,11 +11,11 @@ import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.DataProvider;
+import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
-import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.ListSelect;
@@ -25,8 +24,6 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.renderers.ButtonRenderer;
-import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.repository.Repository;
@@ -36,16 +33,14 @@ import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.tag.TagsetDefinition;
-import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.hugecard.HugeCard;
 import de.catma.ui.events.ResourcesChangedEvent;
-import de.catma.ui.events.routing.RouteToProjectEvent;
+import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.modules.main.CanReloadAll;
 import de.catma.ui.modules.main.ErrorLogger;
 import de.catma.ui.modules.main.HeaderContextChangeEvent;
-import de.catma.ui.util.Styles;
 import de.catma.user.User;
 
 /**
@@ -56,43 +51,23 @@ import de.catma.user.User;
  */
 public class ProjectView extends HugeCard implements CanReloadAll {
 
+	private ProjectManager projectManager;
     private ProjectReference projectReference;
-    private Repository repository;
-
-    private final ProjectManager projectManager;
+    private Repository project;
 
     private final ErrorLogger errorLogger;
-
     private final EventBus eventBus;
 
-    private final DataProvider<TagsetDefinition, Void> tagsetsDP = DataProvider.fromCallbacks(
-            (query) -> {
-                query.getOffset(); //NOOP calls *sigh*
-                query.getLimit(); //NOOP calls *sigh*
-                return getResources(repository::getTagsets);
-            },
-            (query) -> getResourceCount(repository::getTagsetsCount)
-    );
+    private TreeGrid<Resource> resourceGrid;
+    private Grid<TagsetDefinition> tagsetGrid;
+	private Grid<User> teamGrid;
 
-    private final DataProvider<User, Void> membersDP;
-
-    private final TreeGrid<Resource> resourceGrid = new TreeGrid<>();;
-
-
-    public ProjectView(ProjectManager projectManager, EventBus eventBus){
+    public ProjectView(ProjectManager projectManager, EventBus eventBus) {
     	super("Project");
-        this.projectManager = projectManager;
-        this.errorLogger = (ErrorLogger)UI.getCurrent();
+    	this.projectManager = projectManager;
         this.eventBus = eventBus;
+        this.errorLogger = (ErrorLogger)UI.getCurrent();
 
-        membersDP = DataProvider.fromCallbacks(
-                (query) -> {
-                    query.getOffset(); //NOOP calls *sigh*
-                    query.getLimit(); //NOOP calls *sigh*
-                    return getResources(() -> projectManager.getProjectMembers(projectReference.getProjectId()));
-                },
-                (query) -> getResourceCount(() -> projectManager.getProjectMembers(projectReference.getProjectId()).size())
-        );
         initComponents();
         initActions();
         
@@ -106,6 +81,27 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private void handleResourceItemClick(ItemClick<Resource> itemClickEvent) {
     	if (itemClickEvent.getMouseEventDetails().isDoubleClick()) {
     		Resource resource = itemClickEvent.getItem();
+    		
+    		@SuppressWarnings("unchecked")
+			TreeDataProvider<Resource> resourceDataProvider = 
+    				(TreeDataProvider<Resource>) resourceGrid.getDataProvider();
+    		
+    		Resource root = 
+    			resourceDataProvider.getTreeData().getParent(resource);
+    		Resource child = null;
+    		
+    		if (root == null) {
+    			root = resource;
+    		}
+    		else {
+    			child = resource;
+    		}
+    		
+    		SourceDocument document = ((DocumentResource)root).getDocument();
+    		UserMarkupCollectionReference collectionReference = 
+    			(child==null?null:((CollectionResource)child).getCollectionReference());
+    		
+    		eventBus.post(new RouteToAnnotateEvent(project, document, collectionReference));
     	}
     }
     
@@ -113,27 +109,27 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	/* build the GUI */
 
 	private void initComponents() {
-    	FlexLayout mainColumns = new FlexLayout();
-    	mainColumns.addStyleNames("flex-horizontal","flex-wrap");
+    	FlexLayout mainPanel = new FlexLayout();
+    	mainPanel.addStyleNames("flex-horizontal","flex-wrap");
     	
 //        mainColumns.getStyle().set("flex-wrap","wrap"); TODO: flexwrap
 
-    	FlexLayout resources = new FlexLayout();
-    	resources.addStyleNames("flex-vertical");
+    	FlexLayout resourcePanel = new FlexLayout();
+    	resourcePanel.addStyleNames("flex-vertical");
     	
-        resources.setSizeUndefined(); // don't set width 100%
-        resources.addComponent(new Label("Resources"));
+        resourcePanel.setSizeUndefined(); // don't set width 100%
+        resourcePanel.addComponent(new Label("Resources"));
 
-        mainColumns.addComponent(resources);
+        mainPanel.addComponent(resourcePanel);
 
-        FlexLayout team = new FlexLayout();
-        team.addStyleNames("flex-vertical");
-        team.setSizeUndefined(); // don't set width 100%
-        team.addComponent(new Label("Team"));
+        FlexLayout teamPanel = new FlexLayout();
+        teamPanel.addStyleNames("flex-vertical");
+        teamPanel.setSizeUndefined(); // don't set width 100%
+        teamPanel.addComponent(new Label("Team"));
 
-        mainColumns.addComponent(team);
+        mainPanel.addComponent(teamPanel);
 
-        addComponent(mainColumns);
+        addComponent(mainPanel);
         
 //        TODO: expand content.expand(mainColumns);
 
@@ -141,8 +137,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         hugeCardMoreOptions.addItem("Share Ressources", e -> Notification.show("Sharing"));// TODO: 29.10.18 actually share something
         hugeCardMoreOptions.addItem("Delete Ressources", e -> Notification.show("Deleting")); // TODO: 29.10.18 actually delete something
 
-        resources.addComponent(initResourceContent());
-        team.addComponent(initTeamContent());
+        resourcePanel.addComponent(initResourceContent());
+        teamPanel.addComponent(initTeamContent());
 
     }
 
@@ -153,71 +149,34 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     private Component initResourceContent() {
     	FlexLayout resourceContent = new FlexLayout();
     	resourceContent.addStyleNames("flex-horizontal");
-
-        resourceGrid.addStyleName(Styles.actiongrid__hidethead);
+    	resourceGrid = new TreeGrid<>();
         resourceGrid.addStyleName("project-view-document-grid");
         resourceGrid.setWidth("402px");
-        resourceGrid.setDataProvider(buildResourceDataProvider());
-        resourceGrid.removeHeaderRow(0);
+        resourceGrid.setHeaderVisible(false);
         
-        StringBuilder rt = new StringBuilder();
-        rt
-                .append("<vaadin-grid-tree-toggle ")
-                .append("leaf='[[item.leaf]]' expanded='{{expanded}}' level='[[level]]' class='documentsgrid__combined' >")
-                .append("</vaadin-grid-tree-toggle>")
-                .append("<combined-cell>")
-                .append("<centered-icon>")
-                .append("<iron-icon icon='[[item.icon]]'>")
-                .append("</iron-icon>")
-                .append("</centered-icon>")
-                .append("<div class='documentsgrid__doc'> ")
-                .append("<span class='documentsgrid__doc__title'> ")
-                .append("[[item.title]]")
-                .append("</span>")
-                .append("<span class='documentsgrid__doc__author'> ")
-                .append("[[item.detail]]")
-                .append("</span>")
-                .append("</div>")
-                .append("</combined-cell>");
-
-// TODO: old style renderer
-//        resourceGrid.addColumn(TemplateRenderer
-//                .<Resource> of(rt.toString())
-//
-//                .withProperty("leaf",
-//                        item -> ! resourceGrid.getDataProvider().hasChildren(item))
-//                .withProperty("icon",
-//                        item -> {
-//                            if(item instanceof SourceDocumentResource){
-//                                return "vaadin:file";
-//                            }
-//                            if(item instanceof UserMarkupResource){
-//                                return "vaadin:file-text";
-//                            }
-//                            return "";
-//                        })
-//
-//                .withProperty("title", res -> res.toString())
-//                .withProperty("detail", res -> res.hasDetail()?res.detail():null)
-//
-//        ).setFlexGrow(1);
-
+		resourceGrid
+			.addColumn(resource -> resource.getIcon(), new HtmlRenderer());
+        
         resourceGrid
-        	.addColumn(resource -> resource.toString())
+        	.addColumn(resource -> resource.getName())
         	.setCaption("Name")
         	.setExpandRatio(2);
         
-        ButtonRenderer<Resource> resourceOptionsRenderer = new ButtonRenderer<>(
-				resourceOptionClickedEvent -> handleResourceOptionClicked(resourceOptionClickedEvent));
-        resourceOptionsRenderer.setHtmlContentAllowed(true);
+        //TODO: see MD for when it is appropriate to offer row options
+//        ButtonRenderer<Resource> resourceOptionsRenderer = new ButtonRenderer<>(
+//				resourceOptionClickedEvent -> handleResourceOptionClicked(resourceOptionClickedEvent));
+//        resourceOptionsRenderer.setHtmlContentAllowed(true);
         
-		resourceGrid.addColumn(
-			(nan) -> VaadinIcons.ELLIPSIS_DOTS_V.getHtml(), 
-			resourceOptionsRenderer);
+//		resourceGrid.addColumn(
+//			(nan) -> VaadinIcons.ELLIPSIS_DOTS_V.getHtml(), 
+//			resourceOptionsRenderer);
+        
+        
+        
         Label documentsAnnotations = new Label("Documents & Annotations");
 
         documentsAnnotations.setWidth("100%");
-        ActionGridComponent sourceDocumentsGridComponent = new ActionGridComponent<>(
+        ActionGridComponent<TreeGrid<Resource>> sourceDocumentsGridComponent = new ActionGridComponent<>(
                 documentsAnnotations,
                 resourceGrid
         );
@@ -233,22 +192,20 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
         resourceContent.addComponent(sourceDocumentsGridComponent);
 
-        Grid<TagsetDefinition> tagsetGrid = new Grid<>();
-        tagsetGrid.addStyleName(Styles.actiongrid__hidethead);
+        tagsetGrid = new Grid<>();
+        tagsetGrid.setHeaderVisible(false);
         tagsetGrid.setWidth("400px");
 
-        tagsetGrid.setDataProvider(tagsetsDP);
-
-        Column<TagsetDefinition, Object> coltag = tagsetGrid.addColumn((nan) -> VaadinIcons.TAGS);
-//        coltag.setWidth(48);
-
-        tagsetGrid.addColumn(TagsetDefinition::getName);
-        Column<TagsetDefinition, Object> coldots = tagsetGrid.addColumn((nan) -> new IconButton(VaadinIcons.ELLIPSIS_DOTS_V));
-//        coldots.setWidth(32);
+        tagsetGrid.addColumn(tagset -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer());
+		tagsetGrid
+			.addColumn(tagset -> tagset.getName())
+			.setCaption("Name")
+			.setExpandRatio(2);
+	
 
         Label tagsetsAnnotations = new Label("Tagsets");
-        documentsAnnotations.setWidth("100%");
-        ActionGridComponent tagsetsGridComponent = new ActionGridComponent<Grid<TagsetDefinition>>(
+        tagsetsAnnotations.setWidth("100%");
+        ActionGridComponent<Grid<TagsetDefinition>> tagsetsGridComponent = new ActionGridComponent<>(
                 tagsetsAnnotations,
                 tagsetGrid
         );
@@ -257,23 +214,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         return resourceContent;
     }
 
-    private void handleResourceOptionClicked(RendererClickEvent<Resource> resourceOptionClickedEvent) {
-		// TODO Auto-generated method stub
-	}
-
 	private Component initTeamContent() {
     	FlexLayout teamContent = new FlexLayout();
     	teamContent.addStyleNames("flex-horizontal");
-        Grid<User> teamGrid = new Grid<>();
-        teamGrid.addStyleName(Styles.actiongrid__hidethead);
+        teamGrid = new Grid<>();
+        teamGrid.setHeaderVisible(false);
         teamGrid.setWidth("402px");
-        teamGrid.setDataProvider(membersDP);
-        teamGrid.removeHeaderRow(0);
         teamGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
         teamGrid.addColumn(User::getName).setExpandRatio(1);
-        ButtonRenderer<User> moreoptionbutton = new ButtonRenderer<>((user) -> Notification.show("clicked"));
-        moreoptionbutton.setHtmlContentAllowed(true);
-        teamGrid.addColumn((user) -> VaadinIcons.ELLIPSIS_DOTS_V.getHtml(), moreoptionbutton);        
+
         Label membersAnnotations = new Label("Members");
         ActionGridComponent<Grid<User>> membersGridComponent = new ActionGridComponent<>(
                 membersAnnotations,
@@ -288,8 +237,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 
     /**
-     * @// TODO: 15.10.18 refactor ProjectManager to directly return repository, remove listener
-     * @deprecated 
      * @param projectReference
      */
     private void initProject(ProjectReference projectReference) {
@@ -301,63 +248,46 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
             @Override
             public void ready(Repository repository) {
-
-                ProjectView.this.repository = repository;
+                ProjectView.this.project = repository;
+				initData();
             }
 
             @Override
             public void failure(Throwable t) {
-                errorLogger.showAndLogError("fehler", t);
+                errorLogger.showAndLogError("error opening project", t);
             }
         });
     }
 
-    private <T> Stream<T> getResources(ResourceProvider<T> resources){
+    private void initData() {
         try {
-            if(repository == null || projectReference == null)
-                return Stream.empty();
-            return resources.getResources().stream();
-        } catch (Exception e) {
-            errorLogger.showAndLogError("Resources couldn't be retrieved",e);
-            return Stream.empty();
-        }
-    }
+        	resourceGrid.setDataProvider(buildResourceDataProvider());
+        	ListDataProvider<TagsetDefinition> tagsetData = new ListDataProvider<>(project.getTagsets());
+        	tagsetGrid.setDataProvider(tagsetData);
+        	
+        	ListDataProvider<User> memberData = new ListDataProvider<>(project.getProjectMembers());
+        	teamGrid.setDataProvider(memberData);
+		} catch (Exception e) {
+			errorLogger.showAndLogError("error initializing data", e);
+		}
+	}
 
-    private int getResourceCount(ResourceCountProvider resourceCountProvider){
-        try {
-            if(repository == null || projectReference == null){
-                return 0;
-            }
-            return resourceCountProvider.getResourceCount();
-        } catch (Exception e) {
-            errorLogger.showAndLogError("Resourcecount couldn't be retrieved",e);
-            return 0;
-        }
-    }
-
-    private TreeDataProvider<Resource> buildResourceDataProvider() {
-        if(repository == null || projectReference == null){
-            return new TreeDataProvider<>(new TreeData());
-        }
-        try {
+    private TreeDataProvider<Resource> buildResourceDataProvider() throws Exception {
+        if(project != null){
             TreeData<Resource> treeData = new TreeData<>();
-            Collection<SourceDocument> srcDocs = repository.getSourceDocuments();
+            Collection<SourceDocument> srcDocs = project.getSourceDocuments();
             for(SourceDocument srcDoc : srcDocs){
-                SourceDocumentResource srcDocResource = new SourceDocumentResource(srcDoc);
+                DocumentResource srcDocResource = new DocumentResource(srcDoc);
                 treeData.addItem(null,srcDocResource);
                 List<UserMarkupCollectionReference> collections = srcDoc.getUserMarkupCollectionRefs();
                 if(!collections.isEmpty()){
-                    treeData.addItems(srcDocResource,collections.stream().map(UserMarkupResource::new));
+                    treeData.addItems(srcDocResource,collections.stream().map(CollectionResource::new));
                 }
             }
-            return new TreeDataProvider(treeData);
-
-        } catch (Exception e) {
-            errorLogger.showAndLogError("Can't retrieve resources", e);
+            return new TreeDataProvider<>(treeData);
         }
-        return new TreeDataProvider(new TreeData());
+        return new TreeDataProvider<>(new TreeData<>());
     }
-
 
     /* Event handler */
 
@@ -367,18 +297,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     @Override
     public void reloadAll() {
         initProject(projectReference);
-        resourceGrid.setDataProvider(buildResourceDataProvider());
-        tagsetsDP.refreshAll();
-        membersDP.refreshAll();
     }
 
     /**
      * handler for project selection
-     * @param event
      */
-    @Subscribe
-    public void handleProjectSelectedEvent(RouteToProjectEvent event) {
-        projectReference = event.getProjectReference();
+    public void setProjectReference(ProjectReference projectReference) {
+        this.projectReference = projectReference;
         eventBus.post(new HeaderContextChangeEvent(new Label(projectReference.getName())));
         reloadAll();
     }
@@ -389,7 +314,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      */
     @Subscribe
     public void handleResourceChanged(ResourcesChangedEvent<TreeGrid<Resource>> resourcesChangedEvent){
-        resourcesChangedEvent.getComponent().setDataProvider(buildResourceDataProvider());
+    	//TODO:
+//        resourcesChangedEvent.getComponent().setDataProvider(buildResourceDataProvider());
     }
 
     /**

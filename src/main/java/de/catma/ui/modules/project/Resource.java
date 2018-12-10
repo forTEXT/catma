@@ -11,9 +11,12 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
  */
 public interface Resource {
 
-    String toString();
+    String getName();
 
-    String detail();
+    String getDetail();
 
     boolean hasDetail();
+    
+	public String getIcon();
+
 }

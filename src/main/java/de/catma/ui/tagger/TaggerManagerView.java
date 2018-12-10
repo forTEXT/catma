@@ -32,12 +32,10 @@ public class TaggerManagerView extends TabbedView {
 	
 	private int nextTaggerID = 0;
 	
-	
 	public TaggerManagerView() {
 		super(
 			Messages.getString("TaggerManagerView.noOpenDocumentsInfo")); //$NON-NLS-1$
 	}
-	
 
 	public TaggerView openSourceDocument(
 			final SourceDocument sourceDocument, Repository repository) {

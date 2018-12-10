@@ -30,6 +30,9 @@ import com.vaadin.ui.TabSheet.CloseHandler;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.SelectedTabChangeListener;
 import com.vaadin.ui.TabSheet.Tab;
+
+import de.catma.ui.component.hugecard.HugeCardBar;
+
 import com.vaadin.ui.VerticalLayout;
 
 public class TabbedView extends VerticalLayout implements CloseHandler {
@@ -63,6 +66,11 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 	}
 
 	private void initComponents(String noOpenTabsText) {
+		addStyleName("hugecard-tabbed-view");	
+		
+		HugeCardBar hugeCardBar = new HugeCardBar("Annotate");
+		addComponent(hugeCardBar);
+		
 		tabSheet = new TabSheet();
 		tabSheet.setSizeFull();
 
@@ -79,6 +87,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		introPanel.setComponentAlignment(noOpenTabsLabel, Alignment.MIDDLE_CENTER);
 
 		addComponent(tabSheet);
+		setExpandRatio(tabSheet, 1.0f);
 		tabSheet.setTabsVisible(false);
 		tabSheet.setHeight("0px");
 		tabSheet.setCloseHandler(this);

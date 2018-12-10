@@ -17609,6 +17609,12 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	background-color: white;
 }
 
+.catma .hugecard-tabbed-view {
+	margin: 20px;
+	background-color: white;
+	height: unset !important;
+}
+
 .catma .hugecard__bar + div {
 	margin-left: 32px;
 	margin-top: 14px;
@@ -17675,10 +17681,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .actiongrid .v-grid button.v-nativebutton:focus:after, .catma .v-grid button.v-nativebutton:after {
 	border: none;
 	box-shadow: none;
-}
-
-.catma .actiongrid__hidethead thead {
-	display: none;
 }
 
 .catma .actiongrid .v-grid-row > td, .catma .actiongrid .v-grid-editor-cells > div, .catma .actiongrid .v-grid-cell.frozen {

@@ -1,20 +1,23 @@
 package de.catma.ui.modules.project;
 
+import com.vaadin.icons.VaadinIcons;
+
 import de.catma.document.source.SourceDocument;
 
-public class SourceDocumentResource implements Resource {
+public class DocumentResource implements Resource {
 
     private final SourceDocument sourceDocument;
 
-    public SourceDocumentResource(SourceDocument sourceDocument){
+    public DocumentResource(SourceDocument sourceDocument){
         this.sourceDocument = sourceDocument;
     }
+    
     @Override
-    public String detail() {
+    public String getDetail() {
         return sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getContentInfoSet().getAuthor();
     }
 
-    public SourceDocument getSourceDocument() {
+    public SourceDocument getDocument() {
 		return sourceDocument;
 	}
     
@@ -24,7 +27,12 @@ public class SourceDocumentResource implements Resource {
     }
 
     @Override
-    public String toString() {
+    public String getName() {
         return sourceDocument.toString();
+    }
+    
+    @Override
+    public String getIcon() {
+		return VaadinIcons.BOOK.getHtml();
     }
 }

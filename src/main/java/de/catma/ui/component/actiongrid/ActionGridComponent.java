@@ -1,5 +1,6 @@
 package de.catma.ui.component.actiongrid;
 
+import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 
@@ -15,27 +16,37 @@ public class ActionGridComponent<G extends Grid<?>> extends FlexLayout  {
     private final Component titleCompennt;
     private final G dataGrid;
     private final ActionGridBar actionGridBar;
-    private  boolean multiselect = false;
+    private boolean multiselect = false;
+	private boolean headerVisible;
 
     public ActionGridComponent(Component titleComponent, G dataGrid){
         this.titleCompennt = titleComponent;
         this.dataGrid = dataGrid;
         this.actionGridBar = new ActionGridBar(titleCompennt);
         this.actionGridBar.addBtnToggleListSelect(
-                (event) -> {
-                    if(! multiselect) {
-                        dataGrid.setSelectionMode(Grid.SelectionMode.MULTI);
-                        multiselect = true;
-                    }else {
-                        dataGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
-                        multiselect = false;
-                    }
-                }
-        );
+                event -> toggleMultiselect(event));
+        this.headerVisible = dataGrid.isHeaderVisible();
         initComponents();
     }
 
-    private void initComponents() {
+    private void toggleMultiselect(ClickEvent event) {
+        if(! multiselect) {
+            dataGrid.setSelectionMode(Grid.SelectionMode.MULTI);
+            multiselect = true;
+            if (!headerVisible) {
+            	dataGrid.setHeaderVisible(true);
+            }
+        }else {
+            dataGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
+            multiselect = false;
+            
+            if (!headerVisible) {
+            	dataGrid.setHeaderVisible(false);
+            }
+        }
+    }
+
+	private void initComponents() {
         addStyleName(Styles.actiongrid);
         addComponents(actionGridBar, dataGrid);
     }

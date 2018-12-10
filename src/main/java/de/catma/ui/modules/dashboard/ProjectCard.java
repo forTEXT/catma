@@ -25,15 +25,15 @@ import de.catma.ui.modules.main.ErrorLogger;
  */
 public class ProjectCard extends VerticalLayout  {
 
-    private ProjectReference item;
+    private ProjectReference projectReference;
 
     private final ErrorLogger errorLogger;
     private final ProjectManager projectManager;
 
 	private final EventBus eventbus;
 
-    ProjectCard(ProjectReference t, ProjectManager projectManager, EventBus eventbus){
-        this.item = Objects.requireNonNull(t) ;
+    ProjectCard(ProjectReference projectReference, ProjectManager projectManager, EventBus eventbus){
+        this.projectReference = Objects.requireNonNull(projectReference) ;
         this.projectManager = projectManager;
         this.eventbus = eventbus;
         this.errorLogger = (ErrorLogger) UI.getCurrent();
@@ -50,14 +50,14 @@ public class ProjectCard extends VerticalLayout  {
 
         CssLayout preview = new CssLayout();
         preview.addStyleName("projectlist__card__preview");
-        Label labelDesc = new Label(item.getDescription());
+        Label labelDesc = new Label(projectReference.getDescription());
         labelDesc.setWidth("100%");
         preview.addComponents(labelDesc);
-        Label labelProjectId = new Label(item.getProjectId());
+        Label labelProjectId = new Label(projectReference.getProjectId());
         labelProjectId.setWidth("100%");
         preview.addComponents(labelProjectId);
 
-        preview.addLayoutClickListener(evt -> eventbus.post(new RouteToProjectEvent(item)));
+        preview.addLayoutClickListener(evt -> eventbus.post(new RouteToProjectEvent(projectReference)));
         addComponent(preview);
 
         FlexLayout descriptionBar = new FlexLayout();
@@ -66,7 +66,7 @@ public class ProjectCard extends VerticalLayout  {
         descriptionBar.setWidth("100%");
         
         
-        Label name = new Label(item.getName());
+        Label name = new Label(projectReference.getName());
         name.setWidth("100%");
         
         descriptionBar.addComponent(name);
@@ -78,16 +78,16 @@ public class ProjectCard extends VerticalLayout  {
         buttonRemove.addClickListener(
                 (event -> {
                     ConfirmDialog.show(UI.getCurrent(),"delete Project",
-                            "do you want to delete Project: " + item.getName(),
+                            "do you want to delete Project: " + projectReference.getName(),
                             "OK",
                             "Cancel"
                     , (evt) -> {
                         try {
                             if(evt.isConfirmed()){
-                            	projectManager.delete(item.getProjectId());                            	
+                            	projectManager.delete(projectReference.getProjectId());                            	
                             }
                         } catch (Exception e) {
-                            errorLogger.showAndLogError("can't delete project " + item.getName(), e);
+                            errorLogger.showAndLogError("can't delete project " + projectReference.getName(), e);
                         }
                     });
                 }

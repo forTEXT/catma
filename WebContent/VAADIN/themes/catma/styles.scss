@@ -649,6 +649,12 @@
     	  background-color: white;
         }
         
+        .hugecard-tabbed-view {
+          margin: 20px;
+    	  background-color: white;
+    	  height: unset !important;
+        } 
+             
         .hugecard__bar + div {
             margin-left: 32px;
     		margin-top: 14px;
@@ -720,10 +726,6 @@
     		box-shadow: none;
         }
 		
-		.actiongrid__hidethead thead {
-            display: none;
-         }
-         
         /* .actiongrid .v-grid-cell {
             padding: 0px;
             display: flex;

@@ -7,7 +7,8 @@ package de.catma.ui.util;
  */
 public class Styles {
 
-    private Styles() {}
+
+	private Styles() {}
 
     public static final String dialog__bg = "dialog__bg";
 
@@ -21,6 +22,7 @@ public class Styles {
 
     public static final String actiongrid = "actiongrid";
 
-    public static final String actiongrid__hidethead = actiongrid + "__hidethead";
     public static final String button__icon = "button__icon";
+    
+    public static final String hugecard_vl = "hugecard-vl";
 }
