@@ -7,14 +7,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.antlr.runtime.RecognitionException;
-import org.apache.bcel.verifier.VerificationResult;
-
-import com.vaadin.data.HasValue.ValueChangeEvent;
-import com.vaadin.event.selection.SingleSelectionEvent;
-import com.vaadin.event.selection.SingleSelectionListener;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.FontAwesome;
-import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -29,9 +22,6 @@ import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.TextField;
-import com.vaadin.v7.data.util.HierarchicalContainer;
-import com.vaadin.v7.ui.Tree;
 import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.backgroundservice.BackgroundServiceProvider;
@@ -101,7 +91,6 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			initComponents();
 			initListeners();
 			initActions();
-	
 	}
 
 	 private void initComponents() throws Exception{
@@ -131,8 +120,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		
 			resultAndVisualizationPanel.setMargin(margin);
 			setMargin(true);
-			addComponent(resultAndVisualizationPanel);		
-	 
+			addComponent(resultAndVisualizationPanel);		 
 	 }
 	 
 	 private void initListeners() {	 
@@ -394,7 +382,12 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				job, 
 				new ExecutionListener<QueryResult>() {
 			public void done(QueryResult result) {
-			 queryResultPanel = new ResultPanelNew(repository, result,"result for query: "+searchInput.toString());
+			 try {
+				queryResultPanel = new ResultPanelNew(repository, result,"result for query: "+searchInput.toString());
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			 queryResultPanel.setWidth("100%");
 			 resultPanel.setSpacing(true);
 			 resultPanel.addComponentAsFirst(queryResultPanel);
