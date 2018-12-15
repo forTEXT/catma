@@ -12,6 +12,7 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
@@ -26,6 +27,7 @@ import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.v7.data.Item;
 import com.vaadin.v7.ui.Table;
 
+
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.queryengine.result.GroupedQueryResult;
@@ -35,6 +37,8 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.ui.analyzer.Messages;
+import de.catma.ui.component.HTMLNotification;
 
 public class ResultPanelNew extends Panel {
 
@@ -44,8 +48,7 @@ public class ResultPanelNew extends Panel {
 
 	private VerticalLayout contentVerticalLayout;
 	private Table queryResultTable;
-	private TreeGrid<TagRowItem> phraseTreeGrid;
-	private TreeGrid<TagRowItem> tagTreeGrid;
+	private TreeGrid<TagRowItem> treeGrid;
 	private Grid<QueryResultRow> queryResultGrid;
 	private TextArea textArea;
 	private Label queryInfo;
@@ -59,6 +62,8 @@ public class ResultPanelNew extends Panel {
 	private TagQueryResult tagQueryResult;
 	private String queryAsString;
 	private Repository repository;
+	private boolean twoGridViews;
+	private boolean tagView;
 
 	public ResultPanelNew(Repository repository, QueryResult result, String queryAsString) throws Exception {
 
@@ -71,10 +76,11 @@ public class ResultPanelNew extends Panel {
 
 		if (queryAsString.contains("tag=")) {
 			setDataTagStyle();
-			
-
+			twoGridViews = true;
+			tagView= true;
 		} else {
 			setDataPhraseStyle();
+			twoGridViews = false;
 		}
 
 	}
@@ -82,6 +88,8 @@ public class ResultPanelNew extends Panel {
 	private void initComponents() {
 		contentVerticalLayout = new VerticalLayout();
 		setContent(contentVerticalLayout);
+		treeGrid = new TreeGrid<TagRowItem>();
+		treeGrid.setSelectionMode(SelectionMode.MULTI);
 		createResultInfoBar();
 		createButtonBar();
 	}
@@ -90,7 +98,7 @@ public class ResultPanelNew extends Panel {
 		caretDownBt.addClickListener(new ClickListener() {
 
 			public void buttonClick(ClickEvent event) {
-				contentVerticalLayout.addComponent(phraseTreeGrid);
+				contentVerticalLayout.addComponent(treeGrid);
 				groupedIcons.replaceComponent(caretDownBt, caretUpBt);
 
 			}
@@ -99,8 +107,23 @@ public class ResultPanelNew extends Panel {
 		caretUpBt.addClickListener(new ClickListener() {
 
 			public void buttonClick(ClickEvent event) {
-				contentVerticalLayout.removeComponent(phraseTreeGrid);
+				contentVerticalLayout.removeComponent(treeGrid);
 				groupedIcons.replaceComponent(caretUpBt, caretDownBt);
+
+			}
+		});
+		
+		optionsBt.addClickListener(new ClickListener() {
+
+			public void buttonClick(ClickEvent event) {
+			
+				try {
+					swichView();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			
 
 			}
 		});
@@ -113,42 +136,47 @@ public class ResultPanelNew extends Panel {
 			}
 		});
 	}
-
-	private void setData() {
-		QueryResultRowArray resultRowArrayArrayList = queryResult.asQueryResultRowArray();
-		queryResultTable = new Table("Results");
-		queryResultTable.addContainerProperty("Phrase", String.class, null);
-		queryResultTable.addContainerProperty("Range", String.class, null);
-
-		for (QueryResultRow queryResultRow : resultRowArrayArrayList) {
-			Object newItemId = queryResultTable.addItem();
-			Item row1 = queryResultTable.getItem(newItemId);
-
-			row1.getItemProperty("Phrase").setValue(queryResultRow.getPhrase());
-			row1.getItemProperty("Range").setValue(queryResultRow.getRange().toString());
+	
+	private void swichView() throws Exception {
+		
+		if(twoGridViews) {
+			if(tagView) {
+				setDataPhraseStyle();
+				tagView= false;
+			}else {
+				setDataTagStyle();
+				tagView= true;
+			}
 		}
-		queryResultTable.setWidth("100%");
-
+		else {
+			 Notification.show("nix zum swichen",
+		                Notification.Type.HUMANIZED_MESSAGE);
+		}
+	
+	
 	}
 
 	private void setDataTagStyle() throws Exception {
+		
+		treeGrid.removeAllColumns();
 
 		TreeData<TagRowItem> tagData = new TreeData<>();
-		tagTreeGrid = new TreeGrid<>();
-		tagTreeGrid.setSelectionMode(SelectionMode.MULTI);
+
 
 		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(
 				populateTree(repository, tagData, queryResult));
 
-		tagTreeGrid.addColumn(TagRowItem::getTreePath).setCaption("Tag");
+		treeGrid.addColumn(TagRowItem::getTreePath).setCaption("Tag");
 
-		tagTreeGrid.addColumn(TagRowItem::getFrequency).setCaption("Frequency");
+		treeGrid.addColumn(TagRowItem::getFrequency).setCaption("Frequency");
 
 		dataProvider.refreshAll();
-		tagTreeGrid.setDataProvider(dataProvider);
-		tagTreeGrid.setWidth("100%");
+		treeGrid.setDataProvider(dataProvider);
+		treeGrid.setWidth("100%");
 
 	}
+	
+
 
 	private TreeData<TagRowItem> populateTree(Repository repository, TreeData<TagRowItem> treeData,
 			QueryResult queryResult) throws Exception {
@@ -255,11 +283,12 @@ public class ResultPanelNew extends Panel {
 	}
 
 	private void setDataPhraseStyle() throws Exception {
+		treeGrid.removeAllColumns();
+		
 
 		Set<GroupedQueryResult> groupedQueryResults = queryResult.asGroupedSet();
 		TreeData<TagRowItem> phraseData = new TreeData<>();
-		phraseTreeGrid = new TreeGrid<TagRowItem>();
-		phraseTreeGrid.setSelectionMode(SelectionMode.MULTI);
+	
 
 		ArrayList<TagRowItem> phraseAsRoots = new ArrayList<>();
 
@@ -283,12 +312,12 @@ public class ResultPanelNew extends Panel {
 		 */
 
 		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(phraseData);
-		phraseTreeGrid.addColumn(TagRowItem::getTreePath).setCaption("Phrase");
-		phraseTreeGrid.addColumn(TagRowItem::getFrequency).setCaption("Frequency");
+		treeGrid.addColumn(TagRowItem::getTreePath).setCaption("Phrase");
+		treeGrid.addColumn(TagRowItem::getFrequency).setCaption("Frequency");
 
-		phraseTreeGrid.setDataProvider(dataProvider);
+		treeGrid.setDataProvider(dataProvider);
 		dataProvider.refreshAll();
-		phraseTreeGrid.setWidth("100%");
+		treeGrid.setWidth("100%");
 	}
 
 	// get docs as children for a phrase
