@@ -263,11 +263,12 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		
 	
 		List<String> predefQueries = new ArrayList<>();
+		predefQueries.add(new String("property= \"%\""));
 		predefQueries.add(new String("tag=\"Tag%\""));
-		predefQueries.add(new String("tag = \"Tag1\""));
-		predefQueries.add(new String("wild = \"und\""));
-		predefQueries.add(new String("wild = \"Blumen%\""));
-		predefQueries.add(new String("wild = \"%\""));
+		predefQueries.add(new String("tag= \"Tag1\""));
+		predefQueries.add(new String("wild= \"und\""));
+		predefQueries.add(new String("wild= \"Blumen%\""));
+		predefQueries.add(new String("wild= \"%\""));
 		
 		predefQueries.add(new String("freq>0"));
 		

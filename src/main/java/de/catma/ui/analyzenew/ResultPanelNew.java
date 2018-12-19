@@ -1,10 +1,7 @@
 package de.catma.ui.analyzenew;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Set;
-import java.util.stream.Collectors;
-
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
@@ -12,7 +9,6 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.SelectionMode;
-import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
@@ -24,21 +20,16 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.themes.ValoTheme;
-import com.vaadin.v7.data.Item;
 import com.vaadin.v7.ui.Table;
-
 
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.queryengine.result.GroupedQueryResult;
-import de.catma.queryengine.result.PhraseResult;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResult;
 import de.catma.queryengine.result.TagQueryResultRow;
-import de.catma.ui.analyzer.Messages;
-import de.catma.ui.component.HTMLNotification;
 
 public class ResultPanelNew extends Panel {
 
@@ -48,7 +39,9 @@ public class ResultPanelNew extends Panel {
 
 	private VerticalLayout contentVerticalLayout;
 	private Table queryResultTable;
-	private TreeGrid<TagRowItem> treeGrid;
+	private TreeGrid<TagRowItem> treeGridTag;
+	private TreeGrid<TagRowItem> treeGridPhrase;
+	private TreeGrid<TagRowItem> treeGridProperty;
 	private Grid<QueryResultRow> queryResultGrid;
 	private TextArea textArea;
 	private Label queryInfo;
@@ -57,13 +50,14 @@ public class ResultPanelNew extends Panel {
 	private Button caretUpBt;
 	private Button trashBt;
 	private Button optionsBt;
-
+	private Panel treeGridPanel;
 	private QueryResult queryResult;
 	private TagQueryResult tagQueryResult;
 	private String queryAsString;
 	private Repository repository;
 	private boolean twoGridViews;
 	private boolean tagView;
+	private float columnWidth;
 
 	public ResultPanelNew(Repository repository, QueryResult result, String queryAsString) throws Exception {
 
@@ -77,10 +71,23 @@ public class ResultPanelNew extends Panel {
 		if (queryAsString.contains("tag=")) {
 			setDataTagStyle();
 			twoGridViews = true;
-			tagView= true;
-		} else {
+			tagView = true;
+			treeGridPanel.setContent(treeGridTag);
+		} 
+		
+		if (queryAsString.contains("property=")){
+			
+			setDataPropertyStyle();
+			twoGridViews = true;
+			tagView = true;
+			treeGridPanel.setContent(treeGridProperty);		
+		}
+		if (queryAsString.contains("wild=")) {
+			
 			setDataPhraseStyle();
 			twoGridViews = false;
+			tagView = false;
+			treeGridPanel.setContent(treeGridPhrase);
 		}
 
 	}
@@ -88,17 +95,28 @@ public class ResultPanelNew extends Panel {
 	private void initComponents() {
 		contentVerticalLayout = new VerticalLayout();
 		setContent(contentVerticalLayout);
-		treeGrid = new TreeGrid<TagRowItem>();
-		treeGrid.setSelectionMode(SelectionMode.MULTI);
+
+		treeGridTag = new TreeGrid<TagRowItem>();
+		treeGridTag.setSelectionMode(SelectionMode.MULTI);
+
+		treeGridPhrase = new TreeGrid<TagRowItem>();
+		treeGridPhrase.setSelectionMode(SelectionMode.MULTI);
+		
+		treeGridProperty = new TreeGrid<TagRowItem>();
+		treeGridProperty.setSelectionMode(SelectionMode.MULTI);
+		
 		createResultInfoBar();
 		createButtonBar();
+		treeGridPanel = new Panel();
+		//contentVerticalLayout.addComponent(treeGridPanel);
+
 	}
 
 	private void initListeners() {
 		caretDownBt.addClickListener(new ClickListener() {
 
 			public void buttonClick(ClickEvent event) {
-				contentVerticalLayout.addComponent(treeGrid);
+				contentVerticalLayout.addComponent(treeGridPanel);
 				groupedIcons.replaceComponent(caretDownBt, caretUpBt);
 
 			}
@@ -107,23 +125,22 @@ public class ResultPanelNew extends Panel {
 		caretUpBt.addClickListener(new ClickListener() {
 
 			public void buttonClick(ClickEvent event) {
-				contentVerticalLayout.removeComponent(treeGrid);
+				contentVerticalLayout.removeComponent(treeGridPanel);
 				groupedIcons.replaceComponent(caretUpBt, caretDownBt);
 
 			}
 		});
-		
+
 		optionsBt.addClickListener(new ClickListener() {
 
 			public void buttonClick(ClickEvent event) {
-			
+
 				try {
 					swichView();
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			
 
 			}
 		});
@@ -136,47 +153,100 @@ public class ResultPanelNew extends Panel {
 			}
 		});
 	}
-	
+
 	private void swichView() throws Exception {
-		
-		if(twoGridViews) {
-			if(tagView) {
-				setDataPhraseStyle();
-				tagView= false;
-			}else {
-				setDataTagStyle();
-				tagView= true;
+
+		if (twoGridViews) {
+			if (tagView) {
+				treeGridPanel.setContent(treeGridPhrase);
+				tagView = false;
+			} else {
+				treeGridPanel.setContent(treeGridTag);
+				tagView = true;
 			}
+		} else {
+			Notification.show("no tag view available for that query", Notification.Type.HUMANIZED_MESSAGE);
 		}
-		else {
-			 Notification.show("nix zum swichen",
-		                Notification.Type.HUMANIZED_MESSAGE);
-		}
-	
-	
 	}
 
 	private void setDataTagStyle() throws Exception {
-		
-		treeGrid.removeAllColumns();
 
 		TreeData<TagRowItem> tagData = new TreeData<>();
+		tagData = populateTree(repository, tagData, queryResult);
+		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(tagData);
 
-
-		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(
-				populateTree(repository, tagData, queryResult));
-
-		treeGrid.addColumn(TagRowItem::getTreePath).setCaption("Tag");
-
-		treeGrid.addColumn(TagRowItem::getFrequency).setCaption("Frequency");
-
+		treeGridTag.addColumn(TagRowItem::getTreePath).setCaption("Tag").setId("tagID");
+		treeGridTag.getColumn("tagID").setExpandRatio(7);
+		
+		treeGridTag.addColumn(TagRowItem::getFrequency).setCaption("Frequency").setId("freqID");
+		treeGridTag.getColumn("freqID").setExpandRatio(1);
+		
 		dataProvider.refreshAll();
-		treeGrid.setDataProvider(dataProvider);
-		treeGrid.setWidth("100%");
-
+		treeGridTag.setDataProvider(dataProvider);
+		treeGridTag.setWidth("100%");
+		 treeGridPanel.setContent(treeGridTag);
+		setDataPhraseStyle();
 	}
 	
+	private void setDataPropertyStyle() throws Exception {
+		TreeData<TagRowItem> propData = new TreeData<>();
+		propData = populateTreeWithProperties(repository, propData, queryResult); // TODO !!!!!!
+		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(propData);
+	
+			treeGridProperty.addColumn(TagRowItem::getTreePath).setCaption("Tag").setId("tagID");
+			treeGridProperty.getColumn("tagID").setExpandRatio(3);
+		
+			treeGridProperty.addColumn(TagRowItem::getPropertyName).setCaption("Property name").setId("propNameID");
+			treeGridProperty.getColumn("propNameID").setExpandRatio(3);
+			
+			treeGridProperty.addColumn(TagRowItem::getPropertyValue).setCaption("Property value").setId("propValueID");
+			treeGridProperty.getColumn("propValueID").setExpandRatio(3);
+			
+			treeGridProperty.addColumn(TagRowItem::getFrequency).setCaption("Frequency").setId("freqID");
+			treeGridProperty.getColumn("freqID").setExpandRatio(1);
+			
+			
+		 //   setDataPhraseStyle();
+	}
+	
+	private TreeData<TagRowItem>  populateTreeWithProperties(Repository repository, TreeData<TagRowItem> propData, QueryResult queryResult){
+		return null;
+	}
 
+	private void setDataPhraseStyle() throws Exception {
+
+		Set<GroupedQueryResult> groupedQueryResults = queryResult.asGroupedSet();
+		TreeData<TagRowItem> phraseData = new TreeData<>();
+		ArrayList<TagRowItem> phraseAsRoots = new ArrayList<>();
+		// add phrases as roots
+		for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
+
+			String phrase = (String) groupedQueryResult.getGroup();
+			TagRowItem rootPhrase = new TagRowItem();
+			rootPhrase.setTreePath(phrase);
+			rootPhrase.setFrequency(groupedQueryResult.getTotalFrequency());
+			phraseAsRoots.add(rootPhrase);
+			phraseData.addItems(null, rootPhrase);
+
+			phraseData.addItems(rootPhrase, retrieveChilderen(groupedQueryResult));
+
+		}
+
+		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(phraseData);
+		
+		treeGridPhrase.addColumn(TagRowItem::getTreePath).setCaption("Phrase").setId("phraseID");
+		treeGridPhrase.getColumn("phraseID").setExpandRatio(7);
+		
+		treeGridPhrase.addColumn(TagRowItem::getFrequency).setCaption("Frequency").setId("freqID");
+		treeGridPhrase.getColumn("freqID").setExpandRatio(1);
+	
+		dataProvider.refreshAll();
+	
+		//dataProvider.refreshAll();
+		treeGridPhrase.setDataProvider(dataProvider);
+		treeGridPhrase.setWidth("100%");
+		//treeGridPanel.setContent(treeGridPhrase);
+	}
 
 	private TreeData<TagRowItem> populateTree(Repository repository, TreeData<TagRowItem> treeData,
 			QueryResult queryResult) throws Exception {
@@ -237,7 +307,7 @@ public class ResultPanelNew extends Panel {
 
 			treeData.addItems(tag, docsForATag);
 
-			// adding collections as children for documents
+			// ... adding collections as children for documents
 			for (TagRowItem oneDoc : docsForATag) {
 
 				ArrayList<TagRowItem> collectionsForADocument = new ArrayList<TagRowItem>();
@@ -282,44 +352,6 @@ public class ResultPanelNew extends Panel {
 		return treeData;
 	}
 
-	private void setDataPhraseStyle() throws Exception {
-		treeGrid.removeAllColumns();
-		
-
-		Set<GroupedQueryResult> groupedQueryResults = queryResult.asGroupedSet();
-		TreeData<TagRowItem> phraseData = new TreeData<>();
-	
-
-		ArrayList<TagRowItem> phraseAsRoots = new ArrayList<>();
-
-		// add phrases as roots
-		for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
-
-			String phrase = (String) groupedQueryResult.getGroup();
-			TagRowItem rootPhrase = new TagRowItem();
-			rootPhrase.setTreePath(phrase);
-			rootPhrase.setFrequency(groupedQueryResult.getTotalFrequency());
-			phraseAsRoots.add(rootPhrase);
-			phraseData.addItems(null, rootPhrase);
-
-			phraseData.addItems(rootPhrase, retrieveChilderen(groupedQueryResult));
-
-		}
-	
-		/*
-		 * docItems= docsForAPhrase.stream().map( temp-> { TagRowItem docItemRow=new
-		 * TagRowItem(); docItemRow.setTreePath(temp); }).collect(Collectors.toSet());
-		 */
-
-		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(phraseData);
-		treeGrid.addColumn(TagRowItem::getTreePath).setCaption("Phrase");
-		treeGrid.addColumn(TagRowItem::getFrequency).setCaption("Frequency");
-
-		treeGrid.setDataProvider(dataProvider);
-		dataProvider.refreshAll();
-		treeGrid.setWidth("100%");
-	}
-
 	// get docs as children for a phrase
 	private ArrayList<TagRowItem> retrieveChilderen(GroupedQueryResult groupedQueryResult) throws Exception {
 
@@ -328,7 +360,7 @@ public class ResultPanelNew extends Panel {
 		for (String doc : docsForAPhrase) {
 			TagRowItem rowItem = new TagRowItem();
 			// get SourceDoc name from sorceDocID
-			String docName= retrieveDocumentName( this.repository ,doc);
+			String docName = retrieveDocumentName(this.repository, doc);
 			rowItem.setTreePath(docName);
 			rowItem.setFrequency(groupedQueryResult.getFrequency(doc));
 			docItems.add(rowItem);
@@ -336,24 +368,9 @@ public class ResultPanelNew extends Panel {
 		}
 		return docItems;
 	}
-	
-	private String retrieveDocumentName(Repository repository ,String docID) throws Exception {
-		 return repository.getSourceDocument(docID).toString();
-	}
 
-	private CheckBox createCheckbox(final GroupedQueryResult phraseResult) {
-		final CheckBox checkBox = new CheckBox();
-		// checkBox.setValue(false);
-
-		checkBox.addValueChangeListener(event -> {
-			boolean checked = checkBox.getValue();
-			Notification.show("Is checked", "is : " + checked, Notification.Type.HUMANIZED_MESSAGE);
-
-		});
-
-		// synchronizeWithSelectedView(phraseResult, selected);
-
-		return checkBox;
+	private String retrieveDocumentName(Repository repository, String docID) throws Exception {
+		return repository.getSourceDocument(docID).toString();
 	}
 
 	private void createResultInfoBar() {

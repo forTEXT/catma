@@ -17,6 +17,8 @@ public class TagRowItem {
 	private UUID uuid;
 	private String treePath;
 	private int frequency;
+	private String propertyName;
+	private Object propertyValue;
 
 	
 	public TagRowItem() {
@@ -100,6 +102,19 @@ public class TagRowItem {
 	public boolean setFrequencyOneUp() {
 		frequency++;
 		return true;
+	}
+
+	public String getPropertyName() {
+		return propertyName;
+	}
+	public void setPropertyName(String propertyName) {
+		this.propertyName = propertyName;
+	}
+	public Object getPropertyValue() {
+		return propertyValue;
+	}
+	public void setPropertyValue(Object propertyValue) {
+		this.propertyValue = propertyValue;
 	}
 	
 	
