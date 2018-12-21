@@ -1,8 +1,10 @@
 package de.catma.ui.modules.main;
 
+import java.util.Iterator;
+
 import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
 import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.themes.ValoTheme;
@@ -84,19 +86,34 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
 	        addComponent(btTags);
 	        addComponent(btAnnotate);
 	        addComponent(btAnalyze);
-	        
+	        setSelectedStyle(btProject);
 	        currentRoute = routeToProjectEvent.getClass();
 		}
 	}
 	
-	@Override
-	public void handleRouteToAnnotate(RouteToAnnotateEvent routeToAnnotateEvent) {
-		currentRoute = routeToAnnotateEvent.getClass();
+	private void setSelectedStyle(LargeLinkButton selectedButton) {
+		Iterator<Component> componentIter = this.iterator();
+		while (componentIter.hasNext()) {
+			Component comp = componentIter.next();
+			if (comp.equals(selectedButton)) {
+				comp.addStyleName("nav-selected-entry");
+			}
+			else {
+				comp.removeStyleName("nav-selected-entry");
+			}
+		}
 	}
 
 	@Override
-	public void handleRouteToAnalye(RouteToAnalyzeEvent routeToAnalyzeEvent) {
+	public void handleRouteToAnnotate(RouteToAnnotateEvent routeToAnnotateEvent) {
+		currentRoute = routeToAnnotateEvent.getClass();
+		setSelectedStyle(btAnnotate);
+	}
+
+	@Override
+	public void handleRouteToAnalyze(RouteToAnalyzeEvent routeToAnalyzeEvent) {
 		currentRoute = routeToAnalyzeEvent.getClass();
+		setSelectedStyle(btAnalyze);
 	}
 
 	@Override

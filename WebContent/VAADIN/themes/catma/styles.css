@@ -17520,10 +17520,13 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	color: rgba(0, 0, 0, 0.87);
 	flex-grow: 1;
 	width: 160px;
+	justify-content: center;
 }
 
-.catma .nav div:first-child {
-	margin-top: 20px;
+.catma .v-button.v-widget.h3.v-button-h3.link.v-button-link.nav-selected-entry.v-button-nav-selected-entry {
+	background: #0c719a;
+	color: white;
+	padding-bottom: 30px;
 }
 
 .catma .nav .v-label {
@@ -17536,14 +17539,14 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .nav .v-button {
-	margin-left: 20px;
-	margin-right: 20px;
-	margin-top: 10px;
-	margin-bottom: 10px;
+	padding-left: 20px;
+	padding-right: 20px;
+	padding-top: 5px;
+	margin-top: 5px;
+	margin-bottom: 5px;
 	text-decoration: none;
 	cursor: pointer;
 	color: var(--lumo-body-text-color);
-	padding: 0px;
 	text-transform: none;
 }
 

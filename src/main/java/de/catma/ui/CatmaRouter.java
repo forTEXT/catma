@@ -19,7 +19,7 @@ public interface CatmaRouter {
 	void handleRouteToAnnotate(RouteToAnnotateEvent routeToAnnotateEvent);
 
 	@Subscribe
-	void handleRouteToAnalye(RouteToAnalyzeEvent routeToAnalyzeEvent);
+	void handleRouteToAnalyze(RouteToAnalyzeEvent routeToAnalyzeEvent);
 	
 	Class<?> getCurrentRoute();
 	

@@ -143,7 +143,7 @@ public class MainView extends CssLayout implements CatmaRouter  {
 	};
 	
 	@Override
-	public void handleRouteToAnalye(RouteToAnalyzeEvent routeToAnalyzeEvent) {
+	public void handleRouteToAnalyze(RouteToAnalyzeEvent routeToAnalyzeEvent) {
 		if (isNewTarget(routeToAnalyzeEvent.getClass())) {
 			if (this.analyzerManagerView == null) {
 				this.analyzerManagerView = new AnalyzerManagerView(eventBus);
