@@ -1,6 +1,10 @@
 package de.catma.ui.tagger.resourcepanel;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.ListDataProvider;
@@ -28,6 +32,7 @@ public class ResourcePanel extends VerticalLayout {
 	private TreeGrid<DocumentTreeItem> documentTree;
 	private TreeData<DocumentTreeItem> documentsData;
 	private Grid<TagsetDefinition> tagsetGrid;
+	private ResourceSelectionListener resourceSelectionListener;
 
 	public ResourcePanel(Repository project, SourceDocument currentlySelectedSourceDocument) {
 		super();
@@ -59,10 +64,41 @@ public class ResourcePanel extends VerticalLayout {
 			tagsetGrid.setDataProvider(tagsetData);
 			tagsetData.getItems().forEach(tagsetGrid::select);
 			
+			documentsData
+				.getRootItems()
+				.stream()
+				.filter(documentItem -> documentItem.isSelected())
+				.findAny()
+				.ifPresent(documentItem -> documentTree.expand(documentItem));
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public List<UserMarkupCollectionReference> getSelectedUserMarkupCollectionReferences() {
+		
+		Optional<DocumentTreeItem> optionalDocumentTreeItem = 
+				documentsData.getRootItems()
+				.stream()
+				.filter(documentTreeItem->documentTreeItem.isSelected())
+				.findFirst();
+		
+		if (optionalDocumentTreeItem.isPresent()) {
+			return documentsData.getChildren(optionalDocumentTreeItem.get())
+				.stream()
+				.filter(documentTreeItem -> documentTreeItem.isSelected())
+				.map(CollectionDataItem.class::cast)
+				.map(collectionDataItem -> collectionDataItem.getCollectionRef())
+				.collect(Collectors.toList());
+		}
+		
+		return Collections.emptyList();
+	}
+	
+	public Collection<TagsetDefinition> getSelectedTagsets() {
+		return tagsetGrid.getSelectedItems();
 	}
 
 	private void initComponents() {
@@ -134,11 +170,14 @@ public class ResourcePanel extends VerticalLayout {
 			}
 		}		
 		documentTree.getDataProvider().refreshAll();
+		
+		selectedItem.fireSelectedEvent(this.resourceSelectionListener);
+	}
+
+	public void setSelectionListener(
+			ResourceSelectionListener resourceSelectionListener) {
+		this.resourceSelectionListener = resourceSelectionListener;
 	}
 	
 	
-	
-	
-	
-
 }

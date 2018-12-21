@@ -7,4 +7,5 @@ public interface DocumentTreeItem {
 	public void setSelected(boolean value);
 	public boolean isSingleSelection();
 	public boolean isSelected();
+	public void fireSelectedEvent(ResourceSelectionListener resourceSelectionListener);
 }

@@ -20,6 +20,7 @@ package de.catma.ui.analyzer;
 
 import java.util.HashSet;
 
+import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.UI;
@@ -35,12 +36,13 @@ import de.catma.ui.tabbedview.TabbedView;
 public class AnalyzerManagerView extends TabbedView {
 	
 	private Button btnAnalyzeCurrentOpenDoc;
+	private EventBus eventBus;
 	
 
-	public AnalyzerManagerView() {
-		
+	public AnalyzerManagerView(EventBus eventBus) {
 		super(Messages.getString("AnalyzerManagerView.intro")); //$NON-NLS-1$
-
+		this.eventBus = eventBus;
+		
 		initComponents();
 		initAnalyzerAction();	
 	}
@@ -65,31 +67,35 @@ public class AnalyzerManagerView extends TabbedView {
 	  
 	}
 
-	public void analyzeDocuments(Corpus corpus, IndexedRepository repository) throws Exception {
-		
-		AnalyzerView analyzerView = new AnalyzerView(corpus, repository, new CloseListener() {
-
-			public void closeRequest(AnalyzerView analyzerView) {
-				onTabClose(analyzerView);
+	public void analyzeDocuments(Corpus corpus, IndexedRepository repository) {
+		try {
+			AnalyzerView analyzerView = new AnalyzerView(corpus, repository, new CloseListener() {
+	
+				public void closeRequest(AnalyzerView analyzerView) {
+					onTabClose(analyzerView);
+				}
+			});
+	
+			HashSet<String> captions = new HashSet<String>();
+	
+			for (Component c : this.getTabSheet()) {
+				captions.add(getCaption(c));
 			}
-		});
-
-		HashSet<String> captions = new HashSet<String>();
-
-		for (Component c : this.getTabSheet()) {
-			captions.add(getCaption(c));
+	
+			String base = (corpus == null) ? Messages.getString("AnalyzerManagerView.allDocuments") : corpus.toString(); //$NON-NLS-1$
+			String caption = base;
+	
+			int captionIndex = 1;
+			while (captions.contains(caption)) {
+				caption = base + "(" + captionIndex + ")"; //$NON-NLS-1$ //$NON-NLS-2$
+				captionIndex++;
+			}
+	
+			addClosableTab(analyzerView, caption);
 		}
-
-		String base = (corpus == null) ? Messages.getString("AnalyzerManagerView.allDocuments") : corpus.toString(); //$NON-NLS-1$
-		String caption = base;
-
-		int captionIndex = 1;
-		while (captions.contains(caption)) {
-			caption = base + "(" + captionIndex + ")"; //$NON-NLS-1$ //$NON-NLS-2$
-			captionIndex++;
+		catch (Exception e) {
+			((CatmaApplication)UI.getCurrent()).showAndLogError("error initializing Analyze", e);
 		}
-
-		addClosableTab(analyzerView, caption);
 	}
 	
 

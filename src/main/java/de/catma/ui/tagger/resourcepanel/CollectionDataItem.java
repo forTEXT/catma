@@ -7,7 +7,7 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 public class CollectionDataItem implements DocumentTreeItem {
 
 	private UserMarkupCollectionReference collectionRef;
-	private boolean selected;
+	private boolean selected = true;
 
 	public CollectionDataItem(UserMarkupCollectionReference collectionRef) {
 		super();
@@ -16,7 +16,7 @@ public class CollectionDataItem implements DocumentTreeItem {
 	
 	@Override
 	public String getSelectionIcon() {
-		return selected?VaadinIcons.CHECK_SQUARE_O.getHtml():VaadinIcons.THIN_SQUARE.getHtml();
+		return selected?VaadinIcons.EYE.getHtml():VaadinIcons.EYE_SLASH.getHtml();
 	}
 
 	@Override
@@ -24,6 +24,10 @@ public class CollectionDataItem implements DocumentTreeItem {
 		return collectionRef.getName();
 	}
 
+	public UserMarkupCollectionReference getCollectionRef() {
+		return collectionRef;
+	}
+	
 	@Override
 	public String getIcon() {
 		return VaadinIcons.NOTEBOOK.getHtml();
@@ -42,6 +46,11 @@ public class CollectionDataItem implements DocumentTreeItem {
 	@Override
 	public boolean isSelected() {
 		return selected;
+	}
+	
+	@Override
+	public void fireSelectedEvent(ResourceSelectionListener resourceSelectionListener) {
+		resourceSelectionListener.annotationCollectionSelected(collectionRef, isSelected());
 	}
 
 }

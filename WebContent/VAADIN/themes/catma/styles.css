@@ -17794,6 +17794,14 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border: none;
 }
 
+.catma .annotate-tagsets-grid .v-treegrid-row-selected > .v-treegrid-cell-focused::before {
+	border-color: transparent;
+}
+
+.catma .annotate-tagsets-grid .v-treegrid-row-focused::before {
+	border-color: transparent;
+}
+
 .catma .annotate-right-padding {
 	padding-right: 3px;
 }
@@ -17819,4 +17827,23 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .annotate-resource-grid button {
 	background-color: transparent;
 	border: none;
+}
+
+.catma .tagger-contextmenu-menuitem-caption {
+	display: inline-block;
+	width: 15px;
+	margin-top: 1px;
+	margin-bottom: 1px;
+	margin-right: 2px;
+}
+
+.catma .v-menubar-popup .v-menubar-menuitem.tagger-contextmenu-menuitem {
+	padding-left: 25px;
+	padding-right: 45px;
+}
+
+.catma .c-tabbed-view-plus {
+	float: right;
+	margin-top: 10px;
+	margin-right: 20px;
 }

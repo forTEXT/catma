@@ -9,6 +9,7 @@ import com.vaadin.ui.themes.ValoTheme;
 
 import de.catma.ui.CatmaRouter;
 import de.catma.ui.component.LargeLinkButton;
+import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
@@ -91,6 +92,11 @@ public class CatmaNav extends CssLayout implements CatmaRouter {
 	@Override
 	public void handleRouteToAnnotate(RouteToAnnotateEvent routeToAnnotateEvent) {
 		currentRoute = routeToAnnotateEvent.getClass();
+	}
+
+	@Override
+	public void handleRouteToAnalye(RouteToAnalyzeEvent routeToAnalyzeEvent) {
+		currentRoute = routeToAnalyzeEvent.getClass();
 	}
 
 	@Override

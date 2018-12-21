@@ -858,6 +858,14 @@
 		border: none;    
     }
     
+    .annotate-tagsets-grid .v-treegrid-row-selected  > .v-treegrid-cell-focused::before {
+		border-color: transparent;
+	}
+	
+    .annotate-tagsets-grid .v-treegrid-row-focused::before {
+		border-color: transparent;
+	}
+
     .annotate-right-padding {
     	padding-right: 3px;
     }
@@ -887,5 +895,26 @@
 		background-color: transparent;
 		border: none;    
     }
+    
+    .tagger-contextmenu-menuitem-caption {
+    	display: inline-block;
+    	width: 15px;
+    	margin-top: 1px;
+    	margin-bottom: 1px;
+    	margin-right: 2px;
+    }
+    
+	.v-menubar-popup .v-menubar-menuitem.tagger-contextmenu-menuitem {
+	
+	    padding-left: 25px;
+	    padding-right: 45px;
+	
+	}
+
+    .c-tabbed-view-plus {
+	    float: right;
+	    margin-top: 10px;
+	    margin-right: 20px;
+	}
 
 }

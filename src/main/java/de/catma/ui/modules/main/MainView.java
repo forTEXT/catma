@@ -9,6 +9,8 @@ import com.vaadin.ui.Label;
 
 import de.catma.project.ProjectManager;
 import de.catma.ui.CatmaRouter;
+import de.catma.ui.analyzer.AnalyzerManagerView;
+import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
@@ -63,6 +65,8 @@ public class MainView extends CssLayout implements CatmaRouter  {
 	private ProjectView projectView;
 
 	private TaggerManagerView taggerManagerView;
+
+	private AnalyzerManagerView analyzerManagerView;
 	
 	/**
 	 * 
@@ -121,10 +125,11 @@ public class MainView extends CssLayout implements CatmaRouter  {
 		}
 	}
 	
+	@Override
 	public void handleRouteToAnnotate(RouteToAnnotateEvent routeToAnnotateEvent) {
 		if (isNewTarget(routeToAnnotateEvent.getClass())) {
 			if (this.taggerManagerView == null) {
-				this.taggerManagerView = new TaggerManagerView();
+				this.taggerManagerView = new TaggerManagerView(eventBus);
 			}
 			
 			setContent(taggerManagerView);
@@ -136,6 +141,23 @@ public class MainView extends CssLayout implements CatmaRouter  {
 			currentRoute = routeToAnnotateEvent.getClass();
 		}
 	};
+	
+	@Override
+	public void handleRouteToAnalye(RouteToAnalyzeEvent routeToAnalyzeEvent) {
+		if (isNewTarget(routeToAnalyzeEvent.getClass())) {
+			if (this.analyzerManagerView == null) {
+				this.analyzerManagerView = new AnalyzerManagerView(eventBus);
+			}
+			
+			setContent(analyzerManagerView);
+			
+			if (routeToAnalyzeEvent.getCorpus() != null) {
+				analyzerManagerView.analyzeDocuments(
+					routeToAnalyzeEvent.getCorpus(), routeToAnalyzeEvent.getProject());
+			}			
+			currentRoute = routeToAnalyzeEvent.getClass();
+		}
+	}
     
 
 	@Override

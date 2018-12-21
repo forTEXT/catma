@@ -47,7 +47,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Link;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
@@ -83,10 +82,8 @@ import de.catma.ui.analyzer.QueryOptionsProvider;
 import de.catma.ui.authentication.AuthenticationHandler;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
-import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.modules.main.ErrorLogger;
 import de.catma.ui.modules.main.MainView;
-import de.catma.ui.project.ProjectManagerView;
 import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
 import de.catma.user.User;
@@ -124,8 +121,6 @@ public class CatmaApplication extends UI implements
 
 	private UIHelpWindow uiHelpWindow = new UIHelpWindow();
 	private Button btloginLogout;
-	
-	private ProjectManagerView projectManagerView;
 	
 	private final EventBus eventBus = new EventBus();
 	
@@ -328,10 +323,6 @@ public class CatmaApplication extends UI implements
 						MessageFormat.format(
 							Messages.getString("CatmaApplication.signOut"), user.getName())); //$NON-NLS-1$
 
-					projectManagerView = new ProjectManagerView(projectManager);
-					
-					contentPanel.setContent(projectManagerView);
-
 					// new design test
 					// TODO: set this correctly later :-)
 					MainView mainView = new MainView(projectManager, eventBus);
@@ -409,27 +400,10 @@ public class CatmaApplication extends UI implements
 			throw new IOException("could not create temporary directory: " + this.tempDirectory); //$NON-NLS-1$
 		}
 	}
-	
+	@Deprecated
 	public void addTagsetToActiveDocument(TagsetDefinition tagsetDefinition, TagsetSelectionListener tagsetSelectionListener) {
 		
-		//TODO: will fail when trying to load from project view since the active tab will be the project view and not a tagger view
-		TaggerView selectedTab = (TaggerView) projectManagerView.getSelectedTab();
-		
-		if (selectedTab == null) {
-			Notification.show(Messages.getString("CatmaApplication.infoTitle"), //$NON-NLS-1$
-					Messages.getString("CatmaApplication.noActiveDocumentInTagger"), //$NON-NLS-1$
-					Type.TRAY_NOTIFICATION);
-			return;
-		}		
-
-		selectedTab.openTagsetDefinition(this, tagsetDefinition,tagsetSelectionListener);	
-
-		SourceDocument sd = selectedTab.getSourceDocument();
-		String sourceDocumentCaption = sd.toString();
-
-		Notification.show(Messages.getString("CatmaApplication.infoTitle"), //$NON-NLS-1$
-				MessageFormat.format(Messages.getString("CatmaApplication.tagsetLoaded"), sourceDocumentCaption), //$NON-NLS-1$
-				Type.TRAY_NOTIFICATION);
+		//TODO: not needed anymore
 	}
 	
 	public void addTagsetToActiveDocument(TagsetDefinition tagsetDefinition) {
@@ -440,8 +414,8 @@ public class CatmaApplication extends UI implements
 		openTagLibrary(repository, tagLibrary, true);
 	}
 
+	@Deprecated
 	public void openTagLibrary(Repository repository, TagLibrary tagLibrary, boolean switchToTagManagerView) {
-		projectManagerView.openTagLibrary(repository, tagLibrary, switchToTagManagerView);
 	}
 
 	public TaggerView openSourceDocument(String sourceDocumentId) {
@@ -460,8 +434,9 @@ public class CatmaApplication extends UI implements
 		return null;
 	}
 
+	@Deprecated
 	public TaggerView openSourceDocument(SourceDocument sourceDocument, Repository repository) {
-		return projectManagerView.openSourceDocument(sourceDocument, repository);
+		return null;
 	}
 
 	public String getTempDirectory() {
@@ -485,13 +460,15 @@ public class CatmaApplication extends UI implements
 		}, new LogProgressListener());
 	}
 
+	@Deprecated
 	public void openUserMarkupCollection(SourceDocument sourceDocument, UserMarkupCollection userMarkupCollection,
 			Repository repository) {
-		projectManagerView.openUserMarkupCollection(sourceDocument, userMarkupCollection, repository);
+		//projectManagerView.openUserMarkupCollection(sourceDocument, userMarkupCollection, repository);
 	}
 
+	@Deprecated
 	public void analyze(Corpus corpus, IndexedRepository repository) {
-		projectManagerView.analyze(corpus, repository);
+//		projectManagerView.analyze(corpus, repository);
 	}
 
 	public void analyzeCurrentlyActiveDocument() {
@@ -517,9 +494,7 @@ public class CatmaApplication extends UI implements
 	@Override
 	public void close() {
 		VaadinSession.getCurrent().setAttribute("USER", null);
-		if (projectManagerView != null) {
-			projectManagerView.close();
-		}
+
 		logger.info("application for user" + getUser() + " has been closed"); //$NON-NLS-1$ //$NON-NLS-2$
 		if (repositoryOpened) {
 			userManager.logout(this);

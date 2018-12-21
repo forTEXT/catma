@@ -1,10 +1,12 @@
 package de.catma.ui.tagger.annotationpanel;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import com.github.appreciated.material.MaterialTheme;
 import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Alignment;
@@ -23,14 +25,20 @@ import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.repository.Repository;
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.component.IconButton;
-import de.catma.ui.component.actiongrid.ActionGridComponent;
 
 public class AnnotationPanel extends VerticalLayout {
+	
+	public interface TagReferenceSelectionChangeListener {
+		public void tagReferenceSelectionChanged(
+				List<TagReference> tagReferences, boolean selected);
+	}
+	
 	private class PropertyDisplayItem {
 		private String displayValue;
 		private PropertyDefinition propertyDefinition;
@@ -56,17 +64,18 @@ public class AnnotationPanel extends VerticalLayout {
 	private Button addCollectionButton;
 	private TreeGrid<TagTreeItem> tagsetsGrid;
 	private Repository project;
+	private Collection<TagsetDefinition> tagsets;
+	private List<UserMarkupCollection> collections;
+	private TagReferenceSelectionChangeListener selectionListener;
 
 	public AnnotationPanel(Repository project) {
 		this.project = project;
 		initComponents();
 		initActions();
-		initData();
 	}
 
 	private void initData() {
         try {
-            Collection<TagsetDefinition> tagsets = project.getTagsets();
             TreeData<TagTreeItem> tagsetData = new TreeData<>();
             
             tagsetData.addRootItems(tagsets.stream().map(ts -> new TagsetDataItem(ts)));
@@ -90,6 +99,8 @@ public class AnnotationPanel extends VerticalLayout {
             		}
             	}
             }
+            
+            currentEditableCollectionBox.setDataProvider(new ListDataProvider<>(collections));
         } catch (Exception e) {
 			// TODO Auto-generated catch block
             e.printStackTrace();
@@ -106,16 +117,13 @@ public class AnnotationPanel extends VerticalLayout {
     }
 	private void initActions() {
 		tagsetsGrid.addColumn(tagTreeItem -> tagTreeItem.getColor(), new HtmlRenderer())
-//			.setCaption("Tagset")
+			.setCaption("Tagsets")
 			.setExpandRatio(1);
 		tagsetsGrid.setHierarchyColumn(
 			tagsetsGrid.addColumn(tagTreeItem -> tagTreeItem.getName())
 			.setCaption("Tags")
 			.setExpandRatio(3));
-		
-//		tagsetsGrid.addColumn(tagTreeItem -> tagTreeItem.getName())
-//		.setExpandRatio(3)
-//		.setCaption("Name");
+
 		ButtonRenderer<TagTreeItem> visibilityRenderer = 
 			new ButtonRenderer<TagTreeItem>(rendererClickEvent -> handleVisibilityClickEvent(rendererClickEvent));
 		visibilityRenderer.setHtmlContentAllowed(true);
@@ -127,7 +135,17 @@ public class AnnotationPanel extends VerticalLayout {
 	}
 
 	private void handleVisibilityClickEvent(RendererClickEvent<TagTreeItem> rendererClickEvent) {
-		System.out.println(rendererClickEvent.getItem());
+		rendererClickEvent.getItem().setVisible(!rendererClickEvent.getItem().isVisible());
+		tagsetsGrid.getDataProvider().refreshItem(rendererClickEvent.getItem());
+		
+		TagTreeItem tagTreeItem = rendererClickEvent.getItem();
+		List<TagReference> tagReferences = tagTreeItem.getTagReferences(collections);
+		
+		boolean selected = rendererClickEvent.getItem().isVisible();
+		
+		if (selectionListener != null) {
+			selectionListener.tagReferenceSelectionChanged(tagReferences, selected);
+		}
 	}
 
 	private void initComponents() {
@@ -138,7 +156,6 @@ public class AnnotationPanel extends VerticalLayout {
 		currentEditableCollectionBox.setWidth("100%");
 		
 		addCollectionButton = new IconButton(VaadinIcons.PLUS);
-//		addCollectionButton.addStyleName(ValoTheme.BUTTON_LINK);
 		
 		HorizontalLayout editableCollectionPanel = 
 				new HorizontalLayout(currentEditableCollectionBox, addCollectionButton);
@@ -221,6 +238,20 @@ public class AnnotationPanel extends VerticalLayout {
 				return null;
 			}
 		});		
+	}
+	
+	public void setData(Collection<TagsetDefinition> tagsets, List<UserMarkupCollection> collections) {
+		this.tagsets = tagsets;
+		this.collections = collections;
+		initData();
+	}
+	
+	public void setTagReferenceSelectionChangeListener(TagReferenceSelectionChangeListener selectionListener) {
+		this.selectionListener = selectionListener;
+	}
+	
+	public UserMarkupCollection getSelectedEditableCollection() {
+		return currentEditableCollectionBox.getValue();
 	}
 	
 }

@@ -74,4 +74,10 @@ public class DocumentDataItem implements DocumentTreeItem {
 	public boolean isSelected() {
 		return selected;
 	}
+	
+	@Override
+	public void fireSelectedEvent(ResourceSelectionListener resourceSelectionListener) {
+		resourceSelectionListener.documentSelected(document);
+		
+	}
 }

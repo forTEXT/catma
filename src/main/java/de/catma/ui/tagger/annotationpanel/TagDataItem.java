@@ -1,14 +1,20 @@
 package de.catma.ui.tagger.annotationpanel;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.Resource;
 
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.TagDefinition;
 import de.catma.util.ColorConverter;
 
 public class TagDataItem implements TagTreeItem {
 	
 	private TagDefinition tag;
+	private boolean visible;
 	
 	public TagDataItem(TagDefinition tag) {
 		super();
@@ -37,7 +43,7 @@ public class TagDataItem implements TagTreeItem {
 	
 	@Override
 	public String getVisibilityIcon() {
-		return VaadinIcons.EYE_SLASH.getHtml();
+		return visible?VaadinIcons.EYE.getHtml():VaadinIcons.EYE_SLASH.getHtml();
 	}
 
 	@Override
@@ -70,4 +76,24 @@ public class TagDataItem implements TagTreeItem {
 		return tag.getName();
 	}
 	
+	@Override
+	public boolean isVisible() {
+		return visible;
+	}
+	
+	@Override
+	public void setVisible(boolean visible) {
+		this.visible = visible;
+	}
+	
+	@Override
+	public List<TagReference> getTagReferences(List<UserMarkupCollection> collections) {
+		List<TagReference> result = new ArrayList<>();
+		
+		for (UserMarkupCollection collection : collections) {
+			result.addAll(collection.getTagReferences(tag));
+		}
+		
+		return result;
+	}
 }

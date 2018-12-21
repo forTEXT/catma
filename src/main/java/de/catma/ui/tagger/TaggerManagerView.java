@@ -21,6 +21,7 @@ package de.catma.ui.tagger;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.Component;
 
 import de.catma.document.repository.Repository;
@@ -31,10 +32,12 @@ import de.catma.ui.tabbedview.TabbedView;
 public class TaggerManagerView extends TabbedView {
 	
 	private int nextTaggerID = 0;
+	private EventBus eventBus;
 	
-	public TaggerManagerView() {
+	public TaggerManagerView(EventBus eventBus) {
 		super(
 			Messages.getString("TaggerManagerView.noOpenDocumentsInfo")); //$NON-NLS-1$
+		this.eventBus = eventBus;
 	}
 
 	public TaggerView openSourceDocument(
@@ -74,7 +77,8 @@ public class TaggerManagerView extends TabbedView {
 							}
 							
 						}
-					});
+					},
+					eventBus);
 			addClosableTab(taggerView, sourceDocument.toString());
 			setSelectedTab(taggerView);
 		}
