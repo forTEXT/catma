@@ -17,7 +17,7 @@ import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.layout.FlexLayout;
-import de.catma.ui.modules.main.ErrorLogger;
+import de.catma.ui.modules.main.ErrorHandler;
 
 /**
  * Displays a list of all projects in a card style layout.
@@ -27,11 +27,11 @@ public class ProjectList extends VerticalLayout implements
         HasDataProvider<ProjectReference> {
 
     private final ProjectManager projectManager;
-    private final ErrorLogger errorLogger;
+    private final ErrorHandler errorLogger;
 	private final EventBus eventBus;
 
     ProjectList(ProjectManager projectManager, EventBus eventBus) {
-        this.errorLogger = (ErrorLogger)UI.getCurrent();
+        this.errorLogger = (ErrorHandler)UI.getCurrent();
         this.eventBus = eventBus;
         this.projectManager = projectManager;
         initComponents();

@@ -27,6 +27,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -82,7 +84,7 @@ import de.catma.ui.analyzer.QueryOptionsProvider;
 import de.catma.ui.authentication.AuthenticationHandler;
 import de.catma.ui.component.HTMLNotification;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
-import de.catma.ui.modules.main.ErrorLogger;
+import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.modules.main.MainView;
 import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
@@ -92,7 +94,7 @@ import de.catma.user.User;
 @Theme("catma")
 @PreserveOnRefresh
 public class CatmaApplication extends UI implements 
-	BackgroundServiceProvider, ErrorLogger, AnalyzerProvider, LoginToken, ParameterProvider {
+	BackgroundServiceProvider, ErrorHandler, AnalyzerProvider, LoginToken, ParameterProvider, FocusHandler {
 
 	private static final String MINORVERSION = "(build " + new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date()) //$NON-NLS-1$ //$NON-NLS-2$
 			+ ")"; //$NON-NLS-1$
@@ -123,6 +125,7 @@ public class CatmaApplication extends UI implements
 	private Button btloginLogout;
 	
 	private final EventBus eventBus = new EventBus();
+	private MainView mainView;
 	
 //	private final MainView mainView = new MainView(new EventBus());
 
@@ -325,7 +328,7 @@ public class CatmaApplication extends UI implements
 
 					// new design test
 					// TODO: set this correctly later :-)
-					MainView mainView = new MainView(projectManager, eventBus);
+					mainView = new MainView(projectManager, eventBus);
 					setContent(mainView);
 					eventBus.post(new RouteToDashboardEvent());
 					
@@ -496,6 +499,11 @@ public class CatmaApplication extends UI implements
 		VaadinSession.getCurrent().setAttribute("USER", null);
 
 		logger.info("application for user" + getUser() + " has been closed"); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		if (mainView != null) {
+			mainView.close();
+		}
+		
 		if (repositoryOpened) {
 			userManager.logout(this);
 			repositoryOpened = false;
@@ -541,6 +549,21 @@ public class CatmaApplication extends UI implements
 	public Object getUser() {
 		return user;
 	}
+	
+	@Override
+	public void focusDeferred(Focusable focusable) {
+		schedule(() -> {
+			getUI().access(() -> {
+				focusable.focus();
+				//push();
+			});
+			
+		}, 1, TimeUnit.SECONDS);
+	}
 
-
+	public ScheduledFuture<?> schedule(Runnable command,
+			long delay, TimeUnit unit) {
+		return backgroundService.schedule(command, delay, unit);
+	}
+	
 }

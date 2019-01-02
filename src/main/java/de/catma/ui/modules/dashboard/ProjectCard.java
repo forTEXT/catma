@@ -16,7 +16,7 @@ import de.catma.project.ProjectReference;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.layout.FlexLayout;
-import de.catma.ui.modules.main.ErrorLogger;
+import de.catma.ui.modules.main.ErrorHandler;
 
 /**
  * Displays a single project reference as a card
@@ -27,7 +27,7 @@ public class ProjectCard extends VerticalLayout  {
 
     private ProjectReference projectReference;
 
-    private final ErrorLogger errorLogger;
+    private final ErrorHandler errorLogger;
     private final ProjectManager projectManager;
 
 	private final EventBus eventbus;
@@ -36,7 +36,7 @@ public class ProjectCard extends VerticalLayout  {
         this.projectReference = Objects.requireNonNull(projectReference) ;
         this.projectManager = projectManager;
         this.eventbus = eventbus;
-        this.errorLogger = (ErrorLogger) UI.getCurrent();
+        this.errorLogger = (ErrorHandler) UI.getCurrent();
         initComponents();
     }
 

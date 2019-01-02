@@ -3,8 +3,8 @@ package de.catma.ui.tagger.annotationpanel;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.Resource;
 
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
@@ -90,5 +90,20 @@ public class TagsetDataItem implements TagTreeItem {
 		}
 		
 		return result;
+	}
+	
+	@Override
+	public void setChildrenVisible(TreeDataProvider<TagTreeItem> dataProvider, boolean visible, boolean explicit) {
+		for (TagTreeItem tagTreeItem : dataProvider.getTreeData().getChildren(this)) {
+			setChildrenVisible(tagTreeItem, visible, dataProvider);
+		}
+	}
+
+	private void setChildrenVisible(TagTreeItem tagTreeItem, boolean visible, TreeDataProvider<TagTreeItem> dataProvider) {
+		tagTreeItem.setVisible(visible);
+		dataProvider.refreshItem(tagTreeItem);
+		for (TagTreeItem tagTreeChildItem : dataProvider.getTreeData().getChildren(tagTreeItem)) {
+			setChildrenVisible(tagTreeChildItem, visible, dataProvider);
+		}		
 	}
 }

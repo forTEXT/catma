@@ -1,9 +1,13 @@
 package de.catma.ui.tagger.resourcepanel;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.vaadin.data.TreeData;
@@ -13,18 +17,29 @@ import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.TreeGrid;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.repository.Repository;
+import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
+import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.dialog.SingleTextInputDialog;
+import de.catma.ui.modules.main.ErrorHandler;
+import de.catma.ui.modules.project.CollectionResource;
+import de.catma.ui.modules.project.DocumentResource;
+import de.catma.ui.modules.project.Resource;
+import de.catma.util.Pair;
 
 public class ResourcePanel extends VerticalLayout {
 	
@@ -33,14 +48,120 @@ public class ResourcePanel extends VerticalLayout {
 	private TreeData<DocumentTreeItem> documentsData;
 	private Grid<TagsetDefinition> tagsetGrid;
 	private ResourceSelectionListener resourceSelectionListener;
+	private ActionGridComponent<TreeGrid<DocumentTreeItem>> documentActionGridComponent;
+	private PropertyChangeListener collectionChangeListener;
+	private PropertyChangeListener projectExceptionListener;
+	private ErrorHandler errorHandler;
 
 	public ResourcePanel(Repository project, SourceDocument currentlySelectedSourceDocument) {
 		super();
 		this.project = project;
+        this.errorHandler = (ErrorHandler)UI.getCurrent();
+        initProjectListeners();
+		
 		initComponents();
+		initActions();
 		initData(currentlySelectedSourceDocument);
 	}
 
+    private void initProjectListeners() {
+        this.projectExceptionListener = new PropertyChangeListener() {
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				Exception e = (Exception) evt.getNewValue();
+				errorHandler.showAndLogError("Error handling Project!", e);
+				
+			}
+		};
+		project.addPropertyChangeListener(
+				RepositoryChangeEvent.exceptionOccurred, projectExceptionListener);
+		
+        this.collectionChangeListener = new PropertyChangeListener() {
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				handleCollectionChange(evt);
+			}
+		};
+		
+		project.addPropertyChangeListener(
+			RepositoryChangeEvent.userMarkupCollectionChanged, collectionChangeListener);
+		
+		//TODO: remove!
+    }
+    
+	@SuppressWarnings("unchecked")
+	private void handleCollectionChange(PropertyChangeEvent evt) {
+    	
+    	Object oldValue = evt.getOldValue();
+    	Object newValue = evt.getNewValue();
+    	
+    	if (oldValue == null) { // creation
+			Pair<UserMarkupCollectionReference, SourceDocument> creationResult = 
+    				(Pair<UserMarkupCollectionReference, SourceDocument>) newValue;
+    		
+    		SourceDocument document = creationResult.getSecond();
+    		UserMarkupCollectionReference collectionReference = creationResult.getFirst();
+    		
+			CollectionDataItem collectionDataItem = new CollectionDataItem(collectionReference);
+			DocumentDataItem documentDataItem = new DocumentDataItem(document, true);
+			
+			documentsData.addItem(
+    				documentDataItem, collectionDataItem);
+			documentTree.getDataProvider().refreshAll();
+			
+			Notification.show(
+				"Info", 
+				String.format("Collection %1$s has been created!", collectionReference.toString()),  
+				Type.TRAY_NOTIFICATION);
+    	}
+    	else if (newValue == null) { // removal
+    		//TODO:
+    	}
+    	else { // metadata update
+    		//TODO:
+    	}
+    	
+	}
+
+	private void initActions() {
+		documentActionGridComponent.getActionGridBar().addBtnAddClickListener(clickEvent -> handleAddCollectionRequest());
+		
+	}
+
+    private void handleAddCollectionRequest() {
+    	Set<DocumentTreeItem> selectedItems = documentTree.getSelectedItems();
+    	
+    	Set<SourceDocument> selectedDocuments = new HashSet<>();
+    	
+    	for (DocumentTreeItem resource : selectedItems) {
+    		DocumentTreeItem root = documentsData.getParent(resource);
+
+    		if (root == null) {
+    			root = resource;
+    		}
+    		
+    		DocumentDataItem documentDataItem = (DocumentDataItem)root;
+    		selectedDocuments.add(documentDataItem.getDocument());
+    	}
+    	
+    	
+    	SingleTextInputDialog collectionNameDlg = 
+    		new SingleTextInputDialog("Add Annotation Collection", "Please enter the Collection name:",
+    				new SaveCancelListener<String>() {
+						
+						@Override
+						public void savePressed(String result) {
+							for (SourceDocument document : selectedDocuments) {
+								project.createUserMarkupCollection(result, document);
+							}
+						}
+					});
+    	
+    	collectionNameDlg.show();
+    }
+    
 	private void initData(SourceDocument currentlySelectedSourceDocument) {
 		try {
 			documentsData = new TreeData<>();
@@ -72,8 +193,7 @@ public class ResourcePanel extends VerticalLayout {
 				.ifPresent(documentItem -> documentTree.expand(documentItem));
 			
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			errorHandler.showAndLogError("Error loading data!", e);
 		}
 	}
 	
@@ -129,7 +249,7 @@ public class ResourcePanel extends VerticalLayout {
 		documentTree
 			.addColumn(documentTreeItem -> documentTreeItem.getIcon(), new HtmlRenderer());
 
-		ActionGridComponent<TreeGrid<DocumentTreeItem>> documentActionGridComponent = 
+		documentActionGridComponent = 
 				new ActionGridComponent<TreeGrid<DocumentTreeItem>>(documentTreeLabel, documentTree);
 		
 		addComponent(documentActionGridComponent);

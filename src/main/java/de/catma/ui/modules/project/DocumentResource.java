@@ -35,4 +35,31 @@ public class DocumentResource implements Resource {
     public String getIcon() {
 		return VaadinIcons.BOOK.getHtml();
     }
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((sourceDocument == null) ? 0 : sourceDocument.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DocumentResource other = (DocumentResource) obj;
+		if (sourceDocument == null) {
+			if (other.sourceDocument != null)
+				return false;
+		} else if (!sourceDocument.equals(other.sourceDocument))
+			return false;
+		return true;
+	}
+    
+    
 }

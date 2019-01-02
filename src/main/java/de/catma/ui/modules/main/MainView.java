@@ -1,11 +1,11 @@
 package de.catma.ui.modules.main;
 
-import javax.inject.Inject;
-
 import com.google.common.eventbus.EventBus;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.HorizontalLayout;
 
 import de.catma.project.ProjectManager;
 import de.catma.ui.CatmaRouter;
@@ -163,6 +163,12 @@ public class MainView extends CssLayout implements CatmaRouter  {
 	@Override
 	public Class<?> getCurrentRoute() {
 		return currentRoute;
+	}
+
+	public void close() {
+		if (projectView != null) {
+			projectView.close();
+		}
 	}
     
 }

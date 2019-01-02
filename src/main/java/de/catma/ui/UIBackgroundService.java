@@ -94,6 +94,11 @@ public class UIBackgroundService implements BackgroundService {
 				delay, unit);
 	}
 	
+	public ScheduledFuture<?> schedule(Runnable command,
+			long delay, TimeUnit unit) {
+		return backgroundThread.schedule(command, delay, unit);
+	}
+	
 	public void shutdown() {
 		backgroundThread.shutdown();
 	}

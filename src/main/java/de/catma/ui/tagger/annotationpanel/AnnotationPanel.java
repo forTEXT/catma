@@ -134,6 +134,7 @@ public class AnnotationPanel extends VerticalLayout {
 		currentEditableCollectionBox.setEmptySelectionCaption("Please select or create a Collection...");
 	}
 
+	@SuppressWarnings("unchecked")
 	private void handleVisibilityClickEvent(RendererClickEvent<TagTreeItem> rendererClickEvent) {
 		rendererClickEvent.getItem().setVisible(!rendererClickEvent.getItem().isVisible());
 		tagsetsGrid.getDataProvider().refreshItem(rendererClickEvent.getItem());
@@ -146,6 +147,9 @@ public class AnnotationPanel extends VerticalLayout {
 		if (selectionListener != null) {
 			selectionListener.tagReferenceSelectionChanged(tagReferences, selected);
 		}
+		
+		tagTreeItem.setChildrenVisible(
+			(TreeDataProvider<TagTreeItem>)tagsetsGrid.getDataProvider(), selected, false);
 	}
 
 	private void initComponents() {
@@ -185,7 +189,6 @@ public class AnnotationPanel extends VerticalLayout {
 		tagsetsGrid.setSizeFull();
 		tagsetsGrid.setSelectionMode(SelectionMode.SINGLE);
 		tagsetsGrid.addStyleName(MaterialTheme.GRID_BORDERLESS);
-		
 		
 //        ActionGridComponent<TreeGrid<TagTreeItem>> tagsetGridComponent = new ActionGridComponent<>(
 //                tagsetsLabel,
