@@ -49,7 +49,7 @@
 		<dependency org="com.vaadin" name="vaadin-context-menu" rev="3.0.0" />
 		<dependency org="org.vaadin.addons" name="vaadin-sliderpanel" rev="2.2.0" />
 		<dependency org="com.github.appreciated" name="material" rev="1.1.8" />
-		<dependency org="org.vaadin" name="elements" rev="0.2.1-SNAPSHOT" />
+		<dependency org="org.vaadin" name="elements" rev="0.2.1" />
 
 		<dependency org="org.neo4j" name="neo4j-enterprise" rev="3.0.7"/>
 		<dependency org="org.antlr" name="antlr-runtime" rev="3.4"/>
