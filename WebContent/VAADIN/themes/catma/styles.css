@@ -17809,6 +17809,33 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-size: 12px;
 }
 
+.catma div.annotation-panel-property-summary {
+	display: inline;
+	font-size: 12px;
+	position: relative;
+	bottom: 2px;
+}
+
+.catma tr.v-treegrid-row.v-treegrid-row-stripe.v-treegrid-row-has-data.annotate-panel-property-data-item.v-treegrid-row-depth-2 {
+	border-top: none;
+}
+
+.catma tr.v-treegrid-row.v-treegrid-row-stripe.v-treegrid-row-has-data.annotate-panel-property-data-item.v-treegrid-row-depth-2 button.v-nativebutton {
+	font-size: 12px;
+}
+
+.catma tr.v-treegrid-row.v-treegrid-row-has-data.annotate-panel-property-data-item.v-treegrid-row-depth-2 {
+	border-top: none;
+}
+
+.catma tr.v-treegrid-row.v-treegrid-row-has-data.annotate-panel-property-data-item.v-treegrid-row-depth-2 button.v-nativebutton {
+	font-size: 12px;
+}
+
+.catma .annotate-panel-property-data-item .v-treegrid-body .v-treegrid-row:not(:first-child) {
+	border-top: none;
+}
+
 .catma .annotate-properties-details-tree .v-captiontext {
 	font-size: smaller;
 }

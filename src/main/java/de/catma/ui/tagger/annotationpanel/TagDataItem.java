@@ -2,6 +2,7 @@ package de.catma.ui.tagger.annotationpanel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
@@ -11,10 +12,11 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.TagDefinition;
 import de.catma.util.ColorConverter;
 
-public class TagDataItem implements TagTreeItem {
+public class TagDataItem implements TagsetTreeItem {
 	
 	private TagDefinition tag;
 	private boolean visible;
+	private boolean propertiesExpanded;
 	
 	public TagDataItem(TagDefinition tag) {
 		super();
@@ -98,19 +100,54 @@ public class TagDataItem implements TagTreeItem {
 	}
 	
 	@Override
-	public void setChildrenVisible(TreeDataProvider<TagTreeItem> dataProvider, boolean visible, boolean explicit) {
+	public void setChildrenVisible(TreeDataProvider<TagsetTreeItem> dataProvider, boolean visible, boolean explicit) {
 		if (explicit) {
-			for (TagTreeItem tagTreeItem : dataProvider.getTreeData().getChildren(this)) {
+			for (TagsetTreeItem tagTreeItem : dataProvider.getTreeData().getChildren(this)) {
 				setChildrenVisible(tagTreeItem, visible, dataProvider);
 			}
 		}
 	}
 
-	private void setChildrenVisible(TagTreeItem tagTreeItem, boolean visible, TreeDataProvider<TagTreeItem> dataProvider) {
+	private void setChildrenVisible(TagsetTreeItem tagTreeItem, boolean visible, TreeDataProvider<TagsetTreeItem> dataProvider) {
 		tagTreeItem.setVisible(visible);
 		dataProvider.refreshItem(tagTreeItem);
-		for (TagTreeItem tagTreeChildItem : dataProvider.getTreeData().getChildren(tagTreeItem)) {
+		for (TagsetTreeItem tagTreeChildItem : dataProvider.getTreeData().getChildren(tagTreeItem)) {
 			setChildrenVisible(tagTreeChildItem, visible, dataProvider);
 		}		
 	}
+	
+	@Override
+	public String getPropertySummary() {
+		if (tag.getUserDefinedPropertyDefinitions().isEmpty()) {
+			return null;
+		}
+		
+		StringBuilder propertySummary = new StringBuilder();
+		propertySummary.append(
+			(propertiesExpanded?VaadinIcons.CARET_DOWN.getHtml():VaadinIcons.CARET_RIGHT.getHtml()));
+			
+		propertySummary.append("<div class=\"annotation-panel-property-summary\">");
+		if (!propertiesExpanded) {
+			propertySummary.append(tag.getUserDefinedPropertyDefinitions().stream()
+			.limit(3)
+			.map(property -> property.getName())
+			.collect(Collectors.joining(",")));
+			propertySummary.append(
+				((tag.getUserDefinedPropertyDefinitions().size() > 3)?"...":""));
+		}
+		propertySummary.append("</div>");
+		return propertySummary.toString();
+	}
+
+	@Override
+	public boolean isPropertiesExpanded() {
+		return propertiesExpanded;
+	}
+
+	@Override
+	public void setPropertiesExpanded(boolean propertiesExpanded) {
+		this.propertiesExpanded = propertiesExpanded;
+	}
+	
+	
 }

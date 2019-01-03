@@ -1,8 +1,8 @@
 package de.catma.ui.tagger.annotationpanel;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.github.appreciated.material.MaterialTheme;
 import com.vaadin.data.TreeData;
@@ -12,14 +12,12 @@ import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Tree;
+import com.vaadin.ui.StyleGenerator;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.components.grid.DetailsGenerator;
 import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
@@ -34,35 +32,16 @@ import de.catma.ui.component.IconButton;
 
 public class AnnotationPanel extends VerticalLayout {
 	
+	
 	public interface TagReferenceSelectionChangeListener {
 		public void tagReferenceSelectionChanged(
 				List<TagReference> tagReferences, boolean selected);
 	}
 	
-	private class PropertyDisplayItem {
-		private String displayValue;
-		private PropertyDefinition propertyDefinition;
-		
-		public PropertyDisplayItem(String displayValue, PropertyDefinition propertyDefinition) {
-			super();
-			this.displayValue = displayValue;
-			this.propertyDefinition = propertyDefinition;
-		}
-		
-		public void setDisplayValue(String displayValue) {
-			this.displayValue = displayValue;
-		}
-		
-		@Override
-		public String toString() {
-			return displayValue;
-		}
-	}
-	
 	private ComboBox<UserMarkupCollection> currentEditableCollectionBox;
 	private Button tagsetsOptions;
 	private Button addCollectionButton;
-	private TreeGrid<TagTreeItem> tagsetsGrid;
+	private TreeGrid<TagsetTreeItem> tagsetsGrid;
 	private Repository project;
 	private Collection<TagsetDefinition> tagsets;
 	private List<UserMarkupCollection> collections;
@@ -76,7 +55,7 @@ public class AnnotationPanel extends VerticalLayout {
 
 	private void initData() {
         try {
-            TreeData<TagTreeItem> tagsetData = new TreeData<>();
+            TreeData<TagsetTreeItem> tagsetData = new TreeData<>();
             
             tagsetData.addRootItems(tagsets.stream().map(ts -> new TagsetDataItem(ts)));
 
@@ -97,6 +76,7 @@ public class AnnotationPanel extends VerticalLayout {
             		if (!tag.getUserDefinedPropertyDefinitions().isEmpty()) {
             			tagsetsGrid.setDetailsVisible(item, true);
             		}
+
             	}
             }
             
@@ -109,38 +89,85 @@ public class AnnotationPanel extends VerticalLayout {
 
     private void addTagDefinitionSubTree(
     		TagsetDefinition tagsetDefinition, 
-    		TagDefinition tagDefinition, TreeData<TagTreeItem> tagsetData) {
+    		TagDefinition tagDefinition, TreeData<TagsetTreeItem> tagsetData) {
         for (TagDefinition childDefinition : tagsetDefinition.getDirectChildren(tagDefinition)) {
             tagsetData.addItem(new TagDataItem(tagDefinition), new TagDataItem(childDefinition));
             addTagDefinitionSubTree(tagsetDefinition, childDefinition, tagsetData);
         }
     }
 	private void initActions() {
-		tagsetsGrid.addColumn(tagTreeItem -> tagTreeItem.getColor(), new HtmlRenderer())
+		tagsetsGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
 			.setCaption("Tagsets")
 			.setExpandRatio(1);
 		tagsetsGrid.setHierarchyColumn(
-			tagsetsGrid.addColumn(tagTreeItem -> tagTreeItem.getName())
+			tagsetsGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getName())
+			
 			.setCaption("Tags")
-			.setExpandRatio(3));
+			.setExpandRatio(2));
 
-		ButtonRenderer<TagTreeItem> visibilityRenderer = 
-			new ButtonRenderer<TagTreeItem>(rendererClickEvent -> handleVisibilityClickEvent(rendererClickEvent));
+		ButtonRenderer<TagsetTreeItem> propertySummaryRenderer = 
+				new ButtonRenderer<>(rendererClickEvent -> handlePropertySummaryClickEvent(rendererClickEvent));
+		propertySummaryRenderer.setHtmlContentAllowed(true); //TODO: handle property summary js and html injections!
+		
+		tagsetsGrid.addColumn(
+			tagsetTreeItem -> tagsetTreeItem.getPropertySummary(), 
+			propertySummaryRenderer)
+		.setCaption("Properties")
+		.setExpandRatio(2);
+		
+		ButtonRenderer<TagsetTreeItem> visibilityRenderer = 
+			new ButtonRenderer<TagsetTreeItem>(rendererClickEvent -> handleVisibilityClickEvent(rendererClickEvent));
 		visibilityRenderer.setHtmlContentAllowed(true);
 		tagsetsGrid.addColumn(
-			tagTreeItem -> tagTreeItem.getVisibilityIcon(), 
+			tagsetTreeItem -> tagsetTreeItem.getVisibilityIcon(), 
 			visibilityRenderer);
+		
+		tagsetsGrid.setStyleGenerator(new StyleGenerator<TagsetTreeItem>() {
+			
+			@Override
+			public String apply(TagsetTreeItem item) {
+				return item.generateStyle();
+			}
+		});
 		
 		currentEditableCollectionBox.setEmptySelectionCaption("Please select or create a Collection...");
 	}
 
 	@SuppressWarnings("unchecked")
-	private void handleVisibilityClickEvent(RendererClickEvent<TagTreeItem> rendererClickEvent) {
+	private void handlePropertySummaryClickEvent(RendererClickEvent<TagsetTreeItem> rendererClickEvent) {
+		if (rendererClickEvent.getItem() instanceof TagDataItem) {
+			TagDataItem tagDataItem = (TagDataItem) rendererClickEvent.getItem();
+			
+			tagDataItem.setPropertiesExpanded(!tagDataItem.isPropertiesExpanded());
+			
+			if (tagDataItem.isPropertiesExpanded()) {
+				TagDefinition tag = tagDataItem.getTag();
+				
+				for (PropertyDefinition propertyDefinition : tag.getUserDefinedPropertyDefinitions()) {
+					tagsetsGrid.getTreeData().addItem(tagDataItem, new PropertyDataItem(propertyDefinition));
+				}
+				
+				tagsetsGrid.expand(tagDataItem);
+			}
+			else {
+				TreeData<TagsetTreeItem> tagsetTreeData = tagsetsGrid.getTreeData();
+				
+				for (TagsetTreeItem childTagsetTreeItem : new ArrayList<>(tagsetTreeData.getChildren(tagDataItem))) {
+					childTagsetTreeItem.removePropertyDataItem(
+							(TreeDataProvider<TagsetTreeItem>)tagsetsGrid.getDataProvider());
+				}
+			}
+			tagsetsGrid.getDataProvider().refreshAll();
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void handleVisibilityClickEvent(RendererClickEvent<TagsetTreeItem> rendererClickEvent) {
 		rendererClickEvent.getItem().setVisible(!rendererClickEvent.getItem().isVisible());
 		tagsetsGrid.getDataProvider().refreshItem(rendererClickEvent.getItem());
 		
-		TagTreeItem tagTreeItem = rendererClickEvent.getItem();
-		List<TagReference> tagReferences = tagTreeItem.getTagReferences(collections);
+		TagsetTreeItem tagsetTreeItem = rendererClickEvent.getItem();
+		List<TagReference> tagReferences = tagsetTreeItem.getTagReferences(collections);
 		
 		boolean selected = rendererClickEvent.getItem().isVisible();
 		
@@ -148,8 +175,8 @@ public class AnnotationPanel extends VerticalLayout {
 			selectionListener.tagReferenceSelectionChanged(tagReferences, selected);
 		}
 		
-		tagTreeItem.setChildrenVisible(
-			(TreeDataProvider<TagTreeItem>)tagsetsGrid.getDataProvider(), selected, false);
+		tagsetTreeItem.setChildrenVisible(
+			(TreeDataProvider<TagsetTreeItem>)tagsetsGrid.getDataProvider(), selected, false);
 	}
 
 	private void initComponents() {
@@ -189,7 +216,7 @@ public class AnnotationPanel extends VerticalLayout {
 		tagsetsGrid.setSizeFull();
 		tagsetsGrid.setSelectionMode(SelectionMode.SINGLE);
 		tagsetsGrid.addStyleName(MaterialTheme.GRID_BORDERLESS);
-		
+
 //        ActionGridComponent<TreeGrid<TagTreeItem>> tagsetGridComponent = new ActionGridComponent<>(
 //                tagsetsLabel,
 //                tagsetsGrid
@@ -199,48 +226,6 @@ public class AnnotationPanel extends VerticalLayout {
 		setExpandRatio(tagsetsGrid, 1.0f);
 //        addComponent(tagsetGridComponent);
 //        setExpandRatio(tagsetGridComponent, 1.0f);
-		tagsetsGrid.setDetailsGenerator(new DetailsGenerator<TagTreeItem>() {
-			
-			@Override
-			public Component apply(TagTreeItem t) {
-				if (t instanceof TagDataItem) {
-					TagDefinition tag = ((TagDataItem)t).getTag();
-					
-					TreeData<PropertyDisplayItem> propertyData = new TreeData<>();
-					
-					final String parentItemDisplayString = tag.getName() + " Properties: " + tag.getUserDefinedPropertyDefinitions().stream()
-					.limit(3)
-					.map(property -> property.getName())
-					.collect(Collectors.joining(","))
-					+ ((tag.getUserDefinedPropertyDefinitions().size() > 3)?"...":"");
-					
-					final PropertyDisplayItem parent = new PropertyDisplayItem(parentItemDisplayString, null);
-					propertyData.addRootItems(parent);
-					
-					for (PropertyDefinition propertyDefinition : tag.getUserDefinedPropertyDefinitions()) {
-						propertyData.addItem(
-							parent, 
-							new PropertyDisplayItem(propertyDefinition.getName(), propertyDefinition));
-					}
-					
-					Tree<PropertyDisplayItem> properties = new Tree<>();
-					properties.addExpandListener(expandEvent -> {
-						parent.setDisplayValue(tag.getName() + " Properties");
-					});
-					
-					
-					properties.addCollapseListener(collapseEvent -> {
-						parent.setDisplayValue(parentItemDisplayString);
-					});
-					
-					properties.setSelectionMode(SelectionMode.NONE);
-					properties.addStyleName("annotate-properties-details-tree");
-					properties.setDataProvider(new TreeDataProvider<>(propertyData));
-					return properties;
-				}
-				return null;
-			}
-		});		
 	}
 	
 	public void setData(Collection<TagsetDefinition> tagsets, List<UserMarkupCollection> collections) {

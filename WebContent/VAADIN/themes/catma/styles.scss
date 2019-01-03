@@ -873,7 +873,32 @@
     	font-size: 12px;
     }
     
-    .annotate-properties-details-tree {
+    div.annotation-panel-property-summary {
+   	    display: inline;
+    	font-size: 12px;
+    	position: relative;
+    	bottom: 2px;
+    }
+    
+    
+    tr.v-treegrid-row.v-treegrid-row-stripe.v-treegrid-row-has-data.annotate-panel-property-data-item.v-treegrid-row-depth-2 {
+	    border-top: none;
+	}
+	
+	tr.v-treegrid-row.v-treegrid-row-stripe.v-treegrid-row-has-data.annotate-panel-property-data-item.v-treegrid-row-depth-2 button.v-nativebutton {
+    	font-size: 12px;
+	}
+
+	tr.v-treegrid-row.v-treegrid-row-has-data.annotate-panel-property-data-item.v-treegrid-row-depth-2 {
+		border-top: none;
+	}
+
+	tr.v-treegrid-row.v-treegrid-row-has-data.annotate-panel-property-data-item.v-treegrid-row-depth-2 button.v-nativebutton {
+    	font-size: 12px;
+	}
+	
+    .annotate-panel-property-data-item .v-treegrid-body .v-treegrid-row:not(:first-child) {
+    	border-top: none;
     }
     
     .annotate-properties-details-tree .v-captiontext {

@@ -10,7 +10,7 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.TagsetDefinition;
 
-public class TagsetDataItem implements TagTreeItem {
+public class TagsetDataItem implements TagsetTreeItem {
 	
 	private TagsetDefinition tagset;
 	private boolean visible;
@@ -93,17 +93,33 @@ public class TagsetDataItem implements TagTreeItem {
 	}
 	
 	@Override
-	public void setChildrenVisible(TreeDataProvider<TagTreeItem> dataProvider, boolean visible, boolean explicit) {
-		for (TagTreeItem tagTreeItem : dataProvider.getTreeData().getChildren(this)) {
+	public void setChildrenVisible(TreeDataProvider<TagsetTreeItem> dataProvider, boolean visible, boolean explicit) {
+		for (TagsetTreeItem tagTreeItem : dataProvider.getTreeData().getChildren(this)) {
 			setChildrenVisible(tagTreeItem, visible, dataProvider);
 		}
 	}
 
-	private void setChildrenVisible(TagTreeItem tagTreeItem, boolean visible, TreeDataProvider<TagTreeItem> dataProvider) {
+	private void setChildrenVisible(TagsetTreeItem tagTreeItem, boolean visible, TreeDataProvider<TagsetTreeItem> dataProvider) {
 		tagTreeItem.setVisible(visible);
 		dataProvider.refreshItem(tagTreeItem);
-		for (TagTreeItem tagTreeChildItem : dataProvider.getTreeData().getChildren(tagTreeItem)) {
+		for (TagsetTreeItem tagTreeChildItem : dataProvider.getTreeData().getChildren(tagTreeItem)) {
 			setChildrenVisible(tagTreeChildItem, visible, dataProvider);
 		}		
 	}
+	
+	@Override
+	public String getPropertySummary() {
+		return null; // no properties for Tagsets
+	}
+	
+	@Override
+	public boolean isPropertiesExpanded() {
+		return false;
+	}
+
+	@Override
+	public void setPropertiesExpanded(boolean propertiesExpanded) {
+		//noop
+	}
+
 }
