@@ -17786,6 +17786,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .annotate-tag-tree-item {
 	width: 15px;
 	height: 100%;
+	float: right;
 }
 
 .catma .annotate-tagsets-grid button {

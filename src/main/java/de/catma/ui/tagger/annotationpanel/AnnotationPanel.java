@@ -29,6 +29,7 @@ import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.component.IconButton;
+import de.catma.ui.component.actiongrid.ActionGridComponent;
 
 public class AnnotationPanel extends VerticalLayout {
 	
@@ -97,7 +98,7 @@ public class AnnotationPanel extends VerticalLayout {
     }
 	private void initActions() {
 		tagsetsGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
-			.setCaption("Tagsets")
+			.setCaption("Name")
 			.setExpandRatio(1);
 		tagsetsGrid.setHierarchyColumn(
 			tagsetsGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getName())
@@ -217,15 +218,15 @@ public class AnnotationPanel extends VerticalLayout {
 		tagsetsGrid.setSelectionMode(SelectionMode.SINGLE);
 		tagsetsGrid.addStyleName(MaterialTheme.GRID_BORDERLESS);
 
-//        ActionGridComponent<TreeGrid<TagTreeItem>> tagsetGridComponent = new ActionGridComponent<>(
-//                tagsetsLabel,
-//                tagsetsGrid
-//        );
+        ActionGridComponent<TreeGrid<TagsetTreeItem>> tagsetGridComponent = new ActionGridComponent<>(
+                tagsetsLabel,
+                tagsetsGrid
+        );
         
-		addComponent(tagsetsGrid);
-		setExpandRatio(tagsetsGrid, 1.0f);
-//        addComponent(tagsetGridComponent);
-//        setExpandRatio(tagsetGridComponent, 1.0f);
+//		addComponent(tagsetsGrid);
+//		setExpandRatio(tagsetsGrid, 1.0f);
+        addComponent(tagsetGridComponent);
+        setExpandRatio(tagsetGridComponent, 1.0f);
 	}
 	
 	public void setData(Collection<TagsetDefinition> tagsets, List<UserMarkupCollection> collections) {
