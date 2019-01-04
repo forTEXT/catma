@@ -73,6 +73,7 @@ import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
+import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tagger.MarkupPanel.TagInstanceSelectedListener;
 import de.catma.ui.tagger.Tagger.TaggerListener;
@@ -119,6 +120,7 @@ public class TaggerView extends HorizontalLayout
 	private UserMarkupCollectionManager userMarkupCollectionManager;
 	private EventBus eventBus;
 	private TaggerContextMenu taggerContextMenu;
+	private ErrorHandler errorHandler;
 	
 	public TaggerView(
 			int taggerID, 
@@ -134,7 +136,7 @@ public class TaggerView extends HorizontalLayout
 		
 		this.approxMaxLineLength = getApproximateMaxLineLengthForSplitterPanel(initialSplitterPositionInPixels);
 		this.userMarkupCollectionManager = new UserMarkupCollectionManager(project);
-		
+		this.errorHandler = (ErrorHandler)UI.getCurrent();
 		initComponents();
 		initActions();
 		initListeners();
@@ -166,7 +168,7 @@ public class TaggerView extends HorizontalLayout
 			taggerContextMenu.setTagsets(tagsets);
 			
 		} catch (IOException e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError(
+			errorHandler.showAndLogError(
 				Messages.getString("TaggerView.errorShowingSourceDoc"), e); //$NON-NLS-1$
 		}
 	}
@@ -312,7 +314,7 @@ public class TaggerView extends HorizontalLayout
 
 					pagerComponent.setPage(previousPageNumber);
 				} catch (IOException e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
+					errorHandler.showAndLogError(
 						Messages.getString("TaggerView.errorShowingSourceDoc"), e); //$NON-NLS-1$
 				}
 
@@ -343,8 +345,21 @@ public class TaggerView extends HorizontalLayout
 			@Override
 			public void annotationCollectionSelected(UserMarkupCollectionReference collectionReference,
 					boolean selected) {
-				// TODO Auto-generated method stub
-				
+				try {
+					if (selected) {
+						UserMarkupCollection collection = project.getUserMarkupCollection(collectionReference);
+						userMarkupCollectionManager.add(collection);
+						annotationPanel.addCollection(collection);
+					}
+					else {
+						userMarkupCollectionManager.remove(collectionReference.getId());
+						annotationPanel.removeCollection(collectionReference.getId());
+					}
+					
+				}
+				catch (Exception e) {
+					errorHandler.showAndLogError("Error handling Annotation Collection!", e);
+				}
 			}
 
 			@Override
@@ -486,7 +501,7 @@ public class TaggerView extends HorizontalLayout
 				// TODO: if it is PERCENTAGE, work out the splitter position in pixels
 				if (event.getPositionUnit() != Unit.PIXELS){
 					String message = "Must use PIXELS Unit for split position"; //$NON-NLS-1$
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
+					errorHandler.showAndLogError(
 							message, new IllegalArgumentException(message));
 				}							
 				
@@ -505,7 +520,7 @@ public class TaggerView extends HorizontalLayout
 
 					pagerComponent.setPage(previousPageNumber);
 				} catch (IOException e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
+					errorHandler.showAndLogError(
 						Messages.getString("TaggerView.errorShowingSourceDoc"), e); //$NON-NLS-1$
 				}							
 			}
@@ -617,7 +632,7 @@ public class TaggerView extends HorizontalLayout
 			}
 			userMarkupCollectionManager.addTagReferences(tagReferences, collection);
 		} catch (URISyntaxException e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError(
+			errorHandler.showAndLogError(
 				Messages.getString("TaggerView.errorAddingAnnotations"), e); //$NON-NLS-1$
 		}
 	}

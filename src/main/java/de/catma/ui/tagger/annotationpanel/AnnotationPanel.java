@@ -231,7 +231,7 @@ public class AnnotationPanel extends VerticalLayout {
 	
 	public void setData(Collection<TagsetDefinition> tagsets, List<UserMarkupCollection> collections) {
 		this.tagsets = tagsets;
-		this.collections = collections;
+		this.collections = new ArrayList<>(collections);
 		initData();
 	}
 	
@@ -242,5 +242,26 @@ public class AnnotationPanel extends VerticalLayout {
 	public UserMarkupCollection getSelectedEditableCollection() {
 		return currentEditableCollectionBox.getValue();
 	}
+
+	public void addCollection(UserMarkupCollection collection) {
+		this.collections.add(collection);
+		currentEditableCollectionBox.getDataProvider().refreshAll();	
+	}
 	
+	private void removeCollection(UserMarkupCollection collection) {
+		if ((currentEditableCollectionBox.getValue() != null) 
+				&& currentEditableCollectionBox.getValue().equals(collection)) {
+			currentEditableCollectionBox.setValue(null);
+		}
+		collections.remove(collection);
+		currentEditableCollectionBox.getDataProvider().refreshAll();	
+	}
+
+	public void removeCollection(String collectionId) {
+		collections
+			.stream()
+			.filter(collection -> collection.getUuid().equals(collectionId))
+			.findFirst()
+			.ifPresent(collection -> removeCollection(collection));
+	}
 }
