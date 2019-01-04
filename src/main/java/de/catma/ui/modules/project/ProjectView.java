@@ -148,10 +148,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 			}
 			else if (newValue == null) { // removal
-				
+				//TODO
 			}
 			else { // metadata update
-				
+				//TODO
 			}
 		}
 		catch (Exception e) {
@@ -254,6 +254,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				
 				public void wizardCompleted(WizardCompletedEvent event) {
 					event.getWizard().removeListener(this);
+					//TODO:
 //					final boolean generateStarterKit = repository.getSourceDocuments().isEmpty();
 					try {
 						for(SourceDocumentResult sdr : wizardResult.getSourceDocumentResults()){
@@ -433,11 +434,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         
         Label documentsAnnotations = new Label("Documents & Annotations");
 
-        documentsAnnotations.setWidth("100%");
         sourceDocumentsGridComponent = new ActionGridComponent<TreeGrid<Resource>>(
                 documentsAnnotations,
                 resourceGrid
         );
+        sourceDocumentsGridComponent.addStyleName("project-view-action-grid");
 
         ContextMenu BtnMoreOptionsContextMenu = sourceDocumentsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
         BtnMoreOptionsContextMenu.addItem("Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
@@ -458,12 +459,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	
 
         Label tagsetsAnnotations = new Label("Tagsets");
-        tagsetsAnnotations.setWidth("100%");
         ActionGridComponent<Grid<TagsetDefinition>> tagsetsGridComponent = new ActionGridComponent<>(
                 tagsetsAnnotations,
                 tagsetGrid
         );
-
+        tagsetsGridComponent.addStyleName("project-view-action-grid");
+        
         resourceContent.addComponent(tagsetsGridComponent);
         return resourceContent;
     }
@@ -482,7 +483,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 membersAnnotations,
                 teamGrid
         );
-
+        membersGridComponent.addStyleName("project-view-action-grid");
         teamContent.addComponent(membersGridComponent);
         return teamContent;
     }

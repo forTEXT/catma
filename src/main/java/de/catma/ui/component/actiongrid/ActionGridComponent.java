@@ -48,6 +48,7 @@ public class ActionGridComponent<G extends Grid<?>> extends FlexLayout  {
 
 	private void initComponents() {
         addStyleName(Styles.actiongrid);
+        setHeight("100%");
         addComponents(actionGridBar, dataGrid);
     }
 

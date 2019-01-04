@@ -17656,7 +17656,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	min-width: 300px;
 	display: flex;
 	flex-direction: column;
-	margin: 10px;
 	font-size: 16px;
 }
 
@@ -17735,6 +17734,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .project-view-document-grid button {
 	background-color: transparent;
 	border: none;
+}
+
+.catma .project-view-action-grid {
+	margin: 10px;
 }
 
 .catma .dashboard-view {

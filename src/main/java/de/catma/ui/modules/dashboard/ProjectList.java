@@ -68,10 +68,10 @@ public class ProjectList extends VerticalLayout implements
         setSpacing(false);
 //        setPadding(true); TODO: add padding to CSS
         FlexLayout descriptionBar = new FlexLayout();
-        Label description = new Label("all projects");
+        Label description = new Label("All Projects");
         description.setWidth("100%");
 
-        Label title = new Label("title");
+        Label title = new Label("Title");
 
         IconButton upAction = new IconButton(VaadinIcons.ARROW_UP);
 
