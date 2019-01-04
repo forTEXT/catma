@@ -17472,6 +17472,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	flex-direction: row;
 	display: flex;
 	flex-grow: 1;
+	min-height: 0px;
 }
 
 .catma .header {
@@ -17618,6 +17619,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	margin-left: 32px;
 	margin-top: 14px;
 	overflow: auto;
+	display: flex;
+	flex-grow: 1;
 }
 
 .catma .hugecard__bar {

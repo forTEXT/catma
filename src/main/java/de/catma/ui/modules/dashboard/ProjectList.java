@@ -11,12 +11,13 @@ import com.vaadin.data.provider.Query;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.layout.FlexLayout;
+import de.catma.ui.layout.HorizontalLayout;
+import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 
 /**
@@ -41,7 +42,7 @@ public class ProjectList extends VerticalLayout implements
     private DataProvider<ProjectReference, ?> dataProvider = DataProvider.ofItems();;
 
     //ui elements
-    private final FlexLayout projectsLayout = new FlexLayout();
+    private final HorizontalLayout projectsLayout = new HorizontalLayout();
 
     @Override
     public void setDataProvider(final DataProvider<ProjectReference, ?> dataProvider) {
@@ -65,9 +66,8 @@ public class ProjectList extends VerticalLayout implements
     }
 
     protected void initComponents() {
-        setSpacing(false);
 //        setPadding(true); TODO: add padding to CSS
-        FlexLayout descriptionBar = new FlexLayout();
+    	HorizontalLayout descriptionBar = new HorizontalLayout();
         Label description = new Label("All Projects");
         description.setWidth("100%");
 

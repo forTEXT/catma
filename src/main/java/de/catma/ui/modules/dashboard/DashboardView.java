@@ -10,6 +10,7 @@ import com.vaadin.ui.UI;
 import de.catma.Pager;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 
 /**
@@ -18,7 +19,7 @@ import de.catma.ui.modules.main.ErrorHandler;
  *
  * @author db
  */
-public class DashboardView extends CssLayout {
+public class DashboardView extends VerticalLayout {
 
     private final ProjectManager projectManager;
 
