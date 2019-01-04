@@ -9,13 +9,14 @@ import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.layout.FlexLayout;
+import de.catma.ui.layout.HorizontalLayout;
+import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 
 /**
@@ -44,9 +45,6 @@ public class ProjectCard extends VerticalLayout  {
 
     protected void initComponents() {
         addStyleName("projectlist__card");
-//        setPadding(false);
-        setSpacing(false);
-        setWidth("352px");
 
         CssLayout preview = new CssLayout();
         preview.addStyleName("projectlist__card__preview");
@@ -60,7 +58,7 @@ public class ProjectCard extends VerticalLayout  {
         preview.addLayoutClickListener(evt -> eventbus.post(new RouteToProjectEvent(projectReference)));
         addComponent(preview);
 
-        FlexLayout descriptionBar = new FlexLayout();
+        HorizontalLayout descriptionBar = new HorizontalLayout();
         descriptionBar.addStyleName("projectlist__card__descriptionbar");
         descriptionBar.setAlignItems(FlexLayout.AlignItems.BASELINE);
         descriptionBar.setWidth("100%");

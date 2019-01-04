@@ -6,7 +6,7 @@ import com.vaadin.ui.CssLayout;
 /**
  * Created by jonte on 17/03/2017.
  */
-public class FlexLayout extends CssLayout {
+public abstract class FlexLayout extends CssLayout {
 
     public static final String FLEXLAYOUT = "flexlayout";
     private AlignContent alignContent;

@@ -510,6 +510,7 @@
             flex-direction: row;
             display: flex;
             flex-grow: 1;
+            min-height: 0px; /* ugly FF height problem fix */
         }
 
         /* Header */
@@ -658,6 +659,8 @@
             margin-left: 32px;
     		margin-top: 14px;
         	overflow: auto;
+        	display: flex;
+			flex-grow: 1;
         }
 
         .hugecard__bar {

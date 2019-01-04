@@ -32,7 +32,6 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
@@ -51,7 +50,8 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
-import de.catma.ui.layout.FlexLayout;
+import de.catma.ui.layout.HorizontalLayout;
+import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.modules.main.CanReloadAll;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.modules.main.HeaderContextChangeEvent;
@@ -373,19 +373,17 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	/* build the GUI */
 
 	private void initComponents() {
-    	FlexLayout mainPanel = new FlexLayout();
-    	mainPanel.addStyleNames("flex-horizontal","flex-wrap");
+		HorizontalLayout mainPanel = new HorizontalLayout();
+    	mainPanel.setFlexWrap(FlexWrap.WRAP);
     	
-    	FlexLayout resourcePanel = new FlexLayout();
-    	resourcePanel.addStyleNames("flex-vertical");
+    	VerticalLayout resourcePanel = new VerticalLayout();
     	
         resourcePanel.setSizeUndefined(); // don't set width 100%
         resourcePanel.addComponent(new Label("Resources"));
 
         mainPanel.addComponent(resourcePanel);
 
-        FlexLayout teamPanel = new FlexLayout();
-        teamPanel.addStyleNames("flex-vertical");
+        VerticalLayout teamPanel = new VerticalLayout();
         teamPanel.setSizeUndefined(); // don't set width 100%
         teamPanel.addComponent(new Label("Team"));
 
@@ -407,8 +405,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      * @return
      */
     private Component initResourceContent() {
-    	FlexLayout resourceContent = new FlexLayout();
-    	resourceContent.addStyleNames("flex-horizontal");
+    	HorizontalLayout resourceContent = new HorizontalLayout();
     	resourceGrid = new TreeGrid<>();
         resourceGrid.addStyleName("project-view-document-grid");
         resourceGrid.setHeaderVisible(false);
@@ -470,8 +467,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     }
 
 	private Component initTeamContent() {
-    	FlexLayout teamContent = new FlexLayout();
-    	teamContent.addStyleNames("flex-horizontal");
+		HorizontalLayout teamContent = new HorizontalLayout();
         teamGrid = new Grid<>();
         teamGrid.setHeaderVisible(false);
         teamGrid.setWidth("402px");
