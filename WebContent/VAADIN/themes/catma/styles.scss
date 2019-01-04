@@ -600,6 +600,7 @@
             flex-grow: 1;
             width: 100%;
             background-color: #808080;
+            overflow: auto;
         }
 
         .dialog__bg {
@@ -653,6 +654,7 @@
           margin: 20px;
     	  background-color: white;
     	  height: unset !important;
+    	  overflow: auto;
         } 
              
         .hugecard__bar + div {

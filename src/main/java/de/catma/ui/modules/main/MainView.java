@@ -1,11 +1,11 @@
 package de.catma.ui.modules.main;
 
 import com.google.common.eventbus.EventBus;
+import com.vaadin.server.Page;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
+import com.vaadin.ui.JavaScript;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.HorizontalLayout;
 
 import de.catma.project.ProjectManager;
 import de.catma.ui.CatmaRouter;
@@ -81,6 +81,20 @@ public class MainView extends CssLayout implements CatmaRouter  {
         initComponents();
         addStyleName("main-view");
         eventBus.register(this);
+        
+        // implement a custom resize propagation for all Layouts including CSSLayouts
+        JavaScript.getCurrent().addFunction("browserWindowResized", e -> {
+        	this.markAsDirtyRecursive();
+        });
+        Page.getCurrent().getJavaScript().execute(
+        		"var timeout = null;"
+        				+ "window.onresize = function() { "
+        				+ "  if (timeout != null) clearTimeout(timeout); "
+        				+ "  timeout = setTimeout(function() {"
+        				+ "    browserWindowResized(); "
+        				+ "  }, 250);"
+        				+ "}");
+                
     }
 
     /**

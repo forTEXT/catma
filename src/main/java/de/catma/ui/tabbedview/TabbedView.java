@@ -82,7 +82,7 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		noOpenTabsLabel = new Label(noOpenTabsText);
 
 		noOpenTabsLabel.setSizeFull();
-		setMargin(true);
+		setMargin(false);
 
 		introPanel.addComponent(noOpenTabsLabel);
 		introPanel.setComponentAlignment(noOpenTabsLabel, Alignment.MIDDLE_CENTER);

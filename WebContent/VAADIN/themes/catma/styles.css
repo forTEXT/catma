@@ -17562,6 +17562,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	flex-grow: 1;
 	width: 100%;
 	background-color: #808080;
+	overflow: auto;
 }
 
 .catma .dialog__bg {
@@ -17613,6 +17614,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	margin: 20px;
 	background-color: white;
 	height: unset !important;
+	overflow: auto;
 }
 
 .catma .hugecard__bar + div {
