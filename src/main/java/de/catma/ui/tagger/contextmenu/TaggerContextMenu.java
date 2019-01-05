@@ -1,6 +1,8 @@
 package de.catma.ui.tagger.contextmenu;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.icons.VaadinIcons;
@@ -42,6 +44,7 @@ public class TaggerContextMenu {
 	
 	private ContextMenu contextMenu;
 	private TagSelectionListener tagSelectionListener;
+	private Map<Object, MenuItem> entryToMenuItemMap = new HashMap<>();
 	
 	public TaggerContextMenu(Tagger tagger) {
 		initComponents(tagger);
@@ -57,13 +60,9 @@ public class TaggerContextMenu {
 	}
 	
 	public void setTagsets(Collection<TagsetDefinition> tagsets) {
-		
+		contextMenu.removeItems(); //TODO: only remove tagsets
 		for (TagsetDefinition tagset : tagsets) {
-			MenuItem tagsetItem = contextMenu.addItem(tagset.getName(), VaadinIcons.TAGS, null);
-		
-			tagset.getRootTagDefinitions()
-				.forEach(rootTag -> addToMenuItem(tagsetItem, tagset, rootTag));
-		
+			addTagset(tagset);
 		}
 	}
 
@@ -78,10 +77,23 @@ public class TaggerContextMenu {
 			new TagDefinitionCommand(tag, tagSelectionListener));	
 		
 		tagMenuItem.setStyleName("tagger-contextmenu-menuitem");
-
+		entryToMenuItemMap.put(tag, tagMenuItem);
+		
 		for (TagDefinition childTag : tagset.getChildren(tag)) {
 			addToMenuItem(tagMenuItem, tagset, childTag);
 		}
+	}
+
+	public void addTagset(TagsetDefinition tagset) {
+		MenuItem tagsetItem = contextMenu.addItem(tagset.getName(), VaadinIcons.TAGS, null);
+		entryToMenuItemMap.put(tagset, tagsetItem);
+		
+		tagset.getRootTagDefinitions()
+			.forEach(rootTag -> addToMenuItem(tagsetItem, tagset, rootTag));
+	}
+	
+	public void removeTagset(TagsetDefinition tagset) {
+		contextMenu.removeItem(entryToMenuItemMap.get(tagset));
 	}
 
 }

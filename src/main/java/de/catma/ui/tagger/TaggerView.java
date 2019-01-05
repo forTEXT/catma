@@ -164,7 +164,7 @@ public class TaggerView extends HorizontalLayout
 			Collection<TagsetDefinition> tagsets = 
 					new HashSet<>(resourcePanel.getSelectedTagsets());
 			
-			annotationPanel.setData(tagsets, userMarkupCollectionManager.getUserMarkupCollections());
+			annotationPanel.setData(tagsets, new ArrayList<>(userMarkupCollectionManager.getUserMarkupCollections()));
 			taggerContextMenu.setTagsets(tagsets);
 			
 		} catch (IOException e) {
@@ -363,9 +363,14 @@ public class TaggerView extends HorizontalLayout
 			}
 
 			@Override
-			public void tagsetSelected(TagsetDefinition tagset, boolean selected) {
-				// TODO Auto-generated method stub
-				
+			public void tagsetsSelected(Collection<TagsetDefinition> tagsets) {
+				try {
+					annotationPanel.setTagsets(tagsets);
+					taggerContextMenu.setTagsets(tagsets);
+				}
+				catch (Exception e) {
+					errorHandler.showAndLogError("Error handling Tagset!", e);
+				}
 			}
 
 			

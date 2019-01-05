@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
+import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
@@ -127,10 +128,17 @@ public class ResourcePanel extends VerticalLayout {
 
 	private void initActions() {
 		documentActionGridComponent.getActionGridBar().addBtnAddClickListener(clickEvent -> handleAddCollectionRequest());
-		
+		tagsetGrid.addSelectionListener(selectionEvent -> handleTagsetSelectionEvent(selectionEvent));
 	}
 
-    private void handleAddCollectionRequest() {
+    private void handleTagsetSelectionEvent(SelectionEvent<TagsetDefinition> selectionEvent) {
+    	if (resourceSelectionListener != null) {
+    		resourceSelectionListener.tagsetsSelected(selectionEvent.getAllSelectedItems());
+    	}
+    
+    }
+
+	private void handleAddCollectionRequest() {
     	Set<DocumentTreeItem> selectedItems = documentTree.getSelectedItems();
     	
     	Set<SourceDocument> selectedDocuments = new HashSet<>();

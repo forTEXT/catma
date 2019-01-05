@@ -2,7 +2,9 @@ package de.catma.ui.tagger.annotationpanel;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.github.appreciated.material.MaterialTheme;
 import com.vaadin.data.TreeData;
@@ -44,8 +46,8 @@ public class AnnotationPanel extends VerticalLayout {
 	private Button addCollectionButton;
 	private TreeGrid<TagsetTreeItem> tagsetsGrid;
 	private Repository project;
-	private Collection<TagsetDefinition> tagsets;
-	private List<UserMarkupCollection> collections;
+	private Collection<TagsetDefinition> tagsets = Collections.emptyList();
+	private List<UserMarkupCollection> collections = Collections.emptyList();
 	private TagReferenceSelectionChangeListener selectionListener;
 
 	public AnnotationPanel(Repository project) {
@@ -61,24 +63,12 @@ public class AnnotationPanel extends VerticalLayout {
             tagsetData.addRootItems(tagsets.stream().map(ts -> new TagsetDataItem(ts)));
 
             for (TagsetDefinition tagsetDefinition : tagsets) {
-                for (TagDefinition tagDefinition : tagsetDefinition) {
-                    if (tagDefinition.getParentUuid().isEmpty()) {
-                        tagsetData.addItem(new TagsetDataItem(tagsetDefinition), new TagDataItem(tagDefinition));
-                        addTagDefinitionSubTree(tagsetDefinition, tagDefinition, tagsetData);
-                    }
-                }
+            	addTags(tagsetData, tagsetDefinition);
             }
 
             tagsetsGrid.setDataProvider(new TreeDataProvider<>(tagsetData));
             for (TagsetDefinition tagset : tagsets) {
-            	for (TagDefinition tag : tagset) {
-            		TagDataItem item = new TagDataItem(tag);
-            		tagsetsGrid.expand(item);
-            		if (!tag.getUserDefinedPropertyDefinitions().isEmpty()) {
-            			tagsetsGrid.setDetailsVisible(item, true);
-            		}
-
-            	}
+            	expandTagsetDefinition(tagset);
             }
             
             currentEditableCollectionBox.setDataProvider(new ListDataProvider<>(collections));
@@ -88,12 +78,31 @@ public class AnnotationPanel extends VerticalLayout {
         }
     }
 
-    private void addTagDefinitionSubTree(
-    		TagsetDefinition tagsetDefinition, 
-    		TagDefinition tagDefinition, TreeData<TagsetTreeItem> tagsetData) {
-        for (TagDefinition childDefinition : tagsetDefinition.getDirectChildren(tagDefinition)) {
-            tagsetData.addItem(new TagDataItem(tagDefinition), new TagDataItem(childDefinition));
-            addTagDefinitionSubTree(tagsetDefinition, childDefinition, tagsetData);
+    private void expandTagsetDefinition(TagsetDefinition tagset) {
+    	for (TagDefinition tag : tagset) {
+    		TagDataItem item = new TagDataItem(tag);
+    		tagsetsGrid.expand(item);
+    		if (!tag.getUserDefinedPropertyDefinitions().isEmpty()) {
+    			tagsetsGrid.setDetailsVisible(item, true);
+    		}
+    	}
+	}
+
+	private void addTags(TreeData<TagsetTreeItem> tagsetData, TagsetDefinition tagset) {
+        for (TagDefinition tag : tagset) {
+            if (tag.getParentUuid().isEmpty()) {
+                tagsetData.addItem(new TagsetDataItem(tagset), new TagDataItem(tag));
+                addTagSubTree(tagset, tag, tagsetData);
+            }
+        }
+	}
+
+	private void addTagSubTree(
+    		TagsetDefinition tagset, 
+    		TagDefinition tag, TreeData<TagsetTreeItem> tagsetData) {
+        for (TagDefinition childDefinition : tagset.getDirectChildren(tag)) {
+            tagsetData.addItem(new TagDataItem(tag), new TagDataItem(childDefinition));
+            addTagSubTree(tagset, childDefinition, tagsetData);
         }
     }
 	private void initActions() {
@@ -231,7 +240,7 @@ public class AnnotationPanel extends VerticalLayout {
 	
 	public void setData(Collection<TagsetDefinition> tagsets, List<UserMarkupCollection> collections) {
 		this.tagsets = tagsets;
-		this.collections = new ArrayList<>(collections);
+		this.collections = collections;
 		initData();
 	}
 	
@@ -263,5 +272,38 @@ public class AnnotationPanel extends VerticalLayout {
 			.filter(collection -> collection.getUuid().equals(collectionId))
 			.findFirst()
 			.ifPresent(collection -> removeCollection(collection));
+	}
+	
+	public void setTagsets(Collection<TagsetDefinition> tagsets) {
+		tagsets
+		.stream()
+		.filter(tagset -> !this.tagsets.contains(tagset))
+		.forEach(tagset -> addTagset(tagset));
+		
+		this.tagsets.stream()
+		.filter(tagset -> !tagsets.contains(tagset))
+		.collect(Collectors.toList())
+		.stream()
+		.forEach(tagset -> removeTagset(tagset));
+	}
+
+	public void addTagset(TagsetDefinition tagset) {
+		tagsets.add(tagset);
+		@SuppressWarnings("unchecked")
+		TreeDataProvider<TagsetTreeItem> treeDataProvider =
+			(TreeDataProvider<TagsetTreeItem>)tagsetsGrid.getDataProvider();
+		treeDataProvider.getTreeData().addRootItems(new TagsetDataItem(tagset));
+		addTags(treeDataProvider.getTreeData(), tagset);
+		expandTagsetDefinition(tagset);
+		treeDataProvider.refreshAll();
+	}
+	
+	public void removeTagset(TagsetDefinition tagset) {
+		tagsets.remove(tagset);
+		@SuppressWarnings("unchecked")
+		TreeDataProvider<TagsetTreeItem> treeDataProvider =
+			(TreeDataProvider<TagsetTreeItem>)tagsetsGrid.getDataProvider();
+		treeDataProvider.getTreeData().removeItem(new TagsetDataItem(tagset));
+		treeDataProvider.refreshAll();
 	}
 }
