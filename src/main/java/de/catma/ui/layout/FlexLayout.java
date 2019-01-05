@@ -21,6 +21,7 @@ public abstract class FlexLayout extends CssLayout {
     public FlexLayout(Component... components) {
         setPrimaryStyleName(FLEXLAYOUT);
         addComponents(components);
+        
     }
 
     public FlexLayout(FlexDirection flexDirection, Component... components) {
