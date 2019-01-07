@@ -6,6 +6,7 @@ import org.vaadin.dialogs.ConfirmDialog;
 
 import com.google.common.eventbus.EventBus;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
@@ -13,6 +14,7 @@ import com.vaadin.ui.UI;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.ui.component.IconButton;
+import de.catma.ui.events.ResourcesChangedEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalLayout;
@@ -82,10 +84,13 @@ public class ProjectCard extends VerticalLayout  {
                     , (evt) -> {
                         try {
                             if(evt.isConfirmed()){
-                            	projectManager.delete(projectReference.getProjectId());                            	
+                            	projectManager.delete(projectReference.getProjectId());
+                            	eventbus.post(new ResourcesChangedEvent<Component>(ProjectCard.this));
                             }
                         } catch (Exception e) {
+                        	try {Thread.sleep(500);} catch (Exception e1) { } //TODO workaround gitlab race condition after delete. return old results if queried too fast
                             errorLogger.showAndLogError("can't delete project " + projectReference.getName(), e);
+                        	eventbus.post(new ResourcesChangedEvent<Component>(ProjectCard.this));
                         }
                     });
                 }
@@ -97,4 +102,7 @@ public class ProjectCard extends VerticalLayout  {
         
     }
 
+    public String toString() {
+    	return projectReference.getProjectId() + " " + projectReference.getName() + " "+ projectReference.getDescription();
+    }
 }

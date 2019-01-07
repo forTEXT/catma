@@ -1,13 +1,10 @@
 package de.catma.ui.modules.dashboard;
 
-import java.util.List;
-
 import com.google.common.eventbus.EventBus;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.UI;
 
-import de.catma.Pager;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.ui.layout.VerticalLayout;
@@ -27,44 +24,57 @@ public class DashboardView extends VerticalLayout {
 
 	private final EventBus eventBus;
 
+	private final ProjectList projects;
+
     public DashboardView(ProjectManager projectManager, EventBus eventBus){
         this.projectManager = projectManager;
         this.eventBus = eventBus;
         this.errorLogger = (ErrorHandler)(UI.getCurrent());
+        this.projects = new ProjectList(projectManager, eventBus);
         initComponents();
     }
 
     protected void initComponents() {
-        setStyleName("dashboard-view");
+    	addStyleName("dashboard-view");
         
-        ProjectList projects = new ProjectList(projectManager, eventBus);
         CssLayout receivedResources = new CssLayout();
         receivedResources.setStyleName("flexlayout");
         
-        try {
-            Pager<ProjectReference> projectPager = this.projectManager.getProjectReferences();
-
-            DataProvider<ProjectReference,Void> projectDataProvider =
-                    DataProvider.fromCallbacks(
-                            query -> {
-                                int page = (query.getOffset() / query.getLimit()) + 1;
-                                return projectPager
-                                        .page(page)
-                                        .stream()
-                                        ;
-                            },
-                            query -> {
-                                return projectPager.getTotalItems();
+    
+            
+        DataProvider<ProjectReference,Void> projectDataProvider =
+                DataProvider.fromCallbacks(
+                        query -> {
+                            try {
+                            	int page = (query.getOffset() / query.getLimit()) + 1;
+                            
+                            	return projectManager.getProjectReferences()
+                                    .page(page)
+                                    .stream()
+                                    ;
+                            } catch (Exception e) {
+                                errorLogger.showAndLogError("Can't get projects from ProjectManager",e);
+                                return null;
                             }
-                    );
-            List<ProjectReference> test = projectPager.page(1);
-            projects.setDataProvider(projectDataProvider);
-
-        } catch (Exception e) {
-            errorLogger.showAndLogError("Can't get projects from ProjectManager",e);
-            addComponent(receivedResources);
-        }
+                        },
+                        query -> {
+                            try {
+                            	return projectManager.getProjectReferences().getTotalItems();
+                            } catch (Exception e) {
+                                errorLogger.showAndLogError("Can't get projects from ProjectManager",e);
+                                return 0;
+                            }
+                        }
+                );
+           try {
+			projectManager.getProjectReferences().page(1); //Fake call to satisfy vaadin 10 and above
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+        projects.setDataProvider(projectDataProvider);
 
         addComponents(projects, receivedResources);
     }
+
 }
