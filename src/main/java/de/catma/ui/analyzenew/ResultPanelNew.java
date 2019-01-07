@@ -8,9 +8,12 @@ import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.ExpandEvent;
 import com.vaadin.event.ExpandEvent.ExpandListener;
+import com.vaadin.event.selection.SelectionEvent;
+import com.vaadin.event.selection.SelectionListener;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -107,9 +110,20 @@ public class ResultPanelNew extends Panel {
 
 		treeGridTag = new TreeGrid<TagRowItem>();
 		treeGridTag.setSelectionMode(SelectionMode.MULTI);
+		treeGridTag.addSelectionListener(new SelectionListener<TagRowItem>() {
+			
+			@Override
+			public void selectionChange(SelectionEvent<TagRowItem> event) {
+			Iterable<TagRowItem> selectedItems=	event.getAllSelectedItems();
+			selectedItems.forEach(item -> { System.out.println(" TgaPath :"+item.getTreePath()+ " Collection :"+item.getCollectionName()+" Tag ID:"+item.getTagInstanceID());});
+			
+				
+			}
+		});
 
 		treeGridPhrase = new TreeGrid<TagRowItem>();
 		treeGridPhrase.setSelectionMode(SelectionMode.MULTI);
+
 
 		treeGridProperty = new TreeGrid<TagRowItem>();
 		treeGridProperty.setSelectionMode(SelectionMode.MULTI);
@@ -118,6 +132,16 @@ public class ResultPanelNew extends Panel {
 		treeGridPhraseLazy = new TreeGrid<TagRowItem>();
 		treeGridPhraseLazy.setSelectionMode(SelectionMode.MULTI);
 		lazyData= new TreeData<TagRowItem>();	
+		treeGridPhraseLazy.addSelectionListener(new SelectionListener<TagRowItem>() {
+			
+			@Override
+			public void selectionChange(SelectionEvent<TagRowItem> event) {
+			Iterable<TagRowItem> selectedItems=	event.getAllSelectedItems();
+			selectedItems.forEach(item -> { System.out.println(" TgaPath :"+item.getTreePath()+ " Collection :"+item.getCollectionName()+" Tag ID:"+item.getTagInstanceID());});
+			
+				
+			}
+		});
 		
 
 		createResultInfoBar();
@@ -154,6 +178,8 @@ public class ResultPanelNew extends Panel {
 	}
 
 	private void initListeners() {
+		
+	
 
 		caretDownBt.addClickListener(new ClickListener() {
 
@@ -549,7 +575,6 @@ public class ResultPanelNew extends Panel {
 										.equalsIgnoreCase(tagQueryResultRow.getSourceDocumentId()))
 								&& (oneCollection.getCollectionID()
 										.equalsIgnoreCase(tagQueryResultRow.getMarkupCollectionId()))) {
-							oneCollection.setFrequencyOneUp();
 
 							TagRowItem propItem = new TagRowItem();
 							propItem.setTreePath(tagQueryResultRow.getTagDefinitionPath());
@@ -647,6 +672,9 @@ public class ResultPanelNew extends Panel {
 		
        }
 	}
+
+
+
 }
 
 
