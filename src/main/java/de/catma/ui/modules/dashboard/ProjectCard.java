@@ -9,14 +9,15 @@ import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 import de.catma.ui.layout.FlexLayout;
-import de.catma.ui.modules.main.ErrorLogger;
+import de.catma.ui.layout.HorizontalLayout;
+import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.modules.main.ErrorHandler;
 
 /**
  * Displays a single project reference as a card
@@ -25,18 +26,18 @@ import de.catma.ui.modules.main.ErrorLogger;
  */
 public class ProjectCard extends VerticalLayout  {
 
-    private ProjectReference item;
+    private ProjectReference projectReference;
 
-    private final ErrorLogger errorLogger;
+    private final ErrorHandler errorLogger;
     private final ProjectManager projectManager;
 
 	private final EventBus eventbus;
 
-    ProjectCard(ProjectReference t, ProjectManager projectManager, EventBus eventbus){
-        this.item = Objects.requireNonNull(t) ;
+    ProjectCard(ProjectReference projectReference, ProjectManager projectManager, EventBus eventbus){
+        this.projectReference = Objects.requireNonNull(projectReference) ;
         this.projectManager = projectManager;
         this.eventbus = eventbus;
-        this.errorLogger = (ErrorLogger) UI.getCurrent();
+        this.errorLogger = (ErrorHandler) UI.getCurrent();
         initComponents();
     }
 
@@ -44,29 +45,26 @@ public class ProjectCard extends VerticalLayout  {
 
     protected void initComponents() {
         addStyleName("projectlist__card");
-//        setPadding(false);
-        setSpacing(false);
-        setWidth("352px");
 
         CssLayout preview = new CssLayout();
         preview.addStyleName("projectlist__card__preview");
-        Label labelDesc = new Label(item.getDescription());
+        Label labelDesc = new Label(projectReference.getDescription());
         labelDesc.setWidth("100%");
         preview.addComponents(labelDesc);
-        Label labelProjectId = new Label(item.getProjectId());
+        Label labelProjectId = new Label(projectReference.getProjectId());
         labelProjectId.setWidth("100%");
         preview.addComponents(labelProjectId);
 
-        preview.addLayoutClickListener(evt -> eventbus.post(new RouteToProjectEvent(item)));
+        preview.addLayoutClickListener(evt -> eventbus.post(new RouteToProjectEvent(projectReference)));
         addComponent(preview);
 
-        FlexLayout descriptionBar = new FlexLayout();
+        HorizontalLayout descriptionBar = new HorizontalLayout();
         descriptionBar.addStyleName("projectlist__card__descriptionbar");
         descriptionBar.setAlignItems(FlexLayout.AlignItems.BASELINE);
         descriptionBar.setWidth("100%");
         
         
-        Label name = new Label(item.getName());
+        Label name = new Label(projectReference.getName());
         name.setWidth("100%");
         
         descriptionBar.addComponent(name);
@@ -78,16 +76,16 @@ public class ProjectCard extends VerticalLayout  {
         buttonRemove.addClickListener(
                 (event -> {
                     ConfirmDialog.show(UI.getCurrent(),"delete Project",
-                            "do you want to delete Project: " + item.getName(),
+                            "do you want to delete Project: " + projectReference.getName(),
                             "OK",
                             "Cancel"
                     , (evt) -> {
                         try {
                             if(evt.isConfirmed()){
-                            	projectManager.delete(item.getProjectId());                            	
+                            	projectManager.delete(projectReference.getProjectId());                            	
                             }
                         } catch (Exception e) {
-                            errorLogger.showAndLogError("can't delete project " + item.getName(), e);
+                            errorLogger.showAndLogError("can't delete project " + projectReference.getName(), e);
                         }
                     });
                 }

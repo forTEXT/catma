@@ -40,7 +40,7 @@
 		margin-top: 24px;	
 	}
 
-	.v-panel.v-widget.no-border.v-panel-no-border.v-has-width {
+	/*.v-panel.v-widget.no-border.v-panel-no-border.v-has-width {
 		border: none;
 		-webkit-box-shadow: none;
 		box-shadow: none;
@@ -54,9 +54,9 @@
 		border-top: 2px solid transparent;
 		border-bottom: none;
 		text-overflow: inherit;
-	}
+	}*/
 
-	.popupContent > .v-window-wrap > .v-window-contents > .v-scrollable > .v-verticallayout > .v-expand > .v-slot > .v-panel {
+/*	.popupContent > .v-window-wrap > .v-window-contents > .v-scrollable > .v-verticallayout > .v-expand > .v-slot > .v-panel {
 		border:none;
 		-webkit-box-shadow: none;
 		box-shadow: none;
@@ -82,7 +82,7 @@
 	.v-slot-catma-label-spacing {
 		 padding: 10px 0px 5px 0px;
 	}
-	
+	*/
 	.analyzer-panel-padding {
 		padding: 10px;
 	}
@@ -96,7 +96,7 @@
 	.modal-button-container {
 		padding: 0px 10px 0px 10px;
 	}
-			
+	/*		
 	.v-tabsheet-tabitemcell .v-tabsheet-caption-close {
 		right: 3px;
 	}
@@ -114,12 +114,12 @@
 	.v-slot-catma-tagger-markup-panels {
 		padding: 0px 0px 5px 10px;
 	}
-	
+	*/
 	.pager-pageinput {
 		width: 43px;
 		text-align: center;
 	}
-
+/*
 	.v-slot > .v-button {
 		white-space: normal;	
 	}
@@ -138,7 +138,7 @@
 	.v-tabsheet-tabcontainer {
 		padding-left: 10px;
 	}
-
+*/
 	.tagger {
 		height: 100% !important;
 		border-bottom: 1px solid #C5C5C5;
@@ -155,7 +155,7 @@
 		-o-user-select: text;
 		user-select: text; 
 	}
-
+/*
 	.v-window-contents > .v-scrollable > .v-has-height > .v-expand {
 		overflow: visible;
 		padding-bottom: 15px;
@@ -176,7 +176,7 @@
 	.v-verticallayout .expert-features {
 		padding-left:50px;
 		padding-top:10px;
-	}
+	}*/
 	.distributionchartviewpanel .v-slot {
 		height: 100%;
 	}
@@ -205,7 +205,7 @@
 	.c-slider {
 		padding: unset;
 	}
-	
+	/*
 	.v-button-primary-button {
 		background: #5A98A1;
 		border: 1px solid #5A98A1;
@@ -252,7 +252,7 @@
 		border: 0px;
 		box-shadow: none;
 	}
-	
+	*/
 	.help-padding-fix {
 		padding-right: 10px;
 	}
@@ -510,6 +510,7 @@
             flex-direction: row;
             display: flex;
             flex-grow: 1;
+            min-height: 0px; /* ugly FF height problem fix */
         }
 
         /* Header */
@@ -541,7 +542,8 @@
         .header__context {
             display: flex;
             justify-content: center;
-            width: 100%;
+		    flex-grow: 1;
+		    font-size: 1.5em;
         }
 
         .header__version {
@@ -557,11 +559,13 @@
             color: rgba(0, 0, 0, 0.87);
             flex-grow: 1;
             width: 160px;
+            justify-content: center;
         }
         
-        .nav div:first-child {
-        	margin-top: 20px;
-        }
+        .v-button.v-widget.h3.v-button-h3.link.v-button-link.nav-selected-entry.v-button-nav-selected-entry {
+        	background: #0c719a;
+			color: white;
+		}
         
 		.nav .v-label {
 			margin-left: 20px;
@@ -572,14 +576,12 @@
             height: 32px;
 		}
         .nav .v-button {
-            margin-left: 20px;
-            margin-right: 20px;
-            margin-top: 10px;
-            margin-bottom: 10px;
+            padding-left: 20px;
+            padding-right: 20px;
             text-decoration: none;
             cursor: pointer;           
             color: var(--lumo-body-text-color);
-            padding:0px;
+            text-transform: none;
         }
 
         .nav .h3 {
@@ -598,6 +600,7 @@
             flex-grow: 1;
             width: 100%;
             background-color: #808080;
+            overflow: auto;
         }
 
         .dialog__bg {
@@ -647,8 +650,19 @@
     	  background-color: white;
         }
         
+        .hugecard-tabbed-view {
+          margin: 20px;
+    	  background-color: white;
+    	  height: unset !important;
+    	  overflow: auto;
+        } 
+             
         .hugecard__bar + div {
+            margin-left: 32px;
+    		margin-top: 14px;
         	overflow: auto;
+        	display: flex;
+			flex-grow: 1;
         }
 
         .hugecard__bar {
@@ -672,7 +686,7 @@
             justify-content: flex-end;
         }
 
-        .hugecard__bar__moreoptions__btn {
+        .v-button.hugecard__bar__moreoptions__btn {
             color: white;
             background-color: transparent;
             border:none;
@@ -680,22 +694,41 @@
             box-shadow: none;
 		    background-image: none;
 		    font-size: 16px;
+		    opacity: inherit;
         }
 
 
         /* actiongrid */
 
         .actiongrid {
-            min-width: 400px;
+            min-width: 300px;
             display: flex;
             flex-direction: column;
-            margin: 10px;
+            font-size: 16px;
         }
 
-		.actiongrid__hidethead thead {
-            display: none;
-         }
-         
+		.actiongrid .v-grid button.v-nativebutton {
+            border: none;
+            background: transparent;
+            opacity: 0.54;
+            cursor: pointer;
+            justify-content: center;
+            box-shadow: none;
+            font-size: 16px;
+            color: rgb(0, 0, 0);
+            display:flex;
+        }
+
+        .actiongrid .v-grid  button.v-nativebutton:focus {
+            outline: none;
+            background-color:none
+        }
+        
+        .actiongrid .v-grid  button.v-nativebutton:focus:after,.v-grid  button.v-nativebutton:after {
+            border: none; 
+    		box-shadow: none;
+        }
+		
         /* .actiongrid .v-grid-cell {
             padding: 0px;
             display: flex;
@@ -732,7 +765,10 @@
         }
 
         .actiongrid__bar {
-          /*  margin-left: 1em; */
+        	background-color: #e0e0e0;
+        	color: rgba(0, 0, 0, 0.87);
+			padding-top: 14px;
+			padding-bottom: 14px;
         }
 
         centered-icon {
@@ -754,6 +790,15 @@
             font-size: 0.75em;
             color: rgba(0, 0, 0, 0.54);
         }
+
+		.project-view-document-grid button {
+			background-color: transparent;
+			border: none;   
+		}
+		
+		.project-view-action-grid {
+			margin: 10px;
+		}
 
         /* dashboard */
 
@@ -813,23 +858,96 @@
     .annotate-tag-tree-item {
     	width: 15px;
     	height: 100%;
+    	float: right;
     }
     
     .annotate-tagsets-grid button {
-		background-color: white;
+		background-color: transparent;
 		border: none;    
     }
     
+    .annotate-tagsets-grid .v-treegrid-row-selected  > .v-treegrid-cell-focused::before {
+		border-color: transparent;
+	}
+	
+    .annotate-tagsets-grid .v-treegrid-row-focused::before {
+		border-color: transparent;
+	}
+
     .annotate-right-padding {
     	padding-right: 3px;
     }
     
-    .annotate-properties-details-tree {
+    .annotate-panel-tagsetname {
+    	font-size: 12px;
+    }
+    
+    div.annotation-panel-property-summary {
+   	    display: inline;
+    	font-size: 12px;
+    	position: relative;
+    	bottom: 2px;
+    }
+    
+    
+    tr.v-treegrid-row.v-treegrid-row-stripe.v-treegrid-row-has-data.annotate-panel-property-data-item.v-treegrid-row-depth-2 {
+	    border-top: none;
+	}
+	
+	tr.v-treegrid-row.v-treegrid-row-stripe.v-treegrid-row-has-data.annotate-panel-property-data-item.v-treegrid-row-depth-2 button.v-nativebutton {
+    	font-size: 12px;
+	}
+
+	tr.v-treegrid-row.v-treegrid-row-has-data.annotate-panel-property-data-item.v-treegrid-row-depth-2 {
+		border-top: none;
+	}
+
+	tr.v-treegrid-row.v-treegrid-row-has-data.annotate-panel-property-data-item.v-treegrid-row-depth-2 button.v-nativebutton {
+    	font-size: 12px;
+	}
+	
+    .annotate-panel-property-data-item .v-treegrid-body .v-treegrid-row:not(:first-child) {
+    	border-top: none;
     }
     
     .annotate-properties-details-tree .v-captiontext {
     	font-size: smaller;
     }
+    
+    .annotate-resource-panel {
+		overflow: auto;
+		height: inherit;
+    }
 
+	.annotate-resource-grid {
+		background: #FFFFFF;
+		color: #000000;
+	}
+
+	.annotate-resource-grid button {
+		background-color: transparent;
+		border: none;    
+    }
+    
+    .tagger-contextmenu-menuitem-caption {
+    	display: inline-block;
+    	width: 15px;
+    	margin-top: 1px;
+    	margin-bottom: 1px;
+    	margin-right: 2px;
+    }
+    
+	.v-menubar-popup .v-menubar-menuitem.tagger-contextmenu-menuitem {
+	
+	    padding-left: 25px;
+	    padding-right: 45px;
+	
+	}
+
+    .c-tabbed-view-plus {
+	    float: right;
+	    margin-top: 10px;
+	    margin-right: 20px;
+	}
 
 }

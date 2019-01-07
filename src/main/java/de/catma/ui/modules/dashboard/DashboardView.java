@@ -10,7 +10,8 @@ import com.vaadin.ui.UI;
 import de.catma.Pager;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
-import de.catma.ui.modules.main.ErrorLogger;
+import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.modules.main.ErrorHandler;
 
 /**
  *
@@ -18,18 +19,18 @@ import de.catma.ui.modules.main.ErrorLogger;
  *
  * @author db
  */
-public class DashboardView extends CssLayout {
+public class DashboardView extends VerticalLayout {
 
     private final ProjectManager projectManager;
 
-    private final ErrorLogger errorLogger;
+    private final ErrorHandler errorLogger;
 
 	private final EventBus eventBus;
 
     public DashboardView(ProjectManager projectManager, EventBus eventBus){
         this.projectManager = projectManager;
         this.eventBus = eventBus;
-        this.errorLogger = (ErrorLogger)(UI.getCurrent());
+        this.errorLogger = (ErrorHandler)(UI.getCurrent());
         initComponents();
     }
 

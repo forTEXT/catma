@@ -34,6 +34,8 @@ import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
 import org.vaadin.sliderpanel.client.SliderMode;
 
+import com.github.appreciated.material.MaterialTheme;
+import com.google.common.eventbus.EventBus;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.icons.VaadinIcons;
@@ -43,7 +45,6 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -68,19 +69,24 @@ import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.Slider;
-import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
+import de.catma.ui.component.IconButton;
+import de.catma.ui.events.routing.RouteToAnalyzeEvent;
+import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tagger.MarkupPanel.TagInstanceSelectedListener;
 import de.catma.ui.tagger.Tagger.TaggerListener;
 import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedEvent;
 import de.catma.ui.tagger.TaggerSplitPanel.SplitterPositionChangedListener;
 import de.catma.ui.tagger.annotationpanel.AnnotationPanel;
+import de.catma.ui.tagger.contextmenu.TaggerContextMenu;
 import de.catma.ui.tagger.pager.Page;
 import de.catma.ui.tagger.pager.Pager;
 import de.catma.ui.tagger.pager.PagerComponent;
 import de.catma.ui.tagger.pager.PagerComponent.PageChangeListener;
+import de.catma.ui.tagger.resourcepanel.ResourcePanel;
+import de.catma.ui.tagger.resourcepanel.ResourceSelectionListener;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
 import de.catma.util.Pair;
 
@@ -109,31 +115,60 @@ public class TaggerView extends HorizontalLayout
 	private TaggerHelpWindow taggerHelpWindow = new TaggerHelpWindow();
 	private CheckBox cbTraceSelection;
 	private Button btClearSearchHighlights;
+	private ResourcePanel resourcePanel;
+	private AnnotationPanel annotationPanel;
+	private UserMarkupCollectionManager userMarkupCollectionManager;
+	private EventBus eventBus;
+	private TaggerContextMenu taggerContextMenu;
+	private ErrorHandler errorHandler;
 	
 	public TaggerView(
 			int taggerID, 
 			SourceDocument sourceDocument, Repository project, 
-			PropertyChangeListener sourceDocChangedListener) {
+			PropertyChangeListener sourceDocChangedListener,
+			EventBus eventBus) {
 		this.taggerID = taggerID;
 		this.tagManager = project.getTagManager();
 		this.project = project;
 		this.sourceDocument = sourceDocument;
 		this.sourceDocChangedListener = sourceDocChangedListener;
+		this.eventBus = eventBus;
 		
 		this.approxMaxLineLength = getApproximateMaxLineLengthForSplitterPanel(initialSplitterPositionInPixels);
-
+		this.userMarkupCollectionManager = new UserMarkupCollectionManager(project);
+		this.errorHandler = (ErrorHandler)UI.getCurrent();
 		initComponents();
 		initActions();
 		initListeners();
 		pager.setMaxPageLengthInLines(maxPageLengthInLines);
+		initData();
+
+	}
+
+	private void initData() {
 		try {
 			tagger.setText(sourceDocument.getContent());
 			totalLineCount = pager.getTotalLineCount();
 			try {
 				linesPerPageSlider.setValue((100.0/totalLineCount)*maxPageLengthInLines);
 			} catch (ValueOutOfBoundsException toBeIgnored) {}
+			
+			List<UserMarkupCollectionReference> collectionReferences =
+				resourcePanel.getSelectedUserMarkupCollectionReferences();
+			
+			for (UserMarkupCollectionReference collectionRef : collectionReferences) {
+				UserMarkupCollection collection = project.getUserMarkupCollection(collectionRef);
+				userMarkupCollectionManager.add(collection);
+			}
+			
+			Collection<TagsetDefinition> tagsets = 
+					new HashSet<>(resourcePanel.getSelectedTagsets());
+			
+			annotationPanel.setData(tagsets, new ArrayList<>(userMarkupCollectionManager.getUserMarkupCollections()));
+			taggerContextMenu.setTagsets(tagsets);
+			
 		} catch (IOException e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError(
+			errorHandler.showAndLogError(
 				Messages.getString("TaggerView.errorShowingSourceDoc"), e); //$NON-NLS-1$
 		}
 	}
@@ -222,22 +257,20 @@ public class TaggerView extends HorizontalLayout
 	public void  analyzeDocument(){
 		Corpus corpus = new Corpus(sourceDocument.toString());
 		corpus.addSourceDocument(sourceDocument);
-		for (UserMarkupCollection umc : 
-			markupPanel.getUserMarkupCollections()) {
-					UserMarkupCollectionReference userMarkupCollRef =
-					sourceDocument.getUserMarkupCollectionReference(
-							umc.getId());
+		for (UserMarkupCollection umc : userMarkupCollectionManager.getUserMarkupCollections()) {
+			UserMarkupCollectionReference userMarkupCollRef =
+				sourceDocument.getUserMarkupCollectionReference(
+						umc.getId());
 			if (userMarkupCollRef != null) {
 				corpus.addUserMarkupCollectionReference(
 						userMarkupCollRef);
 			}
 		}	
-		((AnalyzerProvider)UI.getCurrent()).analyze(
-				corpus, (IndexedRepository)markupPanel.getRepository());	
+		if (project instanceof IndexedRepository) {
+			eventBus.post(new RouteToAnalyzeEvent((IndexedRepository)project, corpus));
+		}
 	}
 
-
-	
 	private void initActions() {
 		btClearSearchHighlights.addClickListener(new ClickListener() {
 			
@@ -281,7 +314,7 @@ public class TaggerView extends HorizontalLayout
 
 					pagerComponent.setPage(previousPageNumber);
 				} catch (IOException e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
+					errorHandler.showAndLogError(
 						Messages.getString("TaggerView.errorShowingSourceDoc"), e); //$NON-NLS-1$
 				}
 
@@ -301,6 +334,57 @@ public class TaggerView extends HorizontalLayout
 			}
 		});
 		
+		resourcePanel.setSelectionListener(new ResourceSelectionListener() {
+
+			@Override
+			public void documentSelected(SourceDocument sourceDocument) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void annotationCollectionSelected(UserMarkupCollectionReference collectionReference,
+					boolean selected) {
+				try {
+					if (selected) {
+						UserMarkupCollection collection = project.getUserMarkupCollection(collectionReference);
+						userMarkupCollectionManager.add(collection);
+						annotationPanel.addCollection(collection);
+					}
+					else {
+						userMarkupCollectionManager.remove(collectionReference.getId());
+						annotationPanel.removeCollection(collectionReference.getId());
+					}
+					
+				}
+				catch (Exception e) {
+					errorHandler.showAndLogError("Error handling Annotation Collection!", e);
+				}
+			}
+
+			@Override
+			public void tagsetsSelected(Collection<TagsetDefinition> tagsets) {
+				try {
+					annotationPanel.setTagsets(tagsets);
+					taggerContextMenu.setTagsets(tagsets);
+				}
+				catch (Exception e) {
+					errorHandler.showAndLogError("Error handling Tagset!", e);
+				}
+			}
+
+			
+		});
+		
+		annotationPanel.setTagReferenceSelectionChangeListener(
+			(tagReferences, selected) -> {
+				if (!tagReferences.isEmpty()) {
+					tagger.setVisible(tagReferences, selected);
+				}
+			});
+		
+		taggerContextMenu.setTagSelectionListener(tag -> tagger.addTagInstanceWith(tag));
+		
 	}
 
 	private void initComponents() {
@@ -311,8 +395,9 @@ public class TaggerView extends HorizontalLayout
 		taggerPanel.setSpacing(true);
 		taggerPanel.setMargin(new MarginInfo(true, true, true, false));
 
-		btHelp = new Button(VaadinIcons.QUESTION_CIRCLE);
+		btHelp = new IconButton(VaadinIcons.QUESTION_CIRCLE);
 		btHelp.addStyleName("help-button"); //$NON-NLS-1$
+//		btHelp.addStyleName(MaterialTheme.BUTTON_FLAT);
 		
 		IndexInfoSet indexInfoSet = 
 			sourceDocument.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet(); 
@@ -326,6 +411,8 @@ public class TaggerView extends HorizontalLayout
 		
 		taggerPanel.addComponent(tagger);
 		taggerPanel.setExpandRatio(tagger, 1.0f);
+		
+		taggerContextMenu = new TaggerContextMenu(tagger);
 		
 		HorizontalLayout actionPanel = new HorizontalLayout();
 		actionPanel.setSpacing(true);
@@ -345,7 +432,9 @@ public class TaggerView extends HorizontalLayout
 		actionPanel.addComponent(pagerComponent);
 		
 		btAnalyze = new Button(Messages.getString("TaggerView.analyzeDocument")); //$NON-NLS-1$
-		btAnalyze.addStyleName("primary-button"); //$NON-NLS-1$
+		btAnalyze.addStyleName(MaterialTheme.BUTTON_FLAT);
+		btAnalyze.addStyleName(MaterialTheme.BUTTON_PRIMARY);
+		
 		btAnalyze.setEnabled(project instanceof IndexedRepository);
 		actionPanel.addComponent(btAnalyze);
 		
@@ -359,7 +448,7 @@ public class TaggerView extends HorizontalLayout
 		actionPanel.addComponent(cbTraceSelection);
 		cbTraceSelection.addStyleName("tagger-trace-checkbox"); //$NON-NLS-1$
 
-		btClearSearchHighlights = new Button(VaadinIcons.ERASER);
+		btClearSearchHighlights = new IconButton(VaadinIcons.ERASER);
 		btClearSearchHighlights.setDescription(Messages.getString("TaggerView.clearAllSearchHighlights")); //$NON-NLS-1$
 		actionPanel.addComponent(btClearSearchHighlights);
 		
@@ -398,11 +487,10 @@ public class TaggerView extends HorizontalLayout
 				},
 				sourceDocument.getID());
 		
-		AnnotationPanel annotationPanel = new AnnotationPanel(project);
+		annotationPanel = new AnnotationPanel(project);
 		
 		final TaggerSplitPanel splitPanel = new TaggerSplitPanel();
 		splitPanel.addComponent(taggerPanel);
-//		splitPanel.addComponent(markupPanel);
 		splitPanel.addComponent(annotationPanel);
 		
 		splitPanel.setSplitPosition(initialSplitterPositionInPixels, Unit.PIXELS);
@@ -418,7 +506,7 @@ public class TaggerView extends HorizontalLayout
 				// TODO: if it is PERCENTAGE, work out the splitter position in pixels
 				if (event.getPositionUnit() != Unit.PIXELS){
 					String message = "Must use PIXELS Unit for split position"; //$NON-NLS-1$
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
+					errorHandler.showAndLogError(
 							message, new IllegalArgumentException(message));
 				}							
 				
@@ -437,7 +525,7 @@ public class TaggerView extends HorizontalLayout
 
 					pagerComponent.setPage(previousPageNumber);
 				} catch (IOException e) {
-					((CatmaApplication)UI.getCurrent()).showAndLogError(
+					errorHandler.showAndLogError(
 						Messages.getString("TaggerView.errorShowingSourceDoc"), e); //$NON-NLS-1$
 				}							
 			}
@@ -447,28 +535,10 @@ public class TaggerView extends HorizontalLayout
 		splitPanel.addListener(SplitterPositionChangedEvent.class,
                 listener, SplitterPositionChangedListener.positionChangedMethod);
 		
-//		TreeData<SourceDocument> sourceDocsTreeData = new TreeData<>();
-//		
-//		Button btDrawer = new Button(VaadinIcons.GRID_SMALL);
-//		
-//		TreeGrid<SourceDocument> documents = new TreeGrid<>(new TreeDataProvider<>(sourceDocsTreeData));
-//		documents.setSizeFull();
-//		documents.addColumn(sd -> sd.toString());
-//		
-//		try {
-//			sourceDocsTreeData.addRootItems(project.getSourceDocuments());
-//		} catch (Exception e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		
-//		PopupView drawer = new PopupView(VaadinIcons.GRID_SMALL.getHtml(), new Label("Test"));
-//		drawer.addStyleName("catma-drawer");
-//		drawer.setSizeFull();
-//		drawer.setWidth("100px");
-//		addComponent(btDrawer);
+		resourcePanel = new ResourcePanel(project, sourceDocument); 
+		SliderPanel drawer = new SliderPanelBuilder(resourcePanel)
+				.mode(SliderMode.LEFT).expanded(false).build();
 		
-		SliderPanel drawer = new SliderPanelBuilder(new Label("Test")).mode(SliderMode.LEFT).expanded(false).build();
 		addComponent(drawer);
 		
 		addComponent(splitPanel);
@@ -543,34 +613,9 @@ public class TaggerView extends HorizontalLayout
 	
 	public void tagInstanceAdded(
 			ClientTagInstance clientTagInstance) {
-		TagLibrary tagLibrary =
-				markupPanel.getCurrentWritableUserMarkupCollection().getTagLibrary();
+		UserMarkupCollection collection = annotationPanel.getSelectedEditableCollection();
 		
-		if (tagLibrary.getTagDefinition(clientTagInstance.getTagDefinitionID())
-				== null) {
-			TagsetDefinition tagsetDef =
-					markupPanel.getTagsetDefinition(
-							clientTagInstance.getTagDefinitionID());
-			if (tagLibrary.getTagsetDefinition(tagsetDef.getUuid()) == null) {
-				tagManager.addTagsetDefinition(
-						tagLibrary, new TagsetDefinition(tagsetDef));
-			}
-			else {
-				//this should not happen, because we update TagsetDefinitions immedately
-				logger.severe(
-					"TagDefinition not found, but TagsetDefinition is present, " + //$NON-NLS-1$
-					"expected was either a complete TagsetDefiniton or no TagsetDefinition," + //$NON-NLS-1$
-					"adding TagDefinition instead of TagsetDefinition now: orig TagsetDef: " +  //$NON-NLS-1$
-					tagsetDef + " orig TagDef: " +tagsetDef.getTagDefinition( //$NON-NLS-1$
-							clientTagInstance.getTagDefinitionID()));
-				
-				tagManager.addTagDefinition(
-					tagLibrary.getTagsetDefinition(tagsetDef.getUuid()),
-					new TagDefinition(
-						tagsetDef.getTagDefinition(
-							clientTagInstance.getTagDefinitionID())));
-			}
-		}
+		TagLibrary tagLibrary = collection.getTagLibrary();
 		
 		TagDefinition tagDef = 
 				tagLibrary.getTagDefinition(
@@ -582,17 +627,17 @@ public class TaggerView extends HorizontalLayout
 		List<TagReference> tagReferences = new ArrayList<TagReference>();
 		
 		try {
-			String userMarkupCollectionUuid = 
-				markupPanel.getCurrentWritableUserMarkupCollection().getId();
+			String userMarkupCollectionUuid = collection.getId();
+
 			for (TextRange tr : clientTagInstance.getRanges()) {
 				Range r = new Range(tr.getStartPos(), tr.getEndPos());
 				TagReference ref = 
 						new TagReference(ti, sourceDocument.getID(), r, userMarkupCollectionUuid);
 				tagReferences.add(ref);
 			}
-			markupPanel.addTagReferences(tagReferences);
+			userMarkupCollectionManager.addTagReferences(tagReferences, collection);
 		} catch (URISyntaxException e) {
-			((CatmaApplication)UI.getCurrent()).showAndLogError(
+			errorHandler.showAndLogError(
 				Messages.getString("TaggerView.errorAddingAnnotations"), e); //$NON-NLS-1$
 		}
 	}
@@ -654,6 +699,6 @@ public class TaggerView extends HorizontalLayout
 
 	@Override
 	public TagInstanceInfo getTagInstanceInfo(String tagInstanceId) {
-		return markupPanel.getTagInstanceInfo(tagInstanceId);
+		return userMarkupCollectionManager.getTagInstanceInfo(tagInstanceId);
 	}
 }

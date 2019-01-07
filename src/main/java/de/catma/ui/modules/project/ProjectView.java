@@ -1,49 +1,66 @@
 package de.catma.ui.modules.project;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.vaadin.dialogs.ConfirmDialog;
+import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
+import org.vaadin.teemu.wizards.event.WizardCompletedEvent;
+import org.vaadin.teemu.wizards.event.WizardProgressListener;
+import org.vaadin.teemu.wizards.event.WizardStepActivationEvent;
+import org.vaadin.teemu.wizards.event.WizardStepSetChangedEvent;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.DataProvider;
+import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
-import com.vaadin.ui.Grid.Column;
+import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.repository.Repository;
+import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.tag.TagsetDefinition;
-import de.catma.ui.component.IconButton;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.hugecard.HugeCard;
+import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.events.ResourcesChangedEvent;
-import de.catma.ui.events.routing.RouteToProjectEvent;
-import de.catma.ui.layout.FlexLayout;
+import de.catma.ui.events.routing.RouteToAnnotateEvent;
+import de.catma.ui.layout.HorizontalLayout;
+import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.modules.main.CanReloadAll;
-import de.catma.ui.modules.main.ErrorLogger;
+import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.modules.main.HeaderContextChangeEvent;
-import de.catma.ui.util.Styles;
+import de.catma.ui.repository.Messages;
+import de.catma.ui.repository.wizard.AddSourceDocWizardFactory;
+import de.catma.ui.repository.wizard.AddSourceDocWizardResult;
+import de.catma.ui.repository.wizard.SourceDocumentResult;
 import de.catma.user.User;
+import de.catma.util.Pair;
 
 /**
  *
@@ -53,80 +70,333 @@ import de.catma.user.User;
  */
 public class ProjectView extends HugeCard implements CanReloadAll {
 
+	private ProjectManager projectManager;
     private ProjectReference projectReference;
-    private Repository repository;
+    private Repository project;
 
-    private final ProjectManager projectManager;
-
-    private final ErrorLogger errorLogger;
-
+    private final ErrorHandler errorHandler;
     private final EventBus eventBus;
 
-    private final DataProvider<TagsetDefinition, Void> tagsetsDP = DataProvider.fromCallbacks(
-            (query) -> {
-                query.getOffset(); //NOOP calls *sigh*
-                query.getLimit(); //NOOP calls *sigh*
-                return getResources(repository::getTagsets);
-            },
-            (query) -> getResourceCount(repository::getTagsetsCount)
-    );
+    private TreeGrid<Resource> resourceGrid;
+    private Grid<TagsetDefinition> tagsetGrid;
+	private Grid<User> teamGrid;
+	private ActionGridComponent<TreeGrid<Resource>> sourceDocumentsGridComponent;
+	private PropertyChangeListener collectionChangeListener;
+	private PropertyChangeListener projectExceptionListener;
+	private PropertyChangeListener documentChangeListener;
 
-    private final DataProvider<User, Void> membersDP;
-
-    private final TreeGrid<Resource> resourceGrid = new TreeGrid<>();;
-
-
-    public ProjectView(ProjectManager projectManager, EventBus eventBus){
+    public ProjectView(ProjectManager projectManager, EventBus eventBus) {
     	super("Project");
-        this.projectManager = projectManager;
-        this.errorLogger = (ErrorLogger)UI.getCurrent();
+    	this.projectManager = projectManager;
         this.eventBus = eventBus;
+        this.errorHandler = (ErrorHandler)UI.getCurrent();
+        initProjectListeners();
 
-        membersDP = DataProvider.fromCallbacks(
-                (query) -> {
-                    query.getOffset(); //NOOP calls *sigh*
-                    query.getLimit(); //NOOP calls *sigh*
-                    return getResources(() -> projectManager.getProjectMembers(projectReference.getProjectId()));
-                },
-                (query) -> getResourceCount(() -> projectManager.getProjectMembers(projectReference.getProjectId()).size())
-        );
         initComponents();
+        initActions();
+        
         eventBus.register(this);
     }
 
-    /* build the GUI */
+    private void initProjectListeners() {
+        this.projectExceptionListener = new PropertyChangeListener() {
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				Exception e = (Exception) evt.getNewValue();
+				errorHandler.showAndLogError("Error handling Project!", e);
+				
+			}
+		};
+        this.collectionChangeListener = new PropertyChangeListener() {
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				handleCollectionChange(evt);
+			}
+		};
+		
+		this.documentChangeListener = new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				handleDocumentChange(evt);
+			}
+		};
+	}
 
-    private void initComponents() {
-    	FlexLayout mainColumns = new FlexLayout();
-    	mainColumns.addStyleNames("flex-horizontal","flex-wrap");
+	@SuppressWarnings("unchecked")
+	private void handleDocumentChange(PropertyChangeEvent evt) {
+		Object oldValue = evt.getOldValue();
+		Object newValue = evt.getNewValue();
+		try {
+			if (oldValue == null) { // creation
+				String sourceDocumentId = (String)newValue;
+				SourceDocument document = project.getSourceDocument(sourceDocumentId);
+			
+				TreeDataProvider<Resource> resourceDataProvider = 
+	    				(TreeDataProvider<Resource>) resourceGrid.getDataProvider();
+
+				DocumentResource documentResource = new DocumentResource(document);
+				
+				resourceDataProvider.getTreeData().addItem(null, documentResource);
+				resourceDataProvider.refreshAll();
+				
+				Notification.show(
+					"Info", 
+					String.format("Document %1$s has been added!", document.toString()),  
+					Type.TRAY_NOTIFICATION);
+
+			}
+			else if (newValue == null) { // removal
+				//TODO
+			}
+			else { // metadata update
+				//TODO
+			}
+		}
+		catch (Exception e) {
+			errorHandler.showAndLogError("Error handling Document", e);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void handleCollectionChange(PropertyChangeEvent evt) {
     	
-//        mainColumns.getStyle().set("flex-wrap","wrap"); TODO: flexwrap
-
-    	FlexLayout resources = new FlexLayout();
-    	resources.addStyleNames("flex-vertical");
+    	Object oldValue = evt.getOldValue();
+    	Object newValue = evt.getNewValue();
     	
-        resources.setSizeUndefined(); // don't set width 100%
-        resources.addComponent(new Label("Resources"));
+    	if (oldValue == null) { // creation
+			Pair<UserMarkupCollectionReference, SourceDocument> creationResult = 
+    				(Pair<UserMarkupCollectionReference, SourceDocument>) newValue;
+    		
+    		SourceDocument document = creationResult.getSecond();
+    		UserMarkupCollectionReference collectionReference = creationResult.getFirst();
+    		
+			TreeDataProvider<Resource> resourceDataProvider = 
+    				(TreeDataProvider<Resource>) resourceGrid.getDataProvider();
 
-        mainColumns.addComponent(resources);
+			CollectionResource collectionResource = new CollectionResource(collectionReference);
+			DocumentResource documentResource = new DocumentResource(document);
+			
+			resourceDataProvider.getTreeData().addItem(
+    				documentResource, collectionResource);
+			resourceDataProvider.refreshAll();
+			
+			Notification.show(
+				"Info", 
+				String.format("Collection %1$s has been created!", collectionReference.toString()),  
+				Type.TRAY_NOTIFICATION);
+    	}
+    	else if (newValue == null) { // removal
+    		//TODO:
+    	}
+    	else { // metadata update
+    		//TODO:
+    	}
+    	
+	}
 
-        FlexLayout team = new FlexLayout();
-        team.addStyleNames("flex-vertical");
-        team.setSizeUndefined(); // don't set width 100%
-        team.addComponent(new Label("Team"));
+	private void initActions() {
+    	resourceGrid.addItemClickListener(itemClickEvent -> handleResourceItemClick(itemClickEvent));
+    	
+        ContextMenu addContextMenu = 
+        	sourceDocumentsGridComponent.getActionGridBar().getBtnAddContextMenu();
+        addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
+        addContextMenu.addItem("Add Annotation Collection", e -> handleAddCollectionRequest());
 
-        mainColumns.addComponent(team);
+	}
 
-        addComponent(mainColumns);
+    private void handleAddCollectionRequest() {
+		@SuppressWarnings("unchecked")
+		TreeDataProvider<Resource> resourceDataProvider = 
+				(TreeDataProvider<Resource>) resourceGrid.getDataProvider();
+		
+    	Set<Resource> selectedResources = resourceGrid.getSelectedItems();
+    	
+    	Set<SourceDocument> selectedDocuments = new HashSet<>();
+    	
+    	for (Resource resource : selectedResources) {
+    		Resource root = 
+        			resourceDataProvider.getTreeData().getParent(resource);
+
+    		if (root == null) {
+    			root = resource;
+    		}
+    		
+    		DocumentResource documentResource = (DocumentResource)root;
+    		selectedDocuments.add(documentResource.getDocument());
+    	}
+    	
+    	
+    	SingleTextInputDialog collectionNameDlg = 
+    		new SingleTextInputDialog("Add Annotation Collection", "Please enter the Collection name:",
+    				new SaveCancelListener<String>() {
+						
+						@Override
+						public void savePressed(String result) {
+							for (SourceDocument document : selectedDocuments) {
+								project.createUserMarkupCollection(result, document);
+							}
+						}
+					});
+    	
+    	collectionNameDlg.show();
+    }
+
+	private void handleAddDocumentRequest() {
+		
+		final AddSourceDocWizardResult wizardResult = 
+				new AddSourceDocWizardResult();
+		
+		AddSourceDocWizardFactory factory = 
+			new AddSourceDocWizardFactory(
+					new WizardProgressListener() {
+				
+				public void wizardCompleted(WizardCompletedEvent event) {
+					event.getWizard().removeListener(this);
+					//TODO:
+//					final boolean generateStarterKit = repository.getSourceDocuments().isEmpty();
+					try {
+						for(SourceDocumentResult sdr : wizardResult.getSourceDocumentResults()){
+							final SourceDocument sourceDocument = sdr.getSourceDocument();
+							
+							project.addPropertyChangeListener(
+								RepositoryChangeEvent.sourceDocumentChanged,
+								new PropertyChangeListener() {
+
+									@Override
+									public void propertyChange(PropertyChangeEvent evt) {
+										
+										if ((evt.getNewValue() == null)	|| (evt.getOldValue() != null)) {
+											return; // no insert
+										}
+										
+										String newSdId = (String) evt.getNewValue();
+										if (!sourceDocument.getID().equals(newSdId)) {
+											return;
+										}
+										
+											
+										project.removePropertyChangeListener(
+											RepositoryChangeEvent.sourceDocumentChanged, 
+											this);
+										
+										//TODO:
+//										if (currentCorpus != null) {
+//											try {
+//												repository.update(currentCorpus, sourceDocument);
+//												setSourceDocumentsFilter(currentCorpus);
+//												
+//											} catch (IOException e) {
+//												((CatmaApplication)UI.getCurrent()).showAndLogError(
+//													Messages.getString("SourceDocumentPanel.errorAddingSourceDocToCorpus"), e); //$NON-NLS-1$
+//											}
+//											
+//										}
+										
+										//TODO:
+//										if (sourceDocument
+//												.getSourceContentHandler()
+//												.hasIntrinsicMarkupCollection()) {
+//											try {
+//												handleIntrinsicMarkupCollection(sourceDocument);
+//											} catch (IOException e) {
+//												((CatmaApplication)UI.getCurrent()).showAndLogError(
+//													Messages.getString("SourceDocumentPanel.errorExtratingIntrinsicAnnotations"), e); //$NON-NLS-1$
+//											}
+//										}
+										
+//										if (generateStarterKit) {
+//											generateStarterKit(sourceDocument);
+//										}
+									}
+								});
+
+							project.insert(sourceDocument);
+						}
+						
+					} catch (Exception e) {
+						((CatmaApplication)UI.getCurrent()).showAndLogError(
+							Messages.getString("SourceDocumentPanel.errorAddingSourceDoc"), e); //$NON-NLS-1$
+					}
+				}
+
+				public void wizardCancelled(WizardCancelledEvent event) {
+					event.getWizard().removeListener(this);
+				}
+				
+				public void stepSetChanged(WizardStepSetChangedEvent event) {/*not needed*/}
+				
+				public void activeStepChanged(WizardStepActivationEvent event) {/*not needed*/}
+			}, 
+			wizardResult,
+			project);
+		
+		Window sourceDocCreationWizardWindow = 
+				factory.createWizardWindow(
+						Messages.getString("SourceDocumentPanel.addNewSourceDoc"), "85%",  "98%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		
+		UI.getCurrent().addWindow(
+				sourceDocCreationWizardWindow);
+		
+		sourceDocCreationWizardWindow.center();
+	}
+	
+	private void handleResourceItemClick(ItemClick<Resource> itemClickEvent) {
+    	if (itemClickEvent.getMouseEventDetails().isDoubleClick()) {
+    		Resource resource = itemClickEvent.getItem();
+    		
+    		@SuppressWarnings("unchecked")
+			TreeDataProvider<Resource> resourceDataProvider = 
+    				(TreeDataProvider<Resource>) resourceGrid.getDataProvider();
+    		
+    		Resource root = 
+    			resourceDataProvider.getTreeData().getParent(resource);
+    		Resource child = null;
+    		
+    		if (root == null) {
+    			root = resource;
+    		}
+    		else {
+    			child = resource;
+    		}
+    		
+    		SourceDocument document = ((DocumentResource)root).getDocument();
+    		UserMarkupCollectionReference collectionReference = 
+    			(child==null?null:((CollectionResource)child).getCollectionReference());
+    		
+    		eventBus.post(new RouteToAnnotateEvent(project, document, collectionReference));
+    	}
+    }
+    
+
+	/* build the GUI */
+
+	private void initComponents() {
+		HorizontalLayout mainPanel = new HorizontalLayout();
+    	mainPanel.setFlexWrap(FlexWrap.WRAP);
+    	
+    	VerticalLayout resourcePanel = new VerticalLayout();
+    	
+        resourcePanel.setSizeUndefined(); // don't set width 100%
+        resourcePanel.addComponent(new Label("Resources"));
+
+        mainPanel.addComponent(resourcePanel);
+
+        VerticalLayout teamPanel = new VerticalLayout();
+        teamPanel.setSizeUndefined(); // don't set width 100%
+        teamPanel.addComponent(new Label("Team"));
+
+        mainPanel.addComponent(teamPanel);
+
+        addComponent(mainPanel);
         
-//        TODO: expand content.expand(mainColumns);
-
         ContextMenu hugeCardMoreOptions = getBtnMoreOptionsContextMenu();
         hugeCardMoreOptions.addItem("Share Ressources", e -> Notification.show("Sharing"));// TODO: 29.10.18 actually share something
         hugeCardMoreOptions.addItem("Delete Ressources", e -> Notification.show("Deleting")); // TODO: 29.10.18 actually delete something
 
-        resources.addComponent(initResourceContent());
-        team.addComponent(initTeamContent());
+        resourcePanel.addComponent(initResourceContent());
+        teamPanel.addComponent(initTeamContent());
 
     }
 
@@ -135,69 +405,37 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      * @return
      */
     private Component initResourceContent() {
-    	FlexLayout resourceContent = new FlexLayout();
-    	resourceContent.addStyleNames("flex-horizontal");
-
-        resourceGrid.addStyleName(Styles.actiongrid__hidethead);
-        resourceGrid.setWidth("400px");
+    	HorizontalLayout resourceContent = new HorizontalLayout();
+    	resourceGrid = new TreeGrid<>();
+        resourceGrid.addStyleName("project-view-document-grid");
+        resourceGrid.setHeaderVisible(false);
         
-        resourceGrid.setDataProvider(buildResourceDataProvider());
-
-        StringBuilder rt = new StringBuilder();
-        rt
-                .append("<vaadin-grid-tree-toggle ")
-                .append("leaf='[[item.leaf]]' expanded='{{expanded}}' level='[[level]]' class='documentsgrid__combined' >")
-                .append("</vaadin-grid-tree-toggle>")
-                .append("<combined-cell>")
-                .append("<centered-icon>")
-                .append("<iron-icon icon='[[item.icon]]'>")
-                .append("</iron-icon>")
-                .append("</centered-icon>")
-                .append("<div class='documentsgrid__doc'> ")
-                .append("<span class='documentsgrid__doc__title'> ")
-                .append("[[item.title]]")
-                .append("</span>")
-                .append("<span class='documentsgrid__doc__author'> ")
-                .append("[[item.detail]]")
-                .append("</span>")
-                .append("</div>")
-                .append("</combined-cell>");
-
-// TODO: old style renderer
-//        resourceGrid.addColumn(TemplateRenderer
-//                .<Resource> of(rt.toString())
-//
-//                .withProperty("leaf",
-//                        item -> ! resourceGrid.getDataProvider().hasChildren(item))
-//                .withProperty("icon",
-//                        item -> {
-//                            if(item instanceof SourceDocumentResource){
-//                                return "vaadin:file";
-//                            }
-//                            if(item instanceof UserMarkupResource){
-//                                return "vaadin:file-text";
-//                            }
-//                            return "";
-//                        })
-//
-//                .withProperty("title", res -> res.toString())
-//                .withProperty("detail", res -> res.hasDetail()?res.detail():null)
-//
-//        ).setFlexGrow(1);
-
-        Column<Resource, Object> col = resourceGrid.addColumn((nan) -> new IconButton(VaadinIcons.ELLIPSIS_DOTS_V));
-        col.setWidth(32);
+		resourceGrid
+			.addColumn(resource -> resource.getIcon(), new HtmlRenderer());
+        
+        resourceGrid
+        	.addColumn(resource -> resource.getName())
+        	.setCaption("Name")
+        	.setExpandRatio(2);
+        
+        //TODO: see MD for when it is appropriate to offer row options
+//        ButtonRenderer<Resource> resourceOptionsRenderer = new ButtonRenderer<>(
+//				resourceOptionClickedEvent -> handleResourceOptionClicked(resourceOptionClickedEvent));
+//        resourceOptionsRenderer.setHtmlContentAllowed(true);
+        
+//		resourceGrid.addColumn(
+//			(nan) -> VaadinIcons.ELLIPSIS_DOTS_V.getHtml(), 
+//			resourceOptionsRenderer);
+        
+        
+        
         Label documentsAnnotations = new Label("Documents & Annotations");
 
-        documentsAnnotations.setWidth("100%");
-        ActionGridComponent sourceDocumentsGridComponent = new ActionGridComponent<>(
+        sourceDocumentsGridComponent = new ActionGridComponent<TreeGrid<Resource>>(
                 documentsAnnotations,
                 resourceGrid
         );
-
-        ContextMenu addContextMenu = sourceDocumentsGridComponent.getActionGridBar().getBtnAddContextMenu();
-        addContextMenu.addItem("Add Document", e -> Notification.show("Hell"));// TODO: 29.10.18 actually do something
-        addContextMenu.addItem("Add Annotation Collection", e -> Notification.show("Fire")); // TODO: 29.10.18 actually do something
+        sourceDocumentsGridComponent.addStyleName("project-view-action-grid");
 
         ContextMenu BtnMoreOptionsContextMenu = sourceDocumentsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
         BtnMoreOptionsContextMenu.addItem("Delete documents / collections",(menuItem) -> handleDeleteResources(menuItem, resourceGrid));
@@ -206,58 +444,42 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
         resourceContent.addComponent(sourceDocumentsGridComponent);
 
-        Grid<TagsetDefinition> tagsetGrid = new Grid<>();
-        tagsetGrid.addStyleName(Styles.actiongrid__hidethead);
+        tagsetGrid = new Grid<>();
+        tagsetGrid.setHeaderVisible(false);
         tagsetGrid.setWidth("400px");
 
-        tagsetGrid.setDataProvider(tagsetsDP);
-
-        Column<TagsetDefinition, Object> coltag = tagsetGrid.addColumn((nan) -> VaadinIcons.TAGS);
-        coltag.setWidth(48);
-
-        tagsetGrid.addColumn(TagsetDefinition::getName);
-        Column<TagsetDefinition, Object> coldots = tagsetGrid.addColumn((nan) -> new IconButton(VaadinIcons.ELLIPSIS_DOTS_V));
-        coldots.setWidth(32);
+        tagsetGrid.addColumn(tagset -> VaadinIcons.TAGS.getHtml(), new HtmlRenderer());
+		tagsetGrid
+			.addColumn(tagset -> tagset.getName())
+			.setCaption("Name")
+			.setExpandRatio(2);
+	
 
         Label tagsetsAnnotations = new Label("Tagsets");
-        documentsAnnotations.setWidth("100%");
-        ActionGridComponent tagsetsGridComponent = new ActionGridComponent<Grid<TagsetDefinition>>(
+        ActionGridComponent<Grid<TagsetDefinition>> tagsetsGridComponent = new ActionGridComponent<>(
                 tagsetsAnnotations,
                 tagsetGrid
         );
-
+        tagsetsGridComponent.addStyleName("project-view-action-grid");
+        
         resourceContent.addComponent(tagsetsGridComponent);
         return resourceContent;
     }
 
-    private Component initTeamContent() {
-    	FlexLayout teamContent = new FlexLayout();
-    	teamContent.addStyleNames("flex-horizontal");
-        Grid<User> teamGrid = new Grid<>();
-        teamGrid.addStyleName(Styles.actiongrid__hidethead);
+	private Component initTeamContent() {
+		HorizontalLayout teamContent = new HorizontalLayout();
+        teamGrid = new Grid<>();
+        teamGrid.setHeaderVisible(false);
         teamGrid.setWidth("402px");
-        teamGrid.setDataProvider(membersDP);
+        teamGrid.addColumn((user) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
+        teamGrid.addColumn(User::getName).setExpandRatio(1);
 
-        Column<User, String> coluser = teamGrid.addColumn((nan) -> VaadinIcons.USER.getHtml(), new HtmlRenderer());
-//        coluser.setWidth(48);
-        //.setFlexGrow(0).setWidth("3em");
-        Column<User, String> colName = teamGrid.addColumn(User::getName);
-        colName.setExpandRatio(1);
-//        colName.setWidth(300);
-        //.setFlexGrow(1);
-        
-        Column<User, Component> coldots = teamGrid.addComponentColumn((nan) -> new IconButton(VaadinIcons.ELLIPSIS_DOTS_V));
-//        coldots.setWidth(32);
-        
-                //.setFlexGrow(0).setWidth("2em");
-
-        
         Label membersAnnotations = new Label("Members");
-        ActionGridComponent membersGridComponent = new ActionGridComponent<>(
+        ActionGridComponent<Grid<User>> membersGridComponent = new ActionGridComponent<>(
                 membersAnnotations,
                 teamGrid
         );
-
+        membersGridComponent.addStyleName("project-view-action-grid");
         teamContent.addComponent(membersGridComponent);
         return teamContent;
     }
@@ -266,8 +488,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 
     /**
-     * @// TODO: 15.10.18 refactor ProjectManager to directly return repository, remove listener
-     * @deprecated 
      * @param projectReference
      */
     private void initProject(ProjectReference projectReference) {
@@ -279,63 +499,60 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
             @Override
             public void ready(Repository repository) {
-
-                ProjectView.this.repository = repository;
+                ProjectView.this.project = repository;
+                ProjectView.this.project.addPropertyChangeListener(
+                		RepositoryChangeEvent.exceptionOccurred, 
+                		projectExceptionListener);
+                ProjectView.this.project.addPropertyChangeListener(
+                		RepositoryChangeEvent.userMarkupCollectionChanged, 
+                		collectionChangeListener);
+                ProjectView.this.project.addPropertyChangeListener(
+                		RepositoryChangeEvent.sourceDocumentChanged, 
+                		documentChangeListener);
+                
+				initData();
             }
 
             @Override
             public void failure(Throwable t) {
-                errorLogger.showAndLogError("fehler", t);
+                errorHandler.showAndLogError("error opening project", t);
             }
         });
     }
 
-    private <T> Stream<T> getResources(ResourceProvider<T> resources){
+    private void initData() {
         try {
-            if(repository == null || projectReference == null)
-                return Stream.empty();
-            return resources.getResources().stream();
-        } catch (Exception e) {
-            errorLogger.showAndLogError("Resources couldn't be retrieved",e);
-            return Stream.empty();
-        }
-    }
+        	TreeDataProvider<Resource> resourceDataProvider = buildResourceDataProvider(); 
+        	resourceGrid.setDataProvider(resourceDataProvider);
+        	
+        	resourceGrid.expand(resourceDataProvider.getTreeData().getRootItems());
+        	
+        	ListDataProvider<TagsetDefinition> tagsetData = new ListDataProvider<>(project.getTagsets());
+        	tagsetGrid.setDataProvider(tagsetData);
+        	
+        	ListDataProvider<User> memberData = new ListDataProvider<>(project.getProjectMembers());
+        	teamGrid.setDataProvider(memberData);
+		} catch (Exception e) {
+			errorHandler.showAndLogError("error initializing data", e);
+		}
+	}
 
-    private int getResourceCount(ResourceCountProvider resourceCountProvider){
-        try {
-            if(repository == null || projectReference == null){
-                return 0;
-            }
-            return resourceCountProvider.getResourceCount();
-        } catch (Exception e) {
-            errorLogger.showAndLogError("Resourcecount couldn't be retrieved",e);
-            return 0;
-        }
-    }
-
-    private TreeDataProvider<Resource> buildResourceDataProvider() {
-        if(repository == null || projectReference == null){
-            return new TreeDataProvider(new TreeData());
-        }
-        try {
-            TreeData<Resource> treeData = new TreeData();
-            Collection<SourceDocument> srcDocs = repository.getSourceDocuments();
+    private TreeDataProvider<Resource> buildResourceDataProvider() throws Exception {
+        if(project != null){
+            TreeData<Resource> treeData = new TreeData<>();
+            Collection<SourceDocument> srcDocs = project.getSourceDocuments();
             for(SourceDocument srcDoc : srcDocs){
-                SourceDocumentResource srcDocResource = new SourceDocumentResource(srcDoc);
+                DocumentResource srcDocResource = new DocumentResource(srcDoc);
                 treeData.addItem(null,srcDocResource);
                 List<UserMarkupCollectionReference> collections = srcDoc.getUserMarkupCollectionRefs();
                 if(!collections.isEmpty()){
-                    treeData.addItems(srcDocResource,collections.stream().map(UserMarkupResource::new));
+                    treeData.addItems(srcDocResource,collections.stream().map(CollectionResource::new));
                 }
             }
-            return new TreeDataProvider(treeData);
-
-        } catch (Exception e) {
-            errorLogger.showAndLogError("Can't retrieve resources", e);
+            return new TreeDataProvider<>(treeData);
         }
-        return new TreeDataProvider(new TreeData());
+        return new TreeDataProvider<>(new TreeData<>());
     }
-
 
     /* Event handler */
 
@@ -345,18 +562,13 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     @Override
     public void reloadAll() {
         initProject(projectReference);
-        resourceGrid.setDataProvider(buildResourceDataProvider());
-        tagsetsDP.refreshAll();
-        membersDP.refreshAll();
     }
 
     /**
      * handler for project selection
-     * @param event
      */
-    @Subscribe
-    public void handleProjectSelectedEvent(RouteToProjectEvent event) {
-        projectReference = event.getProjectReference();
+    public void setProjectReference(ProjectReference projectReference) {
+        this.projectReference = projectReference;
         eventBus.post(new HeaderContextChangeEvent(new Label(projectReference.getName())));
         reloadAll();
     }
@@ -367,7 +579,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
      */
     @Subscribe
     public void handleResourceChanged(ResourcesChangedEvent<TreeGrid<Resource>> resourcesChangedEvent){
-        resourcesChangedEvent.getComponent().setDataProvider(buildResourceDataProvider());
+    	//TODO:
+//        resourcesChangedEvent.getComponent().setDataProvider(buildResourceDataProvider());
     }
 
     /**
@@ -429,4 +642,31 @@ public class ProjectView extends HugeCard implements CanReloadAll {
             dialog.close();
         },true);
     }
+
+	public void close() {
+		try {
+			if (project != null) {
+				if (collectionChangeListener != null) {
+					project.removePropertyChangeListener(
+						RepositoryChangeEvent.userMarkupCollectionChanged, 
+						collectionChangeListener);
+				}
+				if (documentChangeListener != null) {
+					project.removePropertyChangeListener(
+						RepositoryChangeEvent.sourceDocumentChanged, 
+						documentChangeListener);
+				}
+
+				if (projectExceptionListener != null) {
+					project.removePropertyChangeListener(
+						RepositoryChangeEvent.exceptionOccurred, 
+						projectExceptionListener);
+				}
+			}			
+			
+		}
+		catch (Exception e) {
+			errorHandler.showAndLogError("Error closing ProjectView", e);
+		}
+	}
  }

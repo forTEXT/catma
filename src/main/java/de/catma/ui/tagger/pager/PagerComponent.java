@@ -18,19 +18,17 @@
  */   
 package de.catma.ui.tagger.pager;
 
-import java.text.MessageFormat;
-
-import com.vaadin.v7.data.Property.ValueChangeEvent;
-import com.vaadin.v7.data.Property.ValueChangeListener;
-import com.vaadin.v7.data.Validator;
+import com.github.appreciated.material.MaterialTheme;
+import com.vaadin.data.HasValue.ValueChangeEvent;
+import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.server.ClassResource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.Label;
-import com.vaadin.v7.ui.TextField;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.TextField;
 
 import de.catma.ui.tagger.pager.Pager.PagerListener;
 
@@ -141,9 +139,9 @@ public class PagerComponent extends HorizontalLayout {
 				nextPageButton.setEnabled(false);
 			}
 		});
-		pageInput.addValueChangeListener(new ValueChangeListener() {
+		pageInput.addValueChangeListener(new ValueChangeListener<String>() {
 			
-			public void valueChange(ValueChangeEvent event) {
+			public void valueChange(ValueChangeEvent<String> event) {
 				currentPageNumber = pageInput.getNumber();
 				pageChangeListener.pageChanged(currentPageNumber);
 				if (currentPageNumber == 1) {
@@ -161,49 +159,53 @@ public class PagerComponent extends HorizontalLayout {
 				pageInput.setComponentError(null);
 			}
 		});
-		
-		pageInput.addValidator(new Validator() {
-			public boolean isValid(Object value) {
-				if (value != null) {
-					try {
-						int i = Integer.valueOf(value.toString());
-						if (i>=1 && i<=lastPageNumber) {
-							return true;
-						}
-					}
-					catch (NumberFormatException nfe) {
-						return false;
-					}
-				}
-				return false;
-			}
-			
-			public void validate(Object value) throws InvalidValueException {
-				if (!isValid(value)) {
-					throw new InvalidValueException(MessageFormat.format(Messages.getString("PagerComponent.numberRequirements"), lastPageNumber));  //$NON-NLS-1$
-				}
-			}
-		});
-		pageInput.setInvalidAllowed(false);
-		pageInput.setInvalidCommitted(false);
+
+		//TODO:
+//		pageInput.addValidator(new Validator() {
+//			public boolean isValid(Object value) {
+//				if (value != null) {
+//					try {
+//						int i = Integer.valueOf(value.toString());
+//						if (i>=1 && i<=lastPageNumber) {
+//							return true;
+//						}
+//					}
+//					catch (NumberFormatException nfe) {
+//						return false;
+//					}
+//				}
+//				return false;
+//			}
+//			
+//			public void validate(Object value) throws InvalidValueException {
+//				if (!isValid(value)) {
+//					throw new InvalidValueException(MessageFormat.format(Messages.getString("PagerComponent.numberRequirements"), lastPageNumber));  //$NON-NLS-1$
+//				}
+//			}
+//		});
+//		pageInput.setInvalidAllowed(false);
+//		pageInput.setInvalidCommitted(false);
 	}
 
 	private void initComponents() {
 		setSpacing(true);
 		firstPageButton = new Button();
+		firstPageButton.addStyleName(MaterialTheme.BUTTON_FLAT);
 		addComponent(firstPageButton);
 		previousPageButton = new Button();
+		previousPageButton.addStyleName(MaterialTheme.BUTTON_FLAT);
 		addComponent(previousPageButton);
 		pageInput = new NumberField(1);
-		pageInput.setImmediate(true);
 		pageInput.setStyleName("pager-pageinput"); //$NON-NLS-1$
 		addComponent(pageInput);
 		lastPageNumberLabel = new Label(Messages.getString("PagerComponent.notAvailableAbbr")); //$NON-NLS-1$
 		addComponent(lastPageNumberLabel);
 		this.setComponentAlignment(lastPageNumberLabel, Alignment.MIDDLE_LEFT);
 		nextPageButton = new Button();
+		nextPageButton.addStyleName(MaterialTheme.BUTTON_FLAT);
 		addComponent(nextPageButton);
 		lastPageButton = new Button();
+		lastPageButton.addStyleName(MaterialTheme.BUTTON_FLAT);
 		addComponent(lastPageButton);
 	}
 	

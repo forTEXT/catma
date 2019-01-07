@@ -1225,4 +1225,9 @@ public class DBRepository implements IndexedRepository {
 	public int getTagsetsCount() throws Exception {
 		throw new UnsupportedOperationException();
 	}
+	
+	@Override
+	public List<User> getProjectMembers() throws Exception {
+		throw new UnsupportedOperationException();
+	}
 }

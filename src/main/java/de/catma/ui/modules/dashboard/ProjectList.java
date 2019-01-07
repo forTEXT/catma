@@ -11,13 +11,14 @@ import com.vaadin.data.provider.Query;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.layout.FlexLayout;
-import de.catma.ui.modules.main.ErrorLogger;
+import de.catma.ui.layout.HorizontalLayout;
+import de.catma.ui.layout.VerticalLayout;
+import de.catma.ui.modules.main.ErrorHandler;
 
 /**
  * Displays a list of all projects in a card style layout.
@@ -27,11 +28,11 @@ public class ProjectList extends VerticalLayout implements
         HasDataProvider<ProjectReference> {
 
     private final ProjectManager projectManager;
-    private final ErrorLogger errorLogger;
+    private final ErrorHandler errorLogger;
 	private final EventBus eventBus;
 
     ProjectList(ProjectManager projectManager, EventBus eventBus) {
-        this.errorLogger = (ErrorLogger)UI.getCurrent();
+        this.errorLogger = (ErrorHandler)UI.getCurrent();
         this.eventBus = eventBus;
         this.projectManager = projectManager;
         initComponents();
@@ -41,7 +42,7 @@ public class ProjectList extends VerticalLayout implements
     private DataProvider<ProjectReference, ?> dataProvider = DataProvider.ofItems();;
 
     //ui elements
-    private final FlexLayout projectsLayout = new FlexLayout();
+    private final HorizontalLayout projectsLayout = new HorizontalLayout();
 
     @Override
     public void setDataProvider(final DataProvider<ProjectReference, ?> dataProvider) {
@@ -65,13 +66,12 @@ public class ProjectList extends VerticalLayout implements
     }
 
     protected void initComponents() {
-        setSpacing(false);
 //        setPadding(true); TODO: add padding to CSS
-        FlexLayout descriptionBar = new FlexLayout();
-        Label description = new Label("all projects");
+    	HorizontalLayout descriptionBar = new HorizontalLayout();
+        Label description = new Label("All Projects");
         description.setWidth("100%");
 
-        Label title = new Label("title");
+        Label title = new Label("Title");
 
         IconButton upAction = new IconButton(VaadinIcons.ARROW_UP);
 

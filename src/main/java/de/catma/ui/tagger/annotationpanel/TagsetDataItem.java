@@ -1,14 +1,19 @@
 package de.catma.ui.tagger.annotationpanel;
 
-import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
+import com.vaadin.data.provider.TreeDataProvider;
+import com.vaadin.icons.VaadinIcons;
+
+import de.catma.document.standoffmarkup.usermarkup.TagReference;
+import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.TagsetDefinition;
 
-public class TagsetDataItem implements TagTreeItem {
+public class TagsetDataItem implements TagsetTreeItem {
 	
 	private TagsetDefinition tagset;
-	
+	private boolean visible;
 
 	public TagsetDataItem(TagsetDefinition tagset) {
 		super();
@@ -27,7 +32,7 @@ public class TagsetDataItem implements TagTreeItem {
 	
 	@Override
 	public String getTagsetName() {
-		return tagset.getName();
+		return "<span class=\"annotate-panel-tagsetname\">"+tagset.getName()+"</span>";
 	}
 
 	public TagsetDefinition getTagset() {
@@ -36,7 +41,7 @@ public class TagsetDataItem implements TagTreeItem {
 	
 	@Override
 	public String getVisibilityIcon() {
-		return VaadinIcons.EYE.getHtml();
+		return visible?VaadinIcons.EYE.getHtml():VaadinIcons.EYE_SLASH.getHtml();
 	}
 
 
@@ -66,4 +71,55 @@ public class TagsetDataItem implements TagTreeItem {
 	}
 	
 	
+	@Override
+	public boolean isVisible() {
+		return visible;
+	}
+	
+	@Override
+	public void setVisible(boolean visible) {
+		this.visible = visible;
+	}
+	
+	@Override
+	public List<TagReference> getTagReferences(List<UserMarkupCollection> collections) {
+		List<TagReference> result = new ArrayList<>();
+		
+		for (UserMarkupCollection collection : collections) {
+			result.addAll(collection.getTagReferences(tagset));
+		}
+		
+		return result;
+	}
+	
+	@Override
+	public void setChildrenVisible(TreeDataProvider<TagsetTreeItem> dataProvider, boolean visible, boolean explicit) {
+		for (TagsetTreeItem tagTreeItem : dataProvider.getTreeData().getChildren(this)) {
+			setChildrenVisible(tagTreeItem, visible, dataProvider);
+		}
+	}
+
+	private void setChildrenVisible(TagsetTreeItem tagTreeItem, boolean visible, TreeDataProvider<TagsetTreeItem> dataProvider) {
+		tagTreeItem.setVisible(visible);
+		dataProvider.refreshItem(tagTreeItem);
+		for (TagsetTreeItem tagTreeChildItem : dataProvider.getTreeData().getChildren(tagTreeItem)) {
+			setChildrenVisible(tagTreeChildItem, visible, dataProvider);
+		}		
+	}
+	
+	@Override
+	public String getPropertySummary() {
+		return null; // no properties for Tagsets
+	}
+	
+	@Override
+	public boolean isPropertiesExpanded() {
+		return false;
+	}
+
+	@Override
+	public void setPropertiesExpanded(boolean propertiesExpanded) {
+		//noop
+	}
+
 }

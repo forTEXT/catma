@@ -21,10 +21,17 @@ package de.catma.ui.tabbedview;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.vaadin.elements.Element;
+import org.vaadin.elements.ElementIntegration;
+import org.vaadin.elements.Elements;
+import org.vaadin.elements.Root;
+
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.CloseHandler;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
@@ -63,9 +70,11 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 	}
 
 	private void initComponents(String noOpenTabsText) {
+		addStyleName("hugecard-tabbed-view");	
+		
 		tabSheet = new TabSheet();
 		tabSheet.setSizeFull();
-
+		
 		introPanel = new VerticalLayout();
 		introPanel.setSpacing(true);
 		addComponent(introPanel);
@@ -73,16 +82,44 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		noOpenTabsLabel = new Label(noOpenTabsText);
 
 		noOpenTabsLabel.setSizeFull();
-		setMargin(true);
+		setMargin(false);
 
 		introPanel.addComponent(noOpenTabsLabel);
 		introPanel.setComponentAlignment(noOpenTabsLabel, Alignment.MIDDLE_CENTER);
 
 		addComponent(tabSheet);
+		setExpandRatio(tabSheet, 1.0f);
 		tabSheet.setTabsVisible(false);
 		tabSheet.setHeight("0px");
 		tabSheet.setCloseHandler(this);
+	}
+	
+	@Override
+	public void attach() {
+		super.attach();
+		Root tabSheetRoot = ElementIntegration.getRoot(tabSheet);
+		
+		tabSheetRoot.fetchDom(() -> {
+			if (!tabSheetRoot.getChildren().isEmpty()) {
+				Element tabContainer = (Element)tabSheetRoot.getChildren().get(0);
+				Element addButtonElement = Elements.create("div");
+				addButtonElement.setAttribute(
+					"class", 
+					"c-tabbed-view-plus v-button v-widget icon-only "
+					+ "v-button-icon-only button__icon v-button-button__icon "
+					+ "flat v-button-flat borderless v-button-borderless");
+				
+				tabContainer.appendChild(addButtonElement);
+				addButtonElement.setInnerHtml(VaadinIcons.PLUS.getHtml());
 
+				addButtonElement.addEventListener("click", args -> {
+		            Notification.show("Clicked");
+		           //TODO: add new tab 
+				});
+			}
+		}, tabSheet);
+
+		
 	}
 	public void setHtmlLabel(){
 	    noOpenTabsLabel.setContentMode(ContentMode.HTML);

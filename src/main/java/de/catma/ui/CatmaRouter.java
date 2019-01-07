@@ -2,6 +2,8 @@ package de.catma.ui;
 
 import com.google.common.eventbus.Subscribe;
 
+import de.catma.ui.events.routing.RouteToAnalyzeEvent;
+import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
 
@@ -13,12 +15,16 @@ public interface CatmaRouter {
 	@Subscribe
 	void handleRouteToProject(RouteToProjectEvent routeToProjectEvent);
 	
-	Class<?> getCurrentRoute();
+	@Subscribe
+	void handleRouteToAnnotate(RouteToAnnotateEvent routeToAnnotateEvent);
+
+	@Subscribe
+	void handleRouteToAnalyze(RouteToAnalyzeEvent routeToAnalyzeEvent);
 	
-	void setCurrentRoute(Class<?> routingEventClass);
+	Class<?> getCurrentRoute();
 	
 	default boolean isNewTarget(Class<?> routingEventClass) {
 		return getCurrentRoute() == null || // either current route is null
-				! getCurrentRoute().equals(routingEventClass); // or the current route and new route differs somehow
+				! getCurrentRoute().equals(routingEventClass); // or the current route and new route differ somehow
 	}
 }
