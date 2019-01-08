@@ -1,5 +1,7 @@
 package de.catma.ui.modules.dashboard;
 
+import java.util.Comparator;
+
 import com.google.common.eventbus.EventBus;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.ui.CssLayout;
@@ -34,17 +36,15 @@ public class DashboardView extends VerticalLayout {
         initComponents();
     }
 
-    protected void initComponents() {
+    protected <T> void initComponents() {
     	addStyleName("dashboard-view");
         
         CssLayout receivedResources = new CssLayout();
         receivedResources.setStyleName("flexlayout");
-        
-    
-            
+                   
         DataProvider<ProjectReference,Void> projectDataProvider =
                 DataProvider.fromCallbacks(
-                        query -> {
+                        (query) -> {
                             try {
                             	int page = (query.getOffset() / query.getLimit()) + 1;
                             

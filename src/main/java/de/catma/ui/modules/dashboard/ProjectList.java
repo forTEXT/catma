@@ -1,6 +1,7 @@
 package de.catma.ui.modules.dashboard;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Objects;
 
 import com.google.common.eventbus.EventBus;
@@ -10,6 +11,7 @@ import com.vaadin.data.provider.DataChangeEvent;
 import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.Query;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.shared.Registration;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
@@ -33,6 +35,10 @@ public class ProjectList extends VerticalLayout implements
     private final ProjectManager projectManager;
     private final ErrorHandler errorLogger;
 	private final EventBus eventBus;
+	private final Comparator<ProjectReference> sortByNameAsc = (ref1,ref2) -> ref1.getName().compareTo(ref2.getName());
+	private final Comparator<ProjectReference> sortByNameDesc = (ref1,ref2) -> ref2.getName().compareTo(ref1.getName());
+	
+	private Comparator<ProjectReference> selectedSortOrder = sortByNameAsc;
 
     ProjectList(ProjectManager projectManager, EventBus eventBus) {
         this.errorLogger = (ErrorHandler)UI.getCurrent();
@@ -65,7 +71,9 @@ public class ProjectList extends VerticalLayout implements
     private void rebuild() {
         projectsLayout.removeAllComponents();
         projectsLayout.addComponent(new CreateProjectCard(projectManager, eventBus));
-        this.dataProvider.fetch(new Query<>()).map((prj) -> new ProjectCard(prj, projectManager, eventBus))
+        this.dataProvider.fetch(new Query<>())
+        		.sorted(selectedSortOrder)
+        		.map((prj) -> new ProjectCard(prj, projectManager, eventBus))
                 .forEach(projectsLayout::addComponent);
     }
 
@@ -78,11 +86,22 @@ public class ProjectList extends VerticalLayout implements
 
         Label title = new Label("Title");
 
-        IconButton upAction = new IconButton(VaadinIcons.ARROW_UP);
+        IconButton sortButton = new IconButton(VaadinIcons.ARROW_DOWN);
+        
+        sortButton.addClickListener((evt) -> {
+        	if(sortButton.getIcon().equals(VaadinIcons.ARROW_DOWN)){
+        		selectedSortOrder=sortByNameDesc;
+        		sortButton.setIcon(VaadinIcons.ARROW_UP);
+        	}else {
+        		selectedSortOrder=sortByNameAsc;
+        		sortButton.setIcon(VaadinIcons.ARROW_DOWN);
+        	}
+        	rebuild();
+        });
 
         descriptionBar.addComponent(description);
         descriptionBar.addComponent(title);
-        descriptionBar.addComponent(upAction);
+        descriptionBar.addComponent(sortButton);
 
         descriptionBar.setWidth("100%");
 
@@ -92,7 +111,7 @@ public class ProjectList extends VerticalLayout implements
         addComponent(descriptionBar);
 
         projectsLayout.addStyleName("projectlist__list");
-
+     
         addComponent(projectsLayout);
     }
 

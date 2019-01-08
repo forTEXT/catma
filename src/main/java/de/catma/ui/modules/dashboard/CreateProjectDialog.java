@@ -23,7 +23,6 @@ import de.catma.ui.modules.main.ErrorHandler;
  */
 public class CreateProjectDialog extends AbstractOkCancelDialog<ProjectReference>{
 
-
 	private final TextField name = new TextField("Name");
 	private final TextArea description = new TextArea("Decription");
 	private final ProjectManager projectManager;
@@ -90,7 +89,9 @@ public class CreateProjectDialog extends AbstractOkCancelDialog<ProjectReference
 	@Override
 	protected ProjectReference getResult() {
 		try {
+			
 			return projectManager.createProject(name.getValue(), description.getValue());
+			
 		} catch (Exception e) {
 			errorLogger.showAndLogError(e.getMessage(),e);
 			return null;
