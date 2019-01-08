@@ -1,19 +1,15 @@
 package de.catma.servlet;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.Properties;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 
 import de.catma.document.repository.RepositoryProperties;
 import de.catma.util.NonModifiableProperties;
 
-@WebServlet(name = "CATMAProperties", urlPatterns = "/CATMAProperties", loadOnStartup = 1)
 public class PropertiesInitializerServlet extends HttpServlet {
 	
     @Override
