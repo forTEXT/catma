@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Locale;
 
 import org.antlr.runtime.RecognitionException;
+
+import com.vaadin.event.MouseEvents;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
@@ -22,8 +24,7 @@ import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.v7.ui.VerticalLayout;
-
+import com.vaadin.ui.VerticalLayout;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.document.Corpus;
@@ -112,6 +113,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			resultAndVisualizationPanel.setWidth("100%");
 		    resultPanel = new VerticalLayout();
 		    resultPanel.setHeightUndefined(); 
+		
 	
 		    visualizationPanel = new VerticalLayout();
 			resultAndVisualizationPanel.addComponents(resultPanel,visualizationPanel);
@@ -390,8 +392,21 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 				e.printStackTrace();
 			}
 			 queryResultPanel.setWidth("100%");
+			 
+			 queryResultPanel.addClickListener(new MouseEvents.ClickListener() {
+				
+				@Override
+				public void click(com.vaadin.event.MouseEvents.ClickEvent event) {			
+				//Notification.show(
+	            		//	Messages.getString("Clickbares Zeug"), Type.HUMANIZED_MESSAGE);
+					
+				}
+			});
+			 
+			 
 			 resultPanel.setSpacing(true);
 			 resultPanel.addComponentAsFirst(queryResultPanel);
+			 
 			   	
 			};
 			public void error(Throwable t) {

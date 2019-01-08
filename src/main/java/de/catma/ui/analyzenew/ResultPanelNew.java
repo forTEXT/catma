@@ -32,7 +32,7 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 
-public class ResultPanelNew extends Panel {
+public class ResultPanelNew extends Panel  {
 
 	private static enum TreePropertyName {
 		caption, frequency, visibleInKwic,;
@@ -106,6 +106,8 @@ public class ResultPanelNew extends Panel {
 
 	private void initComponents() {
 		contentVerticalLayout = new VerticalLayout();
+	
+		
 		setContent(contentVerticalLayout);
 
 		treeGridTag = new TreeGrid<TagRowItem>();
@@ -672,7 +674,7 @@ public class ResultPanelNew extends Panel {
 		
        }
 	}
-
+	        
 
 
 }
