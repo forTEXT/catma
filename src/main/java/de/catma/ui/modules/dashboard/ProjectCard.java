@@ -85,13 +85,11 @@ public class ProjectCard extends VerticalLayout  {
                         try {
                             if(evt.isConfirmed()){
                             	projectManager.delete(projectReference.getProjectId());
-                            	eventbus.post(new ResourcesChangedEvent<Component>(ProjectCard.this));
                             }
                         } catch (Exception e) {
-                        	try {Thread.sleep(500);} catch (Exception e1) { } //TODO workaround gitlab race condition after delete. return old results if queried too fast
                             errorLogger.showAndLogError("can't delete project " + projectReference.getName(), e);
-                        	eventbus.post(new ResourcesChangedEvent<Component>(ProjectCard.this));
                         }
+                        eventbus.post(new ResourcesChangedEvent<Component>(ProjectCard.this));
                     });
                 }
                 ));

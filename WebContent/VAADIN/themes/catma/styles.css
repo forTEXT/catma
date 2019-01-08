@@ -17725,13 +17725,18 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	justify-content: center;
 }
 
-.catma .documentsgrid__doc {
-	display: flex;
+.catma div.documentsgrid__doc {
+	display: block;
 	flex-direction: column;
 	flex-grow: 1;
 }
 
+.catma .documentsgrid__doc__title {
+	display: block;
+}
+
 .catma .documentsgrid__doc__author {
+	display: block;
 	font-size: 0.75em;
 	color: rgba(0, 0, 0, 0.54);
 }

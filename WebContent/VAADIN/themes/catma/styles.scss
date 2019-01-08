@@ -776,17 +776,18 @@
             justify-content: center;
         }
 
-        .documentsgrid__doc {
-            display: flex;
+        div.documentsgrid__doc {
+            display: block; /* testing block was flex*/
             flex-direction: column;
             flex-grow: 1;
         }
 
         .documentsgrid__doc__title {
-
+			display:block;
         }
 
         .documentsgrid__doc__author {
+			display:block;    
             font-size: 0.75em;
             color: rgba(0, 0, 0, 0.54);
         }
