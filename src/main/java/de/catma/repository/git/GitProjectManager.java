@@ -131,11 +131,6 @@ public class GitProjectManager implements ProjectManager {
 	}
 
 	@Override
-	public List<de.catma.user.User> getProjectMembers(String projectId) throws Exception {
-		return remoteGitServerManager.getProjectMembers(Objects.requireNonNull(projectId));
-	}
-
-	@Override
 	public ProjectReference findProjectReferenceById(String projectId) throws IOException {
 		return remoteGitServerManager.findProjectReferenceById(Objects.requireNonNull(projectId));
 	}

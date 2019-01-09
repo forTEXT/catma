@@ -8,35 +8,39 @@ public class LargeLinkButton extends Button{
 
 	public LargeLinkButton() {
 		super();
-		setStylenames();
+		init();
 	}
 
 	public LargeLinkButton(Resource icon, ClickListener listener) {
 		super(icon, listener);
-		setStylenames();
+		init();
 	}
 
 	public LargeLinkButton(Resource icon) {
 		super(icon);
-		setStylenames();
+		init();
 	}
 
 	public LargeLinkButton(String caption, ClickListener listener) {
 		super(caption, listener);
-		setStylenames();
+		init();
 	}
 
 	public LargeLinkButton(String caption, Resource icon) {
 		super(caption, icon);
-		setStylenames();
+		init();
 	}
 
 	public LargeLinkButton(String caption) {
 		super(caption);
-		setStylenames();
+		init();
+	}
+	
+	private void init() {
+		addDefaultStyleNames();
 	}
 
-	private void setStylenames(){
+	private void addDefaultStyleNames(){
 		addStyleNames(ValoTheme.LABEL_H3, ValoTheme.BUTTON_LINK);
 
 	}

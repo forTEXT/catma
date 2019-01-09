@@ -1,11 +1,13 @@
-$v-font-size: 14px;
+$v-font-size: 16px;
 $v-unit-size: round(1.8 * $v-font-size);
 
 /* @import "../valo/valo.scss"; */ 
 @import "../material/material.scss";
 @import "flex-layout.scss";
+@import "v-treegrid.scss";
 
 @mixin catma {
   @include material; 
   @include flex-layout;
+  @include v-treegrid;
 }

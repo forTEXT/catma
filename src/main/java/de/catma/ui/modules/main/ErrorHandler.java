@@ -1,6 +1,6 @@
 package de.catma.ui.modules.main;
 
-public interface ErrorLogger {
+public interface ErrorHandler {
 
     void showAndLogError(String message, Throwable e);
 }

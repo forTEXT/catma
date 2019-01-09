@@ -4,7 +4,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.CssLayout;
-import com.vaadin.ui.UI;
 import com.vaadin.ui.themes.ValoTheme;
 
 import de.catma.ui.events.routing.RouteToDashboardEvent;
