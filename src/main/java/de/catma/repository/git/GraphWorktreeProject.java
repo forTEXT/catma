@@ -347,7 +347,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	private void addTagDefinition(TagDefinition tagDefinition, TagsetDefinition tagsetDefinition) throws Exception {
-		String tagsetRevision = gitProjectHandler.createOrUpdateTag(tagsetDefinition.getUuid(), tagDefinition);
+		String tagsetRevision = 
+			gitProjectHandler.createOrUpdateTag(tagsetDefinition.getUuid(), tagDefinition);
 		tagsetDefinition.setRevisionHash(tagsetRevision);
 		String oldRootRevisionHash = this.rootRevisionHash;
 		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();

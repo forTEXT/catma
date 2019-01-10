@@ -10,11 +10,14 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.github.appreciated.material.MaterialTheme;
+import com.google.gwt.event.dom.client.BlurEvent;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.shared.ui.ValueChangeMode;
 import com.vaadin.shared.ui.colorpicker.Color;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -24,6 +27,8 @@ import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
@@ -33,15 +38,15 @@ import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
 import de.catma.ui.dialog.AbstractOkCancelDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
+import de.catma.util.Pair;
 
-public class AddTagDialog extends AbstractOkCancelDialog<TagDefinition> {
+public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, TagDefinition>> {
 
-	private Optional<TagsetDefinition> preSelectedTagset;
-	private Collection<TagsetDefinition> availableTagsets;
 	private ComboBox<TagsetDefinition> cbTagsets;
 	private HorizontalLayout tagPanel;
 	private HorizontalLayout propertyDefNamePanel;
@@ -52,14 +57,14 @@ public class AddTagDialog extends AbstractOkCancelDialog<TagDefinition> {
 	private TextField tfPropertyDefName;
 	private IDGenerator idGenerator = new IDGenerator();
 	private ListDataProvider<PropertyDefinition> propertyDefDataProvider;
+	private ColorPicker colorPicker;
+	private TextField tfName;
 	
 	public AddTagDialog(
 			Collection<TagsetDefinition> availableTagsets, 
 			Optional<TagsetDefinition> preSelectedTagset, 
-			SaveCancelListener<TagDefinition> saveCancelListener) {
+			SaveCancelListener<Pair<TagsetDefinition, TagDefinition>> saveCancelListener) {
 		super("Add Tag", saveCancelListener);
-		this.availableTagsets = availableTagsets;
-		this.preSelectedTagset = preSelectedTagset;
 		initComponents(availableTagsets, preSelectedTagset);
 		initActions();
 	}
@@ -72,6 +77,9 @@ public class AddTagDialog extends AbstractOkCancelDialog<TagDefinition> {
 		propertyDefinitionGrid.addColumn(
 				propertyDef -> VaadinIcons.TRASH.getHtml(), 
 				deletePropertyDefRenderer);
+		
+		tfPropertyDefName.addFocusListener(focusEvent -> btAddProperty.setClickShortcut(KeyCode.ENTER));
+		tfPropertyDefName.addBlurListener(BlurEvent -> btAddProperty.removeClickShortcut());
 		
 		btAddProperty.addClickListener(
 			clickEvent -> handleAddPropertyDefinition(tfPropertyDefName.getValue()));
@@ -89,8 +97,6 @@ public class AddTagDialog extends AbstractOkCancelDialog<TagDefinition> {
 		propertyDefinitionGrid.getSelectedItems().stream().findFirst().ifPresent(
 				propertyDef -> setPossibleValues(
 						propertyDef, Arrays.asList(values.split(Pattern.quote(",")))));
-		
-		
 
 	}
 
@@ -127,7 +133,8 @@ public class AddTagDialog extends AbstractOkCancelDialog<TagDefinition> {
 	}
 
 	private void handlePropertyDefDeleteRequest(RendererClickEvent<PropertyDefinition> clickEvent) {
-		// TODO Auto-generated method stub
+		propertyDefDataProvider.getItems().remove(clickEvent.getItem());
+		propertyDefDataProvider.refreshAll();
 	}
 
 	private void initComponents(Collection<TagsetDefinition> availableTagsets,
@@ -145,13 +152,13 @@ public class AddTagDialog extends AbstractOkCancelDialog<TagDefinition> {
 		tagPanel.setWidth("100%");
 		tagPanel.setMargin(new MarginInfo(false, true));
 		
-		TextField tfName= new TextField();
+		tfName= new TextField();
 		tfName.setPlaceholder("Tag Name");
 		tagPanel.addComponent(tfName);
 		
 		int[] randomRGBColor = ColorConverter.getRandomColor();
 		
-		ColorPicker colorPicker = new ColorPicker(
+		colorPicker = new ColorPicker(
 				"Tag color", 
 				new Color(randomRGBColor[0], randomRGBColor[1], randomRGBColor[2]));
 		colorPicker.addStyleName(MaterialTheme.BUTTON_FLAT);
@@ -223,6 +230,23 @@ public class AddTagDialog extends AbstractOkCancelDialog<TagDefinition> {
 
 	}
 
+	@Override
+	protected void handleOkPressed() {
+		String name = tfName.getValue();
+		
+		if ((name == null) || name.isEmpty()) {
+			Notification.show("Info", "Please enter the Tag's name!", Type.ERROR_MESSAGE);
+		}
+		else if (colorPicker.getValue() == null) {
+			Notification.show("Info", "Please choose the Tag's color!", Type.ERROR_MESSAGE);
+		}
+		else if (cbTagsets.getValue() == null) {
+			Notification.show("Info", "Please choose the Tag's Tagset!", Type.ERROR_MESSAGE);
+		}
+		else {
+			super.handleOkPressed();
+		}
+	}
 	
 	@Override
 	protected String getOkCaption() {
@@ -230,9 +254,27 @@ public class AddTagDialog extends AbstractOkCancelDialog<TagDefinition> {
 	}
 	
 	@Override
-	protected TagDefinition getResult() {
-		// TODO Auto-generated method stub
-		return null;
+	protected Pair<TagsetDefinition, TagDefinition> getResult() {
+		TagDefinition tag = 
+			new TagDefinition(
+				null, 
+				idGenerator.generate(), 
+				tfName.getValue(), new Version(),
+				null, 
+				null, 
+				cbTagsets.getValue().getUuid());
+		
+		tag.addSystemPropertyDefinition(
+			new PropertyDefinition(
+				idGenerator.generate(), 
+				PropertyDefinition.SystemPropertyName.catma_displaycolor.name(), 
+				Collections.singletonList(String.valueOf(colorPicker.getValue().getRGB()))));
+
+		for (PropertyDefinition propertyDefinition : propertyDefDataProvider.getItems()) {
+			tag.addUserDefinedPropertyDefinition(propertyDefinition);
+		}
+		
+		return new Pair<>(cbTagsets.getValue(), tag);
 	}
 
 }

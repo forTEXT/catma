@@ -598,6 +598,35 @@ public class GraphProjectHandler {
 						"parentTagId", tagDefinition.getParentUuid()
 					)
 				);
+				
+				for (PropertyDefinition propertyDefinition : tagDefinition.getUserDefinedPropertyDefinitions()) {
+					session.run(
+							"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+							+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+							+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+							+"(ts:"+nt(Tagset)+")-[:"+rt(hasTag)+"]->"
+							+"(t:"+nt(Tag)+"{tagId:{pTagId}}) "
+							+"SET pr.revisionHash = {pRootRevisionHash} "
+							+"SET ts.revisionHash = {pTagsetRevisionHash} "
+							+"MERGE (t)-[:"+rt(hasProperty)+"]->"
+							+"(:"+nt(Property)+"{"
+								+ "uuid:{pUuid},"
+								+ "name:{pName},"
+								+ "values:{pValues} "
+							+"})",
+							Values.parameters(
+								"pUserId", user.getIdentifier(),
+								"pProjectId", projectReference.getProjectId(),
+								"pRootRevisionHash", rootRevisionHash,
+								"pOldRootRevisionHash", oldRootRevisionHash,
+								"pTagsetRevisionHash", tagsetDefinition.getRevisionHash(),
+								"pTagId", tagDefinition.getUuid(),
+								"pUuid", propertyDefinition.getUuid(),
+								"pName", propertyDefinition.getName(),
+								"pValues", propertyDefinition.getPossibleValueList()
+							)
+						);					
+				}
 			}
 		});
 		

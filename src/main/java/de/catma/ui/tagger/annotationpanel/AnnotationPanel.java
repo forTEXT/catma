@@ -1,5 +1,7 @@
 package de.catma.ui.tagger.annotationpanel;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,6 +23,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.StyleGenerator;
 import com.vaadin.ui.TreeGrid;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
@@ -31,10 +34,13 @@ import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.modules.main.ErrorHandler;
+import de.catma.util.Pair;
 
 public class AnnotationPanel extends VerticalLayout {
 	
@@ -52,32 +58,71 @@ public class AnnotationPanel extends VerticalLayout {
 	private List<UserMarkupCollection> collections = Collections.emptyList();
 	private TagReferenceSelectionChangeListener selectionListener;
 	private ActionGridComponent<TreeGrid<TagsetTreeItem>> tagsetGridComponent;
+	private TreeData<TagsetTreeItem> tagsetData;
+	private TreeDataProvider<TagsetTreeItem> tagsetDataProvider;
 
 	public AnnotationPanel(Repository project) {
 		this.project = project;
 		initComponents();
 		initActions();
+		initListeners();
+	}
+
+	private void initListeners() {
+		PropertyChangeListener tagChangedListener = new PropertyChangeListener() {
+			
+			@SuppressWarnings("unchecked")
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				
+				Object newValue = evt.getNewValue();
+				Object oldValue = evt.getOldValue();
+				
+				if (oldValue == null) { //created
+					Pair<TagsetDefinition, TagDefinition> value = 
+							(Pair<TagsetDefinition, TagDefinition>)newValue;
+					
+					TagsetDefinition tagset = value.getFirst();
+					TagDefinition tag = value.getSecond();
+		            if (tag.getParentUuid().isEmpty()) {
+		            	tagsetData.addItem(
+		            		new TagsetDataItem(tagset), new TagDataItem(tag));
+		            }
+					tagsetDataProvider.refreshAll();
+		            
+				}
+				else if (newValue == null) { //removed
+					
+				}
+				else { //update
+					
+				}
+				
+			}
+		};
+		project.getTagManager().addPropertyChangeListener(
+				TagManagerEvent.tagDefinitionChanged, 
+				tagChangedListener);
 	}
 
 	private void initData() {
         try {
-            TreeData<TagsetTreeItem> tagsetData = new TreeData<>();
+            tagsetData = new TreeData<TagsetTreeItem>();
             
             tagsetData.addRootItems(tagsets.stream().map(ts -> new TagsetDataItem(ts)));
 
             for (TagsetDefinition tagsetDefinition : tagsets) {
             	addTags(tagsetData, tagsetDefinition);
             }
-
-            tagsetGrid.setDataProvider(new TreeDataProvider<>(tagsetData));
+            tagsetDataProvider = new TreeDataProvider<TagsetTreeItem>(tagsetData);
+            tagsetGrid.setDataProvider(tagsetDataProvider);
             for (TagsetDefinition tagset : tagsets) {
             	expandTagsetDefinition(tagset);
             }
             currentEditableCollectionBox.setValue(null);
             currentEditableCollectionBox.setDataProvider(new ListDataProvider<>(collections));
         } catch (Exception e) {
-			// TODO Auto-generated catch block
-            e.printStackTrace();
+			((ErrorHandler)UI.getCurrent()).showAndLogError("Error loading data!", e);
         }
     }
 
@@ -169,15 +214,20 @@ public class AnnotationPanel extends VerticalLayout {
 			.findFirst()
 			.map(tagsetTreeItem -> ((TagsetDataItem)tagsetTreeItem).getTagset());
 			
+		//TODO: check for available and writable tagsets
+		
 		AddTagDialog addTagDialog = 
-				new AddTagDialog(tagsets, selectedTagset, new SaveCancelListener<TagDefinition>() {
-					
-					@Override
-					public void savePressed(TagDefinition result) {
-						
-						
-					}
-				});
+			new AddTagDialog(
+				tagsets, 
+				selectedTagset, 
+				new SaveCancelListener<Pair<TagsetDefinition, TagDefinition>>() {
+				
+				@Override
+				public void savePressed(Pair<TagsetDefinition, TagDefinition> result) {
+					project.getTagManager().addTagDefinition(
+							result.getFirst(), result.getSecond());
+				}
+			});
 		addTagDialog.show();
 		
 	}
@@ -202,18 +252,17 @@ public class AnnotationPanel extends VerticalLayout {
 				TreeData<TagsetTreeItem> tagsetTreeData = tagsetGrid.getTreeData();
 				
 				for (TagsetTreeItem childTagsetTreeItem : new ArrayList<>(tagsetTreeData.getChildren(tagDataItem))) {
-					childTagsetTreeItem.removePropertyDataItem(
-							(TreeDataProvider<TagsetTreeItem>)tagsetGrid.getDataProvider());
+					childTagsetTreeItem.removePropertyDataItem(tagsetDataProvider);
 				}
 			}
-			tagsetGrid.getDataProvider().refreshAll();
+			tagsetDataProvider.refreshAll();
 		}
 	}
 
 	@SuppressWarnings("unchecked")
 	private void handleVisibilityClickEvent(RendererClickEvent<TagsetTreeItem> rendererClickEvent) {
 		rendererClickEvent.getItem().setVisible(!rendererClickEvent.getItem().isVisible());
-		tagsetGrid.getDataProvider().refreshItem(rendererClickEvent.getItem());
+		tagsetDataProvider.refreshItem(rendererClickEvent.getItem());
 		
 		TagsetTreeItem tagsetTreeItem = rendererClickEvent.getItem();
 		List<TagReference> tagReferences = tagsetTreeItem.getTagReferences(collections);
@@ -225,7 +274,7 @@ public class AnnotationPanel extends VerticalLayout {
 		}
 		
 		tagsetTreeItem.setChildrenVisible(
-			(TreeDataProvider<TagsetTreeItem>)tagsetGrid.getDataProvider(), selected, false);
+				tagsetDataProvider, selected, false);
 	}
 
 	private void initComponents() {
@@ -315,21 +364,16 @@ public class AnnotationPanel extends VerticalLayout {
 
 	public void addTagset(TagsetDefinition tagset) {
 		tagsets.add(tagset);
-		@SuppressWarnings("unchecked")
-		TreeDataProvider<TagsetTreeItem> treeDataProvider =
-			(TreeDataProvider<TagsetTreeItem>)tagsetGrid.getDataProvider();
-		treeDataProvider.getTreeData().addRootItems(new TagsetDataItem(tagset));
-		addTags(treeDataProvider.getTreeData(), tagset);
+
+		tagsetData.addRootItems(new TagsetDataItem(tagset));
+		addTags(tagsetData, tagset);
 		expandTagsetDefinition(tagset);
-		treeDataProvider.refreshAll();
+		tagsetDataProvider.refreshAll();
 	}
 	
 	public void removeTagset(TagsetDefinition tagset) {
 		tagsets.remove(tagset);
-		@SuppressWarnings("unchecked")
-		TreeDataProvider<TagsetTreeItem> treeDataProvider =
-			(TreeDataProvider<TagsetTreeItem>)tagsetGrid.getDataProvider();
-		treeDataProvider.getTreeData().removeItem(new TagsetDataItem(tagset));
-		treeDataProvider.refreshAll();
+		tagsetData.removeItem(new TagsetDataItem(tagset));
+		tagsetDataProvider.refreshAll();
 	}
 }
