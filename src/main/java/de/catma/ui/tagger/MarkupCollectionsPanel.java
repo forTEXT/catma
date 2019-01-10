@@ -77,6 +77,7 @@ import de.catma.ui.CatmaApplication;
 import de.catma.ui.tagmanager.ColorLabelColumnGenerator;
 import de.catma.util.Pair;
 
+@Deprecated
 public class MarkupCollectionsPanel extends VerticalLayout {
 	
 	public static enum MarkupCollectionPanelEvent {

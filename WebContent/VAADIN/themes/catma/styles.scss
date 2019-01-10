@@ -950,4 +950,16 @@
 	    margin-right: 20px;
 	}
 
+	.abstract-ok-cancel-dialog-hide-maximize-restore-icon .v-window-maximizebox {
+		display:none;
+	}
+	
+	.v-button.v-widget.v-colorpicker.v-button-v-colorpicker.flat.v-button-flat.inputfield-color-picker.v-button-inputfield-color-picker.v-default-caption-width {
+    	border-bottom: 1px solid;
+	}
+	
+	.add-tag-dialog-tagsets-box {
+		margin-left: 10px;
+		margin-right: 10px;
+	}
 }

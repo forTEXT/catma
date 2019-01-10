@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
+import com.github.appreciated.material.MaterialTheme;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.AbstractOrderedLayout;
 import com.vaadin.ui.Alignment;
@@ -42,6 +43,7 @@ public abstract class AbstractOkCancelDialog<T> extends Window {
 		};
 		
 		addAction(closeShortcut);
+		setShowMaximizeRestoreIcon(false);
 	}
 	
 	@Override
@@ -144,12 +146,15 @@ public abstract class AbstractOkCancelDialog<T> extends Window {
 		buttonPanel = new HorizontalLayout();
 		
 		btOk = new Button(getOkCaption());
+		btOk.addStyleName(MaterialTheme.BUTTON_FLAT);
+		btOk.addStyleName(MaterialTheme.BUTTON_PRIMARY);
+		
 		if (isEnterClickShortcut()) {
 			btOk.setClickShortcut(KeyCode.ENTER);
 		}
 		
-		btCancel = new Button(getAbbrechenCaption());
-		
+		btCancel = new Button(getCancelCaption());
+		btCancel.addStyleName(MaterialTheme.BUTTON_FLAT);
 		buttonPanel.setSpacing(true);
 		buttonPanel.addComponent(btOk);
 		buttonPanel.addComponent(btCancel);
@@ -169,8 +174,8 @@ public abstract class AbstractOkCancelDialog<T> extends Window {
 		}
 	}
 	
-	protected String getAbbrechenCaption() {
-		return "Abbrechen";
+	protected String getCancelCaption() {
+		return "Cancel";
 	}
 
 	protected String getOkCaption() {
@@ -198,4 +203,12 @@ public abstract class AbstractOkCancelDialog<T> extends Window {
 		return buttonPanel;
 	}
 
+	public void setShowMaximizeRestoreIcon(boolean show) {
+		if (show) {
+			removeStyleName("abstract-ok-cancel-dialog-hide-maximize-restore-icon");
+		}
+		else {
+			addStyleName("abstract-ok-cancel-dialog-hide-maximize-restore-icon");			
+		}
+	}
 }

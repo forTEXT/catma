@@ -17882,3 +17882,16 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	margin-top: 10px;
 	margin-right: 20px;
 }
+
+.catma .abstract-ok-cancel-dialog-hide-maximize-restore-icon .v-window-maximizebox {
+	display: none;
+}
+
+.catma .v-button.v-widget.v-colorpicker.v-button-v-colorpicker.flat.v-button-flat.inputfield-color-picker.v-button-inputfield-color-picker.v-default-caption-width {
+	border-bottom: 1px solid;
+}
+
+.catma .add-tag-dialog-tagsets-box {
+	margin-left: 10px;
+	margin-right: 10px;
+}
