@@ -10,14 +10,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.github.appreciated.material.MaterialTheme;
-import com.google.gwt.event.dom.client.BlurEvent;
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.shared.ui.ValueChangeMode;
 import com.vaadin.shared.ui.colorpicker.Color;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -31,23 +29,22 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 
 import de.catma.tag.PropertyDefinition;
-import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
-import de.catma.tag.Version;
+import de.catma.ui.FocusHandler;
 import de.catma.ui.dialog.AbstractOkCancelDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
-import de.catma.util.Pair;
 
-public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, TagDefinition>> {
+public abstract class AddTagDialog<T> extends AbstractOkCancelDialog<T> {
 
-	private ComboBox<TagsetDefinition> cbTagsets;
+	protected ComboBox<TagsetDefinition> cbTagsets;
 	private HorizontalLayout tagPanel;
 	private HorizontalLayout propertyDefNamePanel;
 	private HorizontalLayout propertyDefPanel;
@@ -55,21 +52,19 @@ public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, 
 	private TextArea possibleValuesArea;
 	private Button btAddProperty;
 	private TextField tfPropertyDefName;
-	private IDGenerator idGenerator = new IDGenerator();
-	private ListDataProvider<PropertyDefinition> propertyDefDataProvider;
-	private ColorPicker colorPicker;
-	private TextField tfName;
-	
-	public AddTagDialog(
-			Collection<TagsetDefinition> availableTagsets, 
-			Optional<TagsetDefinition> preSelectedTagset, 
-			SaveCancelListener<Pair<TagsetDefinition, TagDefinition>> saveCancelListener) {
-		super("Add Tag", saveCancelListener);
-		initComponents(availableTagsets, preSelectedTagset);
-		initActions();
+	protected IDGenerator idGenerator = new IDGenerator();
+	protected ListDataProvider<PropertyDefinition> propertyDefDataProvider;
+	protected ColorPicker colorPicker;
+	protected TextField tfName;
+	private boolean withTagsetSelection;
+
+	protected AddTagDialog(
+			String dialogCaption, SaveCancelListener<T> saveCancelListener) {
+		super(dialogCaption, saveCancelListener);
 	}
+
 	
-	private void initActions() {
+	protected void initActions() {
 		ButtonRenderer<PropertyDefinition> deletePropertyDefRenderer =
 				new ButtonRenderer<>(clickEvent -> handlePropertyDefDeleteRequest(clickEvent)); 
 		deletePropertyDefRenderer.setHtmlContentAllowed(true);
@@ -142,15 +137,21 @@ public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, 
 		propertyDefDataProvider.refreshAll();
 	}
 
-	private void initComponents(Collection<TagsetDefinition> availableTagsets,
+	protected void initComponents() {
+		initComponents(Collections.emptyList(), Optional.empty());
+	}
+	
+	protected void initComponents(Collection<TagsetDefinition> availableTagsets,
 			Optional<TagsetDefinition> preSelectedTagset) {
-		cbTagsets = new ComboBox<TagsetDefinition>("Tagset", availableTagsets);
-		cbTagsets.setItemCaptionGenerator(tagset -> tagset.getName());
-		cbTagsets.setWidth("100%");
-		cbTagsets.setDescription("The Tagset that will be the container of the new Tag.");
-		cbTagsets.setEmptySelectionAllowed(false);
-		preSelectedTagset.ifPresent(tagset -> cbTagsets.setValue(tagset));
 		
+		if (withTagsetSelection) {
+			cbTagsets = new ComboBox<TagsetDefinition>("Tagset", availableTagsets);
+			cbTagsets.setItemCaptionGenerator(tagset -> tagset.getName());
+			cbTagsets.setWidth("100%");
+			cbTagsets.setDescription("The Tagset that will be the container of the new Tag.");
+			cbTagsets.setEmptySelectionAllowed(false);
+			preSelectedTagset.ifPresent(tagset -> cbTagsets.setValue(tagset));
+		}		
 		
 		tagPanel = new HorizontalLayout();
 		tagPanel.setSpacing(true);
@@ -175,9 +176,9 @@ public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, 
 		
 		propertyDefNamePanel = new HorizontalLayout();
 		propertyDefNamePanel.setSpacing(true);
-		propertyDefNamePanel.setMargin(new MarginInfo(false, true));
+		propertyDefNamePanel.setMargin(new MarginInfo(true, true, false, true));
 		
-		tfPropertyDefName = new TextField("Add Property");
+		tfPropertyDefName = new TextField("Add Properties");
 		tfPropertyDefName.setPlaceholder("Property Name");
 		propertyDefNamePanel.addComponent(tfPropertyDefName);
 		
@@ -193,6 +194,7 @@ public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, 
 		propertyDefPanel.setVisible(false);
 
 		propertyDefinitionGrid = new Grid<PropertyDefinition>("Assigned Properties");
+		propertyDefinitionGrid.addStyleName("flat-undecorated-icon-buttonrenderer");
 		propertyDefinitionGrid.addColumn(propertyDef -> propertyDef.getName());
 		propertyDefinitionGrid.setHeaderVisible(false);
 		propertyDefinitionGrid.setWidth("99%");
@@ -212,8 +214,13 @@ public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, 
 	
 	private void setPropertyDefinitionsVisible() {
 		propertyDefPanel.setVisible(true);
+		if (propertyDefNamePanel.getParent() instanceof VerticalLayout) {
+			((VerticalLayout) propertyDefNamePanel.getParent()).setExpandRatio(propertyDefNamePanel, 0f);
+		}
+				
 		setHeight("80%");
 		center();
+		
 	}
 
 	@Override
@@ -226,10 +233,14 @@ public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, 
 		setHeight("60%");
 		setWidth("60%");
 	}
+	
+	protected abstract boolean isWithTagsetSelection();
 
 	@Override
 	protected void addContent(ComponentContainer content) {
-		content.addComponent(cbTagsets);
+		if (isWithTagsetSelection()) {
+			content.addComponent(cbTagsets);
+		}
 		content.addComponent(
 			new Label(
 				"Enter name, color and properties (optional) of the Tag you want to add"));
@@ -237,9 +248,19 @@ public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, 
 		content.addComponent(propertyDefNamePanel);
 		content.addComponent(propertyDefPanel);
 		if (content instanceof VerticalLayout) {
+			((VerticalLayout) content).setExpandRatio(propertyDefNamePanel, 0.3f);
+		}
+		
+		if (content instanceof VerticalLayout) {
 			((VerticalLayout) content).setExpandRatio(propertyDefPanel, 1.0f);
 		}
 
+		if (!isWithTagsetSelection() || cbTagsets.getValue() != null) {
+			((FocusHandler)UI.getCurrent()).focusDeferred(tfName);
+		}
+		else {
+			((FocusHandler)UI.getCurrent()).focusDeferred(cbTagsets);
+		}
 	}
 
 	@Override
@@ -252,7 +273,7 @@ public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, 
 		else if (colorPicker.getValue() == null) {
 			Notification.show("Info", "Please choose the Tag's color!", Type.ERROR_MESSAGE);
 		}
-		else if (cbTagsets.getValue() == null) {
+		else if (isWithTagsetSelection() && cbTagsets.getValue() == null) {
 			Notification.show("Info", "Please choose the Tag's Tagset!", Type.ERROR_MESSAGE);
 		}
 		else {
@@ -263,30 +284,6 @@ public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, 
 	@Override
 	protected String getOkCaption() {
 		return "Add Tag";
-	}
-	
-	@Override
-	protected Pair<TagsetDefinition, TagDefinition> getResult() {
-		TagDefinition tag = 
-			new TagDefinition(
-				null, 
-				idGenerator.generate(), 
-				tfName.getValue(), new Version(),
-				null, 
-				null, 
-				cbTagsets.getValue().getUuid());
-		
-		tag.addSystemPropertyDefinition(
-			new PropertyDefinition(
-				idGenerator.generate(), 
-				PropertyDefinition.SystemPropertyName.catma_displaycolor.name(), 
-				Collections.singletonList(String.valueOf(colorPicker.getValue().getRGB()))));
-
-		for (PropertyDefinition propertyDefinition : propertyDefDataProvider.getItems()) {
-			tag.addUserDefinedPropertyDefinition(propertyDefinition);
-		}
-		
-		return new Pair<>(cbTagsets.getValue(), tag);
 	}
 
 }

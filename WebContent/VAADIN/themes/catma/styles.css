@@ -17826,11 +17826,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	float: right;
 }
 
-.catma .annotate-tagsets-grid button {
-	background-color: transparent;
-	border: none;
-}
-
 .catma .annotate-tagsets-grid .v-treegrid-row-selected > .v-treegrid-cell-focused::before {
 	border-color: transparent;
 }
@@ -17888,11 +17883,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	color: #000000;
 }
 
-.catma .annotate-resource-grid button {
-	background-color: transparent;
-	border: none;
-}
-
 .catma .tagger-contextmenu-menuitem-caption {
 	display: inline-block;
 	width: 15px;
@@ -17920,7 +17910,8 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border-bottom: 1px solid;
 }
 
-.catma .add-tag-dialog-tagsets-box {
-	margin-left: 10px;
-	margin-right: 10px;
+.catma .flat-undecorated-icon-buttonrenderer button {
+	background-color: transparent;
+	border: none;
+	cursor: pointer;
 }

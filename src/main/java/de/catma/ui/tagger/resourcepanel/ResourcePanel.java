@@ -232,7 +232,7 @@ public class ResourcePanel extends VerticalLayout {
 		addStyleName("annotate-resource-panel");
 		Label documentTreeLabel = new Label("Documents & Annotations");
 		documentTree = new TreeGrid<>();
-		documentTree.addStyleName("annotate-resource-grid");
+		documentTree.addStyleNames("annotate-resource-grid", "flat-undecorated-icon-buttonrenderer");
 		
 		ButtonRenderer<DocumentTreeItem> documentSelectionRenderer = 
 				new ButtonRenderer<DocumentTreeItem>(
@@ -266,7 +266,7 @@ public class ResourcePanel extends VerticalLayout {
 		Label tagsetLabel = new Label("Tagsets");
 		
 		tagsetGrid = new Grid<>();
-		tagsetGrid.addStyleName("annotate-resource-grid");
+		tagsetGrid.addStyleNames("annotate-resource-grid", "flat-undecorated-icon-buttonrenderer");
 		tagsetGrid.setSelectionMode(SelectionMode.MULTI);
 		//TODO: shouldn't be fixed size
 		tagsetGrid.setWidth("400px");

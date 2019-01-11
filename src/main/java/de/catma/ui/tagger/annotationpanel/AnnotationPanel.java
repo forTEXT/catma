@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import com.github.appreciated.material.MaterialTheme;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.GridSortOrderBuilder;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
@@ -85,9 +86,21 @@ public class AnnotationPanel extends VerticalLayout {
 					TagsetDefinition tagset = value.getFirst();
 					TagDefinition tag = value.getSecond();
 		            if (tag.getParentUuid().isEmpty()) {
+		            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
 		            	tagsetData.addItem(
-		            		new TagsetDataItem(tagset), new TagDataItem(tag));
+		            		tagsetItem, new TagDataItem(tag));
+		            	
+		            	tagsetGrid.expand(tagsetItem);
 		            }
+		            else {
+		            	TagDefinition parentTag = 
+		            		project.getTagManager().getTagLibrary().getTagDefinition(tag.getParentUuid());
+		            	TagsetTreeItem parentTagItem = new TagDataItem(parentTag);
+		            	tagsetData.addItem(parentTagItem, new TagDataItem(tag));
+		            	
+		            	tagsetGrid.expand(parentTagItem);
+		            }
+		            
 					tagsetDataProvider.refreshAll();
 		            
 				}
@@ -119,6 +132,7 @@ public class AnnotationPanel extends VerticalLayout {
             for (TagsetDefinition tagset : tagsets) {
             	expandTagsetDefinition(tagset);
             }
+            
             currentEditableCollectionBox.setValue(null);
             currentEditableCollectionBox.setDataProvider(new ListDataProvider<>(collections));
         } catch (Exception e) {
@@ -159,7 +173,6 @@ public class AnnotationPanel extends VerticalLayout {
 			.setExpandRatio(1);
 		tagsetGrid.setHierarchyColumn(
 			tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getName())
-			
 			.setCaption("Tags")
 			.setExpandRatio(2));
 
@@ -203,7 +216,29 @@ public class AnnotationPanel extends VerticalLayout {
 	}
 
 	private void handleAddSubtagRequest() {
-		// TODO Auto-generated method stub
+		final List<TagDefinition> parentTags = tagsetGrid.getSelectedItems()
+		.stream()
+		.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem)
+		.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
+		.collect(Collectors.toList());
+		
+		AddSubtagDialog addTagDialog =
+			new AddSubtagDialog(new SaveCancelListener<TagDefinition>() {
+				public void savePressed(TagDefinition result) {
+					for (TagDefinition parent : parentTags) {
+						
+						TagsetDefinition tagset = 
+							project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
+						
+						result.setParentUuid(parent.getUuid());
+						result.setTagsetDefinitionUuid(tagset.getUuid());
+						
+						project.getTagManager().addTagDefinition(
+								tagset, result);
+					}
+				};
+			});
+		addTagDialog.show();
 	}
 
 	private void handleAddTagRequest() {
@@ -214,10 +249,10 @@ public class AnnotationPanel extends VerticalLayout {
 			.findFirst()
 			.map(tagsetTreeItem -> ((TagsetDataItem)tagsetTreeItem).getTagset());
 			
-		//TODO: check for available and writable tagsets
+		//TODO: check for available and writable tagsets (permissions!)
 		
-		AddTagDialog addTagDialog = 
-			new AddTagDialog(
+		AddParenttagDialog addTagDialog = 
+			new AddParenttagDialog(
 				tagsets, 
 				selectedTagset, 
 				new SaveCancelListener<Pair<TagsetDefinition, TagDefinition>>() {
@@ -232,7 +267,6 @@ public class AnnotationPanel extends VerticalLayout {
 		
 	}
 
-	@SuppressWarnings("unchecked")
 	private void handlePropertySummaryClickEvent(RendererClickEvent<TagsetTreeItem> rendererClickEvent) {
 		if (rendererClickEvent.getItem() instanceof TagDataItem) {
 			TagDataItem tagDataItem = (TagDataItem) rendererClickEvent.getItem();
@@ -242,8 +276,19 @@ public class AnnotationPanel extends VerticalLayout {
 			if (tagDataItem.isPropertiesExpanded()) {
 				TagDefinition tag = tagDataItem.getTag();
 				
+				PropertyDataItem lastPropertyDataItem = null; 
 				for (PropertyDefinition propertyDefinition : tag.getUserDefinedPropertyDefinitions()) {
-					tagsetGrid.getTreeData().addItem(tagDataItem, new PropertyDataItem(propertyDefinition));
+					lastPropertyDataItem = new PropertyDataItem(propertyDefinition);
+					tagsetGrid.getTreeData().addItem(tagDataItem, lastPropertyDataItem);
+				}
+				
+				List<TagsetTreeItem> children = 
+					tagsetData.getChildren(tagDataItem).stream()
+					.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem)
+					.collect(Collectors.toList());
+				
+				for (int i = children.size()-1; i>=0; i--) {
+					tagsetData.moveAfterSibling(children.get(i), lastPropertyDataItem);
 				}
 				
 				tagsetGrid.expand(tagDataItem);
@@ -259,7 +304,6 @@ public class AnnotationPanel extends VerticalLayout {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void handleVisibilityClickEvent(RendererClickEvent<TagsetTreeItem> rendererClickEvent) {
 		rendererClickEvent.getItem().setVisible(!rendererClickEvent.getItem().isVisible());
 		tagsetDataProvider.refreshItem(rendererClickEvent.getItem());
@@ -299,7 +343,7 @@ public class AnnotationPanel extends VerticalLayout {
 		Label tagsetsLabel = new Label("Tagsets");
 		
 		tagsetGrid = new TreeGrid<>();
-		tagsetGrid.addStyleName("annotate-tagsets-grid");
+		tagsetGrid.addStyleNames("annotate-tagsets-grid", "flat-undecorated-icon-buttonrenderer");
 		tagsetGrid.setSizeFull();
 		tagsetGrid.setSelectionMode(SelectionMode.SINGLE);
 		tagsetGrid.addStyleName(MaterialTheme.GRID_BORDERLESS);

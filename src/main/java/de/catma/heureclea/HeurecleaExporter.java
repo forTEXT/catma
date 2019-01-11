@@ -29,6 +29,7 @@ import de.catma.document.source.contenthandler.SourceContentHandler;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference;
 import de.catma.serialization.tei.TeiUserMarkupCollectionSerializationHandler;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.user.UserProperty;
 
@@ -45,7 +46,7 @@ public class HeurecleaExporter {
 		try {
 			String exportFolder = RepositoryPropertyKey.HeurecleaFolder.getValue();
 			
-			TagManager tagManager = new TagManager();
+			TagManager tagManager = new TagManager(new TagLibrary(null, "Heureclea"));
 			RepositoryManager repoManager = new RepositoryManager(
 					new DefaultBackgroundServiceProvider(), 
 					tagManager, RepositoryProperties.INSTANCE.getProperties());

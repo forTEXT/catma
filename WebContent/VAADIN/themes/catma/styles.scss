@@ -886,11 +886,6 @@
     	float: right;
     }
     
-    .annotate-tagsets-grid button {
-		background-color: transparent;
-		border: none;    
-    }
-    
     .annotate-tagsets-grid .v-treegrid-row-selected  > .v-treegrid-cell-focused::before {
 		border-color: transparent;
 	}
@@ -948,11 +943,6 @@
 		background: #FFFFFF;
 		color: #000000;
 	}
-
-	.annotate-resource-grid button {
-		background-color: transparent;
-		border: none;    
-    }
     
     .tagger-contextmenu-menuitem-caption {
     	display: inline-block;
@@ -983,8 +973,9 @@
     	border-bottom: 1px solid;
 	}
 	
-	.add-tag-dialog-tagsets-box {
-		margin-left: 10px;
-		margin-right: 10px;
+	.flat-undecorated-icon-buttonrenderer button {
+		background-color: transparent;
+		border: none;    
+		cursor: pointer;	
 	}
 }

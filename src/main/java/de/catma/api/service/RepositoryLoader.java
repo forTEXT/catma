@@ -11,13 +11,14 @@ import de.catma.backgroundservice.DefaultBackgroundServiceProvider;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.RepositoryManager;
 import de.catma.document.repository.RepositoryReference;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.user.UserProperty;
 
 public class RepositoryLoader {
 
 	public Repository open(Properties properties, String identifier) throws Exception {
-		TagManager tagManager = new TagManager();
+		TagManager tagManager = new TagManager(new TagLibrary(null, "global"));
 		RepositoryManager repoManager = new RepositoryManager(
 				new DefaultBackgroundServiceProvider(), 
 				tagManager, properties);

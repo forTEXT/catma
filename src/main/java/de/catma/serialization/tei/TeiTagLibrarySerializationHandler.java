@@ -52,7 +52,7 @@ public class TeiTagLibrarySerializationHandler implements TagLibrarySerializatio
 	public TagLibrary deserialize() throws IOException {
 		TeiTagLibraryDeserializer deserializer = 
 				new TeiTagLibraryDeserializer(teiDocument, tagManager);
-		return deserializer.getTagLibrary();
+		return tagManager.getTagLibrary();
 	}
 	
 	public TagLibrary deserialize(
