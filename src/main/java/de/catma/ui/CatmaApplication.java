@@ -90,7 +90,6 @@ import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
 import de.catma.user.User;
 
-//@Push(PushMode.MANUAL)
 @Theme("catma")
 @PreserveOnRefresh
 public class CatmaApplication extends UI implements 

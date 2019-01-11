@@ -17725,13 +17725,18 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	justify-content: center;
 }
 
-.catma .documentsgrid__doc {
-	display: flex;
+.catma div.documentsgrid__doc {
+	display: block;
 	flex-direction: column;
 	flex-grow: 1;
 }
 
+.catma .documentsgrid__doc__title {
+	display: block;
+}
+
 .catma .documentsgrid__doc__author {
+	display: block;
 	font-size: 0.75em;
 	color: rgba(0, 0, 0, 0.54);
 }
@@ -17752,6 +17757,10 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .projectlist {
+	padding: 20px;
+}
+
+.catma .projectlist__list {
 	flex-wrap: wrap;
 }
 
@@ -17761,6 +17770,27 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 
 .catma .projectlist .vaadin-button-container {
 	width: 500px;
+}
+
+.catma .projectlist__newproject {
+	width: 352px;
+	border-radius: 4px;
+	background-color: #ffffff;
+	border: dashed 3px rgba(151, 151, 151, 0.12);
+	margin: 10px;
+	padding: 10px;
+	align-items: center;
+}
+
+.catma .projectlist__newproject__link {
+	height: 176px;
+	display: flex;
+	flex-direction: column;
+	padding: 0.5em;
+	cursor: pointer;
+	font-size: 1.5em;
+	text-transform: uppercase;
+	justify-content: center;
 }
 
 .catma .projectlist__card {
@@ -17787,8 +17817,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .projectlist__card__descriptionbar {
-	padding-left: 1em;
-	padding-bottom: 0.25em;
+	padding: 10px;
 }
 
 .catma .annotate-tag-tree-item {

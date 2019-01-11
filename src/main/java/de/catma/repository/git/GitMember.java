@@ -33,7 +33,7 @@ public class GitMember implements User {
 
     @Override
     public String getEmail() {
-        return delegate.getEmail();
+        return "/nonexistent";
     }
 
     @Override

@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.teemu.wizards.event.WizardCancelledEvent;
@@ -409,15 +410,32 @@ public class ProjectView extends HugeCard implements CanReloadAll {
     	resourceGrid = new TreeGrid<>();
         resourceGrid.addStyleName("project-view-document-grid");
         resourceGrid.setHeaderVisible(false);
-        
+        resourceGrid.setRowHeight(45);
+
 		resourceGrid
 			.addColumn(resource -> resource.getIcon(), new HtmlRenderer());
         
+		Function<Resource,String> buildNameFunction = (resource) -> {
+			StringBuilder sb = new StringBuilder()
+			  .append("<div class='documentsgrid__doc'> ")
+		      .append("<span class='documentsgrid__doc__title'> ")
+		      .append(resource.getName())
+		      .append("</span>");
+			if(resource.hasDetail()){
+		        sb
+		        .append("<span class='documentsgrid__doc__author'> ")
+		        .append(resource.getDetail())
+		        .append("</span>");
+			}
+			sb.append("</div>");
+				        
+		    return sb.toString();
+		};
+      
         resourceGrid
-        	.addColumn(resource -> resource.getName())
+        	.addColumn(resource -> buildNameFunction.apply(resource), new HtmlRenderer())  	
         	.setCaption("Name")
         	.setExpandRatio(2);
-        
         //TODO: see MD for when it is appropriate to offer row options
 //        ButtonRenderer<Resource> resourceOptionsRenderer = new ButtonRenderer<>(
 //				resourceOptionClickedEvent -> handleResourceOptionClicked(resourceOptionClickedEvent));
@@ -460,6 +478,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 tagsetsAnnotations,
                 tagsetGrid
         );
+        tagsetsGridComponent.getActionGridBar().addBtnAddClickListener((click) -> {
+        	
+        });
         tagsetsGridComponent.addStyleName("project-view-action-grid");
         
         resourceContent.addComponent(tagsetsGridComponent);
