@@ -17814,6 +17814,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	flex-direction: column;
 	padding: 0.5em;
 	cursor: pointer;
+	width: 100%;
 }
 
 .catma .projectlist__card__descriptionbar {

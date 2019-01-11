@@ -1,3 +1,4 @@
+
 @import "default.scss";
 
 .catma {
@@ -872,6 +873,7 @@
             flex-direction: column;
             padding: 0.5em;
             cursor: pointer;
+            width: 100%
         }
         .projectlist__card__descriptionbar {
         	padding: 10px;

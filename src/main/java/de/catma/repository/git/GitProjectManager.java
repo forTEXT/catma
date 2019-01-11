@@ -7,11 +7,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import de.catma.backgroundservice.BackgroundService;
 import org.apache.commons.io.FileUtils;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+
 import de.catma.Pager;
-import de.catma.backgroundservice.BackgroundServiceProvider;
+import de.catma.backgroundservice.BackgroundService;
 import de.catma.document.repository.Repository;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
@@ -23,6 +25,9 @@ import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.tag.TagManager;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
+import elemental.json.Json;
+import elemental.json.JsonObject;
+import elemental.json.JsonValue;
 
 public class GitProjectManager implements ProjectManager {
 	private final ILocalGitRepositoryManager localGitRepositoryManager;
@@ -67,13 +72,14 @@ public class GitProjectManager implements ProjectManager {
 	public String create(String name, String description) throws IOException {
 
 		//TODO: consider creating local git projects for offline use
-
+		String marshalledDescription = marshallProjectMetadata(name, description);
+		
 		String projectId = idGenerator.generate() + "_" + name.replaceAll("[^\\p{Alnum}]", "_");
 
 		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
 			// create the group
 			String groupPath = this.remoteGitServerManager.createGroup(
-				projectId, projectId, name
+				projectId, projectId, marshalledDescription
 			);
 
 			// create the root repository
@@ -96,6 +102,8 @@ public class GitProjectManager implements ProjectManager {
 
 		return projectId;
 	}
+
+
 
 	/**
 	 * Deletes an existing project.
@@ -206,6 +214,13 @@ public class GitProjectManager implements ProjectManager {
 				
 			}
 		}
+	}
+	
+	private String marshallProjectMetadata(String name, String description) {
+		JsonObject obj = Json.createObject();
+		obj.put("name", name);
+		obj.put("description", description);
+		return obj.toString();
 	}
 	
 }

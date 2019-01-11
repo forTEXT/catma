@@ -33,12 +33,12 @@ public class ProjectCard extends VerticalLayout  {
     private final ErrorHandler errorLogger;
     private final ProjectManager projectManager;
 
-	private final EventBus eventbus;
+	private final EventBus eventBus;
 
     ProjectCard(ProjectReference projectReference, ProjectManager projectManager, EventBus eventbus){
         this.projectReference = Objects.requireNonNull(projectReference) ;
         this.projectManager = projectManager;
-        this.eventbus = eventbus;
+        this.eventBus = eventbus;
         this.errorLogger = (ErrorHandler) UI.getCurrent();
         initComponents();
     }
@@ -53,11 +53,8 @@ public class ProjectCard extends VerticalLayout  {
         Label labelDesc = new Label(projectReference.getDescription());
         labelDesc.setWidth("100%");
         preview.addComponents(labelDesc);
-        Label labelProjectId = new Label(projectReference.getProjectId());
-        labelProjectId.setWidth("100%");
-        preview.addComponents(labelProjectId);
 
-        preview.addLayoutClickListener(evt -> eventbus.post(new RouteToProjectEvent(projectReference)));
+        preview.addLayoutClickListener(evt -> eventBus.post(new RouteToProjectEvent(projectReference)));
         addComponent(preview);
 
         HorizontalLayout descriptionBar = new HorizontalLayout();
@@ -77,8 +74,8 @@ public class ProjectCard extends VerticalLayout  {
 
         buttonRemove.addClickListener(
                 (event -> {
-                    ConfirmDialog.show(UI.getCurrent(),"delete Project",
-                            "do you want to delete Project: " + projectReference.getName(),
+                    ConfirmDialog.show(UI.getCurrent(),"Delete Project",
+                            "Do you want to delete Project: " + projectReference.getName() + "?",
                             "OK",
                             "Cancel"
                     , (evt) -> {
@@ -89,10 +86,15 @@ public class ProjectCard extends VerticalLayout  {
                         } catch (Exception e) {
                             errorLogger.showAndLogError("can't delete project " + projectReference.getName(), e);
                         }
-                        eventbus.post(new ResourcesChangedEvent<Component>(ProjectCard.this));
+                        eventBus.post(new ResourcesChangedEvent<Component>(ProjectCard.this));
                     });
-                }
-                ));
+                })
+        );
+        IconButton editAction = new IconButton(VaadinIcons.PENCIL);
+        editAction.addClickListener(click -> {
+        	new EditProjectDialog(projectReference, projectManager, result -> eventBus.post(new ResourcesChangedEvent<Component>(this))).show();
+        });
+        descriptionBar.addComponent(editAction);
         IconButton buttonAction = new IconButton(VaadinIcons.ELLIPSIS_DOTS_V);
         descriptionBar.addComponents(buttonAction);
 

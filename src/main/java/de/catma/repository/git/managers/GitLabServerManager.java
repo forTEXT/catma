@@ -36,6 +36,10 @@ import de.catma.repository.git.managers.gitlab4j_api_custom.CustomUserApi;
 import de.catma.repository.git.managers.gitlab4j_api_custom.models.ImpersonationToken;
 import de.catma.user.UserProperty;
 import de.catma.util.Pair;
+import elemental.json.Json;
+import elemental.json.JsonException;
+import elemental.json.JsonObject;
+import elemental.json.JsonValue;
 
 public class GitLabServerManager implements IRemoteGitServerManager {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -520,7 +524,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 		try {
 
 			Group group = this.userGitLabApi.getGroupApi().getGroup(Objects.requireNonNull(projectId));
-			return new ProjectReference(group.getPath(),group.getDescription(),"TODO");
+			return unmarshallProjectReference(group.getPath(),group.getDescription());
 		} catch (GitLabApiException e) {
 			throw new IOException("failed to fetch project ", e);
 		}
@@ -541,9 +545,9 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 		GroupApi groupApi = this.userGitLabApi.getGroupApi();
 		try {
 			return new GitLabPager<>(
-					groupApi.getGroups(30),//TODO: constant
-					group -> new ProjectReference(
-							group.getPath(), group.getDescription(), "TODO"));
+					groupApi.getGroups(30),
+					group -> unmarshallProjectReference(
+							group.getPath(),  group.getDescription()));
 		}
 		catch (Exception e) {
 			throw new IOException("Failed to load groups", e);
@@ -594,5 +598,17 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 
 	public String getEmail() {
 		return gitLabUser.getEmail();
+	}
+	
+
+	private ProjectReference unmarshallProjectReference(String path, String eventuallyMarshalledMetadata){
+		try {
+			JsonObject obj = Json.parse(eventuallyMarshalledMetadata);
+			String name = obj.get("name").asString();
+			String desc = obj.get("description").asString();
+			return new ProjectReference(path, name, desc);
+		} catch (JsonException e) {
+			return new ProjectReference(path, eventuallyMarshalledMetadata, "nonexistent description");
+		}
 	}
 }
