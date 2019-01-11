@@ -73,6 +73,7 @@ import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
+import de.catma.ui.events.routing.RouteToAnalyzeNewEvent;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tagger.MarkupPanel.TagInstanceSelectedListener;
@@ -267,30 +268,26 @@ public class TaggerView extends HorizontalLayout
 						userMarkupCollRef);
 			}
 		}	
-<<<<<<< HEAD
-		((AnalyzerProvider)UI.getCurrent()).analyze(
-				corpus, (IndexedRepository)markupPanel.getRepository());	
+		if (project instanceof IndexedRepository) {
+			eventBus.post(new RouteToAnalyzeEvent((IndexedRepository)project, corpus));
+		}
 	}
+
 	public void  analyzeDocumentNew(){
 		Corpus corpus = new Corpus(sourceDocument.toString());
 		corpus.addSourceDocument(sourceDocument);
-		for (UserMarkupCollection umc : 
-			markupPanel.getUserMarkupCollections()) {
-					UserMarkupCollectionReference userMarkupCollRef =
-					sourceDocument.getUserMarkupCollectionReference(
-							umc.getId());
+		for (UserMarkupCollection umc : userMarkupCollectionManager.getUserMarkupCollections()) {
+			UserMarkupCollectionReference userMarkupCollRef =
+				sourceDocument.getUserMarkupCollectionReference(
+						umc.getId());
 			if (userMarkupCollRef != null) {
 				corpus.addUserMarkupCollectionReference(
 						userMarkupCollRef);
 			}
 		}	
-		((AnalyzerProvider)UI.getCurrent()).analyzeNew(
-				corpus, (IndexedRepository)markupPanel.getRepository());	
-=======
 		if (project instanceof IndexedRepository) {
-			eventBus.post(new RouteToAnalyzeEvent((IndexedRepository)project, corpus));
-		}
->>>>>>> catma6_mp
+			eventBus.post(new RouteToAnalyzeNewEvent((IndexedRepository)project, corpus));
+		}	
 	}
 
 	private void initActions() {

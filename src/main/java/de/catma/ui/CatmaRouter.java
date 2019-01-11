@@ -3,6 +3,7 @@ package de.catma.ui;
 import com.google.common.eventbus.Subscribe;
 
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
+import de.catma.ui.events.routing.RouteToAnalyzeNewEvent;
 import de.catma.ui.events.routing.RouteToAnnotateEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
@@ -20,6 +21,9 @@ public interface CatmaRouter {
 
 	@Subscribe
 	void handleRouteToAnalyze(RouteToAnalyzeEvent routeToAnalyzeEvent);
+	
+	@Subscribe
+	void handleRouteToAnalyzeNew(RouteToAnalyzeNewEvent routeToAnalyzeNewEvent);
 	
 	Class<?> getCurrentRoute();
 	
