@@ -120,6 +120,10 @@ public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, 
 	}
 
 	private void handleAddPropertyDefinition(String name) {
+		if (propertyDefDataProvider.getItems().isEmpty()) {
+			setPropertyDefinitionsVisible();
+		}
+		
 		if ((name != null) && !name.trim().isEmpty()) {
 			tfPropertyDefName.clear();
 			
@@ -129,6 +133,7 @@ public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, 
 			
 			propertyDefDataProvider.getItems().add(propertyDefinition);
 			propertyDefDataProvider.refreshAll();
+			propertyDefinitionGrid.select(propertyDefinition);
 		}
 	}
 
@@ -171,7 +176,7 @@ public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, 
 		propertyDefNamePanel = new HorizontalLayout();
 		propertyDefNamePanel.setSpacing(true);
 		propertyDefNamePanel.setMargin(new MarginInfo(false, true));
-
+		
 		tfPropertyDefName = new TextField("Add Property");
 		tfPropertyDefName.setPlaceholder("Property Name");
 		propertyDefNamePanel.addComponent(tfPropertyDefName);
@@ -185,6 +190,7 @@ public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, 
 		propertyDefPanel.setMargin(new MarginInfo(false, true));
 		propertyDefPanel.setSpacing(true);
 		propertyDefPanel.setSizeFull();
+		propertyDefPanel.setVisible(false);
 
 		propertyDefinitionGrid = new Grid<PropertyDefinition>("Assigned Properties");
 		propertyDefinitionGrid.addColumn(propertyDef -> propertyDef.getName());
@@ -203,6 +209,12 @@ public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, 
 		
 		propertyDefPanel.addComponent(possibleValuesArea);
 	}
+	
+	private void setPropertyDefinitionsVisible() {
+		propertyDefPanel.setVisible(true);
+		setHeight("80%");
+		center();
+	}
 
 	@Override
 	protected boolean isEnterClickShortcut() {
@@ -211,7 +223,7 @@ public class AddTagDialog extends AbstractOkCancelDialog<Pair<TagsetDefinition, 
 	
 	@Override
 	protected void layoutWindow() {
-		setHeight("80%");
+		setHeight("60%");
 		setWidth("60%");
 	}
 
