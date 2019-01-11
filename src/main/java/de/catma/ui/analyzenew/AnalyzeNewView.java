@@ -38,6 +38,7 @@ import de.catma.queryengine.QueryJob.QueryException;
 import de.catma.queryengine.result.GroupedQueryResultSet;
 import de.catma.queryengine.result.QueryResult;
 import de.catma.ui.CatmaApplication;
+import de.catma.ui.analyzenew.ResultPanelNew.ResultPanelCloseListener;
 import de.catma.ui.analyzer.GroupedQueryResultSelectionListener;
 import de.catma.ui.analyzer.Messages;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
@@ -389,7 +390,14 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			public void done(QueryResult result) {
 
 			 try {
-				queryResultPanel = new ResultPanelNew(repository, result,"result for query: "+searchInput.toString());
+				queryResultPanel = new ResultPanelNew(repository, result,"result for query: "+searchInput.toString(), new ResultPanelCloseListener() {
+					
+					@Override
+					public void closeRequest(ResultPanelNew queryResultPanel) {
+						resultPanel.removeComponent(queryResultPanel);
+						
+					}
+				});
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

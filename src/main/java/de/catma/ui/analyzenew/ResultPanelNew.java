@@ -31,14 +31,18 @@ import de.catma.queryengine.result.QueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
+import de.catma.ui.analyzer.AnalyzerView.CloseListener;
 
-public class ResultPanelNew extends Panel  {
+public class ResultPanelNew extends Panel   {
 
 	private static enum TreePropertyName {
 		caption, frequency, visibleInKwic,;
 	}
 	private static enum ViewID {
 		phrase, tag, property,phraseTag,phraseProperty;
+	}
+	public static interface ResultPanelCloseListener{
+		public void closeRequest(ResultPanelNew resultPanelNew);
 	}
 
 	private VerticalLayout contentVerticalLayout;
@@ -62,12 +66,14 @@ public class ResultPanelNew extends Panel  {
 	private String queryAsString;
 	private Repository repository;
 	private ViewID currentView;
+	private ResultPanelCloseListener resultPanelCloseListener;
 
-	public ResultPanelNew(Repository repository, QueryResult result, String queryAsString) throws Exception {
+	public ResultPanelNew(Repository repository, QueryResult result, String queryAsString, ResultPanelCloseListener resultPanelCloseListener) throws Exception {
 
 		this.repository = repository;
 		this.queryResult = result;
 		this.queryAsString = queryAsString;
+		this.resultPanelCloseListener = resultPanelCloseListener;
 
 		initComponents();
 		initListeners();
@@ -112,13 +118,14 @@ public class ResultPanelNew extends Panel  {
 
 		treeGridTag = new TreeGrid<TagRowItem>();
 		treeGridTag.setSelectionMode(SelectionMode.MULTI);
+		// we dont select items here enaymore
 		treeGridTag.addSelectionListener(new SelectionListener<TagRowItem>() {
 			
 			@Override
 			public void selectionChange(SelectionEvent<TagRowItem> event) {
 			Iterable<TagRowItem> selectedItems=	event.getAllSelectedItems();
-			selectedItems.forEach(item -> { System.out.println(" TgaPath :"+item.getTreePath()+ " Collection :"+item.getCollectionName()+" Tag ID:"+item.getTagInstanceID());});
-			
+			selectedItems.forEach(item -> { System.out.println(" TgaPath :"+item.getTreePath()+ 
+					" Collection :"+item.getCollectionName()+" Tag ID:"+item.getTagInstanceID());});	
 				
 			}
 		});
@@ -139,7 +146,8 @@ public class ResultPanelNew extends Panel  {
 			@Override
 			public void selectionChange(SelectionEvent<TagRowItem> event) {
 			Iterable<TagRowItem> selectedItems=	event.getAllSelectedItems();
-			selectedItems.forEach(item -> { System.out.println(" TgaPath :"+item.getTreePath()+ " Collection :"+item.getCollectionName()+" Tag ID:"+item.getTagInstanceID());});
+			selectedItems.forEach(item -> { System.out.println(" TgaPath :"+item.getTreePath()+ 
+					" Collection :"+item.getCollectionName()+" Tag ID:"+item.getTagInstanceID());});
 			
 				
 			}
@@ -206,8 +214,7 @@ public class ResultPanelNew extends Panel  {
 				try {
 					swichView();
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				e.printStackTrace();
 				}
 			}
 		});
@@ -215,7 +222,7 @@ public class ResultPanelNew extends Panel  {
 		trashBt.addClickListener(new ClickListener() {
 
 			public void buttonClick(ClickEvent event) {
-				// remove this instance of resultPanelNew
+				resultPanelCloseListener.closeRequest(ResultPanelNew.this);
 			}
 		});
 		
