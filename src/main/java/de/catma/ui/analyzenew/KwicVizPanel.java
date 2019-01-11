@@ -5,11 +5,13 @@ import com.vaadin.ui.ComponentContainer;
 import de.catma.ui.dialog.AbstractOkCancelDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 
-public class KwicVizPanel<T> extends AbstractOkCancelDialog<T>  implements VizPanel{
+public class KwicVizPanel extends AbstractOkCancelDialog<VizSnapshot>  implements VizPanel{
 
-	public KwicVizPanel(String dialogCaption, SaveCancelListener<T> saveCancelListener) {
+	public KwicVizPanel(String dialogCaption, AnalyzeNewView analyzeNewView, SaveCancelListener<VizSnapshot> saveCancelListener) {
 		super(dialogCaption, saveCancelListener);
 		// TODO Auto-generated constructor stub
+		
+		//setParent(analyzeNewView);
 	}
 
 	@Override
@@ -23,9 +25,12 @@ public class KwicVizPanel<T> extends AbstractOkCancelDialog<T>  implements VizPa
 		// TODO Auto-generated method stub
 		
 	}
-
+	public void attach() {
+		super.attach();
+//		((FocusHandler)UI.getCurrent()).focusDeferred(textInput);
+	}
 	@Override
-	protected T getResult() {
+	protected VizSnapshot getResult() {
 		// TODO Auto-generated method stub
 		return null;
 	}

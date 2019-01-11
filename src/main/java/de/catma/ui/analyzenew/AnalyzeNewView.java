@@ -16,6 +16,7 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.ComboBox.NewItemHandler;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.HasComponents;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
@@ -44,12 +45,13 @@ import de.catma.ui.analyzer.Messages;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
 import de.catma.ui.analyzer.TagKwicResultsProvider;
 import de.catma.ui.component.HTMLNotification;
+import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabComponent;
 
 public class AnalyzeNewView extends VerticalLayout 
-implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, RelevantUserMarkupCollectionProvider, TagKwicResultsProvider {
+implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, RelevantUserMarkupCollectionProvider, TagKwicResultsProvider, HasComponents {
 	
 	public static interface CloseListenerNew{
 		public void closeRequest(AnalyzeNewView analyzeNewView);
@@ -57,7 +59,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private String userMarkupItemDisplayString="Markup Collections";
 	private IndexedRepository repository;
 	private Corpus corpus;
-	private CloseListenerNew closeListener2;
+	private CloseListenerNew closeListener;
 	private List<String> relevantSourceDocumentIDs;
 	private List<String> relevantUserMarkupCollIDs;
 	private List<String> relevantStaticMarkupCollIDs;
@@ -77,10 +79,10 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
     private  MarginInfo margin;
 	
 	
-	 public AnalyzeNewView(Corpus corpus, IndexedRepository repository, CloseListenerNew closeListener2) throws Exception{
+	 public AnalyzeNewView(Corpus corpus, IndexedRepository repository, CloseListenerNew closeListener) throws Exception{
 			this.corpus = corpus;
 			this.repository= repository;
-			this.closeListener2 = closeListener2;
+			this.closeListener = closeListener;
 			this.relevantSourceDocumentIDs = new ArrayList<String>();
 			this.relevantUserMarkupCollIDs = new ArrayList<String>();
 			this.relevantStaticMarkupCollIDs = new ArrayList<String>();
@@ -304,7 +306,28 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		kwicBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		kwicBt.setWidth("100%");
 		kwicBt.setHeight("100%");
-		
+		kwicBt.addClickListener(new ClickListener() {
+			
+			@Override
+			public void buttonClick(ClickEvent event) {
+			KwicVizPanel kwicPanel = new KwicVizPanel("KWIC PANEL", AnalyzeNewView.this, new SaveCancelListener<VizSnapshot>() {
+			
+				
+				@Override
+				public void savePressed(VizSnapshot vizSnapshot) {
+					 Notification.show("RESULT",
+		                     "of the viz",
+		                     Notification.Type.HUMANIZED_MESSAGE);
+					
+				}
+			});
+			
+			kwicPanel.show();
+				
+			}
+			
+		});
+	
 		distBt= new Button("DISTRIBUTION",VaadinIcons.CHART_LINE);
 		distBt.addStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
 		distBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);

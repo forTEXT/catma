@@ -68,6 +68,7 @@ public class ResultPanelNew extends Panel   {
 	private ViewID currentView;
 	private ResultPanelCloseListener resultPanelCloseListener;
 
+
 	public ResultPanelNew(Repository repository, QueryResult result, String queryAsString, ResultPanelCloseListener resultPanelCloseListener) throws Exception {
 
 		this.repository = repository;
