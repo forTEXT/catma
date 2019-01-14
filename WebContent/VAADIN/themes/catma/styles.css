@@ -17624,10 +17624,9 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	cursor: pointer;
 	justify-content: center;
 	border-radius: 6px;
-	-webkit-box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.75);
-	-moz-box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.75);
-	box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.75);
-	box-shadow: none;
+	-webkit-box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.75);
+	-moz-box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.75);
+	box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.75);
 	font-size: 16px;
 	color: white;
 	display: flex;
