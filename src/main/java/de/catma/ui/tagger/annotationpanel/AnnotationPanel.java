@@ -7,12 +7,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.github.appreciated.material.MaterialTheme;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.vaadin.contextmenu.ContextMenu;
 import com.vaadin.data.TreeData;
-import com.vaadin.data.provider.GridSortOrderBuilder;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
@@ -41,6 +43,7 @@ import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.modules.main.ErrorHandler;
+import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
 public class AnnotationPanel extends VerticalLayout {
@@ -61,6 +64,9 @@ public class AnnotationPanel extends VerticalLayout {
 	private ActionGridComponent<TreeGrid<TagsetTreeItem>> tagsetGridComponent;
 	private TreeData<TagsetTreeItem> tagsetData;
 	private TreeDataProvider<TagsetTreeItem> tagsetDataProvider;
+	private IDGenerator idGenerator = new IDGenerator();
+	private PropertyChangeListener tagChangedListener;
+	private PropertyChangeListener propertyDefinitionChangedListener;
 
 	public AnnotationPanel(Repository project) {
 		this.project = project;
@@ -70,7 +76,7 @@ public class AnnotationPanel extends VerticalLayout {
 	}
 
 	private void initListeners() {
-		PropertyChangeListener tagChangedListener = new PropertyChangeListener() {
+		tagChangedListener = new PropertyChangeListener() {
 			
 			@SuppressWarnings("unchecked")
 			@Override
@@ -105,7 +111,6 @@ public class AnnotationPanel extends VerticalLayout {
 		            
 				}
 				else if (newValue == null) { //removed
-					
 				}
 				else { //update
 					
@@ -116,6 +121,46 @@ public class AnnotationPanel extends VerticalLayout {
 		project.getTagManager().addPropertyChangeListener(
 				TagManagerEvent.tagDefinitionChanged, 
 				tagChangedListener);
+		
+		propertyDefinitionChangedListener = new PropertyChangeListener() {
+			
+			@SuppressWarnings("unchecked")
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				Object newValue = evt.getNewValue();
+				Object oldValue = evt.getOldValue();
+				
+				TagDefinition tag = null;
+				
+				if (oldValue == null) { //created
+					Pair<PropertyDefinition, TagDefinition> newData =
+							(Pair<PropertyDefinition, TagDefinition>) newValue;
+					
+					tag = newData.getSecond();
+					
+				}
+				else if (newValue == null) { // removed
+					Pair<PropertyDefinition, Pair<TagDefinition, TagsetDefinition>> oldData =
+							(Pair<PropertyDefinition, Pair<TagDefinition, TagsetDefinition>>) oldValue;
+					
+					tag = oldData.getSecond().getFirst();
+				}
+				else { //update
+					tag = (TagDefinition) oldValue;
+				}
+				
+				TagDataItem tagDataItem = new TagDataItem(tag);
+				
+				hideExpandedProperties(tagDataItem);
+				showExpandedProperties(tagDataItem);
+						
+				tagsetDataProvider.refreshAll();
+			}
+		};
+		
+		project.getTagManager().addPropertyChangeListener(
+				TagManagerEvent.userPropertyDefinitionChanged, 
+				propertyDefinitionChangedListener);	
 	}
 
 	private void initData() {
@@ -186,6 +231,11 @@ public class AnnotationPanel extends VerticalLayout {
 		.setCaption("Properties")
 		.setExpandRatio(2);
 		
+		tagsetGrid.addColumn(
+			tagsetTreeItem -> tagsetTreeItem.getPropertyValue())
+		.setExpandRatio(1);
+			
+		
 		ButtonRenderer<TagsetTreeItem> visibilityRenderer = 
 			new ButtonRenderer<TagsetTreeItem>(rendererClickEvent -> handleVisibilityClickEvent(rendererClickEvent));
 		visibilityRenderer.setHtmlContentAllowed(true);
@@ -212,7 +262,81 @@ public class AnnotationPanel extends VerticalLayout {
 	}
 
 	private void handleAddPropertyRequest() {
-		// TODO Auto-generated method stub
+		final List<TagDefinition> targetTags = tagsetGrid.getSelectedItems()
+		.stream()
+		.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem)
+		.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
+		.collect(Collectors.toList());
+		
+		
+		Multimap<String, PropertyDefinition> propertiesByName = 
+				ArrayListMultimap.create();
+		
+		for (TagDefinition tag : targetTags) {
+			for (PropertyDefinition propertyDef : tag.getUserDefinedPropertyDefinitions()) {
+				if (!propertiesByName.containsKey(propertyDef.getName()) || 
+						propertiesByName.get(propertyDef.getName()).iterator().next().getPossibleValueList()
+							.equals(propertyDef.getPossibleValueList())) {
+					propertiesByName.put(propertyDef.getName(), propertyDef);
+				}
+			}
+		}
+		
+		
+		List<PropertyDefinition> commonProperties = 
+			propertiesByName.asMap().entrySet()
+			.stream()
+			.filter(entry -> entry.getValue().size() == targetTags.size())
+			.map(entry -> new PropertyDefinition(entry.getValue().iterator().next()))
+			.collect(Collectors.toList());
+		
+		AddPropertyDialog addPropertyDialog = new AddPropertyDialog(
+			commonProperties,
+			new SaveCancelListener<List<PropertyDefinition>>() {
+				@Override
+				public void savePressed(List<PropertyDefinition> result) {
+					final Set<String> availablePropertyNames = 
+							result.stream().map(propertyDef -> propertyDef.getName())
+							.collect(Collectors.toSet());
+					
+					final Set<String> deletedProperyNames = commonProperties
+					.stream()
+					.map(propertyDef -> propertyDef.getName())
+					.filter(name -> !availablePropertyNames.contains(name))
+					.collect(Collectors.toSet());
+					
+					for (TagDefinition tag : targetTags) {
+						TagsetDefinition tagset = 
+							project.getTagManager().getTagLibrary().getTagsetDefinition(tag);
+
+						for (PropertyDefinition pd : new ArrayList<>(tag.getUserDefinedPropertyDefinitions())) {
+							if (deletedProperyNames.contains(pd.getName())) {
+								project.getTagManager().removeUserDefinedPropertyDefinition(
+										pd, tag, tagset);
+							}
+							else if (availablePropertyNames.contains(pd.getName())) {
+								result.stream().filter(possiblyChangedPd -> 
+									possiblyChangedPd.getName().equals(pd.getName()))
+								.findFirst()
+								.ifPresent(possiblyChangedPd -> 
+									pd.setPossibleValueList(possiblyChangedPd.getPossibleValueList()));
+								
+								project.getTagManager().updateUserDefinedPropertyDefinition(tag, pd);
+							}
+						}
+						
+						for (PropertyDefinition pd : result) {
+							if (tag.getPropertyDefinition(pd.getName()) == null) {
+								project.getTagManager().addUserDefinedPropertyDefinition(
+									tag, new PropertyDefinition(pd));
+							}
+						}
+					}
+					
+				}
+		});
+		
+		addPropertyDialog.show();
 	}
 
 	private void handleAddSubtagRequest() {
@@ -230,11 +354,13 @@ public class AnnotationPanel extends VerticalLayout {
 						TagsetDefinition tagset = 
 							project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
 						
-						result.setParentUuid(parent.getUuid());
-						result.setTagsetDefinitionUuid(tagset.getUuid());
+						TagDefinition tag = new TagDefinition(result);
+						tag.setUuid(idGenerator.generate());
+						tag.setParentUuid(parent.getUuid());
+						tag.setTagsetDefinitionUuid(tagset.getUuid());
 						
 						project.getTagManager().addTagDefinition(
-								tagset, result);
+								tagset, tag);
 					}
 				};
 			});
@@ -274,33 +400,74 @@ public class AnnotationPanel extends VerticalLayout {
 			tagDataItem.setPropertiesExpanded(!tagDataItem.isPropertiesExpanded());
 			
 			if (tagDataItem.isPropertiesExpanded()) {
-				TagDefinition tag = tagDataItem.getTag();
-				
-				PropertyDataItem lastPropertyDataItem = null; 
-				for (PropertyDefinition propertyDefinition : tag.getUserDefinedPropertyDefinitions()) {
-					lastPropertyDataItem = new PropertyDataItem(propertyDefinition);
-					tagsetGrid.getTreeData().addItem(tagDataItem, lastPropertyDataItem);
-				}
-				
-				List<TagsetTreeItem> children = 
-					tagsetData.getChildren(tagDataItem).stream()
-					.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem)
-					.collect(Collectors.toList());
-				
-				for (int i = children.size()-1; i>=0; i--) {
-					tagsetData.moveAfterSibling(children.get(i), lastPropertyDataItem);
-				}
-				
-				tagsetGrid.expand(tagDataItem);
+				showExpandedProperties(tagDataItem);
 			}
 			else {
-				TreeData<TagsetTreeItem> tagsetTreeData = tagsetGrid.getTreeData();
-				
-				for (TagsetTreeItem childTagsetTreeItem : new ArrayList<>(tagsetTreeData.getChildren(tagDataItem))) {
-					childTagsetTreeItem.removePropertyDataItem(tagsetDataProvider);
-				}
+				hideExpandedProperties(tagDataItem);
 			}
 			tagsetDataProvider.refreshAll();
+		}
+		else if (rendererClickEvent.getItem() instanceof PropertyDataItem) {
+			PropertyDataItem propertyDataItem= (PropertyDataItem)rendererClickEvent.getItem();
+			
+			propertyDataItem.setValuesExpanded(!propertyDataItem.isValuesExpanded());
+			
+			if (propertyDataItem.isValuesExpanded()) {
+				showExpandedPossibleValues(propertyDataItem);
+			}
+			else {
+				hideExpandedPossibleValues(propertyDataItem);
+			}
+			tagsetDataProvider.refreshAll();
+		}
+	}
+
+	private void hideExpandedPossibleValues(PropertyDataItem propertyDataItem) {
+		TreeData<TagsetTreeItem> tagsetTreeData = tagsetGrid.getTreeData();
+		
+		for (TagsetTreeItem childTagsetTreeItem : new ArrayList<>(tagsetTreeData.getChildren(propertyDataItem))) {
+			childTagsetTreeItem.removePropertyDataItem(tagsetDataProvider);
+		}
+	}
+
+	private void showExpandedPossibleValues(PropertyDataItem propertyDataItem) {
+		PropertyDefinition propertyDefinition = propertyDataItem.getPropertyDefinition();
+		
+		for (String possibleValue : propertyDefinition.getPossibleValueList()) {
+			tagsetGrid.getTreeData().addItem(
+				new PropertyDataItem(propertyDefinition), 
+				new PossibleValueDataItem(possibleValue));
+		}
+		
+		tagsetGrid.expand(propertyDataItem);
+	}
+
+	private void showExpandedProperties(TagDataItem tagDataItem) {
+		TagDefinition tag = tagDataItem.getTag();
+		
+		PropertyDataItem lastPropertyDataItem = null; 
+		for (PropertyDefinition propertyDefinition : tag.getUserDefinedPropertyDefinitions()) {
+			lastPropertyDataItem = new PropertyDataItem(propertyDefinition);
+			tagsetGrid.getTreeData().addItem(tagDataItem, lastPropertyDataItem);
+		}
+		
+		List<TagsetTreeItem> children = 
+			tagsetData.getChildren(tagDataItem).stream()
+			.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem)
+			.collect(Collectors.toList());
+		
+		for (int i = children.size()-1; i>=0; i--) {
+			tagsetData.moveAfterSibling(children.get(i), lastPropertyDataItem);
+		}
+		
+		tagsetGrid.expand(tagDataItem);
+	}
+
+	private void hideExpandedProperties(TagDataItem tagDataItem) {
+		TreeData<TagsetTreeItem> tagsetTreeData = tagsetGrid.getTreeData();
+		
+		for (TagsetTreeItem childTagsetTreeItem : new ArrayList<>(tagsetTreeData.getChildren(tagDataItem))) {
+			childTagsetTreeItem.removePropertyDataItem(tagsetDataProvider);
 		}
 	}
 
@@ -419,5 +586,15 @@ public class AnnotationPanel extends VerticalLayout {
 		tagsets.remove(tagset);
 		tagsetData.removeItem(new TagsetDataItem(tagset));
 		tagsetDataProvider.refreshAll();
+	}
+	
+	public void close() {
+		project.getTagManager().removePropertyChangeListener(
+				TagManagerEvent.userPropertyDefinitionChanged, 
+				propertyDefinitionChangedListener);	
+		project.getTagManager().removePropertyChangeListener(
+				TagManagerEvent.tagDefinitionChanged, 
+				tagChangedListener);
+			
 	}
 }

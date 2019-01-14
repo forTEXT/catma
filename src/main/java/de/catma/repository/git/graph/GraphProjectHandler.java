@@ -858,7 +858,7 @@ public class GraphProjectHandler {
 	
 		String uuid = propertyNode.get("uuid").asString();
 		String name = propertyNode.get("name").asString();
-		List<String> values = propertyNode.get("values").asList(value -> value.toString());
+		List<String> values = propertyNode.get("values").asList(value -> value.asString());
 		
 		
 		return new PropertyDefinition(uuid, name, values);

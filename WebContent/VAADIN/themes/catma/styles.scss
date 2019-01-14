@@ -977,10 +977,18 @@
 	tr.v-treegrid-row.v-treegrid-row-has-data.annotate-panel-property-data-item.v-treegrid-row-depth-2 button.v-nativebutton {
     	font-size: 12px;
 	}
-	
-    .annotate-panel-property-data-item .v-treegrid-body .v-treegrid-row:not(:first-child) {
+
+    .v-treegrid-row.v-treegrid-row-has-data.annotate-panel-possible-value-data-item.v-treegrid-row-depth-3 {
     	border-top: none;
     }
+
+	tr.annotate-panel-property-data-item .v-treegrid-expander.expanded {
+	    display: none;
+	}    
+    
+    tr.annotate-panel-possible-value-data-item .v-treegrid-cell {
+	    font-size: 11px;
+	}
     
     .annotate-properties-details-tree .v-captiontext {
     	font-size: smaller;

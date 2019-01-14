@@ -139,12 +139,10 @@ public class TagDataItem implements TagsetTreeItem {
 		return propertySummary.toString();
 	}
 
-	@Override
 	public boolean isPropertiesExpanded() {
 		return propertiesExpanded;
 	}
 
-	@Override
 	public void setPropertiesExpanded(boolean propertiesExpanded) {
 		this.propertiesExpanded = propertiesExpanded;
 	}

@@ -602,6 +602,7 @@ public class TaggerView extends HorizontalLayout
 	}
 
 	public void close() {
+		annotationPanel.close();
 		resourcePanel.close();
 		project.removePropertyChangeListener(
 				RepositoryChangeEvent.sourceDocumentChanged,
