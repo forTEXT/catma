@@ -19,6 +19,7 @@
 package de.catma.ui.tabbedview;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import org.vaadin.elements.Element;
@@ -189,6 +190,11 @@ public class TabbedView extends VerticalLayout implements CloseHandler {
 		} else {
 			return null;
 		}
+	}
+	
+	protected void setCaption(Component tabContent, String caption) {
+		Optional.ofNullable(tabSheet.getTab(tabContent))
+		.ifPresent(tab ->tab.setCaption(caption));
 	}
 
 	public String getCaption(Component c) {

@@ -314,8 +314,7 @@ public class KwicPanel extends VerticalLayout {
 			UserMarkupCollection umc = entry.getValue();
 			
 			if (!umc.getTagLibrary().contains(incomingTagsetDef)) {
-				repository.getTagManager().addTagsetDefinition(
-					umc.getTagLibrary(), new TagsetDefinition(incomingTagsetDef));
+				repository.getTagManager().addTagsetDefinition(new TagsetDefinition(incomingTagsetDef));
 			}
 			userMarkupCollectionManager.add(umc);
 		}

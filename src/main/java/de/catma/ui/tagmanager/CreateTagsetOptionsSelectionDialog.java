@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Iterator;
+
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -13,13 +14,12 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
-import com.vaadin.v7.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.v7.ui.VerticalLayout;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.TagLibrary;
-import de.catma.tag.TagLibraryReference;
 import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
 import de.catma.tag.Version;
@@ -29,7 +29,6 @@ import de.catma.ui.repository.Messages;
 import de.catma.ui.tagger.CurrentWritableUserMarkupCollectionProvider;
 import de.catma.ui.tagger.TagsetSelectionDialog;
 import de.catma.util.IDGenerator;
-import de.catma.util.Pair;
 
 public class CreateTagsetOptionsSelectionDialog extends Window {
 
@@ -72,21 +71,12 @@ public class CreateTagsetOptionsSelectionDialog extends Window {
 
 						if (evt.getOldValue() == null) {
 													
-							TagLibraryReference tagLibRef = (TagLibraryReference) evt.getNewValue();
+							String tagsetName= generateTagsetName(repository);
+							
+							TagsetDefinition tagsetDefinition = new TagsetDefinition(null,
+									new IDGenerator().generate(), tagsetName, new Version());
+							tagManager.addTagsetDefinition(tagsetDefinition);
 
-							try {
-								TagLibrary newTagLib = repository.getTagLibrary(tagLibRef);
-						
-								String tagsetName= generateTagsetName(repository);
-								
-								TagsetDefinition tagsetDefinition = new TagsetDefinition(null,
-										new IDGenerator().generate(), tagsetName, new Version());
-								tagManager.addTagsetDefinition(newTagLib, tagsetDefinition);
-																							
-							} catch (IOException e) {
-								((CatmaApplication) UI.getCurrent()).showAndLogError(
-										Messages.getString("TagLibraryPanel.errorCreatingTagLibrary"), e); //$NON-NLS-1$
-							}
 
 						}
 					}

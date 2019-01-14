@@ -22,11 +22,13 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.vaadin.ui.Component;
 
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
+import de.catma.ui.events.TaggerViewSourceDocumentChangedEvent;
 import de.catma.ui.tabbedview.TabbedView;
 
 public class TaggerManagerView extends TabbedView {
@@ -38,6 +40,15 @@ public class TaggerManagerView extends TabbedView {
 		super(
 			Messages.getString("TaggerManagerView.noOpenDocumentsInfo")); //$NON-NLS-1$
 		this.eventBus = eventBus;
+		this.eventBus.register(this);
+	}
+	
+	@Subscribe
+	public void taggerViewSourceDocumentChanged(
+			TaggerViewSourceDocumentChangedEvent taggerViewSourceDocumentChangedEvent) {
+		TaggerView taggerView = taggerViewSourceDocumentChangedEvent.getTaggerView();
+		String caption = taggerView.getSourceDocument()==null?"N/A":taggerView.getSourceDocument().toString();
+		setCaption(taggerView, caption);
 	}
 
 	public TaggerView openSourceDocument(

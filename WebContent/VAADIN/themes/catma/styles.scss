@@ -938,11 +938,6 @@
     	float: right;
     }
     
-    .annotate-tagsets-grid button {
-		background-color: transparent;
-		border: none;    
-    }
-    
     .annotate-tagsets-grid .v-treegrid-row-selected  > .v-treegrid-cell-focused::before {
 		border-color: transparent;
 	}
@@ -1000,11 +995,6 @@
 		background: #FFFFFF;
 		color: #000000;
 	}
-
-	.annotate-resource-grid button {
-		background-color: transparent;
-		border: none;    
-    }
     
     .tagger-contextmenu-menuitem-caption {
     	display: inline-block;
@@ -1027,4 +1017,17 @@
 	    margin-right: 20px;
 	}
 
+	.abstract-ok-cancel-dialog-hide-maximize-restore-icon .v-window-maximizebox {
+		display:none;
+	}
+	
+	.v-button.v-widget.v-colorpicker.v-button-v-colorpicker.flat.v-button-flat.inputfield-color-picker.v-button-inputfield-color-picker.v-default-caption-width {
+    	border-bottom: 1px solid;
+	}
+	
+	.flat-undecorated-icon-buttonrenderer button {
+		background-color: transparent;
+		border: none;    
+		cursor: pointer;	
+	}
 }

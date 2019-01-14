@@ -22,6 +22,7 @@ import de.catma.repository.git.interfaces.ILocalGitRepositoryManager;
 import de.catma.repository.git.interfaces.IRemoteGitServerManager;
 import de.catma.repository.git.managers.GitLabServerManager;
 import de.catma.repository.git.managers.JGitRepoManager;
+import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
@@ -156,6 +157,8 @@ public class GitProjectManager implements ProjectManager {
 			OpenProjectListener openProjectListener) {
 		try {
 
+			TagLibrary tagLibrary = new TagLibrary(projectReference.getProjectId(), projectReference.getName());
+
 			Repository project =
 				new GraphWorktreeProject(
 						this.user,
@@ -165,7 +168,7 @@ public class GitProjectManager implements ProjectManager {
 							this.localGitRepositoryManager, 
 							this.remoteGitServerManager),
 						projectReference,
-						new TagManager(),
+						new TagManager(tagLibrary),
                         backgroundService);
 			
 			

@@ -224,7 +224,7 @@ public class CorpusCleaner {
 	private void loadMasterTagsetDefinition(String path) throws IOException {
 		try (FileInputStream fis = new FileInputStream(path)) {
 			TeiTagLibrarySerializationHandler teiTagLibrarySerializationHandler = 
-					new TeiTagLibrarySerializationHandler(new TagManager());
+					new TeiTagLibrarySerializationHandler(new TagManager(new TagLibrary(null, "Master")));
 			TagLibrary tagLibrary = teiTagLibrarySerializationHandler.deserialize(null, fis);
 			masterTagsetDefinition = tagLibrary.iterator().next();
 		}
@@ -282,7 +282,7 @@ public class CorpusCleaner {
 			try {
 				for (UserMarkupCollection targetUmc : collections.values()) {
 					TeiUserMarkupCollectionSerializationHandler teiUserMarkupCollectionSerializationHandler = 
-							new TeiUserMarkupCollectionSerializationHandler(new TagManager(), false);
+							new TeiUserMarkupCollectionSerializationHandler(new TagManager(new TagLibrary(null, targetUmc.getName())), false);
 					uploadUmc(teiUserMarkupCollectionSerializationHandler, targetUmc, sourceDocId);
 					outputCollectionCount++;
 				}
@@ -335,7 +335,7 @@ public class CorpusCleaner {
 		
 		logger.info("reading " + umcName);
 		
-		TagManager tagManager = new TagManager();
+		TagManager tagManager = new TagManager(new TagLibrary(null, umcName));
 		
 		TeiUserMarkupCollectionSerializationHandler teiUserMarkupCollectionSerializationHandler = 
 				new TeiUserMarkupCollectionSerializationHandler(tagManager, false);
@@ -387,7 +387,7 @@ public class CorpusCleaner {
 				null, tagsetUUID, "heureCLÉA time tagset", tagsetVersion);
 		
 		copyTagDefs(targetTagsetDefinition, tagLibrary);
-		targetLib.add(targetTagsetDefinition);
+//		targetLib.add(targetTagsetDefinition);
 		
 		Set<UserMarkupCollection> affectedCollections = new HashSet<>();
 		

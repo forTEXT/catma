@@ -89,7 +89,6 @@ public class ResourcePanel extends VerticalLayout {
 		project.addPropertyChangeListener(
 			RepositoryChangeEvent.userMarkupCollectionChanged, collectionChangeListener);
 		
-		//TODO: remove!
     }
     
 	@SuppressWarnings("unchecked")
@@ -233,7 +232,7 @@ public class ResourcePanel extends VerticalLayout {
 		addStyleName("annotate-resource-panel");
 		Label documentTreeLabel = new Label("Documents & Annotations");
 		documentTree = new TreeGrid<>();
-		documentTree.addStyleName("annotate-resource-grid");
+		documentTree.addStyleNames("annotate-resource-grid", "flat-undecorated-icon-buttonrenderer");
 		
 		ButtonRenderer<DocumentTreeItem> documentSelectionRenderer = 
 				new ButtonRenderer<DocumentTreeItem>(
@@ -250,6 +249,8 @@ public class ResourcePanel extends VerticalLayout {
 			.addColumn(documentTreeItem -> documentTreeItem.getName())
 			.setCaption("Name")
 			.setExpandRatio(3);
+		
+		//TODO: shouldn't be fixed size
 		documentTree.setWidth("400px");
 		documentTree.setHeight("250px");
 
@@ -265,8 +266,9 @@ public class ResourcePanel extends VerticalLayout {
 		Label tagsetLabel = new Label("Tagsets");
 		
 		tagsetGrid = new Grid<>();
-		tagsetGrid.addStyleName("annotate-resource-grid");
+		tagsetGrid.addStyleNames("annotate-resource-grid", "flat-undecorated-icon-buttonrenderer");
 		tagsetGrid.setSelectionMode(SelectionMode.MULTI);
+		//TODO: shouldn't be fixed size
 		tagsetGrid.setWidth("400px");
 		tagsetGrid.setHeight("230px");
 		tagsetGrid
@@ -291,9 +293,6 @@ public class ResourcePanel extends VerticalLayout {
 			for (DocumentTreeItem item : documentsData.getRootItems()) {
 				if (!item.equals(selectedItem)) {
 					item.setSelected(false);
-					for (DocumentTreeItem child : documentsData.getChildren(item)) {
-						child.setSelected(false);
-					}
 				}
 			}
 		}		
@@ -307,5 +306,13 @@ public class ResourcePanel extends VerticalLayout {
 		this.resourceSelectionListener = resourceSelectionListener;
 	}
 	
-	
+	public void close() {
+		if (project != null) {
+			project.removePropertyChangeListener(
+				RepositoryChangeEvent.exceptionOccurred, projectExceptionListener);
+		
+			project.removePropertyChangeListener(
+				RepositoryChangeEvent.userMarkupCollectionChanged, collectionChangeListener);
+		}
+	}
 }

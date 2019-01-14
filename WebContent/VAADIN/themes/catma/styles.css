@@ -17871,11 +17871,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	float: right;
 }
 
-.catma .annotate-tagsets-grid button {
-	background-color: transparent;
-	border: none;
-}
-
 .catma .annotate-tagsets-grid .v-treegrid-row-selected > .v-treegrid-cell-focused::before {
 	border-color: transparent;
 }
@@ -17933,11 +17928,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	color: #000000;
 }
 
-.catma .annotate-resource-grid button {
-	background-color: transparent;
-	border: none;
-}
-
 .catma .tagger-contextmenu-menuitem-caption {
 	display: inline-block;
 	width: 15px;
@@ -17955,4 +17945,18 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	float: right;
 	margin-top: 10px;
 	margin-right: 20px;
+}
+
+.catma .abstract-ok-cancel-dialog-hide-maximize-restore-icon .v-window-maximizebox {
+	display: none;
+}
+
+.catma .v-button.v-widget.v-colorpicker.v-button-v-colorpicker.flat.v-button-flat.inputfield-color-picker.v-button-inputfield-color-picker.v-default-caption-width {
+	border-bottom: 1px solid;
+}
+
+.catma .flat-undecorated-icon-buttonrenderer button {
+	background-color: transparent;
+	border: none;
+	cursor: pointer;
 }

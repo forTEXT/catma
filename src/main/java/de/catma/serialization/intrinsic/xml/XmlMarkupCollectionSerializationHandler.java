@@ -72,27 +72,25 @@ public class XmlMarkupCollectionSerializationHandler implements
 	        Builder builder = new Builder();
 	        Document document = builder.build(inputStream);
 	        StringBuilder contentBuilder = new StringBuilder();
-	        TagLibrary tagLibrary = new TagLibrary(null, "Intrinsic Markup");
 	        TagsetDefinition tagsetDefinition = 
 	        		new TagsetDefinition(
 	        			null, idGenerator.generate(), 
 	        			"Intrinsic Markup", new Version());
 	        
-	        tagManager.addTagsetDefinition(tagLibrary, tagsetDefinition);
+	        tagManager.addTagsetDefinition(tagsetDefinition);
 	        Stack<String> elementStack = new Stack<String>();
 	        UserMarkupCollection userMarkupCollection = 
 	        	new UserMarkupCollection(
 	        		new IDGenerator().generate(),
 	        		new ContentInfoSet(
 	        			"", "Intrinsic Markup", "", "Intrinsic Markup"), 
-	        		tagLibrary);
+	        		tagManager.getTagLibrary());
 	        
 	        scanElements(
-	        	
 	        		contentBuilder, 
 	        		document.getRootElement(), 
 	        		elementStack, tagManager,
-	        		tagLibrary, tagsetDefinition,
+	        		tagManager.getTagLibrary(), tagsetDefinition,
 	        		userMarkupCollection);
 	        
 	        return userMarkupCollection;

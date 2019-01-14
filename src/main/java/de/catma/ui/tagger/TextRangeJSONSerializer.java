@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance.SerializationField;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 
+@Deprecated
 public class TextRangeJSONSerializer {
 	
 	public String toJSON(TextRange textRange) throws IOException {

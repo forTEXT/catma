@@ -80,6 +80,7 @@ import de.catma.ui.tagmanager.ColorButtonColumnGenerator.ColorButtonListener;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
 import de.catma.ui.tagmanager.TagsetTree;
 
+@Deprecated
 public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionListener {
 
 	static interface TagInstanceSelectedListener {

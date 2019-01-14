@@ -72,6 +72,7 @@ import de.catma.ui.Slider;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
 import de.catma.ui.component.IconButton;
+import de.catma.ui.events.TaggerViewSourceDocumentChangedEvent;
 import de.catma.ui.events.routing.RouteToAnalyzeEvent;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.tabbedview.ClosableTab;
@@ -155,6 +156,8 @@ public class TaggerView extends HorizontalLayout
 			
 			List<UserMarkupCollectionReference> collectionReferences =
 				resourcePanel.getSelectedUserMarkupCollectionReferences();
+			
+			userMarkupCollectionManager.clear();
 			
 			for (UserMarkupCollectionReference collectionRef : collectionReferences) {
 				UserMarkupCollection collection = project.getUserMarkupCollection(collectionRef);
@@ -338,8 +341,7 @@ public class TaggerView extends HorizontalLayout
 
 			@Override
 			public void documentSelected(SourceDocument sourceDocument) {
-				// TODO Auto-generated method stub
-				
+				setSourceDocument(sourceDocument);
 			}
 
 			@Override
@@ -600,7 +602,7 @@ public class TaggerView extends HorizontalLayout
 	}
 
 	public void close() {
-		markupPanel.close();
+		resourcePanel.close();
 		project.removePropertyChangeListener(
 				RepositoryChangeEvent.sourceDocumentChanged,
 				sourceDocChangedListener);
@@ -695,6 +697,8 @@ public class TaggerView extends HorizontalLayout
 
 	public void setSourceDocument(SourceDocument sd) {
 		this.sourceDocument = sd;
+		initData();
+		eventBus.post(new TaggerViewSourceDocumentChangedEvent(TaggerView.this));
 	}
 
 	@Override

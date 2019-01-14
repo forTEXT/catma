@@ -88,4 +88,8 @@ public class PropertyDataItem implements TagsetTreeItem {
 	public String generateStyle() {
 		return "annotate-panel-property-data-item";
 	}
+	
+	public PropertyDefinition getPropertyDefinition() {
+		return propertyDefinition;
+	}
 }
