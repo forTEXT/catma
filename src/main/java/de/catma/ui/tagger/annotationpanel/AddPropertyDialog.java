@@ -2,10 +2,8 @@ package de.catma.ui.tagger.annotationpanel;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -16,17 +14,12 @@ import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.shared.ui.colorpicker.Color;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.ColorPicker;
-import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
@@ -35,35 +28,30 @@ import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 
 import de.catma.tag.PropertyDefinition;
-import de.catma.tag.TagsetDefinition;
 import de.catma.ui.FocusHandler;
 import de.catma.ui.dialog.AbstractOkCancelDialog;
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
 
-public abstract class AddTagDialog<T> extends AbstractOkCancelDialog<T> {
+public class AddPropertyDialog extends AbstractOkCancelDialog<List<PropertyDefinition>> {
 
-	protected ComboBox<TagsetDefinition> cbTagsets;
-	private HorizontalLayout tagPanel;
 	private HorizontalLayout propertyDefNamePanel;
+	private TextField tfPropertyDefName;
+	private Button btAddProperty;
 	private HorizontalLayout propertyDefPanel;
 	private Grid<PropertyDefinition> propertyDefinitionGrid;
+	private ListDataProvider<PropertyDefinition> propertyDefDataProvider;
 	private TextArea possibleValuesArea;
-	private Button btAddProperty;
-	private TextField tfPropertyDefName;
-	protected IDGenerator idGenerator = new IDGenerator();
-	protected ListDataProvider<PropertyDefinition> propertyDefDataProvider;
-	protected ColorPicker colorPicker;
-	protected TextField tfName;
+	private IDGenerator idGenerator = new IDGenerator();
 
-	protected AddTagDialog(
-			String dialogCaption, SaveCancelListener<T> saveCancelListener) {
-		super(dialogCaption, saveCancelListener);
+	public AddPropertyDialog(List<PropertyDefinition> commonPropertyDefs, 
+			SaveCancelListener<List<PropertyDefinition>> saveCancelListener) {
+		super("Edit Properties", saveCancelListener);
+		initComponents(commonPropertyDefs);
+		initActions();
 	}
 
-	
-	protected void initActions() {
+	private void initActions() {
 		ButtonRenderer<PropertyDefinition> deletePropertyDefRenderer =
 				new ButtonRenderer<>(clickEvent -> handlePropertyDefDeleteRequest(clickEvent)); 
 		deletePropertyDefRenderer.setHtmlContentAllowed(true);
@@ -84,7 +72,11 @@ public abstract class AddTagDialog<T> extends AbstractOkCancelDialog<T> {
 		possibleValuesArea.addValueChangeListener(
 			valueChangeEvent -> handlePossibleValuesChange(valueChangeEvent));
 	}
-
+	
+	private void handlePropertyDefSelection(SelectionEvent<PropertyDefinition> selectionEvent) {
+		selectionEvent.getFirstSelectedItem().ifPresent(propertyDef -> setPropertyValues(propertyDef.getPossibleValueList()));
+	}
+	
 	private void handlePossibleValuesChange(ValueChangeEvent<String> valueChangeEvent) {
 		String values = valueChangeEvent.getValue();
 		
@@ -93,7 +85,7 @@ public abstract class AddTagDialog<T> extends AbstractOkCancelDialog<T> {
 						propertyDef, Arrays.asList(values.split(Pattern.quote(",")))));
 
 	}
-
+	
 	private void setPossibleValues(PropertyDefinition propertyDef, List<String> possibleValues) {
 		propertyDef.setPossibleValueList(
 			possibleValues
@@ -102,19 +94,17 @@ public abstract class AddTagDialog<T> extends AbstractOkCancelDialog<T> {
 			.filter(value -> !value.isEmpty())
 			.collect(Collectors.toList()));
 	}
-
-	private void handlePropertyDefSelection(SelectionEvent<PropertyDefinition> selectionEvent) {
-		selectionEvent.getFirstSelectedItem().ifPresent(propertyDef -> setPropertyValues(propertyDef.getPossibleValueList()));
-	}
-
+	
 	private void setPropertyValues(List<String> possibleValueList) {
 		possibleValuesArea.setValue(possibleValueList.stream().collect(Collectors.joining(",")));
 	}
-
+	
+	private void handlePropertyDefDeleteRequest(RendererClickEvent<PropertyDefinition> clickEvent) {
+		propertyDefDataProvider.getItems().remove(clickEvent.getItem());
+		propertyDefDataProvider.refreshAll();
+	}
+	
 	private void handleAddPropertyDefinition(String name) {
-		if (propertyDefDataProvider.getItems().isEmpty()) {
-			setPropertyDefinitionsVisible();
-		}
 		
 		if ((name != null) && !name.trim().isEmpty()) {
 			tfPropertyDefName.clear();
@@ -128,49 +118,8 @@ public abstract class AddTagDialog<T> extends AbstractOkCancelDialog<T> {
 			propertyDefinitionGrid.select(propertyDefinition);
 		}
 	}
-
-	private void handlePropertyDefDeleteRequest(RendererClickEvent<PropertyDefinition> clickEvent) {
-		propertyDefDataProvider.getItems().remove(clickEvent.getItem());
-		propertyDefDataProvider.refreshAll();
-	}
-
-	protected void initComponents() {
-		initComponents(Collections.emptyList(), Optional.empty());
-	}
 	
-	protected void initComponents(Collection<TagsetDefinition> availableTagsets,
-			Optional<TagsetDefinition> preSelectedTagset) {
-		
-		if (isWithTagsetSelection()) {
-			cbTagsets = new ComboBox<TagsetDefinition>("Tagset", availableTagsets);
-			cbTagsets.setItemCaptionGenerator(tagset -> tagset.getName());
-			cbTagsets.setWidth("100%");
-			cbTagsets.setDescription("The Tagset that will be the container of the new Tag.");
-			cbTagsets.setEmptySelectionAllowed(false);
-			preSelectedTagset.ifPresent(tagset -> cbTagsets.setValue(tagset));
-		}		
-		
-		tagPanel = new HorizontalLayout();
-		tagPanel.setSpacing(true);
-		tagPanel.setWidth("100%");
-		tagPanel.setMargin(new MarginInfo(false, true));
-		
-		tfName= new TextField();
-		tfName.setPlaceholder("Tag Name");
-		tagPanel.addComponent(tfName);
-		
-		int[] randomRGBColor = ColorConverter.getRandomColor();
-		
-		colorPicker = new ColorPicker(
-				"Tag color", 
-				new Color(randomRGBColor[0], randomRGBColor[1], randomRGBColor[2]));
-		colorPicker.addStyleName(MaterialTheme.BUTTON_FLAT);
-		colorPicker.addStyleName("inputfield-color-picker");
-		
-		colorPicker.setModal(true);
-		
-		tagPanel.addComponent(colorPicker);
-		
+	private void initComponents(List<PropertyDefinition> commonPropertyDefs) {
 		propertyDefNamePanel = new HorizontalLayout();
 		propertyDefNamePanel.setSpacing(true);
 		propertyDefNamePanel.setMargin(new MarginInfo(true, true, false, true));
@@ -188,7 +137,6 @@ public abstract class AddTagDialog<T> extends AbstractOkCancelDialog<T> {
 		propertyDefPanel.setMargin(new MarginInfo(false, true));
 		propertyDefPanel.setSpacing(true);
 		propertyDefPanel.setSizeFull();
-		propertyDefPanel.setVisible(false);
 
 		propertyDefinitionGrid = new Grid<PropertyDefinition>("Assigned Properties");
 		propertyDefinitionGrid.addStyleName("flat-undecorated-icon-buttonrenderer");
@@ -198,7 +146,7 @@ public abstract class AddTagDialog<T> extends AbstractOkCancelDialog<T> {
 		propertyDefinitionGrid.setHeight("100%");
 		
 		propertyDefDataProvider = 
-				new ListDataProvider<PropertyDefinition>(new ArrayList<>());
+				new ListDataProvider<PropertyDefinition>(new ArrayList<>(commonPropertyDefs));
 		propertyDefinitionGrid.setDataProvider(propertyDefDataProvider);
 		
 		propertyDefPanel.addComponent(propertyDefinitionGrid);
@@ -208,40 +156,25 @@ public abstract class AddTagDialog<T> extends AbstractOkCancelDialog<T> {
 		
 		propertyDefPanel.addComponent(possibleValuesArea);
 	}
-	
-	private void setPropertyDefinitionsVisible() {
-		propertyDefPanel.setVisible(true);
-		if (propertyDefNamePanel.getParent() instanceof VerticalLayout) {
-			((VerticalLayout) propertyDefNamePanel.getParent()).setExpandRatio(propertyDefNamePanel, 0f);
-		}
-				
-		setHeight("80%");
-		center();
-		
-	}
+
 
 	@Override
-	protected boolean isEnterClickShortcut() {
-		return false;
+	protected List<PropertyDefinition> getResult() {
+
+		List<PropertyDefinition> propertyDefs = new ArrayList<>();
+		
+		for (PropertyDefinition propertyDefinition : propertyDefDataProvider.getItems()) {
+			propertyDefs.add(propertyDefinition);
+		}		
+		
+		return propertyDefs;
 	}
-	
-	@Override
-	protected void layoutWindow() {
-		setHeight("60%");
-		setWidth("60%");
-	}
-	
-	protected abstract boolean isWithTagsetSelection();
 
 	@Override
 	protected void addContent(ComponentContainer content) {
-		if (isWithTagsetSelection()) {
-			content.addComponent(cbTagsets);
-		}
 		content.addComponent(
-			new Label(
-				"Enter name, color and Properties (optional) of the Tag you want to add"));
-		content.addComponent(tagPanel);
+				new Label(
+					"Edit the Properties of the selected Tags"));
 		content.addComponent(propertyDefNamePanel);
 		content.addComponent(propertyDefPanel);
 		if (content instanceof VerticalLayout) {
@@ -252,35 +185,6 @@ public abstract class AddTagDialog<T> extends AbstractOkCancelDialog<T> {
 			((VerticalLayout) content).setExpandRatio(propertyDefPanel, 1.0f);
 		}
 
-		if (!isWithTagsetSelection() || cbTagsets.getValue() != null) {
-			((FocusHandler)UI.getCurrent()).focusDeferred(tfName);
-		}
-		else {
-			((FocusHandler)UI.getCurrent()).focusDeferred(cbTagsets);
-		}
+		((FocusHandler)UI.getCurrent()).focusDeferred(tfPropertyDefName);
 	}
-
-	@Override
-	protected void handleOkPressed() {
-		String name = tfName.getValue();
-		
-		if ((name == null) || name.isEmpty()) {
-			Notification.show("Info", "Please enter the Tag's name!", Type.ERROR_MESSAGE);
-		}
-		else if (colorPicker.getValue() == null) {
-			Notification.show("Info", "Please choose the Tag's color!", Type.ERROR_MESSAGE);
-		}
-		else if (isWithTagsetSelection() && cbTagsets.getValue() == null) {
-			Notification.show("Info", "Please choose the Tag's Tagset!", Type.ERROR_MESSAGE);
-		}
-		else {
-			super.handleOkPressed();
-		}
-	}
-	
-	@Override
-	protected String getOkCaption() {
-		return "Add Tag";
-	}
-
 }
