@@ -21,9 +21,7 @@ package de.catma.ui;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.text.SimpleDateFormat;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,8 +33,8 @@ import java.util.logging.Logger;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Theme;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.ExternalResource;
-import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
@@ -44,18 +42,14 @@ import com.vaadin.server.VaadinService;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.server.VaadinServletService;
 import com.vaadin.server.VaadinSession;
-import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Image;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Link;
 import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.Label;
-import com.vaadin.v7.ui.VerticalLayout;
-import com.vaadin.v7.ui.themes.BaseTheme;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.BackgroundServiceProvider;
@@ -83,11 +77,18 @@ import de.catma.ui.analyzer.AnalyzerProvider;
 import de.catma.ui.analyzer.QueryOptionsProvider;
 import de.catma.ui.authentication.AuthenticationHandler;
 import de.catma.ui.component.HTMLNotification;
+import de.catma.ui.component.IconButton;
+import de.catma.ui.component.LabelButton;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
+import de.catma.ui.layout.FlexLayout.AlignItems;
+import de.catma.ui.layout.FlexLayout.JustifyContent;
+import de.catma.ui.layout.HorizontalLayout;
+import de.catma.ui.layout.VerticalLayout;
 import de.catma.ui.modules.main.ErrorHandler;
 import de.catma.ui.modules.main.MainView;
 import de.catma.ui.tagger.TaggerView;
 import de.catma.ui.tagmanager.TagsetSelectionListener;
+import de.catma.ui.util.Version;
 import de.catma.user.User;
 
 @Theme("catma")
@@ -95,8 +96,6 @@ import de.catma.user.User;
 public class CatmaApplication extends UI implements 
 	BackgroundServiceProvider, ErrorHandler, AnalyzerProvider, LoginToken, ParameterProvider, FocusHandler {
 
-	private static final String MINORVERSION = "(build " + new SimpleDateFormat("yyyy/MM/dd-HH:mm").format(new Date()) //$NON-NLS-1$ //$NON-NLS-2$
-			+ ")"; //$NON-NLS-1$
 	private static final String WEB_INF_DIR = "WEB-INF"; //$NON-NLS-1$
 
 	private String tempDirectory = null;
@@ -109,19 +108,16 @@ public class CatmaApplication extends UI implements
 	private Object user;
 	
 	private VerticalLayout mainLayout;
-	private Panel contentPanel;
+	private VerticalLayout contentPanel;
 
 	private HorizontalLayout menuLayout;
-	private Panel menuPanel;
 	
 	private Button btHelp;
 
 	private ThemeResource logoResource;
 
-	private Label defaultContentPanelLabel;
-
 	private UIHelpWindow uiHelpWindow = new UIHelpWindow();
-	private Button btloginLogout;
+//	private Button btloginLogout;
 	
 	private final EventBus eventBus = new EventBus();
 	private MainView mainView;
@@ -136,72 +132,68 @@ public class CatmaApplication extends UI implements
 		logger.info("Session: " + request.getWrappedSession().getId());
 		storeParameters(request.getParameterMap());
 
-		Page.getCurrent().setTitle("CATMA 6.0 " + MINORVERSION); //$NON-NLS-1$
+		Page.getCurrent().setTitle(Version.LATEST.toString()); //$NON-NLS-1$
 
 		mainLayout = new VerticalLayout();
 		mainLayout.setSizeFull();
-
-		menuPanel = new Panel();
-		menuPanel.addStyleName("menuPanel"); //$NON-NLS-1$
-		mainLayout.addComponent(menuPanel);
-
-		contentPanel = new Panel();
-		contentPanel.setHeight("100%"); //$NON-NLS-1$
-		contentPanel.addStyleName("contentPanel"); //$NON-NLS-1$
-
-		defaultContentPanelLabel = new Label(Messages.getString("CatmaApplication.logInToGetStarted")); //$NON-NLS-1$
-		defaultContentPanelLabel.addStyleName("defaultContentPanelLabel"); //$NON-NLS-1$
-		contentPanel.setContent(defaultContentPanelLabel);
-
-		mainLayout.addComponent(contentPanel);
-		mainLayout.setExpandRatio(contentPanel, 1.0f);
+		mainLayout.setAlignItems(AlignItems.CENTER);
+		mainLayout.addStyleName("home");
+		
 
 		menuLayout = new HorizontalLayout();
-		menuLayout.setMargin(true);
-		menuLayout.setSpacing(true);
+		menuLayout.setWidth("100%");
+		menuLayout.setJustifyContent(JustifyContent.FLEX_END);
+		menuLayout.setAlignItems(AlignItems.CENTER);
+		menuLayout.addStyleName("home__menu");
+		mainLayout.addComponent(menuLayout);
+		menuLayout.setWidth("100%"); //$NON-NLS-1$
 
-		logoResource = new ThemeResource("catma-logo.png"); //$NON-NLS-1$
-		Link logoImage = new Link(null, new ExternalResource("http://www.catma.de")); //$NON-NLS-1$
-		logoImage.setIcon(logoResource);
-		logoImage.setTargetName("_blank"); //$NON-NLS-1$
-		menuLayout.addComponent(logoImage);
+//		logoResource = new ThemeResource("catma-logo.png"); //$NON-NLS-1$
+//		Link logoImage = new Link(null, new ExternalResource("http://www.catma.de")); //$NON-NLS-1$
+//		logoImage.setIcon(logoResource);
+//		logoImage.setTargetName("_blank"); //$NON-NLS-1$
+//		menuLayout.addComponent(logoImage);
 		
 		
-		Link latestFeaturesLink = new Link(Messages.getString("CatmaApplication.latestFeatures"), //$NON-NLS-1$
-				new ExternalResource("http://www.catma.de/latestfeatures")); //$NON-NLS-1$
-		latestFeaturesLink.setTargetName("_blank"); //$NON-NLS-1$
-		menuLayout.addComponent(latestFeaturesLink);
-		menuLayout.setComponentAlignment(latestFeaturesLink, Alignment.TOP_RIGHT);
-		menuLayout.setExpandRatio(latestFeaturesLink, 1.0f);
+//		Link latestFeaturesLink = new Link(Messages.getString("CatmaApplication.latestFeatures"), //$NON-NLS-1$
+//				new ExternalResource("http://www.catma.de/latestfeatures")); //$NON-NLS-1$
+//		latestFeaturesLink.setTargetName("_blank"); //$NON-NLS-1$
+//		menuLayout.addComponent(latestFeaturesLink);
+//		menuLayout.setComponentAlignment(latestFeaturesLink, Alignment.TOP_RIGHT);
+//		menuLayout.setExpandRatio(latestFeaturesLink, 1.0f);
 
 		Link aboutLink = new Link(Messages.getString("CatmaApplication.about"), //$NON-NLS-1$
 				new ExternalResource("http://www.catma.de")); //$NON-NLS-1$
 		aboutLink.setTargetName("_blank"); //$NON-NLS-1$
 		menuLayout.addComponent(aboutLink);
-		menuLayout.setComponentAlignment(aboutLink, Alignment.TOP_RIGHT);
 
 		Link termsOfUseLink = new Link(Messages.getString("CatmaApplication.termsOfUse"), //$NON-NLS-1$
 				new ExternalResource("http://www.catma.de/termsofuse")); //$NON-NLS-1$
 		termsOfUseLink.setTargetName("_blank"); //$NON-NLS-1$
 		menuLayout.addComponent(termsOfUseLink);
-		menuLayout.setComponentAlignment(termsOfUseLink, Alignment.TOP_RIGHT);
 
+		Link imprintLink = new Link("Imprint",
+				new ExternalResource("http://www.catma.de/documentation/imprint"));
+		imprintLink.setTargetName("_blank"); 
+		menuLayout.addComponent(imprintLink);
+
+		Link privacyLink = new Link("Privacy Statement",
+				new ExternalResource("http://catma.de/documentation/privacy/")); 
+		privacyLink.setTargetName("_blank");
+		menuLayout.addComponent(privacyLink);
+		
 		Link manualLink = new Link(Messages.getString("CatmaApplication.Manual"), //$NON-NLS-1$
 				new ExternalResource(request.getContextPath() + "/manual/")); //$NON-NLS-1$
 		manualLink.setTargetName("_blank"); //$NON-NLS-1$
 		menuLayout.addComponent(manualLink);
-		menuLayout.setComponentAlignment(manualLink, Alignment.TOP_RIGHT);
 
 		Link helpLink = new Link(Messages.getString("CatmaApplication.Helpdesk"), //$NON-NLS-1$
 				new ExternalResource("http://www.catma.de/helpdesk/")); //$NON-NLS-1$
 		helpLink.setTargetName("_blank"); //$NON-NLS-1$
 		menuLayout.addComponent(helpLink);
-		menuLayout.setComponentAlignment(helpLink, Alignment.TOP_RIGHT);
 		helpLink.setVisible(false);
 
-		btHelp = new Button(FontAwesome.QUESTION_CIRCLE);
-		btHelp.addStyleName("help-button"); //$NON-NLS-1$
-		btHelp.addStyleName("application-help-button"); //$NON-NLS-1$
+		btHelp = new IconButton(VaadinIcons.QUESTION_CIRCLE);
 
 		menuLayout.addComponent(btHelp);
 
@@ -218,17 +210,30 @@ public class CatmaApplication extends UI implements
 			}
 		});
 
-		btloginLogout = new Button(Messages.getString("CatmaApplication.signIn"), //$NON-NLS-1$
-				event -> handleLoginLogoutEvent(event));
-		btloginLogout.setStyleName(BaseTheme.BUTTON_LINK);
-		btloginLogout.addStyleName("application-loginlink"); //$NON-NLS-1$
+//		btloginLogout = new Button(Messages.getString("CatmaApplication.signIn"), //$NON-NLS-1$
+//				event -> handleLoginLogoutEvent(event));
+//		btloginLogout.setStyleName(BaseTheme.BUTTON_LINK);
+//		btloginLogout.addStyleName("application-loginlink"); //$NON-NLS-1$
+//		menuLayout.addComponent(btloginLogout);
+//		menuLayout.setComponentAlignment(btloginLogout, Alignment.TOP_RIGHT);
 
-		menuLayout.addComponent(btloginLogout);
-		menuLayout.setComponentAlignment(btloginLogout, Alignment.TOP_RIGHT);
-		menuLayout.setWidth("100%"); //$NON-NLS-1$
+		contentPanel = new VerticalLayout();
+		contentPanel.setHeight("100%"); //$NON-NLS-1$
+		contentPanel.addStyleName("home__content"); //$NON-NLS-1$
+	
+		logoResource = new ThemeResource("catma-tailright-final-cmyk.svg"); //$NON-NLS-1$	
+		contentPanel.addComponent(new Image(null,logoResource));		
+		
+		LabelButton btn_signup = new LabelButton("Sign up");
+		LabelButton btn_login = new LabelButton("Login",event -> handleLoginLogoutEvent(event));
+		LabelButton btn_newsletter = new LabelButton("Newsletter");
 
-		menuPanel.setContent(menuLayout);
-
+		HorizontalLayout buttonPanel = new HorizontalLayout(btn_signup,btn_login,btn_newsletter);
+		buttonPanel.addStyleName("home__content__btns");
+		buttonPanel.setJustifyContent(JustifyContent.CENTER);
+		contentPanel.addComponent(buttonPanel);
+		mainLayout.addComponent(contentPanel);
+		
 		setContent(mainLayout);
 		
 
@@ -249,9 +254,9 @@ public class CatmaApplication extends UI implements
 //			addPropertyChangeListener(CatmaApplicationEvent.userChange, menu.userChangeListener);
 
 
-			if (getParameter(Parameter.USER_IDENTIFIER) != null) {
-				btloginLogout.click();
-			}
+//	TODO: marco fragen !!!!		if (getParameter(Parameter.USER_IDENTIFIER) != null) {
+//				btloginLogout.click();
+//			}
 
 			setPollInterval(1000);
 
@@ -306,7 +311,7 @@ public class CatmaApplication extends UI implements
 
 					initTempDirectory();
 					
-					btloginLogout.setHtmlContentAllowed(true);
+//	NEEE				btloginLogout.setHtmlContentAllowed(true);
 					
 					ProjectManager projectManager = 
 						new GitProjectManager(
@@ -321,9 +326,9 @@ public class CatmaApplication extends UI implements
 //						identifier = Messages.getString("CatmaApplication.Guest"); //$NON-NLS-1$
 //					}
 
-					btloginLogout.setCaption(
-						MessageFormat.format(
-							Messages.getString("CatmaApplication.signOut"), user.getName())); //$NON-NLS-1$
+//	NEEE				btloginLogout.setCaption(
+//						MessageFormat.format(
+//							Messages.getString("CatmaApplication.signOut"), user.getName())); //$NON-NLS-1$
 
 					// new design test
 					// TODO: set this correctly later :-)
@@ -337,7 +342,7 @@ public class CatmaApplication extends UI implements
 			});
 		}
 		else {
-			btloginLogout.setCaption(Messages.getString("CatmaApplication.signIn")); //$NON-NLS-1$
+//	NEEE		btloginLogout.setCaption(Messages.getString("CatmaApplication.signIn")); //$NON-NLS-1$
 			
 			logger.info("closing session and redirecting to " + afterLogoutRedirectURL);
 			Page.getCurrent().setLocation(afterLogoutRedirectURL);

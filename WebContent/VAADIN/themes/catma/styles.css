@@ -16915,7 +16915,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 .catma .flex-vertical {
 	display: flex;
 	flex-direction: column;
-	align-items: flex-start;
 	box-sizing: border-box;
 }
 
@@ -17458,6 +17457,23 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	padding-right: 1px;
 }
 
+.catma .home__menu {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.catma .home__menu > * {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.catma .home__content__btns {
+	margin-top: 60px;
+	justify-content: space-evenly;
+	padding-left: 80px;
+	padding-right: 80px;
+}
+
 .catma .main-view {
 	display: flex;
 	flex-direction: column;
@@ -17598,6 +17614,34 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 }
 
 .catma .button__icon:focus:after, .catma .button__icon:after {
+	border: none;
+	box-shadow: none;
+}
+
+.catma .button__label {
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	justify-content: center;
+	border-radius: 6px;
+	-webkit-box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.75);
+	-moz-box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.75);
+	box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.75);
+	box-shadow: none;
+	font-size: 16px;
+	color: white;
+	display: flex;
+	background-color: #5a98a1;
+	font-size: 1.5em;
+	padding: 10px 30px 10px 30px;
+}
+
+.catma .button__label:focus, .catma .button__label:hover {
+	outline: none;
+	background-color: #083658;
+}
+
+.catma .button__label:focus:after, .catma .button__icon:after {
 	border: none;
 	box-shadow: none;
 }
@@ -17814,6 +17858,7 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	flex-direction: column;
 	padding: 0.5em;
 	cursor: pointer;
+	width: 100%;
 }
 
 .catma .projectlist__card__descriptionbar {

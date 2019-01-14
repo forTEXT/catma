@@ -479,7 +479,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 tagsetGrid
         );
         tagsetsGridComponent.getActionGridBar().addBtnAddClickListener((click) -> {
-        	
         });
         tagsetsGridComponent.addStyleName("project-view-action-grid");
         
