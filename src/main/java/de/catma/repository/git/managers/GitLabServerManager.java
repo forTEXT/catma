@@ -297,7 +297,7 @@ public class GitLabServerManager implements IRemoteGitServerManager {
 				for(int i = 0;i < 10; i++ ){
 					logger.info("gitlab: async delete operation detected, waiting 150msec per round. round: " + i );
 					try {
-						Thread.sleep(50);
+						Thread.sleep(150);
 						List<Group> res = groupApi.getGroups(path);
 						if(res.isEmpty()){
 							return;
