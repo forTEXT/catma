@@ -222,12 +222,10 @@ public class GraphWorktreeProject implements IndexedRepository {
 						removeTagDefinition(tagDefinition, tagsetDefinition);
 					}
 					else {
-						@SuppressWarnings("unchecked")
-						final Pair<TagDefinition, TagsetDefinition> args = 
-							(Pair<TagDefinition, TagsetDefinition>)evt.getNewValue();
-						TagDefinition tagDefinition = (TagDefinition)args.getFirst();
-						TagsetDefinition tagsetDefinition = args.getSecond();
-						updateTagDefinition(tagDefinition, tagsetDefinition);
+						TagDefinition tag = (TagDefinition) evt.getNewValue();
+						TagsetDefinition tagset = (TagsetDefinition) evt.getOldValue();
+						
+						updateTagDefinition(tag, tagset);
 					}
 				}
 				catch (Exception e) {
@@ -332,7 +330,7 @@ public class GraphWorktreeProject implements IndexedRepository {
 		tagsetDefinition.setRevisionHash(tagsetRevision);
 		String oldRootRevisionHash = this.rootRevisionHash;
 		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash();
-		graphProjectHandler.updatePropertyDefinition(
+		graphProjectHandler.createOrUpdatePropertyDefinition(
 			rootRevisionHash, propertyDefinition, tagDefinition, tagsetDefinition, oldRootRevisionHash);
 	}
 

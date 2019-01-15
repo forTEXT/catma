@@ -177,9 +177,9 @@ public class MarkupCollectionsPanel extends VerticalLayout {
 						removeOperationResult.getFirst());
 				}
 				else { // update
-					TagDefinition tagDefinition = 
-							((Pair<TagDefinition, TagsetDefinition>)evt.getNewValue()).getFirst();
-					updateTagDefinition(tagDefinition);
+//					TagDefinition tagDefinition = 
+//							((Pair<TagDefinition, TagsetDefinition>)evt.getNewValue()).getFirst();
+//					updateTagDefinition(tagDefinition);
 				}
 				
 			}

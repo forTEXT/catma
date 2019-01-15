@@ -10,6 +10,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.vaadin.dialogs.ConfirmDialog;
+
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -24,6 +26,8 @@ import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.StyleGenerator;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
@@ -111,9 +115,28 @@ public class AnnotationPanel extends VerticalLayout {
 		            
 				}
 				else if (newValue == null) { //removed
+					Pair<TagsetDefinition,TagDefinition> deleted = (Pair<TagsetDefinition, TagDefinition>) oldValue;
+					
+					TagDefinition deletedTag = deleted.getSecond();
+					
+					tagsetData.removeItem(new TagDataItem(deletedTag));
+					tagsetDataProvider.refreshAll();
+					
 				}
 				else { //update
+					TagDefinition tag = (TagDefinition) newValue;
+					TagsetDefinition tagset = (TagsetDefinition)oldValue;
+	            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
+
+					tagsetData.removeItem(new TagDataItem(tag));
+					TagDataItem tagDataItem = new TagDataItem(tag);
+					tagDataItem.setPropertiesExpanded(true);
+					tagsetData.addItem(tagsetItem, tagDataItem);
+					//TODO: sort
 					
+					showExpandedProperties(tagDataItem);
+					
+					tagsetDataProvider.refreshAll();
 				}
 				
 			}
@@ -215,24 +238,30 @@ public class AnnotationPanel extends VerticalLayout {
 	private void initActions() {
 		tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
 			.setCaption("Name")
+			.setSortable(false)
 			.setExpandRatio(1);
 		tagsetGrid.setHierarchyColumn(
 			tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getName())
 			.setCaption("Tags")
+			.setSortable(false)
 			.setExpandRatio(2));
 
 		ButtonRenderer<TagsetTreeItem> propertySummaryRenderer = 
 				new ButtonRenderer<>(rendererClickEvent -> handlePropertySummaryClickEvent(rendererClickEvent));
-		propertySummaryRenderer.setHtmlContentAllowed(true); //TODO: handle property summary js and html injections!
+		propertySummaryRenderer.setHtmlContentAllowed(true); //TODO: handle property summary and values js and html injections!
 		
 		tagsetGrid.addColumn(
 			tagsetTreeItem -> tagsetTreeItem.getPropertySummary(), 
 			propertySummaryRenderer)
 		.setCaption("Properties")
+		.setSortable(false)
+		.setHidable(true)
 		.setExpandRatio(2);
 		
 		tagsetGrid.addColumn(
 			tagsetTreeItem -> tagsetTreeItem.getPropertyValue())
+		.setSortable(false)
+		.setHidable(true)
 		.setExpandRatio(1);
 			
 		
@@ -241,7 +270,8 @@ public class AnnotationPanel extends VerticalLayout {
 		visibilityRenderer.setHtmlContentAllowed(true);
 		tagsetGrid.addColumn(
 			tagsetTreeItem -> tagsetTreeItem.getVisibilityIcon(), 
-			visibilityRenderer);
+			visibilityRenderer)
+		.setSortable(false);
 		
 		tagsetGrid.setStyleGenerator(new StyleGenerator<TagsetTreeItem>() {
 			
@@ -257,8 +287,89 @@ public class AnnotationPanel extends VerticalLayout {
         addContextMenu.addItem("Add Subtag", clickEvent -> handleAddSubtagRequest());
         addContextMenu.addItem("Add Property", clickEvent -> handleAddPropertyRequest());
 		
+		ContextMenu moreOptionsContextMenu = 
+				tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+		moreOptionsContextMenu.addItem("Edit Tag", clickEvent -> handleEditTagRequest());
+		moreOptionsContextMenu.addItem("Delete Tag", clickEvent -> handleDeleteTagRequest());
+		moreOptionsContextMenu.addItem("Edit Properties", clickEvent -> handlePropertiesTagRequest());
+		moreOptionsContextMenu.addItem("Delete Properties", clickEvent -> handleDeletePropertiesRequest());
+		moreOptionsContextMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
+		moreOptionsContextMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
 		
 		currentEditableCollectionBox.setEmptySelectionCaption("Please select or create a Collection...");
+	}
+
+	private void handleDeleteTagsetRequest() {
+		// TODO Auto-generated method stub
+	}
+
+	private void handleEditTagsetRequest() {
+		// TODO Auto-generated method stub
+	}
+
+	private void handleDeletePropertiesRequest() {
+		// TODO Auto-generated method stub
+	}
+
+	private void handlePropertiesTagRequest() {
+		handleAddPropertyRequest();
+	}
+
+	private void handleDeleteTagRequest() {
+		final List<TagDefinition> targetTags = tagsetGrid.getSelectedItems()
+		.stream()
+		.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem)
+		.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
+		.collect(Collectors.toList());
+		
+		String msg = String.format(
+			"Are you sure you want to delete the following Tags: %1$s?", 
+			targetTags
+			.stream()
+			.map(TagDefinition::getName)
+			.collect(Collectors.joining(",")));
+		
+		ConfirmDialog.show(UI.getCurrent(), "Warning", msg, "Delete", "Cancel", dlg -> {
+			if (dlg.isConfirmed()) {
+				for (TagDefinition tag : targetTags) {
+					TagsetDefinition tagset =
+							project.getTagManager().getTagLibrary().getTagsetDefinition(tag);
+					project.getTagManager().removeTagDefinition(tagset, tag);
+				}
+			}
+		});
+		
+	}
+
+	private void handleEditTagRequest() {
+		final List<TagDefinition> targetTags = tagsetGrid.getSelectedItems()
+		.stream()
+		.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem)
+		.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
+		.collect(Collectors.toList());
+		
+		if (targetTags.isEmpty()) {
+			Notification.show("Info", "Please select a Tag first!", Type.TRAY_NOTIFICATION);
+		}
+		else if (targetTags.size() > 1) {
+			handleAddPropertyRequest();
+		}
+		else {
+			
+			final TagDefinition targetTag = targetTags.get(0);
+			
+			EditTagDialog editTagDialog = new EditTagDialog(new TagDefinition(targetTag), 
+					new SaveCancelListener<TagDefinition>() {
+						public void savePressed(TagDefinition result) {
+							
+							project.getTagManager().updateTagDefinition(targetTag, result);
+							
+							//TODO: reload on error
+						};
+					});
+			editTagDialog.show();
+		}
+		
 	}
 
 	private void handleAddPropertyRequest() {
@@ -267,76 +378,93 @@ public class AnnotationPanel extends VerticalLayout {
 		.filter(tagsetTreeItem -> tagsetTreeItem instanceof TagDataItem)
 		.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
 		.collect(Collectors.toList());
-		
-		
-		Multimap<String, PropertyDefinition> propertiesByName = 
-				ArrayListMultimap.create();
-		
-		for (TagDefinition tag : targetTags) {
-			for (PropertyDefinition propertyDef : tag.getUserDefinedPropertyDefinitions()) {
-				if (!propertiesByName.containsKey(propertyDef.getName()) || 
-						propertiesByName.get(propertyDef.getName()).iterator().next().getPossibleValueList()
-							.equals(propertyDef.getPossibleValueList())) {
-					propertiesByName.put(propertyDef.getName(), propertyDef);
+		if (targetTags.isEmpty()) {
+			Notification.show("Info", "Please select one ore more Tags first!", Type.TRAY_NOTIFICATION);
+		}
+		else {
+			Multimap<String, PropertyDefinition> propertiesByName = 
+					ArrayListMultimap.create();
+			
+			for (TagDefinition tag : targetTags) {
+				for (PropertyDefinition propertyDef : tag.getUserDefinedPropertyDefinitions()) {
+					if (!propertiesByName.containsKey(propertyDef.getName()) || 
+							propertiesByName.get(propertyDef.getName()).iterator().next().getPossibleValueList()
+								.equals(propertyDef.getPossibleValueList())) {
+						propertiesByName.put(propertyDef.getName(), propertyDef);
+					}
 				}
 			}
-		}
-		
-		
-		List<PropertyDefinition> commonProperties = 
-			propertiesByName.asMap().entrySet()
-			.stream()
-			.filter(entry -> entry.getValue().size() == targetTags.size())
-			.map(entry -> new PropertyDefinition(entry.getValue().iterator().next()))
-			.collect(Collectors.toList());
-		
-		AddPropertyDialog addPropertyDialog = new AddPropertyDialog(
-			commonProperties,
-			new SaveCancelListener<List<PropertyDefinition>>() {
-				@Override
-				public void savePressed(List<PropertyDefinition> result) {
-					final Set<String> availablePropertyNames = 
-							result.stream().map(propertyDef -> propertyDef.getName())
-							.collect(Collectors.toSet());
-					
-					final Set<String> deletedProperyNames = commonProperties
-					.stream()
-					.map(propertyDef -> propertyDef.getName())
-					.filter(name -> !availablePropertyNames.contains(name))
-					.collect(Collectors.toSet());
-					
-					for (TagDefinition tag : targetTags) {
-						TagsetDefinition tagset = 
-							project.getTagManager().getTagLibrary().getTagsetDefinition(tag);
-
-						for (PropertyDefinition pd : new ArrayList<>(tag.getUserDefinedPropertyDefinitions())) {
-							if (deletedProperyNames.contains(pd.getName())) {
-								project.getTagManager().removeUserDefinedPropertyDefinition(
-										pd, tag, tagset);
-							}
-							else if (availablePropertyNames.contains(pd.getName())) {
-								result.stream().filter(possiblyChangedPd -> 
-									possiblyChangedPd.getName().equals(pd.getName()))
-								.findFirst()
-								.ifPresent(possiblyChangedPd -> 
-									pd.setPossibleValueList(possiblyChangedPd.getPossibleValueList()));
+			
+			
+			List<PropertyDefinition> commonProperties = 
+				propertiesByName.asMap().entrySet()
+				.stream()
+				.filter(entry -> entry.getValue().size() == targetTags.size())
+				.map(entry -> new PropertyDefinition(entry.getValue().iterator().next()))
+				.collect(Collectors.toList());
+			
+			AddEditPropertyDialog addPropertyDialog = new AddEditPropertyDialog(
+				targetTags.size() > 1, // just a single tag's properties or is it a bulk(>1) edit?
+				commonProperties,
+				new SaveCancelListener<List<PropertyDefinition>>() {
+					@Override
+					public void savePressed(List<PropertyDefinition> result) {
+						final Set<String> availableCommonPropertyNames = 
+								result.stream().map(propertyDef -> propertyDef.getName())
+								.collect(Collectors.toSet());
+						
+						final Set<String> deletedCommonProperyNames = commonProperties
+						.stream()
+						.map(propertyDef -> propertyDef.getName())
+						.filter(name -> !availableCommonPropertyNames.contains(name))
+						.collect(Collectors.toSet());
+						
+						for (TagDefinition tag : targetTags) {
+							TagsetDefinition tagset = 
+								project.getTagManager().getTagLibrary().getTagsetDefinition(tag);
+	
+							for (PropertyDefinition existingPropertyDef : 
+								new ArrayList<>(tag.getUserDefinedPropertyDefinitions())) {
 								
-								project.getTagManager().updateUserDefinedPropertyDefinition(tag, pd);
+								//handle deleted PropertyDefs
+								if (deletedCommonProperyNames.contains(existingPropertyDef.getName())) {
+									project.getTagManager().removeUserDefinedPropertyDefinition(
+											existingPropertyDef, tag, tagset);
+								}
+								//handle updated PropertyDefs
+								else if (availableCommonPropertyNames.contains(existingPropertyDef.getName())) {
+									result
+									.stream()
+									.filter(possiblyChangedPd -> 
+										possiblyChangedPd.getName().equals(existingPropertyDef.getName()))
+									.findFirst()
+									.ifPresent(possiblyChangedPd -> 
+										existingPropertyDef.setPossibleValueList(
+											possiblyChangedPd.getPossibleValueList()));
+									
+									project.getTagManager().updateUserDefinedPropertyDefinition(
+										tag, existingPropertyDef);
+								}
+							}
+							
+							//handle created PropertyDefs
+							for (PropertyDefinition pd : result) {
+								if (tag.getPropertyDefinition(pd.getName()) == null) {
+									PropertyDefinition createdPropertyDefinition = 
+											new PropertyDefinition(pd);
+									pd.setUuid(idGenerator.generate());
+									
+									project.getTagManager().addUserDefinedPropertyDefinition(
+										tag, createdPropertyDefinition);
+								}
 							}
 						}
 						
-						for (PropertyDefinition pd : result) {
-							if (tag.getPropertyDefinition(pd.getName()) == null) {
-								project.getTagManager().addUserDefinedPropertyDefinition(
-									tag, new PropertyDefinition(pd));
-							}
-						}
 					}
-					
-				}
-		});
-		
-		addPropertyDialog.show();
+			});
+			
+			addPropertyDialog.show();
+		}
 	}
 
 	private void handleAddSubtagRequest() {

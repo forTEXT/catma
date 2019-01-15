@@ -11,7 +11,7 @@ import de.catma.tag.Version;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.util.Pair;
 
-public class AddParenttagDialog extends AddTagDialog<Pair<TagsetDefinition, TagDefinition>> {
+public class AddParenttagDialog extends AbstractAddEditTagDialog<Pair<TagsetDefinition, TagDefinition>> {
 
 	public AddParenttagDialog(
 			Collection<TagsetDefinition> availableTagsets, 

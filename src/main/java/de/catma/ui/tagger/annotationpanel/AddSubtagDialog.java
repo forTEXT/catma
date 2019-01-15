@@ -7,7 +7,7 @@ import de.catma.tag.TagDefinition;
 import de.catma.tag.Version;
 import de.catma.ui.dialog.SaveCancelListener;
 
-public class AddSubtagDialog extends AddTagDialog<TagDefinition> {
+public class AddSubtagDialog extends AbstractAddEditTagDialog<TagDefinition> {
 	
 	public AddSubtagDialog(	SaveCancelListener<TagDefinition> saveCancelListener) {
 		super("Add Subtag", saveCancelListener);
