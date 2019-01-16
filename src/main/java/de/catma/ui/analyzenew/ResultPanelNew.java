@@ -10,11 +10,13 @@ import com.vaadin.event.ExpandEvent;
 import com.vaadin.event.ExpandEvent.ExpandListener;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SelectionListener;
+import com.vaadin.event.selection.SingleSelectionListener;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
-
+import com.vaadin.ui.Grid.ItemClick;
 import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.components.grid.ItemClickListener;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
@@ -23,6 +25,7 @@ import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.themes.ValoTheme;
 import de.catma.document.repository.Repository;
 import de.catma.document.source.SourceDocument;
@@ -46,7 +49,10 @@ public class ResultPanelNew extends Panel   {
 	}
 
 	private VerticalLayout contentVerticalLayout;
+	
+	private TreeData<TagRowItem> tagData;
 	private TreeGrid<TagRowItem> treeGridTag;
+	
 	private TreeGrid<TagRowItem> treeGridPhrase;
 	private TreeGrid<TagRowItem> treeGridProperty;
 	
@@ -103,8 +109,8 @@ public class ResultPanelNew extends Panel   {
 
 	}
 
-	private ViewID getCurrentView() {
-		return currentView;
+	public Component getCurrentTreeGrid() {
+	return treeGridPanel.getContent();
 	}
 
 	private void setCurrentView(ViewID currentView) {
@@ -119,40 +125,22 @@ public class ResultPanelNew extends Panel   {
 
 		treeGridTag = new TreeGrid<TagRowItem>();
 		treeGridTag.setSelectionMode(SelectionMode.MULTI);
-		// we dont select items here enaymore
-		treeGridTag.addSelectionListener(new SelectionListener<TagRowItem>() {
-			
-			@Override
-			public void selectionChange(SelectionEvent<TagRowItem> event) {
-			Iterable<TagRowItem> selectedItems=	event.getAllSelectedItems();
-			selectedItems.forEach(item -> { System.out.println(" TgaPath :"+item.getTreePath()+ 
-					" Collection :"+item.getCollectionName()+" Tag ID:"+item.getTagInstanceID());});	
-				
-			}
-		});
-
+		
+		
+		
 		treeGridPhrase = new TreeGrid<TagRowItem>();
-		treeGridPhrase.setSelectionMode(SelectionMode.MULTI);
+		//treeGridPhrase.setSelectionMode(SelectionMode.MULTI);
 
 
 		treeGridProperty = new TreeGrid<TagRowItem>();
-		treeGridProperty.setSelectionMode(SelectionMode.MULTI);
+		//treeGridProperty.setSelectionMode(SelectionMode.MULTI);
 		
 		
 		treeGridPhraseLazy = new TreeGrid<TagRowItem>();
-		treeGridPhraseLazy.setSelectionMode(SelectionMode.MULTI);
+		//treeGridPhraseLazy.setSelectionMode(SelectionMode.MULTI);
 		lazyData= new TreeData<TagRowItem>();	
-		treeGridPhraseLazy.addSelectionListener(new SelectionListener<TagRowItem>() {
-			
-			@Override
-			public void selectionChange(SelectionEvent<TagRowItem> event) {
-			Iterable<TagRowItem> selectedItems=	event.getAllSelectedItems();
-			selectedItems.forEach(item -> { System.out.println(" TgaPath :"+item.getTreePath()+ 
-					" Collection :"+item.getCollectionName()+" Tag ID:"+item.getTagInstanceID());});
-			
-				
-			}
-		});
+		
+		
 		
 
 		createResultInfoBar();
@@ -227,6 +215,44 @@ public class ResultPanelNew extends Panel   {
 			}
 		});
 		
+		
+		
+		// we dont select items here anymore, just as test for fullview now
+				treeGridTag.addSelectionListener(new SelectionListener<TagRowItem>() {
+					
+					@Override
+					public void selectionChange(SelectionEvent<TagRowItem> event) {
+						
+					
+					Iterable<TagRowItem> selectedItems=	event.getAllSelectedItems();
+			
+					
+					selectedItems.forEach(item -> { System.out.println(" TgaPath :"+item.getTreePath()+ 
+							" Collection :"+item.getCollectionName()+" Tag ID:"+item.getTagInstanceID());});	
+					
+					
+				for (TagRowItem item: selectedItems) {
+					TagRowItem      parent  = tagData.getParent(item);
+					//can have siblings 
+					if(parent!=null) {
+						checkIfAllSiblingsAreSelectedAndSelectParent(item);
+						//setChildrenSelected(item);
+					
+					//is root= no siblings	
+					}else {
+					//setChildrenSelected(item);
+						
+					}
+					
+					
+				}
+				
+						
+					}
+				});
+				
+
+
 		treeGridPhraseLazy.addExpandListener(new ExpandListener<TagRowItem>() {
 
 			@Override
@@ -261,12 +287,24 @@ public class ResultPanelNew extends Panel   {
 			}
 			}
 		});
+		
+     treeGridPhraseLazy.addSelectionListener(new SelectionListener<TagRowItem>() {
+			
+			@Override
+			public void selectionChange(SelectionEvent<TagRowItem> event) {
+				
+			Iterable<TagRowItem> selectedItems=	event.getAllSelectedItems();
+			
+			selectedItems.forEach(item -> { System.out.println(" TgaPath :"+item.getTreePath()+ 
+					" Collection :"+item.getCollectionName()+" Tag ID:"+item.getTagInstanceID());});	
+			}
+		});
 	}
 
 	
 	private void setDataTagStyle() throws Exception {
 
-		TreeData<TagRowItem> tagData = new TreeData<>();
+		tagData = new TreeData<>();
 		tagData = populateTreeDataWithTags(repository, tagData, queryResult);
 		TreeDataProvider<TagRowItem> dataProvider = new TreeDataProvider<>(tagData);
 
@@ -278,6 +316,7 @@ public class ResultPanelNew extends Panel   {
 
 		dataProvider.refreshAll();
 		treeGridTag.setDataProvider(dataProvider);
+		treeGridTag.recalculateColumnWidths();
 		treeGridTag.setWidth("100%");
 		treeGridPanel.setContent(treeGridTag);
 		//setDataPhraseStyle();
@@ -622,6 +661,55 @@ public class ResultPanelNew extends Panel   {
 		}
 		return docItems;
 	}*/
+	
+	private void setChildrenSelected( TagRowItem item) {
+	Iterable<TagRowItem> childIterartor =  tagData.getChildren(item);
+	childIterartor.forEach(x->treeGridTag.select(x));	
+	}
+	
+	private void setParentUnSelected( TagRowItem item) {	
+	TagRowItem parent =  tagData.getParent(item);
+    treeGridTag.deselect(parent);	
+	}
+	
+	
+	
+	private void checkIfAllSiblingsAreSelectedAndSelectParent(TagRowItem item) {
+		
+		boolean allChildrenSelected = true;
+		TagRowItem      parent  = tagData.getParent(item);
+		List<TagRowItem> children =tagData.getChildren(item);
+		List<TagRowItem> siblings = tagData.getChildren(parent);
+		
+/*	
+			if (siblings.size() == 1) {			
+				treeGridTag.asMultiSelect().select(parent);		
+			} else {*/
+				
+				
+				for (TagRowItem sibl : siblings) {
+					if (treeGridTag.asMultiSelect().isSelected(sibl)) {
+				//allChildrenSelected remains true
+					} else {
+						allChildrenSelected = false;
+					}
+				}
+
+				if (allChildrenSelected) {
+					treeGridTag.asMultiSelect().select(parent);
+
+				} else {
+					treeGridTag.asMultiSelect().deselect(parent);
+
+				}
+			
+			//}
+
+	}
+	
+	private void adaptSelectStatus() {
+		
+	}
 	
 	// get docs as children for a phrase - lazy style
 	private ArrayList<TagRowItem> getChilderenForSpecificPhrase(TagRowItem phraseItem,

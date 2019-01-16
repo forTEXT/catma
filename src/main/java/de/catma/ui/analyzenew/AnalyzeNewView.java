@@ -3,6 +3,7 @@ package de.catma.ui.analyzenew;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
@@ -25,6 +26,7 @@ import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.Panel;
 import com.vaadin.ui.VerticalLayout;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
@@ -75,8 +77,9 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 	private ResultPanelNew  queryResultPanel;
 	private HorizontalLayout resultAndVisualizationPanel;
 	private VerticalLayout resultPanel;
-    private VerticalLayout visualizationPanel;
+    private VerticalLayout visualizationPreviewPanel;
     private  MarginInfo margin;
+    private Panel resultScrollPanel;
 	
 	
 	 public AnalyzeNewView(Corpus corpus, IndexedRepository repository, CloseListenerNew closeListener) throws Exception{
@@ -114,14 +117,20 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			
 			resultAndVisualizationPanel = new HorizontalLayout();
 			resultAndVisualizationPanel.setWidth("100%");
-		    resultPanel = new VerticalLayout();
+		    resultPanel = new VerticalLayout();	  
 		    resultPanel.setHeightUndefined(); 
+		    
+		    //this  didnt work for making the resultpanel scrollable
+		    //resultScrollPanel = new Panel();
+		    //resultScrollPanel.setContent(resultPanel);
+		    //resultScrollPanel.setHeightUndefined();
+
 		
 	
-		    visualizationPanel = new VerticalLayout();
-			resultAndVisualizationPanel.addComponents(resultPanel,visualizationPanel);
+		    visualizationPreviewPanel = new VerticalLayout();
+			resultAndVisualizationPanel.addComponents(resultPanel,visualizationPreviewPanel);
 			resultAndVisualizationPanel.setExpandRatio(resultPanel, 1);
-			resultAndVisualizationPanel.setExpandRatio(visualizationPanel, 1);
+			resultAndVisualizationPanel.setExpandRatio(visualizationPreviewPanel, 1);
 		
 			resultAndVisualizationPanel.setMargin(margin);
 			setMargin(true);
@@ -209,52 +218,9 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			}
 		 
 	 }
-		private void addSourceDocument(SourceDocument sd) {
-			relevantSourceDocumentIDs.add(sd.getID());
-			//TODO: provide a facility where the user can select between different IndexInfoSets
-			indexInfoSet = 
-					sd.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
-			
-			//documentsTree.addItem(sd);
-			MarkupCollectionItem umc = 
-				new MarkupCollectionItem(
-						sd, 
-						userMarkupItemDisplayString, true);
-		//	documentsTree.addItem(umc);
-		//	documentsTree.setParent(umc, sd);
-			for (UserMarkupCollectionReference umcRef :
-				sd.getUserMarkupCollectionRefs()) {
-				if (corpus.getUserMarkupCollectionRefs().contains(umcRef)) {
-					addUserMarkupCollection(umcRef, umc);
-				}
-			}
-		}
-		private void addUserMarkupCollection(UserMarkupCollectionReference umcRef,
-				MarkupCollectionItem umc) {
-			this.relevantUserMarkupCollIDs.add(umcRef.getId());
-		}
-	 
-	 private void  createResultView() {
-		 
-	 }
-	 
-	@Override
-	public void tagResults() {
-		// TODO Auto-generated method stub
-		
-	}
 
-	@Override
-	public List<String> getRelevantUserMarkupCollectionIDs() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Corpus getCorpus() {
-	return corpus;
-	}
-	
+	 
+	 	
 	private Component createSearchPanel() {
 		VerticalLayout searchPanel = new VerticalLayout();
 		Label searchPanelLabel = new Label ("Queries");
@@ -318,6 +284,8 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 					 Notification.show("RESULT",
 		                     "of the viz",
 		                     Notification.Type.HUMANIZED_MESSAGE);
+					 
+					visualizationPreviewPanel.addComponent(vizSnapshot);
 					
 				}
 			});
@@ -365,30 +333,13 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		visIconsPanel.setHeight("100%");
 		return visIconsPanel;	
 	}
-
-	@Override
-	public void resultsSelected(GroupedQueryResultSet groupedQueryResultSet) {
-		// TODO Auto-generated method stub
-		
+	
+	public Iterator<Component> getAllQueryResultPanels(){
+	Iterator<Component> allResultPanelsIterator=	resultPanel.getComponentIterator();
+		return allResultPanelsIterator;
 	}
 
-	@Override
-	public void addClickshortCuts() {
-		// TODO Auto-generated method stub
-		
-	}
 
-	@Override
-	public void removeClickshortCuts() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void close() {
-		// TODO Auto-generated method stub
-		
-	}
 	
 	private void executeSearch() {
 
@@ -413,7 +364,8 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			public void done(QueryResult result) {
 
 			 try {
-				queryResultPanel = new ResultPanelNew(repository, result,"result for query: "+searchInput.toString(), new ResultPanelCloseListener() {
+				queryResultPanel = new ResultPanelNew(repository, result,"result for query: "+
+			                                 searchInput.toString(), new ResultPanelCloseListener() {
 					
 					@Override
 					public void closeRequest(ResultPanelNew queryResultPanel) {
@@ -427,22 +379,17 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			}
 
 			 queryResultPanel.setWidth("100%");
-			 
 			 queryResultPanel.addClickListener(new MouseEvents.ClickListener() {
-				
 				@Override
 				public void click(com.vaadin.event.MouseEvents.ClickEvent event) {			
 				//Notification.show(
-	            		//	Messages.getString("Clickbares Zeug"), Type.HUMANIZED_MESSAGE);
-					
+	            		//	Messages.getString("Clickbares Zeug"), Type.HUMANIZED_MESSAGE);		
 				}
 			});
 			 
-			 
 			 resultPanel.setSpacing(true);
 			 resultPanel.addComponentAsFirst(queryResultPanel);
-			 
-			   	
+				    	
 			};
 			public void error(Throwable t) {
 			
@@ -475,6 +422,69 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			}
 		});
 	
+	}
+	private void addSourceDocument(SourceDocument sd) {
+		relevantSourceDocumentIDs.add(sd.getID());
+		//TODO: provide a facility where the user can select between different IndexInfoSets
+		indexInfoSet = 
+				sd.getSourceContentHandler().getSourceDocumentInfo().getIndexInfoSet();
+		
+		//documentsTree.addItem(sd);
+		MarkupCollectionItem umc = 
+			new MarkupCollectionItem(
+					sd, 
+					userMarkupItemDisplayString, true);
+	//	documentsTree.addItem(umc);
+	//	documentsTree.setParent(umc, sd);
+		for (UserMarkupCollectionReference umcRef :
+			sd.getUserMarkupCollectionRefs()) {
+			if (corpus.getUserMarkupCollectionRefs().contains(umcRef)) {
+				addUserMarkupCollection(umcRef, umc);
+			}
+		}
+	}
+	private void addUserMarkupCollection(UserMarkupCollectionReference umcRef,
+			MarkupCollectionItem umc) {
+		this.relevantUserMarkupCollIDs.add(umcRef.getId());
+	}
+	@Override
+	public void tagResults() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public List<String> getRelevantUserMarkupCollectionIDs() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Corpus getCorpus() {
+	return corpus;
+	}
+	@Override
+	public void resultsSelected(GroupedQueryResultSet groupedQueryResultSet) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void addClickshortCuts() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void removeClickshortCuts() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void close() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }
