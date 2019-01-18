@@ -109,8 +109,9 @@ public class ResultPanelNew extends Panel   {
 
 	}
 
-	public Component getCurrentTreeGrid() {
-	return treeGridPanel.getContent();
+	@SuppressWarnings("unchecked")
+	public TreeGrid<TagRowItem> getCurrentTreeGrid() {
+	return (TreeGrid<TagRowItem>) treeGridPanel.getContent();
 	}
 
 	private void setCurrentView(ViewID currentView) {
@@ -318,6 +319,8 @@ public class ResultPanelNew extends Panel   {
 		treeGridTag.setDataProvider(dataProvider);
 		treeGridTag.recalculateColumnWidths();
 		treeGridTag.setWidth("100%");
+		treeGridTag.setCaption(queryAsString);
+
 		treeGridPanel.setContent(treeGridTag);
 		//setDataPhraseStyle();
 		setDataPhraseStyleLazy();
@@ -380,6 +383,7 @@ public class ResultPanelNew extends Panel   {
 		treeGridPhraseLazy.getColumn("freqID").setExpandRatio(1);	
 		dataProviderLazy.refreshAll();
 		treeGridPhraseLazy.setDataProvider(dataProviderLazy);
+		treeGridPhraseLazy.setCaption(queryAsString);
 		treeGridPhraseLazy.setWidth("100%");		
 	}
 	
@@ -406,6 +410,7 @@ public class ResultPanelNew extends Panel   {
 		dataProvider.refreshAll();
 		treeGridProperty.setDataProvider(dataProvider);
 		treeGridProperty.setWidth("100%");
+		treeGridProperty.setCaption(queryAsString);
 
 		treeGridPanel.setContent(treeGridProperty);
 		
@@ -737,6 +742,9 @@ public class ResultPanelNew extends Panel   {
 	private String retrieveDocumentName(Repository repository, String docID) throws Exception {
 
 		return repository.getSourceDocument(docID).toString();
+	}
+	public String getQueryAsString() {
+		return this.queryAsString;
 	}
 
 	private void swichView() throws Exception {

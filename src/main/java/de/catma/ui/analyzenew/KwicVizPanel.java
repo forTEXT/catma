@@ -4,30 +4,38 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.vaadin.event.selection.SingleSelectionEvent;
+import com.vaadin.event.selection.SingleSelectionListener;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.ui.dialog.AbstractOkCancelDialog;
 import de.catma.ui.dialog.SaveCancelListener;
 
 public class KwicVizPanel extends AbstractOkCancelDialog<VizSnapshot>  implements VizPanel{
-private	AnalyzeNewView analyzeNewView;
+private Iterator<Component> allResultsIterator;
 private	HorizontalLayout mainLayout;
 private Panel left;
 private	Panel right;
 private Button test;
 private ComboBox<String> comboBox;
+private List<String> availableResultSets;
+private VerticalLayout vertical;
+private Panel treeGridPanelKwic;
+private ArrayList<TreeGrid<TagRowItem>> currentTeeGrids;
 
 
-	public KwicVizPanel(String dialogCaption, AnalyzeNewView analyzeNewView, SaveCancelListener<VizSnapshot> saveCancelListener) {
+	public KwicVizPanel(String dialogCaption, ArrayList<TreeGrid<TagRowItem>> currentTreeGrids, SaveCancelListener<VizSnapshot> saveCancelListener) {
 		super(dialogCaption, saveCancelListener);
 
-	this.analyzeNewView= analyzeNewView;
+	this.currentTeeGrids= currentTreeGrids;
 
 	initListeners();
 	initAction();
@@ -55,7 +63,7 @@ private ComboBox<String> comboBox;
 	}
 	@Override
 	protected VizSnapshot getResult() {
-		return	new VizSnapshot("TempTitle");
+		return	new VizSnapshot("KWIC Visualisation");
 	}
 
 	
@@ -63,43 +71,94 @@ private ComboBox<String> comboBox;
 	protected void addContent(ComponentContainer content) {
 		
 		comboBox = new ComboBox<String>();
-		List<String> availableResultSets = new ArrayList<>();
-		availableResultSets.add("property= \"%\"");
-		availableResultSets.add("tag=\"Tag%\"");
-		availableResultSets.add("tag= \"Tag1\"");
-		availableResultSets.add("wild= \"und\"");
+		comboBox.setWidth("100%");
+		comboBox.setCaption("select one resultset");
+	
+		
+		availableResultSets = new ArrayList<>();
+	
     	comboBox.setItems(availableResultSets);
-		
-		
-		
-		
-		
+    	
+ /*   	comboBox.addValueChangeListener(event -> {
+           String queryAsString= event.getSource().getValue();
+           swichToResultTree(queryAsString);
+        });*/
+    	
+    	comboBox.addSelectionListener(new SingleSelectionListener<String>() {
+			
+			@Override
+			public void selectionChange(SingleSelectionEvent<String> event) {
+			    String queryAsString= event.getSource().getValue();
+		           swichToResultTree(queryAsString);
+			
+				
+			}
+		});
 		
 		mainLayout = new HorizontalLayout();
-		left = createResourcePanel( comboBox,analyzeNewView);
+		left = createResourcePanel(comboBox);
 		right= new Panel("Visualisation");
 		mainLayout.addComponents(left,right);
 		mainLayout.setExpandRatio(left,  1);
 		mainLayout.setExpandRatio(right,  1);
 		mainLayout.setWidth("100%");
 
-		content.addComponent(mainLayout);
-	
-		
-	}
-	private Panel createResourcePanel(ComboBox<String> comboBox,AnalyzeNewView analyzeNewView) {
-	Iterator <Component> allResultsIterator	=analyzeNewView.getAllQueryResultPanels();
-	Panel allResultsPanel = new Panel();
-	VerticalLayout vertical= new VerticalLayout();
-	vertical.addComponent(comboBox);
-	allResultsPanel.setContent(vertical);
-	while(allResultsIterator.hasNext()) {
-		Component resultBox=allResultsIterator.next();
-		 ResultPanelNew myBox=(ResultPanelNew)resultBox;
-		 vertical.addComponent(myBox);
+		content.addComponent(mainLayout);	
 	}
 
-	 return allResultsPanel;
+	
+
+	
+
+
+
+
+
+	private ArrayList<TreeGrid<TagRowItem>> getCurrentTeeGrids() {
+		return currentTeeGrids;
+	}
+
+
+
+
+	private void setCurrentTeeGrids(ArrayList<TreeGrid<TagRowItem>> currentTeeGrids) {
+		this.currentTeeGrids = currentTeeGrids;
+	}
+
+
+
+
+	private void swichToResultTree(String queryAsString) {
+		Iterator<TreeGrid<TagRowItem>> allResultsIterator =getCurrentTeeGrids().iterator();
+		TreeGrid<TagRowItem> selectedTreeGrid = new TreeGrid<TagRowItem> ();
+
+		while (allResultsIterator.hasNext()) {
+			TreeGrid<TagRowItem> treeGrid = allResultsIterator.next();
+		
+			if (treeGrid.getCaption().equalsIgnoreCase(queryAsString)) {
+				selectedTreeGrid = treeGrid;
+
+			}
+		}
+
+		treeGridPanelKwic.setContent(selectedTreeGrid);
+	}
+	
+	
+	private Panel createResourcePanel(ComboBox<String> comboBox) {
+	Iterator<TreeGrid<TagRowItem>> allResultsIterator	= getCurrentTeeGrids().iterator();
+	Panel selectResultsPanel = new Panel();	
+	vertical= new VerticalLayout();
+	vertical.addComponent(comboBox);
+	treeGridPanelKwic= new Panel();
+	vertical.addComponent(treeGridPanelKwic);
+	selectResultsPanel.setContent(vertical);
+	while(allResultsIterator.hasNext()) {
+		TreeGrid<TagRowItem> treeGrid=allResultsIterator.next();
+	
+		 availableResultSets.add(treeGrid.getCaption());
+	}
+	 return selectResultsPanel;
 	}
 
 }

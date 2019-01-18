@@ -9,6 +9,7 @@ import java.util.Locale;
 
 import org.antlr.runtime.RecognitionException;
 
+import com.github.appreciated.material.MaterialTheme;
 import com.vaadin.event.MouseEvents;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.MarginInfo;
@@ -27,6 +28,7 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.VerticalLayout;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
@@ -80,6 +82,7 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
     private VerticalLayout visualizationPreviewPanel;
     private  MarginInfo margin;
     private Panel resultScrollPanel;
+    private Iterator<Component> allResultPanelsIterator;
 	
 	
 	 public AnalyzeNewView(Corpus corpus, IndexedRepository repository, CloseListenerNew closeListener) throws Exception{
@@ -276,22 +279,14 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 			
 			@Override
 			public void buttonClick(ClickEvent event) {
-			KwicVizPanel kwicPanel = new KwicVizPanel("KWIC PANEL", AnalyzeNewView.this, new SaveCancelListener<VizSnapshot>() {
 			
-				
+			KwicVizPanel kwicPanel = new KwicVizPanel("KWIC PANEL", getAllTreeGrids(), new SaveCancelListener<VizSnapshot>() {
 				@Override
 				public void savePressed(VizSnapshot vizSnapshot) {
-					 Notification.show("RESULT",
-		                     "of the viz",
-		                     Notification.Type.HUMANIZED_MESSAGE);
-					 
-					visualizationPreviewPanel.addComponent(vizSnapshot);
-					
+					visualizationPreviewPanel.addComponent(vizSnapshot);			
 				}
-			});
-			
+			});	
 			kwicPanel.show();
-				
 			}
 			
 		});
@@ -303,8 +298,8 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		distBt.setHeight("100%");
 		
 		wordCloudBt= new Button("WORDCLOUD",VaadinIcons.CLOUD);
-		wordCloudBt.addStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
-		wordCloudBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		wordCloudBt.addStyleName(MaterialTheme.BUTTON_ICON_ALIGN_TOP);
+		wordCloudBt.addStyleName(MaterialTheme.BUTTON_BORDERLESS);
 		wordCloudBt.setWidth("100%");
 		wordCloudBt.setHeight("100%");
 		
@@ -334,12 +329,18 @@ implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, Relev
 		return visIconsPanel;	
 	}
 	
-	public Iterator<Component> getAllQueryResultPanels(){
-	Iterator<Component> allResultPanelsIterator=	resultPanel.getComponentIterator();
-		return allResultPanelsIterator;
+
+	
+	private ArrayList<TreeGrid<TagRowItem>> getAllTreeGrids(){
+		Iterator <Component> iterator=	resultPanel.getComponentIterator();
+		ArrayList<TreeGrid<TagRowItem>> toReturnList = new ArrayList<TreeGrid<TagRowItem>>();
+		while(iterator.hasNext()) {
+		ResultPanelNew onePanel=	(ResultPanelNew) iterator.next();
+		toReturnList.add(onePanel.getCurrentTreeGrid());
+		}
+		return toReturnList;	
 	}
-
-
+	
 	
 	private void executeSearch() {
 
