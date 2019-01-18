@@ -19,6 +19,7 @@ public enum NodeType implements Label {
 	Tag,
 	Property,
 	
+	DeletedTagset,
 	DeletedTag,
 	DeletedProperty,
 	DeletedTagInstance,

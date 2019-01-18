@@ -5,6 +5,7 @@ import static de.catma.repository.git.graph.NodeType.DeletedAnnotationProperty;
 import static de.catma.repository.git.graph.NodeType.DeletedProperty;
 import static de.catma.repository.git.graph.NodeType.DeletedTag;
 import static de.catma.repository.git.graph.NodeType.DeletedTagInstance;
+import static de.catma.repository.git.graph.NodeType.DeletedTagset;
 import static de.catma.repository.git.graph.NodeType.MarkupCollection;
 import static de.catma.repository.git.graph.NodeType.Project;
 import static de.catma.repository.git.graph.NodeType.ProjectRevision;
@@ -1523,5 +1524,32 @@ public class GraphProjectHandler {
 				);
 			}
 		});		
+	}
+
+	public void removeTagset(String rootRevisionHash, TagsetDefinition tagsetDefinition, String oldRootRevisionHash) throws Exception {
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+"(pr:"+nt(ProjectRevision)+"{revisionHash:{pOldRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}})"
+					+"OPTIONAL MATCH (ts)-[:"+rt(hasTag)+"]->(t:"+nt(Tag)+"{tagId:{pTagId}}) "
+					+"OPTIONAL MATCH (t)-[:"+rt(hasProperty)+"]->(p:"+nt(Property)+") "
+					+"SET pr.revisionHash = {pRootRevisionHash} "
+					+"REMOVE ts:"+nt(Tagset)+ " "
+					+"SET ts:"+nt(DeletedTagset)+ " "
+					+"DETACH DELETE t, p ",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pOldRootRevisionHash", oldRootRevisionHash,
+						"pTagsetId", tagsetDefinition.getUuid()
+					)
+				);
+			}
+		});	
 	}
 }

@@ -93,10 +93,6 @@ public class GitTagsetHandler {
 		}
 	}
 
-	public void delete(@Nonnull String projectId, @Nonnull String tagsetId) throws IOException {
-		throw new UnsupportedOperationException("Not implemented");
-	}
-
 	private ArrayList<TagDefinition> openTagDefinitions(File parentDirectory) throws IOException {
 		ArrayList<TagDefinition> tagDefinitions = new ArrayList<>();
 

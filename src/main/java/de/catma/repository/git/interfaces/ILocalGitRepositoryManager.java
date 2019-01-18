@@ -62,4 +62,6 @@ public interface ILocalGitRepositoryManager extends AutoCloseable {
 
 	String addAllAndCommit(String commitMsg, String committerName, String committerEmail) throws IOException;
 
+	void removeSubmodule(File submodulePath) throws IOException;
+
 }

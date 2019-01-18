@@ -436,4 +436,22 @@ public class GitProjectHandler {
 		return remoteGitServerManager.getProjectMembers(Objects.requireNonNull(projectId));
 	}
 
+	public void removeTagset(TagsetDefinition tagsetDefinition) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String tagsetId = tagsetDefinition.getUuid();
+			
+			// open the project root repo
+			localGitRepoManager.open(projectId, GitProjectManager.getProjectRootRepositoryName(projectId));
+	
+			// remove the submodule only!!!
+			File targetSubmodulePath = Paths.get(
+					localGitRepoManager.getRepositoryWorkTree().toString(),
+					TAGSET_SUBMODULES_DIRECTORY_NAME,
+					tagsetId
+			).toFile();
+	
+			localGitRepoManager.removeSubmodule(targetSubmodulePath);
+		}		
+	}
+
 }

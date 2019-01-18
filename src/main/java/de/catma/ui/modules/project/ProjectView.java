@@ -43,7 +43,9 @@ import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionReference
 import de.catma.project.OpenProjectListener;
 import de.catma.project.ProjectManager;
 import de.catma.project.ProjectReference;
+import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.Version;
 import de.catma.ui.CatmaApplication;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.component.hugecard.HugeCard;
@@ -61,6 +63,7 @@ import de.catma.ui.repository.wizard.AddSourceDocWizardFactory;
 import de.catma.ui.repository.wizard.AddSourceDocWizardResult;
 import de.catma.ui.repository.wizard.SourceDocumentResult;
 import de.catma.user.User;
+import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
 /**
@@ -85,6 +88,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private PropertyChangeListener collectionChangeListener;
 	private PropertyChangeListener projectExceptionListener;
 	private PropertyChangeListener documentChangeListener;
+	private ActionGridComponent<Grid<TagsetDefinition>> tagsetsGridComponent;
+	private PropertyChangeListener tagsetChangeListener;
+	private ListDataProvider<TagsetDefinition> tagsetData;
 
     public ProjectView(ProjectManager projectManager, EventBus eventBus) {
     	super("Project");
@@ -123,6 +129,33 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				handleDocumentChange(evt);
 			}
 		};
+		
+		this.tagsetChangeListener = new PropertyChangeListener() {
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				handleTagsetChange(evt);
+			}
+		};
+	}
+
+	private void handleTagsetChange(PropertyChangeEvent evt) {
+		Object oldValue = evt.getOldValue();
+		Object newValue = evt.getNewValue();
+		
+		if (oldValue == null) { // creation
+			TagsetDefinition tagset = (TagsetDefinition)newValue;
+			tagsetData.getItems().add(tagset);
+			tagsetData.refreshAll();
+		}
+		else if (newValue == null) { // removal
+			TagsetDefinition tagset = (TagsetDefinition)oldValue;
+			tagsetData.getItems().remove(tagset);
+			tagsetData.refreshAll();
+		}
+		else { // metadata update
+			
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -204,10 +237,65 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	sourceDocumentsGridComponent.getActionGridBar().getBtnAddContextMenu();
         addContextMenu.addItem("Add Document", clickEvent -> handleAddDocumentRequest());
         addContextMenu.addItem("Add Annotation Collection", e -> handleAddCollectionRequest());
-
+        
+        tagsetsGridComponent.getActionGridBar().addBtnAddClickListener(
+        	click -> handleAddTagsetRequest());
+        
+        ContextMenu moreOptionsMenu = 
+        	tagsetsGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
+        moreOptionsMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
+        moreOptionsMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
 	}
 
-    private void handleAddCollectionRequest() {
+    private void handleDeleteTagsetRequest() {
+		final Set<TagsetDefinition> tagsets = tagsetGrid.getSelectedItems();
+		if (!tagsets.isEmpty()) {
+			ConfirmDialog.show(
+					UI.getCurrent(), 
+					"Warnung", 
+					"Are you sure you want to delete the selected Tagsets with all their contents?", 
+					"Delete",
+					"Cancel", 
+					dlg -> {
+						for (TagsetDefinition tagset : tagsets) {
+							project.getTagManager().removeTagsetDefinition(tagset);
+						}
+					}
+			);
+		}
+		else {
+			Notification.show(
+				"Info", "Please select one or more Tagsets first!", 
+				Type.HUMANIZED_MESSAGE);
+		}
+		
+	}
+
+	private void handleEditTagsetRequest() {
+		// TODO Auto-generated method stub
+	}
+
+	private void handleAddTagsetRequest() {
+    	
+    	SingleTextInputDialog collectionNameDlg = 
+    		new SingleTextInputDialog("Add Tagset", "Please enter the Tagset name:",
+    				new SaveCancelListener<String>() {
+						
+						@Override
+						public void savePressed(String result) {
+							IDGenerator idGenerator = new IDGenerator();
+							project.getTagManager().addTagsetDefinition(
+								new TagsetDefinition(
+									null, 
+									idGenerator.generate(), result, new Version()));
+						}
+					});
+        	
+        collectionNameDlg.show();
+    	
+	}
+
+	private void handleAddCollectionRequest() {
 		@SuppressWarnings("unchecked")
 		TreeDataProvider<Resource> resourceDataProvider = 
 				(TreeDataProvider<Resource>) resourceGrid.getDataProvider();
@@ -474,12 +562,11 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	
 
         Label tagsetsAnnotations = new Label("Tagsets");
-        ActionGridComponent<Grid<TagsetDefinition>> tagsetsGridComponent = new ActionGridComponent<>(
+        tagsetsGridComponent = new ActionGridComponent<Grid<TagsetDefinition>> (
                 tagsetsAnnotations,
                 tagsetGrid
         );
-        tagsetsGridComponent.getActionGridBar().addBtnAddClickListener((click) -> {
-        });
+
         tagsetsGridComponent.addStyleName("project-view-action-grid");
         
         resourceContent.addComponent(tagsetsGridComponent);
@@ -530,6 +617,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
                 		RepositoryChangeEvent.sourceDocumentChanged, 
                 		documentChangeListener);
                 
+                ProjectView.this.project.getTagManager().addPropertyChangeListener(
+                		TagManagerEvent.tagsetDefinitionChanged,
+                		tagsetChangeListener);
+                
 				initData();
             }
 
@@ -547,7 +638,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
         	
         	resourceGrid.expand(resourceDataProvider.getTreeData().getRootItems());
         	
-        	ListDataProvider<TagsetDefinition> tagsetData = new ListDataProvider<>(project.getTagsets());
+        	tagsetData = new ListDataProvider<>(project.getTagsets());
         	tagsetGrid.setDataProvider(tagsetData);
         	
         	ListDataProvider<User> memberData = new ListDataProvider<>(project.getProjectMembers());
@@ -682,6 +773,12 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 						RepositoryChangeEvent.exceptionOccurred, 
 						projectExceptionListener);
 				}
+				
+				if (tagsetChangeListener != null) {
+	                ProjectView.this.project.getTagManager().removePropertyChangeListener(
+	                		TagManagerEvent.tagsetDefinitionChanged,
+	                		tagsetChangeListener);
+				}				
 			}			
 			
 		}

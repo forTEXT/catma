@@ -166,13 +166,9 @@ public class GraphWorktreeProject implements IndexedRepository {
 					else if (evt.getNewValue() == null) { //delete
 						final TagsetDefinition tagsetDefinition = 
 							(TagsetDefinition)evt.getOldValue();
-						//TODO:
-//						execShield.execute(new DBOperation<Void>() {
-//							public Void execute() throws Exception {
-//								dbTagLibraryHandler.removeTagsetDefinition(args.getSecond());
-//								return null;
-//							}
-//						});
+						
+						removeTagsetDefinition(tagsetDefinition);
+;
 					}
 					else { //update //TODO
 //						execShield.execute(new DBOperation<Void>() {
@@ -292,6 +288,13 @@ public class GraphWorktreeProject implements IndexedRepository {
 		tagManager.addPropertyChangeListener(
 				TagManagerEvent.userPropertyDefinitionChanged,
 				userDefinedPropertyChangedListener);
+	}
+
+	private void removeTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
+		String oldRootRevisionHash = this.rootRevisionHash;
+		gitProjectHandler.removeTagset(tagsetDefinition);
+		this.rootRevisionHash = gitProjectHandler.getRootRevisionHash(); 
+		graphProjectHandler.removeTagset(this.rootRevisionHash, tagsetDefinition, oldRootRevisionHash);
 	}
 
 	private void addPropertyDefinition(PropertyDefinition propertyDefinition, TagDefinition tagDefinition) throws Exception {
