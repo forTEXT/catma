@@ -291,8 +291,7 @@ public class AnnotationPanel extends VerticalLayout {
 				tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 		moreOptionsContextMenu.addItem("Edit Tag", clickEvent -> handleEditTagRequest());
 		moreOptionsContextMenu.addItem("Delete Tag", clickEvent -> handleDeleteTagRequest());
-		moreOptionsContextMenu.addItem("Edit Properties", clickEvent -> handlePropertiesTagRequest());
-		moreOptionsContextMenu.addItem("Delete Properties", clickEvent -> handleDeletePropertiesRequest());
+		moreOptionsContextMenu.addItem("Edit/Deletee Properties", clickEvent -> handlePropertiesTagRequest());
 		moreOptionsContextMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
 		moreOptionsContextMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
 		
@@ -304,10 +303,6 @@ public class AnnotationPanel extends VerticalLayout {
 	}
 
 	private void handleEditTagsetRequest() {
-		// TODO Auto-generated method stub
-	}
-
-	private void handleDeletePropertiesRequest() {
 		// TODO Auto-generated method stub
 	}
 
@@ -474,25 +469,30 @@ public class AnnotationPanel extends VerticalLayout {
 		.map(tagsetTreeItem -> ((TagDataItem)tagsetTreeItem).getTag())
 		.collect(Collectors.toList());
 		
-		AddSubtagDialog addTagDialog =
-			new AddSubtagDialog(new SaveCancelListener<TagDefinition>() {
-				public void savePressed(TagDefinition result) {
-					for (TagDefinition parent : parentTags) {
-						
-						TagsetDefinition tagset = 
-							project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
-						
-						TagDefinition tag = new TagDefinition(result);
-						tag.setUuid(idGenerator.generate());
-						tag.setParentUuid(parent.getUuid());
-						tag.setTagsetDefinitionUuid(tagset.getUuid());
-						
-						project.getTagManager().addTagDefinition(
-								tagset, tag);
-					}
-				};
-			});
-		addTagDialog.show();
+		if (!parentTags.isEmpty()) {
+			AddSubtagDialog addTagDialog =
+				new AddSubtagDialog(new SaveCancelListener<TagDefinition>() {
+					public void savePressed(TagDefinition result) {
+						for (TagDefinition parent : parentTags) {
+							
+							TagsetDefinition tagset = 
+								project.getTagManager().getTagLibrary().getTagsetDefinition(parent);
+							
+							TagDefinition tag = new TagDefinition(result);
+							tag.setUuid(idGenerator.generate());
+							tag.setParentUuid(parent.getUuid());
+							tag.setTagsetDefinitionUuid(tagset.getUuid());
+							
+							project.getTagManager().addTagDefinition(
+									tagset, tag);
+						}
+					};
+				});
+			addTagDialog.show();
+		}
+		else {
+			Notification.show("Info", "Please select at least one parent Tag!", Type.HUMANIZED_MESSAGE);
+		}
 	}
 
 	private void handleAddTagRequest() {
