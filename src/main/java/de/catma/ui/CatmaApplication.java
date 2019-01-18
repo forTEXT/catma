@@ -259,7 +259,6 @@ public class CatmaApplication extends UI implements
 //			}
 
 			setPollInterval(1000);
-
 			
 //TODO:
 //			if ((getParameter(Parameter.AUTOLOGIN) != null) && (getUser() == null)) {
