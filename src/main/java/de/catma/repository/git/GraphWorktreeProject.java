@@ -168,16 +168,13 @@ public class GraphWorktreeProject implements IndexedRepository {
 							(TagsetDefinition)evt.getOldValue();
 						
 						removeTagsetDefinition(tagsetDefinition);
-;
 					}
-					else { //update //TODO
-//						execShield.execute(new DBOperation<Void>() {
-//							public Void execute() throws Exception {
-//								dbTagLibraryHandler.updateTagsetDefinition(
-//										(TagsetDefinition)evt.getNewValue());
-//								return null;
-//							}
-//						});
+					else { //update
+						final TagsetDefinition tagsetDefinition = 
+								(TagsetDefinition)evt.getNewValue();
+						
+						updateTagsetDefinition(tagsetDefinition);
+
 					}
 				}
 				catch (Exception e) {
@@ -288,6 +285,12 @@ public class GraphWorktreeProject implements IndexedRepository {
 		tagManager.addPropertyChangeListener(
 				TagManagerEvent.userPropertyDefinitionChanged,
 				userDefinedPropertyChangedListener);
+	}
+
+	protected void updateTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
+		gitProjectHandler.updateTagset(tagsetDefinition);
+		tagsetDefinition.setRevisionHash(tagsetDefinition.getRevisionHash());
+		graphProjectHandler.updateTagset(this.rootRevisionHash, tagsetDefinition);
 	}
 
 	private void removeTagsetDefinition(TagsetDefinition tagsetDefinition) throws Exception {
@@ -916,8 +919,8 @@ public class GraphWorktreeProject implements IndexedRepository {
 	}
 
 	@Override
+	@Deprecated
 	public User createIfAbsent(Map<String, String> userIdentification) throws IOException {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

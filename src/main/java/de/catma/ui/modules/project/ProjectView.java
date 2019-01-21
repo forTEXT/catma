@@ -154,7 +154,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			tagsetData.refreshAll();
 		}
 		else { // metadata update
-			
+			TagsetDefinition tagset = (TagsetDefinition)newValue;
+			tagsetData.refreshItem(tagset);
 		}
 	}
 
@@ -272,7 +273,25 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	}
 
 	private void handleEditTagsetRequest() {
-		// TODO Auto-generated method stub
+		final Set<TagsetDefinition> tagsets = tagsetGrid.getSelectedItems();
+		if (!tagsets.isEmpty()) {
+			final TagsetDefinition tagset = tagsets.iterator().next();
+	    	SingleTextInputDialog collectionNameDlg = 
+	        		new SingleTextInputDialog("Edit Tagset", "Please enter the new Tagset name:",
+	        				new SaveCancelListener<String>() {
+	    						@Override
+	    						public void savePressed(String result) {
+	    							project.getTagManager().setTagsetDefinitionName(tagset, result);
+	    						}
+	    					});
+	            	
+	            collectionNameDlg.show();			
+		}
+		else {
+			Notification.show(
+				"Info", "Please select a Tagset first!", 
+				Type.HUMANIZED_MESSAGE);
+		}		
 	}
 
 	private void handleAddTagsetRequest() {

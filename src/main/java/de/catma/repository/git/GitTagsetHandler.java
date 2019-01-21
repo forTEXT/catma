@@ -319,4 +319,38 @@ public class GitTagsetHandler {
 			return tagsetRevision;
 		}
 	}
+
+	public String updateTagsetDefinition(String projectId, TagsetDefinition tagsetDefinition) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			String projectRootRepositoryName = GitProjectManager.getProjectRootRepositoryName(projectId);
+
+			String tagsetGitRepositoryName = 
+					projectRootRepositoryName 
+					+ "/" + GitProjectHandler.TAGSET_SUBMODULES_DIRECTORY_NAME 
+					+ "/" + tagsetDefinition.getUuid();
+			
+			localGitRepoManager.open(projectId, tagsetGitRepositoryName);
+
+			
+			File targetHeaderFile = new File(localGitRepoManager.getRepositoryWorkTree(), "header.json");
+			GitTagsetHeader header = 
+					new GitTagsetHeader(
+							tagsetDefinition.getName(), 
+							"", //TODO: description
+							new TreeSet<>(tagsetDefinition.getDeletedDefinitions()));
+			String serializedHeader = new SerializationHelper<GitTagsetHeader>().serialize(header);
+			
+			localGitRepoManager.add(
+					targetHeaderFile,
+					serializedHeader.getBytes(StandardCharsets.UTF_8));
+
+			String tagsetRevision = localGitRepoManager.addAndCommit(
+					targetHeaderFile, 
+					serializedHeader.getBytes(StandardCharsets.UTF_8), 
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail());
+
+			return tagsetRevision;
+		}
+	}
 }

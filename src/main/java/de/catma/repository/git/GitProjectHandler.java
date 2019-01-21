@@ -454,4 +454,17 @@ public class GitProjectHandler {
 		}		
 	}
 
+	public String updateTagset(TagsetDefinition tagsetDefinition) throws Exception {
+		try (ILocalGitRepositoryManager localGitRepoManager = this.localGitRepositoryManager) {
+			GitTagsetHandler gitTagsetHandler = 
+				new GitTagsetHandler(localGitRepoManager, this.remoteGitServerManager);
+
+			String tagsetRevision = 
+				gitTagsetHandler.updateTagsetDefinition(projectId, tagsetDefinition);
+			
+			
+			return tagsetRevision;
+		}
+	}
+
 }

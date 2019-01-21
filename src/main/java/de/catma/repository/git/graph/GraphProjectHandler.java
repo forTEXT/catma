@@ -1552,4 +1552,28 @@ public class GraphProjectHandler {
 			}
 		});	
 	}
+
+	public void updateTagset(String rootRevisionHash, TagsetDefinition tagsetDefinition) throws Exception {
+		StatementExcutor.execute(new SessionRunner() {
+			@Override
+			public void run(Session session) throws Exception {
+				session.run(
+					"MATCH (:"+nt(NodeType.User)+"{userId:{pUserId}})-[:"+rt(hasProject)+"]->"
+					+"(:"+nt(Project)+"{projectId:{pProjectId}})-[:"+rt(hasRevision)+"]->"
+					+"(:"+nt(ProjectRevision)+"{revisionHash:{pRootRevisionHash}})-[:"+rt(hasTagset)+"]->"
+					+"(ts:"+nt(Tagset)+"{tagsetId:{pTagsetId}}) "
+					+"SET ts.revisionHash = {pTagsetRevisionHash}, "
+					+"ts.name = {pName} ",
+					Values.parameters(
+						"pUserId", user.getIdentifier(),
+						"pProjectId", projectReference.getProjectId(),
+						"pRootRevisionHash", rootRevisionHash,
+						"pTagsetId", tagsetDefinition.getUuid(),
+						"pTagsetRevisionHash", tagsetDefinition.getRevisionHash(),
+						"pName", tagsetDefinition.getName()
+					)
+				);
+			}
+		});		
+	}
 }
