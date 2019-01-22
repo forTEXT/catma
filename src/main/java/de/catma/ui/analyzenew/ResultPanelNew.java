@@ -111,7 +111,13 @@ public class ResultPanelNew extends Panel   {
 
 	@SuppressWarnings("unchecked")
 	public TreeGrid<TagRowItem> getCurrentTreeGrid() {
-	return (TreeGrid<TagRowItem>) treeGridPanel.getContent();
+	TreeGrid <TagRowItem> currentTreeGrid= (TreeGrid<TagRowItem>) treeGridPanel.getContent();
+	return currentTreeGrid;
+	}
+	
+	public TreeData getCurrentTreeGridData() {
+	TreeGrid <TagRowItem> currentTreeGrid= (TreeGrid<TagRowItem>) treeGridPanel.getContent();
+	 return (TreeData) currentTreeGrid.getData();
 	}
 
 	private void setCurrentView(ViewID currentView) {

@@ -107,25 +107,14 @@ private ArrayList<TreeGrid<TagRowItem>> currentTeeGrids;
 	}
 
 	
-
-	
-
-
-
-
-
 	private ArrayList<TreeGrid<TagRowItem>> getCurrentTeeGrids() {
 		return currentTeeGrids;
 	}
 
 
-
-
 	private void setCurrentTeeGrids(ArrayList<TreeGrid<TagRowItem>> currentTeeGrids) {
 		this.currentTeeGrids = currentTeeGrids;
 	}
-
-
 
 
 	private void swichToResultTree(String queryAsString) {
@@ -137,13 +126,11 @@ private ArrayList<TreeGrid<TagRowItem>> currentTeeGrids;
 		
 			if (treeGrid.getCaption().equalsIgnoreCase(queryAsString)) {
 				selectedTreeGrid = treeGrid;
-
 			}
 		}
 
 		treeGridPanelKwic.setContent(selectedTreeGrid);
 	}
-	
 	
 	private Panel createResourcePanel(ComboBox<String> comboBox) {
 	Iterator<TreeGrid<TagRowItem>> allResultsIterator	= getCurrentTeeGrids().iterator();
