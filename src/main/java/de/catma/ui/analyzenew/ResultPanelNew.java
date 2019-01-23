@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.DataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.ExpandEvent;
 import com.vaadin.event.ExpandEvent.ExpandListener;
@@ -41,9 +42,9 @@ public class ResultPanelNew extends Panel   {
 	private static enum TreePropertyName {
 		caption, frequency, visibleInKwic,;
 	}
-	private static enum ViewID {
+/*	public static enum ViewID {
 		phrase, tag, property,phraseTag,phraseProperty;
-	}
+	}*/
 	public static interface ResultPanelCloseListener{
 		public void closeRequest(ResultPanelNew resultPanelNew);
 	}
@@ -57,7 +58,7 @@ public class ResultPanelNew extends Panel   {
 	private TreeGrid<TagRowItem> treeGridProperty;
 	
 	
-    private TreeGrid<TagRowItem> treeGridPhraseLazy;
+   // private TreeGrid<TagRowItem> treeGridPhraseLazy;
     private	TreeDataProvider<TagRowItem> dataProviderLazy;
     private TreeData<TagRowItem> lazyData;
     
@@ -100,11 +101,11 @@ public class ResultPanelNew extends Panel   {
 			treeGridPanel.setContent(treeGridProperty);
 		}
 		if (queryAsString.contains("wild=")) {
-			setDataPhraseStyleLazy();
-			//setDataPhraseStyle();
+			//setDataPhraseStyleLazy();
+			setDataPhraseStyle();
 			setCurrentView(ViewID.phrase);
 			//treeGridPanel.setContent(treeGridPhrase);
-			treeGridPanel.setContent(treeGridPhraseLazy);
+			treeGridPanel.setContent(treeGridPhrase);
 		}
 
 	}
@@ -115,13 +116,20 @@ public class ResultPanelNew extends Panel   {
 	return currentTreeGrid;
 	}
 	
+	
 	public TreeData getCurrentTreeGridData() {
 	TreeGrid <TagRowItem> currentTreeGrid= (TreeGrid<TagRowItem>) treeGridPanel.getContent();
-	 return (TreeData) currentTreeGrid.getData();
+	TreeDataProvider<TagRowItem> dataProvider=(TreeDataProvider<TagRowItem>) currentTreeGrid.getDataProvider();
+	 return (TreeData) dataProvider.getTreeData();
 	}
 
+	
 	private void setCurrentView(ViewID currentView) {
 		this.currentView = currentView;
+	}
+
+	public ViewID getCurrentView() {
+	return	this.currentView ;
 	}
 
 	private void initComponents() {
@@ -143,7 +151,7 @@ public class ResultPanelNew extends Panel   {
 		//treeGridProperty.setSelectionMode(SelectionMode.MULTI);
 		
 		
-		treeGridPhraseLazy = new TreeGrid<TagRowItem>();
+		treeGridPhrase = new TreeGrid<TagRowItem>();
 		//treeGridPhraseLazy.setSelectionMode(SelectionMode.MULTI);
 		lazyData= new TreeData<TagRowItem>();	
 		
@@ -225,41 +233,30 @@ public class ResultPanelNew extends Panel   {
 		
 		
 		// we dont select items here anymore, just as test for fullview now
-				treeGridTag.addSelectionListener(new SelectionListener<TagRowItem>() {
-					
-					@Override
-					public void selectionChange(SelectionEvent<TagRowItem> event) {
-						
-					
-					Iterable<TagRowItem> selectedItems=	event.getAllSelectedItems();
-			
-					
-					selectedItems.forEach(item -> { System.out.println(" TgaPath :"+item.getTreePath()+ 
-							" Collection :"+item.getCollectionName()+" Tag ID:"+item.getTagInstanceID());});	
-					
-					
-				for (TagRowItem item: selectedItems) {
-					TagRowItem      parent  = tagData.getParent(item);
-					//can have siblings 
-					if(parent!=null) {
-						checkIfAllSiblingsAreSelectedAndSelectParent(item);
-						//setChildrenSelected(item);
-					
-					//is root= no siblings	
-					}else {
-					//setChildrenSelected(item);
-						
-					}
-					
-					
-				}
-				
-						
-					}
+		treeGridTag.addSelectionListener(new SelectionListener<TagRowItem>() {
+			@Override
+			public void selectionChange(SelectionEvent<TagRowItem> event) {
+				Iterable<TagRowItem> selectedItems = event.getAllSelectedItems();
+				selectedItems.forEach(item -> {
+					System.out.println(" TgaPath :" + item.getTreePath() + " Collection :" + item.getCollectionName()
+							+ " Tag ID:" + item.getTagInstanceID());
 				});
-				
 
+				for (TagRowItem item : selectedItems) {
+					TagRowItem parent = tagData.getParent(item);
+					// can have siblings
+					if (parent != null) {
+						checkIfAllSiblingsAreSelectedAndSelectParent(item);
+						// setChildrenSelected(item);
+						// is root= no siblings
+					} else {
+						// setChildrenSelected(item);
+					}
+				}
+			}
+		});
 
+/*
 		treeGridPhraseLazy.addExpandListener(new ExpandListener<TagRowItem>() {
 
 			@Override
@@ -305,7 +302,7 @@ public class ResultPanelNew extends Panel   {
 			selectedItems.forEach(item -> { System.out.println(" TgaPath :"+item.getTreePath()+ 
 					" Collection :"+item.getCollectionName()+" Tag ID:"+item.getTagInstanceID());});	
 			}
-		});
+		});*/
 	}
 
 	
@@ -328,11 +325,11 @@ public class ResultPanelNew extends Panel   {
 		treeGridTag.setCaption(queryAsString);
 
 		treeGridPanel.setContent(treeGridTag);
-		//setDataPhraseStyle();
-		setDataPhraseStyleLazy();
+	  setDataPhraseStyle();
+		//setDataPhraseStyleLazy();
 	}
 
-/*	private void setDataPhraseStyle() throws Exception {
+	private void setDataPhraseStyle() throws Exception {
 
 		Set<GroupedQueryResult> groupedQueryResults = queryResult.asGroupedSet();
 		TreeData<TagRowItem> phraseData = new TreeData<>();
@@ -363,10 +360,10 @@ public class ResultPanelNew extends Panel   {
 
 		treeGridPhrase.setDataProvider(dataProvider);
 		treeGridPhrase.setWidth("100%");
-	}*/
+	}
 	
 	
-	private void setDataPhraseStyleLazy() throws Exception {
+/*	private void setDataPhraseStyleLazy() throws Exception {
 		
 		Set<GroupedQueryResult> groupedQueryResults = queryResult.asGroupedSet();
 	
@@ -391,7 +388,7 @@ public class ResultPanelNew extends Panel   {
 		treeGridPhraseLazy.setDataProvider(dataProviderLazy);
 		treeGridPhraseLazy.setCaption(queryAsString);
 		treeGridPhraseLazy.setWidth("100%");		
-	}
+	}*/
 	
 	
 	private void setDataPropertyStyle() throws Exception {
@@ -420,8 +417,8 @@ public class ResultPanelNew extends Panel   {
 
 		treeGridPanel.setContent(treeGridProperty);
 		
-		//setDataPhraseStyle();
-		setDataPhraseStyleLazy();
+		setDataPhraseStyle();
+		//setDataPhraseStyleLazy();
 	}
 
 	private TreeData<TagRowItem> populateTreeDataWithTags(Repository repository, TreeData<TagRowItem> treeData,
@@ -656,7 +653,7 @@ public class ResultPanelNew extends Panel   {
 
 	}
 
-/*	// get docs as children for a phrase- normal style
+	// get docs as children for a phrase- normal style
 	private ArrayList<TagRowItem> retrieveChilderen(GroupedQueryResult groupedQueryResult) throws Exception {
 
 		Set<String> docsForAPhrase = groupedQueryResult.getSourceDocumentIDs();
@@ -671,7 +668,7 @@ public class ResultPanelNew extends Panel   {
 
 		}
 		return docItems;
-	}*/
+	}
 	
 	private void setChildrenSelected( TagRowItem item) {
 	Iterable<TagRowItem> childIterartor =  tagData.getChildren(item);
@@ -758,11 +755,11 @@ public class ResultPanelNew extends Panel   {
 		switch(currentView){
 		
 		case tag: 	setCurrentView(ViewID.phraseTag);
-		treeGridPanel.setContent(treeGridPhraseLazy);
+		treeGridPanel.setContent(treeGridPhrase);
 		break;
 		
 		case property: 	setCurrentView(ViewID.phraseProperty);
-		treeGridPanel.setContent(treeGridPhraseLazy);
+		treeGridPanel.setContent(treeGridPhrase);
 		break;
 		
 		case phrase: Notification.show("no tag view available for that query", Notification.Type.HUMANIZED_MESSAGE);

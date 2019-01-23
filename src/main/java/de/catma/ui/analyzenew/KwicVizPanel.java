@@ -29,13 +29,13 @@ private ComboBox<String> comboBox;
 private List<String> availableResultSets;
 private VerticalLayout vertical;
 private Panel treeGridPanelKwic;
-private ArrayList<TreeGrid<TagRowItem>> currentTeeGrids;
+private ArrayList<CurrentTreeGridData> currentTeeGrids;
 
 
-	public KwicVizPanel(String dialogCaption, ArrayList<TreeGrid<TagRowItem>> currentTreeGrids, SaveCancelListener<VizSnapshot> saveCancelListener) {
+	public KwicVizPanel(String dialogCaption, ArrayList<CurrentTreeGridData> currentTreeGridDatas, SaveCancelListener<VizSnapshot> saveCancelListener) {
 		super(dialogCaption, saveCancelListener);
 
-	this.currentTeeGrids= currentTreeGrids;
+	this.currentTeeGrids= currentTreeGridDatas;
 
 	initListeners();
 	initAction();

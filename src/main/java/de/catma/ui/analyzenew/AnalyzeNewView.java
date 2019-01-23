@@ -3,6 +3,7 @@ package de.catma.ui.analyzenew;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -50,11 +51,9 @@ import de.catma.ui.analyzer.Messages;
 import de.catma.ui.analyzer.RelevantUserMarkupCollectionProvider;
 import de.catma.ui.analyzer.TagKwicResultsProvider;
 import de.catma.ui.component.HTMLNotification;
-import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.repository.MarkupCollectionItem;
 import de.catma.ui.tabbedview.ClosableTab;
 import de.catma.ui.tabbedview.TabComponent;
-import scala.reflect.internal.Trees.New;
 
 public class AnalyzeNewView extends VerticalLayout
 		implements ClosableTab, TabComponent, GroupedQueryResultSelectionListener, RelevantUserMarkupCollectionProvider,
@@ -89,6 +88,7 @@ public class AnalyzeNewView extends VerticalLayout
 	private Iterator<Component> allResultPanelsIterator;
 	private VerticalLayout contentPanel;
 	private HorizontalLayout searchAndVisIconsPanel;
+	private HashSet currentResults;
 
 	private Component searchPanel;
 	private Component visIconsPanel;
@@ -221,10 +221,8 @@ public class AnalyzeNewView extends VerticalLayout
 
 					}
 
-				});
-				kwic.setWidth("100%");
-				kwic.setHeight("100%");
-
+				},getAllTreeGridDatas());
+		
 				setContent(kwic);
 			}
 		});
@@ -237,6 +235,8 @@ public class AnalyzeNewView extends VerticalLayout
 	private void setContent(Component component) {
 		removeAllComponents();
 		addComponent(component);
+		component.setHeight("100%");
+		component.setWidth("100%");
 
 	
 
@@ -358,15 +358,18 @@ public class AnalyzeNewView extends VerticalLayout
 		return toReturnList;
 	}
 
-	private ArrayList<TreeData<TagRowItem>> getAllTreeGridDatas() {
+	private ArrayList<CurrentTreeGridData> getAllTreeGridDatas() {
 		Iterator<Component> iterator = resultPanel.getComponentIterator();
-		ArrayList<TreeData<TagRowItem>> toReturnList = new ArrayList<TreeData<TagRowItem>>();
+		ArrayList<CurrentTreeGridData> toReturnList = new ArrayList<CurrentTreeGridData>();
 		while (iterator.hasNext()) {
 			ResultPanelNew onePanel = (ResultPanelNew) iterator.next();
-			toReturnList.add((TreeData<TagRowItem>) onePanel.getCurrentTreeGrid().getData());
+			CurrentTreeGridData current= new CurrentTreeGridData(onePanel.getQueryAsString(),  (TreeData<TagRowItem>) onePanel.getCurrentTreeGridData(),onePanel.getCurrentView());
+			toReturnList.add(current);
 		}
 		return toReturnList;
 	}
+
+
 
 	private void executeSearch() {
 
@@ -406,6 +409,7 @@ public class AnalyzeNewView extends VerticalLayout
 
 						resultPanel.setSpacing(true);
 						resultPanel.addComponentAsFirst(queryResultPanel);
+						
 
 					};
 
