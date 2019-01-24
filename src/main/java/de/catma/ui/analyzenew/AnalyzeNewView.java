@@ -30,7 +30,6 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.VerticalLayout;
 import de.catma.backgroundservice.BackgroundServiceProvider;
 import de.catma.backgroundservice.ExecutionListener;
@@ -218,11 +217,8 @@ public class AnalyzeNewView extends VerticalLayout
 					@Override
 					public void onClose() {
 						setContent(contentPanel);
-
 					}
-
 				},getAllTreeGridDatas());
-		
 				setContent(kwic);
 			}
 		});
@@ -237,8 +233,6 @@ public class AnalyzeNewView extends VerticalLayout
 		addComponent(component);
 		component.setHeight("100%");
 		component.setWidth("100%");
-
-	
 
 	}
 
@@ -348,7 +342,7 @@ public class AnalyzeNewView extends VerticalLayout
 		return visIconsPanel;
 	}
 
-	private ArrayList<TreeGrid<TagRowItem>> getAllTreeGrids() {
+/*	private ArrayList<TreeGrid<TagRowItem>> getAllTreeGrids() {
 		Iterator<Component> iterator = resultPanel.getComponentIterator();
 		ArrayList<TreeGrid<TagRowItem>> toReturnList = new ArrayList<TreeGrid<TagRowItem>>();
 		while (iterator.hasNext()) {
@@ -356,7 +350,7 @@ public class AnalyzeNewView extends VerticalLayout
 			toReturnList.add(onePanel.getCurrentTreeGrid());
 		}
 		return toReturnList;
-	}
+	}*/
 
 	private ArrayList<CurrentTreeGridData> getAllTreeGridDatas() {
 		Iterator<Component> iterator = resultPanel.getComponentIterator();

@@ -54,13 +54,17 @@ public class ResultPanelNew extends Panel   {
 	private TreeData<TagRowItem> tagData;
 	private TreeGrid<TagRowItem> treeGridTag;
 	
+	private TreeData<TagRowItem> phraseData;
 	private TreeGrid<TagRowItem> treeGridPhrase;
+	
 	private TreeGrid<TagRowItem> treeGridProperty;
 	
 	
    // private TreeGrid<TagRowItem> treeGridPhraseLazy;
-    private	TreeDataProvider<TagRowItem> dataProviderLazy;
-    private TreeData<TagRowItem> lazyData;
+   // private	TreeDataProvider<TagRowItem> dataProviderLazy;
+   // private TreeData<TagRowItem> lazyData;
+    
+
     
 	private Label queryInfo;
 	private HorizontalLayout groupedIcons;
@@ -110,11 +114,11 @@ public class ResultPanelNew extends Panel   {
 
 	}
 
-	@SuppressWarnings("unchecked")
+/*	@SuppressWarnings("unchecked")
 	public TreeGrid<TagRowItem> getCurrentTreeGrid() {
 	TreeGrid <TagRowItem> currentTreeGrid= (TreeGrid<TagRowItem>) treeGridPanel.getContent();
 	return currentTreeGrid;
-	}
+	}*/
 	
 	
 	public TreeData getCurrentTreeGridData() {
@@ -139,7 +143,7 @@ public class ResultPanelNew extends Panel   {
 		setContent(contentVerticalLayout);
 
 		treeGridTag = new TreeGrid<TagRowItem>();
-		treeGridTag.setSelectionMode(SelectionMode.MULTI);
+		//treeGridTag.setSelectionMode(SelectionMode.MULTI);
 		
 		
 		
@@ -151,9 +155,9 @@ public class ResultPanelNew extends Panel   {
 		//treeGridProperty.setSelectionMode(SelectionMode.MULTI);
 		
 		
-		treeGridPhrase = new TreeGrid<TagRowItem>();
+		//treeGridPhrase = new TreeGrid<TagRowItem>();
 		//treeGridPhraseLazy.setSelectionMode(SelectionMode.MULTI);
-		lazyData= new TreeData<TagRowItem>();	
+		//lazyData= new TreeData<TagRowItem>();	
 		
 		
 		
