@@ -48,7 +48,7 @@ import com.vaadin.v7.ui.HorizontalLayout;
 import com.vaadin.v7.ui.TreeTable;
 import com.vaadin.v7.ui.VerticalLayout;
 
-import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
+import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.Property;
 import de.catma.tag.TagDefinition;
@@ -357,9 +357,9 @@ public class TagInstanceTree extends HorizontalLayout {
 		setExpandRatio(buttonsAndInfo, 1.0f);
 	}
 
-	public void setTagInstances(List<TagInstanceInfo> tagInstances) {
+	public void setTagInstances(List<Annotation> tagInstances) {
 		tagInstanceTree.removeAllItems();
-		for (TagInstanceInfo ti : tagInstances) {
+		for (Annotation ti : tagInstances) {
 			ClassResource tagIcon = 
 					new ClassResource("tagmanager/resources/reddiamd.gif"); //$NON-NLS-1$
 			

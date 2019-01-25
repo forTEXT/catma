@@ -1,5 +1,7 @@
 package de.catma.ui.tagger.contextmenu;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,9 +12,15 @@ import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
 
 import de.catma.tag.TagDefinition;
+import de.catma.tag.TagManager;
 import de.catma.tag.TagsetDefinition;
+import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.ui.tagger.Tagger;
+import de.catma.ui.tagger.annotationpanel.TagDataItem;
+import de.catma.ui.tagger.annotationpanel.TagsetDataItem;
+import de.catma.ui.tagger.annotationpanel.TagsetTreeItem;
 import de.catma.util.ColorConverter;
+import de.catma.util.Pair;
 
 public class TaggerContextMenu {
 	
@@ -45,9 +53,65 @@ public class TaggerContextMenu {
 	private ContextMenu contextMenu;
 	private TagSelectionListener tagSelectionListener;
 	private Map<Object, MenuItem> entryToMenuItemMap = new HashMap<>();
+	private TagManager tagManager;
+	private PropertyChangeListener tagChangedListener;
 	
-	public TaggerContextMenu(Tagger tagger) {
+	public TaggerContextMenu(Tagger tagger, TagManager tagManager) {
+		this.tagManager = tagManager;
 		initComponents(tagger);
+		initListeners();
+	}
+
+	private void initListeners() {
+		tagChangedListener = new PropertyChangeListener() {
+			
+			@SuppressWarnings("unchecked")
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				
+				Object newValue = evt.getNewValue();
+				Object oldValue = evt.getOldValue();
+				
+				if (oldValue == null) { //created
+					Pair<TagsetDefinition, TagDefinition> value = 
+							(Pair<TagsetDefinition, TagDefinition>)newValue;
+					
+					TagsetDefinition tagset = value.getFirst();
+					TagDefinition tag = value.getSecond();
+					Object parent = tagset;
+					if (!tag.getParentUuid().isEmpty()) {
+						parent = tagset.getTagDefinition(tag.getParentUuid());
+					}
+					
+					MenuItem parentItem = entryToMenuItemMap.get(parent);
+					
+					addToMenuItem(parentItem, tagset, tag);
+				}
+				else if (newValue == null) { //removed
+					Pair<TagsetDefinition,TagDefinition> deleted = (Pair<TagsetDefinition, TagDefinition>) oldValue;
+					
+					TagDefinition deletedTag = deleted.getSecond();
+					MenuItem menuItem = entryToMenuItemMap.get(deletedTag);
+					if (menuItem != null) {
+						contextMenu.removeItem(menuItem);
+					}
+				}
+				else { //update
+					TagDefinition tag = (TagDefinition) newValue;
+					TagsetDefinition tagset = (TagsetDefinition)oldValue;
+	            	TagsetTreeItem tagsetItem = new TagsetDataItem(tagset);
+
+	            	MenuItem menuItem = entryToMenuItemMap.get(tag);
+	            	
+	            	menuItem.setText(createTagMenuItemCaption(tag));
+	            	
+				}
+				
+			}
+		};
+		tagManager.addPropertyChangeListener(
+				TagManagerEvent.tagDefinitionChanged, 
+				tagChangedListener);
 	}
 
 	public void setTagSelectionListener(TagSelectionListener tagSelectionListener) {
@@ -66,14 +130,10 @@ public class TaggerContextMenu {
 		}
 	}
 
-	private void addToMenuItem(MenuItem menuItem, TagsetDefinition tagset, TagDefinition tag) {
+	private void addToMenuItem(MenuItem parentMenuItem, TagsetDefinition tagset, TagDefinition tag) {
 		
-		MenuItem tagMenuItem = menuItem.addItem(
-			"<div "
-			+ "class=\"tagger-contextmenu-menuitem-caption\" "
-			+ "style=\"background-color:#"+ColorConverter.toHex(tag.getColor())+"\">"
-			+ "&nbsp;</div>" 
-			+ tag.getName(), 
+		MenuItem tagMenuItem = parentMenuItem.addItem(
+			createTagMenuItemCaption(tag), 
 			new TagDefinitionCommand(tag, tagSelectionListener));	
 		
 		tagMenuItem.setStyleName("tagger-contextmenu-menuitem");
@@ -82,6 +142,15 @@ public class TaggerContextMenu {
 		for (TagDefinition childTag : tagset.getChildren(tag)) {
 			addToMenuItem(tagMenuItem, tagset, childTag);
 		}
+	}
+
+	private String createTagMenuItemCaption(TagDefinition tag) {
+		return
+				"<div "
+				+ "class=\"tagger-contextmenu-menuitem-caption\" "
+				+ "style=\"background-color:#"+ColorConverter.toHex(tag.getColor())+"\">"
+				+ "&nbsp;</div>" 
+				+ tag.getName();
 	}
 
 	public void addTagset(TagsetDefinition tagset) {
@@ -96,4 +165,9 @@ public class TaggerContextMenu {
 		contextMenu.removeItem(entryToMenuItemMap.get(tagset));
 	}
 
+	public void close() {
+		tagManager.removePropertyChangeListener(
+				TagManagerEvent.tagDefinitionChanged, 
+				tagChangedListener);
+	}
 }

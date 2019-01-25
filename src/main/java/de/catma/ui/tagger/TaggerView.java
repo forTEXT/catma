@@ -55,7 +55,7 @@ import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.IndexInfoSet;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
+import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
@@ -167,7 +167,10 @@ public class TaggerView extends HorizontalLayout
 			Collection<TagsetDefinition> tagsets = 
 					new HashSet<>(resourcePanel.getSelectedTagsets());
 			
-			annotationPanel.setData(tagsets, new ArrayList<>(userMarkupCollectionManager.getUserMarkupCollections()));
+			annotationPanel.setData(
+					sourceDocument, 
+					tagsets, 
+					new ArrayList<>(userMarkupCollectionManager.getUserMarkupCollections()));
 			taggerContextMenu.setTagsets(tagsets);
 			
 		} catch (IOException e) {
@@ -414,7 +417,7 @@ public class TaggerView extends HorizontalLayout
 		taggerPanel.addComponent(tagger);
 		taggerPanel.setExpandRatio(tagger, 1.0f);
 		
-		taggerContextMenu = new TaggerContextMenu(tagger);
+		taggerContextMenu = new TaggerContextMenu(tagger, this.tagManager);
 		
 		HorizontalLayout actionPanel = new HorizontalLayout();
 		actionPanel.setSpacing(true);
@@ -604,6 +607,7 @@ public class TaggerView extends HorizontalLayout
 	public void close() {
 		annotationPanel.close();
 		resourcePanel.close();
+		taggerContextMenu.close();
 		project.removePropertyChangeListener(
 				RepositoryChangeEvent.sourceDocumentChanged,
 				sourceDocChangedListener);
@@ -682,14 +686,31 @@ public class TaggerView extends HorizontalLayout
 	}
 	
 	public void tagInstanceSelected(String instancePartID, String lineID) {
-		markupPanel.showTagInstanceInfo(
-			pager.getCurrentPage().getTagInstanceIDs(instancePartID, lineID), 
-			ClientTagInstance.getTagInstanceIDFromPartId(instancePartID));
+		//TODO:
+//		markupPanel.showTagInstanceInfo(
+//			pager.getCurrentPage().getTagInstanceIDs(instancePartID, lineID), 
+//			ClientTagInstance.getTagInstanceIDFromPartId(instancePartID));
+		try {
+			annotationPanel.showAnnotationDetails(
+					userMarkupCollectionManager.getAnnotations(
+							pager.getCurrentPage().getTagInstanceIDs(instancePartID, lineID)));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	@Override
 	public void tagInstanceSelected(Set<String> tagInstanceIDs) {
-		markupPanel.showTagInstanceInfo(tagInstanceIDs, null);
+		//TODO:
+//		markupPanel.showTagInstanceInfo(tagInstanceIDs, null);
+		try {
+			annotationPanel.showAnnotationDetails(
+				userMarkupCollectionManager.getAnnotations(tagInstanceIDs));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public void addClickshortCuts() { /* noop*/	}
@@ -703,7 +724,7 @@ public class TaggerView extends HorizontalLayout
 	}
 
 	@Override
-	public TagInstanceInfo getTagInstanceInfo(String tagInstanceId) {
-		return userMarkupCollectionManager.getTagInstanceInfo(tagInstanceId);
+	public Annotation getTagInstanceInfo(String tagInstanceId) {
+		return userMarkupCollectionManager.getAnnotation(tagInstanceId);
 	}
 }

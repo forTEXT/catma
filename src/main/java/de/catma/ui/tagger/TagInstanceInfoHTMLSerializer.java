@@ -2,7 +2,7 @@ package de.catma.ui.tagger;
 
 import java.util.List;
 
-import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
+import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition.SystemPropertyName;
 import de.catma.tag.TagInstance;
@@ -11,7 +11,7 @@ import nu.xom.Element;
 
 public class TagInstanceInfoHTMLSerializer {
 
-	public String toHTML(TagInstanceInfo tagInstanceInfo) {
+	public String toHTML(Annotation tagInstanceInfo) {
 		
 		Element table = new Element("table"); //$NON-NLS-1$
 		table.addAttribute(new Attribute("class", "taginstanceinfo")); //$NON-NLS-1$ //$NON-NLS-2$

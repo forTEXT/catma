@@ -30,7 +30,7 @@ import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.UI;
 
 import de.catma.document.Range;
-import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
+import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagInstance;
@@ -57,7 +57,7 @@ public class Tagger extends AbstractComponent {
 		public void tagInstanceAdded(ClientTagInstance clientTagInstance);
 		public void tagInstanceSelected(String instancePartID, String lineID);
 		public void tagInstanceSelected(Set<String> tagInstanceIDs);
-		public TagInstanceInfo getTagInstanceInfo(String tagInstanceId);
+		public Annotation getTagInstanceInfo(String tagInstanceId);
 	}
 	
 	private static final long serialVersionUID = 1L;
@@ -102,7 +102,7 @@ public class Tagger extends AbstractComponent {
 				taggerListener.tagInstanceAdded(
 						pager.getCurrentPage().getAbsoluteTagInstance(tagInstance));
 				
-				TagInstanceInfo tagInstanceInfo = 
+				Annotation tagInstanceInfo = 
 						taggerListener.getTagInstanceInfo(tagInstance.getInstanceID());
 				getState().tagInstanceIdToTooltipInfo.put(
 					tagInstance.getInstanceID(), 
@@ -172,7 +172,7 @@ public class Tagger extends AbstractComponent {
 					for (Page page : pages) {
 						page.addAbsoluteTagInstance(ti);
 					}
-					TagInstanceInfo tagInstanceInfo = 
+					Annotation tagInstanceInfo = 
 							taggerListener.getTagInstanceInfo(ti.getInstanceID());
 					getState().tagInstanceIdToTooltipInfo.put(
 						ti.getInstanceID(), 

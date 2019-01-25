@@ -17967,3 +17967,14 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	border: none;
 	cursor: pointer;
 }
+
+.catma .annotation-details-card-tag-color {
+	margin-left: 10px;
+	padding-left: 6px;
+	padding-right: 6px;
+}
+
+.catma .annotation-panel-button-right-align {
+	float: right;
+	margin-right: 5px;
+}

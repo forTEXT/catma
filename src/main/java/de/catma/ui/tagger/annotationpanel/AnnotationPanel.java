@@ -2,6 +2,7 @@ package de.catma.ui.tagger.annotationpanel;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,11 +33,14 @@ import com.vaadin.ui.StyleGenerator;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.VerticalSplitPanel;
 import com.vaadin.ui.renderers.ButtonRenderer;
 import com.vaadin.ui.renderers.ClickableRenderer.RendererClickEvent;
 import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.document.repository.Repository;
+import de.catma.document.source.SourceDocument;
+import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.PropertyDefinition;
@@ -71,6 +75,9 @@ public class AnnotationPanel extends VerticalLayout {
 	private IDGenerator idGenerator = new IDGenerator();
 	private PropertyChangeListener tagChangedListener;
 	private PropertyChangeListener propertyDefinitionChangedListener;
+	private AnnotationDetailsRibbon annotationDetailsRibbon;
+	private Button btMaximizeAnnotationDetailsRibbon;
+	private VerticalSplitPanel rightSplitPanel;
 
 	public AnnotationPanel(Repository project) {
 		this.project = project;
@@ -172,11 +179,30 @@ public class AnnotationPanel extends VerticalLayout {
 					tag = (TagDefinition) oldValue;
 				}
 				
-				TagDataItem tagDataItem = new TagDataItem(tag);
+				TagsetTreeItem parentItem = null;
+				if (tag.getParentUuid().isEmpty()) {
+					parentItem = new TagsetDataItem(
+						project.getTagManager().getTagLibrary()
+							.getTagsetDefinition(tag.getTagsetDefinitionUuid()));
+				}
+				else {
+					parentItem = new TagDataItem(
+						project.getTagManager().getTagLibrary().getTagDefinition(tag.getParentUuid()));
+				}
 				
-				hideExpandedProperties(tagDataItem);
-				showExpandedProperties(tagDataItem);
-						
+				final String tagId = tag.getUuid();
+				tagsetData.getChildren(parentItem)
+				.stream()
+				.map(tagsetTreeItem -> (TagDataItem)tagsetTreeItem)
+				.filter(tagDataItem -> tagDataItem.getTag().getUuid().equals(tagId))
+				.findFirst()
+				.ifPresent(tagDataItem -> {
+					tagDataItem.setPropertiesExpanded(false);
+					hideExpandedProperties(tagDataItem);
+					tagDataItem.setPropertiesExpanded(true);
+					showExpandedProperties(tagDataItem);
+				});
+				
 				tagsetDataProvider.refreshAll();
 			}
 		};
@@ -190,10 +216,10 @@ public class AnnotationPanel extends VerticalLayout {
         try {
             tagsetData = new TreeData<TagsetTreeItem>();
             
-            tagsetData.addRootItems(tagsets.stream().map(ts -> new TagsetDataItem(ts)));
-
-            for (TagsetDefinition tagsetDefinition : tagsets) {
-            	addTags(tagsetData, tagsetDefinition);
+            for (TagsetDefinition tagset : tagsets) {
+            	TagsetDataItem tagsetItem = new TagsetDataItem(tagset);
+            	tagsetData.addItem(null, tagsetItem);
+            	addTags(tagsetItem, tagset);
             }
             tagsetDataProvider = new TreeDataProvider<TagsetTreeItem>(tagsetData);
             tagsetGrid.setDataProvider(tagsetDataProvider);
@@ -218,21 +244,26 @@ public class AnnotationPanel extends VerticalLayout {
     	}
 	}
 
-	private void addTags(TreeData<TagsetTreeItem> tagsetData, TagsetDefinition tagset) {
+	private void addTags(
+			TagsetDataItem tagsetItem, 
+			TagsetDefinition tagset) {
+		
         for (TagDefinition tag : tagset) {
             if (tag.getParentUuid().isEmpty()) {
-                tagsetData.addItem(new TagsetDataItem(tagset), new TagDataItem(tag));
-                addTagSubTree(tagset, tag, tagsetData);
+            	TagDataItem tagItem =  new TagDataItem(tag);
+                tagsetData.addItem(tagsetItem, tagItem);
+                addTagSubTree(tagset, tag, tagItem);
             }
         }
 	}
 
 	private void addTagSubTree(
     		TagsetDefinition tagset, 
-    		TagDefinition tag, TreeData<TagsetTreeItem> tagsetData) {
+    		TagDefinition tag, TagDataItem parentItem) {
         for (TagDefinition childDefinition : tagset.getDirectChildren(tag)) {
-            tagsetData.addItem(new TagDataItem(tag), new TagDataItem(childDefinition));
-            addTagSubTree(tagset, childDefinition, tagsetData);
+        	TagDataItem childItem = new TagDataItem(childDefinition);
+            tagsetData.addItem(parentItem, childItem);
+            addTagSubTree(tagset, childDefinition, childItem);
         }
     }
 	private void initActions() {
@@ -291,11 +322,17 @@ public class AnnotationPanel extends VerticalLayout {
 				tagsetGridComponent.getActionGridBar().getBtnMoreOptionsContextMenu();
 		moreOptionsContextMenu.addItem("Edit Tag", clickEvent -> handleEditTagRequest());
 		moreOptionsContextMenu.addItem("Delete Tag", clickEvent -> handleDeleteTagRequest());
-		moreOptionsContextMenu.addItem("Edit/Deletee Properties", clickEvent -> handlePropertiesTagRequest());
+		moreOptionsContextMenu.addItem("Edit/Delete Properties", clickEvent -> handlePropertiesTagRequest());
 		moreOptionsContextMenu.addItem("Edit Tagset", clickEvent -> handleEditTagsetRequest());
 		moreOptionsContextMenu.addItem("Delete Tagset", clickEvent -> handleDeleteTagsetRequest());
 		
 		currentEditableCollectionBox.setEmptySelectionCaption("Please select or create a Collection...");
+		
+		annotationDetailsRibbon.addMinimizeButtonClickListener(
+				clickEvent -> setAnnotationDetailsRibbonVisible(false));
+		btMaximizeAnnotationDetailsRibbon.addClickListener(
+				ClickEvent -> setAnnotationDetailsRibbonVisible(true));
+		
 	}
 
 	private void handleDeleteTagsetRequest() {
@@ -648,13 +685,30 @@ public class AnnotationPanel extends VerticalLayout {
                 tagsetGrid
         );
         
-        addComponent(tagsetGridComponent);
-        setExpandRatio(tagsetGridComponent, 1.0f);
+        rightSplitPanel = new VerticalSplitPanel();
+        rightSplitPanel.setSizeFull();
+        rightSplitPanel.setSplitPosition(90);
+        rightSplitPanel.setLocked(true);
+        
+        addComponent(rightSplitPanel);
+        setExpandRatio(rightSplitPanel, 1.0f);
+        
+        rightSplitPanel.addComponent(tagsetGridComponent);
+        
+        btMaximizeAnnotationDetailsRibbon = new IconButton(VaadinIcons.ANGLE_DOUBLE_UP);
+        btMaximizeAnnotationDetailsRibbon.addStyleName("annotation-panel-button-right-align");
+        rightSplitPanel.addComponent(btMaximizeAnnotationDetailsRibbon);
+        
+        annotationDetailsRibbon = new AnnotationDetailsRibbon(project);
 	}
 	
-	public void setData(Collection<TagsetDefinition> tagsets, List<UserMarkupCollection> collections) {
+	public void setData(
+			SourceDocument document, 
+			Collection<TagsetDefinition> tagsets, 
+			List<UserMarkupCollection> collections) throws IOException {
 		this.tagsets = tagsets;
 		this.collections = collections;
+		this.annotationDetailsRibbon.setDocument(document);
 		initData();
 	}
 	
@@ -703,9 +757,9 @@ public class AnnotationPanel extends VerticalLayout {
 
 	public void addTagset(TagsetDefinition tagset) {
 		tagsets.add(tagset);
-
-		tagsetData.addRootItems(new TagsetDataItem(tagset));
-		addTags(tagsetData, tagset);
+		TagsetDataItem tagsetItem = new TagsetDataItem(tagset);
+		tagsetData.addRootItems(tagsetItem);
+		addTags(tagsetItem, tagset);
 		expandTagsetDefinition(tagset);
 		tagsetDataProvider.refreshAll();
 	}
@@ -724,5 +778,31 @@ public class AnnotationPanel extends VerticalLayout {
 				TagManagerEvent.tagDefinitionChanged, 
 				tagChangedListener);
 			
+	}
+	
+	private void setAnnotationDetailsRibbonVisible(boolean visible) {
+		if (visible && (annotationDetailsRibbon.getParent() == null)){
+			rightSplitPanel.removeComponent(btMaximizeAnnotationDetailsRibbon);
+			rightSplitPanel.addComponent(annotationDetailsRibbon);
+			rightSplitPanel.setSplitPosition(50);
+			rightSplitPanel.setMinSplitPosition(1, Unit.PERCENTAGE);
+			rightSplitPanel.setLocked(false);
+		}
+		else if (btMaximizeAnnotationDetailsRibbon.getParent() == null){
+			rightSplitPanel.removeComponent(annotationDetailsRibbon);
+			rightSplitPanel.addComponent(btMaximizeAnnotationDetailsRibbon);
+			rightSplitPanel.setSplitPosition(90);		
+			rightSplitPanel.setLocked(true);
+		}
+	}
+
+	public void showAnnotationDetails(Collection<Annotation> annotations) throws IOException {
+		if (annotationDetailsRibbon.getParent() == null) {
+			setAnnotationDetailsRibbonVisible(true);
+		}
+		for (Annotation annotation : annotations) {
+			annotationDetailsRibbon.addAnnotation(annotation);
+		}
+		
 	}
 }

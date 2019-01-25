@@ -57,7 +57,7 @@ import de.catma.document.Corpus;
 import de.catma.document.repository.Repository;
 import de.catma.document.repository.Repository.RepositoryChangeEvent;
 import de.catma.document.source.SourceDocument;
-import de.catma.document.standoffmarkup.usermarkup.TagInstanceInfo;
+import de.catma.document.standoffmarkup.usermarkup.Annotation;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollectionManager;
@@ -590,7 +590,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 	}
 
 	public void showTagInstanceInfo(Collection<String> instanceIDs, String tagInstanceID) {
-		List<TagInstanceInfo> tagInstances = markupCollectionsPanel.getTagInstances(instanceIDs);
+		List<Annotation> tagInstances = markupCollectionsPanel.getTagInstances(instanceIDs);
 
 		tagInstancesTree.setTagInstances(tagInstances);
 		if (tagInstanceID != null) {
@@ -631,7 +631,7 @@ public class MarkupPanel extends VerticalSplitPanel implements TagIntanceActionL
 		tagInstanceSelectedListener.tagInstanceSelected(tagInstance);
 	}
 
-	public TagInstanceInfo getTagInstanceInfo(String tagInstanceId) {
+	public Annotation getTagInstanceInfo(String tagInstanceId) {
 		return markupCollectionsPanel.getTagInstanceInfo(tagInstanceId);
 	}
 
