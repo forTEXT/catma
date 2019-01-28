@@ -3,6 +3,8 @@ package de.catma.ui.analyzenew;
 import java.util.ArrayList;
 import java.util.UUID;
 
+import de.catma.queryengine.result.QueryResultRow;
+
 public class TagRowItem {
 	
 	private String tagID;
@@ -19,6 +21,7 @@ public class TagRowItem {
 	private int frequency;
 	private String propertyName;
 	private Object propertyValue;
+	private QueryResultRow tagQueryResultRow; 
 
 	
 	public TagRowItem() {
@@ -116,6 +119,14 @@ public class TagRowItem {
 	public void setPropertyValue(Object propertyValue) {
 		this.propertyValue = propertyValue;
 	}
+	public QueryResultRow getTagQueryResultRow() {
+		return tagQueryResultRow;
+	}
+	public void setTagQueryResultRow(QueryResultRow tagQueryResultRow) {
+		this.tagQueryResultRow = tagQueryResultRow;
+	}
+	
+	
 	
 	
 
