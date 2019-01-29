@@ -22,6 +22,7 @@ public class TagRowItem {
 	private String propertyName;
 	private Object propertyValue;
 	private QueryResultRow tagQueryResultRow; 
+	private String phrase;
 
 	
 	public TagRowItem() {
@@ -125,6 +126,14 @@ public class TagRowItem {
 	public void setTagQueryResultRow(QueryResultRow tagQueryResultRow) {
 		this.tagQueryResultRow = tagQueryResultRow;
 	}
+	public String getPhrase() {
+		return phrase;
+	}
+	public void setPhrase(String phrase) {
+		this.phrase = phrase;
+	}
+	
+	
 	
 	
 	

@@ -326,7 +326,16 @@ public class ResultPanelNew extends Panel {
 			phraseAsRoots.add(rootPhrase);
 			phraseData.addItems(null, rootPhrase);
 			// add documents and collections
-			phraseData.addItems(rootPhrase, retrieveChilderen(groupedQueryResult));
+			ArrayList<TagRowItem> documentsForAPhrase = retrieveDocumentsAsChildren(groupedQueryResult);
+			phraseData.addItems(rootPhrase, documentsForAPhrase);
+			
+			for(TagRowItem doc : documentsForAPhrase) {
+				ArrayList<TagRowItem> phraseItems = new ArrayList<>();
+				phraseItems=retrievePhraseItemsAsChildren(groupedQueryResult,doc);
+				
+				phraseData.addItems(doc,phraseItems);
+		
+			}
 
 		}
 
@@ -687,20 +696,37 @@ public class ResultPanelNew extends Panel {
 	}
 
 	// get docs as children for a phrase- normal style
-	private ArrayList<TagRowItem> retrieveChilderen(GroupedQueryResult groupedQueryResult) throws Exception {
+	private ArrayList<TagRowItem> retrieveDocumentsAsChildren(GroupedQueryResult groupedQueryResult) throws Exception {
 
 		Set<String> docsForAPhrase = groupedQueryResult.getSourceDocumentIDs();
 		ArrayList<TagRowItem> docItems = new ArrayList<>();
 		for (String doc : docsForAPhrase) {
-			TagRowItem rowItem = new TagRowItem();
+			TagRowItem oneDocItem = new TagRowItem();
 			// get SourceDoc name from sorceDocID
 			String docName = retrieveDocumentName(this.repository, doc);
-			rowItem.setTreePath(docName);
-			rowItem.setFrequency(groupedQueryResult.getFrequency(doc));
-			docItems.add(rowItem);
+			oneDocItem.setTreePath(docName);
+			oneDocItem.setSourceDocName(docName);
+			oneDocItem.setFrequency(groupedQueryResult.getFrequency(doc));
+			docItems.add(oneDocItem);
 
 		}
 		return docItems;
+	}
+	
+	private ArrayList<TagRowItem> retrievePhraseItemsAsChildren(GroupedQueryResult groupedQueryResult,TagRowItem document) throws Exception{
+		ArrayList<TagRowItem> phraseItems = new ArrayList<>();
+	for(QueryResultRow row:groupedQueryResult) {
+		String docName = retrieveDocumentName(repository, row.getSourceDocumentId());
+		if(document.getSourceDocName().equalsIgnoreCase(docName)) {
+			TagRowItem phraseItem= new TagRowItem();
+			phraseItem.setPhrase(row.getPhrase());
+			phraseItem.setTreePath(row.getPhrase());
+			phraseItems.add(phraseItem);
+	
+		}
+	}
+		
+		return phraseItems;
 	}
 
 	private void setChildrenSelected(TagRowItem item) {
