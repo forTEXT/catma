@@ -33,6 +33,8 @@ import java.util.logging.Logger;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Theme;
+import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.Page;
@@ -49,7 +51,9 @@ import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Link;
 import com.vaadin.ui.Notification.Type;
+import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.renderers.ButtonRenderer;
 
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.backgroundservice.BackgroundServiceProvider;
@@ -131,6 +135,37 @@ public class CatmaApplication extends UI implements
 	protected void init(VaadinRequest request) {
 		logger.info("Session: " + request.getWrappedSession().getId());
 		storeParameters(request.getParameterMap());
+		boolean nase = false;
+		//TODO: remove test code
+		
+		if (nase) {
+			VerticalLayout nasenPanel = new VerticalLayout();
+			nasenPanel.addComponent(new Label("Nase1"));
+			nasenPanel.addComponent(new Label("Nase2"));
+			nasenPanel.addComponent(new Label("Nase3"));
+			
+			
+			TreeData<String> treeData = new TreeData<>();
+			for (int i=0; i<8;i++) {
+				treeData.addItem(null, "item"+i);
+			}
+			
+			for (int i=0; i<10; i++) {
+				treeData.addItem("item5", "child"+i);
+			}
+			TreeDataProvider<String> dp = new TreeDataProvider<>(treeData);
+			TreeGrid<String> grid = new TreeGrid<String>(dp);
+			grid.setHierarchyColumn(
+					grid.addColumn(item -> item.toString()).setCaption("Name"));
+			
+			ButtonRenderer<String> buttonRenderer = new ButtonRenderer<>(clickEvent -> System.out.println("clicked"));
+			buttonRenderer.setHtmlContentAllowed(true);
+			grid.addColumn(item->VaadinIcons.ABACUS.getHtml(), buttonRenderer).setCaption("Click");
+			nasenPanel.addComponent(grid);
+			
+			setContent(nasenPanel);
+			return;
+		}
 
 		Page.getCurrent().setTitle(Version.LATEST.toString()); //$NON-NLS-1$
 

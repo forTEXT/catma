@@ -17968,13 +17968,37 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	cursor: pointer;
 }
 
-.catma .annotation-details-card-tag-color {
-	margin-left: 10px;
-	padding-left: 6px;
-	padding-right: 6px;
-}
-
 .catma .annotation-panel-button-right-align {
 	float: right;
 	margin-right: 5px;
+}
+
+.catma .v-treegrid.v-widget.annotation-details-card-property-tree.v-treegrid-annotation-details-card-property-tree.v-has-height {
+	box-shadow: none;
+}
+
+.catma .annotation-details-card-property-tree .v-treegrid-header th {
+	border: none;
+}
+
+.catma .annotation-details-panel-annotation-details-grid :not(.v-treegrid-header) > .v-treegrid-row:last-child {
+	border: none;
+}
+
+.catma .annotation-details-panel-annotation-details-grid .v-treegrid-body .v-treegrid-row:not(:first-child) {
+	border: none;
+}
+
+.catma .annotation-details-panel-annotation-details-grid .v-grid-spacer.stripe > td {
+	background-color: white;
+	border-top: none;
+	border-bottom: none;
+}
+
+.catma .annotation-details-panel-annotation-details-grid .v-treegrid-cell {
+	font-size: 12px;
+}
+
+.catma .v-verticallayout.v-layout.v-vertical.v-widget.annotation-details-panel.v-verticallayout-annotation-details-panel.v-has-width.v-has-height.v-margin-top.v-margin-right.v-margin-bottom.v-margin-left {
+	padding: 0px;
 }

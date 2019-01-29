@@ -10,6 +10,7 @@ import com.vaadin.icons.VaadinIcons;
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.TagDefinition;
+import de.catma.ui.util.Cleaner;
 import de.catma.util.ColorConverter;
 
 public class TagDataItem implements TagsetTreeItem {
@@ -130,7 +131,7 @@ public class TagDataItem implements TagsetTreeItem {
 		if (!propertiesExpanded) {
 			propertySummary.append(tag.getUserDefinedPropertyDefinitions().stream()
 			.limit(3)
-			.map(property -> property.getName())
+			.map(property -> Cleaner.clean(property.getName()))
 			.collect(Collectors.joining(",")));
 			propertySummary.append(
 				((tag.getUserDefinedPropertyDefinitions().size() > 3)?"...":""));

@@ -4,13 +4,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.vaadin.data.provider.HierarchicalDataProvider;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.icons.VaadinIcons;
 
 import de.catma.document.standoffmarkup.usermarkup.TagReference;
 import de.catma.document.standoffmarkup.usermarkup.UserMarkupCollection;
 import de.catma.tag.PropertyDefinition;
+import de.catma.ui.util.Cleaner;
 
 public class PropertyDataItem implements TagsetTreeItem {
 	
@@ -45,16 +45,21 @@ public class PropertyDataItem implements TagsetTreeItem {
 	@Override
 	public String getPropertySummary() {
 		StringBuilder propertySummary = new StringBuilder();
-		propertySummary.append(
-			(valuesExpanded?VaadinIcons.CARET_DOWN.getHtml():VaadinIcons.CARET_RIGHT.getHtml()));
+		if (!propertyDefinition.getPossibleValueList().isEmpty()) {
+			propertySummary.append(
+				(valuesExpanded?VaadinIcons.CARET_DOWN.getHtml():VaadinIcons.CARET_RIGHT.getHtml()));
+		}
 			
 		propertySummary.append("<div class=\"annotation-panel-property-summary\">");
-		propertySummary.append(propertyDefinition.getName()); 
+		propertySummary.append(Cleaner.clean(propertyDefinition.getName())); 
 
 		if (!valuesExpanded) {
-			propertySummary.append(" - ");
+			if (!propertyDefinition.getPossibleValueList().isEmpty()) { 
+				propertySummary.append(" - ");
+			}
 			propertySummary.append(propertyDefinition.getPossibleValueList().stream()
 			.limit(2)
+			.map(pValue -> Cleaner.clean(pValue))
 			.collect(Collectors.joining(",")));
 			propertySummary.append(
 				((propertyDefinition.getPossibleValueList().size() > 2)?"...":""));

@@ -51,6 +51,7 @@ import de.catma.ui.component.IconButton;
 import de.catma.ui.component.actiongrid.ActionGridComponent;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.modules.main.ErrorHandler;
+import de.catma.ui.util.Cleaner;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
@@ -75,7 +76,7 @@ public class AnnotationPanel extends VerticalLayout {
 	private IDGenerator idGenerator = new IDGenerator();
 	private PropertyChangeListener tagChangedListener;
 	private PropertyChangeListener propertyDefinitionChangedListener;
-	private AnnotationDetailsRibbon annotationDetailsRibbon;
+	private AnnotationDetailsPanel annotationDetailsPanel;
 	private Button btMaximizeAnnotationDetailsRibbon;
 	private VerticalSplitPanel rightSplitPanel;
 
@@ -266,20 +267,21 @@ public class AnnotationPanel extends VerticalLayout {
             addTagSubTree(tagset, childDefinition, childItem);
         }
     }
+
 	private void initActions() {
 		tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getColor(), new HtmlRenderer())
 			.setCaption("Name")
 			.setSortable(false)
-			.setExpandRatio(1);
+			.setWidth(100);
 		tagsetGrid.setHierarchyColumn(
 			tagsetGrid.addColumn(tagsetTreeItem -> tagsetTreeItem.getName())
 			.setCaption("Tags")
 			.setSortable(false)
-			.setExpandRatio(2));
-
+			.setWidth(200));
+		
 		ButtonRenderer<TagsetTreeItem> propertySummaryRenderer = 
 				new ButtonRenderer<>(rendererClickEvent -> handlePropertySummaryClickEvent(rendererClickEvent));
-		propertySummaryRenderer.setHtmlContentAllowed(true); //TODO: handle property summary and values js and html injections!
+		propertySummaryRenderer.setHtmlContentAllowed(true);
 		
 		tagsetGrid.addColumn(
 			tagsetTreeItem -> tagsetTreeItem.getPropertySummary(), 
@@ -287,13 +289,13 @@ public class AnnotationPanel extends VerticalLayout {
 		.setCaption("Properties")
 		.setSortable(false)
 		.setHidable(true)
-		.setExpandRatio(2);
+		.setWidth(100);
 		
 		tagsetGrid.addColumn(
 			tagsetTreeItem -> tagsetTreeItem.getPropertyValue())
 		.setSortable(false)
 		.setHidable(true)
-		.setExpandRatio(1);
+		.setWidth(100);
 			
 		
 		ButtonRenderer<TagsetTreeItem> visibilityRenderer = 
@@ -302,6 +304,7 @@ public class AnnotationPanel extends VerticalLayout {
 		tagsetGrid.addColumn(
 			tagsetTreeItem -> tagsetTreeItem.getVisibilityIcon(), 
 			visibilityRenderer)
+		.setWidth(80)
 		.setSortable(false);
 		
 		tagsetGrid.setStyleGenerator(new StyleGenerator<TagsetTreeItem>() {
@@ -328,7 +331,7 @@ public class AnnotationPanel extends VerticalLayout {
 		
 		currentEditableCollectionBox.setEmptySelectionCaption("Please select or create a Collection...");
 		
-		annotationDetailsRibbon.addMinimizeButtonClickListener(
+		annotationDetailsPanel.addMinimizeButtonClickListener(
 				clickEvent -> setAnnotationDetailsRibbonVisible(false));
 		btMaximizeAnnotationDetailsRibbon.addClickListener(
 				ClickEvent -> setAnnotationDetailsRibbonVisible(true));
@@ -699,7 +702,7 @@ public class AnnotationPanel extends VerticalLayout {
         btMaximizeAnnotationDetailsRibbon.addStyleName("annotation-panel-button-right-align");
         rightSplitPanel.addComponent(btMaximizeAnnotationDetailsRibbon);
         
-        annotationDetailsRibbon = new AnnotationDetailsRibbon(project);
+        annotationDetailsPanel = new AnnotationDetailsPanel(project);
 	}
 	
 	public void setData(
@@ -708,7 +711,7 @@ public class AnnotationPanel extends VerticalLayout {
 			List<UserMarkupCollection> collections) throws IOException {
 		this.tagsets = tagsets;
 		this.collections = collections;
-		this.annotationDetailsRibbon.setDocument(document);
+		this.annotationDetailsPanel.setDocument(document);
 		initData();
 	}
 	
@@ -781,15 +784,15 @@ public class AnnotationPanel extends VerticalLayout {
 	}
 	
 	private void setAnnotationDetailsRibbonVisible(boolean visible) {
-		if (visible && (annotationDetailsRibbon.getParent() == null)){
+		if (visible && (annotationDetailsPanel.getParent() == null)){
 			rightSplitPanel.removeComponent(btMaximizeAnnotationDetailsRibbon);
-			rightSplitPanel.addComponent(annotationDetailsRibbon);
+			rightSplitPanel.addComponent(annotationDetailsPanel);
 			rightSplitPanel.setSplitPosition(50);
 			rightSplitPanel.setMinSplitPosition(1, Unit.PERCENTAGE);
 			rightSplitPanel.setLocked(false);
 		}
 		else if (btMaximizeAnnotationDetailsRibbon.getParent() == null){
-			rightSplitPanel.removeComponent(annotationDetailsRibbon);
+			rightSplitPanel.removeComponent(annotationDetailsPanel);
 			rightSplitPanel.addComponent(btMaximizeAnnotationDetailsRibbon);
 			rightSplitPanel.setSplitPosition(90);		
 			rightSplitPanel.setLocked(true);
@@ -797,11 +800,11 @@ public class AnnotationPanel extends VerticalLayout {
 	}
 
 	public void showAnnotationDetails(Collection<Annotation> annotations) throws IOException {
-		if (annotationDetailsRibbon.getParent() == null) {
+		if (annotationDetailsPanel.getParent() == null) {
 			setAnnotationDetailsRibbonVisible(true);
 		}
 		for (Annotation annotation : annotations) {
-			annotationDetailsRibbon.addAnnotation(annotation);
+			annotationDetailsPanel.addAnnotation(annotation);
 		}
 		
 	}
