@@ -721,6 +721,7 @@ public class ResultPanelNew extends Panel {
 			TagRowItem phraseItem= new TagRowItem();
 			phraseItem.setPhrase(row.getPhrase());
 			phraseItem.setTreePath(row.getPhrase());
+			phraseItem.setTagQueryResultRow(row);
 			phraseItems.add(phraseItem);
 	
 		}

@@ -26,7 +26,7 @@ public class TagRowItem {
 
 	
 	public TagRowItem() {
-		uuid = UUID.randomUUID();
+		//uuid = UUID.randomUUID();
 		frequency=1;
 		
 		
