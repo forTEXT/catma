@@ -218,7 +218,7 @@ public class AnalyzeNewView extends VerticalLayout
 					public void onClose() {
 						setContent(contentPanel);
 					}
-				},getAllTreeGridDatas());
+				},getAllTreeGridDatas(),repository);
 				setContent(kwic);
 			}
 		});

@@ -348,6 +348,7 @@ public class ResultPanelNew extends Panel {
 		treeGridPhrase.getColumn("freqID").setExpandRatio(1);
 
 		dataProvider.refreshAll();
+		
 
 		treeGridPhrase.setDataProvider(dataProvider);
 		treeGridPhrase.setWidth("100%");

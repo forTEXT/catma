@@ -7,11 +7,18 @@ import java.util.List;
 import java.util.Optional;
 
 import com.vaadin.data.TreeData;
+import com.vaadin.data.provider.DataChangeEvent;
+import com.vaadin.data.provider.DataProviderListener;
+import com.vaadin.data.provider.GridSortOrder;
 import com.vaadin.data.provider.TreeDataProvider;
+import com.vaadin.event.ContextClickEvent;
+import com.vaadin.event.SortEvent;
+import com.vaadin.event.SortEvent.SortListener;
 import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SelectionListener;
 import com.vaadin.event.selection.SingleSelectionEvent;
 import com.vaadin.event.selection.SingleSelectionListener;
+import com.vaadin.server.ClientConnector.AttachEvent;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
@@ -24,13 +31,16 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.VerticalLayout;
+
+import de.catma.document.repository.Repository;
+
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 
 public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 	private VerticalLayout leftSide;
-
+	private Repository repository;
 	private Panel header;
 	private Button arrowLeft;
 	private CloseVizViewListener leaveViewListener;
@@ -52,12 +62,14 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private TreeData<TagRowItem> selectedItemsTreeGridData;
 	private TreeGrid<TagRowItem>selectedItemsTreeGrid;
 	private TreeDataProvider<TagRowItem> selectedDataProvider;
+	private KwicPanelNew kwicNew;
 
 	private Panel selectedItemsPanel;
 
-	public KwicVizPanelNew(CloseVizViewListener leaveVizListener, ArrayList<CurrentTreeGridData> currentTreeGridDatas) {
+	public KwicVizPanelNew(CloseVizViewListener leaveVizListener, ArrayList<CurrentTreeGridData> currentTreeGridDatas,Repository repository) {
 		this.currentTreeGridDatas = currentTreeGridDatas;
 		this.leaveViewListener = leaveVizListener;
+		this.repository= repository;
 		initComponents();
 		initActions();
 		initListeners();
@@ -66,6 +78,8 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private void initComponents() {
 		leftSide = new VerticalLayout();
 		rightSide = new Panel("Visualisation");
+		kwicNew=new KwicPanelNew(repository);
+		rightSide.setContent(kwicNew);
 		header = new Panel();
 		arrowLeft = new Button("<");
 		header.setContent(arrowLeft);
@@ -128,6 +142,17 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	}
 
 	private void initListeners() {
+		
+		selectedDataProvider.addDataProviderListener(new DataProviderListener<TagRowItem>() {
+			
+			@Override
+			public void onDataChange(DataChangeEvent<TagRowItem> event) {
+				
+				updateKwicView();
+			System.out.println("hat sich geändert");
+				
+			}
+		});
 	}
 
 	private ArrayList<String> getQueriesForAvailableResults() {
@@ -312,6 +337,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		} else {
 					
 			for (TagRowItem rootItem : allRootItems) {
+				// rootItem exists, therefore renew root+branch
 				if (rootItem.getTreePath().equalsIgnoreCase(newRoot.getTreePath())) {
 					contains=true;		
 					selectedItemsTreeGridData.removeItem(rootItem);
@@ -321,16 +347,13 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 					selectedDataProvider.refreshAll();
 					break;
 				}
-			}
-				
+			}		
 				if(!contains) {	
-					// rootitem exists, therefore renew branch
-			
+					// rootItem is new in the grid
 					selectedItemsTreeGridData.addItems(null,newRoot);
 					selectedItemsTreeGridData.addItems(newRoot, items);
 					selectedItemsTreeGrid.setWidth("100%");
 					selectedDataProvider.refreshAll();
-					
 				}
 			}
 		}
