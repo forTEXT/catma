@@ -116,8 +116,13 @@ public class KwicPanelNew extends VerticalLayout{
 	    	kwicItemList= new ArrayList<>(); 
 			kwicGrid.setSelectionMode(SelectionMode.MULTI);
 			kwicGrid.setSelectionMode(SelectionMode.SINGLE);
+			kwicGrid.setWidth("100%");
+			kwicGrid.setHeight("100%");
 			
+			kwicGrid.addColumn(KwicItem::getBackwardContext).setCaption("Backward").setId("backwordID");
 			kwicGrid.addColumn(KwicItem::getKeyWord).setCaption("KeyWord").setId("keyWordID");
+			kwicGrid.addColumn(KwicItem::getForewardContext).setCaption("Foreward").setId("forewordID");
+			
 			//kwicGrid.getColumn("keyWordID").setExpandRatio(7);
 			
 
@@ -150,9 +155,8 @@ public class KwicPanelNew extends VerticalLayout{
 				}
 				
 				itemDirCache.put(row, kwic.isRightToLeft());
-				
-				
-				createKwicItemFromQueryResultRow();
+					
+				KwicItem kwicItem=createKwicItemFromQueryResultRow(row , kwic);
 				
           /*	create kwicRowItems like:
             	kwic.getBackwardContext(),
@@ -164,16 +168,22 @@ public class KwicPanelNew extends VerticalLayout{
 				row.getRange().getStartPoint(),
 				row.getRange().getEndPoint()},
 			*/
-				
-				
-				 kwicGrid.setItems(kwicItemList);
+				kwicItemList.add(kwicItem);
 			
 		}
+			 kwicGrid.setItems(kwicItemList);
+			 
 
 	}
 		
-		private KwicItem createKwicItemFromQueryResultRow() {
-			return null;
+		private KwicItem createKwicItemFromQueryResultRow(QueryResultRow queryResultRow, KeywordInContext kwic) {
+		TagQueryResultRow	tagQueryResultRow = (TagQueryResultRow) queryResultRow;
+		KwicItem kwicItem = new KwicItem();
+		kwicItem.setKeyWord(tagQueryResultRow.getTagDefinitionPath());
+		kwicItem.setBackwardContext(kwic.getBackwardContext());
+		kwicItem.setForewardContext(kwic.getForwardContext());
+			
+			return kwicItem;
 		}
 }
 

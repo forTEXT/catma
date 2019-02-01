@@ -315,6 +315,7 @@ public class ResultPanelNew extends Panel {
 
 		Set<GroupedQueryResult> groupedQueryResults = queryResult.asGroupedSet();
 		TreeData<TagRowItem> phraseData = new TreeData<>();
+		//phraseData = new TreeData<>();
 		ArrayList<TagRowItem> phraseAsRoots = new ArrayList<>();
 		// add phrases as roots
 		for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
@@ -551,7 +552,7 @@ public class ResultPanelNew extends Panel {
 									.getUserMarkupCollectionReference(tagQueryResultRow.getMarkupCollectionId())
 									.getName());
 							tagTagRowItem.setTreePath(oneCollection.getTagDefinitionPath());
-							tagTagRowItem.setTagQueryResultRow(tagQueryResultRow);
+							tagTagRowItem.setQueryResultRow(tagQueryResultRow);
 							tagsForACollection.add(tagTagRowItem);
 						}
 					}
@@ -722,7 +723,7 @@ public class ResultPanelNew extends Panel {
 			TagRowItem phraseItem= new TagRowItem();
 			phraseItem.setPhrase(row.getPhrase());
 			phraseItem.setTreePath(row.getPhrase());
-			phraseItem.setTagQueryResultRow(row);
+			phraseItem.setQueryResultRow(row);
 			phraseItems.add(phraseItem);
 	
 		}

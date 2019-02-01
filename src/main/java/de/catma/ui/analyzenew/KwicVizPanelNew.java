@@ -33,6 +33,10 @@ import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.document.repository.Repository;
+import de.catma.queryengine.result.QueryResult;
+import de.catma.queryengine.result.QueryResultRow;
+import de.catma.queryengine.result.TagQueryResult;
+import de.catma.queryengine.result.TagQueryResultRow;
 
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -77,7 +81,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 	private void initComponents() {
 		leftSide = new VerticalLayout();
-		rightSide = new Panel("Visualisation");
+		rightSide = new Panel("KWIC Visualisation");
 		kwicNew=new KwicPanelNew(repository);
 		rightSide.setContent(kwicNew);
 		header = new Panel();
@@ -149,11 +153,53 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 			public void onDataChange(DataChangeEvent<TagRowItem> event) {
 				
 				updateKwicView();
-			System.out.println("hat sich geändert");
+			System.out.println("TreeGrid hat sich geändert");
 				
 			}
 		});
 	}
+	
+	private void updateKwicView() {
+		QueryResult queryResult = createQueryResultFromTreeGridData();
+		try {
+			
+			kwicNew.addQueryResultRows(queryResult);
+			
+		} catch (Exception e) {		
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
+	
+	private QueryResult createQueryResultFromTreeGridData() {
+		TagQueryResult tagQueryResult = new TagQueryResult("some Tags");
+
+		List<TagRowItem> rootElements = selectedDataProvider.getTreeData().getRootItems();
+
+		if (!rootElements.isEmpty()) {
+			for (TagRowItem root : rootElements) {
+				List<TagRowItem> children= new ArrayList<TagRowItem>();
+			   children	= selectedItemsTreeGridData.getChildren(root);
+				if(!children.isEmpty()) {
+					for (TagRowItem child : children) 		{
+						TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) child.getQueryResultRow();
+						tagQueryResult.add(tagQueryResultRow);
+					}
+					
+				}
+				
+				
+			}
+
+		} else {
+
+		}
+
+		return tagQueryResult;
+	}
+	
 
 	private ArrayList<String> getQueriesForAvailableResults() {
 		ArrayList<String> allQueries = new ArrayList<>();

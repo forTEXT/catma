@@ -21,7 +21,7 @@ public class TagRowItem {
 	private int frequency;
 	private String propertyName;
 	private Object propertyValue;
-	private QueryResultRow tagQueryResultRow; 
+	private QueryResultRow queryResultRow; 
 	private String phrase;
 
 	
@@ -120,11 +120,11 @@ public class TagRowItem {
 	public void setPropertyValue(Object propertyValue) {
 		this.propertyValue = propertyValue;
 	}
-	public QueryResultRow getTagQueryResultRow() {
-		return tagQueryResultRow;
+	public QueryResultRow getQueryResultRow() {
+		return queryResultRow;
 	}
-	public void setTagQueryResultRow(QueryResultRow tagQueryResultRow) {
-		this.tagQueryResultRow = tagQueryResultRow;
+	public void setQueryResultRow(QueryResultRow queryResultRow) {
+		this.queryResultRow = queryResultRow;
 	}
 	public String getPhrase() {
 		return phrase;
