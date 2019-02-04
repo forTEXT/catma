@@ -18,6 +18,7 @@ import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.event.selection.SelectionListener;
 import com.vaadin.event.selection.SingleSelectionEvent;
 import com.vaadin.event.selection.SingleSelectionListener;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.ClientConnector.AttachEvent;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
@@ -25,6 +26,7 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.SelectionMode;
+import com.vaadin.ui.themes.ValoTheme;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Notification;
@@ -67,6 +69,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private TreeGrid<TagRowItem>selectedItemsTreeGrid;
 	private TreeDataProvider<TagRowItem> selectedDataProvider;
 	private KwicPanelNew kwicNew;
+	private Button arrowLeftBt;
 
 	private Panel selectedItemsPanel;
 
@@ -82,19 +85,29 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private void initComponents() {
 		leftSide = new VerticalLayout();
 		rightSide = new Panel("KWIC Visualisation");
+		rightSide.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		kwicNew=new KwicPanelNew(repository);
 		kwicNew.setHeight("100%");
+		kwicNew.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		rightSide.setContent(kwicNew);
 		rightSide.setHeight("100%");
 		header = new Panel();
-		arrowLeft = new Button("<");
-		header.setContent(arrowLeft);
+		
+		arrowLeftBt = new Button(VaadinIcons.ARROW_LEFT);
+		arrowLeftBt.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+		
+		//arrowLeft = new Button("<");
+		header.setContent(arrowLeftBt);
+		header.addStyleName(ValoTheme.BUTTON_BORDERLESS);
 		leftSide.addComponent(header);
 		mainContentPanel = new HorizontalLayout();
 	
 		addComponent(mainContentPanel);
-		mainContentPanel.setHeight("100%");
-		mainContentPanel.setWidth("100%");
+		mainContentPanel.setSizeFull();
+		setSpacing(false);
+		
+		//mainContentPanel.setHeight("100%");
+		//mainContentPanel.setWidth("100%");
 		comboBox = new ComboBox<String>();
 		comboBox.setWidth("100%");
 		comboBox.setCaption("select one resultset");
@@ -112,7 +125,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		treeGridPanelKwic.setHeight("350px");
 		resultsTreeGrid= new TreeGrid<>();
 		selectedItemsTreeGrid = new TreeGrid<TagRowItem>();
-		selectedItemsTreeGrid.addColumn(TagRowItem::getTreePath).setCaption("treepath");
+		selectedItemsTreeGrid.addColumn(TagRowItem::getTreePath).setCaption("tag");
 		selectedItemsTreeGrid.addColumn(TagRowItem::getPhrase).setCaption("phrase");
 	
 		selectedItemsTreeGridData= new 	TreeData<TagRowItem>();
@@ -122,12 +135,14 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		//selectedItemsGrid.addColumn(TagRowItem::getPhrase).setCaption("Phrase");
 		selectedItemsPanel= new Panel();
 		selectedItemsPanel.setCaption("selected items for the kwic visualization");
+
 		selectedItemsPanel.setWidth("100%");
 		
 		selectedItemsPanel.setContent(selectedItemsTreeGrid);
 		leftSide.addComponent(comboBox);
 		leftSide.addComponent(treeGridPanelKwic);
 		leftSide.addComponent(selectedItemsPanel);
+		
 		mainContentPanel.addComponents(leftSide, rightSide);
 		float left= 0.4f;
 		float right =0.6f;
@@ -139,11 +154,11 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 
 	
 	private void initActions() {
-		arrowLeft.addClickListener(new ClickListener() {
+		arrowLeftBt.addClickListener(new ClickListener() {
 			@Override
 			public void buttonClick(ClickEvent event) {
 				leaveViewListener.onClose();
-				VizSnapshot kwikSnapshot = new VizSnapshot("KWIC Visualisation");
+				VizSnapshot kwicSnapshot = new VizSnapshot("KWIC Snapshot");
 
 			}
 		});
@@ -158,9 +173,13 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 			
 			@Override
 			public void onDataChange(DataChangeEvent<TagRowItem> event) {
+				if(comboBox.getValue().contains("tag")) {
+					updateKwicView();
+					System.out.println("TreeGrid hat sich geändert");
+					
+				}
 				
-				updateKwicView();
-			System.out.println("TreeGrid hat sich geändert");
+
 				
 			}
 		});
@@ -193,15 +212,10 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 					for (TagRowItem child : children) 		{
 						TagQueryResultRow tagQueryResultRow = (TagQueryResultRow) child.getQueryResultRow();
 						tagQueryResult.add(tagQueryResultRow);
-					}
-					
-				}
-				
-				
+					}	
+				}				
 			}
-
 		} else {
-
 		}
 
 		return tagQueryResult;
@@ -263,6 +277,8 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 				public void selectionChange(SelectionEvent<TagRowItem> event) {
 					
 					Optional<String> currentQuery = comboBox.getSelectedItem();
+					
+					
 					Collection<TagRowItem> allRootItems = selectedItemsTreeGridData.getRootItems();
 					
 					
@@ -374,7 +390,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		selectedTreeGrid.setWidth("100%");
 		return selectedTreeGrid;
 	}
-	
+	// here and actual only tag queries
 	private void addItemsToSelectedPanel(String query, Collection<TagRowItem> items,Collection<TagRowItem> allRootItemsIncoming) {
 		
 		TagRowItem newRoot = new TagRowItem();
@@ -414,11 +430,6 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		}
 	
 
-	
-	
-
-
-	
 	@Override
 	public void setQueryResults() {
 		// TODO Auto-generated method stub
