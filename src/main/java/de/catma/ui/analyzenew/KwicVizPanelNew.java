@@ -83,7 +83,9 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		leftSide = new VerticalLayout();
 		rightSide = new Panel("KWIC Visualisation");
 		kwicNew=new KwicPanelNew(repository);
+		kwicNew.setHeight("100%");
 		rightSide.setContent(kwicNew);
+		rightSide.setHeight("100%");
 		header = new Panel();
 		arrowLeft = new Button("<");
 		header.setContent(arrowLeft);
@@ -127,6 +129,10 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 		leftSide.addComponent(treeGridPanelKwic);
 		leftSide.addComponent(selectedItemsPanel);
 		mainContentPanel.addComponents(leftSide, rightSide);
+		float left= 0.4f;
+		float right =0.6f;
+		mainContentPanel.setExpandRatio(leftSide, left);
+		mainContentPanel.setExpandRatio(rightSide, right);
 		//mainContentSplitPanel.setExpandRatio(leftSide, 0.4f);
 			
 	}
@@ -372,7 +378,9 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 	private void addItemsToSelectedPanel(String query, Collection<TagRowItem> items,Collection<TagRowItem> allRootItemsIncoming) {
 		
 		TagRowItem newRoot = new TagRowItem();
-		newRoot.setTreePath(query.substring(20));
+		int length=query.length();
+
+		newRoot.setTreePath(	query.substring(20, length-1));
 		final Collection<TagRowItem> allRootItems= allRootItemsIncoming;
 		boolean contains= false;
 		

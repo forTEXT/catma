@@ -86,6 +86,7 @@ public class KwicPanelNew extends VerticalLayout{
 			
 			initComponents();
 			initActions();
+			setHeight("100%");
 				
 		}
 		public KwicPanelNew(Repository repository, 
@@ -119,9 +120,12 @@ public class KwicPanelNew extends VerticalLayout{
 			kwicGrid.setWidth("100%");
 			kwicGrid.setHeight("100%");
 			
-			kwicGrid.addColumn(KwicItem::getBackwardContext).setCaption("Backward").setId("backwordID");
+			kwicGrid.addColumn(KwicItem::getDocCollection).setCaption("Document/Collection").setId("docCollectionID");
+			kwicGrid.addColumn(KwicItem::getBackwardContext).setCaption("Left Context").setId("backwardID");
 			kwicGrid.addColumn(KwicItem::getKeyWord).setCaption("KeyWord").setId("keyWordID");
-			kwicGrid.addColumn(KwicItem::getForewardContext).setCaption("Foreward").setId("forewordID");
+			kwicGrid.addColumn(KwicItem::getForewardContext).setCaption("Right Context").setId("forewardID");
+			kwicGrid.addColumn(KwicItem::getRangeStartPoint).setCaption("Start Point").setId("startPointID");
+			kwicGrid.addColumn(KwicItem::getRangeEndPoint).setCaption("End Point").setId("endPointID");
 			
 			//kwicGrid.getColumn("keyWordID").setExpandRatio(7);
 			
@@ -134,6 +138,7 @@ public class KwicPanelNew extends VerticalLayout{
 		public void addQueryResultRows(Iterable<QueryResultRow> queryResult) throws Exception {
 
 			HashMap<String, KwicProvider> kwicProviders =	new HashMap<String, KwicProvider>();
+			kwicItemList.removeAll(kwicItemList);
 			
 			boolean showPropertyColumns = false;
 			boolean markupBased=true;
@@ -171,7 +176,7 @@ public class KwicPanelNew extends VerticalLayout{
 				kwicItemList.add(kwicItem);
 			
 		}
-
+			
 			 kwicGrid.setItems(kwicItemList);
 			 
 
@@ -180,9 +185,14 @@ public class KwicPanelNew extends VerticalLayout{
 		private KwicItem createKwicItemFromQueryResultRow(QueryResultRow queryResultRow, KeywordInContext kwic) {
 		TagQueryResultRow	tagQueryResultRow = (TagQueryResultRow) queryResultRow;
 		KwicItem kwicItem = new KwicItem();
-		kwicItem.setKeyWord(tagQueryResultRow.getTagDefinitionPath());
+		
+	
+		kwicItem.setDocCollection(tagQueryResultRow.getTagDefinitionPath());
+		kwicItem.setKeyWord(tagQueryResultRow.getPhrase());
 		kwicItem.setBackwardContext(kwic.getBackwardContext());
 		kwicItem.setForewardContext(kwic.getForwardContext());
+		kwicItem.setRangeStartPoint(queryResultRow.getRange().getStartPoint());
+		kwicItem.setRangeEndPoint(queryResultRow.getRange().getEndPoint());
 			
 			return kwicItem;
 		}

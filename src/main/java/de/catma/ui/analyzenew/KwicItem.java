@@ -10,6 +10,7 @@ public class KwicItem {
 	private String tagDefinitionPath;
 	private String propertyName;
 	private String propertyValue;
+	private String docCollection;
 	private int rangeStartPoint;
 	private int rangeEndPoint;
 	
@@ -76,6 +77,21 @@ public class KwicItem {
 	public void setRangeEndPoint(int rangeEndPoint) {
 		this.rangeEndPoint = rangeEndPoint;
 	}
+
+
+
+
+	public String getDocCollection() {
+		return docCollection;
+	}
+
+
+
+
+	public void setDocCollection(String docCollection) {
+		this.docCollection = docCollection;
+	}
+	
 	
 	
 	
