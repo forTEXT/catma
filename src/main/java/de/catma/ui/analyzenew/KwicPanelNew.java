@@ -115,7 +115,7 @@ public class KwicPanelNew extends VerticalLayout{
 			kwicGrid= new Grid<KwicItem>();
 	    	kwicItemList= new ArrayList<>(); 
 			kwicGrid.setSelectionMode(SelectionMode.MULTI);
-			kwicGrid.setSelectionMode(SelectionMode.SINGLE);
+			//kwicGrid.setSelectionMode(SelectionMode.SINGLE);
 			kwicGrid.setWidth("100%");
 			kwicGrid.setHeight("100%");
 			
