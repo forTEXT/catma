@@ -171,6 +171,7 @@ public class KwicPanelNew extends VerticalLayout{
 				kwicItemList.add(kwicItem);
 			
 		}
+
 			 kwicGrid.setItems(kwicItemList);
 			 
 

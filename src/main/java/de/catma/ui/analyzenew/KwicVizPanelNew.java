@@ -137,6 +137,7 @@ public class KwicVizPanelNew extends HorizontalLayout implements VizPanel {
 			@Override
 			public void buttonClick(ClickEvent event) {
 				leaveViewListener.onClose();
+				VizSnapshot kwikSnapshot = new VizSnapshot("KWIC Visualisation");
 
 			}
 		});

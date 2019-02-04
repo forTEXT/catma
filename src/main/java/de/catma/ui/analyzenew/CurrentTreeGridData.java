@@ -23,7 +23,7 @@ public class CurrentTreeGridData {
 		this.query = query;
 	}
 
-	public TreeData getCurrentTreeData() {
+	public TreeData<TagRowItem> getCurrentTreeData() {
 		return currentTreeData;
 	}
 

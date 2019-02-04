@@ -79,7 +79,7 @@ public class AnalyzeNewView extends VerticalLayout
 	private String searchInput = new String();
 	private ComboBox<String> queryComboBox;
 	private ResultPanelNew queryResultPanel;
-	private HorizontalLayout resultAndVisualizationPanel;
+	private HorizontalLayout resultAndVizSnapshotsPanel;
 	private VerticalLayout resultPanel;
 	private VerticalLayout visualizationPreviewPanel;
 	private MarginInfo margin;
@@ -123,8 +123,8 @@ public class AnalyzeNewView extends VerticalLayout
 		searchAndVisIconsPanel.setMargin(margin);
 		// addComponent(searchAndVisIconsPanel);
 
-		resultAndVisualizationPanel = new HorizontalLayout();
-		resultAndVisualizationPanel.setWidth("100%");
+		resultAndVizSnapshotsPanel = new HorizontalLayout();
+		resultAndVizSnapshotsPanel.setWidth("100%");
 		resultPanel = new VerticalLayout();
 		resultPanel.setHeightUndefined();
 
@@ -136,15 +136,15 @@ public class AnalyzeNewView extends VerticalLayout
 		contentPanel = new VerticalLayout();
 
 		visualizationPreviewPanel = new VerticalLayout();
-		resultAndVisualizationPanel.addComponents(resultPanel, visualizationPreviewPanel);
-		resultAndVisualizationPanel.setExpandRatio(resultPanel, 1);
-		resultAndVisualizationPanel.setExpandRatio(visualizationPreviewPanel, 1);
+		resultAndVizSnapshotsPanel.addComponents(resultPanel, visualizationPreviewPanel);
+		resultAndVizSnapshotsPanel.setExpandRatio(resultPanel, 1);
+		resultAndVizSnapshotsPanel.setExpandRatio(visualizationPreviewPanel, 1);
 
-		resultAndVisualizationPanel.setMargin(margin);
+		resultAndVizSnapshotsPanel.setMargin(margin);
 		setMargin(true);
 
 		contentPanel.addComponent(searchAndVisIconsPanel);
-		contentPanel.addComponent(resultAndVisualizationPanel);
+		contentPanel.addComponent(resultAndVizSnapshotsPanel);
 
 		addComponent(contentPanel);
 	}
@@ -216,6 +216,9 @@ public class AnalyzeNewView extends VerticalLayout
 
 					@Override
 					public void onClose() {
+						VizSnapshot kwivSnapshot = new VizSnapshot("Kwic Snapshot");
+						visualizationPreviewPanel.addComponent(kwivSnapshot);
+					
 						setContent(contentPanel);
 					}
 				},getAllTreeGridDatas(),repository);
